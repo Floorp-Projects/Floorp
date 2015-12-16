@@ -9,7 +9,6 @@ const {
   MozLoopServiceInternal,
   MozLoopService
 } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
-const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 const { LoopRooms } = Cu.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a

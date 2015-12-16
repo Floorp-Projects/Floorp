@@ -27,13 +27,13 @@ describe("loop.store.ActiveRoomStore", function() {
       SetLoopPref: sinon.stub(),
       AddConversationContext: sinon.stub(),
       AddBrowserSharingListener: sinon.stub().returns(42),
-      HangupNow: sinon.stub(),
       RemoveBrowserSharingListener: sinon.stub(),
       "Rooms:Get": sinon.stub().returns({
         roomUrl: "http://invalid"
       }),
       "Rooms:Join": sinon.stub().returns({}),
       "Rooms:RefreshMembership": sinon.stub().returns({ expires: 42 }),
+      "Rooms:Leave": sinon.stub(),
       "Rooms:SendConnectionStatus": sinon.stub(),
       "Rooms:PushSubscription": sinon.stub(),
       SetScreenShareState: sinon.stub(),
@@ -95,8 +95,7 @@ describe("loop.store.ActiveRoomStore", function() {
       store.setStoreState({
         roomState: ROOM_STATES.JOINED,
         roomToken: "fakeToken",
-        sessionToken: "1627384950",
-        windowId: "42"
+        sessionToken: "1627384950"
       });
     });
 
@@ -179,6 +178,18 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(fakeMultiplexGum.reset);
     });
 
+    it("should set screen sharing inactive", function() {
+      store.setStoreState({ windowId: "1234" });
+
+      store.roomFailure(new sharedActions.RoomFailure({
+        error: fakeError,
+        failedJoinRequest: false
+      }));
+
+      sinon.assert.calledOnce(requestStubs.SetScreenShareState);
+      sinon.assert.calledWithExactly(requestStubs.SetScreenShareState, "1234", false);
+    });
+
     it("should disconnect from the servers via the sdk", function() {
       store.roomFailure(new sharedActions.RoomFailure({
         error: fakeError,
@@ -201,8 +212,6 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should remove the sharing listener", function() {
-      sandbox.stub(loop, "unsubscribe");
-
       // Setup the listener.
       store.startBrowserShare(new sharedActions.StartBrowserShare());
 
@@ -212,28 +221,27 @@ describe("loop.store.ActiveRoomStore", function() {
         failedJoinRequest: false
       }));
 
-      sinon.assert.calledOnce(loop.unsubscribe);
-      sinon.assert.calledWith(loop.unsubscribe, "BrowserSwitch");
+      sinon.assert.calledOnce(requestStubs.RemoveBrowserSharingListener);
     });
 
-    it("should call 'HangupNow' Loop API", function() {
+    it("should call mozLoop.rooms.leave", function() {
       store.roomFailure(new sharedActions.RoomFailure({
         error: fakeError,
         failedJoinRequest: false
       }));
 
-      sinon.assert.calledOnce(requestStubs["HangupNow"]);
-      sinon.assert.calledWithExactly(requestStubs["HangupNow"],
-        "fakeToken", "1627384950", "42");
+      sinon.assert.calledOnce(requestStubs["Rooms:Leave"]);
+      sinon.assert.calledWithExactly(requestStubs["Rooms:Leave"],
+        "fakeToken", "1627384950");
     });
 
-    it("should not call 'HangupNow' Loop API if failedJoinRequest is true", function() {
+    it("should not call mozLoop.rooms.leave if failedJoinRequest is true", function() {
       store.roomFailure(new sharedActions.RoomFailure({
         error: fakeError,
         failedJoinRequest: true
       }));
 
-      sinon.assert.notCalled(requestStubs["HangupNow"]);
+      sinon.assert.notCalled(requestStubs["Rooms:Leave"]);
     });
   });
 
@@ -1207,8 +1215,7 @@ describe("loop.store.ActiveRoomStore", function() {
       store.setStoreState({
         roomState: ROOM_STATES.JOINED,
         roomToken: "fakeToken",
-        sessionToken: "1627384950",
-        windowId: "42"
+        sessionToken: "1627384950"
       });
 
       connectionFailureAction = new sharedActions.ConnectionFailure({
@@ -1228,6 +1235,15 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(fakeMultiplexGum.reset);
     });
 
+    it("should set screen sharing inactive", function() {
+      store.setStoreState({ windowId: "1234" });
+
+      store.connectionFailure(connectionFailureAction);
+
+      sinon.assert.calledOnce(requestStubs.SetScreenShareState);
+      sinon.assert.calledWithExactly(requestStubs.SetScreenShareState, "1234", false);
+    });
+
     it("should disconnect from the servers via the sdk", function() {
       store.connectionFailure(connectionFailureAction);
 
@@ -1243,25 +1259,22 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(clearTimeout);
     });
 
-    it("should call 'HangupNow' Loop API", function() {
+    it("should call mozLoop.rooms.leave", function() {
       store.connectionFailure(connectionFailureAction);
 
-      sinon.assert.calledOnce(requestStubs["HangupNow"]);
-      sinon.assert.calledWithExactly(requestStubs["HangupNow"],
-        "fakeToken", "1627384950", "42");
+      sinon.assert.calledOnce(requestStubs["Rooms:Leave"]);
+      sinon.assert.calledWithExactly(requestStubs["Rooms:Leave"],
+        "fakeToken", "1627384950");
     });
 
     it("should remove the sharing listener", function() {
-      sandbox.stub(loop, "unsubscribe");
-
       // Setup the listener.
       store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now simulate connection failure.
       store.connectionFailure(connectionFailureAction);
 
-      sinon.assert.calledOnce(loop.unsubscribe);
-      sinon.assert.calledWith(loop.unsubscribe, "BrowserSwitch");
+      sinon.assert.calledOnce(requestStubs.RemoveBrowserSharingListener);
     });
 
     it("should set the state to `FAILED`", function() {
@@ -1807,36 +1820,33 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(clearTimeout);
     });
 
-    it("should call 'HangupNow' Loop API", function() {
+    it("should call mozLoop.rooms.leave", function() {
       store.windowUnload();
 
-      sinon.assert.calledOnce(requestStubs["HangupNow"]);
-      sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken",
-        "1627384950", "1234");
+      sinon.assert.calledOnce(requestStubs["Rooms:Leave"]);
+      sinon.assert.calledWithExactly(requestStubs["Rooms:Leave"],
+        "fakeToken", "1627384950");
     });
 
-    it("should call 'HangupNow' Loop API if the room state is JOINING",
+    it("should call mozLoop.rooms.leave if the room state is JOINING",
       function() {
         store.setStoreState({ roomState: ROOM_STATES.JOINING });
 
         store.windowUnload();
 
-        sinon.assert.calledOnce(requestStubs["HangupNow"]);
-        sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken",
-          "1627384950", "1234");
+        sinon.assert.calledOnce(requestStubs["Rooms:Leave"]);
+        sinon.assert.calledWithExactly(requestStubs["Rooms:Leave"],
+          "fakeToken", "1627384950");
       });
 
     it("should remove the sharing listener", function() {
-      sandbox.stub(loop, "unsubscribe");
-
       // Setup the listener.
       store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now unload the window.
       store.windowUnload();
 
-      sinon.assert.calledOnce(loop.unsubscribe);
-      sinon.assert.calledWith(loop.unsubscribe, "BrowserSwitch");
+      sinon.assert.calledOnce(requestStubs.RemoveBrowserSharingListener);
     });
 
     it("should set the state to CLOSING", function() {
@@ -1876,32 +1886,22 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(clearTimeout);
     });
 
-    it("should call 'HangupNow' Loop API", function() {
+    it("should call mozLoop.rooms.leave", function() {
       store.leaveRoom();
 
-      sinon.assert.calledOnce(requestStubs["HangupNow"]);
-      sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken", "1627384950");
-    });
-
-    it("should not call 'HangupNow' Loop API when _isDesktop is true", function() {
-      store._isDesktop = true;
-
-      store.leaveRoom();
-
-      sinon.assert.notCalled(requestStubs["HangupNow"]);
+      sinon.assert.calledOnce(requestStubs["Rooms:Leave"]);
+      sinon.assert.calledWithExactly(requestStubs["Rooms:Leave"],
+        "fakeToken", "1627384950");
     });
 
     it("should remove the sharing listener", function() {
-      sandbox.stub(loop, "unsubscribe");
-
       // Setup the listener.
       store.startBrowserShare(new sharedActions.StartBrowserShare());
 
       // Now leave the room.
       store.leaveRoom();
 
-      sinon.assert.calledOnce(loop.unsubscribe);
-      sinon.assert.calledWith(loop.unsubscribe, "BrowserSwitch");
+      sinon.assert.calledOnce(requestStubs.RemoveBrowserSharingListener);
     });
 
     it("should set the state to ENDED", function() {
