@@ -1,31 +1,41 @@
 <?xml version="1.0" ?><manifest>
+  <!--
+    Remotes
+    -->
   <!--original fetch url was https://android.googlesource.com/-->
   <remote fetch="https://git.mozilla.org/external/aosp" name="aosp"/>
-  <!--original fetch url was git://github.com/mozilla-b2g/-->
-  <remote fetch="https://git.mozilla.org/b2g" name="b2g"/>
-  <!--original fetch url was git://github.com/mozilla/-->
-  <remote fetch="https://git.mozilla.org/b2g" name="mozilla"/>
   <!--original fetch url was git://github.com/apitrace/-->
   <remote fetch="https://git.mozilla.org/external/apitrace" name="apitrace"/>
+  <!--original fetch url was git://github.com/mozilla-b2g/-->
+  <remote fetch="https://git.mozilla.org/b2g" name="b2g"/>
+  <!--original fetch url was https://git.mozilla.org/b2g-->
+  <remote fetch="https://git.mozilla.org/b2g" name="b2gmozilla"/>
   <!--original fetch url was git://codeaurora.org/-->
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
+  <!--original fetch url was http://android.git.linaro.org/git-ro/-->
+  <remote fetch="https://git.mozilla.org/external/linaro" name="linaro"/>
+  <!--original fetch url was git://github.com/mozilla/-->
+  <remote fetch="https://git.mozilla.org/b2g" name="mozilla"/>
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
+  <!--
+    B2G repositories for all targets
+    -->
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5c79eeb800161651b22af9461e3de07e527a0141"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="ac7e9ae8a24ab4a3f3da801ca53f95f39a32b89f"/>
+  <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
   <project name="platform_build" path="build" remote="b2g" revision="8d83715f08b7849f16a0dfc88f78d5c3a89c0a54">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="5c79eeb800161651b22af9461e3de07e527a0141"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="fake-qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="939b377d55a2f081d94029a30a75d05e5a20daf3"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
   <project name="librecovery" path="librecovery" remote="b2g" revision="1b3591a50ed352fc6ddb77462b7b35d0bfa555a3"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ac7e9ae8a24ab4a3f3da801ca53f95f39a32b89f"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="2d70fdfc0244a7217df1cfa7df9f4798cbfa3af6"/>
-  <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="ebdad82e61c16772f6cd47e9f11936bf6ebe9aa0"/>
