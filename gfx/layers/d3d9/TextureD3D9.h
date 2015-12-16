@@ -206,7 +206,7 @@ public:
   static D3D9TextureData*
   Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) {}
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) override {}
 
 protected:
   D3D9TextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
@@ -234,7 +234,7 @@ public:
 
   ~DXGID3D9TextureData();
 
-  virtual gfx::IntSize GetSize() const { return gfx::IntSize(mDesc.Width, mDesc.Height); }
+  virtual gfx::IntSize GetSize() const override { return gfx::IntSize(mDesc.Width, mDesc.Height); }
 
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
@@ -246,7 +246,7 @@ public:
 
   virtual bool HasInternalBuffer() const override { return false; }
 
-  virtual void Deallocate(ISurfaceAllocator* aAllocator) {}
+  virtual void Deallocate(ISurfaceAllocator* aAllocator) override {}
 
   IDirect3DDevice9* GetD3D9Device() { return mDevice; }
   IDirect3DTexture9* GetD3D9Texture() { return mTexture; }

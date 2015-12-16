@@ -185,11 +185,11 @@ public:
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual gfx::SurfaceFormat GetFormat() const { return gfx::SurfaceFormat::YUV; }
+  virtual gfx::SurfaceFormat GetFormat() const override { return gfx::SurfaceFormat::YUV; }
 
-  virtual bool SupportsMoz2D() const { return false; }
+  virtual bool SupportsMoz2D() const override { return false; }
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() { return nullptr; }
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override { return nullptr; }
 
   // This TextureData should not be used in a context where we use CreateSimilar
   // (ex. component alpha) because the underlying texture is always created by
