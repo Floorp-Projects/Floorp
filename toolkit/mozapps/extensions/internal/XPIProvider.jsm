@@ -6944,6 +6944,10 @@ AddonWrapper.prototype = {
     return ops;
   },
 
+  get isDebuggable() {
+    return this.isActive && addonFor(this).bootstrap;
+  },
+
   get permissions() {
     return addonFor(this).permissions();
   },
