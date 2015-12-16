@@ -273,8 +273,10 @@ WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
             return ErrorInvalidValue("getIndexedParameter: index should be less than "
                                      "MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS");
 
-        retval.SetValue().SetAsWebGLBuffer() =
-            mBoundTransformFeedbackBuffers[index].get();
+        if (mBoundTransformFeedbackBuffers[index].get()) {
+            retval.SetValue().SetAsWebGLBuffer() =
+                mBoundTransformFeedbackBuffers[index].get();
+        }
         return;
 
     case LOCAL_GL_UNIFORM_BUFFER_BINDING:
@@ -282,7 +284,8 @@ WebGL2Context::GetIndexedParameter(GLenum target, GLuint index,
             return ErrorInvalidValue("getIndexedParameter: index should be than "
                                      "MAX_UNIFORM_BUFFER_BINDINGS");
 
-        retval.SetValue().SetAsWebGLBuffer() = mBoundUniformBuffers[index].get();
+        if (mBoundUniformBuffers[index].get())
+            retval.SetValue().SetAsWebGLBuffer() = mBoundUniformBuffers[index].get();
         return;
 
     case LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER_START:
