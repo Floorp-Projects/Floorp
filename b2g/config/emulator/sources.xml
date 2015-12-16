@@ -1,4 +1,7 @@
 <?xml version="1.0" ?><manifest>
+  <!--
+    Remotes
+    -->
   <!--original fetch url was https://android.googlesource.com/-->
   <remote fetch="https://git.mozilla.org/external/aosp" name="aosp"/>
   <!--original fetch url was git://github.com/apitrace/-->
@@ -9,13 +12,20 @@
   <remote fetch="https://git.mozilla.org/b2g" name="b2gmozilla"/>
   <!--original fetch url was git://codeaurora.org/-->
   <remote fetch="https://git.mozilla.org/external/caf" name="caf"/>
+  <!--original fetch url was http://android.git.linaro.org/git-ro/-->
+  <remote fetch="https://git.mozilla.org/external/linaro" name="linaro"/>
   <!--original fetch url was git://github.com/mozilla/-->
   <remote fetch="https://git.mozilla.org/b2g" name="mozilla"/>
   <!--original fetch url was https://git.mozilla.org/releases-->
   <remote fetch="https://git.mozilla.org/releases" name="mozillaorg"/>
+  <!--
+    B2G repositories for all targets
+    -->
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="5c79eeb800161651b22af9461e3de07e527a0141"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="ac7e9ae8a24ab4a3f3da801ca53f95f39a32b89f"/>
+  <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
-  <!-- Gecko and Gaia -->
-  <project name="gaia.git" path="gaia" remote="mozillaorg" revision="5c79eeb800161651b22af9461e3de07e527a0141"/>
   <!-- Gonk-specific things and forks -->
   <project name="platform_bionic" path="bionic" remote="b2g" revision="e2b3733ba3fa5e3f404e983d2e4142b1f6b1b846"/>
   <project name="platform_build" path="build" remote="b2g" revision="1b0db93fb6b870b03467aff50d6419771ba0d88c">
@@ -26,13 +36,10 @@
   <project name="platform_external_apriori" path="external/apriori" remote="b2g" revision="11816ad0406744f963537b23d68ed9c2afb412bd"/>
   <project name="platform_external_elfcopy" path="external/elfcopy" remote="b2g" revision="62c1bed1c4505369cac2e72fbe30452a598fb690"/>
   <project name="platform_external_elfutils" path="external/elfutils" remote="b2g" revision="72940dec691fa3255e13df01f8c53b620e446066"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ac7e9ae8a24ab4a3f3da801ca53f95f39a32b89f"/>
   <project name="platform_external_opensans" path="external/opensans" remote="b2g" revision="b5b4c226ca1d71e936153cf679dda6d3d60e2354"/>
   <project name="screencap-gonk" path="external/screencap-gonk" remote="b2g" revision="e6403c71e9eca8cb943739d5a0a192deac60fc51"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="23eca997d2042442b6a7927d21ba28aa0658ae69"/>
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="6afc63abe52776ae6a1d32a2d927e630a743a86a"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
-  <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cb4604d5a578efd027277059ce3e0f6e3af59bd1"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="4f46930827957afbce500a4a920755a218bf3155"/>
