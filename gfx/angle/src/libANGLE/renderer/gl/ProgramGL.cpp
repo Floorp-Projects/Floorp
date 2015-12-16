@@ -13,6 +13,7 @@
 #include "libANGLE/renderer/gl/FunctionsGL.h"
 #include "libANGLE/renderer/gl/ShaderGL.h"
 #include "libANGLE/renderer/gl/StateManagerGL.h"
+#include "platform/Platform.h"
 
 namespace rx
 {
@@ -44,6 +45,11 @@ gl::Error ProgramGL::save(gl::BinaryOutputStream *stream)
 {
     UNIMPLEMENTED();
     return gl::Error(GL_INVALID_OPERATION);
+}
+
+void ProgramGL::setBinaryRetrievableHint(bool retrievable)
+{
+    UNIMPLEMENTED();
 }
 
 LinkResult ProgramGL::link(const gl::Data &data, gl::InfoLog &infoLog)
@@ -105,7 +111,6 @@ LinkResult ProgramGL::link(const gl::Data &data, gl::InfoLog &infoLog)
     // Verify the link
     GLint linkStatus = GL_FALSE;
     mFunctions->getProgramiv(mProgramID, GL_LINK_STATUS, &linkStatus);
-    ASSERT(linkStatus == GL_TRUE);
     if (linkStatus == GL_FALSE)
     {
         // Linking failed, put the error into the info log
@@ -118,8 +123,11 @@ LinkResult ProgramGL::link(const gl::Data &data, gl::InfoLog &infoLog)
         mFunctions->deleteProgram(mProgramID);
         mProgramID = 0;
 
-        infoLog << &buf[0];
-        TRACE("\n%s", &buf[0]);
+        infoLog << buf.data();
+
+        std::string warning = FormatString("Program link failed unexpectedly: %s", buf.data());
+        ANGLEPlatformCurrent()->logWarning(warning.c_str());
+        TRACE("\n%s", warning.c_str());
 
         // TODO, return GL_OUT_OF_MEMORY or just fail the link? This is an unexpected case
         return LinkResult(false, gl::Error(GL_NO_ERROR));

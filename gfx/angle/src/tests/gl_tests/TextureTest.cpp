@@ -278,7 +278,7 @@ class TextureTestES3 : public ANGLETest
         const std::string fragmentShaderSource2DArray =
             "#version 300 es\n"
             "precision highp float;\n"
-            "uniform sampler2DArray tex2DArray;\n"
+            "uniform highp sampler2DArray tex2DArray;\n"
             "in vec2 texcoord;\n"
             "out vec4 fragColor;\n"
             "void main()\n"

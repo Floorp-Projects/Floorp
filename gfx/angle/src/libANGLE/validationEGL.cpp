@@ -11,6 +11,7 @@
 #include "common/utilities.h"
 #include "libANGLE/Config.h"
 #include "libANGLE/Context.h"
+#include "libANGLE/Device.h"
 #include "libANGLE/Display.h"
 #include "libANGLE/Image.h"
 #include "libANGLE/Surface.h"
@@ -930,6 +931,58 @@ Error ValidateDestroyImageKHR(const Display *display, const Image *image)
         // not available.
         // EGL_BAD_DISPLAY seems like a reasonable error.
         return Error(EGL_BAD_DISPLAY);
+    }
+
+    return Error(EGL_SUCCESS);
+}
+
+Error ValidateCreateDeviceANGLE(EGLint device_type,
+                                void *native_device,
+                                const EGLAttrib *attrib_list)
+{
+    const ClientExtensions &clientExtensions = Display::getClientExtensions();
+    if (!clientExtensions.deviceCreation)
+    {
+        return Error(EGL_BAD_ACCESS, "Device creation extension not active");
+    }
+
+    if (attrib_list != nullptr && attrib_list[0] != EGL_NONE)
+    {
+        return Error(EGL_BAD_ATTRIBUTE, "Invalid attrib_list parameter");
+    }
+
+    switch (device_type)
+    {
+        case EGL_D3D11_DEVICE_ANGLE:
+            if (!clientExtensions.deviceCreationD3D11)
+            {
+                return Error(EGL_BAD_ATTRIBUTE, "D3D11 device creation extension not active");
+            }
+            break;
+        default:
+            return Error(EGL_BAD_ATTRIBUTE, "Invalid device_type parameter");
+    }
+
+    return Error(EGL_SUCCESS);
+}
+
+Error ValidateReleaseDeviceANGLE(Device *device)
+{
+    const ClientExtensions &clientExtensions = Display::getClientExtensions();
+    if (!clientExtensions.deviceCreation)
+    {
+        return Error(EGL_BAD_ACCESS, "Device creation extension not active");
+    }
+
+    if (device == EGL_NO_DEVICE_EXT || !Device::IsValidDevice(device))
+    {
+        return Error(EGL_BAD_DEVICE_EXT, "Invalid device parameter");
+    }
+
+    Display *owningDisplay = device->getOwningDisplay();
+    if (owningDisplay != nullptr)
+    {
+        return Error(EGL_BAD_DEVICE_EXT, "Device must have been created using eglCreateDevice");
     }
 
     return Error(EGL_SUCCESS);

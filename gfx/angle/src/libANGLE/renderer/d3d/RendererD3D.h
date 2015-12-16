@@ -153,18 +153,7 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
                                         const std::vector<GLint> &vertexUniformBuffers,
                                         const std::vector<GLint> &fragmentUniformBuffers) = 0;
 
-    virtual gl::Error setRasterizerState(const gl::RasterizerState &rasterState) = 0;
-    virtual gl::Error setBlendState(const gl::Framebuffer *framebuffer,
-                                    const gl::BlendState &blendState,
-                                    const gl::ColorF &blendColor,
-                                    unsigned int sampleMask) = 0;
-
-    virtual gl::Error setDepthStencilState(const gl::DepthStencilState &depthStencilState, int stencilRef,
-                                           int stencilBackRef, bool frontFaceCCW) = 0;
-
-    virtual void setScissorRectangle(const gl::Rectangle &scissor, bool enabled) = 0;
-    virtual void setViewport(const gl::Rectangle &viewport, float zNear, float zFar, GLenum drawMode, GLenum frontFace,
-                             bool ignoreViewport) = 0;
+    virtual gl::Error updateState(const gl::Data &data, GLenum drawMode) = 0;
 
     virtual gl::Error applyRenderTarget(const gl::Framebuffer *frameBuffer) = 0;
     virtual gl::Error applyUniforms(const ProgramD3D &programD3D,
@@ -255,7 +244,7 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     // In D3D11, faster than calling setTexture a jillion times
     virtual gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd) = 0;
 
-    egl::Error getEGLDevice(DeviceImpl **device);
+    virtual egl::Error getEGLDevice(DeviceImpl **device) = 0;
 
   protected:
     virtual bool getLUID(LUID *adapterLuid) const = 0;
@@ -265,8 +254,7 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     virtual void createAnnotator() = 0;
 
-    virtual egl::Error initializeEGLDevice(DeviceD3D **outDevice) = 0;
-
+    static unsigned int GetBlendSampleMask(const gl::Data &data, int samples);
     // dirtyPointer is a special value that will make the comparison with any valid pointer fail and force the renderer to re-apply the state.
     static const uintptr_t DirtyPointer;
 
@@ -311,7 +299,6 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
     gl::Error generateSwizzles(const gl::Data &data, gl::SamplerType type);
     gl::Error generateSwizzles(const gl::Data &data);
 
-    gl::Error applyRenderTarget(const gl::Data &data, GLenum drawMode, bool ignoreViewport);
     gl::Error applyState(const gl::Data &data, GLenum drawMode);
     gl::Error applyShaders(const gl::Data &data, GLenum drawMode);
     gl::Error applyTextures(const gl::Data &data, gl::SamplerType shaderType,
@@ -334,8 +321,6 @@ class RendererD3D : public Renderer, public BufferFactoryD3D
 
     mutable bool mWorkaroundsInitialized;
     mutable WorkaroundsD3D mWorkarounds;
-
-    DeviceD3D *mEGLDevice;
 };
 
 struct dx_VertexConstants

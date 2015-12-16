@@ -499,6 +499,11 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQuerySurfacePointerANGLE (EGLDisplay dpy, EGLSu
 #define EGL_FIXED_SIZE_ANGLE              0x3201
 #endif /* EGL_ANGLE_window_fixed_size */
 
+#ifndef EGL_ANGLE_x11_visual
+#define EGL_ANGLE_x11_visual
+#define EGL_X11_VISUAL_ID_ANGLE 0x33A3
+#endif /* EGL_ANGLE_x11_visual */
+
 #ifndef EGL_ARM_pixmap_multisample_discard
 #define EGL_ARM_pixmap_multisample_discard 1
 #define EGL_DISCARD_SAMPLES_ARM           0x3286
@@ -538,6 +543,16 @@ EGLAPI EGLBoolean EGLAPIENTRY eglQueryDevicesEXT (EGLint max_devices, EGLDeviceE
 EGLAPI EGLBoolean EGLAPIENTRY eglQueryDisplayAttribEXT (EGLDisplay dpy, EGLint attribute, EGLAttrib *value);
 #endif
 #endif /* EGL_EXT_device_base */
+
+#ifndef EGL_ANGLE_device_creation
+#define EGL_ANGLE_device_creation 1
+typedef EGLDeviceEXT (EGLAPIENTRYP PFNEGLCREATEDEVICEANGLEPROC) (EGLint device_type, void *native_device, const EGLAttrib *attrib_list);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLRELEASEDEVICEANGLEPROC) (EGLDeviceEXT device);
+#ifdef EGL_EGLEXT_PROTOTYPES
+EGLAPI EGLDeviceEXT EGLAPIENTRY eglCreateDeviceANGLE (EGLint device_type, void *native_device, const EGLAttrib *attrib_list);
+EGLAPI EGLBoolean EGLAPIENTRY eglReleaseDeviceANGLE (EGLDeviceEXT device);
+#endif
+#endif /* EGL_ANGLE_device_creation */
 
 #ifndef EGL_EXT_device_drm
 #define EGL_EXT_device_drm 1

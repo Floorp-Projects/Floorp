@@ -265,7 +265,7 @@ class MipmapTestES3 : public ANGLETest
         const std::string fragmentShaderSourceArray = SHADER_SOURCE
         (   #version 300 es\n
             precision highp float;
-            uniform sampler2DArray tex;
+            uniform highp sampler2DArray tex;
             uniform int slice;
             in vec2 texcoord;
             out vec4 out_FragColor;
@@ -303,7 +303,7 @@ class MipmapTestES3 : public ANGLETest
         const std::string fragmentShaderSource3D = SHADER_SOURCE
         (   #version 300 es\n
             precision highp float;
-            uniform sampler3D tex;
+            uniform highp sampler3D tex;
             uniform float slice;
             uniform float lod;
             in vec2 texcoord;

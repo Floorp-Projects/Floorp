@@ -125,13 +125,16 @@ gl::Error FramebufferD3D::clear(const gl::Data &data, GLbitfield mask)
 {
     const gl::State &state = *data.state;
     ClearParameters clearParams = GetClearParameters(state, mask);
-    return clear(state, clearParams);
+    return clear(data, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferfv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLfloat *values)
+gl::Error FramebufferD3D::clearBufferfv(const gl::Data &data,
+                                        GLenum buffer,
+                                        GLint drawbuffer,
+                                        const GLfloat *values)
 {
     // glClearBufferfv can be called to clear the color buffer or depth buffer
-    ClearParameters clearParams = GetClearParameters(state, 0);
+    ClearParameters clearParams = GetClearParameters(*data.state, 0);
 
     if (buffer == GL_COLOR)
     {
@@ -149,13 +152,16 @@ gl::Error FramebufferD3D::clearBufferfv(const gl::State &state, GLenum buffer, G
         clearParams.depthClearValue = values[0];
     }
 
-    return clear(state, clearParams);
+    return clear(data, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferuiv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLuint *values)
+gl::Error FramebufferD3D::clearBufferuiv(const gl::Data &data,
+                                         GLenum buffer,
+                                         GLint drawbuffer,
+                                         const GLuint *values)
 {
     // glClearBufferuiv can only be called to clear a color buffer
-    ClearParameters clearParams = GetClearParameters(state, 0);
+    ClearParameters clearParams = GetClearParameters(*data.state, 0);
     for (unsigned int i = 0; i < ArraySize(clearParams.clearColor); i++)
     {
         clearParams.clearColor[i] = (drawbuffer == static_cast<int>(i));
@@ -163,13 +169,16 @@ gl::Error FramebufferD3D::clearBufferuiv(const gl::State &state, GLenum buffer, 
     clearParams.colorUIClearValue = gl::ColorUI(values[0], values[1], values[2], values[3]);
     clearParams.colorClearType = GL_UNSIGNED_INT;
 
-    return clear(state, clearParams);
+    return clear(data, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferiv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLint *values)
+gl::Error FramebufferD3D::clearBufferiv(const gl::Data &data,
+                                        GLenum buffer,
+                                        GLint drawbuffer,
+                                        const GLint *values)
 {
     // glClearBufferiv can be called to clear the color buffer or stencil buffer
-    ClearParameters clearParams = GetClearParameters(state, 0);
+    ClearParameters clearParams = GetClearParameters(*data.state, 0);
 
     if (buffer == GL_COLOR)
     {
@@ -187,19 +196,23 @@ gl::Error FramebufferD3D::clearBufferiv(const gl::State &state, GLenum buffer, G
         clearParams.stencilClearValue = values[1];
     }
 
-    return clear(state, clearParams);
+    return clear(data, clearParams);
 }
 
-gl::Error FramebufferD3D::clearBufferfi(const gl::State &state, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil)
+gl::Error FramebufferD3D::clearBufferfi(const gl::Data &data,
+                                        GLenum buffer,
+                                        GLint drawbuffer,
+                                        GLfloat depth,
+                                        GLint stencil)
 {
     // glClearBufferfi can only be called to clear a depth stencil buffer
-    ClearParameters clearParams = GetClearParameters(state, 0);
+    ClearParameters clearParams   = GetClearParameters(*data.state, 0);
     clearParams.clearDepth = true;
     clearParams.depthClearValue = depth;
     clearParams.clearStencil = true;
     clearParams.stencilClearValue = stencil;
 
-    return clear(state, clearParams);
+    return clear(data, clearParams);
 }
 
 GLenum FramebufferD3D::getImplementationColorReadFormat() const
@@ -302,14 +315,14 @@ gl::Error FramebufferD3D::blit(const gl::State &state, const gl::Rectangle &sour
     return gl::Error(GL_NO_ERROR);
 }
 
-GLenum FramebufferD3D::checkStatus() const
+bool FramebufferD3D::checkStatus() const
 {
     // if we have both a depth and stencil buffer, they must refer to the same object
     // since we only support packed_depth_stencil and not separate depth and stencil
     if (mData.getDepthAttachment() != nullptr && mData.getStencilAttachment() != nullptr &&
         mData.getDepthStencilAttachment() == nullptr)
     {
-        return GL_FRAMEBUFFER_UNSUPPORTED;
+        return false;
     }
 
     // D3D11 does not allow for overlapping RenderTargetViews, so ensure uniqueness
@@ -326,13 +339,19 @@ GLenum FramebufferD3D::checkStatus() const
                     (attachment.id() == prevAttachment.id() &&
                      attachment.type() == prevAttachment.type()))
                 {
-                    return GL_FRAMEBUFFER_UNSUPPORTED;
+                    return false;
                 }
             }
         }
     }
 
-    return GL_FRAMEBUFFER_COMPLETE;
+    // D3D requires all render targets to have the same dimensions.
+    if (!mData.attachmentsHaveSameDimensions())
+    {
+        return false;
+    }
+
+    return true;
 }
 
 const gl::AttachmentList &FramebufferD3D::getColorAttachmentsForRender(

@@ -45,6 +45,8 @@ class TransformFeedback : public RefCountObject
     const OffsetBindingPointer<Buffer> &getIndexedBuffer(size_t index) const;
     size_t getIndexedBufferCount() const;
 
+    void detachBuffer(GLuint bufferName);
+
     rx::TransformFeedbackImpl *getImplementation();
     const rx::TransformFeedbackImpl *getImplementation() const;
 

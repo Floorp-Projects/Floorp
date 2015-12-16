@@ -29,7 +29,7 @@ class Framebuffer11 : public FramebufferD3D
     gl::Error invalidateSwizzles() const;
 
   private:
-    gl::Error clear(const gl::State &state, const ClearParameters &clearParams) override;
+    gl::Error clear(const gl::Data &data, const ClearParameters &clearParams) override;
 
     gl::Error readPixelsImpl(const gl::Rectangle &area,
                              GLenum format,

@@ -9,8 +9,6 @@
 #include "libANGLE/renderer/gl/cgl/WindowSurfaceCGL.h"
 
 #import <Cocoa/Cocoa.h>
-#include <mach/mach.h>
-#include <mach/mach_time.h>
 #include <OpenGL/OpenGL.h>
 #import <QuartzCore/QuartzCore.h>
 
@@ -20,146 +18,148 @@
 #include "libANGLE/renderer/gl/RendererGL.h"
 #include "libANGLE/renderer/gl/StateManagerGL.h"
 
-#define GL_TEXTURE_RECTANGLE_ARB 0x84F5
-
-#include <iostream>
-
-namespace
+@interface SwapLayer : CAOpenGLLayer
 {
+    CGLContextObj mDisplayContext;
 
-// All time computations in the file are done in nanoseconds but both the
-// current time and the screen's present time are given as "mach time".
-// The first thing we will do after receiving a mach time is convert it.
-uint64_t MachTimeToNanoseconds(uint64_t machTime)
-{
-    static mach_timebase_info_data_t timebaseInfo;
+    bool initialized;
+    rx::SharedSwapState *mSwapState;
+    const rx::FunctionsGL *mFunctions;
 
-    if (timebaseInfo.denom == 0)
+    GLuint mReadFramebuffer;
+}
+- (id)initWithSharedState:(rx::SharedSwapState *)swapState
+              withContext:(CGLContextObj)displayContext
+            withFunctions:(const rx::FunctionsGL *)functions;
+@end
+
+@implementation SwapLayer
+- (id)initWithSharedState:(rx::SharedSwapState *)swapState
+              withContext:(CGLContextObj)displayContext
+            withFunctions:(const rx::FunctionsGL *)functions
     {
-        mach_timebase_info(&timebaseInfo);
-    }
-
-    return (machTime * timebaseInfo.numer) / timebaseInfo.denom;
-}
-
-uint64_t NowInNanoseconds()
-{
-    return MachTimeToNanoseconds(mach_absolute_time());
-}
-
-}
-
-namespace rx
-{
-
-// A wrapper around CoreVideo's DisplayLink. It polls the screen vsync time,
-// and allows computing when is the next present time after a given time point.
-class DisplayLink
-{
-  public:
-    DisplayLink() : mDisplayLink(nullptr), mHostTimeRemainderNanos(0), mPresentIntervalNanos(0) {}
-
-    ~DisplayLink()
-    {
-        if (mDisplayLink != nullptr)
+        self = [super init];
+        if (self != nil)
         {
-            stop();
-            CVDisplayLinkRelease(mDisplayLink);
-            mDisplayLink = nullptr;
+            self.asynchronous = YES;
+            mDisplayContext   = displayContext;
+
+            initialized = false;
+            mSwapState  = swapState;
+            mFunctions  = functions;
+
+            [self setFrame:CGRectMake(0, 0, mSwapState->textures[0].width,
+                                      mSwapState->textures[0].height)];
         }
+        return self;
     }
 
-    void start()
+    - (CGLPixelFormatObj)copyCGLPixelFormatForDisplayMask:(uint32_t)mask
     {
-        CVDisplayLinkCreateWithActiveCGDisplays(&mDisplayLink);
-        ASSERT(mDisplayLink != nullptr);
-        CVDisplayLinkSetOutputCallback(mDisplayLink, &Callback, this);
-        CVDisplayLinkStart(mDisplayLink);
+        CGLPixelFormatAttribute attribs[] = {
+            kCGLPFADisplayMask, static_cast<CGLPixelFormatAttribute>(mask), kCGLPFAOpenGLProfile,
+            static_cast<CGLPixelFormatAttribute>(kCGLOGLPVersion_3_2_Core),
+            static_cast<CGLPixelFormatAttribute>(0)};
+
+        CGLPixelFormatObj pixelFormat = nullptr;
+        GLint numFormats = 0;
+        CGLChoosePixelFormat(attribs, &pixelFormat, &numFormats);
+
+        return pixelFormat;
     }
 
-    void stop()
+    - (CGLContextObj)copyCGLContextForPixelFormat:(CGLPixelFormatObj)pixelFormat
     {
-        ASSERT(mDisplayLink != nullptr);
-        CVDisplayLinkStop(mDisplayLink);
+        CGLContextObj context = nullptr;
+        CGLCreateContext(pixelFormat, mDisplayContext, &context);
+        return context;
     }
 
-    uint64_t nextPresentAfter(uint64_t time)
+    - (BOOL)canDrawInCGLContext:(CGLContextObj)glContext
+                    pixelFormat:(CGLPixelFormatObj)pixelFormat
+                   forLayerTime:(CFTimeInterval)timeInterval
+                    displayTime:(const CVTimeStamp *)timeStamp
     {
-        // Load the two variables locally to avoid them changing in the middle of the computation.
-        uint64_t presentInterval = mPresentIntervalNanos;
-        uint64_t remainder       = mHostTimeRemainderNanos;
+        BOOL result = NO;
 
-        if (presentInterval == 0)
+        pthread_mutex_lock(&mSwapState->mutex);
         {
-            return time;
+            if (mSwapState->lastRendered->swapId > mSwapState->beingPresented->swapId)
+            {
+                std::swap(mSwapState->lastRendered, mSwapState->beingPresented);
+                result = YES;
+            }
+        }
+        pthread_mutex_unlock(&mSwapState->mutex);
+
+        return result;
+    }
+
+    - (void)drawInCGLContext:(CGLContextObj)glContext
+                 pixelFormat:(CGLPixelFormatObj)pixelFormat
+                forLayerTime:(CFTimeInterval)timeInterval
+                 displayTime:(const CVTimeStamp *)timeStamp
+    {
+        CGLSetCurrentContext(glContext);
+        if (!initialized)
+        {
+            initialized = true;
+
+            mFunctions->genFramebuffers(1, &mReadFramebuffer);
         }
 
-        uint64_t nextSwapNumber = (time - remainder) / presentInterval + 1;
-        return nextSwapNumber * presentInterval + remainder;
+        const auto &texture = *mSwapState->beingPresented;
+        if ([self frame].size.width != texture.width || [self frame].size.height != texture.height)
+        {
+            [self setFrame:CGRectMake(0, 0, texture.width, texture.height)];
+        }
+
+        // TODO(cwallez) support 2.1 contexts too that don't have blitFramebuffer nor the
+        // GL_DRAW_FRAMEBUFFER_BINDING query
+        GLint drawFBO;
+        mFunctions->getIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawFBO);
+
+        mFunctions->bindFramebuffer(GL_FRAMEBUFFER, mReadFramebuffer);
+        mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                         texture.texture, 0);
+
+        mFunctions->bindFramebuffer(GL_READ_FRAMEBUFFER, mReadFramebuffer);
+        mFunctions->bindFramebuffer(GL_DRAW_FRAMEBUFFER, drawFBO);
+        mFunctions->blitFramebuffer(0, 0, texture.width, texture.height, 0, 0, texture.width,
+                                    texture.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+        // Call the super method to flush the context
+        [super drawInCGLContext:glContext
+                    pixelFormat:pixelFormat
+                   forLayerTime:timeInterval
+                    displayTime:timeStamp];
     }
+    @end
 
-    uint64_t getPresentInterval() const { return mPresentIntervalNanos; }
-
-  private:
-    static CVReturn Callback(CVDisplayLinkRef displayLink,
-                             const CVTimeStamp *now,
-                             const CVTimeStamp *outputTime,
-                             CVOptionFlags flagsIn,
-                             CVOptionFlags *flagsOut,
-                             void *userData)
+    namespace rx
     {
-        DisplayLink *link = reinterpret_cast<DisplayLink *>(userData);
-        link->tick(*outputTime);
-        return kCVReturnSuccess;
-    }
 
-    void tick(const CVTimeStamp &outputTime)
-    {
-        // This is called from a special high priority thread so by setting
-        // both member variables here we have a data race. However if we assume
-        // the present interval doesn't change, the data race disappears after
-        // the first tick.
-        // In addition computations using these member variables are made to
-        // produce a sensible result if one of the two members has the default
-        // value of 0.
-        uint64_t hostTimeNanos = MachTimeToNanoseconds(outputTime.hostTime);
-
-        uint64_t numerator            = outputTime.videoRefreshPeriod;
-        uint64_t denominator          = outputTime.videoTimeScale;
-        uint64_t presentIntervalNanos = (1000000000 * numerator) / denominator;
-
-        mHostTimeRemainderNanos = hostTimeNanos % presentIntervalNanos;
-        mPresentIntervalNanos   = presentIntervalNanos;
-    }
-
-    CVDisplayLinkRef mDisplayLink;
-
-    uint64_t mHostTimeRemainderNanos;
-    uint64_t mPresentIntervalNanos;
-};
-
-WindowSurfaceCGL::WindowSurfaceCGL(RendererGL *renderer,
-                                   CALayer *layer,
-                                   const FunctionsGL *functions)
-    : SurfaceGL(renderer),
-      mLayer(layer),
-      mFunctions(functions),
-      mStateManager(renderer->getStateManager()),
-      mWorkarounds(renderer->getWorkarounds()),
-      mDisplayLink(nullptr),
-      mCurrentSurface(0),
-      mFramebuffer(0),
-      mDSRenderbuffer(0)
+    WindowSurfaceCGL::WindowSurfaceCGL(RendererGL *renderer,
+                                       CALayer *layer,
+                                       const FunctionsGL *functions,
+                                       CGLContextObj context)
+        : SurfaceGL(renderer),
+          mSwapLayer(nil),
+          mCurrentSwapId(0),
+          mLayer(layer),
+          mContext(context),
+          mFunctions(functions),
+          mStateManager(renderer->getStateManager()),
+          mWorkarounds(renderer->getWorkarounds()),
+          mFramebuffer(0),
+          mDSRenderbuffer(0)
 {
-    for (auto &surface : mSurfaces)
-    {
-        surface.texture   = 0;
-        surface.ioSurface = nil;
-    }
+    pthread_mutex_init(&mSwapState.mutex, nullptr);
 }
 
 WindowSurfaceCGL::~WindowSurfaceCGL()
 {
+    pthread_mutex_destroy(&mSwapState.mutex);
     if (mFramebuffer != 0)
     {
         mFunctions->deleteFramebuffers(1, &mFramebuffer);
@@ -172,14 +172,19 @@ WindowSurfaceCGL::~WindowSurfaceCGL()
         mDSRenderbuffer = 0;
     }
 
-    for (auto &surface : mSurfaces)
+    if (mSwapLayer != nil)
     {
-        freeSurfaceData(&surface);
+        [mSwapLayer release];
+        mSwapLayer = nil;
     }
 
-    if (mDisplayLink != nullptr)
+    for (size_t i = 0; i < ArraySize(mSwapState.textures); ++i)
     {
-        SafeDelete(mDisplayLink);
+        if (mSwapState.textures[i].texture != 0)
+        {
+            mFunctions->deleteTextures(1, &mSwapState.textures[i].texture);
+            mSwapState.textures[i].texture = 0;
+        }
     }
 }
 
@@ -188,11 +193,24 @@ egl::Error WindowSurfaceCGL::initialize()
     unsigned width  = getWidth();
     unsigned height = getHeight();
 
-    for (auto &surface : mSurfaces)
+    for (size_t i = 0; i < ArraySize(mSwapState.textures); ++i)
     {
-        surface.lastPresentNanos = 0;
-        initializeSurfaceData(&surface, width, height);
+        mFunctions->genTextures(1, &mSwapState.textures[i].texture);
+        mStateManager->bindTexture(GL_TEXTURE_2D, mSwapState.textures[i].texture);
+        mFunctions->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                               GL_UNSIGNED_BYTE, nullptr);
+        mSwapState.textures[i].width  = width;
+        mSwapState.textures[i].height = height;
+        mSwapState.textures[i].swapId = 0;
     }
+    mSwapState.beingRendered  = &mSwapState.textures[0];
+    mSwapState.lastRendered   = &mSwapState.textures[1];
+    mSwapState.beingPresented = &mSwapState.textures[2];
+
+    mSwapLayer = [[SwapLayer alloc] initWithSharedState:&mSwapState
+                                            withContext:mContext
+                                          withFunctions:mFunctions];
+    [mLayer addSublayer:mSwapLayer];
 
     mFunctions->genRenderbuffers(1, &mDSRenderbuffer);
     mStateManager->bindRenderbuffer(GL_RENDERBUFFER, mDSRenderbuffer);
@@ -200,92 +218,46 @@ egl::Error WindowSurfaceCGL::initialize()
 
     mFunctions->genFramebuffers(1, &mFramebuffer);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
-    mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_RECTANGLE_ARB,
-                                     mSurfaces[0].texture, 0);
+    mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                     mSwapState.beingRendered->texture, 0);
     mFunctions->framebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER,
                                         mDSRenderbuffer);
-
-    mDisplayLink = new DisplayLink;
-    mDisplayLink->start();
 
     return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceCGL::makeCurrent()
 {
-    // TODO(cwallez) if it is the first makeCurrent set the viewport and scissor?
     return egl::Error(EGL_SUCCESS);
 }
 
 egl::Error WindowSurfaceCGL::swap()
 {
-    // Because we are rendering to IOSurfaces we have to implement swapBuffers ourselves
-    // (contrary to GLX, WGL or EGL) and have to send the IOSurfaces for presentation at the
-    // right time to avoid causing tearing or flickering. Likewise we must make sure we do
-    // not render to an IOSurface that is still being presented.
-    // ANGLE standalone cannot post function to be executed at a later time so we can only
-    // implement basic synchronization with the present time by sleeping.
-    uint64_t presentInterval = mDisplayLink->getPresentInterval();
-    uint64_t now             = NowInNanoseconds();
+    mFunctions->flush();
+    mSwapState.beingRendered->swapId = ++mCurrentSwapId;
 
+    pthread_mutex_lock(&mSwapState.mutex);
     {
-        Surface &surface = mSurfaces[mCurrentSurface];
-        // A flush is needed for the IOSurface to get the result of the GL operations
-        // as specified in the documentation of CGLTexImageIOSurface2D
-        mFunctions->flush();
+        std::swap(mSwapState.beingRendered, mSwapState.lastRendered);
+    }
+    pthread_mutex_unlock(&mSwapState.mutex);
 
-        // We can only send the IOSurface to the CALayer during a present window
-        // that is in the middle of two vsyncs, otherwise flickering can happen.
-        {
-            // The present window was determined empirically.
-            static const double kPresentWindowMin = 0.3;
-            static const double kPresentWindowMax = 0.7;
+    unsigned width  = getWidth();
+    unsigned height = getHeight();
+    auto &texture   = *mSwapState.beingRendered;
 
-            uint64_t nextPresent      = mDisplayLink->nextPresentAfter(now);
-            uint64_t presentWindowMin = nextPresent - presentInterval * (1.0 - kPresentWindowMin);
-            uint64_t presentWindowMax = nextPresent - presentInterval * (1.0 - kPresentWindowMax);
-            if (now <= presentWindowMin)
-            {
-                usleep((presentWindowMin - now) / 1000);
-            }
-            else if (now >= presentWindowMax)
-            {
-                uint64_t presentTarget = nextPresent + presentInterval * kPresentWindowMin;
-                usleep((presentTarget - now) / 1000);
-            }
-        }
-
-        // Put the IOSurface as the content of the layer
-        [CATransaction begin];
-        [mLayer setContents:(id)surface.ioSurface];
-        [CATransaction commit];
-
-        surface.lastPresentNanos = NowInNanoseconds();
+    if (texture.width != width || texture.height != texture.height)
+    {
+        mStateManager->bindTexture(GL_TEXTURE_2D, texture.texture);
+        mFunctions->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                               GL_UNSIGNED_BYTE, nullptr);
+        texture.width  = width;
+        texture.height = height;
     }
 
-    mCurrentSurface = (mCurrentSurface + 1) % ArraySize(mSurfaces);
-
-    {
-        Surface &surface = mSurfaces[mCurrentSurface];
-
-        {
-            // We need to wait a bit after a swap before rendering to the IOSurface again
-            // otherwise with a small desync between clocks could cause a flickering.
-            static const double kDrawWindowStart = 0.05;
-
-            uint64_t timePresentFinishes = mDisplayLink->nextPresentAfter(surface.lastPresentNanos);
-            timePresentFinishes += presentInterval * kDrawWindowStart;
-
-            if (now < timePresentFinishes)
-            {
-                usleep((timePresentFinishes - now) / 1000);
-            }
-        }
-
-        mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
-        mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                         GL_TEXTURE_RECTANGLE_ARB, surface.texture, 0);
-    }
+    mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebuffer);
+    mFunctions->framebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                                     mSwapState.beingRendered->texture, 0);
 
     return egl::Error(EGL_SUCCESS);
 }
@@ -302,7 +274,7 @@ egl::Error WindowSurfaceCGL::querySurfacePointerANGLE(EGLint attribute, void **v
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceCGL::bindTexImage(EGLint buffer)
+egl::Error WindowSurfaceCGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
     return egl::Error(EGL_SUCCESS);
@@ -316,7 +288,7 @@ egl::Error WindowSurfaceCGL::releaseTexImage(EGLint buffer)
 
 void WindowSurfaceCGL::setSwapInterval(EGLint interval)
 {
-    // TODO(cwallez) investigate the need for swapIntervals other than 1
+    // TODO(cwallez) investigate implementing swap intervals other than 0
 }
 
 EGLint WindowSurfaceCGL::getWidth() const
@@ -344,55 +316,6 @@ FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::Framebuffe
 {
     // TODO(cwallez) assert it happens only once?
     return new FramebufferGL(mFramebuffer, data, mFunctions, mWorkarounds, mStateManager);
-}
-
-void WindowSurfaceCGL::freeSurfaceData(Surface *surface)
-{
-    if (surface->texture != 0)
-    {
-        mFunctions->deleteTextures(1, &surface->texture);
-        surface->texture = 0;
-    }
-    if (surface->ioSurface != nil)
-    {
-        CFRelease(surface->ioSurface);
-        surface->ioSurface = nil;
-    }
-}
-
-egl::Error WindowSurfaceCGL::initializeSurfaceData(Surface *surface, int width, int height)
-{
-    CFDictionaryRef ioSurfaceOptions = nil;
-    {
-        unsigned pixelFormat            = 'BGRA';
-        const unsigned kBytesPerElement = 4;
-
-        NSDictionary *options = @{
-            (id) kIOSurfaceWidth : @(width),
-            (id) kIOSurfaceHeight : @(height),
-            (id) kIOSurfacePixelFormat : @(pixelFormat),
-            (id) kIOSurfaceBytesPerElement : @(kBytesPerElement),
-        };
-        ioSurfaceOptions = reinterpret_cast<CFDictionaryRef>(options);
-    }
-
-    surface->ioSurface = IOSurfaceCreate(ioSurfaceOptions);
-
-    mFunctions->genTextures(1, &surface->texture);
-    mFunctions->bindTexture(GL_TEXTURE_RECTANGLE_ARB, surface->texture);
-
-    CGLError error =
-        CGLTexImageIOSurface2D(CGLGetCurrentContext(), GL_TEXTURE_RECTANGLE_ARB, GL_RGBA, width,
-                               height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, surface->ioSurface, 0);
-
-    if (error != kCGLNoError)
-    {
-        std::string errorMessage =
-            "Could not create the IOSurfaces: " + std::string(CGLErrorString(error));
-        return egl::Error(EGL_BAD_NATIVE_WINDOW, errorMessage.c_str());
-    }
-
-    return egl::Error(EGL_SUCCESS);
 }
 
 }
