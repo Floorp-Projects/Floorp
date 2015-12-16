@@ -74,15 +74,15 @@ protected:
 class FilterNodeConvolveD2D1 : public FilterNodeD2D1
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1, override)
   FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
 
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter);
+  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
 
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue);
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue);
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue);
+  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override;
+  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue) override;
 
   virtual ID2D1Effect* InputEffect() override;
 
@@ -102,7 +102,7 @@ private:
 class FilterNodeExtendInputAdapterD2D1 : public FilterNodeD2D1
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeExtendInputAdapterD2D1)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeExtendInputAdapterD2D1, override)
   FilterNodeExtendInputAdapterD2D1(ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType);
 
   virtual ID2D1Effect* InputEffect() override { return mExtendInputEffect.get(); }
@@ -116,7 +116,7 @@ private:
 class FilterNodePremultiplyAdapterD2D1 : public FilterNodeD2D1
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplyAdapterD2D1)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodePremultiplyAdapterD2D1, override)
   FilterNodePremultiplyAdapterD2D1(ID2D1DeviceContext *aDC, FilterNodeD2D1 *aFilterNode, FilterType aType);
 
   virtual ID2D1Effect* InputEffect() override { return mPrePremultiplyEffect.get(); }
