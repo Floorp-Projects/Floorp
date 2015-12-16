@@ -819,7 +819,7 @@ loop.panel = (function(_, mozL10n) {
       loop.request("GetSelectedTabMetadata").then(function(metadata) {
         // Bail out when the component is not mounted (anymore).
         // This occurs during test runs. See bug 1174611 for more info.
-        if (!this.isMounted()) {
+        if (!this.isMounted() || !metadata) {
           return;
         }
 

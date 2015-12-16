@@ -6,12 +6,14 @@
  */
 "use strict";
 
-const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 var [, gHandlers] = LoopAPI.inspect();
 
 var handlers = [
   { windowId: null }, { windowId: null }
 ];
+
+var listenerCount = 41;
+var listenerIds = [];
 
 function promiseWindowId() {
   return new Promise(resolve => {
@@ -24,7 +26,8 @@ function promiseWindowId() {
         }
       }
     }]);
-    gHandlers.AddBrowserSharingListener({}, () => {});
+    listenerIds.push(++listenerCount);
+    gHandlers.AddBrowserSharingListener({ data: [listenerCount] }, () => {});
   });
 }
 
@@ -78,7 +81,7 @@ add_task(function* test_singleListener() {
   Assert.notEqual(initialWindowId, newWindowId, "Tab contentWindow IDs shouldn't be the same");
 
   // Now remove the listener.
-  gHandlers.RemoveBrowserSharingListener();
+  gHandlers.RemoveBrowserSharingListener({ data: [listenerIds.pop()] }, function() {});
 
   yield removeTabs();
 });
@@ -108,7 +111,7 @@ add_task(function* test_multipleListener() {
   Assert.notEqual(initialWindowId0, newWindowId0, "Tab contentWindow IDs shouldn't be the same");
 
   // Now remove the first listener.
-  gHandlers.RemoveBrowserSharingListener();
+  gHandlers.RemoveBrowserSharingListener({ data: [listenerIds.pop()] }, function() {});
 
   // Check that a new tab updates the window id.
   yield promiseWindowIdReceivedNewTab([handlers[1]]);
@@ -121,7 +124,7 @@ add_task(function* test_multipleListener() {
   Assert.notEqual(newWindowId1, nextWindowId1, "Second listener should have updated");
 
   // Cleanup.
-  gHandlers.RemoveBrowserSharingListener();
+  gHandlers.RemoveBrowserSharingListener({ data: [listenerIds.pop()] }, function() {});
 
   yield removeTabs();
 });
@@ -178,7 +181,9 @@ add_task(function* test_infoBar() {
   Assert.equal(getInfoBar(), null, "The notification should still be hidden");
 
   // Cleanup.
-  gHandlers.RemoveBrowserSharingListener();
+  for (let listenerId of listenerIds) {
+    gHandlers.RemoveBrowserSharingListener({ data: [listenerId] }, function() {});
+  }
   yield removeTabs();
   Services.prefs.clearUserPref(kPrefBrowserSharingInfoBar);
 });
