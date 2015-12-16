@@ -15,7 +15,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/BufferTexture.h"
-#include "mozilla/layers/YCbCrImageDataSerializer.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/ImageBridgeChild.h"  // for ImageBridgeChild
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsISupportsImpl.h"            // for Image::AddRef
@@ -112,14 +112,14 @@ uint8_t*
 SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   MOZ_ASSERT(!mTextureClient, "This image already has allocated data");
-  size_t size = YCbCrImageDataSerializer::ComputeMinBufferSize(aSize);
+  size_t size = ImageDataSerializer::ComputeYCbCrBufferSize(aSize);
   if (!size) {
     return nullptr;
   }
 
-  mTextureClient = TextureClient::CreateWithBufferSize(mCompositable->GetForwarder(),
-                                                       gfx::SurfaceFormat::YUV, size,
-                                                       mCompositable->GetTextureFlags());
+  mTextureClient = TextureClient::CreateForYCbCrWithBufferSize(mCompositable->GetForwarder(),
+                                                               gfx::SurfaceFormat::YUV, size,
+                                                               mCompositable->GetTextureFlags());
 
   // get new buffer _without_ setting mBuffer.
   if (!mTextureClient) {
@@ -132,11 +132,7 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   MappedYCbCrTextureData mapped;
   if (mTextureClient->BorrowMappedYCbCrData(mapped)) {
     // The caller expects a pointer to the beginning of the writable part of the
-    // buffer (after the metadata) which is where the y channel starts by default.
-    // The caller might choose to write the y channel at a different offset and
-    // if it does so, it will also update the metadata.
-    // Anyway, we return the y channel here but the intent is to obtain the start of
-    // the writable part of the buffer.
+    // buffer which is where the y channel starts by default.
     return mapped.y.data;
   } else {
     MOZ_CRASH();
@@ -146,35 +142,26 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 bool
 SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
+  // SetDataNoCopy is used to update YUV plane offsets without (re)allocating
+  // memory previously allocated with AllocateAndGetNewBuffer().
+
   MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
   if (!mTextureClient) {
     return false;
   }
   mData = aData;
   mSize = aData.mPicSize;
-  /* SetDataNoCopy is used to update YUV plane offsets without (re)allocating
-   * memory previously allocated with AllocateAndGetNewBuffer().
-   * serializer.GetData() returns the address of the memory previously allocated
-   * with AllocateAndGetNewBuffer(), that we subtract from the Y, Cb, Cr
-   * channels to compute 0-based offsets to pass to InitializeBufferInfo.
-   */
-  MappedYCbCrTextureData mapped;
-  if(!mTextureClient->BorrowMappedYCbCrData(mapped)) {
-    MOZ_CRASH();
-  }
-  YCbCrImageDataSerializer serializer(mapped.metadata, mBufferSize);
-  uint8_t *base = serializer.GetData();
+
+  uint8_t *base = GetBuffer();
   uint32_t yOffset = aData.mYChannel - base;
   uint32_t cbOffset = aData.mCbChannel - base;
   uint32_t crOffset = aData.mCrChannel - base;
-  serializer.InitializeBufferInfo(yOffset,
-                                  cbOffset,
-                                  crOffset,
-                                  aData.mYStride,
-                                  aData.mCbCrStride,
-                                  aData.mYSize,
-                                  aData.mCbCrSize,
-                                  aData.mStereoMode);
+
+  static_cast<BufferTextureData*>(mTextureClient->GetInternalData())->SetDesciptor(
+    YCbCrDescriptor(aData.mYSize, aData.mCbCrSize, yOffset, cbOffset, crOffset,
+                    aData.mStereoMode)
+  );
+
   return true;
 }
 
@@ -232,8 +219,7 @@ SharedPlanarYCbCrImage::Allocate(PlanarYCbCrData& aData)
   // do not set mBuffer like in PlanarYCbCrImage because the later
   // will try to manage this memory without knowing it belongs to a
   // shmem.
-  mBufferSize = YCbCrImageDataSerializer::ComputeMinBufferSize(mData.mYSize,
-                                                               mData.mCbCrSize);
+  mBufferSize = ImageDataSerializer::ComputeYCbCrBufferSize(mData.mYSize, mData.mCbCrSize);
   mSize = mData.mPicSize;
 
   mTextureClient->Unlock();
