@@ -15,7 +15,8 @@ task:
         type: directory
         path: '/home/worker/artifacts/'
         expires: '{{#from_now}}1 year{{/from_now}}'
-
+    features:
+      allowPtrace: true
   extra:
     treeherder:
       tier: 2

@@ -178,8 +178,6 @@ gfxFT2FontBase::GetGlyphWidth(DrawTarget& aDrawTarget, uint16_t aGID)
 bool
 gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
 {
-    cairo_t *cr = aContext->GetCairo();
-
     // The scaled font ctm is not relevant right here because
     // cairo_set_scaled_font does not record the scaled font itself, but
     // merely the font_face, font_matrix, font_options.  The scaled_font used
@@ -212,6 +210,7 @@ gfxFT2FontBase::SetupCairoFont(gfxContext *aContext)
     // what is set here.  It's too late to change things here as measuring has
     // already taken place.  We should really be measuring with a different
     // font for pdf and ps surfaces (bug 403513).
-    cairo_set_scaled_font(cr, cairoFont);
+    cairo_set_scaled_font(gfxContext::RefCairo(aContext->GetDrawTarget()),
+                          cairoFont);
     return true;
 }

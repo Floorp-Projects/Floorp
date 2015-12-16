@@ -509,8 +509,11 @@
           <![CDATA[
             try {
               this.messageManager.sendAsyncMessage("Browser:PurgeSessionHistory");
-            } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
+            } catch (ex) {
               // This can throw if the browser has started to go away.
+              if (ex.result != Components.results.NS_ERROR_NOT_INITIALIZED) {
+                throw ex;
+              }
             }
             this.webNavigation.canGoBack = false;
             this.webNavigation.canGoForward = false;

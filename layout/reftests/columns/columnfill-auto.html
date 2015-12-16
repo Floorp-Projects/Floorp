@@ -1,19 +1,68 @@
 <html>
   <head>
     <link rel="stylesheet" type="text/css" href="ahem.css" />
+  <style>
+html,body {
+    color:black; background-color:white; font-size:16px; padding:5px; margin:0;
+}
+mask {
+  position: absolute;
+  top:0; bottom:0; left:8px; width:5px;
+  background: black;
+}
+
+.rel {
+  position: relative;
+}
+.columns {
+  -moz-column-width: 12em;
+  -moz-column-gap: 0;
+  -moz-column-fill: auto;
+  height: 8em;
+  font-family: ahem;
+  font-size: 12pt;
+  line-height: 1.1;
+}
+a {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  bottom: 0;
+  left: 0;
+  background: blue;
+}
+f {
+  position: fixed;
+  width: 10px;
+  height: 10px;
+  bottom: 0;
+  left: 100px;
+  background: lime;
+}
+  </style>
   </head>
 
   <body>
-    <div style="width: 100%">
-    <div style="-moz-column-width: 200px;
-                -moz-column-gap: 0px;
-                -moz-column-fill: auto;
-                height: 120px;
-                font-family: ahem;
-                font-size: 12pt;
-		line-height: 1.1;">
-      Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed feugiat libero vel diam. Pellentesque pulvinar commodo lacus. Sed fringilla. Sed lectus. Praesent laoreet orci vitae nisi. Duis venenatis tristique massa. Sed commodo diam at mauris.
+    <div class="columns rel">
+      <a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed
     </div>
+
+    <div class="columns rel" style="overflow: hidden">
+      <a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed
     </div>
+
+    <div class="columns rel" style="overflow: hidden">
+      <f></f>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed
+    </div>
+
+    <div class="columns" style="overflow: hidden">
+      <a></a>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed
+    </div>
+
+    <div class="columns" style="overflow: hidden">
+      <f style="left:120px"></f>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Sed
+    </div>
+
+<mask></mask>
   </body>
 </html>

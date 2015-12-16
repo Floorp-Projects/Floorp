@@ -389,11 +389,13 @@
         <getter><![CDATA[
           // A generator yielding all collapsed chatboxes, in the order in
           // which they should be restored.
-          let child = this.lastElementChild;
-          while (child) {
-            if (child.collapsed)
-              yield child;
-            child = child.previousElementSibling;
+          return function*() {
+            let child = this.lastElementChild;
+            while (child) {
+              if (child.collapsed)
+                yield child;
+              child = child.previousElementSibling;
+            }
           }
         ]]></getter>
       </property>
@@ -401,11 +403,13 @@
       <property name="visibleChildren">
         <getter><![CDATA[
           // A generator yielding all non-collapsed chatboxes.
-          let child = this.firstElementChild;
-          while (child) {
-            if (!child.collapsed)
-              yield child;
-            child = child.nextElementSibling;
+          return function*() {
+            let child = this.firstElementChild;
+            while (child) {
+              if (!child.collapsed)
+                yield child;
+              child = child.nextElementSibling;
+            }
           }
         ]]></getter>
       </property>
@@ -415,9 +419,11 @@
           // A generator yielding all children which are able to be collapsed
           // in the order in which they should be collapsed.
           // (currently this is all visible ones other than the selected one.)
-          for (let child of this.visibleChildren)
-            if (child != this.selectedChat)
-              yield child;
+          return function*() {
+            for (let child of this.visibleChildren())
+              if (child != this.selectedChat)
+                yield child;
+          }
         ]]></getter>
       </property>
 
@@ -627,14 +633,14 @@
             this.cachedWidthNub = this.calcTotalWidthOf(this.nub);
           currentWidth += this.cachedWidthNub;
         }
-        for (let child of this.visibleChildren) {
+        for (let child of this.visibleChildren()) {
           currentWidth += this.getTotalChildWidth(child);
         }
 
         if (currentWidth > availWidth) {
           // we need to collapse some.
           let toCollapse = [];
-          for (let child of this.collapsibleChildren) {
+          for (let child of this.collapsibleChildren()) {
             if (currentWidth <= availWidth)
               break;
             toCollapse.push(child);
@@ -649,7 +655,7 @@
           // XXX - if this was clever, it could know when removing the nub
           // leaves enough space to show all collapsed
           let toShow = [];
-          for (let child of this.collapsedChildren) {
+          for (let child of this.collapsedChildren()) {
             currentWidth += this.getTotalChildWidth(child);
             if (currentWidth > availWidth)
               break;
