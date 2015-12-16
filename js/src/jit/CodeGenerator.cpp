@@ -10374,6 +10374,17 @@ CodeGenerator::visitCheckObjCoercible(LCheckObjCoercible* ins)
     masm.bind(&done);
 }
 
+typedef bool (*CheckSelfHostedFn)(JSContext*, HandleValue);
+static const VMFunction CheckSelfHostedInfo = FunctionInfo<CheckSelfHostedFn>(js::Debug_CheckSelfHosted);
+
+void
+CodeGenerator::visitDebugCheckSelfHosted(LDebugCheckSelfHosted* ins)
+{
+    ValueOperand checkValue = ToValue(ins, LDebugCheckSelfHosted::CheckValue);
+    pushArg(checkValue);
+    callVM(CheckSelfHostedInfo, ins);
+}
+
 void
 CodeGenerator::visitRandom(LRandom* ins)
 {

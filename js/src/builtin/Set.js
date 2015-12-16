@@ -29,7 +29,7 @@ function SetForEach(callbackfn, thisArg = undefined) {
         if (result.done)
             break;
         var value = result.value;
-        callFunction(callbackfn, thisArg, value, value, S);
+        callContentFunction(callbackfn, thisArg, value, value, S);
     }
 }
 

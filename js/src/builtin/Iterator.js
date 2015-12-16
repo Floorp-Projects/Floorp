@@ -11,7 +11,7 @@ var LegacyIteratorWrapperMap = new std_WeakMap();
 function LegacyIteratorNext(arg) {
     var iter = callFunction(std_WeakMap_get, LegacyIteratorWrapperMap, this);
     try {
-        return { value: callFunction(iter.next, iter, arg), done: false };
+        return { value: callContentFunction(iter.next, iter, arg), done: false };
     } catch (e) {
         if (e instanceof std_StopIteration)
             return { value: undefined, done: true };
@@ -22,7 +22,7 @@ function LegacyIteratorNext(arg) {
 function LegacyIteratorThrow(exn) {
     var iter = callFunction(std_WeakMap_get, LegacyIteratorWrapperMap, this);
     try {
-        return { value: callFunction(iter.throw, iter, exn), done: false };
+        return { value: callContentFunction(iter.throw, iter, exn), done: false };
     } catch (e) {
         if (e instanceof std_StopIteration)
             return { value: undefined, done: true };
