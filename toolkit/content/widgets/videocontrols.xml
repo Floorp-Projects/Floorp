@@ -794,16 +794,18 @@
                 },
 
                 seekToPosition : function(newPosition) {
+                    let { AppConstants } =
+                        Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
                     newPosition /= 1000; // convert from ms
                     this.log("+++ seeking to " + newPosition);
-#ifdef MOZ_WIDGET_GONK
-                    // We use fastSeek() on B2G, and an accurate (but slower)
-                    // seek on other platforms (that are likely to be higher
-                    // perf).
-                    this.video.fastSeek(newPosition);
-#else
-                    this.video.currentTime = newPosition;
-#endif
+                    if (AppConstants.platform == "gonk") {
+                        // We use fastSeek() on B2G, and an accurate (but slower)
+                        // seek on other platforms (that are likely to be higher
+                        // perf).
+                        this.video.fastSeek(newPosition);
+                    } else {
+                        this.video.currentTime = newPosition;
+                    }
                 },
 
                 setVolume : function(newVolume) {
@@ -1252,22 +1254,24 @@
                     if (!this.video.hasAttribute("controls"))
                         return;
 
+                    let { AppConstants } =
+                        Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
                     var keystroke = "";
                     if (event.altKey)
                         keystroke += "alt-";
                     if (event.shiftKey)
                         keystroke += "shift-";
-#ifdef XP_MACOSX
-                    if (event.metaKey)
-                        keystroke += "accel-";
-                    if (event.ctrlKey)
-                        keystroke += "control-";
-#else
-                    if (event.metaKey)
-                        keystroke += "meta-";
-                    if (event.ctrlKey)
-                        keystroke += "accel-";
-#endif
+                    if (AppConstants.platform == "macosx") {
+                        if (event.metaKey)
+                            keystroke += "accel-";
+                        if (event.ctrlKey)
+                            keystroke += "control-";
+                    } else {
+                        if (event.metaKey)
+                            keystroke += "meta-";
+                        if (event.ctrlKey)
+                            keystroke += "accel-";
+                    }
 
                     switch (event.keyCode) {
                         case KeyEvent.DOM_VK_UP:

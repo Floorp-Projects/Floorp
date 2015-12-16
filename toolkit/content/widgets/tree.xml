@@ -22,12 +22,7 @@
       <method name="_isAccelPressed">
         <parameter name="aEvent"/>
         <body><![CDATA[
-# Workaround until bug 302174 is fixed
-#ifdef XP_MACOSX
-          return aEvent.metaKey;
-#else
-          return aEvent.ctrlKey;
-#endif
+          return aEvent.getModifierState("Accel");
         ]]></body>
       </method>
     </implementation>
@@ -93,11 +88,11 @@
                 onget="return this.view; /*.QueryInterface(Components.interfaces.nsIXULTreeBuilder)*/"
                 readonly="true"/>
       <field name="pageUpOrDownMovesSelection">
-#ifdef XP_MACOSX
-        false
-#else
-        true
-#endif
+        {
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          AppConstants.platform != "macosx";
+        }
       </field>
       <property name="keepCurrentInView"
                 onget="return (this.getAttribute('keepcurrentinview') == 'true');"
@@ -676,16 +671,18 @@
             return true;
           }
 
-#ifdef XP_MACOSX
-          // See if we can edit the cell.
-          var row = this.currentIndex;
-          if (this._cellSelType) {
-            var column = this.view.selection.currentColumn;
-            var startedEditing = this.startEditing(row, column);
-            if (startedEditing)
-              return true;
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          if (AppConstants.platform == "macosx") {
+            // See if we can edit the cell.
+            var row = this.currentIndex;
+            if (this._cellSelType) {
+              var column = this.view.selection.currentColumn;
+              var startedEditing = this.startEditing(row, column);
+              if (startedEditing)
+                return true;
+            }
           }
-#endif
           return this.changeOpenState(this.currentIndex);
         ]]></body>
       </method>
@@ -1420,12 +1417,12 @@
           if (event.target != event.originalTarget)
             return;
 
-#ifdef XP_WIN
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           // On Windows multiple clicking on tree columns only cycles one time
           // every 2 clicks.
-          if (event.detail % 2 == 0)
+          if (AppConstants.platform == "win" && event.detail % 2 == 0)
             return;
-#endif
 
           var tree = this.parentNode.parentNode;
           var column = tree.columns.getColumnFor(this);

@@ -1818,8 +1818,9 @@ this.UITour = {
         this.getAvailableTargets(aMessageManager, aWindow, aCallbackID);
         break;
       case "loop":
+        const FTU_VERSION = 1;
         this.sendPageCallback(aMessageManager, aCallbackID, {
-          gettingStartedSeen: Services.prefs.getBoolPref("loop.gettingStarted.seen"),
+          gettingStartedSeen: (Services.prefs.getIntPref("loop.gettingStarted.latestFTUVersion") >= FTU_VERSION),
         });
         break;
       case "search":
