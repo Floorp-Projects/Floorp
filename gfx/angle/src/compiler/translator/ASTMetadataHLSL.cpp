@@ -66,13 +66,13 @@ class PullGradient : public TIntermTraverser
         }
     }
 
-    bool visitLoop(Visit visit, TIntermLoop *loop)
+    bool visitLoop(Visit visit, TIntermLoop *loop) override
     {
         visitControlFlow(visit, loop);
         return true;
     }
 
-    bool visitSelection(Visit visit, TIntermSelection *selection)
+    bool visitSelection(Visit visit, TIntermSelection *selection) override
     {
         visitControlFlow(visit, selection);
         return true;
@@ -333,7 +333,7 @@ class PushDiscontinuousLoops : public TIntermTraverser
         ASSERT(mNestedDiscont == (mMetadata->mCalledInDiscontinuousLoop ? 1 : 0));
     }
 
-    bool visitLoop(Visit visit, TIntermLoop *loop)
+    bool visitLoop(Visit visit, TIntermLoop *loop) override
     {
         bool isDiscontinuous = mMetadata->mDiscontinuousLoops.count(loop) > 0;
 

@@ -15,26 +15,53 @@
 namespace angle
 {
 
-void SplitString(const std::string &input,
-                 char delimiter,
-                 std::vector<std::string> *tokensOut)
-{
-    std::istringstream stream(input);
-    std::string token;
+const char kWhitespaceASCII[] = " \f\n\r\t\v";
 
-    while (std::getline(stream, token, delimiter))
+std::vector<std::string> SplitString(const std::string &input,
+                                     const std::string &delimiters,
+                                     WhitespaceHandling whitespace,
+                                     SplitResult resultType)
+{
+    std::vector<std::string> result;
+    if (input.empty())
     {
-        if (!token.empty())
+        return result;
+    }
+
+    std::string::size_type start = 0;
+    while (start != std::string::npos)
+    {
+        auto end = input.find_first_of(delimiters, start);
+
+        std::string piece;
+        if (end == std::string::npos)
         {
-            tokensOut->push_back(token);
+            piece = input.substr(start);
+            start = std::string::npos;
+        }
+        else
+        {
+            piece = input.substr(start, end - start);
+            start = end + 1;
+        }
+
+        if (whitespace == TRIM_WHITESPACE)
+        {
+            piece = TrimString(piece, kWhitespaceASCII);
+        }
+
+        if (resultType == SPLIT_WANT_ALL || !piece.empty())
+        {
+            result.push_back(piece);
         }
     }
+
+    return result;
 }
 
 void SplitStringAlongWhitespace(const std::string &input,
                                 std::vector<std::string> *tokensOut)
 {
-    const char *delimiters = " \f\n\r\t\v";
 
     std::istringstream stream(input);
     std::string line;
@@ -42,7 +69,7 @@ void SplitStringAlongWhitespace(const std::string &input,
     while (std::getline(stream, line))
     {
         size_t prev = 0, pos;
-        while ((pos = line.find_first_of(delimiters, prev)) != std::string::npos)
+        while ((pos = line.find_first_of(kWhitespaceASCII, prev)) != std::string::npos)
         {
             if (pos > prev)
                 tokensOut->push_back(line.substr(prev, pos - prev));
@@ -51,6 +78,23 @@ void SplitStringAlongWhitespace(const std::string &input,
         if (prev < line.length())
             tokensOut->push_back(line.substr(prev, std::string::npos));
     }
+}
+
+std::string TrimString(const std::string &input, const std::string &trimChars)
+{
+    auto begin = input.find_first_not_of(trimChars);
+    if (begin == std::string::npos)
+    {
+        return "";
+    }
+
+    std::string::size_type end = input.find_last_not_of(trimChars);
+    if (end == std::string::npos)
+    {
+        return input.substr(begin);
+    }
+
+    return input.substr(begin, end - begin + 1);
 }
 
 bool HexStringToUInt(const std::string &input, unsigned int *uintOut)

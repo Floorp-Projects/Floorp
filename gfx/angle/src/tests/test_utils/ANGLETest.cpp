@@ -1,6 +1,16 @@
+//
+// Copyright 2015 The ANGLE Project Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+//
+// ANGLETest:
+//   Implementation of common ANGLE testing fixture.
+//
+
 #include "ANGLETest.h"
 #include "EGLWindow.h"
 #include "OSWindow.h"
+#include "system_utils.h"
 
 ANGLETest::ANGLETest()
     : mEGLWindow(nullptr),
@@ -47,10 +57,16 @@ void ANGLETest::SetUp()
     // taking OpenGL traces can guess the size of the default framebuffer and show it
     // in their UIs
     glViewport(0, 0, mWidth, mHeight);
+
+    const auto &info = testing::UnitTest::GetInstance()->current_test_info();
+    angle::WriteDebugMessage("Entering %s.%s\n", info->test_case_name(), info->name());
 }
 
 void ANGLETest::TearDown()
 {
+    const auto &info = testing::UnitTest::GetInstance()->current_test_info();
+    angle::WriteDebugMessage("Exiting %s.%s\n", info->test_case_name(), info->name());
+
     swapBuffers();
     mOSWindow->messageLoop();
 

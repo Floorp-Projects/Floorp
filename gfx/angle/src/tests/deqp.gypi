@@ -112,6 +112,7 @@
         [
             '4091', # typedef ignored when no variable is declared
             '4100',
+            '4125', # decimal digit terminates octal escape sequence
             '4127', # conditional expression constant
             '4244', # possible loss of data
             '4245', # argument signed/unsigned mismatch
@@ -684,46 +685,86 @@
             '<(deqp_path)/modules/egl/teglAndroidUtil.hpp',
             '<(deqp_path)/modules/egl/teglApiCase.cpp',
             '<(deqp_path)/modules/egl/teglApiCase.hpp',
+            '<(deqp_path)/modules/egl/teglBufferAgeTests.cpp',
+            '<(deqp_path)/modules/egl/teglBufferAgeTests.hpp',
             '<(deqp_path)/modules/egl/teglChooseConfigReference.cpp',
             '<(deqp_path)/modules/egl/teglChooseConfigReference.hpp',
             '<(deqp_path)/modules/egl/teglChooseConfigTests.cpp',
             '<(deqp_path)/modules/egl/teglChooseConfigTests.hpp',
-            '<(deqp_path)/modules/egl/teglQueryConfigTests.cpp',
-            '<(deqp_path)/modules/egl/teglQueryConfigTests.hpp',
+            '<(deqp_path)/modules/egl/teglClientExtensionTests.cpp',
+            '<(deqp_path)/modules/egl/teglClientExtensionTests.hpp',
             '<(deqp_path)/modules/egl/teglColorClearCase.cpp',
             '<(deqp_path)/modules/egl/teglColorClearCase.hpp',
             '<(deqp_path)/modules/egl/teglColorClearTests.cpp',
             '<(deqp_path)/modules/egl/teglColorClearTests.hpp',
             '<(deqp_path)/modules/egl/teglConfigList.cpp',
             '<(deqp_path)/modules/egl/teglConfigList.hpp',
+            '<(deqp_path)/modules/egl/teglCreateContextExtTests.cpp',
+            '<(deqp_path)/modules/egl/teglCreateContextExtTests.hpp',
             '<(deqp_path)/modules/egl/teglCreateContextTests.cpp',
             '<(deqp_path)/modules/egl/teglCreateContextTests.hpp',
-            '<(deqp_path)/modules/egl/teglQueryContextTests.cpp',
-            '<(deqp_path)/modules/egl/teglQueryContextTests.hpp',
             '<(deqp_path)/modules/egl/teglCreateSurfaceTests.cpp',
             '<(deqp_path)/modules/egl/teglCreateSurfaceTests.hpp',
-            '<(deqp_path)/modules/egl/teglQuerySurfaceTests.cpp',
-            '<(deqp_path)/modules/egl/teglQuerySurfaceTests.hpp',
             '<(deqp_path)/modules/egl/teglGetProcAddressTests.cpp',
             '<(deqp_path)/modules/egl/teglGetProcAddressTests.hpp',
             '<(deqp_path)/modules/egl/teglGLES1RenderUtil.cpp',
             '<(deqp_path)/modules/egl/teglGLES1RenderUtil.hpp',
             '<(deqp_path)/modules/egl/teglGLES2RenderUtil.cpp',
             '<(deqp_path)/modules/egl/teglGLES2RenderUtil.hpp',
-            '<(deqp_path)/modules/egl/teglImageUtil.cpp',
-            '<(deqp_path)/modules/egl/teglImageUtil.hpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharedRenderingPerfTests.cpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharedRenderingPerfTests.hpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharingTests.cpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharingTests.hpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharingThreadedTests.cpp',
+            '<(deqp_path)/modules/egl/teglGLES2SharingThreadedTests.hpp',
+            '<(deqp_path)/modules/egl/teglImageFormatTests.cpp',
+            '<(deqp_path)/modules/egl/teglImageFormatTests.hpp',
             '<(deqp_path)/modules/egl/teglImageTests.cpp',
             '<(deqp_path)/modules/egl/teglImageTests.hpp',
+            '<(deqp_path)/modules/egl/teglImageUtil.cpp',
+            '<(deqp_path)/modules/egl/teglImageUtil.hpp',
             '<(deqp_path)/modules/egl/teglInfoTests.cpp',
             '<(deqp_path)/modules/egl/teglInfoTests.hpp',
+            '<(deqp_path)/modules/egl/teglMakeCurrentPerfTests.cpp',
+            '<(deqp_path)/modules/egl/teglMakeCurrentPerfTests.hpp',
+            '<(deqp_path)/modules/egl/teglMemoryStressTests.cpp',
+            '<(deqp_path)/modules/egl/teglMemoryStressTests.hpp',
+            '<(deqp_path)/modules/egl/teglMultiThreadTests.cpp',
+            '<(deqp_path)/modules/egl/teglMultiThreadTests.hpp',
+            '<(deqp_path)/modules/egl/teglNativeColorMappingTests.cpp',
+            '<(deqp_path)/modules/egl/teglNativeColorMappingTests.hpp',
+            '<(deqp_path)/modules/egl/teglNativeCoordMappingTests.cpp',
+            '<(deqp_path)/modules/egl/teglNativeCoordMappingTests.hpp',
             '<(deqp_path)/modules/egl/teglNegativeApiTests.cpp',
             '<(deqp_path)/modules/egl/teglNegativeApiTests.hpp',
+            '<(deqp_path)/modules/egl/teglNegativePartialUpdateTests.cpp',
+            '<(deqp_path)/modules/egl/teglNegativePartialUpdateTests.hpp',
+            '<(deqp_path)/modules/egl/teglPreservingSwapTests.cpp',
+            '<(deqp_path)/modules/egl/teglPreservingSwapTests.hpp',
+            '<(deqp_path)/modules/egl/teglPartialUpdateTests.cpp',
+            '<(deqp_path)/modules/egl/teglPartialUpdateTests.hpp',
+            '<(deqp_path)/modules/egl/teglQueryConfigTests.cpp',
+            '<(deqp_path)/modules/egl/teglQueryConfigTests.hpp',
+            '<(deqp_path)/modules/egl/teglQueryContextTests.cpp',
+            '<(deqp_path)/modules/egl/teglQueryContextTests.hpp',
+            '<(deqp_path)/modules/egl/teglQuerySurfaceTests.cpp',
+            '<(deqp_path)/modules/egl/teglQuerySurfaceTests.hpp',
             '<(deqp_path)/modules/egl/teglRenderCase.cpp',
             '<(deqp_path)/modules/egl/teglRenderCase.hpp',
             '<(deqp_path)/modules/egl/teglRenderTests.cpp',
             '<(deqp_path)/modules/egl/teglRenderTests.hpp',
+            '<(deqp_path)/modules/egl/teglResizeTests.cpp',
+            '<(deqp_path)/modules/egl/teglResizeTests.hpp',
             '<(deqp_path)/modules/egl/teglSimpleConfigCase.cpp',
             '<(deqp_path)/modules/egl/teglSimpleConfigCase.hpp',
+            '<(deqp_path)/modules/egl/teglSurfacelessContextTests.cpp',
+            '<(deqp_path)/modules/egl/teglSurfacelessContextTests.hpp',
+            '<(deqp_path)/modules/egl/teglSwapBuffersTests.cpp',
+            '<(deqp_path)/modules/egl/teglSwapBuffersTests.hpp',
+            '<(deqp_path)/modules/egl/teglSwapBuffersWithDamageTests.cpp',
+            '<(deqp_path)/modules/egl/teglSwapBuffersWithDamageTests.hpp',
+            '<(deqp_path)/modules/egl/teglSyncTests.cpp',
+            '<(deqp_path)/modules/egl/teglSyncTests.hpp',
             '<(deqp_path)/modules/egl/teglTestCase.cpp',
             '<(deqp_path)/modules/egl/teglTestCase.hpp',
             '<(deqp_path)/modules/egl/teglTestPackage.cpp',
@@ -731,38 +772,6 @@
             '<(deqp_path)/modules/egl/teglTestPackageEntry.cpp',
             '<(deqp_path)/modules/egl/teglVGRenderUtil.cpp',
             '<(deqp_path)/modules/egl/teglVGRenderUtil.hpp',
-            '<(deqp_path)/modules/egl/teglImageFormatTests.hpp',
-            '<(deqp_path)/modules/egl/teglImageFormatTests.cpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharingTests.hpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharingTests.cpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharingThreadedTests.hpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharingThreadedTests.cpp',
-            '<(deqp_path)/modules/egl/teglSyncTests.hpp',
-            '<(deqp_path)/modules/egl/teglSyncTests.cpp',
-            '<(deqp_path)/modules/egl/teglMultiThreadTests.hpp',
-            '<(deqp_path)/modules/egl/teglMultiThreadTests.cpp',
-            '<(deqp_path)/modules/egl/teglMemoryStressTests.hpp',
-            '<(deqp_path)/modules/egl/teglMemoryStressTests.cpp',
-            '<(deqp_path)/modules/egl/teglMakeCurrentPerfTests.hpp',
-            '<(deqp_path)/modules/egl/teglMakeCurrentPerfTests.cpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharedRenderingPerfTests.hpp',
-            '<(deqp_path)/modules/egl/teglGLES2SharedRenderingPerfTests.cpp',
-            '<(deqp_path)/modules/egl/teglPreservingSwapTests.hpp',
-            '<(deqp_path)/modules/egl/teglPreservingSwapTests.cpp',
-            '<(deqp_path)/modules/egl/teglClientExtensionTests.hpp',
-            '<(deqp_path)/modules/egl/teglClientExtensionTests.cpp',
-            '<(deqp_path)/modules/egl/teglCreateContextExtTests.hpp',
-            '<(deqp_path)/modules/egl/teglCreateContextExtTests.cpp',
-            '<(deqp_path)/modules/egl/teglSurfacelessContextTests.hpp',
-            '<(deqp_path)/modules/egl/teglSurfacelessContextTests.cpp',
-            '<(deqp_path)/modules/egl/teglSwapBuffersTests.hpp',
-            '<(deqp_path)/modules/egl/teglSwapBuffersTests.cpp',
-            '<(deqp_path)/modules/egl/teglNativeColorMappingTests.hpp',
-            '<(deqp_path)/modules/egl/teglNativeColorMappingTests.cpp',
-            '<(deqp_path)/modules/egl/teglNativeCoordMappingTests.hpp',
-            '<(deqp_path)/modules/egl/teglNativeCoordMappingTests.cpp',
-            '<(deqp_path)/modules/egl/teglResizeTests.hpp',
-            '<(deqp_path)/modules/egl/teglResizeTests.cpp',
         ],
         'deqp_libtester_decpp_sources':
         [
@@ -782,6 +791,7 @@
             '<(deqp_path)/framework/delibs/decpp/deRingBuffer.cpp',
             '<(deqp_path)/framework/delibs/decpp/deSemaphore.cpp',
             '<(deqp_path)/framework/delibs/decpp/deSharedPtr.cpp',
+            '<(deqp_path)/framework/delibs/decpp/deSha1.cpp',
             '<(deqp_path)/framework/delibs/decpp/deSocket.cpp',
             '<(deqp_path)/framework/delibs/decpp/deSTLUtil.cpp',
             '<(deqp_path)/framework/delibs/decpp/deStringUtil.cpp',
@@ -860,6 +870,7 @@
             '<(deqp_path)/framework/delibs/debase/deMemory.c',
             '<(deqp_path)/framework/delibs/debase/deRandom.c',
             '<(deqp_path)/framework/delibs/debase/deString.c',
+            '<(deqp_path)/framework/delibs/debase/deSha1.c',
             '<(deqp_path)/framework/delibs/deimage/deImage.c',
             '<(deqp_path)/framework/delibs/deimage/deTarga.c',
             '<(deqp_path)/framework/delibs/depool/deMemPool.c',
@@ -920,6 +931,7 @@
             '<(deqp_path)/framework/opengl/gluProgramInterfaceQuery.cpp',
             '<(deqp_path)/framework/opengl/gluRenderConfig.cpp',
             '<(deqp_path)/framework/opengl/gluRenderContext.cpp',
+            '<(deqp_path)/framework/opengl/gluShaderLibrary.cpp',
             '<(deqp_path)/framework/opengl/gluShaderProgram.cpp',
             '<(deqp_path)/framework/opengl/gluShaderUtil.cpp',
             '<(deqp_path)/framework/opengl/gluStateReset.cpp',
@@ -1172,9 +1184,8 @@
                                 {
                                     'VCCLCompilerTool':
                                     {
-                                        # dEQP requires exceptions and RTTI
+                                        # dEQP requires exceptions
                                         'ExceptionHandling': 1,
-                                        'RuntimeTypeInfo': 'true',
                                     },
                                     'VCLinkerTool':
                                     {
@@ -1201,6 +1212,28 @@
                                                 ],
                                             }],
                                         ],
+                                    },
+                                },
+                            },
+
+                            'Debug_Base':
+                            {
+                                'msvs_settings':
+                                {
+                                    'VCCLCompilerTool':
+                                    {
+                                        'RuntimeTypeInfo': 'true', # dEQP needs RTTI
+                                    },
+                                },
+                            },
+
+                            'Release_Base':
+                            {
+                                'msvs_settings':
+                                {
+                                    'VCCLCompilerTool':
+                                    {
+                                        'RuntimeTypeInfo': 'true', # dEQP needs RTTI
                                     },
                                 },
                             },
@@ -1464,22 +1497,6 @@
                         '<(angle_path)/util/util.gyp:angle_util',
                     ],
 
-                    'copies':
-                    [
-                        {
-                            'destination': '<(PRODUCT_DIR)/deqp_support',
-                            'files':
-                            [
-                                'deqp_support/dEQP-EGL-cases.txt.gz',
-                                'deqp_support/dEQP-GLES2-cases.txt.gz',
-                                'deqp_support/dEQP-GLES3-cases.txt.gz',
-                                'deqp_support/deqp_egl_test_expectations.txt',
-                                'deqp_support/deqp_gles2_test_expectations.txt',
-                                'deqp_support/deqp_gles3_test_expectations.txt',
-                            ],
-                        },
-                    ],
-
                     'direct_dependent_settings':
                     {
                         'include_dirs':
@@ -1517,7 +1534,9 @@
 
                         'conditions':
                         [
-                            ['OS=="linux"',
+                            # NOTE(smcgruer): Guarding with use_libpci allows gyp to run successfully
+                            # on systems without libpci, but the test targets will not compile or link.
+                            ['OS=="linux" and use_libpci==1',
                             {
                                 'ldflags':
                                 [
@@ -1544,19 +1563,6 @@
                             }],
                         ],
                     },
-
-                    'conditions':
-                    [
-                        ['angle_standalone==1',
-                        {
-                            'dependencies': [ 'angle_zlib' ],
-                            'export_dependent_settings': [ 'angle_zlib' ],
-                        },
-                        { # angle_standalone!=1
-                            'dependencies': [ '<(zlib_path)/zlib.gyp:zlib' ],
-                            'export_dependent_settings': [ '<(zlib_path)/zlib.gyp:zlib' ],
-                        }],
-                    ],
                 },
             ], # targets
         }], # angle_build_deqp_gtest_support

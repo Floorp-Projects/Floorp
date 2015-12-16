@@ -229,21 +229,15 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
     const gl::FramebufferAttachment *colorAttachment = fboData.getFirstColorAttachment();
     if (colorAttachment != nullptr)
     {
-        framebufferSize.width = colorAttachment->getWidth();
-        framebufferSize.height = colorAttachment->getHeight();
-        framebufferSize.depth = 1;
+        framebufferSize = colorAttachment->getSize();
     }
     else if (depthAttachment != nullptr)
     {
-        framebufferSize.width = depthAttachment->getWidth();
-        framebufferSize.height = depthAttachment->getHeight();
-        framebufferSize.depth = 1;
+        framebufferSize = depthAttachment->getSize();
     }
     else if (stencilAttachment != nullptr)
     {
-        framebufferSize.width = stencilAttachment->getWidth();
-        framebufferSize.height = stencilAttachment->getHeight();
-        framebufferSize.depth = 1;
+        framebufferSize = stencilAttachment->getSize();
     }
     else
     {

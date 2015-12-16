@@ -226,24 +226,25 @@ bool TParseContext::precisionErrorCheck(const TSourceLoc &line,
 {
     if (!mChecksPrecisionErrors)
         return false;
-    switch (type)
+    if (precision == EbpUndefined)
     {
-        case EbtFloat:
-            if (precision == EbpUndefined)
-            {
+        switch (type)
+        {
+            case EbtFloat:
                 error(line, "No precision specified for (float)", "");
                 return true;
-            }
-            break;
-        case EbtInt:
-            if (precision == EbpUndefined)
-            {
+            case EbtInt:
+            case EbtUInt:
+                UNREACHABLE();  // there's always a predeclared qualifier
                 error(line, "No precision specified (int)", "");
                 return true;
-            }
-            break;
-        default:
-            return false;
+            default:
+                if (IsSampler(type))
+                {
+                    error(line, "No precision specified (sampler)", "");
+                    return true;
+                }
+        }
     }
     return false;
 }
