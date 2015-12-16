@@ -886,6 +886,8 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
+
+        // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume(this);
 
         final String args = ContextUtils.getStringExtra(getIntent(), "args");
@@ -908,7 +910,10 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onPause() {
         super.onPause();
+
+        // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause(this);
+
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
