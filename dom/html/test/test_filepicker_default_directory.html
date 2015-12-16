@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1194893
+-->
+<head>
+  <title>Test for filepicker default directory</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1194893">Mozilla Bug 1194893</a>
+<div id="content">
+  <input type="file" id="f">
+</div>
+<pre id="text">
+<script class="testbody" type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+const { Cc: Cc, Ci: Ci } = SpecialPowers;
+
+// Platform-independent directory names are #define'd in xpcom/io/nsDirectoryServiceDefs.h
+var defaultUploadDirectory = Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(Ci.nsIDirectoryService)
+                            .QueryInterface(Ci.nsIProperties)
+                            .get("Desk", Ci.nsIFile);
+
+// When we want to test an upload directory other than the default, we need to
+// get a valid directory in a platform-independent way. Since NS_OS_DESKTOP_DIR
+// may fallback to NS_OS_HOME_DIR, let's use NS_OS_TMP_DIR.
+var customUploadDirectory = Cc["@mozilla.org/file/directory_service;1"]
+                            .getService(Ci.nsIDirectoryService)
+                            .QueryInterface(Ci.nsIProperties)
+                            .get("TmpD", Ci.nsIFile);
+
+// Useful for debugging
+//info("defaultUploadDirectory" + defaultUploadDirectory.path);
+//info("customUploadDirectory" + customUploadDirectory.path);
+
+var MockFilePicker = SpecialPowers.MockFilePicker;
+MockFilePicker.init(window);
+
+// need to show the MockFilePicker so .displayDirectory gets set
+var f = document.getElementById("f");
+f.focus();
+
+var testIndex = 0;
+var tests = [
+  ["", defaultUploadDirectory.path],
+  [customUploadDirectory.path, customUploadDirectory.path]
+]
+
+MockFilePicker.showCallback = function(filepicker) {
+  info(SpecialPowers.wrap(MockFilePicker).displayDirectory.path);
+
+  is(SpecialPowers.wrap(MockFilePicker).displayDirectory.path,
+  tests[testIndex][1]);
+
+  if (++testIndex == tests.length) {
+    MockFilePicker.cleanup();
+    SimpleTest.finish();
+  } else {
+    launchNextTest();
+  }
+}
+
+function launchNextTest() {
+  SpecialPowers.pushPrefEnv(
+    { 'set': [
+      ['dom.input.fallbackUploadDir', tests[testIndex][0]],
+    ]},
+  function () {
+    f.click();
+  });
+}
+
+launchNextTest();
+
+</script>
+</pre>
+</body>
+</html>
