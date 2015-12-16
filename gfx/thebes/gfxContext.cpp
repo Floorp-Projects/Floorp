@@ -129,40 +129,6 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
   return nullptr;
 }
 
-static void
-DestroyRefCairo(void* aData)
-{
-  cairo_t* refCairo = static_cast<cairo_t*>(aData);
-  MOZ_ASSERT(refCairo);
-  cairo_destroy(refCairo);
-}
-
-/* static */ cairo_t *
-gfxContext::RefCairo(DrawTarget* aDT)
-{
-  // DrawTargets that don't use a Cairo backend can be given a 1x1 "reference"
-  // |cairo_t*|, stored in the DrawTarget's user data, for doing font-related
-  // operations.
-  static UserDataKey sRefCairo;
-
-  cairo_t* refCairo = nullptr;
-  if (aDT->GetBackendType() == BackendType::CAIRO) {
-    refCairo = static_cast<cairo_t*>
-      (aDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
-    if (refCairo) {
-      return refCairo;
-    }
-  }
-
-  refCairo = static_cast<cairo_t*>(aDT->GetUserData(&sRefCairo));
-  if (!refCairo) {
-    refCairo = cairo_create(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->CairoSurface());
-    aDT->AddUserData(&sRefCairo, refCairo, DestroyRefCairo);
-  }
-
-  return refCairo;
-}
-
 void
 gfxContext::Save()
 {

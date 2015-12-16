@@ -342,7 +342,7 @@ gfxFontEntry::GetSVGGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphId,
                "font has invalid unitsPerEm");
 
     cairo_matrix_t fontMatrix;
-    cairo_get_font_matrix(gfxContext::RefCairo(aDrawTarget), &fontMatrix);
+    cairo_get_font_matrix(gfxFont::RefCairo(aDrawTarget), &fontMatrix);
 
     gfxMatrix svgToAppSpace(fontMatrix.xx, fontMatrix.yx,
                             fontMatrix.xy, fontMatrix.yy,

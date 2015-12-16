@@ -29,6 +29,7 @@
 #include "harfbuzz/hb.h"
 #include "mozilla/gfx/2D.h"
 
+typedef struct _cairo cairo_t;
 typedef struct _cairo_scaled_font cairo_scaled_font_t;
 //typedef struct gr_face            gr_face;
 
@@ -1847,6 +1848,11 @@ public:
     // return a cloned font resized and offset to simulate sub/superscript glyphs
     virtual already_AddRefed<gfxFont>
     GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel);
+
+    /**
+     * Return the reference cairo_t object from aDT.
+     */
+    static cairo_t* RefCairo(mozilla::gfx::DrawTarget* aDT);
 
 protected:
     virtual const Metrics& GetHorizontalMetrics() = 0;
