@@ -11,6 +11,7 @@
 #include <prio.h>
 
 #include "mozilla/dom/ToJSValue.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
@@ -840,6 +841,9 @@ public:
   nsresult GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
                          bool subsession, bool clearSubsession);
 
+  void SetRecordingEnabled(bool aEnabled) { mRecordingEnabled = aEnabled; };
+  bool IsRecordingEnabled() const { return mRecordingEnabled; };
+
   nsresult Add(const nsCString& key, uint32_t aSample);
   void Clear(bool subsession);
 
@@ -862,6 +866,7 @@ private:
   const uint32_t mMax;
   const uint32_t mBucketCount;
   const uint32_t mDataset;
+  mozilla::Atomic<bool, mozilla::Relaxed> mRecordingEnabled;
 };
 
 // Hardcoded probes
@@ -893,6 +898,30 @@ const char *
 TelemetryHistogram::expiration() const
 {
   return &gHistogramStringTable[this->expiration_offset];
+}
+
+bool
+IsHistogramEnumId(Telemetry::ID aID)
+{
+  static_assert(((Telemetry::ID)-1 > 0), "ID should be unsigned.");
+  return aID < Telemetry::HistogramCount;
+}
+
+// List of histogram IDs which should have recording disabled initially.
+const Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
+
+  // The array must not be empty. Leave these item here.
+  Telemetry::TELEMETRY_TEST_COUNT_INIT_NO_RECORD,
+  Telemetry::TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD
+};
+
+void
+InitHistogramRecordingEnabled()
+{
+  const size_t length = mozilla::ArrayLength(kRecordingInitiallyDisabledIDs);
+  for (size_t i = 0; i < length; i++) {
+    SetHistogramRecordingEnabled(kRecordingInitiallyDisabledIDs[i], false);
+  }
 }
 
 bool
@@ -1142,7 +1171,7 @@ nsresult
 HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
 {
   // Check if we are allowed to record the data.
-  if (!CanRecordDataset(dataset)) {
+  if (!CanRecordDataset(dataset) || !histogram.IsRecordingEnabled()) {
     return NS_OK;
   }
 
@@ -1925,6 +1954,11 @@ mFailedLockCount(0)
     mKeyedHistograms.Put(id, new KeyedHistogram(id, expiration, h.histogramType,
                                                 h.min, h.max, h.bucketCount, h.dataset));
   }
+
+  // Setup of the initial recording-enabled state (for not-recording-by-default
+  // histograms) using InitHistogramRecordingEnabled() will happen after instantiating
+  // sTelemetry since it depends on the static GetKeyedHistogramById(...) - which
+  // uses the singleton instance at sTelemetry.
 }
 
 TelemetryImpl::~TelemetryImpl() {
@@ -2264,6 +2298,25 @@ TelemetryImpl::UnregisterAddonHistograms(const nsACString &id)
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+TelemetryImpl::SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
+{
+  Histogram *h;
+  nsresult rv = GetHistogramByName(id, &h);
+  if (NS_SUCCEEDED(rv)) {
+    h->SetRecordingEnabled(aEnabled);
+    return NS_OK;
+  }
+
+  KeyedHistogram* keyed = GetKeyedHistogramById(id);
+  if (keyed) {
+    keyed->SetRecordingEnabled(aEnabled);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 nsresult
@@ -3306,6 +3359,7 @@ TelemetryImpl::CreateTelemetryInstance()
   nsCOMPtr<nsITelemetry> ret = sTelemetry;
 
   sTelemetry->InitMemoryReporter();
+  InitHistogramRecordingEnabled(); // requires sTelemetry to exist
 
   return ret.forget();
 }
@@ -3796,6 +3850,34 @@ RecordShutdownEndTimeStamp() {
 
 namespace Telemetry {
 
+// The external API for controlling recording state
+void
+SetHistogramRecordingEnabled(ID aID, bool aEnabled)
+{
+  if (!IsHistogramEnumId(aID)) {
+    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
+    return;
+  }
+
+  if (gHistograms[aID].keyed) {
+    const nsDependentCString id(gHistograms[aID].id());
+    KeyedHistogram* keyed = TelemetryImpl::GetKeyedHistogramById(id);
+    if (keyed) {
+      keyed->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  } else {
+    Histogram *h;
+    nsresult rv = GetHistogramByEnumId(aID, &h);
+    if (NS_SUCCEEDED(rv)) {
+      h->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  }
+
+  MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
+}
+
 void
 Accumulate(ID aHistogram, uint32_t aSample)
 {
@@ -4282,6 +4364,7 @@ KeyedHistogram::KeyedHistogram(const nsACString &name, const nsACString &expirat
   , mMax(max)
   , mBucketCount(bucketCount)
   , mDataset(dataset)
+  , mRecordingEnabled(true)
 {
 }
 
@@ -4368,6 +4451,10 @@ KeyedHistogram::Add(const nsCString& key, uint32_t sample)
     return NS_ERROR_FAILURE;
   }
 #endif
+
+  if (!IsRecordingEnabled()) {
+    return NS_OK;
+  }
 
   histogram->Add(sample);
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
