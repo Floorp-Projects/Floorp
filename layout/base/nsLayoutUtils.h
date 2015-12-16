@@ -168,7 +168,12 @@ public:
   /**
    * Get display port for the given element.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
+  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+
+  /**
+   * Check whether the given element has a displayport.
+   */
+  static bool HasDisplayPort(nsIContent* aContent);
 
   /**
    * @return the display port for the given element which should be used for
@@ -218,7 +223,12 @@ public:
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult = nullptr);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+
+  /**
+   * Check whether the given element has a critical display port.
+   */
+  static bool HasCriticalDisplayPort(nsIContent* aContent);
 
   /**
    * Use heuristics to figure out the child list that
