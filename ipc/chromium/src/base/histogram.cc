@@ -436,7 +436,8 @@ Histogram::Histogram(const std::string& name, Sample minimum,
     bucket_count_(bucket_count),
     flags_(kNoFlags),
     ranges_(bucket_count + 1, 0),
-    range_checksum_(0) {
+    range_checksum_(0),
+    recording_enabled_(true) {
   Initialize();
 }
 
@@ -449,7 +450,8 @@ Histogram::Histogram(const std::string& name, TimeDelta minimum,
     bucket_count_(bucket_count),
     flags_(kNoFlags),
     ranges_(bucket_count + 1, 0),
-    range_checksum_(0) {
+    range_checksum_(0),
+    recording_enabled_(true) {
   Initialize();
 }
 
