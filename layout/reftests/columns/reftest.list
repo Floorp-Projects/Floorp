@@ -19,7 +19,7 @@
 == column-balancing-004.html column-balancing-004.ref.html
 == column-box-alignment-rtl.html column-box-alignment-rtl-ref.html
 HTTP(..) == columnfill-balance.html columnfill-balance-ref.html
-HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
+fuzzy-if(OSX,32,1000) HTTP(..) == columnfill-auto.html columnfill-auto-ref.html
 HTTP(..) == columnfill-auto-2.html columnfill-auto-2-ref.html
 HTTP(..) == columnfill-auto-3.html columnfill-auto-2-ref.html
 skip-if(B2G||Mulet) == columnrule-basic.html columnrule-basic-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
