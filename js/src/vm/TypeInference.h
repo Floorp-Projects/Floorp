@@ -1220,7 +1220,9 @@ class RecompileInfo
     bool shouldSweep(TypeZone& types);
 };
 
-typedef Vector<RecompileInfo, 0, SystemAllocPolicy> RecompileInfoVector;
+// The RecompileInfoVector has a MinInlineCapacity of one so that invalidating a
+// single IonScript doesn't require an allocation.
+typedef Vector<RecompileInfo, 1, SystemAllocPolicy> RecompileInfoVector;
 
 struct AutoEnterAnalysis;
 
