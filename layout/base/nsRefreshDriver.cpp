@@ -441,11 +441,8 @@ private:
     #ifndef ANDROID  /* bug 1142079 */
       if (XRE_IsParentProcess()) {
         TimeDuration vsyncLatency = TimeStamp::Now() - aVsyncTimestamp;
-        uint32_t sample = (uint32_t)vsyncLatency.ToMilliseconds();
         Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS,
-                              sample);
-        Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS,
-                              sample);
+                              vsyncLatency.ToMilliseconds());
       } else if (mVsyncRate != TimeDuration::Forever()) {
         TimeDuration contentDelay = (TimeStamp::Now() - mLastChildTick) - mVsyncRate;
         if (contentDelay.ToMilliseconds() < 0 ){
@@ -453,11 +450,8 @@ private:
           // the reported hardware rate. In those cases, consider that we have 0 delay.
           contentDelay = TimeDuration::FromMilliseconds(0);
         }
-        uint32_t sample = (uint32_t)contentDelay.ToMilliseconds();
         Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS,
-                              sample);
-        Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS,
-                              sample);
+                              contentDelay.ToMilliseconds());
       } else {
         // Request the vsync rate from the parent process. Might be a few vsyncs
         // until the parent responds.
