@@ -278,7 +278,8 @@
     constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS
-    })
+    }),
+    IsMultiProcessEnabled: function() { return true; }
   });
 
   var desktopRoomStoreLoading = new loop.store.RoomStore(dispatcher, {
@@ -636,10 +637,10 @@
             ), 
             React.createElement(FramedExample, {cssClass: "fx-embedded-panel", 
                            dashed: true, 
-                           height: 410, 
+                           height: 553, 
                            summary: "First time experience view", 
                            width: 330}, 
-              React.createElement("div", {className: "panel"}, 
+              React.createElement("div", {className: "panel ftu-panel", height: "553"}, 
                 React.createElement(PanelView, {dispatcher: dispatcher, 
                   gettingStartedSeen: false, 
                   notifications: notifications, 

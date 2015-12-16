@@ -11,9 +11,4 @@ test_certificates = (
 )
 
 for test_certificate in test_certificates:
-    input_file = test_certificate + '.certspec'
-    GENERATED_FILES += [test_certificate]
-    props = GENERATED_FILES[test_certificate]
-    props.script = '../pycert.py'
-    props.inputs = [input_file]
-    TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.test_cert_trust += ['!%s' % test_certificate]
+    GeneratedTestCertificate(test_certificate)

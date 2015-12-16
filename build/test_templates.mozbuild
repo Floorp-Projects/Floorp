@@ -1,0 +1,39 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@template
+def GeneratedTestCertificate(name):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
+    GENERATED_FILES += [name]
+    props = GENERATED_FILES[name]
+    props.script = '/security/manager/ssl/tests/unit/pycert.py'
+    props.inputs = ['%s.certspec' % name]
+    # Turn RELATIVEDIR into list entry: like
+    # 'security/manager/ssl/tests/unit/bad_certs' ->
+    # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.bad_certs.
+    files = TEST_HARNESS_FILES.xpcshell
+    for part in RELATIVEDIR.split('/'):
+        files = files[part]
+    files += ['!%s' % name]
+
+@template
+def GeneratedTestKey(name):
+    if not CONFIG['COMPILE_ENVIRONMENT']:
+        return
+
+    GENERATED_FILES += [name]
+    props = GENERATED_FILES[name]
+    props.script = '/security/manager/ssl/tests/unit/pykey.py'
+    props.inputs = ['%s.keyspec' % name]
+    # Turn RELATIVEDIR into list entry: like
+    # 'security/manager/ssl/tests/unit/bad_certs' ->
+    # TEST_HARNESS_FILES.xpcshell.security.manager.ssl.tests.unit.bad_certs.
+    files = TEST_HARNESS_FILES.xpcshell
+    for part in RELATIVEDIR.split('/'):
+        files = files[part]
+    files += ['!%s' % name]
