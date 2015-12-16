@@ -36,7 +36,7 @@ const BinaryInputStream =
 
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var listener = {
  _httpstatus : 0,
@@ -61,16 +61,8 @@ var listener = {
 };
 
 function runTest() {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"].
-            getService(Components.interfaces.nsIIOService);
-  var uri = ios.newURI("https://redirproxy.example.com/test", "",  null);
-
-  var channel = ios.newChannelFromURI2(uri,
-                                       null,      // aLoadingNode
-                                       Services.scriptSecurityManager.getSystemPrincipal(),
-                                       null,      // aTriggeringPrincipal
-                                       Ci.nsILoadInfo.SEC_NORMAL,
-                                       Ci.nsIContentPolicy.TYPE_OTHER);
+  var uri = NetUtil.newURI("https://redirproxy.example.com/test");
+  var channel = NetUtil.newChannel({uri: uri, loadUsingSystemPrincipal: true});
 
   /* Previously, necko would allow a 302 as part of a CONNECT response
      if the LOAD_DOCUMENT_URI flag was set and the original document
@@ -79,7 +71,7 @@ function runTest() {
   channel.loadFlags |= Components.interfaces.nsIChannel.LOAD_DOCUMENT_URI;
   channel.QueryInterface(Components.interfaces.nsIHttpChannelInternal);
   channel.documentURI = uri;
-  channel.asyncOpen(listener, null);
+  channel.asyncOpen2(listener);
 }
 
 SimpleTest.waitForExplicitFinish();
