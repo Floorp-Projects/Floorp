@@ -34,6 +34,7 @@ add_test(function test_subscribe_success() {
       ok(subscription.endpoint.startsWith('https://example.org/push'), 'Wrong endpoint prefix');
       equal(subscription.pushCount, 0, 'Wrong push count');
       equal(subscription.lastPush, 0, 'Wrong last push time');
+      equal(subscription.quota, -1, 'Wrong quota for system subscription');
 
       do_test_finished();
       run_next_test();
@@ -67,6 +68,7 @@ add_test(function test_getSubscription_exists() {
       equal(subscription.endpoint, 'https://example.org/push/get', 'Wrong endpoint');
       equal(subscription.pushCount, 10, 'Wrong push count');
       equal(subscription.lastPush, 1438360548322, 'Wrong last push');
+      equal(subscription.quota, 16, 'Wrong quota for subscription');
 
       do_test_finished();
       run_next_test();
@@ -149,19 +151,71 @@ add_test(function test_unsubscribe_error() {
   );
 });
 
-add_test(function test_subscribe_principal() {
+add_test(function test_subscribe_app_principal() {
   let principal = Services.scriptSecurityManager.getAppCodebasePrincipal(
     Services.io.newURI('https://example.net/app/1', null, null),
     1, /* appId */
     true /* browserOnly */
   );
 
+  do_test_pending();
   service.subscribe('https://example.net/scope/1', principal, (result, subscription) => {
     ok(Components.isSuccessCode(result), 'Error creating subscription');
     ok(subscription.endpoint.startsWith('https://example.org/push'),
       'Wrong push endpoint in app subscription');
+    equal(subscription.quota, 16, 'Wrong quota for app subscription');
+
+    do_test_finished();
     run_next_test();
   });
+});
+
+add_test(function test_subscribe_origin_principal() {
+  let scope = 'https://example.net/origin-principal';
+  let principal =
+    Services.scriptSecurityManager.createCodebasePrincipalFromOrigin(scope);
+
+  do_test_pending();
+  service.subscribe(scope, principal, (result, subscription) => {
+    ok(Components.isSuccessCode(result),
+      'Expected error creating subscription with origin principal');
+    equal(subscription.quota, 16, 'Wrong quota for origin subscription');
+
+    do_test_finished();
+    run_next_test();
+  });
+});
+
+add_test(function test_subscribe_null_principal() {
+  do_test_pending();
+  service.subscribe(
+    'chrome://push/null-principal',
+    Services.scriptSecurityManager.createNullPrincipal({}),
+    (result, subscription) => {
+      ok(!Components.isSuccessCode(result),
+        'Expected error creating subscription with expanded principal');
+      strictEqual(subscription, null,
+        'Unexpected subscription with expanded principal');
+
+      do_test_finished();
+      run_next_test();
+    }
+  );
+});
+
+add_test(function test_subscribe_missing_principal() {
+  do_test_pending();
+  service.subscribe('chrome://push/missing-principal', null,
+    (result, subscription) => {
+      ok(!Components.isSuccessCode(result),
+        'Expected error creating subscription without principal');
+      strictEqual(subscription, null,
+        'Unexpected subscription without principal');
+
+      do_test_finished();
+      run_next_test();
+    }
+  );
 });
 
 if (isParent) {

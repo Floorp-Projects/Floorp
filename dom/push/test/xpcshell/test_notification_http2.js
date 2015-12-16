@@ -78,6 +78,7 @@ add_task(function* test_pushNotifications() {
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
+    systemRecord: true,
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription2',
     pushEndpoint: serverURL + '/pushEndpoint2',
@@ -96,6 +97,7 @@ add_task(function* test_pushNotifications() {
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
+    systemRecord: true,
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription3',
     pushEndpoint: serverURL + '/pushEndpoint3',
@@ -114,6 +116,7 @@ add_task(function* test_pushNotifications() {
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
+    systemRecord: true,
   }];
 
   for (let record of records) {

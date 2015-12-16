@@ -26,6 +26,7 @@ function putRecord(channelID, scope, publicKey, privateKey, authSecret) {
     lastPush: 0,
     originAttributes: '',
     quota: Infinity,
+    systemRecord: true,
     p256dhPublicKey: base64UrlDecode(publicKey),
     p256dhPrivateKey: privateKey,
     authenticationSecret: base64UrlDecode(authSecret),

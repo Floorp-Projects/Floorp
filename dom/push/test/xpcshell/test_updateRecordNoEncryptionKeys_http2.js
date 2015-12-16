@@ -57,6 +57,7 @@ add_task(function* test1() {
     scope: 'https://example.com/page',
     originAttributes: '',
     quota: Infinity,
+    systemRecord: true,
   };
 
   yield db.put(record);
