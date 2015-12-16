@@ -93,6 +93,7 @@ extern "C" {
 #include "nr_socket_prsock.h"
 #include "nrinterfaceprioritizer.h"
 #include "rlogringbuffer.h"
+#include "test_nr_socket.h"
 
 namespace mozilla {
 
@@ -266,6 +267,25 @@ nsresult NrIceTurnServer::ToNicerTurnStruct(nr_ice_turn_server *server) const {
   }
 
   return NS_OK;
+}
+
+NrIceCtx::NrIceCtx(const std::string& name,
+                   bool offerer,
+                   Policy policy)
+  : connection_state_(ICE_CTX_INIT),
+    gathering_state_(ICE_CTX_GATHER_INIT),
+    name_(name),
+    offerer_(offerer),
+    streams_(),
+    ctx_(nullptr),
+    peer_(nullptr),
+    ice_handler_vtbl_(nullptr),
+    ice_handler_(nullptr),
+    trickle_(true),
+    policy_(policy),
+    nat_ (nullptr) {
+  // XXX: offerer_ will be used eventually;  placate clang in the meantime.
+  (void)offerer_;
 }
 
 // Handler callbacks
@@ -498,6 +518,42 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     }
   }
 
+  char* mapping_type = nullptr;
+  char* filtering_type = nullptr;
+  bool block_udp = false;
+
+  nsresult rv;
+  nsCOMPtr<nsIPrefService> pref_service =
+    do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
+
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIPrefBranch> pref_branch;
+    rv = pref_service->GetBranch(nullptr, getter_AddRefs(pref_branch));
+    if (NS_SUCCEEDED(rv)) {
+      rv = pref_branch->GetCharPref(
+          "media.peerconnection.nat_simulator.mapping_type",
+          &mapping_type);
+      rv = pref_branch->GetCharPref(
+          "media.peerconnection.nat_simulator.filtering_type",
+          &filtering_type);
+      rv = pref_branch->GetBoolPref(
+          "media.peerconnection.nat_simulator.block_udp",
+          &block_udp);
+    }
+  }
+
+  MOZ_MTLOG(ML_DEBUG, "NAT filtering type: " << filtering_type);
+  MOZ_MTLOG(ML_DEBUG, "NAT mapping type: " << mapping_type);
+
+  if (mapping_type && filtering_type) {
+    TestNat* test_nat = new TestNat;
+    test_nat->filtering_type_ = TestNat::ToNatBehavior(filtering_type);
+    test_nat->mapping_type_ = TestNat::ToNatBehavior(mapping_type);
+    test_nat->block_udp_ = block_udp;
+    test_nat->enabled_ = true;
+    ctx->SetNat(test_nat);
+  }
+
   // Create the handler objects
   ctx->ice_handler_vtbl_ = new nr_ice_handler_vtbl();
   ctx->ice_handler_vtbl_->select_pair = &NrIceCtx::select_pair;
@@ -522,13 +578,23 @@ RefPtr<NrIceCtx> NrIceCtx::Create(const std::string& name,
     return nullptr;
   }
 
-  nsresult rv;
   ctx->sts_target_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
 
   if (!NS_SUCCEEDED(rv))
     return nullptr;
 
   return ctx;
+}
+
+int NrIceCtx::SetNat(const RefPtr<TestNat>& aNat) {
+  nat_ = aNat;
+  nr_socket_factory *fac;
+  int r = nat_->create_socket_factory(&fac);
+  if (r) {
+    return r;
+  }
+  nr_ice_ctx_set_socket_factory(ctx_, fac);
+  return 0;
 }
 
 // ONLY USE THIS FOR TESTING. Will cause totally unpredictable and possibly very
