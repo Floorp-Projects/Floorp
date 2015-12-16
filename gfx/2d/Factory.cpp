@@ -265,6 +265,12 @@ Factory::AllowedSurfaceSize(const IntSize &aSize)
 }
 
 bool
+Factory::CheckBufferSize(int32_t bufSize)
+{
+  return !sConfig || bufSize < sConfig->mMaxAllocSize;
+}
+
+bool
 Factory::CheckSurfaceSize(const IntSize &sz,
                           int32_t extentLimit,
                           int32_t allocLimit)
