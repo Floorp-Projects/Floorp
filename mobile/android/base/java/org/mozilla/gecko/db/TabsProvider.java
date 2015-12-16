@@ -65,7 +65,6 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
 
     static final String INDEX_TABS_GUID = "tabs_guid_index";
     static final String INDEX_TABS_POSITION = "tabs_position_index";
-    static final String INDEX_CLIENTS_GUID = "clients_guid_index";
 
     static final UriMatcher URI_MATCHER = new UriMatcher(UriMatcher.NO_MATCH);
 
