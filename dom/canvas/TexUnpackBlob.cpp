@@ -149,15 +149,21 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
     UniqueBuffer tempBuffer;
 
     do {
-        if (!webgl->mPixelStore_FlipY && !webgl->mPixelStore_PremultiplyAlpha)
-            break;
-
         if (!mBytes || !mWidth || !mHeight || !mDepth)
             break;
 
         if (webgl->IsWebGL2())
             break;
         MOZ_ASSERT(mDepth == 1);
+
+        const bool needsYFlip = webgl->mPixelStore_FlipY;
+
+        bool needsAlphaPremult = webgl->mPixelStore_PremultiplyAlpha;
+        if (!UnpackFormatHasAlpha(pi.format))
+            needsAlphaPremult = false;
+
+        if (!needsYFlip && !needsAlphaPremult)
+            break;
 
         // This is literally the worst.
         webgl->GenerateWarning("%s: Uploading ArrayBuffers with FLIP_Y or"
@@ -178,15 +184,8 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         const size_t bytesPerRow = bytesPerPixel * mWidth;
         const size_t rowStride = RoundUpToMultipleOf(bytesPerRow, rowByteAlignment);
 
-        const bool needsYFlip = webgl->mPixelStore_FlipY;
-
-        bool needsAlphaPremult = webgl->mPixelStore_PremultiplyAlpha;
-        if (!UnpackFormatHasAlpha(pi.format))
-            needsAlphaPremult = false;
-
         if (!needsAlphaPremult) {
-            if (!webgl->mPixelStore_FlipY)
-                break;
+            MOZ_ASSERT(needsYFlip);
 
             const uint8_t* src = (const uint8_t*)mBytes;
             const uint8_t* const srcEnd = src + rowStride * mHeight;
@@ -216,7 +215,9 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
         const bool srcPremultiplied = false;
         const bool dstPremultiplied = needsAlphaPremult; // Always true here.
+
         // And go!:
+        MOZ_ASSERT(srcOrigin != dstOrigin || srcPremultiplied != dstPremultiplied);
         if (!ConvertImage(mWidth, mHeight,
                           mBytes, rowStride, srcOrigin, texelFormat, srcPremultiplied,
                           tempBuffer.get(), rowStride, dstOrigin, texelFormat,
