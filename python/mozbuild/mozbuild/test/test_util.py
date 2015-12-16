@@ -452,6 +452,64 @@ class TestStrictOrderingOnAppendListWithFlagsFactory(unittest.TestCase):
         with self.assertRaises(AttributeError):
             l['b'].update(xyz=1)
 
+    def test_strict_ordering_on_append_list_with_flags_factory_extend(self):
+        FooList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': bool, 'bar': unicode
+        })
+        foo = FooList(['a', 'b', 'c'])
+        foo['a'].foo = True
+        foo['b'].bar = 'bar'
+
+        # Don't allow extending lists with different flag definitions.
+        BarList = StrictOrderingOnAppendListWithFlagsFactory({
+            'foo': unicode, 'baz': bool
+        })
+        bar = BarList(['d', 'e', 'f'])
+        bar['d'].foo = 'foo'
+        bar['e'].baz = True
+        with self.assertRaises(ValueError):
+            foo + bar
+        with self.assertRaises(ValueError):
+            bar + foo
+
+        # It's not obvious what to do with duplicate list items with possibly
+        # different flag values, so don't allow that case.
+        with self.assertRaises(ValueError):
+            foo + foo
+
+        def assertExtended(l):
+            self.assertEqual(len(l), 6)
+            self.assertEqual(l['a'].foo, True)
+            self.assertEqual(l['b'].bar, 'bar')
+            self.assertTrue('c' in l)
+            self.assertEqual(l['d'].foo, True)
+            self.assertEqual(l['e'].bar, 'bar')
+            self.assertTrue('f' in l)
+
+        # Test extend.
+        zot = FooList(['d', 'e', 'f'])
+        zot['d'].foo = True
+        zot['e'].bar = 'bar'
+        zot.extend(foo)
+        assertExtended(zot)
+
+        # Test __add__.
+        zot = FooList(['d', 'e', 'f'])
+        zot['d'].foo = True
+        zot['e'].bar = 'bar'
+        assertExtended(foo + zot)
+        assertExtended(zot + foo)
+
+        # Test __iadd__.
+        foo += zot
+        assertExtended(foo)
+
+        # Test __setslice__.
+        foo[3:] = []
+        self.assertEqual(len(foo), 3)
+        foo[3:] = zot
+        assertExtended(foo)
+
 
 class TestMemoize(unittest.TestCase):
     def test_memoize(self):
