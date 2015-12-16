@@ -28,16 +28,23 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         <div className="fte-get-started-content">
-          <header className="fte-title">
-            <img src="shared/img/hello_logo.svg" />
+          <div className="fte-title">
+            <img className="fte-logo" src="shared/img/hello_logo.svg" />
             <div className="fte-subheader">
-              {mozL10n.get("first_time_experience_subheading")}
+              {mozL10n.get("first_time_experience_subheading2")}
             </div>
-          </header>
-          <Button additionalClass="fte-get-started-button"
-                  caption={mozL10n.get("first_time_experience_button_label")}
-                  htmlId="fte-button"
-                  onClick={this.handleButtonClick} />
+            <hr className="fte-separator"/>
+            <div className="fte-content">
+              {mozL10n.get("first_time_experience_content")}
+            </div>
+            <img className="fte-hello-web-share" src="shared/img/hello-web-share.svg" />
+          </div>
+          <div className="fte-button-container">
+            <Button additionalClass="fte-get-started-button"
+                    caption={mozL10n.get("first_time_experience_button_label")}
+                    htmlId="fte-button"
+                    onClick={this.handleButtonClick} />
+          </div>
         </div>
       );
     }
