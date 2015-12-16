@@ -12,7 +12,7 @@
 #include "nsIPipe.h"
 #include "nsICloneableInputStream.h"
 #include "nsIEventTarget.h"
-#include "nsICancelableRunnable.h"
+#include "nsIRunnable.h"
 #include "nsISafeOutputStream.h"
 #include "nsString.h"
 #include "nsIAsyncInputStream.h"
@@ -25,11 +25,8 @@ using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 
-// This is a nsICancelableRunnable because we can dispatch it to Workers and
-// those can be shut down at any time, and in these cases, Cancel() is called
-// instead of Run().
 class nsInputStreamReadyEvent final
-  : public nsICancelableRunnable
+  : public nsIRunnable
   , public nsIInputStreamCallback
 {
 public:
@@ -98,28 +95,19 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() override
-  {
-    mCallback = nullptr;
-    return NS_OK;
-  }
-
 private:
   nsCOMPtr<nsIAsyncInputStream>    mStream;
   nsCOMPtr<nsIInputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget>         mTarget;
 };
 
-NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsICancelableRunnable,
-                  nsIRunnable, nsIInputStreamCallback)
+NS_IMPL_ISUPPORTS(nsInputStreamReadyEvent, nsIRunnable,
+                  nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
-// This is a nsICancelableRunnable because we can dispatch it to Workers and
-// those can be shut down at any time, and in these cases, Cancel() is called
-// instead of Run().
 class nsOutputStreamReadyEvent final
-  : public nsICancelableRunnable
+  : public nsIRunnable
   , public nsIOutputStreamCallback
 {
 public:
@@ -188,20 +176,14 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() override
-  {
-    mCallback = nullptr;
-    return NS_OK;
-  }
-
 private:
   nsCOMPtr<nsIAsyncOutputStream>    mStream;
   nsCOMPtr<nsIOutputStreamCallback> mCallback;
   nsCOMPtr<nsIEventTarget>          mTarget;
 };
 
-NS_IMPL_ISUPPORTS(nsOutputStreamReadyEvent, nsICancelableRunnable,
-                  nsIRunnable, nsIOutputStreamCallback)
+NS_IMPL_ISUPPORTS(nsOutputStreamReadyEvent, nsIRunnable,
+                  nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
@@ -234,7 +216,7 @@ NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback* aCallback,
 class nsAStreamCopier
   : public nsIInputStreamCallback
   , public nsIOutputStreamCallback
-  , public nsICancelableRunnable
+  , public nsIRunnable
 {
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
@@ -451,8 +433,6 @@ public:
     return NS_OK;
   }
 
-  NS_IMETHOD Cancel() MOZ_MUST_OVERRIDE override = 0;
-
   nsresult PostContinuationEvent()
   {
     // we cannot post a continuation event if there is currently
@@ -509,7 +489,6 @@ protected:
 NS_IMPL_ISUPPORTS(nsAStreamCopier,
                   nsIInputStreamCallback,
                   nsIOutputStreamCallback,
-                  nsICancelableRunnable,
                   nsIRunnable)
 
 class nsStreamCopierIB final : public nsAStreamCopier
@@ -548,8 +527,7 @@ public:
     return state->mSinkCondition;
   }
 
-  uint32_t DoCopy(nsresult* aSourceCondition,
-                  nsresult* aSinkCondition) override
+  uint32_t DoCopy(nsresult* aSourceCondition, nsresult* aSinkCondition)
   {
     ReadSegmentsState state;
     state.mSink = mSink;
@@ -560,11 +538,6 @@ public:
       mSource->ReadSegments(ConsumeInputBuffer, &state, mChunkSize, &n);
     *aSinkCondition = state.mSinkCondition;
     return n;
-  }
-
-  NS_IMETHOD Cancel() override
-  {
-    return NS_OK;
   }
 };
 
@@ -604,8 +577,7 @@ public:
     return state->mSourceCondition;
   }
 
-  uint32_t DoCopy(nsresult* aSourceCondition,
-                  nsresult* aSinkCondition) override
+  uint32_t DoCopy(nsresult* aSourceCondition, nsresult* aSinkCondition)
   {
     WriteSegmentsState state;
     state.mSource = mSource;
@@ -616,11 +588,6 @@ public:
       mSink->WriteSegments(FillOutputBuffer, &state, mChunkSize, &n);
     *aSourceCondition = state.mSourceCondition;
     return n;
-  }
-
-  NS_IMETHOD Cancel() override
-  {
-    return NS_OK;
   }
 };
 
