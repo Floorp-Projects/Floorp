@@ -7,3 +7,5 @@
 3. Copy `pretty-fast/test.js` to `devtools/shared/pretty-fast/tests/unit/test.js`
 
 4. If necessary, upgrade acorn (see devtools/shared/acorn/UPGRADING.md)
+
+5. Replace `acorn/dist/` with `acorn/` in pretty-fast.js.
