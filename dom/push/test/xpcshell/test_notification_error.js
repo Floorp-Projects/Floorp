@@ -32,6 +32,7 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 1,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: '3c3930ba-44de-40dc-a7ca-8a133ec1a866',
     pushEndpoint: 'https://example.org/update/error',
@@ -39,6 +40,7 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   }, {
     channelID: 'b63f7bef-0a0d-4236-b41e-086a69dfd316',
     pushEndpoint: 'https://example.org/update/success-2',
@@ -46,6 +48,7 @@ add_task(function* test_notification_error() {
     originAttributes: originAttributes,
     version: 3,
     quota: Infinity,
+    systemRecord: true,
   }];
   for (let record of records) {
     yield db.put(record);

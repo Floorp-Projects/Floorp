@@ -32,6 +32,7 @@ add_task(function* test_register_flush() {
     originAttributes: '',
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   };
   yield db.put(record);
 
