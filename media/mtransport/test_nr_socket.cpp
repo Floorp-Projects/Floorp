@@ -137,6 +137,21 @@ static nr_socket_factory_vtbl test_nat_socket_factory_vtbl = {
   test_nat_socket_factory_destroy
 };
 
+/* static */
+TestNat::NatBehavior
+TestNat::ToNatBehavior(const std::string& type) {
+  if (!type.compare("ENDPOINT_INDEPENDENT")) {
+    return TestNat::ENDPOINT_INDEPENDENT;
+  } else if (!type.compare("ADDRESS_DEPENDENT")) {
+    return TestNat::ADDRESS_DEPENDENT;
+  } else if (!type.compare("PORT_DEPENDENT")) {
+    return TestNat::PORT_DEPENDENT;
+  }
+
+  MOZ_ASSERT(false, "Invalid NAT behavior");
+  return TestNat::ENDPOINT_INDEPENDENT;
+}
+
 bool TestNat::has_port_mappings() const {
   for (TestNrSocket *sock : sockets_) {
     if (sock->has_port_mappings()) {
@@ -512,6 +527,10 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
   }
 
   if (r) {
+    r_log(LOG_GENERIC, LOG_ERR, "TestNrSocket %s failed to async_wait for "
+                                "internal socket: %d\n",
+                                internal_socket_->my_addr().as_string,
+                                r);
     return r;
   }
 
@@ -541,6 +560,10 @@ int TestNrSocket::async_wait(int how, NR_async_cb cb, void *cb_arg,
                                    function,
                                    line);
       if (r) {
+        r_log(LOG_GENERIC, LOG_ERR, "TestNrSocket %s failed to async_wait for "
+                                    "port mapping: %d\n",
+                                    internal_socket_->my_addr().as_string,
+                                    r);
         return r;
       }
     }
