@@ -44,7 +44,6 @@
 #include "nsSMILAnimationController.h"
 #include "nsCSSRuleProcessor.h"
 #include "ChildIterator.h"
-#include "Layers.h"
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
@@ -53,7 +52,6 @@
 namespace mozilla {
 
 using namespace layers;
-using namespace dom;
 
 #define LOG_RESTYLE_CONTINUE(reason_, ...) \
   LOG_RESTYLE("continuing restyle since " reason_, ##__VA_ARGS__)

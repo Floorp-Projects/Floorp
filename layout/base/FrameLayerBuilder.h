@@ -24,7 +24,6 @@ class gfxContext;
 class nsDisplayItemGeometry;
 
 namespace mozilla {
-class DisplayItemScrollClip;
 namespace layers {
 class ContainerLayer;
 class LayerManager;
@@ -55,7 +54,6 @@ struct ContainerLayerParameters {
     , mYScale(1)
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
-    , mScrollClip(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -67,7 +65,6 @@ struct ContainerLayerParameters {
     , mYScale(aYScale)
     , mLayerContentsVisibleRect(nullptr)
     , mBackgroundColor(NS_RGBA(0,0,0,0))
-    , mScrollClip(nullptr)
     , mInTransformedSubtree(false)
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
@@ -82,7 +79,6 @@ struct ContainerLayerParameters {
     , mLayerContentsVisibleRect(nullptr)
     , mOffset(aOffset)
     , mBackgroundColor(aParent.mBackgroundColor)
-    , mScrollClip(aParent.mScrollClip)
     , mInTransformedSubtree(aParent.mInTransformedSubtree)
     , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
@@ -112,7 +108,6 @@ struct ContainerLayerParameters {
   }
 
   nscolor mBackgroundColor;
-  const DisplayItemScrollClip* mScrollClip;
   bool mInTransformedSubtree;
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;
