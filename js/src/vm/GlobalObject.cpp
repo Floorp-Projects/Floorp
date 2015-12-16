@@ -416,7 +416,7 @@ GlobalObject::initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> globa
            InitBareWeakMapCtor(cx, global) &&
            InitStopIterationClass(cx, global) &&
            InitSelfHostingCollectionIteratorFunctions(cx, global) &&
-           JS_DefineFunctions(cx, global, builtins);
+           DefineFunctions(cx, global, builtins, AsIntrinsic);
 }
 
 /* static */ bool
