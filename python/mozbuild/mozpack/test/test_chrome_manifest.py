@@ -47,7 +47,7 @@ class TestManifest(unittest.TestCase):
             'component {b2bba4df-057d-41ea-b6b1-94a10a8ede68} foo.js',
             'contract @mozilla.org/foo;1' +
             ' {b2bba4df-057d-41ea-b6b1-94a10a8ede68}',
-            'interfaces foo.xpt # Inline comment',
+            'interfaces foo.xpt',
             'binary-component bar.so',
             'category command-line-handler m-browser' +
             ' @mozilla.org/browser/clh;1' +
