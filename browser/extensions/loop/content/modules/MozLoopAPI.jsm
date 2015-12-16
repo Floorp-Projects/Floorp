@@ -123,7 +123,7 @@ const updateSocialProvidersCache = function() {
 };
 
 var gAppVersionInfo = null;
-var gBrowserSharingListeners = new Set();
+var gBrowserSharingListenerCount = 0;
 var gBrowserSharingWindows = new Set();
 var gPageListeners = null;
 var gOriginalPageListeners = null;
@@ -141,12 +141,10 @@ const kMessageHandlers = {
   /**
    * Start browser sharing, which basically means to start listening for tab
    * switches and passing the new window ID to the sender whenever that happens.
-   *
+   * 
    * @param {Object}   message Message meant for the handler function, containing
    *                           the following parameters in its `data` property:
-   *                           [
-   *                             {Number} windowId The window ID of the chat window
-   *                           ]
+   *                           [ ]
    * @param {Function} reply   Callback function, invoked with the result of this
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
@@ -171,13 +169,10 @@ const kMessageHandlers = {
       return;
     }
 
-    let [windowId] = message.data;
-
     win.LoopUI.startBrowserSharing();
 
     gBrowserSharingWindows.add(Cu.getWeakReference(win));
-    gBrowserSharingListeners.add(windowId);
-    reply();
+    ++gBrowserSharingListenerCount;
   },
 
   /**
@@ -238,14 +233,13 @@ const kMessageHandlers = {
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
    */
-  ComposeEmail: function(message, reply) {
+  ComposeEmail: function(message) {
     let [subject, body, recipient] = message.data;
     recipient = recipient || "";
     let mailtoURL = "mailto:" + encodeURIComponent(recipient) +
                     "?subject=" + encodeURIComponent(subject) +
                     "&body=" + encodeURIComponent(body);
     extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
-    reply();
   },
 
   /**
@@ -369,7 +363,6 @@ const kMessageHandlers = {
       TWO_WAY_MEDIA_CONN_LENGTH: TWO_WAY_MEDIA_CONN_LENGTH
     });
   },
-
   /**
    * Returns the app version information for use during feedback.
    *
@@ -693,46 +686,9 @@ const kMessageHandlers = {
 
   /**
    * Hangup and close all chat windows that are open.
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following parameters in its `data` property:
-   *                           [ ]
-   * @param {Function} reply   Callback function, invoked with the result of this
-   *                           message handler. The result will be sent back to
-   *                           the senders' channel.
    */
-  HangupAllChatWindows: function(message, reply) {
+  HangupAllChatWindows: function() {
     MozLoopService.hangupAllChatWindows();
-    reply();
-  },
-
-  /**
-   * Hangup a specific chay window or room, by leaving a room, resetting the
-   * screensharing state and removing any active browser switch listeners.
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following parameters in its `data` property:
-   *                           [
-   *                             {String} roomToken The token of the room to leave
-   *                             {Number} windowId  The window ID of the chat window
-   *                           ]
-   * @param {Function} reply   Callback function, invoked with the result of this
-   *                           message handler. The result will be sent back to
-   *                           the senders' channel.
-   */
-  HangupNow: function(message, reply) {
-    let [roomToken, sessionToken, windowId] = message.data;
-    if (!windowId) {
-      windowId = sessionToken;
-    }
-
-    LoopRooms.leave(roomToken);
-    MozLoopService.setScreenShareState(windowId, false);
-    LoopAPI.sendMessageToHandler({
-      name: "RemoveBrowserSharingListener",
-      data: [windowId]
-    });
-    reply();
   },
 
   /**
@@ -859,7 +815,6 @@ const kMessageHandlers = {
     let win = Services.wm.getMostRecentWindow("navigator:browser");
     let url = message.data[0] ? message.data[0] : "about:home";
     win.openDialog("chrome://browser/content/", "_blank", "chrome,all,dialog=no,non-remote", url);
-    reply();
   },
 
   /**
@@ -882,27 +837,14 @@ const kMessageHandlers = {
 
   /**
    * Removes a listener that was previously added.
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following parameters in its `data` property:
-   *                           [
-   *                             {Number} windowId The window ID of the chat
-   *                           ]
-   * @param {Function} reply   Callback function, invoked with the result of this
-   *                           message handler. The result will be sent back to
-   *                           the senders' channel.
    */
-  RemoveBrowserSharingListener: function(message, reply) {
-    if (!gBrowserSharingListeners.size) {
-      reply();
+  RemoveBrowserSharingListener: function() {
+    if (!gBrowserSharingListenerCount) {
       return;
     }
 
-    let [windowId] = message.data;
-    gBrowserSharingListeners.delete(windowId);
-    if (gBrowserSharingListeners.size > 0) {
+    if (--gBrowserSharingListenerCount > 0) {
       // There are still clients listening in, so keep on listening...
-      reply();
       return;
     }
 
@@ -915,7 +857,6 @@ const kMessageHandlers = {
     }
 
     gBrowserSharingWindows.clear();
-    reply();
   },
 
   "Rooms:*": function(action, message, reply) {
@@ -1001,10 +942,9 @@ const kMessageHandlers = {
    *                           message handler. The result will be sent back to
    *                           the senders' channel.
    */
-  SetScreenShareState: function(message, reply) {
+  SetScreenShareState: function(message) {
     let [windowId, active] = message.data;
     MozLoopService.setScreenShareState(windowId, active);
-    reply();
   },
 
   /**
@@ -1373,46 +1313,6 @@ this.LoopAPI = Object.freeze({
   /* @see LoopAPIInternal#destroy */
   destroy: function() {
     LoopAPIInternal.destroy();
-  },
-  /**
-   * Gateway for chrome scripts to send a message to a message handler, when
-   * using the RemotePageManager module is not an option.
-   *
-   * @param {Object}   message Message meant for the handler function, containing
-   *                           the following properties:
-   *                           - {String} name     Name of handler to send this
-   *                                               message to. See `kMessageHandlers`
-   *                                               for the available names.
-   *                           - {String} [action] Optional action name of the
-   *                                               function to call on a sub-API.
-   *                           - {Array}  data     List of arguments that the
-   *                                               handler can use.
-   * @param {Function} [reply] Callback function, invoked with the result of this
-   *                           message handler. Optional.
-   */
-  sendMessageToHandler: function(message, reply) {
-    reply = reply || function() {};
-    let handlerName = message.name;
-    let handler = kMessageHandlers[handlerName];
-    if (gStubbedMessageHandlers && gStubbedMessageHandlers[handlerName]) {
-      handler = gStubbedMessageHandlers[handlerName];
-    }
-    if (!handler) {
-      let msg = "Ouch, no message handler available for '" + handlerName + "'";
-      MozLoopService.log.error(msg);
-      reply(cloneableError(msg));
-      return;
-    }
-
-    if (!message.data) {
-      message.data = [];
-    }
-
-    if (handlerName.endsWith("*")) {
-      handler(message.action, message, reply);
-    } else {
-      handler(message, reply);
-    }
   },
   // The following functions are only used in unit tests.
   inspect: function() {
