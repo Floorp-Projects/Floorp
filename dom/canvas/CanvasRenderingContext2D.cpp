@@ -3811,6 +3811,10 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
     return NS_OK;
   }
 
+  if (!IsFinite(aX) || !IsFinite(aY)) {
+    return NS_OK;
+  }
+
   const ContextState &state = CurrentState();
 
   // This is only needed to know if we can know the drawing bounding box easily.
