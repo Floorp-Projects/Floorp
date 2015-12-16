@@ -7,20 +7,20 @@
 // The idea being that big libraries can be analyzed once, dumped, and
 // then cheaply included in later analysis.
 
-(function(mod) {
+(function(root, mod) {
   if (typeof exports == "object" && typeof module == "object") // CommonJS
     return mod(exports, require("./infer"));
   if (typeof define == "function" && define.amd) // AMD
     return define(["exports", "./infer"], mod);
-  mod(self.tern || (self.tern = {}), tern); // Plain browser env
-})(function(exports, infer) {
+  mod(root.tern || (root.tern = {}), tern); // Plain browser env
+})(this, function(exports, infer) {
   "use strict";
 
   exports.condense = function(origins, name, options) {
     if (typeof origins == "string") origins = [origins];
     var state = new State(origins, name || origins[0], options || {});
 
-    runPass(state.passes.preCondenseReach, state);
+    state.server.signal("preCondenseReach", state)
 
     state.cx.topScope.path = "<top>";
     state.cx.topScope.reached("", state);
@@ -29,7 +29,7 @@
     for (var i = 0; i < state.patchUp.length; ++i)
       patchUpSimpleInstance(state.patchUp[i], state);
 
-    runPass(state.passes.postCondenseReach, state);
+    state.server.signal("postCondenseReach", state)
 
     for (var path in state.types)
       store(createPath(path.split("."), state), state.types[path], state);
@@ -39,7 +39,7 @@
     for (var _def in state.output["!define"]) { hasDef = true; break; }
     if (!hasDef) delete state.output["!define"];
 
-    runPass(state.passes.postCondense, state);
+    state.server.signal("postCondense", state)
 
     return simplify(state.output, state.options.sortOutput);
   };
@@ -47,7 +47,7 @@
   function State(origins, name, options) {
     this.origins = origins;
     this.cx = infer.cx();
-    this.passes = options.passes || this.cx.parent && this.cx.parent.passes || {};
+    this.server = options.server || this.cx.parent || {signal: function() {}}
     this.maxOrigin = -Infinity;
     for (var i = 0; i < origins.length; ++i)
       this.maxOrigin = Math.max(this.maxOrigin, this.cx.origins.indexOf(origins[i]));
@@ -113,7 +113,7 @@
           state.altPaths[oldPath] = actual;
         } else data = {type: actual};
         data.span = state.getSpan(type) || (actual != type && state.isTarget(actual.origin) && state.getSpan(actual)) || data.span;
-        data.doc = type.doc || (actual != type && state.isTarget(actual.origin) && type.doc) || data.doc;
+        data.doc = type.doc || (actual != type && state.isTarget(actual.origin) && actual.doc) || data.doc;
         data.data = actual.metaData;
         data.byName = data.byName == null ? !!byName : data.byName && byName;
         state.types[newPath] = data;
@@ -130,7 +130,13 @@
   infer.Prim.prototype.reached = function() {return true;};
 
   infer.Arr.prototype.reached = function(path, state, concrete) {
-    if (!concrete) reachByName(this.getProp("<i>"), path, "<i>", state);
+    if (concrete) return true
+    if (this.tuple) {
+      for (var i = 0; i < this.tuple; i++)
+        reachByName(this.getProp(String(i)), path, String(i), state)
+    } else {
+      reachByName(this.getProp("<i>"), path, "<i>", state)
+    }
     return true;
   };
 
@@ -177,12 +183,10 @@
   function createPath(parts, state) {
     var base = state.output, defs = state.output["!define"];
     for (var i = 0, path; i < parts.length; ++i) {
-      var part = parts[i], known = path && state.types[path];
+      var part = parts[i];
       path = path ? path + "." + part : part;
       var me = state.types[path];
-      if (part.charAt(0) == "!" ||
-          known && known.type.constructor != infer.Obj ||
-          me && me.byName) {
+      if (part.charAt(0) == "!" || me && me.byName) {
         if (hop(defs, path)) base = defs[path];
         else defs[path] = base = {};
       } else {
@@ -216,24 +220,44 @@
   }
 
   var typeNameStack = [];
-  function typeName(type) {
-    var actual = type.getType(false);
-    if (!actual || typeNameStack.indexOf(actual) > -1)
-      return actual && actual.path || "?";
-    typeNameStack.push(actual);
-    var name = actual.typeName();
-    typeNameStack.pop();
+  function typeName(value) {
+    var isType = value instanceof infer.Type;
+    if (isType) {
+      if (typeNameStack.indexOf(value) > -1)
+        return value.path || "?";
+      typeNameStack.push(value);
+    }
+    var name = value.typeName();
+    if (isType) typeNameStack.pop();
     return name;
   }
 
+  infer.AVal.prototype.typeName = function() {
+    if (this.types.length == 0) return "?";
+    if (this.types.length == 1) return typeName(this.types[0]);
+    var simplified = infer.simplifyTypes(this.types);
+    if (simplified.length > 2) return "?";
+    for (var strs = [], i = 0; i < simplified.length; i++)
+      strs.push(typeName(simplified[i]));
+    return strs.join("|");
+  };
+
+  infer.ANull.typeName = function() { return "?"; };
+
   infer.Prim.prototype.typeName = function() { return this.name; };
 
+  infer.Sym.prototype.typeName = function() { return this.asPropName }
+
   infer.Arr.prototype.typeName = function() {
-    return "[" + typeName(this.getProp("<i>")) + "]";
+    if (!this.tuple) return "[" + typeName(this.getProp("<i>")) + "]"
+    var content = []
+    for (var i = 0; i < this.tuple; i++)
+      content.push(typeName(this.getProp(String(i))))
+    return "[" + content.join(", ") + "]"
   };
 
   infer.Fn.prototype.typeName = function() {
-    var out = "fn(";
+    var out = this.generator ? "fn*(" : "fn(";
     for (var i = 0; i < this.args.length; ++i) {
       if (i) out += ", ";
       var name = this.argNames[i];
@@ -241,12 +265,10 @@
       out += typeName(this.args[i]);
     }
     out += ")";
-    if (this.computeRetSource) {
+    if (this.computeRetSource)
       out += " -> " + this.computeRetSource;
-    } else if (!this.retval.isEmpty()) {
-      var rettype = this.retval.getType(false);
-      if (rettype) out += " -> " + typeName(rettype);
-    }
+    else if (!this.retval.isEmpty())
+      out += " -> " + typeName(this.retval);
     return out;
   };
 
@@ -278,10 +300,5 @@
       out[prop] = obj[prop];
     }
     return out;
-  }
-
-  function runPass(functions) {
-    if (functions) for (var i = 0; i < functions.length; ++i)
-      functions[i].apply(null, Array.prototype.slice.call(arguments, 1));
   }
 });
