@@ -610,6 +610,10 @@ this.PushService = {
 
   /** |delay| should be in milliseconds. */
   setAlarm: function(delay) {
+    if (this._state <= PUSH_SERVICE_ACTIVATING) {
+      return;
+    }
+
     // Bug 909270: Since calls to AlarmService.add() are async, calls must be
     // 'queued' to ensure only one alarm is ever active.
     if (this._settingAlarm) {
@@ -899,7 +903,7 @@ this.PushService = {
       }
       // If there are visible notifications, don't apply the quota penalty
       // for the message.
-      if (!this._visibleNotifications.has(record.uri.prePath)) {
+      if (record.uri && !this._visibleNotifications.has(record.uri.prePath)) {
         record.reduceQuota();
       }
       return record;
@@ -1205,7 +1209,7 @@ this.PushService = {
 
     let clear = (db, domain) => {
       db.clearIf(record => {
-        return hasRootDomain(record.uri.prePath, domain);
+        return record.uri && hasRootDomain(record.uri.prePath, domain);
       });
     }
 

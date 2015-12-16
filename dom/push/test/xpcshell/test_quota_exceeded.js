@@ -13,6 +13,7 @@ function run_test() {
   do_get_profile();
   setPrefs({
     userAgentID,
+    'testing.ignorePermission': true,
   });
   run_next_test();
 }

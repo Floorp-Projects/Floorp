@@ -28,6 +28,7 @@ add_task(function* test_notification_version_string() {
     originAttributes: '',
     version: 2,
     quota: Infinity,
+    systemRecord: true,
   });
 
   let notifyPromise = promiseObserverNotification('push-notification');

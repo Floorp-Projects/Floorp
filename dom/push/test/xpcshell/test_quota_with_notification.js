@@ -14,6 +14,7 @@ function run_test() {
   do_get_profile();
   setPrefs({
     userAgentID,
+    'testing.ignorePermission': true,
   });
   run_next_test();
 }
@@ -21,8 +22,8 @@ function run_test() {
 add_task(function* test_expiration_origin_threshold() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {
-    db.drop().then(_ => db.close())
     PushService.notificationForOriginClosed("https://example.com");
+    return db.drop().then(_ => db.close());
   });
 
   // Simulate a notification being shown for the origin,

@@ -33,6 +33,7 @@ function putRecord(channelID, scope, quota) {
     version: null,
     originAttributes: '',
     quota: quota,
+    systemRecord: quota == Infinity,
   });
 }
 

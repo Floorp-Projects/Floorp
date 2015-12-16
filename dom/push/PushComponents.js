@@ -145,8 +145,7 @@ Object.assign(PushServiceParent.prototype, {
   },
 
   clearForDomain(domain, callback) {
-    let principal = Services.scriptSecurityManager.getSystemPrincipal();
-    return this._handleRequest("Push:Clear", principal, {
+    return this._handleRequest("Push:Clear", null, {
       domain: domain,
     }).then(result => {
       callback.onClear(Cr.NS_OK);
@@ -210,6 +209,17 @@ Object.assign(PushServiceParent.prototype, {
     if (!data.scope) {
       throw new Error("Invalid page record: missing scope");
     }
+    if (!principal) {
+      throw new Error("Invalid page record: missing principal");
+    }
+    if (principal.isNullPrincipal || principal.isExpandedPrincipal) {
+      throw new Error("Invalid page record: unsupported principal");
+    }
+
+    // System subscriptions can only be created by chrome callers, and are
+    // exempt from the background message quota and permission checks. They
+    // also use XPCOM observer notifications instead of service worker events.
+    data.systemRecord = principal.isSystemPrincipal;
 
     data.originAttributes =
       ChromeUtils.originAttributesToSuffix(principal.originAttributes);
@@ -218,10 +228,6 @@ Object.assign(PushServiceParent.prototype, {
   },
 
   _handleRequest(name, principal, data) {
-    if (!principal) {
-      return Promise.reject(new Error("Invalid request: missing principal"));
-    }
-
     if (name == "Push:Clear") {
       return this._service.clear(data);
     }
