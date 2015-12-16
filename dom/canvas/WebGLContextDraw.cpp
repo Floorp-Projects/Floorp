@@ -47,7 +47,6 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
                                                            bool* const out_error)
     : mWebGL(webgl)
 {
-    //typedef nsTArray<WebGLRefPtr<WebGLTexture>> TexturesT;
     typedef decltype(WebGLContext::mBound2DTextures) TexturesT;
 
     const auto fnResolveAll = [this, funcName](const TexturesT& textures)
@@ -72,16 +71,17 @@ ScopedResolveTexturesForDraw::ScopedResolveTexturesForDraw(WebGLContext* webgl,
         return true;
     };
 
-    *out_error = false;
+    bool ok = true;
+    ok &= fnResolveAll(mWebGL->mBound2DTextures);
+    ok &= fnResolveAll(mWebGL->mBoundCubeMapTextures);
+    ok &= fnResolveAll(mWebGL->mBound3DTextures);
+    ok &= fnResolveAll(mWebGL->mBound2DArrayTextures);
 
-    *out_error |= !fnResolveAll(mWebGL->mBound2DTextures);
-    *out_error |= !fnResolveAll(mWebGL->mBoundCubeMapTextures);
-    *out_error |= !fnResolveAll(mWebGL->mBound3DTextures);
-    *out_error |= !fnResolveAll(mWebGL->mBound2DArrayTextures);
-
-    if (*out_error) {
+    if (!ok) {
         mWebGL->ErrorOutOfMemory("%s: Failed to resolve textures for draw.", funcName);
     }
+
+    *out_error = !ok;
 }
 
 ScopedResolveTexturesForDraw::~ScopedResolveTexturesForDraw()

@@ -168,3 +168,8 @@ body {
 .force-menu-show .dropdown-menu {
   display: inline-block !important;
 }
+
+/* Force FTU panel height */
+.panel.ftu-panel {
+  height: 553px;
+}

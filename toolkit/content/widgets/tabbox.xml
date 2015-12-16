@@ -47,11 +47,11 @@
       </property>
 
       <field name="_handleMetaAltArrows" readonly="true">
-#ifdef XP_MACOSX
-        true
-#else
-        false
-#endif
+        {
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          AppConstants.platform == "macosx";
+        }
       </field>
 
       <!-- _tabs and _tabpanels are deprecated, they exist only for
@@ -772,11 +772,11 @@
                                    onset="this.setAttribute('linkedpanel', val); return val;"/>
 
       <field name="arrowKeysShouldWrap" readonly="true">
-#ifdef XP_MACOSX
-        true
-#else
-        false
-#endif
+        {
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          AppConstants.platform == "macosx";
+        }
       </field>
       <field name="TelemetryStopwatch" readonly="true">
         {

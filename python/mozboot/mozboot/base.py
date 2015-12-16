@@ -175,6 +175,9 @@ class BaseBootstrapper(object):
             command = ['dnf', 'groupinstall']
         else:
             command = ['yum', 'groupinstall']
+
+        if self.no_interactive:
+            command.append('-y')
         command.extend(packages)
 
         self.run_as_root(command)
