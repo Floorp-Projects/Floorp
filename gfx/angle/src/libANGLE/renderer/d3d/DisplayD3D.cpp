@@ -55,10 +55,13 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
 
     std::vector<CreateRendererD3DFunction> rendererCreationFunctions;
 
-    const auto &attribMap = display->getAttributeMap();
-    EGLNativeDisplayType nativeDisplay = display->getNativeDisplayId();
+    if (display->getPlatform() == EGL_PLATFORM_ANGLE_ANGLE)
+    {
+        const auto &attribMap              = display->getAttributeMap();
+        EGLNativeDisplayType nativeDisplay = display->getNativeDisplayId();
 
-    EGLint requestedDisplayType = attribMap.get(EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE);
+        EGLint requestedDisplayType =
+            attribMap.get(EGL_PLATFORM_ANGLE_TYPE_ANGLE, EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE);
 
 #   if defined(ANGLE_ENABLE_D3D11)
         if (nativeDisplay == EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE ||
@@ -77,27 +80,41 @@ egl::Error CreateRendererD3D(egl::Display *display, RendererD3D **outRenderer)
         }
 #   endif
 
-    if (nativeDisplay != EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE &&
-        nativeDisplay != EGL_D3D11_ONLY_DISPLAY_ANGLE &&
-        requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE)
-    {
+        if (nativeDisplay != EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE &&
+            nativeDisplay != EGL_D3D11_ONLY_DISPLAY_ANGLE &&
+            requestedDisplayType == EGL_PLATFORM_ANGLE_TYPE_DEFAULT_ANGLE)
+        {
         // The default display is requested, try the D3D9 and D3D11 renderers, order them using
         // the definition of ANGLE_DEFAULT_D3D11
 #       if ANGLE_DEFAULT_D3D11
 #           if defined(ANGLE_ENABLE_D3D11)
-                rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
 #           endif
 #           if defined(ANGLE_ENABLE_D3D9)
-                rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
+            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
 #           endif
 #       else
 #           if defined(ANGLE_ENABLE_D3D9)
-                rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
+            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer9>);
 #           endif
 #           if defined(ANGLE_ENABLE_D3D11)
-                rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
 #           endif
 #       endif
+        }
+    }
+    else if (display->getPlatform() == EGL_PLATFORM_DEVICE_EXT)
+    {
+#if defined(ANGLE_ENABLE_D3D11)
+        if (display->getDevice()->getType() == EGL_D3D11_DEVICE_ANGLE)
+        {
+            rendererCreationFunctions.push_back(CreateTypedRendererD3D<Renderer11>);
+        }
+#endif
+    }
+    else
+    {
+        UNIMPLEMENTED();
     }
 
     egl::Error result(EGL_NOT_INITIALIZED, "No available renderers.");

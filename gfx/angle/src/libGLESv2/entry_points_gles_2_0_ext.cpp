@@ -751,13 +751,13 @@ void GL_APIENTRY GetProgramBinaryOES(GLuint program, GLsizei bufSize, GLsizei *l
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        Program *programObject = context->getProgram(program);
-
-        if (!programObject || !programObject->isLinked())
+        if (!ValidateGetProgramBinaryOES(context, program, bufSize, length, binaryFormat, binary))
         {
-            context->recordError(Error(GL_INVALID_OPERATION));
             return;
         }
+
+        Program *programObject = context->getProgram(program);
+        ASSERT(programObject != nullptr);
 
         Error error = programObject->saveBinary(binaryFormat, binary, bufSize, length);
         if (error.isError())
@@ -776,19 +776,13 @@ void GL_APIENTRY ProgramBinaryOES(GLuint program, GLenum binaryFormat, const voi
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        const std::vector<GLenum> &programBinaryFormats = context->getCaps().programBinaryFormats;
-        if (std::find(programBinaryFormats.begin(), programBinaryFormats.end(), binaryFormat) == programBinaryFormats.end())
+        if (!ValidateProgramBinaryOES(context, program, binaryFormat, binary, length))
         {
-            context->recordError(Error(GL_INVALID_ENUM));
             return;
         }
 
         Program *programObject = context->getProgram(program);
-        if (!programObject)
-        {
-            context->recordError(Error(GL_INVALID_OPERATION));
-            return;
-        }
+        ASSERT(programObject != nullptr);
 
         Error error = programObject->loadBinary(binaryFormat, binary, length);
         if (error.isError())

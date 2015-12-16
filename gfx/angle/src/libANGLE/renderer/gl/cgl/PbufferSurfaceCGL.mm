@@ -95,7 +95,7 @@ egl::Error PbufferSurfaceCGL::querySurfacePointerANGLE(EGLint attribute, void **
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error PbufferSurfaceCGL::bindTexImage(EGLint buffer)
+egl::Error PbufferSurfaceCGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
     return egl::Error(EGL_SUCCESS);

@@ -548,6 +548,16 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
         LimitVersion(maxSupportedESVersion, gl::Version(2, 0));
     }
 
+    // TODO(geofflang): The gl-uniform-arrays WebGL conformance test struggles to complete on time
+    // if the max uniform vectors is too large.  Artificially limit the maximum until the test is
+    // updated.
+    caps->maxVertexUniformVectors = std::min(1024u, caps->maxVertexUniformVectors);
+    caps->maxVertexUniformComponents =
+        std::min(caps->maxVertexUniformVectors / 4, caps->maxVertexUniformComponents);
+    caps->maxFragmentUniformVectors = std::min(1024u, caps->maxFragmentUniformVectors);
+    caps->maxFragmentUniformComponents =
+        std::min(caps->maxFragmentUniformVectors / 4, caps->maxFragmentUniformComponents);
+
     // Extension support
     extensions->setTextureExtensionSupport(*textureCapsMap);
     extensions->elementIndexUint = functions->standard == STANDARD_GL_DESKTOP ||

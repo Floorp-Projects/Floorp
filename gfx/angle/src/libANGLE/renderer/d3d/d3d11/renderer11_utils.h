@@ -296,35 +296,17 @@ class LazyInputLayout final : public LazyResource<ID3D11InputLayout>
     const char *mDebugName;
 };
 
-inline LazyInputLayout::LazyInputLayout(
-    const D3D11_INPUT_ELEMENT_DESC *inputDesc,
-    size_t inputDescLen,
-    const BYTE *byteCode,
-    size_t byteCodeLen,
-    const char *debugName)
-    : mInputDesc(inputDescLen),
-      mByteCodeLen(byteCodeLen),
-      mByteCode(byteCode),
-      mDebugName(debugName)
+class LazyBlendState final : public LazyResource<ID3D11BlendState>
 {
-    memcpy(&mInputDesc[0], inputDesc, sizeof(D3D11_INPUT_ELEMENT_DESC) * inputDescLen);
-}
+  public:
+    LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugName);
 
-inline ID3D11InputLayout *LazyInputLayout::resolve(ID3D11Device *device)
-{
-    checkAssociatedDevice(device);
+    ID3D11BlendState *resolve(ID3D11Device *device) override;
 
-    if (mResource == nullptr)
-    {
-        HRESULT result = device->CreateInputLayout(
-            &mInputDesc[0], static_cast<UINT>(mInputDesc.size()), mByteCode, mByteCodeLen, &mResource);
-        ASSERT(SUCCEEDED(result));
-        UNUSED_ASSERTION_VARIABLE(result);
-        d3d11::SetDebugName(mResource, mDebugName);
-    }
-
-    return mResource;
-}
+  private:
+    D3D11_BLEND_DESC mDesc;
+    const char *mDebugName;
+};
 
 // Copy data to small D3D11 buffers, such as for small constant buffers, which use one struct to
 // represent an entire buffer.

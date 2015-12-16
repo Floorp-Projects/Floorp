@@ -297,7 +297,7 @@ TEST_F(TypeTrackingTest, PackResultTypeAndPrecision)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "precision mediump uint;\n"
+        "precision mediump int;\n"
         "uniform vec2 uv;\n"
         "out vec4 my_FragColor;\n"
         "void main() {\n"
@@ -323,7 +323,7 @@ TEST_F(TypeTrackingTest, UnpackNormResultTypeAndPrecision)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision mediump float;\n"
-        "precision mediump uint;\n"
+        "precision mediump int;\n"
         "uniform uint uu;\n"
         "out vec4 my_FragColor;\n"
         "void main() {\n"
@@ -347,7 +347,7 @@ TEST_F(TypeTrackingTest, UnpackHalfResultTypeAndPrecision)
     const std::string &shaderString =
         "#version 300 es\n"
         "precision highp float;\n"
-        "precision highp uint;\n"
+        "precision highp int;\n"
         "uniform uint uu;\n"
         "out vec4 my_FragColor;\n"
         "void main() {\n"

@@ -20,6 +20,7 @@
             '<(angle_path)/src/common/matrix_utils_unittest.cpp',
             '<(angle_path)/src/common/string_utils_unittest.cpp',
             '<(angle_path)/src/common/utilities_unittest.cpp',
+            '<(angle_path)/src/libANGLE/BinaryStream_unittest.cpp',
             '<(angle_path)/src/libANGLE/Config_unittest.cpp',
             '<(angle_path)/src/libANGLE/Fence_unittest.cpp',
             '<(angle_path)/src/libANGLE/HandleAllocator_unittest.cpp',
