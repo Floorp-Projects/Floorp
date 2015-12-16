@@ -5,25 +5,16 @@
 
 package org.mozilla.gecko.dlc;
 
-import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.background.nativecode.NativeCrypto;
-import org.mozilla.gecko.dlc.catalog.DownloadContent;
-import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.IOUtils;
-
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
-import ch.boye.httpclientandroidlib.HttpEntity;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.HttpStatus;
-import ch.boye.httpclientandroidlib.client.HttpClient;
-import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpRequestRetryHandler;
-import ch.boye.httpclientandroidlib.impl.client.HttpClientBuilder;
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.dlc.catalog.DownloadContent;
+import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IOUtils;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -33,74 +24,102 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.security.NoSuchAlgorithmException;
 import java.util.zip.GZIPInputStream;
 
-/* package-private */ class DownloadContentHelper {
-    private static final String LOGTAG = "GeckoDLCHelper";
+import ch.boye.httpclientandroidlib.HttpEntity;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.HttpStatus;
+import ch.boye.httpclientandroidlib.client.HttpClient;
+import ch.boye.httpclientandroidlib.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpRequestRetryHandler;
+import ch.boye.httpclientandroidlib.impl.client.HttpClientBuilder;
 
-    public static final String ACTION_STUDY_CATALOG = AppConstants.ANDROID_PACKAGE_NAME + ".DLC.STUDY";
-    public static final String ACTION_VERIFY_CONTENT = AppConstants.ANDROID_PACKAGE_NAME + ".DLC.VERIFY";
-    public static final String ACTION_DOWNLOAD_CONTENT = AppConstants.ANDROID_PACKAGE_NAME + ".DLC.DOWNLOAD";
-
-    private static final String CDN_BASE_URL = "https://mobile.cdn.mozilla.net/";
+/**
+ * Download content that has been scheduled during "study" or "verify".
+ */
+public class DownloadAction extends BaseAction {
+    private static final String LOGTAG = "DLCDownloadAction";
 
     private static final String CACHE_DIRECTORY = "downloadContent";
+    private static final String CDN_BASE_URL = "https://mobile.cdn.mozilla.net/";
 
-    /**
-     * Exception indicating a recoverable error has happened. Download of the content will be retried later.
-     */
-    /* package-private */ static class RecoverableDownloadContentException extends Exception {
-        private static final long serialVersionUID = -2246772819507370734L;
-
-        public RecoverableDownloadContentException(String message) {
-            super(message);
-        }
-
-        public RecoverableDownloadContentException(Throwable cause) {
-            super(cause);
-        }
+    public interface Callback {
+        void onContentDownloaded(DownloadContent content);
     }
 
-    /**
-     * If this exception is thrown the content will be marked as unrecoverable, permanently failed and we will not try
-     * downloading it again - until a newer version of the content is available.
-     */
-    /* package-private */ static class UnrecoverableDownloadContentException extends Exception {
-        private static final long serialVersionUID = 8956080754787367105L;
+    private Callback callback;
 
-        public UnrecoverableDownloadContentException(String message) {
-            super(message);
-        }
-
-        public UnrecoverableDownloadContentException(Throwable cause) {
-            super(cause);
-        }
+    public DownloadAction(Callback callback) {
+        this.callback = callback;
     }
 
-    /* package-private */ static HttpClient buildHttpClient() {
-        // TODO: Implement proxy support (Bug 1209496)
-        return HttpClientBuilder.create()
-            .setUserAgent(HardwareUtils.isTablet() ?
-                    AppConstants.USER_AGENT_FENNEC_TABLET :
-                    AppConstants.USER_AGENT_FENNEC_MOBILE)
-            .setRetryHandler(new DefaultHttpRequestRetryHandler())
-            .build();
-    }
+    public void perform(Context context, DownloadContentCatalog catalog) {
+        Log.d(LOGTAG, "Downloading content..");
 
-    /* package-private */ static File createTemporaryFile(Context context, DownloadContent content)
-            throws RecoverableDownloadContentException {
-        File cacheDirectory = new File(context.getCacheDir(), CACHE_DIRECTORY);
-
-        if (!cacheDirectory.exists() && !cacheDirectory.mkdirs()) {
-            // Recoverable: File system might not be mounted NOW and we didn't download anything yet anyways.
-            throw new RecoverableDownloadContentException("Could not create cache directory: " + cacheDirectory);
+        if (isActiveNetworkMetered(context)) {
+            Log.d(LOGTAG, "Network is metered. Postponing download.");
+            // TODO: Reschedule download (bug 1209498)
+            return;
         }
 
-        return new File(cacheDirectory, content.getDownloadChecksum() + "-" + content.getId());
+        final HttpClient client = buildHttpClient();
+
+        for (DownloadContent content : catalog.getScheduledDownloads()) {
+            Log.d(LOGTAG, "Downloading: " + content);
+
+            File temporaryFile = null;
+
+            try {
+                File destinationFile = getDestinationFile(context, content);
+                if (destinationFile.exists() && verify(destinationFile, content.getChecksum())) {
+                    Log.d(LOGTAG, "Content already exists and is up-to-date.");
+                    continue;
+                }
+
+                temporaryFile = createTemporaryFile(context, content);
+
+                // TODO: Check space on disk before downloading content (bug 1220145)
+                final String url = createDownloadURL(content);
+                download(client, url, temporaryFile);
+
+                if (!verify(temporaryFile, content.getDownloadChecksum())) {
+                    Log.w(LOGTAG, "Wrong checksum after download, content=" + content.getId());
+                    temporaryFile.delete();
+                    continue;
+                }
+
+                if (!content.isAssetArchive()) {
+                    Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + content.getType());
+                    continue;
+                }
+
+                extract(temporaryFile, destinationFile, content.getChecksum());
+
+                catalog.markAsDownloaded(content);
+
+                Log.d(LOGTAG, "Successfully downloaded: " + content);
+
+                if (callback != null) {
+                    callback.onContentDownloaded(content);
+                }
+            } catch (RecoverableDownloadContentException e) {
+                Log.w(LOGTAG, "Downloading content failed (Recoverable): " + content , e);
+                // TODO: Reschedule download (bug 1209498)
+            } catch (UnrecoverableDownloadContentException e) {
+                Log.w(LOGTAG, "Downloading content failed (Unrecoverable): " + content, e);
+
+                catalog.markAsPermanentlyFailed(content);
+            } finally {
+                if (temporaryFile != null && temporaryFile.exists()) {
+                    temporaryFile.delete();
+                }
+            }
+        }
+
+        Log.v(LOGTAG, "Done");
     }
 
-    /* package-private */ static void download(HttpClient client, String source, File temporaryFile)
+    /* package-private */ void download(HttpClient client, String source, File temporaryFile)
             throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
         InputStream inputStream = null;
         OutputStream outputStream = null;
@@ -152,51 +171,7 @@ import java.util.zip.GZIPInputStream;
         }
     }
 
-    /* package-private */ static boolean verify(File file, String expectedChecksum)
-            throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
-        InputStream inputStream = null;
-
-        try {
-            inputStream = new BufferedInputStream(new FileInputStream(file));
-
-            byte[] ctx = NativeCrypto.sha256init();
-            if (ctx == null) {
-                throw new RecoverableDownloadContentException("Could not create SHA-256 context");
-            }
-
-            byte[] buffer = new byte[4096];
-            int read;
-
-            while ((read = inputStream.read(buffer)) != -1) {
-                NativeCrypto.sha256update(ctx, buffer, read);
-            }
-
-            String actualChecksum = Utils.byte2Hex(NativeCrypto.sha256finalize(ctx));
-
-            if (!actualChecksum.equalsIgnoreCase(expectedChecksum)) {
-                Log.w(LOGTAG, "Checksums do not match. Expected=" + expectedChecksum + ", Actual=" + actualChecksum);
-                return false;
-            }
-
-            return true;
-        } catch (IOException e) {
-            // Recoverable: Just I/O discontinuation
-            throw new RecoverableDownloadContentException(e);
-        } finally {
-            IOUtils.safeStreamClose(inputStream);
-        }
-    }
-
-    /* package-private */ static void move(File temporaryFile, File destinationFile)
-            throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
-        if (!temporaryFile.renameTo(destinationFile)) {
-            Log.d(LOGTAG, "Could not move temporary file to destination. Trying to copy..");
-            copy(temporaryFile, destinationFile);
-            temporaryFile.delete();
-        }
-    }
-
-    /* package-private */ static void extract(File sourceFile, File destinationFile, String checksum)
+    protected void extract(File sourceFile, File destinationFile, String checksum)
             throws UnrecoverableDownloadContentException, RecoverableDownloadContentException {
         InputStream inputStream = null;
         OutputStream outputStream = null;
@@ -238,7 +213,47 @@ import java.util.zip.GZIPInputStream;
         }
     }
 
-    private static void copy(File temporaryFile, File destinationFile)
+    protected boolean isActiveNetworkMetered(Context context) {
+        return ConnectivityManagerCompat.isActiveNetworkMetered(
+                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
+    }
+
+    protected HttpClient buildHttpClient() {
+        // TODO: Implement proxy support (Bug 1209496)
+        return HttpClientBuilder.create()
+                .setUserAgent(HardwareUtils.isTablet() ?
+                        AppConstants.USER_AGENT_FENNEC_TABLET :
+                        AppConstants.USER_AGENT_FENNEC_MOBILE)
+                .setRetryHandler(new DefaultHttpRequestRetryHandler())
+                .build();
+    }
+
+    protected String createDownloadURL(DownloadContent content) {
+        return CDN_BASE_URL + content.getLocation();
+    }
+
+    protected File createTemporaryFile(Context context, DownloadContent content)
+            throws RecoverableDownloadContentException {
+        File cacheDirectory = new File(context.getCacheDir(), CACHE_DIRECTORY);
+
+        if (!cacheDirectory.exists() && !cacheDirectory.mkdirs()) {
+            // Recoverable: File system might not be mounted NOW and we didn't download anything yet anyways.
+            throw new RecoverableDownloadContentException("Could not create cache directory: " + cacheDirectory);
+        }
+
+        return new File(cacheDirectory, content.getDownloadChecksum() + "-" + content.getId());
+    }
+
+    protected void move(File temporaryFile, File destinationFile)
+            throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
+        if (!temporaryFile.renameTo(destinationFile)) {
+            Log.d(LOGTAG, "Could not move temporary file to destination. Trying to copy..");
+            copy(temporaryFile, destinationFile);
+            temporaryFile.delete();
+        }
+    }
+
+    protected void copy(File temporaryFile, File destinationFile)
             throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
         InputStream inputStream = null;
         OutputStream outputStream = null;
@@ -266,23 +281,5 @@ import java.util.zip.GZIPInputStream;
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
         }
-    }
-
-    /* package-private */ static File getDestinationFile(Context context, DownloadContent content)  throws UnrecoverableDownloadContentException {
-        if (content.isFont()) {
-            return new File(new File(context.getApplicationInfo().dataDir, "fonts"), content.getFilename());
-        }
-
-        // Unrecoverable: We downloaded a file and we don't know what to do with it (Should not happen)
-        throw new UnrecoverableDownloadContentException("Can't determine destination for kind: " + content.getKind());
-    }
-
-    /* package-private */ static boolean isActiveNetworkMetered(Context context) {
-        return ConnectivityManagerCompat.isActiveNetworkMetered(
-                (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
-    }
-
-    /* package-private */ static String createDownloadURL(DownloadContent content) {
-        return CDN_BASE_URL + content.getLocation();
     }
 }
