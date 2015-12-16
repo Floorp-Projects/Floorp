@@ -25,10 +25,7 @@ NS_IMPL_NS_NEW_HTML_ELEMENT(Audio)
 namespace mozilla {
 namespace dom {
 
-extern bool IsAudioAPIEnabled();
-
 NS_IMPL_ELEMENT_CLONE(HTMLAudioElement)
-
 
 HTMLAudioElement::HTMLAudioElement(already_AddRefed<NodeInfo>& aNodeInfo)
   : HTMLMediaElement(aNodeInfo)
