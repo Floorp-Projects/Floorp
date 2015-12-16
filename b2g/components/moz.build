@@ -78,11 +78,6 @@ EXTRA_JS_MODULES += [
     'WebappsUpdater.jsm',
 ]
 
-EXTRA_PP_JS_MODULES += [
-    'KillSwitchMain.jsm',
-    'PersistentDataBlock.jsm'
-]
-
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
     EXTRA_JS_MODULES += [
       'GlobalSimulatorScreen.jsm'
