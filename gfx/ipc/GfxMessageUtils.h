@@ -22,6 +22,7 @@
 #include "mozilla/layers/AsyncDragMetrics.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/CompositorTypes.h"
+#include "ImageTypes.h"
 #include "FrameMetrics.h"
 #include "FilterSupport.h"
 #include "mozilla/layers/GeckoContentController.h"
@@ -797,7 +798,7 @@ template<>
 struct ParamTraits<mozilla::layers::TextureInfo>
 {
   typedef mozilla::layers::TextureInfo paramType;
-  
+
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.mCompositableType);
@@ -828,6 +829,14 @@ struct ParamTraits<mozilla::gfx::SurfaceFormat>
 {};
 
 template <>
+struct ParamTraits<mozilla::StereoMode>
+  : public ContiguousEnumSerializer<
+             mozilla::StereoMode,
+             mozilla::StereoMode::MONO,
+             mozilla::StereoMode::TOP_BOTTOM>
+{};
+
+template <>
 struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
 {
   typedef mozilla::layers::ScrollableLayerGuid paramType;
@@ -846,6 +855,7 @@ struct ParamTraits<mozilla::layers::ScrollableLayerGuid>
             ReadParam(aMsg, aIter, &aResult->mScrollId));
   }
 };
+
 
 template <>
 struct ParamTraits<mozilla::layers::ZoomConstraints>

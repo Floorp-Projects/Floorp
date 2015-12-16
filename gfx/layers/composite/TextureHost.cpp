@@ -13,10 +13,9 @@
 #include "mozilla/layers/CompositableTransactionParent.h" // for CompositableParentManager
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/ISurfaceAllocator.h"  // for ISurfaceAllocator
-#include "mozilla/layers/ImageDataSerializer.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
-#include "mozilla/layers/YCbCrImageDataSerializer.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -95,7 +94,8 @@ TextureHost::CreateIPDLActor(CompositableParentManager* aManager,
                              LayersBackend aLayersBackend,
                              TextureFlags aFlags)
 {
-  if (aSharedData.type() == SurfaceDescriptor::TSurfaceDescriptorMemory &&
+  if (aSharedData.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer &&
+      aSharedData.get_SurfaceDescriptorBuffer().data().type() == MemoryOrShmem::Tuintptr_t &&
       !aManager->IsSameProcess())
   {
     NS_ERROR("A client process is trying to peek at our address space using a MemoryTexture!");
@@ -202,8 +202,7 @@ TextureHost::Create(const SurfaceDescriptor& aDesc,
                     TextureFlags aFlags)
 {
   switch (aDesc.type()) {
-    case SurfaceDescriptor::TSurfaceDescriptorShmem:
-    case SurfaceDescriptor::TSurfaceDescriptorMemory:
+    case SurfaceDescriptor::TSurfaceDescriptorBuffer:
     case SurfaceDescriptor::TSurfaceDescriptorDIB:
     case SurfaceDescriptor::TSurfaceDescriptorFileMapping:
       return CreateBackendIndependentTextureHost(aDesc, aDeallocator, aFlags);
@@ -252,19 +251,26 @@ CreateBackendIndependentTextureHost(const SurfaceDescriptor& aDesc,
 {
   RefPtr<TextureHost> result;
   switch (aDesc.type()) {
-    case SurfaceDescriptor::TSurfaceDescriptorShmem: {
-      const SurfaceDescriptorShmem& descriptor = aDesc.get_SurfaceDescriptorShmem();
-      result = new ShmemTextureHost(descriptor.data(),
-                                    descriptor.format(),
-                                    aDeallocator,
-                                    aFlags);
-      break;
-    }
-    case SurfaceDescriptor::TSurfaceDescriptorMemory: {
-      const SurfaceDescriptorMemory& descriptor = aDesc.get_SurfaceDescriptorMemory();
-      result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(descriptor.data()),
-                                     descriptor.format(),
-                                     aFlags);
+    case SurfaceDescriptor::TSurfaceDescriptorBuffer: {
+      const SurfaceDescriptorBuffer& bufferDesc = aDesc.get_SurfaceDescriptorBuffer();
+      const MemoryOrShmem& data = bufferDesc.data();
+      switch (data.type()) {
+        case MemoryOrShmem::TShmem: {
+          result = new ShmemTextureHost(data.get_Shmem(),
+                                        bufferDesc.desc(),
+                                        aDeallocator,
+                                        aFlags);
+          break;
+        }
+        case MemoryOrShmem::Tuintptr_t: {
+          result = new MemoryTextureHost(reinterpret_cast<uint8_t*>(data.get_uintptr_t()),
+                                         bufferDesc.desc(),
+                                         aFlags);
+          break;
+        }
+        default:
+          MOZ_CRASH();
+      }
       break;
     }
 #ifdef XP_WIN
@@ -368,36 +374,35 @@ TextureSource::~TextureSource()
     MOZ_COUNT_DTOR(TextureSource);
 }
 
-BufferTextureHost::BufferTextureHost(gfx::SurfaceFormat aFormat,
+BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
 : TextureHost(aFlags)
 , mCompositor(nullptr)
-, mFormat(aFormat)
 , mUpdateSerial(1)
 , mLocked(false)
 , mNeedsFullUpdate(false)
 {
+  mDescriptor = aDesc;
+  switch (mDescriptor.type()) {
+    case BufferDescriptor::TYCbCrDescriptor: {
+      const YCbCrDescriptor& ycbcr = mDescriptor.get_YCbCrDescriptor();
+      mSize = ycbcr.ySize();
+      mFormat = gfx::SurfaceFormat::YUV;
+      break;
+    }
+    case BufferDescriptor::TRGBDescriptor: {
+      const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
+      mSize = rgb.size();
+      mFormat = rgb.format();
+      break;
+    }
+    default: MOZ_CRASH();
+  }
   if (aFlags & TextureFlags::COMPONENT_ALPHA) {
     // One texture of a component alpha texture pair will start out all white.
     // This hack allows us to easily make sure that white will be uploaded.
     // See bug 1138934
     mNeedsFullUpdate = true;
-  }
-}
-
-void
-BufferTextureHost::InitSize()
-{
-  if (mFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
-    if (yuvDeserializer.IsValid()) {
-      mSize = yuvDeserializer.GetYSize();
-    }
-  } else if (mFormat != gfx::SurfaceFormat::UNKNOWN) {
-    ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
-    if (deserializer.IsValid()) {
-      mSize = deserializer.GetSize();
-    }
   }
 }
 
@@ -512,7 +517,8 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 bool
 BufferTextureHost::Upload(nsIntRegion *aRegion)
 {
-  if (!GetBuffer()) {
+  uint8_t* buf = GetBuffer();
+  if (!buf) {
     // We don't have a buffer; a possible cause is that the IPDL actor
     // is already dead. This inevitably happens as IPDL actors can die
     // at any time, so we want to silently return in this case.
@@ -527,11 +533,11 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
     NS_WARNING("BufferTextureHost: unsupported format!");
     return false;
   } else if (mFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
-    MOZ_ASSERT(yuvDeserializer.IsValid());
+    const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
 
     if (!mCompositor->SupportsEffect(EffectTypes::YCBCR)) {
-      RefPtr<gfx::DataSourceSurface> surf = yuvDeserializer.ToDataSourceSurface();
+      RefPtr<gfx::DataSourceSurface> surf =
+        ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(buf, mDescriptor.get_YCbCrDescriptor());
       if (NS_WARN_IF(!surf)) {
         return false;
       }
@@ -565,21 +571,20 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
       srcV = mFirstSource->GetNextSibling()->GetNextSibling()->AsDataTextureSource();
     }
 
-
     RefPtr<gfx::DataSourceSurface> tempY =
-      gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetYData(),
-                                                    yuvDeserializer.GetYStride(),
-                                                    yuvDeserializer.GetYSize(),
+      gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetYChannel(buf, desc),
+                                                    desc.ySize().width,
+                                                    desc.ySize(),
                                                     gfx::SurfaceFormat::A8);
     RefPtr<gfx::DataSourceSurface> tempCb =
-      gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCbData(),
-                                                    yuvDeserializer.GetCbCrStride(),
-                                                    yuvDeserializer.GetCbCrSize(),
+      gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCbChannel(buf, desc),
+                                                    desc.cbCrSize().width,
+                                                    desc.cbCrSize(),
                                                     gfx::SurfaceFormat::A8);
     RefPtr<gfx::DataSourceSurface> tempCr =
-      gfx::Factory::CreateWrappingDataSourceSurface(yuvDeserializer.GetCrData(),
-                                                    yuvDeserializer.GetCbCrStride(),
-                                                    yuvDeserializer.GetCbCrSize(),
+      gfx::Factory::CreateWrappingDataSourceSurface(ImageDataSerializer::GetCrChannel(buf, desc),
+                                                    desc.cbCrSize().width,
+                                                    desc.cbCrSize(),
                                                     gfx::SurfaceFormat::A8);
     // We don't support partial updates for Y U V textures
     NS_ASSERTION(!aRegion, "Unsupported partial updates for YCbCr textures");
@@ -602,13 +607,10 @@ BufferTextureHost::Upload(nsIntRegion *aRegion)
         regionToUpdate = nullptr;
       }
     }
-    ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
-    if (!deserializer.IsValid()) {
-      NS_ERROR("Failed to deserialize image!");
-      return false;
-    }
 
-    RefPtr<gfx::DataSourceSurface> surf = deserializer.GetAsSurface();
+    RefPtr<gfx::DataSourceSurface> surf =
+      gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
+        ImageDataSerializer::ComputeRGBStride(mFormat, mSize.width), mSize, mFormat);
     if (!surf) {
       return false;
     }
@@ -630,35 +632,29 @@ BufferTextureHost::GetAsSurface()
     NS_WARNING("BufferTextureHost: unsupported format!");
     return nullptr;
   } else if (mFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataDeserializer yuvDeserializer(GetBuffer(), GetBufferSize());
-    if (!yuvDeserializer.IsValid()) {
-      return nullptr;
-    }
-    result = yuvDeserializer.ToDataSourceSurface();
+    result = ImageDataSerializer::DataSourceSurfaceFromYCbCrDescriptor(
+      GetBuffer(), mDescriptor.get_YCbCrDescriptor());
     if (NS_WARN_IF(!result)) {
       return nullptr;
     }
   } else {
-    ImageDataDeserializer deserializer(GetBuffer(), GetBufferSize());
-    if (!deserializer.IsValid()) {
-      NS_ERROR("Failed to deserialize image!");
-      return nullptr;
-    }
-    result = deserializer.GetAsSurface();
+    RefPtr<gfx::DataSourceSurface> surf =
+      gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(),
+        ImageDataSerializer::GetRGBStride(mDescriptor.get_RGBDescriptor()),
+        mSize, mFormat);
   }
   return result.forget();
 }
 
 ShmemTextureHost::ShmemTextureHost(const ipc::Shmem& aShmem,
-                                   gfx::SurfaceFormat aFormat,
+                                   const BufferDescriptor& aDesc,
                                    ISurfaceAllocator* aDeallocator,
                                    TextureFlags aFlags)
-: BufferTextureHost(aFormat, aFlags)
+: BufferTextureHost(aDesc, aFlags)
 , mShmem(MakeUnique<ipc::Shmem>(aShmem))
 , mDeallocator(aDeallocator)
 {
   MOZ_COUNT_CTOR(ShmemTextureHost);
-  InitSize();
 }
 
 ShmemTextureHost::~ShmemTextureHost()
@@ -705,13 +701,12 @@ size_t ShmemTextureHost::GetBufferSize()
 }
 
 MemoryTextureHost::MemoryTextureHost(uint8_t* aBuffer,
-                                     gfx::SurfaceFormat aFormat,
+                                     const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
-: BufferTextureHost(aFormat, aFlags)
+: BufferTextureHost(aDesc, aFlags)
 , mBuffer(aBuffer)
 {
   MOZ_COUNT_CTOR(MemoryTextureHost);
-  InitSize();
 }
 
 MemoryTextureHost::~MemoryTextureHost()
