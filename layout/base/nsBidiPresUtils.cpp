@@ -842,9 +842,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
           currentLine->MarkDirty();
           nsIFrame* nextBidi;
           int32_t runEnd = contentOffset + runLength;
-          rv = EnsureBidiContinuation(frame, &nextBidi, frameIndex,
-                                      contentOffset,
-                                      runEnd);
+          rv = EnsureBidiContinuation(frame, &nextBidi, contentOffset, runEnd);
           if (NS_FAILED(rv)) {
             break;
           }
@@ -1275,8 +1273,7 @@ nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
   }
 
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
-  return RepositionInlineFrames(&bld, aFirstFrameOnLine, aLineWM,
-                                containerSize, aStart);
+  return RepositionInlineFrames(&bld, aLineWM, containerSize, aStart);
 }
 
 nsIFrame*
@@ -1665,7 +1662,6 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
 
 /* static */ nscoord
 nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
-                                        nsIFrame* aFirstChild,
                                         WritingMode aLineWM,
                                         const nsSize& aContainerSize,
                                         nscoord aStart)
@@ -1767,7 +1763,6 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
 inline nsresult
 nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
-                                        int32_t&        aFrameIndex,
                                         int32_t         aStart,
                                         int32_t         aEnd)
 {
@@ -1832,8 +1827,7 @@ nsresult
 nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    char16_t*       aText,
                                    int32_t&        aTextLength,
-                                   nsCharType      aCharType,
-                                   nsBidiDirection aDir)
+                                   nsCharType      aCharType)
 {
   nsresult rv = NS_OK;
   // ahmed 
@@ -2090,7 +2084,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
       if (int32_t(runVisualText.Length()) < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
       FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
-                        subRunLength, (nsCharType)charType, dir);
+                        subRunLength, (nsCharType)charType);
 
       aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();

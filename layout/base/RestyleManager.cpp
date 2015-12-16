@@ -2061,7 +2061,7 @@ VerifyContextParent(nsIFrame* aFrame, nsStyleContext* aContext,
 }
 
 static void
-VerifyStyleTree(nsIFrame* aFrame, nsStyleContext* aParentContext)
+VerifyStyleTree(nsIFrame* aFrame)
 {
   nsStyleContext*  context = aFrame->StyleContext();
   VerifyContextParent(aFrame, context, nullptr);
@@ -2079,7 +2079,7 @@ VerifyStyleTree(nsIFrame* aFrame, nsStyleContext* aParentContext)
 
           // recurse to out of flow frame, letting the parent context get resolved
           do {
-            VerifyStyleTree(outOfFlowFrame, nullptr);
+            VerifyStyleTree(outOfFlowFrame);
           } while ((outOfFlowFrame = outOfFlowFrame->GetNextContinuation()));
 
           // verify placeholder using the parent frame's context as
@@ -2087,7 +2087,7 @@ VerifyStyleTree(nsIFrame* aFrame, nsStyleContext* aParentContext)
           VerifyContextParent(child, nullptr, nullptr);
         }
         else { // regular frame
-          VerifyStyleTree(child, nullptr);
+          VerifyStyleTree(child);
         }
       }
     }
@@ -2106,9 +2106,7 @@ void
 RestyleManager::DebugVerifyStyleTree(nsIFrame* aFrame)
 {
   if (aFrame) {
-    nsStyleContext* context = aFrame->StyleContext();
-    nsStyleContext* parentContext = context->GetParent();
-    VerifyStyleTree(aFrame, parentContext);
+    VerifyStyleTree(aFrame);
   }
 }
 
@@ -2526,7 +2524,7 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
         }
       }
 #ifdef DEBUG
-      VerifyStyleTree(aFrame, newParentContext);
+      VerifyStyleTree(aFrame);
 #endif
     }
   }
