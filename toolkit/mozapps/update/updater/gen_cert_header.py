@@ -1,4 +1,5 @@
-import sys
+from __future__ import print_function
+
 import binascii
 
 def file_byte_generator(filename, block_size = 512):
@@ -11,15 +12,11 @@ def file_byte_generator(filename, block_size = 512):
       else:
         break
 
-def create_header(array_name, in_filename):
+def create_header(out_fh, in_filename):
+  assert out_fh.name.endswith('.h')
+  array_name = out_fh.name[:-2] + 'Data'
   hexified = ["0x" + binascii.hexlify(byte) for byte in file_byte_generator(in_filename)]
-  print "const uint8_t " + array_name + "[] = {"
-  print ", ".join(hexified)
-  print "};"
+  print("const uint8_t " + array_name + "[] = {", file=out_fh)
+  print(", ".join(hexified), file=out_fh)
+  print("};", file=out_fh)
   return 0
-
-if __name__ == '__main__':
-  if len(sys.argv) < 3:
-    print 'ERROR: usage: gen_cert_header.py array_name in_filename'
-    sys.exit(1);
-  sys.exit(create_header(sys.argv[1], sys.argv[2]))
