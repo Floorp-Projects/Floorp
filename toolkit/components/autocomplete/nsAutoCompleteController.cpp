@@ -451,8 +451,19 @@ nsAutoCompleteController::HandleKeyNavigation(uint32_t aKey, bool *_retval)
           //  A result is selected, so fill in its value
           nsAutoString value;
           if (NS_SUCCEEDED(GetResultValueAt(selectedIndex, false, value))) {
+            // If the result is the previously autofilled string, then restore
+            // the search string and selection that existed when the result was
+            // autofilled.  Else, fill the result and move the caret to the end.
+            int32_t start;
+            if (value.Equals(mPlaceholderCompletionString,
+                             nsCaseInsensitiveStringComparator())) {
+              start = mSearchString.Length();
+              value = mPlaceholderCompletionString;
+            } else {
+              start = value.Length();
+            }
             input->SetTextValue(value);
-            input->SelectTextRange(value.Length(), value.Length());
+            input->SelectTextRange(start, value.Length());
           }
           mCompletedSelectionIndex = selectedIndex;
         } else {
