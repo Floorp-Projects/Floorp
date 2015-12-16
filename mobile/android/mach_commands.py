@@ -219,7 +219,7 @@ class AndroidEmulatorCommands(MachCommandBase):
     def emulator(self, version, wait=False, force_update=False, verbose=False):
         from mozrunner.devices.android_device import AndroidEmulator
 
-        emulator = AndroidEmulator(version, verbose, substs=self.substs)
+        emulator = AndroidEmulator(version, verbose, substs=self.substs, device_serial='emulator-5554')
         if emulator.is_running():
             # It is possible to run multiple emulators simultaneously, but:
             #  - if more than one emulator is using the same avd, errors may
