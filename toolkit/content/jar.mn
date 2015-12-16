@@ -64,7 +64,7 @@ toolkit.jar:
    content/global/TopLevelVideoDocument.js
    content/global/treeUtils.js
    content/global/viewZoomOverlay.js
-*+ content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
++  content/global/bindings/autocomplete.xml    (widgets/autocomplete.xml)
    content/global/bindings/browser.xml         (widgets/browser.xml)
    content/global/bindings/button.xml          (widgets/button.xml)
    content/global/bindings/checkbox.xml        (widgets/checkbox.xml)
@@ -73,11 +73,11 @@ toolkit.jar:
 *+ content/global/bindings/dialog.xml          (widgets/dialog.xml)
    content/global/bindings/editor.xml          (widgets/editor.xml)
    content/global/bindings/expander.xml        (widgets/expander.xml)
-*  content/global/bindings/filefield.xml       (widgets/filefield.xml)
+   content/global/bindings/filefield.xml       (widgets/filefield.xml)
 *+ content/global/bindings/findbar.xml         (widgets/findbar.xml)
    content/global/bindings/general.xml         (widgets/general.xml)
    content/global/bindings/groupbox.xml        (widgets/groupbox.xml)
-*+ content/global/bindings/listbox.xml         (widgets/listbox.xml)
++  content/global/bindings/listbox.xml         (widgets/listbox.xml)
    content/global/bindings/menu.xml            (widgets/menu.xml)
    content/global/bindings/menulist.xml        (widgets/menulist.xml)
    content/global/bindings/notification.xml    (widgets/notification.xml)
@@ -101,7 +101,7 @@ toolkit.jar:
    content/global/bindings/toolbar.xml         (widgets/toolbar.xml)
    content/global/bindings/toolbarbutton.xml   (widgets/toolbarbutton.xml)
 *+ content/global/bindings/tree.xml            (widgets/tree.xml)
-*+ content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
++  content/global/bindings/videocontrols.xml   (widgets/videocontrols.xml)
    content/global/bindings/videocontrols.css   (widgets/videocontrols.css)
 *+ content/global/bindings/wizard.xml          (widgets/wizard.xml)
 #ifdef XP_MACOSX

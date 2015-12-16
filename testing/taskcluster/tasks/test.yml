@@ -14,6 +14,7 @@ task:
   scopes:
     - 'queue:define-task:aws-provisioner-v1/test-c4-2xlarge'
     - 'queue:create-task:aws-provisioner-v1/test-c4-2xlarge'
+    - 'docker-worker:feature:allowPtrace'
 
   payload:
     image: '{{#docker_image}}tester{{/docker_image}}'
