@@ -31,13 +31,14 @@ constants_jar.extra_jars = [
     CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
     CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
+    CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB'],
 ]
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
     constants_jar.sources += ['java/org/mozilla/gecko/' + x for x in [
         'adjust/AdjustHelper.java',
     ]]
-    constants_jar.extra_jars = [
+    constants_jar.extra_jars += [
         'gecko-thirdparty-adjust_sdk.jar',
     ]
 else:
