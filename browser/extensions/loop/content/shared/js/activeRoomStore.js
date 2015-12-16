@@ -1144,9 +1144,9 @@ loop.store.ActiveRoomStore = (function() {
       // NOTE: when the window _is_ closed, hanging up the call is performed by
       //       MozLoopService, because we can't get a message across to LoopAPI
       //       in time whilst a window is closing.
-      if (nextState === ROOM_STATES.FAILED && !failedJoinRequest) {
+      if ((nextState === ROOM_STATES.FAILED || !this._isDesktop) && !failedJoinRequest) {
         loop.request("HangupNow", this._storeState.roomToken,
-          this._storeState.windowId);
+          this._storeState.sessionToken, this._storeState.windowId);
       }
 
       this.setStoreState({ roomState: nextState });
