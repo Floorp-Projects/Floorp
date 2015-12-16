@@ -1280,18 +1280,6 @@ var gViewController = {
       }
     },
 
-    cmd_debugAddons: {
-      isEnabled: function() {
-        return true;
-      },
-      doCommand: function() {
-        let mainWindow = getMainWindow();
-        if ("switchToTabHavingURI" in mainWindow) {
-          mainWindow.switchToTabHavingURI("about:debugging#addons", true);
-        }
-      },
-    },
-
     cmd_cancelOperation: {
       isEnabled: function(aAddon) {
         if (!aAddon)
