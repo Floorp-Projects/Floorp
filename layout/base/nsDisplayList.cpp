@@ -75,7 +75,6 @@
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "nsCSSProps.h"
 #include "nsPluginFrame.h"
-#include "DisplayItemScrollClip.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
 // GetTickCount().
@@ -747,6 +746,36 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
                                                         const nsRect& aDirtyRect)
 {
   nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
+  DisplayItemClip clip;
+  const DisplayItemClip* clipPtr = nullptr;
+  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+      IsPaintingToWindow()) {
+    NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
+    // position: fixed items are reflowed into and only drawn inside the
+    // viewport, or the scroll position clamping scrollport size, if one is
+    // set.
+    nsIPresShell* ps = aFrame->PresContext()->PresShell();
+    dirtyRectRelativeToDirtyFrame.MoveTo(0, 0);
+    if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
+      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetScrollPositionClampingScrollPortSize());
+    } else {
+      dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
+    }
+
+    // Always clip fixed items to the root scroll frame's scrollport, because
+    // we skip setting the clip in ScrollFrameHelper if we have a displayport.
+    nsIFrame* rootScroll = aFrame->PresContext()->PresShell()->GetRootScrollFrame();
+    if (rootScroll) {
+      nsIScrollableFrame* scrollable = do_QueryFrame(rootScroll);
+
+      nsRect clipRect = scrollable->GetScrollPortRect() + ToReferenceFrame(rootScroll);
+      nscoord radii[8];
+      bool haveRadii = rootScroll->GetPaddingBoxBorderRadii(radii);
+      clip.SetTo(clipRect, haveRadii ? radii : nullptr);
+      clipPtr = &clip;
+    }
+  }
+
   nsRect dirty = dirtyRectRelativeToDirtyFrame - aFrame->GetOffsetTo(aDirtyFrame);
   nsRect overflowRect = aFrame->GetVisualOverflowRect();
 
@@ -764,9 +793,16 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
   if (!dirty.IntersectRect(dirty, overflowRect))
     return;
 
+  // Combine clips if necessary
   const DisplayItemClip* oldClip = mClipState.GetClipForContainingBlockDescendants();
-  const DisplayItemScrollClip* sc = mClipState.GetCurrentInnermostScrollClip();
-  OutOfFlowDisplayData* data = new OutOfFlowDisplayData(oldClip, sc, dirty);
+  if (clipPtr && oldClip) {
+    clip.IntersectWith(*oldClip);
+  } else if (oldClip) {
+    clipPtr = oldClip;
+  }
+
+  OutOfFlowDisplayData* data = clipPtr ? new OutOfFlowDisplayData(*clipPtr, dirty)
+    : new OutOfFlowDisplayData(dirty);
   aFrame->Properties().Set(nsDisplayListBuilder::OutOfFlowDisplayDataProperty(), data);
 
   MarkFrameForDisplay(aFrame, aDirtyFrame);
@@ -794,11 +830,8 @@ nsDisplayListBuilder::~nsDisplayListBuilder() {
 
   nsCSSRendering::EndFrameTreesLocked();
 
-  for (DisplayItemClip* c : mDisplayItemClipsToDestroy) {
-    c->DisplayItemClip::~DisplayItemClip();
-  }
-  for (DisplayItemScrollClip* c : mScrollClipsToDestroy) {
-    c->DisplayItemScrollClip::~DisplayItemScrollClip();
+  for (uint32_t i = 0; i < mDisplayItemClipsToDestroy.Length(); ++i) {
+    mDisplayItemClipsToDestroy[i]->DisplayItemClip::~DisplayItemClip();
   }
 
   PL_FinishArenaPool(&mPool);
@@ -997,20 +1030,6 @@ nsDisplayListBuilder::AllocateDisplayItemClip(const DisplayItemClip& aOriginal)
 
   DisplayItemClip* c = new (p) DisplayItemClip(aOriginal);
   mDisplayItemClipsToDestroy.AppendElement(c);
-  return c;
-}
-
-DisplayItemScrollClip*
-nsDisplayListBuilder::AllocateDisplayItemScrollClip(const DisplayItemScrollClip* aParent,
-                                                    const DisplayItemScrollClip* aCrossStackingContextParent,
-                                                    nsIScrollableFrame* aScrollableFrame,
-                                                    const DisplayItemClip* aClip,
-                                                    bool aIsAsyncScrollable)
-{
-  void* p = Allocate(sizeof(DisplayItemScrollClip));
-  DisplayItemScrollClip* c =
-    new (p) DisplayItemScrollClip(aParent, aCrossStackingContextParent, aScrollableFrame, aClip, aIsAsyncScrollable);
-  mScrollClipsToDestroy.AppendElement(c);
   return c;
 }
 
@@ -1377,16 +1396,6 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
   nsRect bounds;
   for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
     bounds.UnionRect(bounds, i->GetClippedBounds(aBuilder));
-  }
-  return bounds;
-}
-
-nsRect
-nsDisplayList::GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const {
-  nsRect bounds;
-  for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetClippedBoundsUpTo(aBuilder, aIncludeScrollClipsUpTo));
   }
   return bounds;
 }
@@ -2072,7 +2081,6 @@ void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
   : mFrame(aFrame)
   , mClip(aBuilder->ClipState().GetCurrentCombinedClip(aBuilder))
-  , mScrollClip(aBuilder->ClipState().GetCurrentInnermostScrollClip())
   , mAnimatedGeometryRoot(nullptr)
 #ifdef MOZ_DUMP_PAINTING
   , mPainted(false)
@@ -2170,21 +2178,6 @@ nsDisplayItem::GetClippedBounds(nsDisplayListBuilder* aBuilder)
   bool snap;
   nsRect r = GetBounds(aBuilder, &snap);
   return GetClip().ApplyNonRoundedIntersection(r);
-}
-
-nsRect
-nsDisplayItem::GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo)
-{
-  nsRect r = GetClippedBounds(aBuilder);
-  for (const DisplayItemScrollClip* sc = mScrollClip;
-       sc && sc != aIncludeScrollClipsUpTo;
-       sc = sc->mParent) {
-    if (sc->mClip) {
-      r = sc->mClip->ApplyNonRoundedIntersection(r);
-    }
-  }
-  return r;
 }
 
 nsRect
@@ -3441,6 +3434,7 @@ nsDisplayCaret::nsDisplayCaret(nsDisplayListBuilder* aBuilder,
   : nsDisplayItem(aBuilder, aCaretFrame)
   , mCaret(aBuilder->GetCaret())
   , mBounds(aBuilder->GetCaretRect() + ToReferenceFrame())
+  , mNeedsCustomScrollClip(false)
 {
   MOZ_COUNT_CTOR(nsDisplayCaret);
 }
@@ -4018,10 +4012,8 @@ nsresult nsDisplayWrapper::WrapListsInPlace(nsDisplayListBuilder* aBuilder,
 
 nsDisplayOpacity::nsDisplayOpacity(nsDisplayListBuilder* aBuilder,
                                    nsIFrame* aFrame, nsDisplayList* aList,
-                                   const DisplayItemScrollClip* aScrollClipForSameAGRChildren,
                                    bool aForEventsOnly)
     : nsDisplayWrapList(aBuilder, aFrame, aList)
-    , mScrollClipForSameAGRChildren(aScrollClipForSameAGRChildren)
     , mOpacity(aFrame->StyleDisplay()->mOpacity)
     , mForEventsOnly(aForEventsOnly)
 {
@@ -4206,8 +4198,6 @@ bool nsDisplayOpacity::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* a
     return false;
   if (aItem->GetClip() != GetClip())
     return false;
-  if (aItem->ScrollClip() != ScrollClip())
-    return false;
   MergeFromTrackingMergedFrames(static_cast<nsDisplayOpacity*>(aItem));
   return true;
 }
@@ -4293,8 +4283,6 @@ bool nsDisplayMixBlendMode::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayIt
     return false;
   if (aItem->GetClip() != GetClip())
     return false;
-  if (aItem->ScrollClip() != ScrollClip())
-    return false;
   MergeFromTrackingMergedFrames(static_cast<nsDisplayMixBlendMode*>(aItem));
   return true;
 }
@@ -4364,8 +4352,6 @@ bool nsDisplayBlendContainer::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplay
   if (aItem->Frame()->GetContent() != mFrame->GetContent())
     return false;
   if (aItem->GetClip() != GetClip())
-    return false;
-  if (aItem->ScrollClip() != ScrollClip())
     return false;
   MergeFromTrackingMergedFrames(static_cast<nsDisplayBlendContainer*>(aItem));
   return true;
@@ -4691,8 +4677,6 @@ bool nsDisplayStickyPosition::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplay
   if (other->mFrame != mFrame)
     return false;
   if (aItem->GetClip() != GetClip())
-    return false;
-  if (aItem->ScrollClip() != ScrollClip())
     return false;
   MergeFromTrackingMergedFrames(other);
   return true;
@@ -5971,9 +5955,6 @@ nsDisplayTransform::TryMerge(nsDisplayListBuilder *aBuilder,
   if (aItem->GetClip() != GetClip())
     return false;
 
-  if (aItem->ScrollClip() != ScrollClip())
-    return false;
-
   /* Now, move everything over to this frame and signal that
    * we merged things!
    */
@@ -6326,8 +6307,6 @@ bool nsDisplaySVGEffects::TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem
   if (aItem->Frame()->GetContent() != mFrame->GetContent())
     return false;
   if (aItem->GetClip() != GetClip())
-    return false;
-  if (aItem->ScrollClip() != ScrollClip())
     return false;
   nsDisplaySVGEffects* other = static_cast<nsDisplaySVGEffects*>(aItem);
   MergeFromTrackingMergedFrames(other);
