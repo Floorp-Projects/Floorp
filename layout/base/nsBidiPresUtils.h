@@ -183,8 +183,7 @@ public:
   static nsresult FormatUnicodeText(nsPresContext*  aPresContext,
                                     char16_t*       aText,
                                     int32_t&        aTextLength,
-                                    nsCharType      aCharType,
-                                    nsBidiDirection aDir);
+                                    nsCharType      aCharType);
 
   /**
    * Reorder plain text using the Unicode Bidi algorithm and send it to
@@ -494,7 +493,6 @@ private:
    *  @lina 04/11/2000
    */
   static nscoord RepositionInlineFrames(BidiLineData* aBld,
-                                        nsIFrame* aFirstChild,
                                         mozilla::WritingMode aLineWM,
                                         const nsSize& aContainerSize,
                                         nscoord aStart);
@@ -506,7 +504,6 @@ private:
    *
    * @param aFrame       the original frame
    * @param aNewFrame    [OUT] the new frame that was created
-   * @param aFrameIndex  [IN/OUT] index of aFrame in mLogicalFrames
    * @param aStart       [IN] the start of the content mapped by aFrame (and 
    *                          any fluid continuations)
    * @param aEnd         [IN] the offset of the end of the single-directional
@@ -517,7 +514,6 @@ private:
   static inline
   nsresult EnsureBidiContinuation(nsIFrame*       aFrame,
                                   nsIFrame**      aNewFrame,
-                                  int32_t&        aFrameIndex,
                                   int32_t         aStart,
                                   int32_t         aEnd);
 

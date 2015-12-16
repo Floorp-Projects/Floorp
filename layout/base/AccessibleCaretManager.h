@@ -135,7 +135,7 @@ protected:
   void DoNotShowCarets();
 
   void UpdateCaretsForCursorMode(UpdateCaretsHint aHint);
-  void UpdateCaretsForSelectionMode(UpdateCaretsHint aHint);
+  void UpdateCaretsForSelectionMode();
 
   // Provide haptic / touch feedback, primarily for select on longpress.
   void ProvideHapticFeedback();
