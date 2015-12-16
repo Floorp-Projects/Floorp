@@ -4135,6 +4135,15 @@
     "bug_numbers": [1221674],
     "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in the content process."
   },
+  "FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "bug_numbers": [1228147],
+    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver while scrolling synchronously."
+  },
   "FX_TAB_SWITCH_UPDATE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
