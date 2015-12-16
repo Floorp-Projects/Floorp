@@ -59,8 +59,14 @@ WebGL2Context::RenderbufferStorageMultisample(GLenum target, GLsizei samples,
                                               GLenum internalFormat,
                                               GLsizei width, GLsizei height)
 {
-  RenderbufferStorage_base("renderbufferStorageMultisample", target, samples,
-                           internalFormat, width, height);
+  const char funcName[] = "renderbufferStorageMultisample";
+  if (IsContextLost())
+    return;
+
+  //RenderbufferStorage_base(funcName, target, samples, internalFormat, width, height);
+
+  ErrorInvalidOperation("%s: Multisampling is still under development, and is currently"
+                        " disabled.", funcName);
 }
 
 } // namespace mozilla
