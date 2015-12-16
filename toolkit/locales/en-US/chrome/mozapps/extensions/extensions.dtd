@@ -25,8 +25,6 @@
 
 <!ENTITY showUnsignedExtensions.button.label  "Some extensions could not be verified">
 <!ENTITY showAllExtensions.button.label       "Show all extensions">
-<!ENTITY debugAddons.label                    "Debug Add-ons">
-<!ENTITY debugAddons.accesskey                "B">
 
 <!-- global warnings -->
 <!ENTITY warning.safemode.label                    "All add-ons have been disabled by safe mode.">
