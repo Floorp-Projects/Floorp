@@ -4853,8 +4853,32 @@ template<>
 bool
 Parser<SyntaxParseHandler>::addExportName(JSAtom* exportName)
 {
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return SyntaxParseHandler::NodeFailure;
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
+}
+
+template<>
+bool
+Parser<FullParseHandler>::addExportNamesForDeclaration(ParseNode* node)
+{
+    MOZ_ASSERT(node->isArity(PN_LIST));
+    for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
+        if (binding->isKind(PNK_ASSIGN))
+            binding = binding->pn_left;
+        MOZ_ASSERT(binding->isKind(PNK_NAME));
+        if (!addExportName(binding->pn_atom))
+            return false;
+    }
+
+    return true;
+}
+
+template<>
+bool
+Parser<SyntaxParseHandler>::addExportNamesForDeclaration(Node node)
+{
+    MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
+    return false;
 }
 
 template<>
@@ -5031,15 +5055,8 @@ Parser<FullParseHandler>::exportDeclaration()
             return null();
         if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
             return null();
-
-        MOZ_ASSERT(kid->isArity(PN_LIST));
-        for (ParseNode* var = kid->pn_head; var; var = var->pn_next) {
-            if (var->isKind(PNK_ASSIGN))
-                var = var->pn_left;
-              MOZ_ASSERT(var->isKind(PNK_NAME));
-              if (!addExportName(var->pn_atom))
-                  return null();
-        }
+        if (!addExportNamesForDeclaration(kid))
+            return null();
         break;
 
       case TOK_DEFAULT: {
@@ -5082,6 +5099,8 @@ Parser<FullParseHandler>::exportDeclaration()
       case TOK_CONST:
         kid = lexicalDeclaration(YieldIsName, tt == TOK_CONST);
         if (!kid)
+            return null();
+        if (!addExportNamesForDeclaration(kid))
             return null();
         break;
 
