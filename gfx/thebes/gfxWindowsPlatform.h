@@ -177,7 +177,7 @@ public:
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                         int32_t aRunScript,
-                                        nsTArray<const char*>& aFontList) overide;
+                                        nsTArray<const char*>& aFontList) override;
 
     nsresult GetStandardFamilyName(const nsAString& aFontName, nsAString& aFamilyName) override;
 
