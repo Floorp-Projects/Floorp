@@ -28,7 +28,6 @@ this.EXPORTED_SYMBOLS = ["HawkClient"];
 
 var {interfaces: Ci, utils: Cu} = Components;
 
-Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-crypto/utils.js");
 Cu.import("resource://services-common/hawkrequest.js");
 Cu.import("resource://services-common/observers.js");
@@ -271,8 +270,7 @@ this.HawkClient.prototype = {
         // gets the same one.
         _onComplete.call(this, error);
       } catch (ex) {
-        log.error("Unhandled exception processing response:" +
-                  CommonUtils.exceptionStr(ex));
+        log.error("Unhandled exception processing response", ex);
         deferred.reject(ex);
       }
     }

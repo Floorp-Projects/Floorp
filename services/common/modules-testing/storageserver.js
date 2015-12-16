@@ -573,8 +573,7 @@ StorageServerCollection.prototype = {
           failed[record.id] = "no bso configured";
         }
       } catch (ex) {
-        this._log.info("Exception when processing BSO: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.info("Exception when processing BSO", ex);
         failed[record.id] = "Exception when processing.";
       }
     }
@@ -933,7 +932,7 @@ StorageServer.prototype = {
     } catch (ex) {
       _("==========================================");
       _("Got exception starting Storage HTTP server on port " + this.port);
-      _("Error: " + CommonUtils.exceptionStr(ex));
+      _("Error: " + Log.exceptionStr(ex));
       _("Is there a process already listening on port " + this.port + "?");
       _("==========================================");
       do_throw(ex);
@@ -1288,7 +1287,7 @@ StorageServer.prototype = {
       if (e instanceof HttpError) {
         this.respond(req, resp, e.code, e.description, "", {}, timestamp);
       } else {
-        this._log.warn(CommonUtils.exceptionStr(e));
+        this._log.warn("StorageServer: handleDefault caught an error", e);
         throw e;
       }
     }
@@ -1393,8 +1392,7 @@ StorageServer.prototype = {
       try {
         return handler.call(this, handler, req, resp, version, username, rest);
       } catch (ex) {
-        this._log.warn("Got exception during request: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Got exception during request", ex);
         throw ex;
       }
     }
