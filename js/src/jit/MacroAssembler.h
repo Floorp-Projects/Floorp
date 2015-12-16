@@ -1264,10 +1264,8 @@ class MacroAssembler : public MacroAssemblerSpecific
     // StackPointer manipulation functions.
     // On ARM64, the StackPointer is implemented as two synchronized registers.
     // Code shared across platforms must use these functions to be valid.
-    template <typename T>
-    void addToStackPtr(T t) { addPtr(t, getStackPointer()); }
-    template <typename T>
-    void addStackPtrTo(T t) { addPtr(getStackPointer(), t); }
+    template <typename T> inline void addToStackPtr(T t);
+    template <typename T> inline void addStackPtrTo(T t);
 
     template <typename T>
     void subFromStackPtr(T t) { subPtr(t, getStackPointer()); }
