@@ -89,6 +89,7 @@ nrappkit copyright:
 #include <sys/types.h>
 #include <assert.h>
 #include <errno.h>
+#include <string>
 
 #include "nspr.h"
 #include "prerror.h"
@@ -110,6 +111,8 @@ nrappkit copyright:
 #include "nsTArray.h"
 #include "mozilla/dom/TCPSocketBinding.h"
 #include "nsITCPSocketCallback.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 
 #if defined(MOZILLA_INTERNAL_API) && !defined(MOZILLA_XPCOMRT_API)
 // csi_platform.h deep in nrappkit defines LOG_INFO and LOG_WARNING
@@ -164,6 +167,7 @@ extern "C" {
 }
 #include "nr_socket_prsock.h"
 #include "simpletokenbucket.h"
+#include "test_nr_socket.h"
 
 // Implement the nsISupports ref counting
 namespace mozilla {

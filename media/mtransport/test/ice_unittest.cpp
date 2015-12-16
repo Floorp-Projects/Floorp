@@ -316,12 +316,9 @@ class IceTestPeer : public sigslot::has_slots<> {
         this,
         &IceTestPeer::ConnectionStateChange);
 
-    nr_socket_factory *fac;
-    int r = nat_->create_socket_factory(&fac);
+    int r = ice_ctx_->SetNat(nat_);
+    (void)r;
     MOZ_ASSERT(!r);
-    if (!r) {
-      nr_ice_ctx_set_socket_factory(ice_ctx_->ctx(), fac);
-    }
   }
 
   ~IceTestPeer() {
