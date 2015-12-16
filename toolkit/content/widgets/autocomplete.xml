@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
-
-# -*- Mode: HTML -*-
-# This Source Code Form is subject to the terms of the Mozilla Public
-# License, v. 2.0. If a copy of the MPL was not distributed with this
-# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <bindings id="autocompleteBindings"
           xmlns="http://www.mozilla.org/xbl"
@@ -448,15 +446,13 @@
 
           var cancel = false;
 
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           // Catch any keys that could potentially move the caret. Ctrl can be
           // used in combination with these keys on Windows and Linux; and Alt
           // can be used on OS X, so make sure the unused one isn't used.
-          if (!this.disableKeyNavigation &&
-#ifdef XP_MACOSX
-              !aEvent.ctrlKey) {
-#else
-              !aEvent.altKey) {
-#endif
+          let metaKey = AppConstants.platform == "macosx" ? aEvent.ctrlKey : aEvent.altKey;
+          if (!this.disableKeyNavigation && !metaKey) {
             switch (aEvent.keyCode) {
               case KeyEvent.DOM_VK_LEFT:
               case KeyEvent.DOM_VK_RIGHT:
@@ -493,11 +489,11 @@
               cancel = this.mController.handleEscape();
               break;
             case KeyEvent.DOM_VK_RETURN:
-#ifdef XP_MACOSX
-              // Prevent the default action, since it will beep on Mac
-              if (aEvent.metaKey)
-                aEvent.preventDefault();
-#endif
+              if (AppConstants.platform == "macosx") {
+                // Prevent the default action, since it will beep on Mac
+                if (aEvent.metaKey)
+                  aEvent.preventDefault();
+              }
               this.mEnterEvent = aEvent;
               if (this.mController.selection) {
                 this._selectionDetails = {
@@ -508,22 +504,26 @@
               cancel = this.handleEnter();
               break;
             case KeyEvent.DOM_VK_DELETE:
-#ifdef XP_MACOSX
-            case KeyEvent.DOM_VK_BACK_SPACE:
-              if (aEvent.shiftKey)
-#endif
+              if (AppConstants.platform == "macosx" && !aEvent.shiftKey) {
+                break;
+              }
               cancel = this.handleDelete();
+              break;
+            case KeyEvent.DOM_VK_BACK_SPACE:
+              if (AppConstants.platform == "macosx" && aEvent.shiftKey) {
+                cancel = this.handleDelete();
+              }
               break;
             case KeyEvent.DOM_VK_DOWN:
             case KeyEvent.DOM_VK_UP:
               if (aEvent.altKey)
                 this.toggleHistoryPopup();
               break;
-#ifndef XP_MACOSX
             case KeyEvent.DOM_VK_F4:
-              this.toggleHistoryPopup();
+              if (AppConstants.platform != "macosx") {
+                this.toggleHistoryPopup();
+              }
               break;
-#endif
           }
 
           if (cancel) {

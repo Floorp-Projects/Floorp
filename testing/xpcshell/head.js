@@ -383,7 +383,20 @@ function _setupDebuggerServer(breakpointFiles, callback) {
     prefs.setBoolPref("devtools.debugger.log.verbose", true);
   }
 
-  let { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
+  let require;
+  try {
+    ({ require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {}));
+  } catch (e) {
+    throw new Error("resource://devtools appears to be inaccessible from the " +
+                    "xpcshell environment.\n" +
+                    "This can usually be resolved by adding:\n" +
+                    "  firefox-appdir = browser\n" +
+                    "to the xpcshell.ini manifest.\n" +
+                    "It is possible for this to alter test behevior by " +
+                    "triggering additional browser code to run, so check " +
+                    "test behavior after making this change.\n" +
+                    "See also https://bugzil.la/1215378.")
+  }
   let { DebuggerServer } = require("devtools/server/main");
   let { OriginalLocation } = require("devtools/server/actors/common");
   DebuggerServer.init();
@@ -474,7 +487,9 @@ function _execute_test() {
     try {
       _initDebugging(_JSDEBUGGER_PORT);
     } catch (ex) {
-      do_print("Failed to initialize debugging: " + ex + "\n" + ex.stack);
+      // Fail the test run immediately if debugging is requested but fails, so
+      // that the failure state is more obvious.
+      do_throw(`Failed to initialize debugging: ${ex}`, ex.stack);
     }
   }
 
