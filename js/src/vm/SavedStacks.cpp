@@ -1120,7 +1120,7 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
             }
         }
 
-        AutoLocationValueRooter location(cx);
+        Rooted<LocationValue> location(cx);
         {
             AutoCompartment ac(cx, iter.compartment());
             if (!cx->compartment()->savedStacks().getLocation(cx, iter, &location))
@@ -1133,9 +1133,9 @@ SavedStacks::insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFram
             parentIsInCache = iter.hasCachedSavedFrame();
 
         auto displayAtom = iter.isNonEvalFunctionFrame() ? iter.functionDisplayAtom() : nullptr;
-        if (!stackChain->emplaceBack(location->source,
-                                     location->line,
-                                     location->column,
+        if (!stackChain->emplaceBack(location.source(),
+                                     location.line(),
+                                     location.column(),
                                      displayAtom,
                                      nullptr,
                                      nullptr,
@@ -1323,7 +1323,8 @@ SavedStacks::sweepPCLocationMap()
 }
 
 bool
-SavedStacks::getLocation(JSContext* cx, const FrameIter& iter, MutableHandleLocationValue locationp)
+SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
+                         MutableHandle<LocationValue> locationp)
 {
     // We should only ever be caching location values for scripts in this
     // compartment. Otherwise, we would get dead cross-compartment scripts in
@@ -1338,19 +1339,20 @@ SavedStacks::getLocation(JSContext* cx, const FrameIter& iter, MutableHandleLoca
 
     if (!iter.hasScript()) {
         if (const char16_t* displayURL = iter.scriptDisplayURL()) {
-            locationp->source = AtomizeChars(cx, displayURL, js_strlen(displayURL));
+            locationp.setSource(AtomizeChars(cx, displayURL, js_strlen(displayURL)));
         } else {
             const char* filename = iter.scriptFilename() ? iter.scriptFilename() : "";
-            locationp->source = Atomize(cx, filename, strlen(filename));
+            locationp.setSource(Atomize(cx, filename, strlen(filename)));
         }
-        if (!locationp->source)
+        if (!locationp.source())
             return false;
 
-        locationp->line = iter.computeLine(&locationp->column);
+        uint32_t column = 0;
+        locationp.setLine(iter.computeLine(&column));
         // XXX: Make the column 1-based as in other browsers, instead of 0-based
         // which is how SpiderMonkey stores it internally. This will be
         // unnecessary once bug 1144340 is fixed.
-        locationp->column++;
+        locationp.setColumn(column + 1);
         return true;
     }
 
