@@ -136,7 +136,7 @@ gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget)
         // the cairo_t, precluding any further drawing.
         return false;
     }
-    cairo_set_scaled_font(gfxContext::RefCairo(aDrawTarget), mScaledFont);
+    cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), mScaledFont);
     return true;
 }
 

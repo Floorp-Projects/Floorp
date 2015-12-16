@@ -575,7 +575,7 @@ gfxFontShaper::GetRoundOffsetsToPixels(DrawTarget* aDrawTarget,
     // Print backends set CAIRO_HINT_METRICS_OFF.
     *aRoundY = true;
 
-    cairo_t* cr = gfxContext::RefCairo(aDrawTarget);
+    cairo_t* cr = gfxFont::RefCairo(aDrawTarget);
     cairo_scaled_font_t *scaled_font = cairo_get_scaled_font(cr);
 
     // bug 1198921 - this sometimes fails under Windows for whatver reason
@@ -3256,6 +3256,40 @@ gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
     return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
 }
 
+static void
+DestroyRefCairo(void* aData)
+{
+  cairo_t* refCairo = static_cast<cairo_t*>(aData);
+  MOZ_ASSERT(refCairo);
+  cairo_destroy(refCairo);
+}
+
+/* static */ cairo_t *
+gfxFont::RefCairo(DrawTarget* aDT)
+{
+  // DrawTargets that don't use a Cairo backend can be given a 1x1 "reference"
+  // |cairo_t*|, stored in the DrawTarget's user data, for doing font-related
+  // operations.
+  static UserDataKey sRefCairo;
+
+  cairo_t* refCairo = nullptr;
+  if (aDT->GetBackendType() == BackendType::CAIRO) {
+    refCairo = static_cast<cairo_t*>
+      (aDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+    if (refCairo) {
+      return refCairo;
+    }
+  }
+
+  refCairo = static_cast<cairo_t*>(aDT->GetUserData(&sRefCairo));
+  if (!refCairo) {
+    refCairo = cairo_create(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->CairoSurface());
+    aDT->AddUserData(&sRefCairo, refCairo, DestroyRefCairo);
+  }
+
+  return refCairo;
+}
+
 gfxGlyphExtents *
 gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
     uint32_t i, count = mGlyphExtentsArray.Length();
@@ -3294,8 +3328,7 @@ gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
     glyph.x = 0;
     glyph.y = 0;
     cairo_text_extents_t extents;
-    cairo_glyph_extents(gfxContext::RefCairo(aDrawTarget),
-                        &glyph, 1, &extents);
+    cairo_glyph_extents(gfxFont::RefCairo(aDrawTarget), &glyph, 1, &extents);
 
     const Metrics& fontMetrics = GetMetrics(eHorizontal);
     int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();

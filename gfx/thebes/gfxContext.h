@@ -85,12 +85,6 @@ public:
         return CurrentSurface(nullptr, nullptr);
     }
 
-    /**
-     * Return the reference cairo_t object from aDT.
-     * XXX this should be moved into gfxFont at some point.
-     */
-    static cairo_t* RefCairo(mozilla::gfx::DrawTarget* aDT);
-
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 
     /**
