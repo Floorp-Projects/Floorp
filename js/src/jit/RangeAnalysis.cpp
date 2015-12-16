@@ -2804,6 +2804,7 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
 {
     bool isCapturedResult = false;
     bool isObservableResult = false;
+    bool isRecoverableResult = true;
     bool hasUseRemoved = candidate->isUseRemoved();
 
     MDefinition::TruncateKind kind = MDefinition::Truncate;
@@ -2816,6 +2817,8 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
             isCapturedResult = true;
             isObservableResult = isObservableResult ||
                 use->consumer()->toResumePoint()->isObservableOperand(*use);
+            isRecoverableResult = isRecoverableResult &&
+                use->consumer()->toResumePoint()->isRecoverableOperand(*use);
             continue;
         }
 
@@ -2847,25 +2850,24 @@ ComputeRequestedTruncateKind(MDefinition* candidate, bool* shouldClone)
     // truncation.
     if (isCapturedResult && needsConversion) {
 
-        // 1. Recover instructions are useless if there is no removed uses.  Not
-        // having removed uses means that we know everything about where this
-        // results flows into.
-        //
-        // 2. If the result is observable, then we cannot recover it.
-        //
-        // 3. The cloned instruction is expected to be used as a recover
-        // instruction.
-        if (hasUseRemoved && !isObservableResult && candidate->canRecoverOnBailout())
+        // These optimizations are pointless if there are no removed uses or any
+        // resume point observing the result.  Not having any means that we know
+        // everything about where this results flows into.
+        if ((hasUseRemoved || (isObservableResult && isRecoverableResult)) &&
+            candidate->canRecoverOnBailout())
+        {
+            // The cloned instruction is expected to be used as a recover
+            // instruction.
             *shouldClone = true;
 
-        // 1. If uses are removed, then we need to keep the expected result for
-        // dead branches.
-        //
-        // 2. If the result is observable, then the result might be read while
-        // the frame is on the stack.
-        else if (hasUseRemoved || isObservableResult)
+        } else if (hasUseRemoved || isObservableResult) {
+            // 1. If uses are removed and we cannot recover the result, then we
+            // need to keep the expected result for dead branches.
+            //
+            // 2. If the result is observable and not recoverable, then the
+            // result might be read while the frame is on the stack.
             kind = Min(kind, MDefinition::TruncateAfterBailouts);
-
+        }
     }
 
     return kind;
