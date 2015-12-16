@@ -22,6 +22,7 @@ add_task(function* prepare() {
 });
 
 add_task(function* clickSuggestion() {
+  gBrowser.selectedTab = gBrowser.addTab();
   gURLBar.focus();
   yield promiseAutocompleteResultPopup("foo");
   let [idx, suggestion] = yield promiseFirstSuggestion();
@@ -32,6 +33,7 @@ add_task(function* clickSuggestion() {
   let uri = Services.search.currentEngine.getSubmission(suggestion).uri;
   Assert.ok(uri.equals(gBrowser.currentURI),
             "The search results page should have loaded");
+  gBrowser.removeTab(gBrowser.selectedTab);
 });
 
 function getFirstSuggestion() {
