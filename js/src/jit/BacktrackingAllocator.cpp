@@ -1007,12 +1007,12 @@ BacktrackingAllocator::tryMergeReusedRegister(VirtualRegister& def, VirtualRegis
         if (iter->pos <= inputOf(def.ins()))
             continue;
 
-        LUse* use = iter->use;
+        LUse* use = iter->use();
         if (FindReusingDefinition(insData[iter->pos], use)) {
             def.setMustCopyInput();
             return true;
         }
-        if (use->policy() != LUse::ANY && use->policy() != LUse::KEEPALIVE) {
+        if (iter->usePolicy() != LUse::ANY && iter->usePolicy() != LUse::KEEPALIVE) {
             def.setMustCopyInput();
             return true;
         }
@@ -1337,9 +1337,9 @@ BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
 
         // Search uses for requirements.
         for (UsePositionIterator iter = range->usesBegin(); iter; iter++) {
-            LUse::Policy policy = iter->use->policy();
+            LUse::Policy policy = iter->usePolicy();
             if (policy == LUse::FIXED) {
-                AnyRegister required = GetFixedRegister(reg.def(), iter->use);
+                AnyRegister required = GetFixedRegister(reg.def(), iter->use());
 
                 JitSpew(JitSpew_RegAlloc, "  Requirement %s, due to use at %u",
                         required.name(), iter->pos.bits());
@@ -1865,11 +1865,11 @@ BacktrackingAllocator::isReusedInput(LUse* use, LNode* ins, bool considerCopy)
 }
 
 bool
-BacktrackingAllocator::isRegisterUse(LUse* use, LNode* ins, bool considerCopy)
+BacktrackingAllocator::isRegisterUse(UsePosition* use, LNode* ins, bool considerCopy)
 {
-    switch (use->policy()) {
+    switch (use->usePolicy()) {
       case LUse::ANY:
-        return isReusedInput(use, ins, considerCopy);
+        return isReusedInput(use->use(), ins, considerCopy);
 
       case LUse::REGISTER:
       case LUse::FIXED:
@@ -1924,7 +1924,7 @@ BacktrackingAllocator::reifyAllocations()
             }
 
             for (UsePositionIterator iter(range->usesBegin()); iter; iter++) {
-                LAllocation* alloc = iter->use;
+                LAllocation* alloc = iter->use();
                 *alloc = range->bundle()->allocation();
 
                 // For any uses which feed into MUST_REUSE_INPUT definitions,
@@ -2252,7 +2252,7 @@ LiveRange::toString() const
     }
 
     for (UsePositionIterator iter = usesBegin(); iter; iter++) {
-        n = JS_snprintf(cursor, end - cursor, " %s@%u", iter->use->toString(), iter->pos.bits());
+        n = JS_snprintf(cursor, end - cursor, " %s@%u", iter->use()->toString(), iter->pos.bits());
         if (n >= uint32_t(end - cursor))
             return " (truncated)";
         cursor += n;
@@ -2407,7 +2407,7 @@ BacktrackingAllocator::minimalUse(LiveRange* range, UsePosition* use)
     // Whether this is a minimal range capturing |use|.
     LNode* ins = insData[use->pos];
     return (range->from() == inputOf(ins)) &&
-           (range->to() == (use->use->usedAtStart() ? outputOf(ins) : outputOf(ins).next()));
+           (range->to() == (use->use()->usedAtStart() ? outputOf(ins) : outputOf(ins).next()));
 }
 
 bool
@@ -2438,9 +2438,8 @@ BacktrackingAllocator::minimalBundle(LiveBundle* bundle, bool* pfixed)
     for (UsePositionIterator iter = range->usesBegin(); iter; iter++) {
         if (iter != range->usesBegin())
             multiple = true;
-        LUse* use = iter->use;
 
-        switch (use->policy()) {
+        switch (iter->usePolicy()) {
           case LUse::FIXED:
             if (fixed)
                 return false;
@@ -2495,9 +2494,7 @@ BacktrackingAllocator::computeSpillWeight(LiveBundle* bundle)
         }
 
         for (UsePositionIterator iter = range->usesBegin(); iter; iter++) {
-            LUse* use = iter->use;
-
-            switch (use->policy()) {
+            switch (iter->usePolicy()) {
               case LUse::ANY:
                 usesTotal += 1000;
                 break;
@@ -2689,7 +2686,6 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveBundle* bundle, LiveBund
         }
 
         for (UsePositionIterator iter(range->usesBegin()); iter; iter++) {
-            LUse* use = iter->use;
             LNode* ins = insData[iter->pos];
 
             // Uses in the bundle should be sorted.
@@ -2697,7 +2693,7 @@ BacktrackingAllocator::trySplitAfterLastRegisterUse(LiveBundle* bundle, LiveBund
             lastUse = inputOf(ins);
 
             if (!conflict || outputOf(ins) < conflict->firstRange()->from()) {
-                if (isRegisterUse(use, ins, /* considerCopy = */ true)) {
+                if (isRegisterUse(*iter, ins, /* considerCopy = */ true)) {
                     lastRegisterFrom = inputOf(ins);
                     lastRegisterTo = iter->pos.next();
                 }
@@ -2756,11 +2752,10 @@ BacktrackingAllocator::trySplitBeforeFirstRegisterUse(LiveBundle* bundle, LiveBu
         LiveRange* range = LiveRange::get(*iter);
 
         for (UsePositionIterator iter(range->usesBegin()); iter; iter++) {
-            LUse* use = iter->use;
             LNode* ins = insData[iter->pos];
 
             if (!conflict || outputOf(ins) >= conflictEnd) {
-                if (isRegisterUse(use, ins, /* considerCopy = */ true)) {
+                if (isRegisterUse(*iter, ins, /* considerCopy = */ true)) {
                     firstRegisterFrom = inputOf(ins);
                     break;
                 }
@@ -2925,7 +2920,7 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
             // finished must be associated with the range for that definition.
             if (isRegisterDefinition(range) && use->pos <= minimalDefEnd(insData[range->from()])) {
                 activeRange->addUse(use);
-            } else if (isRegisterUse(use->use, ins)) {
+            } else if (isRegisterUse(use, ins)) {
                 // Place this register use into a different bundle from the
                 // last one if there are any split points between the two uses.
                 // UseNewBundle always returns true if we are splitting at all
@@ -2936,8 +2931,8 @@ BacktrackingAllocator::splitAt(LiveBundle* bundle, const SplitPositionVector& sp
                 if (UseNewBundle(splitPositions, use->pos, &activeSplitPosition) &&
                     (!activeRange->hasUses() ||
                      activeRange->usesBegin()->pos != use->pos ||
-                     activeRange->usesBegin()->use->policy() == LUse::FIXED ||
-                     use->use->policy() == LUse::FIXED))
+                     activeRange->usesBegin()->usePolicy() == LUse::FIXED ||
+                     use->usePolicy() == LUse::FIXED))
                 {
                     activeBundle = LiveBundle::New(alloc(), bundle->spillSet(), spillBundle);
                     if (!newBundles.append(activeBundle))
