@@ -28,16 +28,23 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         React.createElement("div", {className: "fte-get-started-content"}, 
-          React.createElement("header", {className: "fte-title"}, 
-            React.createElement("img", {src: "shared/img/hello_logo.svg"}), 
+          React.createElement("div", {className: "fte-title"}, 
+            React.createElement("img", {className: "fte-logo", src: "shared/img/hello_logo.svg"}), 
             React.createElement("div", {className: "fte-subheader"}, 
-              mozL10n.get("first_time_experience_subheading")
-            )
+              mozL10n.get("first_time_experience_subheading2")
+            ), 
+            React.createElement("hr", {className: "fte-separator"}), 
+            React.createElement("div", {className: "fte-content"}, 
+              mozL10n.get("first_time_experience_content")
+            ), 
+            React.createElement("img", {className: "fte-hello-web-share", src: "shared/img/hello-web-share.svg"})
           ), 
-          React.createElement(Button, {additionalClass: "fte-get-started-button", 
-                  caption: mozL10n.get("first_time_experience_button_label"), 
-                  htmlId: "fte-button", 
-                  onClick: this.handleButtonClick})
+          React.createElement("div", {className: "fte-button-container"}, 
+            React.createElement(Button, {additionalClass: "fte-get-started-button", 
+                    caption: mozL10n.get("first_time_experience_button_label"), 
+                    htmlId: "fte-button", 
+                    onClick: this.handleButtonClick})
+          )
         )
       );
     }
