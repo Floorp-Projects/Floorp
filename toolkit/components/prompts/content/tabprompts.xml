@@ -311,19 +311,21 @@
             let bnum = this.args.defaultButtonNum || 0;
             let defaultButton = this.ui["button" + bnum];
 
-#ifdef XP_MACOSX
-            // On OS X, the default button always stays marked as such (until
-            // the entire prompt blurs).
-            defaultButton.setAttribute("default", true);
-#else
-            // On other platforms, the default button is only marked as such
-            // when no other button has focus. XUL buttons on not-OSX will
-            // react to pressing enter as a command, so you can't trigger the
-            // default without tabbing to it or something that isn't a button.
-            let focusedDefault = (event.originalTarget == defaultButton);
-            let someButtonFocused = event.originalTarget instanceof Ci.nsIDOMXULButtonElement;
-            defaultButton.setAttribute("default", focusedDefault || !someButtonFocused);
-#endif
+            let { AppConstants } =
+                Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+            if (AppConstants.platform == "macosx") {
+              // On OS X, the default button always stays marked as such (until
+              // the entire prompt blurs).
+              defaultButton.setAttribute("default", true);
+            } else {
+              // On other platforms, the default button is only marked as such
+              // when no other button has focus. XUL buttons on not-OSX will
+              // react to pressing enter as a command, so you can't trigger the
+              // default without tabbing to it or something that isn't a button.
+              let focusedDefault = (event.originalTarget == defaultButton);
+              let someButtonFocused = event.originalTarget instanceof Ci.nsIDOMXULButtonElement;
+              defaultButton.setAttribute("default", focusedDefault || !someButtonFocused);
+            }
         </handler>
         <handler event="blur">
             // If focus shifted to somewhere else in the browser, don't make

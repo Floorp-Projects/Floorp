@@ -72,23 +72,22 @@
           // Setting this attribute allows wizard's clients to dynamically
           // change the styles of each page based on purpose of the page. 
           this.setAttribute("currentpageid", val.pageid);
-                    
+
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {}); 
+
           if (this.onFirstPage) {
             this.canRewind = false;
             this.setAttribute("firstpage", "true");
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-            this._backButton.setAttribute('hidden', 'true');
-#endif
-#endif
+            if (AppConstants.XP_UNIX && AppConstants.platform != "macosx") {
+              this._backButton.setAttribute('hidden', 'true');
+            }
           } else {
             this.canRewind = true;
             this.setAttribute("firstpage", "false");
-#ifdef XP_UNIX
-#ifndef XP_MACOSX
-            this._backButton.setAttribute('hidden', 'false');
-#endif
-#endif
+            if (AppConstants.XP_UNIX && AppConstants.platform != "macosx") {
+              this._backButton.setAttribute('hidden', 'false');
+            }
           }
                     
           if (this.onLastPage) {
@@ -390,19 +389,22 @@
 
       <method name="_adjustWizardHeader">
         <body><![CDATA[
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
           var label = this.currentPage.getAttribute("label");
-          if (!label && this.onFirstPage && this._bundle)
-#ifdef XP_MACOSX
-            label = this._bundle.GetStringFromName("default-first-title-mac");
-#else
-            label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
-#endif
-          else if (!label && this.onLastPage && this._bundle)
-#ifdef XP_MACOSX
-            label = this._bundle.GetStringFromName("default-last-title-mac");
-#else
-            label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
-#endif
+          if (!label && this.onFirstPage && this._bundle) {
+            if (AppConstants.platform == "macosx") {
+              label = this._bundle.GetStringFromName("default-first-title-mac");
+            } else {
+              label = this._bundle.formatStringFromName("default-first-title", [this.title], 1);
+            }
+          } else if (!label && this.onLastPage && this._bundle) {
+            if (AppConstants.platform == "macosx") {
+              label = this._bundle.GetStringFromName("default-last-title-mac");
+            } else {
+              label = this._bundle.formatStringFromName("default-last-title", [this.title], 1);
+            }
+          }
           this._wizardHeader.setAttribute("label", label);
           this._wizardHeader.setAttribute("description", this.currentPage.getAttribute("description"));
         ]]></body>

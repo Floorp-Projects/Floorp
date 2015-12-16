@@ -51,24 +51,25 @@
         <parameter name="aFile"/>
         <body>
         <![CDATA[
-#ifdef XP_WIN
-          var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
-          try {
-            return lfw.getVersionInfoField("FileDescription"); 
+          let { AppConstants } =
+              Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+          if (AppConstants.platform == "win") {
+            var lfw = aFile.QueryInterface(Components.interfaces.nsILocalFileWin);
+            try {
+              return lfw.getVersionInfoField("FileDescription");
+            }
+            catch (e) {
+              // fall through to the filename
+            }
+          } else if (AppConstants.platform == "macosx") {
+            var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
+            try {
+              return lfm.bundleDisplayName;
+            }
+            catch (e) {
+              // fall through to the file name
+            }
           }
-          catch (e) {
-            // fall through to the filename
-          }
-#endif
-#ifdef XP_MACOSX
-          var lfm = aFile.QueryInterface(Components.interfaces.nsILocalFileMac);
-          try {
-            return lfm.bundleDisplayName;
-          }
-          catch (e) {
-            // fall through to the file name
-          }
-#endif
           var ios = Components.classes["@mozilla.org/network/io-service;1"]
                               .getService(Components.interfaces.nsIIOService);
           var url = ios.newFileURI(aFile).QueryInterface(Components.interfaces.nsIURL);

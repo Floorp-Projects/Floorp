@@ -966,11 +966,10 @@
         var control = this.control;
         if (!control || control.disabled)
           return;
-        if ((!event.ctrlKey
-#ifdef XP_MACOSX
-             || event.button == 2
-#endif
-            ) && !event.shiftKey && !event.metaKey) {
+        let { AppConstants } =
+            Components.utils.import("resource://gre/modules/AppConstants.jsm", {});
+        if ((!event.ctrlKey || (AppConstants.platform == "macosx" && event.button == 2)) &&
+            !event.shiftKey && !event.metaKey) {
           if (!this.selected) {
             control.selectItem(this);
           }
