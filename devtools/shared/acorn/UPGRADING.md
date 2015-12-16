@@ -26,3 +26,6 @@ to:
 5. Copy util/walk.js to our tree:
 
        $ cp util/walk.js /path/to/mozilla-central/devtools/shared/acorn/walk.js
+
+6. Check and see if javascript pretty-printing and scratchpad work without any errors.  As of version 2.6.4 we need to comment out lines in acorn_loose.js that attempt to extend the acorn object, like `acorn.parse_dammit = parse_dammit`.
+

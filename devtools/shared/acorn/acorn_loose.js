@@ -578,9 +578,11 @@ function parse_dammit(input, options) {
   return p.parseTopLevel();
 }
 
-acorn.parse_dammit = parse_dammit;
-acorn.LooseParser = _state.LooseParser;
-acorn.pluginsLoose = _state.pluginsLoose;
+// Don't define new properties on acorn because of:
+// TypeError: can't define property "parse_dammit": Object is not extensible
+// acorn.parse_dammit = parse_dammit;
+// acorn.LooseParser = _state.LooseParser;
+// acorn.pluginsLoose = _state.pluginsLoose;
 
 },{"..":1,"./expression":2,"./state":5,"./statement":6,"./tokenize":7}],4:[function(_dereq_,module,exports){
 "use strict";
