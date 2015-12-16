@@ -54,14 +54,13 @@ AutoCompleteInputBase.prototype = {
   
   popupOpen: false,  
   
-  popup: { 
-    selectedIndex: 0,
-    invalidate: function() {},
-
-    // nsISupports implementation
-    QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup])   
+  get popup() {
+    if (!this._popup) {
+      this._popup = new AutocompletePopupBase(this);
+    }
+    return this._popup;
   },
-    
+
   // nsISupports implementation
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompleteInput])
 }
@@ -161,6 +160,25 @@ AutoCompleteSearchBase.prototype = {
     return this.QueryInterface(iid);
   }
 }
+
+function AutocompletePopupBase(input) {
+  this.input = input;
+}
+AutocompletePopupBase.prototype = {
+  selectedIndex: 0,
+  invalidate() {},
+  selectBy(reverse, page) {
+    let numRows = this.input.controller.matchCount;
+    if (numRows > 0) {
+      let delta = reverse ? -1 : 1;
+      this.selectedIndex = (this.selectedIndex + delta) % numRows;
+      if (this.selectedIndex < 0) {
+        this.selectedIndex = numRows - 1;
+      }
+    }
+  },
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAutoCompletePopup]),
+};
 
 /** 
  * Helper to register an AutoCompleteSearch with the given name.

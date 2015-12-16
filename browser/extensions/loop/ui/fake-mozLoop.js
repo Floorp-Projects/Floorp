@@ -155,9 +155,9 @@ var fakeRooms = [
     GetErrors: function() {},
     GetLoopPref: function(pref) {
       switch (pref) {
-        // Ensure we skip FTE completely.
-        case "gettingStarted.seen":
-          return true;
+        // Ensure we skip FTE completely if FTU_VERSION = 1.
+        case "gettingStarted.latestFTUVersion":
+          return 1;
       }
       return null;
     },
