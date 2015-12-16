@@ -5058,6 +5058,17 @@
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_COUNT_INIT_NO_RECORD": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "a testing histogram; not meant to be touched - initially not recording"
+  },
+  "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "a testing histogram; not meant to be touched - initially not recording"
+  },
   "TELEMETRY_TEST_KEYED_FLAG": {
     "expires_in_version": "never",
     "kind": "flag",
