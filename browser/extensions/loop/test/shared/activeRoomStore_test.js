@@ -224,7 +224,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
       sinon.assert.calledOnce(requestStubs["HangupNow"]);
       sinon.assert.calledWithExactly(requestStubs["HangupNow"],
-        "fakeToken", "42");
+        "fakeToken", "1627384950", "42");
     });
 
     it("should not call 'HangupNow' Loop API if failedJoinRequest is true", function() {
@@ -1248,7 +1248,7 @@ describe("loop.store.ActiveRoomStore", function() {
 
       sinon.assert.calledOnce(requestStubs["HangupNow"]);
       sinon.assert.calledWithExactly(requestStubs["HangupNow"],
-        "fakeToken", "42");
+        "fakeToken", "1627384950", "42");
     });
 
     it("should remove the sharing listener", function() {
@@ -1807,19 +1807,23 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(clearTimeout);
     });
 
-    it("should not call 'HangupNow' Loop API", function() {
+    it("should call 'HangupNow' Loop API", function() {
       store.windowUnload();
 
-      sinon.assert.notCalled(requestStubs["HangupNow"]);
+      sinon.assert.calledOnce(requestStubs["HangupNow"]);
+      sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken",
+        "1627384950", "1234");
     });
 
-    it("should call not call 'HangupNow' Loop API if the room state is JOINING",
+    it("should call 'HangupNow' Loop API if the room state is JOINING",
       function() {
         store.setStoreState({ roomState: ROOM_STATES.JOINING });
 
         store.windowUnload();
 
-        sinon.assert.notCalled(requestStubs["HangupNow"]);
+        sinon.assert.calledOnce(requestStubs["HangupNow"]);
+        sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken",
+          "1627384950", "1234");
       });
 
     it("should remove the sharing listener", function() {
@@ -1872,7 +1876,16 @@ describe("loop.store.ActiveRoomStore", function() {
       sinon.assert.calledOnce(clearTimeout);
     });
 
-    it("should not call 'HangupNow' Loop API", function() {
+    it("should call 'HangupNow' Loop API", function() {
+      store.leaveRoom();
+
+      sinon.assert.calledOnce(requestStubs["HangupNow"]);
+      sinon.assert.calledWith(requestStubs["HangupNow"], "fakeToken", "1627384950");
+    });
+
+    it("should not call 'HangupNow' Loop API when _isDesktop is true", function() {
+      store._isDesktop = true;
+
       store.leaveRoom();
 
       sinon.assert.notCalled(requestStubs["HangupNow"]);
