@@ -79,7 +79,7 @@ function httpd_setup (handlers, port=-1) {
   } catch (ex) {
     _("==========================================");
     _("Got exception starting HTTP server on port " + port);
-    _("Error: " + CommonUtils.exceptionStr(ex));
+    _("Error: " + Log.exceptionStr(ex));
     _("Is there a process already listening on port " + port + "?");
     _("==========================================");
     do_throw(ex);
