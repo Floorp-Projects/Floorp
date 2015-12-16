@@ -12,7 +12,7 @@ interface nsIFetchTelemetryDataCallback : nsISupports
   void complete();
 };
 
-[scriptable, uuid(fabde631-c128-41c3-b7cb-9eb96f1276ff)]
+[scriptable, uuid(273d2dd0-6c63-475a-b864-cb65160a1909)]
 interface nsITelemetry : nsISupports
 {
   /**
@@ -326,6 +326,16 @@ interface nsITelemetry : nsISupports
    * @param addon_id - Unique ID of the addon
    */
   void unregisterAddonHistograms(in ACString addon_id);
+
+  /**
+   * Enable/disable recording for this histogram at runtime.
+   * Recording is enabled by default, unless listed at kRecordingInitiallyDisabledIDs[].
+   * Name must be a valid Histogram identifier, otherwise an assertion will be triggered.
+   *
+   * @param id - unique identifier from histograms.json
+   * @param enabled - whether or not to enable recording from now on.
+   */
+  void setHistogramRecordingEnabled(in ACString id, in boolean enabled);
 
   /**
    * An object containing a snapshot from all of the currently
