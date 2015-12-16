@@ -41,6 +41,7 @@
 #define BASE_METRICS_HISTOGRAM_H_
 #pragma once
 
+#include "mozilla/Atomics.h"
 #include "mozilla/MemoryReporting.h"
 
 #include <map>
@@ -405,6 +406,12 @@ class Histogram {
   void Add(int value);
   void Subtract(int value);
 
+  // TODO: Currently recording_enabled_ is not used by any Histogram class, but
+  //       rather examined only by the telemetry code (via IsRecordingEnabled).
+  //       Move handling to Histogram's Add() etc after simplifying Histogram.
+  void SetRecordingEnabled(bool aEnabled) { recording_enabled_ = aEnabled; };
+  bool IsRecordingEnabled() const { return recording_enabled_; };
+
   // This method is an interface, used only by BooleanHistogram.
   virtual void AddBoolean(bool value);
 
@@ -527,6 +534,9 @@ class Histogram {
   // Finally, provide the state that changes with the addition of each new
   // sample.
   SampleSet sample_;
+
+  // When false, new samples are completely ignored.
+  mozilla::Atomic<bool, mozilla::Relaxed> recording_enabled_;
 
  private:
   friend class StatisticsRecorder;  // To allow it to delete duplicates.
