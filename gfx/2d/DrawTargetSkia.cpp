@@ -591,6 +591,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 
   bool shouldLCDRenderText = ShouldLCDRenderText(aFont->GetType(), aOptions.mAntialiasMode);
   paint.mPaint.setLCDRenderText(shouldLCDRenderText);
+  paint.mPaint.setSubpixelText(true);
 
   if (aRenderingOptions && aRenderingOptions->GetType() == FontType::CAIRO) {
     const GlyphRenderingOptionsCairo* cairoOptions =
