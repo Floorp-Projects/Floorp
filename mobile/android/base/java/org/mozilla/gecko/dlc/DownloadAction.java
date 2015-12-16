@@ -73,6 +73,7 @@ public class DownloadAction extends BaseAction {
                 File destinationFile = getDestinationFile(context, content);
                 if (destinationFile.exists() && verify(destinationFile, content.getChecksum())) {
                     Log.d(LOGTAG, "Content already exists and is up-to-date.");
+                    catalog.markAsDownloaded(content);
                     continue;
                 }
 
