@@ -538,8 +538,7 @@ public:
    * aDisplayPort, if non-null, is set to the display port rectangle (relative to
    * the viewport).
    */
-  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame,
-                                           nsRect* aDisplayPort = nullptr);
+  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame);
 
   /**
    * Store whether aThumbFrame wants its own layer. This sets a property on
