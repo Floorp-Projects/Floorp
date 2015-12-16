@@ -3012,6 +3012,18 @@ RangeAnalysis::truncate()
             if (kind == MDefinition::NoTruncate)
                 continue;
 
+            // Range Analysis is sometimes eager to do optimizations, even if we
+            // are not be able to truncate an instruction. In such case, we
+            // speculatively compile the instruction to an int32 instruction
+            // while adding a guard. This is what is implied by
+            // TruncateAfterBailout.
+            //
+            // If we already experienced an overflow bailout while executing
+            // code within the current JSScript, we no longer attempt to make
+            // this kind of eager optimizations.
+            if (kind <= MDefinition::TruncateAfterBailouts && block->info().hadOverflowBailout())
+                continue;
+
             // Truncate this instruction if possible.
             if (!iter->needTruncation(kind))
                 continue;
