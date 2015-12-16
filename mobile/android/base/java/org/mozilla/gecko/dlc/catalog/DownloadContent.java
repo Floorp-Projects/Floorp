@@ -93,6 +93,10 @@ public class DownloadContent {
         return location;
     }
 
+    public long getLastModified() {
+        return lastModified;
+    }
+
     public String getFilename() {
         return filename;
     }
