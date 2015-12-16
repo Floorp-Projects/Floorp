@@ -721,7 +721,10 @@ const kMessageHandlers = {
    *                           the senders' channel.
    */
   HangupNow: function(message, reply) {
-    let [roomToken, windowId] = message.data;
+    let [roomToken, sessionToken, windowId] = message.data;
+    if (!windowId) {
+      windowId = sessionToken;
+    }
 
     LoopRooms.leave(roomToken);
     MozLoopService.setScreenShareState(windowId, false);
