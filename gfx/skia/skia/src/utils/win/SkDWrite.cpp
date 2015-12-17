@@ -4,8 +4,6 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkTypes.h"
-#if defined(SK_BUILD_FOR_WIN32)
 
 #include "SkDWrite.h"
 #include "SkHRESULT.h"
@@ -14,7 +12,7 @@
 
 #include <dwrite.h>
 
-static IDWriteFactory* gDWriteFactory = nullptr;
+static IDWriteFactory* gDWriteFactory = NULL;
 
 static void release_dwrite_factory() {
     if (gDWriteFactory) {
@@ -43,9 +41,10 @@ static void create_dwrite_factory(IDWriteFactory** factory) {
 }
 
 
-SK_DECLARE_STATIC_ONCE(once);
 IDWriteFactory* sk_get_dwrite_factory() {
+    SK_DECLARE_STATIC_ONCE(once);
     SkOnce(&once, create_dwrite_factory, &gDWriteFactory);
+
     return gDWriteFactory;
 }
 
@@ -54,7 +53,7 @@ IDWriteFactory* sk_get_dwrite_factory() {
 
 /** Converts a utf8 string to a WCHAR string. */
 HRESULT sk_cstring_to_wchar(const char* skname, SkSMallocWCHAR* name) {
-    int wlen = MultiByteToWideChar(CP_UTF8, 0, skname, -1, nullptr, 0);
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, skname, -1, NULL, 0);
     if (0 == wlen) {
         HRM(HRESULT_FROM_WIN32(GetLastError()),
             "Could not get length for wchar to utf-8 conversion.");
@@ -68,19 +67,23 @@ HRESULT sk_cstring_to_wchar(const char* skname, SkSMallocWCHAR* name) {
 }
 
 /** Converts a WCHAR string to a utf8 string. */
-HRESULT sk_wchar_to_skstring(WCHAR* name, int nameLen, SkString* skname) {
-    int len = WideCharToMultiByte(CP_UTF8, 0, name, nameLen, nullptr, 0, nullptr, nullptr);
+HRESULT sk_wchar_to_skstring(WCHAR* name, SkString* skname) {
+    int len = WideCharToMultiByte(CP_UTF8, 0, name, -1, NULL, 0, NULL, NULL);
     if (0 == len) {
-        if (nameLen <= 0) {
-            skname->reset();
-            return S_OK;
-        }
         HRM(HRESULT_FROM_WIN32(GetLastError()),
             "Could not get length for utf-8 to wchar conversion.");
     }
-    skname->resize(len);
+    skname->resize(len - 1);
 
-    len = WideCharToMultiByte(CP_UTF8, 0, name, nameLen, skname->writable_str(), len, nullptr, nullptr);
+    // TODO: remove after https://code.google.com/p/skia/issues/detail?id=1989 is fixed.
+    // If we resize to 0 then the skname points to gEmptyRec (the unique empty SkString::Rec).
+    // gEmptyRec is static const and on Windows this means the value is in a read only page.
+    // Writing to it in the following call to WideCharToMultiByte will cause an access violation.
+    if (1 == len) {
+        return S_OK;
+    }
+
+    len = WideCharToMultiByte(CP_UTF8, 0, name, -1, skname->writable_str(), len, NULL, NULL);
     if (0 == len) {
         HRM(HRESULT_FROM_WIN32(GetLastError()), "Could not convert utf-8 to wchar.");
     }
@@ -102,13 +105,14 @@ void sk_get_locale_string(IDWriteLocalizedStrings* names, const WCHAR* preferedL
         }
     }
 
-    UINT32 nameLen;
-    HRVM(names->GetStringLength(nameIndex, &nameLen), "Could not get name length.");
+    UINT32 nameLength;
+    HRVM(names->GetStringLength(nameIndex, &nameLength), "Could not get name length.");
+    nameLength += 1;
 
-    SkSMallocWCHAR name(nameLen+1);
-    HRVM(names->GetString(nameIndex, name.get(), nameLen+1), "Could not get string.");
+    SkSMallocWCHAR name(nameLength);
+    HRVM(names->GetString(nameIndex, name.get(), nameLength), "Could not get string.");
 
-    HRV(sk_wchar_to_skstring(name.get(), nameLen, skname));
+    HRV(sk_wchar_to_skstring(name.get(), skname));
 }
 
 HRESULT SkGetGetUserDefaultLocaleNameProc(SkGetUserDefaultLocaleNameProc* proc) {
@@ -124,5 +128,3 @@ HRESULT SkGetGetUserDefaultLocaleNameProc(SkGetUserDefaultLocaleNameProc* proc) 
     }
     return S_OK;
 }
-
-#endif//defined(SK_BUILD_FOR_WIN32)

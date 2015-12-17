@@ -11,16 +11,12 @@
 #include "SkRegion.h"
 #include "SkAAClip.h"
 
-class SkRRect;
-
 class SkRasterClip {
 public:
-    SkRasterClip(bool forceConservativeRects = false);
-    SkRasterClip(const SkIRect&, bool forceConservativeRects = false);
+    SkRasterClip();
+    SkRasterClip(const SkIRect&);
     SkRasterClip(const SkRasterClip&);
     ~SkRasterClip();
-
-    bool isForceConservativeRects() const { return fForceConservativeRects; }
 
     bool isBW() const { return fIsBW; }
     bool isAA() const { return !fIsBW; }
@@ -43,12 +39,14 @@ public:
     bool setEmpty();
     bool setRect(const SkIRect&);
 
+    bool setPath(const SkPath& path, const SkRegion& clip, bool doAA);
+    bool setPath(const SkPath& path, const SkIRect& clip, bool doAA);
+
     bool op(const SkIRect&, SkRegion::Op);
     bool op(const SkRegion&, SkRegion::Op);
-    bool op(const SkRect&, const SkISize&, SkRegion::Op, bool doAA);
-    bool op(const SkRRect&, const SkISize&, SkRegion::Op, bool doAA);
-    bool op(const SkPath&, const SkISize&, SkRegion::Op, bool doAA);
-    
+    bool op(const SkRasterClip&, SkRegion::Op);
+    bool op(const SkRect&, SkRegion::Op, bool doAA);
+
     void translate(int dx, int dy, SkRasterClip* dst) const;
     void translate(int dx, int dy) {
         this->translate(dx, dy, this);
@@ -65,7 +63,8 @@ public:
      *  intersect, but returning true is a guarantee that they do not.
      */
     bool quickReject(const SkIRect& rect) const {
-        return !SkIRect::Intersects(this->getBounds(), rect);
+        return this->isEmpty() || rect.isEmpty() ||
+               !SkIRect::Intersects(this->getBounds(), rect);
     }
 
     // hack for SkCanvas::getTotalClip
@@ -80,7 +79,6 @@ public:
 private:
     SkRegion    fBW;
     SkAAClip    fAA;
-    bool        fForceConservativeRects;
     bool        fIsBW;
     // these 2 are caches based on querying the right obj based on fIsBW
     bool        fIsEmpty;
@@ -91,29 +89,16 @@ private:
     }
 
     bool computeIsRect() const {
-        return fIsBW ? fBW.isRect() : fAA.isRect();
+        return fIsBW ? fBW.isRect() : false;
     }
 
-    bool updateCacheAndReturnNonEmpty(bool detectAARect = true) {
+    bool updateCacheAndReturnNonEmpty() {
         fIsEmpty = this->computeIsEmpty();
-
-        // detect that our computed AA is really just a (hard-edged) rect
-        if (detectAARect && !fIsEmpty && !fIsBW && fAA.isRect()) {
-            fBW.setRect(fAA.getBounds());
-            fAA.setEmpty(); // don't need this guy anymore
-            fIsBW = true;
-        }
-
         fIsRect = this->computeIsRect();
         return !fIsEmpty;
     }
 
     void convertToAA();
-
-    bool setPath(const SkPath& path, const SkRegion& clip, bool doAA);
-    bool setPath(const SkPath& path, const SkIRect& clip, bool doAA);
-    bool op(const SkRasterClip&, SkRegion::Op);
-    bool setConservativeRect(const SkRect& r, const SkIRect& clipR, bool isInverse);
 };
 
 class SkAutoRasterClipValidate : SkNoncopyable {

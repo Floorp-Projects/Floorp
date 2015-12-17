@@ -8,11 +8,9 @@
 #include "SkRTConf.h"
 #include "SkOSFile.h"
 
-#include <stdlib.h>
-
 SkRTConfRegistry::SkRTConfRegistry(): fConfs(100) {
 
-    FILE *fp = sk_fopen(configFileLocation(), kRead_SkFILE_Flag);
+    SkFILE *fp = sk_fopen(configFileLocation(), kRead_SkFILE_Flag);
 
     if (!fp) {
         return;
@@ -30,7 +28,7 @@ SkRTConfRegistry::SkRTConfRegistry(): fConfs(100) {
         if (commentptr == line) {
             continue;
         }
-        if (commentptr) {
+        if (NULL != commentptr) {
             *commentptr = '\0';
         }
 
@@ -41,13 +39,13 @@ SkRTConfRegistry::SkRTConfRegistry(): fConfs(100) {
             continue;
         }
 
-        char *valptr = strtok(nullptr, sep);
+        char *valptr = strtok(NULL, sep);
         if (!valptr) {
             continue;
         }
 
-        SkString *key = new SkString(keyptr);
-        SkString *val = new SkString(valptr);
+        SkString* key = SkNEW_ARGS(SkString,(keyptr));
+        SkString* val = SkNEW_ARGS(SkString,(valptr));
 
         fConfigFileKeys.append(1, &key);
         fConfigFileValues.append(1, &val);
@@ -64,8 +62,8 @@ SkRTConfRegistry::~SkRTConfRegistry() {
     }
 
     for (int i = 0 ; i < fConfigFileKeys.count() ; i++) {
-        delete fConfigFileKeys[i];
-        delete fConfigFileValues[i];
+        SkDELETE(fConfigFileKeys[i]);
+        SkDELETE(fConfigFileValues[i]);
     }
 }
 
@@ -77,7 +75,7 @@ const char *SkRTConfRegistry::configFileLocation() const {
 // to trigger this, make a config file of zero size.
 void SkRTConfRegistry::possiblyDumpFile() const {
     const char *path = configFileLocation();
-    FILE *fp = sk_fopen(path, kRead_SkFILE_Flag);
+    SkFILE *fp = sk_fopen(path, kRead_SkFILE_Flag);
     if (!fp) {
         return;
     }
@@ -101,7 +99,7 @@ void SkRTConfRegistry::validate() const {
 void SkRTConfRegistry::printAll(const char *fname) const {
     SkWStream *o;
 
-    if (fname) {
+    if (NULL != fname) {
         o = new SkFILEWStream(fname);
     } else {
         o = new SkDebugWStream();
@@ -135,7 +133,7 @@ bool SkRTConfRegistry::hasNonDefault() const {
 void SkRTConfRegistry::printNonDefault(const char *fname) const {
     SkWStream *o;
 
-    if (fname) {
+    if (NULL != fname) {
         o = new SkFILEWStream(fname);
     } else {
         o = new SkDebugWStream();
@@ -240,7 +238,7 @@ static inline void str_replace(char *s, char search, char replace) {
 }
 
 template<typename T> bool SkRTConfRegistry::parse(const char *name, T* value) {
-    const char *str = nullptr;
+    const char *str = NULL;
 
     for (int i = fConfigFileKeys.count() - 1 ; i >= 0; i--) {
         if (fConfigFileKeys[i]->equals(name)) {
@@ -301,7 +299,7 @@ template <typename T> void SkRTConfRegistry::set(const char *name,
         }
         return;
     }
-    SkASSERT(confArray != nullptr);
+    SkASSERT(confArray != NULL);
     for (SkRTConfBase **confBase = confArray->begin(); confBase != confArray->end(); confBase++) {
         // static_cast here is okay because there's only one kind of child class.
         SkRTConf<T> *concrete = static_cast<SkRTConf<T> *>(*confBase);
@@ -323,3 +321,30 @@ SkRTConfRegistry &skRTConfRegistry() {
     static SkRTConfRegistry r;
     return r;
 }
+
+
+#ifdef SK_SUPPORT_UNITTEST
+
+#ifdef SK_BUILD_FOR_WIN32
+static void sk_setenv(const char* key, const char* value) {
+    _putenv_s(key, value);
+}
+#else
+static void sk_setenv(const char* key, const char* value) {
+    setenv(key, value, 1);
+}
+#endif
+
+void SkRTConfRegistry::UnitTest() {
+    SkRTConfRegistry registryWithoutContents(true);
+
+    sk_setenv("skia_nonexistent_item", "132");
+    int result = 0;
+    registryWithoutContents.parse("nonexistent.item", &result);
+    SkASSERT(result == 132);
+}
+
+SkRTConfRegistry::SkRTConfRegistry(bool)
+    : fConfs(100) {
+}
+#endif

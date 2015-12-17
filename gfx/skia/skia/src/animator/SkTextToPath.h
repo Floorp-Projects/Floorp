@@ -17,11 +17,11 @@ class SkDrawPaint;
 class SkDrawPath;
 class SkText;
 
-class SkTextToPath : public SkADrawable {
+class SkTextToPath : public SkDrawable {
     DECLARE_MEMBER_INFO(TextToPath);
     SkTextToPath();
-    bool draw(SkAnimateMaker& ) override;
-    void onEndElement(SkAnimateMaker& ) override;
+    virtual bool draw(SkAnimateMaker& );
+    virtual void onEndElement(SkAnimateMaker& );
 private:
     SkDrawPaint* paint;
     SkDrawPath* path;

@@ -12,7 +12,7 @@
 
 #include "SkColor.h"
 
-class SK_API SkParse {
+class SkParse {
 public:
     static int Count(const char str[]); // number of scalars or int values
     static int Count(const char str[], char separator);

@@ -17,40 +17,37 @@
 
 SkDropShadowImageFilter::SkDropShadowImageFilter(SkScalar dx, SkScalar dy,
                                                  SkScalar sigmaX, SkScalar sigmaY, SkColor color,
-                                                 ShadowMode shadowMode, SkImageFilter* input,
-                                                 const CropRect* cropRect)
+                                                 SkImageFilter* input, const CropRect* cropRect)
     : INHERITED(1, &input, cropRect)
     , fDx(dx)
     , fDy(dy)
     , fSigmaX(sigmaX)
     , fSigmaY(sigmaY)
     , fColor(color)
-    , fShadowMode(shadowMode)
 {
 }
 
-SkFlattenable* SkDropShadowImageFilter::CreateProc(SkReadBuffer& buffer) {
-    SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
-    SkScalar dx = buffer.readScalar();
-    SkScalar dy = buffer.readScalar();
-    SkScalar sigmaX = buffer.readScalar();
-    SkScalar sigmaY = buffer.readScalar();
-    SkColor color = buffer.readColor();
-    ShadowMode shadowMode = buffer.isVersionLT(SkReadBuffer::kDropShadowMode_Version) ?
-                            kDrawShadowAndForeground_ShadowMode :
-                            static_cast<ShadowMode>(buffer.readInt());
-    return Create(dx, dy, sigmaX, sigmaY, color, shadowMode, common.getInput(0),
-                  &common.cropRect());
+SkDropShadowImageFilter::SkDropShadowImageFilter(SkReadBuffer& buffer)
+ : INHERITED(1, buffer) {
+    fDx = buffer.readScalar();
+    fDy = buffer.readScalar();
+    fSigmaX = buffer.readScalar();
+    fSigmaY = buffer.readScalar();
+    fColor = buffer.readColor();
+    buffer.validate(SkScalarIsFinite(fDx) &&
+                    SkScalarIsFinite(fDy) &&
+                    SkScalarIsFinite(fSigmaX) &&
+                    SkScalarIsFinite(fSigmaY));
 }
 
-void SkDropShadowImageFilter::flatten(SkWriteBuffer& buffer) const {
+void SkDropShadowImageFilter::flatten(SkWriteBuffer& buffer) const
+{
     this->INHERITED::flatten(buffer);
     buffer.writeScalar(fDx);
     buffer.writeScalar(fDy);
     buffer.writeScalar(fSigmaX);
     buffer.writeScalar(fSigmaY);
     buffer.writeColor(fColor);
-    buffer.writeInt(static_cast<int>(fShadowMode));
 }
 
 bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source,
@@ -59,7 +56,7 @@ bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source
 {
     SkBitmap src = source;
     SkIPoint srcOffset = SkIPoint::Make(0, 0);
-    if (!this->filterInput(0, proxy, source, ctx, &src, &srcOffset))
+    if (getInput(0) && !getInput(0)->filterImage(proxy, source, ctx, &src, &srcOffset))
         return false;
 
     SkIRect bounds;
@@ -68,7 +65,7 @@ bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source
     }
 
     SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(bounds.width(), bounds.height()));
-    if (nullptr == device.get()) {
+    if (NULL == device.get()) {
         return false;
     }
     SkCanvas canvas(device.get());
@@ -89,9 +86,7 @@ bool SkDropShadowImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& source
     canvas.translate(SkIntToScalar(srcOffset.fX - bounds.fLeft),
                      SkIntToScalar(srcOffset.fY - bounds.fTop));
     canvas.drawBitmap(src, offsetVec.fX, offsetVec.fY, &paint);
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
-        canvas.drawBitmap(src, 0, 0);
-    }
+    canvas.drawBitmap(src, 0, 0);
     *result = device->accessBitmap(false);
     offset->fX = bounds.fLeft;
     offset->fY = bounds.fTop;
@@ -109,16 +104,15 @@ void SkDropShadowImageFilter::computeFastBounds(const SkRect& src, SkRect* dst) 
     shadowBounds.offset(fDx, fDy);
     shadowBounds.outset(SkScalarMul(fSigmaX, SkIntToScalar(3)),
                         SkScalarMul(fSigmaY, SkIntToScalar(3)));
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
-        dst->join(shadowBounds);
-    } else {
-        *dst = shadowBounds;
-    }
+    dst->join(shadowBounds);
 }
 
 bool SkDropShadowImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
                                              SkIRect* dst) const {
     SkIRect bounds = src;
+    if (getInput(0) && !getInput(0)->filterBounds(src, ctm, &bounds)) {
+        return false;
+    }
     SkVector offsetVec = SkVector::Make(fDx, fDy);
     ctm.mapVectors(&offsetVec, 1);
     bounds.offset(-SkScalarCeilToInt(offsetVec.x()),
@@ -127,36 +121,7 @@ bool SkDropShadowImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix&
     ctm.mapVectors(&sigma, 1);
     bounds.outset(SkScalarCeilToInt(SkScalarMul(sigma.x(), SkIntToScalar(3))),
                   SkScalarCeilToInt(SkScalarMul(sigma.y(), SkIntToScalar(3))));
-    if (fShadowMode == kDrawShadowAndForeground_ShadowMode) {
-        bounds.join(src);
-    }
-    if (getInput(0) && !getInput(0)->filterBounds(bounds, ctm, &bounds)) {
-        return false;
-    }
+    bounds.join(src);
     *dst = bounds;
     return true;
 }
-
-#ifndef SK_IGNORE_TO_STRING
-void SkDropShadowImageFilter::toString(SkString* str) const {
-    str->appendf("SkDropShadowImageFilter: (");
-
-    str->appendf("dX: %f ", fDx);
-    str->appendf("dY: %f ", fDy);
-    str->appendf("sigmaX: %f ", fSigmaX);
-    str->appendf("sigmaY: %f ", fSigmaY);
-
-    str->append("Color: ");
-    str->appendHex(fColor);
-
-    static const char* gModeStrings[] = {
-        "kDrawShadowAndForeground", "kDrawShadowOnly"
-    };
-
-    static_assert(kShadowModeCount == SK_ARRAY_COUNT(gModeStrings), "enum_mismatch");
-
-    str->appendf(" mode: %s", gModeStrings[fShadowMode]);
-
-    str->append(")");
-}
-#endif

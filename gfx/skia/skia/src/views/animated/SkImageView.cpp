@@ -16,10 +16,10 @@
 
 SkImageView::SkImageView()
 {
-    fMatrix        = nullptr;
+    fMatrix        = NULL;
     fScaleType    = kMatrix_ScaleType;
 
-    fData.fAnim    = nullptr;        // handles initializing the other union values
+    fData.fAnim    = NULL;        // handles initializing the other union values
     fDataIsAnim    = true;
 
     fUriIsValid    = false;    // an empty string is not valid
@@ -65,7 +65,7 @@ void SkImageView::setScaleType(ScaleType st)
     {
         fScaleType = SkToU8(st);
         if (fUriIsValid)
-            this->inval(nullptr);
+            this->inval(NULL);
     }
 }
 
@@ -92,7 +92,7 @@ void SkImageView::setImageMatrix(const SkMatrix* matrix)
 
     if (matrix && !matrix->isIdentity())
     {
-        if (fMatrix == nullptr)
+        if (fMatrix == NULL)
             fMatrix = (SkMatrix*)sk_malloc_throw(sizeof(SkMatrix));
         *fMatrix = *matrix;
         changed = true;
@@ -103,14 +103,14 @@ void SkImageView::setImageMatrix(const SkMatrix* matrix)
         {
             SkASSERT(!fMatrix->isIdentity());
             sk_free(fMatrix);
-            fMatrix = nullptr;
+            fMatrix = NULL;
             changed = true;
         }
     }
 
     // only redraw if we changed our matrix and we're not in scaleToFit mode
     if (changed && this->getScaleType() == kMatrix_ScaleType && fUriIsValid)
-        this->inval(nullptr);
+        this->inval(NULL);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ bool SkImageView::onEvent(const SkEvent& evt)
     if (evt.isType(SK_EventType_Inval))
     {
         if (fUriIsValid)
-            this->inval(nullptr);
+            this->inval(NULL);
         return true;
     }
     return this->INHERITED::onEvent(evt);
@@ -174,7 +174,7 @@ void SkImageView::onDraw(SkCanvas* canvas)
 SkDEBUGF(("SkImageView : now = %X[%12.3f], diff = %d\n", now, now/1000., diff));
 
         if (diff == SkAnimator::kDifferent)
-            this->inval(nullptr);
+            this->inval(NULL);
         else if (diff == SkAnimator::kPartiallyDifferent)
         {
             SkRect    bounds;
@@ -207,7 +207,7 @@ void SkImageView::onInflate(const SkDOM& dom, const SkDOMNode* node)
 void SkImageView::onUriChange()
 {
     if (this->freeData())
-        this->inval(nullptr);
+        this->inval(NULL);
     fUriIsValid = true;        // give ensureUriIsLoaded() a shot at the new uri
 }
 
@@ -220,7 +220,7 @@ bool SkImageView::freeData()
         else
             delete fData.fBitmap;
 
-        fData.fAnim = nullptr;    // valid for all union values
+        fData.fAnim = NULL;    // valid for all union values
         return true;
     }
     return false;

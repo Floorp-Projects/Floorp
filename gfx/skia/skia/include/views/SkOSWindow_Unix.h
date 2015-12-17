@@ -36,12 +36,11 @@ public:
     enum SkBackEndTypes {
         kNone_BackEndType,
         kNativeGL_BackEndType,
-#if SK_ANGLE
-        kANGLE_BackEndType,
-#endif // SK_ANGLE
-#if SK_COMMAND_BUFFER
-        kCommandBuffer_BackEndType,
-#endif // SK_COMMAND_BUFFER
+    };
+
+    struct AttachmentInfo {
+        int fSampleCount;
+        int fStencilBits;
     };
 
     bool attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
@@ -52,13 +51,9 @@ public:
 
     //static bool PostEvent(SkEvent* evt, SkEventSinkID, SkMSec delay);
 
-    bool makeFullscreen();
-    void setVsync(bool);
-    void closeWindow();
-
 protected:
     // Overridden from from SkWindow:
-    void onSetTitle(const char title[]) override;
+    virtual void onSetTitle(const char title[]) SK_OVERRIDE;
 
 private:
     enum NextXEventResult {
@@ -71,9 +66,7 @@ private:
     void doPaint();
     void mapWindowAndWait();
 
-    // Forcefully closes the window.  If a graceful shutdown is desired then call the public
-    // closeWindow method
-    void internalCloseWindow();
+    void closeWindow();
     void initWindow(int newMSAASampleCount, AttachmentInfo* info);
 
     SkUnixWindow fUnixWindow;

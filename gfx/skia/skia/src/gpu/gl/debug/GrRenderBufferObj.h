@@ -25,7 +25,7 @@ public:
     void resetBound()       { fBound = false; }
     bool getBound() const   { return fBound; }
 
-    void deleteAction() override {
+    virtual void deleteAction() SK_OVERRIDE {
 
         this->INHERITED::deleteAction();
     }

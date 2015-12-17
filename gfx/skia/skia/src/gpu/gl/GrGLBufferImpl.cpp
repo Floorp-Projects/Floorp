@@ -6,7 +6,7 @@
  */
 
 #include "GrGLBufferImpl.h"
-#include "GrGLGpu.h"
+#include "GrGpuGL.h"
 
 #define GL_CALL(GPU, X) GR_GL_CALL(GPU->glInterface(), X)
 
@@ -16,78 +16,151 @@
 #define VALIDATE() do {} while(false)
 #endif
 
-GrGLBufferImpl::GrGLBufferImpl(GrGLGpu* gpu, const Desc& desc, GrGLenum bufferType)
+// GL_STREAM_DRAW triggers an optimization in Chromium's GPU process where a client's vertex buffer
+// objects are implemented as client-side-arrays on tile-deferred architectures.
+#define DYNAMIC_USAGE_PARAM GR_GL_STREAM_DRAW
+
+GrGLBufferImpl::GrGLBufferImpl(GrGpuGL* gpu, const Desc& desc, GrGLenum bufferType)
     : fDesc(desc)
     , fBufferType(bufferType)
-    , fMapPtr(nullptr) {
+    , fMapPtr(NULL) {
     if (0 == desc.fID) {
-        if (gpu->caps()->mustClearUploadedBufferData()) {
-            fCPUData = sk_calloc_throw(desc.fSizeInBytes);
-        } else {
-            fCPUData = sk_malloc_flags(desc.fSizeInBytes, SK_MALLOC_THROW);
-        }
+        fCPUData = sk_malloc_flags(desc.fSizeInBytes, SK_MALLOC_THROW);
         fGLSizeInBytes = 0;
     } else {
-        fCPUData = nullptr;
+        fCPUData = NULL;
         // We assume that the GL buffer was created at the desc's size initially.
         fGLSizeInBytes = fDesc.fSizeInBytes;
     }
     VALIDATE();
 }
 
-void GrGLBufferImpl::release(GrGLGpu* gpu) {
+void GrGLBufferImpl::release(GrGpuGL* gpu) {
     VALIDATE();
     // make sure we've not been abandoned or already released
-    if (fCPUData) {
+    if (NULL != fCPUData) {
         sk_free(fCPUData);
-        fCPUData = nullptr;
-    } else if (fDesc.fID) {
-        gpu->releaseBuffer(fDesc.fID, fBufferType);
+        fCPUData = NULL;
+    } else if (fDesc.fID && !fDesc.fIsWrapped) {
+        GL_CALL(gpu, DeleteBuffers(1, &fDesc.fID));
+        if (GR_GL_ARRAY_BUFFER == fBufferType) {
+            gpu->notifyVertexBufferDelete(fDesc.fID);
+        } else {
+            SkASSERT(GR_GL_ELEMENT_ARRAY_BUFFER == fBufferType);
+            gpu->notifyIndexBufferDelete(fDesc.fID);
+        }
         fDesc.fID = 0;
         fGLSizeInBytes = 0;
     }
-    fMapPtr = nullptr;
+    fMapPtr = NULL;
     VALIDATE();
 }
 
 void GrGLBufferImpl::abandon() {
     fDesc.fID = 0;
     fGLSizeInBytes = 0;
-    fMapPtr = nullptr;
+    fMapPtr = NULL;
     sk_free(fCPUData);
-    fCPUData = nullptr;
+    fCPUData = NULL;
     VALIDATE();
 }
 
-void* GrGLBufferImpl::map(GrGLGpu* gpu) {
+void GrGLBufferImpl::bind(GrGpuGL* gpu) const {
+    VALIDATE();
+    if (GR_GL_ARRAY_BUFFER == fBufferType) {
+        gpu->bindVertexBuffer(fDesc.fID);
+    } else {
+        SkASSERT(GR_GL_ELEMENT_ARRAY_BUFFER == fBufferType);
+        gpu->bindIndexBufferAndDefaultVertexArray(fDesc.fID);
+    }
+    VALIDATE();
+}
+
+void* GrGLBufferImpl::map(GrGpuGL* gpu) {
     VALIDATE();
     SkASSERT(!this->isMapped());
     if (0 == fDesc.fID) {
         fMapPtr = fCPUData;
     } else {
-        fMapPtr = gpu->mapBuffer(fDesc.fID, fBufferType, fDesc.fDynamic, fGLSizeInBytes,
-                                 fDesc.fSizeInBytes);
-        fGLSizeInBytes = fDesc.fSizeInBytes;
+        switch (gpu->glCaps().mapBufferType()) {
+            case GrGLCaps::kNone_MapBufferType:
+                VALIDATE();
+                return NULL;
+            case GrGLCaps::kMapBuffer_MapBufferType:
+                this->bind(gpu);
+                // Let driver know it can discard the old data
+                if (GR_GL_USE_BUFFER_DATA_NULL_HINT || fDesc.fSizeInBytes != fGLSizeInBytes) {
+                    fGLSizeInBytes = fDesc.fSizeInBytes;
+                    GL_CALL(gpu,
+                            BufferData(fBufferType, fGLSizeInBytes, NULL,
+                                       fDesc.fDynamic ? DYNAMIC_USAGE_PARAM : GR_GL_STATIC_DRAW));
+                }
+                GR_GL_CALL_RET(gpu->glInterface(), fMapPtr,
+                               MapBuffer(fBufferType, GR_GL_WRITE_ONLY));
+                break;
+            case GrGLCaps::kMapBufferRange_MapBufferType: {
+                this->bind(gpu);
+                // Make sure the GL buffer size agrees with fDesc before mapping.
+                if (fDesc.fSizeInBytes != fGLSizeInBytes) {
+                    fGLSizeInBytes = fDesc.fSizeInBytes;
+                    GL_CALL(gpu,
+                            BufferData(fBufferType, fGLSizeInBytes, NULL,
+                                       fDesc.fDynamic ? DYNAMIC_USAGE_PARAM : GR_GL_STATIC_DRAW));
+                }
+                static const GrGLbitfield kAccess = GR_GL_MAP_INVALIDATE_BUFFER_BIT |
+                                                    GR_GL_MAP_WRITE_BIT;
+                GR_GL_CALL_RET(gpu->glInterface(),
+                               fMapPtr,
+                               MapBufferRange(fBufferType, 0, fGLSizeInBytes, kAccess));
+                break;
+            }
+            case GrGLCaps::kChromium_MapBufferType:
+                this->bind(gpu);
+                // Make sure the GL buffer size agrees with fDesc before mapping.
+                if (fDesc.fSizeInBytes != fGLSizeInBytes) {
+                    fGLSizeInBytes = fDesc.fSizeInBytes;
+                    GL_CALL(gpu,
+                            BufferData(fBufferType, fGLSizeInBytes, NULL,
+                                       fDesc.fDynamic ? DYNAMIC_USAGE_PARAM : GR_GL_STATIC_DRAW));
+                }
+                GR_GL_CALL_RET(gpu->glInterface(),
+                               fMapPtr,
+                               MapBufferSubData(fBufferType, 0, fGLSizeInBytes, GR_GL_WRITE_ONLY));
+                break;
+        }
     }
     VALIDATE();
     return fMapPtr;
 }
 
-void GrGLBufferImpl::unmap(GrGLGpu* gpu) {
+void GrGLBufferImpl::unmap(GrGpuGL* gpu) {
     VALIDATE();
     SkASSERT(this->isMapped());
     if (0 != fDesc.fID) {
-        gpu->unmapBuffer(fDesc.fID, fBufferType, fMapPtr);
+        switch (gpu->glCaps().mapBufferType()) {
+            case GrGLCaps::kNone_MapBufferType:
+                SkDEBUGFAIL("Shouldn't get here.");
+                return;
+            case GrGLCaps::kMapBuffer_MapBufferType: // fall through
+            case GrGLCaps::kMapBufferRange_MapBufferType:
+                this->bind(gpu);
+                GL_CALL(gpu, UnmapBuffer(fBufferType));
+                break;
+            case GrGLCaps::kChromium_MapBufferType:
+                this->bind(gpu);
+                GR_GL_CALL(gpu->glInterface(), UnmapBufferSubData(fMapPtr));
+                break;
+        }
     }
-    fMapPtr = nullptr;
+    fMapPtr = NULL;
 }
 
 bool GrGLBufferImpl::isMapped() const {
     VALIDATE();
-    return SkToBool(fMapPtr);
+    return NULL != fMapPtr;
 }
 
-bool GrGLBufferImpl::updateData(GrGLGpu* gpu, const void* src, size_t srcSizeInBytes) {
+bool GrGLBufferImpl::updateData(GrGpuGL* gpu, const void* src, size_t srcSizeInBytes) {
     SkASSERT(!this->isMapped());
     VALIDATE();
     if (srcSizeInBytes > fDesc.fSizeInBytes) {
@@ -97,22 +170,57 @@ bool GrGLBufferImpl::updateData(GrGLGpu* gpu, const void* src, size_t srcSizeInB
         memcpy(fCPUData, src, srcSizeInBytes);
         return true;
     }
-    gpu->bufferData(fDesc.fID, fBufferType, fDesc.fDynamic, fDesc.fSizeInBytes, src,
-                    srcSizeInBytes);
+    this->bind(gpu);
+    GrGLenum usage = fDesc.fDynamic ? DYNAMIC_USAGE_PARAM : GR_GL_STATIC_DRAW;
+
 #if GR_GL_USE_BUFFER_DATA_NULL_HINT
-    fGLSizeInBytes = fDesc.fSizeInBytes;
+    if (fDesc.fSizeInBytes == srcSizeInBytes) {
+        GL_CALL(gpu, BufferData(fBufferType, (GrGLsizeiptr) srcSizeInBytes, src, usage));
+    } else {
+        // Before we call glBufferSubData we give the driver a hint using
+        // glBufferData with NULL. This makes the old buffer contents
+        // inaccessible to future draws. The GPU may still be processing
+        // draws that reference the old contents. With this hint it can
+        // assign a different allocation for the new contents to avoid
+        // flushing the gpu past draws consuming the old contents.
+        fGLSizeInBytes = fDesc.fSizeInBytes;
+        GL_CALL(gpu, BufferData(fBufferType, fGLSizeInBytes, NULL, usage));
+        GL_CALL(gpu, BufferSubData(fBufferType, 0, (GrGLsizeiptr) srcSizeInBytes, src));
+    }
 #else
-    fGLSizeInBytes = srcSizeInBytes;
+    // Note that we're cheating on the size here. Currently no methods
+    // allow a partial update that preserves contents of non-updated
+    // portions of the buffer (map() does a glBufferData(..size, NULL..))
+    bool doSubData = false;
+#if GR_GL_MAC_BUFFER_OBJECT_PERFOMANCE_WORKAROUND
+    static int N = 0;
+    // 128 was chosen experimentally. At 256 a slight hitchiness was noticed
+    // when dragging a Chromium window around with a canvas tab backgrounded.
+    doSubData = 0 == (N % 128);
+    ++N;
 #endif
-    VALIDATE();
+    if (doSubData) {
+        // The workaround is to do a glBufferData followed by glBufferSubData.
+        // Chromium's command buffer may turn a glBufferSubData where the size
+        // exactly matches the buffer size into a glBufferData. So we tack 1
+        // extra byte onto the glBufferData.
+        fGLSizeInBytes = srcSizeInBytes + 1;
+        GL_CALL(gpu, BufferData(fBufferType, fGLSizeInBytes, NULL, usage));
+        GL_CALL(gpu, BufferSubData(fBufferType, 0, srcSizeInBytes, src));
+    } else {
+        fGLSizeInBytes = srcSizeInBytes;
+        GL_CALL(gpu, BufferData(fBufferType, fGLSizeInBytes, src, usage));
+    }
+#endif
     return true;
 }
 
 void GrGLBufferImpl::validate() const {
     SkASSERT(GR_GL_ARRAY_BUFFER == fBufferType || GR_GL_ELEMENT_ARRAY_BUFFER == fBufferType);
     // The following assert isn't valid when the buffer has been abandoned:
-    // SkASSERT((0 == fDesc.fID) == (fCPUData));
-    SkASSERT(nullptr == fCPUData || 0 == fGLSizeInBytes);
-    SkASSERT(nullptr == fMapPtr || fCPUData || fGLSizeInBytes <= fDesc.fSizeInBytes);
-    SkASSERT(nullptr == fCPUData || nullptr == fMapPtr || fCPUData == fMapPtr);
+    // SkASSERT((0 == fDesc.fID) == (NULL != fCPUData));
+    SkASSERT(0 != fDesc.fID || !fDesc.fIsWrapped);
+    SkASSERT(NULL == fCPUData || 0 == fGLSizeInBytes);
+    SkASSERT(NULL == fMapPtr || NULL != fCPUData || fGLSizeInBytes == fDesc.fSizeInBytes);
+    SkASSERT(NULL == fCPUData || NULL == fMapPtr || fCPUData == fMapPtr);
 }

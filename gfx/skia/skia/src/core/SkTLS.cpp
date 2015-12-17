@@ -1,10 +1,3 @@
-/*
- * Copyright 2012 Google Inc.
- *
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
-
 #include "SkTLS.h"
 
 // enable to help debug TLS storage
@@ -12,7 +5,7 @@
 
 
 #ifdef SK_TRACE_TLS_LIFETIME
-    #include "SkAtomics.h"
+    #include "SkThread.h"
     static int32_t gTLSRecCount;
 #endif
 
@@ -50,14 +43,14 @@ void SkTLS::Destructor(void* ptr) {
     SkTLSRec* rec = (SkTLSRec*)ptr;
     do {
         SkTLSRec* next = rec->fNext;
-        delete rec;
+        SkDELETE(rec);
         rec = next;
-    } while (rec);
+    } while (NULL != rec);
 }
 
 void* SkTLS::Get(CreateProc createProc, DeleteProc deleteProc) {
-    if (nullptr == createProc) {
-        return nullptr;
+    if (NULL == createProc) {
+        return NULL;
     }
 
     void* ptr = SkTLS::PlatformGetSpecific(true);
@@ -69,7 +62,7 @@ void* SkTLS::Get(CreateProc createProc, DeleteProc deleteProc) {
                 SkASSERT(rec->fDeleteProc == deleteProc);
                 return rec->fData;
             }
-        } while ((rec = rec->fNext) != nullptr);
+        } while ((rec = rec->fNext) != NULL);
         // not found, so create a new one
     }
 
@@ -86,8 +79,8 @@ void* SkTLS::Get(CreateProc createProc, DeleteProc deleteProc) {
 }
 
 void* SkTLS::Find(CreateProc createProc) {
-    if (nullptr == createProc) {
-        return nullptr;
+    if (NULL == createProc) {
+        return NULL;
     }
 
     void* ptr = SkTLS::PlatformGetSpecific(false);
@@ -98,20 +91,20 @@ void* SkTLS::Find(CreateProc createProc) {
             if (rec->fCreateProc == createProc) {
                 return rec->fData;
             }
-        } while ((rec = rec->fNext) != nullptr);
+        } while ((rec = rec->fNext) != NULL);
     }
-    return nullptr;
+    return NULL;
 }
 
 void SkTLS::Delete(CreateProc createProc) {
-    if (nullptr == createProc) {
+    if (NULL == createProc) {
         return;
     }
 
     void* ptr = SkTLS::PlatformGetSpecific(false);
 
     SkTLSRec* curr = (SkTLSRec*)ptr;
-    SkTLSRec* prev = nullptr;
+    SkTLSRec* prev = NULL;
     while (curr) {
         SkTLSRec* next = curr->fNext;
         if (curr->fCreateProc == createProc) {
@@ -121,7 +114,7 @@ void SkTLS::Delete(CreateProc createProc) {
                 // we have a new head of our chain
                 SkTLS::PlatformSetSpecific(next);
             }
-            delete curr;
+            SkDELETE(curr);
             break;
         }
         prev = curr;

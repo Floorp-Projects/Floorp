@@ -12,15 +12,14 @@
 
 #include "SkPDFFont.h"
 
-class SkPDFType0Font final : public SkPDFFont {
+class SkPDFType0Font : public SkPDFFont {
 public:
     virtual ~SkPDFType0Font();
-    bool multiByteGlyphs() const override { return true; }
-    SkPDFFont* getFontSubset(const SkPDFGlyphSet* usage) override;
+    virtual bool multiByteGlyphs() const { return true; }
+    SK_API virtual SkPDFFont* getFontSubset(const SkPDFGlyphSet* usage);
 #ifdef SK_DEBUG
-    void emitObject(SkWStream*,
-                    const SkPDFObjNumMap&,
-                    const SkPDFSubstituteMap&) const override;
+    virtual void emitObject(SkWStream* stream, SkPDFCatalog* catalog,
+                            bool indirect);
 #endif
 
 private:
@@ -30,13 +29,12 @@ private:
     typedef SkPDFDict INHERITED;
 #endif
 
-    SkPDFType0Font(const SkAdvancedTypefaceMetrics* info,
-                   SkTypeface* typeface);
+    SkPDFType0Font(const SkAdvancedTypefaceMetrics* info, SkTypeface* typeface);
 
     bool populate(const SkPDFGlyphSet* subset);
 };
 
-class SkPDFCIDFont final : public SkPDFFont {
+class SkPDFCIDFont : public SkPDFFont {
 public:
     virtual ~SkPDFCIDFont();
     virtual bool multiByteGlyphs() const { return true; }
@@ -44,8 +42,7 @@ public:
 private:
     friend class SkPDFType0Font;  // to access the constructor
 
-    SkPDFCIDFont(const SkAdvancedTypefaceMetrics* info,
-                 SkTypeface* typeface,
+    SkPDFCIDFont(const SkAdvancedTypefaceMetrics* info, SkTypeface* typeface,
                  const SkPDFGlyphSet* subset);
 
     bool populate(const SkPDFGlyphSet* subset);
@@ -53,7 +50,7 @@ private:
                            const SkTDArray<uint32_t>* subset);
 };
 
-class SkPDFType1Font final : public SkPDFFont {
+class SkPDFType1Font : public SkPDFFont {
 public:
     virtual ~SkPDFType1Font();
     virtual bool multiByteGlyphs() const { return false; }
@@ -61,10 +58,8 @@ public:
 private:
     friend class SkPDFFont;  // to access the constructor
 
-    SkPDFType1Font(const SkAdvancedTypefaceMetrics* info,
-                   SkTypeface* typeface,
-                   uint16_t glyphID,
-                   SkPDFDict* relatedFontDescriptor);
+    SkPDFType1Font(const SkAdvancedTypefaceMetrics* info, SkTypeface* typeface,
+                   uint16_t glyphID, SkPDFDict* relatedFontDescriptor);
 
     bool populate(int16_t glyphID);
     bool addFontDescriptor(int16_t defaultWidth);
@@ -72,7 +67,7 @@ private:
         const SkAdvancedTypefaceMetrics::WidthRange* widthRangeEntry);
 };
 
-class SkPDFType3Font final : public SkPDFFont {
+class SkPDFType3Font : public SkPDFFont {
 public:
     virtual ~SkPDFType3Font();
     virtual bool multiByteGlyphs() const { return false; }
@@ -81,10 +76,9 @@ private:
     friend class SkPDFFont;  // to access the constructor
 
     SkPDFType3Font(const SkAdvancedTypefaceMetrics* info,
-                   SkTypeface* typeface,
-                   uint16_t glyphID);
+                   SkTypeface* typeface, uint16_t glyphID);
 
-    bool populate(uint16_t glyphID);
+    bool populate(int16_t glyphID);
 };
 
 #endif

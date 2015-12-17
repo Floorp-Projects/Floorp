@@ -18,12 +18,12 @@ class SkDrawTextBox : public SkDrawRect {
     SkDrawTextBox();
 
     // overrides
-    bool draw(SkAnimateMaker& ) override;
+    virtual bool draw(SkAnimateMaker& );
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
-    bool getProperty(int index, SkScriptValue* value) const override;
-    bool setProperty(int index, SkScriptValue& ) override;
+    virtual bool getProperty(int index, SkScriptValue* value) const;
+    virtual bool setProperty(int index, SkScriptValue& );
 
 private:
     SkString fText;

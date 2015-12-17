@@ -7,18 +7,18 @@
 
 #include "SkLocalMatrixShader.h"
 
-SkFlattenable* SkLocalMatrixShader::CreateProc(SkReadBuffer& buffer) {
-    SkMatrix lm;
-    buffer.readMatrix(&lm);
-    SkAutoTUnref<SkShader> shader(buffer.readShader());
-    if (!shader.get()) {
-        return nullptr;
+SkLocalMatrixShader::SkLocalMatrixShader(SkReadBuffer& buffer) : INHERITED(buffer) {
+    if (buffer.isVersionLT(SkReadBuffer::kSimplifyLocalMatrix_Version)) {
+        buffer.readMatrix(&(INHERITED::fLocalMatrix));
     }
-    return SkShader::CreateLocalMatrixShader(shader, lm);
+    fProxyShader.reset(buffer.readShader());
+    if (NULL == fProxyShader.get()) {
+        sk_throw();
+    }
 }
 
 void SkLocalMatrixShader::flatten(SkWriteBuffer& buffer) const {
-    buffer.writeMatrix(this->getLocalMatrix());
+    this->INHERITED::flatten(buffer);
     buffer.writeFlattenable(fProxyShader.get());
 }
 
@@ -27,7 +27,7 @@ SkShader::Context* SkLocalMatrixShader::onCreateContext(const ContextRec& rec,
     ContextRec newRec(rec);
     SkMatrix tmp;
     if (rec.fLocalMatrix) {
-        tmp.setConcat(*rec.fLocalMatrix, this->getLocalMatrix());
+        tmp.setConcat(this->getLocalMatrix(), *rec.fLocalMatrix);
         newRec.fLocalMatrix = &tmp;
     } else {
         newRec.fLocalMatrix = &this->getLocalMatrix();
@@ -48,10 +48,6 @@ void SkLocalMatrixShader::toString(SkString* str) const {
 #endif
 
 SkShader* SkShader::CreateLocalMatrixShader(SkShader* proxy, const SkMatrix& localMatrix) {
-    if (nullptr == proxy) {
-        return nullptr;
-    }
-
     if (localMatrix.isIdentity()) {
         return SkRef(proxy);
     }
@@ -66,5 +62,5 @@ SkShader* SkShader::CreateLocalMatrixShader(SkShader* proxy, const SkMatrix& loc
         proxy = otherProxy.get();
     }
 
-    return new SkLocalMatrixShader(proxy, *lm);
+    return SkNEW_ARGS(SkLocalMatrixShader, (proxy, *lm));
 }

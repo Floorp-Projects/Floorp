@@ -4,9 +4,9 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-#include "SkAtomics.h"
-#include "SkOSMenu.h"
 #include <stdarg.h>
+#include "SkOSMenu.h"
+#include "SkThread.h"
 
 static int gOSMenuCmd = 7000;
 
@@ -28,11 +28,11 @@ const SkOSMenu::Item* SkOSMenu::getItemByID(int itemID) const {
         if (itemID == fItems[i]->getID())
             return fItems[i];
     }
-    return nullptr;
+    return NULL;
 }
 
 void SkOSMenu::getItems(const SkOSMenu::Item* items[]) const {
-    if (items) {
+    if (NULL != items) {
         for (int i = 0; i < fItems.count(); ++i) {
             items[i] = fItems[i];
         }
@@ -155,7 +155,7 @@ int SkOSMenu::appendList(const char label[], const char slotName[],
         SkString str(option);
         va_start(args, option);
         int count = 1;
-        for (const char* arg = va_arg(args, const char*); arg != nullptr; arg = va_arg(args, const char*)) {
+        for (const char* arg = va_arg(args, const char*); arg != NULL; arg = va_arg(args, const char*)) {
             str += gDelimiter;
             str += arg;
             ++count;
@@ -204,15 +204,15 @@ bool SkOSMenu::FindListItemCount(const SkEvent& evt, int* count) {
 }
 
 bool SkOSMenu::FindListItems(const SkEvent& evt, SkString items[]) {
-    if (evt.isType(gMenuEventType) && items) {
+    if (evt.isType(gMenuEventType) && NULL != items) {
         const char* text = evt.findString(gList_Items_Str);
-        if (text != nullptr) {
+        if (text != NULL) {
             SkString temp(text);
             char* token = strtok((char*)temp.c_str(), gDelimiter);
             int index = 0;
-            while (token != nullptr) {
+            while (token != NULL) {
                 items[index].set(token, strlen(token));
-                token = strtok (nullptr, gDelimiter);
+                token = strtok (NULL, gDelimiter);
                 ++index;
             }
         }

@@ -1,19 +1,19 @@
+
 /*
  * Copyright 2012 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #ifndef SkBitmapHeap_DEFINED
 #define SkBitmapHeap_DEFINED
 
-#include "SkAtomics.h"
 #include "SkBitmap.h"
-#include "SkPoint.h"
+#include "SkFlattenable.h"
 #include "SkRefCnt.h"
 #include "SkTDArray.h"
-#include "SkTypes.h"
+#include "SkThread.h"
+#include "SkTRefArray.h"
 
 /**
  * SkBitmapHeapEntry provides users of SkBitmapHeap (using internal storage) with a means to...
@@ -53,7 +53,7 @@ private:
 
 class SkBitmapHeapReader : public SkRefCnt {
 public:
-
+    SK_DECLARE_INST_COUNT(SkBitmapHeapReader)
 
     SkBitmapHeapReader() : INHERITED() {}
     virtual SkBitmap* getBitmap(int32_t slot) const = 0;
@@ -70,7 +70,7 @@ class SkBitmapHeap : public SkBitmapHeapReader {
 public:
     class ExternalStorage : public SkRefCnt {
      public:
-
+        SK_DECLARE_INST_COUNT(ExternalStorage)
 
         virtual bool insert(const SkBitmap& bitmap, int32_t slot) = 0;
 
@@ -114,26 +114,34 @@ public:
     virtual ~SkBitmapHeap();
 
     /**
+     * Makes a shallow copy of all bitmaps currently in the heap and returns them as an array. The
+     * array indices match their position in the heap.
+     *
+     * @return  a ptr to an array of bitmaps or NULL if external storage is being used.
+     */
+    SkTRefArray<SkBitmap>* extractBitmaps() const;
+
+    /**
      * Retrieves the bitmap from the specified slot in the heap
      *
-     * @return  The bitmap located at that slot or nullptr if external storage is being used.
+     * @return  The bitmap located at that slot or NULL if external storage is being used.
      */
-    SkBitmap* getBitmap(int32_t slot) const override {
-        SkASSERT(fExternalStorage == nullptr);
+    virtual SkBitmap* getBitmap(int32_t slot) const SK_OVERRIDE {
+        SkASSERT(fExternalStorage == NULL);
         SkBitmapHeapEntry* entry = getEntry(slot);
         if (entry) {
             return &entry->fBitmap;
         }
-        return nullptr;
+        return NULL;
     }
 
     /**
      * Retrieves the bitmap from the specified slot in the heap
      *
-     * @return  The bitmap located at that slot or nullptr if external storage is being used.
+     * @return  The bitmap located at that slot or NULL if external storage is being used.
      */
-    void releaseRef(int32_t slot) override {
-        SkASSERT(fExternalStorage == nullptr);
+    virtual void releaseRef(int32_t slot) SK_OVERRIDE {
+        SkASSERT(fExternalStorage == NULL);
         if (fOwnerCount != IGNORE_OWNERS) {
             SkBitmapHeapEntry* entry = getEntry(slot);
             if (entry) {
@@ -158,12 +166,12 @@ public:
      * Retrieves an entry from the heap at a given slot.
      *
      * @param slot  the slot in the heap where a bitmap was stored.
-     * @return  a SkBitmapHeapEntry that wraps the bitmap or nullptr if external storage is used.
+     * @return  a SkBitmapHeapEntry that wraps the bitmap or NULL if external storage is used.
      */
     SkBitmapHeapEntry* getEntry(int32_t slot) const {
         SkASSERT(slot <= fStorage.count());
-        if (fExternalStorage != nullptr) {
-            return nullptr;
+        if (fExternalStorage != NULL) {
+            return NULL;
         }
         return fStorage[slot];
     }
@@ -172,7 +180,7 @@ public:
      * Returns a count of the number of items currently in the heap
      */
     int count() const {
-        SkASSERT(fExternalStorage != nullptr ||
+        SkASSERT(fExternalStorage != NULL ||
                  fStorage.count() - fUnusedSlots.count() == fLookupTable.count());
         return fLookupTable.count();
     }
@@ -215,8 +223,8 @@ private:
         , fPixelOrigin(bm.pixelRefOrigin())
         , fWidth(bm.width())
         , fHeight(bm.height())
-        , fMoreRecentlyUsed(nullptr)
-        , fLessRecentlyUsed(nullptr){}
+        , fMoreRecentlyUsed(NULL)
+        , fLessRecentlyUsed(NULL){}
 
         const uint32_t fGenerationId; // SkPixelRef GenerationID.
         const SkIPoint fPixelOrigin;
@@ -260,7 +268,7 @@ private:
     /**
      * Remove a LookupEntry from the LRU, in preparation for either deleting or appending as most
      * recent. Points the LookupEntry's old neighbors at each other, and sets fLeastRecentlyUsed
-     * (if there is still an entry left). Sets LookupEntry's fMoreRecentlyUsed to nullptr and leaves
+     * (if there is still an entry left). Sets LookupEntry's fMoreRecentlyUsed to NULL and leaves
      * its fLessRecentlyUsed unmodified.
      */
     void removeFromLRU(LookupEntry* entry);

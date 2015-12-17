@@ -9,8 +9,7 @@
 
 
 #include "SkTypefaceCache.h"
-#include "SkAtomics.h"
-#include "SkMutex.h"
+#include "SkThread.h"
 
 #define TYPEFACE_CACHE_LIMIT    1024
 
@@ -20,19 +19,43 @@ SkTypefaceCache::~SkTypefaceCache() {
     const Rec* curr = fArray.begin();
     const Rec* stop = fArray.end();
     while (curr < stop) {
-        curr->fFace->unref();
+        if (curr->fStrong) {
+            curr->fFace->unref();
+        } else {
+            curr->fFace->weak_unref();
+        }
         curr += 1;
     }
 }
 
-void SkTypefaceCache::add(SkTypeface* face, const SkFontStyle& requestedStyle) {
+void SkTypefaceCache::add(SkTypeface* face,
+                          SkTypeface::Style requestedStyle,
+                          bool strong) {
     if (fArray.count() >= TYPEFACE_CACHE_LIMIT) {
         this->purge(TYPEFACE_CACHE_LIMIT >> 2);
     }
 
     Rec* rec = fArray.append();
-    rec->fFace = SkRef(face);
+    rec->fFace = face;
     rec->fRequestedStyle = requestedStyle;
+    rec->fStrong = strong;
+    if (strong) {
+        face->ref();
+    } else {
+        face->weak_ref();
+    }
+}
+
+SkTypeface* SkTypefaceCache::findByID(SkFontID fontID) const {
+    const Rec* curr = fArray.begin();
+    const Rec* stop = fArray.end();
+    while (curr < stop) {
+        if (curr->fFace->uniqueID() == fontID) {
+            return curr->fFace;
+        }
+        curr += 1;
+    }
+    return NULL;
 }
 
 SkTypeface* SkTypefaceCache::findByProcAndRef(FindProc proc, void* ctx) const {
@@ -41,11 +64,18 @@ SkTypeface* SkTypefaceCache::findByProcAndRef(FindProc proc, void* ctx) const {
     while (curr < stop) {
         SkTypeface* currFace = curr->fFace;
         if (proc(currFace, curr->fRequestedStyle, ctx)) {
-            return SkRef(currFace);
+            if (curr->fStrong) {
+                currFace->ref();
+                return currFace;
+            } else if (currFace->try_ref()) {
+                return currFace;
+            } else {
+                //remove currFace from fArray?
+            }
         }
         curr += 1;
     }
-    return nullptr;
+    return NULL;
 }
 
 void SkTypefaceCache::purge(int numToPurge) {
@@ -53,8 +83,13 @@ void SkTypefaceCache::purge(int numToPurge) {
     int i = 0;
     while (i < count) {
         SkTypeface* face = fArray[i].fFace;
-        if (face->unique()) {
-            face->unref();
+        bool strong = fArray[i].fStrong;
+        if ((strong && face->unique()) || (!strong && face->weak_expired())) {
+            if (strong) {
+                face->unref();
+            } else {
+                face->weak_unref();
+            }
             fArray.remove(i);
             --count;
             if (--numToPurge == 0) {
@@ -84,9 +119,16 @@ SkFontID SkTypefaceCache::NewFontID() {
 
 SK_DECLARE_STATIC_MUTEX(gMutex);
 
-void SkTypefaceCache::Add(SkTypeface* face, const SkFontStyle& requestedStyle) {
+void SkTypefaceCache::Add(SkTypeface* face,
+                          SkTypeface::Style requestedStyle,
+                          bool strong) {
     SkAutoMutexAcquire ama(gMutex);
-    Get().add(face, requestedStyle);
+    Get().add(face, requestedStyle, strong);
+}
+
+SkTypeface* SkTypefaceCache::FindByID(SkFontID fontID) {
+    SkAutoMutexAcquire ama(gMutex);
+    return Get().findByID(fontID);
 }
 
 SkTypeface* SkTypefaceCache::FindByProcAndRef(FindProc proc, void* ctx) {
@@ -103,9 +145,9 @@ void SkTypefaceCache::PurgeAll() {
 ///////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_DEBUG
-static bool DumpProc(SkTypeface* face, const SkFontStyle& s, void* ctx) {
-    SkDebugf("SkTypefaceCache: face %p fontID %d weight %d width %d style %d refcnt %d\n",
-             face, face->uniqueID(), s.weight(), s.width(), s.slant(), face->getRefCnt());
+static bool DumpProc(SkTypeface* face, SkTypeface::Style style, void* ctx) {
+    SkDebugf("SkTypefaceCache: face %p fontID %d style %d refcnt %d\n",
+             face, face->uniqueID(), style, face->getRefCnt());
     return false;
 }
 #endif
@@ -113,6 +155,6 @@ static bool DumpProc(SkTypeface* face, const SkFontStyle& s, void* ctx) {
 void SkTypefaceCache::Dump() {
 #ifdef SK_DEBUG
     SkAutoMutexAcquire ama(gMutex);
-    (void)Get().findByProcAndRef(DumpProc, nullptr);
+    (void)Get().findByProcAndRef(DumpProc, NULL);
 #endif
 }

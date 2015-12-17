@@ -22,15 +22,15 @@ public:
     GrFrameBufferObj()
         : GrFakeRefObj()
         , fBound(false)
-        , fColorBuffer(nullptr)
-        , fDepthBuffer(nullptr)
-        , fStencilBuffer(nullptr) {
+        , fColorBuffer(NULL)
+        , fDepthBuffer(NULL)
+        , fStencilBuffer(NULL) {
     }
 
     virtual ~GrFrameBufferObj() {
-        fColorBuffer = nullptr;
-        fDepthBuffer = nullptr;
-        fStencilBuffer = nullptr;
+        fColorBuffer = NULL;
+        fDepthBuffer = NULL;
+        fStencilBuffer = NULL;
     }
 
     void setBound()         { fBound = true; }
@@ -46,11 +46,11 @@ public:
     void setStencil(GrFBBindableObj *buffer);
     GrFBBindableObj *getStencil()     { return fStencilBuffer; }
 
-    void deleteAction() override {
+    virtual void deleteAction() SK_OVERRIDE {
 
-        setColor(nullptr);
-        setDepth(nullptr);
-        setStencil(nullptr);
+        setColor(NULL);
+        setDepth(NULL);
+        setStencil(NULL);
 
         this->INHERITED::deleteAction();
     }

@@ -22,11 +22,13 @@ SkPMColor SkPixelXorXfermode::xferColor(SkPMColor src, SkPMColor dst) const {
 }
 
 void SkPixelXorXfermode::flatten(SkWriteBuffer& wb) const {
+    this->INHERITED::flatten(wb);
     wb.writeColor(fOpColor);
 }
 
-SkFlattenable* SkPixelXorXfermode::CreateProc(SkReadBuffer& buffer) {
-    return Create(buffer.readColor());
+SkPixelXorXfermode::SkPixelXorXfermode(SkReadBuffer& rb)
+        : INHERITED(rb) {
+    fOpColor = rb.readColor();
 }
 
 #ifndef SK_IGNORE_TO_STRING

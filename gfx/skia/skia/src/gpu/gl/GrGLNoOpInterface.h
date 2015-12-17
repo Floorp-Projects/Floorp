@@ -9,20 +9,18 @@
 #define GrGLNoOpInterface_DEFINED
 
 #include "gl/GrGLDefines.h"
-#include "gl/GrGLTypes.h"
+#include "gl/GrGLFunctions.h"
 
 // These are constants/functions that are common to the Null and Debug GL interface implementations.
-
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBindFragDataLocation(GrGLuint program,
-                                                        GrGLuint colorNumber,
-                                                        const GrGLchar* name);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendColor(GrGLclampf red,
                                               GrGLclampf green,
                                               GrGLclampf blue,
                                               GrGLclampf alpha);
 
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendEquation(GrGLenum mode);
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBindFragDataLocation(GrGLuint program,
+                                                        GrGLuint colorNumber,
+                                                        const GrGLchar* name);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendFunc(GrGLenum sfactor,
                                              GrGLenum dfactor);
@@ -86,11 +84,6 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDisableVertexAttribArray(GrGLuint index);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawArrays(GrGLenum mode, GrGLint first, GrGLsizei count);
 
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawArraysInstanced(GrGLenum mode,
-                                                       GrGLint first,
-                                                       GrGLsizei count,
-                                                       GrGLsizei primcount);
-
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawBuffer(GrGLenum mode);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawBuffers(GrGLsizei n,
@@ -100,12 +93,6 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawElements(GrGLenum mode,
                                                 GrGLsizei count,
                                                 GrGLenum type,
                                                 const GrGLvoid* indices);
-
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawElementsInstanced(GrGLenum mode,
-                                                         GrGLsizei count,
-                                                         GrGLenum type,
-                                                         const GrGLvoid* indices,
-                                                         GrGLsizei primcount);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLEnable(GrGLenum cap);
 
@@ -279,12 +266,6 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLUniformMatrix4fv(GrGLint location,
                                                     GrGLboolean transpose,
                                                     const GrGLfloat* value);
 
- GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib1f(GrGLuint indx, const GrGLfloat value);
-
- GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib2fv(GrGLuint indx, const GrGLfloat* values);
-
- GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib3fv(GrGLuint indx, const GrGLfloat* values);
-
  GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib4fv(GrGLuint indx, const GrGLfloat* values);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttribPointer(GrGLuint indx,
@@ -293,8 +274,6 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttribPointer(GrGLuint indx,
                                                        GrGLboolean normalized,
                                                        GrGLsizei stride,
                                                        const GrGLvoid* ptr);
-
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttribDivisor(GrGLuint index, GrGLuint divisor);
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLViewport(GrGLint x,
                                             GrGLint y,

@@ -46,11 +46,7 @@ public:
                             SkScalar dstX, SkScalar dstY, SkWStream* content);
     static void AppendRectangle(const SkRect& rect, SkWStream* content);
     static void EmitPath(const SkPath& path, SkPaint::Style paintStyle,
-                         bool doConsumeDegerates, SkWStream* content);
-    static void EmitPath(const SkPath& path, SkPaint::Style paintStyle,
-                         SkWStream* content) {
-        SkPDFUtils::EmitPath(path, paintStyle, true, content);
-    }
+                         SkWStream* content);
     static void ClosePath(SkWStream* content);
     static void PaintPath(SkPaint::Style style, SkPath::FillType fill,
                           SkWStream* content);
@@ -58,8 +54,6 @@ public:
     static void DrawFormXObject(int objectIndex, SkWStream* content);
     static void ApplyGraphicState(int objectIndex, SkWStream* content);
     static void ApplyPattern(int objectIndex, SkWStream* content);
-    static void AppendScalar(SkScalar value, SkWStream* stream);
-    static SkString FormatString(const char* input, size_t len);
 };
 
 #endif

@@ -9,79 +9,53 @@
 #include "SkDevice.h"
 #include "SkCanvas.h"
 #include "SkReadBuffer.h"
-#include "SkSurfaceProps.h"
 #include "SkWriteBuffer.h"
 #include "SkValidationUtils.h"
 
 SkPictureImageFilter::SkPictureImageFilter(const SkPicture* picture)
-    : INHERITED(0, 0, nullptr)
-    , fPicture(SkSafeRef(picture))
-    , fCropRect(picture ? picture->cullRect() : SkRect::MakeEmpty())
-    , fPictureResolution(kDeviceSpace_PictureResolution) 
-    , fFilterQuality(kLow_SkFilterQuality) {
+  : INHERITED(0, 0),
+    fPicture(picture),
+    fCropRect(SkRect::MakeWH(picture ? SkIntToScalar(picture->width()) : 0,
+                             picture ? SkIntToScalar(picture->height()) : 0)) {
+    SkSafeRef(fPicture);
 }
 
-SkPictureImageFilter::SkPictureImageFilter(const SkPicture* picture, const SkRect& cropRect,
-                                           PictureResolution pictureResolution,
-                                           SkFilterQuality filterQuality)
-    : INHERITED(0, 0, nullptr)
-    , fPicture(SkSafeRef(picture))
-    , fCropRect(cropRect)
-    , fPictureResolution(pictureResolution)
-    , fFilterQuality(filterQuality) {
+SkPictureImageFilter::SkPictureImageFilter(const SkPicture* picture, const SkRect& cropRect)
+  : INHERITED(0, 0),
+    fPicture(picture),
+    fCropRect(cropRect) {
+    SkSafeRef(fPicture);
 }
 
 SkPictureImageFilter::~SkPictureImageFilter() {
     SkSafeUnref(fPicture);
 }
 
-SkFlattenable* SkPictureImageFilter::CreateProc(SkReadBuffer& buffer) {
-    SkAutoTUnref<SkPicture> picture;
-    SkRect cropRect;
-
-    if (buffer.isCrossProcess() && SkPicture::PictureIOSecurityPrecautionsEnabled()) {
-        buffer.validate(!buffer.readBool());
-    } else {
+SkPictureImageFilter::SkPictureImageFilter(SkReadBuffer& buffer)
+  : INHERITED(0, buffer),
+    fPicture(NULL) {
+    if (!buffer.isCrossProcess()) {
         if (buffer.readBool()) {
-            picture.reset(SkPicture::CreateFromBuffer(buffer));
+            fPicture = SkPicture::CreateFromBuffer(buffer);
         }
-    }
-    buffer.readRect(&cropRect);
-    PictureResolution pictureResolution;
-    if (buffer.isVersionLT(SkReadBuffer::kPictureImageFilterResolution_Version)) {
-        pictureResolution = kDeviceSpace_PictureResolution;
     } else {
-        pictureResolution = (PictureResolution)buffer.readInt();
-    }  
-
-    if (kLocalSpace_PictureResolution == pictureResolution) {
-        //filterLevel is only serialized if pictureResolution is LocalSpace
-        SkFilterQuality filterQuality;
-        if (buffer.isVersionLT(SkReadBuffer::kPictureImageFilterLevel_Version)) {
-            filterQuality = kLow_SkFilterQuality;
-        } else {
-            filterQuality = (SkFilterQuality)buffer.readInt();
-        }
-        return CreateForLocalSpace(picture, cropRect, filterQuality);
+        buffer.validate(!buffer.readBool());
     }
-    return Create(picture, cropRect);
+    buffer.readRect(&fCropRect);
 }
 
 void SkPictureImageFilter::flatten(SkWriteBuffer& buffer) const {
-    if (buffer.isCrossProcess() && SkPicture::PictureIOSecurityPrecautionsEnabled()) {
-        buffer.writeBool(false);
-    } else {
-        bool hasPicture = (fPicture != nullptr);
+    this->INHERITED::flatten(buffer);
+    if (!buffer.isCrossProcess()) {
+        bool hasPicture = (fPicture != NULL);
         buffer.writeBool(hasPicture);
         if (hasPicture) {
             fPicture->flatten(buffer);
         }
+    } else {
+        buffer.writeBool(false);
     }
     buffer.writeRect(fCropRect);
-    buffer.writeInt(fPictureResolution);
-    if (kLocalSpace_PictureResolution == fPictureResolution) {
-        buffer.writeInt(fFilterQuality);
-    }
 }
 
 bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Context& ctx,
@@ -92,11 +66,9 @@ bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Co
     }
 
     SkRect floatBounds;
+    SkIRect bounds;
     ctx.ctm().mapRect(&floatBounds, fCropRect);
-    SkIRect bounds = floatBounds.roundOut();
-    if (!bounds.intersect(ctx.clipBounds())) {
-        return false;
-    }
+    floatBounds.roundOut(&bounds);
 
     if (bounds.isEmpty()) {
         offset->fX = offset->fY = 0;
@@ -104,16 +76,16 @@ bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Co
     }
 
     SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(bounds.width(), bounds.height()));
-    if (nullptr == device.get()) {
+    if (NULL == device.get()) {
         return false;
     }
 
-    if (kDeviceSpace_PictureResolution == fPictureResolution || 
-        0 == (ctx.ctm().getType() & ~SkMatrix::kTranslate_Mask)) {
-        this->drawPictureAtDeviceResolution(device.get(), bounds, ctx);        
-    } else {
-        this->drawPictureAtLocalResolution(proxy, device.get(), bounds, ctx);
-    }
+    SkCanvas canvas(device.get());
+    SkPaint paint;
+
+    canvas.translate(-SkIntToScalar(bounds.fLeft), -SkIntToScalar(bounds.fTop));
+    canvas.concat(ctx.ctm());
+    canvas.drawPicture(fPicture);
 
     *result = device.get()->accessBitmap(false);
     offset->fX = bounds.fLeft;
@@ -121,56 +93,9 @@ bool SkPictureImageFilter::onFilterImage(Proxy* proxy, const SkBitmap&, const Co
     return true;
 }
 
-void SkPictureImageFilter::drawPictureAtDeviceResolution(SkBaseDevice* device,
-                                                         const SkIRect& deviceBounds,
-                                                         const Context& ctx) const {
-    SkCanvas canvas(device);
-
-    canvas.translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
-    canvas.concat(ctx.ctm());
-    canvas.drawPicture(fPicture);
+bool SkPictureImageFilter::onFilterBounds(const SkIRect& src, const SkMatrix& ctm,
+                                          SkIRect* dst) const {
+    *dst = src;
+    return true;
 }
 
-void SkPictureImageFilter::drawPictureAtLocalResolution(Proxy* proxy, SkBaseDevice* device,
-                                                        const SkIRect& deviceBounds,
-                                                        const Context& ctx) const {
-    SkMatrix inverseCtm;
-    if (!ctx.ctm().invert(&inverseCtm)) {
-        return;
-    }
-
-    SkRect localBounds = SkRect::Make(ctx.clipBounds());
-    inverseCtm.mapRect(&localBounds);
-    if (!localBounds.intersect(fCropRect)) {
-        return;
-    }
-    SkIRect localIBounds = localBounds.roundOut();
-    SkAutoTUnref<SkBaseDevice> localDevice(proxy->createDevice(localIBounds.width(), localIBounds.height()));
-
-    SkCanvas localCanvas(localDevice);
-    localCanvas.translate(-SkIntToScalar(localIBounds.fLeft), -SkIntToScalar(localIBounds.fTop));
-    localCanvas.drawPicture(fPicture);
-
-    SkCanvas canvas(device);
-
-    canvas.translate(-SkIntToScalar(deviceBounds.fLeft), -SkIntToScalar(deviceBounds.fTop));
-    canvas.concat(ctx.ctm());
-    SkPaint paint;
-    paint.setFilterQuality(fFilterQuality);
-    canvas.drawBitmap(localDevice.get()->accessBitmap(false), SkIntToScalar(localIBounds.fLeft),
-                      SkIntToScalar(localIBounds.fTop), &paint);
-}
-
-#ifndef SK_IGNORE_TO_STRING
-void SkPictureImageFilter::toString(SkString* str) const {
-    str->appendf("SkPictureImageFilter: (");
-    str->appendf("crop: (%f,%f,%f,%f) ", 
-                 fCropRect.fLeft, fCropRect.fTop, fCropRect.fRight, fCropRect.fBottom);
-    if (fPicture) {
-        str->appendf("picture: (%f,%f,%f,%f)",
-                     fPicture->cullRect().fLeft, fPicture->cullRect().fTop,
-                     fPicture->cullRect().fRight, fPicture->cullRect().fBottom);
-    }
-    str->append(")");
-}
-#endif

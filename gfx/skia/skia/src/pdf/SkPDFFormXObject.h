@@ -14,11 +14,12 @@
 #include "SkPDFTypes.h"
 #include "SkRect.h"
 #include "SkRefCnt.h"
+#include "SkPDFResourceDict.h"
 #include "SkString.h"
 
 class SkMatrix;
 class SkPDFDevice;
-class SkPDFObjNumMap;
+class SkPDFCatalog;
 
 /** \class SkPDFFormXObject
 
@@ -30,7 +31,7 @@ class SkPDFObjNumMap;
 // The caller could keep track of the form XObjects it creates and
 // canonicalize them, but the Skia API doesn't provide enough context to
 // automatically do it (trivially).
-class SkPDFFormXObject final : public SkPDFStream {
+class SkPDFFormXObject : public SkPDFStream {
 public:
     /** Create a PDF form XObject. Entries for the dictionary entries are
      *  automatically added.
@@ -43,12 +44,18 @@ public:
      */
     explicit SkPDFFormXObject(SkStream* content,
                               SkRect bbox,
-                              SkPDFDict* resourceDict);
+                              SkPDFResourceDict* resourceDict);
     virtual ~SkPDFFormXObject();
+
+    // The SkPDFObject interface.
+    virtual void getResources(const SkTSet<SkPDFObject*>& knownResourceObjects,
+                              SkTSet<SkPDFObject*>* newResourceObjects);
 
 private:
     void init(const char* colorSpace,
               SkPDFDict* resourceDict, SkPDFArray* bbox);
+
+    SkTSet<SkPDFObject*> fResources;
 };
 
 #endif

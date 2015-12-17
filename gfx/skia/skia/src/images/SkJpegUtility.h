@@ -35,8 +35,9 @@ void skjpeg_error_exit(j_common_ptr cinfo);
 */
 struct skjpeg_source_mgr : jpeg_source_mgr {
     skjpeg_source_mgr(SkStream* stream, SkImageDecoder* decoder);
+    ~skjpeg_source_mgr();
 
-    // Unowned.
+    // fStream is ref'ed and unref'ed
     SkStream*       fStream;
     // Unowned pointer to the decoder, used to check if the decoding process
     // has been cancelled.

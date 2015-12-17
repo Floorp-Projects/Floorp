@@ -8,13 +8,13 @@
 #ifndef SkRemotableFontMgr_DEFINED
 #define SkRemotableFontMgr_DEFINED
 
-#include "../private/SkTemplates.h"
 #include "SkFontStyle.h"
 #include "SkRefCnt.h"
-#include "SkTypes.h"
+#include "SkTemplates.h"
 
 class SkDataTable;
 class SkStreamAsset;
+class SkString;
 
 struct SK_API SkFontIdentity {
     static const uint32_t kInvalidDataId = 0xFFFFFFFF;
@@ -35,6 +35,8 @@ struct SK_API SkFontIdentity {
 
 class SK_API SkRemotableFontIdentitySet : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkRemotableFontIdentitySet)
+
     SkRemotableFontIdentitySet(int count, SkFontIdentity** data);
 
     int count() const { return fCount; }
@@ -44,8 +46,7 @@ public:
 
 private:
     SkRemotableFontIdentitySet() : fCount(0), fData() { }
-
-    friend SkRemotableFontIdentitySet* sk_remotable_font_identity_set_new();
+    static SkRemotableFontIdentitySet* NewEmptyImpl();
 
     int fCount;
     SkAutoTMalloc<SkFontIdentity> fData;
@@ -55,6 +56,8 @@ private:
 
 class SK_API SkRemotableFontMgr : public SkRefCnt {
 public:
+    SK_DECLARE_INST_COUNT(SkRemotableFontMgr)
+
     /**
      *  Returns the names of the known fonts on the system.
      *  Will not return NULL, will return an empty table if no families exist.
@@ -131,8 +134,7 @@ public:
      *  so it is fine to just pass a ISO 639 here.
      */
     virtual SkFontIdentity matchNameStyleCharacter(const char familyName[], const SkFontStyle&,
-                                                   const char* bcp47[], int bcp47Count,
-                                                   SkUnichar character) const=0;
+                                                   const char bpc47[], SkUnichar character) const=0;
 
     /**
      *  Returns the data for the given data id.

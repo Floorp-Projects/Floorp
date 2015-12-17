@@ -11,7 +11,7 @@
 
 #include <GL/gl.h>
 #include <WindowsX.h>
-#include "win/SkWGL.h"
+#include "SkWGL.h"
 #include "SkWindow.h"
 #include "SkCanvas.h"
 #include "SkOSMenu.h"
@@ -21,8 +21,8 @@
 #include "SkGraphics.h"
 
 #if SK_ANGLE
-#include "gl/angle/SkANGLEGLContext.h"
 #include "gl/GrGLInterface.h"
+
 #include "GLES2/gl2.h"
 
 #define ANGLE_GL_CALL(IFACE, X)                                 \
@@ -30,52 +30,37 @@
         (IFACE)->fFunctions.f##X;                               \
     } while (false)
 
-#endif // SK_ANGLE
+#endif
 
-#if SK_COMMAND_BUFFER
-#include "gl/command_buffer/SkCommandBufferGLContext.h"
+#define INVALIDATE_DELAY_MS 200
 
-#define COMMAND_BUFFER_GL_CALL(IFACE, X)                                 \
-    do {                                                        \
-        (IFACE)->fFunctions.f##X;                               \
-    } while (false)
-
-#endif // SK_COMMAND_BUFFER
+static SkOSWindow* gCurrOSWin;
+static HWND gEventTarget;
 
 #define WM_EVENT_CALLBACK (WM_USER+0)
 
-void post_skwinevent(HWND hwnd)
+void post_skwinevent()
 {
-    PostMessage(hwnd, WM_EVENT_CALLBACK, 0, 0);
+    PostMessage(gEventTarget, WM_EVENT_CALLBACK, 0, 0);
 }
 
-SkTHashMap<void*, SkOSWindow*> SkOSWindow::gHwndToOSWindowMap;
-
-SkOSWindow::SkOSWindow(const void* winInit) {
-    fWinInit = *(const WindowInit*)winInit;
-
-    fHWND = CreateWindow(fWinInit.fClass, NULL, WS_OVERLAPPEDWINDOW,
-                         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, fWinInit.fInstance, NULL);
-    gHwndToOSWindowMap.set(fHWND, this);
+SkOSWindow::SkOSWindow(void* hWnd) {
+    fHWND = hWnd;
 #if SK_SUPPORT_GPU
 #if SK_ANGLE
     fDisplay = EGL_NO_DISPLAY;
     fContext = EGL_NO_CONTEXT;
     fSurface = EGL_NO_SURFACE;
 #endif
-#if SK_COMMAND_BUFFER
-    fCommandBuffer = nullptr;
-#endif // SK_COMMAND_BUFFER
-
     fHGLRC = NULL;
 #endif
     fAttached = kNone_BackEndType;
-    fFullscreen = false;
+    gEventTarget = (HWND)hWnd;
 }
 
 SkOSWindow::~SkOSWindow() {
 #if SK_SUPPORT_GPU
-    if (fHGLRC) {
+    if (NULL != fHGLRC) {
         wglDeleteContext((HGLRC)fHGLRC);
     }
 #if SK_ANGLE
@@ -94,12 +79,7 @@ SkOSWindow::~SkOSWindow() {
         fDisplay = EGL_NO_DISPLAY;
     }
 #endif // SK_ANGLE
-#if SK_COMMAND_BUFFER
-    delete fCommandBuffer;
-#endif // SK_COMMAND_BUFFER
-
 #endif // SK_SUPPORT_GPU
-    this->closeWindow();
 }
 
 static SkKey winToskKey(WPARAM vk) {
@@ -164,6 +144,14 @@ bool SkOSWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             return true;
             } break;
 
+        case WM_TIMER: {
+            RECT* rect = (RECT*)wParam;
+            InvalidateRect(hWnd, rect, FALSE);
+            KillTimer(hWnd, (UINT_PTR)rect);
+            delete rect;
+            return true;
+        } break;
+
         case WM_LBUTTONDOWN:
             this->handleClick(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam),
                               Click::kDown_State, NULL, getModifiers(message));
@@ -181,7 +169,7 @@ bool SkOSWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case WM_EVENT_CALLBACK:
             if (SkEvent::ProcessEvent()) {
-                post_skwinevent(hWnd);
+                post_skwinevent();
             }
             return true;
     }
@@ -230,20 +218,22 @@ void SkOSWindow::doPaint(void* ctx) {
     }
 }
 
+#if 0
 void SkOSWindow::updateSize()
 {
     RECT    r;
-    GetWindowRect((HWND)fHWND, &r);
+    GetWindowRect((HWND)this->getHWND(), &r);
     this->resize(r.right - r.left, r.bottom - r.top);
 }
+#endif
 
 void SkOSWindow::onHandleInval(const SkIRect& r) {
-    RECT rect;
-    rect.left    = r.fLeft;
-    rect.top     = r.fTop;
-    rect.right   = r.fRight;
-    rect.bottom  = r.fBottom;
-    InvalidateRect((HWND)fHWND, &rect, FALSE);
+    RECT* rect = new RECT;
+    rect->left    = r.fLeft;
+    rect->top     = r.fTop;
+    rect->right   = r.fRight;
+    rect->bottom  = r.fBottom;
+    SetTimer((HWND)fHWND, (UINT_PTR)rect, INVALIDATE_DELAY_MS, NULL);
 }
 
 void SkOSWindow::onAddMenu(const SkOSMenu* sk_menu)
@@ -310,9 +300,8 @@ static SkKey raw2key(uint32_t raw)
 
 void SkEvent::SignalNonEmptyQueue()
 {
-    SkOSWindow::ForAllWindows([](void* hWND, SkOSWindow**) {
-        post_skwinevent((HWND)hWND);
-    });
+    post_skwinevent();
+    //SkDebugf("signal nonempty\n");
 }
 
 static UINT_PTR gTimer;
@@ -388,13 +377,13 @@ void SkOSWindow::detachGL() {
 }
 
 void SkOSWindow::presentGL() {
+    glFlush();
     HDC dc = GetDC((HWND)fHWND);
     SwapBuffers(dc);
     ReleaseDC((HWND)fHWND, dc);
 }
 
 #if SK_ANGLE
-
 bool create_ANGLE(EGLNativeWindowType hWnd,
                   int msaaSampleCount,
                   EGLDisplay* eglDisplay,
@@ -418,11 +407,9 @@ bool create_ANGLE(EGLNativeWindowType hWnd,
         EGL_NONE, EGL_NONE
     };
 
-    EGLDisplay display = SkANGLEGLContext::GetD3DEGLDisplay(GetDC(hWnd), false);
-
-    if (EGL_NO_DISPLAY == display) {
-        SkDebugf("Could not create ANGLE egl display!\n");
-        return false;
+    EGLDisplay display = eglGetDisplay(GetDC(hWnd));
+    if (display == EGL_NO_DISPLAY ) {
+       return false;
     }
 
     // Initialize EGL
@@ -451,7 +438,7 @@ bool create_ANGLE(EGLNativeWindowType hWnd,
         msaaConfigAttribList[kConfigAttribListCnt + 1] = EGL_SAMPLES;
         msaaConfigAttribList[kConfigAttribListCnt + 2] = msaaSampleCount;
         msaaConfigAttribList[kConfigAttribListCnt + 3] = EGL_NONE;
-        if (eglChooseConfig(display, msaaConfigAttribList, eglConfig, 1, &numConfigs)) {
+        if (eglChooseConfig(display, configAttribList, eglConfig, 1, &numConfigs)) {
             SkASSERT(numConfigs > 0);
             foundConfig = true;
         }
@@ -548,50 +535,6 @@ void SkOSWindow::presentANGLE() {
     eglSwapBuffers(fDisplay, fSurface);
 }
 #endif // SK_ANGLE
-
-#if SK_COMMAND_BUFFER
-
-bool SkOSWindow::attachCommandBuffer(int msaaSampleCount, AttachmentInfo* info) {
-    if (!fCommandBuffer) {
-        fCommandBuffer = SkCommandBufferGLContext::Create((HWND)fHWND, msaaSampleCount);
-        if (!fCommandBuffer)
-            return false;
-    
-        SkAutoTUnref<const GrGLInterface> intf(GrGLCreateCommandBufferInterface());
-        if (intf) {
-            COMMAND_BUFFER_GL_CALL(intf, ClearStencil(0));
-            COMMAND_BUFFER_GL_CALL(intf, ClearColor(0, 0, 0, 0));
-            COMMAND_BUFFER_GL_CALL(intf, StencilMask(0xffffffff));
-            COMMAND_BUFFER_GL_CALL(intf, Clear(GL_STENCIL_BUFFER_BIT |GL_COLOR_BUFFER_BIT));
-        }
-    }
-
-    if (fCommandBuffer->makeCurrent()) {
-        info->fStencilBits = fCommandBuffer->getStencilBits();
-        info->fSampleCount = fCommandBuffer->getSampleCount();
-
-        SkAutoTUnref<const GrGLInterface> intf(GrGLCreateCommandBufferInterface());
-
-        if (intf ) {
-            COMMAND_BUFFER_GL_CALL(intf, Viewport(0, 0,
-                                         SkScalarRoundToInt(this->width()),
-                                         SkScalarRoundToInt(this->height())));
-        }
-        return true;
-    }
-    return false;
-}
-
-void SkOSWindow::detachCommandBuffer() {
-    delete fCommandBuffer;
-    fCommandBuffer = nullptr;
-}
-
-void SkOSWindow::presentCommandBuffer() {
-    fCommandBuffer->presentCommandBuffer();
-}
-#endif // SK_COMMAND_BUFFER
-
 #endif // SK_SUPPORT_GPU
 
 // return true on success
@@ -616,11 +559,6 @@ bool SkOSWindow::attach(SkBackEndTypes attachType, int msaaSampleCount, Attachme
         result = attachANGLE(msaaSampleCount, info);
         break;
 #endif // SK_ANGLE
-#if SK_COMMAND_BUFFER
-    case kCommandBuffer_BackEndType:
-        result = attachCommandBuffer(msaaSampleCount, info);
-        break;
-#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);
@@ -649,11 +587,6 @@ void SkOSWindow::detach() {
         detachANGLE();
         break;
 #endif // SK_ANGLE
-#if SK_COMMAND_BUFFER
-    case kCommandBuffer_BackEndType:
-        detachCommandBuffer();
-        break;
-#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);
@@ -676,11 +609,6 @@ void SkOSWindow::present() {
         presentANGLE();
         break;
 #endif // SK_ANGLE
-#if SK_COMMAND_BUFFER
-    case kCommandBuffer_BackEndType:
-        presentCommandBuffer();
-        break;
-#endif // SK_COMMAND_BUFFER
 #endif // SK_SUPPORT_GPU
     default:
         SkASSERT(false);
@@ -688,92 +616,4 @@ void SkOSWindow::present() {
     }
 }
 
-bool SkOSWindow::makeFullscreen() {
-    if (fFullscreen) {
-        return true;
-    }
-#if SK_SUPPORT_GPU
-    if (fHGLRC) {
-        this->detachGL();
-    }
-#endif // SK_SUPPORT_GPU
-    // This is hacked together from various sources on the web. It can certainly be improved and be
-    // made more robust.
-
-    // Save current window/resolution information. We do this in case we ever implement switching
-    // back to windowed mode.
-    fSavedWindowState.fZoomed = SkToBool(IsZoomed((HWND)fHWND));
-    if (fSavedWindowState.fZoomed) {
-        SendMessage((HWND)fHWND, WM_SYSCOMMAND, SC_RESTORE, 0);
-    }
-    fSavedWindowState.fStyle = GetWindowLong((HWND)fHWND, GWL_STYLE);
-    fSavedWindowState.fExStyle = GetWindowLong((HWND)fHWND, GWL_EXSTYLE);
-    GetWindowRect((HWND)fHWND, &fSavedWindowState.fRect);
-    DEVMODE currScreenSettings;
-    memset(&currScreenSettings,0,sizeof(currScreenSettings));
-    currScreenSettings.dmSize = sizeof(currScreenSettings);
-    EnumDisplaySettings(NULL, ENUM_CURRENT_SETTINGS, &currScreenSettings);
-    fSavedWindowState.fScreenWidth = currScreenSettings.dmPelsWidth;
-    fSavedWindowState.fScreenHeight = currScreenSettings.dmPelsHeight;
-    fSavedWindowState.fScreenBits = currScreenSettings.dmBitsPerPel;
-    fSavedWindowState.fHWND = fHWND;
-
-    // Try different sizes to find an allowed setting? Use ChangeDisplaySettingsEx?
-    static const int kWidth = 1280;
-    static const int kHeight = 1024;
-    DEVMODE newScreenSettings;
-    memset(&newScreenSettings, 0, sizeof(newScreenSettings));
-    newScreenSettings.dmSize = sizeof(newScreenSettings);
-    newScreenSettings.dmPelsWidth    = kWidth;
-    newScreenSettings.dmPelsHeight   = kHeight;
-    newScreenSettings.dmBitsPerPel   = 32;
-    newScreenSettings.dmFields = DM_BITSPERPEL|DM_PELSWIDTH|DM_PELSHEIGHT;
-    if (ChangeDisplaySettings(&newScreenSettings, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL) {
-        return false;
-    }
-    RECT WindowRect;
-    WindowRect.left = 0;
-    WindowRect.right = kWidth;
-    WindowRect.top = 0;
-    WindowRect.bottom = kHeight;     
-    ShowCursor(FALSE);
-    AdjustWindowRectEx(&WindowRect, WS_POPUP, FALSE, WS_EX_APPWINDOW);
-    HWND fsHWND = CreateWindowEx(
-        WS_EX_APPWINDOW,
-        fWinInit.fClass,
-        NULL,
-        WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_POPUP,
-        0, 0, WindowRect.right-WindowRect.left, WindowRect.bottom-WindowRect.top,
-        NULL,
-        NULL,
-        fWinInit.fInstance,
-        NULL
-    );
-    if (!fsHWND) {
-        return false;
-    }
-    // Hide the old window and set the entry in the global mapping for this SkOSWindow to the
-    // new HWND.
-    ShowWindow((HWND)fHWND, SW_HIDE);
-    gHwndToOSWindowMap.remove(fHWND);
-    fHWND = fsHWND;
-    gHwndToOSWindowMap.set(fHWND, this);
-    this->updateSize();
-
-    fFullscreen = true;
-    return true;
-}
-
-void SkOSWindow::setVsync(bool enable) {
-    SkWGLExtensions wgl;
-    wgl.swapInterval(enable ? 1 : 0);
-}
-
-void SkOSWindow::closeWindow() {
-    DestroyWindow((HWND)fHWND);
-    if (fFullscreen) {
-        DestroyWindow((HWND)fSavedWindowState.fHWND);
-    }
-    gHwndToOSWindowMap.remove(fHWND);
-}
 #endif

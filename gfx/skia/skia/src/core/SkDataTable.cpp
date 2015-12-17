@@ -16,9 +16,9 @@ static void malloc_freeproc(void* context) {
 SkDataTable::SkDataTable() {
     fCount = 0;
     fElemSize = 0;   // 0 signals that we use fDir instead of fElems
-    fU.fDir = nullptr;
-    fFreeProc = nullptr;
-    fFreeProcContext = nullptr;
+    fU.fDir = NULL;
+    fFreeProc = NULL;
+    fFreeProcContext = NULL;
 }
 
 SkDataTable::SkDataTable(const void* array, size_t elemSize, int count,
@@ -78,8 +78,8 @@ const void* SkDataTable::at(int index, size_t* size) const {
 
 SkDataTable* SkDataTable::NewEmpty() {
     static SkDataTable* gEmpty;
-    if (nullptr == gEmpty) {
-        gEmpty = new SkDataTable;
+    if (NULL == gEmpty) {
+        gEmpty = SkNEW(SkDataTable);
     }
     gEmpty->ref();
     return gEmpty;
@@ -108,7 +108,7 @@ SkDataTable* SkDataTable::NewCopyArrays(const void * const * ptrs,
         elem += sizes[i];
     }
 
-    return new SkDataTable(dir, count, malloc_freeproc, buffer);
+    return SkNEW_ARGS(SkDataTable, (dir, count, malloc_freeproc, buffer));
 }
 
 SkDataTable* SkDataTable::NewCopyArray(const void* array, size_t elemSize,
@@ -121,7 +121,8 @@ SkDataTable* SkDataTable::NewCopyArray(const void* array, size_t elemSize,
     void* buffer = sk_malloc_throw(bufferSize);
     memcpy(buffer, array, bufferSize);
 
-    return new SkDataTable(buffer, elemSize, count, malloc_freeproc, buffer);
+    return SkNEW_ARGS(SkDataTable,
+                      (buffer, elemSize, count, malloc_freeproc, buffer));
 }
 
 SkDataTable* SkDataTable::NewArrayProc(const void* array, size_t elemSize,
@@ -129,15 +130,17 @@ SkDataTable* SkDataTable::NewArrayProc(const void* array, size_t elemSize,
     if (count <= 0) {
         return SkDataTable::NewEmpty();
     }
-    return new SkDataTable(array, elemSize, count, proc, ctx);
+    return SkNEW_ARGS(SkDataTable, (array, elemSize, count, proc, ctx));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void chunkalloc_freeproc(void* context) { delete (SkChunkAlloc*)context; }
+static void chunkalloc_freeproc(void* context) {
+    SkDELETE((SkChunkAlloc*)context);
+}
 
 SkDataTableBuilder::SkDataTableBuilder(size_t minChunkSize)
-    : fHeap(nullptr)
+    : fHeap(NULL)
     , fMinChunkSize(minChunkSize) {}
 
 SkDataTableBuilder::~SkDataTableBuilder() { this->reset(); }
@@ -146,14 +149,14 @@ void SkDataTableBuilder::reset(size_t minChunkSize) {
     fMinChunkSize = minChunkSize;
     fDir.reset();
     if (fHeap) {
-        delete fHeap;
-        fHeap = nullptr;
+        SkDELETE(fHeap);
+        fHeap = NULL;
     }
 }
 
 void SkDataTableBuilder::append(const void* src, size_t size) {
-    if (nullptr == fHeap) {
-        fHeap = new SkChunkAlloc(fMinChunkSize);
+    if (NULL == fHeap) {
+        fHeap = SkNEW_ARGS(SkChunkAlloc, (fMinChunkSize));
     }
 
     void* dst = fHeap->alloc(size, SkChunkAlloc::kThrow_AllocFailType);
@@ -175,9 +178,11 @@ SkDataTable* SkDataTableBuilder::detachDataTable() {
                              SkChunkAlloc::kThrow_AllocFailType);
     memcpy(dir, fDir.begin(), count * sizeof(SkDataTable::Dir));
 
-    SkDataTable* table = new SkDataTable((SkDataTable::Dir*)dir, count, chunkalloc_freeproc, fHeap);
+    SkDataTable* table = SkNEW_ARGS(SkDataTable,
+                                    ((SkDataTable::Dir*)dir, count,
+                                     chunkalloc_freeproc, fHeap));
     // we have to detach our fHeap, since we are giving that to the table
-    fHeap = nullptr;
+    fHeap = NULL;
     fDir.reset();
     return table;
 }

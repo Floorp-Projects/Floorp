@@ -10,7 +10,7 @@
 #define GrGLNameAllocator_DEFINED
 
 #include "SkRefCnt.h"
-#include "gl/GrGLTypes.h"
+#include "gl/GrGLFunctions.h"
 
 /**
  * This class assumes ownership of an explicit range of OpenGL object names and

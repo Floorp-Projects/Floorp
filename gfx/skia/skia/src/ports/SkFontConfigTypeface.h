@@ -15,50 +15,58 @@ class SkFontDescriptor;
 class FontConfigTypeface : public SkTypeface_FreeType {
     SkFontConfigInterface::FontIdentity fIdentity;
     SkString fFamilyName;
-    SkAutoTDelete<SkStreamAsset> fLocalStream;
+    SkStream* fLocalStream;
 
 public:
-    static FontConfigTypeface* Create(const SkFontStyle& style,
+    static FontConfigTypeface* Create(Style style,
                                       const SkFontConfigInterface::FontIdentity& fi,
                                       const SkString& familyName) {
-        return new FontConfigTypeface(style, fi, familyName);
+        return SkNEW_ARGS(FontConfigTypeface, (style, fi, familyName));
     }
 
-    static FontConfigTypeface* Create(const SkFontStyle& style, bool fixedWidth,
-                                      SkStreamAsset* localStream) {
-        return new FontConfigTypeface(style, fixedWidth, localStream);
+    static FontConfigTypeface* Create(Style style, bool fixedWidth, SkStream* localStream) {
+        return SkNEW_ARGS(FontConfigTypeface, (style, fixedWidth, localStream));
+    }
+
+    virtual ~FontConfigTypeface() {
+        SkSafeUnref(fLocalStream);
     }
 
     const SkFontConfigInterface::FontIdentity& getIdentity() const {
         return fIdentity;
     }
 
-    SkStreamAsset* getLocalStream() const { return fLocalStream.get(); }
+    const char* getFamilyName() const { return fFamilyName.c_str(); }
+    SkStream*   getLocalStream() const { return fLocalStream; }
 
     bool isFamilyName(const char* name) const {
         return fFamilyName.equals(name);
     }
 
-    static SkTypeface* LegacyCreateTypeface(const char familyName[], SkTypeface::Style);
+    static SkTypeface* LegacyCreateTypeface(const SkTypeface* family,
+                                            const char familyName[],
+                                            SkTypeface::Style);
 
 protected:
-    FontConfigTypeface(const SkFontStyle& style,
+    friend class SkFontHost;    // hack until we can make public versions
+
+    FontConfigTypeface(Style style,
                        const SkFontConfigInterface::FontIdentity& fi,
                        const SkString& familyName)
             : INHERITED(style, SkTypefaceCache::NewFontID(), false)
             , fIdentity(fi)
             , fFamilyName(familyName)
-            , fLocalStream(nullptr) {}
+            , fLocalStream(NULL) {}
 
-    FontConfigTypeface(const SkFontStyle& style, bool fixedWidth, SkStreamAsset* localStream)
-            : INHERITED(style, SkTypefaceCache::NewFontID(), fixedWidth)
-            , fLocalStream(localStream) {
+    FontConfigTypeface(Style style, bool fixedWidth, SkStream* localStream)
+            : INHERITED(style, SkTypefaceCache::NewFontID(), fixedWidth) {
         // we default to empty fFamilyName and fIdentity
+        fLocalStream = localStream;
+        SkSafeRef(localStream);
     }
 
-    void onGetFamilyName(SkString* familyName) const override;
-    void onGetFontDescriptor(SkFontDescriptor*, bool*) const override;
-    SkStreamAsset* onOpenStream(int* ttcIndex) const override;
+    virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const SK_OVERRIDE;
+    virtual SkStream* onOpenStream(int* ttcIndex) const SK_OVERRIDE;
 
 private:
     typedef SkTypeface_FreeType INHERITED;

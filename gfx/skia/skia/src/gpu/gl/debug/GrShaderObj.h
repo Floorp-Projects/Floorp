@@ -24,7 +24,7 @@ public:
     void setType(GrGLenum type)         { fType = type; }
     GrGLenum getType()                  { return fType; }
 
-    void deleteAction() override;
+    virtual void deleteAction() SK_OVERRIDE;
 
 protected:
 private:

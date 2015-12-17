@@ -38,29 +38,27 @@ public:
     */
     static SkDashPathEffect* Create(const SkScalar intervals[], int count,
                                     SkScalar phase) {
-        return new SkDashPathEffect(intervals, count, phase);
+        return SkNEW_ARGS(SkDashPathEffect, (intervals, count, phase));
     }
     virtual ~SkDashPathEffect();
 
     virtual bool filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec*, const SkRect*) const override;
+                            SkStrokeRec*, const SkRect*) const SK_OVERRIDE;
 
     virtual bool asPoints(PointData* results, const SkPath& src,
                           const SkStrokeRec&, const SkMatrix&,
-                          const SkRect*) const override;
+                          const SkRect*) const SK_OVERRIDE;
 
-    DashType asADash(DashInfo* info) const override;
+    virtual DashType asADash(DashInfo* info) const SK_OVERRIDE;
 
-    SK_TO_STRING_OVERRIDE()
-    SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDashPathEffect)
+    virtual Factory getFactory() const SK_OVERRIDE;
 
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
-    bool exposedInAndroidJavaAPI() const override { return true; }
-#endif
+    static SkFlattenable* CreateProc(SkReadBuffer&);
 
 protected:
     SkDashPathEffect(const SkScalar intervals[], int count, SkScalar phase);
-    void flatten(SkWriteBuffer&) const override;
+    explicit SkDashPathEffect(SkReadBuffer&);
+    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
 private:
     SkScalar*   fIntervals;

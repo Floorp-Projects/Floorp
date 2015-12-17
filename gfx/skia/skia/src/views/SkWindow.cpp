@@ -1,26 +1,29 @@
+
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include "SkWindow.h"
 #include "SkCanvas.h"
+#include "SkDevice.h"
 #include "SkOSMenu.h"
-#include "SkSurface.h"
 #include "SkSystemEventTypes.h"
 #include "SkTime.h"
 
 #define SK_EventDelayInval "\xd" "n" "\xa" "l"
 
-SkWindow::SkWindow()
-    : fSurfaceProps(SkSurfaceProps::kLegacyFontHost_InitType)
-    , fFocusView(nullptr)
-{
+SkWindow::SkWindow() : fFocusView(NULL) {
     fClicks.reset();
     fWaitingOnInval = false;
+
+#ifdef SK_BUILD_FOR_WINCE
+    fColorType = kRGB_565_SkColorType;
+#else
     fColorType = kN32_SkColorType;
+#endif
+
     fMatrix.reset();
 }
 
@@ -29,15 +32,14 @@ SkWindow::~SkWindow() {
     fMenus.deleteAll();
 }
 
-SkSurface* SkWindow::createSurface() {
-    const SkBitmap& bm = this->getBitmap();
-    return SkSurface::NewRasterDirect(bm.info(), bm.getPixels(), bm.rowBytes(), &fSurfaceProps);
+SkCanvas* SkWindow::createCanvas() {
+    return new SkCanvas(this->getBitmap());
 }
 
 void SkWindow::setMatrix(const SkMatrix& matrix) {
     if (fMatrix != matrix) {
         fMatrix = matrix;
-        this->inval(nullptr);
+        this->inval(NULL);
     }
 }
 
@@ -67,7 +69,7 @@ void SkWindow::resize(int width, int height, SkColorType ct) {
                                               ct, kPremul_SkAlphaType));
 
         this->setSize(SkIntToScalar(width), SkIntToScalar(height));
-        this->inval(nullptr);
+        this->inval(NULL);
     }
 }
 
@@ -99,19 +101,36 @@ void SkWindow::forceInvalAll() {
                       SkScalarCeilToInt(this->height()));
 }
 
+#if defined(SK_BUILD_FOR_WINCE) && defined(USE_GX_SCREEN)
+    #include <windows.h>
+    #include <gx.h>
+    extern GXDisplayProperties gDisplayProps;
+#endif
+
 #ifdef SK_SIMULATE_FAILED_MALLOC
 extern bool gEnableControlledThrow;
 #endif
 
 bool SkWindow::update(SkIRect* updateArea) {
     if (!fDirtyRgn.isEmpty()) {
-        SkAutoTUnref<SkSurface> surface(this->createSurface());
-        SkCanvas* canvas = surface->getCanvas();
+        SkBitmap bm = this->getBitmap();
+
+#if defined(SK_BUILD_FOR_WINCE) && defined(USE_GX_SCREEN)
+        char* buffer = (char*)GXBeginDraw();
+        SkASSERT(buffer);
+
+        RECT    rect;
+        GetWindowRect((HWND)((SkOSWindow*)this)->getHWND(), &rect);
+        buffer += rect.top * gDisplayProps.cbyPitch + rect.left * gDisplayProps.cbxPitch;
+
+        bm.setPixels(buffer);
+#endif
+
+        SkAutoTUnref<SkCanvas> canvas(this->createCanvas());
 
         canvas->clipRegion(fDirtyRgn);
-        if (updateArea) {
+        if (updateArea)
             *updateArea = fDirtyRgn.getBounds();
-        }
 
         SkAutoCanvasRestore acr(canvas, true);
         canvas->concat(fMatrix);
@@ -136,6 +155,10 @@ bool SkWindow::update(SkIRect* updateArea) {
         gEnableControlledThrow = false;
 #endif
 
+#if defined(SK_BUILD_FOR_WINCE) && defined(USE_GX_SCREEN)
+        GXEndDraw();
+#endif
+
         return true;
     }
     return false;
@@ -146,7 +169,7 @@ bool SkWindow::handleChar(SkUnichar uni) {
         return true;
 
     SkView* focus = this->getFocusView();
-    if (focus == nullptr)
+    if (focus == NULL)
         focus = this;
 
     SkEvent evt(SK_EventType_Unichar);
@@ -164,7 +187,7 @@ bool SkWindow::handleKey(SkKey key) {
     // send an event to the focus-view
     {
         SkView* focus = this->getFocusView();
-        if (focus == nullptr)
+        if (focus == NULL)
             focus = this;
 
         SkEvent evt(SK_EventType_Key);
@@ -174,8 +197,8 @@ bool SkWindow::handleKey(SkKey key) {
     }
 
     if (key == kUp_SkKey || key == kDown_SkKey) {
-        if (this->moveFocus(key == kUp_SkKey ? kPrev_FocusDirection : kNext_FocusDirection) == nullptr)
-            this->onSetFocusView(nullptr);
+        if (this->moveFocus(key == kUp_SkKey ? kPrev_FocusDirection : kNext_FocusDirection) == NULL)
+            this->onSetFocusView(NULL);
         return true;
     }
     return false;
@@ -191,7 +214,7 @@ bool SkWindow::handleKeyUp(SkKey key) {
     //send an event to the focus-view
     {
         SkView* focus = this->getFocusView();
-        if (focus == nullptr)
+        if (focus == NULL)
             focus = this;
 
         //should this one be the same?
@@ -209,7 +232,7 @@ void SkWindow::addMenu(SkOSMenu* menu) {
 }
 
 void SkWindow::setTitle(const char title[]) {
-    if (nullptr == title) {
+    if (NULL == title) {
         title = "";
     }
     fTitle.set(title);
@@ -313,27 +336,3 @@ bool SkWindow::onDispatchClick(int x, int y, Click::State state,
     }
     return handled;
 }
-
-#if SK_SUPPORT_GPU
-
-#include "GrContext.h"
-#include "gl/GrGLInterface.h"
-#include "gl/GrGLUtil.h"
-#include "SkGr.h"
-
-GrRenderTarget* SkWindow::renderTarget(const AttachmentInfo& attachmentInfo,
-        const GrGLInterface* interface, GrContext* grContext) {
-    GrBackendRenderTargetDesc desc;
-    desc.fWidth = SkScalarRoundToInt(this->width());
-    desc.fHeight = SkScalarRoundToInt(this->height());
-    desc.fConfig = kSkia8888_GrPixelConfig;
-    desc.fOrigin = kBottomLeft_GrSurfaceOrigin;
-    desc.fSampleCnt = attachmentInfo.fSampleCount;
-    desc.fStencilBits = attachmentInfo.fStencilBits;
-    GrGLint buffer;
-    GR_GL_GetIntegerv(interface, GR_GL_FRAMEBUFFER_BINDING, &buffer);
-    desc.fRenderTargetHandle = buffer;
-    return grContext->textureProvider()->wrapBackendRenderTarget(desc);
-}
-
-#endif

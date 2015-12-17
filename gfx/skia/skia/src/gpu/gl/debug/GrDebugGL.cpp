@@ -16,7 +16,7 @@
 #include "GrTextureUnitObj.h"
 #include "GrVertexArrayObj.h"
 
-GrDebugGL* GrDebugGL::gObj = nullptr;
+GrDebugGL* GrDebugGL::gObj = NULL;
 int GrDebugGL::gStaticRefCount = 0;
 GrDebugGL::Create GrDebugGL::gFactoryFunc[kObjTypeCount] = {
     GrTextureObj::createGrTextureObj,
@@ -34,14 +34,13 @@ GrDebugGL::GrDebugGL()
     : fPackRowLength(0)
     , fUnPackRowLength(0)
     , fCurTextureUnit(0)
-    , fArrayBuffer(nullptr)
-    , fElementArrayBuffer(nullptr)
-    , fFrameBuffer(nullptr)
-    , fRenderBuffer(nullptr)
-    , fProgram(nullptr)
-    , fTexture(nullptr)
-    , fVertexArray(nullptr)
-    , fAbandoned(false) {
+    , fArrayBuffer(NULL)
+    , fElementArrayBuffer(NULL)
+    , fFrameBuffer(NULL)
+    , fRenderBuffer(NULL)
+    , fProgram(NULL)
+    , fTexture(NULL)
+    , fVertexArray(NULL)  {
 
     for (int i = 0; i < kDefaultMaxTextureUnits; ++i) {
 
@@ -67,13 +66,13 @@ GrDebugGL::~GrDebugGL() {
     }
     fObjects.reset();
 
-    fArrayBuffer = nullptr;
-    fElementArrayBuffer = nullptr;
-    fFrameBuffer = nullptr;
-    fRenderBuffer = nullptr;
-    fProgram = nullptr;
-    fTexture = nullptr;
-    fVertexArray = nullptr;
+    fArrayBuffer = NULL;
+    fElementArrayBuffer = NULL;
+    fFrameBuffer = NULL;
+    fRenderBuffer = NULL;
+    fProgram = NULL;
+    fTexture = NULL;
+    fVertexArray = NULL;
 }
 
 GrFakeRefObj *GrDebugGL::findObject(GrGLuint ID, GrObjTypes type) {
@@ -87,7 +86,7 @@ GrFakeRefObj *GrDebugGL::findObject(GrGLuint ID, GrObjTypes type) {
         }
     }
 
-    return nullptr;
+    return NULL;
 }
 
 void GrDebugGL::setArrayBuffer(GrBufferObj *arrayBuffer) {
@@ -112,7 +111,7 @@ void GrDebugGL::setArrayBuffer(GrBufferObj *arrayBuffer) {
 }
 
 void GrDebugGL::setVertexArray(GrVertexArrayObj* vertexArray) {
-    if (vertexArray) {
+    if (NULL != vertexArray) {
         SkASSERT(!vertexArray->getDeleted());
     }
     SkRefCnt_SafeAssign(fVertexArray, vertexArray);
@@ -205,9 +204,8 @@ void GrDebugGL::useProgram(GrProgramObj *program) {
 
 void GrDebugGL::report() const {
     for (int i = 0; i < fObjects.count(); ++i) {
-        if (!fAbandoned) {
-            GrAlwaysAssert(0 == fObjects[i]->getRefCount());
-            GrAlwaysAssert(fObjects[i]->getDeleted());
-        }
+        GrAlwaysAssert(0 == fObjects[i]->getRefCount());
+        GrAlwaysAssert(0 < fObjects[i]->getHighRefCount());
+        GrAlwaysAssert(fObjects[i]->getDeleted());
     }
 }

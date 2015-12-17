@@ -19,7 +19,7 @@ template SkImageDecoder_DecodeReg* SkImageDecoder_DecodeReg::gHead;
 SkImageDecoder* image_decoder_from_stream(SkStreamRewindable*);
 
 SkImageDecoder* image_decoder_from_stream(SkStreamRewindable* stream) {
-    SkImageDecoder* codec = nullptr;
+    SkImageDecoder* codec = NULL;
     const SkImageDecoder_DecodeReg* curr = SkImageDecoder_DecodeReg::Head();
     while (curr) {
         codec = curr->factory()(stream);
@@ -31,8 +31,8 @@ SkImageDecoder* image_decoder_from_stream(SkStreamRewindable* stream) {
         // if we are given a stream that does not support rewinding.
         if (!rewindSuceeded) {
             SkDEBUGF(("Unable to rewind the image stream."));
-            delete codec;
-            return nullptr;
+            SkDELETE(codec);
+            return NULL;
         }
 
         if (codec) {
@@ -40,14 +40,14 @@ SkImageDecoder* image_decoder_from_stream(SkStreamRewindable* stream) {
         }
         curr = curr->next();
     }
-    return nullptr;
+    return NULL;
 }
 
 template SkImageDecoder_FormatReg* SkImageDecoder_FormatReg::gHead;
 
 SkImageDecoder::Format SkImageDecoder::GetStreamFormat(SkStreamRewindable* stream) {
     const SkImageDecoder_FormatReg* curr = SkImageDecoder_FormatReg::Head();
-    while (curr != nullptr) {
+    while (curr != NULL) {
         Format format = curr->factory()(stream);
         if (!stream->rewind()) {
             SkErrorInternals::SetError(kInvalidOperation_SkError,

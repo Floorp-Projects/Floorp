@@ -42,11 +42,13 @@ _static const char gMathPrimerText[] =
 
 #define gMathPrimer gMathPrimerText
 
-SkAnimator::SkAnimator() : fMaker(nullptr) {
+SkAnimator::SkAnimator() : fMaker(NULL) {
     initialize();
 }
 
-SkAnimator::~SkAnimator() { delete fMaker; }
+SkAnimator::~SkAnimator() {
+    SkDELETE(fMaker);
+}
 
 void SkAnimator::addExtras(SkExtras* extras) {
     *fMaker->fExtras.append() = extras;
@@ -82,7 +84,7 @@ bool SkAnimator::decodeURI(const char uri[]) {
 //  SkDebugf("animator decode %s\n", uri);
 
 //    SkStream* stream = SkStream::GetURIStream(fMaker->fPrefix.c_str(), uri);
-    SkAutoTDelete<SkStream> stream(SkStream::NewFromFile(uri));
+    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(uri));
     if (stream.get()) {
         this->setURIBase(uri);
         return decodeStream(stream);
@@ -144,7 +146,7 @@ bool SkAnimator::doUserEvent(const SkEvent& evt) {
 }
 
 SkAnimator::DifferenceType SkAnimator::draw(SkCanvas* canvas, SkPaint* paint, SkMSec time) {
-    if (paint == nullptr)
+    if (paint == NULL)
         return draw(canvas, time);
     fMaker->fScreenplay.time = time;
     fMaker->fCanvas = canvas;
@@ -179,7 +181,7 @@ bool SkAnimator::findClickEvent(SkScalar x, SkScalar y) {
 
 const SkAnimator* SkAnimator::getAnimator(const SkDisplayable* displayable) const {
     if (displayable->getType() != SkType_Movie)
-        return nullptr;
+        return NULL;
     const SkDisplayMovie* movie = (const SkDisplayMovie*) displayable;
     return movie->getAnimator();
 }
@@ -187,13 +189,13 @@ const SkAnimator* SkAnimator::getAnimator(const SkDisplayable* displayable) cons
 const SkDisplayable* SkAnimator::getElement(const char* id) {
     SkDisplayable* element;
     if (fMaker->find(id, &element) == false)
-        return nullptr;
+        return NULL;
     return (const SkDisplayable*) element;
 }
 
 SkElementType SkAnimator::getElementType(const SkDisplayable* ae) {
     SkDisplayable* element = (SkDisplayable*) ae;
-    const SkMemberInfo* info = SkDisplayType::GetMembers(fMaker, element->getType(), nullptr);
+    const SkMemberInfo* info = SkDisplayType::GetMembers(fMaker, element->getType(), NULL);
     return (SkElementType) SkDisplayType::Find(fMaker, info);
 }
 
@@ -240,10 +242,10 @@ int32_t SkAnimator::getArrayInt(const SkDisplayable* ae,
 
 int32_t SkAnimator::getArrayInt(const char* id, const char* fieldID, int index) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return SK_NaN32;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return SK_NaN32;
     return getArrayInt(element, field, index);
 }
@@ -257,10 +259,10 @@ SkScalar SkAnimator::getArrayScalar(const SkDisplayable* ae,
 
 SkScalar SkAnimator::getArrayScalar(const char* id, const char* fieldID, int index) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return SK_ScalarNaN;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return SK_ScalarNaN;
     return getArrayScalar(element, field, index);
 }
@@ -269,16 +271,16 @@ const char* SkAnimator::getArrayString(const SkDisplayable* ae,
         const SkMemberInfo* ai, int index) {
     SkOperand operand;
     bool result = getArrayCommon(ae, ai, index, &operand);
-    return result ? operand.fString->c_str() : nullptr;
+    return result ? operand.fString->c_str() : NULL;
 }
 
 const char* SkAnimator::getArrayString(const char* id, const char* fieldID, int index) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
-        return nullptr;
+    if (element == NULL)
+        return NULL;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
-        return nullptr;
+    if (field == NULL)
+        return NULL;
     return getArrayString(element, field, index);
 }
 
@@ -326,10 +328,10 @@ int32_t SkAnimator::getInt(const SkDisplayable* element, const SkMemberInfo* inf
 
 int32_t SkAnimator::getInt(const char* id, const char* fieldID) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return SK_NaN32;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return SK_NaN32;
     return getInt(element, field);
 }
@@ -352,10 +354,10 @@ SkScalar SkAnimator::getScalar(const SkDisplayable* element, const SkMemberInfo*
 
 SkScalar SkAnimator::getScalar(const char* id, const char* fieldID) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return SK_ScalarNaN;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return SK_ScalarNaN;
     return getScalar(element, field);
 }
@@ -371,11 +373,11 @@ const char* SkAnimator::getString(const SkDisplayable* ae,
 
 const char* SkAnimator::getString(const char* id, const char* fieldID) {
     const SkDisplayable* element = getElement(id);
-    if (element == nullptr)
-        return nullptr;
+    if (element == NULL)
+        return NULL;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
-        return nullptr;
+    if (field == NULL)
+        return NULL;
     return getString(element, field);
 }
 
@@ -384,8 +386,8 @@ const char* SkAnimator::getURIBase() {
 }
 
 void SkAnimator::initialize() {
-    delete fMaker;
-    fMaker = new SkAnimateMaker(this, nullptr, nullptr);
+    SkDELETE(fMaker);
+    fMaker = SkNEW_ARGS(SkAnimateMaker, (this, NULL, NULL));
     decodeMemory(gMathPrimer, sizeof(gMathPrimer)-1);
 #ifdef SK_BUILD_FOR_ANDROID
     InitializeSkExtraPathEffects(this);
@@ -402,7 +404,7 @@ bool SkAnimator::isTrackingEvents() {
 bool SkAnimator::onEvent(const SkEvent& evt) {
 #ifdef SK_DEBUG
     SkAnimator* root = fMaker->getRoot();
-    if (root == nullptr)
+    if (root == NULL)
         root = this;
     if (root->isTrackingEvents())
         root->eventDone(evt);
@@ -424,7 +426,7 @@ bool SkAnimator::onEvent(const SkEvent& evt) {
     }
     {
         const char* id = evt.findString("id");
-        if (id == nullptr)
+        if (id == NULL)
             return false;
         SkDisplayable** firstMovie = fMaker->fMovies.begin();
         SkDisplayable** endMovie = fMaker->fMovies.end();
@@ -555,11 +557,11 @@ bool SkAnimator::setArray(SkDisplayable* element, const SkMemberInfo* info, SkTy
 
 bool SkAnimator::setArray(const char* id, const char* fieldID, SkTypedArray array) {
     SkDisplayable* element = (SkDisplayable*) getElement(id);
-    //should I go ahead and change all 'nullptr's to 'nullptr'?
-    if (element == nullptr)
+    //should I go ahead and change all 'NULL's to 'NULL'?
+    if (element == NULL)
         return false;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return false;
     return setArray(element, field, array);
 }
@@ -581,10 +583,10 @@ bool SkAnimator::setInt(SkDisplayable* element, const SkMemberInfo* info, int32_
 
 bool SkAnimator::setInt(const char* id, const char* fieldID, int32_t s32) {
     SkDisplayable* element = (SkDisplayable*) getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return false;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return false;
     return setInt(element, field, s32);
 }
@@ -606,10 +608,10 @@ bool SkAnimator::setScalar(SkDisplayable* element, const SkMemberInfo* info, SkS
 
 bool SkAnimator::setScalar(const char* id, const char* fieldID, SkScalar scalar) {
     SkDisplayable* element = (SkDisplayable*) getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return false;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return false;
     return setScalar(element, field, scalar);
 }
@@ -617,16 +619,16 @@ bool SkAnimator::setScalar(const char* id, const char* fieldID, SkScalar scalar)
 bool SkAnimator::setString(SkDisplayable* element,
         const SkMemberInfo* info, const char* str) {
     // !!! until this is fixed, can't call script with global references from here
-    info->setValue(*fMaker, nullptr, 0, info->fCount, element, info->getType(), str, strlen(str));
+    info->setValue(*fMaker, NULL, 0, info->fCount, element, info->getType(), str, strlen(str));
     return true;
 }
 
 bool SkAnimator::setString(const char* id, const char* fieldID, const char* str) {
     SkDisplayable* element = (SkDisplayable*) getElement(id);
-    if (element == nullptr)
+    if (element == NULL)
         return false;
     const SkMemberInfo* field = getField(element, fieldID);
-    if (field == nullptr)
+    if (field == NULL)
         return false;
     return setString(element, field, str);
 }

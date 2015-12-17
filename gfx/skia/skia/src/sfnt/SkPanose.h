@@ -634,6 +634,6 @@ struct SkPanose {
 #pragma pack(pop)
 
 
-static_assert(sizeof(SkPanose) == 10, "sizeof_SkPanose_not_10");
+SK_COMPILE_ASSERT(sizeof(SkPanose) == 10, sizeof_SkPanose_not_10);
 
 #endif

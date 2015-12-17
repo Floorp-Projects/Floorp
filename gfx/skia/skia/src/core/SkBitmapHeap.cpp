@@ -7,7 +7,10 @@
  */
 
 #include "SkBitmapHeap.h"
+
 #include "SkBitmap.h"
+#include "SkReadBuffer.h"
+#include "SkWriteBuffer.h"
 #include "SkTSearch.h"
 
 SkBitmapHeapEntry::SkBitmapHeapEntry()
@@ -65,9 +68,9 @@ bool SkBitmapHeap::LookupEntry::Less(const SkBitmapHeap::LookupEntry& a,
 
 SkBitmapHeap::SkBitmapHeap(int32_t preferredSize, int32_t ownerCount)
     : INHERITED()
-    , fExternalStorage(nullptr)
-    , fMostRecentlyUsed(nullptr)
-    , fLeastRecentlyUsed(nullptr)
+    , fExternalStorage(NULL)
+    , fMostRecentlyUsed(NULL)
+    , fLeastRecentlyUsed(NULL)
     , fPreferredCount(preferredSize)
     , fOwnerCount(ownerCount)
     , fBytesAllocated(0)
@@ -77,8 +80,8 @@ SkBitmapHeap::SkBitmapHeap(int32_t preferredSize, int32_t ownerCount)
 SkBitmapHeap::SkBitmapHeap(ExternalStorage* storage, int32_t preferredSize)
     : INHERITED()
     , fExternalStorage(storage)
-    , fMostRecentlyUsed(nullptr)
-    , fLeastRecentlyUsed(nullptr)
+    , fMostRecentlyUsed(NULL)
+    , fLeastRecentlyUsed(NULL)
     , fPreferredCount(preferredSize)
     , fOwnerCount(IGNORE_OWNERS)
     , fBytesAllocated(0)
@@ -108,42 +111,55 @@ SkBitmapHeap::~SkBitmapHeap() {
     fLookupTable.deleteAll();
 }
 
+SkTRefArray<SkBitmap>* SkBitmapHeap::extractBitmaps() const {
+    const int size = fStorage.count();
+    SkTRefArray<SkBitmap>* array = NULL;
+    if (size > 0) {
+        array = SkTRefArray<SkBitmap>::Create(size);
+        for (int i = 0; i < size; i++) {
+            // make a shallow copy of the bitmap
+            array->writableAt(i) = fStorage[i]->fBitmap;
+        }
+    }
+    return array;
+}
+
 void SkBitmapHeap::removeFromLRU(SkBitmapHeap::LookupEntry* entry) {
     if (fMostRecentlyUsed == entry) {
         fMostRecentlyUsed = entry->fLessRecentlyUsed;
-        if (nullptr == fMostRecentlyUsed) {
+        if (NULL == fMostRecentlyUsed) {
             SkASSERT(fLeastRecentlyUsed == entry);
-            fLeastRecentlyUsed = nullptr;
+            fLeastRecentlyUsed = NULL;
         } else {
-            fMostRecentlyUsed->fMoreRecentlyUsed = nullptr;
+            fMostRecentlyUsed->fMoreRecentlyUsed = NULL;
         }
     } else {
         // Remove entry from its prior place, and make sure to cover the hole.
         if (fLeastRecentlyUsed == entry) {
-            SkASSERT(entry->fMoreRecentlyUsed != nullptr);
+            SkASSERT(entry->fMoreRecentlyUsed != NULL);
             fLeastRecentlyUsed = entry->fMoreRecentlyUsed;
         }
         // Since we have already considered the case where entry is the most recently used, it must
         // have a more recently used at this point.
-        SkASSERT(entry->fMoreRecentlyUsed != nullptr);
+        SkASSERT(entry->fMoreRecentlyUsed != NULL);
         entry->fMoreRecentlyUsed->fLessRecentlyUsed = entry->fLessRecentlyUsed;
 
-        if (entry->fLessRecentlyUsed != nullptr) {
+        if (entry->fLessRecentlyUsed != NULL) {
             SkASSERT(fLeastRecentlyUsed != entry);
             entry->fLessRecentlyUsed->fMoreRecentlyUsed = entry->fMoreRecentlyUsed;
         }
     }
-    entry->fMoreRecentlyUsed = nullptr;
+    entry->fMoreRecentlyUsed = NULL;
 }
 
 void SkBitmapHeap::appendToLRU(SkBitmapHeap::LookupEntry* entry) {
-    if (fMostRecentlyUsed != nullptr) {
-        SkASSERT(nullptr == fMostRecentlyUsed->fMoreRecentlyUsed);
+    if (fMostRecentlyUsed != NULL) {
+        SkASSERT(NULL == fMostRecentlyUsed->fMoreRecentlyUsed);
         fMostRecentlyUsed->fMoreRecentlyUsed = entry;
         entry->fLessRecentlyUsed = fMostRecentlyUsed;
     }
     fMostRecentlyUsed = entry;
-    if (nullptr == fLeastRecentlyUsed) {
+    if (NULL == fLeastRecentlyUsed) {
         fLeastRecentlyUsed = entry;
     }
 }
@@ -154,13 +170,13 @@ SkBitmapHeap::LookupEntry* SkBitmapHeap::findEntryToReplace(const SkBitmap& repl
     SkASSERT(fStorage.count() >= fPreferredCount);
 
     SkBitmapHeap::LookupEntry* iter = fLeastRecentlyUsed;
-    while (iter != nullptr) {
+    while (iter != NULL) {
         SkBitmapHeapEntry* heapEntry = fStorage[iter->fStorageSlot];
         if (heapEntry->fRefCount > 0) {
             // If the least recently used bitmap has not been unreferenced
             // by its owner, then according to our LRU specifications a more
             // recently used one can not have used all its references yet either.
-            return nullptr;
+            return NULL;
         }
         if (replacement.getGenerationID() == iter->fGenerationId) {
             // Do not replace a bitmap with a new one using the same
@@ -171,7 +187,7 @@ SkBitmapHeap::LookupEntry* SkBitmapHeap::findEntryToReplace(const SkBitmap& repl
             return iter;
         }
     }
-    return nullptr;
+    return NULL;
 }
 
 size_t SkBitmapHeap::freeMemoryIfPossible(size_t bytesToFree) {
@@ -182,7 +198,7 @@ size_t SkBitmapHeap::freeMemoryIfPossible(size_t bytesToFree) {
     size_t origBytesAllocated = fBytesAllocated;
     // Purge starting from LRU until a non-evictable bitmap is found or until
     // everything is evicted.
-    while (iter != nullptr) {
+    while (iter != NULL) {
         SkBitmapHeapEntry* heapEntry = fStorage[iter->fStorageSlot];
         if (heapEntry->fRefCount > 0) {
             break;
@@ -203,15 +219,15 @@ size_t SkBitmapHeap::freeMemoryIfPossible(size_t bytesToFree) {
     if (fLeastRecentlyUsed != iter) {
         // There was at least one eviction.
         fLeastRecentlyUsed = iter;
-        if (nullptr == fLeastRecentlyUsed) {
+        if (NULL == fLeastRecentlyUsed) {
             // Everything was evicted
-            fMostRecentlyUsed = nullptr;
+            fMostRecentlyUsed = NULL;
             fBytesAllocated -= (fStorage.count() * sizeof(SkBitmapHeapEntry));
             fStorage.deleteAll();
             fUnusedSlots.reset();
             SkASSERT(0 == fBytesAllocated);
         } else {
-            fLeastRecentlyUsed->fLessRecentlyUsed = nullptr;
+            fLeastRecentlyUsed->fLessRecentlyUsed = NULL;
         }
     }
 
@@ -227,8 +243,8 @@ int SkBitmapHeap::findInLookupTable(const LookupEntry& indexEntry, SkBitmapHeapE
     if (index < 0) {
         // insert ourselves into the bitmapIndex
         index = ~index;
-        *fLookupTable.insert(index) = new LookupEntry(indexEntry);
-    } else if (entry != nullptr) {
+        *fLookupTable.insert(index) = SkNEW_ARGS(LookupEntry, (indexEntry));
+    } else if (entry != NULL) {
         // populate the entry if needed
         *entry = fStorage[fLookupTable[index]->fStorageSlot];
     }
@@ -244,7 +260,7 @@ bool SkBitmapHeap::copyBitmap(const SkBitmap& originalBitmap, SkBitmap& copiedBi
     if (originalBitmap.isImmutable()) {
         copiedBitmap = originalBitmap;
 // TODO if we have the pixel ref in the heap we could pass it here to avoid a potential deep copy
-//    else if (sharedPixelRef != nullptr) {
+//    else if (sharedPixelRef != NULL) {
 //        copiedBitmap = orig;
 //        copiedBitmap.setPixelRef(sharedPixelRef, originalBitmap.pixelRefOffset());
     } else if (originalBitmap.empty()) {
@@ -259,18 +275,18 @@ bool SkBitmapHeap::copyBitmap(const SkBitmap& originalBitmap, SkBitmap& copiedBi
 int SkBitmapHeap::removeEntryFromLookupTable(LookupEntry* entry) {
     // remove the bitmap index for the deleted entry
     SkDEBUGCODE(int count = fLookupTable.count();)
-    int index = this->findInLookupTable(*entry, nullptr);
+    int index = this->findInLookupTable(*entry, NULL);
     // Verify that findInLookupTable found an existing entry rather than adding
     // a new entry to the lookup table.
     SkASSERT(count == fLookupTable.count());
     fBytesAllocated -= fStorage[entry->fStorageSlot]->fBytesAllocated;
-    delete fLookupTable[index];
+    SkDELETE(fLookupTable[index]);
     fLookupTable.remove(index);
     return index;
 }
 
 int32_t SkBitmapHeap::insert(const SkBitmap& originalBitmap) {
-    SkBitmapHeapEntry* entry = nullptr;
+    SkBitmapHeapEntry* entry = NULL;
     int searchIndex = this->findInLookupTable(LookupEntry(originalBitmap), &entry);
 
     if (entry) {
@@ -296,7 +312,7 @@ int32_t SkBitmapHeap::insert(const SkBitmap& originalBitmap) {
     if (fPreferredCount != UNLIMITED_SIZE && fStorage.count() >= fPreferredCount) {
         // iterate through our LRU cache and try to find an entry to evict
         LookupEntry* lookupEntry = this->findEntryToReplace(originalBitmap);
-        if (lookupEntry != nullptr) {
+        if (lookupEntry != NULL) {
             // we found an entry to evict
             entry = fStorage[lookupEntry->fStorageSlot];
             // Remove it from the LRU. The new entry will be added to the LRU later.
@@ -317,7 +333,7 @@ int32_t SkBitmapHeap::insert(const SkBitmap& originalBitmap) {
             fUnusedSlots.pop(&slot);
             entry = fStorage[slot];
         } else {
-            entry = new SkBitmapHeapEntry;
+            entry = SkNEW(SkBitmapHeapEntry);
             fStorage.append(1, &entry);
             entry->fSlot = fStorage.count() - 1;
             fBytesAllocated += sizeof(SkBitmapHeapEntry);
@@ -335,14 +351,14 @@ int32_t SkBitmapHeap::insert(const SkBitmap& originalBitmap) {
     // if the copy failed then we must abort
     if (!copySucceeded) {
         // delete the index
-        delete fLookupTable[searchIndex];
+        SkDELETE(fLookupTable[searchIndex]);
         fLookupTable.remove(searchIndex);
         // If entry is the last slot in storage, it is safe to delete it.
         if (fStorage.count() - 1 == entry->fSlot) {
             // free the slot
             fStorage.remove(entry->fSlot);
             fBytesAllocated -= sizeof(SkBitmapHeapEntry);
-            delete entry;
+            SkDELETE(entry);
         } else {
             fUnusedSlots.push(entry->fSlot);
         }
@@ -383,7 +399,7 @@ void SkBitmapHeap::endAddingOwnersDeferral(bool add) {
         for (int i = 0; i < fDeferredEntries.count(); i++) {
             SkASSERT(fOwnerCount != IGNORE_OWNERS);
             SkBitmapHeapEntry* heapEntry = this->getEntry(fDeferredEntries[i]);
-            SkASSERT(heapEntry != nullptr);
+            SkASSERT(heapEntry != NULL);
             heapEntry->addReferences(fOwnerCount);
         }
     }

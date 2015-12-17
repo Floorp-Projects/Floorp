@@ -1,9 +1,3 @@
-/*
- * Copyright 2011 Google Inc.
- *
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
- */
 
 #include "SkTestImageFilters.h"
 #include "SkCanvas.h"
@@ -49,13 +43,13 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
     // downsample
     {
         SkBaseDevice* dev = proxy->createDevice(dstW, dstH);
-        if (nullptr == dev) {
+        if (NULL == dev) {
             return false;
         }
         OwnDeviceCanvas canvas(dev);
         SkPaint paint;
 
-        paint.setFilterQuality(kLow_SkFilterQuality);
+        paint.setFilterLevel(SkPaint::kLow_FilterLevel);
         canvas.scale(scale, scale);
         canvas.drawBitmap(src, 0, 0, &paint);
         tmp = dev->accessBitmap(false);
@@ -64,30 +58,27 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
     // upscale
     {
         SkBaseDevice* dev = proxy->createDevice(src.width(), src.height());
-        if (nullptr == dev) {
+        if (NULL == dev) {
             return false;
         }
         OwnDeviceCanvas canvas(dev);
 
-        canvas.drawBitmapRect(tmp, SkRect::MakeIWH(src.width(), src.height()), nullptr);
+        SkRect r = SkRect::MakeWH(SkIntToScalar(src.width()),
+                                  SkIntToScalar(src.height()));
+        canvas.drawBitmapRect(tmp, NULL, r, NULL);
         *result = dev->accessBitmap(false);
     }
     return true;
 }
 
-SkFlattenable* SkDownSampleImageFilter::CreateProc(SkReadBuffer& buffer) {
-    SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
-    return Create(buffer.readScalar(), common.getInput(0));
-}
-
 void SkDownSampleImageFilter::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
+
     buffer.writeScalar(fScale);
 }
 
-#ifndef SK_IGNORE_TO_STRING
-void SkDownSampleImageFilter::toString(SkString* str) const {
-    str->appendf("SkDownSampleImageFilter: (");
-    str->append(")");
+SkDownSampleImageFilter::SkDownSampleImageFilter(SkReadBuffer& buffer)
+  : INHERITED(1, buffer) {
+    fScale = buffer.readScalar();
+    buffer.validate(SkScalarIsFinite(fScale));
 }
-#endif

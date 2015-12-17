@@ -6,6 +6,8 @@
  * found in the LICENSE file.
  */
 
+
+#include "GrTemplates.h"
 #include "GrFontScaler.h"
 #include "SkDescriptor.h"
 #include "SkDistanceFieldGen.h"
@@ -13,16 +15,51 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+GrFontDescKey::GrFontDescKey(const SkDescriptor& desc) : fHash(desc.getChecksum()) {
+    size_t size = desc.getLength();
+    if (size <= sizeof(fStorage)) {
+        fDesc = GrTCast<SkDescriptor*>(fStorage);
+    } else {
+        fDesc = SkDescriptor::Alloc(size);
+    }
+    memcpy(fDesc, &desc, size);
+}
+
+GrFontDescKey::~GrFontDescKey() {
+    if (fDesc != GrTCast<SkDescriptor*>(fStorage)) {
+        SkDescriptor::Free(fDesc);
+    }
+}
+
+bool GrFontDescKey::lt(const GrFontDescKey& rh) const {
+    const SkDescriptor* srcDesc = (&rh)->fDesc;
+    size_t lenLH = fDesc->getLength();
+    size_t lenRH = srcDesc->getLength();
+    int cmp = memcmp(fDesc, srcDesc, SkTMin<size_t>(lenLH, lenRH));
+    if (0 == cmp) {
+        return lenLH < lenRH;
+    } else {
+        return cmp < 0;
+    }
+}
+
+bool GrFontDescKey::eq(const GrFontDescKey& rh) const {
+    const SkDescriptor* srcDesc = (&rh)->fDesc;
+    return fDesc->equals(*srcDesc);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 GrFontScaler::GrFontScaler(SkGlyphCache* strike) {
     fStrike = strike;
-    fKey = nullptr;
+    fKey = NULL;
 }
 
 GrFontScaler::~GrFontScaler() {
     SkSafeUnref(fKey);
 }
 
-GrMaskFormat GrFontScaler::getMaskFormat() const {
+GrMaskFormat GrFontScaler::getMaskFormat() {
     SkMask::Format format = fStrike->getMaskFormat();
     switch (format) {
         case SkMask::kBW_Format:
@@ -31,6 +68,8 @@ GrMaskFormat GrFontScaler::getMaskFormat() const {
             return kA8_GrMaskFormat;
         case SkMask::kLCD16_Format:
             return kA565_GrMaskFormat;
+        case SkMask::kLCD32_Format:
+            return kA888_GrMaskFormat;
         case SkMask::kARGB32_Format:
             return kARGB_GrMaskFormat;
         default:
@@ -40,46 +79,25 @@ GrMaskFormat GrFontScaler::getMaskFormat() const {
 }
 
 const GrFontDescKey* GrFontScaler::getKey() {
-    if (nullptr == fKey) {
-        fKey = new GrFontDescKey(fStrike->getDescriptor());
+    if (NULL == fKey) {
+        fKey = SkNEW_ARGS(GrFontDescKey, (fStrike->getDescriptor()));
     }
     return fKey;
 }
 
-GrMaskFormat GrFontScaler::getPackedGlyphMaskFormat(const SkGlyph& glyph) const {
-    SkMask::Format format = static_cast<SkMask::Format>(glyph.fMaskFormat);
-    switch (format) {
-        case SkMask::kBW_Format:
-            // fall through to kA8 -- we store BW glyphs in our 8-bit cache
-        case SkMask::kA8_Format:
-            return kA8_GrMaskFormat;
-        case SkMask::kLCD16_Format:
-            return kA565_GrMaskFormat;
-        case SkMask::kARGB32_Format:
-            return kARGB_GrMaskFormat;
-        default:
-            SkDEBUGFAIL("unsupported SkMask::Format");
-            return kA8_GrMaskFormat;
-    }
-}
-
-bool GrFontScaler::getPackedGlyphBounds(const SkGlyph& glyph, SkIRect* bounds) {
-#if 1
-    // crbug:510931
-    // Retrieving the image from the cache can actually change the mask format.
-    fStrike->findImage(glyph);
-#endif
+bool GrFontScaler::getPackedGlyphBounds(GrGlyph::PackedID packed, SkIRect* bounds) {
+    const SkGlyph& glyph = fStrike->getGlyphIDMetrics(GrGlyph::UnpackID(packed),
+                                                      GrGlyph::UnpackFixedX(packed),
+                                                      GrGlyph::UnpackFixedY(packed));
     bounds->setXYWH(glyph.fLeft, glyph.fTop, glyph.fWidth, glyph.fHeight);
 
     return true;
 }
 
-bool GrFontScaler::getPackedGlyphDFBounds(const SkGlyph& glyph, SkIRect* bounds) {
-#if 1
-    // crbug:510931
-    // Retrieving the image from the cache can actually change the mask format.
-    fStrike->findImage(glyph);
-#endif
+bool GrFontScaler::getPackedGlyphDFBounds(GrGlyph::PackedID packed, SkIRect* bounds) {
+    const SkGlyph& glyph = fStrike->getGlyphIDMetrics(GrGlyph::UnpackID(packed),
+                                                      GrGlyph::UnpackFixedX(packed),
+                                                      GrGlyph::UnpackFixedY(packed));
     bounds->setXYWH(glyph.fLeft, glyph.fTop, glyph.fWidth, glyph.fHeight);
     bounds->outset(SK_DistanceFieldPad, SK_DistanceFieldPad);
 
@@ -112,25 +130,17 @@ void expand_bits(INT_TYPE* dst,
 }
 }
 
-bool GrFontScaler::getPackedGlyphImage(const SkGlyph& glyph, int width, int height, int dstRB,
-                                       GrMaskFormat expectedMaskFormat, void* dst) {
+bool GrFontScaler::getPackedGlyphImage(GrGlyph::PackedID packed,
+                                         int width, int height,
+                                         int dstRB, void* dst) {
+    const SkGlyph& glyph = fStrike->getGlyphIDMetrics(GrGlyph::UnpackID(packed),
+                                                      GrGlyph::UnpackFixedX(packed),
+                                                      GrGlyph::UnpackFixedY(packed));
     SkASSERT(glyph.fWidth == width);
     SkASSERT(glyph.fHeight == height);
     const void* src = fStrike->findImage(glyph);
-    if (nullptr == src) {
+    if (NULL == src) {
         return false;
-    }
-
-    // crbug:510931
-    // Retrieving the image from the cache can actually change the mask format.  This case is very
-    // uncommon so for now we just draw a clear box for these glyphs.
-    if (getPackedGlyphMaskFormat(glyph) != expectedMaskFormat) {
-        const int bpp = GrMaskFormatBytesPerPixel(expectedMaskFormat);
-        for (int y = 0; y < height; y++) {
-            sk_bzero(dst, width * bpp);
-            dst = (char*)dst + dstRB;
-        }
-        return true;
     }
 
     int srcRB = glyph.rowBytes();
@@ -140,7 +150,7 @@ bool GrFontScaler::getPackedGlyphImage(const SkGlyph& glyph, int width, int heig
     if (SkMask::kBW_Format == glyph.fMaskFormat) {
         // expand bits to our mask type
         const uint8_t* bits = reinterpret_cast<const uint8_t*>(src);
-        switch (expectedMaskFormat) {
+        switch (this->getMaskFormat()) {
             case kA8_GrMaskFormat:{
                 uint8_t* bytes = reinterpret_cast<uint8_t*>(dst);
                 expand_bits(bytes, bits, width, height, dstRB, srcRB);
@@ -151,13 +161,18 @@ bool GrFontScaler::getPackedGlyphImage(const SkGlyph& glyph, int width, int heig
                 expand_bits(rgb565, bits, width, height, dstRB, srcRB);
                 break;
             }
+            case kA888_GrMaskFormat: {
+                uint32_t* rgba8888 = reinterpret_cast<uint32_t*>(dst);
+                expand_bits(rgba8888, bits, width, height, dstRB, srcRB);
+                break;
+            }
             default:
                 SkFAIL("Invalid GrMaskFormat");
         }
     } else if (srcRB == dstRB) {
         memcpy(dst, src, dstRB * height);
     } else {
-        const int bbp = GrMaskFormatBytesPerPixel(expectedMaskFormat);
+        const int bbp = GrMaskFormatBytesPerPixel(this->getMaskFormat());
         for (int y = 0; y < height; y++) {
             memcpy(dst, src, width * bbp);
             src = (const char*)src + srcRB;
@@ -167,41 +182,32 @@ bool GrFontScaler::getPackedGlyphImage(const SkGlyph& glyph, int width, int heig
     return true;
 }
 
-bool GrFontScaler::getPackedGlyphDFImage(const SkGlyph& glyph, int width, int height, void* dst) {
+bool GrFontScaler::getPackedGlyphDFImage(GrGlyph::PackedID packed,
+                                           int width, int height,
+                                           void* dst) {
+    const SkGlyph& glyph = fStrike->getGlyphIDMetrics(GrGlyph::UnpackID(packed),
+                                                      GrGlyph::UnpackFixedX(packed),
+                                                      GrGlyph::UnpackFixedY(packed));
     SkASSERT(glyph.fWidth + 2*SK_DistanceFieldPad == width);
     SkASSERT(glyph.fHeight + 2*SK_DistanceFieldPad == height);
-    const void* image = fStrike->findImage(glyph);
-    if (nullptr == image) {
+    const void* src = fStrike->findDistanceField(glyph);
+    if (NULL == src) {
         return false;
     }
-    // now generate the distance field
-    SkASSERT(dst);
-    SkMask::Format maskFormat = static_cast<SkMask::Format>(glyph.fMaskFormat);
-    if (SkMask::kA8_Format == maskFormat) {
-        // make the distance field from the image
-        SkGenerateDistanceFieldFromA8Image((unsigned char*)dst,
-                                           (unsigned char*)image,
-                                           glyph.fWidth, glyph.fHeight,
-                                           glyph.rowBytes());
-    } else if (SkMask::kBW_Format == maskFormat) {
-        // make the distance field from the image
-        SkGenerateDistanceFieldFromBWImage((unsigned char*)dst,
-                                           (unsigned char*)image,
-                                           glyph.fWidth, glyph.fHeight,
-                                           glyph.rowBytes());
-    } else {
-        return false;
-    }
+
+    memcpy(dst, src, width * height);
 
     return true;
 }
 
-const SkPath* GrFontScaler::getGlyphPath(const SkGlyph& glyph) {
-    return fStrike->findPath(glyph);
-}
+// we should just return const SkPath* (NULL means false)
+bool GrFontScaler::getGlyphPath(uint16_t glyphID, SkPath* path) {
 
-const SkGlyph& GrFontScaler::grToSkGlyph(GrGlyph::PackedID id) {
-    return fStrike->getGlyphIDMetrics(GrGlyph::UnpackID(id),
-                                      GrGlyph::UnpackFixedX(id),
-                                      GrGlyph::UnpackFixedY(id));
+    const SkGlyph& glyph = fStrike->getGlyphIDMetrics(glyphID);
+    const SkPath* skPath = fStrike->findPath(glyph);
+    if (skPath) {
+        *path = *skPath;
+        return true;
+    }
+    return false;
 }

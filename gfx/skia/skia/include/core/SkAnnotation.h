@@ -10,11 +10,12 @@
 
 #include "SkRefCnt.h"
 #include "SkString.h"
-#include "SkTypes.h"
 
 class SkData;
 class SkReadBuffer;
 class SkWriteBuffer;
+class SkStream;
+class SkWStream;
 struct SkPoint;
 
 /**
@@ -26,10 +27,12 @@ public:
     virtual ~SkAnnotation();
 
     static SkAnnotation* Create(const char key[], SkData* value) {
-        return new SkAnnotation(key, value);
+        return SkNEW_ARGS(SkAnnotation, (key, value));
     }
 
-    static SkAnnotation* Create(SkReadBuffer& buffer) { return new SkAnnotation(buffer); }
+    static SkAnnotation* Create(SkReadBuffer& buffer) {
+        return SkNEW_ARGS(SkAnnotation, (buffer));
+    }
 
     /**
      *  Return the data for the specified key, or NULL.

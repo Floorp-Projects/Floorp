@@ -84,7 +84,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLBufferData(GrGLenum target,
                    GR_GL_STATIC_DRAW == usage ||
                    GR_GL_DYNAMIC_DRAW == usage);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -241,7 +241,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
 
                  if (textures[j] == pTU->getTexture()->getID()) {
                      // this ID is the current texture - revert the binding to 0
-                     pTU->setTexture(nullptr);
+                     pTU->setTexture(NULL);
                  }
              }
          }
@@ -256,17 +256,17 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
 
          for (int i = 0; i < n; ++i) {
 
-             if (frameBuffer->getColor() &&
+             if (NULL != frameBuffer->getColor() &&
                  textures[i] == frameBuffer->getColor()->getID()) {
-                 frameBuffer->setColor(nullptr);
+                 frameBuffer->setColor(NULL);
              }
-             if (frameBuffer->getDepth() &&
+             if (NULL != frameBuffer->getDepth() &&
                  textures[i] == frameBuffer->getDepth()->getID()) {
-                 frameBuffer->setDepth(nullptr);
+                 frameBuffer->setDepth(NULL);
              }
-             if (frameBuffer->getStencil() &&
+             if (NULL != frameBuffer->getStencil() &&
                  textures[i] == frameBuffer->getStencil()->getID()) {
-                 frameBuffer->setStencil(nullptr);
+                 frameBuffer->setStencil(NULL);
              }
          }
      }
@@ -298,7 +298,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
              if (frameBuffers[i] ==
                  GrDebugGL::getInstance()->getFrameBuffer()->getID()) {
                  // this ID is the current frame buffer - rebind to the default
-                 GrDebugGL::getInstance()->setFrameBuffer(nullptr);
+                 GrDebugGL::getInstance()->setFrameBuffer(NULL);
              }
          }
      }
@@ -326,7 +326,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
                  GrDebugGL::getInstance()->getRenderBuffer()->getID()) {
                  // this ID is the current render buffer - make no
                  // render buffer be bound
-                 GrDebugGL::getInstance()->setRenderBuffer(nullptr);
+                 GrDebugGL::getInstance()->setRenderBuffer(NULL);
              }
          }
      }
@@ -341,17 +341,17 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
 
          for (int i = 0; i < n; ++i) {
 
-             if (frameBuffer->getColor() &&
+             if (NULL != frameBuffer->getColor() &&
                  renderBuffers[i] == frameBuffer->getColor()->getID()) {
-                 frameBuffer->setColor(nullptr);
+                 frameBuffer->setColor(NULL);
              }
-             if (frameBuffer->getDepth() &&
+             if (NULL != frameBuffer->getDepth() &&
                  renderBuffers[i] == frameBuffer->getDepth()->getID()) {
-                 frameBuffer->setDepth(nullptr);
+                 frameBuffer->setDepth(NULL);
              }
-             if (frameBuffer->getStencil() &&
+             if (NULL != frameBuffer->getStencil() &&
                  renderBuffers[i] == frameBuffer->getStencil()->getID()) {
-                 frameBuffer->setStencil(nullptr);
+                 frameBuffer->setStencil(NULL);
              }
          }
      }
@@ -390,7 +390,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
 
      GrFrameBufferObj *framebuffer = GrDebugGL::getInstance()->getFrameBuffer();
      // A render buffer cannot be attached to the default framebuffer
-     GrAlwaysAssert(framebuffer);
+     GrAlwaysAssert(NULL != framebuffer);
 
      // a renderBufferID of 0 is acceptable - it unbinds the current
      // render buffer
@@ -430,7 +430,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLReadPixels(GrGLint x,
 
      GrFrameBufferObj *framebuffer = GrDebugGL::getInstance()->getFrameBuffer();
      // A texture cannot be attached to the default framebuffer
-     GrAlwaysAssert(framebuffer);
+     GrAlwaysAssert(NULL != framebuffer);
 
      // A textureID of 0 is allowed - it unbinds the currently bound texture
      GrTextureObj *texture = GR_FIND(textureID, GrTextureObj,
@@ -552,7 +552,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLDeleteVertexArrays(GrGLsizei n, const GrGLui
 
         // Deleting the current vertex array binds object 0
         if (GrDebugGL::getInstance()->getVertexArray() == array) {
-            GrDebugGL::getInstance()->setVertexArray(nullptr);
+            GrDebugGL::getInstance()->setVertexArray(NULL);
         }
 
         if (array->getRefCount()) {
@@ -566,7 +566,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLDeleteVertexArrays(GrGLsizei n, const GrGLui
 
 GrGLvoid GR_GL_FUNCTION_TYPE debugGLBindVertexArray(GrGLuint id) {
     GrVertexArrayObj* array = GR_FIND(id, GrVertexArrayObj, GrDebugGL::kVertexArray_ObjTypes);
-    GrAlwaysAssert((0 == id) || array);
+    GrAlwaysAssert((0 == id) || NULL != array);
     GrDebugGL::getInstance()->setVertexArray(array);
 }
 
@@ -599,13 +599,13 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLDeleteBuffers(GrGLsizei n, const GrGLuint* i
         if (GrDebugGL::getInstance()->getArrayBuffer() &&
             ids[i] == GrDebugGL::getInstance()->getArrayBuffer()->getID()) {
             // this ID is the current array buffer
-            GrDebugGL::getInstance()->setArrayBuffer(nullptr);
+            GrDebugGL::getInstance()->setArrayBuffer(NULL);
         }
         if (GrDebugGL::getInstance()->getElementArrayBuffer() &&
             ids[i] ==
                 GrDebugGL::getInstance()->getElementArrayBuffer()->getID()) {
             // this ID is the current element array buffer
-            GrDebugGL::getInstance()->setElementArrayBuffer(nullptr);
+            GrDebugGL::getInstance()->setElementArrayBuffer(NULL);
         }
     }
 
@@ -631,7 +631,7 @@ GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBufferRange(GrGLenum target, GrGLintptr 
     GrAlwaysAssert(!SkToBool(GR_GL_MAP_READ_BIT & access));
     GrAlwaysAssert((GR_GL_MAP_INVALIDATE_BUFFER_BIT | GR_GL_MAP_INVALIDATE_RANGE_BIT) & access);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -644,7 +644,7 @@ GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBufferRange(GrGLenum target, GrGLintptr 
             break;
     }
 
-    if (buffer) {
+    if (NULL != buffer) {
         GrAlwaysAssert(offset >= 0 && offset + length <= buffer->getSize());
         GrAlwaysAssert(!buffer->getMapped());
         buffer->setMapped(offset, length);
@@ -652,13 +652,13 @@ GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBufferRange(GrGLenum target, GrGLintptr 
     }
 
     GrAlwaysAssert(false);
-    return nullptr;        // no buffer bound to the target
+    return NULL;        // no buffer bound to the target
 }
 
 GrGLvoid* GR_GL_FUNCTION_TYPE debugGLMapBuffer(GrGLenum target, GrGLenum access) {
     GrAlwaysAssert(GR_GL_WRITE_ONLY == access);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -682,7 +682,7 @@ GrGLboolean GR_GL_FUNCTION_TYPE debugGLUnmapBuffer(GrGLenum target) {
     GrAlwaysAssert(GR_GL_ARRAY_BUFFER == target ||
                    GR_GL_ELEMENT_ARRAY_BUFFER == target);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -695,7 +695,7 @@ GrGLboolean GR_GL_FUNCTION_TYPE debugGLUnmapBuffer(GrGLenum target) {
             break;
     }
 
-    if (buffer) {
+    if (NULL != buffer) {
         GrAlwaysAssert(buffer->getMapped());
         buffer->resetMapped();
         return GR_GL_TRUE;
@@ -711,7 +711,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLFlushMappedBufferRange(GrGLenum target,
     GrAlwaysAssert(GR_GL_ARRAY_BUFFER == target ||
                    GR_GL_ELEMENT_ARRAY_BUFFER == target);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -724,7 +724,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLFlushMappedBufferRange(GrGLenum target,
             break;
     }
 
-    if (buffer) {
+    if (NULL != buffer) {
         GrAlwaysAssert(buffer->getMapped());
         GrAlwaysAssert(offset >= 0 && (offset + length) <= buffer->getMappedLength());
     } else {
@@ -742,7 +742,7 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLGetBufferParameteriv(GrGLenum target,
     GrAlwaysAssert(GR_GL_BUFFER_SIZE == value ||
                    GR_GL_BUFFER_USAGE == value);
 
-    GrBufferObj *buffer = nullptr;
+    GrBufferObj *buffer = NULL;
     switch (target) {
         case GR_GL_ARRAY_BUFFER:
             buffer = GrDebugGL::getInstance()->getArrayBuffer();
@@ -757,17 +757,17 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLGetBufferParameteriv(GrGLenum target,
     switch (value) {
         case GR_GL_BUFFER_MAPPED:
             *params = GR_GL_FALSE;
-            if (buffer)
+            if (NULL != buffer)
                 *params = buffer->getMapped() ? GR_GL_TRUE : GR_GL_FALSE;
             break;
         case GR_GL_BUFFER_SIZE:
             *params = 0;
-            if (buffer)
+            if (NULL != buffer)
                 *params = SkToInt(buffer->getSize());
             break;
         case GR_GL_BUFFER_USAGE:
             *params = GR_GL_STATIC_DRAW;
-            if (buffer)
+            if (NULL != buffer)
                 *params = buffer->getUsage();
             break;
         default:
@@ -781,10 +781,10 @@ GrGLvoid GR_GL_FUNCTION_TYPE debugGLGetBufferParameteriv(GrGLenum target,
 struct GrDebugGLInterface : public GrGLInterface {
 
 public:
-    
+    SK_DECLARE_INST_COUNT(GrDebugGLInterface)
 
     GrDebugGLInterface()
-        : fWrapped(nullptr) {
+        : fWrapped(NULL) {
         GrDebugGL::staticRef();
     }
 
@@ -794,10 +794,6 @@ public:
 
     void setWrapped(GrGLInterface *interface) {
         fWrapped.reset(interface);
-    }
-
-    void abandon() const override {
-        GrDebugGL::abandon();
     }
 
     // TODO: there are some issues w/ wrapping another GL interface inside the
@@ -819,7 +815,7 @@ public:
     //      The solution to this is probably to alter SkDebugGlContext's
     //      "makeCurrent" method to make a call like "makeCurrent(this)" to
     //      the debug GL interface (assuming that the application will create
-    //      multiple SkGLContext's) to let it switch between the active
+    //      multiple SkGLContextHelper's) to let it switch between the active
     //      context. Everything in the GrDebugGL object would then need to be
     //      moved to a GrContextObj and the GrDebugGL object would just switch
     //      between them. Note that this approach would also require that
@@ -836,7 +832,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 const GrGLInterface* GrGLCreateDebugInterface() {
-    GrGLInterface *interface = new GrDebugGLInterface;
+    GrGLInterface* interface = SkNEW(GrDebugGLInterface);
 
     interface->fStandard = kGL_GrGLStandard;
 
@@ -850,7 +846,6 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fBindTexture = debugGLBindTexture;
     functions->fBindVertexArray = debugGLBindVertexArray;
     functions->fBlendColor = noOpGLBlendColor;
-    functions->fBlendEquation = noOpGLBlendEquation;
     functions->fBlendFunc = noOpGLBlendFunc;
     functions->fBufferData = debugGLBufferData;
     functions->fBufferSubData = noOpGLBufferSubData;
@@ -875,11 +870,9 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fDisable = noOpGLDisable;
     functions->fDisableVertexAttribArray = noOpGLDisableVertexAttribArray;
     functions->fDrawArrays = noOpGLDrawArrays;
-    functions->fDrawArraysInstanced = noOpGLDrawArraysInstanced;
     functions->fDrawBuffer = noOpGLDrawBuffer;
     functions->fDrawBuffers = noOpGLDrawBuffers;
     functions->fDrawElements = noOpGLDrawElements;
-    functions->fDrawElementsInstanced = noOpGLDrawElementsInstanced;
     functions->fEnable = noOpGLEnable;
     functions->fEnableVertexAttribArray = noOpGLEnableVertexAttribArray;
     functions->fEndQuery = noOpGLEndQuery;
@@ -951,12 +944,8 @@ const GrGLInterface* GrGLCreateDebugInterface() {
     functions->fUniformMatrix4fv = noOpGLUniformMatrix4fv;
     functions->fUnmapBuffer = debugGLUnmapBuffer;
     functions->fUseProgram = debugGLUseProgram;
-    functions->fVertexAttrib1f = noOpGLVertexAttrib1f;
-    functions->fVertexAttrib2fv = noOpGLVertexAttrib2fv;
-    functions->fVertexAttrib3fv = noOpGLVertexAttrib3fv;
     functions->fVertexAttrib4fv = noOpGLVertexAttrib4fv;
     functions->fVertexAttribPointer = noOpGLVertexAttribPointer;
-    functions->fVertexAttribDivisor = noOpGLVertexAttribDivisor;
     functions->fViewport = noOpGLViewport;
     functions->fBindFramebuffer = debugGLBindFramebuffer;
     functions->fBindRenderbuffer = debugGLBindRenderbuffer;
@@ -983,7 +972,7 @@ const GrGLInterface* GrGLCreateDebugInterface() {
                                     noOpGLBindFragDataLocationIndexed;
 
     interface->fExtensions.init(kGL_GrGLStandard, functions->fGetString, functions->fGetStringi,
-                                functions->fGetIntegerv, nullptr, GR_EGL_NO_DISPLAY);
+                                functions->fGetIntegerv);
 
     return interface;
 }

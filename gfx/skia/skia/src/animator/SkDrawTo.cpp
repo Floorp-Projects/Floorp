@@ -23,7 +23,7 @@ const SkMemberInfo SkDrawTo::fInfo[] = {
 
 DEFINE_GET_MEMBER(SkDrawTo);
 
-SkDrawTo::SkDrawTo() : drawOnce(false), use(nullptr), fDrawnOnce(false) {
+SkDrawTo::SkDrawTo() : drawOnce(false), use(NULL), fDrawnOnce(false) {
 }
 
 #if 0

@@ -10,17 +10,17 @@
 #ifndef SkDrawClip_DEFINED
 #define SkDrawClip_DEFINED
 
-#include "SkADrawable.h"
+#include "SkDrawable.h"
 #include "SkMemberInfo.h"
 #include "SkRegion.h"
 
 class SkDrawPath;
 class SkDrawRect;
 
-class SkDrawClip : public SkADrawable {
+class SkDrawClip : public SkDrawable {
     DECLARE_DRAW_MEMBER_INFO(Clip);
     SkDrawClip();
-    bool draw(SkAnimateMaker& ) override;
+    virtual bool draw(SkAnimateMaker& );
 private:
     SkDrawRect* rect;
     SkDrawPath* path;

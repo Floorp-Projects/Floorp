@@ -10,7 +10,6 @@
 
 #include "SkTypes.h"
 
-#include "SkMutex.h"
 #include "SkStream.h"
 #include "SkTScopedComPtr.h"
 
@@ -25,16 +24,16 @@ public:
     explicit SkDWriteFontFileStream(IDWriteFontFileStream* fontFileStream);
     virtual ~SkDWriteFontFileStream();
 
-    size_t read(void* buffer, size_t size) override;
-    bool isAtEnd() const override;
-    bool rewind() override;
-    SkDWriteFontFileStream* duplicate() const override;
-    size_t getPosition() const override;
-    bool seek(size_t position) override;
-    bool move(long offset) override;
-    SkDWriteFontFileStream* fork() const override;
-    size_t getLength() const override;
-    const void* getMemoryBase() override;
+    virtual size_t read(void* buffer, size_t size) SK_OVERRIDE;
+    virtual bool isAtEnd() const SK_OVERRIDE;
+    virtual bool rewind() SK_OVERRIDE;
+    virtual SkDWriteFontFileStream* duplicate() const SK_OVERRIDE;
+    virtual size_t getPosition() const SK_OVERRIDE;
+    virtual bool seek(size_t position) SK_OVERRIDE;
+    virtual bool move(long offset) SK_OVERRIDE;
+    virtual SkDWriteFontFileStream* fork() const SK_OVERRIDE;
+    virtual size_t getLength() const SK_OVERRIDE;
+    virtual const void* getMemoryBase() SK_OVERRIDE;
 
 private:
     SkTScopedComPtr<IDWriteFontFileStream> fFontFileStream;
@@ -65,15 +64,14 @@ public:
     virtual HRESULT STDMETHODCALLTYPE GetFileSize(UINT64* fileSize);
     virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(UINT64* lastWriteTime);
 
-    static HRESULT Create(SkStreamAsset* stream,
-                          SkDWriteFontFileStreamWrapper** streamFontFileStream);
+    static HRESULT Create(SkStream* stream, SkDWriteFontFileStreamWrapper** streamFontFileStream);
 
 private:
-    explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
+    explicit SkDWriteFontFileStreamWrapper(SkStream* stream);
     virtual ~SkDWriteFontFileStreamWrapper() { }
 
     ULONG fRefCount;
-    SkAutoTDelete<SkStreamAsset> fStream;
+    SkAutoTUnref<SkStream> fStream;
     SkMutex fStreamMutex;
 };
 #endif

@@ -29,14 +29,14 @@ void SkView::Artist::onInflate(const SkDOM&, const SkDOM::Node*)
 SkView::Artist* SkView::getArtist() const
 {
     Artist_SkTagList* rec = (Artist_SkTagList*)this->findTagList(kViewArtist_SkTagList);
-    SkASSERT(rec == nullptr || rec->fArtist != nullptr);
+    SkASSERT(rec == NULL || rec->fArtist != NULL);
 
-    return rec ? rec->fArtist : nullptr;
+    return rec ? rec->fArtist : NULL;
 }
 
 SkView::Artist* SkView::setArtist(Artist* obj)
 {
-    if (obj == nullptr)
+    if (obj == NULL)
     {
         this->removeTagList(kViewArtist_SkTagList);
     }
@@ -75,14 +75,14 @@ void SkView::Layout::onInflate(const SkDOM&, const SkDOM::Node*)
 SkView::Layout* SkView::getLayout() const
 {
     Layout_SkTagList* rec = (Layout_SkTagList*)this->findTagList(kViewLayout_SkTagList);
-    SkASSERT(rec == nullptr || rec->fLayout != nullptr);
+    SkASSERT(rec == NULL || rec->fLayout != NULL);
 
-    return rec ? rec->fLayout : nullptr;
+    return rec ? rec->fLayout : NULL;
 }
 
 SkView::Layout* SkView::setLayout(Layout* obj, bool invokeLayoutNow)
 {
-    if (obj == nullptr)
+    if (obj == NULL)
     {
         this->removeTagList(kViewLayout_SkTagList);
     }

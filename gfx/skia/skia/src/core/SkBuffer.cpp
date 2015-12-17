@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -5,9 +6,8 @@
  * found in the LICENSE file.
  */
 
-#include "SkBuffer.h"
 
-#include <string.h>
+#include "SkBuffer.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,7 +22,7 @@ void SkRBuffer::readNoSizeCheck(void* buffer, size_t size)
 const void* SkRBuffer::skip(size_t size)
 {
     const void* result = fPos;
-    readNoSizeCheck(nullptr, size);
+    readNoSizeCheck(NULL, size);
     return result;
 }
 
@@ -45,8 +45,8 @@ bool SkRBufferWithSizeCheck::read(void* buffer, size_t size) {
 void* SkWBuffer::skip(size_t size)
 {
     void* result = fPos;
-    writeNoSizeCheck(nullptr, size);
-    return fData == nullptr ? nullptr : result;
+    writeNoSizeCheck(NULL, size);
+    return fData == NULL ? NULL : result;
 }
 
 void SkWBuffer::writeNoSizeCheck(const void* buffer, size_t size)
