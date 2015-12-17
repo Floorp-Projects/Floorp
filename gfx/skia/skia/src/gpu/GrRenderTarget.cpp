@@ -10,76 +10,37 @@
 #include "GrRenderTarget.h"
 
 #include "GrContext.h"
+#include "GrDrawContext.h"
+#include "GrDrawTarget.h"
 #include "GrGpu.h"
-#include "GrStencilBuffer.h"
+#include "GrRenderTargetPriv.h"
+#include "GrStencilAttachment.h"
 
-bool GrRenderTarget::readPixels(int left, int top, int width, int height,
-                                GrPixelConfig config,
-                                void* buffer,
-                                size_t rowBytes,
-                                uint32_t pixelOpsFlags) {
-    // go through context so that all necessary flushing occurs
-    GrContext* context = this->getContext();
-    if (NULL == context) {
-        return false;
+GrRenderTarget::~GrRenderTarget() {
+    if (fLastDrawTarget) {
+        fLastDrawTarget->clearRT();
     }
-    return context->readRenderTargetPixels(this,
-                                           left, top, width, height,
-                                           config, buffer, rowBytes,
-                                           pixelOpsFlags);
-}
-
-void GrRenderTarget::writePixels(int left, int top, int width, int height,
-                                 GrPixelConfig config,
-                                 const void* buffer,
-                                 size_t rowBytes,
-                                 uint32_t pixelOpsFlags) {
-    // go through context so that all necessary flushing occurs
-    GrContext* context = this->getContext();
-    if (NULL == context) {
-        return;
-    }
-    context->writeRenderTargetPixels(this,
-                                     left, top, width, height,
-                                     config, buffer, rowBytes,
-                                     pixelOpsFlags);
-}
-
-void GrRenderTarget::resolve() {
-    // go through context so that all necessary flushing occurs
-    GrContext* context = this->getContext();
-    if (NULL == context) {
-        return;
-    }
-    context->resolveRenderTarget(this);
+    SkSafeUnref(fLastDrawTarget);
 }
 
 void GrRenderTarget::discard() {
     // go through context so that all necessary flushing occurs
     GrContext* context = this->getContext();
-    if (NULL == context) {
+    if (!context) {
         return;
     }
-    context->discardRenderTarget(this);
-}
 
-size_t GrRenderTarget::gpuMemorySize() const {
-    size_t colorBits;
-    if (kUnknown_GrPixelConfig == fDesc.fConfig) {
-        colorBits = 32; // don't know, make a guess
-    } else {
-        colorBits = GrBytesPerPixel(fDesc.fConfig) * 8;
+    SkAutoTUnref<GrDrawContext> drawContext(context->drawContext(this));
+    if (!drawContext) {
+        return;
     }
-    uint64_t size = fDesc.fWidth;
-    size *= fDesc.fHeight;
-    size *= colorBits;
-    size *= SkTMax(1, fDesc.fSampleCnt);
-    return (size_t)(size / 8);
+
+    drawContext->discard();
 }
 
 void GrRenderTarget::flagAsNeedingResolve(const SkIRect* rect) {
     if (kCanResolve_ResolveType == getResolveType()) {
-        if (NULL != rect) {
+        if (rect) {
             fResolveRect.join(*rect);
             if (!fResolveRect.intersect(0, 0, this->width(), this->height())) {
                 fResolveRect.setEmpty();
@@ -101,18 +62,46 @@ void GrRenderTarget::overrideResolveRect(const SkIRect rect) {
     }
 }
 
-void GrRenderTarget::setStencilBuffer(GrStencilBuffer* stencilBuffer) {
-    SkRefCnt_SafeAssign(fStencilBuffer, stencilBuffer);
-}
-
 void GrRenderTarget::onRelease() {
-    this->setStencilBuffer(NULL);
+    SkSafeSetNull(fStencilAttachment);
 
     INHERITED::onRelease();
 }
 
 void GrRenderTarget::onAbandon() {
-    this->setStencilBuffer(NULL);
+    SkSafeSetNull(fStencilAttachment);
+
+    // The contents of this renderTarget are gone/invalid. It isn't useful to point back
+    // the creating drawTarget.
+    this->setLastDrawTarget(nullptr);
 
     INHERITED::onAbandon();
+}
+
+void GrRenderTarget::setLastDrawTarget(GrDrawTarget* dt) {
+    if (fLastDrawTarget) {
+        // The non-MDB world never closes so we can't check this condition
+#ifdef ENABLE_MDB
+        SkASSERT(fLastDrawTarget->isClosed());
+#endif
+        fLastDrawTarget->clearRT();
+    }
+
+    SkRefCnt_SafeAssign(fLastDrawTarget, dt);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool GrRenderTargetPriv::attachStencilAttachment(GrStencilAttachment* stencil) {
+    if (!stencil && !fRenderTarget->fStencilAttachment) {
+        // No need to do any work since we currently don't have a stencil attachment and
+        // we're not acctually adding one.
+        return true;
+    }
+    fRenderTarget->fStencilAttachment = stencil;
+    if (!fRenderTarget->completeStencilAttachment()) {
+        SkSafeSetNull(fRenderTarget->fStencilAttachment);
+        return false;
+    } 
+    return true;
 }

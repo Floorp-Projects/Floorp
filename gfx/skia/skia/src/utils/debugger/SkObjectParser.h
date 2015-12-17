@@ -20,10 +20,16 @@ class SkObjectParser {
 public:
 
     /**
-        Returns a string about a bitmaps bounds and colortype.
+        Returns a string about a bitmap's bounds and colortype.
         @param bitmap  SkBitmap
     */
     static SkString* BitmapToString(const SkBitmap& bitmap);
+
+    /**
+        Returns a string about a image
+        @param image   SkImage
+    */
+    static SkString* ImageToString(const SkImage* image);
 
     /**
         Returns a string representation of a boolean.
@@ -83,13 +89,13 @@ public:
         Returns a string representation of the SkRects coordinates.
         @param rect  SkRect
      */
-    static SkString* RectToString(const SkRect& rect, const char* title = NULL);
+    static SkString* RectToString(const SkRect& rect, const char* title = nullptr);
 
     /**
         Returns a string representation of an SkRRect.
         @param rrect  SkRRect
      */
-    static SkString* RRectToString(const SkRRect& rrect, const char* title = NULL);
+    static SkString* RRectToString(const SkRRect& rrect, const char* title = nullptr);
 
     /**
         Returns a string representation of the SkRegion enum.

@@ -7,7 +7,7 @@
 
 
 #include "SkDeviceProfile.h"
-#include "SkThread.h"
+#include "SkMutex.h"
 
 #define DEFAULT_GAMMAEXP        2.2f
 #define DEFAULT_CONTRASTSCALE   0.5f
@@ -41,7 +41,7 @@ SkDeviceProfile* SkDeviceProfile::Create(float gammaExp,
                                          float contrast,
                                          LCDConfig config,
                                          FontHintLevel level) {
-    return SkNEW_ARGS(SkDeviceProfile, (gammaExp, contrast, config, level));
+    return new SkDeviceProfile(gammaExp, contrast, config, level);
 }
 
 SK_DECLARE_STATIC_MUTEX(gMutex);
@@ -51,7 +51,7 @@ static SkDeviceProfile* gGlobalProfile;
 SkDeviceProfile* SkDeviceProfile::GetDefault() {
     SkAutoMutexAcquire amc(gMutex);
 
-    if (NULL == gDefaultProfile) {
+    if (nullptr == gDefaultProfile) {
         gDefaultProfile = SkDeviceProfile::Create(DEFAULT_GAMMAEXP,
                                                   DEFAULT_CONTRASTSCALE,
                                                   DEFAULT_LCDCONFIG,
@@ -63,7 +63,7 @@ SkDeviceProfile* SkDeviceProfile::GetDefault() {
 SkDeviceProfile* SkDeviceProfile::RefGlobal() {
     SkAutoMutexAcquire amc(gMutex);
 
-    if (NULL == gGlobalProfile) {
+    if (nullptr == gGlobalProfile) {
         gGlobalProfile = SkDeviceProfile::GetDefault();
     }
     gGlobalProfile->ref();

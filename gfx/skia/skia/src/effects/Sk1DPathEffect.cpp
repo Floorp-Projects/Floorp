@@ -11,6 +11,7 @@
 #include "SkReadBuffer.h"
 #include "SkWriteBuffer.h"
 #include "SkPathMeasure.h"
+#include "SkStrokeRec.h"
 
 bool Sk1DPathEffect::filterPath(SkPath* dst, const SkPath& src,
                                 SkStrokeRec*, const SkRect*) const {
@@ -147,26 +148,23 @@ static void morphpath(SkPath* dst, const SkPath& src, SkPathMeasure& meas,
     }
 }
 
-SkPath1DPathEffect::SkPath1DPathEffect(SkReadBuffer& buffer) {
-    fAdvance = buffer.readScalar();
-    if (fAdvance > 0) {
-        buffer.readPath(&fPath);
-        fInitialOffset = buffer.readScalar();
-        fStyle = (Style) buffer.readUInt();
-    } else {
-        SkDEBUGF(("SkPath1DPathEffect can't use advance <= 0\n"));
-        // Make Coverity happy.
-        fInitialOffset = 0;
-        fStyle = kStyleCount;
-    }
-}
-
 SkScalar SkPath1DPathEffect::begin(SkScalar contourLength) const {
     return fInitialOffset;
 }
 
+SkFlattenable* SkPath1DPathEffect::CreateProc(SkReadBuffer& buffer) {
+    SkScalar advance = buffer.readScalar();
+    if (advance > 0) {
+        SkPath path;
+        buffer.readPath(&path);
+        SkScalar phase = buffer.readScalar();
+        Style style = (Style)buffer.readUInt();
+        return SkPath1DPathEffect::Create(path, advance, phase, style);
+    }
+    return nullptr;
+}
+
 void SkPath1DPathEffect::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
     buffer.writeScalar(fAdvance);
     if (fAdvance > 0) {
         buffer.writePath(fPath);
@@ -180,7 +178,7 @@ SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance,
     switch (fStyle) {
         case kTranslate_Style: {
             SkPoint pos;
-            if (meas.getPosTan(distance, &pos, NULL)) {
+            if (meas.getPosTan(distance, &pos, nullptr)) {
                 dst->addPath(fPath, pos.fX, pos.fY);
             }
         } break;
@@ -199,3 +197,13 @@ SkScalar SkPath1DPathEffect::next(SkPath* dst, SkScalar distance,
     }
     return fAdvance;
 }
+
+
+#ifndef SK_IGNORE_TO_STRING
+void SkPath1DPathEffect::toString(SkString* str) const {
+    str->appendf("SkPath1DPathEffect: (");
+    // TODO: add path and style
+    str->appendf("advance: %.2f phase %.2f", fAdvance, fInitialOffset);
+    str->appendf(")");
+}
+#endif

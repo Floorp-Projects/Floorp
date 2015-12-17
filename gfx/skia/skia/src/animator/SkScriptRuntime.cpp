@@ -200,13 +200,13 @@ bool SkScriptRuntime::executeTokens(unsigned char* opCode) {
             operand[0].fScalar = SkScriptEngine2::IntToScalar(operand[op - SkScriptEngine2::kIntToScalar].fS32);
             break;
         case SkScriptEngine2::kStringToInt:
-            if (SkParse::FindS32(operand[0].fString->c_str(), &operand[0].fS32) == NULL)
+            if (SkParse::FindS32(operand[0].fString->c_str(), &operand[0].fS32) == nullptr)
                 return false;
             break;
         case SkScriptEngine2::kStringToScalar:
         case SkScriptEngine2::kStringToScalar2:
             if (SkParse::FindScalar(operand[0].fString->c_str(),
-                    &operand[op - SkScriptEngine2::kStringToScalar].fScalar) == NULL)
+                    &operand[op - SkScriptEngine2::kStringToScalar].fScalar) == nullptr)
                 return false;
             break;
         case SkScriptEngine2::kScalarToInt:
@@ -221,9 +221,9 @@ bool SkScriptRuntime::executeTokens(unsigned char* opCode) {
             break;
         case SkScriptEngine2::kAddString:
 //            if (fTrackString.find(operand[1].fString) < 0) {
-//                operand[1].fString = SkNEW_ARGS(SkString, (*operand[1].fString));
-//                track(operand[1].fString);
-//            }
+            //                operand[1].fString = new SkString  (*operand[1].fString);
+            //                track(operand[1].fString);
+            //            }
             operand[0].fString->append(*operand[1].fString);
             break;
         case SkScriptEngine2::kBitAndInt:
@@ -249,7 +249,7 @@ bool SkScriptRuntime::executeTokens(unsigned char* opCode) {
                 operand[0].fScalar = operand[0].fScalar == 0 ? SK_ScalarNaN :
                     operand[0].fScalar > 0 ? SK_ScalarMax : -SK_ScalarMax;
             else
-                operand[0].fScalar = SkScalarDiv(operand[0].fScalar, operand[1].fScalar);
+                operand[0].fScalar = operand[0].fScalar / operand[1].fScalar;
             break;
         case SkScriptEngine2::kEqualInt:
             operand[0].fS32 = operand[0].fS32 == operand[1].fS32;
@@ -341,11 +341,11 @@ void SkScriptRuntime::track(SkString* string) {
 void SkScriptRuntime::untrack(SkOpArray* array) {
     int index = fTrackArray.find(array);
     SkASSERT(index >= 0);
-    fTrackArray.begin()[index] = NULL;
+    fTrackArray.begin()[index] = nullptr;
 }
 
 void SkScriptRuntime::untrack(SkString* string) {
     int index = fTrackString.find(string);
     SkASSERT(index >= 0);
-    fTrackString.begin()[index] = NULL;
+    fTrackString.begin()[index] = nullptr;
 }

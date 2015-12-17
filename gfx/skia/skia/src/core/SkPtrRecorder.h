@@ -22,11 +22,11 @@
  */
 class SkPtrSet : public SkRefCnt {
 public:
-    SK_DECLARE_INST_COUNT(SkPtrSet)
+    
 
     /**
      *  Search for the specified ptr in the set. If it is found, return its
-     *  32bit ID [1..N], or if not found, return 0. Always returns 0 for NULL.
+     *  32bit ID [1..N], or if not found, return 0. Always returns 0 for nullptr.
      */
     uint32_t find(void*) const;
 
@@ -34,7 +34,7 @@ public:
      *  Add the specified ptr to the set, returning a unique 32bit ID for it
      *  [1...N]. Duplicate ptrs will return the same ID.
      *
-     *  If the ptr is NULL, it is not added, and 0 is returned.
+     *  If the ptr is nullptr, it is not added, and 0 is returned.
      */
     uint32_t add(void*);
 
@@ -58,13 +58,34 @@ public:
      */
     void reset();
 
+    /**
+     * Set iterator.
+     */
+    class Iter {
+    public:
+        Iter(const SkPtrSet& set)
+            : fSet(set)
+            , fIndex(0) {}
+
+        /**
+         * Return the next ptr in the set or null if the end was reached.
+         */
+        void* next() {
+            return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
+        }
+
+    private:
+        const SkPtrSet& fSet;
+        int             fIndex;
+    };
+
 protected:
     virtual void incPtr(void*) {}
     virtual void decPtr(void*) {}
 
 private:
     struct Pair {
-        void*       fPtr;   // never NULL
+        void*       fPtr;   // never nullptr
         uint32_t    fIndex; // 1...N
     };
 
@@ -123,7 +144,7 @@ class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};
  */
 class SkNamedFactorySet : public SkRefCnt {
 public:
-    SK_DECLARE_INST_COUNT(SkNamedFactorySet)
+    
 
     SkNamedFactorySet();
 

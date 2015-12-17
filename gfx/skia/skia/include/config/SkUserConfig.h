@@ -58,13 +58,6 @@
 //#define SK_DEBUG_GLYPH_CACHE
 //#define SK_DEBUG_PATH
 
-/*  To assist debugging, Skia provides an instance counting utility in
-    include/core/SkInstCount.h. This flag turns on and off that utility to
-    allow instance count tracking in either debug or release builds. By
-    default it is enabled in debug but disabled in release.
- */
-#define SK_ENABLE_INST_COUNT 0
-
 /*  If, in debugging mode, Skia needs to stop (presumably to invoke a debugger)
     it will call SK_CRASH(). If this is not defined it, it is defined in
     SkPostConfig.h to write to an illegal address
@@ -107,14 +100,6 @@
  */
 //#define SK_DEFAULT_IMAGE_CACHE_LIMIT (1024 * 1024)
 
-/*  If zlib is available and you want to support the flate compression
-    algorithm (used in PDF generation), define SK_ZLIB_INCLUDE to be the
-    include path. Alternatively, define SK_SYSTEM_ZLIB to use the system zlib
-    library specified as "#include <zlib.h>".
- */
-//#define SK_ZLIB_INCLUDE <zlib.h>
-//#define SK_SYSTEM_ZLIB
-
 /*  Define this to allow PDF scalars above 32k.  The PDF/A spec doesn't allow
     them, but modern PDF interpreters should handle them just fine.
  */
@@ -139,17 +124,15 @@
 //#define SK_SUPPORT_UNITTEST
 #endif
 
-/* If your system embeds skia and has complex event logging, define this
-   symbol to name a file that maps the following macros to your system's
-   equivalents:
-       SK_TRACE_EVENT0(event)
-       SK_TRACE_EVENT1(event, name1, value1)
-       SK_TRACE_EVENT2(event, name1, value1, name2, value2)
-   src/utils/SkDebugTrace.h has a trivial implementation that writes to
-   the debug output stream. If SK_USER_TRACE_INCLUDE_FILE is not defined,
-   SkTrace.h will define the above three macros to do nothing.
-*/
-//#undef SK_USER_TRACE_INCLUDE_FILE
+/*  Change the ordering to work in X windows.
+ */
+//#ifdef SK_SAMPLES_FOR_X
+//        #define SK_R32_SHIFT    16
+//        #define SK_G32_SHIFT    8
+//        #define SK_B32_SHIFT    0
+//        #define SK_A32_SHIFT    24
+//#endif
+
 
 /* Determines whether to build code that supports the GPU backend. Some classes
    that are not GPU-specific, such as SkShader subclasses, have optional code
@@ -161,40 +144,14 @@
 //#define SK_SUPPORT_GPU 1
 
 
-/* The PDF generation code uses Path Ops to generate inverse fills and complex
- * clipping paths, but at this time, Path Ops is not release ready yet. So,
- * the code is hidden behind this #define guard. If you are feeling adventurous
- * and want the latest and greatest PDF generation code, uncomment the #define.
+/* The PDF generation code uses Path Ops to handle complex clipping paths,
+ * but at this time, Path Ops is not release ready yet. So, the code is
+ * hidden behind this #define guard. If you are feeling adventurous and
+ * want the latest and greatest PDF generation code, uncomment the #define.
  * When Path Ops is release ready, the define guards and this user config
  * define should be removed entirely.
  */
-//#define SK_PDF_USE_PATHOPS
-
-/* Skia uses these defines as the target of include preprocessor directives.
- * The header files pointed to by these defines provide declarations and
- * possibly inline implementations of threading primitives.
- *
- * See SkThread.h for documentation on what these includes must contain.
- */
-//#define SK_ATOMICS_PLATFORM_H "SkAtomics_xxx.h"
-//#define SK_MUTEX_PLATFORM_H "SkMutex_xxx.h"
-#if defined(_MSC_VER)
-#  define SK_ATOMICS_PLATFORM_H "../../src/ports/SkAtomics_win.h"
-#else
-#  define SK_ATOMICS_PLATFORM_H "../../src/ports/SkAtomics_sync.h"
-#endif
-
-#if defined(_WIN32)
-#  define SK_MUTEX_PLATFORM_H   "../../src/ports/SkMutex_win.h"
-#else
-#  define SK_MUTEX_PLATFORM_H   "../../src/ports/SkMutex_pthread.h"
-#endif
-
-#if defined(SK_CPU_ARM32) || defined(SK_CPU_ARM64)
-#  define SK_BARRIERS_PLATFORM_H "../../src/ports/SkBarriers_arm.h"
-#else
-#  define SK_BARRIERS_PLATFORM_H "../../src/ports/SkBarriers_x86.h"
-#endif
+//#define SK_PDF_USE_PATHOPS_CLIPPING
 
 // On all platforms we have this byte order
 #define SK_A32_SHIFT 24
@@ -205,8 +162,21 @@
 #define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
 
 #define SK_SUPPORT_LEGACY_GETDEVICE
+
 #define SK_IGNORE_ETC1_SUPPORT
 
 #define SK_RASTERIZE_EVEN_ROUNDING
+
+#define GR_GL_PER_GL_FUNC_CALLBACK 1
+
+#define MOZ_SKIA 1
+
+#ifndef MOZ_IMPLICIT
+#  ifdef MOZ_CLANG_PLUGIN
+#    define MOZ_IMPLICIT __attribute__((annotate("moz_implicit")))
+#  else
+#    define MOZ_IMPLICIT
+#  endif
+#endif
 
 #endif

@@ -11,31 +11,31 @@
 #define SkDisplayMovie_DEFINED
 
 #include "SkAnimator.h"
-#include "SkDrawable.h"
+#include "SkADrawable.h"
 #include "SkMemberInfo.h"
 
 struct SkEventState;
 
-class SkDisplayMovie : public SkDrawable {
+class SkDisplayMovie : public SkADrawable {
     DECLARE_DISPLAY_MEMBER_INFO(Movie);
     SkDisplayMovie();
     virtual ~SkDisplayMovie();
     void buildMovie();
-    virtual SkDisplayable* deepCopy(SkAnimateMaker* );
-    virtual void dirty();
+    SkDisplayable* deepCopy(SkAnimateMaker* ) override;
+    void dirty() override;
     bool doEvent(const SkEvent& evt) {
         return fLoaded && fMovie.doEvent(evt);
     }
-    virtual bool doEvent(SkDisplayEvent::Kind , SkEventState* state );
-    virtual bool draw(SkAnimateMaker& );
+    bool doEvent(SkDisplayEvent::Kind , SkEventState* state ) override;
+    bool draw(SkAnimateMaker& ) override;
 #ifdef SK_DUMP_ENABLED
-    virtual void dump(SkAnimateMaker* );
-    virtual void dumpEvents();
+    void dump(SkAnimateMaker* ) override;
+    void dumpEvents() override;
 #endif
-    virtual bool enable(SkAnimateMaker& );
+    bool enable(SkAnimateMaker& ) override;
     const SkAnimator* getAnimator() const { return &fMovie; }
-    virtual bool hasEnable() const;
-    virtual void onEndElement(SkAnimateMaker& );
+    bool hasEnable() const override;
+    void onEndElement(SkAnimateMaker& ) override;
 protected:
     SkString src;
     SkAnimator fMovie;
@@ -45,7 +45,7 @@ protected:
     friend class SkAnimateMaker;
     friend class SkPost;
 private:
-    typedef SkDrawable INHERITED;
+    typedef SkADrawable INHERITED;
 };
 
 #endif // SkDisplayMovie_DEFINED

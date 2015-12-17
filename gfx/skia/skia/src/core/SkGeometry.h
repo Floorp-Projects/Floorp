@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -6,26 +5,26 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkGeometry_DEFINED
 #define SkGeometry_DEFINED
 
 #include "SkMatrix.h"
+#include "SkNx.h"
 
-/** An XRay is a half-line that runs from the specific point/origin to
-    +infinity in the X direction. e.g. XRay(3,5) is the half-line
-    (3,5)....(infinity, 5)
- */
-typedef SkPoint SkXRay;
+static inline Sk2s from_point(const SkPoint& point) {
+    return Sk2s::Load(&point.fX);
+}
 
-/** Given a line segment from pts[0] to pts[1], and an xray, return true if
-    they intersect. Optional outgoing "ambiguous" argument indicates
-    whether the answer is ambiguous because the query occurred exactly at
-    one of the endpoints' y coordinates, indicating that another query y
-    coordinate is preferred for robustness.
-*/
-bool SkXRayCrossesLine(const SkXRay& pt, const SkPoint pts[2],
-                       bool* ambiguous = NULL);
+static inline SkPoint to_point(const Sk2s& x) {
+    SkPoint point;
+    x.store(&point.fX);
+    return point;
+}
+
+static inline Sk2s sk2s_cubic_eval(const Sk2s& A, const Sk2s& B, const Sk2s& C, const Sk2s& D,
+                                   const Sk2s& t) {
+    return ((A * t + B) * t + C) * t + D;
+}
 
 /** Given a quadratic equation Ax^2 + Bx + C = 0, return 0, 1, 2 roots for the
     equation.
@@ -34,13 +33,23 @@ int SkFindUnitQuadRoots(SkScalar A, SkScalar B, SkScalar C, SkScalar roots[2]);
 
 ///////////////////////////////////////////////////////////////////////////////
 
+SkPoint SkEvalQuadAt(const SkPoint src[3], SkScalar t);
+SkPoint SkEvalQuadTangentAt(const SkPoint src[3], SkScalar t);
+
 /** Set pt to the point on the src quadratic specified by t. t must be
     0 <= t <= 1.0
 */
-void SkEvalQuadAt(const SkPoint src[3], SkScalar t, SkPoint* pt,
-                  SkVector* tangent = NULL);
-void SkEvalQuadAtHalf(const SkPoint src[3], SkPoint* pt,
-                      SkVector* tangent = NULL);
+void SkEvalQuadAt(const SkPoint src[3], SkScalar t, SkPoint* pt, SkVector* tangent = nullptr);
+
+/**
+ *  output is : eval(t) == coeff[0] * t^2 + coeff[1] * t + coeff[2]
+ */
+void SkQuadToCoeff(const SkPoint pts[3], SkPoint coeff[3]);
+
+/**
+ *  output is : eval(t) == coeff[0] * t^3 + coeff[1] * t^2 + coeff[2] * t + coeff[3]
+ */
+void SkCubicToCoeff(const SkPoint pts[4], SkPoint coeff[4]);
 
 /** Given a src quadratic bezier, chop it at the specified t value,
     where 0 < t < 1, and return the two new quadratics in dst:
@@ -76,7 +85,7 @@ int SkChopQuadAtXExtrema(const SkPoint src[3], SkPoint dst[5]);
     curvature exists on the segment, returns the t value for this
     point along the curve. Otherwise it will return a value of 0.
 */
-float SkFindQuadMaxCurvature(const SkPoint src[3]);
+SkScalar SkFindQuadMaxCurvature(const SkPoint src[3]);
 
 /** Given 3 points on a quadratic bezier, divide it into 2 quadratics
     if the point of maximum curvature exists on the quad segment.
@@ -95,11 +104,6 @@ SK_API void SkConvertQuadToCubic(const SkPoint src[3], SkPoint dst[4]);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-/** Convert from parametric from (pts) to polynomial coefficients
-    coeff[0]*T^3 + coeff[1]*T^2 + coeff[2]*T + coeff[3]
-*/
-void SkGetCubicCoeff(const SkPoint pts[4], SkScalar cx[4], SkScalar cy[4]);
-
 /** Set pt to the point on the src cubic specified by t. t must be
     0 <= t <= 1.0
 */
@@ -111,6 +115,7 @@ void SkEvalCubicAt(const SkPoint src[4], SkScalar t, SkPoint* locOrNull,
     dst[0..3] and dst[3..6]
 */
 void SkChopCubicAt(const SkPoint src[4], SkPoint dst[7], SkScalar t);
+
 /** Given a src cubic bezier, chop it at the specified t values,
     where 0 < t < 1, and return the new cubics in dst:
     dst[0..3],dst[3..6],...,dst[3*t_count..3*(t_count+1)]
@@ -159,37 +164,24 @@ int SkChopCubicAtInflections(const SkPoint src[4], SkPoint dst[10]);
 
 int SkFindCubicMaxCurvature(const SkPoint src[4], SkScalar tValues[3]);
 int SkChopCubicAtMaxCurvature(const SkPoint src[4], SkPoint dst[13],
-                              SkScalar tValues[3] = NULL);
+                              SkScalar tValues[3] = nullptr);
 
-/** Given a monotonic cubic bezier, determine whether an xray intersects the
-    cubic.
-    By definition the cubic is open at the starting point; in other
-    words, if pt.fY is equivalent to cubic[0].fY, and pt.fX is to the
-    left of the curve, the line is not considered to cross the curve,
-    but if it is equal to cubic[3].fY then it is considered to
-    cross.
-    Optional outgoing "ambiguous" argument indicates whether the answer is
-    ambiguous because the query occurred exactly at one of the endpoints' y
-    coordinates, indicating that another query y coordinate is preferred
-    for robustness.
- */
-bool SkXRayCrossesMonotonicCubic(const SkXRay& pt, const SkPoint cubic[4],
-                                 bool* ambiguous = NULL);
+bool SkChopMonoCubicAtX(SkPoint src[4], SkScalar y, SkPoint dst[7]);
+bool SkChopMonoCubicAtY(SkPoint src[4], SkScalar x, SkPoint dst[7]);
 
-/** Given an arbitrary cubic bezier, return the number of times an xray crosses
-    the cubic. Valid return values are [0..3]
-    By definition the cubic is open at the starting point; in other
-    words, if pt.fY is equivalent to cubic[0].fY, and pt.fX is to the
-    left of the curve, the line is not considered to cross the curve,
-    but if it is equal to cubic[3].fY then it is considered to
-    cross.
-    Optional outgoing "ambiguous" argument indicates whether the answer is
-    ambiguous because the query occurred exactly at one of the endpoints' y
-    coordinates or at a tangent point, indicating that another query y
-    coordinate is preferred for robustness.
- */
-int SkNumXRayCrossingsForCubic(const SkXRay& pt, const SkPoint cubic[4],
-                               bool* ambiguous = NULL);
+enum SkCubicType {
+    kSerpentine_SkCubicType,
+    kCusp_SkCubicType,
+    kLoop_SkCubicType,
+    kQuadratic_SkCubicType,
+    kLine_SkCubicType,
+    kPoint_SkCubicType
+};
+
+/** Returns the cubic classification. Pass scratch storage for computing inflection data,
+    which can be used with additional work to find the loop intersections and so on.
+*/
+SkCubicType SkClassifyCubic(const SkPoint p[4], SkScalar inflection[3]);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -212,13 +204,31 @@ enum SkRotationDirection {
 int SkBuildQuadArc(const SkVector& unitStart, const SkVector& unitStop,
                    SkRotationDirection, const SkMatrix*, SkPoint quadPoints[]);
 
-// experimental
 struct SkConic {
+    SkConic() {}
+    SkConic(const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w) {
+        fPts[0] = p0;
+        fPts[1] = p1;
+        fPts[2] = p2;
+        fW = w;
+    }
+    SkConic(const SkPoint pts[3], SkScalar w) {
+        memcpy(fPts, pts, sizeof(fPts));
+        fW = w;
+    }
+
     SkPoint  fPts[3];
     SkScalar fW;
 
     void set(const SkPoint pts[3], SkScalar w) {
         memcpy(fPts, pts, 3 * sizeof(SkPoint));
+        fW = w;
+    }
+
+    void set(const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w) {
+        fPts[0] = p0;
+        fPts[1] = p1;
+        fPts[2] = p2;
         fW = w;
     }
 
@@ -229,9 +239,12 @@ struct SkConic {
      *  tangent value's length is arbitrary, and only its direction should
      *  be used.
      */
-    void evalAt(SkScalar t, SkPoint* pos, SkVector* tangent = NULL) const;
+    void evalAt(SkScalar t, SkPoint* pos, SkVector* tangent = nullptr) const;
     void chopAt(SkScalar t, SkConic dst[2]) const;
     void chop(SkConic dst[2]) const;
+
+    SkPoint evalAt(SkScalar t) const;
+    SkVector evalTangentAt(SkScalar t) const;
 
     void computeAsQuadError(SkVector* err) const;
     bool asQuadTol(SkScalar tol) const;
@@ -263,7 +276,15 @@ struct SkConic {
      *
      *  @return  true if max curvature found inside 0..1 range, false otherwise
      */
-    bool findMaxCurvature(SkScalar* t) const;
+//    bool findMaxCurvature(SkScalar* t) const;  // unimplemented
+
+    static SkScalar TransformW(const SkPoint[3], SkScalar w, const SkMatrix&);
+
+    enum {
+        kMaxConicsForArc = 5
+    };
+    static int BuildUnitArc(const SkVector& start, const SkVector& stop, SkRotationDirection,
+                            const SkMatrix*, SkConic conics[kMaxConicsForArc]);
 };
 
 #include "SkTemplates.h"
