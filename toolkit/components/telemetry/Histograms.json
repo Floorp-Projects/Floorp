@@ -9275,12 +9275,6 @@
     "kind": "boolean",
     "description": "Has the tab queue functionality been enabled."
   },
-  "FENNEC_OPEN_URLS_IN_PRIVATE": {
-    "alert_emails": ["margaret@mozilla.com"],
-    "expires_in_version": "45",
-    "kind": "flag",
-    "description": "Reports the state of the open external links in private tabs preference"
-  },
   "GRAPHICS_DRIVER_STARTUP_TEST": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
