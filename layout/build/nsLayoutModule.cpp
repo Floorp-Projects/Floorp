@@ -240,7 +240,6 @@ static void Shutdown();
 #include "nsITelephonyService.h"
 #include "nsIVoicemailService.h"
 
-#include "mozilla/dom/FakeTVService.h"
 #include "mozilla/dom/TVServiceFactory.h"
 #include "mozilla/dom/TVTypes.h"
 #include "nsITVService.h"
@@ -387,8 +386,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITelephonyService,
                                          NS_CreateTelephonyService)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIVoicemailService,
                                          NS_CreateVoicemailService)
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(FakeTVService,
-                                         TVServiceFactory::CreateFakeTVService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVTunerData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVChannelData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(TVProgramData)
@@ -846,7 +843,6 @@ NS_DEFINE_NAMED_CID(NS_SYNTHVOICEREGISTRY_CID);
 #ifdef ACCESSIBILITY
 NS_DEFINE_NAMED_CID(NS_ACCESSIBILITY_SERVICE_CID);
 #endif
-NS_DEFINE_NAMED_CID(FAKE_TV_SERVICE_CID);
 NS_DEFINE_NAMED_CID(TV_TUNER_DATA_CID);
 NS_DEFINE_NAMED_CID(TV_CHANNEL_DATA_CID);
 NS_DEFINE_NAMED_CID(TV_PROGRAM_DATA_CID);
@@ -1149,7 +1145,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kTELEPHONY_SERVICE_CID, false, nullptr, nsITelephonyServiceConstructor },
   { &kNS_MOBILE_CONNECTION_SERVICE_CID, false, NULL, nsIMobileConnectionServiceConstructor },
   { &kNS_VOICEMAIL_SERVICE_CID, false, nullptr, nsIVoicemailServiceConstructor },
-  { &kFAKE_TV_SERVICE_CID, false, nullptr, FakeTVServiceConstructor },
   { &kTV_TUNER_DATA_CID, false, nullptr, TVTunerDataConstructor },
   { &kTV_CHANNEL_DATA_CID, false, nullptr, TVChannelDataConstructor },
   { &kTV_PROGRAM_DATA_CID, false, nullptr, TVProgramDataConstructor },
@@ -1313,7 +1308,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { "@mozilla.org/accessibleRetrieval;1", &kNS_ACCESSIBILITY_SERVICE_CID },
 #endif
   { TELEPHONY_SERVICE_CONTRACTID, &kTELEPHONY_SERVICE_CID },
-  { FAKE_TV_SERVICE_CONTRACTID, &kFAKE_TV_SERVICE_CID },
   { TV_TUNER_DATA_CONTRACTID, &kTV_TUNER_DATA_CID },
   { TV_CHANNEL_DATA_CONTRACTID, &kTV_CHANNEL_DATA_CID },
   { TV_PROGRAM_DATA_CONTRACTID, &kTV_PROGRAM_DATA_CID },
