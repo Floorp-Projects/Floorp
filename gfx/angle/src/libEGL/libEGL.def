@@ -44,6 +44,8 @@ EXPORTS
     eglQueryDeviceStringEXT          @50
     eglCreateImageKHR                @51
     eglDestroyImageKHR               @52
+    eglCreateDeviceANGLE             @53
+    eglReleaseDeviceANGLE            @54
 
     ; 1.5 entry points
     eglCreateSync                    @38

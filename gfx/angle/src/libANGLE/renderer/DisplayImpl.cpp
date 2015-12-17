@@ -21,10 +21,7 @@ DisplayImpl::DisplayImpl()
 
 DisplayImpl::~DisplayImpl()
 {
-    while (!mSurfaceSet.empty())
-    {
-        destroySurface(*mSurfaceSet.begin());
-    }
+    ASSERT(mSurfaceSet.empty());
 }
 
 void DisplayImpl::destroySurface(egl::Surface *surface)

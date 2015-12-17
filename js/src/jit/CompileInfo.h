@@ -200,6 +200,7 @@ class CompileInfo
                 InlineScriptTree* inlineScriptTree)
       : script_(script), fun_(fun), osrPc_(osrPc), constructing_(constructing),
         analysisMode_(analysisMode), scriptNeedsArgsObj_(scriptNeedsArgsObj),
+        hadOverflowBailout_(script->hadOverflowBailout()),
         inlineScriptTree_(inlineScriptTree)
     {
         MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOP_LOOPENTRY);
@@ -548,6 +549,12 @@ class CompileInfo
         return true;
     }
 
+    // Check previous bailout states to prevent doing the same bailout in the
+    // next compilation.
+    bool hadOverflowBailout() const {
+        return hadOverflowBailout_;
+    }
+
   private:
     unsigned nimplicit_;
     unsigned nargs_;
@@ -567,6 +574,10 @@ class CompileInfo
     // since the arguments optimization could be marked as failed on the main
     // thread, so cache a value here and use it throughout for consistency.
     bool scriptNeedsArgsObj_;
+
+    // Record the state of previous bailouts in order to prevent compiling the
+    // same function identically the next time.
+    bool hadOverflowBailout_;
 
     InlineScriptTree* inlineScriptTree_;
 };

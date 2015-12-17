@@ -15,8 +15,8 @@ How to update from Chromium:
 
  * ```git apply -R angle-mods.patch```, ```git add . -u```, ```git commit```
  * Copy over Chromium files, ```git add . -u```, ```git commit```
- * ```git revert HEAD~2```
+ * ```git revert HEAD~```
  * ```rm angle-mods.patch```
- * ```git diff HEAD~1 (`)ls(`) > angle-mods.patch```,```git add angle-mods.patch```, ```git commit --amend```
+ * ```git diff HEAD~ (`)ls(`) > angle-mods.patch```,```git add angle-mods.patch```, ```git commit --amend```
  * ```git rebase -i``` to squash the three patches into one.
 

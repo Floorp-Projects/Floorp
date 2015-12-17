@@ -67,10 +67,23 @@ class FramebufferD3D : public FramebufferImpl
     void setReadBuffer(GLenum buffer) override;
 
     gl::Error clear(const gl::Data &data, GLbitfield mask) override;
-    gl::Error clearBufferfv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLfloat *values) override;
-    gl::Error clearBufferuiv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLuint *values) override;
-    gl::Error clearBufferiv(const gl::State &state, GLenum buffer, GLint drawbuffer, const GLint *values) override;
-    gl::Error clearBufferfi(const gl::State &state, GLenum buffer, GLint drawbuffer, GLfloat depth, GLint stencil) override;
+    gl::Error clearBufferfv(const gl::Data &data,
+                            GLenum buffer,
+                            GLint drawbuffer,
+                            const GLfloat *values) override;
+    gl::Error clearBufferuiv(const gl::Data &data,
+                             GLenum buffer,
+                             GLint drawbuffer,
+                             const GLuint *values) override;
+    gl::Error clearBufferiv(const gl::Data &data,
+                            GLenum buffer,
+                            GLint drawbuffer,
+                            const GLint *values) override;
+    gl::Error clearBufferfi(const gl::Data &data,
+                            GLenum buffer,
+                            GLint drawbuffer,
+                            GLfloat depth,
+                            GLint stencil) override;
 
     GLenum getImplementationColorReadFormat() const override;
     GLenum getImplementationColorReadType() const override;
@@ -79,7 +92,7 @@ class FramebufferD3D : public FramebufferImpl
     gl::Error blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
                    GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer) override;
 
-    GLenum checkStatus() const override;
+    bool checkStatus() const override;
 
     const gl::AttachmentList &getColorAttachmentsForRender(const WorkaroundsD3D &workarounds) const;
 
@@ -89,7 +102,7 @@ class FramebufferD3D : public FramebufferImpl
     mutable bool mInvalidateColorAttachmentCache;
 
   private:
-    virtual gl::Error clear(const gl::State &state, const ClearParameters &clearParams) = 0;
+    virtual gl::Error clear(const gl::Data &data, const ClearParameters &clearParams) = 0;
 
     virtual gl::Error readPixelsImpl(const gl::Rectangle &area,
                                      GLenum format,

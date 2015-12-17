@@ -24,7 +24,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
                      MediaSink* aAudioSink,
                      MediaQueue<MediaData>& aVideoQueue,
                      VideoFrameContainer* aContainer,
-                     bool aRealTime,
                      FrameStatistics& aFrameStats,
                      uint32_t aVQueueSentToCompositerSize)
   : mOwnerThread(aThread)
@@ -32,7 +31,6 @@ VideoSink::VideoSink(AbstractThread* aThread,
   , mVideoQueue(aVideoQueue)
   , mContainer(aContainer)
   , mProducerID(ImageContainer::AllocateProducerID())
-  , mRealTime(aRealTime)
   , mFrameStats(aFrameStats)
   , mVideoFrameEndTime(-1)
   , mOldDroppedCount(0)
@@ -353,7 +351,7 @@ VideoSink::UpdateRenderedVideoFrames()
     int32_t framesRemoved = 0;
     while (VideoQueue().GetSize() > 0) {
       MediaData* nextFrame = VideoQueue().PeekFront();
-      if (!mRealTime && nextFrame->mTime > clockTime) {
+      if (nextFrame->mTime > clockTime) {
         remainingTime = nextFrame->mTime - clockTime;
         break;
       }

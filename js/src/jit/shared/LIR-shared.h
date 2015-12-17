@@ -7388,6 +7388,14 @@ class LCheckObjCoercible : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES,
     LIR_HEADER(CheckObjCoercible)
 };
 
+class LDebugCheckSelfHosted : public LCallInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
+{
+  public:
+    static const size_t CheckValue = 0;
+
+    LIR_HEADER(DebugCheckSelfHosted)
+};
+
 } // namespace jit
 } // namespace js
 

@@ -13356,6 +13356,29 @@ class MCheckObjCoercible
     }
 };
 
+class MDebugCheckSelfHosted
+  : public MUnaryInstruction,
+    public BoxInputsPolicy::Data
+{
+    explicit MDebugCheckSelfHosted(MDefinition* toCheck)
+      : MUnaryInstruction(toCheck)
+    {
+        setGuard();
+        setResultType(MIRType_Value);
+        setResultTypeSet(toCheck->resultTypeSet());
+    }
+
+  public:
+    INSTRUCTION_HEADER(DebugCheckSelfHosted)
+    static MDebugCheckSelfHosted* New(TempAllocator& alloc, MDefinition* toCheck) {
+        return new(alloc) MDebugCheckSelfHosted(toCheck);
+    }
+
+    MDefinition* checkValue() {
+        return getOperand(0);
+    }
+};
+
 class MAsmJSNeg
   : public MUnaryInstruction,
     public NoTypePolicy::Data

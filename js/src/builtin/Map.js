@@ -29,7 +29,7 @@ function MapForEach(callbackfn, thisArg = undefined) {
         if (result.done)
             break;
         var entry = result.value;
-        callFunction(callbackfn, thisArg, entry[1], entry[0], M);
+        callContentFunction(callbackfn, thisArg, entry[1], entry[0], M);
     }
 }
 

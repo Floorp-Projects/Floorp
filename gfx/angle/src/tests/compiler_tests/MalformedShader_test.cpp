@@ -15,7 +15,7 @@
 class MalformedShaderTest : public testing::Test
 {
   public:
-    MalformedShaderTest() {}
+    MalformedShaderTest() : mExtraCompileOptions(0) {}
 
   protected:
     virtual void SetUp()
@@ -36,7 +36,8 @@ class MalformedShaderTest : public testing::Test
     bool compile(const std::string& shaderString)
     {
         const char *shaderStrings[] = { shaderString.c_str() };
-        bool compilationSuccess = mTranslator->compile(shaderStrings, 1, SH_INTERMEDIATE_TREE);
+        bool compilationSuccess =
+            mTranslator->compile(shaderStrings, 1, SH_INTERMEDIATE_TREE | mExtraCompileOptions);
         TInfoSink &infoSink = mTranslator->getInfoSink();
         mInfoLog = infoSink.info.c_str();
         return compilationSuccess;
@@ -50,6 +51,7 @@ class MalformedShaderTest : public testing::Test
   protected:
     std::string mInfoLog;
     TranslatorESSL *mTranslator;
+    int mExtraCompileOptions;
 };
 
 class MalformedVertexShaderTest : public MalformedShaderTest
@@ -82,6 +84,28 @@ class MalformedWebGL2ShaderTest : public MalformedShaderTest
         mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_WEBGL2_SPEC);
         ASSERT_TRUE(mTranslator->Init(resources));
     }
+};
+
+class MalformedWebGL1ShaderTest : public MalformedShaderTest
+{
+  public:
+    MalformedWebGL1ShaderTest() {}
+
+  protected:
+    void SetUp() override
+    {
+        ShBuiltInResources resources;
+        ShInitBuiltInResources(&resources);
+
+        mTranslator = new TranslatorESSL(GL_FRAGMENT_SHADER, SH_WEBGL_SPEC);
+        ASSERT_TRUE(mTranslator->Init(resources));
+    }
+};
+
+class UnrollForLoopsTest : public MalformedShaderTest
+{
+  public:
+    UnrollForLoopsTest() { mExtraCompileOptions = SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX; }
 };
 
 // This is a test for a bug that used to exist in ANGLE:
@@ -1309,6 +1333,121 @@ TEST_F(MalformedShaderTest, TextureLodOffsetOutOfRange)
         "void main()\n"
         "{\n"
         "   my_FragColor = textureLodOffset(u_sampler, u_texCoord, 0.0, ivec3(0, 0, 8));\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that default precision qualifier for uint is not accepted.
+// ESSL 3.00.4 section 4.5.4: Only allowed for float, int and sampler types.
+TEST_F(MalformedShaderTest, DefaultPrecisionUint)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "precision mediump uint;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that sampler3D needs to be precision qualified.
+// ESSL 3.00.4 section 4.5.4: New ESSL 3.00 sampler types don't have predefined precision.
+TEST_F(MalformedShaderTest, NoPrecisionSampler3D)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "uniform sampler3D s;\n"
+        "out vec4 my_FragColor;\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = vec4(0.0);\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Test that using a non-constant expression in a for loop initializer is forbidden in WebGL 1.0,
+// even when ANGLE is able to constant fold the initializer.
+// ESSL 1.00 Appendix A.
+TEST_F(MalformedWebGL1ShaderTest, NonConstantLoopIndex)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "uniform int u;\n"
+        "void main()\n"
+        "{\n"
+        "    for (int i = (true ? 1 : u); i < 5; ++i) {\n"
+        "        gl_FragColor = vec4(0.0);\n"
+        "    }\n"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}
+
+// Regression test for an old crash bug in ANGLE.
+// ForLoopUnroll used to crash when it encountered a while loop.
+TEST_F(UnrollForLoopsTest, WhileLoop)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    while (true) {\n"
+        "        gl_FragColor = vec4(0.0);\n"
+        "        break;\n"
+        "    }\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Regression test for an old crash bug in ANGLE.
+// ForLoopUnroll used to crash when it encountered a loop that didn't fit the ESSL 1.00
+// Appendix A limitations.
+TEST_F(UnrollForLoopsTest, UnlimitedForLoop)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    for (;true;) {\n"
+        "        gl_FragColor = vec4(0.0);\n"
+        "        break;\n"
+        "    }\n"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Check that indices that are not integers are rejected.
+// The check should be done even if ESSL 1.00 Appendix A limitations are not applied.
+TEST_F(MalformedShaderTest, NonIntegerIndex)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "void main()\n"
+        "{\n"
+        "    float f[3];\n"
+        "    const float i = 2.0;\n"
+        "    gl_fragColor = vec4(f[i]);\n"
         "}\n";
     if (compile(shaderString))
     {

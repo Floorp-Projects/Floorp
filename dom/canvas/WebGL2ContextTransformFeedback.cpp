@@ -52,10 +52,10 @@ WebGL2Context::IsTransformFeedback(WebGLTransformFeedback* tf)
     if (IsContextLost())
         return false;
 
-    if (!ValidateObjectAllowDeleted("isTransformFeedback", tf))
+    if (!ValidateObjectAllowDeletedOrNull("isTransformFeedback", tf))
         return false;
 
-    if (tf->IsDeleted())
+    if (!tf || tf->IsDeleted())
         return false;
 
     MakeContextCurrent();

@@ -68,13 +68,21 @@ typedef Color<unsigned int> ColorUI;
 
 struct Rectangle
 {
+    Rectangle() : x(0), y(0), width(0), height(0) {}
+    Rectangle(int x_in, int y_in, int width_in, int height_in)
+        : x(x_in), y(y_in), width(width_in), height(height_in)
+    {
+    }
+
+    int x0() const { return x; }
+    int y0() const { return y; }
+    int x1() const { return x + width; }
+    int y1() const { return y + height; }
+
     int x;
     int y;
     int width;
     int height;
-
-    Rectangle() : x(0), y(0), width(0), height(0) { }
-    Rectangle(int x_in, int y_in, int width_in, int height_in) : x(x_in), y(y_in), width(width_in), height(height_in) { }
 };
 
 bool operator==(const Rectangle &a, const Rectangle &b);
@@ -103,6 +111,9 @@ struct Extents
 
     bool empty() const { return (width * height * depth) == 0; }
 };
+
+bool operator==(const Extents &lhs, const Extents &rhs);
+bool operator!=(const Extents &lhs, const Extents &rhs);
 
 struct Box
 {

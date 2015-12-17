@@ -317,58 +317,11 @@ gl::Error InputLayoutCache::applyVertexBuffers(const std::vector<TranslatedAttri
     }
 
     ID3D11InputLayout *inputLayout = nullptr;
-
-    auto layoutMapIt = mLayoutMap.find(layout);
-    if (layoutMapIt != mLayoutMap.end())
+    gl::Error error = findInputLayout(layout, inputElementCount, inputElements, programD3D,
+                                      sortedAttributes, unsortedAttributes.size(), &inputLayout);
+    if (error.isError())
     {
-        inputLayout = layoutMapIt->second;
-    }
-    else
-    {
-        const gl::InputLayout &shaderInputLayout =
-            GetInputLayout(sortedAttributes, unsortedAttributes.size());
-
-        ShaderExecutableD3D *shader = nullptr;
-        gl::Error error = programD3D->getVertexExecutableForInputLayout(shaderInputLayout, &shader, nullptr);
-        if (error.isError())
-        {
-            return error;
-        }
-
-        ShaderExecutableD3D *shader11 = GetAs<ShaderExecutable11>(shader);
-
-        D3D11_INPUT_ELEMENT_DESC descs[gl::MAX_VERTEX_ATTRIBS];
-        for (unsigned int j = 0; j < inputElementCount; ++j)
-        {
-            descs[j] = inputElements[j];
-        }
-
-        HRESULT result = mDevice->CreateInputLayout(descs, inputElementCount, shader11->getFunction(), shader11->getLength(), &inputLayout);
-        if (FAILED(result))
-        {
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to create internal input layout, HRESULT: 0x%08x", result);
-        }
-
-        if (mLayoutMap.size() >= mCacheSize)
-        {
-            TRACE("Overflowed the limit of %u input layouts, purging half the cache.", mCacheSize);
-
-            // Randomly release every second element
-            auto it = mLayoutMap.begin();
-            while (it != mLayoutMap.end())
-            {
-                it++;
-                if (it != mLayoutMap.end())
-                {
-                    // Calling std::map::erase invalidates the current iterator, so make a copy.
-                    auto eraseIt = it++;
-                    SafeRelease(eraseIt->second);
-                    mLayoutMap.erase(eraseIt);
-                }
-            }
-        }
-
-        mLayoutMap[layout] = inputLayout;
+        return error;
     }
 
     if (inputLayout != mCurrentIL)
@@ -406,7 +359,7 @@ gl::Error InputLayoutCache::applyVertexBuffers(const std::vector<TranslatedAttri
                 if (sourceInfo->srcBuffer != nullptr)
                 {
                     const uint8_t *bufferData = nullptr;
-                    gl::Error error = sourceInfo->srcBuffer->getData(&bufferData);
+                    error = sourceInfo->srcBuffer->getData(&bufferData);
                     if (error.isError())
                     {
                         return error;
@@ -561,4 +514,70 @@ gl::Error InputLayoutCache::applyVertexBuffers(const std::vector<TranslatedAttri
     return gl::Error(GL_NO_ERROR);
 }
 
+gl::Error InputLayoutCache::findInputLayout(
+    const PackedAttributeLayout &layout,
+    unsigned int inputElementCount,
+    const D3D11_INPUT_ELEMENT_DESC inputElements[gl::MAX_VERTEX_ATTRIBS],
+    ProgramD3D *programD3D,
+    const TranslatedAttribute *sortedAttributes[gl::MAX_VERTEX_ATTRIBS],
+    size_t attributeCount,
+    ID3D11InputLayout **inputLayout)
+{
+    if (inputElementCount == 0)
+    {
+        *inputLayout = nullptr;
+        return gl::Error(GL_NO_ERROR);
+    }
+
+    auto layoutMapIt = mLayoutMap.find(layout);
+    if (layoutMapIt != mLayoutMap.end())
+    {
+        *inputLayout = layoutMapIt->second;
+        return gl::Error(GL_NO_ERROR);
+    }
+
+    const gl::InputLayout &shaderInputLayout = GetInputLayout(sortedAttributes, attributeCount);
+
+    ShaderExecutableD3D *shader = nullptr;
+    gl::Error error =
+        programD3D->getVertexExecutableForInputLayout(shaderInputLayout, &shader, nullptr);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    ShaderExecutableD3D *shader11 = GetAs<ShaderExecutable11>(shader);
+
+    HRESULT result =
+        mDevice->CreateInputLayout(inputElements, inputElementCount, shader11->getFunction(),
+                                   shader11->getLength(), inputLayout);
+    if (FAILED(result))
+    {
+        return gl::Error(GL_OUT_OF_MEMORY,
+                         "Failed to create internal input layout, HRESULT: 0x%08x", result);
+    }
+
+    if (mLayoutMap.size() >= mCacheSize)
+    {
+        TRACE("Overflowed the limit of %u input layouts, purging half the cache.", mCacheSize);
+
+        // Randomly release every second element
+        auto it = mLayoutMap.begin();
+        while (it != mLayoutMap.end())
+        {
+            it++;
+            if (it != mLayoutMap.end())
+            {
+                // Calling std::map::erase invalidates the current iterator, so make a copy.
+                auto eraseIt = it++;
+                SafeRelease(eraseIt->second);
+                mLayoutMap.erase(eraseIt);
+            }
+        }
+    }
+
+    mLayoutMap[layout] = *inputLayout;
+    return gl::Error(GL_NO_ERROR);
 }
+
+}  // namespace rx
