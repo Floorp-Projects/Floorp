@@ -390,16 +390,34 @@ nsDeviceSensors::FireDOMOrientationEvent(EventTarget* aTarget,
   init.mGamma.SetValue(aGamma);
   init.mAbsolute = aIsAbsolute;
 
-  RefPtr<DeviceOrientationEvent> event =
-    DeviceOrientationEvent::Constructor(aTarget,
-                                        NS_LITERAL_STRING("deviceorientation"),
-                                        init);
-  event->SetTrusted(true);
+  auto Dispatch = [&](EventTarget* aEventTarget, const nsAString& aType)
+  {
+    RefPtr<DeviceOrientationEvent> event =
+      DeviceOrientationEvent::Constructor(aEventTarget, aType, init);
+    event->SetTrusted(true);
+    bool dummy;
+    aEventTarget->DispatchEvent(event, &dummy);
+  };
 
-  bool dummy;
-  aTarget->DispatchEvent(event, &dummy);
+  Dispatch(aTarget, aIsAbsolute ? NS_LITERAL_STRING("absolutedeviceorientation") :
+                                  NS_LITERAL_STRING("deviceorientation"));
+
+  // This is used to determine whether relative events have been dispatched
+  // during the current session, in which case we don't dispatch the additional
+  // compatibility events.
+  static bool sIsDispatchingRelativeEvents = false;
+  sIsDispatchingRelativeEvents = sIsDispatchingRelativeEvents || !aIsAbsolute;
+
+  // Android devices with SENSOR_GAME_ROTATION_VECTOR support dispatch
+  // relative events for "deviceorientation" by default, while other platforms
+  // and devices without such support dispatch absolute events by default.
+  if (aIsAbsolute && !sIsDispatchingRelativeEvents) {
+    // For absolute events on devices without support for relative events,
+    // we need to additionally dispatch type "deviceorientation" to keep
+    // backwards-compatibility.
+    Dispatch(aTarget, NS_LITERAL_STRING("deviceorientation"));
+  }
 }
-
 
 void
 nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
