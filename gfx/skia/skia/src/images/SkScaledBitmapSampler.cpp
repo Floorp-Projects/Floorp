@@ -343,7 +343,7 @@ static SkScaledBitmapSampler::RowProc
 get_RGBA_to_4444_proc(const SkScaledBitmapSampler::Options& opts) {
     if (!opts.fPremultiplyAlpha) {
         // Unpremultiplied is not supported for 4444
-        return NULL;
+        return nullptr;
     }
     if (opts.fSkipZeros) {
         if (opts.fDither) {
@@ -396,10 +396,9 @@ static bool Sample_Index_D8888_SkipZ(void* SK_RESTRICT dstRow,
 
 static SkScaledBitmapSampler::RowProc
 get_index_to_8888_proc(const SkScaledBitmapSampler::Options& opts) {
-    if (!opts.fPremultiplyAlpha) {
-        // Unpremultiplied is not supported for an index source.
-        return NULL;
-    }
+    // The caller is expected to have created the source colortable
+    // properly with respect to opts.fPremultiplyAlpha, so premul makes
+    // no difference here.
     // Dither makes no difference
     if (opts.fSkipZeros) {
         return Sample_Index_D8888_SkipZ;
@@ -516,7 +515,7 @@ static SkScaledBitmapSampler::RowProc
 get_index_to_4444_proc(const SkScaledBitmapSampler::Options& opts) {
     // Unpremul not allowed
     if (!opts.fPremultiplyAlpha) {
-        return NULL;
+        return nullptr;
     }
     if (opts.fSkipZeros) {
         if (opts.fDither) {
@@ -549,7 +548,7 @@ static SkScaledBitmapSampler::RowProc
 get_index_to_index_proc(const SkScaledBitmapSampler::Options& opts) {
     // Unpremul not allowed
     if (!opts.fPremultiplyAlpha) {
-        return NULL;
+        return nullptr;
     }
     // Ignore dither and skip zeroes
     return Sample_Index_DI;
@@ -564,14 +563,14 @@ static bool Sample_Gray_DA8(void* SK_RESTRICT dstRow,
     // except we assume that there is alpha for speed, since an A8
     // bitmap with no alpha is not interesting.
     (void) Sample_Index_DI(dstRow, src, width, deltaSrc, /* y unused */ 0,
-                           /* ctable unused */ NULL);
+                           /* ctable unused */ nullptr);
     return true;
 }
 
 static SkScaledBitmapSampler::RowProc
 get_gray_to_A8_proc(const SkScaledBitmapSampler::Options& opts) {
     if (!opts.fPremultiplyAlpha) {
-        return NULL;
+        return nullptr;
     }
     // Ignore skip and dither.
     return Sample_Gray_DA8;
@@ -584,9 +583,9 @@ typedef SkScaledBitmapSampler::RowProc (*RowProcChooser)(const SkScaledBitmapSam
 
 SkScaledBitmapSampler::SkScaledBitmapSampler(int width, int height,
                                              int sampleSize) {
-    fCTable = NULL;
-    fDstRow = NULL;
-    fRowProc = NULL;
+    fCTable = nullptr;
+    fDstRow = nullptr;
+    fRowProc = nullptr;
 
     if (width <= 0 || height <= 0) {
         sk_throw();
@@ -632,7 +631,7 @@ bool SkScaledBitmapSampler::begin(SkBitmap* dst, SrcConfig sc,
         get_RGBx_to_8888_proc,
         get_RGBA_to_8888_proc,
         get_index_to_8888_proc,
-        NULL, // 565 to 8888
+        nullptr, // 565 to 8888
 
         get_gray_to_565_proc,
         get_RGBx_to_565_proc,
@@ -644,25 +643,25 @@ bool SkScaledBitmapSampler::begin(SkBitmap* dst, SrcConfig sc,
         get_RGBx_to_4444_proc,
         get_RGBA_to_4444_proc,
         get_index_to_4444_proc,
-        NULL, // 565 to 4444
+        nullptr, // 565 to 4444
 
-        NULL, // gray to index
-        NULL, // rgbx to index
-        NULL, // rgba to index
+        nullptr, // gray to index
+        nullptr, // rgbx to index
+        nullptr, // rgba to index
         get_index_to_index_proc,
-        NULL, // 565 to index
+        nullptr, // 565 to index
 
         get_gray_to_A8_proc,
-        NULL, // rgbx to a8
-        NULL, // rgba to a8
-        NULL, // index to a8
-        NULL, // 565 to a8
+        nullptr, // rgbx to a8
+        nullptr, // rgba to a8
+        nullptr, // index to a8
+        nullptr, // 565 to a8
     };
 
     // The jump between dst configs in the table
     static const int gProcDstConfigSpan = 5;
-    SK_COMPILE_ASSERT(SK_ARRAY_COUNT(gProcChoosers) == 5 * gProcDstConfigSpan,
-                      gProcs_has_the_wrong_number_of_entries);
+    static_assert(SK_ARRAY_COUNT(gProcChoosers) == 5 * gProcDstConfigSpan,
+                  "gProcs_has_the_wrong_number_of_entries");
 
     fCTable = ctable;
 
@@ -717,15 +716,15 @@ bool SkScaledBitmapSampler::begin(SkBitmap* dst, SrcConfig sc,
     }
 
     RowProcChooser chooser = gProcChoosers[index];
-    if (NULL == chooser) {
-        fRowProc = NULL;
+    if (nullptr == chooser) {
+        fRowProc = nullptr;
     } else {
         fRowProc = chooser(opts);
     }
     fDstRow = (char*)dst->getPixels();
     fDstRowBytes = dst->rowBytes();
     fCurrY = 0;
-    return fRowProc != NULL;
+    return fRowProc != nullptr;
 }
 
 bool SkScaledBitmapSampler::begin(SkBitmap* dst, SrcConfig sc,
@@ -763,7 +762,9 @@ bool SkScaledBitmapSampler::sampleInterlaced(const uint8_t* SK_RESTRICT src, int
     // of the destination bitmap's pixels, which is used to calculate the destination row
     // each time this function is called.
     const int dstY = srcYMinusY0 / fDY;
-    SkASSERT(dstY < fScaledHeight);
+    if (dstY >= fScaledHeight) {
+        return false;
+    }
     char* dstRow = fDstRow + dstY * fDstRowBytes;
     return fRowProc(dstRow, src + fX0 * fSrcPixelSize, fScaledWidth,
                     fDX * fSrcPixelSize, dstY, fCTable);
@@ -793,41 +794,41 @@ public:
 //  ~D~U                D~U                     ~DU                         DU
 SkScaledBitmapSampler::RowProc gTestProcs[] = {
     // Gray
-    Sample_Gray_DA8,    Sample_Gray_DA8,        NULL,                       NULL,                       // to A8
-    NULL,               NULL,                   NULL,                       NULL,                       // to Index8
+    Sample_Gray_DA8,    Sample_Gray_DA8,        nullptr,                       nullptr,                       // to A8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to Index8
     Sample_Gray_D565,   Sample_Gray_D565_D,     Sample_Gray_D565,           Sample_Gray_D565_D,         // to 565
     Sample_Gray_D4444,  Sample_Gray_D4444_D,    Sample_Gray_D4444,          Sample_Gray_D4444_D,        // to 4444
     Sample_Gray_D8888,  Sample_Gray_D8888,      Sample_Gray_D8888,          Sample_Gray_D8888,          // to 8888
     // Index
-    NULL,               NULL,                   NULL,                       NULL,                       // to A8
-    Sample_Index_DI,    Sample_Index_DI,        NULL,                       NULL,                       // to Index8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to A8
+    Sample_Index_DI,    Sample_Index_DI,        nullptr,                       nullptr,                       // to Index8
     Sample_Index_D565,  Sample_Index_D565_D,    Sample_Index_D565,          Sample_Index_D565_D,        // to 565
-    Sample_Index_D4444, Sample_Index_D4444_D,   NULL,                       NULL,                       // to 4444
-    Sample_Index_D8888, Sample_Index_D8888,     NULL,                       NULL,                       // to 8888
+    Sample_Index_D4444, Sample_Index_D4444_D,   nullptr,                       nullptr,                       // to 4444
+    Sample_Index_D8888, Sample_Index_D8888,     Sample_Index_D8888,         Sample_Index_D8888,         // to 8888
     // RGB
-    NULL,               NULL,                   NULL,                       NULL,                       // to A8
-    NULL,               NULL,                   NULL,                       NULL,                       // to Index8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to A8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to Index8
     Sample_RGBx_D565,   Sample_RGBx_D565_D,     Sample_RGBx_D565,           Sample_RGBx_D565_D,         // to 565
     Sample_RGBx_D4444,  Sample_RGBx_D4444_D,    Sample_RGBx_D4444,          Sample_RGBx_D4444_D,        // to 4444
     Sample_RGBx_D8888,  Sample_RGBx_D8888,      Sample_RGBx_D8888,          Sample_RGBx_D8888,          // to 8888
     // RGBx is the same as RGB
-    NULL,               NULL,                   NULL,                       NULL,                       // to A8
-    NULL,               NULL,                   NULL,                       NULL,                       // to Index8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to A8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to Index8
     Sample_RGBx_D565,   Sample_RGBx_D565_D,     Sample_RGBx_D565,           Sample_RGBx_D565_D,         // to 565
     Sample_RGBx_D4444,  Sample_RGBx_D4444_D,    Sample_RGBx_D4444,          Sample_RGBx_D4444_D,        // to 4444
     Sample_RGBx_D8888,  Sample_RGBx_D8888,      Sample_RGBx_D8888,          Sample_RGBx_D8888,          // to 8888
     // RGBA
-    NULL,               NULL,                   NULL,                       NULL,                       // to A8
-    NULL,               NULL,                   NULL,                       NULL,                       // to Index8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to A8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to Index8
     Sample_RGBx_D565,   Sample_RGBx_D565_D,     Sample_RGBx_D565,           Sample_RGBx_D565_D,         // to 565
-    Sample_RGBA_D4444,  Sample_RGBA_D4444_D,    NULL,                       NULL,                       // to 4444
+    Sample_RGBA_D4444,  Sample_RGBA_D4444_D,    nullptr,                       nullptr,                       // to 4444
     Sample_RGBA_D8888,  Sample_RGBA_D8888,      Sample_RGBA_D8888_Unpremul, Sample_RGBA_D8888_Unpremul, // to 8888
     // RGB_565
-    NULL,               NULL,                   NULL,                       NULL,                       // to A8
-    NULL,               NULL,                   NULL,                       NULL,                       // to Index8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to A8
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to Index8
     Sample_D565_D565,   Sample_D565_D565,       Sample_D565_D565,           Sample_D565_D565,           // to 565
-    NULL,               NULL,                   NULL,                       NULL,                       // to 4444
-    NULL,               NULL,                   NULL,                       NULL,                       // to 8888
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to 4444
+    nullptr,               nullptr,                   nullptr,                       nullptr,                       // to 8888
 };
 
 // Dummy class that allows instantiation of an ImageDecoder, so begin can query its fields.
@@ -835,8 +836,8 @@ class DummyDecoder : public SkImageDecoder {
 public:
     DummyDecoder() {}
 protected:
-    virtual bool onDecode(SkStream*, SkBitmap*, SkImageDecoder::Mode) SK_OVERRIDE {
-        return false;
+    Result onDecode(SkStream*, SkBitmap*, SkImageDecoder::Mode) override {
+        return kFailure;
     }
 };
 

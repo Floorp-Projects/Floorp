@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 #include "SkFloatBits.h"
+#include "SkOpCoincidence.h"
 #include "SkPathOpsTypes.h"
 
 static bool arguments_denormalized(float a, float b, int epsilon) {
@@ -159,7 +160,7 @@ int UlpsDistance(float a, float b) {
         return a == b ? 0 : SK_MaxS32;
     }
     // Find the difference in ULPs.
-    return abs(floatIntA.fSignBitInt - floatIntB.fSignBitInt);
+    return SkTAbs(floatIntA.fSignBitInt - floatIntB.fSignBitInt);
 }
 
 // cube root approximation using bit hack for 64-bit float
@@ -198,3 +199,27 @@ double SkDCubeRoot(double x) {
     }
     return result;
 }
+
+SkOpGlobalState::SkOpGlobalState(SkOpCoincidence* coincidence, SkOpContourHead* head
+                                 SkDEBUGPARAMS(const char* testName))
+    : fCoincidence(coincidence)
+    , fContourHead(head)
+    , fNested(0)
+    , fWindingFailed(false)
+    , fAngleCoincidence(false)
+    , fPhase(kIntersecting)
+    SkDEBUGPARAMS(fDebugTestName(testName))
+    SkDEBUGPARAMS(fAngleID(0))
+    SkDEBUGPARAMS(fCoinID(0))
+    SkDEBUGPARAMS(fContourID(0))
+    SkDEBUGPARAMS(fPtTID(0))
+    SkDEBUGPARAMS(fSegmentID(0))
+    SkDEBUGPARAMS(fSpanID(0)) {
+    if (coincidence) {
+        coincidence->debugSetGlobalState(this);
+    }
+#if DEBUG_T_SECT_LOOP_COUNT
+    debugResetLoopCounts();
+#endif
+}
+

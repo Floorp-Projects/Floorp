@@ -5,6 +5,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "SkTypes.h"
+#if defined(SK_BUILD_FOR_MAC)
 
 
 #include "gl/GrGLInterface.h"
@@ -21,13 +23,13 @@ public:
     }
 
     ~GLLoader() {
-        if (NULL != fLibrary) {
+        if (fLibrary) {
             dlclose(fLibrary);
         }
     }
 
     void* handle() const {
-        return NULL == fLibrary ? RTLD_DEFAULT : fLibrary;
+        return nullptr == fLibrary ? RTLD_DEFAULT : fLibrary;
     }
 
 private:
@@ -47,7 +49,7 @@ private:
 };
 
 static GrGLFuncPtr mac_get_gl_proc(void* ctx, const char name[]) {
-    SkASSERT(NULL != ctx);
+    SkASSERT(ctx);
     const GLProcGetter* getter = (const GLProcGetter*) ctx;
     return getter->getProc(name);
 }
@@ -56,3 +58,5 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     GLProcGetter getter;
     return GrGLAssembleGLInterface(&getter, mac_get_gl_proc);
 }
+
+#endif//defined(SK_BUILD_FOR_MAC)

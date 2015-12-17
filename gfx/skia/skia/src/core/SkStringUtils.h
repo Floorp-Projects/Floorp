@@ -20,4 +20,22 @@ void SkAddFlagToString(SkString* string, bool flag,
                        const char* flagStr, bool* needSeparator);
 
 
+enum SkScalarAsStringType {
+    kDec_SkScalarAsStringType,
+    kHex_SkScalarAsStringType,
+};
+
+void SkAppendScalar(SkString*, SkScalar, SkScalarAsStringType);
+
+static inline void SkAppendScalarDec(SkString* str, SkScalar value) {
+    SkAppendScalar(str, value, kDec_SkScalarAsStringType);
+}
+
+static inline void SkAppendScalarHex(SkString* str, SkScalar value) {
+    SkAppendScalar(str, value, kHex_SkScalarAsStringType);
+}
+
+/** Indents every non-empty line of the string by tabCnt tabs */
+SkString SkTabString(const SkString& string, int tabCnt);
+
 #endif

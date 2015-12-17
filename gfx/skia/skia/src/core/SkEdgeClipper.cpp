@@ -148,7 +148,9 @@ void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) {
         return;
     }
     if (pts[0].fX >= clip.fRight) {  // wholly to the right
-        this->appendVLine(clip.fRight, pts[0].fY, pts[2].fY, reverse);
+        if (!this->canCullToTheRight()) {
+            this->appendVLine(clip.fRight, pts[0].fY, pts[2].fY, reverse);
+        }
         return;
     }
 
@@ -223,54 +225,36 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkScalar eval_cubic_coeff(SkScalar A, SkScalar B, SkScalar C,
-                                 SkScalar D, SkScalar t) {
-    return SkScalarMulAdd(SkScalarMulAdd(SkScalarMulAdd(A, t, B), t, C), t, D);
+static SkScalar mono_cubic_closestT(const SkScalar src[], SkScalar x) {
+    SkScalar t = 0.5f;
+    SkScalar lastT;
+    SkScalar bestT  SK_INIT_TO_AVOID_WARNING;
+    SkScalar step = 0.25f;
+    SkScalar D = src[0];
+    SkScalar A = src[6] + 3*(src[2] - src[4]) - D;
+    SkScalar B = 3*(src[4] - src[2] - src[2] + D);
+    SkScalar C = 3*(src[2] - D);
+    x -= D;
+    SkScalar closest = SK_ScalarMax;
+    do {
+        SkScalar loc = ((A * t + B) * t + C) * t;
+        SkScalar dist = SkScalarAbs(loc - x);
+        if (closest > dist) {
+            closest = dist;
+            bestT = t;
+        }
+        lastT = t;
+        t += loc < x ? step : -step;
+        step *= 0.5f;
+    } while (closest > 0.25f && lastT != t);
+    return bestT;
 }
 
-/*  Given 4 cubic points (either Xs or Ys), and a target X or Y, compute the
-    t value such that cubic(t) = target
- */
-static bool chopMonoCubicAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar c3,
-                           SkScalar target, SkScalar* t) {
- //   SkASSERT(c0 <= c1 && c1 <= c2 && c2 <= c3);
-    SkASSERT(c0 < target && target < c3);
-
-    SkScalar D = c0 - target;
-    SkScalar A = c3 + 3*(c1 - c2) - c0;
-    SkScalar B = 3*(c2 - c1 - c1 + c0);
-    SkScalar C = 3*(c1 - c0);
-
-    const SkScalar TOLERANCE = SK_Scalar1 / 4096;
-    SkScalar minT = 0;
-    SkScalar maxT = SK_Scalar1;
-    SkScalar mid;
-
-    // This is a lot of iterations. Is there a faster way?
-    for (int i = 0; i < 24; i++) {
-        mid = SkScalarAve(minT, maxT);
-        SkScalar delta = eval_cubic_coeff(A, B, C, D, mid);
-        if (delta < 0) {
-            minT = mid;
-            delta = -delta;
-        } else {
-            maxT = mid;
-        }
-        if (delta < TOLERANCE) {
-            break;
-        }
+static void chop_mono_cubic_at_y(SkPoint src[4], SkScalar y, SkPoint dst[7]) {
+    if (SkChopMonoCubicAtY(src, y, dst)) {
+        return;
     }
-    *t = mid;
-//    SkDebugf("-- evalCubicAt %d delta %g\n", i, eval_cubic_coeff(A, B, C, D, *t));
-    return true;
-}
-
-static bool chopMonoCubicAtY(SkPoint pts[4], SkScalar y, SkScalar* t) {
-    return chopMonoCubicAt(pts[0].fY, pts[1].fY, pts[2].fY, pts[3].fY, y, t);
-}
-
-static bool chopMonoCubicAtX(SkPoint pts[4], SkScalar x, SkScalar* t) {
-    return chopMonoCubicAt(pts[0].fX, pts[1].fX, pts[2].fX, pts[3].fX, x, t);
+    SkChopCubicAt(src, dst, mono_cubic_closestT(&src->fY, y));
 }
 
 // Modify pts[] in place so that it is clipped in Y to the clip rect
@@ -278,50 +262,37 @@ static void chop_cubic_in_Y(SkPoint pts[4], const SkRect& clip) {
 
     // are we partially above
     if (pts[0].fY < clip.fTop) {
-        SkScalar t;
-        if (chopMonoCubicAtY(pts, clip.fTop, &t)) {
-            SkPoint tmp[7];
-            SkChopCubicAt(pts, tmp, t);
+        SkPoint tmp[7];
+        chop_mono_cubic_at_y(pts, clip.fTop, tmp);
+        // tmp[3, 4].fY should all be to the below clip.fTop.
+        // Since we can't trust the numerics of
+        // the chopper, we force those conditions now
+        tmp[3].fY = clip.fTop;
+        clamp_ge(tmp[4].fY, clip.fTop);
 
-            // tmp[3, 4, 5].fY should all be to the below clip.fTop.
-            // Since we can't trust the numerics of
-            // the chopper, we force those conditions now
-            tmp[3].fY = clip.fTop;
-            clamp_ge(tmp[4].fY, clip.fTop);
-            clamp_ge(tmp[5].fY, clip.fTop);
-
-            pts[0] = tmp[3];
-            pts[1] = tmp[4];
-            pts[2] = tmp[5];
-        } else {
-            // if chopMonoCubicAtY failed, then we may have hit inexact numerics
-            // so we just clamp against the top
-            for (int i = 0; i < 4; i++) {
-                clamp_ge(pts[i].fY, clip.fTop);
-            }
-        }
+        pts[0] = tmp[3];
+        pts[1] = tmp[4];
+        pts[2] = tmp[5];
     }
 
     // are we partially below
     if (pts[3].fY > clip.fBottom) {
-        SkScalar t;
-        if (chopMonoCubicAtY(pts, clip.fBottom, &t)) {
-            SkPoint tmp[7];
-            SkChopCubicAt(pts, tmp, t);
-            tmp[3].fY = clip.fBottom;
-            clamp_le(tmp[2].fY, clip.fBottom);
+        SkPoint tmp[7];
+        chop_mono_cubic_at_y(pts, clip.fBottom, tmp);
+        tmp[3].fY = clip.fBottom;
+        clamp_le(tmp[2].fY, clip.fBottom);
 
-            pts[1] = tmp[1];
-            pts[2] = tmp[2];
-            pts[3] = tmp[3];
-        } else {
-            // if chopMonoCubicAtY failed, then we may have hit inexact numerics
-            // so we just clamp against the bottom
-            for (int i = 0; i < 4; i++) {
-                clamp_le(pts[i].fY, clip.fBottom);
-            }
-        }
+        pts[1] = tmp[1];
+        pts[2] = tmp[2];
+        pts[3] = tmp[3];
     }
+}
+
+static void chop_mono_cubic_at_x(SkPoint src[4], SkScalar x, SkPoint dst[7]) {
+    if (SkChopMonoCubicAtX(src, x, dst)) {
+        return;
+    }
+    SkChopCubicAt(src, dst, mono_cubic_closestT(&src->fX, x));
 }
 
 // srcPts[] must be monotonic in X and Y
@@ -350,53 +321,38 @@ void SkEdgeClipper::clipMonoCubic(const SkPoint src[4], const SkRect& clip) {
         return;
     }
     if (pts[0].fX >= clip.fRight) {  // wholly to the right
-        this->appendVLine(clip.fRight, pts[0].fY, pts[3].fY, reverse);
+        if (!this->canCullToTheRight()) {
+            this->appendVLine(clip.fRight, pts[0].fY, pts[3].fY, reverse);
+        }
         return;
     }
 
     // are we partially to the left
     if (pts[0].fX < clip.fLeft) {
-        SkScalar t;
-        if (chopMonoCubicAtX(pts, clip.fLeft, &t)) {
-            SkPoint tmp[7];
-            SkChopCubicAt(pts, tmp, t);
-            this->appendVLine(clip.fLeft, tmp[0].fY, tmp[3].fY, reverse);
+        SkPoint tmp[7];
+        chop_mono_cubic_at_x(pts, clip.fLeft, tmp);
+        this->appendVLine(clip.fLeft, tmp[0].fY, tmp[3].fY, reverse);
 
-            // tmp[3, 4, 5].fX should all be to the right of clip.fLeft.
-            // Since we can't trust the numerics of
-            // the chopper, we force those conditions now
-            tmp[3].fX = clip.fLeft;
-            clamp_ge(tmp[4].fX, clip.fLeft);
-            clamp_ge(tmp[5].fX, clip.fLeft);
+        // tmp[3, 4].fX should all be to the right of clip.fLeft.
+        // Since we can't trust the numerics of
+        // the chopper, we force those conditions now
+        tmp[3].fX = clip.fLeft;
+        clamp_ge(tmp[4].fX, clip.fLeft);
 
-            pts[0] = tmp[3];
-            pts[1] = tmp[4];
-            pts[2] = tmp[5];
-        } else {
-            // if chopMonocubicAtY failed, then we may have hit inexact numerics
-            // so we just clamp against the left
-            this->appendVLine(clip.fLeft, pts[0].fY, pts[3].fY, reverse);
-            return;
-        }
+        pts[0] = tmp[3];
+        pts[1] = tmp[4];
+        pts[2] = tmp[5];
     }
 
     // are we partially to the right
     if (pts[3].fX > clip.fRight) {
-        SkScalar t;
-        if (chopMonoCubicAtX(pts, clip.fRight, &t)) {
-            SkPoint tmp[7];
-            SkChopCubicAt(pts, tmp, t);
-            tmp[3].fX = clip.fRight;
-            clamp_le(tmp[2].fX, clip.fRight);
-            clamp_le(tmp[1].fX, clip.fRight);
+        SkPoint tmp[7];
+        chop_mono_cubic_at_x(pts, clip.fRight, tmp);
+        tmp[3].fX = clip.fRight;
+        clamp_le(tmp[2].fX, clip.fRight);
 
-            this->appendCubic(tmp, reverse);
-            this->appendVLine(clip.fRight, tmp[3].fY, tmp[6].fY, reverse);
-        } else {
-            // if chopMonoCubicAtX failed, then we may have hit inexact numerics
-            // so we just clamp against the right
-            this->appendVLine(clip.fRight, pts[0].fY, pts[3].fY, reverse);
-        }
+        this->appendCubic(tmp, reverse);
+        this->appendVLine(clip.fRight, tmp[3].fY, tmp[6].fY, reverse);
     } else {    // wholly inside the clip
         this->appendCubic(pts, reverse);
     }

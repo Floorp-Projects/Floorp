@@ -13,25 +13,35 @@
 SkComposeImageFilter::~SkComposeImageFilter() {
 }
 
+void SkComposeImageFilter::computeFastBounds(const SkRect& src, SkRect* dst) const {
+    SkImageFilter* outer = getInput(0);
+    SkImageFilter* inner = getInput(1);
+
+    SkRect tmp;
+    inner->computeFastBounds(src, &tmp);
+    outer->computeFastBounds(tmp, dst);
+}
+
 bool SkComposeImageFilter::onFilterImage(Proxy* proxy,
                                          const SkBitmap& src,
                                          const Context& ctx,
                                          SkBitmap* result,
                                          SkIPoint* offset) const {
-    SkImageFilter* outer = getInput(0);
-    SkImageFilter* inner = getInput(1);
+    SkBitmap tmp;
+    SkIPoint innerOffset = SkIPoint::Make(0, 0);
+    SkIPoint outerOffset = SkIPoint::Make(0, 0);
+    if (!this->filterInput(1, proxy, src, ctx, &tmp, &innerOffset))
+        return false;
 
-    if (!outer && !inner) {
+    SkMatrix outerMatrix(ctx.ctm());
+    outerMatrix.postTranslate(SkIntToScalar(-innerOffset.x()), SkIntToScalar(-innerOffset.y()));
+    Context outerContext(outerMatrix, ctx.clipBounds(), ctx.cache(), ctx.sizeConstraint());
+    if (!this->filterInput(0, proxy, tmp, outerContext, result, &outerOffset, false)) {
         return false;
     }
 
-    if (!outer || !inner) {
-        return (outer ? outer : inner)->filterImage(proxy, src, ctx, result, offset);
-    }
-
-    SkBitmap tmp;
-    return inner->filterImage(proxy, src, ctx, &tmp, offset) &&
-           outer->filterImage(proxy, tmp, ctx, result, offset);
+    *offset = innerOffset + outerOffset;
+    return true;
 }
 
 bool SkComposeImageFilter::onFilterBounds(const SkIRect& src,
@@ -40,19 +50,28 @@ bool SkComposeImageFilter::onFilterBounds(const SkIRect& src,
     SkImageFilter* outer = getInput(0);
     SkImageFilter* inner = getInput(1);
 
-    if (!outer && !inner) {
-        return false;
-    }
-
-    if (!outer || !inner) {
-        return (outer ? outer : inner)->filterBounds(src, ctm, dst);
-    }
-
     SkIRect tmp;
-    return inner->filterBounds(src, ctm, &tmp) &&
-           outer->filterBounds(tmp, ctm, dst);
+    return inner->filterBounds(src, ctm, &tmp) && outer->filterBounds(tmp, ctm, dst);
 }
 
-SkComposeImageFilter::SkComposeImageFilter(SkReadBuffer& buffer)
-  : INHERITED(2, buffer) {
+SkFlattenable* SkComposeImageFilter::CreateProc(SkReadBuffer& buffer) {
+    SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 2);
+    return SkComposeImageFilter::Create(common.getInput(0), common.getInput(1));
 }
+
+#ifndef SK_IGNORE_TO_STRING
+void SkComposeImageFilter::toString(SkString* str) const {
+    SkImageFilter* outer = getInput(0);
+    SkImageFilter* inner = getInput(1);
+
+    str->appendf("SkComposeImageFilter: (");
+
+    str->appendf("outer: ");
+    outer->toString(str);
+
+    str->appendf("inner: ");
+    inner->toString(str);
+
+    str->appendf(")");
+}
+#endif

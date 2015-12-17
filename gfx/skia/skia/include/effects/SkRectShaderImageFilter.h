@@ -26,22 +26,24 @@ public:
      *               primitive's bounds are used instead.
      */
     SK_ATTR_DEPRECATED("use Create(SkShader*, const CropRect*)")
-    static SkRectShaderImageFilter* Create(SkShader* s, const SkRect& rect);
+    static SkImageFilter* Create(SkShader* s, const SkRect& rect);
+    static SkImageFilter* Create(SkShader* s, const CropRect* rect = NULL);
 
-    static SkRectShaderImageFilter* Create(SkShader* s, const CropRect* rect = NULL);
-    virtual ~SkRectShaderImageFilter();
+    bool affectsTransparentBlack() const override;
 
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkRectShaderImageFilter)
 
 protected:
-    SkRectShaderImageFilter(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    virtual ~SkRectShaderImageFilter();
 
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
-                               SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
+    bool onFilterImage(Proxy*, const SkBitmap& src, const Context&, SkBitmap* result,
+                       SkIPoint* loc) const override;
 
 private:
     SkRectShaderImageFilter(SkShader* s, const CropRect* rect);
+
     SkShader*  fShader;
 
     typedef SkImageFilter INHERITED;

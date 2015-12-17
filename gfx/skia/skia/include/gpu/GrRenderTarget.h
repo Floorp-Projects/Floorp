@@ -11,74 +11,84 @@
 #include "GrSurface.h"
 #include "SkRect.h"
 
-class GrStencilBuffer;
-class GrTexture;
+class GrDrawTarget;
+class GrStencilAttachment;
+class GrRenderTargetPriv;
 
 /**
  * GrRenderTarget represents a 2D buffer of pixels that can be rendered to.
  * A context's render target is set by setRenderTarget(). Render targets are
- * created by a createTexture with the kRenderTarget_TextureFlag flag.
+ * created by a createTexture with the kRenderTarget_SurfaceFlag flag.
  * Additionally, GrContext provides methods for creating GrRenderTargets
  * that wrap externally created render targets.
  */
-class GrRenderTarget : public GrSurface {
+class GrRenderTarget : virtual public GrSurface {
 public:
-    SK_DECLARE_INST_COUNT(GrRenderTarget)
-
-    // GrResource overrides
-    virtual size_t gpuMemorySize() const SK_OVERRIDE;
-
     // GrSurface overrides
-    /**
-     * @return the texture associated with the render target, may be NULL.
-     */
-    virtual GrTexture* asTexture() SK_OVERRIDE { return fTexture; }
-    virtual const GrTexture* asTexture() const SK_OVERRIDE { return fTexture; }
-
-    /**
-     * @return this render target.
-     */
-    virtual GrRenderTarget* asRenderTarget() SK_OVERRIDE { return this; }
-    virtual const GrRenderTarget* asRenderTarget() const  SK_OVERRIDE {
-        return this;
-    }
-
-    virtual bool readPixels(int left, int top, int width, int height,
-                            GrPixelConfig config,
-                            void* buffer,
-                            size_t rowBytes = 0,
-                            uint32_t pixelOpsFlags = 0) SK_OVERRIDE;
-
-    virtual void writePixels(int left, int top, int width, int height,
-                             GrPixelConfig config,
-                             const void* buffer,
-                             size_t rowBytes = 0,
-                             uint32_t pixelOpsFlags = 0) SK_OVERRIDE;
+    GrRenderTarget* asRenderTarget() override { return this; }
+    const GrRenderTarget* asRenderTarget() const  override { return this; }
 
     // GrRenderTarget
     /**
-     * If this RT is multisampled, this is the multisample buffer
-     * @return the 3D API's handle to this object (e.g. FBO ID in OpenGL)
-     */
-    virtual GrBackendObject getRenderTargetHandle() const = 0;
+     * On some hardware it is possible for a render target to have multisampling
+     * only in certain buffers.
+     * Enforce only two legal sample configs.
+     * kUnified_SampleConfig signifies multisampling in both color and stencil
+     * buffers and is available across all hardware.
+     * kStencil_SampleConfig means multisampling is present in stencil buffer
+     * only; this config requires hardware support of
+     * NV_framebuffer_mixed_samples.
+    */
+    enum SampleConfig {
+        kUnified_SampleConfig = 0,
+        kStencil_SampleConfig = 1
+    };
 
     /**
-     * If this RT is multisampled, this is the buffer it is resolved to.
-     * Otherwise, same as getRenderTargetHandle().
-     * (In GL a separate FBO ID is used for the MSAA and resolved buffers)
-     * @return the 3D API's handle to this object (e.g. FBO ID in OpenGL)
+     * @return true if the surface is multisampled in all buffers,
+     *         false otherwise
      */
-    virtual GrBackendObject getRenderTargetResolvedHandle() const = 0;
+    bool isUnifiedMultisampled() const {
+        if (fSampleConfig != kUnified_SampleConfig) {
+            return false;
+        }
+        return 0 != fDesc.fSampleCnt;
+    }
 
     /**
-     * @return true if the surface is multisampled, false otherwise
+     * @return true if the surface is multisampled in the stencil buffer,
+     *         false otherwise
      */
-    bool isMultisampled() const { return 0 != fDesc.fSampleCnt; }
+    bool isStencilBufferMultisampled() const {
+        return 0 != fDesc.fSampleCnt;
+    }
 
     /**
-     * @return the number of samples-per-pixel or zero if non-MSAA.
+     * @return the number of color samples-per-pixel, or zero if non-MSAA or
+     *         multisampled in the stencil buffer only.
      */
-    int numSamples() const { return fDesc.fSampleCnt; }
+    int numColorSamples() const {
+        if (fSampleConfig == kUnified_SampleConfig) {
+            return fDesc.fSampleCnt;
+        }
+        return 0;
+    }
+
+    /**
+     * @return the number of stencil samples-per-pixel, or zero if non-MSAA.
+     */
+    int numStencilSamples() const {
+        return fDesc.fSampleCnt;
+    }
+
+    /**
+     * @return true if the surface is mixed sampled, false otherwise.
+     */
+    bool hasMixedSamples() const {
+        SkASSERT(kStencil_SampleConfig != fSampleConfig ||
+                 this->isStencilBufferMultisampled());
+        return kStencil_SampleConfig == fSampleConfig;
+    }
 
     /**
      * Call to indicate the multisample contents were modified such that the
@@ -114,14 +124,6 @@ public:
     const SkIRect& getResolveRect() const { return fResolveRect; }
 
     /**
-     * If the render target is multisampled this will perform a multisample
-     * resolve. Any pending draws to the target are first flushed. This only
-     * applies to render targets that are associated with GrTextures. After the
-     * function returns the GrTexture will contain the resolved pixels.
-     */
-    void resolve();
-
-    /**
      * Provide a performance hint that the render target's contents are allowed
      * to become undefined.
      */
@@ -138,40 +140,61 @@ public:
     virtual ResolveType getResolveType() const = 0;
 
     /**
-     * GrStencilBuffer is not part of the public API.
+     *  Return the native ID or handle to the rendertarget, depending on the
+     *  platform. e.g. on OpenGL, return the FBO ID.
      */
-    GrStencilBuffer* getStencilBuffer() const { return fStencilBuffer; }
-    void setStencilBuffer(GrStencilBuffer* stencilBuffer);
+    virtual GrBackendObject getRenderTargetHandle() const = 0;
+
+    // Checked when this object is asked to attach a stencil buffer.
+    virtual bool canAttemptStencilAttachment() const = 0;
+
+    // Provides access to functions that aren't part of the public API.
+    GrRenderTargetPriv renderTargetPriv();
+    const GrRenderTargetPriv renderTargetPriv() const;
+
+    void setLastDrawTarget(GrDrawTarget* dt);
+    GrDrawTarget* getLastDrawTarget() { return fLastDrawTarget; }
 
 protected:
-    GrRenderTarget(GrGpu* gpu,
-                   bool isWrapped,
-                   GrTexture* texture,
-                   const GrTextureDesc& desc)
-        : INHERITED(gpu, isWrapped, desc)
-        , fStencilBuffer(NULL)
-        , fTexture(texture) {
+    GrRenderTarget(GrGpu* gpu, LifeCycle lifeCycle, const GrSurfaceDesc& desc,
+                   SampleConfig sampleConfig, GrStencilAttachment* stencil = nullptr)
+        : INHERITED(gpu, lifeCycle, desc)
+        , fStencilAttachment(stencil)
+        , fSampleConfig(sampleConfig)
+        , fLastDrawTarget(nullptr) {
         fResolveRect.setLargestInverted();
     }
 
+    ~GrRenderTarget() override;
+
     // override of GrResource
-    virtual void onAbandon() SK_OVERRIDE;
-    virtual void onRelease() SK_OVERRIDE;
+    void onAbandon() override;
+    void onRelease() override;
 
 private:
-    friend class GrTexture;
-    // called by ~GrTexture to remove the non-ref'ed back ptr.
-    void owningTextureDestroyed() {
-        SkASSERT(NULL != fTexture);
-        fTexture = NULL;
-    }
+    // Allows the backends to perform any additional work that is required for attaching a
+    // GrStencilAttachment. When this is called, the GrStencilAttachment has already been put onto
+    // the GrRenderTarget. This function must return false if any failures occur when completing the
+    // stencil attachment.
+    virtual bool completeStencilAttachment() = 0;
 
-    GrStencilBuffer*  fStencilBuffer;
-    GrTexture*        fTexture; // not ref'ed
+    friend class GrRenderTargetPriv;
 
-    SkIRect           fResolveRect;
+    GrStencilAttachment*  fStencilAttachment;
+    SampleConfig          fSampleConfig;
+
+    SkIRect               fResolveRect;
+
+    // The last drawTarget that wrote to or is currently going to write to this renderTarget
+    // The drawTarget can be closed (e.g., no draw context is currently bound
+    // to this renderTarget).
+    // This back-pointer is required so that we can add a dependancy between
+    // the drawTarget used to create the current contents of this renderTarget
+    // and the drawTarget of a destination renderTarget to which this one is being drawn.
+    GrDrawTarget* fLastDrawTarget;
 
     typedef GrSurface INHERITED;
 };
+
 
 #endif

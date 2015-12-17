@@ -6,8 +6,8 @@
  */
 
 #include "GrGLNoOpInterface.h"
+#include "SkMutex.h"
 #include "SkString.h"
-#include "SkThread.h"
 
 // the OpenGLES 2.0 spec says this must be >= 128
 static const GrGLint kDefaultMaxVertexUniformVectors = 128;
@@ -27,7 +27,6 @@ static const char* kExtensions[] = {
     "GL_ARB_timer_query",
     "GL_ARB_draw_buffers",
     "GL_ARB_occlusion_query",
-    "GL_EXT_blend_color",
     "GL_EXT_stencil_wrap"
 };
 
@@ -48,15 +47,18 @@ const GrGLubyte* combined_extensions_string() {
 }
 }
 
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBindFragDataLocation(GrGLuint program,
+                                                        GrGLuint colorNumber,
+                                                        const GrGLchar* name) {
+}
+
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendColor(GrGLclampf red,
                                               GrGLclampf green,
                                               GrGLclampf blue,
                                               GrGLclampf alpha) {
 }
 
-GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBindFragDataLocation(GrGLuint program,
-                                                        GrGLuint colorNumber,
-                                                        const GrGLchar* name) {
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendEquation(GrGLenum mode) {
 }
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLBlendFunc(GrGLenum sfactor,
@@ -138,6 +140,12 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawArrays(GrGLenum mode,
                                               GrGLsizei count) {
 }
 
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawArraysInstanced(GrGLenum mode,
+                                                       GrGLint first,
+                                                       GrGLsizei count,
+                                                       GrGLsizei primcount) {
+}
+
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawBuffer(GrGLenum mode) {
 }
 
@@ -149,6 +157,13 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawElements(GrGLenum mode,
                                                 GrGLsizei count,
                                                 GrGLenum type,
                                                 const GrGLvoid* indices) {
+}
+
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLDrawElementsInstanced(GrGLenum mode,
+                                                         GrGLsizei count,
+                                                         GrGLenum type,
+                                                         const GrGLvoid* indices,
+                                                         GrGLsizei primcount) {
 }
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLEnable(GrGLenum cap) {
@@ -367,6 +382,15 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLUniformMatrix4fv(GrGLint location,
                                                     const GrGLfloat* value) {
 }
 
+ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib1f(GrGLuint indx, const GrGLfloat value) {
+}
+
+ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib2fv(GrGLuint indx, const GrGLfloat* values) {
+}
+
+ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib3fv(GrGLuint indx, const GrGLfloat* values) {
+}
+
  GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttrib4fv(GrGLuint indx, const GrGLfloat* values) {
 }
 
@@ -376,6 +400,9 @@ GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttribPointer(GrGLuint indx,
                                                        GrGLboolean normalized,
                                                        GrGLsizei stride,
                                                        const GrGLvoid* ptr) {
+}
+
+GrGLvoid GR_GL_FUNCTION_TYPE noOpGLVertexAttribDivisor(GrGLuint index, GrGLuint divisor) {
 }
 
 GrGLvoid GR_GL_FUNCTION_TYPE noOpGLViewport(GrGLint x,
@@ -615,7 +642,7 @@ const GrGLubyte* GR_GL_FUNCTION_TYPE noOpGLGetString(GrGLenum name) {
             return (const GrGLubyte*)"The Debug (Non-)Renderer";
         default:
             SkFAIL("Unexpected name passed to GetString");
-            return NULL;
+            return nullptr;
    }
 }
 
@@ -625,11 +652,11 @@ const GrGLubyte* GR_GL_FUNCTION_TYPE noOpGLGetStringi(GrGLenum name, GrGLuint i)
             if (static_cast<size_t>(i) <= SK_ARRAY_COUNT(kExtensions)) {
                 return (const GrGLubyte*) kExtensions[i];
             } else {
-                return NULL;
+                return nullptr;
             }
         default:
             SkFAIL("Unexpected name passed to GetStringi");
-            return NULL;
+            return nullptr;
     }
 }
 
