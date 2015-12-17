@@ -7088,6 +7088,11 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
     }
 
     ParseNode* pn2 = pn->pn_head;
+    if (pn->getOp() != JSOP_CALL) {
+        reportError(pn, JSMSG_NOT_CONSTRUCTOR, pn2->name());
+        return false;
+    }
+
     ParseNode* funNode = pn2->pn_next;
     if (!emitTree(funNode))
         return false;
