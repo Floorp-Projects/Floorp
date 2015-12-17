@@ -1,5 +1,7 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 
 var httpServer = null;
 // Need to randomize, because apparently no one clears our cache
@@ -13,16 +15,7 @@ var cacheUpdateObserver = null;
 var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         systemPrincipal,
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 function make_uri(url) {
@@ -103,7 +96,7 @@ function run_test()
     chan.notificationCallbacks = new ChannelEventSink(ES_ABORT_REDIRECT);
     var chanac = chan.QueryInterface(Ci.nsIApplicationCacheChannel);
     chanac.chooseApplicationCache = true;
-    chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE), null);
+    chan.asyncOpen2(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
   }}
 
   var os = Cc["@mozilla.org/observer-service;1"].
