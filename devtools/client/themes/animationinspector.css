@@ -290,7 +290,7 @@ body {
   height: 100%;
   box-sizing: border-box;
 
-  --timelime-border-color: var(--theme-body-color);
+  --timeline-border-color: var(--theme-body-color);
   --timeline-background-color: var(--theme-splitter-color);
 
   /* Iterations of the animation are displayed with a repeating linear-gradient
@@ -299,25 +299,25 @@ body {
      the border of this element */
   background-image:
     linear-gradient(to right,
-                    var(--timelime-border-color) 0,
-                    var(--timelime-border-color) 1px,
+                    var(--timeline-border-color) 0,
+                    var(--timeline-border-color) 1px,
                     transparent 1px,
                     transparent 2px);
   background-repeat: repeat-x;
   background-position: -1px 0;
-  border: 1px solid var(--timelime-border-color);
+  border: 1px solid var(--timeline-border-color);
 
   /* The background color is set independently */
   background-color: var(--timeline-background-color);
 }
 
 .animation-timeline .animation .cssanimation {
-  --timelime-border-color: var(--theme-highlight-lightorange);
+  --timeline-border-color: var(--theme-highlight-lightorange);
   --timeline-background-color: var(--theme-contrast-background);
 }
 
 .animation-timeline .animation .csstransition {
-  --timelime-border-color: var(--theme-highlight-bluegrey);
+  --timeline-border-color: var(--theme-highlight-bluegrey);
   --timeline-background-color: var(--theme-highlight-blue);
 }
 
@@ -369,14 +369,14 @@ body {
   box-sizing: border-box;
   height: calc(100% + 2px);
 
-  border: 1px solid var(--timelime-border-color);
+  border: 1px solid var(--timeline-border-color);
   border-width: 1px 0 1px 1px;
   background-image: repeating-linear-gradient(45deg,
                                               transparent,
                                               transparent 1px,
                                               var(--theme-selection-color) 1px,
                                               var(--theme-selection-color) 4px);
-  background-color: var(--timelime-border-color);
+  background-color: var(--timeline-border-color);
 }
 
 .animation-timeline .animation .delay.negative {
