@@ -22,6 +22,9 @@
 #include "nsLiteralString.h"
 #include "mozilla/UniquePtr.h"
 
+#include "prenv.h"
+#include "prmem.h"
+
 #ifdef MOZ_B2G_LOADER
 #include "ProcessUtils.h"
 
@@ -47,21 +50,6 @@ using namespace mozilla::ipc;
 # define CHILD_UNPRIVILEGED_GID 65534
 #endif
 
-#ifdef ANDROID
-#include <pthread.h>
-/*
- * Currently, PR_DuplicateEnvironment is implemented in
- * mozglue/build/BionicGlue.cpp
- */
-#define HAVE_PR_DUPLICATE_ENVIRONMENT
-
-#include "plstr.h"
-#include "prenv.h"
-#include "prmem.h"
-/* Temporary until we have PR_DuplicateEnvironment in prenv.h */
-extern "C" { NSPR_API(pthread_mutex_t *)PR_GetEnvLock(void); }
-#endif
-
 namespace {
 
 enum ParsingState {
@@ -75,38 +63,13 @@ static mozilla::EnvironmentLog gProcessLog("MOZ_PROCESS_LOG");
 
 namespace base {
 
-#ifdef HAVE_PR_DUPLICATE_ENVIRONMENT
-/* 
- * I tried to put PR_DuplicateEnvironment down in mozglue, but on android 
- * this winds up failing because the strdup/free calls wind up mismatching. 
- */
-
-static char **
-PR_DuplicateEnvironment(void)
-{
-    char **result = NULL;
-    char **s;
-    char **d;
-    pthread_mutex_lock(PR_GetEnvLock());
-    for (s = environ; *s != NULL; s++)
-      ;
-    if ((result = (char **)PR_Malloc(sizeof(char *) * (s - environ + 1))) != NULL) {
-      for (s = environ, d = result; *s != NULL; s++, d++) {
-        *d = PL_strdup(*s);
-      }
-      *d = NULL;
-    }
-    pthread_mutex_unlock(PR_GetEnvLock());
-    return result;
-}
-
 class EnvironmentEnvp
 {
 public:
   EnvironmentEnvp()
     : mEnvp(PR_DuplicateEnvironment()) {}
 
-  EnvironmentEnvp(const environment_map &em)
+  explicit EnvironmentEnvp(const environment_map &em)
   {
     mEnvp = (char **)PR_Malloc(sizeof(char *) * (em.size() + 1));
     if (!mEnvp) {
@@ -118,7 +81,9 @@ public:
       std::string str = it->first;
       str += "=";
       str += it->second;
-      *e = PL_strdup(str.c_str());
+      size_t len = str.length() + 1;
+      *e = static_cast<char*>(PR_Malloc(len));
+      memcpy(*e, str.c_str(), len);
     }
     *e = NULL;
   }
@@ -129,7 +94,7 @@ public:
       return;
     }
     for (char **e = mEnvp; *e; ++e) {
-      PL_strfree(*e);
+      PR_Free(*e);
     }
     PR_Free(mEnvp);
   }
@@ -178,7 +143,6 @@ public:
 private:
   std::auto_ptr<EnvironmentEnvp> mEnvp;
 };
-#endif // HAVE_PR_DUPLICATE_ENVIRONMENT
 
 bool LaunchApp(const std::vector<std::string>& argv,
                const file_handle_mapping_vector& fds_to_remap,
@@ -268,7 +232,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
   fd_shuffle1.reserve(fds_to_remap.size());
   fd_shuffle2.reserve(fds_to_remap.size());
 
-#ifdef HAVE_PR_DUPLICATE_ENVIRONMENT
   Environment env;
   env.Merge(env_vars_to_set);
   char * const *envp = env.AsEnvp();
@@ -276,7 +239,6 @@ bool LaunchApp(const std::vector<std::string>& argv,
     DLOG(ERROR) << "FAILED to duplicate environment for: " << argv_cstr[0];
     return false;
   }
-#endif
 
   pid_t pid = fork();
   if (pid < 0)
@@ -300,17 +262,10 @@ bool LaunchApp(const std::vector<std::string>& argv,
 
     SetCurrentProcessPrivileges(privs);
 
-#ifdef HAVE_PR_DUPLICATE_ENVIRONMENT
     execve(argv_cstr[0], argv_cstr.get(), envp);
-#else
-    for (environment_map::const_iterator it = env_vars_to_set.begin();
-         it != env_vars_to_set.end(); ++it) {
-      if (setenv(it->first.c_str(), it->second.c_str(), 1/*overwrite*/))
-        _exit(127);
-    }
-    execv(argv_cstr[0], argv_cstr.get());
-#endif
     // if we get here, we're in serious trouble and should complain loudly
+    // NOTE: This is async signal unsafe; it could deadlock instead.  (But
+    // only on debug builds; otherwise it's a signal-safe no-op.)
     DLOG(ERROR) << "FAILED TO exec() CHILD PROCESS, path: " << argv_cstr[0];
     _exit(127);
   } else {
