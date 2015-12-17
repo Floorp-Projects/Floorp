@@ -165,6 +165,85 @@ const TEST_STATES = {
       }
     ],
   },
+  SORTING_NAMING_RESTORE_PAGE: {
+    windows: [
+      {
+        tabs: [
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 1",
+            }],
+            index: 1,
+            hidden: false,
+            extData: {
+              "tabview-tab": "{\"groupID\":2,\"active\":true}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 2",
+            }],
+            index: 1,
+            hidden: false,
+            extData: {
+              "tabview-tab": "{\"groupID\":2}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 3",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+              "tabview-tab": "{\"groupID\":13}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 4",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+              "tabview-tab": "{\"groupID\":15}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 5",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+              "tabview-tab": "{\"groupID\":16}",
+            },
+          },
+          {
+            entries: [{
+              url: "about:robots",
+              title: "Robots 6",
+            }],
+            index: 1,
+            hidden: true,
+            extData: {
+              "tabview-tab": "{\"groupID\":17}",
+            },
+          }
+        ],
+        extData: {
+          "tabview-group": "{\"2\":{},\"13\":{\"title\":\"Foopy\"}, \"15\":{\"title\":\"Barry\"}, \"16\":{}, \"17\":{}}",
+          "tabview-groups": "{\"nextID\":20,\"activeGroupId\":2,\"totalNumber\":5}",
+          "tabview-visibility": "false"
+        },
+      },
+    ]
+  },
 };
 
 add_task(function* gatherGroupDataTest() {
@@ -175,7 +254,10 @@ add_task(function* gatherGroupDataTest() {
   let group2 = singleWinGroups.get("2");
   Assert.ok(!!group2, "group 2 should exist");
   Assert.equal(group2.tabs.length, 2, "2 tabs in group 2");
-  Assert.equal(group2.tabGroupsMigrationTitle, "", "We don't assign titles to untitled groups");
+  // Note that this has groupID 2 in the internal representation of tab groups,
+  // but because it was the first group we encountered when migrating, it was
+  // labeled "group 1" for the user
+  Assert.equal(group2.tabGroupsMigrationTitle, "Group 1", "We assign a numeric title to untitled groups");
   Assert.equal(group2.anonGroupID, "1", "We mark an untitled group with an anonymous id");
   let group13 = singleWinGroups.get("13");
   Assert.ok(!!group13, "group 13 should exist");
@@ -306,5 +388,19 @@ add_task(function* dealWithNoGroupInfo() {
   let fallbackActiveGroup = windowGroups.get("active group");
   Assert.ok(fallbackActiveGroup, "Fallback group should exist");
   Assert.equal(fallbackActiveGroup.tabs.length, 3, "There should be 3 tabs in the fallback group");
+});
+
+add_task(function* groupSortingInRemovedDataUsedForRestorePage() {
+  let stateClone = JSON.parse(JSON.stringify(TEST_STATES.SORTING_NAMING_RESTORE_PAGE));
+  let groupInfo = TabGroupsMigrator._gatherGroupData(stateClone);
+  let removedGroups = TabGroupsMigrator._removeHiddenTabGroupsFromState(stateClone, groupInfo);
+  Assert.equal(stateClone.windows.length, 1, "Should still only have 1 window");
+  Assert.equal(stateClone.windows[0].tabs.length, 2, "Should now have 2 tabs");
+
+  let restoredWindowTitles = removedGroups.windows.map(win => win.tabGroupsMigrationTitle);
+  // Note that group 1 is the active group and as such it won't appear in the list of
+  // things the user can restore:
+  Assert.deepEqual(restoredWindowTitles,
+    ["Barry", "Foopy", "Group 2", "Group 3"]);
 });
 

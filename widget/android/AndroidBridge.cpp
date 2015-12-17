@@ -18,6 +18,7 @@
 #include "AndroidBridge.h"
 #include "AndroidJNIWrapper.h"
 #include "AndroidBridgeUtilities.h"
+#include "nsAlertsUtils.h"
 #include "nsAppShell.h"
 #include "nsOSHelperAppService.h"
 #include "nsWindow.h"
@@ -519,15 +520,19 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
                                      const nsAString& aAlertText,
                                      const nsAString& aAlertCookie,
                                      nsIObserver *aAlertListener,
-                                     const nsAString& aAlertName)
+                                     const nsAString& aAlertName,
+                                     nsIPrincipal* aPrincipal)
 {
     if (nsAppShell::gAppShell && aAlertListener) {
         // This will remove any observers already registered for this id
         nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
     }
 
+    nsAutoString host;
+    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
+
     GeckoAppShell::ShowAlertNotificationWrapper
-           (aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName);
+           (aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
 }
 
 int

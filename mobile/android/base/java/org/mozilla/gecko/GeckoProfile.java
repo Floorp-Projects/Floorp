@@ -29,7 +29,7 @@ import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.mozglue.ContextUtils;
-import org.mozilla.gecko.firstrun.FirstrunPane;
+import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
@@ -871,7 +871,7 @@ public final class GeckoProfile {
         // Initialize pref flag for displaying the start pane for a new non-webapp profile.
         if (!mIsWebAppProfile) {
             final SharedPreferences prefs = GeckoSharedPrefs.forProfile(mApplicationContext);
-            prefs.edit().putBoolean(FirstrunPane.PREF_FIRSTRUN_ENABLED, true).apply();
+            prefs.edit().putBoolean(FirstrunAnimationContainer.PREF_FIRSTRUN_ENABLED, true).apply();
         }
 
         return profileDir;

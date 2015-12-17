@@ -83,19 +83,14 @@
   width: 7px;
 }
 
-.requests-menu-header-button[sorted] > .button-box > .button-icon,
-.requests-menu-header-button[sorted] #requests-menu-waterfall-image {
-  list-style-image: url('chrome://devtools/skin/images/sort-arrows.svg');
-}
-
 .requests-menu-header-button[sorted=ascending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=ascending] #requests-menu-waterfall-image {
-  -moz-image-region: rect(4px, 19px, 7px, 14px);
+  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#ascending");
 }
 
 .requests-menu-header-button[sorted=descending] > .button-box > .button-icon,
 .requests-menu-header-button[sorted=descending] #requests-menu-waterfall-image {
-  -moz-image-region: rect(5px, 8px, 8px, 3px);
+  list-style-image: url("chrome://devtools/skin/images/sort-arrows.svg#descending");
 }
 
 .requests-menu-header-button > .button-box > .button-text,
@@ -116,10 +111,15 @@
 
 /* Network requests table: specific column dimensions */
 
-.requests-menu-status,
-.requests-menu-method-box,
-.requests-menu-method {
+.requests-menu-status {
   max-width: 6em;
+  text-align: center;
+  width: 10vw;
+}
+
+.requests-menu-method,
+.requests-menu-method-box {
+  max-width: 7em;
   text-align: center;
   width: 10vw;
 }
@@ -172,8 +172,13 @@
 }
 
 .requests-menu-type,
-.requests-menu-transferred,
 .requests-menu-size {
+  max-width: 6em;
+  text-align: center;
+  width: 8vw;
+}
+
+.requests-menu-transferred {
   max-width: 8em;
   text-align: center;
   width: 8vw;
