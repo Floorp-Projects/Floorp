@@ -8217,6 +8217,8 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
                     (const IonTrackedOptimizationsAttemptsTable*) optsAttemptsTableAddr;
                 entry.initTrackedOptimizations(optsRegionTable, optsTypesTable, optsAttemptsTable,
                                                allTypes);
+            } else {
+                cx->recoverFromOutOfMemory();
             }
         }
 
