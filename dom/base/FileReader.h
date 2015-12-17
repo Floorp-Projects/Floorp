@@ -9,45 +9,37 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/dom/DOMError.h"
 
-#include "nsIAsyncInputStream.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsCOMPtr.h"
+#include "nsIAsyncInputStream.h"
+#include "nsIStreamListener.h"
+#include "nsISupportsUtils.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsITimer.h"
+#include "nsJSUtils.h"
 #include "nsString.h"
+#include "nsTArray.h"
 #include "nsWeakReference.h"
-#include "WorkerFeature.h"
+#include "prtime.h"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
-
-class nsITimer;
-class nsIEventTarget;
 
 namespace mozilla {
 namespace dom {
 
 class Blob;
-class DOMError;
-
-namespace workers {
-class WorkerPrivate;
-}
 
 extern const uint64_t kUnknownSize;
-
-class FileReaderDecreaseBusyCounter;
 
 class FileReader final : public DOMEventTargetHelper,
                          public nsIInterfaceRequestor,
                          public nsSupportsWeakReference,
                          public nsIInputStreamCallback,
-                         public nsITimerCallback,
-                         public workers::WorkerFeature
+                         public nsITimerCallback
 {
-  friend class FileReaderDecreaseBusyCounter;
-
 public:
-  FileReader(nsPIDOMWindow* aWindow,
-             workers::WorkerPrivate* aWorkerPrivate);
+  explicit FileReader(nsPIDOMWindow* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -55,11 +47,9 @@ public:
   NS_DECL_NSIINPUTSTREAMCALLBACK
   NS_DECL_NSIINTERFACEREQUESTOR
 
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader,
-                                                         DOMEventTargetHelper)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(FileReader, DOMEventTargetHelper)
 
-  virtual JSObject* WrapObject(JSContext* aCx,
-                               JS::Handle<JSObject*> aGivenProto) override;
+  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL
   static already_AddRefed<FileReader>
@@ -106,9 +96,6 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
-  // WorkerFeature
-  bool Notify(JSContext* aCx, workers::Status) override;
-
 private:
   virtual ~FileReader();
 
@@ -144,25 +131,17 @@ private:
   void DispatchError(nsresult rv, nsAString& finalEvent);
   nsresult DispatchProgressEvent(const nsAString& aType);
 
-  nsresult DoAsyncWait();
-  nsresult DoReadData(uint64_t aCount);
+  nsresult DoReadData(nsIAsyncInputStream* aStream, uint64_t aCount);
 
   nsresult DoOnLoadEnd(nsresult aStatus, nsAString& aSuccessEvent,
                        nsAString& aTerminationEvent);
 
   void FreeFileData()
   {
-    if (mFileData) {
-      free(mFileData);
-      mFileData = nullptr;
-      mDataLen = 0;
-   }
+    free(mFileData);
+    mFileData = nullptr;
+    mDataLen = 0;
   }
-
-  nsresult IncreaseBusyCounter();
-  void DecreaseBusyCounter();
-
-  void Shutdown();
 
   char *mFileData;
   RefPtr<Blob> mBlob;
@@ -187,13 +166,6 @@ private:
 
   uint64_t mTotal;
   uint64_t mTransferred;
-
-  nsCOMPtr<nsIEventTarget> mTarget;
-
-  uint64_t mBusyCount;
-
-  // Kept alive with a WorkerFeature.
-  workers::WorkerPrivate* mWorkerPrivate;
 };
 
 } // dom namespace
