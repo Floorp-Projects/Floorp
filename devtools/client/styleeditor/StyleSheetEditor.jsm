@@ -361,6 +361,7 @@ StyleSheetEditor.prototype = {
         this.sourceEditor.setText(newText);
         this.sourceEditor.setFirstVisibleLine(firstLine);
         this.sourceEditor.setCursor(pos);
+        this.emit("style-applied");
       });
     }
   },
