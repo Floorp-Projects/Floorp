@@ -1232,9 +1232,6 @@ if test "$GNU_CC"; then
 
     # Turn off some non-useful warnings that -Wall turns on.
 
-    # -Wno-unused - lots of violations in third-party code
-    _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wno-unused"
-
     # -Wno-unused-local-typedef - catches unused typedefs, which are commonly used in assertion macros
     MOZ_C_SUPPORTS_WARNING(-Wno-, unused-local-typedef, ac_c_has_wno_unused_local_typedef)
 
