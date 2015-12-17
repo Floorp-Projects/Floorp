@@ -179,7 +179,7 @@ bool
 js::Debug_CheckSelfHosted(JSContext* cx, HandleValue fun)
 {
 #ifndef DEBUG
-    MOZ_CRASH("Self hosted checks should only be done in Debug builds");
+    MOZ_CRASH("self-hosted checks should only be done in Debug builds");
 #endif
 
     MOZ_ASSERT(fun.isObject());
