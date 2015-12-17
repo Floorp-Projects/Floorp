@@ -139,7 +139,7 @@ flags:
     - mochitest-oop
     - mochitest-other
     - mochitest-push
-    #- mochitest-webgl -- disabled per bug 1227637 / bug 1220658
+    - mochitest-webgl
     - mozmill
     - reftest
     - reftest-e10s

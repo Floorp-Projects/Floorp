@@ -791,9 +791,6 @@ private:
    * Internal helpers for checking general state of this apzc.
    */
   static bool IsTransformingState(PanZoomState aState);
-  bool IsInPanningState() const;
-
-
 
   /* ===================================================================
    * The functions and members in this section are used to manage
@@ -1035,9 +1032,7 @@ public:
     return mX.IsOverscrolled() || mY.IsOverscrolled();
   }
 
-  bool IsPannedIntoOverscroll() const {
-    return IsOverscrolled() && IsInPanningState();
-  }
+  bool IsInPanningState() const;
 
 private:
   /* This is the cumulative CSS transform for all the layers from (and including)

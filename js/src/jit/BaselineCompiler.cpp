@@ -4241,3 +4241,22 @@ BaselineCompiler::emit_JSOP_RESUME()
     return true;
 }
 
+typedef bool (*CheckSelfHostedFn)(JSContext*, HandleValue);
+static const VMFunction CheckSelfHostedInfo = FunctionInfo<CheckSelfHostedFn>(js::Debug_CheckSelfHosted);
+
+bool
+BaselineCompiler::emit_JSOP_DEBUGCHECKSELFHOSTED()
+{
+#ifdef DEBUG
+    frame.syncStack(0);
+
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    prepareVMCall();
+    pushArg(R0);
+    if (!callVM(CheckSelfHostedInfo))
+        return false;
+#endif
+    return true;
+
+}

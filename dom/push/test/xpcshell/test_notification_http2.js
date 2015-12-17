@@ -75,7 +75,8 @@ add_task(function* test_pushNotifications() {
       x: '8J3iA1CSPBFqHrUul0At3NkosudTlQDAPO1Dn-HRCxM',
       y: '26jk0IFbqcK6-JxhHAm-rsHEwy0CyVJjtnfOcqc1tgA'
     },
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription2',
@@ -92,7 +93,8 @@ add_task(function* test_pushNotifications() {
       x: '-dbJSjvIye4yXIq0RG4t9YTxrT1212MdJbaWkL38GpE',
       y: '5TZ1rK8Ldih6ljyxVwnBA-nygQHGRpEmu1jV5K8437E'
     },
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }, {
     subscriptionUri: serverURL + '/pushNotifications/subscription3',
@@ -109,7 +111,8 @@ add_task(function* test_pushNotifications() {
       x: 'OFQchNJ5WtZjJsWdvvKVVMIMMs91BYyl_yBeFxbC9po',
       y: 'Ja6n3YH8TOcH8narDF6t8mKVvg2ioLW-8MH5O4dzGcI'
     },
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
     quota: Infinity,
   }];
 

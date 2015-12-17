@@ -110,6 +110,7 @@ PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     : m_sampleRate(sampleRate)
     , m_centsPerRange(CentsPerRange)
     , m_lowestRequestedFundamentalFrequency(std::numeric_limits<float>::max())
+    , m_normalizationScale(1.0f)
 {
     float nyquist = 0.5 * m_sampleRate;
 

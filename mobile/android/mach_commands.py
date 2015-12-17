@@ -219,7 +219,7 @@ class AndroidEmulatorCommands(MachCommandBase):
     def emulator(self, version, wait=False, force_update=False, verbose=False):
         from mozrunner.devices.android_device import AndroidEmulator
 
-        emulator = AndroidEmulator(version, verbose, substs=self.substs)
+        emulator = AndroidEmulator(version, verbose, substs=self.substs, device_serial='emulator-5554')
         if emulator.is_running():
             # It is possible to run multiple emulators simultaneously, but:
             #  - if more than one emulator is using the same avd, errors may
@@ -254,6 +254,15 @@ class AndroidEmulatorCommands(MachCommandBase):
             # This is unusual but the emulator may still function.
             self.log(logging.WARN, "emulator", {},
                      "Unable to verify that emulator is running.")
+
+        if conditions.is_android(self):
+            self.log(logging.INFO, "emulator", {},
+                     "Use 'mach install' to install or update Firefox on your emulator.")
+        else:
+            self.log(logging.WARN, "emulator", {},
+                     "No Firefox for Android build detected.\n"
+                     "Switch to a Firefox for Android build context or use 'mach bootstrap'\n"
+                     "to setup an Android build environment.")
 
         if wait:
             self.log(logging.INFO, "emulator", {},

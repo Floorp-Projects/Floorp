@@ -41,6 +41,7 @@
 #include "mozilla/dom/Element.h"
 #include <stdint.h>
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/Telemetry.h"
 #include "FrameLayerBuilder.h"
 #include "nsSMILKeySpline.h"
 #include "nsSubDocumentFrame.h"
@@ -1510,6 +1511,8 @@ public:
     , mCallee(nullptr)
     , mOneDevicePixelInAppUnits(aPresContext->DevPixelsToAppUnits(1))
   {
+    Telemetry::SetHistogramRecordingEnabled(
+      Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
   }
 
   NS_INLINE_DECL_REFCOUNTING(AsyncSmoothMSDScroll, override)
@@ -1598,6 +1601,8 @@ private:
   // Private destructor, to discourage deletion outside of Release():
   ~AsyncSmoothMSDScroll() {
     RemoveObserver();
+    Telemetry::SetHistogramRecordingEnabled(
+      Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, false);
   }
 
   nsRefreshDriver* RefreshDriver(ScrollFrameHelper* aCallee) {
@@ -1634,12 +1639,17 @@ public:
   explicit AsyncScroll(nsPoint aStartPos)
     : AsyncScrollBase(aStartPos)
     , mCallee(nullptr)
-  {}
+  {
+    Telemetry::SetHistogramRecordingEnabled(
+      Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, true);
+  }
 
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~AsyncScroll() {
     RemoveObserver();
+    Telemetry::SetHistogramRecordingEnabled(
+      Telemetry::FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS, false);
   }
 
 public:
@@ -2093,6 +2103,12 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
 
   nsRect range = aRange ? *aRange : nsRect(aScrollPosition, nsSize(0, 0));
 
+  if (aMode != nsIScrollableFrame::SMOOTH_MSD) {
+    // If we get a non-smooth-scroll, reset the cached APZ scroll destination,
+    // so that we know to process the next smooth-scroll destined for APZ.
+    mApzSmoothScrollDestination = Nothing();
+  }
+
   if (aMode == nsIScrollableFrame::INSTANT) {
     // Asynchronous scrolling is not allowed, so we'll kill any existing
     // async-scrolling process and do an instant scroll.
@@ -2122,7 +2138,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
         }
 
         if (nsLayoutUtils::AsyncPanZoomEnabled(mOuter)) {
-          if (mApzSmoothScrollDestination == mDestination &&
+          if (mApzSmoothScrollDestination == Some(mDestination) &&
               mScrollGeneration == sScrollGenerationCounter) {
             // If we already sent APZ a smooth-scroll request to this
             // destination with this generation (i.e. it was the last request
@@ -2131,9 +2147,10 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
             // calls, incrementing the generation counter, and blocking APZ from
             // syncing the scroll offset back to the main thread.
             // Note that if we get two smooth-scroll requests to the same
-            // destination with some other scroll in between, mDestination will
-            // get reset and so we shouldn't have the problem where this check
-            // discards a legitimate smooth-scroll.
+            // destination with some other scroll in between,
+            // mApzSmoothScrollDestination will get reset to Nothing() and so
+            // we shouldn't have the problem where this check discards a
+            // legitimate smooth-scroll.
             // Note: if there are two separate scrollframes both getting smooth
             // scrolled at the same time, sScrollGenerationCounter can get
             // incremented and this early-exit won't get taken. Bug 1231177 is
@@ -2145,7 +2162,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
           // information needed to start the animation and skip the main-thread
           // animation for this scroll.
           mLastSmoothScrollOrigin = aOrigin;
-          mApzSmoothScrollDestination = mDestination;
+          mApzSmoothScrollDestination = Some(mDestination);
           mScrollGeneration = ++sScrollGenerationCounter;
 
           if (!nsLayoutUtils::GetDisplayPort(mOuter->GetContent())) {

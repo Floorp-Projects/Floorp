@@ -683,6 +683,8 @@ class IonBuilder
     bool jsop_compare(JSOp op, MDefinition* left, MDefinition* right);
     bool getStaticName(JSObject* staticObject, PropertyName* name, bool* psucceeded,
                        MDefinition* lexicalCheck = nullptr);
+    bool loadStaticSlot(JSObject* staticObject, BarrierKind barrier, TemporaryTypeSet* types,
+                        uint32_t slot);
     bool setStaticName(JSObject* staticObject, PropertyName* name);
     bool jsop_getgname(PropertyName* name);
     bool jsop_getname(PropertyName* name);

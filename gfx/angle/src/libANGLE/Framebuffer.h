@@ -66,6 +66,8 @@ class Framebuffer
         const std::vector<GLenum> &getDrawBufferStates() const { return mDrawBufferStates; }
         const std::vector<FramebufferAttachment> &getColorAttachments() const { return mColorAttachments; }
 
+        bool attachmentsHaveSameDimensions() const;
+
       private:
         friend class Framebuffer;
 
@@ -115,6 +117,7 @@ class Framebuffer
     bool isEnabledColorAttachment(size_t colorAttachment) const;
     bool hasEnabledColorAttachment() const;
     size_t getNumColorBuffers() const;
+    bool hasDepth() const;
     bool hasStencil() const;
     int getSamples(const gl::Data &data) const;
     bool usingExtendedDrawBuffers() const;

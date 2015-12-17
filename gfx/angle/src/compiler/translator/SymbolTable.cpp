@@ -280,7 +280,7 @@ TPrecision TSymbolTable::getDefaultPrecision(TBasicType type) const
 
     int level = static_cast<int>(precisionStack.size()) - 1;
     assert(level >= 0); // Just to be safe. Should not happen.
-    // If we dont find anything we return this. Should we error check this?
+    // If we dont find anything we return this. Some types don't have predefined default precision.
     TPrecision prec = EbpUndefined;
     while (level >= 0)
     {

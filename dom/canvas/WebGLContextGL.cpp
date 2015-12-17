@@ -1339,6 +1339,24 @@ IsFormatAndTypeUnpackable(GLenum format, GLenum type)
     }
 }
 
+static bool
+IsIntegerFormatAndTypeUnpackable(GLenum format, GLenum type)
+{
+    switch (type) {
+    case LOCAL_GL_UNSIGNED_INT:
+    case LOCAL_GL_INT:
+        switch (format) {
+        case LOCAL_GL_RGBA_INTEGER:
+            return true;
+        default:
+            return false;
+        }
+    default:
+        return false;
+    }
+}
+
+
 CheckedUint32
 WebGLContext::GetPackSize(uint32_t width, uint32_t height, uint8_t bytesPerPixel,
                           CheckedUint32* const out_startOffset,
@@ -1394,8 +1412,10 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     if (pixels.IsNull())
         return ErrorInvalidValue("readPixels: null destination buffer");
 
-    if (!IsFormatAndTypeUnpackable(format, type))
+    if (!(IsWebGL2() && IsIntegerFormatAndTypeUnpackable(format, type)) &&
+        !IsFormatAndTypeUnpackable(format, type)) {
         return ErrorInvalidEnum("readPixels: Bad format or type.");
+    }
 
     int channels = 0;
 
@@ -1408,6 +1428,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         channels = 3;
         break;
     case LOCAL_GL_RGBA:
+    case LOCAL_GL_RGBA_INTEGER:
         channels = 4;
         break;
     default:
@@ -1429,6 +1450,16 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
     case LOCAL_GL_UNSIGNED_SHORT_5_6_5:
         bytesPerPixel = 2;
         requiredDataType = js::Scalar::Uint16;
+        break;
+
+    case LOCAL_GL_UNSIGNED_INT:
+        bytesPerPixel = 4;
+        requiredDataType = js::Scalar::Uint32;
+        break;
+
+    case LOCAL_GL_INT:
+        bytesPerPixel = 4;
+        requiredDataType = js::Scalar::Int32;
         break;
 
     case LOCAL_GL_FLOAT:
