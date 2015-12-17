@@ -4374,7 +4374,6 @@ static const struct {
     int tlsHash;
     SECOidTag oid;
 } tlsHashOIDMap[] = {
-    { tls_hash_md5, SEC_OID_MD5 },
     { tls_hash_sha1, SEC_OID_SHA1 },
     { tls_hash_sha224, SEC_OID_SHA224 },
     { tls_hash_sha256, SEC_OID_SHA256 },
