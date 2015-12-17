@@ -1041,57 +1041,54 @@ MediaFormatReader::Update(TrackType aTrack)
   // stats counters using the AutoNotifyDecoded stack-based class.
   AbstractMediaDecoder::AutoNotifyDecoded a(mDecoder);
 
-  if (aTrack == TrackInfo::kVideoTrack) {
-    uint64_t delta =
-      decoder.mNumSamplesOutputTotal - mLastReportedNumDecodedFrames;
-    a.mDecoded = static_cast<uint32_t>(delta);
-    mLastReportedNumDecodedFrames = decoder.mNumSamplesOutputTotal;
+  // Drop any frames found prior our internal seek target.
+  while (decoder.mTimeThreshold && decoder.mOutput.Length()) {
+    RefPtr<MediaData>& output = decoder.mOutput[0];
+    SeekTarget target = decoder.mTimeThreshold.ref();
+    media::TimeUnit time = media::TimeUnit::FromMicroseconds(output->mTime);
+    if (time >= target.mTime) {
+      // We have reached our internal seek target.
+      decoder.mTimeThreshold.reset();
+    }
+    if (time < target.mTime || target.mDropTarget) {
+      LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
+           TrackTypeToStr(aTrack),
+           media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
+           target.mTime.ToSeconds(),
+           output->mKeyframe);
+      decoder.mOutput.RemoveElementAt(0);
+    }
   }
 
   if (decoder.HasPromise()) {
     needOutput = true;
-    if (!decoder.mOutput.IsEmpty()) {
+    if (decoder.mOutput.Length()) {
       // We have a decoded sample ready to be returned.
       if (aTrack == TrackType::kVideoTrack) {
+        uint64_t delta =
+          decoder.mNumSamplesOutputTotal - mLastReportedNumDecodedFrames;
+        a.mDecoded = static_cast<uint32_t>(delta);
+        mLastReportedNumDecodedFrames = decoder.mNumSamplesOutputTotal;
         nsCString error;
         mVideo.mIsHardwareAccelerated =
           mVideo.mDecoder && mVideo.mDecoder->IsHardwareAccelerated(error);
       }
-      while (decoder.mOutput.Length()) {
-        RefPtr<MediaData> output = decoder.mOutput[0];
-        decoder.mOutput.RemoveElementAt(0);
-        decoder.mSizeOfQueue -= 1;
-        decoder.mLastSampleTime =
-          Some(media::TimeUnit::FromMicroseconds(output->mTime));
-        auto target = decoder.mTimeThreshold;
-        auto time = media::TimeUnit::FromMicroseconds(output->mTime);
-        if (target && time >= target.ref().mTime) {
-          // We have reached our internal seek target.
-          decoder.mTimeThreshold.reset();
-        }
-        if (target && (time < target.ref().mTime || target.ref().mDropTarget)) {
-          LOGV("Internal Seeking: Dropping %s frame time:%f wanted:%f (kf:%d)",
-               TrackTypeToStr(aTrack),
-               media::TimeUnit::FromMicroseconds(output->mTime).ToSeconds(),
-               target.ref().mTime.ToSeconds(),
-               output->mKeyframe);
-        } else {
-           ReturnOutput(output, aTrack);
-           break;
-        }
-      }
-    }
-  }
-  if (decoder.HasPromise() && decoder.mOutput.IsEmpty()) {
-    if (decoder.mError) {
+      RefPtr<MediaData> output = decoder.mOutput[0];
+      decoder.mOutput.RemoveElementAt(0);
+      decoder.mSizeOfQueue -= 1;
+      decoder.mLastSampleTime =
+        Some(media::TimeUnit::FromMicroseconds(output->mTime));
+      ReturnOutput(output, aTrack);
+    } else if (decoder.mError) {
+      LOG("Rejecting %s promise: DECODE_ERROR", TrackTypeToStr(aTrack));
       decoder.RejectPromise(DECODE_ERROR, __func__);
       return;
-    }
-    if (decoder.mDrainComplete) {
+    } else if (decoder.mDrainComplete) {
       bool wasDraining = decoder.mDraining;
       decoder.mDrainComplete = false;
       decoder.mDraining = false;
       if (decoder.mDemuxEOS) {
+        LOG("Rejecting %s promise: EOS", TrackTypeToStr(aTrack));
         decoder.RejectPromise(END_OF_STREAM, __func__);
       } else if (decoder.mWaitingForData) {
         if (wasDraining && decoder.mLastSampleTime &&
@@ -1103,6 +1100,7 @@ MediaFormatReader::Update(TrackType aTrack)
               decoder.mLastSampleTime.ref().ToMicroseconds());
           InternalSeek(aTrack, SeekTarget(decoder.mLastSampleTime.ref(), true));
         }
+        LOG("Rejecting %s promise: WAITING_FOR_DATA", TrackTypeToStr(aTrack));
         decoder.RejectPromise(WAITING_FOR_DATA, __func__);
       }
       // Now that draining has completed, we check if we have received
