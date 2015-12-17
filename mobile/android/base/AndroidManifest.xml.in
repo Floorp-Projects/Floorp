@@ -371,10 +371,7 @@
         </receiver>
 
         <receiver android:name="org.mozilla.gecko.GeckoMessageReceiver"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER">
-            <intent-filter>
-                  <action android:name="org.mozilla.gecko.INIT_PW"></action>
-            </intent-filter>
+                  android:exported="false">
         </receiver>
 
         <!-- Catch install referrer so we can do post-install work. -->
