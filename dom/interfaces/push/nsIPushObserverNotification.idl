@@ -6,8 +6,8 @@
 #include "nsISupports.idl"
 
 /**
- * A push message received by an `nsIPushNotificationService`, used as the
- * subject of a `push-notification` observer notification.
+ * A push message received by an `nsIPushService`, used as the subject of a
+ * `push-notification` observer notification.
  */
 [scriptable, uuid(56f57607-28b6-44b0-aa56-3d4d3c88be15)]
 interface nsIPushObserverNotification : nsISupports

@@ -10,11 +10,13 @@ import subprocess
 # The logic here is far from robust. Improvements are welcome.
 
 def update_mercurial_repo(hg, repo, path, revision='default',
-    hostfingerprints=None):
+                          hostfingerprints=None, global_args=None):
     """Ensure a HG repository exists at a path and is up to date."""
     hostfingerprints = hostfingerprints or {}
 
     args = [hg]
+    if global_args:
+        args.extend(global_args)
 
     for host, fingerprint in sorted(hostfingerprints.items()):
         args.extend(['--config', 'hostfingerprints.%s=%s' % (host,

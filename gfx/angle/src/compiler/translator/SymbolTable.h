@@ -435,6 +435,8 @@ class TSymbolTable : angle::NonCopyable
     {
         if (!SupportsPrecision(type.type))
             return false;
+        if (type.type == EbtUInt)
+            return false;  // ESSL 3.00.4 section 4.5.4
         if (type.isAggregate())
             return false; // Not allowed to set for aggregate types
         int indexOfLastElement = static_cast<int>(precisionStack.size()) - 1;

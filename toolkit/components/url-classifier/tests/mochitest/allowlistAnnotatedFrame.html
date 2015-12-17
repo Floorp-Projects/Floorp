@@ -15,6 +15,7 @@ var imageItem2 = "untouched";
 var frameItem2 = "untouched";
 var xhrItem = "untouched";
 var fetchItem = "untouched";
+var mediaItem1 = "untouched";
 
 function checkLoads() {
   window.parent.is(scriptItem1, "spoiled", "Should not block tracking js 1");
@@ -23,6 +24,7 @@ function checkLoads() {
   window.parent.is(imageItem2, "spoiled", "Should not block tracking img 2");
   window.parent.is(frameItem1, "spoiled", "Should not block tracking iframe 1");
   window.parent.is(frameItem2, "spoiled", "Should not block tracking iframe 2");
+  window.parent.is(mediaItem1, "loaded", "Should not block tracking video");
   window.parent.is(xhrItem, "loaded", "Should not block tracking XHR");
   window.parent.is(fetchItem, "loaded", "Should not block fetches from tracking domains");
   window.parent.is(window.document.blockedTrackingNodeCount, 0,
@@ -36,6 +38,7 @@ function checkLoads() {
 var onloadCalled = false;
 var xhrFinished = false;
 var fetchFinished = false;
+var videoLoaded = false;
 function loaded(type) {
  if (type === "onload") {
       onloadCalled = true;
@@ -43,9 +46,11 @@ function loaded(type) {
       xhrFinished = true;
   } else if (type === "fetch") {
       fetchFinished = true;
+  } else if (type === "video") {
+      videoLoaded = true;
   }
 
-  if (onloadCalled && xhrFinished && fetchFinished) {
+  if (onloadCalled && xhrFinished && fetchFinished && videoLoaded) {
       checkLoads();
   }
 }
@@ -64,7 +69,20 @@ function loaded(type) {
 <!-- Try loading from a tracking frame URI (1) -->
 <iframe id="badframe1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/track.html" onload="frameItem1 = 'spoiled';"></iframe>
 
+<!-- Try loading from a tracking video URI -->
+<video id="badmedia1" src="http://tracking.example.com/tests/toolkit/components/url-classifier/tests/mochitest/vp9.webm"></video>
+
 <script>
+var v = document.getElementById("badmedia1");
+v.addEventListener("loadedmetadata", function() {
+    mediaItem1 = "loaded";
+    loaded("video");
+}, true);
+v.addEventListener("error", function() {
+    mediaItem1 = "error";
+    loaded("video");
+}, true);
+
 // Try loading from a tracking script URI (2) - The loader may follow a
 // different path depending on whether the resource is loaded from JS or HTML.
 var newScript = document.createElement("script");

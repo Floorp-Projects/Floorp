@@ -59,6 +59,19 @@ bool ValidateBindVertexArray(Context *context, GLuint array);
 bool ValidateDeleteVertexArrays(Context *context, GLsizei n);
 bool ValidateGenVertexArrays(Context *context, GLsizei n);
 bool ValidateIsVertexArray(Context *context);
+
+bool ValidateProgramBinary(Context *context,
+                           GLuint program,
+                           GLenum binaryFormat,
+                           const void *binary,
+                           GLint length);
+bool ValidateGetProgramBinary(Context *context,
+                              GLuint program,
+                              GLsizei bufSize,
+                              GLsizei *length,
+                              GLenum *binaryFormat,
+                              void *binary);
+bool ValidateProgramParameter(Context *context, GLuint program, GLenum pname, GLint value);
 }
 
 #endif // LIBANGLE_VALIDATION_ES3_H_

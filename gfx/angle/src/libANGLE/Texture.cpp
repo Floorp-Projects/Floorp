@@ -839,16 +839,9 @@ Texture::SamplerCompletenessCache::SamplerCompletenessCache()
 {
 }
 
-GLsizei Texture::getAttachmentWidth(const gl::FramebufferAttachment::Target &target) const
+Extents Texture::getAttachmentSize(const gl::FramebufferAttachment::Target &target) const
 {
-    return static_cast<GLsizei>(
-        getWidth(target.textureIndex().type, target.textureIndex().mipIndex));
-}
-
-GLsizei Texture::getAttachmentHeight(const gl::FramebufferAttachment::Target &target) const
-{
-    return static_cast<GLsizei>(
-        getHeight(target.textureIndex().type, target.textureIndex().mipIndex));
+    return getImageDesc(target.textureIndex().type, target.textureIndex().mipIndex).size;
 }
 
 GLenum Texture::getAttachmentInternalFormat(const gl::FramebufferAttachment::Target &target) const

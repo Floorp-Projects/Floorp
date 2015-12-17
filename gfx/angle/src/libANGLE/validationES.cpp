@@ -543,9 +543,11 @@ static bool IsPartialBlit(gl::Context *context, const gl::FramebufferAttachment 
                           GLint srcX0, GLint srcY0, GLint srcX1, GLint srcY1,
                           GLint dstX0, GLint dstY0, GLint dstX1, GLint dstY1)
 {
-    if (srcX0 != 0 || srcY0 != 0 || dstX0 != 0 || dstY0 != 0 ||
-        dstX1 != writeBuffer->getWidth() || dstY1 != writeBuffer->getHeight() ||
-        srcX1 != readBuffer->getWidth() || srcY1 != readBuffer->getHeight())
+    const Extents &writeSize = writeBuffer->getSize();
+    const Extents &readSize  = readBuffer->getSize();
+
+    if (srcX0 != 0 || srcY0 != 0 || dstX0 != 0 || dstY0 != 0 || dstX1 != writeSize.width ||
+        dstY1 != writeSize.height || srcX1 != readSize.width || srcY1 != readSize.height)
     {
         return true;
     }
@@ -553,9 +555,8 @@ static bool IsPartialBlit(gl::Context *context, const gl::FramebufferAttachment 
     {
         const Rectangle &scissor = context->getState().getScissor();
 
-        return scissor.x > 0 || scissor.y > 0 ||
-               scissor.width < writeBuffer->getWidth() ||
-               scissor.height < writeBuffer->getHeight();
+        return scissor.x > 0 || scissor.y > 0 || scissor.width < writeSize.width ||
+               scissor.height < writeSize.height;
     }
     else
     {
@@ -655,6 +656,7 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
     {
         const gl::FramebufferAttachment *readColorBuffer = readFramebuffer->getReadColorbuffer();
         const gl::FramebufferAttachment *drawColorBuffer = drawFramebuffer->getFirstColorbuffer();
+        const Extensions &extensions                     = context->getExtensions();
 
         if (readColorBuffer && drawColorBuffer)
         {
@@ -672,20 +674,45 @@ bool ValidateBlitFramebufferParameters(gl::Context *context, GLint srcX0, GLint 
                     // 1) If the read buffer is fixed point format, the draw buffer must be as well
                     // 2) If the read buffer is an unsigned integer format, the draw buffer must be as well
                     // 3) If the read buffer is a signed integer format, the draw buffer must be as well
-                    if ( (readFormatInfo.componentType == GL_UNSIGNED_NORMALIZED || readFormatInfo.componentType == GL_SIGNED_NORMALIZED) &&
-                        !(drawFormatInfo.componentType == GL_UNSIGNED_NORMALIZED || drawFormatInfo.componentType == GL_SIGNED_NORMALIZED))
+                    // Changes with EXT_color_buffer_float:
+                    // Case 1) is changed to fixed point OR floating point
+                    GLenum readComponentType = readFormatInfo.componentType;
+                    GLenum drawComponentType = drawFormatInfo.componentType;
+                    bool readFixedPoint = (readComponentType == GL_UNSIGNED_NORMALIZED ||
+                                           readComponentType == GL_SIGNED_NORMALIZED);
+                    bool drawFixedPoint = (drawComponentType == GL_UNSIGNED_NORMALIZED ||
+                                           drawComponentType == GL_SIGNED_NORMALIZED);
+
+                    if (extensions.colorBufferFloat)
+                    {
+                        bool readFixedOrFloat = (readFixedPoint || readComponentType == GL_FLOAT);
+                        bool drawFixedOrFloat = (drawFixedPoint || drawComponentType == GL_FLOAT);
+
+                        if (readFixedOrFloat != drawFixedOrFloat)
+                        {
+                            context->recordError(Error(GL_INVALID_OPERATION,
+                                                       "If the read buffer contains fixed-point or "
+                                                       "floating-point values, the draw buffer "
+                                                       "must as well."));
+                            return false;
+                        }
+                    }
+                    else if (readFixedPoint != drawFixedPoint)
+                    {
+                        context->recordError(Error(GL_INVALID_OPERATION,
+                                                   "If the read buffer contains fixed-point "
+                                                   "values, the draw buffer must as well."));
+                        return false;
+                    }
+
+                    if (readComponentType == GL_UNSIGNED_INT &&
+                        drawComponentType != GL_UNSIGNED_INT)
                     {
                         context->recordError(Error(GL_INVALID_OPERATION));
                         return false;
                     }
 
-                    if (readFormatInfo.componentType == GL_UNSIGNED_INT && drawFormatInfo.componentType != GL_UNSIGNED_INT)
-                    {
-                        context->recordError(Error(GL_INVALID_OPERATION));
-                        return false;
-                    }
-
-                    if (readFormatInfo.componentType == GL_INT && drawFormatInfo.componentType != GL_INT)
+                    if (readComponentType == GL_INT && drawComponentType != GL_INT)
                     {
                         context->recordError(Error(GL_INVALID_OPERATION));
                         return false;
@@ -2190,9 +2217,7 @@ bool ValidateEGLImageTargetRenderbufferStorageOES(Context *context,
 
 bool ValidateBindVertexArrayBase(Context *context, GLuint array)
 {
-    VertexArray *vao = context->getVertexArray(array);
-
-    if (!vao)
+    if (!context->isVertexArrayGenerated(array))
     {
         // The default VAO should always exist
         ASSERT(array != 0);
@@ -2219,6 +2244,51 @@ bool ValidateGenVertexArraysBase(Context *context, GLsizei n)
     if (n < 0)
     {
         context->recordError(Error(GL_INVALID_VALUE));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateProgramBinaryBase(Context *context,
+                               GLuint program,
+                               GLenum binaryFormat,
+                               const void *binary,
+                               GLint length)
+{
+    Program *programObject = GetValidProgram(context, program);
+    if (programObject == nullptr)
+    {
+        return false;
+    }
+
+    const std::vector<GLenum> &programBinaryFormats = context->getCaps().programBinaryFormats;
+    if (std::find(programBinaryFormats.begin(), programBinaryFormats.end(), binaryFormat) ==
+        programBinaryFormats.end())
+    {
+        context->recordError(Error(GL_INVALID_ENUM, "Program binary format is not valid."));
+        return false;
+    }
+
+    return true;
+}
+
+bool ValidateGetProgramBinaryBase(Context *context,
+                                  GLuint program,
+                                  GLsizei bufSize,
+                                  GLsizei *length,
+                                  GLenum *binaryFormat,
+                                  void *binary)
+{
+    Program *programObject = GetValidProgram(context, program);
+    if (programObject == nullptr)
+    {
+        return false;
+    }
+
+    if (!programObject->isLinked())
+    {
+        context->recordError(Error(GL_INVALID_OPERATION, "Program is not linked."));
         return false;
     }
 

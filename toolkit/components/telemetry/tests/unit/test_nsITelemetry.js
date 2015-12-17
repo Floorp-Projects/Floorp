@@ -638,6 +638,95 @@ function test_keyed_histogram_recording() {
   Assert.equal(h.snapshot(TEST_KEY).sum, 1);
 }
 
+function test_histogram_recording_enabled() {
+  Telemetry.canRecordBase = true;
+  Telemetry.canRecordExtended = true;
+
+  // Check that a "normal" histogram respects recording-enabled on/off
+  var h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT");
+  var orig = h.snapshot();
+
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+              "add should record by default.");
+
+  // Check that when recording is disabled - add is ignored
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT", false);
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+              "When recording is disabled add should not record.");
+
+  // Check that we're back to normal after recording is enabled
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT", true);
+  h.add(1);
+  Assert.equal(orig.sum + 2, h.snapshot().sum,
+               "When recording is re-enabled add should record.");
+
+  // Check that a histogram with recording disabled by default behaves correctly
+  h = Telemetry.getHistogramById("TELEMETRY_TEST_COUNT_INIT_NO_RECORD");
+  orig = h.snapshot();
+
+  h.add(1);
+  Assert.equal(orig.sum, h.snapshot().sum,
+               "When recording is disabled by default, add should not record by default.");
+
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT_INIT_NO_RECORD", true);
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "When recording is enabled add should record.");
+
+  // Restore to disabled
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_COUNT_INIT_NO_RECORD", false);
+  h.add(1);
+  Assert.equal(orig.sum + 1, h.snapshot().sum,
+               "When recording is disabled add should not record.");
+
+}
+
+function test_keyed_histogram_recording_enabled() {
+  Telemetry.canRecordBase = true;
+  Telemetry.canRecordExtended = true;
+
+  // Check RecordingEnabled for keyed histograms which are recording by default
+  const TEST_KEY = "record_foo";
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT");
+
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+    "Keyed histogram add should record by default");
+
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT", false);
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+    "Keyed histogram add should not record when recording is disabled");
+
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_RELEASE_OPTOUT", true);
+  h.clear();
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+    "Keyed histogram add should record when recording is re-enabled");
+
+  // Check that a histogram with recording disabled by default behaves correctly
+  h = Telemetry.getKeyedHistogramById("TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD");
+  h.clear();
+
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 0,
+    "Keyed histogram add should not record by default for histograms which don't record by default");
+
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD", true);
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+    "Keyed histogram add should record when recording is enabled");
+
+  // Restore to disabled
+  Telemetry.setHistogramRecordingEnabled("TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD", false);
+  h.add(TEST_KEY, 1);
+  Assert.equal(h.snapshot(TEST_KEY).sum, 1,
+    "Keyed histogram add should not record when recording is disabled");
+}
+
 function test_keyed_histogram() {
   // Check that invalid names get rejected.
 
@@ -914,4 +1003,6 @@ function run_test()
   test_datasets();
   test_subsession();
   test_keyed_subsession();
+  test_histogram_recording_enabled();
+  test_keyed_histogram_recording_enabled();
 }

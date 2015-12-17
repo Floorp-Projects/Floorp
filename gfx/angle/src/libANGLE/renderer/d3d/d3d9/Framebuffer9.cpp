@@ -53,7 +53,7 @@ gl::Error Framebuffer9::invalidateSub(size_t, const GLenum *, const gl::Rectangl
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Framebuffer9::clear(const gl::State &state, const ClearParameters &clearParams)
+gl::Error Framebuffer9::clear(const gl::Data &data, const ClearParameters &clearParams)
 {
     const gl::FramebufferAttachment *colorAttachment = mData.getColorAttachment(0);
     const gl::FramebufferAttachment *depthStencilAttachment = mData.getDepthOrStencilAttachment();
@@ -64,11 +64,12 @@ gl::Error Framebuffer9::clear(const gl::State &state, const ClearParameters &cle
         return error;
     }
 
-    float nearZ = state.getNearPlane();
-    float farZ = state.getFarPlane();
-    mRenderer->setViewport(state.getViewport(), nearZ, farZ, GL_TRIANGLES, state.getRasterizerState().frontFace, true);
+    float nearZ = data.state->getNearPlane();
+    float farZ = data.state->getFarPlane();
+    mRenderer->setViewport(data.caps, data.state->getViewport(), nearZ, farZ, GL_TRIANGLES,
+                           data.state->getRasterizerState().frontFace, true);
 
-    mRenderer->setScissorRectangle(state.getScissor(), state.isScissorTestEnabled());
+    mRenderer->setScissorRectangle(data.state->getScissor(), data.state->isScissorTestEnabled());
 
     return mRenderer->clear(clearParams, colorAttachment, depthStencilAttachment);
 }

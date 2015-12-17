@@ -271,6 +271,18 @@ EGLBoolean EGLAPIENTRY eglDestroyImageKHR(EGLDisplay dpy, EGLImageKHR image)
     return egl::DestroyImageKHR(dpy, image);
 }
 
+EGLDeviceEXT EGLAPIENTRY eglCreateDeviceANGLE(EGLint device_type,
+                                              void *native_device,
+                                              const EGLAttrib *attrib_list)
+{
+    return egl::CreateDeviceANGLE(device_type, native_device, attrib_list);
+}
+
+EGLBoolean EGLAPIENTRY eglReleaseDeviceANGLE(EGLDeviceEXT device)
+{
+    return egl::ReleaseDeviceANGLE(device);
+}
+
 __eglMustCastToProperFunctionPointerType EGLAPIENTRY eglGetProcAddress(const char *procname)
 {
     return egl::GetProcAddress(procname);

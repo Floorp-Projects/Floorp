@@ -91,7 +91,7 @@ gl::Error Framebuffer11::invalidateSwizzles() const
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Framebuffer11::clear(const gl::State &state, const ClearParameters &clearParams)
+gl::Error Framebuffer11::clear(const gl::Data &data, const ClearParameters &clearParams)
 {
     Clear11 *clearer = mRenderer->getClearer();
     gl::Error error = clearer->clearFramebuffer(clearParams, mData);

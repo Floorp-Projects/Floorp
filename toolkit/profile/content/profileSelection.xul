@@ -36,6 +36,6 @@
 
   <script type="application/javascript" src="chrome://mozapps/content/profile/profileSelection.js"/>
 
-  <browser id="browser" src="about:profiles?profileManager" flex="1" />
+  <browser id="browser" src="about:profiles?manage" flex="1" />
 
 </dialog>

@@ -85,7 +85,15 @@ FunctionsWGL::FunctionsWGL()
       queryPbufferARB(nullptr),
       bindTexImageARB(nullptr),
       releaseTexImageARB(nullptr),
-      setPbufferAttribARB(nullptr)
+      setPbufferAttribARB(nullptr),
+      dxSetResourceShareHandleNV(nullptr),
+      dxOpenDeviceNV(nullptr),
+      dxCloseDeviceNV(nullptr),
+      dxRegisterObjectNV(nullptr),
+      dxUnregisterObjectNV(nullptr),
+      dxObjectAccessNV(nullptr),
+      dxLockObjectsNV(nullptr),
+      dxUnlockObjectsNV(nullptr)
 {
 }
 
@@ -154,6 +162,16 @@ void FunctionsWGL::initialize(HMODULE glModule, HDC context)
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_render_texture", "wglBindTexImageARB", &bindTexImageARB);
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_render_texture", "wglReleaseTexImageARB", &releaseTexImageARB);
     GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_ARB_render_texture", "wglSetPbufferAttribARB", &setPbufferAttribARB);
+
+    // WGL_NV_DX_interop
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXSetResourceShareHandleNV", &dxSetResourceShareHandleNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXOpenDeviceNV", &dxOpenDeviceNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXCloseDeviceNV", &dxCloseDeviceNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXRegisterObjectNV", &dxRegisterObjectNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXUnregisterObjectNV", &dxUnregisterObjectNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXObjectAccessNV", &dxObjectAccessNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXLockObjectsNV", &dxLockObjectsNV);
+    GetWGLExtensionProcAddress(glModule, getProcAddress, extensions, "WGL_NV_DX_interop", "wglDXUnlockObjectsNV", &dxUnlockObjectsNV);
 }
 
 bool FunctionsWGL::hasExtension(const std::string &ext) const

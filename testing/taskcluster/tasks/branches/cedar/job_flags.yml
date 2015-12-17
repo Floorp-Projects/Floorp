@@ -146,7 +146,8 @@ tests:
   xpcshell:
     allowed_build_tasks:
       tasks/builds/b2g_emulator_ics_opt.yml:
-        task: tasks/tests/b2g_emulator_xpcshell.yml
+        task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
+        chunks: 1
       tasks/builds/b2g_emulator_ics_debug.yml:
         task: tasks/tests/b2g_emulator_xpcshell_chunked.yml
         chunks: 2

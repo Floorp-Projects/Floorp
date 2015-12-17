@@ -128,7 +128,13 @@ WebGLContext::CreateShaderValidator(GLenum shaderType) const
         return nullptr;
 
     ShShaderSpec spec = IsWebGL2() ? SH_WEBGL2_SPEC : SH_WEBGL_SPEC;
-    ShShaderOutput outputLanguage = ShaderOutput(gl);
+    ShShaderOutput outputLanguage = gl->IsGLES() ? SH_ESSL_OUTPUT
+                                                 : SH_GLSL_OUTPUT;
+
+    // If we're using WebGL2 we want a more specific version of GLSL
+    if (IsWebGL2())
+        outputLanguage = ShaderOutput(gl);
+
     ShBuiltInResources resources;
     memset(&resources, 0, sizeof(resources));
     ShInitBuiltInResources(&resources);
@@ -238,6 +244,15 @@ ShaderValidator::CanLinkTo(const ShaderValidator* prev, nsCString* const out_log
 {
     if (!prev) {
         nsPrintfCString error("Passed in NULL prev ShaderValidator.");
+        *out_log = error;
+        return false;
+    }
+
+    if (ShGetShaderVersion(prev->mHandle) != ShGetShaderVersion(mHandle)) {
+        nsPrintfCString error("Vertex shader version %d does not match"
+                              " fragment shader version %d.",
+                              ShGetShaderVersion(prev->mHandle),
+                              ShGetShaderVersion(mHandle));
         *out_log = error;
         return false;
     }

@@ -348,8 +348,7 @@ static const AllocKind IncrementalPhaseStrings[] = {
 };
 
 static const AllocKind IncrementalPhaseScripts[] = {
-    AllocKind::SCRIPT,
-    AllocKind::LAZY_SCRIPT
+    AllocKind::SCRIPT
 };
 
 static const AllocKind IncrementalPhaseJitCode[] = {
@@ -377,6 +376,10 @@ static const AllocKind BackgroundPhaseObjects[] = {
     AllocKind::OBJECT16_BACKGROUND
 };
 
+static const AllocKind BackgroundPhaseScripts[] = {
+    AllocKind::LAZY_SCRIPT
+};
+
 static const AllocKind BackgroundPhaseStringsAndSymbols[] = {
     AllocKind::FAT_INLINE_STRING,
     AllocKind::STRING,
@@ -391,6 +394,7 @@ static const AllocKind BackgroundPhaseShapes[] = {
 };
 
 static const FinalizePhase BackgroundFinalizePhases[] = {
+    PHASE(BackgroundPhaseScripts, gcstats::PHASE_SWEEP_SCRIPT),
     PHASE(BackgroundPhaseObjects, gcstats::PHASE_SWEEP_OBJECT),
     PHASE(BackgroundPhaseStringsAndSymbols, gcstats::PHASE_SWEEP_STRING),
     PHASE(BackgroundPhaseShapes, gcstats::PHASE_SWEEP_SHAPE)

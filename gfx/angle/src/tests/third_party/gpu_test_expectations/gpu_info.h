@@ -173,10 +173,15 @@ struct GPU_EXPORT GPUInfo {
   // Number of GPU process crashes recorded.
   int process_crash_count;
 
+  // True if the GPU is running in the browser process instead of its own.
+  bool in_process_gpu;
+
   // The state of whether the basic/context/DxDiagnostics info is collected and
   // if the collection fails or not.
   CollectInfoResult basic_info_state;
   CollectInfoResult context_info_state;
+
+  bool jpeg_decode_accelerator_supported;
 
   // Note: when adding new members, please remember to update EnumerateFields
   // in gpu_info.cc.

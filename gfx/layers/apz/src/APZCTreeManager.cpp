@@ -904,7 +904,9 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     // (By contrast, if we're in overscroll but not panning, such as after
     // putting two fingers down during an overscroll animation, we process the
     // second touch and proceed to pinch.)
-    if (mApzcForInputBlock && BuildOverscrollHandoffChain(mApzcForInputBlock)->HasApzcPannedIntoOverscroll()) {
+    if (mApzcForInputBlock &&
+        mApzcForInputBlock->IsInPanningState() &&
+        BuildOverscrollHandoffChain(mApzcForInputBlock)->HasOverscrolledApzc()) {
       if (mRetainedTouchIdentifier == -1) {
         mRetainedTouchIdentifier = mApzcForInputBlock->GetLastTouchIdentifier();
       }

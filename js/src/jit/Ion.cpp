@@ -3116,17 +3116,17 @@ jit::Invalidate(JSContext* cx, const RecompileInfoVector& invalid, bool resetUse
                     cancelOffThread);
 }
 
-bool
+void
 jit::IonScript::invalidate(JSContext* cx, bool resetUses, const char* reason)
 {
     JitSpew(JitSpew_IonInvalidate, " Invalidate IonScript %p: %s", this, reason);
+
+    // RecompileInfoVector has inline space for at least one element.
     RecompileInfoVector list;
-    if (!list.append(recompileInfo())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    MOZ_RELEASE_ASSERT(list.reserve(1));
+    list.infallibleAppend(recompileInfo());
+
     Invalidate(cx, list, resetUses, true);
-    return true;
 }
 
 bool
@@ -3155,12 +3155,11 @@ jit::Invalidate(JSContext* cx, JSScript* script, bool resetUses, bool cancelOffT
         js_free(buf);
     }
 
+    // RecompileInfoVector has inline space for at least one element.
     RecompileInfoVector scripts;
     MOZ_ASSERT(script->hasIonScript());
-    if (!scripts.append(script->ionScript()->recompileInfo())) {
-        ReportOutOfMemory(cx);
-        return false;
-    }
+    MOZ_RELEASE_ASSERT(scripts.reserve(1));
+    scripts.infallibleAppend(script->ionScript()->recompileInfo());
 
     Invalidate(cx, scripts, resetUses, cancelOffThread);
     return true;
