@@ -111,6 +111,7 @@ gujar.sources += [
     'util/PrefUtils.java',
     'util/ProxySelector.java',
     'util/RawResource.java',
+    'util/ScreenshotObserver.java',
     'util/StringUtils.java',
     'util/ThreadUtils.java',
     'util/UIAsyncTask.java',
