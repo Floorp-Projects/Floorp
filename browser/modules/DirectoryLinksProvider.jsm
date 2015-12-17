@@ -773,7 +773,7 @@ var DirectoryLinksProvider = {
       RemoteNewTabUtils.links.addObserver(this);
     }
 
-    return Task.spawn(function() {
+    return Task.spawn(function*() {
       // get the last modified time of the links file if it exists
       let doesFileExists = yield OS.File.exists(this._directoryFilePath);
       if (doesFileExists) {
@@ -916,7 +916,7 @@ var DirectoryLinksProvider = {
     if (!sortedLinks) {
       // If NewTabUtils.links.resetCache() is called before getting here,
       // sortedLinks may be undefined.
-      return;
+      return undefined;
     }
 
     // Delete the current suggested tile, if one exists.
@@ -939,7 +939,7 @@ var DirectoryLinksProvider = {
       // There are no potential suggested links we can show or not
       // enough history for a suggested tile, or suggested tile was
       // recently blocked and wait time interval has not decayed yet
-      return;
+      return undefined;
     }
 
     // Create a flat list of all possible links we can show as suggested.
@@ -994,7 +994,7 @@ var DirectoryLinksProvider = {
     // We might have run out of possible links to show
     let numLinks = possibleLinks.size;
     if (numLinks == 0) {
-      return;
+      return undefined;
     }
 
     let flattenedLinks = [...possibleLinks.values()];
