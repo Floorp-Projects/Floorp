@@ -370,8 +370,18 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             // may be in the nursery, so include a barrier to make sure this
             // object is updated if that typed object moves.
             if (!IsInsideNursery(obj) && cx->runtime()->gc.nursery.isInside(buffer->dataPointerEither())) {
-                MOZ_ASSERT(!isSharedMemory);
-                cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+                // Shared buffer data should never be nursery-allocated, so
+                // we need to fail here if isSharedMemory.  However, mmap()
+                // can place a SharedArrayRawBuffer up against the bottom end
+                // of the nursery, and a zero-length buffer will erroneously be
+                // perceived as being inside the nursery; sidestep that.
+                if (isSharedMemory) {
+                    MOZ_ASSERT(buffer->byteLength() == 0 &&
+                               cx->runtime()->gc.nursery.start() ==
+                                   buffer->dataPointerEither().unwrapValue());
+                } else {
+                    cx->runtime()->gc.storeBuffer.putWholeCell(obj);
+                }
             }
         } else {
             void* data = obj->fixedData(FIXED_DATA_START);
