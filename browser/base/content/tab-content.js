@@ -334,7 +334,7 @@ var AboutReaderListener = {
    */
   updateReaderButton: function(forceNonArticle) {
     if (!ReaderMode.isEnabledForParseOnLoad || this.isAboutReader ||
-        !(content.document instanceof content.HTMLDocument) ||
+        !content || !(content.document instanceof content.HTMLDocument) ||
         content.document.mozSyntheticDocument) {
       return;
     }

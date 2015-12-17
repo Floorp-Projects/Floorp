@@ -6992,6 +6992,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's JS Profiler been opened?"
   },
+  "DEVTOOLS_MEMORY_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Memory Tool been opened?"
+  },
   "DEVTOOLS_NETMONITOR_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -7162,6 +7167,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's JS Profiler?"
+  },
+  "DEVTOOLS_MEMORY_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Memory Tool?"
   },
   "DEVTOOLS_NETMONITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -7367,6 +7377,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the JS profiler been active (seconds)"
+  },
+  "DEVTOOLS_MEMORY_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the Memory Tool been active (seconds)"
   },
   "DEVTOOLS_NETMONITOR_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",
