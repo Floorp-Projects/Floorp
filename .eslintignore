@@ -83,7 +83,6 @@ browser/extensions/pdfjs/**
 browser/extensions/shumway/**
 browser/fuel/**
 browser/locales/**
-browser/modules/**
 
 # Loop specific exclusions
 
