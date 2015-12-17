@@ -108,6 +108,10 @@ var developerHUD = {
       this._logging = enabled;
     });
 
+    SettingsListener.observe('hud.telemetry.logging', _telemetryDebug, enabled => {
+      _telemetryDebug = enabled;
+    });
+
     SettingsListener.observe('metrics.selectedMetrics.level', "", level => {
       this._telemetry = (level === 'Enhanced');
     });
