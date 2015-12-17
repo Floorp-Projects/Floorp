@@ -92,11 +92,6 @@ fi
 # Mark as WebGL conformant
 MOZ_WEBGL_CONFORMANT=1
 
-# Enable Tab Queue
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_TAB_QUEUE=1
-fi
-
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
 
