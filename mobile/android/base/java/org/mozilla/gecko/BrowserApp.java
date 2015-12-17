@@ -300,9 +300,12 @@ public class BrowserApp extends GeckoApp
 
         Log.d(LOGTAG, "BrowserApp.onTabChanged: " + tab.getId() + ": " + msg);
         switch(msg) {
-            case LOCATION_CHANGE:
-                // fall through
             case SELECTED:
+                if (Tabs.getInstance().isSelectedTab(tab) && mDynamicToolbar.isEnabled()) {
+                    mDynamicToolbar.setVisible(true, VisibilityTransition.ANIMATE);
+                }
+                // fall through
+            case LOCATION_CHANGE:
                 if (mZoomedView != null) {
                     mZoomedView.stopZoomDisplay(false);
                 }
