@@ -17,7 +17,7 @@ class TInfoSinkBase;
 class ValidateLimitations : public TIntermTraverser
 {
   public:
-    ValidateLimitations(sh::GLenum shaderType, TInfoSinkBase &sink);
+    ValidateLimitations(sh::GLenum shaderType, TInfoSinkBase *sink);
 
     int numErrors() const { return mNumErrors; }
 
@@ -25,6 +25,8 @@ class ValidateLimitations : public TIntermTraverser
     bool visitUnary(Visit, TIntermUnary *) override;
     bool visitAggregate(Visit, TIntermAggregate *) override;
     bool visitLoop(Visit, TIntermLoop *) override;
+
+    static bool IsLimitedForLoop(TIntermLoop *node);
 
   private:
     void error(TSourceLoc loc, const char *reason, const char *token);
@@ -51,9 +53,11 @@ class ValidateLimitations : public TIntermTraverser
     bool validateIndexing(TIntermBinary *node);
 
     sh::GLenum mShaderType;
-    TInfoSinkBase &mSink;
+    TInfoSinkBase *mSink;
     int mNumErrors;
     TLoopStack mLoopStack;
+    bool mValidateIndexing;
+    bool mValidateInnerLoops;
 };
 
 #endif // COMPILER_TRANSLATOR_VALIDATELIMITATIONS_H_

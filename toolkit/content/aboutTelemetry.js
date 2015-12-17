@@ -531,27 +531,139 @@ var EnvironmentData = {
     let data = sectionalizeObject(ping.environment);
 
     for (let [section, sectionData] of data) {
+      if (section == "addons") {
+        break;
+      }
+
       let table = document.createElement("table");
       let caption = document.createElement("caption");
       caption.appendChild(document.createTextNode(section + "\n"));
       table.appendChild(caption);
-
-      let headings = document.createElement("tr");
-      this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingName") + "\t");
-      this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingValue") + "\t");
-      table.appendChild(headings);
+      this.appendHeading(table);
 
       for (let [path, value] of sectionData) {
-          let row = document.createElement("tr");
-          this.appendColumn(row, "td", path + "\t");
-          this.appendColumn(row, "td", value + "\t");
-          table.appendChild(row);
+        let row = document.createElement("tr");
+        this.appendColumn(row, "td", path);
+        this.appendColumn(row, "td", value);
+        table.appendChild(row);
       }
 
       dataDiv.appendChild(table);
     }
+
+    // We use specialized rendering here to make the addon and plugin listings
+    // more readable.
+    let addonSection = this.createAddonSection(dataDiv);
+    let addons = ping.environment.addons;
+
+    this.renderAddonsObject(addons.activeAddons, addonSection, "activeAddons");
+    this.renderActivePlugins(addons.activePlugins, addonSection, "activePlugins");
+    this.renderKeyValueObject(addons.theme, addonSection, "theme");
+    this.renderKeyValueObject(addons.activeExperiment, addonSection, "activeExperiment");
+    this.renderAddonsObject(addons.activeGMPlugins, addonSection, "activeGMPlugins");
+    this.renderPersona(addons, addonSection, "persona");
   },
 
+  renderPersona: function(addonObj, addonSection, sectionTitle) {
+    let table = document.createElement("table");
+    table.setAttribute("id", sectionTitle);
+    this.appendAddonSubsectionTitle(sectionTitle, table);
+    this.appendRow(table, "persona", addonObj.persona);
+    addonSection.appendChild(table);
+  },
+
+  renderActivePlugins: function(addonObj, addonSection, sectionTitle) {
+    let data = explodeObject(addonObj);
+    let table = document.createElement("table");
+    table.setAttribute("id", sectionTitle);
+    this.appendAddonSubsectionTitle(sectionTitle, table);
+
+    for (let plugin of addonObj) {
+      let data = explodeObject(plugin);
+      this.appendHeadingName(table, data.get("name"));
+
+      for (let [key, value] of data) {
+        this.appendRow(table, key, value);
+      }
+    }
+
+    addonSection.appendChild(table);
+  },
+
+  renderAddonsObject: function(addonObj, addonSection, sectionTitle) {
+    let table = document.createElement("table");
+    table.setAttribute("id", sectionTitle);
+    this.appendAddonSubsectionTitle(sectionTitle, table);
+
+    for (let id of Object.keys(addonObj)) {
+      let addon = addonObj[id];
+      this.appendHeadingName(table, addon.name || id);
+      this.appendAddonID(table, id);
+      let data = explodeObject(addon);
+
+      for (let [key, value] of data) {
+        this.appendRow(table, key, value);
+      }
+    }
+
+    addonSection.appendChild(table);
+  },
+
+  renderKeyValueObject: function(addonObj, addonSection, sectionTitle) {
+    let data = explodeObject(addonObj);
+    let table = document.createElement("table");
+    table.setAttribute("class", sectionTitle);
+    this.appendAddonSubsectionTitle(sectionTitle, table);
+    this.appendHeading(table);
+
+    for (let [key, value] of data) {
+      this.appendRow(table, key, value);
+    }
+
+    addonSection.appendChild(table);
+  },
+
+  appendAddonID: function(table, addonID) {
+    this.appendRow(table, "id", addonID);
+  },
+
+  appendHeading: function(table) {
+    let headings = document.createElement("tr");
+    this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingName"));
+    this.appendColumn(headings, "th", bundle.GetStringFromName("environmentDataHeadingValue"));
+    table.appendChild(headings);
+  },
+
+  appendHeadingName: function(table, name) {
+    let headings = document.createElement("tr");
+    this.appendColumn(headings, "th", name);
+    headings.cells[0].colSpan = 2;
+    table.appendChild(headings);
+  },
+
+  appendAddonSubsectionTitle: function(section, table) {
+    let caption = document.createElement("caption");
+    caption.setAttribute("class", "addon-caption");
+    caption.appendChild(document.createTextNode(section));
+    table.appendChild(caption);
+  },
+
+  createAddonSection: function(dataDiv) {
+    let divAddon = document.createElement("div");
+    divAddon.setAttribute("id", "addons-data");
+    let caption = document.createElement("caption");
+    caption.appendChild(document.createTextNode("addons"));
+    divAddon.appendChild(caption);
+    dataDiv.appendChild(divAddon);
+    return divAddon;
+  },
+
+  appendRow: function(table, id, value){
+    let row = document.createElement("tr");
+    this.appendColumn(row, "td", id);
+    this.appendColumn(row, "td", value);
+    table.appendChild(row);
+  },
   /**
    * Helper function for appending a column to the data table.
    *

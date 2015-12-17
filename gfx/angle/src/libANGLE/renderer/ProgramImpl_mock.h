@@ -25,6 +25,7 @@ class MockProgramImpl : public rx::ProgramImpl
 
     MOCK_METHOD2(load, LinkResult(gl::InfoLog &, gl::BinaryInputStream *));
     MOCK_METHOD1(save, gl::Error(gl::BinaryOutputStream *));
+    MOCK_METHOD1(setBinaryRetrievableHint, void(bool));
 
     MOCK_METHOD2(link, LinkResult(const gl::Data &, gl::InfoLog &));
     MOCK_METHOD2(validate, GLboolean(const gl::Caps &, gl::InfoLog *));

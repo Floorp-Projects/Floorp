@@ -4,10 +4,6 @@
 
 "use strict";
 
-Components.utils.import("resource://gre/modules/Task.jsm");
-var {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-var promise = require("promise");
-
 const TESTCASE_URI_HTML = TEST_BASE_HTTP + "sourcemaps-watching.html";
 const TESTCASE_URI_CSS = TEST_BASE_HTTP + "sourcemap-css/sourcemaps.css";
 const TESTCASE_URI_REG_CSS = TEST_BASE_HTTP + "simple.css";
@@ -19,75 +15,73 @@ const TRANSITIONS_PREF = "devtools.styleeditor.transitions";
 
 const CSS_TEXT = "* { color: blue }";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const Cc = Components.classes;
+const Ci = Components.interfaces;
 
-var tempScope = {};
-Components.utils.import("resource://gre/modules/FileUtils.jsm", tempScope);
-Components.utils.import("resource://gre/modules/NetUtil.jsm", tempScope);
-var FileUtils = tempScope.FileUtils;
-var NetUtil = tempScope.NetUtil;
+const {FileUtils} = Components.utils.import("resource://gre/modules/FileUtils.jsm", {});
+const {NetUtil} = Components.utils.import("resource://gre/modules/NetUtil.jsm", {});
 
-function test() {
-  waitForExplicitFinish();
-
-  Services.prefs.setBoolPref(TRANSITIONS_PREF, false);
-
-  Task.spawn(function*() {
-    // copy all our files over so we don't screw them up for other tests
-    let HTMLFile = yield copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
-    let CSSFile = yield copy(TESTCASE_URI_CSS,
-      ["sourcemap-css", "sourcemaps.css"]);
-    yield copy(TESTCASE_URI_SCSS, ["sourcemap-sass", "sourcemaps.scss"]);
-    yield copy(TESTCASE_URI_MAP, ["sourcemap-css", "sourcemaps.css.map"]);
-    yield copy(TESTCASE_URI_REG_CSS, ["simple.css"]);
-
-    let uri = Services.io.newFileURI(HTMLFile);
-    let testcaseURI = uri.resolve("");
-
-    let { ui } = yield openStyleEditorForURL(testcaseURI);
-
-    let editor = ui.editors[1];
-    if (getStylesheetNameFor(editor) != TESTCASE_SCSS_NAME) {
-      editor = ui.editors[2];
-    }
-
-    is(getStylesheetNameFor(editor), TESTCASE_SCSS_NAME, "found scss editor");
-
-    let link = getLinkFor(editor);
-    link.click();
-
-    yield editor.getSourceEditor();
-
-    let element = content.document.querySelector("div");
-    let style = content.getComputedStyle(element, null);
-
-    is(style.color, "rgb(255, 0, 102)", "div is red before saving file");
-
-    editor.styleSheet.relatedStyleSheet.once("style-applied", function() {
-      is(style.color, "rgb(0, 0, 255)", "div is blue after saving file");
-      finishUp();
-    });
-
-    yield pauseForTimeChange();
-
-    // Edit and save Sass in the editor. This will start off a file-watching
-    // process waiting for the CSS file to change.
-    yield editSCSS(editor);
-
-    // We can't run Sass or another compiler, so we fake it by just
-    // directly changing the CSS file.
-    yield editCSSFile(CSSFile);
-
-    info("wrote to CSS file");
+add_task(function*() {
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      [TRANSITIONS_PREF, false]
+    ]}, resolve);
   });
-}
+
+  // copy all our files over so we don't screw them up for other tests
+  let HTMLFile = yield copy(TESTCASE_URI_HTML, ["sourcemaps.html"]);
+  let CSSFile = yield copy(TESTCASE_URI_CSS,
+    ["sourcemap-css", "sourcemaps.css"]);
+  yield copy(TESTCASE_URI_SCSS, ["sourcemap-sass", "sourcemaps.scss"]);
+  yield copy(TESTCASE_URI_MAP, ["sourcemap-css", "sourcemaps.css.map"]);
+  yield copy(TESTCASE_URI_REG_CSS, ["simple.css"]);
+
+  let uri = Services.io.newFileURI(HTMLFile);
+  let testcaseURI = uri.resolve("");
+
+  let { ui } = yield openStyleEditorForURL(testcaseURI);
+
+  let editor = ui.editors[1];
+  if (getStylesheetNameFor(editor) != TESTCASE_SCSS_NAME) {
+    editor = ui.editors[2];
+  }
+
+  is(getStylesheetNameFor(editor), TESTCASE_SCSS_NAME, "found scss editor");
+
+  let link = getLinkFor(editor);
+  link.click();
+
+  yield editor.getSourceEditor();
+
+  let element = content.document.querySelector("div");
+  let style = content.getComputedStyle(element, null);
+
+  is(style.color, "rgb(255, 0, 102)", "div is red before saving file");
+
+  // let styleApplied = promise.defer();
+  let styleApplied = editor.once("style-applied");
+
+  yield pauseForTimeChange();
+
+  // Edit and save Sass in the editor. This will start off a file-watching
+  // process waiting for the CSS file to change.
+  yield editSCSS(editor);
+
+  // We can't run Sass or another compiler, so we fake it by just
+  // directly changing the CSS file.
+  yield editCSSFile(CSSFile);
+
+  info("wrote to CSS file, waiting for style-applied event");
+
+  yield styleApplied;
+
+  is(style.color, "rgb(0, 0, 255)", "div is blue after saving file");
+});
 
 function editSCSS(editor) {
   let deferred = promise.defer();
 
-  let pos = {line: 0, ch: 0};
-  editor.sourceEditor.replaceText(CSS_TEXT, pos, pos);
+  editor.sourceEditor.setText(CSS_TEXT);
 
   editor.saveToFile(null, function(file) {
     ok(file, "Scss file should be saved");
@@ -110,11 +104,6 @@ function pauseForTimeChange() {
   setTimeout(deferred.resolve, 2000);
 
   return deferred.promise;
-}
-
-function finishUp() {
-  Services.prefs.clearUserPref(TRANSITIONS_PREF);
-  finish();
 }
 
 /* Helpers */

@@ -682,12 +682,7 @@ bool IsMinContent(const nsStyleCoord& aCoord)
 }
 
 /**
- * Search for the aNth occurrence of aName in aNameList (forward), starting at
- * the zero-based aFromIndex, and return the 1-based index (line number).
- * Also take into account there is an unconditional match at aImplicitLine
- * unless it's zero.
- * Return zero if aNth occurrences can't be found.  In that case, aNth has
- * been decremented with the number of occurrences that were found (if any).
+ * @see FindNamedLine, this function searches forward.
  */
 static uint32_t
 FindLine(const nsString& aName, int32_t* aNth,
@@ -720,7 +715,7 @@ FindLine(const nsString& aName, int32_t* aNth,
 }
 
 /**
- * @see FindLine, this function does the same but searches in reverse.
+ * @see FindNamedLine, this function searches in reverse.
  */
 static uint32_t
 RFindLine(const nsString& aName, int32_t* aNth,
@@ -728,6 +723,10 @@ RFindLine(const nsString& aName, int32_t* aNth,
           const nsTArray<nsTArray<nsString>>& aNameList)
 {
   MOZ_ASSERT(aNth && *aNth > 0);
+  if (MOZ_UNLIKELY(aFromIndex == 0)) {
+    return 0; // There are no named lines beyond the start of the explicit grid.
+  }
+  --aFromIndex; // (shift aFromIndex so we can treat it as inclusive)
   int32_t nth = *aNth;
   const uint32_t len = aNameList.Length();
   // The implicit line may be beyond the length of aNameList so we match this
@@ -737,8 +736,7 @@ RFindLine(const nsString& aName, int32_t* aNth,
       return aImplicitLine;
     }
   }
-  uint32_t i = aFromIndex == 0 ? len : std::min(aFromIndex, len);
-  for (; i; --i) {
+  for (uint32_t i = std::min(aFromIndex, len); i; --i) {
     if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
       if (--nth == 0) {
         return i;
@@ -750,6 +748,22 @@ RFindLine(const nsString& aName, int32_t* aNth,
   return 0;
 }
 
+/**
+ * Find the aNth occurrence of aName, searching forward if aNth is positive,
+ * and in reverse if aNth is negative (aNth == 0 is invalid), starting from
+ * aFromIndex (not inclusive), and return a 1-based line number.
+ * Also take into account there is an unconditional match at aImplicitLine
+ * unless it's zero.
+ * Return zero if aNth occurrences can't be found.  In that case, aNth has
+ * been decremented with the number of occurrences that were found (if any).
+ *
+ * E.g. to search for "A 2" forward from the start of the grid: aName is "A"
+ * aNth is 2 and aFromIndex is zero.  To search for "A -2", aNth is -2 and
+ * aFromIndex is ExplicitGridEnd + 1 (which is the line "before" the last
+ * line when we're searching in reverse).  For "span A 2", aNth is 2 when
+ * used on a grid-[row|column]-end property and -2 for a *-start property,
+ * and aFromIndex is the line (which we should skip) on the opposite property.
+ */
 static uint32_t
 FindNamedLine(const nsString& aName, int32_t* aNth,
               uint32_t aFromIndex, uint32_t aImplicitLine,
@@ -1354,7 +1368,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       return LinePair(kAutoLine, 1); // XXX subgrid explicit size instead of 1?
     }
 
-    uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd : 0;
+    uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
     auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
@@ -1388,7 +1402,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
     }
   } else {
-    uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd : 0;
+    uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd + 1: 0;
     start = ResolveLine(aStart, aStart.mInteger, from, aLineNameList,
                         aAreaStart, aAreaEnd, aExplicitGridEnd,
                         eLineRangeSideStart, aStyle);
@@ -1417,7 +1431,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       from = start;
     }
   } else {
-    from = aEnd.mInteger < 0 ? aExplicitGridEnd : 0;
+    from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
   }
   auto end = ResolveLine(aEnd, nth, from, aLineNameList, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
@@ -1493,9 +1507,10 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     if (aEnd.IsAuto()) {
       return LineRange(kAutoLine, kAutoLine);
     }
-    int32_t end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
-                              aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
-                              aStyle);
+    uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
+    int32_t end =
+      ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
+                  aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
     if (aEnd.mHasSpan) {
       ++end;
     }
@@ -1505,8 +1520,9 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
   }
 
   if (aEnd.IsAuto()) {
+    uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd + 1: 0;
     int32_t start =
-      ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
+      ResolveLine(aStart, aStart.mInteger, from, aLineNameList, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideStart, aStyle);
     if (aStart.mHasSpan) {
       start = std::max(aGridEnd - start, aGridStart);

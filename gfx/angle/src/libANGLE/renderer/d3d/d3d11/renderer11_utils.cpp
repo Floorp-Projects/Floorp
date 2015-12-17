@@ -1334,6 +1334,56 @@ HRESULT SetDebugName(ID3D11DeviceChild *resource, const char *name)
 #endif
 }
 
+LazyInputLayout::LazyInputLayout(const D3D11_INPUT_ELEMENT_DESC *inputDesc,
+                                 size_t inputDescLen,
+                                 const BYTE *byteCode,
+                                 size_t byteCodeLen,
+                                 const char *debugName)
+    : mInputDesc(inputDescLen),
+      mByteCodeLen(byteCodeLen),
+      mByteCode(byteCode),
+      mDebugName(debugName)
+{
+    memcpy(&mInputDesc[0], inputDesc, sizeof(D3D11_INPUT_ELEMENT_DESC) * inputDescLen);
+}
+
+ID3D11InputLayout *LazyInputLayout::resolve(ID3D11Device *device)
+{
+    checkAssociatedDevice(device);
+
+    if (mResource == nullptr)
+    {
+        HRESULT result =
+            device->CreateInputLayout(&mInputDesc[0], static_cast<UINT>(mInputDesc.size()),
+                                      mByteCode, mByteCodeLen, &mResource);
+        ASSERT(SUCCEEDED(result));
+        UNUSED_ASSERTION_VARIABLE(result);
+        d3d11::SetDebugName(mResource, mDebugName);
+    }
+
+    return mResource;
+}
+
+LazyBlendState::LazyBlendState(const D3D11_BLEND_DESC &desc, const char *debugName)
+    : mDesc(desc), mDebugName(debugName)
+{
+}
+
+ID3D11BlendState *LazyBlendState::resolve(ID3D11Device *device)
+{
+    checkAssociatedDevice(device);
+
+    if (mResource == nullptr)
+    {
+        HRESULT result = device->CreateBlendState(&mDesc, &mResource);
+        ASSERT(SUCCEEDED(result));
+        UNUSED_ASSERTION_VARIABLE(result);
+        d3d11::SetDebugName(mResource, mDebugName);
+    }
+
+    return mResource;
+}
+
 WorkaroundsD3D GenerateWorkarounds(D3D_FEATURE_LEVEL featureLevel)
 {
     WorkaroundsD3D workarounds;

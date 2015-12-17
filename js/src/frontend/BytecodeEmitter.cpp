@@ -6636,6 +6636,16 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
     if (!emit1((isGenerator || isDerivedClassConstructor) ? JSOP_SETRVAL : JSOP_RETURN))
         return false;
 
+    // Make sure that we emit this before popping the blocks in prepareForNonLocalJump,
+    // to ensure that the error is thrown while the scope-chain is still intact.
+    if (isDerivedClassConstructor) {
+        BindingIter bi = Bindings::thisBinding(cx, script);
+        if (!emitLoadFromTopScope(bi))
+            return false;
+        if (!emit1(JSOP_CHECKRETURN))
+            return false;
+    }
+
     NonLocalExitScope nle(this);
 
     if (!nle.prepareForNonLocalJump(nullptr))
@@ -6653,11 +6663,6 @@ BytecodeEmitter::emitReturn(ParseNode* pn)
             return false;
     } else if (isDerivedClassConstructor) {
         MOZ_ASSERT(code()[top] == JSOP_SETRVAL);
-        BindingIter bi = Bindings::thisBinding(cx, script);
-        if (!emitLoadFromTopScope(bi))
-            return false;
-        if (!emit1(JSOP_CHECKRETURN))
-            return false;
         if (!emit1(JSOP_RETRVAL))
             return false;
     } else if (top + static_cast<ptrdiff_t>(JSOP_RETURN_LENGTH) != offset()) {
@@ -7054,6 +7059,18 @@ BytecodeEmitter::emitDeleteExpression(ParseNode* node)
 }
 
 bool
+BytecodeEmitter::emitDebugOnlyCheckSelfHosted()
+{
+#ifdef DEBUG
+    if (emitterMode == BytecodeEmitter::SelfHosting) {
+        if (!emit1(JSOP_DEBUGCHECKSELFHOSTED))
+            return false;
+    }
+#endif
+    return true;
+}
+
+bool
 BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
 {
     // Special-casing of callFunction to emit bytecode that directly
@@ -7065,15 +7082,27 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
     //
     // argc is set to the amount of actually emitted args and the
     // emitting of args below is disabled by setting emitArgs to false.
+    ParseNode* pn2 = pn->pn_head;
+    const char* errorName = pn2->name() == cx->names().callFunction ?
+                            "callFunction" : "callContentFunction";
     if (pn->pn_count < 3) {
-        reportError(pn, JSMSG_MORE_ARGS_NEEDED, "callFunction", "1", "s");
+        reportError(pn, JSMSG_MORE_ARGS_NEEDED, errorName, "2", "s");
         return false;
     }
 
-    ParseNode* pn2 = pn->pn_head;
+    if (pn->getOp() != JSOP_CALL) {
+        reportError(pn, JSMSG_NOT_CONSTRUCTOR, errorName);
+        return false;
+    }
+
     ParseNode* funNode = pn2->pn_next;
     if (!emitTree(funNode))
         return false;
+
+    if (pn2->name() != cx->names().callContentFunction) {
+        if (!emitDebugOnlyCheckSelfHosted())
+            return false;
+    }
 
     ParseNode* thisArg = funNode->pn_next;
     if (!emitTree(thisArg))
@@ -7173,10 +7202,14 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             // We shouldn't see foo(bar) = x in self-hosted code.
             MOZ_ASSERT(!(pn->pn_xflags & PNX_SETCALL));
 
-            // Calls to "forceInterpreter", "callFunction" or "resumeGenerator"
-            // in self-hosted code generate inline bytecode.
-            if (pn2->name() == cx->names().callFunction)
+            // Calls to "forceInterpreter", "callFunction",
+            // "callContentFunction", or "resumeGenerator" in self-hosted
+            // code generate inline bytecode.
+            if (pn2->name() == cx->names().callFunction ||
+                pn2->name() == cx->names().callContentFunction)
+            {
                 return emitSelfHostedCallFunction(pn);
+            }
             if (pn2->name() == cx->names().resumeGenerator)
                 return emitSelfHostedResumeGenerator(pn);
             if (pn2->name() == cx->names().forceInterpreter)
@@ -7194,6 +7227,10 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             if (!emitPropOp(pn2, callop ? JSOP_CALLPROP : JSOP_GETPROP))
                 return false;
         }
+
+        if (!emitDebugOnlyCheckSelfHosted())
+            return false;
+
         break;
       case PNK_ELEM:
         if (pn2->as<PropertyByValue>().isSuper()) {
@@ -7207,6 +7244,10 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
                     return false;
             }
         }
+
+        if (!emitDebugOnlyCheckSelfHosted())
+            return false;
+
         break;
       case PNK_FUNCTION:
         /*

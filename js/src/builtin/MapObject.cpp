@@ -1411,7 +1411,7 @@ const JSFunctionSpec selfhosting_collection_iterator_methods[] = {
 bool
 js::InitSelfHostingCollectionIteratorFunctions(JSContext* cx, HandleObject obj)
 {
-    return JS_DefineFunctions(cx, obj, selfhosting_collection_iterator_methods);
+    return DefineFunctions(cx, obj, selfhosting_collection_iterator_methods, AsIntrinsic);
 }
 
 /*** JS static utility functions *********************************************/

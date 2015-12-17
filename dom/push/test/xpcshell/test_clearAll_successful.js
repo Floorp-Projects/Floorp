@@ -42,7 +42,7 @@ add_task(function* test_unregister_success() {
     }
   });
 
-  yield PushNotificationService.clearAll();
+  yield PushService._clearAll();
   let record = yield db.getByKeyID(channelID);
   ok(!record, 'Unregister did not remove record');
 });

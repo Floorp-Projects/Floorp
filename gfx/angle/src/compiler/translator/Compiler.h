@@ -179,6 +179,8 @@ class TCompiler : public TShHandleBase
     bool tagUsedFunctions();
     void internalTagUsedFunction(size_t index);
 
+    void initSamplerDefaultPrecision(TBasicType samplerType);
+
     // Removes unused function declarations and prototypes from the AST
     class UnusedPredicate;
     bool pruneUnusedFunctions(TIntermNode *root);

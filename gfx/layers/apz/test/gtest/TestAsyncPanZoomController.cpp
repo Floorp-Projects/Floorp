@@ -2993,6 +2993,43 @@ TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1073250) {
   EXPECT_FALSE(rootApzc->IsOverscrolled());
 }
 
+// This is almost exactly like StuckInOverscroll_Bug1073250, except the
+// APZC receiving the input events for the first touch block is the child
+// (and thus not the same APZC that overscrolls, which is the parent).
+TEST_F(APZOverscrollHandoffTester, StuckInOverscroll_Bug1231228) {
+  // Enable overscrolling.
+  SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+
+  CreateOverscrollHandoffLayerTree1();
+
+  TestAsyncPanZoomController* child = ApzcOf(layers[1]);
+
+  // Pan, causing the parent APZC to overscroll.
+  Pan(manager, mcc, 60, 90, true /* keep finger down */);
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_TRUE(rootApzc->IsOverscrolled());
+
+  // Put a second finger down.
+  MultiTouchInput secondFingerDown(MultiTouchInput::MULTITOUCH_START, 0, TimeStamp(), 0);
+  // Use the same touch identifier for the first touch (0) as Pan(). (A bit hacky.)
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(0, ScreenIntPoint(10, 40), ScreenSize(0, 0), 0, 0));
+  secondFingerDown.mTouches.AppendElement(SingleTouchData(1, ScreenIntPoint(30, 20), ScreenSize(0, 0), 0, 0));
+  manager->ReceiveInputEvent(secondFingerDown, nullptr, nullptr);
+
+  // Release the fingers.
+  MultiTouchInput fingersUp = secondFingerDown;
+  fingersUp.mType = MultiTouchInput::MULTITOUCH_END;
+  manager->ReceiveInputEvent(fingersUp, nullptr, nullptr);
+
+  // Allow any animations to run their course.
+  child->AdvanceAnimationsUntilEnd();
+  rootApzc->AdvanceAnimationsUntilEnd();
+
+  // Make sure nothing is overscrolled.
+  EXPECT_FALSE(child->IsOverscrolled());
+  EXPECT_FALSE(rootApzc->IsOverscrolled());
+}
+
 // Test that flinging in a direction where one component of the fling goes into
 // overscroll but the other doesn't, results in just the one component being
 // handed off to the parent, while the original APZC continues flinging in the
