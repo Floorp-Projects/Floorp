@@ -33,6 +33,7 @@ class ProgramGL : public ProgramImpl
 
     LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) override;
     gl::Error save(gl::BinaryOutputStream *stream) override;
+    void setBinaryRetrievableHint(bool retrievable) override;
 
     LinkResult link(const gl::Data &data, gl::InfoLog &infoLog) override;
     GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) override;

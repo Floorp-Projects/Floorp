@@ -74,8 +74,8 @@ TEST(ValidationESTest, DrawElementsWithMaxIndexGivesError)
     EXPECT_CALL(*framebufferImpl, onUpdateColorAttachment(_)).Times(1).RetiresOnSaturation();
     EXPECT_CALL(*framebufferImpl, checkStatus())
         .Times(2)
-        .WillOnce(Return(GL_FRAMEBUFFER_COMPLETE))
-        .WillOnce(Return(GL_FRAMEBUFFER_COMPLETE));
+        .WillOnce(Return(true))
+        .WillOnce(Return(true));
     EXPECT_CALL(*framebufferImpl, destroy()).Times(1).RetiresOnSaturation();
 
     MockProgramImpl *programImpl = new MockProgramImpl();

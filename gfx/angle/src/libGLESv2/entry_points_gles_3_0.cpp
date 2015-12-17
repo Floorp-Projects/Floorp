@@ -2924,9 +2924,11 @@ void GL_APIENTRY BindTransformFeedback(GLenum target, GLuint id)
                 }
 
                 // Cannot bind a transform feedback object that does not exist (3.0.2 pg 85 section 2.14.1)
-                if (context->getTransformFeedback(id) == NULL)
+                if (!context->isTransformFeedbackGenerated(id))
                 {
-                    context->recordError(Error(GL_INVALID_OPERATION));
+                    context->recordError(
+                        Error(GL_INVALID_OPERATION,
+                              "Cannot bind a transform feedback object that does not exist."));
                     return;
                 }
 
@@ -2994,7 +2996,15 @@ GLboolean GL_APIENTRY IsTransformFeedback(GLuint id)
             return GL_FALSE;
         }
 
-        return ((context->getTransformFeedback(id) != NULL) ? GL_TRUE : GL_FALSE);
+        if (id == 0)
+        {
+            // The 3.0.4 spec [section 6.1.11] states that if ID is zero, IsTransformFeedback
+            // returns FALSE
+            return GL_FALSE;
+        }
+
+        const TransformFeedback *transformFeedback = context->getTransformFeedback(id);
+        return ((transformFeedback != nullptr) ? GL_TRUE : GL_FALSE);
     }
 
     return GL_FALSE;
@@ -3062,14 +3072,20 @@ void GL_APIENTRY GetProgramBinary(GLuint program, GLsizei bufSize, GLsizei* leng
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientVersion() < 3)
+        if (!ValidateGetProgramBinary(context, program, bufSize, length, binaryFormat, binary))
         {
-            context->recordError(Error(GL_INVALID_OPERATION));
             return;
         }
 
-        // TODO: Pipe through to the OES extension for now, needs proper validation
-        return GetProgramBinaryOES(program, bufSize, length, binaryFormat, binary);
+        Program *programObject = context->getProgram(program);
+        ASSERT(programObject != nullptr);
+
+        Error error = programObject->saveBinary(binaryFormat, binary, bufSize, length);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -3081,14 +3097,20 @@ void GL_APIENTRY ProgramBinary(GLuint program, GLenum binaryFormat, const GLvoid
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientVersion() < 3)
+        if (!ValidateProgramBinary(context, program, binaryFormat, binary, length))
         {
-            context->recordError(Error(GL_INVALID_OPERATION));
             return;
         }
 
-        // TODO: Pipe through to the OES extension for now, needs proper validation
-        return ProgramBinaryOES(program, binaryFormat, binary, length);
+        Program *programObject = context->getProgram(program);
+        ASSERT(programObject != nullptr);
+
+        Error error = programObject->loadBinary(binaryFormat, binary, length);
+        if (error.isError())
+        {
+            context->recordError(error);
+            return;
+        }
     }
 }
 
@@ -3100,14 +3122,23 @@ void GL_APIENTRY ProgramParameteri(GLuint program, GLenum pname, GLint value)
     Context *context = GetValidGlobalContext();
     if (context)
     {
-        if (context->getClientVersion() < 3)
+        if (!ValidateProgramParameter(context, program, pname, value))
         {
-            context->recordError(Error(GL_INVALID_OPERATION));
             return;
         }
 
-        // glProgramParameteri
-        UNIMPLEMENTED();
+        gl::Program *programObject = context->getProgram(program);
+        ASSERT(programObject != nullptr);
+
+        switch (pname)
+        {
+            case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+                programObject->setBinaryRetrievableHint(value != GL_FALSE);
+                break;
+
+            default:
+                UNREACHABLE();
+        }
     }
 }
 

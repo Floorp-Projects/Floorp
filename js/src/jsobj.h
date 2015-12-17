@@ -982,6 +982,20 @@ LookupProperty(JSContext* cx, HandleObject obj, PropertyName* name,
 extern bool
 HasOwnProperty(JSContext* cx, HandleObject obj, HandleId id, bool* result);
 
+/**
+ * This enum is used to select whether the defined functions should be marked as
+ * builtin native instrinsics for self-hosted code.
+ */
+enum DefineAsIntrinsic {
+    NotIntrinsic,
+    AsIntrinsic
+};
+
+extern bool
+DefineFunctions(JSContext* cx, HandleObject obj, const JSFunctionSpec* fs,
+                DefineAsIntrinsic intrinsic,
+                PropertyDefinitionBehavior behavior = DefineAllProperties);
+
 /*
  * Set a watchpoint: a synchronous callback when the given property of the
  * given object is set.

@@ -29,8 +29,11 @@ add_task(function* test_unregister_empty_scope() {
   });
 
   yield rejects(
-    PushNotificationService.unregister('',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.unregister({
+      scope: '',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     'Expected error for empty endpoint'
   );
 });

@@ -27,14 +27,16 @@ add_task(function* test_registration_success() {
     channelID: 'f6edfbcd-79d6-49b8-9766-48b9dcfeff0f',
     pushEndpoint: 'https://example.com/update/same-manifest/2',
     scope: 'https://example.net/b',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: 42 }),
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: 42 }),
     version: 10,
     quota: Infinity,
   }, {
     channelID: 'b1cf38c9-6836-4d29-8a30-a3e98d59b728',
     pushEndpoint: 'https://example.org/update/different-manifest',
     scope: 'https://example.org/c',
-    originAttributes: ChromeUtils.originAttributesToSuffix({ appId: 42, inBrowser: true }),
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: 42, inBrowser: true }),
     version: 15,
     quota: Infinity,
   }];
@@ -68,10 +70,12 @@ add_task(function* test_registration_success() {
     'Timed out waiting for handshake'
   );
 
-  let registration = yield PushNotificationService.registration(
-    'https://example.net/a', '');
+  let registration = yield PushService.registration({
+    scope: 'https://example.net/a',
+    originAttributes: '',
+  });
   equal(
-    registration.pushEndpoint,
+    registration.endpoint,
     'https://example.com/update/same-manifest/1',
     'Wrong push endpoint for scope'
   );

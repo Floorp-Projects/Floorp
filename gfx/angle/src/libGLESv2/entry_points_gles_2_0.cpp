@@ -2082,6 +2082,7 @@ void GL_APIENTRY GetProgramiv(GLuint program, GLenum pname, GLint* params)
               case GL_TRANSFORM_FEEDBACK_BUFFER_MODE:
               case GL_TRANSFORM_FEEDBACK_VARYINGS:
               case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH:
+              case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
                 context->recordError(Error(GL_INVALID_ENUM));
                 return;
             }
@@ -2134,6 +2135,9 @@ void GL_APIENTRY GetProgramiv(GLuint program, GLenum pname, GLint* params)
           case GL_TRANSFORM_FEEDBACK_VARYING_MAX_LENGTH:
             *params = programObject->getTransformFeedbackVaryingMaxLength();
             break;
+          case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+              *params = programObject->getBinaryRetrievableHint();
+              break;
 
           default:
             context->recordError(Error(GL_INVALID_ENUM));

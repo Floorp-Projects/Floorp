@@ -150,6 +150,14 @@ class Test(object):
         return None
 
     @property
+    def restart_after(self):
+        for meta in self.itermeta(None):
+            restart_after = meta.restart_after
+            if restart_after is not None:
+                return True
+        return False
+
+    @property
     def tags(self):
         tags = set()
         for meta in self.itermeta():

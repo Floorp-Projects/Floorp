@@ -12,6 +12,7 @@
 
 #include "angle_gl.h"
 #include "common/angleutils.h"
+#include "libANGLE/angletypes.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/ImageIndex.h"
 
@@ -111,8 +112,10 @@ class FramebufferAttachment final
     GLint mipLevel() const;
     GLint layer() const;
 
-    GLsizei getWidth() const;
-    GLsizei getHeight() const;
+    // The size of the underlying resource the attachment points to. The 'depth' value will
+    // correspond to a 3D texture depth or the layer count of a 2D array texture. For Surfaces and
+    // Renderbuffers, it will always be 1.
+    Extents getSize() const;
     GLenum getInternalFormat() const;
     GLsizei getSamples() const;
     GLenum type() const { return mType; }
@@ -148,8 +151,7 @@ class FramebufferAttachmentObject
     FramebufferAttachmentObject() {}
     virtual ~FramebufferAttachmentObject() {}
 
-    virtual GLsizei getAttachmentWidth(const FramebufferAttachment::Target &target) const = 0;
-    virtual GLsizei getAttachmentHeight(const FramebufferAttachment::Target &target) const = 0;
+    virtual Extents getAttachmentSize(const FramebufferAttachment::Target &target) const = 0;
     virtual GLenum getAttachmentInternalFormat(const FramebufferAttachment::Target &target) const = 0;
     virtual GLsizei getAttachmentSamples(const FramebufferAttachment::Target &target) const = 0;
 
@@ -164,14 +166,9 @@ class FramebufferAttachmentObject
     virtual rx::FramebufferAttachmentObjectImpl *getAttachmentImpl() const = 0;
 };
 
-inline GLsizei FramebufferAttachment::getWidth() const
+inline Extents FramebufferAttachment::getSize() const
 {
-    return mResource->getAttachmentWidth(mTarget);
-}
-
-inline GLsizei FramebufferAttachment::getHeight() const
-{
-    return mResource->getAttachmentHeight(mTarget);
+    return mResource->getAttachmentSize(mTarget);
 }
 
 inline GLenum FramebufferAttachment::getInternalFormat() const

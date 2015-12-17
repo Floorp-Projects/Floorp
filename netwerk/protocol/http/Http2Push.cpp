@@ -174,6 +174,22 @@ Http2PushedStream::ReadSegments(nsAHttpSegmentReader *,
 }
 
 void
+Http2PushedStream::AdjustInitialWindow()
+{
+  LOG3(("Http2PushStream %p 0x%X AdjustInitialWindow", this, mStreamID));
+  if (mConsumerStream) {
+    LOG3(("Http2PushStream::AdjustInitialWindow %p 0x%X calling super %p", this,
+          mStreamID, mConsumerStream));
+    Http2Stream::AdjustInitialWindow();
+    // We have to use mConsumerStream here because our ReadSegments is a nop for
+    // actually sending data.
+    mSession->TransactionHasDataToWrite(mConsumerStream);
+  }
+  // Otherwise, when we get hooked up, the initial window will get bumped
+  // anyway, so we're good to go.
+}
+
+void
 Http2PushedStream::SetConsumerStream(Http2Stream *consumer)
 {
   mConsumerStream = consumer;

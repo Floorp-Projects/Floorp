@@ -38,6 +38,18 @@ bool ValidateBindVertexArrayOES(Context *context, GLuint array);
 bool ValidateDeleteVertexArraysOES(Context *context, GLsizei n);
 bool ValidateGenVertexArraysOES(Context *context, GLsizei n);
 bool ValidateIsVertexArrayOES(Context *context);
+
+bool ValidateProgramBinaryOES(Context *context,
+                              GLuint program,
+                              GLenum binaryFormat,
+                              const void *binary,
+                              GLint length);
+bool ValidateGetProgramBinaryOES(Context *context,
+                                 GLuint program,
+                                 GLsizei bufSize,
+                                 GLsizei *length,
+                                 GLenum *binaryFormat,
+                                 void *binary);
 }
 
 #endif // LIBANGLE_VALIDATION_ES2_H_

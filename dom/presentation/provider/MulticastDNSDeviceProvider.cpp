@@ -576,18 +576,20 @@ MulticastDNSDeviceProvider::ForceDiscovery()
   MOZ_ASSERT(mMulticastDNS);
 
   // if it's already discovering, extend existing discovery timeout.
+  nsresult rv;
   if (mIsDiscovering) {
     Unused << mDiscoveryTimer->Cancel();
 
-    NS_WARN_IF(NS_FAILED(mDiscoveryTimer->Init(this,
-                                               mDiscveryTimeoutMs,
-                                               nsITimer::TYPE_ONE_SHOT)));
+    if (NS_WARN_IF(NS_FAILED( rv = mDiscoveryTimer->Init(this,
+        mDiscveryTimeoutMs,
+        nsITimer::TYPE_ONE_SHOT)))) {
+        return rv;
+    }
     return NS_OK;
   }
 
   StopDiscovery(NS_OK);
 
-  nsresult rv;
   if (NS_WARN_IF(NS_FAILED(rv = mMulticastDNS->StartDiscovery(
       NS_LITERAL_CSTRING(SERVICE_TYPE),
       mWrappedListener,

@@ -29,13 +29,18 @@ typedef uint32_t uint32;
 typedef int64_t int64;
 typedef uint64_t uint64;
 
-// Shim Chromium's base by importing functions in the bsae namespace.
+// Shim Chromium's base by importing functions in the base namespace.
 namespace base
 {
-    using angle::HexStringToUInt;
-    using angle::ReadFileToString;
+    using angle::kWhitespaceASCII;
+    using angle::TRIM_WHITESPACE;
+    using angle::KEEP_WHITESPACE;
+    using angle::SPLIT_WANT_ALL;
+    using angle::SPLIT_WANT_NONEMPTY;
     using angle::SplitString;
     using angle::SplitStringAlongWhitespace;
+    using angle::HexStringToUInt;
+    using angle::ReadFileToString;
 
     // StringPrintf is called differently in ANGLE but using cannot change
     // the name of the imported function. Use a define to change the name.
