@@ -650,14 +650,14 @@ function ArrayShorthand(...dims) {
   if (!IsObject(this) || !ObjectIsTypeDescr(this))
     ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
-  var T = GetTypedObjectModule();
+  var AT = GetTypedObjectModule().ArrayType;
 
   if (dims.length == 0)
     ThrowTypeError(JSMSG_TYPEDOBJECT_BAD_ARGS);
 
   var accum = this;
   for (var i = dims.length - 1; i >= 0; i--)
-    accum = new T.ArrayType(accum, dims[i]);
+    accum = new AT(accum, dims[i]);
   return accum;
 }
 
@@ -1160,9 +1160,9 @@ function FilterTypedSeqImpl(array, func) {
     inOffset += size;
   }
 
-  var T = GetTypedObjectModule();
+  var AT = GetTypedObjectModule().ArrayType;
 
-  var resultType = new T.ArrayType(elementType, count);
+  var resultType = new AT(elementType, count);
   var result = new resultType();
   for (var i = 0, j = 0; i < array.length; i++) {
     if (GET_BIT(flags, i))

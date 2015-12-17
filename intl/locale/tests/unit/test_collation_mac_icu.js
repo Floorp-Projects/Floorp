@@ -2,7 +2,8 @@ var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
-function check_sort() {
+function run_test()
+{
   var input = [
     "Argentina",
     "Oerlikon",
@@ -79,30 +80,4 @@ function check_sort() {
     "中国",
     "日本",
   ]);
-}
-
-function test_default() {
-  Services.prefs.clearUserPref("intl.collation.mac.use_icu");
-  check_sort();
-}
-
-function test_ICU() {
-  Services.prefs.setBoolPref("intl.collation.mac.use_icu", true);
-  check_sort();
-}
-
-function test_CoreServices() {
-  Services.prefs.setBoolPref("intl.collation.mac.use_icu", false);
-  check_sort();
-}
-
-function run_test()
-{
-  test_default();
-  test_ICU();
-  if (Services.sysinfo.getProperty("arch") == "x86") {
-    test_CoreServices();
-  }
-
-  Services.prefs.clearUserPref("intl.collation.mac.use_icu");
 }

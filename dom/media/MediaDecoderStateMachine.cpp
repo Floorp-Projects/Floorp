@@ -395,8 +395,7 @@ MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
 
   RefPtr<media::MediaSink> mediaSink =
     new VideoSink(mTaskQueue, audioSink, mVideoQueue,
-                  mVideoFrameContainer, mRealTime,
-                  *mFrameStats,
+                  mVideoFrameContainer, *mFrameStats,
                   sVideoQueueSendToCompositorSize);
   return mediaSink.forget();
 }

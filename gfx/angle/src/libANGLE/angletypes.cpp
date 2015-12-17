@@ -133,4 +133,13 @@ bool Box::operator!=(const Box &other) const
     return !(*this == other);
 }
 
+bool operator==(const Extents &lhs, const Extents &rhs)
+{
+    return lhs.width == rhs.width && lhs.height == rhs.height && lhs.depth == rhs.depth;
+}
+
+bool operator!=(const Extents &lhs, const Extents &rhs)
+{
+    return !(lhs == rhs);
+}
 }

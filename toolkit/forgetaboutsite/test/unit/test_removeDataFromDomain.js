@@ -467,8 +467,8 @@ function* test_push_cleared()
 {
   let ps;
   try {
-    ps = Cc["@mozilla.org/push/NotificationService;1"].
-           getService(Ci.nsIPushNotificationService);
+    ps = Cc["@mozilla.org/push/Service;1"].
+           getService(Ci.nsIPushService);
   } catch(e) {
     // No push service, skip test.
     return;
@@ -502,9 +502,18 @@ function* test_push_cleared()
 
   function push_registration_exists(aURL, ps)
   {
-    return ps.registration(aURL, ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }))
-      .then(record => !!record)
-      .catch(_ => false);
+    return new Promise(resolve => {
+      let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+                  .getService(Ci.nsIScriptSecurityManager);
+      let principal = ssm.createCodebasePrincipalFromOrigin(aURL);
+      return ps.getSubscription(aURL, principal, (status, record) => {
+        if (!Components.isSuccessCode(status)) {
+          resolve(false);
+        } else {
+          resolve(!!record);
+        }
+      });
+    });
   }
 
   const TEST_URL = "https://www.mozilla.org/scope/";

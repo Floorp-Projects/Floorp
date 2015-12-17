@@ -85,6 +85,24 @@ void TransformFeedback::bindGenericBuffer(Buffer *buffer)
     mImplementation->bindGenericBuffer(mGenericBuffer);
 }
 
+void TransformFeedback::detachBuffer(GLuint bufferName)
+{
+    for (size_t index = 0; index < mIndexedBuffers.size(); index++)
+    {
+        if (mIndexedBuffers[index].id() == bufferName)
+        {
+            mIndexedBuffers[index].set(nullptr);
+            mImplementation->bindIndexedBuffer(index, mIndexedBuffers[index]);
+        }
+    }
+
+    if (mGenericBuffer.id() == bufferName)
+    {
+        mGenericBuffer.set(nullptr);
+        mImplementation->bindGenericBuffer(mGenericBuffer);
+    }
+}
+
 const BindingPointer<Buffer> &TransformFeedback::getGenericBuffer() const
 {
     return mGenericBuffer;

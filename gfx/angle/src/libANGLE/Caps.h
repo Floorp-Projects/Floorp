@@ -83,7 +83,7 @@ struct Extensions
     // GL_KHR_texture_compression_astc_hdr, GL_KHR_texture_compression_astc_ldr
     // GL_OES_compressed_ETC1_RGB8_texture
     // GL_EXT_sRGB
-    // GL_ANGLE_depth_texture
+    // GL_ANGLE_depth_texture, GL_OES_depth32
     // GL_EXT_color_buffer_float
     void setTextureExtensionSupport(const TextureCapsMap &textureCaps);
 
@@ -157,6 +157,10 @@ struct Extensions
 
     // GL_ANGLE_depth_texture
     bool depthTextures;
+
+    // GL_OES_depth32
+    // Allows DEPTH_COMPONENT32_OES as a valid Renderbuffer format.
+    bool depth32;
 
     // GL_EXT_texture_storage
     bool textureStorage;
@@ -467,6 +471,9 @@ struct ClientExtensions
     // EGL_EXT_platform_base
     bool platformBase;
 
+    // EGL_EXT_platform_device
+    bool platformDevice;
+
     // EGL_ANGLE_platform_angle
     bool platformANGLE;
 
@@ -475,6 +482,15 @@ struct ClientExtensions
 
     // EGL_ANGLE_platform_angle_opengl
     bool platformANGLEOpenGL;
+
+    // EGL_ANGLE_device_creation
+    bool deviceCreation;
+
+    // EGL_ANGLE_device_creation_d3d11
+    bool deviceCreationD3D11;
+
+    // EGL_ANGLE_x11_visual
+    bool x11Visual;
 
     // EGL_KHR_client_get_all_proc_addresses
     bool clientGetAllProcAddresses;

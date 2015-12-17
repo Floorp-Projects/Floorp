@@ -26,7 +26,7 @@ class Framebuffer9 : public FramebufferD3D
     gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) override;
 
   private:
-    gl::Error clear(const gl::State &state, const ClearParameters &clearParams) override;
+    gl::Error clear(const gl::Data &data, const ClearParameters &clearParams) override;
 
     gl::Error readPixelsImpl(const gl::Rectangle &area,
                              GLenum format,

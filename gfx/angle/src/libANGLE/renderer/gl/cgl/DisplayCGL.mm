@@ -113,7 +113,7 @@ SurfaceImpl *DisplayCGL::createWindowSurface(const egl::Config *configuration,
                                              EGLNativeWindowType window,
                                              const egl::AttributeMap &attribs)
 {
-    return new WindowSurfaceCGL(this->getRenderer(), window, mFunctions);
+    return new WindowSurfaceCGL(this->getRenderer(), window, mFunctions, mContext);
 }
 
 SurfaceImpl *DisplayCGL::createPbufferSurface(const egl::Config *configuration,

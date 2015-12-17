@@ -11,9 +11,13 @@
 
 #include "libANGLE/renderer/gl/SurfaceGL.h"
 
+struct _CGLContextObject;
+typedef _CGLContextObject *CGLContextObj;
 @class CALayer;
 struct __IOSurface;
 typedef __IOSurface *IOSurfaceRef;
+
+@class SwapLayer;
 
 namespace rx
 {
@@ -24,12 +28,36 @@ class FunctionsGL;
 class StateManagerGL;
 struct WorkaroundsGL;
 
-class DisplayLink;
+struct SharedSwapState
+{
+    struct SwapTexture
+    {
+        GLuint texture;
+        unsigned int width;
+        unsigned int height;
+        uint64_t swapId;
+    };
+
+    SwapTexture textures[3];
+
+    // This code path is not going to be used by Chrome so we take the liberty
+    // to use pthreads directly instead of using mutexes and condition variables
+    // via the Platform API.
+    pthread_mutex_t mutex;
+    // The following members should be accessed only when holding the mutex
+    // (or doing construction / destruction)
+    SwapTexture *beingRendered;
+    SwapTexture *lastRendered;
+    SwapTexture *beingPresented;
+};
 
 class WindowSurfaceCGL : public SurfaceGL
 {
   public:
-    WindowSurfaceCGL(RendererGL *renderer, CALayer *layer, const FunctionsGL *functions);
+    WindowSurfaceCGL(RendererGL *renderer,
+                     CALayer *layer,
+                     const FunctionsGL *functions,
+                     CGLContextObj context);
     ~WindowSurfaceCGL() override;
 
     egl::Error initialize() override;
@@ -38,7 +66,7 @@ class WindowSurfaceCGL : public SurfaceGL
     egl::Error swap() override;
     egl::Error postSubBuffer(EGLint x, EGLint y, EGLint width, EGLint height) override;
     egl::Error querySurfacePointerANGLE(EGLint attribute, void **value) override;
-    egl::Error bindTexImage(EGLint buffer) override;
+    egl::Error bindTexImage(gl::Texture *texture, EGLint buffer) override;
     egl::Error releaseTexImage(EGLint buffer) override;
     void setSwapInterval(EGLint interval) override;
 
@@ -51,27 +79,16 @@ class WindowSurfaceCGL : public SurfaceGL
     FramebufferImpl *createDefaultFramebuffer(const gl::Framebuffer::Data &data) override;
 
   private:
-    struct Surface
-    {
-        IOSurfaceRef ioSurface;
-        GLuint texture;
-        uint64_t lastPresentNanos;
-    };
-
-    void freeSurfaceData(Surface *surface);
-    egl::Error initializeSurfaceData(Surface *surface, int width, int height);
+    SwapLayer *mSwapLayer;
+    SharedSwapState mSwapState;
+    uint64_t mCurrentSwapId;
 
     CALayer *mLayer;
+    CGLContextObj mContext;
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;
     const WorkaroundsGL &mWorkarounds;
-    DisplayLink *mDisplayLink;
 
-    // CGL doesn't have a default framebuffer, we instead render to an IOSurface
-    // that will be set as the content of the CALayer which is our native window.
-    // We use two IOSurfaces to do double buffering.
-    Surface mSurfaces[2];
-    int mCurrentSurface;
     GLuint mFramebuffer;
     GLuint mDSRenderbuffer;
 };

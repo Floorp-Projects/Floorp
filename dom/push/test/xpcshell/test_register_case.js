@@ -47,12 +47,15 @@ add_task(function* test_register_case() {
   });
 
   let newRecord = yield waitForPromise(
-    PushNotificationService.register('https://example.net/case',
-      ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
+    PushService.register({
+      scope: 'https://example.net/case',
+      originAttributes: ChromeUtils.originAttributesToSuffix(
+        { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false }),
+    }),
     DEFAULT_TIMEOUT,
     'Mixed-case register response timed out'
   );
-  equal(newRecord.pushEndpoint, 'https://example.com/update/case',
+  equal(newRecord.endpoint, 'https://example.com/update/case',
     'Wrong push endpoint in registration record');
 
   let record = yield db.getByPushEndpoint('https://example.com/update/case');
