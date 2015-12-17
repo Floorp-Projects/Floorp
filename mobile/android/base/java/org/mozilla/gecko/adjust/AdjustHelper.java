@@ -5,8 +5,12 @@
 
 package org.mozilla.gecko.adjust;
 
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.preferences.GeckoPreferences;
+
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 
 import com.adjust.sdk.Adjust;
 import com.adjust.sdk.AdjustConfig;
@@ -15,6 +19,10 @@ import com.adjust.sdk.LogLevel;
 
 public class AdjustHelper implements AdjustHelperInterface {
     public void onCreate(final Context context, final String maybeAppToken) {
+        if (isUserOptOut(context)) {
+            return;
+        }
+
         final String environment;
         final String appToken;
         final LogLevel logLevel;
@@ -33,14 +41,31 @@ public class AdjustHelper implements AdjustHelperInterface {
     }
 
     public void onReceive(final Context context, final Intent intent) {
+        if (isUserOptOut(context)) {
+            return;
+        }
+
         new AdjustReferrerReceiver().onReceive(context, intent);
     }
 
-    public void onResume() {
+    public void onResume(final Context context) {
+        if (isUserOptOut(context)) {
+            return;
+        }
+
         Adjust.onResume();
     }
 
-    public void onPause() {
+    public void onPause(final Context context) {
+        if (isUserOptOut(context)) {
+            return;
+        }
+
         Adjust.onPause();
+    }
+
+    private boolean isUserOptOut(final Context context) {
+        final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
+        return !prefs.getBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
     }
 }

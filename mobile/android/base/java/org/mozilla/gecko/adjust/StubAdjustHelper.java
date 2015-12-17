@@ -17,11 +17,11 @@ public class StubAdjustHelper implements AdjustHelperInterface {
         // Do nothing.
     }
 
-    public void onResume() {
+    public void onResume(final Context context) {
         // Do nothing.
     }
 
-    public void onPause() {
+    public void onPause(final Context context) {
         // Do nothing.
     }
 }
