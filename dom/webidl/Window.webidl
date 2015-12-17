@@ -354,6 +354,7 @@ partial interface Window {
 
            attribute EventHandler ondevicemotion;
            attribute EventHandler ondeviceorientation;
+           attribute EventHandler onabsolutedeviceorientation;
            attribute EventHandler ondeviceproximity;
            attribute EventHandler onuserproximity;
            attribute EventHandler ondevicelight;

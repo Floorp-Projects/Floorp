@@ -319,6 +319,8 @@ EventListenerManager::AddEventListenerInternal(
     }
   } else if (aTypeAtom == nsGkAtoms::ondeviceorientation) {
     EnableDevice(eDeviceOrientation);
+  } else if (aTypeAtom == nsGkAtoms::onabsolutedeviceorientation) {
+    EnableDevice(eAbsoluteDeviceOrientation);
   } else if (aTypeAtom == nsGkAtoms::ondeviceproximity || aTypeAtom == nsGkAtoms::onuserproximity) {
     EnableDevice(eDeviceProximity);
   } else if (aTypeAtom == nsGkAtoms::ondevicelight) {
@@ -431,6 +433,7 @@ EventListenerManager::IsDeviceType(EventMessage aEventMessage)
 {
   switch (aEventMessage) {
     case eDeviceOrientation:
+    case eAbsoluteDeviceOrientation:
     case eDeviceMotion:
     case eDeviceLight:
     case eDeviceProximity:
@@ -459,6 +462,14 @@ EventListenerManager::EnableDevice(EventMessage aEventMessage)
       // Falls back to SENSOR_ROTATION_VECTOR and SENSOR_ORIENTATION if
       // unavailable on device.
       window->EnableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
+#else
+      window->EnableDeviceSensor(SENSOR_ORIENTATION);
+#endif
+      break;
+    case eAbsoluteDeviceOrientation:
+#ifdef MOZ_WIDGET_ANDROID
+      // Falls back to SENSOR_ORIENTATION if unavailable on device.
+      window->EnableDeviceSensor(SENSOR_ROTATION_VECTOR);
 #else
       window->EnableDeviceSensor(SENSOR_ORIENTATION);
 #endif
@@ -497,10 +508,17 @@ EventListenerManager::DisableDevice(EventMessage aEventMessage)
   switch (aEventMessage) {
     case eDeviceOrientation:
 #ifdef MOZ_WIDGET_ANDROID
+      // Disable all potential fallback sensors.
+      window->DisableDeviceSensor(SENSOR_GAME_ROTATION_VECTOR);
       window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
-#else
-      window->DisableDeviceSensor(SENSOR_ORIENTATION);
 #endif
+      window->DisableDeviceSensor(SENSOR_ORIENTATION);
+      break;
+    case eAbsoluteDeviceOrientation:
+#ifdef MOZ_WIDGET_ANDROID
+      window->DisableDeviceSensor(SENSOR_ROTATION_VECTOR);
+#endif
+      window->DisableDeviceSensor(SENSOR_ORIENTATION);
       break;
     case eDeviceMotion:
       window->DisableDeviceSensor(SENSOR_ACCELERATION);
