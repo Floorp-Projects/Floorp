@@ -9260,6 +9260,22 @@ export DIST
 export MOZ_LINKER
 export ZLIB_IN_MOZGLUE
 export MOZ_MEMORY
+export AR
+export RANLIB
+export CPP
+export CC
+export CXX
+export LD
+export ARFLAGS
+export CPPFLAGS
+export CFLAGS
+export CXXFLAGS
+export LDFLAGS
+export HOST_CC
+export HOST_CXX
+export HOST_CFLAGS
+export HOST_CXXFLAGS
+export HOST_LDFLAGS
 
 if ! test -e js; then
     mkdir js
