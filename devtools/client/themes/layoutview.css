@@ -6,7 +6,7 @@
   box-sizing: border-box;
 }
 
-.theme-sidebar body {
+body.theme-sidebar {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;
   margin: 0px auto;
