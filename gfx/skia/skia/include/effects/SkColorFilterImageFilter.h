@@ -14,26 +14,25 @@ class SkColorFilter;
 
 class SK_API SkColorFilterImageFilter : public SkImageFilter {
 public:
-    static SkColorFilterImageFilter* Create(SkColorFilter* cf,
-                                            SkImageFilter* input = NULL,
-                                            const CropRect* cropRect = NULL);
-    virtual ~SkColorFilterImageFilter();
+    static SkImageFilter* Create(SkColorFilter* cf, SkImageFilter* input = NULL,
+                                 const CropRect* cropRect = NULL);
 
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkColorFilterImageFilter)
 
 protected:
-    SkColorFilterImageFilter(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
-
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
-                               SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
-
-    virtual bool asColorFilter(SkColorFilter**) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
+    bool onFilterImage(Proxy*, const SkBitmap& src, const Context&, SkBitmap* result,
+                       SkIPoint* loc) const override;
+    bool onIsColorFilterNode(SkColorFilter**) const override;
+    bool affectsTransparentBlack() const override;
 
 private:
     SkColorFilterImageFilter(SkColorFilter* cf,
                              SkImageFilter* input,
                              const CropRect* cropRect);
+    virtual ~SkColorFilterImageFilter();
+
     SkColorFilter*  fColorFilter;
 
     typedef SkImageFilter INHERITED;

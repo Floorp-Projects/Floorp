@@ -54,8 +54,8 @@ static bool is_32bit_colortype(SkColorType ct) {
 }
 
 static AlphaVerb compute_AlphaVerb(SkAlphaType src, SkAlphaType dst) {
-    SkASSERT(kIgnore_SkAlphaType != src);
-    SkASSERT(kIgnore_SkAlphaType != dst);
+    SkASSERT(kUnknown_SkAlphaType != src);
+    SkASSERT(kUnknown_SkAlphaType != dst);
 
     if (kOpaque_SkAlphaType == src || kOpaque_SkAlphaType == dst || src == dst) {
         return kNothing_AlphaVerb;
@@ -126,14 +126,44 @@ bool SkSrcPixelInfo::convertPixelsTo(SkDstPixelInfo* dst, int width, int height)
     return true;
 }
 
-static void rect_memcpy(void* dst, size_t dstRB, const void* src, size_t srcRB, size_t bytesPerRow,
-                        int rowCount) {
-    SkASSERT(bytesPerRow <= srcRB);
-    SkASSERT(bytesPerRow <= dstRB);
-    for (int i = 0; i < rowCount; ++i) {
-        memcpy(dst, src, bytesPerRow);
-        dst = (char*)dst + dstRB;
-        src = (const char*)src + srcRB;
+static void copy_g8_to_32(void* dst, size_t dstRB, const void* src, size_t srcRB, int w, int h) {
+    uint32_t* dst32 = (uint32_t*)dst;
+    const uint8_t* src8 = (const uint8_t*)src;
+    
+    for (int y = 0; y < h; ++y) {
+        for (int x = 0; x < w; ++x) {
+            dst32[x] = SkPackARGB32(0xFF, src8[x], src8[x], src8[x]);
+        }
+        dst32 = (uint32_t*)((char*)dst32 + dstRB);
+        src8 += srcRB;
+    }
+}
+
+static void copy_32_to_g8(void* dst, size_t dstRB, const void* src, size_t srcRB,
+                          const SkImageInfo& srcInfo) {
+    uint8_t* dst8 = (uint8_t*)dst;
+    const uint32_t* src32 = (const uint32_t*)src;
+
+    const int w = srcInfo.width();
+    const int h = srcInfo.height();
+    const bool isBGRA = (kBGRA_8888_SkColorType == srcInfo.colorType());
+
+    for (int y = 0; y < h; ++y) {
+        if (isBGRA) {
+            // BGRA
+            for (int x = 0; x < w; ++x) {
+                uint32_t s = src32[x];
+                dst8[x] = SkComputeLuminance((s >> 16) & 0xFF, (s >> 8) & 0xFF, s & 0xFF);
+            }
+        } else {
+            // RGBA
+            for (int x = 0; x < w; ++x) {
+                uint32_t s = src32[x];
+                dst8[x] = SkComputeLuminance(s & 0xFF, (s >> 8) & 0xFF, (s >> 16) & 0xFF);
+            }
+        }
+        src32 = (const uint32_t*)((const char*)src32 + srcRB);
+        dst8 += dstRB;
     }
 }
 
@@ -154,13 +184,13 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
         dstPI.fAlphaType = dstInfo.alphaType();
         dstPI.fPixels = dstPixels;
         dstPI.fRowBytes = dstRB;
-        
+
         SkSrcPixelInfo srcPI;
         srcPI.fColorType = srcInfo.colorType();
         srcPI.fAlphaType = srcInfo.alphaType();
         srcPI.fPixels = srcPixels;
         srcPI.fRowBytes = srcRB;
-        
+
         return srcPI.convertPixelsTo(&dstPI, width, height);
     }
 
@@ -170,6 +200,7 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
         switch (srcInfo.colorType()) {
             case kRGB_565_SkColorType:
             case kAlpha_8_SkColorType:
+            case kGray_8_SkColorType:
                 break;
             case kIndex_8_SkColorType:
             case kARGB_4444_SkColorType:
@@ -180,7 +211,7 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
             default:
                 return false;
         }
-        rect_memcpy(dstPixels, dstRB, srcPixels, srcRB, width * srcInfo.bytesPerPixel(), height);
+        SkRectMemcpy(dstPixels, dstRB, srcPixels, srcRB, width * srcInfo.bytesPerPixel(), height);
         return true;
     }
 
@@ -189,6 +220,15 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
      *  are supported.
      */
 
+    if (kGray_8_SkColorType == srcInfo.colorType() && 4 == dstInfo.bytesPerPixel()) {
+        copy_g8_to_32(dstPixels, dstRB, srcPixels, srcRB, width, height);
+        return true;
+    }
+    if (kGray_8_SkColorType == dstInfo.colorType() && 4 == srcInfo.bytesPerPixel()) {
+        copy_32_to_g8(dstPixels, dstRB, srcPixels, srcRB, srcInfo);
+        return true;
+    }
+
     // Can no longer draw directly into 4444, but we can manually whack it for a few combinations
     if (kARGB_4444_SkColorType == dstInfo.colorType() &&
         (kN32_SkColorType == srcInfo.colorType() || kIndex_8_SkColorType == srcInfo.colorType())) {
@@ -196,13 +236,13 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
             // Our method for converting to 4444 assumes premultiplied.
             return false;
         }
-        
-        const SkPMColor* table = NULL;
+
+        const SkPMColor* table = nullptr;
         if (kIndex_8_SkColorType == srcInfo.colorType()) {
-            if (NULL == ctable) {
+            if (nullptr == ctable) {
                 return false;
             }
-            table = ctable->lockColors();
+            table = ctable->readColors();
         }
 
         for (int y = 0; y < height; ++y) {
@@ -222,10 +262,6 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
             dstPixels = (char*)dstPixels + dstRB;
             srcPixels = (const char*)srcPixels + srcRB;
         }
-        
-        if (table) {
-            ctable->unlockColors();
-        }
         return true;
     }
 
@@ -240,11 +276,11 @@ bool SkPixelInfo::CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t
     // TODO: switch the allocation of tmpDst to call sk_calloc_throw
     {
         SkBitmap bm;
-        if (!bm.installPixels(srcInfo, const_cast<void*>(srcPixels), srcRB, ctable, NULL, NULL)) {
+        if (!bm.installPixels(srcInfo, const_cast<void*>(srcPixels), srcRB, ctable, nullptr, nullptr)) {
             return false;
         }
         SkAutoTUnref<SkCanvas> canvas(SkCanvas::NewRasterDirect(dstInfo, dstPixels, dstRB));
-        if (NULL == canvas.get()) {
+        if (nullptr == canvas.get()) {
             return false;
         }
 

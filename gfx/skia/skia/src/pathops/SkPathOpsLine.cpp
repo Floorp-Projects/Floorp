@@ -6,41 +6,6 @@
  */
 #include "SkPathOpsLine.h"
 
-SkDLine SkDLine::subDivide(double t1, double t2) const {
-    SkDVector delta = tangent();
-    SkDLine dst = {{{
-            fPts[0].fX - t1 * delta.fX, fPts[0].fY - t1 * delta.fY}, {
-            fPts[0].fX - t2 * delta.fX, fPts[0].fY - t2 * delta.fY}}};
-    return dst;
-}
-
-// may have this below somewhere else already:
-// copying here because I thought it was clever
-
-// Copyright 2001, softSurfer (www.softsurfer.com)
-// This code may be freely used and modified for any purpose
-// providing that this copyright notice is included with it.
-// SoftSurfer makes no warranty for this code, and cannot be held
-// liable for any real or imagined damage resulting from its use.
-// Users of this code must verify correctness for their application.
-
-// Assume that a class is already given for the object:
-//    Point with coordinates {float x, y;}
-//===================================================================
-
-// isLeft(): tests if a point is Left|On|Right of an infinite line.
-//    Input:  three points P0, P1, and P2
-//    Return: >0 for P2 left of the line through P0 and P1
-//            =0 for P2 on the line
-//            <0 for P2 right of the line
-//    See: the January 2001 Algorithm on Area of Triangles
-//    return (float) ((P1.x - P0.x)*(P2.y - P0.y) - (P2.x - P0.x)*(P1.y - P0.y));
-double SkDLine::isLeft(const SkDPoint& pt) const {
-    SkDVector p0 = fPts[1] - fPts[0];
-    SkDVector p2 = pt - fPts[0];
-    return p0.cross(p2);
-}
-
 SkDPoint SkDLine::ptAtT(double t) const {
     if (0 == t) {
         return fPts[0];
@@ -89,7 +54,7 @@ double SkDLine::nearPoint(const SkDPoint& xy, bool* unequal) const {
     if (unequal) {
         *unequal = (float) largest != (float) (largest + dist);
     }
-    t = SkPinT(t);
+    t = SkPinT(t);  // a looser pin breaks skpwww_lptemp_com_3
     SkASSERT(between(0, t, 1));
     return t;
 }
@@ -108,19 +73,6 @@ bool SkDLine::nearRay(const SkDPoint& xy) const {
     double largest = SkTMax(SkTMax(SkTMax(fPts[0].fX, fPts[0].fY), fPts[1].fX), fPts[1].fY);
     largest = SkTMax(largest, -tiniest);
     return RoughlyEqualUlps(largest, largest + dist); // is the dist within ULPS tolerance?
-}
-
-// Returns true if a ray from (0,0) to (x1,y1) is coincident with a ray (0,0) to (x2,y2)
-// OPTIMIZE: a specialty routine could speed this up -- may not be called very often though
-bool SkDLine::NearRay(double x1, double y1, double x2, double y2) {
-    double denom1 = x1 * x1 + y1 * y1;
-    double denom2 = x2 * x2 + y2 * y2;
-    SkDLine line = {{{0, 0}, {x1, y1}}};
-    SkDPoint pt = {x2, y2};
-    if (denom2 > denom1) {
-        SkTSwap(line[1], pt);
-    }
-    return line.nearRay(pt);
 }
 
 double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, double y) {

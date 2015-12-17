@@ -13,83 +13,58 @@
 #include "SkStream.h"
 #include "SkTemplates.h"
 
-// As copy constructor is hidden in the class hierarchy, we need to call
-// default constructor explicitly to suppress a compiler warning.
-SkColorTable::SkColorTable(const SkColorTable& src) : INHERITED() {
-    f16BitCache = NULL;
-    fAlphaType = src.fAlphaType;
-    int count = src.count();
-    fCount = SkToU16(count);
-    fColors = reinterpret_cast<SkPMColor*>(
-                                    sk_malloc_throw(count * sizeof(SkPMColor)));
-    memcpy(fColors, src.fColors, count * sizeof(SkPMColor));
+void SkColorTable::init(const SkPMColor colors[], int count) {
+    SkASSERT((unsigned)count <= 256);
 
-    SkDEBUGCODE(fColorLockCount = 0;)
-    SkDEBUGCODE(f16BitCacheLockCount = 0;)
+    fCount = count;
+    fColors = reinterpret_cast<SkPMColor*>(sk_malloc_throw(count * sizeof(SkPMColor)));
+
+    memcpy(fColors, colors, count * sizeof(SkPMColor));
 }
 
-SkColorTable::SkColorTable(const SkPMColor colors[], int count, SkAlphaType at)
-    : f16BitCache(NULL), fAlphaType(SkToU8(at))
-{
-    SkASSERT(0 == count || NULL != colors);
-
+SkColorTable::SkColorTable(const SkPMColor colors[], int count) {
+    SkASSERT(0 == count || colors);
     if (count < 0) {
         count = 0;
     } else if (count > 256) {
         count = 256;
     }
-
-    fCount = SkToU16(count);
-    fColors = reinterpret_cast<SkPMColor*>(
-                                    sk_malloc_throw(count * sizeof(SkPMColor)));
-
-    memcpy(fColors, colors, count * sizeof(SkPMColor));
-
-    SkDEBUGCODE(fColorLockCount = 0;)
-    SkDEBUGCODE(f16BitCacheLockCount = 0;)
+    this->init(colors, count);
 }
 
-SkColorTable::~SkColorTable()
+SkColorTable::SkColorTable(SkPMColor* colors, int count, AllocatedWithMalloc)
+    : fColors(colors)
+    , fCount(count)
 {
-    SkASSERT(fColorLockCount == 0);
-    SkASSERT(f16BitCacheLockCount == 0);
-
-    sk_free(fColors);
-    sk_free(f16BitCache);
+    SkASSERT(count > 0 && count <= 256);
+    SkASSERT(colors);
 }
 
-void SkColorTable::unlockColors() {
-    SkASSERT(fColorLockCount != 0);
-    SkDEBUGCODE(sk_atomic_dec(&fColorLockCount);)
+SkColorTable::~SkColorTable() {
+    sk_free(fColors);
+    // f16BitCache frees itself
 }
 
 #include "SkColorPriv.h"
 
-static inline void build_16bitcache(uint16_t dst[], const SkPMColor src[],
-                                    int count) {
-    while (--count >= 0) {
-        *dst++ = SkPixel32ToPixel16_ToU16(*src++);
-    }
-}
-
-const uint16_t* SkColorTable::lock16BitCache() {
-    if (this->isOpaque() && NULL == f16BitCache) {
-        f16BitCache = (uint16_t*)sk_malloc_throw(fCount * sizeof(uint16_t));
-        build_16bitcache(f16BitCache, fColors, fCount);
-    }
-
-    SkDEBUGCODE(f16BitCacheLockCount += 1);
-    return f16BitCache;
+const uint16_t* SkColorTable::read16BitCache() const {
+    return f16BitCache.get([&]{
+        auto cache = new uint16_t[fCount];
+        for (int i = 0; i < fCount; i++) {
+            cache[i] = SkPixel32ToPixel16_ToU16(fColors[i]);
+        }
+        return cache;
+    });
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if 0
 SkColorTable::SkColorTable(SkReadBuffer& buffer) {
-    f16BitCache = NULL;
-    SkDEBUGCODE(fColorLockCount = 0;)
-    SkDEBUGCODE(f16BitCacheLockCount = 0;)
+    if (buffer.isVersionLT(SkReadBuffer::kRemoveColorTableAlpha_Version)) {
+        /*fAlphaType = */buffer.readUInt();
+    }
 
-    fAlphaType = SkToU8(buffer.readUInt());
     fCount = buffer.getArrayCount();
     size_t allocSize = fCount * sizeof(SkPMColor);
     SkDEBUGCODE(bool success = false;)
@@ -98,15 +73,40 @@ SkColorTable::SkColorTable(SkReadBuffer& buffer) {
         SkDEBUGCODE(success =) buffer.readColorArray(fColors, fCount);
     } else {
         fCount = 0;
-        fColors = NULL;
+        fColors = nullptr;
     }
 #ifdef SK_DEBUG
     SkASSERT((unsigned)fCount <= 256);
     SkASSERT(success);
 #endif
 }
+#endif
 
 void SkColorTable::writeToBuffer(SkWriteBuffer& buffer) const {
-    buffer.writeUInt(fAlphaType);
     buffer.writeColorArray(fColors, fCount);
 }
+
+SkColorTable* SkColorTable::Create(SkReadBuffer& buffer) {
+    if (buffer.isVersionLT(SkReadBuffer::kRemoveColorTableAlpha_Version)) {
+        /*fAlphaType = */buffer.readUInt();
+    }
+
+    const int count = buffer.getArrayCount();
+    if (0 == count) {
+        return new SkColorTable(nullptr, 0);
+    }
+
+    if (count < 0 || count > 256) {
+        buffer.validate(false);
+        return nullptr;
+    }
+
+    const size_t allocSize = count * sizeof(SkPMColor);
+    SkAutoTDelete<SkPMColor> colors((SkPMColor*)sk_malloc_throw(allocSize));
+    if (!buffer.readColorArray(colors, count)) {
+        return nullptr;
+    }
+
+    return new SkColorTable(colors.detach(), count, kAllocatedWithMalloc);
+}
+

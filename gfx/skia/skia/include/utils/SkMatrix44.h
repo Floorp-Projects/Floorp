@@ -29,7 +29,20 @@
     static inline double SkMScalarToDouble(double x) {
         return x;
     }
+    static inline double SkMScalarAbs(double x) {
+        return fabs(x);
+    }
     static const SkMScalar SK_MScalarPI = 3.141592653589793;
+
+    #define SkMScalarFloor(x)           sk_double_floor(x)
+    #define SkMScalarCeil(x)            sk_double_ceil(x)
+    #define SkMScalarRound(x)           sk_double_round(x)
+
+    #define SkMScalarFloorToInt(x)      sk_double_floor2int(x)
+    #define SkMScalarCeilToInt(x)       sk_double_ceil2int(x)
+    #define SkMScalarRoundToInt(x)      sk_double_round2int(x)
+
+
 #elif defined SK_MSCALAR_IS_FLOAT
 #ifdef SK_MSCALAR_IS_DOUBLE
     #error "can't define MSCALAR both as DOUBLE and FLOAT"
@@ -48,11 +61,25 @@
     static inline double SkMScalarToDouble(float x) {
         return static_cast<double>(x);
     }
+    static inline float SkMScalarAbs(float x) {
+        return sk_float_abs(x);
+    }
     static const SkMScalar SK_MScalarPI = 3.14159265f;
+
+    #define SkMScalarFloor(x)           sk_float_floor(x)
+    #define SkMScalarCeil(x)            sk_float_ceil(x)
+    #define SkMScalarRound(x)           sk_float_round(x)
+
+    #define SkMScalarFloorToInt(x)      sk_float_floor2int(x)
+    #define SkMScalarCeilToInt(x)       sk_float_ceil2int(x)
+    #define SkMScalarRoundToInt(x)      sk_float_round2int(x)
+
 #endif
 
-#define SkMScalarToScalar SkMScalarToFloat
-#define SkScalarToMScalar SkFloatToMScalar
+#define SkIntToMScalar(n)       static_cast<SkMScalar>(n)
+
+#define SkMScalarToScalar(x)    SkMScalarToFloat(x)
+#define SkScalarToMScalar(x)    SkFloatToMScalar(x)
 
 static const SkMScalar SK_MScalar1 = 1;
 
@@ -198,6 +225,17 @@ public:
         return !(this->getType() & ~(kScale_Mask | kTranslate_Mask));
     }
 
+    /**
+     *  Returns true if the matrix only contains scale or is identity.
+     */
+    inline bool isScale() const {
+            return !(this->getType() & ~kScale_Mask);
+    }
+
+    inline bool hasPerspective() const {
+        return SkToBool(this->getType() & kPerspective_Mask);
+    }
+
     void setIdentity();
     inline void reset() { this->setIdentity();}
 
@@ -320,7 +358,8 @@ public:
     }
 
     /** If this is invertible, return that in inverse and return true. If it is
-        not invertible, return false and ignore the inverse parameter.
+        not invertible, return false and leave the inverse parameter in an
+        unspecified state.
      */
     bool invert(SkMatrix44* inverse) const;
 
@@ -372,6 +411,18 @@ public:
      */
     void map2(const float src2[], int count, float dst4[]) const;
     void map2(const double src2[], int count, double dst4[]) const;
+
+    /** Returns true if transformating an axis-aligned square in 2d by this matrix
+        will produce another 2d axis-aligned square; typically means the matrix
+        is a scale with perhaps a 90-degree rotation. A 3d rotation through 90
+        degrees into a perpendicular plane collapses a square to a line, but
+        is still considered to be axis-aligned.
+
+        By default, tolerates very slight error due to float imprecisions;
+        a 90-degree rotation can still end up with 10^-17 of
+        "non-axis-aligned" result.
+     */
+    bool preserves2dAxisAlignment(SkMScalar epsilon = SK_ScalarNearlyZero) const;
 
     void dump() const;
 
