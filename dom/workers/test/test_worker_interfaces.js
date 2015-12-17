@@ -107,8 +107,6 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "File",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    "FileReader",
-// IMPORTANT: Do not change this list without review from a DOM peer!
     "FileReaderSync",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "FormData",
