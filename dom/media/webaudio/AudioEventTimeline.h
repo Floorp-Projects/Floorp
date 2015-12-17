@@ -58,7 +58,10 @@ struct AudioTimelineEvent final
 
   explicit AudioTimelineEvent(MediaStream* aStream)
     : mType(Stream)
+    , mCurve(nullptr)
     , mStream(aStream)
+    , mTimeConstant(0.0)
+    , mDuration(0.0)
 #ifdef DEBUG
     , mTimeIsInTicks(false)
 #endif

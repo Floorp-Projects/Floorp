@@ -31,6 +31,7 @@ namespace rx
 struct TranslatedAttribute;
 struct TranslatedIndexData;
 struct SourceIndexData;
+class ProgramD3D;
 
 class InputLayoutCache : angle::NonCopyable
 {
@@ -76,6 +77,14 @@ class InputLayoutCache : angle::NonCopyable
         uint32_t attributeData[gl::MAX_VERTEX_ATTRIBS];
     };
 
+    gl::Error findInputLayout(const PackedAttributeLayout &layout,
+                              unsigned int inputElementCount,
+                              const D3D11_INPUT_ELEMENT_DESC inputElements[gl::MAX_VERTEX_ATTRIBS],
+                              ProgramD3D *programD3D,
+                              const TranslatedAttribute *sortedAttributes[gl::MAX_VERTEX_ATTRIBS],
+                              size_t attributeCount,
+                              ID3D11InputLayout **inputLayout);
+
     std::map<PackedAttributeLayout, ID3D11InputLayout *> mLayoutMap;
 
     ID3D11InputLayout *mCurrentIL;
@@ -94,6 +103,6 @@ class InputLayoutCache : angle::NonCopyable
     D3D_FEATURE_LEVEL mFeatureLevel;
 };
 
-}
+}  // namespace rx
 
 #endif // LIBANGLE_RENDERER_D3D_D3D11_INPUTLAYOUTCACHE_H_

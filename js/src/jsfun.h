@@ -187,7 +187,6 @@ class JSFunction : public js::NativeObject
     bool isExprBody()               const { return flags() & EXPR_BODY; }
     bool hasGuessedAtom()           const { return flags() & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags() & LAMBDA; }
-    bool isSelfHostedBuiltin()      const { return flags() & SELF_HOSTED; }
     bool hasRest()                  const { return flags() & HAS_REST; }
     bool isInterpretedLazy()        const { return flags() & INTERPRETED_LAZY; }
     bool hasScript()                const { return flags() & INTERPRETED; }
@@ -208,6 +207,10 @@ class JSFunction : public js::NativeObject
 
     bool hasResolvedLength()        const { return flags() & RESOLVED_LENGTH; }
     bool hasResolvedName()          const { return flags() & RESOLVED_NAME; }
+
+    bool isSelfHostedOrIntrinsic()  const { return flags() & SELF_HOSTED; }
+    bool isSelfHostedBuiltin()      const { return isSelfHostedOrIntrinsic() && !isNative(); }
+    bool isIntrinsic()              const { return isSelfHostedOrIntrinsic() && isNative(); }
 
     bool hasJITCode() const {
         if (!hasScript())
@@ -263,10 +266,16 @@ class JSFunction : public js::NativeObject
     }
 
     void setIsSelfHostedBuiltin() {
+        MOZ_ASSERT(isInterpreted());
         MOZ_ASSERT(!isSelfHostedBuiltin());
         flags_ |= SELF_HOSTED;
         // Self-hosted functions should not be constructable.
         flags_ &= ~CONSTRUCTOR;
+    }
+    void setIsIntrinsic() {
+        MOZ_ASSERT(isNative());
+        MOZ_ASSERT(!isIntrinsic());
+        flags_ |= SELF_HOSTED;
     }
 
     void setIsFunctionPrototype() {

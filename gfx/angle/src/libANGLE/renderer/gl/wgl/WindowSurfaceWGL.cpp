@@ -119,7 +119,7 @@ egl::Error WindowSurfaceWGL::querySurfacePointerANGLE(EGLint attribute, void **v
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceWGL::bindTexImage(EGLint buffer)
+egl::Error WindowSurfaceWGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
     return egl::Error(EGL_SUCCESS);

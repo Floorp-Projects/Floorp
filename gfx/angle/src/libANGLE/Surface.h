@@ -70,8 +70,7 @@ class Surface final : public gl::FramebufferAttachmentObject
     EGLint isFixedSize() const;
 
     // FramebufferAttachmentObject implementation
-    GLsizei getAttachmentWidth(const gl::FramebufferAttachment::Target &/*target*/) const override { return getWidth(); }
-    GLsizei getAttachmentHeight(const gl::FramebufferAttachment::Target &/*target*/) const override { return getHeight(); }
+    gl::Extents getAttachmentSize(const gl::FramebufferAttachment::Target &target) const override;
     GLenum getAttachmentInternalFormat(const gl::FramebufferAttachment::Target &target) const override;
     GLsizei getAttachmentSamples(const gl::FramebufferAttachment::Target &target) const override;
 

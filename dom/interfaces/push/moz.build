@@ -5,9 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 XPIDL_SOURCES += [
-    'nsIPushClient.idl',
-    'nsIPushNotificationService.idl',
     'nsIPushObserverNotification.idl',
+    'nsIPushService.idl',
 ]
 
 XPIDL_MODULE = 'dom_push'

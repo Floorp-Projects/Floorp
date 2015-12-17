@@ -41,7 +41,7 @@ EGLDisplay EGLAPIENTRY GetDisplay(EGLNativeDisplayType display_id)
 {
     EVENT("(EGLNativeDisplayType display_id = 0x%0.8p)", display_id);
 
-    return Display::getDisplay(display_id, AttributeMap());
+    return Display::GetDisplayFromAttribs(reinterpret_cast<void *>(display_id), AttributeMap());
 }
 
 EGLBoolean EGLAPIENTRY Initialize(EGLDisplay dpy, EGLint *major, EGLint *minor)
@@ -1539,6 +1539,10 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY GetProcAddress(const char *
         // EGL_KHR_image_base/EGL_KHR_image
         INSERT_PROC_ADDRESS(egl, CreateImageKHR);
         INSERT_PROC_ADDRESS(egl, DestroyImageKHR);
+
+        // EGL_EXT_device_creation
+        INSERT_PROC_ADDRESS(egl, CreateDeviceANGLE);
+        INSERT_PROC_ADDRESS(egl, ReleaseDeviceANGLE);
 
 #undef INSERT_PROC_ADDRESS
         return map;

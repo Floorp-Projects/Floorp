@@ -57,6 +57,7 @@ class FunctionsGLGLX : public FunctionsGL
 DisplayGLX::DisplayGLX()
     : DisplayGL(),
       mFunctionsGL(nullptr),
+      mRequestedVisual(-1),
       mContextConfig(nullptr),
       mContext(nullptr),
       mDummyPbuffer(0),
@@ -80,6 +81,7 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
 {
     mEGLDisplay = display;
     Display *xDisplay = display->getNativeDisplayId();
+    const auto &attribMap = display->getAttributeMap();
 
     // ANGLE_platform_angle allows the creation of a default display
     // using EGL_DEFAULT_DISPLAY (= nullptr). In this case just open
@@ -137,14 +139,42 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
         mMinSwapInterval = 1;
     }
 
-    // When glXMakeCurrent is called, the context and the surface must be
-    // compatible which in glX-speak means that their config have the same
-    // color buffer type, are both RGBA or ColorIndex, and their buffers have
-    // the same depth, if they exist.
-    // Since our whole EGL implementation is backed by only one GL context, this
-    // context must be compatible with all the GLXFBConfig corresponding to the
-    // EGLconfigs that we will be exposing.
+    if (attribMap.contains(EGL_X11_VISUAL_ID_ANGLE))
     {
+        mRequestedVisual = attribMap.get(EGL_X11_VISUAL_ID_ANGLE, -1);
+
+        // There is no direct way to get the GLXFBConfig matching an X11 visual ID
+        // so we have to iterate over all the GLXFBConfigs to find the right one.
+        int nConfigs;
+        int attribList[] = {
+            None,
+        };
+        glx::FBConfig *allConfigs = mGLX.chooseFBConfig(attribList, &nConfigs);
+
+        for (int i = 0; i < nConfigs; ++i)
+        {
+            if (getGLXFBConfigAttrib(allConfigs[i], GLX_VISUAL_ID) == mRequestedVisual)
+            {
+                mContextConfig = allConfigs[i];
+                break;
+            }
+        }
+        XFree(allConfigs);
+
+        if (mContextConfig == nullptr)
+        {
+            return egl::Error(EGL_NOT_INITIALIZED, "Invalid visual ID requested.");
+        }
+    }
+    else
+    {
+        // When glXMakeCurrent is called, the context and the surface must be
+        // compatible which in glX-speak means that their config have the same
+        // color buffer type, are both RGBA or ColorIndex, and their buffers have
+        // the same depth, if they exist.
+        // Since our whole EGL implementation is backed by only one GL context, this
+        // context must be compatible with all the GLXFBConfig corresponding to the
+        // EGLconfigs that we will be exposing.
         int nConfigs;
         int attribList[] =
         {
@@ -168,7 +198,7 @@ egl::Error DisplayGLX::initialize(egl::Display *display)
             GLX_CONFIG_CAVEAT, GLX_NONE,
             None
         };
-        glx::FBConfig* candidates = mGLX.chooseFBConfig(attribList, &nConfigs);
+        glx::FBConfig *candidates = mGLX.chooseFBConfig(attribList, &nConfigs);
         if (nConfigs == 0)
         {
             XFree(candidates);
@@ -435,6 +465,14 @@ egl::ConfigSet DisplayGLX::generateConfigs() const
         config.nativeVisualType = getGLXFBConfigAttrib(glxConfig, GLX_X_VISUAL_TYPE);
         config.nativeRenderable = EGL_TRUE;
 
+        // When a visual ID has been specified with EGL_ANGLE_x11_visual we should
+        // only return configs with this visual: it will maximize performance by avoid
+        // blits in the driver when showing the window on the screen.
+        if (mRequestedVisual != -1 && config.nativeVisualID != mRequestedVisual)
+        {
+            continue;
+        }
+
         // Buffer sizes
         config.redSize = getGLXFBConfigAttrib(glxConfig, GLX_RED_SIZE);
         config.greenSize = getGLXFBConfigAttrib(glxConfig, GLX_GREEN_SIZE);
@@ -650,6 +688,11 @@ void DisplayGLX::setSwapInterval(glx::Drawable drawable, SwapControlData *data)
         }
         mCurrentSwapInterval = data->targetSwapInterval;
     }
+}
+
+bool DisplayGLX::isValidWindowVisualId(int visualId) const
+{
+    return mRequestedVisual == -1 || mRequestedVisual == visualId;
 }
 
 const FunctionsGL *DisplayGLX::getFunctionsGL() const

@@ -370,8 +370,18 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
   nsresult rv = aRequest->GetStatus(&status);
   NS_ENSURE_SUCCESS(rv, rv);
   if (NS_FAILED(status)) {
-    if (element)
+    if (element) {
+      // Handle media not loading error because source was a tracking URL.
+      // We make a note of this media node by including it in a dedicated
+      // array of blocked tracking nodes under its parent document.
+      if (status == NS_ERROR_TRACKING_URI) {
+        nsIDocument* ownerDoc = element->OwnerDoc();
+        if (ownerDoc) {
+          ownerDoc->AddBlockedTrackingNode(element);
+        }
+      }
       element->NotifyLoadError();
+    }
     return status;
   }
 
@@ -1307,6 +1317,7 @@ nsresult HTMLMediaElement::LoadResource()
                               nullptr,   // aCallbacks
                               nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
                               nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE |
+                              nsIChannel::LOAD_CLASSIFY_URI |
                               nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
 
   NS_ENSURE_SUCCESS(rv,rv);

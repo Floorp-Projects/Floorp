@@ -74,12 +74,12 @@ public abstract class NotificationClient {
      *
      * @see NotificationHandler#add(int, String, String, String, PendingIntent, PendingIntent)
      */
-    public synchronized void add(final int notificationID, final String aImageUrl,
+    public synchronized void add(final int notificationID, final String aImageUrl, final String aHost,
             final String aAlertTitle, final String aAlertText, final PendingIntent contentIntent) {
         mTaskQueue.add(new Runnable() {
             @Override
             public void run() {
-                mHandler.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
+                mHandler.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent);
             }
         });
         notify();

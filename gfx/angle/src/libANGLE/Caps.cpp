@@ -114,6 +114,7 @@ Extensions::Extensions()
       textureCompressionASTCLDR(false),
       compressedETC1RGB8Texture(false),
       depthTextures(false),
+      depth32(false),
       textureStorage(false),
       textureNPOT(false),
       drawBuffers(false),
@@ -177,6 +178,7 @@ std::vector<std::string> Extensions::getStrings() const
     InsertExtensionString("GL_OES_compressed_ETC1_RGB8_texture", compressedETC1RGB8Texture, &extensionStrings);
     InsertExtensionString("GL_EXT_sRGB",                         sRGB,                      &extensionStrings);
     InsertExtensionString("GL_ANGLE_depth_texture",              depthTextures,             &extensionStrings);
+    InsertExtensionString("GL_OES_depth32",                      depth32,                   &extensionStrings);
     InsertExtensionString("GL_EXT_texture_storage",              textureStorage,            &extensionStrings);
     InsertExtensionString("GL_OES_texture_npot",                 textureNPOT,               &extensionStrings);
     InsertExtensionString("GL_EXT_draw_buffers",                 drawBuffers,               &extensionStrings);
@@ -435,6 +437,15 @@ static bool DetermineDepthTextureSupport(const TextureCapsMap &textureCaps)
     return GetFormatSupport(textureCaps, requiredFormats, true, true, true);
 }
 
+// Check for GL_OES_depth32
+static bool DetermineDepth32Support(const TextureCapsMap &textureCaps)
+{
+    std::vector<GLenum> requiredFormats;
+    requiredFormats.push_back(GL_DEPTH_COMPONENT32_OES);
+
+    return GetFormatSupport(textureCaps, requiredFormats, false, false, true);
+}
+
 // Check for GL_EXT_color_buffer_float
 static bool DetermineColorBufferFloatSupport(const TextureCapsMap &textureCaps)
 {
@@ -468,6 +479,7 @@ void Extensions::setTextureExtensionSupport(const TextureCapsMap &textureCaps)
     compressedETC1RGB8Texture = DetermineETC1RGB8TextureSupport(textureCaps);
     sRGB = DetermineSRGBTextureSupport(textureCaps);
     depthTextures = DetermineDepthTextureSupport(textureCaps);
+    depth32                   = DetermineDepth32Support(textureCaps);
     colorBufferFloat = DetermineColorBufferFloatSupport(textureCaps);
 }
 
@@ -636,9 +648,13 @@ std::vector<std::string> DeviceExtensions::getStrings() const
 ClientExtensions::ClientExtensions()
     : clientExtensions(false),
       platformBase(false),
+      platformDevice(false),
       platformANGLE(false),
       platformANGLED3D(false),
       platformANGLEOpenGL(false),
+      deviceCreation(false),
+      deviceCreationD3D11(false),
+      x11Visual(false),
       clientGetAllProcAddresses(false)
 {
 }
@@ -651,9 +667,13 @@ std::vector<std::string> ClientExtensions::getStrings() const
     //                   | Extension name                         | Supported flag           | Output vector   |
     InsertExtensionString("EGL_EXT_client_extensions",             clientExtensions,          &extensionStrings);
     InsertExtensionString("EGL_EXT_platform_base",                 platformBase,              &extensionStrings);
+    InsertExtensionString("EGL_EXT_platform_device",               platformDevice,            &extensionStrings);
     InsertExtensionString("EGL_ANGLE_platform_angle",              platformANGLE,             &extensionStrings);
     InsertExtensionString("EGL_ANGLE_platform_angle_d3d",          platformANGLED3D,          &extensionStrings);
     InsertExtensionString("EGL_ANGLE_platform_angle_opengl",       platformANGLEOpenGL,       &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_device_creation",             deviceCreation,            &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_device_creation_d3d11",       deviceCreationD3D11,       &extensionStrings);
+    InsertExtensionString("EGL_ANGLE_x11_visual",                  x11Visual,                 &extensionStrings);
     InsertExtensionString("EGL_KHR_client_get_all_proc_addresses", clientGetAllProcAddresses, &extensionStrings);
     // clang-format on
 

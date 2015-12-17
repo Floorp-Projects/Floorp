@@ -222,6 +222,7 @@ config("libANGLE_config") {
   }
   defines += [
     "GL_GLEXT_PROTOTYPES",
+    "EGL_EGLEXT_PROTOTYPES",
   ]
 
   if (is_win) {

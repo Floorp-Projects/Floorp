@@ -147,6 +147,18 @@ bool ValidateBindVertexArrayBase(Context *context, GLuint array);
 bool ValidateDeleteVertexArraysBase(Context *context, GLsizei n);
 bool ValidateGenVertexArraysBase(Context *context, GLsizei n);
 
+bool ValidateProgramBinaryBase(Context *context,
+                               GLuint program,
+                               GLenum binaryFormat,
+                               const void *binary,
+                               GLint length);
+bool ValidateGetProgramBinaryBase(Context *context,
+                                  GLuint program,
+                                  GLsizei bufSize,
+                                  GLsizei *length,
+                                  GLenum *binaryFormat,
+                                  void *binary);
+
 // Error messages shared here for use in testing.
 extern const char *g_ExceedsMaxElementErrorMessage;
 }

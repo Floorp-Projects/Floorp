@@ -1324,4 +1324,61 @@ bool ValidateIsVertexArray(Context *context)
 
     return true;
 }
+
+bool ValidateProgramBinary(Context *context,
+                           GLuint program,
+                           GLenum binaryFormat,
+                           const void *binary,
+                           GLint length)
+{
+    if (context->getClientVersion() < 3)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    return ValidateProgramBinaryBase(context, program, binaryFormat, binary, length);
+}
+
+bool ValidateGetProgramBinary(Context *context,
+                              GLuint program,
+                              GLsizei bufSize,
+                              GLsizei *length,
+                              GLenum *binaryFormat,
+                              void *binary)
+{
+    if (context->getClientVersion() < 3)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    return ValidateGetProgramBinaryBase(context, program, bufSize, length, binaryFormat, binary);
+}
+
+bool ValidateProgramParameter(Context *context, GLuint program, GLenum pname, GLint value)
+{
+    if (context->getClientVersion() < 3)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION));
+        return false;
+    }
+
+    if (GetValidProgram(context, program) == nullptr)
+    {
+        return false;
+    }
+
+    switch (pname)
+    {
+        case GL_PROGRAM_BINARY_RETRIEVABLE_HINT:
+            break;
+
+        default:
+            context->recordError(Error(GL_INVALID_ENUM, "Invalid pname: 0x%X", pname));
+            return false;
+    }
+
+    return true;
+}
 }

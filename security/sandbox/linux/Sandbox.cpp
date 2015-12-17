@@ -524,8 +524,11 @@ SandboxEarlyInit(GeckoProcessType aType, bool aIsNuwa)
     return;
   }
 
-  MOZ_RELEASE_ASSERT(IsSingleThreaded());
   const SandboxInfo info = SandboxInfo::Get();
+  if (info.Test(SandboxInfo::kUnexpectedThreads)) {
+    return;
+  }
+  MOZ_RELEASE_ASSERT(IsSingleThreaded());
 
   // Which kinds of resource isolation (of those that need to be set
   // up at this point) can be used by this process?

@@ -146,7 +146,7 @@ static int GetWGLBufferBindTarget(EGLint buffer)
     }
 }
 
-egl::Error PbufferSurfaceWGL::bindTexImage(EGLint buffer)
+egl::Error PbufferSurfaceWGL::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     if (!mFunctionsWGL->bindTexImageARB(mPbuffer, GetWGLBufferBindTarget(buffer)))
     {

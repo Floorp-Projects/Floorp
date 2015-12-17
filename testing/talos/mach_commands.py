@@ -36,15 +36,14 @@ class TalosRunner(MozbuildObject):
         self.talos_dir = os.path.join(self.topsrcdir, 'testing', 'talos')
         self.mozharness_dir = os.path.join(self.topsrcdir, 'testing',
                                            'mozharness')
-        self.config_dir = os.path.join(self.mozharness_dir, 'configs', 'talos')
         self.talos_json = os.path.join(self.talos_dir, 'talos.json')
-        self.config_filename = 'in_tree_conf.json'
-        self.config_file_path = os.path.join(self.config_dir,
-                                             self.config_filename)
+        self.config_file_path = os.path.join(self._topobjdir, 'testing',
+                                             'talos-in_tree_conf.json')
         self.binary_path = self.get_binary_path()
         self.virtualenv_script = os.path.join(self.topsrcdir, 'python',
                                               'virtualenv', 'virtualenv.py')
-        self.virtualenv_path = os.path.join(self.mozharness_dir, 'venv')
+        self.virtualenv_path = os.path.join(self._topobjdir, 'testing',
+                                            'talos-venv')
         self.python_interp = sys.executable
         self.talos_args = talos_args
 

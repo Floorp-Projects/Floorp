@@ -7,25 +7,31 @@
 //   dEQP and GoogleTest integration logic. Calls through to the random
 //   order executor.
 
+#include <fstream>
 #include <stdint.h>
-#include <zlib.h>
 
 #include <gtest/gtest.h>
 
 #include "angle_deqp_libtester.h"
 #include "common/angleutils.h"
 #include "common/debug.h"
+#include "common/Optional.h"
+#include "common/string_utils.h"
 #include "gpu_test_expectations_parser.h"
 #include "system_utils.h"
 
 namespace
 {
 
-const char *g_CaseListFiles[] =
-{
-    "dEQP-GLES2-cases.txt.gz",
-    "dEQP-GLES3-cases.txt.gz",
-    "dEQP-EGL-cases.txt.gz",
+const char *g_CaseListRelativePath = "/../../third_party/deqp/src/android/cts/master/";
+
+const char *g_TestExpectationsSearchPaths[] = {
+    "/../../src/tests/deqp_support/", "/../../third_party/angle/src/tests/deqp_support/",
+    "/deqp_support/",
+};
+
+const char *g_CaseListFiles[] = {
+    "gles2-master.txt", "gles3-master.txt", "egl-master.txt",
 };
 
 const char *g_TestExpectationsFiles[] =
@@ -34,6 +40,25 @@ const char *g_TestExpectationsFiles[] =
     "deqp_gles3_test_expectations.txt",
     "deqp_egl_test_expectations.txt",
 };
+
+Optional<std::string> FindTestExpectationsPath(const std::string &exeDir, size_t testModuleIndex)
+{
+    for (const char *testPath : g_TestExpectationsSearchPaths)
+    {
+        std::stringstream testExpectationsPathStr;
+        testExpectationsPathStr << exeDir << testPath << g_TestExpectationsFiles[testModuleIndex];
+
+        std::string path = testExpectationsPathStr.str();
+        std::ifstream inFile(path.c_str());
+        if (!inFile.fail())
+        {
+            inFile.close();
+            return Optional<std::string>(path);
+        }
+    }
+
+    return Optional<std::string>::Invalid();
+}
 
 class dEQPCaseList
 {
@@ -97,15 +122,16 @@ void dEQPCaseList::initialize()
     std::string exeDir = angle::GetExecutableDirectory();
 
     std::stringstream caseListPathStr;
-    caseListPathStr << exeDir << "/deqp_support/" << g_CaseListFiles[mTestModuleIndex];
+    caseListPathStr << exeDir << g_CaseListRelativePath << g_CaseListFiles[mTestModuleIndex];
     std::string caseListPath = caseListPathStr.str();
 
-    std::stringstream testExpectationsPathStr;
-    testExpectationsPathStr << exeDir << "/deqp_support/"
-                            << g_TestExpectationsFiles[mTestModuleIndex];
-    std::string testExpectationsPath = testExpectationsPathStr.str();
+    Optional<std::string> testExpectationsPath = FindTestExpectationsPath(exeDir, mTestModuleIndex);
+    if (!testExpectationsPath.valid())
+    {
+        FAIL() << "Failed to find test expectations file.";
+    }
 
-    if (!mTestExpectationsParser.LoadTestExpectationsFromFile(testExpectationsPath))
+    if (!mTestExpectationsParser.LoadTestExpectationsFromFile(testExpectationsPath.value()))
     {
         std::stringstream errorMsgStream;
         for (const auto &message : mTestExpectationsParser.GetErrorMessages())
@@ -121,44 +147,28 @@ void dEQPCaseList::initialize()
         FAIL() << "Failed to load test configuration.";
     }
 
-    std::stringstream caseListStream;
-
-    std::vector<char> buf(1024 * 1024 * 16);
-    gzFile *fi = static_cast<gzFile *>(gzopen(caseListPath.c_str(), "rb"));
-
-    if (fi == nullptr)
-    {
-        FAIL() << "Failed to read gzipped test information.";
-    }
-
-    gzrewind(fi);
-    while (!gzeof(fi))
-    {
-        int len = gzread(fi, &buf[0], static_cast<unsigned int>(buf.size()) - 1);
-        buf[len] = '\0';
-        caseListStream << &buf[0];
-    }
-    gzclose(fi);
+    std::ifstream caseListStream(caseListPath);
 
     while (!caseListStream.eof())
     {
         std::string inString;
         std::getline(caseListStream, inString);
 
-        if (inString.substr(0, 4) == "TEST")
+        std::string dEQPName = angle::TrimString(inString, angle::kWhitespaceASCII);
+        if (dEQPName.empty())
+            continue;
+        std::string gTestName = dEQPName.substr(dEQPName.find('.') + 1);
+        if (gTestName.empty())
+            continue;
+        std::replace(gTestName.begin(), gTestName.end(), '.', '_');
+
+        // Occurs in some luminance tests
+        gTestName.erase(std::remove(gTestName.begin(), gTestName.end(), '-'), gTestName.end());
+
+        int expectation = mTestExpectationsParser.GetTestExpectation(dEQPName, mTestConfig);
+        if (expectation != gpu::GPUTestExpectationsParser::kGpuTestSkip)
         {
-            std::string dEQPName = inString.substr(6);
-            std::string gTestName = dEQPName.substr(dEQPName.find('.') + 1);
-            std::replace(gTestName.begin(), gTestName.end(), '.', '_');
-
-            // Occurs in some luminance tests
-            gTestName.erase(std::remove(gTestName.begin(), gTestName.end(), '-'), gTestName.end());
-
-            int expectation = mTestExpectationsParser.GetTestExpectation(dEQPName, mTestConfig);
-            if (expectation != gpu::GPUTestExpectationsParser::kGpuTestSkip)
-            {
-                mCaseInfoList.push_back(CaseInfo(dEQPName, gTestName, expectation));
-            }
+            mCaseInfoList.push_back(CaseInfo(dEQPName, gTestName, expectation));
         }
     }
 }

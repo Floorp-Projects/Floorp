@@ -105,7 +105,7 @@ bool DebugAnnotationsActive();
 #if !defined(NDEBUG)
 #define ASSERT(expression) { \
     if(!(expression)) \
-        ERR("\t! Assert failed in %s(%d): "#expression"\n", __FUNCTION__, __LINE__); \
+        ERR("\t! Assert failed in %s(%d): %s\n", __FUNCTION__, __LINE__, #expression); \
         assert(expression); \
     } ANGLE_EMPTY_STATEMENT
 #define UNUSED_ASSERTION_VARIABLE(variable)

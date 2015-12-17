@@ -16,6 +16,7 @@ import os
 import sys
 import time
 
+from mozbuild.util import ensureParentDir
 from mozpack.files import FileFinder
 from mozpack.mozjar import JarWriter
 import mozpack.path as mozpath
@@ -316,6 +317,7 @@ def main(argv):
 
     file_count = 0
     t_start = time.time()
+    ensureParentDir(args.outputfile)
     with open(args.outputfile, 'wb') as fh:
         # Experimentation revealed that level 5 is significantly faster and has
         # marginally larger sizes than higher values and is the sweet spot

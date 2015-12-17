@@ -418,7 +418,7 @@ js::TraceWeakEdge(JSTracer* trc, WeakRef<T>* thingp, const char* name)
 {
     // Non-marking tracers treat the edge strongly.
     if (!trc->isMarkingTracer())
-        DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
+        return DispatchToTracer(trc, ConvertToBase(thingp->unsafeUnbarrieredForTracing()), name);
 
     NoteWeakEdge(static_cast<GCMarker*>(trc),
                  ConvertToBase(thingp->unsafeUnbarrieredForTracing()));
