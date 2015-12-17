@@ -207,7 +207,8 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
       *aOutInputBlockId = block->GetBlockId();
     }
 
-    INPQ_LOG("started new drag block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new drag block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
@@ -262,7 +263,8 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
 
   if (!block) {
     block = new WheelBlockState(aTarget, aTargetConfirmed, aEvent);
-    INPQ_LOG("started new scroll wheel block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new scroll wheel block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
@@ -326,10 +328,13 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
   if (!block || block->WasInterrupted()) {
     if (aEvent.mType != PanGestureInput::PANGESTURE_START) {
       // Only PANGESTURE_START events are allowed to start a new pan gesture block.
+      INPQ_LOG("pangesture block %p was interrupted %d\n", block,
+          block ? block->WasInterrupted() : 0);
       return nsEventStatus_eConsumeDoDefault;
     }
     block = new PanGestureBlockState(aTarget, aTargetConfirmed, aEvent);
-    INPQ_LOG("started new pan gesture block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new pan gesture block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     if (aTargetConfirmed &&
         aEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &&
