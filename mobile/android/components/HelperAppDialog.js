@@ -23,6 +23,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 // HelperApp Launcher Dialog
 // -----------------------------------------------------------------------
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 XPCOMUtils.defineLazyGetter(this, "ContentAreaUtils", function() {
   let ContentAreaUtils = {};
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", ContentAreaUtils);
@@ -197,17 +199,11 @@ HelperAppLauncherDialog.prototype = {
   _refuseDownload: function(aLauncher) {
     aLauncher.cancel(Cr.NS_BINDING_ABORTED);
 
-    let win = this.getNativeWindow();
-    if (!win) {
-      // Oops.
-      Services.console.logStringMessage("Refusing download, but can't show a toast.");
-      return;
-    }
-
     Services.console.logStringMessage("Refusing download of non-downloadable file.");
+
     let bundle = Services.strings.createBundle("chrome://browser/locale/handling.properties");
-    let failedText = bundle.GetStringFromName("download.blocked");
-    win.toast.show(failedText, "long");
+
+    Snackbars.show(bundle.GetStringFromName("download.blocked"), Snackbars.LENGTH_LONG);
   },
 
   _getPrefName: function getPrefName(mimetype) {
