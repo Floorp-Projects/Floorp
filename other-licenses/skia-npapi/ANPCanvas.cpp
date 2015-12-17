@@ -153,13 +153,18 @@ static void anp_drawBitmapRect(ANPCanvas* canvas, const ANPBitmap* bitmap,
                                const ANPPaint* paint) {
     SkBitmap    bm;
     SkRect      dstR;
-    SkIRect     srcR, *srcPtr = NULL;
+    SkIRect     srcR;
 
     if (src) {
-        srcPtr = SkANP::SetRect(&srcR, *src);
+        canvas->skcanvas->drawBitmapRect(*SkANP::SetBitmap(&bm, *bitmap),
+                                         *SkANP::SetRect(&srcR, *src),
+                                         *SkANP::SetRect(&dstR, *dst),
+                                         paint);
+    } else {
+        canvas->skcanvas->drawBitmapRect(*SkANP::SetBitmap(&bm, *bitmap),
+                                         *SkANP::SetRect(&dstR, *dst),
+                                         paint);
     }
-    canvas->skcanvas->drawBitmapRect(*SkANP::SetBitmap(&bm, *bitmap), srcPtr,
-                           *SkANP::SetRect(&dstR, *dst), paint);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
