@@ -74,7 +74,7 @@ void SkPatch3D::reset() {
 }
 
 void SkPatch3D::transform(const SkMatrix3D& m, SkPatch3D* dst) const {
-    if (dst == nullptr) {
+    if (dst == NULL) {
         dst = (SkPatch3D*)this;
     }
     m.mapVector(fU, &dst->fU);
@@ -291,13 +291,13 @@ Sk3DView::~Sk3DView() {
     Rec* rec = fRec;
     while (rec != &fInitialRec) {
         Rec* next = rec->fNext;
-        delete rec;
+        SkDELETE(rec);
         rec = next;
     }
 }
 
 void Sk3DView::save() {
-    Rec* rec = new Rec;
+    Rec* rec = SkNEW(Rec);
     rec->fNext = fRec;
     rec->fMatrix = fRec->fMatrix;
     fRec = rec;
@@ -306,7 +306,7 @@ void Sk3DView::save() {
 void Sk3DView::restore() {
     SkASSERT(fRec != &fInitialRec);
     Rec* next = fRec->fNext;
-    delete fRec;
+    SkDELETE(fRec);
     fRec = next;
 }
 
@@ -356,7 +356,7 @@ SkScalar Sk3DView::dotWithNormal(SkScalar x, SkScalar y, SkScalar z) const {
 }
 
 void Sk3DView::getMatrix(SkMatrix* matrix) const {
-    if (matrix != nullptr) {
+    if (matrix != NULL) {
         SkPatch3D   patch;
         patch.transform(fRec->fMatrix);
         fCamera.patchToMatrix(patch, matrix);

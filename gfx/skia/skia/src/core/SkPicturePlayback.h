@@ -9,22 +9,27 @@
 #define SkPicturePlayback_DEFINED
 
 #include "SkPictureFlat.h"  // for DrawType
+#include "SkPictureStateTree.h"
 
 class SkBitmap;
 class SkCanvas;
+class SkDrawPictureCallback;
 class SkPaint;
 class SkPictureData;
 
 // The basic picture playback class replays the provided picture into a canvas.
+// If the picture was generated with a BBH it is used to accelerate drawing
+// unless disabled via setUseBBH.
 class SkPicturePlayback : SkNoncopyable {
 public:
-    SkPicturePlayback(const SkPictureData* data)
-        : fPictureData(data)
-        , fCurOffset(0) {
+    SkPicturePlayback(const SkPicture* picture)
+        : fPictureData(picture->fData.get())
+        , fCurOffset(0)
+        , fUseBBH(true) {
     }
     virtual ~SkPicturePlayback() { }
 
-    virtual void draw(SkCanvas* canvas, SkPicture::AbortCallback*);
+    virtual void draw(SkCanvas* canvas, SkDrawPictureCallback*);
 
     // TODO: remove the curOp calls after cleaning up GrGatherDevice
     // Return the ID of the operation currently being executed when playing
@@ -32,17 +37,30 @@ public:
     size_t curOpID() const { return fCurOffset; }
     void resetOpID() { fCurOffset = 0; }
 
+    // TODO: remove setUseBBH after cleaning up GrGatherCanvas
+    void setUseBBH(bool useBBH) { fUseBBH = useBBH; }
+
 protected:
     const SkPictureData* fPictureData;
 
     // The offset of the current operation when within the draw method
     size_t fCurOffset;
 
-    void handleOp(SkReader32* reader,
-                  DrawType op,
-                  uint32_t size,
+    bool   fUseBBH;
+
+    void handleOp(SkReader32* reader, 
+                  DrawType op, 
+                  uint32_t size, 
                   SkCanvas* canvas,
                   const SkMatrix& initialMatrix);
+
+    const SkPicture::OperationList* getActiveOps(const SkCanvas* canvas);
+    bool initIterator(SkPictureStateTree::Iterator* iter, 
+                      SkCanvas* canvas,
+                      const SkPicture::OperationList *activeOpsList);
+    static void StepIterator(SkPictureStateTree::Iterator* iter, SkReader32* reader);
+    static void SkipIterTo(SkPictureStateTree::Iterator* iter, 
+                           SkReader32* reader, uint32_t skipTo);
 
     static DrawType ReadOpAndSize(SkReader32* reader, uint32_t* size);
 
@@ -50,7 +68,7 @@ protected:
     public:
         AutoResetOpID(SkPicturePlayback* playback) : fPlayback(playback) { }
         ~AutoResetOpID() {
-            if (fPlayback) {
+            if (NULL != fPlayback) {
                 fPlayback->resetOpID();
             }
         }

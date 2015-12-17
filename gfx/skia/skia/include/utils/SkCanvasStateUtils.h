@@ -27,8 +27,7 @@ class SkCanvasState;
  * ReleaseCanvasState(...)      |||
  *
  */
-class SK_API SkCanvasStateUtils {
-public:
+namespace SkCanvasStateUtils {
     /**
      * Captures the current state of the canvas into an opaque ptr that is safe
      * to pass to a different instance of Skia (which may be the same version,
@@ -48,7 +47,7 @@ public:
      *         to reconstruct the canvas. The caller is responsible for calling
      *         ReleaseCanvasState to free the memory associated with this state.
      */
-    static SkCanvasState* CaptureCanvasState(SkCanvas* canvas);
+    SK_API SkCanvasState* CaptureCanvasState(SkCanvas* canvas);
 
     /**
      * Create a new SkCanvas from the captured state of another SkCanvas. The
@@ -62,7 +61,7 @@ public:
      *         identical to the captured canvas. The caller is responsible for
      *         calling unref on the SkCanvas.
      */
-    static SkCanvas* CreateFromCanvasState(const SkCanvasState* state);
+    SK_API SkCanvas* CreateFromCanvasState(const SkCanvasState* state);
 
     /**
      * Free the memory associated with the captured canvas state.  The state
@@ -72,7 +71,7 @@ public:
      *
      * @param state The captured state you wish to dispose of.
      */
-    static void ReleaseCanvasState(SkCanvasState* state);
+    SK_API void ReleaseCanvasState(SkCanvasState* state);
 };
 
 #endif

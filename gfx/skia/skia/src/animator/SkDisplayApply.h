@@ -11,12 +11,12 @@
 #define SkDisplayApply_DEFINED
 
 #include "SkAnimateBase.h"
-#include "SkADrawable.h"
+#include "SkDrawable.h"
 #include "SkIntArray.h"
 
 class SkActive;
 
-class SkApply : public SkADrawable {
+class SkApply : public SkDrawable {
     DECLARE_MEMBER_INFO(Apply);
 public:
 
@@ -38,41 +38,41 @@ public:
     void appendActive(SkActive* );
     void applyValues(int animatorIndex, SkOperand* values, int count,
         SkDisplayTypes , SkMSec time);
-    bool contains(SkDisplayable*) override;
+    virtual bool contains(SkDisplayable*);
 //  void createActive(SkAnimateMaker& );
-    SkDisplayable* deepCopy(SkAnimateMaker* ) override;
+    virtual SkDisplayable* deepCopy(SkAnimateMaker* );
     void disable();
-    bool draw(SkAnimateMaker& ) override;
+    virtual bool draw(SkAnimateMaker& );
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
-    bool enable(SkAnimateMaker& ) override;
+    virtual bool enable(SkAnimateMaker& );
     void enableCreate(SkAnimateMaker& );
     void enableDynamic(SkAnimateMaker& );
     void endSave(int index);
     Mode getMode() { return mode; }
-    bool getProperty(int index, SkScriptValue* value) const override;
-    SkADrawable* getScope() { return scope; }
+    virtual bool getProperty(int index, SkScriptValue* value) const;
+    SkDrawable* getScope() { return scope; }
     void getStep(SkScriptValue* );
-    SkADrawable* getTarget(SkAnimateBase* );
+    SkDrawable* getTarget(SkAnimateBase* );
     bool hasDelayedAnimator() const;
-    bool hasEnable() const override;
+    virtual bool hasEnable() const;
     bool inactivate(SkAnimateMaker& maker);
-    void initialize() override;
+    virtual void initialize();
     bool interpolate(SkAnimateMaker& , SkMSec time);
-    void onEndElement(SkAnimateMaker& ) override;
-    const SkMemberInfo* preferredChild(SkDisplayTypes type) override;
+    virtual void onEndElement(SkAnimateMaker& );
+    virtual const SkMemberInfo* preferredChild(SkDisplayTypes type);
     void refresh(SkAnimateMaker& );
     void reset();
-    bool resolveIDs(SkAnimateMaker& maker, SkDisplayable* original, SkApply* ) override;
+    virtual bool resolveIDs(SkAnimateMaker& maker, SkDisplayable* original, SkApply* );
     bool resolveField(SkAnimateMaker& , SkDisplayable* parent, SkString* str);
     void save(int index);
     void setEmbedded() { fEmbedded = true; }
-    bool setProperty(int index, SkScriptValue& ) override;
-    void setSteps(int _steps) override;
+    virtual bool setProperty(int index, SkScriptValue& );
+    virtual void setSteps(int _steps);
 //  virtual void setTime(SkMSec time);
 #ifdef SK_DEBUG
-    void validate() override;
+    virtual void validate();
 #endif
 private:
     SkMSec begin;
@@ -84,12 +84,12 @@ private:
     SkBool pickup;
 #endif
     SkBool restore;
-    SkADrawable* scope;
+    SkDrawable* scope;
     int32_t steps;
     Transition transition;
     SkActive* fActive;
     SkTDAnimateArray fAnimators;
-//  SkADrawable* fCurrentScope;
+//  SkDrawable* fCurrentScope;
     SkMSec fLastTime;   // used only to return script property time
     SkTDDrawableArray fScopes;
     SkBool fAppended : 1;
@@ -100,7 +100,7 @@ private:
     SkBool fEnabling : 1; // set if calling interpolate from enable
     friend class SkActive;
     friend class SkDisplayList;
-    typedef SkADrawable INHERITED;
+    typedef SkDrawable INHERITED;
 };
 
 #endif // SkDisplayApply_DEFINED

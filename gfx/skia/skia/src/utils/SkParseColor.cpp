@@ -423,11 +423,11 @@ const char* SkParse::FindNamedColor(const char* name, size_t len, SkColor* color
             while ((int) gColorNames[lo] >= 0)
                 ++lo;
         } else if (hi == mid)
-            return nullptr;
+            return NULL;
         else
             hi = mid;
     }
-    return nullptr;
+    return NULL;
 }
 
 // !!! move to char utilities
@@ -435,12 +435,12 @@ const char* SkParse::FindNamedColor(const char* name, size_t len, SkColor* color
 //  char c;
 //  int separators = 0;
 //  while ((c = *str++) != '\0') {
-//      if (strchr(sep, c) == nullptr)
+//      if (strchr(sep, c) == NULL)
 //          continue;
 //      do {
 //          if ((c = *str++) == '\0')
 //              goto goHome;
-//      } while (strchr(sep, c) != nullptr);
+//      } while (strchr(sep, c) != NULL);
 //      separators++;
 //  }
 //goHome:
@@ -459,7 +459,7 @@ const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
         uint32_t    hex;
         const char* end = SkParse::FindHex(value + 1, &hex);
 //      SkASSERT(end);
-        if (end == nullptr)
+        if (end == NULL)
             return end;
         size_t len = end - value - 1;
         if (len == 3 || len == 4) {
@@ -476,7 +476,7 @@ const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
             return end;
         } else {
 //          SkASSERT(0);
-            return nullptr;
+            return NULL;
         }
 //  } else if (strchr(value, ',')) {
 //      SkScalar array[4];
@@ -484,8 +484,8 @@ const char* SkParse::FindColor(const char* value, SkColor* colorPtr) {
 //      SkASSERT(count == 3 || count == 4);
 //      array[0] = SK_Scalar1 * 255;
 //      const char* end = SkParse::FindScalars(value, &array[4 - count], count);
-//      if (end == nullptr)
-//          return nullptr;
+//      if (end == NULL)
+//          return NULL;
         // !!! range check for errors?
 //      *colorPtr = SkColorSetARGB(SkScalarRoundToInt(array[0]), SkScalarRoundToInt(array[1]),
 //          SkScalarRoundToInt(array[2]), SkScalarRoundToInt(array[3]));
@@ -503,7 +503,7 @@ void SkParse::TestColor() {
     for (index = 0; index < colorNamesSize; index++) {
         result = SK_ColorBLACK;
         SkNameRGB nameRGB = colorNames[index];
-        SkASSERT(FindColor(nameRGB.name, &result) != nullptr);
+        SkASSERT(FindColor(nameRGB.name, &result) != NULL);
         SkASSERT(result == (SkColor) (nameRGB.rgb | 0xFF000000));
     }
     for (index = 0; index < colorNamesSize; index++) {
@@ -513,9 +513,9 @@ void SkParse::TestColor() {
         size_t len = strlen(nameRGB.name);
         memcpy(bad, nameRGB.name, len);
         bad[len - 1] -= 1;
-        SkASSERT(FindColor(bad, &result) == nullptr);
+        SkASSERT(FindColor(bad, &result) == NULL);
         bad[len - 1] += 2;
-        SkASSERT(FindColor(bad, &result) == nullptr);
+        SkASSERT(FindColor(bad, &result) == NULL);
     }
     result = SK_ColorBLACK;
     SkASSERT(FindColor("lightGrey", &result));

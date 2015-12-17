@@ -59,6 +59,7 @@ public:
      *  resulting region is non-empty.
      */
     bool set(const SkRegion& src) {
+        SkASSERT(&src);
         *this = src;
         return !this->isEmpty();
     }

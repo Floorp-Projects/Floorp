@@ -43,6 +43,16 @@ void SkPoint::setIRectFan(int l, int t, int r, int b, size_t stride) {
                                                    SkIntToScalar(t));
 }
 
+void SkPoint::setRectFan(SkScalar l, SkScalar t, SkScalar r, SkScalar b,
+                         size_t stride) {
+    SkASSERT(stride >= sizeof(SkPoint));
+
+    ((SkPoint*)((intptr_t)this + 0 * stride))->set(l, t);
+    ((SkPoint*)((intptr_t)this + 1 * stride))->set(l, b);
+    ((SkPoint*)((intptr_t)this + 2 * stride))->set(r, b);
+    ((SkPoint*)((intptr_t)this + 3 * stride))->set(r, t);
+}
+
 void SkPoint::rotateCW(SkPoint* dst) const {
     SkASSERT(dst);
 
@@ -100,7 +110,6 @@ SkScalar SkPoint::Normalize(SkPoint* pt) {
     float y = pt->fY;
     float mag2;
     if (isLengthNearlyZero(x, y, &mag2)) {
-        pt->set(0, 0);
         return 0;
     }
 
@@ -148,7 +157,6 @@ SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) {
 bool SkPoint::setLength(float x, float y, float length) {
     float mag2;
     if (isLengthNearlyZero(x, y, &mag2)) {
-        this->set(0, 0);
         return false;
     }
 
@@ -161,7 +169,7 @@ bool SkPoint::setLength(float x, float y, float length) {
         // divide by inf. and return (0,0) vector.
         double xx = x;
         double yy = y;
-    #ifdef SK_CPU_FLUSH_TO_ZERO
+    #ifdef SK_DISCARD_DENORMALIZED_FOR_SPEED
         // The iOS ARM processor discards small denormalized numbers to go faster.
         // Casting this to a float would cause the scale to go to zero. Keeping it
         // as a double for the multiply keeps the scale non-zero.
@@ -185,7 +193,6 @@ bool SkPoint::setLengthFast(float length) {
 bool SkPoint::setLengthFast(float x, float y, float length) {
     float mag2;
     if (isLengthNearlyZero(x, y, &mag2)) {
-        this->set(0, 0);
         return false;
     }
 
@@ -217,15 +224,13 @@ SkScalar SkPoint::distanceToLineBetweenSqd(const SkPoint& a,
 
     SkScalar uLengthSqd = u.lengthSqd();
     SkScalar det = u.cross(v);
-    if (side) {
+    if (NULL != side) {
         SkASSERT(-1 == SkPoint::kLeft_Side &&
                   0 == SkPoint::kOn_Side &&
                   1 == kRight_Side);
         *side = (Side) SkScalarSignAsInt(det);
     }
-    SkScalar temp = det / uLengthSqd;
-    temp *= det;
-    return temp;
+    return SkScalarMulDiv(det, det, uLengthSqd);
 }
 
 SkScalar SkPoint::distanceToLineSegmentBetweenSqd(const SkPoint& a,
@@ -258,8 +263,6 @@ SkScalar SkPoint::distanceToLineSegmentBetweenSqd(const SkPoint& a,
         return b.distanceToSqd(*this);
     } else {
         SkScalar det = u.cross(v);
-        SkScalar temp = det / uLengthSqd;
-        temp *= det;
-        return temp;
+        return SkScalarMulDiv(det, det, uLengthSqd);
     }
 }

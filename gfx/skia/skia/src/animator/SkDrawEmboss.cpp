@@ -28,7 +28,7 @@ SkDrawEmboss::SkDrawEmboss() : fSigma(-1) {
 
 SkMaskFilter* SkDrawEmboss::getMaskFilter() {
     if (fSigma < 0 || fDirection.count() !=3)
-        return nullptr;
+        return NULL;
     return SkBlurMaskFilter::CreateEmboss(fSigma, fDirection.begin(),
                                           fAmbient, fSpecular);
 }

@@ -169,6 +169,6 @@ struct SkIBMFamilyClass {
 #pragma pack(pop)
 
 
-static_assert(sizeof(SkIBMFamilyClass) == 2, "sizeof_SkIBMFamilyClass_not_2");
+SK_COMPILE_ASSERT(sizeof(SkIBMFamilyClass) == 2, sizeof_SkIBMFamilyClass_not_2);
 
 #endif

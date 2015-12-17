@@ -72,7 +72,7 @@ SkinSuite::SkinSuite()
         if (!fAnimators[i]->decodeURI(path.c_str()))
         {
             delete fAnimators[i];
-            fAnimators[i] = nullptr;
+            fAnimators[i] = NULL;
         }
     }
 }
@@ -88,11 +88,11 @@ static SkinSuite* gSkinSuite;
 static SkAnimator* get_skin_animator(SkinType st)
 {
 #if 0
-    if (gSkinSuite == nullptr)
+    if (gSkinSuite == NULL)
         gSkinSuite = new SkinSuite;
     return gSkinSuite->get(st);
 #else
-    return nullptr;
+    return NULL;
 #endif
 }
 
@@ -109,7 +109,7 @@ void SkWidget::Term()
 
 void SkWidget::onEnabledChange()
 {
-    this->inval(nullptr);
+    this->inval(NULL);
 }
 
 void SkWidget::postWidgetEvent()
@@ -130,7 +130,7 @@ void SkWidget::onInflate(const SkDOM& dom, const SkDOM::Node* node)
 {
     this->INHERITED::onInflate(dom, node);
 
-    if ((node = dom.getFirstChild(node, "event")) != nullptr)
+    if ((node = dom.getFirstChild(node, "event")) != NULL)
         fEvent.inflate(dom, node);
 }
 
@@ -196,7 +196,7 @@ void SkButtonWidget::setButtonState(State state)
 
 void SkButtonWidget::onButtonStateChange()
 {
-    this->inval(nullptr);
+    this->inval(NULL);
 }
 
 void SkButtonWidget::onInflate(const SkDOM& dom, const SkDOM::Node* node)
@@ -293,7 +293,7 @@ void SkPushButtonWidget::onDraw(SkCanvas* canvas)
         p.setColor(SK_ColorBLUE);
         create_emboss(&p, SkIntToScalar(12)/5, this->hasFocus(), this->getButtonState() == kOn_State);
         canvas->drawRoundRect(r, SkScalarHalf(this->height()), SkScalarHalf(this->height()), p);
-        p.setMaskFilter(nullptr);
+        p.setMaskFilter(NULL);
 
         p.setTextAlign(SkPaint::kCenter_Align);
 
@@ -351,7 +351,7 @@ void SkStaticTextView::computeSize()
 {
     if (fMode == kAutoWidth_Mode)
     {
-        SkScalar width = fPaint.measureText(fText.c_str(), fText.size(), nullptr, nullptr);
+        SkScalar width = fPaint.measureText(fText.c_str(), fText.size(), NULL, NULL);
         this->setWidth(width + fMargin.fX * 2);
     }
     else if (fMode == kAutoHeight_Mode)
@@ -360,7 +360,7 @@ void SkStaticTextView::computeSize()
         int lines = width > 0 ? SkTextLineBreaker::CountLines(fText.c_str(), fText.size(), fPaint, width) : 0;
 
         SkScalar    before, after;
-        (void)fPaint.measureText(0, nullptr, &before, &after);
+        (void)fPaint.measureText(0, NULL, &before, &after);
 
         this->setHeight(lines * (after - before) + fMargin.fY * 2);
     }
@@ -380,7 +380,7 @@ void SkStaticTextView::setMode(Mode mode)
 void SkStaticTextView::setSpacingAlign(SkTextBox::SpacingAlign align)
 {
     fSpacingAlign = SkToU8(align);
-    this->inval(nullptr);
+    this->inval(NULL);
 }
 
 void SkStaticTextView::getMargin(SkPoint* margin) const
@@ -395,7 +395,7 @@ void SkStaticTextView::setMargin(SkScalar dx, SkScalar dy)
     {
         fMargin.set(dx, dy);
         this->computeSize();
-        this->inval(nullptr);
+        this->inval(NULL);
     }
 }
 
@@ -429,7 +429,7 @@ void SkStaticTextView::setText(const char text[], size_t len)
     {
         fText.set(text, len);
         this->computeSize();
-        this->inval(nullptr);
+        this->inval(NULL);
     }
 }
 
@@ -445,7 +445,7 @@ void SkStaticTextView::setPaint(const SkPaint& paint)
     {
         fPaint = paint;
         this->computeSize();
-        this->inval(nullptr);
+        this->inval(NULL);
     }
 }
 
@@ -489,7 +489,7 @@ void SkStaticTextView::onInflate(const SkDOM& dom, const SkDOM::Node* node)
     if (text)
         this->setText(text);
 
-    if ((node = dom.getFirstChild(node, "paint")) != nullptr)
+    if ((node = dom.getFirstChild(node, "paint")) != NULL)
         SkPaint_Inflate(&fPaint, dom, node);
 }
 

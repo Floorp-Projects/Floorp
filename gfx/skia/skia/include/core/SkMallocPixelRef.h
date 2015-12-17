@@ -16,6 +16,7 @@
 */
 class SK_API SkMallocPixelRef : public SkPixelRef {
 public:
+    SK_DECLARE_INST_COUNT(SkMallocPixelRef)
     /**
      *  Return a new SkMallocPixelRef with the provided pixel storage, rowBytes,
      *  and optional colortable. The caller is responsible for managing the
@@ -43,22 +44,11 @@ public:
                                          size_t rowBytes, SkColorTable*);
 
     /**
-     *  Identical to NewAllocate, except all pixel bytes are zeroed.
-     */
-    static SkMallocPixelRef* NewZeroed(const SkImageInfo& info,
-                                       size_t rowBytes, SkColorTable*);
-
-    /**
      *  Return a new SkMallocPixelRef with the provided pixel storage,
      *  rowBytes, and optional colortable. On destruction, ReleaseProc
      *  will be called.
      *
      *  This pixelref will ref() the specified colortable (if not NULL).
-     *
-     *  If ReleaseProc is NULL, the pixels will never be released. This
-     *  can be useful if the pixels were stack allocated. However, such an
-     *  SkMallocPixelRef must not live beyond its pixels (e.g. by copying
-     *  an SkBitmap pointing to it, or drawing to an SkPicture).
      *
      *  Returns NULL on failure.
      */
@@ -87,12 +77,9 @@ public:
 
     class PRFactory : public SkPixelRefFactory {
     public:
-        SkPixelRef* create(const SkImageInfo&, size_t rowBytes, SkColorTable*) override;
-    };
-
-    class ZeroedPRFactory : public SkPixelRefFactory {
-    public:
-        SkPixelRef* create(const SkImageInfo&, size_t rowBytes, SkColorTable*) override;
+        virtual SkPixelRef* create(const SkImageInfo&,
+                                   size_t rowBytes,
+                                   SkColorTable*) SK_OVERRIDE;
     };
 
 protected:
@@ -101,17 +88,11 @@ protected:
                      bool ownPixels);
     virtual ~SkMallocPixelRef();
 
-    bool onNewLockPixels(LockRec*) override;
-    void onUnlockPixels() override;
-    size_t getAllocatedSizeInBytes() const override;
+    virtual bool onNewLockPixels(LockRec*) SK_OVERRIDE;
+    virtual void onUnlockPixels() SK_OVERRIDE;
+    virtual size_t getAllocatedSizeInBytes() const SK_OVERRIDE;
 
 private:
-    // Uses alloc to implement NewAllocate or NewZeroed.
-    static SkMallocPixelRef* NewUsing(void*(*alloc)(size_t),
-                                      const SkImageInfo&,
-                                      size_t rowBytes,
-                                      SkColorTable*);
-
     void*           fStorage;
     SkColorTable*   fCTable;
     size_t          fRB;

@@ -118,5 +118,5 @@ void GrRectanizerSkyline::addSkylineLevel(int skylineIndex, int x, int y, int wi
 ///////////////////////////////////////////////////////////////////////////////
 
 GrRectanizer* GrRectanizer::Factory(int width, int height) {
-    return new GrRectanizerSkyline(width, height);
+    return SkNEW_ARGS(GrRectanizerSkyline, (width, height));
 }

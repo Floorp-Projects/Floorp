@@ -6,13 +6,11 @@
  */
 
 #include "GrGLVertexBuffer.h"
-#include "GrGLGpu.h"
-#include "SkTraceMemoryDump.h"
+#include "GrGpuGL.h"
 
-GrGLVertexBuffer::GrGLVertexBuffer(GrGLGpu* gpu, const Desc& desc)
-    : INHERITED(gpu, desc.fSizeInBytes, desc.fDynamic, 0 == desc.fID)
+GrGLVertexBuffer::GrGLVertexBuffer(GrGpuGL* gpu, const Desc& desc)
+    : INHERITED(gpu, desc.fIsWrapped, desc.fSizeInBytes, desc.fDynamic, 0 == desc.fID)
     , fImpl(gpu, desc, GR_GL_ARRAY_BUFFER) {
-    this->registerWithCache();
 }
 
 void GrGLVertexBuffer::onRelease() {
@@ -32,7 +30,7 @@ void* GrGLVertexBuffer::onMap() {
     if (!this->wasDestroyed()) {
         return fImpl.map(this->getGpuGL());
     } else {
-        return nullptr;
+        return NULL;
     }
 }
 
@@ -48,12 +46,4 @@ bool GrGLVertexBuffer::onUpdateData(const void* src, size_t srcSizeInBytes) {
     } else {
         return false;
     }
-}
-
-void GrGLVertexBuffer::setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
-                                        const SkString& dumpName) const {
-    SkString buffer_id;
-    buffer_id.appendU32(this->bufferID());
-    traceMemoryDump->setMemoryBacking(dumpName.c_str(), "gl_buffer",
-                                      buffer_id.c_str());
 }

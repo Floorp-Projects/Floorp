@@ -16,7 +16,7 @@
 #include "SkTypedArray.h"
 
 class SkApply;
-class SkADrawable;
+class SkDrawable;
 
 class SkAnimateBase : public SkDisplayable {
 public:
@@ -24,26 +24,26 @@ public:
     SkAnimateBase();
     virtual ~SkAnimateBase();
     virtual int components();
-    SkDisplayable* deepCopy(SkAnimateMaker* ) override;
-    void dirty() override;
+    virtual SkDisplayable* deepCopy(SkAnimateMaker* );
+    virtual void dirty();
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
     int entries() { return fValues.count() / components(); }
     virtual bool hasExecute() const;
     bool isDynamic() const { return SkToBool(fDynamic); }
-    SkDisplayable* getParent() const override;
-    bool getProperty(int index, SkScriptValue* value) const override;
+    virtual SkDisplayable* getParent() const;
+    virtual bool getProperty(int index, SkScriptValue* value) const;
     SkMSec getStart() const { return fStart; }
     SkOperand* getValues() { return fValues.begin(); }
     SkDisplayTypes getValuesType() { return fValues.getType(); }
-    void onEndElement(SkAnimateMaker& ) override;
+    virtual void onEndElement(SkAnimateMaker& );
     void packARGB(SkScalar [], int count, SkTDOperandArray* );
     virtual void refresh(SkAnimateMaker& );
     void setChanged(bool changed) { fChanged = changed; }
     void setHasEndEvent() { fHasEndEvent = true; }
-    bool setParent(SkDisplayable* ) override;
-    bool setProperty(int index, SkScriptValue& value) override;
+    virtual bool setParent(SkDisplayable* );
+    virtual bool setProperty(int index, SkScriptValue& value);
     void setTarget(SkAnimateMaker& );
     virtual bool targetNeedsInitialization() const;
 protected:
@@ -62,7 +62,7 @@ protected:
     const SkMemberInfo* fFieldInfo;
     int fFieldOffset;
     SkMSec fStart;  // corrected time when this apply was enabled
-    SkADrawable* fTarget;
+    SkDrawable* fTarget;
     SkTypedArray fValues;
     unsigned fChanged : 1; // true when value referenced by script has changed
     unsigned fDelayed : 1;  // enabled, but undrawn pending delay

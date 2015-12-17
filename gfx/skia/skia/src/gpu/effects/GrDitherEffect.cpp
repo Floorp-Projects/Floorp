@@ -6,74 +6,94 @@
  */
 
 #include "GrDitherEffect.h"
-#include "GrFragmentProcessor.h"
-#include "GrInvariantOutput.h"
+
+#include "gl/GrGLEffect.h"
+#include "gl/GrGLShaderBuilder.h"
+#include "gl/GrGLSL.h"
+#include "GrTBackendEffectFactory.h"
+
 #include "SkRect.h"
-#include "glsl/GrGLSLFragmentProcessor.h"
-#include "glsl/GrGLSLFragmentShaderBuilder.h"
-#include "glsl/GrGLSLProgramBuilder.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
-class DitherEffect : public GrFragmentProcessor {
+class GLDitherEffect;
+
+class DitherEffect : public GrEffect {
 public:
-    static GrFragmentProcessor* Create() {
-        return new DitherEffect;
+    static GrEffect* Create() {
+        GR_CREATE_STATIC_EFFECT(gDitherEffect, DitherEffect, ())
+        return SkRef(gDitherEffect);
     }
 
     virtual ~DitherEffect() {};
+    static const char* Name() { return "Dither"; }
 
-    const char* name() const override { return "Dither"; }
+    typedef GLDitherEffect GLEffect;
+
+    virtual void getConstantColorComponents(GrColor* color, uint32_t* validFlags) const SK_OVERRIDE;
+
+    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE {
+        return GrTBackendEffectFactory<DitherEffect>::getInstance();
+    }
 
 private:
     DitherEffect() {
-        this->initClassID<DitherEffect>();
         this->setWillReadFragmentPosition();
     }
 
-    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-
-    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
-
     // All dither effects are equal
-    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+    virtual bool onIsEqual(const GrEffect&) const SK_OVERRIDE { return true; }
 
-    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
+    GR_DECLARE_EFFECT_TEST;
 
-    GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
-
-    typedef GrFragmentProcessor INHERITED;
+    typedef GrEffect INHERITED;
 };
 
-void DitherEffect::onComputeInvariantOutput(GrInvariantOutput* inout) const {
-    inout->setToUnknown(GrInvariantOutput::kWill_ReadInput);
+void DitherEffect::getConstantColorComponents(GrColor* color, uint32_t* validFlags) const {
+    *validFlags = 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-GR_DEFINE_FRAGMENT_PROCESSOR_TEST(DitherEffect);
+GR_DEFINE_EFFECT_TEST(DitherEffect);
 
-const GrFragmentProcessor* DitherEffect::TestCreate(GrProcessorTestData*) {
+GrEffect* DitherEffect::TestCreate(SkRandom*,
+                                   GrContext*,
+                                   const GrDrawTargetCaps&,
+                                   GrTexture*[]) {
     return DitherEffect::Create();
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-class GLDitherEffect : public GrGLSLFragmentProcessor {
+class GLDitherEffect : public GrGLEffect {
 public:
-    GLDitherEffect(const GrProcessor&);
+    GLDitherEffect(const GrBackendEffectFactory&, const GrDrawEffect&);
 
-    virtual void emitCode(EmitArgs& args) override;
+    virtual void emitCode(GrGLShaderBuilder* builder,
+                          const GrDrawEffect& drawEffect,
+                          const GrEffectKey& key,
+                          const char* outputColor,
+                          const char* inputColor,
+                          const TransformedCoordsArray&,
+                          const TextureSamplerArray&) SK_OVERRIDE;
 
 private:
-    typedef GrGLSLFragmentProcessor INHERITED;
+    typedef GrGLEffect INHERITED;
 };
 
-GLDitherEffect::GLDitherEffect(const GrProcessor&) {
+GLDitherEffect::GLDitherEffect(const GrBackendEffectFactory& factory,
+                               const GrDrawEffect& drawEffect)
+    : INHERITED (factory) {
 }
 
-void GLDitherEffect::emitCode(EmitArgs& args) {
-    GrGLSLFragmentBuilder* fragBuilder = args.fFragBuilder;
+void GLDitherEffect::emitCode(GrGLShaderBuilder* builder,
+                              const GrDrawEffect& drawEffect,
+                              const GrEffectKey& key,
+                              const char* outputColor,
+                              const char* inputColor,
+                              const TransformedCoordsArray&,
+                              const TextureSamplerArray& samplers) {
     // Generate a random number based on the fragment position. For this
     // random number generator, we use the "GLSL rand" function
     // that seems to be floating around on the internet. It works under
@@ -83,22 +103,13 @@ void GLDitherEffect::emitCode(EmitArgs& args) {
 
     // For each channel c, add the random offset to the pixel to either bump
     // it up or let it remain constant during quantization.
-    fragBuilder->codeAppendf("\t\tfloat r = "
-                             "fract(sin(dot(%s.xy ,vec2(12.9898,78.233))) * 43758.5453);\n",
-                             fragBuilder->fragmentPosition());
-    fragBuilder->codeAppendf("\t\t%s = (1.0/255.0) * vec4(r, r, r, r) + %s;\n",
-                             args.fOutputColor, GrGLSLExpr4(args.fInputColor).c_str());
+    builder->fsCodeAppendf("\t\tfloat r = "
+                           "fract(sin(dot(%s.xy ,vec2(12.9898,78.233))) * 43758.5453);\n",
+                           builder->fragmentPosition());
+    builder->fsCodeAppendf("\t\t%s = (1.0/255.0) * vec4(r, r, r, r) + %s;\n",
+                           outputColor, GrGLSLExpr4(inputColor).c_str());
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-void DitherEffect::onGetGLSLProcessorKey(const GrGLSLCaps& caps,
-                                         GrProcessorKeyBuilder* b) const {
-    GLDitherEffect::GenKey(*this, caps, b);
-}
-
-GrGLSLFragmentProcessor* DitherEffect::onCreateGLSLInstance() const  {
-    return new GLDitherEffect(*this);
-}
-
-GrFragmentProcessor* GrDitherEffect::Create() { return DitherEffect::Create(); }
+GrEffect* GrDitherEffect::Create() { return DitherEffect::Create(); }

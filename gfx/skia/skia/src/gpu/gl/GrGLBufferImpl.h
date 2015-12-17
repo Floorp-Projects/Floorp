@@ -9,9 +9,9 @@
 #define GrGLBufferImpl_DEFINED
 
 #include "SkTypes.h"
-#include "gl/GrGLTypes.h"
+#include "gl/GrGLFunctions.h"
 
-class GrGLGpu;
+class GrGpuGL;
 
 /**
  * This class serves as the implementation of GrGL*Buffer classes. It was written to avoid code
@@ -20,27 +20,30 @@ class GrGLGpu;
 class GrGLBufferImpl : SkNoncopyable {
 public:
     struct Desc {
+        bool        fIsWrapped;
         GrGLuint    fID;            // set to 0 to indicate buffer is CPU-backed and not a VBO.
         size_t      fSizeInBytes;
         bool        fDynamic;
     };
 
-    GrGLBufferImpl(GrGLGpu*, const Desc&, GrGLenum bufferType);
+    GrGLBufferImpl(GrGpuGL*, const Desc&, GrGLenum bufferType);
     ~GrGLBufferImpl() {
         // either release or abandon should have been called by the owner of this object.
         SkASSERT(0 == fDesc.fID);
     }
 
     void abandon();
-    void release(GrGLGpu* gpu);
+    void release(GrGpuGL* gpu);
 
     GrGLuint bufferID() const { return fDesc.fID; }
     size_t baseOffset() const { return reinterpret_cast<size_t>(fCPUData); }
 
-    void* map(GrGLGpu* gpu);
-    void unmap(GrGLGpu* gpu);
+    void bind(GrGpuGL* gpu) const;
+
+    void* map(GrGpuGL* gpu);
+    void unmap(GrGpuGL* gpu);
     bool isMapped() const;
-    bool updateData(GrGLGpu* gpu, const void* src, size_t srcSizeInBytes);
+    bool updateData(GrGpuGL* gpu, const void* src, size_t srcSizeInBytes);
 
 private:
     void validate() const;

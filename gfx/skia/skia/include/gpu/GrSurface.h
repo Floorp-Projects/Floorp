@@ -11,22 +11,27 @@
 
 #include "GrTypes.h"
 #include "GrGpuResource.h"
-#include "SkImageInfo.h"
 #include "SkRect.h"
 
-class GrRenderTarget;
-class GrSurfacePriv;
 class GrTexture;
+class GrRenderTarget;
+struct SkImageInfo;
 
-class SK_API GrSurface : public GrGpuResource {
+class GrSurface : public GrGpuResource {
 public:
+    SK_DECLARE_INST_COUNT(GrSurface);
+
     /**
      * Retrieves the width of the surface.
+     *
+     * @return the width in texels
      */
     int width() const { return fDesc.fWidth; }
 
     /**
      * Retrieves the height of the surface.
+     *
+     * @return the height in texels
      */
     int height() const { return fDesc.fHeight; }
 
@@ -52,19 +57,37 @@ public:
     /**
      * Return the descriptor describing the surface
      */
-    const GrSurfaceDesc& desc() const { return fDesc; }
+    const GrTextureDesc& desc() const { return fDesc; }
+
+    SkImageInfo info() const;
 
     /**
      * @return the texture associated with the surface, may be NULL.
      */
-    virtual GrTexture* asTexture() { return NULL; }
-    virtual const GrTexture* asTexture() const { return NULL; }
+    virtual GrTexture* asTexture() = 0;
+    virtual const GrTexture* asTexture() const = 0;
 
     /**
      * @return the render target underlying this surface, may be NULL.
      */
-    virtual GrRenderTarget* asRenderTarget() { return NULL; }
-    virtual const GrRenderTarget* asRenderTarget() const { return NULL; }
+    virtual GrRenderTarget* asRenderTarget() = 0;
+    virtual const GrRenderTarget* asRenderTarget() const = 0;
+
+    /**
+     * Checks whether this GrSurface refers to the same GPU object as other. This
+     * catches the case where a GrTexture and GrRenderTarget refer to the same
+     * GPU memory.
+     */
+    bool isSameAs(const GrSurface* other) const {
+        const GrRenderTarget* thisRT = this->asRenderTarget();
+        if (NULL != thisRT) {
+            return thisRT == other->asRenderTarget();
+        } else {
+            const GrTexture* thisTex = this->asTexture();
+            SkASSERT(NULL != thisTex); // We must be one or the other
+            return thisTex == other->asTexture();
+        }
+    }
 
     /**
      * Reads a rectangle of pixels from the surface.
@@ -81,11 +104,11 @@ public:
      * @return true if the read succeeded, false if not. The read can fail because of an unsupported
      *              pixel config.
      */
-    bool readPixels(int left, int top, int width, int height,
-                    GrPixelConfig config,
-                    void* buffer,
-                    size_t rowBytes = 0,
-                    uint32_t pixelOpsFlags = 0);
+    virtual bool readPixels(int left, int top, int width, int height,
+                            GrPixelConfig config,
+                            void* buffer,
+                            size_t rowBytes = 0,
+                            uint32_t pixelOpsFlags = 0) = 0;
 
     /**
      * Copy the src pixels [buffer, rowbytes, pixelconfig] into the surface at the specified
@@ -99,82 +122,29 @@ public:
      * @param rowBytes      number of bytes between consecutive rows. Zero means rows are tightly
      *                      packed.
      * @param pixelOpsFlags See the GrContext::PixelOpsFlags enum.
-     *
-     * @return true if the read succeeded, false if not. The read can fail because of an unsupported
-     *              pixel config.
      */
-    bool writePixels(int left, int top, int width, int height,
-                     GrPixelConfig config,
-                     const void* buffer,
-                     size_t rowBytes = 0,
-                     uint32_t pixelOpsFlags = 0);
+    virtual void writePixels(int left, int top, int width, int height,
+                             GrPixelConfig config,
+                             const void* buffer,
+                             size_t rowBytes = 0,
+                             uint32_t pixelOpsFlags = 0) = 0;
 
     /**
-     * After this returns any pending writes to the surface will be issued to the backend 3D API.
+     * Write the contents of the surface to a PNG. Returns true if successful.
+     * @param filename      Full path to desired file
      */
-    void flushWrites();
-
-
-    /**
-     * After this returns any pending surface IO will be issued to the backend 3D API and
-     * if the surface has MSAA it will be resolved.
-     */
-    void prepareForExternalIO();
-
-    /** Access methods that are only to be used within Skia code. */
-    inline GrSurfacePriv surfacePriv();
-    inline const GrSurfacePriv surfacePriv() const;
-
-    typedef void* ReleaseCtx;
-    typedef void (*ReleaseProc)(ReleaseCtx);
-
-    void setRelease(ReleaseProc proc, ReleaseCtx ctx) {
-        fReleaseProc = proc;
-        fReleaseCtx = ctx;
-    }
-
-    static size_t WorseCaseSize(const GrSurfaceDesc& desc);
+    bool savePixels(const char* filename);
 
 protected:
-    // Methods made available via GrSurfacePriv
-    SkImageInfo info(SkAlphaType) const;
-    bool savePixels(const char* filename);
-    bool hasPendingRead() const;
-    bool hasPendingWrite() const;
-    bool hasPendingIO() const;
-
-    // Provides access to methods that should be public within Skia code.
-    friend class GrSurfacePriv;
-
-    GrSurface(GrGpu* gpu, LifeCycle lifeCycle, const GrSurfaceDesc& desc)
-        : INHERITED(gpu, lifeCycle)
-        , fDesc(desc)
-        , fReleaseProc(NULL)
-        , fReleaseCtx(NULL)
-    {}
-
-    ~GrSurface() override {
-        // check that invokeReleaseProc has been called (if needed)
-        SkASSERT(NULL == fReleaseProc);
+    GrSurface(GrGpu* gpu, bool isWrapped, const GrTextureDesc& desc)
+    : INHERITED(gpu, isWrapped)
+    , fDesc(desc) {
     }
 
-    GrSurfaceDesc fDesc;
-
-    void onRelease() override;
-    void onAbandon() override;
+    GrTextureDesc fDesc;
 
 private:
-    void invokeReleaseProc() {
-        if (fReleaseProc) {
-            fReleaseProc(fReleaseCtx);
-            fReleaseProc = NULL;
-        }
-    }
-
-    ReleaseProc fReleaseProc;
-    ReleaseCtx  fReleaseCtx;
-
     typedef GrGpuResource INHERITED;
 };
 
-#endif
+#endif // GrSurface_DEFINED

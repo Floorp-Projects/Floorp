@@ -30,7 +30,7 @@ class SkActive;
 class SkAnimate;
 class SkCanvas;
 class SkDisplayable;
-class SkADrawable;
+class SkDrawable;
 class SkDump;
 class SkEvent;
 class SkEventSink;

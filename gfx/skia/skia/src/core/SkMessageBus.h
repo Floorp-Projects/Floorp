@@ -8,10 +8,9 @@
 #ifndef SkMessageBus_DEFINED
 #define SkMessageBus_DEFINED
 
-#include "SkMutex.h"
-#include "SkOncePtr.h"
-#include "SkTArray.h"
+#include "SkLazyPtr.h"
 #include "SkTDArray.h"
+#include "SkThread.h"
 #include "SkTypes.h"
 
 template <typename Message>
@@ -26,10 +25,10 @@ public:
         ~Inbox();
 
         // Overwrite out with all the messages we've received since the last call.  Threadsafe.
-        void poll(SkTArray<Message>* out);
+        void poll(SkTDArray<Message>* out);
 
     private:
-        SkTArray<Message>  fMessages;
+        SkTDArray<Message> fMessages;
         SkMutex            fMessagesMutex;
 
         friend class SkMessageBus;
@@ -39,18 +38,19 @@ public:
 private:
     SkMessageBus();
     static SkMessageBus* Get();
+    static SkMessageBus* New();
 
     SkTDArray<Inbox*> fInboxes;
     SkMutex           fInboxesMutex;
 };
 
 // This must go in a single .cpp file, not some .h, or we risk creating more than one global
-// SkMessageBus per type when using shared libraries.  NOTE: at most one per file will compile.
-#define DECLARE_SKMESSAGEBUS_MESSAGE(Message)                      \
-    SK_DECLARE_STATIC_ONCE_PTR(SkMessageBus<Message>, bus);        \
-    template <>                                                    \
-    SkMessageBus<Message>* SkMessageBus<Message>::Get() {          \
-        return bus.get([]{ return new SkMessageBus<Message>(); }); \
+// SkMessageBus per type when using shared libraries.
+#define DECLARE_SKMESSAGEBUS_MESSAGE(Message)                        \
+    template <>                                                      \
+    SkMessageBus<Message>* SkMessageBus<Message>::Get() {            \
+        SK_DECLARE_STATIC_LAZY_PTR(SkMessageBus<Message>, bus, New); \
+        return bus.get();                                            \
     }
 
 //   ----------------------- Implementation of SkMessageBus::Inbox -----------------------
@@ -80,21 +80,26 @@ SkMessageBus<Message>::Inbox::~Inbox() {
 template<typename Message>
 void SkMessageBus<Message>::Inbox::receive(const Message& m) {
     SkAutoMutexAcquire lock(fMessagesMutex);
-    fMessages.push_back(m);
+    fMessages.push(m);
 }
 
 template<typename Message>
-void SkMessageBus<Message>::Inbox::poll(SkTArray<Message>* messages) {
-    SkASSERT(messages);
+void SkMessageBus<Message>::Inbox::poll(SkTDArray<Message>* messages) {
+    SkASSERT(NULL != messages);
     messages->reset();
     SkAutoMutexAcquire lock(fMessagesMutex);
-    fMessages.swap(messages);
+    messages->swap(fMessages);
 }
 
 //   ----------------------- Implementation of SkMessageBus -----------------------
 
 template <typename Message>
 SkMessageBus<Message>::SkMessageBus() {}
+
+template <typename Message>
+/*static*/ SkMessageBus<Message>* SkMessageBus<Message>::New() {
+    return SkNEW(SkMessageBus<Message>);
+}
 
 template <typename Message>
 /*static*/ void SkMessageBus<Message>::Post(const Message& m) {

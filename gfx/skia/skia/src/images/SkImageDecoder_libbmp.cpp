@@ -19,12 +19,12 @@ class SkBMPImageDecoder : public SkImageDecoder {
 public:
     SkBMPImageDecoder() {}
 
-    Format getFormat() const override {
+    virtual Format getFormat() const SK_OVERRIDE {
         return kBMP_Format;
     }
 
 protected:
-    Result onDecode(SkStream* stream, SkBitmap* bm, Mode mode) override;
+    virtual bool onDecode(SkStream* stream, SkBitmap* bm, Mode mode) SK_OVERRIDE;
 
 private:
     typedef SkImageDecoder INHERITED;
@@ -46,9 +46,9 @@ static bool is_bmp(SkStreamRewindable* stream) {
 
 static SkImageDecoder* sk_libbmp_dfactory(SkStreamRewindable* stream) {
     if (is_bmp(stream)) {
-        return new SkBMPImageDecoder;
+        return SkNEW(SkBMPImageDecoder);
     }
-    return nullptr;
+    return NULL;
 }
 
 static SkImageDecoder_DecodeReg gReg(sk_libbmp_dfactory);
@@ -74,7 +74,7 @@ public:
         fWidth = width;
         fHeight = height;
         if (fJustBounds) {
-            return nullptr;
+            return NULL;
         }
 
         fRGB.setCount(width * height * 3);  // 3 == r, g, b
@@ -92,7 +92,7 @@ private:
     bool fJustBounds;
 };
 
-SkImageDecoder::Result SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
+bool SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* bm, Mode mode) {
     // First read the entire stream, so that all of the data can be passed to
     // the BmpDecoderHelper.
 
@@ -101,7 +101,7 @@ SkImageDecoder::Result SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* b
     // Byte length of all of the data.
     const size_t length = SkCopyStreamToStorage(&storage, stream);
     if (0 == length) {
-        return kFailure;
+        return 0;
     }
 
     const bool justBounds = SkImageDecoder::kDecodeBounds_Mode == mode;
@@ -113,7 +113,7 @@ SkImageDecoder::Result SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* b
         const int max_pixels = 16383*16383; // max width*height
         if (!helper.DecodeImage((const char*)storage.get(), length,
                                 max_pixels, &callback)) {
-            return kFailure;
+            return false;
         }
     }
 
@@ -136,17 +136,17 @@ SkImageDecoder::Result SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* b
                                   colorType, kOpaque_SkAlphaType));
 
     if (justBounds) {
-        return kSuccess;
+        return true;
     }
 
-    if (!this->allocPixelRef(bm, nullptr)) {
-        return kFailure;
+    if (!this->allocPixelRef(bm, NULL)) {
+        return false;
     }
 
     SkAutoLockPixels alp(*bm);
 
     if (!sampler.begin(bm, SkScaledBitmapSampler::kRGB, *this)) {
-        return kFailure;
+        return false;
     }
 
     const int srcRowBytes = width * 3;
@@ -158,5 +158,5 @@ SkImageDecoder::Result SkBMPImageDecoder::onDecode(SkStream* stream, SkBitmap* b
         sampler.next(srcRow);
         srcRow += sampler.srcDY() * srcRowBytes;
     }
-    return kSuccess;
+    return true;
 }

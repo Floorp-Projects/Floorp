@@ -19,22 +19,22 @@ class SkDrawPath : public SkBoundable {
     DECLARE_DRAW_MEMBER_INFO(Path);
     SkDrawPath();
     virtual ~SkDrawPath();
-    bool addChild(SkAnimateMaker& , SkDisplayable* child) override;
+    virtual bool addChild(SkAnimateMaker& , SkDisplayable* child) SK_OVERRIDE;
     bool childHasID() { return SkToBool(fChildHasID); }
-    bool childrenNeedDisposing() const override;
-    void dirty() override;
-    bool draw(SkAnimateMaker& ) override;
-    SkDisplayable* getParent() const override;
+    virtual bool childrenNeedDisposing() const;
+    virtual void dirty();
+    virtual bool draw(SkAnimateMaker& );
+    virtual SkDisplayable* getParent() const;
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
     SkPath& getPath();
-    bool getProperty(int index, SkScriptValue* value) const override;
-    bool setProperty(int index, SkScriptValue& value) override;
-    void onEndElement(SkAnimateMaker& ) override;
-    void setChildHasID() override;
-    bool setParent(SkDisplayable* parent) override;
-    bool isPath() const override { return true; }
+    virtual bool getProperty(int index, SkScriptValue* value) const;
+    virtual bool setProperty(int index, SkScriptValue& value);
+    virtual void onEndElement(SkAnimateMaker& );
+    virtual void setChildHasID();
+    virtual bool setParent(SkDisplayable* parent);
+    virtual bool isPath() const { return true; }
 public:
     SkPath fPath;
 protected:
@@ -51,8 +51,8 @@ private:
 
 class SkPolyline : public SkDrawPath {
     DECLARE_MEMBER_INFO(Polyline);
-    bool addChild(SkAnimateMaker& , SkDisplayable*) override;
-    void onEndElement(SkAnimateMaker& ) override;
+    virtual bool addChild(SkAnimateMaker& , SkDisplayable*) SK_OVERRIDE;
+    virtual void onEndElement(SkAnimateMaker& );
 protected:
     SkTDScalarArray points;
 private:
@@ -61,7 +61,7 @@ private:
 
 class SkPolygon : public SkPolyline {
     DECLARE_MEMBER_INFO(Polygon);
-    void onEndElement(SkAnimateMaker& ) override;
+    virtual void onEndElement(SkAnimateMaker& );
 private:
     typedef SkPolyline INHERITED;
 };

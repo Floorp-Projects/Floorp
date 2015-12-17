@@ -15,7 +15,7 @@
 
 #include <dwrite.h>
 
-class SkGlyph;
+struct SkGlyph;
 class SkDescriptor;
 
 class SkScalerContext_DW : public SkScalerContext {
@@ -24,23 +24,16 @@ public:
     virtual ~SkScalerContext_DW();
 
 protected:
-    unsigned generateGlyphCount() override;
-    uint16_t generateCharToGlyph(SkUnichar uni) override;
-    void generateAdvance(SkGlyph* glyph) override;
-    void generateMetrics(SkGlyph* glyph) override;
-    void generateImage(const SkGlyph& glyph) override;
-    void generatePath(const SkGlyph& glyph, SkPath* path) override;
-    void generateFontMetrics(SkPaint::FontMetrics*) override;
+    virtual unsigned generateGlyphCount() SK_OVERRIDE;
+    virtual uint16_t generateCharToGlyph(SkUnichar uni) SK_OVERRIDE;
+    virtual void generateAdvance(SkGlyph* glyph) SK_OVERRIDE;
+    virtual void generateMetrics(SkGlyph* glyph) SK_OVERRIDE;
+    virtual void generateImage(const SkGlyph& glyph) SK_OVERRIDE;
+    virtual void generatePath(const SkGlyph& glyph, SkPath* path) SK_OVERRIDE;
+    virtual void generateFontMetrics(SkPaint::FontMetrics*) SK_OVERRIDE;
 
 private:
-    const void* drawDWMask(const SkGlyph& glyph,
-                           DWRITE_RENDERING_MODE renderingMode,
-                           DWRITE_TEXTURE_TYPE textureType);
-
-    HRESULT getBoundingBox(SkGlyph* glyph,
-                           DWRITE_RENDERING_MODE renderingMode,
-                           DWRITE_TEXTURE_TYPE textureType,
-                           RECT* bbox);
+    const void* drawDWMask(const SkGlyph& glyph);
 
     SkTDArray<uint8_t> fBits;
     /** The total matrix without the text height scale. */

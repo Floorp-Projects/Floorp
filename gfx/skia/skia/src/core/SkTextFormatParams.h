@@ -30,10 +30,12 @@ static const SkScalar kStdFakeBoldInterpKeys[] = {
 };
 static const SkScalar kStdFakeBoldInterpValues[] = {
     SK_Scalar1/24,
-    SK_Scalar1/32,
+    SK_Scalar1/32
 };
-static_assert(SK_ARRAY_COUNT(kStdFakeBoldInterpKeys) == SK_ARRAY_COUNT(kStdFakeBoldInterpValues),
-              "mismatched_array_size");
-static const int kStdFakeBoldInterpLength = SK_ARRAY_COUNT(kStdFakeBoldInterpKeys);
+SK_COMPILE_ASSERT(SK_ARRAY_COUNT(kStdFakeBoldInterpKeys) ==
+                  SK_ARRAY_COUNT(kStdFakeBoldInterpValues),
+                  mismatched_array_size);
+static const int kStdFakeBoldInterpLength =
+    SK_ARRAY_COUNT(kStdFakeBoldInterpKeys);
 
 #endif  //SkTextFormatParams_DEFINES

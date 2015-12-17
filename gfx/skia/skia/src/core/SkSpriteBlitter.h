@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -5,11 +6,13 @@
  * found in the LICENSE file.
  */
 
+
 #ifndef SkSpriteBlitter_DEFINED
 #define SkSpriteBlitter_DEFINED
 
+#include "SkBitmap.h"
+#include "SkBitmapProcShader.h"
 #include "SkBlitter.h"
-#include "SkPixmap.h"
 #include "SkShader.h"
 #include "SkSmallAllocator.h"
 
@@ -17,23 +20,28 @@ class SkPaint;
 
 class SkSpriteBlitter : public SkBlitter {
 public:
-    SkSpriteBlitter(const SkPixmap& source);
+            SkSpriteBlitter(const SkBitmap& source);
+    virtual ~SkSpriteBlitter();
 
-    virtual void setup(const SkPixmap& dst, int left, int top, const SkPaint&);
+    virtual void setup(const SkBitmap& device, int left, int top,
+                       const SkPaint& paint);
 
+    // overrides
 #ifdef SK_DEBUG
-    void blitH(int x, int y, int width) override;
-    void blitAntiH(int x, int y, const SkAlpha antialias[], const int16_t runs[]) override;
-    void blitV(int x, int y, int height, SkAlpha alpha) override;
-    void blitMask(const SkMask&, const SkIRect& clip) override;
+    virtual void    blitH(int x, int y, int width);
+    virtual void    blitAntiH(int x, int y, const SkAlpha antialias[], const int16_t runs[]);
+    virtual void    blitV(int x, int y, int height, SkAlpha alpha);
+    virtual void    blitMask(const SkMask&, const SkIRect& clip);
 #endif
 
-    static SkSpriteBlitter* ChooseD16(const SkPixmap& source, const SkPaint&, SkTBlitterAllocator*);
-    static SkSpriteBlitter* ChooseD32(const SkPixmap& source, const SkPaint&, SkTBlitterAllocator*);
+    static SkSpriteBlitter* ChooseD16(const SkBitmap& source, const SkPaint&,
+                                      SkTBlitterAllocator*);
+    static SkSpriteBlitter* ChooseD32(const SkBitmap& source, const SkPaint&,
+                                      SkTBlitterAllocator*);
 
 protected:
-    SkPixmap        fDst;
-    const SkPixmap  fSource;
+    const SkBitmap* fDevice;
+    const SkBitmap* fSource;
     int             fLeft, fTop;
     const SkPaint*  fPaint;
 };

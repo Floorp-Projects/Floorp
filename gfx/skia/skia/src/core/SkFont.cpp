@@ -31,16 +31,16 @@ SkFont::SkFont(SkTypeface* face, SkScalar size, SkScalar scaleX, SkScalar skewX,
 SkFont* SkFont::Create(SkTypeface* face, SkScalar size, SkScalar scaleX, SkScalar skewX,
                        MaskType mt, uint32_t flags) {
     if (size <= 0 || !SkScalarIsFinite(size)) {
-        return nullptr;
+        return NULL;
     }
     if (scaleX <= 0 || !SkScalarIsFinite(scaleX)) {
-        return nullptr;
+        return NULL;
     }
     if (!SkScalarIsFinite(skewX)) {
-        return nullptr;
+        return NULL;
     }
     flags &= kAllFlags;
-    return new SkFont(face, size, scaleX, skewX, mt, flags);
+    return SkNEW_ARGS(SkFont, (face, size, scaleX, skewX, mt, flags));
 }
 
 SkFont* SkFont::Create(SkTypeface* face, SkScalar size, MaskType mt, uint32_t flags) {
@@ -82,7 +82,7 @@ int SkFont::textToGlyphs(const void* text, size_t byteLength, SkTextEncoding enc
             count = SkToInt(byteLength >> 1);
             break;
     }
-    if (nullptr == glyphs) {
+    if (NULL == glyphs) {
         return count;
     }
 

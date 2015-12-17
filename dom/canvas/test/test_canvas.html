@@ -14401,7 +14401,12 @@ ctx.moveTo(50, 25);
 ctx.bezierCurveTo(50, 25, 50, 25, 50, 25);
 ctx.stroke();
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+if (IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
+
 
 }
 </script>
@@ -14433,7 +14438,11 @@ ctx.moveTo(50, 25);
 ctx.lineTo(50, 25);
 ctx.stroke();
 
-todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+if (IsAzureSkia()) {
+  isPixel(ctx, 50,25, 0,255,0,255, 0);
+} else {
+  todo_isPixel(ctx, 50,25, 0,255,0,255, 0);
+}
 
 }
 </script>

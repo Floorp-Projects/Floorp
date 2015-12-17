@@ -8,10 +8,9 @@
 #ifndef GrBezierEffect_DEFINED
 #define GrBezierEffect_DEFINED
 
-#include "GrCaps.h"
-#include "GrProcessor.h"
-#include "GrGeometryProcessor.h"
-#include "GrInvariantOutput.h"
+#include "GrDrawTargetCaps.h"
+#include "GrEffect.h"
+#include "GrVertexEffect.h"
 #include "GrTypesPriv.h"
 
 /**
@@ -56,73 +55,60 @@
  */
 class GrGLConicEffect;
 
-class GrConicEffect : public GrGeometryProcessor {
+class GrConicEffect : public GrVertexEffect {
 public:
-    static GrGeometryProcessor* Create(GrColor color,
-                                       const SkMatrix& viewMatrix,
-                                       const GrPrimitiveEdgeType edgeType,
-                                       const GrCaps& caps,
-                                       const SkMatrix& localMatrix,
-                                       bool usesLocalCoords,
-                                       uint8_t coverage = 0xff) {
+    static GrEffect* Create(const GrEffectEdgeType edgeType, const GrDrawTargetCaps& caps) {
+        GR_CREATE_STATIC_EFFECT(gConicFillAA, GrConicEffect, (kFillAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gConicHairAA, GrConicEffect, (kHairlineAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gConicFillBW, GrConicEffect, (kFillBW_GrEffectEdgeType));
         switch (edgeType) {
-            case kFillAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+            case kFillAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrConicEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
-                                         localMatrix, usesLocalCoords);
-            case kHairlineAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+                gConicFillAA->ref();
+                return gConicFillAA;
+            case kHairlineAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrConicEffect(color, viewMatrix, coverage,
-                                         kHairlineAA_GrProcessorEdgeType, localMatrix,
-                                         usesLocalCoords);
-            case kFillBW_GrProcessorEdgeType:
-                return new GrConicEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
-                                         localMatrix, usesLocalCoords);
+                gConicHairAA->ref();
+                return gConicHairAA;
+            case kFillBW_GrEffectEdgeType:
+                gConicFillBW->ref();
+                return gConicFillBW;
             default:
-                return nullptr;
+                return NULL;
         }
     }
 
     virtual ~GrConicEffect();
 
-    const char* name() const override { return "Conic"; }
+    static const char* Name() { return "Conic"; }
 
-    inline const Attribute* inPosition() const { return fInPosition; }
-    inline const Attribute* inConicCoeffs() const { return fInConicCoeffs; }
-    inline bool isAntiAliased() const { return GrProcessorEdgeTypeIsAA(fEdgeType); }
-    inline bool isFilled() const { return GrProcessorEdgeTypeIsFill(fEdgeType); }
-    inline GrPrimitiveEdgeType getEdgeType() const { return fEdgeType; }
-    GrColor color() const { return fColor; }
-    bool colorIgnored() const { return GrColor_ILLEGAL == fColor; }
-    const SkMatrix& viewMatrix() const { return fViewMatrix; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
-    bool usesLocalCoords() const { return fUsesLocalCoords; }
-    uint8_t coverageScale() const { return fCoverageScale; }
+    inline bool isAntiAliased() const { return GrEffectEdgeTypeIsAA(fEdgeType); }
+    inline bool isFilled() const { return GrEffectEdgeTypeIsFill(fEdgeType); }
+    inline GrEffectEdgeType getEdgeType() const { return fEdgeType; }
 
-    void getGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override;
+    typedef GrGLConicEffect GLEffect;
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrGLSLCaps&) const override;
+    virtual void getConstantColorComponents(GrColor* color,
+                                            uint32_t* validFlags) const SK_OVERRIDE {
+        *validFlags = 0;
+    }
+
+    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
 
 private:
-    GrConicEffect(GrColor, const SkMatrix& viewMatrix, uint8_t coverage, GrPrimitiveEdgeType,
-                  const SkMatrix& localMatrix, bool usesLocalCoords);
+    GrConicEffect(GrEffectEdgeType);
 
-    GrColor             fColor;
-    SkMatrix            fViewMatrix;
-    SkMatrix            fLocalMatrix;
-    bool                fUsesLocalCoords;
-    uint8_t             fCoverageScale;
-    GrPrimitiveEdgeType fEdgeType;
-    const Attribute*    fInPosition;
-    const Attribute*    fInConicCoeffs;
+    virtual bool onIsEqual(const GrEffect& other) const SK_OVERRIDE;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST;
+    GrEffectEdgeType fEdgeType;
 
-    typedef GrGeometryProcessor INHERITED;
+    GR_DECLARE_EFFECT_TEST;
+
+    typedef GrVertexEffect INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -136,73 +122,60 @@ private:
  */
 class GrGLQuadEffect;
 
-class GrQuadEffect : public GrGeometryProcessor {
+class GrQuadEffect : public GrVertexEffect {
 public:
-    static GrGeometryProcessor* Create(GrColor color,
-                                       const SkMatrix& viewMatrix,
-                                       const GrPrimitiveEdgeType edgeType,
-                                       const GrCaps& caps,
-                                       const SkMatrix& localMatrix,
-                                       bool usesLocalCoords,
-                                       uint8_t coverage = 0xff) {
+    static GrEffect* Create(const GrEffectEdgeType edgeType, const GrDrawTargetCaps& caps) {
+        GR_CREATE_STATIC_EFFECT(gQuadFillAA, GrQuadEffect, (kFillAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gQuadHairAA, GrQuadEffect, (kHairlineAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gQuadFillBW, GrQuadEffect, (kFillBW_GrEffectEdgeType));
         switch (edgeType) {
-            case kFillAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+            case kFillAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrQuadEffect(color, viewMatrix, coverage, kFillAA_GrProcessorEdgeType,
-                                        localMatrix, usesLocalCoords);
-            case kHairlineAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+                gQuadFillAA->ref();
+                return gQuadFillAA;
+            case kHairlineAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrQuadEffect(color, viewMatrix, coverage,
-                                        kHairlineAA_GrProcessorEdgeType, localMatrix,
-                                        usesLocalCoords);
-            case kFillBW_GrProcessorEdgeType:
-                return new GrQuadEffect(color, viewMatrix, coverage, kFillBW_GrProcessorEdgeType,
-                                        localMatrix, usesLocalCoords);
+                gQuadHairAA->ref();
+                return gQuadHairAA;
+            case kFillBW_GrEffectEdgeType:
+                gQuadFillBW->ref();
+                return gQuadFillBW;
             default:
-                return nullptr;
+                return NULL;
         }
     }
 
     virtual ~GrQuadEffect();
 
-    const char* name() const override { return "Quad"; }
+    static const char* Name() { return "Quad"; }
 
-    inline const Attribute* inPosition() const { return fInPosition; }
-    inline const Attribute* inHairQuadEdge() const { return fInHairQuadEdge; }
-    inline bool isAntiAliased() const { return GrProcessorEdgeTypeIsAA(fEdgeType); }
-    inline bool isFilled() const { return GrProcessorEdgeTypeIsFill(fEdgeType); }
-    inline GrPrimitiveEdgeType getEdgeType() const { return fEdgeType; }
-    GrColor color() const { return fColor; }
-    bool colorIgnored() const { return GrColor_ILLEGAL == fColor; }
-    const SkMatrix& viewMatrix() const { return fViewMatrix; }
-    const SkMatrix& localMatrix() const { return fLocalMatrix; }
-    bool usesLocalCoords() const { return fUsesLocalCoords; }
-    uint8_t coverageScale() const { return fCoverageScale; }
+    inline bool isAntiAliased() const { return GrEffectEdgeTypeIsAA(fEdgeType); }
+    inline bool isFilled() const { return GrEffectEdgeTypeIsFill(fEdgeType); }
+    inline GrEffectEdgeType getEdgeType() const { return fEdgeType; }
 
-    void getGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override;
+    typedef GrGLQuadEffect GLEffect;
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrGLSLCaps&) const override;
+    virtual void getConstantColorComponents(GrColor* color,
+                                            uint32_t* validFlags) const SK_OVERRIDE {
+        *validFlags = 0;
+    }
+
+    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
 
 private:
-    GrQuadEffect(GrColor, const SkMatrix& viewMatrix, uint8_t coverage, GrPrimitiveEdgeType,
-                 const SkMatrix& localMatrix, bool usesLocalCoords);
+    GrQuadEffect(GrEffectEdgeType);
 
-    GrColor             fColor;
-    SkMatrix            fViewMatrix;
-    SkMatrix            fLocalMatrix;
-    bool                fUsesLocalCoords;
-    uint8_t             fCoverageScale;
-    GrPrimitiveEdgeType fEdgeType;
-    const Attribute*    fInPosition;
-    const Attribute*    fInHairQuadEdge;
+    virtual bool onIsEqual(const GrEffect& other) const SK_OVERRIDE;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST;
+    GrEffectEdgeType fEdgeType;
 
-    typedef GrGeometryProcessor INHERITED;
+    GR_DECLARE_EFFECT_TEST;
+
+    typedef GrVertexEffect INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -218,59 +191,60 @@ private:
  */
 class GrGLCubicEffect;
 
-class GrCubicEffect : public GrGeometryProcessor {
+class GrCubicEffect : public GrVertexEffect {
 public:
-    static GrGeometryProcessor* Create(GrColor color,
-                                       const SkMatrix& viewMatrix,
-                                       const GrPrimitiveEdgeType edgeType,
-                                       const GrCaps& caps) {
+    static GrEffect* Create(const GrEffectEdgeType edgeType, const GrDrawTargetCaps& caps) {
+        GR_CREATE_STATIC_EFFECT(gCubicFillAA, GrCubicEffect, (kFillAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gCubicHairAA, GrCubicEffect, (kHairlineAA_GrEffectEdgeType));
+        GR_CREATE_STATIC_EFFECT(gCubicFillBW, GrCubicEffect, (kFillBW_GrEffectEdgeType));
         switch (edgeType) {
-            case kFillAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+            case kFillAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrCubicEffect(color, viewMatrix, kFillAA_GrProcessorEdgeType);
-            case kHairlineAA_GrProcessorEdgeType:
-                if (!caps.shaderCaps()->shaderDerivativeSupport()) {
-                    return nullptr;
+                gCubicFillAA->ref();
+                return gCubicFillAA;
+            case kHairlineAA_GrEffectEdgeType:
+                if (!caps.shaderDerivativeSupport()) {
+                    return NULL;
                 }
-                return new GrCubicEffect(color, viewMatrix, kHairlineAA_GrProcessorEdgeType);
-            case kFillBW_GrProcessorEdgeType:
-                return new GrCubicEffect(color, viewMatrix, kFillBW_GrProcessorEdgeType);
+                gCubicHairAA->ref();
+                return gCubicHairAA;
+            case kFillBW_GrEffectEdgeType:
+                gCubicFillBW->ref();
+                return gCubicFillBW;
             default:
-                return nullptr;
+                return NULL;
         }
     }
 
     virtual ~GrCubicEffect();
 
-    const char* name() const override { return "Cubic"; }
+    static const char* Name() { return "Cubic"; }
 
-    inline const Attribute* inPosition() const { return fInPosition; }
-    inline const Attribute* inCubicCoeffs() const { return fInCubicCoeffs; }
-    inline bool isAntiAliased() const { return GrProcessorEdgeTypeIsAA(fEdgeType); }
-    inline bool isFilled() const { return GrProcessorEdgeTypeIsFill(fEdgeType); }
-    inline GrPrimitiveEdgeType getEdgeType() const { return fEdgeType; }
-    GrColor color() const { return fColor; }
-    bool colorIgnored() const { return GrColor_ILLEGAL == fColor; }
-    const SkMatrix& viewMatrix() const { return fViewMatrix; }
+    inline bool isAntiAliased() const { return GrEffectEdgeTypeIsAA(fEdgeType); }
+    inline bool isFilled() const { return GrEffectEdgeTypeIsFill(fEdgeType); }
+    inline GrEffectEdgeType getEdgeType() const { return fEdgeType; }
 
-    void getGLSLProcessorKey(const GrGLSLCaps& caps, GrProcessorKeyBuilder* b) const override;
+    typedef GrGLCubicEffect GLEffect;
 
-    GrGLSLPrimitiveProcessor* createGLSLInstance(const GrGLSLCaps&) const override;
+    virtual void getConstantColorComponents(GrColor* color,
+                                            uint32_t* validFlags) const SK_OVERRIDE {
+        *validFlags = 0;
+    }
+
+    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
 
 private:
-    GrCubicEffect(GrColor, const SkMatrix& viewMatrix, GrPrimitiveEdgeType);
+    GrCubicEffect(GrEffectEdgeType);
 
-    GrColor             fColor;
-    SkMatrix            fViewMatrix;
-    GrPrimitiveEdgeType fEdgeType;
-    const Attribute*    fInPosition;
-    const Attribute*    fInCubicCoeffs;
+    virtual bool onIsEqual(const GrEffect& other) const SK_OVERRIDE;
 
-    GR_DECLARE_GEOMETRY_PROCESSOR_TEST;
+    GrEffectEdgeType fEdgeType;
 
-    typedef GrGeometryProcessor INHERITED;
+    GR_DECLARE_EFFECT_TEST;
+
+    typedef GrVertexEffect INHERITED;
 };
 
 #endif

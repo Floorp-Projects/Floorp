@@ -1,9 +1,11 @@
+
 /*
  * Copyright 2006 The Android Open Source Project
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 
 #include "SkXMLWriter.h"
 #include "SkStream.h"
@@ -49,16 +51,6 @@ void SkXMLWriter::addScalarAttribute(const char name[], SkScalar value)
     this->addAttribute(name, tmp.c_str());
 }
 
-void SkXMLWriter::addText(const char text[], size_t length) {
-    if (fElems.isEmpty()) {
-        return;
-    }
-    
-    this->onAddText(text, length);
-    
-    fElems.top()->fHasText = true;
-}
-
 void SkXMLWriter::doEnd(Elem* elem)
 {
     delete elem;
@@ -71,7 +63,9 @@ bool SkXMLWriter::doStart(const char name[], size_t length)
     if (firstChild)
         fElems[level-1]->fHasChildren = true;
     Elem** elem = fElems.push();
-    *elem = new Elem(name, length);
+    *elem = new Elem;
+    (*elem)->fName.set(name, length);
+    (*elem)->fHasChildren = 0;
     return firstChild;
 }
 
@@ -146,7 +140,7 @@ void SkXMLWriter::addAttributeLen(const char name[], const char value[], size_t 
 
     if (fDoEscapeMarkup)
     {
-        size_t   extra = escape_markup(nullptr, value, length);
+        size_t   extra = escape_markup(NULL, value, length);
         if (extra)
         {
             valueStr.resize(length + extra);
@@ -169,27 +163,20 @@ static void write_dom(const SkDOM& dom, const SkDOM::Node* node, SkXMLWriter* w,
 {
     if (!skipRoot)
     {
-        const char* elem = dom.getName(node);
-        if (dom.getType(node) == SkDOM::kText_Type) {
-            SkASSERT(dom.countChildren(node) == 0);
-            w->addText(elem, strlen(elem));
-            return;
-        }
-
-        w->startElement(elem);
+        w->startElement(dom.getName(node));
 
         SkDOM::AttrIter iter(dom, node);
         const char* name;
         const char* value;
-        while ((name = iter.next(&value)) != nullptr)
+        while ((name = iter.next(&value)) != NULL)
             w->addAttribute(name, value);
     }
 
-    node = dom.getFirstChild(node, nullptr);
+    node = dom.getFirstChild(node, NULL);
     while (node)
     {
         write_dom(dom, node, w, false);
-        node = dom.getNextSibling(node, nullptr);
+        node = dom.getNextSibling(node, NULL);
     }
 
     if (!skipRoot)
@@ -225,7 +212,7 @@ SkXMLStreamWriter::~SkXMLStreamWriter()
 
 void SkXMLStreamWriter::onAddAttributeLen(const char name[], const char value[], size_t length)
 {
-    SkASSERT(!fElems.top()->fHasChildren && !fElems.top()->fHasText);
+    SkASSERT(!fElems.top()->fHasChildren);
     fStream.writeText(" ");
     fStream.writeText(name);
     fStream.writeText("=\"");
@@ -233,31 +220,18 @@ void SkXMLStreamWriter::onAddAttributeLen(const char name[], const char value[],
     fStream.writeText("\"");
 }
 
-void SkXMLStreamWriter::onAddText(const char text[], size_t length) {
-    Elem* elem = fElems.top();
-
-    if (!elem->fHasChildren && !elem->fHasText) {
-        fStream.writeText(">");
-        fStream.newline();
-    }
-
-    tab(fStream, fElems.count() + 1);
-    fStream.write(text, length);
-    fStream.newline();
-}
-
 void SkXMLStreamWriter::onEndElement()
 {
     Elem* elem = getEnd();
-    if (elem->fHasChildren || elem->fHasText)
+    if (elem->fHasChildren)
     {
         tab(fStream, fElems.count());
         fStream.writeText("</");
         fStream.writeText(elem->fName.c_str());
         fStream.writeText(">");
-    } else {
-        fStream.writeText("/>");
     }
+    else
+        fStream.writeText("/>");
     fStream.newline();
     doEnd(elem);
 }
@@ -300,13 +274,9 @@ SkXMLParserWriter::~SkXMLParserWriter()
 
 void SkXMLParserWriter::onAddAttributeLen(const char name[], const char value[], size_t length)
 {
-    SkASSERT(fElems.count() == 0 || (!fElems.top()->fHasChildren && !fElems.top()->fHasText));
+    SkASSERT(fElems.count() == 0 || !fElems.top()->fHasChildren);
     SkString str(value, length);
     fParser.addAttribute(name, str.c_str());
-}
-
-void SkXMLParserWriter::onAddText(const char text[], size_t length) {
-    fParser.text(text, SkToInt(length));
 }
 
 void SkXMLParserWriter::onEndElement()

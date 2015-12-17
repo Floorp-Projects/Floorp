@@ -20,7 +20,7 @@ const SkMemberInfo SkDataInput::fInfo[] = {
 
 DEFINE_GET_MEMBER(SkDataInput);
 
-SkDataInput::SkDataInput() : fParent(nullptr) {}
+SkDataInput::SkDataInput() : fParent(NULL) {}
 
 bool SkDataInput::add() {
     SkASSERT(name.size() > 0);

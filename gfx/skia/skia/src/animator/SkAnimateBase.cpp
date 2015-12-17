@@ -12,7 +12,7 @@
 #include "SkAnimateProperties.h"
 #include "SkAnimatorScript.h"
 #include "SkDisplayApply.h"
-#include "SkADrawable.h"
+#include "SkDrawable.h"
 
 #if SK_USE_CONDENSED_INFO == 0
 
@@ -39,7 +39,7 @@ const SkMemberInfo SkAnimateBase::fInfo[] = {
 DEFINE_GET_MEMBER(SkAnimateBase);
 
 SkAnimateBase::SkAnimateBase() : begin(0), dur(1), repeat(SK_Scalar1),
-        fApply(nullptr), fFieldInfo(nullptr), fFieldOffset(0), fStart((SkMSec) -1), fTarget(nullptr),
+        fApply(NULL), fFieldInfo(NULL), fFieldOffset(0), fStart((SkMSec) -1), fTarget(NULL),
         fChanged(0), fDelayed(0), fDynamic(0), fHasEndEvent(0), fHasValues(0),
         fMirror(0), fReset(0), fResetPending(0), fTargetIsScope(0) {
     blend.setCount(1);
@@ -91,7 +91,7 @@ void SkAnimateBase::dump(SkAnimateMaker* maker) {
         SkDebugf("to=\"%s\" ", to.c_str());
     }
     if (begin != 0) {
-        SkDebugf("begin=\"%g\" ", begin * 0.001);
+        SkDebugf("begin=\"%g\" ", SkScalarToFloat(SkScalarDiv(begin,1000)));
     }
 }
 #endif
@@ -116,7 +116,7 @@ returnBool:
             value->fType = SkType_Boolean;
             break;
         case SK_PROPERTY(step):
-            if (fApply == nullptr)
+            if (fApply == NULL)
                 return false;    // !!! notify there's an error?
             fApply->getStep(value);
             break;
@@ -148,7 +148,7 @@ void SkAnimateBase::onEndElement(SkAnimateMaker& maker) {
         // lval must be of the form x[y]
         const char* lvalStr = lval.c_str();
         const char* arrayEnd = strchr(lvalStr, '[');
-        if (arrayEnd == nullptr)
+        if (arrayEnd == NULL)
             return; //should this return an error?
         size_t arrayNameLen = arrayEnd - lvalStr;
         SkString arrayStr(lvalStr, arrayNameLen);

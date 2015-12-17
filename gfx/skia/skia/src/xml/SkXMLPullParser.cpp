@@ -16,13 +16,13 @@ static void reset(SkXMLPullParser::Curr* curr)
     curr->fIsWhitespace = false;
 }
 
-SkXMLPullParser::SkXMLPullParser() : fStream(nullptr)
+SkXMLPullParser::SkXMLPullParser() : fStream(NULL)
 {
     fCurr.fEventType = ERROR;
     fDepth = -1;
 }
 
-SkXMLPullParser::SkXMLPullParser(SkStream* stream) : fStream(nullptr)
+SkXMLPullParser::SkXMLPullParser(SkStream* stream) : fStream(NULL)
 {
     fCurr.fEventType = ERROR;
     fDepth = 0;
@@ -32,7 +32,7 @@ SkXMLPullParser::SkXMLPullParser(SkStream* stream) : fStream(nullptr)
 
 SkXMLPullParser::~SkXMLPullParser()
 {
-    this->setStream(nullptr);
+    this->setStream(NULL);
 }
 
 SkStream* SkXMLPullParser::setStream(SkStream* stream)
@@ -89,7 +89,7 @@ const char* SkXMLPullParser::getName()
     case END_TAG:
         return fCurr.fName;
     default:
-        return nullptr;
+        return NULL;
     }
 }
 
@@ -100,7 +100,7 @@ const char* SkXMLPullParser::getText()
     case IGNORABLE_WHITESPACE:
         return fCurr.fName;
     default:
-        return nullptr;
+        return NULL;
     }
 }
 

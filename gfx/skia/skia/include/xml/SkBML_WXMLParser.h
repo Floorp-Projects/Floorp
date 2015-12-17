@@ -40,7 +40,7 @@ private:
     char*       fAttrValues[256];
 
     // important that these are U8, so we get automatic wrap-around
-    uint8_t  fNextElem, fNextAttrName, fNextAttrValue;
+    U8  fNextElem, fNextAttrName, fNextAttrValue;
 };
 
 #endif // SkBML_WXMLParser_DEFINED

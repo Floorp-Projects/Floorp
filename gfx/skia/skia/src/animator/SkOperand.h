@@ -14,7 +14,7 @@
 
 class SkTypedArray;
 class SkDisplayable;
-class SkADrawable;
+class SkDrawable;
 class SkString;
 
 union SkOperand {
@@ -22,7 +22,7 @@ union SkOperand {
 //  SkOperand(SkScalar scalar) : fScalar(scalar) {}
     SkTypedArray* fArray;
     SkDisplayable* fDisplayable;
-    SkADrawable* fDrawable;
+    SkDrawable* fDrawable;
     void* fObject;
     int32_t fS32;
     SkMSec fMSec;
@@ -35,7 +35,7 @@ struct SkScriptValue {
     SkDisplayTypes fType;
     SkTypedArray* getArray() { SkASSERT(fType == SkType_Array); return fOperand.fArray; }
     SkDisplayable* getDisplayable() { SkASSERT(fType == SkType_Displayable); return fOperand.fDisplayable; }
-    SkADrawable* getDrawable() { SkASSERT(fType == SkType_Drawable); return fOperand.fDrawable; }
+    SkDrawable* getDrawable() { SkASSERT(fType == SkType_Drawable); return fOperand.fDrawable; }
     int32_t getS32(SkAnimateMaker* maker) { SkASSERT(fType == SkType_Int || fType == SkType_Boolean ||
         SkDisplayType::IsEnum(maker, fType)); return fOperand.fS32; }
     SkMSec getMSec() { SkASSERT(fType == SkType_MSec); return fOperand.fMSec; }

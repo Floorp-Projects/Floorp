@@ -15,6 +15,8 @@
 
 class SK_API SkLayerDrawLooper : public SkDrawLooper {
 public:
+    SK_DECLARE_INST_COUNT(SkLayerDrawLooper)
+
     virtual ~SkLayerDrawLooper();
 
     /**
@@ -71,21 +73,22 @@ public:
         LayerInfo();
     };
 
-    SkDrawLooper::Context* createContext(SkCanvas*, void* storage) const override;
+    virtual SkDrawLooper::Context* createContext(SkCanvas*, void* storage) const SK_OVERRIDE;
 
-    size_t contextSize() const override { return sizeof(LayerDrawLooperContext); }
+    virtual size_t contextSize() const SK_OVERRIDE { return sizeof(LayerDrawLooperContext); }
 
-    bool asABlurShadow(BlurShadowRec* rec) const override;
+    virtual bool asABlurShadow(BlurShadowRec* rec) const SK_OVERRIDE;
 
     SK_TO_STRING_OVERRIDE()
 
-    Factory getFactory() const override { return CreateProc; }
+    /// Implements Flattenable.
+    virtual Factory getFactory() const SK_OVERRIDE { return CreateProc; }
     static SkFlattenable* CreateProc(SkReadBuffer& buffer);
 
 protected:
     SkLayerDrawLooper();
 
-    void flatten(SkWriteBuffer&) const override;
+    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
 
 private:
     struct Rec {
@@ -94,6 +97,7 @@ private:
         LayerInfo fInfo;
     };
     Rec*    fRecs;
+    Rec*    fTopRec;
     int     fCount;
 
     // state-machine during the init/next cycle
@@ -102,12 +106,17 @@ private:
         explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
     protected:
-        bool next(SkCanvas*, SkPaint* paint) override;
+        virtual bool next(SkCanvas*, SkPaint* paint) SK_OVERRIDE;
 
     private:
         Rec* fCurrRec;
 
         static void ApplyInfo(SkPaint* dst, const SkPaint& src, const LayerInfo&);
+    };
+
+    class MyRegistrar : public SkFlattenable::Registrar {
+    public:
+        MyRegistrar();
     };
 
     typedef SkDrawLooper INHERITED;

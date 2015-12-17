@@ -15,7 +15,7 @@
 class SkDrawEmboss : public SkDrawMaskFilter {
     DECLARE_DRAW_MEMBER_INFO(Emboss);
     SkDrawEmboss();
-    SkMaskFilter* getMaskFilter() override;
+    virtual SkMaskFilter* getMaskFilter() SK_OVERRIDE;
 protected:
     SkTDScalarArray fDirection;
     SkScalar        fSigma;

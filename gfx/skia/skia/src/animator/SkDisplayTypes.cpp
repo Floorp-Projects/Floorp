@@ -121,7 +121,7 @@ SkDisplayString::SkDisplayString(SkString& copyFrom) : value(copyFrom) {
 void SkDisplayString::executeFunction(SkDisplayable* target, int index,
         SkTDArray<SkScriptValue>& parameters, SkDisplayTypes type,
         SkScriptValue* scriptValue) {
-    if (scriptValue == nullptr)
+    if (scriptValue == NULL)
         return;
     SkASSERT(target == this);
     switch (index) {

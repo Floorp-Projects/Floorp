@@ -218,7 +218,7 @@ void SkDrawPath::parseSVG() {
                 break;
             case '~': {
                 SkPoint args[2];
-                data = find_points(data, args, 2, false, nullptr);
+                data = find_points(data, args, 2, false, NULL);
                 fPath.moveTo(args[0].fX, args[0].fY);
                 fPath.lineTo(args[1].fX, args[1].fY);
             }

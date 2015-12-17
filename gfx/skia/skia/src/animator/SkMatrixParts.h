@@ -39,7 +39,7 @@ class SkRotate : public SkMatrixPart {
     DECLARE_MEMBER_INFO(Rotate);
     SkRotate();
 protected:
-    bool add() override;
+    virtual bool add();
     SkScalar degrees;
     SkPoint center;
 };
@@ -48,7 +48,7 @@ class SkScale : public SkMatrixPart {
     DECLARE_MEMBER_INFO(Scale);
     SkScale();
 protected:
-    bool add() override;
+    virtual bool add();
     SkScalar x;
     SkScalar y;
     SkPoint center;
@@ -58,7 +58,7 @@ class SkSkew : public SkMatrixPart {
     DECLARE_MEMBER_INFO(Skew);
     SkSkew();
 protected:
-    bool add() override;
+    virtual bool add();
     SkScalar x;
     SkScalar y;
     SkPoint center;
@@ -68,7 +68,7 @@ class SkTranslate : public SkMatrixPart {
     DECLARE_MEMBER_INFO(Translate);
     SkTranslate();
 protected:
-    bool add() override;
+    virtual bool add();
     SkScalar x;
     SkScalar y;
 };
@@ -78,7 +78,7 @@ class SkFromPath : public SkMatrixPart {
     SkFromPath();
     virtual ~SkFromPath();
 protected:
-    bool add() override;
+    virtual bool add();
     int32_t mode;
     SkScalar offset;
     SkDrawPath* path;
@@ -90,11 +90,11 @@ class SkRectToRect : public SkMatrixPart {
     SkRectToRect();
     virtual ~SkRectToRect();
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
-    const SkMemberInfo* preferredChild(SkDisplayTypes type) override;
+    virtual const SkMemberInfo* preferredChild(SkDisplayTypes type);
 protected:
-    bool add() override;
+    virtual bool add();
     SkDrawRect* source;
     SkDrawRect* destination;
 };
@@ -104,12 +104,12 @@ class SkPolyToPoly : public SkMatrixPart {
     SkPolyToPoly();
     virtual ~SkPolyToPoly();
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
-    void onEndElement(SkAnimateMaker& ) override;
-    const SkMemberInfo* preferredChild(SkDisplayTypes type) override;
+    virtual void onEndElement(SkAnimateMaker& );
+    virtual const SkMemberInfo* preferredChild(SkDisplayTypes type);
 protected:
-    bool add() override;
+    virtual bool add();
     SkPolygon* source;
     SkPolygon* destination;
 };

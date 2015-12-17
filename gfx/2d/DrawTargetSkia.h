@@ -142,7 +142,7 @@ private:
 
 #ifdef USE_SKIA_GPU
   RefPtrSkia<GrContext> mGrContext;
-  GrGLuint mTexture;
+  uint32_t mTexture;
 #endif
 
   IntSize mSize;

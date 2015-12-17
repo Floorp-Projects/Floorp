@@ -11,9 +11,37 @@
 #include "SkImageFilter.h"
 #include "SkColor.h"
 
+class SK_API SkPoint3 {
+public:
+    SkPoint3() {}
+    SkPoint3(SkScalar x, SkScalar y, SkScalar z)
+      : fX(x), fY(y), fZ(z) {}
+    SkScalar dot(const SkPoint3& other) const {
+        return fX * other.fX + fY * other.fY + fZ * other.fZ;
+    }
+    SkScalar maxComponent() const {
+        return fX > fY ? (fX > fZ ? fX : fZ) : (fY > fZ ? fY : fZ);
+    }
+    void normalize() {
+        // Small epsilon is added to prevent division by 0.
+        SkScalar scale = SkScalarInvert(SkScalarSqrt(dot(*this)) + SK_ScalarNearlyZero);
+        fX = fX * scale;
+        fY = fY * scale;
+        fZ = fZ * scale;
+    }
+    SkPoint3 operator*(SkScalar scalar) const {
+        return SkPoint3(fX * scalar, fY * scalar, fZ * scalar);
+    }
+    SkPoint3 operator-(const SkPoint3& other) const {
+        return SkPoint3(fX - other.fX, fY - other.fY, fZ - other.fZ);
+    }
+    bool operator==(const SkPoint3& other) const {
+        return fX == other.fX && fY == other.fY && fZ == other.fZ;
+    }
+    SkScalar fX, fY, fZ;
+};
 
-class SkImageFilterLight;
-struct SkPoint3;
+class SkLight;
 
 class SK_API SkLightingImageFilter : public SkImageFilter {
 public:
@@ -42,18 +70,18 @@ public:
     SK_DECLARE_FLATTENABLE_REGISTRAR_GROUP()
 
 protected:
-    SkLightingImageFilter(SkImageFilterLight* light,
+    SkLightingImageFilter(SkLight* light,
                           SkScalar surfaceScale,
                           SkImageFilter* input,
                           const CropRect* cropRect);
-    void flatten(SkWriteBuffer&) const override;
-    const SkImageFilterLight* light() const { return fLight.get(); }
+    explicit SkLightingImageFilter(SkReadBuffer& buffer);
+    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    const SkLight* light() const { return fLight; }
     SkScalar surfaceScale() const { return fSurfaceScale; }
-    bool affectsTransparentBlack() const override { return true; }
 
 private:
     typedef SkImageFilter INHERITED;
-    SkAutoTUnref<SkImageFilterLight> fLight;
+    SkLight* fLight;
     SkScalar fSurfaceScale;
 };
 

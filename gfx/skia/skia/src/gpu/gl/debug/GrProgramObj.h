@@ -24,7 +24,7 @@ public:
 
     void AttachShader(GrShaderObj *shader);
 
-    void deleteAction() override;
+    virtual void deleteAction() SK_OVERRIDE;
 
     // TODO: this flag system won't work w/ multiple contexts!
     void setInUse()         { fInUse = true; }

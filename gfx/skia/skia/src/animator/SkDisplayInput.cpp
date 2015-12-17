@@ -30,7 +30,7 @@ DEFINE_GET_MEMBER(SkInput);
 SkInput::SkInput() : fInt((int) SK_NaN32), fFloat(SK_ScalarNaN) {}
 
 SkDisplayable* SkInput::contains(const SkString& string) {
-    return string.equals(name) ? this : nullptr;
+    return string.equals(name) ? this : NULL;
 }
 
 bool SkInput::enable(SkAnimateMaker & ) {

@@ -22,13 +22,19 @@ static void RoundCapper(SkPath* path, const SkPoint& pivot,
                         const SkVector& normal, const SkPoint& stop,
                         SkPath*)
 {
-    SkVector parallel;
-    normal.rotateCW(&parallel);
+    SkScalar    px = pivot.fX;
+    SkScalar    py = pivot.fY;
+    SkScalar    nx = normal.fX;
+    SkScalar    ny = normal.fY;
+    SkScalar    sx = SkScalarMul(nx, CUBIC_ARC_FACTOR);
+    SkScalar    sy = SkScalarMul(ny, CUBIC_ARC_FACTOR);
 
-    SkPoint projectedCenter = pivot + parallel;
-
-    path->conicTo(projectedCenter + normal, projectedCenter, SK_ScalarRoot2Over2);
-    path->conicTo(projectedCenter - normal, stop, SK_ScalarRoot2Over2);
+    path->cubicTo(px + nx + CWX(sx, sy), py + ny + CWY(sx, sy),
+                  px + CWX(nx, ny) + sx, py + CWY(nx, ny) + sy,
+                  px + CWX(nx, ny), py + CWY(nx, ny));
+    path->cubicTo(px + CWX(nx, ny) - sx, py + CWY(nx, ny) - sy,
+                  px - nx + CWX(sx, sy), py - ny + CWY(sx, sy),
+                  stop.fX, stop.fY);
 }
 
 static void SquareCapper(SkPath* path, const SkPoint& pivot,
@@ -130,15 +136,18 @@ static void RoundJoiner(SkPath* outer, SkPath* inner, const SkVector& beforeUnit
         dir = kCCW_SkRotationDirection;
     }
 
+    SkPoint     pts[kSkBuildQuadArcStorage];
     SkMatrix    matrix;
     matrix.setScale(radius, radius);
     matrix.postTranslate(pivot.fX, pivot.fY);
-    SkConic conics[SkConic::kMaxConicsForArc];
-    int count = SkConic::BuildUnitArc(before, after, dir, &matrix, conics);
-    if (count > 0) {
-        for (int i = 0; i < count; ++i) {
-            outer->conicTo(conics[i].fPts[1], conics[i].fPts[2], conics[i].fW);
-        }
+    int count = SkBuildQuadArc(before, after, dir, &matrix, pts);
+    SkASSERT((count & 1) == 1);
+
+    if (count > 1)
+    {
+        for (int i = 1; i < count; i += 2)
+            outer->quadTo(pts[i].fX, pts[i].fY, pts[i+1].fX, pts[i+1].fY);
+
         after.scale(radius);
         HandleInnerJoin(inner, pivot, after);
     }
@@ -214,7 +223,7 @@ static void MiterJoiner(SkPath* outer, SkPath* inner, const SkVector& beforeUnit
     else
         mid.set(before.fX + after.fX, before.fY + after.fY);
 
-    mid.setLength(radius / sinHalfAngle);
+    mid.setLength(SkScalarDiv(radius, sinHalfAngle));
 DO_MITER:
     if (prevIsLine)
         outer->setLastPt(pivot.fX + mid.fX, pivot.fY + mid.fY);
