@@ -10,6 +10,7 @@ import org.mozilla.gecko.CrashHandler;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoMessageReceiver;
 import org.mozilla.gecko.NSSBridge;
 import org.mozilla.gecko.db.BrowserContract.DeletedPasswords;
 import org.mozilla.gecko.db.BrowserContract.Passwords;
@@ -216,8 +217,10 @@ public class PasswordsProvider extends SQLiteBridgeContentProvider {
 
     @Override
     public void initGecko() {
-        GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Passwords:Init", null));
-        Intent initIntent = new Intent(GeckoApp.ACTION_INIT_PW);
+        // We're not in the main process.  The receiver of this Intent can
+        // communicate with Gecko in the main process.
+        Intent initIntent = new Intent(getContext(), GeckoMessageReceiver.class);
+        initIntent.setAction(GeckoApp.ACTION_INIT_PW);
         mContext.sendBroadcast(initIntent);
     }
 
