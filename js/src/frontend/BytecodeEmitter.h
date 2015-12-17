@@ -598,6 +598,7 @@ struct BytecodeEmitter
     bool emitConditionalExpression(ConditionalExpression& conditional);
 
     bool emitCallOrNew(ParseNode* pn);
+    bool emitDebugOnlyCheckSelfHosted();
     bool emitSelfHostedCallFunction(ParseNode* pn);
     bool emitSelfHostedResumeGenerator(ParseNode* pn);
     bool emitSelfHostedForceInterpreter(ParseNode* pn);

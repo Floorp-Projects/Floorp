@@ -17,16 +17,13 @@ Cu.import('resource://gre/modules/ObjectUtils.jsm');
 const serviceExports = Cu.import('resource://gre/modules/PushService.jsm', {});
 const servicePrefs = new Preferences('dom.push.');
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "PushNotificationService",
-  "@mozilla.org/push/NotificationService;1",
-  "nsIPushNotificationService"
-);
-
 const DEFAULT_TIMEOUT = 5000;
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
+
+var isParent = Cc['@mozilla.org/xre/runtime;1']
+                 .getService(Ci.nsIXULRuntime).processType ==
+                 Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 // Stop and clean up after the PushService.
 Services.obs.addObserver(function observe(subject, topic, data) {
@@ -439,3 +436,114 @@ MockMobileNetworkInfo.prototype = {
     return 'network-active-changed';
   }
 };
+
+var setUpServiceInParent = Task.async(function* (service, db) {
+  if (!isParent) {
+    return;
+  }
+
+  let userAgentID = 'ce704e41-cb77-4206-b07b-5bf47114791b';
+  setPrefs({
+    userAgentID: userAgentID,
+  });
+
+  yield db.put({
+    channelID: '6e2814e1-5f84-489e-b542-855cc1311f09',
+    pushEndpoint: 'https://example.org/push/get',
+    scope: 'https://example.com/get/ok',
+    originAttributes: '',
+    version: 1,
+    pushCount: 10,
+    lastPush: 1438360548322,
+    quota: 16,
+  });
+  yield db.put({
+    channelID: '3a414737-2fd0-44c0-af05-7efc172475fc',
+    pushEndpoint: 'https://example.org/push/unsub',
+    scope: 'https://example.com/unsub/ok',
+    originAttributes: '',
+    version: 2,
+    pushCount: 10,
+    lastPush: 1438360848322,
+    quota: 4,
+  });
+  yield db.put({
+    channelID: 'ca3054e8-b59b-4ea0-9c23-4a3c518f3161',
+    pushEndpoint: 'https://example.org/push/stale',
+    scope: 'https://example.com/unsub/fail',
+    originAttributes: '',
+    version: 3,
+    pushCount: 10,
+    lastPush: 1438362348322,
+    quota: 1,
+  });
+
+  service.init({
+    serverURI: 'wss://push.example.org/',
+    networkInfo: new MockDesktopNetworkInfo(),
+    db: makeStub(db, {
+      put(prev, record) {
+        if (record.scope == 'https://example.com/sub/fail') {
+          return Promise.reject('synergies not aligned');
+        }
+        return prev.call(this, record);
+      },
+      delete: function(prev, channelID) {
+        if (channelID == 'ca3054e8-b59b-4ea0-9c23-4a3c518f3161') {
+          return Promise.reject('splines not reticulated');
+        }
+        return prev.call(this, channelID);
+      },
+      getByIdentifiers(prev, identifiers) {
+        if (identifiers.scope == 'https://example.com/get/fail') {
+          return Promise.reject('qualia unsynchronized');
+        }
+        return prev.call(this, identifiers);
+      },
+    }),
+    makeWebSocket(uri) {
+      return new MockWebSocket(uri, {
+        onHello(request) {
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'hello',
+            uaid: userAgentID,
+            status: 200,
+          }));
+        },
+        onRegister(request) {
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'register',
+            uaid: userAgentID,
+            channelID: request.channelID,
+            status: 200,
+            pushEndpoint: 'https://example.org/push/' + request.channelID,
+          }));
+        },
+      });
+    },
+  });
+});
+
+var tearDownServiceInParent = Task.async(function* (db) {
+  if (!isParent) {
+    return;
+  }
+
+  let record = yield db.getByIdentifiers({
+    scope: 'https://example.com/sub/ok',
+    originAttributes: '',
+  });
+  ok(record.pushEndpoint.startsWith('https://example.org/push'),
+    'Wrong push endpoint in subscription record');
+
+  record = yield db.getByIdentifiers({
+    scope: 'https://example.net/scope/1',
+    originAttributes: ChromeUtils.originAttributesToSuffix(
+      { appId: 1, inBrowser: true }),
+  });
+  ok(record.pushEndpoint.startsWith('https://example.org/push'),
+    'Wrong push endpoint in app record');
+
+  record = yield db.getByKeyID('3a414737-2fd0-44c0-af05-7efc172475fc');
+  ok(!record, 'Unsubscribed record should not exist');
+});

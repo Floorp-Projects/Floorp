@@ -132,6 +132,8 @@ Renderer9::Renderer9(egl::Display *display)
     mAppliedProgramSerial = 0;
 
     initializeDebugAnnotator();
+
+    mEGLDevice = nullptr;
 }
 
 Renderer9::~Renderer9()
@@ -154,6 +156,7 @@ void Renderer9::release()
 
     releaseDeviceResources();
 
+    SafeDelete(mEGLDevice);
     SafeRelease(mDevice);
     SafeRelease(mDeviceEx);
     SafeRelease(mD3d9);
@@ -883,6 +886,53 @@ gl::Error Renderer9::setUniformBuffers(const gl::Data &/*data*/,
     return gl::Error(GL_NO_ERROR);
 }
 
+gl::Error Renderer9::updateState(const gl::Data &data, GLenum drawMode)
+{
+    // Applies the render target surface, depth stencil surface, viewport rectangle and
+    // scissor rectangle to the renderer
+    const gl::Framebuffer *framebufferObject = data.state->getDrawFramebuffer();
+    ASSERT(framebufferObject && framebufferObject->checkStatus(data) == GL_FRAMEBUFFER_COMPLETE);
+
+    gl::Error error = applyRenderTarget(framebufferObject);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    // Setting viewport state
+    setViewport(data.caps, data.state->getViewport(), data.state->getNearPlane(),
+                data.state->getFarPlane(), drawMode, data.state->getRasterizerState().frontFace,
+                false);
+
+    // Setting scissors state
+    setScissorRectangle(data.state->getScissor(), data.state->isScissorTestEnabled());
+
+    // Setting rasterizer state
+    int samples                    = framebufferObject->getSamples(data);
+    gl::RasterizerState rasterizer = data.state->getRasterizerState();
+    rasterizer.pointDrawMode       = (drawMode == GL_POINTS);
+    rasterizer.multiSample         = (samples != 0);
+
+    error = setRasterizerState(rasterizer);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    // Setting blend state
+    unsigned int mask = GetBlendSampleMask(data, samples);
+    error = setBlendState(framebufferObject, data.state->getBlendState(),
+                          data.state->getBlendColor(), mask);
+    if (error.isError())
+    {
+        return error;
+    }
+
+    // Setting depth stencil state
+    error = setDepthStencilState(*data.state);
+    return error;
+}
+
 gl::Error Renderer9::setRasterizerState(const gl::RasterizerState &rasterState)
 {
     bool rasterStateChanged = mForceSetRasterState || memcmp(&rasterState, &mCurRasterState, sizeof(gl::RasterizerState)) != 0;
@@ -1031,9 +1081,13 @@ gl::Error Renderer9::setBlendState(const gl::Framebuffer *framebuffer,
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Renderer9::setDepthStencilState(const gl::DepthStencilState &depthStencilState, int stencilRef,
-                                          int stencilBackRef, bool frontFaceCCW)
+gl::Error Renderer9::setDepthStencilState(const gl::State &glState)
 {
+    const auto &depthStencilState = glState.getDepthStencilState();
+    int stencilRef                = glState.getStencilRef();
+    int stencilBackRef            = glState.getStencilBackRef();
+    bool frontFaceCCW             = (glState.getRasterizerState().frontFace == GL_CCW);
+
     bool depthStencilStateChanged = mForceSetDepthStencilState ||
                                     memcmp(&depthStencilState, &mCurDepthStencilState, sizeof(gl::DepthStencilState)) != 0;
     bool stencilRefChanged = mForceSetDepthStencilState || stencilRef != mCurStencilRef ||
@@ -1154,7 +1208,12 @@ void Renderer9::setScissorRectangle(const gl::Rectangle &scissor, bool enabled)
     mForceSetScissor = false;
 }
 
-void Renderer9::setViewport(const gl::Rectangle &viewport, float zNear, float zFar, GLenum drawMode, GLenum frontFace,
+void Renderer9::setViewport(const gl::Caps *caps,
+                            const gl::Rectangle &viewport,
+                            float zNear,
+                            float zFar,
+                            GLenum drawMode,
+                            GLenum frontFace,
                             bool ignoreViewport)
 {
     gl::Rectangle actualViewport = viewport;
@@ -1277,15 +1336,14 @@ gl::Error Renderer9::getNullColorbuffer(const gl::FramebufferAttachment *depthbu
 {
     ASSERT(depthbuffer);
 
-    GLsizei width  = depthbuffer->getWidth();
-    GLsizei height = depthbuffer->getHeight();
+    const gl::Extents &size = depthbuffer->getSize();
 
     // search cached nullcolorbuffers
     for (int i = 0; i < NUM_NULL_COLORBUFFER_CACHE_ENTRIES; i++)
     {
         if (mNullColorbufferCache[i].buffer != NULL &&
-            mNullColorbufferCache[i].width == width &&
-            mNullColorbufferCache[i].height == height)
+            mNullColorbufferCache[i].width == size.width &&
+            mNullColorbufferCache[i].height == size.height)
         {
             mNullColorbufferCache[i].lruCount = ++mMaxNullColorbufferLRU;
             *outColorBuffer = mNullColorbufferCache[i].buffer;
@@ -1294,7 +1352,7 @@ gl::Error Renderer9::getNullColorbuffer(const gl::FramebufferAttachment *depthbu
     }
 
     gl::Renderbuffer *nullRenderbuffer = new gl::Renderbuffer(createRenderbuffer(), 0);
-    gl::Error error = nullRenderbuffer->setStorage(GL_NONE, width, height);
+    gl::Error error = nullRenderbuffer->setStorage(GL_NONE, size.width, size.height);
     if (error.isError())
     {
         SafeDelete(nullRenderbuffer);
@@ -1316,8 +1374,8 @@ gl::Error Renderer9::getNullColorbuffer(const gl::FramebufferAttachment *depthbu
     delete oldest->buffer;
     oldest->buffer = nullbuffer;
     oldest->lruCount = ++mMaxNullColorbufferLRU;
-    oldest->width = width;
-    oldest->height = height;
+    oldest->width    = size.width;
+    oldest->height   = size.height;
 
     *outColorBuffer = nullbuffer;
     return gl::Error(GL_NO_ERROR);
@@ -3052,14 +3110,23 @@ gl::Error Renderer9::clearTextures(gl::SamplerType samplerType, size_t rangeStar
     return gl::Error(GL_NO_ERROR);
 }
 
-egl::Error Renderer9::initializeEGLDevice(DeviceD3D **outDevice)
+egl::Error Renderer9::getEGLDevice(DeviceImpl **device)
 {
-    if (*outDevice == nullptr)
+    if (mEGLDevice == nullptr)
     {
         ASSERT(mDevice != nullptr);
-        *outDevice = new DeviceD3D(reinterpret_cast<void *>(mDevice), EGL_D3D9_DEVICE_ANGLE);
+        mEGLDevice       = new DeviceD3D();
+        egl::Error error = mEGLDevice->initialize(reinterpret_cast<void *>(mDevice),
+                                                  EGL_D3D9_DEVICE_ANGLE, EGL_FALSE);
+
+        if (error.isError())
+        {
+            SafeDelete(mEGLDevice);
+            return error;
+        }
     }
 
+    *device = static_cast<DeviceImpl *>(mEGLDevice);
     return egl::Error(EGL_SUCCESS);
 }
 

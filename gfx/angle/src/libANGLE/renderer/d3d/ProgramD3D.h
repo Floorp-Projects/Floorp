@@ -150,8 +150,9 @@ class ProgramD3D : public ProgramImpl
     bool usesGeometryShader(GLenum drawMode) const;
     bool usesInstancedPointSpriteEmulation() const;
 
-    LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream);
-    gl::Error save(gl::BinaryOutputStream *stream);
+    LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) override;
+    gl::Error save(gl::BinaryOutputStream *stream) override;
+    void setBinaryRetrievableHint(bool retrievable) override;
 
     gl::Error getPixelExecutableForFramebuffer(const gl::Framebuffer *fbo,
                                                ShaderExecutableD3D **outExectuable);

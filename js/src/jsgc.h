@@ -167,7 +167,7 @@ IsBackgroundFinalized(AllocKind kind)
         false,     /* AllocKind::OBJECT16 */
         true,      /* AllocKind::OBJECT16_BACKGROUND */
         false,     /* AllocKind::SCRIPT */
-        false,     /* AllocKind::LAZY_SCRIPT */
+        true,      /* AllocKind::LAZY_SCRIPT */
         true,      /* AllocKind::SHAPE */
         true,      /* AllocKind::ACCESSOR_SHAPE */
         true,      /* AllocKind::BASE_SHAPE */

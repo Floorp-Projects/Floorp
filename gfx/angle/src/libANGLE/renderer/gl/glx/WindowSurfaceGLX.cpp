@@ -52,12 +52,26 @@ WindowSurfaceGLX::~WindowSurfaceGLX()
 
 egl::Error WindowSurfaceGLX::initialize()
 {
+    // Check that the window's visual ID is valid, as part of the AMGLE_x11_visual
+    // extension.
+    {
+        XWindowAttributes windowAttributes;
+        XGetWindowAttributes(mDisplay, mParent, &windowAttributes);
+        int visualId = windowAttributes.visual->visualid;
+
+        if (!mGLXDisplay->isValidWindowVisualId(visualId))
+        {
+            return egl::Error(EGL_BAD_MATCH,
+                              "The visual of native_window doesn't match the visual given with "
+                              "ANGLE_X11_VISUAL_ID");
+        }
+    }
+
     // The visual of the X window, GLX window and GLX context must match,
     // however we received a user-created window that can have any visual
     // and wouldn't work with our GLX context. To work in all cases, we
     // create a child window with the right visual that covers all of its
     // parent.
-
     XVisualInfo *visualInfo = mGLX.getVisualFromFBConfig(mFBConfig);
     if (!visualInfo)
     {
@@ -152,7 +166,7 @@ egl::Error WindowSurfaceGLX::querySurfacePointerANGLE(EGLint attribute, void **v
     return egl::Error(EGL_SUCCESS);
 }
 
-egl::Error WindowSurfaceGLX::bindTexImage(EGLint buffer)
+egl::Error WindowSurfaceGLX::bindTexImage(gl::Texture *texture, EGLint buffer)
 {
     UNIMPLEMENTED();
     return egl::Error(EGL_SUCCESS);

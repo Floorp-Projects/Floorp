@@ -4135,6 +4135,15 @@
     "bug_numbers": [1221674],
     "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in the content process."
   },
+  "FX_REFRESH_DRIVER_SYNC_SCROLL_FRAME_DELAY_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "bug_numbers": [1228147],
+    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver while scrolling synchronously."
+  },
   "FX_TAB_SWITCH_UPDATE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
@@ -5057,6 +5066,17 @@
     "expires_in_version": "never",
     "kind": "count",
     "description": "a testing histogram; not meant to be touched"
+  },
+  "TELEMETRY_TEST_COUNT_INIT_NO_RECORD": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "description": "a testing histogram; not meant to be touched - initially not recording"
+  },
+  "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "a testing histogram; not meant to be touched - initially not recording"
   },
   "TELEMETRY_TEST_KEYED_FLAG": {
     "expires_in_version": "never",
@@ -6279,6 +6299,22 @@
     "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment.",
     "cpp_guard": "MOZ_RUST_MP4PARSE"
   },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser audio track results match.",
+    "cpp_guard": "MOZ_RUST_MP4PARSE"
+  },
+  "MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "bug_numbers": [1231169],
+    "description": "Whether rust and stagefight mp4 parser video track results match.",
+    "cpp_guard": "MOZ_RUST_MP4PARSE"
+  },
   "MEDIA_WMF_DECODE_ERROR": {
     "expires_in_version": "50",
     "kind": "enumerated",
@@ -6992,6 +7028,11 @@
     "kind": "boolean",
     "description": "How many times has the devtool's JS Profiler been opened?"
   },
+  "DEVTOOLS_MEMORY_OPENED_BOOLEAN": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "How many times has the devtool's Memory Tool been opened?"
+  },
   "DEVTOOLS_NETMONITOR_OPENED_BOOLEAN": {
     "expires_in_version": "never",
     "kind": "boolean",
@@ -7162,6 +7203,11 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "How many users have opened the devtool's JS Profiler?"
+  },
+  "DEVTOOLS_MEMORY_OPENED_PER_USER_FLAG": {
+    "expires_in_version": "never",
+    "kind": "flag",
+    "description": "How many users have opened the devtool's Memory Tool?"
   },
   "DEVTOOLS_NETMONITOR_OPENED_PER_USER_FLAG": {
     "expires_in_version": "never",
@@ -7367,6 +7413,13 @@
     "high": "10000000",
     "n_buckets": 100,
     "description": "How long has the JS profiler been active (seconds)"
+  },
+  "DEVTOOLS_MEMORY_TIME_ACTIVE_SECONDS": {
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": "10000000",
+    "n_buckets": 100,
+    "description": "How long has the Memory Tool been active (seconds)"
   },
   "DEVTOOLS_NETMONITOR_TIME_ACTIVE_SECONDS": {
     "expires_in_version": "never",

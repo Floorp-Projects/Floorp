@@ -142,7 +142,7 @@ function GetIterator(obj, method) {
         method = GetMethod(obj, std_iterator);
 
     // Steps 3-4.
-    var iterator = callFunction(method, obj);
+    var iterator = callContentFunction(method, obj);
 
     // Step 5.
     if (!IsObject(iterator))

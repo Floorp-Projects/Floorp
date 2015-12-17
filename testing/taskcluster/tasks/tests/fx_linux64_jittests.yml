@@ -10,7 +10,7 @@ task:
       total: 2
     suite:
       name: jittest
-      flavor: jittests-chunked
+      flavor: jittest-chunked
     treeherder:
       groupName: Desktop jittests
       symbol: Jit{{chunk}}

@@ -85,7 +85,7 @@
    *          True if we believe it is an array literal, false otherwise.
    */
   function isArrayLiteral(token, lastToken) {
-    if (token.type.type != "[") {
+    if (token.type.label != "[") {
       return false;
     }
     if (!lastToken) {
@@ -95,7 +95,7 @@
       return true;
     }
     return !!PRE_ARRAY_LITERAL_TOKENS[
-      lastToken.type.keyword || lastToken.type.type
+      lastToken.type.keyword || lastToken.type.label
     ];
   }
 
@@ -210,15 +210,15 @@
     if (!lastToken) {
       return false;
     }
-    if (token.startLoc.line === lastToken.startLoc.line) {
+    if (token.loc.start.line === lastToken.loc.start.line) {
       return false;
     }
     if (PREVENT_ASI_AFTER_TOKENS[
-      lastToken.type.type || lastToken.type.keyword
+      lastToken.type.label || lastToken.type.keyword
     ]) {
       return false;
     }
-    if (PREVENT_ASI_BEFORE_TOKENS[token.type.type || token.type.keyword]) {
+    if (PREVENT_ASI_BEFORE_TOKENS[token.type.label || token.type.keyword]) {
       return false;
     }
     return true;
@@ -243,9 +243,9 @@
   function isGetterOrSetter(token, lastToken, stack) {
     return stack[stack.length - 1] == "{"
       && lastToken
-      && lastToken.type.type == "name"
+      && lastToken.type.label == "name"
       && (lastToken.value == "get" || lastToken.value == "set")
-      && token.type.type == "name";
+      && token.type.label == "name";
   }
 
   /**
@@ -263,12 +263,12 @@
     if (token.isArrayLiteral) {
       return true;
     }
-    var ttt = token.type.type;
+    var ttl = token.type.label;
     var top = stack[stack.length - 1];
-    return ttt == ";" && top != "("
-      || ttt == "{"
-      || ttt == "," && top != "("
-      || ttt == ":" && (top == "case" || top == "default");
+    return ttl == ";" && top != "("
+      || ttl == "{"
+      || ttl == "," && top != "("
+      || ttl == ":" && (top == "case" || top == "default");
   }
 
   /**
@@ -288,7 +288,7 @@
    */
   function appendNewline(token, write, stack) {
     if (isLineDelimiter(token, stack)) {
-      write("\n", token.startLoc.line, token.startLoc.column);
+      write("\n", token.loc.start.line, token.loc.start.column);
       return true;
     }
     return false;
@@ -315,7 +315,7 @@
         return true;
       }
 
-      var ltt = lastToken.type.type;
+      var ltt = lastToken.type.label;
       if (ltt == "?") {
         return true;
       }
@@ -332,7 +332,7 @@
       var ltk = lastToken.type.keyword;
       if (ltk != null) {
         if (ltk == "break" || ltk == "continue" || ltk == "return") {
-          return token.type.type != ";";
+          return token.type.label != ";";
         }
         if (ltk != "debugger"
             && ltk != "null"
@@ -344,11 +344,11 @@
         }
       }
 
-      if (ltt == ")" && (token.type.type != ")"
-                         && token.type.type != "]"
-                         && token.type.type != ";"
-                         && token.type.type != ","
-                         && token.type.type != ".")) {
+      if (ltt == ")" && (token.type.label != ")"
+                         && token.type.label != "]"
+                         && token.type.label != ";"
+                         && token.type.label != ","
+                         && token.type.label != ".")) {
         return true;
       }
     }
@@ -359,7 +359,7 @@
     if (token.type.binop != null) {
       return true;
     }
-    if (token.type.type == "?") {
+    if (token.type.label == "?") {
       return true;
     }
 
@@ -389,9 +389,9 @@
   function prependWhiteSpace(token, lastToken, addedNewline, write, options,
                              indentLevel, stack) {
     var ttk = token.type.keyword;
-    var ttt = token.type.type;
+    var ttl = token.type.label;
     var newlineAdded = addedNewline;
-    var ltt = lastToken ? lastToken.type.type : null;
+    var ltt = lastToken ? lastToken.type.label : null;
 
     // Handle whitespace and newlines after "}" here instead of in
     // `isLineDelimiter` because it is only a line delimiter some of the
@@ -400,49 +400,49 @@
     if (lastToken && ltt == "}") {
       if (ttk == "while" && stack[stack.length - 1] == "do") {
         write(" ",
-              lastToken.startLoc.line,
-              lastToken.startLoc.column);
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
       } else if (ttk == "else" ||
                  ttk == "catch" ||
                  ttk == "finally") {
         write(" ",
-              lastToken.startLoc.line,
-              lastToken.startLoc.column);
-      } else if (ttt != "(" &&
-                 ttt != ";" &&
-                 ttt != "," &&
-                 ttt != ")" &&
-                 ttt != ".") {
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
+      } else if (ttl != "(" &&
+                 ttl != ";" &&
+                 ttl != "," &&
+                 ttl != ")" &&
+                 ttl != ".") {
         write("\n",
-              lastToken.startLoc.line,
-              lastToken.startLoc.column);
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
         newlineAdded = true;
       }
     }
 
     if (isGetterOrSetter(token, lastToken, stack)) {
       write(" ",
-            lastToken.startLoc.line,
-            lastToken.startLoc.column);
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
     }
 
-    if (ttt == ":" && stack[stack.length - 1] == "?") {
+    if (ttl == ":" && stack[stack.length - 1] == "?") {
       write(" ",
-            lastToken.startLoc.line,
-            lastToken.startLoc.column);
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
     }
 
     if (lastToken && ltt != "}" && ttk == "else") {
       write(" ",
-            lastToken.startLoc.line,
-            lastToken.startLoc.column);
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
     }
 
     function ensureNewline() {
       if (!newlineAdded) {
         write("\n",
-              lastToken.startLoc.line,
-              lastToken.startLoc.column);
+              lastToken.loc.start.line,
+              lastToken.loc.start.column);
         newlineAdded = true;
       }
     }
@@ -451,24 +451,24 @@
       ensureNewline();
     }
 
-    if (decrementsIndent(ttt, stack)) {
+    if (decrementsIndent(ttl, stack)) {
       ensureNewline();
     }
 
     if (newlineAdded) {
       if (ttk == "case" || ttk == "default") {
         write(repeat(options.indent, indentLevel - 1),
-              token.startLoc.line,
-              token.startLoc.column);
+              token.loc.start.line,
+              token.loc.start.column);
       } else {
         write(repeat(options.indent, indentLevel),
-              token.startLoc.line,
-              token.startLoc.column);
+              token.loc.start.line,
+              token.loc.start.column);
       }
     } else if (needsSpaceAfter(token, lastToken)) {
       write(" ",
-            lastToken.startLoc.line,
-            lastToken.startLoc.column);
+            lastToken.loc.start.line,
+            lastToken.loc.start.column);
     }
   }
 
@@ -541,18 +541,18 @@
    *        The function to write pretty printed code to the result SourceNode.
    */
   function addToken(token, write) {
-    if (token.type.type == "string") {
+    if (token.type.label == "string") {
       write("'" + sanitize(token.value) + "'",
-            token.startLoc.line,
-            token.startLoc.column);
-    } else if (token.type.type == "regexp") {
+            token.loc.start.line,
+            token.loc.start.column);
+    } else if (token.type.label == "regexp") {
       write(String(token.value.value),
-            token.startLoc.line,
-            token.startLoc.column);
+            token.loc.start.line,
+            token.loc.start.column);
     } else {
-      write(String(token.value != null ? token.value : token.type.type),
-            token.startLoc.line,
-            token.startLoc.column);
+      write(String(token.value != null ? token.value : token.type.label),
+            token.loc.start.line,
+            token.loc.start.column);
     }
   }
 
@@ -560,12 +560,12 @@
    * Returns true if the given token type belongs on the stack.
    */
   function belongsOnStack(token) {
-    var ttt = token.type.type;
+    var ttl = token.type.label;
     var ttk = token.type.keyword;
-    return ttt == "{"
-      || ttt == "("
-      || ttt == "["
-      || ttt == "?"
+    return ttl == "{"
+      || ttl == "("
+      || ttl == "["
+      || ttl == "?"
       || ttk == "do"
       || ttk == "switch"
       || ttk == "case"
@@ -576,13 +576,13 @@
    * Returns true if the given token should cause us to pop the stack.
    */
   function shouldStackPop(token, stack) {
-    var ttt = token.type.type;
+    var ttl = token.type.label;
     var ttk = token.type.keyword;
     var top = stack[stack.length - 1];
-    return ttt == "]"
-      || ttt == ")"
-      || ttt == "}"
-      || (ttt == ":" && (top == "case" || top == "default" || top == "?"))
+    return ttl == "]"
+      || ttl == ")"
+      || ttl == "}"
+      || (ttl == ":" && (top == "case" || top == "default" || top == "?"))
       || (ttk == "while" && top == "do");
   }
 
@@ -600,7 +600,7 @@
    * level.
    */
   function incrementsIndent(token) {
-    return token.type.type == "{"
+    return token.type.label == "{"
       || token.isArrayLiteral
       || token.type.keyword == "switch";
   }
@@ -713,9 +713,9 @@
     // The current token we will be adding to the pretty printed code.
     var token;
 
-    // Shorthand for token.type.type, so we don't have to repeatedly access
+    // Shorthand for token.type.label, so we don't have to repeatedly access
     // properties.
-    var ttt;
+    var ttl;
 
     // Shorthand for token.type.keyword, so we don't have to repeatedly access
     // properties.
@@ -747,48 +747,60 @@
     // decrement the indent level when we find them.
     var stack = [];
 
-    // Acorn's tokenizer will always yield comments *before* the token they
-    // follow (unless the very first thing in the source is a comment), so we
-    // have to queue the comments in order to pretty print them in the correct
-    // location. For example, the source file:
+    // Pass through acorn's tokenizer and append tokens and comments into a
+    // single queue to process.  For example, the source file:
     //
     //     foo
     //     // a
     //     // b
     //     bar
     //
-    // When tokenized by acorn, gives us the following token stream:
+    // After this process, tokenQueue has the following token stream:
     //
-    //     [ '// a', '// b', foo, bar ]
-    var commentQueue = [];
+    //     [ foo, '// a', '// b', bar]
+    var tokenQueue = [];
 
-    var getToken = acorn.tokenize(input, {
+    var tokens = acorn.tokenizer(input, {
       locations: true,
       sourceFile: options.url,
       onComment: function (block, text, start, end, startLoc, endLoc) {
-        if (lastToken) {
-          commentQueue.push({
-            block: block,
-            text: text,
-            line: startLoc.line,
-            column: startLoc.column,
-            trailing: lastToken.endLoc.line == startLoc.line
-          });
-        } else {
-          addComment(write, indentLevel, options, block, text, startLoc.line,
-                     startLoc.column);
-          addedNewline = true;
-        }
+        tokenQueue.push({
+          type: {},
+          comment: true,
+          block: block,
+          text: text,
+          loc: { start: startLoc, end: endLoc }
+        });
       }
     });
 
     for (;;) {
-      token = getToken();
+      token = tokens.getToken();
+      tokenQueue.push(token);
+      if (token.type.label == "eof") {
+        break;
+      }
+    }
+
+    for (var i = 0; i < tokenQueue.length; i++) {
+      token = tokenQueue[i];
+
+      if (token.comment) {
+        var commentIndentLevel = indentLevel;
+        if (lastToken && (lastToken.loc.end.line == token.loc.start.line)) {
+          commentIndentLevel = 0;
+          write(" ");
+        }
+        addComment(write, commentIndentLevel, options, token.block, token.text,
+                   token.loc.start.line, token.loc.start.column);
+        addedNewline = true;
+        continue;
+      }
 
       ttk = token.type.keyword;
-      ttt = token.type.type;
+      ttl = token.type.label;
 
-      if (ttt == "eof") {
+      if (ttl == "eof") {
         if (!addedNewline) {
           write("\n");
         }
@@ -801,13 +813,13 @@
         if (token.isArrayLiteral) {
           stack.push("[\n");
         } else {
-          stack.push(ttt || ttk);
+          stack.push(ttl || ttk);
         }
       }
 
-      if (decrementsIndent(ttt, stack)) {
+      if (decrementsIndent(ttl, stack)) {
         indentLevel--;
-        if (ttt == "}"
+        if (ttl == "}"
             && stack.length > 1
             && stack[stack.length - 2] == "switch") {
           indentLevel--;
@@ -817,7 +829,11 @@
       prependWhiteSpace(token, lastToken, addedNewline, write, options,
                         indentLevel, stack);
       addToken(token, write);
-      if (commentQueue.length === 0 || !commentQueue[0].trailing) {
+
+      // If the next token is going to be a comment starting on the same line,
+      // then no need to add one here
+      var nextToken = tokenQueue[i + 1];
+      if (!nextToken || !nextToken.comment || token.loc.end.line != nextToken.loc.start.line) {
         addedNewline = appendNewline(token, write, stack);
       }
 
@@ -838,35 +854,17 @@
       // object the same way that acorn reuses the token object. This allows us
       // to avoid allocations and minimize GC pauses.
       if (!lastToken) {
-        lastToken = { startLoc: {}, endLoc: {} };
+        lastToken = { loc: { start: {}, end: {} } };
       }
       lastToken.start = token.start;
       lastToken.end = token.end;
-      lastToken.startLoc.line = token.startLoc.line;
-      lastToken.startLoc.column = token.startLoc.column;
-      lastToken.endLoc.line = token.endLoc.line;
-      lastToken.endLoc.column = token.endLoc.column;
+      lastToken.loc.start.line = token.loc.start.line;
+      lastToken.loc.start.column = token.loc.start.column;
+      lastToken.loc.end.line = token.loc.end.line;
+      lastToken.loc.end.column = token.loc.end.column;
       lastToken.type = token.type;
       lastToken.value = token.value;
       lastToken.isArrayLiteral = token.isArrayLiteral;
-
-      // Apply all the comments that have been queued up.
-      if (commentQueue.length) {
-        if (!addedNewline && !commentQueue[0].trailing) {
-          write("\n");
-        }
-        if (commentQueue[0].trailing) {
-          write(" ");
-        }
-        for (var i = 0, n = commentQueue.length; i < n; i++) {
-          var comment = commentQueue[i];
-          var commentIndentLevel = commentQueue[i].trailing ? 0 : indentLevel;
-          addComment(write, commentIndentLevel, options, comment.block,
-                     comment.text, comment.line, comment.column);
-        }
-        addedNewline = true;
-        commentQueue.splice(0, commentQueue.length);
-      }
     }
 
     return result.toStringWithSourceMap({ file: options.url });

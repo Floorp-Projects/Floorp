@@ -110,6 +110,12 @@ span {
 ._n    { }                           ._n    ~ span  { left: 20px; }
 ._n2   { }                           ._n2   ~ span  { top: 20px; }
 .A3Xe  { left: 60px; }
+.asA   { }                           .asA   ~ span  { left: 20px; }
+.asA2  { }                           .asA2  ~ span  { top: 20px; }
+.a2sA2 { width: 40px; }              .a2sA2 ~ span  { left: 20px; top: 20px; }
+.as1   { }                           .as1   ~ span  { left: 20px; }
+.as2   { }                           .as2   ~ span  { top: 20px; }
+.as3   { left: 20px; }
 
 .c1 { background:grey; }
 
@@ -210,6 +216,15 @@ span {
 <div class="grid"><span class="_n"  ></span><span class="c1"></span></div>
 <div class="grid"><span class="_n2" ></span><span class="c1"></span></div>
 <div class="grid"><span class="A3Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="asA"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px; clear:both">
+<div class="grid"><span class="asA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="a2sA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as1"></span><span class="c1"></span></div>
+<div class="grid"><span class="as2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as3"></span><span class="c1"></span></div>
 </div>
 
 </body>

@@ -196,6 +196,23 @@ inline unsigned int GetSwizzleIndex(GLenum swizzle)
     return colorIndex;
 }
 
+D3D11_BLEND_DESC GetAlphaMaskBlendStateDesc()
+{
+    D3D11_BLEND_DESC desc;
+    memset(&desc, 0, sizeof(desc));
+    desc.RenderTarget[0].BlendEnable           = TRUE;
+    desc.RenderTarget[0].SrcBlend              = D3D11_BLEND_ONE;
+    desc.RenderTarget[0].DestBlend             = D3D11_BLEND_ZERO;
+    desc.RenderTarget[0].BlendOp               = D3D11_BLEND_OP_ADD;
+    desc.RenderTarget[0].SrcBlendAlpha         = D3D11_BLEND_ZERO;
+    desc.RenderTarget[0].DestBlendAlpha        = D3D11_BLEND_ZERO;
+    desc.RenderTarget[0].BlendOpAlpha          = D3D11_BLEND_OP_ADD;
+    desc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_RED |
+                                                 D3D11_COLOR_WRITE_ENABLE_GREEN |
+                                                 D3D11_COLOR_WRITE_ENABLE_BLUE;
+    return desc;
+}
+
 D3D11_INPUT_ELEMENT_DESC quad2DLayout[] =
 {
     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -236,6 +253,7 @@ Blit11::Blit11(Renderer11 *renderer)
                 "Blit11 3D input layout"),
       mQuad3DVS(g_VS_Passthrough3D, ArraySize(g_VS_Passthrough3D), "Blit11 3D vertex shader"),
       mQuad3DGS(g_GS_Passthrough3D, ArraySize(g_GS_Passthrough3D), "Blit11 3D geometry shader"),
+      mAlphaMaskBlendState(GetAlphaMaskBlendStateDesc(), "Blit11 Alpha Mask Blend"),
       mSwizzleCB(nullptr)
 {
 }
@@ -729,9 +747,16 @@ gl::Error Blit11::swizzleTexture(ID3D11ShaderResourceView *source,
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                              ID3D11RenderTargetView *dest, const gl::Box &destArea, const gl::Extents &destSize,
-                              const gl::Rectangle *scissor, GLenum destFormat, GLenum filter)
+gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source,
+                              const gl::Box &sourceArea,
+                              const gl::Extents &sourceSize,
+                              ID3D11RenderTargetView *dest,
+                              const gl::Box &destArea,
+                              const gl::Extents &destSize,
+                              const gl::Rectangle *scissor,
+                              GLenum destFormat,
+                              GLenum filter,
+                              bool maskOffAlpha)
 {
     gl::Error error = initResources();
     if (error.isError())
@@ -784,7 +809,16 @@ gl::Error Blit11::copyTexture(ID3D11ShaderResourceView *source, const gl::Box &s
     deviceContext->IASetVertexBuffers(0, 1, &mVertexBuffer, &stride, &startIdx);
 
     // Apply state
-    deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFF);
+    if (maskOffAlpha)
+    {
+        ID3D11BlendState *blendState = mAlphaMaskBlendState.resolve(mRenderer->getDevice());
+        ASSERT(blendState);
+        deviceContext->OMSetBlendState(blendState, nullptr, 0xFFFFFFF);
+    }
+    else
+    {
+        deviceContext->OMSetBlendState(nullptr, nullptr, 0xFFFFFFF);
+    }
     deviceContext->OMSetDepthStencilState(nullptr, 0xFFFFFFFF);
 
     if (scissor)

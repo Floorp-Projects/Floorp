@@ -43,8 +43,6 @@ public class URLMetadataTable extends BaseTable {
             TILE_IMAGE_URL_COLUMN + " STRING, " +
             TILE_COLOR_COLUMN + " STRING);";
         db.execSQL(create);
-
-        db.execSQL("CREATE INDEX metadata_url_idx ON " + TABLE + " (" + URL_COLUMN + ")");
     }
 
     @Override
@@ -52,6 +50,11 @@ public class URLMetadataTable extends BaseTable {
         // This table was added in v19 of the db. Force its creation if we're coming from an earlier version
         if (newVersion >= 21 && oldVersion < 21) {
             onCreate(db);
+        }
+
+        // Removed the redundant metadata_url_idx index in version 26
+        if (newVersion >= 26 && oldVersion < 26) {
+            db.execSQL("DROP INDEX IF EXISTS metadata_url_idx");
         }
     }
 
