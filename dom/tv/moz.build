@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
-    'FakeTVService.h',
     'TVChannel.h',
     'TVListeners.h',
     'TVManager.h',
@@ -20,7 +19,6 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'FakeTVService.cpp',
     'TVChannel.cpp',
     'TVListeners.cpp',
     'TVManager.cpp',
