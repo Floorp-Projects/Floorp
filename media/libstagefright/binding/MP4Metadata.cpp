@@ -200,6 +200,18 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   static LazyLogModule sLog("MP4Metadata");
   MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=%u rust=%u",
                                  rust_track_type, total, rust_total));
+  switch (aType) {
+    case mozilla::TrackInfo::kAudioTrack:
+      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO,
+                            rust_total == total);
+      break;
+    case mozilla::TrackInfo::kVideoTrack:
+      Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_TRACK_MATCH_VIDEO,
+                            rust_total == total);
+      break;
+    default:
+      break;
+  }
 #endif
   return total;
 }

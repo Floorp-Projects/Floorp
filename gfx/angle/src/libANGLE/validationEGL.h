@@ -23,6 +23,7 @@ namespace egl
 
 class AttributeMap;
 struct Config;
+class Device;
 class Display;
 class Image;
 class Surface;
@@ -51,6 +52,11 @@ Error ValidateCreateImageKHR(const Display *display,
                              EGLClientBuffer buffer,
                              const AttributeMap &attributes);
 Error ValidateDestroyImageKHR(const Display *display, const Image *image);
+
+Error ValidateCreateDeviceANGLE(EGLint device_type,
+                                void *native_device,
+                                const EGLAttrib *attrib_list);
+Error ValidateReleaseDeviceANGLE(Device *device);
 
 // Other validation
 Error ValidateCompatibleConfigs(const Config *config1, const Config *config2, EGLint surfaceType);

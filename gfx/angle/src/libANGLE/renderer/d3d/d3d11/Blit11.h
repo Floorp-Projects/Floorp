@@ -29,9 +29,16 @@ class Blit11 : angle::NonCopyable
     gl::Error swizzleTexture(ID3D11ShaderResourceView *source, ID3D11RenderTargetView *dest, const gl::Extents &size,
                              GLenum swizzleRed, GLenum swizzleGreen, GLenum swizzleBlue, GLenum swizzleAlpha);
 
-    gl::Error copyTexture(ID3D11ShaderResourceView *source, const gl::Box &sourceArea, const gl::Extents &sourceSize,
-                          ID3D11RenderTargetView *dest, const gl::Box &destArea, const gl::Extents &destSize,
-                          const gl::Rectangle *scissor, GLenum destFormat, GLenum filter);
+    gl::Error copyTexture(ID3D11ShaderResourceView *source,
+                          const gl::Box &sourceArea,
+                          const gl::Extents &sourceSize,
+                          ID3D11RenderTargetView *dest,
+                          const gl::Box &destArea,
+                          const gl::Extents &destSize,
+                          const gl::Rectangle *scissor,
+                          GLenum destFormat,
+                          GLenum filter,
+                          bool maskOffAlpha);
 
     gl::Error copyStencil(ID3D11Resource *source, unsigned int sourceSubresource, const gl::Box &sourceArea, const gl::Extents &sourceSize,
                           ID3D11Resource *dest, unsigned int destSubresource, const gl::Box &destArea, const gl::Extents &destSize,
@@ -166,6 +173,8 @@ class Blit11 : angle::NonCopyable
     d3d11::LazyInputLayout mQuad3DIL;
     d3d11::LazyShader<ID3D11VertexShader> mQuad3DVS;
     d3d11::LazyShader<ID3D11GeometryShader> mQuad3DGS;
+
+    d3d11::LazyBlendState mAlphaMaskBlendState;
 
     ID3D11Buffer *mSwizzleCB;
 };

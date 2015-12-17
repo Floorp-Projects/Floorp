@@ -198,7 +198,6 @@ class State : angle::NonCopyable
     // GL_ARRAY_BUFFER
     void setArrayBufferBinding(Buffer *buffer);
     GLuint getArrayBufferId() const;
-    bool removeArrayBufferBinding(GLuint buffer);
 
     // GL_UNIFORM_BUFFER - Both indexed and generic targets
     void setGenericUniformBufferBinding(Buffer *buffer);
@@ -215,6 +214,8 @@ class State : angle::NonCopyable
 
     // Retrieve typed buffer by target (non-indexed)
     Buffer *getTargetBuffer(GLenum target) const;
+    // Detach a buffer from all bindings
+    void detachBuffer(GLuint bufferName);
 
     // Vertex attrib manipulation
     void setEnableVertexAttribArray(unsigned int attribNum, bool enabled);

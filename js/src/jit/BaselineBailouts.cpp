@@ -1911,6 +1911,8 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
 
       // Invalid assumption based on baseline code.
       case Bailout_OverflowInvalidate:
+        outerScript->setHadOverflowBailout();
+        // FALL THROUGH
       case Bailout_NonStringInputInvalidate:
       case Bailout_DoubleOutput:
       case Bailout_ObjectIdentityOrTypeGuard:

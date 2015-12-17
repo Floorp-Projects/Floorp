@@ -37,6 +37,7 @@ class ProgramImpl : angle::NonCopyable
 
     virtual LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) = 0;
     virtual gl::Error save(gl::BinaryOutputStream *stream) = 0;
+    virtual void setBinaryRetrievableHint(bool retrievable) = 0;
 
     virtual LinkResult link(const gl::Data &data, gl::InfoLog &infoLog) = 0;
     virtual GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) = 0;

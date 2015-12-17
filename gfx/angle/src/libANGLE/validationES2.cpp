@@ -1043,4 +1043,35 @@ bool ValidateIsVertexArrayOES(Context *context)
 
     return true;
 }
+
+bool ValidateProgramBinaryOES(Context *context,
+                              GLuint program,
+                              GLenum binaryFormat,
+                              const void *binary,
+                              GLint length)
+{
+    if (!context->getExtensions().getProgramBinary)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION, "Extension not enabled"));
+        return false;
+    }
+
+    return ValidateProgramBinaryBase(context, program, binaryFormat, binary, length);
+}
+
+bool ValidateGetProgramBinaryOES(Context *context,
+                                 GLuint program,
+                                 GLsizei bufSize,
+                                 GLsizei *length,
+                                 GLenum *binaryFormat,
+                                 void *binary)
+{
+    if (!context->getExtensions().getProgramBinary)
+    {
+        context->recordError(Error(GL_INVALID_OPERATION, "Extension not enabled"));
+        return false;
+    }
+
+    return ValidateGetProgramBinaryBase(context, program, bufSize, length, binaryFormat, binary);
+}
 }

@@ -569,7 +569,7 @@ nsHTTPCompressConv::check_header(nsIInputStream *iStr, uint32_t streamLen, nsres
     case GZIP_EXTRA1:
       iStr->Read(&c, 1, &unused);
       streamLen--;
-      mLen = ((uInt) c & 0377) << 8;
+      mLen |= ((uInt) c & 0377) << 8;
       mSkipCount = 0;
       hMode = GZIP_EXTRA2;
       break;

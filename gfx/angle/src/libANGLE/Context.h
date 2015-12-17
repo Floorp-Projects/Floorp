@@ -153,6 +153,9 @@ class Context final : public ValidationContext
 
     bool isSampler(GLuint samplerName) const;
 
+    bool isVertexArrayGenerated(GLuint vertexArray);
+    bool isTransformFeedbackGenerated(GLuint vertexArray);
+
     void getBooleanv(GLenum pname, GLboolean *params);
     void getFloatv(GLenum pname, GLfloat *params);
     void getIntegerv(GLenum pname, GLint *params);
@@ -217,6 +220,9 @@ class Context final : public ValidationContext
     void syncRendererState(const State::DirtyBits &bitMask);
 
   private:
+    void checkVertexArrayAllocation(GLuint vertexArray);
+    void checkTransformFeedbackAllocation(GLuint transformFeedback);
+
     void detachBuffer(GLuint buffer);
     void detachTexture(GLuint texture);
     void detachFramebuffer(GLuint framebuffer);
@@ -265,7 +271,6 @@ class Context final : public ValidationContext
     VertexArrayMap mVertexArrayMap;
     HandleAllocator mVertexArrayHandleAllocator;
 
-    BindingPointer<TransformFeedback> mTransformFeedbackZero;
     typedef std::map<GLuint, TransformFeedback*> TransformFeedbackMap;
     TransformFeedbackMap mTransformFeedbackMap;
     HandleAllocator mTransformFeedbackAllocator;
