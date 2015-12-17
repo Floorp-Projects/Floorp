@@ -125,7 +125,10 @@ int main(int argc, char **argv) {
 #if !defined(NO_SIGN_VERIFY)
   uint32_t fileSizes[MAX_SIGNATURES];
   const uint8_t* certBuffers[MAX_SIGNATURES];
+#if ((!defined(MAR_NSS) && defined(XP_WIN)) || defined(XP_MACOSX)) || \
+    ((defined(XP_WIN) || defined(XP_MACOSX)) && !defined(MAR_NSS))
   char* DERFilePaths[MAX_SIGNATURES];
+#endif
 #if (!defined(XP_WIN) && !defined(XP_MACOSX)) || defined(MAR_NSS)
   CERTCertificate* certs[MAX_SIGNATURES];
 #endif
