@@ -13,6 +13,8 @@ This test is using a resumable response.
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -21,16 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const responseBody = "response body";
@@ -60,9 +53,9 @@ function run_test()
   httpServer.start(-1);
 
   var chan1 = make_channel(URL + "/content");
-  chan1.asyncOpen(new ChannelListener(firstTimeThrough, null), null);
+  chan1.asyncOpen2(new ChannelListener(firstTimeThrough, null));
   var chan2 = make_channel(URL + "/content");
-  chan2.asyncOpen(new ChannelListener(secondTimeThrough, null), null);
+  chan2.asyncOpen2(new ChannelListener(secondTimeThrough, null));
 
   do_test_pending();
 }
