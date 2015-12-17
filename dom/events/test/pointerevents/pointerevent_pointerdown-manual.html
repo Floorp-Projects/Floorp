@@ -10,9 +10,10 @@ http://www.w3.org/wiki/PointerEvents/TestAssertions
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
-        <script src="/resources/testharnessreport.js"></script>
+        <!--script src="/resources/testharnessreport.js"></script-->
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
+        <script type="text/javascript" src="mochitest_support_internal.js"></script>
         <script>
             var detected_pointertypes = {};
             var test_pointerEvent = async_test("pointerdown event received");
