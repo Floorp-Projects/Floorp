@@ -20,6 +20,7 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,7 +82,10 @@ public class DownloadAction extends BaseAction {
 
                 // TODO: Check space on disk before downloading content (bug 1220145)
                 final String url = createDownloadURL(content);
-                download(client, url, temporaryFile);
+
+                if (!temporaryFile.exists() || temporaryFile.length() < content.getSize()) {
+                    download(client, url, temporaryFile);
+                }
 
                 if (!verify(temporaryFile, content.getDownloadChecksum())) {
                     Log.w(LOGTAG, "Wrong checksum after download, content=" + content.getId());
@@ -91,6 +95,7 @@ public class DownloadAction extends BaseAction {
 
                 if (!content.isAssetArchive()) {
                     Log.e(LOGTAG, "Downloaded content is not of type 'asset-archive': " + content.getType());
+                    temporaryFile.delete();
                     continue;
                 }
 
@@ -103,6 +108,10 @@ public class DownloadAction extends BaseAction {
                 if (callback != null) {
                     callback.onContentDownloaded(content);
                 }
+
+                if (temporaryFile != null && temporaryFile.exists()) {
+                    temporaryFile.delete();
+                }
             } catch (RecoverableDownloadContentException e) {
                 Log.w(LOGTAG, "Downloading content failed (Recoverable): " + content , e);
                 // TODO: Reschedule download (bug 1209498)
@@ -110,7 +119,7 @@ public class DownloadAction extends BaseAction {
                 Log.w(LOGTAG, "Downloading content failed (Unrecoverable): " + content, e);
 
                 catalog.markAsPermanentlyFailed(content);
-            } finally {
+
                 if (temporaryFile != null && temporaryFile.exists()) {
                     temporaryFile.delete();
                 }
@@ -120,17 +129,22 @@ public class DownloadAction extends BaseAction {
         Log.v(LOGTAG, "Done");
     }
 
-    /* package-private */ void download(HttpClient client, String source, File temporaryFile)
+    protected void download(HttpClient client, String source, File temporaryFile)
             throws RecoverableDownloadContentException, UnrecoverableDownloadContentException {
         InputStream inputStream = null;
         OutputStream outputStream = null;
 
         final HttpGet request = new HttpGet(source);
 
+        final long offset = temporaryFile.exists() ? temporaryFile.length() : 0;
+        if (offset > 0) {
+            request.setHeader("Range", "bytes=" + offset + "-");
+        }
+
         try {
             final HttpResponse response = client.execute(request);
             final int status = response.getStatusLine().getStatusCode();
-            if (status != HttpStatus.SC_OK) {
+            if (status != HttpStatus.SC_OK && status != HttpStatus.SC_PARTIAL_CONTENT) {
                 // We are trying to be smart and only retry if this is an error that might resolve in the future.
                 // TODO: This is guesstimating at best. We want to implement failure counters (Bug 1215106).
                 if (status >= 500) {
@@ -154,22 +168,23 @@ public class DownloadAction extends BaseAction {
             }
 
             inputStream = new BufferedInputStream(entity.getContent());
-            outputStream = new BufferedOutputStream(new FileOutputStream(temporaryFile));
+            outputStream = openFile(temporaryFile, status == HttpStatus.SC_PARTIAL_CONTENT);
 
             IOUtils.copy(inputStream, outputStream);
 
             inputStream.close();
             outputStream.close();
         } catch (IOException e) {
-            // TODO: Support resuming downloads using 'Range' header (Bug 1209513)
-            temporaryFile.delete();
-
             // Recoverable: Just I/O discontinuation
             throw new RecoverableDownloadContentException(e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
         }
+    }
+
+    protected OutputStream openFile(File file, boolean append) throws FileNotFoundException {
+        return new BufferedOutputStream(new FileOutputStream(file, append));
     }
 
     protected void extract(File sourceFile, File destinationFile, String checksum)
@@ -201,9 +216,8 @@ public class DownloadAction extends BaseAction {
 
             move(temporaryFile, destinationFile);
         } catch (IOException e) {
-            // We do not support resume yet (Bug 1209513). Therefore we have to treat this as unrecoverable: The
-            // temporarily file will be deleted and we want to avoid downloading and failing repeatedly.
-            throw new UnrecoverableDownloadContentException(e);
+            // We could not extract to the destination: Keep temporary file and try again next time we run.
+            throw new RecoverableDownloadContentException(e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
@@ -273,11 +287,9 @@ public class DownloadAction extends BaseAction {
             inputStream.close();
             outputStream.close();
         } catch (IOException e) {
-            // Meh. This is an awkward situation: We downloaded the content but we can't move it to its destination. We
-            // are treating this as "unrecoverable" error because we want to avoid downloading this again and again and
-            // then always failing to copy it to the destination. This will be fixed after we implement resuming
-            // downloads (Bug 1209513): We will keep the downloaded temporary file and just retry copying.
-            throw new UnrecoverableDownloadContentException(e);
+            // We could not copy the temporary file to its destination: Keep the temporary file and
+            // try again the next time we run.
+            throw new RecoverableDownloadContentException(e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
