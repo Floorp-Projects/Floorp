@@ -3380,9 +3380,16 @@ NS_METHOD nsWindow::EnableDragDrop(bool aEnable)
 
 NS_METHOD nsWindow::CaptureMouse(bool aCapture)
 {
+  if (!nsToolkit::gMouseTrailer) {
+    NS_ERROR("nsWindow::CaptureMouse called after nsToolkit destroyed");
+    return NS_OK;
+  }
+
   if (aCapture) {
+    nsToolkit::gMouseTrailer->SetCaptureWindow(mWnd);
     ::SetCapture(mWnd);
   } else {
+    nsToolkit::gMouseTrailer->SetCaptureWindow(nullptr);
     ::ReleaseCapture();
   }
   sIsInMouseCapture = aCapture;
@@ -4197,8 +4204,13 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
 
   // call the event callback
   if (mWidgetListener) {
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Disable();
     if (aEventMessage == eMouseMove) {
-      LayoutDeviceIntRect rect;
+      if (nsToolkit::gMouseTrailer && !sIsInMouseCapture) {
+        nsToolkit::gMouseTrailer->SetMouseTrailerWindow(mWnd);
+      }
+      nsIntRect rect;
       GetBounds(rect);
       rect.x = 0;
       rect.y = 0;
@@ -4229,6 +4241,9 @@ nsWindow::DispatchMouseEvent(EventMessage aEventMessage, WPARAM wParam,
     }
 
     result = ConvertStatus(DispatchInputEvent(&event));
+
+    if (nsToolkit::gMouseTrailer)
+      nsToolkit::gMouseTrailer->Enable();
 
     // Release the widget with NS_IF_RELEASE() just in case
     // the context menu key code in EventListenerManager::HandleEvent()
@@ -5082,15 +5097,6 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
 
     case WM_MOUSEMOVE:
     {
-      if (!mMousePresent) {
-        // First MOOUSEMOVE over the client area. Ask for MOUSELEAVE
-        TRACKMOUSEEVENT mTrack;
-        mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
-        mTrack.dwFlags = TME_LEAVE;
-        mTrack.dwHoverTime = 0;
-        mTrack.hwndTrack = mWnd;
-        TrackMouseEvent(&mTrack);
-      }
       mMousePresent = true;
 
       // Suppress dispatch of pending events
@@ -6685,11 +6691,22 @@ void nsWindow::OnDestroy()
 
   IMEHandler::OnDestroyWindow(this);
 
+  // Turn off mouse trails if enabled.
+  MouseTrailer* mtrailer = nsToolkit::gMouseTrailer;
+  if (mtrailer) {
+    if (mtrailer->GetMouseTrailerWindow() == mWnd)
+      mtrailer->DestroyTimer();
+
+    if (mtrailer->GetCaptureWindow() == mWnd)
+      mtrailer->SetCaptureWindow(nullptr);
+  }
+
   // Free GDI window class objects
   if (mBrush) {
     VERIFY(::DeleteObject(mBrush));
     mBrush = nullptr;
   }
+
 
   // Destroy any custom cursor resources.
   if (mCursor == -1)
