@@ -75,6 +75,7 @@ import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.PrefUtils;
+import org.mozilla.gecko.util.ScreenshotObserver;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
@@ -88,6 +89,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -107,6 +109,7 @@ import android.nfc.NfcEvent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.MediaStore;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -268,6 +271,7 @@ public class BrowserApp extends GeckoApp
     private boolean mHideWebContentOnAnimationEnd;
 
     private final DynamicToolbar mDynamicToolbar = new DynamicToolbar();
+    private final ScreenshotObserver mScreenshotObserver = new ScreenshotObserver();
 
     @Override
     public View onCreateView(final String name, final Context context, final AttributeSet attrs) {
@@ -729,6 +733,15 @@ public class BrowserApp extends GeckoApp
             }
         });
 
+        // Watch for screenshots while browser is in foreground.
+        mScreenshotObserver.setListener(getContext(), new ScreenshotObserver.OnScreenshotListener() {
+            @Override
+            public void onScreenshotTaken(String data, String title) {
+                // Treat screenshots as a sharing method.
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "screenshot");
+            }
+        });
+
         // Set the maximum bits-per-pixel the favicon system cares about.
         IconDirectoryEntry.setMaxBPP(GeckoAppShell.getScreenDepth());
     }
@@ -905,6 +918,8 @@ public class BrowserApp extends GeckoApp
             "Prompt:ShowTop");
 
         processTabQueue();
+
+        mScreenshotObserver.start();
     }
 
     @Override
@@ -913,6 +928,8 @@ public class BrowserApp extends GeckoApp
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
+
+        mScreenshotObserver.stop();
     }
 
     @Override
