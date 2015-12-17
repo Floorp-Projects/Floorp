@@ -806,7 +806,6 @@ ReadDir(nsDir* aDir, PRDirFlags aFlags, nsString& aName)
     }
 
     const wchar_t* fileName;
-    nsString tmp;
     fileName = (aDir)->data.cFileName;
 
     if ((aFlags & PR_SKIP_DOT) &&
@@ -824,11 +823,7 @@ ReadDir(nsDir* aDir, PRDirFlags aFlags, nsString& aName)
       continue;
     }
 
-    if (fileName == tmp.get()) {
-      aName = tmp;
-    } else {
-      aName = fileName;
-    }
+    aName = fileName;
     return NS_OK;
   }
 
