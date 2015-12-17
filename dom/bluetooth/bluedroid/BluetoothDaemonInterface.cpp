@@ -145,14 +145,14 @@ BluetoothDaemonProtocol::Send(DaemonSocketPDU* aPDU,
   MOZ_ASSERT(mConnection);
   MOZ_ASSERT(aPDU);
 
-  aPDU->SetConsumer(this);
-  aPDU->SetResultHandler(aRes);
-  aPDU->UpdateHeader();
-
   if (mConnection->GetConnectionStatus() == SOCKET_DISCONNECTED) {
     BT_LOGR("Connection to Bluetooth daemon is closed.");
     return NS_ERROR_FAILURE;
   }
+
+  aPDU->SetConsumer(this);
+  aPDU->SetResultHandler(aRes);
+  aPDU->UpdateHeader();
 
   mConnection->SendSocketData(aPDU); // Forward PDU to command channel
 

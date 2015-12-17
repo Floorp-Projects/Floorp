@@ -8,7 +8,7 @@
 const acorn_loose = require("acorn/acorn_loose");
 
 function run_test() {
-  let actualAST = acorn_loose.parse_dammit("let x = 10");
+  let actualAST = acorn_loose.parse_dammit("let x = 10", {});
 
   do_print("Actual AST:");
   do_print(JSON.stringify(actualAST, null, 2));

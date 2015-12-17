@@ -195,6 +195,7 @@ toolkit/components/places/**
 
 # Uses preprocessing
 toolkit/content/contentAreaUtils.js
+toolkit/content/widgets/videocontrols.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/search/nsSearchService.js
 toolkit/components/url-classifier/**
