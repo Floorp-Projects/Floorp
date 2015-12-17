@@ -8,11 +8,13 @@
 
 #include "nsIProtocolHandler.h"
 #include "nsSimpleNestedURI.h"
+#include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 
 class nsIURI;
 
 class nsAboutProtocolHandler : public nsIProtocolHandler
+                             , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
@@ -28,6 +30,7 @@ private:
 };
 
 class nsSafeAboutProtocolHandler final : public nsIProtocolHandler
+                                       , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
