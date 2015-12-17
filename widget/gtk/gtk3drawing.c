@@ -722,8 +722,6 @@ ensure_scrolled_window_widget()
 gint
 moz_gtk_init()
 {
-    GtkWidgetClass *entry_class;
-
     if (is_initialized)
         return MOZ_GTK_SUCCESS;
 
@@ -743,11 +741,6 @@ moz_gtk_init()
     else {
         notebook_has_tab_gap = TRUE;
     }
-
-    /* Add style property to GtkEntry.
-     * Adding the style property to the normal GtkEntry class means that it
-     * will work without issues inside GtkComboBox and for Spinbuttons. */
-    entry_class = g_type_class_ref(GTK_TYPE_ENTRY);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1095,14 +1088,11 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
                                GtkTextDirection direction)
 {
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-    GtkStateType saved_state;
     GdkRectangle arrow_rect;
     gdouble arrow_angle;
     GtkStyleContext* style;
     GtkWidget *scrollbar;
     gint arrow_displacement_x, arrow_displacement_y;
-    const char* detail = (flags & MOZ_GTK_STEPPER_VERTICAL) ?
-                           "vscrollbar" : "hscrollbar";
 
     ensure_scrollbar_widget();
 
@@ -1215,7 +1205,6 @@ moz_gtk_scrollbar_thumb_paint(GtkThemeWidgetType widget,
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
     GtkStyleContext* style;
     GtkScrollbar *scrollbar;
-    GtkAdjustment *adj;
     GtkBorder margin;
 
     ensure_scrollbar_widget();
@@ -1648,7 +1637,7 @@ moz_gtk_combo_box_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkTextDirection direction)
 {
     GdkRectangle arrow_rect, real_arrow_rect;
-    gint arrow_size, separator_width;
+    gint separator_width;
     gboolean wide_separators;
     GtkStyleContext* style;
     GtkRequisition arrow_req;
@@ -2456,9 +2445,8 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     GtkStyleContext* style;
     gboolean wide_separators;
     gint separator_height;
-    gint paint_height;
     guint border_width;
-    gint x, y, w, h;
+    gint x, y, w;
     GtkBorder padding;
 
     ensure_menu_separator_widget();
@@ -2472,7 +2460,6 @@ moz_gtk_menu_separator_paint(cairo_t *cr, GdkRectangle* rect,
     x = rect->x + border_width;
     y = rect->y + border_width;
     w = rect->width - border_width * 2;
-    h = rect->height - border_width * 2;
 
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_SEPARATOR);
@@ -3395,8 +3382,6 @@ gboolean moz_gtk_has_scrollbar_buttons(void)
 gint
 moz_gtk_shutdown()
 {
-    GtkWidgetClass *entry_class;
-
     if (gTooltipWidget)
         gtk_widget_destroy(gTooltipWidget);
     /* This will destroy all of our widgets */
@@ -3451,9 +3436,6 @@ moz_gtk_shutdown()
     gHPanedWidget = NULL;
     gVPanedWidget = NULL;
     gScrolledWindowWidget = NULL;
-
-    entry_class = g_type_class_peek(GTK_TYPE_ENTRY);
-    g_type_class_unref(entry_class);
 
     is_initialized = FALSE;
 
