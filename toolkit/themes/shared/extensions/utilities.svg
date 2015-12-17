@@ -13,6 +13,9 @@
     use[id$="-native"] {
       fill: GrayText;
     }
+    use[id$="-grayscale"] {
+      fill: #4d4d4d;
+    }
     use[id$="-inverted"] {
       fill: #ddd;
     }
@@ -22,5 +25,6 @@
   </defs>
   <use id="utilities" xlink:href="#utilities-shape"/>
   <use id="utilities-native" xlink:href="#utilities-shape"/>
+  <use id="utilities-grayscale" xlink:href="#utilities-shape"/>
   <use id="utilities-inverted" xlink:href="#utilities-shape"/>
 </svg>
