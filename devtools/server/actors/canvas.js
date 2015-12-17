@@ -9,6 +9,7 @@ const promise = require("promise");
 const protocol = require("devtools/server/protocol");
 const {CallWatcherActor, CallWatcherFront} = require("devtools/server/actors/call-watcher");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
+const {WebGLPrimitiveCounter} = require("devtools/server/primitive");
 
 const {on, once, off, emit} = events;
 const {method, custom, Arg, Option, RetVal} = protocol;
@@ -113,11 +114,12 @@ var FrameSnapshotActor = protocol.ActorClass({
    * @param object screenshot
    *        A single "snapshot-image" type instance.
    */
-  initialize: function(conn, { canvas, calls, screenshot }) {
+  initialize: function(conn, { canvas, calls, screenshot, primitive }) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this._contentCanvas = canvas;
     this._functionCalls = calls;
     this._animationFrameEndScreenshot = screenshot;
+    this._primitive = primitive;
   },
 
   /**
@@ -127,7 +129,13 @@ var FrameSnapshotActor = protocol.ActorClass({
     return {
       calls: this._functionCalls,
       thumbnails: this._functionCalls.map(e => e._thumbnail).filter(e => !!e),
-      screenshot: this._animationFrameEndScreenshot
+      screenshot: this._animationFrameEndScreenshot,
+      primitive: {
+        tris: this._primitive.tris,
+        vertices: this._primitive.vertices,
+        points: this._primitive.points,
+        lines: this._primitive.lines
+      }
     };
   }, {
     response: { overview: RetVal("snapshot-overview") }
@@ -241,10 +249,12 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClass({
   initialize: function(conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
+    this._webGLPrimitiveCounter = new WebGLPrimitiveCounter(tabActor);
     this._onContentFunctionCall = this._onContentFunctionCall.bind(this);
   },
   destroy: function(conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
+    this._webGLPrimitiveCounter.destroy();
     this.finalize();
   },
 
@@ -317,6 +327,7 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClass({
     this._recordingContainsDrawCall = false;
     this._callWatcher.eraseRecording();
     this._callWatcher.initFrameStartTimestamp();
+    this._webGLPrimitiveCounter.resetCounts();
     this._callWatcher.resumeRecording();
 
     let deferred = this._currentAnimationFrameSnapshot = promise.defer();
@@ -370,6 +381,7 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClass({
     }
     if (CanvasFront.DRAW_CALLS.has(name) && this._animationStarted) {
       this._handleDrawCall(functionCall);
+      this._webGLPrimitiveCounter.handleDrawPrimitive(functionCall);
       return;
     }
   },
@@ -415,6 +427,7 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let height = this._lastContentCanvasHeight;
     let flipped = !!this._lastThumbnailFlipped; // undefined -> false
     let pixels = ContextUtils.getPixelStorage()["8bit"];
+    let primitiveResult = this._webGLPrimitiveCounter.getCounts();
     let animationFrameEndScreenshot = {
       index: index,
       width: width,
@@ -429,7 +442,13 @@ var CanvasActor = exports.CanvasActor = protocol.ActorClass({
     let frameSnapshot = new FrameSnapshotActor(this.conn, {
       canvas: this._lastDrawCallCanvas,
       calls: functionCalls,
-      screenshot: animationFrameEndScreenshot
+      screenshot: animationFrameEndScreenshot,
+      primitive: {
+        tris: primitiveResult.tris,
+        vertices: primitiveResult.vertices,
+        points: primitiveResult.points,
+        lines: primitiveResult.lines
+      }
     });
 
     this._currentAnimationFrameSnapshot.resolve(frameSnapshot);

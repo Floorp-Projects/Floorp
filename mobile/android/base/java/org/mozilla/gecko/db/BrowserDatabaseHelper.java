@@ -39,7 +39,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
-    public static final int DATABASE_VERSION = 25;
+    public static final int DATABASE_VERSION = 26; // Bug 1128675
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -143,8 +143,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Favicons.DATE_MODIFIED + " INTEGER" +
                 ");");
 
-        db.execSQL("CREATE INDEX favicons_url_index ON " + TABLE_FAVICONS + "("
-                + Favicons.URL + ")");
         db.execSQL("CREATE INDEX favicons_modified_index ON " + TABLE_FAVICONS + "("
                 + Favicons.DATE_MODIFIED + ")");
     }
@@ -156,9 +154,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 Thumbnails.URL + " TEXT UNIQUE," +
                 Thumbnails.DATA + " BLOB" +
                 ");");
-
-        db.execSQL("CREATE INDEX thumbnails_url_index ON " + TABLE_THUMBNAILS + "("
-                + Thumbnails.URL + ")");
     }
 
     private void createBookmarksWithFaviconsView(SQLiteDatabase db) {
@@ -191,10 +186,6 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 BrowserContract.Clients.LAST_MODIFIED + " INTEGER," +
                 BrowserContract.Clients.DEVICE_TYPE + " TEXT" +
                 ");");
-
-        // Index on GUID.
-        db.execSQL("CREATE INDEX " + TabsProvider.INDEX_CLIENTS_GUID +
-                " ON " + TABLE_CLIENTS + "(" + BrowserContract.Clients.GUID + ")");
     }
 
     private boolean didCreateTabsTable = false;
@@ -1032,6 +1023,13 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         didCreateTabsTable =true;
     }
 
+    private void upgradeDatabaseFrom25to26(SQLiteDatabase db) {
+        debug("Dropping unnecessary indices");
+        db.execSQL("DROP INDEX IF EXISTS clients_guid_index");
+        db.execSQL("DROP INDEX IF EXISTS thumbnails_url_index");
+        db.execSQL("DROP INDEX IF EXISTS favicons_url_index");
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1110,6 +1108,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 25:
                     upgradeDatabaseFrom24to25(db);
+                    break;
+
+                case 26:
+                    upgradeDatabaseFrom25to26(db);
                     break;
             }
         }

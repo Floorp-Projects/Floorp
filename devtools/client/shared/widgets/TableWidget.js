@@ -475,7 +475,7 @@ function Column(table, id, header) {
   this.wrapper.appendChild(this.column);
 
   this.header = this.document.createElementNS(XUL_NS, "label");
-  this.header.className = "plain devtools-toolbar table-widget-column-header";
+  this.header.className = "devtools-toolbar table-widget-column-header";
   this.header.setAttribute("value", header);
   this.column.appendChild(this.header);
   if (table.headersContextMenu) {

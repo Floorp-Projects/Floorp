@@ -94,7 +94,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
 
 #ifdef MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertCookie,
-                                                          aAlertListener, aAlertName);
+                                                          aAlertListener, aAlertName, aPrincipal);
   return NS_OK;
 #else
   // Check if there is an optional service that handles system-level notifications

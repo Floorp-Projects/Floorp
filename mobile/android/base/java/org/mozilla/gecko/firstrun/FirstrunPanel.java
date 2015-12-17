@@ -7,6 +7,12 @@ package org.mozilla.gecko.firstrun;
 
 import android.support.v4.app.Fragment;
 
+/**
+ * Base class for our first run pages. We call these FirstrunPanel for consistency
+ * with HomePager/HomePanel.
+ *
+ * @see FirstrunPager for the containing pager.
+ */
 public class FirstrunPanel extends Fragment {
 
     public static final int TITLE_RES = -1;
