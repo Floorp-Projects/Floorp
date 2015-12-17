@@ -695,10 +695,7 @@ public class BrowserApp extends GeckoApp
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         if (AppConstants.MOZ_INSTALL_TRACKING) {
-            final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
-            if (prefs.getBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
-                AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
-            }
+            AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
         }
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
@@ -889,7 +886,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onResume() {
         super.onResume();
-        AdjustConstants.getAdjustHelper().onResume();
+        AdjustConstants.getAdjustHelper().onResume(this);
 
         final String args = ContextUtils.getStringExtra(getIntent(), "args");
         // If an external intent tries to start Fennec in guest mode, and it's not already
@@ -911,7 +908,7 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onPause() {
         super.onPause();
-        AdjustConstants.getAdjustHelper().onPause();
+        AdjustConstants.getAdjustHelper().onPause(this);
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
