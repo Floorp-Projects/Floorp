@@ -6,10 +6,13 @@
 import sys
 import platform
 import optparse
-import logging
 import mozhttpd
 # media test utilities
 import media_utils
+
+from mozlog import get_proxy_logger
+
+LOG = get_proxy_logger()
 
 """
 MediaManager serves as entry point for running media performance tests.
@@ -134,9 +137,9 @@ def run_server(doc_root):
         ]
     )
 
-    logging.info("Server %s at %s:%s",
-                 httpd_server.docroot, httpd_server.host,
-                 httpd_server.port)
+    LOG.info("Server %s at %s:%s" % (httpd_server.docroot,
+                                     httpd_server.host,
+                                     httpd_server.port))
     ObjectDb.httpd_server = httpd_server
     httpd_server.start()
     return httpd_server
