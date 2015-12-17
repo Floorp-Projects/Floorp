@@ -21,7 +21,7 @@ This introduced shadow layers and edit lists and was originally done for e10s v1
 
 - 3d transforms (September 2011 - Bug 505115)
 
-- OMTC (December 2012 - Bug 711168)
+- OMTC (December 2011 - Bug 711168)
 This was prototyped on OS X but shipped first for Fennec
 
 - Tiling v1 (April 2012 - Bug 739679)
@@ -34,7 +34,12 @@ painting.
 - C++ Async pan zoom controller (July 2012 - Bug 750974)
 The existing APZ code was in Java for Fennec so this was reimplemented.
 
+- Streaming WebGL Buffers (February 203 - Bug 716859)
+Infrastructure to allow OMTC WebGL and avoid the need to glFinish() every
+frame.
+
 - Compositor API (April 2013 - Bug 825928)
+The planing for this started around November 2012.
 Layers refactoring created a compositor API that abstracted away the differences between the
 D3D vs OpenGL. The main piece of API is DrawQuad.
 
@@ -48,3 +53,8 @@ of the sync messages to the compositor.
 
  The slow performance of allocating was directly addressed by bug 959089 which allowed us
 to allocate gralloc buffers without sync messages to the compositor thread.
+
+- B2G WebGL performance (May 2014 - Bug 1006957, 1001417, 1024144)
+This worked improved the synchronization mechanism between the compositor
+and the producer.
+
