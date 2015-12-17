@@ -89,6 +89,11 @@ GrGLvoid glBlendColor_mozilla(GrGLclampf red, GrGLclampf green, GrGLclampf blue,
     return sGLContext.get()->fBlendColor(red, green, blue, alpha);
 }
 
+GrGLvoid glBlendEquation_mozilla(GrGLenum mode)
+{
+    return sGLContext.get()->fBlendEquation(mode);
+}
+
 GrGLvoid glBlendFunc_mozilla(GrGLenum sfactor, GrGLenum dfactor)
 {
     return sGLContext.get()->fBlendFunc(sfactor, dfactor);
@@ -315,6 +320,11 @@ GrGLvoid glGetShaderiv_mozilla(GrGLuint shader, GrGLenum pname, GrGLint* params)
     return sGLContext.get()->fGetShaderiv(shader, pname, params);
 }
 
+GrGLvoid glGetShaderPrecisionFormat_mozilla(GrGLenum shadertype, GrGLenum precisiontype, GLint *range, GLint *precision)
+{
+    return sGLContext.get()->fGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+}
+
 const GLubyte* glGetString_mozilla(GrGLenum name)
 {
     // GLContext only exposes a OpenGL 2.0 style API, so we have to intercept a bunch
@@ -356,6 +366,12 @@ const GLubyte* glGetString_mozilla(GrGLenum name)
 
                 if (sGLContext.get()->IsSupported(GLFeature::standard_derivatives)) {
                     strcat(extensionsString, "GL_OES_standard_derivatives ");
+                }
+            } else {
+                if (sGLContext.get()->IsSupported(GLFeature::framebuffer_object)) {
+                    strcat(extensionsString, "GL_ARB_framebuffer_object ");
+                } else if (sGLContext.get()->IsExtensionSupported(GLContext::EXT_framebuffer_object)) {
+                    strcat(extensionsString, "GL_EXT_framebuffer_object ");
                 }
             }
 
@@ -581,6 +597,21 @@ GrGLvoid glUseProgram_mozilla(GrGLuint program)
     return sGLContext.get()->fUseProgram(program);
 }
 
+GrGLvoid glVertexAttrib1f_mozilla(GrGLuint index, GrGLfloat value)
+{
+    return sGLContext.get()->fVertexAttrib1f(index, value);
+}
+
+GrGLvoid glVertexAttrib2fv_mozilla(GrGLuint index, const GrGLfloat* values)
+{
+    return sGLContext.get()->fVertexAttrib2fv(index, values);
+}
+
+GrGLvoid glVertexAttrib3fv_mozilla(GrGLuint index, const GrGLfloat* values)
+{
+    return sGLContext.get()->fVertexAttrib3fv(index, values);
+}
+
 GrGLvoid glVertexAttrib4fv_mozilla(GrGLuint index, const GrGLfloat* values)
 {
     return sGLContext.get()->fVertexAttrib4fv(index, values);
@@ -767,6 +798,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fBindTexture = glBindTexture_mozilla;
     i->fFunctions.fBlendFunc = glBlendFunc_mozilla;
     i->fFunctions.fBlendColor = glBlendColor_mozilla;
+    i->fFunctions.fBlendEquation = glBlendEquation_mozilla;
     i->fFunctions.fBufferData = glBufferData_mozilla;
     i->fFunctions.fBufferSubData = glBufferSubData_mozilla;
     i->fFunctions.fCheckFramebufferStatus = glCheckFramebufferStatus_mozilla;
@@ -811,6 +843,7 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fGetRenderbufferParameteriv = glGetRenderbufferParameteriv_mozilla;
     i->fFunctions.fGetShaderInfoLog = glGetShaderInfoLog_mozilla;
     i->fFunctions.fGetShaderiv = glGetShaderiv_mozilla;
+    i->fFunctions.fGetShaderPrecisionFormat = glGetShaderPrecisionFormat_mozilla;
     i->fFunctions.fGetString = glGetString_mozilla;
     i->fFunctions.fGetUniformLocation = glGetUniformLocation_mozilla;
     i->fFunctions.fLineWidth = glLineWidth_mozilla;
@@ -847,6 +880,9 @@ static GrGLInterface* CreateGrGLInterfaceFromGLContext(GLContext* context)
     i->fFunctions.fUniformMatrix3fv = glUniformMatrix3fv_mozilla;
     i->fFunctions.fUniformMatrix4fv = glUniformMatrix4fv_mozilla;
     i->fFunctions.fUseProgram = glUseProgram_mozilla;
+    i->fFunctions.fVertexAttrib1f = glVertexAttrib1f_mozilla;
+    i->fFunctions.fVertexAttrib2fv = glVertexAttrib2fv_mozilla;
+    i->fFunctions.fVertexAttrib3fv = glVertexAttrib3fv_mozilla;
     i->fFunctions.fVertexAttrib4fv = glVertexAttrib4fv_mozilla;
     i->fFunctions.fVertexAttribPointer = glVertexAttribPointer_mozilla;
     i->fFunctions.fViewport = glViewport_mozilla;
