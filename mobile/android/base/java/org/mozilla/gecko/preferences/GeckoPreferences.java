@@ -131,7 +131,6 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
     private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.state";
     private static final String PREFS_TRACKING_PROTECTION_PB = "privacy.trackingprotection.pbmode.enabled";
-    public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
     private static final String PREFS_ADVANCED = NON_PREF_PREFIX + "advanced.enabled";
@@ -697,13 +696,6 @@ OnSharedPreferenceChangeListener
                 pref.setOnPreferenceChangeListener(this);
                 if (PREFS_UPDATER_AUTODOWNLOAD.equals(key)) {
                     if (!AppConstants.MOZ_UPDATER) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
-                } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
-                    // Remove UI for opening external links in private browsing on non-Nightly builds.
-                    if (!AppConstants.NIGHTLY_BUILD || !Restrictions.isAllowed(this, Restrictable.PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
