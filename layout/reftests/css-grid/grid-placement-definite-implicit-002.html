@@ -122,6 +122,12 @@ span {
 ._n    { grid-column: auto / 1;           }
 ._n2   { grid-column: auto / 2;           }
 .A3Xe  { grid-column: A 3 / X 2;          }
+.asA   { grid-column: span A / A;         }
+.asA2  { grid-column: span A / A 2;       }
+.a2sA2 { grid-column: span A 2 / A 2;     }
+.as1   { grid-column: span A / 1;         }
+.as2   { grid-column: span A / 2;         }
+.as3   { grid-column: span A / 3;         }
 
 .c1 { grid-column:1; grid-row:auto; background:grey; }
 
@@ -223,6 +229,15 @@ span {
 <div class="grid"><span class="_n"  ></span><span class="c1"></span></div>
 <div class="grid"><span class="_n2" ></span><span class="c1"></span></div>
 <div class="grid"><span class="A3Xe"></span><span class="c1"></span></div>
+<div class="grid"><span class="asA"></span><span class="c1"></span></div>
+</div>
+
+<div style="float:left; width:140px; clear:both">
+<div class="grid"><span class="asA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="a2sA2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as1"></span><span class="c1"></span></div>
+<div class="grid"><span class="as2"></span><span class="c1"></span></div>
+<div class="grid"><span class="as3"></span><span class="c1"></span></div>
 </div>
 
 </body>
