@@ -1306,12 +1306,10 @@ public class GeckoAppShell
     }
 
     @WrapForJNI(stubName = "ShowAlertNotificationWrapper")
-    public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText,
-                                             String aAlertCookie, String aAlertName) {
+    public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText, String aAlertCookie, String aAlertName, String aHost) {
         // The intent to launch when the user clicks the expanded notification
-        String app = getContext().getClass().getName();
         Intent notificationIntent = new Intent(GeckoApp.ACTION_ALERT_CALLBACK);
-        notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, app);
+        notificationIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         int notificationID = aAlertName.hashCode();
@@ -1329,7 +1327,7 @@ public class GeckoAppShell
         ALERT_COOKIES.put(aAlertName, aAlertCookie);
         callObserver(aAlertName, "alertshow", aAlertCookie);
 
-        notificationClient.add(notificationID, aImageUrl, aAlertTitle, aAlertText, contentIntent);
+        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent);
     }
 
     @WrapForJNI

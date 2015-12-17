@@ -505,6 +505,9 @@ var testCases = [
            "      chrome.pageAction.show(sender.tab.id);\n" +
            "    }\n" +
            "    break;\n" +
+           "  case 'hide': /*Multiline\n" +
+           "    Comment */" +
+           "    break;\n" +
            "  default:\n" +
            "    console.warn('unknown request'); //$NON-NLS-0$\n" +
            "    // don't respond if you don't understand the message.\n" +
@@ -515,6 +518,9 @@ var testCases = [
             "    if (localStorage.hideicon !== 'true') { //$NON-NLS-0$\n" +
             "      chrome.pageAction.show(sender.tab.id);\n" +
             "    }\n" +
+            "    break;\n" +
+            "  case 'hide': /*Multiline\n" +
+            "    Comment */\n" +
             "    break;\n" +
             "  default:\n" +
             "    console.warn('unknown request'); //$NON-NLS-0$\n" +

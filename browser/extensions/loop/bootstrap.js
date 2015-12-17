@@ -35,6 +35,7 @@ var WindowListener = {
     let gBrowser = window.gBrowser;
     let xhrClass = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"];
     let FileReader = window.FileReader;
+    let menuItem = null;
 
     // the "exported" symbols
     var LoopUI = {
@@ -67,20 +68,6 @@ var WindowListener = {
           this.browser = browser;
         }
         return browser;
-      },
-
-      /**
-       * @var {String|null} selectedTab Getter for the name of the currently selected
-       *                                tab inside the Loop panel. Will be NULL if
-       *                                the panel hasn't loaded yet.
-       */
-      get selectedTab() {
-        if (!this.browser) {
-          return null;
-        }
-
-        let selectedTab = this.browser.contentDocument.querySelector(".tab-view > .selected");
-        return selectedTab && selectedTab.getAttribute("data-tab-name");
       },
 
       /**
@@ -278,6 +265,8 @@ var WindowListener = {
           }
         });
 
+        this.addMenuItem();
+
         // Don't do the rest if this is for the hidden window - we don't
         // have a toolbar there.
         if (window == Services.appShell.hiddenDOMWindow) {
@@ -292,6 +281,35 @@ var WindowListener = {
         Services.obs.addObserver(this, "loop-status-changed", false);
 
         this.updateToolbarState();
+      },
+
+      /**
+       * Adds a menu item to the browsers' Tools menu that open the Loop panel
+       * when selected.
+       */
+      addMenuItem: function() {
+        let menu = document.getElementById("menu_ToolsPopup");
+        if (!menu || menuItem) {
+          return;
+        }
+
+        menuItem = document.createElementNS(kNSXUL, "menuitem");
+        menuItem.setAttribute("id", "menu_openLoop");
+        menuItem.setAttribute("label", this._getString("loopMenuItem_label"));
+        menuItem.setAttribute("accesskey", this._getString("loopMenuItem_accesskey"));
+
+        menuItem.addEventListener("command", () => this.togglePanel());
+
+        menu.insertBefore(menuItem, document.getElementById("sync-setup"));
+      },
+
+      /**
+       * Removes the menu item from the browsers' Tools menu.
+       */
+      removeMenuItem: function() {
+        if (menuItem) {
+          menuItem.parentNode.removeChild(menuItem);
+        }
       },
 
       // Implements nsIObserver
@@ -674,7 +692,10 @@ var WindowListener = {
 
     // Take any steps to remove UI or anything from the browser window
     // document.getElementById() etc. will work here
-    // XXX Add in tear-down of the panel.
+    if (window.LoopUI) {
+      window.LoopUI.removeMenuItem();
+      // XXX Add in tear-down of the panel.
+    }
   },
 
   // nsIWindowMediatorListener functions.

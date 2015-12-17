@@ -124,7 +124,6 @@ private:
   // If sIMMEnabled is false, any IME messages are not handled in TSF mode.
   // Additionally, IME context is always disassociated from focused window.
   static bool sIsIMMEnabled;
-  static bool sShowingOnScreenKeyboard;
 
   static bool IsTSFAvailable() { return (sIsInTSFMode && !sPluginHasFocus); }
   static bool IsIMMActive();
@@ -148,6 +147,12 @@ private:
    * Windows 8 and higher.
    */
   static void DismissOnScreenKeyboard();
+
+  /**
+   * Get the HWND for the on-screen keyboard, if it's up. Only
+   * allowed for Windows 8 and higher.
+   */
+  static HWND GetOnScreenKeyboardWindow();
 #endif // #ifdef NS_ENABLE_TSF
 };
 

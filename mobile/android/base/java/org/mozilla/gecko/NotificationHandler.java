@@ -5,20 +5,19 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.gfx.BitmapUtils;
+import android.graphics.Bitmap;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
-import android.net.Uri;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
-import android.util.Log;
+import org.mozilla.gecko.gfx.BitmapUtils;
 
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NotificationHandler {
+    private static String LOGTAG = "GeckoNotifHandler";
     private final ConcurrentHashMap<Integer, Notification>
             mNotifications = new ConcurrentHashMap<Integer, Notification>();
     private final Context mContext;
@@ -51,21 +50,29 @@ public class NotificationHandler {
      * @param aAlertText     text of the notification
      * @param contentIntent  Intent used when the notification is clicked
      */
-    public void add(int notificationID, String aImageUrl, String aAlertTitle,
+    public void add(final int notificationID, String aImageUrl, String aHost, String aAlertTitle,
                     String aAlertText, PendingIntent contentIntent) {
         // Remove the old notification with the same ID, if any
         remove(notificationID);
 
-        Uri imageUri = Uri.parse(aImageUrl);
-        int icon = BitmapUtils.getResource(imageUri, R.drawable.ic_status_logo);
-
-        Notification notification = new NotificationCompat.Builder(mContext)
+        final NotificationCompat.Builder builder = new NotificationCompat.Builder(mContext)
                 .setContentTitle(aAlertTitle)
                 .setContentText(aAlertText)
-                .setSmallIcon(icon)
-                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.drawable.ic_status_logo)
                 .setContentIntent(contentIntent)
-                .build();
+                .setAutoCancel(true)
+                .setStyle(new NotificationCompat.InboxStyle()
+                          .addLine(aAlertText)
+                          .setSummaryText(aHost));
+
+        // Fetch icon.
+        if (!aImageUrl.isEmpty()) {
+            final Bitmap image = BitmapUtils.decodeUrl(aImageUrl);
+            builder.setLargeIcon(image);
+        }
+
+        builder.setWhen(System.currentTimeMillis());
+        final Notification notification = builder.build();
 
         mNotificationManager.notify(notificationID, notification);
         mNotifications.put(notificationID, notification);

@@ -6,6 +6,7 @@
 package org.mozilla.gecko.restrictions;
 
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.TargetApi;
@@ -33,6 +34,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         configuration.put(Restrictable.ADVANCED_SETTINGS, false);
         configuration.put(Restrictable.CAMERA_MICROPHONE, false);
         configuration.put(Restrictable.DATA_CHOICES, true);
+
+        // Hold behind Nightly flag until we have an actual block list deployed.
+        if (AppConstants.NIGHTLY_BUILD) {
+            configuration.put(Restrictable.BLOCK_LIST, false);
+        }
     }
 
     /**
@@ -70,6 +76,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         // Special casing system/user restrictions
         if (restrictable == Restrictable.INSTALL_APPS || restrictable == Restrictable.MODIFY_ACCOUNTS) {
             return !cachedUserRestrictions.getBoolean(restrictable.name);
+        }
+
+        if (!cachedAppRestrictions.containsKey(restrictable.name) && !configuration.containsKey(restrictable)) {
+            // Always allow features that are not in the configuration
+            return true;
         }
 
         return cachedAppRestrictions.getBoolean(restrictable.name, configuration.get(restrictable));
