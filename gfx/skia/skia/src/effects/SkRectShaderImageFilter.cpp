@@ -13,39 +13,41 @@
 #include "SkWriteBuffer.h"
 #include "SkShader.h"
 
-SkImageFilter* SkRectShaderImageFilter::Create(SkShader* s, const SkRect& rect) {
+SkRectShaderImageFilter* SkRectShaderImageFilter::Create(SkShader* s, const SkRect& rect) {
     SkASSERT(s);
     uint32_t flags = CropRect::kHasAll_CropEdge;
     if (rect.width() == 0 || rect.height() == 0) {
         flags = 0x0;
     }
     CropRect cropRect(rect, flags);
-    return s ? new SkRectShaderImageFilter(s, &cropRect) : nullptr;
+    return SkNEW_ARGS(SkRectShaderImageFilter, (s, &cropRect));
 }
 
-SkImageFilter* SkRectShaderImageFilter::Create(SkShader* s, const CropRect* cropRect) {
+SkRectShaderImageFilter* SkRectShaderImageFilter::Create(SkShader* s, const CropRect* cropRect) {
     SkASSERT(s);
-    return s ? new SkRectShaderImageFilter(s, cropRect) : nullptr;
+    return SkNEW_ARGS(SkRectShaderImageFilter, (s, cropRect));
 }
 
 SkRectShaderImageFilter::SkRectShaderImageFilter(SkShader* s, const CropRect* cropRect)
-  : INHERITED(0, nullptr, cropRect)
-  , fShader(SkRef(s)) {
+  : INHERITED(0, NULL, cropRect)
+  , fShader(s) {
+    SkASSERT(s);
+    s->ref();
 }
 
-SkFlattenable* SkRectShaderImageFilter::CreateProc(SkReadBuffer& buffer) {
-    SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 0);
-    SkAutoTUnref<SkShader> shader(buffer.readShader());
-    return Create(shader.get(), &common.cropRect());
+SkRectShaderImageFilter::SkRectShaderImageFilter(SkReadBuffer& buffer)
+  : INHERITED(0, buffer) {
+    fShader = buffer.readShader();
 }
 
 void SkRectShaderImageFilter::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
+
     buffer.writeFlattenable(fShader);
 }
 
 SkRectShaderImageFilter::~SkRectShaderImageFilter() {
-    fShader->unref();
+    SkSafeUnref(fShader);
 }
 
 bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
@@ -60,7 +62,7 @@ bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
 
     SkAutoTUnref<SkBaseDevice> device(proxy->createDevice(bounds.width(),
                                                           bounds.height()));
-    if (nullptr == device.get()) {
+    if (NULL == device.get()) {
         return false;
     }
     SkCanvas canvas(device.get());
@@ -68,7 +70,7 @@ bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
     SkPaint paint;
     SkMatrix matrix(ctx.ctm());
     matrix.postTranslate(SkIntToScalar(-bounds.left()), SkIntToScalar(-bounds.top()));
-    SkSafeUnref(paint.setShader(SkShader::CreateLocalMatrixShader(fShader, matrix)));
+    paint.setShader(SkShader::CreateLocalMatrixShader(fShader, matrix))->unref();
 
     SkRect rect = SkRect::MakeWH(SkIntToScalar(bounds.width()), SkIntToScalar(bounds.height()));
     canvas.drawRect(rect, paint);
@@ -78,14 +80,3 @@ bool SkRectShaderImageFilter::onFilterImage(Proxy* proxy,
     offset->fY = bounds.fTop;
     return true;
 }
-
-bool SkRectShaderImageFilter::affectsTransparentBlack() const {
-    return true;
-}
-
-#ifndef SK_IGNORE_TO_STRING
-void SkRectShaderImageFilter::toString(SkString* str) const {
-    str->appendf("SkRectShaderImageFilter: (");
-    str->append(")");
-}
-#endif

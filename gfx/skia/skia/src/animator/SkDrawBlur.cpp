@@ -27,7 +27,7 @@ SkDrawBlur::SkDrawBlur()
 
 SkMaskFilter* SkDrawBlur::getMaskFilter() {
     if (fSigma <= 0) {
-        return nullptr;
+        return NULL;
     }
     return SkBlurMaskFilter::Create((SkBlurStyle)fBlurStyle, fSigma);
 }

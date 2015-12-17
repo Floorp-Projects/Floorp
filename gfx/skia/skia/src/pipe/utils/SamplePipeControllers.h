@@ -16,10 +16,10 @@ class SkMatrix;
 
 class PipeController : public SkGPipeController {
 public:
-    PipeController(SkCanvas* target, SkPicture::InstallPixelRefProc proc = nullptr);
+    PipeController(SkCanvas* target, SkPicture::InstallPixelRefProc proc = NULL);
     virtual ~PipeController();
-    void* requestBlock(size_t minRequest, size_t* actual) override;
-    void notifyWritten(size_t bytes) override;
+    virtual void* requestBlock(size_t minRequest, size_t* actual) SK_OVERRIDE;
+    virtual void notifyWritten(size_t bytes) SK_OVERRIDE;
 protected:
     const void* getData() { return (const char*) fBlock + fBytesWritten; }
     SkGPipeReader fReader;
@@ -34,11 +34,11 @@ private:
 
 class TiledPipeController : public PipeController {
 public:
-    TiledPipeController(const SkBitmap&, SkPicture::InstallPixelRefProc proc = nullptr,
-                        const SkMatrix* initialMatrix = nullptr);
+    TiledPipeController(const SkBitmap&, SkPicture::InstallPixelRefProc proc = NULL,
+                        const SkMatrix* initialMatrix = NULL);
     virtual ~TiledPipeController() {};
-    void notifyWritten(size_t bytes) override;
-    int numberOfReaders() const override { return NumberOfTiles; }
+    virtual void notifyWritten(size_t bytes) SK_OVERRIDE;
+    virtual int numberOfReaders() const SK_OVERRIDE { return NumberOfTiles; }
 private:
     enum {
         NumberOfTiles = 10
@@ -57,9 +57,9 @@ private:
 class ThreadSafePipeController : public SkGPipeController {
 public:
     ThreadSafePipeController(int numberOfReaders);
-    void* requestBlock(size_t minRequest, size_t* actual) override;
-    void notifyWritten(size_t bytes) override;
-    int numberOfReaders() const override { return fNumberOfReaders; }
+    virtual void* requestBlock(size_t minRequest, size_t* actual) SK_OVERRIDE;
+    virtual void notifyWritten(size_t bytes) SK_OVERRIDE;
+    virtual int numberOfReaders() const SK_OVERRIDE { return fNumberOfReaders; }
 
     /**
      * Play the stored drawing commands to the specified canvas. If SkGPipeWriter::startRecording

@@ -51,6 +51,6 @@ struct SkTTCFHeader {
 #pragma pack(pop)
 
 
-static_assert(sizeof(SkTTCFHeader) == 12, "sizeof_SkTTCFHeader_not_12");
+SK_COMPILE_ASSERT(sizeof(SkTTCFHeader) == 12, sizeof_SkTTCFHeader_not_12);
 
 #endif

@@ -15,31 +15,43 @@
 #include <stdarg.h>
 
 namespace {
-void *CreateThreadError() { return new SkError(kNoError_SkError); }
-void DeleteThreadError(void *v) { delete reinterpret_cast<SkError *>(v); }
+    void *CreateThreadError() {
+        return SkNEW_ARGS(SkError, (kNoError_SkError));
+    }
+    void DeleteThreadError(void* v) {
+        SkDELETE(reinterpret_cast<SkError*>(v));
+    }
     #define THREAD_ERROR \
         (*reinterpret_cast<SkError*>(SkTLS::Get(CreateThreadError, DeleteThreadError)))
 
     void *CreateThreadErrorCallback() {
-        return new SkErrorCallbackFunction(SkErrorInternals::DefaultErrorCallback);
+        return SkNEW_ARGS(SkErrorCallbackFunction, (SkErrorInternals::DefaultErrorCallback));
     }
     void DeleteThreadErrorCallback(void* v) {
-        delete reinterpret_cast<SkErrorCallbackFunction *>(v);
+        SkDELETE(reinterpret_cast<SkErrorCallbackFunction *>(v));
     }
 
     #define THREAD_ERROR_CALLBACK                                                             \
         *(reinterpret_cast<SkErrorCallbackFunction *>(SkTLS::Get(CreateThreadErrorCallback,   \
                                                                  DeleteThreadErrorCallback)))
 
-    void *CreateThreadErrorContext() { return new void **(nullptr); }
-    void DeleteThreadErrorContext(void *v) { delete reinterpret_cast<void **>(v); }
+    void *CreateThreadErrorContext() {
+        return SkNEW_ARGS(void **, (NULL));
+    }
+    void DeleteThreadErrorContext(void* v) {
+        SkDELETE(reinterpret_cast<void **>(v));
+    }
     #define THREAD_ERROR_CONTEXT \
         (*reinterpret_cast<void **>(SkTLS::Get(CreateThreadErrorContext, DeleteThreadErrorContext)))
 
     #define ERROR_STRING_LENGTH 2048
 
-    void *CreateThreadErrorString() { return new char[(ERROR_STRING_LENGTH)]; }
-    void DeleteThreadErrorString(void *v) { delete[] reinterpret_cast<char *>(v); }
+    void *CreateThreadErrorString() {
+        return SkNEW_ARRAY(char, (ERROR_STRING_LENGTH));
+    }
+    void DeleteThreadErrorString(void* v) {
+        SkDELETE_ARRAY(reinterpret_cast<char *>(v));
+    }
     #define THREAD_ERROR_STRING \
         (reinterpret_cast<char *>(SkTLS::Get(CreateThreadErrorString, DeleteThreadErrorString)))
 }
@@ -60,7 +72,7 @@ const char *SkGetLastErrorString() {
 // ------------ Private Error functions ---------
 
 void SkErrorInternals::SetErrorCallback(SkErrorCallbackFunction cb, void *context) {
-    if (cb == nullptr) {
+    if (cb == NULL) {
         THREAD_ERROR_CALLBACK = SkErrorInternals::DefaultErrorCallback;
     } else {
         THREAD_ERROR_CALLBACK = cb;
@@ -89,7 +101,7 @@ void SkErrorInternals::SetError(SkError code, const char *fmt, ...) {
     va_list args;
 
     char *str = THREAD_ERROR_STRING;
-    const char *error_name = nullptr;
+    const char *error_name = NULL;
     switch( code ) {
         case kNoError_SkError:
             error_name = "No Error";

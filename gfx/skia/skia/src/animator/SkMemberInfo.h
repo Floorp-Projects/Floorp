@@ -32,7 +32,7 @@ struct SkMemberInfo {
     // if fCount == 0, record is member property
     // then fType can be type, so caller doesn't have to check
 #if SK_USE_CONDENSED_INFO == 0
-    const char* fName;  // may be nullptr for anonymous functions
+    const char* fName;  // may be NULL for anonymous functions
     size_t fOffset; // if negative, is index into member pointer table (for properties and functions)
     SkDisplayTypes fType;
     int fCount;         // for properties, actual type (count is always assumed to be 1)
@@ -104,18 +104,13 @@ struct SkMemberInfo {
 //  static bool SetValue(void* value, const char* name, SkDisplayTypes , int count);
 };
 
-#ifndef SK_OFFSETOF
-    // This is offsetof for types which are not standard layout.
-    #define SK_OFFSETOF(type, field) (size_t)((char*)&(((type*)1024)->field) - (char*)1024)
-#endif
-
 #define SK_MEMBER(_member, _type) \
     { #_member, SK_OFFSETOF(BASE_CLASS, _member), SkType_##_type, \
-    sizeof(skstd::declval<BASE_CLASS>()._member) / sizeof(SkScalar) }
+    sizeof(((BASE_CLASS*) 1)->_member) / sizeof(SkScalar) }
 
 #define SK_MEMBER_ALIAS(_member, _alias, _type) \
     { #_member, SK_OFFSETOF(BASE_CLASS, _alias), SkType_##_type, \
-    sizeof(skstd::declval<BASE_CLASS>()._alias) / sizeof(SkScalar) }
+    sizeof(((BASE_CLASS*) 1)->_alias) / sizeof(SkScalar) }
 
 #define SK_MEMBER_ARRAY(_member, _type) \
     { #_member, SK_OFFSETOF(BASE_CLASS, _member), SkType_Array, \
@@ -155,49 +150,49 @@ struct SkMemberInfo {
 public: \
     static const SkMemberInfo fInfo[]; \
     static const int fInfoCount; \
-    const SkMemberInfo* getMember(int index) override; \
-    const SkMemberInfo* getMember(const char name[]) override; \
+    virtual const SkMemberInfo* getMember(int index); \
+    virtual const SkMemberInfo* getMember(const char name[]); \
     typedef Sk##_type BASE_CLASS
 
 #define DECLARE_MEMBER_INFO(_type) \
 public: \
     static const SkMemberInfo fInfo[]; \
     static const int fInfoCount; \
-    const SkMemberInfo* getMember(int index) override; \
-    const SkMemberInfo* getMember(const char name[]) override; \
-    SkDisplayTypes getType() const override { return SkType_##_type; } \
+    virtual const SkMemberInfo* getMember(int index); \
+    virtual const SkMemberInfo* getMember(const char name[]); \
+    virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef Sk##_type BASE_CLASS
 
 #define DECLARE_DRAW_MEMBER_INFO(_type) \
 public: \
     static const SkMemberInfo fInfo[]; \
     static const int fInfoCount; \
-    const SkMemberInfo* getMember(int index) override; \
-    const SkMemberInfo* getMember(const char name[]) override; \
-    SkDisplayTypes getType() const override { return SkType_##_type; } \
+    virtual const SkMemberInfo* getMember(int index); \
+    virtual const SkMemberInfo* getMember(const char name[]); \
+    virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef SkDraw##_type BASE_CLASS
 
 #define DECLARE_DISPLAY_MEMBER_INFO(_type) \
 public: \
     static const SkMemberInfo fInfo[]; \
     static const int fInfoCount; \
-    const SkMemberInfo* getMember(int index) override; \
-    const SkMemberInfo* getMember(const char name[]) override; \
-    SkDisplayTypes getType() const override { return SkType_##_type; } \
+    virtual const SkMemberInfo* getMember(int index); \
+    virtual const SkMemberInfo* getMember(const char name[]); \
+    virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef SkDisplay##_type BASE_CLASS
 
 #define DECLARE_EMPTY_MEMBER_INFO(_type) \
 public: \
-    SkDisplayTypes getType() const override { return SkType_##_type; }
+    virtual SkDisplayTypes getType() const { return SkType_##_type; }
 
 #define DECLARE_EXTRAS_MEMBER_INFO(_type) \
 public: \
     static const SkMemberInfo fInfo[]; \
     static const int fInfoCount; \
-    const SkMemberInfo* getMember(int index) override; \
-    const SkMemberInfo* getMember(const char name[]) override; \
+    virtual const SkMemberInfo* getMember(int index); \
+    virtual const SkMemberInfo* getMember(const char name[]); \
     SkDisplayTypes fType; \
-    SkDisplayTypes getType() const override { return fType; } \
+    virtual SkDisplayTypes getType() const { return fType; } \
     typedef _type BASE_CLASS
 
 #define DECLARE_NO_VIRTUALS_MEMBER_INFO(_type) \
@@ -229,36 +224,36 @@ public: \
 #define DECLARE_MEMBER_INFO(_type) \
 public: \
     virtual const SkMemberInfo* getMember(int index) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &index); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &index); } \
     virtual const SkMemberInfo* getMember(const char name[]) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &name); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &name); } \
     virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef Sk##_type BASE_CLASS
 
 #define DECLARE_DRAW_MEMBER_INFO(_type) \
 public: \
     virtual const SkMemberInfo* getMember(int index) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &index); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &index); } \
     virtual const SkMemberInfo* getMember(const char name[]) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &name); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &name); } \
     virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef SkDraw##_type BASE_CLASS
 
 #define DECLARE_DISPLAY_MEMBER_INFO(_type) \
 public: \
     virtual const SkMemberInfo* getMember(int index) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &index); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &index); } \
     virtual const SkMemberInfo* getMember(const char name[]) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &name); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &name); } \
     virtual SkDisplayTypes getType() const { return SkType_##_type; } \
     typedef SkDisplay##_type BASE_CLASS
 
 #define DECLARE_EXTRAS_MEMBER_INFO(_type) \
 public: \
     virtual const SkMemberInfo* getMember(int index) { \
-        return SkDisplayType::GetMember(nullptr, SkType_##_type, &index); } \
+        return SkDisplayType::GetMember(NULL, SkType_##_type, &index); } \
     virtual const SkMemberInfo* getMember(const char name[]) { \
-        return SkDisplayType::GetMember(nullptr, fType, &name); } \
+        return SkDisplayType::GetMember(NULL, fType, &name); } \
     SkDisplayTypes fType; \
     virtual SkDisplayTypes getType() const { return fType; } \
     typedef _type BASE_CLASS

@@ -10,16 +10,16 @@
 #ifndef SkHitTest_DEFINED
 #define SkHitTest_DEFINED
 
-#include "SkADrawable.h"
+#include "SkDrawable.h"
 #include "SkTypedArray.h"
 
-class SkHitTest : public SkADrawable {
+class SkHitTest : public SkDrawable {
     DECLARE_MEMBER_INFO(HitTest);
     SkHitTest();
-    bool draw(SkAnimateMaker& ) override;
-    bool enable(SkAnimateMaker& ) override;
-    bool hasEnable() const override;
-    const SkMemberInfo* preferredChild(SkDisplayTypes type) override;
+    virtual bool draw(SkAnimateMaker& );
+    virtual bool enable(SkAnimateMaker& );
+    virtual bool hasEnable() const;
+    virtual const SkMemberInfo* preferredChild(SkDisplayTypes type);
 private:
     SkTDDisplayableArray bullets;
     SkTDIntArray hits;

@@ -37,12 +37,12 @@ public:
 
     uint32_t getLength() const { return fLength; }
 
-    void* addEntry(uint32_t tag, size_t length, const void* data = nullptr) {
+    void* addEntry(uint32_t tag, size_t length, const void* data = NULL) {
         SkASSERT(tag);
         SkASSERT(SkAlign4(length) == length);
-        SkASSERT(this->findEntry(tag, nullptr) == nullptr);
+        SkASSERT(this->findEntry(tag, NULL) == NULL);
 
-        Entry* entry = (Entry*)((char*)this + fLength);
+        Entry*  entry = (Entry*)((char*)this + fLength);
         entry->fTag = tag;
         entry->fLen = SkToU32(length);
         if (data) {
@@ -50,7 +50,7 @@ public:
         }
 
         fCount += 1;
-        fLength = SkToU32(fLength + sizeof(Entry) + length);
+        fLength += sizeof(Entry) + length;
         return (entry + 1); // return its data
     }
 
@@ -77,7 +77,7 @@ public:
             }
             entry = (const Entry*)((const char*)(entry + 1) + entry->fLen);
         }
-        return nullptr;
+        return NULL;
     }
 
     SkDescriptor* copy() const {
@@ -134,18 +134,7 @@ private:
 
 class SkAutoDescriptor : SkNoncopyable {
 public:
-    SkAutoDescriptor() : fDesc(nullptr) {}
-    SkAutoDescriptor(size_t size) : fDesc(nullptr) { this->reset(size); }
-    SkAutoDescriptor(const SkDescriptor& desc) : fDesc(nullptr) {
-        size_t size = desc.getLength();
-        this->reset(size);
-        memcpy(fDesc, &desc, size);
-    }
-
-    ~SkAutoDescriptor() { this->free(); }
-
-    void reset(size_t size) {
-        this->free();
+    SkAutoDescriptor(size_t size) {
         if (size <= sizeof(fStorage)) {
             fDesc = (SkDescriptor*)(void*)fStorage;
         } else {
@@ -153,14 +142,14 @@ public:
         }
     }
 
-    SkDescriptor* getDesc() const { SkASSERT(fDesc); return fDesc; }
-private:
-    void free() {
+    ~SkAutoDescriptor() {
         if (fDesc != (SkDescriptor*)(void*)fStorage) {
             SkDescriptor::Free(fDesc);
         }
     }
 
+    SkDescriptor* getDesc() const { return fDesc; }
+private:
     enum {
         kStorageSize =  sizeof(SkDescriptor)
                         + sizeof(SkDescriptor::Entry) + sizeof(SkScalerContext::Rec)    // for rec

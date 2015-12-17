@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2011 Google Inc.
  *
@@ -7,10 +8,9 @@
 
 #import "SkNSView.h"
 #include "SkCanvas.h"
-#include "SkSurface.h"
 #include "SkCGUtils.h"
 #include "SkEvent.h"
-static_assert(SK_SUPPORT_GPU, "not_implemented_for_non_gpu_build");
+SK_COMPILE_ASSERT(SK_SUPPORT_GPU, not_implemented_for_non_gpu_build);
 #include <OpenGL/gl.h>
 
 //#define FORCE_REDRAW
@@ -50,7 +50,7 @@ static_assert(SK_SUPPORT_GPU, "not_implemented_for_non_gpu_build");
                                           selector:@selector(backingPropertiesChanged:)
                                           name:@"NSWindowDidChangeBackingPropertiesNotification"
                                           object:[self window]];
-    if (fWind) {
+    if (NULL != fWind) {
         fWind->setVisibleP(true);
         NSSize size = self.frame.size;
 #if RETINA_API_AVAILABLE
@@ -58,7 +58,6 @@ static_assert(SK_SUPPORT_GPU, "not_implemented_for_non_gpu_build");
 #endif
         fWind->resize((int) size.width, (int) size.height,
                       kN32_SkColorType);
-        [[self window] setAcceptsMouseMovedEvents:YES];
     }
 }
 
@@ -104,9 +103,12 @@ static_assert(SK_SUPPORT_GPU, "not_implemented_for_non_gpu_build");
 #if RETINA_API_AVAILABLE
     newSize = [self convertSizeToBacking:newSize];
 #endif
-    if (fWind && (fWind->width()  != newSize.width || fWind->height() != newSize.height)) {
+    if (NULL != fWind &&
+            (fWind->width()  != newSize.width ||
+             fWind->height() != newSize.height))
+    {
         fWind->resize((int) newSize.width, (int) newSize.height);
-        if (fGLContext) {
+        if (NULL != fGLContext) {
             glClear(GL_STENCIL_BUFFER_BIT);
             [fGLContext update];
         }
@@ -119,24 +121,19 @@ static_assert(SK_SUPPORT_GPU, "not_implemented_for_non_gpu_build");
 }
 
 - (void)dealloc {
-    [self freeNativeWind];
+    delete fWind;
     self.fGLContext = nil;
     self.fTitle = nil;
     [super dealloc];
-}
-
-- (void)freeNativeWind {
-    delete fWind;
-    fWind = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 - (void)drawSkia {
     fRedrawRequestPending = false;
-    if (fWind) {
-        SkAutoTUnref<SkSurface> surface(fWind->createSurface());
-        fWind->draw(surface->getCanvas());
+    if (NULL != fWind) {
+        SkAutoTUnref<SkCanvas> canvas(fWind->createCanvas());
+        fWind->draw(canvas);
 #ifdef FORCE_REDRAW
         fWind->inval(NULL);
 #endif
@@ -271,7 +268,7 @@ static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
     NSPoint p = [event locationInWindow];
     unsigned modi = convertNSModifiersToSk([event modifierFlags]);
 
-    if ([self mouse:p inRect:[self bounds]] && fWind) {
+    if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
 #if RETINA_API_AVAILABLE
         loc = [self convertPointToBacking:loc]; //y-up
@@ -286,7 +283,7 @@ static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
     NSPoint p = [event locationInWindow];
     unsigned modi = convertNSModifiersToSk([event modifierFlags]);
 
-    if ([self mouse:p inRect:[self bounds]] && fWind) {
+    if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
 #if RETINA_API_AVAILABLE
         loc = [self convertPointToBacking:loc]; //y-up
@@ -301,7 +298,7 @@ static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
     NSPoint p = [event locationInWindow];
     unsigned modi = convertNSModifiersToSk([event modifierFlags]);
     
-    if ([self mouse:p inRect:[self bounds]] && fWind) {
+    if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
 #if RETINA_API_AVAILABLE
         loc = [self convertPointToBacking:loc]; //y-up
@@ -316,7 +313,7 @@ static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
     NSPoint p = [event locationInWindow];
     unsigned modi = convertNSModifiersToSk([event modifierFlags]);
     
-    if ([self mouse:p inRect:[self bounds]] && fWind) {
+    if ([self mouse:p inRect:[self bounds]] && NULL != fWind) {
         NSPoint loc = [self convertPoint:p fromView:nil];
 #if RETINA_API_AVAILABLE
         loc = [self convertPointToBacking:loc]; //y-up
@@ -330,7 +327,8 @@ static unsigned convertNSModifiersToSk(NSUInteger nsModi) {
 ///////////////////////////////////////////////////////////////////////////////
 #include <OpenGL/OpenGL.h>
 
-static CGLContextObj createGLContext(int msaaSampleCount) {
+namespace { 
+CGLContextObj createGLContext(int msaaSampleCount) {
     GLint major, minor;
     CGLGetVersion(&major, &minor);
     
@@ -369,6 +367,7 @@ static CGLContextObj createGLContext(int msaaSampleCount) {
     CGLSetCurrentContext(ctx);
     return ctx;
 }
+}
 
 - (void)viewDidMoveToWindow {
     [super viewDidMoveToWindow];
@@ -385,7 +384,6 @@ static CGLContextObj createGLContext(int msaaSampleCount) {
         andGetInfo:(SkOSWindow::AttachmentInfo*) info {
     if (nil == fGLContext) {
         CGLContextObj ctx = createGLContext(sampleCount);
-        SkASSERT(ctx);
         fGLContext = [[NSOpenGLContext alloc] initWithCGLContextObj:ctx];
         CGLReleaseContext(ctx);
         if (NULL == fGLContext) {
@@ -417,14 +415,6 @@ static CGLContextObj createGLContext(int msaaSampleCount) {
 - (void)present {
     if (nil != fGLContext) {
         [fGLContext flushBuffer];
-    }
-}
-
-- (void)setVSync:(bool)enable {
-    if (fGLContext) {
-        GLint interval = enable ? 1 : 0;
-        CGLContextObj ctx = (CGLContextObj)[fGLContext CGLContextObj];
-        CGLSetParameter(ctx, kCGLCPSwapInterval, &interval);
     }
 }
 @end

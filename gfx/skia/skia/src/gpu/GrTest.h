@@ -11,15 +11,6 @@
 
 #include "GrContext.h"
 #include "GrDrawTarget.h"
-#include "gl/GrGLContext.h"
-
-namespace GrTest {
-    /**
-     * Forces the GrContext to use a small atlas which only has room for one plot and will thus
-     * constantly be evicting entries
-     */
-    void SetupAlwaysEvictAtlas(GrContext*);
-};
 
 /** Allows a test to temporarily draw to a GrDrawTarget owned by a GrContext. Tests that use this
     should be careful not to mix using the GrDrawTarget directly and drawing via SkCanvas or
@@ -28,15 +19,17 @@ class GrTestTarget {
 public:
     GrTestTarget() {};
 
-    void init(GrContext*, GrDrawTarget*, GrRenderTarget*);
+    void init(GrContext*, GrDrawTarget*);
 
     GrDrawTarget* target() { return fDrawTarget.get(); }
-    GrResourceProvider* resourceProvider() { return fContext->resourceProvider(); }
 
 private:
-    SkAutoTUnref<GrContext>                 fContext;
+    SkTLazy<GrDrawTarget::AutoStateRestore> fASR;
+    SkTLazy<GrDrawTarget::AutoClipRestore>  fACR;
+    SkTLazy<GrDrawTarget::AutoGeometryPush> fAGP;
+
     SkAutoTUnref<GrDrawTarget>              fDrawTarget;
-    SkAutoTUnref<GrRenderTarget>            fRenderTarget;
+    SkAutoTUnref<GrContext>                 fContext;
 };
 
 #endif

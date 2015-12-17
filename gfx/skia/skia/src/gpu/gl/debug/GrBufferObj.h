@@ -19,7 +19,7 @@ class GrBufferObj : public GrFakeRefObj {
 public:
     GrBufferObj()
         : GrFakeRefObj()
-        , fDataPtr(nullptr)
+        , fDataPtr(NULL)
         , fMapped(false)
         , fBound(false)
         , fSize(0)
@@ -55,7 +55,7 @@ public:
     void setUsage(GrGLint usage) { fUsage = usage; }
     GrGLint getUsage() const     { return fUsage; }
 
-    void deleteAction() override;
+    virtual void deleteAction() SK_OVERRIDE;
 
 protected:
 private:

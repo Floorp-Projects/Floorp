@@ -10,7 +10,7 @@
 #ifndef SkDrawPaint_DEFINED
 #define SkDrawPaint_DEFINED
 
-#include "SkADrawable.h"
+#include "SkDrawable.h"
 #include "SkIntArray.h"
 #include "SkMemberInfo.h"
 #include "SkPaint.h"
@@ -22,22 +22,22 @@ class SkDrawShader;
 class SkTransferMode;
 class SkDrawTypeface;
 
-class SkDrawPaint : public SkADrawable {
+class SkDrawPaint : public SkDrawable {
     DECLARE_DRAW_MEMBER_INFO(Paint);
     SkDrawPaint();
     virtual ~SkDrawPaint();
     virtual bool add(SkAnimateMaker* , SkDisplayable* child);
-    SkDisplayable* deepCopy(SkAnimateMaker* ) override;
-    bool draw(SkAnimateMaker& ) override;
+    virtual SkDisplayable* deepCopy(SkAnimateMaker* );
+    virtual bool draw(SkAnimateMaker& );
 #ifdef SK_DUMP_ENABLED
-    void dump(SkAnimateMaker* ) override;
+    virtual void dump(SkAnimateMaker* );
 #endif
-    void executeFunction(SkDisplayable* target, int index,
+    virtual void executeFunction(SkDisplayable* target, int index,
         SkTDArray<SkScriptValue>& parameters, SkDisplayTypes type,
-        SkScriptValue* ) override;
-    const SkFunctionParamType* getFunctionsParameters() override;
-    bool getProperty(int index, SkScriptValue* value) const override;
-    bool resolveIDs(SkAnimateMaker& maker, SkDisplayable* original, SkApply* apply) override;
+        SkScriptValue* );
+    virtual const SkFunctionParamType* getFunctionsParameters();
+    virtual bool getProperty(int index, SkScriptValue* value) const;
+    virtual bool resolveIDs(SkAnimateMaker& maker, SkDisplayable* original, SkApply* apply);
 protected:
     static const SkFunctionParamType fFunctionParameters[];
     void setupPaint(SkPaint* paint) const;
@@ -71,7 +71,7 @@ public:
     SkBool8 fOwnsTransferMode;
     SkBool8 fOwnsTypeface;
 private:
-    typedef SkADrawable INHERITED;
+    typedef SkDrawable INHERITED;
     friend class SkTextToPath;
     friend class SkSaveLayer;
 };

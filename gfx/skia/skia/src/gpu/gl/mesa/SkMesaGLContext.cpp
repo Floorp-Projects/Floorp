@@ -8,27 +8,67 @@
 
 #include <GL/osmesa.h>
 
-#include "gl/mesa/SkMesaGLContext.h"
+#include "gl/SkMesaGLContext.h"
 #include "gl/GrGLDefines.h"
+
+SkMesaGLContext::AutoContextRestore::AutoContextRestore() {
+    fOldContext = (Context)OSMesaGetCurrentContext();
+    if (NULL != (OSMesaContext)fOldContext) {
+        OSMesaGetColorBuffer((OSMesaContext)fOldContext,
+                              &fOldWidth, &fOldHeight,
+                              &fOldFormat, &fOldImage);
+    }
+}
+
+SkMesaGLContext::AutoContextRestore::~AutoContextRestore() {
+    if (NULL != (OSMesaContext)fOldContext) {
+        OSMesaMakeCurrent((OSMesaContext)fOldContext, fOldImage,
+                          fOldFormat, fOldWidth, fOldHeight);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+SkMesaGLContext::SkMesaGLContext()
+    : fContext(static_cast<Context>(NULL))
+    , fImage(NULL) {
+    GR_STATIC_ASSERT(sizeof(Context) == sizeof(OSMesaContext));
+}
+
+SkMesaGLContext::~SkMesaGLContext() {
+    this->destroyGLContext();
+}
+
+void SkMesaGLContext::destroyGLContext() {
+    if (fImage) {
+        sk_free(fImage);
+        fImage = NULL;
+    }
+
+    if (fContext) {
+        OSMesaDestroyContext((OSMesaContext)fContext);
+        fContext = static_cast<Context>(NULL);
+    }
+}
 
 static const GrGLint gBOGUS_SIZE = 16;
 
-SkMesaGLContext::SkMesaGLContext()
-    : fContext(static_cast<Context>(0))
-    , fImage(nullptr) {
-    GR_STATIC_ASSERT(sizeof(Context) == sizeof(OSMesaContext));
+const GrGLInterface* SkMesaGLContext::createGLContext(GrGLStandard forcedGpuAPI) {
+    if (kGLES_GrGLStandard == forcedGpuAPI) {
+        return NULL;
+    }
 
     /* Create an RGBA-mode context */
 #if OSMESA_MAJOR_VERSION * 100 + OSMESA_MINOR_VERSION >= 305
     /* specify Z, stencil, accum sizes */
-    fContext = (Context)OSMesaCreateContextExt(OSMESA_BGRA, 0, 0, 0, nullptr);
+    fContext = (Context)OSMesaCreateContextExt(OSMESA_BGRA, 0, 0, 0, NULL);
 #else
-    fContext = (Context)OSMesaCreateContext(OSMESA_BGRA, nullptr);
+    fContext = (Context)OSMesaCreateContext(OSMESA_BGRA, NULL);
 #endif
     if (!fContext) {
         SkDebugf("OSMesaCreateContext failed!\n");
         this->destroyGLContext();
-        return;
+        return NULL;
     }
     // Allocate the image buffer
     fImage = (GrGLubyte *) sk_malloc_throw(gBOGUS_SIZE * gBOGUS_SIZE *
@@ -36,7 +76,7 @@ SkMesaGLContext::SkMesaGLContext()
     if (!fImage) {
         SkDebugf("Alloc image buffer failed!\n");
         this->destroyGLContext();
-        return;
+        return NULL;
     }
 
     // Bind the buffer to the context and make it current
@@ -47,45 +87,20 @@ SkMesaGLContext::SkMesaGLContext()
                            gBOGUS_SIZE)) {
         SkDebugf("OSMesaMakeCurrent failed!\n");
         this->destroyGLContext();
-        return;
+        return NULL;
     }
 
-    SkAutoTUnref<const GrGLInterface> gl(GrGLCreateMesaInterface());
-    if (nullptr == gl.get()) {
+    const GrGLInterface* interface = GrGLCreateMesaInterface();
+    if (!interface) {
         SkDebugf("Could not create GL interface!\n");
         this->destroyGLContext();
-        return;
+        return NULL;
     }
+    return interface;
 
-    if (!gl->validate()) {
-        SkDebugf("Could not validate GL interface!\n");
-        this->destroyGLContext();
-        return;
-    }
-
-    this->init(gl.detach());
 }
 
-SkMesaGLContext::~SkMesaGLContext() {
-    this->teardown();
-    this->destroyGLContext();
-}
-
-void SkMesaGLContext::destroyGLContext() {
-    if (fImage) {
-        sk_free(fImage);
-        fImage = nullptr;
-    }
-
-    if (fContext) {
-        OSMesaDestroyContext((OSMesaContext)fContext);
-        fContext = static_cast<Context>(0);
-    }
-}
-
-
-
-void SkMesaGLContext::onPlatformMakeCurrent() const {
+void SkMesaGLContext::makeCurrent() const {
     if (fContext) {
         if (!OSMesaMakeCurrent((OSMesaContext)fContext, fImage,
                                GR_GL_UNSIGNED_BYTE, gBOGUS_SIZE, gBOGUS_SIZE)) {
@@ -94,8 +109,4 @@ void SkMesaGLContext::onPlatformMakeCurrent() const {
     }
 }
 
-void SkMesaGLContext::onPlatformSwapBuffers() const { }
-
-GrGLFuncPtr SkMesaGLContext::onPlatformGetProcAddress(const char* procName) const {
-    return OSMesaGetProcAddress(procName);
-}
+void SkMesaGLContext::swapBuffers() const { }

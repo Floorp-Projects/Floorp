@@ -1,13 +1,24 @@
+
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
 #include "SkFlattenable.h"
 #include "SkPtrRecorder.h"
-#include "SkReadBuffer.h"
+
+///////////////////////////////////////////////////////////////////////////////
+
+void SkFlattenable::flatten(SkWriteBuffer&) const
+{
+    /*  we don't write anything at the moment, but this allows our subclasses
+        to not know that, since we want them to always call INHERITED::flatten()
+        in their code.
+    */
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 SkNamedFactorySet::SkNamedFactorySet() : fNextAddedFactory(0) {}
 
@@ -17,7 +28,7 @@ uint32_t SkNamedFactorySet::find(SkFlattenable::Factory factory) {
         return index;
     }
     const char* name = SkFlattenable::FactoryToName(factory);
-    if (nullptr == name) {
+    if (NULL == name) {
         return 0;
     }
     *fNames.append() = name;
@@ -28,7 +39,7 @@ const char* SkNamedFactorySet::getNextAddedFactoryName() {
     if (fNextAddedFactory < fNames.count()) {
         return fNames[fNextAddedFactory++];
     }
-    return nullptr;
+    return NULL;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -47,6 +58,8 @@ void SkRefCntSet::decPtr(void* ptr) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #define MAX_ENTRY_COUNT  1024
 
@@ -56,12 +69,19 @@ struct Entry {
     SkFlattenable::Type     fType;
 };
 
-static int gCount = 0;
+static int gCount;
 static Entry gEntries[MAX_ENTRY_COUNT];
 
 void SkFlattenable::Register(const char name[], Factory factory, SkFlattenable::Type type) {
     SkASSERT(name);
     SkASSERT(factory);
+
+    static bool gOnce = false;
+    if (!gOnce) {
+        gCount = 0;
+        gOnce = true;
+    }
+
     SkASSERT(gCount < MAX_ENTRY_COUNT);
 
     gEntries[gCount].fName = name;
@@ -91,11 +111,11 @@ SkFlattenable::Factory SkFlattenable::NameToFactory(const char name[]) {
             return entries[i].fFactory;
         }
     }
-    return nullptr;
+    return NULL;
 }
 
 bool SkFlattenable::NameToType(const char name[], SkFlattenable::Type* type) {
-    SkASSERT(type);
+    SkASSERT(NULL != type);
     InitializeFlattenablesIfNeeded();
 #ifdef SK_DEBUG
     report_no_entries(__FUNCTION__);
@@ -121,5 +141,5 @@ const char* SkFlattenable::FactoryToName(Factory fact) {
             return entries[i].fName;
         }
     }
-    return nullptr;
+    return NULL;
 }

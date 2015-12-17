@@ -9,7 +9,6 @@
 
 
 #include "SkTypes.h"
-#if defined(SK_BUILD_FOR_WIN32)
 
 static const size_t kBufferSize = 2048;
 
@@ -22,9 +21,11 @@ void SkDebugf(const char format[], ...) {
     va_list args;
 
     va_start(args, format);
-    vfprintf(stderr, format, args);
+    vprintf(format, args);
     va_end(args);
-    fflush(stderr);  // stderr seems to be buffered on Windows.
+    // When we crash on Windows we often are missing a lot of prints. Since we don't really care
+    // about SkDebugf performance we flush after every print.
+    fflush(stdout);
 
     va_start(args, format);
     vsnprintf(buffer, kBufferSize, format, args);
@@ -32,4 +33,3 @@ void SkDebugf(const char format[], ...) {
 
     OutputDebugStringA(buffer);
 }
-#endif//defined(SK_BUILD_FOR_WIN32)

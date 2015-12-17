@@ -9,8 +9,6 @@
 #define SkGlyphCache_Globals_DEFINED
 
 #include "SkGlyphCache.h"
-#include "SkMutex.h"
-#include "SkSpinlock.h"
 #include "SkTLS.h"
 
 #ifndef SK_DEFAULT_FONT_CACHE_COUNT_LIMIT
@@ -23,26 +21,37 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+class SkMutex;
+
 class SkGlyphCache_Globals {
 public:
-    SkGlyphCache_Globals() {
-        fHead = nullptr;
+    enum UseMutex {
+        kNo_UseMutex,  // thread-local cache
+        kYes_UseMutex  // shared cache
+    };
+
+    SkGlyphCache_Globals(UseMutex um) {
+        fHead = NULL;
         fTotalMemoryUsed = 0;
         fCacheSizeLimit = SK_DEFAULT_FONT_CACHE_LIMIT;
         fCacheCount = 0;
         fCacheCountLimit = SK_DEFAULT_FONT_CACHE_COUNT_LIMIT;
+
+        fMutex = (kYes_UseMutex == um) ? SkNEW(SkMutex) : NULL;
     }
 
     ~SkGlyphCache_Globals() {
         SkGlyphCache* cache = fHead;
         while (cache) {
             SkGlyphCache* next = cache->fNext;
-            delete cache;
+            SkDELETE(cache);
             cache = next;
         }
+
+        SkDELETE(fMutex);
     }
 
-    SkSpinlock     fLock;
+    SkMutex*        fMutex;
 
     SkGlyphCache* internalGetHead() const { return fHead; }
     SkGlyphCache* internalGetTail() const;
@@ -78,6 +87,17 @@ public:
     void internalDetachCache(SkGlyphCache*);
     void internalAttachCacheToHead(SkGlyphCache*);
 
+    // can return NULL
+    static SkGlyphCache_Globals* FindTLS() {
+        return (SkGlyphCache_Globals*)SkTLS::Find(CreateTLS);
+    }
+
+    static SkGlyphCache_Globals& GetTLS() {
+        return *(SkGlyphCache_Globals*)SkTLS::Get(CreateTLS, DeleteTLS);
+    }
+
+    static void DeleteTLS() { SkTLS::Delete(CreateTLS); }
+
 private:
     SkGlyphCache* fHead;
     size_t  fTotalMemoryUsed;
@@ -89,6 +109,14 @@ private:
     // and attempt to purge caches to match.
     // Returns number of bytes freed.
     size_t internalPurge(size_t minBytesNeeded = 0);
+
+    static void* CreateTLS() {
+        return SkNEW_ARGS(SkGlyphCache_Globals, (kNo_UseMutex));
+    }
+
+    static void DeleteTLS(void* ptr) {
+        SkDELETE((SkGlyphCache_Globals*)ptr);
+    }
 };
 
 #endif

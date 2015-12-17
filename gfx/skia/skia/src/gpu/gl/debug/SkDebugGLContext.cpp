@@ -6,12 +6,12 @@
  * found in the LICENSE file.
  */
 
-#include "gl/debug/SkDebugGLContext.h"
+#include "gl/SkDebugGLContext.h"
 
-SkDebugGLContext::SkDebugGLContext() {
-    this->init(GrGLCreateDebugInterface());
-}
+const GrGLInterface* SkDebugGLContext::createGLContext(GrGLStandard forcedGpuAPI) {
+    if (kGLES_GrGLStandard == forcedGpuAPI) {
+        return NULL;
+    }
 
-SkDebugGLContext::~SkDebugGLContext() {
-    this->teardown();
-}
+    return GrGLCreateDebugInterface();
+};

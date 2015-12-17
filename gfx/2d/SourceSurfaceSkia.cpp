@@ -13,7 +13,6 @@
 #include "DataSurfaceHelpers.h"
 
 #ifdef USE_SKIA_GPU
-#include "GLDefs.h"
 #include "skia/include/gpu/SkGrPixelRef.h"
 #endif
 
@@ -51,11 +50,13 @@ SourceSurfaceSkia::InitFromCanvas(SkCanvas* aCanvas,
                                   SurfaceFormat aFormat,
                                   DrawTargetSkia* aOwner)
 {
-  mBitmap = aCanvas->getDevice()->accessBitmap(false);
+  SkISize size = aCanvas->getDeviceSize();
+
+  mBitmap = (SkBitmap)aCanvas->getDevice()->accessBitmap(false);
 
   mFormat = aFormat;
 
-  mSize = IntSize(mBitmap.width(), mBitmap.height());
+  mSize = IntSize(size.fWidth, size.fHeight);
   mStride = mBitmap.rowBytes();
   mDrawTarget = aOwner;
 
@@ -83,6 +84,10 @@ SourceSurfaceSkia::InitFromData(unsigned char* aData,
     return false;
   }
 
+  if (aFormat == SurfaceFormat::B8G8R8X8) {
+    mBitmap.setAlphaType(kIgnore_SkAlphaType);
+  }
+
   mSize = aSize;
   mFormat = aFormat;
   mStride = mBitmap.rowBytes();
@@ -104,15 +109,11 @@ SourceSurfaceSkia::InitFromTexture(DrawTargetSkia* aOwner,
   skiaTexGlue.fOrigin = kTopLeft_GrSurfaceOrigin;
   skiaTexGlue.fConfig = GfxFormatToGrConfig(aFormat);
   skiaTexGlue.fSampleCnt = 0;
+  skiaTexGlue.fTextureHandle = aTexture;
 
-  GrGLTextureInfo texInfo;
-  texInfo.fTarget = LOCAL_GL_TEXTURE_2D;
-  texInfo.fID = aTexture;
-  skiaTexGlue.fTextureHandle = reinterpret_cast<GrBackendObject>(&texInfo);
-
-  GrTexture *skiaTexture = aOwner->mGrContext->textureProvider()->wrapBackendTexture(skiaTexGlue);
+  GrTexture *skiaTexture = aOwner->mGrContext->wrapBackendTexture(skiaTexGlue);
   SkImageInfo imgInfo = SkImageInfo::Make(aSize.width, aSize.height, GfxFormatToSkiaColorType(aFormat), kOpaque_SkAlphaType);
-  SkGrPixelRef *texRef = new SkGrPixelRef(imgInfo, skiaTexture);
+  SkGrPixelRef *texRef = new SkGrPixelRef(imgInfo, skiaTexture, false);
   mBitmap.setInfo(imgInfo);
   mBitmap.setPixelRef(texRef);
   mFormat = aFormat;

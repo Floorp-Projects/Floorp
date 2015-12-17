@@ -22,6 +22,7 @@ class GrFakeRefObj : SkNoncopyable {
 public:
     GrFakeRefObj()
         : fRef(0)
+        , fHighRefCount(0)
         , fMarkedForDeletion(false)
         , fDeleted(false) {
 
@@ -34,6 +35,9 @@ public:
 
     void ref() {
         fRef++;
+        if (fHighRefCount < fRef) {
+            fHighRefCount = fRef;
+        }
     }
     void unref() {
         fRef--;
@@ -47,6 +51,7 @@ public:
         }
     }
     int getRefCount() const             { return fRef; }
+    int getHighRefCount() const         { return fHighRefCount; }
 
     GrGLuint getID() const              { return fID; }
 
@@ -64,6 +69,7 @@ public:
 protected:
 private:
     int         fRef;               // ref count
+    int         fHighRefCount;      // high water mark of the ref count
     GrGLuint    fID;                // globally unique ID
     bool        fMarkedForDeletion;
     // The deleted flag is only set when OpenGL thinks the object is deleted
@@ -79,8 +85,10 @@ private:
 // factory creation entry point. This entry point is used by the GrGLDebug
 // object to instantiate the various objects
 // all globally unique IDs
-#define GR_DEFINE_CREATOR(className) \
-public:                              \
-    static GrFakeRefObj *create##className() { return new className; }
+#define GR_DEFINE_CREATOR(className)                        \
+    public:                                                 \
+    static GrFakeRefObj *create ## className() {            \
+        return SkNEW(className);                            \
+    }
 
 #endif // GrFakeRefObj_DEFINED

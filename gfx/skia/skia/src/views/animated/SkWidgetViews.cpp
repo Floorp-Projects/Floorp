@@ -42,7 +42,7 @@ const char* get_skin_enum_path(SkinEnum se)
 void init_skin_anim(const char path[], SkAnimator* anim) {
     SkASSERT(path && anim);
 
-    SkAutoTDelete<SkStream> stream(SkStream::NewFromFile(path));
+    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(path));
     if (!stream.get()) {
         SkDEBUGF(("init_skin_anim: loading skin failed <%s>\n", path));
         sk_throw();
@@ -110,7 +110,7 @@ void SkWidgetView::setLabel(const char label[])
 
 void SkWidgetView::setLabel(const char label[], size_t len)
 {
-    if ((label == nullptr && fLabel.size() != 0) || !fLabel.equals(label, len))
+    if ((label == NULL && fLabel.size() != 0) || !fLabel.equals(label, len))
     {
         SkString    tmp(label, len);
 
@@ -153,13 +153,13 @@ bool SkWidgetView::postWidgetEvent()
     if (label)
         this->setLabel(label);
 
-    if ((node = dom.getFirstChild(node, "event")) != nullptr)
+    if ((node = dom.getFirstChild(node, "event")) != NULL)
         fEvent.inflate(dom, node);
 }
 
 /*virtual*/ void SkWidgetView::onLabelChange(const char oldLabel[], const char newLabel[])
 {
-    this->inval(nullptr);
+    this->inval(NULL);
 }
 
 static const char gWidgetEventSinkIDSlotName[] = "sk-widget-sinkid-slot";
@@ -208,7 +208,7 @@ void SkCheckButtonView::setCheckState(CheckState state)
 
 /*virtual*/ void SkCheckButtonView::onCheckStateChange(CheckState oldState, CheckState newState)
 {
-    this->inval(nullptr);
+    this->inval(NULL);
 }
 
 /*virtual*/ void SkCheckButtonView::onInflate(const SkDOM& dom, const SkDOM::Node* node)
@@ -296,7 +296,7 @@ protected:
         SkAnimator::DifferenceType    diff = fAnim.draw(canvas, &paint, SkTime::GetMSecs());
 
         if (diff == SkAnimator::kDifferent)
-            this->inval(nullptr);
+            this->inval(NULL);
         else if (diff == SkAnimator::kPartiallyDifferent)
         {
             SkRect    bounds;
@@ -309,7 +309,7 @@ protected:
     {
         if (evt.isType(SK_EventType_Inval))
         {
-            this->inval(nullptr);
+            this->inval(NULL);
             return true;
         }
         if (evt.isType("recommendDim"))
@@ -346,8 +346,8 @@ private:
 
 SkView* SkWidgetFactory(const char name[])
 {
-    if (name == nullptr)
-        return nullptr;
+    if (name == NULL)
+        return NULL;
 
     // must be in the same order as the SkSkinWidgetEnum is declared
     static const char* gNames[] = {
@@ -365,7 +365,7 @@ SkView* SkWidgetFactory(const char name[])
         if (!strcmp(gNames[i], name))
             return SkWidgetFactory((SkWidgetEnum)i);
 
-    return nullptr;
+    return NULL;
 }
 
 #include "SkImageView.h"
@@ -394,5 +394,5 @@ SkView* SkWidgetFactory(SkWidgetEnum sw)
         SkDEBUGFAIL("unknown enum passed to SkWidgetFactory");
         break;
     }
-    return nullptr;
+    return NULL;
 }

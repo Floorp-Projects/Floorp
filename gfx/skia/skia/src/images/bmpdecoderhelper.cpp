@@ -163,7 +163,7 @@ bool BmpDecoderHelper::DecodeImage(const char* p,
   }
 
   output_ = callback->SetSize(width_, height_);
-  if (nullptr == output_) {
+  if (NULL == output_) {
     return true;  // meaning we succeeded, but they want us to stop now
   }
 

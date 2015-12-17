@@ -18,10 +18,10 @@ class SkDataInput: public SkInput {
     DECLARE_MEMBER_INFO(DataInput);
     SkDataInput();
     bool add();
-    void dirty() override;
-    SkDisplayable* getParent() const override;
-    void onEndElement(SkAnimateMaker& ) override;
-    bool setParent(SkDisplayable* ) override;
+    virtual void dirty();
+    virtual SkDisplayable* getParent() const;
+    virtual void onEndElement(SkAnimateMaker& );
+    virtual bool setParent(SkDisplayable* );
 protected:
     SkPost* fParent;
     typedef SkInput INHERITED;

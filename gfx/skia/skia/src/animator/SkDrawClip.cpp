@@ -25,14 +25,14 @@ const SkMemberInfo SkDrawClip::fInfo[] = {
 
 DEFINE_GET_MEMBER(SkDrawClip);
 
-SkDrawClip::SkDrawClip() : rect(nullptr), path(nullptr) {
+SkDrawClip::SkDrawClip() : rect(NULL), path(NULL) {
 }
 
 bool SkDrawClip::draw(SkAnimateMaker& maker ) {
-    if (rect != nullptr)
+    if (rect != NULL)
         maker.fCanvas->clipRect(rect->fRect);
     else {
-        SkASSERT(path != nullptr);
+        SkASSERT(path != NULL);
         maker.fCanvas->clipPath(path->fPath);
     }
     return false;

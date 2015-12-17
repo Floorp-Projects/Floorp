@@ -777,7 +777,7 @@ gfxPlatform::~gfxPlatform()
 #ifdef USE_SKIA
     // must do Skia cleanup before Cairo cleanup, because Skia may be referencing
     // Cairo objects e.g. through SkCairoFTTypeface
-    SkGraphics::PurgeFontCache();
+    SkGraphics::Term();
 #endif
 
 #if MOZ_TREE_CAIRO

@@ -19,9 +19,9 @@ public:
         this->reset();
     }
 
-    ~GrRectanizerSkyline() override { }
+    virtual ~GrRectanizerSkyline() { }
 
-    void reset() override {
+    virtual void reset() SK_OVERRIDE{
         fAreaSoFar = 0;
         fSkyline.reset();
         SkylineSegment* seg = fSkyline.append(1);
@@ -30,9 +30,9 @@ public:
         seg->fWidth = this->width();
     }
 
-    bool addRect(int w, int h, SkIPoint16* loc) override;
+    virtual bool addRect(int w, int h, SkIPoint16* loc) SK_OVERRIDE;
 
-    float percentFull() const override {
+    virtual float percentFull() const SK_OVERRIDE {
         return fAreaSoFar / ((float)this->width() * this->height());
     }
 

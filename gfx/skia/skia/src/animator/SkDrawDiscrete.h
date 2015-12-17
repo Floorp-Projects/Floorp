@@ -13,7 +13,7 @@
 class SkDiscrete : public SkDrawPathEffect {
     DECLARE_MEMBER_INFO(Discrete);
     SkDiscrete();
-    SkPathEffect* getPathEffect() override;
+    virtual SkPathEffect* getPathEffect();
 private:
     SkScalar deviation;
     SkScalar segLength;

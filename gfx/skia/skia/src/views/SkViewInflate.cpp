@@ -37,10 +37,10 @@ void SkViewInflate::rInflate(const SkDOM& dom, const SkDOM::Node* node, SkView* 
             const char* name = dom.getName(child);
             const char* target;
 
-            if (!strcmp(name, "listenTo") && (target = dom.findAttr(child, "target")) != nullptr)
+            if (!strcmp(name, "listenTo") && (target = dom.findAttr(child, "target")) != NULL)
                 this->addIDStr(&fListenTo, parent, target);
 
-            if (!strcmp(name, "broadcastTo") && (target = dom.findAttr(child, "target")) != nullptr)
+            if (!strcmp(name, "broadcastTo") && (target = dom.findAttr(child, "target")) != NULL)
                 this->addIDStr(&fBroadcastTo, parent, target);
         }
         child = dom.getNextSibling(child);
@@ -62,13 +62,13 @@ SkView* SkViewInflate::inflate(const SkDOM& dom, const SkDOM::Node* node, SkView
 {
     fIDs.reset();
 
-    if (root == nullptr)
+    if (root == NULL)
     {
         root = this->createView(dom, node);
-        if (root == nullptr)
+        if (root == NULL)
         {
-            printf("createView returned nullptr on <%s>\n", dom.getName(node));
-            return nullptr;
+            printf("createView returned NULL on <%s>\n", dom.getName(node));
+            return NULL;
         }
     }
     this->rInflate(dom, node, root);
@@ -103,21 +103,21 @@ SkView* SkViewInflate::inflate(const char xml[], size_t len, SkView* root)
     SkDOM                dom;
     const SkDOM::Node*    node = dom.build(xml, len);
 
-    return node ? this->inflate(dom, node, root) : nullptr;
+    return node ? this->inflate(dom, node, root) : NULL;
 }
 
 SkView* SkViewInflate::findViewByID(const char id[]) const
 {
     SkASSERT(id);
     SkView* view;
-    return fIDs.find(id, &view) ? view : nullptr;
+    return fIDs.find(id, &view) ? view : NULL;
 }
 
 SkView* SkViewInflate::createView(const SkDOM& dom, const SkDOM::Node* node)
 {
     if (!strcmp(dom.getName(node), "view"))
         return new SkView;
-    return nullptr;
+    return NULL;
 }
 
 void SkViewInflate::addIDStr(SkTDArray<IDStr>* list, SkView* view, const char* str)

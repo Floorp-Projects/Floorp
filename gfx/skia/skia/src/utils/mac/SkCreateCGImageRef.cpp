@@ -5,10 +5,6 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
-
-#include "SkTypes.h"
-#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
-
 #include "SkCGUtils.h"
 #include "SkBitmap.h"
 #include "SkColorPriv.h"
@@ -16,9 +12,8 @@
 static CGBitmapInfo ComputeCGAlphaInfo_RGBA(SkAlphaType at) {
     CGBitmapInfo info = kCGBitmapByteOrder32Big;
     switch (at) {
-        case kUnknown_SkAlphaType:
-            break;
         case kOpaque_SkAlphaType:
+        case kIgnore_SkAlphaType:
             info |= kCGImageAlphaNoneSkipLast;
             break;
         case kPremul_SkAlphaType:
@@ -34,9 +29,8 @@ static CGBitmapInfo ComputeCGAlphaInfo_RGBA(SkAlphaType at) {
 static CGBitmapInfo ComputeCGAlphaInfo_BGRA(SkAlphaType at) {
     CGBitmapInfo info = kCGBitmapByteOrder32Little;
     switch (at) {
-        case kUnknown_SkAlphaType:
-            break;
         case kOpaque_SkAlphaType:
+        case kIgnore_SkAlphaType:
             info |= kCGImageAlphaNoneSkipFirst;
             break;
         case kPremul_SkAlphaType:
@@ -105,7 +99,7 @@ static SkBitmap* prepareForImageRef(const SkBitmap& bm,
                                     CGBitmapInfo* info) {
     bool upscaleTo32;
     if (!getBitmapInfo(bm, bitsPerComponent, info, &upscaleTo32)) {
-        return nullptr;
+        return NULL;
     }
 
     SkBitmap* copy;
@@ -126,8 +120,8 @@ CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
     CGBitmapInfo info       SK_INIT_TO_AVOID_WARNING;
 
     SkBitmap* bitmap = prepareForImageRef(bm, &bitsPerComponent, &info);
-    if (nullptr == bitmap) {
-        return nullptr;
+    if (NULL == bitmap) {
+        return NULL;
     }
 
     const int w = bitmap->width();
@@ -142,7 +136,7 @@ CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
                                                              SkBitmap_ReleaseInfo);
 
     bool releaseColorSpace = false;
-    if (nullptr == colorSpace) {
+    if (NULL == colorSpace) {
         colorSpace = CGColorSpaceCreateDeviceRGB();
         releaseColorSpace = true;
     }
@@ -150,7 +144,7 @@ CGImageRef SkCreateCGImageRefWithColorspace(const SkBitmap& bm,
     CGImageRef ref = CGImageCreate(w, h, bitsPerComponent,
                                    bitmap->bytesPerPixel() * 8,
                                    bitmap->rowBytes(), colorSpace, info, dataRef,
-                                   nullptr, false, kCGRenderingIntentDefault);
+                                   NULL, false, kCGRenderingIntentDefault);
 
     if (releaseColorSpace) {
         CGColorSpaceRelease(colorSpace);
@@ -194,21 +188,30 @@ private:
 };
 #define SkAutoPDFRelease(...) SK_REQUIRE_LOCAL_VAR(SkAutoPDFRelease)
 
+static void CGDataProviderReleaseData_FromMalloc(void*, const void* data,
+                                                 size_t size) {
+    sk_free((void*)data);
+}
+
 bool SkPDFDocumentToBitmap(SkStream* stream, SkBitmap* output) {
-    CGDataProviderRef data = SkCreateDataProviderFromStream(stream);
-    if (nullptr == data) {
+    size_t size = stream->getLength();
+    void* ptr = sk_malloc_throw(size);
+    stream->read(ptr, size);
+    CGDataProviderRef data = CGDataProviderCreateWithData(NULL, ptr, size,
+                                          CGDataProviderReleaseData_FromMalloc);
+    if (NULL == data) {
         return false;
     }
 
     CGPDFDocumentRef pdf = CGPDFDocumentCreateWithProvider(data);
     CGDataProviderRelease(data);
-    if (nullptr == pdf) {
+    if (NULL == pdf) {
         return false;
     }
     SkAutoPDFRelease releaseMe(pdf);
 
     CGPDFPageRef page = CGPDFDocumentGetPage(pdf, 1);
-    if (nullptr == page) {
+    if (NULL == page) {
         return false;
     }
 
@@ -218,14 +221,14 @@ bool SkPDFDocumentToBitmap(SkStream* stream, SkBitmap* output) {
     int h = (int)CGRectGetHeight(bounds);
 
     SkBitmap bitmap;
-    if (!bitmap.tryAllocN32Pixels(w, h)) {
+    if (!bitmap.allocPixels(SkImageInfo::MakeN32Premul(w, h))) {
         return false;
     }
     bitmap.eraseColor(SK_ColorWHITE);
 
     size_t bitsPerComponent;
     CGBitmapInfo info;
-    getBitmapInfo(bitmap, &bitsPerComponent, &info, nullptr);
+    getBitmapInfo(bitmap, &bitsPerComponent, &info, NULL);
 
     CGColorSpaceRef cs = CGColorSpaceCreateDeviceRGB();
     CGContextRef ctx = CGBitmapContextCreate(bitmap.getPixels(), w, h,
@@ -265,7 +268,7 @@ SK_API bool SkCopyPixelsFromCGImage(const SkImageInfo& info, size_t rowBytes, vo
     CGContextRef cg = CGBitmapContextCreate(pixels, info.width(), info.height(), bitsPerComponent,
                                             rowBytes, cs, cg_bitmap_info);
     CFRelease(cs);
-    if (nullptr == cg) {
+    if (NULL == cg) {
         return false;
     }
 
@@ -284,7 +287,7 @@ bool SkCreateBitmapFromCGImage(SkBitmap* dst, CGImageRef image, SkISize* scaleTo
     SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
 
     SkBitmap tmp;
-    if (!tmp.tryAllocPixels(info)) {
+    if (!tmp.allocPixels(info)) {
         return false;
     }
 
@@ -310,5 +313,3 @@ bool SkCreateBitmapFromCGImage(SkBitmap* dst, CGImageRef image, SkISize* scaleTo
     *dst = tmp;
     return true;
 }
-
-#endif//defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)

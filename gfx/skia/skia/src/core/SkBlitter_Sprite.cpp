@@ -8,10 +8,18 @@
 #include "SkSmallAllocator.h"
 #include "SkSpriteBlitter.h"
 
-SkSpriteBlitter::SkSpriteBlitter(const SkPixmap& source) : fSource(source) {}
+SkSpriteBlitter::SkSpriteBlitter(const SkBitmap& source)
+        : fSource(&source) {
+    fSource->lockPixels();
+}
 
-void SkSpriteBlitter::setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) {
-    fDst = dst;
+SkSpriteBlitter::~SkSpriteBlitter() {
+    fSource->unlockPixels();
+}
+
+void SkSpriteBlitter::setup(const SkBitmap& device, int left, int top,
+                            const SkPaint& paint) {
+    fDevice = &device;
     fLeft = left;
     fTop = top;
     fPaint = &paint;
@@ -40,8 +48,8 @@ void SkSpriteBlitter::blitMask(const SkMask&, const SkIRect& clip) {
 
 // returning null means the caller will call SkBlitter::Choose() and
 // have wrapped the source bitmap inside a shader
-SkBlitter* SkBlitter::ChooseSprite(const SkPixmap& dst, const SkPaint& paint,
-        const SkPixmap& source, int left, int top, SkTBlitterAllocator* allocator) {
+SkBlitter* SkBlitter::ChooseSprite(const SkBitmap& device, const SkPaint& paint,
+        const SkBitmap& source, int left, int top, SkTBlitterAllocator* allocator) {
     /*  We currently ignore antialiasing and filtertype, meaning we will take our
         special blitters regardless of these settings. Ignoring filtertype seems fine
         since by definition there is no scale in the matrix. Ignoring antialiasing is
@@ -51,11 +59,11 @@ SkBlitter* SkBlitter::ChooseSprite(const SkPixmap& dst, const SkPaint& paint,
         paint and return null if it is set, forcing the client to take the slow shader case
         (which does respect soft edges).
     */
-    SkASSERT(allocator != nullptr);
+    SkASSERT(allocator != NULL);
 
     SkSpriteBlitter* blitter;
 
-    switch (dst.colorType()) {
+    switch (device.colorType()) {
         case kRGB_565_SkColorType:
             blitter = SkSpriteBlitter::ChooseD16(source, paint, allocator);
             break;
@@ -63,12 +71,12 @@ SkBlitter* SkBlitter::ChooseSprite(const SkPixmap& dst, const SkPaint& paint,
             blitter = SkSpriteBlitter::ChooseD32(source, paint, allocator);
             break;
         default:
-            blitter = nullptr;
+            blitter = NULL;
             break;
     }
 
     if (blitter) {
-        blitter->setup(dst, left, top, paint);
+        blitter->setup(device, left, top, paint);
     }
     return blitter;
 }

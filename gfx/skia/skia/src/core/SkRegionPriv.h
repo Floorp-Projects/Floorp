@@ -11,7 +11,7 @@
 #define SkRegionPriv_DEFINED
 
 #include "SkRegion.h"
-#include "SkAtomics.h"
+#include "SkThread.h"
 
 #define assert_sentinel(value, isSentinel) \
     SkASSERT(((value) == SkRegion::kRunTypeSentinel) == isSentinel)
@@ -65,10 +65,7 @@ public:
 
         SkASSERT(count >= SkRegion::kRectRegionRuns);
 
-        const int64_t size = sk_64_mul(count, sizeof(RunType)) + sizeof(RunHead);
-        if (count < 0 || !sk_64_isS32(size)) { SK_CRASH(); }
-
-        RunHead* head = (RunHead*)sk_malloc_throw(size);
+        RunHead* head = (RunHead*)sk_malloc_throw(sizeof(RunHead) + count * sizeof(RunType));
         head->fRefCnt = 1;
         head->fRunCount = count;
         // these must be filled in later, otherwise we will be invalid
@@ -142,7 +139,7 @@ public:
     /**
      *  Return the scanline that contains the Y value. This requires that the Y
      *  value is already known to be contained within the bounds of the region,
-     *  and so this routine never returns nullptr.
+     *  and so this routine never returns NULL.
      *
      *  It returns the beginning of the scanline, starting with its Bottom value.
      */

@@ -16,7 +16,7 @@
 class SkAnimateMaker;
 class SkActive;
 class SkApply;
-class SkADrawable;
+class SkDrawable;
 class SkGroup;
 
 class SkDisplayList : public SkRefCnt {
@@ -33,9 +33,9 @@ public:
     static int fIndent;
     static int fDumpIndex;
 #endif
-    int findGroup(SkADrawable* match, SkTDDrawableArray** list,
+    int findGroup(SkDrawable* match, SkTDDrawableArray** list,
         SkGroup** parent, SkGroup** found, SkTDDrawableArray** grandList);
-    SkADrawable* get(int index) { return fDrawList[index]; }
+    SkDrawable* get(int index) { return fDrawList[index]; }
     SkMSec getTime() { return fInTime; }
     SkTDDrawableArray* getDrawList() { return &fDrawList; }
     void hardReset();
@@ -47,9 +47,9 @@ public:
 #else
     void validate() {}
 #endif
-    static int SearchForMatch(SkADrawable* match, SkTDDrawableArray** list,
+    static int SearchForMatch(SkDrawable* match, SkTDDrawableArray** list,
         SkGroup** parent, SkGroup** found, SkTDDrawableArray**grandList);
-    static bool SearchGroupForMatch(SkADrawable* draw, SkADrawable* match,
+    static bool SearchGroupForMatch(SkDrawable* draw, SkDrawable* match,
         SkTDDrawableArray** list, SkGroup** parent, SkGroup** found, SkTDDrawableArray** grandList,
         int &index);
 public:

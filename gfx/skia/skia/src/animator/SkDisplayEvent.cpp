@@ -45,7 +45,7 @@ const SkMemberInfo SkDisplayEvent::fInfo[] = {
 DEFINE_GET_MEMBER(SkDisplayEvent);
 
 SkDisplayEvent::SkDisplayEvent() : code((SkKey) -1), disable(false),
-    kind(kUser), x(0), y(0), fLastCode((SkKey) -1), fMax((SkKey) -1), fTarget(nullptr) {
+    kind(kUser), x(0), y(0), fLastCode((SkKey) -1), fMax((SkKey) -1), fTarget(NULL) {
 }
 
 SkDisplayEvent::~SkDisplayEvent() {
@@ -71,7 +71,7 @@ SkDisplayable* SkDisplayEvent::contains(const SkString& match) {
         if (child->contains(match))
             return child;
     }
-    return nullptr;
+    return NULL;
 }
 
 void SkDisplayEvent::deleteMembers() {
@@ -100,7 +100,7 @@ void SkDisplayEvent::dumpEvent(SkAnimateMaker* maker) {
         else
             SkDebugf("key=\"%c\" ", code);
     }
-    if (fTarget != nullptr) {
+    if (fTarget != NULL) {
         SkDebugf("target=\"%s\" ", fTarget->id);
     }
     if (kind >= SkDisplayEvent::kMouseDown && kind <= SkDisplayEvent::kMouseUp) {
@@ -130,7 +130,7 @@ bool SkDisplayEvent::enableEvent(SkAnimateMaker& maker)
         SkDisplayable* displayable = fChildren[index];
         if (displayable->isGroup()) {
             SkTDDrawableArray* parentList = displayList.getDrawList();
-            *parentList->append() = (SkADrawable*) displayable;  // make it findable before children are enabled
+            *parentList->append() = (SkDrawable*) displayable;  // make it findable before children are enabled
         }
         if (displayable->enable(maker))
             continue;
@@ -138,7 +138,7 @@ bool SkDisplayEvent::enableEvent(SkAnimateMaker& maker)
             return true;
         if (displayable->isDrawable() == false)
             return true;    // error
-        SkADrawable* drawable = (SkADrawable*) displayable;
+        SkDrawable* drawable = (SkDrawable*) displayable;
         SkTDDrawableArray* parentList = displayList.getDrawList();
         *parentList->append() = drawable;
     }
@@ -188,7 +188,7 @@ void SkDisplayEvent::populateInput(SkAnimateMaker& maker, const SkEvent& fEvent)
     SkMetaData::Type    type;
     int number;
     const char* name;
-    while ((name = iter.next(&type, &number)) != nullptr) {
+    while ((name = iter.next(&type, &number)) != NULL) {
         if (name[0] == '\0')
             continue;
         SkDisplayable* displayable;

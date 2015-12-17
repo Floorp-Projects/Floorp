@@ -12,14 +12,14 @@
 #include "osmesa_wrapper.h"
 
 static GrGLFuncPtr osmesa_get(void* ctx, const char name[]) {
-    SkASSERT(nullptr == ctx);
-    SkASSERT(OSMesaGetCurrentContext());
+    SkASSERT(NULL == ctx);
+    SkASSERT(NULL != OSMesaGetCurrentContext());
     return OSMesaGetProcAddress(name);
 }
 
 const GrGLInterface* GrGLCreateMesaInterface() {
-    if (nullptr == OSMesaGetCurrentContext()) {
-        return nullptr;
+    if (NULL == OSMesaGetCurrentContext()) {
+        return NULL;
     }
-    return GrGLAssembleInterface(nullptr, osmesa_get);
+    return GrGLAssembleGLInterface(NULL, osmesa_get);
 }
