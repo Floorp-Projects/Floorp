@@ -33,7 +33,6 @@ public:
             MediaSink* aAudioSink,
             MediaQueue<MediaData>& aVideoQueue,
             VideoFrameContainer* aContainer,
-            bool aRealTime,
             FrameStatistics& aFrameStats,
             uint32_t aVQueueSentToCompositerSize);
 
@@ -114,9 +113,6 @@ private:
   // Producer ID to help ImageContainer distinguish different streams of
   // FrameIDs. A unique and immutable value per VideoSink.
   const ProducerID mProducerID;
-
-  // True if we are decoding a real-time stream.
-  const bool mRealTime;
 
   // Used to notify MediaDecoder's frame statistics
   FrameStatistics& mFrameStats;
