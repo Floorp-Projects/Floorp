@@ -1713,7 +1713,9 @@ class ObjectBox
     FunctionBox* asFunctionBox();
     bool isModuleBox() { return object->is<ModuleObject>(); }
     ModuleBox* asModuleBox();
-    void trace(JSTracer* trc);
+    virtual void trace(JSTracer* trc);
+
+    static void TraceList(JSTracer* trc, ObjectBox* listHead);
 
   protected:
     friend struct CGObjectList;
