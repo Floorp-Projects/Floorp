@@ -10,8 +10,8 @@
 enum PermissionName {
   "geolocation",
   "notifications",
-  "push",
-  "midi"
+  "push"
+  // Unsupported: "midi"
 };
 
 dictionary PermissionDescriptor {
