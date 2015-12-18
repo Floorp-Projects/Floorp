@@ -28,9 +28,6 @@ if not CONFIG['JS_STANDALONE']:
     CONFIGURE_DEFINE_FILES += [
         'mozilla-config.h',
     ]
-    EXPORTS += [
-        '!mozilla-config.h',
-    ]
 
     DIRS += [
         'build',
