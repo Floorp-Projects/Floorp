@@ -15,6 +15,4 @@ public interface AdjustHelperInterface {
      */
     void onCreate(final Context context, final String appToken);
     void onReceive(final Context context, final Intent intent);
-    void onResume(final Context context);
-    void onPause(final Context context);
 }
