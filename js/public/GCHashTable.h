@@ -10,6 +10,7 @@
 #include "js/GCPolicyAPI.h"
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
+#include "js/SweepingAPI.h"
 #include "js/TracingAPI.h"
 
 namespace js {
@@ -214,6 +215,11 @@ class HandleBase<GCHashMap<A,B,C,D,E>>
   : public GCHashMapOperations<JS::Handle<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
+template <typename A, typename B, typename C, typename D, typename E>
+class WeakCacheBase<GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::WeakCache<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
+{};
+
 // A GCHashSet is a HashSet with an additional trace method that knows
 // be traced to be kept alive will generally want to use this GCHashSet
 // specializeation in lieu of HashSet.
@@ -277,7 +283,7 @@ class GCHashSetOperations
     using Range = typename Set::Range;
     using Enum = typename Set::Enum;
 
-    const Set& set() const { return static_cast<const Outer*>(this)->extract(); }
+    const Set& set() const { return static_cast<const Outer*>(this)->get(); }
 
   public:
     bool initialized() const                   { return set().initialized(); }
@@ -301,7 +307,7 @@ class MutableGCHashSetOperations
     using Range = typename Set::Range;
     using Enum = typename Set::Enum;
 
-    Set& set() { return static_cast<Outer*>(this)->extract(); }
+    Set& set() { return static_cast<Outer*>(this)->get(); }
 
   public:
     bool init(uint32_t len = 16) { return set().init(len); }
@@ -340,37 +346,24 @@ template <typename T, typename HP, typename AP>
 class RootedBase<GCHashSet<T, HP, AP>>
   : public MutableGCHashSetOperations<JS::Rooted<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP>;
-
-    friend class GCHashSetOperations<JS::Rooted<Set>, T, HP, AP>;
-    const Set& extract() const { return *static_cast<const JS::Rooted<Set>*>(this)->address(); }
-
-    friend class MutableGCHashSetOperations<JS::Rooted<Set>, T, HP, AP>;
-    Set& extract() { return *static_cast<JS::Rooted<Set>*>(this)->address(); }
 };
 
 template <typename T, typename HP, typename AP>
 class MutableHandleBase<GCHashSet<T, HP, AP>>
   : public MutableGCHashSetOperations<JS::MutableHandle<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP>;
-
-    friend class GCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP>;
-    const Set& extract() const {
-        return *static_cast<const JS::MutableHandle<Set>*>(this)->address();
-    }
-
-    friend class MutableGCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP>;
-    Set& extract() { return *static_cast<JS::MutableHandle<Set>*>(this)->address(); }
 };
 
 template <typename T, typename HP, typename AP>
 class HandleBase<GCHashSet<T, HP, AP>>
   : public GCHashSetOperations<JS::Handle<GCHashSet<T, HP, AP>>, T, HP, AP>
 {
-    using Set = GCHashSet<T, HP, AP>;
-    friend class GCHashSetOperations<JS::Handle<Set>, T, HP, AP>;
-    const Set& extract() const { return *static_cast<const JS::Handle<Set>*>(this)->address(); }
+};
+
+template <typename T, typename HP, typename AP>
+class WeakCacheBase<GCHashSet<T, HP, AP>>
+  : public MutableGCHashSetOperations<JS::WeakCache<GCHashSet<T, HP, AP>>, T, HP, AP>
+{
 };
 
 } /* namespace js */
