@@ -34,6 +34,7 @@ class Image;
 }
 
 namespace dom {
+class OffscreenCanvas;
 
 namespace workers {
 class WorkerStructuredCloneClosure;
@@ -102,6 +103,11 @@ public:
 
   static already_AddRefed<ImageBitmap>
   CreateFromCloneData(nsIGlobalObject* aGlobal, ImageBitmapCloneData* aData);
+
+  static already_AddRefed<ImageBitmap>
+  CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
+                            OffscreenCanvas& aOffscreenCanvas,
+                            ErrorResult& aRv);
 
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,

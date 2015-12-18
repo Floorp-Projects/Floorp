@@ -26,6 +26,7 @@ class CanvasClient;
 
 namespace dom {
 class Blob;
+class ImageBitmap;
 
 // This is helper class for transferring OffscreenCanvas to worker thread.
 // Because OffscreenCanvas is not thread-safe. So we cannot pass Offscreen-
@@ -109,6 +110,9 @@ public:
     }
   }
 
+  already_AddRefed<ImageBitmap>
+  TransferToImageBitmap();
+
   already_AddRefed<Promise>
   ToBlob(JSContext* aCx,
          const nsAString& aType,
@@ -119,6 +123,8 @@ public:
   {
     return mCurrentContext;
   }
+
+  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr);
 
   static already_AddRefed<OffscreenCanvas>
   CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
