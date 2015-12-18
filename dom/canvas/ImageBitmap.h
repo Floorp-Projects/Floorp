@@ -25,6 +25,7 @@ namespace mozilla {
 class ErrorResult;
 
 namespace gfx {
+class DataSourceSurface;
 class SourceSurface;
 }
 
@@ -49,6 +50,12 @@ class PostMessageEvent; // For StructuredClone between windows.
 class CreateImageBitmapFromBlob;
 class CreateImageBitmapFromBlobTask;
 class CreateImageBitmapFromBlobWorkerTask;
+
+struct ImageBitmapCloneData final
+{
+  RefPtr<gfx::DataSourceSurface> mSurface;
+  gfx::IntRect mPictureRect;
+};
 
 /*
  * ImageBitmap is an opaque handler to several kinds of image-like objects from
@@ -90,6 +97,12 @@ public:
   already_AddRefed<gfx::SourceSurface>
   PrepareForDrawTarget(gfx::DrawTarget* aTarget);
 
+  ImageBitmapCloneData*
+  ToCloneData();
+
+  static already_AddRefed<ImageBitmap>
+  CreateFromCloneData(nsIGlobalObject* aGlobal, ImageBitmapCloneData* aData);
+
   static already_AddRefed<Promise>
   Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
          const Maybe<gfx::IntRect>& aCropRect, ErrorResult& aRv);
@@ -98,12 +111,12 @@ public:
   ReadStructuredClone(JSContext* aCx,
                       JSStructuredCloneReader* aReader,
                       nsIGlobalObject* aParent,
-                      const nsTArray<RefPtr<layers::Image>>& aClonedImages,
+                      const nsTArray<RefPtr<gfx::DataSourceSurface>>& aClonedSurfaces,
                       uint32_t aIndex);
 
   static bool
   WriteStructuredClone(JSStructuredCloneWriter* aWriter,
-                       nsTArray<RefPtr<layers::Image>>& aClonedImages,
+                       nsTArray<RefPtr<gfx::DataSourceSurface>>& aClonedSurfaces,
                        ImageBitmap* aImageBitmap);
 
   friend CreateImageBitmapFromBlob;

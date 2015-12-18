@@ -1232,6 +1232,11 @@ public:
     CreateWrappingDataSourceSurface(uint8_t *aData, int32_t aStride,
                                     const IntSize &aSize, SurfaceFormat aFormat);
 
+  static void
+    CopyDataSourceSurface(DataSourceSurface* aSource,
+                          DataSourceSurface* aDest);
+
+
   static already_AddRefed<DrawEventRecorder>
     CreateEventRecorderForFile(const char *aFilename);
 
