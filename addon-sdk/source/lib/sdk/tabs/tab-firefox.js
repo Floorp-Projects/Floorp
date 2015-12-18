@@ -44,6 +44,9 @@ function isClosed(tab) {
   return viewsFor.get(tab).closing;
 }
 
+// private tab attribute where the remote cached value is stored
+const remoteReadyStateCached = Symbol("remoteReadyStateCached");
+
 const Tab = Class({
   implements: [EventTarget],
   initialize: function(tabElement, options = null) {
@@ -125,8 +128,7 @@ const Tab = Class({
   },
 
   get readyState() {
-    // TODO: This will use CPOWs in e10s: bug 1146606
-    return isDestroyed(this) ? undefined : browser(this).contentDocument.readyState;
+    return isDestroyed(this) ? undefined : this[remoteReadyStateCached] || "uninitialized";
   },
 
   pin: function() {
@@ -306,11 +308,21 @@ function tabEventListener(event, tabElement, ...args) {
       removeListItem(window.tabs, tab);
     // The tabs module will take care of removing from its internal list
   }
-  else if (event == "ready" || event == "load") {
+  else if (event == "init" || event == "create" || event == "ready" || event == "load") {
     // Ignore load events from before browser windows have fully loaded, these
     // are for about:blank in the initial tab
     if (isBrowser(domWindow) && !domWindow.gBrowserInit.delayedStartupFinished)
       return;
+
+    // update the cached remote readyState value
+    let { readyState } = args[0] || {};
+    tab[remoteReadyStateCached] = readyState;
+  }
+
+  if (event == "init") {
+    // Do not emit events for the detected existent tabs, we only need to cache
+    // their current document.readyState value.
+    return;
   }
 
   tabEmit(tab, event, ...args);
