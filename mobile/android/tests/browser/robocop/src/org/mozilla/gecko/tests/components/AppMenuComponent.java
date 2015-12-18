@@ -159,7 +159,7 @@ public class AppMenuComponent extends BaseComponent {
      * This method is dependent on not having two views with equivalent contentDescription / text.
      */
     private View findAppMenuItemView(String text) {
-        mSolo.waitForText(text, 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
+        mSolo.waitForText(String.format("^%s$", text), 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
 
         final List<View> views = mSolo.getViews();
 
@@ -298,7 +298,8 @@ public class AppMenuComponent extends BaseComponent {
 
     private boolean isLegacyMoreMenuOpen() {
         // Check if the first menu option is visible.
-        return mSolo.searchText(mSolo.getString(R.string.share), true);
+        final String shareTitle = mSolo.getString(R.string.share);
+        return mSolo.searchText(String.format("^%s$", shareTitle), true);
     }
 
     /**
@@ -310,7 +311,7 @@ public class AppMenuComponent extends BaseComponent {
      */
     private boolean isMenuOpen(String menuItemTitle) {
         final View menuItemView = findAppMenuItemView(menuItemTitle);
-        return isMenuOpen(menuItemView) ? true : mSolo.searchText(menuItemTitle, true);
+        return isMenuOpen(menuItemView) ? true : mSolo.searchText(String.format("^%s$", menuItemTitle), true);
     }
 
     /**
