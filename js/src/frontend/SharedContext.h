@@ -411,6 +411,8 @@ class FunctionBox : public ObjectBox, public SharedContext
                isDerivedClassConstructor() ||
                isGenerator();
     }
+
+    void trace(JSTracer* trc) override;
 };
 
 class ModuleBox : public ObjectBox, public SharedContext
@@ -426,6 +428,8 @@ class ModuleBox : public ObjectBox, public SharedContext
     ObjectBox* toObjectBox() override { return this; }
     ModuleObject* module() const { return &object->as<ModuleObject>(); }
     JSObject* staticScope() const override { return module(); }
+
+    void trace(JSTracer* trc) override;
 };
 
 inline FunctionBox*

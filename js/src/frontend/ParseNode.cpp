@@ -1162,22 +1162,32 @@ ObjectBox::asModuleBox()
     return static_cast<ModuleBox*>(this);
 }
 
+/* static */ void
+ObjectBox::TraceList(JSTracer* trc, ObjectBox* listHead)
+{
+    for (ObjectBox* box = listHead; box; box = box->traceLink)
+        box->trace(trc);
+}
+
 void
 ObjectBox::trace(JSTracer* trc)
 {
-    ObjectBox* box = this;
-    while (box) {
-        TraceRoot(trc, &box->object, "parser.object");
-        if (box->isFunctionBox()) {
-            FunctionBox* funbox = box->asFunctionBox();
-            funbox->bindings.trace(trc);
-            if (funbox->enclosingStaticScope_)
-                TraceRoot(trc, &funbox->enclosingStaticScope_, "funbox-enclosingStaticScope");
-        } else if (box->isModuleBox()) {
-            ModuleBox* modulebox = box->asModuleBox();
-            modulebox->bindings.trace(trc);
-            modulebox->exportNames.trace(trc);
-        }
-        box = box->traceLink;
-    }
+    TraceRoot(trc, &object, "parser.object");
+}
+
+void
+FunctionBox::trace(JSTracer* trc)
+{
+    ObjectBox::trace(trc);
+    bindings.trace(trc);
+    if (enclosingStaticScope_)
+        TraceRoot(trc, &enclosingStaticScope_, "funbox-enclosingStaticScope");
+}
+
+void
+ModuleBox::trace(JSTracer* trc)
+{
+    ObjectBox::trace(trc);
+    bindings.trace(trc);
+    exportNames.trace(trc);
 }
