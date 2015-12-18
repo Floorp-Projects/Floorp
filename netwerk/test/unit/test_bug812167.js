@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 /*
 - get 302 with Cache-control: no-store
@@ -23,16 +23,7 @@ XPCOMUtils.defineLazyGetter(this, "randomURI2", function() {
 });
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const responseBody = "response body";
@@ -79,7 +70,7 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
 
     // Do the request again and check the server handler is called appropriately
     var chan = make_channel(path);
-    chan.asyncOpen(new ChannelListener(function(request, buffer) {
+    chan.asyncOpen2(new ChannelListener(function(request, buffer) {
       do_check_eq(buffer, responseBody);
 
       if (expectedExpiration) {
@@ -94,26 +85,26 @@ function check_response(path, request, buffer, expectedExpiration, continuation)
       }
 
       continuation();
-    }, null), null);
+    }, null));
   });
 }
 
 function run_test_no_store()
 {
   var chan = make_channel(randomURI1);
-  chan.asyncOpen(new ChannelListener(function(request, buffer) {
+  chan.asyncOpen2(new ChannelListener(function(request, buffer) {
     // Cache-control: no-store response should only be found in the memory cache.
     check_response(randomURI1, request, buffer, false, run_test_expires_past);
-  }, null), null);
+  }, null));
 }
 
 function run_test_expires_past()
 {
   var chan = make_channel(randomURI2);
-  chan.asyncOpen(new ChannelListener(function(request, buffer) {
+  chan.asyncOpen2(new ChannelListener(function(request, buffer) {
     // Expires: -1 response should not be found in any cache.
     check_response(randomURI2, request, buffer, true, finish_test);
-  }, null), null);
+  }, null));
 }
 
 function finish_test()
