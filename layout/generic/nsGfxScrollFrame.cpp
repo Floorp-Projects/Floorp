@@ -4225,28 +4225,18 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent)
 
 /* ============= Scroll events ========== */
 
-ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
-  : mHelper(aHelper)
+NS_IMETHODIMP
+ScrollFrameHelper::ScrollEvent::Run()
 {
-  mHelper->mOuter->PresContext()->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
-}
-
-ScrollFrameHelper::ScrollEvent::~ScrollEvent()
-{
-  mHelper->mOuter->PresContext()->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
-}
-
-void
-ScrollFrameHelper::ScrollEvent::WillRefresh(mozilla::TimeStamp aTime)
-{
-  mHelper->FireScrollEvent();
+  if (mHelper)
+    mHelper->FireScrollEvent();
+  return NS_OK;
 }
 
 void
 ScrollFrameHelper::FireScrollEvent()
 {
-  MOZ_ASSERT(mScrollEvent);
-  mScrollEvent = nullptr;
+  mScrollEvent.Forget();
 
   ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);
   WidgetGUIEvent event(true, eScroll, nullptr);
@@ -4273,11 +4263,14 @@ ScrollFrameHelper::FireScrollEvent()
 void
 ScrollFrameHelper::PostScrollEvent()
 {
-  if (mScrollEvent)
+  if (mScrollEvent.IsPending())
     return;
 
-  // The ScrollEvent constructor registers itself with the refresh driver.
+  nsRootPresContext* rpc = mOuter->PresContext()->GetRootPresContext();
+  if (!rpc)
+    return;
   mScrollEvent = new ScrollEvent(this);
+  rpc->AddWillPaintObserver(mScrollEvent.get());
 }
 
 NS_IMETHODIMP
