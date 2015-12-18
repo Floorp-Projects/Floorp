@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/OffscreenCanvasBinding.h"
 #include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/dom/WorkerScope.h"
 #include "mozilla/layers/AsyncCanvasRenderer.h"
 #include "mozilla/layers/CanvasClient.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -213,6 +214,23 @@ OffscreenCanvas::ToCloneData()
                                       mCompositorBackendType, mNeutered, mIsWriteOnly);
 }
 
+already_AddRefed<ImageBitmap>
+OffscreenCanvas::TransferToImageBitmap()
+{
+  ErrorResult rv;
+  RefPtr<ImageBitmap> result = ImageBitmap::CreateFromOffscreenCanvas(GetGlobalObject(), *this, rv);
+
+  // Clear the content.
+  if ((mCurrentContextType == CanvasContextType::WebGL1 ||
+       mCurrentContextType == CanvasContextType::WebGL2))
+  {
+    WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
+    webGL->ClearScreen();
+  }
+
+  return result.forget();
+}
+
 already_AddRefed<Promise>
 OffscreenCanvas::ToBlob(JSContext* aCx,
                         const nsAString& aType,
@@ -280,6 +298,15 @@ OffscreenCanvas::ToBlob(JSContext* aCx,
   return promise.forget();
 }
 
+already_AddRefed<gfx::SourceSurface>
+OffscreenCanvas::GetSurfaceSnapshot(bool* aPremultAlpha)
+{
+  if (!mCurrentContext) {
+    return nullptr;
+  }
+
+  return mCurrentContext->GetSurfaceSnapshot(aPremultAlpha);
+}
 
 nsCOMPtr<nsIGlobalObject>
 OffscreenCanvas::GetGlobalObject()

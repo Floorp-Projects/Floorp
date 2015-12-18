@@ -519,6 +519,35 @@ ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
 }
 
 /* static */ already_AddRefed<ImageBitmap>
+ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
+                                       OffscreenCanvas& aOffscreenCanvas,
+                                       ErrorResult& aRv)
+{
+  // Check origin-clean.
+  if (aOffscreenCanvas.IsWriteOnly()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsLayoutUtils::SurfaceFromElementResult res =
+    nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas,
+                                              nsLayoutUtils::SFE_WANT_FIRST_FRAME);
+
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+
+  if (NS_WARN_IF(!surface)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<layers::Image> data =
+    CreateImageFromSurface(surface);
+
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  return ret.forget();
+}
+
+/* static */ already_AddRefed<ImageBitmap>
 ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, HTMLImageElement& aImageEl,
                             const Maybe<IntRect>& aCropRect, ErrorResult& aRv)
 {
