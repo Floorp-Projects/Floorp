@@ -2,6 +2,8 @@
 celt_sources = [
     'celt/bands.c',
     'celt/celt.c',
+    'celt/celt_decoder.c',
+    'celt/celt_encoder.c',
     'celt/celt_lpc.c',
     'celt/cwrs.c',
     'celt/entcode.c',
@@ -18,11 +20,19 @@ celt_sources = [
     'celt/vq.c',
 ]
 
-celt_nonunified_sources = [
-    # Disabled because of name clash of opus_custom_encoder_get_size.
-    'celt/celt_decoder.c',
-    # Disabled because of name clash of opus_custom_encoder_get_size.
-    'celt/celt_encoder.c',
+celt_sources_sse = [
+    'celt/x86/pitch_sse.c',
+    'celt/x86/x86_celt_map.c',
+    'celt/x86/x86cpu.c',
+]
+
+celt_sources_sse2 = [
+    'celt/x86/pitch_sse2.c',
+]
+
+celt_sources_sse4_1 = [
+    'celt/x86/celt_lpc_sse.c',
+    'celt/x86/pitch_sse4_1.c',
 ]
 
 celt_sources_arm = [
@@ -36,6 +46,13 @@ celt_sources_arm_asm = [
 
 celt_am_sources_arm_asm = [
     'celt/arm/armopts.s.in',
+]
+
+celt_sources_arm_neon_intr = [
+    'celt/arm/celt_ne10_fft.c',
+    'celt/arm/celt_ne10_mdct.c',
+    'celt/arm/celt_neon_intr.c',
+    'CELT_SOURCES_ARM_NE10=',
 ]
 
 opus_sources = [
@@ -133,6 +150,14 @@ silk_sources = [
     'silk/VQ_WMat_EC.c',
 ]
 
+silk_sources_sse4_1 = [
+    'silk/x86/NSQ_del_dec_sse.c',
+    'silk/x86/NSQ_sse.c',
+    'silk/x86/VAD_sse.c',
+    'silk/x86/VQ_WMat_EC_sse.c',
+    'silk/x86/x86_silk_map.c',
+]
+
 silk_sources_fixed = [
     'silk/fixed/apply_sine_window_FIX.c',
     'silk/fixed/autocorr_FIX.c',
@@ -159,6 +184,12 @@ silk_sources_fixed = [
     'silk/fixed/solve_LS_FIX.c',
     'silk/fixed/vector_ops_FIX.c',
     'silk/fixed/warped_autocorrelation_FIX.c',
+]
+
+silk_sources_fixed_sse4_1 = [
+    'silk/fixed/x86/burg_modified_FIX_sse.c',
+    'silk/fixed/x86/prefilter_FIX_sse.c',
+    'silk/fixed/x86/vector_ops_FIX_sse.c',
 ]
 
 silk_sources_float = [
