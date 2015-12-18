@@ -1328,8 +1328,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
   RefPtr<DrawTarget> drawTarget = backBuffer->BorrowDrawTarget();
   drawTarget->SetTransform(Matrix());
 
-  RefPtr<gfxContext> ctxt = new gfxContext(drawTarget);
-
   // XXX Perhaps we should just copy the bounding rectangle here?
   RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
   nsIntRegionRectIterator it(aDirtyRegion);
@@ -1363,7 +1361,6 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
                    aTileOrigin.y * GetPresShellResolution(), GetTileLength(), GetTileLength());
 #endif
 
-  ctxt = nullptr;
   drawTarget = nullptr;
 
   nsIntRegion tileRegion =
