@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 html {
-  --aboutSupport-table-background: #ebebeb;
+  --aboutProfiles-table-background: #ebebeb;
   background-color: var(--in-content-page-background);
 }
 
@@ -21,7 +21,7 @@ button {
 }
 
 table {
-  background-color: var(--aboutSupport-table-background);
+  background-color: var(--aboutProfiles-table-background);
   color: var(--in-content-text-color);
   font: message-box;
   text-align: start;
@@ -33,10 +33,10 @@ table {
 th, td {
   border: 1px solid var(--in-content-border-color);
   padding: 4px;
+  text-align: start;
 }
 
 th {
-  text-align: start;
   background-color: var(--in-content-table-header-background);
   color: var(--in-content-selected-text);
 }
@@ -47,12 +47,11 @@ th.column {
 }
 
 td {
-  text-align: start;
   border-color: var(--in-content-table-border-dark-color);
 }
 
 #action-box {
-  background-color: var(--aboutSupport-table-background);
+  background-color: var(--aboutProfiles-table-background);
   border: 1px solid var(--in-content-border-color);
   color: var(--in-content-text-color);
   float: right;
@@ -66,10 +65,6 @@ td {
 
 #action-box:-moz-dir(rtl) {
   float: left;
-}
-
-#reset-box > h3 {
-  margin-top: 0;
 }
 
 #action-box button {
