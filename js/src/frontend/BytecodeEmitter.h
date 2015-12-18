@@ -121,7 +121,12 @@ enum VarEmitOption {
     // Emit code to evaluate initializer expressions and leave those values on
     // the stack. This is used to implement `for (let/const ...;;)` and
     // deprecated `let` blocks.
-    PushInitialValues
+    PushInitialValues,
+
+    // Like InitializeVars, but bind using BINDVAR instead of
+    // BINDNAME/BINDGNAME. Only used for emitting declarations synthesized for
+    // Annex B block-scoped function semantics.
+    AnnexB,
 };
 
 struct BytecodeEmitter
