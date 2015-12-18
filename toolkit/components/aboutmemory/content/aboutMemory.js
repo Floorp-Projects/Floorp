@@ -78,7 +78,7 @@ function assert(aCond, aMsg)
 {
   if (!aCond) {
     reportAssertionFailure(aMsg)
-    throw(gAssertionFailureMsgPrefix + aMsg);
+    throw new Error(gAssertionFailureMsgPrefix + aMsg);
   }
 }
 
@@ -86,19 +86,19 @@ function assert(aCond, aMsg)
 function assertInput(aCond, aMsg)
 {
   if (!aCond) {
-    throw "Invalid memory report(s): " + aMsg;
+    throw new Error("Invalid memory report(s): " + aMsg);
   }
 }
 
 function handleException(ex)
 {
-  let str = ex.toString();
+  let str = "" + ex;
   if (str.startsWith(gAssertionFailureMsgPrefix)) {
     // Argh, assertion failure within this file!  Give up.
     throw ex;
   } else {
     // File or memory reporter problem.  Print a message.
-    updateMainAndFooter(ex.toString(), HIDE_FOOTER, "badInputWarning");
+    updateMainAndFooter(str, HIDE_FOOTER, "badInputWarning");
   }
 }
 
@@ -635,8 +635,8 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn)
 
   try {
     let reader = new FileReader();
-    reader.onerror = () => { throw "FileReader.onerror"; };
-    reader.onabort = () => { throw "FileReader.onabort"; };
+    reader.onerror = () => { throw new Error("FileReader.onerror"); };
+    reader.onabort = () => { throw new Error("FileReader.onabort"); };
     reader.onload = (aEvent) => {
       // Clear "Loading..." from above.
       updateTitleMainAndFooter(aTitleNote, "", SHOW_FOOTER);
@@ -661,7 +661,7 @@ function loadMemoryReportsFromFile(aFilename, aTitleNote, aFn)
       onStopRequest: function(aR, aC, aStatusCode) {
         try {
           if (!Components.isSuccessCode(aStatusCode)) {
-            throw aStatusCode;
+            throw new Components.Exception("Error while reading gzip file", aStatusCode);
           }
           reader.readAsText(new Blob(this.data));
         } catch (ex) {
