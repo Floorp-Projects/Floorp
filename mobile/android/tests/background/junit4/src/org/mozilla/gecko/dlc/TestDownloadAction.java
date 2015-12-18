@@ -12,6 +12,9 @@ import org.mockito.ArgumentCaptor;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.dlc.catalog.DownloadContent;
 import org.mozilla.gecko.dlc.catalog.DownloadContentCatalog;
+
+import android.content.Context;
+
 import org.robolectric.RuntimeEnvironment;
 
 import java.io.ByteArrayInputStream;
@@ -61,6 +64,24 @@ public class TestDownloadAction {
 
         action.perform(RuntimeEnvironment.application, null);
 
+        verify(action, never()).buildHttpClient();
+        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
+    }
+
+    /**
+     * Scenario: No (connected) network is available.
+     *
+     * Verify that:
+     *  * No download is performed
+     */
+    @Test
+    public void testNothingIsDoneIfNoNetworkIsAvailable() throws Exception {
+        DownloadAction action = spy(new DownloadAction(null));
+        doReturn(false).when(action).isConnectedToNetwork(RuntimeEnvironment.application);
+
+        action.perform(RuntimeEnvironment.application, null);
+
+        verify(action, never()).isActiveNetworkMetered(any(Context.class));
         verify(action, never()).buildHttpClient();
         verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
     }
