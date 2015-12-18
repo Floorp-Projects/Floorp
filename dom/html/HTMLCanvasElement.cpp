@@ -783,6 +783,10 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
                                            sz.height,
                                            GetCompositorBackendType(),
                                            renderer);
+    if (mWriteOnly) {
+      mOffscreenCanvas->SetWriteOnly();
+    }
+
     if (!mContextObserver) {
       mContextObserver = new HTMLCanvasElementObserver(this);
     }
