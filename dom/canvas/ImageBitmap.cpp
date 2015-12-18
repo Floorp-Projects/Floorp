@@ -146,15 +146,14 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
 }
 
 /*
- * Encapsulate the given _aSurface_ into a layers::CairoImage.
+ * Encapsulate the given _aSurface_ into a layers::SourceSurfaceImage.
  */
 static already_AddRefed<layers::Image>
 CreateImageFromSurface(SourceSurface* aSurface)
 {
   MOZ_ASSERT(aSurface);
-  RefPtr<layers::CairoImage> image =
-    new layers::CairoImage(aSurface->GetSize(), aSurface);
-
+  RefPtr<layers::SourceSurfaceImage> image =
+    new layers::SourceSurfaceImage(aSurface->GetSize(), aSurface);
   return image.forget();
 }
 
@@ -251,13 +250,13 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
 
 /*
  * This is a synchronous task.
- * This class is used to create a layers::CairoImage from raw data in the main
+ * This class is used to create a layers::SourceSurfaceImage from raw data in the main
  * thread. While creating an ImageBitmap from an ImageData, we need to create
  * a SouceSurface from the ImageData's raw data and then set the SourceSurface
- * into a layers::CairoImage. However, the layers::CairoImage asserts the
+ * into a layers::SourceSurfaceImage. However, the layers::SourceSurfaceImage asserts the
  * setting operation in the main thread, so if we are going to create an
  * ImageBitmap from an ImageData off the main thread, we post an event to the
- * main thread to create a layers::CairoImage from an ImageData's raw data.
+ * main thread to create a layers::SourceSurfaceImage from an ImageData's raw data.
  */
 class CreateImageFromRawDataInMainThreadSyncTask final :
   public WorkerMainThreadRunnable
