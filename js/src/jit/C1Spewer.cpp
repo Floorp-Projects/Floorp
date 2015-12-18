@@ -97,7 +97,7 @@ C1Spewer::spewRanges(GenericPrinter& out, BacktrackingAllocator* regalloc, LNode
         for (LiveRange::RegisterLinkIterator iter = vreg->rangesBegin(); iter; iter++) {
             LiveRange* range = LiveRange::get(*iter);
             out.printf("%d object \"", id);
-            out.printf("%s", range->bundle()->allocation().toString());
+            out.printf("%s", range->bundle()->allocation().toString().get());
             out.printf("\" %d -1", id);
             out.printf(" [%u, %u[", range->from().bits(), range->to().bits());
             for (UsePositionIterator usePos(range->usesBegin()); usePos; usePos++)
