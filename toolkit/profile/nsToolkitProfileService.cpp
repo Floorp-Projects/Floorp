@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -971,12 +972,10 @@ nsToolkitProfileService::Flush()
 
     uint32_t length;
     const int bufsize = 100+MAXPATHLEN*pCount;
-    nsAutoArrayPtr<char> buffer (new char[bufsize]);
+    auto buffer = MakeUnique<char[]>(bufsize);
 
-    NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
-
-    char *pos = buffer;
-    char *end = buffer + bufsize;
+    char *pos = buffer.get();
+    char *end = pos + bufsize;
 
     pos += snprintf(pos, end - pos,
                     "[General]\n"
@@ -1024,13 +1023,11 @@ nsToolkitProfileService::Flush()
     rv = mListFile->OpenANSIFileDesc("w", &writeFile);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    if (buffer) {
-        length = pos - buffer;
+    length = pos - buffer.get();
 
-        if (fwrite(buffer, sizeof(char), length, writeFile) != length) {
-            fclose(writeFile);
-            return NS_ERROR_UNEXPECTED;
-        }
+    if (fwrite(buffer.get(), sizeof(char), length, writeFile) != length) {
+        fclose(writeFile);
+        return NS_ERROR_UNEXPECTED;
     }
 
     fclose(writeFile);

@@ -605,6 +605,12 @@ public:
 
     virtual void FlushContentDrawing() {}
 
+    // If a device reset has occurred, update the necessary platform backend
+    // bits.
+    virtual bool UpdateForDeviceReset() {
+      return false;
+    }
+
     /**
      * Helper method, creates a draw target for a specific Azure backend.
      * Used by CreateOffscreenDrawTarget.

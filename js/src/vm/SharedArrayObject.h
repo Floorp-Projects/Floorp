@@ -130,10 +130,14 @@ class SharedArrayBufferObject : public ArrayBufferObjectMaybeShared
     static bool class_constructor(JSContext* cx, unsigned argc, Value* vp);
 
     // Create a SharedArrayBufferObject with a new SharedArrayRawBuffer.
-    static SharedArrayBufferObject* New(JSContext* cx, uint32_t length);
+    static SharedArrayBufferObject* New(JSContext* cx,
+                                        uint32_t length,
+                                        HandleObject proto = nullptr);
 
     // Create a SharedArrayBufferObject using an existing SharedArrayRawBuffer.
-    static SharedArrayBufferObject* New(JSContext* cx, SharedArrayRawBuffer* buffer);
+    static SharedArrayBufferObject* New(JSContext* cx,
+                                        SharedArrayRawBuffer* buffer,
+                                        HandleObject proto = nullptr);
 
     static void Finalize(FreeOp* fop, JSObject* obj);
 

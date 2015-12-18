@@ -1392,7 +1392,6 @@ private:
                                     bool aNavigate,
                                     nsIArray *argv,
                                     nsISupports *aExtraArgument,
-                                    nsIPrincipal *aCalleePrincipal,
                                     JSContext *aJSCallerContext,
                                     nsIDOMWindow **aReturn);
 

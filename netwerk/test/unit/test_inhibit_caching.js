@@ -1,6 +1,6 @@
 Cu.import('resource://gre/modules/LoadContextInfo.jsm');
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var first = true;
 function contentHandler(metadata, response)
@@ -35,18 +35,8 @@ function run_test()
 
 // Makes a regular request
 function test_first_response() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(uri+"/test",
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
-
-  chan.asyncOpen(new ChannelListener(check_first_response, null), null);
+  var chan = NetUtil.newChannel({uri: uri+"/test", loadUsingSystemPrincipal: true});
+  chan.asyncOpen2(new ChannelListener(check_first_response, null));
 }
 
 // Checks that we got the appropriate response
@@ -71,19 +61,9 @@ function cache_entry_callback(status, entry) {
 
 // Makes a request with the INHIBIT_CACHING load flag
 function test_inhibit_caching() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(uri+"/test",
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
-
+  var chan = NetUtil.newChannel({uri: uri+"/test", loadUsingSystemPrincipal: true});
   chan.QueryInterface(Ci.nsIRequest).loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
-  chan.asyncOpen(new ChannelListener(check_second_response, null), null);
+  chan.asyncOpen2(new ChannelListener(check_second_response, null));
 }
 
 // Checks that we got a different response from the first request
