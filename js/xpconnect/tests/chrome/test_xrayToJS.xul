@@ -498,7 +498,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     // functions.  We're trying to remove them anyway; no point doing extra work
     // to expose them over Xrays.
     let ctorPropsToSkip = ["join", "reverse", "sort", "push", "pop", "shift",
-                           "unshift", "splice", "concat", "slice"];
+                           "unshift", "splice", "slice"];
     testXray('Array', new iwin.Array(20), new iwin.Array(), propsToSkip,
              ctorPropsToSkip);
 
