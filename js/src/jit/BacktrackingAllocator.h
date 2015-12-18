@@ -344,11 +344,9 @@ class LiveRange : public TempObject
         hasDefinition_ = true;
     }
 
-    // Return a string describing this range. This is not re-entrant!
-#ifdef DEBUG
-    const char* toString() const;
-#else
-    const char* toString() const { return "???"; }
+#ifdef JS_JITSPEW
+    // Return a string describing this range.
+    UniqueChars toString() const;
 #endif
 
     // Comparator for use in range splay trees.
@@ -467,11 +465,9 @@ class LiveBundle : public TempObject
         return spillParent_;
     }
 
-    // Return a string describing this bundle. This is not re-entrant!
-#ifdef DEBUG
-    const char* toString() const;
-#else
-    const char* toString() const { return "???"; }
+#ifdef JS_JITSPEW
+    // Return a string describing this bundle.
+    UniqueChars toString() const;
 #endif
 };
 
