@@ -2700,6 +2700,12 @@ public class BrowserApp extends GeckoApp
 
         @Override
         public boolean onInterceptTouchEvent(View view, MotionEvent event) {
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN
+                    && mSnackbar != null
+                    && mSnackbar.isShown()) {
+                mSnackbar.dismiss();
+            }
+
             // Only try to hide the button toast if it's already inflated and if we are starting a tap action.
             // By only hiding a toast at the start of a tap action, a button toast opened in response to a tap
             // action is not immediately hidden as the tap action continues.
