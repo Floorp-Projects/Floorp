@@ -83,6 +83,50 @@ public:
   }
 };
 
+class nsOwningThreadSourceSurfaceRef;
+
+template <>
+class nsAutoRefTraits<nsOwningThreadSourceSurfaceRef> {
+public:
+  typedef mozilla::gfx::SourceSurface* RawRef;
+
+  /**
+   * The XPCOM event that will do the actual release on the creation thread.
+   */
+  class SurfaceReleaser : public nsRunnable {
+  public:
+    explicit SurfaceReleaser(RawRef aRef) : mRef(aRef) {}
+    NS_IMETHOD Run() {
+      mRef->Release();
+      return NS_OK;
+    }
+    RawRef mRef;
+  };
+
+  static RawRef Void() { return nullptr; }
+  void Release(RawRef aRawRef)
+  {
+    MOZ_ASSERT(mOwningThread);
+    bool current;
+    mOwningThread->IsOnCurrentThread(&current);
+    if (current) {
+      aRawRef->Release();
+      return;
+    }
+    nsCOMPtr<nsIRunnable> runnable = new SurfaceReleaser(aRawRef);
+    mOwningThread->Dispatch(runnable, nsIThread::DISPATCH_NORMAL);
+  }
+  void AddRef(RawRef aRawRef)
+  {
+    MOZ_ASSERT(!mOwningThread);
+    NS_GetCurrentThread(getter_AddRefs(mOwningThread));
+    aRawRef->AddRef();
+  }
+
+private:
+  nsCOMPtr<nsIThread> mOwningThread;
+};
+
 #endif
 
 #ifdef XP_WIN
@@ -784,7 +828,7 @@ public:
 
 private:
   gfx::IntSize mSize;
-  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
+  nsCountedRef<nsOwningThreadSourceSurfaceRef> mSourceSurface;
   nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
 };
 
