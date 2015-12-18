@@ -3692,7 +3692,6 @@ fi
 MOZ_RAW=
 MOZ_VORBIS=
 MOZ_TREMOR=
-MOZ_WAVE=1
 MOZ_SAMPLE_TYPE_FLOAT32=
 MOZ_SAMPLE_TYPE_S16=
 MOZ_GSTREAMER=
@@ -5487,18 +5486,6 @@ if test -z "$MOZ_NATIVE_LIBVPX"; then
 
     dnl native libvpx no longer has vpx_mem_set_functions
     AC_DEFINE(MOZ_VPX_NO_MEM_REPORTING)
-fi
-
-dnl ========================================================
-dnl = Disable Wave decoder support
-dnl ========================================================
-MOZ_ARG_DISABLE_BOOL(wave,
-[  --disable-wave          Disable Wave decoder support],
-    MOZ_WAVE=,
-    MOZ_WAVE=1)
-
-if test -n "$MOZ_WAVE"; then
-    AC_DEFINE(MOZ_WAVE)
 fi
 
 dnl ========================================================
@@ -8905,7 +8892,6 @@ AC_SUBST(NS_ENABLE_TSF)
 AC_SUBST(WIN32_CONSOLE_EXE_LDFLAGS)
 AC_SUBST(WIN32_GUI_EXE_LDFLAGS)
 
-AC_SUBST(MOZ_WAVE)
 AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WMF)

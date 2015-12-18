@@ -30,6 +30,7 @@ DIRS += [
     'ogg',
     'platforms',
     'systemservices',
+    'wave',
     'webaudio',
     'webm',
     'webrtc',
@@ -40,9 +41,6 @@ DIRS += [
 
 if CONFIG['MOZ_RAW']:
     DIRS += ['raw']
-
-if CONFIG['MOZ_WAVE']:
-    DIRS += ['wave']
 
 if CONFIG['MOZ_GSTREAMER']:
     DIRS += ['gstreamer']
