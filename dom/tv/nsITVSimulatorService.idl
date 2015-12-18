@@ -16,6 +16,13 @@ interface mozIDOMWindow;
 interface nsITVSimulatorService : nsITVService
 {
   /*
+   * Init the simulation data.
+   *
+   * @param mockedData    The preloaded mocked data in stringified JSON format.
+   */
+  void initData([optional] in DOMString mockedData);
+
+  /*
    * Get the URL of simulated video blob.
    *
    * @param tunerId       The ID of the tuner.
@@ -29,4 +36,42 @@ interface nsITVSimulatorService : nsITVService
                                 in DOMString channelNumber,
                                 in mozIDOMWindow window,
                                 [retval] out DOMString blobUrl);
+
+  /*
+   * Simulate some channels are scanned.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   */
+  void simulateChannelScanned(in DOMString tunerId,
+                              in DOMString sourceType);
+
+  /*
+   * Simulate channel scanning complete.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   */
+  void simulateChannelScanComplete(in DOMString tunerId,
+                                   in DOMString sourceType);
+
+  /*
+   * Simulate error occurs during channel scanning.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   */
+  void simulateChannelScanError(in DOMString tunerId,
+                                in DOMString sourceType);
+
+  /*
+   * Simulate EIT broadcasted.
+   *
+   * @param tunerId       The ID of the tuner.
+   * @param sourceType    The source type to be used.
+   * @param channelNumber The LCN (Logical Channel Number) of the channel.
+   */
+  void simulateEITBroadcasted(in DOMString tunerId,
+                              in DOMString sourceType,
+                              in DOMString channelNumber);
 };

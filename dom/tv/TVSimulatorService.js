@@ -44,34 +44,28 @@ function TVSimulatorService() {
   // }
   this._sourceListeners = {};
   this._internalTuners = null;
-  this._scanCompleteTimer = null;
-  this._scanningWrapTunerData = null;
-  this._init();
+  try {
+    this.initData();
+  } catch (e) {
+    debug("Error: " + e + ", Cannot init the data.");
+  }
 }
 
 TVSimulatorService.prototype = {
   classID: Components.ID("{94b065ad-d45a-436a-b394-6dabc3cf110f}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITVSimulatorService,
-                                         Ci.nsITVService,
-                                         Ci.nsITimerCallback]),
+                                         Ci.nsITVService]),
 
-  _init: function TVSimInit() {
-    if (this._internalTuners) {
-      return;
-    }
-
-    // I try to load the testing mock data if related preference are already set.
-    // Otherwise, use to the simulation data from prefences.
-    // See /dom/tv/test/mochitest/head.js for more details.
-    let settingStr = "";
-    try {
-      settingStr = Services.prefs.getCharPref("dom.testing.tv_mock_data");
-    } catch(e) {
+  initData: function(aMockedData) {
+    // Use the passed-in mocked data. If it doesn't exist, then try to load the
+    // simulation data.
+    let settingStr = aMockedData;
+    if (!settingStr) {
       try {
         settingStr = this._getDummyData();
       } catch(e) {
         debug("TV Simulator service failed to load simulation data: " + e);
-        return;
+        throw Cr.NS_ERROR_FAILURE;
       }
     }
 
@@ -81,8 +75,7 @@ TVSimulatorService.prototype = {
        *
        * Setting JSON file format:
        *
-       * Note: This setting JSON is not allow empty array.
-       *       If set the empty array, _init() will fail.
+       * Note: Empty arrays are not allowed in the format.
        *       e.g.
        *        - "tuners": []
        *        - "channels":[]
@@ -121,13 +114,13 @@ TVSimulatorService.prototype = {
       settingsObj = JSON.parse(settingStr);
     } catch(e) {
       debug("File load error: " + e);
-      return;
+      throw Cr.NS_ERROR_FAILURE;
     }
 
     // validation
     if (!this._validateSettings(settingsObj)) {
       debug("Failed to validate settings.");
-      return;
+      throw Cr.NS_ERROR_INVALID_ARG;
     }
 
     // Key is as follow
@@ -299,68 +292,20 @@ TVSimulatorService.prototype = {
       throw Cr.NS_ERROR_INVALID_ARG;
     }
 
-    if (this._scanningWrapTunerData) {
-      aCallback.notifyError(Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-
     let wrapTunerData = this._getWrapTunerData(aTunerId, aSourceType);
     if (!wrapTunerData || !wrapTunerData.channels) {
       aCallback.notifyError(Ci.nsITVServiceCallback.TV_ERROR_FAILURE);
       return;
     }
 
-    this._scanningWrapTunerData = wrapTunerData;
-
     aCallback.notifySuccess(null);
-
-    for (let [key, wrapChannelData] of wrapTunerData.channels) {
-      for (let listener of this._getSourceListeners(aTunerId, aSourceType)) {
-        listener.notifyChannelScanned(aTunerId, aSourceType, wrapChannelData.channel);
-      }
-    }
-
-    this._scanCompleteTimer = Cc["@mozilla.org/timer;1"]
-                                .createInstance(Ci.nsITimer);
-    this._scanCompleteTimer.initWithCallback(this, 10,
-                                             Ci.nsITimer.TYPE_ONE_SHOT);
-  },
-
-  notify: function(aTimer) {
-    if (!this._scanningWrapTunerData) {
-      return;
-    }
-
-    this._scanCompleteTimer = null;
-
-    let tunerId = this._scanningWrapTunerData.tuner.id;
-    let sourceType = this._scanningWrapTunerData.sourceType;
-    let notifyResult = Cr.NS_OK;
-    for (let listener of this._getSourceListeners(tunerId, sourceType)) {
-      notifyResult = listener.notifyChannelScanComplete(tunerId, sourceType);
-    }
-    this._scanningWrapTunerData = null;
-    return notifyResult;
   },
 
   stopScanningChannels: function(aTunerId, aSourceType, aCallback) {
+
     if (!aCallback) {
       debug("aCallback is null\n");
       throw Cr.NS_ERROR_INVALID_ARG;
-    }
-
-    if (!this._scanningWrapTunerData ||
-        aTunerId != this._scanningWrapTunerData.tuner.id ||
-        aSourceType != this._scanningWrapTunerData.sourceType) {
-      aCallback.notifyError(Cr.NS_ERROR_DOM_INVALID_STATE_ERR);
-      return;
-    }
-
-    this._scanningWrapTunerData = null;
-
-    if (this._scanCompleteTimer) {
-      this._scanCompleteTimer.cancel();
-      this._scanCompleteTimer = null;
     }
 
     for (let listener of this._getSourceListeners(aTunerId, aSourceType)) {
@@ -462,6 +407,51 @@ TVSimulatorService.prototype = {
     let videoBlobURL = aWin.URL.createObjectURL(videoFile);
 
     return videoBlobURL;
+  },
+
+  simulateChannelScanned: function(aTunerId, aSourceType) {
+    let wrapTunerData = this._getWrapTunerData(aTunerId, aSourceType);
+    if (!wrapTunerData || !wrapTunerData.channels) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let listeners = this._getSourceListeners(aTunerId, aSourceType);
+    for (let [key, wrapChannelData] of wrapTunerData.channels) {
+      for (let listener of listeners) {
+        listener.notifyChannelScanned(aTunerId, aSourceType, wrapChannelData.channel);
+      }
+    }
+  },
+
+  simulateChannelScanComplete: function(aTunerId, aSourceType) {
+    for (let listener of this._getSourceListeners(aTunerId, aSourceType)) {
+      listener.notifyChannelScanComplete(aTunerId, aSourceType);
+    }
+  },
+
+  simulateChannelScanError: function(aTunerId, aSourceType) {
+    for (let listener of this._getSourceListeners(aTunerId, aSourceType)) {
+      listener.notifyChannelScanStopped(aTunerId, aSourceType);
+    }
+  },
+
+  simulateEITBroadcasted: function(aTunerId, aSourceType, aChannelNumber) {
+    let wrapTunerData = this._getWrapTunerData(aTunerId, aSourceType);
+    if (!wrapTunerData || !wrapTunerData.channels) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    let wrapChannelData = wrapTunerData.channels.get(aChannelNumber);
+    if (!wrapChannelData || !wrapChannelData.programs) {
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+
+    for (let listener of this._getSourceListeners(aTunerId, aSourceType)) {
+      listener.notifyEITBroadcasted(aTunerId, aSourceType,
+                                    wrapChannelData.channel,
+                                    wrapChannelData.programs,
+                                    wrapChannelData.programs.length);
+    }
   },
 
   _getDummyData : function() {

@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test channel scanning complete for TV API</title>
+  <title>Test TVEITBroadcastedEvent for TV API</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -14,8 +14,6 @@
 
 function runTest() {
   ok('tv' in navigator, "navigator.tv should exist.");
-
-  var isScannedEventFired = false;
   var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('tv_chrome_script.js'));
 
   navigator.tv.getTuners().then(
@@ -27,32 +25,29 @@ function runTest() {
           ok(aSources.length > 0, "Got at least 1 source.");
           var source = aSources[0];
 
-          source.onscanningstatechanged = function(aEvent) {
-            if (aEvent.state === 'scanned') {
-              if (!isScannedEventFired) {
-                isScannedEventFired = true;
-                gScript.sendAsyncMessage('trigger-channel-scan-complete',
-                                         { tunerId: aTuners[0].id,
-                                           sourceType: source.type });
-              }
-              info("Received channel scanned event.");
-              ok(aEvent.channel, "Scanned channel should be set.");
-            } else if (aEvent.state === 'completed') {
-              ok(isScannedEventFired, "Received channel scanning completed event after channel scanned event.");
-              gScript.destroy();
-              SimpleTest.finish();
+          source.oneitbroadcasted = function(aEvent) {
+            info("Received EIT broadcasted event.");
+
+            var programs = aEvent.programs;
+            for (var i = 0; i < programs.length; i++) {
+              ok(programs[i], "Program " + i + " should be set.")
             }
+
+            gScript.destroy();
+            SimpleTest.finish();
           };
 
-          // TODO Bug 1088818 - Modify the behavior of channel scanning.
-          source.startScanning({}).then(
-            function() {
-              gScript.sendAsyncMessage('trigger-channel-scanned',
+          source.getChannels().then(
+            function(aChannels) {
+              ok(aChannels.length > 0, "Got at least 1 channel.");
+
+              gScript.sendAsyncMessage('trigger-eit-broadcasted',
                                        { tunerId: aTuners[0].id,
-                                         sourceType: source.type });
+                                         sourceType: source.type,
+                                         channelNumber: aChannels[0].number });
             },
             function(aError) {
-              ok(false, "Error occurred when starting scanning: " + aError);
+              ok(false, "Error occurred when getting channels: " + aError);
               gScript.destroy();
               SimpleTest.finish();
             }
@@ -73,7 +68,6 @@ function runTest() {
   );
 }
 
-SimpleTest.expectAssertions(0, 2);
 SimpleTest.waitForExplicitFinish();
 prepareTest(runTest);
 
