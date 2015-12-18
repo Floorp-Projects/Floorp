@@ -317,8 +317,13 @@ class DrawTargetCaptureImpl;
  * This is the base class for source surfaces. These objects are surfaces
  * which may be used as a source in a SurfacePattern or a DrawSurface call.
  * They cannot be drawn to directly.
+ *
+ * Although SourceSurface has thread-safe refcount, some SourceSurface cannot
+ * be used on random threads at the same time. Only DataSourceSurface can be
+ * used on random threads now. This will be fixed in the future. Eventually
+ * all SourceSurface should be thread-safe.
  */
-class SourceSurface : public RefCounted<SourceSurface>
+class SourceSurface : public external::AtomicRefCounted<SourceSurface>
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurface)
