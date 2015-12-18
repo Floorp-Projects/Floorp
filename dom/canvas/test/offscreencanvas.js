@@ -39,6 +39,14 @@ function sendBlob(blob) {
   postMessageGeneral({type: "blob", blob: blob});
 }
 
+function sendImageBitmap(img) {
+  if (port) {
+    port.postMessage({type: "imagebitmap", bitmap: img});
+  } else {
+    postMessage({type: "imagebitmap", bitmap: img});
+  }
+}
+
 //--------------------------------------------------------------------
 // WebGL Drawing Functions
 //--------------------------------------------------------------------
@@ -241,6 +249,19 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
     canvas.toBlob().then(function(blob) {
       sendBlob(blob);
     });
+  }
+  //------------------------------------------------------------------------
+  // Test toImageBitmap
+  //------------------------------------------------------------------------
+  else if (test == "webgl_imagebitmap") {
+    draw = createDrawFunc(canvas);
+    if (!draw) {
+      return;
+    }
+
+    draw("", false);
+    var imgBitmap = canvas.transferToImageBitmap();
+    sendImageBitmap(imgBitmap);
   }
   //------------------------------------------------------------------------
   // Canvas Size Change from Worker
