@@ -448,17 +448,11 @@ class FullParseHandler
     void addStatementToList(ParseNode* list, ParseNode* stmt, PC* pc) {
         MOZ_ASSERT(list->isKind(PNK_STATEMENTLIST));
 
-        if (stmt->isKind(PNK_FUNCTION)) {
-            if (pc->atBodyLevel()) {
-                // PNX_FUNCDEFS notifies the emitter that the block contains
-                // body-level function definitions that should be processed
-                // before the rest of nodes.
-                list->pn_xflags |= PNX_FUNCDEFS;
-            } else {
-                // General deoptimization was done in Parser::functionDef.
-                MOZ_ASSERT_IF(pc->sc->isFunctionBox(),
-                              pc->sc->asFunctionBox()->hasExtensibleScope());
-            }
+        if (stmt->isKind(PNK_FUNCTION) || stmt->isKind(PNK_ANNEXB_FUNCTION)) {
+            // PNX_FUNCDEFS notifies the emitter that the block contains
+            // body-level function definitions that should be processed
+            // before the rest of nodes.
+            list->pn_xflags |= PNX_FUNCDEFS;
         }
 
         list->append(stmt);
@@ -656,6 +650,11 @@ class FullParseHandler
         MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
         pn->pn_funbox = funbox;
     }
+    ParseNode* newFunctionDefinitionForAnnexB(ParseNode* pn, ParseNode* assignment) {
+        MOZ_ASSERT(pn->isKind(PNK_FUNCTION));
+        MOZ_ASSERT(assignment->isKind(PNK_ASSIGN) || assignment->isKind(PNK_VAR));
+        return new_<BinaryNode>(PNK_ANNEXB_FUNCTION, JSOP_NOP, pos(), pn, assignment);
+    }
     void addFunctionArgument(ParseNode* pn, ParseNode* argpn) {
         pn->pn_body->append(argpn);
     }
@@ -727,7 +726,7 @@ class FullParseHandler
         return node->isKind(PNK_SUPERBASE);
     }
 
-    inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op);
+    inline bool finishInitializerAssignment(ParseNode* pn, ParseNode* init);
     inline void setLexicalDeclarationOp(ParseNode* pn, JSOp op);
 
     void setBeginPosition(ParseNode* pn, ParseNode* oth) {
@@ -990,7 +989,7 @@ FullParseHandler::setLastFunctionArgumentDestructuring(ParseNode* funcpn, ParseN
 }
 
 inline bool
-FullParseHandler::finishInitializerAssignment(ParseNode* pn, ParseNode* init, JSOp op)
+FullParseHandler::finishInitializerAssignment(ParseNode* pn, ParseNode* init)
 {
     if (pn->isUsed()) {
         pn = makeAssignment(pn, init);
