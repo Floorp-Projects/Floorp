@@ -26,6 +26,7 @@ class nsDisplayListBuilder;
 namespace mozilla {
 namespace layers {
 class CanvasLayer;
+class Layer;
 class LayerManager;
 } // namespace layers
 namespace gfx {
@@ -39,6 +40,7 @@ class nsICanvasRenderingContextInternal :
 {
 public:
   typedef mozilla::layers::CanvasLayer CanvasLayer;
+  typedef mozilla::layers::Layer Layer;
   typedef mozilla::layers::LayerManager LayerManager;
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICANVASRENDERINGCONTEXTINTERNAL_IID)
@@ -129,9 +131,9 @@ public:
 
   // Return the CanvasLayer for this context, creating
   // one for the given layer manager if not available.
-  virtual already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* builder,
-                                                       CanvasLayer *oldLayer,
-                                                       LayerManager *manager) = 0;
+  virtual already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* builder,
+                                                 Layer *oldLayer,
+                                                 LayerManager *manager) = 0;
 
   // Return true if the canvas should be forced to be "inactive" to ensure
   // it can be drawn to the screen even if it's too large to be blitted by

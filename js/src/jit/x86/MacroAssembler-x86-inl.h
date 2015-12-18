@@ -16,6 +16,7 @@ namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
+// Logical functions
 
 void
 MacroAssembler::andPtr(Register src, Register dest)
@@ -78,10 +79,145 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    addl(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    addl(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    addl(Imm32(imm.value), dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    addl(Operand(src), dest);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addl(src.low, dest.low);
     adcl(src.high, dest.high);
+}
+
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    addl(imm, dest.low);
+    adcl(Imm32(0), dest.high);
+}
+
+void
+MacroAssembler::addConstantDouble(double d, FloatRegister dest)
+{
+    Double* dbl = getDouble(d);
+    if (!dbl)
+        return;
+    masm.vaddsd_mr(nullptr, dest.encoding(), dest.encoding());
+    propagateOOM(dbl->uses.append(CodeOffset(masm.size())));
+}
+
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    subl(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    subl(src, Operand(dest));
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    subl(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    subl(Operand(addr), dest);
+}
+
+// Note: this function clobbers eax and edx.
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    MOZ_ASSERT(dest.low != eax && dest.low != edx);
+    MOZ_ASSERT(dest.high != eax && dest.high != edx);
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+    imull(edx, dest.high);
+
+    // edx:eax = LOW(dest) * LOW(imm);
+    movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
+    movl(dest.low, eax);
+    mull(edx);
+
+    // HIGH(dest) += edx;
+    addl(edx, dest.high);
+
+    // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+    if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
+        leal(Operand(dest.low, dest.low, TimesFour), edx);
+    else
+        MOZ_CRASH("Unsupported imm");
+    addl(edx, dest.high);
+
+    // LOW(dest) = eax;
+    movl(eax, dest.low);
+}
+
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    lea(Operand(src, src, TimesTwo), dest);
+}
+
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    movl(imm, temp);
+    vmulsd(Operand(temp, 0), dest, dest);
+}
+
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    addl(Imm32(1), Operand(dest));
+    Label noOverflow;
+    j(NonZero, &noOverflow);
+    addl(Imm32(1), Operand(dest.offset(4)));
+    bind(&noOverflow);
 }
 
 // ===============================================================
@@ -121,6 +257,29 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+// Note: this function clobbers the source register.
+void
+MacroAssemblerX86::convertUInt32ToDouble(Register src, FloatRegister dest)
+{
+    // src is [0, 2^32-1]
+    subl(Imm32(0x80000000), src);
+
+    // Now src is [-2^31, 2^31-1] - int range, but not the same value.
+    convertInt32ToDouble(src, dest);
+
+    // dest is now a double with the int range.
+    // correct the double value by adding 0x80000000.
+    asMasm().addConstantDouble(2147483648.0, dest);
+}
+
+// Note: this function clobbers the source register.
+void
+MacroAssemblerX86::convertUInt32ToFloat32(Register src, FloatRegister dest)
+{
+    convertUInt32ToDouble(src, dest);
+    convertDoubleToFloat32(dest, dest);
+}
 
 } // namespace jit
 } // namespace js

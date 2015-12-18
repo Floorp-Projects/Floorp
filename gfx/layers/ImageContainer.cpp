@@ -549,18 +549,18 @@ PlanarYCbCrImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-CairoImage::CairoImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface)
+SourceSurfaceImage::SourceSurfaceImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface)
   : Image(nullptr, ImageFormat::CAIRO_SURFACE),
     mSize(aSize),
     mSourceSurface(aSourceSurface)
 {}
 
-CairoImage::~CairoImage()
+SourceSurfaceImage::~SourceSurfaceImage()
 {
 }
 
 TextureClient*
-CairoImage::GetTextureClient(CompositableClient *aClient)
+SourceSurfaceImage::GetTextureClient(CompositableClient *aClient)
 {
   if (!aClient) {
     return nullptr;

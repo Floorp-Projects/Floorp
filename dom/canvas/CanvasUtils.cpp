@@ -61,6 +61,11 @@ GetCanvasContextType(const nsAString& str, dom::CanvasContextType* const out_typ
     }
   }
 
+  if (str.EqualsLiteral("bitmaprenderer")) {
+    *out_type = dom::CanvasContextType::ImageBitmap;
+    return true;
+  }
+
   return false;
 }
 

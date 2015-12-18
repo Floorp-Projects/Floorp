@@ -8,6 +8,7 @@
 #include "ContentHelper.h"
 #include "gfxPlatform.h" // For gfxPlatform::UseTiling
 #include "gfxPrefs.h"
+#include "LayersLogging.h"  // For Stringify
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/IntegerPrintfMacros.h"

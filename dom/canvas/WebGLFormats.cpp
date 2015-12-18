@@ -539,11 +539,14 @@ FormatUsageAuthority::CreateForWebGL1(gl::GLContext* gl)
     // RGBA8 is made renderable in WebGL 1.0, "Framebuffer Object Attachments"
     //                              render filter
     //                              able   able
-    fnSet(EffectiveFormat::RGBA8  , true , true);
-    fnSet(EffectiveFormat::RGBA4  , true , true);
-    fnSet(EffectiveFormat::RGB5_A1, true , true);
-    fnSet(EffectiveFormat::RGB8   , false, true);
-    fnSet(EffectiveFormat::RGB565 , true , true);
+    fnSet(EffectiveFormat::RGBA8  , true, true);
+    fnSet(EffectiveFormat::RGBA4  , true, true);
+    fnSet(EffectiveFormat::RGB5_A1, true, true);
+    fnSet(EffectiveFormat::RGB565 , true, true);
+
+    // RGB8 is not guaranteed to be renderable, but we should allow it for web-compat.
+    // Min-capability mode should mark this as non-renderable.
+    fnSet(EffectiveFormat::RGB8, true, true);
 
     fnSet(EffectiveFormat::Luminance8Alpha8, false, true);
     fnSet(EffectiveFormat::Luminance8      , false, true);

@@ -1,4 +1,4 @@
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 function inChildProcess() {
   return Cc["@mozilla.org/xre/app-info;1"]
@@ -7,15 +7,8 @@ function inChildProcess() {
 }
 
 function makeChan(url, appId, inBrowser) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
+  var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
+                    .QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
     isInBrowserElement: inBrowser,
@@ -37,28 +30,28 @@ function makeChan(url, appId, inBrowser) {
 function run_test() {
   do_test_pending();
   var chan = makeChan("http://localhost:12345/first", 14, false);
-  chan.asyncOpen(new ChannelListener(checkResponse, "response0"), null);
+  chan.asyncOpen2(new ChannelListener(checkResponse, "response0"));
 }
 
 // Should return cached result
 function test1() {
   do_test_pending();
   var chan = makeChan("http://localhost:12345/first", 14, false);
-  chan.asyncOpen(new ChannelListener(checkResponse, "response0"), null);
+  chan.asyncOpen2(new ChannelListener(checkResponse, "response0"));
 }
 
 // This request should fail
 function test2() {
   do_test_pending();
   var chan = makeChan("http://localhost:12345/second", 14, false);
-  chan.asyncOpen(new ChannelListener(checkResponse, "", CL_EXPECT_FAILURE), null);
+  chan.asyncOpen2(new ChannelListener(checkResponse, "", CL_EXPECT_FAILURE));
 }
 
 // This request should succeed
 function test3() {
   do_test_pending();
   var chan = makeChan("http://localhost:12345/second", 14, false);
-  chan.asyncOpen(new ChannelListener(checkResponse, "response3"), null);
+  chan.asyncOpen2(new ChannelListener(checkResponse, "response3"));
 }
 
 function checkResponse(req, buffer, expected) {

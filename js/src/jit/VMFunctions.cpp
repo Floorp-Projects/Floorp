@@ -34,8 +34,7 @@ using namespace js::jit;
 namespace js {
 namespace jit {
 
-// Don't explicitly initialize, it's not guaranteed that this initializer will
-// run before the constructors for static VMFunctions.
+// Statics are initialized to null.
 /* static */ VMFunction* VMFunction::functions;
 
 AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx, MutableHandleValue rval)
@@ -48,11 +47,6 @@ AutoDetectInvalidation::AutoDetectInvalidation(JSContext* cx, MutableHandleValue
 void
 VMFunction::addToFunctions()
 {
-    static bool initialized = false;
-    if (!initialized) {
-        initialized = true;
-        functions = nullptr;
-    }
     this->next = functions;
     functions = this;
 }
