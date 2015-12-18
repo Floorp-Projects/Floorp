@@ -1229,7 +1229,7 @@ BacktrackingAllocator::processBundle(LiveBundle* bundle)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
         JitSpew(JitSpew_RegAlloc, "Allocating %s [priority %lu] [weight %lu]",
-                bundle->toString(), computePriority(bundle), computeSpillWeight(bundle));
+                bundle->toString().get(), computePriority(bundle), computeSpillWeight(bundle));
     }
 
     // A bundle can be processed by doing any of the following:
@@ -1322,7 +1322,7 @@ BacktrackingAllocator::computeRequirement(LiveBundle* bundle,
             if (policy == LDefinition::FIXED) {
                 // Fixed policies get a FIXED requirement.
                 JitSpew(JitSpew_RegAlloc, "  Requirement %s, fixed by definition",
-                        reg.def()->output()->toString());
+                        reg.def()->output()->toString().get());
                 if (!requirement->merge(Requirement(*reg.def()->output())))
                     return false;
             } else if (reg.ins()->isPhi()) {
@@ -1398,7 +1398,7 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
                     return false;
             } else {
                 JitSpew(JitSpew_RegAlloc, "  %s collides with fixed use %s",
-                        rAlias.reg.name(), existing->toString());
+                        rAlias.reg.name(), existing->toString().get());
                 *pfixed = true;
                 return true;
             }
@@ -1417,13 +1417,13 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
             if (aliasedConflicting.length() == 1) {
                 LiveBundle* existing = aliasedConflicting[0];
                 JitSpew(JitSpew_RegAlloc, "  %s collides with %s [weight %lu]",
-                        r.reg.name(), existing->toString(), computeSpillWeight(existing));
+                        r.reg.name(), existing->toString().get(), computeSpillWeight(existing));
             } else {
                 JitSpew(JitSpew_RegAlloc, "  %s collides with the following", r.reg.name());
                 for (size_t i = 0; i < aliasedConflicting.length(); i++) {
                     LiveBundle* existing = aliasedConflicting[i];
                     JitSpew(JitSpew_RegAlloc, "      %s [weight %lu]",
-                            existing->toString(), computeSpillWeight(existing));
+                            existing->toString().get(), computeSpillWeight(existing));
                 }
             }
         }
@@ -1460,7 +1460,7 @@ BacktrackingAllocator::evictBundle(LiveBundle* bundle)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
         JitSpew(JitSpew_RegAlloc, "  Evicting %s [priority %lu] [weight %lu]",
-                bundle->toString(), computePriority(bundle), computeSpillWeight(bundle));
+                bundle->toString().get(), computePriority(bundle), computeSpillWeight(bundle));
     }
 
     AnyRegister reg(bundle->allocation().toRegister());
@@ -1483,9 +1483,9 @@ BacktrackingAllocator::splitAndRequeueBundles(LiveBundle* bundle,
                                               const LiveBundleVector& newBundles)
 {
     if (JitSpewEnabled(JitSpew_RegAlloc)) {
-        JitSpew(JitSpew_RegAlloc, "    splitting bundle %s into:", bundle->toString());
+        JitSpew(JitSpew_RegAlloc, "    splitting bundle %s into:", bundle->toString().get());
         for (size_t i = 0; i < newBundles.length(); i++)
-            JitSpew(JitSpew_RegAlloc, "      %s", newBundles[i]->toString());
+            JitSpew(JitSpew_RegAlloc, "      %s", newBundles[i]->toString().get());
     }
 
     // Remove all ranges in the old bundle from their register's list.
@@ -2220,74 +2220,55 @@ BacktrackingAllocator::annotateMoveGroups()
 // Debugging methods
 /////////////////////////////////////////////////////////////////////
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
 
-const char*
+UniqueChars
 LiveRange::toString() const
 {
-    // Not reentrant!
-    static char buf[10000];
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char* cursor = buf;
-    char* end = cursor + sizeof(buf);
+    char* buf = JS_smprintf("v%u [%u,%u)", hasVreg() ? vreg() : 0, from().bits(), to().bits());
 
-    uint32_t n = JS_snprintf(cursor, end - cursor, "v%u [%u,%u)",
-                        hasVreg() ? vreg() : 0, from().bits(), to().bits());
-    if (n >= uint32_t(end - cursor))
-        return "(truncated)";
-    cursor += n;
+    if (buf && bundle() && !bundle()->allocation().isBogus())
+        buf = JS_sprintf_append(buf, " %s", bundle()->allocation().toString().get());
 
-    if (bundle() && !bundle()->allocation().isBogus()) {
-        n = JS_snprintf(cursor, end - cursor, " %s", bundle()->allocation().toString());
-        if (n >= uint32_t(end - cursor))
-            return " (truncated)";
-        cursor += n;
-    }
+    if (buf && hasDefinition())
+        buf = JS_sprintf_append(buf, " (def)");
 
-    if (hasDefinition()) {
-        n = JS_snprintf(cursor, end - cursor, " (def)");
-        if (n >= uint32_t(end - cursor))
-            return " (truncated)";
-        cursor += n;
-    }
+    for (UsePositionIterator iter = usesBegin(); buf && iter; iter++)
+        buf = JS_sprintf_append(buf, " %s@%u", iter->use()->toString().get(), iter->pos.bits());
 
-    for (UsePositionIterator iter = usesBegin(); iter; iter++) {
-        n = JS_snprintf(cursor, end - cursor, " %s@%u", iter->use()->toString(), iter->pos.bits());
-        if (n >= uint32_t(end - cursor))
-            return " (truncated)";
-        cursor += n;
-    }
+    if (!buf)
+        oomUnsafe.crash("LiveRange::toString()");
 
-    return buf;
+    return UniqueChars(buf);
 }
 
-const char*
+UniqueChars
 LiveBundle::toString() const
 {
-    // Not reentrant!
-    static char buf[10000];
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    char* cursor = buf;
-    char* end = cursor + sizeof(buf);
+    char *buf = JS_smprintf("");
 
-    for (LiveRange::BundleLinkIterator iter = rangesBegin(); iter; iter++) {
-        uint32_t n = JS_snprintf(cursor, end - cursor, "%s %s",
-                            (iter == rangesBegin()) ? "" : " ##",
-                            LiveRange::get(*iter)->toString());
-        if (n >= uint32_t(end - cursor))
-            return "(truncated)";
-        cursor += n;
+    for (LiveRange::BundleLinkIterator iter = rangesBegin(); buf && iter; iter++) {
+        buf = JS_smprintf(buf, "%s %s",
+                          (iter == rangesBegin()) ? "" : " ##",
+                          LiveRange::get(*iter)->toString().get());
     }
 
-    return buf;
+    if (!buf)
+        oomUnsafe.crash("LiveBundle::toString()");
+
+    return UniqueChars(buf);
 }
 
-#endif // DEBUG
+#endif // JS_JITSPEW
 
 void
 BacktrackingAllocator::dumpVregs()
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     MOZ_ASSERT(!vregs[0u].hasRanges());
 
     fprintf(stderr, "Live ranges by virtual register:\n");
@@ -2298,7 +2279,7 @@ BacktrackingAllocator::dumpVregs()
         for (LiveRange::RegisterLinkIterator iter = reg.rangesBegin(); iter; iter++) {
             if (iter != reg.rangesBegin())
                 fprintf(stderr, " ## ");
-            fprintf(stderr, "%s", LiveRange::get(*iter)->toString());
+            fprintf(stderr, "%s", LiveRange::get(*iter)->toString().get());
         }
         fprintf(stderr, "\n");
     }
@@ -2315,7 +2296,7 @@ BacktrackingAllocator::dumpVregs()
                 for (LiveRange::BundleLinkIterator iter = bundle->rangesBegin(); iter; iter++) {
                     if (iter != bundle->rangesBegin())
                         fprintf(stderr, " ## ");
-                    fprintf(stderr, "%s", LiveRange::get(*iter)->toString());
+                    fprintf(stderr, "%s", LiveRange::get(*iter)->toString().get());
                 }
                 fprintf(stderr, "\n");
             }
@@ -2327,12 +2308,12 @@ BacktrackingAllocator::dumpVregs()
 void
 BacktrackingAllocator::dumpFixedRanges()
 {
-#ifdef DEBUG
-    fprintf(stderr, "Live ranges by physical register: %s\n", callRanges->toString());
-#endif // DEBUG
+#ifdef JS_JITSPEW
+    fprintf(stderr, "Live ranges by physical register: %s\n", callRanges->toString().get());
+#endif // JS_JITSPEW
 }
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
 struct BacktrackingAllocator::PrintLiveRange
 {
     bool& first_;
@@ -2345,7 +2326,7 @@ struct BacktrackingAllocator::PrintLiveRange
             first_ = false;
         else
             fprintf(stderr, " /");
-        fprintf(stderr, " %s", range->toString());
+        fprintf(stderr, " %s", range->toString().get());
     }
 };
 #endif
@@ -2353,7 +2334,7 @@ struct BacktrackingAllocator::PrintLiveRange
 void
 BacktrackingAllocator::dumpAllocations()
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     fprintf(stderr, "Allocations:\n");
 
     dumpVregs();
@@ -2370,7 +2351,7 @@ BacktrackingAllocator::dumpAllocations()
     }
 
     fprintf(stderr, "\n");
-#endif // DEBUG
+#endif // JS_JITSPEW
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2569,7 +2550,7 @@ BacktrackingAllocator::trySplitAcrossHotcode(LiveBundle* bundle, bool* success)
         return true;
     }
 
-    JitSpew(JitSpew_RegAlloc, "  split across hot range %s", hotRange->toString());
+    JitSpew(JitSpew_RegAlloc, "  split across hot range %s", hotRange->toString().get());
 
     // Tweak the splitting method when compiling asm.js code to look at actual
     // uses within the hot/cold code. This heuristic is in place as the below
