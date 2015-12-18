@@ -103,9 +103,7 @@ ParseContext<FullParseHandler>::checkLocalsOverflow(TokenStream& ts)
 static void
 MarkUsesAsHoistedLexical(ParseNode* pn)
 {
-    MOZ_ASSERT(pn->isDefn());
-
-    Definition* dn = (Definition*)pn;
+    Definition* dn = &pn->as<Definition>();
     ParseNode** pnup = &dn->dn_uses;
     ParseNode* pnu;
     unsigned start = pn->pn_blockid;
@@ -222,6 +220,8 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
     MOZ_ASSERT(!pn->isUsed());
     MOZ_ASSERT_IF(pn->isDefn(), pn->isPlaceholder());
 
+    pn->setDefn(true);
+
     Definition* prevDef = nullptr;
     if (kind == Definition::LET || kind == Definition::CONSTANT)
         prevDef = decls_.lookupFirst(name);
@@ -240,7 +240,7 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         while ((pnu = *pnup) != nullptr && pnu->pn_blockid >= start) {
             MOZ_ASSERT(pnu->pn_blockid >= bodyid);
             MOZ_ASSERT(pnu->isUsed());
-            pnu->pn_lexdef = (Definition*) pn;
+            pnu->pn_lexdef = &pn->as<Definition>();
             pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
             pnup = &pnu->pn_link;
         }
@@ -258,12 +258,11 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
     }
 
     MOZ_ASSERT_IF(kind != Definition::LET && kind != Definition::CONSTANT, !lexdeps->lookup(name));
-    pn->setDefn(true);
     pn->pn_dflags &= ~PND_PLACEHOLDER;
     if (kind == Definition::CONSTANT)
         pn->pn_dflags |= PND_CONST;
 
-    Definition* dn = (Definition*)pn;
+    Definition* dn = &pn->as<Definition>();
     switch (kind) {
       case Definition::ARG:
         MOZ_ASSERT(sc->isFunctionBox());
@@ -393,7 +392,7 @@ ParseContext<ParseHandler>::updateDecl(TokenStream& ts, JSAtom* atom, Node pn)
     Definition* oldDecl = decls_.lookupFirst(atom);
 
     pn->setDefn(true);
-    Definition* newDecl = (Definition*)pn;
+    Definition* newDecl = &pn->template as<Definition>();
     decls_.updateFirst(atom, newDecl);
 
     if (sc->isGlobalContext() || oldDecl->isDeoptimized()) {
@@ -1393,7 +1392,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, HandleAt
     for (ParseNode* pnu = dn->dn_uses; pnu; pnu = pnu->pn_link) {
         MOZ_ASSERT(pnu->isUsed());
         MOZ_ASSERT(!pnu->isDefn());
-        pnu->pn_lexdef = (Definition*) pn;
+        pnu->pn_lexdef = &pn->as<Definition>();
         pn->pn_dflags |= pnu->pn_dflags & PND_USE2DEF_FLAGS;
     }
     pn->pn_dflags |= dn->pn_dflags & PND_USE2DEF_FLAGS;
@@ -1436,7 +1435,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, HandleAt
                 return false;
             pn->dn_uses = lhs;
             dn->pn_link = nullptr;
-            dn = (Definition*) lhs;
+            dn = &lhs->as<Definition>();
         }
     }
 
@@ -1447,7 +1446,7 @@ Parser<FullParseHandler>::makeDefIntoUse(Definition* dn, ParseNode* pn, HandleAt
     dn->setOp((CodeSpec[dn->getOp()].format & JOF_SET) ? JSOP_SETNAME : JSOP_GETNAME);
     dn->setDefn(false);
     dn->setUsed(true);
-    dn->pn_lexdef = (Definition*) pn;
+    dn->pn_lexdef = &pn->as<Definition>();
     dn->pn_scopecoord.makeFree();
     dn->pn_dflags &= ~PND_BOUND;
     return true;
@@ -2395,8 +2394,7 @@ Parser<FullParseHandler>::checkFunctionDefinition(HandlePropertyName funName,
                     if (!data.bind(funName, this))
                         return false;
 
-                    MOZ_ASSERT(varNode->isDefn());
-                    annexDef = static_cast<Definition*>(varNode);
+                    annexDef = &varNode->as<Definition>();
 
                     synthesizedDeclarationList = handler.newDeclarationList(PNK_VAR, JSOP_DEFVAR);
                     if (!synthesizedDeclarationList)

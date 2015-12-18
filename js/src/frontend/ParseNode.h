@@ -1612,6 +1612,8 @@ struct Definition : public ParseNode
         IMPORT
     };
 
+    static bool test(const ParseNode& pn) { return pn.isDefn(); }
+
     bool canHaveInitializer() { return int(kind()) <= int(ARG); }
 
     static const char* kindString(Kind kind);

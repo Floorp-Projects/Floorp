@@ -1738,7 +1738,7 @@ BytecodeEmitter::bindNameToSlotHelper(ParseNode* pn)
         MOZ_ASSERT(dn->isDefn());
         pn->pn_dflags |= (dn->pn_dflags & PND_CONST);
     } else if (pn->isDefn()) {
-        dn = (Definition*) pn;
+        dn = &pn->as<Definition>();
     } else {
         return true;
     }
