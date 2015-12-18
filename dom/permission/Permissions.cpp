@@ -56,7 +56,7 @@ CreatePushPermissionStatus(JSContext* aCx,
   }
 
   if (permission.mUserVisible) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
   }
 
