@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for FileReader in workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<script type="text/javascript;version=1.7">
+
+const minFileSize = 20000;
+SimpleTest.waitForExplicitFinish();
+
+// Create strings containing data we'll test with. We'll want long
+// strings to ensure they span multiple buffers while loading
+var testTextData = "asd b\tlah\u1234w\u00a0r";
+while (testTextData.length < minFileSize) {
+  testTextData = testTextData + testTextData;
+}
+
+var testASCIIData = "abcdef 123456\n";
+while (testASCIIData.length < minFileSize) {
+  testASCIIData = testASCIIData + testASCIIData;
+}
+
+var testBinaryData = "";
+for (var i = 0; i < 256; i++) {
+  testBinaryData += String.fromCharCode(i);
+}
+while (testBinaryData.length < minFileSize) {
+  testBinaryData = testBinaryData + testBinaryData;
+}
+
+var dataurldata0 = testBinaryData.substr(0, testBinaryData.length -
+					 testBinaryData.length % 3);
+var dataurldata1 = testBinaryData.substr(0, testBinaryData.length - 2 -
+					 testBinaryData.length % 3);
+var dataurldata2 = testBinaryData.substr(0, testBinaryData.length - 1 -
+					 testBinaryData.length % 3);
+
+
+//Set up files for testing
+var openerURL = SimpleTest.getTestFileURL("fileapi_chromeScript.js");
+var opener = SpecialPowers.loadChromeScript(openerURL);
+opener.addMessageListener("files.opened", onFilesOpened);
+opener.sendAsyncMessage("files.open", [
+  testASCIIData,
+  testBinaryData,
+  null,
+  convertToUTF8(testTextData),
+  convertToUTF16(testTextData),
+  "",
+  dataurldata0,
+  dataurldata1,
+  dataurldata2,
+]);
+
+function onFilesOpened(message) {
+  var worker = new Worker('worker_fileReader.js');
+  worker.postMessage({ blobs: message,
+                       testTextData: testTextData,
+                       testASCIIData: testASCIIData,
+                       testBinaryData: testBinaryData,
+                       dataurldata0: dataurldata0,
+                       dataurldata1: dataurldata1,
+                       dataurldata2: dataurldata2 });
+
+  worker.onmessage = function(e) {
+    var msg = e.data;
+    if (msg.type == 'finish') {
+      SimpleTest.finish();
+      return;
+    }
+
+    if (msg.type == 'check') {
+      ok(msg.status, msg.msg);
+      return;
+    }
+
+    ok(false, "Unknown message.");
+  }
+}
+
+function convertToUTF16(s) {
+  res = "";
+  for (var i = 0; i < s.length; ++i) {
+    c = s.charCodeAt(i);
+    res += String.fromCharCode(c & 255, c >>> 8);
+  }
+  return res;
+}
+
+function convertToUTF8(s) {
+  return unescape(encodeURIComponent(s));
+}
+
+</script>
+</body>
+</html>
