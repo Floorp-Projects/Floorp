@@ -169,8 +169,15 @@
     DEFINED_ON_EXPAND_ARCH_RESULTS(                     \
       (MOZ_FOR_EACH(DEFINED_ON_FWDARCH, (), ArchList)))
 
+// clang-cl doesn't exactly follow MSVC's custom rules for handling
+// __VA_ARGS__ in macros (see LLVM PR 25875), so avoid using this macro
+// there.
+#if defined(_MSC_VER) && defined(__clang__)
+# define DEFINED_ON(...) /* nothing */
+#else
 # define DEFINED_ON(...)                                \
     DEFINED_ON_MAP_ON_ARCHS((none, __VA_ARGS__))
+#endif
 
 # define PER_ARCH DEFINED_ON(ALL_ARCH)
 # define PER_SHARED_ARCH DEFINED_ON(ALL_SHARED_ARCH)
