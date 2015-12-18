@@ -1,4 +1,4 @@
-FROM          taskcluster/ubuntu1204-test:0.1.4
+FROM          taskcluster/ubuntu1204-test:0.1.5
 MAINTAINER    Dustin J. Mitchell <dustin@mozilla.com>
 
 ### update to latest from upstream repositories
