@@ -807,11 +807,11 @@ protected:
 };
 
 /**
- * Currently, the data in a CairoImage surface is treated as being in the
+ * Currently, the data in a SourceSurfaceImage surface is treated as being in the
  * device output color space. This class is very simple as all backends
  * have to know about how to deal with drawing a cairo image.
  */
-class CairoImage final : public Image {
+class SourceSurfaceImage final : public Image {
 public:
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
@@ -823,8 +823,8 @@ public:
 
   virtual gfx::IntSize GetSize() override { return mSize; }
 
-  CairoImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface);
-  ~CairoImage();
+  SourceSurfaceImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface);
+  ~SourceSurfaceImage();
 
 private:
   gfx::IntSize mSize;
