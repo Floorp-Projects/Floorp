@@ -6,6 +6,7 @@
  */
 
 #include "SkTypes.h"
+#if defined(SK_BUILD_FOR_WIN32)
 
 #include "SkDWriteGeometrySink.h"
 #include "SkFloatUtils.h"
@@ -19,7 +20,7 @@ SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path) : fRefCount(1), fPath(p
 SkDWriteGeometrySink::~SkDWriteGeometrySink() { }
 
 HRESULT STDMETHODCALLTYPE SkDWriteGeometrySink::QueryInterface(REFIID iid, void **object) {
-    if (NULL == object) {
+    if (nullptr == object) {
         return E_INVALIDARG;
     }
     if (iid == __uuidof(IUnknown) || iid == __uuidof(IDWriteGeometrySink)) {
@@ -27,7 +28,7 @@ HRESULT STDMETHODCALLTYPE SkDWriteGeometrySink::QueryInterface(REFIID iid, void 
         this->AddRef();
         return S_OK;
     } else {
-        *object = NULL;
+        *object = nullptr;
         return E_NOINTERFACE;
     }
 }
@@ -144,3 +145,5 @@ HRESULT SkDWriteGeometrySink::Create(SkPath* path, IDWriteGeometrySink** geometr
     *geometryToPath = new SkDWriteGeometrySink(path);
     return S_OK;
 }
+
+#endif//defined(SK_BUILD_FOR_WIN32)

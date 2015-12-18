@@ -10,10 +10,9 @@
 #define GrGLPath_DEFINED
 
 #include "../GrPath.h"
-#include "gl/GrGLFunctions.h"
+#include "gl/GrGLTypes.h"
 
-class GrGpuGL;
-struct GrGLInterface;
+class GrGLGpu;
 
 /**
  * Currently this represents a path built using GL_NV_path_rendering. If we
@@ -23,24 +22,33 @@ struct GrGLInterface;
 
 class GrGLPath : public GrPath {
 public:
-    static void InitPathObject(const GrGLInterface*,
-                               GrGLuint pathID,
-                               const SkPath&,
-                               const SkStrokeRec&);
+    static bool InitPathObjectPathDataCheckingDegenerates(GrGLGpu*,
+                                                          GrGLuint pathID,
+                                                          const SkPath&);
+    static void InitPathObjectPathData(GrGLGpu*,
+                                       GrGLuint pathID,
+                                       const SkPath&);
+    static void InitPathObjectStroke(GrGLGpu* gpu, GrGLuint pathID, const GrStrokeInfo& stroke);
 
-    GrGLPath(GrGpuGL* gpu, const SkPath& path, const SkStrokeRec& stroke);
-    virtual ~GrGLPath();
+    static void InitPathObjectEmptyPath(GrGLGpu*, GrGLuint pathID);
+
+
+    GrGLPath(GrGLGpu* gpu, const SkPath& path, const GrStrokeInfo& stroke);
     GrGLuint pathID() const { return fPathID; }
-    // TODO: Figure out how to get an approximate size of the path in Gpu
-    // memory.
-    virtual size_t gpuMemorySize() const SK_OVERRIDE { return 100; }
 
+    bool shouldStroke() const { return fShouldStroke; }
+    bool shouldFill() const { return fShouldFill; }
 protected:
-    virtual void onRelease() SK_OVERRIDE;
-    virtual void onAbandon() SK_OVERRIDE;
+    void onRelease() override;
+    void onAbandon() override;
 
 private:
+    // TODO: Figure out how to get an approximate size of the path in Gpu memory.
+    size_t onGpuMemorySize() const override { return 100; }
+
     GrGLuint fPathID;
+    bool fShouldStroke;
+    bool fShouldFill;
 
     typedef GrPath INHERITED;
 };

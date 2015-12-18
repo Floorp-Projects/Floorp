@@ -1,11 +1,8 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
- * Use of this source code is governed by a BSD-style license that can be
- * found in the LICENSE file.
+ * Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
  */
-
 
 #ifndef SkGlyphCache_DEFINED
 #define SkGlyphCache_DEFINED
@@ -14,88 +11,76 @@
 #include "SkChunkAlloc.h"
 #include "SkDescriptor.h"
 #include "SkGlyph.h"
+#include "SkTHash.h"
 #include "SkScalerContext.h"
 #include "SkTemplates.h"
 #include "SkTDArray.h"
 
-struct SkDeviceProperties;
 class SkPaint;
+class SkTraceMemoryDump;
 
 class SkGlyphCache_Globals;
 
 /** \class SkGlyphCache
 
-    This class represents a strike: a specific combination of typeface, size,
-    matrix, etc., and holds the glyphs for that strike. Calling any of the
-    getUnichar.../getGlyphID... methods will return the requested glyph,
-    either instantly if it is already cached, or by first generating it and then
-    adding it to the strike.
+    This class represents a strike: a specific combination of typeface, size, matrix, etc., and
+    holds the glyphs for that strike. Calling any of the getUnichar.../getGlyphID... methods will
+    return the requested glyph, either instantly if it is already cached, or by first generating
+    it and then adding it to the strike.
 
-    The strikes are held in a global list, available to all threads. To interact
-    with one, call either VisitCache() or DetachCache().
+    The strikes are held in a global list, available to all threads. To interact with one, call
+    either VisitCache() or DetachCache().
 */
 class SkGlyphCache {
 public:
-    /** Returns a glyph with valid fAdvance and fDevKern fields.
-        The remaining fields may be valid, but that is not guaranteed. If you
-        require those, call getUnicharMetrics or getGlyphIDMetrics instead.
+    /** Returns a glyph with valid fAdvance and fDevKern fields. The remaining fields may be
+        valid, but that is not guaranteed. If you require those, call getUnicharMetrics or
+        getGlyphIDMetrics instead.
     */
     const SkGlyph& getUnicharAdvance(SkUnichar);
     const SkGlyph& getGlyphIDAdvance(uint16_t);
 
-    /** Returns a glyph with all fields valid except fImage and fPath, which
-        may be null. If they are null, call findImage or findPath for those.
-        If they are not null, then they are valid.
+    /** Returns a glyph with all fields valid except fImage and fPath, which may be null. If they
+        are null, call findImage or findPath for those. If they are not null, then they are valid.
 
-        This call is potentially slower than the matching ...Advance call. If
-        you only need the fAdvance/fDevKern fields, call those instead.
+        This call is potentially slower than the matching ...Advance call. If you only need the
+        fAdvance/fDevKern fields, call those instead.
     */
     const SkGlyph& getUnicharMetrics(SkUnichar);
     const SkGlyph& getGlyphIDMetrics(uint16_t);
 
-    /** These are variants that take the device position of the glyph. Call
-        these only if you are drawing in subpixel mode. Passing 0, 0 is
-        effectively the same as calling the variants w/o the extra params, tho
-        a tiny bit slower.
+    /** These are variants that take the device position of the glyph. Call these only if you are
+        drawing in subpixel mode. Passing 0, 0 is effectively the same as calling the variants
+        w/o the extra params, though a tiny bit slower.
     */
     const SkGlyph& getUnicharMetrics(SkUnichar, SkFixed x, SkFixed y);
     const SkGlyph& getGlyphIDMetrics(uint16_t, SkFixed x, SkFixed y);
 
-    /** Return the glyphID for the specified Unichar. If the char has already
-        been seen, use the existing cache entry. If not, ask the scalercontext
-        to compute it for us.
+    /** Return the glyphID for the specified Unichar. If the char has already been seen, use the
+        existing cache entry. If not, ask the scalercontext to compute it for us.
     */
     uint16_t unicharToGlyph(SkUnichar);
 
-    /** Map the glyph to its Unicode equivalent. Unmappable glyphs map to
-        a character code of zero.
+    /** Map the glyph to its Unicode equivalent. Unmappable glyphs map to a character code of zero.
     */
     SkUnichar glyphToUnichar(uint16_t);
 
     /** Returns the number of glyphs for this strike.
     */
-    unsigned getGlyphCount();
+    unsigned getGlyphCount() const;
 
-#ifdef SK_BUILD_FOR_ANDROID
-    /** Returns the base glyph count for this strike.
-    */
-    unsigned getBaseGlyphCount(SkUnichar charCode) const {
-        return fScalerContext->getBaseGlyphCount(charCode);
-    }
-#endif
+    /** Return the number of glyphs currently cached. */
+    int countCachedGlyphs() const;
 
-    /** Return the image associated with the glyph. If it has not been generated
-        this will trigger that.
+    /** Return the image associated with the glyph. If it has not been generated this will
+        trigger that.
     */
     const void* findImage(const SkGlyph&);
-    /** Return the Path associated with the glyph. If it has not been generated
-        this will trigger that.
+
+    /** Return the Path associated with the glyph. If it has not been generated this will trigger
+        that.
     */
     const SkPath* findPath(const SkGlyph&);
-    /** Return the distance field associated with the glyph. If it has not been generated
-     this will trigger that.
-     */
-    const void* findDistanceField(const SkGlyph&);
 
     /** Return the vertical metrics for this strike.
     */
@@ -113,55 +98,60 @@ public:
         return fScalerContext->isSubpixel();
     }
 
-    /*  AuxProc/Data allow a client to associate data with this cache entry.
-        Multiple clients can use this, as their data is keyed with a function
-        pointer. In addition to serving as a key, the function pointer is called
-        with the data when the glyphcache object is deleted, so the client can
-        cleanup their data as well. NOTE: the auxProc must not try to access
-        this glyphcache in any way, since it may be in the process of being
-        deleted.
+    /** Return the approx RAM usage for this cache. */
+    size_t getMemoryUsed() const { return fMemoryUsed; }
+
+    void dump() const;
+
+    /** AuxProc/Data allow a client to associate data with this cache entry. Multiple clients can
+        use this, as their data is keyed with a function pointer. In addition to serving as a
+        key, the function pointer is called with the data when the glyphcache object is deleted,
+        so the client can cleanup their data as well.
+        NOTE: the auxProc must not try to access this glyphcache in any way, since it may be in
+        the process of being deleted.
     */
 
     //! If the proc is found, return true and set *dataPtr to its data
     bool getAuxProcData(void (*auxProc)(void*), void** dataPtr) const;
+
     //! Add a proc/data pair to the glyphcache. proc should be non-null
     void setAuxProc(void (*auxProc)(void*), void* auxData);
 
     SkScalerContext* getScalerContext() const { return fScalerContext; }
 
-    /** Call proc on all cache entries, stopping early if proc returns true.
-        The proc should not create or delete caches, since it could produce
-        deadlock.
-    */
-    static void VisitAllCaches(bool (*proc)(SkGlyphCache*, void*), void* ctx);
-
-    /** Find a matching cache entry, and call proc() with it. If none is found
-        create a new one. If the proc() returns true, detach the cache and
-        return it, otherwise leave it and return NULL.
+    /** Find a matching cache entry, and call proc() with it. If none is found create a new one.
+        If the proc() returns true, detach the cache and return it, otherwise leave it and return
+        nullptr.
     */
     static SkGlyphCache* VisitCache(SkTypeface*, const SkDescriptor* desc,
                                     bool (*proc)(const SkGlyphCache*, void*),
                                     void* context);
 
-    /** Given a strike that was returned by either VisitCache() or DetachCache()
-        add it back into the global cache list (after which the caller should
-        not reference it anymore.
+    /** Given a strike that was returned by either VisitCache() or DetachCache() add it back into
+        the global cache list (after which the caller should not reference it anymore.
     */
     static void AttachCache(SkGlyphCache*);
 
-    /** Detach a strike from the global cache matching the specified descriptor.
-        Once detached, it can be queried/modified by the current thread, and
-        when finished, be reattached to the global cache with AttachCache().
-        While detached, if another request is made with the same descriptor,
-        a different strike will be generated. This is fine. It does mean we
-        can have more than 1 strike for the same descriptor, but that will
-        eventually get purged, and the win is that different thread will never
-        block each other while a strike is being used.
+    /** Detach a strike from the global cache matching the specified descriptor. Once detached,
+        it can be queried/modified by the current thread, and when finished, be reattached to the
+        global cache with AttachCache(). While detached, if another request is made with the same
+        descriptor, a different strike will be generated. This is fine. It does mean we can have
+        more than 1 strike for the same descriptor, but that will eventually get purged, and the
+        win is that different thread will never block each other while a strike is being used.
     */
-    static SkGlyphCache* DetachCache(SkTypeface* typeface,
-                                     const SkDescriptor* desc) {
-        return VisitCache(typeface, desc, DetachProc, NULL);
+    static SkGlyphCache* DetachCache(SkTypeface* typeface, const SkDescriptor* desc) {
+        return VisitCache(typeface, desc, DetachProc, nullptr);
     }
+
+    static void Dump();
+
+    /** Dump memory usage statistics of all the attaches caches in the process using the
+        SkTraceMemoryDump interface.
+    */
+    static void DumpMemoryStatistics(SkTraceMemoryDump* dump);
+
+    typedef void (*Visitor)(const SkGlyphCache&, void* context);
+    static void VisitAll(Visitor, void* context);
 
 #ifdef SK_DEBUG
     void validate() const;
@@ -182,66 +172,83 @@ public:
             }
         }
         void forget() {
-            fCache = NULL;
+            fCache = nullptr;
         }
     private:
         const SkGlyphCache* fCache;
     };
 
 private:
-    // we take ownership of the scalercontext
-    SkGlyphCache(SkTypeface*, const SkDescriptor*, SkScalerContext*);
-    ~SkGlyphCache();
+    friend class SkGlyphCache_Globals;
 
     enum MetricsType {
         kJustAdvance_MetricsType,
         kFull_MetricsType
     };
 
-    SkGlyph* lookupMetrics(uint32_t id, MetricsType);
-    static bool DetachProc(const SkGlyphCache*, void*) { return true; }
-
-    SkGlyphCache*       fNext, *fPrev;
-    SkDescriptor*       fDesc;
-    SkScalerContext*    fScalerContext;
-    SkPaint::FontMetrics fFontMetrics;
-
     enum {
-        kHashBits   = 8,
-        kHashCount  = 1 << kHashBits,
-        kHashMask   = kHashCount - 1
+        kHashBits           = 8,
+        kHashCount          = 1 << kHashBits,
+        kHashMask           = kHashCount - 1
     };
-    SkGlyph*            fGlyphHash[kHashCount];
-    SkTDArray<SkGlyph*> fGlyphArray;
-    SkChunkAlloc        fGlyphAlloc;
+
+    typedef uint32_t PackedGlyphID;    // glyph-index + subpixel-pos
+    typedef uint32_t PackedUnicharID;  // unichar + subpixel-pos
 
     struct CharGlyphRec {
-        uint32_t    fID;    // unichar + subpixel
-        SkGlyph*    fGlyph;
+        PackedUnicharID    fPackedUnicharID;
+        PackedGlyphID      fPackedGlyphID;
     };
-    // no reason to use the same kHashCount as fGlyphHash, but we do for now
-    CharGlyphRec    fCharToGlyphHash[kHashCount];
-
-    static inline unsigned ID2HashIndex(uint32_t id) {
-        id ^= id >> 16;
-        id ^= id >> 8;
-        return id & kHashMask;
-    }
-
-    // used to track (approx) how much ram is tied-up in this cache
-    size_t  fMemoryUsed;
 
     struct AuxProcRec {
         AuxProcRec* fNext;
         void (*fProc)(void*);
         void* fData;
     };
-    AuxProcRec* fAuxProcList;
+
+    // SkGlyphCache takes ownership of the scalercontext.
+    SkGlyphCache(SkTypeface*, const SkDescriptor*, SkScalerContext*);
+    ~SkGlyphCache();
+
+    // Return the SkGlyph* associated with MakeID. The id parameter is the
+    // combined glyph/x/y id generated by MakeID. If it is just a glyph id
+    // then x and y are assumed to be zero.
+    SkGlyph* lookupByPackedGlyphID(PackedGlyphID packedGlyphID, MetricsType type);
+
+    // Return a SkGlyph* associated with unicode id and position x and y.
+    SkGlyph* lookupByChar(SkUnichar id, MetricsType type, SkFixed x = 0, SkFixed y = 0);
+
+    // Return a new SkGlyph for the glyph ID and subpixel position id. Limit the amount
+    // of work
+    // using type.
+    SkGlyph* allocateNewGlyph(PackedGlyphID packedGlyphID, MetricsType type);
+
+    static bool DetachProc(const SkGlyphCache*, void*) { return true; }
+
+    // The id arg is a combined id generated by MakeID.
+    CharGlyphRec* getCharGlyphRec(PackedUnicharID id);
+
     void invokeAndRemoveAuxProcs();
 
     inline static SkGlyphCache* FindTail(SkGlyphCache* head);
 
-    friend class SkGlyphCache_Globals;
+    SkGlyphCache*          fNext;
+    SkGlyphCache*          fPrev;
+    SkDescriptor* const    fDesc;
+    SkScalerContext* const fScalerContext;
+    SkPaint::FontMetrics   fFontMetrics;
+
+    // Map from a combined GlyphID and sub-pixel position to a SkGlyph.
+    SkTHashTable<SkGlyph, PackedGlyphID, SkGlyph::HashTraits> fGlyphMap;
+
+    SkChunkAlloc           fGlyphAlloc;
+
+    SkAutoTArray<CharGlyphRec> fPackedUnicharIDToPackedGlyphID;
+
+    // used to track (approx) how much ram is tied-up in this cache
+    size_t                 fMemoryUsed;
+
+    AuxProcRec*            fAuxProcList;
 };
 
 class SkAutoGlyphCacheBase {
@@ -251,24 +258,24 @@ public:
     void release() {
         if (fCache) {
             SkGlyphCache::AttachCache(fCache);
-            fCache = NULL;
+            fCache = nullptr;
         }
     }
 
 protected:
-    // Hide the constructors so we can't create one of these directly.
-    // Create SkAutoGlyphCache or SkAutoGlyphCacheNoCache instead.
+    // Hide the constructors so we can't create one of these directly. Create SkAutoGlyphCache or
+    // SkAutoGlyphCacheNoCache instead.
     SkAutoGlyphCacheBase(SkGlyphCache* cache) : fCache(cache) {}
     SkAutoGlyphCacheBase(SkTypeface* typeface, const SkDescriptor* desc) {
         fCache = SkGlyphCache::DetachCache(typeface, desc);
     }
-    SkAutoGlyphCacheBase(const SkPaint& paint,
-                         const SkDeviceProperties* deviceProperties,
-                         const SkMatrix* matrix) {
-        fCache = NULL;
+    SkAutoGlyphCacheBase(const SkPaint& /*paint*/,
+                         const SkSurfaceProps* /*surfaceProps*/,
+                         const SkMatrix* /*matrix*/) {
+        fCache = nullptr;
     }
     SkAutoGlyphCacheBase() {
-        fCache = NULL;
+        fCache = nullptr;
     }
     ~SkAutoGlyphCacheBase() {
         if (fCache) {
@@ -288,9 +295,9 @@ public:
     SkAutoGlyphCache(SkTypeface* typeface, const SkDescriptor* desc) :
         SkAutoGlyphCacheBase(typeface, desc) {}
     SkAutoGlyphCache(const SkPaint& paint,
-                     const SkDeviceProperties* deviceProperties,
+                     const SkSurfaceProps* surfaceProps,
                      const SkMatrix* matrix) {
-        fCache = paint.detachCache(deviceProperties, matrix, false);
+        fCache = paint.detachCache(surfaceProps, matrix, false);
     }
 
 private:
@@ -304,9 +311,9 @@ public:
     SkAutoGlyphCacheNoGamma(SkTypeface* typeface, const SkDescriptor* desc) :
         SkAutoGlyphCacheBase(typeface, desc) {}
     SkAutoGlyphCacheNoGamma(const SkPaint& paint,
-                            const SkDeviceProperties* deviceProperties,
+                            const SkSurfaceProps* surfaceProps,
                             const SkMatrix* matrix) {
-        fCache = paint.detachCache(deviceProperties, matrix, true);
+        fCache = paint.detachCache(surfaceProps, matrix, true);
     }
 
 private:

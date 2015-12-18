@@ -24,7 +24,7 @@ class SkCanvasClipVisitor;
 // (i.e., the fSaveCount in force when it was added). Restores are thus
 // implemented by removing clips from fDeque that have an fSaveCount larger
 // then the freshly decremented count.
-class SK_API SkClipStack {
+class SK_API SkClipStack : public SkNVRefCnt<SkClipStack> {
 public:
     enum BoundsType {
         // The bounding box contains all the pixels that can be written to
@@ -310,18 +310,17 @@ public:
                    bool* isIntersectionOfRects = NULL) const;
 
     /**
-     * Takes an input rect in device space and conservatively clips it to the
-     * clip-stack. If false is returned then the rect does not intersect the
-     * clip and is unmodified.
-     */
-    bool intersectRectWithClip(SkRect* devRect) const;
-
-    /**
      * Returns true if the input rect in device space is entirely contained
      * by the clip. A return value of false does not guarantee that the rect
      * is not contained by the clip.
      */
     bool quickContains(const SkRect& devRect) const;
+
+    /**
+     * Flattens the clip stack into a single SkPath. Returns true if any of
+     * the clip stack components requires anti-aliasing.
+     */
+    bool asPath(SkPath* path) const;
 
     void clipDevRect(const SkIRect& ir, SkRegion::Op op) {
         SkRect r;

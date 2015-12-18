@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Skia
  *
@@ -6,35 +5,38 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkOSWindow_Android_DEFINED
 #define SkOSWindow_Android_DEFINED
 
 #include "SkWindow.h"
 
-class SkIRect;
+#include <EGL/egl.h>
+
+struct SkAndroidWindow {
+    EGLDisplay fDisplay;
+    EGLSurface fSurface;
+    EGLContext fContext;
+};
 
 class SkOSWindow : public SkWindow {
 public:
-    SkOSWindow(void*) {}
-    ~SkOSWindow() {}
+    SkOSWindow(void*);
+    ~SkOSWindow();
 
     enum SkBackEndTypes {
         kNone_BackEndType,
         kNativeGL_BackEndType,
     };
 
-    struct AttachmentInfo {
-        int fSampleCount;
-        int fStencilBits;
-    };
-
     bool attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo* info);
-    void detach() {}
-    void present() {}
+    void detach();
+    void present();
+    bool makeFullscreen() { return true; }
+    void closeWindow();
+    void setVsync(bool);
+    bool destroyRequested() { return fDestroyRequested; }
 
-    virtual void onPDFSaved(const char title[], const char desc[],
-        const char path[]);
+    virtual void onPDFSaved(const char title[], const char desc[], const char path[]);
 
 protected:
     // overrides from SkWindow
@@ -42,6 +44,10 @@ protected:
     virtual void onSetTitle(const char title[]);
 
 private:
+    SkAndroidWindow fWindow;
+    ANativeWindow* fNativeWindow;
+    bool fDestroyRequested;
+
     typedef SkWindow INHERITED;
 };
 

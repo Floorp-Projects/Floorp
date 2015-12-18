@@ -7,37 +7,31 @@
  */
 
 
-#include "GrTypes.h"
-
-#include "gl/GrGLConfig.h"
+#include "GrGpuFactory.h"
 
 #include "GrGpu.h"
-#include "gl/GrGpuGL.h"
+#include "gl/GrGLConfig.h"
+#include "gl/GrGLGpu.h"
 
-GrGpu* GrGpu::Create(GrBackend backend, GrBackendContext backendContext, GrContext* context) {
+static CreateGpuProc gGpuFactories[kBackendCount] = { GrGLGpu::Create, nullptr };
 
-    const GrGLInterface* glInterface = NULL;
-    SkAutoTUnref<const GrGLInterface> glInterfaceUnref;
-
-    if (kOpenGL_GrBackend == backend) {
-        glInterface = reinterpret_cast<const GrGLInterface*>(backendContext);
-        if (NULL == glInterface) {
-            glInterface = GrGLDefaultInterface();
-            // By calling GrGLDefaultInterface we've taken a ref on the
-            // returned object. We only want to hold that ref until after
-            // the GrGpu is constructed and has taken ownership.
-            glInterfaceUnref.reset(glInterface);
-        }
-        if (NULL == glInterface) {
-#ifdef SK_DEBUG
-            GrPrintf("No GL interface provided!\n");
+#ifdef SK_VULKAN
+extern GrGpu* vk_gpu_create(GrBackendContext backendContext, const GrContextOptions& options,
+                            GrContext* context);
+GrGpuFactoryRegistrar gVkGpuFactoryProc(kVulkan_GrBackend, vk_gpu_create);
 #endif
-            return NULL;
-        }
-        GrGLContext ctx(glInterface);
-        if (ctx.isInitialized()) {
-            return SkNEW_ARGS(GrGpuGL, (ctx, context));
-        }
+
+GrGpuFactoryRegistrar::GrGpuFactoryRegistrar(int i, CreateGpuProc proc) {
+    gGpuFactories[i] = proc;
+}
+
+GrGpu* GrGpu::Create(GrBackend backend,
+                     GrBackendContext backendContext,
+                     const GrContextOptions& options,
+                     GrContext* context) {
+    SkASSERT((int)backend < kBackendCount);
+    if (!gGpuFactories[backend]) {
+        return nullptr;
     }
-    return NULL;
+    return (gGpuFactories[backend])(backendContext, options, context);
 }

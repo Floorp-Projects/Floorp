@@ -22,6 +22,145 @@ enum SkPathOpsMask {
     kEvenOdd_PathOpsMask = 1
 };
 
+class SkOpCoincidence;
+class SkOpContour;
+class SkOpContourHead;
+class SkIntersections;
+class SkIntersectionHelper;
+
+class SkOpGlobalState {
+public:
+    SkOpGlobalState(SkOpCoincidence* coincidence, SkOpContourHead* head
+                    SkDEBUGPARAMS(const char* testName));
+
+    enum Phase {
+        kIntersecting,
+        kWalking,
+        kFixWinding,
+    };
+
+    enum {
+        kMaxWindingTries = 10
+    };
+
+    bool angleCoincidence() const {
+        return fAngleCoincidence;
+    }
+
+    void bumpNested() {
+        ++fNested;
+    }
+
+    void clearNested() {
+        fNested = 0;
+    }
+
+    SkOpCoincidence* coincidence() {
+        return fCoincidence;
+    }
+
+    SkOpContourHead* contourHead() {
+        return fContourHead;
+    }
+
+#ifdef SK_DEBUG
+    const struct SkOpAngle* debugAngle(int id) const;
+    SkOpContour* debugContour(int id);
+    const class SkOpPtT* debugPtT(int id) const;
+    bool debugRunFail() const;
+    const class SkOpSegment* debugSegment(int id) const;
+    const class SkOpSpanBase* debugSpan(int id) const;
+    const char* debugTestName() const { return fDebugTestName; }
+#endif
+
+#if DEBUG_T_SECT_LOOP_COUNT
+    void debugAddLoopCount(SkIntersections* , const SkIntersectionHelper& ,
+        const SkIntersectionHelper& );
+    void debugDoYourWorst(SkOpGlobalState* );
+    void debugLoopReport();
+    void debugResetLoopCounts();
+#endif
+
+    int nested() const {
+        return fNested;
+    }
+
+#ifdef SK_DEBUG
+    int nextAngleID() {
+        return ++fAngleID;
+    }
+
+    int nextCoinID() {
+        return ++fCoinID;
+    }
+
+    int nextContourID() {
+        return ++fContourID;
+    }
+
+    int nextPtTID() {
+        return ++fPtTID;
+    }
+
+    int nextSegmentID() {
+        return ++fSegmentID;
+    }
+
+    int nextSpanID() {
+        return ++fSpanID;
+    }
+#endif
+
+    Phase phase() const {
+        return fPhase;
+    }
+
+    void setAngleCoincidence() {
+        fAngleCoincidence = true;
+    }
+    
+    void setContourHead(SkOpContourHead* contourHead) {
+        fContourHead = contourHead;
+    }
+
+    void setPhase(Phase phase) {
+        SkASSERT(fPhase != phase);
+        fPhase = phase;
+    }
+
+    // called in very rare cases where angles are sorted incorrectly -- signfies op will fail
+    void setWindingFailed() {
+        fWindingFailed = true;
+    }
+
+    bool windingFailed() const {
+        return fWindingFailed;
+    }
+
+private:
+    SkOpCoincidence* fCoincidence;
+    SkOpContourHead* fContourHead;
+    int fNested;
+    bool fWindingFailed;
+    bool fAngleCoincidence;
+    Phase fPhase;
+#ifdef SK_DEBUG
+    const char* fDebugTestName;
+    int fAngleID;
+    int fCoinID;
+    int fContourID;
+    int fPtTID;
+    int fSegmentID;
+    int fSpanID;
+#endif
+#if DEBUG_T_SECT_LOOP_COUNT
+    int fDebugLoopCount[3];
+    SkPath::Verb fDebugWorstVerb[6];
+    SkPoint fDebugWorstPts[24];
+    float fDebugWorstWeight[6];
+#endif
+};
+
 // Use Almost Equal when comparing coordinates. Use epsilon to compare T values.
 bool AlmostEqualUlps(float a, float b);
 inline bool AlmostEqualUlps(double a, double b) {
@@ -92,6 +231,7 @@ const double DBL_EPSILON_SUBDIVIDE_ERR = DBL_EPSILON * 16;
 const double ROUGH_EPSILON = FLT_EPSILON * 64;
 const double MORE_ROUGH_EPSILON = FLT_EPSILON * 256;
 const double WAY_ROUGH_EPSILON = FLT_EPSILON * 2048;
+const double BUMP_EPSILON = FLT_EPSILON * 4096;
 
 inline bool zero_or_one(double x) {
     return x == 0 || x == 1;
@@ -148,6 +288,10 @@ inline bool approximately_zero_inverse(double x) {
 // OPTIMIZATION: if called multiple times with the same denom, we want to pass 1/y instead
 inline bool approximately_zero_when_compared_to(double x, double y) {
     return x == 0 || fabs(x) < fabs(y * FLT_EPSILON);
+}
+
+inline bool precisely_zero_when_compared_to(double x, double y) {
+    return x == 0 || fabs(x) < fabs(y * DBL_EPSILON);
 }
 
 // Use this for comparing Ts in the range of 0 to 1. For general numbers (larger and smaller) use
@@ -298,12 +442,22 @@ inline bool precisely_between(double a, double b, double c) {
 
 // returns true if (a <= b <= c) || (a >= b >= c)
 inline bool between(double a, double b, double c) {
-    SkASSERT(((a <= b && b <= c) || (a >= b && b >= c)) == ((a - b) * (c - b) <= 0));
+    SkASSERT(((a <= b && b <= c) || (a >= b && b >= c)) == ((a - b) * (c - b) <= 0)
+            || (precisely_zero(a) && precisely_zero(b) && precisely_zero(c)));
     return (a - b) * (c - b) <= 0;
 }
 
 inline bool roughly_equal(double x, double y) {
     return fabs(x - y) < ROUGH_EPSILON;
+}
+
+inline bool roughly_negative(double x) {
+    return x < ROUGH_EPSILON;
+}
+
+inline bool roughly_between(double a, double b, double c) {
+    return a <= c ? roughly_negative(a - b) && roughly_negative(b - c)
+            : roughly_negative(b - a) && roughly_negative(c - b);
 }
 
 inline bool more_roughly_equal(double x, double y) {
@@ -318,7 +472,7 @@ struct SkDPoint;
 struct SkDVector;
 struct SkDLine;
 struct SkDQuad;
-struct SkDTriangle;
+struct SkDConic;
 struct SkDCubic;
 struct SkDRect;
 
@@ -337,11 +491,12 @@ inline SkPath::Verb SkPathOpsPointsToVerb(int points) {
 }
 
 inline int SkPathOpsVerbToPoints(SkPath::Verb verb) {
-    int points = (int) verb - ((int) verb >> 2);
+    int points = (int) verb - (((int) verb + 1) >> 2);
 #ifdef SK_DEBUG
     switch (verb) {
         case SkPath::kLine_Verb: SkASSERT(1 == points); break;
         case SkPath::kQuad_Verb: SkASSERT(2 == points); break;
+        case SkPath::kConic_Verb: SkASSERT(2 == points); break;
         case SkPath::kCubic_Verb: SkASSERT(3 == points); break;
         default: SkDEBUGFAIL("should not get here");
     }

@@ -9,6 +9,7 @@
 #define SkDiscardableMemoryPool_DEFINED
 
 #include "SkDiscardableMemory.h"
+#include "SkMutex.h"
 
 #ifndef SK_LAZY_CACHE_STATS
     #ifdef SK_DEBUG
@@ -52,7 +53,7 @@ public:
      *  Without mutex, will be not be thread safe.
      */
     static SkDiscardableMemoryPool* Create(
-            size_t size, SkBaseMutex* mutex = NULL);
+            size_t size, SkBaseMutex* mutex = nullptr);
 };
 
 /**

@@ -19,12 +19,12 @@ struct SkBaseMutex;
 /**
  *  \class SkFontConfigInterface
  *
- *  Provides SkFontHost clients with access to fontconfig services. They will
- *  access the global instance found in RefGlobal().
+ *  A simple interface for remotable font management.
+ *  The global instance can be found with RefGlobal().
  */
 class SK_API SkFontConfigInterface : public SkRefCnt {
 public:
-    SK_DECLARE_INST_COUNT(SkFontConfigInterface)
+    
 
     /**
      *  Returns the global SkFontConfigInterface instance, and if it is not
@@ -90,23 +90,34 @@ public:
     /**
      *  Given a FontRef, open a stream to access its data, or return null
      *  if the FontRef's data is not available. The caller is responsible for
-     *  calling stream->unref() when it is done accessing the data.
+     *  deleting the stream when it is done accessing the data.
      */
-    virtual SkStream* openStream(const FontIdentity&) = 0;
+    virtual SkStreamAsset* openStream(const FontIdentity&) = 0;
+
+    /**
+     *  Return an SkTypeface for the given FontIdentity.
+     *
+     *  The default implementation simply returns a new typeface built using data obtained from
+     *  openStream(), but derived classes may implement more complex caching schemes.
+     *
+     *  Callers are responsible for unref-ing the result.
+     */
+    virtual SkTypeface* createTypeface(const FontIdentity& identity) {
+        return SkTypeface::CreateFromStream(this->openStream(identity), identity.fTTCIndex);
+    }
 
     /**
      *  Return a singleton instance of a direct subclass that calls into
      *  libfontconfig. This does not affect the refcnt of the returned instance.
      *  The mutex may be used to guarantee the singleton is only constructed once.
      */
-    static SkFontConfigInterface* GetSingletonDirectInterface
-        (SkBaseMutex* mutex = NULL);
+    static SkFontConfigInterface* GetSingletonDirectInterface(SkBaseMutex* mutex = NULL);
 
     // New APIS, which have default impls for now (which do nothing)
 
     virtual SkDataTable* getFamilyNames() { return SkDataTable::NewEmpty(); }
-    virtual bool matchFamilySet(const char inFamilyName[],
-                                SkString* outFamilyName,
+    virtual bool matchFamilySet(const char[] /*inFamilyName*/,
+                                SkString* /*outFamilyName*/,
                                 SkTArray<FontIdentity>*) {
         return false;
     }

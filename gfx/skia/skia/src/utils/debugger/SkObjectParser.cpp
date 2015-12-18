@@ -9,6 +9,8 @@
 #include "SkObjectParser.h"
 #include "SkData.h"
 #include "SkFontDescriptor.h"
+#include "SkImage.h"
+#include "SkPath.h"
 #include "SkRRect.h"
 #include "SkShader.h"
 #include "SkStream.h"
@@ -26,7 +28,7 @@ SkString* SkObjectParser::BitmapToString(const SkBitmap& bitmap) {
     mBitmap->appendS32(bitmap.height());
 
     const char* gColorTypeStrings[] = {
-        "None", "A8", "565", "4444", "RGBA", "BGRA", "Index8"
+        "None", "A8", "565", "4444", "RGBA", "BGRA", "Index8", "G8"
     };
     SkASSERT(kLastEnum_SkColorType + 1 == SK_ARRAY_COUNT(gColorTypeStrings));
 
@@ -55,6 +57,29 @@ SkString* SkObjectParser::BitmapToString(const SkBitmap& bitmap) {
     mBitmap->appendS32(bitmap.getGenerationID());
 
     return mBitmap;
+}
+
+SkString* SkObjectParser::ImageToString(const SkImage* image) {
+    SkString* str = new SkString("SkImage: ");
+    if (!image) {
+        return str;
+    }
+
+    str->append("W: ");
+    str->appendS32(image->width());
+    str->append(" H: ");
+    str->appendS32(image->height());
+
+    if (image->isOpaque()) {
+        str->append(" opaque");
+    } else {
+        str->append(" not-opaque");
+    }
+
+    str->append(" uniqueID: ");
+    str->appendS32(image->uniqueID());
+
+    return str;
 }
 
 SkString* SkObjectParser::BoolToString(bool doAA) {
@@ -109,7 +134,9 @@ SkString* SkObjectParser::PaintToString(const SkPaint& paint) {
 }
 
 SkString* SkObjectParser::PathToString(const SkPath& path) {
-    SkString* mPath = new SkString("Path (");
+    SkString* mPath = new SkString;
+    
+    mPath->appendf("Path (%d) (", path.getGenerationID());
 
     static const char* gFillStrings[] = {
         "Winding", "EvenOdd", "InverseWinding", "InverseEvenOdd"
@@ -126,10 +153,23 @@ SkString* SkObjectParser::PathToString(const SkPath& path) {
     mPath->append(gConvexityStrings[path.getConvexity()]);
     mPath->append(", ");
 
-    if (path.isRect(NULL)) {
+    if (path.isRect(nullptr)) {
         mPath->append("isRect, ");
     } else {
         mPath->append("isNotRect, ");
+    }
+
+    if (path.isOval(nullptr)) {
+        mPath->append("isOval, ");
+    } else {
+        mPath->append("isNotOval, ");
+    }
+
+    SkRRect rrect;
+    if (path.isRRect(&rrect)) {
+        mPath->append("isRRect, ");
+    } else {
+        mPath->append("isNotRRect, ");
     }
 
     mPath->appendS32(path.countVerbs());
@@ -174,9 +214,9 @@ SkString* SkObjectParser::PathToString(const SkPath& path) {
 
     SkString* boundStr = SkObjectParser::RectToString(path.getBounds(), "    Bound: ");
 
-    if (NULL != boundStr) {
+    if (boundStr) {
         mPath->append(*boundStr);
-        SkDELETE(boundStr);
+        delete boundStr;
     }
 
     return mPath;
@@ -210,7 +250,7 @@ SkString* SkObjectParser::RectToString(const SkRect& rect, const char* title) {
 
     SkString* mRect = new SkString;
 
-    if (NULL == title) {
+    if (nullptr == title) {
         mRect->append("SkRect: ");
     } else {
         mRect->append(title);
@@ -231,7 +271,7 @@ SkString* SkObjectParser::RRectToString(const SkRRect& rrect, const char* title)
 
     SkString* mRRect = new SkString;
 
-    if (NULL == title) {
+    if (nullptr == title) {
         mRRect->append("SkRRect (");
         if (rrect.isEmpty()) {
             mRRect->append("empty");
@@ -333,7 +373,7 @@ SkString* SkObjectParser::TextToString(const void* text, size_t byteLength,
             decodedText->append("UTF-16: ");
             size_t sizeNeeded = SkUTF16_ToUTF8((uint16_t*)text,
                                                 SkToS32(byteLength / 2),
-                                                NULL);
+                                                nullptr);
             SkAutoSTMalloc<0x100, char> utf8(sizeNeeded);
             SkUTF16_ToUTF8((uint16_t*)text, SkToS32(byteLength / 2), utf8);
             decodedText->append(utf8, sizeNeeded);

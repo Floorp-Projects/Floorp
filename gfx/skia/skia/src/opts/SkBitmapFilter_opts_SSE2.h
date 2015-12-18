@@ -11,12 +11,6 @@
 #include "SkBitmapProcState.h"
 #include "SkConvolver.h"
 
-void highQualityFilter_ScaleOnly_SSE2(const SkBitmapProcState &s, int x, int y,
-                                      SkPMColor *SK_RESTRICT colors, int count);
-void highQualityFilter_SSE2(const SkBitmapProcState &s, int x, int y,
-                            SkPMColor *SK_RESTRICT colors, int count);
-
-
 void convolveVertically_SSE2(const SkConvolutionFilter1D::ConvolutionFixed* filter_values,
                              int filter_length,
                              unsigned char* const* source_data_rows,
@@ -25,7 +19,8 @@ void convolveVertically_SSE2(const SkConvolutionFilter1D::ConvolutionFixed* filt
                              bool has_alpha);
 void convolve4RowsHorizontally_SSE2(const unsigned char* src_data[4],
                                     const SkConvolutionFilter1D& filter,
-                                    unsigned char* out_row[4]);
+                                    unsigned char* out_row[4],
+                                    size_t outRowBytes);
 void convolveHorizontally_SSE2(const unsigned char* src_data,
                                const SkConvolutionFilter1D& filter,
                                unsigned char* out_row,

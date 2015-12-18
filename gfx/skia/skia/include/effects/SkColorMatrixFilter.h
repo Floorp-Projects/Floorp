@@ -14,19 +14,19 @@
 class SK_API SkColorMatrixFilter : public SkColorFilter {
 public:
     static SkColorMatrixFilter* Create(const SkColorMatrix& cm) {
-        return SkNEW_ARGS(SkColorMatrixFilter, (cm));
+        return new SkColorMatrixFilter(cm);
     }
     static SkColorMatrixFilter* Create(const SkScalar array[20]) {
-        return SkNEW_ARGS(SkColorMatrixFilter, (array));
+        return new SkColorMatrixFilter(array);
     }
 
-    // overrides from SkColorFilter
-    virtual void filterSpan(const SkPMColor src[], int count, SkPMColor[]) const SK_OVERRIDE;
-    virtual void filterSpan16(const uint16_t src[], int count, uint16_t[]) const SK_OVERRIDE;
-    virtual uint32_t getFlags() const SK_OVERRIDE;
-    virtual bool asColorMatrix(SkScalar matrix[20]) const SK_OVERRIDE;
+    void filterSpan(const SkPMColor src[], int count, SkPMColor[]) const override;
+    uint32_t getFlags() const override;
+    bool asColorMatrix(SkScalar matrix[20]) const override;
+    SkColorFilter* newComposed(const SkColorFilter*) const override;
+
 #if SK_SUPPORT_GPU
-    virtual GrEffect* asNewEffect(GrContext*) const SK_OVERRIDE;
+    const GrFragmentProcessor* asFragmentProcessor(GrContext*) const override;
 #endif
 
     struct State {
@@ -41,11 +41,11 @@ public:
 protected:
     explicit SkColorMatrixFilter(const SkColorMatrix&);
     explicit SkColorMatrixFilter(const SkScalar array[20]);
-    explicit SkColorMatrixFilter(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
 
 private:
-    SkColorMatrix fMatrix;
+    SkColorMatrix   fMatrix;
+    float           fTranspose[SkColorMatrix::kCount]; // for Sk4s
 
     typedef void (*Proc)(const State&, unsigned r, unsigned g, unsigned b,
                          unsigned a, int32_t result[4]);

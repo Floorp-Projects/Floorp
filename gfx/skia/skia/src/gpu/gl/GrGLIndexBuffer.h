@@ -12,37 +12,32 @@
 #include "GrGLBufferImpl.h"
 #include "gl/GrGLInterface.h"
 
-class GrGpuGL;
+class GrGLGpu;
 
 class GrGLIndexBuffer : public GrIndexBuffer {
 
 public:
     typedef GrGLBufferImpl::Desc Desc;
 
-    GrGLIndexBuffer(GrGpuGL* gpu, const Desc& desc);
-    virtual ~GrGLIndexBuffer() { this->release(); }
+    GrGLIndexBuffer(GrGLGpu* gpu, const Desc& desc);
 
     GrGLuint bufferID() const { return fImpl.bufferID(); }
     size_t baseOffset() const { return fImpl.baseOffset(); }
 
-    void bind() const {
-        if (!this->wasDestroyed()) {
-            fImpl.bind(this->getGpuGL());
-        }
-    }
-
 protected:
-    virtual void onAbandon() SK_OVERRIDE;
-    virtual void onRelease() SK_OVERRIDE;
+    void onAbandon() override;
+    void onRelease() override;
+    void setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
+                          const SkString& dumpName) const override;
 
 private:
-    virtual void* onMap() SK_OVERRIDE;
-    virtual void onUnmap() SK_OVERRIDE;
-    virtual bool onUpdateData(const void* src, size_t srcSizeInBytes) SK_OVERRIDE;
+    void* onMap() override;
+    void onUnmap() override;
+    bool onUpdateData(const void* src, size_t srcSizeInBytes) override;
 
-    GrGpuGL* getGpuGL() const {
+    GrGLGpu* getGpuGL() const {
         SkASSERT(!this->wasDestroyed());
-        return (GrGpuGL*)(this->getGpu());
+        return (GrGLGpu*)(this->getGpu());
     }
 
     GrGLBufferImpl fImpl;

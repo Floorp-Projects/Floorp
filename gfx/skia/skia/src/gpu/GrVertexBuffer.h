@@ -14,9 +14,27 @@
 #include "GrGeometryBuffer.h"
 
 class GrVertexBuffer : public GrGeometryBuffer {
+public:
+    static void ComputeScratchKey(size_t size, bool dynamic, GrScratchKey* key) {
+        static const GrScratchKey::ResourceType kType = GrScratchKey::GenerateResourceType();
+
+        GrScratchKey::Builder builder(key, kType, 2);
+
+        builder[0] = SkToUInt(size);
+        builder[1] = dynamic ? 1 : 0;
+    }
+
 protected:
-    GrVertexBuffer(GrGpu* gpu, bool isWrapped, size_t gpuMemorySize, bool dynamic, bool cpuBacked)
-        : INHERITED(gpu, isWrapped, gpuMemorySize, dynamic, cpuBacked) {}
+    GrVertexBuffer(GrGpu* gpu, size_t gpuMemorySize, bool dynamic, bool cpuBacked)
+        : INHERITED(gpu, gpuMemorySize, dynamic, cpuBacked) {
+        // We currently only make buffers scratch if they're both pow2 sized and not cpuBacked.
+        if (!cpuBacked && SkIsPow2(gpuMemorySize)) {
+            GrScratchKey key;
+            ComputeScratchKey(gpuMemorySize, dynamic, &key);
+            this->setScratchKey(key);
+        }
+    }
+
 private:
     typedef GrGeometryBuffer INHERITED;
 };

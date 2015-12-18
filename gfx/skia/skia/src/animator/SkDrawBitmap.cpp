@@ -130,8 +130,8 @@ const SkMemberInfo SkImageBaseBitmap::fInfo[] = {
 
 DEFINE_GET_MEMBER(SkImageBaseBitmap);
 
-SkImageBaseBitmap::SkImageBaseBitmap() : fDirty(true), fUriBase(NULL) {
-    base64.fData = NULL;
+SkImageBaseBitmap::SkImageBaseBitmap() : fDirty(true), fUriBase(nullptr) {
+    base64.fData = nullptr;
     base64.fLength = 0;
 }
 
@@ -189,7 +189,7 @@ void SkImageBaseBitmap::resolve() {
         fBitmap.reset();
 
         //SkStream* stream = SkStream::GetURIStream(fUriBase, src.c_str());
-        SkAutoTUnref<SkStreamAsset> stream(SkStream::NewFromFile(src.c_str()));
+        SkAutoTDelete<SkStreamAsset> stream(SkStream::NewFromFile(src.c_str()));
         if (stream.get()) {
             SkImageDecoder::DecodeStream(stream, &fBitmap);
         }
