@@ -69,6 +69,10 @@ struct StructGCPolicy
         tp->trace(trc);
     }
 
+    static void sweep(T* tp) {
+        return tp->sweep();
+    }
+
     static bool needsSweep(T* tp) {
         return tp->needsSweep();
     }
@@ -97,9 +101,6 @@ struct GCPointerPolicy
     static void trace(JSTracer* trc, T* vp, const char* name) {
         if (*vp)
             js::UnsafeTraceManuallyBarrieredEdge(trc, vp, name);
-    }
-    static bool needsSweep(T* vp) {
-        return js::gc::EdgeNeedsSweep(vp);
     }
 };
 template <> struct GCPolicy<JS::Symbol*> : public GCPointerPolicy<JS::Symbol*> {};
