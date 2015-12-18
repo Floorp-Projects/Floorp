@@ -133,6 +133,14 @@ class ScriptMixin(PlatformMixin):
     env = None
     script_obj = None
 
+    def platform_name(self):
+        """ Return the platform name on which the script is running on.
+        Returns:
+            None: for failure to determine the platform.
+            str: The name of the platform (e.g. linux64)
+        """
+        return platform_name()
+
     # Simple filesystem commands {{{2
     def mkdir_p(self, path, error_level=ERROR):
         """ Create a directory if it doesn't exists.
