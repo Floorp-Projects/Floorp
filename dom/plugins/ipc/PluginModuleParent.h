@@ -255,7 +255,7 @@ protected:
     virtual nsresult SetBackgroundUnknown(NPP instance) override;
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect& aRect,
-                                           gfxContext** aCtx) override;
+                                           DrawTarget** aDrawTarget) override;
     virtual nsresult EndUpdateBackground(NPP instance,
                                          const nsIntRect& aRect) override;
 

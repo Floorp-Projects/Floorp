@@ -119,7 +119,7 @@ public:
     mFrame->mInstanceOwner->SetBackgroundUnknown();
   }
 
-  virtual already_AddRefed<gfxContext>
+  virtual already_AddRefed<DrawTarget>
       BeginUpdate(const nsIntRect& aRect, uint64_t aSequenceNumber)
   {
     if (!AcceptUpdate(aSequenceNumber))

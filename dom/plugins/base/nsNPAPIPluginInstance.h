@@ -83,6 +83,8 @@ private:
   typedef mozilla::PluginLibrary PluginLibrary;
 
 public:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(nsNPAPIPluginInstance)
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIAUDIOCHANNELAGENTCALLBACK
@@ -108,7 +110,7 @@ public:
   nsresult NotifyPainted(void);
   nsresult GetIsOOP(bool* aIsOOP);
   nsresult SetBackgroundUnknown();
-  nsresult BeginUpdateBackground(nsIntRect* aRect, gfxContext** aContext);
+  nsresult BeginUpdateBackground(nsIntRect* aRect, DrawTarget** aContext);
   nsresult EndUpdateBackground(nsIntRect* aRect);
   nsresult IsTransparent(bool* isTransparent);
   nsresult GetFormValue(nsAString& aValue);

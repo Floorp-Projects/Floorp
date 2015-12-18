@@ -1994,13 +1994,13 @@ PluginModuleParent::SetBackgroundUnknown(NPP instance)
 nsresult
 PluginModuleParent::BeginUpdateBackground(NPP instance,
                                           const nsIntRect& aRect,
-                                          gfxContext** aCtx)
+                                          DrawTarget** aDrawTarget)
 {
     PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
     if (!i)
         return NS_ERROR_FAILURE;
 
-    return i->BeginUpdateBackground(aRect, aCtx);
+    return i->BeginUpdateBackground(aRect, aDrawTarget);
 }
 
 nsresult
