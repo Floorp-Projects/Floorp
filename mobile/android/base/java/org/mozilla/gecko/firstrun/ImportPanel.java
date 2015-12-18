@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.CheckedTextView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import org.mozilla.gecko.AppConstants;
@@ -26,9 +27,7 @@ import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.preferences.AndroidImport;
 import org.mozilla.gecko.util.ThreadUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 public class ImportPanel extends FirstrunPanel {
     public static final String LOGTAG = "GeckoImportPanel";
@@ -51,21 +50,12 @@ public class ImportPanel extends FirstrunPanel {
             @Override
             public void onClick(View v) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-                final List<Integer> checked = new ArrayList<>(Arrays.asList(0, 1));
+                final boolean[] checked = {true, true};
                 Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-import-action");
+
+                // We set ListView.OnItemClickListener later, which overrides OnMultiChoiceClickListener, so don't make one here.
                 builder.setTitle(R.string.firstrun_import_action)
-                       .setMultiChoiceItems(R.array.pref_import_android_entries, makeBooleanArray(R.array.pref_import_android_defaults), new DialogInterface.OnMultiChoiceClickListener() {
-                           @Override
-                           public void onClick(DialogInterface dialogInterface, int index, boolean isChecked) {
-                               // Add telemetry for toggling checkboxes.
-                               Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.DIALOG, "firstrun-import-dialog-checkbox");
-                               if (isChecked && !checked.contains(index)) {
-                                   checked.add(index);
-                               } else if (!isChecked && checked.contains(index)) {
-                                   checked.remove(checked.indexOf(index));
-                               }
-                           }
-                       })
+                       .setMultiChoiceItems(R.array.pref_import_android_entries, makeBooleanArray(R.array.pref_import_android_defaults), null)
                        .setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
                            @Override
                            public void onClick(DialogInterface dialog, int i) {
@@ -76,8 +66,8 @@ public class ImportPanel extends FirstrunPanel {
                        .setPositiveButton(R.string.firstrun_import_dialog_button, new DialogInterface.OnClickListener() {
                            @Override
                            public void onClick(DialogInterface dialog, int i) {
-                               final boolean importBookmarks = checked.contains(BOOKMARKS_INDEX);
-                               final boolean importHistory = checked.contains(HISTORY_INDEX);
+                               final boolean importBookmarks = checked[BOOKMARKS_INDEX];
+                               final boolean importHistory = checked[HISTORY_INDEX];
 
                                runImport(importBookmarks, importHistory);
 
@@ -93,9 +83,18 @@ public class ImportPanel extends FirstrunPanel {
 
                 final Button importButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
                 final ListView listView = dialog.getListView();
+
+                // Setting this listView listener is equivalent to setting OnMultiChoiceClickListener.
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.DIALOG, "firstrun-import-dialog-checkbox");
+
+                        // Keep track of checked state.
+                        final boolean isChecked = ((CheckedTextView) view).isChecked();
+                        checked[i] = isChecked;
+
+                        // Update importButton state.
                         if (AppConstants.Versions.feature11Plus) {
                             if (listView.getCheckedItemCount() == 0) {
                                 importButton.setEnabled(false);
