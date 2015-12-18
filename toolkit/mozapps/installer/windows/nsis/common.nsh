@@ -2985,10 +2985,18 @@
       Exch $R8
       Push $R7
 
+      DeleteRegValue HKCU "Software\Classes\$R9\OpenWithProgids" $R8
+      EnumRegValue $R7 HKCU "Software\Classes\$R9\OpenWithProgids" 0
+      StrCmp "$R7" "" +1 +2
+      DeleteRegKey HKCU "Software\Classes\$R9\OpenWithProgids"
       ReadRegStr $R7 HKCU "Software\Classes\$R9" ""
       StrCmp "$R7" "$R8" +1 +2
       DeleteRegKey HKCU "Software\Classes\$R9"
 
+      DeleteRegValue HKLM "Software\Classes\$R9\OpenWithProgids" $R8
+      EnumRegValue $R7 HKLM "Software\Classes\$R9\OpenWithProgids" 0
+      StrCmp "$R7" "" +1 +2
+      DeleteRegKey HKLM "Software\Classes\$R9\OpenWithProgids"
       ReadRegStr $R7 HKLM "Software\Classes\$R9" ""
       StrCmp "$R7" "$R8" +1 +2
       DeleteRegValue HKLM "Software\Classes\$R9" ""
