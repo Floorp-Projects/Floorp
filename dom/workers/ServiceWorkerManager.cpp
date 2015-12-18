@@ -950,14 +950,12 @@ public:
                        const nsACString& aScope,
                        const nsACString& aScriptSpec,
                        ServiceWorkerUpdateFinishCallback* aCallback,
-                       ServiceWorkerRegistrationInfo* aRegistration,
                        ServiceWorkerInfo* aServiceWorkerInfo)
     : ServiceWorkerJob(aQueue, aJobType)
     , mPrincipal(aPrincipal)
     , mScope(aScope)
     , mScriptSpec(aScriptSpec)
     , mCallback(aCallback)
-    , mRegistration(aRegistration)
     , mUpdateAndInstallInfo(aServiceWorkerInfo)
     , mCanceled(false)
   {
@@ -984,6 +982,38 @@ protected:
   ~ServiceWorkerJobBase()
   { }
 
+  // Ensure that mRegistration is set for the job.  Also, if mRegistration was
+  // already set, ensure that a new registration object has not replaced it in
+  // the ServiceWorkerManager.  This can happen when jobs race such that the
+  // registration is cleared and recreated while an update job is executing.
+  nsresult
+  EnsureAndVerifyRegistration()
+  {
+    AssertIsOnMainThread();
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    if (NS_WARN_IF(!swm)) {
+      mRegistration = nullptr;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    RefPtr<ServiceWorkerRegistrationInfo> registration =
+      swm->GetRegistration(mPrincipal, mScope);
+
+    if (NS_WARN_IF(!registration)) {
+      mRegistration = nullptr;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    if (NS_WARN_IF(mRegistration && registration != mRegistration)) {
+      mRegistration = nullptr;
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+
+    mRegistration = registration.forget();
+    return NS_OK;
+  }
+
   void
   Succeed()
   {
@@ -1003,7 +1033,6 @@ protected:
   FailWithErrorResult(ErrorResult& aRv)
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mRegistration);
 
     // With cancellation support, we may only be running with one reference
     // from another object like a stream loader or something.
@@ -1021,7 +1050,7 @@ protected:
       aRv.SuppressException();
 
       NS_ConvertUTF8toUTF16 scriptSpec(mScriptSpec);
-      NS_ConvertUTF8toUTF16 scope(mRegistration->mScope);
+      NS_ConvertUTF8toUTF16 scope(mScope);
 
       // Throw the type error with a generic error message.
       aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(scriptSpec, scope);
@@ -1035,8 +1064,14 @@ protected:
     aRv.SuppressException();
 
     mUpdateAndInstallInfo = nullptr;
+
+    if (!mRegistration) {
+      Done(origStatus);
+      return;
+    }
+
     if (mRegistration->mInstallingWorker) {
-      nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+      nsresult rv = serviceWorkerScriptCache::PurgeCache(mPrincipal,
                                                          mRegistration->mInstallingWorker->CacheName());
       if (NS_FAILED(rv)) {
         NS_WARNING("Failed to purge the installing worker cache.");
@@ -1068,13 +1103,10 @@ public:
                           const nsACString& aScope,
                           const nsACString& aScriptSpec,
                           ServiceWorkerUpdateFinishCallback* aCallback,
-                          ServiceWorkerRegistrationInfo* aRegistration,
                           ServiceWorkerInfo* aServiceWorkerInfo)
     : ServiceWorkerJobBase(aQueue, Type::InstallJob, aPrincipal, aScope,
-                           aScriptSpec, aCallback, aRegistration,
-                           aServiceWorkerInfo)
+                           aScriptSpec, aCallback, aServiceWorkerInfo)
   {
-    MOZ_ASSERT(aRegistration);
   }
 
   void
@@ -1090,10 +1122,15 @@ public:
   Install()
   {
     RefPtr<ServiceWorkerJob> kungFuDeathGrip = this;
+
     if (mCanceled) {
       return Fail(NS_ERROR_DOM_ABORT_ERR);
     }
-    MOZ_ASSERT(mRegistration);
+
+    nsresult rv = EnsureAndVerifyRegistration();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Fail(NS_ERROR_DOM_ABORT_ERR);
+    }
 
     // Begin [[Install]] atomic step 3.
     if (mRegistration->mInstallingWorker) {
@@ -1135,8 +1172,8 @@ public:
     // which sends the install event to the worker.
     ServiceWorkerPrivate* workerPrivate =
       mRegistration->mInstallingWorker->WorkerPrivate();
-    nsresult rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"),
-                                                    callback, failRunnable);
+    rv = workerPrivate->SendLifeCycleEvent(NS_LITERAL_STRING("install"),
+                                           callback, failRunnable);
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       ContinueAfterInstallEvent(false /* aSuccess */);
@@ -1148,6 +1185,11 @@ public:
   {
     if (mCanceled) {
       return Done(NS_ERROR_DOM_ABORT_ERR);
+    }
+
+    nsresult rv = EnsureAndVerifyRegistration();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Fail(NS_ERROR_DOM_ABORT_ERR);
     }
 
     if (!mRegistration->mInstallingWorker) {
@@ -1218,7 +1260,7 @@ public:
                            ServiceWorkerUpdateFinishCallback* aCallback,
                            nsILoadGroup* aLoadGroup)
     : ServiceWorkerJobBase(aQueue, Type::RegisterJob, aPrincipal, aScope,
-                           aScriptSpec, aCallback, nullptr, nullptr)
+                           aScriptSpec, aCallback, nullptr)
     , mLoadGroup(aLoadGroup)
   {
     AssertIsOnMainThread();
@@ -1231,10 +1273,9 @@ public:
                            nsIPrincipal* aPrincipal,
                            const nsACString& aScope,
                            const nsACString& aScriptSpec,
-                           ServiceWorkerRegistrationInfo* aRegistration,
                            ServiceWorkerUpdateFinishCallback* aCallback)
     : ServiceWorkerJobBase(aQueue, Type::UpdateJob, aPrincipal, aScope,
-                           aScriptSpec, aCallback, aRegistration, nullptr)
+                           aScriptSpec, aCallback, nullptr)
   {
     AssertIsOnMainThread();
   }
@@ -1254,6 +1295,7 @@ public:
     }
 
     if (mJobType == RegisterJob) {
+      MOZ_ASSERT(!mRegistration);
       mRegistration = swm->GetRegistration(mPrincipal, mScope);
 
       if (mRegistration) {
@@ -1281,10 +1323,19 @@ public:
     } else {
       MOZ_ASSERT(mJobType == UpdateJob);
 
+      nsresult rv = EnsureAndVerifyRegistration();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        // Do nothing here, but since mRegistration is nullptr we will
+        // trigger the async Fail() call below.
+        MOZ_ASSERT(!mRegistration);
+      }
+
       // If a different script spec has been registered between when this update
       // was scheduled and it running now, then simply abort.
-      RefPtr<ServiceWorkerInfo> newest = mRegistration->Newest();
-      if (newest && !mScriptSpec.Equals(newest->ScriptSpec())) {
+      RefPtr<ServiceWorkerInfo> newest = mRegistration ? mRegistration->Newest()
+                                                       : nullptr;
+      if (!mRegistration ||
+          (newest && !mScriptSpec.Equals(newest->ScriptSpec()))) {
 
         // Done() must always be called async from Start()
         nsCOMPtr<nsIRunnable> runnable =
@@ -1307,6 +1358,7 @@ public:
                    const nsACString& aMaxScope) override
   {
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
+
     if (NS_WARN_IF(mCanceled)) {
       Fail(NS_ERROR_DOM_ABORT_ERR);
       return;
@@ -1315,6 +1367,11 @@ public:
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
       Fail(aStatus);
       return;
+    }
+
+    nsresult rv = EnsureAndVerifyRegistration();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Fail(NS_ERROR_DOM_ABORT_ERR);
     }
 
     if (aInCacheAndEqual) {
@@ -1329,7 +1386,7 @@ public:
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
 
     nsCOMPtr<nsIURI> scriptURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(scriptURI), mScriptSpec);
+    rv = NS_NewURI(getter_AddRefs(scriptURI), mScriptSpec);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       Fail(NS_ERROR_DOM_SECURITY_ERR);
       return;
@@ -1402,7 +1459,12 @@ private:
   ContinueInstall(bool aScriptEvaluationResult)
   {
     AssertIsOnMainThread();
-    MOZ_ASSERT(mRegistration);
+
+    nsresult rv = EnsureAndVerifyRegistration();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return Fail(NS_ERROR_DOM_ABORT_ERR);
+    }
+
     mRegistration->mUpdating = false;
 
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
@@ -1421,8 +1483,7 @@ private:
 
     RefPtr<ServiceWorkerInstallJob> job =
       new ServiceWorkerInstallJob(mQueue, mPrincipal, mScope, mScriptSpec,
-                                  mCallback, mRegistration,
-                                  mUpdateAndInstallInfo);
+                                  mCallback, mUpdateAndInstallInfo);
     mQueue->Append(job);
     Done(NS_OK);
   }
@@ -1449,7 +1510,13 @@ private:
   {
     AssertIsOnMainThread();
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
+
     if (mCanceled) {
+      return Fail(NS_ERROR_DOM_ABORT_ERR);
+    }
+
+    nsresult rv = EnsureAndVerifyRegistration();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(NS_ERROR_DOM_ABORT_ERR);
     }
 
@@ -1469,10 +1536,9 @@ private:
       cacheName = workerInfo->CacheName();
     }
 
-    nsresult rv =
-      serviceWorkerScriptCache::Compare(mRegistration, mRegistration->mPrincipal, cacheName,
-                                        NS_ConvertUTF8toUTF16(mScriptSpec), this,
-                                        mLoadGroup);
+    rv = serviceWorkerScriptCache::Compare(mRegistration, mPrincipal, cacheName,
+                                           NS_ConvertUTF8toUTF16(mScriptSpec),
+                                           this, mLoadGroup);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return Fail(rv);
     }
@@ -3753,7 +3819,7 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
 
     RefPtr<ServiceWorkerRegisterJob> job =
       new ServiceWorkerRegisterJob(queue, principal, registration->mScope,
-                                   newest->ScriptSpec(), registration, nullptr);
+                                   newest->ScriptSpec(), nullptr);
     queue->Append(job);
   }
 }
@@ -3805,7 +3871,7 @@ ServiceWorkerManager::Update(nsIPrincipal* aPrincipal,
   // its argument."
   RefPtr<ServiceWorkerRegisterJob> job =
     new ServiceWorkerRegisterJob(queue, aPrincipal, registration->mScope,
-                                 newest->ScriptSpec(), registration, aCallback);
+                                 newest->ScriptSpec(), aCallback);
   queue->Append(job);
 }
 
