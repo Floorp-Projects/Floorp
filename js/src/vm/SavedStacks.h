@@ -157,6 +157,7 @@ class SavedStacks {
   public:
     SavedStacks()
       : frames(),
+        bernoulliSeeded(false),
         bernoulli(1.0, 0x59fdad7f6b4cc573, 0x91adf38db96a9354),
         creatingSavedFrame(false)
     { }
@@ -181,6 +182,7 @@ class SavedStacks {
 
   private:
     SavedFrame::Set frames;
+    bool bernoulliSeeded;
     mozilla::FastBernoulliTrial bernoulli;
     bool creatingSavedFrame;
 

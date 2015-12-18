@@ -22,6 +22,10 @@ namespace layers {
 class Image;
 }
 
+namespace gfx {
+class DataSourceSurface;
+}
+
 namespace dom {
 
 class StructuredCloneHolderBase
@@ -181,7 +185,7 @@ public:
   bool HasClonedDOMObjects() const
   {
     return !mBlobImplArray.IsEmpty() ||
-           !mClonedImages.IsEmpty();
+           !mClonedSurfaces.IsEmpty();
   }
 
   nsTArray<RefPtr<BlobImpl>>& BlobImpls()
@@ -212,9 +216,9 @@ public:
     return mPortIdentifiers;
   }
 
-  nsTArray<RefPtr<layers::Image>>& GetImages()
+  nsTArray<RefPtr<gfx::DataSourceSurface>>& GetSurfaces()
   {
-    return mClonedImages;
+    return mClonedSurfaces;
   }
 
   // Implementations of the virtual methods to allow cloning of objects which
@@ -291,10 +295,10 @@ protected:
   nsTArray<RefPtr<BlobImpl>> mBlobImplArray;
 
   // This is used for sharing the backend of ImageBitmaps.
-  // The layers::Image object must be thread-safely reference-counted.
-  // The layers::Image object will not be written ever via any ImageBitmap
+  // The DataSourceSurface object must be thread-safely reference-counted.
+  // The DataSourceSurface object will not be written ever via any ImageBitmap
   // instance, so no race condition will occur.
-  nsTArray<RefPtr<layers::Image>> mClonedImages;
+  nsTArray<RefPtr<gfx::DataSourceSurface>> mClonedSurfaces;
 
   // This raw pointer is only set within ::Read() and is unset by the end.
   nsISupports* MOZ_NON_OWNING_REF mParent;

@@ -21,8 +21,6 @@
 #if defined(__NetBSD__)
 #include <lwp.h>
 #elif defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/thr.h>
 #include <pthread_np.h>
 #endif
 
@@ -46,13 +44,7 @@ PlatformThreadId CurrentThreadId() {
 #elif defined(__OpenBSD__)
   ret = reinterpret_cast<uintptr_t> (pthread_self());
 #elif defined(__FreeBSD__)
-#if __FreeBSD_version > 900030
-    ret = pthread_getthreadid_np();
-#else
-    long lwpid;
-    thr_self(&lwpid);
-    ret = lwpid;
-#endif
+  ret = pthread_getthreadid_np();
 #else
   // Default implementation for nacl and solaris.
   ret = reinterpret_cast<pid_t>(pthread_self());

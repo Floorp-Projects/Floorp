@@ -1,5 +1,5 @@
 // Tests bug 304414
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const PR_RDONLY = 0x1;  // see prio.h
 
@@ -69,12 +69,10 @@ function stream_from_channel(file) {
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
   var uri = ios.newFileURI(file);
-  return ios.newChannelFromURI2(uri,
-                                null,      // aLoadingNode
-                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_NORMAL,
-                                Ci.nsIContentPolicy.TYPE_OTHER).open();
+  return NetUtil.newChannel({
+    uri: uri,
+    loadUsingSystemPrincipal: true
+  }).open2();
 }
 
 function run_test() {

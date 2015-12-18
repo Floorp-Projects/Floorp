@@ -31,6 +31,7 @@ namespace layers {
 class AsyncCanvasRenderer;
 class CanvasLayer;
 class Image;
+class Layer;
 class LayerManager;
 } // namespace layers
 namespace gfx {
@@ -120,6 +121,7 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
 
   typedef layers::AsyncCanvasRenderer AsyncCanvasRenderer;
   typedef layers::CanvasLayer CanvasLayer;
+  typedef layers::Layer Layer;
   typedef layers::LayerManager LayerManager;
 
 public:
@@ -308,9 +310,9 @@ public:
    * Helpers called by various users of Canvas
    */
 
-  already_AddRefed<CanvasLayer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                               CanvasLayer *aOldLayer,
-                                               LayerManager *aManager);
+  already_AddRefed<Layer> GetCanvasLayer(nsDisplayListBuilder* aBuilder,
+                                         Layer *aOldLayer,
+                                         LayerManager *aManager);
   // Should return true if the canvas layer should always be marked inactive.
   // We should return true here if we can't do accelerated compositing with
   // a non-BasicCanvasLayer.

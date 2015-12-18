@@ -76,9 +76,114 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    addq(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    addq(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    MOZ_ASSERT(dest != scratch);
+    if ((intptr_t)imm.value <= INT32_MAX && (intptr_t)imm.value >= INT32_MIN) {
+        addq(Imm32((int32_t)imm.value), dest);
+    } else {
+        mov(imm, scratch);
+        addq(scratch, dest);
+    }
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    addq(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addq(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    addq(Operand(src), dest);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     addq(src.reg, dest.reg);
+}
+
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    addq(imm, dest.reg);
+}
+
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    subq(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    subq(src, Operand(dest));
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    subq(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    subq(Operand(addr), dest);
+}
+
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    movq(ImmWord(uintptr_t(imm.value)), ScratchReg);
+    imulq(ScratchReg, dest.reg);
+}
+
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    lea(Operand(src, src, TimesTwo), dest);
+}
+
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    movq(imm, ScratchReg);
+    vmulsd(Operand(ScratchReg, 0), dest, dest);
+}
+
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    if (X86Encoding::IsAddressImmediate(dest.addr)) {
+        addPtr(Imm32(1), dest);
+    } else {
+        ScratchRegisterScope scratch(*this);
+        mov(ImmPtr(dest.addr), scratch);
+        addPtr(Imm32(1), Address(scratch, 0));
+    }
 }
 
 // ===============================================================
@@ -116,6 +221,12 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+void
+MacroAssemblerX64::incrementInt32Value(const Address& addr)
+{
+    asMasm().addPtr(Imm32(1), addr);
+}
 
 } // namespace jit
 } // namespace js

@@ -234,20 +234,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T, typename S> void cmpPtrSet(Condition, T, S, Register) { MOZ_CRASH(); }
     template <typename T, typename S> void cmp32Set(Condition, T, S, Register) { MOZ_CRASH(); }
 
-    template <typename T, typename S> void add32(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void addPtr(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void add64(T, S) { MOZ_CRASH(); }
-    template <typename T, typename S> void subPtr(T, S) { MOZ_CRASH(); }
-    void neg32(Register) { MOZ_CRASH(); }
-    void mulBy3(Register, Register) { MOZ_CRASH(); }
-    void mul64(Imm64, const Register64&) { MOZ_CRASH(); }
-
-    void negateDouble(FloatRegister) { MOZ_CRASH(); }
-    void addDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
-    void subDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
-    void mulDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
-    void divDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
-
     template <typename T, typename S> void branch32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchTest32(Condition, T, S, Label*) { MOZ_CRASH(); }
     template <typename T, typename S> void branchAdd32(Condition, T, S, Label*) { MOZ_CRASH(); }
@@ -402,7 +388,6 @@ class MacroAssemblerNone : public Assembler
     template <typename T> void convertInt32ToDouble(T, FloatRegister) { MOZ_CRASH(); }
     void convertFloat32ToDouble(FloatRegister, FloatRegister) { MOZ_CRASH(); }
     void convertUInt64ToDouble(Register64, Register, FloatRegister) { MOZ_CRASH(); }
-    void mulDoublePtr(ImmPtr, Register, FloatRegister) { MOZ_CRASH(); }
 
     void branchTruncateDouble(FloatRegister, Register, Label*) { MOZ_CRASH(); }
     void branchTruncateFloat32(FloatRegister, Register, Label*) { MOZ_CRASH(); }
@@ -413,9 +398,7 @@ class MacroAssemblerNone : public Assembler
     void int32ValueToFloat32(ValueOperand, FloatRegister) { MOZ_CRASH(); }
 
     void loadConstantDouble(double, FloatRegister) { MOZ_CRASH(); }
-    void addConstantDouble(double, FloatRegister) { MOZ_CRASH(); }
     void loadConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
-    void addConstantFloat32(float, FloatRegister) { MOZ_CRASH(); }
     Condition testInt32Truthy(bool, ValueOperand) { MOZ_CRASH(); }
     Condition testStringTruthy(bool, ValueOperand) { MOZ_CRASH(); }
     void branchTestInt32Truthy(bool, ValueOperand, Label*) { MOZ_CRASH(); }
@@ -429,7 +412,6 @@ class MacroAssemblerNone : public Assembler
 
     void convertUInt32ToDouble(Register, FloatRegister) { MOZ_CRASH(); }
     void convertUInt32ToFloat32(Register, FloatRegister) { MOZ_CRASH(); }
-    void inc64(AbsoluteAddress) { MOZ_CRASH(); }
     void incrementInt32Value(Address) { MOZ_CRASH(); }
     void ensureDouble(ValueOperand, FloatRegister, Label*) { MOZ_CRASH(); }
     void handleFailureWithHandlerTail(void*) { MOZ_CRASH(); }

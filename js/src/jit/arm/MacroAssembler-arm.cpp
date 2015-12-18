@@ -97,9 +97,9 @@ MacroAssemblerARMCompat::convertUInt64ToDouble(Register64 src, Register temp, Fl
     convertUInt32ToDouble(src.high, dest);
     movePtr(ImmPtr(&TO_DOUBLE_HIGH_SCALE), ScratchRegister);
     loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
-    mulDouble(ScratchDoubleReg, dest);
+    asMasm().mulDouble(ScratchDoubleReg, dest);
     convertUInt32ToDouble(src.low, ScratchDoubleReg);
-    addDouble(ScratchDoubleReg, dest);
+    asMasm().addDouble(ScratchDoubleReg, dest);
 }
 
 void
@@ -244,53 +244,6 @@ MacroAssemblerARM::convertInt32ToFloat32(const Address& src, FloatRegister dest)
     ScratchFloat32Scope scratch(asMasm());
     ma_vldr(src, scratch);
     as_vcvt(dest, VFPRegister(scratch).sintOverlay());
-}
-
-void
-MacroAssemblerARM::addDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vadd(dest, src, dest);
-}
-
-void
-MacroAssemblerARM::subDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vsub(dest, src, dest);
-}
-
-void
-MacroAssemblerARM::mulDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vmul(dest, src, dest);
-}
-
-void
-MacroAssemblerARM::divDouble(FloatRegister src, FloatRegister dest)
-{
-    ma_vdiv(dest, src, dest);
-}
-
-void
-MacroAssemblerARM::negateDouble(FloatRegister reg)
-{
-    ma_vneg(reg, reg);
-}
-
-void
-MacroAssemblerARM::inc64(AbsoluteAddress dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-
-    ma_strd(r0, r1, EDtrAddr(sp, EDtrOffImm(-8)), PreIndex);
-
-    ma_mov(Imm32((int32_t)dest.addr), scratch);
-    ma_ldrd(EDtrAddr(scratch, EDtrOffImm(0)), r0, r1);
-
-    ma_add(Imm32(1), r0, SetCC);
-    ma_adc(Imm32(0), r1, LeaveCC);
-
-    ma_strd(r0, r1, EDtrAddr(scratch, EDtrOffImm(0)));
-    ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
 }
 
 bool
@@ -1948,41 +1901,6 @@ MacroAssembler::restoreFrameAlignmentForICArguments(AfterICSaveLive& aic)
 }
 
 void
-MacroAssemblerARMCompat::add32(Register src, Register dest)
-{
-    ma_add(src, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::add32(Imm32 imm, Register dest)
-{
-    ma_add(imm, dest, SetCC);
-}
-
-void
-MacroAssemblerARMCompat::add32(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(dest, scratch);
-    ma_add(imm, scratch, SetCC);
-    store32(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(Register src, Register dest)
-{
-    ma_add(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(const Address& src, Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    load32(src, scratch);
-    ma_add(scratch, dest, SetCC);
-}
-
-void
 MacroAssemblerARMCompat::move32(Imm32 imm, Register dest)
 {
     ma_mov(imm, dest);
@@ -2624,50 +2542,6 @@ MacroAssemblerARMCompat::setStackArg(Register reg, uint32_t arg)
 {
     ma_dataTransferN(IsStore, 32, true, sp, Imm32(arg * sizeof(intptr_t)), reg);
 
-}
-
-void
-MacroAssemblerARMCompat::subPtr(Imm32 imm, const Register dest)
-{
-    ma_sub(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(const Address& addr, const Register dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(addr, scratch);
-    ma_sub(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(Register src, Register dest)
-{
-    ma_sub(src, dest);
-}
-
-void
-MacroAssemblerARMCompat::subPtr(Register src, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(dest, scratch);
-    ma_sub(src, scratch);
-    storePtr(scratch, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(Imm32 imm, const Register dest)
-{
-    ma_add(imm, dest);
-}
-
-void
-MacroAssemblerARMCompat::addPtr(Imm32 imm, const Address& dest)
-{
-    ScratchRegisterScope scratch(asMasm());
-    loadPtr(dest, scratch);
-    addPtr(imm, scratch);
-    storePtr(scratch, dest);
 }
 
 void

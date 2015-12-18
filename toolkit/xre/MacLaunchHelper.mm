@@ -6,8 +6,8 @@
 #include "MacLaunchHelper.h"
 
 #include "nsMemory.h"
-#include "nsAutoPtr.h"
 #include "nsIAppStartup.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
 #include <spawn.h>
@@ -40,7 +40,7 @@ void LaunchChildMac(int aArgc, char** aArgv,
 {
   // "posix_spawnp" uses null termination for arguments rather than a count.
   // Note that we are not duplicating the argument strings themselves.
-  nsAutoArrayPtr<char*> argv_copy(new char*[aArgc + 1]);
+  auto argv_copy = MakeUnique<char*[]>(aArgc + 1);
   for (int i = 0; i < aArgc; i++) {
     argv_copy[i] = aArgv[i];
   }
@@ -80,7 +80,7 @@ void LaunchChildMac(int aArgc, char** aArgv,
     envp = *cocoaEnvironment;
   }
 
-  int result = posix_spawnp(pid, argv_copy[0], NULL, &spawnattr, argv_copy, envp);
+  int result = posix_spawnp(pid, argv_copy[0], NULL, &spawnattr, argv_copy.get(), envp);
 
   posix_spawnattr_destroy(&spawnattr);
 

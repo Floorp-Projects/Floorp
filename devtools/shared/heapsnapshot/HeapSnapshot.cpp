@@ -55,6 +55,18 @@ using ::google::protobuf::io::ZeroCopyInputStream;
 
 using JS::ubi::AtomOrTwoByteChars;
 
+MallocSizeOf
+GetCurrentThreadDebuggerMallocSizeOf()
+{
+  auto ccrt = CycleCollectedJSRuntime::Get();
+  MOZ_ASSERT(ccrt);
+  auto rt = ccrt->Runtime();
+  MOZ_ASSERT(rt);
+  auto mallocSizeOf = JS::dbg::GetDebuggerMallocSizeOf(rt);
+  MOZ_ASSERT(mallocSizeOf);
+  return mallocSizeOf;
+}
+
 /*** Cycle Collection Boilerplate *****************************************************************/
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(HeapSnapshot, mParent)
@@ -482,7 +494,7 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
     return;
   }
 
-  JS::ubi::CensusHandler handler(census, rootCount);
+  JS::ubi::CensusHandler handler(census, rootCount, GetCurrentThreadDebuggerMallocSizeOf());
 
   {
     JS::AutoCheckCannotGC nogc;
@@ -504,7 +516,7 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
     }
   }
 
-  if (NS_WARN_IF(!handler.report(rval))) {
+  if (NS_WARN_IF(!handler.report(cx, rval))) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }

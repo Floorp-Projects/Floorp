@@ -1,0 +1,163 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script type="text/js-worker">
+function ok(expect, msg) {
+  postMessage({"type": "status", status: !!expect, msg: msg});
+}
+
+onmessage = function(event) {
+  var bitmap = event.data.bitmap;
+  ok(!!bitmap, "Get the ImageBitmap from the main script.");
+
+  var offscreenCanvas = new OffscreenCanvas(64, 64);
+  var ctx = offscreenCanvas.getContext('bitmaprenderer');
+  ok(!!ctx, "Get bitmaprenderer context on worker.");
+
+  ctx.transferImageBitmap(bitmap);
+  var resultBitmap = offscreenCanvas.transferToImageBitmap();
+  postMessage({"type": "bitmap", bitmap: resultBitmap}, [resultBitmap]);
+}
+</script>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function createCanvas(width, height) {
+  var htmlCanvas = document.createElement('canvas');
+  htmlCanvas.width = width;
+  htmlCanvas.height = height;
+  document.body.appendChild(htmlCanvas);
+  return htmlCanvas;
+}
+
+function runTest(canvasWidth, canvasHeight, nextTest) {
+  var canvas1 = createCanvas(canvasWidth, canvasHeight);
+  var ctx = canvas1.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  var canvasRef = createCanvas(90, 90);
+  var ctx = canvasRef.getContext("2d");
+  // Clear with black transparent first
+  ctx.fillStyle = "rgba(0, 0, 0, 0)";
+  ctx.fillRect(0, 0, 90, 90);
+
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+  createImageBitmap(canvas1).then(function(bmp) {
+    document.body.removeChild(canvas1);
+
+    var canvas2 = createCanvas(90, 90);
+    var ctx2 = canvas2.getContext("bitmaprenderer");
+    ctx2.transferImageBitmap(bmp);
+
+    ok(canvasRef.toDataURL() == canvas2.toDataURL(), "toDataURL should return same result.");
+
+    // Exam render result
+    canvasRef.style.display = "none";
+    canvas2.style.display = "block";
+    var snapshot = snapshotWindow(window);
+
+    canvasRef.style.display = "block";
+    canvas2.style.display = "none";
+    var snapshotRef = snapshotWindow(window);
+
+    var results = compareSnapshots(snapshot, snapshotRef, true);
+    ok(results[0], "Screenshots should be the same");
+
+    document.body.removeChild(canvasRef);
+    document.body.removeChild(canvas2);
+
+    nextTest();
+  });
+}
+
+function scaleTest() {
+  var canvas1 = createCanvas(64, 64);
+  var ctx = canvas1.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, 64, 64);
+
+  var canvas2 = createCanvas(64, 64);
+  var ctx2 = canvas2.getContext("2d");
+  ctx2.fillStyle = "#00FF00";
+  ctx2.fillRect(0, 0, 64, 64);
+
+  var p1 = createImageBitmap(canvas1);
+  var p2 = createImageBitmap(canvas2);
+  Promise.all([p1, p2]).then(function(bitmaps) {
+    document.body.removeChild(canvas1);
+    document.body.removeChild(canvas2);
+
+    // Create a large canvas then shrink.
+    var canvas3 = createCanvas(128, 128);
+    var ctx3 = canvas3.getContext("bitmaprenderer");
+    ctx3.transferImageBitmap(bitmaps[0]);
+    var snapshotLargeRef = snapshotWindow(window);
+
+    canvas3.width = 32;
+    canvas3.height = 32;
+    var snapshotSmall = snapshotWindow(window);
+    document.body.removeChild(canvas3);
+
+    // Create a small canvas then grow.
+    var canvas4 = createCanvas(32, 32);
+    var ctx4 = canvas4.getContext("bitmaprenderer");
+    ctx4.transferImageBitmap(bitmaps[1]);
+    var snapshotSmallRef = snapshotWindow(window);
+
+    canvas4.width = 128;
+    canvas4.height = 128;
+    var snapshotLarge = snapshotWindow(window);
+    document.body.removeChild(canvas4);
+
+    var resultsLarge = compareSnapshots(snapshotLarge, snapshotLargeRef, true);
+    ok(resultsLarge[0], "Screenshots should be the same");
+
+    var resultsSmall = compareSnapshots(snapshotSmall, snapshotSmallRef, true);
+    ok(resultsSmall[0], "Screenshots should be the same");
+    runTestOnWorker();
+  });
+}
+
+function runTestOnWorker() {
+  var canvas1 = createCanvas(64, 64);
+  var ctx = canvas1.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, 64, 64);
+
+  var blob = new Blob(Array.prototype.map.call(document.querySelectorAll("script[type=\"text\/js-worker\"]"), function (oScript) { return oScript.textContent; }),{type: "text/javascript"});
+
+  var worker = new Worker(window.URL.createObjectURL(blob));
+
+  createImageBitmap(canvas1).then(function(bmp) {
+    worker.postMessage({bitmap: bmp}, [bmp]);
+    worker.onmessage = function(event) {
+      if (event.data.type == "status") {
+        ok(event.data.status, event.data.msg);
+      } else if (event.data.type == "bitmap") {
+        var canvas2 = createCanvas(64, 64);
+        var ctx2 = canvas2.getContext('bitmaprenderer');
+        ctx2.transferImageBitmap(event.data.bitmap);
+        ok(canvas1.toDataURL() == canvas2.toDataURL(), 'toDataURL should be the same');
+        SimpleTest.finish();
+      }
+    }
+  });
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+]}, runTest.bind(this, 64, 64, runTest.bind(this, 128, 128, scaleTest)));
+
+</script>
+</body>
+</html>

@@ -213,7 +213,8 @@ public:
      */
     virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
 
-    virtual bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
+    bool DidRenderingDeviceReset(DeviceResetReason* aResetReason = nullptr) override;
+    bool UpdateForDeviceReset() override;
 
     mozilla::gfx::BackendType GetContentBackendFor(mozilla::layers::LayersBackend aLayers) override;
 

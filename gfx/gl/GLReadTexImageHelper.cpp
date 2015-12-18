@@ -250,96 +250,6 @@ SwapRAndBComponents(DataSourceSurface* surf)
     surf->Unmap();
 }
 
-static uint16_t
-PackRGB565(uint8_t r, uint8_t g, uint8_t b)
-{
-    uint16_t pixel = ((r << 11) & 0xf800) |
-                     ((g <<  5) & 0x07e0) |
-                     ((b      ) & 0x001f);
-
-    return pixel;
-}
-
-static void
-CopyDataSourceSurface(DataSourceSurface* aSource,
-                      DataSourceSurface* aDest)
-{
-    // Don't worry too much about speed.
-    MOZ_ASSERT(aSource->GetSize() == aDest->GetSize());
-    MOZ_ASSERT(aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-               aSource->GetFormat() == SurfaceFormat::R8G8B8X8 ||
-               aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-               aSource->GetFormat() == SurfaceFormat::B8G8R8X8);
-    MOZ_ASSERT(aDest->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-               aDest->GetFormat() == SurfaceFormat::R8G8B8X8 ||
-               aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-               aDest->GetFormat() == SurfaceFormat::B8G8R8X8 ||
-               aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16);
-
-    const bool isSrcBGR = aSource->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                          aSource->GetFormat() == SurfaceFormat::B8G8R8X8;
-    const bool isDestBGR = aDest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                           aDest->GetFormat() == SurfaceFormat::B8G8R8X8;
-    const bool needsSwap02 = isSrcBGR != isDestBGR;
-
-    const bool srcHasAlpha = aSource->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-                             aSource->GetFormat() == SurfaceFormat::B8G8R8A8;
-    const bool destHasAlpha = aDest->GetFormat() == SurfaceFormat::R8G8B8A8 ||
-                              aDest->GetFormat() == SurfaceFormat::B8G8R8A8;
-    const bool needsAlphaMask = !srcHasAlpha && destHasAlpha;
-
-    const bool needsConvertTo16Bits = aDest->GetFormat() == SurfaceFormat::R5G6B5_UINT16;
-
-    DataSourceSurface::MappedSurface srcMap;
-    DataSourceSurface::MappedSurface destMap;
-    if (!aSource->Map(DataSourceSurface::MapType::READ, &srcMap) ||
-        !aDest->Map(DataSourceSurface::MapType::WRITE, &destMap)) {
-        MOZ_ASSERT(false, "CopyDataSourceSurface: Failed to map surface.");
-        return;
-    }
-    MOZ_ASSERT(srcMap.mStride >= 0);
-    MOZ_ASSERT(destMap.mStride >= 0);
-
-    const size_t srcBPP = BytesPerPixel(aSource->GetFormat());
-    const size_t srcRowBytes = aSource->GetSize().width * srcBPP;
-    const size_t srcRowHole = srcMap.mStride - srcRowBytes;
-
-    const size_t destBPP = BytesPerPixel(aDest->GetFormat());
-    const size_t destRowBytes = aDest->GetSize().width * destBPP;
-    const size_t destRowHole = destMap.mStride - destRowBytes;
-
-    uint8_t* srcRow = srcMap.mData;
-    uint8_t* destRow = destMap.mData;
-    const size_t rows = aSource->GetSize().height;
-    for (size_t i = 0; i < rows; i++) {
-        const uint8_t* srcRowEnd = srcRow + srcRowBytes;
-
-        while (srcRow != srcRowEnd) {
-            uint8_t d0 = needsSwap02 ? srcRow[2] : srcRow[0];
-            uint8_t d1 = srcRow[1];
-            uint8_t d2 = needsSwap02 ? srcRow[0] : srcRow[2];
-            uint8_t d3 = needsAlphaMask ? 0xff : srcRow[3];
-
-            if (needsConvertTo16Bits) {
-                *(uint16_t*)destRow = PackRGB565(d0, d1, d2);
-            } else {
-                destRow[0] = d0;
-                destRow[1] = d1;
-                destRow[2] = d2;
-                destRow[3] = d3;
-            }
-            srcRow += srcBPP;
-            destRow += destBPP;
-        }
-
-        srcRow += srcRowHole;
-        destRow += destRowHole;
-    }
-
-    aSource->Unmap();
-    aDest->Unmap();
-}
-
 static int
 CalcRowStride(int width, int pixelSize, int alignment)
 {
@@ -500,7 +410,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
     if (readSurf != dest) {
         MOZ_ASSERT(readFormat == LOCAL_GL_RGBA);
         MOZ_ASSERT(readType == LOCAL_GL_UNSIGNED_BYTE);
-        CopyDataSourceSurface(readSurf, dest);
+        gfx::Factory::CopyDataSourceSurface(readSurf, dest);
     }
 
     // Check if GL is giving back 1.0 alpha for

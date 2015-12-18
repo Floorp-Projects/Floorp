@@ -566,79 +566,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     // Common interface.
     /////////////////////////////////////////////////////////////////
 
-    void addPtr(Register src, Register dest) {
-        add32(src, dest);
-    }
-    void addPtr(Imm32 imm, Register dest) {
-        add32(imm, dest);
-    }
-    void addPtr(ImmWord imm, Register dest) {
-        add32(Imm32(imm.value), dest);
-    }
-    void addPtr(ImmPtr imm, Register dest) {
-        addPtr(ImmWord(uintptr_t(imm.value)), dest);
-    }
-    void addPtr(Imm32 imm, const Address& dest) {
-        add32(imm, Operand(dest));
-    }
-    void addPtr(Imm32 imm, const Operand& dest) {
-        add32(imm, dest);
-    }
-    void addPtr(const Address& src, Register dest) {
-        addl(Operand(src), dest);
-    }
-    void add64(Imm32 imm, Register64 dest) {
-        addl(imm, dest.low);
-        adcl(Imm32(0), dest.high);
-    }
-    void subPtr(Imm32 imm, Register dest) {
-        subl(imm, dest);
-    }
-    void subPtr(Register src, Register dest) {
-        subl(src, dest);
-    }
-    void subPtr(const Address& addr, Register dest) {
-        subl(Operand(addr), dest);
-    }
-    void subPtr(Register src, const Address& dest) {
-        subl(src, Operand(dest));
-    }
-    void mulBy3(const Register& src, const Register& dest) {
-        lea(Operand(src, src, TimesTwo), dest);
-    }
-    // Note: this function clobbers eax and edx.
-    void mul64(Imm64 imm, const Register64& dest) {
-        // LOW32  = LOW(LOW(dest) * LOW(imm));
-        // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
-        //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
-        //        + HIGH(LOW(dest) * LOW(imm)) [carry]
-
-        MOZ_ASSERT(dest.low != eax && dest.low != edx);
-        MOZ_ASSERT(dest.high != eax && dest.high != edx);
-
-        // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
-        movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
-        imull(edx, dest.high);
-
-        // edx:eax = LOW(dest) * LOW(imm);
-        movl(Imm32(imm.value & 0xFFFFFFFFL), edx);
-        movl(dest.low, eax);
-        mull(edx);
-
-        // HIGH(dest) += edx;
-        addl(edx, dest.high);
-
-        // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
-        if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
-            leal(Operand(dest.low, dest.low, TimesFour), edx);
-        else
-            MOZ_CRASH("Unsupported imm");
-        addl(edx, dest.high);
-
-        // LOW(dest) = eax;
-        movl(eax, dest.low);
-    }
-
     void branch32(Condition cond, AbsoluteAddress lhs, Imm32 rhs, Label* label) {
         cmp32(Operand(lhs), rhs);
         j(cond, label);
@@ -723,7 +650,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         j(cond, label);
     }
     void decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label) {
-        subPtr(imm, lhs);
+        subl(imm, lhs);
         j(cond, label);
     }
 
@@ -1011,9 +938,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     void loadConstantDouble(double d, FloatRegister dest);
-    void addConstantDouble(double d, FloatRegister dest);
     void loadConstantFloat32(float f, FloatRegister dest);
-    void addConstantFloat32(float f, FloatRegister dest);
     void loadConstantInt32x4(const SimdConstant& v, FloatRegister dest);
     void loadConstantFloat32x4(const SimdConstant& v, FloatRegister dest);
 
@@ -1098,38 +1023,12 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     }
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToDouble(Register src, FloatRegister dest) {
-        // src is [0, 2^32-1]
-        subl(Imm32(0x80000000), src);
-
-        // Now src is [-2^31, 2^31-1] - int range, but not the same value.
-        convertInt32ToDouble(src, dest);
-
-        // dest is now a double with the int range.
-        // correct the double value by adding 0x80000000.
-        addConstantDouble(2147483648.0, dest);
-    }
+    inline void convertUInt32ToDouble(Register src, FloatRegister dest);
 
     // Note: this function clobbers the source register.
-    void convertUInt32ToFloat32(Register src, FloatRegister dest) {
-        convertUInt32ToDouble(src, dest);
-        convertDoubleToFloat32(dest, dest);
-    }
+    inline void convertUInt32ToFloat32(Register src, FloatRegister dest);
 
     void convertUInt64ToDouble(Register64 src, Register temp, FloatRegister dest);
-
-    void mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest) {
-        movl(imm, temp);
-        vmulsd(Operand(temp, 0), dest, dest);
-    }
-
-    void inc64(AbsoluteAddress dest) {
-        addl(Imm32(1), Operand(dest));
-        Label noOverflow;
-        j(NonZero, &noOverflow);
-        addl(Imm32(1), Operand(dest.offset(4)));
-        bind(&noOverflow);
-    }
 
     void incrementInt32Value(const Address& addr) {
         addl(Imm32(1), payloadOf(addr));

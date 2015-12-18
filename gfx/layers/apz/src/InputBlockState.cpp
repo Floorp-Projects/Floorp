@@ -614,6 +614,7 @@ bool
 PanGestureBlockState::SetContentResponse(bool aPreventDefault)
 {
   if (aPreventDefault) {
+    TBS_LOG("%p setting interrupted flag\n", this);
     mInterrupted = true;
   }
   bool stateChanged = CancelableBlockState::SetContentResponse(aPreventDefault);
