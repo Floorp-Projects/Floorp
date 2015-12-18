@@ -662,11 +662,7 @@ private:
 
   static bool IsOggEnabled();
   static bool IsOpusEnabled();
-
-#ifdef MOZ_WAVE
   static bool IsWaveEnabled();
-#endif
-
   static bool IsWebMEnabled();
 
 #ifdef NECKO_PROTOCOL_rtsp
