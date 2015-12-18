@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test channel scanning complete for TV API</title>
+  <title>Test channel scanning error for TV API</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
@@ -15,7 +15,6 @@
 function runTest() {
   ok('tv' in navigator, "navigator.tv should exist.");
 
-  var isScannedEventFired = false;
   var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('tv_chrome_script.js'));
 
   navigator.tv.getTuners().then(
@@ -28,26 +27,17 @@ function runTest() {
           var source = aSources[0];
 
           source.onscanningstatechanged = function(aEvent) {
-            if (aEvent.state === 'scanned') {
-              if (!isScannedEventFired) {
-                isScannedEventFired = true;
-                gScript.sendAsyncMessage('trigger-channel-scan-complete',
-                                         { tunerId: aTuners[0].id,
-                                           sourceType: source.type });
-              }
-              info("Received channel scanned event.");
-              ok(aEvent.channel, "Scanned channel should be set.");
-            } else if (aEvent.state === 'completed') {
-              ok(isScannedEventFired, "Received channel scanning completed event after channel scanned event.");
+            if (aEvent.state === 'stopped') {
+              ok(true, "Received channel scanning stopped event.");
               gScript.destroy();
               SimpleTest.finish();
             }
           };
 
           // TODO Bug 1088818 - Modify the behavior of channel scanning.
-          source.startScanning({}).then(
+          source.startScanning().then(
             function() {
-              gScript.sendAsyncMessage('trigger-channel-scanned',
+              gScript.sendAsyncMessage('trigger-channel-scan-error',
                                        { tunerId: aTuners[0].id,
                                          sourceType: source.type });
             },
@@ -73,7 +63,6 @@ function runTest() {
   );
 }
 
-SimpleTest.expectAssertions(0, 2);
 SimpleTest.waitForExplicitFinish();
 prepareTest(runTest);
 
