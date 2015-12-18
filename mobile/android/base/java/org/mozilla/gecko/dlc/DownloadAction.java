@@ -7,6 +7,7 @@ package org.mozilla.gecko.dlc;
 
 import android.content.Context;
 import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.support.v4.net.ConnectivityManagerCompat;
 import android.util.Log;
 
@@ -56,6 +57,12 @@ public class DownloadAction extends BaseAction {
 
     public void perform(Context context, DownloadContentCatalog catalog) {
         Log.d(LOGTAG, "Downloading content..");
+
+        if (!isConnectedToNetwork(context)) {
+            Log.d(LOGTAG, "No connected network available. Postponing download.");
+            // TODO: Reschedule download (bug 1209498)
+            return;
+        }
 
         if (isActiveNetworkMetered(context)) {
             Log.d(LOGTAG, "Network is metered. Postponing download.");
@@ -226,6 +233,13 @@ public class DownloadAction extends BaseAction {
                 temporaryFile.delete();
             }
         }
+    }
+
+    protected boolean isConnectedToNetwork(Context context) {
+        ConnectivityManager manager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = manager.getActiveNetworkInfo();
+
+        return networkInfo != null && networkInfo.isConnected();
     }
 
     protected boolean isActiveNetworkMetered(Context context) {
