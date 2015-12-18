@@ -156,7 +156,7 @@ this.ProfileAge.prototype = {
 
       function onStatFailure(e) {
         // Never mind.
-        self._log.debug("Stat failure: " + CommonUtils.exceptionStr(e));
+        self._log.debug("Stat failure", e);
       }
 
       return OS.File.stat(entry.path)
