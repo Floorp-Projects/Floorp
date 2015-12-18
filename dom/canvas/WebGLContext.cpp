@@ -1131,9 +1131,9 @@ private:
     RefPtr<HTMLCanvasElement> mCanvas;
 };
 
-already_AddRefed<layers::CanvasLayer>
+already_AddRefed<layers::Layer>
 WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
-                             CanvasLayer* oldLayer,
+                             Layer* oldLayer,
                              LayerManager* manager)
 {
     if (IsContextLost())
@@ -1141,7 +1141,7 @@ WebGLContext::GetCanvasLayer(nsDisplayListBuilder* builder,
 
     if (!mResetLayer && oldLayer &&
         oldLayer->HasUserData(&gWebGLLayerUserData)) {
-        RefPtr<layers::CanvasLayer> ret = oldLayer;
+        RefPtr<layers::Layer> ret = oldLayer;
         return ret.forget();
     }
 

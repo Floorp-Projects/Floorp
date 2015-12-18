@@ -505,6 +505,14 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
   return surface.forget();
 }
 
+already_AddRefed<layers::Image>
+ImageBitmap::TransferAsImage()
+{
+  RefPtr<layers::Image> image = mData;
+  Close();
+  return image.forget();
+}
+
 ImageBitmapCloneData*
 ImageBitmap::ToCloneData()
 {

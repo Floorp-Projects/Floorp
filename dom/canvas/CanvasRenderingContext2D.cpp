@@ -5579,9 +5579,9 @@ CanvasRenderingContext2D::GetBufferProvider(LayerManager* aManager)
   return mBufferProvider;
 }
 
-already_AddRefed<CanvasLayer>
+already_AddRefed<Layer>
 CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                         CanvasLayer *aOldLayer,
+                                         Layer *aOldLayer,
                                          LayerManager *aManager)
 {
   if (mOpaque || mIsSkiaGL) {
@@ -5624,8 +5624,10 @@ CanvasRenderingContext2D::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
       data.mBufferProvider = provider;
     }
 
-    if (userData && userData->IsForContext(this) && aOldLayer->IsDataValid(data)) {
-      RefPtr<CanvasLayer> ret = aOldLayer;
+    if (userData &&
+        userData->IsForContext(this) &&
+        static_cast<CanvasLayer*>(aOldLayer)->IsDataValid(data)) {
+      RefPtr<Layer> ret = aOldLayer;
       return ret.forget();
     }
   }
