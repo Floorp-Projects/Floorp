@@ -221,6 +221,9 @@ WriteHeapGraph(JSContext* cx,
                         ignoreNodeCount, ignoreEdgeCount);
 }
 
+// Get the mozilla::MallocSizeOf for the current thread's JSRuntime.
+MallocSizeOf GetCurrentThreadDebuggerMallocSizeOf();
+
 } // namespace devtools
 } // namespace mozilla
 

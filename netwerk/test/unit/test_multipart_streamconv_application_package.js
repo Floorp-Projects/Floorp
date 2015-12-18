@@ -21,7 +21,7 @@
 //   - checks that the headers for each part is set correctly
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = null;
 
@@ -30,16 +30,7 @@ XPCOMUtils.defineLazyGetter(this, "uri", function() {
 });
 
 function make_channel(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 function contentHandler(metadata, response)
@@ -210,7 +201,7 @@ function test_multipart() {
            null);
 
   var chan = make_channel(uri + "/multipart");
-  chan.asyncOpen(conv, null);
+  chan.asyncOpen2(conv);
 }
 
 function test_multipart_with_boundary() {
@@ -222,7 +213,7 @@ function test_multipart_with_boundary() {
            null);
 
   var chan = make_channel(uri + "/multipart2");
-  chan.asyncOpen(conv, null);
+  chan.asyncOpen2(conv);
 }
 
 function test_multipart_chunked_headers() {
@@ -234,7 +225,7 @@ function test_multipart_chunked_headers() {
            null);
 
   var chan = make_channel(uri + "/multipart3");
-  chan.asyncOpen(conv, null);
+  chan.asyncOpen2(conv);
 }
 
 function test_multipart_content_type_other() {
@@ -247,7 +238,7 @@ function test_multipart_content_type_other() {
            null);
 
   var chan = make_channel(uri + "/multipart4");
-  chan.asyncOpen(conv, null);
+  chan.asyncOpen2(conv);
 }
 
 function test_multipart_package_header(aChunkSize) {
@@ -260,7 +251,7 @@ function test_multipart_package_header(aChunkSize) {
            null);
 
   var chan = make_channel(uri + "/multipart5_" + aChunkSize);
-  chan.asyncOpen(conv, null);
+  chan.asyncOpen2(conv);
 }
 
 // Bug 1212223 - Test multipart with package header and different chunk size.

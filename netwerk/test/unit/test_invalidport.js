@@ -2,7 +2,7 @@
 // Perform the async open several times in order to induce exponential
 // scheduling behavior bugs.
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var CC = Components.Constructor;
 
@@ -31,17 +31,8 @@ function run_test() {
 }
 
 function execute_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
-  var chan = ios.newChannel2("http://localhost:75000",
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  var chan = NetUtil.newChannel({uri: "http://localhost:75000", loadUsingSystemPrincipal: true});
   chan.QueryInterface(Ci.nsIHttpChannel);
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 

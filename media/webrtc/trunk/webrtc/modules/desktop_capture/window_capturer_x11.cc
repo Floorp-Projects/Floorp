@@ -134,6 +134,16 @@ bool WindowCapturerLinux::GetWindowList(WindowList* windows) {
       if (app_window && !IsDesktopElement(app_window)) {
         Window w;
         w.id = app_window;
+
+        XWindowAttributes window_attr;
+        if(!XGetWindowAttributes(display(),w.id,&window_attr)){
+          LOG(LS_ERROR)<<"Bad request for attributes for window ID:"<<w.id;
+          continue;
+        }
+        if((window_attr.width <= 0) || (window_attr.height <=0)){
+          continue;
+        }
+
         if (GetWindowTitle(app_window, &w.title))
           result.push_back(w);
       }
