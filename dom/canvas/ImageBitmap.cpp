@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/ImageBitmap.h"
+
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/StructuredCloneTags.h"
@@ -145,15 +146,14 @@ CropAndCopyDataSourceSurface(DataSourceSurface* aSurface, const IntRect& aCropRe
 }
 
 /*
- * Encapsulate the given _aSurface_ into a layers::CairoImage.
+ * Encapsulate the given _aSurface_ into a layers::SourceSurfaceImage.
  */
 static already_AddRefed<layers::Image>
 CreateImageFromSurface(SourceSurface* aSurface)
 {
   MOZ_ASSERT(aSurface);
-  RefPtr<layers::CairoImage> image =
-    new layers::CairoImage(aSurface->GetSize(), aSurface);
-
+  RefPtr<layers::SourceSurfaceImage> image =
+    new layers::SourceSurfaceImage(aSurface->GetSize(), aSurface);
   return image.forget();
 }
 
@@ -250,13 +250,13 @@ CreateImageFromRawData(const gfx::IntSize& aSize,
 
 /*
  * This is a synchronous task.
- * This class is used to create a layers::CairoImage from raw data in the main
+ * This class is used to create a layers::SourceSurfaceImage from raw data in the main
  * thread. While creating an ImageBitmap from an ImageData, we need to create
  * a SouceSurface from the ImageData's raw data and then set the SourceSurface
- * into a layers::CairoImage. However, the layers::CairoImage asserts the
+ * into a layers::SourceSurfaceImage. However, the layers::SourceSurfaceImage asserts the
  * setting operation in the main thread, so if we are going to create an
  * ImageBitmap from an ImageData off the main thread, we post an event to the
- * main thread to create a layers::CairoImage from an ImageData's raw data.
+ * main thread to create a layers::SourceSurfaceImage from an ImageData's raw data.
  */
 class CreateImageFromRawDataInMainThreadSyncTask final :
   public WorkerMainThreadRunnable
@@ -409,6 +409,14 @@ ImageBitmap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
+ImageBitmap::Close()
+{
+  mData = nullptr;
+  mSurface = nullptr;
+  mPictureRect.SetEmpty();
+}
+
+void
 ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv)
 {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
@@ -418,6 +426,10 @@ already_AddRefed<SourceSurface>
 ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 {
   MOZ_ASSERT(aTarget);
+
+  if (!mData) {
+    return nullptr;
+  }
 
   if (!mSurface) {
     mSurface = mData->GetAsSourceSurface();
@@ -491,6 +503,68 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 
   RefPtr<gfx::SourceSurface> surface(mSurface);
   return surface.forget();
+}
+
+already_AddRefed<layers::Image>
+ImageBitmap::TransferAsImage()
+{
+  RefPtr<layers::Image> image = mData;
+  Close();
+  return image.forget();
+}
+
+ImageBitmapCloneData*
+ImageBitmap::ToCloneData()
+{
+  ImageBitmapCloneData* result = new ImageBitmapCloneData();
+  result->mPictureRect = mPictureRect;
+  RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
+  result->mSurface = surface->GetDataSurface();
+  MOZ_ASSERT(result->mSurface);
+
+  return result;
+}
+
+/* static */ already_AddRefed<ImageBitmap>
+ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
+                                 ImageBitmapCloneData* aData)
+{
+  RefPtr<layers::Image> data =
+    CreateImageFromSurface(aData->mSurface);
+
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  ErrorResult rv;
+  ret->SetPictureRect(aData->mPictureRect, rv);
+  return ret.forget();
+}
+
+/* static */ already_AddRefed<ImageBitmap>
+ImageBitmap::CreateFromOffscreenCanvas(nsIGlobalObject* aGlobal,
+                                       OffscreenCanvas& aOffscreenCanvas,
+                                       ErrorResult& aRv)
+{
+  // Check origin-clean.
+  if (aOffscreenCanvas.IsWriteOnly()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  nsLayoutUtils::SurfaceFromElementResult res =
+    nsLayoutUtils::SurfaceFromOffscreenCanvas(&aOffscreenCanvas,
+                                              nsLayoutUtils::SFE_WANT_FIRST_FRAME);
+
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+
+  if (NS_WARN_IF(!surface)) {
+    aRv.Throw(NS_ERROR_NOT_AVAILABLE);
+    return nullptr;
+  }
+
+  RefPtr<layers::Image> data =
+    CreateImageFromSurface(surface);
+
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  return ret.forget();
 }
 
 /* static */ already_AddRefed<ImageBitmap>
@@ -1154,7 +1228,7 @@ ImageBitmap::Create(nsIGlobalObject* aGlobal, const ImageBitmapSource& aSrc,
 ImageBitmap::ReadStructuredClone(JSContext* aCx,
                                  JSStructuredCloneReader* aReader,
                                  nsIGlobalObject* aParent,
-                                 const nsTArray<RefPtr<layers::Image>>& aClonedImages,
+                                 const nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
                                  uint32_t aIndex)
 {
   MOZ_ASSERT(aCx);
@@ -1177,8 +1251,8 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   int32_t picRectHeight = BitwiseCast<int32_t>(picRectHeight_);
 
   // Create a new ImageBitmap.
-  MOZ_ASSERT(!aClonedImages.IsEmpty());
-  MOZ_ASSERT(aIndex < aClonedImages.Length());
+  MOZ_ASSERT(!aClonedSurfaces.IsEmpty());
+  MOZ_ASSERT(aIndex < aClonedSurfaces.Length());
 
   // RefPtr<ImageBitmap> needs to go out of scope before toObjectOrNull() is
   // called because the static analysis thinks dereferencing XPCOM objects
@@ -1187,8 +1261,9 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   // while destructors are running.
   JS::Rooted<JS::Value> value(aCx);
   {
+    RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
     RefPtr<ImageBitmap> imageBitmap =
-      new ImageBitmap(aParent, aClonedImages[aIndex]);
+      new ImageBitmap(aParent, img);
 
     ErrorResult error;
     imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
@@ -1208,7 +1283,7 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
 
 /*static*/ bool
 ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
-                                  nsTArray<RefPtr<layers::Image>>& aClonedImages,
+                                  nsTArray<RefPtr<DataSourceSurface>>& aClonedSurfaces,
                                   ImageBitmap* aImageBitmap)
 {
   MOZ_ASSERT(aWriter);
@@ -1219,8 +1294,8 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
   const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
 
-  // Indexing the cloned images and send the index to the receiver.
-  uint32_t index = aClonedImages.Length();
+  // Indexing the cloned surfaces and send the index to the receiver.
+  uint32_t index = aClonedSurfaces.Length();
 
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
@@ -1228,8 +1303,24 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
     return false;
   }
 
-  aClonedImages.AppendElement(aImageBitmap->mData);
-
+  RefPtr<SourceSurface> surface =
+    aImageBitmap->mData->GetAsSourceSurface();
+  RefPtr<DataSourceSurface> snapshot = surface->GetDataSurface();
+  RefPtr<DataSourceSurface> dstDataSurface;
+  {
+    // DataSourceSurfaceD2D1::GetStride() will call EnsureMapped implicitly and
+    // won't Unmap after exiting function. So instead calling GetStride()
+    // directly, using ScopedMap to get stride.
+    DataSourceSurface::ScopedMap map(snapshot, DataSourceSurface::READ);
+    dstDataSurface =
+      Factory::CreateDataSourceSurfaceWithStride(snapshot->GetSize(),
+                                                 snapshot->GetFormat(),
+                                                 map.GetStride(),
+                                                 true);
+  }
+  MOZ_ASSERT(dstDataSurface);
+  Factory::CopyDataSourceSurface(snapshot, dstDataSurface);
+  aClonedSurfaces.AppendElement(dstDataSurface);
   return true;
 }
 

@@ -50,6 +50,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     marked(true),
     warnedAboutFlagsArgument(false),
     warnedAboutExprClosure(false),
+    warnedAboutRegExpMultiline(false),
     addonId(options.addonIdOrNull()),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),

@@ -25,6 +25,8 @@ class CanvasClient;
 } // namespace layers
 
 namespace dom {
+class Blob;
+class ImageBitmap;
 
 // This is helper class for transferring OffscreenCanvas to worker thread.
 // Because OffscreenCanvas is not thread-safe. So we cannot pass Offscreen-
@@ -35,7 +37,7 @@ struct OffscreenCanvasCloneData final
   OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                            uint32_t aWidth, uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
-                           bool aNeutered);
+                           bool aNeutered, bool aIsWriteOnly);
   ~OffscreenCanvasCloneData();
 
   RefPtr<layers::AsyncCanvasRenderer> mRenderer;
@@ -43,6 +45,7 @@ struct OffscreenCanvasCloneData final
   uint32_t mHeight;
   layers::LayersBackend mCompositorBackendType;
   bool mNeutered;
+  bool mIsWriteOnly;
 };
 
 class OffscreenCanvas final : public DOMEventTargetHelper
@@ -52,15 +55,22 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(OffscreenCanvas, DOMEventTargetHelper)
 
-  OffscreenCanvas(uint32_t aWidth,
+  OffscreenCanvas(nsIGlobalObject* aGlobal,
+                  uint32_t aWidth,
                   uint32_t aHeight,
                   layers::LayersBackend aCompositorBackend,
                   layers::AsyncCanvasRenderer* aRenderer);
 
-  OffscreenCanvas* GetParentObject() const;
+  nsCOMPtr<nsIGlobalObject> GetParentObject() const { return GetOwnerGlobal(); }
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<OffscreenCanvas>
+  Constructor(const GlobalObject& aGlobal,
+              uint32_t aWidth,
+              uint32_t aHeight,
+              ErrorResult& aRv);
 
   void ClearResources();
 
@@ -100,13 +110,24 @@ public:
     }
   }
 
+  already_AddRefed<ImageBitmap>
+  TransferToImageBitmap();
+
+  already_AddRefed<Promise>
+  ToBlob(JSContext* aCx,
+         const nsAString& aType,
+         JS::Handle<JS::Value> aParams,
+         ErrorResult& aRv);
+
   nsICanvasRenderingContextInternal* GetContext() const
   {
     return mCurrentContext;
   }
 
+  already_AddRefed<gfx::SourceSurface> GetSurfaceSnapshot(bool* aPremultAlpha = nullptr);
+
   static already_AddRefed<OffscreenCanvas>
-  CreateFromCloneData(OffscreenCanvasCloneData* aData);
+  CreateFromCloneData(nsIGlobalObject* aGlobal, OffscreenCanvasCloneData* aData);
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
 
@@ -147,6 +168,16 @@ public:
     return mNeutered;
   }
 
+  void SetWriteOnly()
+  {
+    mIsWriteOnly = true;
+  }
+
+  bool IsWriteOnly() const
+  {
+    return mIsWriteOnly;
+  }
+
   layers::LayersBackend GetCompositorBackendType() const
   {
     return mCompositorBackendType;
@@ -154,6 +185,8 @@ public:
 
 private:
   ~OffscreenCanvas();
+
+  nsCOMPtr<nsIGlobalObject> GetGlobalObject();
 
   void CanvasAttrChanged()
   {
@@ -164,6 +197,7 @@ private:
 
   bool mAttrDirty;
   bool mNeutered;
+  bool mIsWriteOnly;
 
   uint32_t mWidth;
   uint32_t mHeight;

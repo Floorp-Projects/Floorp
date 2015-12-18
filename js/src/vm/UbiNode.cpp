@@ -497,7 +497,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     return edges.append(mozilla::Move(Edge(name.release(), node)));
 }
 
-const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("RootList");
+const char16_t Concrete<RootList>::concreteTypeName[] = MOZ_UTF16("JS::ubi::RootList");
 
 UniquePtr<EdgeRange>
 Concrete<RootList>::edges(JSRuntime* rt, bool wantNames) const {

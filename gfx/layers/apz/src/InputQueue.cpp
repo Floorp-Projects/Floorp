@@ -207,7 +207,8 @@ InputQueue::ReceiveMouseInput(const RefPtr<AsyncPanZoomController>& aTarget,
       *aOutInputBlockId = block->GetBlockId();
     }
 
-    INPQ_LOG("started new drag block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new drag block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
@@ -262,7 +263,8 @@ InputQueue::ReceiveScrollWheelInput(const RefPtr<AsyncPanZoomController>& aTarge
 
   if (!block) {
     block = new WheelBlockState(aTarget, aTargetConfirmed, aEvent);
-    INPQ_LOG("started new scroll wheel block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new scroll wheel block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     SweepDepletedBlocks();
     mInputBlockQueue.AppendElement(block);
@@ -321,19 +323,25 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
     block = mInputBlockQueue.LastElement()->AsPanGestureBlock();
   }
 
+  PanGestureInput event = aEvent;
   nsEventStatus result = nsEventStatus_eConsumeDoDefault;
 
   if (!block || block->WasInterrupted()) {
-    if (aEvent.mType != PanGestureInput::PANGESTURE_START) {
-      // Only PANGESTURE_START events are allowed to start a new pan gesture block.
-      return nsEventStatus_eConsumeDoDefault;
+    if (event.mType != PanGestureInput::PANGESTURE_START) {
+      // Only PANGESTURE_START events are allowed to start a new pan gesture
+      // block, but we really want to start a new block here, so we magically
+      // turn this input into a PANGESTURE_START.
+      INPQ_LOG("transmogrifying pan input %d to PANGESTURE_START for new block\n",
+          event.mType);
+      event.mType = PanGestureInput::PANGESTURE_START;
     }
-    block = new PanGestureBlockState(aTarget, aTargetConfirmed, aEvent);
-    INPQ_LOG("started new pan gesture block %p for target %p\n", block, aTarget.get());
+    block = new PanGestureBlockState(aTarget, aTargetConfirmed, event);
+    INPQ_LOG("started new pan gesture block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     if (aTargetConfirmed &&
-        aEvent.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &&
-        !CanScrollTargetHorizontally(aEvent, block)) {
+        event.mRequiresContentResponseIfCannotScrollHorizontallyInStartDirection &&
+        !CanScrollTargetHorizontally(event, block)) {
       // This event may trigger a swipe gesture, depending on what our caller
       // wants to do it. We need to suspend handling of this block until we get
       // a content response which will tell us whether to proceed or abort the
@@ -363,8 +371,8 @@ InputQueue::ReceivePanGestureInput(const RefPtr<AsyncPanZoomController>& aTarget
   // null) should take priority. This is equivalent to just always using the
   // target (confirmed or not) from the block, which is what
   // MaybeHandleCurrentBlock() does.
-  if (!MaybeHandleCurrentBlock(block, aEvent)) {
-    block->AddEvent(aEvent.AsPanGestureInput());
+  if (!MaybeHandleCurrentBlock(block, event)) {
+    block->AddEvent(event.AsPanGestureInput());
   }
 
   return result;

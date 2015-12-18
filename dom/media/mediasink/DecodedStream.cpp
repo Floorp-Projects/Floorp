@@ -480,7 +480,10 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
           self->mOutputStreamManager.Disconnect();
           delete data;
         });
-        AbstractThread::MainThread()->Dispatch(r.forget());
+        // We are in tail dispatching phase. Don't call
+        // AbstractThread::MainThread()->Dispatch() to avoid reentrant
+        // AutoTaskDispatcher.
+        NS_DispatchToMainThread(r.forget());
       }
     }
     RefPtr<DecodedStream> mThis;

@@ -88,7 +88,7 @@ private:
     ScopedFreePtr<unsigned char> mData;
     size_t mDataSize;
     nsCOMPtr<nsIDOMWindow> mWindow;
-    RefPtr<layers::CairoImage> mImage;
+    RefPtr<layers::SourceSurfaceImage> mImage;
     nsCOMPtr<nsITimer> mTimer;
     Monitor mMonitor;
     nsCOMPtr<nsITabSource> mTabSource;
