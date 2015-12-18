@@ -613,7 +613,6 @@ bool StringsEqual(JSContext* cx, HandleString left, HandleString right, bool* re
 bool ArrayPopDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
 bool ArrayPushDense(JSContext* cx, HandleObject obj, HandleValue v, uint32_t* length);
 bool ArrayShiftDense(JSContext* cx, HandleObject obj, MutableHandleValue rval);
-JSObject* ArrayConcatDense(JSContext* cx, HandleObject obj1, HandleObject obj2, HandleObject res);
 JSString* ArrayJoin(JSContext* cx, HandleObject array, HandleString sep);
 
 bool CharCodeAt(JSContext* cx, HandleString str, int32_t index, uint32_t* code);
