@@ -290,6 +290,7 @@ class SyntaxParseHandler
 
     Node newStatementList(unsigned blockid, const TokenPos& pos) { return NodeGeneric; }
     void addStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler>* pc) {}
+    void addCaseStatementToList(Node list, Node stmt, ParseContext<SyntaxParseHandler>* pc) {}
     bool prependInitialYield(Node stmtList, Node gen) { return true; }
     Node newEmptyStatement(const TokenPos& pos) { return NodeEmptyStatement; }
 
