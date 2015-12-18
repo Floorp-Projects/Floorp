@@ -2012,6 +2012,24 @@ nsHttpChannel::StartRedirectChannelToURI(nsIURI *upgradedURI, uint32_t flags)
     // Inform consumers about this fake redirect
     mRedirectChannel = newChannel;
 
+    if (!(flags & nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
+        // Ensure that internally-redirected channels cannot be intercepted, which would look
+        // like two separate requests to the nsINetworkInterceptController.
+        if (mInterceptCache == INTERCEPTED) {
+            nsCOMPtr<nsIHttpChannelInternal> httpRedirect = do_QueryInterface(mRedirectChannel);
+            if (httpRedirect) {
+                httpRedirect->ForceIntercepted(mInterceptionID);
+            }
+        } else {
+            nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+            rv = mRedirectChannel->GetLoadFlags(&loadFlags);
+            NS_ENSURE_SUCCESS(rv, rv);
+            loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
+            rv = mRedirectChannel->SetLoadFlags(loadFlags);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
     PushRedirectAsyncFunc(
         &nsHttpChannel::ContinueAsyncRedirectChannelToURI);
     rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, flags);
@@ -4585,24 +4603,6 @@ nsHttpChannel::SetupReplacementChannel(nsIURI       *newURI,
             return NS_ERROR_NOT_RESUMABLE;
         }
         resumableChannel->ResumeAt(mStartPos, mEntityID);
-    }
-
-    if (!(redirectFlags & nsIChannelEventSink::REDIRECT_STS_UPGRADE)) {
-        // Ensure that internally-redirected channels cannot be intercepted, which would look
-        // like two separate requests to the nsINetworkInterceptController.
-        if (mInterceptCache == INTERCEPTED) {
-            nsCOMPtr<nsIHttpChannelInternal> httpRedirect = do_QueryInterface(newChannel);
-            if (httpRedirect) {
-                httpRedirect->ForceIntercepted(mInterceptionID);
-            }
-        } else {
-            nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
-            rv = newChannel->GetLoadFlags(&loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-            loadFlags |= nsIChannel::LOAD_BYPASS_SERVICE_WORKER;
-            rv = newChannel->SetLoadFlags(loadFlags);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
     }
 
     return NS_OK;
