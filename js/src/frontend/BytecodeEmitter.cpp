@@ -4413,13 +4413,25 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
              * i' to be hoisted out of the loop.
              */
             MOZ_ASSERT(binding->isOp(JSOP_NOP));
-            MOZ_ASSERT(emitOption != DefineVars && emitOption != AnnexB);
+            MOZ_ASSERT(emitOption != DefineVars);
+            MOZ_ASSERT_IF(emitOption == AnnexB, binding->pn_left->isKind(PNK_NAME));
 
-            /*
-             * To allow the front end to rewrite var f = x; as f = x; when a
-             * function f(){} precedes the var, detect simple name assignment
-             * here and initialize the name.
-             */
+            // To allow the front end to rewrite |var f = x;| as |f = x;| when a
+            // |function f(){}| precedes the var, detect simple name assignment
+            // here and initialize the name.
+            //
+            // There is a corner case where a function declaration synthesizes
+            // an Annex B declaration, which in turn gets rewritten later as a
+            // simple assignment due to hoisted function declaration of the
+            // same name. For example,
+            //
+            // {
+            //   // Synthesizes an Annex B declaration because no 'f' binding
+            //   // yet exists. This later gets rewritten as an assignment when
+            //   // the outer function 'f' gets hoisted.
+            //   function f() {}
+            // }
+            // function f() {}
             if (binding->pn_left->isKind(PNK_NAME)) {
                 if (!emitSingleVariable(pn, binding->pn_left, binding->pn_right, emitOption))
                     return false;
