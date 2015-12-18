@@ -18,6 +18,7 @@ class ErrorResult;
 
 namespace dom {
 
+class EncodeCompleteCallback;
 class FileCallback;
 
 enum class CanvasContextType : uint8_t {
@@ -54,6 +55,10 @@ protected:
                                bool* const outCustomParseOptions);
 
   void ToBlob(JSContext* aCx, nsIGlobalObject* global, FileCallback& aCallback,
+              const nsAString& aType, JS::Handle<JS::Value> aParams,
+              ErrorResult& aRv);
+
+  void ToBlob(JSContext* aCx, nsIGlobalObject* aGlobal, EncodeCompleteCallback* aCallback,
               const nsAString& aType, JS::Handle<JS::Value> aParams,
               ErrorResult& aRv);
 
