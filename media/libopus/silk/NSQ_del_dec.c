@@ -57,6 +57,9 @@ typedef struct {
 
 typedef NSQ_sample_struct  NSQ_sample_pair[ 2 ];
 
+#if defined(MIPSr1_ASM)
+#include "mips/NSQ_del_dec_mipsr1.h"
+#endif
 static OPUS_INLINE void silk_nsq_del_dec_scale_states(
     const silk_encoder_state *psEncC,               /* I    Encoder State                       */
     silk_nsq_state      *NSQ,                       /* I/O  NSQ state                           */
@@ -106,7 +109,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
     opus_int            decisionDelay           /* I                                        */
 );
 
-void silk_NSQ_del_dec(
+void silk_NSQ_del_dec_c(
     const silk_encoder_state    *psEncC,                                    /* I/O  Encoder State                   */
     silk_nsq_state              *NSQ,                                       /* I/O  NSQ state                       */
     SideInfoIndices             *psIndices,                                 /* I/O  Quantization Indices            */
@@ -244,7 +247,7 @@ void silk_NSQ_del_dec(
                 silk_assert( start_idx > 0 );
 
                 silk_LPC_analysis_filter( &sLTP[ start_idx ], &NSQ->xq[ start_idx + k * psEncC->subfr_length ],
-                    A_Q12, psEncC->ltp_mem_length - start_idx, psEncC->predictLPCOrder );
+                    A_Q12, psEncC->ltp_mem_length - start_idx, psEncC->predictLPCOrder, psEncC->arch );
 
                 NSQ->sLTP_buf_idx = psEncC->ltp_mem_length;
                 NSQ->rewhite_flag = 1;
@@ -303,6 +306,7 @@ void silk_NSQ_del_dec(
 /******************************************/
 /* Noise shape quantizer for one subframe */
 /******************************************/
+#ifndef OVERRIDE_silk_noise_shape_quantizer_del_dec
 static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
     silk_nsq_state      *NSQ,                   /* I/O  NSQ state                           */
     NSQ_del_dec_struct  psDelDec[],             /* I/O  Delayed decision states             */
@@ -629,6 +633,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec(
     }
     RESTORE_STACK;
 }
+#endif /* OVERRIDE_silk_noise_shape_quantizer_del_dec */
 
 static OPUS_INLINE void silk_nsq_del_dec_scale_states(
     const silk_encoder_state *psEncC,               /* I    Encoder State                       */

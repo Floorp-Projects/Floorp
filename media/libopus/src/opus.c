@@ -166,6 +166,27 @@ static int parse_size(const unsigned char *data, opus_int32 len, opus_int16 *siz
    }
 }
 
+int opus_packet_get_samples_per_frame(const unsigned char *data,
+      opus_int32 Fs)
+{
+   int audiosize;
+   if (data[0]&0x80)
+   {
+      audiosize = ((data[0]>>3)&0x3);
+      audiosize = (Fs<<audiosize)/400;
+   } else if ((data[0]&0x60) == 0x60)
+   {
+      audiosize = (data[0]&0x08) ? Fs/50 : Fs/100;
+   } else {
+      audiosize = ((data[0]>>3)&0x3);
+      if (audiosize == 3)
+         audiosize = Fs*60/1000;
+      else
+         audiosize = (Fs<<audiosize)/100;
+   }
+   return audiosize;
+}
+
 int opus_packet_parse_impl(const unsigned char *data, opus_int32 len,
       int self_delimited, unsigned char *out_toc,
       const unsigned char *frames[48], opus_int16 size[48],
