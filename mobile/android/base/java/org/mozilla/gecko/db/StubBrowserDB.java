@@ -379,10 +379,6 @@ public class StubBrowserDB implements BrowserDB {
         return 0;
     }
 
-    public int getTrackingIdForUrl(String url) {
-        return 0;
-    }
-
     public Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
         return null;
     }
