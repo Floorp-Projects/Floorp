@@ -502,7 +502,7 @@ getFullPath (PWCHAR filePath, wchar_t* fname)
   }
 
   // now actually grab it
-  SearchPathW(sanitizedFilePath, fname, L".dll", pathlen + 1, full_fname,
+  SearchPathW(sanitizedFilePath, fname, L".dll", pathlen + 1, full_fname.get(),
               nullptr);
   return full_fname;
 }
@@ -669,7 +669,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
           UINT vInfoLen;
 
           if (GetFileVersionInfoW(full_fname.get(), 0, infoSize, infoData.get()) &&
-              VerQueryValueW(infoData, L"\\", (LPVOID*) &vInfo, &vInfoLen))
+              VerQueryValueW(infoData.get(), L"\\", (LPVOID*) &vInfo, &vInfoLen))
           {
             fVersion =
               ((unsigned long long)vInfo->dwFileVersionMS) << 32 |
