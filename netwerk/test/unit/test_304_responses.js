@@ -2,7 +2,7 @@
 // https://bugzilla.mozilla.org/show_bug.cgi?id=761228
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -26,16 +26,8 @@ function make_uri(url) {
 }
 
 function make_channel(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
-  return chan;
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 function clearCache() {
@@ -76,7 +68,7 @@ function consume304(request, buffer) {
 // a 304 response (i.e. when the server shouldn't have sent us one).
 add_test(function test_unexpected_304() {
   var chan = make_channel(baseURI + unexpected304);
-  chan.asyncOpen(new ChannelListener(consume304, null), null);
+  chan.asyncOpen2(new ChannelListener(consume304, null));
 });
 
 // Test that we can cope with a 304 response that was (erroneously) stored in
@@ -98,6 +90,6 @@ add_test(function test_304_stored_in_cache() {
       chan.QueryInterface(Components.interfaces.nsIHttpChannel);
       chan.setRequestHeader("If-None-Match", '"foo"', false);
 
-      chan.asyncOpen(new ChannelListener(consume304, null), null);
+      chan.asyncOpen2(new ChannelListener(consume304, null));
     });
 });

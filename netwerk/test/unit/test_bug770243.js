@@ -8,7 +8,7 @@
 */
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserv;
 
@@ -28,19 +28,10 @@ function clearCreds()
 }
 
 function makeChan() {
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-                      .getService(Ci.nsIIOService);
-  var chan = ios.newChannel2("http://localhost:" +
-                             httpserv.identity.primaryPort + "/",
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
-                .QueryInterface(Ci.nsIHttpChannel);
-  return chan;
+  return NetUtil.newChannel({
+    uri: "http://localhost:" + httpserv.identity.primaryPort + "/",
+    loadUsingSystemPrincipal: true
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 // Array of handlers that are called one by one in response to expected requests
@@ -148,46 +139,46 @@ var tests = [
   // Test 1: 200 (cacheable)
   function() {
     var ch = makeChan();
-    ch.asyncOpen(new ChannelListener(function(req, body) {
+    ch.asyncOpen2(new ChannelListener(function(req, body) {
       do_check_eq(body, "Response body 1");
       sync_and_run_next_test();
-    }, null, CL_NOT_FROM_CACHE), null);
+    }, null, CL_NOT_FROM_CACHE));
   },
 
   // Test 2: 401 and 200 + new content
   function() {
     var ch = makeChan();
-    ch.asyncOpen(new ChannelListener(function(req, body) {
+    ch.asyncOpen2(new ChannelListener(function(req, body) {
       do_check_eq(body, "Response body 2");
       sync_and_run_next_test();
-    }, null, CL_NOT_FROM_CACHE), null);
+    }, null, CL_NOT_FROM_CACHE));
   },
 
   // Test 3: 401 and 304
   function() {
     var ch = makeChan();
-    ch.asyncOpen(new ChannelListener(function(req, body) {
+    ch.asyncOpen2(new ChannelListener(function(req, body) {
       do_check_eq(body, "Response body 2");
       sync_and_run_next_test();
-    }, null, CL_FROM_CACHE), null);
+    }, null, CL_FROM_CACHE));
   },
 
   // Test 4: 407 and 200 + new content
   function() {
     var ch = makeChan();
-    ch.asyncOpen(new ChannelListener(function(req, body) {
+    ch.asyncOpen2(new ChannelListener(function(req, body) {
       do_check_eq(body, "Response body 3");
       sync_and_run_next_test();
-    }, null, CL_NOT_FROM_CACHE), null);
+    }, null, CL_NOT_FROM_CACHE));
   },
 
   // Test 5: 407 and 304
   function() {
     var ch = makeChan();
-    ch.asyncOpen(new ChannelListener(function(req, body) {
+    ch.asyncOpen2(new ChannelListener(function(req, body) {
       do_check_eq(body, "Response body 3");
       sync_and_run_next_test();
-    }, null, CL_FROM_CACHE), null);
+    }, null, CL_FROM_CACHE));
   },
 
   // End of test run
