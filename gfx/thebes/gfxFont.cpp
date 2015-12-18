@@ -1716,8 +1716,9 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
     }
 
     if (fontParams.haveColorGlyphs &&
-        RenderColorGlyph(runParams.context, fontParams.scaledFont,
-                         fontParams.renderingOptions, fontParams.drawOptions,
+        RenderColorGlyph(runParams.dt,
+                         fontParams.scaledFont, fontParams.renderingOptions,
+                         fontParams.drawOptions,
                          fontParams.matInv * gfx::Point(devPt.x, devPt.y),
                          aGlyphID)) {
         return;
@@ -2098,7 +2099,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
 }
 
 bool
-gfxFont::RenderColorGlyph(gfxContext* aContext,
+gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget,
                           mozilla::gfx::ScaledFont* scaledFont,
                           GlyphRenderingOptions* aRenderingOptions,
                           mozilla::gfx::DrawOptions aDrawOptions,
@@ -2112,7 +2113,6 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         return false;
     }
 
-    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
          layerIndex++) {
         Glyph glyph;
@@ -2123,9 +2123,9 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         buffer.mGlyphs = &glyph;
         buffer.mNumGlyphs = 1;
 
-        dt->FillGlyphs(scaledFont, buffer,
-                       ColorPattern(layerColors[layerIndex]),
-                       aDrawOptions, aRenderingOptions);
+        aDrawTarget->FillGlyphs(scaledFont, buffer,
+                                ColorPattern(layerColors[layerIndex]),
+                                aDrawOptions, aRenderingOptions);
     }
     return true;
 }
