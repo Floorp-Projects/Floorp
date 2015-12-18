@@ -295,20 +295,25 @@ NS_IMPL_ISUPPORTS(UploadLastDir::ContentPrefCallback, nsIContentPrefCallback2)
 NS_IMETHODIMP
 UploadLastDir::ContentPrefCallback::HandleCompletion(uint16_t aReason)
 {
-  nsCOMPtr<nsIFile> localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
-  NS_ENSURE_STATE(localFile);
+  nsCOMPtr<nsIFile> localFile;
+  nsAutoString prefStr;
 
-  if (aReason == nsIContentPrefCallback2::COMPLETE_ERROR ||
-      !mResult) {
-    // Default to "desktop" directory for each platform
-    nsCOMPtr<nsIFile> homeDir;
-    NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(homeDir));
-    localFile = do_QueryInterface(homeDir);
-  } else {
-    nsAutoString prefStr;
-    nsCOMPtr<nsIVariant> pref;
-    mResult->GetValue(getter_AddRefs(pref));
-    pref->GetAsAString(prefStr);
+  if (aReason == nsIContentPrefCallback2::COMPLETE_ERROR || !mResult) {
+    prefStr = Preferences::GetString("dom.input.fallbackUploadDir");
+    if (prefStr.IsEmpty()) {
+      // If no custom directory was set through the pref, default to
+      // "desktop" directory for each platform.
+      NS_GetSpecialDirectory(NS_OS_DESKTOP_DIR, getter_AddRefs(localFile));
+    }
+  }
+
+  if (!localFile) {
+    if (prefStr.IsEmpty() && mResult) {
+      nsCOMPtr<nsIVariant> pref;
+      mResult->GetValue(getter_AddRefs(pref));
+      pref->GetAsAString(prefStr);
+    }
+    localFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
     localFile->InitWithPath(prefStr);
   }
 

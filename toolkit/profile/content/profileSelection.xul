@@ -22,7 +22,7 @@
   title="&windowtitle.label;"
   orient="vertical" 
   buttons="accept,cancel"
-  style="width: 80em; height: 40em;"
+  style="width: 60em; height: 40em;"
   onload="startup();"
   ondialogaccept="return acceptDialog()"
   ondialogcancel="return exitDialog()"

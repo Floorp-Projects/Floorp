@@ -8,8 +8,8 @@ const cssAutoCompleter = require("devtools/client/sourceeditor/css-autocompleter
 const { AutocompletePopup } = require("devtools/client/shared/autocomplete-popup");
 
 const CM_TERN_SCRIPTS = [
-  "chrome://devtools/content/sourceeditor/codemirror/tern/tern.js",
-  "chrome://devtools/content/sourceeditor/codemirror/hint/show-hint.js"
+  "chrome://devtools/content/sourceeditor/codemirror/addon/tern/tern.js",
+  "chrome://devtools/content/sourceeditor/codemirror/addon/hint/show-hint.js"
 ];
 
 const autocompleteMap = new WeakMap();

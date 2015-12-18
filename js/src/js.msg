@@ -444,6 +444,7 @@ MSG_DEF(JSMSG_UNDEFINED_CURRENCY,      0, JSEXN_TYPEERR, "undefined currency in 
 
 // RegExp
 MSG_DEF(JSMSG_BAD_CLASS_RANGE,         0, JSEXN_SYNTAXERR, "invalid range in character class")
+MSG_DEF(JSMSG_DEPRECATED_REGEXP_MULTILINE, 0, JSEXN_SYNTAXERR, "RegExp.multiline is deprecated. Use m flag instead")
 MSG_DEF(JSMSG_ESCAPE_AT_END_OF_REGEXP, 0, JSEXN_SYNTAXERR, "\\ at end of pattern")
 MSG_DEF(JSMSG_INVALID_GROUP,           0, JSEXN_SYNTAXERR, "invalid regexp group")
 MSG_DEF(JSMSG_MISSING_PAREN,           0, JSEXN_SYNTAXERR, "unterminated parenthetical")

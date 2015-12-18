@@ -102,6 +102,18 @@ bool WindowCapturerMac::GetWindowList(WindowList* windows) {
     CFNumberRef window_layer = reinterpret_cast<CFNumberRef>(
         CFDictionaryGetValue(window, kCGWindowLayer));
     if (window_title && window_id && window_layer) {
+      //Skip windows of zero area
+      CFDictionaryRef bounds_ref = reinterpret_cast<CFDictionaryRef>(
+           CFDictionaryGetValue(window,kCGWindowBounds));
+      CGRect bounds_rect;
+      if(!(bounds_ref) ||
+        !(CGRectMakeWithDictionaryRepresentation(bounds_ref,&bounds_rect))){
+        continue;
+      }
+      bounds_rect = CGRectStandardize(bounds_rect);
+      if((bounds_rect.size.width <= 0) || (bounds_rect.size.height <= 0)){
+        continue;
+      }
       // Skip windows with layer=0 (menu, dock).
       int layer;
       CFNumberGetValue(window_layer, kCFNumberIntType, &layer);

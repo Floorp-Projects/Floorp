@@ -101,5 +101,8 @@ testBuiltin(Array, 3.0);
 testBuiltin(Array, "non-length one-arg");
 testBuiltin(Array, 5, 10, 15, "these are elements");
 
+if (this.SharedArrayBuffer)
+    testBuiltin(SharedArrayBuffer);
+
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");

@@ -1319,10 +1319,10 @@ INSTALL_TARGETS += %(prefix)s
                 backend_file.write('INSTALL_TARGETS += %s\n' % target_var)
 
     def _process_final_target_pp_files(self, obj, files, backend_file):
-        # We'd like to install these via manifests as preprocessed files.
-        # But they currently depend on non-standard flags being added via
-        # some Makefiles, so for now we just pass them through to the
-        # underlying Makefile.in.
+        # Bug 1177710 - We'd like to install these via manifests as
+        # preprocessed files. But they currently depend on non-standard flags
+        # being added via some Makefiles, so for now we just pass them through
+        # to the underlying Makefile.in.
         for i, (path, files) in enumerate(files.walk()):
             for f in files:
                 backend_file.write('DIST_FILES_%d += %s\n' % (

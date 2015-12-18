@@ -41,7 +41,7 @@ enum class ImageFormat {
   SHARED_RGB,
 
   /**
-   * The CAIRO_SURFACE format creates a CairoImage. All backends should
+   * The CAIRO_SURFACE format creates a SourceSurfaceImage. All backends should
    * support this format, because video rendering sometimes requires it.
    *
    * This format is useful even though a PaintedLayer could be used.

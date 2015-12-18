@@ -30,21 +30,23 @@
   border: none !important;
 }
 
+.alertCloseBox {
+  /* The close button is larger on Windows and has a large
+     circle around it, so we add more space between the close
+     button and the edge of the window. */
+  margin-inline-end: 2px;
+}
+
 #alertSettings {
   /* The close button is larger on Windows, so the
      gear button is moved over to accomodate it and
      keep the two buttons horizontally aligned together. */
-  margin-inline-end: 3px;
+  margin-inline-end: 5px;
 }
 
 @media (-moz-windows-default-theme) {
-  #alertBox[hasBodyText] > #alertTextBox,
-  #alertBox[hasOrigin] > #alertTitleBox {
-    border-bottom-color: rgba(107,107,107,.4);
-  }
-
   #alertBox {
-    border-color: rgba(107,107,107,.4);
+    border-color: rgba(107,107,107,.3);
     background-color: rgba(255,255,255,.9);
     color: rgba(0,0,0,.9);
   }
