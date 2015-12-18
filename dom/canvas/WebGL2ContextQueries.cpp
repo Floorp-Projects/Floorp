@@ -6,8 +6,6 @@
 #include "WebGL2Context.h"
 #include "GLContext.h"
 #include "WebGLQuery.h"
-#include "gfxPrefs.h"
-#include "nsThreadUtils.h"
 
 namespace mozilla {
 
@@ -257,7 +255,6 @@ WebGL2Context::EndQuery(GLenum target)
     }
 
     UpdateBoundQuery(target, nullptr);
-    NS_DispatchToCurrentThread(new WebGLQuery::AvailableRunnable(activeQuery));
 }
 
 already_AddRefed<WebGLQuery>
@@ -325,11 +322,6 @@ WebGL2Context::GetQueryParameter(JSContext*, WebGLQuery* query, GLenum pname,
          *     mean that query->mGLName is not a query object yet.
          */
         ErrorInvalidOperation("getQueryObject: `query` has never been active.");
-        return;
-    }
-
-    // We must wait for an event loop before the query can be available
-    if (!query->mCanBeAvailable && !gfxPrefs::WebGLImmediateQueries()) {
         return;
     }
 
