@@ -1644,6 +1644,8 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   AutoRestore<TimeStamp> restoreTickStart(mTickStart);
   mTickStart = TimeStamp::Now();
 
+  gfxPlatform::GetPlatform()->UpdateForDeviceReset();
+
   /*
    * The timer holds a reference to |this| while calling |Notify|.
    * However, implementations of |WillRefresh| are permitted to destroy

@@ -5,10 +5,10 @@
 
 #include "WebGL2Context.h"
 
+#include "gfxPrefs.h"
 #include "GLContext.h"
 #include "mozilla/dom/WebGL2RenderingContextBinding.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
 #include "WebGLBuffer.h"
 #include "WebGLFormats.h"
@@ -37,7 +37,7 @@ WebGL2Context::CreateFormatUsage(gl::GLContext* gl) const
 /*static*/ bool
 WebGL2Context::IsSupported()
 {
-    return Preferences::GetBool("webgl.enable-prototype-webgl2", false);
+    return gfxPrefs::WebGL2Enabled();
 }
 
 /*static*/ WebGL2Context*

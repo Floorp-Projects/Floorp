@@ -87,7 +87,7 @@ using CountBasePtr = UniquePtr<CountBase, CountDeleter>;
 
 // Abstract base class for CountType nodes.
 struct CountType {
-    explicit CountType(Census& census) : census(census) { }
+    explicit CountType() { }
     virtual ~CountType() { }
 
     // Destruct a count tree node that this type instance constructed.
@@ -102,14 +102,13 @@ struct CountType {
 
     // Implement the 'count' method for counts returned by this CountType
     // instance's 'newCount' method.
-    virtual bool count(CountBase& count, const Node& node) = 0;
+    virtual bool count(CountBase& count,
+                       mozilla::MallocSizeOf mallocSizeOf,
+                       const Node& node) = 0;
 
     // Implement the 'report' method for counts returned by this CountType
     // instance's 'newCount' method.
-    virtual bool report(CountBase& count, MutableHandleValue report) = 0;
-
-  protected:
-    Census& census;
+    virtual bool report(JSContext* cx, CountBase& count, MutableHandleValue report) = 0;
 };
 
 using CountTypePtr = UniquePtr<CountType, JS::DeletePolicy<CountType>>;
@@ -129,12 +128,16 @@ class CountBase {
     explicit CountBase(CountType& type) : type(type), total_(0) { }
 
     // Categorize and count |node| as appropriate for this count's type.
-    bool count(const Node& node) { return type.count(*this, node); }
+    bool count(mozilla::MallocSizeOf mallocSizeOf, const Node& node) {
+        return type.count(*this, mallocSizeOf, node);
+    }
 
     // Construct a JavaScript object reporting the counts recorded in this
     // count, and store it in |report|. Return true on success, or false on
     // failure.
-    bool report(MutableHandleValue report) { return type.report(*this, report); }
+    bool report(JSContext* cx, MutableHandleValue report) {
+        return type.report(cx, *this, report);
+    }
 
     // Down-cast this CountBase to its true type, based on its 'type' member,
     // and run its destructor.
@@ -173,18 +176,6 @@ struct Census {
     explicit Census(JSContext* cx) : cx(cx), atomsZone(nullptr) { }
 
     bool init();
-
-    // A 'new' work-alike that behaves like TempAllocPolicy: report OOM on this
-    // census's context, but don't charge the memory allocated to our context's
-    // GC pressure counters.
-    template<typename T, typename... Args>
-    T* new_(Args&&... args) MOZ_HEAP_ALLOCATOR {
-        void* memory = js_malloc(sizeof(T));
-        if (MOZ_UNLIKELY(!memory)) {
-            return nullptr;
-        }
-        return new(memory) T(mozilla::Forward<Args>(args)...);
-    }
 };
 
 // A BreadthFirst handler type that conducts a census, using a CountBase to
@@ -192,15 +183,17 @@ struct Census {
 class CensusHandler {
     Census& census;
     CountBasePtr& rootCount;
+    mozilla::MallocSizeOf mallocSizeOf;
 
   public:
-    CensusHandler(Census& census, CountBasePtr& rootCount)
+    CensusHandler(Census& census, CountBasePtr& rootCount, mozilla::MallocSizeOf mallocSizeOf)
       : census(census),
-        rootCount(rootCount)
+        rootCount(rootCount),
+        mallocSizeOf(mallocSizeOf)
     { }
 
-    bool report(MutableHandleValue report) {
-        return rootCount->report(report);
+    bool report(JSContext* cx, MutableHandleValue report) {
+        return rootCount->report(cx, report);
     }
 
     // This class needs to retain no per-node data.
@@ -213,10 +206,16 @@ class CensusHandler {
 
 using CensusTraversal = BreadthFirst<CensusHandler>;
 
-// Examine the census options supplied by the API consumer, and use that to
-// build a CountType tree.
+// Examine the census options supplied by the API consumer, and (among other
+// things) use that to build a CountType tree.
 bool ParseCensusOptions(JSContext* cx, Census& census, HandleObject options,
                         CountTypePtr& outResult);
+
+// Parse the breakdown language (as described in
+// js/src/doc/Debugger/Debugger.Memory.md) into a CountTypePtr. A null pointer
+// is returned on error and is reported to the cx.
+CountTypePtr ParseBreakdown(JSContext* cx, HandleValue breakdownValue);
+
 
 } // namespace ubi
 } // namespace JS

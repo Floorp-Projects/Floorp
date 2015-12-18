@@ -23,6 +23,18 @@ interface ImageBitmap {
   readonly attribute unsigned long height;
 };
 
+// It's crucial that there be a way to explicitly dispose of ImageBitmaps
+// since they refer to potentially large graphics resources. Some uses
+// of this API proposal will result in repeated allocations of ImageBitmaps,
+// and garbage collection will not reliably reclaim them quickly enough.
+// Here we reuse close(), which also exists on another Transferable type,
+// MessagePort. Potentially, all Transferable types should inherit from a
+// new interface type "Closeable".
+partial interface ImageBitmap {
+  // Dispose of all graphical resources associated with this ImageBitmap.
+  void close();
+};
+
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface ImageBitmapFactories {
   [Throws]

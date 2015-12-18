@@ -226,23 +226,12 @@ OmxDataDecoder::DoAsyncShutdown()
   mWatchManager.Unwatch(mOmxState, &OmxDataDecoder::OmxStateRunner);
   mWatchManager.Unwatch(mPortSettingsChanged, &OmxDataDecoder::PortSettingsChanged);
 
-  // Do flush so all port can be returned to client.
+  // Flush to all ports, so all buffers can be returned from component.
   RefPtr<OmxDataDecoder> self = this;
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
     ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
-             LOG("DoAsyncShutdown: flush complete, collecting buffers...");
-             self->CollectBufferPromises(OMX_DirMax)
-               ->Then(self->mOmxTaskQueue, __func__,
-                   [self] () {
-                     LOG("DoAsyncShutdown: releasing all buffers.");
-                     self->ReleaseBuffers(OMX_DirInput);
-                     self->ReleaseBuffers(OMX_DirOutput);
-                   },
-                   [self] () {
-                     self->mOmxLayer->Shutdown();
-                   });
-
+             LOG("DoAsyncShutdown: flush complete");
              return self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr);
            },
            [self] () {
@@ -251,8 +240,30 @@ OmxDataDecoder::DoAsyncShutdown()
     ->CompletionPromise()
     ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
-             LOG("DoAsyncShutdown: OMX_StateIdle");
-             return self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateLoaded, nullptr);
+             RefPtr<OmxCommandPromise> p =
+               self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateLoaded, nullptr);
+
+             LOG("DoAsyncShutdown: collecting buffers...");
+             self->CollectBufferPromises(OMX_DirMax)
+               ->Then(self->mOmxTaskQueue, __func__,
+                   [self] () {
+                   // According to spec 3.1.1.2.2.1:
+                   // OMX_StateLoaded needs to be sent before releasing buffers.
+                   // And state transition from OMX_StateIdle to OMX_StateLoaded
+                   // is completed when all of the buffers have been removed
+                   // from the component.
+                   // Here the buffer promises are not resolved due to displaying
+                   // in layer, it needs to wait before the layer returns the
+                   // buffers.
+                   LOG("DoAsyncShutdown: all buffers collected, releasing buffers...");
+                   self->ReleaseBuffers(OMX_DirInput);
+                   self->ReleaseBuffers(OMX_DirOutput);
+                   },
+                   [self] () {
+                     self->mOmxLayer->Shutdown();
+                   });
+
+             return p;
            },
            [self] () {
              self->mOmxLayer->Shutdown();

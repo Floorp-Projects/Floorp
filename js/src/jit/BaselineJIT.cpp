@@ -23,6 +23,7 @@
 #include "jsscriptinlines.h"
 
 #include "jit/JitFrames-inl.h"
+#include "jit/MacroAssembler-inl.h"
 #include "vm/Stack-inl.h"
 
 using namespace js;

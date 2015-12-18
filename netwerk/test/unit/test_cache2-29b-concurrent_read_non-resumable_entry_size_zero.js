@@ -15,6 +15,7 @@ This test is using a non-resumable response.
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -23,16 +24,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const responseBody = "c\r\ndata reached\r\n3\r\nhej\r\n0\r\n\r\n";
@@ -60,9 +52,9 @@ function run_test()
   httpServer.start(-1);
 
   var chan1 = make_channel(URL + "/content");
-  chan1.asyncOpen(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL), null);
+  chan1.asyncOpen2(new ChannelListener(firstTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
   var chan2 = make_channel(URL + "/content");
-  chan2.asyncOpen(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL), null);
+  chan2.asyncOpen2(new ChannelListener(secondTimeThrough, null, CL_ALLOW_UNKNOWN_CL));
 
   do_test_pending();
 }

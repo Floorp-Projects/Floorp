@@ -4,24 +4,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/devtools/DominatorTree.h"
-#include "js/Debug.h"
-#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/DominatorTreeBinding.h"
 
 namespace mozilla {
 namespace devtools {
-
-static MallocSizeOf
-getCurrentThreadDebuggerMallocSizeOf()
-{
-  auto ccrt = CycleCollectedJSRuntime::Get();
-  MOZ_ASSERT(ccrt);
-  auto rt = ccrt->Runtime();
-  MOZ_ASSERT(rt);
-  auto mallocSizeOf = JS::dbg::GetDebuggerMallocSizeOf(rt);
-  MOZ_ASSERT(mallocSizeOf);
-  return mallocSizeOf;
-}
 
 dom::Nullable<uint64_t>
 DominatorTree::GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv)
@@ -31,7 +17,7 @@ DominatorTree::GetRetainedSize(uint64_t aNodeId, ErrorResult& aRv)
   if (node.isNothing())
     return dom::Nullable<uint64_t>();
 
-  auto mallocSizeOf = getCurrentThreadDebuggerMallocSizeOf();
+  auto mallocSizeOf = GetCurrentThreadDebuggerMallocSizeOf();
   JS::ubi::Node::Size size = 0;
   if (!mDominatorTree.getRetainedSize(*node, mallocSizeOf, size)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -83,7 +69,7 @@ DominatorTree::GetImmediatelyDominated(uint64_t aNodeId,
     return;
 
   // Get all immediately dominated nodes and their retained sizes.
-  MallocSizeOf mallocSizeOf = getCurrentThreadDebuggerMallocSizeOf();
+  MallocSizeOf mallocSizeOf = GetCurrentThreadDebuggerMallocSizeOf();
   Maybe<JS::ubi::DominatorTree::DominatedSetRange> range = mDominatorTree.getDominatedSet(*node);
   MOZ_ASSERT(range.isSome(), "The node should be known, since we got it from the heap snapshot.");
   size_t length = range->length();

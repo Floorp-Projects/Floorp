@@ -632,7 +632,7 @@ RasterImage::GetCurrentImage(ImageContainer* aContainer, uint32_t aFlags)
   GetWidth(&size.width);
   GetHeight(&size.height);
 
-  RefPtr<layers::Image> image = new layers::CairoImage(size, surface);
+  RefPtr<layers::Image> image = new layers::SourceSurfaceImage(size, surface);
   return MakePair(drawResult, Move(image));
 }
 

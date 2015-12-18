@@ -25,10 +25,10 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
   fi
   if test -n "$MOZ_RUST" && test -z "$_RUSTC_MAJOR_VERSION" -o \
     "$_RUSTC_MAJOR_VERSION" -lt 1 -o \
-    \( "$_RUSTC_MAJOR_VERSION" -eq 1 -a "$_RUSTC_MINOR_VERSION" -lt 4 \); then
+    \( "$_RUSTC_MAJOR_VERSION" -eq 1 -a "$_RUSTC_MINOR_VERSION" -lt 5 \); then
     AC_MSG_ERROR([Rust compiler ${RUSTC_VERSION} is too old.
       To compile Rust language sources please install at least
-      version 1.4 of the 'rustc' toolchain and make sure it is
+      version 1.5 of the 'rustc' toolchain and make sure it is
       first in your path.
       You can verify this by typing 'rustc --version'.])
   fi

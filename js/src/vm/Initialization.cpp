@@ -15,6 +15,7 @@
 #include "jstypes.h"
 
 #include "builtin/AtomicsObject.h"
+#include "gc/Statistics.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/Ion.h"
 #include "js/Utility.h"
@@ -102,6 +103,8 @@ JS_Init(void)
 
     if (!FutexRuntime::initialize())
         return false;
+
+    js::gcstats::Statistics::initialize();
 
     libraryInitState = InitState::Running;
     return true;

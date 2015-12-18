@@ -763,55 +763,6 @@ Statistics::Statistics(JSRuntime* rt)
     for (auto d : MakeRange(NumTimingArrays))
         PodArrayZero(phaseTimes[d]);
 
-    static bool initialized = false;
-    if (!initialized) {
-        initialized = true;
-
-        for (size_t i = 0; i < PHASE_LIMIT; i++) {
-            MOZ_ASSERT(phases[i].index == i);
-            for (size_t j = 0; j < PHASE_LIMIT; j++)
-                MOZ_ASSERT_IF(i != j, phases[i].telemetryBucket != phases[j].telemetryBucket);
-        }
-
-        // Create a static table of descendants for every phase with multiple
-        // children. This assumes that all descendants come linearly in the
-        // list, which is reasonable since full dags are not supported; any
-        // path from the leaf to the root must encounter at most one node with
-        // multiple parents.
-        size_t dagSlot = 0;
-        for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
-            Phase parent = dagChildEdges[i].parent;
-            if (!phaseExtra[parent].dagSlot)
-                phaseExtra[parent].dagSlot = ++dagSlot;
-
-            Phase child = dagChildEdges[i].child;
-            MOZ_ASSERT(phases[child].parent == PHASE_MULTI_PARENTS);
-            int j = child;
-            do {
-                dagDescendants[phaseExtra[parent].dagSlot].append(Phase(j));
-                j++;
-            } while (j != PHASE_LIMIT && phases[j].parent != PHASE_MULTI_PARENTS);
-        }
-        MOZ_ASSERT(dagSlot <= MaxMultiparentPhases - 1);
-
-        // Fill in the depth of each node in the tree. Multi-parented nodes
-        // have depth 0.
-        mozilla::Vector<Phase> stack;
-        stack.append(PHASE_LIMIT); // Dummy entry to avoid special-casing the first node
-        for (int i = 0; i < PHASE_LIMIT; i++) {
-            if (phases[i].parent == PHASE_NO_PARENT ||
-                phases[i].parent == PHASE_MULTI_PARENTS)
-            {
-                stack.clear();
-            } else {
-                while (stack.back() != phases[i].parent)
-                    stack.popBack();
-            }
-            phaseExtra[i].depth = stack.length();
-            stack.append(Phase(i));
-        }
-    }
-
     char* env = getenv("MOZ_GCTIMER");
     if (env) {
         if (strcmp(env, "none") == 0) {
@@ -832,6 +783,55 @@ Statistics::~Statistics()
 {
     if (fp && fp != stdout && fp != stderr)
         fclose(fp);
+}
+
+/* static */ void
+Statistics::initialize()
+{
+    for (size_t i = 0; i < PHASE_LIMIT; i++) {
+        MOZ_ASSERT(phases[i].index == i);
+        for (size_t j = 0; j < PHASE_LIMIT; j++)
+            MOZ_ASSERT_IF(i != j, phases[i].telemetryBucket != phases[j].telemetryBucket);
+    }
+
+    // Create a static table of descendants for every phase with multiple
+    // children. This assumes that all descendants come linearly in the
+    // list, which is reasonable since full dags are not supported; any
+    // path from the leaf to the root must encounter at most one node with
+    // multiple parents.
+    size_t dagSlot = 0;
+    for (size_t i = 0; i < mozilla::ArrayLength(dagChildEdges); i++) {
+        Phase parent = dagChildEdges[i].parent;
+        if (!phaseExtra[parent].dagSlot)
+            phaseExtra[parent].dagSlot = ++dagSlot;
+
+        Phase child = dagChildEdges[i].child;
+        MOZ_ASSERT(phases[child].parent == PHASE_MULTI_PARENTS);
+        int j = child;
+        do {
+            dagDescendants[phaseExtra[parent].dagSlot].append(Phase(j));
+            j++;
+        } while (j != PHASE_LIMIT && phases[j].parent != PHASE_MULTI_PARENTS);
+    }
+    MOZ_ASSERT(dagSlot <= MaxMultiparentPhases - 1);
+
+    // Fill in the depth of each node in the tree. Multi-parented nodes
+    // have depth 0.
+    mozilla::Vector<Phase> stack;
+    stack.append(PHASE_LIMIT); // Dummy entry to avoid special-casing the first node
+    for (int i = 0; i < PHASE_LIMIT; i++) {
+        if (phases[i].parent == PHASE_NO_PARENT ||
+            phases[i].parent == PHASE_MULTI_PARENTS)
+        {
+            stack.clear();
+        } else {
+            while (stack.back() != phases[i].parent)
+                stack.popBack();
+        }
+        phaseExtra[i].depth = stack.length();
+        stack.append(Phase(i));
+    }
+
 }
 
 JS::GCSliceCallback
