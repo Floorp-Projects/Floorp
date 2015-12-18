@@ -63,6 +63,12 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 
+  static already_AddRefed<OffscreenCanvas>
+  Constructor(const GlobalObject& aGlobal,
+              uint32_t aWidth,
+              uint32_t aHeight,
+              ErrorResult& aRv);
+
   void ClearResources();
 
   uint32_t Width() const
