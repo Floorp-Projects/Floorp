@@ -35,11 +35,6 @@ task:
         --log-mach=-
         --log-raw=/home/worker/upload/logs/raw.log
         gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/unit/manifest.ini
-    artifacts:
-      'private/device.json':
-        type: file
-        path: '/home/worker/data/device.json'
-        expires: '{{#from_now}}1 year{{/from_now}}'
 
   extra:
     treeherder:
