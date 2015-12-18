@@ -5,14 +5,10 @@
  *
  * For more information on this interface, please see
  * https://wiki.whatwg.org/wiki/OffscreenCanvas
- *
- * Current implementation focus on transfer canvas from main thread to worker.
- * So there are some spec doesn't implement, such as [Constructor], toBlob() and
- * transferToImageBitmap in OffscreenCanvas. Bug 1172796 will implement
- * remaining spec.
  */
 
-[Exposed=(Window,Worker),
+[Constructor(unsigned long width, unsigned long height),
+ Exposed=(Window,Worker),
  Func="mozilla::dom::OffscreenCanvas::PrefEnabled"]
 interface OffscreenCanvas : EventTarget {
   [Pure, SetterThrows]
@@ -23,6 +19,11 @@ interface OffscreenCanvas : EventTarget {
   [Throws]
   nsISupports? getContext(DOMString contextId,
                           optional any contextOptions = null);
+
+  ImageBitmap transferToImageBitmap();
+  [Throws]
+  Promise<Blob> toBlob(optional DOMString type = "",
+                       optional any encoderOptions);
 };
 
 // OffscreenCanvas implements Transferable;

@@ -1021,7 +1021,7 @@ JS_vsnprintf(char* out, uint32_t outlen, const char* fmt, va_list ap)
     (void) dosprintf(&ss, fmt, ap);
 
     uint32_t charsWritten = ss.cur - ss.base;
-    MOZ_ASSERT(charsWritten > 0);
+    MOZ_RELEASE_ASSERT(charsWritten > 0);
 
     // If we didn't append a null then we must have hit the buffer limit. Write
     // a null terminator now and return a value indicating that we failed.

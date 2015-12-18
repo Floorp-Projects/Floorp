@@ -17,6 +17,10 @@ runWithMSE(function(ms, el) {
     ok(true, "Receive a sourceopen event");
     var audiosb = ms.addSourceBuffer("audio/mp4");
     var videosb = ms.addSourceBuffer("video/mp4");
+    // ensure tracks end at approximately the same time to ensure ended event is
+    // always fired (bug 1233639).
+    audiosb.appendWindowEnd = 3.9;
+    videosb.appendWindowEnd = 3.9;
     fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
     .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
     .then(fetchAndLoad.bind(null, audiosb, 'bipbop/bipbop_audio', range(1, 5), '.m4s'))
@@ -35,18 +39,11 @@ runWithMSE(function(ms, el) {
       el.play();
       return p;
     }).then(function() {
-      // currentTime is based on the current video frame, so if the audio ends just before
-      // the next video frame, currentTime can be up to 1 frame's worth earlier than
-      // min(audioEnd, videoEnd).
-      // Some decoders (Windows in particular) may keep up to 25 frames queued.
-      isfuzzy(el.currentTime, Math.min(audiosb.buffered.end(0), videosb.buffered.end(0)) - 1/60,
-              25 * 1/30, "Got a waiting event at " + el.currentTime);
-    }).then(function() {
       var p = once(el, 'ended');
       ms.endOfStream();
       return p;
     }).then(function() {
-      is(el.duration, 4.005, "Video has correct duration: " + el.duration);
+      is(el.duration, 3.854512, "Video has correct duration: " + el.duration);
       is(el.currentTime, el.duration, "Video has correct currentTime.");
       SimpleTest.finish();
     });

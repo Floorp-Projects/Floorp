@@ -1,0 +1,69 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<canvas id="c" width="64" height="64"></canvas>
+<canvas id="c2" width="64" height="64"></canvas>
+<canvas id="c-ref" width="64" height="64"></canvas>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+
+  var worker = new Worker("offscreencanvas.js");
+
+  ok(worker, "Web worker successfully created");
+
+  worker.onmessage = function(evt) {
+    var msg = evt.data || {};
+    if (msg.type == "test") {
+      ok(msg.result, msg.name);
+    }
+    if (msg.type == "imagebitmap") {
+      // testing toBlob
+      // Fill c-ref with green color.
+      var c = document.getElementById("c-ref");
+      var ctx = c.getContext("2d");
+      ctx.rect(0, 0, 64, 64);
+      ctx.fillStyle = "#00FF00";
+      ctx.fill();
+
+      var htmlCanvas = document.getElementById("c");
+      var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
+      bitmapRenderer.transferImageBitmap(msg.bitmap);
+
+      ok(c.toDataURL() == htmlCanvas.toDataURL(),
+         "imagebitmap should return a 64x64 green square");
+
+      // The ownership of msg.bitmap should be transferred to canvas "c" when
+      // we called transferImageBitmap. So we test if the ownership is actually
+      // transferred here.
+      var htmlCanvas = document.getElementById("c2");
+      var bitmapRenderer = htmlCanvas.getContext("bitmaprenderer");
+      bitmapRenderer.transferImageBitmap(msg.bitmap);
+
+      SimpleTest.doesThrow(
+        function() { c2.toDataURL(); },
+        "ImageBitmap has been transferred, toDataURL will throw.");
+
+      worker.terminate();
+      SimpleTest.finish();
+    }
+  }
+
+  worker.postMessage({test: 'webgl_imagebitmap'});
+}
+
+SpecialPowers.pushPrefEnv({'set': [
+  ['gfx.offscreencanvas.enabled', true],
+  ['webgl.force-enabled', true],
+]}, runTest);
+
+</script>
+</body>
+</html>

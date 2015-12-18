@@ -175,9 +175,6 @@ class MacroAssemblerX86Shared : public Assembler
     void move32(Register src, const Operand& dest) {
         movl(src, dest);
     }
-    void neg32(Register reg) {
-        negl(reg);
-    }
     void test32(Register lhs, Register rhs) {
         testl(rhs, lhs);
     }
@@ -208,21 +205,9 @@ class MacroAssemblerX86Shared : public Assembler
     CodeOffset cmp32WithPatch(Register lhs, Imm32 rhs) {
         return cmplWithPatch(rhs, lhs);
     }
-    void add32(Register src, Register dest) {
-        addl(src, dest);
-    }
-    void add32(Imm32 imm, Register dest) {
-        addl(imm, dest);
-    }
-    void add32(Imm32 imm, const Operand& dest) {
-        addl(imm, dest);
-    }
-    void add32(Imm32 imm, const Address& dest) {
-        addl(imm, Operand(dest));
-    }
     template <typename T>
     void branchAdd32(Condition cond, T src, Register dest, Label* label) {
-        add32(src, dest);
+        addl(src, dest);
         j(cond, label);
     }
     template <typename T>
@@ -916,38 +901,6 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void zeroFloat32(FloatRegister reg) {
         vxorps(reg, reg, reg);
-    }
-    void negateDouble(FloatRegister reg) {
-        // From MacroAssemblerX86Shared::maybeInlineDouble
-        ScratchDoubleScope scratch(asMasm());
-        vpcmpeqw(scratch, scratch, scratch);
-        vpsllq(Imm32(63), scratch, scratch);
-
-        // XOR the float in a float register with -0.0.
-        vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
-    }
-    void negateFloat(FloatRegister reg) {
-        ScratchFloat32Scope scratch(asMasm());
-        vpcmpeqw(scratch, scratch, scratch);
-        vpsllq(Imm32(31), scratch, scratch);
-
-        // XOR the float in a float register with -0.0.
-        vxorps(scratch, reg, reg); // s ^ 0x80000000
-    }
-    void addDouble(FloatRegister src, FloatRegister dest) {
-        vaddsd(src, dest, dest);
-    }
-    void subDouble(FloatRegister src, FloatRegister dest) {
-        vsubsd(src, dest, dest);
-    }
-    void mulDouble(FloatRegister src, FloatRegister dest) {
-        vmulsd(src, dest, dest);
-    }
-    void divDouble(FloatRegister src, FloatRegister dest) {
-        vdivsd(src, dest, dest);
-    }
-    void addFloat32(FloatRegister src, FloatRegister dest) {
-        vaddss(src, dest, dest);
     }
     void convertFloat32ToDouble(FloatRegister src, FloatRegister dest) {
         vcvtss2sd(src, dest, dest);

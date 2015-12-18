@@ -139,62 +139,6 @@ CSPService::ShouldLoad(uint32_t aContentType,
     return NS_OK;
   }
 
-  // ----- THIS IS A TEMPORARY FAST PATH FOR CERTIFIED APPS. -----
-  // ----- PLEASE REMOVE ONCE bug 925004 LANDS.              -----
-
-  // Cache the app status for this origin.
-  uint16_t status = nsIPrincipal::APP_STATUS_NOT_INSTALLED;
-  nsAutoCString sourceOrigin;
-  if (aRequestPrincipal && aRequestOrigin) {
-    aRequestOrigin->GetPrePath(sourceOrigin);
-    if (!mAppStatusCache.Get(sourceOrigin, &status)) {
-      aRequestPrincipal->GetAppStatus(&status);
-      mAppStatusCache.Put(sourceOrigin, status);
-    }
-  }
-
-  if (status == nsIPrincipal::APP_STATUS_CERTIFIED) {
-    // The CSP for certified apps is :
-    // "default-src * data: blob:; script-src 'self'; object-src 'none'; style-src 'self' app://theme.gaiamobile.org:*"
-    // That means we can optimize for this case by:
-    // - loading same origin scripts and stylesheets, and stylesheets from the
-    //   theme url space.
-    // - never loading objects.
-    // - accepting everything else.
-
-    switch (aContentType) {
-      case nsIContentPolicy::TYPE_SCRIPT:
-      case nsIContentPolicy::TYPE_STYLESHEET:
-        {
-          // Whitelist the theme resources.
-          auto themeOrigin = Preferences::GetCString("b2g.theme.origin");
-          nsAutoCString contentOrigin;
-          aContentLocation->GetPrePath(contentOrigin);
-
-          if (!(sourceOrigin.Equals(contentOrigin) ||
-                (themeOrigin && themeOrigin.Equals(contentOrigin)))) {
-            *aDecision = nsIContentPolicy::REJECT_SERVER;
-          }
-        }
-        break;
-
-      case nsIContentPolicy::TYPE_OBJECT:
-        *aDecision = nsIContentPolicy::REJECT_SERVER;
-        break;
-
-      default:
-        *aDecision = nsIContentPolicy::ACCEPT;
-    }
-
-    // Only cache and return if we are successful. If not, we want the error
-    // to be reported, and thus fallback to the slow path.
-    if (*aDecision == nsIContentPolicy::ACCEPT) {
-      return NS_OK;
-    }
-  }
-
-  // ----- END OF TEMPORARY FAST PATH FOR CERTIFIED APPS. -----
-
   // query the principal of the document; if no document is passed, then
   // fall back to using the requestPrincipal (e.g. service workers do not
   // pass a document).

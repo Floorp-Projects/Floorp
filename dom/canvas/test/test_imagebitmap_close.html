@@ -1,0 +1,93 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>WebGL in OffscreenCanvas</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script type="text/js-worker">
+function ok(expect, msg) {
+  postMessage({"type": "status", status: !!expect, msg: msg});
+}
+
+onmessage = function(event) {
+  var bitmap = event.data.bitmap;
+  ok(!!bitmap, "Get the ImageBitmap from the main script.");
+  bitmap.close();
+  ok(bitmap.width == 0 && bitmap.height == 0, "After close(), width and height should return 0");
+  postMessage({"type": "finish"});
+}
+</script>
+<script>
+
+SimpleTest.waitForExplicitFinish();
+
+function createCanvas() {
+  var htmlCanvas = document.createElement('canvas');
+  htmlCanvas.width = 64;
+  htmlCanvas.height = 64;
+  document.body.appendChild(htmlCanvas);
+  return htmlCanvas;
+}
+
+function runTest() {
+  var canvas1 = createCanvas();
+  var ctx = canvas1.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, 64, 64);
+
+  var canvasRef = createCanvas();
+  var ctx = canvasRef.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, 64, 64);
+
+  createImageBitmap(canvas1).then(function(bmp) {
+    var canvas2 = createCanvas();
+    var ctx2 = canvas2.getContext("2d");
+    ctx2.drawImage(bmp, 0, 0);
+
+    ok(canvasRef.toDataURL() == canvas2.toDataURL(), "toDataURL should return same result.");
+    document.body.removeChild(canvas2);
+
+    bmp.close();
+    ok(bmp.width == 0 && bmp.height == 0, "After close(), width and height should return 0");
+    var canvas2 = createCanvas();
+    var ctx2 = canvas2.getContext("2d");
+    var beforeDrawImageDataURL = canvas2.toDataURL();
+    ctx2.drawImage(bmp, 0, 0);
+    var afterDrawImageDataURL = canvas2.toDataURL();
+    ok(beforeDrawImageDataURL == afterDrawImageDataURL,
+       "Drawing operations with a closed ImageBitmap should do nothing.");
+    runTestOnWorker();
+  });
+}
+
+function runTestOnWorker() {
+  var canvas1 = createCanvas();
+  var ctx = canvas1.getContext("2d");
+  ctx.fillStyle = "#00FF00";
+  ctx.fillRect(0, 0, 64, 64);
+
+  var blob = new Blob(Array.prototype.map.call(document.querySelectorAll("script[type=\"text\/js-worker\"]"), function (oScript) { return oScript.textContent; }),{type: "text/javascript"});
+
+  var worker = new Worker(window.URL.createObjectURL(blob));
+
+  createImageBitmap(canvas1).then(function(bmp) {
+    worker.postMessage({bitmap: bmp}, [bmp]);
+    worker.onmessage = function(event) {
+      if (event.data.type == "status") {
+        ok(event.data.status, event.data.msg);
+      } else if (event.data.type == "finish") {
+        SimpleTest.finish();
+      }
+    }
+  });
+}
+
+runTest();
+
+</script>
+</body>
+</html>
