@@ -20,7 +20,6 @@ WebGLQuery::WrapObject(JSContext* cx, JS::Handle<JSObject*> givenProto)
 
 WebGLQuery::WebGLQuery(WebGLContext* webgl)
     : WebGLContextBoundObject(webgl)
-    , mCanBeAvailable(false)
     , mGLName(0)
     , mType(0)
 {
