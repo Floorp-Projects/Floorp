@@ -331,8 +331,8 @@ public:
         return ActiveBoundTextureForTarget(texTarget);
     }
 
-    already_AddRefed<CanvasLayer>
-    GetCanvasLayer(nsDisplayListBuilder* builder, CanvasLayer* oldLayer,
+    already_AddRefed<Layer>
+    GetCanvasLayer(nsDisplayListBuilder* builder, Layer* oldLayer,
                    LayerManager* manager) override;
 
     // Note that 'clean' here refers to its invalidation state, not the
