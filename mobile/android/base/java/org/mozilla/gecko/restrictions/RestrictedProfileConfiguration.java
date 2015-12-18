@@ -32,7 +32,9 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         configuration.put(Restrictable.GUEST_BROWSING, false);
         configuration.put(Restrictable.ADVANCED_SETTINGS, false);
         configuration.put(Restrictable.CAMERA_MICROPHONE, false);
-        configuration.put(Restrictable.DATA_CHOICES, true);
+        configuration.put(Restrictable.DATA_CHOICES, false);
+        configuration.put(Restrictable.TELEMETRY, false);
+        configuration.put(Restrictable.HEALTH_REPORT, true);
     }
 
     /**
@@ -40,7 +42,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
      */
     private static List<Restrictable> hiddenRestrictions = Arrays.asList(
             Restrictable.MASTER_PASSWORD,
-            Restrictable.GUEST_BROWSING
+            Restrictable.GUEST_BROWSING,
+            Restrictable.DATA_CHOICES
     );
 
     /* package-private */ static boolean shouldHide(Restrictable restrictable) {

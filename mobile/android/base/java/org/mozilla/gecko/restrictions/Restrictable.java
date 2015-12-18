@@ -48,9 +48,7 @@ public enum Restrictable {
             R.string.restrictable_feature_private_browsing,
             R.string.restrictable_feature_private_browsing_description),
 
-    DATA_CHOICES(13, "data_coices",
-            R.string.restrictable_feature_data_choices,
-            R.string.restrictable_feature_data_choices_description),
+    DATA_CHOICES(13, "data_coices", 0, 0),
 
     CLEAR_HISTORY(14, "clear_history",
             R.string.restrictable_feature_clear_history,
@@ -66,7 +64,15 @@ public enum Restrictable {
 
     CAMERA_MICROPHONE(18, "camera_microphone",
             R.string.restrictable_feature_camera_microphone,
-            R.string.restrictable_feature_camera_microphone_description);
+            R.string.restrictable_feature_camera_microphone_description),
+
+    TELEMETRY(19, "telemetry",
+            R.string.datareporting_telemetry_title,
+            R.string.datareporting_telemetry_summary),
+
+    HEALTH_REPORT(20, "health_report",
+            R.string.datareporting_fhr_title,
+            R.string.datareporting_fhr_summary2);
 
     public final int id;
     public final String name;

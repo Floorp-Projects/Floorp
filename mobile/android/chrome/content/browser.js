@@ -538,6 +538,14 @@ var BrowserApp = {
       Services.prefs.setBoolPref("xpinstall.enabled", true);
     }
 
+     if (ParentalControls.parentalControlsEnabled) {
+        let isTelemetryEnabled = ParentalControls.isAllowed(ParentalControls.TELEMETRY);
+        Services.prefs.setBoolPref("toolkit.telemetry.enabled", isTelemetryEnabled);
+
+        let isHealthReportEnabled = ParentalControls.isAllowed(ParentalControls.HEALTH_REPORT);
+        SharedPreferences.forApp().setBoolPref("android.not_a_preference.healthreport.uploadEnabled", isHealthReportEnabled);
+     }
+
     let sysInfo = Cc["@mozilla.org/system-info;1"].getService(Ci.nsIPropertyBag2);
     if (sysInfo.get("version") < 16) {
       let defaults = Services.prefs.getDefaultBranch(null);
