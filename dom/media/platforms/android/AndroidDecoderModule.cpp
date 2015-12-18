@@ -85,42 +85,6 @@ public:
     return MediaCodecDataDecoder::Input(aSample);
   }
 
-  bool WantCopy() {
-    // Allocating a texture is incredibly slow on PowerVR and may fail on
-    // emulators, see bug 1190379.
-    return mGLContext->Vendor() != GLVendor::Imagination &&
-           mGLContext->Renderer() != GLRenderer::AndroidEmulator;
-  }
-
-  EGLImage CopySurface(layers::Image* img) {
-    mGLContext->MakeCurrent();
-
-    GLuint tex = CreateTextureForOffscreen(mGLContext, mGLContext->GetGLFormats(),
-                                           img->GetSize());
-
-    auto helper = mGLContext->BlitHelper();
-    const gl::OriginPos destOrigin = gl::OriginPos::TopLeft;
-    if (!helper->BlitImageToTexture(img, img->GetSize(), tex, LOCAL_GL_TEXTURE_2D,
-                                    destOrigin))
-    {
-      mGLContext->fDeleteTextures(1, &tex);
-      return nullptr;
-    }
-
-    EGLint attribs[] = {
-      LOCAL_EGL_IMAGE_PRESERVED_KHR, LOCAL_EGL_TRUE,
-      LOCAL_EGL_NONE, LOCAL_EGL_NONE
-    };
-
-    EGLContext eglContext = static_cast<GLContextEGL*>(mGLContext.get())->mContext;
-    EGLImage eglImage = sEGLLibrary.fCreateImage(EGL_DISPLAY(), eglContext,
-                                                 LOCAL_EGL_GL_TEXTURE_2D_KHR,
-                                                 (EGLClientBuffer)tex, attribs);
-    mGLContext->fDeleteTextures(1, &tex);
-
-    return eglImage;
-  }
-
   nsresult PostOutput(BufferInfo::Param aInfo, MediaFormat::Param aFormat,
                       const media::TimeUnit& aDuration) override {
     if (!EnsureGLContext()) {
@@ -135,38 +99,6 @@ public:
 
     layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
     stImg->SetData(data);
-
-    if (WantCopy()) {
-      EGLImage eglImage = CopySurface(img);
-      if (!eglImage) {
-        return NS_ERROR_FAILURE;
-      }
-
-      EGLSync eglSync = nullptr;
-      if (sEGLLibrary.IsExtensionSupported(GLLibraryEGL::KHR_fence_sync) &&
-          mGLContext->IsExtensionSupported(GLContext::OES_EGL_sync))
-      {
-        MOZ_ASSERT(mGLContext->IsCurrent());
-        eglSync = sEGLLibrary.fCreateSync(EGL_DISPLAY(),
-                                          LOCAL_EGL_SYNC_FENCE,
-                                          nullptr);
-        MOZ_ASSERT(eglSync);
-        mGLContext->fFlush();
-      } else {
-        NS_WARNING("No EGL fence support detected, rendering artifacts may occur!");
-      }
-
-      img = mImageContainer->CreateImage(ImageFormat::EGLIMAGE);
-      layers::EGLImageImage::Data data;
-      data.mImage = eglImage;
-      data.mSync = eglSync;
-      data.mOwns = true;
-      data.mSize = mConfig.mDisplay;
-      data.mOriginPos = gl::OriginPos::TopLeft;
-
-      layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
-      typedImg->SetData(data);
-    }
 
     nsresult rv;
     int32_t flags;
