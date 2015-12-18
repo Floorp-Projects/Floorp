@@ -24,8 +24,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Log",
                                   "resource://gre/modules/Log.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
@@ -580,14 +578,12 @@ ConnectionData.prototype = Object.freeze({
             // The best we can do is proceed without a transaction and hope
             // things won't break.
             if (wrappedConnections.has(this._identifier)) {
-              this._log.warn("A new transaction could not be started cause the wrapped connection had one in progress: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("A new transaction could not be started cause the wrapped connection had one in progress", ex);
               // Unmark the in progress transaction, since it's managed by
               // some other non-Sqlite.jsm client.  See the comment above.
               this._hasInProgressTransaction = false;
             } else {
-              this._log.warn("A transaction was already in progress, likely a nested transaction: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("A transaction was already in progress, likely a nested transaction", ex);
               throw ex;
             }
           }
@@ -599,18 +595,15 @@ ConnectionData.prototype = Object.freeze({
             // It's possible that the exception has been caused by trying to
             // close the connection in the middle of a transaction.
             if (this._closeRequested) {
-              this._log.warn("Connection closed while performing a transaction: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("Connection closed while performing a transaction", ex);
             } else {
-              this._log.warn("Error during transaction. Rolling back: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("Error during transaction. Rolling back", ex);
               // If we began a transaction, we must rollback it.
               if (this._hasInProgressTransaction) {
                 try {
                   yield this.execute("ROLLBACK TRANSACTION");
                 } catch (inner) {
-                  this._log.warn("Could not roll back transaction: " +
-                                 CommonUtils.exceptionStr(inner));
+                  this._log.warn("Could not roll back transaction", inner);
                 }
               }
             }
@@ -629,8 +622,7 @@ ConnectionData.prototype = Object.freeze({
             try {
               yield this.execute("COMMIT TRANSACTION");
             } catch (ex) {
-              this._log.warn("Error committing transaction: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("Error committing transaction", ex);
               throw ex;
             }
           }
@@ -776,8 +768,7 @@ ConnectionData.prototype = Object.freeze({
               break;
             }
 
-            self._log.warn("Exception when calling onRow callback: " +
-                           CommonUtils.exceptionStr(e));
+            self._log.warn("Exception when calling onRow callback", e);
           }
         }
       },
@@ -942,7 +933,7 @@ function openConnection(options) {
           new OpenedConnection(connection.QueryInterface(Ci.mozIStorageAsyncConnection),
                               identifier, openedOptions));
       } catch (ex) {
-        log.warn("Could not open database: " + CommonUtils.exceptionStr(ex));
+        log.warn("Could not open database", ex);
         reject(ex);
       }
     });
@@ -1020,7 +1011,7 @@ function cloneStorageConnection(options) {
         let conn = connection.QueryInterface(Ci.mozIStorageAsyncConnection);
         resolve(new OpenedConnection(conn, identifier, openedOptions));
       } catch (ex) {
-        log.warn("Could not clone database: " + CommonUtils.exceptionStr(ex));
+        log.warn("Could not clone database", ex);
         reject(ex);
       }
     });
@@ -1070,7 +1061,7 @@ function wrapStorageConnection(options) {
       wrappedConnections.add(identifier);
       resolve(wrapper);
     } catch (ex) {
-      log.warn("Could not wrap database: " + CommonUtils.exceptionStr(ex));
+      log.warn("Could not wrap database", ex);
       throw ex;
     }
   });
