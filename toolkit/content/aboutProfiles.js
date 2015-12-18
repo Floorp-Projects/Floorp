@@ -21,6 +21,37 @@ const gManage = window.location.href.indexOf('?manage') != -1;
 const bundle = Services.strings.createBundle(
   'chrome://global/locale/aboutProfiles.properties');
 
+// nsIToolkitProfileService.selectProfile can be used only during the selection
+// of the profile in the ProfileManager. If we are showing about:profiles in a
+// tab, the selectedProfile returns the default profile.
+// In this function we use the ProfD to find the current profile.
+function findCurrentProfile() {
+  let cpd;
+  try {
+    cpd = Cc["@mozilla.org/file/directory_service;1"]
+            .getService(Ci.nsIProperties)
+            .get("ProfD", Ci.nsIFile);
+  } catch(e) {}
+
+  if (cpd) {
+    let itr = ProfileService.profiles;
+    while(itr.hasMoreElements()) {
+      let profile = itr.getNext().QueryInterface(Ci.nsIToolkitProfile);
+      if (profile.rootDir.path == cpd.path) {
+        return profile;
+      }
+    }
+  }
+
+  // selectedProfile can trow if nothing is selected or if the selected profile
+  // has been deleted.
+  try {
+    return ProfileService.selectedProfile;
+  } catch(e) {
+    return null;
+  }
+}
+
 function refreshUI() {
   if (gManage) {
     document.getElementById('action-box').style.display = 'none';
@@ -31,12 +62,14 @@ function refreshUI() {
     parent.removeChild(parent.firstChild);
   }
 
+  let currentProfile = findCurrentProfile() || ProfileService.defaultProfile;
+
   let iter = ProfileService.profiles;
   while (iter.hasMoreElements()) {
     let profile = iter.getNext().QueryInterface(Ci.nsIToolkitProfile);
     display({ profile: profile,
               isDefault: profile == ProfileService.defaultProfile,
-              isCurrentProfile: !gManage && profile == ProfileService.selectedProfile });
+              isCurrentProfile: profile == currentProfile });
   }
 
   let createButton = document.getElementById('create-button');
@@ -66,7 +99,7 @@ function display(profileData) {
   name.appendChild(document.createTextNode(nameStr));
   div.appendChild(name);
 
-  if (profileData.isCurrentProfile) {
+  if (!gManage && profileData.isCurrentProfile) {
     let currentProfile = document.createElement('h3');
     let currentProfileStr = bundle.GetStringFromName('currentProfile');
     currentProfile.appendChild(document.createTextNode(currentProfileStr));
@@ -129,7 +162,7 @@ function display(profileData) {
   };
   div.appendChild(renameButton);
 
-  if (!profileData.isCurrentProfile) {
+  if (gManage || !profileData.isCurrentProfile) {
     let removeButton = document.createElement('button');
     removeButton.appendChild(document.createTextNode(bundle.GetStringFromName('remove')));
     removeButton.onclick = function() {
