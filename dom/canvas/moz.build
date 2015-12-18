@@ -34,6 +34,7 @@ EXPORTS.mozilla.dom += [
     'CanvasRenderingContextHelper.h',
     'CanvasUtils.h',
     'ImageBitmap.h',
+    'ImageBitmapRenderingContext.h',
     'ImageBitmapSource.h',
     'ImageData.h',
     'OffscreenCanvas.h',
@@ -50,6 +51,7 @@ UNIFIED_SOURCES += [
     'DocumentRendererChild.cpp',
     'DocumentRendererParent.cpp',
     'ImageBitmap.cpp',
+    'ImageBitmapRenderingContext.cpp',
     'ImageData.cpp',
     'OffscreenCanvas.cpp',
 ]

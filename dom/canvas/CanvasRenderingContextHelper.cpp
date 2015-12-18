@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CanvasRenderingContextHelper.h"
+#include "ImageBitmapRenderingContext.h"
 #include "ImageEncoder.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/Telemetry.h"
@@ -149,6 +150,11 @@ CanvasRenderingContextHelper::CreateContext(CanvasContextType aContextType)
     ret = WebGL2Context::Create();
     if (!ret)
       return nullptr;
+
+    break;
+
+  case CanvasContextType::ImageBitmap:
+    ret = new ImageBitmapRenderingContext();
 
     break;
   }

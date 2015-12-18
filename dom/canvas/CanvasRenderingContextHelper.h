@@ -25,7 +25,8 @@ enum class CanvasContextType : uint8_t {
   NoContext,
   Canvas2D,
   WebGL1,
-  WebGL2
+  WebGL2,
+  ImageBitmap
 };
 
 /**

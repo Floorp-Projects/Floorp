@@ -100,6 +100,13 @@ public:
   already_AddRefed<gfx::SourceSurface>
   PrepareForDrawTarget(gfx::DrawTarget* aTarget);
 
+  /*
+   * Transfer ownership of buffer to caller. So this function call
+   * Close() implicitly.
+   */
+  already_AddRefed<layers::Image>
+  TransferAsImage();
+
   ImageBitmapCloneData*
   ToCloneData();
 

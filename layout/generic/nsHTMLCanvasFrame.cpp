@@ -13,6 +13,7 @@
 #include "nsDisplayList.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleUtil.h"
+#include "ImageLayers.h"
 #include "Layers.h"
 #include "ActiveLayerTracker.h"
 
@@ -338,7 +339,7 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   CanvasLayer* oldLayer = static_cast<CanvasLayer*>
     (aManager->GetLayerBuilder()->GetLeafLayerFor(aBuilder, aItem));
-  RefPtr<CanvasLayer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
+  RefPtr<Layer> layer = element->GetCanvasLayer(aBuilder, oldLayer, aManager);
   if (!layer)
     return nullptr;
 
@@ -357,7 +358,13 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   transform.PreScale(destGFXRect.Width() / canvasSizeInPx.width,
                      destGFXRect.Height() / canvasSizeInPx.height);
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
-  layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+  if (layer->GetType() == layers::Layer::TYPE_CANVAS) {
+    RefPtr<CanvasLayer> canvasLayer = static_cast<CanvasLayer*>(layer.get());
+    canvasLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+  } else if (layer->GetType() == layers::Layer::TYPE_IMAGE) {
+    RefPtr<ImageLayer> imageLayer = static_cast<ImageLayer*>(layer.get());
+    imageLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+  }
 
   return layer.forget();
 }

@@ -121,7 +121,8 @@ OffscreenCanvas::GetContext(JSContext* aCx,
   }
 
   if (!(contextType == CanvasContextType::WebGL1 ||
-        contextType == CanvasContextType::WebGL2))
+        contextType == CanvasContextType::WebGL2 ||
+        contextType == CanvasContextType::ImageBitmap))
   {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
@@ -138,28 +139,31 @@ OffscreenCanvas::GetContext(JSContext* aCx,
   }
 
   if (mCanvasRenderer) {
-    WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
-    gl::GLContext* gl = webGL->GL();
-    mCanvasRenderer->mContext = mCurrentContext;
-    mCanvasRenderer->SetActiveThread();
-    mCanvasRenderer->mGLContext = gl;
-    mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
+    if (contextType == CanvasContextType::WebGL1 ||
+        contextType == CanvasContextType::WebGL2) {
+      WebGLContext* webGL = static_cast<WebGLContext*>(mCurrentContext.get());
+      gl::GLContext* gl = webGL->GL();
+      mCanvasRenderer->mContext = mCurrentContext;
+      mCanvasRenderer->SetActiveThread();
+      mCanvasRenderer->mGLContext = gl;
+      mCanvasRenderer->SetIsAlphaPremultiplied(webGL->IsPremultAlpha() || !gl->Caps().alpha);
 
-    if (ImageBridgeChild::IsCreated()) {
-      TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
-      mCanvasClient = ImageBridgeChild::GetSingleton()->
-        CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
-      mCanvasRenderer->SetCanvasClient(mCanvasClient);
+      if (ImageBridgeChild::IsCreated()) {
+        TextureFlags flags = TextureFlags::ORIGIN_BOTTOM_LEFT;
+        mCanvasClient = ImageBridgeChild::GetSingleton()->
+          CreateCanvasClient(CanvasClient::CanvasClientTypeShSurf, flags).take();
+        mCanvasRenderer->SetCanvasClient(mCanvasClient);
 
-      gl::GLScreenBuffer* screen = gl->Screen();
-      gl::SurfaceCaps caps = screen->mCaps;
-      auto forwarder = mCanvasClient->GetForwarder();
+        gl::GLScreenBuffer* screen = gl->Screen();
+        gl::SurfaceCaps caps = screen->mCaps;
+        auto forwarder = mCanvasClient->GetForwarder();
 
-      UniquePtr<gl::SurfaceFactory> factory =
-        gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
+        UniquePtr<gl::SurfaceFactory> factory =
+          gl::GLScreenBuffer::CreateFactory(gl, caps, forwarder, flags);
 
-      if (factory)
-        screen->Morph(Move(factory));
+        if (factory)
+          screen->Morph(Move(factory));
+      }
     }
   }
 

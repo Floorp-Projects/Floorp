@@ -1046,9 +1046,9 @@ HTMLCanvasElement::GetOpaqueAttr()
   return HasAttr(kNameSpaceID_None, nsGkAtoms::moz_opaque);
 }
 
-already_AddRefed<CanvasLayer>
+already_AddRefed<Layer>
 HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
-                                  CanvasLayer *aOldLayer,
+                                  Layer *aOldLayer,
                                   LayerManager *aManager)
 {
   // The address of sOffscreenCanvasLayerUserDataDummy is used as the user
@@ -1064,7 +1064,7 @@ HTMLCanvasElement::GetCanvasLayer(nsDisplayListBuilder* aBuilder,
   if (mOffscreenCanvas) {
     if (!mResetLayer &&
         aOldLayer && aOldLayer->HasUserData(&sOffscreenCanvasLayerUserDataDummy)) {
-      RefPtr<CanvasLayer> ret = aOldLayer;
+      RefPtr<Layer> ret = aOldLayer;
       return ret.forget();
     }
 
