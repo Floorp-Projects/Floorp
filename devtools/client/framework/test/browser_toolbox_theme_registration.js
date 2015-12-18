@@ -2,60 +2,45 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+// Test for dynamically registering and unregistering themes
 const CHROME_URL = "chrome://mochitests/content/browser/devtools/client/framework/test/";
 
 var toolbox;
 
-function test()
-{
-  gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+add_task(function* themeRegistration() {
+  let tab = yield addTab("data:text/html,test");
+  let target = TargetFactory.forTab(tab);
+  toolbox = yield gDevTools.showToolbox(target);
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    gDevTools.showToolbox(target).then(testRegister);
-  }, true);
+  let themeId = yield new Promise(resolve => {
+    gDevTools.once("theme-registered", (e, themeId) => {
+      resolve(themeId);
+    });
 
-  content.location = "data:text/html,test for dynamically registering and unregistering themes";
-}
-
-function testRegister(aToolbox)
-{
-  toolbox = aToolbox
-  gDevTools.once("theme-registered", themeRegistered);
-
-  gDevTools.registerTheme({
-    id: "test-theme",
-    label: "Test theme",
-    stylesheets: [CHROME_URL + "doc_theme.css"],
-    classList: ["theme-test"],
+    gDevTools.registerTheme({
+      id: "test-theme",
+      label: "Test theme",
+      stylesheets: [CHROME_URL + "doc_theme.css"],
+      classList: ["theme-test"],
+    });
   });
-}
 
-function themeRegistered(event, themeId)
-{
   is(themeId, "test-theme", "theme-registered event handler sent theme id");
 
   ok(gDevTools.getThemeDefinitionMap().has(themeId), "theme added to map");
+});
 
-  // Test that new theme appears in the Options panel
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "options").then(() => {
-    let panel = toolbox.getCurrentPanel();
-    let doc = panel.panelWin.frameElement.contentDocument;
-    let themeOption = doc.querySelector("#devtools-theme-box > radio[value=test-theme]");
+add_task(function* themeInOptionsPanel() {
 
-    ok(themeOption, "new theme exists in the Options panel");
+  yield toolbox.selectTool("options");
 
-    // Apply the new theme.
-    applyTheme();
-  });
-}
-
-function applyTheme()
-{
+  let panel = toolbox.getCurrentPanel();
   let panelWin = toolbox.getCurrentPanel().panelWin;
   let doc = panelWin.frameElement.contentDocument;
+  let themeOption = doc.querySelector("#devtools-theme-box > radio[value=test-theme]");
+
+  ok(themeOption, "new theme exists in the Options panel");
+
   let testThemeOption = doc.querySelector("#devtools-theme-box > radio[value=test-theme]");
   let lightThemeOption = doc.querySelector("#devtools-theme-box > radio[value=light]");
 
@@ -65,24 +50,26 @@ function applyTheme()
   // Select test theme.
   testThemeOption.click();
 
+  info("Waiting for theme to finish loading");
+  yield once(panelWin, "theme-switch-complete");
+
   color = panelWin.getComputedStyle(testThemeOption).color;
   is(color, "rgb(255, 0, 0)", "style applied");
 
   // Select light theme
   lightThemeOption.click();
 
+  info("Waiting for theme to finish loading");
+  yield once(panelWin, "theme-switch-complete");
+
   color = panelWin.getComputedStyle(testThemeOption).color;
   isnot(color, "rgb(255, 0, 0)", "style unapplied");
 
   // Select test theme again.
   testThemeOption.click();
+});
 
-  // Then unregister the test theme.
-  testUnregister();
-}
-
-function testUnregister()
-{
+add_task(function* themeUnregistration() {
   gDevTools.unregisterTheme("test-theme");
 
   ok(!gDevTools.getThemeDefinitionMap().has("test-theme"), "theme removed from map");
@@ -94,20 +81,9 @@ function testUnregister()
   // The default light theme must be selected now.
   is(themeBox.selectedItem, themeBox.querySelector("[value=light]"),
     "theme light must be selected");
+});
 
-  // Make sure the tab-attaching process is done before we destroy the toolbox.
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  let actor = target.activeTab.actor;
-  target.client.attachTab(actor, (response) => {
-    cleanup();
-  });
-}
-
-function cleanup()
-{
-  toolbox.destroy().then(function() {
-    toolbox = null;
-    gBrowser.removeCurrentTab();
-    finish();
-  });
-}
+add_task(function* cleanup() {
+  yield toolbox.destroy();
+  toolbox = null;
+});
