@@ -869,3 +869,89 @@ function ArrayToString() {
         return callFunction(std_Object_toString, array);
     return callContentFunction(func, array);
 }
+
+// ES 2016 draft Mar 25, 2016 22.1.3.1.
+// Note: Array.prototype.concat.length is 1.
+function ArrayConcat(arg1) {
+    // Step 1.
+    var O = ToObject(this);
+
+    // Step 2.
+    var A = std_Array(0);
+
+    // Step 3.
+    var n = 0;
+
+    // Step 4 (implicit in |arguments|).
+
+    // Step 5.
+    var i = 0, argsLen = arguments.length;
+
+    // Step 5.a (first element).
+    var E = O;
+
+    var k, len;
+    while (true) {
+        // Steps 5.b-c.
+        // IsArray should be replaced with IsConcatSpreadable (bug 1041586).
+        if (IsArray(E)) {
+            // Step 5.c.ii.
+            len = ToLength(E.length);
+
+            // Step 5.c.iii.
+            if (n + len > MAX_NUMERIC_INDEX)
+                ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
+
+            if (IsPackedArray(E)) {
+                // Step 5.c.i, 5.c.iv, and 5.c.iv.5.
+                for (k = 0; k < len; k++) {
+                    // Steps 5.c.iv.1-3.
+                    // IsPackedArray(E) ensures that |k in E| is always true.
+                    _DefineDataProperty(A, n, E[k]);
+
+                    // Step 5.c.iv.4.
+                    n++;
+                }
+            } else {
+                // Step 5.c.i, 5.c.iv, and 5.c.iv.5.
+                for (k = 0; k < len; k++) {
+                    // Steps 5.c.iv.1-3.
+                    if (k in E)
+                        _DefineDataProperty(A, n, E[k]);
+
+                    // Step 5.c.iv.4.
+                    n++;
+                }
+            }
+        } else {
+            // Step 5.d.i.
+            if (n >= MAX_NUMERIC_INDEX)
+                ThrowTypeError(JSMSG_TOO_LONG_ARRAY);
+
+            // Step 5.d.ii.
+            _DefineDataProperty(A, n, E);
+
+            // Step 5.d.iii.
+            n++;
+        }
+
+        if (i >= argsLen)
+            break;
+        // Step 5.a (subsequent elements).
+        E = arguments[i];
+        i++;
+    }
+
+    // Step 6.
+    A.length = n;
+
+    // Step 7.
+    return A;
+}
+
+function ArrayStaticConcat(arr, arg1) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'Array.concat');
+    var args = callFunction(std_Array_slice, arguments, 1);
+    return callFunction(std_Function_apply, ArrayConcat, arr, args);
+}

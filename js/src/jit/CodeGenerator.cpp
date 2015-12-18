@@ -7976,55 +7976,6 @@ CodeGenerator::visitArrayPushT(LArrayPushT* lir)
     emitArrayPush(lir, lir->mir(), obj, value, elementsTemp, length);
 }
 
-typedef JSObject* (*ArrayConcatDenseFn)(JSContext*, HandleObject, HandleObject, HandleObject);
-static const VMFunction ArrayConcatDenseInfo = FunctionInfo<ArrayConcatDenseFn>(ArrayConcatDense);
-
-void
-CodeGenerator::visitArrayConcat(LArrayConcat* lir)
-{
-    Register lhs = ToRegister(lir->lhs());
-    Register rhs = ToRegister(lir->rhs());
-    Register temp1 = ToRegister(lir->temp1());
-    Register temp2 = ToRegister(lir->temp2());
-
-    // If 'length == initializedLength' for both arrays we try to allocate an object
-    // inline and pass it to the stub. Else, we just pass nullptr and the stub falls
-    // back to a slow path.
-    Label fail, call;
-    if (lir->mir()->unboxedThis()) {
-        masm.load32(Address(lhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
-        masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
-        masm.branch32(Assembler::NotEqual, Address(lhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
-    } else {
-        masm.loadPtr(Address(lhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-    }
-    if (lir->mir()->unboxedArg()) {
-        masm.load32(Address(rhs, UnboxedArrayObject::offsetOfCapacityIndexAndInitializedLength()), temp1);
-        masm.and32(Imm32(UnboxedArrayObject::InitializedLengthMask), temp1);
-        masm.branch32(Assembler::NotEqual, Address(rhs, UnboxedArrayObject::offsetOfLength()), temp1, &fail);
-    } else {
-        masm.loadPtr(Address(rhs, NativeObject::offsetOfElements()), temp1);
-        masm.load32(Address(temp1, ObjectElements::offsetOfInitializedLength()), temp2);
-        masm.branch32(Assembler::NotEqual, Address(temp1, ObjectElements::offsetOfLength()), temp2, &fail);
-    }
-
-    // Try to allocate an object.
-    masm.createGCObject(temp1, temp2, lir->mir()->templateObj(), lir->mir()->initialHeap(), &fail);
-    masm.jump(&call);
-    {
-        masm.bind(&fail);
-        masm.movePtr(ImmPtr(nullptr), temp1);
-    }
-    masm.bind(&call);
-
-    pushArg(temp1);
-    pushArg(ToRegister(lir->rhs()));
-    pushArg(ToRegister(lir->lhs()));
-    callVM(ArrayConcatDenseInfo, lir);
-}
-
 typedef JSObject* (*ArraySliceDenseFn)(JSContext*, HandleObject, int32_t, int32_t, HandleObject);
 static const VMFunction ArraySliceDenseInfo = FunctionInfo<ArraySliceDenseFn>(array_slice_dense);
 

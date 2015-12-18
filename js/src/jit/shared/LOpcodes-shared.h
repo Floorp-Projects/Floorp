@@ -265,7 +265,6 @@
     _(ArrayPopShiftT)               \
     _(ArrayPushV)                   \
     _(ArrayPushT)                   \
-    _(ArrayConcat)                  \
     _(ArraySlice)                   \
     _(ArrayJoin)                    \
     _(StoreElementHoleV)            \

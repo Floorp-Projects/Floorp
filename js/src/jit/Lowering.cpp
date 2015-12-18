@@ -3176,21 +3176,6 @@ LIRGenerator::visitArrayPush(MArrayPush* ins)
 }
 
 void
-LIRGenerator::visitArrayConcat(MArrayConcat* ins)
-{
-    MOZ_ASSERT(ins->type() == MIRType_Object);
-    MOZ_ASSERT(ins->lhs()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->rhs()->type() == MIRType_Object);
-
-    LArrayConcat* lir = new(alloc()) LArrayConcat(useFixed(ins->lhs(), CallTempReg1),
-                                                  useFixed(ins->rhs(), CallTempReg2),
-                                                  tempFixed(CallTempReg3),
-                                                  tempFixed(CallTempReg4));
-    defineReturn(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitArraySlice(MArraySlice* ins)
 {
     MOZ_ASSERT(ins->type() == MIRType_Object);
