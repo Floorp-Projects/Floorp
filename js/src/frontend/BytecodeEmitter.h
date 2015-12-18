@@ -249,7 +249,10 @@ struct BytecodeEmitter
         return parser->blockScopes[dn->pn_blockid];
     }
 
-    bool atBodyLevel() const;
+    bool atBodyLevel(StmtInfoBCE* stmt) const;
+    bool atBodyLevel() const {
+        return atBodyLevel(innermostStmt());
+    }
     uint32_t computeHops(ParseNode* pn, BytecodeEmitter** bceOfDefOut);
     bool isAliasedName(BytecodeEmitter* bceOfDef, ParseNode* pn);
     bool computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definition* dn, JSOp* op);
