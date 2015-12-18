@@ -14,12 +14,14 @@
 #include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
+#include "vm/Unicode.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+using namespace js::unicode;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
@@ -782,6 +784,29 @@ SetLastIndex(JSContext* cx, Handle<RegExpObject*> reobj, double lastIndex)
     return true;
 }
 
+template <typename CharT>
+static bool
+IsTrailSurrogateWithLeadSurrogateImpl(JSContext* cx, HandleLinearString input, size_t index)
+{
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(index > 0 && index < input->length());
+    const CharT* inputChars = input->chars<CharT>(nogc);
+
+    return unicode::IsTrailSurrogate(inputChars[index]) &&
+           unicode::IsLeadSurrogate(inputChars[index - 1]);
+}
+
+static bool
+IsTrailSurrogateWithLeadSurrogate(JSContext* cx, HandleLinearString input, int32_t index)
+{
+    if (index <= 0 || size_t(index) >= input->length())
+        return false;
+
+    return input->hasLatin1Chars()
+           ? IsTrailSurrogateWithLeadSurrogateImpl<Latin1Char>(cx, input, index)
+           : IsTrailSurrogateWithLeadSurrogateImpl<char16_t>(cx, input, index);
+}
+
 /* ES6 final draft 21.2.5.2.2. */
 RegExpRunStatus
 js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
@@ -862,6 +887,33 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
 
         /* Step 15.a.iii. */
         return RegExpRunStatus_Success_NotFound;
+    }
+
+    /* Steps 12-13. */
+    if (reobj->unicode()) {
+        /*
+         * ES6 21.2.2.2 step 2.
+         *   Let listIndex be the index into Input of the character that was
+         *   obtained from element index of str.
+         *
+         * In the spec, pattern match is performed with decoded Unicode code
+         * points, but our implementation performs it with UTF-16 encoded
+         * string.  In step 2, we should decrement searchIndex (index) if it
+         * points the trail surrogate that has corresponding lead surrogate.
+         *
+         *   var r = /\uD83D\uDC38/ug;
+         *   r.lastIndex = 1;
+         *   var str = "\uD83D\uDC38";
+         *   var result = r.exec(str); // pattern match starts from index 0
+         *   print(result.index);      // prints 0
+         *
+         * Note: this doesn't match the current spec text and result in
+         * different values for `result.index` under certain conditions.
+         * However, the spec will change to match our implementation's
+         * behavior. See https://github.com/tc39/ecma262/issues/128.
+         */
+        if (IsTrailSurrogateWithLeadSurrogate(cx, input, searchIndex))
+            searchIndex--;
     }
 
     /* Step 14-29. */
