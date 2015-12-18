@@ -989,10 +989,6 @@ SavedFrame::toStringMethod(JSContext* cx, unsigned argc, Value* vp)
 bool
 SavedStacks::init()
 {
-    mozilla::Array<uint64_t, 2> seed;
-    GenerateXorShift128PlusSeed(seed);
-    bernoulli.setRandomState(seed[0], seed[1]);
-
     if (!pcLocationMap.init())
         return false;
 
@@ -1417,6 +1413,13 @@ SavedStacks::chooseSamplingProbability(JSCompartment* compartment)
         }
     }
     MOZ_ASSERT(foundAnyDebuggers);
+
+    if (!bernoulliSeeded) {
+        mozilla::Array<uint64_t, 2> seed;
+        GenerateXorShift128PlusSeed(seed);
+        bernoulli.setRandomState(seed[0], seed[1]);
+        bernoulliSeeded = true;
+    }
 
     bernoulli.setProbability(probability);
 }
