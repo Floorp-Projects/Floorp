@@ -237,8 +237,8 @@ public:
   // but it takes several hops to get there.
   void SetBackgroundUnknown();
   already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect);
-  void EndUpdateBackground(gfxContext* aContext, const nsIntRect& aRect);
-  
+  void EndUpdateBackground(const nsIntRect& aRect);
+
   bool UseAsyncRendering();
 
   already_AddRefed<nsIURI> GetBaseURI() const;

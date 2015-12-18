@@ -257,7 +257,6 @@ protected:
                                            const nsIntRect& aRect,
                                            gfxContext** aCtx) override;
     virtual nsresult EndUpdateBackground(NPP instance,
-                                         gfxContext* aCtx,
                                          const nsIntRect& aRect) override;
 
 #if defined(XP_UNIX) && !defined(XP_MACOSX) && !defined(MOZ_WIDGET_GONK)

@@ -109,7 +109,7 @@ public:
   nsresult GetIsOOP(bool* aIsOOP);
   nsresult SetBackgroundUnknown();
   nsresult BeginUpdateBackground(nsIntRect* aRect, gfxContext** aContext);
-  nsresult EndUpdateBackground(gfxContext* aContext, nsIntRect* aRect);
+  nsresult EndUpdateBackground(nsIntRect* aRect);
   nsresult IsTransparent(bool* isTransparent);
   nsresult GetFormValue(nsAString& aValue);
   nsresult PushPopupsEnabledState(bool aEnabled);

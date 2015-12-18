@@ -1263,8 +1263,7 @@ nsNPAPIPluginInstance::BeginUpdateBackground(nsIntRect* aRect,
 }
 
 nsresult
-nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
-                                           nsIntRect* aRect)
+nsNPAPIPluginInstance::EndUpdateBackground(nsIntRect* aRect)
 {
   if (RUNNING != mRunning)
     return NS_OK;
@@ -1273,7 +1272,7 @@ nsNPAPIPluginInstance::EndUpdateBackground(gfxContext* aContext,
   if (!library)
     return NS_ERROR_FAILURE;
 
-  return library->EndUpdateBackground(&mNPP, aContext, *aRect);
+  return library->EndUpdateBackground(&mNPP, *aRect);
 }
 
 nsresult

@@ -92,8 +92,7 @@ public:
   virtual nsresult SetBackgroundUnknown(NPP instance) = 0;
   virtual nsresult BeginUpdateBackground(NPP instance,
                                          const nsIntRect&, gfxContext**) = 0;
-  virtual nsresult EndUpdateBackground(NPP instance,
-                                       gfxContext*, const nsIntRect&) = 0;
+  virtual nsresult EndUpdateBackground(NPP instance, const nsIntRect&) = 0;
   virtual nsresult GetRunID(uint32_t* aRunID) = 0;
   virtual void SetHasLocalInstance() = 0;
 };

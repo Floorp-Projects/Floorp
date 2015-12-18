@@ -281,12 +281,11 @@ nsPluginInstanceOwner::BeginUpdateBackground(const nsIntRect& aRect)
 }
 
 void
-nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
-                                           const nsIntRect& aRect)
+nsPluginInstanceOwner::EndUpdateBackground(const nsIntRect& aRect)
 {
   nsIntRect rect = aRect;
   if (mInstance) {
-    mInstance->EndUpdateBackground(aContext, &rect);
+    mInstance->EndUpdateBackground(&rect);
   }
 }
 
