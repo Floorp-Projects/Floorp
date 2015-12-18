@@ -9,9 +9,13 @@
 #define GrTextureDomainEffect_DEFINED
 
 #include "GrSingleTextureEffect.h"
-#include "gl/GrGLEffect.h"
+#include "glsl/GrGLSLFragmentProcessor.h"
+#include "glsl/GrGLSLProgramDataManager.h"
 
-class GrGLShaderBuilder;
+class GrGLProgramBuilder;
+class GrGLSLShaderBuilder;
+class GrInvariantOutput;
+class GrGLSLTextureSampler;
 struct SkRect;
 
 /**
@@ -23,11 +27,18 @@ struct SkRect;
 class GrTextureDomain {
 public:
     enum Mode {
-        kIgnore_Mode,  // Ignore the texture domain rectangle.
-        kClamp_Mode,   // Clamp texture coords to the domain rectangle.
-        kDecal_Mode,   // Treat the area outside the domain rectangle as fully transparent.
+        // Ignore the texture domain rectangle.
+        kIgnore_Mode,
+        // Clamp texture coords to the domain rectangle.
+        kClamp_Mode,
+        // Treat the area outside the domain rectangle as fully transparent.
+        kDecal_Mode,
+        // Wrap texture coordinates.  NOTE: filtering may not work as expected because Bilerp will
+        // read texels outside of the domain.  We could perform additional texture reads and filter
+        // in the shader, but are not currently doing this for performance reasons
+        kRepeat_Mode,
 
-        kLastMode = kDecal_Mode
+        kLastMode = kRepeat_Mode
     };
     static const int kModeCount = kLastMode + 1;
 
@@ -60,44 +71,62 @@ public:
         return result;
     }
 
+    static const SkRect MakeTexelDomainForMode(const GrTexture* texture, const SkIRect& texelRect, Mode mode) {
+        // For Clamp mode, inset by half a texel.
+        SkScalar wInv = SK_Scalar1 / texture->width();
+        SkScalar hInv = SK_Scalar1 / texture->height();
+        SkScalar inset = (mode == kClamp_Mode && !texelRect.isEmpty()) ? SK_ScalarHalf : 0;
+        return SkRect::MakeLTRB(
+            (texelRect.fLeft + inset) * wInv,
+            (texelRect.fTop + inset) * hInv,
+            (texelRect.fRight - inset) * wInv,
+            (texelRect.fBottom - inset) * hInv
+        );
+    }
+
     bool operator== (const GrTextureDomain& that) const {
-        return fMode == that.fMode && fDomain == that.fDomain;
+        return fMode == that.fMode && (kIgnore_Mode == fMode || fDomain == that.fDomain);
     }
 
     /**
-     * A GrGLEffect subclass that corresponds to a GrEffect subclass that uses GrTextureDomain
-     * should include this helper. It generates the texture domain GLSL, produces the part of the
-     * effect key that reflects the texture domain code, and performs the uniform uploads necessary
-     * for texture domains.
+     * A GrGLSLFragmentProcessor subclass that corresponds to a GrProcessor subclass that uses
+     * GrTextureDomain should include this helper. It generates the texture domain GLSL, produces
+     * the part of the effect key that reflects the texture domain code, and performs the uniform
+     * uploads necessary for texture domains.
      */
     class GLDomain {
     public:
         GLDomain() {
-            fPrevDomain[0] = SK_FloatNaN;
+            for (int i = 0; i < kPrevDomainCount; i++) {
+                fPrevDomain[i] = SK_FloatNaN;
+            }
             SkDEBUGCODE(fMode = (Mode) -1;)
         }
 
         /**
-         * Call this from GrGLEffect::emitCode() to sample the texture W.R.T. the domain and mode.
+         * Call this from GrGLSLFragmentProcessor::emitCode() to sample the texture W.R.T. the
+         * domain and mode.
          *
          * @param outcolor  name of vec4 variable to hold the sampled color.
          * @param inCoords  name of vec2 variable containing the coords to be used with the domain.
          *                  It is assumed that this is a variable and not an expression.
-         * @param inModulateColor   if non-NULL the sampled color will be modulated with this
+         * @param inModulateColor   if non-nullptr the sampled color will be modulated with this
          *                          expression before being written to outColor.
          */
-        void sampleTexture(GrGLShaderBuilder* builder,
+        void sampleTexture(GrGLSLShaderBuilder* builder,
+                           const GrGLSLCaps* glslCaps,
                            const GrTextureDomain& textureDomain,
                            const char* outColor,
                            const SkString& inCoords,
-                           const GrGLEffect::TextureSampler sampler,
-                           const char* inModulateColor = NULL);
+                           const GrGLSLTextureSampler& sampler,
+                           const char* inModulateColor = nullptr);
 
         /**
-         * Call this from GrGLEffect::setData() to upload uniforms necessary for the texture domain.
-         * The rectangle is automatically adjusted to account for the texture's origin.
+         * Call this from GrGLSLFragmentProcessor::setData() to upload uniforms necessary for the
+         * texture domain. The rectangle is automatically adjusted to account for the texture's
+         * origin.
          */
-        void setData(const GrGLUniformManager& uman, const GrTextureDomain& textureDomain,
+        void setData(const GrGLSLProgramDataManager& pdman, const GrTextureDomain& textureDomain,
                      GrSurfaceOrigin textureOrigin);
 
         enum {
@@ -105,8 +134,8 @@ public:
         };
 
         /**
-         * GrGLEffect::GenKey() must call this and include the returned value in it's computed key.
-         * The returned will be limited to the lower kDomainKeyBits bits.
+         * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in it's
+         * computed key. The returned will be limited to the lower kDomainKeyBits bits.
          */
         static uint32_t DomainKey(const GrTextureDomain& domain) {
             GR_STATIC_ASSERT(kModeCount <= 4);
@@ -114,10 +143,11 @@ public:
         }
 
     private:
-        SkDEBUGCODE(Mode                  fMode;)
-        GrGLUniformManager::UniformHandle fDomainUni;
-        SkString                          fDomainName;
-        GrGLfloat                         fPrevDomain[4];
+        static const int kPrevDomainCount = 4;
+        SkDEBUGCODE(Mode                        fMode;)
+        GrGLSLProgramDataManager::UniformHandle fDomainUni;
+        SkString                                fDomainName;
+        float                                   fPrevDomain[kPrevDomainCount];
     };
 
 protected:
@@ -128,29 +158,31 @@ protected:
     typedef GrSingleTextureEffect INHERITED;
 };
 
-class GrGLTextureDomainEffect;
-
 /**
  * A basic texture effect that uses GrTextureDomain.
  */
 class GrTextureDomainEffect : public GrSingleTextureEffect {
 
 public:
-    static GrEffect* Create(GrTexture*,
-                            const SkMatrix&,
-                            const SkRect& domain,
-                            GrTextureDomain::Mode,
-                            GrTextureParams::FilterMode filterMode,
-                            GrCoordSet = kLocal_GrCoordSet);
+    static const GrFragmentProcessor* Create(GrTexture*,
+                                             const SkMatrix&,
+                                             const SkRect& domain,
+                                             GrTextureDomain::Mode,
+                                             GrTextureParams::FilterMode filterMode,
+                                             GrCoordSet = kLocal_GrCoordSet);
 
     virtual ~GrTextureDomainEffect();
 
-    static const char* Name() { return "TextureDomain"; }
+    const char* name() const override { return "TextureDomain"; }
 
-    typedef GrGLTextureDomainEffect GLEffect;
-
-    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
-    virtual void getConstantColorComponents(GrColor* color, uint32_t* validFlags) const SK_OVERRIDE;
+    SkString dumpInfo() const override {
+        SkString str;
+        str.appendf("Domain: [L: %.2f, T: %.2f, R: %.2f, B: %.2f] ", 
+                    fTextureDomain.domain().fLeft, fTextureDomain.domain().fTop,
+                    fTextureDomain.domain().fRight, fTextureDomain.domain().fBottom);
+        str.append(INHERITED::dumpInfo());
+        return str;
+    }
 
     const GrTextureDomain& textureDomain() const { return fTextureDomain; }
 
@@ -165,9 +197,15 @@ private:
                           GrTextureParams::FilterMode,
                           GrCoordSet);
 
-    virtual bool onIsEqual(const GrEffect&) const SK_OVERRIDE;
+    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-    GR_DECLARE_EFFECT_TEST;
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
+
+    bool onIsEqual(const GrFragmentProcessor&) const override;
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
+
+    GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 
     typedef GrSingleTextureEffect INHERITED;
 };

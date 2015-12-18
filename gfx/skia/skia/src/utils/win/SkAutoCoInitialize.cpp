@@ -6,6 +6,9 @@
  * found in the LICENSE file.
  */
 
+#include "SkTypes.h"
+#if defined(SK_BUILD_FOR_WIN32)
+
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -14,7 +17,7 @@
 
 SkAutoCoInitialize::SkAutoCoInitialize() :
     fHR(
-        CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)
+        CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE)
     )
 { }
 
@@ -27,3 +30,5 @@ SkAutoCoInitialize::~SkAutoCoInitialize() {
 bool SkAutoCoInitialize::succeeded() {
     return SUCCEEDED(this->fHR) || RPC_E_CHANGED_MODE == this->fHR;
 }
+
+#endif//defined(SK_BUILD_FOR_WIN32)

@@ -8,56 +8,8 @@
 #ifndef SkDrawProcs_DEFINED
 #define SkDrawProcs_DEFINED
 
-#include "SkBlitter.h"
 #include "SkDraw.h"
 #include "SkGlyph.h"
-
-class SkAAClip;
-class SkBlitter;
-
-struct SkDraw1Glyph {
-    const SkDraw* fDraw;
-    const SkRegion* fClip;
-    const SkAAClip* fAAClip;
-    SkBlitter* fBlitter;
-    SkGlyphCache* fCache;
-    const SkPaint* fPaint;
-    SkIRect fClipBounds;
-    /** Half the sampling frequency of the rasterized glyph in x. */
-    SkFixed fHalfSampleX;
-    /** Half the sampling frequency of the rasterized glyph in y. */
-    SkFixed fHalfSampleY;
-
-    /** Draws one glyph.
-     *
-     *  The x and y are pre-biased, so implementations may just truncate them.
-     *  i.e. half the sampling frequency has been added.
-     *  e.g. 1/2 or 1/(2^(SkGlyph::kSubBits+1)) has already been added.
-     *  This added bias can be found in fHalfSampleX,Y.
-     */
-    typedef void (*Proc)(const SkDraw1Glyph&, SkFixed x, SkFixed y, const SkGlyph&);
-
-    Proc init(const SkDraw* draw, SkBlitter* blitter, SkGlyphCache* cache,
-              const SkPaint&);
-
-    // call this instead of fBlitter->blitMask() since this wrapper will handle
-    // the case when the mask is ARGB32_Format
-    //
-    void blitMask(const SkMask& mask, const SkIRect& clip) const {
-        if (SkMask::kARGB32_Format == mask.fFormat) {
-            this->blitMaskAsSprite(mask);
-        } else {
-            fBlitter->blitMask(mask, clip);
-        }
-    }
-
-    // mask must be kARGB32_Format
-    void blitMaskAsSprite(const SkMask& mask) const;
-};
-
-struct SkDrawProcs {
-    SkDraw1Glyph::Proc  fD1GProc;
-};
 
 bool SkDrawTreatAAStrokeAsHairline(SkScalar strokeWidth, const SkMatrix&,
                                    SkScalar* coverage);
@@ -90,31 +42,6 @@ inline bool SkDrawTreatAsHairline(const SkPaint& paint, const SkMatrix& matrix,
 class SkTextAlignProc {
 public:
     SkTextAlignProc(SkPaint::Align align)
-        : fAlign(align) {
-    }
-
-    // Returns the position of the glyph in fixed point, which may be rounded or not
-    //         by the caller e.g. subpixel doesn't round.
-    // @param point interpreted as SkFixed [x, y].
-    void operator()(const SkPoint& loc, const SkGlyph& glyph, SkIPoint* dst) {
-        if (SkPaint::kLeft_Align == fAlign) {
-            dst->set(SkScalarToFixed(loc.fX), SkScalarToFixed(loc.fY));
-        } else if (SkPaint::kCenter_Align == fAlign) {
-            dst->set(SkScalarToFixed(loc.fX) - (glyph.fAdvanceX >> 1),
-                     SkScalarToFixed(loc.fY) - (glyph.fAdvanceY >> 1));
-        } else {
-            SkASSERT(SkPaint::kRight_Align == fAlign);
-            dst->set(SkScalarToFixed(loc.fX) - glyph.fAdvanceX,
-                     SkScalarToFixed(loc.fY) - glyph.fAdvanceY);
-        }
-    }
-private:
-    const SkPaint::Align fAlign;
-};
-
-class SkTextAlignProcScalar {
-public:
-    SkTextAlignProcScalar(SkPaint::Align align)
         : fAlign(align) {
     }
 

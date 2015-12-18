@@ -19,7 +19,7 @@ class GrGpu;
  */
 class GrGeometryBuffer : public GrGpuResource {
 public:
-    SK_DECLARE_INST_COUNT(GrGeometryBuffer);
+    
 
     /**
      *Retrieves whether the buffer was created with the dynamic flag
@@ -48,7 +48,7 @@ public:
      * Note that buffer mapping does not go through GrContext and therefore is
      * not serialized with other operations.
      *
-     * @return a pointer to the data or NULL if the map fails.
+     * @return a pointer to the data or nullptr if the map fails.
      */
      void* map() { return (fMapPtr = this->onMap()); }
 
@@ -58,16 +58,16 @@ public:
      * The pointer returned by the previous map call will no longer be valid.
      */
      void unmap() {
-         SkASSERT(NULL != fMapPtr);
+         SkASSERT(fMapPtr);
          this->onUnmap();
-         fMapPtr = NULL;
+         fMapPtr = nullptr;
      }
 
     /**
-     * Returns the same ptr that map() returned at time of map or NULL if the
+     * Returns the same ptr that map() returned at time of map or nullptr if the
      * is not mapped.
      *
-     * @return ptr to mapped buffer data or NULL if buffer is not mapped.
+     * @return ptr to mapped buffer data or nullptr if buffer is not mapped.
      */
      void* mapPtr() const { return fMapPtr; }
 
@@ -76,7 +76,7 @@ public:
 
      @return true if the buffer is mapped, false otherwise.
      */
-     bool isMapped() const { return NULL != fMapPtr; }
+     bool isMapped() const { return SkToBool(fMapPtr); }
 
     /**
      * Updates the buffer data.
@@ -98,18 +98,17 @@ public:
         return this->onUpdateData(src, srcSizeInBytes);
     }
 
-    // GrGpuResource overrides
-    virtual size_t gpuMemorySize() const { return fGpuMemorySize; }
-
 protected:
-    GrGeometryBuffer(GrGpu* gpu, bool isWrapped, size_t gpuMemorySize, bool dynamic, bool cpuBacked)
-        : INHERITED(gpu, isWrapped)
-        , fMapPtr(NULL)
+    GrGeometryBuffer(GrGpu* gpu, size_t gpuMemorySize, bool dynamic, bool cpuBacked)
+        : INHERITED(gpu, kCached_LifeCycle)
+        , fMapPtr(nullptr)
         , fGpuMemorySize(gpuMemorySize)
         , fDynamic(dynamic)
         , fCPUBacked(cpuBacked) {}
 
 private:
+    virtual size_t onGpuMemorySize() const { return fGpuMemorySize; }
+
     virtual void* onMap() = 0;
     virtual void onUnmap() = 0;
     virtual bool onUpdateData(const void* src, size_t srcSizeInBytes) = 0;

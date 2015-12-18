@@ -13,42 +13,41 @@
 
 class SkSweepGradient : public SkGradientShaderBase {
 public:
-    SkSweepGradient(SkScalar cx, SkScalar cy, const Descriptor&,
-                    const SkMatrix* localMatrix);
+    SkSweepGradient(SkScalar cx, SkScalar cy, const Descriptor&);
 
-    virtual size_t contextSize() const SK_OVERRIDE;
+    size_t contextSize() const override;
 
     class SweepGradientContext : public SkGradientShaderBase::GradientShaderBaseContext {
     public:
         SweepGradientContext(const SkSweepGradient& shader, const ContextRec&);
 
-        virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count) SK_OVERRIDE;
-        virtual void shadeSpan16(int x, int y, uint16_t dstC[], int count) SK_OVERRIDE;
+        void shadeSpan(int x, int y, SkPMColor dstC[], int count) override;
+        void shadeSpan16(int x, int y, uint16_t dstC[], int count) override;
 
     private:
         typedef SkGradientShaderBase::GradientShaderBaseContext INHERITED;
     };
 
-    virtual BitmapType asABitmap(SkBitmap* bitmap,
-                                 SkMatrix* matrix,
-                                 TileMode* xy) const SK_OVERRIDE;
+    GradientType asAGradient(GradientInfo* info) const override;
 
-    virtual GradientType asAGradient(GradientInfo* info) const SK_OVERRIDE;
-
-    virtual bool asNewEffect(GrContext*, const SkPaint&, const SkMatrix*, GrColor*, GrEffect**)
-        const SK_OVERRIDE;
+#if SK_SUPPORT_GPU
+    const GrFragmentProcessor* asFragmentProcessor(GrContext*,
+                                                   const SkMatrix& viewM,
+                                                   const SkMatrix*,
+                                                   SkFilterQuality) const override;
+#endif
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkSweepGradient)
 
 protected:
-    SkSweepGradient(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer& buffer) const SK_OVERRIDE;
-    virtual Context* onCreateContext(const ContextRec&, void* storage) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer& buffer) const override;
+    Context* onCreateContext(const ContextRec&, void* storage) const override;
 
 private:
     const SkPoint fCenter;
 
+    friend class SkGradientShader;
     typedef SkGradientShaderBase INHERITED;
 };
 

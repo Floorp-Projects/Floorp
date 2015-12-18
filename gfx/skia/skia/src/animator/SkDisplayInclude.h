@@ -15,9 +15,9 @@
 
 class SkInclude : public SkDisplayable {
     DECLARE_MEMBER_INFO(Include);
-    virtual void onEndElement(SkAnimateMaker & );
-    virtual bool enable(SkAnimateMaker & );
-    virtual bool hasEnable() const;
+    void onEndElement(SkAnimateMaker & ) override;
+    bool enable(SkAnimateMaker & ) override;
+    bool hasEnable() const override;
 protected:
     SkString src;
 };
