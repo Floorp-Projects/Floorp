@@ -8472,6 +8472,14 @@
     "kind": "boolean",
     "description": "Is the tracking protection in private browsing mode disabled?"
   },
+  "FENNEC_TRACKING_PROTECTION_STATE": {
+    "expires_in_version": "60",
+    "kind": "enumerated",
+    "n_values": 5,
+    "description": "The state of the user-visible tracking protection setting (0 = Disabled, 1 = Enabled in PB, 2 = Enabled)",
+    "alert_emails": ["mleibovic@mozilla.com"],
+    "bug_numbers": [1228090]
+  },
   "TRACKING_PROTECTION_SHIELD": {
     "expires_in_version": "never",
     "kind": "enumerated",
