@@ -560,7 +560,7 @@ nsListControlFrame::ReflowAsDropdown(nsPresContext*           aPresContext,
   // rules applied to the combobox dropdown.
 
   mDropdownCanGrow = false;
-  if (visibleBSize <= 0 || blockSizeOfARow <= 0) {
+  if (visibleBSize <= 0 || blockSizeOfARow <= 0 || XRE_IsContentProcess()) {
     // Looks like we have no options.  Just size us to a single row
     // block size.
     state.SetComputedBSize(blockSizeOfARow);
