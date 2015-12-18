@@ -1,7 +1,7 @@
 // This is essentially a debug mode crashtest to make sure everything
 // involved in a reload runs on the right thread. It relies on the
 // assertions in necko.
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var listener = {
   onStartRequest: function test_onStartR(request, ctx) {
@@ -17,20 +17,14 @@ var listener = {
 };
 
 function run_test() {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
-  var chan = ios.newChannel2("http://localhost:4444",
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  var chan = NetUtil.newChannel({
+    uri: "http://localhost:4444",
+    loadUsingSystemPrincipal: true
+  });
   chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION |
 	           Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
   chan.QueryInterface(Ci.nsIHttpChannel);
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
   do_test_pending();
 }
 

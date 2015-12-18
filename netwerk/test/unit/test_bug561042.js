@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const SERVER_PORT = 8080;
 const baseURL = "http://localhost:" + SERVER_PORT + "/";
@@ -31,18 +31,8 @@ function run_test() {
         response.setHeader("Set-Cookie", "BigCookie=" + cookie, false);
         response.write("Hello world");
     });
-
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                         .getService(Components.interfaces.nsIIOService);
-    var chan = ios.newChannel2(baseURL,
-                               null,
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER)
-                  .QueryInterface(Components.interfaces.nsIHttpChannel);
-    chan.asyncOpen(listener, null);
+    var chan = NetUtil.newChannel({uri: baseURL, loadUsingSystemPrincipal: true})
+                      .QueryInterface(Components.interfaces.nsIHttpChannel);
+    chan.asyncOpen2(listener);
     do_test_pending();
 }

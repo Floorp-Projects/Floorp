@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/MockRegistrar.jsm");
 
 var httpserv = null;
@@ -29,19 +29,8 @@ function checkValue(request, data, ctx) {
 }
 
 function makeChan(url) {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
-
-  return chan;
 }
 
 function run_test() {
@@ -66,7 +55,7 @@ function run_test() {
 
   var chan = makeChan("http://localhost:" + httpserv.identity.primaryPort +
                       "/target");
-  chan.asyncOpen(new ChannelListener(checkValue, null), null);
+  chan.asyncOpen2(new ChannelListener(checkValue, null));
 
   do_test_pending();
 }
