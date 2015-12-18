@@ -9,18 +9,14 @@ Set up a browser environment before running a test.
 import os
 import re
 import tempfile
+import logging
 import mozfile
 from mozprocess import ProcessHandler
 from mozprofile.profile import Profile
 
-from mozlog import get_proxy_logger
-
 from talos import utils
 from talos.utils import TalosError
 from talos.sps_profile import SpsProfile
-
-
-LOG = get_proxy_logger()
 
 
 class FFSetup(object):
@@ -115,32 +111,30 @@ class FFSetup(object):
         )
 
         def browser_log(line):
-            LOG.process_output(browser.pid, line)
+            logging.debug('BROWSER_OUTPUT: %s', line)
 
         browser = ProcessHandler(command_args, env=self.env,
                                  processOutputLine=browser_log)
         browser.run()
-        LOG.process_start(browser.pid, ' '.join(command_args))
         try:
-            exit_code = browser.wait()
+            browser.wait()
         except KeyboardInterrupt:
             browser.kill()
             raise
 
-        LOG.process_exit(browser.pid, exit_code)
         results_raw = '\n'.join(browser.output)
 
         if not self.PROFILE_REGEX.search(results_raw):
-            LOG.info("Could not find %s in browser output"
-                     % self.PROFILE_REGEX.pattern)
-            LOG.info("Raw results:%s" % results_raw)
+            logging.info("Could not find %s in browser output",
+                         self.PROFILE_REGEX.pattern)
+            logging.info("Raw results:%s", results_raw)
             raise TalosError("browser failed to close after being initialized")
 
     def _init_sps_profile(self):
         upload_dir = os.getenv('MOZ_UPLOAD_DIR')
         if self.test_config.get('sps_profile') and not upload_dir:
-            LOG.critical("Profiling ignored because MOZ_UPLOAD_DIR was not"
-                         " set")
+            logging.critical("Profiling ignored because MOZ_UPLOAD_DIR was not"
+                             " set")
         if upload_dir and self.test_config.get('sps_profile'):
             self.sps_profile = SpsProfile(upload_dir,
                                           self.browser_config,
@@ -153,8 +147,8 @@ class FFSetup(object):
             self.sps_profile.clean()
 
     def __enter__(self):
-        LOG.info('Initialising browser for %s test...'
-                 % self.test_config['name'])
+        logging.info('Initialising browser for %s test...',
+                     self.test_config['name'])
         self._init_env()
         self._init_profile()
         try:
@@ -163,7 +157,7 @@ class FFSetup(object):
             self.clean()
             raise
         self._init_sps_profile()
-        LOG.info('Browser initialized.')
+        logging.info('Browser initialized.')
         return self
 
     def __exit__(self, type, value, tb):

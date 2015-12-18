@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mozversion
+import logging
 import os
 import sys
 import time
@@ -13,8 +14,6 @@ import urllib
 import utils
 import mozhttpd
 
-from mozlog import get_proxy_logger
-
 from talos.results import TalosResults
 from talos.ttest import TTest
 from talos.utils import TalosError, TalosCrash, TalosRegression
@@ -22,7 +21,6 @@ from talos.config import get_configs, ConfigurationError
 
 # directory of this file
 here = os.path.dirname(os.path.realpath(__file__))
-LOG = get_proxy_logger()
 
 
 def useBaseTestDefaults(base, tests):
@@ -69,7 +67,7 @@ def buildCommandLine(test):
 
 def setup_webserver(webserver):
     """use mozhttpd to setup a webserver"""
-    LOG.info("starting webserver on %r" % webserver)
+    logging.info("starting webserver on %r" % webserver)
 
     host, port = webserver.split(':')
     return mozhttpd.MozHttpd(host=host, port=int(port), docroot=here)
@@ -155,8 +153,8 @@ def run_tests(config, browser_config):
                                              '%a, %d %b %Y %H:%M:%S GMT')))
     else:
         date = int(time.time())
-    LOG.debug("using testdate: %d" % date)
-    LOG.debug("actual date: %d" % int(time.time()))
+    logging.debug("using testdate: %d", date)
+    logging.debug("actual date: %d", int(time.time()))
 
     # results container
     talos_results = TalosResults(title=title,
@@ -187,20 +185,20 @@ def run_tests(config, browser_config):
     try:
         # run the tests
         timer = utils.Timer()
-        LOG.info("Starting test suite %s" % title)
+        logging.info("Starting test suite %s", title)
         for test in tests:
             testname = test['name']
             testtimer = utils.Timer()
-            LOG.info("Starting test %s" % testname)
+            logging.info("Starting test %s", testname)
 
             mytest = TTest()
             talos_results.add(mytest.runTest(browser_config, test))
 
-            LOG.info("Completed test %s (%s)"
-                     % (testname,  testtimer.elapsed()))
+            logging.info("Completed test %s (%s)", testname,
+                         testtimer.elapsed())
 
     except TalosRegression:
-        LOG.error("Detected a regression for %s" % testname)
+        logging.error("Detected a regression for %s", testname)
         # by returning 1, we report an orange to buildbot
         # http://docs.buildbot.net/latest/developer/results.html
         return 1
@@ -214,7 +212,7 @@ def run_tests(config, browser_config):
     finally:
         httpd.stop()
 
-    LOG.info("Completed test suite (%s)" % timer.elapsed())
+    logging.info("Completed test suite (%s)", timer.elapsed())
 
     # output results
     if results_urls:
@@ -235,6 +233,7 @@ def main(args=sys.argv[1:]):
         config, browser_config = get_configs()
     except ConfigurationError, exc:
         sys.exit("ERROR: %s" % exc)
+    utils.startLogger('debug' if config['debug'] else 'info')
     sys.exit(run_tests(config, browser_config))
 
 
