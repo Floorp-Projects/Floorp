@@ -302,14 +302,14 @@ static inline char* js_strdup(const char* s)
  * Note: Do not add a ; at the end of a use of JS_DECLARE_NEW_METHODS,
  * or the build will break.
  */
-#define JS_DECLARE_NEW_METHODS(NEWNAME, ALLOCATOR, QUALIFIERS)\
+#define JS_DECLARE_NEW_METHODS(NEWNAME, ALLOCATOR, QUALIFIERS) \
     template <class T, typename... Args> \
     QUALIFIERS T * \
     NEWNAME(Args&&... args) MOZ_HEAP_ALLOCATOR { \
         void* memory = ALLOCATOR(sizeof(T)); \
-        return memory \
-               ? new(memory) T(mozilla::Forward<Args>(args)...) \
-               : nullptr; \
+        return MOZ_LIKELY(memory) \
+            ? new(memory) T(mozilla::Forward<Args>(args)...) \
+            : nullptr; \
     }
 
 /*
