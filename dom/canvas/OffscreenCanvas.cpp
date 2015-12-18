@@ -24,12 +24,13 @@ namespace dom {
 OffscreenCanvasCloneData::OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                                                    uint32_t aWidth, uint32_t aHeight,
                                                    layers::LayersBackend aCompositorBackend,
-                                                   bool aNeutered)
+                                                   bool aNeutered, bool aIsWriteOnly)
   : mRenderer(aRenderer)
   , mWidth(aWidth)
   , mHeight(aHeight)
   , mCompositorBackendType(aCompositorBackend)
   , mNeutered(aNeutered)
+  , mIsWriteOnly(aIsWriteOnly)
 {
 }
 
@@ -43,6 +44,7 @@ OffscreenCanvas::OffscreenCanvas(uint32_t aWidth,
                                  layers::AsyncCanvasRenderer* aRenderer)
   : mAttrDirty(false)
   , mNeutered(false)
+  , mIsWriteOnly(false)
   , mWidth(aWidth)
   , mHeight(aHeight)
   , mCompositorBackendType(aCompositorBackend)
@@ -191,7 +193,7 @@ OffscreenCanvasCloneData*
 OffscreenCanvas::ToCloneData()
 {
   return new OffscreenCanvasCloneData(mCanvasRenderer, mWidth, mHeight,
-                                      mCompositorBackendType, mNeutered);
+                                      mCompositorBackendType, mNeutered, mIsWriteOnly);
 }
 
 /* static */ already_AddRefed<OffscreenCanvas>
