@@ -26,36 +26,6 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
                                      JS::Handle<JS::Value> aParams,
                                      ErrorResult& aRv)
 {
-  nsAutoString type;
-  nsContentUtils::ASCIIToLower(aType, type);
-
-  nsAutoString params;
-  bool usingCustomParseOptions;
-  aRv = ParseParams(aCx, type, aParams, params, &usingCustomParseOptions);
-  if (aRv.Failed()) {
-    return;
-  }
-
-  if (mCurrentContext) {
-    // We disallow canvases of width or height zero, and set them to 1, so
-    // we will have a discrepancy with the sizes of the canvas and the context.
-    // That discrepancy is OK, the rest are not.
-    nsIntSize elementSize = GetWidthHeight();
-    if ((elementSize.width != mCurrentContext->GetWidth() &&
-         (elementSize.width != 0 || mCurrentContext->GetWidth() != 1)) ||
-        (elementSize.height != mCurrentContext->GetHeight() &&
-         (elementSize.height != 0 || mCurrentContext->GetHeight() != 1))) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-  }
-
-  UniquePtr<uint8_t[]> imageBuffer;
-  int32_t format = 0;
-  if (mCurrentContext) {
-    imageBuffer = mCurrentContext->GetImageBuffer(&format);
-  }
-
   // Encoder callback when encoding is complete.
   class EncodeCallback : public EncodeCompleteCallback
   {
@@ -96,6 +66,49 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
 
   RefPtr<EncodeCompleteCallback> callback =
     new EncodeCallback(aGlobal, &aCallback);
+
+  ToBlob(aCx, aGlobal, callback, aType, aParams, aRv);
+}
+
+void
+CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
+                                     nsIGlobalObject* aGlobal,
+                                     EncodeCompleteCallback* aCallback,
+                                     const nsAString& aType,
+                                     JS::Handle<JS::Value> aParams,
+                                     ErrorResult& aRv)
+{
+  nsAutoString type;
+  nsContentUtils::ASCIIToLower(aType, type);
+
+  nsAutoString params;
+  bool usingCustomParseOptions;
+  aRv = ParseParams(aCx, type, aParams, params, &usingCustomParseOptions);
+  if (aRv.Failed()) {
+    return;
+  }
+
+  if (mCurrentContext) {
+    // We disallow canvases of width or height zero, and set them to 1, so
+    // we will have a discrepancy with the sizes of the canvas and the context.
+    // That discrepancy is OK, the rest are not.
+    nsIntSize elementSize = GetWidthHeight();
+    if ((elementSize.width != mCurrentContext->GetWidth() &&
+         (elementSize.width != 0 || mCurrentContext->GetWidth() != 1)) ||
+        (elementSize.height != mCurrentContext->GetHeight() &&
+         (elementSize.height != 0 || mCurrentContext->GetHeight() != 1))) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return;
+    }
+  }
+
+  UniquePtr<uint8_t[]> imageBuffer;
+  int32_t format = 0;
+  if (mCurrentContext) {
+    imageBuffer = mCurrentContext->GetImageBuffer(&format);
+  }
+
+  RefPtr<EncodeCompleteCallback> callback = aCallback;
 
   aRv = ImageEncoder::ExtractDataAsync(type,
                                        params,

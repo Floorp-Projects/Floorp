@@ -1,28 +1,42 @@
 /* WebWorker for test_offscreencanvas_*.html */
+(function(){
+
 var port = null;
 
-function ok(expect, msg) {
-  if (port) {
-    port.postMessage({type: "test", result: !!expect, name: msg});
-  } else {
-    postMessage({type: "test", result: !!expect, name: msg});
+function isInWorker() {
+  try {
+    return !(self instanceof Window);
+  } catch (e) {
+    return true;
   }
+}
+
+function postMessageGeneral(data) {
+  if (isInWorker()) {
+    if (port) {
+      port.postMessage(data);
+    } else {
+      postMessage(data);
+    }
+  } else {
+    postMessage(data, "*");
+  }
+}
+
+function ok(expect, msg) {
+  postMessageGeneral({type: "test", result: !!expect, name: msg});
 }
 
 function finish() {
-  if (port) {
-    port.postMessage({type: "finish"});
-  } else {
-    postMessage({type: "finish"});
-  }
+  postMessageGeneral({type: "finish"});
 }
 
 function drawCount(count) {
-  if (port) {
-    port.postMessage({type: "draw", count: count});
-  } else {
-    postMessage({type: "draw", count: count});
-  }
+  postMessageGeneral({type: "draw", count: count});
+}
+
+function sendBlob(blob) {
+  postMessageGeneral({type: "blob", blob: blob});
 }
 
 //--------------------------------------------------------------------
@@ -140,7 +154,7 @@ function createDrawFunc(canvas) {
   // Start drawing
   checkGLError('after setup');
 
-  return function(prefix) {
+  return function(prefix, needCommitFrame) {
     if (prefix) {
       prefix = "[" + prefix + "] ";
     } else {
@@ -152,7 +166,9 @@ function createDrawFunc(canvas) {
     preDraw(prefix);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
     postDraw(prefix);
-    gl.commit();
+    if (needCommitFrame) {
+      gl.commit();
+    }
     checkGLError(prefix);
   };
 }
@@ -161,6 +177,9 @@ function createDrawFunc(canvas) {
 function entryFunction(testStr, subtests, offscreenCanvas) {
   var test = testStr;
   var canvas = offscreenCanvas;
+  if (test == "webgl_imagebitmap") {
+    canvas = new OffscreenCanvas(64, 64);
+  }
 
   if (test != "subworker") {
     ok(canvas, "Canvas successfully transfered to worker");
@@ -190,7 +209,7 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
         finish();
         return;
       }
-      draw("loop " +count);
+      draw("loop " +count, true);
     }, 0);
   }
   //------------------------------------------------------------------------
@@ -205,9 +224,23 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
     var count = 0;
     var iid = setInterval(function() {
       ++count;
-      draw("loop " + count);
+      draw("loop " + count, true);
       drawCount(count);
     }, 0);
+  }
+  //------------------------------------------------------------------------
+  // Test toBlob
+  //------------------------------------------------------------------------
+  else if (test == "webgl_toblob") {
+    draw = createDrawFunc(canvas);
+    if (!draw) {
+      return;
+    }
+
+    draw("", false);
+    canvas.toBlob().then(function(blob) {
+      sendBlob(blob);
+    });
   }
   //------------------------------------------------------------------------
   // Canvas Size Change from Worker
@@ -219,22 +252,22 @@ function entryFunction(testStr, subtests, offscreenCanvas) {
       return;
     }
 
-    draw("64x64");
+    draw("64x64", true);
 
     setTimeout(function() {
       canvas.width = 128;
       canvas.height = 128;
-      draw("Increased to 128x128");
+      draw("Increased to 128x128", true);
 
       setTimeout(function() {
         canvas.width = 32;
         canvas.width = 32;
-        draw("Decreased to 32x32");
+        draw("Decreased to 32x32", true);
 
         setTimeout(function() {
           canvas.width = 64;
           canvas.height = 64;
-          draw("Increased to 64x64");
+          draw("Increased to 64x64", true);
 
           ok(true, "Worker is done");
           finish();
@@ -297,3 +330,9 @@ onconnect = function(evt) {
 
   port.start();
 };
+
+if (!isInWorker()) {
+  window.entryFunction = entryFunction;
+}
+
+})();

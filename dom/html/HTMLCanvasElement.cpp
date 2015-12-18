@@ -374,7 +374,8 @@ HTMLCanvasElement::~HTMLCanvasElement()
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(HTMLCanvasElement, nsGenericHTMLElement,
                                    mCurrentContext, mPrintCallback,
-                                   mPrintState, mOriginalCanvas)
+                                   mPrintState, mOriginalCanvas,
+                                   mOffscreenCanvas)
 
 NS_IMPL_ADDREF_INHERITED(HTMLCanvasElement, Element)
 NS_IMPL_RELEASE_INHERITED(HTMLCanvasElement, Element)
@@ -779,7 +780,10 @@ HTMLCanvasElement::TransferControlToOffscreen(ErrorResult& aRv)
     renderer->SetWidth(sz.width);
     renderer->SetHeight(sz.height);
 
-    mOffscreenCanvas = new OffscreenCanvas(sz.width,
+    nsCOMPtr<nsIGlobalObject> global =
+      do_QueryInterface(OwnerDoc()->GetInnerWindow());
+    mOffscreenCanvas = new OffscreenCanvas(global,
+                                           sz.width,
                                            sz.height,
                                            GetCompositorBackendType(),
                                            renderer);
