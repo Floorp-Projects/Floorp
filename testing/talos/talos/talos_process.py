@@ -28,15 +28,19 @@ class ProcessContext(object):
         return self.process and self.process.pid
 
     def kill_process(self):
+        """
+        Kill the process, returning the exit code or None if the process
+        is already finished.
+        """
         if self.process and self.process.is_running():
             LOG.debug("Terminating %s" % self.process)
             self.process.terminate()
             try:
-                self.process.wait(3)
+                return self.process.wait(3)
             except psutil.TimeoutExpired:
                 self.process.kill()
                 # will raise TimeoutExpired if unable to kill
-                self.process.wait(3)
+                return self.process.wait(3)
 
 
 class Reader(object):
@@ -125,8 +129,9 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     finally:
         # this also handle KeyboardInterrupt
         # ensure early the process is really terminated
-        context.kill_process()
-        return_code = proc.wait(1)
+        return_code = context.kill_process()
+        if return_code is None:
+            return_code = proc.wait(1)
 
     reader.output.append(
         "__startBeforeLaunchTimestamp%d__endBeforeLaunchTimestamp"
@@ -135,6 +140,9 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
         "__startAfterTerminationTimestamp%d__endAfterTerminationTimestamp"
         % (int(time.time()) * 1000))
 
-    LOG.process_exit(proc.pid, return_code)
+    if return_code is not None:
+        LOG.process_exit(proc.pid, return_code)
+    else:
+        LOG.debug("Unable to detect exit code of the process %s." % proc.pid)
     context.output = reader.output
     return context
