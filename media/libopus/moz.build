@@ -70,7 +70,6 @@ LOCAL_INCLUDES += [
 include('sources.mozbuild')
 
 UNIFIED_SOURCES += celt_sources
-SOURCES += celt_nonunified_sources
 UNIFIED_SOURCES += silk_sources
 UNIFIED_SOURCES += opus_sources
 
