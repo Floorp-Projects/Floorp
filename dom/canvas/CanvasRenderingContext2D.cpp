@@ -3458,7 +3458,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     }
     mTextRun = mFontgrp->MakeTextRun(text,
                                      length,
-                                     mThebes->GetDrawTarget(),
+                                     mDrawTarget,
                                      mAppUnitsPerDevPixel,
                                      flags,
                                      mMissingFonts);
@@ -3471,7 +3471,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                                                                mDoMeasureBoundingBox ?
                                                                  gfxFont::TIGHT_INK_EXTENTS :
                                                                  gfxFont::LOOSE_INK_EXTENTS,
-                                                               mThebes->GetDrawTarget(),
+                                                               mDrawTarget,
                                                                nullptr);
 
     // this only measures the height; the total width is gotten from the
@@ -3507,7 +3507,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
                               mDoMeasureBoundingBox ?
                                   gfxFont::TIGHT_INK_EXTENTS :
                                   gfxFont::LOOSE_INK_EXTENTS,
-                              mThebes->GetDrawTarget(),
+                              mDrawTarget,
                               nullptr);
       inlineCoord += textRunMetrics.mAdvanceWidth;
       // old code was:
@@ -3706,7 +3706,7 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
   nsAutoPtr<gfxTextRun> mTextRun;
 
   // pointer to a screen reference context used to measure text and such
-  RefPtr<gfxContext> mThebes;
+  RefPtr<DrawTarget> mDrawTarget;
 
   // Pointer to the draw target we should fill our text to
   CanvasRenderingContext2D *mCtx;
@@ -3832,15 +3832,14 @@ CanvasRenderingContext2D::DrawOrMeasureText(const nsAString& aRawText,
 
   GetAppUnitsValues(&processor.mAppUnitsPerDevPixel, nullptr);
   processor.mPt = gfxPoint(aX, aY);
-  processor.mThebes =
-    new gfxContext(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
+  processor.mDrawTarget =
+    gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
 
   // If we don't have a target then we don't have a transform. A target won't
   // be needed in the case where we're measuring the text size. This allows
   // to avoid creating a target if it's only being used to measure text sizes.
   if (mTarget) {
-    Matrix matrix = mTarget->GetTransform();
-    processor.mThebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21, matrix._22, matrix._31, matrix._32));
+    processor.mDrawTarget->SetTransform(mTarget->GetTransform());
   }
   processor.mCtx = this;
   processor.mOp = aOp;
