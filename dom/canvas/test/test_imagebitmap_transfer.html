@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<title>Test ImageBitmap : Transfer</title>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<body>
+<script type="text/javascript">
+
+var gImage1;
+var gImage2;
+var gImageBitmap1;
+var gImageBitmap2;
+
+function isPixel(ctx1, ctx2, x, y) {
+  var pixel1 = ctx1.getImageData(x, y, 1, 1);
+  var pixel2 = ctx2.getImageData(x, y, 1, 1);
+  ok(pixel1.data[0] == pixel2.data[0] &&
+     pixel1.data[1] == pixel2.data[1] &&
+     pixel1.data[2] == pixel2.data[2] &&
+     pixel1.data[3] == pixel2.data[3],
+    "Color(" + pixel1.data[0] + ", " + pixel1.data[1] + ", " + pixel1.data[2] + ", " + pixel1.data[3] + ") should qual to Color(" + pixel2.data[0] + ", " + pixel2.data[1] + ", " + pixel2.data[2] + ", " + pixel2.data[3] +  ")");
+}
+
+function compareImageBitmapWithImageElement(imageBitmap, imageElement) {
+  var canvas1 = document.createElement('canvas');
+  var canvas2 = document.createElement('canvas');
+
+  canvas1.width  = imageElement.naturalWidth;
+  canvas1.height = imageElement.naturalHeight;
+  canvas2.width  = imageElement.naturalWidth;
+  canvas2.height = imageElement.naturalHeight;
+
+  var ctx1 = canvas1.getContext('2d');
+  var ctx2 = canvas2.getContext('2d');
+
+  ctx1.drawImage(imageElement, 0, 0);
+  ctx2.drawImage(imageBitmap, 0, 0);
+
+  document.body.appendChild(canvas1);
+  document.body.appendChild(canvas2);
+
+  for (var t = 0; t < 20; ++t) {
+    // check one random pixel
+    var randomX = Math.floor(Math.random() * imageElement.naturalWidth);
+    var randomY = Math.floor(Math.random() * imageElement.naturalHeight);
+    isPixel(ctx1, ctx2, randomX, randomY);
+  }
+}
+
+var worker = new Worker("imagebitmap_structuredclone.js");
+worker.onmessage = function(event) {
+
+  if (event.data.type == "status") {
+    ok(event.data.status, event.data.msg);
+  } else if (event.data.type == "finish") {
+    SimpleTest.finish();
+  } else if (event.data.type == "bitmap1") {
+    compareImageBitmapWithImageElement(event.data.bitmap, gImage1);
+  } else if (event.data.type == "bitmap2") {
+    compareImageBitmapWithImageElement(event.data.bitmap, gImage2);
+  }
+}
+
+function prepareTwoImageBitmap() {
+  gImage1 = document.createElement('img');
+  gImage2 = document.createElement('img');
+  gImage1.src = "image_rgrg-256x256.png";
+  gImage2.src = "image_yellow.png";
+
+  var p1 = new Promise(function(resolve, reject) {
+    gImage1.onload = function() {
+      var promise = createImageBitmap(gImage1);
+      promise.then(function(bitmap) {
+        gImageBitmap1 = bitmap;
+        resolve(true);
+      });
+    }
+  });
+
+  var p2 = new Promise(function(resolve, reject) {
+    gImage2.onload = function() {
+      var promise = createImageBitmap(gImage2);
+      promise.then(function(bitmap) {
+        gImageBitmap2 = bitmap;
+        resolve(true);
+      });
+    }
+  });
+
+  return Promise.all([p1, p2]);
+}
+
+function runTests() {
+  ok(worker, "Worker created successfully.");
+
+  prepareTwoImageBitmap().then(function(){
+    worker.postMessage({"bitmap1":gImageBitmap1, "bitmap2":gImageBitmap2},
+                       [gImageBitmap1, gImageBitmap2]);
+
+    ok(gImageBitmap1.width == 0 && gImageBitmap1.height == 0,
+       "After transfer, ImageBitmap become neutered");
+    ok(gImageBitmap2.width == 0 && gImageBitmap2.height == 0,
+       "After transfer, ImageBitmap become neutered");
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(runTests);
+
+</script>
+</body>
