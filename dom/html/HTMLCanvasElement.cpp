@@ -1173,7 +1173,7 @@ void
 HTMLCanvasElement::SetFrameCapture(already_AddRefed<SourceSurface> aSurface)
 {
   RefPtr<SourceSurface> surface = aSurface;
-  RefPtr<CairoImage> image = new CairoImage(surface->GetSize(), surface);
+  RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), surface);
 
   // Loop backwards to allow removing elements in the loop.
   for (int i = mRequestedFrameListeners.Length() - 1; i >= 0; --i) {

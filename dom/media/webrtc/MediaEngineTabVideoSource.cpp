@@ -196,7 +196,7 @@ MediaEngineTabVideoSource::NotifyPull(MediaStreamGraph*,
   MonitorAutoLock mon(mMonitor);
 
   // Note: we're not giving up mImage here
-  RefPtr<layers::CairoImage> image = mImage;
+  RefPtr<layers::SourceSurfaceImage> image = mImage;
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
   if (delta > 0) {
     // nullptr images are allowed
@@ -298,7 +298,7 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  RefPtr<layers::CairoImage> image = new layers::CairoImage(size, surface);
+  RefPtr<layers::SourceSurfaceImage> image = new layers::SourceSurfaceImage(size, surface);
 
   MonitorAutoLock mon(mMonitor);
   mImage = image;
