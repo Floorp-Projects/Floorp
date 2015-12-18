@@ -62,13 +62,18 @@ function refreshUI() {
     parent.removeChild(parent.firstChild);
   }
 
-  let currentProfile = findCurrentProfile() || ProfileService.defaultProfile;
+  let defaultProfile;
+  try {
+    defaultProfile = ProfileService.defaultProfile;
+  } catch(e) {}
+
+  let currentProfile = findCurrentProfile() || defaultProfile;
 
   let iter = ProfileService.profiles;
   while (iter.hasMoreElements()) {
     let profile = iter.getNext().QueryInterface(Ci.nsIToolkitProfile);
     display({ profile: profile,
-              isDefault: profile == ProfileService.defaultProfile,
+              isDefault: profile == defaultProfile,
               isCurrentProfile: profile == currentProfile });
   }
 
