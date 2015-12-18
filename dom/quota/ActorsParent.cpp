@@ -1302,21 +1302,18 @@ struct StorageDirectoryHelper::OriginProps
 
   nsCOMPtr<nsIFile> mDirectory;
   nsCString mSpec;
-  uint32_t mAppId;
+  PrincipalOriginAttributes mAttrs;
   int64_t mTimestamp;
   nsCString mGroup;
   nsCString mOrigin;
 
   Type mType;
-  bool mInMozBrowser;
   bool mIsApp;
 
 public:
   explicit OriginProps()
-    : mAppId(kNoAppId)
-    , mTimestamp(0)
+    : mTimestamp(0)
     , mType(eContent)
-    , mInMozBrowser(false)
     , mIsApp(false)
   { }
 };
@@ -1383,14 +1380,11 @@ public:
 
   static bool
   ParseOrigin(const nsACString& aOrigin,
-              uint32_t* aAppId,
-              bool* aInMozBrowser,
-              nsCString& aSpec);
+              nsCString& aSpec,
+              PrincipalOriginAttributes* aAttrs);
 
   bool
-  Parse(uint32_t* aAppId,
-        bool* aInMozBrowser,
-        nsACString& aSpec);
+  Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs);
 
 private:
   void
@@ -5992,19 +5986,18 @@ StorageDirectoryHelper::AddOriginDirectory(nsIFile* aDirectory)
     originProps->mType = OriginProps::eChrome;
   } else {
     nsCString spec;
-    uint32_t appId;
-    bool inMozBrowser;
-    if (NS_WARN_IF(!OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
-                                              &appId, &inMozBrowser, spec))) {
+    PrincipalOriginAttributes attrs;
+    bool result = OriginParser::ParseOrigin(NS_ConvertUTF16toUTF8(leafName),
+                                            spec, &attrs);
+    if (NS_WARN_IF(!result)) {
       return NS_ERROR_FAILURE;
     }
 
     OriginProps* originProps = mOriginProps.AppendElement();
     originProps->mDirectory = aDirectory;
     originProps->mSpec = spec;
-    originProps->mAppId = appId;
+    originProps->mAttrs = attrs;
     originProps->mType = OriginProps::eContent;
-    originProps->mInMozBrowser = inMozBrowser;
 
     if (mCreate) {
       int64_t timestamp = INT64_MIN;
@@ -6178,17 +6171,10 @@ StorageDirectoryHelper::RunOnMainThread()
           return rv;
         }
 
-        nsCOMPtr<nsIPrincipal> principal;
-        if (originProps.mAppId == kUnknownAppId) {
-          rv = secMan->GetSimpleCodebasePrincipal(uri,
-                                                  getter_AddRefs(principal));
-        } else {
-          PrincipalOriginAttributes attrs(originProps.mAppId, originProps.mInMozBrowser);
-          principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-          rv = principal ? NS_OK : NS_ERROR_FAILURE;
-        }
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
+        nsCOMPtr<nsIPrincipal> principal =
+          BasePrincipal::CreateCodebasePrincipal(uri, originProps.mAttrs);
+        if (NS_WARN_IF(!principal)) {
+          return NS_ERROR_FAILURE;
         }
 
         if (mCreate) {
@@ -6239,30 +6225,20 @@ StorageDirectoryHelper::Run()
 // static
 bool
 OriginParser::ParseOrigin(const nsACString& aOrigin,
-                          uint32_t* aAppId,
-                          bool* aInMozBrowser,
-                          nsCString& aSpec)
+                          nsCString& aSpec,
+                          PrincipalOriginAttributes* aAttrs)
 {
   MOZ_ASSERT(!aOrigin.IsEmpty());
-  MOZ_ASSERT(aAppId);
-  MOZ_ASSERT(aInMozBrowser);
+  MOZ_ASSERT(aAttrs);
 
   OriginParser parser(aOrigin);
-
-  if (!parser.Parse(aAppId, aInMozBrowser, aSpec)) {
-    return false;
-  }
-
-  return true;
+  return parser.Parse(aSpec, aAttrs);
 }
 
 bool
-OriginParser::Parse(uint32_t* aAppId,
-                    bool* aInMozBrowser,
-                    nsACString& aSpec)
+OriginParser::Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs)
 {
-  MOZ_ASSERT(aAppId);
-  MOZ_ASSERT(aInMozBrowser);
+  MOZ_ASSERT(aAttrs);
 
   while (mTokenizer.hasMoreTokens()) {
     const nsDependentCSubstring& token = mTokenizer.nextToken();
@@ -6294,8 +6270,7 @@ OriginParser::Parse(uint32_t* aAppId,
 
   MOZ_ASSERT(mState == eComplete || mState == eHandledTrailingSeparator);
 
-  *aAppId = mAppId;
-  *aInMozBrowser = mInMozBrowser;
+  *aAttrs = PrincipalOriginAttributes(mAppId, mInMozBrowser);
 
   nsAutoCString spec(mSchema);
 
