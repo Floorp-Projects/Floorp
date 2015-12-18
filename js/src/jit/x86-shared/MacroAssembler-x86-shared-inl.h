@@ -80,6 +80,42 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
 // Arithmetic instructions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    addl(src, dest);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    addl(imm, dest);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const AbsoluteAddress& dest)
+{
+    addl(imm, Operand(dest));
+}
+
+void
+MacroAssembler::addFloat32(FloatRegister src, FloatRegister dest)
+{
+    vaddss(src, dest, dest);
+}
+
+void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    vaddsd(src, dest, dest);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     subl(src, dest);
@@ -95,6 +131,53 @@ void
 MacroAssembler::sub32(const Address& src, Register dest)
 {
     subl(Operand(src), dest);
+}
+
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    vsubsd(src, dest, dest);
+}
+
+void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    vmulsd(src, dest, dest);
+}
+
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    vdivsd(src, dest, dest);
+}
+
+void
+MacroAssembler::neg32(Register reg)
+{
+    negl(reg);
+}
+
+void
+MacroAssembler::negateFloat(FloatRegister reg)
+{
+    ScratchFloat32Scope scratch(*this);
+    vpcmpeqw(scratch, scratch, scratch);
+    vpsllq(Imm32(31), scratch, scratch);
+
+    // XOR the float in a float register with -0.0.
+    vxorps(scratch, reg, reg); // s ^ 0x80000000
+}
+
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    // From MacroAssemblerX86Shared::maybeInlineDouble
+    ScratchDoubleScope scratch(*this);
+    vpcmpeqw(scratch, scratch, scratch);
+    vpsllq(Imm32(63), scratch, scratch);
+
+    // XOR the float in a float register with -0.0.
+    vxorpd(scratch, reg, reg); // s ^ 0x80000000000000
 }
 
 //}}} check_macroassembler_style

@@ -233,3 +233,7 @@ function replaceExperiments(experiment, list) {
     },
   });
 }
+
+// Experiments require Telemetry to be enabled, and that's not true for debug
+// builds. Let's just enable it here instead of going through each test.
+Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);

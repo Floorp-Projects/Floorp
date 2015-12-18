@@ -957,7 +957,7 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
 
         RefPtr<gfx::SourceSurface> sourceSurface =
             gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
-        RefPtr<CairoImage> image = new CairoImage(surface->GetSize(), sourceSurface);
+        RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surface->GetSize(), sourceSurface);
 
         nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
         imageList.AppendElement(

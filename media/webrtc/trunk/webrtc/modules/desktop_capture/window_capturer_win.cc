@@ -70,6 +70,12 @@ BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
   // Skip windows when we failed to convert the title or it is empty.
   if (window.title.empty())
     return TRUE;
+  // Skip windows of zero visible area, except IconicWindows
+  RECT bounds;
+  if(GetClientRect(hwnd,&bounds) && !IsIconic(hwnd)
+    && IsRectEmpty(&bounds)){
+    return TRUE;
+  }
 
   list->push_back(window);
 

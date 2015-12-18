@@ -539,7 +539,7 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
     JS::ubi::RootedCount rootCount(cx, rootType->makeCount());
     if (!rootCount)
         return false;
-    JS::ubi::CensusHandler handler(census, rootCount);
+    JS::ubi::CensusHandler handler(census, rootCount, cx->runtime()->debuggerMallocSizeOf);
 
     Debugger* dbg = memory->getDebugger();
     RootedObject dbgObj(cx, dbg->object);
@@ -573,7 +573,7 @@ DebuggerMemory::takeCensus(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    return handler.report(args.rval());
+    return handler.report(cx, args.rval());
 }
 
 

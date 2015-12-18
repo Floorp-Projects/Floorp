@@ -79,6 +79,47 @@ MacroAssembler::xor32(Imm32 imm, Register dest)
 // Arithmetic instructions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    as_addu(dest, dest, src);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    ma_addu(dest, dest, imm);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    load32(dest, SecondScratchReg);
+    ma_addu(SecondScratchReg, imm);
+    store32(SecondScratchReg, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    loadPtr(dest, ScratchRegister);
+    addPtr(imm, ScratchRegister);
+    storePtr(ScratchRegister, dest);
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    loadPtr(src, ScratchRegister);
+    addPtr(ScratchRegister, dest);
+}
+
+void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    as_addd(dest, dest, src);
+}
+
+void
 MacroAssembler::sub32(Register src, Register dest)
 {
     as_subu(dest, dest, src);
@@ -95,6 +136,59 @@ MacroAssembler::sub32(const Address& src, Register dest)
 {
     load32(src, SecondScratchReg);
     as_subu(dest, dest, SecondScratchReg);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    loadPtr(dest, SecondScratchReg);
+    subPtr(src, SecondScratchReg);
+    storePtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    loadPtr(addr, SecondScratchReg);
+    subPtr(SecondScratchReg, dest);
+}
+
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    as_subd(dest, dest, src);
+}
+
+void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    as_muld(dest, dest, src);
+}
+
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    movePtr(imm, ScratchRegister);
+    loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+    mulDouble(ScratchDoubleReg, dest);
+}
+
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    as_divd(dest, dest, src);
+}
+
+void
+MacroAssembler::neg32(Register reg)
+{
+    ma_negu(reg, reg);
+}
+
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    as_negd(reg, reg);
 }
 
 //}}} check_macroassembler_style

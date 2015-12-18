@@ -6116,7 +6116,7 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
 
-    RefPtr<CairoImage> image = new CairoImage(surfaceSizeInt, surface);
+    RefPtr<SourceSurfaceImage> image = new SourceSurfaceImage(surfaceSizeInt, surface);
     container->SetCurrentImageInTransaction(image);
 
     GetMaskLayerImageCache()->PutImage(newKey.forget(), container);

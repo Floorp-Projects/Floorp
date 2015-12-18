@@ -139,10 +139,79 @@ MacroAssembler::xorPtr(Imm32 imm, Register dest)
 // Arithmetic functions
 
 void
+MacroAssembler::add32(Register src, Register dest)
+{
+    ma_add(src, dest, SetCC);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, Register dest)
+{
+    ma_add(imm, dest, SetCC);
+}
+
+void
+MacroAssembler::add32(Imm32 imm, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(dest, scratch);
+    ma_add(imm, scratch, SetCC);
+    store32(scratch, dest);
+}
+
+void
+MacroAssembler::addPtr(Register src, Register dest)
+{
+    ma_add(src, dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, Register dest)
+{
+    ma_add(imm, dest);
+}
+
+void
+MacroAssembler::addPtr(ImmWord imm, Register dest)
+{
+    addPtr(Imm32(imm.value), dest);
+}
+
+void
+MacroAssembler::addPtr(Imm32 imm, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(dest, scratch);
+    addPtr(imm, scratch);
+    storePtr(scratch, dest);
+}
+
+void
+MacroAssembler::addPtr(const Address& src, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    load32(src, scratch);
+    ma_add(scratch, dest, SetCC);
+}
+
+void
 MacroAssembler::add64(Register64 src, Register64 dest)
 {
     ma_add(src.low, dest.low, SetCC);
     ma_adc(src.high, dest.high);
+}
+
+void
+MacroAssembler::add64(Imm32 imm, Register64 dest)
+{
+    ma_add(imm, dest.low, SetCC);
+    ma_adc(Imm32(0), dest.high, LeaveCC);
+}
+
+void
+MacroAssembler::addDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vadd(dest, src, dest);
 }
 
 void
@@ -163,6 +232,125 @@ MacroAssembler::sub32(const Address& src, Register dest)
     ScratchRegisterScope scratch(*this);
     load32(src, scratch);
     ma_sub(scratch, dest, SetCC);
+}
+
+void
+MacroAssembler::subPtr(Register src, Register dest)
+{
+    ma_sub(src, dest);
+}
+
+void
+MacroAssembler::subPtr(Register src, const Address& dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(dest, scratch);
+    ma_sub(src, scratch);
+    storePtr(scratch, dest);
+}
+
+void
+MacroAssembler::subPtr(Imm32 imm, Register dest)
+{
+    ma_sub(imm, dest);
+}
+
+void
+MacroAssembler::subPtr(const Address& addr, Register dest)
+{
+    ScratchRegisterScope scratch(*this);
+    loadPtr(addr, scratch);
+    ma_sub(scratch, dest);
+}
+
+void
+MacroAssembler::subDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vsub(dest, src, dest);
+}
+
+void
+MacroAssembler::mul64(Imm64 imm, const Register64& dest)
+{
+    // LOW32  = LOW(LOW(dest) * LOW(imm));
+    // HIGH32 = LOW(HIGH(dest) * LOW(imm)) [multiply imm into upper bits]
+    //        + LOW(LOW(dest) * HIGH(imm)) [multiply dest into upper bits]
+    //        + HIGH(LOW(dest) * LOW(imm)) [carry]
+
+    // HIGH(dest) = LOW(HIGH(dest) * LOW(imm));
+    ma_mov(Imm32(imm.value & 0xFFFFFFFFL), ScratchRegister);
+    as_mul(dest.high, dest.high, ScratchRegister);
+
+    // high:low = LOW(dest) * LOW(imm);
+    as_umull(secondScratchReg_, ScratchRegister, dest.low, ScratchRegister);
+
+    // HIGH(dest) += high;
+    as_add(dest.high, dest.high, O2Reg(secondScratchReg_));
+
+    // HIGH(dest) += LOW(LOW(dest) * HIGH(imm));
+    if (((imm.value >> 32) & 0xFFFFFFFFL) == 5)
+        as_add(secondScratchReg_, dest.low, lsl(dest.low, 2));
+    else
+        MOZ_CRASH("Not supported imm");
+    as_add(dest.high, dest.high, O2Reg(secondScratchReg_));
+
+    // LOW(dest) = low;
+    ma_mov(ScratchRegister, dest.low);
+}
+
+void
+MacroAssembler::mulBy3(Register src, Register dest)
+{
+    as_add(dest, src, lsl(src, 1));
+}
+
+void
+MacroAssembler::mulDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vmul(dest, src, dest);
+}
+
+void
+MacroAssembler::mulDoublePtr(ImmPtr imm, Register temp, FloatRegister dest)
+{
+    movePtr(imm, ScratchRegister);
+    loadDouble(Address(ScratchRegister, 0), ScratchDoubleReg);
+    mulDouble(ScratchDoubleReg, dest);
+}
+
+void
+MacroAssembler::divDouble(FloatRegister src, FloatRegister dest)
+{
+    ma_vdiv(dest, src, dest);
+}
+
+void
+MacroAssembler::inc64(AbsoluteAddress dest)
+{
+    ScratchRegisterScope scratch(*this);
+
+    ma_strd(r0, r1, EDtrAddr(sp, EDtrOffImm(-8)), PreIndex);
+
+    ma_mov(Imm32((int32_t)dest.addr), scratch);
+    ma_ldrd(EDtrAddr(scratch, EDtrOffImm(0)), r0, r1);
+
+    ma_add(Imm32(1), r0, SetCC);
+    ma_adc(Imm32(0), r1, LeaveCC);
+
+    ma_strd(r0, r1, EDtrAddr(scratch, EDtrOffImm(0)));
+    ma_ldrd(EDtrAddr(sp, EDtrOffImm(8)), r0, r1, PostIndex);
+}
+
+void
+MacroAssembler::neg32(Register reg)
+{
+    ma_neg(reg, reg, SetCC);
+}
+
+void
+MacroAssembler::negateDouble(FloatRegister reg)
+{
+    ma_vneg(reg, reg);
 }
 
 // ===============================================================
@@ -204,6 +392,27 @@ MacroAssembler::rshift64(Imm32 imm, Register64 dest)
 
 //}}} check_macroassembler_style
 // ===============================================================
+
+template <typename T>
+void
+MacroAssemblerARMCompat::branchAdd32(Condition cond, T src, Register dest, Label* label)
+{
+    asMasm().add32(src, dest);
+    j(cond, label);
+}
+
+void
+MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)
+{
+    asMasm().add32(Imm32(1), ToPayload(addr));
+}
+
+void
+MacroAssemblerARMCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
+{
+    asMasm().subPtr(imm, lhs);
+    branch32(cond, lhs, Imm32(0), label);
+}
 
 } // namespace jit
 } // namespace js
