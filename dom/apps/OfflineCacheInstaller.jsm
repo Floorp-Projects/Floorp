@@ -255,7 +255,7 @@ function installCache(app) {
     // The group ID contains application id and 'f' for not being hosted in
     // a browser element, but a mozbrowser iframe.
     // See netwerk/cache/nsDiskCacheDeviceSQL.cpp: AppendJARIdentifier
-    let groupID = appcacheURL + '#' + app.localId+ '+f';
+    let groupID = appcacheURL + '#^appId=' + app.localId;
     let applicationCache = applicationCacheService.createApplicationCache(groupID);
     applicationCache.activate();
 
