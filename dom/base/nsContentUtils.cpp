@@ -6775,29 +6775,6 @@ nsContentUtils::HaveEqualPrincipals(nsIDocument* aDoc1, nsIDocument* aDoc2)
   return principalsEqual;
 }
 
-static void
-CheckForWindowedPlugins(nsISupports* aSupports, void* aResult)
-{
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aSupports));
-  if (!content || !content->IsInDoc()) {
-    return;
-  }
-  nsCOMPtr<nsIObjectLoadingContent> olc(do_QueryInterface(content));
-  if (!olc) {
-    return;
-  }
-  RefPtr<nsNPAPIPluginInstance> plugin;
-  olc->GetPluginInstance(getter_AddRefs(plugin));
-  if (!plugin) {
-    return;
-  }
-  bool isWindowless = false;
-  nsresult res = plugin->IsWindowless(&isWindowless);
-  if (NS_SUCCEEDED(res) && !isWindowless) {
-    *static_cast<bool*>(aResult) = true;
-  }
-}
-
 /* static */
 bool
 nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
@@ -6805,10 +6782,30 @@ nsContentUtils::HasPluginWithUncontrolledEventDispatch(nsIContent* aContent)
 #ifdef XP_MACOSX
   // We control dispatch to all mac plugins.
   return false;
+#else
+  if (!aContent || !aContent->IsInDoc()) {
+    return false;
+  }
+
+  nsCOMPtr<nsIObjectLoadingContent> olc = do_QueryInterface(aContent);
+  if (!olc) {
+    return false;
+  }
+
+  RefPtr<nsNPAPIPluginInstance> plugin;
+  olc->GetPluginInstance(getter_AddRefs(plugin));
+  if (!plugin) {
+    return false;
+  }
+
+  bool isWindowless = false;
+  nsresult res = plugin->IsWindowless(&isWindowless);
+  if (NS_FAILED(res)) {
+    return false;
+  }
+
+  return !isWindowless;
 #endif
-  bool result = false;
-  CheckForWindowedPlugins(aContent, &result);
-  return result;
 }
 
 /* static */
