@@ -1809,6 +1809,14 @@
      *   Stack: => val
      */ \
     macro(JSOP_GETIMPORT,     176,"getimport",  NULL,     5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    /*
+     * Examines the top stack value, asserting that it's either a self-hosted
+     * function or a self-hosted intrinsic. This opcode does nothing in an
+     * optimized build.
+     *   Category: Other
+     *   Operands:
+     *   Stack: checkVal => checkVal
+     */ \
     macro(JSOP_DEBUGCHECKSELFHOSTED, 177,"debug-checkselfhosted",  NULL, 1,  1,  1,  JOF_BYTE) \
     macro(JSOP_UNUSED178,     178,"unused178",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED179,     179,"unused179",  NULL,     1,  0,  0,  JOF_BYTE) \
