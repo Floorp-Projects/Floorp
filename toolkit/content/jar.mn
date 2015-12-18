@@ -23,7 +23,7 @@ toolkit.jar:
 #endif
    content/global/aboutNetworking.js
    content/global/aboutNetworking.xhtml
-   content/global/aboutProfiles.js
+*  content/global/aboutProfiles.js
    content/global/aboutProfiles.xhtml
    content/global/aboutServiceWorkers.js
    content/global/aboutServiceWorkers.xhtml

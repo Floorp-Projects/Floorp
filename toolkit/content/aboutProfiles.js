@@ -49,6 +49,12 @@ function refreshUI() {
   restartNormalModeButton.onclick = function() { restart(false); }
 }
 
+function openDirectory(dir) {
+  let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+  new nsLocalFile(dir).reveal();
+}
+
 function display(profileData) {
   let parent = document.getElementById('profiles');
 
@@ -73,7 +79,7 @@ function display(profileData) {
   let tbody = document.createElement('tbody');
   table.appendChild(tbody);
 
-  function createItem(title, value) {
+  function createItem(title, value, dir = false) {
     let tr = document.createElement('tr');
     tbody.appendChild(tr);
 
@@ -85,15 +91,35 @@ function display(profileData) {
     let td = document.createElement('td');
     td.appendChild(document.createTextNode(value));
     tr.appendChild(td);
+
+    if (dir) {
+      td.appendChild(document.createTextNode(' '));
+      let button = document.createElement('button');
+      let buttonText = document.createTextNode(bundle.GetStringFromName(
+#ifdef XP_WIN
+        'winOpenDir'
+#elif XP_MACOSX
+        'macOpenDir'
+#else
+        'openDir'
+#endif
+      ));
+      button.appendChild(buttonText);
+      td.appendChild(button);
+
+      button.addEventListener('click', function(e) {
+        openDirectory(value);
+      });
+    }
   }
 
   createItem(bundle.GetStringFromName('isDefault'),
              profileData.isDefault ? bundle.GetStringFromName('yes') : bundle.GetStringFromName('no'));
 
-  createItem(bundle.GetStringFromName('rootDir'), profileData.profile.rootDir.path);
+  createItem(bundle.GetStringFromName('rootDir'), profileData.profile.rootDir.path, true);
 
   if (profileData.profile.localDir.path != profileData.profile.rootDir.path) {
-    createItem(bundle.GetStringFromName('localDir'), profileData.profile.localDir.path);
+    createItem(bundle.GetStringFromName('localDir'), profileData.profile.localDir.path, true);
   }
 
   let renameButton = document.createElement('button');
