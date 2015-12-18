@@ -7,11 +7,9 @@
 #ifndef SkReduceOrder_DEFINED
 #define SkReduceOrder_DEFINED
 
-#include "SkPath.h"
 #include "SkPathOpsCubic.h"
 #include "SkPathOpsLine.h"
 #include "SkPathOpsQuad.h"
-#include "SkTArray.h"
 
 union SkReduceOrder {
     enum Quadratics {
@@ -23,6 +21,7 @@ union SkReduceOrder {
     int reduce(const SkDLine& line);
     int reduce(const SkDQuad& quad);
 
+    static SkPath::Verb Conic(const SkPoint pts[3], SkScalar weight, SkPoint* reducePts);
     static SkPath::Verb Cubic(const SkPoint pts[4], SkPoint* reducePts);
     static SkPath::Verb Quad(const SkPoint pts[3], SkPoint* reducePts);
 

@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
@@ -10,7 +9,8 @@
 #define SkTScopedComPtr_DEFINED
 
 #include "SkTypes.h"
-#include "SkTemplates.h"
+
+#ifdef SK_BUILD_FOR_WIN
 
 template<typename T>
 class SkBlockComRef : public T {
@@ -54,7 +54,7 @@ public:
     T **operator&() { SkASSERT(fPtr == NULL); return &fPtr; }
     T *get() const { return fPtr; }
     void reset() {
-        if (NULL != this->fPtr) {
+        if (this->fPtr) {
             this->fPtr->Release();
             this->fPtr = NULL;
         }
@@ -73,4 +73,5 @@ public:
     }
 };
 
-#endif
+#endif  // SK_BUILD_FOR_WIN
+#endif  // SkTScopedComPtr_DEFINED

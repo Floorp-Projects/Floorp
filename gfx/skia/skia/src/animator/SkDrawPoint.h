@@ -24,7 +24,7 @@ private:
 class SkDrawPoint : public SkDisplayable {
     DECLARE_MEMBER_INFO(DrawPoint);
     SkDrawPoint();
-    virtual void getBounds(SkRect*  );
+    void getBounds(SkRect* ) override;
 private:
     SkPoint fPoint;
     typedef SkDisplayable INHERITED;

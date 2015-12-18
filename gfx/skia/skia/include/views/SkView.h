@@ -210,7 +210,7 @@ public:
      *  Return true on success; false on failure
      */
     bool        globalToLocal(SkPoint* pt) const {
-        if (NULL != pt) {
+        if (pt) {
             return this->globalToLocal(pt->fX, pt->fY, pt);
         }
         return true;  // nothing to do so return true
@@ -258,7 +258,7 @@ public:
     */
     class Artist : public SkRefCnt {
     public:
-        SK_DECLARE_INST_COUNT(Artist)
+        
 
         void draw(SkView*, SkCanvas*);
         void inflate(const SkDOM&, const SkDOM::Node*);
@@ -286,7 +286,7 @@ public:
     */
     class Layout : public SkRefCnt {
     public:
-        SK_DECLARE_INST_COUNT(Layout)
+        
 
         void layoutChildren(SkView* parent);
         void inflate(const SkDOM&, const SkDOM::Node*);
@@ -337,12 +337,12 @@ protected:
     //! called once before all of the children are drawn (or clipped/translated)
     virtual SkCanvas* beforeChildren(SkCanvas* c) { return c; }
     //! called once after all of the children are drawn (or clipped/translated)
-    virtual void afterChildren(SkCanvas* orig) {}
+    virtual void afterChildren(SkCanvas*) {}
 
     //! called right before this child's onDraw is called
-    virtual void beforeChild(SkView* child, SkCanvas* canvas) {}
+    virtual void beforeChild(SkView* /*child*/, SkCanvas*) {}
     //! called right after this child's onDraw is called
-    virtual void afterChild(SkView* child, SkCanvas* canvas) {}
+    virtual void afterChild(SkView* /*child*/, SkCanvas*) {}
 
     /** Override this if you might handle the click
     */

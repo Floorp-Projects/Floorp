@@ -10,6 +10,8 @@
 
 #include "SkImageInfo.h"
 
+class SkColorTable;
+
 struct SkPixelInfo {
     SkColorType fColorType;
     SkAlphaType fAlphaType;
@@ -17,7 +19,7 @@ struct SkPixelInfo {
 
     static bool CopyPixels(const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
                            const SkImageInfo& srcInfo, const void* srcPixels, size_t srcRowBytes,
-                           SkColorTable* srcCTable = NULL);
+                           SkColorTable* srcCTable = nullptr);
 };
 
 struct SkDstPixelInfo : SkPixelInfo {
@@ -31,5 +33,16 @@ struct SkSrcPixelInfo : SkPixelInfo {
     // (but not if they overlap partially)
     bool convertPixelsTo(SkDstPixelInfo* dst, int width, int height) const;
 };
+
+static inline void SkRectMemcpy(void* dst, size_t dstRB, const void* src, size_t srcRB,
+                                size_t bytesPerRow, int rowCount) {
+    SkASSERT(bytesPerRow <= srcRB);
+    SkASSERT(bytesPerRow <= dstRB);
+    for (int i = 0; i < rowCount; ++i) {
+        memcpy(dst, src, bytesPerRow);
+        dst = (char*)dst + dstRB;
+        src = (const char*)src + srcRB;
+    }
+}
 
 #endif

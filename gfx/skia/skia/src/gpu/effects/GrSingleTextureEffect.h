@@ -8,9 +8,10 @@
 #ifndef GrSingleTextureEffect_DEFINED
 #define GrSingleTextureEffect_DEFINED
 
-#include "GrEffect.h"
-#include "SkMatrix.h"
+#include "GrFragmentProcessor.h"
 #include "GrCoordTransform.h"
+#include "GrInvariantOutput.h"
+#include "SkMatrix.h"
 
 class GrTexture;
 
@@ -18,9 +19,15 @@ class GrTexture;
  * A base class for effects that draw a single texture with a texture matrix. This effect has no
  * backend implementations. One must be provided by the subclass.
  */
-class GrSingleTextureEffect : public GrEffect {
+class GrSingleTextureEffect : public GrFragmentProcessor {
 public:
-    virtual ~GrSingleTextureEffect();
+    ~GrSingleTextureEffect() override;
+
+    SkString dumpInfo() const override {
+        SkString str;
+        str.appendf("Texture: %d", fTextureAccess.getTexture()->getUniqueID());
+        return str;
+    }
 
 protected:
     /** unfiltered, clamp mode */
@@ -34,26 +41,17 @@ protected:
                           GrCoordSet = kLocal_GrCoordSet);
 
     /**
-     * Helper for subclass onIsEqual() functions.
-     */
-    bool hasSameTextureParamsMatrixAndSourceCoords(const GrSingleTextureEffect& other) const {
-        // We don't have to check the accesses' swizzles because they are inferred from the texture.
-        return fTextureAccess == other.fTextureAccess &&
-               fCoordTransform.getMatrix().cheapEqualTo(other.fCoordTransform.getMatrix()) &&
-               fCoordTransform.sourceCoords() == other.fCoordTransform.sourceCoords();
-    }
-
-    /**
-     * Can be used as a helper to implement subclass getConstantColorComponents(). It assumes that
+     * Can be used as a helper to implement subclass onComputeInvariantOutput(). It assumes that
      * the subclass output color will be a modulation of the input color with a value read from the
      * texture.
      */
-    void updateConstantColorComponentsForModulation(GrColor* color, uint32_t* validFlags) const {
-        if ((*validFlags & kA_GrColorComponentFlag) && 0xFF == GrColorUnpackA(*color) &&
-            GrPixelConfigIsOpaque(this->texture(0)->config())) {
-            *validFlags = kA_GrColorComponentFlag;
+    void updateInvariantOutputForModulation(GrInvariantOutput* inout) const {
+        if (GrPixelConfigIsAlphaOnly(this->texture(0)->config())) {
+            inout->mulByUnknownSingleComponent();
+        } else if (GrPixelConfigIsOpaque(this->texture(0)->config())) {
+            inout->mulByUnknownOpaqueFourComponents();
         } else {
-            *validFlags = 0;
+            inout->mulByUnknownFourComponents();
         }
     }
 
@@ -61,7 +59,7 @@ private:
     GrCoordTransform fCoordTransform;
     GrTextureAccess  fTextureAccess;
 
-    typedef GrEffect INHERITED;
+    typedef GrFragmentProcessor INHERITED;
 };
 
 #endif

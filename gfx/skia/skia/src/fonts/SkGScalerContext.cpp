@@ -16,13 +16,13 @@ public:
     virtual ~SkGScalerContext();
 
 protected:
-    virtual unsigned generateGlyphCount() SK_OVERRIDE;
-    virtual uint16_t generateCharToGlyph(SkUnichar) SK_OVERRIDE;
-    virtual void generateAdvance(SkGlyph*) SK_OVERRIDE;
-    virtual void generateMetrics(SkGlyph*) SK_OVERRIDE;
-    virtual void generateImage(const SkGlyph&) SK_OVERRIDE;
-    virtual void generatePath(const SkGlyph&, SkPath*) SK_OVERRIDE;
-    virtual void generateFontMetrics(SkPaint::FontMetrics*) SK_OVERRIDE;
+    unsigned generateGlyphCount() override;
+    uint16_t generateCharToGlyph(SkUnichar) override;
+    void generateAdvance(SkGlyph*) override;
+    void generateMetrics(SkGlyph*) override;
+    void generateImage(const SkGlyph&) override;
+    void generatePath(const SkGlyph&, SkPath*) override;
+    void generateFontMetrics(SkPaint::FontMetrics*) override;
 
 private:
     SkGTypeface*     fFace;
@@ -63,9 +63,7 @@ SkGScalerContext::SkGScalerContext(SkGTypeface* face, const SkDescriptor* desc)
     fMatrix.preScale(SK_Scalar1 / STD_SIZE, SK_Scalar1 / STD_SIZE);
 }
 
-SkGScalerContext::~SkGScalerContext() {
-    SkDELETE(fProxy);
-}
+SkGScalerContext::~SkGScalerContext() { delete fProxy; }
 
 unsigned SkGScalerContext::generateGlyphCount() {
     return fProxy->getGlyphCount();
@@ -158,7 +156,7 @@ void SkGScalerContext::generateFontMetrics(SkPaint::FontMetrics* metrics) {
 #include "SkTypefaceCache.h"
 
 SkGTypeface::SkGTypeface(SkTypeface* proxy, const SkPaint& paint)
-    : SkTypeface(proxy->style(), SkTypefaceCache::NewFontID(), false)
+    : SkTypeface(proxy->fontStyle(), SkTypefaceCache::NewFontID(), false)
     , fProxy(SkRef(proxy))
     , fPaint(paint) {}
 
@@ -168,7 +166,7 @@ SkGTypeface::~SkGTypeface() {
 
 SkScalerContext* SkGTypeface::onCreateScalerContext(
                                             const SkDescriptor* desc) const {
-    return SkNEW_ARGS(SkGScalerContext, (const_cast<SkGTypeface*>(this), desc));
+    return new SkGScalerContext(const_cast<SkGTypeface*>(this), desc);
 }
 
 void SkGTypeface::onFilterRec(SkScalerContextRec* rec) const {
@@ -178,13 +176,13 @@ void SkGTypeface::onFilterRec(SkScalerContextRec* rec) const {
 }
 
 SkAdvancedTypefaceMetrics* SkGTypeface::onGetAdvancedTypefaceMetrics(
-                                SkAdvancedTypefaceMetrics::PerGlyphInfo info,
+                                PerGlyphInfo info,
                                 const uint32_t* glyphIDs,
                                 uint32_t glyphIDsCount) const {
     return fProxy->getAdvancedTypefaceMetrics(info, glyphIDs, glyphIDsCount);
 }
 
-SkStream* SkGTypeface::onOpenStream(int* ttcIndex) const {
+SkStreamAsset* SkGTypeface::onOpenStream(int* ttcIndex) const {
     return fProxy->openStream(ttcIndex);
 }
 
@@ -204,6 +202,10 @@ int SkGTypeface::onCountGlyphs() const {
 
 int SkGTypeface::onGetUPEM() const {
     return fProxy->getUnitsPerEm();
+}
+
+void SkGTypeface::onGetFamilyName(SkString* familyName) const {
+    fProxy->getFamilyName(familyName);
 }
 
 SkTypeface::LocalizedStrings* SkGTypeface::onCreateFamilyNameIterator() const {

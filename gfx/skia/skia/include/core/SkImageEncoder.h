@@ -1,14 +1,14 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #ifndef SkImageEncoder_DEFINED
 #define SkImageEncoder_DEFINED
 
-#include "SkTypes.h"
+#include "SkImageInfo.h"
 #include "SkTRegistry.h"
 
 class SkBitmap;
@@ -17,6 +17,7 @@ class SkWStream;
 
 class SkImageEncoder {
 public:
+    // TODO (scroggo): Merge with SkEncodedFormat.
     enum Type {
         kUnknown_Type,
         kBMP_Type,
@@ -59,7 +60,10 @@ public:
      */
     bool encodeStream(SkWStream* stream, const SkBitmap& bm, int quality);
 
+    static SkData* EncodeData(const SkImageInfo&, const void* pixels, size_t rowBytes,
+                              Type, int quality);
     static SkData* EncodeData(const SkBitmap&, Type, int quality);
+
     static bool EncodeFile(const char file[], const SkBitmap&, Type,
                            int quality);
     static bool EncodeStream(SkWStream*, const SkBitmap&, Type,
@@ -83,10 +87,8 @@ protected:
 
 // This macro defines the global creation entry point for each encoder. Each
 // encoder implementation that registers with the encoder factory must call it.
-#define DEFINE_ENCODER_CREATOR(codec)           \
-    SkImageEncoder *Create ## codec () {        \
-        return SkNEW( Sk ## codec );            \
-    }
+#define DEFINE_ENCODER_CREATOR(codec) \
+    SkImageEncoder* Create##codec() { return new Sk##codec; }
 
 // All the encoders known by Skia. Note that, depending on the compiler settings,
 // not all of these will be available

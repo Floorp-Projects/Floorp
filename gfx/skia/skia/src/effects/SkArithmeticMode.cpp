@@ -12,11 +12,7 @@
 #include "SkString.h"
 #include "SkUnPreMultiply.h"
 #if SK_SUPPORT_GPU
-#include "GrContext.h"
-#include "GrCoordTransform.h"
-#include "gl/GrGLEffect.h"
-#include "gl/GrGLShaderBuilder.h"
-#include "GrTBackendEffectFactory.h"
+#include "SkArithmeticMode_gpu.h"
 #endif
 
 static const bool gUseUnpremul = false;
@@ -25,17 +21,20 @@ class SkArithmeticMode_scalar : public SkXfermode {
 public:
     static SkArithmeticMode_scalar* Create(SkScalar k1, SkScalar k2, SkScalar k3, SkScalar k4,
                                            bool enforcePMColor) {
-        return SkNEW_ARGS(SkArithmeticMode_scalar, (k1, k2, k3, k4, enforcePMColor));
+        return new SkArithmeticMode_scalar(k1, k2, k3, k4, enforcePMColor);
     }
 
     virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count,
-                        const SkAlpha aa[]) const SK_OVERRIDE;
+                        const SkAlpha aa[]) const override;
 
     SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkArithmeticMode_scalar)
 
 #if SK_SUPPORT_GPU
-    virtual bool asNewEffect(GrEffect** effect, GrTexture* background) const SK_OVERRIDE;
+    bool asFragmentProcessor(const GrFragmentProcessor**,
+                             const GrFragmentProcessor* dst) const override;
+
+    bool asXPFactory(GrXPFactory**) const override;
 #endif
 
 private:
@@ -47,16 +46,7 @@ private:
         fEnforcePMColor = enforcePMColor;
     }
 
-    SkArithmeticMode_scalar(SkReadBuffer& buffer) : INHERITED(buffer) {
-        fK[0] = buffer.readScalar();
-        fK[1] = buffer.readScalar();
-        fK[2] = buffer.readScalar();
-        fK[3] = buffer.readScalar();
-        fEnforcePMColor = buffer.readBool();
-    }
-
-    virtual void flatten(SkWriteBuffer& buffer) const SK_OVERRIDE {
-        INHERITED::flatten(buffer);
+    void flatten(SkWriteBuffer& buffer) const override {
         buffer.writeScalar(fK[0]);
         buffer.writeScalar(fK[1]);
         buffer.writeScalar(fK[2]);
@@ -66,8 +56,19 @@ private:
     SkScalar fK[4];
     bool fEnforcePMColor;
 
+    friend class SkArithmeticMode;
+
     typedef SkXfermode INHERITED;
 };
+
+SkFlattenable* SkArithmeticMode_scalar::CreateProc(SkReadBuffer& buffer) {
+    const SkScalar k1 = buffer.readScalar();
+    const SkScalar k2 = buffer.readScalar();
+    const SkScalar k3 = buffer.readScalar();
+    const SkScalar k4 = buffer.readScalar();
+    const bool enforcePMColor = buffer.readBool();
+    return Create(k1, k2, k3, k4, enforcePMColor);
+}
 
 static int pinToByte(int value) {
     if (value < 0) {
@@ -104,7 +105,7 @@ void SkArithmeticMode_scalar::xfer32(SkPMColor dst[], const SkPMColor src[],
     SkScalar k4 = fK[3] * 255;
 
     for (int i = 0; i < count; ++i) {
-        if ((NULL == aaCoverage) || aaCoverage[i]) {
+        if ((nullptr == aaCoverage) || aaCoverage[i]) {
             SkPMColor sc = src[i];
             SkPMColor dc = dst[i];
 
@@ -216,15 +217,15 @@ SkXfermode* SkArithmeticMode::Create(SkScalar k1, SkScalar k2,
         int32_t i3 = toDot8(k3);
         int32_t i4 = toDot8(k4);
         if (i1) {
-            return SkNEW_ARGS(SkArithmeticMode_quad, (i1, i2, i3, i4));
+            return new SkArithmeticMode_quad  (i1, i2, i3, i4);
         }
         if (0 == i2) {
-            return SkNEW_ARGS(SkArithmeticMode_dst, (i3, i4));
+            return new SkArithmeticMode_dst  (i3, i4);
         }
         if (0 == i3) {
-            return SkNEW_ARGS(SkArithmeticMode_src, (i2, i4));
+            return new SkArithmeticMode_src  (i2, i4);
         }
-        return SkNEW_ARGS(SkArithmeticMode_linear, (i2, i3, i4));
+        return new SkArithmeticMode_linear  (i2, i3, i4);
 #endif
     }
     return SkArithmeticMode_scalar::Create(k1, k2, k3, k4, enforcePMColor);
@@ -234,206 +235,26 @@ SkXfermode* SkArithmeticMode::Create(SkScalar k1, SkScalar k2,
 //////////////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
-
-class GrGLArithmeticEffect : public GrGLEffect {
-public:
-    GrGLArithmeticEffect(const GrBackendEffectFactory&, const GrDrawEffect&);
-    virtual ~GrGLArithmeticEffect();
-
-    virtual void emitCode(GrGLShaderBuilder*,
-                          const GrDrawEffect&,
-                          const GrEffectKey&,
-                          const char* outputColor,
-                          const char* inputColor,
-                          const TransformedCoordsArray&,
-                          const TextureSamplerArray&) SK_OVERRIDE;
-
-    virtual void setData(const GrGLUniformManager&, const GrDrawEffect&) SK_OVERRIDE;
-
-    static void GenKey(const GrDrawEffect&, const GrGLCaps& caps, GrEffectKeyBuilder* b);
-
-private:
-    GrGLUniformManager::UniformHandle fKUni;
-    bool fEnforcePMColor;
-
-    typedef GrGLEffect INHERITED;
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
-class GrArithmeticEffect : public GrEffect {
-public:
-    static GrEffect* Create(float k1, float k2, float k3, float k4, bool enforcePMColor,
-                               GrTexture* background) {
-        return SkNEW_ARGS(GrArithmeticEffect, (k1, k2, k3, k4, enforcePMColor, background));
+bool SkArithmeticMode_scalar::asFragmentProcessor(const GrFragmentProcessor** fp,
+                                                  const GrFragmentProcessor* dst) const {
+    if (fp) {
+        *fp = GrArithmeticFP::Create(SkScalarToFloat(fK[0]),
+                                     SkScalarToFloat(fK[1]),
+                                     SkScalarToFloat(fK[2]),
+                                     SkScalarToFloat(fK[3]),
+                                     fEnforcePMColor,
+                                     dst);
     }
-
-    virtual ~GrArithmeticEffect();
-
-    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
-
-    typedef GrGLArithmeticEffect GLEffect;
-    static const char* Name() { return "Arithmetic"; }
-    GrTexture* backgroundTexture() const { return fBackgroundAccess.getTexture(); }
-
-    virtual void getConstantColorComponents(GrColor* color, uint32_t* validFlags) const SK_OVERRIDE;
-
-    float k1() const { return fK1; }
-    float k2() const { return fK2; }
-    float k3() const { return fK3; }
-    float k4() const { return fK4; }
-    bool enforcePMColor() const { return fEnforcePMColor; }
-
-private:
-    virtual bool onIsEqual(const GrEffect&) const SK_OVERRIDE;
-
-    GrArithmeticEffect(float k1, float k2, float k3, float k4, bool enforcePMColor,
-                       GrTexture* background);
-    float                       fK1, fK2, fK3, fK4;
-    bool                        fEnforcePMColor;
-    GrCoordTransform            fBackgroundTransform;
-    GrTextureAccess             fBackgroundAccess;
-
-    GR_DECLARE_EFFECT_TEST;
-    typedef GrEffect INHERITED;
-
-};
-
-///////////////////////////////////////////////////////////////////////////////
-
-GrArithmeticEffect::GrArithmeticEffect(float k1, float k2, float k3, float k4,
-                                       bool enforcePMColor, GrTexture* background)
-  : fK1(k1), fK2(k2), fK3(k3), fK4(k4), fEnforcePMColor(enforcePMColor) {
-    if (background) {
-        fBackgroundTransform.reset(kLocal_GrCoordSet, background);
-        this->addCoordTransform(&fBackgroundTransform);
-        fBackgroundAccess.reset(background);
-        this->addTextureAccess(&fBackgroundAccess);
-    } else {
-        this->setWillReadDstColor();
-    }
+    return true;
 }
 
-GrArithmeticEffect::~GrArithmeticEffect() {
-}
-
-bool GrArithmeticEffect::onIsEqual(const GrEffect& sBase) const {
-    const GrArithmeticEffect& s = CastEffect<GrArithmeticEffect>(sBase);
-    return fK1 == s.fK1 &&
-           fK2 == s.fK2 &&
-           fK3 == s.fK3 &&
-           fK4 == s.fK4 &&
-           fEnforcePMColor == s.fEnforcePMColor &&
-           backgroundTexture() == s.backgroundTexture();
-}
-
-const GrBackendEffectFactory& GrArithmeticEffect::getFactory() const {
-    return GrTBackendEffectFactory<GrArithmeticEffect>::getInstance();
-}
-
-void GrArithmeticEffect::getConstantColorComponents(GrColor* color, uint32_t* validFlags) const {
-    // TODO: optimize this
-    *validFlags = 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-
-GrGLArithmeticEffect::GrGLArithmeticEffect(const GrBackendEffectFactory& factory,
-                                           const GrDrawEffect& drawEffect)
-   : INHERITED(factory),
-     fEnforcePMColor(true) {
-}
-
-GrGLArithmeticEffect::~GrGLArithmeticEffect() {
-}
-
-void GrGLArithmeticEffect::emitCode(GrGLShaderBuilder* builder,
-                                    const GrDrawEffect& drawEffect,
-                                    const GrEffectKey& key,
-                                    const char* outputColor,
-                                    const char* inputColor,
-                                    const TransformedCoordsArray& coords,
-                                    const TextureSamplerArray& samplers) {
-
-    GrTexture* backgroundTex = drawEffect.castEffect<GrArithmeticEffect>().backgroundTexture();
-    const char* dstColor;
-    if (backgroundTex) {
-        builder->fsCodeAppend("\t\tvec4 bgColor = ");
-        builder->fsAppendTextureLookup(samplers[0], coords[0].c_str(), coords[0].type());
-        builder->fsCodeAppendf(";\n");
-        dstColor = "bgColor";
-    } else {
-        dstColor = builder->dstColor();
-    }
-
-    SkASSERT(NULL != dstColor);
-    fKUni = builder->addUniform(GrGLShaderBuilder::kFragment_Visibility,
-                                kVec4f_GrSLType, "k");
-    const char* kUni = builder->getUniformCStr(fKUni);
-
-    // We don't try to optimize for this case at all
-    if (NULL == inputColor) {
-        builder->fsCodeAppendf("\t\tconst vec4 src = vec4(1);\n");
-    } else {
-        builder->fsCodeAppendf("\t\tvec4 src = %s;\n", inputColor);
-        if (gUseUnpremul) {
-            builder->fsCodeAppendf("\t\tsrc.rgb = clamp(src.rgb / src.a, 0.0, 1.0);\n");
-        }
-    }
-
-    builder->fsCodeAppendf("\t\tvec4 dst = %s;\n", dstColor);
-    if (gUseUnpremul) {
-        builder->fsCodeAppendf("\t\tdst.rgb = clamp(dst.rgb / dst.a, 0.0, 1.0);\n");
-    }
-
-    builder->fsCodeAppendf("\t\t%s = %s.x * src * dst + %s.y * src + %s.z * dst + %s.w;\n", outputColor, kUni, kUni, kUni, kUni);
-    builder->fsCodeAppendf("\t\t%s = clamp(%s, 0.0, 1.0);\n", outputColor, outputColor);
-    if (gUseUnpremul) {
-        builder->fsCodeAppendf("\t\t%s.rgb *= %s.a;\n", outputColor, outputColor);
-    } else if (fEnforcePMColor) {
-        builder->fsCodeAppendf("\t\t%s.rgb = min(%s.rgb, %s.a);\n", outputColor, outputColor, outputColor);
-    }
-}
-
-void GrGLArithmeticEffect::setData(const GrGLUniformManager& uman, const GrDrawEffect& drawEffect) {
-    const GrArithmeticEffect& arith = drawEffect.castEffect<GrArithmeticEffect>();
-    uman.set4f(fKUni, arith.k1(), arith.k2(), arith.k3(), arith.k4());
-    fEnforcePMColor = arith.enforcePMColor();
-}
-
-void GrGLArithmeticEffect::GenKey(const GrDrawEffect& drawEffect,
-                                  const GrGLCaps&, GrEffectKeyBuilder* b) {
-    const GrArithmeticEffect& arith = drawEffect.castEffect<GrArithmeticEffect>();
-    uint32_t key = arith.enforcePMColor() ? 1 : 0;
-    if (arith.backgroundTexture()) {
-        key |= 2;
-    }
-    b->add32(key);
-}
-
-GrEffect* GrArithmeticEffect::TestCreate(SkRandom* rand,
-                                         GrContext*,
-                                         const GrDrawTargetCaps&,
-                                         GrTexture*[]) {
-    float k1 = rand->nextF();
-    float k2 = rand->nextF();
-    float k3 = rand->nextF();
-    float k4 = rand->nextF();
-    bool enforcePMColor = rand->nextBool();
-
-    return SkNEW_ARGS(GrArithmeticEffect, (k1, k2, k3, k4, enforcePMColor, NULL));
-}
-
-GR_DEFINE_EFFECT_TEST(GrArithmeticEffect);
-
-bool SkArithmeticMode_scalar::asNewEffect(GrEffect** effect, GrTexture* background) const {
-    if (effect) {
-        *effect = GrArithmeticEffect::Create(SkScalarToFloat(fK[0]),
+bool SkArithmeticMode_scalar::asXPFactory(GrXPFactory** xpf) const {
+    if (xpf) {
+        *xpf = GrArithmeticXPFactory::Create(SkScalarToFloat(fK[0]),
                                              SkScalarToFloat(fK[1]),
                                              SkScalarToFloat(fK[2]),
                                              SkScalarToFloat(fK[3]),
-                                             fEnforcePMColor,
-                                             background);
+                                             fEnforcePMColor);
     }
     return true;
 }

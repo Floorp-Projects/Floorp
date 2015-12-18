@@ -8,25 +8,43 @@
 #ifndef SkPaintPriv_DEFINED
 #define SkPaintPriv_DEFINED
 
+#include "SkTypes.h"
+
 class SkBitmap;
+class SkImage;
 class SkPaint;
 
-#include "SkTypes.h"
-/** Returns true if draw calls that use the paint will completely occlude
-    canvas contents that are covered by the draw.
-    @param paint The paint to be analyzed, NULL is equivalent to
-        the default paint.
-    @param bmpReplacesShader a bitmap to be used in place of the paint's
-        shader.
-    @return true if paint is opaque
-*/
-bool isPaintOpaque(const SkPaint* paint,
-                   const SkBitmap* bmpReplacesShader = NULL);
+class SkPaintPriv {
+public:
+    enum ShaderOverrideOpacity {
+        kNone_ShaderOverrideOpacity,        //!< there is no overriding shader (bitmap or image)
+        kOpaque_ShaderOverrideOpacity,      //!< the overriding shader is opaque
+        kNotOpaque_ShaderOverrideOpacity,   //!< the overriding shader may not be opaque
+    };
+    
+    /**
+     *  Returns true if drawing with this paint (or nullptr) will ovewrite all affected pixels.
+     *
+     *  Note: returns conservative true, meaning it may return false even though the paint might
+     *        in fact overwrite its pixels.
+     */
+    static bool Overwrites(const SkPaint* paint, ShaderOverrideOpacity);
 
-/** Returns true if the provided paint has fields which are not
-    immutable (and will thus require deep copying).
-    @param paint the paint to be analyzed
-    @return true if the paint requires a deep copy
-*/
-bool NeedsDeepCopy(const SkPaint& paint);
+    static bool Overwrites(const SkPaint& paint) {
+        return Overwrites(&paint, kNone_ShaderOverrideOpacity);
+    }
+
+    /**
+     *  Returns true if drawing this bitmap with this paint (or nullptr) will ovewrite all affected
+     *  pixels.
+     */
+    static bool Overwrites(const SkBitmap&, const SkPaint* paint);
+
+    /**
+     *  Returns true if drawing this image with this paint (or nullptr) will ovewrite all affected
+     *  pixels.
+     */
+    static bool Overwrites(const SkImage*, const SkPaint* paint);
+};
+
 #endif
