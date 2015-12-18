@@ -91,6 +91,8 @@ public:
     return mPictureRect.Height();
   }
 
+  void Close();
+
   /*
    * The PrepareForDrawTarget() might return null if the mPictureRect does not
    * intersect with the size of mData.
