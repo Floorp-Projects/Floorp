@@ -35,7 +35,7 @@ struct OffscreenCanvasCloneData final
   OffscreenCanvasCloneData(layers::AsyncCanvasRenderer* aRenderer,
                            uint32_t aWidth, uint32_t aHeight,
                            layers::LayersBackend aCompositorBackend,
-                           bool aNeutered);
+                           bool aNeutered, bool aIsWriteOnly);
   ~OffscreenCanvasCloneData();
 
   RefPtr<layers::AsyncCanvasRenderer> mRenderer;
@@ -43,6 +43,7 @@ struct OffscreenCanvasCloneData final
   uint32_t mHeight;
   layers::LayersBackend mCompositorBackendType;
   bool mNeutered;
+  bool mIsWriteOnly;
 };
 
 class OffscreenCanvas final : public DOMEventTargetHelper
@@ -147,6 +148,16 @@ public:
     return mNeutered;
   }
 
+  void SetWriteOnly()
+  {
+    mIsWriteOnly = true;
+  }
+
+  bool IsWriteOnly() const
+  {
+    return mIsWriteOnly;
+  }
+
   layers::LayersBackend GetCompositorBackendType() const
   {
     return mCompositorBackendType;
@@ -164,6 +175,7 @@ private:
 
   bool mAttrDirty;
   bool mNeutered;
+  bool mIsWriteOnly;
 
   uint32_t mWidth;
   uint32_t mHeight;
