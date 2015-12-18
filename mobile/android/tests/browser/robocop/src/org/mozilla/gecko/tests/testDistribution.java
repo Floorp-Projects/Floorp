@@ -24,7 +24,6 @@ import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.db.BrowserContract;
-import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.ReferrerDescriptor;
 import org.mozilla.gecko.distribution.ReferrerReceiver;
@@ -134,20 +133,6 @@ public class testDistribution extends ContentProviderTest {
         // Wait for any startup-related background distribution shenanigans to
         // finish. This reduces the chance of us racing with startup pref writes.
         waitForBackgroundHappiness();
-
-        // Pre-clear distribution pref, override suggested sites and run tiles tests.
-        clearDistributionPref();
-        Distribution dist = initDistribution(mockPackagePath);
-        SuggestedSites suggestedSites = new SuggestedSites(mActivity, dist);
-        GeckoProfile.get(mActivity).getDB().setSuggestedSites(suggestedSites);
-
-        // Test tiles uploading for an en-US OS locale with no app locale.
-        setOSLocale(Locale.US);
-        checkTilesReporting("en-US");
-
-        // Test tiles uploading for an es-MX OS locale with no app locale.
-        setOSLocale(new Locale("es", "MX"));
-        checkTilesReporting("es-MX");
 
         // Pre-clear distribution pref, run basic preferences and en-US localized preferences Tests
         clearDistributionPref();
@@ -509,45 +494,6 @@ public class testDistribution extends ContentProviderTest {
         String keyName = mActivity.getPackageName() + ".distribution_state";
         settings.edit().remove(keyName).commit();
         TestableDistribution.clearReferrerDescriptorForTesting();
-    }
-
-    public void checkTilesReporting(String localeCode) throws JSONException {
-        // Slight hack: Force top sites grid to reload.
-        inputAndLoadUrl(mStringHelper.ABOUT_BLANK_URL);
-        inputAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
-
-        // Click the first tracking tile and verify the posted data.
-        JSONObject response = clickTrackingTile(mStringHelper.DISTRIBUTION1_LABEL);
-        mAsserter.is(response.getInt("click"), 0, "JSON click index matched");
-        mAsserter.is(response.getString("locale"), localeCode, "JSON locale code matched");
-        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456},{\"id\":632},{\"id\":630},{\"id\":631}]", "JSON tiles data matched");
-
-        inputAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
-
-        // Pin the second tracking tile.
-        pinTopSite(mStringHelper.DISTRIBUTION2_LABEL);
-
-        // Click the second tracking tile and verify the posted data.
-        response = clickTrackingTile(mStringHelper.DISTRIBUTION2_LABEL);
-        mAsserter.is(response.getInt("click"), 1, "JSON click index matched");
-        mAsserter.is(response.getString("tiles"), "[{\"id\":123},{\"id\":456,\"pin\":true},{\"id\":632},{\"id\":630},{\"id\":631}]", "JSON tiles data matched");
-
-        inputAndLoadUrl(mStringHelper.ABOUT_HOME_URL);
-
-        // Unpin the second tracking tile.
-        unpinTopSite(mStringHelper.DISTRIBUTION2_LABEL);
-    }
-
-    private JSONObject clickTrackingTile(String text) throws JSONException {
-        boolean tileFound = waitForText(text);
-        mAsserter.ok(tileFound, "Found tile: " + text, null);
-
-        Actions.EventExpecter loadExpecter = mActions.expectGeckoEvent("Robocop:TilesResponse");
-        mSolo.clickOnText(text);
-        String data = loadExpecter.blockForEventData();
-        JSONObject dataJSON = new JSONObject(data);
-        String response = dataJSON.getString("response");
-        return new JSONObject(response);
     }
 
     @Override

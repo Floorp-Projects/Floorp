@@ -83,9 +83,6 @@ public class SuggestedSites {
         BrowserContract.SuggestedSites.TITLE,
     };
 
-    public static final int TRACKING_ID_NONE = -1;
-
-    private static final String JSON_KEY_TRACKING_ID = "trackingid";
     private static final String JSON_KEY_URL = "url";
     private static final String JSON_KEY_TITLE = "title";
     private static final String JSON_KEY_IMAGE_URL = "imageurl";
@@ -97,11 +94,9 @@ public class SuggestedSites {
         public final String title;
         public final String imageUrl;
         public final String bgColor;
-        public final int trackingId;
         public final boolean restricted;
 
         public Site(JSONObject json) throws JSONException {
-            this.trackingId = json.isNull(JSON_KEY_TRACKING_ID) ? TRACKING_ID_NONE : json.getInt(JSON_KEY_TRACKING_ID);
             this.restricted =  !json.isNull(JSON_KEY_RESTRICTED);
             this.url = json.getString(JSON_KEY_URL);
             this.title = json.getString(JSON_KEY_TITLE);
@@ -111,8 +106,7 @@ public class SuggestedSites {
             validate();
         }
 
-        public Site(int trackingId, String url, String title, String imageUrl, String bgColor) {
-            this.trackingId = trackingId;
+        public Site(String url, String title, String imageUrl, String bgColor) {
             this.url = url;
             this.title = title;
             this.imageUrl = imageUrl;
@@ -135,8 +129,7 @@ public class SuggestedSites {
 
         @Override
         public String toString() {
-            return "{ trackingId = " + trackingId + "\n" +
-                     "url = " + url + "\n" +
+            return "{ url = " + url + "\n" +
                      "restricted = " + restricted + "\n" +
                      "title = " + title + "\n" +
                      "imageUrl = " + imageUrl + "\n" +
@@ -145,10 +138,6 @@ public class SuggestedSites {
 
         public JSONObject toJSON() throws JSONException {
             final JSONObject json = new JSONObject();
-
-            if (trackingId >= 0) {
-                json.put(JSON_KEY_TRACKING_ID, trackingId);
-            }
 
             if (restricted) {
                 json.put(JSON_KEY_RESTRICTED, true);
@@ -539,11 +528,6 @@ public class SuggestedSites {
     public String getBackgroundColorForUrl(String url) {
         final Site site = getSiteForUrl(url);
         return (site != null ? site.bgColor : null);
-    }
-
-    public int getTrackingIdForUrl(String url) {
-        final Site site = getSiteForUrl(url);
-        return (site != null ? site.trackingId : TRACKING_ID_NONE);
     }
 
     private Set<String> loadBlacklist() {
