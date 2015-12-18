@@ -203,7 +203,7 @@ eventWatcher.wait_for(t, 'animationstart').then(t.step_func(function() {
                                 'animationend']);
 })).then(t.step_func(function() {
   assertExpectedStateAtEndOfAnimation();
-  t.done();
+  test.done();
 }));
 ```
 
