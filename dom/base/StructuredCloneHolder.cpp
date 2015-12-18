@@ -28,6 +28,7 @@
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/WebCryptoCommon.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
@@ -306,7 +307,7 @@ StructuredCloneHolder::Read(nsISupports* aParent,
   // If we are tranferring something, we cannot call 'Read()' more than once.
   if (mSupportsTransferring) {
     mBlobImplArray.Clear();
-    mClonedImages.Clear();
+    mClonedSurfaces.Clear();
     Clear();
   }
 }
@@ -976,7 +977,7 @@ StructuredCloneHolder::CustomReadHandler(JSContext* aCx,
     nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(mParent);
     // aIndex is the index of the cloned image.
     return ImageBitmap::ReadStructuredClone(aCx, aReader,
-                                            parent, GetImages(), aIndex);
+                                            parent, GetSurfaces(), aIndex);
    }
 
   return ReadFullySerializableObjects(aCx, aReader, aTag);
@@ -1021,7 +1022,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
     ImageBitmap* imageBitmap = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(ImageBitmap, aObj, imageBitmap))) {
       return ImageBitmap::WriteStructuredClone(aWriter,
-                                               GetImages(),
+                                               GetSurfaces(),
                                                imageBitmap);
     }
   }
@@ -1085,6 +1086,26 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
     return true;
   }
 
+  if (aTag == SCTAG_DOM_IMAGEBITMAP) {
+    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
+               mSupportedContext == SameProcessDifferentThread);
+    MOZ_ASSERT(aContent);
+    ImageBitmapCloneData* data =
+      static_cast<ImageBitmapCloneData*>(aContent);
+    nsCOMPtr<nsIGlobalObject> parent = do_QueryInterface(mParent);
+    RefPtr<ImageBitmap> bitmap = ImageBitmap::CreateFromCloneData(parent, data);
+    delete data;
+
+    JS::Rooted<JS::Value> value(aCx);
+    if (!GetOrCreateDOMReflector(aCx, bitmap, &value)) {
+      JS_ClearPendingException(aCx);
+      return false;
+    }
+
+    aReturnObject.set(&value.toObject());
+    return true;
+  }
+
   return false;
 }
 
@@ -1133,6 +1154,21 @@ StructuredCloneHolder::CustomWriteTransferHandler(JSContext* aCx,
 
         return true;
       }
+
+      ImageBitmap* bitmap = nullptr;
+      rv = UNWRAP_OBJECT(ImageBitmap, aObj, bitmap);
+      if (NS_SUCCEEDED(rv)) {
+        MOZ_ASSERT(bitmap);
+
+        *aExtraData = 0;
+        *aTag = SCTAG_DOM_IMAGEBITMAP;
+        *aOwnership = JS::SCTAG_TMO_CUSTOM;
+        *aContent = bitmap->ToCloneData();
+        MOZ_ASSERT(*aContent);
+        bitmap->Close();
+
+        return true;
+      }
     }
   }
 
@@ -1160,6 +1196,16 @@ StructuredCloneHolder::CustomFreeTransferHandler(uint32_t aTag,
     MOZ_ASSERT(aContent);
     OffscreenCanvasCloneData* data =
       static_cast<OffscreenCanvasCloneData*>(aContent);
+    delete data;
+    return;
+  }
+
+  if (aTag == SCTAG_DOM_IMAGEBITMAP) {
+    MOZ_ASSERT(mSupportedContext == SameProcessSameThread ||
+               mSupportedContext == SameProcessDifferentThread);
+    MOZ_ASSERT(aContent);
+    ImageBitmapCloneData* data =
+      static_cast<ImageBitmapCloneData*>(aContent);
     delete data;
     return;
   }
