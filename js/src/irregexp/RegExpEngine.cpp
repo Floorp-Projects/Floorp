@@ -2182,6 +2182,8 @@ RegExpAssertion::ToNode(RegExpCompiler* compiler,
       }
       case NOT_AFTER_LEAD_SURROGATE:
         return AssertionNode::NotAfterLeadSurrogate(on_success);
+      case NOT_IN_SURROGATE_PAIR:
+        return AssertionNode::NotInSurrogatePair(on_success);
       default:
         MOZ_CRASH("Bad assertion type");
     }
@@ -2994,6 +2996,40 @@ EmitNotAfterLeadSurrogate(RegExpCompiler* compiler, RegExpNode* on_success, Trac
     on_success->Emit(compiler, &new_trace);
 }
 
+// Assert that the next character is not a trail surrogate that has a
+// corresponding lead surrogate.
+static void
+EmitNotInSurrogatePair(RegExpCompiler* compiler, RegExpNode* on_success, Trace* trace)
+{
+    RegExpMacroAssembler* assembler = compiler->macro_assembler();
+
+    jit::Label ok;
+    assembler->CheckPosition(trace->cp_offset(), &ok);
+
+    // We will be loading the next and previous characters into the current
+    // character register.
+    Trace new_trace(*trace);
+    new_trace.InvalidateCurrentCharacter();
+
+    if (new_trace.cp_offset() == 0)
+        assembler->CheckAtStart(&ok);
+
+    // First check if next character is a trail surrogate.
+    assembler->LoadCurrentCharacter(new_trace.cp_offset(), new_trace.backtrack(), false);
+    assembler->CheckCharacterNotInRange(unicode::TrailSurrogateMin, unicode::TrailSurrogateMax,
+                                        &ok);
+
+    // Next check if previous character is a lead surrogate.
+    // We already checked that we are not at the start of input so it must be
+    // OK to load the previous character.
+    assembler->LoadCurrentCharacter(new_trace.cp_offset() - 1, new_trace.backtrack(), false);
+    assembler->CheckCharacterInRange(unicode::LeadSurrogateMin, unicode::LeadSurrogateMax,
+                                     new_trace.backtrack());
+
+    assembler->Bind(&ok);
+    on_success->Emit(compiler, &new_trace);
+}
+
 // Check for [0-9A-Z_a-z].
 static void
 EmitWordCheck(RegExpMacroAssembler* assembler,
@@ -3149,6 +3185,9 @@ AssertionNode::Emit(RegExpCompiler* compiler, Trace* trace)
       }
       case NOT_AFTER_LEAD_SURROGATE:
         EmitNotAfterLeadSurrogate(compiler, on_success(), trace);
+        return;
+      case NOT_IN_SURROGATE_PAIR:
+        EmitNotInSurrogatePair(compiler, on_success(), trace);
         return;
     }
     on_success()->Emit(compiler, trace);
