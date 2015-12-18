@@ -183,8 +183,12 @@ exports.executeSoon = function executeSoon(aFn) {
   if (isWorker) {
     setImmediate(aFn);
   } else {
+    let stack = components.stack;
+    let executor = () => {
+      Cu.callFunctionWithAsyncStack(aFn, stack, "DevToolsUtils.executeSoon");
+    };
     Services.tm.mainThread.dispatch({
-      run: exports.makeInfallible(aFn)
+      run: exports.makeInfallible(executor)
     }, Ci.nsIThread.DISPATCH_NORMAL);
   }
 };
