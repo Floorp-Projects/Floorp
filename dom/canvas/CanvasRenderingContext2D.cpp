@@ -5219,19 +5219,17 @@ CanvasRenderingContext2D::GetImageDataArray(JSContext* aCx,
   IntRect dstWriteRect = srcReadRect;
   dstWriteRect.MoveBy(-aX, -aY);
 
-  uint8_t* src;
-  uint32_t srcStride;
-
-  if (readback) {
-    srcStride = rawData.mStride;
-    src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
-  }
-
   JS::AutoCheckCannotGC nogc;
   bool isShared;
   uint8_t* data = JS_GetUint8ClampedArrayData(darray, &isShared, nogc);
   MOZ_ASSERT(!isShared);        // Should not happen, data was created above
-  if (!readback) {
+
+  uint8_t* src;
+  uint32_t srcStride;
+  if (readback) {
+    srcStride = rawData.mStride;
+    src = rawData.mData + srcReadRect.y * srcStride + srcReadRect.x * 4;
+  } else {
     src = data;
     srcStride = aWidth * 4;
   }
