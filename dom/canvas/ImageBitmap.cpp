@@ -409,6 +409,14 @@ ImageBitmap::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
+ImageBitmap::Close()
+{
+  mData = nullptr;
+  mSurface = nullptr;
+  mPictureRect.SetEmpty();
+}
+
+void
 ImageBitmap::SetPictureRect(const IntRect& aRect, ErrorResult& aRv)
 {
   mPictureRect = FixUpNegativeDimension(aRect, aRv);
@@ -418,6 +426,10 @@ already_AddRefed<SourceSurface>
 ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 {
   MOZ_ASSERT(aTarget);
+
+  if (!mData) {
+    return nullptr;
+  }
 
   if (!mSurface) {
     mSurface = mData->GetAsSourceSurface();
