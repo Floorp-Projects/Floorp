@@ -28,6 +28,10 @@ class nsPluginDOMContextMenuListener;
 class nsPluginFrame;
 class nsDisplayListBuilder;
 
+#if defined(MOZ_X11) || defined(ANDROID)
+class gfxContext;
+#endif
+
 namespace mozilla {
 class TextComposition;
 namespace dom {
@@ -54,6 +58,8 @@ class nsPluginInstanceOwner final : public nsIPluginInstanceOwner,
                                     public nsSupportsWeakReference
 {
 public:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
   nsPluginInstanceOwner();
   
   NS_DECL_ISUPPORTS
@@ -236,7 +242,7 @@ public:
   // The eventual target of these operations is PluginInstanceParent,
   // but it takes several hops to get there.
   void SetBackgroundUnknown();
-  already_AddRefed<gfxContext> BeginUpdateBackground(const nsIntRect& aRect);
+  already_AddRefed<DrawTarget> BeginUpdateBackground(const nsIntRect& aRect);
   void EndUpdateBackground(const nsIntRect& aRect);
 
   bool UseAsyncRendering();

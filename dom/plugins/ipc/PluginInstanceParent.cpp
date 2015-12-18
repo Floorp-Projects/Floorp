@@ -1130,7 +1130,7 @@ PluginInstanceParent::SetBackgroundUnknown()
 
 nsresult
 PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
-                                            gfxContext** aCtx)
+                                            DrawTarget** aDrawTarget)
 {
     PLUGIN_LOG_DEBUG(
         ("[InstanceParent][%p] BeginUpdateBackground for <x=%d,y=%d, w=%d,h=%d>",
@@ -1144,7 +1144,7 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
         MOZ_ASSERT(aRect.TopLeft() == nsIntPoint(0, 0),
                    "Expecting rect for whole frame");
         if (!CreateBackground(aRect.Size())) {
-            *aCtx = nullptr;
+            *aDrawTarget = nullptr;
             return NS_OK;
         }
     }
@@ -1157,8 +1157,7 @@ PluginInstanceParent::BeginUpdateBackground(const nsIntRect& aRect,
 
     RefPtr<gfx::DrawTarget> dt = gfxPlatform::GetPlatform()->
       CreateDrawTargetForSurface(mBackground, gfx::IntSize(sz.width, sz.height));
-    RefPtr<gfxContext> ctx = new gfxContext(dt);
-    ctx.forget(aCtx);
+    dt.forget(aDrawTarget);
 
     return NS_OK;
 }

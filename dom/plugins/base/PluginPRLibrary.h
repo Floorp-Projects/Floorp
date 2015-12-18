@@ -117,8 +117,8 @@ public:
     virtual nsresult ContentsScaleFactorChanged(NPP aInstance, double aContentsScaleFactor) override;
 #endif
     virtual nsresult SetBackgroundUnknown(NPP instance) override;
-    virtual nsresult BeginUpdateBackground(NPP instance,
-                                           const nsIntRect&, gfxContext** aCtx) override;
+    virtual nsresult BeginUpdateBackground(NPP instance, const nsIntRect&,
+                                           DrawTarget** aDrawTarget) override;
     virtual nsresult EndUpdateBackground(NPP instance,
                                          const nsIntRect&) override;
     virtual void DidComposite(NPP aInstance) override { }
