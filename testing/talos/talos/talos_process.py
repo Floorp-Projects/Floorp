@@ -3,16 +3,13 @@
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import time
+import logging
 import psutil
 import mozcrash
 from mozprocess import ProcessHandler
 from threading import Event
 
-from mozlog import get_proxy_logger
-
 from utils import TalosError
-
-LOG = get_proxy_logger()
 
 
 class ProcessContext(object):
@@ -29,7 +26,7 @@ class ProcessContext(object):
 
     def kill_process(self):
         if self.process and self.process.is_running():
-            LOG.debug("Terminating %s" % self.process)
+            logging.debug("Terminating %s", self.process)
             self.process.terminate()
             try:
                 self.process.wait(3)
@@ -46,7 +43,6 @@ class Reader(object):
         self.got_timeout = False
         self.timeout_message = ''
         self.event = event
-        self.proc = None
 
     def __call__(self, line):
         if line.find('__endTimestamp') != -1:
@@ -59,7 +55,7 @@ class Reader(object):
 
         if not (line.startswith('JavaScript error:') or
                 line.startswith('JavaScript warning:')):
-            LOG.process_output(self.proc.pid, line)
+            logging.debug('BROWSER_OUTPUT: %s', line)
             self.output.append(line)
 
 
@@ -98,9 +94,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
     kwargs['processOutputLine'] = reader
     kwargs['onFinish'] = event.set
     proc = ProcessHandler(command, **kwargs)
-    reader.proc = proc
     proc.run()
-    LOG.process_start(proc.pid, ' '.join(command))
     try:
         context.process = psutil.Process(proc.pid)
         if on_started:
@@ -116,7 +110,7 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
                 if proc.wait(1) is not None:
                     break
             if proc.poll() is None:
-                LOG.info(
+                logging.info(
                     "Browser shutdown timed out after {0} seconds, terminating"
                     " process.".format(wait_for_quit_timeout)
                 )
@@ -135,6 +129,6 @@ def run_browser(command, minidump_dir, timeout=None, on_started=None,
         "__startAfterTerminationTimestamp%d__endAfterTerminationTimestamp"
         % (int(time.time()) * 1000))
 
-    LOG.process_exit(proc.pid, return_code)
+    logging.info("Browser exited with error code: {0}".format(return_code))
     context.output = reader.output
     return context
