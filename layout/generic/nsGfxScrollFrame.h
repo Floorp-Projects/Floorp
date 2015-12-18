@@ -19,7 +19,6 @@
 #include "nsIReflowCallback.h"
 #include "nsBoxLayoutState.h"
 #include "nsQueryFrame.h"
-#include "nsRefreshDriver.h"
 #include "nsExpirationTracker.h"
 #include "TextOverflow.h"
 #include "ScrollVelocityQueue.h"
@@ -102,13 +101,11 @@ public:
 
   bool IsSmoothScrollingEnabled();
 
-  class ScrollEvent : public nsARefreshObserver {
+  class ScrollEvent : public nsRunnable {
   public:
-    NS_INLINE_DECL_REFCOUNTING(ScrollEvent, override)
-    explicit ScrollEvent(ScrollFrameHelper *helper);
-    void WillRefresh(mozilla::TimeStamp aTime) override;
-  protected:
-    virtual ~ScrollEvent();
+    NS_DECL_NSIRUNNABLE
+    explicit ScrollEvent(ScrollFrameHelper *helper) : mHelper(helper) {}
+    void Revoke() { mHelper = nullptr; }
   private:
     ScrollFrameHelper *mHelper;
   };
@@ -420,7 +417,7 @@ public:
   nsCOMPtr<nsIContent> mScrollCornerContent;
   nsCOMPtr<nsIContent> mResizerContent;
 
-  RefPtr<ScrollEvent> mScrollEvent;
+  nsRevocableEventPtr<ScrollEvent> mScrollEvent;
   nsRevocableEventPtr<AsyncScrollPortEvent> mAsyncScrollPortEvent;
   nsRevocableEventPtr<ScrolledAreaEvent> mScrolledAreaEvent;
   nsIFrame* mHScrollbarBox;
