@@ -196,6 +196,7 @@ public abstract class GeckoApp
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
     protected ButtonToast mToast;
+    protected Snackbar mSnackbar;
 
     protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
@@ -854,6 +855,8 @@ public abstract class GeckoApp
         }
 
         snackbar.show();
+
+        this.mSnackbar = snackbar;
     }
 
     /**
