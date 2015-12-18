@@ -742,9 +742,9 @@ Transform(const gfxImageSurface* aDest,
   SkPaint paint;
   paint.setXfermodeMode(SkXfermode::kSrc_Mode);
   paint.setAntiAlias(true);
-  paint.setFilterLevel(SkPaint::kLow_FilterLevel);
+  paint.setFilterQuality(kLow_SkFilterQuality);
   SkRect destRect = SkRect::MakeXYWH(0, 0, srcSize.width, srcSize.height);
-  destCanvas.drawBitmapRectToRect(src, nullptr, destRect, &paint);
+  destCanvas.drawBitmapRect(src, destRect, &paint);
 }
 #else
 static pixman_transform
