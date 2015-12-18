@@ -775,10 +775,6 @@ Parser<FullParseHandler>::cloneParseTree(ParseNode* opn)
     return pn;
 }
 
-template <>
-ParseNode*
-Parser<FullParseHandler>::cloneLeftHandSide(ParseNode* opn);
-
 /*
  * Used by Parser::cloneLeftHandSide to clone a default expression
  * in the form of
@@ -889,6 +885,16 @@ Parser<FullParseHandler>::cloneLeftHandSide(ParseNode* opn)
         }
     }
     return pn;
+}
+
+template <>
+SyntaxParseHandler::Node
+Parser<SyntaxParseHandler>::cloneLeftHandSide(Node node)
+{
+    // See the comment in SyntaxParseHandler::singleBindingFromDeclaration for
+    // why this is okay.
+    MOZ_ASSERT(node == SyntaxParseHandler::NodeUnparenthesizedName);
+    return SyntaxParseHandler::NodeGeneric;
 }
 
 } /* namespace frontend */
