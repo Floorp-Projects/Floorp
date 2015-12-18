@@ -66,7 +66,7 @@ public:
    * @param aContext the context returned by BeginUpdate
    * Implicitly Restore()s the state of aContext.
    */
-  virtual void EndUpdate(gfxContext* aContext, const gfx::IntRect& aRect) = 0;
+  virtual void EndUpdate(const gfx::IntRect& aRect) = 0;
 };
 
 /**

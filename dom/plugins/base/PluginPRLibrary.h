@@ -120,7 +120,7 @@ public:
     virtual nsresult BeginUpdateBackground(NPP instance,
                                            const nsIntRect&, gfxContext** aCtx) override;
     virtual nsresult EndUpdateBackground(NPP instance,
-                                         gfxContext* aCtx, const nsIntRect&) override;
+                                         const nsIntRect&) override;
     virtual void DidComposite(NPP aInstance) override { }
     virtual void GetLibraryPath(nsACString& aPath) { aPath.Assign(mFilePath); }
     virtual nsresult GetRunID(uint32_t* aRunID) override { return NS_ERROR_NOT_IMPLEMENTED; }
