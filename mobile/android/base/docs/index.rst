@@ -9,3 +9,4 @@ Firefox for Android
    uitelemetry
    adjust
    gradle
+   defaultdomains
