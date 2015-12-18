@@ -2004,15 +2004,13 @@ PluginModuleParent::BeginUpdateBackground(NPP instance,
 }
 
 nsresult
-PluginModuleParent::EndUpdateBackground(NPP instance,
-                                        gfxContext* aCtx,
-                                        const nsIntRect& aRect)
+PluginModuleParent::EndUpdateBackground(NPP instance, const nsIntRect& aRect)
 {
     PluginInstanceParent* i = PluginInstanceParent::Cast(instance);
     if (!i)
         return NS_ERROR_FAILURE;
 
-    return i->EndUpdateBackground(aCtx, aRect);
+    return i->EndUpdateBackground(aRect);
 }
 
 void

@@ -197,7 +197,7 @@ public:
 
       rotBuffer.DrawBufferWithRotation(dt, RotatedBuffer::BUFFER_BLACK);
 
-      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
+      update.mLayer->GetSink()->EndUpdate(update.mUpdateRect + offset);
     }
   }
 

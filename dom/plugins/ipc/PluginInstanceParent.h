@@ -339,8 +339,7 @@ public:
     nsresult SetBackgroundUnknown();
     nsresult BeginUpdateBackground(const nsIntRect& aRect,
                                    gfxContext** aCtx);
-    nsresult EndUpdateBackground(gfxContext* aCtx,
-                                 const nsIntRect& aRect);
+    nsresult EndUpdateBackground(const nsIntRect& aRect);
     void DidComposite();
 
     bool IsUsingDirectDrawing();

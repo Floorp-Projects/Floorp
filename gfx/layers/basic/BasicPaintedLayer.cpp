@@ -212,7 +212,7 @@ BasicPaintedLayer::Validate(LayerManager::DrawPaintedLayerCallback aCallback,
       ctx->SetMatrix(ctx->CurrentMatrix().Translate(offset.x, offset.y));
       mContentClient->DrawTo(this, ctx->GetDrawTarget(), 1.0,
                              ctx->CurrentOp(), nullptr, nullptr);
-      update.mLayer->GetSink()->EndUpdate(ctx, update.mUpdateRect + offset);
+      update.mLayer->GetSink()->EndUpdate(update.mUpdateRect + offset);
     }
   }
 }

@@ -122,7 +122,7 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
         IntSize size = aLayer->GetSize();
         ctx->GetDrawTarget()->FillRect(Rect(0, 0, size.width, size.height),
                                        color);
-        aLayer->mSink->EndUpdate(ctx, aLayer->GetRect());
+        aLayer->mSink->EndUpdate(aLayer->GetRect());
       }
     }
   } else {

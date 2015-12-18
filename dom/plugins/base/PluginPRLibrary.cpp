@@ -315,8 +315,7 @@ PluginPRLibrary::BeginUpdateBackground(NPP instance,
 }
 
 nsresult
-PluginPRLibrary::EndUpdateBackground(NPP instance,
-                                     gfxContext*, const nsIntRect&)
+PluginPRLibrary::EndUpdateBackground(NPP instance, const nsIntRect&)
 {
   NS_RUNTIMEABORT("This should never be called");
   return NS_ERROR_NOT_AVAILABLE;
