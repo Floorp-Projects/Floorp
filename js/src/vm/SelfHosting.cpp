@@ -11,6 +11,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
+#include "jsarray.h"
 #include "jscntxt.h"
 #include "jscompartment.h"
 #include "jsdate.h"
@@ -86,6 +87,24 @@ intrinsic_IsObject(JSContext* cx, unsigned argc, Value* vp)
     Value val = args[0];
     bool isObject = val.isObject();
     args.rval().setBoolean(isObject);
+    return true;
+}
+
+static bool
+intrinsic_IsArray(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedValue val(cx, args[0]);
+    if (val.isObject()) {
+        RootedObject obj(cx, &val.toObject());
+        bool isArray = false;
+        if (!IsArray(cx, obj, &isArray))
+            return false;
+        args.rval().setBoolean(isArray);
+    } else {
+        args.rval().setBoolean(false);
+    }
     return true;
 }
 
@@ -2101,6 +2120,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     // Helper funtions after this point.
     JS_INLINABLE_FN("ToObject",      intrinsic_ToObject,                1,0, IntrinsicToObject),
     JS_INLINABLE_FN("IsObject",      intrinsic_IsObject,                1,0, IntrinsicIsObject),
+    JS_INLINABLE_FN("IsArray",       intrinsic_IsArray,                 1,0, ArrayIsArray),
     JS_INLINABLE_FN("ToInteger",     intrinsic_ToInteger,               1,0, IntrinsicToInteger),
     JS_INLINABLE_FN("ToString",      intrinsic_ToString,                1,0, IntrinsicToString),
     JS_FN("ToPropertyKey",           intrinsic_ToPropertyKey,           1,0),
