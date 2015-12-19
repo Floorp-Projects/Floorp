@@ -81,6 +81,7 @@ private:
   typedef Pair<RefPtr<MediaData>, bool> MediaDataAndInputExhausted;
   std::deque<MediaDataAndInputExhausted> mDelayedOutput;
   RefPtr<MediaTimer> mDelayedOutputTimer;
+  MozPromiseRequestHolder<MediaTimerPromise> mDelayedOutputRequest;
   // If draining, a 'DrainComplete' will be sent after all delayed frames have
   // been output.
   bool mDraining;
