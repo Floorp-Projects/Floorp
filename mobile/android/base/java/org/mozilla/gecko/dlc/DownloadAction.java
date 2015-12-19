@@ -87,6 +87,11 @@ public class DownloadAction extends BaseAction {
 
                 temporaryFile = createTemporaryFile(context, content);
 
+                if (!hasEnoughDiskSpace(content, destinationFile, temporaryFile)) {
+                    Log.d(LOGTAG, "Not enough disk space to save content. Skipping download.");
+                    continue;
+                }
+
                 // TODO: Check space on disk before downloading content (bug 1220145)
                 final String url = createDownloadURL(content);
 
@@ -308,5 +313,20 @@ public class DownloadAction extends BaseAction {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
         }
+    }
+
+    protected boolean hasEnoughDiskSpace(DownloadContent content, File destinationFile, File temporaryFile) {
+        final File temporaryDirectory = temporaryFile.getParentFile();
+        if (temporaryDirectory.getUsableSpace() < content.getSize()) {
+            return false;
+        }
+
+        final File destinationDirectory = destinationFile.getParentFile();
+        // We need some more space to extract the file (getSize() returns the uncompressed size)
+        if (destinationDirectory.getUsableSpace() < content.getSize() * 2) {
+            return false;
+        }
+
+        return true;
     }
 }
