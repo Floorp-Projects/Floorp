@@ -11,6 +11,9 @@
 #define RTCD_C
 #include "./vpx_scale_rtcd.h"
 #include "vpx_ports/vpx_once.h"
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 void vpx_scale_rtcd()
 {
