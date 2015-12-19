@@ -259,6 +259,12 @@ HttpChannelParent::SynthesizeResponse(nsIInterceptedChannel* aChannel)
     return;
   }
 
+  if (!mSynthesizedResponseHead) {
+    // Near-term crash fix for bug 1219469.
+    mozilla::Unused << SendReportRedirectionError();
+    return;
+  }
+
   aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(),
                              mSynthesizedResponseHead->StatusText());
   nsCOMPtr<nsIHttpHeaderVisitor> visitor = new HeaderVisitor(aChannel);

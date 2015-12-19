@@ -2566,5 +2566,33 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
   return true;
 }
 
+bool
+HttpChannelChild::RecvReportRedirectionError()
+{
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  nsCString spec;
+  uri->GetSpec(spec);
+  nsString wideSpec = NS_ConvertUTF8toUTF16(spec);
+
+  nsCOMPtr<nsIDocument> doc;
+  GetCallback(doc);
+
+  nsString msg = NS_LITERAL_STRING("Failed to load '");
+  msg.Append(wideSpec);
+  msg.AppendLiteral("'. A Service Worker for a multiprocess window encountered a redirection ");
+  msg.AppendLiteral("response, which is currently unsupported and tracked in bug 1219469.");
+  nsContentUtils::ReportToConsoleNonLocalized(msg,
+                                              nsIScriptError::errorFlag,
+                                              NS_LITERAL_CSTRING("Service Worker Interception"),
+                                              doc,
+                                              uri,
+                                              EmptyString(),
+                                              0,
+                                              0);
+  Cancel(NS_ERROR_NOT_AVAILABLE);
+  return true;
+}
+
 } // namespace net
 } // namespace mozilla
