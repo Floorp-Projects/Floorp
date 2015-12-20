@@ -789,7 +789,6 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
 
       AnimationProperty &propData = *destEffect->Properties().AppendElement();
       propData.mProperty = prop;
-      propData.mWinsInCascade = true;
 
       KeyframeData *fromKeyframe = nullptr;
       RefPtr<nsStyleContext> fromContext;
