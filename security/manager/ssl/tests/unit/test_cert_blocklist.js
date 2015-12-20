@@ -60,15 +60,32 @@ var XULAppInfoFactory = {
   }
 };
 
+// we need to ensure we setup revocation data before certDB, or we'll start with
+// no revocation.txt in the profile
+var profile = do_get_profile();
+
+// Write out an empty blocklist.xml file to the profile to ensure nothing
+// is blocklisted by default
+var blockFile = profile.clone();
+blockFile.append("blocklist.xml");
+var stream = Cc["@mozilla.org/network/file-output-stream;1"]
+               .createInstance(Ci.nsIFileOutputStream);
+stream.init(blockFile,
+  FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE,
+  FileUtils.PERMS_FILE, 0);
+
+var data = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+           "<blocklist xmlns=\"http://www.mozilla.org/2006/addons-blocklist\">\n" +
+           "</blocklist>\n";
+stream.write(data, data.length);
+stream.close();
+
 var registrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 const XULAPPINFO_CONTRACTID = "@mozilla.org/xre/app-info;1";
 const XULAPPINFO_CID = Components.ID("{c763b610-9d49-455a-bbd2-ede71682a1ac}");
 registrar.registerFactory(XULAPPINFO_CID, "XULAppInfo",
                           XULAPPINFO_CONTRACTID, XULAppInfoFactory);
 
-// we need to ensure we setup revocation data before certDB, or we'll start with
-// no revocation.txt in the profile
-var profile = do_get_profile();
 var revocations = profile.clone();
 revocations.append("revocations.txt");
 if (!revocations.exists()) {
