@@ -676,6 +676,12 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static JSObject*
     fromArray(JSContext* cx, HandleObject other, HandleObject newTarget = nullptr);
 
+    static JSObject*
+    fromTypedArray(JSContext* cx, HandleObject other, HandleObject newTarget);
+
+    static JSObject*
+    fromObject(JSContext* cx, HandleObject other, HandleObject newTarget);
+
     static const NativeType
     getIndex(JSObject* obj, uint32_t index)
     {
@@ -719,31 +725,79 @@ TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
 {
     // Allow nullptr newTarget for FriendAPI methods, which don't care about
     // subclassing.
+    if (other->is<TypedArrayObject>())
+        return fromTypedArray(cx, other, newTarget);
+
+    return fromObject(cx, other, newTarget);
+}
+
+// ES 2016 draft Mar 25, 2016 22.2.4.3.
+template<typename T>
+/* static */ JSObject*
+TypedArrayObjectTemplate<T>::fromTypedArray(JSContext* cx, HandleObject other,
+                                            HandleObject newTarget)
+{
+    // Step 1.
+    MOZ_ASSERT(other->is<TypedArrayObject>());
+
+    // Step 2 (done in caller).
+
+    // Step 4 (partially).
     RootedObject proto(cx);
+    if (!GetPrototypeForInstance(cx, newTarget, &proto))
+        return nullptr;
 
-    uint32_t len;
-    if (other->is<TypedArrayObject>()) {
-        if (!GetPrototypeForInstance(cx, newTarget, &proto))
-            return nullptr;
+    // Step 5.
+    Rooted<TypedArrayObject*> srcArray(cx, &other->as<TypedArrayObject>());
 
-        if (other->as<TypedArrayObject>().hasDetachedBuffer()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-            return nullptr;
-        }
-        len = other->as<TypedArrayObject>().length();
-    } else {
-        if (!GetLengthProperty(cx, other, &len))
-            return nullptr;
-        if (!GetPrototypeForInstance(cx, newTarget, &proto))
-            return nullptr;
+    // Steps 6-7.
+    if (srcArray->hasDetachedBuffer()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return nullptr;
     }
 
+    // Steps 10.
+    uint32_t elementLength = srcArray->length();
+
+    // Steps 8-9, 11-18.
     Rooted<ArrayBufferObject*> buffer(cx);
+    if (!maybeCreateArrayBuffer(cx, elementLength, &buffer))
+        return nullptr;
+
+    // Steps 3, 4 (remaining part), 19-23.
+    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, elementLength, proto));
+    if (!obj)
+        return nullptr;
+
+    // Step 18.d-g or 24.1.1.4 step 11.
+    if (!TypedArrayMethods<TypedArrayObject>::setFromTypedArray(cx, obj, srcArray))
+        return nullptr;
+
+    return obj;
+}
+
+// FIXME: This is not compatible with TypedArrayFrom in the spec
+// (ES 2016 draft Mar 25, 2016 22.2.4.4 and 22.2.2.1.1)
+// We should handle iterator protocol (bug 1232266).
+template<typename T>
+/* static */ JSObject*
+TypedArrayObjectTemplate<T>::fromObject(JSContext* cx, HandleObject other, HandleObject newTarget)
+{
+    RootedObject proto(cx);
+    Rooted<ArrayBufferObject*> buffer(cx);
+    uint32_t len;
+    if (!GetLengthProperty(cx, other, &len))
+        return nullptr;
+    if (!GetPrototypeForInstance(cx, newTarget, &proto))
+        return nullptr;
     if (!maybeCreateArrayBuffer(cx, len, &buffer))
         return nullptr;
 
     Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
-    if (!obj || !TypedArrayMethods<TypedArrayObject>::setFromArrayLike(cx, obj, other, len))
+    if (!obj)
+        return nullptr;
+
+    if (!TypedArrayMethods<TypedArrayObject>::setFromNonTypedArray(cx, obj, other, len))
         return nullptr;
     return obj;
 }
