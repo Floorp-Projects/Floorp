@@ -386,6 +386,26 @@ nsAnimationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
+void
+nsAnimationManager::CopyIsRunningOnCompositor(
+  KeyframeEffectReadOnly& aSourceEffect,
+  KeyframeEffectReadOnly& aDestEffect)
+{
+  nsCSSPropertySet sourceProperties;
+
+  for (AnimationProperty& property : aSourceEffect.Properties()) {
+    if (property.mIsRunningOnCompositor) {
+      sourceProperties.AddProperty(property.mProperty);
+    }
+  }
+
+  for (AnimationProperty& property : aDestEffect.Properties()) {
+    if (sourceProperties.HasProperty(property.mProperty)) {
+      property.mIsRunningOnCompositor = true;
+    }
+  }
+}
+
 nsIStyleRule*
 nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                        mozilla::dom::Element* aElement)
@@ -493,6 +513,12 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
           oldEffect->SetTiming(newEffect->Timing());
+
+          // To preserve the mIsRunningOnCompositor value on each property,
+          // we copy it from the old effect to the new effect since, in the
+          // following step, we will completely clobber the properties on the
+          // old effect with the values on the new effect.
+          CopyIsRunningOnCompositor(*oldEffect, *newEffect);
           oldEffect->Properties() = newEffect->Properties();
         }
 
