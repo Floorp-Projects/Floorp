@@ -235,6 +235,7 @@
     macro(shape, shape, "shape") \
     macro(size, size, "size") \
     macro(source, source, "source") \
+    macro(SpeciesConstructor, SpeciesConstructor, "SpeciesConstructor") \
     macro(stack, stack, "stack") \
     macro(star, star, "*") \
     macro(starDefaultStar, starDefaultStar, "*default*") \
