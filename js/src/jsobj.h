@@ -1334,6 +1334,9 @@ FreezeObject(JSContext* cx, HandleObject obj)
 extern bool
 TestIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level, bool* resultp);
 
+extern bool
+SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor);
+
 }  /* namespace js */
 
 #endif /* jsobj_h */

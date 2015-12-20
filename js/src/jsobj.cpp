@@ -3861,3 +3861,24 @@ JSObject::maybeConstructorDisplayAtom() const
         return nullptr;
     return displayAtomFromObjectGroup(*group());
 }
+
+bool
+js::SpeciesConstructor(JSContext* cx, HandleObject obj, HandleValue defaultCtor, MutableHandleValue pctor)
+{
+    HandlePropertyName shName = cx->names().SpeciesConstructor;
+    RootedValue func(cx);
+    if (!GlobalObject::getSelfHostedFunction(cx, cx->global(), shName, shName, 2, &func))
+        return false;
+    InvokeArgs args(cx);
+    if (!args.init(2))
+        return false;
+    args.setCallee(func);
+    args.setThis(UndefinedValue());
+    args[0].setObject(*obj);
+    args[1].set(defaultCtor);
+    if (!Invoke(cx, args))
+        return false;
+
+    pctor.set(args.rval());
+    return true;
+}
