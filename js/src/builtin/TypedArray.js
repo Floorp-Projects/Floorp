@@ -1308,6 +1308,12 @@ function TypedArrayStaticOf(/*...items*/) {
     return newObj;
 }
 
+// ES 2016 draft Mar 25, 2016 22.2.2.4.
+function TypedArraySpecies() {
+    // Step 1.
+    return this;
+}
+
 // ES 2016 draft Mar 25, 2016 24.1.4.3.
 function ArrayBufferSlice(start, end) {
     // Step 1.
@@ -1396,4 +1402,10 @@ function ArrayBufferStaticSlice(buf, start, end) {
     if (arguments.length < 1)
         ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'ArrayBuffer.slice');
     return callFunction(ArrayBufferSlice, buf, start, end);
+}
+
+// ES 2016 draft Mar 25, 2016 24.1.3.3.
+function ArrayBufferSpecies() {
+    // Step 1.
+    return this;
 }
