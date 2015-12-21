@@ -42,6 +42,7 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
         configuration.put(Restrictable.TELEMETRY, false);
         configuration.put(Restrictable.HEALTH_REPORT, true);
+        configuration.put(Restrictable.DEFAULT_THEME, true);
     }
 
     /**
@@ -50,7 +51,8 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     private static List<Restrictable> hiddenRestrictions = Arrays.asList(
             Restrictable.MASTER_PASSWORD,
             Restrictable.GUEST_BROWSING,
-            Restrictable.DATA_CHOICES
+            Restrictable.DATA_CHOICES,
+            Restrictable.DEFAULT_THEME
     );
 
     /* package-private */ static boolean shouldHide(Restrictable restrictable) {
