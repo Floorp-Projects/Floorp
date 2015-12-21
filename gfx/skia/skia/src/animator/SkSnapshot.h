@@ -10,15 +10,15 @@
 #ifndef SkSnapShot_DEFINED
 #define SkSnapShot_DEFINED
 
-#include "SkDrawable.h"
+#include "SkADrawable.h"
 #include "SkImageDecoder.h"
 #include "SkMemberInfo.h"
 #include "SkString.h"
 
-class SkSnapshot: public SkDrawable {
+class SkSnapshot: public SkADrawable {
     DECLARE_MEMBER_INFO(Snapshot);
     SkSnapshot();
-    virtual bool draw(SkAnimateMaker& );
+    bool draw(SkAnimateMaker& ) override;
     private:
     SkString filename;
     SkScalar quality;

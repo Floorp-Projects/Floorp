@@ -24,18 +24,24 @@ public:
     /** Processes input, adding it to the digest.
      *  Note that this treats the buffer as a series of uint8_t values.
      */
-    virtual bool write(const void* buffer, size_t size) SK_OVERRIDE {
+    bool write(const void* buffer, size_t size) override {
         this->update(reinterpret_cast<const uint8_t*>(buffer), size);
         return true;
     }
 
-    virtual size_t bytesWritten() const SK_OVERRIDE { return SkToSizeT(this->byteCount); }
+    size_t bytesWritten() const override { return SkToSizeT(this->byteCount); }
 
     /** Processes input, adding it to the digest. Calling this after finish is undefined. */
     void update(const uint8_t* input, size_t length);
 
     struct Digest {
         uint8_t data[16];
+        bool operator ==(Digest const& other) const {
+            return 0 == memcmp(data, other.data, sizeof(data));
+        }
+        bool operator !=(Digest const& other) const {
+            return 0 != memcmp(data, other.data, sizeof(data));
+        }
     };
 
     /** Computes and returns the digest. */

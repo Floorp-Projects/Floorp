@@ -173,6 +173,8 @@ HeapAnalysesClient.prototype.computeDominatorTree = function (snapshotFilePath) 
  *        An object specifying options for this request.
  *        - {DominatorTreeId} dominatorTreeId
  *          The id of the dominator tree.
+ *        - {Object} breakdown
+ *          The breakdown used to generate node labels.
  *        - {Number} maxDepth
  *          The maximum depth to traverse down the tree to create this initial
  *          view.
@@ -195,6 +197,8 @@ HeapAnalysesClient.prototype.getDominatorTree = function (opts) {
  *          The id of the dominator tree.
  *        - {NodeId} nodeId
  *          The id of the node whose children are being found.
+ *        - {Object} breakdown
+ *          The breakdown used to generate node labels.
  *        - {Number} startIndex
  *          The starting index within the full set of immediately dominated
  *          children of the children being requested. Children are always sorted

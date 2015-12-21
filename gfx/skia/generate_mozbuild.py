@@ -25,34 +25,12 @@ header = """
 
 footer = """
 
-# can we find a better way of dealing with asm sources?
-
-# left out of UNIFIED_SOURCES for now; that's not C++ anyway, nothing else to unify it with
-#XXX: doesn't build with Apple's assembler
-if not CONFIG['INTEL_ARCHITECTURE'] and CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['OS_TARGET'] != 'Darwin':
-    SOURCES += [
-        'skia/src/opts/memset.arm.S',
-    ]
-    if CONFIG['BUILD_ARM_NEON']:
-        SOURCES += [
-            'skia/src/opts/memset16_neon.S',
-            'skia/src/opts/memset32_neon.S',
-        ]
-
-if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC'] and CONFIG['OS_ARCH'] != 'WINNT':
-    if CONFIG['CPU_ARCH'] == 'x86_64':
-        SOURCES += [
-            'skia/src/opts/SkBlitRow_opts_SSE4_x64_asm.S',
-        ]
-    else:
-        SOURCES += [
-            'skia/src/opts/SkBlitRow_opts_SSE4_asm.S',
-        ]
-
+# We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
 
 FINAL_LIBRARY = 'gkmedias'
 LOCAL_INCLUDES += [
+    'skia/include/c',
     'skia/include/config',
     'skia/include/core',
     'skia/include/effects',
@@ -61,6 +39,7 @@ LOCAL_INCLUDES += [
     'skia/include/pathops',
     'skia/include/pipe',
     'skia/include/ports',
+    'skia/include/private',
     'skia/include/utils',
     'skia/include/utils/mac',
     'skia/include/utils/win',
@@ -77,12 +56,6 @@ LOCAL_INCLUDES += [
     'skia/src/utils/mac',
     'skia/src/utils/win',
 ]
-
-if CONFIG['MOZ_WIDGET_TOOLKIT'] in {'android', 'gtk2', 'gtk3', 'qt', 'gonk', 'cocoa', 'uikit'}:
-    DEFINES['SK_USE_POSIX_THREADS'] = 1
-
-if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['HAVE_TOOLCHAIN_SUPPORT_MSSSE3']:
-    DEFINES['SK_BUILD_SSSE3'] = 1
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     DEFINES['SK_FONTHOST_CAIRO_STANDALONE'] = 0
@@ -101,37 +74,33 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
 if CONFIG['_MSC_VER']:
     # MSVC doesn't need special compiler flags, but Skia needs to be told that these files should
     # be built with the required SSE level or it will simply compile in stubs and cause runtime crashes
-    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=31']
-    SOURCES['skia/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=41']
-    SOURCES['skia/src/opts/SkMorphology_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkUtils_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-    SOURCES['skia/src/opts/SkXfermode_opts_SSE2.cpp'].flags += ['-DSK_CPU_SSE_LEVEL=20']
-
+    SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=20']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE4.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=41']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=31']
+    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['/arch:SSE2 -DSK_CPU_SSE_LEVEL=41']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['/arch:AVX -DSK_CPU_SSE_LEVEL=51']
 if CONFIG['INTEL_ARCHITECTURE'] and CONFIG['GNU_CC']:
     SOURCES['skia/src/opts/SkBitmapFilter_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
-    SOURCES['skia/src/opts/SkBlitRect_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
     SOURCES['skia/src/opts/SkBlitRow_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES['skia/src/opts/SkBlurImage_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES['skia/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
-    SOURCES['skia/src/opts/SkMorphology_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES['skia/src/opts/SkUtils_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
-    SOURCES['skia/src/opts/SkXfermode_opts_SSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE4.cpp'].flags += ['-msse4.1']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
+    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
 elif CONFIG['CPU_ARCH'] == 'arm' and CONFIG['GNU_CC'] and CONFIG['BUILD_ARM_NEON']:
-    DEFINES['__ARM_HAVE_OPTIONAL_NEON_SUPPORT'] = 1
-    DEFINES['USE_ANDROID_NDK_CPU_FEATURES'] = 0
+    DEFINES['SK_ARM_HAS_OPTIONAL_NEON'] = 1
 elif CONFIG['CLANG_CL']:
     SOURCES['skia/src/opts/SkBitmapProcState_opts_SSSE3.cpp'].flags += ['-mssse3']
-    SOURCES['skia/src/opts/SkBlurImage_opts_SSE4.cpp'].flags += ['-msse4.1']
+    SOURCES['skia/src/opts/SkBlitRow_opts_SSE4.cpp'].flags += ['-msse4.1']
+    SOURCES['skia/src/opts/SkOpts_ssse3.cpp'].flags += ['-mssse3']
+    SOURCES['skia/src/opts/SkOpts_sse41.cpp'].flags += ['-msse4.1']
+    SOURCES['skia/src/opts/SkOpts_avx.cpp'].flags += ['-mavx']
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
-DEFINES['GR_IMPLEMENTATION'] = 1
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
@@ -147,6 +116,8 @@ if CONFIG['GNU_CXX']:
             '-Wno-macro-redefined',
             '-Wno-unused-private-field',
         ]
+        # work around inline function linking bug with template arguments
+        SOURCES['skia/src/gpu/GrResourceCache.cpp'].flags += ['-fkeep-inline-functions']
     else:
         CXXFLAGS += [
             '-Wno-logical-op',
@@ -180,7 +151,7 @@ def generate_platform_sources():
   sources = {}
 
   for plat in platforms:
-    if os.system("cd skia && GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=%s gyp/skia_lib.gyp" % plat) != 0:
+    if os.system("cd skia && GYP_GENERATORS=dump_mozbuild ./gyp_skia -D OS=%s -D host_os=linux gyp/skia_lib.gyp" % plat) != 0:
       print 'Failed to generate sources for ' + plat
       continue
 
@@ -195,31 +166,26 @@ def generate_platform_sources():
 def generate_separated_sources(platform_sources):
   blacklist = [
     'ChromeUtils',
-    'SkImageDecoder_',
-    '_gif',
-    'SkFontConfigParser_android',
     'SkJpeg',
     'SkXML',
-    'SkCity',
     'GrGLCreateNativeInterface',
+    'SkCreatePlatformGLContext',
     'fontconfig',
-    'SkCondVar',
     'SkThreadUtils_pthread_',
-    'SkImage_Codec',
-    'SkBitmapChecksummer',
-    'SkNativeGLContext',
     'SkFontConfig',
-    'SkFontHost_win_dw',
     'SkFontMgr_android',
+    'SkFontMgr_custom',
+    'SkFontHost_FreeType.cpp',
     'SkForceLinking',
     'SkMovie',
     'SkImageDecoder',
     'SkImageEncoder',
     'SkBitmapHasher',
+    'SkBitmapRegion',
+    'codec',
     'SkWGL',
-    'SkImages',
-    'SkDiscardableMemory_ashmem',
     'SkMemory_malloc',
+    'SkOpts_',
     'opts_check_x86',
     'third_party',
   ]
@@ -233,30 +199,18 @@ def generate_separated_sources(platform_sources):
 
   separated = defaultdict(set, {
     'common': {
-      #'skia/src/effects/gradients/SkGradientTileProc.cpp',
       'skia/src/gpu/gl/GrGLCreateNativeInterface_none.cpp',
       'skia/src/ports/SkDiscardableMemory_none.cpp',
       'skia/src/ports/SkImageDecoder_empty.cpp',
       'skia/src/ports/SkMemory_mozalloc.cpp',
-      # 'skia/src/images/SkImages.cpp',
-      # 'skia/src/images/SkImageRef.cpp',
-      # 'skia/src/images/SkImageRef_GlobalPool.cpp',
-      # 'skia/src/images/SkImageRefPool.cpp',
-      # 'skia/src/images/SkImageDecoder.cpp',
-      # 'skia/src/images/SkImageDecoder_Factory.cpp',
     },
     'android': {
       # 'skia/src/ports/SkDebug_android.cpp',
-      'skia/src/ports/SkFontHost_android_old.cpp',
       'skia/src/ports/SkFontHost_cairo.cpp',
       # 'skia/src/ports/SkFontHost_FreeType.cpp',
       # 'skia/src/ports/SkFontHost_FreeType_common.cpp',
-      # 'skia/src/ports/SkThread_pthread.cpp',
-      # 'skia/src/ports/SkPurgeableMemoryBlock_android.cpp',
       # 'skia/src/ports/SkTime_Unix.cpp',
       # 'skia/src/utils/SkThreadUtils_pthread.cpp',
-      # 'skia/src/images/SkImageRef_ashmem.cpp',
-      # 'skia/src/utils/android/ashmem.cpp',
     },
     'linux': {
       'skia/src/ports/SkFontHost_cairo.cpp',
@@ -264,18 +218,18 @@ def generate_separated_sources(platform_sources):
     'intel': {
       # There is currently no x86-specific opt for SkTextureCompression
       'skia/src/opts/opts_check_x86.cpp',
-      'skia/src/opts/SkTextureCompression_opts_none.cpp',
+      'skia/src/opts/SkOpts_ssse3.cpp',
+      'skia/src/opts/SkOpts_sse41.cpp',
+      'skia/src/opts/SkOpts_avx.cpp',
     },
     'arm': {
-      'skia/src/opts/SkUtils_opts_arm.cpp',
       'skia/src/core/SkUtilsArm.cpp',
     },
     'neon': {
+      'skia/src/opts/SkOpts_neon.cpp',
       'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
     },
-    'none': {
-      'skia/src/opts/SkUtils_opts_none.cpp',
-    }
+    'none': set()
   })
 
   for plat in platform_sources.keys():
@@ -341,15 +295,22 @@ def write_sources(f, values, indent):
     'SkBlitter_Sprite.cpp',
     'SkBlitRow_opts_arm.cpp',
     'SkScan_Antihair.cpp',
-    'SkCondVar.cpp',
     'SkParse.cpp',
-    'GrAddPathRenderers_default.cpp',
-    'GrDistanceFieldTextContext.cpp',
     'SkSHA1.cpp',
     'SkMD5.cpp',
     'SkPictureData.cpp',
-    'SkScaledImageCache.cpp',
     'opts_check_x86.cpp',
+    'GrDrawContext',
+    'GrResourceCache',
+    'GrAA',
+    'GrGL',
+    'GrBatchAtlas.cpp',
+    'SkArithmeticMode_gpu.cpp',
+    'SkImage_Gpu.cpp',
+    'SkPathOpsDebug.cpp',
+    'SkParsePath.cpp',
+    'SkOpts',
+    'SkRecorder.cpp',
   ]
 
   def isblacklisted(value):

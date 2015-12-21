@@ -34,10 +34,6 @@ using mozilla::IsWin7OrLater;
 
 #endif
 
-#if defined(VMS)
-#include <unixlib.h>
-#endif
-
 #ifndef MAXPATHLEN
 #ifdef PATH_MAX
 #define MAXPATHLEN PATH_MAX
@@ -221,19 +217,7 @@ GetRegWindowsAppDataFolder(bool aLocal, nsIFile** aFile)
 static nsresult
 GetUnixHomeDir(nsIFile** aFile)
 {
-#ifdef VMS
-  char* pHome;
-  pHome = getenv("HOME");
-  if (*pHome == '/') {
-    return NS_NewNativeLocalFile(nsDependentCString(pHome),
-                                 true,
-                                 aFile);
-  } else {
-    return NS_NewNativeLocalFile(nsDependentCString(decc$translate_vms(pHome)),
-                                 true,
-                                 aFile);
-  }
-#elif defined(ANDROID)
+#if defined(ANDROID)
   // XXX no home dir on android; maybe we should return the sdcard if present?
   return NS_ERROR_FAILURE;
 #else

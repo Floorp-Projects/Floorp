@@ -22,6 +22,9 @@ const HeapAnalysesClient =
 const Services = require("Services");
 const { censusReportToCensusTreeNode } = require("devtools/shared/heapsnapshot/census-tree-node");
 const CensusUtils = require("devtools/shared/heapsnapshot/CensusUtils");
+const DominatorTreeNode = require("devtools/shared/heapsnapshot/DominatorTreeNode");
+const { LabelAndShallowSizeVisitor } = DominatorTreeNode;
+
 
 // Always log packets when running tests. runxpcshelltests.py will throw
 // the output away anyway, unless you give it the --verbose flag.
@@ -295,4 +298,30 @@ function assertDiff(breakdown, first, second, expected) {
   dumpn("Actual delta-report: " + JSON.stringify(actual, null, 4));
 
   assertStructurallyEquivalent(actual, expected);
+}
+
+/**
+ * Assert that creating a label and getting a shallow size from the given node
+ * description with the specified breakdown is as expected.
+ *
+ * @param {Object} breakdown
+ * @param {Object} givenDescription
+ * @param {Number} expectedShallowSize
+ * @param {Object} expectedLabel
+ */
+function assertLabelAndShallowSize(breakdown, givenDescription, expectedShallowSize, expectedLabel) {
+  dumpn("Computing label and shallow size from node description:");
+  dumpn("Breakdown: " + JSON.stringify(breakdown, null, 4));
+  dumpn("Given description: " + JSON.stringify(givenDescription, null, 4));
+
+  const visitor = new LabelAndShallowSizeVisitor();
+  CensusUtils.walk(breakdown, description, visitor);
+
+  dumpn("Expected shallow size: " + expectedShallowSize);
+  dumpn("Actual shallow size: " + visitor.shallowSize());
+  equal(visitor.shallowSize(), expectedShallowSize, "Shallow size should be correct");
+
+  dumpn("Expected label: " + JSON.stringify(expectedLabel, null, 4));
+  dumpn("Actual label: " + JSON.stringify(visitor.label(), null, 4));
+  assertStructurallyEquivalent(visitor.label(), expectedLabel);
 }

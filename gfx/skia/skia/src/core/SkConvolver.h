@@ -46,7 +46,7 @@ public:
         // The cast relies on ConvolutionFixed being a short, implying that on
         // the platforms we care about all (16) bits will fit into
         // the mantissa of a (32-bit) float.
-        SK_COMPILE_ASSERT(sizeof(ConvolutionFixed) == 2, ConvolutionFixed_type_should_fit_in_float_mantissa);
+        static_assert(sizeof(ConvolutionFixed) == 2, "ConvolutionFixed_type_should_fit_in_float_mantissa");
         float raw = static_cast<float>(x);
         return ldexpf(raw, -kShiftBits);
     }
@@ -91,7 +91,7 @@ public:
         *filterOffset = filter.fOffset;
         *filterLength = filter.fTrimmedLength;
         if (filter.fTrimmedLength == 0) {
-            return NULL;
+            return nullptr;
         }
         return &fFilterValues[filter.fDataLocation];
     }
@@ -102,7 +102,7 @@ public:
   // |specifiedFilterLength| may be different if leading/trailing zeros of the
   // original floating point form were clipped.
   // There will be |filterLength| values in the return array.
-  // Returns NULL if the filter is 0-length (for instance when all floating
+  // Returns nullptr if the filter is 0-length (for instance when all floating
   // point values passed to AddFilter were clipped to 0).
     SK_API const ConvolutionFixed* GetSingleFilter(int* specifiedFilterLength,
         int* filterOffset,
@@ -153,7 +153,8 @@ typedef void (*SkConvolveVertically_pointer)(
 typedef void (*SkConvolve4RowsHorizontally_pointer)(
     const unsigned char* srcData[4],
     const SkConvolutionFilter1D& filter,
-    unsigned char* outRow[4]);
+    unsigned char* outRow[4],
+    size_t outRowBytes);
 typedef void (*SkConvolveHorizontally_pointer)(
     const unsigned char* srcData,
     const SkConvolutionFilter1D& filter,
@@ -192,7 +193,11 @@ struct SkConvolutionProcs {
 //
 // The layout in memory is assumed to be 4-bytes per pixel in B-G-R-A order
 // (this is ARGB when loaded into 32-bit words on a little-endian machine).
-SK_API void BGRAConvolve2D(const unsigned char* sourceData,
+/**
+ *  Returns false if it was unable to perform the convolution/rescale. in which case the output
+ *  buffer is assumed to be undefined.
+ */
+SK_API bool BGRAConvolve2D(const unsigned char* sourceData,
     int sourceByteRowStride,
     bool sourceHasAlpha,
     const SkConvolutionFilter1D& xfilter,

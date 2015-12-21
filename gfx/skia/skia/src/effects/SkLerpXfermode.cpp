@@ -18,19 +18,17 @@ SkXfermode* SkLerpXfermode::Create(SkScalar scale) {
     } else if (scale256 <= 0) {
         return SkXfermode::Create(SkXfermode::kDst_Mode);
     }
-    return SkNEW_ARGS(SkLerpXfermode, (scale256));
+    return new SkLerpXfermode(scale256);
 }
 
 SkLerpXfermode::SkLerpXfermode(unsigned scale256) : fScale256(scale256) {}
 
-SkLerpXfermode::SkLerpXfermode(SkReadBuffer& buffer)
-    : INHERITED(buffer) {
-    fScale256 = buffer.readUInt();
+void SkLerpXfermode::flatten(SkWriteBuffer& buffer) const {
+    buffer.writeUInt(fScale256);
 }
 
-void SkLerpXfermode::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
-    buffer.writeUInt(fScale256);
+SkFlattenable* SkLerpXfermode::CreateProc(SkReadBuffer& buffer) {
+    return new SkLerpXfermode(buffer.readUInt());
 }
 
 void SkLerpXfermode::xfer32(SkPMColor dst[], const SkPMColor src[], int count,

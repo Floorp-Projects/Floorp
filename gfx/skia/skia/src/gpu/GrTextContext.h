@@ -8,48 +8,80 @@
 #ifndef GrTextContext_DEFINED
 #define GrTextContext_DEFINED
 
+#include "GrClip.h"
 #include "GrGlyph.h"
 #include "GrPaint.h"
-#include "SkDeviceProperties.h"
-
+#include "SkSurfaceProps.h"
 #include "SkPostConfig.h"
 
+class GrClip;
 class GrContext;
-class GrDrawTarget;
+class GrDrawContext;
 class GrFontScaler;
+class SkDrawFilter;
+class SkTextBlob;
 
 /*
  * This class wraps the state for a single text render
  */
 class GrTextContext {
 public:
-    virtual ~GrTextContext() {}
-    virtual void drawText(const GrPaint&, const SkPaint&, const char text[], size_t byteLength,
-                          SkScalar x, SkScalar y) = 0;
-    virtual void drawPosText(const GrPaint&, const SkPaint&,
-                             const char text[], size_t byteLength,
-                             const SkScalar pos[], SkScalar constY,
-                             int scalarsPerPosition) = 0;
+    virtual ~GrTextContext();
 
-    virtual bool canDraw(const SkPaint& paint) = 0;
+    void drawText(GrDrawContext* dc, GrRenderTarget* rt,
+                  const GrClip&,  const GrPaint&, const SkPaint&,
+                  const SkMatrix& viewMatrix, const char text[], size_t byteLength, SkScalar x,
+                  SkScalar y, const SkIRect& clipBounds);
+    void drawPosText(GrDrawContext* dc, GrRenderTarget* rt,
+                     const GrClip&, const GrPaint&, const SkPaint&,
+                     const SkMatrix& viewMatrix,
+                     const char text[], size_t byteLength,
+                     const SkScalar pos[], int scalarsPerPosition,
+                     const SkPoint& offset, const SkIRect& clipBounds);
+    virtual void drawTextBlob(GrDrawContext* dc, GrRenderTarget*, const GrClip&, const SkPaint&,
+                              const SkMatrix& viewMatrix, const SkTextBlob*,
+                              SkScalar x, SkScalar y,
+                              SkDrawFilter*, const SkIRect& clipBounds);
+
+    static bool ShouldDisableLCD(const SkPaint& paint);
 
 protected:
-    GrTextContext(GrContext*, const SkDeviceProperties&);
+    GrTextContext*                 fFallbackTextContext;
+    GrContext*                     fContext;
+    SkSurfaceProps                 fSurfaceProps;
+
+    GrTextContext(GrContext*, const SkSurfaceProps&);
+
+    virtual bool canDraw(const SkPaint&, const SkMatrix& viewMatrix) = 0;
+
+    virtual void onDrawText(GrDrawContext*, GrRenderTarget*, const GrClip&,
+                            const GrPaint&, const SkPaint&,
+                            const SkMatrix& viewMatrix, const char text[], size_t byteLength,
+                            SkScalar x, SkScalar y, const SkIRect& clipBounds) = 0;
+    virtual void onDrawPosText(GrDrawContext*, GrRenderTarget*, const GrClip&,
+                               const GrPaint&, const SkPaint&,
+                               const SkMatrix& viewMatrix,
+                               const char text[], size_t byteLength,
+                               const SkScalar pos[], int scalarsPerPosition,
+                               const SkPoint& offset, const SkIRect& clipBounds) = 0;
+
+    void drawTextAsPath(GrDrawContext*, const GrClip& clip,
+                        const SkPaint& origPaint, const SkMatrix& viewMatrix,
+                        const char text[], size_t byteLength, SkScalar x, SkScalar y,
+                        const SkIRect& clipBounds);
+    void drawPosTextAsPath(GrDrawContext*, const GrClip& clip,
+                           const SkPaint& origPaint, const SkMatrix& viewMatrix,
+                           const char text[], size_t byteLength,
+                           const SkScalar pos[], int scalarsPerPosition,
+                           const SkPoint& offset, const SkIRect& clipBounds);
 
     static GrFontScaler* GetGrFontScaler(SkGlyphCache* cache);
-    static void MeasureText(SkGlyphCache* cache, SkDrawCacheProc glyphCacheProc,
-                            const char text[], size_t byteLength, SkVector* stopVector);
+    // sets extent in stopVector and returns glyph count
+    static int MeasureText(SkGlyphCache* cache, SkDrawCacheProc glyphCacheProc,
+                           const char text[], size_t byteLength, SkVector* stopVector);
+    static uint32_t FilterTextFlags(const SkSurfaceProps& surfaceProps, const SkPaint& paint);
 
-    void init(const GrPaint&, const SkPaint&);
-    void finish() { fDrawTarget = NULL; }
-
-    GrContext*         fContext;
-    SkDeviceProperties fDeviceProperties;
-
-    GrDrawTarget*      fDrawTarget;
-    SkIRect            fClipRect;
-    GrPaint            fPaint;
-    SkPaint            fSkPaint;
+    friend class GrAtlasTextBatch;
 };
 
 #endif

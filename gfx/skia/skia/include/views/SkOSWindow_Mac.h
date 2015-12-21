@@ -24,17 +24,21 @@ public:
 #if SK_SUPPORT_GPU
         kNativeGL_BackEndType,
 #endif
-    };
-
-    struct AttachmentInfo {
-        int fSampleCount;
-        int fStencilBits;
+#if SK_ANGLE
+        kANGLE_BackEndType,
+#endif // SK_ANGLE
+#if SK_COMMAND_BUFFER
+        kCommandBuffer_BackEndType,
+#endif // SK_COMMAND_BUFFER
     };
 
     void    detach();
     bool    attach(SkBackEndTypes attachType, int msaaSampleCount, AttachmentInfo*);
     void    present();
 
+    bool    makeFullscreen();
+    void    closeWindow();
+    void    setVsync(bool);
 protected:
     // overrides from SkEventSink
     virtual bool onEvent(const SkEvent& evt);

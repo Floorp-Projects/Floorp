@@ -58,6 +58,17 @@ interface HeapSnapshot {
   any takeCensus(object? options);
 
   /**
+   * Describe `node` with the specified `breakdown`. See the comment above
+   * `takeCensus` or `js/src/doc/Debugger/Debugger.Memory.md` for detailed
+   * documentation on breakdowns.
+   *
+   * Throws an error when `node` is not the id of a node in the heap snapshot,
+   * or if the breakdown is invalid.
+   */
+  [Throws]
+  any describeNode(object breakdown, NodeId node);
+
+  /**
    * Compute the dominator tree for this heap snapshot.
    *
    * @see DominatorTree.webidl
