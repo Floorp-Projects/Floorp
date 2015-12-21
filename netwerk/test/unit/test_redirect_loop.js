@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 /*
  * This xpcshell test checks whether we detect infinite HTTP redirect loops.
@@ -23,7 +23,16 @@ var emptyLoopPath = "/empty/";
 var emptyLoopURI = "http://localhost:" + PORT + emptyLoopPath;
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  return ios.newChannel2(url,
+                         "",
+                         null,
+                         null,      // aLoadingNode
+                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 function fullLoopHandler(metadata, response)
@@ -56,7 +65,8 @@ function testFullLoop(request, buffer)
   do_check_eq(request.status, Components.results.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(relativeLoopURI);
-  chan.asyncOpen2(new ChannelListener(testRelativeLoop, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(testRelativeLoop, null, CL_EXPECT_FAILURE),
+                 null);
 }
 
 function testRelativeLoop(request, buffer)
@@ -64,7 +74,8 @@ function testRelativeLoop(request, buffer)
   do_check_eq(request.status, Components.results.NS_ERROR_REDIRECT_LOOP);
 
   var chan = make_channel(emptyLoopURI);
-  chan.asyncOpen2(new ChannelListener(testEmptyLoop, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(testEmptyLoop, null, CL_EXPECT_FAILURE),
+                 null);
 }
 
 function testEmptyLoop(request, buffer)
@@ -81,6 +92,7 @@ function run_test()
   httpServer.registerPathHandler(emptyLoopPath, emptyLoopHandler);
 
   var chan = make_channel(fullLoopURI);
-  chan.asyncOpen2(new ChannelListener(testFullLoop, null, CL_EXPECT_FAILURE));
+  chan.asyncOpen(new ChannelListener(testFullLoop, null, CL_EXPECT_FAILURE),
+                 null);
   do_test_pending();
 }

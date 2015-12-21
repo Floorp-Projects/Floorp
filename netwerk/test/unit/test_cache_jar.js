@@ -1,6 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
@@ -20,8 +19,15 @@ function cached_handler(metadata, response) {
 }
 
 function makeChan(url, appId, inBrowser) {
-  var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
-                    .QueryInterface(Ci.nsIHttpChannel);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel2(url,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
   chan.notificationCallbacks = {
     appId: appId,
     isInBrowserElement: inBrowser,
@@ -47,7 +53,7 @@ function run_all_tests() {
   for (let test of firstTests) {
     handlers_called = 0;
     var chan = makeChan(URL, test[0], test[1]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[2]));
+    chan.asyncOpen(new ChannelListener(doneFirstLoad, test[2]), null);
     yield undefined;
   }
 
@@ -65,7 +71,7 @@ function run_all_tests() {
   for (let test of secondTests) {
     handlers_called = 0;
     var chan = makeChan(URL, test[0], test[1]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[2]));
+    chan.asyncOpen(new ChannelListener(doneFirstLoad, test[2]), null);
     yield undefined;
   }
 
@@ -75,7 +81,7 @@ function run_all_tests() {
   for (let test of thirdTests) {
     handlers_called = 0;
     var chan = makeChan(URL, test[0], test[1]);
-    chan.asyncOpen2(new ChannelListener(doneFirstLoad, test[2]));
+    chan.asyncOpen(new ChannelListener(doneFirstLoad, test[2]), null);
     yield undefined;
   }
 }
@@ -99,7 +105,7 @@ function doneFirstLoad(req, buffer, expected) {
   // Load it again, make sure it hits the cache
   var nc = req.notificationCallbacks.getInterface(Ci.nsILoadContext);
   var chan = makeChan(URL, nc.appId, nc.isInBrowserElement);
-  chan.asyncOpen2(new ChannelListener(doneSecondLoad, expected));
+  chan.asyncOpen(new ChannelListener(doneSecondLoad, expected), null);
 }
 
 function doneSecondLoad(req, buffer, expected) {

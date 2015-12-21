@@ -1,7 +1,7 @@
 // This file tests channel event sinks (bug 315598 et al)
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort;
@@ -97,7 +97,19 @@ var listener = {
 };
 
 function makeChan(url) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var ios = Components.classes["@mozilla.org/network/io-service;1"]
+                      .getService(Components.interfaces.nsIIOService);
+  var chan = ios.newChannel2(url,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER)
+                .QueryInterface(Components.interfaces.nsIHttpChannel);
+
+  return chan;
 }
 
 var httpserv = null;
@@ -115,7 +127,7 @@ function run_test() {
   var chan = makeChan(URL + "/redirect");
   chan.notificationCallbacks = eventsink;
 
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener, null);
 
   do_test_pending();
 }
@@ -141,7 +153,7 @@ function run_test_continued() {
   }
 
   listener._iteration++;
-  chan.asyncOpen2(listener);
+  chan.asyncOpen(listener, null);
 
   do_test_pending();
 }

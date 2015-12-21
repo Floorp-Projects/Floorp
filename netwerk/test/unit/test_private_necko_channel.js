@@ -3,7 +3,7 @@
 //
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 var testpath = "/simple";
@@ -25,16 +25,23 @@ function run_test() {
   channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
   channel.setPrivate(true);
 
-  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
+  channel.asyncOpen(new ChannelListener(checkRequest, channel), null);
 
   do_test_pending();
 }
 
 function setupChannel(path) {
-  return NetUtil.newChannel({
-    uri: "http://localhost:" + httpserver.identity.primaryPort + path,
-    loadUsingSystemPrincipal: true
-  }).QueryInterface(Ci.nsIHttpChannel);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  return chan = ios.newChannel2("http://localhost:" +
+                                httpserver.identity.primaryPort + path,
+                                "",
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER)
+                   .QueryInterface(Ci.nsIHttpChannel);
 }
 
 function serverHandler(metadata, response) {
