@@ -14,6 +14,8 @@ class nsIDOMWindow;
 class PPrintProgressDialogParent;
 class PPrintSettingsDialogParent;
 
+typedef mozilla::layout::PRemotePrintJobParent PRemotePrintJobParent;
+
 namespace mozilla {
 namespace embedding {
 
@@ -48,6 +50,12 @@ public:
 
     virtual bool
     DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor);
+    
+    virtual PRemotePrintJobParent*
+    AllocPRemotePrintJobParent();
+
+    virtual bool
+    DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor);
 
     virtual void
     ActorDestroy(ActorDestroyReason aWhy);
@@ -69,4 +77,3 @@ private:
 } // namespace mozilla
 
 #endif
-
