@@ -52,7 +52,6 @@ class LayerMetricsWrapper;
 class InputQueue;
 class GeckoContentController;
 class HitTestingTreeNode;
-class TaskThrottler;
 
 /**
  * ****************** NOTE ON LOCK ORDERING IN APZ **************************
@@ -136,17 +135,6 @@ public:
                             bool aIsFirstPaint,
                             uint64_t aOriginatingLayersId,
                             uint32_t aPaintSequenceNumber);
-
-  /**
-   * Do any per-layers-id setup needed. This will be called on the main thread,
-   * and may be called multiple times for the same layers id.
-   */
-  void InitializeForLayersId(uint64_t aLayersId);
-
-  /**
-   * Move any per-layers-id state from the old APZCTreeManager to this one.
-   */
-  void AdoptLayersId(uint64_t aLayersId, APZCTreeManager* aOldManager);
 
   /**
    * Walk the tree of APZCs and flushes the repaint requests for all the APZCS
@@ -419,8 +407,7 @@ protected:
 
   // Protected hooks for gtests subclass
   virtual AsyncPanZoomController* NewAPZCInstance(uint64_t aLayersId,
-                                                  GeckoContentController* aController,
-                                                  TaskThrottler* aPaintThrottler);
+                                                  GeckoContentController* aController);
 public:
   // Public hooks for gtests subclass
   virtual TimeStamp GetFrameTime();
@@ -535,10 +522,6 @@ private:
   /* Holds the zoom constraints for scrollable layers, as determined by the
    * the main-thread gecko code. */
   std::map<ScrollableLayerGuid, ZoomConstraints> mZoomConstraints;
-  /* Stores a paint throttler for each layers id. There is one for each layers
-   * id to ensure that one child process painting slowly doesn't hold up
-   * another. */
-  std::map<uint64_t, RefPtr<TaskThrottler>> mPaintThrottlerMap;
   /* This tracks the APZC that should receive all inputs for the current input event block.
    * This allows touch points to move outside the thing they started on, but still have the
    * touch events delivered to the same initial APZC. This will only ever be touched on the

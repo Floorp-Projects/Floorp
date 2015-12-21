@@ -249,7 +249,6 @@ UNIFIED_SOURCES += [
     'apz/src/InputBlockState.cpp',
     'apz/src/InputQueue.cpp',
     'apz/src/OverscrollHandoffState.cpp',
-    'apz/src/TaskThrottler.cpp',
     'apz/src/TouchCounter.cpp',
     'apz/src/WheelScrollAnimation.cpp',
     'apz/testutil/APZTestData.cpp',
