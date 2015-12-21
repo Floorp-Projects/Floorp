@@ -28,9 +28,16 @@ task:
       GAIA_REF: '{{{gaia_ref}}}'
       GAIA_REV: '{{{gaia_rev}}}'
 
+    log: 'private/b2g/logs/live.log'
+
     # All builds share a common artifact directory for ease of uploading.
     artifacts:
-      'private/logs':
+      'private/b2g/device.json':
+        type: file
+        path: '/home/worker/data/device.json'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+      'private/b2g/logs':
         type: directory
         path: '/home/worker/upload/logs/'
         expires: '{{#from_now}}1 year{{/from_now}}'

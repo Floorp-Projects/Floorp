@@ -296,6 +296,9 @@
           sid = params.args.indexOf("-screen");
           ok(params.args[sid + 1].includes(device.width + "x" + device.height), "Simulator screen resolution looks right");
 
+          // Test Simulator Menu.
+          is(doc.querySelector("#tv_simulator_menu").style.visibility, "hidden", "OpenTVDummyDirectory Button is not hidden\n");
+
           // Restore default simulator options.
 
           doc.querySelector("#reset").click();
@@ -321,6 +324,9 @@
           for (let param in defaults.television) {
             is(form[param].value, String(defaults.television[param]), "Default TV value for device " + param);
           }
+
+          // Test Simulator Menu
+          is(doc.querySelector("#tv_simulator_menu").style.visibility, "visible", "OpenTVDummyDirectory Button is not visible");
 
           // Force reload the list of simulators.
 
