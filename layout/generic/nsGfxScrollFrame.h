@@ -111,6 +111,7 @@ public:
     virtual ~ScrollEvent();
   private:
     ScrollFrameHelper *mHelper;
+    RefPtr<nsRefreshDriver> mDriver;
   };
 
   class AsyncScrollPortEvent : public nsRunnable {
