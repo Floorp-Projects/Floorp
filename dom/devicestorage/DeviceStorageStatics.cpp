@@ -271,13 +271,6 @@ DeviceStorageStatics::DumpDirs()
     nullptr
   };
 
-  const char* ptStr;
-  if (XRE_IsParentProcess()) {
-    ptStr = "parent";
-  } else {
-    ptStr = "child";
-  }
-
   for (uint32_t i = 0; i < TYPE_COUNT; ++i) {
     MOZ_ASSERT(storageTypes[i]);
 
@@ -285,8 +278,8 @@ DeviceStorageStatics::DumpDirs()
     if (mDirs[i]) {
       mDirs[i]->GetPath(path);
     }
-    DS_LOG_INFO("(%s) %s: '%s'",
-      ptStr, storageTypes[i], NS_LossyConvertUTF16toASCII(path).get());
+    DS_LOG_INFO("%s: '%s'",
+      storageTypes[i], NS_LossyConvertUTF16toASCII(path).get());
   }
 #endif
 }
@@ -302,47 +295,6 @@ DeviceStorageStatics::Shutdown()
   Preferences::RemoveObserver(this, kPrefTesting);
   Preferences::RemoveObserver(this, kPrefPromptTesting);
   Preferences::RemoveObserver(this, kPrefWritableName);
-}
-
-/* static */ void
-DeviceStorageStatics::GetDeviceStorageAreasForIPC(
-  DeviceStorageAreaInfo& aAreaInfo)
-{
-  MOZ_ASSERT(XRE_IsParentProcess());
-  MOZ_ASSERT(NS_IsMainThread());
-
-  InitializeDirs();
-
-  GetDirPath(TYPE_APPS,     aAreaInfo.apps());
-  GetDirPath(TYPE_CRASHES,  aAreaInfo.crashes());
-  GetDirPath(TYPE_PICTURES, aAreaInfo.pictures());
-  GetDirPath(TYPE_VIDEOS,   aAreaInfo.videos());
-  GetDirPath(TYPE_MUSIC,    aAreaInfo.music());
-  GetDirPath(TYPE_SDCARD,   aAreaInfo.sdcard());
-}
-
-/* static */ void
-DeviceStorageStatics::RecvDeviceStorageAreasFromParent(
-  const DeviceStorageAreaInfo& aAreaInfo)
-{
-  if (XRE_IsParentProcess()) {
-    // We are the parent. Therefore our info is already correct.
-    return;
-  }
-
-  StaticMutexAutoLock lock(sMutex);
-  if (NS_WARN_IF(!sInstance)) {
-    return;
-  }
-
-  NS_NewLocalFile(aAreaInfo.apps(),     true, getter_AddRefs(sInstance->mDirs[TYPE_APPS]));
-  NS_NewLocalFile(aAreaInfo.crashes(),  true, getter_AddRefs(sInstance->mDirs[TYPE_CRASHES]));
-  NS_NewLocalFile(aAreaInfo.pictures(), true, getter_AddRefs(sInstance->mDirs[TYPE_PICTURES]));
-  NS_NewLocalFile(aAreaInfo.videos(),   true, getter_AddRefs(sInstance->mDirs[TYPE_VIDEOS]));
-  NS_NewLocalFile(aAreaInfo.music(),    true, getter_AddRefs(sInstance->mDirs[TYPE_MUSIC]));
-  NS_NewLocalFile(aAreaInfo.sdcard(),   true, getter_AddRefs(sInstance->mDirs[TYPE_SDCARD]));
-
-  sInstance->mInitialized = true;
 }
 
 /* static */ already_AddRefed<nsIFile>
@@ -378,16 +330,6 @@ DeviceStorageStatics::GetDir(DeviceStorageType aType)
 #endif
   }
   return file.forget();
-}
-
-/* static */ void
-DeviceStorageStatics::GetDirPath(DeviceStorageType aType, nsString& aDirPath)
-{
-  aDirPath.Truncate();
-  nsCOMPtr<nsIFile> file = GetDir(aType);
-  if (file) {
-    file->GetPath(aDirPath);
-  }
 }
 
 /* static */ bool

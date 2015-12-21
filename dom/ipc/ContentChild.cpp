@@ -17,7 +17,6 @@
 #include "BlobChild.h"
 #include "CrashReporterChild.h"
 #include "GeckoProfiler.h"
-#include "DeviceStorageStatics.h"
 #include "TabChild.h"
 #include "HandlerServiceChild.h"
 
@@ -2591,15 +2590,6 @@ ContentChild::RecvVolumes(nsTArray<VolumeInfo>&& aVolumes)
     if (vs) {
         vs->RecvVolumesFromParent(aVolumes);
     }
-#endif
-    return true;
-}
-
-bool
-ContentChild::RecvDeviceStorageAreas(const DeviceStorageAreaInfo& areaInfo)
-{
-#if !defined(MOZ_WIDGET_GONK)
-    DeviceStorageStatics::RecvDeviceStorageAreasFromParent(areaInfo);
 #endif
     return true;
 }
