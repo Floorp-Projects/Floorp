@@ -12,27 +12,32 @@
 #include "SkPoint.h"
 
 class SK_API SkOffsetImageFilter : public SkImageFilter {
-    typedef SkImageFilter INHERITED;
-
 public:
-    static SkOffsetImageFilter* Create(SkScalar dx, SkScalar dy, SkImageFilter* input = NULL,
-                                       const CropRect* cropRect = NULL) {
-        return SkNEW_ARGS(SkOffsetImageFilter, (dx, dy, input, cropRect));
+    static SkImageFilter* Create(SkScalar dx, SkScalar dy, SkImageFilter* input = NULL,
+                                 const CropRect* cropRect = NULL) {
+        if (!SkScalarIsFinite(dx) || !SkScalarIsFinite(dy)) {
+            return NULL;
+        }
+        return new SkOffsetImageFilter(dx, dy, input, cropRect);
     }
-    virtual void computeFastBounds(const SkRect& src, SkRect* dst) const SK_OVERRIDE;
+
+    void computeFastBounds(const SkRect& src, SkRect* dst) const override;
+
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkOffsetImageFilter)
 
 protected:
-    SkOffsetImageFilter(SkScalar dx, SkScalar dy, SkImageFilter* input, const CropRect* cropRect);
-    explicit SkOffsetImageFilter(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
-
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
-                               SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
-    virtual bool onFilterBounds(const SkIRect&, const SkMatrix&, SkIRect*) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
+    bool onFilterImage(Proxy*, const SkBitmap& src, const Context&, SkBitmap* result,
+                       SkIPoint* loc) const override;
+    bool onFilterBounds(const SkIRect&, const SkMatrix&, SkIRect*) const override;
 
 private:
+    SkOffsetImageFilter(SkScalar dx, SkScalar dy, SkImageFilter* input, const CropRect*);
+
     SkVector fOffset;
+
+    typedef SkImageFilter INHERITED;
 };
 
 #endif

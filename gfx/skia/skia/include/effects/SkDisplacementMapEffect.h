@@ -27,11 +27,7 @@ public:
                                            ChannelSelectorType yChannelSelector,
                                            SkScalar scale, SkImageFilter* displacement,
                                            SkImageFilter* color = NULL,
-                                           const CropRect* cropRect = NULL) {
-        SkImageFilter* inputs[2] = { displacement, color };
-        return SkNEW_ARGS(SkDisplacementMapEffect, (xChannelSelector, yChannelSelector, scale,
-                                                    inputs, cropRect));
-    }
+                                           const CropRect* cropRect = NULL);
 
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDisplacementMapEffect)
 
@@ -39,25 +35,26 @@ public:
                                const SkBitmap& src,
                                const Context& ctx,
                                SkBitmap* dst,
-                               SkIPoint* offset) const SK_OVERRIDE;
-    virtual void computeFastBounds(const SkRect& src, SkRect* dst) const SK_OVERRIDE;
+                               SkIPoint* offset) const override;
+    void computeFastBounds(const SkRect& src, SkRect* dst) const override;
 
     virtual bool onFilterBounds(const SkIRect& src, const SkMatrix&,
-                                SkIRect* dst) const SK_OVERRIDE;
+                                SkIRect* dst) const override;
 
 #if SK_SUPPORT_GPU
-    virtual bool canFilterImageGPU() const SK_OVERRIDE { return true; }
+    bool canFilterImageGPU() const override { return true; }
     virtual bool filterImageGPU(Proxy* proxy, const SkBitmap& src, const Context& ctx,
-                                SkBitmap* result, SkIPoint* offset) const SK_OVERRIDE;
+                                SkBitmap* result, SkIPoint* offset) const override;
 #endif
+
+    SK_TO_STRING_OVERRIDE()
 
 protected:
     SkDisplacementMapEffect(ChannelSelectorType xChannelSelector,
                             ChannelSelectorType yChannelSelector,
                             SkScalar scale, SkImageFilter* inputs[2],
                             const CropRect* cropRect);
-    explicit SkDisplacementMapEffect(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
 
 private:
     ChannelSelectorType fXChannelSelector;

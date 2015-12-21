@@ -45,18 +45,30 @@ SkPairPathEffect::~SkPairPathEffect() {
     Format: [oe0-factory][pe1-factory][pe0-size][pe0-data][pe1-data]
 */
 void SkPairPathEffect::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
     buffer.writeFlattenable(fPE0);
     buffer.writeFlattenable(fPE1);
 }
 
-SkPairPathEffect::SkPairPathEffect(SkReadBuffer& buffer) {
-    fPE0 = buffer.readPathEffect();
-    fPE1 = buffer.readPathEffect();
-    // either of these may fail, so we have to check for nulls later on
+#ifndef SK_IGNORE_TO_STRING
+void SkPairPathEffect::toString(SkString* str) const {
+    str->appendf("first: ");
+    if (fPE0) {
+        fPE0->toString(str);
+    }
+    str->appendf(" second: ");
+    if (fPE1) {
+        fPE1->toString(str);
+    }
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
+
+SkFlattenable* SkComposePathEffect::CreateProc(SkReadBuffer& buffer) {
+    SkAutoTUnref<SkPathEffect> pe0(buffer.readPathEffect());
+    SkAutoTUnref<SkPathEffect> pe1(buffer.readPathEffect());
+    return SkComposePathEffect::Create(pe0, pe1);
+}
 
 bool SkComposePathEffect::filterPath(SkPath* dst, const SkPath& src,
                              SkStrokeRec* rec, const SkRect* cullRect) const {
@@ -74,7 +86,22 @@ bool SkComposePathEffect::filterPath(SkPath* dst, const SkPath& src,
     return fPE0->filterPath(dst, *ptr, rec, cullRect);
 }
 
+
+#ifndef SK_IGNORE_TO_STRING
+void SkComposePathEffect::toString(SkString* str) const {
+    str->appendf("SkComposePathEffect: (");
+    this->INHERITED::toString(str);
+    str->appendf(")");
+}
+#endif
+
 ///////////////////////////////////////////////////////////////////////////////
+
+SkFlattenable* SkSumPathEffect::CreateProc(SkReadBuffer& buffer) {
+    SkAutoTUnref<SkPathEffect> pe0(buffer.readPathEffect());
+    SkAutoTUnref<SkPathEffect> pe1(buffer.readPathEffect());
+    return SkSumPathEffect::Create(pe0, pe1);
+}
 
 bool SkSumPathEffect::filterPath(SkPath* dst, const SkPath& src,
                              SkStrokeRec* rec, const SkRect* cullRect) const {
@@ -82,3 +109,12 @@ bool SkSumPathEffect::filterPath(SkPath* dst, const SkPath& src,
     return fPE0->filterPath(dst, src, rec, cullRect) |
            fPE1->filterPath(dst, src, rec, cullRect);
 }
+
+
+#ifndef SK_IGNORE_TO_STRING
+void SkSumPathEffect::toString(SkString* str) const {
+    str->appendf("SkSumPathEffect: (");
+    this->INHERITED::toString(str);
+    str->appendf(")");
+}
+#endif

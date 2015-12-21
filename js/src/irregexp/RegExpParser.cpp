@@ -205,7 +205,8 @@ RegExpBuilder::AddQuantifierToAtom(int min, int max,
 
 template <typename CharT>
 RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
-                                  const CharT* chars, const CharT* end, bool multiline_mode)
+                                  const CharT* chars, const CharT* end, bool multiline_mode,
+                                  bool unicode, bool ignore_case)
   : ts(ts),
     alloc(alloc),
     captures_(nullptr),
@@ -215,6 +216,8 @@ RegExpParser<CharT>::RegExpParser(frontend::TokenStream& ts, LifoAlloc* alloc,
     capture_count_(0),
     has_more_(true),
     multiline_(multiline_mode),
+    unicode_(unicode),
+    ignore_case_(ignore_case),
     simple_(false),
     contains_anchor_(false),
     is_scanned_for_captures_(false)
@@ -300,6 +303,133 @@ RegExpParser<CharT>::ParseHexEscape(int length, size_t* value)
     return true;
 }
 
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseBracedHexEscape(size_t* value)
+{
+    MOZ_ASSERT(current() == '{');
+    Advance();
+
+    bool first = true;
+    uint32_t code = 0;
+    while (true) {
+        widechar c = current();
+        if (c == kEndMarker) {
+            ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+            return false;
+        }
+        if (c == '}') {
+            if (first) {
+                ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+                return false;
+            }
+            Advance();
+            break;
+        }
+
+        int d = HexValue(c);
+        if (d < 0) {
+            ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+            return false;
+        }
+        code = (code << 4) | d;
+        if (code > unicode::NonBMPMax) {
+            ReportError(JSMSG_UNICODE_OVERFLOW);
+            return false;
+        }
+        Advance();
+        first = false;
+    }
+
+    *value = code;
+    return true;
+}
+
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseTrailSurrogate(size_t* value)
+{
+    if (current() != '\\')
+        return false;
+
+    const CharT* start = position();
+    Advance();
+    if (current() != 'u') {
+        Reset(start);
+        return false;
+    }
+    Advance();
+    if (!ParseHexEscape(4, value)) {
+        Reset(start);
+        return false;
+    }
+    if (!unicode::IsTrailSurrogate(*value)) {
+        Reset(start);
+        return false;
+    }
+    return true;
+}
+
+template <typename CharT>
+bool
+RegExpParser<CharT>::ParseRawSurrogatePair(char16_t* lead, char16_t* trail)
+{
+    widechar c1 = current();
+    if (!unicode::IsLeadSurrogate(c1))
+        return false;
+
+    const CharT* start = position();
+    Advance();
+    widechar c2 = current();
+    if (!unicode::IsTrailSurrogate(c2)) {
+        Reset(start);
+        return false;
+    }
+    Advance();
+    *lead = c1;
+    *trail = c2;
+    return true;
+}
+
+static inline RegExpTree*
+RangeAtom(LifoAlloc* alloc, char16_t from, char16_t to)
+{
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(from, to));
+    return alloc->newInfallible<RegExpCharacterClass>(ranges, false);
+}
+
+static inline RegExpTree*
+NegativeLookahead(LifoAlloc* alloc, char16_t from, char16_t to)
+{
+    return alloc->newInfallible<RegExpLookahead>(RangeAtom(alloc, from, to), false, 0, 0);
+}
+
+static bool
+IsSyntaxCharacter(widechar c)
+{
+  switch (c) {
+    case '^':
+    case '$':
+    case '\\':
+    case '.':
+    case '*':
+    case '+':
+    case '?':
+    case '(':
+    case ')':
+    case '[':
+    case ']':
+    case '{':
+    case '}':
+    case '|':
+    case '/':
+      return true;
+    default:
+      return false;
+  }
+}
+
 #ifdef DEBUG
 // Currently only used in an assert.kASSERT.
 static bool
@@ -317,8 +447,8 @@ IsSpecialClassEscape(widechar c)
 #endif
 
 template <typename CharT>
-widechar
-RegExpParser<CharT>::ParseClassCharacterEscape()
+bool
+RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
 {
     MOZ_ASSERT(current() == '\\');
     MOZ_ASSERT(has_next() && !IsSpecialClassEscape(Next()));
@@ -326,92 +456,519 @@ RegExpParser<CharT>::ParseClassCharacterEscape()
     switch (current()) {
       case 'b':
         Advance();
-        return '\b';
+        *code = '\b';
+        return true;
       // ControlEscape :: one of
       //   f n r t v
       case 'f':
         Advance();
-        return '\f';
+        *code = '\f';
+        return true;
       case 'n':
         Advance();
-        return '\n';
+        *code = '\n';
+        return true;
       case 'r':
         Advance();
-        return '\r';
+        *code = '\r';
+        return true;
       case 't':
         Advance();
-        return '\t';
+        *code = '\t';
+        return true;
       case 'v':
         Advance();
-        return '\v';
+        *code = '\v';
+        return true;
       case 'c': {
         widechar controlLetter = Next();
         widechar letter = controlLetter & ~('A' ^ 'a');
         // For compatibility with JSC, inside a character class
-        // we also accept digits and underscore as control characters.
-        if ((controlLetter >= '0' && controlLetter <= '9') ||
-            controlLetter == '_' ||
-            (letter >= 'A' && letter <= 'Z')) {
+        // we also accept digits and underscore as control characters,
+        // but only in non-unicode mode
+        if ((!unicode_ &&
+             ((controlLetter >= '0' && controlLetter <= '9') ||
+              controlLetter == '_')) ||
+            (letter >= 'A' && letter <= 'Z'))
+        {
             Advance(2);
             // Control letters mapped to ASCII control characters in the range
             // 0x00-0x1f.
-            return controlLetter & 0x1f;
+            *code = controlLetter & 0x1f;
+            return true;
+        }
+        if (unicode_) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
         }
         // We match JSC in reading the backslash as a literal
         // character instead of as starting an escape.
-        return '\\';
+        *code = '\\';
+        return true;
       }
       case '0': case '1': case '2': case '3': case '4': case '5':
       case '6': case '7':
-        // For compatibility, we interpret a decimal escape that isn't
-        // a back reference (and therefore either \0 or not valid according
-        // to the specification) as a 1..3 digit octal character code.
-        return ParseOctalLiteral();
+        if (unicode_) {
+            if (current() == '0') {
+                *code = 0;
+                return true;
+            }
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
+        // For compatibility, outside of unicode mode, we interpret a decimal
+        // escape that isn't a back reference (and therefore either \0 or not
+        // valid according to the specification) as a 1..3 digit octal
+        // character code.
+        *code = ParseOctalLiteral();
+        return true;
       case 'x': {
         Advance();
         size_t value;
-        if (ParseHexEscape(2, &value))
-            return value;
+        if (ParseHexEscape(2, &value)) {
+            *code = value;
+            return true;
+        }
+        if (unicode_) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
         // If \x is not followed by a two-digit hexadecimal, treat it
-        // as an identity escape.
-        return 'x';
+        // as an identity escape in non-unicode mode.
+        *code = 'x';
+        return true;
       }
       case 'u': {
         Advance();
         size_t value;
-        if (ParseHexEscape(4, &value))
-            return value;
-        // If \u is not followed by a four-digit hexadecimal, treat it
+        if (unicode_) {
+            if (current() == '{') {
+                if (!ParseBracedHexEscape(&value))
+                    return false;
+                *code = value;
+                return true;
+            }
+            if (ParseHexEscape(4, &value)) {
+                if (unicode::IsLeadSurrogate(value)) {
+                    size_t trail;
+                    if (ParseTrailSurrogate(&trail)) {
+                        *code = unicode::UTF16Decode(value, trail);
+                        return true;
+                    }
+                }
+                *code = value;
+                return true;
+            }
+            ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+            return false;
+        }
+        if (ParseHexEscape(4, &value)) {
+            *code = value;
+            return true;
+        }
+        // If \u is not followed by a four-digit or braced hexadecimal, treat it
         // as an identity escape.
-        return 'u';
+        *code = 'u';
+        return true;
       }
       default: {
-        // Extended identity escape. We accept any character that hasn't
-        // been matched by a more specific case, not just the subset required
-        // by the ECMAScript specification.
+        // Extended identity escape (non-unicode only). We accept any character
+        // that hasn't been matched by a more specific case, not just the subset
+        // required by the ECMAScript specification.
         widechar result = current();
+        if (unicode_ && result != '-' && !IsSyntaxCharacter(result)) {
+            ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
+            return false;
+        }
         Advance();
-        return result;
+        *code = result;
+        return true;
       }
     }
-    return 0;
+    return true;
+}
+
+class WideCharRange
+{
+  public:
+    WideCharRange()
+      : from_(0), to_(0)
+    {}
+
+    WideCharRange(widechar from, widechar to)
+      : from_(from), to_(to)
+    {}
+
+    static inline WideCharRange Singleton(widechar value) {
+        return WideCharRange(value, value);
+    }
+    static inline WideCharRange Range(widechar from, widechar to) {
+        MOZ_ASSERT(from <= to);
+        return WideCharRange(from, to);
+    }
+
+    bool Contains(widechar i) const { return from_ <= i && i <= to_; }
+    widechar from() const { return from_; }
+    widechar to() const { return to_; }
+
+  private:
+    widechar from_;
+    widechar to_;
+};
+
+typedef Vector<WideCharRange, 1, LifoAllocPolicy<Infallible> > WideCharRangeVector;
+
+static inline CharacterRange
+LeadSurrogateRange()
+{
+    return CharacterRange::Range(unicode::LeadSurrogateMin, unicode::LeadSurrogateMax);
+}
+
+static inline CharacterRange
+TrailSurrogateRange()
+{
+    return CharacterRange::Range(unicode::TrailSurrogateMin, unicode::TrailSurrogateMax);
+}
+
+static inline WideCharRange
+NonBMPRange()
+{
+    return WideCharRange::Range(unicode::NonBMPMin, unicode::NonBMPMax);
 }
 
 static const char16_t kNoCharClass = 0;
 
-// Adds range or pre-defined character class to character ranges.
+// Adds a character or pre-defined character class to character ranges.
 // If char_class is not kInvalidClass, it's interpreted as a class
 // escape (i.e., 's' means whitespace, from '\s').
 static inline void
-AddRangeOrEscape(LifoAlloc* alloc,
-                 CharacterRangeVector* ranges,
-                 char16_t char_class,
-                 CharacterRange range)
+AddCharOrEscape(LifoAlloc* alloc,
+                CharacterRangeVector* ranges,
+                char16_t char_class,
+                widechar c)
 {
     if (char_class != kNoCharClass)
         CharacterRange::AddClassEscape(alloc, char_class, ranges);
     else
-        ranges->append(range);
+        ranges->append(CharacterRange::Singleton(c));
+}
+
+static inline void
+AddCharOrEscapeUnicode(LifoAlloc* alloc,
+                       CharacterRangeVector* ranges,
+                       CharacterRangeVector* lead_ranges,
+                       CharacterRangeVector* trail_ranges,
+                       WideCharRangeVector* wide_ranges,
+                       char16_t char_class,
+                       widechar c,
+                       bool ignore_case)
+{
+    if (char_class != kNoCharClass) {
+        CharacterRange::AddClassEscapeUnicode(alloc, char_class, ranges, ignore_case);
+        switch (char_class) {
+          case 'S':
+          case 'W':
+          case 'D':
+            lead_ranges->append(LeadSurrogateRange());
+            trail_ranges->append(TrailSurrogateRange());
+            wide_ranges->append(NonBMPRange());
+            break;
+          case '.':
+            MOZ_CRASH("Bad char_class!");
+        }
+        return;
+    }
+
+    if (unicode::IsLeadSurrogate(c))
+        lead_ranges->append(CharacterRange::Singleton(c));
+    else if (unicode::IsTrailSurrogate(c))
+        trail_ranges->append(CharacterRange::Singleton(c));
+    else if (c >= unicode::NonBMPMin)
+        wide_ranges->append(WideCharRange::Singleton(c));
+    else
+        ranges->append(CharacterRange::Singleton(c));
+}
+
+static inline void
+AddUnicodeRange(LifoAlloc* alloc,
+                CharacterRangeVector* ranges,
+                CharacterRangeVector* lead_ranges,
+                CharacterRangeVector* trail_ranges,
+                WideCharRangeVector* wide_ranges,
+                widechar first,
+                widechar next)
+{
+    MOZ_ASSERT(first <= next);
+    if (first < unicode::LeadSurrogateMin) {
+        if (next < unicode::LeadSurrogateMin) {
+            ranges->append(CharacterRange::Range(first, next));
+            return;
+        }
+        ranges->append(CharacterRange::Range(first, unicode::LeadSurrogateMin - 1));
+        first = unicode::LeadSurrogateMin;
+    }
+    if (first <= unicode::LeadSurrogateMax) {
+        if (next <= unicode::LeadSurrogateMax) {
+            lead_ranges->append(CharacterRange::Range(first, next));
+            return;
+        }
+        lead_ranges->append(CharacterRange::Range(first, unicode::LeadSurrogateMax));
+        first = unicode::LeadSurrogateMax + 1;
+    }
+    MOZ_ASSERT(unicode::LeadSurrogateMax + 1 == unicode::TrailSurrogateMin);
+    if (first <= unicode::TrailSurrogateMax) {
+        if (next <= unicode::TrailSurrogateMax) {
+            trail_ranges->append(CharacterRange::Range(first, next));
+            return;
+        }
+        trail_ranges->append(CharacterRange::Range(first, unicode::TrailSurrogateMax));
+        first = unicode::TrailSurrogateMax + 1;
+    }
+    if (first <= unicode::UTF16Max) {
+        if (next <= unicode::UTF16Max) {
+            ranges->append(CharacterRange::Range(first, next));
+            return;
+        }
+        ranges->append(CharacterRange::Range(first, unicode::UTF16Max));
+        first = unicode::NonBMPMin;
+    }
+    MOZ_ASSERT(unicode::UTF16Max + 1 == unicode::NonBMPMin);
+    wide_ranges->append(WideCharRange::Range(first, next));
+}
+
+// Negate a vector of ranges by subtracting its ranges from a range
+// encompassing the full range of possible values.
+template <typename RangeType>
+static inline void
+NegateUnicodeRanges(LifoAlloc* alloc, Vector<RangeType, 1, LifoAllocPolicy<Infallible> >** ranges,
+                    RangeType full_range)
+{
+    typedef Vector<RangeType, 1, LifoAllocPolicy<Infallible> > RangeVector;
+    RangeVector* tmp_ranges = alloc->newInfallible<RangeVector>(*alloc);
+    tmp_ranges->append(full_range);
+    RangeVector* result_ranges = alloc->newInfallible<RangeVector>(*alloc);
+
+    // Perform the following calculation:
+    //   result_ranges = tmp_ranges - ranges
+    // with the following steps:
+    //   result_ranges = tmp_ranges - ranges[0]
+    //   SWAP(result_ranges, tmp_ranges)
+    //   result_ranges = tmp_ranges - ranges[1]
+    //   SWAP(result_ranges, tmp_ranges)
+    //   ...
+    //   result_ranges = tmp_ranges - ranges[N-1]
+    //   SWAP(result_ranges, tmp_ranges)
+    // The last SWAP is just for simplicity of the loop.
+    for (size_t i = 0; i < (*ranges)->length(); i++) {
+        result_ranges->clear();
+
+        const RangeType& range = (**ranges)[i];
+        for (size_t j = 0; j < tmp_ranges->length(); j++) {
+            const RangeType& tmpRange = (*tmp_ranges)[j];
+            size_t from1 = tmpRange.from();
+            size_t to1 = tmpRange.to();
+            size_t from2 = range.from();
+            size_t to2 = range.to();
+
+            if (from1 < from2) {
+                if (to1 < from2) {
+                    result_ranges->append(tmpRange);
+                } else if (to1 <= to2) {
+                    result_ranges->append(RangeType::Range(from1, from2 - 1));
+                } else {
+                    result_ranges->append(RangeType::Range(from1, from2 - 1));
+                    result_ranges->append(RangeType::Range(to2 + 1, to1));
+                }
+            } else if (from1 <= to2) {
+                if (to1 > to2)
+                    result_ranges->append(RangeType::Range(to2 + 1, to1));
+            } else {
+                result_ranges->append(tmpRange);
+            }
+        }
+
+        auto tmp = tmp_ranges;
+        tmp_ranges = result_ranges;
+        result_ranges = tmp;
+    }
+
+    // After the loop, result is pointed at by tmp_ranges, instead of
+    // result_ranges.
+    *ranges = tmp_ranges;
+}
+
+static bool
+WideCharRangesContain(WideCharRangeVector* wide_ranges, widechar c)
+{
+    for (size_t i = 0; i < wide_ranges->length(); i++) {
+        const WideCharRange& range = (*wide_ranges)[i];
+        if (range.Contains(c))
+            return true;
+    }
+    return false;
+}
+
+static void
+CalculateCaseInsensitiveRanges(LifoAlloc* alloc, widechar from, widechar to, int32_t diff,
+                               WideCharRangeVector* wide_ranges,
+                               WideCharRangeVector** tmp_wide_ranges)
+{
+    widechar contains_from = 0;
+    widechar contains_to = 0;
+    for (widechar c = from; c <= to; c++) {
+        if (WideCharRangesContain(wide_ranges, c) &&
+            !WideCharRangesContain(wide_ranges, c + diff))
+        {
+            if (contains_from == 0)
+                contains_from = c;
+            contains_to = c;
+        } else if (contains_from != 0) {
+            if (!*tmp_wide_ranges)
+                *tmp_wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+
+            (*tmp_wide_ranges)->append(WideCharRange::Range(contains_from + diff,
+                                                            contains_to + diff));
+            contains_from = 0;
+        }
+    }
+
+    if (contains_from != 0) {
+        if (!*tmp_wide_ranges)
+            *tmp_wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+
+        (*tmp_wide_ranges)->append(WideCharRange::Range(contains_from + diff,
+                                                        contains_to + diff));
+    }
+}
+
+static RegExpTree*
+UnicodeRangesAtom(LifoAlloc* alloc,
+                  CharacterRangeVector* ranges,
+                  CharacterRangeVector* lead_ranges,
+                  CharacterRangeVector* trail_ranges,
+                  WideCharRangeVector* wide_ranges,
+                  bool is_negated,
+                  bool ignore_case)
+{
+    // Calculate case folding for non-BMP first and negate the range if needed.
+    if (ignore_case) {
+        WideCharRangeVector* tmp_wide_ranges = nullptr;
+#define CALL_CALC(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+        CalculateCaseInsensitiveRanges(alloc, FROM, TO, DIFF, wide_ranges, &tmp_wide_ranges);
+        FOR_EACH_NON_BMP_CASE_FOLDING(CALL_CALC)
+#undef CALL_CALC
+
+        if (tmp_wide_ranges) {
+            for (size_t i = 0; i < tmp_wide_ranges->length(); i++)
+                wide_ranges->append((*tmp_wide_ranges)[i]);
+        }
+    }
+
+    if (is_negated) {
+        NegateUnicodeRanges(alloc, &lead_ranges, LeadSurrogateRange());
+        NegateUnicodeRanges(alloc, &trail_ranges, TrailSurrogateRange());
+        NegateUnicodeRanges(alloc, &wide_ranges, NonBMPRange());
+    }
+
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    bool added = false;
+
+    if (is_negated) {
+        ranges->append(LeadSurrogateRange());
+        ranges->append(TrailSurrogateRange());
+    }
+    if (ranges->length() > 0) {
+        builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(ranges, is_negated));
+        added = true;
+    }
+
+    if (lead_ranges->length() > 0) {
+        if (added)
+            builder->NewAlternative();
+        builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(lead_ranges, false));
+        builder->AddAtom(NegativeLookahead(alloc, unicode::TrailSurrogateMin,
+                                           unicode::TrailSurrogateMax));
+        added = true;
+    }
+
+    if (trail_ranges->length() > 0) {
+        if (added)
+            builder->NewAlternative();
+        builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+            RegExpAssertion::NOT_AFTER_LEAD_SURROGATE));
+        builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(trail_ranges, false));
+        added = true;
+    }
+
+    for (size_t i = 0; i < wide_ranges->length(); i++) {
+        if (added)
+            builder->NewAlternative();
+
+        const WideCharRange& range = (*wide_ranges)[i];
+        widechar from = range.from();
+        widechar to = range.to();
+        size_t from_lead, from_trail;
+        size_t to_lead, to_trail;
+
+        unicode::UTF16Encode(from, &from_lead, &from_trail);
+        if (from == to) {
+            builder->AddCharacter(from_lead);
+            builder->AddCharacter(from_trail);
+        } else {
+            unicode::UTF16Encode(to, &to_lead, &to_trail);
+            if (from_lead == to_lead) {
+                MOZ_ASSERT(from_trail != to_trail);
+                builder->AddCharacter(from_lead);
+                builder->AddAtom(RangeAtom(alloc, from_trail, to_trail));
+            } else if (from_trail == unicode::TrailSurrogateMin &&
+                       to_trail == unicode::TrailSurrogateMax)
+            {
+                builder->AddAtom(RangeAtom(alloc, from_lead, to_lead));
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin,
+                                           unicode::TrailSurrogateMax));
+            } else if (from_lead + 1 == to_lead) {
+                builder->AddCharacter(from_lead);
+                builder->AddAtom(RangeAtom(alloc, from_trail, unicode::TrailSurrogateMax));
+
+                builder->NewAlternative();
+
+                builder->AddCharacter(to_lead);
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, to_trail));
+            } else if (from_lead + 2 == to_lead) {
+                builder->AddCharacter(from_lead);
+                builder->AddAtom(RangeAtom(alloc, from_trail, unicode::TrailSurrogateMax));
+
+                builder->NewAlternative();
+
+                builder->AddCharacter(from_lead + 1);
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin,
+                                           unicode::TrailSurrogateMax));
+
+                builder->NewAlternative();
+
+                builder->AddCharacter(to_lead);
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, to_trail));
+            } else {
+                builder->AddCharacter(from_lead);
+                builder->AddAtom(RangeAtom(alloc, from_trail, unicode::TrailSurrogateMax));
+
+                builder->NewAlternative();
+
+                builder->AddAtom(RangeAtom(alloc, from_lead + 1, to_lead - 1));
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin,
+                                           unicode::TrailSurrogateMax));
+
+                builder->NewAlternative();
+
+                builder->AddCharacter(to_lead);
+                builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, to_trail));
+            }
+        }
+        added = true;
+    }
+
+    return builder->ToRegExp();
 }
 
 template <typename CharT>
@@ -426,9 +983,19 @@ RegExpParser<CharT>::ParseCharacterClass()
         Advance();
     }
     CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    CharacterRangeVector* lead_ranges = nullptr;
+    CharacterRangeVector* trail_ranges = nullptr;
+    WideCharRangeVector* wide_ranges = nullptr;
+
+    if (unicode_) {
+        lead_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+        trail_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+        wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+    }
+
     while (has_more() && current() != ']') {
         char16_t char_class = kNoCharClass;
-        CharacterRange first;
+        widechar first = 0;
         if (!ParseClassAtom(&char_class, &first))
             return nullptr;
         if (current() == '-') {
@@ -438,41 +1005,69 @@ RegExpParser<CharT>::ParseCharacterClass()
                 // following code report an error.
                 break;
             } else if (current() == ']') {
-                AddRangeOrEscape(alloc, ranges, char_class, first);
+                if (unicode_) {
+                    AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges,
+                                           char_class, first, ignore_case_);
+                } else {
+                    AddCharOrEscape(alloc, ranges, char_class, first);
+                }
                 ranges->append(CharacterRange::Singleton('-'));
                 break;
             }
             char16_t char_class_2 = kNoCharClass;
-            CharacterRange next;
+            widechar next = 0;
             if (!ParseClassAtom(&char_class_2, &next))
                 return nullptr;
             if (char_class != kNoCharClass || char_class_2 != kNoCharClass) {
+                if (unicode_)
+                    return ReportError(JSMSG_RANGE_WITH_CLASS_ESCAPE);
+
                 // Either end is an escaped character class. Treat the '-' verbatim.
-                AddRangeOrEscape(alloc, ranges, char_class, first);
+                AddCharOrEscape(alloc, ranges, char_class, first);
                 ranges->append(CharacterRange::Singleton('-'));
-                AddRangeOrEscape(alloc, ranges, char_class_2, next);
+                AddCharOrEscape(alloc, ranges, char_class_2, next);
                 continue;
             }
-            if (first.from() > next.to())
+            if (first > next)
                 return ReportError(JSMSG_BAD_CLASS_RANGE);
-            ranges->append(CharacterRange::Range(first.from(), next.to()));
+            if (unicode_)
+                AddUnicodeRange(alloc, ranges, lead_ranges, trail_ranges,wide_ranges, first, next);
+            else
+                ranges->append(CharacterRange::Range(first, next));
         } else {
-            AddRangeOrEscape(alloc, ranges, char_class, first);
+            if (unicode_) {
+                AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges,
+                                       char_class, first, ignore_case_);
+            } else {
+                AddCharOrEscape(alloc, ranges, char_class, first);
+            }
         }
     }
     if (!has_more())
         return ReportError(JSMSG_UNTERM_CLASS);
     Advance();
-    if (ranges->length() == 0) {
-        ranges->append(CharacterRange::Everything());
-        is_negated = !is_negated;
+    if (!unicode_) {
+        if (ranges->length() == 0) {
+            ranges->append(CharacterRange::Everything());
+            is_negated = !is_negated;
+        }
+        return alloc->newInfallible<RegExpCharacterClass>(ranges, is_negated);
     }
-    return alloc->newInfallible<RegExpCharacterClass>(ranges, is_negated);
+
+    if (!is_negated && ranges->length() == 0 && lead_ranges->length() == 0 &&
+        trail_ranges->length() == 0 && wide_ranges->length() == 0)
+    {
+        ranges->append(CharacterRange::Everything());
+        return alloc->newInfallible<RegExpCharacterClass>(ranges, true);
+    }
+
+    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, is_negated,
+                             ignore_case_);
 }
 
 template <typename CharT>
 bool
-RegExpParser<CharT>::ParseClassAtom(char16_t* char_class, CharacterRange* char_range)
+RegExpParser<CharT>::ParseClassAtom(char16_t* char_class, widechar* value)
 {
     MOZ_ASSERT(*char_class == kNoCharClass);
     widechar first = current();
@@ -486,13 +1081,20 @@ RegExpParser<CharT>::ParseClassAtom(char16_t* char_class, CharacterRange* char_r
           case kEndMarker:
             return ReportError(JSMSG_ESCAPE_AT_END_OF_REGEXP);
           default:
-            widechar c = ParseClassCharacterEscape();
-            *char_range = CharacterRange::Singleton(c);
+            if (!ParseClassCharacterEscape(value))
+                return false;
             return true;
         }
     } else {
+        if (unicode_) {
+            char16_t lead, trail;
+            if (ParseRawSurrogatePair(&lead, &trail)) {
+                *value = unicode::UTF16Decode(lead, trail);
+                return true;
+            }
+        }
         Advance();
-        *char_range = CharacterRange::Singleton(first);
+        *value = first;
         return true;
     }
 }
@@ -673,6 +1275,120 @@ RegExpParser<CharT>::ParsePattern()
     return result;
 }
 
+static inline RegExpTree*
+CaseFoldingSurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail, int32_t diff)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    builder->AddCharacter(lead);
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(trail, trail));
+    ranges->append(CharacterRange::Range(trail + diff, trail + diff));
+    builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(ranges, false));
+
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+SurrogatePairAtom(LifoAlloc* alloc, char16_t lead, char16_t trail, bool ignore_case)
+{
+    if (ignore_case) {
+#define CALL_ATOM(FROM, TO, LEAD, TRAIL_FROM, TRAIL_TO, DIFF) \
+        if (lead == LEAD &&trail >= TRAIL_FROM && trail <= TRAIL_TO) \
+            return CaseFoldingSurrogatePairAtom(alloc, lead, trail, DIFF);
+        FOR_EACH_NON_BMP_CASE_FOLDING(CALL_ATOM)
+#undef CALL_ATOM
+    }
+
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddCharacter(lead);
+    builder->AddCharacter(trail);
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+LeadSurrogateAtom(LifoAlloc* alloc, char16_t value)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddCharacter(value);
+    builder->AddAtom(NegativeLookahead(alloc, unicode::TrailSurrogateMin,
+                                       unicode::TrailSurrogateMax));
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+TrailSurrogateAtom(LifoAlloc* alloc, char16_t value)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+    builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+        RegExpAssertion::NOT_AFTER_LEAD_SURROGATE));
+    builder->AddCharacter(value);
+    return builder->ToRegExp();
+}
+
+static inline RegExpTree*
+UnicodeEverythingAtom(LifoAlloc* alloc)
+{
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    // everything except \x0a, \x0d, \u2028 and \u2029
+
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    ranges->append(CharacterRange::Range(0x0, 0x09));
+    ranges->append(CharacterRange::Range(0x0b, 0x0c));
+    ranges->append(CharacterRange::Range(0x0e, 0x2027));
+    ranges->append(CharacterRange::Range(0x202A, unicode::LeadSurrogateMin - 1));
+    ranges->append(CharacterRange::Range(unicode::TrailSurrogateMax + 1, unicode::UTF16Max));
+    builder->AddAtom(alloc->newInfallible<RegExpCharacterClass>(ranges, false));
+
+    builder->NewAlternative();
+
+    builder->AddAtom(RangeAtom(alloc, unicode::LeadSurrogateMin, unicode::LeadSurrogateMax));
+    builder->AddAtom(NegativeLookahead(alloc, unicode::TrailSurrogateMin,
+                                       unicode::TrailSurrogateMax));
+
+    builder->NewAlternative();
+
+    builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+        RegExpAssertion::NOT_AFTER_LEAD_SURROGATE));
+    builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, unicode::TrailSurrogateMax));
+
+    builder->NewAlternative();
+
+    builder->AddAtom(RangeAtom(alloc, unicode::LeadSurrogateMin, unicode::LeadSurrogateMax));
+    builder->AddAtom(RangeAtom(alloc, unicode::TrailSurrogateMin, unicode::TrailSurrogateMax));
+
+    return builder->ToRegExp();
+}
+
+RegExpTree*
+UnicodeCharacterClassEscapeAtom(LifoAlloc* alloc, char16_t char_class, bool ignore_case)
+{
+    CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    CharacterRangeVector* lead_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    CharacterRangeVector* trail_ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
+    WideCharRangeVector* wide_ranges = alloc->newInfallible<WideCharRangeVector>(*alloc);
+    AddCharOrEscapeUnicode(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, char_class, 0,
+                           ignore_case);
+
+    return UnicodeRangesAtom(alloc, ranges, lead_ranges, trail_ranges, wide_ranges, false, false);
+}
+
+static inline RegExpTree*
+UnicodeBackReferenceAtom(LifoAlloc* alloc, RegExpTree* atom)
+{
+    // If a back reference has a standalone lead surrogate as its last
+    // character, then that lead surrogate shouldn't match lead surrogates that
+    // are paired with a corresponding trail surrogate.
+    RegExpBuilder* builder = alloc->newInfallible<RegExpBuilder>(alloc);
+
+    builder->AddAtom(atom);
+    builder->AddAssertion(alloc->newInfallible<RegExpAssertion>(
+        RegExpAssertion::NOT_IN_SURROGATE_PAIR));
+
+    return builder->ToRegExp();
+}
+
 // Disjunction ::
 //   Alternative
 //   Alternative | Disjunction
@@ -736,6 +1452,8 @@ RegExpParser<CharT>::ParseDisjunction()
                                                    capture_index);
             }
             builder->AddAtom(body);
+            if (unicode_ && (group_type == POSITIVE_LOOKAHEAD || group_type == NEGATIVE_LOOKAHEAD))
+                continue;
             // For compatability with JSC and ES3, we allow quantifiers after
             // lookaheads, and break in all cases.
             break;
@@ -770,6 +1488,10 @@ RegExpParser<CharT>::ParseDisjunction()
           case '.': {
             Advance();
             // everything except \x0a, \x0d, \u2028 and \u2029
+            if (unicode_) {
+                builder->AddAtom(UnicodeEverythingAtom(alloc));
+                break;
+            }
             CharacterRangeVector* ranges = alloc->newInfallible<CharacterRangeVector>(*alloc);
             CharacterRange::AddClassEscape(alloc, '.', ranges);
             RegExpTree* atom = alloc->newInfallible<RegExpCharacterClass>(ranges, false);
@@ -833,12 +1555,24 @@ RegExpParser<CharT>::ParseDisjunction()
                 //
                 // CharacterClassEscape :: one of
                 //   d D s S w W
-              case 'd': case 'D': case 's': case 'S': case 'w': case 'W': {
+              case 'D': case 'S': case 'W':
+                if (unicode_) {
+                    Advance();
+                    builder->AddAtom(UnicodeCharacterClassEscapeAtom(alloc, current(),
+                                                                     ignore_case_));
+                    Advance();
+                    break;
+                }
+                // Fall through
+              case 'd': case 's': case 'w': {
                 widechar c = Next();
                 Advance(2);
                 CharacterRangeVector* ranges =
                     alloc->newInfallible<CharacterRangeVector>(*alloc);
-                CharacterRange::AddClassEscape(alloc, c, ranges);
+                if (unicode_)
+                    CharacterRange::AddClassEscapeUnicode(alloc, c, ranges, ignore_case_);
+                else
+                    CharacterRange::AddClassEscape(alloc, c, ranges);
                 RegExpTree* atom = alloc->newInfallible<RegExpCharacterClass>(ranges, false);
                 builder->AddAtom(atom);
                 break;
@@ -856,9 +1590,14 @@ RegExpParser<CharT>::ParseDisjunction()
                         break;
                     }
                     RegExpTree* atom = alloc->newInfallible<RegExpBackReference>(capture);
-                    builder->AddAtom(atom);
+                    if (unicode_)
+                        builder->AddAtom(UnicodeBackReferenceAtom(alloc, atom));
+                    else
+                        builder->AddAtom(atom);
                     break;
                 }
+                if (unicode_)
+                    return ReportError(JSMSG_BACK_REF_OUT_OF_RANGE);
                 widechar first_digit = Next();
                 if (first_digit == '8' || first_digit == '9') {
                     // Treat as identity escape
@@ -869,6 +1608,14 @@ RegExpParser<CharT>::ParseDisjunction()
               }
                 // FALLTHROUGH
               case '0': {
+                if (unicode_) {
+                    Advance(2);
+                    if (IsDecimalDigit(current()))
+                        return ReportError(JSMSG_INVALID_DECIMAL_ESCAPE);
+                    builder->AddCharacter(0);
+                    break;
+                }
+
                 Advance();
                 size_t octal = ParseOctalLiteral();
                 builder->AddCharacter(octal);
@@ -903,6 +1650,8 @@ RegExpParser<CharT>::ParseDisjunction()
                 // Convert lower case letters to uppercase.
                 widechar letter = controlLetter & ~('a' ^ 'A');
                 if (letter < 'A' || 'Z' < letter) {
+                    if (unicode_)
+                        return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                     // controlLetter is not in range 'A'-'Z' or 'a'-'z'.
                     // This is outside the specification. We match JSC in
                     // reading the backslash as a literal character instead
@@ -920,6 +1669,8 @@ RegExpParser<CharT>::ParseDisjunction()
                 if (ParseHexEscape(2, &value)) {
                     builder->AddCharacter(value);
                 } else {
+                    if (unicode_)
+                        return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                     builder->AddCharacter('x');
                 }
                 break;
@@ -927,6 +1678,41 @@ RegExpParser<CharT>::ParseDisjunction()
               case 'u': {
                 Advance(2);
                 size_t value;
+                if (unicode_) {
+                    if (current() == '{') {
+                        if (!ParseBracedHexEscape(&value))
+                            return nullptr;
+                        if (unicode::IsLeadSurrogate(value)) {
+                            builder->AddAtom(LeadSurrogateAtom(alloc, value));
+                        } else if (unicode::IsTrailSurrogate(value)) {
+                            builder->AddAtom(TrailSurrogateAtom(alloc, value));
+                        } else if (value >= unicode::NonBMPMin) {
+                            size_t lead, trail;
+                            unicode::UTF16Encode(value, &lead, &trail);
+                            builder->AddAtom(SurrogatePairAtom(alloc, lead, trail,
+                                                               ignore_case_));
+                        } else {
+                            builder->AddCharacter(value);
+                        }
+                    } else if (ParseHexEscape(4, &value)) {
+                        if (unicode::IsLeadSurrogate(value)) {
+                            size_t trail;
+                            if (ParseTrailSurrogate(&trail)) {
+                                builder->AddAtom(SurrogatePairAtom(alloc, value, trail,
+                                                                   ignore_case_));
+                            } else {
+                                builder->AddAtom(LeadSurrogateAtom(alloc, value));
+                            }
+                        } else if (unicode::IsTrailSurrogate(value)) {
+                            builder->AddAtom(TrailSurrogateAtom(alloc, value));
+                        } else {
+                            builder->AddCharacter(value);
+                        }
+                    } else {
+                        return ReportError(JSMSG_INVALID_UNICODE_ESCAPE);
+                    }
+                    break;
+                }
                 if (ParseHexEscape(4, &value)) {
                     builder->AddCharacter(value);
                 } else {
@@ -936,18 +1722,42 @@ RegExpParser<CharT>::ParseDisjunction()
               }
               default:
                 // Identity escape.
+                if (unicode_ && !IsSyntaxCharacter(Next()))
+                    return ReportError(JSMSG_INVALID_IDENTITY_ESCAPE);
                 builder->AddCharacter(Next());
                 Advance(2);
                 break;
             }
             break;
           case '{': {
+            if (unicode_)
+                return ReportError(JSMSG_RAW_BRACE_IN_REGEP);
             int dummy;
             if (ParseIntervalQuantifier(&dummy, &dummy))
                 return ReportError(JSMSG_NOTHING_TO_REPEAT);
             // fallthrough
           }
           default:
+            if (unicode_) {
+                char16_t lead, trail;
+                if (ParseRawSurrogatePair(&lead, &trail)) {
+                    builder->AddAtom(SurrogatePairAtom(alloc, lead, trail, ignore_case_));
+                } else {
+                    widechar c = current();
+                    if (unicode::IsLeadSurrogate(c))
+                        builder->AddAtom(LeadSurrogateAtom(alloc, c));
+                    else if (unicode::IsTrailSurrogate(c))
+                        builder->AddAtom(TrailSurrogateAtom(alloc, c));
+                    else if (c == ']')
+                        return ReportError(JSMSG_RAW_BRACKET_IN_REGEP);
+                    else if (c == '}')
+                        return ReportError(JSMSG_RAW_BRACE_IN_REGEP);
+                    else
+                        builder->AddCharacter(c);
+                    Advance();
+                }
+                break;
+            }
             builder->AddCharacter(current());
             Advance();
             break;
@@ -1002,7 +1812,8 @@ template class irregexp::RegExpParser<char16_t>;
 template <typename CharT>
 static bool
 ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
-             bool multiline, bool match_only, RegExpCompileData* data)
+             bool multiline, bool match_only, bool unicode, bool ignore_case,
+             RegExpCompileData* data)
 {
     if (match_only) {
         // Try to strip a leading '.*' from the RegExp, but only if it is not
@@ -1025,7 +1836,7 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
         }
     }
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, multiline, unicode, ignore_case);
     data->tree = parser.ParsePattern();
     if (!data->tree)
         return false;
@@ -1038,32 +1849,34 @@ ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, si
 
 bool
 irregexp::ParsePattern(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
-                       bool multiline, bool match_only,
+                       bool multiline, bool match_only, bool unicode, bool ignore_case,
                        RegExpCompileData* data)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
            ? ::ParsePattern(ts, alloc, str->latin1Chars(nogc), str->length(),
-                            multiline, match_only, data)
+                            multiline, match_only, unicode, ignore_case, data)
            : ::ParsePattern(ts, alloc, str->twoByteChars(nogc), str->length(),
-                            multiline, match_only, data);
+                            multiline, match_only, unicode, ignore_case, data);
 }
 
 template <typename CharT>
 static bool
-ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length)
+ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, const CharT* chars, size_t length,
+                   bool unicode)
 {
     LifoAllocScope scope(&alloc);
 
-    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false);
+    RegExpParser<CharT> parser(ts, &alloc, chars, chars + length, false, unicode, false);
     return parser.ParsePattern() != nullptr;
 }
 
 bool
-irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str)
+irregexp::ParsePatternSyntax(frontend::TokenStream& ts, LifoAlloc& alloc, JSAtom* str,
+                             bool unicode)
 {
     JS::AutoCheckCannotGC nogc;
     return str->hasLatin1Chars()
-           ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length())
-           : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length());
+           ? ::ParsePatternSyntax(ts, alloc, str->latin1Chars(nogc), str->length(), unicode)
+           : ::ParsePatternSyntax(ts, alloc, str->twoByteChars(nogc), str->length(), unicode);
 }

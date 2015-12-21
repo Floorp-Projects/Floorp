@@ -5,7 +5,7 @@
 // Note: sets Cc and Ci variables
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 var testpath = "/simple";
@@ -26,22 +26,15 @@ function setup_test() {
   httpserver.start(-1);
   var channel = setupChannel(testpath);
   // ChannelListener defined in head_channels.js
-  channel.asyncOpen(new ChannelListener(checkRequest, channel), null);
+  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
   if (dbg) { print("============== setup_test: out"); }
 }
 
 function setupChannel(path) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-                       getService(Ci.nsIIOService);
-  var chan = ios.newChannel2("http://localhost:" +
-                             httpserver.identity.primaryPort + path,
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  var chan = NetUtil.newChannel({
+    uri: "http://localhost:" + httpserver.identity.primaryPort + path,
+    loadUsingSystemPrincipal: true
+  });
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   return chan;

@@ -12,7 +12,10 @@
 
 class SK_API SkColorMatrix {
 public:
-    SkScalar    fMat[20];
+    enum {
+        kCount = 20
+    };
+    SkScalar    fMat[kCount];
 
     enum Elem {
         kR_Scale    = 0,
@@ -59,6 +62,9 @@ public:
     }
 
     bool operator!=(const SkColorMatrix& other) const { return !((*this) == other); }
+
+    static bool NeedsClamping(const SkScalar[20]);
+    static void SetConcat(SkScalar result[20], const SkScalar outer[20], const SkScalar inner[20]);
 };
 
 #endif

@@ -1809,6 +1809,14 @@
      *   Stack: => val
      */ \
     macro(JSOP_GETIMPORT,     176,"getimport",  NULL,     5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET) \
+    /*
+     * Examines the top stack value, asserting that it's either a self-hosted
+     * function or a self-hosted intrinsic. This opcode does nothing in an
+     * optimized build.
+     *   Category: Other
+     *   Operands:
+     *   Stack: checkVal => checkVal
+     */ \
     macro(JSOP_DEBUGCHECKSELFHOSTED, 177,"debug-checkselfhosted",  NULL, 1,  1,  1,  JOF_BYTE) \
     macro(JSOP_UNUSED178,     178,"unused178",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED179,     179,"unused179",  NULL,     1,  0,  0,  JOF_BYTE) \
@@ -2052,7 +2060,15 @@
     macro(JSOP_UNUSED210,     210, "unused210",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED211,     211, "unused211",    NULL,  1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED212,     212, "unused212",    NULL,  1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED213,     213, "unused213",    NULL,  1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pushes the nearest 'var' environment.
+     *
+     *   Category: Variables and Scopes
+     *   Type: Free Variables
+     *   Operands:
+     *   Stack: => scope
+     */ \
+    macro(JSOP_BINDVAR,       213, "bindvar",      NULL,  1,  0,  1,  JOF_BYTE) \
     /*
      * Pushes the global scope onto the stack if the script doesn't have a
      * non-syntactic global scope.  Otherwise will act like JSOP_BINDNAME.

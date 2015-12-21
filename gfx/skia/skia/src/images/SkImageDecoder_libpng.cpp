@@ -17,25 +17,24 @@
 #include "SkTemplates.h"
 #include "SkUtils.h"
 #include "transform_scanline.h"
-extern "C" {
+
 #include "png.h"
-}
 
 /* These were dropped in libpng >= 1.4 */
 #ifndef png_infopp_NULL
-#define png_infopp_NULL NULL
+#define png_infopp_NULL nullptr
 #endif
 
 #ifndef png_bytepp_NULL
-#define png_bytepp_NULL NULL
+#define png_bytepp_NULL nullptr
 #endif
 
 #ifndef int_p_NULL
-#define int_p_NULL NULL
+#define int_p_NULL nullptr
 #endif
 
 #ifndef png_flush_ptr_NULL
-#define png_flush_ptr_NULL NULL
+#define png_flush_ptr_NULL nullptr
 #endif
 
 #if defined(SK_DEBUG)
@@ -49,25 +48,23 @@ SK_CONF_DECLARE(bool, c_suppressPNGImageDecoderWarnings,
                 "Suppress most PNG warnings when calling image decode "
                 "functions.");
 
-
-
 class SkPNGImageIndex {
 public:
+    // Takes ownership of stream.
     SkPNGImageIndex(SkStreamRewindable* stream, png_structp png_ptr, png_infop info_ptr)
         : fStream(stream)
         , fPng_ptr(png_ptr)
         , fInfo_ptr(info_ptr)
         , fColorType(kUnknown_SkColorType) {
-        SkASSERT(stream != NULL);
-        stream->ref();
+        SkASSERT(stream != nullptr);
     }
     ~SkPNGImageIndex() {
-        if (NULL != fPng_ptr) {
+        if (fPng_ptr) {
             png_destroy_read_struct(&fPng_ptr, &fInfo_ptr, png_infopp_NULL);
         }
     }
 
-    SkAutoTUnref<SkStreamRewindable>    fStream;
+    SkAutoTDelete<SkStreamRewindable>   fStream;
     png_structp                         fPng_ptr;
     png_infop                           fInfo_ptr;
     SkColorType                         fColorType;
@@ -76,28 +73,22 @@ public:
 class SkPNGImageDecoder : public SkImageDecoder {
 public:
     SkPNGImageDecoder() {
-        fImageIndex = NULL;
+        fImageIndex = nullptr;
     }
-    virtual Format getFormat() const SK_OVERRIDE {
+    Format getFormat() const override {
         return kPNG_Format;
     }
 
-    virtual ~SkPNGImageDecoder() {
-        SkDELETE(fImageIndex);
-    }
+    virtual ~SkPNGImageDecoder() { delete fImageIndex; }
 
 protected:
-#ifdef SK_BUILD_FOR_ANDROID
-    virtual bool onBuildTileIndex(SkStreamRewindable *stream, int *width, int *height) SK_OVERRIDE;
-    virtual bool onDecodeSubset(SkBitmap* bitmap, const SkIRect& region) SK_OVERRIDE;
-#endif
-    virtual bool onDecode(SkStream* stream, SkBitmap* bm, Mode) SK_OVERRIDE;
+    Result onDecode(SkStream* stream, SkBitmap* bm, Mode) override;
 
 private:
     SkPNGImageIndex* fImageIndex;
 
     bool onDecodeInit(SkStream* stream, png_structp *png_ptrp, png_infop *info_ptrp);
-    bool decodePalette(png_structp png_ptr, png_infop info_ptr,
+    bool decodePalette(png_structp png_ptr, png_infop info_ptr, int bitDepth,
                        bool * SK_RESTRICT hasAlphap, bool *reallyHasAlphap,
                        SkColorTable **colorTablep);
     bool getBitmapColorType(png_structp, png_infop, SkColorType*, bool* hasAlpha,
@@ -131,23 +122,14 @@ static void sk_read_fn(png_structp png_ptr, png_bytep data, png_size_t length) {
     }
 }
 
-#ifdef SK_BUILD_FOR_ANDROID
-static void sk_seek_fn(png_structp png_ptr, png_uint_32 offset) {
-    SkStreamRewindable* sk_stream = (SkStreamRewindable*) png_get_io_ptr(png_ptr);
-    if (!sk_stream->rewind()) {
-        png_error(png_ptr, "Failed to rewind stream!");
-    }
-    (void)sk_stream->skip(offset);
-}
-#endif
-
+#ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
 static int sk_read_user_chunk(png_structp png_ptr, png_unknown_chunkp chunk) {
-    SkImageDecoder::Peeker* peeker =
-                    (SkImageDecoder::Peeker*)png_get_user_chunk_ptr(png_ptr);
-    // peek() returning true means continue decoding
-    return peeker->peek((const char*)chunk->name, chunk->data, chunk->size) ?
+    SkPngChunkReader* peeker = (SkPngChunkReader*)png_get_user_chunk_ptr(png_ptr);
+    // readChunk() returning true means continue decoding
+    return peeker->readChunk((const char*)chunk->name, chunk->data, chunk->size) ?
             1 : -1;
 }
+#endif
 
 static void sk_error_fn(png_structp png_ptr, png_const_charp msg) {
     SkDEBUGF(("------ png error %s\n", msg));
@@ -202,7 +184,7 @@ static bool hasTransparencyInPalette(png_structp png_ptr, png_infop info_ptr) {
     int num_trans;
 
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-        png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, NULL);
+        png_get_tRNS(png_ptr, info_ptr, &trans, &num_trans, nullptr);
         return num_trans > 0;
     }
     return false;
@@ -216,13 +198,13 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
                                      png_infop *info_ptrp) {
     /* Create and initialize the png_struct with the desired error handler
     * functions.  If you want to use the default stderr and longjump method,
-    * you can supply NULL for the last three parameters.  We also supply the
+    * you can supply nullptr for the last three parameters.  We also supply the
     * the compiler header file version, so that we know if the application
     * was compiled with a compatible version of the library.  */
 
     png_error_ptr user_warning_fn =
-        (c_suppressPNGImageDecoderWarnings) ? (&do_nothing_warning_fn) : NULL;
-    /* NULL means to leave as default library behavior. */
+        (c_suppressPNGImageDecoderWarnings) ? (&do_nothing_warning_fn) : nullptr;
+    /* nullptr means to leave as default library behavior. */
     /* c_suppressPNGImageDecoderWarnings default depends on SK_DEBUG. */
     /* To suppress warnings with a SK_DEBUG binary, set the
      * environment variable "skia_images_png_suppressDecoderWarnings"
@@ -230,9 +212,9 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
      * SK_CONF_SET("images.png.suppressDecoderWarnings", true); */
 
     png_structp png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-        NULL, sk_error_fn, user_warning_fn);
+        nullptr, sk_error_fn, user_warning_fn);
     //   png_voidp user_error_ptr, user_error_fn, user_warning_fn);
-    if (png_ptr == NULL) {
+    if (png_ptr == nullptr) {
         return false;
     }
 
@@ -240,7 +222,7 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
 
     /* Allocate/initialize the memory for image information. */
     png_infop info_ptr = png_create_info_struct(png_ptr);
-    if (info_ptr == NULL) {
+    if (info_ptr == nullptr) {
         png_destroy_read_struct(&png_ptr, png_infopp_NULL, png_infopp_NULL);
         return false;
     }
@@ -259,19 +241,17 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
     * png_init_io() here you would call:
     */
     png_set_read_fn(png_ptr, (void *)sk_stream, sk_read_fn);
-#ifdef SK_BUILD_FOR_ANDROID
-    png_set_seek_fn(png_ptr, sk_seek_fn);
-#endif
     /* where user_io_ptr is a structure you want available to the callbacks */
     /* If we have already read some of the signature */
 //  png_set_sig_bytes(png_ptr, 0 /* sig_read */ );
 
+#ifdef PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
     // hookup our peeker so we can see any user-chunks the caller may be interested in
     png_set_keep_unknown_chunks(png_ptr, PNG_HANDLE_CHUNK_ALWAYS, (png_byte*)"", 0);
     if (this->getPeeker()) {
         png_set_read_user_chunk_fn(png_ptr, (png_voidp)this->getPeeker(), sk_read_user_chunk);
     }
-
+#endif
     /* The call to png_read_info() gives us all of the information from the
     * PNG file before the first IDAT (image data chunk). */
     png_read_info(png_ptr, info_ptr);
@@ -284,11 +264,13 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
     if (bitDepth == 16) {
         png_set_strip_16(png_ptr);
     }
+#ifdef PNG_READ_PACK_SUPPORTED
     /* Extract multiple pixels with bit depths of 1, 2, and 4 from a single
      * byte into separate bytes (useful for paletted and grayscale images). */
     if (bitDepth < 8) {
         png_set_packing(png_ptr);
     }
+#endif
     /* Expand grayscale images to the full 8 bits from 1, 2, or 4 bits/pixel */
     if (colorType == PNG_COLOR_TYPE_GRAY && bitDepth < 8) {
         png_set_expand_gray_1_2_4_to_8(png_ptr);
@@ -297,19 +279,19 @@ bool SkPNGImageDecoder::onDecodeInit(SkStream* sk_stream, png_structp *png_ptrp,
     return true;
 }
 
-bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
-                                 Mode mode) {
+SkImageDecoder::Result SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
+                                                   Mode mode) {
     png_structp png_ptr;
     png_infop info_ptr;
 
     if (!onDecodeInit(sk_stream, &png_ptr, &info_ptr)) {
-        return false;
+        return kFailure;
     }
 
     PNGAutoClean autoClean(png_ptr, info_ptr);
 
     if (setjmp(png_jmpbuf(png_ptr))) {
-        return false;
+        return kFailure;
     }
 
     png_uint_32 origWidth, origHeight;
@@ -322,7 +304,7 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
     SkPMColor           theTranspColor = 0; // 0 tells us not to try to match
 
     if (!this->getBitmapColorType(png_ptr, info_ptr, &colorType, &hasAlpha, &theTranspColor)) {
-        return false;
+        return kFailure;
     }
 
     SkAlphaType alphaType = this->getRequireUnpremultipliedColors() ?
@@ -333,7 +315,7 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
                                              colorType, alphaType));
 
     if (SkImageDecoder::kDecodeBounds_Mode == mode) {
-        return true;
+        return kSuccess;
     }
 
     // from here down we are concerned with colortables and pixels
@@ -342,20 +324,26 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
     // to |= PNG_COLOR_MASK_ALPHA, but all of its pixels are in fact opaque. We care, since we
     // draw lots faster if we can flag the bitmap has being opaque
     bool reallyHasAlpha = false;
-    SkColorTable* colorTable = NULL;
+    SkColorTable* colorTable = nullptr;
 
     if (pngColorType == PNG_COLOR_TYPE_PALETTE) {
-        decodePalette(png_ptr, info_ptr, &hasAlpha, &reallyHasAlpha, &colorTable);
+        decodePalette(png_ptr, info_ptr, bitDepth, &hasAlpha, &reallyHasAlpha, &colorTable);
     }
 
     SkAutoUnref aur(colorTable);
 
     if (!this->allocPixelRef(decodedBitmap,
-                             kIndex_8_SkColorType == colorType ? colorTable : NULL)) {
-        return false;
+                             kIndex_8_SkColorType == colorType ? colorTable : nullptr)) {
+        return kFailure;
     }
 
     SkAutoLockPixels alp(*decodedBitmap);
+
+    // Repeat setjmp, otherwise variables declared since the last call (e.g. alp
+    // and aur) won't get their destructors called in case of a failure.
+    if (setjmp(png_jmpbuf(png_ptr))) {
+        return kFailure;
+    }
 
     /* Turn on interlace handling.  REQUIRED if you are not using
     *  png_read_image().  To see how to handle interlacing passes,
@@ -390,7 +378,7 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
         SkScaledBitmapSampler::SrcConfig sc;
         int srcBytesPerPixel = 4;
 
-        if (colorTable != NULL) {
+        if (colorTable != nullptr) {
             sc = SkScaledBitmapSampler::kIndex;
             srcBytesPerPixel = 1;
         } else if (kAlpha_8_SkColorType == colorType) {
@@ -408,9 +396,9 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
             even if our decodedBitmap doesn't, due to the request that we
             upscale png's palette to a direct model
          */
-        SkAutoLockColors ctLock(colorTable);
-        if (!sampler.begin(decodedBitmap, sc, *this, ctLock.colors())) {
-            return false;
+        const SkPMColor* colors = colorTable ? colorTable->readColors() : nullptr;
+        if (!sampler.begin(decodedBitmap, sc, *this, colors)) {
+            return kFailure;
         }
         const int height = decodedBitmap->height();
 
@@ -467,7 +455,7 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
                 // Fall through.
             case kARGB_4444_SkColorType:
                 // We have chosen not to support unpremul for these colortypes.
-                return false;
+                return kFailure;
             default: {
                 // Fall through to finish the decode. This colortype either
                 // supports unpremul or it is irrelevant because it has no
@@ -480,7 +468,7 @@ bool SkPNGImageDecoder::onDecode(SkStream* sk_stream, SkBitmap* decodedBitmap,
     if (!reallyHasAlpha) {
         decodedBitmap->setAlphaType(kOpaque_SkAlphaType);
     }
-    return true;
+    return kSuccess;
 }
 
 
@@ -494,6 +482,7 @@ bool SkPNGImageDecoder::getBitmapColorType(png_structp png_ptr, png_infop info_p
     png_get_IHDR(png_ptr, info_ptr, &origWidth, &origHeight, &bitDepth,
                  &colorType, int_p_NULL, int_p_NULL, int_p_NULL);
 
+#ifdef PNG_sBIT_SUPPORTED
     // check for sBIT chunk data, in case we should disable dithering because
     // our data is not truely 8bits per component
     png_color_8p sig_bit;
@@ -509,6 +498,7 @@ bool SkPNGImageDecoder::getBitmapColorType(png_structp png_ptr, png_infop info_p
             this->setDitherImage(false);
         }
     }
+#endif
 
     if (colorType == PNG_COLOR_TYPE_PALETTE) {
         bool paletteHasAlpha = hasTransparencyInPalette(png_ptr, info_ptr);
@@ -518,14 +508,14 @@ bool SkPNGImageDecoder::getBitmapColorType(png_structp png_ptr, png_infop info_p
             *colorTypep = kIndex_8_SkColorType;
         }
     } else {
-        png_color_16p transpColor = NULL;
+        png_color_16p transpColor = nullptr;
         int numTransp = 0;
 
-        png_get_tRNS(png_ptr, info_ptr, NULL, &numTransp, &transpColor);
+        png_get_tRNS(png_ptr, info_ptr, nullptr, &numTransp, &transpColor);
 
         bool valid = png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS);
 
-        if (valid && numTransp == 1 && transpColor != NULL) {
+        if (valid && numTransp == 1 && transpColor != nullptr) {
             /*  Compute our transparent color, which we'll match against later.
                 We don't really handle 16bit components properly here, since we
                 do our compare *after* the values have been knocked down to 8bit
@@ -607,19 +597,13 @@ bool SkPNGImageDecoder::getBitmapColorType(png_structp png_ptr, png_infop info_p
         }
     }
 
-#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
-    if (!this->chooseFromOneChoice(*colorTypep, origWidth, origHeight)) {
-        return false;
-    }
-#endif
-
     // If the image has alpha and the decoder wants unpremultiplied
     // colors, the only supported colortype is 8888.
     if (this->getRequireUnpremultipliedColors() && *hasAlphap) {
         *colorTypep = kN32_SkColorType;
     }
 
-    if (fImageIndex != NULL) {
+    if (fImageIndex != nullptr) {
         if (kUnknown_SkColorType == fImageIndex->fColorType) {
             // This is the first time for this subset decode. From now on,
             // all decodes must be in the same colortype.
@@ -650,7 +634,8 @@ bool SkPNGImageDecoder::getBitmapColorType(png_structp png_ptr, png_infop info_p
 typedef uint32_t (*PackColorProc)(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
 
 bool SkPNGImageDecoder::decodePalette(png_structp png_ptr, png_infop info_ptr,
-                                      bool *hasAlphap, bool *reallyHasAlphap,
+                                      int bitDepth, bool *hasAlphap,
+                                      bool *reallyHasAlphap,
                                       SkColorTable **colorTablep) {
     int numPalette;
     png_colorp palette;
@@ -659,18 +644,11 @@ bool SkPNGImageDecoder::decodePalette(png_structp png_ptr, png_infop info_ptr,
 
     png_get_PLTE(png_ptr, info_ptr, &palette, &numPalette);
 
-    /*  BUGGY IMAGE WORKAROUND
-
-        We hit some images (e.g. fruit_.png) who contain bytes that are == colortable_count
-        which is a problem since we use the byte as an index. To work around this we grow
-        the colortable by 1 (if its < 256) and duplicate the last color into that slot.
-    */
-    int colorCount = numPalette + (numPalette < 256);
     SkPMColor colorStorage[256];    // worst-case storage
     SkPMColor* colorPtr = colorStorage;
 
     if (png_get_valid(png_ptr, info_ptr, PNG_INFO_tRNS)) {
-        png_get_tRNS(png_ptr, info_ptr, &trans, &numTrans, NULL);
+        png_get_tRNS(png_ptr, info_ptr, &trans, &numTrans, nullptr);
         *hasAlphap = (numTrans > 0);
     } else {
         numTrans = 0;
@@ -704,285 +682,25 @@ bool SkPNGImageDecoder::decodePalette(png_structp png_ptr, png_infop info_ptr,
         palette++;
     }
 
-    // see BUGGY IMAGE WORKAROUND comment above
-    if (numPalette < 256) {
-        *colorPtr = colorPtr[-1];
+    /*  BUGGY IMAGE WORKAROUND
+
+        Invalid images could contain pixel values that are greater than the number of palette
+        entries. Since we use pixel values as indices into the palette this could result in reading
+        beyond the end of the palette which could leak the contents of uninitialized memory. To
+        ensure this doesn't happen, we grow the colortable to the maximum size that can be
+        addressed by the bitdepth of the image and fill it with the last palette color or black if
+        the palette is empty (really broken image).
+    */
+    int colorCount = SkTMax(numPalette, 1 << SkTMin(bitDepth, 8));
+    SkPMColor lastColor = index > 0 ? colorPtr[-1] : SkPackARGB32(0xFF, 0, 0, 0);
+    for (; index < colorCount; index++) {
+        *colorPtr++ = lastColor;
     }
 
-    SkAlphaType alphaType = kOpaque_SkAlphaType;
-    if (reallyHasAlpha) {
-        if (this->getRequireUnpremultipliedColors()) {
-            alphaType = kUnpremul_SkAlphaType;
-        } else {
-            alphaType = kPremul_SkAlphaType;
-        }
-    }
-
-    *colorTablep = SkNEW_ARGS(SkColorTable,
-                              (colorStorage, colorCount, alphaType));
+    *colorTablep = new SkColorTable(colorStorage, colorCount);
     *reallyHasAlphap = reallyHasAlpha;
     return true;
 }
-
-#ifdef SK_BUILD_FOR_ANDROID
-
-bool SkPNGImageDecoder::onBuildTileIndex(SkStreamRewindable* sk_stream, int *width, int *height) {
-    png_structp png_ptr;
-    png_infop   info_ptr;
-
-    if (!onDecodeInit(sk_stream, &png_ptr, &info_ptr)) {
-        return false;
-    }
-
-    if (setjmp(png_jmpbuf(png_ptr)) != 0) {
-        png_destroy_read_struct(&png_ptr, &info_ptr, png_infopp_NULL);
-        return false;
-    }
-
-    png_uint_32 origWidth, origHeight;
-    int bitDepth, colorType;
-    png_get_IHDR(png_ptr, info_ptr, &origWidth, &origHeight, &bitDepth,
-                 &colorType, int_p_NULL, int_p_NULL, int_p_NULL);
-
-    *width = origWidth;
-    *height = origHeight;
-
-    png_build_index(png_ptr);
-
-    if (fImageIndex) {
-        SkDELETE(fImageIndex);
-    }
-    fImageIndex = SkNEW_ARGS(SkPNGImageIndex, (sk_stream, png_ptr, info_ptr));
-
-    return true;
-}
-
-bool SkPNGImageDecoder::onDecodeSubset(SkBitmap* bm, const SkIRect& region) {
-    if (NULL == fImageIndex) {
-        return false;
-    }
-
-    png_structp png_ptr = fImageIndex->fPng_ptr;
-    png_infop info_ptr = fImageIndex->fInfo_ptr;
-    if (setjmp(png_jmpbuf(png_ptr))) {
-        return false;
-    }
-
-    png_uint_32 origWidth, origHeight;
-    int bitDepth, pngColorType, interlaceType;
-    png_get_IHDR(png_ptr, info_ptr, &origWidth, &origHeight, &bitDepth,
-                 &pngColorType, &interlaceType, int_p_NULL, int_p_NULL);
-
-    SkIRect rect = SkIRect::MakeWH(origWidth, origHeight);
-
-    if (!rect.intersect(region)) {
-        // If the requested region is entirely outside the image, just
-        // returns false
-        return false;
-    }
-
-    SkColorType         colorType;
-    bool                hasAlpha = false;
-    SkPMColor           theTranspColor = 0; // 0 tells us not to try to match
-
-    if (!this->getBitmapColorType(png_ptr, info_ptr, &colorType, &hasAlpha, &theTranspColor)) {
-        return false;
-    }
-
-    const int sampleSize = this->getSampleSize();
-    SkScaledBitmapSampler sampler(origWidth, rect.height(), sampleSize);
-
-    SkBitmap decodedBitmap;
-    decodedBitmap.setInfo(SkImageInfo::Make(sampler.scaledWidth(), sampler.scaledHeight(),
-                                            colorType, kPremul_SkAlphaType));
-
-    // from here down we are concerned with colortables and pixels
-
-    // we track if we actually see a non-opaque pixels, since sometimes a PNG sets its colortype
-    // to |= PNG_COLOR_MASK_ALPHA, but all of its pixels are in fact opaque. We care, since we
-    // draw lots faster if we can flag the bitmap has being opaque
-    bool reallyHasAlpha = false;
-    SkColorTable* colorTable = NULL;
-
-    if (pngColorType == PNG_COLOR_TYPE_PALETTE) {
-        decodePalette(png_ptr, info_ptr, &hasAlpha, &reallyHasAlpha, &colorTable);
-    }
-
-    SkAutoUnref aur(colorTable);
-
-    // Check ahead of time if the swap(dest, src) is possible.
-    // If yes, then we will stick to AllocPixelRef since it's cheaper with the swap happening.
-    // If no, then we will use alloc to allocate pixels to prevent garbage collection.
-    int w = rect.width() / sampleSize;
-    int h = rect.height() / sampleSize;
-    const bool swapOnly = (rect == region) && (w == decodedBitmap.width()) &&
-                          (h == decodedBitmap.height()) && bm->isNull();
-    const bool needColorTable = kIndex_8_SkColorType == colorType;
-    if (swapOnly) {
-        if (!this->allocPixelRef(&decodedBitmap, needColorTable ? colorTable : NULL)) {
-            return false;
-        }
-    } else {
-        if (!decodedBitmap.allocPixels(NULL, needColorTable ? colorTable : NULL)) {
-            return false;
-        }
-    }
-    SkAutoLockPixels alp(decodedBitmap);
-
-    /* Turn on interlace handling.  REQUIRED if you are not using
-    * png_read_image().  To see how to handle interlacing passes,
-    * see the png_read_row() method below:
-    */
-    const int number_passes = (interlaceType != PNG_INTERLACE_NONE) ?
-                              png_set_interlace_handling(png_ptr) : 1;
-
-    /* Optional call to gamma correct and add the background to the palette
-    * and update info structure.  REQUIRED if you are expecting libpng to
-    * update the palette for you (ie you selected such a transform above).
-    */
-
-    // Direct access to png_ptr fields is deprecated in libpng > 1.2.
-#if defined(PNG_1_0_X) || defined (PNG_1_2_X)
-    png_ptr->pass = 0;
-#else
-    // FIXME: This sets pass as desired, but also sets iwidth. Is that ok?
-    png_set_interlaced_pass(png_ptr, 0);
-#endif
-    png_read_update_info(png_ptr, info_ptr);
-
-    int actualTop = rect.fTop;
-
-    if ((kAlpha_8_SkColorType == colorType || kIndex_8_SkColorType == colorType)
-        && 1 == sampleSize) {
-        if (kAlpha_8_SkColorType == colorType) {
-            // For an A8 bitmap, we assume there is an alpha for speed. It is
-            // possible the bitmap is opaque, but that is an unlikely use case
-            // since it would not be very interesting.
-            reallyHasAlpha = true;
-            // A8 is only allowed if the original was GRAY.
-            SkASSERT(PNG_COLOR_TYPE_GRAY == pngColorType);
-        }
-
-        for (int i = 0; i < number_passes; i++) {
-            png_configure_decoder(png_ptr, &actualTop, i);
-            for (int j = 0; j < rect.fTop - actualTop; j++) {
-                uint8_t* bmRow = decodedBitmap.getAddr8(0, 0);
-                png_read_rows(png_ptr, &bmRow, png_bytepp_NULL, 1);
-            }
-            png_uint_32 bitmapHeight = (png_uint_32) decodedBitmap.height();
-            for (png_uint_32 y = 0; y < bitmapHeight; y++) {
-                uint8_t* bmRow = decodedBitmap.getAddr8(0, y);
-                png_read_rows(png_ptr, &bmRow, png_bytepp_NULL, 1);
-            }
-        }
-    } else {
-        SkScaledBitmapSampler::SrcConfig sc;
-        int srcBytesPerPixel = 4;
-
-        if (colorTable != NULL) {
-            sc = SkScaledBitmapSampler::kIndex;
-            srcBytesPerPixel = 1;
-        } else if (kAlpha_8_SkColorType == colorType) {
-            // A8 is only allowed if the original was GRAY.
-            SkASSERT(PNG_COLOR_TYPE_GRAY == pngColorType);
-            sc = SkScaledBitmapSampler::kGray;
-            srcBytesPerPixel = 1;
-        } else if (hasAlpha) {
-            sc = SkScaledBitmapSampler::kRGBA;
-        } else {
-            sc = SkScaledBitmapSampler::kRGBX;
-        }
-
-        /*  We have to pass the colortable explicitly, since we may have one
-            even if our decodedBitmap doesn't, due to the request that we
-            upscale png's palette to a direct model
-         */
-        SkAutoLockColors ctLock(colorTable);
-        if (!sampler.begin(&decodedBitmap, sc, *this, ctLock.colors())) {
-            return false;
-        }
-        const int height = decodedBitmap.height();
-
-        if (number_passes > 1) {
-            SkAutoMalloc storage(origWidth * origHeight * srcBytesPerPixel);
-            uint8_t* base = (uint8_t*)storage.get();
-            size_t rb = origWidth * srcBytesPerPixel;
-
-            for (int i = 0; i < number_passes; i++) {
-                png_configure_decoder(png_ptr, &actualTop, i);
-                for (int j = 0; j < rect.fTop - actualTop; j++) {
-                    png_read_rows(png_ptr, &base, png_bytepp_NULL, 1);
-                }
-                uint8_t* row = base;
-                for (int32_t y = 0; y < rect.height(); y++) {
-                    uint8_t* bmRow = row;
-                    png_read_rows(png_ptr, &bmRow, png_bytepp_NULL, 1);
-                    row += rb;
-                }
-            }
-            // now sample it
-            base += sampler.srcY0() * rb;
-            for (int y = 0; y < height; y++) {
-                reallyHasAlpha |= sampler.next(base);
-                base += sampler.srcDY() * rb;
-            }
-        } else {
-            SkAutoMalloc storage(origWidth * srcBytesPerPixel);
-            uint8_t* srcRow = (uint8_t*)storage.get();
-
-            png_configure_decoder(png_ptr, &actualTop, 0);
-            skip_src_rows(png_ptr, srcRow, sampler.srcY0());
-
-            for (int i = 0; i < rect.fTop - actualTop; i++) {
-                png_read_rows(png_ptr, &srcRow, png_bytepp_NULL, 1);
-            }
-            for (int y = 0; y < height; y++) {
-                uint8_t* tmp = srcRow;
-                png_read_rows(png_ptr, &tmp, png_bytepp_NULL, 1);
-                reallyHasAlpha |= sampler.next(srcRow);
-                if (y < height - 1) {
-                    skip_src_rows(png_ptr, srcRow, sampler.srcDY() - 1);
-                }
-            }
-        }
-    }
-
-    if (0 != theTranspColor) {
-        reallyHasAlpha |= substituteTranspColor(&decodedBitmap, theTranspColor);
-    }
-    if (reallyHasAlpha && this->getRequireUnpremultipliedColors()) {
-        switch (decodedBitmap.colorType()) {
-            case kIndex_8_SkColorType:
-                // Fall through.
-            case kARGB_4444_SkColorType:
-                // We have chosen not to support unpremul for these colortypess.
-                return false;
-            default: {
-                // Fall through to finish the decode. This config either
-                // supports unpremul or it is irrelevant because it has no
-                // alpha (or only alpha).
-                // These brackets prevent a warning.
-            }
-        }
-    }
-    SkAlphaType alphaType = kOpaque_SkAlphaType;
-    if (reallyHasAlpha) {
-        if (this->getRequireUnpremultipliedColors()) {
-            alphaType = kUnpremul_SkAlphaType;
-        } else {
-            alphaType = kPremul_SkAlphaType;
-        }
-    }
-    decodedBitmap.setAlphaType(alphaType);
-
-    if (swapOnly) {
-        bm->swap(decodedBitmap);
-        return true;
-    }
-    return this->cropBitmap(bm, &decodedBitmap, sampleSize, region.x(), region.y(),
-                            region.width(), region.height(), 0, rect.y());
-}
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1022,7 +740,7 @@ static transform_scanline_proc choose_proc(SkColorType ct, bool hasAlpha) {
         }
     }
     sk_throw();
-    return NULL;
+    return nullptr;
 }
 
 // return the minimum legal bitdepth (by png standards) for this many colortable
@@ -1050,8 +768,7 @@ static int computeBitDepth(int colorCount) {
 static inline int pack_palette(SkColorTable* ctable,
                                png_color* SK_RESTRICT palette,
                                png_byte* SK_RESTRICT trans, bool hasAlpha) {
-    SkAutoLockColors alc(ctable);
-    const SkPMColor* SK_RESTRICT colors = alc.colors();
+    const SkPMColor* SK_RESTRICT colors = ctable ? ctable->readColors() : nullptr;
     const int ctCount = ctable->count();
     int i, num_trans = 0;
 
@@ -1100,7 +817,7 @@ static inline int pack_palette(SkColorTable* ctable,
 
 class SkPNGImageEncoder : public SkImageEncoder {
 protected:
-    virtual bool onEncode(SkWStream* stream, const SkBitmap& bm, int quality) SK_OVERRIDE;
+    bool onEncode(SkWStream* stream, const SkBitmap& bm, int quality) override;
 private:
     bool doEncode(SkWStream* stream, const SkBitmap& bm,
                   const bool& hasAlpha, int colorType,
@@ -1161,7 +878,7 @@ bool SkPNGImageEncoder::onEncode(SkWStream* stream, const SkBitmap& bitmap, int 
 
     // we must do this after we have locked the pixels
     SkColorTable* ctable = bitmap.getColorTable();
-    if (NULL != ctable) {
+    if (ctable) {
         if (ctable->count() == 0) {
             return false;
         }
@@ -1180,14 +897,14 @@ bool SkPNGImageEncoder::doEncode(SkWStream* stream, const SkBitmap& bitmap,
     png_structp png_ptr;
     png_infop info_ptr;
 
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, sk_error_fn,
-                                      NULL);
-    if (NULL == png_ptr) {
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, nullptr, sk_error_fn,
+                                      nullptr);
+    if (nullptr == png_ptr) {
         return false;
     }
 
     info_ptr = png_create_info_struct(png_ptr);
-    if (NULL == info_ptr) {
+    if (nullptr == info_ptr) {
         png_destroy_write_struct(&png_ptr,  png_infopp_NULL);
         return false;
     }
@@ -1224,11 +941,12 @@ bool SkPNGImageEncoder::doEncode(SkWStream* stream, const SkBitmap& bitmap,
         int numTrans = pack_palette(ct, paletteColors, trans, hasAlpha);
         png_set_PLTE(png_ptr, info_ptr, paletteColors, ct->count());
         if (numTrans > 0) {
-            png_set_tRNS(png_ptr, info_ptr, trans, numTrans, NULL);
+            png_set_tRNS(png_ptr, info_ptr, trans, numTrans, nullptr);
         }
     }
-
+#ifdef PNG_sBIT_SUPPORTED
     png_set_sBIT(png_ptr, info_ptr, &sig_bit);
+#endif
     png_write_info(png_ptr, info_ptr);
 
     const char* srcImage = (const char*)bitmap.getPixels();
@@ -1266,9 +984,9 @@ static bool is_png(SkStreamRewindable* stream) {
 
 SkImageDecoder* sk_libpng_dfactory(SkStreamRewindable* stream) {
     if (is_png(stream)) {
-        return SkNEW(SkPNGImageDecoder);
+        return new SkPNGImageDecoder;
     }
-    return NULL;
+    return nullptr;
 }
 
 static SkImageDecoder::Format get_format_png(SkStreamRewindable* stream) {
@@ -1279,7 +997,7 @@ static SkImageDecoder::Format get_format_png(SkStreamRewindable* stream) {
 }
 
 SkImageEncoder* sk_libpng_efactory(SkImageEncoder::Type t) {
-    return (SkImageEncoder::kPNG_Type == t) ? SkNEW(SkPNGImageEncoder) : NULL;
+    return (SkImageEncoder::kPNG_Type == t) ? new SkPNGImageEncoder : nullptr;
 }
 
 static SkImageDecoder_DecodeReg gDReg(sk_libpng_dfactory);

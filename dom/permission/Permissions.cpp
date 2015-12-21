@@ -56,7 +56,7 @@ CreatePushPermissionStatus(JSContext* aCx,
   }
 
   if (permission.mUserVisible) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return nullptr;
   }
 
@@ -84,8 +84,8 @@ CreatePermissionStatus(JSContext* aCx,
     case PermissionName::Push:
       return CreatePushPermissionStatus(aCx, aPermission, aWindow, aRv);
 
-    case PermissionName::Midi:
     default:
+      MOZ_ASSERT_UNREACHABLE("Unhandled type");
       aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
       return nullptr;
   }

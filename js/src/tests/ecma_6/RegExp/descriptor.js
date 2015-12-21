@@ -10,7 +10,7 @@ var getters = [
   "multiline",
   "source",
   "sticky",
-  //"unicode",
+  "unicode",
 ];
 
 for (var name of getters) {
@@ -20,10 +20,6 @@ for (var name of getters) {
   assertEq("writable" in desc, false);
   assertEq("get" in desc, true);
 }
-
-// When the /u flag is supported, remove this comment and the next line, and
-// uncomment "unicode" in |props| above.
-assertThrowsInstanceOf(() => RegExp("", "mygui").flags, SyntaxError);
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);

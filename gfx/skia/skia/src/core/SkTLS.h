@@ -1,10 +1,9 @@
-//
-//  SkTLS.h
-//
-//
-//  Created by Mike Reed on 4/21/12.
-//  Copyright (c) 2012 __MyCompanyName__. All rights reserved.
-//
+/*
+ * Copyright 2012 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #ifndef SkTLS_DEFINED
 #define SkTLS_DEFINED
@@ -21,7 +20,7 @@ public:
 
     /**
      *  If Get() has previously been called with this CreateProc, then this
-     *  returns its cached data, otherwise it returns NULL. The CreateProc is
+     *  returns its cached data, otherwise it returns nullptr. The CreateProc is
      *  never invoked in Find, it is only used as a key for searching the
      *  cache.
      */
@@ -53,8 +52,8 @@ private:
      *  Implemented by the platform, to return the value of our (one) slot per-thread
      *
      *  If forceCreateTheSlot is true, then we must have created the "slot" for
-     *  our TLS, even though we know that the return value will be NULL in that
-     *  case (i.e. no-slot and first-time-slot both return NULL). This ensures
+     *  our TLS, even though we know that the return value will be nullptr in that
+     *  case (i.e. no-slot and first-time-slot both return nullptr). This ensures
      *  that after calling GetSpecific, we know that we can legally call
      *  SetSpecific.
      *

@@ -203,6 +203,7 @@ private:
   class ServerSendIndicationResultHandler;
 
   BluetoothGattManager();
+  bool Init();
 
   void HandleShutdown();
 

@@ -20,11 +20,11 @@ class SkSaveLayer : public SkGroup {
     DECLARE_MEMBER_INFO(SaveLayer);
     SkSaveLayer();
     virtual ~SkSaveLayer();
-    virtual bool draw(SkAnimateMaker& );
+    bool draw(SkAnimateMaker& ) override;
 #ifdef SK_DUMP_ENABLED
-    virtual void dump(SkAnimateMaker* );
+    void dump(SkAnimateMaker* ) override;
 #endif
-    virtual void onEndElement(SkAnimateMaker& );
+    void onEndElement(SkAnimateMaker& ) override;
 protected:
     SkDrawPaint* paint;
     SkDrawRect* bounds;

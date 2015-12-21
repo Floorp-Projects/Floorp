@@ -1270,9 +1270,7 @@ static nsresult pref_InitInitialObjects()
     "winpref.js"
 #elif defined(XP_UNIX)
     "unix.js"
-#if defined(VMS)
-    , "openvms.js"
-#elif defined(_AIX)
+#if defined(_AIX)
     , "aix.js"
 #endif
 #elif defined(XP_BEOS)

@@ -16,11 +16,11 @@
 
 class SkDisplayMath : public SkDisplayable {
     DECLARE_DISPLAY_MEMBER_INFO(Math);
-    virtual void executeFunction(SkDisplayable* , int index,
+    void executeFunction(SkDisplayable* , int index,
         SkTDArray<SkScriptValue>& parameters, SkDisplayTypes type,
-        SkScriptValue* );
-    virtual const SkFunctionParamType* getFunctionsParameters();
-    virtual bool getProperty(int index, SkScriptValue* value) const;
+        SkScriptValue* ) override;
+    const SkFunctionParamType* getFunctionsParameters() override;
+    bool getProperty(int index, SkScriptValue* value) const override;
 private:
     mutable SkRandom fRandom;
     static const SkScalar gConstants[];

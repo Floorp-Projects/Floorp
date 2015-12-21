@@ -234,7 +234,102 @@ CanLowerCase(char16_t ch)
     return CharInfo(ch).lowerCase != 0;
 }
 
+class FoldingInfo {
+  public:
+    uint16_t folding;
+    uint16_t reverse1;
+    uint16_t reverse2;
+    uint16_t reverse3;
+};
+
+extern const uint8_t folding_index1[];
+extern const uint8_t folding_index2[];
+extern const FoldingInfo js_foldinfo[];
+
+inline const FoldingInfo&
+CaseFoldInfo(char16_t code)
+{
+    const size_t shift = 6;
+    size_t index = folding_index1[code >> shift];
+    index = folding_index2[(index << shift) + (code & ((1 << shift) - 1))];
+    return js_foldinfo[index];
+}
+
+inline char16_t
+FoldCase(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.folding;
+}
+
+inline char16_t
+ReverseFoldCase1(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse1;
+}
+
+inline char16_t
+ReverseFoldCase2(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse2;
+}
+
+inline char16_t
+ReverseFoldCase3(char16_t ch)
+{
+    const FoldingInfo& info = CaseFoldInfo(ch);
+    return uint16_t(ch) + info.reverse3;
+}
+
+const size_t LeadSurrogateMin = 0xD800;
+const size_t LeadSurrogateMax = 0xDBFF;
+const size_t TrailSurrogateMin = 0xDC00;
+const size_t TrailSurrogateMax = 0xDFFF;
+const size_t UTF16Max = 0xFFFF;
+const size_t NonBMPMin = 0x10000;
+const size_t NonBMPMax = 0x10FFFF;
+
+inline bool
+IsLeadSurrogate(size_t value)
+{
+    return value >= LeadSurrogateMin && value <= LeadSurrogateMax;
+}
+
+inline bool
+IsTrailSurrogate(size_t value)
+{
+    return value >= TrailSurrogateMin && value <= TrailSurrogateMax;
+}
+
+inline void
+UTF16Encode(size_t cp, size_t* lead, size_t* trail)
+{
+    MOZ_ASSERT(cp >= NonBMPMin && cp <= NonBMPMax);
+
+    *lead = (cp - NonBMPMin) / 1024 + LeadSurrogateMin;
+    *trail = ((cp - NonBMPMin) % 1024) + TrailSurrogateMin;
+}
+
+inline size_t
+UTF16Decode(size_t lead, size_t trail)
+{
+    MOZ_ASSERT(IsLeadSurrogate(lead));
+    MOZ_ASSERT(IsTrailSurrogate(trail));
+
+    return (lead - LeadSurrogateMin) * 1024 + (trail - TrailSurrogateMin) + NonBMPMin;
+}
+
 } /* namespace unicode */
 } /* namespace js */
+
+#define FOR_EACH_NON_BMP_CASE_FOLDING(macro)                            \
+    macro(0x10400, 0x10427, 0xD801, 0xDC00, 0xDC27, 0x28)               \
+    macro(0x10428, 0x1044F, 0xD801, 0xDC28, 0xDC4F, -0x28)              \
+    macro(0x10C80, 0x10CB2, 0xD803, 0xDC80, 0xDCB2, 0x40)               \
+    macro(0x10CC0, 0x10CF2, 0xD803, 0xDCC0, 0xDCF2, -0x40)              \
+    macro(0x118A0, 0x118bf, 0xD806, 0xDCA0, 0xDCBF, 0x20)               \
+    macro(0x118C0, 0x118df, 0xD806, 0xDCC0, 0xDCDF, -0x20)
 
 #endif /* vm_Unicode_h */

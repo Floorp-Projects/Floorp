@@ -5,6 +5,8 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include "SkTypes.h"
+#if defined(SK_BUILD_FOR_WIN32)
 
 #include "gl/GrGLInterface.h"
 #include "gl/GrGLAssembleInterface.h"
@@ -12,24 +14,13 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <GL/gl.h>
-
-#define GET_PROC(F) functions->f ## F = (GrGL ## F ## Proc) get(ctx, "gl" #F)
-#define GET_PROC_SUFFIX(F, S) functions->f ## F = (GrGL ## F ## Proc) get(ctx, "gl" #F #S)
-#define GET_PROC_LOCAL(F) GrGL ## F ## Proc F = (GrGL ## F ## Proc) get(ctx, "gl" #F)
-
-#define GET_LINKED GET_PROC
-#define GET_LINKED_SUFFIX GET_PROC_SUFFIX
-
-#include "gl/GrGLAssembleGLESInterface.h"
-
 class AutoLibraryUnload {
 public:
     AutoLibraryUnload(const char* moduleName) {
         fModule = LoadLibrary(moduleName);
     }
     ~AutoLibraryUnload() {
-        if (NULL != fModule) {
+        if (fModule) {
             FreeLibrary(fModule);
         }
     }
@@ -43,17 +34,17 @@ class GLProcGetter {
 public:
     GLProcGetter() : fGLLib("opengl32.dll") {}
 
-    bool isInitialized() const { return NULL != fGLLib.get(); }
+    bool isInitialized() const { return SkToBool(fGLLib.get()); }
 
     GrGLFuncPtr getProc(const char name[]) const {
         GrGLFuncPtr proc;
-        if (NULL != (proc = (GrGLFuncPtr) GetProcAddress(fGLLib.get(), name))) {
+        if ((proc = (GrGLFuncPtr) GetProcAddress(fGLLib.get(), name))) {
             return proc;
         }
-        if (NULL != (proc = (GrGLFuncPtr) wglGetProcAddress(name))) {
+        if ((proc = (GrGLFuncPtr) wglGetProcAddress(name))) {
             return proc;
         }
-        return NULL;
+        return nullptr;
     }
 
 private:
@@ -61,8 +52,8 @@ private:
 };
 
 static GrGLFuncPtr win_get_gl_proc(void* ctx, const char name[]) {
-    SkASSERT(NULL != ctx);
-    SkASSERT(NULL != wglGetCurrentContext());
+    SkASSERT(ctx);
+    SkASSERT(wglGetCurrentContext());
     const GLProcGetter* getter = (const GLProcGetter*) ctx;
     return getter->getProc(name);
 }
@@ -73,18 +64,18 @@ static GrGLFuncPtr win_get_gl_proc(void* ctx, const char name[]) {
  * Otherwise, a springboard would be needed that hides the calling convention.
  */
 const GrGLInterface* GrGLCreateNativeInterface() {
-    if (NULL == wglGetCurrentContext()) {
-        return NULL;
+    if (nullptr == wglGetCurrentContext()) {
+        return nullptr;
     }
 
     GLProcGetter getter;
     if (!getter.isInitialized()) {
-        return NULL;
+        return nullptr;
     }
 
     GrGLGetStringProc getString = (GrGLGetStringProc)getter.getProc("glGetString");
-    if (NULL == getString) {
-        return NULL;
+    if (nullptr == getString) {
+        return nullptr;
     }
     const char* verStr = reinterpret_cast<const char*>(getString(GR_GL_VERSION));
     GrGLStandard standard = GrGLGetStandardInUseFromString(verStr);
@@ -94,5 +85,7 @@ const GrGLInterface* GrGLCreateNativeInterface() {
     } else if (kGL_GrGLStandard == standard) {
         return GrGLAssembleGLInterface(&getter, win_get_gl_proc);
     }
-    return NULL;
+    return nullptr;
 }
+
+#endif//defined(SK_BUILD_FOR_WIN32)

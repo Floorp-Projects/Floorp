@@ -165,10 +165,10 @@ class Preferences(object):
         """
 
         marker = '##//' # magical marker
-        lines = [i.strip() for i in mozfile.load(path).readlines() if i.strip()]
+        lines = [i.strip() for i in mozfile.load(path).readlines()]
         _lines = []
         for line in lines:
-            if line.startswith(('#', '//')):
+            if not line.startswith(pref_setter):
                 continue
             if '//' in line:
                 line = line.replace('//', marker)

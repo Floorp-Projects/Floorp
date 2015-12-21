@@ -8,7 +8,12 @@
 #define mozilla_dom_devicestorage_DeviceStorageStatics_h
 
 #include "mozilla/Mutex.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
+#include "nsArrayUtils.h"
 
+class nsString;
 class nsDOMDeviceStorage;
 class DeviceStorageFile;
 #ifdef MOZ_WIDGET_GONK
@@ -35,6 +40,9 @@ public:
   static void GetWritableName(nsString& aName);
   static void SetWritableName(const nsAString& aName);
 
+  static void GetDeviceStorageAreasForIPC(DeviceStorageAreaInfo& aAreaInfo);
+  static void RecvDeviceStorageAreasFromParent(const DeviceStorageAreaInfo& aAreaInfo);
+
   static bool HasOverrideRootDir();
   static already_AddRefed<nsIFile> GetAppsDir();
   static already_AddRefed<nsIFile> GetCrashesDir();
@@ -56,6 +64,7 @@ private:
   };
 
   static already_AddRefed<nsIFile> GetDir(DeviceStorageType aType);
+  static void GetDirPath(DeviceStorageType aType, nsString& aString);
 
   DeviceStorageStatics();
   virtual ~DeviceStorageStatics();
