@@ -132,6 +132,9 @@ var gContentPane = {
 
     gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
                     "resizable=yes", params);
+
+    Services.telemetry
+            .getHistogramById("WEB_NOTIFICATION_EXCEPTIONS_OPENED").add();
   },
 
 
@@ -171,7 +174,7 @@ var gContentPane = {
   },
 
   /**
-   * 
+   *
    */
   _selectDefaultLanguageGroup: function (aLanguageGroup, aIsSerif)
   {
@@ -243,7 +246,7 @@ var gContentPane = {
   /**
    * Displays the fonts dialog, where web page font names and sizes can be
    * configured.
-   */  
+   */
   configureFonts: function ()
   {
     gSubDialog.open("chrome://browser/content/preferences/fonts.xul", "resizable=no");

@@ -64,7 +64,7 @@ var ContentClick = {
     // This part is based on handleLinkClick.
     var where = window.whereToOpenLink(json);
     if (where == "current")
-      return false;
+      return;
 
     // Todo(903022): code for where == save
 

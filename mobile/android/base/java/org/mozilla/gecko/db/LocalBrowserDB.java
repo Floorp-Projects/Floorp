@@ -1655,11 +1655,6 @@ public class LocalBrowserDB implements BrowserDB {
         return 0;
     }
 
-    @Override
-    public int getTrackingIdForUrl(String url) {
-        return mSuggestedSites.getTrackingIdForUrl(url);
-    }
-
     private static void appendUrlsFromCursor(List<String> urls, Cursor c) {
         if (!c.moveToFirst()) {
             return;

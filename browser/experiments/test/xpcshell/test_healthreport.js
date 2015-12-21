@@ -40,7 +40,7 @@ add_test(function setup() {
   run_next_test();
 });
 
-add_task(function test_constructor() {
+add_task(function* test_constructor() {
   Experiments.instance();
   yield Experiments._mainTask;
   let provider = new ExperimentsProvider();

@@ -22,10 +22,13 @@ public class FirstrunPagerConfig {
 
     public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
-        if (isInExperimentLocal(context, ONBOARDING_A)) {
+
+        // The "Import" feature is disabled on devices running Android M+ (Bug 1183559).
+        // Exclude these users from the experiment to add an "Import" panel.
+        if (isInExperimentLocal(context, ONBOARDING_A) && AppConstants.Versions.preM) {
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_A);
-        } else if (isInExperimentLocal(context, ONBOARDING_B)) {
+        } else if (isInExperimentLocal(context, ONBOARDING_B) && AppConstants.Versions.preM) {
             // Strings used for first run, pulled from existing strings.
             panels.add(new FirstrunPanelConfig(ImportPanel.class.getName(), ImportPanel.TITLE_RES));
             panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
