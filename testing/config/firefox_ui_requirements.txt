@@ -1,0 +1,4 @@
+-r marionette_requirements.txt
+../firefox-ui/harness/
+../firefox-ui/tests/
+../puppeteer/firefox/
