@@ -14,12 +14,14 @@
 #include "jit/InlinableNatives.h"
 #include "vm/RegExpStatics.h"
 #include "vm/StringBuffer.h"
+#include "vm/Unicode.h"
 
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
+using namespace js::unicode;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
@@ -174,8 +176,11 @@ RegExpInitialize(JSContext* cx, Handle<RegExpObject*> obj, HandleValue patternVa
     /* Steps 9-10. */
     CompileOptions options(cx);
     frontend::TokenStream dummyTokenStream(cx, options, nullptr, 0, nullptr);
-    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern))
+    if (!irregexp::ParsePatternSyntax(dummyTokenStream, cx->tempLifoAlloc(), pattern,
+                                      flags & UnicodeFlag))
+    {
         return false;
+    }
 
     if (staticsUse == UseRegExpStatics) {
         RegExpStatics* res = cx->global()->getRegExpStatics(cx);
@@ -557,6 +562,24 @@ regexp_sticky(JSContext* cx, unsigned argc, JS::Value* vp)
     return CallNonGenericMethod<IsRegExpObject, regexp_sticky_impl>(cx, args);
 }
 
+/* ES6 21.2.5.15. */
+MOZ_ALWAYS_INLINE bool
+regexp_unicode_impl(JSContext* cx, const CallArgs& args)
+{
+    MOZ_ASSERT(IsRegExpObject(args.thisv()));
+    /* Steps 4-6. */
+    args.rval().setBoolean(args.thisv().toObject().as<RegExpObject>().unicode());
+    return true;
+}
+
+static bool
+regexp_unicode(JSContext* cx, unsigned argc, JS::Value* vp)
+{
+    /* Steps 1-3. */
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return CallNonGenericMethod<IsRegExpObject, regexp_unicode_impl>(cx, args);
+}
+
 const JSPropertySpec js::regexp_properties[] = {
     JS_SELF_HOSTED_GET("flags", "RegExpFlagsGetter", 0),
     JS_PSG("global", regexp_global, 0),
@@ -564,6 +587,7 @@ const JSPropertySpec js::regexp_properties[] = {
     JS_PSG("multiline", regexp_multiline, 0),
     JS_PSG("source", regexp_source, 0),
     JS_PSG("sticky", regexp_sticky, 0),
+    JS_PSG("unicode", regexp_unicode, 0),
     JS_PS_END
 };
 
@@ -760,6 +784,29 @@ SetLastIndex(JSContext* cx, Handle<RegExpObject*> reobj, double lastIndex)
     return true;
 }
 
+template <typename CharT>
+static bool
+IsTrailSurrogateWithLeadSurrogateImpl(JSContext* cx, HandleLinearString input, size_t index)
+{
+    JS::AutoCheckCannotGC nogc;
+    MOZ_ASSERT(index > 0 && index < input->length());
+    const CharT* inputChars = input->chars<CharT>(nogc);
+
+    return unicode::IsTrailSurrogate(inputChars[index]) &&
+           unicode::IsLeadSurrogate(inputChars[index - 1]);
+}
+
+static bool
+IsTrailSurrogateWithLeadSurrogate(JSContext* cx, HandleLinearString input, int32_t index)
+{
+    if (index <= 0 || size_t(index) >= input->length())
+        return false;
+
+    return input->hasLatin1Chars()
+           ? IsTrailSurrogateWithLeadSurrogateImpl<Latin1Char>(cx, input, index)
+           : IsTrailSurrogateWithLeadSurrogateImpl<char16_t>(cx, input, index);
+}
+
 /* ES6 final draft 21.2.5.2.2. */
 RegExpRunStatus
 js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
@@ -840,6 +887,33 @@ js::ExecuteRegExp(JSContext* cx, HandleObject regexp, HandleString string,
 
         /* Step 15.a.iii. */
         return RegExpRunStatus_Success_NotFound;
+    }
+
+    /* Steps 12-13. */
+    if (reobj->unicode()) {
+        /*
+         * ES6 21.2.2.2 step 2.
+         *   Let listIndex be the index into Input of the character that was
+         *   obtained from element index of str.
+         *
+         * In the spec, pattern match is performed with decoded Unicode code
+         * points, but our implementation performs it with UTF-16 encoded
+         * string.  In step 2, we should decrement searchIndex (index) if it
+         * points the trail surrogate that has corresponding lead surrogate.
+         *
+         *   var r = /\uD83D\uDC38/ug;
+         *   r.lastIndex = 1;
+         *   var str = "\uD83D\uDC38";
+         *   var result = r.exec(str); // pattern match starts from index 0
+         *   print(result.index);      // prints 0
+         *
+         * Note: this doesn't match the current spec text and result in
+         * different values for `result.index` under certain conditions.
+         * However, the spec will change to match our implementation's
+         * behavior. See https://github.com/tc39/ecma262/issues/128.
+         */
+        if (IsTrailSurrogateWithLeadSurrogate(cx, input, searchIndex))
+            searchIndex--;
     }
 
     /* Step 14-29. */

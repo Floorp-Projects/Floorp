@@ -719,9 +719,10 @@ NativeRegExpMacroAssembler::CheckNotBackReference(int start_reg, Label* on_no_ma
 }
 
 void
-NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label* on_no_match)
+NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label* on_no_match,
+                                                            bool unicode)
 {
-    JitSpew(SPEW_PREFIX "CheckNotBackReferenceIgnoreCase(%d)", start_reg);
+    JitSpew(SPEW_PREFIX "CheckNotBackReferenceIgnoreCase(%d, %d)", start_reg, unicode);
 
     Label fallthrough;
 
@@ -833,8 +834,13 @@ NativeRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, Label
         masm.passABIArg(current_character);
         masm.passABIArg(current_position);
         masm.passABIArg(temp1);
-        int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareStrings;
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+        if (!unicode) {
+            int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareStrings;
+            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+        } else {
+            int (*fun)(const char16_t*, const char16_t*, size_t) = CaseInsensitiveCompareUCStrings;
+            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+        }
         masm.storeCallResult(temp0);
 
         masm.PopRegsInMask(volatileRegs);

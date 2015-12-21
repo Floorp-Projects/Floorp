@@ -90,7 +90,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S32_opaque_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 SkPMColor
-#define CHECKSTATE(state)       SkASSERT(4 == state.fBitmap->bytesPerPixel()); \
+#define CHECKSTATE(state)       SkASSERT(4 == state.fPixmap.info().bytesPerPixel()); \
                                 SkASSERT(state.fAlphaScale == 256)
 #define RETURNDST(src)          src
 #define SRC_TO_FILTER(src)      src
@@ -102,7 +102,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S32_alpha_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 SkPMColor
-#define CHECKSTATE(state)       SkASSERT(4 == state.fBitmap->bytesPerPixel()); \
+#define CHECKSTATE(state)       SkASSERT(4 == state.fPixmap.info().bytesPerPixel()); \
                                 SkASSERT(state.fAlphaScale < 256)
 #define PREAMBLE(state)         unsigned alphaScale = state.fAlphaScale
 #define RETURNDST(src)          SkAlphaMulQ(src, alphaScale)
@@ -121,7 +121,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S16_opaque_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 uint16_t
-#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale == 256)
 #define RETURNDST(src)          SkPixel16ToPixel32(src)
 #define SRC_TO_FILTER(src)      src
@@ -137,7 +137,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S16_alpha_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 uint16_t
-#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale < 256)
 #define PREAMBLE(state)         unsigned alphaScale = state.fAlphaScale
 #define RETURNDST(src)          SkAlphaMulQ(SkPixel16ToPixel32(src), alphaScale)
@@ -152,12 +152,12 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(SI8_opaque_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 uint8_t
-#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale == 256)
-#define PREAMBLE(state)         const SkPMColor* SK_RESTRICT table = state.fBitmap->getColorTable()->lockColors()
+#define PREAMBLE(state)         const SkPMColor* SK_RESTRICT table = state.fPixmap.ctable()->readColors()
 #define RETURNDST(src)          table[src]
 #define SRC_TO_FILTER(src)      table[src]
-#define POSTAMBLE(state)        state.fBitmap->getColorTable()->unlockColors()
+#define POSTAMBLE(state)
 #include "SkBitmapProcState_sample.h"
 
 #undef FILTER_PROC
@@ -166,13 +166,13 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(SI8_alpha_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 uint8_t
-#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale < 256)
 #define PREAMBLE(state)         unsigned alphaScale = state.fAlphaScale; \
-                                const SkPMColor* SK_RESTRICT table = state.fBitmap->getColorTable()->lockColors()
+                                const SkPMColor* SK_RESTRICT table = state.fPixmap.ctable()->readColors()
 #define RETURNDST(src)          SkAlphaMulQ(table[src], alphaScale)
 #define SRC_TO_FILTER(src)      table[src]
-#define POSTAMBLE(state)        state.fBitmap->getColorTable()->unlockColors()
+#define POSTAMBLE(state)
 #include "SkBitmapProcState_sample.h"
 
 // SRC == 4444
@@ -183,7 +183,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S4444_opaque_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 SkPMColor16
-#define CHECKSTATE(state)       SkASSERT(kARGB_4444_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kARGB_4444_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale == 256)
 #define RETURNDST(src)          SkPixel4444ToPixel32(src)
 #define SRC_TO_FILTER(src)      src
@@ -199,7 +199,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S4444_alpha_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 SkPMColor16
-#define CHECKSTATE(state)       SkASSERT(kARGB_4444_SkColorType == state.fBitmap->colorType()); \
+#define CHECKSTATE(state)       SkASSERT(kARGB_4444_SkColorType == state.fPixmap.colorType()); \
                                 SkASSERT(state.fAlphaScale < 256)
 #define PREAMBLE(state)         unsigned alphaScale = state.fAlphaScale
 #define RETURNDST(src)          SkAlphaMulQ(SkPixel4444ToPixel32(src), alphaScale)
@@ -218,9 +218,28 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(SA8_alpha_D32 ## suffix)
 #define DSTSIZE                 32
 #define SRCTYPE                 uint8_t
-#define CHECKSTATE(state)       SkASSERT(kAlpha_8_SkColorType == state.fBitmap->colorType());
+#define CHECKSTATE(state)       SkASSERT(kAlpha_8_SkColorType == state.fPixmap.colorType());
 #define PREAMBLE(state)         const SkPMColor pmColor = state.fPaintPMColor;
 #define RETURNDST(src)          SkAlphaMulQ(pmColor, SkAlpha255To256(src))
+#define SRC_TO_FILTER(src)      src
+#include "SkBitmapProcState_sample.h"
+
+// SRC == Gray8
+
+#undef FILTER_PROC
+#define FILTER_PROC(x, y, a, b, c, d, dst) \
+    do {                                                        \
+        unsigned tmp = Filter_8(x, y, a, b, c, d);              \
+        SkPMColor color = SkPackARGB32(0xFF, tmp, tmp, tmp);    \
+        *(dst) = SkAlphaMulQ(color, alphaScale);                \
+    } while (0)
+
+#define MAKENAME(suffix)        NAME_WRAP(SG8_alpha_D32 ## suffix)
+#define DSTSIZE                 32
+#define SRCTYPE                 uint8_t
+#define CHECKSTATE(state)       SkASSERT(kGray_8_SkColorType == state.fPixmap.colorType());
+#define PREAMBLE(state)         unsigned alphaScale = state.fAlphaScale
+#define RETURNDST(src)          SkAlphaMulQ(SkPackARGB32(0xFF, src, src, src), alphaScale)
 #define SRC_TO_FILTER(src)      src
 #include "SkBitmapProcState_sample.h"
 
@@ -243,8 +262,8 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S32_D16 ## suffix)
 #define DSTSIZE                 16
 #define SRCTYPE                 SkPMColor
-#define CHECKSTATE(state)       SkASSERT(4 == state.fBitmap->bytesPerPixel()); \
-                                SkASSERT(state.fBitmap->isOpaque())
+#define CHECKSTATE(state)       SkASSERT(4 == state.fPixmap.info().bytesPerPixel()); \
+                                SkASSERT(state.fPixmap.isOpaque())
 #define RETURNDST(src)          SkPixel32ToPixel16(src)
 #define SRC_TO_FILTER(src)      src
 #include "SkBitmapProcState_sample.h"
@@ -261,7 +280,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(S16_D16 ## suffix)
 #define DSTSIZE                 16
 #define SRCTYPE                 uint16_t
-#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fBitmap->colorType())
+#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fPixmap.colorType())
 #define RETURNDST(src)          src
 #define SRC_TO_FILTER(src)      src
 #include "SkBitmapProcState_sample.h"
@@ -278,12 +297,12 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(SI8_D16 ## suffix)
 #define DSTSIZE                 16
 #define SRCTYPE                 uint8_t
-#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fBitmap->colorType()); \
-                                SkASSERT(state.fBitmap->isOpaque())
-#define PREAMBLE(state)         const uint16_t* SK_RESTRICT table = state.fBitmap->getColorTable()->lock16BitCache()
+#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fPixmap.colorType()); \
+                                SkASSERT(state.fPixmap.isOpaque())
+#define PREAMBLE(state)         const uint16_t* SK_RESTRICT table = state.fPixmap.ctable()->read16BitCache()
 #define RETURNDST(src)          table[src]
 #define SRC_TO_FILTER(src)      table[src]
-#define POSTAMBLE(state)        state.fBitmap->getColorTable()->unlock16BitCache()
+#define POSTAMBLE(state)
 #include "SkBitmapProcState_sample.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -306,7 +325,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(Clamp_S16_D16 ## suffix)
 #define SRCTYPE                 uint16_t
 #define DSTTYPE                 uint16_t
-#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fBitmap->colorType())
+#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fPixmap.colorType())
 #define SRC_TO_FILTER(src)      src
 #include "SkBitmapProcState_shaderproc.h"
 
@@ -319,7 +338,7 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(Repeat_S16_D16 ## suffix)
 #define SRCTYPE                 uint16_t
 #define DSTTYPE                 uint16_t
-#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fBitmap->colorType())
+#define CHECKSTATE(state)       SkASSERT(kRGB_565_SkColorType == state.fPixmap.colorType())
 #define SRC_TO_FILTER(src)      src
 #include "SkBitmapProcState_shaderproc.h"
 
@@ -334,10 +353,10 @@ static inline U8CPU Filter_8(unsigned x, unsigned y,
 #define MAKENAME(suffix)        NAME_WRAP(Clamp_SI8_opaque_D32 ## suffix)
 #define SRCTYPE                 uint8_t
 #define DSTTYPE                 uint32_t
-#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fBitmap->colorType())
-#define PREAMBLE(state)         const SkPMColor* SK_RESTRICT table = state.fBitmap->getColorTable()->lockColors()
+#define CHECKSTATE(state)       SkASSERT(kIndex_8_SkColorType == state.fPixmap.colorType())
+#define PREAMBLE(state)         const SkPMColor* SK_RESTRICT table = state.fPixmap.ctable()->readColors()
 #define SRC_TO_FILTER(src)      table[src]
-#define POSTAMBLE(state)        state.fBitmap->getColorTable()->unlockColors()
+#define POSTAMBLE(state)
 #include "SkBitmapProcState_shaderproc.h"
 
 #undef NAME_WRAP

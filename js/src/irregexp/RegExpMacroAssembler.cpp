@@ -65,6 +65,38 @@ template int
 irregexp::CaseInsensitiveCompareStrings(const char16_t* substring1, const char16_t* substring2,
 					size_t byteLength);
 
+template <typename CharT>
+int
+irregexp::CaseInsensitiveCompareUCStrings(const CharT* substring1, const CharT* substring2,
+                                          size_t byteLength)
+{
+    MOZ_ASSERT(byteLength % sizeof(CharT) == 0);
+    size_t length = byteLength / sizeof(CharT);
+
+    for (size_t i = 0; i < length; i++) {
+        char16_t c1 = substring1[i];
+        char16_t c2 = substring2[i];
+        if (c1 != c2) {
+            c1 = unicode::FoldCase(c1);
+            c2 = unicode::FoldCase(c2);
+            if (c1 != c2)
+                return 0;
+        }
+    }
+
+    return 1;
+}
+
+template int
+irregexp::CaseInsensitiveCompareUCStrings(const Latin1Char* substring1,
+                                          const Latin1Char* substring2,
+                                          size_t byteLength);
+
+template int
+irregexp::CaseInsensitiveCompareUCStrings(const char16_t* substring1,
+                                          const char16_t* substring2,
+                                          size_t byteLength);
+
 InterpretedRegExpMacroAssembler::InterpretedRegExpMacroAssembler(LifoAlloc* alloc, RegExpShared* shared,
                                                                  size_t numSavedRegisters)
   : RegExpMacroAssembler(*alloc, shared, numSavedRegisters),
@@ -210,11 +242,16 @@ InterpretedRegExpMacroAssembler::CheckNotBackReference(int start_reg, jit::Label
 }
 
 void
-InterpretedRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg, jit::Label* on_no_match)
+InterpretedRegExpMacroAssembler::CheckNotBackReferenceIgnoreCase(int start_reg,
+                                                                 jit::Label* on_no_match,
+                                                                 bool unicode)
 {
     MOZ_ASSERT(start_reg >= 0);
     MOZ_ASSERT(start_reg <= kMaxRegister);
-    Emit(BC_CHECK_NOT_BACK_REF_NO_CASE, start_reg);
+    if (unicode)
+        Emit(BC_CHECK_NOT_BACK_REF_NO_CASE_UNICODE, start_reg);
+    else
+        Emit(BC_CHECK_NOT_BACK_REF_NO_CASE, start_reg);
     EmitOrLink(on_no_match);
 }
 

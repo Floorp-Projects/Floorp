@@ -51,12 +51,27 @@ void SkXMLParserError::reset() {
 
 ////////////////
 
-SkXMLParser::SkXMLParser(SkXMLParserError* parserError) : fParser(NULL), fError(parserError)
+SkXMLParser::SkXMLParser(SkXMLParserError* parserError) : fParser(nullptr), fError(parserError)
 {
 }
 
 SkXMLParser::~SkXMLParser()
 {
+}
+
+bool SkXMLParser::parse(SkStream& docStream)
+{
+    return false;
+}
+
+bool SkXMLParser::parse(const char doc[], size_t len)
+{
+    return false;
+}
+
+void SkXMLParser::GetNativeErrorString(int error, SkString* str)
+{
+
 }
 
 bool SkXMLParser::startElement(const char elem[])

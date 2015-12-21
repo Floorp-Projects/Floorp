@@ -1261,7 +1261,7 @@ public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
 
-// Computed value of the grid-template-columns or grid-columns-rows property
+// Computed value of the grid-template-columns or grid-template-rows property
 // (but *not* grid-template-areas.)
 // http://dev.w3.org/csswg/css-grid/#track-sizing
 //

@@ -1,10 +1,10 @@
-
 /*
  * Copyright 2011 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+
 #include "SkLineClipper.h"
 
 template <typename T> T pin_unsorted(T value, T limit0, T limit1) {
@@ -78,7 +78,7 @@ bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip,
                                   SkPoint dst[2]) {
     SkRect bounds;
 
-    bounds.set(src, 2);
+    bounds.set(src[0], src[1]);
     if (containsNoEmptyCheck(clip, bounds)) {
         if (src != dst) {
             memcpy(dst, src, 2 * sizeof(SkPoint));
@@ -137,7 +137,7 @@ bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip,
         tmp[index1].set(clip.fRight, sect_with_vertical(src, clip.fRight));
     }
 #ifdef SK_DEBUG
-    bounds.set(tmp, 2);
+    bounds.set(tmp[0], tmp[1]);
     SkASSERT(containsNoEmptyCheck(clip, bounds));
 #endif
     memcpy(dst, tmp, sizeof(tmp));
@@ -172,8 +172,9 @@ static void sect_with_horizontal_test_for_pin_results() {
 }
 #endif
 
-int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip,
-                            SkPoint lines[]) {
+int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip, SkPoint lines[],
+                            bool canCullToTheRight) {
+
 #ifdef SK_DEBUG
     {
         static bool gOnce;
@@ -241,6 +242,9 @@ int SkLineClipper::ClipLine(const SkPoint pts[], const SkRect& clip,
         result = tmp;
         reverse = false;
     } else if (tmp[index0].fX >= clip.fRight) {    // wholly to the right
+        if (canCullToTheRight) {
+            return 0;
+        }
         tmp[0].fX = tmp[1].fX = clip.fRight;
         result = tmp;
         reverse = false;

@@ -10,6 +10,7 @@
 
 #include "gl/GrGLInterface.h"
 #include "GrGLDefines.h"
+#include "GrStencil.h"
 
 class SkMatrix;
 
@@ -17,14 +18,18 @@ class SkMatrix;
 
 typedef uint32_t GrGLVersion;
 typedef uint32_t GrGLSLVersion;
+typedef uint32_t GrGLDriverVersion;
 
 #define GR_GL_VER(major, minor) ((static_cast<int>(major) << 16) | \
                                  static_cast<int>(minor))
 #define GR_GLSL_VER(major, minor) ((static_cast<int>(major) << 16) | \
                                    static_cast<int>(minor))
+#define GR_GL_DRIVER_VER(major, minor) ((static_cast<int>(major) << 16) | \
+                                        static_cast<int>(minor))
 
 #define GR_GL_INVALID_VER GR_GL_VER(0, 0)
-#define GR_GLSL_INVALID_VER GR_GL_VER(0, 0)
+#define GR_GLSL_INVALID_VER GR_GLSL_VER(0, 0)
+#define GR_GL_DRIVER_UNKNOWN_VER GR_GL_DRIVER_VER(0, 0)
 
 /**
  * The Vendor and Renderer enum values are lazily updated as required.
@@ -42,8 +47,20 @@ enum GrGLVendor {
 enum GrGLRenderer {
     kTegra2_GrGLRenderer,
     kTegra3_GrGLRenderer,
-
+    kPowerVR54x_GrGLRenderer,
+    kPowerVRRogue_GrGLRenderer,
+    kAdreno3xx_GrGLRenderer,
+    kAdreno4xx_GrGLRenderer,
     kOther_GrGLRenderer
+};
+
+enum GrGLDriver {
+    kMesa_GrGLDriver,
+    kChromium_GrGLDriver,
+    kNVIDIA_GrGLDriver,
+    kIntel_GrGLDriver,
+    kANGLE_GrGLDriver,
+    kUnknown_GrGLDriver
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,10 +86,19 @@ enum GrGLRenderer {
         *(p) = GR_GL_INIT_ZERO;                                                \
         GR_GL_CALL(gl, GetRenderbufferParameteriv(t, pname, p));               \
     } while (0)
+
 #define GR_GL_GetTexLevelParameteriv(gl, t, l, pname, p)                       \
     do {                                                                       \
         *(p) = GR_GL_INIT_ZERO;                                                \
         GR_GL_CALL(gl, GetTexLevelParameteriv(t, l, pname, p));                \
+    } while (0)
+
+#define GR_GL_GetShaderPrecisionFormat(gl, st, pt, range, precision)           \
+    do {                                                                       \
+        (range)[0] = GR_GL_INIT_ZERO;                                          \
+        (range)[1] = GR_GL_INIT_ZERO;                                          \
+        (*precision) = GR_GL_INIT_ZERO;                                        \
+        GR_GL_CALL(gl, GetShaderPrecisionFormat(st, pt, range, precision));    \
     } while (0)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -85,10 +111,15 @@ enum GrGLRenderer {
 GrGLVersion GrGLGetVersionFromString(const char* versionString);
 GrGLStandard GrGLGetStandardInUseFromString(const char* versionString);
 GrGLSLVersion GrGLGetGLSLVersionFromString(const char* versionString);
-bool GrGLIsMesaFromVersionString(const char* versionString);
 GrGLVendor GrGLGetVendorFromString(const char* vendorString);
 GrGLRenderer GrGLGetRendererFromString(const char* rendererString);
-bool GrGLIsChromiumFromRendererString(const char* rendererString);
+
+void GrGLGetDriverInfo(GrGLStandard standard,
+                       GrGLVendor vendor,
+                       const char* rendererString,
+                       const char* versionString,
+                       GrGLDriver* outDriver,
+                       GrGLDriverVersion* outVersion);
 
 // these variants call glGetString()
 GrGLVersion GrGLGetVersion(const GrGLInterface*);
@@ -107,11 +138,6 @@ void GrGLCheckErr(const GrGLInterface* gl,
 
 void GrGLClearErr(const GrGLInterface* gl);
 
-/**
- * Helper for converting SkMatrix to a column-major GL float array
- */
-template<int MatrixSize> void GrGLGetMatrix(GrGLfloat* dest, const SkMatrix& src);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -129,13 +155,13 @@ template<int MatrixSize> void GrGLGetMatrix(GrGLfloat* dest, const SkMatrix& src
     #define GR_GL_CHECK_ERROR_IMPL(IFACE, X)
 #endif
 
-// internal macro to conditionally log the gl call using GrPrintf based on
+// internal macro to conditionally log the gl call using SkDebugf based on
 // compile-time and run-time flags.
 #if GR_GL_LOG_CALLS
     extern bool gLogCallsGL;
     #define GR_GL_LOG_CALLS_IMPL(X)                             \
         if (gLogCallsGL)                                        \
-            GrPrintf(GR_FILE_AND_LINE_STR "GL: " #X "\n")
+            SkDebugf(GR_FILE_AND_LINE_STR "GL: " #X "\n")
 #else
     #define GR_GL_LOG_CALLS_IMPL(X)
 #endif
@@ -180,5 +206,8 @@ template<int MatrixSize> void GrGLGetMatrix(GrGLfloat* dest, const SkMatrix& src
 
 // call glGetError without doing a redundant error check or logging.
 #define GR_GL_GET_ERROR(IFACE) (IFACE)->fFunctions.fGetError()
+
+GrGLenum GrToGLStencilFunc(GrStencilFunc basicFunc);
+
 
 #endif

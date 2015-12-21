@@ -30,10 +30,6 @@
 #include "prenv.h"
 #endif
 
-#ifdef VMS
-#include <rmsdef.h>
-#endif
-
 #if defined(MOZ_WIDGET_GONK) && !defined(MOZ_CRASHREPORTER)
 #include <sys/syscall.h>
 #endif
@@ -616,27 +612,6 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
           }
         }
         return NS_ERROR_FILE_ACCESS_DENIED;
-    }
-#elif defined(VMS)
-    nsAutoCString filePath;
-    rv = lockFile->GetNativePath(filePath);
-    if (NS_FAILED(rv))
-        return rv;
-
-    lockFile->GetLastModifiedTime(&mReplacedLockTime);
-
-    mLockFileDesc = open_noshr(filePath.get(), O_CREAT, 0666);
-    if (mLockFileDesc == -1)
-    {
-        if ((errno == EVMSERR) && (vaxc$errno == RMS$_FLK))
-        {
-            return NS_ERROR_FILE_ACCESS_DENIED;
-        }
-        else
-        {
-            NS_ERROR("Failed to open lock file.");
-            return NS_ERROR_FAILURE;
-        }
     }
 #endif
 

@@ -42,7 +42,6 @@
 #include "SkDrawText.h"
 #include "SkDrawTextBox.h"
 #include "SkDrawTo.h"
-#include "SkDrawTransparentShader.h"
 #include "SkDump.h"
 #include "SkExtras.h"
 #include "SkHitClear.h"
@@ -63,7 +62,7 @@
     case SkType_##_class: result = new SkDisplay##_class(); break
 #ifdef SK_DEBUG
     #define CASE_DEBUG_RETURN_NIL(_class) \
-        case SkType_##_class: return NULL
+        case SkType_##_class: return nullptr
 #else
     #define CASE_DEBUG_RETURN_NIL(_class)
 #endif
@@ -72,7 +71,7 @@
 SkDisplayTypes SkDisplayType::gNewTypes = kNumberOfTypes;
 
 SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTypes type) {
-    SkDisplayable* result = NULL;
+    SkDisplayable* result = nullptr;
     switch (type) {
         // unknown
         CASE_DISPLAY_NEW(Math);
@@ -196,13 +195,12 @@ SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTyp
         CASE_NEW(TextToPath);
         CASE_DEBUG_RETURN_NIL(TileMode);
         CASE_NEW(Translate);
-        CASE_DRAW_NEW(TransparentShader);
         CASE_DRAW_NEW(Typeface);
         CASE_DEBUG_RETURN_NIL(Xfermode);
         default:
             SkExtras** end = maker->fExtras.end();
             for (SkExtras** extraPtr = maker->fExtras.begin(); extraPtr < end; extraPtr++) {
-                if ((result = (*extraPtr)->createInstance(type)) != NULL)
+                if ((result = (*extraPtr)->createInstance(type)) != nullptr)
                     return result;
             }
             SkASSERT(0);
@@ -226,7 +224,7 @@ SkDisplayable* SkDisplayType::CreateInstance(SkAnimateMaker* maker, SkDisplayTyp
 
 const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         SkDisplayTypes type, int* infoCountPtr) {
-    const SkMemberInfo* info = NULL;
+    const SkMemberInfo* info = nullptr;
     int infoCount = 0;
     switch (type) {
         // unknown
@@ -351,7 +349,6 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
         CASE_GET_INFO(TextToPath);
         // tilemode
         CASE_GET_INFO(Translate);
-        // transparentshader
         CASE_GET_DRAW_INFO(Typeface);
         // xfermode
         // knumberoftypes
@@ -359,11 +356,11 @@ const SkMemberInfo* SkDisplayType::GetMembers(SkAnimateMaker* maker,
             if (maker) {
                 SkExtras** end = maker->fExtras.end();
                 for (SkExtras** extraPtr = maker->fExtras.begin(); extraPtr < end; extraPtr++) {
-                    if ((info = (*extraPtr)->getMembers(type, infoCountPtr)) != NULL)
+                    if ((info = (*extraPtr)->getMembers(type, infoCountPtr)) != nullptr)
                         return info;
                 }
             }
-            return NULL;
+            return nullptr;
     }
     if (infoCountPtr)
         *infoCountPtr = infoCount;
@@ -518,7 +515,6 @@ const TypeNames gTypeNames[] = {
     { "textToPath", SkType_TextToPath           INIT_BOOL_FIELDS },
     // tilemode
     { "translate", SkType_Translate             INIT_BOOL_FIELDS },
-    DRAW_NAME("transparentShader", SkType_TransparentShader),
     { "typeface", SkType_Typeface               INIT_BOOL_FIELDS }
     // xfermode
     // knumberoftypes
@@ -529,7 +525,7 @@ const int kTypeNamesSize = SK_ARRAY_COUNT(gTypeNames);
 SkDisplayTypes SkDisplayType::Find(SkAnimateMaker* maker, const SkMemberInfo* match) {
     for (int index = 0; index < kTypeNamesSize; index++) {
         SkDisplayTypes type = gTypeNames[index].fType;
-        const SkMemberInfo* info = SkDisplayType::GetMembers(maker, type, NULL);
+        const SkMemberInfo* info = SkDisplayType::GetMembers(maker, type, nullptr);
         if (info == match)
             return type;
     }
@@ -542,7 +538,7 @@ SkDisplayTypes SkDisplayType::GetParent(SkAnimateMaker* maker, SkDisplayTypes ba
         return SkType_Displayable;
     if (base == SkType_Set)
         return SkType_Animate;  // another cheat until we have a lookup table
-    const SkMemberInfo* info = GetMembers(maker, base, NULL); // get info for this type
+    const SkMemberInfo* info = GetMembers(maker, base, nullptr); // get info for this type
     SkASSERT(info);
     if (info->fType != SkType_BaseClassInfo)
         return SkType_Unknown; // if no base, done
@@ -551,7 +547,7 @@ SkDisplayTypes SkDisplayType::GetParent(SkAnimateMaker* maker, SkDisplayTypes ba
     const SkMemberInfo* inherited = info->getInherited();
     SkDisplayTypes result = (SkDisplayTypes) (SkType_Unknown + 1);
     for (; result <= SkType_Xfermode; result = (SkDisplayTypes) (result + 1)) {
-        const SkMemberInfo* match = GetMembers(maker, result, NULL);
+        const SkMemberInfo* match = GetMembers(maker, result, nullptr);
         if (match == inherited)
             break;
     }
@@ -679,7 +675,6 @@ bool SkDisplayType::IsDisplayable(SkAnimateMaker* , SkDisplayTypes type) {
         case SkType_TextOnPath:
         case SkType_TextToPath:
         case SkType_Translate:
-        case SkType_TransparentShader:
             return true;
         default:    // to avoid warnings
             break;
@@ -715,10 +710,10 @@ const char* SkDisplayType::GetName(SkAnimateMaker* maker, SkDisplayTypes type) {
     SkExtras** end = maker->fExtras.end();
     for (SkExtras** extraPtr = maker->fExtras.begin(); extraPtr < end; extraPtr++) {
         const char* result = (*extraPtr)->getName(type);
-        if (result != NULL)
+        if (result != nullptr)
             return result;
     }
-    return NULL;
+    return nullptr;
 }
 #endif
 
@@ -733,7 +728,7 @@ void SkDisplayType::UnitTest() {
     }
     for (index = 0; index < kTypeNamesSize; index++) {
         SkDisplayable* test = CreateInstance(maker, gTypeNames[index].fType);
-        if (test == NULL)
+        if (test == nullptr)
             continue;
 #if defined _WIN32 && _MSC_VER >= 1300  && defined _INC_CRTDBG // only on windows, only if using "crtdbg.h"
     // we know that crtdbg puts 0xfdfdfdfd at the end of the block
@@ -749,7 +744,7 @@ void SkDisplayType::UnitTest() {
     for (index = 0; index < kTypeNamesSize; index++) {
         int infoCount;
         const SkMemberInfo* info = GetMembers(maker, gTypeNames[index].fType, &infoCount);
-        if (info == NULL)
+        if (info == nullptr)
             continue;
 #if SK_USE_CONDENSED_INFO == 0
         for (int inner = 0; inner < infoCount - 1; inner++) {
