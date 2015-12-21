@@ -23,6 +23,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::layout;
 
 namespace mozilla {
 namespace embedding {
@@ -103,6 +104,10 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
 
   // And send it back.
   rv = po->SerializeToPrintData(settings, nullptr, aResult);
+
+  PRemotePrintJobParent* remotePrintJob = new RemotePrintJobParent(settings);
+  aResult->remotePrintJobParent() = SendPRemotePrintJobConstructor(remotePrintJob);
+
   return rv;
 }
 

@@ -12,11 +12,6 @@
  * differs from nsIPrintSettings, which stores data which may
  * be valid across a number of jobs.
  *
- * This interface is currently empty since, at this point, only
- * platform-specific derived interfaces offer any functionality.
- * It is here as a placeholder for when the printing session has
- * XP functionality.
- *
  * The creation of a component which implements this interface
  * will begin the session. Likewise, destruction of that object
  * will end the session.
@@ -24,8 +19,22 @@
  * @status
  */
 
-[uuid(2f977d52-5485-11d4-87e2-0010a4e75ef2)]
+%{ C++
+namespace mozilla {
+namespace layout {
+class RemotePrintJobChild;
+}
+}
+%}
+
+[ptr] native RemotePrintJobChildPtr(mozilla::layout::RemotePrintJobChild);
+
+[uuid(424ae4bb-10ca-4f35-b84e-eab893322df4)]
 
 interface nsIPrintSession : nsISupports
 {
+  /**
+   * The remote print job is used for printing via the parent process.
+   */
+  [noscript] attribute RemotePrintJobChildPtr remotePrintJob;
 };
