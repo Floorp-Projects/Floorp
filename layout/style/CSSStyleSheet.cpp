@@ -43,11 +43,11 @@
 #include "nsMediaFeatures.h"
 #include "nsDOMClassInfoID.h"
 #include "mozilla/Likely.h"
-#include "mozilla/dom/CSSStyleSheetBinding.h"
 #include "nsComponentManagerUtils.h"
 #include "nsNullPrincipal.h"
 #include "mozilla/RuleProcessorCache.h"
 #include "nsIStyleSheetLinkingElement.h"
+#include "nsDOMWindowUtils.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1104,6 +1104,7 @@ CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode, ReferrerPolicy aReferrerPolicy)
     mDisabled(false),
     mDirty(false),
     mInRuleProcessorCache(false),
+    mParsingMode(css::eUserSheetFeatures),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
@@ -1122,6 +1123,7 @@ CSSStyleSheet::CSSStyleSheet(CORSMode aCORSMode,
     mDisabled(false),
     mDirty(false),
     mInRuleProcessorCache(false),
+    mParsingMode(css::eUserSheetFeatures),
     mScopeElement(nullptr),
     mRuleProcessors(nullptr)
 {
@@ -1142,6 +1144,7 @@ CSSStyleSheet::CSSStyleSheet(const CSSStyleSheet& aCopy,
     mDisabled(aCopy.mDisabled),
     mDirty(aCopy.mDirty),
     mInRuleProcessorCache(false),
+    mParsingMode(aCopy.mParsingMode),
     mScopeElement(nullptr),
     mInner(aCopy.mInner),
     mRuleProcessors(nullptr)
@@ -1187,6 +1190,22 @@ CSSStyleSheet::~CSSStyleSheet()
   if (mInRuleProcessorCache) {
     RuleProcessorCache::RemoveSheet(this);
   }
+}
+
+mozilla::dom::CSSStyleSheetParsingMode
+CSSStyleSheet::ParsingMode()
+{
+#define CHECK(X, Y) \
+  static_assert(static_cast<int>(X) == static_cast<int>(Y),             \
+                "mozilla::dom::CSSStyleSheetParsingMode and mozilla::css::SheetParsingMode should have identical values");
+
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Agent, css::eAgentSheetFeatures);
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::User, css::eUserSheetFeatures);
+  CHECK(mozilla::dom::CSSStyleSheetParsingMode::Author, css::eAuthorSheetFeatures);
+
+#undef CHECK
+
+  return static_cast<mozilla::dom::CSSStyleSheetParsingMode>(mParsingMode);
 }
 
 void
