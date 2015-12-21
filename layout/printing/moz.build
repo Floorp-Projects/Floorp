@@ -25,6 +25,7 @@ UNIFIED_SOURCES += [
     'nsPrintEngine.cpp',
     'nsPrintObject.cpp',
     'nsPrintPreviewListener.cpp',
+    'PrintTranslator.cpp',
 ]
 
 IPDL_SOURCES = [
