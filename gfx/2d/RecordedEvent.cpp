@@ -4,8 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RecordedEvent.h"
-#include "PathRecording.h"
 
+#include "PathRecording.h"
+#include "RecordingTypes.h"
 #include "Tools.h"
 #include "Filters.h"
 #include "Logging.h"
