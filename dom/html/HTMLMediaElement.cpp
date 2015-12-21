@@ -4382,6 +4382,9 @@ void HTMLMediaElement::NotifyAddedSource()
   // A load was paused in the resource selection algorithm, waiting for
   // a new source child to be added, resume the resource selection algorithm.
   if (mLoadWaitStatus == WAITING_FOR_SOURCE) {
+    // Rest the flag so we don't queue multiple LoadFromSourceTask() when
+    // multiple <source> are attached in an event loop.
+    mLoadWaitStatus = NOT_WAITING;
     QueueLoadFromSourceTask();
   }
 }
