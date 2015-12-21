@@ -208,6 +208,10 @@ gfxWindowsSurface::BeginPrinting(const nsAString& aTitle,
 {
 #ifdef NS_PRINTING
 #define DOC_TITLE_LENGTH (MAX_PATH-1)
+    if (!mForPrinting) {
+        return NS_OK;
+    }
+
     DOCINFOW docinfo;
 
     nsString titleStr(aTitle);
@@ -235,6 +239,10 @@ nsresult
 gfxWindowsSurface::EndPrinting()
 {
 #ifdef NS_PRINTING
+    if (!mForPrinting) {
+        return NS_OK;
+    }
+
     int result = ::EndDoc(mDC);
     if (result <= 0)
         return NS_ERROR_FAILURE;
@@ -249,6 +257,10 @@ nsresult
 gfxWindowsSurface::AbortPrinting()
 {
 #ifdef NS_PRINTING
+    if (!mForPrinting) {
+        return NS_OK;
+    }
+
     int result = ::AbortDoc(mDC);
     if (result <= 0)
         return NS_ERROR_FAILURE;
@@ -262,6 +274,10 @@ nsresult
 gfxWindowsSurface::BeginPage()
 {
 #ifdef NS_PRINTING
+    if (!mForPrinting) {
+        return NS_OK;
+    }
+
     int result = ::StartPage(mDC);
     if (result <= 0)
         return NS_ERROR_FAILURE;
@@ -275,8 +291,11 @@ nsresult
 gfxWindowsSurface::EndPage()
 {
 #ifdef NS_PRINTING
-    if (mForPrinting)
-        cairo_surface_show_page(CairoSurface());
+    if (!mForPrinting) {
+        return NS_OK;
+    }
+
+    cairo_surface_show_page(CairoSurface());
     int result = ::EndPage(mDC);
     if (result <= 0)
         return NS_ERROR_FAILURE;
