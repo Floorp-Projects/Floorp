@@ -672,6 +672,20 @@ this.Utils = {
       Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler).oscpu;
 
     return Str.sync.get("client.name2", [user, appName, system]);
+  },
+
+  getDeviceName() {
+    const deviceName = Svc.Prefs.get("client.name", "");
+
+    if (deviceName === "") {
+      return this.getDefaultDeviceName();
+    }
+
+    return deviceName;
+  },
+
+  getDeviceType() {
+    return Svc.Prefs.get("client.type", DEVICE_TYPE_DESKTOP);
   }
 };
 
