@@ -1117,11 +1117,11 @@ gfxGDIFontList::ActivateBundledFonts()
         if (!file) {
             continue;
         }
-        nsCString path;
-        if (NS_FAILED(file->GetNativePath(path))) {
+        nsAutoString path;
+        if (NS_FAILED(file->GetPath(path))) {
             continue;
         }
-        AddFontResourceEx(path.get(), FR_PRIVATE, nullptr);
+        AddFontResourceExW(path.get(), FR_PRIVATE, nullptr);
     }
 }
 
