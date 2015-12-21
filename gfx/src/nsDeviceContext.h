@@ -182,8 +182,8 @@ public:
      * EndDocument() or AbortDocument().
      *
      * @param aTitle - title of Document
-     * @param aPrintToFileName - name of file to print to, if nullptr
-     * then don't print to file
+     * @param aPrintToFileName - name of file to print to, if empty then don't
+     *                           print to file
      * @param aStartPage - starting page number (must be greater than zero)
      * @param aEndPage - ending page number (must be less than or
      * equal to number of pages)
@@ -191,7 +191,7 @@ public:
      * @return error status
      */
     nsresult BeginDocument(const nsAString& aTitle,
-                           char16_t*       aPrintToFileName,
+                           const nsAString& aPrintToFileName,
                            int32_t          aStartPage,
                            int32_t          aEndPage);
 
