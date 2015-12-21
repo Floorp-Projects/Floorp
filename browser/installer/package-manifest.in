@@ -388,6 +388,9 @@
 @RESPATH@/browser/components/webideComponents.manifest
 @RESPATH@/browser/components/Experiments.manifest
 @RESPATH@/browser/components/ExperimentsService.js
+@RESPATH@/browser/components/browser-newtab.xpt
+@RESPATH@/browser/components/aboutNewTabService.js
+@RESPATH@/browser/components/NewTabComponents.manifest
 @RESPATH@/components/Downloads.manifest
 @RESPATH@/components/DownloadLegacy.js
 @RESPATH@/components/BrowserPageThumbs.manifest

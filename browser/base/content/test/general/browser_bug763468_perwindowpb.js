@@ -1,36 +1,40 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
+/* globals
+  waitForExplicitFinish, whenNewWindowLoaded, whenNewTabLoaded,
+  executeSoon, registerCleanupFunction, finish, is
+*/
+/* exported test */
 
 // This test makes sure that opening a new tab in private browsing mode opens about:privatebrowsing
 function test() {
   // initialization
   waitForExplicitFinish();
-  let aboutNewTabService = Components.classes["@mozilla.org/browser/aboutnewtab-service;1"]
-                                     .getService(Components.interfaces.nsIAboutNewTabService);
 
   let windowsToClose = [];
-  let newTab;
   let newTabURL;
   let mode;
 
   function doTest(aIsPrivateMode, aWindow, aCallback) {
-    whenNewTabLoaded(aWindow, function () {
+    whenNewTabLoaded(aWindow, function() {
       if (aIsPrivateMode) {
         mode = "per window private browsing";
         newTabURL = "about:privatebrowsing";
       } else {
         mode = "normal";
-        newTabURL = aboutNewTabService.newTabURL;
+        newTabURL = "about:newtab";
       }
 
       is(aWindow.gBrowser.currentURI.spec, newTabURL,
         "URL of NewTab should be " + newTabURL + " in " + mode +  " mode");
 
       aWindow.gBrowser.removeTab(aWindow.gBrowser.selectedTab);
-      aCallback()
+      aCallback();
     });
-  };
+  }
 
   function testOnWindow(aOptions, aCallback) {
     whenNewWindowLoaded(aOptions, function(aWin) {
@@ -40,9 +44,9 @@ function test() {
       // call whenNewWindowLoaded() instead of testOnWindow() on your test.
       executeSoon(() => aCallback(aWin));
     });
-  };
+  }
 
-   // this function is called after calling finish() on the test.
+  // this function is called after calling finish() on the test.
   registerCleanupFunction(function() {
     windowsToClose.forEach(function(aWin) {
       aWin.close();
