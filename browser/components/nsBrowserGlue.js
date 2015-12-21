@@ -30,12 +30,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
 
 if(!AppConstants.RELEASE_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
-                                    "resource:///modules/RemoteAboutNewTab.jsm");
-
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
-                                    "resource:///modules/RemoteNewTabUtils.jsm");
-
   XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
                                     "resource:///modules/NewTabPrefsProvider.jsm");
 }
@@ -825,9 +819,6 @@ BrowserGlue.prototype = {
     AboutNewTab.init();
 
     if(!AppConstants.RELEASE_BUILD) {
-      RemoteNewTabUtils.init();
-      RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
-      RemoteAboutNewTab.init();
       NewTabPrefsProvider.prefs.init();
     }
 
@@ -1150,10 +1141,7 @@ BrowserGlue.prototype = {
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
-    if (!AppConstants.RELEASE_BUILD) {
-      RemoteAboutNewTab.uninit();
-      NewTabPrefsProvider.prefs.uninit();
-    }
+    NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
