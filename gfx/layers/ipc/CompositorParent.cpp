@@ -1546,10 +1546,6 @@ CompositorParent::RecvNotifyChildCreated(const uint64_t& child)
 void
 CompositorParent::NotifyChildCreated(const uint64_t& aChild)
 {
-  if (mApzcTreeManager) {
-    NS_DispatchToMainThread(NS_NewRunnableMethodWithArg<uint64_t>(
-        mApzcTreeManager, &APZCTreeManager::InitializeForLayersId, aChild));
-  }
   sIndirectLayerTreesLock->AssertCurrentThreadOwns();
   sIndirectLayerTrees[aChild].mParent = this;
   sIndirectLayerTrees[aChild].mLayerManager = mLayerManager;
@@ -1559,9 +1555,6 @@ bool
 CompositorParent::RecvAdoptChild(const uint64_t& child)
 {
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
-  if (mApzcTreeManager) {
-    mApzcTreeManager->AdoptLayersId(child, sIndirectLayerTrees[child].mParent->mApzcTreeManager.get());
-  }
   NotifyChildCreated(child);
   if (sIndirectLayerTrees[child].mLayerTree) {
     sIndirectLayerTrees[child].mLayerTree->mLayerManager = mLayerManager;
@@ -1633,7 +1626,6 @@ ScopedLayerTreeRegistration::ScopedLayerTreeRegistration(APZCTreeManager* aApzct
     : mLayersId(aLayersId)
 {
   EnsureLayerTreeMapReady();
-  aApzctm->InitializeForLayersId(aLayersId);
   MonitorAutoLock lock(*sIndirectLayerTreesLock);
   sIndirectLayerTrees[aLayersId].mRoot = aRoot;
   sIndirectLayerTrees[aLayersId].mController = aController;
@@ -1649,9 +1641,6 @@ ScopedLayerTreeRegistration::~ScopedLayerTreeRegistration()
 CompositorParent::SetControllerForLayerTree(uint64_t aLayersId,
                                             GeckoContentController* aController)
 {
-  if (APZCTreeManager* apzctm = GetAPZCTreeManager(aLayersId)) {
-    apzctm->InitializeForLayersId(aLayersId);
-  }
   // This ref is adopted by UpdateControllerForLayersId().
   aController->AddRef();
   CompositorLoop()->PostTask(FROM_HERE,
