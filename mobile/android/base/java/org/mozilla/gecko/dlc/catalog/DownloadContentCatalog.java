@@ -31,6 +31,8 @@ public class DownloadContentCatalog {
     private static final String LOGTAG = "GeckoDLCCatalog";
     private static final String FILE_NAME = "download_content_catalog";
 
+    private static final int MAX_FAILURES_UNTIL_PERMANENTLY_FAILED = 10;
+
     private final AtomicFile file;          // Guarded by 'file'
     private List<DownloadContent> content;  // Guarded by 'this'
     private boolean hasLoadedCatalog;       // Guarded by 'this
@@ -107,6 +109,7 @@ public class DownloadContentCatalog {
 
     public synchronized void markAsDownloaded(DownloadContent content) {
         content.setState(DownloadContent.STATE_DOWNLOADED);
+        content.resetFailures();
         hasCatalogChanged = true;
     }
 
@@ -118,6 +121,17 @@ public class DownloadContentCatalog {
     public synchronized void markAsIgnored(DownloadContent content) {
         content.setState(DownloadContent.STATE_IGNORED);
         hasCatalogChanged = true;
+    }
+
+    public synchronized void rememberFailure(DownloadContent content, int failureType) {
+        if (content.getFailures() >= MAX_FAILURES_UNTIL_PERMANENTLY_FAILED) {
+            Log.d(LOGTAG, "Maximum number of failures reached. Marking content has permanently failed.");
+
+            markAsPermanentlyFailed(content);
+        } else {
+            content.rememberFailure(failureType);
+            hasCatalogChanged = true;
+        }
     }
 
     public void persistChanges() {

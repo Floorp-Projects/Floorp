@@ -6,6 +6,7 @@
 package org.mozilla.gecko.dlc;
 
 import android.content.Context;
+import android.support.annotation.IntDef;
 import android.util.Log;
 
 import org.mozilla.gecko.background.nativecode.NativeCrypto;
@@ -29,12 +30,40 @@ public abstract class BaseAction {
     /* package-private */ static class RecoverableDownloadContentException extends Exception {
         private static final long serialVersionUID = -2246772819507370734L;
 
-        public RecoverableDownloadContentException(String message) {
+        @IntDef({MEMORY, DISK_IO, SERVER, NETWORK})
+        public @interface ErrorType {}
+        public static final int MEMORY = 1;
+        public static final int DISK_IO = 2;
+        public static final int SERVER = 3;
+        public static final int NETWORK = 4;
+
+        private int errorType;
+
+        public RecoverableDownloadContentException(@ErrorType int errorType, String message) {
             super(message);
+            this.errorType = errorType;
         }
 
-        public RecoverableDownloadContentException(Throwable cause) {
+        public RecoverableDownloadContentException(@ErrorType int errorType, Throwable cause) {
             super(cause);
+            this.errorType = errorType;
+        }
+
+        @ErrorType
+        public int getErrorType() {
+            return errorType;
+        }
+
+        /**
+         * Should this error be counted as failure? If this type of error will happen multiple times in a row then this
+         * error will be treated as permanently and the operation will not be tried again until the content changes.
+         */
+        public boolean shouldBeCountedAsFailure() {
+            if (NETWORK == errorType) {
+                return false; // Always retry after network errors
+            }
+
+            return true;
         }
     }
 
@@ -74,7 +103,8 @@ public abstract class BaseAction {
 
             byte[] ctx = NativeCrypto.sha256init();
             if (ctx == null) {
-                throw new RecoverableDownloadContentException("Could not create SHA-256 context");
+                throw new RecoverableDownloadContentException(RecoverableDownloadContentException.MEMORY,
+                                                              "Could not create SHA-256 context");
             }
 
             byte[] buffer = new byte[4096];
@@ -94,7 +124,7 @@ public abstract class BaseAction {
             return true;
         } catch (IOException e) {
             // Recoverable: Just I/O discontinuation
-            throw new RecoverableDownloadContentException(e);
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO, e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
         }
