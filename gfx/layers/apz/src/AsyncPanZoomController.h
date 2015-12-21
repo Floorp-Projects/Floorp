@@ -24,7 +24,6 @@
 #include "APZUtils.h"
 #include "Layers.h"                     // for Layer::ScrollDirection
 #include "LayersTypes.h"
-#include "TaskThrottler.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsRegion.h"
 
@@ -104,7 +103,6 @@ public:
                          APZCTreeManager* aTreeManager,
                          const RefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
-                         TaskThrottler* aPaintThrottler,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
 
   // --------------------------------------------------------------------------
@@ -185,11 +183,6 @@ public:
    * the initial metrics and the initial paint of the frame has just happened.
    */
   void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint);
-
-  /**
-   * Flush any pending repaint request.
-   */
-  void FlushRepaintIfPending();
 
   /**
    * The platform implementation must set the compositor parent so that we can
@@ -650,7 +643,6 @@ protected:
 
   uint64_t mLayersId;
   RefPtr<CompositorParent> mCompositorParent;
-  RefPtr<TaskThrottler> mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
