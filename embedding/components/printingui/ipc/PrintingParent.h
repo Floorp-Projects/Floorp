@@ -14,9 +14,11 @@ class nsIDOMWindow;
 class PPrintProgressDialogParent;
 class PPrintSettingsDialogParent;
 
-typedef mozilla::layout::PRemotePrintJobParent PRemotePrintJobParent;
-
 namespace mozilla {
+namespace layout {
+class PRemotePrintJobParent;
+}
+
 namespace embedding {
 
 class PrintingParent final : public PPrintingParent
