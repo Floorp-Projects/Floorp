@@ -22,7 +22,6 @@ public:
     : ScaledFontBase(aSize)
     , mFontFace(aFont)
   {}
-  ScaledFontDWrite(uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize);
 
   virtual FontType GetType() const { return FontType::DWRITE; }
 
@@ -49,9 +48,6 @@ protected:
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* GetCairoFontFace() override;
 #endif
-
-private:
-  RefPtr<IDWriteFontFileStream> mFontFileStream;
 };
 
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions

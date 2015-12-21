@@ -10,6 +10,7 @@
 
 #include "BigEndianInts.h"
 #include "Logging.h"
+#include "mozilla/HashFunctions.h"
 #include "SFNTNameTable.h"
 
 namespace mozilla {
@@ -116,7 +117,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
   // Check to see if this is a font collection.
   if (aDataLength < sizeof(TTCHeader)) {
     gfxWarning() << "Font data too short.";
-    return false;
+    return nullptr;
   }
 
   const TTCHeader *ttcHeader = reinterpret_cast<const TTCHeader*>(aFontData);
@@ -124,7 +125,7 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
     uint32_t numFonts = ttcHeader->numFonts;
     if (aDataLength < sizeof(TTCHeader) + (numFonts * sizeof(BigEndianUint32))) {
       gfxWarning() << "Font data too short to contain full TTC Header.";
-      return false;
+      return nullptr;
     }
 
     UniquePtr<SFNTData> sfntData(new SFNTData);
@@ -149,6 +150,23 @@ SFNTData::Create(const uint8_t *aFontData, uint32_t aDataLength)
   return Move(sfntData);
 }
 
+/* static */
+uint64_t
+SFNTData::GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength)
+{
+  uint64_t hash;
+  UniquePtr<SFNTData> sfntData = SFNTData::Create(aFontData, aDataLength);
+  mozilla::u16string firstName;
+  if (sfntData && sfntData->GetU16FullName(0, firstName)) {
+    hash = HashString(firstName.c_str(), firstName.length());
+  } else {
+    gfxWarning() << "Failed to get name from font data hashing whole font.";
+    hash = HashString(aFontData, aDataLength);
+  }
+
+  return hash << 32 | aDataLength;;
+}
+
 SFNTData::~SFNTData()
 {
   for (size_t i = 0; i < mFonts.length(); ++i) {
@@ -165,6 +183,21 @@ SFNTData::GetU16FullName(uint32_t aIndex, mozilla::u16string& aU16FullName)
   }
 
   return mFonts[aIndex]->GetU16FullName(aU16FullName);
+}
+
+bool
+SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames)
+{
+  bool fontFound = false;
+  for (size_t i = 0; i < mFonts.length(); ++i) {
+    mozilla::u16string name;
+    if (mFonts[i]->GetU16FullName(name)) {
+      fontFound = true;
+    }
+    aU16FullNames.append(Move(name));
+  }
+
+  return fontFound;
 }
 
 bool
