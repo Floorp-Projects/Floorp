@@ -293,10 +293,7 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Convert to buffered stream
-  nsCOMPtr<nsIInputStream> in;
-  rv = NS_NewBufferedInputStream(getter_AddRefs(in), localInFile,
-                                 BUFFER_SIZE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIInputStream> in = NS_BufferInputStream(localInFile, BUFFER_SIZE);
 
   uint32_t magic;
   uint32_t read;
@@ -396,10 +393,7 @@ nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
   }
 
   // Convert to buffered stream
-  nsCOMPtr<nsIOutputStream> out;
-  rv = NS_NewBufferedOutputStream(getter_AddRefs(out), localOutFile,
-                                  BUFFER_SIZE);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIOutputStream> out = NS_BufferOutputStream(localOutFile, BUFFER_SIZE);
 
   uint32_t written;
   uint32_t writelen = sizeof(uint32_t);
