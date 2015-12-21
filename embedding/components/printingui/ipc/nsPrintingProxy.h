@@ -9,12 +9,6 @@
 #include "nsIPrintingPromptService.h"
 #include "mozilla/embedding/PPrintingChild.h"
 
-namespace mozilla {
-namespace layout {
-class PRemotePrintJobChild;
-}
-}
-
 class nsPrintingProxy: public nsIPrintingPromptService,
                        public mozilla::embedding::PPrintingChild
 {
@@ -45,12 +39,6 @@ public:
 
     virtual bool
     DeallocPPrintSettingsDialogChild(PPrintSettingsDialogChild* aActor) override;
-
-    virtual PRemotePrintJobChild*
-    AllocPRemotePrintJobChild() override;
-
-    virtual bool
-    DeallocPRemotePrintJobChild(PRemotePrintJobChild* aActor) override;
 };
 
 #endif

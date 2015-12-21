@@ -15,10 +15,6 @@ class PPrintProgressDialogParent;
 class PPrintSettingsDialogParent;
 
 namespace mozilla {
-namespace layout {
-class PRemotePrintJobParent;
-}
-
 namespace embedding {
 
 class PrintingParent final : public PPrintingParent
@@ -53,12 +49,6 @@ public:
     virtual bool
     DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor);
 
-    virtual PRemotePrintJobParent*
-    AllocPRemotePrintJobParent();
-
-    virtual bool
-    DeallocPRemotePrintJobParent(PRemotePrintJobParent* aActor);
-
     virtual void
     ActorDestroy(ActorDestroyReason aWhy);
 
@@ -79,3 +69,4 @@ private:
 } // namespace mozilla
 
 #endif
+

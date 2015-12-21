@@ -22,7 +22,6 @@ EXPORTS.mozilla.gfx += [
     'Coord.h',
     'CriticalSection.h',
     'DataSurfaceHelpers.h',
-    'DrawEventRecorder.h',
     'DrawTargetTiled.h',
     'Filters.h',
     'Helpers.h',
@@ -38,10 +37,7 @@ EXPORTS.mozilla.gfx += [
     'PathHelpers.h',
     'PatternHelpers.h',
     'Point.h',
-    'Preferences.h',
     'Quaternion.h',
-    'RecordedEvent.h',
-    'RecordingTypes.h',
     'Rect.h',
     'Scale.h',
     'ScaleFactor.h',
@@ -71,8 +67,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
         'JobScheduler_win32.cpp',
-        'NativeFontResourceDWrite.cpp',
-        'NativeFontResourceGDI.cpp',
         'PathD2D.cpp',
         'RadialGradientEffectD2D1.cpp',
         'ScaledFontDWrite.cpp',
@@ -154,14 +148,11 @@ UNIFIED_SOURCES += [
     'PathCairo.cpp',
     'PathHelpers.cpp',
     'PathRecording.cpp',
-    'Preferences.cpp',
     'Quaternion.cpp',
     'RecordedEvent.cpp',
     'Scale.cpp',
     'ScaledFontBase.cpp',
     'ScaledFontCairo.cpp',
-    'SFNTData.cpp',
-    'SFNTNameTable.cpp',
     'SourceSurfaceCairo.cpp',
     'SourceSurfaceRawData.cpp',
 ]
@@ -195,3 +186,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gtk2', 'gtk3', 'gonk', 'qt'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
+
+if CONFIG['OS_ARCH'] == 'WINNT':
+    # Due to bug 796023, we can't have -DUNICODE and -D_UNICODE; defining those
+    # macros changes the type of LOGFONT to LOGFONTW instead of LOGFONTA. This
+    # changes the symbol names of exported C++ functions that use LOGFONT.
+    del DEFINES['UNICODE']
+    del DEFINES['_UNICODE']

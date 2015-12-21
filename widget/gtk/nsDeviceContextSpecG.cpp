@@ -300,10 +300,8 @@ nsDeviceContextSpecGTK::EnumeratePrinters()
                          nullptr, TRUE);
 }
 
-NS_IMETHODIMP
-nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle,
-                                      const nsAString& aPrintToFileName,
-                                      int32_t aStartPage, int32_t aEndPage)
+NS_IMETHODIMP nsDeviceContextSpecGTK::BeginDocument(const nsAString& aTitle, char16_t * aPrintToFileName,
+                                                    int32_t aStartPage, int32_t aEndPage)
 {
   mTitle.Truncate();
   AppendUTF16toUTF8(aTitle, mTitle);

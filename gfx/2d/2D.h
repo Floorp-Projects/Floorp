@@ -667,29 +667,6 @@ protected:
   UserData mUserData;
 };
 
-/**
- * Derived classes hold a native font resource from which to create
- * ScaledFonts.
- */
-class NativeFontResource : public RefCounted<NativeFontResource>
-{
-public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(NativeFontResource)
-
-  /**
-   * Creates a ScaledFont using the font corresponding to the index and
-   * the given glyph size.
-   *
-   * @param aIndex index for the font within the resource.
-   * @param aGlyphSize the size of ScaledFont required.
-   * @return an already_addrefed ScaledFont, containing nullptr if failed.
-   */
-  virtual already_AddRefed<ScaledFont>
-    CreateScaledFont(uint32_t aIndex, uint32_t aGlyphSize) = 0;
-
-  virtual ~NativeFontResource() {};
-};
-
 /** This class is designed to allow passing additional glyph rendering
  * parameters to the glyph drawing functions. This is an empty wrapper class
  * merely used to allow holding on to and passing around platform specific
@@ -726,9 +703,6 @@ public:
   virtual DrawTargetType GetType() const = 0;
 
   virtual BackendType GetBackendType() const = 0;
-
-  virtual bool IsRecording() const { return false; }
-
   /**
    * Returns a SourceSurface which is a snapshot of the current contents of the DrawTarget.
    * Multiple calls to Snapshot() without any drawing operations in between will
@@ -1215,15 +1189,16 @@ public:
     CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSize);
 
   /**
-   * This creates a NativeFontResource from TrueType data.
+   * This creates a ScaledFont from TrueType data.
    *
    * @param aData Pointer to the data
    * @param aSize Size of the TrueType data
-   * @param aType Type of NativeFontResource that should be created.
-   * @return a NativeFontResource of nullptr if failed.
+   * @param aFaceIndex Index of the font face in the truetype data this ScaledFont needs to represent.
+   * @param aGlyphSize Size of the glyphs in this ScaledFont
+   * @param aType Type of ScaledFont that should be created.
    */
-  static already_AddRefed<NativeFontResource>
-    CreateNativeFontResource(uint8_t *aData, uint32_t aSize, FontType aType);
+  static already_AddRefed<ScaledFont>
+    CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize, uint32_t aFaceIndex, Float aGlyphSize, FontType aType);
 
   /**
    * This creates a scaled font with an associated cairo_scaled_font_t, and
