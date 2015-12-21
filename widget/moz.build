@@ -95,6 +95,7 @@ EXPORTS += [
     'InputData.h',
     'nsBaseScreen.h',
     'nsBaseWidget.h',
+    'nsDeviceContextSpecProxy.h',
     'nsIDeviceContextSpec.h',
     'nsIPluginWidget.h',
     'nsIRollupListener.h',
