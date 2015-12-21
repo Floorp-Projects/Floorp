@@ -270,6 +270,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
 
+  *surface = nullptr;
   RefPtr<gfxASurface> newSurface;
 
   int16_t outputFormat = 0;
@@ -315,19 +316,24 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
       newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
       if (newSurface->GetType() == (gfxSurfaceType)-1) {
         gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
-        newSurface = nullptr;
+        return NS_ERROR_FAILURE;
       }
     }
   }
 
-  if (newSurface) {
-    *surface = newSurface;
-    NS_ADDREF(*surface);
-    return NS_OK;
-  }
+  mPrintingSurface = newSurface;
+  newSurface.forget(surface);
+  return NS_OK;
+}
 
-  *surface = nullptr;
-  return NS_ERROR_FAILURE;
+float
+nsDeviceContextSpecWin::GetPrintingScale()
+{
+  MOZ_ASSERT(mPrintingSurface);
+
+  HDC dc = reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
+  int32_t OSVal = GetDeviceCaps(dc, LOGPIXELSY);
+  return float(OSVal) / GetDPI();
 }
 
 //----------------------------------------------------------------------------------
