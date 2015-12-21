@@ -286,8 +286,7 @@ public:
    */
   static const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
-    const ParentLayerPoint& aVelocity,
-    double aEstimatedPaintDuration);
+    const ParentLayerPoint& aVelocity);
 
   /**
    * Set the dpi value used by all AsyncPanZoomControllers.
