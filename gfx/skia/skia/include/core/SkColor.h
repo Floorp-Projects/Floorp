@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2006 The Android Open Source Project
  *
@@ -6,11 +5,11 @@
  * found in the LICENSE file.
  */
 
-
 #ifndef SkColor_DEFINED
 #define SkColor_DEFINED
 
 #include "SkScalar.h"
+#include "SkTypes.h"
 
 /** \file SkColor.h
 
@@ -160,10 +159,5 @@ SK_API SkPMColor SkPreMultiplyColor(SkColor c);
 /** Define a function pointer type for combining two premultiplied colors
 */
 typedef SkPMColor (*SkXfermodeProc)(SkPMColor src, SkPMColor dst);
-
-/** Define a function pointer type for combining a premultiplied src color
-    and a 16bit device color.
-*/
-typedef uint16_t (*SkXfermodeProc16)(SkPMColor src, uint16_t dst);
 
 #endif

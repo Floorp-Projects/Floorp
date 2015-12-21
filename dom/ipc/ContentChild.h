@@ -383,6 +383,7 @@ public:
     virtual bool RecvLastPrivateDocShellDestroyed() override;
 
     virtual bool RecvVolumes(InfallibleTArray<VolumeInfo>&& aVolumes) override;
+    virtual bool RecvDeviceStorageAreas(const DeviceStorageAreaInfo& areaInfo) override;
     virtual bool RecvFilePathUpdate(const nsString& aStorageType,
                                     const nsString& aStorageName,
                                     const nsString& aPath,

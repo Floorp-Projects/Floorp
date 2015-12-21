@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/PushManager.h"
 
+#include "mozilla/Base64.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
@@ -65,6 +66,26 @@ GetPermissionState(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
+void
+SubscriptionToJSON(PushSubscriptionJSON& aJSON, const nsString& aEndpoint,
+                   const nsTArray<uint8_t>& aRawP256dhKey,
+                   const nsTArray<uint8_t>& aAuthSecret)
+{
+  aJSON.mEndpoint.Construct();
+  aJSON.mEndpoint.Value() = aEndpoint;
+
+  aJSON.mKeys.mP256dh.Construct();
+  nsresult rv = Base64URLEncode(aRawP256dhKey.Length(),
+                                aRawP256dhKey.Elements(),
+                                aJSON.mKeys.mP256dh.Value());
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+
+  aJSON.mKeys.mAuth.Construct();
+  rv = Base64URLEncode(aAuthSecret.Length(), aAuthSecret.Elements(),
+                       aJSON.mKeys.mAuth.Value());
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+}
+
 } // anonymous namespace
 
 class UnsubscribeResultCallback final : public nsIUnsubscribeResultCallback
@@ -121,6 +142,12 @@ PushSubscription::Unsubscribe(ErrorResult& aRv)
   Unused << NS_WARN_IF(NS_FAILED(
     service->Unsubscribe(mScope, mPrincipal, callback)));
   return p.forget();
+}
+
+void
+PushSubscription::ToJSON(PushSubscriptionJSON& aJSON)
+{
+  SubscriptionToJSON(aJSON, mEndpoint, mRawP256dhKey, mAuthSecret);
 }
 
 PushSubscription::PushSubscription(nsIGlobalObject* aGlobal,
@@ -505,6 +532,12 @@ WorkerPushSubscription::Unsubscribe(ErrorResult &aRv)
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(r)));
 
   return p.forget();
+}
+
+void
+WorkerPushSubscription::ToJSON(PushSubscriptionJSON& aJSON)
+{
+  SubscriptionToJSON(aJSON, mEndpoint, mRawP256dhKey, mAuthSecret);
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_0(WorkerPushSubscription)

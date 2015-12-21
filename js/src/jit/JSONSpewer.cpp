@@ -371,7 +371,7 @@ JSONSpewer::spewRanges(BacktrackingAllocator* regalloc)
 
                     beginObject();
                     property("allocation");
-                    out_.printf("\"%s\"", range->bundle()->allocation().toString());
+                    out_.printf("\"%s\"", range->bundle()->allocation().toString().get());
                     integerProperty("start", range->from().bits());
                     integerProperty("end", range->to().bits());
                     endObject();

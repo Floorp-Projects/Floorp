@@ -11,7 +11,7 @@
 #define SkDraw3D_DEFINED
 
 #include "SkCamera.h"
-#include "SkDrawable.h"
+#include "SkADrawable.h"
 #include "SkMemberInfo.h"
 
 class Sk3D_Patch;
@@ -23,11 +23,11 @@ private:
     SkPoint3D fPoint;
 };
 
-class Sk3D_Camera : public SkDrawable {
+class Sk3D_Camera : public SkADrawable {
     DECLARE_MEMBER_INFO(3D_Camera);
     Sk3D_Camera();
     virtual ~Sk3D_Camera();
-    virtual bool draw(SkAnimateMaker& );
+    bool draw(SkAnimateMaker& ) override;
 private:
     SkScalar hackWidth;
     SkScalar hackHeight;
@@ -38,10 +38,10 @@ private:
 class Sk3D_Patch : public SkDisplayable {
     DECLARE_MEMBER_INFO(3D_Patch);
 private:
-    virtual void executeFunction(SkDisplayable* , int index,
+    void executeFunction(SkDisplayable* , int index,
         SkTDArray<SkScriptValue>& parameters, SkDisplayTypes type,
-        SkScriptValue* );
-    virtual const SkFunctionParamType* getFunctionsParameters();
+        SkScriptValue* ) override;
+    const SkFunctionParamType* getFunctionsParameters() override;
     SkPatch3D  fPatch;
     static const SkFunctionParamType fFunctionParameters[];
     friend class Sk3D_Camera;

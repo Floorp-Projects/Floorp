@@ -1,9 +1,18 @@
+/*
+ * Copyright 2015 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
 #include "SkBitmapScaler.h"
 #include "SkBitmapFilter.h"
-#include "SkRect.h"
-#include "SkTArray.h"
-#include "SkErrorInternals.h"
 #include "SkConvolver.h"
+#include "SkImageInfo.h"
+#include "SkPixmap.h"
+#include "SkRect.h"
+#include "SkScalar.h"
+#include "SkTArray.h"
 
 // SkResizeFilter ----------------------------------------------------------------
 
@@ -16,9 +25,7 @@ public:
                    float destWidth, float destHeight,
                    const SkRect& destSubset,
                    const SkConvolutionProcs& convolveProcs);
-    ~SkResizeFilter() {
-        SkDELETE( fBitmapFilter );
-    }
+    ~SkResizeFilter() { delete fBitmapFilter; }
 
     // Returns the filled filter values.
     const SkConvolutionFilter1D& xFilter() { return fXFilter; }
@@ -55,29 +62,25 @@ SkResizeFilter::SkResizeFilter(SkBitmapScaler::ResizeMethod method,
                                const SkRect& destSubset,
                                const SkConvolutionProcs& convolveProcs) {
 
-    // method will only ever refer to an "algorithm method".
-    SkASSERT((SkBitmapScaler::RESIZE_FIRST_ALGORITHM_METHOD <= method) &&
-             (method <= SkBitmapScaler::RESIZE_LAST_ALGORITHM_METHOD));
+    SkASSERT(method >= SkBitmapScaler::RESIZE_FirstMethod &&
+             method <= SkBitmapScaler::RESIZE_LastMethod);
 
+    fBitmapFilter = nullptr;
     switch(method) {
         case SkBitmapScaler::RESIZE_BOX:
-            fBitmapFilter = SkNEW(SkBoxFilter);
+            fBitmapFilter = new SkBoxFilter;
             break;
         case SkBitmapScaler::RESIZE_TRIANGLE:
-            fBitmapFilter = SkNEW(SkTriangleFilter);
+            fBitmapFilter = new SkTriangleFilter;
             break;
         case SkBitmapScaler::RESIZE_MITCHELL:
-            fBitmapFilter = SkNEW_ARGS(SkMitchellFilter, (1.f/3.f, 1.f/3.f));
+            fBitmapFilter = new SkMitchellFilter(1.f / 3.f, 1.f / 3.f);
             break;
         case SkBitmapScaler::RESIZE_HAMMING:
-            fBitmapFilter = SkNEW(SkHammingFilter);
+            fBitmapFilter = new SkHammingFilter;
             break;
         case SkBitmapScaler::RESIZE_LANCZOS3:
-            fBitmapFilter = SkNEW(SkLanczosFilter);
-            break;
-        default:
-            // NOTREACHED:
-            fBitmapFilter = SkNEW_ARGS(SkMitchellFilter, (1.f/3.f, 1.f/3.f));
+            fBitmapFilter = new SkLanczosFilter;
             break;
     }
 
@@ -207,126 +210,52 @@ void SkResizeFilter::computeFilters(int srcSize,
   }
 }
 
-static SkBitmapScaler::ResizeMethod ResizeMethodToAlgorithmMethod(
-                                    SkBitmapScaler::ResizeMethod method) {
-    // Convert any "Quality Method" into an "Algorithm Method"
-    if (method >= SkBitmapScaler::RESIZE_FIRST_ALGORITHM_METHOD &&
-    method <= SkBitmapScaler::RESIZE_LAST_ALGORITHM_METHOD) {
-        return method;
-    }
-    // The call to SkBitmapScalerGtv::Resize() above took care of
-    // GPU-acceleration in the cases where it is possible. So now we just
-    // pick the appropriate software method for each resize quality.
-    switch (method) {
-        // Users of RESIZE_GOOD are willing to trade a lot of quality to
-        // get speed, allowing the use of linear resampling to get hardware
-        // acceleration (SRB). Hence any of our "good" software filters
-        // will be acceptable, so we use a triangle.
-        case SkBitmapScaler::RESIZE_GOOD:
-            return SkBitmapScaler::RESIZE_TRIANGLE;
-        // Users of RESIZE_BETTER are willing to trade some quality in order
-        // to improve performance, but are guaranteed not to devolve to a linear
-        // resampling. In visual tests we see that Hamming-1 is not as good as
-        // Lanczos-2, however it is about 40% faster and Lanczos-2 itself is
-        // about 30% faster than Lanczos-3. The use of Hamming-1 has been deemed
-        // an acceptable trade-off between quality and speed.
-        case SkBitmapScaler::RESIZE_BETTER:
-            return SkBitmapScaler::RESIZE_HAMMING;
-        default:
-#ifdef SK_HIGH_QUALITY_IS_LANCZOS
-            return SkBitmapScaler::RESIZE_LANCZOS3;
-#else
-            return SkBitmapScaler::RESIZE_MITCHELL;
-#endif
-    }
-}
-
-// static
-bool SkBitmapScaler::Resize(SkBitmap* resultPtr,
-                            const SkBitmap& source,
-                            ResizeMethod method,
-                            float destWidth, float destHeight,
-                            SkBitmap::Allocator* allocator) {
-
-  SkConvolutionProcs convolveProcs= { 0, NULL, NULL, NULL, NULL };
-  PlatformConvolutionProcs(&convolveProcs);
-
-  SkRect destSubset = { 0, 0, destWidth, destHeight };
-
-  // Ensure that the ResizeMethod enumeration is sound.
-    SkASSERT(((RESIZE_FIRST_QUALITY_METHOD <= method) &&
-        (method <= RESIZE_LAST_QUALITY_METHOD)) ||
-        ((RESIZE_FIRST_ALGORITHM_METHOD <= method) &&
-        (method <= RESIZE_LAST_ALGORITHM_METHOD)));
-
-    SkRect dest = { 0, 0, destWidth, destHeight };
-    if (!dest.contains(destSubset)) {
-        SkErrorInternals::SetError( kInvalidArgument_SkError,
-                                    "Sorry, the destination bitmap scale subset "
-                                    "falls outside the full destination bitmap." );
-    }
-
-    // If the size of source or destination is 0, i.e. 0x0, 0xN or Nx0, just
-    // return empty.
-    if (source.width() < 1 || source.height() < 1 ||
-        destWidth < 1 || destHeight < 1) {
-        // todo: seems like we could handle negative dstWidth/Height, since that
-        // is just a negative scale (flip)
+bool SkBitmapScaler::Resize(SkBitmap* resultPtr, const SkPixmap& source, ResizeMethod method,
+                            int destWidth, int destHeight, SkBitmap::Allocator* allocator) {
+    if (nullptr == source.addr() || source.colorType() != kN32_SkColorType ||
+        source.width() < 1 || source.height() < 1)
+    {
         return false;
     }
 
-    method = ResizeMethodToAlgorithmMethod(method);
-
-    // Check that we deal with an "algorithm methods" from this point onward.
-    SkASSERT((SkBitmapScaler::RESIZE_FIRST_ALGORITHM_METHOD <= method) &&
-        (method <= SkBitmapScaler::RESIZE_LAST_ALGORITHM_METHOD));
-
-    SkAutoLockPixels locker(source);
-    if (!source.readyToDraw() ||
-        source.colorType() != kN32_SkColorType) {
+    if (destWidth < 1 || destHeight < 1) {
         return false;
     }
+
+    SkConvolutionProcs convolveProcs= { 0, nullptr, nullptr, nullptr, nullptr };
+    PlatformConvolutionProcs(&convolveProcs);
+
+    SkRect destSubset = SkRect::MakeIWH(destWidth, destHeight);
 
     SkResizeFilter filter(method, source.width(), source.height(),
-                          destWidth, destHeight, destSubset, convolveProcs);
+                        destWidth, destHeight, destSubset, convolveProcs);
 
-    // Get a source bitmap encompassing this touched area. We construct the
+    // Get a subset encompassing this touched area. We construct the
     // offsets and row strides such that it looks like a new bitmap, while
     // referring to the old data.
-    const unsigned char* sourceSubset =
-        reinterpret_cast<const unsigned char*>(source.getPixels());
+    const uint8_t* sourceSubset = reinterpret_cast<const uint8_t*>(source.addr());
 
     // Convolve into the result.
     SkBitmap result;
     result.setInfo(SkImageInfo::MakeN32(SkScalarCeilToInt(destSubset.width()),
-                                        SkScalarCeilToInt(destSubset.height()),
-                                        source.alphaType()));
-    result.allocPixels(allocator, NULL);
+                                      SkScalarCeilToInt(destSubset.height()),
+                                      source.alphaType()));
+    result.allocPixels(allocator, nullptr);
     if (!result.readyToDraw()) {
+      return false;
+    }
+
+    if (!BGRAConvolve2D(sourceSubset, static_cast<int>(source.rowBytes()),
+                        !source.isOpaque(), filter.xFilter(), filter.yFilter(),
+                        static_cast<int>(result.rowBytes()),
+                        static_cast<unsigned char*>(result.getPixels()),
+                        convolveProcs, true)) {
         return false;
     }
 
-    BGRAConvolve2D(sourceSubset, static_cast<int>(source.rowBytes()),
-        !source.isOpaque(), filter.xFilter(), filter.yFilter(),
-        static_cast<int>(result.rowBytes()),
-        static_cast<unsigned char*>(result.getPixels()),
-        convolveProcs, true);
-
     *resultPtr = result;
     resultPtr->lockPixels();
-    SkASSERT(NULL != resultPtr->getPixels());
+    SkASSERT(resultPtr->getPixels());
     return true;
 }
 
-// static -- simpler interface to the resizer; returns a default bitmap if scaling
-// fails for any reason.  This is the interface that Chrome expects.
-SkBitmap SkBitmapScaler::Resize(const SkBitmap& source,
-                                ResizeMethod method,
-                                float destWidth, float destHeight,
-                                SkBitmap::Allocator* allocator) {
-  SkBitmap result;
-  if (!Resize(&result, source, method, destWidth, destHeight, allocator)) {
-    return SkBitmap();
-  }
-  return result;
-}

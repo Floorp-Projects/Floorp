@@ -6,73 +6,71 @@
  */
 
 #include "GrGLContext.h"
+#include "GrGLGLSL.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrGLContextInfo& GrGLContextInfo::operator= (const GrGLContextInfo& that) {
-    fInterface.reset(SkSafeRef(that.fInterface.get()));
-    fGLVersion      = that.fGLVersion;
-    fGLSLGeneration = that.fGLSLGeneration;
-    fVendor         = that.fVendor;
-    fRenderer       = that.fRenderer;
-    fIsMesa         = that.fIsMesa;
-    fIsChromium     = that.fIsChromium;
-    *fGLCaps        = *that.fGLCaps.get();
-    return *this;
-}
-
-bool GrGLContextInfo::initialize(const GrGLInterface* interface) {
-    this->reset();
-    // We haven't validated the GrGLInterface yet, so check for GetString
-    // function pointer
-    if (interface->fFunctions.fGetString) {
-        const GrGLubyte* verUByte;
-        GR_GL_CALL_RET(interface, verUByte, GetString(GR_GL_VERSION));
-        const char* ver = reinterpret_cast<const char*>(verUByte);
-
-        const GrGLubyte* rendererUByte;
-        GR_GL_CALL_RET(interface, rendererUByte, GetString(GR_GL_RENDERER));
-        const char* renderer = reinterpret_cast<const char*>(rendererUByte);
-
-        if (interface->validate()) {
-
-            fGLVersion = GrGLGetVersionFromString(ver);
-            if (GR_GL_INVALID_VER == fGLVersion) {
-                return false;
-            }
-
-            if (!GrGetGLSLGeneration(interface, &fGLSLGeneration)) {
-                return false;
-            }
-
-            fVendor = GrGLGetVendor(interface);
-
-            fRenderer = GrGLGetRendererFromString(renderer);
-
-            fIsMesa = GrGLIsMesaFromVersionString(ver);
-
-            fIsChromium = GrGLIsChromiumFromRendererString(renderer);
-
-            // This must occur before caps init.
-            fInterface.reset(SkRef(interface));
-
-            return fGLCaps->init(*this, interface);
-        }
+GrGLContext* GrGLContext::Create(const GrGLInterface* interface, const GrContextOptions& options) {
+    // We haven't validated the GrGLInterface yet, so check for GetString function pointer
+    if (!interface->fFunctions.fGetString) {
+        return nullptr;
     }
-    return false;
+    ConstructorArgs args;
+    args.fInterface = interface;
+
+    const GrGLubyte* verUByte;
+    GR_GL_CALL_RET(interface, verUByte, GetString(GR_GL_VERSION));
+    const char* ver = reinterpret_cast<const char*>(verUByte);
+
+    const GrGLubyte* rendererUByte;
+    GR_GL_CALL_RET(interface, rendererUByte, GetString(GR_GL_RENDERER));
+    const char* renderer = reinterpret_cast<const char*>(rendererUByte);
+
+    if (!interface->validate()) {
+        return nullptr;
+    }
+
+    args.fGLVersion = GrGLGetVersionFromString(ver);
+    if (GR_GL_INVALID_VER == args.fGLVersion) {
+        return nullptr;
+    }
+
+    if (!GrGLGetGLSLGeneration(interface, &args.fGLSLGeneration)) {
+        return nullptr;
+    }
+
+    args.fVendor = GrGLGetVendor(interface);
+
+    args.fRenderer = GrGLGetRendererFromString(renderer);
+
+    /*
+     * Qualcomm drivers for the 3xx series have a horrendous bug with some drivers. Though they
+     * claim to support GLES 3.00, some perfectly valid GLSL300 shaders will only compile with
+     * #version 100, and will fail to compile with #version 300 es.  In the long term, we
+     * need to lock this down to a specific driver version.
+     * ?????/2015 - This bug is still present in Lollipop pre-mr1
+     * 06/18/2015 - This bug does not affect the nexus 6 (which has an Adreno 4xx).
+     */
+    if (kAdreno3xx_GrGLRenderer == args.fRenderer) {
+        args.fGLSLGeneration = k110_GrGLSLGeneration;
+    }
+
+    GrGLGetDriverInfo(interface->fStandard, args.fVendor, renderer, ver,
+                      &args.fDriver, &args.fDriverVersion);
+
+    args.fContextOptions = &options;
+
+    return new GrGLContext(args);
 }
 
-bool GrGLContextInfo::isInitialized() const {
-    return NULL != fInterface.get();
-}
+GrGLContextInfo::GrGLContextInfo(const ConstructorArgs& args) {
+    fInterface.reset(SkRef(args.fInterface));
+    fGLVersion = args.fGLVersion;
+    fGLSLGeneration = args.fGLSLGeneration;
+    fVendor = args.fVendor;
+    fRenderer = args.fRenderer;
+    fDriver = args.fDriver;
+    fDriverVersion = args.fDriverVersion;
 
-void GrGLContextInfo::reset() {
-    fInterface.reset(NULL);
-    fGLVersion = GR_GL_VER(0, 0);
-    fGLSLGeneration = static_cast<GrGLSLGeneration>(0);
-    fVendor = kOther_GrGLVendor;
-    fRenderer = kOther_GrGLRenderer;
-    fIsMesa = false;
-    fIsChromium = false;
-    fGLCaps->reset();
+    fGLCaps.reset(new GrGLCaps(*args.fContextOptions, *this, fInterface));
 }

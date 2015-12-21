@@ -526,8 +526,10 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
     setTimeout(function() {
       utils.advanceTimeAndRefresh(1000);
 
-      if (!aCallback)
+      if (!aCallback) {
+        utils.advanceTimeAndRefresh(0);
         return;
+      }
 
       var waitForPaints = function () {
         SpecialPowers.Services.obs.removeObserver(waitForPaints, "apz-repaints-flushed", false);

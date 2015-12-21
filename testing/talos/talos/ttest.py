@@ -22,12 +22,15 @@ import mozcrash
 import talosconfig
 import shutil
 import mozfile
-import logging
+
+from mozlog import get_proxy_logger
 
 from talos.utils import TalosCrash, TalosRegression
 from talos.talos_process import run_browser
 from talos.ffsetup import FFSetup
 from talos.cmanager import CounterManagement
+
+LOG = get_proxy_logger()
 
 
 class TTest(object):
@@ -56,7 +59,7 @@ class TTest(object):
 
         """
 
-        logging.debug("operating with platform_type : %s", self.platform_type)
+        LOG.debug("operating with platform_type : %s" % self.platform_type)
         with FFSetup(browser_config, test_config) as setup:
             return self._runTest(browser_config, test_config, setup)
 
@@ -103,8 +106,8 @@ class TTest(object):
         )
 
         for i in range(test_config['cycles']):
-            logging.info("Running cycle %d/%d for %s test...",
-                         i+1, test_config['cycles'], test_config['name'])
+            LOG.info("Running cycle %d/%d for %s test..."
+                     % (i+1, test_config['cycles'], test_config['name']))
 
             # remove the browser  error file
             mozfile.remove(browser_config['error_filename'])
@@ -116,8 +119,8 @@ class TTest(object):
                     origin = os.path.join(test_config['profile_path'],
                                           keep)
                     dest = os.path.join(setup.profile_dir, keep)
-                    logging.debug("Reinstalling %s on top of %s", origin,
-                                  dest)
+                    LOG.debug("Reinstalling %s on top of %s"
+                              % (origin, dest))
                     shutil.copy(origin, dest)
 
             # Run the test
@@ -245,7 +248,7 @@ class TTest(object):
         )
         for c in test_results.all_counter_results:
             for key, value in c.items():
-                logging.debug("COUNTER %r: %s", key, value)
+                LOG.debug("COUNTER %r: %s" % (key, value))
 
         # return results
         return test_results

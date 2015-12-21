@@ -15,7 +15,7 @@
 #include "SkStream.h"
 #include "SkTemplates.h"
 
-class SkPDFCatalog;
+class SkPDFObjNumMap;
 
 /** \class SkPDFStream
 
@@ -23,83 +23,42 @@ class SkPDFCatalog;
     SkObjRef).
 */
 class SkPDFStream : public SkPDFDict {
-    SK_DECLARE_INST_COUNT(SkPDFStream)
+    
 public:
     /** Create a PDF stream. A Length entry is automatically added to the
      *  stream dictionary.
-     *  @param data   The data part of the stream.  Will be ref()ed.
+     *  @param data   The data part of the stream.  Will not take ownership.
      */
-    explicit SkPDFStream(SkData* data);
+    explicit SkPDFStream(SkData* data) { this->setData(data); }
 
     /** Create a PDF stream. A Length entry is automatically added to the
      *  stream dictionary.
-     *  @param stream The data part of the stream.  Will be duplicate()d.
+     *  @param stream The data part of the stream.  Will not take ownership.
      */
-    explicit SkPDFStream(SkStream* stream);
+    explicit SkPDFStream(SkStream* stream) { this->setData(stream); }
 
     virtual ~SkPDFStream();
 
-    // The SkPDFObject interface.  These two methods use a mutex to
-    // allow multiple threads to call at the same time.
-    virtual void emitObject(SkWStream* stream, SkPDFCatalog* catalog,
-                            bool indirect);
-    virtual size_t getOutputSize(SkPDFCatalog* catalog, bool indirect);
+    // The SkPDFObject interface.
+    void emitObject(SkWStream* stream,
+                    const SkPDFObjNumMap& objNumMap,
+                    const SkPDFSubstituteMap& substitutes) const override;
 
 protected:
-    enum State {
-        kUnused_State,         //!< The stream hasn't been requested yet.
-        kNoCompression_State,  //!< The stream's been requested in an
-                               //   uncompressed form.
-        kCompressed_State,     //!< The stream's already been compressed.
-    };
-
-    /** Create a PDF stream with the same content and dictionary entries
-     *  as the passed one.
-     */
-    explicit SkPDFStream(const SkPDFStream& pdfStream);
-
     /* Create a PDF stream with no data.  The setData method must be called to
      * set the data.
      */
-    SkPDFStream();
+    SkPDFStream() {}
 
-    // Populate the stream dictionary.  This method returns false if
-    // fSubstitute should be used.
-    virtual bool populate(SkPDFCatalog* catalog);
-
-    void setSubstitute(SkPDFStream* stream) {
-        fSubstitute.reset(stream);
-    }
-
-    SkPDFStream* getSubstitute() const {
-        return fSubstitute.get();
-    }
-
-    void setData(SkData* data);
+    /** Only call this function once. */
     void setData(SkStream* stream);
-
-    size_t dataSize() const;
-
-    void setState(State state) {
-        fState = state;
-    }
-
-    State getState() const {
-        return fState;
+    void setData(SkData* data) {
+        SkMemoryStream memoryStream(data);
+        this->setData(&memoryStream);
     }
 
 private:
-    // Indicates what form (or if) the stream has been requested.
-    State fState;
-
-    // Mutex guards fState, fDataStream, and fSubstitute in public interface.
-    SkMutex fMutex;
-
-    SkMemoryStream fMemoryStream;  // Used by fDataStream when
-                                   // fDataStream needs to be backed
-                                   // by SkData.
-    SkAutoTUnref<SkStreamRewindable> fDataStream;
-    SkAutoTUnref<SkPDFStream> fSubstitute;
+    SkAutoTDelete<SkStreamRewindable> fCompressedData;
 
     typedef SkPDFDict INHERITED;
 };

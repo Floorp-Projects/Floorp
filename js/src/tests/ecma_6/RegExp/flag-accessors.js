@@ -8,17 +8,14 @@ var props = [
   "ignoreCase",
   "multiline",
   "sticky",
-  //"unicode",
+  "unicode",
 ];
 
 testThrows(RegExp.prototype);
 test(/foo/iymg, [true, true, true, true, false]);
 test(RegExp(""), [false, false, false, false, false]);
 test(RegExp("", "mygi"), [true, true, true, true, false]);
-// When the /u flag is supported, remove the following line, uncomment the
-// next line, and uncomment "unicode" in |props| above.
-assertThrowsInstanceOf(() => RegExp("", "mygui").flags, SyntaxError);
-// test(RegExp("", "mygiu"), [true, true, true, true, true]);
+test(RegExp("", "mygiu"), [true, true, true, true, true]);
 
 testThrowsGeneric();
 testThrowsGeneric(1);

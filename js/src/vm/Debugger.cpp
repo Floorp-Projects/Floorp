@@ -377,10 +377,10 @@ Debugger::Debugger(JSContext* cx, NativeObject* dbg)
     objects(cx),
     environments(cx),
 #ifdef NIGHTLY_BUILD
-    traceLoggerLastDrainedId(0),
+    traceLoggerLastDrainedSize(0),
     traceLoggerLastDrainedIteration(0),
 #endif
-    traceLoggerScriptedCallsLastDrainedId(0),
+    traceLoggerScriptedCallsLastDrainedSize(0),
     traceLoggerScriptedCallsLastDrainedIteration(0)
 {
     assertSameCompartment(cx, dbg);
@@ -4402,9 +4402,9 @@ Debugger::drainTraceLogger(JSContext* cx, unsigned argc, Value* vp)
     size_t num;
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     bool lostEvents = logger->lostEvents(dbg->traceLoggerLastDrainedIteration,
-                                         dbg->traceLoggerLastDrainedId);
+                                         dbg->traceLoggerLastDrainedSize);
     EventEntry* events = logger->getEventsStartingAt(&dbg->traceLoggerLastDrainedIteration,
-                                                     &dbg->traceLoggerLastDrainedId,
+                                                     &dbg->traceLoggerLastDrainedSize,
                                                      &num);
 
     RootedObject array(cx, NewDenseEmptyArray(cx));
@@ -4497,10 +4497,10 @@ Debugger::drainTraceLoggerScriptCalls(JSContext* cx, unsigned argc, Value* vp)
     size_t num;
     TraceLoggerThread* logger = TraceLoggerForMainThread(cx->runtime());
     bool lostEvents = logger->lostEvents(dbg->traceLoggerScriptedCallsLastDrainedIteration,
-                                         dbg->traceLoggerScriptedCallsLastDrainedId);
+                                         dbg->traceLoggerScriptedCallsLastDrainedSize);
     EventEntry* events = logger->getEventsStartingAt(
                                          &dbg->traceLoggerScriptedCallsLastDrainedIteration,
-                                         &dbg->traceLoggerScriptedCallsLastDrainedId,
+                                         &dbg->traceLoggerScriptedCallsLastDrainedSize,
                                          &num);
 
     RootedObject array(cx, NewDenseEmptyArray(cx));

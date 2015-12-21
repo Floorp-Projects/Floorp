@@ -186,27 +186,22 @@ static void twopoint_mirror(TwoPtRadialContext* rec, SkPMColor* SK_RESTRICT dstC
     }
 }
 
-void SkTwoPointConicalGradient::init() {
-    fRec.init(fCenter1, fRadius1, fCenter2, fRadius2, fFlippedGrad);
-    fPtsToUnit.reset();
-}
-
 /////////////////////////////////////////////////////////////////////
 
 SkTwoPointConicalGradient::SkTwoPointConicalGradient(
         const SkPoint& start, SkScalar startRadius,
         const SkPoint& end, SkScalar endRadius,
-        bool flippedGrad, const Descriptor& desc,
-        const SkMatrix* localMatrix)
-    : SkGradientShaderBase(desc, localMatrix),
-    fCenter1(start),
-    fCenter2(end),
-    fRadius1(startRadius),
-    fRadius2(endRadius),
-    fFlippedGrad(flippedGrad) {
+        bool flippedGrad, const Descriptor& desc)
+    : SkGradientShaderBase(desc, SkMatrix::I())
+    , fCenter1(start)
+    , fCenter2(end)
+    , fRadius1(startRadius)
+    , fRadius2(endRadius)
+    , fFlippedGrad(flippedGrad)
+{
     // this is degenerate, and should be caught by our caller
     SkASSERT(fCenter1 != fCenter2 || fRadius1 != fRadius2);
-    this->init();
+    fRec.init(fCenter1, fRadius1, fCenter2, fRadius2, fFlippedGrad);
 }
 
 bool SkTwoPointConicalGradient::isOpaque() const {
@@ -222,7 +217,7 @@ size_t SkTwoPointConicalGradient::contextSize() const {
 
 SkShader::Context* SkTwoPointConicalGradient::onCreateContext(const ContextRec& rec,
                                                               void* storage) const {
-    return SkNEW_PLACEMENT_ARGS(storage, TwoPointConicalGradientContext, (*this, rec));
+    return new (storage) TwoPointConicalGradientContext(*this, rec);
 }
 
 SkTwoPointConicalGradient::TwoPointConicalGradientContext::TwoPointConicalGradientContext(
@@ -297,35 +292,6 @@ void SkTwoPointConicalGradient::TwoPointConicalGradientContext::shadeSpan(
     }
 }
 
-SkShader::BitmapType SkTwoPointConicalGradient::asABitmap(
-    SkBitmap* bitmap, SkMatrix* matrix, SkShader::TileMode* xy) const {
-    SkPoint diff = fCenter2 - fCenter1;
-    SkScalar diffLen = 0;
-
-    if (bitmap) {
-        this->getGradientTableBitmap(bitmap);
-    }
-    if (matrix) {
-        diffLen = diff.length();
-    }
-    if (matrix) {
-        if (diffLen) {
-            SkScalar invDiffLen = SkScalarInvert(diffLen);
-            // rotate to align circle centers with the x-axis
-            matrix->setSinCos(-SkScalarMul(invDiffLen, diff.fY),
-                              SkScalarMul(invDiffLen, diff.fX));
-        } else {
-            matrix->reset();
-        }
-        matrix->preTranslate(-fCenter1.fX, -fCenter1.fY);
-    }
-    if (xy) {
-        xy[0] = fTileMode;
-        xy[1] = kClamp_TileMode;
-    }
-    return kTwoPointConical_BitmapType;
-}
-
 // Returns the original non-sorted version of the gradient
 SkShader::GradientType SkTwoPointConicalGradient::asAGradient(
     GradientInfo* info) const {
@@ -343,32 +309,45 @@ SkShader::GradientType SkTwoPointConicalGradient::asAGradient(
     return kConical_GradientType;
 }
 
-SkTwoPointConicalGradient::SkTwoPointConicalGradient(
-    SkReadBuffer& buffer)
-    : INHERITED(buffer),
-    fCenter1(buffer.readPoint()),
-    fCenter2(buffer.readPoint()),
-    fRadius1(buffer.readScalar()),
-    fRadius2(buffer.readScalar()) {
-    if (buffer.isVersionLT(SkReadBuffer::kGradientFlippedFlag_Version)) {
-        // V23_COMPATIBILITY_CODE
-        // Sort gradient by radius size for old pictures
-        if (fRadius2 < fRadius1) {
-            SkTSwap(fCenter1, fCenter2);
-            SkTSwap(fRadius1, fRadius2);
-            this->flipGradientColors();
-            fFlippedGrad = true;
-        } else {
-            fFlippedGrad = false;
-        }
-    } else {
-        fFlippedGrad = buffer.readBool();
+SkFlattenable* SkTwoPointConicalGradient::CreateProc(SkReadBuffer& buffer) {
+    DescriptorScope desc;
+    if (!desc.unflatten(buffer)) {
+        return nullptr;
     }
-    this->init();
-};
+    SkPoint c1 = buffer.readPoint();
+    SkPoint c2 = buffer.readPoint();
+    SkScalar r1 = buffer.readScalar();
+    SkScalar r2 = buffer.readScalar();
 
-void SkTwoPointConicalGradient::flatten(
-    SkWriteBuffer& buffer) const {
+    if (buffer.readBool()) {    // flipped
+        SkTSwap(c1, c2);
+        SkTSwap(r1, r2);
+
+        SkColor* colors = desc.mutableColors();
+        SkScalar* pos = desc.mutablePos();
+        const int last = desc.fCount - 1;
+        const int half = desc.fCount >> 1;
+        for (int i = 0; i < half; ++i) {
+            SkTSwap(colors[i], colors[last - i]);
+            if (pos) {
+                SkScalar tmp = pos[i];
+                pos[i] = SK_Scalar1 - pos[last - i];
+                pos[last - i] = SK_Scalar1 - tmp;
+            }
+        }
+        if (pos) {
+            if (desc.fCount & 1) {
+                pos[half] = SK_Scalar1 - pos[half];
+            }
+        }
+    }
+
+    return SkGradientShader::CreateTwoPointConical(c1, r1, c2, r2, desc.fColors, desc.fPos,
+                                                   desc.fCount, desc.fTileMode, desc.fGradFlags,
+                                                   desc.fLocalMatrix);
+}
+
+void SkTwoPointConicalGradient::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
     buffer.writePoint(fCenter1);
     buffer.writePoint(fCenter2);
@@ -381,24 +360,16 @@ void SkTwoPointConicalGradient::flatten(
 
 #include "SkGr.h"
 
-bool SkTwoPointConicalGradient::asNewEffect(GrContext* context, const SkPaint& paint,
-                                             const SkMatrix* localMatrix, GrColor* paintColor,
-                                             GrEffect** effect)  const {
-    SkASSERT(NULL != context);
+const GrFragmentProcessor* SkTwoPointConicalGradient::asFragmentProcessor(
+                                                  GrContext* context,
+                                                  const SkMatrix& viewM,
+                                                  const SkMatrix* localMatrix,
+                                                  SkFilterQuality) const {
+    SkASSERT(context);
     SkASSERT(fPtsToUnit.isIdentity());
-
-    *effect = Gr2PtConicalGradientEffect::Create(context, *this, fTileMode, localMatrix);
-    *paintColor = SkColor2GrColorJustAlpha(paint.getColor());
-    return true;
-}
-
-#else
-
-bool SkTwoPointConicalGradient::asNewEffect(GrContext* context, const SkPaint& paint,
-                                            const SkMatrix* localMatrix, GrColor* paintColor,
-                                            GrEffect** effect)  const {
-    SkDEBUGFAIL("Should not call in GPU-less build");
-    return false;
+    SkAutoTUnref<const GrFragmentProcessor> inner(
+        Gr2PtConicalGradientEffect::Create(context, *this, fTileMode, localMatrix));
+    return GrFragmentProcessor::MulOutputByInputAlpha(inner);
 }
 
 #endif

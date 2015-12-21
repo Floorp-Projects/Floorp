@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 #include "SkConvolver.h"
+#include "SkMath.h"
 #include "SkSize.h"
 #include "SkTypes.h"
 
@@ -158,9 +159,12 @@ template<bool hasAlpha>
         }
     }
 
-    // There's a bug somewhere here with GCC autovectorization (-ftree-vectorize) on 32 bit builds.
-    // Dropping to -O2 disables -ftree-vectorize.  GCC 4.6 needs noinline.  http://skbug.com/2575
-    #if defined(__i386) && SK_HAS_ATTRIBUTE(optimize) && defined(SK_RELEASE)
+    // There's a bug somewhere here with GCC autovectorization (-ftree-vectorize).  We originally
+    // thought this was 32 bit only, but subsequent tests show that some 64 bit gcc compiles
+    // suffer here too.
+    //
+    // Dropping to -O2 disables -ftree-vectorize.  GCC 4.6 needs noinline.  https://bug.skia.org/2575
+    #if SK_HAS_ATTRIBUTE(optimize) && defined(SK_RELEASE)
         #define SK_MAYBE_DISABLE_VECTORIZATION __attribute__((optimize("O2"), noinline))
     #else
         #define SK_MAYBE_DISABLE_VECTORIZATION
@@ -349,13 +353,13 @@ const SkConvolutionFilter1D::ConvolutionFixed* SkConvolutionFilter1D::GetSingleF
     *filterLength = filter.fTrimmedLength;
     *specifiedFilterlength = filter.fLength;
     if (filter.fTrimmedLength == 0) {
-        return NULL;
+        return nullptr;
     }
 
     return &fFilterValues[filter.fDataLocation];
 }
 
-void BGRAConvolve2D(const unsigned char* sourceData,
+bool BGRAConvolve2D(const unsigned char* sourceData,
                     int sourceByteRowStride,
                     bool sourceHasAlpha,
                     const SkConvolutionFilter1D& filterX,
@@ -390,6 +394,20 @@ void BGRAConvolve2D(const unsigned char* sourceData,
     int rowBufferWidth = (filterX.numValues() + 15) & ~0xF;
     int rowBufferHeight = maxYFilterSize +
                           (convolveProcs.fConvolve4RowsHorizontally ? 4 : 0);
+
+    // check for too-big allocation requests : crbug.com/528628
+    {
+        int64_t size = sk_64_mul(rowBufferWidth, rowBufferHeight);
+        // need some limit, to avoid over-committing success from malloc, but then
+        // crashing when we try to actually use the memory.
+        // 100meg seems big enough to allow "normal" zoom factors and image sizes through
+        // while avoiding the crash seen by the bug (crbug.com/528628)
+        if (size > 100 * 1024 * 1024) {
+//            SkDebugf("BGRAConvolve2D: tmp allocation [%lld] too big\n", size);
+            return false;
+        }
+    }
+
     CircularRowBuffer rowBuffer(rowBufferWidth,
                                 rowBufferHeight,
                                 filterOffset);
@@ -433,7 +451,7 @@ void BGRAConvolve2D(const unsigned char* sourceData,
                     src[i] = &sourceData[(uint64_t)(nextXRow + i) * sourceByteRowStride];
                     outRow[i] = rowBuffer.advanceRow();
                 }
-                convolveProcs.fConvolve4RowsHorizontally(src, filterX, outRow);
+                convolveProcs.fConvolve4RowsHorizontally(src, filterX, outRow, 4*rowBufferWidth);
                 nextXRow += 4;
             } else {
                 // Check if we need to avoid SSE2 for this row.
@@ -483,4 +501,5 @@ void BGRAConvolve2D(const unsigned char* sourceData,
                                sourceHasAlpha);
         }
     }
+    return true;
 }

@@ -385,8 +385,25 @@ BluetoothGattManager::Get()
 
   // Create a new instance, register, and return
   BluetoothGattManager* manager = new BluetoothGattManager();
+  NS_ENSURE_TRUE(manager->Init(), nullptr);
   sBluetoothGattManager = manager;
   return sBluetoothGattManager;
+}
+
+bool
+BluetoothGattManager::Init()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
+  NS_ENSURE_TRUE(obs, false);
+
+  if (NS_FAILED(obs->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false))) {
+    BT_WARNING("Failed to add observers!");
+    return false;
+  }
+
+  return true;
 }
 
 class BluetoothGattManager::RegisterModuleResultHandler final

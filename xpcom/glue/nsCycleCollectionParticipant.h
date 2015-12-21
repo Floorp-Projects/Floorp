@@ -76,7 +76,7 @@ struct TraceCallbacks
 
 /*
  * An implementation of TraceCallbacks that calls a single function for all JS
- * GC thing types encountered.
+ * GC thing types encountered. Implemented in nsCycleCollectorTraceJSHelpers.cpp.
  */
 struct TraceCallbackFunc : public TraceCallbacks
 {
@@ -184,6 +184,7 @@ public:
   NS_IMETHOD_(void) Trace(void* aPtr, const TraceCallbacks& aCb,
                           void* aClosure) override = 0;
 
+  // Implemented in nsCycleCollectorTraceJSHelpers.cpp.
   static void NoteJSChild(JS::GCCellPtr aGCThing, const char* aName,
                           void* aClosure);
 };

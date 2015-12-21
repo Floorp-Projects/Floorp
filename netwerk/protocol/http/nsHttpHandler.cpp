@@ -88,6 +88,7 @@
 #define TELEMETRY_ENABLED        "toolkit.telemetry.enabled"
 #define ALLOW_EXPERIMENTS        "network.allow-experiments"
 #define SAFE_HINT_HEADER_VALUE   "safeHint.enabled"
+#define SECURITY_PREFIX          "security."
 
 #define UA_PREF(_pref) UA_PREF_PREFIX _pref
 #define HTTP_PREF(_pref) HTTP_PREF_PREFIX _pref
@@ -281,6 +282,7 @@ nsHttpHandler::Init()
         prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.short_lived_connections"), this, true);
         prefBranch->AddObserver(HTTP_PREF("tcp_keepalive.long_lived_connections"), this, true);
         prefBranch->AddObserver(SAFE_HINT_HEADER_VALUE, this, true);
+        prefBranch->AddObserver(SECURITY_PREFIX, this, true);
         PrefsChanged(prefBranch, nullptr);
     }
 
@@ -919,6 +921,15 @@ nsHttpHandler::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
 #define PREF_CHANGED(p) ((pref == nullptr) || !PL_strcmp(pref, p))
 #define MULTI_PREF_CHANGED(p) \
   ((pref == nullptr) || !PL_strncmp(pref, p, sizeof(p) - 1))
+
+    // If a security pref changed, lets clear our connection pool reuse
+    if (MULTI_PREF_CHANGED(SECURITY_PREFIX)) {
+        LOG(("nsHttpHandler::PrefsChanged Security Pref Changed %s\n", pref));
+        if (mConnMgr) {
+            mConnMgr->DoShiftReloadConnectionCleanup(nullptr);
+            mConnMgr->PruneDeadConnections();
+        }
+    }
 
     //
     // UA components

@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -16,16 +16,7 @@ XPCOMUtils.defineLazyGetter(this, "noRedirectURI", function() {
 var httpserver = null;
 
 function make_channel(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const requestBody = "request body";
@@ -54,7 +45,7 @@ function noRedirectStreamObserver(request, buffer)
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
                                                            "text/plain",
                                                            -1);
-  chan.asyncOpen(new ChannelListener(noHeaderStreamObserver, null), null);
+  chan.asyncOpen2(new ChannelListener(noHeaderStreamObserver, null));
 }
 
 function noHeaderStreamObserver(request, buffer)
@@ -68,7 +59,7 @@ function noHeaderStreamObserver(request, buffer)
       requestBody;
   uploadStream.setData(streamBody, streamBody.length);
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream, "", -1);
-  chan.asyncOpen(new ChannelListener(headerStreamObserver, null), null);
+  chan.asyncOpen2(new ChannelListener(headerStreamObserver, null));
 }
 
 function headerStreamObserver(request, buffer)
@@ -95,6 +86,6 @@ function run_test()
   chan.QueryInterface(Ci.nsIUploadChannel).setUploadStream(uploadStream,
                                                            "text/plain",
                                                            -1);
-  chan.asyncOpen(new ChannelListener(noRedirectStreamObserver, null), null);
+  chan.asyncOpen2(new ChannelListener(noRedirectStreamObserver, null));
   do_test_pending();
 }
