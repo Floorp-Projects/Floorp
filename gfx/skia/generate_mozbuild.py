@@ -69,6 +69,10 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in {
   } or CONFIG['MOZ_WIDGET_GTK']:
     DEFINES['SK_FONTHOST_DOES_NOT_USE_FONTMGR'] = 1
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    DEFINES['UNICODE'] = True
+    DEFINES['_UNICODE'] = True
+
 # We should autogenerate these SSE related flags.
 
 if CONFIG['_MSC_VER']:
