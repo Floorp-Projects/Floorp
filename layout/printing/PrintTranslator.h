@@ -38,32 +38,44 @@ public:
 
   DrawTarget* LookupDrawTarget(ReferencePtr aRefPtr) final
   {
-    return mDrawTargets.GetWeak(aRefPtr);
+    DrawTarget* result = mDrawTargets.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   Path* LookupPath(ReferencePtr aRefPtr) final
   {
-    return mPaths.GetWeak(aRefPtr);
+    Path* result = mPaths.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   SourceSurface* LookupSourceSurface(ReferencePtr aRefPtr) final
   {
-    return mSourceSurfaces.GetWeak(aRefPtr);
+    SourceSurface* result = mSourceSurfaces.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   FilterNode* LookupFilterNode(ReferencePtr aRefPtr) final
   {
-    return mFilterNodes.GetWeak(aRefPtr);
+    FilterNode* result = mFilterNodes.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   GradientStops* LookupGradientStops(ReferencePtr aRefPtr) final
   {
-    return mGradientStops.GetWeak(aRefPtr);
+    GradientStops* result =  mGradientStops.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   ScaledFont* LookupScaledFont(ReferencePtr aRefPtr) final
   {
-    return mScaledFonts.GetWeak(aRefPtr);
+    ScaledFont* result = mScaledFonts.GetWeak(aRefPtr);
+    MOZ_ASSERT(result);
+    return result;
   }
 
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final
