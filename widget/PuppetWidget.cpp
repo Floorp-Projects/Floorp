@@ -946,9 +946,12 @@ PuppetWidget::NotifyIMEOfPositionChange(const IMENotification& aIMENotification)
 NS_IMETHODIMP
 PuppetWidget::SetCursor(nsCursor aCursor)
 {
+  // Don't cache on windows, Windowless flash breaks this via async cursor updates.
+#if !defined(XP_WIN)
   if (mCursor == aCursor && !mCustomCursor && !mUpdateCursor) {
     return NS_OK;
   }
+#endif
 
   mCustomCursor = nullptr;
 
@@ -971,12 +974,14 @@ PuppetWidget::SetCursor(imgIContainer* aCursor,
     return NS_OK;
   }
 
+#if !defined(XP_WIN)
   if (mCustomCursor == aCursor &&
       mCursorHotspotX == aHotspotX &&
       mCursorHotspotY == aHotspotY &&
       !mUpdateCursor) {
     return NS_OK;
   }
+#endif
 
   RefPtr<mozilla::gfx::SourceSurface> surface =
     aCursor->GetFrame(imgIContainer::FRAME_CURRENT,
