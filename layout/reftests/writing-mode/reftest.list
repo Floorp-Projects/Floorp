@@ -16,10 +16,10 @@ fuzzy-if(gtkWidget,255,2) fuzzy-if(winWidget||Android||B2G,4,8704) HTTP(..) == 1
 == 1089388-2.html 1089388-2-ref.html
 == 1090159-1.html 1090159-1-ref.html
 # bug 1230357 fuzz on b2g for subpixel text positioning on skia.
-fuzzy-if(B2G&&azureSkia,128,166) == 1090168-1.html 1090168-1-ref.html
+fuzzy-if(B2G&&azureSkia,130,200) == 1090168-1.html 1090168-1-ref.html
 != 1090168-1.html 1090168-1-notref.html
-fuzzy-if(B2G&&azureSkia,128,166) == 1090168-2.html 1090168-2-ref.html
-fuzzy-if(B2G,244,173) fuzzy-if(Mulet,255,165) fuzzy-if(azureSkia,255,2649) == 1090168-3.html 1090168-3-ref.html # bug 1142928: mark fuzzy on Mulet as on B2G, bug 1230357 for skia.
+fuzzy-if(B2G&&azureSkia,130,200) == 1090168-2.html 1090168-2-ref.html
+fuzzy-if(B2G,244,173) fuzzy-if(Mulet,255,165) fuzzy-if(azureSkia,255,2700) == 1090168-3.html 1090168-3-ref.html # bug 1142928: mark fuzzy on Mulet as on B2G, bug 1230357 for skia.
 == 1091058-1.html 1091058-1-ref.html
 random-if(gtkWidget) == 1094434-1.html 1094434-1-ref.html # bug 1094845
 random-if(gtkWidget) == 1094434-2.html 1094434-2-ref.html # bug 1094845

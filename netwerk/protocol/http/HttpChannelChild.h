@@ -86,10 +86,6 @@ public:
   NS_IMETHOD GetProtocolVersion(nsACString& aProtocolVersion) override;
   // nsIHttpChannelInternal
   NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
-  NS_IMETHOD GetLocalAddress(nsACString& addr) override;
-  NS_IMETHOD GetLocalPort(int32_t* port) override;
-  NS_IMETHOD GetRemoteAddress(nsACString& addr) override;
-  NS_IMETHOD GetRemotePort(int32_t* port) override;
   NS_IMETHOD ForceIntercepted(uint64_t aInterceptionID) override;
   // nsISupportsPriority
   NS_IMETHOD SetPriority(int32_t value) override;
@@ -153,6 +149,8 @@ protected:
 
   bool RecvIssueDeprecationWarning(const uint32_t& warning,
                                    const bool& asError) override;
+
+  bool RecvReportRedirectionError() override;
 
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;

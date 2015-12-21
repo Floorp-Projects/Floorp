@@ -10,8 +10,7 @@
 
 #include "GrSingleTextureEffect.h"
 
-class GrEffectStage;
-class GrGLConfigConversionEffect;
+class GrInvariantOutput;
 
 /**
  * This class is used to perform config conversions. Clients may want to read/write data that is
@@ -34,18 +33,10 @@ public:
         kPMConversionCnt
     };
 
-    // Installs an effect in the GrEffectStage to perform a config conversion.
-    static const GrEffect* Create(GrTexture*,
-                                  bool swapRedAndBlue,
-                                  PMConversion pmConversion,
-                                  const SkMatrix& matrix);
+    static const GrFragmentProcessor* Create(GrTexture*, bool swapRedAndBlue, PMConversion,
+                                             const SkMatrix&);
 
-    static const char* Name() { return "Config Conversion"; }
-    typedef GrGLConfigConversionEffect GLEffect;
-
-    virtual const GrBackendEffectFactory& getFactory() const SK_OVERRIDE;
-
-    virtual void getConstantColorComponents(GrColor* color, uint32_t* validFlags) const SK_OVERRIDE;
+    const char* name() const override { return "Config Conversion"; }
 
     bool swapsRedAndBlue() const { return fSwapRedAndBlue; }
     PMConversion  pmConversion() const { return fPMConversion; }
@@ -61,16 +52,22 @@ public:
 
 private:
     GrConfigConversionEffect(GrTexture*,
-                            bool swapRedAndBlue,
-                            PMConversion pmConversion,
-                            const SkMatrix& matrix);
+                             bool swapRedAndBlue,
+                             PMConversion pmConversion,
+                             const SkMatrix& matrix);
 
-    virtual bool onIsEqual(const GrEffect&) const SK_OVERRIDE;
+    GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+
+    void onGetGLSLProcessorKey(const GrGLSLCaps&, GrProcessorKeyBuilder*) const override;
+
+    bool onIsEqual(const GrFragmentProcessor&) const override;
+
+    void onComputeInvariantOutput(GrInvariantOutput* inout) const override;
 
     bool            fSwapRedAndBlue;
     PMConversion    fPMConversion;
 
-    GR_DECLARE_EFFECT_TEST;
+    GR_DECLARE_FRAGMENT_PROCESSOR_TEST;
 
     typedef GrSingleTextureEffect INHERITED;
 };

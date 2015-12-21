@@ -32,12 +32,9 @@ static inline void D16_S32A_Blend_Pixel_helper(uint16_t* dst, SkPMColor sc,
         db = SkAlphaBlend(SkPacked32ToB16(sc), SkGetPackedB16(dc), src_scale);
     } else {
         unsigned dst_scale = 255 - SkAlphaMul(sa, src_scale);
-        dr = (SkPacked32ToR16(sc) * src_scale +
-              SkGetPackedR16(dc) * dst_scale) >> 8;
-        dg = (SkPacked32ToG16(sc) * src_scale +
-              SkGetPackedG16(dc) * dst_scale) >> 8;
-        db = (SkPacked32ToB16(sc) * src_scale +
-              SkGetPackedB16(dc) * dst_scale) >> 8;
+        dr = (SkPacked32ToR16(sc) * src_scale + SkGetPackedR16(dc) * dst_scale) >> 8;
+        dg = (SkPacked32ToG16(sc) * src_scale + SkGetPackedG16(dc) * dst_scale) >> 8;
+        db = (SkPacked32ToB16(sc) * src_scale + SkGetPackedB16(dc) * dst_scale) >> 8;
     }
     *dst = SkPackRGB16(dr, dg, db);
 }
@@ -50,16 +47,14 @@ static inline void D16_S32A_Blend_Pixel_helper(uint16_t* dst, SkPMColor sc,
 
 class Sprite_D16_S16_Opaque : public SkSpriteBlitter {
 public:
-    Sprite_D16_S16_Opaque(const SkBitmap& source)
-        : SkSpriteBlitter(source) {}
+    Sprite_D16_S16_Opaque(const SkPixmap& source) : SkSpriteBlitter(source) {}
 
     // overrides
-    virtual void blitRect(int x, int y, int width, int height) {
-        uint16_t* SK_RESTRICT dst = fDevice->getAddr16(x, y);
-        const uint16_t* SK_RESTRICT src = fSource->getAddr16(x - fLeft,
-                                                             y - fTop);
-        size_t dstRB = fDevice->rowBytes();
-        size_t srcRB = fSource->rowBytes();
+    void blitRect(int x, int y, int width, int height) override {
+        uint16_t* SK_RESTRICT dst = fDst.writable_addr16(x, y);
+        const uint16_t* SK_RESTRICT src = fSource.addr16(x - fLeft, y - fTop);
+        size_t dstRB = fDst.rowBytes();
+        size_t srcRB = fSource.rowBytes();
 
         while (--height >= 0) {
             memcpy(dst, src, width << 1);
@@ -81,8 +76,8 @@ public:
 #define SkSPRITE_INIT                       fSrcAlpha = alpha;
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint16_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr16
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr16
 #define SkSPRITE_PREAMBLE(srcBM, x, y)      int scale = SkAlpha255To256(fSrcAlpha);
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S16_Blend_Pixel(dst, src, scale)
 #define SkSPRITE_NEXT_ROW
@@ -103,8 +98,8 @@ public:
 #define SkSPRITE_INIT
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   SkPMColor16
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr16
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr16
 #define SkSPRITE_PREAMBLE(srcBM, x, y)
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S4444_Opaque(dst, src)
 #define SkSPRITE_NEXT_ROW
@@ -124,8 +119,8 @@ public:
 #define SkSPRITE_INIT                       fSrcAlpha = alpha;
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint16_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr16
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr16
 #define SkSPRITE_PREAMBLE(srcBM, x, y)      int scale = SkAlpha15To16(fSrcAlpha);
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S4444_Blend(dst, src, scale)
 #define SkSPRITE_NEXT_ROW
@@ -140,12 +135,12 @@ public:
 #define SkSPRITE_INIT
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint8_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr8
-#define SkSPRITE_PREAMBLE(srcBM, x, y)      const SkPMColor* ctable = srcBM.getColorTable()->lockColors()
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr8
+#define SkSPRITE_PREAMBLE(srcBM, x, y)      const SkPMColor* ctable = srcBM.ctable()->readColors()
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S32A_Opaque_Pixel(dst, ctable[src])
 #define SkSPRITE_NEXT_ROW
-#define SkSPRITE_POSTAMBLE(srcBM)           srcBM.getColorTable()->unlockColors()
+#define SkSPRITE_POSTAMBLE(srcBM)
 #include "SkSpriteBlitterTemplate.h"
 
 #define SkSPRITE_CLASSNAME                  Sprite_D16_SIndex8A_Blend
@@ -154,12 +149,12 @@ public:
 #define SkSPRITE_INIT                       fSrcAlpha = alpha;
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint8_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr8
-#define SkSPRITE_PREAMBLE(srcBM, x, y)      const SkPMColor* ctable = srcBM.getColorTable()->lockColors(); unsigned src_scale = SkAlpha255To256(fSrcAlpha);
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr8
+#define SkSPRITE_PREAMBLE(srcBM, x, y)      const SkPMColor* ctable = srcBM.ctable()->readColors(); unsigned src_scale = SkAlpha255To256(fSrcAlpha);
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S32A_Blend_Pixel(dst, ctable[src], src_scale)
 #define SkSPRITE_NEXT_ROW
-#define SkSPRITE_POSTAMBLE(srcBM)           srcBM.getColorTable()->unlockColors();
+#define SkSPRITE_POSTAMBLE(srcBM)
 #include "SkSpriteBlitterTemplate.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -232,12 +227,12 @@ static void blitrow_d16_si8(uint16_t* SK_RESTRICT dst,
 #define SkSPRITE_INIT
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint8_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr8
-#define SkSPRITE_PREAMBLE(srcBM, x, y)      const uint16_t* ctable = srcBM.getColorTable()->lock16BitCache()
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr8
+#define SkSPRITE_PREAMBLE(srcBM, x, y)      const uint16_t* ctable = srcBM.ctable()->read16BitCache()
 #define SkSPRITE_BLIT_PIXEL(dst, src)       *dst = ctable[src]
 #define SkSPRITE_NEXT_ROW
-#define SkSPRITE_POSTAMBLE(srcBM)           srcBM.getColorTable()->unlock16BitCache()
+#define SkSPRITE_POSTAMBLE(srcBM)
 #include "SkSpriteBlitterTemplate.h"
 
 #define SkSPRITE_CLASSNAME                  Sprite_D16_SIndex8_Blend
@@ -246,48 +241,43 @@ static void blitrow_d16_si8(uint16_t* SK_RESTRICT dst,
 #define SkSPRITE_INIT                       fSrcAlpha = alpha;
 #define SkSPRITE_DST_TYPE                   uint16_t
 #define SkSPRITE_SRC_TYPE                   uint8_t
-#define SkSPRITE_DST_GETADDR                getAddr16
-#define SkSPRITE_SRC_GETADDR                getAddr8
-#define SkSPRITE_PREAMBLE(srcBM, x, y)      const uint16_t* ctable = srcBM.getColorTable()->lock16BitCache(); unsigned src_scale = SkAlpha255To256(fSrcAlpha);
+#define SkSPRITE_DST_GETADDR                writable_addr16
+#define SkSPRITE_SRC_GETADDR                addr8
+#define SkSPRITE_PREAMBLE(srcBM, x, y)      const uint16_t* ctable = srcBM.ctable()->read16BitCache(); unsigned src_scale = SkAlpha255To256(fSrcAlpha);
 #define SkSPRITE_BLIT_PIXEL(dst, src)       D16_S16_Blend_Pixel(dst, ctable[src], src_scale)
 #define SkSPRITE_NEXT_ROW
-#define SkSPRITE_POSTAMBLE(srcBM)           srcBM.getColorTable()->unlock16BitCache();
+#define SkSPRITE_POSTAMBLE(srcBM)
 #include "SkSpriteBlitterTemplate.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class Sprite_D16_S32_BlitRowProc : public SkSpriteBlitter {
 public:
-    Sprite_D16_S32_BlitRowProc(const SkBitmap& source)
-        : SkSpriteBlitter(source) {}
+    Sprite_D16_S32_BlitRowProc(const SkPixmap& source) : SkSpriteBlitter(source) {}
 
-    // overrides
-
-    virtual void setup(const SkBitmap& device, int left, int top,
-                       const SkPaint& paint) {
-        this->INHERITED::setup(device, left, top, paint);
+    void setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) override {
+        this->INHERITED::setup(dst, left, top, paint);
 
         unsigned flags = 0;
 
         if (paint.getAlpha() < 0xFF) {
             flags |= SkBlitRow::kGlobalAlpha_Flag;
         }
-        if (!fSource->isOpaque()) {
+        if (!fSource.isOpaque()) {
             flags |= SkBlitRow::kSrcPixelAlpha_Flag;
         }
         if (paint.isDither()) {
             flags |= SkBlitRow::kDither_Flag;
         }
-        fProc = SkBlitRow::Factory(flags, kRGB_565_SkColorType);
+        fProc = SkBlitRow::Factory16(flags);
     }
 
-    virtual void blitRect(int x, int y, int width, int height) {
-        uint16_t* SK_RESTRICT dst = fDevice->getAddr16(x, y);
-        const SkPMColor* SK_RESTRICT src = fSource->getAddr32(x - fLeft,
-                                                              y - fTop);
-        size_t dstRB = fDevice->rowBytes();
-        size_t srcRB = fSource->rowBytes();
-        SkBlitRow::Proc proc = fProc;
+    void blitRect(int x, int y, int width, int height) override {
+        uint16_t* SK_RESTRICT dst = fDst.writable_addr16(x, y);
+        const SkPMColor* SK_RESTRICT src = fSource.addr32(x - fLeft, y - fTop);
+        size_t dstRB = fDst.rowBytes();
+        size_t srcRB = fSource.rowBytes();
+        SkBlitRow::Proc16 proc = fProc;
         U8CPU alpha = fPaint->getAlpha();
 
         while (--height >= 0) {
@@ -299,31 +289,31 @@ public:
     }
 
 private:
-    SkBlitRow::Proc fProc;
+    SkBlitRow::Proc16 fProc;
 
     typedef SkSpriteBlitter INHERITED;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkSpriteBlitter* SkSpriteBlitter::ChooseD16(const SkBitmap& source, const SkPaint& paint,
-        SkTBlitterAllocator* allocator) {
+SkSpriteBlitter* SkSpriteBlitter::ChooseD16(const SkPixmap& source, const SkPaint& paint,
+                                            SkTBlitterAllocator* allocator) {
 
-    SkASSERT(allocator != NULL);
+    SkASSERT(allocator != nullptr);
 
-    if (paint.getMaskFilter() != NULL) { // may add cases for this
-        return NULL;
+    if (paint.getMaskFilter() != nullptr) { // may add cases for this
+        return nullptr;
     }
-    if (paint.getXfermode() != NULL) { // may add cases for this
-        return NULL;
+    if (paint.getXfermode() != nullptr) { // may add cases for this
+        return nullptr;
     }
-    if (paint.getColorFilter() != NULL) { // may add cases for this
-        return NULL;
+    if (paint.getColorFilter() != nullptr) { // may add cases for this
+        return nullptr;
     }
 
     const SkAlphaType at = source.alphaType();
 
-    SkSpriteBlitter* blitter = NULL;
+    SkSpriteBlitter* blitter = nullptr;
     unsigned alpha = paint.getAlpha();
 
     switch (source.colorType()) {

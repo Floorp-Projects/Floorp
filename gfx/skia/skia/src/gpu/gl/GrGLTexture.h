@@ -10,42 +10,12 @@
 #define GrGLTexture_DEFINED
 
 #include "GrGpu.h"
-#include "GrGLRenderTarget.h"
+#include "GrTexture.h"
+#include "GrGLUtil.h"
 
-/**
- * A ref counted tex id that deletes the texture in its destructor.
- */
-class GrGLTexID : public SkRefCnt {
-public:
-    SK_DECLARE_INST_COUNT(GrGLTexID)
+class GrGLGpu;
 
-    GrGLTexID(const GrGLInterface* gl, GrGLuint texID, bool isWrapped)
-        : fGL(gl)
-        , fTexID(texID)
-        , fIsWrapped(isWrapped) {
-    }
-
-    virtual ~GrGLTexID() {
-        if (0 != fTexID && !fIsWrapped) {
-            GR_GL_CALL(fGL, DeleteTextures(1, &fTexID));
-        }
-    }
-
-    void abandon() { fTexID = 0; }
-    GrGLuint id() const { return fTexID; }
-
-private:
-    const GrGLInterface* fGL;
-    GrGLuint             fTexID;
-    bool                 fIsWrapped;
-
-    typedef SkRefCnt INHERITED;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-class GrGLTexture : public GrTextureImpl {
+class GrGLTexture : public GrTexture {
 
 public:
     struct TexParams {
@@ -57,25 +27,16 @@ public:
         void invalidate() { memset(this, 0xff, sizeof(TexParams)); }
     };
 
-    struct Desc : public GrTextureDesc {
-        GrGLuint        fTextureID;
-        bool            fIsWrapped;
+    struct IDDesc {
+        GrGLTextureInfo             fInfo;
+        GrGpuResource::LifeCycle    fLifeCycle;
     };
 
-    // creates a texture that is also an RT
-    GrGLTexture(GrGpuGL* gpu,
-                const Desc& textureDesc,
-                const GrGLRenderTarget::Desc& rtDesc);
+    GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&);
 
-    // creates a non-RT texture
-    GrGLTexture(GrGpuGL* gpu,
-                const Desc& textureDesc);
+    GrBackendObject getTextureHandle() const override;
 
-    virtual ~GrGLTexture() { this->release(); }
-
-    virtual GrBackendObject getTextureHandle() const SK_OVERRIDE;
-
-    virtual void textureParamsModified() SK_OVERRIDE { fTexParams.invalidate(); }
+    void textureParamsModified() override { fTexParams.invalidate(); }
 
     // These functions are used to track the texture parameters associated with the texture.
     const TexParams& getCachedTexParams(GrGpu::ResetTimestamp* timestamp) const {
@@ -89,23 +50,36 @@ public:
         fTexParamsTimestamp = timestamp;
     }
 
-    GrGLuint textureID() const { return (NULL != fTexIDObj.get()) ? fTexIDObj->id() : 0; }
+    GrGLuint textureID() const { return fInfo.fID; }
+
+    GrGLenum target() const { return fInfo.fTarget; }
 
 protected:
-    // overrides of GrTexture
-    virtual void onAbandon() SK_OVERRIDE;
-    virtual void onRelease() SK_OVERRIDE;
+    // The public constructor registers this object with the cache. However, only the most derived
+    // class should register with the cache. This constructor does not do the registration and
+    // rather moves that burden onto the derived class.
+    enum Derived { kDerived };
+    GrGLTexture(GrGLGpu*, const GrSurfaceDesc&, const IDDesc&, Derived);
+
+    void init(const GrSurfaceDesc&, const IDDesc&);
+
+    void onAbandon() override;
+    void onRelease() override;
+    void setMemoryBacking(SkTraceMemoryDump* traceMemoryDump,
+                          const SkString& dumpName) const override;
 
 private:
     TexParams                       fTexParams;
     GrGpu::ResetTimestamp           fTexParamsTimestamp;
-    SkAutoTUnref<GrGLTexID>         fTexIDObj;
+    // Holds the texture target and ID. A pointer to this may be shared to external clients for
+    // direct interaction with the GL object.
+    GrGLTextureInfo                 fInfo;
 
-    void init(GrGpuGL* gpu,
-              const Desc& textureDesc,
-              const GrGLRenderTarget::Desc* rtDesc);
+    // We track this separately from GrGpuResource because this may be both a texture and a render
+    // target, and the texture may be wrapped while the render target is not.
+    LifeCycle                       fTextureIDLifecycle;
 
-    typedef GrTextureImpl INHERITED;
+    typedef GrTexture INHERITED;
 };
 
 #endif

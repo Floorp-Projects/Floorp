@@ -2,6 +2,7 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserv.identity.primaryPort + "/";
@@ -56,19 +57,8 @@ var listener = {
 };
 
 function makeChan() {
-  var ios = Components.classes["@mozilla.org/network/io-service;1"]
-                      .getService(Components.interfaces.nsIIOService);
-  var chan = ios.newChannel2(URL,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
+  return NetUtil.newChannel({uri: URL, loadUsingSystemPrincipal: true})
                 .QueryInterface(Components.interfaces.nsIHttpChannel);
-
-  return chan;
 }
 
 var httpserv = null;
@@ -85,7 +75,7 @@ function run_test() {
 
   chan.setRequestHeader("Cookie", cookieVal, false);
 
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }
@@ -104,7 +94,7 @@ function run_test_continued() {
   cookieVal = cookie2 + "; " + cookieVal;
 
   listener._iteration++;
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 
   do_test_pending();
 }

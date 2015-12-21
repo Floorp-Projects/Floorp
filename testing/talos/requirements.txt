@@ -1,3 +1,4 @@
+mozlog>=3.1
 mozcrash>=0.15
 mozfile>=1.2
 mozhttpd>=0.7

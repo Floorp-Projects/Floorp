@@ -8,14 +8,17 @@
 #ifndef GrYUVtoRGBEffect_DEFINED
 #define GrYUVtoRGBEffect_DEFINED
 
-class GrEffect;
+#include "SkImageInfo.h"
+
+class GrFragmentProcessor;
 class GrTexture;
 
 namespace GrYUVtoRGBEffect {
     /**
      * Creates an effect that performs color conversion from YUV to RGB
      */
-    GrEffect* Create(GrTexture* yTexture, GrTexture* uTexture, GrTexture* vTexture);
+    GrFragmentProcessor* Create(GrTexture* yTexture, GrTexture* uTexture, GrTexture* vTexture,
+                                const SkISize sizes[3], SkYUVColorSpace colorSpace);
 };
 
 #endif

@@ -16,9 +16,6 @@
 using namespace js;
 using namespace js::frontend;
 
-typedef JS::Rooted<ImportEntryObject*> RootedImportEntry;
-typedef JS::Rooted<ExportEntryObject*> RootedExportEntry;
-
 template<typename T, Value ValueGetter(T* obj)>
 static bool
 ModuleValueGetterImpl(JSContext* cx, const CallArgs& args)
@@ -121,7 +118,7 @@ ImportEntryObject::create(JSContext* cx,
     if (!obj)
         return nullptr;
 
-    RootedImportEntry self(cx, &obj->as<ImportEntryObject>());
+    RootedImportEntryObject self(cx, &obj->as<ImportEntryObject>());
     self->initReservedSlot(ModuleRequestSlot, StringValue(moduleRequest));
     self->initReservedSlot(ImportNameSlot, StringValue(importName));
     self->initReservedSlot(LocalNameSlot, StringValue(localName));
@@ -194,7 +191,7 @@ ExportEntryObject::create(JSContext* cx,
     if (!obj)
         return nullptr;
 
-    RootedExportEntry self(cx, &obj->as<ExportEntryObject>());
+    RootedExportEntryObject self(cx, &obj->as<ExportEntryObject>());
     self->initReservedSlot(ExportNameSlot, StringOrNullValue(maybeExportName));
     self->initReservedSlot(ModuleRequestSlot, StringOrNullValue(maybeModuleRequest));
     self->initReservedSlot(ImportNameSlot, StringOrNullValue(maybeImportName));
@@ -941,9 +938,9 @@ ModuleBuilder::buildAndInit(frontend::ParseNode* moduleNode)
     }
 
     for (const auto& e : exportEntries_) {
-        RootedExportEntry exp(cx_, e);
+        RootedExportEntryObject exp(cx_, e);
         if (!exp->moduleRequest()) {
-            RootedImportEntry importEntry(cx_, importEntryFor(exp->localName()));
+            RootedImportEntryObject importEntry(cx_, importEntryFor(exp->localName()));
             if (!importEntry) {
                 if (!appendLocalExportEntry(exp))
                     return false;
@@ -955,7 +952,7 @@ ModuleBuilder::buildAndInit(frontend::ParseNode* moduleNode)
                     RootedAtom exportName(cx_, exp->exportName());
                     RootedAtom moduleRequest(cx_, importEntry->moduleRequest());
                     RootedAtom importName(cx_, importEntry->importName());
-                    RootedExportEntry exportEntry(cx_);
+                    RootedExportEntryObject exportEntry(cx_);
                     exportEntry = ExportEntryObject::create(cx_,
                                                             exportName,
                                                             moduleRequest,
@@ -1039,7 +1036,7 @@ ModuleBuilder::processImport(frontend::ParseNode* pn)
         if (!importedBoundNames_.append(localName))
             return false;
 
-        RootedImportEntry importEntry(cx_);
+        RootedImportEntryObject importEntry(cx_);
         importEntry = ImportEntryObject::create(cx_, module, importName, localName);
         if (!importEntry || !importEntries_.append(importEntry))
             return false;

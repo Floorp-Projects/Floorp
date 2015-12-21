@@ -16,33 +16,33 @@ class SK_API SkMergeImageFilter : public SkImageFilter {
 public:
     virtual ~SkMergeImageFilter();
 
-    static SkMergeImageFilter* Create(SkImageFilter* first, SkImageFilter* second,
-                                      SkXfermode::Mode mode = SkXfermode::kSrcOver_Mode,
-                                      const CropRect* cropRect = NULL) {
+    static SkImageFilter* Create(SkImageFilter* first, SkImageFilter* second,
+                                 SkXfermode::Mode mode = SkXfermode::kSrcOver_Mode,
+                                 const CropRect* cropRect = NULL) {
         SkImageFilter* inputs[2] = { first, second };
         SkXfermode::Mode modes[2] = { mode, mode };
-        return SkNEW_ARGS(SkMergeImageFilter, (inputs, 2, modes, cropRect));
-    }
-    static SkMergeImageFilter* Create(SkImageFilter* filters[], int count,
-                                      const SkXfermode::Mode modes[] = NULL,
-                                      const CropRect* cropRect = NULL) {
-        return SkNEW_ARGS(SkMergeImageFilter, (filters, count, modes, cropRect));
+        return new SkMergeImageFilter(inputs, 2, modes, cropRect);
     }
 
+    static SkImageFilter* Create(SkImageFilter* filters[], int count,
+                                 const SkXfermode::Mode modes[] = NULL,
+                                const CropRect* cropRect = NULL) {
+        return new SkMergeImageFilter(filters, count, modes, cropRect);
+    }
+
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkMergeImageFilter)
 
 protected:
-    SkMergeImageFilter(SkImageFilter* filters[], int count,
-                       const SkXfermode::Mode modes[],
-                       const CropRect* cropRect);
-    explicit SkMergeImageFilter(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
-
-    virtual bool onFilterImage(Proxy*, const SkBitmap& src, const Context&,
-                               SkBitmap* result, SkIPoint* loc) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
+    bool onFilterImage(Proxy*, const SkBitmap& src, const Context&, SkBitmap* result,
+                       SkIPoint* loc) const override;
 
 private:
-    uint8_t*            fModes; // SkXfermode::Mode
+    SkMergeImageFilter(SkImageFilter* filters[], int count, const SkXfermode::Mode modes[],
+                       const CropRect* cropRect);
+
+    uint8_t*    fModes; // SkXfermode::Mode
 
     // private storage, to avoid dynamically allocating storage for our copy
     // of the modes (unless the count is so large we can't fit).

@@ -18,26 +18,30 @@ print(BUGNUMBER + ": " + summary);
  * BEGIN TEST *
  **************/
 
-for (let x = 0; x < 9; ++x)
+for (let x = 0; x < 9; ++x) {
   function q1() {}
+}
 
 {
-  for (let x = 0; x < 9; ++x)
+  for (let x = 0; x < 9; ++x) {
     function q2() {}
+  }
 }
 
 function f1()
 {
-  for (let x = 0; x < 9; ++x)
+  for (let x = 0; x < 9; ++x) {
     function q3() {}
+  }
 }
 f1();
 
 function f2()
 {
   {
-    for (let x = 0; x < 9; ++x)
+    for (let x = 0; x < 9; ++x) {
       function q4() {}
+    }
   }
 }
 f2();

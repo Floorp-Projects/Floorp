@@ -16,8 +16,8 @@ class SkBaseBitmap;
 class SkDrawBitmapShader : public SkDrawShader {
     DECLARE_DRAW_MEMBER_INFO(BitmapShader);
     SkDrawBitmapShader();
-    virtual bool add();
-    virtual SkShader* getShader();
+    bool add() override;
+    SkShader* getShader() override;
 protected:
     SkBool filterBitmap;
     SkBaseBitmap* image;

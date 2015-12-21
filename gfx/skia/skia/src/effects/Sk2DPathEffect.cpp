@@ -12,6 +12,7 @@
 #include "SkWriteBuffer.h"
 #include "SkPath.h"
 #include "SkRegion.h"
+#include "SkStrokeRec.h"
 
 Sk2DPathEffect::Sk2DPathEffect(const SkMatrix& mat) : fMatrix(mat) {
     fMatrixIsInvertible = mat.invert(&fInverse);
@@ -73,10 +74,14 @@ void Sk2DPathEffect::flatten(SkWriteBuffer& buffer) const {
     buffer.writeMatrix(fMatrix);
 }
 
-Sk2DPathEffect::Sk2DPathEffect(SkReadBuffer& buffer) {
-    buffer.readMatrix(&fMatrix);
-    fMatrixIsInvertible = fMatrix.invert(&fInverse);
+#ifndef SK_IGNORE_TO_STRING
+void Sk2DPathEffect::toString(SkString* str) const {
+    str->appendf("(matrix: %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f %.2f)",
+            fMatrix[SkMatrix::kMScaleX], fMatrix[SkMatrix::kMSkewX],  fMatrix[SkMatrix::kMTransX],
+            fMatrix[SkMatrix::kMSkewY],  fMatrix[SkMatrix::kMScaleY], fMatrix[SkMatrix::kMTransY],
+            fMatrix[SkMatrix::kMPersp0], fMatrix[SkMatrix::kMPersp1], fMatrix[SkMatrix::kMPersp2]);
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -102,14 +107,27 @@ void SkLine2DPathEffect::nextSpan(int u, int v, int ucount, SkPath* dst) const {
     }
 }
 
-SkLine2DPathEffect::SkLine2DPathEffect(SkReadBuffer& buffer) : INHERITED(buffer) {
-    fWidth = buffer.readScalar();
+SkFlattenable* SkLine2DPathEffect::CreateProc(SkReadBuffer& buffer) {
+    SkMatrix matrix;
+    buffer.readMatrix(&matrix);
+    SkScalar width = buffer.readScalar();
+    return SkLine2DPathEffect::Create(width, matrix);
 }
 
 void SkLine2DPathEffect::flatten(SkWriteBuffer &buffer) const {
-    this->INHERITED::flatten(buffer);
+    buffer.writeMatrix(this->getMatrix());
     buffer.writeScalar(fWidth);
 }
+
+
+#ifndef SK_IGNORE_TO_STRING
+void SkLine2DPathEffect::toString(SkString* str) const {
+    str->appendf("SkLine2DPathEffect: (");
+    this->INHERITED::toString(str);
+    str->appendf("width: %f", fWidth);
+    str->appendf(")");
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -117,13 +135,16 @@ SkPath2DPathEffect::SkPath2DPathEffect(const SkMatrix& m, const SkPath& p)
     : INHERITED(m), fPath(p) {
 }
 
-SkPath2DPathEffect::SkPath2DPathEffect(SkReadBuffer& buffer)
-        : INHERITED(buffer) {
-    buffer.readPath(&fPath);
+SkFlattenable* SkPath2DPathEffect::CreateProc(SkReadBuffer& buffer) {
+    SkMatrix matrix;
+    buffer.readMatrix(&matrix);
+    SkPath path;
+    buffer.readPath(&path);
+    return SkPath2DPathEffect::Create(matrix, path);
 }
 
 void SkPath2DPathEffect::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
+    buffer.writeMatrix(this->getMatrix());
     buffer.writePath(fPath);
 }
 
@@ -131,3 +152,12 @@ void SkPath2DPathEffect::next(const SkPoint& loc, int u, int v,
                               SkPath* dst) const {
     dst->addPath(fPath, loc.fX, loc.fY);
 }
+
+#ifndef SK_IGNORE_TO_STRING
+void SkPath2DPathEffect::toString(SkString* str) const {
+    str->appendf("SkPath2DPathEffect: (");
+    this->INHERITED::toString(str);
+    // TODO: print out path information
+    str->appendf(")");
+}
+#endif

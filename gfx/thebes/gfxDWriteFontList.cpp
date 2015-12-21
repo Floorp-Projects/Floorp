@@ -1357,7 +1357,7 @@ static HRESULT GetFamilyName(IDWriteFont *aFont, nsString& aFamilyName)
 // used to invoke the DirectWrite layout engine to determine the fallback font
 // for a given character.
 
-IFACEMETHODIMP FontFallbackRenderer::DrawGlyphRun(
+IFACEMETHODIMP DWriteFontFallbackRenderer::DrawGlyphRun(
     void* clientDrawingContext,
     FLOAT baselineOriginX,
     FLOAT baselineOriginY,
@@ -1422,7 +1422,7 @@ gfxDWriteFontList::GlobalFontFallback(const uint32_t aCh,
 
     // initialize fallback renderer
     if (!mFallbackRenderer) {
-        mFallbackRenderer = new FontFallbackRenderer(dwFactory);
+        mFallbackRenderer = new DWriteFontFallbackRenderer(dwFactory);
     }
 
     // initialize text format

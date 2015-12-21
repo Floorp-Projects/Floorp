@@ -8,21 +8,24 @@
 #ifndef SkNullGLContext_DEFINED
 #define SkNullGLContext_DEFINED
 
-#include "SkGLContextHelper.h"
+#include "gl/SkGLContext.h"
 
-class SK_API SkNullGLContext : public SkGLContextHelper {
-
+class SK_API SkNullGLContext : public SkGLContext {
 public:
-    SkNullGLContext() {};
+    ~SkNullGLContext() override;
 
-    virtual void makeCurrent() const SK_OVERRIDE {};
+    static SkNullGLContext* Create(GrGLStandard);
 
-    virtual void swapBuffers() const SK_OVERRIDE {};
+    class ContextState;
 
-protected:
-    virtual const GrGLInterface* createGLContext(GrGLStandard forcedGpuAPI) SK_OVERRIDE;
+private:
+    SkNullGLContext();
 
-    virtual void destroyGLContext() SK_OVERRIDE {};
+    void onPlatformMakeCurrent() const override;
+    void onPlatformSwapBuffers() const override {}
+    GrGLFuncPtr onPlatformGetProcAddress(const char*) const override { return NULL; }
+
+    ContextState* fState;
 };
 
 #endif

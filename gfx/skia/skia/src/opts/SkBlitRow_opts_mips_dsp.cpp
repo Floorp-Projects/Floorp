@@ -34,7 +34,7 @@ static void S32_D565_Blend_mips_dsp(uint16_t* SK_RESTRICT dst,
             "and             %[t1],    %[s0],    %[s5]     \n\t"
             "shra.ph         %[t0],    %[s0],    5         \n\t"
             "and             %[t2],    %[t0],    %[s6]     \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
             "shrl.ph         %[t3],    %[s0],    11        \n\t"
 #else
             "shra.ph         %[t0],    %[s0],    11        \n\t"
@@ -46,7 +46,7 @@ static void S32_D565_Blend_mips_dsp(uint16_t* SK_RESTRICT dst,
             "ins             %[s2],    %[s1],    16, 16    \n\t"
             "preceu.ph.qbra  %[t0],    %[s2]               \n\t"
             "shrl.qb         %[t6],    %[t0],    3         \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
             "shrl.ph         %[t5],    %[s2],    10        \n\t"
 #else
             "shra.ph         %[t0],    %[s2],    10        \n\t"
@@ -303,7 +303,7 @@ static void S32_D565_Opaque_Dither_mips_dsp(uint16_t* __restrict__ dst,
         "lw              %[t2],    4(%[src])           \n\t"
         "precrq.ph.w     %[t3],    %[t0],    %[t2]     \n\t"
         "preceu.ph.qbra  %[t9],    %[t3]               \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append          %[t0],    %[t2],    16        \n\t"
         "preceu.ph.qbra  %[t4],    %[t0]               \n\t"
         "preceu.ph.qbla  %[t5],    %[t0]               \n\t"
@@ -328,7 +328,7 @@ static void S32_D565_Opaque_Dither_mips_dsp(uint16_t* __restrict__ dst,
         "subu.qb         %[t4],    %[t3],    %[t2]     \n\t"
         "shra.ph         %[t8],    %[t4],    2         \n\t"
         "precrq.ph.w     %[t0],    %[t6],    %[t7]     \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append          %[t6],    %[t7],    16        \n\t"
 #else
         "sll             %[t6],    %[t6],    16        \n\t"
@@ -425,7 +425,7 @@ static void S32_D565_Blend_Dither_mips_dsp(uint16_t* dst,
     "5:                                                    \n\t"
         "sll             %[t3],     %[t0],     7           \n\t"
         "sll             %[t4],     %[t1],     7           \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append          %[t0],     %[t1],     16          \n\t"
 #else
         "sll             %[t0],     %[t0],     8           \n\t"
@@ -442,7 +442,7 @@ static void S32_D565_Blend_Dither_mips_dsp(uint16_t* dst,
         "preceu.ph.qbra  %[t6],     %[t6]                  \n\t"
         "lh              %[t2],     0(%[dst])              \n\t"
         "lh              %[s1],     2(%[dst])              \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append          %[t2],     %[s1],     16          \n\t"
 #else
         "sll             %[s1],     %[s1],     16          \n\t"
@@ -575,7 +575,7 @@ static void S32A_D565_Opaque_mips_dsp(uint16_t* __restrict__ dst,
         "lw             %[t1],    4(%[src])             \n\t"
         "precrq.ph.w    %[t2],    %[t0],    %[t1]       \n\t"
         "preceu.ph.qbra %[t8],    %[t2]                 \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append         %[t0],    %[t1],    16          \n\t"
 #else
         "sll            %[t0],    %[t0],    16          \n\t"
@@ -592,7 +592,7 @@ static void S32A_D565_Opaque_mips_dsp(uint16_t* __restrict__ dst,
         "lh             %[t0],    0(%[dst])             \n\t"
         "lh             %[t1],    2(%[dst])             \n\t"
         "and            %[t1],    %[t1],    0xffff      \n\t"
-#ifdef SK_MIPS_HAS_DSPR2
+#ifdef __mips_dspr2
         "append         %[t0],    %[t1],    16          \n\t"
 #else
         "sll            %[t5],    %[t0],    16          \n\t"
@@ -753,12 +753,9 @@ static void S32A_D565_Blend_mips_dsp(uint16_t* SK_RESTRICT dst,
         if (sc) {
             uint16_t dc = *dst;
             unsigned dst_scale = 255 - SkMulDiv255Round(SkGetPackedA32(sc), alpha);
-            unsigned dr = SkMulS16(SkPacked32ToR16(sc), alpha) +
-                          SkMulS16(SkGetPackedR16(dc), dst_scale);
-            unsigned dg = SkMulS16(SkPacked32ToG16(sc), alpha) +
-                          SkMulS16(SkGetPackedG16(dc), dst_scale);
-            unsigned db = SkMulS16(SkPacked32ToB16(sc), alpha) +
-                          SkMulS16(SkGetPackedB16(dc), dst_scale);
+            unsigned dr = (SkPacked32ToR16(sc) * alpha) + (SkGetPackedR16(dc) * dst_scale);
+            unsigned dg = (SkPacked32ToG16(sc) * alpha) + (SkGetPackedG16(dc) * dst_scale);
+            unsigned db = (SkPacked32ToB16(sc) * alpha) + (SkGetPackedB16(dc) * dst_scale);
             *dst = SkPackRGB16(SkDiv255Round(dr), SkDiv255Round(dg), SkDiv255Round(db));
         }
         dst += 1;
@@ -921,9 +918,9 @@ void blitmask_d565_opaque_mips(int width, int height, uint16_t* device,
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-const SkBlitRow::Proc platform_565_procs_mips_dsp[] = {
+const SkBlitRow::Proc16 platform_565_procs_mips_dsp[] = {
     // no dither
-    NULL,
+    nullptr,
     S32_D565_Blend_mips_dsp,
     S32A_D565_Opaque_mips_dsp,
     S32A_D565_Blend_mips_dsp,
@@ -932,28 +929,24 @@ const SkBlitRow::Proc platform_565_procs_mips_dsp[] = {
     S32_D565_Opaque_Dither_mips_dsp,
     S32_D565_Blend_Dither_mips_dsp,
     S32A_D565_Opaque_Dither_mips_dsp,
-    NULL,
+    nullptr,
 };
 
 static const SkBlitRow::Proc32 platform_32_procs_mips_dsp[] = {
-    NULL,   // S32_Opaque,
+    nullptr,   // S32_Opaque,
     S32_Blend_BlitRow32_mips_dsp,   // S32_Blend,
-    NULL,   // S32A_Opaque,
-    NULL,   // S32A_Blend,
+    nullptr,   // S32A_Opaque,
+    nullptr,   // S32A_Blend,
 };
 
-SkBlitRow::Proc SkBlitRow::PlatformProcs565(unsigned flags) {
+SkBlitRow::Proc16 SkBlitRow::PlatformFactory565(unsigned flags) {
     return platform_565_procs_mips_dsp[flags];
+}
+
+SkBlitRow::ColorProc16 SkBlitRow::PlatformColorFactory565(unsigned flags) {
+    return nullptr;
 }
 
 SkBlitRow::Proc32 SkBlitRow::PlatformProcs32(unsigned flags) {
     return platform_32_procs_mips_dsp[flags];
-}
-
-SkBlitRow::ColorRectProc PlatformColorRectProcFactory() {
-    return NULL;
-}
-
-SkBlitRow::ColorProc SkBlitRow::PlatformColorProc() {
-    return NULL;
 }

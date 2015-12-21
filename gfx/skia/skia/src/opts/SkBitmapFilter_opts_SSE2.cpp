@@ -40,142 +40,6 @@ static inline void print128f(__m128 value) {
 }
 #endif
 
-// because the border is handled specially, this is guaranteed to have all 16 pixels
-// available to it without running off the bitmap's edge.
-
-void highQualityFilter_SSE2(const SkBitmapProcState& s, int x, int y,
-                            SkPMColor* SK_RESTRICT colors, int count) {
-
-    const int maxX = s.fBitmap->width() - 1;
-    const int maxY = s.fBitmap->height() - 1;
-
-    while (count-- > 0) {
-        SkPoint srcPt;
-        s.fInvProc(s.fInvMatrix, SkIntToScalar(x),
-                    SkIntToScalar(y), &srcPt);
-        srcPt.fX -= SK_ScalarHalf;
-        srcPt.fY -= SK_ScalarHalf;
-
-        int sx = SkScalarFloorToInt(srcPt.fX);
-        int sy = SkScalarFloorToInt(srcPt.fY);
-
-        __m128 weight = _mm_setzero_ps();
-        __m128 accum = _mm_setzero_ps();
-
-        int y0 = SkTMax(0, int(ceil(sy-s.getBitmapFilter()->width() + 0.5f)));
-        int y1 = SkTMin(maxY, int(floor(sy+s.getBitmapFilter()->width() + 0.5f)));
-        int x0 = SkTMax(0, int(ceil(sx-s.getBitmapFilter()->width() + 0.5f)));
-        int x1 = SkTMin(maxX, int(floor(sx+s.getBitmapFilter()->width() + 0.5f)));
-
-        for (int src_y = y0; src_y <= y1; src_y++) {
-            float yweight = SkScalarToFloat(s.getBitmapFilter()->lookupScalar(srcPt.fY - src_y));
-
-            for (int src_x = x0; src_x <= x1 ; src_x++) {
-                float xweight = SkScalarToFloat(s.getBitmapFilter()->lookupScalar(srcPt.fX - src_x));
-
-                float combined_weight = xweight * yweight;
-
-                SkPMColor color = *s.fBitmap->getAddr32(src_x, src_y);
-
-                __m128i c = _mm_cvtsi32_si128( color );
-                c = _mm_unpacklo_epi8(c, _mm_setzero_si128());
-                c = _mm_unpacklo_epi16(c, _mm_setzero_si128());
-
-                __m128 cfloat = _mm_cvtepi32_ps( c );
-
-                __m128 weightVector = _mm_set1_ps(combined_weight);
-
-                accum = _mm_add_ps(accum, _mm_mul_ps(cfloat, weightVector));
-                weight = _mm_add_ps( weight, weightVector );
-            }
-        }
-
-        accum = _mm_div_ps(accum, weight);
-        accum = _mm_add_ps(accum, _mm_set1_ps(0.5f));
-
-        __m128i accumInt = _mm_cvtps_epi32( accum );
-
-        int localResult[4];
-        _mm_storeu_si128((__m128i *) (localResult), accumInt);
-        int a = SkClampMax(localResult[0], 255);
-        int r = SkClampMax(localResult[1], a);
-        int g = SkClampMax(localResult[2], a);
-        int b = SkClampMax(localResult[3], a);
-
-        *colors++ = SkPackARGB32(a, r, g, b);
-
-        x++;
-    }
-}
-
-void highQualityFilter_ScaleOnly_SSE2(const SkBitmapProcState &s, int x, int y,
-                             SkPMColor *SK_RESTRICT colors, int count) {
-    const int maxX = s.fBitmap->width() - 1;
-    const int maxY = s.fBitmap->height() - 1;
-
-    SkPoint srcPt;
-    s.fInvProc(s.fInvMatrix, SkIntToScalar(x),
-                SkIntToScalar(y), &srcPt);
-    srcPt.fY -= SK_ScalarHalf;
-    int sy = SkScalarFloorToInt(srcPt.fY);
-
-    int y0 = SkTMax(0, int(ceil(sy-s.getBitmapFilter()->width() + 0.5f)));
-    int y1 = SkTMin(maxY, int(floor(sy+s.getBitmapFilter()->width() + 0.5f)));
-
-    while (count-- > 0) {
-        srcPt.fX -= SK_ScalarHalf;
-        srcPt.fY -= SK_ScalarHalf;
-
-        int sx = SkScalarFloorToInt(srcPt.fX);
-
-        float weight = 0;
-        __m128 accum = _mm_setzero_ps();
-
-        int x0 = SkTMax(0, int(ceil(sx-s.getBitmapFilter()->width() + 0.5f)));
-        int x1 = SkTMin(maxX, int(floor(sx+s.getBitmapFilter()->width() + 0.5f)));
-
-        for (int src_y = y0; src_y <= y1; src_y++) {
-            float yweight = SkScalarToFloat(s.getBitmapFilter()->lookupScalar(srcPt.fY - src_y));
-
-            for (int src_x = x0; src_x <= x1 ; src_x++) {
-                float xweight = SkScalarToFloat(s.getBitmapFilter()->lookupScalar(srcPt.fX - src_x));
-
-                float combined_weight = xweight * yweight;
-
-                SkPMColor color = *s.fBitmap->getAddr32(src_x, src_y);
-
-                __m128 c = _mm_set_ps((float)SkGetPackedB32(color),
-                                      (float)SkGetPackedG32(color),
-                                      (float)SkGetPackedR32(color),
-                                      (float)SkGetPackedA32(color));
-
-                __m128 weightVector = _mm_set1_ps(combined_weight);
-
-                accum = _mm_add_ps(accum, _mm_mul_ps(c, weightVector));
-                weight += combined_weight;
-            }
-        }
-
-        __m128 totalWeightVector = _mm_set1_ps(weight);
-        accum = _mm_div_ps(accum, totalWeightVector);
-        accum = _mm_add_ps(accum, _mm_set1_ps(0.5f));
-
-        float localResult[4];
-        _mm_storeu_ps(localResult, accum);
-        int a = SkClampMax(int(localResult[0]), 255);
-        int r = SkClampMax(int(localResult[1]), a);
-        int g = SkClampMax(int(localResult[2]), a);
-        int b = SkClampMax(int(localResult[3]), a);
-
-        *colors++ = SkPackARGB32(a, r, g, b);
-
-        x++;
-
-        s.fInvProc(s.fInvMatrix, SkIntToScalar(x),
-                    SkIntToScalar(y), &srcPt);
-    }
-}
-
 // Convolves horizontally along a single row. The row data is given in
 // |src_data| and continues for the num_values() of the filter.
 void convolveHorizontally_SSE2(const unsigned char* src_data,
@@ -310,7 +174,10 @@ void convolveHorizontally_SSE2(const unsigned char* src_data,
 // refer to that function for detailed comments.
 void convolve4RowsHorizontally_SSE2(const unsigned char* src_data[4],
                                     const SkConvolutionFilter1D& filter,
-                                    unsigned char* out_row[4]) {
+                                    unsigned char* out_row[4],
+                                    size_t outRowBytes) {
+    SkDEBUGCODE(const unsigned char* out_row_0_start = out_row[0];)
+
     int num_values = filter.numValues();
 
     int filter_offset, filter_length;
@@ -410,6 +277,9 @@ void convolve4RowsHorizontally_SSE2(const unsigned char* src_data[4],
         accum3 = _mm_srai_epi32(accum3, SkConvolutionFilter1D::kShiftBits);
         accum3 = _mm_packs_epi32(accum3, zero);
         accum3 = _mm_packus_epi16(accum3, zero);
+
+        // We seem to be running off the edge here (chromium:491660).
+        SkASSERT(((size_t)out_row[0] - (size_t)out_row_0_start) < outRowBytes);
 
         *(reinterpret_cast<int*>(out_row[0])) = _mm_cvtsi128_si32(accum0);
         *(reinterpret_cast<int*>(out_row[1])) = _mm_cvtsi128_si32(accum1);
