@@ -18,10 +18,12 @@
 #include "nsNetUtil.h"
 #include "nsISeekableStream.h"
 #include "nsIBufferedStreams.h"
+#include "nsIFileStreams.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/Logging.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla;
 
@@ -374,11 +376,24 @@ nsUrlClassifierPrefixSet::LoadFromFile(nsIFile* aFile)
 NS_IMETHODIMP
 nsUrlClassifierPrefixSet::StoreToFile(nsIFile* aFile)
 {
-  // Now re-open
   nsCOMPtr<nsIOutputStream> localOutFile;
   nsresult rv = NS_NewLocalFileOutputStream(getter_AddRefs(localOutFile), aFile,
                                             PR_WRONLY | PR_TRUNCATE | PR_CREATE_FILE);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Preallocate the file storage
+  {
+    nsCOMPtr<nsIFileOutputStream> fos(do_QueryInterface(localOutFile));
+    Telemetry::AutoTimer<Telemetry::URLCLASSIFIER_PS_FALLOCATE_TIME> timer;
+    int64_t size = 4 * sizeof(uint32_t);
+    uint32_t deltas = mTotalPrefixes - mIndexPrefixes.Length();
+    size += 2 * mIndexPrefixes.Length() * sizeof(uint32_t);
+    size += deltas * sizeof(uint16_t);
+
+    // Ignore failure, the preallocation is a hint and we write out the entire
+    // file later on
+    Unused << fos->Preallocate(size);
+  }
 
   // Convert to buffered stream
   nsCOMPtr<nsIOutputStream> out;
