@@ -538,8 +538,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'TextSelection.java',
     'TextSelectionHandle.java',
     'ThumbnailHelper.java',
-    'tiles/Tile.java',
-    'tiles/TilesRecorder.java',
     'toolbar/AutocompleteHandler.java',
     'toolbar/BackButton.java',
     'toolbar/BrowserToolbar.java',

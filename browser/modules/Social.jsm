@@ -137,7 +137,9 @@ this.Social = {
   },
 
   _updateWorkerState: function(enable) {
-    [p.enabled = enable for (p of Social.providers) if (p.enabled != enable)];
+    for (let p of Social.providers) {
+      p.enabled = enable;
+    }
   },
 
   // Called to update our cache of providers and set the current provider
