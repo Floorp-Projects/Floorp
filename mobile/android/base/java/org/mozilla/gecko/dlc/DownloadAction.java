@@ -126,6 +126,11 @@ public class DownloadAction extends BaseAction {
                 }
             } catch (RecoverableDownloadContentException e) {
                 Log.w(LOGTAG, "Downloading content failed (Recoverable): " + content , e);
+
+                if (e.shouldBeCountedAsFailure()) {
+                    catalog.rememberFailure(content, e.getErrorType());
+                }
+
                 // TODO: Reschedule download (bug 1209498)
             } catch (UnrecoverableDownloadContentException e) {
                 Log.w(LOGTAG, "Downloading content failed (Unrecoverable): " + content, e);
@@ -161,7 +166,8 @@ public class DownloadAction extends BaseAction {
                 // TODO: This is guesstimating at best. We want to implement failure counters (Bug 1215106).
                 if (status >= 500) {
                     // Recoverable: Server errors 5xx
-                    throw new RecoverableDownloadContentException("(Recoverable) Download failed. Status code: " + status);
+                    throw new RecoverableDownloadContentException(RecoverableDownloadContentException.SERVER,
+                                                                  "(Recoverable) Download failed. Status code: " + status);
                 } else if (status >= 400) {
                     // Unrecoverable: Client errors 4xx - Unlikely that this version of the client will ever succeed.
                     throw new UnrecoverableDownloadContentException("(Unrecoverable) Download failed. Status code: " + status);
@@ -176,7 +182,7 @@ public class DownloadAction extends BaseAction {
             final HttpEntity entity = response.getEntity();
             if (entity == null) {
                 // Recoverable: Should not happen for a valid asset
-                throw new RecoverableDownloadContentException("Null entity");
+                throw new RecoverableDownloadContentException(RecoverableDownloadContentException.SERVER, "Null entity");
             }
 
             inputStream = new BufferedInputStream(entity.getContent());
@@ -188,7 +194,7 @@ public class DownloadAction extends BaseAction {
             outputStream.close();
         } catch (IOException e) {
             // Recoverable: Just I/O discontinuation
-            throw new RecoverableDownloadContentException(e);
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.NETWORK, e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
@@ -229,7 +235,7 @@ public class DownloadAction extends BaseAction {
             move(temporaryFile, destinationFile);
         } catch (IOException e) {
             // We could not extract to the destination: Keep temporary file and try again next time we run.
-            throw new RecoverableDownloadContentException(e);
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO, e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
@@ -272,7 +278,8 @@ public class DownloadAction extends BaseAction {
 
         if (!cacheDirectory.exists() && !cacheDirectory.mkdirs()) {
             // Recoverable: File system might not be mounted NOW and we didn't download anything yet anyways.
-            throw new RecoverableDownloadContentException("Could not create cache directory: " + cacheDirectory);
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO,
+                                                          "Could not create cache directory: " + cacheDirectory);
         }
 
         return new File(cacheDirectory, content.getDownloadChecksum() + "-" + content.getId());
@@ -308,7 +315,7 @@ public class DownloadAction extends BaseAction {
         } catch (IOException e) {
             // We could not copy the temporary file to its destination: Keep the temporary file and
             // try again the next time we run.
-            throw new RecoverableDownloadContentException(e);
+            throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO, e);
         } finally {
             IOUtils.safeStreamClose(inputStream);
             IOUtils.safeStreamClose(outputStream);
