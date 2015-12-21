@@ -3,7 +3,7 @@
 //
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -89,21 +89,13 @@ function run_test() {
          .setUploadStream(mime, "", mime.available());
   channel.requestMethod = "POST";
   channel.notificationCallbacks = listenerCallback;
-  channel.asyncOpen(new ChannelListener(checkRequest, channel), null);
+  channel.asyncOpen2(new ChannelListener(checkRequest, channel));
   do_test_pending();
 }
 
 function setupChannel(path) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  return chan = ios.newChannel2(URL + path,
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER)
-                   .QueryInterface(Ci.nsIHttpChannel);
+  return NetUtil.newChannel({uri: URL + path, loadUsingSystemPrincipal: true})
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 function serverHandler(metadata, response) {
