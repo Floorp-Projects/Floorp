@@ -1,6 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpServer = null;
 // Need to randomize, because apparently no one clears our cache
@@ -11,9 +10,19 @@ XPCOMUtils.defineLazyGetter(this, "randomURI", function() {
 });
 
 var cacheUpdateObserver = null;
+var systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
 
 function make_channel(url, callback, ctx) {
-  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+            getService(Ci.nsIIOService);
+  return ios.newChannel2(url,
+                         "",
+                         null,
+                         null,      // aLoadingNode
+                         systemPrincipal,
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER);
 }
 
 function make_uri(url) {
@@ -99,7 +108,7 @@ function run_test()
       chan.notificationCallbacks = new ChannelEventSink(ES_ABORT_REDIRECT);
       var chanac = chan.QueryInterface(Ci.nsIApplicationCacheChannel);
       chanac.chooseApplicationCache = true;
-      chan.asyncOpen2(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE));
+      chan.asyncOpen(new ChannelListener(finish_test, null, CL_EXPECT_FAILURE), null);
     });
   }}
 
@@ -114,7 +123,7 @@ function run_test()
                              httpServer.identity.primaryPort + "/manifest"),
                     make_uri("http://localhost:" +
                              httpServer.identity.primaryPort + "/masterEntry"),
-                    Services.scriptSecurityManager.getSystemPrincipal(),
+                    systemPrincipal,
                     null);
 
   do_test_pending();
