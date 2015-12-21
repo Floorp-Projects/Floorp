@@ -57,7 +57,7 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
 {
   FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
   for (; *aFormats > -1; aFormats++) {
-    if (*aFormats == PIX_FMT_YUV420P) {
+    if (*aFormats == PIX_FMT_YUV420P || *aFormats == PIX_FMT_YUVJ420P) {
       FFMPEG_LOG("Requesting pixel format YUV420P.");
       return PIX_FMT_YUV420P;
     }
