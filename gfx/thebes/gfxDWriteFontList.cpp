@@ -789,35 +789,12 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
         return nullptr;
     }
     
+    RefPtr<IDWriteFontFileStream> fontFileStream;
     RefPtr<IDWriteFontFile> fontFile;
-    HRESULT hr;
-
-    /**
-     * We pass in a pointer to a structure containing a pointer to the array
-     * containing the font data and a unique identifier. DWrite will
-     * internally copy what is at that pointer, and pass that to
-     * CreateStreamFromKey. The array will be empty when the function 
-     * succesfully returns since it swaps out the data.
-     */
-    ffReferenceKey key;
-    key.mArray = &newFontData;
-    nsCOMPtr<nsIUUIDGenerator> uuidgen =
-      do_GetService("@mozilla.org/uuid-generator;1");
-    if (!uuidgen) {
-        return nullptr;
-    }
-
-    rv = uuidgen->GenerateUUIDInPlace(&key.mGUID);
-
-    if (NS_FAILED(rv)) {
-        return nullptr;
-    }
-
-    hr = gfxWindowsPlatform::GetPlatform()->GetDWriteFactory()->
-        CreateCustomFontFileReference(&key,
-                                      sizeof(key),
-                                      gfxDWriteFontFileLoader::Instance(),
-                                      getter_AddRefs(fontFile));
+    HRESULT hr =
+      gfxDWriteFontFileLoader::CreateCustomFontFile(newFontData,
+                                                    getter_AddRefs(fontFile),
+                                                    getter_AddRefs(fontFileStream));
 
     if (FAILED(hr)) {
         NS_WARNING("Failed to create custom font file reference.");
@@ -831,6 +808,7 @@ gfxDWriteFontList::MakePlatformFont(const nsAString& aFontName,
     gfxDWriteFontEntry *entry = 
         new gfxDWriteFontEntry(uniqueName, 
                                fontFile,
+                               fontFileStream,
                                aWeight,
                                aStretch,
                                aStyle);
