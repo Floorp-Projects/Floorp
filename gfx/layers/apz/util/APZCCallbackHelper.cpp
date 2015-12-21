@@ -41,15 +41,6 @@ static void
 AdjustDisplayPortForScrollDelta(mozilla::layers::FrameMetrics& aFrameMetrics,
                                 const CSSPoint& aActualScrollOffset)
 {
-  // In cases where the APZ scroll offset is different from the content scroll
-  // offset, we want to interpret the margins as relative to the APZ scroll
-  // offset except when the frame is not scrollable by APZ. Therefore, if the
-  // layer is a scroll info layer, we leave the margins as-is and they will
-  // be interpreted as relative to the content scroll offset.
-  if (aFrameMetrics.IsScrollInfoLayer()) {
-    return;
-  }
-
   // Correct the display-port by the difference between the requested scroll
   // offset and the resulting scroll offset after setting the requested value.
   ScreenPoint shift =
@@ -137,9 +128,20 @@ ScrollFrame(nsIContent* aContent,
   CSSPoint actualScrollOffset = ScrollFrameTo(sf, apzScrollOffset, scrollUpdated);
 
   if (scrollUpdated) {
-    // Correct the display port due to the difference between mScrollOffset and the
-    // actual scroll offset.
-    AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
+    if (aMetrics.IsScrollInfoLayer()) {
+      // In cases where the APZ scroll offset is different from the content scroll
+      // offset, we want to interpret the margins as relative to the APZ scroll
+      // offset except when the frame is not scrollable by APZ. Therefore, if the
+      // layer is a scroll info layer, we leave the margins as-is and they will
+      // be interpreted as relative to the content scroll offset.
+      if (nsIFrame* frame = aContent->GetPrimaryFrame()) {
+        frame->SchedulePaint();
+      }
+    } else {
+      // Correct the display port due to the difference between mScrollOffset and the
+      // actual scroll offset.
+      AdjustDisplayPortForScrollDelta(aMetrics, actualScrollOffset);
+    }
   } else {
     // For whatever reason we couldn't update the scroll offset on the scroll frame,
     // which means the data APZ used for its displayport calculation is stale. Fall
