@@ -6,6 +6,8 @@
 
 #include "RemotePrintJobChild.h"
 
+#include "mozilla/unused.h"
+
 namespace mozilla {
 namespace layout {
 
@@ -30,7 +32,7 @@ RemotePrintJobChild::RecvAbortPrint(const nsresult& aRv)
 void
 RemotePrintJobChild::ProcessPage(Shmem& aStoredPage)
 {
-  SendProcessPage(aStoredPage);
+  Unused << SendProcessPage(aStoredPage);
 }
 
 RemotePrintJobChild::~RemotePrintJobChild()
