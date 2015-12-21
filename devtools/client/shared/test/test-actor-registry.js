@@ -12,6 +12,7 @@ var CC = Components.Constructor;
 
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+var { fetch } = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 
 var TEST_URL_ROOT = "http://example.com/browser/devtools/client/shared/test/";
@@ -86,27 +87,7 @@ exports.getTestActorWithoutToolbox = Task.async(function* (tab) {
 
 // Fetch the content of a URI
 var request = function (uri) {
-  let deferred = promise.defer();
-  try {
-    uri = Services.io.newURI(uri, null, null);
-  } catch (e) {
-    deferred.reject(e);
-  }
-
-  NetUtil.asyncFetch(uri, (stream, status, req) => {
-    if (!Components.isSuccessCode(status)) {
-      deferred.reject(new Error("Request failed with status code = "
-                       + status
-                       + " after NetUtil.asyncFetch for url = "
-                       + uri.spec));
-      return;
-    }
-
-    let source = NetUtil.readInputStreamToString(stream, stream.available());
-    stream.close();
-    deferred.resolve(source);
-  });
-  return deferred.promise;
+  return fetch(uri).then(({ content }) => content);
 }
 
 var getTestActor = Task.async(function* (client, tab, toolbox) {
