@@ -12,7 +12,6 @@ import os
 import shutil
 import sys
 import warnings
-import which
 
 from mozbuild.base import (
     MachCommandBase,
