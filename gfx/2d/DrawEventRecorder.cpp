@@ -19,6 +19,14 @@ DrawEventRecorderPrivate::DrawEventRecorderPrivate(std::ostream *aStream)
 }
 
 void
+DrawEventRecorderPrivate::WriteHeader()
+{
+  WriteElement(*mOutputStream, kMagicInt);
+  WriteElement(*mOutputStream, kMajorRevision);
+  WriteElement(*mOutputStream, kMinorRevision);
+}
+
+void
 DrawEventRecorderPrivate::RecordEvent(const RecordedEvent &aEvent)
 {
   WriteElement(*mOutputStream, aEvent.mType);
@@ -34,9 +42,7 @@ DrawEventRecorderFile::DrawEventRecorderFile(const char *aFilename)
 {
   mOutputStream = &mOutputFile;
 
-  WriteElement(*mOutputStream, kMagicInt);
-  WriteElement(*mOutputStream, kMajorRevision);
-  WriteElement(*mOutputStream, kMinorRevision);
+  WriteHeader();
 }
 
 DrawEventRecorderFile::~DrawEventRecorderFile()
@@ -48,6 +54,41 @@ void
 DrawEventRecorderFile::Flush()
 {
   mOutputFile.flush();
+}
+
+DrawEventRecorderMemory::DrawEventRecorderMemory()
+  : DrawEventRecorderPrivate(nullptr)
+{
+  mOutputStream = &mMemoryStream;
+
+  WriteHeader();
+}
+
+void
+DrawEventRecorderMemory::Flush()
+{
+   mOutputStream->flush();
+}
+
+size_t
+DrawEventRecorderMemory::RecordingSize()
+{
+  return mMemoryStream.tellp();
+}
+
+bool
+DrawEventRecorderMemory::CopyRecording(char* aBuffer, size_t aBufferLen)
+{
+  return !!mMemoryStream.read(aBuffer, aBufferLen);
+}
+
+void
+DrawEventRecorderMemory::WipeRecording()
+{
+  mMemoryStream.str(std::string());
+  mMemoryStream.clear();
+
+  WriteHeader();
 }
 
 } // namespace gfx
