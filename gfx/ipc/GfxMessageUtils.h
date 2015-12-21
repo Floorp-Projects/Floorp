@@ -715,6 +715,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mMaskLayerIndex);
     WriteParam(aMsg, aParam.mIsLayersIdRoot);
     WriteParam(aMsg, aParam.mUsesContainerScrolling);
+    WriteParam(aMsg, aParam.mIsScrollInfoLayer);
     WriteParam(aMsg, aParam.GetContentDescription());
   }
 
@@ -761,6 +762,7 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
             ReadParam(aMsg, aIter, &aResult->mIsLayersIdRoot) &&
             ReadParam(aMsg, aIter, &aResult->mUsesContainerScrolling) &&
+            ReadParam(aMsg, aIter, &aResult->mIsScrollInfoLayer) &&
             ReadContentDescription(aMsg, aIter, aResult));
   }
 };
