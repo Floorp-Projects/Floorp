@@ -30,7 +30,6 @@
 #include "AudioChannelService.h"
 #include "BlobParent.h"
 #include "CrashReporterParent.h"
-#include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -1607,10 +1606,6 @@ ContentParent::ForwardKnownInfo()
         vs->GetVolumesForIPC(&volumeInfo);
         Unused << SendVolumes(volumeInfo);
     }
-#else
-    DeviceStorageAreaInfo areaInfo;
-    DeviceStorageStatics::GetDeviceStorageAreasForIPC(areaInfo);
-    Unused << SendDeviceStorageAreas(areaInfo);
 #endif /* MOZ_WIDGET_GONK */
 
     nsCOMPtr<nsISystemMessagesInternal> systemMessenger =
