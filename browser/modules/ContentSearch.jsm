@@ -212,7 +212,7 @@ this.ContentSearch = {
 
     let event = this._eventQueue.shift();
 
-    return this._currentEventPromise = Task.spawn(function* () {
+    this._currentEventPromise = Task.spawn(function* () {
       try {
         yield this["_on" + event.type](event.data);
       } catch (err) {

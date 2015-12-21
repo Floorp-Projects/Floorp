@@ -78,12 +78,10 @@ browser/components/shell/**
 browser/components/tabview/**
 browser/components/translation/**
 browser/components/uitour/**
-browser/experiments/**
 browser/extensions/pdfjs/**
 browser/extensions/shumway/**
 browser/fuel/**
 browser/locales/**
-browser/modules/**
 
 # Loop specific exclusions
 

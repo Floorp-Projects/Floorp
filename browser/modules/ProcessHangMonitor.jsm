@@ -11,6 +11,7 @@ var Cu = Components.utils;
 
 this.EXPORTED_SYMBOLS = ["ProcessHangMonitor"];
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 /**
@@ -176,7 +177,7 @@ var ProcessHangMonitor = {
   handleUserInput: function(win, func) {
     let report = this.findActiveReport(win.gBrowser.selectedBrowser);
     if (!report) {
-      return;
+      return null;
     }
     this.removeActiveReport(report);
 
@@ -322,8 +323,7 @@ var ProcessHangMonitor = {
         }
       }];
 
-#ifdef MOZ_DEV_EDITION
-    if (report.hangType == report.SLOW_SCRIPT) {
+    if (AppConstants.MOZ_DEV_EDITION && report.hangType == report.SLOW_SCRIPT) {
       buttons.push({
         label: bundle.getString("processHang.button_debug.label"),
         accessKey: bundle.getString("processHang.button_debug.accessKey"),
@@ -332,7 +332,6 @@ var ProcessHangMonitor = {
         }
       });
     }
-#endif
 
     nb.appendNotification(bundle.getString("processHang.label"),
                           "process-hang",

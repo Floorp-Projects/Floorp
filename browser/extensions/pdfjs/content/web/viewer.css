@@ -77,6 +77,10 @@
 }
 
 
+.annotationLayer section {
+  position: absolute;
+}
+
 .annotationLayer .annotLink > a:hover {
   opacity: 0.2;
   background: #ff0;

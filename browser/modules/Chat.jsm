@@ -70,7 +70,7 @@ var Chat = {
 
         // Make a new array instead of the live NodeList so this iterator can be
         // used for closing/deleting.
-        let chatboxes = [c for (c of chatbar.children)];
+        let chatboxes = [...chatbar.children];
         for (let chatbox of chatboxes) {
           yield chatbox;
         }
@@ -244,7 +244,7 @@ var Chat = {
 
     // When the buttonSet is coming from an XML attribute, it will be a string.
     if (typeof buttonSet == "string") {
-      buttonSet = [for (button of buttonSet.split(",")) button.trim()];
+      buttonSet = buttonSet.split(",").map(button => button.trim());
     }
 
     // Make sure to keep the current set around.
