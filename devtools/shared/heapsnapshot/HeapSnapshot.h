@@ -159,6 +159,9 @@ public:
   void TakeCensus(JSContext* cx, JS::HandleObject options,
                   JS::MutableHandleValue rval, ErrorResult& rv);
 
+  void DescribeNode(JSContext* cx, JS::HandleObject breakdown, uint64_t nodeId,
+                    JS::MutableHandleValue rval, ErrorResult& rv);
+
   already_AddRefed<DominatorTree> ComputeDominatorTree(ErrorResult& rv);
 
   dom::Nullable<uint64_t> GetCreationTime() {

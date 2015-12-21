@@ -66,12 +66,12 @@ int SkEdge::setLine(const SkPoint& p0, const SkPoint& p1, const SkIRect* clip,
         return 0;
     }
     // are we completely above or below the clip?
-    if (NULL != clip && (top >= clip->fBottom || bot <= clip->fTop)) {
+    if (clip && (top >= clip->fBottom || bot <= clip->fTop)) {
         return 0;
     }
 
     SkFixed slope = SkFDot6Div(x1 - x0, y1 - y0);
-    const int dy  = SkEdge_Compute_DY(top, y0);
+    const SkFDot6 dy  = SkEdge_Compute_DY(top, y0);
 
     fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));   // + SK_Fixed1/2
     fDX         = slope;
@@ -112,7 +112,7 @@ int SkEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1)
     x1 >>= 10;
 
     SkFixed slope = SkFDot6Div(x1 - x0, y1 - y0);
-    const int dy  = SkEdge_Compute_DY(top, y0);
+    const SkFDot6 dy  = SkEdge_Compute_DY(top, y0);
 
     fX          = SkFDot6ToFixed(x0 + SkFixedMul(slope, dy));   // + SK_Fixed1/2
     fDX         = slope;
@@ -332,8 +332,7 @@ static SkFDot6 cubic_delta_from_line(SkFDot6 a, SkFDot6 b, SkFDot6 c, SkFDot6 d)
     return SkMax32(SkAbs32(oneThird), SkAbs32(twoThird));
 }
 
-int SkCubicEdge::setCubic(const SkPoint pts[4], const SkIRect* clip, int shift)
-{
+int SkCubicEdge::setCubic(const SkPoint pts[4], int shift) {
     SkFDot6 x0, y0, x1, y1, x2, y2, x3, y3;
 
     {
@@ -374,10 +373,6 @@ int SkCubicEdge::setCubic(const SkPoint pts[4], const SkIRect* clip, int shift)
 
     // are we a zero-height cubic (line)?
     if (top == bot)
-        return 0;
-
-    // are we completely above or below the clip?
-    if (clip && (top >= clip->fBottom || bot <= clip->fTop))
         return 0;
 
     // compute number of steps needed (1 << shift)
@@ -433,16 +428,6 @@ int SkCubicEdge::setCubic(const SkPoint pts[4], const SkIRect* clip, int shift)
     fCLastX = SkFDot6ToFixed(x3);
     fCLastY = SkFDot6ToFixed(y3);
 
-    if (clip)
-    {
-        do {
-            if (!this->updateCubic()) {
-                return 0;
-            }
-        } while (!this->intersectsClip(*clip));
-        this->chopLineWithClip(*clip);
-        return 1;
-    }
     return this->updateCubic();
 }
 

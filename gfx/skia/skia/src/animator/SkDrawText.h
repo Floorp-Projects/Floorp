@@ -17,11 +17,11 @@ class SkText : public SkBoundable {
     DECLARE_MEMBER_INFO(Text);
     SkText();
     virtual ~SkText();
-    virtual bool draw(SkAnimateMaker& );
+    bool draw(SkAnimateMaker& ) override;
 #ifdef SK_DUMP_ENABLED
-    virtual void dump(SkAnimateMaker* );
+    void dump(SkAnimateMaker* ) override;
 #endif
-    virtual bool getProperty(int index, SkScriptValue* value) const ;
+    bool getProperty(int index, SkScriptValue* value) const override;
     const char* getText() { return text.c_str(); }
     size_t getSize() { return text.size(); }
 protected:

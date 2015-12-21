@@ -20,13 +20,12 @@ static bool ComputeStep(const SkPoint& a, const SkPoint& b, SkScalar radius,
                         SkPoint* step) {
     SkScalar dist = SkPoint::Distance(a, b);
 
-    step->set(b.fX - a.fX, b.fY - a.fY);
-
+    *step = b - a;
     if (dist <= radius * 2) {
-        step->scale(SK_ScalarHalf);
+        *step *= SK_ScalarHalf;
         return false;
     } else {
-        step->scale(SkScalarDiv(radius, dist));
+        *step *= radius / dist;
         return true;
     }
 }
@@ -47,6 +46,7 @@ bool SkCornerPathEffect::filterPath(SkPath* dst, const SkPath& src,
     bool        prevIsValid = true;
 
     // to avoid warnings
+    step.set(0, 0);
     moveTo.set(0, 0);
     firstStep.set(0, 0);
     lastCorner.set(0, 0);
@@ -94,6 +94,16 @@ bool SkCornerPathEffect::filterPath(SkPath* dst, const SkPath& src,
                 lastCorner = pts[2];
                 firstStep.set(0, 0);
                 break;
+            case SkPath::kConic_Verb:
+                // TBD - just replicate the curve for now
+                if (!prevIsValid) {
+                    dst->moveTo(pts[0]);
+                    prevIsValid = true;
+                }
+                dst->conicTo(pts[1], pts[2], iter.conicWeight());
+                lastCorner = pts[2];
+                firstStep.set(0, 0);
+                break;
             case SkPath::kCubic_Verb:
                 if (!prevIsValid) {
                     dst->moveTo(pts[0]);
@@ -111,11 +121,12 @@ bool SkCornerPathEffect::filterPath(SkPath* dst, const SkPath& src,
                                 lastCorner.fY + firstStep.fY);
                     }
                 dst->close();
-                break;
-            case SkPath::kConic_Verb:
-                SkASSERT(0);
+                prevIsValid = false;
                 break;
             case SkPath::kDone_Verb:
+                if (prevIsValid) {
+                    dst->lineTo(lastCorner);
+                }
                 goto DONE;
         }
 
@@ -128,11 +139,18 @@ DONE:
     return true;
 }
 
+SkFlattenable* SkCornerPathEffect::CreateProc(SkReadBuffer& buffer) {
+    return SkCornerPathEffect::Create(buffer.readScalar());
+}
+
 void SkCornerPathEffect::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
     buffer.writeScalar(fRadius);
 }
 
-SkCornerPathEffect::SkCornerPathEffect(SkReadBuffer& buffer) {
-    fRadius = buffer.readScalar();
+#ifndef SK_IGNORE_TO_STRING
+void SkCornerPathEffect::toString(SkString* str) const {
+    str->appendf("SkCornerPathEffect: (");
+    str->appendf("radius: %.2f", fRadius);
+    str->appendf(")");
 }
+#endif

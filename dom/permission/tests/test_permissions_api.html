@@ -27,7 +27,8 @@ const PERMISSIONS = [
 ];
 
 const UNSUPPORTED_PERMISSIONS = [
-  'midi',
+  'foobarbaz',  // Not in spec, for testing only.
+  'midi'
 ];
 
 function setup() {
@@ -61,7 +62,10 @@ function checkUnsupportedPermissions() {
   return Promise.all(UNSUPPORTED_PERMISSIONS.map(name => {
     return navigator.permissions.query({ name }).then(
       result => ok(false, `query should not have resolved for '${name}'`),
-      error => ok(true, `query should have rejected for '${name}'`));
+      error => {
+        is(error.name, 'TypeError',
+           `query should have thrown TypeError for '${name}'`);
+      });
   }));
 }
 

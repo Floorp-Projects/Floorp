@@ -22,10 +22,6 @@
 #include "PseudoStack.h"
 #include "ProfilerBacktrace.h"
 
-#ifdef MOZ_TASK_TRACER
-#include "GeckoTaskTracer.h"
-#endif
-
 /* QT has a #define for the word "slots" and jsfriendapi.h has a struct with
  * this variable name, causing compilation problems. Alleviate this for now by
  * removing this #define */
@@ -62,18 +58,12 @@ extern bool stack_key_initialized;
 static inline
 void profiler_init(void* stackTop)
 {
-#ifdef MOZ_TASK_TRACER
-  mozilla::tasktracer::InitTaskTracer();
-#endif
   mozilla_sampler_init(stackTop);
 }
 
 static inline
 void profiler_shutdown()
 {
-#ifdef MOZ_TASK_TRACER
-  mozilla::tasktracer::ShutdownTaskTracer();
-#endif
   mozilla_sampler_shutdown();
 }
 

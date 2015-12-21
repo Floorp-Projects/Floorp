@@ -2276,6 +2276,41 @@ DoMatchLocal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLine
     return true;
 }
 
+/* ES6 21.2.5.2.3. */
+static size_t
+AdvanceStringIndex(HandleLinearString input, size_t length, size_t index, bool unicode)
+{
+    /* Steps 1-3 (implicit). */
+
+    /* Step 4: If input is latin1, there is no surrogate pair. */
+    if (!unicode || input->hasLatin1Chars())
+        return index + 1;
+
+    JS::AutoCheckCannotGC nogc;
+    const char16_t* S = input->twoByteChars(nogc);
+
+    /* Step 6. */
+    if (index + 1 >= length)
+        return index + 1;
+
+    /* Step 7. */
+    char16_t first = S[index];
+
+    /* Step 8. */
+    if (!unicode::IsLeadSurrogate(first))
+        return index + 1;
+
+    /* Step 9. */
+    char16_t second = S[index + 1];
+
+    /* Step 10. */
+    if (!unicode::IsTrailSurrogate(second))
+        return index + 1;
+
+    /* Step 11. */
+    return index + 2;
+}
+
 /* ES5 15.5.4.10 step 8. */
 static bool
 DoMatchGlobal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLinearString input,
@@ -2331,6 +2366,7 @@ DoMatchGlobal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLin
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
     size_t charsLen = input->length();
     RegExpShared& re = g.regExp();
+    bool unicode = re.unicode();
     for (size_t searchIndex = 0; searchIndex <= charsLen; ) {
         if (!CheckForInterrupt(cx))
             return false;
@@ -2348,7 +2384,9 @@ DoMatchGlobal(JSContext* cx, const CallArgs& args, RegExpStatics* res, HandleLin
         MatchPair& match = matches[0];
 
         // Steps 8f(iii)(1-3).
-        searchIndex = match.isEmpty() ? match.limit + 1 : match.limit;
+        searchIndex = match.isEmpty()
+                      ? AdvanceStringIndex(input, charsLen, match.limit, unicode)
+                      : match.limit;
 
         // Step 8f(iii)(4-5).
         JSLinearString* str = NewDependentString(cx, input, match.start, match.length());
@@ -2614,6 +2652,7 @@ static bool
 DoMatchForReplaceGlobal(JSContext* cx, RegExpStatics* res, HandleLinearString linearStr,
                         RegExpShared& re, ReplaceData& rdata, size_t* rightContextOffset)
 {
+    bool unicode = re.unicode();
     size_t charsLen = linearStr->length();
     ScopedMatchPairs matches(&cx->tempLifoAlloc());
     for (size_t count = 0, searchIndex = 0; searchIndex <= charsLen; ++count) {
@@ -2628,7 +2667,9 @@ DoMatchForReplaceGlobal(JSContext* cx, RegExpStatics* res, HandleLinearString li
             break;
 
         MatchPair& match = matches[0];
-        searchIndex = match.isEmpty() ? match.limit + 1 : match.limit;
+        searchIndex = match.isEmpty()
+                      ? AdvanceStringIndex(linearStr, charsLen, match.limit, unicode)
+                      : match.limit;
         *rightContextOffset = match.limit;
 
         if (!res->updateFromMatchPairs(cx, linearStr, matches))
@@ -3228,6 +3269,7 @@ StrReplaceRegexpRemove(JSContext* cx, HandleString str, RegExpShared& re)
     size_t lazyIndex = 0;  /* Index before last successful match. */
 
     /* Accumulate StringRanges for unmatched substrings. */
+    bool unicode = re.unicode();
     while (startIndex <= charsLen) {
         if (!CheckForInterrupt(cx))
             return nullptr;
@@ -3248,7 +3290,9 @@ StrReplaceRegexpRemove(JSContext* cx, HandleString str, RegExpShared& re)
         lazyIndex = lastIndex;
         lastIndex = match.limit;
 
-        startIndex = match.isEmpty() ? match.limit + 1 : match.limit;
+        startIndex = match.isEmpty()
+                     ? AdvanceStringIndex(linearStr, charsLen, match.limit, unicode)
+                     : match.limit;
 
         /* Non-global removal executes at most once. */
         if (!re.global())
@@ -3631,7 +3675,7 @@ class SplitMatchResult {
 template<class Matcher>
 static JSObject*
 SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, const Matcher& splitMatch,
-            HandleObjectGroup group)
+            HandleObjectGroup group, bool unicode)
 {
     size_t strLength = str->length();
     SplitMatchResult result;
@@ -3696,7 +3740,7 @@ SplitHelper(JSContext* cx, HandleLinearString str, uint32_t limit, const Matcher
 
         /* Step 13(c)(ii). */
         if (endIndex == lastEndIndex) {
-            index++;
+            index = AdvanceStringIndex(str, strLength, index, unicode);
             continue;
         }
 
@@ -3925,14 +3969,14 @@ js::str_split(JSContext* cx, unsigned argc, Value* vp)
             aobj = CharSplitHelper(cx, linearStr, limit, group);
         } else {
             SplitStringMatcher matcher(cx, sepstr);
-            aobj = SplitHelper(cx, linearStr, limit, matcher, group);
+            aobj = SplitHelper(cx, linearStr, limit, matcher, group, false);
         }
     } else {
         RegExpStatics* res = cx->global()->getRegExpStatics(cx);
         if (!res)
             return false;
         SplitRegExpMatcher matcher(*re, res);
-        aobj = SplitHelper(cx, linearStr, limit, matcher, group);
+        aobj = SplitHelper(cx, linearStr, limit, matcher, group, re->unicode());
     }
     if (!aobj)
         return false;
@@ -3960,7 +4004,7 @@ js::str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, H
         return CharSplitHelper(cx, linearStr, limit, group);
 
     SplitStringMatcher matcher(cx, linearSep);
-    return SplitHelper(cx, linearStr, limit, matcher, group);
+    return SplitHelper(cx, linearStr, limit, matcher, group, false);
 }
 
 /*

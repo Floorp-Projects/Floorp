@@ -27,6 +27,7 @@
 #include "SkANP.h"
 #include "SkFontHost.h"
 #include "SkStream.h"
+#include <stdlib.h>
 
 static ANPTypeface* anp_createFromName(const char name[], ANPTypefaceStyle s) {
     SkTypeface* tf = SkTypeface::CreateFromName(name,

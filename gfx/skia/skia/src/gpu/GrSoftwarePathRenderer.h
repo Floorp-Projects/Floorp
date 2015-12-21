@@ -12,7 +12,6 @@
 #include "GrPathRenderer.h"
 
 class GrContext;
-class GrAutoScratchTexture;
 
 /**
  * This class uses the software side to render a path to an SkBitmap and
@@ -23,20 +22,14 @@ public:
     GrSoftwarePathRenderer(GrContext* context)
         : fContext(context) {
     }
+private:
+    StencilSupport onGetStencilSupport(const SkPath&, const GrStrokeInfo&) const override {
+        return GrPathRenderer::kNoSupport_StencilSupport;
+    }
+    
+    bool onCanDrawPath(const CanDrawPathArgs&) const override;
 
-    virtual bool canDrawPath(const SkPath&,
-                             const SkStrokeRec&,
-                             const GrDrawTarget*,
-                             bool antiAlias) const SK_OVERRIDE;
-protected:
-    virtual StencilSupport onGetStencilSupport(const SkPath&,
-                                               const SkStrokeRec&,
-                                               const GrDrawTarget*) const SK_OVERRIDE;
-
-    virtual bool onDrawPath(const SkPath&,
-                            const SkStrokeRec&,
-                            GrDrawTarget*,
-                            bool antiAlias) SK_OVERRIDE;
+    bool onDrawPath(const DrawPathArgs&) override;
 
 private:
     GrContext*     fContext;

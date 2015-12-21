@@ -92,8 +92,8 @@ public:
         // someone should admit to actually using this class
         SkASSERT(0 < gStaticRefCount);
 
-        if (NULL == gObj) {
-            gObj = SkNEW(GrDebugGL);
+        if (nullptr == gObj) {
+            gObj = new GrDebugGL;
         }
 
         return gObj;
@@ -109,9 +109,14 @@ public:
         SkASSERT(gStaticRefCount > 0);
         gStaticRefCount--;
         if (0 == gStaticRefCount) {
-            SkDELETE(gObj);
-            gObj = NULL;
+            delete gObj;
+            gObj = nullptr;
         }
+    }
+
+    static void abandon() {
+        SkASSERT(gStaticRefCount > 0);
+        gObj->fAbandoned = true;
     }
 
 protected:
@@ -131,6 +136,8 @@ private:
     GrTextureObj* fTexture;
     GrTextureUnitObj *fTextureUnits[kDefaultMaxTextureUnits];
     GrVertexArrayObj *fVertexArray;
+
+    bool fAbandoned;
 
     typedef GrFakeRefObj *(*Create)();
 

@@ -227,9 +227,6 @@ nsContainerFrame*
 NS_NewDocElementBoxFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*
-NS_NewThumbFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
-
-nsIFrame*
 NS_NewDeckFrame (nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 nsIFrame*

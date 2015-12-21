@@ -1,3 +1,9 @@
+/*
+ * Copyright 2011 Google Inc.
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
 
 #include "SkTestImageFilters.h"
 #include "SkCanvas.h"
@@ -43,13 +49,13 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
     // downsample
     {
         SkBaseDevice* dev = proxy->createDevice(dstW, dstH);
-        if (NULL == dev) {
+        if (nullptr == dev) {
             return false;
         }
         OwnDeviceCanvas canvas(dev);
         SkPaint paint;
 
-        paint.setFilterLevel(SkPaint::kLow_FilterLevel);
+        paint.setFilterQuality(kLow_SkFilterQuality);
         canvas.scale(scale, scale);
         canvas.drawBitmap(src, 0, 0, &paint);
         tmp = dev->accessBitmap(false);
@@ -58,27 +64,30 @@ bool SkDownSampleImageFilter::onFilterImage(Proxy* proxy, const SkBitmap& src,
     // upscale
     {
         SkBaseDevice* dev = proxy->createDevice(src.width(), src.height());
-        if (NULL == dev) {
+        if (nullptr == dev) {
             return false;
         }
         OwnDeviceCanvas canvas(dev);
 
-        SkRect r = SkRect::MakeWH(SkIntToScalar(src.width()),
-                                  SkIntToScalar(src.height()));
-        canvas.drawBitmapRect(tmp, NULL, r, NULL);
+        canvas.drawBitmapRect(tmp, SkRect::MakeIWH(src.width(), src.height()), nullptr);
         *result = dev->accessBitmap(false);
     }
     return true;
 }
 
+SkFlattenable* SkDownSampleImageFilter::CreateProc(SkReadBuffer& buffer) {
+    SK_IMAGEFILTER_UNFLATTEN_COMMON(common, 1);
+    return Create(buffer.readScalar(), common.getInput(0));
+}
+
 void SkDownSampleImageFilter::flatten(SkWriteBuffer& buffer) const {
     this->INHERITED::flatten(buffer);
-
     buffer.writeScalar(fScale);
 }
 
-SkDownSampleImageFilter::SkDownSampleImageFilter(SkReadBuffer& buffer)
-  : INHERITED(1, buffer) {
-    fScale = buffer.readScalar();
-    buffer.validate(SkScalarIsFinite(fScale));
+#ifndef SK_IGNORE_TO_STRING
+void SkDownSampleImageFilter::toString(SkString* str) const {
+    str->appendf("SkDownSampleImageFilter: (");
+    str->append(")");
 }
+#endif

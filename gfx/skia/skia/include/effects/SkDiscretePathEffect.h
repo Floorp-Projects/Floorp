@@ -32,21 +32,24 @@ public:
     static SkDiscretePathEffect* Create(SkScalar segLength,
                                         SkScalar deviation,
                                         uint32_t seedAssist=0) {
-        return SkNEW_ARGS(SkDiscretePathEffect,
-                          (segLength, deviation, seedAssist));
+        return new SkDiscretePathEffect(segLength, deviation, seedAssist);
     }
 
     virtual bool filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec*, const SkRect*) const SK_OVERRIDE;
+                            SkStrokeRec*, const SkRect*) const override;
 
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkDiscretePathEffect)
+
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    bool exposedInAndroidJavaAPI() const override { return true; }
+#endif
 
 protected:
     SkDiscretePathEffect(SkScalar segLength,
                          SkScalar deviation,
                          uint32_t seedAssist);
-    explicit SkDiscretePathEffect(SkReadBuffer&);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
 
 private:
     SkScalar fSegLength, fPerterb;

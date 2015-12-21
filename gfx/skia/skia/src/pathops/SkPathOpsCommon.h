@@ -8,24 +8,27 @@
 #define SkPathOpsCommon_DEFINED
 
 #include "SkOpAngle.h"
-#include "SkOpContour.h"
 #include "SkTDArray.h"
 
+class SkOpCoincidence;
+class SkOpContour;
 class SkPathWriter;
 
+const SkOpAngle* AngleWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* windingPtr,
+                              bool* sortable);
 void Assemble(const SkPathWriter& path, SkPathWriter* simple);
-// FIXME: find chase uses insert, so it can't be converted to SkTArray yet
-SkOpSegment* FindChase(SkTDArray<SkOpSpan*>* chase, int* tIndex, int* endIndex);
-SkOpSegment* FindSortableTop(const SkTArray<SkOpContour*, true>& , SkOpAngle::IncludeType ,
-                             bool* firstContour, int* index, int* endIndex, SkPoint* topLeft,
-                             bool* unsortable, bool* done, bool* onlyVertical, bool firstPass);
-SkOpSegment* FindUndone(SkTArray<SkOpContour*, true>& contourList, int* start, int* end);
-void MakeContourList(SkTArray<SkOpContour>& contours, SkTArray<SkOpContour*, true>& list,
-                     bool evenOdd, bool oppEvenOdd);
-bool HandleCoincidence(SkTArray<SkOpContour*, true>* , int );
-
-#if DEBUG_ACTIVE_SPANS || DEBUG_ACTIVE_SPANS_FIRST_ONLY
-void DebugShowActiveSpans(SkTArray<SkOpContour*, true>& contourList);
+SkOpSegment* FindChase(SkTDArray<SkOpSpanBase*>* chase, SkOpSpanBase** startPtr,
+                       SkOpSpanBase** endPtr);
+SkOpSpan* FindSortableTop(SkOpContourHead* );
+SkOpSegment* FindUndone(SkOpContourHead* , SkOpSpanBase** startPtr,
+                        SkOpSpanBase** endPtr);
+void FixWinding(SkPath* path);
+bool SortContourList(SkOpContourHead** , bool evenOdd, bool oppEvenOdd);
+bool HandleCoincidence(SkOpContourHead* , SkOpCoincidence* , SkChunkAlloc* );
+bool OpDebug(const SkPath& one, const SkPath& two, SkPathOp op, SkPath* result,
+             bool expectSuccess  SkDEBUGPARAMS(const char* testName));
+#if DEBUG_ACTIVE_SPANS
+void DebugShowActiveSpans(SkOpContourHead* );
 #endif
 
 #endif
