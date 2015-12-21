@@ -12,6 +12,7 @@
 #define kStrokeRec_FillStyleWidth     (-SK_Scalar1)
 
 SkStrokeRec::SkStrokeRec(InitStyle s) {
+    fResScale       = 1;
     fWidth          = (kFill_InitStyle == s) ? kStrokeRec_FillStyleWidth : 0;
     fMiterLimit     = SkPaintDefaults_MiterLimit;
     fCap            = SkPaint::kDefault_Cap;
@@ -19,19 +20,17 @@ SkStrokeRec::SkStrokeRec(InitStyle s) {
     fStrokeAndFill  = false;
 }
 
-SkStrokeRec::SkStrokeRec(const SkStrokeRec& src) {
-    memcpy(this, &src, sizeof(src));
+SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkScalar resScale) {
+    this->init(paint, paint.getStyle(), resScale);
 }
 
-SkStrokeRec::SkStrokeRec(const SkPaint& paint) {
-    this->init(paint, paint.getStyle());
+SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkPaint::Style styleOverride, SkScalar resScale) {
+    this->init(paint, styleOverride, resScale);
 }
 
-SkStrokeRec::SkStrokeRec(const SkPaint& paint, SkPaint::Style styleOverride) {
-    this->init(paint, styleOverride);
-}
+void SkStrokeRec::init(const SkPaint& paint, SkPaint::Style style, SkScalar resScale) {
+    fResScale = resScale;
 
-void SkStrokeRec::init(const SkPaint& paint, SkPaint::Style style) {
     switch (style) {
         case SkPaint::kFill_Style:
             fWidth = kStrokeRec_FillStyleWidth;
@@ -97,17 +96,41 @@ void SkStrokeRec::setStrokeStyle(SkScalar width, bool strokeAndFill) {
 
 #include "SkStroke.h"
 
+#ifdef SK_DEBUG  
+    // enables tweaking these values at runtime from SampleApp
+    bool gDebugStrokerErrorSet = false;
+    SkScalar gDebugStrokerError;
+#endif
+
 bool SkStrokeRec::applyToPath(SkPath* dst, const SkPath& src) const {
     if (fWidth <= 0) {  // hairline or fill
         return false;
     }
 
     SkStroke stroker;
-    stroker.setCap(fCap);
-    stroker.setJoin(fJoin);
+    stroker.setCap((SkPaint::Cap)fCap);
+    stroker.setJoin((SkPaint::Join)fJoin);
     stroker.setMiterLimit(fMiterLimit);
     stroker.setWidth(fWidth);
     stroker.setDoFill(fStrokeAndFill);
+#ifdef SK_DEBUG
+    stroker.setResScale(gDebugStrokerErrorSet ? gDebugStrokerError : fResScale);
+#else
+    stroker.setResScale(fResScale);
+#endif
     stroker.strokePath(src, dst);
     return true;
+}
+
+void SkStrokeRec::applyToPaint(SkPaint* paint) const {
+    if (fWidth < 0) {  // fill
+        paint->setStyle(SkPaint::kFill_Style);
+        return;
+    }
+
+    paint->setStyle(fStrokeAndFill ? SkPaint::kStrokeAndFill_Style : SkPaint::kStroke_Style);
+    paint->setStrokeWidth(fWidth);
+    paint->setStrokeMiter(fMiterLimit);
+    paint->setStrokeCap((SkPaint::Cap)fCap);
+    paint->setStrokeJoin((SkPaint::Join)fJoin);
 }

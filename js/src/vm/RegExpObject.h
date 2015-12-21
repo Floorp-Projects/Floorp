@@ -51,9 +51,10 @@ enum RegExpFlag
     GlobalFlag      = 0x02,
     MultilineFlag   = 0x04,
     StickyFlag      = 0x08,
+    UnicodeFlag     = 0x10,
 
     NoFlags         = 0x00,
-    AllFlags        = 0x0f
+    AllFlags        = 0x1f
 };
 
 enum RegExpRunStatus
@@ -186,6 +187,7 @@ class RegExpShared
     bool global() const                 { return flags & GlobalFlag; }
     bool multiline() const              { return flags & MultilineFlag; }
     bool sticky() const                 { return flags & StickyFlag; }
+    bool unicode() const                { return flags & UnicodeFlag; }
 
     bool isCompiled(CompilationMode mode, bool latin1,
                     ForceByteCodeEnum force = DontForceByteCode) const {
@@ -340,9 +342,10 @@ class RegExpObject : public NativeObject
     static const unsigned IGNORE_CASE_FLAG_SLOT    = 3;
     static const unsigned MULTILINE_FLAG_SLOT      = 4;
     static const unsigned STICKY_FLAG_SLOT         = 5;
+    static const unsigned UNICODE_FLAG_SLOT        = 6;
 
   public:
-    static const unsigned RESERVED_SLOTS = 6;
+    static const unsigned RESERVED_SLOTS = 7;
     static const unsigned PRIVATE_SLOT = 7;
 
     static const Class class_;
@@ -404,6 +407,7 @@ class RegExpObject : public NativeObject
         flags |= ignoreCase() ? IgnoreCaseFlag : 0;
         flags |= multiline() ? MultilineFlag : 0;
         flags |= sticky() ? StickyFlag : 0;
+        flags |= unicode() ? UnicodeFlag : 0;
         return RegExpFlag(flags);
     }
 
@@ -429,10 +433,15 @@ class RegExpObject : public NativeObject
         setSlot(STICKY_FLAG_SLOT, BooleanValue(enabled));
     }
 
+    void setUnicode(bool enabled) {
+        setSlot(UNICODE_FLAG_SLOT, BooleanValue(enabled));
+    }
+
     bool ignoreCase() const { return getFixedSlot(IGNORE_CASE_FLAG_SLOT).toBoolean(); }
     bool global() const     { return getFixedSlot(GLOBAL_FLAG_SLOT).toBoolean(); }
     bool multiline() const  { return getFixedSlot(MULTILINE_FLAG_SLOT).toBoolean(); }
     bool sticky() const     { return getFixedSlot(STICKY_FLAG_SLOT).toBoolean(); }
+    bool unicode() const    { return getFixedSlot(UNICODE_FLAG_SLOT).toBoolean(); }
 
     bool getShared(JSContext* cx, RegExpGuard* g);
 

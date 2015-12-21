@@ -9,13 +9,15 @@ import time
 import urlparse
 import string
 import urllib
-import logging
 import json
 import re
 import platform
 
+from mozlog import get_proxy_logger
+
 # directory of this file for use with interpolatePath()
 here = os.path.dirname(os.path.realpath(__file__))
+LOG = get_proxy_logger()
 
 
 def _get_platform():
@@ -51,13 +53,6 @@ class Timer(object):
     def elapsed(self):
         seconds = time.time() - self._start_time
         return time.strftime("%H:%M:%S", time.gmtime(seconds))
-
-
-def startLogger(levelChoice):
-    # declare and define global logger object to send logging messages to
-    log_levels = {'debug': logging.DEBUG, 'info': logging.INFO}
-    logging.basicConfig(format='%(asctime)-15s %(levelname)s : %(message)s',
-                        level=log_levels[levelChoice])
 
 
 class TalosError(Exception):
@@ -179,7 +174,6 @@ def GenerateBrowserCommandLine(browser_path, extra_args, profile_dir,
     if url.find('media_manager.py') != -1:
         command_args = url.split(' ')
 
-    logging.debug("command line: %s", ' '.join(command_args))
     return command_args
 
 

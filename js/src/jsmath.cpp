@@ -797,12 +797,10 @@ GenerateSeed(uint64_t* seedBuffer, size_t length)
 
 #elif defined(XP_UNIX)
     int fd = open("/dev/urandom", O_RDONLY);
-    MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom?!");
     if (fd >= 0) {
         ssize_t size = length * sizeof(seedBuffer[0]);
         ssize_t nread = read(fd, (char *) seedBuffer, size);
         close(fd);
-        MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
         if (nread == size)
             return;
     }

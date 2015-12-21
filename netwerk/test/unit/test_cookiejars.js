@@ -14,6 +14,8 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 var httpserver = new HttpServer();
 
 var cookieSetPath = "/setcookie";
@@ -48,15 +50,7 @@ var i = 0;
 
 function setupChannel(path)
 {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(URL + path,
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
+  var chan = NetUtil.newChannel({uri: URL + path, loadUsingSystemPrincipal: true});
   chan.notificationCallbacks = tests[i].loadContext;
   chan.QueryInterface(Ci.nsIHttpChannel);
   return chan;
@@ -65,7 +59,7 @@ function setupChannel(path)
 function setCookie() {
   var channel = setupChannel(cookieSetPath);
   channel.setRequestHeader("foo-set-cookie", tests[i].cookieName, false);
-  channel.asyncOpen(new ChannelListener(setNextCookie, null), null);
+  channel.asyncOpen2(new ChannelListener(setNextCookie, null));
 }
 
 function setNextCookie(request, data, context) 
@@ -85,7 +79,7 @@ function setNextCookie(request, data, context)
 function checkCookie()
 {
   var channel = setupChannel(cookieCheckPath);
-  channel.asyncOpen(new ChannelListener(completeCheckCookie, null), null);
+  channel.asyncOpen2(new ChannelListener(completeCheckCookie, null));
 }
 
 function completeCheckCookie(request, data, context) {

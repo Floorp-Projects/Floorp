@@ -10,7 +10,6 @@
 
 #include "SkPath.h"
 #include "SkPathOpsPoint.h"
-#include "SkTArray.h"
 
 struct SkDCubicPair {
     const SkDCubic& first() const { return (const SkDCubic&) pts[0]; }
@@ -19,78 +18,133 @@ struct SkDCubicPair {
 };
 
 struct SkDCubic {
+    static const int kPointCount = 4;
+    static const int kPointLast = kPointCount - 1;
+    static const int kMaxIntersections = 9;
+
     enum SearchAxis {
         kXAxis,
         kYAxis
     };
 
-    const SkDPoint& operator[](int n) const { SkASSERT(n >= 0 && n < 4); return fPts[n]; }
-    SkDPoint& operator[](int n) { SkASSERT(n >= 0 && n < 4); return fPts[n]; }
+    bool collapsed() const {
+        return fPts[0].approximatelyEqual(fPts[1]) && fPts[0].approximatelyEqual(fPts[2])
+                && fPts[0].approximatelyEqual(fPts[3]);
+    }
+
+    bool controlsInside() const {
+        SkDVector v01 = fPts[0] - fPts[1];
+        SkDVector v02 = fPts[0] - fPts[2];
+        SkDVector v03 = fPts[0] - fPts[3];
+        SkDVector v13 = fPts[1] - fPts[3];
+        SkDVector v23 = fPts[2] - fPts[3];
+        return v03.dot(v01) > 0 && v03.dot(v02) > 0 && v03.dot(v13) > 0 && v03.dot(v23) > 0;
+    }
+
+    static bool IsConic() { return false; }
+
+    const SkDPoint& operator[](int n) const { SkASSERT(n >= 0 && n < kPointCount); return fPts[n]; }
+    SkDPoint& operator[](int n) { SkASSERT(n >= 0 && n < kPointCount); return fPts[n]; }
 
     void align(int endIndex, int ctrlIndex, SkDPoint* dstPt) const;
     double binarySearch(double min, double max, double axisIntercept, SearchAxis xAxis) const;
     double calcPrecision() const;
     SkDCubicPair chopAt(double t) const;
-    bool clockwise() const;
     static void Coefficients(const double* cubic, double* A, double* B, double* C, double* D);
-    bool controlsContainedByEnds() const;
+    static bool ComplexBreak(const SkPoint pts[4], SkScalar* t);
+    int convexHull(char order[kPointCount]) const;
+
+    void debugInit() {
+        sk_bzero(fPts, sizeof(fPts));
+    }
+
+    void dump() const;  // callable from the debugger when the implementation code is linked in
+    void dumpID(int id) const;
+    void dumpInner() const;
     SkDVector dxdyAtT(double t) const;
     bool endsAreExtremaInXOrY() const;
-    static int FindExtrema(double a, double b, double c, double d, double tValue[2]);
+    static int FindExtrema(const double src[], double tValue[2]);
     int findInflections(double tValues[2]) const;
 
-    static int FindInflections(const SkPoint a[4], double tValues[2]) {
+    static int FindInflections(const SkPoint a[kPointCount], double tValues[2]) {
         SkDCubic cubic;
-        cubic.set(a);
-        return cubic.findInflections(tValues);
+        return cubic.set(a).findInflections(tValues);
     }
 
     int findMaxCurvature(double tValues[]) const;
+    bool hullIntersects(const SkDCubic& c2, bool* isLinear) const;
+    bool hullIntersects(const SkDConic& c, bool* isLinear) const;
+    bool hullIntersects(const SkDQuad& c2, bool* isLinear) const;
+    bool hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const;
     bool isLinear(int startIndex, int endIndex) const;
+    bool monotonicInX() const;
     bool monotonicInY() const;
+    void otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const;
     SkDPoint ptAtT(double t) const;
     static int RootsReal(double A, double B, double C, double D, double t[3]);
     static int RootsValidT(const double A, const double B, const double C, double D, double s[3]);
 
     int searchRoots(double extremes[6], int extrema, double axisIntercept,
                     SearchAxis xAxis, double* validRoots) const;
-    bool serpentine() const;
 
-    void set(const SkPoint pts[4]) {
+    /**
+     *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
+     *  specified horizontal line.
+     */
+    int horizontalIntersect(double yIntercept, double roots[3]) const;
+    /**
+     *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
+     *  specified vertical line.
+     */
+    int verticalIntersect(double xIntercept, double roots[3]) const;
+
+    const SkDCubic& set(const SkPoint pts[kPointCount]) {
         fPts[0] = pts[0];
         fPts[1] = pts[1];
         fPts[2] = pts[2];
         fPts[3] = pts[3];
+        return *this;
     }
 
     SkDCubic subDivide(double t1, double t2) const;
 
-    static SkDCubic SubDivide(const SkPoint a[4], double t1, double t2) {
+    static SkDCubic SubDivide(const SkPoint a[kPointCount], double t1, double t2) {
         SkDCubic cubic;
-        cubic.set(a);
-        return cubic.subDivide(t1, t2);
+        return cubic.set(a).subDivide(t1, t2);
     }
 
     void subDivide(const SkDPoint& a, const SkDPoint& d, double t1, double t2, SkDPoint p[2]) const;
 
-    static void SubDivide(const SkPoint pts[4], const SkDPoint& a, const SkDPoint& d, double t1,
+    static void SubDivide(const SkPoint pts[kPointCount], const SkDPoint& a, const SkDPoint& d, double t1,
                           double t2, SkDPoint p[2]) {
         SkDCubic cubic;
-        cubic.set(pts);
-        cubic.subDivide(a, d, t1, t2, p);
+        cubic.set(pts).subDivide(a, d, t1, t2, p);
     }
 
-    SkDPoint top(double startT, double endT) const;
-    void toQuadraticTs(double precision, SkTArray<double, true>* ts) const;
+    double top(const SkDCubic& dCurve, double startT, double endT, SkDPoint*topPt) const;
     SkDQuad toQuad() const;
-
-    // utilities callable by the user from the debugger when the implementation code is linked in
-    void dump() const;
-    void dumpNumber() const;
 
     static const int gPrecisionUnit;
 
-    SkDPoint fPts[4];
+    SkDPoint fPts[kPointCount];
 };
+
+/* Given the set [0, 1, 2, 3], and two of the four members, compute an XOR mask
+   that computes the other two. Note that:
+
+   one ^ two == 3 for (0, 3), (1, 2)
+   one ^ two <  3 for (0, 1), (0, 2), (1, 3), (2, 3)
+   3 - (one ^ two) is either 0, 1, or 2
+   1 >> (3 - (one ^ two)) is either 0 or 1
+thus:
+   returned == 2 for (0, 3), (1, 2)
+   returned == 3 for (0, 1), (0, 2), (1, 3), (2, 3)
+given that:
+   (0, 3) ^ 2 -> (2, 1)  (1, 2) ^ 2 -> (3, 0)
+   (0, 1) ^ 3 -> (3, 2)  (0, 2) ^ 3 -> (3, 1)  (1, 3) ^ 3 -> (2, 0)  (2, 3) ^ 3 -> (1, 0)
+*/
+inline int other_two(int one, int two) {
+    return 1 >> (3 - (one ^ two)) ^ 3;
+}
 
 #endif

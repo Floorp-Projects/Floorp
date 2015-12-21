@@ -8,17 +8,16 @@
 #include "SkBlitRow.h"
 #include "SkBlitMask.h"
 #include "SkColorPriv.h"
+#include "SkOpts.h"
 #include "SkUtils.h"
 
 #define UNROLL
-
-SkBlitRow::ColorRectProc PlatformColorRectProcFactory();
 
 static void S32_Opaque_BlitRow32(SkPMColor* SK_RESTRICT dst,
                                  const SkPMColor* SK_RESTRICT src,
                                  int count, U8CPU alpha) {
     SkASSERT(255 == alpha);
-    sk_memcpy32(dst, src, count);
+    memcpy(dst, src, count * 4);
 }
 
 static void S32_Blend_BlitRow32(SkPMColor* SK_RESTRICT dst,
@@ -126,124 +125,17 @@ SkBlitRow::Proc32 SkBlitRow::Factory32(unsigned flags) {
     flags &= kFlags32_Mask;
 
     SkBlitRow::Proc32 proc = PlatformProcs32(flags);
-    if (NULL == proc) {
+    if (nullptr == proc) {
         proc = gDefault_Procs32[flags];
     }
     SkASSERT(proc);
     return proc;
 }
 
-SkBlitRow::Proc32 SkBlitRow::ColorProcFactory() {
-    SkBlitRow::ColorProc proc = PlatformColorProc();
-    if (NULL == proc) {
-        proc = Color32;
+void SkBlitRow::Color32(SkPMColor dst[], const SkPMColor src[], int count, SkPMColor color) {
+    switch (SkGetPackedA32(color)) {
+        case   0: memmove(dst, src, count * sizeof(SkPMColor)); return;
+        case 255: sk_memset32(dst, color, count);               return;
     }
-    SkASSERT(proc);
-    return proc;
-}
-
-void SkBlitRow::Color32(SkPMColor* SK_RESTRICT dst,
-                        const SkPMColor* SK_RESTRICT src,
-                        int count, SkPMColor color) {
-    if (count > 0) {
-        if (0 == color) {
-            if (src != dst) {
-                memcpy(dst, src, count * sizeof(SkPMColor));
-            }
-            return;
-        }
-        unsigned colorA = SkGetPackedA32(color);
-        if (255 == colorA) {
-            sk_memset32(dst, color, count);
-        } else {
-            unsigned scale = 256 - SkAlpha255To256(colorA);
-            do {
-                *dst = color + SkAlphaMulQ(*src, scale);
-                src += 1;
-                dst += 1;
-            } while (--count);
-        }
-    }
-}
-
-template <size_t N> void assignLoop(SkPMColor* dst, SkPMColor color) {
-    for (size_t i = 0; i < N; ++i) {
-        *dst++ = color;
-    }
-}
-
-static inline void assignLoop(SkPMColor dst[], SkPMColor color, int count) {
-    while (count >= 4) {
-        *dst++ = color;
-        *dst++ = color;
-        *dst++ = color;
-        *dst++ = color;
-        count -= 4;
-    }
-    if (count >= 2) {
-        *dst++ = color;
-        *dst++ = color;
-        count -= 2;
-    }
-    if (count > 0) {
-        *dst++ = color;
-    }
-}
-
-void SkBlitRow::ColorRect32(SkPMColor* dst, int width, int height,
-                            size_t rowBytes, SkPMColor color) {
-    if (width <= 0 || height <= 0 || 0 == color) {
-        return;
-    }
-
-    // Just made up this value, since I saw it once in a SSE2 file.
-    // We should consider writing some tests to find the optimimal break-point
-    // (or query the Platform proc?)
-    static const int MIN_WIDTH_FOR_SCANLINE_PROC = 32;
-
-    bool isOpaque = (0xFF == SkGetPackedA32(color));
-
-    if (!isOpaque || width >= MIN_WIDTH_FOR_SCANLINE_PROC) {
-        SkBlitRow::ColorProc proc = SkBlitRow::ColorProcFactory();
-        while (--height >= 0) {
-            (*proc)(dst, dst, width, color);
-            dst = (SkPMColor*) ((char*)dst + rowBytes);
-        }
-    } else {
-        switch (width) {
-            case 1:
-                while (--height >= 0) {
-                    assignLoop<1>(dst, color);
-                    dst = (SkPMColor*) ((char*)dst + rowBytes);
-                }
-                break;
-            case 2:
-                while (--height >= 0) {
-                    assignLoop<2>(dst, color);
-                    dst = (SkPMColor*) ((char*)dst + rowBytes);
-                }
-                break;
-            case 3:
-                while (--height >= 0) {
-                    assignLoop<3>(dst, color);
-                    dst = (SkPMColor*) ((char*)dst + rowBytes);
-                }
-                break;
-            default:
-                while (--height >= 0) {
-                    assignLoop(dst, color, width);
-                    dst = (SkPMColor*) ((char*)dst + rowBytes);
-                }
-                break;
-        }
-    }
-}
-
-SkBlitRow::ColorRectProc SkBlitRow::ColorRectProcFactory() {
-    SkBlitRow::ColorRectProc proc = PlatformColorRectProcFactory();
-    if (NULL == proc) {
-        proc = ColorRect32;
-    }
-    SkASSERT(proc);
-    return proc;
+    return SkOpts::blit_row_color32(dst, src, count, color);
 }

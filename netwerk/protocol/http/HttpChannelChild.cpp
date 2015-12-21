@@ -457,6 +457,8 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   mCacheEntryAvailable = cacheEntryAvailable;
   mCacheExpirationTime = cacheExpirationTime;
   mCachedCharset = cachedCharset;
+  mSelfAddr = selfAddr;
+  mPeerAddr = peerAddr;
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
@@ -486,9 +488,6 @@ HttpChannelChild::OnStartRequest(const nsresult& channelStatus,
   mTracingEnabled = false;
 
   DoOnStartRequest(this, mListenerContext);
-
-  mSelfAddr = selfAddr;
-  mPeerAddr = peerAddr;
 }
 
 void
@@ -1991,36 +1990,6 @@ HttpChannelChild::SetupFallbackChannel(const char *aFallbackKey)
   DROP_DEAD();
 }
 
-// The next four _should_ be implemented, but we need to figure out how
-// to transfer the data from the chrome process first.
-
-NS_IMETHODIMP
-HttpChannelChild::GetRemoteAddress(nsACString & _result)
-{
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetRemotePort(int32_t * _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetLocalAddress(nsACString & _result)
-{
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-NS_IMETHODIMP
-HttpChannelChild::GetLocalPort(int32_t * _result)
-{
-  NS_ENSURE_ARG_POINTER(_result);
-  return NS_ERROR_NOT_AVAILABLE;
-}
-
-
 //-----------------------------------------------------------------------------
 // HttpChannelChild::nsICacheInfoChannel
 //-----------------------------------------------------------------------------
@@ -2566,6 +2535,34 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
   if (warner) {
     warner->IssueWarning(warning, asError);
   }
+  return true;
+}
+
+bool
+HttpChannelChild::RecvReportRedirectionError()
+{
+  nsCOMPtr<nsIURI> uri;
+  GetURI(getter_AddRefs(uri));
+  nsCString spec;
+  uri->GetSpec(spec);
+  nsString wideSpec = NS_ConvertUTF8toUTF16(spec);
+
+  nsCOMPtr<nsIDocument> doc;
+  GetCallback(doc);
+
+  nsString msg = NS_LITERAL_STRING("Failed to load '");
+  msg.Append(wideSpec);
+  msg.AppendLiteral("'. A Service Worker for a multiprocess window encountered a redirection ");
+  msg.AppendLiteral("response, which is currently unsupported and tracked in bug 1219469.");
+  nsContentUtils::ReportToConsoleNonLocalized(msg,
+                                              nsIScriptError::errorFlag,
+                                              NS_LITERAL_CSTRING("Service Worker Interception"),
+                                              doc,
+                                              uri,
+                                              EmptyString(),
+                                              0,
+                                              0);
+  Cancel(NS_ERROR_NOT_AVAILABLE);
   return true;
 }
 

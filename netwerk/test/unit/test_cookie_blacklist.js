@@ -9,6 +9,7 @@ function run_test() {
                         .getService(Ci.nsICookieService);
   cookieService.setCookieStringFromHttp(cookieURI, cookieURI, null, "BadCookie1=\x01", null, null);
   cookieService.setCookieStringFromHttp(cookieURI, cookieURI, null, "BadCookie2=\v", null, null);
+  cookieService.setCookieStringFromHttp(cookieURI, cookieURI, null, "Bad\x07Name=illegal", null, null);
   cookieService.setCookieStringFromHttp(cookieURI, cookieURI, null, GOOD_COOKIE, null, null);
 
   var storedCookie = cookieService.getCookieString(cookieURI, null);

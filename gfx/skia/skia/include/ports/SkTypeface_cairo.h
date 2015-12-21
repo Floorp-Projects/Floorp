@@ -5,7 +5,7 @@
 
 #include "SkTypeface.h"
 
-SK_API extern SkTypeface* SkCreateTypefaceFromCairoFont(cairo_font_face_t* fontFace, SkTypeface::Style style, bool isFixedWidth);
+SK_API extern SkTypeface* SkCreateTypefaceFromCairoFont(cairo_font_face_t* fontFace, const SkFontStyle& style, bool isFixedWidth);
 
 #endif
 

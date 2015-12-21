@@ -183,7 +183,7 @@ class LAllocation : public TempObject
         return bits_;
     }
 
-    const char* toString() const;
+    UniqueChars toString() const;
     bool aliases(const LAllocation& other) const;
     void dump() const;
 
@@ -577,7 +577,7 @@ class LDefinition
         }
     }
 
-    const char* toString() const;
+    UniqueChars toString() const;
 
     void dump() const;
 };

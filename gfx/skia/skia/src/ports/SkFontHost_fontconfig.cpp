@@ -8,9 +8,6 @@
 #include "SkFontConfigInterface.h"
 #include "SkFontConfigTypeface.h"
 #include "SkFontDescriptor.h"
-#include "SkFontHost.h"
-#include "SkFontHost_FreeType_common.h"
-#include "SkFontStream.h"
 #include "SkStream.h"
 #include "SkTypeface.h"
 #include "SkTypefaceCache.h"
@@ -59,150 +56,102 @@ SkFontConfigInterface* SkFontHost_fontconfig_ref_global() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-struct FindRec {
-    FindRec(const char* name, SkTypeface::Style style)
+struct NameStyle {
+    NameStyle(const char* name, const SkFontStyle& style)
         : fFamilyName(name)  // don't need to make a deep copy
         , fStyle(style) {}
 
     const char* fFamilyName;
-    SkTypeface::Style fStyle;
+    SkFontStyle fStyle;
 };
 
-static bool find_proc(SkTypeface* face, SkTypeface::Style style, void* ctx) {
-    FontConfigTypeface* fci = (FontConfigTypeface*)face;
-    const FindRec* rec = (const FindRec*)ctx;
+static bool find_by_NameStyle(SkTypeface* cachedTypeface,
+                              const SkFontStyle& cachedStyle,
+                              void* ctx)
+{
+    FontConfigTypeface* cachedFCTypeface = static_cast<FontConfigTypeface*>(cachedTypeface);
+    const NameStyle* nameStyle = static_cast<const NameStyle*>(ctx);
 
-    return rec->fStyle == style && fci->isFamilyName(rec->fFamilyName);
+    return nameStyle->fStyle == cachedStyle &&
+           cachedFCTypeface->isFamilyName(nameStyle->fFamilyName);
 }
 
-SkTypeface* FontConfigTypeface::LegacyCreateTypeface(
-                const SkTypeface* familyFace,
-                const char familyName[],
-                SkTypeface::Style style) {
+static bool find_by_FontIdentity(SkTypeface* cachedTypeface, const SkFontStyle&, void* ctx) {
+    typedef SkFontConfigInterface::FontIdentity FontIdentity;
+    FontConfigTypeface* cachedFCTypeface = static_cast<FontConfigTypeface*>(cachedTypeface);
+    FontIdentity* indentity = static_cast<FontIdentity*>(ctx);
+
+    return cachedFCTypeface->getIdentity() == *indentity;
+}
+
+SkTypeface* FontConfigTypeface::LegacyCreateTypeface(const char familyName[],
+                                                     SkTypeface::Style style)
+{
     SkAutoTUnref<SkFontConfigInterface> fci(RefFCI());
-    if (NULL == fci.get()) {
-        return NULL;
+    if (nullptr == fci.get()) {
+        return nullptr;
     }
 
-    if (familyFace) {
-        FontConfigTypeface* fct = (FontConfigTypeface*)familyFace;
-        familyName = fct->getFamilyName();
-    }
-
-    FindRec rec(familyName, style);
-    SkTypeface* face = SkTypefaceCache::FindByProcAndRef(find_proc, &rec);
+    // Check if requested NameStyle is in the NameStyle cache.
+    SkFontStyle requestedStyle(style);
+    NameStyle nameStyle(familyName, requestedStyle);
+    SkTypeface* face = SkTypefaceCache::FindByProcAndRef(find_by_NameStyle, &nameStyle);
     if (face) {
-//        SkDebugf("found cached face <%s> <%s> %p [%d]\n", familyName, ((FontConfigTypeface*)face)->getFamilyName(), face, face->getRefCnt());
+        //SkDebugf("found cached face <%s> <%s> %p [%d]\n",
+        //         familyName, ((FontConfigTypeface*)face)->getFamilyName(),
+        //         face, face->getRefCnt());
         return face;
     }
 
     SkFontConfigInterface::FontIdentity indentity;
-    SkString                            outFamilyName;
-    SkTypeface::Style                   outStyle;
-
-    if (!fci->matchFamilyName(familyName, style,
-                              &indentity, &outFamilyName, &outStyle)) {
-        return NULL;
+    SkString outFamilyName;
+    SkTypeface::Style outStyle;
+    if (!fci->matchFamilyName(familyName, style, &indentity, &outFamilyName, &outStyle)) {
+        return nullptr;
     }
 
-    // check if we, in fact, already have this. perhaps fontconfig aliased the
-    // requested name to some other name we actually have...
-    rec.fFamilyName = outFamilyName.c_str();
-    rec.fStyle = outStyle;
-    face = SkTypefaceCache::FindByProcAndRef(find_proc, &rec);
-    if (face) {
-        return face;
+    // Check if a typeface with this FontIdentity is already in the FontIdentity cache.
+    face = SkTypefaceCache::FindByProcAndRef(find_by_FontIdentity, &indentity);
+    if (!face) {
+        face = FontConfigTypeface::Create(SkFontStyle(outStyle), indentity, outFamilyName);
+        // Add this FontIdentity to the FontIdentity cache.
+        SkTypefaceCache::Add(face, requestedStyle);
     }
+    // TODO: Ensure requested NameStyle and resolved NameStyle are both in the NameStyle cache.
 
-    face = FontConfigTypeface::Create(outStyle, indentity, outFamilyName);
-    SkTypefaceCache::Add(face, style);
-//    SkDebugf("add face <%s> <%s> %p [%d]\n", familyName, outFamilyName.c_str(), face, face->getRefCnt());
+    //SkDebugf("add face <%s> <%s> %p [%d]\n",
+    //         familyName, outFamilyName.c_str(),
+    //         face, face->getRefCnt());
     return face;
 }
-
-#ifdef SK_FONTHOST_DOES_NOT_USE_FONTMGR
-
-SkTypeface* SkFontHost::CreateTypeface(const SkTypeface* familyFace,
-                                       const char familyName[],
-                                       SkTypeface::Style style) {
-    return FontConfigTypeface::LegacyCreateTypeface(familyFace, familyName,
-                                                    style);
-}
-
-SkTypeface* SkFontHost::CreateTypefaceFromStream(SkStream* stream) {
-    if (!stream) {
-        return NULL;
-    }
-    const size_t length = stream->getLength();
-    if (!length) {
-        return NULL;
-    }
-    if (length >= 1024 * 1024 * 1024) {
-        return NULL;  // don't accept too large fonts (>= 1GB) for safety.
-    }
-
-    // ask freetype for reported style and if it is a fixed width font
-    SkTypeface::Style style = SkTypeface::kNormal;
-    bool isFixedWidth = false;
-    if (!SkTypeface_FreeType::ScanFont(stream, 0, NULL, &style, &isFixedWidth)) {
-        return NULL;
-    }
-
-    SkTypeface* face = SkNEW_ARGS(FontConfigTypeface, (style, isFixedWidth, stream));
-    return face;
-}
-
-SkTypeface* SkFontHost::CreateTypefaceFromFile(const char path[]) {
-    SkAutoTUnref<SkStream> stream(SkStream::NewFromFile(path));
-    return stream.get() ? CreateTypefaceFromStream(stream) : NULL;
-}
-
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkStream* FontConfigTypeface::onOpenStream(int* ttcIndex) const {
-    SkStream* stream = this->getLocalStream();
+SkStreamAsset* FontConfigTypeface::onOpenStream(int* ttcIndex) const {
+    SkStreamAsset* stream = this->getLocalStream();
     if (stream) {
-        // should have been provided by CreateFromStream()
+        // TODO: should have been provided by CreateFromStream()
         *ttcIndex = 0;
-
-        SkAutoTUnref<SkStream> dupStream(stream->duplicate());
-        if (dupStream) {
-            return dupStream.detach();
-        }
-
-        // TODO: update interface use, remove the following code in this block.
-        size_t length = stream->getLength();
-
-        const void* memory = stream->getMemoryBase();
-        if (NULL != memory) {
-            return new SkMemoryStream(memory, length, true);
-        }
-
-        SkAutoTMalloc<uint8_t> allocMemory(length);
-        stream->rewind();
-        if (length == stream->read(allocMemory.get(), length)) {
-            SkAutoTUnref<SkMemoryStream> copyStream(new SkMemoryStream());
-            copyStream->setMemoryOwned(allocMemory.detach(), length);
-            return copyStream.detach();
-        }
-
-        stream->rewind();
-        stream->ref();
-    } else {
-        SkAutoTUnref<SkFontConfigInterface> fci(RefFCI());
-        if (NULL == fci.get()) {
-            return NULL;
-        }
-        stream = fci->openStream(this->getIdentity());
-        *ttcIndex = this->getIdentity().fTTCIndex;
+        return stream->duplicate();
     }
-    return stream;
+
+    SkAutoTUnref<SkFontConfigInterface> fci(RefFCI());
+    if (nullptr == fci.get()) {
+        return nullptr;
+    }
+
+    *ttcIndex = this->getIdentity().fTTCIndex;
+    return fci->openStream(this->getIdentity());
+}
+
+void FontConfigTypeface::onGetFamilyName(SkString* familyName) const {
+    *familyName = fFamilyName;
 }
 
 void FontConfigTypeface::onGetFontDescriptor(SkFontDescriptor* desc,
                                              bool* isLocalStream) const {
-    desc->setFamilyName(this->getFamilyName());
+    SkString name;
+    this->getFamilyName(&name);
+    desc->setFamilyName(name.c_str());
     *isLocalStream = SkToBool(this->getLocalStream());
 }

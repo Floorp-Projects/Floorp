@@ -31,7 +31,7 @@ size_t SkCopyStreamToStorage(SkAutoMalloc* storage, SkStream* stream);
  *  @param stream SkStream to be copied into data.
  *  @return SkData* The resulting SkData after the copy. This data
  *      will have a ref count of one upon return and belongs to the
- *      caller. Returns NULL on failure.
+ *      caller. Returns nullptr on failure.
  */
 SkData *SkCopyStreamToData(SkStream* stream);
 
@@ -42,5 +42,11 @@ SkData *SkCopyStreamToData(SkStream* stream);
  *  input stream is left in an indeterminate state.
  */
 SkStreamRewindable* SkStreamRewindableFromSkStream(SkStream* stream);
+
+/**
+ *  Copies the input stream from the current position to the end.
+ *  Does not rewind the input stream.
+ */
+bool SkStreamCopy(SkWStream* out, SkStream* input);
 
 #endif  // SkStreamPriv_DEFINED

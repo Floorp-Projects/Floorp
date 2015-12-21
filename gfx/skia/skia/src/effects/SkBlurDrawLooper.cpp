@@ -36,7 +36,7 @@ void SkBlurDrawLooper::initEffects() {
 
         fBlur = SkBlurMaskFilter::Create(kNormal_SkBlurStyle, fSigma, flags);
     } else {
-        fBlur = NULL;
+        fBlur = nullptr;
     }
 
     if (fBlurFlags & kOverrideColor_BlurFlag) {
@@ -47,7 +47,7 @@ void SkBlurDrawLooper::initEffects() {
         fColorFilter = SkColorFilter::CreateModeFilter(opaqueColor,
                                                        SkXfermode::kSrcIn_Mode);
     } else {
-        fColorFilter = NULL;
+        fColorFilter = nullptr;
     }
 }
 
@@ -62,23 +62,20 @@ void SkBlurDrawLooper::init(SkScalar sigma, SkScalar dx, SkScalar dy,
     this->initEffects();
 }
 
-SkBlurDrawLooper::SkBlurDrawLooper(SkReadBuffer& buffer) : INHERITED(buffer) {
-
-    fSigma = buffer.readScalar();
-    fDx = buffer.readScalar();
-    fDy = buffer.readScalar();
-    fBlurColor = buffer.readColor();
-    fBlurFlags = buffer.readUInt() & kAll_BlurFlag;
-
-    this->initEffects();
+SkFlattenable* SkBlurDrawLooper::CreateProc(SkReadBuffer& buffer) {
+    const SkColor color = buffer.readColor();
+    const SkScalar sigma = buffer.readScalar();
+    const SkScalar dx = buffer.readScalar();
+    const SkScalar dy = buffer.readScalar();
+    const uint32_t flags = buffer.read32();
+    return Create(color, sigma, dx, dy, flags);
 }
 
 void SkBlurDrawLooper::flatten(SkWriteBuffer& buffer) const {
-    this->INHERITED::flatten(buffer);
+    buffer.writeColor(fBlurColor);
     buffer.writeScalar(fSigma);
     buffer.writeScalar(fDx);
     buffer.writeScalar(fDy);
-    buffer.writeColor(fBlurColor);
     buffer.write32(fBlurFlags);
 }
 
@@ -106,7 +103,7 @@ bool SkBlurDrawLooper::asABlurShadow(BlurShadowRec* rec) const {
 ////////////////////////////////////////////////////////////////////////////////////////
 
 SkDrawLooper::Context* SkBlurDrawLooper::createContext(SkCanvas*, void* storage) const {
-    return SkNEW_PLACEMENT_ARGS(storage, BlurDrawLooperContext, (this));
+    return new (storage) BlurDrawLooperContext(this);
 }
 
 SkBlurDrawLooper::BlurDrawLooperContext::BlurDrawLooperContext(

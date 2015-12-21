@@ -7,15 +7,17 @@
 
 import filter
 import json
-import logging
 import post_file
 import time
 import utils
 
+from StringIO import StringIO
+from mozlog import get_proxy_logger
+
 # NOTE: we have a circular dependecy with output.py when we import results
 import results as TalosResults
 
-from StringIO import StringIO
+LOG = get_proxy_logger()
 
 
 def filesizeformat(bytes):
@@ -108,14 +110,14 @@ class Output(object):
     def JS_Metric(cls, val_list):
         """v8 benchmark score"""
         results = [i for i, j in val_list]
-        logging.info("javascript benchmark")
+        LOG.info("javascript benchmark")
         return sum(results)
 
     @classmethod
     def CanvasMark_Metric(cls, val_list):
         """CanvasMark benchmark score (NOTE: this is identical to JS_Metric)"""
         results = [i for i, j in val_list]
-        logging.info("CanvasMark benchmark")
+        LOG.info("CanvasMark benchmark")
         return sum(results)
 
 
@@ -150,7 +152,7 @@ class GraphserverOutput(Output):
         )
 
         for test in self.results.results:
-            logging.debug("Working with test: %s", test.name())
+            LOG.debug("Working with test: %s" % test.name())
 
             # get full name of test
             testname = test.name()
@@ -161,7 +163,7 @@ class GraphserverOutput(Output):
                 # /run_tests.py#l176
                 testname += test.extension()
 
-            logging.debug("Generating results file: %s" % test.name())
+            LOG.debug("Generating results file: %s" % test.name())
 
             # HACK: when running xperf, we upload xperf counters to the graph
             # server but we do not want to
@@ -184,7 +186,7 @@ class GraphserverOutput(Output):
                                              self.shortName(counter_type))
                     if not values:
                         # failed to collect any data for this counter
-                        logging.error(
+                        LOG.error(
                             "No results collected for: " + counterName
                         )
 # NOTE: we are not going to enforce this warning for now as this happens too
@@ -218,7 +220,7 @@ class GraphserverOutput(Output):
                     info['testname'] = counterName
 
                     # append the counter string
-                    logging.info(
+                    LOG.info(
                         "Generating results file: %s" % counterName)
                     result_strings.append(self.construct_results(vals, **info))
 
@@ -276,7 +278,7 @@ class GraphserverOutput(Output):
                 try:
                     buffer.write("%d,%.2f,%s\n" % (i, float(val), page))
                 except ValueError:
-                    logging.info(
+                    LOG.info(
                         "We expected a numeric value and recieved '%s' instead"
                         % val
                     )
@@ -292,7 +294,7 @@ class GraphserverOutput(Output):
             if line.find("RETURN\t") > -1:
                 line = line.replace("RETURN\t", "")
                 links += line + '\n'
-            logging.debug("process_Request line: %s", line)
+            LOG.debug("process_Request line: %s" % line)
         if not links:
             raise utils.TalosError("send failed, graph server says:\n%s"
                                    % post)
@@ -308,9 +310,10 @@ class GraphserverOutput(Output):
             times = 0
             msg = ""
             while times < self.retries:
-                logging.info(
-                    "Posting result %d of %d to %s://%s%s, attempt %d",
-                    index, len(results), scheme, server, path, times)
+                LOG.info(
+                    "Posting result %d of %d to %s://%s%s, attempt %d" % (
+                        index, len(results), scheme, server, path, times)
+                )
                 try:
                     links.append(self.process_Request(
                         post_file.post_multipart(server, path,
@@ -404,7 +407,7 @@ class PerfherderOutput(Output):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        logging.info("PERFHERDER_DATA: %s" % json.dumps(results))
+        LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
         if results_scheme in ('file'):
             json.dump(results, file(results_path, 'w'), indent=2,
                       sort_keys=True)

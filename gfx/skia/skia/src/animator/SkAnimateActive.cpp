@@ -31,7 +31,7 @@ void SkActive::init()
     fState.setCount(animators);
     int index;
     for (index = 0; index < animators; index++)
-        fInterpolators[index] = SkNEW(SkOperandInterpolator);
+        fInterpolators[index] = new SkOperandInterpolator;
     initState(&fApply, 0);
 //  for (index = 0; index < animators; index++)
 //      fState[index].bumpSave();
@@ -65,7 +65,7 @@ void SkActive::append(SkApply* apply) {
     fInterpolators.setCount(total);
     memset(&fInterpolators.begin()[oldCount], 0, newCount * sizeof(SkOperandInterpolator*));
     for (index = oldCount; index < total; index++)
-        fInterpolators[index] = SkNEW(SkOperandInterpolator);
+        fInterpolators[index] = new SkOperandInterpolator;
     fAnimators.setCount(total);
     memcpy(&fAnimators[oldCount], animates.begin(), sizeof(fAnimators[0]) *
         newCount);
@@ -152,7 +152,7 @@ void SkActive::calcDurations(int index)
 //      SkScriptValue value;
 //      value.fOperand = animate->getValues()[entries - 1];
 //      value.fType = animate->getValuesType();
-//      bool result = SkScriptEngine::ConvertTo(NULL, SkType_Int, &value);
+//      bool result = SkScriptEngine::ConvertTo(nullptr, SkType_Int, &value);
 //      SkASSERT(result);
 //      duration = value.fOperand.fS32 * SK_MSec1;
 //      break;
@@ -164,7 +164,7 @@ void SkActive::calcDurations(int index)
         fMaxTime = maxTime;
 }
 
-void SkActive::create(SkDrawable* drawable, SkMSec time) {
+void SkActive::create(SkADrawable* drawable, SkMSec time) {
     fApply.fLastTime = time;
     fApply.refresh(fMaker);
     for (int index = 0; index < fAnimators.count(); index++) {
@@ -174,7 +174,7 @@ void SkActive::create(SkDrawable* drawable, SkMSec time) {
         if (animate->formula.size() > 0) {
             SkTDOperandArray values;
             values.setCount(count);
-            SkDEBUGCODE(bool success = ) animate->fFieldInfo->setValue(fMaker, &values, 0, 0, NULL,
+            SkDEBUGCODE(bool success = ) animate->fFieldInfo->setValue(fMaker, &values, 0, 0, nullptr,
                 animate->getValuesType(), animate->formula);
             SkASSERT(success);
             fApply.applyValues(index, values.begin(), count, animate->getValuesType(), time);
@@ -191,7 +191,7 @@ void SkActive::create(SkDrawable* drawable, SkMSec time) {
 bool SkActive::immediate(bool enable) {
     SkMSec time = 0;
     bool result = false;
-    SkDrawable* drawable = fApply.scope;
+    SkADrawable* drawable = fApply.scope;
     SkMSec final = fMaxTime;
     do {
         bool applied = fAnimators.count() == 0;
@@ -212,7 +212,7 @@ bool SkActive::immediate(bool enable) {
             if (animate->formula.size() > 0) {
                 SkTDOperandArray values;
                 values.setCount(count);
-                SkDEBUGCODE(bool success = ) animate->fFieldInfo->setValue(fMaker, &values, 0, 0, NULL,
+                SkDEBUGCODE(bool success = ) animate->fFieldInfo->setValue(fMaker, &values, 0, 0, nullptr,
                     animate->getValuesType(), animate->formula);
                 SkASSERT(success);
                 fApply.applyValues(index, values.begin(), count, animate->getValuesType(), time);
@@ -368,7 +368,7 @@ void SkActive::saveInterpolatorValues(int index) {
 }
 
 void SkActive::setInterpolator(int index, SkOperand* from) {
-    if (from == NULL) // legitimate for set string
+    if (from == nullptr) // legitimate for set string
         return;
     SkAnimateBase* animate = fAnimators[index];
     int entries = animate->entries();

@@ -8,7 +8,11 @@ try {
         }
     }(), function() {}))
 } catch (e) {};
+var log = "";
+evaluate(`
 try {
     function x() {}
     assertEq(String(b), "function () {}");
-} catch (e) { throw (e); }
+} catch (e) { log += "e"; }
+`);
+assertEq(log, "e");

@@ -17,7 +17,7 @@ class SkPathMeasure;
 class SK_API Sk1DPathEffect : public SkPathEffect {
 public:
     virtual bool filterPath(SkPath* dst, const SkPath& src,
-                            SkStrokeRec*, const SkRect*) const SK_OVERRIDE;
+                            SkStrokeRec*, const SkRect*) const override;
 
 protected:
     /** Called at the start of each contour, returns the initial offset
@@ -30,6 +30,10 @@ protected:
         contour is done.
     */
     virtual SkScalar next(SkPath* dst, SkScalar dist, SkPathMeasure&) const = 0;
+
+#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+    bool exposedInAndroidJavaAPI() const override { return true; }
+#endif
 
 private:
     typedef SkPathEffect INHERITED;
@@ -54,22 +58,22 @@ public:
     */
     static SkPath1DPathEffect* Create(const SkPath& path, SkScalar advance, SkScalar phase,
                                       Style style) {
-        return SkNEW_ARGS(SkPath1DPathEffect, (path, advance, phase, style));
+        return new SkPath1DPathEffect(path, advance, phase, style);
     }
 
     virtual bool filterPath(SkPath*, const SkPath&,
-                            SkStrokeRec*, const SkRect*) const SK_OVERRIDE;
+                            SkStrokeRec*, const SkRect*) const override;
 
+    SK_TO_STRING_OVERRIDE()
     SK_DECLARE_PUBLIC_FLATTENABLE_DESERIALIZATION_PROCS(SkPath1DPathEffect)
 
 protected:
     SkPath1DPathEffect(const SkPath& path, SkScalar advance, SkScalar phase, Style);
-    explicit SkPath1DPathEffect(SkReadBuffer& buffer);
-    virtual void flatten(SkWriteBuffer&) const SK_OVERRIDE;
+    void flatten(SkWriteBuffer&) const override;
 
     // overrides from Sk1DPathEffect
-    virtual SkScalar begin(SkScalar contourLength) const SK_OVERRIDE;
-    virtual SkScalar next(SkPath*, SkScalar, SkPathMeasure&) const SK_OVERRIDE;
+    SkScalar begin(SkScalar contourLength) const override;
+    SkScalar next(SkPath*, SkScalar, SkPathMeasure&) const override;
 
 private:
     SkPath      fPath;          // copied from constructor

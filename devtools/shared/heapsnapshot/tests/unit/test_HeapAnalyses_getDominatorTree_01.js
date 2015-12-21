@@ -7,6 +7,14 @@ function run_test() {
   run_next_test();
 }
 
+const breakdown = {
+  by: "coarseType",
+  objects: { by: "count", count: true, bytes: true },
+  scripts: { by: "count", count: true, bytes: true },
+  strings: { by: "count", count: true, bytes: true },
+  other: { by: "count", count: true, bytes: true },
+};
+
 add_task(function* () {
   const client = new HeapAnalysesClient();
 
@@ -18,7 +26,10 @@ add_task(function* () {
   equal(typeof dominatorTreeId, "number",
         "should get a dominator tree id, and it should be a number");
 
-  const partialTree = yield client.getDominatorTree({ dominatorTreeId });
+  const partialTree = yield client.getDominatorTree({
+    dominatorTreeId,
+    breakdown
+  });
   ok(partialTree, "Should get a partial tree");
   equal(typeof partialTree, "object",
         "partialTree should be an object");
