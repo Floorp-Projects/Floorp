@@ -23,6 +23,8 @@ public class DownloadContent {
     private static final String KEY_KIND = "kind";
     private static final String KEY_SIZE = "size";
     private static final String KEY_STATE = "state";
+    private static final String KEY_FAILURES = "failures";
+    private static final String KEY_LAST_FAILURE_TYPE = "last_failure_type";
 
     @IntDef({STATE_NONE, STATE_SCHEDULED, STATE_DOWNLOADED, STATE_FAILED, STATE_IGNORED})
     public @interface State {}
@@ -50,6 +52,8 @@ public class DownloadContent {
     private final String kind;
     private final long size;
     private int state;
+    private int failures;
+    private int lastFailureType;
 
     private DownloadContent(@NonNull String id, @NonNull String location, @NonNull String filename,
                             @NonNull String checksum, @NonNull String downloadChecksum, @NonNull long lastModified,
@@ -121,6 +125,24 @@ public class DownloadContent {
         return TYPE_ASSET_ARCHIVE.equals(type);
     }
 
+    /* package-private */ int getFailures() {
+        return failures;
+    }
+
+    /* package-private */ void rememberFailure(int failureType) {
+        if (lastFailureType != failureType) {
+            lastFailureType = failureType;
+            failures = 1;
+        } else {
+            failures++;
+        }
+    }
+
+    /* package-private */ void resetFailures() {
+        failures = 0;
+        lastFailureType = 0;
+    }
+
     public static DownloadContent fromJSON(JSONObject object) throws JSONException {
         return new Builder()
                 .setId(object.getString(KEY_ID))
@@ -133,6 +155,7 @@ public class DownloadContent {
                 .setKind(object.getString(KEY_KIND))
                 .setSize(object.getLong(KEY_SIZE))
                 .setState(object.getInt(KEY_STATE))
+                .setFailures(object.optInt(KEY_FAILURES), object.optInt(KEY_LAST_FAILURE_TYPE))
                 .build();
     }
 
@@ -148,6 +171,12 @@ public class DownloadContent {
         object.put(KEY_KIND, kind);
         object.put(KEY_SIZE, size);
         object.put(KEY_STATE, state);
+
+        if (failures > 0) {
+            object.put(KEY_FAILURES, failures);
+            object.put(KEY_LAST_FAILURE_TYPE, lastFailureType);
+        }
+
         return object;
     }
 
@@ -166,11 +195,16 @@ public class DownloadContent {
         private String kind;
         private long size;
         private int state;
+        private int failures;
+        private int lastFailureType;
 
         public DownloadContent build() {
             DownloadContent content = new DownloadContent(id, location, filename, checksum, downloadChecksum,
                                                           lastModified, type, kind, size);
             content.setState(state);
+            content.failures = failures;
+            content.lastFailureType = lastFailureType;
+
             return content;
         }
 
@@ -221,6 +255,13 @@ public class DownloadContent {
 
         public Builder setState(int state) {
             this.state = state;
+            return this;
+        }
+
+        /* package-private */ Builder setFailures(int failures, int lastFailureType) {
+            this.failures = failures;
+            this.lastFailureType = lastFailureType;
+
             return this;
         }
     }

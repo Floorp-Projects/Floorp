@@ -426,6 +426,83 @@ public class TestDownloadAction {
         Assert.assertTrue(action.hasEnoughDiskSpace(content, destinationFile, temporaryFile));
     }
 
+    /**
+     * Scenario: Download failed with network I/O error.
+     *
+     * Verify that:
+     *  * Error is not counted as failure
+     */
+    @Test
+    public void testNetworkErrorIsNotCountedAsFailure() throws Exception {
+        DownloadContent content = createFont();
+        DownloadContentCatalog catalog = mockCatalogWithScheduledDownloads(content);
+
+        DownloadAction action = spy(new DownloadAction(null));
+        doReturn(true).when(action).isConnectedToNetwork(RuntimeEnvironment.application);
+        doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
+        doReturn(mockNotExistingFile()).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
+        doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
+        doReturn(true).when(action).hasEnoughDiskSpace(eq(content), any(File.class), any(File.class));
+
+        HttpClient client = mock(HttpClient.class);
+        doThrow(IOException.class).when(client).execute(any(HttpUriRequest.class));
+        doReturn(client).when(action).buildHttpClient();
+
+        action.perform(RuntimeEnvironment.application, catalog);
+
+        verify(catalog, never()).rememberFailure(eq(content), anyInt());
+        verify(catalog, never()).markAsDownloaded(content);
+    }
+
+    /**
+     * Scenario: Disk IO Error when extracting file.
+     *
+     * Verify that:
+     * * Error is counted as failure
+     * * After multiple errors the content is marked as permanently failed
+     */
+    @Test
+    public void testDiskIOErrorIsCountedAsFailure() throws Exception {
+        DownloadContent content = createFont();
+        DownloadContentCatalog catalog = mockCatalogWithScheduledDownloads(content);
+        doCallRealMethod().when(catalog).rememberFailure(eq(content), anyInt());
+        doCallRealMethod().when(catalog).markAsPermanentlyFailed(content);
+
+        Assert.assertEquals(DownloadContent.STATE_NONE, content.getState());
+
+        DownloadAction action = spy(new DownloadAction(null));
+        doReturn(true).when(action).isConnectedToNetwork(RuntimeEnvironment.application);
+        doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
+        doReturn(mockNotExistingFile()).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
+        doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
+        doReturn(true).when(action).hasEnoughDiskSpace(eq(content), any(File.class), any(File.class));
+        doNothing().when(action).download(any(HttpClient.class), anyString(), any(File.class));
+        doReturn(true).when(action).verify(any(File.class), anyString());
+
+        File destinationFile = mock(File.class);
+        doReturn(false).when(destinationFile).exists();
+        File parentFile = mock(File.class);
+        doReturn(false).when(parentFile).mkdirs();
+        doReturn(false).when(parentFile).exists();
+        doReturn(parentFile).when(destinationFile).getParentFile();
+        doReturn(destinationFile).when(action).getDestinationFile(RuntimeEnvironment.application, content);
+
+        for (int i = 0; i < 10; i++) {
+            action.perform(RuntimeEnvironment.application, catalog);
+
+            Assert.assertEquals(DownloadContent.STATE_NONE, content.getState());
+        }
+
+        action.perform(RuntimeEnvironment.application, catalog);
+
+        Assert.assertEquals(DownloadContent.STATE_FAILED, content.getState());
+        verify(catalog, times(11)).rememberFailure(eq(content), anyInt());
+    }
+
+    private DownloadContent createFont() {
+        return createFontWithSize(102400L);
+    }
+
     private DownloadContent createFontWithSize(long size) {
         return new DownloadContent.Builder()
                 .setKind(DownloadContent.KIND_FONT)
