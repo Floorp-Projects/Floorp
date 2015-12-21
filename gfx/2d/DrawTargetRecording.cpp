@@ -12,6 +12,7 @@
 #include "Tools.h"
 #include "Filters.h"
 #include "mozilla/UniquePtr.h"
+#include "RecordingTypes.h"
 
 namespace mozilla {
 namespace gfx {
