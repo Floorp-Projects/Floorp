@@ -105,6 +105,11 @@ UnboxedLayout::makeConstructorCode(JSContext* cx, HandleObjectGroup group)
     newKindReg = IntArgReg1;
 #endif
 
+#ifdef JS_CODEGEN_ARM64
+    // ARM64 communicates stack address via sp, but uses a pseudo-sp for addressing.
+    masm.initStackPtr();
+#endif
+
     MOZ_ASSERT(propertiesReg.volatile_());
     MOZ_ASSERT(newKindReg.volatile_());
 
