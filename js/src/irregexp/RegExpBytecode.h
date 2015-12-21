@@ -90,7 +90,8 @@ V(CHECK_AT_START,    43, 8)   /* bc8 pad24 addr32                           */ \
 V(CHECK_NOT_AT_START, 44, 8)  /* bc8 pad24 addr32                           */ \
 V(CHECK_GREEDY,      45, 8)   /* bc8 pad24 addr32                           */ \
 V(ADVANCE_CP_AND_GOTO, 46, 8) /* bc8 offset24 addr32                        */ \
-V(SET_CURRENT_POSITION_FROM_END, 47, 4) /* bc8 idx24                        */
+V(SET_CURRENT_POSITION_FROM_END, 47, 4) /* bc8 idx24                        */ \
+V(CHECK_NOT_BACK_REF_NO_CASE_UNICODE, 48, 8) /* bc8 reg_idx24 addr32        */
 
 #define DECLARE_BYTECODES(name, code, length) \
   static const int BC_##name = code;

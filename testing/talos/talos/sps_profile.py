@@ -8,13 +8,15 @@ module to handle sps profilling.
 
 import os
 import tempfile
-import logging
 import zipfile
 import json
-
 import mozfile
 
+from mozlog import get_proxy_logger
+
 from talos.profiler import symbolication, sps
+
+LOG = get_proxy_logger()
 
 
 class SpsProfile(object):
@@ -42,7 +44,7 @@ class SpsProfile(object):
             self.upload_dir,
             "profile_{0}.sps.zip".format(test_config['name'])
         )
-        logging.info("Clearing archive {0}".format(self.profile_arcname))
+        LOG.info("Clearing archive {0}".format(self.profile_arcname))
         mozfile.remove(self.profile_arcname)
 
         self.symbol_paths = {
@@ -51,11 +53,11 @@ class SpsProfile(object):
             'WINDOWS': tempfile.mkdtemp()
         }
 
-        logging.info("Activating Gecko Profiling. Temp. profile dir:"
-                     " {0}, interval: {1}, entries: {2}"
-                     .format(sps_profile_dir,
-                             sps_profile_interval,
-                             sps_profile_entries))
+        LOG.info("Activating Gecko Profiling. Temp. profile dir:"
+                 " {0}, interval: {1}, entries: {2}"
+                 .format(sps_profile_dir,
+                         sps_profile_interval,
+                         sps_profile_entries))
 
         self.profiling_info = {
             "sps_profile_interval": sps_profile_interval,
@@ -94,15 +96,17 @@ class SpsProfile(object):
             symbolicator.symbolicate_profile(profile)
             sps.save_profile(profile, profile_path)
         except MemoryError:
-            logging.exception(
+            LOG.critical(
                 "Ran out of memory while trying"
                 " to symbolicate profile {0} (cycle {1})"
-                .format(profile_path, cycle)
+                .format(profile_path, cycle),
+                exc_info=True
             )
         except Exception:
-            logging.exception("Encountered an exception during profile"
-                              " symbolication {0} (cycle {1})"
-                              .format(profile_path, cycle))
+            LOG.critical("Encountered an exception during profile"
+                         " symbolication {0} (cycle {1})"
+                         .format(profile_path, cycle),
+                         exc_info=True)
 
     def symbolicate(self, cycle):
         """
@@ -182,14 +186,14 @@ class SpsProfile(object):
                         testname,
                         cycle_name
                     )
-                logging.info(
+                LOG.info(
                     "Adding profile {0} to archive {1}"
                     .format(path_in_zip, self.profile_arcname)
                 )
                 try:
                     arc.write(profile_path, path_in_zip)
                 except Exception:
-                    logging.exception(
+                    LOG.exception(
                         "Failed to copy profile {0} as {1} to"
                         " archive {2}".format(profile_path,
                                               path_in_zip,

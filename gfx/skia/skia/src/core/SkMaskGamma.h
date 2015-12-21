@@ -92,7 +92,7 @@ void SkTMaskGamma_build_correcting_lut(uint8_t table[256], U8CPU srcI, SkScalar 
  * @param B The number of luminance bits to use [1, 8] from the blue channel.
  */
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS> class SkTMaskGamma : public SkRefCnt {
-    SK_DECLARE_INST_COUNT(SkTMaskGamma)
+    
 public:
 
     /** Creates a linear SkTMaskGamma. */
@@ -168,7 +168,7 @@ private:
  * convert a linear alpha value for a given channel to a gamma correcting alpha
  * value for that channel. This class is immutable.
  *
- * If fR, fG, or fB is NULL, all of them will be. This indicates that no mask
+ * If fR, fG, or fB is nullptr, all of them will be. This indicates that no mask
  * pre blend should be applied. SkTMaskPreBlend::isApplicable() is provided as
  * a convenience function to test for the absence of this case.
  */
@@ -182,7 +182,7 @@ private:
     friend class SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>;
 public:
     /** Creates a non applicable SkTMaskPreBlend. */
-    SkTMaskPreBlend() : fParent(), fR(NULL), fG(NULL), fB(NULL) { }
+    SkTMaskPreBlend() : fParent(), fR(nullptr), fG(nullptr), fB(nullptr) { }
 
     /**
      * This copy contructor exists for correctness, but should never be called
@@ -193,10 +193,8 @@ public:
 
     ~SkTMaskPreBlend() { }
 
-    /** True if this PreBlend should be applied. When false, fR, fG, and fB are NULL. */
-    bool isApplicable() const {
-        return NULL != this->fG;
-    }
+    /** True if this PreBlend should be applied. When false, fR, fG, and fB are nullptr. */
+    bool isApplicable() const { return SkToBool(this->fG); }
 
     const uint8_t* fR;
     const uint8_t* fG;

@@ -12,7 +12,7 @@
 #include "SkAnimator.h"
 #include "SkDisplayEvent.h"
 #include "SkDisplayMovie.h"
-#include "SkDrawable.h"
+#include "SkADrawable.h"
 #ifdef SK_DEBUG
 #include "SkDump.h"
 #endif
@@ -47,7 +47,7 @@ bool SkEvents::doEvent(SkAnimateMaker& maker, SkDisplayEvent::Kind kind, SkEvent
         if (kind != SkDisplayEvent::kOnload)
             movie->doEvent(kind, state);
     }
-    SkDisplayable* displayable = state ? state->fDisplayable : NULL;
+    SkDisplayable* displayable = state ? state->fDisplayable : nullptr;
     int keyCode = state ? state->fCode : 0;
     int count = fEvents.count();
     for (int index = 0; index < count; index++) {
@@ -61,9 +61,9 @@ bool SkEvents::doEvent(SkAnimateMaker& maker, SkDisplayEvent::Kind kind, SkEvent
                 continue;
             evt->fLastCode = (SkKey) keyCode;
         }
-        if (evt->fTarget != NULL && evt->fTarget != displayable)
+        if (evt->fTarget != nullptr && evt->fTarget != displayable)
             continue;
-        if (state == NULL || state->fDisable == 0) {
+        if (state == nullptr || state->fDisable == 0) {
             if (kind >= SkDisplayEvent::kMouseDown && kind <= SkDisplayEvent::kMouseUp) {
                 evt->x = state->fX;
                 evt->y = state->fY;
@@ -82,7 +82,7 @@ void SkEvents::dump(SkAnimateMaker& maker) {
     SkTDDrawableArray& drawArray = maker.fDisplayList.fDrawList;
     int count = drawArray.count();
     for (index = 0; index < count; index++) {
-        SkDrawable* drawable = drawArray[index];
+        SkADrawable* drawable = drawArray[index];
         drawable->dumpEvents();
     }
     count = fEvents.count();
@@ -96,7 +96,7 @@ void SkEvents::dump(SkAnimateMaker& maker) {
 // currently this only removes onLoad events
 void SkEvents::removeEvent(SkDisplayEvent::Kind kind, SkEventState* state) {
     int keyCode = state ? state->fCode : 0;
-    SkDisplayable* displayable = state ? state->fDisplayable : NULL;
+    SkDisplayable* displayable = state ? state->fDisplayable : nullptr;
     for (SkDisplayEvent** evtPtr = fEvents.begin(); evtPtr < fEvents.end(); evtPtr++) {
         SkDisplayEvent* evt = *evtPtr;
         if (evt->kind != kind)
@@ -105,7 +105,7 @@ void SkEvents::removeEvent(SkDisplayEvent::Kind kind, SkEventState* state) {
             if ((int) evt->code > keyCode || (int) (evt->fMax != (SkKey) -1 ? evt->fMax : evt->code) < keyCode)
                 continue;
         }
-        if (evt->fTarget != NULL && evt->fTarget != displayable)
+        if (evt->fTarget != nullptr && evt->fTarget != displayable)
             continue;
         int index = fEvents.find(evt);
         fEvents.remove(index);

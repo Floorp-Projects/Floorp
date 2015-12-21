@@ -9275,12 +9275,6 @@
     "kind": "boolean",
     "description": "Has the tab queue functionality been enabled."
   },
-  "FENNEC_OPEN_URLS_IN_PRIVATE": {
-    "alert_emails": ["margaret@mozilla.com"],
-    "expires_in_version": "45",
-    "kind": "flag",
-    "description": "Reports the state of the open external links in private tabs preference"
-  },
   "GRAPHICS_DRIVER_STARTUP_TEST": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",
@@ -10238,6 +10232,50 @@
     "kind": "boolean",
     "bug_numbers": [1188391],
     "description": "The number of ICE connections which immediately failed (0) vs. reached at least checking state (1)."
+  },
+  "ALERTS_SERVICE_DND_ENABLED": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "XUL-only: whether the user has toggled do not disturb."
+  },
+  "ALERTS_SERVICE_DND_SUPPORTED_FLAG": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "flag",
+    "description": "Whether the do not disturb option is supported. True if the browser uses XUL alerts."
+  },
+  "WEB_NOTIFICATION_EXCEPTIONS_OPENED": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Number of times the Notification Permissions dialog has been opened."
+  },
+  "WEB_NOTIFICATION_PERMISSIONS": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Number of origins with the web notifications permission (0 = denied, 1 = allowed)."
+  },
+  "WEB_NOTIFICATION_PERMISSION_REMOVED": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "Number of removed web notifications permissions (0 = remove deny, 1 = remove allow)."
+  },
+  "WEB_NOTIFICATION_SENDERS": {
+    "alert_emails": ["firefox-dev@mozilla.org"],
+    "bug_numbers": [1219030],
+    "expires_in_version": "50",
+    "kind": "count",
+    "description": "Number of origins that have shown a web notification. Excludes system alerts like update reminders and add-ons."
   },
   "YOUTUBE_REWRITABLE_EMBED_SEEN": {
     "alert_emails": ["cpeterson@mozilla.com"],

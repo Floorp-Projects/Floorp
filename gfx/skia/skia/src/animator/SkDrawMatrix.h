@@ -10,36 +10,36 @@
 #ifndef SkDrawMatrix_DEFINED
 #define SkDrawMatrix_DEFINED
 
-#include "SkDrawable.h"
+#include "SkADrawable.h"
 #include "SkMatrix.h"
 #include "SkMemberInfo.h"
 #include "SkIntArray.h"
 
 class SkMatrixPart;
 
-class SkDrawMatrix : public SkDrawable {
+class SkDrawMatrix : public SkADrawable {
     DECLARE_DRAW_MEMBER_INFO(Matrix);
     SkDrawMatrix();
     virtual ~SkDrawMatrix();
-    virtual bool addChild(SkAnimateMaker& , SkDisplayable* child) SK_OVERRIDE;
-    virtual bool childrenNeedDisposing() const;
-    virtual void dirty();
-    virtual bool draw(SkAnimateMaker& );
+    bool addChild(SkAnimateMaker& , SkDisplayable* child) override;
+    bool childrenNeedDisposing() const override;
+    void dirty() override;
+    bool draw(SkAnimateMaker& ) override;
 #ifdef SK_DUMP_ENABLED
-    virtual void dump(SkAnimateMaker* );
+    void dump(SkAnimateMaker* ) override;
 #endif
     SkMatrix& getMatrix();
-    virtual bool getProperty(int index, SkScriptValue* value) const;
-    virtual void initialize();
-    virtual void onEndElement(SkAnimateMaker& );
-    virtual void setChildHasID();
-    virtual bool setProperty(int index, SkScriptValue& );
+    bool getProperty(int index, SkScriptValue* value) const override;
+    void initialize() override;
+    void onEndElement(SkAnimateMaker& ) override;
+    void setChildHasID() override;
+    bool setProperty(int index, SkScriptValue& ) override;
 
     void concat(SkMatrix& inMatrix) {
         fConcat.preConcat(inMatrix);
     }
 
-    virtual SkDisplayable* deepCopy(SkAnimateMaker* );
+    SkDisplayable* deepCopy(SkAnimateMaker* ) override;
 
 
     void rotate(SkScalar degrees, SkPoint& center) {
@@ -68,7 +68,7 @@ private:
     SkTDMatrixPartArray fParts;
     SkBool8 fChildHasID;
     SkBool8 fDirty;
-    typedef SkDrawable INHERITED;
+    typedef SkADrawable INHERITED;
 };
 
 #endif // SkDrawMatrix_DEFINED

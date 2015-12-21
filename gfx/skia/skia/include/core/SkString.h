@@ -39,6 +39,12 @@ static int SkStrFind(const char string[], const char substring[]) {
     return SkToS32(first - &string[0]);
 }
 
+static int SkStrFindLastOf(const char string[], const char subchar) {
+    const char* last = strrchr(string, subchar);
+    if (NULL == last) return -1;
+    return SkToS32(last - &string[0]);
+}
+
 static bool SkStrContains(const char string[], const char substring[]) {
     SkASSERT(string);
     SkASSERT(substring);
@@ -58,7 +64,23 @@ static inline char *SkStrDup(const char string[]) {
     return ret;
 }
 
-
+/*
+ *  The SkStrAppend... methods will write into the provided buffer, assuming it is large enough.
+ *  Each method has an associated const (e.g. SkStrAppendU32_MaxSize) which will be the largest
+ *  value needed for that method's buffer.
+ *
+ *  char storage[SkStrAppendU32_MaxSize];
+ *  SkStrAppendU32(storage, value);
+ *
+ *  Note : none of the SkStrAppend... methods write a terminating 0 to their buffers. Instead,
+ *  the methods return the ptr to the end of the written part of the buffer. This can be used
+ *  to compute the length, and/or know where to write a 0 if that is desired.
+ *
+ *  char storage[SkStrAppendU32_MaxSize + 1];
+ *  char* stop = SkStrAppendU32(storage, value);
+ *  size_t len = stop - storage;
+ *  *stop = 0;   // valid, since storage was 1 byte larger than the max.
+ */
 
 #define SkStrAppendU32_MaxSize  10
 char*   SkStrAppendU32(char buffer[], uint32_t);
@@ -136,6 +158,9 @@ public:
     int find(const char substring[]) const {
         return SkStrFind(fRec->data(), substring);
     }
+    int findLastOf(const char subchar) const {
+        return SkStrFindLastOf(fRec->data(), subchar);
+    }
 
     friend bool operator==(const SkString& a, const SkString& b) {
         return a.equals(b);
@@ -153,6 +178,7 @@ public:
     char& operator[](size_t n) { return this->writable_str()[n]; }
 
     void reset();
+    /** Destructive resize, does not preserve contents. */
     void resize(size_t len) { this->set(NULL, len); }
     void set(const SkString& src) { *this = src; }
     void set(const char text[]);
@@ -195,6 +221,7 @@ public:
     void appendf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
     void appendVAList(const char format[], va_list);
     void prependf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
+    void prependVAList(const char format[], va_list);
 
     void remove(size_t offset, size_t length);
 
@@ -221,7 +248,6 @@ private:
     Rec* fRec;
 
 #ifdef SK_DEBUG
-    const char* fStr;
     void validate() const;
 #else
     void validate() const {}

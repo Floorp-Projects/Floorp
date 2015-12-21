@@ -54,6 +54,9 @@ class ImportEntryObject : public NativeObject
     JSAtom* localName();
 };
 
+typedef Rooted<ImportEntryObject*> RootedImportEntryObject;
+typedef Handle<ImportEntryObject*> HandleImportEntryObject;
+
 class ExportEntryObject : public NativeObject
 {
   public:

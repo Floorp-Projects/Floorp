@@ -442,6 +442,27 @@ irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* cha
             }
             break;
           }
+          BYTECODE(CHECK_NOT_BACK_REF_NO_CASE_UNICODE) {
+            int from = registers[insn >> BYTECODE_SHIFT];
+            int len = registers[(insn >> BYTECODE_SHIFT) + 1] - from;
+            if (from < 0 || len <= 0) {
+                pc += BC_CHECK_NOT_BACK_REF_NO_CASE_UNICODE_LENGTH;
+                break;
+            }
+            if (current + len > length) {
+                pc = byteCode + Load32Aligned(pc + 4);
+                break;
+            }
+            if (CaseInsensitiveCompareUCStrings(chars + from, chars + current,
+                                                len * sizeof(CharT)))
+            {
+                current += len;
+                pc += BC_CHECK_NOT_BACK_REF_NO_CASE_UNICODE_LENGTH;
+            } else {
+                pc = byteCode + Load32Aligned(pc + 4);
+            }
+            break;
+          }
           BYTECODE(CHECK_AT_START)
             if (current == 0)
                 pc = byteCode + Load32Aligned(pc + 4);

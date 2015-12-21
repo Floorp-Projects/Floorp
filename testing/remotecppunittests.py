@@ -171,7 +171,7 @@ class RemoteCPPUnitTests(cppunittests.CPPUnitTests):
         result = returncode == 0
         if not result:
             self.log.test_end(basename, status='FAIL', expected='PASS',
-                              message=("test failed with return code %d" %
+                              message=("test failed with return code %s" %
                                        returncode))
         else:
             self.log.test_end(basename, status='PASS', expected='PASS')

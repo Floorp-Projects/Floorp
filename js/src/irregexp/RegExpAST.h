@@ -138,7 +138,9 @@ class RegExpAssertion : public RegExpTree {
     END_OF_LINE,
     END_OF_INPUT,
     BOUNDARY,
-    NON_BOUNDARY
+    NON_BOUNDARY,
+    NOT_AFTER_LEAD_SURROGATE,
+    NOT_IN_SURROGATE_PAIR
   };
   explicit RegExpAssertion(AssertionType type) : assertion_type_(type) { }
   virtual void* Accept(RegExpVisitor* visitor, void* data);

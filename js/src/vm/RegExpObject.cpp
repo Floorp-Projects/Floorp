@@ -39,6 +39,7 @@ JS_STATIC_ASSERT(IgnoreCaseFlag == JSREG_FOLD);
 JS_STATIC_ASSERT(GlobalFlag == JSREG_GLOB);
 JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
+JS_STATIC_ASSERT(UnicodeFlag == JSREG_UNICODE);
 
 RegExpObject*
 js::RegExpAlloc(ExclusiveContext* cx, HandleObject proto /* = nullptr */)
@@ -216,7 +217,7 @@ RegExpObject::createNoStatics(ExclusiveContext* cx, HandleAtom source, RegExpFla
         tokenStream = dummyTokenStream.ptr();
     }
 
-    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source))
+    if (!irregexp::ParsePatternSyntax(*tokenStream, alloc, source, flags & UnicodeFlag))
         return nullptr;
 
     Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
@@ -276,6 +277,7 @@ RegExpObject::init(ExclusiveContext* cx, HandleAtom source, RegExpFlag flags)
     self->setIgnoreCase(flags & IgnoreCaseFlag);
     self->setMultiline(flags & MultilineFlag);
     self->setSticky(flags & StickyFlag);
+    self->setUnicode(flags & UnicodeFlag);
     return true;
 }
 
@@ -458,6 +460,8 @@ RegExpObject::toString(JSContext* cx) const
         return nullptr;
     if (multiline() && !sb.append('m'))
         return nullptr;
+    if (unicode() && !sb.append('u'))
+        return nullptr;
     if (sticky() && !sb.append('y'))
         return nullptr;
 
@@ -518,7 +522,7 @@ RegExpShared::compile(JSContext* cx, HandleAtom pattern, HandleLinearString inpu
     /* Parse the pattern. */
     irregexp::RegExpCompileData data;
     if (!irregexp::ParsePattern(dummyTokenStream, cx->tempLifoAlloc(), pattern,
-                                multiline(), mode == MatchOnly, &data))
+                                multiline(), mode == MatchOnly, unicode(), ignoreCase(), &data))
     {
         return false;
     }
@@ -531,7 +535,7 @@ RegExpShared::compile(JSContext* cx, HandleAtom pattern, HandleLinearString inpu
                                                          input->hasLatin1Chars(),
                                                          mode == MatchOnly,
                                                          force == ForceByteCode,
-                                                         sticky());
+                                                         sticky(), unicode());
     if (code.empty())
         return false;
 
@@ -955,6 +959,10 @@ ParseRegExpFlags(const CharT* chars, size_t length, RegExpFlag* flagsOut, char16
             break;
           case 'y':
             if (!HandleRegExpFlag(StickyFlag, flagsOut))
+                return false;
+            break;
+          case 'u':
+            if (!HandleRegExpFlag(UnicodeFlag, flagsOut))
                 return false;
             break;
           default:

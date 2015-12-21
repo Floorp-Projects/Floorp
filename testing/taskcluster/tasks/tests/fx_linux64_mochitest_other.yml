@@ -15,7 +15,7 @@ task:
   extra:
     suite:
       name: mochitest
-      flavor: mochitest-other
+      flavor: chrome,a11y
     treeherder:
       groupName: Desktop mochitests
       groupSymbol: tc-M

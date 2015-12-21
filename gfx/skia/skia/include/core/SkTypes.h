@@ -8,10 +8,21 @@
 #ifndef SkTypes_DEFINED
 #define SkTypes_DEFINED
 
+// IWYU pragma: begin_exports
 #include "SkPreConfig.h"
 #include "SkUserConfig.h"
 #include "SkPostConfig.h"
+#include <stddef.h>
 #include <stdint.h>
+
+#if defined(SK_ARM_HAS_NEON)
+    #include <arm_neon.h>
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
+    #include <immintrin.h>
+#endif
+// IWYU pragma: end_exports
+
+#include <string.h>
 
 /** \file SkTypes.h
 */
@@ -72,7 +83,7 @@ static inline void sk_bzero(void* buffer, size_t size) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifdef SK_OVERRIDE_GLOBAL_NEW
+#ifdef override_GLOBAL_NEW
 #include <new>
 
 inline void* operator new(size_t size) {
@@ -95,6 +106,7 @@ inline void operator delete(void* p) {
 #ifdef SK_DEBUG
     #define SkASSERT(cond)              SK_ALWAYSBREAK(cond)
     #define SkDEBUGFAIL(message)        SkASSERT(false && message)
+    #define SkDEBUGFAILF(fmt, ...)      SkASSERTF(false, fmt, ##__VA_ARGS__)
     #define SkDEBUGCODE(code)           code
     #define SkDECLAREPARAM(type, var)   , type var
     #define SkPARAM(var)                , var
@@ -132,27 +144,14 @@ inline void operator delete(void* p) {
     #define SK_TO_STRING_PUREVIRT()
     #define SK_TO_STRING_OVERRIDE()
 #else
+    class SkString;
     // the 'toString' helper functions convert Sk* objects to human-readable
     // form in developer mode
     #define SK_TO_STRING_NONVIRT() void toString(SkString* str) const;
     #define SK_TO_STRING_VIRT() virtual void toString(SkString* str) const;
     #define SK_TO_STRING_PUREVIRT() virtual void toString(SkString* str) const = 0;
-    #define SK_TO_STRING_OVERRIDE() virtual void toString(SkString* str) const SK_OVERRIDE;
+    #define SK_TO_STRING_OVERRIDE() void toString(SkString* str) const override;
 #endif
-
-template <bool>
-struct SkCompileAssert {
-};
-
-// Uses static_cast<bool>(expr) instead of bool(expr) due to
-// https://connect.microsoft.com/VisualStudio/feedback/details/832915
-
-// The extra parentheses in SkCompileAssert<(...)> are a work around for
-// http://gcc.gnu.org/bugzilla/show_bug.cgi?id=57771
-// which was fixed in gcc 4.8.2.
-#define SK_COMPILE_ASSERT(expr, msg) \
-    typedef SkCompileAssert<(static_cast<bool>(expr))> \
-            msg[static_cast<bool>(expr) ? 1 : -1] SK_UNUSED
 
 /*
  *  Usage:  SK_MACRO_CONCAT(a, b)   to construct the symbol ab
@@ -195,7 +194,7 @@ struct SkCompileAssert {
  * Take a look at SkAutoFree and SkAutoMalloc in this file for examples.
  */
 #define SK_REQUIRE_LOCAL_VAR(classname) \
-    SK_COMPILE_ASSERT(false, missing_name_for_##classname)
+    static_assert(false, "missing name for " #classname)
 
 ///////////////////////////////////////////////////////////////////////
 
@@ -283,13 +282,20 @@ static inline bool SkIsU16(long x) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-#ifndef SK_OFFSETOF
-    #define SK_OFFSETOF(type, field)    (size_t)((char*)&(((type*)1)->field) - (char*)1)
-#endif
 
-/** Returns the number of entries in an array (not a pointer)
-*/
-#define SK_ARRAY_COUNT(array)       (sizeof(array) / sizeof(array[0]))
+/** Returns the number of entries in an array (not a pointer) */
+template <typename T, size_t N> char (&SkArrayCountHelper(T (&array)[N]))[N];
+#define SK_ARRAY_COUNT(array) (sizeof(SkArrayCountHelper(array)))
+
+// Can be used to bracket data types that must be dense, e.g. hash keys.
+#if defined(__clang__)  // This should work on GCC too, but GCC diagnostic pop didn't seem to work!
+    #define SK_BEGIN_REQUIRE_DENSE _Pragma("GCC diagnostic push") \
+                                   _Pragma("GCC diagnostic error \"-Wpadded\"")
+    #define SK_END_REQUIRE_DENSE   _Pragma("GCC diagnostic pop")
+#else
+    #define SK_BEGIN_REQUIRE_DENSE
+    #define SK_END_REQUIRE_DENSE
+#endif
 
 #define SkAlign2(x)     (((x) + 1) >> 1 << 1)
 #define SkIsAlign2(x)   (0 == ((x) & 1))
@@ -299,6 +305,9 @@ static inline bool SkIsU16(long x) {
 
 #define SkAlign8(x)     (((x) + 7) >> 3 << 3)
 #define SkIsAlign8(x)   (0 == ((x) & 7))
+
+#define SkAlignPtr(x)   (sizeof(void*) == 8 ?   SkAlign8(x) :   SkAlign4(x))
+#define SkIsAlignPtr(x) (sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x))
 
 typedef uint32_t SkFourByteTag;
 #define SkSetFourByteTag(a, b, c, d)    (((a) << 24) | ((b) << 16) | ((c) << 8) | (d))
@@ -349,6 +358,7 @@ template <typename T> inline void SkTSwap(T& a, T& b) {
 }
 
 static inline int32_t SkAbs32(int32_t value) {
+    SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
     if (value < 0) {
         value = -value;
     }
@@ -393,16 +403,9 @@ static inline int32_t SkFastMin32(int32_t value, int32_t max) {
     return value;
 }
 
-/** Returns signed 32 bit value pinned between min and max, inclusively
-*/
-static inline int32_t SkPin32(int32_t value, int32_t min, int32_t max) {
-    if (value < min) {
-        value = min;
-    }
-    if (value > max) {
-        value = max;
-    }
-    return value;
+/** Returns value pinned between min and max, inclusively. */
+template <typename T> static inline const T& SkTPin(const T& value, const T& min, const T& max) {
+    return SkTMax(SkTMin(value, max), min);
 }
 
 static inline uint32_t SkSetClearShift(uint32_t bits, bool cond,
@@ -441,7 +444,7 @@ template <typename Dst> Dst SkTCast(const void* ptr) {
 
 /** \class SkNoncopyable
 
-SkNoncopyable is the base class for objects that may do not want to
+SkNoncopyable is the base class for objects that do not want to
 be copied. It hides its copy-constructor and its assignment-operator.
 */
 class SK_API SkNoncopyable {
@@ -536,7 +539,7 @@ public:
      */
     void* reset(size_t size, OnShrink shrink = kAlloc_OnShrink,  bool* didChangeAlloc = NULL) {
         if (size == fSize || (kReuse_OnShrink == shrink && size < fSize)) {
-            if (NULL != didChangeAlloc) {
+            if (didChangeAlloc) {
                 *didChangeAlloc = false;
             }
             return fPtr;
@@ -545,7 +548,7 @@ public:
         sk_free(fPtr);
         fPtr = size ? sk_malloc_throw(size) : NULL;
         fSize = size;
-        if (NULL != didChangeAlloc) {
+        if (didChangeAlloc) {
             *didChangeAlloc = true;
         }
 
@@ -640,7 +643,7 @@ public:
                 bool* didChangeAlloc = NULL) {
         size = (size < kSize) ? kSize : size;
         bool alloc = size != fSize && (SkAutoMalloc::kAlloc_OnShrink == shrink || size > fSize);
-        if (NULL != didChangeAlloc) {
+        if (didChangeAlloc) {
             *didChangeAlloc = alloc;
         }
         if (alloc) {

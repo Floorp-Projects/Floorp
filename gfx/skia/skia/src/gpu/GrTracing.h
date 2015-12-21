@@ -10,8 +10,8 @@
 
 #include "GrDrawTarget.h"
 #include "GrGpu.h"
-#include "GrInOrderDrawBuffer.h"
 #include "GrTraceMarker.h"
+#include "SkTLazy.h"
 #include "SkTraceEvent.h"
 
 /**
@@ -19,45 +19,39 @@
  */
 class GrGpuTraceMarkerGenerator : public ::SkNoncopyable {
 public:
-    GrGpuTraceMarkerGenerator(GrDrawTarget* target) : fTarget(target) {}
+    GrGpuTraceMarkerGenerator(GrDrawTarget* target) {}
 
     ~GrGpuTraceMarkerGenerator() {
         if (fTraceMarker.isValid()) {
-            fTarget->removeGpuTraceMarker(fTraceMarker.get());
+            // TODO remove trace marker
         }
     }
 
     void initialize(const char* marker_str, int* marker_counter) {
-        GrGpuTraceMarker* traceMarker = fTraceMarker.init();
-        traceMarker->fMarker = marker_str;
-        traceMarker->fID = *marker_counter;
-        fTarget->addGpuTraceMarker(traceMarker);
+        // GrGpuTraceMarker* traceMarker = fTraceMarker.init(marker_str, *marker_counter);
+        // TODO add trace marker
     }
 
 private:
-    GrDrawTarget* fTarget;
     SkTLazy<GrGpuTraceMarker> fTraceMarker;
 };
 
 class GrGpuTraceMarkerGeneratorContext : public ::SkNoncopyable {
 public:
-    GrGpuTraceMarkerGeneratorContext(GrContext* context) : fContext(context) {}
+    GrGpuTraceMarkerGeneratorContext(GrContext* context) {}
 
     ~GrGpuTraceMarkerGeneratorContext() {
         if (fTraceMarker.isValid()) {
-            fContext->removeGpuTraceMarker(fTraceMarker.get());
+            // TODO remove trace marker
         }
     }
 
     void initialize(const char* marker_str, int* marker_counter) {
-        GrGpuTraceMarker* traceMarker = fTraceMarker.init();
-        traceMarker->fMarker = marker_str;
-        traceMarker->fID = *marker_counter;
-        fContext->addGpuTraceMarker(traceMarker);
+        // GrGpuTraceMarker* traceMarker = fTraceMarker.init(marker_str, *marker_counter);
+        // TODO add trace marker
     }
 
 private:
-    GrContext* fContext;
     SkTLazy<GrGpuTraceMarker> fTraceMarker;
 };
 
@@ -85,13 +79,20 @@ private:
     INTERNAL_TRACE_EVENT_ADD_SCOPED(TRACE_DISABLED_BY_DEFAULT("skia.gpu"),name,   \
                        "id", name_counter, ##__VA_ARGS__);                        
 
-#define GR_CREATE_GPU_TRACE_MARKER(name, name_counter, target)                    \
-    GrGpuTraceMarkerGenerator SK_MACRO_APPEND_LINE(TMG)(target);                  \
-    if (target->isGpuTracingEnabled()) {                                          \
-        SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);                \
+#if GR_FORCE_GPU_TRACE_DEBUGGING
+#define GR_CREATE_GPU_TRACE_MARKER(name, name_counter, target)                     \
+    GrGpuTraceMarkerGenerator SK_MACRO_APPEND_LINE(TMG)(target);                   \
+    SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);
+#else
+#define GR_CREATE_GPU_TRACE_MARKER(name, name_counter, target)                     \
+    GrGpuTraceMarkerGenerator SK_MACRO_APPEND_LINE(TMG)(target);                   \
+    bool SK_MACRO_APPEND_LINE(gpuTracingEnabled);                                  \
+    TRACE_EVENT_CATEGORY_GROUP_ENABLED(TRACE_DISABLED_BY_DEFAULT("skia.gpu"),      \
+                                        &SK_MACRO_APPEND_LINE(gpuTracingEnabled)); \
+    if (SK_MACRO_APPEND_LINE(gpuTracingEnabled)) {                                 \
+        SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);                 \
     }                                                                             
-
-
+#endif
 
 #define GR_CREATE_TRACE_MARKER_CONTEXT(name, context)                             \
     INTERNAL_GR_CREATE_TRACE_MARKER_SCOPED_C(name, context)                       
@@ -112,10 +113,19 @@ private:
     INTERNAL_TRACE_EVENT_ADD_SCOPED(TRACE_DISABLED_BY_DEFAULT("skia.gpu"),name,   \
                                     "id", name_counter, ##__VA_ARGS__);                        
 
-#define GR_CREATE_GPU_TRACE_MARKER_C(name, name_counter, context)                 \
-    GrGpuTraceMarkerGeneratorContext SK_MACRO_APPEND_LINE(TMG)(context);          \
-    if (context->isGpuTracingEnabled()) {                                         \
-        SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);                \
+#if GR_FORCE_GPU_TRACE_DEBUGGING
+#define GR_CREATE_GPU_TRACE_MARKER_C(name, name_counter, context)                  \
+    GrGpuTraceMarkerGeneratorContext SK_MACRO_APPEND_LINE(TMG)(context);           \
+    SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);
+#else
+#define GR_CREATE_GPU_TRACE_MARKER_C(name, name_counter, context)                  \
+    GrGpuTraceMarkerGeneratorContext SK_MACRO_APPEND_LINE(TMG)(context);           \
+    bool SK_MACRO_APPEND_LINE(gpuTracingEnabled);                                  \
+    TRACE_EVENT_CATEGORY_GROUP_ENABLED(TRACE_DISABLED_BY_DEFAULT("skia.gpu"),      \
+                                        &SK_MACRO_APPEND_LINE(gpuTracingEnabled)); \
+    if (SK_MACRO_APPEND_LINE(gpuTracingEnabled)) {                                 \
+        SK_MACRO_APPEND_LINE(TMG).initialize(name, &name_counter);                 \
     }                                                                             
+#endif
 
 #endif

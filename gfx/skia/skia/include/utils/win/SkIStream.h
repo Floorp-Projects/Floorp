@@ -10,6 +10,10 @@
 #ifndef SkIStream_DEFINED
 #define SkIStream_DEFINED
 
+#include "SkTypes.h"
+
+#ifdef SK_BUILD_FOR_WIN
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ole2.h>
@@ -75,20 +79,20 @@ public:
 };
 
 /**
- * A minimal read-only IStream implementation which wraps an SkIStream.
+ * A minimal read-only IStream implementation which wraps an SkStream.
  */
 class SkIStream : public SkBaseIStream {
 private:
     SkStream *fSkStream;
-    bool fUnrefOnRelease;
+    const bool fDeleteOnRelease;
     ULARGE_INTEGER fLocation;
 
-    SkIStream(SkStream* stream, bool unrefOnRelease);
+    SkIStream(SkStream* stream, bool fDeleteOnRelease);
     virtual ~SkIStream();
 
 public:
     HRESULT static CreateFromSkStream(SkStream* stream
-                                    , bool unrefOnRelease
+                                    , bool fDeleteOnRelease
                                     , IStream ** ppStream);
 
     virtual HRESULT STDMETHODCALLTYPE Read(void* pv, ULONG cb, ULONG* pcbRead);
@@ -128,4 +132,5 @@ public:
                                          , DWORD grfStatFlag);
 };
 
-#endif
+#endif  // SK_BUILD_FOR_WIN
+#endif  // SkIStream_DEFINED
