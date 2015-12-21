@@ -9,6 +9,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
 var WebcompatReporter = {
   menuItem: null,
@@ -77,12 +78,12 @@ var WebcompatReporter = {
     let currentURI = BrowserApp.selectedTab.browser.currentURI.spec;
     let message = this.strings.GetStringFromName("webcompat.reportDesktopMode.message");
     let options = {
-      button: {
+      action: {
         label: this.strings.GetStringFromName("webcompat.reportDesktopModeYes.label"),
         callback: () => this.reportIssue(currentURI)
       }
     };
-    NativeWindow.toast.show(message, "long", options);
+    Snackbars.show(message, Snackbars.LENGTH_LONG, options);
   },
 
   reportIssue: function(url) {
