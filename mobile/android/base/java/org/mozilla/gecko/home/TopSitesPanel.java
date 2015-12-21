@@ -12,11 +12,9 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Tab;
@@ -35,8 +33,6 @@ import org.mozilla.gecko.home.PinSiteDialog.OnSiteSelectedListener;
 import org.mozilla.gecko.home.TopSitesGridView.OnEditPinnedSiteListener;
 import org.mozilla.gecko.home.TopSitesGridView.TopSitesGridContextMenuInfo;
 import org.mozilla.gecko.restrictions.Restrictable;
-import org.mozilla.gecko.tiles.TilesRecorder;
-import org.mozilla.gecko.tiles.Tile;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -221,14 +217,6 @@ public class TopSitesPanel extends HomeFragment {
                         }
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, Integer.toString(position));
 
-                        // Record tile click events on non-private tabs.
-                        final Tab tab = Tabs.getInstance().getSelectedTab();
-                        if (!tab.isPrivate()) {
-                            final Locale locale = Locale.getDefault();
-                            final String localeTag = Locales.getLanguageTag(locale);
-                            TilesRecorder.recordAction(tab, TilesRecorder.ACTION_CLICK, position, getTilesSnapshot(), localeTag);
-                        }
-
                         mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
                     }
                 } else {
@@ -274,27 +262,6 @@ public class TopSitesPanel extends HomeFragment {
 
         registerForContextMenu(mList);
         registerForContextMenu(mGrid);
-    }
-
-    private List<Tile> getTilesSnapshot() {
-        final int count = mGrid.getCount();
-        final ArrayList<Tile> snapshot = new ArrayList<>();
-        final BrowserDB db = GeckoProfile.get(getActivity()).getDB();
-        for (int i = 0; i < count; i++) {
-            final Cursor cursor = (Cursor) mGrid.getItemAtPosition(i);
-            final int type = cursor.getInt(cursor.getColumnIndexOrThrow(TopSites.TYPE));
-
-            if (type == TopSites.TYPE_BLANK) {
-                snapshot.add(null);
-                continue;
-            }
-
-            final String url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
-            final int id = db.getTrackingIdForUrl(url);
-            final boolean pinned = (type == TopSites.TYPE_PINNED);
-            snapshot.add(new Tile(id, pinned));
-        }
-        return snapshot;
     }
 
     @Override
