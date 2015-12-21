@@ -819,7 +819,8 @@ protected:
     MakeApzcZoomable();
 
     if (aShouldTriggerPinch) {
-      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+      // One repaint request for each gesture.
+      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(2);
     } else {
       EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
     }
@@ -1248,7 +1249,8 @@ protected:
   void DoPanTest(bool aShouldTriggerScroll, bool aShouldBeConsumed, uint32_t aBehavior)
   {
     if (aShouldTriggerScroll) {
-      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
+      // One repaint request for each pan.
+      EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(2);
     } else {
       EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(0);
     }
@@ -1357,8 +1359,6 @@ TEST_F(APZCPanningTester, PanWithPreventDefault) {
 }
 
 TEST_F(APZCBasicTester, Fling) {
-  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
-
   int touchStart = 50;
   int touchEnd = 10;
   ParentLayerPoint pointOut;
@@ -2422,10 +2422,8 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   // because we have already issued a paint request with it.
   EXPECT_EQ(ScreenPoint(25, 25), transformToGecko * ParentLayerPoint(12.5, 75));
 
-  // This second pan will move the APZC by another 50 pixels but since the paint
-  // request dispatched above has not "completed", we will not dispatch another
-  // one yet. Now we have an async transform on top of the pending paint request
-  // transform.
+  // This second pan will move the APZC by another 50 pixels.
+  EXPECT_CALL(*mcc, RequestContentRepaint(_)).Times(1);
   ApzcPanNoFling(apzcroot, mcc, 100, 50);
 
   // Hit where layers[3] used to be. It should now hit the root.
@@ -2433,18 +2431,16 @@ TEST_F(APZHitTestingTester, HitTesting2) {
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(ParentLayerPoint(75, 75), transformToApzc * ScreenPoint(75, 75));
-  // transformToGecko unapplies the full async transform of -100 pixels, and then
-  // reapplies the "D" transform of -50 leading to an overall adjustment of +50
-  EXPECT_EQ(ScreenPoint(75, 125), transformToGecko * ParentLayerPoint(75, 75));
+  // transformToGecko unapplies the full async transform of -100 pixels
+  EXPECT_EQ(ScreenPoint(75, 75), transformToGecko * ParentLayerPoint(75, 75));
 
   // Hit where layers[1] used to be. It should now hit the root.
   hit = GetTargetAPZC(ScreenPoint(25, 25));
   EXPECT_EQ(apzcroot, hit.get());
   // transformToApzc doesn't unapply the root's own async transform
   EXPECT_EQ(ParentLayerPoint(25, 25), transformToApzc * ScreenPoint(25, 25));
-  // transformToGecko unapplies the full async transform of -100 pixels, and then
-  // reapplies the "D" transform of -50 leading to an overall adjustment of +50
-  EXPECT_EQ(ScreenPoint(25, 75), transformToGecko * ParentLayerPoint(25, 25));
+  // transformToGecko unapplies the full async transform of -100 pixels
+  EXPECT_EQ(ScreenPoint(25, 25), transformToGecko * ParentLayerPoint(25, 25));
 }
 
 TEST_F(APZCTreeManagerTester, ScrollablePaintedLayers) {
