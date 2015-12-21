@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 
 class nsPagePrintTimer;
+class nsPrintEngine;
 
 namespace mozilla {
 namespace layout {
@@ -33,10 +34,13 @@ public:
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 
+  void SetPrintEngine(nsPrintEngine* aPrintEngine);
+
 private:
   ~RemotePrintJobChild() final;
 
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
+  RefPtr<nsPrintEngine> mPrintEngine;
 };
 
 } // namespace layout
