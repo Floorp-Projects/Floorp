@@ -358,109 +358,107 @@ static const char * const TypeChars[] =
 #endif
 };
 
-static void
-PrintDefinition(char* buf, size_t size, const LDefinition& def)
-{
-    char* cursor = buf;
-    char* end = buf + size;
-
-    cursor += JS_snprintf(cursor, end - cursor, "v%u", def.virtualRegister());
-    cursor += JS_snprintf(cursor, end - cursor, "<%s>", TypeChars[def.type()]);
-
-    if (def.policy() == LDefinition::FIXED)
-        cursor += JS_snprintf(cursor, end - cursor, ":%s", def.output()->toString());
-    else if (def.policy() == LDefinition::MUST_REUSE_INPUT)
-        cursor += JS_snprintf(cursor, end - cursor, ":tied(%u)", def.getReusedInput());
-}
-
-const char*
+UniqueChars
 LDefinition::toString() const
 {
-    // Not reentrant!
-    static char buf[40];
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    if (isBogusTemp())
-        return "bogus";
+    char* buf;
+    if (isBogusTemp()) {
+        buf = JS_smprintf("bogus");
+    } else {
+        buf = JS_smprintf("v%u<%s>", virtualRegister(), TypeChars[type()]);
+        if (buf) {
+            if (policy() == LDefinition::FIXED)
+                buf = JS_sprintf_append(buf, ":%s", output()->toString().get());
+            else if (policy() == LDefinition::MUST_REUSE_INPUT)
+                buf = JS_sprintf_append(buf, ":tied(%u)", getReusedInput());
+        }
+    }
 
-    PrintDefinition(buf, sizeof(buf), *this);
-    return buf;
+    if (!buf)
+        oomUnsafe.crash("LDefinition::toString()");
+
+    return UniqueChars(buf);
 }
 
-static void
-PrintUse(char* buf, size_t size, const LUse* use)
+static char*
+PrintUse(const LUse* use)
 {
     switch (use->policy()) {
       case LUse::REGISTER:
-        JS_snprintf(buf, size, "v%d:r", use->virtualRegister());
-        break;
+        return JS_smprintf("v%d:r", use->virtualRegister());
       case LUse::FIXED:
-        JS_snprintf(buf, size, "v%d:%s", use->virtualRegister(),
-                    AnyRegister::FromCode(use->registerCode()).name());
-        break;
+        return JS_smprintf("v%d:%s", use->virtualRegister(),
+                           AnyRegister::FromCode(use->registerCode()).name());
       case LUse::ANY:
-        JS_snprintf(buf, size, "v%d:r?", use->virtualRegister());
-        break;
+        return JS_smprintf("v%d:r?", use->virtualRegister());
       case LUse::KEEPALIVE:
-        JS_snprintf(buf, size, "v%d:*", use->virtualRegister());
-        break;
+        return JS_smprintf("v%d:*", use->virtualRegister());
       case LUse::RECOVERED_INPUT:
-        JS_snprintf(buf, size, "v%d:**", use->virtualRegister());
-        break;
+        return JS_smprintf("v%d:**", use->virtualRegister());
       default:
         MOZ_CRASH("invalid use policy");
     }
 }
 
-const char*
+UniqueChars
 LAllocation::toString() const
 {
-    // Not reentrant!
-    static char buf[40];
+    AutoEnterOOMUnsafeRegion oomUnsafe;
 
-    if (isBogus())
-        return "bogus";
-
-    switch (kind()) {
-      case LAllocation::CONSTANT_VALUE:
-      case LAllocation::CONSTANT_INDEX:
-        return "c";
-      case LAllocation::GPR:
-        JS_snprintf(buf, sizeof(buf), "%s", toGeneralReg()->reg().name());
-        return buf;
-      case LAllocation::FPU:
-        JS_snprintf(buf, sizeof(buf), "%s", toFloatReg()->reg().name());
-        return buf;
-      case LAllocation::STACK_SLOT:
-        JS_snprintf(buf, sizeof(buf), "stack:%d", toStackSlot()->slot());
-        return buf;
-      case LAllocation::ARGUMENT_SLOT:
-        JS_snprintf(buf, sizeof(buf), "arg:%d", toArgument()->index());
-        return buf;
-      case LAllocation::USE:
-        PrintUse(buf, sizeof(buf), toUse());
-        return buf;
-      default:
-        MOZ_CRASH("what?");
+    char* buf;
+    if (isBogus()) {
+        buf = JS_smprintf("bogus");
+    } else {
+        switch (kind()) {
+          case LAllocation::CONSTANT_VALUE:
+          case LAllocation::CONSTANT_INDEX:
+            buf = JS_smprintf("c");
+            break;
+          case LAllocation::GPR:
+            buf = JS_smprintf("%s", toGeneralReg()->reg().name());
+            break;
+          case LAllocation::FPU:
+            buf = JS_smprintf("%s", toFloatReg()->reg().name());
+            break;
+          case LAllocation::STACK_SLOT:
+            buf = JS_smprintf("stack:%d", toStackSlot()->slot());
+            break;
+          case LAllocation::ARGUMENT_SLOT:
+            buf = JS_smprintf("arg:%d", toArgument()->index());
+            break;
+          case LAllocation::USE:
+            buf = PrintUse(toUse());
+            break;
+          default:
+            MOZ_CRASH("what?");
+        }
     }
+
+    if (!buf)
+        oomUnsafe.crash("LAllocation::toString()");
+
+    return UniqueChars(buf);
 }
 
 void
 LAllocation::dump() const
 {
-    fprintf(stderr, "%s\n", toString());
+    fprintf(stderr, "%s\n", toString().get());
 }
 
 void
 LDefinition::dump() const
 {
-    fprintf(stderr, "%s\n", toString());
+    fprintf(stderr, "%s\n", toString().get());
 }
 
 void
 LNode::printOperands(GenericPrinter& out)
 {
     for (size_t i = 0, e = numOperands(); i < e; i++) {
-        out.printf(" (%s)", getOperand(i)->toString());
+        out.printf(" (%s)", getOperand(i)->toString().get());
         if (i != numOperands() - 1)
             out.printf(",");
     }
@@ -490,7 +488,7 @@ LNode::dump(GenericPrinter& out)
     if (numDefs() != 0) {
         out.printf("{");
         for (size_t i = 0; i < numDefs(); i++) {
-            out.printf("%s", getDef(i)->toString());
+            out.printf("%s", getDef(i)->toString().get());
             if (i != numDefs() - 1)
                 out.printf(", ");
         }
@@ -503,7 +501,7 @@ LNode::dump(GenericPrinter& out)
     if (numTemps()) {
         out.printf(" t=(");
         for (size_t i = 0; i < numTemps(); i++) {
-            out.printf("%s", getTemp(i)->toString());
+            out.printf("%s", getTemp(i)->toString().get());
             if (i != numTemps() - 1)
                 out.printf(", ");
         }
@@ -599,9 +597,7 @@ LMoveGroup::printOperands(GenericPrinter& out)
 {
     for (size_t i = 0; i < numMoves(); i++) {
         const LMove& move = getMove(i);
-        // Use two printfs, as LAllocation::toString is not reentrant.
-        out.printf(" [%s", move.from().toString());
-        out.printf(" -> %s", move.to().toString());
+        out.printf(" [%s -> %s", move.from().toString().get(), move.to().toString().get());
 #ifdef DEBUG
         out.printf(", %s", TypeChars[move.type()]);
 #endif

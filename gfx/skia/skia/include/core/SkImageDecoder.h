@@ -10,10 +10,13 @@
 
 #include "SkBitmap.h"
 #include "SkImage.h"
+#include "SkPngChunkReader.h"
 #include "SkRect.h"
 #include "SkRefCnt.h"
 #include "SkTRegistry.h"
 #include "SkTypes.h"
+
+//#define SK_LEGACY_PEEKER
 
 class SkStream;
 class SkStreamRewindable;
@@ -26,6 +29,7 @@ class SkImageDecoder : SkNoncopyable {
 public:
     virtual ~SkImageDecoder();
 
+    // TODO (scroggo): Merge with SkEncodedFormat
     enum Format {
         kUnknown_Format,
         kBMP_Format,
@@ -37,6 +41,7 @@ public:
         kWEBP_Format,
         kPKM_Format,
         kKTX_Format,
+        kASTC_Format,
 
         kLastKnownFormat = kKTX_Format,
     };
@@ -45,6 +50,15 @@ public:
         formats, kUnknown_Format will be returned.
     */
     virtual Format getFormat() const;
+
+    /** If planes or rowBytes is NULL, decodes the header and computes componentSizes
+        for memory allocation.
+        Otherwise, decodes the YUV planes into the provided image planes and
+        updates componentSizes to the final image size.
+        Returns whether the decoding was successful.
+    */
+    bool decodeYUV8Planes(SkStream* stream, SkISize componentSizes[3], void* planes[3],
+                          size_t rowBytes[3], SkYUVColorSpace*);
 
     /** Return the format of the SkStreamRewindable or kUnknown_Format if it cannot be determined.
         Rewinds the stream before returning.
@@ -115,95 +129,20 @@ public:
     */
     bool getRequireUnpremultipliedColors() const { return fRequireUnpremultipliedColors; }
 
-    /** \class Peeker
-
-        Base class for optional callbacks to retrieve meta/chunk data out of
-        an image as it is being decoded.
-    */
-    class Peeker : public SkRefCnt {
+#ifdef SK_LEGACY_PEEKER
+    // Android subclasses SkImageDecoder::Peeker, which has been changed into SkPngChunkReader.
+    // Temporarily use this class until Android can be updated to directly inherit from
+    // SkPngChunkReader.
+    class Peeker : public SkPngChunkReader {
     public:
-        SK_DECLARE_INST_COUNT(Peeker)
-
-        /** Return true to continue decoding, or false to indicate an error, which
-            will cause the decoder to not return the image.
-        */
+        bool readChunk(const char tag[], const void* data, size_t length) final {
+            return this->peek(tag, data, length);
+        }
         virtual bool peek(const char tag[], const void* data, size_t length) = 0;
-    private:
-        typedef SkRefCnt INHERITED;
     };
-
-    Peeker* getPeeker() const { return fPeeker; }
-    Peeker* setPeeker(Peeker*);
-
-#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
-    /** \class Chooser
-
-        Base class for optional callbacks to choose an image from a format that
-        contains multiple images.
-    */
-    class Chooser : public SkRefCnt {
-    public:
-        SK_DECLARE_INST_COUNT(Chooser)
-
-        virtual void begin(int count) {}
-        virtual void inspect(int index, SkBitmap::Config config, int width, int height) {}
-        /** Return the index of the subimage you want, or -1 to choose none of them.
-        */
-        virtual int choose() = 0;
-
-    private:
-        typedef SkRefCnt INHERITED;
-    };
-
-    Chooser* getChooser() const { return fChooser; }
-    Chooser* setChooser(Chooser*);
 #endif
-
-#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
-    /**
-     *  Optional table describing the caller's preferred config based on
-     *  information about the src data. Each field should be set to the
-     *  preferred config for a src described in the name of the field. The
-     *  src attributes are described in terms of depth (8-index,
-     *  8bit-grayscale, or 8-bits/component) and whether there is per-pixel
-     *  alpha (does not apply to grayscale). If the caller has no preference
-     *  for a particular src type, its slot should be set to kNo_Config.
-     *
-     *  NOTE ABOUT PREFERRED CONFIGS:
-     *  If a config is preferred, either using a pref table or as a parameter
-     *  to some flavor of decode, it is still at the discretion of the codec
-     *  as to what output config is actually returned, as it may not be able
-     *  to support the caller's preference.
-     *
-     *  If a bitmap is decoded into SkBitmap::A8_Config, the resulting bitmap
-     *  will either be a conversion of the grayscale in the case of a
-     *  grayscale source or the alpha channel in the case of a source with
-     *  an alpha channel.
-     */
-    struct PrefConfigTable {
-        SkBitmap::Config fPrefFor_8Index_NoAlpha_src;
-        SkBitmap::Config fPrefFor_8Index_YesAlpha_src;
-        SkBitmap::Config fPrefFor_8Gray_src;
-        SkBitmap::Config fPrefFor_8bpc_NoAlpha_src;
-        SkBitmap::Config fPrefFor_8bpc_YesAlpha_src;
-    };
-
-    /**
-     *  Set an optional table for specifying the caller's preferred config
-     *  based on information about the src data.
-     *
-     *  The default is no preference, which will assume the config set by
-     *  decode is preferred.
-     */
-    void setPrefConfigTable(const PrefConfigTable&);
-
-    /**
-     *  Do not use a PrefConfigTable to determine the output config. This
-     *  is the default, so there is no need to call unless a PrefConfigTable
-     *  was previously set.
-     */
-    void resetPrefConfigTable() { fUsePrefTable = false; }
-#endif
+    SkPngChunkReader* getPeeker() const { return fPeeker; }
+    SkPngChunkReader* setPeeker(SkPngChunkReader*);
 
     /**
      *  By default, the codec will try to comply with the "pref" colortype
@@ -261,13 +200,26 @@ public:
         kDecodePixels_Mode  //!< return entire bitmap (including pixels)
     };
 
+    /** Result of a decode. If read as a boolean, a partial success is
+        considered a success (true).
+    */
+    enum Result {
+        kFailure        = 0,    //!< Image failed to decode. bitmap will be
+                                //   unchanged.
+        kPartialSuccess = 1,    //!< Part of the image decoded. The rest is
+                                //   filled in automatically
+        kSuccess        = 2     //!< The entire image was decoded, if Mode is
+                                //   kDecodePixels_Mode, or the bounds were
+                                //   decoded, in kDecodeBounds_Mode.
+    };
+
     /** Given a stream, decode it into the specified bitmap.
         If the decoder can decompress the image, it calls bitmap.setInfo(),
         and then if the Mode is kDecodePixels_Mode, call allocPixelRef(),
         which will allocated a pixelRef. To access the pixel memory, the codec
         needs to call lockPixels/unlockPixels on the
         bitmap. It can then set the pixels with the decompressed image.
-    *   If the image cannot be decompressed, return false. After the
+    *   If the image cannot be decompressed, return kFailure. After the
     *   decoding, the function converts the decoded colortype in bitmap
     *   to pref if possible. Whether a conversion is feasible is
     *   tested by Bitmap::canCopyTo(pref).
@@ -277,31 +229,13 @@ public:
         to allocate the memory from a cache, volatile memory, or even from
         an existing bitmap's memory.
 
-        If a Peeker is installed via setPeeker, it may be used to peek into
-        meta data during the decode.
+        If an SkPngChunkReader is installed via setPeeker, it may be used to
+        peek into meta data during the decode.
     */
-    bool decode(SkStream*, SkBitmap* bitmap, SkColorType pref, Mode);
-    bool decode(SkStream* stream, SkBitmap* bitmap, Mode mode) {
+    Result decode(SkStream*, SkBitmap* bitmap, SkColorType pref, Mode);
+    Result decode(SkStream* stream, SkBitmap* bitmap, Mode mode) {
         return this->decode(stream, bitmap, kUnknown_SkColorType, mode);
     }
-
-    /**
-     * Given a stream, build an index for doing tile-based decode.
-     * The built index will be saved in the decoder, and the image size will
-     * be returned in width and height.
-     *
-     * Return true for success or false on failure.
-     */
-    bool buildTileIndex(SkStreamRewindable*, int *width, int *height);
-
-    /**
-     * Decode a rectangle subset in the image.
-     * The method can only be called after buildTileIndex().
-     *
-     * Return true for success.
-     * Return false if the index is never built or failing in decoding.
-     */
-    bool decodeSubset(SkBitmap* bm, const SkIRect& subset, SkColorType pref);
 
     /** Given a stream, this will try to find an appropriate decoder object.
         If none is found, the method returns NULL.
@@ -311,8 +245,7 @@ public:
     /** Decode the image stored in the specified file, and store the result
         in bitmap. Return true for success or false on failure.
 
-        @param pref If the PrefConfigTable is not set, prefer this colortype.
-                          See NOTE ABOUT PREFERRED CONFIGS.
+        @param pref Prefer this colortype.
 
         @param format On success, if format is non-null, it is set to the format
                       of the decoded file. On failure it is ignored.
@@ -326,8 +259,7 @@ public:
     /** Decode the image stored in the specified memory buffer, and store the
         result in bitmap. Return true for success or false on failure.
 
-        @param pref If the PrefConfigTable is not set, prefer this colortype.
-                          See NOTE ABOUT PREFERRED CONFIGS.
+        @param pref Prefer this colortype.
 
         @param format On success, if format is non-null, it is set to the format
                        of the decoded buffer. On failure it is ignored.
@@ -338,26 +270,10 @@ public:
         return DecodeMemory(buffer, size, bitmap, kUnknown_SkColorType, kDecodePixels_Mode, NULL);
     }
 
-    /**
-     *  Struct containing information about a pixel destination.
-     */
-    struct Target {
-        /**
-         *  Pre-allocated memory.
-         */
-        void*  fAddr;
-
-        /**
-         *  Rowbytes of the allocated memory.
-         */
-        size_t fRowBytes;
-    };
-
     /** Decode the image stored in the specified SkStreamRewindable, and store the result
         in bitmap. Return true for success or false on failure.
 
-        @param pref If the PrefConfigTable is not set, prefer this colortype.
-                          See NOTE ABOUT PREFERRED CONFIGS.
+        @param pref Prefer this colortype.
 
         @param format On success, if format is non-null, it is set to the format
                       of the decoded stream. On failure it is ignored.
@@ -370,38 +286,19 @@ public:
 
 protected:
     // must be overridden in subclasses. This guy is called by decode(...)
-    virtual bool onDecode(SkStream*, SkBitmap* bitmap, Mode) = 0;
+    virtual Result onDecode(SkStream*, SkBitmap* bitmap, Mode) = 0;
 
-    // If the decoder wants to support tiled based decoding,
-    // this method must be overridden. This guy is called by buildTileIndex(...)
-    virtual bool onBuildTileIndex(SkStreamRewindable*, int *width, int *height) {
+    /** If planes or rowBytes is NULL, decodes the header and computes componentSizes
+        for memory allocation.
+        Otherwise, decodes the YUV planes into the provided image planes and
+        updates componentSizes to the final image size.
+        Returns whether the decoding was successful.
+    */
+    virtual bool onDecodeYUV8Planes(SkStream*, SkISize[3] /*componentSizes*/,
+                                    void*[3] /*planes*/, size_t[3] /*rowBytes*/,
+                                    SkYUVColorSpace*) {
         return false;
     }
-
-    // If the decoder wants to support tiled based decoding,
-    // this method must be overridden. This guy is called by decodeRegion(...)
-    virtual bool onDecodeSubset(SkBitmap* bitmap, const SkIRect& rect) {
-        return false;
-    }
-
-    /*
-     * Crop a rectangle from the src Bitmap to the dest Bitmap. src and dst are
-     * both sampled by sampleSize from an original Bitmap.
-     *
-     * @param dst the destination bitmap.
-     * @param src the source bitmap that is sampled by sampleSize from the
-     *            original bitmap.
-     * @param sampleSize the sample size that src is sampled from the original bitmap.
-     * @param (dstX, dstY) the upper-left point of the dest bitmap in terms of
-     *                     the coordinate in the original bitmap.
-     * @param (width, height) the width and height of the unsampled dst.
-     * @param (srcX, srcY) the upper-left point of the src bitmap in terms of
-     *                     the coordinate in the original bitmap.
-     * @return bool Whether or not it succeeded.
-     */
-    bool cropBitmap(SkBitmap *dst, SkBitmap *src, int sampleSize,
-                    int dstX, int dstY, int width, int height,
-                    int srcX, int srcY);
 
     /**
      *  Copy all fields on this decoder to the other decoder. Used by subclasses
@@ -428,12 +325,6 @@ protected:
      *  Return the default preference being used by the current or latest call to decode.
      */
     SkColorType getDefaultPref() { return fDefaultPref; }
-    
-#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
-    // helper function for decoders to handle the (common) case where there is only
-    // once choice available in the image file.
-    bool chooseFromOneChoice(SkColorType, int width, int height) const;
-#endif
 
     /*  Helper for subclasses. Call this to allocate the pixel memory given the bitmap's info.
         Returns true on success. This method handles checking for an optional Allocator.
@@ -459,17 +350,10 @@ protected:
     SkColorType getPrefColorType(SrcDepth, bool hasAlpha) const;
 
 private:
-    Peeker*                 fPeeker;
-#ifdef SK_SUPPORT_LEGACY_IMAGEDECODER_CHOOSER
-    Chooser*                fChooser;
-#endif
+    SkPngChunkReader*       fPeeker;
     SkBitmap::Allocator*    fAllocator;
     int                     fSampleSize;
     SkColorType             fDefaultPref;   // use if fUsePrefTable is false
-#ifdef SK_SUPPORT_LEGACY_BITMAP_CONFIG
-    PrefConfigTable         fPrefTable;     // use if fUsePrefTable is true
-    bool                    fUsePrefTable;
-#endif
     bool                    fPreserveSrcDepth;
     bool                    fDitherImage;
     bool                    fSkipWritingZeroes;
@@ -486,7 +370,7 @@ private:
  */
 class SkImageDecoderFactory : public SkRefCnt {
 public:
-    SK_DECLARE_INST_COUNT(SkImageDecoderFactory)
+    
 
     virtual SkImageDecoder* newDecoder(SkStreamRewindable*) = 0;
 
@@ -509,10 +393,8 @@ public:
 
 // This macro defines the global creation entry point for each decoder. Each
 // decoder implementation that registers with the decoder factory must call it.
-#define DEFINE_DECODER_CREATOR(codec)           \
-    SkImageDecoder *Create ## codec () {        \
-        return SkNEW( Sk ## codec );            \
-    }
+#define DEFINE_DECODER_CREATOR(codec) \
+    SkImageDecoder* Create##codec() { return new Sk##codec; }
 
 // All the decoders known by Skia. Note that, depending on the compiler settings,
 // not all of these will be available
@@ -525,6 +407,7 @@ DECLARE_DECODER_CREATOR(WBMPImageDecoder);
 DECLARE_DECODER_CREATOR(WEBPImageDecoder);
 DECLARE_DECODER_CREATOR(PKMImageDecoder);
 DECLARE_DECODER_CREATOR(KTXImageDecoder);
+DECLARE_DECODER_CREATOR(ASTCImageDecoder);
 
 // Typedefs to make registering decoder and formatter callbacks easier.
 // These have to be defined outside SkImageDecoder. :(

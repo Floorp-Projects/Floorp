@@ -35,9 +35,6 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"/>
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
-    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"/>
 #ifdef MOZ_ANDROID_DOWNLOADS_INTEGRATION
     <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
 #endif
@@ -371,10 +368,7 @@
         </receiver>
 
         <receiver android:name="org.mozilla.gecko.GeckoMessageReceiver"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER">
-            <intent-filter>
-                  <action android:name="org.mozilla.gecko.INIT_PW"></action>
-            </intent-filter>
+                  android:exported="false">
         </receiver>
 
         <!-- Catch install referrer so we can do post-install work. -->
@@ -421,7 +415,7 @@
 
         <provider android:name="org.mozilla.gecko.db.BrowserProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.browser"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:exported="false"/>
 
         <!-- Share overlay activity
 
@@ -454,36 +448,35 @@
         <provider android:name="org.mozilla.gecko.db.PasswordsProvider"
                   android:label="@string/sync_configure_engines_title_passwords"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.passwords"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
+                  android:exported="false"
                   android:process="@MANGLED_ANDROID_PACKAGE_NAME@.PasswordsProvider"/>
 
         <provider android:name="org.mozilla.gecko.db.FormHistoryProvider"
                   android:label="@string/sync_configure_engines_title_history"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.formhistory"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
-                  android:protectionLevel="signature"/>
+                  android:exported="false"/>
 
         <provider android:name="org.mozilla.gecko.GeckoProfilesProvider"
-                  android:authorities="@ANDROID_PACKAGE_NAME@.profiles"/>
+                  android:authorities="@ANDROID_PACKAGE_NAME@.profiles"
+                  android:exported="false"/>
 
         <provider android:name="org.mozilla.gecko.db.TabsProvider"
                   android:label="@string/sync_configure_engines_title_tabs"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.tabs"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:exported="false"/>
 
         <provider android:name="org.mozilla.gecko.db.HomeProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.home"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:exported="false"/>
 
         <provider android:name="org.mozilla.gecko.db.ReadingListProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.readinglist"
-                  android:exported="false"
                   android:label="@string/reading_list_title"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:exported="false"/>
 
         <provider android:name="org.mozilla.gecko.db.SearchHistoryProvider"
                   android:authorities="@ANDROID_PACKAGE_NAME@.db.searchhistory"
-                  android:permission="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"/>
+                  android:exported="false"/>
 
         <service
             android:exported="false"
@@ -519,14 +512,4 @@
 #endif
 
     </application>
-
-    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.BROWSER_PROVIDER"
-                android:protectionLevel="signature"/>
-
-    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.PASSWORD_PROVIDER"
-                android:protectionLevel="signature"/>
-
-    <permission android:name="@ANDROID_PACKAGE_NAME@.permissions.FORMHISTORY_PROVIDER"
-                android:protectionLevel="signature"/>
-
 </manifest>

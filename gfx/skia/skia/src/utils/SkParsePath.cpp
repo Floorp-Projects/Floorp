@@ -86,6 +86,8 @@ bool SkParsePath::FromSVGString(const char data[], SkPath* result) {
             if (op == '\0') {
                 return false;
             }
+        } else if (is_sep(ch)) {
+            data = skip_sep(data);
         } else {
             op = ch;
             relative = false;
@@ -165,7 +167,7 @@ bool SkParsePath::FromSVGString(const char data[], SkPath* result) {
                 break;
             case '~': {
                 SkPoint args[2];
-                data = find_points(data, args, 2, false, NULL);
+                data = find_points(data, args, 2, false, nullptr);
                 path.moveTo(args[0].fX, args[0].fY);
                 path.lineTo(args[1].fX, args[1].fY);
             } break;
@@ -184,6 +186,7 @@ bool SkParsePath::FromSVGString(const char data[], SkPath* result) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "SkGeometry.h"
 #include "SkString.h"
 #include "SkStream.h"
 
@@ -216,9 +219,14 @@ void SkParsePath::ToSVGString(const SkPath& path, SkString* str) {
 
     for (;;) {
         switch (iter.next(pts, false)) {
-             case SkPath::kConic_Verb:
-                SkASSERT(0);
-                break;
+            case SkPath::kConic_Verb: {
+                const SkScalar tol = SK_Scalar1 / 1024; // how close to a quad
+                SkAutoConicToQuads quadder;
+                const SkPoint* quadPts = quadder.computeQuads(pts, iter.conicWeight(), tol);
+                for (int i = 0; i < quadder.countQuads(); ++i) {
+                    append_scalars(&stream, 'Q', &quadPts[i*2 + 1].fX, 4);
+                }
+            } break;
            case SkPath::kMove_Verb:
                 append_scalars(&stream, 'M', &pts[0].fX, 2);
                 break;

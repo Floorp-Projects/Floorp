@@ -13,18 +13,10 @@ struct SkDRect {
     double fLeft, fTop, fRight, fBottom;
 
     void add(const SkDPoint& pt) {
-        if (fLeft > pt.fX) {
-            fLeft = pt.fX;
-        }
-        if (fTop > pt.fY) {
-            fTop = pt.fY;
-        }
-        if (fRight < pt.fX) {
-            fRight = pt.fX;
-        }
-        if (fBottom < pt.fY) {
-            fBottom = pt.fY;
-        }
+        fLeft = SkTMin(fLeft, pt.fX);
+        fTop = SkTMin(fTop, pt.fY);
+        fRight = SkTMax(fRight, pt.fX);
+        fBottom = SkTMax(fBottom, pt.fY);
     }
 
     bool contains(const SkDPoint& pt) const {
@@ -32,12 +24,14 @@ struct SkDRect {
                 && approximately_between(fTop, pt.fY, fBottom);
     }
 
-    bool intersects(SkDRect* r) const {
+    void debugInit();
+
+    bool intersects(const SkDRect& r) const {
         SkASSERT(fLeft <= fRight);
         SkASSERT(fTop <= fBottom);
-        SkASSERT(r->fLeft <= r->fRight);
-        SkASSERT(r->fTop <= r->fBottom);
-        return r->fLeft <= fRight && fLeft <= r->fRight && r->fTop <= fBottom && fTop <= r->fBottom;
+        SkASSERT(r.fLeft <= r.fRight);
+        SkASSERT(r.fTop <= r.fBottom);
+        return r.fLeft <= fRight && fLeft <= r.fRight && r.fTop <= fBottom && fTop <= r.fBottom;
     }
 
     void set(const SkDPoint& pt) {
@@ -53,11 +47,23 @@ struct SkDRect {
         return fBottom - fTop;
     }
 
-    void setBounds(const SkDLine&);
-    void setBounds(const SkDCubic&);
-    void setBounds(const SkDQuad&);
-    void setRawBounds(const SkDCubic&);
-    void setRawBounds(const SkDQuad&);
+    void setBounds(const SkDConic& curve) {
+        setBounds(curve, curve, 0, 1);
+    }
+
+    void setBounds(const SkDConic& curve, const SkDConic& sub, double tStart, double tEnd);
+
+    void setBounds(const SkDCubic& curve) {
+        setBounds(curve, curve, 0, 1);
+    }
+
+    void setBounds(const SkDCubic& curve, const SkDCubic& sub, double tStart, double tEnd);
+
+    void setBounds(const SkDQuad& curve) {
+        setBounds(curve, curve, 0, 1);
+    }
+
+    void setBounds(const SkDQuad& curve, const SkDQuad& sub, double tStart, double tEnd);
 };
 
 #endif

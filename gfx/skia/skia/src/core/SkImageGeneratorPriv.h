@@ -17,23 +17,24 @@
  *  the generator.  If it succeeds, it will modify destination
  *  bitmap.
  *
- *  If generator is NULL, will safely return false.
+ *  If generator is nullptr, will safely return false.
  *
  *  If this fails or when the SkDiscardablePixelRef that is
  *  installed into destination is destroyed, it will call
- *  SkDELETE() on the generator.  Therefore, generator should be
- *  allocated with SkNEW() or SkNEW_ARGS().
+ *  `delete` on the generator.  Therefore, generator should be
+ *  allocated with `new`.
  *
  *  @param destination Upon success, this bitmap will be
  *  configured and have a pixelref installed.
  *
- *  @param factory If not NULL, this object will be used as a
- *  source of discardable memory when decoding.  If NULL, then
+ *  @param factory If not nullptr, this object will be used as a
+ *  source of discardable memory when decoding.  If nullptr, then
  *  SkDiscardableMemory::Create() will be called.
  *
  *  @return true iff successful.
  */
-bool SkInstallDiscardablePixelRef(SkImageGenerator*, SkBitmap* destination,
-                                  SkDiscardableMemory::Factory* factory);
+bool SkDEPRECATED_InstallDiscardablePixelRef(SkImageGenerator*, const SkIRect* subset,
+                                             SkBitmap* destination,
+                                             SkDiscardableMemory::Factory* factory);
 
 #endif

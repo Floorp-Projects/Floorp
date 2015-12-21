@@ -110,7 +110,6 @@ body {
 #timeline-toolbar .label {
   padding: 0 5px;
   border-style: solid;
-  border-color: rgba(170, 170, 170, .5);
 }
 
 #timeline-toolbar .devtools-button,

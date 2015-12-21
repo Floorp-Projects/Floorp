@@ -50,7 +50,7 @@ loop.panel = (function(_, mozL10n) {
           ), 
           React.createElement("div", {className: "fte-button-container"}, 
             React.createElement(Button, {additionalClass: "fte-get-started-button", 
-                    caption: mozL10n.get("first_time_experience_button_label"), 
+                    caption: mozL10n.get("first_time_experience_button_label2"), 
                     htmlId: "fte-button", 
                     onClick: this.handleButtonClick})
           )

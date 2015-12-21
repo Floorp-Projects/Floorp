@@ -104,6 +104,9 @@ public:
   already_AddRefed<Promise>
   Unsubscribe(ErrorResult& aRv);
 
+  void
+  ToJSON(PushSubscriptionJSON& aJSON);
+
 protected:
   ~PushSubscription();
 
@@ -196,6 +199,9 @@ public:
 
   already_AddRefed<Promise>
   Unsubscribe(ErrorResult& aRv);
+
+  void
+  ToJSON(PushSubscriptionJSON& aJSON);
 
 protected:
   ~WorkerPushSubscription();

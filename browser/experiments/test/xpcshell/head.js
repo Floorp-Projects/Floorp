@@ -38,9 +38,11 @@ function sha1File(path) {
   is.close();
   let bytes = hasher.finish(false);
 
-  return [("0" + bytes.charCodeAt(byte).toString(16)).slice(-2)
-          for (byte in bytes)]
-         .join("");
+  let rv = "";
+  for (let i = 0; i < bytes.length; i++) {
+    rv += ("0" + bytes.charCodeAt(i).toString(16)).substr(-2);
+  }
+  return rv;
 }
 
 const EXPERIMENT1_ID       = "test-experiment-1@tests.mozilla.org";
@@ -153,7 +155,7 @@ function getExperimentAddons(previous=false) {
     if (previous) {
       deferred.resolve(addons);
     } else {
-      deferred.resolve([a for (a of addons) if (!a.appDisabled)]);
+      deferred.resolve(addons.filter(a => !a.appDisabled));
     }
   });
 

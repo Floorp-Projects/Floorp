@@ -855,12 +855,6 @@ public class Tabs implements GeckoEventListener {
             boolean desktopMode = (flags & LOADURL_DESKTOP) != 0;
             boolean external = (flags & LOADURL_EXTERNAL) != 0;
 
-            final SharedPreferences sharedPrefs =  GeckoSharedPrefs.forApp(mAppContext);
-            final boolean isPrivatePref = sharedPrefs.getBoolean(GeckoPreferences.PREFS_OPEN_URLS_IN_PRIVATE, false);
-            if (isPrivatePref && external) {
-                isPrivate = true;
-            }
-
             args.put("url", url);
             args.put("engine", searchEngine);
             args.put("parentId", parentId);

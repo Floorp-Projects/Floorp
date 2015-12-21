@@ -5,11 +5,14 @@
  * found in the LICENSE file.
  */
 
+#include "SkAtomics.h"
 #include "SkEventTracer.h"
-#include "SkOnce.h"
+#include "SkOncePtr.h"
 
-class SkDefaultEventTracer: public SkEventTracer {
-    virtual SkEventTracer::Handle
+#include <stdlib.h>
+
+class SkDefaultEventTracer : public SkEventTracer {
+    SkEventTracer::Handle
         addTraceEvent(char phase,
                       const uint8_t* categoryEnabledFlag,
                       const char* name,
@@ -18,42 +21,38 @@ class SkDefaultEventTracer: public SkEventTracer {
                       const char** argNames,
                       const uint8_t* argTypes,
                       const uint64_t* argValues,
-                      uint8_t flags) SK_OVERRIDE { return 0; }
+                      uint8_t flags) override { return 0; }
 
-    virtual void
+    void
         updateTraceEventDuration(const uint8_t* categoryEnabledFlag,
                                  const char* name,
-                                 SkEventTracer::Handle handle) SK_OVERRIDE {};
+                                 SkEventTracer::Handle handle) override {}
 
-    virtual const uint8_t* getCategoryGroupEnabled(const char* name) SK_OVERRIDE {
+    const uint8_t* getCategoryGroupEnabled(const char* name) override {
         static uint8_t no = 0;
         return &no;
-    };
-    virtual const char* getCategoryGroupName(
-      const uint8_t* categoryEnabledFlag) SK_OVERRIDE {
+    }
+    const char* getCategoryGroupName(
+      const uint8_t* categoryEnabledFlag) override {
         static const char* dummy = "dummy";
         return dummy;
-    };
+    }
 };
 
-SkEventTracer* SkEventTracer::gInstance;
+// We prefer gUserTracer if it's been set, otherwise we fall back on gDefaultTracer.
+static SkEventTracer* gUserTracer = nullptr;
+SK_DECLARE_STATIC_ONCE_PTR(SkDefaultEventTracer, gDefaultTracer);
 
-static void cleanup_tracer() {
-    // calling SetInstance will delete the existing instance.
-    SkEventTracer::SetInstance(NULL);
+void SkEventTracer::SetInstance(SkEventTracer* tracer) {
+    SkASSERT(nullptr == sk_atomic_load(&gUserTracer, sk_memory_order_acquire));
+    sk_atomic_store(&gUserTracer, tracer, sk_memory_order_release);
+    // An atomic load during process shutdown is probably overkill, but safe overkill.
+    atexit([]() { delete sk_atomic_load(&gUserTracer, sk_memory_order_acquire); });
 }
-
-static void intialize_default_tracer(SkEventTracer* current_instance) {
-    if (NULL == current_instance) {
-        SkEventTracer::SetInstance(SkNEW(SkDefaultEventTracer));
-    }
-    atexit(cleanup_tracer);
-}
-
 
 SkEventTracer* SkEventTracer::GetInstance() {
-    SK_DECLARE_STATIC_ONCE(once);
-    SkOnce(&once, intialize_default_tracer, SkEventTracer::gInstance);
-    SkASSERT(NULL != SkEventTracer::gInstance);
-    return SkEventTracer::gInstance;
+    if (SkEventTracer* tracer = sk_atomic_load(&gUserTracer, sk_memory_order_acquire)) {
+        return tracer;
+    }
+    return gDefaultTracer.get([]{ return new SkDefaultEventTracer; });
 }

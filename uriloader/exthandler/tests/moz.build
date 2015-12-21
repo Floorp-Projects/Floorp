@@ -8,6 +8,8 @@ MOCHITEST_MANIFESTS += ['mochitest/mochitest.ini']
 
 XPCSHELL_TESTS_MANIFESTS += ['unit/xpcshell.ini']
 
+BROWSER_CHROME_MANIFESTS += ['mochitest/browser.ini']
+
 # The encoding test is already implemented in the Downloads API by a set of
 # test cases with the string "content_encoding" in their names.
 if not CONFIG['MOZ_JSDOWNLOADS']:

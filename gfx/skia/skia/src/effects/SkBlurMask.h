@@ -16,11 +16,11 @@
 class SkBlurMask {
 public:
     static bool BlurRect(SkScalar sigma, SkMask *dst, const SkRect &src, SkBlurStyle,
-                         SkIPoint *margin = NULL,
+                         SkIPoint *margin = nullptr,
                          SkMask::CreateMode createMode =
                                                 SkMask::kComputeBoundsAndRenderImage_CreateMode);
     static bool BlurRRect(SkScalar sigma, SkMask *dst, const SkRRect &src, SkBlurStyle,
-                         SkIPoint *margin = NULL,
+                         SkIPoint *margin = nullptr,
                          SkMask::CreateMode createMode =
                                                 SkMask::kComputeBoundsAndRenderImage_CreateMode);
 
@@ -32,12 +32,12 @@ public:
 
     static bool BoxBlur(SkMask* dst, const SkMask& src,
                         SkScalar sigma, SkBlurStyle style, SkBlurQuality quality,
-                        SkIPoint* margin = NULL, bool force_quality=false);
+                        SkIPoint* margin = nullptr, bool force_quality=false);
 
     // the "ground truth" blur does a gaussian convolution; it's slow
     // but useful for comparison purposes.
     static bool BlurGroundTruth(SkScalar sigma, SkMask* dst, const SkMask& src, SkBlurStyle,
-                                SkIPoint* margin = NULL);
+                                SkIPoint* margin = nullptr);
 
     // If radius > 0, return the corresponding sigma, else return 0
     static SkScalar ConvertRadiusToSigma(SkScalar radius);
@@ -54,15 +54,14 @@ public:
         @param blurred_width The width of the final, blurred rectangle
         @param sharp_width The width of the original, unblurred rectangle.
     */
-    static uint8_t ProfileLookup(const uint8_t* profile, int loc, int blurred_width, int sharp_width);
+    static uint8_t ProfileLookup(const uint8_t* profile, int loc, int blurredWidth, int sharpWidth);
 
     /** Allocate memory for and populate the profile of a 1D blurred halfplane.  The caller
         must free the memory.  The amount of memory allocated will be exactly 6*sigma bytes.
         @param sigma The standard deviation of the gaussian blur kernel
-        @param profile_out The location to store the allocated profile curve
     */
 
-    static void ComputeBlurProfile(SkScalar sigma, uint8_t** profile_out);
+    static uint8_t* ComputeBlurProfile(SkScalar sigma);
 
     /** Compute an entire scanline of a blurred step function.  This is a 1D helper that
         will produce both the horizontal and vertical profiles of the blurry rectangle.

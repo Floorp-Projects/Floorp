@@ -7,6 +7,14 @@ function run_test() {
   run_next_test();
 }
 
+const breakdown = {
+  by: "coarseType",
+  objects: { by: "count", count: true, bytes: true },
+  scripts: { by: "count", count: true, bytes: true },
+  strings: { by: "count", count: true, bytes: true },
+  other: { by: "count", count: true, bytes: true },
+};
+
 add_task(function* () {
   const client = new HeapAnalysesClient();
 
@@ -14,13 +22,17 @@ add_task(function* () {
   yield client.readHeapSnapshot(snapshotFilePath);
   const dominatorTreeId = yield client.computeDominatorTree(snapshotFilePath);
 
-  const partialTree = yield client.getDominatorTree({ dominatorTreeId });
+  const partialTree = yield client.getDominatorTree({
+    dominatorTreeId,
+    breakdown
+  });
   ok(partialTree.children.length > 0,
      "root should immediately dominate some nodes");
 
   // First, test getting a subset of children available.
   const response = yield client.getImmediatelyDominated({
     dominatorTreeId,
+    breakdown,
     nodeId: partialTree.nodeId,
     startIndex: 0,
     maxCount: partialTree.children.length - 1
@@ -33,6 +45,7 @@ add_task(function* () {
   // Next, test getting a subset of children available.
   const secondResponse = yield client.getImmediatelyDominated({
     dominatorTreeId,
+    breakdown,
     nodeId: partialTree.nodeId,
     startIndex: 0,
     maxCount: Infinity

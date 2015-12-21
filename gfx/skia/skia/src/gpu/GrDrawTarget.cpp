@@ -6,1160 +6,559 @@
  * found in the LICENSE file.
  */
 
-
-
 #include "GrDrawTarget.h"
-#include "GrContext.h"
-#include "GrDrawTargetCaps.h"
+
+#include "GrCaps.h"
+#include "GrGpu.h"
 #include "GrPath.h"
+#include "GrPipeline.h"
+#include "GrMemoryPool.h"
 #include "GrRenderTarget.h"
+#include "GrResourceProvider.h"
+#include "GrRenderTargetPriv.h"
+#include "GrSurfacePriv.h"
 #include "GrTexture.h"
 #include "GrVertexBuffer.h"
+
+#include "batches/GrClearBatch.h"
+#include "batches/GrCopySurfaceBatch.h"
+#include "batches/GrDiscardBatch.h"
+#include "batches/GrDrawBatch.h"
+#include "batches/GrDrawPathBatch.h"
+#include "batches/GrRectBatchFactory.h"
+#include "batches/GrStencilPathBatch.h"
 
 #include "SkStrokeRec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-GrDrawTarget::DrawInfo& GrDrawTarget::DrawInfo::operator =(const DrawInfo& di) {
-    fPrimitiveType  = di.fPrimitiveType;
-    fStartVertex    = di.fStartVertex;
-    fStartIndex     = di.fStartIndex;
-    fVertexCount    = di.fVertexCount;
-    fIndexCount     = di.fIndexCount;
+GrDrawTarget::GrDrawTarget(GrRenderTarget* rt, GrGpu* gpu, GrResourceProvider* resourceProvider,
+                           const Options& options)
+    : fGpu(SkRef(gpu))
+    , fResourceProvider(resourceProvider)
+    , fFlushing(false)
+    , fFlags(0)
+    , fRenderTarget(rt) {
+    // TODO: Stop extracting the context (currently needed by GrClipMaskManager)
+    fContext = fGpu->getContext();
+    fClipMaskManager.reset(new GrClipMaskManager(this, options.fClipBatchToBounds));
 
-    fInstanceCount          = di.fInstanceCount;
-    fVerticesPerInstance    = di.fVerticesPerInstance;
-    fIndicesPerInstance     = di.fIndicesPerInstance;
-
-    if (NULL != di.fDevBounds) {
-        SkASSERT(di.fDevBounds == &di.fDevBoundsStorage);
-        fDevBoundsStorage = di.fDevBoundsStorage;
-        fDevBounds = &fDevBoundsStorage;
-    } else {
-        fDevBounds = NULL;
-    }
-
-    fDstCopy = di.fDstCopy;
-
-    return *this;
-}
+    rt->setLastDrawTarget(this);
 
 #ifdef SK_DEBUG
-bool GrDrawTarget::DrawInfo::isInstanced() const {
-    if (fInstanceCount > 0) {
-        SkASSERT(0 == fIndexCount % fIndicesPerInstance);
-        SkASSERT(0 == fVertexCount % fVerticesPerInstance);
-        SkASSERT(fIndexCount / fIndicesPerInstance == fInstanceCount);
-        SkASSERT(fVertexCount / fVerticesPerInstance == fInstanceCount);
-        // there is no way to specify a non-zero start index to drawIndexedInstances().
-        SkASSERT(0 == fStartIndex);
-        return true;
-    } else {
-        SkASSERT(!fVerticesPerInstance);
-        SkASSERT(!fIndicesPerInstance);
-        return false;
-    }
-}
+    static int debugID = 0;
+    fDebugID = debugID++;
 #endif
-
-void GrDrawTarget::DrawInfo::adjustInstanceCount(int instanceOffset) {
-    SkASSERT(this->isInstanced());
-    SkASSERT(instanceOffset + fInstanceCount >= 0);
-    fInstanceCount += instanceOffset;
-    fVertexCount = fVerticesPerInstance * fInstanceCount;
-    fIndexCount = fIndicesPerInstance * fInstanceCount;
-}
-
-void GrDrawTarget::DrawInfo::adjustStartVertex(int vertexOffset) {
-    fStartVertex += vertexOffset;
-    SkASSERT(fStartVertex >= 0);
-}
-
-void GrDrawTarget::DrawInfo::adjustStartIndex(int indexOffset) {
-    SkASSERT(this->isIndexed());
-    fStartIndex += indexOffset;
-    SkASSERT(fStartIndex >= 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-#define DEBUG_INVAL_BUFFER 0xdeadcafe
-#define DEBUG_INVAL_START_IDX -1
-
-GrDrawTarget::GrDrawTarget(GrContext* context)
-    : fClip(NULL)
-    , fContext(context)
-    , fGpuTraceMarkerCount(0) {
-    SkASSERT(NULL != context);
-
-    fDrawState = &fDefaultDrawState;
-    // We assume that fDrawState always owns a ref to the object it points at.
-    fDefaultDrawState.ref();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.push_back();
-#ifdef SK_DEBUG
-    geoSrc.fVertexCount = DEBUG_INVAL_START_IDX;
-    geoSrc.fVertexBuffer = (GrVertexBuffer*)DEBUG_INVAL_BUFFER;
-    geoSrc.fIndexCount = DEBUG_INVAL_START_IDX;
-    geoSrc.fIndexBuffer = (GrIndexBuffer*)DEBUG_INVAL_BUFFER;
-#endif
-    geoSrc.fVertexSrc = kNone_GeometrySrcType;
-    geoSrc.fIndexSrc  = kNone_GeometrySrcType;
 }
 
 GrDrawTarget::~GrDrawTarget() {
-    SkASSERT(1 == fGeoSrcStateStack.count());
-    SkDEBUGCODE(GeometrySrcState& geoSrc = fGeoSrcStateStack.back());
-    SkASSERT(kNone_GeometrySrcType == geoSrc.fIndexSrc);
-    SkASSERT(kNone_GeometrySrcType == geoSrc.fVertexSrc);
-    fDrawState->unref();
-}
-
-void GrDrawTarget::releaseGeometry() {
-    int popCnt = fGeoSrcStateStack.count() - 1;
-    while (popCnt) {
-        this->popGeometrySource();
-        --popCnt;
+    if (fRenderTarget && this == fRenderTarget->getLastDrawTarget()) {
+        fRenderTarget->setLastDrawTarget(nullptr);
     }
-    this->resetVertexSource();
-    this->resetIndexSource();
-}
 
-void GrDrawTarget::setClip(const GrClipData* clip) {
-    clipWillBeSet(clip);
-    fClip = clip;
-}
-
-const GrClipData* GrDrawTarget::getClip() const {
-    return fClip;
-}
-
-void GrDrawTarget::setDrawState(GrDrawState*  drawState) {
-    SkASSERT(NULL != fDrawState);
-    if (NULL == drawState) {
-        drawState = &fDefaultDrawState;
-    }
-    if (fDrawState != drawState) {
-        fDrawState->unref();
-        drawState->ref();
-        fDrawState = drawState;
-    }
-}
-
-bool GrDrawTarget::reserveVertexSpace(size_t vertexSize,
-                                      int vertexCount,
-                                      void** vertices) {
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    bool acquired = false;
-    if (vertexCount > 0) {
-        SkASSERT(NULL != vertices);
-        this->releasePreviousVertexSource();
-        geoSrc.fVertexSrc = kNone_GeometrySrcType;
-
-        acquired = this->onReserveVertexSpace(vertexSize,
-                                              vertexCount,
-                                              vertices);
-    }
-    if (acquired) {
-        geoSrc.fVertexSrc = kReserved_GeometrySrcType;
-        geoSrc.fVertexCount = vertexCount;
-        geoSrc.fVertexSize = vertexSize;
-    } else if (NULL != vertices) {
-        *vertices = NULL;
-    }
-    return acquired;
-}
-
-bool GrDrawTarget::reserveIndexSpace(int indexCount,
-                                     void** indices) {
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    bool acquired = false;
-    if (indexCount > 0) {
-        SkASSERT(NULL != indices);
-        this->releasePreviousIndexSource();
-        geoSrc.fIndexSrc = kNone_GeometrySrcType;
-
-        acquired = this->onReserveIndexSpace(indexCount, indices);
-    }
-    if (acquired) {
-        geoSrc.fIndexSrc = kReserved_GeometrySrcType;
-        geoSrc.fIndexCount = indexCount;
-    } else if (NULL != indices) {
-        *indices = NULL;
-    }
-    return acquired;
-
-}
-
-bool GrDrawTarget::reserveVertexAndIndexSpace(int vertexCount,
-                                              int indexCount,
-                                              void** vertices,
-                                              void** indices) {
-    size_t vertexSize = this->drawState()->getVertexSize();
-    this->willReserveVertexAndIndexSpace(vertexCount, indexCount);
-    if (vertexCount) {
-        if (!this->reserveVertexSpace(vertexSize, vertexCount, vertices)) {
-            if (indexCount) {
-                this->resetIndexSource();
-            }
-            return false;
-        }
-    }
-    if (indexCount) {
-        if (!this->reserveIndexSpace(indexCount, indices)) {
-            if (vertexCount) {
-                this->resetVertexSource();
-            }
-            return false;
-        }
-    }
-    return true;
-}
-
-bool GrDrawTarget::geometryHints(int32_t* vertexCount,
-                                 int32_t* indexCount) const {
-    if (NULL != vertexCount) {
-        *vertexCount = -1;
-    }
-    if (NULL != indexCount) {
-        *indexCount = -1;
-    }
-    return false;
-}
-
-void GrDrawTarget::releasePreviousVertexSource() {
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    switch (geoSrc.fVertexSrc) {
-        case kNone_GeometrySrcType:
-            break;
-        case kArray_GeometrySrcType:
-            this->releaseVertexArray();
-            break;
-        case kReserved_GeometrySrcType:
-            this->releaseReservedVertexSpace();
-            break;
-        case kBuffer_GeometrySrcType:
-            geoSrc.fVertexBuffer->unref();
-#ifdef SK_DEBUG
-            geoSrc.fVertexBuffer = (GrVertexBuffer*)DEBUG_INVAL_BUFFER;
-#endif
-            break;
-        default:
-            SkFAIL("Unknown Vertex Source Type.");
-            break;
-    }
-}
-
-void GrDrawTarget::releasePreviousIndexSource() {
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    switch (geoSrc.fIndexSrc) {
-        case kNone_GeometrySrcType:   // these two don't require
-            break;
-        case kArray_GeometrySrcType:
-            this->releaseIndexArray();
-            break;
-        case kReserved_GeometrySrcType:
-            this->releaseReservedIndexSpace();
-            break;
-        case kBuffer_GeometrySrcType:
-            geoSrc.fIndexBuffer->unref();
-#ifdef SK_DEBUG
-            geoSrc.fIndexBuffer = (GrIndexBuffer*)DEBUG_INVAL_BUFFER;
-#endif
-            break;
-        default:
-            SkFAIL("Unknown Index Source Type.");
-            break;
-    }
-}
-
-void GrDrawTarget::setVertexSourceToArray(const void* vertexArray,
-                                          int vertexCount) {
-    this->releasePreviousVertexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fVertexSrc = kArray_GeometrySrcType;
-    geoSrc.fVertexSize = this->drawState()->getVertexSize();
-    geoSrc.fVertexCount = vertexCount;
-    this->onSetVertexSourceToArray(vertexArray, vertexCount);
-}
-
-void GrDrawTarget::setIndexSourceToArray(const void* indexArray,
-                                         int indexCount) {
-    this->releasePreviousIndexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fIndexSrc = kArray_GeometrySrcType;
-    geoSrc.fIndexCount = indexCount;
-    this->onSetIndexSourceToArray(indexArray, indexCount);
-}
-
-void GrDrawTarget::setVertexSourceToBuffer(const GrVertexBuffer* buffer) {
-    this->releasePreviousVertexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fVertexSrc    = kBuffer_GeometrySrcType;
-    geoSrc.fVertexBuffer = buffer;
-    buffer->ref();
-    geoSrc.fVertexSize = this->drawState()->getVertexSize();
-}
-
-void GrDrawTarget::setIndexSourceToBuffer(const GrIndexBuffer* buffer) {
-    this->releasePreviousIndexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fIndexSrc     = kBuffer_GeometrySrcType;
-    geoSrc.fIndexBuffer  = buffer;
-    buffer->ref();
-}
-
-void GrDrawTarget::resetVertexSource() {
-    this->releasePreviousVertexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fVertexSrc = kNone_GeometrySrcType;
-}
-
-void GrDrawTarget::resetIndexSource() {
-    this->releasePreviousIndexSource();
-    GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    geoSrc.fIndexSrc = kNone_GeometrySrcType;
-}
-
-void GrDrawTarget::pushGeometrySource() {
-    this->geometrySourceWillPush();
-    GeometrySrcState& newState = fGeoSrcStateStack.push_back();
-    newState.fIndexSrc = kNone_GeometrySrcType;
-    newState.fVertexSrc = kNone_GeometrySrcType;
-#ifdef SK_DEBUG
-    newState.fVertexCount  = ~0;
-    newState.fVertexBuffer = (GrVertexBuffer*)~0;
-    newState.fIndexCount   = ~0;
-    newState.fIndexBuffer = (GrIndexBuffer*)~0;
-#endif
-}
-
-void GrDrawTarget::popGeometrySource() {
-    // if popping last element then pops are unbalanced with pushes
-    SkASSERT(fGeoSrcStateStack.count() > 1);
-
-    this->geometrySourceWillPop(fGeoSrcStateStack.fromBack(1));
-    this->releasePreviousVertexSource();
-    this->releasePreviousIndexSource();
-    fGeoSrcStateStack.pop_back();
+    fGpu->unref();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool GrDrawTarget::checkDraw(GrPrimitiveType type, int startVertex,
-                             int startIndex, int vertexCount,
-                             int indexCount) const {
-    const GrDrawState& drawState = this->getDrawState();
-#ifdef SK_DEBUG
-    const GeometrySrcState& geoSrc = fGeoSrcStateStack.back();
-    int maxVertex = startVertex + vertexCount;
-    int maxValidVertex;
-    switch (geoSrc.fVertexSrc) {
-        case kNone_GeometrySrcType:
-            SkFAIL("Attempting to draw without vertex src.");
-        case kReserved_GeometrySrcType: // fallthrough
-        case kArray_GeometrySrcType:
-            maxValidVertex = geoSrc.fVertexCount;
-            break;
-        case kBuffer_GeometrySrcType:
-            maxValidVertex = static_cast<int>(geoSrc.fVertexBuffer->gpuMemorySize() / geoSrc.fVertexSize);
-            break;
-    }
-    if (maxVertex > maxValidVertex) {
-        SkFAIL("Drawing outside valid vertex range.");
-    }
-    if (indexCount > 0) {
-        int maxIndex = startIndex + indexCount;
-        int maxValidIndex;
-        switch (geoSrc.fIndexSrc) {
-            case kNone_GeometrySrcType:
-                SkFAIL("Attempting to draw indexed geom without index src.");
-            case kReserved_GeometrySrcType: // fallthrough
-            case kArray_GeometrySrcType:
-                maxValidIndex = geoSrc.fIndexCount;
-                break;
-            case kBuffer_GeometrySrcType:
-                maxValidIndex = static_cast<int>(geoSrc.fIndexBuffer->gpuMemorySize() / sizeof(uint16_t));
-                break;
-        }
-        if (maxIndex > maxValidIndex) {
-            SkFAIL("Index reads outside valid index range.");
-        }
+// Add a GrDrawTarget-based dependency
+void GrDrawTarget::addDependency(GrDrawTarget* dependedOn) {
+    SkASSERT(!dependedOn->dependsOn(this));  // loops are bad
+
+    if (this->dependsOn(dependedOn)) {
+        return;  // don't add duplicate dependencies
     }
 
-    SkASSERT(NULL != drawState.getRenderTarget());
-
-    for (int s = 0; s < drawState.numColorStages(); ++s) {
-        const GrEffect* effect = drawState.getColorStage(s).getEffect();
-        int numTextures = effect->numTextures();
-        for (int t = 0; t < numTextures; ++t) {
-            GrTexture* texture = effect->texture(t);
-            SkASSERT(texture->asRenderTarget() != drawState.getRenderTarget());
-        }
-    }
-    for (int s = 0; s < drawState.numCoverageStages(); ++s) {
-        const GrEffect* effect = drawState.getCoverageStage(s).getEffect();
-        int numTextures = effect->numTextures();
-        for (int t = 0; t < numTextures; ++t) {
-            GrTexture* texture = effect->texture(t);
-            SkASSERT(texture->asRenderTarget() != drawState.getRenderTarget());
-        }
-    }
-
-    SkASSERT(drawState.validateVertexAttribs());
-#endif
-    if (NULL == drawState.getRenderTarget()) {
-        return false;
-    }
-    return true;
+    *fDependencies.push() = dependedOn;
 }
 
-bool GrDrawTarget::setupDstReadIfNecessary(GrDeviceCoordTexture* dstCopy, const SkRect* drawBounds) {
-    if (this->caps()->dstReadInShaderSupport() || !this->getDrawState().willEffectReadDstColor()) {
+// Convert from a GrSurface-based dependency to a GrDrawTarget one
+void GrDrawTarget::addDependency(GrSurface* dependedOn) {
+    if (dependedOn->asRenderTarget() && dependedOn->asRenderTarget()->getLastDrawTarget()) {
+        // If it is still receiving dependencies, this DT shouldn't be closed
+        SkASSERT(!this->isClosed());
+
+        GrDrawTarget* dt = dependedOn->asRenderTarget()->getLastDrawTarget();
+        if (dt == this) {
+            // self-read - presumably for dst reads
+        } else {
+            this->addDependency(dt);
+
+            // Can't make it closed in the self-read case
+            dt->makeClosed();
+        }
+    }
+}
+
+#ifdef SK_DEBUG
+void GrDrawTarget::dump() const {
+    SkDebugf("--------------------------------------------------------------\n");
+    SkDebugf("node: %d -> RT: %d\n", fDebugID, fRenderTarget ? fRenderTarget->getUniqueID() : -1);
+    SkDebugf("relies On (%d): ", fDependencies.count());
+    for (int i = 0; i < fDependencies.count(); ++i) {
+        SkDebugf("%d, ", fDependencies[i]->fDebugID);
+    }
+    SkDebugf("\n");
+    SkDebugf("batches (%d):\n", fBatches.count());
+    for (int i = 0; i < fBatches.count(); ++i) {
+#if 0
+        SkDebugf("*******************************\n");
+#endif
+        SkDebugf("%d: %s\n", i, fBatches[i]->name());
+#if 0
+        SkString str = fBatches[i]->dumpInfo();
+        SkDebugf("%s\n", str.c_str());
+#endif
+    }
+}
+#endif
+
+bool GrDrawTarget::setupDstReadIfNecessary(const GrPipelineBuilder& pipelineBuilder,
+                                           const GrPipelineOptimizations& optimizations,
+                                           GrXferProcessor::DstTexture* dstTexture,
+                                           const SkRect& batchBounds) {
+    SkRect bounds = batchBounds;
+    bounds.outset(0.5f, 0.5f);
+
+    if (!pipelineBuilder.willXPNeedDstTexture(*this->caps(), optimizations)) {
         return true;
     }
-    GrRenderTarget* rt = this->drawState()->getRenderTarget();
-    SkIRect copyRect;
-    const GrClipData* clip = this->getClip();
-    clip->getConservativeBounds(rt, &copyRect);
 
-    if (NULL != drawBounds) {
-        SkIRect drawIBounds;
-        drawBounds->roundOut(&drawIBounds);
-        if (!copyRect.intersect(drawIBounds)) {
-#ifdef SK_DEBUG
-            GrPrintf("Missed an early reject. Bailing on draw from setupDstReadIfNecessary.\n");
-#endif
-            return false;
+    GrRenderTarget* rt = pipelineBuilder.getRenderTarget();
+
+    if (this->caps()->textureBarrierSupport()) {
+        if (GrTexture* rtTex = rt->asTexture()) {
+            // The render target is a texture, so we can read from it directly in the shader. The XP
+            // will be responsible to detect this situation and request a texture barrier.
+            dstTexture->setTexture(rtTex);
+            dstTexture->setOffset(0, 0);
+            return true;
         }
-    } else {
+    }
+
+    SkIRect copyRect;
+    pipelineBuilder.clip().getConservativeBounds(rt->width(), rt->height(), &copyRect);
+
+    SkIRect drawIBounds;
+    bounds.roundOut(&drawIBounds);
+    if (!copyRect.intersect(drawIBounds)) {
 #ifdef SK_DEBUG
-        //GrPrintf("No dev bounds when dst copy is made.\n");
+        GrCapsDebugf(this->caps(), "Missed an early reject. "
+                                   "Bailing on draw from setupDstReadIfNecessary.\n");
 #endif
+        return false;
     }
 
     // MSAA consideration: When there is support for reading MSAA samples in the shader we could
     // have per-sample dst values by making the copy multisampled.
-    GrTextureDesc desc;
-    this->initCopySurfaceDstDesc(rt, &desc);
+    GrSurfaceDesc desc;
+    if (!fGpu->initCopySurfaceDstDesc(rt, &desc)) {
+        desc.fOrigin = kDefault_GrSurfaceOrigin;
+        desc.fFlags = kRenderTarget_GrSurfaceFlag;
+        desc.fConfig = rt->config();
+    }
+
     desc.fWidth = copyRect.width();
     desc.fHeight = copyRect.height();
 
-    GrAutoScratchTexture ast(fContext, desc, GrContext::kApprox_ScratchTexMatch);
+    static const uint32_t kFlags = 0;
+    SkAutoTUnref<GrTexture> copy(fResourceProvider->createApproxTexture(desc, kFlags));
 
-    if (NULL == ast.texture()) {
-        GrPrintf("Failed to create temporary copy of destination texture.\n");
+    if (!copy) {
+        SkDebugf("Failed to create temporary copy of destination texture.\n");
         return false;
     }
     SkIPoint dstPoint = {0, 0};
-    if (this->copySurface(ast.texture(), rt, copyRect, dstPoint)) {
-        dstCopy->setTexture(ast.texture());
-        dstCopy->setOffset(copyRect.fLeft, copyRect.fTop);
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void GrDrawTarget::drawIndexed(GrPrimitiveType type,
-                               int startVertex,
-                               int startIndex,
-                               int vertexCount,
-                               int indexCount,
-                               const SkRect* devBounds) {
-    if (indexCount > 0 && this->checkDraw(type, startVertex, startIndex, vertexCount, indexCount)) {
-        DrawInfo info;
-        info.fPrimitiveType = type;
-        info.fStartVertex   = startVertex;
-        info.fStartIndex    = startIndex;
-        info.fVertexCount   = vertexCount;
-        info.fIndexCount    = indexCount;
-
-        info.fInstanceCount         = 0;
-        info.fVerticesPerInstance   = 0;
-        info.fIndicesPerInstance    = 0;
-
-        if (NULL != devBounds) {
-            info.setDevBounds(*devBounds);
-        }
-        // TODO: We should continue with incorrect blending.
-        if (!this->setupDstReadIfNecessary(&info)) {
-            return;
-        }
-        this->onDraw(info);
-    }
-}
-
-void GrDrawTarget::drawNonIndexed(GrPrimitiveType type,
-                                  int startVertex,
-                                  int vertexCount,
-                                  const SkRect* devBounds) {
-    if (vertexCount > 0 && this->checkDraw(type, startVertex, -1, vertexCount, -1)) {
-        DrawInfo info;
-        info.fPrimitiveType = type;
-        info.fStartVertex   = startVertex;
-        info.fStartIndex    = 0;
-        info.fVertexCount   = vertexCount;
-        info.fIndexCount    = 0;
-
-        info.fInstanceCount         = 0;
-        info.fVerticesPerInstance   = 0;
-        info.fIndicesPerInstance    = 0;
-
-        if (NULL != devBounds) {
-            info.setDevBounds(*devBounds);
-        }
-        // TODO: We should continue with incorrect blending.
-        if (!this->setupDstReadIfNecessary(&info)) {
-            return;
-        }
-        this->onDraw(info);
-    }
-}
-
-void GrDrawTarget::stencilPath(const GrPath* path, SkPath::FillType fill) {
-    // TODO: extract portions of checkDraw that are relevant to path stenciling.
-    SkASSERT(NULL != path);
-    SkASSERT(this->caps()->pathRenderingSupport());
-    SkASSERT(!SkPath::IsInverseFillType(fill));
-    this->onStencilPath(path, fill);
-}
-
-void GrDrawTarget::drawPath(const GrPath* path, SkPath::FillType fill) {
-    // TODO: extract portions of checkDraw that are relevant to path rendering.
-    SkASSERT(NULL != path);
-    SkASSERT(this->caps()->pathRenderingSupport());
-    const GrDrawState* drawState = &getDrawState();
-
-    SkRect devBounds;
-    if (SkPath::IsInverseFillType(fill)) {
-        devBounds = SkRect::MakeWH(SkIntToScalar(drawState->getRenderTarget()->width()),
-                                   SkIntToScalar(drawState->getRenderTarget()->height()));
-    } else {
-        devBounds = path->getBounds();
-    }
-    SkMatrix viewM = drawState->getViewMatrix();
-    viewM.mapRect(&devBounds);
-
-    GrDeviceCoordTexture dstCopy;
-    if (!this->setupDstReadIfNecessary(&dstCopy, &devBounds)) {
-        return;
-    }
-
-    this->onDrawPath(path, fill, dstCopy.texture() ? &dstCopy : NULL);
-}
-
-void GrDrawTarget::drawPaths(const GrPathRange* pathRange,
-                             const uint32_t indices[], int count,
-                             const float transforms[], PathTransformType transformsType,
-                             SkPath::FillType fill) {
-    SkASSERT(this->caps()->pathRenderingSupport());
-    SkASSERT(NULL != pathRange);
-    SkASSERT(NULL != indices);
-    SkASSERT(NULL != transforms);
-
-    // Don't compute a bounding box for setupDstReadIfNecessary(), we'll opt
-    // instead for it to just copy the entire dst. Realistically this is a moot
-    // point, because any context that supports NV_path_rendering will also
-    // support NV_blend_equation_advanced.
-    GrDeviceCoordTexture dstCopy;
-    if (!this->setupDstReadIfNecessary(&dstCopy, NULL)) {
-        return;
-    }
-
-    this->onDrawPaths(pathRange, indices, count, transforms, transformsType, fill,
-                      dstCopy.texture() ? &dstCopy : NULL);
-}
-
-typedef GrTraceMarkerSet::Iter TMIter;
-void GrDrawTarget::saveActiveTraceMarkers() {
-    if (this->caps()->gpuTracingSupport()) {
-        SkASSERT(0 == fStoredTraceMarkers.count());
-        fStoredTraceMarkers.addSet(fActiveTraceMarkers);
-        for (TMIter iter = fStoredTraceMarkers.begin(); iter != fStoredTraceMarkers.end(); ++iter) {
-            this->removeGpuTraceMarker(&(*iter));
-        }
-    }
-}
-
-void GrDrawTarget::restoreActiveTraceMarkers() {
-    if (this->caps()->gpuTracingSupport()) {
-        SkASSERT(0 == fActiveTraceMarkers.count());
-        for (TMIter iter = fStoredTraceMarkers.begin(); iter != fStoredTraceMarkers.end(); ++iter) {
-            this->addGpuTraceMarker(&(*iter));
-        }
-        for (TMIter iter = fActiveTraceMarkers.begin(); iter != fActiveTraceMarkers.end(); ++iter) {
-            this->fStoredTraceMarkers.remove(*iter);
-        }
-    }
-}
-
-void GrDrawTarget::addGpuTraceMarker(const GrGpuTraceMarker* marker) {
-    if (this->caps()->gpuTracingSupport()) {
-        SkASSERT(fGpuTraceMarkerCount >= 0);
-        this->fActiveTraceMarkers.add(*marker);
-        this->didAddGpuTraceMarker();
-        ++fGpuTraceMarkerCount;
-    }
-}
-
-void GrDrawTarget::removeGpuTraceMarker(const GrGpuTraceMarker* marker) {
-    if (this->caps()->gpuTracingSupport()) {
-        SkASSERT(fGpuTraceMarkerCount >= 1);
-        this->fActiveTraceMarkers.remove(*marker);
-        this->didRemoveGpuTraceMarker();
-        --fGpuTraceMarkerCount;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool GrDrawTarget::willUseHWAALines() const {
-    // There is a conflict between using smooth lines and our use of premultiplied alpha. Smooth
-    // lines tweak the incoming alpha value but not in a premul-alpha way. So we only use them when
-    // our alpha is 0xff and tweaking the color for partial coverage is OK
-    if (!this->caps()->hwAALineSupport() ||
-        !this->getDrawState().isHWAntialiasState()) {
-        return false;
-    }
-    GrDrawState::BlendOptFlags opts = this->getDrawState().getBlendOpts();
-    return (GrDrawState::kDisableBlend_BlendOptFlag & opts) &&
-           (GrDrawState::kCoverageAsAlpha_BlendOptFlag & opts);
-}
-
-bool GrDrawTarget::canApplyCoverage() const {
-    // we can correctly apply coverage if a) we have dual source blending
-    // or b) one of our blend optimizations applies.
-    return this->caps()->dualSourceBlendingSupport() ||
-           GrDrawState::kNone_BlendOpt != this->getDrawState().getBlendOpts(true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-void GrDrawTarget::drawIndexedInstances(GrPrimitiveType type,
-                                        int instanceCount,
-                                        int verticesPerInstance,
-                                        int indicesPerInstance,
-                                        const SkRect* devBounds) {
-    if (!verticesPerInstance || !indicesPerInstance) {
-        return;
-    }
-
-    int maxInstancesPerDraw = this->indexCountInCurrentSource() / indicesPerInstance;
-    if (!maxInstancesPerDraw) {
-        return;
-    }
-
-    DrawInfo info;
-    info.fPrimitiveType = type;
-    info.fStartIndex = 0;
-    info.fStartVertex = 0;
-    info.fIndicesPerInstance = indicesPerInstance;
-    info.fVerticesPerInstance = verticesPerInstance;
-
-    // Set the same bounds for all the draws.
-    if (NULL != devBounds) {
-        info.setDevBounds(*devBounds);
-    }
-    // TODO: We should continue with incorrect blending.
-    if (!this->setupDstReadIfNecessary(&info)) {
-        return;
-    }
-
-    while (instanceCount) {
-        info.fInstanceCount = SkTMin(instanceCount, maxInstancesPerDraw);
-        info.fVertexCount = info.fInstanceCount * verticesPerInstance;
-        info.fIndexCount = info.fInstanceCount * indicesPerInstance;
-
-        if (this->checkDraw(type,
-                            info.fStartVertex,
-                            info.fStartIndex,
-                            info.fVertexCount,
-                            info.fIndexCount)) {
-            this->onDraw(info);
-        }
-        info.fStartVertex += info.fVertexCount;
-        instanceCount -= info.fInstanceCount;
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-namespace {
-
-// position + (optional) texture coord
-extern const GrVertexAttrib gBWRectPosUVAttribs[] = {
-    {kVec2f_GrVertexAttribType, 0,               kPosition_GrVertexAttribBinding},
-    {kVec2f_GrVertexAttribType, sizeof(SkPoint), kLocalCoord_GrVertexAttribBinding}
-};
-
-void set_vertex_attributes(GrDrawState* drawState, bool hasUVs) {
-    if (hasUVs) {
-        drawState->setVertexAttribs<gBWRectPosUVAttribs>(2);
-    } else {
-        drawState->setVertexAttribs<gBWRectPosUVAttribs>(1);
-    }
-}
-
-};
-
-void GrDrawTarget::onDrawRect(const SkRect& rect,
-                              const SkMatrix* matrix,
-                              const SkRect* localRect,
-                              const SkMatrix* localMatrix) {
-
-    GrDrawState::AutoViewMatrixRestore avmr;
-    if (NULL != matrix) {
-        avmr.set(this->drawState(), *matrix);
-    }
-
-    set_vertex_attributes(this->drawState(), NULL != localRect);
-
-    AutoReleaseGeometry geo(this, 4, 0);
-    if (!geo.succeeded()) {
-        GrPrintf("Failed to get space for vertices!\n");
-        return;
-    }
-
-    size_t vsize = this->drawState()->getVertexSize();
-    geo.positions()->setRectFan(rect.fLeft, rect.fTop, rect.fRight, rect.fBottom, vsize);
-    if (NULL != localRect) {
-        SkPoint* coords = GrTCast<SkPoint*>(GrTCast<intptr_t>(geo.vertices()) +
-                                            sizeof(SkPoint));
-        coords->setRectFan(localRect->fLeft, localRect->fTop,
-                           localRect->fRight, localRect->fBottom,
-                           vsize);
-        if (NULL != localMatrix) {
-            localMatrix->mapPointsWithStride(coords, vsize, 4);
-        }
-    }
-    SkRect bounds;
-    this->getDrawState().getViewMatrix().mapRect(&bounds, rect);
-
-    this->drawNonIndexed(kTriangleFan_GrPrimitiveType, 0, 4, &bounds);
-}
-
-void GrDrawTarget::clipWillBeSet(const GrClipData* clipData) {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-GrDrawTarget::AutoStateRestore::AutoStateRestore() {
-    fDrawTarget = NULL;
-}
-
-GrDrawTarget::AutoStateRestore::AutoStateRestore(GrDrawTarget* target,
-                                                 ASRInit init,
-                                                 const SkMatrix* vm) {
-    fDrawTarget = NULL;
-    this->set(target, init, vm);
-}
-
-GrDrawTarget::AutoStateRestore::~AutoStateRestore() {
-    if (NULL != fDrawTarget) {
-        fDrawTarget->setDrawState(fSavedState);
-        fSavedState->unref();
-    }
-}
-
-void GrDrawTarget::AutoStateRestore::set(GrDrawTarget* target, ASRInit init, const SkMatrix* vm) {
-    SkASSERT(NULL == fDrawTarget);
-    fDrawTarget = target;
-    fSavedState = target->drawState();
-    SkASSERT(fSavedState);
-    fSavedState->ref();
-    if (kReset_ASRInit == init) {
-        if (NULL == vm) {
-            // calls the default cons
-            fTempState.init();
-        } else {
-            SkNEW_IN_TLAZY(&fTempState, GrDrawState, (*vm));
-        }
-    } else {
-        SkASSERT(kPreserve_ASRInit == init);
-        if (NULL == vm) {
-            fTempState.set(*fSavedState);
-        } else {
-            SkNEW_IN_TLAZY(&fTempState, GrDrawState, (*fSavedState, *vm));
-        }
-    }
-    target->setDrawState(fTempState.get());
-}
-
-bool GrDrawTarget::AutoStateRestore::setIdentity(GrDrawTarget* target, ASRInit init) {
-    SkASSERT(NULL == fDrawTarget);
-    fDrawTarget = target;
-    fSavedState = target->drawState();
-    SkASSERT(fSavedState);
-    fSavedState->ref();
-    if (kReset_ASRInit == init) {
-        // calls the default cons
-        fTempState.init();
-    } else {
-        SkASSERT(kPreserve_ASRInit == init);
-        // calls the copy cons
-        fTempState.set(*fSavedState);
-        if (!fTempState.get()->setIdentityViewMatrix()) {
-            // let go of any resources held by the temp
-            fTempState.get()->reset();
-            fDrawTarget = NULL;
-            fSavedState->unref();
-            fSavedState = NULL;
-            return false;
-        }
-    }
-    target->setDrawState(fTempState.get());
+    this->copySurface(copy, rt, copyRect, dstPoint);
+    dstTexture->setTexture(copy);
+    dstTexture->setOffset(copyRect.fLeft, copyRect.fTop);
     return true;
 }
 
+void GrDrawTarget::prepareBatches(GrBatchFlushState* flushState) {
+    if (fFlushing) {
+        return;
+    }
+    fFlushing = true;
+
+    // Semi-usually the drawTargets are already closed at this point, but sometimes Ganesh
+    // needs to flush mid-draw. In that case, the SkGpuDevice's drawTargets won't be closed
+    // but need to be flushed anyway. Closing such drawTargets here will mean new
+    // drawTargets will be created to replace them if the SkGpuDevice(s) write to them again.
+    this->makeClosed();
+
+    // Loop over the batches that haven't yet generated their geometry
+    for (int i = 0; i < fBatches.count(); ++i) {
+        fBatches[i]->prepare(flushState);
+    }
+}
+
+void GrDrawTarget::drawBatches(GrBatchFlushState* flushState) {
+    // Draw all the generated geometry.
+    for (int i = 0; i < fBatches.count(); ++i) {
+        fBatches[i]->draw(flushState);
+    }
+
+    fFlushing = false;
+}
+
+void GrDrawTarget::reset() {
+    fBatches.reset();
+}
+
+void GrDrawTarget::drawBatch(const GrPipelineBuilder& pipelineBuilder, GrDrawBatch* batch) {
+    // Setup clip
+    GrPipelineBuilder::AutoRestoreStencil ars;
+    GrAppliedClip clip;
+    if (!fClipMaskManager->setupClipping(pipelineBuilder, &ars, &batch->bounds(), &clip)) {
+        return;
+    }
+    GrPipelineBuilder::AutoRestoreFragmentProcessorState arfps;
+    if (clip.clipCoverageFragmentProcessor()) {
+        arfps.set(&pipelineBuilder);
+        arfps.addCoverageFragmentProcessor(clip.clipCoverageFragmentProcessor());
+    }
+
+    GrPipeline::CreateArgs args;
+    if (!this->installPipelineInDrawBatch(&pipelineBuilder, &clip.scissorState(), batch)) {
+        return;
+    }
+
+#ifdef ENABLE_MDB
+    SkASSERT(fRenderTarget);
+    batch->pipeline()->addDependenciesTo(fRenderTarget);
+#endif
+
+    this->recordBatch(batch);
+}
+
+static const GrStencilSettings& winding_path_stencil_settings() {
+    GR_STATIC_CONST_SAME_STENCIL_STRUCT(gSettings,
+        kIncClamp_StencilOp,
+        kIncClamp_StencilOp,
+        kAlwaysIfInClip_StencilFunc,
+        0xFFFF, 0xFFFF, 0xFFFF);
+    return *GR_CONST_STENCIL_SETTINGS_PTR_FROM_STRUCT_PTR(&gSettings);
+}
+
+static const GrStencilSettings& even_odd_path_stencil_settings() {
+    GR_STATIC_CONST_SAME_STENCIL_STRUCT(gSettings,
+        kInvert_StencilOp,
+        kInvert_StencilOp,
+        kAlwaysIfInClip_StencilFunc,
+        0xFFFF, 0xFFFF, 0xFFFF);
+    return *GR_CONST_STENCIL_SETTINGS_PTR_FROM_STRUCT_PTR(&gSettings);
+}
+
+void GrDrawTarget::getPathStencilSettingsForFilltype(GrPathRendering::FillType fill,
+                                                     const GrStencilAttachment* sb,
+                                                     GrStencilSettings* outStencilSettings) {
+
+    switch (fill) {
+        default:
+            SkFAIL("Unexpected path fill.");
+        case GrPathRendering::kWinding_FillType:
+            *outStencilSettings = winding_path_stencil_settings();
+            break;
+        case GrPathRendering::kEvenOdd_FillType:
+            *outStencilSettings = even_odd_path_stencil_settings();
+            break;
+    }
+    fClipMaskManager->adjustPathStencilParams(sb, outStencilSettings);
+}
+
+void GrDrawTarget::stencilPath(const GrPipelineBuilder& pipelineBuilder,
+                               const SkMatrix& viewMatrix,
+                               const GrPath* path,
+                               GrPathRendering::FillType fill) {
+    // TODO: extract portions of checkDraw that are relevant to path stenciling.
+    SkASSERT(path);
+    SkASSERT(this->caps()->shaderCaps()->pathRenderingSupport());
+
+    // Setup clip
+    GrPipelineBuilder::AutoRestoreStencil ars;
+    GrAppliedClip clip;
+    if (!fClipMaskManager->setupClipping(pipelineBuilder, &ars, nullptr, &clip)) {
+        return;
+    }
+
+    GrPipelineBuilder::AutoRestoreFragmentProcessorState arfps;
+    if (clip.clipCoverageFragmentProcessor()) {
+        arfps.set(&pipelineBuilder);
+        arfps.addCoverageFragmentProcessor(clip.clipCoverageFragmentProcessor());
+    }
+
+    // set stencil settings for path
+    GrStencilSettings stencilSettings;
+    GrRenderTarget* rt = pipelineBuilder.getRenderTarget();
+    GrStencilAttachment* sb = fResourceProvider->attachStencilAttachment(rt);
+    this->getPathStencilSettingsForFilltype(fill, sb, &stencilSettings);
+
+    GrBatch* batch = GrStencilPathBatch::Create(viewMatrix,
+                                                pipelineBuilder.isHWAntialias(),
+                                                stencilSettings, clip.scissorState(),
+                                                pipelineBuilder.getRenderTarget(),
+                                                path);
+    this->recordBatch(batch);
+    batch->unref();
+}
+
+void GrDrawTarget::drawPath(const GrPipelineBuilder& pipelineBuilder,
+                            const SkMatrix& viewMatrix,
+                            GrColor color,
+                            const GrPath* path,
+                            GrPathRendering::FillType fill) {
+    SkASSERT(path);
+    SkASSERT(this->caps()->shaderCaps()->pathRenderingSupport());
+
+    GrDrawPathBatchBase* batch = GrDrawPathBatch::Create(viewMatrix, color, path);
+    this->drawPathBatch(pipelineBuilder, batch, fill);
+    batch->unref();
+}
+
+void GrDrawTarget::drawPathsFromRange(const GrPipelineBuilder& pipelineBuilder,
+                                      const SkMatrix& viewMatrix,
+                                      const SkMatrix& localMatrix,
+                                      GrColor color,
+                                      GrPathRange* range,
+                                      GrPathRangeDraw* draw,
+                                      GrPathRendering::FillType fill, 
+                                      const SkRect& bounds) {
+    GrDrawPathBatchBase* batch = GrDrawPathRangeBatch::Create(viewMatrix, localMatrix, color,
+                                                              range, draw, bounds);
+    this->drawPathBatch(pipelineBuilder, batch, fill);
+    batch->unref();
+}
+
+void GrDrawTarget::drawPathBatch(const GrPipelineBuilder& pipelineBuilder,
+                                 GrDrawPathBatchBase* batch,
+                                 GrPathRendering::FillType fill) {
+    // This looks like drawBatch() but there is an added wrinkle that stencil settings get inserted
+    // after setting up clipping but before onDrawBatch(). TODO: Figure out a better model for
+    // handling stencil settings WRT interactions between pipeline(builder), clipmaskmanager, and
+    // batches.
+
+    GrPipelineBuilder::AutoRestoreStencil ars;
+    GrAppliedClip clip;
+    if (!fClipMaskManager->setupClipping(pipelineBuilder, &ars, &batch->bounds(), &clip)) {
+        return;
+    }
+
+    GrPipelineBuilder::AutoRestoreFragmentProcessorState arfps;
+    if (clip.clipCoverageFragmentProcessor()) {
+        arfps.set(&pipelineBuilder);
+        arfps.addCoverageFragmentProcessor(clip.clipCoverageFragmentProcessor());
+    }
+
+    // Ensure the render target has a stencil buffer and get the stencil settings.
+    GrStencilSettings stencilSettings;
+    GrRenderTarget* rt = pipelineBuilder.getRenderTarget();
+    GrStencilAttachment* sb = fResourceProvider->attachStencilAttachment(rt);
+    this->getPathStencilSettingsForFilltype(fill, sb, &stencilSettings);
+    batch->setStencilSettings(stencilSettings);
+
+    GrPipeline::CreateArgs args;
+    if (!this->installPipelineInDrawBatch(&pipelineBuilder, &clip.scissorState(), batch)) {
+        return;
+    }
+
+    this->recordBatch(batch);
+}
+
+void GrDrawTarget::drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
+                              GrColor color,
+                              const SkMatrix& viewMatrix,
+                              const SkRect& rect) {
+   SkAutoTUnref<GrDrawBatch> batch(GrRectBatchFactory::CreateNonAAFill(color, viewMatrix, rect,
+                                                                       nullptr, nullptr));
+   this->drawBatch(pipelineBuilder, batch);
+}
+
+void GrDrawTarget::drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
+                              GrColor color,
+                              const SkMatrix& viewMatrix,
+                              const SkRect& rect,
+                              const SkMatrix& localMatrix) {
+   SkAutoTUnref<GrDrawBatch> batch(GrRectBatchFactory::CreateNonAAFill(color, viewMatrix, rect,
+                                                                       nullptr, &localMatrix));
+   this->drawBatch(pipelineBuilder, batch);
+}
+
+void GrDrawTarget::drawNonAARect(const GrPipelineBuilder& pipelineBuilder,
+                              GrColor color,
+                              const SkMatrix& viewMatrix,
+                              const SkRect& rect,
+                              const SkRect& localRect) {
+   SkAutoTUnref<GrDrawBatch> batch(GrRectBatchFactory::CreateNonAAFill(color, viewMatrix, rect,
+                                                                       &localRect, nullptr));
+   this->drawBatch(pipelineBuilder, batch);
+}
+
+
+void GrDrawTarget::drawAARect(const GrPipelineBuilder& pipelineBuilder,
+                              GrColor color,
+                              const SkMatrix& viewMatrix,
+                              const SkRect& rect,
+                              const SkRect& devRect) {
+    SkAutoTUnref<GrDrawBatch> batch(GrRectBatchFactory::CreateAAFill(color, viewMatrix, rect,
+                                                                     devRect));
+    this->drawBatch(pipelineBuilder, batch);
+}
+
+void GrDrawTarget::clear(const SkIRect* rect,
+                         GrColor color,
+                         bool canIgnoreRect,
+                         GrRenderTarget* renderTarget) {
+    SkIRect rtRect = SkIRect::MakeWH(renderTarget->width(), renderTarget->height());
+    SkIRect clippedRect;
+    if (!rect ||
+        (canIgnoreRect && this->caps()->fullClearIsFree()) ||
+        rect->contains(rtRect)) {
+        rect = &rtRect;
+    } else {
+        clippedRect = *rect;
+        if (!clippedRect.intersect(rtRect)) {
+            return;
+        }
+        rect = &clippedRect;
+    }
+
+    if (this->caps()->useDrawInsteadOfClear()) {
+        // This works around a driver bug with clear by drawing a rect instead.
+        // The driver will ignore a clear if it is the only thing rendered to a
+        // target before the target is read.
+        if (rect == &rtRect) {
+            this->discard(renderTarget);
+        }
+
+        GrPipelineBuilder pipelineBuilder;
+        pipelineBuilder.setXPFactory(
+            GrPorterDuffXPFactory::Create(SkXfermode::kSrc_Mode))->unref();
+        pipelineBuilder.setRenderTarget(renderTarget);
+
+        this->drawNonAARect(pipelineBuilder, color, SkMatrix::I(), *rect);
+    } else {
+        GrBatch* batch = new GrClearBatch(*rect, color, renderTarget);
+        this->recordBatch(batch);
+        batch->unref();
+    }
+}
+
+void GrDrawTarget::discard(GrRenderTarget* renderTarget) {
+    if (this->caps()->discardRenderTargetSupport()) {
+        GrBatch* batch = new GrDiscardBatch(renderTarget);
+        this->recordBatch(batch);
+        batch->unref();
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
-GrDrawTarget::AutoReleaseGeometry::AutoReleaseGeometry(
-                                         GrDrawTarget*  target,
-                                         int vertexCount,
-                                         int indexCount) {
-    fTarget = NULL;
-    this->set(target, vertexCount, indexCount);
-}
-
-GrDrawTarget::AutoReleaseGeometry::AutoReleaseGeometry() {
-    fTarget = NULL;
-}
-
-GrDrawTarget::AutoReleaseGeometry::~AutoReleaseGeometry() {
-    this->reset();
-}
-
-bool GrDrawTarget::AutoReleaseGeometry::set(GrDrawTarget*  target,
-                                            int vertexCount,
-                                            int indexCount) {
-    this->reset();
-    fTarget = target;
-    bool success = true;
-    if (NULL != fTarget) {
-        fTarget = target;
-        success = target->reserveVertexAndIndexSpace(vertexCount,
-                                                     indexCount,
-                                                     &fVertices,
-                                                     &fIndices);
-        if (!success) {
-            fTarget = NULL;
-            this->reset();
-        }
-    }
-    SkASSERT(success == (NULL != fTarget));
-    return success;
-}
-
-void GrDrawTarget::AutoReleaseGeometry::reset() {
-    if (NULL != fTarget) {
-        if (NULL != fVertices) {
-            fTarget->resetVertexSource();
-        }
-        if (NULL != fIndices) {
-            fTarget->resetIndexSource();
-        }
-        fTarget = NULL;
-    }
-    fVertices = NULL;
-    fIndices = NULL;
-}
-
-GrDrawTarget::AutoClipRestore::AutoClipRestore(GrDrawTarget* target, const SkIRect& newClip) {
-    fTarget = target;
-    fClip = fTarget->getClip();
-    fStack.init();
-    fStack.get()->clipDevRect(newClip, SkRegion::kReplace_Op);
-    fReplacementClip.fClipStack = fStack.get();
-    target->setClip(&fReplacementClip);
-}
-
-namespace {
-// returns true if the read/written rect intersects the src/dst and false if not.
-bool clip_srcrect_and_dstpoint(const GrSurface* dst,
-                               const GrSurface* src,
-                               const SkIRect& srcRect,
-                               const SkIPoint& dstPoint,
-                               SkIRect* clippedSrcRect,
-                               SkIPoint* clippedDstPoint) {
-    *clippedSrcRect = srcRect;
-    *clippedDstPoint = dstPoint;
-
-    // clip the left edge to src and dst bounds, adjusting dstPoint if necessary
-    if (clippedSrcRect->fLeft < 0) {
-        clippedDstPoint->fX -= clippedSrcRect->fLeft;
-        clippedSrcRect->fLeft = 0;
-    }
-    if (clippedDstPoint->fX < 0) {
-        clippedSrcRect->fLeft -= clippedDstPoint->fX;
-        clippedDstPoint->fX = 0;
-    }
-
-    // clip the top edge to src and dst bounds, adjusting dstPoint if necessary
-    if (clippedSrcRect->fTop < 0) {
-        clippedDstPoint->fY -= clippedSrcRect->fTop;
-        clippedSrcRect->fTop = 0;
-    }
-    if (clippedDstPoint->fY < 0) {
-        clippedSrcRect->fTop -= clippedDstPoint->fY;
-        clippedDstPoint->fY = 0;
-    }
-
-    // clip the right edge to the src and dst bounds.
-    if (clippedSrcRect->fRight > src->width()) {
-        clippedSrcRect->fRight = src->width();
-    }
-    if (clippedDstPoint->fX + clippedSrcRect->width() > dst->width()) {
-        clippedSrcRect->fRight = clippedSrcRect->fLeft + dst->width() - clippedDstPoint->fX;
-    }
-
-    // clip the bottom edge to the src and dst bounds.
-    if (clippedSrcRect->fBottom > src->height()) {
-        clippedSrcRect->fBottom = src->height();
-    }
-    if (clippedDstPoint->fY + clippedSrcRect->height() > dst->height()) {
-        clippedSrcRect->fBottom = clippedSrcRect->fTop + dst->height() - clippedDstPoint->fY;
-    }
-
-    // The above clipping steps may have inverted the rect if it didn't intersect either the src or
-    // dst bounds.
-    return !clippedSrcRect->isEmpty();
-}
-}
-
-bool GrDrawTarget::copySurface(GrSurface* dst,
+void GrDrawTarget::copySurface(GrSurface* dst,
                                GrSurface* src,
                                const SkIRect& srcRect,
                                const SkIPoint& dstPoint) {
-    SkASSERT(NULL != dst);
-    SkASSERT(NULL != src);
+    GrBatch* batch = GrCopySurfaceBatch::Create(dst, src, srcRect, dstPoint);
+    if (batch) {
+#ifdef ENABLE_MDB
+        this->addDependency(src);
+#endif
 
-    SkIRect clippedSrcRect;
-    SkIPoint clippedDstPoint;
-    // If the rect is outside the src or dst then we've already succeeded.
-    if (!clip_srcrect_and_dstpoint(dst,
-                                   src,
-                                   srcRect,
-                                   dstPoint,
-                                   &clippedSrcRect,
-                                   &clippedDstPoint)) {
-        SkASSERT(this->canCopySurface(dst, src, srcRect, dstPoint));
-        return true;
+        this->recordBatch(batch);
+        batch->unref();
     }
-
-    bool result = this->onCopySurface(dst, src, clippedSrcRect, clippedDstPoint);
-    SkASSERT(result == this->canCopySurface(dst, src, clippedSrcRect, clippedDstPoint));
-    return result;
 }
 
-bool GrDrawTarget::canCopySurface(GrSurface* dst,
-                                  GrSurface* src,
-                                  const SkIRect& srcRect,
-                                  const SkIPoint& dstPoint) {
-    SkASSERT(NULL != dst);
-    SkASSERT(NULL != src);
+template <class Left, class Right> static bool intersect(const Left& a, const Right& b) {
+    SkASSERT(a.fLeft <= a.fRight && a.fTop <= a.fBottom &&
+             b.fLeft <= b.fRight && b.fTop <= b.fBottom);
+    return a.fLeft < b.fRight && b.fLeft < a.fRight && a.fTop < b.fBottom && b.fTop < a.fBottom;
+}
 
-    SkIRect clippedSrcRect;
-    SkIPoint clippedDstPoint;
-    // If the rect is outside the src or dst then we're guaranteed success
-    if (!clip_srcrect_and_dstpoint(dst,
-                                   src,
-                                   srcRect,
-                                   dstPoint,
-                                   &clippedSrcRect,
-                                   &clippedDstPoint)) {
-        return true;
+void GrDrawTarget::recordBatch(GrBatch* batch) {
+    // A closed drawTarget should never receive new/more batches
+    SkASSERT(!this->isClosed());
+
+    // Check if there is a Batch Draw we can batch with by linearly searching back until we either
+    // 1) check every draw
+    // 2) intersect with something
+    // 3) find a 'blocker'
+    // Experimentally we have found that most batching occurs within the first 10 comparisons.
+    static const int kMaxLookback = 10;
+
+    GrBATCH_INFO("Re-Recording (%s, B%u)\n"
+        "\tBounds LRTB (%f, %f, %f, %f)\n",
+        batch->name(),
+        batch->uniqueID(),
+        batch->bounds().fLeft, batch->bounds().fRight,
+        batch->bounds().fTop, batch->bounds().fBottom);
+    GrBATCH_INFO(SkTabString(batch->dumpInfo(), 1).c_str());
+    GrBATCH_INFO("\tOutcome:\n");    
+    int maxCandidates = SkTMin(kMaxLookback, fBatches.count());
+    if (maxCandidates) {
+        int i = 0;
+        while (true) {
+            GrBatch* candidate = fBatches.fromBack(i);
+            // We cannot continue to search backwards if the render target changes
+            if (candidate->renderTargetUniqueID() != batch->renderTargetUniqueID()) {
+                GrBATCH_INFO("\t\tBreaking because of (%s, B%u) Rendertarget\n",
+                    candidate->name(), candidate->uniqueID());
+                break;
+            }
+            if (candidate->combineIfPossible(batch, *this->caps())) {
+                GrBATCH_INFO("\t\tCombining with (%s, B%u)\n", candidate->name(),
+                    candidate->uniqueID());
+                return;
+            }
+            // Stop going backwards if we would cause a painter's order violation.
+            // TODO: The bounds used here do not fully consider the clip. It may be advantageous
+            // to clip each batch's bounds to the clip.
+            if (intersect(candidate->bounds(), batch->bounds())) {
+                GrBATCH_INFO("\t\tIntersects with (%s, B%u)\n", candidate->name(),
+                    candidate->uniqueID());
+                break;
+            }
+            ++i;
+            if (i == maxCandidates) {
+                GrBATCH_INFO("\t\tReached max lookback or beginning of batch array %d\n", i);
+                break;
+            }
+        }
+    } else {
+        GrBATCH_INFO("\t\tFirstBatch\n");
     }
-    return this->onCanCopySurface(dst, src, clippedSrcRect, clippedDstPoint);
-}
-
-bool GrDrawTarget::onCanCopySurface(GrSurface* dst,
-                                    GrSurface* src,
-                                    const SkIRect& srcRect,
-                                    const SkIPoint& dstPoint) {
-    // Check that the read/write rects are contained within the src/dst bounds.
-    SkASSERT(!srcRect.isEmpty());
-    SkASSERT(SkIRect::MakeWH(src->width(), src->height()).contains(srcRect));
-    SkASSERT(dstPoint.fX >= 0 && dstPoint.fY >= 0);
-    SkASSERT(dstPoint.fX + srcRect.width() <= dst->width() &&
-             dstPoint.fY + srcRect.height() <= dst->height());
-
-    return !dst->isSameAs(src) && NULL != dst->asRenderTarget() && NULL != src->asTexture();
-}
-
-bool GrDrawTarget::onCopySurface(GrSurface* dst,
-                                 GrSurface* src,
-                                 const SkIRect& srcRect,
-                                 const SkIPoint& dstPoint) {
-    if (!GrDrawTarget::onCanCopySurface(dst, src, srcRect, dstPoint)) {
-        return false;
-    }
-
-    GrRenderTarget* rt = dst->asRenderTarget();
-    GrTexture* tex = src->asTexture();
-
-    GrDrawTarget::AutoStateRestore asr(this, kReset_ASRInit);
-    this->drawState()->setRenderTarget(rt);
-    SkMatrix matrix;
-    matrix.setTranslate(SkIntToScalar(srcRect.fLeft - dstPoint.fX),
-                        SkIntToScalar(srcRect.fTop - dstPoint.fY));
-    matrix.postIDiv(tex->width(), tex->height());
-    this->drawState()->addColorTextureEffect(tex, matrix);
-    SkIRect dstRect = SkIRect::MakeXYWH(dstPoint.fX,
-                                        dstPoint.fY,
-                                        srcRect.width(),
-                                        srcRect.height());
-    this->drawSimpleRect(dstRect);
-    return true;
-}
-
-void GrDrawTarget::initCopySurfaceDstDesc(const GrSurface* src, GrTextureDesc* desc) {
-    // Make the dst of the copy be a render target because the default copySurface draws to the dst.
-    desc->fOrigin = kDefault_GrSurfaceOrigin;
-    desc->fFlags = kRenderTarget_GrTextureFlagBit | kNoStencil_GrTextureFlagBit;
-    desc->fConfig = src->config();
+    fBatches.push_back().reset(SkRef(batch));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void GrDrawTargetCaps::reset() {
-    fMipMapSupport = false;
-    fNPOTTextureTileSupport = false;
-    fTwoSidedStencilSupport = false;
-    fStencilWrapOpsSupport = false;
-    fHWAALineSupport = false;
-    fShaderDerivativeSupport = false;
-    fGeometryShaderSupport = false;
-    fDualSourceBlendingSupport = false;
-    fPathRenderingSupport = false;
-    fDstReadInShaderSupport = false;
-    fDiscardRenderTargetSupport = false;
-    fReuseScratchTextures = true;
-    fGpuTracingSupport = false;
-
-    fMapBufferFlags = kNone_MapFlags;
-
-    fMaxRenderTargetSize = 0;
-    fMaxTextureSize = 0;
-    fMaxSampleCount = 0;
-
-    memset(fConfigRenderSupport, 0, sizeof(fConfigRenderSupport));
-    memset(fConfigTextureSupport, 0, sizeof(fConfigTextureSupport));
-}
-
-GrDrawTargetCaps& GrDrawTargetCaps::operator=(const GrDrawTargetCaps& other) {
-    fMipMapSupport = other.fMipMapSupport;
-    fNPOTTextureTileSupport = other.fNPOTTextureTileSupport;
-    fTwoSidedStencilSupport = other.fTwoSidedStencilSupport;
-    fStencilWrapOpsSupport = other.fStencilWrapOpsSupport;
-    fHWAALineSupport = other.fHWAALineSupport;
-    fShaderDerivativeSupport = other.fShaderDerivativeSupport;
-    fGeometryShaderSupport = other.fGeometryShaderSupport;
-    fDualSourceBlendingSupport = other.fDualSourceBlendingSupport;
-    fPathRenderingSupport = other.fPathRenderingSupport;
-    fDstReadInShaderSupport = other.fDstReadInShaderSupport;
-    fDiscardRenderTargetSupport = other.fDiscardRenderTargetSupport;
-    fReuseScratchTextures = other.fReuseScratchTextures;
-    fGpuTracingSupport = other.fGpuTracingSupport;
-
-    fMapBufferFlags = other.fMapBufferFlags;
-
-    fMaxRenderTargetSize = other.fMaxRenderTargetSize;
-    fMaxTextureSize = other.fMaxTextureSize;
-    fMaxSampleCount = other.fMaxSampleCount;
-
-    memcpy(fConfigRenderSupport, other.fConfigRenderSupport, sizeof(fConfigRenderSupport));
-    memcpy(fConfigTextureSupport, other.fConfigTextureSupport, sizeof(fConfigTextureSupport));
-
-    return *this;
-}
-
-static SkString map_flags_to_string(uint32_t flags) {
-    SkString str;
-    if (GrDrawTargetCaps::kNone_MapFlags == flags) {
-        str = "none";
-    } else {
-        SkASSERT(GrDrawTargetCaps::kCanMap_MapFlag & flags);
-        SkDEBUGCODE(flags &= ~GrDrawTargetCaps::kCanMap_MapFlag);
-        str = "can_map";
-
-        if (GrDrawTargetCaps::kSubset_MapFlag & flags) {
-            str.append(" partial");
-        } else {
-            str.append(" full");
-        }
-        SkDEBUGCODE(flags &= ~GrDrawTargetCaps::kSubset_MapFlag);
-    }
-    SkASSERT(0 == flags); // Make sure we handled all the flags.
-    return str;
-}
-
-SkString GrDrawTargetCaps::dump() const {
-    SkString r;
-    static const char* gNY[] = {"NO", "YES"};
-    r.appendf("MIP Map Support              : %s\n", gNY[fMipMapSupport]);
-    r.appendf("NPOT Texture Tile Support    : %s\n", gNY[fNPOTTextureTileSupport]);
-    r.appendf("Two Sided Stencil Support    : %s\n", gNY[fTwoSidedStencilSupport]);
-    r.appendf("Stencil Wrap Ops  Support    : %s\n", gNY[fStencilWrapOpsSupport]);
-    r.appendf("HW AA Lines Support          : %s\n", gNY[fHWAALineSupport]);
-    r.appendf("Shader Derivative Support    : %s\n", gNY[fShaderDerivativeSupport]);
-    r.appendf("Geometry Shader Support      : %s\n", gNY[fGeometryShaderSupport]);
-    r.appendf("Dual Source Blending Support : %s\n", gNY[fDualSourceBlendingSupport]);
-    r.appendf("Path Rendering Support       : %s\n", gNY[fPathRenderingSupport]);
-    r.appendf("Dst Read In Shader Support   : %s\n", gNY[fDstReadInShaderSupport]);
-    r.appendf("Discard Render Target Support: %s\n", gNY[fDiscardRenderTargetSupport]);
-    r.appendf("Reuse Scratch Textures       : %s\n", gNY[fReuseScratchTextures]);
-    r.appendf("Gpu Tracing Support          : %s\n", gNY[fGpuTracingSupport]);
-    r.appendf("Max Texture Size             : %d\n", fMaxTextureSize);
-    r.appendf("Max Render Target Size       : %d\n", fMaxRenderTargetSize);
-    r.appendf("Max Sample Count             : %d\n", fMaxSampleCount);
-
-    r.appendf("Map Buffer Support           : %s\n", map_flags_to_string(fMapBufferFlags).c_str());
-
-    static const char* kConfigNames[] = {
-        "Unknown",  // kUnknown_GrPixelConfig
-        "Alpha8",   // kAlpha_8_GrPixelConfig,
-        "Index8",   // kIndex_8_GrPixelConfig,
-        "RGB565",   // kRGB_565_GrPixelConfig,
-        "RGBA444",  // kRGBA_4444_GrPixelConfig,
-        "RGBA8888", // kRGBA_8888_GrPixelConfig,
-        "BGRA8888", // kBGRA_8888_GrPixelConfig,
-        "ETC1",     // kETC1_GrPixelConfig,
-        "LATC",     // kLATC_GrPixelConfig,
-        "R11EAC",   // kR11_EAC_GrPixelConfig,
-        "ASTC12x12",// kASTC_12x12_GrPixelConfig,
-        "RGBAFloat",  // kRGBA_float_GrPixelConfig
-    };
-    GR_STATIC_ASSERT(0  == kUnknown_GrPixelConfig);
-    GR_STATIC_ASSERT(1  == kAlpha_8_GrPixelConfig);
-    GR_STATIC_ASSERT(2  == kIndex_8_GrPixelConfig);
-    GR_STATIC_ASSERT(3  == kRGB_565_GrPixelConfig);
-    GR_STATIC_ASSERT(4  == kRGBA_4444_GrPixelConfig);
-    GR_STATIC_ASSERT(5  == kRGBA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(6  == kBGRA_8888_GrPixelConfig);
-    GR_STATIC_ASSERT(7  == kETC1_GrPixelConfig);
-    GR_STATIC_ASSERT(8  == kLATC_GrPixelConfig);
-    GR_STATIC_ASSERT(9  == kR11_EAC_GrPixelConfig);
-    GR_STATIC_ASSERT(10 == kASTC_12x12_GrPixelConfig);
-    GR_STATIC_ASSERT(11 == kRGBA_float_GrPixelConfig);
-    GR_STATIC_ASSERT(SK_ARRAY_COUNT(kConfigNames) == kGrPixelConfigCnt);
-
-    SkASSERT(!fConfigRenderSupport[kUnknown_GrPixelConfig][0]);
-    SkASSERT(!fConfigRenderSupport[kUnknown_GrPixelConfig][1]);
-
-    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
-        r.appendf("%s is renderable: %s, with MSAA: %s\n",
-                  kConfigNames[i],
-                  gNY[fConfigRenderSupport[i][0]],
-                  gNY[fConfigRenderSupport[i][1]]);
+bool GrDrawTarget::installPipelineInDrawBatch(const GrPipelineBuilder* pipelineBuilder,
+                                              const GrScissorState* scissor,
+                                              GrDrawBatch* batch) {
+    GrPipeline::CreateArgs args;
+    args.fPipelineBuilder = pipelineBuilder;
+    args.fCaps = this->caps();
+    args.fScissor = scissor;
+    batch->getPipelineOptimizations(&args.fOpts);
+    args.fOpts.fColorPOI.completeCalculations(pipelineBuilder->fColorFragmentProcessors.begin(),
+                                              pipelineBuilder->numColorFragmentProcessors());
+    args.fOpts.fCoveragePOI.completeCalculations(
+                                               pipelineBuilder->fCoverageFragmentProcessors.begin(),
+                                               pipelineBuilder->numCoverageFragmentProcessors());
+    if (!this->setupDstReadIfNecessary(*pipelineBuilder, args.fOpts, &args.fDstTexture,
+                                       batch->bounds())) {
+        return false;
     }
 
-    SkASSERT(!fConfigTextureSupport[kUnknown_GrPixelConfig]);
-
-    for (size_t i = 1; i < SK_ARRAY_COUNT(kConfigNames); ++i)  {
-        r.appendf("%s is uploadable to a texture: %s\n",
-                  kConfigNames[i],
-                  gNY[fConfigTextureSupport[i]]);
+    if (!batch->installPipeline(args)) {
+        return false;
     }
 
-    return r;
+    return true;
+}
+
+void GrDrawTarget::clearStencilClip(const SkIRect& rect, bool insideClip, GrRenderTarget* rt) {
+    GrBatch* batch = new GrClearStencilClipBatch(rect, insideClip, rt);
+    this->recordBatch(batch);
+    batch->unref();
 }

@@ -225,6 +225,9 @@ EncodeInputStream(nsIInputStream* aInputStream,
   return NS_OK;
 }
 
+static const char kBase64URLAlphabet[] =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
 } // namespace
 
 namespace mozilla {
@@ -353,6 +356,51 @@ Base64Decode(const nsAString& aBinaryData, nsAString& aString)
   }
 
   return rv;
+}
+
+nsresult
+Base64URLEncode(uint32_t aLength, const uint8_t* aData, nsACString& aString)
+{
+  // Don't encode empty strings.
+  if (aLength == 0) {
+    aString.Truncate();
+    return NS_OK;
+  }
+
+  // Check for overflow.
+  if ((static_cast<uint64_t>(aLength) * 6 + 7) / 8 > UINT32_MAX) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!aString.SetLength((aLength * 8 + 5) / 6, fallible)) {
+    aString.Truncate();
+    return NS_ERROR_FAILURE;
+  }
+
+  char* rawBuffer = aString.BeginWriting();
+
+  uint32_t index = 0;
+  for (; index + 3 <= aLength; index += 3) {
+    *rawBuffer++ = kBase64URLAlphabet[aData[index] >> 2];
+    *rawBuffer++ = kBase64URLAlphabet[((aData[index] & 0x3) << 4) |
+                                      (aData[index + 1] >> 4)];
+    *rawBuffer++ = kBase64URLAlphabet[((aData[index + 1] & 0xf) << 2) |
+                                      (aData[index + 2] >> 6)];
+    *rawBuffer++ = kBase64URLAlphabet[aData[index + 2] & 0x3f];
+  }
+
+  uint32_t remaining = aLength - index;
+  if (remaining == 1) {
+    *rawBuffer++ = kBase64URLAlphabet[aData[index] >> 2];
+    *rawBuffer++ = kBase64URLAlphabet[((aData[index] & 0x3) << 4)];
+  } else if (remaining == 2) {
+    *rawBuffer++ = kBase64URLAlphabet[aData[index] >> 2];
+    *rawBuffer++ = kBase64URLAlphabet[((aData[index] & 0x3) << 4) |
+                                      (aData[index + 1] >> 4)];
+    *rawBuffer++ = kBase64URLAlphabet[((aData[index + 1] & 0xf) << 2)];
+  }
+
+  return NS_OK;
 }
 
 } // namespace mozilla

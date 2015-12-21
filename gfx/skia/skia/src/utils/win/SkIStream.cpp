@@ -6,6 +6,8 @@
  * found in the LICENSE file.
  */
 
+#include "SkTypes.h"
+#if defined(SK_BUILD_FOR_WIN32)
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -22,7 +24,7 @@ SkBaseIStream::~SkBaseIStream() { }
 HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid
                                                       , void ** ppvObject)
 {
-    if (NULL == ppvObject) {
+    if (nullptr == ppvObject) {
         return E_INVALIDARG;
     }
     if (iid == __uuidof(IUnknown)
@@ -33,7 +35,7 @@ HRESULT STDMETHODCALLTYPE SkBaseIStream::QueryInterface(REFIID iid
         AddRef();
         return S_OK;
     } else {
-        *ppvObject = NULL;
+        *ppvObject = nullptr;
         return E_NOINTERFACE;
     }
 }
@@ -103,29 +105,29 @@ HRESULT STDMETHODCALLTYPE SkBaseIStream::Stat(STATSTG* pStatstg
 /**
  * SkIStream
  */
-SkIStream::SkIStream(SkStream* stream, bool unrefOnRelease)
+SkIStream::SkIStream(SkStream* stream, bool deleteOnRelease)
     : SkBaseIStream()
     , fSkStream(stream)
-    , fUnrefOnRelease(unrefOnRelease)
+    , fDeleteOnRelease(deleteOnRelease)
     , fLocation()
 {
     this->fSkStream->rewind();
 }
 
 SkIStream::~SkIStream() {
-    if (NULL != this->fSkStream && fUnrefOnRelease) {
-        this->fSkStream->unref();
+    if (fDeleteOnRelease) {
+        delete this->fSkStream;
     }
 }
 
 HRESULT SkIStream::CreateFromSkStream(SkStream* stream
-                                    , bool unrefOnRelease
+                                    , bool deleteOnRelease
                                     , IStream ** ppStream)
 {
-    if (NULL == stream) {
+    if (nullptr == stream) {
         return E_INVALIDARG;
     }
-    *ppStream = new SkIStream(stream, unrefOnRelease);
+    *ppStream = new SkIStream(stream, deleteOnRelease);
     return S_OK;
 }
 
@@ -196,7 +198,7 @@ HRESULT STDMETHODCALLTYPE SkIStream::Seek(LARGE_INTEGER liDistanceToMove
         break;
     }
 
-    if (NULL != lpNewFilePointer) {
+    if (lpNewFilePointer) {
         lpNewFilePointer->QuadPart = this->fLocation.QuadPart;
     }
     return hr;
@@ -208,7 +210,7 @@ HRESULT STDMETHODCALLTYPE SkIStream::Stat(STATSTG* pStatstg
     if (0 == (grfStatFlag & STATFLAG_NONAME)) {
         return STG_E_INVALIDFLAG;
     }
-    pStatstg->pwcsName = NULL;
+    pStatstg->pwcsName = nullptr;
     // FIXME: Should not depend on getLength
     // See https://code.google.com/p/skia/issues/detail?id=1570
     pStatstg->cbSize.QuadPart = this->fSkStream->getLength();
@@ -228,7 +230,7 @@ SkWIStream::SkWIStream(SkWStream* stream)
 { }
 
 SkWIStream::~SkWIStream() {
-    if (NULL != this->fSkWStream) {
+    if (this->fSkWStream) {
         this->fSkWStream->flush();
     }
 }
@@ -268,10 +270,11 @@ HRESULT STDMETHODCALLTYPE SkWIStream::Stat(STATSTG* pStatstg
     if (0 == (grfStatFlag & STATFLAG_NONAME)) {
         return STG_E_INVALIDFLAG;
     }
-    pStatstg->pwcsName = NULL;
+    pStatstg->pwcsName = nullptr;
     pStatstg->cbSize.QuadPart = 0;
     pStatstg->clsid = CLSID_NULL;
     pStatstg->type = STGTY_STREAM;
     pStatstg->grfMode = STGM_WRITE;
     return S_OK;
 }
+#endif//defined(SK_BUILD_FOR_WIN32)
