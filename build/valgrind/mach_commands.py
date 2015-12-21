@@ -111,13 +111,6 @@ class MachCommands(MachCommandBase):
                 '--show-possibly-lost=no',
                 '--track-origins=yes',
                 '--trace-children=yes',
-                # The gstreamer plugin scanner can run as part of executing
-                # firefox, but is an external program. In some weird cases,
-                # valgrind finds errors while executing __libc_freeres when
-                # it runs, but those are not relevant, as it's related to
-                # executing third party code. So don't trace
-                # gst-plugin-scanner.
-                '--trace-children-skip=*/gst-plugin-scanner',
                 '-v',  # Enable verbosity to get the list of used suppressions
             ]
 
