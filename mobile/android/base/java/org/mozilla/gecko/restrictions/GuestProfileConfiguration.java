@@ -27,7 +27,8 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
             Restrictable.REMOTE_DEBUGGING,
             Restrictable.IMPORT_SETTINGS,
             Restrictable.BLOCK_LIST,
-            Restrictable.DATA_CHOICES
+            Restrictable.DATA_CHOICES,
+            Restrictable.DEFAULT_THEME
     );
 
     @SuppressWarnings("serial")

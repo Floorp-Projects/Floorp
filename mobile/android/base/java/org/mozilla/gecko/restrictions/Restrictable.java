@@ -76,8 +76,9 @@ public enum Restrictable {
 
     HEALTH_REPORT(21, "health_report",
             R.string.datareporting_fhr_title,
-            R.string.datareporting_fhr_summary2);
+            R.string.datareporting_fhr_summary2),
 
+    DEFAULT_THEME(22, "default_theme", 0, 0);
 
     public final int id;
     public final String name;
