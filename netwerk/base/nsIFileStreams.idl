@@ -87,7 +87,7 @@ interface nsIFileInputStream : nsIInputStream
 /**
  * An output stream that lets you stream to a file.
  */
-[scriptable, uuid(e6f68040-c7ec-11d3-8cda-0060b0fc14a3)]
+[scriptable, uuid(e734cac9-1295-4e6f-9684-3ac4e1f91063)]
 interface nsIFileOutputStream : nsIOutputStream
 {
     /**
@@ -103,6 +103,15 @@ interface nsIFileOutputStream : nsIOutputStream
      */
     void init(in nsIFile file, in long ioFlags, in long perm,
               in long behaviorFlags);
+
+    /**
+     * @param length        asks the operating system to allocate storage for
+     *                      this file of at least |length| bytes long, and
+     *                      set the file length to the corresponding size.
+     * @throws NS_ERROR_FAILURE if the preallocation fails.
+     * @throws NS_ERROR_NOT_INITIALIZED if the file is not opened.
+     */
+    [noscript] void preallocate(in long long length);
 
     /**
      * See the same constant in nsIFileInputStream. The deferred open will
