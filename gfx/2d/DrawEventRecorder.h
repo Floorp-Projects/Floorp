@@ -32,19 +32,16 @@ public:
   void RecordEvent(const RecordedEvent &aEvent);
   void WritePath(const PathRecording *aPath);
 
-  void AddStoredPath(const ReferencePtr aPath) {
-    mStoredPaths.insert(aPath);
+  void AddStoredObject(const ReferencePtr aObject) {
+    mStoredObjects.insert(aObject);
   }
 
-  void RemoveStoredPath(const ReferencePtr aPath) {
-    mStoredPaths.erase(aPath);
+  void RemoveStoredObject(const ReferencePtr aObject) {
+    mStoredObjects.erase(aObject);
   }
 
-  bool HasStoredPath(const ReferencePtr aPath) {
-    if (mStoredPaths.find(aPath) != mStoredPaths.end()) {
-      return true;
-    }
-    return false;
+  bool HasStoredObject(const ReferencePtr aObject) {
+    return mStoredObjects.find(aObject) != mStoredObjects.end();
   }
 
 protected:
@@ -58,8 +55,7 @@ protected:
   typedef std::set<const void*> ObjectSet;
 #endif
 
-  ObjectSet mStoredPaths;
-  ObjectSet mStoredScaledFonts;
+  ObjectSet mStoredObjects;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate
