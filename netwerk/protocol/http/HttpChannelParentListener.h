@@ -12,17 +12,27 @@
 #include "nsIChannelEventSink.h"
 #include "nsIRedirectResultListener.h"
 #include "nsIPackagedAppChannelListener.h"
+#include "nsINetworkInterceptController.h"
 
 namespace mozilla {
 namespace net {
 
 class HttpChannelParent;
 
+#define HTTP_CHANNEL_PARENT_LISTENER_IID \
+  { 0xe409da52, 0xda76, 0x4eb7, \
+    { 0xa7, 0xf4, 0x03, 0x3d, 0x88, 0xac, 0x87, 0x6d } }
+
+// Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
+// works correctly on this object, as it's needed to compute a void* pointing to
+// the beginning of this object.
+
 class HttpChannelParentListener final : public nsIInterfaceRequestor
                                       , public nsIChannelEventSink
                                       , public nsIRedirectResultListener
                                       , public nsIPackagedAppChannelListener
                                       , public nsIStreamListener
+                                      , public nsINetworkInterceptController
 {
 public:
   NS_DECL_ISUPPORTS
@@ -32,6 +42,9 @@ public:
   NS_DECL_NSIREDIRECTRESULTLISTENER
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSINETWORKINTERCEPTCONTROLLER
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_LISTENER_IID)
 
   explicit HttpChannelParentListener(HttpChannelParent* aInitialChannel);
 
@@ -39,11 +52,18 @@ public:
   nsresult DivertTo(nsIStreamListener *aListener);
   nsresult SuspendForDiversion();
 
+  void SetupInterception(const nsHttpResponseHead& aResponseHead);
+  void SetupInterceptionAfterRedirect(bool aShouldIntercept);
+  void ClearInterceptedChannel();
+
 private:
   virtual ~HttpChannelParentListener();
 
   // Private partner function to SuspendForDiversion.
   nsresult ResumeForDiversion();
+
+  void SynthesizeResponse(nsIInterceptedChannel* aChannel);
+  friend class ResponseSynthesizer;
 
   // Can be the original HttpChannelParent that created this object (normal
   // case), a different {HTTP|FTP}ChannelParent that we've been redirected to,
@@ -53,7 +73,20 @@ private:
   uint32_t mRedirectChannelId;
   // When set, no OnStart/OnData/OnStop calls should be received.
   bool mSuspendedForDiversion;
+
+  // Set if this channel should be intercepted before it sets up the HTTP transaction.
+  bool mShouldIntercept;
+  // Set if this channel should suspend on interception.
+  bool mShouldSuspendIntercept;
+
+  nsAutoPtr<nsHttpResponseHead> mSynthesizedResponseHead;
+
+  // Handle to the channel wrapper if this channel has been intercepted.
+  nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParentListener,
+                              HTTP_CHANNEL_PARENT_LISTENER_IID)
 
 } // namespace net
 } // namespace mozilla
