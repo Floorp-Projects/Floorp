@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 20; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: set ts=8 sts=2 et sw=2 tw=80:
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -11,69 +10,9 @@
 #include "Logging.h"
 #include "Tools.h"
 #include "Filters.h"
-#include "mozilla/UniquePtr.h"
-#include "RecordingTypes.h"
 
 namespace mozilla {
 namespace gfx {
-
-struct RecordingSourceSurfaceUserData
-{
-  void *refPtr;
-  RefPtr<DrawEventRecorderPrivate> recorder;
-};
-
-void RecordingSourceSurfaceUserDataFunc(void *aUserData)
-{
-  RecordingSourceSurfaceUserData *userData =
-    static_cast<RecordingSourceSurfaceUserData*>(aUserData);
-
-  userData->recorder->RemoveStoredObject(userData->refPtr);
-  userData->recorder->RecordEvent(
-    RecordedSourceSurfaceDestruction(userData->refPtr));
-
-  delete userData;
-}
-
-static void
-StoreSourceSurface(DrawEventRecorderPrivate *aRecorder, SourceSurface *aSurface,
-                   DataSourceSurface *aDataSurf, const char *reason)
-{
-  if (!aDataSurf) {
-    gfxWarning() << "Recording failed to record SourceSurface for " << reason;
-    // Insert a bogus source surface.
-    int32_t stride = aSurface->GetSize().width * BytesPerPixel(aSurface->GetFormat());
-    UniquePtr<uint8_t[]> sourceData(new uint8_t[stride * aSurface->GetSize().height]());
-    aRecorder->RecordEvent(
-      RecordedSourceSurfaceCreation(aSurface, sourceData.get(), stride,
-                                    aSurface->GetSize(), aSurface->GetFormat()));
-  } else {
-    DataSourceSurface::ScopedMap map(aDataSurf, DataSourceSurface::READ);
-    aRecorder->RecordEvent(
-      RecordedSourceSurfaceCreation(aSurface, map.GetData(), map.GetStride(),
-                                    aDataSurf->GetSize(), aDataSurf->GetFormat()));
-  }
-}
-
-static void
-EnsureSurfaceStored(DrawEventRecorderPrivate *aRecorder, SourceSurface *aSurface,
-                    const char *reason)
-{
-  if (aRecorder->HasStoredObject(aSurface)) {
-    return;
-  }
-
-  RefPtr<DataSourceSurface> dataSurf = aSurface->GetDataSurface();
-  StoreSourceSurface(aRecorder, aSurface, dataSurf, reason);
-  aRecorder->AddStoredObject(aSurface);
-
-  RecordingSourceSurfaceUserData *userData = new RecordingSourceSurfaceUserData;
-  userData->refPtr = aSurface;
-  userData->recorder = aRecorder;
-  aSurface->AddUserData(reinterpret_cast<UserDataKey*>(aRecorder),
-                        userData, &RecordingSourceSurfaceUserDataFunc);
-  return;
-}
 
 class SourceSurfaceRecording : public SourceSurface
 {
@@ -82,12 +21,10 @@ public:
   SourceSurfaceRecording(SourceSurface *aFinalSurface, DrawEventRecorderPrivate *aRecorder)
     : mFinalSurface(aFinalSurface), mRecorder(aRecorder)
   {
-    mRecorder->AddStoredObject(this);
   }
 
   ~SourceSurfaceRecording()
   {
-    mRecorder->RemoveStoredObject(this);
     mRecorder->RecordEvent(RecordedSourceSurfaceDestruction(this));
   }
 
@@ -107,12 +44,10 @@ public:
   GradientStopsRecording(GradientStops *aFinalGradientStops, DrawEventRecorderPrivate *aRecorder)
     : mFinalGradientStops(aFinalGradientStops), mRecorder(aRecorder)
   {
-    mRecorder->AddStoredObject(this);
   }
 
   ~GradientStopsRecording()
   {
-    mRecorder->RemoveStoredObject(this);
     mRecorder->RecordEvent(RecordedGradientStopsDestruction(this));
   }
 
@@ -151,39 +86,29 @@ public:
   FilterNodeRecording(FilterNode *aFinalFilterNode, DrawEventRecorderPrivate *aRecorder)
     : mFinalFilterNode(aFinalFilterNode), mRecorder(aRecorder)
   {
-    mRecorder->AddStoredObject(this);
   }
 
   ~FilterNodeRecording()
   {
-    mRecorder->RemoveStoredObject(this);
     mRecorder->RecordEvent(RecordedFilterNodeDestruction(this));
-  }
-
-  static FilterNode*
-  GetFilterNode(FilterNode* aNode)
-  {
-    if (aNode->GetBackendType() != FILTER_BACKEND_RECORDING) {
-      gfxWarning() << "Non recording filter node used with recording DrawTarget!";
-      return aNode;
-    }
-
-    return static_cast<FilterNodeRecording*>(aNode)->mFinalFilterNode;
   }
 
   virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override
   {
-    EnsureSurfaceStored(mRecorder, aSurface,  "SetInput");
-
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
     mFinalFilterNode->SetInput(aIndex, GetSourceSurface(aSurface));
   }
   virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override
   {
-    MOZ_ASSERT(mRecorder->HasStoredObject(aFilter));
+    FilterNode *finalNode = aFilter;
+    if (aFilter->GetBackendType() != FILTER_BACKEND_RECORDING) {
+      gfxWarning() << "Non recording filter node used with recording DrawTarget!";
+    } else {
+      finalNode = static_cast<FilterNodeRecording*>(aFilter)->mFinalFilterNode;
+    }
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
-    mFinalFilterNode->SetInput(aIndex, GetFilterNode(aFilter));
+    mFinalFilterNode->SetInput(aIndex, finalNode);
   }
 
 
@@ -202,7 +127,6 @@ public:
   FORWARD_SET_ATTRIBUTE(const Rect&, RECT);
   FORWARD_SET_ATTRIBUTE(const IntRect&, INTRECT);
   FORWARD_SET_ATTRIBUTE(const Point&, POINT);
-  FORWARD_SET_ATTRIBUTE(const Matrix&, MATRIX);
   FORWARD_SET_ATTRIBUTE(const Matrix5x4&, MATRIX5X4);
   FORWARD_SET_ATTRIBUTE(const Point3D&, POINT3D);
   FORWARD_SET_ATTRIBUTE(const Color&, COLOR);
@@ -219,6 +143,17 @@ public:
   RefPtr<FilterNode> mFinalFilterNode;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
+
+static FilterNode*
+GetFilterNode(FilterNode* aNode)
+{
+  if (aNode->GetBackendType() != FILTER_BACKEND_RECORDING) {
+    gfxWarning() << "Non recording filter node used with recording DrawTarget!";
+    return aNode;
+  }
+
+  return static_cast<FilterNodeRecording*>(aNode)->mFinalFilterNode;
+}
 
 struct AdjustedPattern
 {
@@ -298,16 +233,6 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarge
   mFormat = mFinalDT->GetFormat();
 }
 
-DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording *aDT,
-                                         const IntSize &aSize,
-                                         SurfaceFormat aFormat)
-  : mRecorder(aDT->mRecorder)
-  , mFinalDT(aDT->mFinalDT->CreateSimilarDrawTarget(aSize, aFormat))
-{
-  mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(this, aSize, aFormat));
-  mFormat = mFinalDT->GetFormat();
-}
-
 DrawTargetRecording::~DrawTargetRecording()
 {
   mRecorder->RecordEvent(RecordedDrawTargetDestruction(this));
@@ -318,8 +243,6 @@ DrawTargetRecording::FillRect(const Rect &aRect,
                               const Pattern &aPattern,
                               const DrawOptions &aOptions)
 {
-  EnsurePatternDependenciesStored(aPattern);
-
   mRecorder->RecordEvent(RecordedFillRect(this, aRect, aPattern, aOptions));
   mFinalDT->FillRect(aRect, *AdjustedPattern(aPattern), aOptions);
 }
@@ -330,8 +253,6 @@ DrawTargetRecording::StrokeRect(const Rect &aRect,
                                 const StrokeOptions &aStrokeOptions,
                                 const DrawOptions &aOptions)
 {
-  EnsurePatternDependenciesStored(aPattern);
-
   mRecorder->RecordEvent(RecordedStrokeRect(this, aRect, aPattern, aStrokeOptions, aOptions));
   mFinalDT->StrokeRect(aRect, *AdjustedPattern(aPattern), aStrokeOptions, aOptions);
 }
@@ -343,10 +264,18 @@ DrawTargetRecording::StrokeLine(const Point &aBegin,
                                 const StrokeOptions &aStrokeOptions,
                                 const DrawOptions &aOptions)
 {
-  EnsurePatternDependenciesStored(aPattern);
-
   mRecorder->RecordEvent(RecordedStrokeLine(this, aBegin, aEnd, aPattern, aStrokeOptions, aOptions));
   mFinalDT->StrokeLine(aBegin, aEnd, *AdjustedPattern(aPattern), aStrokeOptions, aOptions);
+}
+
+Path*
+DrawTargetRecording::GetPathForPathRecording(const Path *aPath) const
+{
+  if (aPath->GetBackendType() != BackendType::RECORDING) {
+    return nullptr;
+  }
+
+  return static_cast<const PathRecording*>(aPath)->mPath;
 }
 
 void
@@ -354,11 +283,10 @@ DrawTargetRecording::Fill(const Path *aPath,
                           const Pattern &aPattern,
                           const DrawOptions &aOptions)
 {
-  RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
-  EnsurePatternDependenciesStored(aPattern);
+  EnsureStored(aPath);
 
-  mRecorder->RecordEvent(RecordedFill(this, pathRecording, aPattern, aOptions));
-  mFinalDT->Fill(pathRecording->mPath, *AdjustedPattern(aPattern), aOptions);
+  mRecorder->RecordEvent(RecordedFill(this, const_cast<Path*>(aPath), aPattern, aOptions));
+  mFinalDT->Fill(GetPathForPathRecording(aPath), *AdjustedPattern(aPattern), aOptions);
 }
 
 struct RecordingFontUserData
@@ -387,20 +315,10 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
                                 const DrawOptions &aOptions,
                                 const GlyphRenderingOptions *aRenderingOptions)
 {
-  EnsurePatternDependenciesStored(aPattern);
-
   if (!aFont->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get()))) {
   // TODO support font in b2g recordings
 #ifndef MOZ_WIDGET_GONK
-    RecordedFontData fontData(aFont);
-    RecordedFontDetails fontDetails;
-    if (fontData.GetFontDetails(fontDetails)) {
-      if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
-        mRecorder->RecordEvent(fontData);
-        mRecorder->AddStoredFontData(fontDetails.fontDataKey);
-      }
-      mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, fontDetails));
-    }
+    mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, aFont));
 #endif
     RecordingFontUserData *userData = new RecordingFontUserData;
     userData->refPtr = aFont;
@@ -421,9 +339,6 @@ DrawTargetRecording::Mask(const Pattern &aSource,
                           const Pattern &aMask,
                           const DrawOptions &aOptions)
 {
-  EnsurePatternDependenciesStored(aSource);
-  EnsurePatternDependenciesStored(aMask);
-
   mRecorder->RecordEvent(RecordedMask(this, aSource, aMask, aOptions));
   mFinalDT->Mask(*AdjustedPattern(aSource), *AdjustedPattern(aMask), aOptions);
 }
@@ -434,9 +349,6 @@ DrawTargetRecording::MaskSurface(const Pattern &aSource,
                                  Point aOffset,
                                  const DrawOptions &aOptions)
 {
-  EnsurePatternDependenciesStored(aSource);
-  EnsureSurfaceStored(mRecorder, aMask, "MaskSurface");
-
   mRecorder->RecordEvent(RecordedMaskSurface(this, aSource, aMask, aOffset, aOptions));
   mFinalDT->MaskSurface(*AdjustedPattern(aSource), GetSourceSurface(aMask), aOffset, aOptions);
 }
@@ -447,11 +359,10 @@ DrawTargetRecording::Stroke(const Path *aPath,
                             const StrokeOptions &aStrokeOptions,
                             const DrawOptions &aOptions)
 {
-  RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
-  EnsurePatternDependenciesStored(aPattern);
+  EnsureStored(aPath);
 
-  mRecorder->RecordEvent(RecordedStroke(this, pathRecording, aPattern, aStrokeOptions, aOptions));
-  mFinalDT->Stroke(pathRecording->mPath, *AdjustedPattern(aPattern), aStrokeOptions, aOptions);
+  mRecorder->RecordEvent(RecordedStroke(this, const_cast<Path*>(aPath), aPattern, aStrokeOptions, aOptions));
+  mFinalDT->Stroke(GetPathForPathRecording(aPath), *AdjustedPattern(aPattern), aStrokeOptions, aOptions);
 }
 
 already_AddRefed<SourceSurface>
@@ -473,8 +384,6 @@ DrawTargetRecording::DrawSurface(SourceSurface *aSurface,
                                  const DrawSurfaceOptions &aSurfOptions,
                                  const DrawOptions &aOptions)
 {
-  EnsureSurfaceStored(mRecorder, aSurface, "DrawSurface");
-
   mRecorder->RecordEvent(RecordedDrawSurface(this, aSurface, aDest, aSource, aSurfOptions, aOptions));
   mFinalDT->DrawSurface(GetSourceSurface(aSurface), aDest, aSource, aSurfOptions, aOptions);
 }
@@ -487,8 +396,6 @@ DrawTargetRecording::DrawSurfaceWithShadow(SourceSurface *aSurface,
                                            Float aSigma,
                                            CompositionOp aOp)
 {
-  EnsureSurfaceStored(mRecorder, aSurface, "DrawSurfaceWithShadow");
-
   mRecorder->RecordEvent(RecordedDrawSurfaceWithShadow(this, aSurface, aDest, aColor, aOffset, aSigma, aOp));
   mFinalDT->DrawSurfaceWithShadow(GetSourceSurface(aSurface), aDest, aColor, aOffset, aSigma, aOp);
 }
@@ -499,10 +406,8 @@ DrawTargetRecording::DrawFilter(FilterNode *aNode,
                                 const Point &aDestPoint,
                                 const DrawOptions &aOptions)
 {
-  MOZ_ASSERT(mRecorder->HasStoredObject(aNode));
-
   mRecorder->RecordEvent(RecordedDrawFilter(this, aNode, aSourceRect, aDestPoint, aOptions));
-  mFinalDT->DrawFilter(FilterNodeRecording::GetFilterNode(aNode), aSourceRect, aDestPoint, aOptions);
+  mFinalDT->DrawFilter(GetFilterNode(aNode), aSourceRect, aDestPoint, aOptions);
 }
 
 already_AddRefed<FilterNode>
@@ -529,8 +434,6 @@ DrawTargetRecording::CopySurface(SourceSurface *aSurface,
                                  const IntRect &aSourceRect,
                                  const IntPoint &aDestination)
 {
-  EnsureSurfaceStored(mRecorder, aSurface, "CopySurface");
-
   mRecorder->RecordEvent(RecordedCopySurface(this, aSurface, aSourceRect, aDestination));
   mFinalDT->CopySurface(GetSourceSurface(aSurface), aSourceRect, aDestination);
 }
@@ -538,10 +441,10 @@ DrawTargetRecording::CopySurface(SourceSurface *aSurface,
 void
 DrawTargetRecording::PushClip(const Path *aPath)
 {
-  RefPtr<PathRecording> pathRecording = EnsurePathStored(aPath);
+  EnsureStored(aPath);
 
-  mRecorder->RecordEvent(RecordedPushClip(this, pathRecording));
-  mFinalDT->PushClip(pathRecording->mPath);
+  mRecorder->RecordEvent(RecordedPushClip(this, const_cast<Path*>(aPath)));
+  mFinalDT->PushClip(GetPathForPathRecording(aPath));
 }
 
 void
@@ -587,7 +490,21 @@ DrawTargetRecording::OptimizeSourceSurface(SourceSurface *aSurface) const
     dataSurf = aSurface->GetDataSurface();
   }
 
-  StoreSourceSurface(mRecorder, retSurf, dataSurf, "OptimizeSourceSurface");
+  if (!dataSurf) {
+    gfxWarning() << "Recording failed to record SourceSurface created from OptimizeSourceSurface";
+    // Insert a bogus source surface.
+    uint8_t *sourceData = new uint8_t[surf->GetSize().width * surf->GetSize().height * BytesPerPixel(surf->GetFormat())];
+    memset(sourceData, 0, surf->GetSize().width * surf->GetSize().height * BytesPerPixel(surf->GetFormat()));
+    mRecorder->RecordEvent(
+      RecordedSourceSurfaceCreation(retSurf, sourceData,
+                                    surf->GetSize().width * BytesPerPixel(surf->GetFormat()),
+                                    surf->GetSize(), surf->GetFormat()));
+    delete [] sourceData;
+  } else {
+    mRecorder->RecordEvent(
+      RecordedSourceSurfaceCreation(retSurf, dataSurf->GetData(), dataSurf->Stride(),
+                                    dataSurf->GetSize(), dataSurf->GetFormat()));
+  }
 
   return retSurf.forget();
 }
@@ -600,7 +517,22 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
   RefPtr<SourceSurface> retSurf = new SourceSurfaceRecording(surf, mRecorder);
 
   RefPtr<DataSourceSurface> dataSurf = surf->GetDataSurface();
-  StoreSourceSurface(mRecorder, retSurf, dataSurf, "CreateSourceSurfaceFromNativeSurface");
+
+  if (!dataSurf) {
+    gfxWarning() << "Recording failed to record SourceSurface created from OptimizeSourceSurface";
+    // Insert a bogus source surface.
+    uint8_t *sourceData = new uint8_t[surf->GetSize().width * surf->GetSize().height * BytesPerPixel(surf->GetFormat())];
+    memset(sourceData, 0, surf->GetSize().width * surf->GetSize().height * BytesPerPixel(surf->GetFormat()));
+    mRecorder->RecordEvent(
+      RecordedSourceSurfaceCreation(retSurf, sourceData,
+                                    surf->GetSize().width * BytesPerPixel(surf->GetFormat()),
+                                    surf->GetSize(), surf->GetFormat()));
+    delete [] sourceData;
+  } else {
+    mRecorder->RecordEvent(
+      RecordedSourceSurfaceCreation(retSurf, dataSurf->GetData(), dataSurf->Stride(),
+                                    dataSurf->GetSize(), dataSurf->GetFormat()));
+  }
 
   return retSurf.forget();
 }
@@ -608,7 +540,8 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
 already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  return MakeAndAddRef<DrawTargetRecording>(this, aSize, aFormat);
+  RefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
+  return MakeAndAddRef<DrawTargetRecording>(mRecorder.get(), dt);
 }
 
 already_AddRefed<PathBuilder>
@@ -640,54 +573,17 @@ DrawTargetRecording::SetTransform(const Matrix &aTransform)
   mFinalDT->SetTransform(aTransform);
 }
 
-already_AddRefed<PathRecording>
-DrawTargetRecording::EnsurePathStored(const Path *aPath)
-{
-  RefPtr<PathRecording> pathRecording;
-  if (aPath->GetBackendType() == BackendType::RECORDING) {
-    pathRecording = const_cast<PathRecording*>(static_cast<const PathRecording*>(aPath));
-    if (mRecorder->HasStoredObject(aPath)) {
-      return pathRecording.forget();
-    }
-  } else {
-    MOZ_ASSERT(!mRecorder->HasStoredObject(aPath));
-    FillRule fillRule = aPath->GetFillRule();
-    RefPtr<PathBuilder> builder = mFinalDT->CreatePathBuilder(fillRule);
-    RefPtr<PathBuilderRecording> builderRecording =
-      new PathBuilderRecording(builder, fillRule);
-    aPath->StreamToSink(builderRecording);
-    pathRecording = builderRecording->Finish().downcast<PathRecording>();
-  }
-
-  mRecorder->RecordEvent(RecordedPathCreation(pathRecording));
-  mRecorder->AddStoredObject(pathRecording);
-  pathRecording->mStoredRecorders.push_back(mRecorder);
-
-  return pathRecording.forget();
-}
-
 void
-DrawTargetRecording::EnsurePatternDependenciesStored(const Pattern &aPattern)
+DrawTargetRecording::EnsureStored(const Path *aPath)
 {
-  switch (aPattern.GetType()) {
-  case PatternType::COLOR:
-    // No dependencies here.
-    return;
-  case PatternType::LINEAR_GRADIENT:
-    {
-      MOZ_ASSERT(mRecorder->HasStoredObject(static_cast<const LinearGradientPattern*>(&aPattern)->mStops));
-      return;
-    }
-  case PatternType::RADIAL_GRADIENT:
-    {
-      MOZ_ASSERT(mRecorder->HasStoredObject(static_cast<const RadialGradientPattern*>(&aPattern)->mStops));
-      return;
-    }
-  case PatternType::SURFACE:
-    {
-      const SurfacePattern *pat = static_cast<const SurfacePattern*>(&aPattern);
-      EnsureSurfaceStored(mRecorder, pat->mSurface, "EnsurePatternDependenciesStored");
-      return;
+  if (!mRecorder->HasStoredPath(aPath)) {
+    if (aPath->GetBackendType() != BackendType::RECORDING) {
+      gfxWarning() << "Cannot record this fill path properly!";
+    } else {
+      PathRecording *recPath = const_cast<PathRecording*>(static_cast<const PathRecording*>(aPath));
+      mRecorder->RecordEvent(RecordedPathCreation(recPath));
+      mRecorder->AddStoredPath(aPath);
+      recPath->mStoredRecorders.push_back(mRecorder);
     }
   }
 }

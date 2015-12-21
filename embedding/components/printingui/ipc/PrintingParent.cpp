@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* vim: set sw=4 ts=8 et tw=80 : */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -19,11 +19,9 @@
 #include "PrintDataUtils.h"
 #include "PrintProgressDialogParent.h"
 #include "PrintSettingsDialogParent.h"
-#include "mozilla/layout/RemotePrintJobParent.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-using namespace mozilla::layout;
 
 namespace mozilla {
 namespace embedding {
@@ -104,10 +102,6 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
 
   // And send it back.
   rv = po->SerializeToPrintData(settings, nullptr, aResult);
-
-  PRemotePrintJobParent* remotePrintJob = new RemotePrintJobParent(settings);
-  aResult->remotePrintJobParent() = SendPRemotePrintJobConstructor(remotePrintJob);
-
   return rv;
 }
 
@@ -184,20 +178,6 @@ PrintingParent::AllocPPrintSettingsDialogParent()
 
 bool
 PrintingParent::DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aDoomed)
-{
-  delete aDoomed;
-  return true;
-}
-
-PRemotePrintJobParent*
-PrintingParent::AllocPRemotePrintJobParent()
-{
-  MOZ_ASSERT_UNREACHABLE("No default constructors for implementations.");
-  return nullptr;
-}
-
-bool
-PrintingParent::DeallocPRemotePrintJobParent(PRemotePrintJobParent* aDoomed)
 {
   delete aDoomed;
   return true;

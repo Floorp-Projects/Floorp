@@ -21,7 +21,7 @@ public:
                      nsTArray<gfx::GradientStop>& aStops,
                      gfx::ExtendMode aExtend);
 
-    static already_AddRefed<gfx::GradientStops>
+    static gfx::GradientStops*
     GetOrCreateGradientStops(const gfx::DrawTarget *aDT,
                              nsTArray<gfx::GradientStop>& aStops,
                              gfx::ExtendMode aExtend);
