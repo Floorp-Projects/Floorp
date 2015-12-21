@@ -947,7 +947,7 @@ public:
   RecordedScaledFontCreation(ReferencePtr aRefPtr, ScaledFont *aScaledFont)
     : RecordedEvent(SCALEDFONTCREATION), mRefPtr(aRefPtr), mData(nullptr)
   {
-    aScaledFont->GetFontFileData(&FontDataProc, this);
+    mGetFontFileDataSucceeded = aScaledFont->GetFontFileData(&FontDataProc, this);
   }
 
   ~RecordedScaledFontCreation();
@@ -970,6 +970,7 @@ private:
   uint32_t mSize;
   Float mGlyphSize;
   uint32_t mIndex;
+  bool mGetFontFileDataSucceeded = false;
 
   MOZ_IMPLICIT RecordedScaledFontCreation(std::istream &aStream);
 };
