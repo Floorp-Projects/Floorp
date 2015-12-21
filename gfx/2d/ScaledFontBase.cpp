@@ -45,6 +45,33 @@ ScaledFontBase::ScaledFontBase(Float aSize)
 #endif
 }
 
+#ifdef USE_CAIRO_SCALED_FONT
+bool
+ScaledFontBase::PopulateCairoScaledFont()
+{
+  cairo_font_face_t* cairoFontFace = GetCairoFontFace();
+  if (!cairoFontFace) {
+    return false;
+  }
+
+  cairo_matrix_t sizeMatrix;
+  cairo_matrix_t identityMatrix;
+
+  cairo_matrix_init_scale(&sizeMatrix, mSize, mSize);
+  cairo_matrix_init_identity(&identityMatrix);
+
+  cairo_font_options_t *fontOptions = cairo_font_options_create();
+
+  mScaledFont = cairo_scaled_font_create(cairoFontFace, &sizeMatrix,
+    &identityMatrix, fontOptions);
+
+  cairo_font_options_destroy(fontOptions);
+  cairo_font_face_destroy(cairoFontFace);
+
+  return (cairo_scaled_font_status(mScaledFont) == CAIRO_STATUS_SUCCESS);
+}
+#endif
+
 #ifdef USE_SKIA
 SkPath
 ScaledFontBase::GetSkiaPathForGlyphs(const GlyphBuffer &aBuffer)
