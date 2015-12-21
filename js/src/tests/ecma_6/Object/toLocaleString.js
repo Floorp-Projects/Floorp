@@ -2,9 +2,7 @@
 
 Object.defineProperty(String.prototype, "toString", {
     get() {
-        // Congratulations! You probably fixed primitive-this getters.
-        // Change "object" to "string".
-        assertEq(typeof this, "object");
+        assertEq(typeof this, "string");
 
         return function() { return typeof this; };
     }
