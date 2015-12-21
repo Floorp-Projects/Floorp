@@ -4,7 +4,6 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver;
 
@@ -14,16 +13,23 @@ function inChildProcess() {
            .processType != Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;  
 }
 function makeChan(path) {
-  return NetUtil.newChannel({
-    uri: "http://localhost:" + httpserver.identity.primaryPort + "/" + path,
-    loadUsingSystemPrincipal: true
-  }).QueryInterface(Ci.nsIHttpChannel);
+  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel2("http://localhost:" + httpserver.identity.primaryPort + "/" + path,
+                             null,
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER)
+                .QueryInterface(Ci.nsIHttpChannel);
+  return chan;
 }
 
 function setup_chan(path, isPrivate, callback) {
   var chan = makeChan(path);
   chan.QueryInterface(Ci.nsIPrivateBrowsingChannel).setPrivate(isPrivate);
-  chan.asyncOpen2(new ChannelListener(callback));  
+  chan.asyncOpen(new ChannelListener(callback), null);  
  }
 
 function set_cookie(value, callback) {

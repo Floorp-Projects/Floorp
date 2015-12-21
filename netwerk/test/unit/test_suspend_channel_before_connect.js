@@ -1,7 +1,7 @@
 
 var CC = Components.Constructor;
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const ServerSocket = CC("@mozilla.org/network/server-socket;1",
                         "nsIServerSocket",
@@ -88,11 +88,17 @@ add_test(function testNoConnectChannelCanceledEarly() {
   serv = new TestServer();
 
   obs.addObserver(requestListenerObserver, "http-on-modify-request", false);
-  var chan = NetUtil.newChannel({
-    uri:"http://localhost:" + serv.port,
-    loadUsingSystemPrincipal: true
-  });
-  chan.asyncOpen2(listener);
+
+  var chan = ios.newChannel2("http://localhost:" + serv.port,
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
+
+  chan.asyncOpen(listener, chan);
 
   do_register_cleanup(function(){ serv.stop(); });
 });
