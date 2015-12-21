@@ -24,10 +24,6 @@
 #include "RawDecoder.h"
 #include "RawReader.h"
 #endif
-#ifdef MOZ_GSTREAMER
-#include "GStreamerDecoder.h"
-#include "GStreamerReader.h"
-#endif
 #ifdef MOZ_ANDROID_OMX
 #include "AndroidMediaDecoder.h"
 #include "AndroidMediaReader.h"
@@ -171,23 +167,6 @@ DecoderTraits::IsWebMAudioType(const nsACString& aType)
 {
   return aType.EqualsASCII("audio/webm");
 }
-
-#ifdef MOZ_GSTREAMER
-static bool
-IsGStreamerSupportedType(const nsACString& aMimeType)
-{
-  if (DecoderTraits::IsWebMTypeAndEnabled(aMimeType))
-    return false;
-
-  if (!MediaDecoder::IsGStreamerEnabled())
-    return false;
-
-  if (IsOggType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
-    return false;
-
-  return GStreamerDecoder::CanHandleMediaType(aMimeType, nullptr);
-}
-#endif
 
 #ifdef MOZ_OMX_DECODER
 static const char* const gOmxTypes[] = {
@@ -498,12 +477,6 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
   if (IsAACSupportedType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
-#ifdef MOZ_GSTREAMER
-  if (GStreamerDecoder::CanHandleMediaType(nsDependentCString(aMIMEType),
-                                           aHaveRequestedCodecs ? &aRequestedCodecs : nullptr)) {
-    return aHaveRequestedCodecs ? CANPLAY_YES : CANPLAY_MAYBE;
-  }
-#endif
 #ifdef MOZ_OMX_DECODER
   if (IsOmxSupportedType(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
@@ -550,12 +523,6 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     decoder = new ADTSDecoder(aOwner);
     return decoder.forget();
   }
-#ifdef MOZ_GSTREAMER
-  if (IsGStreamerSupportedType(aType)) {
-    decoder = new GStreamerDecoder(aOwner);
-    return decoder.forget();
-  }
-#endif
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     decoder = new RawDecoder(aOwner);
@@ -650,11 +617,6 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
   if (IsAACSupportedType(aType)) {
     decoderReader = new MediaFormatReader(aDecoder, new ADTSDemuxer(aDecoder->GetResource()));
   } else
-#ifdef MOZ_GSTREAMER
-  if (IsGStreamerSupportedType(aType)) {
-    decoderReader = new GStreamerReader(aDecoder);
-  } else
-#endif
 #ifdef MOZ_RAW
   if (IsRawType(aType)) {
     decoderReader = new RawReader(aDecoder);
@@ -715,9 +677,6 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
      !IsB2GSupportOnlyType(aType)) ||
 #endif
     IsWebMSupportedType(aType) ||
-#ifdef MOZ_GSTREAMER
-    IsGStreamerSupportedType(aType) ||
-#endif
 #ifdef MOZ_ANDROID_OMX
     (MediaDecoder::IsAndroidMediaEnabled() && IsAndroidMediaType(aType)) ||
 #endif
