@@ -6,6 +6,8 @@
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 
 XPCOMUtils.defineLazyGetter(this, "uri", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -18,16 +20,7 @@ const nsIBinaryInputStream = Components.Constructor("@mozilla.org/binaryinputstr
 
 
 function make_channel(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 function Listener(callback) {
@@ -231,10 +224,10 @@ function run_test()
 function test_channel_with_bad_signature() {
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
-  channel.asyncOpen(new Listener(function(l) {
+  channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotFileNotFound);
     run_next_test();
-  }), null);
+  }));
 }
 
 function test_channel_with_bad_signature_from_trusted_origin() {
@@ -245,20 +238,20 @@ function test_channel_with_bad_signature_from_trusted_origin() {
   Services.prefs.setComplexValue(pref, Ci.nsISupportsString, origin);
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
-  channel.asyncOpen(new Listener(function(l) {
+  channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
     Services.prefs.clearUserPref(pref);
     run_next_test();
-  }), null);
+  }));
 }
 
 function test_channel_with_good_signature() {
   var channel = make_channel(uri+"/package_with_good_signature!//index.html");
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
-  channel.asyncOpen(new Listener(function(l) {
+  channel.asyncOpen2(new Listener(function(l) {
     do_check_true(l.gotStopRequestOK);
     run_next_test();
-  }), null);
+  }));
 }
 
 function test_channel(aNullNotificationCallbacks) {
@@ -268,13 +261,13 @@ function test_channel(aNullNotificationCallbacks) {
     channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);
   }
 
-  channel.asyncOpen(new Listener(function(l) {
+  channel.asyncOpen2(new Listener(function(l) {
     // XXX: no content length available for this resource
     //do_check_true(channel.contentLength > 0);
     do_check_true(l.gotStartRequest);
     do_check_true(l.gotStopRequestOK);
     run_next_test();
-  }), null);
+  }));
 }
 
 function test_channel_no_notificationCallbacks() {
@@ -284,7 +277,7 @@ function test_channel_no_notificationCallbacks() {
 function test_channel_uris() {
   // A `!//` in the query or ref should not be handled as a packaged app resource
   var channel = make_channel(uri+"/regular?bla!//bla#bla!//bla");
-  channel.asyncOpen(new ChannelListener(check_regular_response, null), null);
+  channel.asyncOpen2(new ChannelListener(check_regular_response, null));
 }
 
 function check_regular_response(request, buffer) {
