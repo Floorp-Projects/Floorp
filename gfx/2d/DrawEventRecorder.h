@@ -46,6 +46,14 @@ public:
     return mStoredObjects.find(aObject) != mStoredObjects.end();
   }
 
+  void AddStoredFontData(const uint64_t aFontDataKey) {
+    mStoredFontData.insert(aFontDataKey);
+  }
+
+  bool HasStoredFontData(const uint64_t aFontDataKey) {
+    return mStoredFontData.find(aFontDataKey) != mStoredFontData.end();
+  }
+
 protected:
   std::ostream *mOutputStream;
 
@@ -53,11 +61,14 @@ protected:
 
 #if defined(_MSC_VER)
   typedef std::unordered_set<const void*> ObjectSet;
+  typedef std::unordered_set<uint64_t> Uint64Set;
 #else
   typedef std::set<const void*> ObjectSet;
+  typedef std::set<uint64_t> Uint64Set;
 #endif
 
   ObjectSet mStoredObjects;
+  Uint64Set mStoredFontData;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate

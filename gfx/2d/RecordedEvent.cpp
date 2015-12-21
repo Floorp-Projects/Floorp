@@ -10,6 +10,7 @@
 #include "Tools.h"
 #include "Filters.h"
 #include "Logging.h"
+#include "SFNTData.h"
 
 namespace mozilla {
 namespace gfx {
@@ -78,6 +79,7 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
     LOAD_EVENT_TYPE(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);
     LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
     LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
+    LOAD_EVENT_TYPE(FONTDATA, RecordedFontData);
   default:
     return nullptr;
   }
@@ -153,6 +155,8 @@ RecordedEvent::GetEventName(EventType aType)
     return "SetInput";
   case CREATESIMILARDRAWTARGET:
     return "CreateSimilarDrawTarget";
+  case FONTDATA:
+    return "FontData";
   default:
     return "Unknown";
   }
@@ -1387,34 +1391,85 @@ RecordedSnapshot::OutputSimpleEventInfo(stringstream &aStringStream) const
   aStringStream << "[" << mRefPtr << "] Snapshot Created (DT: " << mDT << ")";
 }
 
-RecordedScaledFontCreation::~RecordedScaledFontCreation()
+RecordedFontData::~RecordedFontData()
 {
-  delete [] mData;
+  delete[] mData;
+}
+
+void
+RecordedFontData::PlayEvent(Translator *aTranslator) const
+{
+  RefPtr<NativeFontResource> fontResource =
+    Factory::CreateNativeFontResource(mData, mFontDetails.size,
+                                      aTranslator->GetDesiredFontType());
+  aTranslator->AddNativeFontResource(mFontDetails.fontDataKey, fontResource);
+}
+
+void
+RecordedFontData::RecordToStream(std::ostream &aStream) const
+{
+  MOZ_ASSERT(mGetFontFileDataSucceeded);
+
+  WriteElement(aStream, mFontDetails.fontDataKey);
+  WriteElement(aStream, mFontDetails.size);
+  aStream.write((const char*)mData, mFontDetails.size);
+}
+
+void
+RecordedFontData::OutputSimpleEventInfo(stringstream &aStringStream) const
+{
+  aStringStream << "Font Data of size " << mFontDetails.size;
+}
+
+void
+RecordedFontData::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize)
+{
+  mData = new uint8_t[aSize];
+  memcpy(mData, aData, aSize);
+  mFontDetails.fontDataKey = SFNTData::GetUniqueKey(aData, aSize);
+  mFontDetails.size = aSize;
+  mFontDetails.index = aIndex;
+  mFontDetails.glyphSize = aGlyphSize;
+}
+
+bool
+RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
+{
+  if (!mGetFontFileDataSucceeded) {
+    return false;
+  }
+
+  fontDetails.fontDataKey = mFontDetails.fontDataKey;
+  fontDetails.size = mFontDetails.size;
+  fontDetails.glyphSize = mFontDetails.glyphSize;
+  fontDetails.index = mFontDetails.index;
+  return true;
+}
+
+RecordedFontData::RecordedFontData(istream &aStream)
+  : RecordedEvent(FONTDATA)
+{
+  ReadElement(aStream, mFontDetails.fontDataKey);
+  ReadElement(aStream, mFontDetails.size);
+  mData = new uint8_t[mFontDetails.size];
+  aStream.read((char*)mData, mFontDetails.size);
 }
 
 void
 RecordedScaledFontCreation::PlayEvent(Translator *aTranslator) const
 {
-  RefPtr<ScaledFont> scaledFont =
-    Factory::CreateScaledFontForTrueTypeData(mData, mSize, mIndex, mGlyphSize,
-                                             aTranslator->GetDesiredFontType());
+  NativeFontResource *fontResource = aTranslator->LookupNativeFontResource(mFontDataKey);
+  RefPtr<ScaledFont> scaledFont = fontResource->CreateScaledFont(mIndex, mGlyphSize);
   aTranslator->AddScaledFont(mRefPtr, scaledFont);
 }
 
 void
 RecordedScaledFontCreation::RecordToStream(std::ostream &aStream) const
 {
-  if (!mGetFontFileDataSucceeded) {
-    gfxWarning()
-      << "Unable to record ScaledFont creation as no data was retrieved.";
-    return;
-  }
-
   WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mFontDataKey);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mGlyphSize);
-  WriteElement(aStream, mSize);
-  aStream.write((const char*)mData, mSize);
 }
 
 void
@@ -1423,25 +1478,13 @@ RecordedScaledFontCreation::OutputSimpleEventInfo(stringstream &aStringStream) c
   aStringStream << "[" << mRefPtr << "] ScaledFont Created";
 }
 
-void
-RecordedScaledFontCreation::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize)
-{
-  mData = new uint8_t[aSize];
-  memcpy(mData, aData, aSize);
-  mSize = aSize;
-  mIndex = aIndex;
-  mGlyphSize = aGlyphSize;
-}
-
 RecordedScaledFontCreation::RecordedScaledFontCreation(istream &aStream)
   : RecordedEvent(SCALEDFONTCREATION)
 {
   ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mFontDataKey);
   ReadElement(aStream, mIndex);
   ReadElement(aStream, mGlyphSize);
-  ReadElement(aStream, mSize);
-  mData = new uint8_t[mSize];
-  aStream.read((char*)mData, mSize);
 }
 
 void

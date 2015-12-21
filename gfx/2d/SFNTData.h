@@ -30,6 +30,15 @@ public:
   static UniquePtr<SFNTData> Create(const uint8_t *aFontData,
                                     uint32_t aDataLength);
 
+  /**
+   * Creates a unique key for the given font data.
+   *
+   * @param aFontData the SFNT data
+   * @param aDataLength length
+   * @return unique key to be used for caching
+   */
+  static uint64_t GetUniqueKey(const uint8_t *aFontData, uint32_t aDataLength);
+
   ~SFNTData();
 
   /**
@@ -44,6 +53,17 @@ public:
    * @return true if the full name is successfully read.
    */
   bool GetU16FullName(uint32_t aIndex, mozilla::u16string& aU16FullName);
+
+  /**
+   * Populate a Vector with the first UTF16 full name from each name table of
+   * the fonts. If the full name string is not present it will use the family
+   * space concatenated with the style.
+   * This will only read names that are already UTF16.
+   *
+   * @param aU16FullNames the Vector to be populated.
+   * @return true if at least one name found otherwise false.
+   */
+  bool GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames);
 
   /**
    * Returns the index for the first UTF16 name matching aU16FullName.
