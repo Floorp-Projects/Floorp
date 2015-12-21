@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var Cu = Components.utils;
+var Ci = Components.interfaces;
 
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { GetDevices, GetDeviceString } = require("devtools/client/shared/devices");
@@ -117,7 +118,27 @@ var SimulatorEditor = {
       this.updateProfileSelector();
       this.updateDeviceSelector();
       this.updateDeviceFields();
+
+      // Change visibility of 'TV Simulator Menu'.
+      let tvSimMenu = document.querySelector("#tv_simulator_menu");
+      tvSimMenu.style.visibility = (this._simulator.type === "television")?
+                                   "visible" : "hidden";
     });
+  },
+
+  // Open the directory of TV Simulator config.
+  showTVConfigDirectory() {
+    let profD = Services.dirsvc.get("ProfD", Ci.nsIFile);
+    profD.append("extensions");
+    profD.append(this._simulator.addon.id);
+    profD.append("profile");
+    profD.append("dummy");
+    let profileDir = profD.path;
+
+    // Show the profile directory.
+    let nsLocalFile = Components.Constructor("@mozilla.org/file/local;1",
+                                           "nsILocalFile", "initWithPath");
+    new nsLocalFile(profileDir).reveal();
   },
 
   // Close the configuration panel.
@@ -317,4 +338,9 @@ window.addEventListener("load", function onLoad() {
 
   // We just loaded, so we probably missed the first configure request.
   SimulatorEditor.edit(Simulators._lastConfiguredSimulator);
+
+  document.querySelector("#open-tv-dummy-directory").onclick = e => {
+    SimulatorEditor.showTVConfigDirectory();
+    e.preventDefault();
+  };
 });

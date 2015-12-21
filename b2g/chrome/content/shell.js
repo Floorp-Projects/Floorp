@@ -1391,6 +1391,8 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
   appStartup.quit(Ci.nsIAppStartup.eForceQuit);
 }, 'b2g-reset-profile', false);
 
+var showInstallScreen;
+
 if (AppConstants.MOZ_GRAPHENE) {
   const restoreWindowGeometry = () => {
     let screenX = Services.prefs.getIntPref("b2g.nativeWindowGeometry.screenX");
@@ -1428,7 +1430,7 @@ if (AppConstants.MOZ_GRAPHENE) {
   const showNativeWindow = () => baseWindow.visibility = true;
   const hideNativeWindow = () => baseWindow.visibility = false;
 
-  const showInstallScreen = () => {
+  showInstallScreen = () => {
     const grapheneStrings =
       Services.strings.createBundle('chrome://b2g-l10n/locale/graphene.properties');
     document.querySelector('#installing > .message').textContent =
