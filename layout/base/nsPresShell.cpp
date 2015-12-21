@@ -6579,7 +6579,6 @@ FlushThrottledStyles(nsIDocument *aDocument, void *aData)
     }
   }
 
-  aDocument->EnumerateSubDocuments(FlushThrottledStyles, nullptr);
   return true;
 }
 
@@ -7153,9 +7152,9 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       nsWeakFrame weakFrame(frame);
       {  // scope for scriptBlocker.
         nsAutoScriptBlocker scriptBlocker;
-        FlushThrottledStyles(GetRootPresShell()->GetDOcument(), nullptr);
+        GetRootPresShell()->GetDocument()->
+          EnumerateSubDocuments(FlushThrottledStyles, nullptr);
       }
-
 
       if (!weakFrame.IsAlive()) {
         frame = GetNearestFrameContainingPresShell(this);
