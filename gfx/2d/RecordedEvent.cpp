@@ -4,13 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "RecordedEvent.h"
-
 #include "PathRecording.h"
-#include "RecordingTypes.h"
+
 #include "Tools.h"
 #include "Filters.h"
 #include "Logging.h"
-#include "SFNTData.h"
 
 namespace mozilla {
 namespace gfx {
@@ -27,16 +25,6 @@ static std::string NameFromBackend(BackendType aType)
   default:
     return "Unknown";
   }
-}
-
-already_AddRefed<DrawTarget>
-Translator::CreateDrawTarget(ReferencePtr aRefPtr, const IntSize &aSize,
-                             SurfaceFormat aFormat)
-{
-  RefPtr<DrawTarget> newDT =
-    GetReferenceDrawTarget()->CreateSimilarDrawTarget(aSize, aFormat);
-  AddDrawTarget(aRefPtr, newDT);
-  return newDT.forget();
 }
 
 #define LOAD_EVENT_TYPE(_typeenum, _class) \
@@ -78,8 +66,6 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
     LOAD_EVENT_TYPE(MASKSURFACE, RecordedMaskSurface);
     LOAD_EVENT_TYPE(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);
     LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
-    LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
-    LOAD_EVENT_TYPE(FONTDATA, RecordedFontData);
   default:
     return nullptr;
   }
@@ -153,10 +139,6 @@ RecordedEvent::GetEventName(EventType aType)
     return "SetAttribute";
   case FILTERNODESETINPUT:
     return "SetInput";
-  case CREATESIMILARDRAWTARGET:
-    return "CreateSimilarDrawTarget";
-  case FONTDATA:
-    return "FontData";
   default:
     return "Unknown";
   }
@@ -384,9 +366,10 @@ void
 RecordedDrawTargetCreation::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<DrawTarget> newDT =
-    aTranslator->CreateDrawTarget(mRefPtr, mSize, mFormat);
+    aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize, mFormat);
+  aTranslator->AddDrawTarget(mRefPtr, newDT);
 
-  if (newDT && mHasExistingData) {
+  if (mHasExistingData) {
     Rect dataRect(0, 0, mExistingData->GetSize().width, mExistingData->GetSize().height);
     newDT->DrawSurface(mExistingData, dataRect, dataRect);
   }
@@ -467,36 +450,6 @@ void
 RecordedDrawTargetDestruction::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
   aStringStream << "[" << mRefPtr << "] DrawTarget Destruction";
-}
-
-void
-RecordedCreateSimilarDrawTarget::PlayEvent(Translator *aTranslator) const
-{
-  RefPtr<DrawTarget> newDT =
-    aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize, mFormat);
-  aTranslator->AddDrawTarget(mRefPtr, newDT);
-}
-
-void
-RecordedCreateSimilarDrawTarget::RecordToStream(ostream &aStream) const
-{
-  WriteElement(aStream, mRefPtr);
-  WriteElement(aStream, mSize);
-  WriteElement(aStream, mFormat);
-}
-
-RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(istream &aStream)
-  : RecordedEvent(CREATESIMILARDRAWTARGET)
-{
-  ReadElement(aStream, mRefPtr);
-  ReadElement(aStream, mSize);
-  ReadElement(aStream, mFormat);
-}
-
-void
-RecordedCreateSimilarDrawTarget::OutputSimpleEventInfo(stringstream &aStringStream) const
-{
-  aStringStream << "[" << mRefPtr << "] CreateSimilarDrawTarget (Size: " << mSize.width << "x" << mSize.height << ")";
 }
 
 struct GenericPattern
@@ -1391,75 +1344,17 @@ RecordedSnapshot::OutputSimpleEventInfo(stringstream &aStringStream) const
   aStringStream << "[" << mRefPtr << "] Snapshot Created (DT: " << mDT << ")";
 }
 
-RecordedFontData::~RecordedFontData()
+RecordedScaledFontCreation::~RecordedScaledFontCreation()
 {
-  delete[] mData;
-}
-
-void
-RecordedFontData::PlayEvent(Translator *aTranslator) const
-{
-  RefPtr<NativeFontResource> fontResource =
-    Factory::CreateNativeFontResource(mData, mFontDetails.size,
-                                      aTranslator->GetDesiredFontType());
-  aTranslator->AddNativeFontResource(mFontDetails.fontDataKey, fontResource);
-}
-
-void
-RecordedFontData::RecordToStream(std::ostream &aStream) const
-{
-  MOZ_ASSERT(mGetFontFileDataSucceeded);
-
-  WriteElement(aStream, mFontDetails.fontDataKey);
-  WriteElement(aStream, mFontDetails.size);
-  aStream.write((const char*)mData, mFontDetails.size);
-}
-
-void
-RecordedFontData::OutputSimpleEventInfo(stringstream &aStringStream) const
-{
-  aStringStream << "Font Data of size " << mFontDetails.size;
-}
-
-void
-RecordedFontData::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize)
-{
-  mData = new uint8_t[aSize];
-  memcpy(mData, aData, aSize);
-  mFontDetails.fontDataKey = SFNTData::GetUniqueKey(aData, aSize);
-  mFontDetails.size = aSize;
-  mFontDetails.index = aIndex;
-  mFontDetails.glyphSize = aGlyphSize;
-}
-
-bool
-RecordedFontData::GetFontDetails(RecordedFontDetails& fontDetails)
-{
-  if (!mGetFontFileDataSucceeded) {
-    return false;
-  }
-
-  fontDetails.fontDataKey = mFontDetails.fontDataKey;
-  fontDetails.size = mFontDetails.size;
-  fontDetails.glyphSize = mFontDetails.glyphSize;
-  fontDetails.index = mFontDetails.index;
-  return true;
-}
-
-RecordedFontData::RecordedFontData(istream &aStream)
-  : RecordedEvent(FONTDATA)
-{
-  ReadElement(aStream, mFontDetails.fontDataKey);
-  ReadElement(aStream, mFontDetails.size);
-  mData = new uint8_t[mFontDetails.size];
-  aStream.read((char*)mData, mFontDetails.size);
+  delete [] mData;
 }
 
 void
 RecordedScaledFontCreation::PlayEvent(Translator *aTranslator) const
 {
-  NativeFontResource *fontResource = aTranslator->LookupNativeFontResource(mFontDataKey);
-  RefPtr<ScaledFont> scaledFont = fontResource->CreateScaledFont(mIndex, mGlyphSize);
+  RefPtr<ScaledFont> scaledFont =
+    Factory::CreateScaledFontForTrueTypeData(mData, mSize, mIndex, mGlyphSize,
+                                             aTranslator->GetDesiredFontType());
   aTranslator->AddScaledFont(mRefPtr, scaledFont);
 }
 
@@ -1467,9 +1362,10 @@ void
 RecordedScaledFontCreation::RecordToStream(std::ostream &aStream) const
 {
   WriteElement(aStream, mRefPtr);
-  WriteElement(aStream, mFontDataKey);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mGlyphSize);
+  WriteElement(aStream, mSize);
+  aStream.write((const char*)mData, mSize);
 }
 
 void
@@ -1478,13 +1374,25 @@ RecordedScaledFontCreation::OutputSimpleEventInfo(stringstream &aStringStream) c
   aStringStream << "[" << mRefPtr << "] ScaledFont Created";
 }
 
+void
+RecordedScaledFontCreation::SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize)
+{
+  mData = new uint8_t[aSize];
+  memcpy(mData, aData, aSize);
+  mSize = aSize;
+  mIndex = aIndex;
+  mGlyphSize = aGlyphSize;
+}
+
 RecordedScaledFontCreation::RecordedScaledFontCreation(istream &aStream)
   : RecordedEvent(SCALEDFONTCREATION)
 {
   ReadElement(aStream, mRefPtr);
-  ReadElement(aStream, mFontDataKey);
   ReadElement(aStream, mIndex);
   ReadElement(aStream, mGlyphSize);
+  ReadElement(aStream, mSize);
+  mData = new uint8_t[mSize];
+  aStream.read((char*)mData, mSize);
 }
 
 void
@@ -1571,7 +1479,6 @@ RecordedFilterNodeSetAttribute::PlayEvent(Translator *aTranslator) const
     REPLAY_SET_ATTRIBUTE(Rect, RECT);
     REPLAY_SET_ATTRIBUTE(IntRect, INTRECT);
     REPLAY_SET_ATTRIBUTE(Point, POINT);
-    REPLAY_SET_ATTRIBUTE(Matrix, MATRIX);
     REPLAY_SET_ATTRIBUTE(Matrix5x4, MATRIX5X4);
     REPLAY_SET_ATTRIBUTE(Point3D, POINT3D);
     REPLAY_SET_ATTRIBUTE(Color, COLOR);

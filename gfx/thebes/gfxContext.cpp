@@ -212,7 +212,6 @@ already_AddRefed<Path> gfxContext::GetPath()
 void gfxContext::SetPath(Path* path)
 {
   MOZ_ASSERT(path->GetBackendType() == mDT->GetBackendType() ||
-             path->GetBackendType() == BackendType::RECORDING ||
              (mDT->GetBackendType() == BackendType::DIRECT2D1_1 && path->GetBackendType() == BackendType::DIRECT2D));
   mPath = path;
   mPathBuilder = nullptr;

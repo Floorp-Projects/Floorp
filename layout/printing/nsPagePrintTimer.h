@@ -47,9 +47,6 @@ public:
 
   void Stop();
 
-  void WaitForRemotePrint();
-  void RemotePrintFinished();
-
 private:
   ~nsPagePrintTimer();
 
@@ -62,7 +59,6 @@ private:
   nsCOMPtr<nsIDocumentViewerPrint> mDocViewerPrint;
   nsCOMPtr<nsITimer>         mTimer;
   nsCOMPtr<nsITimer>         mWatchDogTimer;
-  nsCOMPtr<nsITimer>         mWaitingForRemotePrint;
   uint32_t                   mDelay;
   uint32_t                   mFiringCount;
   nsPrintObject *            mPrintObj;

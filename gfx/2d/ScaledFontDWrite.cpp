@@ -5,15 +5,140 @@
 
 #include "ScaledFontDWrite.h"
 #include "PathD2D.h"
+#include "DrawTargetD2D.h"
+#include "Logging.h"
 
 #include <vector>
 
-#ifdef USE_CAIRO_SCALED_FONT
-#include "cairo-win32.h"
-#endif
-
 namespace mozilla {
 namespace gfx {
+
+struct ffReferenceKey
+{
+    uint8_t *mData;
+    uint32_t mSize;
+};
+
+class DWriteFontFileLoader : public IDWriteFontFileLoader
+{
+public:
+  DWriteFontFileLoader()
+  {
+  }
+
+  // IUnknown interface
+  IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject)
+  {
+    if (iid == __uuidof(IDWriteFontFileLoader)) {
+      *ppObject = static_cast<IDWriteFontFileLoader*>(this);
+      return S_OK;
+    } else if (iid == __uuidof(IUnknown)) {
+      *ppObject = static_cast<IUnknown*>(this);
+      return S_OK;
+    } else {
+      return E_NOINTERFACE;
+    }
+  }
+
+  IFACEMETHOD_(ULONG, AddRef)()
+  {
+    return 1;
+  }
+
+  IFACEMETHOD_(ULONG, Release)()
+  {
+    return 1;
+  }
+
+  // IDWriteFontFileLoader methods
+  /**
+    * Important! Note the key here -has- to be a pointer to an
+    * ffReferenceKey object.
+    */
+  virtual HRESULT STDMETHODCALLTYPE 
+    CreateStreamFromKey(void const* fontFileReferenceKey,
+                        UINT32 fontFileReferenceKeySize,
+                        OUT IDWriteFontFileStream** fontFileStream);
+
+  /**
+    * Gets the singleton loader instance. Note that when using this font
+    * loader, the key must be a pointer to an FallibleTArray<uint8_t>. This
+    * array will be empty when the function returns.
+    */
+  static IDWriteFontFileLoader* Instance()
+  {
+    if (!mInstance) {
+      mInstance = new DWriteFontFileLoader();
+      DrawTargetD2D::GetDWriteFactory()->
+          RegisterFontFileLoader(mInstance);
+    }
+    return mInstance;
+  }
+
+private:
+  static IDWriteFontFileLoader* mInstance;
+}; 
+
+class DWriteFontFileStream : public IDWriteFontFileStream
+{
+public:
+  /**
+    * Used by the FontFileLoader to create a new font stream,
+    * this font stream is created from data in memory. The memory
+    * passed may be released after object creation, it will be
+    * copied internally.
+    *
+    * @param aData Font data
+    */
+  DWriteFontFileStream(uint8_t *aData, uint32_t aSize);
+  ~DWriteFontFileStream();
+
+  // IUnknown interface
+  IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject)
+  {
+    if (iid == __uuidof(IDWriteFontFileStream)) {
+      *ppObject = static_cast<IDWriteFontFileStream*>(this);
+      return S_OK;
+    } else if (iid == __uuidof(IUnknown)) {
+      *ppObject = static_cast<IUnknown*>(this);
+      return S_OK;
+    } else {
+      return E_NOINTERFACE;
+    }
+  }
+
+  IFACEMETHOD_(ULONG, AddRef)()
+  {
+    ++mRefCnt;
+    return mRefCnt;
+  }
+
+  IFACEMETHOD_(ULONG, Release)()
+  {
+    --mRefCnt;
+    if (mRefCnt == 0) {
+      delete this;
+      return 0;
+    }
+    return mRefCnt;
+  }
+
+  // IDWriteFontFileStream methods
+  virtual HRESULT STDMETHODCALLTYPE ReadFileFragment(void const** fragmentStart,
+                                                     UINT64 fileOffset,
+                                                     UINT64 fragmentSize,
+                                                     OUT void** fragmentContext);
+
+  virtual void STDMETHODCALLTYPE ReleaseFileFragment(void* fragmentContext);
+
+  virtual HRESULT STDMETHODCALLTYPE GetFileSize(OUT UINT64* fileSize);
+
+  virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(OUT UINT64* lastWriteTime);
+
+private:
+  std::vector<uint8_t> mData;
+  uint32_t mRefCnt;
+};
 
 static BYTE
 GetSystemTextQuality()
@@ -86,6 +211,99 @@ DoGrayscale(IDWriteFontFace *aDWFace, Float ppem)
     aDWFace->ReleaseFontTable(tableContext);
   }
   return true;
+}
+
+IDWriteFontFileLoader* DWriteFontFileLoader::mInstance = nullptr;
+
+HRESULT STDMETHODCALLTYPE
+DWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey, 
+                                          UINT32 fontFileReferenceKeySize, 
+                                          IDWriteFontFileStream **fontFileStream)
+{
+  if (!fontFileReferenceKey || !fontFileStream) {
+    return E_POINTER;
+  }
+
+  const ffReferenceKey *key = static_cast<const ffReferenceKey*>(fontFileReferenceKey);
+  *fontFileStream = 
+    new DWriteFontFileStream(key->mData, key->mSize);
+
+  if (!*fontFileStream) {
+    return E_OUTOFMEMORY;
+  }
+  (*fontFileStream)->AddRef();
+  return S_OK;
+}
+
+DWriteFontFileStream::DWriteFontFileStream(uint8_t *aData, uint32_t aSize)
+  : mRefCnt(0)
+{
+  mData.resize(aSize);
+  memcpy(&mData.front(), aData, aSize);
+}
+
+DWriteFontFileStream::~DWriteFontFileStream()
+{
+}
+
+HRESULT STDMETHODCALLTYPE
+DWriteFontFileStream::GetFileSize(UINT64 *fileSize)
+{
+  *fileSize = mData.size();
+  return S_OK;
+}
+
+HRESULT STDMETHODCALLTYPE
+DWriteFontFileStream::GetLastWriteTime(UINT64 *lastWriteTime)
+{
+  return E_NOTIMPL;
+}
+
+HRESULT STDMETHODCALLTYPE
+DWriteFontFileStream::ReadFileFragment(const void **fragmentStart,
+                                       UINT64 fileOffset,
+                                       UINT64 fragmentSize,
+                                       void **fragmentContext)
+{
+  // We are required to do bounds checking.
+  if (fileOffset + fragmentSize > mData.size()) {
+    return E_FAIL;
+  }
+
+  // truncate the 64 bit fileOffset to size_t sized index into mData
+  size_t index = static_cast<size_t>(fileOffset);
+
+  // We should be alive for the duration of this.
+  *fragmentStart = &mData[index];
+  *fragmentContext = nullptr;
+  return S_OK;
+}
+
+void STDMETHODCALLTYPE
+DWriteFontFileStream::ReleaseFileFragment(void *fragmentContext)
+{
+}
+
+ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
+                                   uint32_t aIndex, Float aGlyphSize)
+  : ScaledFontBase(aGlyphSize)
+{
+  IDWriteFactory *factory = DrawTargetD2D::GetDWriteFactory();
+
+  ffReferenceKey key;
+  key.mData = aData;
+  key.mSize = aSize;
+
+  RefPtr<IDWriteFontFile> fontFile;
+  if (FAILED(factory->CreateCustomFontFileReference(&key, sizeof(ffReferenceKey), DWriteFontFileLoader::Instance(), getter_AddRefs(fontFile)))) {
+    gfxWarning() << "Failed to load font file from data!";
+    return;
+  }
+
+  IDWriteFontFile *ff = fontFile;
+  if (FAILED(factory->CreateFontFace(DWRITE_FONT_FACE_TYPE_TRUETYPE, 1, &ff, aIndex, DWRITE_FONT_SIMULATIONS_NONE, getter_AddRefs(mFontFace)))) {
+    gfxWarning() << "Failed to create font face from font file data!";
+  }
 }
 
 already_AddRefed<Path>
@@ -212,18 +430,6 @@ ScaledFontDWrite::GetDefaultAAMode()
   }
   return defaultMode;
 }
-
-#ifdef USE_CAIRO_SCALED_FONT
-cairo_font_face_t*
-ScaledFontDWrite::GetCairoFontFace()
-{
-  if (!mFontFace) {
-    return nullptr;
-  }
-
-  return cairo_dwrite_font_face_create_for_dwrite_fontface(nullptr, mFontFace);
-}
-#endif
 
 }
 }
