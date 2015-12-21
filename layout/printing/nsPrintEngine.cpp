@@ -75,6 +75,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISelectionController.h"
 
 // Misc
+#include "mozilla/gfx/DrawEventRecorder.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
@@ -91,6 +92,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
+#include "nsDeviceContextSpecProxy.h"
 #include "nsViewManager.h"
 #include "nsView.h"
 #include "nsRenderingContext.h"
@@ -569,9 +571,13 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   mPrt->mPrintSettings->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
                                         isSelection || mPrt->mIsIFrameSelected);
 
-  nsCOMPtr<nsIDeviceContextSpec> devspec
-    (do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDeviceContextSpec> devspec;
+  if (XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent")) {
+    devspec = new nsDeviceContextSpecProxy();
+  } else {
+    devspec = do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsScriptSuppressor scriptSuppressor(this);
   if (!aIsPrintPreview) {
