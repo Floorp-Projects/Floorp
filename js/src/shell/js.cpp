@@ -5909,6 +5909,9 @@ NewGlobalObject(JSContext* cx, JS::CompartmentOptions& options,
 
         /* Initialize FakeDOMObject.prototype */
         InitDOMObject(domProto);
+
+        if (!js::InitModuleClasses(cx, glob))
+            return nullptr;
     }
 
     JS_FireOnNewGlobalObject(cx, glob);

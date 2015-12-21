@@ -112,9 +112,6 @@ IF_SAB(real,imaginary)(SharedUint8ClampedArray, 51,     InitViaClassSpec,       
     real(TypedArray,            52,      InitViaClassSpec,      &js::TypedArrayObject::sharedTypedArrayPrototypeClass) \
 IF_SAB(real,imaginary)(Atomics,                 53,     InitAtomicsClass, OCLASP(Atomics)) \
     real(SavedFrame,            54,      InitViaClassSpec,      &js::SavedFrame::class_) \
-    real(Module,                55,      InitModuleClass,       OCLASP(Module)) \
-    real(ImportEntry,           56,      InitImportEntryClass,  OCLASP(ImportEntry)) \
-    real(ExportEntry,           57,      InitExportEntryClass,  OCLASP(ExportEntry)) \
 
 #define JS_FOR_EACH_PROTOTYPE(macro) JS_FOR_PROTOTYPES(macro,macro)
 

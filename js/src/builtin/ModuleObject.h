@@ -269,9 +269,7 @@ class MOZ_STACK_CLASS ModuleBuilder
     ArrayObject* createArray(const TraceableVector<T>& vector);
 };
 
-JSObject* InitModuleClass(JSContext* cx, HandleObject obj);
-JSObject* InitImportEntryClass(JSContext* cx, HandleObject obj);
-JSObject* InitExportEntryClass(JSContext* cx, HandleObject obj);
+bool InitModuleClasses(JSContext* cx, HandleObject obj);
 
 } // namespace js
 
