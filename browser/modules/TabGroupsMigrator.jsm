@@ -37,6 +37,10 @@ this.TabGroupsMigrator = {
   migrate(stateAsSupportsString) {
     stateAsSupportsString.QueryInterface(Ci.nsISupportsString);
     let stateStr = stateAsSupportsString.data;
+    // If this is the very first startup of this profile, this is going to be empty:
+    if (!stateStr) {
+      return;
+    }
     let state;
     try {
       state = JSON.parse(stateStr);

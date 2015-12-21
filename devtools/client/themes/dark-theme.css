@@ -187,13 +187,13 @@ body {
  * Best effort to match the existing theme, some of the colors
  * are duplicated here to prevent weirdness in the main theme. */
 
-.CodeMirror { /* Inherit platform specific font sizing and styles */
+.CodeMirror.cm-s-mozilla  { /* Inherit platform specific font sizing and styles */
   font-family: inherit;
   font-size: inherit;
   background: transparent;
 }
 
-.CodeMirror pre,
+.CodeMirror.cm-s-mozilla  pre,
 .cm-s-mozilla .cm-variable-2,
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-operator,
