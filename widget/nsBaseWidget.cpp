@@ -167,6 +167,9 @@ nsBaseWidget::nsBaseWidget()
 , mUpdateCursor(true)
 , mUseAttachedEvents(false)
 , mIMEHasFocus(false)
+#ifdef XP_WIN
+, mAccessibilityInUseFlag(false)
+#endif
 {
 #ifdef NOISY_WIDGET_LEAKS
   gNumWidgets++;
@@ -232,6 +235,18 @@ WidgetShutdownObserver::Unregister()
   }
 }
 
+#ifdef XP_WIN
+// defined in nsAppRunner.cpp
+extern const char* kAccessibilityLastRunDatePref;
+
+static inline uint32_t
+PRTimeToSeconds(PRTime t_usec)
+{
+  PRTime usec_per_sec = PR_USEC_PER_SEC;
+  return uint32_t(t_usec /= usec_per_sec);
+}
+#endif
+
 void
 nsBaseWidget::Shutdown()
 {
@@ -242,6 +257,12 @@ nsBaseWidget::Shutdown()
     delete sPluginWidgetList;
     sPluginWidgetList = nullptr;
   }
+#if defined(XP_WIN)
+  if (mAccessibilityInUseFlag) {
+    uint32_t now = PRTimeToSeconds(PR_Now());
+    Preferences::SetInt(kAccessibilityLastRunDatePref, now);
+  }
+#endif
 #endif
 }
 
@@ -285,6 +306,7 @@ nsBaseWidget::FreeShutdownObserver()
 // nsBaseWidget destructor
 //
 //-------------------------------------------------------------------------
+
 nsBaseWidget::~nsBaseWidget()
 {
   IMEStateManager::WidgetDestroyed(this);
@@ -1770,18 +1792,6 @@ nsBaseWidget::GetTextEventDispatcher()
 
 #ifdef ACCESSIBILITY
 
-#ifdef XP_WIN
-// defined in nsAppRunner.cpp
-extern const char* kAccessibilityLastRunDatePref;
-
-static inline uint32_t
-PRTimeToSeconds(PRTime t_usec)
-{
-  PRTime usec_per_sec = PR_USEC_PER_SEC;
-  return uint32_t(t_usec /= usec_per_sec);
-}
-#endif
-
 a11y::Accessible*
 nsBaseWidget::GetRootAccessible()
 {
@@ -1801,8 +1811,7 @@ nsBaseWidget::GetRootAccessible()
     services::GetAccessibilityService();
   if (accService) {
 #ifdef XP_WIN
-    uint32_t now = PRTimeToSeconds(PR_Now());
-    Preferences::SetInt(kAccessibilityLastRunDatePref, now);
+    mAccessibilityInUseFlag = true;
 #endif
     return accService->GetRootDocumentAccessible(presShell, nsContentUtils::IsSafeToRunScript());
   }
