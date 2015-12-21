@@ -9,6 +9,8 @@
 #include "ScaledFontBase.h"
 #include <windows.h>
 
+#include "mozilla/UniquePtr.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -18,15 +20,33 @@ public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontWin)
   ScaledFontWin(LOGFONT* aFont, Float aSize);
 
+  ScaledFontWin(uint8_t* aFontData, uint32_t aFontDataLength, uint32_t aIndex,
+                Float aGlyphSize);
+
   virtual FontType GetType() const { return FontType::GDI; }
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
 #endif
+
+protected:
+#ifdef USE_CAIRO_SCALED_FONT
+  cairo_font_face_t* GetCairoFontFace() override;
+#endif
+
 private:
 #ifdef USE_SKIA
   friend class DrawTargetSkia;
 #endif
   LOGFONT mLogFont;
+
+  struct MemoryFontRemover
+  {
+    HANDLE memFontHandle;
+    MemoryFontRemover(HANDLE aMemFontHandle) : memFontHandle(aMemFontHandle) {}
+    ~MemoryFontRemover() { ::RemoveFontMemResourceEx(memFontHandle); }
+  };
+
+  UniquePtr<MemoryFontRemover> mMemoryFontRemover;
 };
 
 }
