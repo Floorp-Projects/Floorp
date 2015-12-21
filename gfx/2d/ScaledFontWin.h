@@ -24,6 +24,9 @@ public:
                 Float aGlyphSize);
 
   virtual FontType GetType() const { return FontType::GDI; }
+
+  bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
+
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
 #endif
