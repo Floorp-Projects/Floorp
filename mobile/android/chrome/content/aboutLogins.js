@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyGetter(window, "gChromeWin", () =>
     .getInterface(Ci.nsIDOMWindow)
     .QueryInterface(Ci.nsIDOMChromeWindow));
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Prompt",
                                   "resource://gre/modules/Prompt.jsm");
 
@@ -26,14 +27,14 @@ var debug = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.d.
 
 var gStringBundle = Services.strings.createBundle("chrome://browser/locale/aboutLogins.properties");
 
-function copyStringAndToast(string, notifyString) {
+function copyStringShowSnackbar(string, notifyString) {
   try {
     let clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);
     clipboard.copyString(string);
-    gChromeWin.NativeWindow.toast.show(notifyString, "short");
+    Snackbars.show(notifyString, Snackbars.LENGTH_SHORT);
   } catch (e) {
     debug("Error copying from about:logins");
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), "short");
+    Snackbars.show(gStringBundle.GetStringFromName("loginsDetails.copyFailed"), Snackbars.LENGTH_SHORT);
   }
 }
 
@@ -300,7 +301,7 @@ var Logins = {
       if ((newUsername === origUsername) &&
           (newPassword === origPassword) &&
           (newDomain === origDomain) ) {
-        gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
+        Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_SHORT);
         this._showList();
         return;
       }
@@ -319,10 +320,10 @@ var Logins = {
         }
       }
     } catch (e) {
-      gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), "short");
+      Snackbars.show(gStringBundle.GetStringFromName("editLogin.couldNotSave"), Snackbars.LENGTH_SHORT);
       return;
     }
-    gChromeWin.NativeWindow.toast.show(gStringBundle.GetStringFromName("editLogin.saved1"), "short");
+    Snackbars.show(gStringBundle.GetStringFromName("editLogin.saved1"), Snackbars.LENGTH_SHORT);
     this._showList();
   },
 
@@ -363,7 +364,7 @@ var Logins = {
         switch (data.button) {
           case 0:
           // Corresponds to "Copy password" button.
-          copyStringAndToast(password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
+          copyStringShowSnackbar(password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
         }
      });
   },
@@ -395,10 +396,10 @@ var Logins = {
           this._showPassword(login.password);
           break;
         case 1:
-          copyStringAndToast(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
+          copyStringShowSnackbar(login.password, gStringBundle.GetStringFromName("loginsDetails.passwordCopied"));
           break;
         case 2:
-          copyStringAndToast(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
+          copyStringShowSnackbar(login.username, gStringBundle.GetStringFromName("loginsDetails.usernameCopied"));
           break;
         case 3:
           this._selectedLogin = login;
