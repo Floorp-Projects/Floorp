@@ -28,35 +28,21 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
   var h = Telemetry.newHistogram(name, "never", histogram_type, min, max, bucket_count);
   var r = h.snapshot().ranges;
   var sum = 0;
-  var log_sum = 0;
-  var log_sum_squares = 0;
   for(var i=0;i<r.length;i++) {
     var v = r[i];
     sum += v;
-    if (histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-      var log_v = Math.log(1+v);
-      log_sum += log_v;
-      log_sum_squares += log_v*log_v;
-    }
     h.add(v);
   }
   var s = h.snapshot();
   // verify properties
   do_check_eq(sum, s.sum);
   if (histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-    // We do the log with float precision in C++ and double precision in
-    // JS, so there's bound to be tiny discrepancies.  Just check the
-    // integer part.
-    do_check_eq(Math.floor(log_sum), Math.floor(s.log_sum));
-    do_check_eq(Math.floor(log_sum_squares), Math.floor(s.log_sum_squares));
     do_check_false("sum_squares_lo" in s);
     do_check_false("sum_squares_hi" in s);
   } else {
     // Doing the math to verify sum_squares was reflected correctly is
     // tedious in JavaScript.  Just make sure we have something.
     do_check_neq(s.sum_squares_lo + s.sum_squares_hi, 0);
-    do_check_false("log_sum" in s);
-    do_check_false("log_sum_squares" in s);
   }
 
   // there should be exactly one element per bucket
@@ -84,10 +70,7 @@ function test_histogram(histogram_type, name, min, max, bucket_count) {
     do_check_eq(i, 0);
   }
   do_check_eq(s.sum, 0);
-  if (histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-    do_check_eq(s.log_sum, 0);
-    do_check_eq(s.log_sum_squares, 0);
-  } else {
+  if (histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
     do_check_eq(s.sum_squares_lo, 0);
     do_check_eq(s.sum_squares_hi, 0);
   }
@@ -208,10 +191,7 @@ function compareHistograms(h1, h2) {
   do_check_eq(s1.min, s2.min);
   do_check_eq(s1.max, s2.max);
   do_check_eq(s1.sum, s2.sum);
-  if (s1.histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-    do_check_eq(s1.log_sum, s2.log_sum);
-    do_check_eq(s1.log_sum_squares, s2.log_sum_squares);
-  } else {
+  if (s1.histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
     do_check_eq(s1.sum_squares_lo, s2.sum_squares_lo);
     do_check_eq(s1.sum_squares_hi, s2.sum_squares_hi);
   }
@@ -418,21 +398,6 @@ function test_histogramRecording() {
   h.add(1);
   Assert.equal(orig.sum + 1, h.snapshot().sum,
                "Histogram value should have incremented by 1 due to recording.");
-}
-
-// Check that histograms that aren't flagged as needing extended stats
-// don't record extended stats.
-function test_extended_stats() {
-  var h = Telemetry.getHistogramById("GRADIENT_DURATION");
-  var s = h.snapshot();
-  do_check_eq(s.sum, 0);
-  do_check_eq(s.log_sum, 0);
-  do_check_eq(s.log_sum_squares, 0);
-  h.add(1);
-  s = h.snapshot();
-  do_check_eq(s.sum, 1);
-  do_check_eq(s.log_sum, 0);
-  do_check_eq(s.log_sum_squares, 0);
 }
 
 // Return an array of numbers from lower up to, excluding, upper
@@ -997,7 +962,6 @@ function run_test()
   test_privateMode();
   test_histogramRecording();
   test_addons();
-  test_extended_stats();
   test_expired_histogram();
   test_keyed_histogram();
   test_datasets();
