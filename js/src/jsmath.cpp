@@ -39,6 +39,15 @@
 
 #include "jsobjinlines.h"
 
+#if defined(XP_WIN)
+// #define needed to link in RtlGenRandom(), a.k.a. SystemFunction036.  See the
+// "Community Additions" comment on MSDN here:
+// https://msdn.microsoft.com/en-us/library/windows/desktop/aa387694.aspx
+# define SystemFunction036 NTAPI SystemFunction036
+# include <NTSecAPI.h>
+# undef SystemFunction036
+#endif
+
 #if defined(ANDROID) || defined(XP_DARWIN) || defined(__DragonFly__) || \
     defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 # include <stdlib.h>
@@ -740,49 +749,13 @@ js::random_generateSeed(uint64_t* seedBuffer, size_t length)
         return;
 
 #if defined(XP_WIN)
-    /*
-     * Temporary diagnostic for bug 1167248: Test whether the injected hooks
-     * react differently to LoadLibraryW / LoadLibraryExW.
-     */
-    HMODULE oldWay = LoadLibraryW(L"ADVAPI32.DLL");
-    HMODULE newWay = LoadLibraryExW(L"ADVAPI32.DLL",
-                                    nullptr,
-                                    LOAD_LIBRARY_SEARCH_SYSTEM32);
-    /* Fallback for older versions of Windows */
-    if (!newWay && GetLastError() == ERROR_INVALID_PARAMETER)
-        newWay = LoadLibraryExW(L"ADVAPI32.DLL", nullptr, 0);
+    size_t size = length * sizeof(seedBuffer[0]);
+    if (RtlGenRandom(seedBuffer, size))
+        return;
 
-    if (oldWay && !newWay)
-        MOZ_CRASH();
-
-    union {
-        uint32_t    u32[2];
-        uint64_t    u64;
-    } seed;
-    seed.u64 = 0;
-
-    errno_t error = rand_s(&seed.u32[0]);
-
-    if (oldWay)
-        FreeLibrary(oldWay);
-    if (newWay)
-        FreeLibrary(newWay);
-
-    MOZ_ASSERT(error == 0, "rand_s() error?!");
-
-    error = rand_s(&seed.u32[1]);
-    MOZ_ASSERT(error == 0, "rand_s() error?!");
-
-    seedBuffer[0] = seed.u64 ^= PRMJ_Now();
-    for (size_t i = 1; i < length; i++) {
-        error = rand_s(&seed.u32[0]);
-        MOZ_ASSERT(error == 0, "rand_s() error?!");
-
-        error = rand_s(&seed.u32[1]);
-        MOZ_ASSERT(error == 0, "rand_s() error?!");
-
-        seedBuffer[i] = seed.u64 ^ PRMJ_Now();
-    }
+    // Use PRMJ_Now() if we couldn't read from RtlGetRandom().
+    for (size_t i = 0; i < length; i++)
+        seedBuffer[i] = PRMJ_Now();
 
 #elif defined(HAVE_ARC4RANDOM)
     union {
@@ -799,12 +772,10 @@ js::random_generateSeed(uint64_t* seedBuffer, size_t length)
 
 #elif defined(XP_UNIX)
     int fd = open("/dev/urandom", O_RDONLY);
-    MOZ_ASSERT(fd >= 0, "Can't open /dev/urandom?!");
     if (fd >= 0) {
         ssize_t size = length * sizeof(seedBuffer[0]);
         ssize_t nread = read(fd, (char *) seedBuffer, size);
         close(fd);
-        MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
         if (nread == size)
             return;
     }
