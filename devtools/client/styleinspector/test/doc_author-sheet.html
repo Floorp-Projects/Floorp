@@ -1,0 +1,41 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+<head>
+  <title>authored sheet test</title>
+
+  <style>
+    #target {
+      color: chartreuse;
+    }
+  </style>
+
+  <script>
+var gIOService = SpecialPowers.Cc["@mozilla.org/network/io-service;1"]
+  .getService(SpecialPowers.Ci.nsIIOService)
+
+var style = "data:text/css,div { background-color: seagreen; }";
+var uri = gIOService.newURI(style, null, null);
+var windowUtils = SpecialPowers.wrap(window)
+    .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+    .getInterface(SpecialPowers.Ci.nsIDOMWindowUtils);
+windowUtils.loadSheet(uri, windowUtils.AUTHOR_SHEET);
+
+  </script>
+
+</head>
+<body>
+  <div id="target"> the ocean </div>
+
+  <input type=text placeholder=test></input>
+  <input type=color></input>
+  <input type=range></input>
+  <input type=number></input>
+  <progress></progress>
+  <blockquote type=cite>
+    <pre _moz_quote=true>
+      inspect <a href="foo">user agent</a> styles
+    </pre>
+  </blockquote>
+</body>
+</html>
