@@ -26,11 +26,18 @@ public:
 
   void ActorDestroy(ActorDestroyReason aWhy) final;
 
+  nsresult InitializePrint(const nsString& aDocumentTitle,
+                           const nsString& aPrintToFile,
+                           const int32_t& aStartPage,
+                           const int32_t& aEndPage);
+
+  bool RecvPrintInitializationResult(const nsresult& aRv) final;
+
+  void ProcessPage(Shmem& aStoredPage);
+
   bool RecvPageProcessed() final;
 
   bool RecvAbortPrint(const nsresult& aRv) final;
-
-  void ProcessPage(Shmem& aStoredPage);
 
   void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
 
@@ -39,6 +46,8 @@ public:
 private:
   ~RemotePrintJobChild() final;
 
+  bool mPrintInitialized = false;
+  nsresult mInitializationResult = NS_OK;
   RefPtr<nsPagePrintTimer> mPagePrintTimer;
   RefPtr<nsPrintEngine> mPrintEngine;
 };
