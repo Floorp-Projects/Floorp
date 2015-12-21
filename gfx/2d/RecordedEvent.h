@@ -183,6 +183,8 @@ public:
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 
+  virtual ~RecordedEvent() {}
+
   static std::string GetEventName(EventType aType);
 
   virtual void PlayEvent(Translator *aTranslator) const {}
