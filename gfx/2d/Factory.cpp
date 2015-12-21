@@ -573,6 +573,27 @@ Factory::CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize,
       return MakeAndAddRef<ScaledFontDWrite>(aData, aSize, aFaceIndex, aGlyphSize);
     }
 #endif
+  case FontType::CAIRO:
+    {
+      RefPtr<ScaledFontBase> scaledFont;
+
+#ifdef WIN32
+      if (DrawTargetD2D::GetDWriteFactory()) {
+        scaledFont = new ScaledFontDWrite(aData, aSize, aFaceIndex, aGlyphSize);
+      } else {
+        scaledFont = new ScaledFontWin(aData, aSize, aFaceIndex, aGlyphSize);
+      }
+
+      if (!scaledFont->PopulateCairoScaledFont()) {
+        gfxWarning() << "Unable to create cairo scaled font from truetype data";
+        return nullptr;
+      }
+#else
+      gfxWarning() << "Unable to create cairo scaled font from truetype data";
+#endif
+
+      return scaledFont.forget();
+    }
   default:
     gfxWarning() << "Unable to create requested font type from truetype data";
     return nullptr;
