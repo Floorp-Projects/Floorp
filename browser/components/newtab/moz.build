@@ -16,6 +16,16 @@ if not CONFIG['RELEASE_BUILD']:
         'NewTabURL.jsm',
         'PlacesProvider.jsm',
         'RemoteAboutNewTab.jsm',
-        'RemoteNewTabLocation.jsm',
         'RemoteNewTabUtils.jsm',
     ]
+
+XPIDL_SOURCES += [
+    'nsIAboutNewTabService.idl',
+]
+
+XPIDL_MODULE = 'browser-newtab'
+
+EXTRA_COMPONENTS += [
+    'aboutNewTabService.js',
+    'NewTabComponents.manifest',
+]
