@@ -22,8 +22,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::embedding;
-
-typedef mozilla::layout::RemotePrintJobChild RemotePrintJobChild;
+using namespace mozilla::layout;
 
 static StaticRefPtr<nsPrintingProxy> sPrintingProxyInstance;
 
