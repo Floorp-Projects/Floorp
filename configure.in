@@ -92,8 +92,8 @@ _PTHREAD_LDFLAGS=""
 
 dnl Do not allow objdir == srcdir builds.
 dnl ==============================================================
-_topsrcdir=`cd \`dirname $0\`; pwd -W 2>/dev/null || pwd`
-_objdir=`pwd`
+_topsrcdir=`cd \`dirname $0\`; pwd -W 2>/dev/null || pwd -P`
+_objdir=`pwd -P`
 
 dnl TODO Don't exempt L10N builds once bug 842760 is resolved.
 if test "$_topsrcdir" = "$_objdir" -a "${with_l10n_base+set}" != set; then
@@ -134,7 +134,7 @@ EOF
   exit 1
   break
 fi
-MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
+MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_PYTHON
@@ -157,7 +157,7 @@ if test -n "$L10NBASEDIR"; then
     if test "$L10NBASEDIR" = "yes" -o "$L10NBASEDIR" = "no"; then
         AC_MSG_ERROR([--with-l10n-base must specify a path])
     elif test -d "$L10NBASEDIR"; then
-        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd`
+        L10NBASEDIR=`cd "$L10NBASEDIR" && pwd -P`
     else
         AC_MSG_ERROR([Invalid value --with-l10n-base, $L10NBASEDIR doesn't exist])
     fi
