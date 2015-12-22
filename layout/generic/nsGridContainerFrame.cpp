@@ -3139,6 +3139,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
      aState.mReflowState->ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
   nsPresContext* pc = PresContext();
   nsStyleContext* containerSC = StyleContext();
+  LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
+  const LogicalPoint padStart(wm, pad.IStart(wm), pad.BStart(wm));
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     const bool isGridItem = child->GetType() != nsGkAtoms::placeholderFrame;
@@ -3207,6 +3209,9 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         ReflowChild(child, pc, *childSize, *childRS, childWM,
                     LogicalPoint(childWM), dummyContainerSize, 0, childStatus);
       }
+    } else {
+      // Put a placeholder at the padding edge, in case an ancestor is its CB.
+      childPos -= padStart;
     }
     childRS->ApplyRelativePositioning(&childPos, containerSize);
     FinishReflowChild(child, pc, *childSize, childRS.ptr(), childWM, childPos,
@@ -3218,11 +3223,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
   if (IsAbsoluteContainer()) {
     nsFrameList children(GetChildList(GetAbsoluteListID()));
     if (!children.IsEmpty()) {
-      LogicalMargin pad(aState.mReflowState->ComputedLogicalPadding());
-      pad.ApplySkipSides(GetLogicalSkipSides(aState.mReflowState));
-      // 'gridOrigin' is the origin of the grid (the start of the first track),
+      // 'padStart' is the origin of the grid (the start of the first track),
       // with respect to the grid container's padding-box (CB).
-      const LogicalPoint gridOrigin(wm, pad.IStart(wm), pad.BStart(wm));
       const LogicalRect gridCB(wm, 0, 0,
                                aContentArea.ISize(wm) + pad.IStartEnd(wm),
                                aContentArea.BSize(wm) + pad.BStartEnd(wm));
@@ -3234,7 +3236,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         MOZ_ASSERT(mAbsPosItems[i].mFrame == child);
         GridArea& area = mAbsPosItems[i].mArea;
         LogicalRect itemCB =
-          ContainingBlockForAbsPos(aState, area, gridOrigin, gridCB);
+          ContainingBlockForAbsPos(aState, area, padStart, gridCB);
         // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
         nsRect* cb = static_cast<nsRect*>(child->Properties().Get(
                        GridItemContainingBlockRect()));
