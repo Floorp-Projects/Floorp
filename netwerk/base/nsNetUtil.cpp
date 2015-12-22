@@ -1126,6 +1126,22 @@ NS_BufferOutputStream(nsIOutputStream *aOutputStream,
     return bos.forget();
 }
 
+already_AddRefed<nsIInputStream>
+NS_BufferInputStream(nsIInputStream *aInputStream,
+                      uint32_t aBufferSize)
+{
+    NS_ASSERTION(aInputStream, "No input stream given!");
+
+    nsCOMPtr<nsIInputStream> bis;
+    nsresult rv = NS_NewBufferedInputStream(getter_AddRefs(bis), aInputStream,
+                                            aBufferSize);
+    if (NS_SUCCEEDED(rv))
+        return bis.forget();
+
+    bis = aInputStream;
+    return bis.forget();
+}
+
 nsresult
 NS_ReadInputStreamToBuffer(nsIInputStream *aInputStream,
                            void **aDest,

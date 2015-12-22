@@ -69,6 +69,16 @@ class TypedArrayObject : public NativeObject
     template<typename T> struct OfType;
 
     static bool sameBuffer(Handle<TypedArrayObject*> a, Handle<TypedArrayObject*> b) {
+        // Inline buffers.
+        if (!a->hasBuffer() || !b->hasBuffer())
+            return a.get() == b.get();
+
+        // Shared buffers.
+        if (a->isSharedMemory() && b->isSharedMemory()) {
+            return (a->bufferObject()->as<SharedArrayBufferObject>().globalID() ==
+                    b->bufferObject()->as<SharedArrayBufferObject>().globalID());
+        }
+
         return a->bufferObject() == b->bufferObject();
     }
 

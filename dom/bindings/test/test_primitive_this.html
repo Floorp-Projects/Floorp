@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=603201
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 603201</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  /** Test for Bug 603201 **/
+
+  SimpleTest.waitForExplicitFinish();
+  function runTest()
+  {
+    var nodes = document.body.childNodes;
+
+    Object.setPrototypeOf(Number.prototype, nodes);
+
+    Object.defineProperty(nodes, "getter", {get: function() {
+      "use strict";
+      is(this, 1);
+      return "getter";
+    }});
+    Object.defineProperty(Object.getPrototypeOf(nodes), "getter2", {get: function() {
+      "use strict";
+      is(this, 1);
+      return "getter2";
+    }});
+
+    var number = 1;
+    is(number.getter, "getter");
+    is(number.getter2, "getter2");
+
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body onload="runTest();">
+<pre>Test</pre>
+</body>
+</html>

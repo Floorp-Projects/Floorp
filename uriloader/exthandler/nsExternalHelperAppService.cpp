@@ -416,12 +416,12 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
     const char* userName = PR_GetEnv("USERNAME");
     if (!userName || !*userName) {
       userName = PR_GetEnv("USER");
-      if (!userName || !*userName) {
-        userName = PR_GetEnv("LOGNAME");
-      }
-      else {
-        userName = "mozillaUser";
-      }
+    }
+    if (!userName || !*userName) {
+      userName = PR_GetEnv("LOGNAME");
+    }
+    if (!userName || !*userName) {
+      userName = "mozillaUser";
     }
 
     nsAutoString userDir;
@@ -447,7 +447,12 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
         rv = finalPath->GetPermissions(&permissions);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (permissions == PR_IRWXU) {
+        // Ensuring the path is writable by the current user.
+        bool isWritable;
+        rv = finalPath->IsWritable(&isWritable);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (permissions == PR_IRWXU && isWritable) {
           dir = finalPath;
           break;
         }
@@ -513,10 +518,8 @@ static nsDefaultMimeTypeEntry defaultMimeEntries [] =
   { APPLICATION_OGG, "ogg" },
   { AUDIO_OGG, "oga" },
   { AUDIO_OGG, "opus" },
-#ifdef MOZ_WEBM
   { VIDEO_WEBM, "webm" },
   { AUDIO_WEBM, "webm" },
-#endif
 #if defined(MOZ_GSTREAMER) || defined(MOZ_WMF)
   { VIDEO_MP4, "mp4" },
   { AUDIO_MP4, "m4a" },

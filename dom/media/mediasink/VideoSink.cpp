@@ -166,8 +166,29 @@ VideoSink::Start(int64_t aStartTime, const MediaInfo& aInfo)
 
   if (mHasVideo) {
     mEndPromise = mEndPromiseHolder.Ensure(__func__);
+
+    // If the underlying MediaSink has an end promise for the video track (which
+    // happens when mAudioSink refers to a DecodedStream), we must wait for it
+    // to complete before resolving our own end promise. Otherwise, MDSM might
+    // stop playback before DecodedStream plays to the end and cause
+    // test_streams_element_capture.html to time out.
+    RefPtr<GenericPromise> p = mAudioSink->OnEnded(TrackInfo::kVideoTrack);
+    if (p) {
+      RefPtr<VideoSink> self = this;
+      mVideoSinkEndRequest.Begin(p->Then(mOwnerThread, __func__,
+        [self] () {
+          self->mVideoSinkEndRequest.Complete();
+          self->TryUpdateRenderedVideoFrames();
+        }, [self] () {
+          self->mVideoSinkEndRequest.Complete();
+          self->TryUpdateRenderedVideoFrames();
+        }));
+    }
+
     ConnectListener();
-    TryUpdateRenderedVideoFrames();
+    // Run the render loop at least once so we can resolve the end promise
+    // when video duration is 0.
+    UpdateRenderedVideoFrames();
   }
 }
 
@@ -183,7 +204,8 @@ VideoSink::Stop()
   mUpdateScheduler.Reset();
   if (mHasVideo) {
     DisconnectListener();
-    mEndPromiseHolder.Resolve(true, __func__);
+    mVideoSinkEndRequest.DisconnectIfExists();
+    mEndPromiseHolder.ResolveIfExists(true, __func__);
     mEndPromise = nullptr;
   }
   mVideoFrameEndTime = -1;
@@ -216,7 +238,7 @@ VideoSink::Shutdown()
 }
 
 void
-VideoSink::OnVideoQueueEvent(RefPtr<MediaData>&& aSample)
+VideoSink::OnVideoQueuePushed(RefPtr<MediaData>&& aSample)
 {
   AssertOwnerThread();
   // Listen to push event, VideoSink should try rendering ASAP if first frame
@@ -227,6 +249,18 @@ VideoSink::OnVideoQueueEvent(RefPtr<MediaData>&& aSample)
     // push events for them. We only need to trigger render loop
     // when this frame is not rendered yet.
     TryUpdateRenderedVideoFrames();
+  }
+}
+
+void
+VideoSink::OnVideoQueueFinished()
+{
+  AssertOwnerThread();
+  // Run render loop if the end promise is not resolved yet.
+  if (!mUpdateScheduler.IsScheduled() &&
+      mAudioSink->IsPlaying() &&
+      !mEndPromiseHolder.IsEmpty()) {
+    UpdateRenderedVideoFrames();
   }
 }
 
@@ -260,7 +294,9 @@ VideoSink::ConnectListener()
 {
   AssertOwnerThread();
   mPushListener = VideoQueue().PushEvent().Connect(
-    mOwnerThread, this, &VideoSink::OnVideoQueueEvent);
+    mOwnerThread, this, &VideoSink::OnVideoQueuePushed);
+  mFinishListener = VideoQueue().FinishEvent().Connect(
+    mOwnerThread, this, &VideoSink::OnVideoQueueFinished);
 }
 
 void
@@ -268,6 +304,7 @@ VideoSink::DisconnectListener()
 {
   AssertOwnerThread();
   mPushListener.Disconnect();
+  mFinishListener.Disconnect();
 }
 
 void
@@ -369,6 +406,13 @@ VideoSink::UpdateRenderedVideoFrames()
       mVideoFrameEndTime = currentFrame->GetEndTime();
       mFrameStats.NotifyPresentedFrame();
     }
+  }
+
+  // All frames are rendered, Let's resolve the promise.
+  if (VideoQueue().IsFinished() &&
+      VideoQueue().GetSize() <= 1 &&
+      !mVideoSinkEndRequest.Exists()) {
+    mEndPromiseHolder.ResolveIfExists(true, __func__);
   }
 
   RenderVideoFrames(mVideoQueueSendToCompositorSize, clockTime, nowTime);
