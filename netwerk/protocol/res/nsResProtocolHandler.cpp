@@ -21,26 +21,45 @@ using mozilla::dom::ContentParent;
 using mozilla::LogLevel;
 using mozilla::Unused;
 
-#define kAPP           "app"
-#define kGRE           "gre"
+#define kAPP           NS_LITERAL_CSTRING("app")
+#define kGRE           NS_LITERAL_CSTRING("gre")
 
 nsresult
 nsResProtocolHandler::Init()
 {
     nsresult rv;
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, mAppURI);
+    nsAutoCString appURI, greURI;
+    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::APP, appURI);
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, mGREURI);
+    rv = mozilla::Omnijar::GetURIString(mozilla::Omnijar::GRE, greURI);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // mozilla::Omnijar::GetURIString always returns a string ending with /,
-    // and we want to remove it.
-    mGREURI.Truncate(mGREURI.Length() - 1);
-    if (mAppURI.Length()) {
-      mAppURI.Truncate(mAppURI.Length() - 1);
-    } else {
-      mAppURI = mGREURI;
+    //
+    // make resource:/// point to the application directory or omnijar
+    //
+    nsCOMPtr<nsIURI> uri;
+    rv = NS_NewURI(getter_AddRefs(uri), appURI.Length() ? appURI : greURI);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = SetSubstitution(EmptyCString(), uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    //
+    // make resource://app/ point to the application directory or omnijar
+    //
+    rv = SetSubstitution(kAPP, uri);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    //
+    // make resource://gre/ point to the GRE directory
+    //
+    if (appURI.Length()) { // We already have greURI in uri if appURI.Length() is 0.
+        rv = NS_NewURI(getter_AddRefs(uri), greURI);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
+
+    rv = SetSubstitution(kGRE, uri);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     //XXXbsmedberg Neil wants a resource://pchrome/ for the profile chrome dir...
     // but once I finish multiple chrome registration I'm not sure that it is needed
@@ -80,29 +99,4 @@ nsResProtocolHandler::GetSubstitutionInternal(const nsACString& root, nsIURI **r
         return NS_ERROR_NOT_AVAILABLE;
 
     return NS_OK;
-}
-
-bool
-nsResProtocolHandler::ResolveSpecialCases(const nsACString& aHost,
-                                          const nsACString& aPath,
-                                          nsACString& aResult)
-{
-    if (aHost.Equals("") || aHost.Equals(kAPP)) {
-        aResult.Assign(mAppURI);
-    } else if (aHost.Equals(kGRE)) {
-        aResult.Assign(mGREURI);
-    } else {
-        return false;
-    }
-    aResult.Append(aPath);
-    return true;
-}
-
-nsresult
-nsResProtocolHandler::SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI)
-{
-    MOZ_ASSERT(!aRoot.Equals(""));
-    MOZ_ASSERT(!aRoot.Equals(kAPP));
-    MOZ_ASSERT(!aRoot.Equals(kGRE));
-    return SubstitutingProtocolHandler::SetSubstitution(aRoot, aBaseURI);
 }
