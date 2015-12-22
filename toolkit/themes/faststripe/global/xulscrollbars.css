@@ -21,7 +21,7 @@ scrollbar {
 
 scrollbar[orient="vertical"] 
 {
-   -moz-appearance: scrollbartrack-vertical;
+   -moz-appearance: scrollbar-vertical;
   border-left: none;
   border-right: none;
   border-top: 1px solid #555555;
@@ -116,7 +116,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
   /* ::::: scrollbar ::::: */
 
   html|div scrollbar {
-    -moz-appearance: scrollbartrack-horizontal;
+    -moz-appearance: scrollbar-horizontal;
     -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
     cursor: default;
     background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
@@ -124,7 +124,7 @@ scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"
 
   html|div scrollbar[orient="vertical"] 
   {
-     -moz-appearance: scrollbartrack-vertical;
+     -moz-appearance: scrollbar-vertical;
   }
 
   /* ::::: borders for thumb and buttons ::::: */

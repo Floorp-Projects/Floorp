@@ -780,6 +780,8 @@ const KTableEntry nsCSSProps::kAppearanceKTable[] = {
   { eCSSKeyword_spinner_textfield,      NS_THEME_SPINNER_TEXTFIELD },
   { eCSSKeyword_scrollbar,              NS_THEME_SCROLLBAR },
   { eCSSKeyword_scrollbar_small,        NS_THEME_SCROLLBAR_SMALL },
+  { eCSSKeyword_scrollbar_horizontal,   NS_THEME_SCROLLBAR_HORIZONTAL },
+  { eCSSKeyword_scrollbar_vertical,     NS_THEME_SCROLLBAR_VERTICAL },
   { eCSSKeyword_scrollbarbutton_up,     NS_THEME_SCROLLBAR_BUTTON_UP },
   { eCSSKeyword_scrollbarbutton_down,   NS_THEME_SCROLLBAR_BUTTON_DOWN },
   { eCSSKeyword_scrollbarbutton_left,   NS_THEME_SCROLLBAR_BUTTON_LEFT },

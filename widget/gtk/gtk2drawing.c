@@ -1293,7 +1293,7 @@ moz_gtk_scrollbar_trough_paint(GtkThemeWidgetType widget,
 
     ensure_scrollbar_widget();
 
-    if (widget ==  MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL)
+    if (widget ==  MOZ_GTK_SCROLLBAR_HORIZONTAL)
         scrollbar = GTK_SCROLLBAR(gHorizScrollbarWidget);
     else
         scrollbar = GTK_SCROLLBAR(gVertScrollbarWidget);
@@ -2977,8 +2977,8 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
     case MOZ_GTK_CHECKBUTTON:
     case MOZ_GTK_RADIOBUTTON:
     case MOZ_GTK_SCROLLBAR_BUTTON:
-    case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
-    case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
+    case MOZ_GTK_SCROLLBAR_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_VERTICAL:
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
     case MOZ_GTK_SCALE_THUMB_HORIZONTAL:
@@ -3244,8 +3244,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, GdkDrawable* drawable,
                                               (GtkScrollbarButtonFlags) flags,
                                               direction);
         break;
-    case MOZ_GTK_SCROLLBAR_TRACK_HORIZONTAL:
-    case MOZ_GTK_SCROLLBAR_TRACK_VERTICAL:
+    case MOZ_GTK_SCROLLBAR_HORIZONTAL:
+    case MOZ_GTK_SCROLLBAR_VERTICAL:
         return moz_gtk_scrollbar_trough_paint(widget, drawable, rect,
                                               cliprect, state, direction);
         break;
