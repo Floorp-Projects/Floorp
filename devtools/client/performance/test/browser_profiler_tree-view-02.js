@@ -4,9 +4,12 @@
 /**
  * Tests if the profiler's tree view implementation works properly and
  * creates the correct column structure after expanding some of the nodes.
+ * Also tests that demangling works.
  */
 
 var { CATEGORY_MASK } = require("devtools/client/performance/modules/global");
+var MANGLED_FN = "__Z3FooIiEvv";
+var UNMANGLED_FN = "void Foo<int>()";
 
 function test() {
   let { ThreadNode } = require("devtools/client/performance/modules/logic/tree-model");
@@ -94,18 +97,22 @@ function test() {
     "The .A.B node's percentage cell displays the correct value.");
   is($$sampl(2).textContent.trim(), "0",
     "The .A.B node's samples cell displays the correct value.");
-  is($fun(".call-tree-name", $$(".call-tree-item")[2]).textContent.trim(), "B",
-    "The .A.B node's function cell displays the correct name.");
-  is($fun(".call-tree-url", $$(".call-tree-item")[2]).textContent.trim(), "baz",
-    "The .A.B node's function cell displays the correct url.");
-  ok($fun(".call-tree-url", $$(".call-tree-item")[2]).getAttribute("tooltiptext").includes("http://foo/bar/baz"),
-    "The .A.B node's function cell displays the correct url tooltiptext.");
   is($fun(".call-tree-line", $$(".call-tree-item")[2]).textContent.trim(), ":34",
     "The .A.B node's function cell displays the correct line.");
   is($fun(".call-tree-host", $$(".call-tree-item")[2]).textContent.trim(), "foo",
     "The .A.B node's function cell displays the correct host.");
   is($fun(".call-tree-category", $$(".call-tree-item")[2]).textContent.trim(), "Styles",
     "The .A.B node's function cell displays the correct category.");
+
+  // Test demangling in the profiler tree
+  is($fun(".call-tree-name", $$(".call-tree-item")[2]).textContent.trim(), UNMANGLED_FN,
+    "The mangled function name is demangled.");
+  ok($$(".call-tree-item")[2].getAttribute("tooltiptext").includes(MANGLED_FN),
+    "The mangled node's row's tooltip contains the original mangled name.");
+  is($fun(".call-tree-url", $$(".call-tree-item")[2]).textContent.trim(), "baz",
+    "The mangled node's function cell displays the correct url.");
+  ok($fun(".call-tree-url", $$(".call-tree-item")[2]).getAttribute("tooltiptext").includes("http://foo/bar/baz"),
+    "The mangled node's function cell displays the url tooltiptext.");
 
   is($$dur(3).textContent.trim(), "5 ms",
     "The .A.E node's duration cell displays the correct value.");
@@ -134,7 +141,7 @@ var gThread = synthesizeProfileForTest([{
   frames: [
     { category: CATEGORY_MASK('other'),  location: "(root)" },
     { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
-    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('css'),    location: `${MANGLED_FN} (http://foo/bar/baz:34)` },
     { category: CATEGORY_MASK('js'),     location: "C (http://foo/bar/baz:56)" }
   ]
 }, {
@@ -142,7 +149,7 @@ var gThread = synthesizeProfileForTest([{
   frames: [
     { category: CATEGORY_MASK('other'),  location: "(root)" },
     { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
-    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('css'),    location: `${MANGLED_FN} (http://foo/bar/baz:34)` },
     { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
   ]
 }, {
@@ -150,7 +157,7 @@ var gThread = synthesizeProfileForTest([{
   frames: [
     { category: CATEGORY_MASK('other'),  location: "(root)" },
     { category: CATEGORY_MASK('other'),  location: "A (http://foo/bar/baz:12)" },
-    { category: CATEGORY_MASK('css'),    location: "B (http://foo/bar/baz:34)" },
+    { category: CATEGORY_MASK('css'),    location: `${MANGLED_FN} (http://foo/bar/baz:34)` },
     { category: CATEGORY_MASK('gc', 1),  location: "D (http://foo/bar/baz:78)" }
   ]
 }, {

@@ -828,7 +828,7 @@ CSSFilterEditorWidget.prototype = {
     // Unquoted.  This approach might change the original input -- for
     // example the original might be over-quoted.  But, this is
     // correct and probably good enough.
-    return filter.value.replace(/[ \t(){};]/g, "\\$&");
+    return filter.value.replace(/[\\ \t()"']/g, "\\$&");
   },
 
   removeAt: function(index) {

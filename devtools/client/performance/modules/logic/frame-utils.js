@@ -8,6 +8,7 @@ const { Cc, Ci, Cu, Cr } = require("chrome");
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "global",
   "devtools/client/performance/modules/global");
+const demangle = require("devtools/client/shared/demangle");
 
 // Character codes used in various parsing helper functions.
 const CHAR_CODE_A = "a".charCodeAt(0);
@@ -27,12 +28,14 @@ const CHAR_CODE_T = "t".charCodeAt(0);
 const CHAR_CODE_U = "u".charCodeAt(0);
 const CHAR_CODE_0 = "0".charCodeAt(0);
 const CHAR_CODE_9 = "9".charCodeAt(0);
+const CHAR_CODE_CAP_Z = "Z".charCodeAt(0);
 
 const CHAR_CODE_LPAREN = "(".charCodeAt(0);
 const CHAR_CODE_RPAREN = ")".charCodeAt(0);
 const CHAR_CODE_COLON = ":".charCodeAt(0);
 const CHAR_CODE_SLASH = "/".charCodeAt(0);
 const CHAR_CODE_SPACE = " ".charCodeAt(0);
+const CHAR_CODE_UNDERSCORE = "_".charCodeAt(0);
 
 // The cache used in the `nsIURL` function.
 const gNSURLStore = new Map();
@@ -480,6 +483,13 @@ function isNumeric(c) {
   return c >= CHAR_CODE_0 && c <= CHAR_CODE_9;
 }
 
+function shouldDemangle(name) {
+  return name && name.charCodeAt &&
+         name.charCodeAt(0) === CHAR_CODE_UNDERSCORE &&
+         name.charCodeAt(1) === CHAR_CODE_UNDERSCORE &&
+         name.charCodeAt(2) === CHAR_CODE_CAP_Z;
+}
+
 /**
  * Calculates the relative costs of this frame compared to a root,
  * and generates allocations information if specified. Uses caching
@@ -513,7 +523,9 @@ function getFrameInfo (node, options) {
     data.nodeType = node.nodeType;
 
     // Frame name (function location or some meta information)
-    data.name = data.isMetaCategory ? data.categoryData.label : data.functionName || "";
+    data.name = data.isMetaCategory ? data.categoryData.label :
+                shouldDemangle(data.functionName) ? demangle(data.functionName) : data.functionName;
+
     data.tooltiptext = data.isMetaCategory ? data.categoryData.label : node.location || "";
 
     gFrameData.set(node, data);
@@ -583,3 +595,4 @@ exports.parseLocation = parseLocation;
 exports.getInflatedFrameCache = getInflatedFrameCache;
 exports.getOrAddInflatedFrame = getOrAddInflatedFrame;
 exports.InflatedFrame = InflatedFrame;
+exports.shouldDemangle = shouldDemangle;
