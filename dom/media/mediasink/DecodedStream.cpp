@@ -26,7 +26,6 @@ public:
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
     , mLastOutputTime(aStream->StreamTimeToMicroseconds(aStream->GetCurrentTime()))
-    , mStreamFinishedOnMainThread(false)
   {
     mFinishPromise = Move(aPromise);
   }
@@ -52,8 +51,6 @@ public:
   void DoNotifyFinished()
   {
     mFinishPromise.ResolveIfExists(true, __func__);
-    MutexAutoLock lock(mMutex);
-    mStreamFinishedOnMainThread = true;
   }
 
   int64_t GetLastOutputTime()
@@ -70,18 +67,11 @@ public:
     mStream = nullptr;
   }
 
-  bool IsFinishedOnMainThread()
-  {
-    MutexAutoLock lock(mMutex);
-    return mStreamFinishedOnMainThread;
-  }
-
 private:
   Mutex mMutex;
   // Members below are protected by mMutex.
   RefPtr<MediaStream> mStream;
   int64_t mLastOutputTime; // microseconds
-  bool mStreamFinishedOnMainThread;
   // Main thread only.
   MozPromiseHolder<GenericPromise> mFinishPromise;
 };
@@ -119,7 +109,6 @@ public:
   DecodedStreamData(SourceMediaStream* aStream,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
-  bool IsFinished() const;
   int64_t GetPosition() const;
   void SetPlaying(bool aPlaying);
 
@@ -178,12 +167,6 @@ DecodedStreamData::~DecodedStreamData()
 {
   mListener->Forget();
   mStream->Destroy();
-}
-
-bool
-DecodedStreamData::IsFinished() const
-{
-  return mListener->IsFinishedOnMainThread();
 }
 
 int64_t
@@ -882,13 +865,6 @@ DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
     *aTimeStamp = TimeStamp::Now();
   }
   return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
-}
-
-bool
-DecodedStream::IsFinished() const
-{
-  AssertOwnerThread();
-  return mData && mData->IsFinished();
 }
 
 void
