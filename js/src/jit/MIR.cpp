@@ -3993,7 +3993,6 @@ OperandIndexMap::init(TempAllocator& alloc, JSObject* templateObject)
     const UnboxedLayout& layout =
         templateObject->as<UnboxedPlainObject>().layoutDontCheckGeneration();
 
-    // 0 is used as an error code.
     const UnboxedLayout::PropertyVector& properties = layout.properties();
     MOZ_ASSERT(properties.length() < 255);
 
@@ -4068,8 +4067,54 @@ MObjectState::init(TempAllocator& alloc, MDefinition* obj)
     return true;
 }
 
+bool
+MObjectState::initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal)
+{
+    JSObject* templateObject = templateObjectOf(object());
+
+    // Initialize all the slots of the object state with the value contained in
+    // the template object. This is needed to account values which are baked in
+    // the template objects and not visible in IonMonkey, such as the
+    // uninitialized-lexical magic value of call objects.
+    if (templateObject->is<UnboxedPlainObject>()) {
+        UnboxedPlainObject& unboxedObject = templateObject->as<UnboxedPlainObject>();
+        const UnboxedLayout& layout = unboxedObject.layoutDontCheckGeneration();
+        const UnboxedLayout::PropertyVector& properties = layout.properties();
+
+        for (size_t i = 0; i < properties.length(); i++) {
+            Value val = unboxedObject.getValue(properties[i], /* maybeUninitialized = */ true);
+            MDefinition *def = undefinedVal;
+            if (!val.isUndefined()) {
+                MConstant* ins = val.isObject() ?
+                    MConstant::NewConstraintlessObject(alloc, &val.toObject()) :
+                    MConstant::New(alloc, val);
+                block()->insertBefore(this, ins);
+                def = ins;
+            }
+            initSlot(i, def);
+        }
+    } else {
+        NativeObject& nativeObject = templateObject->as<NativeObject>();
+        MOZ_ASSERT(nativeObject.slotSpan() == numSlots());
+
+        for (size_t i = 0; i < numSlots(); i++) {
+            Value val = nativeObject.getSlot(i);
+            MDefinition *def = undefinedVal;
+            if (!val.isUndefined()) {
+                MConstant* ins = val.isObject() ?
+                    MConstant::NewConstraintlessObject(alloc, &val.toObject()) :
+                    MConstant::New(alloc, val);
+                block()->insertBefore(this, ins);
+                def = ins;
+            }
+            initSlot(i, def);
+        }
+    }
+    return true;
+}
+
 MObjectState*
-MObjectState::New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefinedVal)
+MObjectState::New(TempAllocator& alloc, MDefinition* obj)
 {
     JSObject* templateObject = templateObjectOf(obj);
     MOZ_ASSERT(templateObject, "Unexpected object creation.");
@@ -4084,8 +4129,6 @@ MObjectState::New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefined
     MObjectState* res = new(alloc) MObjectState(templateObject, operandIndex);
     if (!res || !res->init(alloc, obj))
         return nullptr;
-    for (size_t i = 0; i < res->numSlots(); i++)
-        res->initSlot(i, undefinedVal);
     return res;
 }
 
