@@ -3244,13 +3244,14 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         }
         *cb = itemCB.GetPhysicalRect(wm, gridCBPhysicalSize);
       }
-      // This rect isn't used at all for layout so we use it to optimize
-      // away the virtual GetType() call in the callee in most cases.
-      // @see nsAbsoluteContainingBlock::Reflow
-      nsRect dummyRect(0, 0, VERY_LIKELY_A_GRID_CONTAINER, 0);
+      // We pass a dummy rect as CB because each child has its own CB rect.
+      // The eIsGridContainerCB flag tells nsAbsoluteContainingBlock::Reflow to
+      // use those instead.
+      nsRect dummyRect;
       AbsPosReflowFlags flags =
         AbsPosReflowFlags::eCBWidthAndHeightChanged; // XXX could be optimized
       flags |= AbsPosReflowFlags::eConstrainHeight;
+      flags |= AbsPosReflowFlags::eIsGridContainerCB;
       GetAbsoluteContainingBlock()->Reflow(this, pc, *aState.mReflowState,
                                            aStatus, dummyRect, flags,
                                            &aDesiredSize.mOverflowAreas);

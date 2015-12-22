@@ -70,10 +70,11 @@ public:
                    nsIFrame*      aOldFrame);
 
   enum class AbsPosReflowFlags {
-    eConstrainHeight = 0x1,
-    eCBWidthChanged  = 0x2,
-    eCBHeightChanged = 0x4,
+    eConstrainHeight   = 0x1,
+    eCBWidthChanged    = 0x2,
+    eCBHeightChanged   = 0x4,
     eCBWidthAndHeightChanged = eCBWidthChanged | eCBHeightChanged,
+    eIsGridContainerCB = 0x8,
   };
 
   /**
