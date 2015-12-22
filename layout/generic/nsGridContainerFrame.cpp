@@ -3227,15 +3227,32 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   InitImplicitNamedAreas(stylePos);
   GridReflowState gridReflowState(this, aReflowState);
   mIsNormalFlowInCSSOrder = gridReflowState.mIter.ItemsAreAlreadyInOrder();
-  LogicalSize indefinite(gridReflowState.mWM, NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  PlaceGridItems(gridReflowState, indefinite, indefinite, indefinite);
-
   const nscoord computedBSize = aReflowState.ComputedBSize();
   const nscoord computedISize = aReflowState.ComputedISize();
   const WritingMode& wm = gridReflowState.mWM;
+  LogicalSize computedSize(wm, computedISize, computedBSize);
+
+  // ComputedMinSize is zero rather than NS_UNCONSTRAINEDSIZE when indefinite
+  // (unfortunately) so we have to check the style data and parent reflow state
+  // to determine if it's indefinite.
+  LogicalSize computedMinSize(aReflowState.ComputedMinSize());
+  const nsHTMLReflowState* cbState = aReflowState.mCBReflowState;
+  if (!stylePos->MinISize(wm).IsCoordPercentCalcUnit() ||
+      (stylePos->MinISize(wm).HasPercent() && cbState &&
+       cbState->ComputedSize(wm).ISize(wm) == NS_UNCONSTRAINEDSIZE)) {
+    computedMinSize.ISize(wm) = NS_UNCONSTRAINEDSIZE;
+  }
+  if (!stylePos->MinBSize(wm).IsCoordPercentCalcUnit() ||
+      (stylePos->MinBSize(wm).HasPercent() && cbState &&
+       cbState->ComputedSize(wm).BSize(wm) == NS_UNCONSTRAINEDSIZE)) {
+    computedMinSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+  }
+
+  PlaceGridItems(gridReflowState, computedMinSize, computedSize,
+                 aReflowState.ComputedMaxSize());
+
   gridReflowState.mIter.Reset();
-  CalculateTrackSizes(gridReflowState,
-                      LogicalSize(wm, computedISize, computedBSize),
+  CalculateTrackSizes(gridReflowState, computedSize,
                       nsLayoutUtils::PREF_ISIZE);
 
   // FIXME bug 1229180: Instead of doing this on every reflow, we should only
