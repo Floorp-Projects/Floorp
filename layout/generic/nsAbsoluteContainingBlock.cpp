@@ -118,16 +118,8 @@ nsAbsoluteContainingBlock::Reflow(nsContainerFrame*        aDelegatingFrame,
 {
   nsReflowStatus reflowStatus = NS_FRAME_COMPLETE;
 
-  bool reflowAll = aReflowState.ShouldReflowAllKids();
-
-  // The 'width' check below is an optimization to avoid the virtual GetType()
-  // call in most cases.  'aContainingBlock' isn't used for grid items,
-  // each item has its own CB on a frame property instead.
-  // @see nsGridContainerFrame::ReflowChildren
-  const bool isGrid =
-    aContainingBlock.width == nsGridContainerFrame::VERY_LIKELY_A_GRID_CONTAINER &&
-    aDelegatingFrame->GetType() == nsGkAtoms::gridContainerFrame;
-
+  const bool reflowAll = aReflowState.ShouldReflowAllKids();
+  const bool isGrid = !!(aFlags & AbsPosReflowFlags::eIsGridContainerCB);
   nsIFrame* kidFrame;
   nsOverflowContinuationTracker tracker(aDelegatingFrame, true);
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
