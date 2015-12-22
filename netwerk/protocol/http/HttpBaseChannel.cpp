@@ -170,7 +170,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
   rv = mRequestHead.SetHeader(nsHttp::Host, hostLine);
   if (NS_FAILED(rv)) return rv;
 
-  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead.Headers());
+  rv = gHttpHandler->AddStandardRequestHeaders(&mRequestHead.Headers(), nsContentUtils::IsYouTubeURI(aURI));
   if (NS_FAILED(rv)) return rv;
 
   nsAutoCString type;

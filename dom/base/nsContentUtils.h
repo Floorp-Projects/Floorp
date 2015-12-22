@@ -530,6 +530,8 @@ public:
   static bool CheckForBOM(const unsigned char* aBuffer, uint32_t aLength,
                           nsACString& aCharset);
 
+  static bool IsYouTubeURI(nsIURI* aURI);
+
   /**
    * Returns true if |aName| is a valid name to be registered via
    * document.registerElement.
