@@ -3494,6 +3494,12 @@ SimdTypeToArrayElementType(SimdTypeDescr::Type type)
     switch (type) {
       case SimdTypeDescr::Float32x4: return Scalar::Float32x4;
       case SimdTypeDescr::Int32x4:   return Scalar::Int32x4;
+      // Bool vectors don't have load/store operations.
+      case SimdTypeDescr::Bool8x16:
+      case SimdTypeDescr::Bool16x8:
+      case SimdTypeDescr::Bool32x4:
+      case SimdTypeDescr::Bool64x2: break;
+      // Not yet implemented.
       case SimdTypeDescr::Int8x16:
       case SimdTypeDescr::Int16x8:
       case SimdTypeDescr::Float64x2: break;
