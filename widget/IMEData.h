@@ -71,6 +71,11 @@ struct nsIMEUpdatePreference final
   {
   }
 
+  nsIMEUpdatePreference operator|(const nsIMEUpdatePreference& aOther) const
+  {
+    return nsIMEUpdatePreference(aOther.mWantUpdates | mWantUpdates);
+  }
+
   void DontNotifyChangesCausedByComposition()
   {
     mWantUpdates &= ~DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES;
