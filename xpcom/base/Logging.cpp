@@ -18,11 +18,9 @@
 const uint32_t kInitialModuleCount = 256;
 
 namespace mozilla {
-/**
- * Safely converts an integer into a valid LogLevel.
- */
+
 LogLevel
-Clamp(int32_t aLevel)
+ToLogLevel(int32_t aLevel)
 {
   aLevel = std::min(aLevel, static_cast<int32_t>(LogLevel::Verbose));
   aLevel = std::max(aLevel, static_cast<int32_t>(LogLevel::Disabled));
@@ -57,7 +55,7 @@ public:
       // NSPR does not impose a restriction on the values that log levels can
       // be. LogModule uses the LogLevel enum class so we must clamp the value
       // to a max of Verbose.
-      LogLevel logLevel = Clamp(prModule->level);
+      LogLevel logLevel = ToLogLevel(prModule->level);
       module = new LogModule(logLevel);
       mModules.Put(aName, module);
     }

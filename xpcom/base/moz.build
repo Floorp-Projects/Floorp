@@ -109,6 +109,7 @@ UNIFIED_SOURCES += [
     'HoldDropJSObjects.cpp',
     'JSObjectHolder.cpp',
     'Logging.cpp',
+    'LogModulePrefWatcher.cpp',
     'nsConsoleMessage.cpp',
     'nsConsoleService.cpp',
     'nsCycleCollector.cpp',
