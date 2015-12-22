@@ -17,7 +17,6 @@
 #include "WaveReader.h"
 
 #include "WebMDecoder.h"
-#include "WebMReader.h"
 #include "WebMDemuxer.h"
 
 #ifdef MOZ_RAW
@@ -639,13 +638,10 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-
   if (IsWebMSupportedType(aType)) {
-    decoderReader = Preferences::GetBool("media.format-reader.webm", true) ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()))) :
-      new WebMReader(aDecoder);
+    decoderReader =
+      new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()));
   } else
-
 #ifdef MOZ_DIRECTSHOW
   if (IsDirectShowSupportedType(aType)) {
     decoderReader = new DirectShowReader(aDecoder);
