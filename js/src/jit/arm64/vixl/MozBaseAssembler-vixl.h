@@ -206,11 +206,6 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
  protected:
   // The buffer into which code and relocation info are generated.
   ARMBuffer armbuffer_;
-
-  js::jit::CompactBufferWriter jumpRelocations_;
-  js::jit::CompactBufferWriter dataRelocations_;
-  js::jit::CompactBufferWriter relocations_;
-  js::jit::CompactBufferWriter preBarriers_;
 };
 
 

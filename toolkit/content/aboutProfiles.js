@@ -99,9 +99,33 @@ function display(profileData) {
   let div = document.createElement('div');
   parent.appendChild(div);
 
-  let name = document.createElement('h2');
   let nameStr = bundle.formatStringFromName('name', [profileData.profile.name], 1);
-  name.appendChild(document.createTextNode(nameStr));
+
+  let name = document.createElement('h2');
+
+  if (gManage) {
+    let checkBox = document.createElement('input');
+    checkBox.setAttribute('type', 'radio');
+    checkBox.setAttribute('name', 'profile');
+    checkBox.setAttribute('id', profileData.profile.name);
+    if (profileData.isCurrentProfile) {
+      checkBox.setAttribute('checked', 'checked');
+    }
+    name.appendChild(checkBox);
+
+    checkBox.addEventListener('change', function() {
+      ProfileService.selectedProfile = profileData.profile;
+      ProfileService.flush();
+    });
+
+    let label = document.createElement('label');
+    label.appendChild(document.createTextNode(nameStr));
+    label.setAttribute('for', profileData.profile.name);
+    name.appendChild(label);
+  } else {
+    name.appendChild(document.createTextNode(nameStr));
+  }
+
   div.appendChild(name);
 
   if (!gManage && profileData.isCurrentProfile) {
@@ -186,20 +210,12 @@ function display(profileData) {
     div.appendChild(defaultButton);
   }
 
-  if (gManage) {
-    let openButton = document.createElement('button');
-    openButton.appendChild(document.createTextNode(bundle.GetStringFromName('open')));
-    openButton.onclick = function() {
-      openProfile(profileData.profile);
-    };
-    div.appendChild(openButton);
-  }
-
   let sep = document.createElement('hr');
   div.appendChild(sep);
 }
 
 function CreateProfile(profile) {
+  ProfileService.selectedProfile = profile;
   ProfileService.flush();
   refreshUI();
 }
@@ -272,13 +288,6 @@ function defaultProfile(profile) {
   ProfileService.defaultProfile = profile;
   ProfileService.flush();
   refreshUI();
-}
-
-function openProfile(profile) {
-  ProfileService.selectedProfile = profile;
-  ProfileService.flush();
-
-  dispatchEvent(new CustomEvent("startbrowser"));
 }
 
 function restart(safeMode) {

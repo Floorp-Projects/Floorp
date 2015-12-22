@@ -118,7 +118,7 @@ struct AnimationPropertySegment
 
 struct AnimationProperty
 {
-  nsCSSProperty mProperty;
+  nsCSSProperty mProperty = eCSSProperty_UNKNOWN;
 
   // Does this property win in the CSS Cascade?
   //
@@ -136,16 +136,26 @@ struct AnimationProperty
   // For other properties, we make it always be true.
   // **NOTE 2**: This member is not included when comparing AnimationProperty
   // objects for equality.
-  bool mWinsInCascade;
+  bool mWinsInCascade = true;
+
+  // If true, the propery is currently being animated on the compositor.
+  //
+  // Note that when the owning Animation requests a non-throttled restyle, in
+  // between calling RequestRestyle on its AnimationCollection and when the
+  // restyle is performed, this member may temporarily become false even if
+  // the animation remains on the layer after the restyle.
+  bool mIsRunningOnCompositor = false;
 
   InfallibleTArray<AnimationPropertySegment> mSegments;
 
-  // NOTE: This operator does *not* compare the mWinsInCascade member.
+  // NOTE: This operator does *not* compare the mWinsInCascade member *or* the
+  // mIsRunningOnCompositor member.
   // This is because AnimationProperty objects are compared when recreating
   // CSS animations to determine if mutation observer change records need to
   // be created or not. However, at the point when these objects are compared
-  // the mWinsInCascade will not have been set on the new objects so we ignore
-  // this member to avoid generating spurious change records.
+  // neither the mWinsInCascade nor the mIsRunningOnCompositor will have been
+  // set on the new objects so we ignore these members to avoid generating
+  // spurious change records.
   bool operator==(const AnimationProperty& aOther) const {
     return mProperty == aOther.mProperty &&
            mSegments == aOther.mSegments;
@@ -279,8 +289,6 @@ public:
   // Any updated properties are added to |aSetProperties|.
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
-  // Returns true if |aProperty| is currently being animated on compositor.
-  bool IsPropertyRunningOnCompositor(nsCSSProperty aProperty) const;
   // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
@@ -340,17 +348,6 @@ protected:
   nsCSSPseudoElements::Type mPseudoType;
 
   InfallibleTArray<AnimationProperty> mProperties;
-
-  // Parallel array corresponding to CommonAnimationManager::sLayerAnimationInfo
-  // such that mIsPropertyRunningOnCompositor[x] is true only if this effect has
-  // an animation of CommonAnimationManager::sLayerAnimationInfo[x].mProperty
-  // that is currently running on the compositor.
-  //
-  // Note that when the owning Animation requests a non-throttled restyle, in
-  // between calling RequestRestyle on its AnimationCollection and when the
-  // restyle is performed, this member may temporarily become false even if
-  // the animation remains on the layer after the restyle.
-  bool mIsPropertyRunningOnCompositor[LayerAnimationInfo::kRecords];
 
 private:
   nsIFrame* GetAnimationFrame() const;

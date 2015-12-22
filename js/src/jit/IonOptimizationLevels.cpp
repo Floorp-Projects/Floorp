@@ -16,27 +16,28 @@ using namespace js::jit;
 namespace js {
 namespace jit {
 
-OptimizationInfos IonOptimizations;
+OptimizationLevelInfo IonOptimizations;
 
 void
 OptimizationInfo::initNormalOptimizationInfo()
 {
-    level_ = Optimization_Normal;
+    level_ = OptimizationLevel::Normal;
 
+    autoTruncate_ = true;
     eaa_ = true;
+    eagerSimdUnbox_ = true;
     edgeCaseAnalysis_ = true;
     eliminateRedundantChecks_ = true;
     inlineInterpreted_ = true;
     inlineNative_ = true;
-    eagerSimdUnbox_ = true;
-    gvn_ = true;
     licm_ = true;
-    rangeAnalysis_ = true;
     loopUnrolling_ = true;
+    gvn_ = true;
+    rangeAnalysis_ = true;
     reordering_ = true;
-    autoTruncate_ = true;
     sincos_ = true;
     sink_ = true;
+
     registerAllocator_ = RegisterAllocator_Backtracking;
 
     inlineMaxBytecodePerCallSiteMainThread_ = 500;
@@ -61,16 +62,16 @@ OptimizationInfo::initAsmjsOptimizationInfo()
     // Take normal option values for not specified values.
     initNormalOptimizationInfo();
 
+    level_ = OptimizationLevel::AsmJS;
+
     ama_ = true;
-    level_ = Optimization_AsmJS;
+    autoTruncate_ = false;
     eagerSimdUnbox_ = false;           // AsmJS has no boxing / unboxing.
     edgeCaseAnalysis_ = false;
     eliminateRedundantChecks_ = false;
-    autoTruncate_ = false;
+    scalarReplacement_ = false;        // AsmJS has no objects.
     sincos_ = false;
     sink_ = false;
-    registerAllocator_ = RegisterAllocator_Backtracking;
-    scalarReplacement_ = false;        // AsmJS has no objects.
 }
 
 uint32_t
@@ -108,49 +109,51 @@ OptimizationInfo::compilerWarmUpThreshold(JSScript* script, jsbytecode* pc) cons
     return warmUpThreshold + loopDepth * 100;
 }
 
-OptimizationInfos::OptimizationInfos()
+OptimizationLevelInfo::OptimizationLevelInfo()
 {
-    infos_[Optimization_Normal - 1].initNormalOptimizationInfo();
-    infos_[Optimization_AsmJS - 1].initAsmjsOptimizationInfo();
+    infos_[OptimizationLevel::Normal].initNormalOptimizationInfo();
+    infos_[OptimizationLevel::AsmJS].initAsmjsOptimizationInfo();
 
 #ifdef DEBUG
     OptimizationLevel level = firstLevel();
     while (!isLastLevel(level)) {
         OptimizationLevel next = nextLevel(level);
-        MOZ_ASSERT(level < next);
+        MOZ_ASSERT_IF(level != OptimizationLevel::DontCompile, level < next);
         level = next;
     }
 #endif
 }
 
 OptimizationLevel
-OptimizationInfos::nextLevel(OptimizationLevel level) const
+OptimizationLevelInfo::nextLevel(OptimizationLevel level) const
 {
     MOZ_ASSERT(!isLastLevel(level));
     switch (level) {
-      case Optimization_DontCompile:
-        return Optimization_Normal;
-      default:
-        MOZ_CRASH("Unknown optimization level.");
+      case OptimizationLevel::DontCompile:
+        return OptimizationLevel::Normal;
+      case OptimizationLevel::Normal:
+      case OptimizationLevel::AsmJS:
+      case OptimizationLevel::Count:;
     }
+    MOZ_CRASH("Unknown optimization level.");
 }
 
 OptimizationLevel
-OptimizationInfos::firstLevel() const
+OptimizationLevelInfo::firstLevel() const
 {
-    return nextLevel(Optimization_DontCompile);
+    return nextLevel(OptimizationLevel::DontCompile);
 }
 
 bool
-OptimizationInfos::isLastLevel(OptimizationLevel level) const
+OptimizationLevelInfo::isLastLevel(OptimizationLevel level) const
 {
-    return level == Optimization_Normal;
+    return level == OptimizationLevel::Normal;
 }
 
 OptimizationLevel
-OptimizationInfos::levelForScript(JSScript* script, jsbytecode* pc) const
+OptimizationLevelInfo::levelForScript(JSScript* script, jsbytecode* pc) const
 {
-    OptimizationLevel prev = Optimization_DontCompile;
+    OptimizationLevel prev = OptimizationLevel::DontCompile;
 
     while (!isLastLevel(prev)) {
         OptimizationLevel level = nextLevel(prev);

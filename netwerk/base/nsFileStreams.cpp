@@ -21,6 +21,8 @@
 #include "nsReadLine.h"
 #include "nsIClassInfoImpl.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "mozilla/unused.h"
+#include "mozilla/FileUtils.h"
 #include "nsNetCID.h"
 #include "nsXULAppAPI.h"
 
@@ -864,6 +866,20 @@ nsFileOutputStream::Init(nsIFile* file, int32_t ioFlags, int32_t perm,
 
     return MaybeOpen(file, ioFlags, perm,
                      mBehaviorFlags & nsIFileOutputStream::DEFER_OPEN);
+}
+
+NS_IMETHODIMP
+nsFileOutputStream::Preallocate(int64_t aLength)
+{
+    if (!mFD) {
+        return NS_ERROR_NOT_INITIALIZED;
+    }
+
+    if (!mozilla::fallocate(mFD, aLength)) {
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
