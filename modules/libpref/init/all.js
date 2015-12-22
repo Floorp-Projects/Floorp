@@ -4856,6 +4856,25 @@ pref("browser.safebrowsing.allowOverride", true);
 // Turn off Spatial navigation by default.
 pref("snav.enabled", false);
 
+// Original caret implementation on collapsed selection.
+pref("touchcaret.enabled", false);
+
+// This will inflate the size of the touch caret frame when checking if user
+// clicks on the caret or not. In app units.
+pref("touchcaret.inflatesize.threshold", 40);
+
+// We'll start to increment time when user release the control of touch caret.
+// When time exceed this expiration time, we'll hide touch caret.
+// In milliseconds. (0 means disable this feature)
+pref("touchcaret.expiration.time", 3000);
+
+// Original caret implementation on non-collapsed selection.
+pref("selectioncaret.enabled", false);
+
+// This will inflate size of selection caret frame when we checking if
+// user click on selection caret or not. In app units.
+pref("selectioncaret.inflatesize.threshold", 40);
+
 // New implementation to unify touch-caret and selection-carets.
 pref("layout.accessiblecaret.enabled", false);
 
