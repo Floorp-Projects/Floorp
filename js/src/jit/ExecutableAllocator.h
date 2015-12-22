@@ -183,9 +183,6 @@ namespace jit {
 
 class ExecutableAllocator
 {
-    typedef void (*DestroyCallback)(void* addr, size_t size);
-    DestroyCallback destroyCallback;
-
 #ifdef XP_WIN
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
 #endif
@@ -194,7 +191,6 @@ class ExecutableAllocator
     enum ProtectionSetting { Writable, Executable };
 
     ExecutableAllocator()
-      : destroyCallback(nullptr)
     {
         MOZ_ASSERT(m_smallPools.empty());
     }
@@ -243,11 +239,7 @@ class ExecutableAllocator
 
     void releasePoolPages(ExecutablePool* pool) {
         MOZ_ASSERT(pool->m_allocation.pages);
-        if (destroyCallback) {
-            // Do not allow GC during the page release callback.
-            JS::AutoSuppressGCAnalysis nogc;
-            destroyCallback(pool->m_allocation.pages, pool->m_allocation.size);
-        }
+
         systemRelease(pool->m_allocation);
         MOZ_ASSERT(m_pools.initialized());
 
@@ -258,10 +250,6 @@ class ExecutableAllocator
     }
 
     void addSizeOfCode(JS::CodeSizes* sizes) const;
-
-    void setDestroyCallback(DestroyCallback destroyCallback) {
-        this->destroyCallback = destroyCallback;
-    }
 
     static void initStatic();
 
