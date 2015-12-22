@@ -70,6 +70,13 @@ private:
                              AudioChannel aAudioChannel,
                              const nsAString& aManifestURL);
 
+  bool IsSystemAppWindow(nsPIDOMWindow* aWindow) const;
+
+  // This method is used to check whether we're in the nested-mozbrower-frame
+  // situation, see bug1214148.
+  nsresult IsFromNestedFrame(nsISupports* aSubject,
+                             bool& aIsNested) const;
+
   ~BrowserElementAudioChannel();
 
   nsresult Initialize();
