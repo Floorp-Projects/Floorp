@@ -145,8 +145,6 @@ test(function(t) {
 }, 'Order of CSS Animations - across and within elements');
 
 test(function(t) {
-  cancelAllAnimationsOnEnd(t);
-
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
   var animLeft = document.getAnimations()[0];
   assert_equals(animLeft.animationName, 'animLeft',
@@ -165,8 +163,6 @@ test(function(t) {
 }, 'Order of CSS Animations - markup-bound vs free animations');
 
 test(function(t) {
-  cancelAllAnimationsOnEnd(t);
-
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
   var animLeft = document.getAnimations()[0];
   var animTop  = document.getAnimations()[1];
@@ -239,8 +235,6 @@ test(function(t) {
 }, 'CSS Animations cancelled via the API are not returned');
 
 test(function(t) {
-  cancelAllAnimationsOnEnd(t);
-
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   var anim = div.getAnimations()[0];
   anim.cancel();
