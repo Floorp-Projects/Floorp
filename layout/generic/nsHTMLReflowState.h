@@ -246,16 +246,16 @@ protected:
   inline nscoord ComputeISizeValue(nscoord aContainingBlockISize,
                                    nscoord aContentEdgeToBoxSizing,
                                    nscoord aBoxSizingToMarginEdge,
-                                   const nsStyleCoord& aCoord);
+                                   const nsStyleCoord& aCoord) const;
   // same as previous, but using mComputedBorderPadding, mComputedPadding,
   // and mComputedMargin
   nscoord ComputeISizeValue(nscoord aContainingBlockISize,
                             mozilla::StyleBoxSizing aBoxSizing,
-                            const nsStyleCoord& aCoord);
+                            const nsStyleCoord& aCoord) const;
 
   nscoord ComputeBSizeValue(nscoord aContainingBlockBSize,
                             mozilla::StyleBoxSizing aBoxSizing,
-                            const nsStyleCoord& aCoord);
+                            const nsStyleCoord& aCoord) const;
 };
 
 /**
@@ -924,7 +924,7 @@ protected:
   // These are returned in the coordinate space of the containing block.
   nsIFrame* GetHypotheticalBoxContainer(nsIFrame* aFrame,
                                         nscoord& aCBIStartEdge,
-                                        mozilla::LogicalSize& aCBSize);
+                                        mozilla::LogicalSize& aCBSize) const;
 
   // Calculate a "hypothetical box" position where the placeholder frame
   // (for a position:fixed/absolute element) would have been placed if it were
@@ -935,7 +935,7 @@ protected:
                                      nsIFrame* aPlaceholderFrame,
                                      const nsHTMLReflowState* cbrs,
                                      nsHypotheticalPosition& aHypotheticalPos,
-                                     nsIAtom* aFrameType);
+                                     nsIAtom* aFrameType) const;
 
   void InitAbsoluteConstraints(nsPresContext* aPresContext,
                                const nsHTMLReflowState* cbrs,
@@ -953,7 +953,7 @@ protected:
   void CalculateBorderPaddingMargin(mozilla::LogicalAxis aAxis,
                                     nscoord aContainingBlockSize,
                                     nscoord* aInsideBoxSizing,
-                                    nscoord* aOutsideBoxSizing);
+                                    nscoord* aOutsideBoxSizing) const;
 
   void CalculateBlockSideMargins(nsIAtom* aFrameType);
 };
