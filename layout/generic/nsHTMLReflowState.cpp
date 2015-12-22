@@ -82,6 +82,9 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   if (aFlags & COMPUTE_SIZE_SHRINK_WRAP) {
     mFlags.mShrinkWrap = true;
   }
+  if (aFlags & STATIC_POS_IS_CB_ORIGIN) {
+    mFlags.mStaticPosIsCBOrigin = true;
+  }
 
   if (!(aFlags & CALLER_WILL_INIT)) {
     Init(aPresContext);
@@ -223,6 +226,7 @@ nsHTMLReflowState::nsHTMLReflowState(
   mFlags.mIsFlexContainerMeasuringHeight = false;
   mFlags.mDummyParentReflowState = false;
   mFlags.mShrinkWrap = !!(aFlags & COMPUTE_SIZE_SHRINK_WRAP);
+  mFlags.mStaticPosIsCBOrigin = !!(aFlags & STATIC_POS_IS_CB_ORIGIN);
 
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = (aParentReflowState.mPercentBSizeObserver &&
@@ -1520,8 +1524,14 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsPresContext* aPresContext,
        (eStyleUnit_Auto == mStylePosition->mOffset.GetRightUnit())) ||
       ((eStyleUnit_Auto == mStylePosition->mOffset.GetTopUnit()) &&
        (eStyleUnit_Auto == mStylePosition->mOffset.GetBottomUnit()))) {
-    CalculateHypotheticalPosition(aPresContext, placeholderFrame, cbrs,
-                                  hypotheticalPos, aFrameType);
+    if (mFlags.mStaticPosIsCBOrigin) {
+      hypotheticalPos.mWritingMode = cbwm;
+      hypotheticalPos.mIStart = nscoord(0);
+      hypotheticalPos.mBStart = nscoord(0);
+    } else {
+      CalculateHypotheticalPosition(aPresContext, placeholderFrame, cbrs,
+                                    hypotheticalPos, aFrameType);
+    }
   }
 
   // Initialize the 'left' and 'right' computed offsets
