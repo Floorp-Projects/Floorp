@@ -736,11 +736,6 @@
   background-image: url("chrome://devtools/skin/images/command-pick.png");
 }
 
-:root.theme-emoji #command-button-pick > image {
-  background-image: url("chrome://devtools/skin/images/emojis/emoji-command-pick.svg");
-  filter: none;
-}
-
 #command-button-frames > image {
   background-image: url("chrome://devtools/skin/images/command-frames.png");
 }
@@ -895,10 +890,6 @@
   width: 16px; /* Prevents collapse during theme switching */
 }
 
-:root.theme-emoji .devtools-tab > image {
-  opacity: 0.8;
-}
-
 .devtools-tab > label {
   white-space: nowrap;
 }
@@ -998,8 +989,7 @@
 /* Since selected backgrounds are blue, we want to use the normal
  * (light) icons. */
 .theme-light .devtools-tab[icon-invertable][selected] > image,
-.theme-light .devtools-tab[icon-invertable][highlighted] > image,
-:root.theme-emoji .devtools-tab[icon-invertable] > image {
+.theme-light .devtools-tab[icon-invertable][highlighted] > image {
   filter: none !important;
 }
 
