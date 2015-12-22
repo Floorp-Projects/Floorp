@@ -2774,6 +2774,17 @@ Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
     return rv;
   }
 
+  if (mozilla::Preferences::GetBool("media.youtube-ua.override", false) &&
+      nsContentUtils::IsYouTubeURI(aURI)) {
+    const nsAdoptingString& from =
+      mozilla::Preferences::GetString("media.youtube-ua.override.from");
+    const nsAdoptingString& to =
+      mozilla::Preferences::GetString("media.youtube-ua.override.to");
+    if (!from.IsEmpty() && !to.IsEmpty()) {
+      ua.ReplaceSubstring(NS_ConvertUTF16toUTF8(from), NS_ConvertUTF16toUTF8(to));
+    }
+  }
+
   CopyASCIItoUTF16(ua, aUserAgent);
 
   if (!aWindow || !aURI) {
