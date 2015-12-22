@@ -23,7 +23,7 @@
     -->
   <project name="gaia" path="gaia" remote="mozillaorg" revision="ef2c6f4b8b316a2b695584b961060c4a3200013a"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="e58218ed5175132d9645882688a653140a9de94c"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="afc9663500623538bd1b0939310e45189f584b61"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
   <project name="platform_build" path="build" remote="b2g" revision="660169a3d7e034a892359e39135e8c2785a6ad6f">
