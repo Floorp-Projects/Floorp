@@ -346,13 +346,14 @@ DecodedStream::OnEnded(TrackType aType)
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome());
 
-  if (aType == TrackInfo::kAudioTrack) {
+  if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio()) {
     // TODO: we should return a promise which is resolved when the audio track
     // is finished. For now this promise is resolved when the whole stream is
     // finished.
     return mFinishPromise;
+  } else if (aType == TrackInfo::kVideoTrack && mInfo.HasVideo()) {
+    return mFinishPromise;
   }
-  // TODO: handle video track.
   return nullptr;
 }
 
