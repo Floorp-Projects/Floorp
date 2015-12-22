@@ -20,6 +20,7 @@ MIRTypeToSimdTypeDescr(MIRType type)
     switch (type) {
       case MIRType_Float32x4:   return SimdTypeDescr::Float32x4;
       case MIRType_Int32x4:     return SimdTypeDescr::Int32x4;
+      case MIRType_Bool32x4:    return SimdTypeDescr::Bool32x4;
       default:                  break;
     }
     MOZ_CRASH("unexpected MIRType");

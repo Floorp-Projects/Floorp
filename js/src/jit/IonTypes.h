@@ -102,6 +102,7 @@ enum BailoutKind
     Bailout_NonSymbolInput,
 
     // SIMD Unbox expects a given type, bails out if it doesn't match.
+    Bailout_NonSimdBool32x4Input,
     Bailout_NonSimdInt32x4Input,
     Bailout_NonSimdFloat32x4Input,
 
@@ -213,6 +214,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_NonStringInput";
       case Bailout_NonSymbolInput:
         return "Bailout_NonSymbolInput";
+      case Bailout_NonSimdBool32x4Input:
+        return "Bailout_NonSimdBool32x4Input";
       case Bailout_NonSimdInt32x4Input:
         return "Bailout_NonSimdInt32x4Input";
       case Bailout_NonSimdFloat32x4Input:
@@ -414,6 +417,7 @@ enum MIRType
     MIRType_Last = MIRType_ObjectGroup,
     MIRType_Float32x4 = MIRType_Float32 | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Int32x4   = MIRType_Int32   | (2 << VECTOR_SCALE_SHIFT),
+    MIRType_Bool32x4  = MIRType_Boolean | (2 << VECTOR_SCALE_SHIFT),
     MIRType_Doublex2  = MIRType_Double  | (1 << VECTOR_SCALE_SHIFT)
 };
 
@@ -571,7 +575,7 @@ IsNullOrUndefined(MIRType type)
 static inline bool
 IsSimdType(MIRType type)
 {
-    return type == MIRType_Int32x4 || type == MIRType_Float32x4;
+    return type == MIRType_Int32x4 || type == MIRType_Float32x4 || type == MIRType_Bool32x4;
 }
 
 static inline bool
@@ -584,6 +588,12 @@ static inline bool
 IsIntegerSimdType(MIRType type)
 {
     return type == MIRType_Int32x4;
+}
+
+static inline bool
+IsBooleanSimdType(MIRType type)
+{
+    return type == MIRType_Bool32x4;
 }
 
 static inline bool
@@ -655,7 +665,7 @@ ScalarTypeToLength(Scalar::Type type)
 }
 
 // Get the type of the individual lanes in a SIMD type.
-// For example, Int32x4 -> Int32, FLoat32x4 -> Float32 etc.
+// For example, Int32x4 -> Int32, Float32x4 -> Float32 etc.
 static inline MIRType
 SimdTypeToLaneType(MIRType type)
 {
@@ -663,6 +673,19 @@ SimdTypeToLaneType(MIRType type)
     static_assert(MIRType_Last <= ELEMENT_TYPE_MASK,
                   "ELEMENT_TYPE_MASK should be larger than the last MIRType");
     return MIRType((type >> ELEMENT_TYPE_SHIFT) & ELEMENT_TYPE_MASK);
+}
+
+// Get the type expected when inserting a lane into a SIMD type.
+// This is the argument type expected by the MSimdValue constructors as well as
+// MSimdSplat and MSimdInsertElement.
+static inline MIRType
+SimdTypeToLaneArgumentType(MIRType type)
+{
+    MIRType laneType = SimdTypeToLaneType(type);
+
+    // Boolean lanes should be pre-converted to an Int32 with the values 0 or -1.
+    // All other lane types are inserted directly.
+    return laneType == MIRType_Boolean ? MIRType_Int32 : laneType;
 }
 
 // Indicates a lane in a SIMD register: X for the first lane, Y for the second,

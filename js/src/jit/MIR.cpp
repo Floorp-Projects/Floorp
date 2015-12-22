@@ -906,7 +906,7 @@ MConstant::canProduceFloat32() const
 MDefinition*
 MSimdValueX4::foldsTo(TempAllocator& alloc)
 {
-    DebugOnly<MIRType> laneType = SimdTypeToLaneType(type());
+    DebugOnly<MIRType> laneType = SimdTypeToLaneArgumentType(type());
     bool allConstants = true;
     bool allSame = true;
 
@@ -925,6 +925,13 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
     if (allConstants) {
         SimdConstant cst;
         switch (type()) {
+          case MIRType_Bool32x4: {
+            int32_t a[4];
+            for (size_t i = 0; i < 4; ++i)
+                a[i] = getOperand(i)->constantToBoolean() ? -1 : 0;
+            cst = SimdConstant::CreateX4(a);
+            break;
+          }
           case MIRType_Int32x4: {
             int32_t a[4];
             for (size_t i = 0; i < 4; ++i)
@@ -952,7 +959,7 @@ MSimdValueX4::foldsTo(TempAllocator& alloc)
 MDefinition*
 MSimdSplatX4::foldsTo(TempAllocator& alloc)
 {
-    DebugOnly<MIRType> laneType = SimdTypeToLaneType(type());
+    DebugOnly<MIRType> laneType = SimdTypeToLaneArgumentType(type());
     MDefinition* op = getOperand(0);
     if (!op->isConstantValue())
         return this;
@@ -960,20 +967,19 @@ MSimdSplatX4::foldsTo(TempAllocator& alloc)
 
     SimdConstant cst;
     switch (type()) {
+      case MIRType_Bool32x4: {
+        int32_t v = op->constantToBoolean() ? -1 : 0;
+        cst = SimdConstant::SplatX4(v);
+        break;
+      }
       case MIRType_Int32x4: {
-        int32_t a[4];
-        int32_t v = getOperand(0)->constantValue().toInt32();
-        for (size_t i = 0; i < 4; ++i)
-            a[i] = v;
-        cst = SimdConstant::CreateX4(a);
+        int32_t v = op->constantValue().toInt32();
+        cst = SimdConstant::SplatX4(v);
         break;
       }
       case MIRType_Float32x4: {
-        float a[4];
-        float v = getOperand(0)->constantValue().toNumber();
-        for (size_t i = 0; i < 4; ++i)
-            a[i] = v;
-        cst = SimdConstant::CreateX4(a);
+        float v = op->constantValue().toNumber();
+        cst = SimdConstant::SplatX4(v);
         break;
       }
       default: MOZ_CRASH("unexpected type in MSimdSplatX4::foldsTo");
