@@ -47,13 +47,6 @@ static CriticalAddress gCriticalAddress;
    ((defined(__GNUC__) && (defined(__i386) || defined(PPC))) || \
     defined(HAVE__UNWIND_BACKTRACE)))
 
-#if MOZ_STACKWALK_SUPPORTS_MACOSX
-#include <pthread.h>
-#include <sys/errno.h>
-#ifdef MOZ_WIDGET_COCOA
-#include <CoreServices/CoreServices.h>
-#endif
-
 #if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
 #define HAVE___LIBC_STACK_END 1
 #else
@@ -62,6 +55,13 @@ static CriticalAddress gCriticalAddress;
 
 #if HAVE___LIBC_STACK_END
 extern MOZ_EXPORT void* __libc_stack_end; // from ld-linux.so
+#endif
+
+#if MOZ_STACKWALK_SUPPORTS_MACOSX
+#include <pthread.h>
+#include <sys/errno.h>
+#ifdef MOZ_WIDGET_COCOA
+#include <CoreServices/CoreServices.h>
 #endif
 
 typedef void
