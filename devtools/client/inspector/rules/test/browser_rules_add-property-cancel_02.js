@@ -54,6 +54,18 @@ add_task(function*() {
   info("Entering a property value");
   editor.input.value = "red";
 
+  // Setting the input value above schedules a preview to be shown in 10ms
+  // which triggers a ruleview-changed event. If the event arrives at just the
+  // right moment after pressing escape but before the new property is removed
+  // from the rule view (it's done after a tick), the test continues too soon
+  // and the assertions below fail as the new property is still there (bug
+  // 1209295).
+  //
+  // Thus, wait for the ruleview-changed event triggered by the preview before
+  // continuing to discard the new property.
+  info("Waiting for preview to be applied.");
+  yield view.once("ruleview-changed");
+
   info("Escaping out of the field");
   onRuleViewChanged = view.once("ruleview-changed");
   EventUtils.synthesizeKey("VK_ESCAPE", {}, view.styleWindow);
