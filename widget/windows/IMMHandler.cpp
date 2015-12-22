@@ -2031,8 +2031,12 @@ IMMHandler::CreateTextRangeArray()
   if (targetClause &&
       cursor >= targetClause->mStartOffset &&
       cursor <= targetClause->mEndOffset) {
+    // Forget the caret position specified by IME since Gecko's caret position
+    // will be at the end of composition string.
+    mCursorPosition = NO_IME_CARET;
     MOZ_LOG(gIMMLog, LogLevel::Info,
-      ("IMM: CreateTextRangeArray, no caret due to it's in the target clause"));
+      ("IMM: CreateTextRangeArray, no caret due to it's in the target clause, "
+       "now, mCursorPosition is NO_IME_CARET"));
     return textRangeArray.forget();
   }
 
