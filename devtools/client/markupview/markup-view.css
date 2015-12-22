@@ -128,13 +128,16 @@ ul.children + .tag-line::before {
   left: -1000em;
   right: 0;
   height: 100%;
-  z-index: -1;
+  z-index: 0;
 }
 
 .expander {
   display: inline-block;
   margin-left: -14px;
   vertical-align: middle;
+  /* Make sure the expander still appears above the tag-state */
+  position: relative;
+  z-index: 1;
 }
 
 .child.collapsed .child {
@@ -190,6 +193,12 @@ ul.children + .tag-line::before {
   cursor: pointer;
 }
 
+.editor {
+  /* Make sure the editor still appears above the tag-state */
+  position: relative;
+  z-index: 1;
+}
+
 .editor.text {
   display: inline-block;
 }
@@ -198,4 +207,3 @@ ul.children + .tag-line::before {
 .editor.comment pre {
   font: inherit;
 }
-
