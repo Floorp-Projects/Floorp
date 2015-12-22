@@ -167,7 +167,9 @@ VideoSink::Start(int64_t aStartTime, const MediaInfo& aInfo)
   if (mHasVideo) {
     mEndPromise = mEndPromiseHolder.Ensure(__func__);
     ConnectListener();
-    TryUpdateRenderedVideoFrames();
+    // Run the render loop at least once so we can resolve the end promise
+    // when video duration is 0.
+    UpdateRenderedVideoFrames();
   }
 }
 
