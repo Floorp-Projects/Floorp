@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
@@ -699,9 +700,14 @@ public class BrowserApp extends GeckoApp
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         if (AppConstants.MOZ_INSTALL_TRACKING) {
-            // TODO: If this is the first run with the new Adjust config, we need to get the health report upload value
-            // and setEnabled with it.
-            AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
+            final AdjustHelperInterface adjustHelper = AdjustConstants.getAdjustHelper();
+            adjustHelper.onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
+
+            // Adjust stores enabled state so this is only necessary because users may have set
+            // their data preferences before this feature was implemented and we need to respect
+            // those before upload can occur in Adjust.onResume.
+            final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
+            adjustHelper.setEnabled(prefs.getBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true));
         }
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
