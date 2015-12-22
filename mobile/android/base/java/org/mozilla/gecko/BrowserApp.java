@@ -699,10 +699,9 @@ public class BrowserApp extends GeckoApp
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
         if (AppConstants.MOZ_INSTALL_TRACKING) {
-            final SharedPreferences prefs = GeckoSharedPrefs.forApp(this);
-            if (prefs.getBoolean(GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
-                AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
-            }
+            // TODO: If this is the first run with the new Adjust config, we need to get the health report upload value
+            // and setEnabled with it.
+            AdjustConstants.getAdjustHelper().onCreate(this, AdjustConstants.MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN);
         }
 
         if (AppConstants.MOZ_ANDROID_BEAM) {
