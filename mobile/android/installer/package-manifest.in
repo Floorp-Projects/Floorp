@@ -472,6 +472,9 @@
 @BINPATH@/components/PACGenerator.js
 @BINPATH@/components/PACGenerator.manifest
 
+@BINPATH@/components/TVSimulatorService.js
+@BINPATH@/components/TVSimulatorService.manifest
+
 ; Modules
 @BINPATH@/modules/*
 

@@ -1088,11 +1088,12 @@ AnimationTimeBlock.prototype = {
     text += "\n";
 
     // Adding the iteration count (the infinite symbol, or an integer).
-    // XXX: see bug 1219608 to remove this if the count is 1.
-    text += L10N.getStr("player.animationIterationCountLabel") + " ";
-    text += state.iterationCount ||
-            L10N.getStr("player.infiniteIterationCountText");
-    text += "\n";
+    if (state.iterationCount !== 1) {
+      text += L10N.getStr("player.animationIterationCountLabel") + " ";
+      text += state.iterationCount ||
+              L10N.getStr("player.infiniteIterationCountText");
+      text += "\n";
+    }
 
     // Adding the playback rate if it's different than 1.
     if (state.playbackRate !== 1) {
