@@ -23,6 +23,11 @@
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
 #include "mozilla/dom/AnonymousContent.h"
+// for touchcaret
+#include "nsContentList.h"
+#include "nsContentCreatorFunctions.h"
+#include "nsContentUtils.h"
+#include "nsStyleSet.h"
 // for focus
 #include "nsIScrollableFrame.h"
 #ifdef DEBUG_CANVAS_FOCUS
@@ -48,6 +53,8 @@ NS_QUERYFRAME_HEAD(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsCanvasFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
+
+NS_IMPL_ISUPPORTS(nsCanvasFrame::DummyTouchListener, nsIDOMEventListener)
 
 void
 nsCanvasFrame::ShowCustomContentContainer()
@@ -76,6 +83,66 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 
   nsCOMPtr<nsIDocument> doc = mContent->OwnerDoc();
   nsresult rv = NS_OK;
+  ErrorResult er;
+  // We won't create touch caret element if preference is not enabled.
+  if (PresShell::TouchCaretPrefEnabled()) {
+    RefPtr<NodeInfo> nodeInfo;
+
+    // Create and append touch caret frame.
+    nodeInfo = doc->NodeInfoManager()->GetNodeInfo(nsGkAtoms::div, nullptr,
+                                                   kNameSpaceID_XHTML,
+                                                   nsIDOMNode::ELEMENT_NODE);
+    NS_ENSURE_TRUE(nodeInfo, NS_ERROR_OUT_OF_MEMORY);
+
+    rv = NS_NewHTMLElement(getter_AddRefs(mTouchCaretElement), nodeInfo.forget(),
+                           NOT_FROM_PARSER);
+    NS_ENSURE_SUCCESS(rv, rv);
+    aElements.AppendElement(mTouchCaretElement);
+
+    // Set touch caret to visibility: hidden by default.
+    nsAutoString classValue;
+    classValue.AppendLiteral("moz-touchcaret hidden");
+    rv = mTouchCaretElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                     classValue, true);
+
+    if (!mDummyTouchListener) {
+      mDummyTouchListener = new DummyTouchListener();
+    }
+    mTouchCaretElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                         mDummyTouchListener, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (PresShell::SelectionCaretPrefEnabled()) {
+    // Selection caret
+    mSelectionCaretsStartElement = doc->CreateHTMLElement(nsGkAtoms::div);
+    aElements.AppendElement(mSelectionCaretsStartElement);
+    nsCOMPtr<mozilla::dom::Element> selectionCaretsStartElementInner = doc->CreateHTMLElement(nsGkAtoms::div);
+    mSelectionCaretsStartElement->AppendChildTo(selectionCaretsStartElementInner, false);
+
+    mSelectionCaretsEndElement = doc->CreateHTMLElement(nsGkAtoms::div);
+    aElements.AppendElement(mSelectionCaretsEndElement);
+    nsCOMPtr<mozilla::dom::Element> selectionCaretsEndElementInner = doc->CreateHTMLElement(nsGkAtoms::div);
+    mSelectionCaretsEndElement->AppendChildTo(selectionCaretsEndElementInner, false);
+
+    rv = mSelectionCaretsStartElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                               NS_LITERAL_STRING("moz-selectioncaret-left hidden"),
+                                               true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mSelectionCaretsEndElement->SetAttr(kNameSpaceID_None, nsGkAtoms::_class,
+                                             NS_LITERAL_STRING("moz-selectioncaret-right hidden"),
+                                             true);
+
+    if (!mDummyTouchListener) {
+      mDummyTouchListener = new DummyTouchListener();
+    }
+    mSelectionCaretsStartElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                                   mDummyTouchListener, false);
+    mSelectionCaretsEndElement->AddEventListener(NS_LITERAL_STRING("touchstart"),
+                                                 mDummyTouchListener, false);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   // Create the custom content container.
   mCustomContentContainer = doc->CreateHTMLElement(nsGkAtoms::div);
@@ -121,6 +188,18 @@ nsCanvasFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
 void
 nsCanvasFrame::AppendAnonymousContentTo(nsTArray<nsIContent*>& aElements, uint32_t aFilter)
 {
+  if (mTouchCaretElement) {
+    aElements.AppendElement(mTouchCaretElement);
+  }
+
+  if (mSelectionCaretsStartElement) {
+    aElements.AppendElement(mSelectionCaretsStartElement);
+  }
+
+  if (mSelectionCaretsEndElement) {
+    aElements.AppendElement(mSelectionCaretsEndElement);
+  }
+
   aElements.AppendElement(mCustomContentContainer);
 }
 
@@ -132,6 +211,25 @@ nsCanvasFrame::DestroyFrom(nsIFrame* aDestructRoot)
   if (sf) {
     sf->RemoveScrollPositionListener(this);
   }
+
+  if (mTouchCaretElement) {
+    mTouchCaretElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                            mDummyTouchListener, false);
+  }
+
+  if (mSelectionCaretsStartElement) {
+    mSelectionCaretsStartElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                                      mDummyTouchListener, false);
+  }
+
+  if (mSelectionCaretsEndElement) {
+    mSelectionCaretsEndElement->RemoveEventListener(NS_LITERAL_STRING("touchstart"),
+                                                    mDummyTouchListener, false);
+  }
+
+  nsContentUtils::DestroyAnonymousContent(&mTouchCaretElement);
+  nsContentUtils::DestroyAnonymousContent(&mSelectionCaretsStartElement);
+  nsContentUtils::DestroyAnonymousContent(&mSelectionCaretsEndElement);
 
   // Elements inserted in the custom content container have the same lifetime as
   // the document, so before destroying the container, make sure to keep a clone
@@ -199,8 +297,8 @@ nsCanvasFrame::AppendFrames(ChildListID     aListID,
   MOZ_ASSERT(aListID == kPrincipalList, "unexpected child list");
   if (!mFrames.IsEmpty()) {
     for (nsFrameList::Enumerator e(aFrameList); !e.AtEnd(); e.Next()) {
-      // We only allow native anonymous child frames to be in principal child
-      // list in canvas frame.
+      // We only allow native anonymous child frame for touch caret,
+      // which its placeholder is added to the Principal child lists.
       MOZ_ASSERT(e.get()->GetContent()->IsInNativeAnonymousSubtree(),
                  "invalid child list");
     }
@@ -429,6 +527,15 @@ nsCanvasFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   nsIFrame* kid;
   for (kid = GetFirstPrincipalChild(); kid; kid = kid->GetNextSibling()) {
+    // Skip touch/selection caret frame if we do not build caret.
+    if (!aBuilder->IsBuildingCaret()) {
+      if(kid->GetContent() == mTouchCaretElement ||
+         kid->GetContent() == mSelectionCaretsStartElement||
+         kid->GetContent() == mSelectionCaretsEndElement) {
+        continue;
+      }
+    }
+
     // Put our child into its own pseudo-stack.
     BuildDisplayListForChild(aBuilder, kid, aDirtyRect, aLists);
   }

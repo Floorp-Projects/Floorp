@@ -73,6 +73,12 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
+  // Touch caret preference
+  static bool TouchCaretPrefEnabled();
+
+  // Selection caret preference
+  static bool SelectionCaretPrefEnabled();
+
   static bool AccessibleCaretEnabled();
 
   // BeforeAfterKeyboardEvent preference
@@ -239,6 +245,14 @@ public:
                                       bool aFlushOnHoverChange) override;
   virtual void ClearMouseCaptureOnView(nsView* aView) override;
   virtual bool IsVisible() override;
+
+  // touch caret
+  virtual already_AddRefed<mozilla::TouchCaret> GetTouchCaret() const override;
+  virtual mozilla::dom::Element* GetTouchCaretElement() const override;
+  // selection caret
+  virtual already_AddRefed<mozilla::SelectionCarets> GetSelectionCarets() const override;
+  virtual mozilla::dom::Element* GetSelectionCaretsStartElement() const override;
+  virtual mozilla::dom::Element* GetSelectionCaretsEndElement() const override;
 
   virtual already_AddRefed<mozilla::AccessibleCaretEventHub> GetAccessibleCaretEventHub() const override;
 
@@ -802,11 +816,15 @@ protected:
   nsCallbackEventRequest*   mFirstCallbackEventRequest;
   nsCallbackEventRequest*   mLastCallbackEventRequest;
 
-  mozilla::TouchManager     mTouchManager;
+  // TouchManager
+  TouchManager              mTouchManager;
 
   RefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
   RefPtr<MobileViewportManager> mMobileViewportManager;
 
+  // TouchCaret
+  RefPtr<mozilla::TouchCaret> mTouchCaret;
+  RefPtr<mozilla::SelectionCarets> mSelectionCarets;
   RefPtr<mozilla::AccessibleCaretEventHub> mAccessibleCaretEventHub;
 
   // This timer controls painting suppression.  Until it fires
