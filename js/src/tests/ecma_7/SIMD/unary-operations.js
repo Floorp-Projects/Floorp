@@ -3,6 +3,10 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 function testFloat32x4abs() {
   function absf(a) {
@@ -167,6 +171,154 @@ function testInt32x4not() {
   }
 }
 
+function testBool8x16not() {
+  var valsExp = [
+    [[true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false],
+     [false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true]],
+    [[true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false],
+    [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX16(Bool8x16.not(Bool8x16(...v)), w);
+  }
+}
+
+function testBool8x16allTrue() {
+  var valsExp = [
+    [[false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false], false],
+    [[true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true], true],
+    [[false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true], false],
+    [[true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true], false],
+    [[true, false, true, true, true, true, true, true, true, true, true, true, true, true, false, true], false],
+    [[true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false], false],
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool8x16.allTrue(Bool8x16(...v)), w);
+  }
+}
+
+function testBool8x16anyTrue() {
+  var valsExp = [
+    [[false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false], false],
+    [[true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true], true],
+    [[false, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true], true],
+    [[true, false, true, true, true, true, true, true, true, true, true, true, true, true, true, true], true],
+    [[true, false, true, true, true, true, true, true, true, true, true, true, true, true, false, true], true],
+    [[true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, false], true],
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool8x16.anyTrue(Bool8x16(...v)), w);
+  }
+}
+
+function testBool16x8not() {
+  var valsExp = [
+    [[true, false, true, false, true, false, true, false], [false, true, false, true, false, true, false, true]],
+    [[true, true, false, false, true, true, false, false], [false, false, true, true, false, false, true, true]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX8(Bool16x8.not(Bool16x8(...v)), w);
+  }
+}
+
+function testBool16x8allTrue() {
+  var valsExp = [
+    [[false, false, false, false, false, false, false, false], false],
+    [[true, true, true, true, true, true, true, true], true],
+    [[false, true, true, true, true, true, true, true], false],
+    [[true, false, true, true, true, true, true, true], false],
+    [[true, true, true, true, true, true, false, true], false],
+    [[true, true, true, true, true, true, true, false], false],
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool16x8.allTrue(Bool16x8(...v)), w);
+  }
+}
+
+function testBool16x8anyTrue() {
+  var valsExp = [
+    [[false, false, false, false, false, false, false, false], false],
+    [[true, true, true, true, true, true, true, true], true],
+    [[false, false, false, false, false, false, false, true], true],
+    [[false, false, false, false, false, false, true, false], true],
+    [[false, true, false, false, false, false, false, true], true],
+    [[true, false, false, false, false, false, false, false], true],
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool16x8.anyTrue(Bool16x8(...v)), w);
+  }
+}
+
+function testBool32x4not() {
+  var valsExp = [
+    [[true, false, true, false], [false, true, false, true]],
+    [[true, true, false, false], [false, false, true, true]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX4(Bool32x4.not(Bool32x4(...v)), w);
+  }
+}
+
+function testBool32x4allTrue() {
+  var valsExp = [
+    [[false, false, false, false], false],
+    [[true, false, true, false], false],
+    [[true, true, true, true], true],
+    [[true, true, false, false], false]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool32x4.allTrue(Bool32x4(...v)), w);
+  }
+}
+
+function testBool32x4anyTrue() {
+  var valsExp = [
+    [[false, false, false, false], false],
+    [[true, false, true, false], true],
+    [[true, true, true, true], true],
+    [[true, true, false, false], true]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool32x4.anyTrue(Bool32x4(...v)), w);
+  }
+}
+
+function testBool64x2not() {
+  var valsExp = [
+    [[false, false], [true, true]],
+    [[false, true], [true, false]],
+    [[true, false], [false, true]],
+    [[true, true], [false, false]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX2(Bool64x2.not(Bool64x2(...v)), w);
+  }
+}
+
+function testBool64x2allTrue() {
+  var valsExp = [
+    [[false, false], false],
+    [[false, true], false],
+    [[true, false], false],
+    [[true, true], true]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool64x2.allTrue(Bool64x2(...v)), w);
+  }
+}
+
+function testBool64x2anyTrue() {
+  var valsExp = [
+    [[false, false], false],
+    [[false, true], true],
+    [[true, false], true],
+    [[true, true], true]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEq(Bool64x2.anyTrue(Bool64x2(...v)), w);
+  }
+}
+
 function test() {
   testFloat32x4abs();
   testFloat32x4neg();
@@ -183,6 +335,23 @@ function test() {
 
   testInt32x4neg();
   testInt32x4not();
+
+  testBool8x16not();
+  testBool8x16allTrue();
+  testBool8x16anyTrue();
+
+  testBool16x8not();
+  testBool16x8allTrue();
+  testBool16x8anyTrue();
+
+  testBool32x4not();
+  testBool32x4allTrue();
+  testBool32x4anyTrue();
+
+  testBool64x2not();
+  testBool64x2allTrue();
+  testBool64x2anyTrue();
+
 
   if (typeof reportCompare === "function") {
     reportCompare(true, true);

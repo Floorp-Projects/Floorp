@@ -10,8 +10,28 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 function getMask(i, maskLength) {
+    var args = [];
+    for (var j = 0; j < maskLength; j++)
+        args.push((i >> j) & 1);
+    if (maskLength == 2)
+        return Bool64x2(...args);
+    else if (maskLength == 4)
+        return Bool32x4(...args);
+    else if (maskLength == 8)
+        return Bool16x8(...args);
+    else if (maskLength == 16)
+        return Bool8x16(...args);
+    else
+        throw new Error("Invalid mask length.");
+}
+
+function getSelectBitsMask(i, maskLength) {
     var args = [];
     for (var j = 0; j < maskLength; j++)
         args.push((!!((i >> j) & 1)) ? -1 : 0);
@@ -30,7 +50,7 @@ function select(mask, ifTrue, ifFalse) {
     var tv = simdToArray(ifTrue);
     var fv = simdToArray(ifFalse);
     return m.map(function(v, i) {
-        return (v < 0 ? tv : fv)[i];
+        return (v ? tv : fv)[i];
     });
 }
 
@@ -44,7 +64,6 @@ function select(mask, ifTrue, ifFalse) {
 function testSelect(type, inputs) {
     var x, y;
     var maskLength = simdLengthType(type);
-    maskLength = maskLength != 2 ? maskLength : 4;
     for (var i = 0; i < Math.pow(maskLength, 2); i++) {
         var mask = getMask(i, maskLength);
         for ([x, y] of inputs)
@@ -67,10 +86,12 @@ function testSelectBitsSimple(type, inputs) {
     var x, y;
     var maskLength = simdLengthType(type);
     for (var i = 0; i < Math.pow(maskLength, 2); i++) {
+        var bitsMask = getSelectBitsMask(i, maskLength);
         var mask = getMask(i, maskLength);
-        for ([x, y] of inputs)
-            assertEqVec(type.selectBits(mask, x, y), selectBits(type, mask, x, y));
-            assertEqVec(type.selectBits(mask, x, y), simdToArray(type.select(mask, x, y)));
+        for ([x, y] of inputs){
+            assertEqVec(type.selectBits(bitsMask, x, y), selectBits(type, bitsMask, x, y));
+            assertEqVec(type.selectBits(bitsMask, x, y), simdToArray(type.select(mask, x, y)));
+        }
     }
 }
 

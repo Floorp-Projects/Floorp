@@ -4,6 +4,11 @@ setJitCompilerOption("ion.warmup.trigger", 50);
 
 function f() {
     var i4 = SIMD.Int32x4(1, -2, 3, -4);
+    var b4 = SIMD.Bool32x4(true, true, false, true);
+
+
+    var bt4 = SIMD.Bool32x4(true, true, true, true);
+    var bf4 = SIMD.Bool32x4(false, false, false, false);
 
     var v = Math.fround(13.37);
     var f4 = SIMD.Float32x4(13.37, NaN, Infinity, -0);
@@ -22,8 +27,20 @@ function f() {
         assertEq(SIMD.Float32x4.extractLane(f4, 3), -0);
 
         assertEq(f4.signMask, 0b1000);
+
+        assertEq(SIMD.Bool32x4.extractLane(b4, 0), true);
+        assertEq(SIMD.Bool32x4.extractLane(b4, 1), true);
+        assertEq(SIMD.Bool32x4.extractLane(b4, 2), false);
+        assertEq(SIMD.Bool32x4.extractLane(b4, 3), true);
+
+        assertEq(SIMD.Bool32x4.anyTrue(b4), true);
+        assertEq(SIMD.Bool32x4.allTrue(b4), false);
+
+        assertEq(SIMD.Bool32x4.anyTrue(bt4), true);
+        assertEq(SIMD.Bool32x4.allTrue(bt4), true);
+        assertEq(SIMD.Bool32x4.anyTrue(bf4), false);
+        assertEq(SIMD.Bool32x4.allTrue(bf4), false);
     }
 }
 
 f();
-
