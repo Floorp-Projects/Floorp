@@ -120,11 +120,6 @@ conditions are documented below:
 Attempts to optimize a property access on `window` which refers to
 a property on the global object.
 
-### GetProp_SimdGetter
-
-Optimizes property accesses to SIMD vectors.  Accesses to properties
-signMask, x, y, w, and z are optimized.
-
 ### GetProp_TypedObject
 
 Optimizes accesses to properties on TypedObjects.

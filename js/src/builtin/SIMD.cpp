@@ -131,54 +131,6 @@ TypedObjectMemory(HandleValue v)
     return reinterpret_cast<Elem>(obj.typedMem());
 }
 
-template<typename SimdType>
-static bool SignMask(JSContext* cx, unsigned argc, Value* vp)
-{
-    typedef typename SimdType::Elem Elem;
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SimdTypeDescr::class_.name, "signMask",
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    TypedObject& typedObj = args.thisv().toObject().as<TypedObject>();
-    TypeDescr& descr = typedObj.typeDescr();
-    if (descr.kind() != type::Simd || descr.as<SimdTypeDescr>().type() != SimdType::type) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SimdTypeDescr::class_.name, "signMask",
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    // Load the data as integer so that we treat the sign bit consistently,
-    // since -0.0 is not less than zero, but it still has the sign bit set.
-    typedef typename mozilla::SignedStdintTypeForSize<sizeof(Elem)>::Type Int;
-    static_assert(SimdType::lanes * sizeof(Int) <= jit::Simd128DataSize,
-                  "signMask access should respect the bounds of the type");
-    const Elem* elems = reinterpret_cast<const Elem*>(typedObj.typedMem());
-    int32_t result = 0;
-    for (unsigned i = 0; i < SimdType::lanes; ++i) {
-        Int x = mozilla::BitwiseCast<Int>(elems[i]);
-        result |= (x < 0) << i;
-    }
-    args.rval().setInt32(result);
-    return true;
-}
-
-#define SIGN_MASK(type) \
-static bool type##SignMask(JSContext* cx, unsigned argc, Value* vp) { \
-    return SignMask<type>(cx, argc, vp); \
-}
-    SIGN_MASK(Float32x4);
-    SIGN_MASK(Float64x2);
-    SIGN_MASK(Int8x16);
-    SIGN_MASK(Int16x8);
-    SIGN_MASK(Int32x4);
-#undef SIGN_MASK
-
 const Class SimdTypeDescr::class_ = {
     "SIMD",
     JSCLASS_HAS_RESERVED_SLOTS(JS_DESCR_SLOTS) | JSCLASS_BACKGROUND_FINALIZE,
@@ -200,7 +152,6 @@ class Int8x16Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int8x16;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -208,7 +159,6 @@ class Int16x8Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int16x8;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -216,7 +166,6 @@ class Int32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -224,7 +173,6 @@ class Float32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -232,7 +180,6 @@ class Float64x2Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -242,7 +189,6 @@ class Bool8x16Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
-    static constexpr JSPropertySpec* TypedObjectProperties = nullptr;
 };
 class Bool16x8Defn {
   public:
@@ -250,7 +196,6 @@ class Bool16x8Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
-    static constexpr JSPropertySpec* TypedObjectProperties = nullptr;
 };
 class Bool32x4Defn {
   public:
@@ -258,7 +203,6 @@ class Bool32x4Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
-    static constexpr JSPropertySpec* TypedObjectProperties = nullptr;
 };
 class Bool64x2Defn {
   public:
@@ -266,7 +210,6 @@ class Bool64x2Defn {
     static const JSFunctionSpec TypeDescriptorMethods[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
-    static constexpr JSPropertySpec* TypedObjectProperties = nullptr;
 };
 } // namespace
 
@@ -275,11 +218,6 @@ const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
-};
-
-const JSPropertySpec Float32x4Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Float32x4SignMask, JSPROP_PERMANENT),
-    JS_PS_END
 };
 
 const JSFunctionSpec Float32x4Defn::TypedObjectMethods[] = {
@@ -302,11 +240,6 @@ const JSFunctionSpec Float64x2Defn::TypeDescriptorMethods[] = {
     JS_FS_END
 };
 
-const JSPropertySpec Float64x2Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Float64x2SignMask, JSPROP_PERMANENT),
-    JS_PS_END
-};
-
 const JSFunctionSpec Float64x2Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
@@ -325,11 +258,6 @@ const JSFunctionSpec Int8x16Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END,
-};
-
-const JSPropertySpec Int8x16Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int8x16SignMask, JSPROP_PERMANENT),
-    JS_PS_END
 };
 
 const JSFunctionSpec Int8x16Defn::TypedObjectMethods[] = {
@@ -352,11 +280,6 @@ const JSFunctionSpec Int16x8Defn::TypeDescriptorMethods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec Int16x8Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int16x8SignMask, JSPROP_PERMANENT),
-    JS_PS_END
-};
-
 const JSFunctionSpec Int16x8Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
@@ -375,11 +298,6 @@ const JSFunctionSpec Int32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END,
-};
-
-const JSPropertySpec Int32x4Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int32x4SignMask, JSPROP_PERMANENT),
-    JS_PS_END
 };
 
 const JSFunctionSpec Int32x4Defn::TypedObjectMethods[] = {
@@ -517,8 +435,7 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, typeDescr, proto) ||
-        !DefinePropertiesAndFunctions(cx, proto, T::TypedObjectProperties,
-                                      T::TypedObjectMethods))
+        !JS_DefineFunctions(cx, proto, T::TypedObjectMethods))
     {
         return nullptr;
     }

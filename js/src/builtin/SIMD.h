@@ -114,7 +114,6 @@
   V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1)                               \
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1)                        \
   V(neg, (UnaryFunc<Float32x4, Neg, Float32x4>), 1)                                   \
-  V(not, (CoercedUnaryFunc<Float32x4, Int32x4, Not, Float32x4>), 1)                   \
   V(reciprocalApproximation, (UnaryFunc<Float32x4, RecApprox, Float32x4>), 1)         \
   V(reciprocalSqrtApproximation, (UnaryFunc<Float32x4, RecSqrtApprox, Float32x4>), 1) \
   V(splat, (FuncSplat<Float32x4>), 1)                                                 \
@@ -122,7 +121,6 @@
 
 #define FLOAT32X4_BINARY_FUNCTION_LIST(V)                                             \
   V(add, (BinaryFunc<Float32x4, Add, Float32x4>), 2)                                  \
-  V(and, (CoercedBinaryFunc<Float32x4, Int32x4, And, Float32x4>), 2)                  \
   V(div, (BinaryFunc<Float32x4, Div, Float32x4>), 2)                                  \
   V(equal, (CompareFunc<Float32x4, Equal, Bool32x4>), 2)                              \
   V(extractLane, (ExtractLane<Float32x4>), 2)                                         \
@@ -140,9 +138,7 @@
   V(minNum, (BinaryFunc<Float32x4, MinNum, Float32x4>), 2)                            \
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2)                                  \
   V(notEqual, (CompareFunc<Float32x4, NotEqual, Bool32x4>), 2)                        \
-  V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2)                    \
-  V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2)                                  \
-  V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
+  V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
@@ -244,7 +240,6 @@
 #define INT8X16_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int8x16>), 3)                                           \
   V(select, (Select<Int8x16, Bool8x16>), 3)                                           \
-  V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                    \
   V(store, (Store<Int8x16, 16>), 3)
 
 #define INT8X16_SHUFFLE_FUNCTION_LIST(V)                                              \
@@ -289,7 +284,6 @@
 #define INT16X8_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int16x8>), 3)                                           \
   V(select, (Select<Int16x8, Bool16x8>), 3)                                           \
-  V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                    \
   V(store, (Store<Int16x8, 8>), 3)
 
 #define INT16X8_SHUFFLE_FUNCTION_LIST(V)                                              \
@@ -339,7 +333,6 @@
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int32x4>), 3)                                           \
   V(select, (Select<Int32x4, Bool32x4>), 3)                                           \
-  V(selectBits, (SelectBits<Int32x4, Int32x4>), 3)                                    \
   V(store,  (Store<Int32x4, 4>), 3)                                                   \
   V(store3, (Store<Int32x4, 3>), 3)                                                   \
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
@@ -355,58 +348,235 @@
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                    \
   INT32X4_SHUFFLE_FUNCTION_LIST(V)
 
-#define FOREACH_BOOL_SIMD_OP(_)       \
+/*
+ * The FOREACH macros below partition all of the SIMD operations into disjoint
+ * sets.
+ */
+
+// Operations available on all SIMD types. Mixed arity.
+#define FOREACH_COMMON_SIMD_OP(_)     \
+    _(extractLane)                    \
+    _(replaceLane)                    \
+    _(check)                          \
+    _(splat)
+
+// Lanewise operations available on numeric SIMD types.
+// Include lane-wise select here since it is not arithmetic and defined on
+// numeric types too.
+#define FOREACH_LANE_SIMD_OP(_)       \
+    _(select)                         \
+    _(swizzle)                        \
+    _(shuffle)
+
+// Memory operations available on numeric SIMD types.
+#define FOREACH_MEMORY_SIMD_OP(_)     \
+    _(load)                           \
+    _(store)
+
+// Memory operations available on numeric X4 SIMD types.
+#define FOREACH_MEMORY_X4_SIMD_OP(_)  \
+    _(load1)                          \
+    _(load2)                          \
+    _(load3)                          \
+    _(store1)                         \
+    _(store2)                         \
+    _(store3)
+
+// Unary operations on Bool vectors.
+#define FOREACH_BOOL_SIMD_UNOP(_)     \
     _(allTrue)                        \
     _(anyTrue)
-#define CONVERSION_INT32X4_SIMD_OP(_) \
+
+// Unary bitwise SIMD operators defined on all integer and boolean SIMD types.
+#define FOREACH_BITWISE_SIMD_UNOP(_)  \
+    _(not)
+
+// Binary bitwise SIMD operators defined on all integer and boolean SIMD types.
+#define FOREACH_BITWISE_SIMD_BINOP(_) \
+    _(and)                            \
+    _(or)                             \
+    _(xor)
+
+// Bitwise shifts defined on integer SIMD types.
+#define FOREACH_SHIFT_SIMD_OP(_)      \
+    _(shiftLeftByScalar)              \
+    _(shiftRightArithmeticByScalar)   \
+    _(shiftRightLogicalByScalar)
+
+// Unary arithmetic operators defined on numeric SIMD types.
+#define FOREACH_NUMERIC_SIMD_UNOP(_)  \
+    _(neg)
+
+// Binary arithmetic operators defined on numeric SIMD types.
+#define FOREACH_NUMERIC_SIMD_BINOP(_) \
+    _(add)                            \
+    _(sub)                            \
+    _(mul)
+
+// Unary arithmetic operators defined on floating point SIMD types.
+#define FOREACH_FLOAT_SIMD_UNOP(_)    \
+    _(abs)                            \
+    _(sqrt)                           \
+    _(reciprocalApproximation)        \
+    _(reciprocalSqrtApproximation)
+
+// Binary arithmetic operators defined on floating point SIMD types.
+#define FOREACH_FLOAT_SIMD_BINOP(_)   \
+    _(div)                            \
+    _(max)                            \
+    _(min)                            \
+    _(maxNum)                         \
+    _(minNum)
+
+// Comparison operators defined on numeric SIMD types.
+#define FOREACH_COMP_SIMD_OP(_)       \
+    _(lessThan)                       \
+    _(lessThanOrEqual)                \
+    _(equal)                          \
+    _(notEqual)                       \
+    _(greaterThan)                    \
+    _(greaterThanOrEqual)
+
+/*
+ * All SIMD operations, excluding casts.
+ */
+#define FORALL_SIMD_NONCAST_OP(_)     \
+    FOREACH_COMMON_SIMD_OP(_)         \
+    FOREACH_LANE_SIMD_OP(_)           \
+    FOREACH_MEMORY_SIMD_OP(_)         \
+    FOREACH_MEMORY_X4_SIMD_OP(_)      \
+    FOREACH_BOOL_SIMD_UNOP(_)         \
+    FOREACH_BITWISE_SIMD_UNOP(_)      \
+    FOREACH_BITWISE_SIMD_BINOP(_)     \
+    FOREACH_SHIFT_SIMD_OP(_)          \
+    FOREACH_NUMERIC_SIMD_UNOP(_)      \
+    FOREACH_NUMERIC_SIMD_BINOP(_)     \
+    FOREACH_FLOAT_SIMD_UNOP(_)        \
+    FOREACH_FLOAT_SIMD_BINOP(_)       \
+    FOREACH_COMP_SIMD_OP(_)
+
+/*
+ * All operations on integer SIMD types, excluding casts and
+ * FOREACH_MEMORY_X4_OP.
+ */
+#define FORALL_INT_SIMD_OP(_)         \
+    FOREACH_COMMON_SIMD_OP(_)         \
+    FOREACH_LANE_SIMD_OP(_)           \
+    FOREACH_MEMORY_SIMD_OP(_)         \
+    FOREACH_BITWISE_SIMD_UNOP(_)      \
+    FOREACH_BITWISE_SIMD_BINOP(_)     \
+    FOREACH_SHIFT_SIMD_OP(_)          \
+    FOREACH_NUMERIC_SIMD_UNOP(_)      \
+    FOREACH_NUMERIC_SIMD_BINOP(_)     \
+    FOREACH_COMP_SIMD_OP(_)
+
+/*
+ * All operations on floating point SIMD types, excluding casts and
+ * FOREACH_MEMORY_X4_OP.
+ */
+#define FORALL_FLOAT_SIMD_OP(_)       \
+    FOREACH_COMMON_SIMD_OP(_)         \
+    FOREACH_LANE_SIMD_OP(_)           \
+    FOREACH_MEMORY_SIMD_OP(_)         \
+    FOREACH_NUMERIC_SIMD_UNOP(_)      \
+    FOREACH_NUMERIC_SIMD_BINOP(_)     \
+    FOREACH_FLOAT_SIMD_UNOP(_)        \
+    FOREACH_FLOAT_SIMD_BINOP(_)       \
+    FOREACH_COMP_SIMD_OP(_)
+
+/*
+ * All operations on Bool SIMD types.
+ *
+ * These types don't have casts, so no need to specialize.
+ */
+#define FORALL_BOOL_SIMD_OP(_)        \
+    FOREACH_COMMON_SIMD_OP(_)         \
+    FOREACH_BOOL_SIMD_UNOP(_)         \
+    FOREACH_BITWISE_SIMD_UNOP(_)      \
+    FOREACH_BITWISE_SIMD_BINOP(_)
+
+/*
+ * The sets of cast operations are listed per type below.
+ *
+ * These sets are not disjoint.
+ */
+
+#define FOREACH_INT8X16_SIMD_CAST(_)  \
+    _(fromFloat32x4Bits)              \
+    _(fromFloat64x2Bits)              \
+    _(fromInt16x8Bits)                \
+    _(fromInt32x4Bits)
+
+#define FOREACH_INT16X8_SIMD_CAST(_)  \
+    _(fromFloat32x4Bits)              \
+    _(fromFloat64x2Bits)              \
+    _(fromInt8x16Bits)                \
+    _(fromInt32x4Bits)
+
+#define FOREACH_INT32X4_SIMD_CAST(_)  \
+    _(fromFloat32x4)                  \
+    _(fromFloat32x4Bits)              \
+    _(fromFloat64x2Bits)              \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)
+
+#define FOREACH_FLOAT32X4_SIMD_CAST(_)\
+    _(fromFloat64x2Bits)              \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)                \
+    _(fromInt32x4)                    \
+    _(fromInt32x4Bits)
+
+#define FOREACH_FLOAT64X2_SIMD_CAST(_)\
+    _(fromFloat32x4Bits)              \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)                \
+    _(fromInt32x4Bits)
+
+// All operations on Int32x4.
+#define FORALL_INT32X4_SIMD_OP(_)     \
+    FORALL_INT_SIMD_OP(_)             \
+    FOREACH_MEMORY_X4_SIMD_OP(_)      \
+    FOREACH_INT32X4_SIMD_CAST(_)
+
+// All operations on Float32X4
+#define FORALL_FLOAT32X4_SIMD_OP(_)   \
+    FORALL_FLOAT_SIMD_OP(_)           \
+    FOREACH_MEMORY_X4_SIMD_OP(_)      \
+    FOREACH_FLOAT32X4_SIMD_CAST(_)
+
+/*
+ * All SIMD operations assuming only 32x4 types exist.
+ * This is used in the current asm.js impl.
+ */
+#define FORALL_SIMD_ASMJS_OP(_)       \
+    FORALL_SIMD_NONCAST_OP(_)         \
+    _(fromFloat32x4)                  \
+    _(fromFloat32x4Bits)              \
+    _(fromInt32x4)                    \
+    _(fromInt32x4Bits)
+
+// All operations on Int32x4 in the asm.js world
+#define FORALL_INT32X4_ASMJS_OP(_)    \
+    FORALL_INT_SIMD_OP(_)             \
+    FOREACH_MEMORY_X4_SIMD_OP(_)      \
     _(fromFloat32x4)                  \
     _(fromFloat32x4Bits)
-#define FOREACH_INT32X4_SIMD_OP(_)   \
-    CONVERSION_INT32X4_SIMD_OP(_)    \
-    _(selectBits)                    \
-    _(shiftLeftByScalar)             \
-    _(shiftRightArithmeticByScalar)  \
-    _(shiftRightLogicalByScalar)
-#define UNARY_ARITH_FLOAT32X4_SIMD_OP(_) \
-    _(abs)                           \
-    _(sqrt)                          \
-    _(reciprocalApproximation)       \
-    _(reciprocalSqrtApproximation)
-#define BINARY_ARITH_FLOAT32X4_SIMD_OP(_) \
-    _(div)                           \
-    _(max)                           \
-    _(min)                           \
-    _(maxNum)                        \
-    _(minNum)
-#define FOREACH_FLOAT32X4_SIMD_OP(_) \
-    UNARY_ARITH_FLOAT32X4_SIMD_OP(_) \
-    BINARY_ARITH_FLOAT32X4_SIMD_OP(_)\
-    _(fromInt32x4)                   \
+
+// All operations on Float32X4 in the asm.js world.
+#define FORALL_FLOAT32X4_ASMJS_OP(_)  \
+    FORALL_FLOAT_SIMD_OP(_)           \
+    FOREACH_MEMORY_X4_SIMD_OP(_)      \
+    _(fromInt32x4)                    \
     _(fromInt32x4Bits)
-#define ARITH_COMMONX4_SIMD_OP(_)    \
-    _(add)                           \
-    _(sub)                           \
-    _(mul)
-#define BITWISE_COMMONX4_SIMD_OP(_)  \
-    _(and)                           \
-    _(or)                            \
-    _(xor)
-#define COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(_) \
-    _(lessThan)                      \
-    _(lessThanOrEqual)               \
-    _(equal)                         \
-    _(notEqual)                      \
-    _(greaterThan)                   \
-    _(greaterThanOrEqual)
+
 // TODO: remove when all SIMD calls are inlined (bug 1112155)
 #define ION_COMMONX4_SIMD_OP(_)      \
-    ARITH_COMMONX4_SIMD_OP(_)        \
-    BITWISE_COMMONX4_SIMD_OP(_)      \
+    FOREACH_NUMERIC_SIMD_BINOP(_)    \
     _(extractLane)                   \
     _(replaceLane)                   \
     _(select)                        \
     _(splat)                         \
-    _(not)                           \
     _(neg)                           \
     _(swizzle)                       \
     _(shuffle)                       \
@@ -419,14 +589,6 @@
     _(store2)                        \
     _(store3)                        \
     _(check)
-#define FOREACH_COMMONX4_SIMD_OP(_)  \
-    ION_COMMONX4_SIMD_OP(_)          \
-    COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(_)
-#define FORALL_SIMD_OP(_)            \
-    FOREACH_INT32X4_SIMD_OP(_)       \
-    FOREACH_FLOAT32X4_SIMD_OP(_)     \
-    FOREACH_BOOL_SIMD_OP(_)          \
-    FOREACH_COMMONX4_SIMD_OP(_)
 
 namespace js {
 

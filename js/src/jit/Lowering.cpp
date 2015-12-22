@@ -4135,25 +4135,6 @@ LIRGenerator::visitSimdInsertElement(MSimdInsertElement* ins)
 }
 
 void
-LIRGenerator::visitSimdSignMask(MSimdSignMask* ins)
-{
-    MDefinition* input = ins->input();
-    MOZ_ASSERT(IsSimdType(input->type()));
-    MOZ_ASSERT(ins->type() == MIRType_Int32);
-
-    LUse use = useRegisterAtStart(input);
-
-    switch (input->type()) {
-      case MIRType_Int32x4:
-      case MIRType_Float32x4:
-        define(new(alloc()) LSimdSignMaskX4(use), ins);
-        break;
-      default:
-        MOZ_CRASH("Unexpected SIMD type extracting sign bits.");
-    }
-}
-
-void
 LIRGenerator::visitSimdAllTrue(MSimdAllTrue* ins)
 {
     MDefinition* input = ins->input();

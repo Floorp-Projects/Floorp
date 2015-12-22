@@ -89,28 +89,6 @@ function testFloat32x4sqrt() {
   }
 }
 
-function testFloat32x4not() {
-  var notf = (function() {
-    var i = new Int32Array(1);
-    var f = new Float32Array(i.buffer);
-    return function(x) {
-      f[0] = x;
-      i[0] = ~i[0];
-      return f[0];
-    };
-  })();
-
-  var vals = [
-    [2, 13, -37, 4.2],
-    [2.897, 13.245, -37.781, 5.28],
-    [NaN, -0, Infinity, -Infinity]
-  ];
-
-  for (var v of vals) {
-    assertEqX4(Float32x4.not(Float32x4(...v)), v.map(notf));
-  }
-}
-
 function testInt8x16neg() {
   var vals = [
     [[1, 2, 3, 4, 5, 6, 7, 8, -1, -2, -3, -4, -5, INT8_MAX, INT8_MIN, 0],
@@ -322,7 +300,6 @@ function testBool64x2anyTrue() {
 function test() {
   testFloat32x4abs();
   testFloat32x4neg();
-  testFloat32x4not();
   testFloat32x4reciprocalApproximation();
   testFloat32x4reciprocalSqrtApproximation();
   testFloat32x4sqrt();
