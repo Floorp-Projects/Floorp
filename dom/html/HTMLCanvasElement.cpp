@@ -683,7 +683,13 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
   }
 
   stream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO);
-  RegisterFrameCaptureListener(stream->FrameCaptureListener());
+
+  rv = RegisterFrameCaptureListener(stream->FrameCaptureListener());
+  if (NS_FAILED(rv)) {
+    aRv.Throw(rv);
+    return nullptr;
+  }
+
   return stream.forget();
 }
 
@@ -1128,38 +1134,48 @@ HTMLCanvasElement::IsContextCleanForFrameCapture()
   return mCurrentContext && mCurrentContext->IsContextCleanForFrameCapture();
 }
 
-void
+nsresult
 HTMLCanvasElement::RegisterFrameCaptureListener(FrameCaptureListener* aListener)
 {
   WeakPtr<FrameCaptureListener> listener = aListener;
 
   if (mRequestedFrameListeners.Contains(listener)) {
-    return;
+    return NS_OK;
   }
-
-  mRequestedFrameListeners.AppendElement(listener);
 
   if (!mRequestedFrameRefreshObserver) {
     nsIDocument* doc = OwnerDoc();
-    MOZ_RELEASE_ASSERT(doc);
+    if (!doc) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsIPresShell* shell = doc->GetShell();
-    MOZ_RELEASE_ASSERT(shell);
+    if (!shell) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsPresContext* context = shell->GetPresContext();
-    MOZ_RELEASE_ASSERT(context);
+    if (!context) {
+      return NS_ERROR_FAILURE;
+    }
 
     context = context->GetRootPresContext();
-    MOZ_RELEASE_ASSERT(context);
+    if (!context) {
+      return NS_ERROR_FAILURE;
+    }
 
     nsRefreshDriver* driver = context->RefreshDriver();
-    MOZ_RELEASE_ASSERT(driver);
+    if (!driver) {
+      return NS_ERROR_FAILURE;
+    }
 
     mRequestedFrameRefreshObserver =
       new RequestedFrameRefreshObserver(this, driver);
   }
 
+  mRequestedFrameListeners.AppendElement(listener);
   mRequestedFrameRefreshObserver->Register();
+  return NS_OK;
 }
 
 bool
