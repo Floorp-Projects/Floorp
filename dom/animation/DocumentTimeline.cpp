@@ -110,6 +110,8 @@ void
 DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
 {
   MOZ_ASSERT(mIsObservingRefreshDriver);
+  MOZ_ASSERT(GetRefreshDriver(),
+             "Should be able to reach refresh driver from within WillRefresh");
 
   bool needsTicks = false;
   nsTArray<Animation*> animationsToRemove(mAnimations.Count());
@@ -143,10 +145,13 @@ DocumentTimeline::WillRefresh(mozilla::TimeStamp aTime)
   }
 
   if (!needsTicks) {
-    // If another refresh driver observer destroys the nsPresContext,
-    // nsRefreshDriver will detect it and we won't be called.
+    // We already assert that GetRefreshDriver() is non-null at the beginning
+    // of this function but we check it again here to be sure that ticking
+    // animations does not have any side effects that cause us to lose the
+    // connection with the refresh driver, such as triggering the destruction
+    // of mDocument's PresShell.
     MOZ_ASSERT(GetRefreshDriver(),
-               "Refresh driver should still be valid inside WillRefresh");
+               "Refresh driver should still be valid at end of WillRefresh");
     GetRefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
     mIsObservingRefreshDriver = false;
   }

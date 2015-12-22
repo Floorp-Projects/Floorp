@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1232829
+-->
+<head>
+<meta charset="utf-8">
+<title>Test for Bug 1232829</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script>
+
+/** Test for Bug 1232829 **/
+
+// This should be a crashtest but it relies on using a pop-up window which
+// isn't supported in crashtests.
+function boom() {
+  var popup = window.open("data:text/html,2");
+  setTimeout(function() {
+    var frameDoc = document.querySelector("iframe").contentDocument;
+    frameDoc.write("3");
+    frameDoc.defaultView.history.back();
+    requestAnimationFrame(function() {
+      popup.close();
+      ok(true, "Didn't crash");
+      SimpleTest.finish();
+    });
+  }, 0);
+}
+
+SimpleTest.waitForExplicitFinish();
+</script>
+</head>
+<body onload="boom()">
+  <iframe srcdoc="<style>@keyframes a { to { opacity: 0.5 } }</style>
+                  <div style='animation: a 1ms'></div>"></iframe>
+</body>
+</html>
