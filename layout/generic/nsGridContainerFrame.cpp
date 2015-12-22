@@ -193,6 +193,82 @@ private:
 };
 
 /**
+ * Utility class to find line names.  It provides an interface to lookup line
+ * names with a dynamic number of repeat(auto-fill/fit) tracks taken into
+ * account.
+ */
+class MOZ_STACK_CLASS nsGridContainerFrame::LineNameMap
+{
+public:
+  /**
+   * Create a LineNameMap.
+   * @param aGridTemplate is the grid-template-rows/columns data for this axis
+   * @param aNumRepeatTracks the number of actual tracks associated with
+   *   a repeat(auto-fill/fit) track (zero or more), or zero if there is no
+   *   specified repeat(auto-fill/fit) track
+   */
+  LineNameMap(const nsStyleGridTemplate& aGridTemplate,
+              uint32_t                   aNumRepeatTracks)
+    : mLineNameLists(aGridTemplate.mLineNameLists)
+    , mRepeatAutoLineNameListBefore(aGridTemplate.mRepeatAutoLineNameListBefore)
+    , mRepeatAutoLineNameListAfter(aGridTemplate.mRepeatAutoLineNameListAfter)
+    , mRepeatAutoStart(aGridTemplate.HasRepeatAuto() ?
+                         aGridTemplate.mRepeatAutoIndex : 0)
+    , mRepeatAutoEnd(mRepeatAutoStart + aNumRepeatTracks)
+    , mRepeatEndDelta(aGridTemplate.HasRepeatAuto() ?
+                        int32_t(aNumRepeatTracks) - 1 :
+                        0)
+    , mTemplateLinesEnd(mLineNameLists.Length() + mRepeatEndDelta)
+    , mHasRepeatAuto(aGridTemplate.HasRepeatAuto())
+  {
+    MOZ_ASSERT(mHasRepeatAuto || aNumRepeatTracks == 0);
+    MOZ_ASSERT(mRepeatAutoStart <= mLineNameLists.Length());
+    MOZ_ASSERT(!mHasRepeatAuto || mLineNameLists.Length() >= 2);
+  }
+
+private:
+  // Return true if aName exists at aIndex.
+  const bool Contains(uint32_t aIndex, const nsString& aName) const
+  {
+    if (!mHasRepeatAuto) {
+      return mLineNameLists[aIndex].Contains(aName);
+    }
+    if (aIndex < mRepeatAutoEnd && aIndex >= mRepeatAutoStart &&
+        mRepeatAutoLineNameListBefore.Contains(aName)) {
+      return true;
+    }
+    if (aIndex <= mRepeatAutoEnd && aIndex > mRepeatAutoStart &&
+        mRepeatAutoLineNameListAfter.Contains(aName)) {
+      return true;
+    }
+    if (aIndex <= mRepeatAutoStart) {
+      return mLineNameLists[aIndex].Contains(aName) ||
+             (aIndex == mRepeatAutoEnd &&
+              mLineNameLists[aIndex + 1].Contains(aName));
+    }
+    return aIndex >= mRepeatAutoEnd &&
+           mLineNameLists[aIndex - mRepeatEndDelta].Contains(aName);
+  }
+
+  // Some style data references, for easy access.
+  const nsTArray<nsTArray<nsString>>& mLineNameLists;
+  const nsTArray<nsString>& mRepeatAutoLineNameListBefore;
+  const nsTArray<nsString>& mRepeatAutoLineNameListAfter;
+  // The index of the repeat(auto-fill/fit) track, or zero if there is none.
+  const uint32_t mRepeatAutoStart;
+  // The (hypothetical) index of the last such repeat() track.
+  const uint32_t mRepeatAutoEnd;
+  // The difference between mTemplateLinesEnd and mLineNameLists.Length().
+  const int32_t mRepeatEndDelta;
+  // The end of the line name lists with repeat(auto-fill/fit) tracks accounted
+  // for.  It is equal to mLineNameLists.Length() when a repeat() track
+  // generates one track (making mRepeatEndDelta == 0).
+  const uint32_t mTemplateLinesEnd;
+  // True if there is a specified repeat(auto-fill/fit) track.
+  const bool mHasRepeatAuto;
+};
+
+/**
  * Encapsulates CSS track-sizing functions.
  */
 struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
