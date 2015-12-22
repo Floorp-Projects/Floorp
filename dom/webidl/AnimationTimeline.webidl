@@ -14,5 +14,4 @@
 interface AnimationTimeline {
   [BinaryName="currentTimeAsDouble"]
   readonly attribute double? currentTime;
-  sequence<Animation>        getAnimations ();
 };
