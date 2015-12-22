@@ -535,7 +535,7 @@ this.BrowserUITelemetry = {
     let paletteItems =
       CustomizableUI.getUnusedWidgets(aWindow.gNavToolbox.palette);
     let defaultRemoved = [];
-    for (item of paletteItems) {
+    for (let item of paletteItems) {
       if (DEFAULT_ITEMS.indexOf(item.id) != -1) {
         defaultRemoved.push(item.id);
       }
