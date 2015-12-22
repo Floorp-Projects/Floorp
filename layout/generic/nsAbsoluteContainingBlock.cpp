@@ -383,10 +383,21 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
       aReflowState.ComputedSizeWithPadding(wm).ISize(wm);
   }
 
+  uint32_t rsFlags = 0;
+  if (aFlags & AbsPosReflowFlags::eIsGridContainerCB) {
+    // When a grid container generates the abs.pos. CB for a *child* then
+    // the static-position is the CB origin (i.e. of the grid area rect).
+    // https://drafts.csswg.org/css-grid/#static-position
+    nsIFrame* placeholder =
+      aPresContext->PresShell()->GetPlaceholderFrameFor(aKidFrame);
+    if (placeholder && placeholder->GetParent() == aDelegatingFrame) {
+      rsFlags |= nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN;
+    }
+  }
   nsHTMLReflowState kidReflowState(aPresContext, aReflowState, aKidFrame,
                                    LogicalSize(wm, availISize,
                                                NS_UNCONSTRAINEDSIZE),
-                                   &logicalCBSize);
+                                   &logicalCBSize, rsFlags);
 
   // Get the border values
   WritingMode outerWM = aReflowState.GetWritingMode();
@@ -464,15 +475,18 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
 
   // Offset the frame rect by the given origin of the absolute containing block.
   // If the frame is auto-positioned on both sides of an axis, it will be
-  // positioned based on its containing block and we don't need to offset.
+  // positioned based on its containing block and we don't need to offset
+  // (unless the caller demands it (the STATIC_POS_IS_CB_ORIGIN case)).
   if (aContainingBlock.TopLeft() != nsPoint(0, 0)) {
     const nsStyleSides& offsets = kidReflowState.mStylePosition->mOffset;
     if (!(offsets.GetLeftUnit() == eStyleUnit_Auto &&
-          offsets.GetRightUnit() == eStyleUnit_Auto)) {
+          offsets.GetRightUnit() == eStyleUnit_Auto) ||
+        (rsFlags & nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN)) {
       r.x += aContainingBlock.x;
     }
     if (!(offsets.GetTopUnit() == eStyleUnit_Auto &&
-          offsets.GetBottomUnit() == eStyleUnit_Auto)) {
+          offsets.GetBottomUnit() == eStyleUnit_Auto) ||
+        (rsFlags & nsHTMLReflowState::STATIC_POS_IS_CB_ORIGIN)) {
       r.y += aContainingBlock.y;
     }
   }
