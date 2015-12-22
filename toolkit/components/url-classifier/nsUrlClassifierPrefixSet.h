@@ -43,14 +43,13 @@ public:
 protected:
   virtual ~nsUrlClassifierPrefixSet();
 
+  static const uint32_t BUFFER_SIZE = 64 * 1024;
   static const uint32_t DELTAS_LIMIT = 120;
   static const uint32_t MAX_INDEX_DIFF = (1 << 16);
   static const uint32_t PREFIXSET_VERSION_MAGIC = 1;
 
   nsresult MakePrefixSet(const uint32_t* aArray, uint32_t aLength);
   uint32_t BinSearch(uint32_t start, uint32_t end, uint32_t target);
-  nsresult LoadFromFd(mozilla::AutoFDClose& fileFd);
-  nsresult StoreToFd(mozilla::AutoFDClose& fileFd);
 
   // Return the estimated size of the set on disk and in memory, in bytes.
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf);

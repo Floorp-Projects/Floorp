@@ -183,6 +183,11 @@ public:
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
 protected:
+  struct FlushCommand {
+    OMX_DIRTYPE type;
+    OMX_PTR cmd;
+  };
+
   BUFFERLIST* GetBufferHolders(OMX_DIRTYPE aType);
 
   already_AddRefed<MediaRawData> FindAndRemoveRawData(OMX_TICKS aTimecode);
@@ -197,7 +202,7 @@ protected:
 
   MozPromiseHolder<OmxCommandPromise> mFlushPromise;
 
-  OMX_U32 mFlushPortIndex;
+  nsTArray<FlushCommand> mFlushCommands;
 
   nsAutoPtr<OmxPlatformLayer> mPlatformLayer;
 

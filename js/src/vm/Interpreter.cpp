@@ -4036,12 +4036,11 @@ js::GetProperty(JSContext* cx, HandleValue v, HandlePropertyName name, MutableHa
             return true;
     }
 
+    RootedValue receiver(cx, v);
     RootedObject obj(cx, ToObjectFromStack(cx, v));
     if (!obj)
         return false;
 
-    // Bug 603201: Pass primitive receiver here.
-    RootedValue receiver(cx, ObjectValue(*obj));
     return GetProperty(cx, obj, receiver, name, vp);
 }
 

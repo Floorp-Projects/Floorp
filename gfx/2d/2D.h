@@ -1162,6 +1162,11 @@ public:
                                int32_t limit = 0,
                                int32_t allocLimit = 0);
 
+  /**
+   * Make sure that the given buffer size doesn't exceed the allocation limit.
+   */
+  static bool CheckBufferSize(int32_t bufSize);
+
   /** Make sure the given dimension satisfies the CheckSurfaceSize and is
    * within 8k limit.  The 8k value is chosen a bit randomly.
    */

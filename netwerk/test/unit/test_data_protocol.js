@@ -1,5 +1,5 @@
 /* run some tests on the data: protocol handler */
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // The behaviour wrt spaces is:
 // - Textual content keeps all spaces
@@ -40,16 +40,12 @@ function run_test() {
   for (var i = 0; i < urls.length; ++i) {
     dump("*** opening channel " + i + "\n");
     do_test_pending();
-    var chan = ios.newChannel2(urls[i][0],
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
+    var chan = NetUtil.newChannel({
+      uri: urls[i][0],
+      loadUsingSystemPrincipal: true
+    });
     chan.contentType = "foo/bar"; // should be ignored
-    chan.asyncOpen(new ChannelListener(on_read_complete, i), null);
+    chan.asyncOpen2(new ChannelListener(on_read_complete, i));
   }
 }
 

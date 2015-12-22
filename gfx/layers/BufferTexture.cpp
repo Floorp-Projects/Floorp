@@ -30,10 +30,10 @@ public:
 
   virtual void Deallocate(ISurfaceAllocator*) override;
 
-  MemoryTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+  MemoryTextureData(const BufferDescriptor& aDesc,
                     gfx::BackendType aMoz2DBackend,
                     uint8_t* aBuffer, size_t aBufferSize)
-  : BufferTextureData(aSize, aFormat, aMoz2DBackend)
+  : BufferTextureData(aDesc, aMoz2DBackend)
   , mBuffer(aBuffer)
   , mBufferSize(aBufferSize)
   {
@@ -67,9 +67,9 @@ public:
 
   virtual void Deallocate(ISurfaceAllocator* aAllocator) override;
 
-  ShmemTextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+  ShmemTextureData(const BufferDescriptor& aDesc,
                    gfx::BackendType aMoz2DBackend, mozilla::ipc::Shmem aShmem)
-  : BufferTextureData(aSize, aFormat, aMoz2DBackend)
+  : BufferTextureData(aDesc, aMoz2DBackend)
   , mShmem(aShmem)
   {
     MOZ_ASSERT(mShmem.Size<uint8_t>());
@@ -97,43 +97,46 @@ BufferTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 }
 
 BufferTextureData*
-BufferTextureData::CreateWithBufferSize(ISurfaceAllocator* aAllocator,
-                                        gfx::SurfaceFormat aFormat,
-                                        size_t aSize,
-                                        TextureFlags aTextureFlags)
+BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
+                                  const BufferDescriptor& aDesc,
+                                  gfx::BackendType aMoz2DBackend,
+                                  int32_t aBufferSize,
+                                  TextureFlags aTextureFlags)
 {
-  if (aSize == 0) {
-    return nullptr;
-  }
-
-  BufferTextureData* data;
   if (!aAllocator || aAllocator->IsSameProcess()) {
-    uint8_t* buffer = new (fallible) uint8_t[aSize];
+    uint8_t* buffer = new (fallible) uint8_t[aBufferSize];
     if (!buffer) {
       return nullptr;
     }
 
-    data = new MemoryTextureData(gfx::IntSize(), aFormat, gfx::BackendType::NONE, buffer, aSize);
+    return new MemoryTextureData(aDesc, aMoz2DBackend, buffer, aBufferSize);
   } else {
     ipc::Shmem shm;
-    if (!aAllocator->AllocUnsafeShmem(aSize, OptimalShmemType(), &shm)) {
+    if (!aAllocator->AllocUnsafeShmem(aBufferSize, OptimalShmemType(), &shm)) {
       return nullptr;
     }
 
-    data = new ShmemTextureData(gfx::IntSize(), aFormat, gfx::BackendType::NONE, shm);
+    return new ShmemTextureData(aDesc, aMoz2DBackend, shm);
+  }
+}
+
+BufferTextureData*
+BufferTextureData::CreateForYCbCrWithBufferSize(ISurfaceAllocator* aAllocator,
+                                                gfx::SurfaceFormat aFormat,
+                                                int32_t aBufferSize,
+                                                TextureFlags aTextureFlags)
+{
+  if (aBufferSize == 0 || !gfx::Factory::CheckBufferSize(aBufferSize)) {
+    return nullptr;
   }
 
   // Initialize the metadata with something, even if it will have to be rewritten
   // afterwards since we don't know the dimensions of the texture at this point.
-  if (aFormat == gfx::SurfaceFormat::YUV) {
-    YCbCrImageDataSerializer serializer(data->GetBuffer(), data->GetBufferSize());
-    serializer.InitializeBufferInfo(gfx::IntSize(0,0), gfx::IntSize(0,0), StereoMode::MONO);
-  } else {
-    ImageDataSerializer serializer(data->GetBuffer(), data->GetBufferSize());
-    serializer.InitializeBufferInfo(gfx::IntSize(0, 0), aFormat);
-  }
+  BufferDescriptor desc = YCbCrDescriptor(gfx::IntSize(), gfx::IntSize(),
+                                          0, 0, 0, StereoMode::MONO);
 
-  return data;
+  return CreateInternal(aAllocator, desc, gfx::BackendType::NONE, aBufferSize,
+                        aTextureFlags);
 }
 
 BufferTextureData*
@@ -143,24 +146,41 @@ BufferTextureData::CreateForYCbCr(ISurfaceAllocator* aAllocator,
                                   StereoMode aStereoMode,
                                   TextureFlags aTextureFlags)
 {
-  size_t bufSize = YCbCrImageDataSerializer::ComputeMinBufferSize(aYSize, aCbCrSize);
-  BufferTextureData* texture = CreateWithBufferSize(aAllocator, gfx::SurfaceFormat::YUV,
-                                                    bufSize, aTextureFlags);
-  if (!texture) {
+  uint32_t bufSize = ImageDataSerializer::ComputeYCbCrBufferSize(aYSize, aCbCrSize);
+  if (bufSize == 0) {
     return nullptr;
   }
 
-  YCbCrImageDataSerializer serializer(texture->GetBuffer(), texture->GetBufferSize());
-  serializer.InitializeBufferInfo(aYSize, aCbCrSize, aStereoMode);
-  texture->mSize = aYSize;
+  uint32_t yOffset;
+  uint32_t cbOffset;
+  uint32_t crOffset;
+  ImageDataSerializer::ComputeYCbCrOffsets(aYSize.width, aYSize.height,
+                                          aCbCrSize.width, aCbCrSize.height,
+                                          yOffset, cbOffset, crOffset);
 
-  return texture;
+  YCbCrDescriptor descriptor = YCbCrDescriptor(aYSize, aCbCrSize, yOffset, cbOffset,
+                                               crOffset, aStereoMode);
+
+ return CreateInternal(aAllocator, descriptor, gfx::BackendType::NONE, bufSize,
+                       aTextureFlags);
+}
+
+gfx::IntSize
+BufferTextureData::GetSize() const
+{
+  return ImageDataSerializer::SizeFromBufferDescriptor(mDescriptor);
+}
+
+gfx::SurfaceFormat
+BufferTextureData::GetFormat() const
+{
+  return ImageDataSerializer::FormatFromBufferDescriptor(mDescriptor);
 }
 
 bool
 BufferTextureData::SupportsMoz2D() const
 {
-  switch (mFormat) {
+  switch (GetFormat()) {
     case gfx::SurfaceFormat::YUV:
     case gfx::SurfaceFormat::NV12:
     case gfx::SurfaceFormat::UNKNOWN:
@@ -179,12 +199,17 @@ BufferTextureData::BorrowDrawTarget()
     return dt.forget();
   }
 
-  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
-  if (!serializer.IsValid()) {
+  if (mDescriptor.type() != BufferDescriptor::TRGBDescriptor) {
     return nullptr;
   }
 
-  mDrawTarget = serializer.GetAsDrawTarget(mMoz2DBackend);
+  const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
+
+  uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
+  mDrawTarget = gfx::Factory::CreateDrawTargetForData(mMoz2DBackend,
+                                                      GetBuffer(), rgb.size(),
+                                                      stride, rgb.format());
+
   if (mDrawTarget) {
     RefPtr<gfx::DrawTarget> dt = mDrawTarget;
     return dt.forget();
@@ -192,7 +217,12 @@ BufferTextureData::BorrowDrawTarget()
 
   // TODO - should we warn? should we really fallback to cairo? perhaps
   // at least update mMoz2DBackend...
-  mDrawTarget = serializer.GetAsDrawTarget(gfx::BackendType::CAIRO);
+  if (mMoz2DBackend != gfx::BackendType::CAIRO) {
+    mDrawTarget = gfx::Factory::CreateDrawTargetForData(gfx::BackendType::CAIRO,
+                                                        GetBuffer(), rgb.size(),
+                                                        stride, rgb.format());
+  }
+
   if (!mDrawTarget) {
     gfxCriticalNote << "BorrowDrawTarget failure, original backend " << (int)mMoz2DBackend;
   }
@@ -204,19 +234,16 @@ BufferTextureData::BorrowDrawTarget()
 bool
 BufferTextureData::BorrowMappedData(MappedTextureData& aData)
 {
-  if (mFormat == gfx::SurfaceFormat::YUV) {
+  if (GetFormat() == gfx::SurfaceFormat::YUV) {
     return false;
   }
 
-  ImageDataDeserializer view(GetBuffer(), GetBufferSize());
-  if (!view.IsValid()) {
-    return false;
-  }
+  gfx::IntSize size = GetSize();
 
-  aData.data = view.GetData();
-  aData.size = view.GetSize();
-  aData.stride = view.GetStride();
-  aData.format = mFormat;
+  aData.data = GetBuffer();
+  aData.size = size;
+  aData.format = GetFormat();
+  aData.stride = ImageDataSerializer::ComputeRGBStride(aData.format, size.width);
 
   return true;
 }
@@ -224,31 +251,32 @@ BufferTextureData::BorrowMappedData(MappedTextureData& aData)
 bool
 BufferTextureData::BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap)
 {
-  if (mFormat != gfx::SurfaceFormat::YUV) {
+  if (mDescriptor.type() != BufferDescriptor::TYCbCrDescriptor) {
     return false;
   }
 
-  YCbCrImageDataDeserializer view(GetBuffer(), GetBufferSize());
-  if (!view.IsValid()) {
-    return false;
-  }
+  const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
 
-  aMap.stereoMode = view.GetStereoMode();
-  aMap.metadata = GetBuffer();
+  uint8_t* data = GetBuffer();
+  auto ySize = desc.ySize();
+  auto cbCrSize = desc.cbCrSize();
 
-  aMap.y.data = view.GetYData();
-  aMap.y.size = view.GetYSize();
-  aMap.y.stride = view.GetYStride();
+  aMap.stereoMode = desc.stereoMode();
+  aMap.metadata = nullptr;
+
+  aMap.y.data = data + desc.yOffset();
+  aMap.y.size = ySize;
+  aMap.y.stride = ySize.width;
   aMap.y.skip = 0;
 
-  aMap.cb.data = view.GetCbData();
-  aMap.cb.size = view.GetCbCrSize();
-  aMap.cb.stride = view.GetCbCrStride();
+  aMap.cb.data = data + desc.cbOffset();
+  aMap.cb.size = cbCrSize;
+  aMap.cb.stride = cbCrSize.width;
   aMap.cb.skip = 0;
 
-  aMap.cr.data = view.GetCrData();
-  aMap.cr.size = view.GetCbCrSize();
-  aMap.cr.stride = view.GetCbCrStride();
+  aMap.cr.data = data + desc.crOffset();
+  aMap.cr.size = cbCrSize;
+  aMap.cr.stride = cbCrSize.width;
   aMap.cr.skip = 0;
 
   return true;
@@ -257,9 +285,15 @@ BufferTextureData::BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap)
 bool
 BufferTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
 {
-  ImageDataSerializer serializer(GetBuffer(), GetBufferSize());
+  if (mDescriptor.type() != BufferDescriptor::TRGBDescriptor) {
+    return false;
+  }
+  const RGBDescriptor& rgb = mDescriptor.get_RGBDescriptor();
 
-  RefPtr<gfx::DataSourceSurface> surface = serializer.GetAsSurface();
+  uint32_t stride = ImageDataSerializer::GetRGBStride(rgb);
+  RefPtr<gfx::DataSourceSurface> surface =
+    gfx::Factory::CreateWrappingDataSourceSurface(GetBuffer(), stride,
+                                                  rgb.size(), rgb.format());
 
   if (!surface) {
     gfxCriticalError() << "Failed to get serializer as surface!";
@@ -304,6 +338,14 @@ BufferTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   return true;
 }
 
+void
+BufferTextureData::SetDesciptor(const BufferDescriptor& aDescriptor)
+{
+  MOZ_ASSERT(mDescriptor.type() == BufferDescriptor::TYCbCrDescriptor);
+  MOZ_ASSERT(mDescriptor.get_YCbCrDescriptor().ySize() == gfx::IntSize());
+  mDescriptor = aDescriptor;
+}
+
 bool
 MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
 {
@@ -312,14 +354,13 @@ MemoryTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
-  aOutDescriptor = SurfaceDescriptorMemory(reinterpret_cast<uintptr_t>(mBuffer),
-                                           GetFormat());
+  uintptr_t ptr = reinterpret_cast<uintptr_t>(mBuffer);
+  aOutDescriptor = SurfaceDescriptorBuffer(mDescriptor, MemoryOrShmem(ptr));
+
   return true;
 }
 
-static bool InitBuffer(uint8_t* buf, size_t bufSize,
-                       gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                       TextureAllocationFlags aAllocFlags)
+static bool InitBuffer(uint8_t* buf, size_t bufSize, TextureAllocationFlags aAllocFlags)
 {
   if (!buf) {
     gfxDebug() << "BufferTextureData: Failed to allocate " << bufSize << " bytes";
@@ -333,8 +374,6 @@ static bool InitBuffer(uint8_t* buf, size_t bufSize,
     memset(buf, 0xFF, bufSize);
   }
 
-  ImageDataSerializer serializer(buf, bufSize);
-  serializer.InitializeBufferInfo(aSize, aFormat);
   return true;
 }
 
@@ -344,24 +383,29 @@ MemoryTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                           TextureAllocationFlags aAllocFlags,
                           ISurfaceAllocator*)
 {
+  // Should have used CreateForYCbCr.
+  MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
+
   if (aSize.width <= 0 || aSize.height <= 0) {
     gfxDebug() << "Asking for buffer of invalid size " << aSize.width << "x" << aSize.height;
     return nullptr;
   }
 
-  uint32_t bufSize = ImageDataSerializer::ComputeMinBufferSize(aSize, aFormat);
+  uint32_t bufSize = ImageDataSerializer::ComputeRGBBufferSize(aSize, aFormat);
   if (!bufSize) {
     return nullptr;
   }
 
   uint8_t* buf = new (fallible) uint8_t[bufSize];
-
-  if (InitBuffer(buf, bufSize, aSize, aFormat, aAllocFlags)) {
-    GfxMemoryImageReporter::DidAlloc(buf);
-    return new MemoryTextureData(aSize, aFormat, aMoz2DBackend, buf, bufSize);
+  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+    return nullptr;
   }
 
-  return nullptr;
+  GfxMemoryImageReporter::DidAlloc(buf);
+
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
+
+  return new MemoryTextureData(descriptor, aMoz2DBackend, buf, bufSize);
 }
 
 void
@@ -378,7 +422,7 @@ MemoryTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
                                  TextureFlags aFlags,
                                  TextureAllocationFlags aAllocFlags) const
 {
-  return MemoryTextureData::Create(mSize, mFormat, mMoz2DBackend,
+  return MemoryTextureData::Create(GetSize(), GetFormat(), mMoz2DBackend,
                                    aFlags, aAllocFlags, aAllocator);
 }
 
@@ -390,7 +434,7 @@ ShmemTextureData::Serialize(SurfaceDescriptor& aOutDescriptor)
     return false;
   }
 
-  aOutDescriptor = SurfaceDescriptorShmem(mShmem, GetFormat());
+  aOutDescriptor = SurfaceDescriptorBuffer(mDescriptor, MemoryOrShmem(mShmem));
 
   return true;
 }
@@ -402,6 +446,9 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                          ISurfaceAllocator* aAllocator)
 {
   MOZ_ASSERT(aAllocator);
+  // Should have used CreateForYCbCr.
+  MOZ_ASSERT(aFormat != gfx::SurfaceFormat::YUV);
+
   if (!aAllocator) {
     return nullptr;
   }
@@ -411,7 +458,7 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  uint32_t bufSize = ImageDataSerializer::ComputeMinBufferSize(aSize, aFormat);
+  uint32_t bufSize = ImageDataSerializer::ComputeRGBBufferSize(aSize, aFormat);
   if (!bufSize) {
     return nullptr;
   }
@@ -422,10 +469,13 @@ ShmemTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   }
 
   uint8_t* buf = shm.get<uint8_t>();
-
-  if (InitBuffer(buf, bufSize, aSize, aFormat, aAllocFlags)) {
-    return new ShmemTextureData(aSize, aFormat, aMoz2DBackend, shm);
+  if (!InitBuffer(buf, bufSize, aAllocFlags)) {
+    return nullptr;
   }
+
+  BufferDescriptor descriptor = RGBDescriptor(aSize, aFormat);
+
+  return new ShmemTextureData(descriptor, aMoz2DBackend, shm);
 
   return nullptr;
 }
@@ -435,7 +485,7 @@ ShmemTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
                                 TextureFlags aFlags,
                                 TextureAllocationFlags aAllocFlags) const
 {
-  return ShmemTextureData::Create(mSize, mFormat, mMoz2DBackend,
+  return ShmemTextureData::Create(GetSize(), GetFormat(), mMoz2DBackend,
                                   aFlags, aAllocFlags, aAllocator);
 }
 

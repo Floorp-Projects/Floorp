@@ -319,11 +319,12 @@ ShadowLayerForwarder::CheckSurfaceDescriptor(const SurfaceDescriptor* aDescripto
     return;
   }
 
-  if (aDescriptor->type() == SurfaceDescriptor::TSurfaceDescriptorShmem) {
-    const SurfaceDescriptorShmem& shmem = aDescriptor->get_SurfaceDescriptorShmem();
-    shmem.data().AssertInvariants();
+  if (aDescriptor->type() == SurfaceDescriptor::TSurfaceDescriptorBuffer &&
+      aDescriptor->get_SurfaceDescriptorBuffer().data().type() == MemoryOrShmem::TShmem) {
+    const Shmem& shmem = aDescriptor->get_SurfaceDescriptorBuffer().data().get_Shmem();
+    shmem.AssertInvariants();
     MOZ_ASSERT(mShadowManager &&
-               mShadowManager->IsTrackingSharedMemory(shmem.data().mSegment));
+               mShadowManager->IsTrackingSharedMemory(shmem.mSegment));
   }
 }
 #endif

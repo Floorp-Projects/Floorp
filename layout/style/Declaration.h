@@ -325,7 +325,7 @@ public:
     mContainer.mOwningRule = aRule;
   }
 
-  Rule* GetOwningRule() {
+  Rule* GetOwningRule() const {
     if (mContainer.mRaw & 0x1) {
       return nullptr;
     }
@@ -341,7 +341,7 @@ public:
     }
   }
 
-  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() {
+  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const {
     if (!(mContainer.mRaw & 0x1)) {
       return nullptr;
     }

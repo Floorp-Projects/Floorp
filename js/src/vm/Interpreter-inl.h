@@ -455,17 +455,15 @@ GetObjectElementOperation(JSContext* cx, JSOp op, JS::HandleObject obj, JS::Hand
 }
 
 static MOZ_ALWAYS_INLINE bool
-GetPrimitiveElementOperation(JSContext* cx, JSOp op, JS::HandleValue receiver_,
+GetPrimitiveElementOperation(JSContext* cx, JSOp op, JS::HandleValue receiver,
                              HandleValue key, MutableHandleValue res)
 {
     MOZ_ASSERT(op == JSOP_GETELEM || op == JSOP_CALLELEM);
 
-    // FIXME: We shouldn't be boxing here or exposing the boxed object as
-    //        receiver anywhere below (bug 603201).
-    RootedObject boxed(cx, ToObjectFromStack(cx, receiver_));
+    // FIXME: Bug 1234324 We shouldn't be boxing here.
+    RootedObject boxed(cx, ToObjectFromStack(cx, receiver));
     if (!boxed)
         return false;
-    RootedValue receiver(cx, ObjectValue(*boxed));
 
     do {
         uint32_t index;
@@ -495,7 +493,7 @@ GetPrimitiveElementOperation(JSContext* cx, JSOp op, JS::HandleValue receiver_,
         RootedId id(cx);
         if (!ToPropertyKey(cx, key, &id))
             return false;
-        if (!GetProperty(cx, boxed, boxed, id, res))
+        if (!GetProperty(cx, boxed, receiver, id, res))
             return false;
     } while (false);
 

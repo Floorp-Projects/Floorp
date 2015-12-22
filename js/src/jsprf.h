@@ -25,6 +25,9 @@
 **      %g - float
 */
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/SizePrintfMacros.h"
+
 #include <stdarg.h>
 
 #include "jstypes.h"

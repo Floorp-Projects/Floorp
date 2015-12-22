@@ -407,13 +407,6 @@ MacroAssemblerARMCompat::incrementInt32Value(const Address& addr)
     asMasm().add32(Imm32(1), ToPayload(addr));
 }
 
-void
-MacroAssemblerARMCompat::decBranchPtr(Condition cond, Register lhs, Imm32 imm, Label* label)
-{
-    asMasm().subPtr(imm, lhs);
-    branch32(cond, lhs, Imm32(0), label);
-}
-
 } // namespace jit
 } // namespace js
 
