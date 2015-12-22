@@ -327,7 +327,7 @@ protected:
    *             a specified line name, it's permitted to pass in zero which
    *             will be treated as one.
    * @param aFromIndex the zero-based index to start counting from
-   * @param aLineNameList the explicit named lines
+   * @param aNameMap for looking up explicit named lines
    * @param aAreaStart a pointer to GridNamedArea::mColumnStart/mRowStart
    * @param aAreaEnd a pointer to GridNamedArea::mColumnEnd/mRowEnd
    * @param aExplicitGridEnd the last line in the explicit grid
@@ -338,7 +338,7 @@ protected:
   int32_t ResolveLine(const nsStyleGridLine& aLine,
                       int32_t aNth,
                       uint32_t aFromIndex,
-                      const nsTArray<nsTArray<nsString>>& aLineNameList,
+                      const LineNameMap& aNameMap,
                       uint32_t GridNamedArea::* aAreaStart,
                       uint32_t GridNamedArea::* aAreaEnd,
                       uint32_t aExplicitGridEnd,
@@ -353,7 +353,7 @@ protected:
    * @param aStyle the StylePosition() for the grid container
    * @param aStart style data for the start line
    * @param aEnd style data for the end line
-   * @param aLineNameList the explicit named lines
+   * @param aNameMap for looking up explicit named lines
    * @param aAreaStart a pointer to GridNamedArea::mColumnStart/mRowStart
    * @param aAreaEnd a pointer to GridNamedArea::mColumnEnd/mRowEnd
    * @param aExplicitGridEnd the last line in the explicit grid
@@ -361,7 +361,7 @@ protected:
    */
   LineRange ResolveLineRange(const nsStyleGridLine& aStart,
                              const nsStyleGridLine& aEnd,
-                             const nsTArray<nsTArray<nsString>>& aLineNameList,
+                             const LineNameMap& aNameMap,
                              uint32_t GridNamedArea::* aAreaStart,
                              uint32_t GridNamedArea::* aAreaEnd,
                              uint32_t aExplicitGridEnd,
@@ -376,7 +376,7 @@ protected:
   LineRange
   ResolveAbsPosLineRange(const nsStyleGridLine& aStart,
                          const nsStyleGridLine& aEnd,
-                         const nsTArray<nsTArray<nsString>>& aLineNameList,
+                         const LineNameMap& aNameMap,
                          uint32_t GridNamedArea::* aAreaStart,
                          uint32_t GridNamedArea::* aAreaEnd,
                          uint32_t aExplicitGridEnd,
@@ -389,9 +389,14 @@ protected:
    * with placement errors resolved.  One or both positions may still
    * be 'auto'.
    * @param aChild the grid item
+   * @param aColLineNameMap for looking up explicit named column lines
+   * @param aRowLineNameMap for looking up explicit named row lines
    * @param aStyle the StylePosition() for the grid container
    */
-  GridArea PlaceDefinite(nsIFrame* aChild, const nsStylePosition* aStyle);
+  GridArea PlaceDefinite(nsIFrame* aChild,
+                         const LineNameMap& aColLineNameMap,
+                         const LineNameMap& aRowLineNameMap,
+                         const nsStylePosition* aStyle);
 
   /**
    * Place aArea in the first column (in row aArea->mRows.mStart) starting at
@@ -452,9 +457,14 @@ protected:
    * a definite line (1-based) with placement errors resolved.  One or both
    * positions may still be 'auto'.
    * @param aChild the abs.pos. grid item to place
+   * @param aColLineNameMap for looking up explicit named column lines
+   * @param aRowLineNameMap for looking up explicit named row lines
    * @param aStyle the StylePosition() for the grid container
    */
-  GridArea PlaceAbsPos(nsIFrame* aChild, const nsStylePosition* aStyle);
+  GridArea PlaceAbsPos(nsIFrame* aChild,
+                       const LineNameMap& aColLineNameMap,
+                       const LineNameMap& aRowLineNameMap,
+                       const nsStylePosition* aStyle);
 
   /**
    * Place all child frames into the grid and expand the (implicit) grid as
@@ -499,7 +509,7 @@ protected:
   typedef std::pair<int32_t, int32_t> LinePair;
   LinePair ResolveLineRangeHelper(const nsStyleGridLine& aStart,
                                   const nsStyleGridLine& aEnd,
-                                  const nsTArray<nsTArray<nsString>>& aLineNameList,
+                                  const LineNameMap& aNameMap,
                                   uint32_t GridNamedArea::* aAreaStart,
                                   uint32_t GridNamedArea::* aAreaEnd,
                                   uint32_t aExplicitGridEnd,
