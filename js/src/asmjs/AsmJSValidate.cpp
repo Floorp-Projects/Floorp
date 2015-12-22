@@ -1335,7 +1335,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
 #define ADDSTDLIBSIMDOPNAME(op) || !addStandardLibrarySimdOpName(#op, AsmJSSimdOperation_##op)
         if (!standardLibrarySimdOpNames_.init()
-            FORALL_SIMD_OP(ADDSTDLIBSIMDOPNAME))
+            FORALL_SIMD_ASMJS_OP(ADDSTDLIBSIMDOPNAME))
         {
             return false;
         }
@@ -2559,19 +2559,23 @@ IsSimdTypeName(ModuleValidator& m, PropertyName* name, AsmJSSimdType* type)
 static bool
 IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
 {
-    switch (op) {
 #define CASE(op) case AsmJSSimdOperation_##op:
-      FOREACH_COMMONX4_SIMD_OP(CASE)
-        return true;
-      FOREACH_INT32X4_SIMD_OP(CASE)
-        return type == AsmJSSimdType_int32x4;
-      FOREACH_FLOAT32X4_SIMD_OP(CASE)
-        return type == AsmJSSimdType_float32x4;
-      FOREACH_BOOL_SIMD_OP(CASE)
-        return false; // TODO bug 1160971
-#undef CASE
+    switch(type) {
+      case AsmJSSimdType_int32x4:
+        switch (op) {
+          FORALL_INT32X4_ASMJS_OP(CASE) return true;
+          default: return false;
+        }
+        break;
+      case AsmJSSimdType_float32x4:
+        switch (op) {
+          FORALL_FLOAT32X4_ASMJS_OP(CASE) return true;
+          default: return false;
+        }
+        break;
     }
-    return false;
+#undef CASE
+    MOZ_CRASH("Unhandles SIMD type");
 }
 
 static bool
@@ -3193,37 +3197,6 @@ CheckLoadArray(FunctionValidator& f, ParseNode* elem, Type* type)
         *type = Type::MaybeDouble;
         break;
       default: MOZ_CRASH("Unexpected array type");
-    }
-
-    return true;
-}
-
-static bool
-CheckDotAccess(FunctionValidator& f, ParseNode* elem, Type* type)
-{
-    MOZ_ASSERT(elem->isKind(PNK_DOT));
-
-    size_t opcodeAt = f.tempOp();
-
-    ParseNode* base = DotBase(elem);
-    Type baseType;
-    if (!CheckExpr(f, base, &baseType))
-        return false;
-    if (!baseType.isSimd())
-        return f.failf(base, "expected SIMD type, got %s", baseType.toChars());
-
-    ModuleValidator& m = f.m();
-    PropertyName* field = DotMember(elem);
-
-    JSAtomState& names = m.cx()->names();
-
-    if (field != names.signMask)
-        return f.fail(base, "dot access field must be signMask");
-
-    *type = Type::Signed;
-    switch (baseType.simdType()) {
-      case AsmJSSimdType_int32x4:   f.patchOp(opcodeAt, I32::I32X4SignMask); break;
-      case AsmJSSimdType_float32x4: f.patchOp(opcodeAt, I32::F32X4SignMask); break;
     }
 
     return true;
@@ -4535,7 +4508,7 @@ static bool
 CheckSimdBinary(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
                 MSimdBinaryBitwise::Operation op, Type* type)
 {
-    SwitchPackOp(f, opType, I32X4::BinaryBitwise, F32X4::BinaryBitwise);
+    SwitchPackOp(f, opType, I32X4::BinaryBitwise, F32X4::Bad);
     return CheckSimdBinaryGuts(f, call, opType, op, type);
 }
 
@@ -4796,12 +4769,9 @@ CheckSimdStore(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType,
 }
 
 static bool
-CheckSimdSelect(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, bool isElementWise,
-                Type* type)
+CheckSimdSelect(FunctionValidator& f, ParseNode* call, AsmJSSimdType opType, Type* type)
 {
-    SwitchPackOp(f, opType,
-                 isElementWise ? I32X4::Select : I32X4::BitSelect,
-                 isElementWise ? F32X4::Select : F32X4::BitSelect);
+    SwitchPackOp(f, opType, I32X4::Select, F32X4::Select);
     if (!CheckSimdCallArgs(f, call, 3, CheckSimdSelectArgs(opType)))
         return false;
     *type = opType;
@@ -4843,8 +4813,8 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
 #define OP_CHECK_CASE_LIST_(OP)                                                         \
       case AsmJSSimdOperation_##OP:                                                     \
         return CheckSimdBinary(f, call, opType, MSimdBinaryArith::Op_##OP, type);
-      ARITH_COMMONX4_SIMD_OP(OP_CHECK_CASE_LIST_)
-      BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_CHECK_CASE_LIST_)
+      FOREACH_NUMERIC_SIMD_BINOP(OP_CHECK_CASE_LIST_)
+      FOREACH_FLOAT_SIMD_BINOP(OP_CHECK_CASE_LIST_)
 #undef OP_CHECK_CASE_LIST_
 
       case AsmJSSimdOperation_lessThan:
@@ -4923,10 +4893,8 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
       case AsmJSSimdOperation_store3:
         return CheckSimdStore(f, call, opType, 3, type);
 
-      case AsmJSSimdOperation_selectBits:
-        return CheckSimdSelect(f, call, opType, /*isElementWise */ false, type);
       case AsmJSSimdOperation_select:
-        return CheckSimdSelect(f, call, opType, /*isElementWise */ true, type);
+        return CheckSimdSelect(f, call, opType, type);
 
       case AsmJSSimdOperation_splat:
         return CheckSimdSplat(f, call, opType, type);
@@ -5661,7 +5629,6 @@ CheckExpr(FunctionValidator& f, ParseNode* expr, Type* type)
     switch (expr->getKind()) {
       case PNK_NAME:        return CheckVarRef(f, expr, type);
       case PNK_ELEM:        return CheckLoadArray(f, expr, type);
-      case PNK_DOT:         return CheckDotAccess(f, expr, type);
       case PNK_ASSIGN:      return CheckAssign(f, expr, type);
       case PNK_POS:         return CheckPos(f, expr, type);
       case PNK_NOT:         return CheckNot(f, expr, type);

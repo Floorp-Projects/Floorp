@@ -325,16 +325,6 @@ class LSimdInsertElementF : public LSimdInsertElementBase
     {}
 };
 
-class LSimdSignMaskX4 : public LInstructionHelper<1, 1, 0>
-{
-  public:
-    LIR_HEADER(SimdSignMaskX4);
-
-    explicit LSimdSignMaskX4(const LAllocation& input) {
-        setOperand(0, input);
-    }
-};
-
 // Base class for both int32x4 and float32x4 shuffle instructions.
 class LSimdSwizzleBase : public LInstructionHelper<1, 1, 0>
 {

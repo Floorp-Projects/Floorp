@@ -2,14 +2,6 @@ load(libdir + 'simd.js');
 
 setJitCompilerOption("ion.warmup.trigger", 50);
 
-function selectBits(mask, ifTrue, ifFalse) {
-    var Int32x4 = SIMD.Int32x4;
-    var tr = Int32x4.and(mask, ifTrue);
-    var fr = Int32x4.and(Int32x4.not(mask), ifFalse);
-    var orApplied = Int32x4.or(tr, fr);
-    return simdToArray(orApplied);
-}
-
 function select(type, mask, ifTrue, ifFalse) {
     var arr = [];
     for (var i = 0; i < 4; i++) {
@@ -37,10 +29,7 @@ function f() {
 
         assertEqX4(SIMD.Int32x4.select(TFTF, i1, i2), select(SIMD.Int32x4, TFTF, i1, i2));
         assertEqX4(SIMD.Int32x4.select(TTFT, i1, i2), select(SIMD.Int32x4, TTFT, i1, i2));
-
-        assertEqX4(SIMD.Int32x4.selectBits(mask, i1, i2), selectBits(mask, i1, i2));
     }
 }
 
 f();
-

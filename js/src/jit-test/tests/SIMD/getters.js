@@ -19,14 +19,10 @@ function f() {
         assertEq(SIMD.Int32x4.extractLane(i4, 2), 3);
         assertEq(SIMD.Int32x4.extractLane(i4, 3), -4);
 
-        assertEq(i4.signMask, 0b1010);
-
         assertEq(SIMD.Float32x4.extractLane(f4, 0), v);
         assertEq(SIMD.Float32x4.extractLane(f4, 1), NaN);
         assertEq(SIMD.Float32x4.extractLane(f4, 2), Infinity);
         assertEq(SIMD.Float32x4.extractLane(f4, 3), -0);
-
-        assertEq(f4.signMask, 0b1000);
 
         assertEq(SIMD.Bool32x4.extractLane(b4, 0), true);
         assertEq(SIMD.Bool32x4.extractLane(b4, 1), true);

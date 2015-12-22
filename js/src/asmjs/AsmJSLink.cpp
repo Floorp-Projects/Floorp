@@ -379,20 +379,16 @@ ValidateSimdOperation(JSContext* cx, AsmJSModule::Global& global, HandleValue gl
 #define FALLTHROUGH(op) case AsmJSSimdOperation_##op:
       case AsmJSSimdType_int32x4:
         switch (global.simdOperation()) {
-          FOREACH_INT32X4_SIMD_OP(SET_NATIVE_INT32X4)
-          FOREACH_COMMONX4_SIMD_OP(SET_NATIVE_INT32X4)
-          FOREACH_FLOAT32X4_SIMD_OP(FALLTHROUGH)
-          FOREACH_BOOL_SIMD_OP(FALLTHROUGH)
+          FORALL_INT32X4_ASMJS_OP(SET_NATIVE_INT32X4)
+          default:
             MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                     "place");
         }
         break;
       case AsmJSSimdType_float32x4:
         switch (global.simdOperation()) {
-          FOREACH_FLOAT32X4_SIMD_OP(SET_NATIVE_FLOAT32X4)
-          FOREACH_COMMONX4_SIMD_OP(SET_NATIVE_FLOAT32X4)
-          FOREACH_INT32X4_SIMD_OP(FALLTHROUGH)
-          FOREACH_BOOL_SIMD_OP(FALLTHROUGH)
+          FORALL_FLOAT32X4_ASMJS_OP(SET_NATIVE_FLOAT32X4)
+          default:
              MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
                                                      "place");
         }
