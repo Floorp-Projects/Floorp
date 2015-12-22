@@ -226,7 +226,102 @@ public:
     MOZ_ASSERT(!mHasRepeatAuto || mLineNameLists.Length() >= 2);
   }
 
+  /**
+   * Find the aNth occurrence of aName, searching forward if aNth is positive,
+   * and in reverse if aNth is negative (aNth == 0 is invalid), starting from
+   * aFromIndex (not inclusive), and return a 1-based line number.
+   * Also take into account there is an unconditional match at aImplicitLine
+   * unless it's zero.
+   * Return zero if aNth occurrences can't be found.  In that case, aNth has
+   * been decremented with the number of occurrences that were found (if any).
+   *
+   * E.g. to search for "A 2" forward from the start of the grid: aName is "A"
+   * aNth is 2 and aFromIndex is zero.  To search for "A -2", aNth is -2 and
+   * aFromIndex is ExplicitGridEnd + 1 (which is the line "before" the last
+   * line when we're searching in reverse).  For "span A 2", aNth is 2 when
+   * used on a grid-[row|column]-end property and -2 for a *-start property,
+   * and aFromIndex is the line (which we should skip) on the opposite property.
+   */
+  static uint32_t FindNamedLine(const nsString& aName, int32_t* aNth,
+                         uint32_t aFromIndex, uint32_t aImplicitLine,
+                         const nsTArray<nsTArray<nsString>>& aNameList)
+  {
+    MOZ_ASSERT(aNth && *aNth != 0);
+    if (*aNth > 0) {
+      return FindLine(aName, aNth, aFromIndex, aImplicitLine, aNameList);
+    }
+    int32_t nth = -*aNth;
+    int32_t line = RFindLine(aName, &nth, aFromIndex, aImplicitLine, aNameList);
+    *aNth = -nth;
+    return line;
+  }
+
 private:
+  /**
+   * @see FindNamedLine, this function searches forward.
+   */
+  static uint32_t FindLine(const nsString& aName, int32_t* aNth,
+                    uint32_t aFromIndex, uint32_t aImplicitLine,
+                    const nsTArray<nsTArray<nsString>>& aNameList)
+  {
+    MOZ_ASSERT(aNth && *aNth > 0);
+    int32_t nth = *aNth;
+    const uint32_t len = aNameList.Length();
+    uint32_t line;
+    uint32_t i = aFromIndex;
+    for (; i < len; i = line) {
+      line = i + 1;
+      if (line == aImplicitLine || aNameList[i].Contains(aName)) {
+        if (--nth == 0) {
+          return line;
+        }
+      }
+    }
+    if (aImplicitLine > i) {
+      // aImplicitLine is after the lines we searched above so it's last.
+      // (grid-template-areas has more tracks than grid-template-[rows|columns])
+      if (--nth == 0) {
+        return aImplicitLine;
+      }
+    }
+    MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+    *aNth = nth;
+    return 0;
+  }
+
+  /**
+   * @see FindNamedLine, this function searches in reverse.
+   */
+  static uint32_t RFindLine(const nsString& aName, int32_t* aNth,
+                     uint32_t aFromIndex, uint32_t aImplicitLine,
+                     const nsTArray<nsTArray<nsString>>& aNameList)
+  {
+    MOZ_ASSERT(aNth && *aNth > 0);
+    if (MOZ_UNLIKELY(aFromIndex == 0)) {
+      return 0; // There are no named lines beyond the start of the explicit grid.
+    }
+    --aFromIndex; // (shift aFromIndex so we can treat it as inclusive)
+    int32_t nth = *aNth;
+    const uint32_t len = aNameList.Length();
+    // The implicit line may be beyond the length of aNameList so we match this
+    // line first if it's within the len..aFromIndex range.
+    if (aImplicitLine > len && aImplicitLine < aFromIndex) {
+      if (--nth == 0) {
+        return aImplicitLine;
+      }
+    }
+    for (uint32_t i = std::min(aFromIndex, len); i; --i) {
+      if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
+        if (--nth == 0) {
+          return i;
+        }
+      }
+    }
+    MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
+    *aNth = nth;
+    return 0;
+  }
+
   // Return true if aName exists at aIndex.
   const bool Contains(uint32_t aIndex, const nsString& aName) const
   {
@@ -758,104 +853,6 @@ bool IsMinContent(const nsStyleCoord& aCoord)
 }
 
 /**
- * @see FindNamedLine, this function searches forward.
- */
-static uint32_t
-FindLine(const nsString& aName, int32_t* aNth,
-         uint32_t aFromIndex, uint32_t aImplicitLine,
-         const nsTArray<nsTArray<nsString>>& aNameList)
-{
-  MOZ_ASSERT(aNth && *aNth > 0);
-  int32_t nth = *aNth;
-  const uint32_t len = aNameList.Length();
-  uint32_t line;
-  uint32_t i = aFromIndex;
-  for (; i < len; i = line) {
-    line = i + 1;
-    if (line == aImplicitLine || aNameList[i].Contains(aName)) {
-      if (--nth == 0) {
-        return line;
-      }
-    }
-  }
-  if (aImplicitLine > i) {
-    // aImplicitLine is after the lines we searched above so it's last.
-    // (grid-template-areas has more tracks than grid-template-[rows|columns])
-    if (--nth == 0) {
-      return aImplicitLine;
-    }
-  }
-  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
-  *aNth = nth;
-  return 0;
-}
-
-/**
- * @see FindNamedLine, this function searches in reverse.
- */
-static uint32_t
-RFindLine(const nsString& aName, int32_t* aNth,
-          uint32_t aFromIndex, uint32_t aImplicitLine,
-          const nsTArray<nsTArray<nsString>>& aNameList)
-{
-  MOZ_ASSERT(aNth && *aNth > 0);
-  if (MOZ_UNLIKELY(aFromIndex == 0)) {
-    return 0; // There are no named lines beyond the start of the explicit grid.
-  }
-  --aFromIndex; // (shift aFromIndex so we can treat it as inclusive)
-  int32_t nth = *aNth;
-  const uint32_t len = aNameList.Length();
-  // The implicit line may be beyond the length of aNameList so we match this
-  // line first if it's within the len..aFromIndex range.
-  if (aImplicitLine > len && aImplicitLine < aFromIndex) {
-    if (--nth == 0) {
-      return aImplicitLine;
-    }
-  }
-  for (uint32_t i = std::min(aFromIndex, len); i; --i) {
-    if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
-      if (--nth == 0) {
-        return i;
-      }
-    }
-  }
-  MOZ_ASSERT(nth > 0, "should have returned a valid line above already");
-  *aNth = nth;
-  return 0;
-}
-
-/**
- * Find the aNth occurrence of aName, searching forward if aNth is positive,
- * and in reverse if aNth is negative (aNth == 0 is invalid), starting from
- * aFromIndex (not inclusive), and return a 1-based line number.
- * Also take into account there is an unconditional match at aImplicitLine
- * unless it's zero.
- * Return zero if aNth occurrences can't be found.  In that case, aNth has
- * been decremented with the number of occurrences that were found (if any).
- *
- * E.g. to search for "A 2" forward from the start of the grid: aName is "A"
- * aNth is 2 and aFromIndex is zero.  To search for "A -2", aNth is -2 and
- * aFromIndex is ExplicitGridEnd + 1 (which is the line "before" the last
- * line when we're searching in reverse).  For "span A 2", aNth is 2 when
- * used on a grid-[row|column]-end property and -2 for a *-start property,
- * and aFromIndex is the line (which we should skip) on the opposite property.
- */
-static uint32_t
-FindNamedLine(const nsString& aName, int32_t* aNth,
-              uint32_t aFromIndex, uint32_t aImplicitLine,
-              const nsTArray<nsTArray<nsString>>& aNameList)
-{
-  MOZ_ASSERT(aNth && *aNth != 0);
-  if (*aNth > 0) {
-    return ::FindLine(aName, aNth, aFromIndex, aImplicitLine, aNameList);
-  }
-  int32_t nth = -*aNth;
-  int32_t line = ::RFindLine(aName, &nth, aFromIndex, aImplicitLine, aNameList);
-  *aNth = -nth;
-  return line;
-}
-
-/**
  * A convenience method to lookup a name in 'grid-template-areas'.
  * @param aStyle the StylePosition() for the grid container
  * @return null if not found
@@ -1372,7 +1369,7 @@ nsGridContainerFrame::ResolveLine(
           lineName.AppendLiteral("-end");
           implicitLine = area ? area->*aAreaEnd : 0;
         }
-        line = ::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
+        line = LineNameMap::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
                                aLineNameList);
       }
     }
@@ -1395,7 +1392,7 @@ nsGridContainerFrame::ResolveLine(
           implicitLine = area->*areaEdge;
         }
       }
-      line = ::FindNamedLine(aLine.mLineName, &aNth, aFromIndex, implicitLine,
+      line = LineNameMap::FindNamedLine(aLine.mLineName, &aNth, aFromIndex, implicitLine,
                              aLineNameList);
     }
 
