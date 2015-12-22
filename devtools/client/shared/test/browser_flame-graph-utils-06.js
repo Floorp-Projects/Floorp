@@ -2,10 +2,12 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that the text displayed is the function name, file name and line number
-// if applicable.
+// if applicable and demangling.
 
 var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 var {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
+var MANGLED_FN = "__Z3FooIiEvv";
+var UNMANGLED_FN = "void Foo<int>()";
 
 add_task(function*() {
   yield addTab("about:blank");
@@ -49,7 +51,7 @@ var TEST_DATA = synthesizeProfileForTest([{
   frames: [{
     location: "A (http://path/to/file.js:10:5)"
   }, {
-    location: "B (http://path/to/file.js:100:5)"
+    location: `${MANGLED_FN} (http://path/to/file.js:100:5)`
   }],
   time: 50,
 }]);
@@ -77,31 +79,31 @@ var EXPECTED_OUTPUT = [{
 }, {
   blocks: []
 }, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
-  blocks: []
-}, {
   blocks: [{
     startTime: 0,
-    frameKey: "B (http://path/to/file.js:100:5)",
+    frameKey: `${MANGLED_FN} (http://path/to/file.js:100:5)`,
     x: 0,
     y: 15,
     width: 50,
     height: 15,
-    text: "B (file.js:100)"
+    text: `${UNMANGLED_FN} (file.js:100)`
   }]
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
+}, {
+  blocks: []
 }, {
   blocks: []
 }, {

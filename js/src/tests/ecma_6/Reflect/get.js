@@ -64,21 +64,8 @@ assertEq(Reflect.get(obj, "itself"), obj);
 assertEq(Reflect.get(obj, "itself", Math), Math);
 assertEq(Reflect.get(Object.create(obj), "itself", Math), Math);
 
-// The receiver shouldn't have to be an object---but we do not implement that
-// correctly yet (bug 603201). For now, test the wrong behavior just to make
-// sure we don't crash.
-var result;
-try {
-    result = Reflect.get(obj, "x", 37.2);
-} catch (exc) {
-    result = exc;
-}
-if (result === 37.2) {
-    throw new Error("Congratulations on fixing bug 603201! " +
-                    "Please update this test for 1 karma point.");
-}
-assertEq(result instanceof TypeError, true);
-
+// The receiver shouldn't have to be an object
+assertEq(Reflect.get(obj, "itself", 37.2), 37.2);
 
 // For more Reflect.get tests, see target.js and propertyKeys.js.
 

@@ -1641,21 +1641,17 @@ MediaDecoder::IsOggEnabled()
   return Preferences::GetBool("media.ogg.enabled");
 }
 
-#ifdef MOZ_WAVE
 bool
 MediaDecoder::IsWaveEnabled()
 {
   return Preferences::GetBool("media.wave.enabled");
 }
-#endif
 
-#ifdef MOZ_WEBM
 bool
 MediaDecoder::IsWebMEnabled()
 {
   return Preferences::GetBool("media.webm.enabled");
 }
-#endif
 
 #ifdef NECKO_PROTOCOL_rtsp
 bool

@@ -256,10 +256,7 @@ HashStore::Open()
   }
 
   uint32_t fileSize32 = static_cast<uint32_t>(fileSize);
-
-  rv = NS_NewBufferedInputStream(getter_AddRefs(mInputStream), origStream,
-                                 fileSize32);
-  NS_ENSURE_SUCCESS(rv, rv);
+  mInputStream = NS_BufferInputStream(origStream, fileSize32);
 
   rv = CheckChecksum(storeFile, fileSize32);
   SUCCESS_OR_RESET(rv);

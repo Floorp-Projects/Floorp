@@ -9,7 +9,7 @@
 
 add_task(function*() {
   yield addTab(TEST_URL_ROOT + "doc_simple_animation.html");
-  let {panel} = yield openAnimationInspector();
+  let {panel, controller} = yield openAnimationInspector();
 
   info("Getting the animation element from the panel");
   let timelineEl = panel.animationsTimelineComponent.rootWrapperEl;
@@ -17,12 +17,16 @@ add_task(function*() {
 
   // Verify that each time-block's name element has a tooltip that looks sort of
   // ok. We don't need to test the actual content.
-  for (let el of timeBlockNameEls) {
-    ok(el.hasAttribute("title"), "The tooltip is defined");
+  [...timeBlockNameEls].forEach((el, i) => {
+    ok(el.hasAttribute("title"), "The tooltip is defined for animation " + i);
 
     let title = el.getAttribute("title");
     ok(title.match(/Delay: [\d.-]+s/), "The tooltip shows the delay");
     ok(title.match(/Duration: [\d.]+s/), "The tooltip shows the duration");
-    ok(title.match(/Repeats: /), "The tooltip shows the iterations");
-  }
+    if (controller.animationPlayers[i].state.iterationCount !== 1) {
+      ok(title.match(/Repeats: /), "The tooltip shows the iterations");
+    } else {
+      ok(!title.match(/Repeats: /), "The tooltip doesn't show the iterations");
+    }
+  });
 });

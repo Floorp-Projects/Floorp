@@ -26,14 +26,6 @@ function startup()
   gBrandBundle = document.getElementById("bundle_brand");
 
   document.documentElement.centerWindowOnScreen();
-
-  var browser = document.getElementById("browser");
-  browser.frameLoader.docShell.contentViewer.DOMDocument.defaultView
-         .addEventListener('startbrowser', function() {
-    if (acceptDialog()) {
-      this.close();
-    }
-  }.bind(this), false);
 }
 
 function acceptDialog()

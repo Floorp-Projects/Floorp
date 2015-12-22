@@ -501,15 +501,15 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc, void* thing,
                 bool willFit = str->length() + strlen("<length > ") +
                                CountDecimalDigits(str->length()) < bufsize;
 
-                n = JS_snprintf(buf, bufsize, "<length %d%s> ",
-                                (int)str->length(),
+                n = JS_snprintf(buf, bufsize, "<length %" PRIuSIZE "%s> ",
+                                str->length(),
                                 willFit ? "" : " (truncated)");
                 buf += n;
                 bufsize -= n;
 
                 PutEscapedString(buf, bufsize, &str->asLinear(), 0);
             } else {
-                JS_snprintf(buf, bufsize, "<rope: length %d>", (int)str->length());
+                JS_snprintf(buf, bufsize, "<rope: length %" PRIuSIZE ">", str->length());
             }
             break;
           }

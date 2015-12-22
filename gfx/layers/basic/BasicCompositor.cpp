@@ -7,7 +7,6 @@
 #include "BasicLayersImpl.h"            // for FillRectWithMask
 #include "TextureHostBasic.h"
 #include "mozilla/layers/Effects.h"
-#include "mozilla/layers/YCbCrImageDataSerializer.h"
 #include "nsIWidget.h"
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"

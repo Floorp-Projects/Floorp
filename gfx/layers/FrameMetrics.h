@@ -68,6 +68,7 @@ public:
     , mAllowVerticalScrollWithWheel(false)
     , mIsLayersIdRoot(false)
     , mUsesContainerScrolling(false)
+    , mIsScrollInfoLayer(false)
   {
   }
 
@@ -104,7 +105,8 @@ public:
            mClipRect == aOther.mClipRect &&
            mMaskLayerIndex == aOther.mMaskLayerIndex &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
-		   mUsesContainerScrolling == aOther.mUsesContainerScrolling;
+           mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
+           mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
   bool operator!=(const FrameMetrics& aOther) const
   {
@@ -545,6 +547,13 @@ public:
     return mUsesContainerScrolling;
   }
 
+  void SetIsScrollInfoLayer(bool aIsScrollInfoLayer) {
+    mIsScrollInfoLayer = aIsScrollInfoLayer;
+  }
+  bool IsScrollInfoLayer() const {
+    return mIsScrollInfoLayer;
+  }
+
 private:
 
   // The pres-shell resolution that has been induced on the document containing
@@ -731,6 +740,9 @@ private:
   // True if scrolling using containers, false otherwise. This can be removed
   // when containerful scrolling is eliminated.
   bool mUsesContainerScrolling;
+
+  // Whether or not this frame has a "scroll info layer" to capture events.
+  bool mIsScrollInfoLayer;
 
   // WARNING!!!!
   //
