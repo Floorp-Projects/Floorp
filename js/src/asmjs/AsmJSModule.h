@@ -73,7 +73,8 @@ enum AsmJSAtomicsBuiltinFunction
 enum AsmJSSimdType
 {
     AsmJSSimdType_int32x4,
-    AsmJSSimdType_float32x4
+    AsmJSSimdType_float32x4,
+    AsmJSSimdType_bool32x4
 };
 
 // Set of known operations, for a given SIMD type (int32x4, float32x4,...)
@@ -871,9 +872,19 @@ class AsmJSModule
         MOZ_ASSERT(!isFinished());
         unsigned width = 0;
         switch (type) {
-          case wasm::ValType::I32:   case wasm::ValType::F32:   width = 4;  break;
-          case wasm::ValType::I64:   case wasm::ValType::F64:   width = 8;  break;
-          case wasm::ValType::I32x4: case wasm::ValType::F32x4: width = 16; break;
+          case wasm::ValType::I32:
+          case wasm::ValType::F32:
+            width = 4;
+            break;
+          case wasm::ValType::I64:
+          case wasm::ValType::F64:
+            width = 8;
+            break;
+          case wasm::ValType::I32x4:
+          case wasm::ValType::F32x4:
+          case wasm::ValType::B32x4:
+            width = 16;
+            break;
         }
         return allocateGlobalBytes(width, width, globalDataOffset);
     }
