@@ -572,8 +572,10 @@ NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
     if (*child == '.')
         ABORT(R_BAD_ARGS);
 
-    plen = strlen(parent);
     clen = strlen(child);
+    if (!clen)
+        ABORT(R_BAD_ARGS);
+    plen = strlen(parent);
     if ((plen + clen + 2) > sizeof(NR_registry))
         ABORT(R_BAD_ARGS);
 
@@ -592,8 +594,6 @@ NR_reg_make_registry(NR_registry parent, char *child, NR_registry out)
         if (isspace(*c) || *c == '.' || *c == '/' || ! isprint(*c))
             *c = '_';
     }
-    if (i == 0 || child[i-1] == '.')
-        ABORT(R_BAD_ARGS);
 
     *c = '\0';
 
