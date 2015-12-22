@@ -101,6 +101,7 @@ enum class WebGLTexelFormat : uint8_t {
     RA16F, // OES_texture_half_float
     RA32F, // OES_texture_float
     RG8,
+    RG16F,
     // 3-channel formats
     RGB8,
     RGB565,
