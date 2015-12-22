@@ -2316,7 +2316,7 @@ TabParent::GetTabIdFrom(nsIDocShell *docShell)
 RenderFrameParent*
 TabParent::GetRenderFrame()
 {
-  PRenderFrameParent* p = LoneManagedOrNull(ManagedPRenderFrameParent());
+  PRenderFrameParent* p = LoneManagedOrNullAsserts(ManagedPRenderFrameParent());
   return static_cast<RenderFrameParent*>(p);
 }
 

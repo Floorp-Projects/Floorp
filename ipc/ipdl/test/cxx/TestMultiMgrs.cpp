@@ -78,10 +78,10 @@ TestMultiMgrsChild::RecvCheck()
 
     TestMultiMgrsLeftChild* leftie =
         static_cast<TestMultiMgrsLeftChild*>(
-            LoneManagedOrNull(ManagedPTestMultiMgrsLeftChild()));
+            LoneManagedOrNullAsserts(ManagedPTestMultiMgrsLeftChild()));
     TestMultiMgrsRightChild* rightie =
         static_cast<TestMultiMgrsRightChild*>(
-            LoneManagedOrNull(ManagedPTestMultiMgrsRightChild()));
+            LoneManagedOrNullAsserts(ManagedPTestMultiMgrsRightChild()));
 
     if (!leftie->HasChild(mBottomL))
         fail("leftie didn't have a child it was supposed to!");
