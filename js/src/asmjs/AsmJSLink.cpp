@@ -105,7 +105,7 @@ GetDataProperty(JSContext* cx, HandleValue objVal, HandlePropertyName field, Mut
 static bool
 HasPureCoercion(JSContext* cx, HandleValue v)
 {
-    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Float32x4>(v))
+    if (IsVectorObject<Int32x4>(v) || IsVectorObject<Float32x4>(v) || IsVectorObject<Bool32x4>(v))
         return true;
 
     // Ideally, we'd reject all non-SIMD non-primitives, but Emscripten has a
@@ -148,6 +148,8 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule& module, AsmJSModule::Gl
             *(double*)datum = v.f64();
             break;
           case ValType::I32x4:
+          case ValType::B32x4:
+            // Bool32x4 uses the same data layout as Int32x4.
             memcpy(datum, v.i32x4(), Simd128DataSize);
             break;
           case ValType::F32x4:
@@ -193,6 +195,14 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule& module, AsmJSModule::Gl
             if (!ToSimdConstant<Float32x4>(cx, v, &simdConstant))
                 return false;
             memcpy(datum, simdConstant.asFloat32x4(), Simd128DataSize);
+            break;
+          }
+          case ValType::B32x4: {
+            SimdConstant simdConstant;
+            if (!ToSimdConstant<Bool32x4>(cx, v, &simdConstant))
+                return false;
+            // Bool32x4 uses the same data layout as Int32x4.
+            memcpy(datum, simdConstant.asInt32x4(), Simd128DataSize);
             break;
           }
         }
@@ -307,6 +317,7 @@ SimdTypeToName(JSContext* cx, AsmJSSimdType type)
     switch (type) {
       case AsmJSSimdType_int32x4:   return cx->names().int32x4;
       case AsmJSSimdType_float32x4: return cx->names().float32x4;
+      case AsmJSSimdType_bool32x4:  return cx->names().bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected SIMD type");
 }
@@ -317,6 +328,7 @@ AsmJSSimdTypeToTypeDescrType(AsmJSSimdType type)
     switch (type) {
       case AsmJSSimdType_int32x4: return Int32x4::type;
       case AsmJSSimdType_float32x4: return Float32x4::type;
+      case AsmJSSimdType_bool32x4: return Bool32x4::type;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected AsmJSSimdType");
 }
@@ -376,6 +388,7 @@ ValidateSimdOperation(JSContext* cx, AsmJSModule::Global& global, HandleValue gl
     switch (global.simdOperationType()) {
 #define SET_NATIVE_INT32X4(op) case AsmJSSimdOperation_##op: native = simd_int32x4_##op; break;
 #define SET_NATIVE_FLOAT32X4(op) case AsmJSSimdOperation_##op: native = simd_float32x4_##op; break;
+#define SET_NATIVE_BOOL32X4(op) case AsmJSSimdOperation_##op: native = simd_bool32x4_##op; break;
 #define FALLTHROUGH(op) case AsmJSSimdOperation_##op:
       case AsmJSSimdType_int32x4:
         switch (global.simdOperation()) {
@@ -393,9 +406,18 @@ ValidateSimdOperation(JSContext* cx, AsmJSModule::Global& global, HandleValue gl
                                                      "place");
         }
         break;
+      case AsmJSSimdType_bool32x4:
+        switch (global.simdOperation()) {
+          FORALL_BOOL_SIMD_OP(SET_NATIVE_BOOL32X4)
+          default:
+             MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("shouldn't have been validated in the first "
+                                                     "place");
+        }
+        break;
 #undef FALLTHROUGH
 #undef SET_NATIVE_FLOAT32X4
 #undef SET_NATIVE_INT32X4
+#undef SET_NATIVE_BOOL32X4
 #undef SET_NATIVE
     }
     if (!native || !IsNativeFunction(v, native))
@@ -717,6 +739,14 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
             memcpy(&coercedArgs[i], simd.asFloat32x4(), Simd128DataSize);
             break;
           }
+          case ValType::B32x4: {
+            SimdConstant simd;
+            if (!ToSimdConstant<Bool32x4>(cx, v, &simd))
+                return false;
+            // Bool32x4 uses the same representation as Int32x4.
+            memcpy(&coercedArgs[i], simd.asInt32x4(), Simd128DataSize);
+            break;
+          }
         }
     }
 
@@ -780,6 +810,12 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
         break;
       case ExprType::F32x4:
         simdObj = CreateSimd<Float32x4>(cx, (float*)&coercedArgs[0]);
+        if (!simdObj)
+            return false;
+        callArgs.rval().set(ObjectValue(*simdObj));
+        break;
+      case ExprType::B32x4:
+        simdObj = CreateSimd<Bool32x4>(cx, (int32_t*)&coercedArgs[0]);
         if (!simdObj)
             return false;
         callArgs.rval().set(ObjectValue(*simdObj));
