@@ -2140,6 +2140,58 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState,
       }
     }
   }
+
+  // Count empty 'auto-fit' tracks at the end of the repeat() range.
+  uint32_t numEmptyCols = 0;
+  if (aState.mColFunctions.mHasRepeatAuto &&
+      !gridStyle->mGridTemplateColumns.mIsAutoFill &&
+      aState.mColFunctions.NumRepeatTracks() > 0) {
+    for (int32_t start = aState.mColFunctions.mRepeatAutoStart,
+                   col = aState.mColFunctions.mRepeatAutoEnd - 1;
+         col >= start && mCellMap.IsEmptyCol(col);
+         --col) {
+      ++numEmptyCols;
+    }
+  }
+  uint32_t numEmptyRows = 0;
+  if (aState.mRowFunctions.mHasRepeatAuto &&
+      !gridStyle->mGridTemplateRows.mIsAutoFill &&
+      aState.mRowFunctions.NumRepeatTracks() > 0) {
+    for (int32_t start = aState.mRowFunctions.mRepeatAutoStart,
+                   row = aState.mRowFunctions.mRepeatAutoEnd - 1;
+         row >= start && mCellMap.IsEmptyRow(row);
+         --row) {
+      ++numEmptyRows;
+    }
+  }
+  // Remove the empty 'auto-fit' tracks we found above, if any.
+  if (numEmptyCols || numEmptyRows) {
+    // Adjust the line numbers in the grid areas.
+    const uint32_t firstRemovedCol =
+      aState.mColFunctions.mRepeatAutoEnd - numEmptyCols;
+    const uint32_t firstRemovedRow =
+      aState.mRowFunctions.mRepeatAutoEnd - numEmptyRows;
+    for (auto& item : mGridItems) {
+      GridArea& area = item.mArea;
+      area.mCols.AdjustForRemovedTracks(firstRemovedCol, numEmptyCols);
+      area.mRows.AdjustForRemovedTracks(firstRemovedRow, numEmptyRows);
+    }
+    for (auto& item : mAbsPosItems) {
+      GridArea& area = item.mArea;
+      area.mCols.AdjustAbsPosForRemovedTracks(firstRemovedCol, numEmptyCols);
+      area.mRows.AdjustAbsPosForRemovedTracks(firstRemovedRow, numEmptyRows);
+    }
+    // Adjust the grid size.
+    mGridColEnd -= numEmptyCols;
+    mExplicitGridColEnd -= numEmptyCols;
+    mGridRowEnd -= numEmptyRows;
+    mExplicitGridRowEnd -= numEmptyRows;
+    // Adjust the track mapping to unmap the removed tracks.
+    auto finalColRepeatCount = aState.mColFunctions.NumRepeatTracks() - numEmptyCols;
+    aState.mColFunctions.SetNumRepeatTracks(finalColRepeatCount);
+    auto finalRowRepeatCount = aState.mRowFunctions.NumRepeatTracks() - numEmptyRows;
+    aState.mRowFunctions.SetNumRepeatTracks(finalRowRepeatCount);
+  }
 }
 
 void
