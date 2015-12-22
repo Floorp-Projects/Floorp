@@ -14,6 +14,7 @@ var longexp2Path = "/longexp/2/" + suffix;
 var nocachePath = "/nocache" + suffix;
 var nostorePath = "/nostore" + suffix;
 var test410Path = "/test410" + suffix;
+var test404Path = "/test404" + suffix;
 
 // We attach this to channel when we want to test Private Browsing mode
 function LoadContext(usePrivateBrowsing) {
@@ -267,7 +268,16 @@ var gTests = [
   new Test(httpBase + test410Path, 0,
            true,   // expect success
            true,   // read from cache
-           false)  // hit server
+           false), // hit server
+
+  new Test(httpBase + test404Path, 0,
+           true,   // expect success
+           false,  // read from cache
+           true),  // hit server
+  new Test(httpBase + test404Path, 0,
+           true,   // expect success
+           false,  // read from cache
+           true)   // hit server
 ];
 
 function run_next_test()
@@ -314,6 +324,10 @@ function test410_handler(metadata, response) {
   handler(410, metadata, response);
 }
 
+function test404_handler(metadata, response) {
+  handler(404, metadata, response);
+}
+
 function shortexp_handler(metadata, response) {
   response.setHeader("Cache-Control", "max-age=0", false);
   handler(200, metadata, response);
@@ -337,6 +351,7 @@ function run_test() {
   httpserver.registerPathHandler(nocachePath, nocache_handler);
   httpserver.registerPathHandler(nostorePath, nostore_handler);
   httpserver.registerPathHandler(test410Path, test410_handler);
+  httpserver.registerPathHandler(test404Path, test404_handler);
 
   run_next_test();
   do_test_pending();

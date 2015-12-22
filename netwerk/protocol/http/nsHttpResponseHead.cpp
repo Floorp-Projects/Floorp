@@ -450,6 +450,12 @@ nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
         return NS_OK;
     }
 
+    if (mStatus >= 400) {
+        LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %p] "
+             "Do not calculate heuristic max-age for most responses >= 400\n", this));
+        return NS_OK;
+    }
+
     // Fallback on heuristic using last modified header...
     if (NS_SUCCEEDED(GetLastModifiedValue(&date2))) {
         LOG(("using last-modified to determine freshness-lifetime\n"));
