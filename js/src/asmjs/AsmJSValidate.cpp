@@ -2567,6 +2567,8 @@ IsSimdValidOperationType(AsmJSSimdType type, AsmJSSimdOperation op)
         return type == AsmJSSimdType_int32x4;
       FOREACH_FLOAT32X4_SIMD_OP(CASE)
         return type == AsmJSSimdType_float32x4;
+      FOREACH_BOOL_SIMD_OP(CASE)
+        return false; // TODO bug 1160971
 #undef CASE
     }
     return false;
@@ -4928,6 +4930,10 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
 
       case AsmJSSimdOperation_splat:
         return CheckSimdSplat(f, call, opType, type);
+
+      case AsmJSSimdOperation_allTrue:
+      case AsmJSSimdOperation_anyTrue:
+        MOZ_CRASH("unreachable and nyi"); // TODO bug 1160971
     }
     MOZ_CRASH("unexpected simd operation in CheckSimdOperationCall");
 }
