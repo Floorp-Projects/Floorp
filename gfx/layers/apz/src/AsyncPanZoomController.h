@@ -24,7 +24,6 @@
 #include "APZUtils.h"
 #include "Layers.h"                     // for Layer::ScrollDirection
 #include "LayersTypes.h"
-#include "TaskThrottler.h"
 #include "mozilla/gfx/Matrix.h"
 #include "nsRegion.h"
 
@@ -104,7 +103,6 @@ public:
                          APZCTreeManager* aTreeManager,
                          const RefPtr<InputQueue>& aInputQueue,
                          GeckoContentController* aController,
-                         TaskThrottler* aPaintThrottler,
                          GestureBehavior aGestures = DEFAULT_GESTURES);
 
   // --------------------------------------------------------------------------
@@ -187,11 +185,6 @@ public:
   void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint);
 
   /**
-   * Flush any pending repaint request.
-   */
-  void FlushRepaintIfPending();
-
-  /**
    * The platform implementation must set the compositor parent so that we can
    * request composites.
    */
@@ -269,8 +262,7 @@ public:
    */
   static const ScreenMargin CalculatePendingDisplayPort(
     const FrameMetrics& aFrameMetrics,
-    const ParentLayerPoint& aVelocity,
-    double aEstimatedPaintDuration);
+    const ParentLayerPoint& aVelocity);
 
   nsEventStatus HandleDragEvent(const MouseInput& aEvent,
                                 const AsyncDragMetrics& aDragMetrics);
@@ -597,7 +589,7 @@ protected:
    * the paint throttler. In particular, the GeckoContentController::RequestContentRepaint
    * function will be invoked before this function returns.
    */
-  void RequestContentRepaint(FrameMetrics& aFrameMetrics, bool aThrottled = true);
+  void RequestContentRepaint(FrameMetrics& aFrameMetrics);
 
   /**
    * Actually send the next pending paint request to gecko.
@@ -651,7 +643,6 @@ protected:
 
   uint64_t mLayersId;
   RefPtr<CompositorParent> mCompositorParent;
-  RefPtr<TaskThrottler> mPaintThrottler;
 
   /* Access to the following two fields is protected by the mRefPtrMonitor,
      since they are accessed on the UI thread but can be cleared on the
@@ -699,15 +690,12 @@ private:
   // the Gecko state, it should be used as a basis for untransformation when
   // sending messages back to Gecko.
   FrameMetrics mLastContentPaintMetrics;
-  // The last metrics that we requested a paint for. These are used to make sure
-  // that we're not requesting a paint of the same thing that's already drawn.
-  // If we don't do this check, we don't get a ShadowLayersUpdated back.
+  // The last metrics used for a content repaint request.
   FrameMetrics mLastPaintRequestMetrics;
-  // The last metrics that we actually sent to Gecko. This allows us to transform
-  // inputs into a coordinate space that Gecko knows about. This assumes the pipe
-  // through which input events and repaint requests are sent to Gecko operates
-  // in a FIFO manner.
-  FrameMetrics mLastDispatchedPaintMetrics;
+  // The metrics that we expect content to have. This is updated when we
+  // request a content repaint, and when we receive a shadow layers update.
+  // This allows us to transform events into Gecko's coordinate space.
+  FrameMetrics mExpectedGeckoMetrics;
 
   AxisX mX;
   AxisY mY;

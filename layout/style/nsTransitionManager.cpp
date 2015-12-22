@@ -679,7 +679,6 @@ nsTransitionManager::ConsiderStartingTransition(
 
   AnimationProperty& prop = *pt->Properties().AppendElement();
   prop.mProperty = aProperty;
-  prop.mWinsInCascade = true;
 
   AnimationPropertySegment& segment = *prop.mSegments.AppendElement();
   segment.mFromValue = startValue;

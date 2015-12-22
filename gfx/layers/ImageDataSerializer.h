@@ -24,72 +24,49 @@ class DrawTarget;
 namespace mozilla {
 namespace layers {
 
-class ImageDataSerializerBase
-{
-public:
-  bool IsValid() const { return mIsValid; }
+namespace ImageDataSerializer {
 
-  uint8_t* GetData();
-  uint32_t GetStride() const;
-  gfx::IntSize GetSize() const;
-  gfx::SurfaceFormat GetFormat() const;
-  already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
-  already_AddRefed<gfx::DrawTarget> GetAsDrawTarget(gfx::BackendType aBackend);
+// RGB
 
-  static uint32_t ComputeMinBufferSize(gfx::IntSize aSize,
-                                       gfx::SurfaceFormat aFormat);
+int32_t ComputeRGBStride(gfx::SurfaceFormat aFormat, int32_t aWidth);
 
-  size_t GetBufferSize() const { return mDataSize; }
+int32_t GetRGBStride(const RGBDescriptor& aDescriptor);
 
-protected:
+uint32_t ComputeRGBBufferSize(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
-  ImageDataSerializerBase(uint8_t* aData, size_t aDataSize)
-    : mData(aData)
-    , mDataSize(aDataSize)
-    , mIsValid(false)
-  {}
 
-  void Validate();
+// YCbCr
 
-  uint8_t* mData;
-  size_t mDataSize;
-  bool mIsValid;
-};
+///This function is meant as a helper to know how much shared memory we need
+///to allocate in a shmem in order to place a shared YCbCr image blob of
+///given dimensions.
+uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
+                                int32_t aYStride,
+                                const gfx::IntSize& aCbCrSize,
+                                int32_t aCbCrStride);
+uint32_t ComputeYCbCrBufferSize(const gfx::IntSize& aYSize,
+                                const gfx::IntSize& aCbCrSize);
 
-/**
- * A facility to serialize an image into a buffer of memory.
- * This is intended for use with the IPC code, in order to copy image data
- * into shared memory.
- * Note that there is a separate serializer class for YCbCr images
- * (see YCbCrImageDataSerializer.h).
- */
-class MOZ_STACK_CLASS ImageDataSerializer : public ImageDataSerializerBase
-{
-public:
-  ImageDataSerializer(uint8_t* aData, size_t aDataSize)
-    : ImageDataSerializerBase(aData, aDataSize)
-  {
-    // a serializer needs to be usable before correct buffer info has been written to it
-    mIsValid = !!mData;
-  }
-  void InitializeBufferInfo(gfx::IntSize aSize,
-                            gfx::SurfaceFormat aFormat);
-};
+uint32_t ComputeYCbCrBufferSize(uint32_t aBufferSize);
 
-/**
- * A facility to deserialize image data that has been serialized by an
- * ImageDataSerializer.
- */
-class MOZ_STACK_CLASS ImageDataDeserializer : public ImageDataSerializerBase
-{
-public:
-  ImageDataDeserializer(uint8_t* aData, size_t aDataSize)
-    : ImageDataSerializerBase(aData, aDataSize)
-  {
-    Validate();
-  }
+void ComputeYCbCrOffsets(int32_t yStride, int32_t yHeight,
+                         int32_t cbCrStride, int32_t cbCrHeight,
+                         uint32_t& outYOffset, uint32_t& outCbOffset, uint32_t& outCrOffset);
 
-};
+gfx::SurfaceFormat FormatFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+
+gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
+
+uint8_t* GetYChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
+
+uint8_t* GetCbChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
+
+uint8_t* GetCrChannel(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
+
+already_AddRefed<gfx::DataSourceSurface>
+DataSourceSurfaceFromYCbCrDescriptor(uint8_t* aBuffer, const YCbCrDescriptor& aDescriptor);
+
+} // ImageDataSerializer
 
 } // namespace layers
 } // namespace mozilla

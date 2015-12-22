@@ -96,7 +96,6 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   , mPseudoType(aPseudoType)
 {
   MOZ_ASSERT(aTarget, "null animation target is not yet supported");
-  ResetIsRunningOnCompositor();
 }
 
 JSObject*
@@ -467,27 +466,14 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
 }
 
 bool
-KeyframeEffectReadOnly::IsPropertyRunningOnCompositor(
-  nsCSSProperty aProperty) const
-{
-  const auto& info = LayerAnimationInfo::sRecords;
-  for (size_t i = 0; i < ArrayLength(mIsPropertyRunningOnCompositor); i++) {
-    if (info[i].mProperty == aProperty) {
-      return mIsPropertyRunningOnCompositor[i];
-    }
-  }
-  return false;
-}
-
-bool
 KeyframeEffectReadOnly::IsRunningOnCompositor() const
 {
   // We consider animation is running on compositor if there is at least
   // one property running on compositor.
   // Animation.IsRunningOnCompotitor will return more fine grained
   // information in bug 1196114.
-  for (bool isPropertyRunningOnCompositor : mIsPropertyRunningOnCompositor) {
-    if (isPropertyRunningOnCompositor) {
+  for (const AnimationProperty& property : mProperties) {
+    if (property.mIsRunningOnCompositor) {
       return true;
     }
   }
@@ -498,19 +484,13 @@ void
 KeyframeEffectReadOnly::SetIsRunningOnCompositor(nsCSSProperty aProperty,
                                                  bool aIsRunning)
 {
-  static_assert(
-    MOZ_ARRAY_LENGTH(LayerAnimationInfo::sRecords) ==
-      MOZ_ARRAY_LENGTH(mIsPropertyRunningOnCompositor),
-    "The length of mIsPropertyRunningOnCompositor should equal to"
-    "the length of LayserAnimationInfo::sRecords");
   MOZ_ASSERT(nsCSSProps::PropHasFlags(aProperty,
                                       CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR),
              "Property being animated on compositor is a recognized "
              "compositor-animatable property");
-  const auto& info = LayerAnimationInfo::sRecords;
-  for (size_t i = 0; i < ArrayLength(mIsPropertyRunningOnCompositor); i++) {
-    if (info[i].mProperty == aProperty) {
-      mIsPropertyRunningOnCompositor[i] = aIsRunning;
+  for (AnimationProperty& property : mProperties) {
+    if (property.mProperty == aProperty) {
+      property.mIsRunningOnCompositor = aIsRunning;
       return;
     }
   }
@@ -523,8 +503,8 @@ KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 void
 KeyframeEffectReadOnly::ResetIsRunningOnCompositor()
 {
-  for (bool& isPropertyRunningOnCompositor : mIsPropertyRunningOnCompositor) {
-    isPropertyRunningOnCompositor = false;
+  for (AnimationProperty& property : mProperties) {
+    property.mIsRunningOnCompositor = false;
   }
 }
 
@@ -556,9 +536,7 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     // Any effects not in the effect set will not be included in the set of
     // candidate effects for running on the compositor and hence they won't
     // have their compositor status updated so we should do that now.
-    for (bool& isRunningOnCompositor : mIsPropertyRunningOnCompositor) {
-      isRunningOnCompositor = false;
-    }
+    ResetIsRunningOnCompositor();
   }
 }
 
@@ -1822,7 +1800,7 @@ KeyframeEffectReadOnly::CanThrottle() const
   }
 
   // First we need to check layer generation and transform overflow
-  // prior to the IsPropertyRunningOnCompositor check because we should
+  // prior to the property.mIsRunningOnCompositor check because we should
   // occasionally unthrottle these animations even if the animations are
   // already running on compositor.
   for (const LayerAnimationInfo::Record& record :
@@ -1854,7 +1832,7 @@ KeyframeEffectReadOnly::CanThrottle() const
   }
 
   for (const AnimationProperty& property : mProperties) {
-    if (!IsPropertyRunningOnCompositor(property.mProperty)) {
+    if (!property.mIsRunningOnCompositor) {
       return false;
     }
   }
