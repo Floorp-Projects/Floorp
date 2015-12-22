@@ -98,7 +98,7 @@ ContentBridgeChild::SendPBrowserConstructor(PBrowserChild* aActor,
 jsipc::CPOWManager*
 ContentBridgeChild::GetCPOWManager()
 {
-  if (PJavaScriptChild* c = LoneManagedOrNull(ManagedPJavaScriptChild())) {
+  if (PJavaScriptChild* c = LoneManagedOrNullAsserts(ManagedPJavaScriptChild())) {
     return CPOWManagerFor(c);
   }
   return CPOWManagerFor(SendPJavaScriptConstructor());
