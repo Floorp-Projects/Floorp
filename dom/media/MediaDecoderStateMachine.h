@@ -1101,6 +1101,9 @@ private:
   // been written to the MediaStream.
   Watchable<bool> mAudioCompleted;
 
+  // True if all video frames are already rendered.
+  Watchable<bool> mVideoCompleted;
+
   // Set if MDSM receives dormant request during reading metadata.
   Maybe<bool> mPendingDormant;
 
