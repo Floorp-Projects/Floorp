@@ -170,7 +170,7 @@ SharedArrayRawBuffer::dropReference()
         uint8_t* address = p.unwrap(/*safe - only reference*/);
         uint32_t allocSize = (this->length + 2*AsmJSPageSize - 1) & ~(AsmJSPageSize - 1);
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        if (!IsValidAsmJSHeapLength(allocSize)) {
+        if (!IsValidAsmJSHeapLength(this->length)) {
             UnmapMemory(address, allocSize);
         } else {
             numLive--;
