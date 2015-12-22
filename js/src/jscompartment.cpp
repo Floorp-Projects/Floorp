@@ -68,6 +68,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     propertyTree(thisForCtor()),
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
+    innerViews(zone, InnerViewTable()),
     lazyArrayBuffers(nullptr),
     nonSyntacticLexicalScopes_(nullptr),
     gcIncomingGrayPointers(nullptr),
@@ -662,12 +663,6 @@ JSCompartment::sweepAfterMinorGC()
 
     if (innerViews.needsSweepAfterMinorGC())
         innerViews.sweepAfterMinorGC();
-}
-
-void
-JSCompartment::sweepInnerViews()
-{
-    innerViews.sweep();
 }
 
 void
