@@ -328,10 +328,10 @@ AboutReader.prototype = {
 
     if (this._isReadingListItem == 0) {
       this._mm.sendAsyncMessage("Reader:AddToList", { article: this._article });
-      UITelemetry.addEvent("save.1", aMethod, null, "reader");
+      UITelemetry.addEvent("save.1", aMethod, null, "reading_list");
     } else {
       this._mm.sendAsyncMessage("Reader:RemoveFromList", { url: this._article.url });
-      UITelemetry.addEvent("unsave.1", aMethod, null, "reader");
+      UITelemetry.addEvent("unsave.1", aMethod, null, "reading_list");
     }
   },
 
