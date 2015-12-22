@@ -30,6 +30,8 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-abspos-items-011.html grid-abspos-items-011-ref.html
 == grid-abspos-items-012.html grid-abspos-items-012-ref.html
 == grid-abspos-items-013.html grid-abspos-items-013-ref.html
+== grid-abspos-items-014.html grid-abspos-items-014-ref.html
+== grid-abspos-items-015.html grid-abspos-items-015-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
