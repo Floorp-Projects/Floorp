@@ -274,6 +274,7 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     case WebGLTexelFormat::A16F:
     case WebGLTexelFormat::R16F:
     case WebGLTexelFormat::RA8:
+    case WebGLTexelFormat::RG8:
     case WebGLTexelFormat::RGB565:
     case WebGLTexelFormat::RGBA4444:
     case WebGLTexelFormat::RGBA5551:
@@ -324,6 +325,7 @@ MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
             format == WebGLTexelFormat::RA8      ||
             format == WebGLTexelFormat::RA16F    ||
             format == WebGLTexelFormat::RA32F    ||
+            format == WebGLTexelFormat::RG8      ||
             format == WebGLTexelFormat::RGB565   ||
             format == WebGLTexelFormat::RGB8     ||
             format == WebGLTexelFormat::RGB16F   ||
@@ -763,6 +765,34 @@ pack<WebGLTexelFormat::RA32F, WebGLTexelPremultiplicationOp::Unpremultiply, floa
     float scaleFactor = src[3] ? 1.0f / src[3] : 1.0f;
     dst[0] = src[0] * scaleFactor;
     dst[1] = src[3];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG8, WebGLTexelPremultiplicationOp::None, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG8, WebGLTexelPremultiplicationOp::Premultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+{
+    float scaleFactor = src[3] / 255.0f;
+    uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
+    uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
+    dst[0] = srcR;
+    dst[1] = srcG;
+}
+
+// FIXME: this routine is lossy and must be removed.
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_t, uint8_t>(const uint8_t* __restrict src, uint8_t* __restrict dst)
+{
+    float scaleFactor = src[3] ? 255.0f / src[3] : 1.0f;
+    uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
+    uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
+    dst[0] = srcR;
+    dst[1] = srcG;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
