@@ -32,6 +32,14 @@ public class AdjustHelper implements AdjustHelperInterface {
         Adjust.onCreate(config);
     }
 
+    public void onPause() {
+        Adjust.onPause();
+    }
+
+    public void onResume() {
+        Adjust.onResume();
+    }
+
     public void setEnabled(final boolean isEnabled) {
         Adjust.setEnabled(isEnabled);
     }
