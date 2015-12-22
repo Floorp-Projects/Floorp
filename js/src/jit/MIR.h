@@ -3399,8 +3399,12 @@ class MObjectState
     // on bailout.
     static JSObject* templateObjectOf(MDefinition* obj);
 
-    static MObjectState* New(TempAllocator& alloc, MDefinition* obj, MDefinition* undefinedVal);
+    static MObjectState* New(TempAllocator& alloc, MDefinition* obj);
     static MObjectState* Copy(TempAllocator& alloc, MObjectState* state);
+
+    // As we might do read of uninitialized properties, we have to copy the
+    // initial values from the template object.
+    bool initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal);
 
     MDefinition* object() const {
         return getOperand(0);
