@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import android.annotation.TargetApi;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AdjustConstants;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
@@ -1188,7 +1189,9 @@ OnSharedPreferenceChangeListener
             // to Gecko, but we do broadcast intent to the health report
             // background uploader service, which will start or stop the
             // repeated background upload attempts.
-            broadcastHealthReportUploadPref(this, (Boolean) newValue);
+            final Boolean newBooleanValue = (Boolean) newValue;
+            broadcastHealthReportUploadPref(this, newBooleanValue);
+            AdjustConstants.getAdjustHelper().setEnabled(newBooleanValue);
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             broadcastStumblerPref(this, (Boolean) newValue);
             // Translate boolean value to int for geo reporting pref.
