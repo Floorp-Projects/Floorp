@@ -4,7 +4,7 @@
 //
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 do_get_profile();
 
@@ -21,18 +21,10 @@ function repeatToLargerThan1K(data) {
 }
 
 function setupChannel(suffix, value) {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"]
-            .getService(Ci.nsIIOService);
-    var chan = ios.newChannel2("http://localhost:" +
-                               httpserver.identity.primaryPort +
-                               suffix,
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
+    var chan = NetUtil.newChannel({
+        uri: "http://localhost:" + httpserver.identity.primaryPort + suffix,
+        loadUsingSystemPrincipal: true
+    });
     var httpChan = chan.QueryInterface(Components.interfaces.nsIHttpChannel);
     httpChan.setRequestHeader("x-request", value, false);
     
@@ -109,9 +101,7 @@ function InitializeCacheDevices(memDevice, diskDevice) {
             }
         }
         var channel = setupChannel("/bug650995", "Initial value");
-        channel.asyncOpen(new ChannelListener(
-            nextTest, null),
-            null);
+        channel.asyncOpen2(new ChannelListener(nextTest, null));
     }
 }
 
@@ -128,14 +118,14 @@ function TestCacheEntrySize(setSizeFunc, firstRequest, secondRequest, secondExpe
     this.start = function() {
         setSizeFunc();
         var channel = setupChannel("/bug650995", firstRequest);
-        channel.asyncOpen(new ChannelListener(this.initialLoad, this), null);
+        channel.asyncOpen2(new ChannelListener(this.initialLoad, this));
     },
 
     this.initialLoad = function(request, data, ctx) {
         do_check_eq(firstRequest, data);
         var channel = setupChannel("/bug650995", secondRequest);
         do_execute_soon(function() {
-            channel.asyncOpen(new ChannelListener(ctx.testAndTriggerNext, ctx), null);
+            channel.asyncOpen2(new ChannelListener(ctx.testAndTriggerNext, ctx));
             });
     },
 
