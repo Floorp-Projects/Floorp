@@ -385,41 +385,6 @@ struct IntermediateFormat
                                              : WebGLTexelFormat::RGBA8;
 };
 
-inline GLenum
-GLFormatForTexelFormat(WebGLTexelFormat format) {
-    switch (format) {
-    // 1-channel formats
-    case WebGLTexelFormat::A8:          return LOCAL_GL_ALPHA;
-    case WebGLTexelFormat::A16F:        return LOCAL_GL_ALPHA;
-    case WebGLTexelFormat::A32F:        return LOCAL_GL_ALPHA;
-    case WebGLTexelFormat::R8:          return LOCAL_GL_LUMINANCE;
-    case WebGLTexelFormat::R16F:        return LOCAL_GL_LUMINANCE;
-    case WebGLTexelFormat::R32F:        return LOCAL_GL_LUMINANCE;
-    // 2-channel formats
-    case WebGLTexelFormat::RA8:         return LOCAL_GL_LUMINANCE_ALPHA;
-    case WebGLTexelFormat::RA16F:       return LOCAL_GL_LUMINANCE_ALPHA;
-    case WebGLTexelFormat::RA32F:       return LOCAL_GL_LUMINANCE_ALPHA;
-    // 3-channel formats
-    case WebGLTexelFormat::RGB565:      return LOCAL_GL_RGB;
-    case WebGLTexelFormat::RGB8:        return LOCAL_GL_RGB;
-    case WebGLTexelFormat::RGB16F:      return LOCAL_GL_RGB;
-    case WebGLTexelFormat::RGB32F:      return LOCAL_GL_RGB;
-    // 4-channel formats
-    case WebGLTexelFormat::RGBA4444:    return LOCAL_GL_RGBA;
-    case WebGLTexelFormat::RGBA5551:    return LOCAL_GL_RGBA;
-    case WebGLTexelFormat::RGBA8:       return LOCAL_GL_RGBA;
-    case WebGLTexelFormat::RGBA16F:     return LOCAL_GL_RGBA;
-    case WebGLTexelFormat::RGBA32F:     return LOCAL_GL_RGBA;
-    // DOM element source formats
-    case WebGLTexelFormat::BGRX8:       return LOCAL_GL_BGR;
-    case WebGLTexelFormat::BGRA8:       return LOCAL_GL_BGRA;
-
-    default:
-            MOZ_CRASH("Unknown texel format. Coding mistake?");
-            return LOCAL_GL_INVALID_ENUM;
-    }
-}
-
 inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     switch (format) {
     case WebGLTexelFormat::A8:
