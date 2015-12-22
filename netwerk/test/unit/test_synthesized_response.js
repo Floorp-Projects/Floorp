@@ -69,6 +69,9 @@ function make_channel(url, body, cb) {
       if (cb) {
         cb(channel);
       }
+      return {
+        dispatch: function() { }
+      };
     },
   };
   return chan;
