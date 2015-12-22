@@ -27,6 +27,7 @@
 #include "nsStyleContext.h"
 
 using namespace mozilla;
+typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 typedef nsGridContainerFrame::TrackSize TrackSize;
 const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
   uint32_t(nsStyleGridLine::kMaxLine - nsStyleGridLine::kMinLine);
@@ -3247,9 +3248,11 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
       // away the virtual GetType() call in the callee in most cases.
       // @see nsAbsoluteContainingBlock::Reflow
       nsRect dummyRect(0, 0, VERY_LIKELY_A_GRID_CONTAINER, 0);
+      AbsPosReflowFlags flags =
+        AbsPosReflowFlags::eCBWidthAndHeightChanged; // XXX could be optimized
+      flags |= AbsPosReflowFlags::eConstrainHeight;
       GetAbsoluteContainingBlock()->Reflow(this, pc, *aState.mReflowState,
-                                           aStatus, dummyRect, true,
-                                           true, true, // XXX could be optimized
+                                           aStatus, dummyRect, flags,
                                            &aDesiredSize.mOverflowAreas);
     }
   }
