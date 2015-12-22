@@ -18,16 +18,21 @@ def skip_if_not_rotatable(target):
     return wrapper
 
 
-class CommonCaretsTestCase(object):
-    '''Common test cases for a selection with a two carets.
-
-    To run these test cases, a subclass must inherit from both this class and
-    MarionetteTestCase.
+class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
+    '''Test cases for AccessibleCaret under selection mode, aka selection carets.
 
     '''
+
     def setUp(self):
         # Code to execute before a tests are run.
-        super(CommonCaretsTestCase, self).setUp()
+        super(AccessibleCaretSelectionModeTestCase, self).setUp()
+        self.carets_tested_pref = 'layout.accessiblecaret.enabled'
+        self.prefs = {
+            'layout.word_select.eat_space_to_next_word': False,
+            'layout.accessiblecaret.use_long_tap_injector': False,
+            self.carets_tested_pref: True,
+        }
+        self.marionette.set_prefs(self.prefs)
         self.actions = Actions(self.marionette)
 
     def open_test_html(self):
@@ -689,31 +694,6 @@ class CommonCaretsTestCase(object):
     def test_content_non_editable2_minimum_select_one_character(self):
         self.open_test_html2()
         self._test_minimum_select_one_character(self._content2, self.assertEqual)
-
-
-class SelectionCaretsTestCase(CommonCaretsTestCase, MarionetteTestCase):
-    def setUp(self):
-        super(SelectionCaretsTestCase, self).setUp()
-        self.carets_tested_pref = 'selectioncaret.enabled'
-        self.prefs = {
-            'layout.accessiblecaret.enabled': False,
-            'layout.word_select.eat_space_to_next_word': False,
-            self.carets_tested_pref: True,
-        }
-        self.marionette.set_prefs(self.prefs)
-
-
-class AccessibleCaretSelectionModeTestCase(CommonCaretsTestCase, MarionetteTestCase):
-    def setUp(self):
-        super(AccessibleCaretSelectionModeTestCase, self).setUp()
-        self.carets_tested_pref = 'layout.accessiblecaret.enabled'
-        self.prefs = {
-            'selectioncaret.enabled': False,
-            'layout.word_select.eat_space_to_next_word': False,
-            'layout.accessiblecaret.use_long_tap_injector': False,
-            self.carets_tested_pref: True,
-        }
-        self.marionette.set_prefs(self.prefs)
 
     def test_long_press_to_select_when_partial_visible_word_is_selected(self):
         self.open_test_html()
