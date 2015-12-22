@@ -7771,7 +7771,7 @@ nsDocument::GetViewportInfo(const ScreenIntSize& aDisplaySize)
   // pixel an integer, and we want the adjusted value.
   float fullZoom = context ? context->DeviceContext()->GetFullZoom() : 1.0;
   fullZoom = (fullZoom == 0.0) ? 1.0 : fullZoom;
-  CSSToLayoutDeviceScale layoutDeviceScale = context->CSSToDevPixelScale();
+  CSSToLayoutDeviceScale layoutDeviceScale = context ? context->CSSToDevPixelScale() : CSSToLayoutDeviceScale(1);
 
   CSSToScreenScale defaultScale = layoutDeviceScale
                                 * LayoutDeviceToScreenScale(1.0);
