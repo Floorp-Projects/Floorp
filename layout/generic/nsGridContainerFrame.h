@@ -118,6 +118,7 @@ protected:
   struct TrackSizingFunctions;
   struct Tracks;
   struct GridReflowState;
+  class LineNameMap;
   friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
                                                     nsStyleContext* aContext);
   explicit nsGridContainerFrame(nsStyleContext* aContext)
