@@ -155,7 +155,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
             key = bucket.get_key(source)
             return retry(key.get_contents_to_filename,
                          args=(destination, ),
-                         sleeptime=5, max_sleeptime=60,
+                         sleeptime=30, max_sleeptime=150,
                          retry_exceptions=(S3CopyError, S3ResponseError,
                                            IOError, HTTPException))
 

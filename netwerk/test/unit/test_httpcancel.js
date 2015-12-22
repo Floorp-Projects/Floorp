@@ -5,7 +5,7 @@
 // expected: see comments that start with ENSURE_CALLED_BEFORE_CONNECT:
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -73,15 +73,8 @@ var listener = {
 };
 
 function makeChan(url) {
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
-                .QueryInterface(Components.interfaces.nsIHttpChannel);
+  var chan = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
+                    .QueryInterface(Components.interfaces.nsIHttpChannel);
 
   // ENSURE_CALLED_BEFORE_CONNECT: set original value
   var uri = ios.newURI("http://site1.com", null, null);
@@ -100,7 +93,7 @@ function execute_test() {
   obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
   obs.addObserver(observer, "http-on-modify-request", false);
 
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 function run_test() {

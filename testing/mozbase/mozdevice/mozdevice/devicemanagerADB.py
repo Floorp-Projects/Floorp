@@ -472,8 +472,9 @@ class DeviceManagerADB(DeviceManager):
         # we must determine the device root ourselves
         paths = [('/storage/sdcard0', 'tests'),
                  ('/storage/sdcard1', 'tests'),
-                 ('/sdcard', 'tests'),
+                 ('/storage/sdcard', 'tests'),
                  ('/mnt/sdcard', 'tests'),
+                 ('/sdcard', 'tests'),
                  ('/data/local', 'tests')]
         for (basePath, subPath) in paths:
             if self.dirExists(basePath):

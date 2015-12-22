@@ -180,7 +180,6 @@ EXPORTS.mozilla.layers += [
     'RenderTrace.h',
     'TextureWrapperImage.h',
     'TransactionIdAllocator.h',
-    'YCbCrImageDataSerializer.h',
 ]
 
 if CONFIG['MOZ_X11']:
@@ -250,7 +249,6 @@ UNIFIED_SOURCES += [
     'apz/src/InputBlockState.cpp',
     'apz/src/InputQueue.cpp',
     'apz/src/OverscrollHandoffState.cpp',
-    'apz/src/TaskThrottler.cpp',
     'apz/src/TouchCounter.cpp',
     'apz/src/WheelScrollAnimation.cpp',
     'apz/testutil/APZTestData.cpp',
@@ -352,7 +350,6 @@ UNIFIED_SOURCES += [
     'RenderTrace.cpp',
     'RotatedBuffer.cpp',
     'TextureWrapperImage.cpp',
-    'YCbCrImageDataSerializer.cpp',
 ]
 
 SOURCES += [

@@ -572,8 +572,8 @@ nsresult NS_NewBufferedOutputStream(nsIOutputStream **result,
                                     uint32_t          bufferSize);
 
 /**
- * Attempts to buffer a given output stream.  If this fails, it returns the
- * passed-in output stream.
+ * Attempts to buffer a given stream.  If this fails, it returns the
+ * passed-in stream.
  *
  * @param aOutputStream
  *        The output stream we want to buffer.  This cannot be null.
@@ -584,6 +584,9 @@ nsresult NS_NewBufferedOutputStream(nsIOutputStream **result,
  */
 already_AddRefed<nsIOutputStream>
 NS_BufferOutputStream(nsIOutputStream *aOutputStream,
+                      uint32_t aBufferSize);
+already_AddRefed<nsIInputStream>
+NS_BufferInputStream(nsIInputStream *aInputStream,
                       uint32_t aBufferSize);
 
 // returns an input stream compatible with nsIUploadChannel::SetUploadStream()

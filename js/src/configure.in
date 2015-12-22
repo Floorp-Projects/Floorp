@@ -73,8 +73,8 @@ _PTHREAD_LDFLAGS=""
 
 dnl Do not allow objdir == srcdir builds
 dnl ==============================================================
-_topsrcdir=`cd $srcdir; pwd -W 2>/dev/null || pwd`
-_objdir=`pwd`
+_topsrcdir=`cd $srcdir; pwd -W 2>/dev/null || pwd -P`
+_objdir=`pwd -P`
 
 if test "$_topsrcdir" = "$_objdir"
 then
@@ -112,7 +112,7 @@ if test "$_conflict_files"; then
   exit 1
   break
 fi
-MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
+MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
 MOZ_BUILD_BACKEND
 

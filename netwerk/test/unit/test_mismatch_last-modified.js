@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 var httpserver = new HttpServer();
 
 var ios;
@@ -69,18 +69,11 @@ XPCOMUtils.defineLazyGetter(this, "listener_2", function() {
 
     onStopRequest: function test_onStopR(request, ctx, status) {
     var channel = request.QueryInterface(Ci.nsIHttpChannel);
-
-    var chan = ios.newChannel2("http://localhost:" +
-                               httpserver.identity.primaryPort +
-                               "/test1",
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
-    chan.asyncOpen(listener_3, null);
+    var chan = NetUtil.newChannel({
+      uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
+      loadUsingSystemPrincipal: true
+    });
+    chan.asyncOpen2(listener_3);
     }
 };
 });
@@ -107,19 +100,12 @@ XPCOMUtils.defineLazyGetter(this, "listener_1", function() {
     },
 
     onStopRequest: function test_onStopR(request, ctx, status) {
-	var channel = request.QueryInterface(Ci.nsIHttpChannel);
-
-	var chan = ios.newChannel2("http://localhost:" +
-				                     httpserver.identity.primaryPort +
-				                     "/test1",
-                             "",
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER);
-	chan.asyncOpen(listener_2, null);
+    var channel = request.QueryInterface(Ci.nsIHttpChannel);
+    var chan = NetUtil.newChannel({
+      uri: "http://localhost:" + httpserver.identity.primaryPort + "/test1",
+      loadUsingSystemPrincipal: true
+    });
+	  chan.asyncOpen2(listener_2);
     }
 };
 });
@@ -135,16 +121,11 @@ function run_test() {
     httpserver.start(-1);
 
     var port = httpserver.identity.primaryPort;
-
-    var chan = ios.newChannel2("http://localhost:" + port + "/test1",
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
-    chan.asyncOpen(listener_1, null);
+    var chan = NetUtil.newChannel({
+      uri: "http://localhost:" + port + "/test1",
+      loadUsingSystemPrincipal: true
+    });
+    chan.asyncOpen2(listener_1);
 
     do_test_pending();
 }

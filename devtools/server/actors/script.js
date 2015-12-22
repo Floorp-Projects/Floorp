@@ -12,7 +12,7 @@ const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/ser
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { assert, dbg_assert, dumpn, update, fetch } = DevToolsUtils;
+const { assert, dumpn, update, fetch } = DevToolsUtils;
 const { dirname, joinURI } = require("devtools/shared/path");
 const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
@@ -353,8 +353,6 @@ EventLoop.prototype = {
         xpcInspector.exitNestedEventLoop();
       }
     }
-
-    dbg_assert(this._thread.state === "running", "Should be in the running state");
 
     if (this._hooks.postNest) {
       this._hooks.postNest(nestData);

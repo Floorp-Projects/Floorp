@@ -68,7 +68,7 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
   , mOmxState(OMX_STATETYPE::OMX_StateInvalid, "OmxDataDecoder::mOmxState")
   , mTrackInfo(aTrackInfo.Clone())
   , mFlushing(false)
-  , mShutdown(false)
+  , mShuttingDown(false)
   , mCheckingInputExhausted(false)
   , mPortSettingsChanged(-1, "OmxDataDecoder::mPortSettingsChanged")
   , mAudioCompactor(mAudioQueue)
@@ -86,7 +86,6 @@ OmxDataDecoder::~OmxDataDecoder()
 {
   LOG("(%p)", this);
   mWatchManager.Shutdown();
-  mOmxTaskQueue->AwaitShutdownAndIdle();
 }
 
 void
@@ -207,11 +206,24 @@ OmxDataDecoder::Shutdown()
 {
   LOG("(%p)", this);
 
-  mShutdown = true;
+  mShuttingDown = true;
 
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &OmxDataDecoder::DoAsyncShutdown);
   mOmxTaskQueue->Dispatch(r.forget());
+
+  {
+    // DoAsyncShutdown() will be running for a while, it could be still running
+    // when reader releasing the decoder and then it causes problem. To avoid it,
+    // Shutdown() must block until DoAsyncShutdown() is completed.
+    MonitorAutoLock lock(mMonitor);
+    while (mShuttingDown) {
+      lock.Wait();
+    }
+  }
+
+  mOmxTaskQueue->BeginShutdown();
+  mOmxTaskQueue->AwaitShutdownAndIdle();
 
   return NS_OK;
 }
@@ -273,9 +285,17 @@ OmxDataDecoder::DoAsyncShutdown()
            [self] () {
              LOG("DoAsyncShutdown: OMX_StateLoaded, it is safe to shutdown omx");
              self->mOmxLayer->Shutdown();
+
+             MonitorAutoLock lock(self->mMonitor);
+             self->mShuttingDown = false;
+             self->mMonitor.Notify();
            },
            [self] () {
              self->mOmxLayer->Shutdown();
+
+             MonitorAutoLock lock(self->mMonitor);
+             self->mShuttingDown = false;
+             self->mMonitor.Notify();
            });
 }
 
@@ -400,12 +420,8 @@ OmxDataDecoder::FillAndEmptyBuffers()
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
   MOZ_ASSERT(mOmxState == OMX_StateExecuting);
 
-  // During the port setting changed, it is forbided to do any buffer operations.
-  if (mPortSettingsChanged != -1 || mShutdown) {
-    return;
-  }
-
-  if (mFlushing) {
+  // During the port setting changed, it is forbidden to do any buffer operation.
+  if (mPortSettingsChanged != -1 || mShuttingDown || mFlushing) {
     return;
   }
 
@@ -842,7 +858,6 @@ OmxDataDecoder::DoFlush()
 
   // 1. Call OMX command OMX_CommandFlush in Omx TaskQueue.
   // 2. Remove all elements in mMediaRawDatas when flush is completed.
-  RefPtr<OmxDataDecoder> self = this;
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
     ->Then(mOmxTaskQueue, __func__, this,
            &OmxDataDecoder::FlushComplete,
