@@ -17,8 +17,92 @@
 /*
  * JS SIMD functions.
  * Spec matching polyfill:
- * https://github.com/johnmccutchan/ecmascript_simd/blob/master/src/ecmascript_simd.js
+ * https://github.com/tc39/ecmascript_simd/blob/master/src/ecmascript_simd.js
  */
+
+#define BOOL8X16_UNARY_FUNCTION_LIST(V)                                               \
+  V(not, (UnaryFunc<Bool8x16, LogicalNot, Bool8x16>), 1)                              \
+  V(check, (UnaryFunc<Bool8x16, Identity, Bool8x16>), 1)                              \
+  V(splat, (FuncSplat<Bool8x16>), 1)                                                  \
+  V(allTrue, (AllTrue<Bool8x16>), 1)                                                  \
+  V(anyTrue, (AnyTrue<Bool8x16>), 1)
+
+#define BOOL8X16_BINARY_FUNCTION_LIST(V)                                              \
+  V(extractLane, (ExtractLane<Bool8x16>), 2)                                          \
+  V(and, (BinaryFunc<Bool8x16, And, Bool8x16>), 2)                                    \
+  V(or, (BinaryFunc<Bool8x16, Or, Bool8x16>), 2)                                      \
+  V(xor, (BinaryFunc<Bool8x16, Xor, Bool8x16>), 2)                                    \
+
+#define BOOL8X16_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Bool8x16>), 3)
+
+#define BOOL8X16_FUNCTION_LIST(V)                                                     \
+  BOOL8X16_UNARY_FUNCTION_LIST(V)                                                     \
+  BOOL8X16_BINARY_FUNCTION_LIST(V)                                                    \
+  BOOL8X16_TERNARY_FUNCTION_LIST(V)
+
+#define BOOL16X8_UNARY_FUNCTION_LIST(V)                                               \
+  V(not, (UnaryFunc<Bool16x8, LogicalNot, Bool16x8>), 1)                              \
+  V(check, (UnaryFunc<Bool16x8, Identity, Bool16x8>), 1)                              \
+  V(splat, (FuncSplat<Bool16x8>), 1)                                                  \
+  V(allTrue, (AllTrue<Bool16x8>), 1)                                                  \
+  V(anyTrue, (AnyTrue<Bool16x8>), 1)
+
+#define BOOL16X8_BINARY_FUNCTION_LIST(V)                                              \
+  V(extractLane, (ExtractLane<Bool16x8>), 2)                                          \
+  V(and, (BinaryFunc<Bool16x8, And, Bool16x8>), 2)                                    \
+  V(or, (BinaryFunc<Bool16x8, Or, Bool16x8>), 2)                                      \
+  V(xor, (BinaryFunc<Bool16x8, Xor, Bool16x8>), 2)                                    \
+
+#define BOOL16X8_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Bool16x8>), 3)
+
+#define BOOL16X8_FUNCTION_LIST(V)                                                     \
+  BOOL16X8_UNARY_FUNCTION_LIST(V)                                                     \
+  BOOL16X8_BINARY_FUNCTION_LIST(V)                                                    \
+  BOOL16X8_TERNARY_FUNCTION_LIST(V)
+
+#define BOOL32X4_UNARY_FUNCTION_LIST(V)                                               \
+  V(not, (UnaryFunc<Bool32x4, LogicalNot, Bool32x4>), 1)                              \
+  V(check, (UnaryFunc<Bool32x4, Identity, Bool32x4>), 1)                              \
+  V(splat, (FuncSplat<Bool32x4>), 1)                                                  \
+  V(allTrue, (AllTrue<Bool32x4>), 1)                                                  \
+  V(anyTrue, (AnyTrue<Bool32x4>), 1)
+
+#define BOOL32X4_BINARY_FUNCTION_LIST(V)                                              \
+  V(extractLane, (ExtractLane<Bool32x4>), 2)                                          \
+  V(and, (BinaryFunc<Bool32x4, And, Bool32x4>), 2)                                    \
+  V(or, (BinaryFunc<Bool32x4, Or, Bool32x4>), 2)                                      \
+  V(xor, (BinaryFunc<Bool32x4, Xor, Bool32x4>), 2)                                    \
+
+#define BOOL32X4_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Bool32x4>), 3)
+
+#define BOOL32X4_FUNCTION_LIST(V)                                                     \
+  BOOL32X4_UNARY_FUNCTION_LIST(V)                                                     \
+  BOOL32X4_BINARY_FUNCTION_LIST(V)                                                    \
+  BOOL32X4_TERNARY_FUNCTION_LIST(V)
+
+#define BOOL64X2_UNARY_FUNCTION_LIST(V)                                               \
+  V(not, (UnaryFunc<Bool64x2, LogicalNot, Bool64x2>), 1)                              \
+  V(check, (UnaryFunc<Bool64x2, Identity, Bool64x2>), 1)                              \
+  V(splat, (FuncSplat<Bool64x2>), 1)                                                  \
+  V(allTrue, (AllTrue<Bool64x2>), 1)                                                  \
+  V(anyTrue, (AnyTrue<Bool64x2>), 1)
+
+#define BOOL64X2_BINARY_FUNCTION_LIST(V)                                              \
+  V(extractLane, (ExtractLane<Bool64x2>), 2)                                          \
+  V(and, (BinaryFunc<Bool64x2, And, Bool64x2>), 2)                                    \
+  V(or, (BinaryFunc<Bool64x2, Or, Bool64x2>), 2)                                      \
+  V(xor, (BinaryFunc<Bool64x2, Xor, Bool64x2>), 2)                                    \
+
+#define BOOL64X2_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Bool64x2>), 3)
+
+#define BOOL64X2_FUNCTION_LIST(V)                                                     \
+  BOOL64X2_UNARY_FUNCTION_LIST(V)                                                     \
+  BOOL64X2_BINARY_FUNCTION_LIST(V)                                                    \
+  BOOL64X2_TERNARY_FUNCTION_LIST(V)
 
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                              \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1)                                   \
@@ -40,12 +124,12 @@
   V(add, (BinaryFunc<Float32x4, Add, Float32x4>), 2)                                  \
   V(and, (CoercedBinaryFunc<Float32x4, Int32x4, And, Float32x4>), 2)                  \
   V(div, (BinaryFunc<Float32x4, Div, Float32x4>), 2)                                  \
-  V(equal, (CompareFunc<Float32x4, Equal, Int32x4>), 2)                               \
+  V(equal, (CompareFunc<Float32x4, Equal, Bool32x4>), 2)                              \
   V(extractLane, (ExtractLane<Float32x4>), 2)                                         \
-  V(greaterThan, (CompareFunc<Float32x4, GreaterThan, Int32x4>), 2)                   \
-  V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual, Int32x4>), 2)     \
-  V(lessThan, (CompareFunc<Float32x4, LessThan, Int32x4>), 2)                         \
-  V(lessThanOrEqual, (CompareFunc<Float32x4, LessThanOrEqual, Int32x4>), 2)           \
+  V(greaterThan, (CompareFunc<Float32x4, GreaterThan, Bool32x4>), 2)                  \
+  V(greaterThanOrEqual, (CompareFunc<Float32x4, GreaterThanOrEqual, Bool32x4>), 2)    \
+  V(lessThan, (CompareFunc<Float32x4, LessThan, Bool32x4>), 2)                        \
+  V(lessThanOrEqual, (CompareFunc<Float32x4, LessThanOrEqual, Bool32x4>), 2)          \
   V(load,  (Load<Float32x4, 4>), 2)                                                   \
   V(load3, (Load<Float32x4, 3>), 2)                                                   \
   V(load2, (Load<Float32x4, 2>), 2)                                                   \
@@ -55,14 +139,14 @@
   V(min, (BinaryFunc<Float32x4, Minimum, Float32x4>), 2)                              \
   V(minNum, (BinaryFunc<Float32x4, MinNum, Float32x4>), 2)                            \
   V(mul, (BinaryFunc<Float32x4, Mul, Float32x4>), 2)                                  \
-  V(notEqual, (CompareFunc<Float32x4, NotEqual, Int32x4>), 2)                         \
+  V(notEqual, (CompareFunc<Float32x4, NotEqual, Bool32x4>), 2)                        \
   V(or, (CoercedBinaryFunc<Float32x4, Int32x4, Or, Float32x4>), 2)                    \
   V(sub, (BinaryFunc<Float32x4, Sub, Float32x4>), 2)                                  \
   V(xor, (CoercedBinaryFunc<Float32x4, Int32x4, Xor, Float32x4>), 2)
 
 #define FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                            \
   V(replaceLane, (ReplaceLane<Float32x4>), 3)                                         \
-  V(select, (Select<Float32x4, Int32x4>), 3)                                          \
+  V(select, (Select<Float32x4, Bool32x4>), 3)                                         \
   V(store,  (Store<Float32x4, 4>), 3)                                                 \
   V(store3, (Store<Float32x4, 3>), 3)                                                 \
   V(store2, (Store<Float32x4, 2>), 3)                                                 \
@@ -96,12 +180,12 @@
 #define FLOAT64X2_BINARY_FUNCTION_LIST(V)                                             \
   V(add, (BinaryFunc<Float64x2, Add, Float64x2>), 2)                                  \
   V(div, (BinaryFunc<Float64x2, Div, Float64x2>), 2)                                  \
-  V(equal, (CompareFunc<Float64x2, Equal, Int32x4>), 2)                               \
+  V(equal, (CompareFunc<Float64x2, Equal, Bool64x2>), 2)                              \
   V(extractLane, (ExtractLane<Float64x2>), 2)                                         \
-  V(greaterThan, (CompareFunc<Float64x2, GreaterThan, Int32x4>), 2)                   \
-  V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual, Int32x4>), 2)     \
-  V(lessThan, (CompareFunc<Float64x2, LessThan, Int32x4>), 2)                         \
-  V(lessThanOrEqual, (CompareFunc<Float64x2, LessThanOrEqual, Int32x4>), 2)           \
+  V(greaterThan, (CompareFunc<Float64x2, GreaterThan, Bool64x2>), 2)                  \
+  V(greaterThanOrEqual, (CompareFunc<Float64x2, GreaterThanOrEqual, Bool64x2>), 2)    \
+  V(lessThan, (CompareFunc<Float64x2, LessThan, Bool64x2>), 2)                        \
+  V(lessThanOrEqual, (CompareFunc<Float64x2, LessThanOrEqual, Bool64x2>), 2)          \
   V(load,  (Load<Float64x2, 2>), 2)                                                   \
   V(load1, (Load<Float64x2, 1>), 2)                                                   \
   V(max, (BinaryFunc<Float64x2, Maximum, Float64x2>), 2)                              \
@@ -109,12 +193,12 @@
   V(min, (BinaryFunc<Float64x2, Minimum, Float64x2>), 2)                              \
   V(minNum, (BinaryFunc<Float64x2, MinNum, Float64x2>), 2)                            \
   V(mul, (BinaryFunc<Float64x2, Mul, Float64x2>), 2)                                  \
-  V(notEqual, (CompareFunc<Float64x2, NotEqual, Int32x4>), 2)                         \
+  V(notEqual, (CompareFunc<Float64x2, NotEqual, Bool64x2>), 2)                        \
   V(sub, (BinaryFunc<Float64x2, Sub, Float64x2>), 2)
 
 #define FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                            \
   V(replaceLane, (ReplaceLane<Float64x2>), 3)                                         \
-  V(select, (Select<Float64x2, Int32x4>), 3)                                          \
+  V(select, (Select<Float64x2, Bool64x2>), 3)                                         \
   V(store,  (Store<Float64x2, 2>), 3)                                                 \
   V(store1, (Store<Float64x2, 1>), 3)
 
@@ -141,15 +225,15 @@
 #define INT8X16_BINARY_FUNCTION_LIST(V)                                               \
   V(add, (BinaryFunc<Int8x16, Add, Int8x16>), 2)                                      \
   V(and, (BinaryFunc<Int8x16, And, Int8x16>), 2)                                      \
-  V(equal, (CompareFunc<Int8x16, Equal, Int8x16>), 2)                                 \
+  V(equal, (CompareFunc<Int8x16, Equal, Bool8x16>), 2)                                \
   V(extractLane, (ExtractLane<Int8x16>), 2)                                           \
-  V(greaterThan, (CompareFunc<Int8x16, GreaterThan, Int8x16>), 2)                     \
-  V(greaterThanOrEqual, (CompareFunc<Int8x16, GreaterThanOrEqual, Int8x16>), 2)       \
-  V(lessThan, (CompareFunc<Int8x16, LessThan, Int8x16>), 2)                           \
-  V(lessThanOrEqual, (CompareFunc<Int8x16, LessThanOrEqual, Int8x16>), 2)             \
+  V(greaterThan, (CompareFunc<Int8x16, GreaterThan, Bool8x16>), 2)                    \
+  V(greaterThanOrEqual, (CompareFunc<Int8x16, GreaterThanOrEqual, Bool8x16>), 2)      \
+  V(lessThan, (CompareFunc<Int8x16, LessThan, Bool8x16>), 2)                          \
+  V(lessThanOrEqual, (CompareFunc<Int8x16, LessThanOrEqual, Bool8x16>), 2)            \
   V(load, (Load<Int8x16, 16>), 2)                                                     \
   V(mul, (BinaryFunc<Int8x16, Mul, Int8x16>), 2)                                      \
-  V(notEqual, (CompareFunc<Int8x16, NotEqual, Int8x16>), 2)                           \
+  V(notEqual, (CompareFunc<Int8x16, NotEqual, Bool8x16>), 2)                          \
   V(or, (BinaryFunc<Int8x16, Or, Int8x16>), 2)                                        \
   V(sub, (BinaryFunc<Int8x16, Sub, Int8x16>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int8x16, ShiftLeft>), 2)                         \
@@ -159,8 +243,8 @@
 
 #define INT8X16_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int8x16>), 3)                                           \
-  V(select, (Select<Int8x16, Int8x16>), 3)                                            \
-  V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                            \
+  V(select, (Select<Int8x16, Bool8x16>), 3)                                           \
+  V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                    \
   V(store, (Store<Int8x16, 16>), 3)
 
 #define INT8X16_SHUFFLE_FUNCTION_LIST(V)                                              \
@@ -186,15 +270,15 @@
 #define INT16X8_BINARY_FUNCTION_LIST(V)                                               \
   V(add, (BinaryFunc<Int16x8, Add, Int16x8>), 2)                                      \
   V(and, (BinaryFunc<Int16x8, And, Int16x8>), 2)                                      \
-  V(equal, (CompareFunc<Int16x8, Equal, Int16x8>), 2)                                 \
+  V(equal, (CompareFunc<Int16x8, Equal, Bool16x8>), 2)                                \
   V(extractLane, (ExtractLane<Int16x8>), 2)                                           \
-  V(greaterThan, (CompareFunc<Int16x8, GreaterThan, Int16x8>), 2)                     \
-  V(greaterThanOrEqual, (CompareFunc<Int16x8, GreaterThanOrEqual, Int16x8>), 2)       \
-  V(lessThan, (CompareFunc<Int16x8, LessThan, Int16x8>), 2)                           \
-  V(lessThanOrEqual, (CompareFunc<Int16x8, LessThanOrEqual, Int16x8>), 2)             \
+  V(greaterThan, (CompareFunc<Int16x8, GreaterThan, Bool16x8>), 2)                    \
+  V(greaterThanOrEqual, (CompareFunc<Int16x8, GreaterThanOrEqual, Bool16x8>), 2)      \
+  V(lessThan, (CompareFunc<Int16x8, LessThan, Bool16x8>), 2)                          \
+  V(lessThanOrEqual, (CompareFunc<Int16x8, LessThanOrEqual, Bool16x8>), 2)            \
   V(load, (Load<Int16x8, 8>), 2)                                                      \
   V(mul, (BinaryFunc<Int16x8, Mul, Int16x8>), 2)                                      \
-  V(notEqual, (CompareFunc<Int16x8, NotEqual, Int16x8>), 2)                           \
+  V(notEqual, (CompareFunc<Int16x8, NotEqual, Bool16x8>), 2)                          \
   V(or, (BinaryFunc<Int16x8, Or, Int16x8>), 2)                                        \
   V(sub, (BinaryFunc<Int16x8, Sub, Int16x8>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int16x8, ShiftLeft>), 2)                         \
@@ -204,8 +288,8 @@
 
 #define INT16X8_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int16x8>), 3)                                           \
-  V(select, (Select<Int16x8, Int16x8>), 3)                                            \
-  V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                            \
+  V(select, (Select<Int16x8, Bool16x8>), 3)                                           \
+  V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                    \
   V(store, (Store<Int16x8, 8>), 3)
 
 #define INT16X8_SHUFFLE_FUNCTION_LIST(V)                                              \
@@ -233,18 +317,18 @@
 #define INT32X4_BINARY_FUNCTION_LIST(V)                                               \
   V(add, (BinaryFunc<Int32x4, Add, Int32x4>), 2)                                      \
   V(and, (BinaryFunc<Int32x4, And, Int32x4>), 2)                                      \
-  V(equal, (CompareFunc<Int32x4, Equal, Int32x4>), 2)                                 \
+  V(equal, (CompareFunc<Int32x4, Equal, Bool32x4>), 2)                                \
   V(extractLane, (ExtractLane<Int32x4>), 2)                                           \
-  V(greaterThan, (CompareFunc<Int32x4, GreaterThan, Int32x4>), 2)                     \
-  V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual, Int32x4>), 2)       \
-  V(lessThan, (CompareFunc<Int32x4, LessThan, Int32x4>), 2)                           \
-  V(lessThanOrEqual, (CompareFunc<Int32x4, LessThanOrEqual, Int32x4>), 2)             \
+  V(greaterThan, (CompareFunc<Int32x4, GreaterThan, Bool32x4>), 2)                    \
+  V(greaterThanOrEqual, (CompareFunc<Int32x4, GreaterThanOrEqual, Bool32x4>), 2)      \
+  V(lessThan, (CompareFunc<Int32x4, LessThan, Bool32x4>), 2)                          \
+  V(lessThanOrEqual, (CompareFunc<Int32x4, LessThanOrEqual, Bool32x4>), 2)            \
   V(load,  (Load<Int32x4, 4>), 2)                                                     \
   V(load3, (Load<Int32x4, 3>), 2)                                                     \
   V(load2, (Load<Int32x4, 2>), 2)                                                     \
   V(load1, (Load<Int32x4, 1>), 2)                                                     \
   V(mul, (BinaryFunc<Int32x4, Mul, Int32x4>), 2)                                      \
-  V(notEqual, (CompareFunc<Int32x4, NotEqual, Int32x4>), 2)                           \
+  V(notEqual, (CompareFunc<Int32x4, NotEqual, Bool32x4>), 2)                          \
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2)                                        \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int32x4, ShiftLeft>), 2)                         \
@@ -254,8 +338,8 @@
 
 #define INT32X4_TERNARY_FUNCTION_LIST(V)                                              \
   V(replaceLane, (ReplaceLane<Int32x4>), 3)                                           \
-  V(select, (Select<Int32x4, Int32x4>), 3)                                            \
-  V(selectBits, (SelectBits<Int32x4, Int32x4>), 3)                                            \
+  V(select, (Select<Int32x4, Bool32x4>), 3)                                           \
+  V(selectBits, (SelectBits<Int32x4, Int32x4>), 3)                                    \
   V(store,  (Store<Int32x4, 4>), 3)                                                   \
   V(store3, (Store<Int32x4, 3>), 3)                                                   \
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
@@ -271,6 +355,9 @@
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                    \
   INT32X4_SHUFFLE_FUNCTION_LIST(V)
 
+#define FOREACH_BOOL_SIMD_OP(_)       \
+    _(allTrue)                        \
+    _(anyTrue)
 #define CONVERSION_INT32X4_SIMD_OP(_) \
     _(fromFloat32x4)                  \
     _(fromFloat32x4Bits)
@@ -311,6 +398,13 @@
     _(notEqual)                      \
     _(greaterThan)                   \
     _(greaterThanOrEqual)
+#define COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(_) \
+    _(lessThan)                      \
+    _(lessThanOrEqual)               \
+    _(equal)                         \
+    _(notEqual)                      \
+    _(greaterThan)                   \
+    _(greaterThanOrEqual)
 // TODO: remove when all SIMD calls are inlined (bug 1112155)
 #define ION_COMMONX4_SIMD_OP(_)      \
     ARITH_COMMONX4_SIMD_OP(_)        \
@@ -338,6 +432,7 @@
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \
+    FOREACH_BOOL_SIMD_OP(_)          \
     FOREACH_COMMONX4_SIMD_OP(_)
 
 namespace js {
@@ -430,6 +525,58 @@ struct Int32x4 {
     }
 };
 
+struct Bool8x16 {
+    typedef int8_t Elem;
+    static const unsigned lanes = 16;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool8x16;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        *out = ToBoolean(v) ? -1 : 0;
+        return true;
+    }
+    static Value ToValue(Elem value) {
+        return BooleanValue(value);
+    }
+};
+
+struct Bool16x8 {
+    typedef int16_t Elem;
+    static const unsigned lanes = 8;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool16x8;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        *out = ToBoolean(v) ? -1 : 0;
+        return true;
+    }
+    static Value ToValue(Elem value) {
+        return BooleanValue(value);
+    }
+};
+
+struct Bool32x4 {
+    typedef int32_t Elem;
+    static const unsigned lanes = 4;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool32x4;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        *out = ToBoolean(v) ? -1 : 0;
+        return true;
+    }
+    static Value ToValue(Elem value) {
+        return BooleanValue(value);
+    }
+};
+
+struct Bool64x2 {
+    typedef int64_t Elem;
+    static const unsigned lanes = 2;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool64x2;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        *out = ToBoolean(v) ? -1 : 0;
+        return true;
+    }
+    static Value ToValue(Elem value) {
+        return BooleanValue(value);
+    }
+};
+
 template<typename V>
 JSObject* CreateSimd(JSContext* cx, const typename V::Elem* data);
 
@@ -468,6 +615,30 @@ extern bool                                                     \
 simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
 INT32X4_FUNCTION_LIST(DECLARE_SIMD_INT32x4_FUNCTION)
 #undef DECLARE_SIMD_INT32x4_FUNCTION
+
+#define DECLARE_SIMD_BOOL8X16_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_bool8x16_##Name(JSContext* cx, unsigned argc, Value* vp);
+BOOL8X16_FUNCTION_LIST(DECLARE_SIMD_BOOL8X16_FUNCTION)
+#undef DECLARE_SIMD_BOOL8X16_FUNCTION
+
+#define DECLARE_SIMD_BOOL16X8_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_bool16x8_##Name(JSContext* cx, unsigned argc, Value* vp);
+BOOL16X8_FUNCTION_LIST(DECLARE_SIMD_BOOL16X8_FUNCTION)
+#undef DECLARE_SIMD_BOOL16X8_FUNCTION
+
+#define DECLARE_SIMD_BOOL32X4_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_bool32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
+BOOL32X4_FUNCTION_LIST(DECLARE_SIMD_BOOL32X4_FUNCTION)
+#undef DECLARE_SIMD_BOOL32X4_FUNCTION
+
+#define DECLARE_SIMD_BOOL64x2_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_bool64x2_##Name(JSContext* cx, unsigned argc, Value* vp);
+BOOL64X2_FUNCTION_LIST(DECLARE_SIMD_BOOL64x2_FUNCTION)
+#undef DECLARE_SIMD_BOOL64x2_FUNCTION
 
 JSObject*
 InitSIMDClass(JSContext* cx, HandleObject obj);

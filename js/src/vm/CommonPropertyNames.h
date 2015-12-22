@@ -23,6 +23,10 @@
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(Async, Async, "Async") \
+    macro(bool8x16, bool8x16, "Bool8x16") \
+    macro(bool16x8, bool16x8, "Bool16x8") \
+    macro(bool32x4, bool32x4, "Bool32x4") \
+    macro(bool64x2, bool64x2, "Bool64x2") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
