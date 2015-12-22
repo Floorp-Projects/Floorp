@@ -776,6 +776,8 @@ enum class BarrierKind : uint32_t {
     TypeSet
 };
 
+enum ReprotectCode { Reprotect = true, DontReprotect = false };
+
 } // namespace jit
 } // namespace js
 
