@@ -192,6 +192,55 @@ protected:
       }
     }
     /**
+     * Translate the lines to account for (empty) removed tracks.  This method
+     * is only for grid items and should only be called after placement.
+     */
+    void AdjustForRemovedTracks(uint32_t aFirstRemovedTrack,
+                                uint32_t aNumRemovedTracks)
+    {
+      MOZ_ASSERT(mStart != kAutoLine, "invalid resolved line for a grid item");
+      MOZ_ASSERT(mEnd != kAutoLine, "invalid resolved line for a grid item");
+      if (mStart >= aFirstRemovedTrack) {
+        MOZ_ASSERT(mStart >= aFirstRemovedTrack + aNumRemovedTracks,
+                   "can't start in a removed range of tracks - those tracks "
+                   "are supposed to be empty");
+        mStart -= aNumRemovedTracks;
+        mEnd -= aNumRemovedTracks;
+      } else {
+        MOZ_ASSERT(mEnd <= aFirstRemovedTrack, "can't span into a removed "
+                   "range of tracks - those tracks are supposed to be empty");
+      }
+    }
+    /**
+     * Translate the lines to account for (empty) removed tracks.  This method
+     * is only for abs.pos. children and should only be called after placement.
+     * Same as for in-flow items, but we don't touch 'auto' lines here and we
+     * also need to adjust areas that span into the removed range.
+     */
+    void AdjustAbsPosForRemovedTracks(uint32_t aFirstRemovedTrack,
+                                      uint32_t aNumRemovedTracks)
+    {
+      if (mStart != nsGridContainerFrame::kAutoLine &&
+          mStart > aFirstRemovedTrack) {
+        if (mStart < aFirstRemovedTrack + aNumRemovedTracks) {
+          mStart = aFirstRemovedTrack;
+        } else {
+          mStart -= aNumRemovedTracks;
+        }
+      }
+      if (mEnd != nsGridContainerFrame::kAutoLine &&
+          mEnd > aFirstRemovedTrack) {
+        if (mEnd < aFirstRemovedTrack + aNumRemovedTracks) {
+          mEnd = aFirstRemovedTrack;
+        } else {
+          mEnd -= aNumRemovedTracks;
+        }
+      }
+      if (mStart == mEnd) {
+        mEnd = nsGridContainerFrame::kAutoLine;
+      }
+    }
+    /**
      * Return the contribution of this line range for step 2 in
      * http://dev.w3.org/csswg/css-grid/#auto-placement-algo
      */
@@ -292,6 +341,27 @@ protected:
     };
     void Fill(const GridArea& aGridArea);
     void ClearOccupied();
+    uint32_t IsEmptyCol(uint32_t aCol) const
+    {
+      for (auto& row : mCells) {
+        if (aCol < row.Length() && row[aCol].mIsOccupied) {
+          return false;
+        }
+      }
+      return true;
+    }
+    uint32_t IsEmptyRow(uint32_t aRow) const
+    {
+      if (aRow >= mCells.Length()) {
+        return true;
+      }
+      for (const Cell& cell : mCells[aRow]) {
+        if (cell.mIsOccupied) {
+          return false;
+        }
+      }
+      return true;
+    }
 #if DEBUG
     void Dump() const;
 #endif
