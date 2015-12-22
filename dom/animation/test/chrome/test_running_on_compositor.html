@@ -207,6 +207,9 @@ promise_test(function(t) {
         resolve();
       }));
       observer.observe(div, { animations: true, subtree: false });
+      t.add_cleanup(function() {
+        observer.disconnect();
+      });
       div.style.animationDuration = "200s";
     }));
   }));

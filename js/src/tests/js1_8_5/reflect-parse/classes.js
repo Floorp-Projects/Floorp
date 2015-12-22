@@ -479,6 +479,8 @@ function testClasses() {
     assertClassError("class NAME { static *y", SyntaxError);
     assertClassError("class NAME { static get", SyntaxError);
     assertClassError("class NAME { static get y", SyntaxError);
+    assertClassError("class NAME { static }", SyntaxError);
+    assertClassError("class NAME { static ;", SyntaxError);
     assertClassError("class NAME extends", SyntaxError);
     assertClassError("class NAME { constructor() { super", SyntaxError);
     assertClassError("class NAME { constructor() { super.", SyntaxError);

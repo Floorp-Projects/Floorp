@@ -6780,6 +6780,13 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
         if (tt == TOK_NAME && tokenStream.currentName() == context->names().static_) {
             if (!tokenStream.peekToken(&tt, TokenStream::KeywordIsName))
                 return null();
+            if (tt == TOK_RC) {
+                tokenStream.consumeKnownToken(tt, TokenStream::KeywordIsName);
+                report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                       "property name", TokenKindToDesc(tt));
+                return null();
+            }
+
             if (tt != TOK_LP) {
                 if (!checkUnescapedName())
                     return null();
@@ -9249,8 +9256,7 @@ Parser<ParseHandler>::propertyName(YieldHandling yieldHandling, Node propList,
     if (!tokenStream.getToken(&ltok, TokenStream::KeywordIsName))
         return null();
 
-    // TOK_RC should be handled in caller.
-    MOZ_ASSERT(ltok != TOK_RC);
+    MOZ_ASSERT(ltok != TOK_RC, "caller should have handled TOK_RC");
 
     bool isGenerator = false;
     if (ltok == TOK_MUL) {

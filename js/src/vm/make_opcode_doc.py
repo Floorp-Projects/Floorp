@@ -333,8 +333,27 @@ def print_opcode(opcode):
            stack_defs=escape(opcode.stack_defs) or "&nbsp;",
            desc=opcode.desc)) # desc is already escaped
 
-def make_element_id(name):
-    return name.replace(' ', '-')
+id_cache = dict()
+id_count = dict()
+
+def make_element_id(category, type=''):
+    key = '{}:{}'.format(category, type)
+    if key in id_cache:
+        return id_cache[key]
+
+    if type == '':
+        id = category.replace(' ', '_')
+    else:
+        id = type.replace(' ', '_')
+
+    if id in id_count:
+        id_count[id] += 1
+        id = '{}_{}'.format(id, id_count[id])
+    else:
+        id_count[id] = 1
+
+    id_cache[key] = id
+    return id
 
 def print_doc(version, index):
     print("""<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
@@ -358,7 +377,7 @@ def print_doc(version, index):
         for (type_name, opcodes) in types:
             if type_name:
                 print('<h4 id="{id}">{name}</h4>'.format(name=type_name,
-                                                         id=make_element_id(type_name)))
+                                                         id=make_element_id(category_name, type_name)))
             print('<dl>')
             for opcode in sorted(opcodes,
                                  key=lambda opcode: opcode.sort_key):

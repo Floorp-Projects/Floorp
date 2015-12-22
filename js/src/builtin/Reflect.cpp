@@ -199,11 +199,7 @@ Reflect_enumerate(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
-/*
- * ES6 26.1.6 Reflect.get(target, propertyKey [, receiver])
- *
- * Primitive receivers are not supported yet (see bug 603201).
- */
+/* ES6 26.1.6 Reflect.get(target, propertyKey [, receiver]) */
 static bool
 Reflect_get(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -221,16 +217,10 @@ Reflect_get(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 4.
-    RootedValue receiver(cx, argc > 2 ? args[2] : args.get(0));
-
-    // Non-standard hack: Throw a TypeError if the receiver isn't an object.
-    // See bug 603201.
-    RootedObject receiverObj(cx, NonNullObject(cx, receiver));
-    if (!receiverObj)
-        return false;
+    RootedValue receiver(cx, args.length() > 2 ? args[2] : args.get(0));
 
     // Step 5.
-    return GetProperty(cx, obj, receiverObj, key, args.rval());
+    return GetProperty(cx, obj, receiver, key, args.rval());
 }
 
 /* ES6 26.1.7 Reflect.getOwnPropertyDescriptor(target, propertyKey) */
@@ -336,7 +326,7 @@ Reflect_set(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     // Step 4.
-    RootedValue receiver(cx, argc > 3 ? args[3] : args.get(0));
+    RootedValue receiver(cx, args.length() > 3 ? args[3] : args.get(0));
 
     // Step 5.
     ObjectOpResult result;
