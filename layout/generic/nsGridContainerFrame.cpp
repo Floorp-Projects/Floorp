@@ -242,16 +242,15 @@ public:
    * used on a grid-[row|column]-end property and -2 for a *-start property,
    * and aFromIndex is the line (which we should skip) on the opposite property.
    */
-  static uint32_t FindNamedLine(const nsString& aName, int32_t* aNth,
-                         uint32_t aFromIndex, uint32_t aImplicitLine,
-                         const nsTArray<nsTArray<nsString>>& aNameList)
+  uint32_t FindNamedLine(const nsString& aName, int32_t* aNth,
+                         uint32_t aFromIndex, uint32_t aImplicitLine) const
   {
     MOZ_ASSERT(aNth && *aNth != 0);
     if (*aNth > 0) {
-      return FindLine(aName, aNth, aFromIndex, aImplicitLine, aNameList);
+      return FindLine(aName, aNth, aFromIndex, aImplicitLine);
     }
     int32_t nth = -*aNth;
-    int32_t line = RFindLine(aName, &nth, aFromIndex, aImplicitLine, aNameList);
+    int32_t line = RFindLine(aName, &nth, aFromIndex, aImplicitLine);
     *aNth = -nth;
     return line;
   }
@@ -260,18 +259,17 @@ private:
   /**
    * @see FindNamedLine, this function searches forward.
    */
-  static uint32_t FindLine(const nsString& aName, int32_t* aNth,
-                    uint32_t aFromIndex, uint32_t aImplicitLine,
-                    const nsTArray<nsTArray<nsString>>& aNameList)
+  uint32_t FindLine(const nsString& aName, int32_t* aNth,
+                    uint32_t aFromIndex, uint32_t aImplicitLine) const
   {
     MOZ_ASSERT(aNth && *aNth > 0);
     int32_t nth = *aNth;
-    const uint32_t len = aNameList.Length();
+    const uint32_t end = mTemplateLinesEnd;
     uint32_t line;
     uint32_t i = aFromIndex;
-    for (; i < len; i = line) {
+    for (; i < end; i = line) {
       line = i + 1;
-      if (line == aImplicitLine || aNameList[i].Contains(aName)) {
+      if (line == aImplicitLine || Contains(i, aName)) {
         if (--nth == 0) {
           return line;
         }
@@ -292,9 +290,8 @@ private:
   /**
    * @see FindNamedLine, this function searches in reverse.
    */
-  static uint32_t RFindLine(const nsString& aName, int32_t* aNth,
-                     uint32_t aFromIndex, uint32_t aImplicitLine,
-                     const nsTArray<nsTArray<nsString>>& aNameList)
+  uint32_t RFindLine(const nsString& aName, int32_t* aNth,
+                     uint32_t aFromIndex, uint32_t aImplicitLine) const
   {
     MOZ_ASSERT(aNth && *aNth > 0);
     if (MOZ_UNLIKELY(aFromIndex == 0)) {
@@ -302,16 +299,16 @@ private:
     }
     --aFromIndex; // (shift aFromIndex so we can treat it as inclusive)
     int32_t nth = *aNth;
-    const uint32_t len = aNameList.Length();
-    // The implicit line may be beyond the length of aNameList so we match this
-    // line first if it's within the len..aFromIndex range.
-    if (aImplicitLine > len && aImplicitLine < aFromIndex) {
+    // The implicit line may be beyond the explicit grid so we match
+    // this line first if it's within the mTemplateLinesEnd..aFromIndex range.
+    const uint32_t end = mTemplateLinesEnd;
+    if (aImplicitLine > end && aImplicitLine < aFromIndex) {
       if (--nth == 0) {
         return aImplicitLine;
       }
     }
-    for (uint32_t i = std::min(aFromIndex, len); i; --i) {
-      if (i == aImplicitLine || aNameList[i - 1].Contains(aName)) {
+    for (uint32_t i = std::min(aFromIndex, end); i; --i) {
+      if (i == aImplicitLine || Contains(i - 1, aName)) {
         if (--nth == 0) {
           return i;
         }
@@ -1336,7 +1333,7 @@ nsGridContainerFrame::ResolveLine(
   const nsStyleGridLine& aLine,
   int32_t aNth,
   uint32_t aFromIndex,
-  const nsTArray<nsTArray<nsString>>& aLineNameList,
+  const LineNameMap& aNameMap,
   uint32_t GridNamedArea::* aAreaStart,
   uint32_t GridNamedArea::* aAreaEnd,
   uint32_t aExplicitGridEnd,
@@ -1369,8 +1366,8 @@ nsGridContainerFrame::ResolveLine(
           lineName.AppendLiteral("-end");
           implicitLine = area ? area->*aAreaEnd : 0;
         }
-        line = LineNameMap::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
-                               aLineNameList);
+        line = aNameMap.FindNamedLine(lineName, &aNth, aFromIndex,
+                                      implicitLine);
       }
     }
 
@@ -1392,8 +1389,8 @@ nsGridContainerFrame::ResolveLine(
           implicitLine = area->*areaEdge;
         }
       }
-      line = LineNameMap::FindNamedLine(aLine.mLineName, &aNth, aFromIndex, implicitLine,
-                             aLineNameList);
+      line = aNameMap.FindNamedLine(aLine.mLineName, &aNth, aFromIndex,
+                                    implicitLine);
     }
 
     if (line == 0) {
@@ -1420,7 +1417,7 @@ nsGridContainerFrame::LinePair
 nsGridContainerFrame::ResolveLineRangeHelper(
   const nsStyleGridLine& aStart,
   const nsStyleGridLine& aEnd,
-  const nsTArray<nsTArray<nsString>>& aLineNameList,
+  const LineNameMap& aNameMap,
   uint32_t GridNamedArea::* aAreaStart,
   uint32_t GridNamedArea::* aAreaEnd,
   uint32_t aExplicitGridEnd,
@@ -1442,7 +1439,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     }
 
     uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
-    auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
+    auto end = ResolveLine(aEnd, aEnd.mInteger, from, aNameMap, aAreaStart,
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
     int32_t span = aStart.mInteger == 0 ? 1 : aStart.mInteger;
@@ -1452,7 +1449,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       int32_t start = std::max(end - span, nsStyleGridLine::kMinLine);
       return LinePair(start, end);
     }
-    auto start = ResolveLine(aStart, -span, end, aLineNameList, aAreaStart,
+    auto start = ResolveLine(aStart, -span, end, aNameMap, aAreaStart,
                              aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
                              aStyle);
     return LinePair(start, end);
@@ -1476,7 +1473,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     }
   } else {
     uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd + 1: 0;
-    start = ResolveLine(aStart, aStart.mInteger, from, aLineNameList,
+    start = ResolveLine(aStart, aStart.mInteger, from, aNameMap,
                         aAreaStart, aAreaEnd, aExplicitGridEnd,
                         eLineRangeSideStart, aStyle);
     if (aEnd.IsAuto()) {
@@ -1506,7 +1503,7 @@ nsGridContainerFrame::ResolveLineRangeHelper(
   } else {
     from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
   }
-  auto end = ResolveLine(aEnd, nth, from, aLineNameList, aAreaStart,
+  auto end = ResolveLine(aEnd, nth, from, aNameMap, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
   if (start == int32_t(kAutoLine)) {
     // auto / definite line
@@ -1519,13 +1516,13 @@ nsGridContainerFrame::LineRange
 nsGridContainerFrame::ResolveLineRange(
   const nsStyleGridLine& aStart,
   const nsStyleGridLine& aEnd,
-  const nsTArray<nsTArray<nsString>>& aLineNameList,
+  const LineNameMap& aNameMap,
   uint32_t GridNamedArea::* aAreaStart,
   uint32_t GridNamedArea::* aAreaEnd,
   uint32_t aExplicitGridEnd,
   const nsStylePosition* aStyle)
 {
-  LinePair r = ResolveLineRangeHelper(aStart, aEnd, aLineNameList, aAreaStart,
+  LinePair r = ResolveLineRangeHelper(aStart, aEnd, aNameMap, aAreaStart,
                                       aAreaEnd, aExplicitGridEnd, aStyle);
   MOZ_ASSERT(r.second != int32_t(kAutoLine));
 
@@ -1550,16 +1547,18 @@ nsGridContainerFrame::ResolveLineRange(
 
 nsGridContainerFrame::GridArea
 nsGridContainerFrame::PlaceDefinite(nsIFrame* aChild,
+                                    const LineNameMap& aColLineNameMap,
+                                    const LineNameMap& aRowLineNameMap,
                                     const nsStylePosition* aStyle)
 {
   const nsStylePosition* itemStyle = aChild->StylePosition();
   return GridArea(
     ResolveLineRange(itemStyle->mGridColumnStart, itemStyle->mGridColumnEnd,
-                     aStyle->mGridTemplateColumns.mLineNameLists,
+                     aColLineNameMap,
                      &GridNamedArea::mColumnStart, &GridNamedArea::mColumnEnd,
                      mExplicitGridColEnd, aStyle),
     ResolveLineRange(itemStyle->mGridRowStart, itemStyle->mGridRowEnd,
-                     aStyle->mGridTemplateRows.mLineNameLists,
+                     aRowLineNameMap,
                      &GridNamedArea::mRowStart, &GridNamedArea::mRowEnd,
                      mExplicitGridRowEnd, aStyle));
 }
@@ -1568,7 +1567,7 @@ nsGridContainerFrame::LineRange
 nsGridContainerFrame::ResolveAbsPosLineRange(
   const nsStyleGridLine& aStart,
   const nsStyleGridLine& aEnd,
-  const nsTArray<nsTArray<nsString>>& aLineNameList,
+  const LineNameMap& aNameMap,
   uint32_t GridNamedArea::* aAreaStart,
   uint32_t GridNamedArea::* aAreaEnd,
   uint32_t aExplicitGridEnd,
@@ -1582,7 +1581,7 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     }
     uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd + 1: 0;
     int32_t end =
-      ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
+      ResolveLine(aEnd, aEnd.mInteger, from, aNameMap, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
     if (aEnd.mHasSpan) {
       ++end;
@@ -1595,7 +1594,7 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
   if (aEnd.IsAuto()) {
     uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd + 1: 0;
     int32_t start =
-      ResolveLine(aStart, aStart.mInteger, from, aLineNameList, aAreaStart,
+      ResolveLine(aStart, aStart.mInteger, from, aNameMap, aAreaStart,
                   aAreaEnd, aExplicitGridEnd, eLineRangeSideStart, aStyle);
     if (aStart.mHasSpan) {
       start = std::max(aGridEnd - start, aGridStart);
@@ -1604,7 +1603,7 @@ nsGridContainerFrame::ResolveAbsPosLineRange(
     return LineRange(start, kAutoLine);
   }
 
-  LineRange r = ResolveLineRange(aStart, aEnd, aLineNameList, aAreaStart,
+  LineRange r = ResolveLineRange(aStart, aEnd, aNameMap, aAreaStart,
                                  aAreaEnd, aExplicitGridEnd, aStyle);
   if (r.IsAuto()) {
     MOZ_ASSERT(aStart.mHasSpan && aEnd.mHasSpan, "span / span is the only case "
@@ -1656,6 +1655,8 @@ nsGridContainerFrame::FindAutoCol(uint32_t aStartCol, uint32_t aLockedRow,
 
 nsGridContainerFrame::GridArea
 nsGridContainerFrame::PlaceAbsPos(nsIFrame* aChild,
+                                  const LineNameMap& aColLineNameMap,
+                                  const LineNameMap& aRowLineNameMap,
                                   const nsStylePosition* aStyle)
 {
   const nsStylePosition* itemStyle = aChild->StylePosition();
@@ -1664,14 +1665,14 @@ nsGridContainerFrame::PlaceAbsPos(nsIFrame* aChild,
   return GridArea(
     ResolveAbsPosLineRange(itemStyle->mGridColumnStart,
                            itemStyle->mGridColumnEnd,
-                           aStyle->mGridTemplateColumns.mLineNameLists,
+                           aColLineNameMap,
                            &GridNamedArea::mColumnStart,
                            &GridNamedArea::mColumnEnd,
                            mExplicitGridColEnd, gridColStart, mGridColEnd,
                            aStyle),
     ResolveAbsPosLineRange(itemStyle->mGridRowStart,
                            itemStyle->mGridRowEnd,
-                           aStyle->mGridTemplateRows.mLineNameLists,
+                           aRowLineNameMap,
                            &GridNamedArea::mRowStart,
                            &GridNamedArea::mRowEnd,
                            mExplicitGridRowEnd, gridRowStart, mGridRowEnd,
@@ -1802,6 +1803,12 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   mCellMap.ClearOccupied();
   InitializeGridBounds(gridStyle);
 
+  uint32_t numRepeatCols = 0; // XXX will be fixed in a later patch
+  LineNameMap colLineNameMap(gridStyle->mGridTemplateColumns, numRepeatCols);
+
+  uint32_t numRepeatRows = 0; // XXX will be fixed in a later patch
+  LineNameMap rowLineNameMap(gridStyle->mGridTemplateRows, numRepeatRows);
+
   // http://dev.w3.org/csswg/css-grid/#line-placement
   // Resolve definite positions per spec chap 9.2.
   int32_t minCol = 1;
@@ -1810,7 +1817,10 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     GridItemInfo* info =
-      mGridItems.AppendElement(GridItemInfo(PlaceDefinite(child, gridStyle)));
+      mGridItems.AppendElement(GridItemInfo(PlaceDefinite(child,
+                                                          colLineNameMap,
+                                                          rowLineNameMap,
+                                                          gridStyle)));
 #ifdef DEBUG
     MOZ_ASSERT(aState.mIter.GridItemIndex() == mGridItems.Length() - 1,
                "GridItemIndex() is broken");
@@ -1963,7 +1973,10 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState)
     for (nsFrameList::Enumerator e(children); !e.AtEnd(); e.Next(), ++i) {
       nsIFrame* child = e.get();
       GridItemInfo* info =
-        mAbsPosItems.AppendElement(GridItemInfo(PlaceAbsPos(child, gridStyle)));
+        mAbsPosItems.AppendElement(GridItemInfo(PlaceAbsPos(child,
+                                                            colLineNameMap,
+                                                            rowLineNameMap,
+                                                            gridStyle)));
 #ifdef DEBUG
       info->mFrame = child;
 #endif
