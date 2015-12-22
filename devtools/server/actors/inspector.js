@@ -2149,7 +2149,7 @@ var WalkerActor = protocol.ActorClass({
           nodes = this._multiFrameQuerySelectorAll(query);
         }
         for (let node of nodes) {
-          for (let className of node.className.split(" ")) {
+          for (let className of node.classList) {
             sugs.classes.set(className, (sugs.classes.get(className)|0) + 1);
           }
         }
@@ -2218,7 +2218,7 @@ var WalkerActor = protocol.ActorClass({
           sugs.ids.set(node.id, (sugs.ids.get(node.id)|0) + 1);
           let tag = node.tagName.toLowerCase();
           sugs.tags.set(tag, (sugs.tags.get(tag)|0) + 1);
-          for (let className of node.className.split(" ")) {
+          for (let className of node.classList) {
             sugs.classes.set(className, (sugs.classes.get(className)|0) + 1);
           }
         }

@@ -64,12 +64,8 @@ var AnimationPlayerActor = ActorClass({
   /**
    * @param {AnimationsActor} The main AnimationsActor instance
    * @param {AnimationPlayer} The player object returned by getAnimationPlayers
-   * @param {Number} Temporary work-around used to retrieve duration and
-   * iteration count from computed-style rather than from waapi. This is needed
-   * to know which duration to get, in case there are multiple css animations
-   * applied to the same node.
    */
-  initialize: function(animationsActor, player, playerIndex) {
+  initialize: function(animationsActor, player) {
     Actor.prototype.initialize.call(this, animationsActor.conn);
 
     this.onAnimationMutation = this.onAnimationMutation.bind(this);
@@ -77,7 +73,6 @@ var AnimationPlayerActor = ActorClass({
     this.tabActor = animationsActor.tabActor;
     this.player = player;
     this.node = player.effect.target;
-    this.playerIndex = playerIndex;
 
     let win = this.node.ownerDocument.defaultView;
     this.styles = win.getComputedStyle(this.node);
@@ -134,42 +129,6 @@ var AnimationPlayerActor = ActorClass({
   },
 
   /**
-   * Some of the player's properties are retrieved from the node's
-   * computed-styles because the Web Animations API does not provide them yet.
-   * But the computed-styles may contain multiple animations for a node and so
-   * we need to know which is the index of the current animation in the style.
-   * @return {Number}
-   */
-  getPlayerIndex: function() {
-    let names = this.styles.animationName;
-    if (names === "none") {
-      names = this.styles.transitionProperty;
-    }
-
-    // If we still don't have a name, let's fall back to the provided index
-    // which may, by now, be wrong, but it's the best we can do until the waapi
-    // gives us a way to get duration, delay, ... directly.
-    if (!names || names === "none") {
-      return this.playerIndex;
-    }
-
-    // If there's only one name.
-    if (names.includes(",") === -1) {
-      return 0;
-    }
-
-    // If there are several names, retrieve the index of the animation name in
-    // the list.
-    let playerName = this.getName();
-    names = names.split(",").map(n => n.trim());
-    for (let i = 0; i < names.length; i++) {
-      if (names[i] === playerName) {
-        return i;
-      }
-    }
-  },
-
-  /**
    * Get the name associated with the player. This is used to match
    * up the player with values in the computed animation-name or
    * transition-property property.
@@ -187,72 +146,29 @@ var AnimationPlayerActor = ActorClass({
 
   /**
    * Get the animation duration from this player, in milliseconds.
-   * Note that the Web Animations API doesn't yet offer a way to retrieve this
-   * directly from the AnimationPlayer object, so for now, a duration is only
-   * returned if found in the node's computed styles.
    * @return {Number}
    */
   getDuration: function() {
-    let durationText;
-    if (this.styles.animationDuration !== "0s") {
-      durationText = this.styles.animationDuration;
-    } else if (this.styles.transitionDuration !== "0s") {
-      durationText = this.styles.transitionDuration;
-    } else {
-      return null;
-    }
-
-    // If the computed duration has multiple entries, we need to find the right
-    // one.
-    if (durationText.indexOf(",") !== -1) {
-      durationText = durationText.split(",")[this.getPlayerIndex()];
-    }
-
-    return parseFloat(durationText) * 1000;
+    return this.player.effect.getComputedTiming().duration;
   },
 
   /**
    * Get the animation delay from this player, in milliseconds.
-   * Note that the Web Animations API doesn't yet offer a way to retrieve this
-   * directly from the AnimationPlayer object, so for now, a delay is only
-   * returned if found in the node's computed styles.
    * @return {Number}
    */
   getDelay: function() {
-    let delayText;
-    if (this.styles.animationDelay !== "0s") {
-      delayText = this.styles.animationDelay;
-    } else if (this.styles.transitionDelay !== "0s") {
-      delayText = this.styles.transitionDelay;
-    } else {
-      return 0;
-    }
-
-    if (delayText.indexOf(",") !== -1) {
-      delayText = delayText.split(",")[this.getPlayerIndex()];
-    }
-
-    return parseFloat(delayText) * 1000;
+    return this.player.effect.getComputedTiming().delay;
   },
 
   /**
    * Get the animation iteration count for this player. That is, how many times
    * is the animation scheduled to run.
-   * Note that the Web Animations API doesn't yet offer a way to retrieve this
-   * directly from the AnimationPlayer object, so for now, check for
-   * animationIterationCount in the node's computed styles, and return that.
-   * This style property defaults to 1 anyway.
-   * @return {Number}
+   * @return {Number} The number of iterations, or null if the animation repeats
+   * infinitely.
    */
   getIterationCount: function() {
-    let iterationText = this.styles.animationIterationCount;
-    if (iterationText.indexOf(",") !== -1) {
-      iterationText = iterationText.split(",")[this.getPlayerIndex()];
-    }
-
-    return iterationText === "infinite"
-           ? null
-           : parseInt(iterationText, 10);
+    let iterations = this.player.effect.getComputedTiming().iterations;
+    return iterations === "Infinity" ? null : iterations;
   },
 
   /**
@@ -606,9 +522,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
     // is assumed that the client is responsible for lifetimes of actors.
     this.actors = [];
     for (let i = 0; i < animations.length; i++) {
-      // XXX: for now the index is passed along as the AnimationPlayerActor uses
-      // it to retrieve animation information from CSS.
-      let actor = AnimationPlayerActor(this, animations[i], i);
+      let actor = AnimationPlayerActor(this, animations[i]);
       this.actors.push(actor);
     }
 
@@ -686,8 +600,7 @@ var AnimationsActor = exports.AnimationsActor = ActorClass({
           this.actors.splice(index, 1);
         }
 
-        let actor = AnimationPlayerActor(
-          this, player, player.effect.target.getAnimations().indexOf(player));
+        let actor = AnimationPlayerActor(this, player);
         this.actors.push(actor);
         eventData.push({
           type: "added",

@@ -343,6 +343,11 @@ int main(int argc, char **argv) {
 #if (defined(XP_WIN) || defined(XP_MACOSX)) && !defined(MAR_NSS)
       rv = mar_read_entire_file(DERFilePaths[k], MAR_MAX_CERT_SIZE,
                                 &certBuffers[k], &fileSizes[k]);
+
+      if (rv) {
+        fprintf(stderr, "ERROR: could not read file %s", DERFilePaths[k]);
+        break;
+      }
 #else
       /* It is somewhat circuitous to look up a CERTCertificate and then pass
        * in its DER encoding just so we can later re-create that
@@ -358,12 +363,10 @@ int main(int argc, char **argv) {
         fileSizes[k] = certs[k]->derCert.len;
       } else {
         rv = -1;
-      }
-#endif
-      if (rv) {
-        fprintf(stderr, "ERROR: could not read file %s", DERFilePaths[k]);
+        fprintf(stderr, "ERROR: could not find cert from nickname %s", certNames[k]);
         break;
       }
+#endif
     }
 
     if (!rv) {

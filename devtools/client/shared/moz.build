@@ -20,6 +20,7 @@ DevToolsModules(
     'browser-loader.js',
     'css-parsing-utils.js',
     'Curl.jsm',
+    'demangle.js',
     'DeveloperToolbar.jsm',
     'devices.js',
     'DOMHelpers.jsm',
