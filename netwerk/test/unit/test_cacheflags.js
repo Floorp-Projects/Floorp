@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -42,16 +42,7 @@ LoadContext.prototype = {
 PrivateBrowsingLoadContext = new LoadContext(true);
 
 function make_channel(url, flags, usePrivateBrowsing) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-    getService(Ci.nsIIOService);
-  var req = ios.newChannel2(url,
-                            null,
-                            null,
-                            null,      // aLoadingNode
-                            Services.scriptSecurityManager.getSystemPrincipal(),
-                            null,      // aTriggeringPrincipal
-                            Ci.nsILoadInfo.SEC_NORMAL,
-                            Ci.nsIContentPolicy.TYPE_OTHER);
+  var req = NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
   req.loadFlags = flags;
   if (usePrivateBrowsing) {
     req.notificationCallbacks = PrivateBrowsingLoadContext;    
@@ -112,7 +103,7 @@ Test.prototype = {
          "\n  " + this.hitServer + "\n");
     gHitServer = false;
     var channel = make_channel(this.path, this.flags, this.usePrivateBrowsing);
-    channel.asyncOpen(this, null);
+    channel.asyncOpen2(this);
   }
 };
 
