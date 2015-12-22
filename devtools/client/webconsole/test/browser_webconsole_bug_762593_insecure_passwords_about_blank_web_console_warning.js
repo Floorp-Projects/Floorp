@@ -13,7 +13,7 @@ const INSECURE_PASSWORD_MSG = "Password fields present on an insecure " +
   "(http://) page. This is a security risk that allows user login " +
   "credentials to be stolen.";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

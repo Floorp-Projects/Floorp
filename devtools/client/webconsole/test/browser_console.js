@@ -17,7 +17,7 @@ const TEST_IMAGE = "http://example.com/browser/devtools/client/webconsole/" +
 
 "use strict";
 
-var test = asyncTest(function*() {
+add_task(function*() {
   yield loadTab(TEST_URI);
 
   let opened = waitForConsole();

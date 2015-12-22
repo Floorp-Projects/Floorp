@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
                  "persisting history - bug 943306";
 const INPUT_HISTORY_COUNT = 10;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   info("Setting custom input history pref to " + INPUT_HISTORY_COUNT);
   Services.prefs.setIntPref("devtools.webconsole.inputHistoryCount",
                             INPUT_HISTORY_COUNT);

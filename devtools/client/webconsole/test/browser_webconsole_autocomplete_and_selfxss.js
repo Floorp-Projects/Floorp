@@ -11,7 +11,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
                                    "nsIClipboardHelper");
 var WebConsoleUtils = require("devtools/shared/webconsole/utils").Utils;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
