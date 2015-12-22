@@ -262,6 +262,7 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitInt32x4ToFloat32x4(LInt32x4ToFloat32x4* ins);
     void visitFloat32x4ToInt32x4(LFloat32x4ToInt32x4* ins);
     void visitSimdReinterpretCast(LSimdReinterpretCast* lir);
+    void visitSimdExtractElementB(LSimdExtractElementB* lir);
     void visitSimdExtractElementI(LSimdExtractElementI* lir);
     void visitSimdExtractElementF(LSimdExtractElementF* lir);
     void visitSimdInsertElementI(LSimdInsertElementI* lir);
@@ -279,6 +280,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4* lir);
     void visitSimdShift(LSimdShift* lir);
     void visitSimdSelect(LSimdSelect* ins);
+    void visitSimdAllTrue(LSimdAllTrue* ins);
+    void visitSimdAnyTrue(LSimdAnyTrue* ins);
 
     template <class T, class Reg> void visitSimdGeneralShuffle(LSimdGeneralShuffleBase* lir, Reg temp);
     void visitSimdGeneralShuffleI(LSimdGeneralShuffleI* lir);

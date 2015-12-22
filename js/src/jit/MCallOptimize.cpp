@@ -206,6 +206,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineSimdInt32x4(callInfo, target->native());
       case InlinableNative::SimdFloat32x4:
         return inlineSimdFloat32x4(callInfo, target->native());
+      case InlinableNative::SimdBool32x4:
+        return inlineSimdBool32x4(callInfo, target->native());
 
       // Testing functions.
       case InlinableNative::TestBailout:
@@ -3049,6 +3051,38 @@ IonBuilder::inlineConstructTypedObject(CallInfo& callInfo, TypeDescr* descr)
 }
 
 IonBuilder::InliningStatus
+IonBuilder::inlineSimdBool32x4(CallInfo& callInfo, JSNative native)
+{
+#define INLINE_SIMD_BITWISE_(OP)                                                                   \
+    if (native == js::simd_bool32x4_##OP)                                                          \
+        return inlineBinarySimd<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::OP##_,   \
+                                                    SimdTypeDescr::Bool32x4);
+
+    BITWISE_COMMONX4_SIMD_OP(INLINE_SIMD_BITWISE_)
+#undef INLINE_SIMD_BITWISE_
+
+    if (native == js::simd_bool32x4_extractLane)
+        return inlineSimdExtractLane(callInfo, native, SimdTypeDescr::Bool32x4);
+    if (native == js::simd_bool32x4_replaceLane)
+        return inlineSimdReplaceLane(callInfo, native, SimdTypeDescr::Bool32x4);
+
+    if (native == js::simd_bool32x4_not)
+        return inlineUnarySimd(callInfo, native, MSimdUnaryArith::not_, SimdTypeDescr::Bool32x4);
+
+    if (native == js::simd_bool32x4_splat)
+        return inlineSimdSplat(callInfo, native, SimdTypeDescr::Bool32x4);
+    if (native == js::simd_bool32x4_check)
+        return inlineSimdCheck(callInfo, native, SimdTypeDescr::Bool32x4);
+
+    if (native == js::simd_bool32x4_allTrue)
+        return inlineSimdAnyAllTrue(callInfo, true, native);
+    if (native == js::simd_bool32x4_anyTrue)
+        return inlineSimdAnyAllTrue(callInfo, false, native);
+
+    return InliningStatus_NotInlined;
+}
+
+IonBuilder::InliningStatus
 IonBuilder::inlineSimdInt32x4(CallInfo& callInfo, JSNative native)
 {
 #define INLINE_INT32X4_SIMD_ARITH_(OP)                                                           \
@@ -3078,7 +3112,7 @@ IonBuilder::inlineSimdInt32x4(CallInfo& callInfo, JSNative native)
     if (native == js::simd_int32x4_##OP)                                                           \
         return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::Int32x4);
 
-    COMP_COMMONX4_TO_INT32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
+    COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
 #undef INLINE_SIMD_COMPARISON_
 
     if (native == js::simd_int32x4_extractLane)
@@ -3160,7 +3194,7 @@ IonBuilder::inlineSimdFloat32x4(CallInfo& callInfo, JSNative native)
     if (native == js::simd_float32x4_##OP)                                                         \
         return inlineCompSimd(callInfo, native, MSimdBinaryComp::OP, SimdTypeDescr::Float32x4);
 
-    COMP_COMMONX4_TO_INT32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
+    COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(INLINE_SIMD_COMPARISON_)
 #undef INLINE_SIMD_COMPARISON_
 
     if (native == js::simd_float32x4_extractLane)
@@ -3221,6 +3255,37 @@ IonBuilder::inlineSimdFloat32x4(CallInfo& callInfo, JSNative native)
     return InliningStatus_NotInlined;
 }
 
+// The representation of boolean SIMD vectors is the same as the corresponding
+// integer SIMD vectors with -1 lanes meaning true and 0 lanes meaning false.
+//
+// Functions that set the value of a boolean vector lane work by applying
+// ToBoolean on the input argument, so they accept any argument type, just like
+// the MNot and MTest instructions.
+//
+// Convert any scalar value into an appropriate SIMD lane value: An Int32 value
+// that is either 0 for false or -1 for true.
+MDefinition*
+IonBuilder::convertToBooleanSimdLane(MDefinition* scalar)
+{
+    MSub* result;
+
+    if (scalar->type() == MIRType_Boolean) {
+        // The input scalar is already a boolean with the int32 values 0 / 1.
+        // Compute result = 0 - scalar.
+        result = MSub::New(alloc(), constant(Int32Value(0)), scalar);
+    } else {
+        // For any other type, let MNot handle the conversion to boolean.
+        // Compute result = !scalar - 1.
+        MNot* inv = MNot::New(alloc(), scalar);
+        current->add(inv);
+        result = MSub::New(alloc(), inv, constant(Int32Value(1)));
+    }
+
+    result->setInt32Specialization();
+    current->add(result);
+    return result;
+}
+
 IonBuilder::InliningStatus
 IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
 {
@@ -3246,10 +3311,12 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
     // When there are missing arguments, provide a default value
     // containing the coercion of 'undefined' to the right type.
     MConstant* defVal = nullptr;
+    MIRType laneType = SimdTypeToLaneType(simdType);
     if (callInfo.argc() < SimdTypeToLength(simdType)) {
-        MIRType laneType = SimdTypeToLaneType(simdType);
         if (laneType == MIRType_Int32) {
             defVal = constant(Int32Value(0));
+        } else if (laneType == MIRType_Boolean) {
+            defVal = constant(BooleanValue(false));
         } else {
             MOZ_ASSERT(IsFloatingPointType(laneType));
             defVal = constant(DoubleNaNValue());
@@ -3257,10 +3324,18 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         }
     }
 
+    MDefinition* lane[4];
+    for (unsigned i = 0; i < 4; i++)
+        lane[i] = callInfo.getArgWithDefault(i, defVal);
+
+    // Convert boolean lanes into Int32 0 / -1.
+    if (laneType == MIRType_Boolean) {
+        for (unsigned i = 0; i < 4; i++)
+            lane[i] = convertToBooleanSimdLane(lane[i]);
+    }
+
     MSimdValueX4* values =
-        MSimdValueX4::New(alloc(), simdType,
-                          callInfo.getArgWithDefault(0, defVal), callInfo.getArgWithDefault(1, defVal),
-                          callInfo.getArgWithDefault(2, defVal), callInfo.getArgWithDefault(3, defVal));
+      MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
     current->add(values);
 
     MSimdBox* obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject,
@@ -3326,7 +3401,7 @@ IonBuilder::inlineCompSimd(CallInfo& callInfo, JSNative native, MSimdBinaryComp:
                            SimdTypeDescr::Type compType)
 {
     InlineTypedObject* templateObj = nullptr;
-    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::Int32x4, 2, &templateObj))
+    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::Bool32x4, 2, &templateObj))
         return InliningStatus_NotInlined;
 
     // If the type of any of the arguments is neither a SIMD type, an Object
@@ -3362,7 +3437,13 @@ IonBuilder::inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdTypeDescr::
 
     // See comment in inlineBinarySimd
     MIRType mirType = SimdTypeDescrToMIRType(type);
-    MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), callInfo.getArg(0), mirType);
+    MDefinition* arg = callInfo.getArg(0);
+
+    // Convert to 0 / -1 before splatting a boolean lane.
+    if (SimdTypeToLaneType(mirType) == MIRType_Boolean)
+        arg = convertToBooleanSimdLane(arg);
+
+    MSimdSplatX4* ins = MSimdSplatX4::New(alloc(), arg, mirType);
     return boxSimd(callInfo, ins, templateObj);
 }
 
@@ -3408,8 +3489,14 @@ IonBuilder::inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, SimdTypeD
 
     // See comment in inlineBinarySimd
     MIRType mirType = SimdTypeDescrToMIRType(type);
-    MSimdInsertElement* ins = MSimdInsertElement::New(alloc(), callInfo.getArg(0),
-                                                      callInfo.getArg(2), mirType, SimdLane(lane));
+
+    // Convert to 0 / -1 before inserting a boolean lane.
+    MDefinition* value = callInfo.getArg(2);
+    if (SimdTypeToLaneType(mirType) == MIRType_Boolean)
+        value = convertToBooleanSimdLane(value);
+
+    MSimdInsertElement* ins =
+      MSimdInsertElement::New(alloc(), callInfo.getArg(0), value, mirType, SimdLane(lane));
     return boxSimd(callInfo, ins, templateObj);
 }
 
@@ -3484,6 +3571,25 @@ IonBuilder::inlineSimdShuffle(CallInfo& callInfo, JSNative native, SimdTypeDescr
         ins->setLane(i, callInfo.getArg(numVectors + i));
 
     return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdAnyAllTrue(CallInfo& callInfo, bool IsAllTrue, JSNative native)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!checkInlineSimd(callInfo, native, SimdTypeDescr::Bool32x4, 1, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MUnaryInstruction* ins;
+    if (IsAllTrue)
+        ins = MSimdAllTrue::New(alloc(), callInfo.getArg(0), MIRType_Bool32x4);
+    else
+        ins = MSimdAnyTrue::New(alloc(), callInfo.getArg(0), MIRType_Bool32x4);
+
+    current->add(ins);
+    current->push(ins);
+    callInfo.setImplicitlyUsedUnchecked();
+    return InliningStatus_Inlined;
 }
 
 // Get the typed array element type corresponding to the lanes in a SIMD vector type.
