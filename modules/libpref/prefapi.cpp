@@ -318,9 +318,12 @@ pref_SetPref(const dom::PrefSetting& aPref)
     return rv;
 }
 
-void
-pref_savePrefs(PLDHashTable* aTable, char** aPrefArray)
+UniquePtr<char*[]>
+pref_savePrefs(PLDHashTable* aTable)
 {
+    auto savedPrefs = MakeUnique<char*[]>(aTable->EntryCount());
+    memset(savedPrefs.get(), 0, aTable->EntryCount() * sizeof(char*));
+
     int32_t j = 0;
     for (auto iter = aTable->Iter(); !iter.Done(); iter.Next()) {
         auto pref = static_cast<PrefHashEntry*>(iter.Get());
@@ -360,12 +363,14 @@ pref_savePrefs(PLDHashTable* aTable, char** aPrefArray)
         nsAutoCString prefName;
         str_escape(pref->key, prefName);
 
-        aPrefArray[j++] = ToNewCString(prefPrefix +
+        savedPrefs[j++] = ToNewCString(prefPrefix +
                                        prefName +
                                        NS_LITERAL_CSTRING("\", ") +
                                        prefValue +
                                        NS_LITERAL_CSTRING(");"));
     }
+
+    return savedPrefs;
 }
 
 static void

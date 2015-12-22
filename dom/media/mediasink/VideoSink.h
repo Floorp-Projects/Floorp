@@ -72,7 +72,8 @@ private:
   virtual ~VideoSink();
 
   // VideoQueue listener related.
-  void OnVideoQueueEvent(RefPtr<MediaData>&& aSample);
+  void OnVideoQueuePushed(RefPtr<MediaData>&& aSample);
+  void OnVideoQueueFinished();
   void ConnectListener();
   void DisconnectListener();
 
@@ -129,6 +130,7 @@ private:
 
   // Event listeners for VideoQueue
   MediaEventListener mPushListener;
+  MediaEventListener mFinishListener;
 
   // True if this sink is going to handle video track.
   bool mHasVideo;

@@ -598,7 +598,7 @@ class Marionette(object):
                                            addons=self.addons,
                                            workspace=workspace)
             self.instance.start()
-            assert(self.wait_for_port(timeout=startup_timeout)), "Timed out waiting for port!"
+            self.raise_for_port(self.wait_for_port(timeout=startup_timeout))
 
         if emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,
@@ -617,7 +617,7 @@ class Marionette(object):
             self.emulator = self.runner.device
             self.emulator.start()
             self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
-            assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
+            self.raise_for_port(self.emulator.wait_for_port(self.port))
 
         if connect_to_running_emulator:
             self.runner = B2GEmulatorRunner(b2g_home=homedir,
@@ -626,7 +626,7 @@ class Marionette(object):
             self.emulator = self.runner.device
             self.emulator.connect()
             self.port = self.emulator.setup_port_forwarding(remote_port=self.port)
-            assert(self.emulator.wait_for_port(self.port)), "Timed out waiting for port!"
+            self.raise_for_port(self.emulator.wait_for_port(self.port))
 
         if emulator:
             if busybox:
@@ -672,6 +672,12 @@ class Marionette(object):
 
     def wait_for_port(self, timeout=60):
         return transport.wait_for_port(self.host, self.port, timeout=timeout)
+
+    @do_crash_check
+    def raise_for_port(self, port_obtained):
+        if not port_obtained:
+            raise IOError("Timed out waiting for port!")
+
 
     @do_crash_check
     def _send_message(self, name, params=None, key=None):
@@ -1097,7 +1103,7 @@ class Marionette(object):
         if not pref_exists:
             self.delete_session()
             self.instance.restart(prefs)
-            assert(self.wait_for_port()), "Timed out waiting for port!"
+            self.raise_for_port(self.wait_for_port())
             self.start_session()
             self._reset_timeouts()
 
@@ -1134,7 +1140,7 @@ class Marionette(object):
         else:
             self.delete_session()
             self.instance.restart(clean=clean)
-        assert(self.wait_for_port()), "Timed out waiting for port!"
+        self.raise_for_port(self.wait_for_port())
         self.start_session(session_id=self.session_id)
         self._reset_timeouts()
 

@@ -14,13 +14,9 @@ class nsITVService;
 namespace mozilla {
 namespace dom {
 
-class FakeTVService;
-
 class TVServiceFactory
 {
 public:
-  static already_AddRefed<FakeTVService> CreateFakeTVService();
-
   static already_AddRefed<nsITVService> AutoCreateTVService();
 };
 

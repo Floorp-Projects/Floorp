@@ -11,7 +11,7 @@
  */
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpServer.identity.primaryPort;
@@ -20,16 +20,7 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpServer = null;
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const responseBody1 = "response body 1";
@@ -81,7 +72,7 @@ function run_test_content1a()
   var chan = make_channel(URL + "/content1");
   caching = chan.QueryInterface(Ci.nsICachingChannel);
   caching.cacheOnlyMetadata = true;
-  chan.asyncOpen(new ChannelListener(contentListener1a, null), null);
+  chan.asyncOpen2(new ChannelListener(contentListener1a, null));
 }
 
 function contentListener1a(request, buffer)
@@ -105,7 +96,7 @@ function cacheCheck1(status, entry)
   var chan = make_channel(URL + "/content1");
   caching = chan.QueryInterface(Ci.nsICachingChannel);
   caching.cacheOnlyMetadata = true;
-  chan.asyncOpen(new ChannelListener(contentListener1b, null, CL_IGNORE_CL), null);
+  chan.asyncOpen2(new ChannelListener(contentListener1b, null, CL_IGNORE_CL));
 }
 
 function contentListener1b(request, buffer)
@@ -126,7 +117,7 @@ function run_test_content2a()
   var chan = make_channel(URL + "/content2");
   caching = chan.QueryInterface(Ci.nsICachingChannel);
   caching.cacheOnlyMetadata = true;
-  chan.asyncOpen(new ChannelListener(contentListener2a, null), null);
+  chan.asyncOpen2(new ChannelListener(contentListener2a, null));
 }
 
 function contentListener2a(request, buffer)
@@ -151,7 +142,7 @@ function cacheCheck2(status, entry)
   var chan = make_channel(URL + "/content2");
   caching = chan.QueryInterface(Ci.nsICachingChannel);
   caching.cacheOnlyMetadata = true;
-  chan.asyncOpen(new ChannelListener(contentListener2b, null), null);
+  chan.asyncOpen2(new ChannelListener(contentListener2b, null));
 }
 
 function contentListener2b(request, buffer)

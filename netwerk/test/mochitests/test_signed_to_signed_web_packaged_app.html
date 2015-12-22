@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Web packaged app </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+var Cu = SpecialPowers.Cu;
+var Cr = SpecialPowers.Cr;
+
+SpecialPowers.pushPrefEnv(
+  { "set": [["network.http.enable-packaged-apps", true],
+            ["dom.ipc.processPriorityManager.testMode", true],
+            ["network.http.signed-packages.enabled", true],
+            ["network.http.signed-packages.trusted-origin", "http://mochi.test:8888"],
+            ["dom.ipc.processPriorityManager.enabled", true],
+            ["dom.ipc.tabs.disabled", false],
+            ["dom.ipc.processCount", 30],
+            ["dom.mozBrowserFramesEnabled", true]] },
+  () => SpecialPowers.pushPermissions([
+    { "type": "browser", "allow": 1, "context": document }
+  ], function() {
+    runTest();
+  }));
+
+SimpleTest.waitForExplicitFinish();
+
+// Listen for and count process-created event. There should be 3 processes
+// to be created:
+// 1) The remote tab
+// 2) While navigating to http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app_random.sjs!//scripts/app.js
+// 3) While navigating to http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app_random.sjs!//index.html
+//
+// Note that signed_web_packaged_app_random.sjs will return different package identifier
+// in each request. Therefore, step (3) should trigger process switch.
+var kProcessCreatedTopic = "process-priority-manager:TEST-ONLY:process-created";
+var processCreatedCnt = 0;
+SpecialPowers.addObserver(() => {
+  processCreatedCnt++;
+  if (processCreatedCnt == 3) {
+    SimpleTest.finish();
+  } else {
+    ok(true, "We have " + (3 - processCreatedCnt) + " processes to create.");
+  }
+}, kProcessCreatedTopic, /* weak = */ false);
+
+function runTest() {
+  var iframe = document.createElement("iframe");
+  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute('remote', 'true');
+  iframe.setAttribute("src", "http://example.org:80");
+
+  iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+    iframe.removeEventListener("mozbrowserloadend", loadend);
+    ok(true, "Got mozbrowserloadend 1");
+    iframe.setAttribute("src", "http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app_random.sjs!//scripts/app.js");
+
+    iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+      iframe.removeEventListener("mozbrowserloadend", loadend);
+      ok(true, "Got mozbrowserloadend 2");
+      iframe.setAttribute("src", "http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app_random.sjs!//index.html");
+    });
+
+  });
+
+  document.body.appendChild(iframe);
+}
+
+</script>
+</pre>
+</body>
+</html>
