@@ -40,7 +40,8 @@
    ...
 }
 # Leaks due to either Gtk+3 or cairo, but Gecko is not directly involved with
-# those cairo interactions.
+# those cairo interactions.  One suspected cause is Gecko not closing the
+# display to work around a bug in old Gtk+3 versions.  See also bug 1228724.
 {
    Bug 1187649
    Memcheck:Leak
@@ -49,9 +50,6 @@
    fun:_cairo_freelist_alloc
    fun:_cairo_xlib_display_queue_resource
    fun:_cairo_xlib_surface_finish
-   ...
-   fun:gtk_widget_realize
-   fun:_ZN8nsWindow6CreateEP9nsIWidgetPvRKN7mozilla3gfx12IntRectTypedINS4_12UnknownUnitsEEEP16nsWidgetInitData
    ...
 }
 # The three following leaks are deep in Gtk+3, and it doesn't seem we're doing
