@@ -40,6 +40,7 @@ public class LocalURLMetadata implements URLMetadata {
             add(URLMetadataTable.URL_COLUMN);
             add(URLMetadataTable.TILE_IMAGE_URL_COLUMN);
             add(URLMetadataTable.TILE_COLOR_COLUMN);
+            add(URLMetadataTable.TOUCH_ICON_COLUMN);
         }};
     }
 
@@ -96,14 +97,14 @@ public class LocalURLMetadata implements URLMetadata {
     @Override
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
                                                        final List<String> urls,
-                                                       final List<String> columns) {
+                                                       final List<String> requestedColumns) {
         ThreadUtils.assertNotOnUiThread();
         ThreadUtils.assertNotOnGeckoThread();
 
         final Map<String, Map<String, Object>> data = new HashMap<String, Map<String, Object>>();
 
         // Nothing to query for
-        if (urls.isEmpty() || columns.isEmpty()) {
+        if (urls.isEmpty() || requestedColumns.isEmpty()) {
             Log.e(LOGTAG, "Queried metadata for nothing");
             return data;
         }
@@ -113,8 +114,22 @@ public class LocalURLMetadata implements URLMetadata {
         for (String url : urls) {
             final Map<String, Object> hit = cache.get(url);
             if (hit != null) {
-                // Cache hit!
-                data.put(url, hit);
+                // Cache hit: we've found the URL in the cache, however we may not have cached the desired columns
+                // for that URL. Hence we need to check whether our cache hit contains those columns, and directly
+                // retrieve the desired data if not. (E.g. the top sites panel retrieves the tile, and tilecolor. If
+                // we later try to retrieve the touchIcon for a top-site the cache hit will only point to
+                // tile+tilecolor, and not the required touchIcon. In this case we don't want to use the cache.)
+                boolean useCache = true;
+                for (String c: requestedColumns) {
+                    if (!hit.containsKey(c)) {
+                        useCache = false;
+                    }
+                }
+                if (useCache) {
+                    data.put(url, hit);
+                } else {
+                    urlsToQuery.add(url);
+                }
             } else {
                 urlsToQuery.add(url);
             }
@@ -128,8 +143,12 @@ public class LocalURLMetadata implements URLMetadata {
         }
 
         final String selection = DBUtils.computeSQLInClause(urlsToQuery.size(), URLMetadataTable.URL_COLUMN);
+        List<String> columns = requestedColumns;
         // We need the url to build our final HashMap, so we force it to be included in the query.
         if (!columns.contains(URLMetadataTable.URL_COLUMN)) {
+            // The requestedColumns may be immutable (e.g. if the caller used Collections.singletonList), hence
+            // we have to create a copy.
+            columns = new ArrayList<String>(columns);
             columns.add(URLMetadataTable.URL_COLUMN);
         }
 

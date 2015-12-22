@@ -39,7 +39,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
-    public static final int DATABASE_VERSION = 26; // Bug 1128675
+    public static final int DATABASE_VERSION = 27; // Bug 1128675
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
