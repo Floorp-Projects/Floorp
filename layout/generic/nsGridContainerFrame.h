@@ -470,17 +470,21 @@ protected:
    * Place all child frames into the grid and expand the (implicit) grid as
    * needed.  The allocated GridAreas are stored in the GridAreaProperty
    * frame property on the child frame.
+   * @param aComputedMinSize the container's min-size - used to determine
+   *   the number of repeat(auto-fill/fit) tracks.
+   * @param aComputedSize the container's size - used to determine
+   *   the number of repeat(auto-fill/fit) tracks.
+   * @param aComputedMaxSize the container's max-size - used to determine
+   *   the number of repeat(auto-fill/fit) tracks.
    */
-  void PlaceGridItems(GridReflowState& aState);
-
-  /**
-   * Initialize the end lines of the Explicit Grid (mExplicitGridCol[Row]End).
-   * This is determined by the larger of the number of rows/columns defined
-   * by 'grid-template-areas' and the 'grid-template-rows'/'-columns', plus one.
-   * Also initialize the Implicit Grid (mGridCol[Row]End) to the same values.
-   * @param aStyle the StylePosition() for the grid container
-   */
-  void InitializeGridBounds(const nsStylePosition* aStyle);
+  void PlaceGridItems(GridReflowState&   aState,
+                      const LogicalSize& aComputedMinSize,
+                      const LogicalSize& aComputedSize,
+                      const LogicalSize& aComputedMaxSize);
+  // Helper for the above.
+  void PlaceGridItems(GridReflowState&   aState,
+                      const LineNameMap& aColLineNameMap,
+                      const LineNameMap& aRowLineNameMap);
 
   /**
    * Inflate the implicit grid to include aArea.
