@@ -10,7 +10,7 @@
 
 var {Tools} = require("devtools/client/definitions");
 
-var test = asyncTest(function* () {
+add_task(function* () {
   let currWindow, hud, mainWindow;
 
   mainWindow = Services.wm.getMostRecentWindow(null);

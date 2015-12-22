@@ -12,7 +12,7 @@ const INIT_URI = "data:text/html;charset=utf8,hello world";
 const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
                  "test/test-duplicate-error.html";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(INIT_URI);
 
   let hud = yield openConsole();
