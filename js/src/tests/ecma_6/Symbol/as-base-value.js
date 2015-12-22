@@ -20,9 +20,8 @@ Object.defineProperty(Symbol.prototype, "prop", {
     get: function () {
         "use strict";
         gets++;
-        assertEq(typeof this, "object");
-        assertEq(this instanceof Symbol, true);
-        assertEq(this.valueOf(), sym);
+        assertEq(typeof this, "symbol");
+        assertEq(this, sym);
         return "got";
     },
     set: function (v) {

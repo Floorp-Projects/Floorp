@@ -26,7 +26,6 @@ public:
     : mMutex("DecodedStreamGraphListener::mMutex")
     , mStream(aStream)
     , mLastOutputTime(aStream->StreamTimeToMicroseconds(aStream->GetCurrentTime()))
-    , mStreamFinishedOnMainThread(false)
   {
     mFinishPromise = Move(aPromise);
   }
@@ -52,8 +51,6 @@ public:
   void DoNotifyFinished()
   {
     mFinishPromise.ResolveIfExists(true, __func__);
-    MutexAutoLock lock(mMutex);
-    mStreamFinishedOnMainThread = true;
   }
 
   int64_t GetLastOutputTime()
@@ -70,18 +67,11 @@ public:
     mStream = nullptr;
   }
 
-  bool IsFinishedOnMainThread()
-  {
-    MutexAutoLock lock(mMutex);
-    return mStreamFinishedOnMainThread;
-  }
-
 private:
   Mutex mMutex;
   // Members below are protected by mMutex.
   RefPtr<MediaStream> mStream;
   int64_t mLastOutputTime; // microseconds
-  bool mStreamFinishedOnMainThread;
   // Main thread only.
   MozPromiseHolder<GenericPromise> mFinishPromise;
 };
@@ -119,7 +109,6 @@ public:
   DecodedStreamData(SourceMediaStream* aStream,
                     MozPromiseHolder<GenericPromise>&& aPromise);
   ~DecodedStreamData();
-  bool IsFinished() const;
   int64_t GetPosition() const;
   void SetPlaying(bool aPlaying);
 
@@ -178,12 +167,6 @@ DecodedStreamData::~DecodedStreamData()
 {
   mListener->Forget();
   mStream->Destroy();
-}
-
-bool
-DecodedStreamData::IsFinished() const
-{
-  return mListener->IsFinishedOnMainThread();
 }
 
 int64_t
@@ -346,13 +329,14 @@ DecodedStream::OnEnded(TrackType aType)
   AssertOwnerThread();
   MOZ_ASSERT(mStartTime.isSome());
 
-  if (aType == TrackInfo::kAudioTrack) {
+  if (aType == TrackInfo::kAudioTrack && mInfo.HasAudio()) {
     // TODO: we should return a promise which is resolved when the audio track
     // is finished. For now this promise is resolved when the whole stream is
     // finished.
     return mFinishPromise;
+  } else if (aType == TrackInfo::kVideoTrack && mInfo.HasVideo()) {
+    return mFinishPromise;
   }
-  // TODO: handle video track.
   return nullptr;
 }
 
@@ -881,13 +865,6 @@ DecodedStream::GetPosition(TimeStamp* aTimeStamp) const
     *aTimeStamp = TimeStamp::Now();
   }
   return mStartTime.ref() + (mData ? mData->GetPosition() : 0);
-}
-
-bool
-DecodedStream::IsFinished() const
-{
-  AssertOwnerThread();
-  return mData && mData->IsFinished();
 }
 
 void

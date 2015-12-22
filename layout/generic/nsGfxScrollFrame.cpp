@@ -4228,12 +4228,14 @@ void ScrollFrameHelper::CurPosAttributeChanged(nsIContent* aContent)
 ScrollFrameHelper::ScrollEvent::ScrollEvent(ScrollFrameHelper* aHelper)
   : mHelper(aHelper)
 {
-  mHelper->mOuter->PresContext()->RefreshDriver()->AddRefreshObserver(this, Flush_Style);
+  mDriver = mHelper->mOuter->PresContext()->RefreshDriver();
+  mDriver->AddRefreshObserver(this, Flush_Style);
 }
 
 ScrollFrameHelper::ScrollEvent::~ScrollEvent()
 {
-  mHelper->mOuter->PresContext()->RefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
+  mDriver->RemoveRefreshObserver(this, Flush_Style);
+  mDriver = nullptr;
 }
 
 void

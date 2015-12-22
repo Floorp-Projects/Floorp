@@ -1,0 +1,99 @@
+{
+  "tuners": [
+    {
+       "id":"1",
+       "supportedType": ["dvb-t"],
+       "sources": [
+         {
+           "type": "dvb-t",
+           "channels": [
+             {
+             "networkId": "32112",
+             "transportStreamId": "32112",
+             "serviceId": "40960",
+             "type": "tv",
+             "name": "TV #1",
+             "number" : 1,
+             "isEmergency": false,
+             "isFree" : true,
+             "videoFilePath": "tv1.ogv",
+             "programs": [
+               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"422158917", "title":"News of Midnight",  "startTime":"1431266400", "duration":"3600",  "description":"Summary of today news",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               ]
+             },
+             {
+             "_comment": "Channel Data",
+             "networkId": "32122",
+             "transportStreamId": "32122",
+             "serviceId": "40990",
+             "type": "tv",
+             "name": "TV #2",
+             "number" : 2,
+             "isEmergency": false,
+             "isFree" : true,
+             "videoFilePath": "tv2.ogv",
+             "programs": [
+                 {"eventId":"931109607","title":"News of Morning",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"297834220","title":"Weekly News",	"startTime":"1431259200",	"duration":"10800",	"description":"Poopular Music program",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"866886159","title":"Weekly news",	"startTime":"1431270000",	"duration":"7200",	"description":"Information program on Monday",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]}
+               ]
+             },
+             {
+             "_comment": "Channel Data",
+             "networkId": "32132",
+             "transportStreamId": "32132",
+             "serviceId": "41020",
+             "type": "tv",
+             "name": "TV #3",
+             "number" : 3,
+             "isEmergency": false,
+             "isFree" : true,
+             "videoFilePath": "tv1.ogv",
+             "programs": [
+               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"586216742", "title":"Information Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               ]
+             },
+             {
+             "_comment": "Channel Data",
+             "networkId": "32142",
+             "transportStreamId": "32142",
+             "serviceId": "41040",
+             "type": "tv",
+             "name": "TV #5",
+             "number" : 4,
+             "isEmergency": false,
+             "isFree" : true,
+             "videoFilePath": "tv2.ogv",
+             "programs": [
+                 {"eventId":"931109607","title":"News of Morning",	"startTime":"1430686800",	"duration":"10800",	"description":"Provide news in morning",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"297834220","title":"Weekly News",	"startTime":"1431259200",	"duration":"10800",	"description":"Poopular Music program",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]},
+                 {"eventId":"866886159","title":"Weekly news",	"startTime":"1431270000",	"duration":"7200",	"description":"Information program on Monday",	"rating":"0",	"audioLanguages":["eng"],	"subtitleLanguages":["eng"]}
+               ]
+             },
+             {
+             "_comment": "Channel Data",
+             "networkId": "32152",
+             "transportStreamId": "32152",
+             "serviceId": "41060",
+             "type": "tv",
+             "name": "TV #5",
+             "number" : 5,
+             "isEmergency": false,
+             "isFree" : true,
+             "videoFilePath": "tv1.ogv",
+             "programs": [
+               {"eventId":"734475972", "title":"News of Morning",  "startTime":"1430686800", "duration":"10800", "description":"Morning News", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"586216742", "title":"Information Program", "startTime":"1430697600", "duration":"7200",  "description":"Provide program Information.",  "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]},
+               {"eventId":"533612446", "title":"Entertainment Program",  "startTime":"1431270000", "duration":"7200",  "description":"Midnight entertainment program", "rating":"0", "audioLanguages":["eng"], "subtitleLanguages":["eng"]}
+               ]
+             }
+           ]
+         }
+       ]
+    }
+  ]
+}

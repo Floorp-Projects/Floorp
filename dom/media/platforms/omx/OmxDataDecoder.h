@@ -163,7 +163,7 @@ protected:
   Atomic<bool> mFlushing;
 
   // It is accessed in Omx/reader TaskQeueu.
-  Atomic<bool> mShutdown;
+  Atomic<bool> mShuttingDown;
 
   // It is accessed in Omx TaskQeueu.
   bool mCheckingInputExhausted;

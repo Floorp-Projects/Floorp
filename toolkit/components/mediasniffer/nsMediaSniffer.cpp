@@ -11,9 +11,7 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mp3sniff.h"
-#ifdef MOZ_WEBM
 #include "nestegg/nestegg.h"
-#endif
 
 #include "nsIClassInfoImpl.h"
 #include <algorithm>
@@ -107,11 +105,7 @@ static bool MatchesMP4(const uint8_t* aData, const uint32_t aLength, nsACString&
 
 static bool MatchesWebM(const uint8_t* aData, const uint32_t aLength)
 {
-#ifdef MOZ_WEBM
   return nestegg_sniff((uint8_t*)aData, aLength) ? true : false;
-#else
-  return false;
-#endif
 }
 
 // This function implements mp3 sniffing based on parsing

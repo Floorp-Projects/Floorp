@@ -349,7 +349,7 @@ class ElementSpecific
         MOZ_ASSERT(SpecificArray::ArrayTypeID() == target->type(),
                    "calling wrong setFromTypedArray specialization");
         MOZ_ASSERT(SomeTypedArray::sameBuffer(target, source),
-                   "provided arrays don't actually overlap, so it's "
+                   "the provided arrays don't actually overlap, so it's "
                    "undesirable to use this method");
 
         MOZ_ASSERT(offset <= target->length());

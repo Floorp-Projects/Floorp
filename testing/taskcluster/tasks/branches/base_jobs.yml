@@ -191,7 +191,7 @@ tests:
       tasks/builds/b2g_emulator_x86_kk_opt.yml:
         task: tasks/tests/b2g_emulator_crashtest.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_cppunit.yml
+        task: tasks/tests/fx_linux64_crashtest.yml
   gaia-build:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
