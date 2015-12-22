@@ -40,9 +40,8 @@ with Files('nsChangeHint.h'):
 with Files('nsBidi*'):
     BUG_COMPONENT = ('Core', 'Layout: Text')
 
-for caret_file in ('AccessibleCaret*', 'TouchCaret*', 'SelectionCarets*'):
-    with Files(caret_file):
-        BUG_COMPONENT = ('Core', 'Selection')
+with Files('AccessibleCaret*'):
+    BUG_COMPONENT = ('Core', 'Selection')
 
 XPIDL_SOURCES += [
     'nsIStyleSheetService.idl',
@@ -147,9 +146,7 @@ UNIFIED_SOURCES += [
     'RestyleManager.cpp',
     'RestyleTracker.cpp',
     'ScrollbarStyles.cpp',
-    'SelectionCarets.cpp',
     'StackArena.cpp',
-    'TouchCaret.cpp',
     'TouchManager.cpp',
     'ZoomConstraintsClient.cpp',
 ]
