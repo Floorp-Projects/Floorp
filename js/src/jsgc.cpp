@@ -2200,7 +2200,6 @@ GCRuntime::sweepZoneAfterCompacting(Zone* zone)
         cache->sweep();
 
     for (CompartmentsInZoneIter c(zone); !c.done(); c.next()) {
-        c->sweepInnerViews();
         c->objectGroups.sweep(fop);
         c->sweepRegExps();
         c->sweepSavedStacks();
@@ -4849,7 +4848,6 @@ class SweepWeakCacheTask : public GCSweepTask
         explicit name (JSRuntime* rt) : GCSweepTask(rt) {}                    \
     }
 MAKE_GC_SWEEP_TASK(SweepAtomsTask);
-MAKE_GC_SWEEP_TASK(SweepInnerViewsTask);
 MAKE_GC_SWEEP_TASK(SweepCCWrappersTask);
 MAKE_GC_SWEEP_TASK(SweepBaseShapesTask);
 MAKE_GC_SWEEP_TASK(SweepInitialShapesTask);
@@ -4862,13 +4860,6 @@ MAKE_GC_SWEEP_TASK(SweepMiscTask);
 SweepAtomsTask::run()
 {
     runtime->sweepAtoms();
-}
-
-/* virtual */ void
-SweepInnerViewsTask::run()
-{
-    for (GCCompartmentGroupIter c(runtime); !c.done(); c.next())
-        c->sweepInnerViews();
 }
 
 /* virtual */ void
@@ -4980,7 +4971,6 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
     FreeOp fop(rt);
     SweepAtomsTask sweepAtomsTask(rt);
-    SweepInnerViewsTask sweepInnerViewsTask(rt);
     SweepCCWrappersTask sweepCCWrappersTask(rt);
     SweepObjectGroupsTask sweepObjectGroupsTask(rt);
     SweepRegExpsTask sweepRegExpsTask(rt);
@@ -5029,7 +5019,6 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
 
         {
             AutoLockHelperThreadState helperLock;
-            startTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS, helperLock);
             startTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
             startTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
             startTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
@@ -5109,7 +5098,6 @@ GCRuntime::beginSweepingZoneGroup(AutoLockForExclusiveAccess& lock)
         gcstats::AutoSCC scc(stats, zoneGroupIndex);
 
         AutoLockHelperThreadState helperLock;
-        joinTask(sweepInnerViewsTask, gcstats::PHASE_SWEEP_INNER_VIEWS, helperLock);
         joinTask(sweepCCWrappersTask, gcstats::PHASE_SWEEP_CC_WRAPPER, helperLock);
         joinTask(sweepObjectGroupsTask, gcstats::PHASE_SWEEP_TYPE_OBJECT, helperLock);
         joinTask(sweepRegExpsTask, gcstats::PHASE_SWEEP_REGEXP, helperLock);
