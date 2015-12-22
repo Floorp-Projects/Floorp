@@ -4,6 +4,10 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 var {StructType, Handle} = TypedObject;
 var {float32, float64, int8, int16, int32, uint8} = TypedObject;
@@ -248,7 +252,10 @@ function testInt8x16Reify() {
   // alias into the array.
 
   var f = array[1];
-  assertEq(Int8x16.extractLane(f, 3), 20);
+
+  var sj1 = Int8x16.extractLane(f, 3);
+
+  assertEq(sj1, 20);
   assertEq(Int8x16.extractLane(array[1], 3), 20);
   array[1] = Int8x16(49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64);
   assertEq(Int8x16.extractLane(f, 3), 20);
@@ -461,7 +468,257 @@ function testInt32x4Setters() {
   }, TypeError, "Setting Int32x4 from a number");
 }
 
+function testBool8x16Getters() {
+  // Create a Bool8x16 and check that the getters work:
+  var f = Bool8x16(true, false, true, false, true, false, true, false, true, true, false, false, true, true, false, false);
+  assertEq(Bool8x16.extractLane(f, 0), true);
+  assertEq(Bool8x16.extractLane(f, 1), false);
+  assertEq(Bool8x16.extractLane(f, 2), true);
+  assertEq(Bool8x16.extractLane(f, 3), false);
+  assertEq(Bool8x16.extractLane(f, 4), true);
+  assertEq(Bool8x16.extractLane(f, 5), false);
+  assertEq(Bool8x16.extractLane(f, 6), true);
+  assertEq(Bool8x16.extractLane(f, 7), false);
+  assertEq(Bool8x16.extractLane(f, 8), true);
+  assertEq(Bool8x16.extractLane(f, 9), true);
+  assertEq(Bool8x16.extractLane(f, 10), false);
+  assertEq(Bool8x16.extractLane(f, 11), false);
+  assertEq(Bool8x16.extractLane(f, 12), true);
+  assertEq(Bool8x16.extractLane(f, 13), true);
+  assertEq(Bool8x16.extractLane(f, 14), false);
+  assertEq(Bool8x16.extractLane(f, 15), false);
+
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 16), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, -1), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, 0.5), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(1, 0), TypeError);
+  assertThrowsInstanceOf(() => Bool8x16.extractLane(f, f), TypeError);
+}
+
+function testBool8x16Reify() {
+  var Array = Bool8x16.array(3);
+  var array = new Array([Bool8x16(true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false),
+                         Bool8x16(false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true),
+                         Bool8x16(true, true, true, true, false, false, false, false, true, true, true, true, false, false, false, false)]);
+
+  // Test that reading array[1] produces a *copy* of Bool8x16, not an
+  // alias into the array.
+
+  var f = array[1];
+  assertEq(Bool8x16.extractLane(f, 2), false);
+  assertEq(Bool8x16.extractLane(array[1], 2), false);
+  assertEq(Bool8x16.extractLane(f, 3), true);
+  assertEq(Bool8x16.extractLane(array[1], 3), true);
+  array[1] = Bool8x16(true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false);
+  assertEq(Bool8x16.extractLane(f, 3), true);
+  assertEq(Bool8x16.extractLane(array[1], 3), false);
+}
+
+function testBool8x16Setters() {
+  var Array = Bool8x16.array(3);
+  var array = new Array([Bool8x16(true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false),
+                         Bool8x16(false, true, false, true, false, true, false, true, false, true, false, true, false, true, false, true),
+                         Bool8x16(true, true, true, true, false, false, false, false, true, true, true, true, false, false, false, false)]);
+
+  assertEq(Bool8x16.extractLane(array[1], 3), true);
+  // Test that we are allowed to write Bool8x16 values into array,
+  // but not other things.
+  array[1] = Bool8x16(true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false);
+  assertEq(Bool8x16.extractLane(array[1], 3), false);
+  assertThrowsInstanceOf(function() {
+    array[1] = {s0: true, s1: true, s2: true, s3: true, s4: true, s5: true, s6: true, s7: true,
+                s8: false, s9: false, s10: false, s11: false, s12: false, s13: false, s14: false, s15: false};
+  }, TypeError, "Setting Bool8x16 from an object");
+  assertThrowsInstanceOf(function() {
+    array[1] = [true, false, true, false, true, false, true, false, true, false, true, false, true, false, true, false];
+  }, TypeError, "Setting Bool8x16 from an array");
+  assertThrowsInstanceOf(function() {
+    array[1] = false;
+  }, TypeError, "Setting Bool8x16 from a boolean");
+}
+
+function testBool16x8Getters() {
+  // Create a Bool8x16 and check that the getters work:
+  var f = Bool16x8(true, false, true, false, true, true, false, false);
+  assertEq(Bool16x8.extractLane(f, 0), true);
+  assertEq(Bool16x8.extractLane(f, 1), false);
+  assertEq(Bool16x8.extractLane(f, 2), true);
+  assertEq(Bool16x8.extractLane(f, 3), false);
+  assertEq(Bool16x8.extractLane(f, 4), true);
+  assertEq(Bool16x8.extractLane(f, 5), true);
+  assertEq(Bool16x8.extractLane(f, 6), false);
+  assertEq(Bool16x8.extractLane(f, 7), false);
+
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 8), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, -1), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, 0.5), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(1, 0), TypeError);
+  assertThrowsInstanceOf(() => Bool16x8.extractLane(f, f), TypeError);
+}
+
+function testBool16x8Reify() {
+  var Array = Bool16x8.array(3);
+  var array = new Array([Bool16x8(true, false, true, false, true, false, true, false),
+                         Bool16x8(false, true, false, true, false, true, false, true),
+                         Bool16x8(true, true, true, false, true, true, true, false)]);
+  // Test that reading array[1] produces a *copy* of Bool16x8, not an
+  // alias into the array.
+  var f = array[1];
+  assertEq(Bool16x8.extractLane(f, 2), false);
+  assertEq(Bool16x8.extractLane(array[1], 2), false);
+  assertEq(Bool16x8.extractLane(f, 3), true);
+  assertEq(Bool16x8.extractLane(array[1], 3), true);
+  array[1] = Bool16x8(true, false, true, false, true, false, true, false);
+  assertEq(Bool16x8.extractLane(f, 3), true);
+  assertEq(Bool16x8.extractLane(array[1], 3), false);
+}
+
+function testBool16x8Setters() {
+  var Array = Bool16x8.array(3);
+  var array = new Array([Bool16x8(true, false, true, false, true, false, true, false),
+                         Bool16x8(false, true, false, true, false, true, false, true),
+                         Bool16x8(true, true, true, false, true, true, true, false)]);
+
+
+  assertEq(Bool16x8.extractLane(array[1], 3), true);
+  // Test that we are allowed to write Bool16x8 values into array,
+  // but not other things.
+  array[1] = Bool16x8(true, false, true, false, true, false, true, false);
+  assertEq(Bool16x8.extractLane(array[1], 3), false);
+  assertThrowsInstanceOf(function() {
+    array[1] = {s0: false, s1: true, s2: false, s3: true, s4: false, s5: true, s6: false, s7: true};
+  }, TypeError, "Setting Bool16x8 from an object");
+  assertThrowsInstanceOf(function() {
+    array[1] = [true, false, false, true, true, true, false, false];
+  }, TypeError, "Setting Bool16x8 from an array");
+  assertThrowsInstanceOf(function() {
+    array[1] = false;
+  }, TypeError, "Setting Bool16x8 from a boolean");
+}
+
+function testBool32x4Getters() {
+  // Create a Bool32x4 and check that the getters work:
+  var f = Bool32x4(true, false, false, true);
+  assertEq(Bool32x4.extractLane(f, 0), true);
+  assertEq(Bool32x4.extractLane(f, 1), false);
+  assertEq(Bool32x4.extractLane(f, 2), false);
+  assertEq(Bool32x4.extractLane(f, 3), true);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 4), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, -1), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, 0.5), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(Float32x4(1, 2, 3, 4), 0), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(1, 0), TypeError);
+  assertThrowsInstanceOf(() => Bool32x4.extractLane(f, f), TypeError);
+}
+
+function testBool32x4Reify() {
+  var Array = Bool32x4.array(3);
+  var array = new Array([Bool32x4(true, false, false, true),
+                         Bool32x4(true, false, true, false),
+                         Bool32x4(true, true, true, false)]);
+
+  // Test that reading array[1] produces a *copy* of Bool32x4, not an
+  // alias into the array.
+
+  var f = array[1];
+  assertEq(Bool32x4.extractLane(f, 2), true);
+  assertEq(Bool32x4.extractLane(array[1], 2), true);
+  assertEq(Bool32x4.extractLane(f, 3), false);
+  assertEq(Bool32x4.extractLane(array[1], 3), false);
+  array[1] = Bool32x4(false, true, false, true);
+  assertEq(Bool32x4.extractLane(f, 3), false);
+  assertEq(Bool32x4.extractLane(array[1], 3), true);
+}
+
+function testBool32x4Setters() {
+  var Array = Bool32x4.array(3);
+  var array = new Array([Bool32x4(true, false, false, true),
+                         Bool32x4(true, false, true, false),
+                         Bool32x4(true, true, true, false)]);
+
+
+  assertEq(Bool32x4.extractLane(array[1], 3), false);
+  // Test that we are allowed to write Bool32x4 values into array,
+  // but not other things.
+  array[1] = Bool32x4(false, true, false, true);
+  assertEq(Bool32x4.extractLane(array[1], 3), true);
+  assertThrowsInstanceOf(function() {
+    array[1] = {x: false, y: true, z: false, w: true};
+  }, TypeError, "Setting Bool32x4 from an object");
+  assertThrowsInstanceOf(function() {
+    array[1] = [true, false, false, true];
+  }, TypeError, "Setting Bool32x4 from an array");
+  assertThrowsInstanceOf(function() {
+    array[1] = false;
+  }, TypeError, "Setting Bool32x4 from a number");
+}
+
+function testBool64x2Getters() {
+  // Create a Bool64x2 and check that the getters work:
+  var f = Bool64x2(true, false);
+  assertEq(Bool64x2.extractLane(f, 0), true);
+  assertEq(Bool64x2.extractLane(f, 1), false);
+
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 2), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, -1), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, 0.5), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, {}), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(Bool32x4(1,2,3,4), 0), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(1, 0), TypeError);
+  assertThrowsInstanceOf(() => Bool64x2.extractLane(f, f), TypeError);
+}
+
+function testBool64x2Reify() {
+  var Array = Bool64x2.array(3);
+  var array = new Array([Bool64x2(true, false),
+                         Bool64x2(false, true),
+                         Bool64x2(true, true)]);
+
+  // Test that reading array[1] produces a *copy* of Bool64x2, not an
+  // alias into the array.
+
+  var f = array[1];
+  assertEq(Bool64x2.extractLane(f, 1), true);
+  assertEq(Bool64x2.extractLane(array[1], 1), true);
+  array[1] = Bool64x2(false, false);
+  assertEq(Bool64x2.extractLane(f, 1), true);
+  assertEq(Bool64x2.extractLane(array[1], 1), false);
+}
+
+function testBool64x2Setters() {
+  var Array = Bool64x2.array(3);
+  var array = new Array([Bool64x2(true, false),
+                         Bool64x2(false, true),
+                         Bool64x2(true, true)]);
+  assertEq(Bool64x2.extractLane(array[1], 1), true);
+
+  // Test that we are allowed to write Bool64x2 values into array,
+  // but not other things.
+
+  array[1] = Bool64x2(false, false);
+  assertEq(Bool64x2.extractLane(array[1], 1), false);
+
+  assertThrowsInstanceOf(function() {
+    array[1] = {x: false, y: false };
+  }, TypeError, "Setting Bool64x2 from an object");
+
+  assertThrowsInstanceOf(function() {
+    array[1] = [ false, false ];
+  }, TypeError, "Setting Bool64x2 from an array");
+
+  assertThrowsInstanceOf(function() {
+    array[1] = 9;
+  }, TypeError, "Setting Bool64x2 from a number");
+}
+
+
 function test() {
+
   testFloat32x4Alignment();
   testFloat32x4Getters();
   testFloat32x4Handles();
@@ -491,6 +748,22 @@ function test() {
   testInt32x4Handles();
   testInt32x4Reify();
   testInt32x4Setters();
+
+  testBool8x16Getters();
+  testBool8x16Reify();
+  testBool8x16Setters();
+
+  testBool16x8Getters();
+  testBool16x8Reify();
+  testBool16x8Setters();
+
+  testBool32x4Getters();
+  testBool32x4Reify();
+  testBool32x4Setters();
+
+  testBool64x2Getters();
+  testBool64x2Reify();
+  testBool64x2Setters();
 
   if (typeof reportCompare === "function") {
     reportCompare(true, true);

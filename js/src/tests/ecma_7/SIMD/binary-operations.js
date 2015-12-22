@@ -3,6 +3,10 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 function testFloat32x4add() {
   function addf(a, b) {
@@ -360,6 +364,143 @@ function testInt32x4xor() {
   }
 }
 
+var b8x16vals = [
+  [[true, true, true, true, false, false, false, false, true, true, true, true, false, false, false, false],
+   [false, true, false, true, false, true, false, true, true, true, true, true, false, false, false, false]]
+];
+
+function testBool8x16and() {
+  function andb(a, b) {
+    return a && b;
+  }
+
+  for (var [v,w] of b8x16vals) {
+    testBinaryFunc(Bool8x16(...v), Bool8x16(...w), Bool8x16.and, andb);
+  }
+}
+
+function testBool8x16or() {
+  function orb(a, b) {
+    return a || b;
+  }
+
+  for (var [v,w] of b8x16vals) {
+    testBinaryFunc(Bool8x16(...v), Bool8x16(...w), Bool8x16.or, orb);
+  }
+}
+
+function testBool8x16xor() {
+  function xorb(a, b) {
+    return a != b;
+  }
+
+  for (var [v,w] of b8x16vals) {
+    testBinaryFunc(Bool8x16(...v), Bool8x16(...w), Bool8x16.xor, xorb);
+  }
+}
+
+var b16x8vals = [
+  [[true, true, true, true, false, false, false, false],
+   [false, true, false, true, false, true, false, true]]
+];
+
+function testBool16x8and() {
+  function andb(a, b) {
+    return a && b;
+  }
+
+  for (var [v,w] of b16x8vals) {
+    testBinaryFunc(Bool16x8(...v), Bool16x8(...w), Bool16x8.and, andb);
+  }
+}
+
+function testBool16x8or() {
+  function orb(a, b) {
+    return a || b;
+  }
+
+  for (var [v,w] of b16x8vals) {
+    testBinaryFunc(Bool16x8(...v), Bool16x8(...w), Bool16x8.or, orb);
+  }
+}
+
+function testBool16x8xor() {
+  function xorb(a, b) {
+    return a != b;
+  }
+
+  for (var [v,w] of b16x8vals) {
+    testBinaryFunc(Bool16x8(...v), Bool16x8(...w), Bool16x8.xor, xorb);
+  }
+}
+
+var b32x4vals = [
+  [[true, true, false, false], [false, true, false, true]]
+];
+
+function testBool32x4and() {
+  function andb(a, b) {
+    return a && b;
+  }
+
+  for (var [v,w] of b32x4vals) {
+    testBinaryFunc(Bool32x4(...v), Bool32x4(...w), Bool32x4.and, andb);
+  }
+}
+
+function testBool32x4or() {
+  function orb(a, b) {
+    return a || b;
+  }
+
+  for (var [v,w] of b32x4vals) {
+    testBinaryFunc(Bool32x4(...v), Bool32x4(...w), Bool32x4.or, orb);
+  }
+}
+
+function testBool32x4xor() {
+  function xorb(a, b) {
+    return a != b;
+  }
+
+  for (var [v,w] of b32x4vals) {
+    testBinaryFunc(Bool32x4(...v), Bool32x4(...w), Bool32x4.xor, xorb);
+  }
+}
+
+var b64x2vals = [
+  [[false, false], [false, true], [true, false], [true, true]]
+];
+
+function testBool64x2and() {
+  function andb(a, b) {
+    return a && b;
+  }
+
+  for (var [v,w] of b64x2vals) {
+    testBinaryFunc(Bool64x2(...v), Bool64x2(...w), Bool64x2.and, andb);
+  }
+}
+
+function testBool64x2or() {
+  function orb(a, b) {
+    return a || b;
+  }
+
+  for (var [v,w] of b64x2vals) {
+    testBinaryFunc(Bool64x2(...v), Bool64x2(...w), Bool64x2.or, orb);
+  }
+}
+
+function testBool64x2xor() {
+  function xorb(a, b) {
+    return a != b;
+  }
+
+  for (var [v,w] of b64x2vals) {
+    testBinaryFunc(Bool64x2(...v), Bool64x2(...w), Bool64x2.xor, xorb);
+  }
+}
 
 function test() {
   testFloat32x4add();
@@ -390,6 +531,22 @@ function test() {
   testInt32x4or();
   testInt32x4sub();
   testInt32x4xor();
+
+  testBool8x16and();
+  testBool8x16or();
+  testBool8x16xor();
+
+  testBool16x8and();
+  testBool16x8or();
+  testBool16x8xor();
+
+  testBool32x4and();
+  testBool32x4or();
+  testBool32x4xor();
+
+  testBool64x2and();
+  testBool64x2or();
+  testBool64x2xor();
 
   if (typeof reportCompare === "function") {
     reportCompare(true, true);
