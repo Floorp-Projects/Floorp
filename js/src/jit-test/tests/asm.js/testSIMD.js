@@ -155,6 +155,13 @@ assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTF4 + "function f() {var x=i4(1,2,3,4); return e(x,0) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + EXTI4 + "function f() {var x=i4(1,2,3,4); var i=0; return e(x,i) | 0;} return f");
 
+// The signMask property is no longer supported. Replaced by allTrue / anyTrue.
+assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42; return x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42.; return x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + FROUND + "function f() {var x=f32(42.); return x.signMask;} return f");
+assertAsmTypeFail('glob', USE_ASM + I32 + 'function f() { var x=i4(1,2,3,4); return x.signMask | 0 } return f');
+assertAsmTypeFail('glob', USE_ASM + F32 + FROUND + 'var Infinity = glob.Infinity; function f() { var x=f4(0,0,0,0); x=f4(f32(1), f32(-13.37), f32(42), f32(-Infinity)); return x.signMask | 0 } return f');
+
 // signMask
 function CheckSignMask(innerBody, type, expected) {
     var coerceBefore, coerceAfter, extractLane;
@@ -200,17 +207,6 @@ CheckSignMaskF4('var x=f4(13.37, 2., 3., -0)', [13.37, 2, 3, -0]);
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); var y=0.0; y=x.signMask;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + "function f() {var x=i4(1,2,3,4); return (x.signMask > (1>>>0)) | 0;} return f");
 assertAsmTypeFail('glob', USE_ASM + I32 + FROUND + "function f() {var x=i4(1,2,3,4); var y=f32(0.0); y=x.signMask;} return f");
-
-assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42; return x.signMask;} return f");
-assertAsmTypeFail('glob', USE_ASM + "function f() {var x=42.; return x.signMask;} return f");
-assertAsmTypeFail('glob', USE_ASM + FROUND + "function f() {var x=f32(42.); return x.signMask;} return f");
-
-assertEq(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f() { var x=i4(1,2,3,4); return x.signMask | 0 } return f'), this)(), 0b0000);
-assertEq(asmLink(asmCompile('glob', USE_ASM + I32 + 'function f() { var x=i4(0,-1, ' + INT32_MAX + ',' + INT32_MIN  + '); return x.signMask | 0 } return f'), this)(), 0b1010);
-
-assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + FROUND + 'var Infinity = glob.Infinity; function f() { var x=f4(0,0,0,0); x=f4(f32(1), f32(-13.37), f32(42), f32(-Infinity)); return x.signMask | 0 } return f'), this)(), 0b1010);
-assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + FROUND + 'var Infinity = glob.Infinity; function f() { var x=f4(0,0,0,0); x=f4(f32(-1), f32(0), f32(-0.000001), f32(Infinity)); return x.signMask | 0 } return f'), this)(), 0b0101);
-assertEq(asmLink(asmCompile('glob', USE_ASM + F32 + FROUND + 'var NaN = glob.NaN; function f() { var x=f4(0,0,0,0); x=f4(f32(-1), f32(NaN), f32(-0), f32(0)); return x.signMask | 0 } return f'), this)(), 0b0101);
 
 // 1.3.3. Variable assignments
 assertAsmTypeFail('glob', USE_ASM + I32 + I32A + "function f() {var x=i4(1,2,3,4); x=i4();} return f");
@@ -575,18 +571,6 @@ var CheckNegF = CheckUnaryF4('neg', function(x) { return -x });
 CheckNegF([1, 42.42, 0.63, 13.37]);
 CheckNegF([NaN, -Infinity, Infinity, 0]);
 
-var CheckNotF = CheckUnaryF4('not', (function() {
-    var f32 = new Float32Array(1);
-    var i32 = new Int32Array(f32.buffer);
-    return function(x) {
-        f32[0] = x;
-        i32[0] = ~i32[0];
-        return f32[0];
-    }
-})());
-CheckNotF([1, 42.42, 0.63, 13.37]);
-CheckNotF([NaN, -Infinity, Infinity, 0]);
-
 var CheckSqrt = CheckUnaryF4('sqrt', function(x) { return Math.sqrt(x); });
 CheckSqrt([1, 42.42, 0.63, 13.37]);
 CheckSqrt([NaN, -Infinity, Infinity, 0]);
@@ -831,30 +815,16 @@ CheckI4(ANDI32, 'var x=i4(42,1337,-1,13); var y=i4(2, 4, 7, 15); x=andd(x,y)', [
 CheckI4(ORI32, ' var x=i4(42,1337,-1,13); var y=i4(2, 4, 7, 15); x=orr(x,y)',  [42 | 2, 1337 | 4, -1 | 7, 13 | 15]);
 CheckI4(XORI32, 'var x=i4(42,1337,-1,13); var y=i4(2, 4, 7, 15); x=xorr(x,y)', [42 ^ 2, 1337 ^ 4, -1 ^ 7, 13 ^ 15]);
 
+// No bitwise ops on Float32x4.
 const ANDF32 = 'var andd=f4.and;';
 const ORF32 = 'var orr=f4.or;';
 const XORF32 = 'var xorr=f4.xor;';
+const NOTF32 = 'var nott=f4.not;';
 
-var bitwise = (function() {
-    var asf32 = new Float32Array(2);
-    var asi32 = new Int32Array(asf32.buffer);
-    function andd(x, y) { asf32[0] = x; asf32[1] = y; asi32[0] = asi32[0] & asi32[1]; return asf32[0]; }
-    function orr(x, y)  { asf32[0] = x; asf32[1] = y; asi32[0] = asi32[0] | asi32[1]; return asf32[0]; }
-    function xorr(x, y) { asf32[0] = x; asf32[1] = y; asi32[0] = asi32[0] ^ asi32[1]; return asf32[0]; }
-
-    function andx4(x, y) { var res = []; for (var i = 0; i < 4; i++) res[i] = andd(x[i], y[i]); return res; }
-    function orx4(x, y) { var res = []; for (var i = 0; i < 4; i++) res[i] = orr(x[i], y[i]); return res; }
-    function xorx4(x, y) { var res = []; for (var i = 0; i < 4; i++) res[i] = xorr(x[i], y[i]); return res; }
-    return {
-        and: andx4,
-        or: orx4,
-        xor: xorx4
-    }
-})();
-
-CheckF4(ANDF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=andd(x,y)', bitwise.and([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
-CheckF4(ORF32,  'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=orr(x,y)',  bitwise.or( [42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
-CheckF4(XORF32, 'var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=xorr(x,y)', bitwise.xor([42, 13.37, -1.42, 23.10], [19.89, 2.4, 8.15, 16.36]));
+assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + ANDF32 + 'function f() {var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=andd(x,y);} return f');
+assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + ORF32 + 'function f() {var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=orr(x,y);} return f');
+assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + XORF32 + 'function f() {var x=f4(42, 13.37,-1.42, 23.10); var y=f4(19.89, 2.4, 8.15, 16.36); x=xorr(x,y);} return f');
+assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + NOTF32 + 'function f() {var x=f4(42, 13.37,-1.42, 23.10); x=nott(x);} return f');
 
 // Logical ops
 const LSHI = 'var lsh=i4.shiftLeftByScalar;'

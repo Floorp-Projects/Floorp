@@ -10997,11 +10997,6 @@ IonBuilder::jsop_getprop(PropertyName* name)
         if (!getPropTryConstant(&emitted, obj, NameToId(name), types) || emitted)
             return emitted;
 
-        // Try to emit SIMD getter loads
-        trackOptimizationAttempt(TrackedStrategy::GetProp_SimdGetter);
-        if (!getPropTrySimdGetter(&emitted, obj, name) || emitted)
-            return emitted;
-
         // Try to emit loads from known binary data blocks
         trackOptimizationAttempt(TrackedStrategy::GetProp_TypedObject);
         if (!getPropTryTypedObject(&emitted, obj, name) || emitted)
@@ -11258,50 +11253,6 @@ IonBuilder::SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
       case SimdTypeDescr::Bool64x2: return MIRType_Undefined;
     }
     MOZ_CRASH("unimplemented MIR type for a SimdTypeDescr::Type");
-}
-
-bool
-IonBuilder::getPropTrySimdGetter(bool* emitted, MDefinition* obj, PropertyName* name)
-{
-    MOZ_ASSERT(!*emitted);
-
-    if (!JitSupportsSimd()) {
-        trackOptimizationOutcome(TrackedOutcome::NoSimdJitSupport);
-        return true;
-    }
-
-    TypedObjectPrediction objPrediction = typedObjectPrediction(obj);
-    if (objPrediction.isUseless()) {
-        trackOptimizationOutcome(TrackedOutcome::AccessNotTypedObject);
-        return true;
-    }
-
-    if (objPrediction.kind() != type::Simd) {
-        trackOptimizationOutcome(TrackedOutcome::AccessNotSimdObject);
-        return true;
-    }
-
-    MIRType type = SimdTypeDescrToMIRType(objPrediction.simdType());
-    if (type == MIRType_Undefined) {
-        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
-        return true;
-    }
-
-    const JSAtomState& names = compartment->runtime()->names();
-
-    // Reading the signMask property.
-    if (name != names.signMask) {
-        // Unknown getprop access on a SIMD value
-        trackOptimizationOutcome(TrackedOutcome::UnknownSimdProperty);
-        return true;
-    }
-
-    MSimdSignMask* ins = MSimdSignMask::New(alloc(), obj, type);
-    current->add(ins);
-    current->push(ins);
-    trackOptimizationSuccess();
-    *emitted = true;
-    return true;
 }
 
 bool

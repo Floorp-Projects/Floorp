@@ -285,7 +285,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitSimdUnbox(MSimdUnbox* ins);
     void visitSimdExtractElement(MSimdExtractElement* ins);
     void visitSimdInsertElement(MSimdInsertElement* ins);
-    void visitSimdSignMask(MSimdSignMask* ins);
     void visitSimdSwizzle(MSimdSwizzle* ins);
     void visitSimdGeneralShuffle(MSimdGeneralShuffle* ins);
     void visitSimdShuffle(MSimdShuffle* ins);

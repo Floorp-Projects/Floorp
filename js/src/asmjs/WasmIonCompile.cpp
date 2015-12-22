@@ -309,8 +309,7 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* selectSimd(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type,
-                            bool isElementWise)
+    MDefinition* selectSimd(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
@@ -319,7 +318,7 @@ class FunctionCompiler
         MOZ_ASSERT(mask->type() == MIRType_Int32x4);
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdSelect* ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type, isElementWise);
+        MSimdSelect* ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type);
         curBlock_->add(ins);
         return ins;
     }
@@ -574,17 +573,6 @@ class FunctionCompiler
         MOZ_ASSERT(IsSimdType(base->type()));
         MOZ_ASSERT(!IsSimdType(type));
         MSimdExtractElement* ins = MSimdExtractElement::NewAsmJS(alloc(), base, type, lane);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* extractSignMask(MDefinition* base)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(base->type()));
-        MSimdSignMask* ins = MSimdSignMask::NewAsmJS(alloc(), base);
         curBlock_->add(ins);
         return ins;
     }
@@ -1343,16 +1331,6 @@ EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
 }
 
 static bool
-EmitSignMask(FunctionCompiler& f, ValType type, MDefinition** def)
-{
-    MDefinition* in;
-    if (!EmitExpr(f, type, &in))
-        return false;
-    *def = f.extractSignMask(in);
-    return true;
-}
-
-static bool
 EmitStore(FunctionCompiler& f, Scalar::Type viewType, MDefinition** def)
 {
     NeedsBoundsCheck needsBoundsCheck = NeedsBoundsCheck(f.readU8());
@@ -1897,15 +1875,13 @@ EmitSimdStore(FunctionCompiler& f, ValType type, MDefinition** def)
     return true;
 }
 
-typedef bool IsElementWise;
-
 static bool
-EmitSimdSelect(FunctionCompiler& f, ValType type, bool isElementWise, MDefinition** def)
+EmitSimdSelect(FunctionCompiler& f, ValType type, MDefinition** def)
 {
     MDefinition* defs[3];
     if (!EmitI32X4Expr(f, &defs[0]) || !EmitExpr(f, type, &defs[1]) || !EmitExpr(f, type, &defs[2]))
         return false;
-    *def = f.selectSimd(defs[0], defs[1], defs[2], ToMIRType(type), isElementWise);
+    *def = f.selectSimd(defs[0], defs[1], defs[2], ToMIRType(type));
     return true;
 }
 
@@ -2645,10 +2621,6 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitAtomicsStore(f, def);
       case I32::AtomicsBinOp:
         return EmitAtomicsBinOp(f, def);
-      case I32::I32X4SignMask:
-        return EmitSignMask(f, ValType::I32x4, def);
-      case I32::F32X4SignMask:
-        return EmitSignMask(f, ValType::F32x4, def);
       case I32::I32X4ExtractLane:
         return EmitExtractLane(f, ValType::I32x4, def);
       case I32::Bad:
@@ -2855,9 +2827,7 @@ EmitI32X4Expr(FunctionCompiler& f, MDefinition** def)
       case I32X4::Shuffle:
         return EmitSimdShuffle(f, ValType::I32x4, def);
       case I32X4::Select:
-        return EmitSimdSelect(f, ValType::I32x4, IsElementWise(true), def);
-      case I32X4::BitSelect:
-        return EmitSimdSelect(f, ValType::I32x4, IsElementWise(false), def);
+        return EmitSimdSelect(f, ValType::I32x4, def);
       case I32X4::Splat:
         return EmitSimdSplat(f, ValType::I32x4, def);
       case I32X4::Load:
@@ -2903,8 +2873,6 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
         return EmitSimdUnary(f, ValType::F32x4, def);
       case F32X4::Binary:
         return EmitSimdBinaryArith(f, ValType::F32x4, def);
-      case F32X4::BinaryBitwise:
-        return EmitSimdBinaryBitwise(f, ValType::F32x4, def);
       case F32X4::ReplaceLane:
         return EmitSimdReplaceLane(f, ValType::F32x4, def);
       case F32X4::FromI32X4:
@@ -2916,9 +2884,7 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
       case F32X4::Shuffle:
         return EmitSimdShuffle(f, ValType::F32x4, def);
       case F32X4::Select:
-        return EmitSimdSelect(f, ValType::F32x4, IsElementWise(true), def);
-      case F32X4::BitSelect:
-        return EmitSimdSelect(f, ValType::F32x4, IsElementWise(false), def);
+        return EmitSimdSelect(f, ValType::F32x4, def);
       case F32X4::Splat:
         return EmitSimdSplat(f, ValType::F32x4, def);
       case F32X4::Load:

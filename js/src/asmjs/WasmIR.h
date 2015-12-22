@@ -172,9 +172,6 @@ enum class I32 : uint8_t
     AtomicsBinOp,
 
     // SIMD opcodes
-    I32X4SignMask,
-    F32X4SignMask,
-
     I32X4ExtractLane,
 
     // Specific to AsmJS
@@ -328,7 +325,6 @@ enum class I32X4 : uint8_t
     Swizzle,
     Shuffle,
     Select,
-    BitSelect,
     Splat,
 
     Load,
@@ -363,7 +359,6 @@ enum class F32X4 : uint8_t
     Unary,
 
     Binary,
-    BinaryBitwise,
 
     ReplaceLane,
 
@@ -372,7 +367,6 @@ enum class F32X4 : uint8_t
     Swizzle,
     Shuffle,
     Select,
-    BitSelect,
     Splat,
 
     Load,

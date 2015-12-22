@@ -2523,16 +2523,6 @@ CodeGeneratorX86Shared::visitSimdInsertElementF(LSimdInsertElementF* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4* ins)
-{
-    FloatRegister input = ToFloatRegister(ins->input());
-    Register output = ToRegister(ins->output());
-
-    // For Float32x4 and Int32x4.
-    masm.vmovmskps(input, output);
-}
-
-void
 CodeGeneratorX86Shared::visitSimdAllTrue(LSimdAllTrue* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
@@ -3354,19 +3344,18 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect* ins)
         masm.vmovaps(mask, temp);
 
     MSimdSelect* mir = ins->mir();
-    if (mir->isElementWise()) {
-        if (AssemblerX86Shared::HasAVX()) {
-            masm.vblendvps(mask, onTrue, onFalse, output);
-            return;
-        }
 
-        // SSE4.1 has plain blendvps which can do this, but it is awkward
-        // to use because it requires the mask to be in xmm0.
-
-        // Propagate sign to all bits of mask vector, if necessary.
-        if (!mir->mask()->isSimdBinaryComp())
-            masm.packedRightShiftByScalar(Imm32(31), temp);
+    if (AssemblerX86Shared::HasAVX()) {
+        masm.vblendvps(mask, onTrue, onFalse, output);
+        return;
     }
+
+    // SSE4.1 has plain blendvps which can do this, but it is awkward
+    // to use because it requires the mask to be in xmm0.
+
+    // Propagate sign to all bits of mask vector, if necessary.
+    if (!mir->mask()->isSimdBinaryComp())
+        masm.packedRightShiftByScalar(Imm32(31), temp);
 
     masm.bitwiseAndX4(Operand(temp), output);
     masm.bitwiseAndNotX4(Operand(onFalse), temp);

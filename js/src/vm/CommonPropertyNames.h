@@ -203,7 +203,6 @@
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
     macro(shape, shape, "shape") \
-    macro(signMask, signMask, "signMask") \
     macro(size, size, "size") \
     macro(source, source, "source") \
     macro(stack, stack, "stack") \
@@ -254,11 +253,7 @@
     macro(watch, watch, "watch") \
     macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
     macro(writable, writable, "writable") \
-    macro(w, w, "w") \
-    macro(x, x, "x") \
-    macro(y, y, "y") \
     macro(yield, yield, "yield") \
-    macro(z, z, "z") \
     macro(raw, raw, "raw") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \

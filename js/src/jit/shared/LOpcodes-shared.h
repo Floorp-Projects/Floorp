@@ -30,7 +30,6 @@
     _(SimdExtractElementF)          \
     _(SimdInsertElementI)           \
     _(SimdInsertElementF)           \
-    _(SimdSignMaskX4)               \
     _(SimdGeneralShuffleI)          \
     _(SimdGeneralShuffleF)          \
     _(SimdSwizzleI)                 \

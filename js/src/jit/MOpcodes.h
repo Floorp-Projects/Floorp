@@ -21,7 +21,6 @@ namespace jit {
     _(SimdReinterpretCast)                                                  \
     _(SimdExtractElement)                                                   \
     _(SimdInsertElement)                                                    \
-    _(SimdSignMask)                                                         \
     _(SimdSwizzle)                                                          \
     _(SimdGeneralShuffle)                                                   \
     _(SimdShuffle)                                                          \

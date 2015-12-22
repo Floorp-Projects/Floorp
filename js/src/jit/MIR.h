@@ -1718,46 +1718,6 @@ class MSimdInsertElement
     ALLOW_CLONE(MSimdInsertElement)
 };
 
-// Extracts the sign bits from a given vector, returning an MIRType_Int32.
-class MSimdSignMask
-  : public MUnaryInstruction,
-    public SimdPolicy<0>::Data
-{
-  protected:
-    explicit MSimdSignMask(MDefinition* obj, MIRType type)
-      : MUnaryInstruction(obj)
-    {
-        setResultType(MIRType_Int32);
-        specialization_ = type;
-        setMovable();
-    }
-
-  public:
-    INSTRUCTION_HEADER(SimdSignMask)
-
-    static MSimdSignMask* NewAsmJS(TempAllocator& alloc, MDefinition* obj)
-    {
-        MOZ_ASSERT(IsSimdType(obj->type()));
-        return new(alloc) MSimdSignMask(obj, obj->type());
-    }
-
-    static MSimdSignMask* New(TempAllocator& alloc, MDefinition* obj, MIRType type)
-    {
-        return new(alloc) MSimdSignMask(obj, type);
-    }
-
-    AliasSet getAliasSet() const override {
-        return AliasSet::None();
-    }
-    bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isSimdSignMask())
-            return false;
-        return congruentIfOperandsEqual(ins);
-    }
-
-    ALLOW_CLONE(MSimdSignMask)
-};
-
 // Returns true if all lanes are true.
 class MSimdAllTrue
   : public MUnaryInstruction,
@@ -2062,7 +2022,7 @@ class MSimdUnaryArith
   public:
     enum Operation {
 #define OP_LIST_(OP) OP,
-        UNARY_ARITH_FLOAT32X4_SIMD_OP(OP_LIST_)
+        FOREACH_FLOAT_SIMD_UNOP(OP_LIST_)
         neg,
         not_
 #undef OP_LIST_
@@ -2132,14 +2092,14 @@ class MSimdBinaryComp
   public:
     enum Operation {
 #define NAME_(x) x,
-        COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(NAME_)
+        FOREACH_COMP_SIMD_OP(NAME_)
 #undef NAME_
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
 #define NAME_(x) case x: return #x;
-        COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(NAME_)
+        FOREACH_COMP_SIMD_OP(NAME_)
 #undef NAME_
         }
         MOZ_CRASH("unexpected operation");
@@ -2216,16 +2176,16 @@ class MSimdBinaryArith
   public:
     enum Operation {
 #define OP_LIST_(OP) Op_##OP,
-        ARITH_COMMONX4_SIMD_OP(OP_LIST_)
-        BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_LIST_)
+        FOREACH_NUMERIC_SIMD_BINOP(OP_LIST_)
+        FOREACH_FLOAT_SIMD_BINOP(OP_LIST_)
 #undef OP_LIST_
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
 #define OP_CASE_LIST_(OP) case Op_##OP: return #OP;
-          ARITH_COMMONX4_SIMD_OP(OP_CASE_LIST_)
-          BINARY_ARITH_FLOAT32X4_SIMD_OP(OP_CASE_LIST_)
+          FOREACH_NUMERIC_SIMD_BINOP(OP_CASE_LIST_)
+          FOREACH_FLOAT_SIMD_BINOP(OP_CASE_LIST_)
 #undef OP_CASE_LIST_
         }
         MOZ_CRASH("unexpected operation");
@@ -2410,11 +2370,8 @@ class MSimdSelect
   : public MTernaryInstruction,
     public SimdSelectPolicy::Data
 {
-    bool isElementWise_;
-
-    MSimdSelect(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type,
-                bool isElementWise)
-      : MTernaryInstruction(mask, lhs, rhs), isElementWise_(isElementWise)
+    MSimdSelect(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type)
+      : MTernaryInstruction(mask, lhs, rhs)
     {
         MOZ_ASSERT(IsSimdType(type));
         setResultType(type);
@@ -2425,18 +2382,18 @@ class MSimdSelect
   public:
     INSTRUCTION_HEADER(SimdSelect)
     static MSimdSelect* NewAsmJS(TempAllocator& alloc, MDefinition* mask, MDefinition* lhs,
-                                 MDefinition* rhs, MIRType t, bool isElementWise)
+                                 MDefinition* rhs, MIRType t)
     {
-        MOZ_ASSERT(mask->type() == (isElementWise ? MIRType_Bool32x4 : t));
+        MOZ_ASSERT(mask->type() == MIRType_Bool32x4);
         MOZ_ASSERT(lhs->type() == rhs->type());
         MOZ_ASSERT(lhs->type() == t);
-        return new(alloc) MSimdSelect(mask, lhs, rhs, t, isElementWise);
+        return new(alloc) MSimdSelect(mask, lhs, rhs, t);
     }
 
     static MSimdSelect* New(TempAllocator& alloc, MDefinition* mask, MDefinition* lhs,
-                            MDefinition* rhs, MIRType t, bool isElementWise)
+                            MDefinition* rhs, MIRType t)
     {
-        return new(alloc) MSimdSelect(mask, lhs, rhs, t, isElementWise);
+        return new(alloc) MSimdSelect(mask, lhs, rhs, t);
     }
 
     MDefinition* mask() const {
@@ -2447,14 +2404,8 @@ class MSimdSelect
         return AliasSet::None();
     }
 
-    bool isElementWise() const {
-        return isElementWise_;
-    }
-
     bool congruentTo(const MDefinition* ins) const override {
-        if (!congruentIfOperandsEqual(ins))
-            return false;
-        return isElementWise_ == ins->toSimdSelect()->isElementWise();
+        return congruentIfOperandsEqual(ins);
     }
 
     ALLOW_CLONE(MSimdSelect)
