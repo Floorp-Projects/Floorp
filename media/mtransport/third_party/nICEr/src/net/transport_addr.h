@@ -44,11 +44,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <netinet/in.h>
 #endif
 
-#ifdef WIN32
-#define MAXIFNAME IFNAMSIZ
-#else
-#define MAXIFNAME 16
-#endif
+/* Length of a string  hex representation of a MD5 hash */
+#define MAXIFNAME 33
 
 /* Generic transport address
 

@@ -75,11 +75,14 @@ static char *RCSSTRING __UNUSED__="$Id: addrs.c,v 1.2 2008/04/28 18:21:30 ekr Ex
 
 #include "stun.h"
 #include "addrs.h"
+#include "nr_crypto.h"
+#include "util.h"
 
 #if defined(WIN32)
 
 #define WIN32_MAX_NUM_INTERFACES  20
 
+#define NR_MD5_HASH_LENGTH 16
 
 #define _NR_MAX_KEY_LENGTH 256
 #define _NR_MAX_NAME_LENGTH 512
@@ -149,7 +152,8 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     int r,_status;
     PIP_ADAPTER_ADDRESSES AdapterAddresses = NULL, tmpAddress = NULL;
     ULONG buflen;
-    char munged_ifname[IFNAMSIZ];
+    char bin_hashed_ifname[NR_MD5_HASH_LENGTH];
+    char hex_hashed_ifname[MAXIFNAME];
     int n = 0;
 
     *count = 0;
@@ -184,26 +188,20 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
     /* Loop through the adapters */
 
     for (tmpAddress = AdapterAddresses; tmpAddress != NULL; tmpAddress = tmpAddress->Next) {
-      char *c;
 
       if (tmpAddress->OperStatus != IfOperStatusUp)
         continue;
 
-      snprintf(munged_ifname, IFNAMSIZ, "%S%c", tmpAddress->FriendlyName, 0);
-      /* replace spaces with underscores */
-      c = strchr(munged_ifname, ' ');
-      while (c != NULL) {
-        *c = '_';
-         c = strchr(munged_ifname, ' ');
-      }
-      c = strchr(munged_ifname, '.');
-      while (c != NULL) {
-        *c = '+';
-         c = strchr(munged_ifname, '.');
-      }
-
       if ((tmpAddress->IfIndex != 0) || (tmpAddress->Ipv6IfIndex != 0)) {
         IP_ADAPTER_UNICAST_ADDRESS *u = 0;
+
+        if(r=nr_crypto_md5((UCHAR *)tmpAddress->FriendlyName,
+                           wcslen(tmpAddress->FriendlyName) * sizeof(wchar_t),
+                           bin_hashed_ifname))
+          ABORT(r);
+        if(r=nr_bin2hex(bin_hashed_ifname, sizeof(bin_hashed_ifname),
+          hex_hashed_ifname))
+          ABORT(r);
 
         for (u = tmpAddress->FirstUnicastAddress; u != 0; u = u->Next) {
           SOCKET_ADDRESS *sa_addr = &u->Address;
@@ -214,11 +212,11 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
                 ABORT(r);
           }
           else {
-            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized sa_family for adapteraddress %s",munged_ifname);
+            r_log(NR_LOG_STUN, LOG_DEBUG, "Unrecognized sa_family for address on adapter %lu", tmpAddress->IfIndex);
             continue;
           }
 
-          strlcpy(addrs[n].addr.ifname, munged_ifname, sizeof(addrs[n].addr.ifname));
+          strlcpy(addrs[n].addr.ifname, hex_hashed_ifname, sizeof(addrs[n].addr.ifname));
           /* TODO: (Bug 895793) Getting interface properties for Windows */
           addrs[n].interface.type = NR_INTERFACE_TYPE_UNKNOWN;
           addrs[n].interface.estimated_speed = 0;

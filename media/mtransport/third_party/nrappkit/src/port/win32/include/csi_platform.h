@@ -94,7 +94,6 @@ typedef SOCKET NR_SOCKET;
 
 // Until we refine the Windows port....
 
-#define IFNAMSIZ        256  /* big enough for FriendlyNames */
 #define in_addr_t   UINT4
 
 #ifndef strlcpy
