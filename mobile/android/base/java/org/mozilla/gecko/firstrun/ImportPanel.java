@@ -73,7 +73,7 @@ public class ImportPanel extends FirstrunPanel {
 
                                // Telemetry for what options are confirmed.
                                final int importState = (importBookmarks ? 1 : 0) + (importHistory ? 2 : 0);
-                               Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.BUTTON, "firstrun-import-dialog-" + importState);
+                               Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.BUTTON, "firstrun-import-dialog-" + importState);
                                dialog.dismiss();
                            }
                        });
@@ -88,8 +88,6 @@ public class ImportPanel extends FirstrunPanel {
                 listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                        Telemetry.sendUIEvent(TelemetryContract.Event.EDIT, TelemetryContract.Method.DIALOG, "firstrun-import-dialog-checkbox");
-
                         // Keep track of checked state.
                         final boolean isChecked = ((CheckedTextView) view).isChecked();
                         checked[i] = isChecked;
