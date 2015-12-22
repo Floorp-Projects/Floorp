@@ -371,7 +371,6 @@ PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 
   // Nullify |mTransport| here so it won't try to re-close |mTransport| in
   // potential subsequent |Shutdown| calls.
-  mTransport->SetCallback(nullptr);
   mTransport = nullptr;
 
   if (NS_WARN_IF(!IsSessionReady())) {
