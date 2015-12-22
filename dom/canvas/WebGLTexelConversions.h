@@ -35,6 +35,7 @@
 #include "WebGLTypes.h"
 #include <stdint.h>
 #include "mozilla/Attributes.h"
+#include "mozilla/Casting.h"
 
 namespace mozilla {
 
@@ -155,6 +156,150 @@ unpackFromFloat16(uint16_t v)
     return f32Value;
 }
 
+// These routines come from angle/common/mathutil.h
+// They are copied here to remove the dependency on ANGLE headers
+// included from mathutil.h
+MOZ_ALWAYS_INLINE uint16_t
+packToFloat11(float fp32)
+{
+    const unsigned int float32MantissaMask = 0x7FFFFF;
+    const unsigned int float32ExponentMask = 0x7F800000;
+    const unsigned int float32SignMask = 0x80000000;
+    const unsigned int float32ValueMask = ~float32SignMask;
+    const unsigned int float32ExponentFirstBit = 23;
+    const unsigned int float32ExponentBias = 127;
+
+    const unsigned short float11Max = 0x7BF;
+    const unsigned short float11MantissaMask = 0x3F;
+    const unsigned short float11ExponentMask = 0x7C0;
+    const unsigned short float11BitMask = 0x7FF;
+    const unsigned int float11ExponentBias = 14;
+
+    const unsigned int float32Maxfloat11 = 0x477E0000;
+    const unsigned int float32Minfloat11 = 0x38800000;
+
+    const unsigned int float32Bits = BitwiseCast<unsigned int>(fp32);
+    const bool float32Sign = (float32Bits & float32SignMask) == float32SignMask;
+
+    unsigned int float32Val = float32Bits & float32ValueMask;
+
+    if ((float32Val & float32ExponentMask) == float32ExponentMask)
+    {
+        // INF or NAN
+        if ((float32Val & float32MantissaMask) != 0)
+        {
+            return float11ExponentMask | (((float32Val >> 17) | (float32Val >> 11) | (float32Val >> 6) | (float32Val)) & float11MantissaMask);
+        }
+        else if (float32Sign)
+        {
+            // -INF is clamped to 0 since float11 is positive only
+            return 0;
+        }
+        else
+        {
+            return float11ExponentMask;
+        }
+    }
+    else if (float32Sign)
+    {
+        // float11 is positive only, so clamp to zero
+        return 0;
+    }
+    else if (float32Val > float32Maxfloat11)
+    {
+        // The number is too large to be represented as a float11, set to max
+        return float11Max;
+    }
+    else
+    {
+        if (float32Val < float32Minfloat11)
+        {
+            // The number is too small to be represented as a normalized float11
+            // Convert it to a denormalized value.
+            const unsigned int shift = (float32ExponentBias - float11ExponentBias) - (float32Val >> float32ExponentFirstBit);
+            float32Val = ((1 << float32ExponentFirstBit) | (float32Val & float32MantissaMask)) >> shift;
+        }
+        else
+        {
+            // Rebias the exponent to represent the value as a normalized float11
+            float32Val += 0xC8000000;
+        }
+
+        return ((float32Val + 0xFFFF + ((float32Val >> 17) & 1)) >> 17) & float11BitMask;
+    }
+}
+
+MOZ_ALWAYS_INLINE uint16_t
+packToFloat10(float fp32)
+{
+    const unsigned int float32MantissaMask = 0x7FFFFF;
+    const unsigned int float32ExponentMask = 0x7F800000;
+    const unsigned int float32SignMask = 0x80000000;
+    const unsigned int float32ValueMask = ~float32SignMask;
+    const unsigned int float32ExponentFirstBit = 23;
+    const unsigned int float32ExponentBias = 127;
+
+    const unsigned short float10Max = 0x3DF;
+    const unsigned short float10MantissaMask = 0x1F;
+    const unsigned short float10ExponentMask = 0x3E0;
+    const unsigned short float10BitMask = 0x3FF;
+    const unsigned int float10ExponentBias = 14;
+
+    const unsigned int float32Maxfloat10 = 0x477C0000;
+    const unsigned int float32Minfloat10 = 0x38800000;
+
+    const unsigned int float32Bits = BitwiseCast<unsigned int>(fp32);
+    const bool float32Sign = (float32Bits & float32SignMask) == float32SignMask;
+
+    unsigned int float32Val = float32Bits & float32ValueMask;
+
+    if ((float32Val & float32ExponentMask) == float32ExponentMask)
+    {
+        // INF or NAN
+        if ((float32Val & float32MantissaMask) != 0)
+        {
+            return float10ExponentMask | (((float32Val >> 18) | (float32Val >> 13) | (float32Val >> 3) | (float32Val)) & float10MantissaMask);
+        }
+        else if (float32Sign)
+        {
+            // -INF is clamped to 0 since float11 is positive only
+            return 0;
+        }
+        else
+        {
+            return float10ExponentMask;
+        }
+    }
+    else if (float32Sign)
+    {
+        // float10 is positive only, so clamp to zero
+        return 0;
+    }
+    else if (float32Val > float32Maxfloat10)
+    {
+        // The number is too large to be represented as a float11, set to max
+        return float10Max;
+    }
+    else
+    {
+        if (float32Val < float32Minfloat10)
+        {
+            // The number is too small to be represented as a normalized float11
+            // Convert it to a denormalized value.
+            const unsigned int shift = (float32ExponentBias - float10ExponentBias) - (float32Val >> float32ExponentFirstBit);
+            float32Val = ((1 << float32ExponentFirstBit) | (float32Val & float32MantissaMask)) >> shift;
+        }
+        else
+        {
+            // Rebias the exponent to represent the value as a normalized float11
+            float32Val += 0xC8000000;
+        }
+
+        return ((float32Val + 0x1FFFF + ((float32Val >> 18) & 1)) >> 18) & float10BitMask;
+    }
+}
+
+
 enum class WebGLTexelPremultiplicationOp : int {
     None,
     Premultiply,
@@ -171,6 +316,7 @@ struct IsFloatFormat
         Format == WebGLTexelFormat::R32F         ||
         Format == WebGLTexelFormat::RA32F        ||
         Format == WebGLTexelFormat::RG32F        ||
+        Format == WebGLTexelFormat::RGB11F11F10F ||
         Format == WebGLTexelFormat::RGB32F       ||
         Format == WebGLTexelFormat::RGBA32F;
 };
@@ -221,6 +367,12 @@ template<WebGLTexelFormat Format>
 struct DataTypeForFormat<Format, false, false, true>
 {
     typedef uint16_t Type;
+};
+
+template<>
+struct DataTypeForFormat<WebGLTexelFormat::RGB11F11F10F, true, false, false>
+{
+    typedef uint32_t Type;
 };
 
 template<WebGLTexelFormat Format>
@@ -287,6 +439,7 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     case WebGLTexelFormat::R32F:
     case WebGLTexelFormat::RA16F:
     case WebGLTexelFormat::RG16F:
+    case WebGLTexelFormat::RGB11F11F10F:
     case WebGLTexelFormat::RGBA8:
     case WebGLTexelFormat::BGRX8:
     case WebGLTexelFormat::BGRA8:
@@ -334,6 +487,7 @@ MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
             format == WebGLTexelFormat::RG32F    ||
             format == WebGLTexelFormat::RGB565   ||
             format == WebGLTexelFormat::RGB8     ||
+            format == WebGLTexelFormat::RGB11F11F10F ||
             format == WebGLTexelFormat::RGB16F   ||
             format == WebGLTexelFormat::RGB32F   ||
             format == WebGLTexelFormat::RGBA4444 ||
@@ -913,6 +1067,32 @@ pack<WebGLTexelFormat::RGB8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8
     dst[0] = srcR;
     dst[1] = srcG;
     dst[2] = srcB;
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGB11F11F10F, WebGLTexelPremultiplicationOp::None, float, uint32_t>(const float* __restrict src, uint32_t* __restrict dst)
+{
+    dst[0] = ((packToFloat11(src[0]) <<  0) |
+              (packToFloat11(src[1]) << 11) |
+              (packToFloat10(src[2]) << 22));
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGB11F11F10F, WebGLTexelPremultiplicationOp::Premultiply, float, uint32_t>(const float* __restrict src, uint32_t* __restrict dst)
+{
+    float scaleFactor = src[3];
+    dst[0] = ((packToFloat11(src[0] * scaleFactor) <<  0) |
+              (packToFloat11(src[1] * scaleFactor) << 11) |
+              (packToFloat10(src[2] * scaleFactor) << 22));
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RGB11F11F10F, WebGLTexelPremultiplicationOp::Unpremultiply, float, uint32_t>(const float* __restrict src, uint32_t* __restrict dst)
+{
+    float scaleFactor = src[3] ? 1.0f / src[3] : 1.0f;
+    dst[0] = ((packToFloat11(src[0] * scaleFactor) <<  0) |
+              (packToFloat11(src[1] * scaleFactor) << 11) |
+              (packToFloat10(src[2] * scaleFactor) << 22));
 }
 
 template<> MOZ_ALWAYS_INLINE void
