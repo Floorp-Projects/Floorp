@@ -906,6 +906,9 @@ public class BrowserApp extends GeckoApp
     public void onResume() {
         super.onResume();
 
+        // Needed for Adjust to get accurate session measurements
+        AdjustConstants.getAdjustHelper().onResume();
+
         final String args = ContextUtils.getStringExtra(getIntent(), "args");
         // If an external intent tries to start Fennec in guest mode, and it's not already
         // in guest mode, this will change modes before opening the url.
@@ -928,6 +931,10 @@ public class BrowserApp extends GeckoApp
     @Override
     public void onPause() {
         super.onPause();
+
+        // Needed for Adjust to get accurate session measurements
+        AdjustConstants.getAdjustHelper().onPause();
+
         // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
         EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Prompt:ShowTop");
