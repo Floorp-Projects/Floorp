@@ -197,6 +197,8 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsICookieService.h"
 #include "mozilla/EnumSet.h"
+#include "nsIEffectiveTLDService.h"
+#include "nsServiceManagerUtils.h"
 
 #include "nsIBidiKeyboard.h"
 
@@ -8191,4 +8193,26 @@ nsContentUtils::InternalStorageAllowedForPrincipal(nsIPrincipal* aPrincipal,
   }
 
   return access;
+}
+
+/* static */ bool
+nsContentUtils::IsYouTubeURI(nsIURI* aURI)
+{
+  if (!aURI) {
+    return false;
+  }
+
+  nsCOMPtr<nsIEffectiveTLDService> tldServ =
+    do_GetService(NS_EFFECTIVETLDSERVICE_CONTRACTID);
+  NS_ENSURE_TRUE(tldServ, false);
+
+  nsAutoCString eTLDplusOne;
+  if (NS_FAILED(tldServ->GetBaseDomain(aURI, 0, eTLDplusOne))) {
+    return false;
+  }
+
+  // Those are the domains used by YouTube.
+  return eTLDplusOne.EqualsLiteral("youtube.com") ||
+         eTLDplusOne.EqualsLiteral("youtube-nocookie.com") ||
+         eTLDplusOne.EqualsLiteral("ytimg.com");
 }

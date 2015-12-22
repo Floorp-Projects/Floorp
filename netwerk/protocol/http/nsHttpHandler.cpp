@@ -173,6 +173,7 @@ nsHttpHandler::nsHttpHandler()
     , mLegacyAppVersion("5.0")
     , mProduct("Gecko")
     , mCompatFirefoxEnabled(false)
+    , mOverrideYouTubeUserAgent(false)
     , mUserAgentIsDirty(true)
     , mPromptTempRedirect(true)
     , mSendSecureXSiteReferrer(true)
@@ -381,6 +382,18 @@ nsHttpHandler::Init()
     if (pc) {
         pc->GetParentalControlsEnabled(&mParentalControlEnabled);
     }
+
+
+    rv = Preferences::AddBoolVarCache(&mOverrideYouTubeUserAgent,
+                                      "media.youtube-ua.override", false);
+    if (NS_FAILED(rv)) {
+        mOverrideYouTubeUserAgent = false;
+    }
+    mOverrideYouTubeUserAgentFrom =
+        NS_ConvertUTF16toUTF8(mozilla::Preferences::GetString("media.youtube-ua.override.from"));
+    mOverrideYouTubeUserAgentTo =
+        NS_ConvertUTF16toUTF8(mozilla::Preferences::GetString("media.youtube-ua.override.to"));
+
     return NS_OK;
 }
 
@@ -417,12 +430,12 @@ nsHttpHandler::InitConnectionMgr()
 }
 
 nsresult
-nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request)
+nsHttpHandler::AddStandardRequestHeaders(nsHttpHeaderArray *request, bool isForYouTube)
 {
     nsresult rv;
 
     // Add the "User-Agent" header
-    rv = request->SetHeader(nsHttp::User_Agent, UserAgent(),
+    rv = request->SetHeader(nsHttp::User_Agent, UserAgent(isForYouTube),
                             false, nsHttpHeaderArray::eVarietyDefault);
     if (NS_FAILED(rv)) return rv;
 
@@ -599,7 +612,7 @@ nsHttpHandler::GenerateHostPort(const nsCString& host, int32_t port,
 //-----------------------------------------------------------------------------
 
 const nsAFlatCString &
-nsHttpHandler::UserAgent()
+nsHttpHandler::UserAgent(bool isForYouTube)
 {
     if (mUserAgentOverride) {
         LOG(("using general.useragent.override : %s\n", mUserAgentOverride.get()));
@@ -609,6 +622,10 @@ nsHttpHandler::UserAgent()
     if (mUserAgentIsDirty) {
         BuildUserAgent();
         mUserAgentIsDirty = false;
+    }
+
+    if (isForYouTube) {
+      return mYouTubeUserAgent;
     }
 
     return mUserAgent;
@@ -688,6 +705,15 @@ nsHttpHandler::BuildUserAgent()
         mUserAgent += mAppName;
         mUserAgent += '/';
         mUserAgent += mAppVersion;
+    }
+
+    if (mOverrideYouTubeUserAgent) {
+        mYouTubeUserAgent = mUserAgent;
+        if (!mOverrideYouTubeUserAgentFrom.IsEmpty() &&
+            !mOverrideYouTubeUserAgentTo.IsEmpty()) {
+            mYouTubeUserAgent.ReplaceSubstring(mOverrideYouTubeUserAgentFrom,
+                                               mOverrideYouTubeUserAgentTo);
+        }
     }
 }
 

@@ -65,12 +65,12 @@ public:
     nsHttpHandler();
 
     nsresult Init();
-    nsresult AddStandardRequestHeaders(nsHttpHeaderArray *);
+    nsresult AddStandardRequestHeaders(nsHttpHeaderArray *, bool isForYouTube);
     nsresult AddConnectionHeader(nsHttpHeaderArray *,
                                  uint32_t capabilities);
     bool     IsAcceptableEncoding(const char *encoding);
 
-    const nsAFlatCString &UserAgent();
+    const nsAFlatCString &UserAgent(bool isForYouTube = false);
 
     nsHttpVersion  HttpVersion()             { return mHttpVersion; }
     nsHttpVersion  ProxyHttpVersion()        { return mProxyHttpVersion; }
@@ -455,6 +455,10 @@ private:
 
     nsCString      mUserAgent;
     nsXPIDLCString mUserAgentOverride;
+    bool           mOverrideYouTubeUserAgent;
+    nsCString      mYouTubeUserAgent;
+    nsCString      mOverrideYouTubeUserAgentFrom;
+    nsCString      mOverrideYouTubeUserAgentTo;
     bool           mUserAgentIsDirty; // true if mUserAgent should be rebuilt
 
 
