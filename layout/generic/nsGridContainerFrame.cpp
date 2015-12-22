@@ -392,9 +392,76 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::TrackSizingFunctions
   uint32_t InitRepeatTracks(nscoord aGridGap, nscoord aMinSize, nscoord aSize,
                             nscoord aMaxSize)
   {
-    uint32_t repeatTracks = 0; // XXX will be fixed in a later patch
+    uint32_t repeatTracks =
+      CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize);
     SetNumRepeatTracks(repeatTracks);
     return repeatTracks;
+  }
+
+  uint32_t CalculateRepeatFillCount(nscoord aGridGap,
+                                    nscoord aMinSize,
+                                    nscoord aSize,
+                                    nscoord aMaxSize) const
+  {
+    if (!mHasRepeatAuto) {
+      return 0;
+    }
+    // Spec quotes are from https://drafts.csswg.org/css-grid/#repeat-notation
+    const uint32_t numTracks = mMinSizingFunctions.Length();
+    MOZ_ASSERT(numTracks >= 1, "expected at least the repeat() track");
+    nscoord maxFill = aSize != NS_UNCONSTRAINEDSIZE ? aSize : aMaxSize;
+    if (maxFill == NS_UNCONSTRAINEDSIZE && aMinSize == NS_UNCONSTRAINEDSIZE) {
+      // "Otherwise, the specified track list repeats only once."
+      return 1;
+    }
+    nscoord repeatTrackSize = 0;
+    // Note that the repeat() track size is included in |sum| in this loop.
+    nscoord sum = 0;
+    for (uint32_t i = 0; i < numTracks; ++i) {
+      // "The <auto-repeat> variant ... requires definite minimum track sizes"
+      // "... treating each track as its max track sizing function if that is
+      //  definite or as its minimum track sizing function otherwise"
+      // https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill
+      const auto& maxCoord = mMaxSizingFunctions[i];
+      const auto* coord = &maxCoord;
+      if (!coord->IsCoordPercentCalcUnit()) {
+        coord = &mMinSizingFunctions[i];
+        if (!coord->IsCoordPercentCalcUnit()) {
+          return 1;
+        }
+      }
+      nscoord trackSize = nsRuleNode::ComputeCoordPercentCalc(*coord, aSize);
+      if (i == mRepeatAutoStart) {
+        // Use a minimum 1px for the repeat() track-size.
+        if (trackSize < AppUnitsPerCSSPixel()) {
+          trackSize = AppUnitsPerCSSPixel();
+        }
+        repeatTrackSize = trackSize;
+      }
+      sum += trackSize;
+    }
+    if (numTracks > 1) {
+      // Add grid-gaps for all the tracks including the repeat() track.
+      sum += aGridGap * (numTracks - 1);
+    }
+    nscoord available = maxFill != NS_UNCONSTRAINEDSIZE ? maxFill : aMinSize;
+    nscoord spaceToFill = available - sum;
+    if (spaceToFill <= 0) {
+      // "if any number of repetitions would overflow, then 1 repetition"
+      return 1;
+    }
+    // Calculate the max number of tracks that fits without overflow.
+    uint32_t numRepeatTracks = (spaceToFill / (repeatTrackSize + aGridGap)) + 1;
+    if (maxFill == NS_UNCONSTRAINEDSIZE) {
+      // "Otherwise, if the grid container has a definite min size in
+      // the relevant axis, the number of repetitions is the largest possible
+      // positive integer that fulfills that minimum requirement."
+      ++numRepeatTracks; // one more to ensure the grid is at least min-size
+    }
+    // Clamp the number of repeat tracks so that the last line <= kMaxLine.
+    // (note that |numTracks| already includes one repeat() track)
+    const uint32_t maxRepeatTracks = nsStyleGridLine::kMaxLine - numTracks;
+    return std::min(numRepeatTracks, maxRepeatTracks);
   }
 
   /**
