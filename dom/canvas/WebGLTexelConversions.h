@@ -181,6 +181,7 @@ struct IsHalfFloatFormat
         Format == WebGLTexelFormat::A16F   ||
         Format == WebGLTexelFormat::R16F   ||
         Format == WebGLTexelFormat::RA16F  ||
+        Format == WebGLTexelFormat::RG16F  ||
         Format == WebGLTexelFormat::RGB16F ||
         Format == WebGLTexelFormat::RGBA16F;
 };
@@ -284,6 +285,7 @@ inline size_t TexelBytesForFormat(WebGLTexelFormat format) {
     case WebGLTexelFormat::A32F:
     case WebGLTexelFormat::R32F:
     case WebGLTexelFormat::RA16F:
+    case WebGLTexelFormat::RG16F:
     case WebGLTexelFormat::RGBA8:
     case WebGLTexelFormat::BGRX8:
     case WebGLTexelFormat::BGRA8:
@@ -326,6 +328,7 @@ MOZ_ALWAYS_INLINE bool HasColor(WebGLTexelFormat format) {
             format == WebGLTexelFormat::RA16F    ||
             format == WebGLTexelFormat::RA32F    ||
             format == WebGLTexelFormat::RG8      ||
+            format == WebGLTexelFormat::RG16F    ||
             format == WebGLTexelFormat::RGB565   ||
             format == WebGLTexelFormat::RGB8     ||
             format == WebGLTexelFormat::RGB16F   ||
@@ -793,6 +796,30 @@ pack<WebGLTexelFormat::RG8, WebGLTexelPremultiplicationOp::Unpremultiply, uint8_
     uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
     dst[0] = srcR;
     dst[1] = srcG;
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG16F, WebGLTexelPremultiplicationOp::None, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    dst[0] = src[0];
+    dst[1] = src[1];
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG16F, WebGLTexelPremultiplicationOp::Premultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float scaleFactor = unpackFromFloat16(src[3]);
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+    dst[1] = packToFloat16(unpackFromFloat16(src[1]) * scaleFactor);
+}
+
+template<> MOZ_ALWAYS_INLINE void
+pack<WebGLTexelFormat::RG16F, WebGLTexelPremultiplicationOp::Unpremultiply, uint16_t, uint16_t>(const uint16_t* __restrict src, uint16_t* __restrict dst)
+{
+    float unpackedAlpha = unpackFromFloat16(src[3]);
+    float scaleFactor = unpackedAlpha ? 1.0f / unpackedAlpha : 1.0f;
+    dst[0] = packToFloat16(unpackFromFloat16(src[0]) * scaleFactor);
+    dst[1] = packToFloat16(unpackFromFloat16(src[1]) * scaleFactor);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
