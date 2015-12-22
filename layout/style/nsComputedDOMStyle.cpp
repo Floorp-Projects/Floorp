@@ -2353,26 +2353,60 @@ nsComputedDOMStyle::DoGetGridTemplateAreas()
   return valueList;
 }
 
-// aLineNames must not be empty
-CSSValue*
-nsComputedDOMStyle::GetGridLineNames(const nsTArray<nsString>& aLineNames)
+void
+nsComputedDOMStyle::AppendGridLineNames(nsString& aResult,
+                                        const nsTArray<nsString>& aLineNames)
 {
-  nsROCSSPrimitiveValue *val = new nsROCSSPrimitiveValue;
+  MOZ_ASSERT(!aLineNames.IsEmpty(), "expected some line names");
+  uint32_t numLines = aLineNames.Length();
+  for (uint32_t i = 0;;) {
+    nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], aResult);
+    if (++i == numLines) {
+      break;
+    }
+    aResult.Append(' ');
+  }
+}
+
+void
+nsComputedDOMStyle::AppendGridLineNames(nsDOMCSSValueList* aValueList,
+                                        const nsTArray<nsString>& aLineNames)
+{
+  if (aLineNames.IsEmpty()) {
+    return;
+  }
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   nsAutoString lineNamesString;
-  uint32_t i_end = aLineNames.Length();
   lineNamesString.Assign('[');
-  if (i_end > 0) {
-    for (uint32_t i = 0;;) {
-      nsStyleUtil::AppendEscapedCSSIdent(aLineNames[i], lineNamesString);
-      if (++i == i_end) {
-        break;
-      }
+  AppendGridLineNames(lineNamesString, aLineNames);
+  lineNamesString.Append(']');
+  val->SetString(lineNamesString);
+  aValueList->AppendCSSValue(val);
+}
+
+void
+nsComputedDOMStyle::AppendGridLineNames(nsDOMCSSValueList* aValueList,
+                                        const nsTArray<nsString>& aLineNames1,
+                                        const nsTArray<nsString>& aLineNames2)
+{
+  if (aLineNames1.IsEmpty() && aLineNames2.IsEmpty()) {
+    return;
+  }
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  nsAutoString lineNamesString;
+  lineNamesString.Assign('[');
+  if (!aLineNames1.IsEmpty()) {
+    AppendGridLineNames(lineNamesString, aLineNames1);
+  }
+  if (!aLineNames2.IsEmpty()) {
+    if (!aLineNames1.IsEmpty()) {
       lineNamesString.Append(' ');
     }
+    AppendGridLineNames(lineNamesString, aLineNames2);
   }
   lineNamesString.Append(']');
   val->SetString(lineNamesString);
-  return val;
+  aValueList->AppendCSSValue(val);
 }
 
 CSSValue*
@@ -2412,6 +2446,7 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
                                                const nsTArray<nscoord>* aTrackSizes)
 {
   if (aTrackList.mIsSubgrid) {
+    // XXX TODO: add support for repeat(auto-fill) for 'subgrid' (bug 1234311)
     NS_ASSERTION(aTrackList.mMinTrackSizingFunctions.IsEmpty() &&
                  aTrackList.mMaxTrackSizingFunctions.IsEmpty(),
                  "Unexpected sizing functions with subgrid");
@@ -2422,7 +2457,21 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
     valueList->AppendCSSValue(subgridKeyword);
 
     for (uint32_t i = 0; i < aTrackList.mLineNameLists.Length(); i++) {
-      valueList->AppendCSSValue(GetGridLineNames(aTrackList.mLineNameLists[i]));
+      if (MOZ_UNLIKELY(aTrackList.IsRepeatAutoIndex(i))) {
+        MOZ_ASSERT(aTrackList.mIsAutoFill, "subgrid can only have 'auto-fill'");
+        MOZ_ASSERT(!aTrackList.mRepeatAutoLineNameListBefore.IsEmpty(),
+                   "The syntax is <line-names>+ so this shouldn't be empty");
+        MOZ_ASSERT(aTrackList.mRepeatAutoLineNameListAfter.IsEmpty(),
+                   "mRepeatAutoLineNameListAfter isn't used for subgrid");
+        nsROCSSPrimitiveValue* start = new nsROCSSPrimitiveValue;
+        start->SetString(NS_LITERAL_STRING("repeat(auto-fill,"));
+        valueList->AppendCSSValue(start);
+        AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore);
+        nsROCSSPrimitiveValue* end = new nsROCSSPrimitiveValue;
+        end->SetString(NS_LITERAL_STRING(")"));
+        valueList->AppendCSSValue(end);
+      }
+      AppendGridLineNames(valueList, aTrackList.mLineNameLists[i]);
     }
     return valueList;
   }
@@ -2443,29 +2492,98 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
   MOZ_ASSERT(aTrackList.mLineNameLists.Length() == numSizes + 1,
              "Unexpected number of line name lists");
   if (aTrackSizes) {
-    for (uint32_t i = 0;; i++) {
-      const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
-      if (!lineNames.IsEmpty()) {
-        valueList->AppendCSSValue(GetGridLineNames(lineNames));
+    // We've done layout on the grid and have resolved the sizes of its tracks,
+    // so we'll return those sizes here.  The grid spec says we MAY use
+    // repeat(<positive-integer>, Npx) here for consecutive tracks with the same
+    // size, but that doesn't seem worth doing since even for repeat(auto-*)
+    // the resolved size might differ for the repeated tracks.
+    const uint32_t numTracks = aTrackSizes->Length();
+    MOZ_ASSERT(numTracks > 0 ||
+               (aTrackList.HasRepeatAuto() && !aTrackList.mIsAutoFill),
+               "only 'auto-fit' can result in zero tracks");
+    if (numTracks == 0) {
+      nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+      val->SetIdent(eCSSKeyword_none);
+      return val;
+    }
+    int32_t endOfRepeat = 0;  // first index after any repeat() tracks
+    int32_t offsetToLastRepeat = 0;
+    if (aTrackList.HasRepeatAuto()) {
+      // offsetToLastRepeat is -1 if all repeat(auto-fit) tracks are empty
+      offsetToLastRepeat = numTracks + 1 - aTrackList.mLineNameLists.Length();
+      endOfRepeat = aTrackList.mRepeatAutoIndex + offsetToLastRepeat + 1;
+    }
+    MOZ_ASSERT(numTracks > 0);
+    for (int32_t i = 0;; i++) {
+      if (aTrackList.HasRepeatAuto()) {
+        if (i == aTrackList.mRepeatAutoIndex) {
+          const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+          if (i == endOfRepeat) {
+            // all auto-fit tracks are empty, so "[a] repeat(...) [b]"
+            // becomes "[a b]"
+            AppendGridLineNames(valueList, lineNames,
+                                aTrackList.mLineNameLists[i + 1]);
+          } else {
+            AppendGridLineNames(valueList, lineNames,
+                                aTrackList.mRepeatAutoLineNameListBefore);
+          }
+        } else if (i == endOfRepeat) {
+          const nsTArray<nsString>& lineNames =
+            aTrackList.mLineNameLists[aTrackList.mRepeatAutoIndex + 1];
+          AppendGridLineNames(valueList,
+                              aTrackList.mRepeatAutoLineNameListAfter,
+                              lineNames);
+        } else if (i > aTrackList.mRepeatAutoIndex && i < endOfRepeat) {
+          AppendGridLineNames(valueList,
+                              aTrackList.mRepeatAutoLineNameListAfter,
+                              aTrackList.mRepeatAutoLineNameListBefore);
+        } else {
+          uint32_t j = i > endOfRepeat ? i - offsetToLastRepeat : i;
+          const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[j];
+          AppendGridLineNames(valueList, lineNames);
+        }
+      } else {
+        const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
+        AppendGridLineNames(valueList, lineNames);
       }
-      if (i == numSizes) {
+      if (uint32_t(i) == numTracks) {
         break;
       }
       nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-      val->SetAppUnits(aTrackSizes->ElementAt(i));
+      val->SetAppUnits((*aTrackSizes)[i]);
       valueList->AppendCSSValue(val);
     }
   } else {
+    // We don't have a frame.  So, we'll just return a serialization of
+    // the tracks from the style (without resolved sizes).
     for (uint32_t i = 0;; i++) {
       const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
       if (!lineNames.IsEmpty()) {
-        valueList->AppendCSSValue(GetGridLineNames(lineNames));
+        AppendGridLineNames(valueList, lineNames);
       }
       if (i == numSizes) {
         break;
       }
-      valueList->AppendCSSValue(GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
-                                                 aTrackList.mMaxTrackSizingFunctions[i]));
+      if (MOZ_UNLIKELY(aTrackList.IsRepeatAutoIndex(i))) {
+        nsROCSSPrimitiveValue* start = new nsROCSSPrimitiveValue;
+        start->SetString(aTrackList.mIsAutoFill ? NS_LITERAL_STRING("repeat(auto-fill,")
+                                                : NS_LITERAL_STRING("repeat(auto-fit,"));
+        valueList->AppendCSSValue(start);
+        if (!aTrackList.mRepeatAutoLineNameListBefore.IsEmpty()) {
+          AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListBefore);
+        }
+        valueList->AppendCSSValue(GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
+                                                   aTrackList.mMaxTrackSizingFunctions[i]));
+        if (!aTrackList.mRepeatAutoLineNameListAfter.IsEmpty()) {
+          AppendGridLineNames(valueList, aTrackList.mRepeatAutoLineNameListAfter);
+        }
+        nsROCSSPrimitiveValue* end = new nsROCSSPrimitiveValue;
+        end->SetString(NS_LITERAL_STRING(")"));
+        valueList->AppendCSSValue(end);
+      } else {
+        valueList->AppendCSSValue(GetGridTrackSize(aTrackList.mMinTrackSizingFunctions[i],
+                                                   aTrackList.mMaxTrackSizingFunctions[i]));
+      }
     }
   }
 
