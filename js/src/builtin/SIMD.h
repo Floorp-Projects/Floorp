@@ -391,13 +391,6 @@
     _(and)                           \
     _(or)                            \
     _(xor)
-#define COMP_COMMONX4_TO_INT32X4_SIMD_OP(_) \
-    _(lessThan)                      \
-    _(lessThanOrEqual)               \
-    _(equal)                         \
-    _(notEqual)                      \
-    _(greaterThan)                   \
-    _(greaterThanOrEqual)
 #define COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(_) \
     _(lessThan)                      \
     _(lessThanOrEqual)               \
@@ -428,7 +421,7 @@
     _(check)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
-    COMP_COMMONX4_TO_INT32X4_SIMD_OP(_)
+    COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(_)
 #define FORALL_SIMD_OP(_)            \
     FOREACH_INT32X4_SIMD_OP(_)       \
     FOREACH_FLOAT32X4_SIMD_OP(_)     \

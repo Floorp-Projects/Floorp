@@ -639,6 +639,7 @@ LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4* ins)
 
     switch (ins->type()) {
       case MIRType_Int32x4:
+      case MIRType_Bool32x4:
         define(lir, ins);
         break;
       case MIRType_Float32x4:
@@ -656,7 +657,8 @@ LIRGeneratorX86Shared::visitSimdSplatX4(MSimdSplatX4* ins)
 void
 LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
 {
-    if (ins->type() == MIRType_Float32x4) {
+    switch (ins->type()) {
+      case MIRType_Float32x4: {
         // Ideally, x would be used at start and reused for the output, however
         // register allocation currently doesn't permit us to tie together two
         // virtual registers with different types.
@@ -666,14 +668,19 @@ LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
         LAllocation w = useRegister(ins->getOperand(3));
         LDefinition t = temp(LDefinition::FLOAT32X4);
         define(new (alloc()) LSimdValueFloat32x4(x, y, z, w, t), ins);
-    } else {
-        MOZ_ASSERT(ins->type() == MIRType_Int32x4);
-
+        break;
+      }
+      case MIRType_Bool32x4:
+      case MIRType_Int32x4: {
         // No defineReuseInput => useAtStart for everyone.
         LAllocation x = useRegisterAtStart(ins->getOperand(0));
         LAllocation y = useRegisterAtStart(ins->getOperand(1));
         LAllocation z = useRegisterAtStart(ins->getOperand(2));
         LAllocation w = useRegisterAtStart(ins->getOperand(3));
         define(new(alloc()) LSimdValueInt32x4(x, y, z, w), ins);
+        break;
+      }
+      default:
+        MOZ_CRASH("Unknown SIMD kind");
     }
 }

@@ -54,6 +54,7 @@ ABIArgGenerator::next(MIRType type)
       case MIRType_Double:
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
+      case MIRType_Bool32x4:
       case MIRType_Int32x4:
       case MIRType_Float32x4:
         // On Win64, >64 bit args need to be passed by reference, but asm.js
@@ -88,6 +89,7 @@ ABIArgGenerator::next(MIRType type)
         else
             current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
         break;
+      case MIRType_Bool32x4:
       case MIRType_Int32x4:
       case MIRType_Float32x4:
         if (floatRegIndex_ == NumFloatArgRegs) {

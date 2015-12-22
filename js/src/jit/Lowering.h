@@ -296,6 +296,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitSimdConstant(MSimdConstant* ins);
     void visitSimdConvert(MSimdConvert* ins);
     void visitSimdReinterpretCast(MSimdReinterpretCast* ins);
+    void visitSimdAllTrue(MSimdAllTrue* ins);
+    void visitSimdAnyTrue(MSimdAnyTrue* ins);
     void visitPhi(MPhi* ins);
     void visitBeta(MBeta* ins);
     void visitObjectState(MObjectState* ins);

@@ -1401,7 +1401,7 @@ class MSimdValueX4
     static MSimdValueX4* NewAsmJS(TempAllocator& alloc, MIRType type, MDefinition* x,
                                   MDefinition* y, MDefinition* z, MDefinition* w)
     {
-        mozilla::DebugOnly<MIRType> laneType = SimdTypeToLaneType(type);
+        mozilla::DebugOnly<MIRType> laneType = SimdTypeToLaneArgumentType(type);
         MOZ_ASSERT(laneType == x->type());
         MOZ_ASSERT(laneType == y->type());
         MOZ_ASSERT(laneType == z->type());
@@ -1445,7 +1445,7 @@ class MSimdSplatX4
 
     static MSimdSplatX4* NewAsmJS(TempAllocator& alloc, MDefinition* v, MIRType type)
     {
-        MOZ_ASSERT(SimdTypeToLaneType(type) == v->type());
+        MOZ_ASSERT(SimdTypeToLaneArgumentType(type) == v->type());
         return new(alloc) MSimdSplatX4(type, v);
     }
 
@@ -1492,6 +1492,9 @@ class MSimdConstant
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isSimdConstant())
+            return false;
+        // Bool32x4 and Int32x4 share the same underlying SimdConstant representation.
+        if (type() != ins->type())
             return false;
         return value() == ins->toSimdConstant()->value();
     }
@@ -1602,7 +1605,10 @@ class MSimdExtractElement
         MOZ_ASSERT(IsSimdType(vecType));
         MOZ_ASSERT(uint32_t(lane) < SimdTypeToLength(vecType));
         MOZ_ASSERT(!IsSimdType(laneType));
-        MOZ_ASSERT(SimdTypeToLaneType(vecType) == laneType);
+        // The resulting type should match the lane type.
+        // Allow extracting boolean lanes directly into an Int32 (for asm.js).
+        MOZ_ASSERT(SimdTypeToLaneType(vecType) == laneType ||
+                   (IsBooleanSimdType(vecType) && laneType == MIRType_Int32));
 
         setMovable();
         specialization_ = vecType;
@@ -1665,7 +1671,7 @@ class MSimdInsertElement
                                          MIRType type, SimdLane lane)
     {
         MOZ_ASSERT(vec->type() == type);
-        MOZ_ASSERT(SimdTypeToLaneType(type) == val->type());
+        MOZ_ASSERT(SimdTypeToLaneArgumentType(type) == val->type());
         return new(alloc) MSimdInsertElement(vec, val, type, lane);
     }
 
@@ -1750,6 +1756,83 @@ class MSimdSignMask
     }
 
     ALLOW_CLONE(MSimdSignMask)
+};
+
+// Returns true if all lanes are true.
+class MSimdAllTrue
+  : public MUnaryInstruction,
+    public SimdPolicy<0>::Data
+{
+  protected:
+    explicit MSimdAllTrue(MDefinition* obj, MIRType simdType, MIRType result)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(result == MIRType_Boolean || result == MIRType_Int32);
+        setResultType(result);
+        specialization_ = simdType;
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdAllTrue)
+
+    static MSimdAllTrue* NewAsmJS(TempAllocator& alloc, MDefinition* obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        return new(alloc) MSimdAllTrue(obj, obj->type(), MIRType_Int32);
+    }
+
+    static MSimdAllTrue* New(TempAllocator& alloc, MDefinition* obj, MIRType type)
+    {
+        return new(alloc) MSimdAllTrue(obj, type, MIRType_Boolean);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    ALLOW_CLONE(MSimdAllTrue)
+};
+
+// Returns true if any lane is true.
+class MSimdAnyTrue
+  : public MUnaryInstruction,
+    public SimdPolicy<0>::Data
+{
+  protected:
+    explicit MSimdAnyTrue(MDefinition* obj, MIRType simdType, MIRType result)
+      : MUnaryInstruction(obj)
+    {
+        MOZ_ASSERT(result == MIRType_Boolean || result == MIRType_Int32);
+        setResultType(result);
+        specialization_ = simdType;
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdAnyTrue)
+
+    static MSimdAnyTrue* NewAsmJS(TempAllocator& alloc, MDefinition* obj)
+    {
+        MOZ_ASSERT(IsSimdType(obj->type()));
+        return new(alloc) MSimdAnyTrue(obj, obj->type(), MIRType_Int32);
+    }
+
+    static MSimdAnyTrue* New(TempAllocator& alloc, MDefinition* obj, MIRType type)
+    {
+        return new(alloc) MSimdAnyTrue(obj, type, MIRType_Boolean);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+
+    ALLOW_CLONE(MSimdAnyTrue)
 };
 
 // Base for the MSimdSwizzle and MSimdShuffle classes.
@@ -2049,14 +2132,14 @@ class MSimdBinaryComp
   public:
     enum Operation {
 #define NAME_(x) x,
-        COMP_COMMONX4_TO_INT32X4_SIMD_OP(NAME_)
+        COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(NAME_)
 #undef NAME_
     };
 
     static const char* OperationName(Operation op) {
         switch (op) {
 #define NAME_(x) case x: return #x;
-        COMP_COMMONX4_TO_INT32X4_SIMD_OP(NAME_)
+        COMP_COMMONX4_TO_BOOL32X4_SIMD_OP(NAME_)
 #undef NAME_
         }
         MOZ_CRASH("unexpected operation");
@@ -2068,7 +2151,7 @@ class MSimdBinaryComp
     MSimdBinaryComp(MDefinition* left, MDefinition* right, Operation op, MIRType opType)
       : MBinaryInstruction(left, right), operation_(op)
     {
-        setResultType(MIRType_Int32x4);
+        setResultType(MIRType_Bool32x4);
         specialization_ = opType;
         setMovable();
         if (op == equal || op == notEqual)
@@ -2344,7 +2427,7 @@ class MSimdSelect
     static MSimdSelect* NewAsmJS(TempAllocator& alloc, MDefinition* mask, MDefinition* lhs,
                                  MDefinition* rhs, MIRType t, bool isElementWise)
     {
-        MOZ_ASSERT(mask->type() == MIRType_Int32x4);
+        MOZ_ASSERT(mask->type() == (isElementWise ? MIRType_Bool32x4 : t));
         MOZ_ASSERT(lhs->type() == rhs->type());
         MOZ_ASSERT(lhs->type() == t);
         return new(alloc) MSimdSelect(mask, lhs, rhs, t, isElementWise);

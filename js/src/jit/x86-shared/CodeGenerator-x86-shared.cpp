@@ -287,6 +287,7 @@ CodeGeneratorX86Shared::visitAsmJSPassStackArg(LAsmJSPassStackArg* ins)
               // StackPointer is SIMD-aligned and ABIArgGenerator guarantees
               // stack offsets are SIMD-aligned.
               case MIRType_Int32x4:
+              case MIRType_Bool32x4:
                 masm.storeAlignedInt32x4(ToFloatRegister(ins->arg()), dst);
                 return;
               case MIRType_Float32x4:
@@ -2308,7 +2309,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
 void
 CodeGeneratorX86Shared::visitSimdValueInt32x4(LSimdValueInt32x4* ins)
 {
-    MOZ_ASSERT(ins->mir()->type() == MIRType_Int32x4);
+    MOZ_ASSERT(ins->mir()->type() == MIRType_Int32x4 || ins->mir()->type() == MIRType_Bool32x4);
 
     FloatRegister output = ToFloatRegister(ins->output());
     if (AssemblerX86Shared::HasSSE41()) {
@@ -2359,7 +2360,8 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4* ins)
     JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
 
     switch (mir->type()) {
-      case MIRType_Int32x4: {
+      case MIRType_Int32x4:
+      case MIRType_Bool32x4: {
         Register r = ToRegister(ins->getOperand(0));
         masm.vmovd(r, output);
         masm.vpshufd(0, output, output);
@@ -2395,6 +2397,28 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
       default:
         MOZ_CRASH("Unknown SIMD kind");
     }
+}
+
+void
+CodeGeneratorX86Shared::visitSimdExtractElementB(LSimdExtractElementB* ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    SimdLane lane = ins->lane();
+    if (lane == LaneX) {
+        // The value we want to extract is in the low double-word
+        masm.moveLowInt32(input, output);
+    } else if (AssemblerX86Shared::HasSSE41()) {
+        masm.vpextrd(lane, input, output);
+    } else {
+        uint32_t mask = MacroAssembler::ComputeShuffleMask(lane);
+        masm.shuffleInt32(mask, input, ScratchSimd128Reg);
+        masm.moveLowInt32(ScratchSimd128Reg, output);
+    }
+
+    // We need to generate a 0/1 value. We have 0/-1.
+    masm.and32(Imm32(1), output);
 }
 
 void
@@ -2506,6 +2530,28 @@ CodeGeneratorX86Shared::visitSimdSignMaskX4(LSimdSignMaskX4* ins)
 
     // For Float32x4 and Int32x4.
     masm.vmovmskps(input, output);
+}
+
+void
+CodeGeneratorX86Shared::visitSimdAllTrue(LSimdAllTrue* ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.vmovmskps(input, output);
+    masm.cmp32(output, Imm32(0xf));
+    masm.emitSet(Assembler::Zero, output);
+}
+
+void
+CodeGeneratorX86Shared::visitSimdAnyTrue(LSimdAnyTrue* ins)
+{
+    FloatRegister input = ToFloatRegister(ins->input());
+    Register output = ToRegister(ins->output());
+
+    masm.vmovmskps(input, output);
+    masm.cmp32(output, Imm32(0x0));
+    masm.emitSet(Assembler::NonZero, output);
 }
 
 template <class T, class Reg> void
