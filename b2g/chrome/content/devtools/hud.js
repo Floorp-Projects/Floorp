@@ -8,6 +8,8 @@
 
 const DEVELOPER_HUD_LOG_PREFIX = 'DeveloperHUD';
 const CUSTOM_HISTOGRAM_PREFIX = 'DEVTOOLS_HUD_CUSTOM_';
+const APPNAME_IDX = 3;
+const HISTNAME_IDX = 4;
 
 XPCOMUtils.defineLazyGetter(this, 'devtools', function() {
   const {devtools} = Cu.import('resource://devtools/shared/Loader.jsm', {});
@@ -322,14 +324,16 @@ Target.prototype = {
   },
 
   _getAddonHistogram(item) {
-    let APPNAME_IDX = 3;
-    let HISTNAME_IDX = 4;
+    let appName = this._getAddonHistogramName(item, APPNAME_IDX);
+    let histName = this._getAddonHistogramName(item, HISTNAME_IDX);
 
+    return Services.telemetry.getAddonHistogram(appName, CUSTOM_HISTOGRAM_PREFIX
+      + histName);
+  },
+
+  _getAddonHistogramName(item, index) {
     let array = item.split('_');
-    let appName = array[APPNAME_IDX].toUpperCase();
-    let histName = array[HISTNAME_IDX].toUpperCase();
-    return Services.telemetry.getAddonHistogram(appName,
-      CUSTOM_HISTOGRAM_PREFIX + histName);
+    return array[index].toUpperCase();
   },
 
   _clearTelemetryData() {
@@ -357,11 +361,21 @@ Target.prototype = {
       payload.keyedHistograms[item] =
         Services.telemetry.getKeyedHistogramById(item).snapshot();
     });
+
     // Package the registered hud custom histograms
     developerHUD._customHistograms.forEach(item => {
-      payload.addonHistograms[item] = this._getAddonHistogram(item).snapshot();
+      let appName = this._getAddonHistogramName(item, APPNAME_IDX);
+      let histName = CUSTOM_HISTOGRAM_PREFIX +
+        this._getAddonHistogramName(item, HISTNAME_IDX);
+      let addonHist = Services.telemetry.getAddonHistogram(appName, histName).snapshot();
+      if (!(appName in payload.addonHistograms)) {
+        payload.addonHistograms[appName] = {};
+      }
+      // Do not include histograms with sum of 0.
+      if (addonHist.sum > 0) {
+        payload.addonHistograms[appName][histName] = addonHist;
+      }
     });
-
     shell.sendEvent(frame, 'advanced-telemetry-update', Cu.cloneInto(payload, frame));
   },
 
