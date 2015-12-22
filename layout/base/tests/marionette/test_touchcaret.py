@@ -12,21 +12,16 @@ from marionette_driver.marionette import Actions
 from marionette_driver.selection import SelectionManager
 
 
-class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
-    '''Test cases for AccessibleCaret under cursor mode, aka touch caret.
+class CommonCaretTestCase(object):
+    '''Common test cases for a collapsed selection with a single caret.
+
+    To run these test cases, a subclass must inherit from both this class and
+    MarionetteTestCase.
 
     '''
-
     def setUp(self):
         # Code to execute before a test is being run.
-        super(AccessibleCaretCursorModeTestCase, self).setUp()
-        self.caret_tested_pref = 'layout.accessiblecaret.enabled'
-        self.caret_timeout_ms_pref = 'layout.accessiblecaret.timeout_ms'
-        self.prefs = {
-            self.caret_tested_pref: True,
-            self.caret_timeout_ms_pref: 0,
-        }
-        self.marionette.set_prefs(self.prefs)
+        super(CommonCaretTestCase, self).setUp()
         self.actions = Actions(self.marionette)
 
     def timeout_ms(self):
@@ -299,6 +294,46 @@ class AccessibleCaretCursorModeTestCase(MarionetteTestCase):
         with self.marionette.using_prefs({self.caret_tested_pref: False}):
             self.open_test_html()
             self._test_move_caret_to_front_by_dragging_touch_caret_to_front_of_content(self._contenteditable, self.assertNotEqual)
+
+
+class TouchCaretTestCase(CommonCaretTestCase, MarionetteTestCase):
+    def setUp(self):
+        super(TouchCaretTestCase, self).setUp()
+        self.caret_tested_pref = 'touchcaret.enabled'
+        self.caret_timeout_ms_pref = 'touchcaret.expiration.time'
+
+        self.prefs = {
+            'layout.accessiblecaret.enabled': False,
+            self.caret_tested_pref: True,
+            self.caret_timeout_ms_pref: 0,
+        }
+        self.marionette.set_prefs(self.prefs)
+
+    def test_input_touch_caret_hides_after_receiving_wheel_event(self):
+        self.open_test_html()
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._input, self.assertNotEqual)
+
+    def test_textarea_touch_caret_hides_after_receiving_wheel_event(self):
+        self.open_test_html()
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._textarea, self.assertNotEqual)
+
+    def test_contenteditable_touch_caret_hides_after_receiving_wheel_event(self):
+        self.open_test_html()
+        self._test_touch_caret_hides_after_receiving_wheel_event(self._contenteditable, self.assertNotEqual)
+
+
+class AccessibleCaretCursorModeTestCase(CommonCaretTestCase, MarionetteTestCase):
+    def setUp(self):
+        super(AccessibleCaretCursorModeTestCase, self).setUp()
+        self.caret_tested_pref = 'layout.accessiblecaret.enabled'
+        self.caret_timeout_ms_pref = 'layout.accessiblecaret.timeout_ms'
+
+        self.prefs = {
+            'touchcaret.enabled': False,
+            self.caret_tested_pref: True,
+            self.caret_timeout_ms_pref: 0,
+        }
+        self.marionette.set_prefs(self.prefs)
 
     def test_caret_does_not_jump_when_dragging_to_editable_content_boundary(self):
         self.open_test_html()
