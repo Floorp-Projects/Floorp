@@ -20,19 +20,23 @@
 #define WORKERDEBUGGERMANAGER_CONTRACTID \
   "@mozilla.org/dom/workers/workerdebuggermanager;1"
 
+class RegisterDebuggerRunnable;
+
 BEGIN_WORKERS_NAMESPACE
 
 class WorkerDebugger;
 
 class WorkerDebuggerManager final : public nsIWorkerDebuggerManager
 {
-  Mutex mMutex;
+  friend class ::RegisterDebuggerRunnable;
+
+  mozilla::Mutex mMutex;
 
   // Protected by mMutex.
   nsTArray<nsCOMPtr<nsIWorkerDebuggerManagerListener>> mListeners;
 
   // Only touched on the main thread.
-  nsTArray<RefPtr<WorkerDebugger>> mDebuggers;
+  nsTArray<WorkerDebugger*> mDebuggers;
 
 public:
   static WorkerDebuggerManager*
@@ -50,17 +54,17 @@ public:
 
   void ClearListeners();
 
-  void RegisterDebugger(WorkerPrivate* aWorkerPrivate);
+  void RegisterDebugger(WorkerDebugger* aDebugger);
 
-  void UnregisterDebugger(WorkerPrivate* aWorkerPrivate);
-
-  void RegisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate,
-			          bool aNotifyListeners);
-
-  void UnregisterDebuggerMainThread(WorkerPrivate* aWorkerPrivate);
+  void UnregisterDebugger(WorkerDebugger* aDebugger);
 
 private:
   virtual ~WorkerDebuggerManager();
+
+  void RegisterDebuggerOnMainThread(WorkerDebugger* aDebugger,
+                                    bool aHasListeners);
+
+  void UnregisterDebuggerOnMainThread(WorkerDebugger* aDebugger);
 };
 
 inline nsresult
@@ -77,7 +81,7 @@ ClearWorkerDebuggerManagerListeners()
 }
 
 inline nsresult
-RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
+RegisterWorkerDebugger(WorkerDebugger* aDebugger)
 {
   RefPtr<WorkerDebuggerManager> manager =
     WorkerDebuggerManager::GetOrCreateService();
@@ -85,12 +89,12 @@ RegisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
     return NS_ERROR_FAILURE;
   }
 
-  manager->RegisterDebugger(aWorkerPrivate);
+  manager->RegisterDebugger(aDebugger);
   return NS_OK;
 }
 
 inline nsresult
-UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
+UnregisterWorkerDebugger(WorkerDebugger* aDebugger)
 {
   RefPtr<WorkerDebuggerManager> manager =
     WorkerDebuggerManager::GetOrCreateService();
@@ -98,7 +102,7 @@ UnregisterWorkerDebugger(WorkerPrivate* aWorkerPrivate)
     return NS_ERROR_FAILURE;
   }
 
-  manager->UnregisterDebugger(aWorkerPrivate);
+  manager->UnregisterDebugger(aDebugger);
   return NS_OK;
 }
 
