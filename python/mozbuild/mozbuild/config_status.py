@@ -10,6 +10,7 @@ from __future__ import absolute_import, print_function
 
 import logging
 import os
+import subprocess
 import sys
 import time
 
@@ -209,3 +210,8 @@ def config_status(topobjdir='.', topsrcdir='.',
     if MachCommandConditions.is_android(env):
         if 'AndroidEclipse' not in options.backend:
             print(ANDROID_IDE_ADVERTISEMENT)
+
+    if env.substs['MOZ_ARTIFACT_BUILDS']:
+        # Execute |mach artifact install| from the top source directory.
+        os.chdir(topsrcdir)
+        return subprocess.check_call([sys.executable, os.path.join(topsrcdir, 'mach'), 'artifact', 'install'])

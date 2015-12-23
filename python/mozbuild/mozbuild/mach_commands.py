@@ -25,6 +25,7 @@ from mach.decorators import (
 from mach.mixin.logging import LoggingMixin
 
 from mozbuild.base import (
+    BuildEnvironmentNotFoundException,
     MachCommandBase,
     MachCommandConditions as conditions,
     MozbuildObject,
@@ -381,6 +382,9 @@ class Build(MachCommandBase):
                     line_handler=output.on_line, log=False,
                     print_directory=False)
 
+                if self.substs['MOZ_ARTIFACT_BUILDS']:
+                    self._run_mach_artifact_install()
+
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
                     # We don't display build status messages during partial
@@ -395,6 +399,19 @@ class Build(MachCommandBase):
                     if status != 0:
                         break
             else:
+                try:
+                    if self.substs['MOZ_ARTIFACT_BUILDS']:
+                        self._run_mach_artifact_install()
+                except BuildEnvironmentNotFoundException:
+                    # Can't read self.substs from config.status?  That means we
+                    # need to run configure.  The client.mk invocation below
+                    # will configure, which will run config.status, which will
+                    # invoke |mach artifact install| itself before continuing
+                    # the build.  Therefore, we needn't install artifacts
+                    # ourselves.
+                    self.log(logging.DEBUG, 'artifact',
+                             {}, "Not running |mach artifact install| -- it will be run by client.mk.")
+
                 monitor.start_resource_recording()
                 status = self._run_make(srcdir=True, filename='client.mk',
                     line_handler=output.on_line, log=False, print_directory=False,
@@ -601,6 +618,18 @@ class Build(MachCommandBase):
 
         return self._run_command_in_objdir(args=args, pass_thru=True,
             ensure_exit_code=False)
+
+    def _run_mach_artifact_install(self):
+        # We'd like to launch artifact using
+        # self._mach_context.commands.dispatch.  However, artifact activates
+        # the virtualenv, which plays badly with the rest of this code.
+        # Therefore, we run |mach artifact install| in a new process (and
+        # throw an exception if it fails).
+        self.log(logging.INFO, 'artifact',
+                 {}, "Running |mach artifact install|.")
+        args = [os.path.join(self.topsrcdir, 'mach'), 'artifact', 'install']
+        self._run_command_in_srcdir(args=args,
+            pass_thru=True, ensure_exit_code=True)
 
 @CommandProvider
 class Doctor(MachCommandBase):
