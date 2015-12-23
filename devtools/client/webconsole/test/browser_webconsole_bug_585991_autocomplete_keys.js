@@ -9,7 +9,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
                  "popup keyboard usage test";
 var HUD, popup, jsterm, inputNode, completeNode;
 
-var test = asyncTest(function*() {
+add_task(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 

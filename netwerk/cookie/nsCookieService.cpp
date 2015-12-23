@@ -2965,6 +2965,11 @@ nsCookieService::GetCookieStringInternal(nsIURI *aHostURI,
     break;
   }
 
+  // Note: The following permissions logic is mirrored in
+  // toolkit/modules/addons/MatchPattern.jsm:MatchPattern.matchesCookie().
+  // If it changes, please update that function, or file a bug for someone
+  // else to do so.
+
   // check if aHostURI is using an https secure protocol.
   // if it isn't, then we can't send a secure cookie over the connection.
   // if SchemeIs fails, assume an insecure connection, to be on the safe side
@@ -3832,6 +3837,11 @@ nsCookieService::CheckDomain(nsCookieAttributes &aCookieAttributes,
                              const nsCString    &aBaseDomain,
                              bool                aRequireHostMatch)
 {
+  // Note: The logic in this function is mirrored in
+  // toolkit/components/extensions/ext-cookies.js:checkSetCookiePermissions().
+  // If it changes, please update that function, or file a bug for someone
+  // else to do so.
+
   // get host from aHostURI
   nsAutoCString hostFromURI;
   aHostURI->GetAsciiHost(hostFromURI);

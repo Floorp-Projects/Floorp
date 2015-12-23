@@ -13,7 +13,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 var hud;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   Services.prefs.setBoolPref(PREF, true);
 
   let { browser } = yield loadTab(TEST_URI);

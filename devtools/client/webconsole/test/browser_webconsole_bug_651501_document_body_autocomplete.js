@@ -13,7 +13,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console autocompletion " +
 
 var gHUD;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   gHUD = yield openConsole();

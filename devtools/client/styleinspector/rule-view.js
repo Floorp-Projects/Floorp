@@ -15,7 +15,8 @@ const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {OutputParser} = require("devtools/client/shared/output-parser");
-const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
+const {PrefObserver, PREF_ORIG_SOURCES} =
+      require("devtools/client/styleeditor/utils");
 const {
   createChild,
   appendText,
@@ -266,11 +267,11 @@ ElementStyle.prototype = {
   /**
    * Put pseudo elements in front of others.
    */
-   _sortRulesForPseudoElement: function() {
-     this.rules = this.rules.sort((a, b) => {
-       return (a.pseudoElement || "z") > (b.pseudoElement || "z");
-     });
-   },
+  _sortRulesForPseudoElement: function() {
+    this.rules = this.rules.sort((a, b) => {
+      return (a.pseudoElement || "z") > (b.pseudoElement || "z");
+    });
+  },
 
   /**
    * Add a rule if it's one we care about.  Filters out duplicates and
@@ -340,7 +341,7 @@ ElementStyle.prototype = {
    *        Which pseudo element to flag as overridden.
    *        Empty string or undefined will default to no pseudo element.
    */
-  markOverridden: function(pseudo="") {
+  markOverridden: function(pseudo = "") {
     // Gather all the text properties applied by these rules, ordered
     // from more- to less-specific. Text properties from keyframes rule are
     // excluded from being marked as overridden since a number of criteria such
@@ -567,7 +568,8 @@ Rule.prototype = {
    *         both the full and short version of the source string.
    */
   getOriginalSourceStrings: function() {
-    return this.domRule.getOriginalLocation().then(({href, line, mediaText}) => {
+    return this.domRule.getOriginalLocation().then(({href,
+                                                     line, mediaText}) => {
       let mediaString = mediaText ? " @" + mediaText : "";
       let linePart = line > 0 ? (":" + line) : "";
 
@@ -1162,7 +1164,7 @@ TextProperty.prototype = {
           priority: dummyStyle.getPropertyPriority(prop),
         });
       }
-    } catch(e) {
+    } catch (e) {
       // This is a partial property name, probably from cutting and pasting
       // text. At this point don't check for computed properties.
     }
@@ -1189,7 +1191,7 @@ TextProperty.prototype = {
     }
   },
 
-  setValue: function(value, priority, force=false) {
+  setValue: function(value, priority, force = false) {
     let store = this.rule.elementStyle.store;
 
     if (this.editor && value !== this.editor.committed.value || force) {
@@ -1632,7 +1634,7 @@ CssRuleView.prototype = {
       }
 
       clipboardHelper.copyString(text);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     }
   },
@@ -1765,7 +1767,7 @@ CssRuleView.prototype = {
    * @param {String} value
    *        The search value.
    */
-  setFilterStyles: function(value="") {
+  setFilterStyles: function(value = "") {
     this.searchField.value = value;
     this.searchField.focus();
     this._onFilterStyles();
@@ -1872,7 +1874,7 @@ CssRuleView.prototype = {
       this.styleWindow.focus();
       let contextmenu = this.inspector.toolbox.textboxContextMenuPopup;
       contextmenu.openPopupAtScreen(event.screenX, event.screenY, true);
-    } catch(e) {
+    } catch (e) {
       console.error(e);
     }
   },
@@ -1952,8 +1954,6 @@ CssRuleView.prototype = {
     this.popup.destroy();
   },
 
-
-
   /**
    * Mark the view as selecting an element, disabling all interaction, and
    * visually clearing the view after a few milliseconds to avoid confusion
@@ -1978,7 +1978,7 @@ CssRuleView.prototype = {
    * @param {Boolean} allowRefresh
    *        Update the view even if the element is the same as last time.
    */
-  selectElement: function(element, allowRefresh=false) {
+  selectElement: function(element, allowRefresh = false) {
     let refresh = (this._viewedElement === element);
     if (refresh && !allowRefresh) {
       return promise.resolve(undefined);
@@ -2133,7 +2133,7 @@ CssRuleView.prototype = {
   /**
    * Clear the rule view.
    */
-  clear: function(clearDom=true) {
+  clear: function(clearDom = true) {
     this.lastSelectorIcon = null;
 
     if (clearDom) {
@@ -2648,17 +2648,17 @@ CssRuleView.prototype = {
 /**
  * Create a RuleEditor.
  *
- * @param {CssRuleView} aRuleView
+ * @param {CssRuleView} ruleView
  *        The CssRuleView containg the document holding this rule editor.
- * @param {Rule} aRule
+ * @param {Rule} rule
  *        The Rule object we're editing.
  */
-function RuleEditor(aRuleView, aRule) {
-  this.ruleView = aRuleView;
+function RuleEditor(ruleView, rule) {
+  this.ruleView = ruleView;
   this.doc = this.ruleView.styleDocument;
-  this.rule = aRule;
+  this.rule = rule;
 
-  this.isEditable = !aRule.isSystem;
+  this.isEditable = !rule.isSystem;
   // Flag that blocks updates of the selector and properties when it is
   // being edited
   this.isEditing = false;
@@ -2730,9 +2730,9 @@ RuleEditor.prototype = {
     });
 
     if (this.isSelectorEditable) {
-      this.selectorText.addEventListener("click", aEvent => {
+      this.selectorText.addEventListener("click", event => {
         // Clicks within the selector shouldn't propagate any further.
-        aEvent.stopPropagation();
+        event.stopPropagation();
       }, false);
 
       editableField({
@@ -2796,7 +2796,7 @@ RuleEditor.prototype = {
    * Event handler called when a property changes on the
    * StyleRuleActor.
    */
-  _locationChanged: function(line, column) {
+  _locationChanged: function() {
     this.updateSourceLink();
   },
 
@@ -2943,23 +2943,23 @@ RuleEditor.prototype = {
    * to the proper location after adding (either focus the value on the
    * last property if it is empty, or create a new property and focus it).
    *
-   * @param {Array} aProperties
+   * @param {Array} properties
    *        Array of properties, which are objects with this signature:
    *        {
    *          name: {string},
    *          value: {string},
    *          priority: {string}
    *        }
-   * @param {TextProperty} aSiblingProp
+   * @param {TextProperty} siblingProp
    *        Optional, the property next to which all new props should be added.
    */
-  addProperties: function(aProperties, aSiblingProp) {
-    if (!aProperties || !aProperties.length) {
+  addProperties: function(properties, siblingProp) {
+    if (!properties || !properties.length) {
       return;
     }
 
-    let lastProp = aSiblingProp;
-    for (let p of aProperties) {
+    let lastProp = siblingProp;
+    for (let p of properties) {
       lastProp = this.addProperty(p.name, p.value, p.priority, lastProp);
     }
 
@@ -3015,13 +3015,13 @@ RuleEditor.prototype = {
   /**
    * Called when the new property input has been dismissed.
    *
-   * @param {String} aValue
+   * @param {String} value
    *        The value in the editor.
-   * @param {Boolean} aCommit
+   * @param {Boolean} commit
    *        True if the value should be committed.
    */
-  _onNewProperty: function(aValue, aCommit) {
-    if (!aValue || !aCommit) {
+  _onNewProperty: function(value, commit) {
+    if (!value || !commit) {
       return;
     }
 
@@ -3029,7 +3029,7 @@ RuleEditor.prototype = {
     // case, we're creating a new declaration, it doesn't make sense to accept
     // these entries
     this.multipleAddedProperties =
-      parseDeclarations(aValue).filter(d => d.name);
+      parseDeclarations(value).filter(d => d.name);
 
     // Blur the editor field now and deal with adding declarations later when
     // the field gets destroyed (see _newPropertyDestroy)
@@ -3743,7 +3743,7 @@ TextPropertyEditor.prototype = {
    * @param {Number} direction
    *        The move focus direction number.
    */
-  _onValueDone: function(value="", commit, direction) {
+  _onValueDone: function(value = "", commit, direction) {
     let parsedProperties = this._getValueAndExtraProperties(value);
     let val = parseSingleValue(parsedProperties.firstValue);
     let isValueUnchanged = (!commit && !this.ruleEditor.isEditing) ||

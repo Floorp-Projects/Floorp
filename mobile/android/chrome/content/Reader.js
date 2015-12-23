@@ -225,7 +225,7 @@ var Reader = {
 
     readerModeActiveCallback: function(tabID) {
       Reader._addTabToReadingList(tabID).catch(e => Cu.reportError("Error adding tab to reading list: " + e));
-      UITelemetry.addEvent("save.1", "pageaction", null, "reader");
+      UITelemetry.addEvent("save.1", "pageaction", null, "reading_list");
       Reader._buttonHistogram.add(Reader._buttonHistogramValues.LONG_TAP);
     },
   },

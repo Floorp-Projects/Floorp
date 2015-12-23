@@ -14,7 +14,7 @@ const TEST_URI2 = "http://example.com/browser/devtools/client/" +
                  "webconsole/test/" +
                  "test-bug-646025-console-file-location.html";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

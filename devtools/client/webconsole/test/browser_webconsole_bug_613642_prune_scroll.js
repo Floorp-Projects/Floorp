@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for " +
 
 var hud;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();
