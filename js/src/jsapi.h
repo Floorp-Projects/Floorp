@@ -1006,6 +1006,9 @@ JS_BeginRequest(JSContext* cx);
 extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext* cx);
 
+extern JS_PUBLIC_API(void)
+JS_SetFutexCanWait(JSRuntime* rt);
+
 namespace js {
 
 void
