@@ -480,7 +480,7 @@ InterruptCheck(JSContext* cx)
 
     {
         JitRuntime* jrt = cx->runtime()->jitRuntime();
-        JitRuntime::AutoMutateBackedges amb(jrt);
+        JitRuntime::AutoPreventBackedgePatching apbp(jrt);
         jrt->patchIonBackedges(cx->runtime(), JitRuntime::BackedgeLoopHeader);
     }
 

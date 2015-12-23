@@ -165,7 +165,7 @@ JSRuntime::createJitRuntime(JSContext* cx)
     // Protect jitRuntime_ from being observed (by InterruptRunningJitCode)
     // while it is being initialized. Unfortunately, initialization depends on
     // jitRuntime_ being non-null, so we can't just wait to assign jitRuntime_.
-    JitRuntime::AutoMutateBackedges amb(jrt);
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt);
     jitRuntime_ = jrt;
 
     if (!jitRuntime_->initialize(cx)) {

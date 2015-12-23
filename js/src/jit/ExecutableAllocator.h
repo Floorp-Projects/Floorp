@@ -79,6 +79,7 @@ namespace jit {
 enum CodeKind { ION_CODE = 0, BASELINE_CODE, REGEXP_CODE, OTHER_CODE };
 
 class ExecutableAllocator;
+class JitRuntime;
 
 // These are reference-counted. A new one starts with a count of 1.
 class ExecutablePool
@@ -133,11 +134,12 @@ class ExecutableAllocator
 #ifdef XP_WIN
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
 #endif
+    JitRuntime* jrt_;
 
   public:
     enum ProtectionSetting { Writable, Executable };
 
-    ExecutableAllocator();
+    explicit ExecutableAllocator(JitRuntime* jrt);
     ~ExecutableAllocator();
 
     void purge();
@@ -182,6 +184,13 @@ class ExecutableAllocator
     {
         if (nonWritableJitCode)
             reprotectRegion(start, size, Executable);
+    }
+
+    void makeAllWritable() {
+        reprotectAll(Writable);
+    }
+    void makeAllExecutable() {
+        reprotectAll(Executable);
     }
 
     static unsigned initialProtectionFlags(ProtectionSetting protection);
@@ -259,6 +268,7 @@ class ExecutableAllocator
     void operator=(const ExecutableAllocator&) = delete;
 
     static void reprotectRegion(void*, size_t, ProtectionSetting);
+    void reprotectAll(ProtectionSetting);
 
     // These are strong references;  they keep pools alive.
     static const size_t maxSmallPools = 4;

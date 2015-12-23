@@ -93,15 +93,8 @@ static void
 TryToUseImplicitInterruptCheck(MIRGraph& graph, MBasicBlock* backedge)
 {
     // Implicit interrupt checks require asm.js signal handlers to be installed.
-    // They also require writable JIT code: reprotecting in patchIonBackedges
-    // would be expensive and using AutoWritableJitCode in the signal handler
-    // is complicated because there could be another AutoWritableJitCode on the
-    // stack.
-    if (!GetJitContext()->runtime->canUseSignalHandlers() ||
-        ExecutableAllocator::nonWritableJitCode)
-    {
+    if (!GetJitContext()->runtime->canUseSignalHandlers())
         return;
-    }
 
     // To avoid triggering expensive interrupts (backedge patching) in
     // requestMajorGC and requestMinorGC, use an implicit interrupt check only

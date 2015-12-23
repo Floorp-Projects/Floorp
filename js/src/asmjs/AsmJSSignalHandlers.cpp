@@ -1174,7 +1174,7 @@ RedirectIonBackedgesToInterruptCheck(JSRuntime* rt)
         // thus not in a JIT iloop. We assume that the interrupt flag will be
         // checked at least once before entering JIT code (if not, no big deal;
         // the browser will just request another interrupt in a second).
-        if (!jitRuntime->mutatingBackedgeList())
+        if (!jitRuntime->preventBackedgePatching())
             jitRuntime->patchIonBackedges(rt, jit::JitRuntime::BackedgeInterruptCheck);
     }
 }
