@@ -60,6 +60,7 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mPBOverride(aOverrideStatus)
   , mLoadContext(aLoadContext)
   , mStatus(NS_OK)
+  , mPendingDiversion(false)
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
@@ -274,6 +275,8 @@ HttpChannelParent::SynthesizeResponse(nsIInterceptedChannel* aChannel)
   NS_DispatchToCurrentThread(event);
 
   mSynthesizedResponseHead = nullptr;
+
+  MaybeFlushPendingDiversion();
 }
 
 //-----------------------------------------------------------------------------
@@ -1045,6 +1048,27 @@ HttpChannelParent::DivertComplete()
   mParentListener = nullptr;
 }
 
+void
+HttpChannelParent::MaybeFlushPendingDiversion()
+{
+  if (!mPendingDiversion) {
+    return;
+  }
+
+  mPendingDiversion = false;
+
+  nsresult rv = SuspendForDiversion();
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return;
+  }
+
+  if (mDivertListener) {
+    DivertTo(mDivertListener);
+  }
+
+  return;
+}
+
 bool
 HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
   const mozilla::ipc::PrincipalInfo& requestingPrincipal)
@@ -1388,6 +1412,15 @@ HttpChannelParent::SuspendForDiversion()
   LOG(("HttpChannelParent::SuspendForDiversion [this=%p]\n", this));
   MOZ_ASSERT(mChannel);
   MOZ_ASSERT(mParentListener);
+
+  // If we're in the process of opening a synthesized response, we must wait
+  // to perform the diversion.  Some of our diversion listeners clear callbacks
+  // which breaks the synthesis process.
+  if (mSynthesizedResponseHead) {
+    mPendingDiversion = true;
+    return NS_OK;
+  }
+
   if (NS_WARN_IF(mDivertingFromChild)) {
     MOZ_ASSERT(!mDivertingFromChild, "Already suspended for diversion!");
     return NS_ERROR_UNEXPECTED;
@@ -1444,6 +1477,18 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
   LOG(("HttpChannelParent::DivertTo [this=%p aListener=%p]\n",
        this, aListener));
   MOZ_ASSERT(mParentListener);
+
+  // If we're in the process of opening a synthesized response, we must wait
+  // to perform the diversion.  Some of our diversion listeners clear callbacks
+  // which breaks the synthesis process.
+  if (mSynthesizedResponseHead) {
+    // We should already have started pending the diversion when
+    // SuspendForDiversion() was called.
+    MOZ_ASSERT(mPendingDiversion);
+    mDivertListener = aListener;
+    return;
+  }
+
   if (NS_WARN_IF(!mDivertingFromChild)) {
     MOZ_ASSERT(mDivertingFromChild,
                "Cannot DivertTo new listener if diverting is not set!");
