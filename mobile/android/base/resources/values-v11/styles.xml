@@ -88,6 +88,10 @@
         <item name="android:background">@android:color/transparent</item>
         <item name="android:paddingLeft">15dp</item>
         <item name="android:paddingRight">15dp</item>
+        <!-- gravity and minWidth are added here to more resemble our values/styles.xml
+             counterpart. This is solely to correct bug 1233709 -->
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:minWidth">0dp</item>
     </style>
 
     <style name="GeckoActionBar.Button" parent="android:style/Widget.Holo.Light.ActionButton">
