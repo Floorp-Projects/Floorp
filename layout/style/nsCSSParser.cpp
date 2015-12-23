@@ -10392,9 +10392,12 @@ CSSParserImpl::ParseWebkitGradientColorStops(nsCSSValueGradient* aGradient)
     nsCSSValueGradientStop* stop1 = aGradient->mStops.AppendElement();
     stop1->mColor.SetIntegerColorValue(NS_RGBA(0, 0, 0, 0),
                                        eCSSUnit_RGBAColor);
+    stop1->mLocation.SetPercentValue(0.0f);
+
     nsCSSValueGradientStop* stop2 = aGradient->mStops.AppendElement();
     stop2->mColor.SetIntegerColorValue(NS_RGBA(0, 0, 0, 0),
                                        eCSSUnit_RGBAColor);
+    stop2->mLocation.SetPercentValue(1.0f);
   } else if (aGradient->mStops.Length() == 1) {
     // Copy whatever the author provided in the first stop:
     nsCSSValueGradientStop* stop = aGradient->mStops.AppendElement();
