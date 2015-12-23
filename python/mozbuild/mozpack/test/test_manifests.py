@@ -39,13 +39,15 @@ class TestInstallManifest(TestWithTmpDir):
         m.add_pattern_symlink('ps_base', 'ps/*', 'ps_dest')
         m.add_pattern_copy('pc_base', 'pc/**', 'pc_dest')
         m.add_preprocess('p_source', 'p_dest', 'p_source.pp')
+        m.add_content('content', 'content')
 
-        self.assertEqual(len(m), 7)
+        self.assertEqual(len(m), 8)
         self.assertIn('s_dest', m)
         self.assertIn('c_dest', m)
         self.assertIn('p_dest', m)
         self.assertIn('e_dest', m)
         self.assertIn('o_dest', m)
+        self.assertIn('content', m)
 
         with self.assertRaises(ValueError):
             m.add_symlink('s_other', 's_dest')
@@ -68,6 +70,9 @@ class TestInstallManifest(TestWithTmpDir):
         with self.assertRaises(ValueError):
             m.add_pattern_copy('pc_base', 'pc/**', 'pc_dest')
 
+        with self.assertRaises(ValueError):
+            m.add_content('content', 'content')
+
     def _get_test_manifest(self):
         m = InstallManifest()
         m.add_symlink(self.tmppath('s_source'), 's_dest')
@@ -77,6 +82,7 @@ class TestInstallManifest(TestWithTmpDir):
         m.add_optional_exists('o_dest')
         m.add_pattern_symlink('ps_base', '*', 'ps_dest')
         m.add_pattern_copy('pc_base', '**', 'pc_dest')
+        m.add_content('the content\non\nmultiple lines', 'content')
 
         return m
 
@@ -90,12 +96,12 @@ class TestInstallManifest(TestWithTmpDir):
         with open(p, 'rb') as fh:
             c = fh.read()
 
-        self.assertEqual(c.count('\n'), 8)
+        self.assertEqual(c.count('\n'), 9)
 
         lines = c.splitlines()
-        self.assertEqual(len(lines), 8)
+        self.assertEqual(len(lines), 9)
 
-        self.assertEqual(lines[0], '4')
+        self.assertEqual(lines[0], '5')
 
         m2 = InstallManifest(path=p)
         self.assertEqual(m, m2)
@@ -112,8 +118,9 @@ class TestInstallManifest(TestWithTmpDir):
         r = FileRegistry()
         m.populate_registry(r)
 
-        self.assertEqual(len(r), 5)
-        self.assertEqual(r.paths(), ['c_dest', 'e_dest', 'o_dest', 'p_dest', 's_dest'])
+        self.assertEqual(len(r), 6)
+        self.assertEqual(r.paths(), ['c_dest', 'content', 'e_dest', 'o_dest',
+                                     'p_dest', 's_dest'])
 
     def test_pattern_expansion(self):
         source = self.tmppath('source')
@@ -182,6 +189,7 @@ class TestInstallManifest(TestWithTmpDir):
         self.assertTrue(os.path.exists(self.tmppath('dest/p_dest')))
         self.assertTrue(os.path.exists(self.tmppath('dest/e_dest')))
         self.assertTrue(os.path.exists(self.tmppath('dest/o_dest')))
+        self.assertTrue(os.path.exists(self.tmppath('dest/content')))
         self.assertFalse(os.path.exists(to_delete))
 
         with open(self.tmppath('dest/s_dest'), 'rt') as fh:
@@ -194,7 +202,7 @@ class TestInstallManifest(TestWithTmpDir):
             self.assertEqual(fh.read(), 'preprocess!')
 
         self.assertEqual(result.updated_files, set(self.tmppath(p) for p in (
-            'dest/s_dest', 'dest/c_dest', 'dest/p_dest')))
+            'dest/s_dest', 'dest/c_dest', 'dest/p_dest', 'dest/content')))
         self.assertEqual(result.existing_files,
             set([self.tmppath('dest/e_dest'), self.tmppath('dest/o_dest')]))
         self.assertEqual(result.removed_files, {to_delete})
