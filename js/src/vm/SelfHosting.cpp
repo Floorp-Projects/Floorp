@@ -109,6 +109,17 @@ intrinsic_IsArray(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_IsWrappedArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    bool result = false;
+    if (!IsWrappedArrayConstructor(cx, args[0], &result))
+        return false;
+    args.rval().setBoolean(result);
+    return true;
+}
+
+static bool
 intrinsic_ToInteger(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -2121,6 +2132,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_INLINABLE_FN("ToObject",      intrinsic_ToObject,                1,0, IntrinsicToObject),
     JS_INLINABLE_FN("IsObject",      intrinsic_IsObject,                1,0, IntrinsicIsObject),
     JS_INLINABLE_FN("IsArray",       intrinsic_IsArray,                 1,0, ArrayIsArray),
+    JS_FN("IsWrappedArrayConstructor", intrinsic_IsWrappedArrayConstructor, 1,0),
     JS_INLINABLE_FN("ToInteger",     intrinsic_ToInteger,               1,0, IntrinsicToInteger),
     JS_INLINABLE_FN("ToString",      intrinsic_ToString,                1,0, IntrinsicToString),
     JS_FN("ToPropertyKey",           intrinsic_ToPropertyKey,           1,0),
