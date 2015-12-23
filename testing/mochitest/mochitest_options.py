@@ -401,6 +401,14 @@ class MochitestArguments(ArgumentContainer):
           "default": None,
           "suppress": True,
           }],
+        [["--jscov-dir-prefix"],
+         {"action": "store",
+          "help": "Directory to store per-test line coverage data as json "
+                  "(browser-chrome only). To emit lcov formatted data, set "
+                  "JS_CODE_COVERAGE_OUTPUT_DIR in the environment.",
+          "default": None,
+          "suppress": True,
+          }],
         [["--strict-content-sandbox"],
          {"action": "store_true",
           "default": False,
@@ -682,6 +690,13 @@ class MochitestArguments(ArgumentContainer):
                 parser.error(
                     "directory for %s does not exist as a destination to copy a "
                     "chrome manifest." % options.store_chrome_manifest)
+
+        if options.jscov_dir_prefix:
+            options.jscov_dir_prefix = os.path.abspath(options.jscov_dir_prefix)
+            if not os.path.isdir(options.jscov_dir_prefix):
+                parser.error(
+                    "directory %s does not exist as a destination for coverage "
+                    "data." % options.jscov_dir_prefix)
 
         if options.testingModulesDir is None:
             if build_obj:

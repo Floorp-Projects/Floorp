@@ -180,6 +180,8 @@ function Tester(aTests, aDumper, aCallback) {
     this.SimpleTestOriginal[m] = this.SimpleTest[m];
   });
 
+  this._coverageCollector = null;
+
   this._toleratedUncaughtRejections = null;
   this._uncaughtErrorObserver = function({message, date, fileName, stack, lineNumber}) {
     let error = message;
@@ -246,6 +248,13 @@ Tester.prototype = {
 
     if (gConfig.repeat)
       this.repeat = gConfig.repeat;
+
+    if (gConfig.jscovDirPrefix) {
+      let coveragePath = gConfig.jscovDirPrefix;
+      let {CoverageCollector} = Cu.import("resource://testing-common/CoverageUtils.jsm",
+                                          {});
+      this._coverageCollector = new CoverageCollector(coveragePath);
+    }
 
     this.dumper.structuredLogger.info("*** Start BrowserChrome Test Results ***");
     Services.console.registerListener(this);
@@ -423,6 +432,9 @@ Tester.prototype = {
   nextTest: Task.async(function*() {
     if (this.currentTest) {
       this.Promise.Debugging.flushUncaughtErrors();
+      if (this._coverageCollector) {
+        this._coverageCollector.recordTestCoverage(this.currentTest.path);
+      }
 
       // Run cleanup functions for the current test before moving on to the
       // next one.
@@ -562,6 +574,9 @@ Tester.prototype = {
     // is invoked to start the tests.
     this.waitForWindowsState((function () {
       if (this.done) {
+        if (this._coverageCollector) {
+          this._coverageCollector.finalize();
+        }
 
         // Uninitialize a few things explicitly so that they can clean up
         // frames and browser intentionally kept alive until shutdown to
