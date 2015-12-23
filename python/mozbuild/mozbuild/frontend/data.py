@@ -96,14 +96,12 @@ class DirectoryTraversal(ContextDerived):
     """
     __slots__ = (
         'dirs',
-        'test_dirs',
     )
 
     def __init__(self, context):
         ContextDerived.__init__(self, context)
 
         self.dirs = []
-        self.test_dirs = []
 
 
 class BaseConfigSubstitution(ContextDerived):
