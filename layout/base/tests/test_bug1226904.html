@@ -9,35 +9,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=684759
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body onload="run()">
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=684759">Mozilla Bug 684759</a>
-<iframe src="preserve3d_sorting_hit_testing_iframe.html" id="iframe" height="1000" width="1000" style="border:none"></iframe>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1226904">Mozilla Bug 1226904</a>
+<iframe src="bug1226904.html" id="iframe" height="1000" width="1000" style="border:none"></iframe>
 <pre id="test">
 <script type="application/javascript">
 
-/** Test for Bug 684759 **/
+/** Test for Bug 1226904 **/
 
 SimpleTest.waitForExplicitFinish();
 
 function run() {
-  
   var iframe = document.getElementById("iframe");
-  
   var doc = iframe.contentDocument;
-
-  var big= doc.getElementById("big");
-  var small = doc.getElementById("small");
+  var container = doc.getElementById("container");
+  var separator = doc.getElementById("separator");
+  var transformed = doc.getElementById("transformed");
 
   function check(x, y, expected_element, description)
   {
-	is(doc.elementFromPoint(x, y).id, expected_element.id,
+	is(doc.elementFromPoint(x, y), expected_element,
 	   "point (" + x + ", " + y + "): " + description);
   }
 
-  check(650, 250, small, "Small object should be infront of big");
-  check(650, 308, big, "Check bounds of small object");
-  check(650, 207, big, "Check bounds of small object");
-  check(607, 250, big, "Check bounds of small object");
-  check(708, 250, big, "Check bounds of small object");
+  check(600, 200, separator, "Separator object should be at right side");
+  check(900, 200, container, "Check bounds of separator object");
+  check(200, 600, transformed, "Transformed object should be at left side");
 
   SimpleTest.finish();
 }
