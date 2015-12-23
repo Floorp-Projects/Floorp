@@ -3639,8 +3639,11 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
 JS_FRIEND_API(void)
 js::DumpBacktrace(JSContext* cx)
 {
-    Sprinter sprinter(cx);
-    sprinter.init();
+    Sprinter sprinter(cx, false);
+    if (!sprinter.init()) {
+        fprintf(stdout, "js::DumpBacktrace: OOM\n");
+        return;
+    }
     size_t depth = 0;
     for (AllFramesIter i(cx); !i.done(); ++i, ++depth) {
         const char* filename = JS_GetScriptFilename(i.script());
@@ -3659,9 +3662,8 @@ js::DumpBacktrace(JSContext* cx)
     }
     fprintf(stdout, "%s", sprinter.string());
 #ifdef XP_WIN32
-    if (IsDebuggerPresent()) {
+    if (IsDebuggerPresent())
         OutputDebugStringA(sprinter.string());
-    }
 #endif
 }
 
