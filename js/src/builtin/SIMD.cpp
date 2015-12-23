@@ -687,8 +687,9 @@ struct ShiftLeft {
 template<typename T>
 struct ShiftRightArithmetic {
     static T apply(T v, int32_t bits) {
+        typedef typename mozilla::MakeSigned<T>::Type SignedT;
         uint32_t maxBits = sizeof(T) * 8;
-        return v >> (uint32_t(bits) >= maxBits ? maxBits - 1 : bits);
+        return SignedT(v) >> (uint32_t(bits) >= maxBits ? maxBits - 1 : bits);
     }
 };
 template<typename T>
