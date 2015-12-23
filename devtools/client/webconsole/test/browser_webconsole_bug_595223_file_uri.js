@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
 var hud;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   Services.prefs.setBoolPref(PREF, true);
 
   let jar = getJar(getRootDirectory(gTestPath));

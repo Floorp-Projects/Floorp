@@ -14,7 +14,7 @@ var gWebConsole, gJSTerm, gVariablesView;
 
 var hud;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

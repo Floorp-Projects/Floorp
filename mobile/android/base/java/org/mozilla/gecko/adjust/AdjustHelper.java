@@ -32,6 +32,18 @@ public class AdjustHelper implements AdjustHelperInterface {
         Adjust.onCreate(config);
     }
 
+    public void onPause() {
+        Adjust.onPause();
+    }
+
+    public void onResume() {
+        Adjust.onResume();
+    }
+
+    public void setEnabled(final boolean isEnabled) {
+        Adjust.setEnabled(isEnabled);
+    }
+
     public void onReceive(final Context context, final Intent intent) {
         new AdjustReferrerReceiver().onReceive(context, intent);
     }

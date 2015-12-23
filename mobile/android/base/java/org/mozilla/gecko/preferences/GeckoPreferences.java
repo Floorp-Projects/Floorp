@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 
 import android.annotation.TargetApi;
 import org.mozilla.gecko.AboutPages;
+import org.mozilla.gecko.AdjustConstants;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
@@ -451,6 +452,7 @@ OnSharedPreferenceChangeListener
         return GeckoPreferenceFragment.class.getName().equals(fragmentName);
     }
 
+    @TargetApi(11)
     @Override
     public void onBuildHeaders(List<Header> target) {
         if (onIsMultiPane()) {
@@ -462,6 +464,9 @@ OnSharedPreferenceChangeListener
                 Header header = iterator.next();
 
                 if (header.id == R.id.pref_header_advanced && !Restrictions.isAllowed(this, Restrictable.ADVANCED_SETTINGS)) {
+                    iterator.remove();
+                } else if (header.id == R.id.pref_header_clear_private_data
+                           && !Restrictions.isAllowed(this, Restrictable.CLEAR_HISTORY)) {
                     iterator.remove();
                 }
             }
@@ -1179,7 +1184,9 @@ OnSharedPreferenceChangeListener
             // to Gecko, but we do broadcast intent to the health report
             // background uploader service, which will start or stop the
             // repeated background upload attempts.
-            broadcastHealthReportUploadPref(this, (Boolean) newValue);
+            final Boolean newBooleanValue = (Boolean) newValue;
+            broadcastHealthReportUploadPref(this, newBooleanValue);
+            AdjustConstants.getAdjustHelper().setEnabled(newBooleanValue);
         } else if (PREFS_GEO_REPORTING.equals(prefName)) {
             broadcastStumblerPref(this, (Boolean) newValue);
             // Translate boolean value to int for geo reporting pref.

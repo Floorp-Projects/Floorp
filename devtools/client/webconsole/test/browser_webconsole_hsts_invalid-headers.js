@@ -12,7 +12,7 @@ const SJS_URL = "https://example.com/browser/devtools/client/webconsole/" +
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
                        "HTTP_Strict_Transport_Security";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

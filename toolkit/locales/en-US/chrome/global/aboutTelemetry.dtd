@@ -36,6 +36,18 @@ Current ping data
 Archived ping data
 ">
 
+<!ENTITY aboutTelemetry.pingDataDisplay "
+Ping data display:
+">
+
+<!ENTITY aboutTelemetry.structured "
+Structured
+">
+
+<!ENTITY aboutTelemetry.raw "
+Raw JSON
+">
+
 <!ENTITY aboutTelemetry.showSubsessionData "
 Show subsession data
 ">

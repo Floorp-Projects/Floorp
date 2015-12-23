@@ -6,7 +6,7 @@
 
 "use strict";
 
-var test = asyncTest(function*() {
+add_task(function*() {
   yield loadTab("data:text/html;charset=utf8,test for bug 676722 - " +
                 "inspectable objects for window.console");
 
