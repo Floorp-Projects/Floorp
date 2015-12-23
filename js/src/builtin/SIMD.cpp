@@ -163,6 +163,21 @@ class Int32x4Defn {
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
     static const JSFunctionSpec Methods[];
 };
+class Uint8x16Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint8x16;
+    static const JSFunctionSpec Methods[];
+};
+class Uint16x8Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint16x8;
+    static const JSFunctionSpec Methods[];
+};
+class Uint32x4Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint32x4;
+    static const JSFunctionSpec Methods[];
+};
 class Float32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
@@ -246,6 +261,30 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
     JS_INLINABLE_FN(#Name, js::simd_int32x4_##Name, Operands, 0, SimdInt32x4),
     INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
 #undef SIMD_INT32X4_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Uint8x16Defn::Methods[] = {
+#define SIMD_UINT8X16_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_uint8x16_##Name, Operands, 0),
+    UINT8X16_FUNCTION_LIST(SIMD_UINT8X16_FUNCTION_ITEM)
+#undef SIMD_UINT8X16_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Uint16x8Defn::Methods[] = {
+#define SIMD_UINT16X8_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_uint16x8_##Name, Operands, 0),
+    UINT16X8_FUNCTION_LIST(SIMD_UINT16X8_FUNCTION_ITEM)
+#undef SIMD_UINT16X8_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Uint32x4Defn::Methods[] = {
+#define SIMD_UINT32X4_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_uint32x4_##Name, Operands, 0),
+    UINT32X4_FUNCTION_LIST(SIMD_UINT32X4_FUNCTION_ITEM)
+#undef SIMD_UINT32X4_FUNCTION_ITEM
     JS_FS_END
 };
 
@@ -375,6 +414,9 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
       case SimdTypeDescr::Int8x16:   return FillLanes< ::Int8x16>(cx, result, args);
       case SimdTypeDescr::Int16x8:   return FillLanes< ::Int16x8>(cx, result, args);
       case SimdTypeDescr::Int32x4:   return FillLanes< ::Int32x4>(cx, result, args);
+      case SimdTypeDescr::Uint8x16:  return FillLanes< ::Uint8x16>(cx, result, args);
+      case SimdTypeDescr::Uint16x8:  return FillLanes< ::Uint16x8>(cx, result, args);
+      case SimdTypeDescr::Uint32x4:  return FillLanes< ::Uint32x4>(cx, result, args);
       case SimdTypeDescr::Float32x4: return FillLanes< ::Float32x4>(cx, result, args);
       case SimdTypeDescr::Float64x2: return FillLanes< ::Float64x2>(cx, result, args);
       case SimdTypeDescr::Bool8x16:  return FillLanes< ::Bool8x16>(cx, result, args);
@@ -451,6 +493,21 @@ js::InitSIMDClass(JSContext* cx, HandleObject obj)
     RootedObject i32x4(cx);
     i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, globalSimdObject, cx->names().int32x4);
     if (!i32x4)
+        return nullptr;
+
+    RootedObject u8x16(cx);
+    u8x16 = CreateAndBindSimdClass<Uint8x16Defn>(cx, global, globalSimdObject, cx->names().uint8x16);
+    if (!u8x16)
+        return nullptr;
+
+    RootedObject u16x8(cx);
+    u16x8 = CreateAndBindSimdClass<Uint16x8Defn>(cx, global, globalSimdObject, cx->names().uint16x8);
+    if (!u16x8)
+        return nullptr;
+
+    RootedObject u32x4(cx);
+    u32x4 = CreateAndBindSimdClass<Uint32x4Defn>(cx, global, globalSimdObject, cx->names().uint32x4);
+    if (!u32x4)
         return nullptr;
 
     RootedObject f32x4(cx);
@@ -927,9 +984,15 @@ struct NeverThrow
 template<>
 struct ThrowOnConvert<int32_t, float> : public NeverThrow {};
 
+template<>
+struct ThrowOnConvert<uint32_t, float> : public NeverThrow {};
+
 // All int32 can be safely converted to doubles.
 template<>
 struct ThrowOnConvert<int32_t, double> : public NeverThrow {};
+
+template<>
+struct ThrowOnConvert<uint32_t, double> : public NeverThrow {};
 
 // All floats can be safely converted to doubles.
 template<>
@@ -961,7 +1024,13 @@ template<>
 struct ThrowOnConvert<double, int32_t> : public ThrowIfNotInRange<double, int32_t> {};
 
 template<>
+struct ThrowOnConvert<double, uint32_t> : public ThrowIfNotInRange<double, uint32_t> {};
+
+template<>
 struct ThrowOnConvert<float, int32_t> : public ThrowIfNotInRange<float, int32_t> {};
+
+template<>
+struct ThrowOnConvert<float, uint32_t> : public ThrowIfNotInRange<float, uint32_t> {};
 
 template<typename V, typename Vret>
 static bool
@@ -970,7 +1039,10 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
     typedef typename V::Elem Elem;
     typedef typename Vret::Elem RetElem;
 
+    static_assert(!mozilla::IsSame<V,Vret>::value, "Can't convert SIMD type to itself");
     static_assert(V::lanes == Vret::lanes, "Can only convert from same number of lanes");
+    static_assert(!mozilla::IsIntegral<Elem>::value || !mozilla::IsIntegral<RetElem>::value,
+                  "Cannot convert between integer SIMD types");
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1 || !IsVectorObject<V>(args[0]))
@@ -995,7 +1067,12 @@ template<typename V, typename Vret>
 static bool
 FuncConvertBits(JSContext* cx, unsigned argc, Value* vp)
 {
+    typedef typename V::Elem Elem;
     typedef typename Vret::Elem RetElem;
+
+    static_assert(!mozilla::IsSame<V, Vret>::value, "Can't convert SIMD type to itself");
+    static_assert(V::lanes * sizeof(Elem) == Vret::lanes * sizeof(RetElem),
+                  "Can only bitcast from the same number of bits");
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1 || !IsVectorObject<V>(args[0]))
@@ -1232,12 +1309,40 @@ js::simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp)   \
 INT32X4_FUNCTION_LIST(DEFINE_SIMD_INT32X4_FUNCTION)
 #undef DEFINE_SIMD_INT32X4_FUNCTION
 
+#define DEFINE_SIMD_UINT8X16_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_uint8x16_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+UINT8X16_FUNCTION_LIST(DEFINE_SIMD_UINT8X16_FUNCTION)
+#undef DEFINE_SIMD_UINT8X16_FUNCTION
+
+#define DEFINE_SIMD_UINT16X8_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_uint16x8_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+UINT16X8_FUNCTION_LIST(DEFINE_SIMD_UINT16X8_FUNCTION)
+#undef DEFINE_SIMD_UINT16X8_FUNCTION
+
+#define DEFINE_SIMD_UINT32X4_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_uint32x4_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+UINT32X4_FUNCTION_LIST(DEFINE_SIMD_UINT32X4_FUNCTION)
+#undef DEFINE_SIMD_UINT32X4_FUNCTION
+
 #define DEFINE_SIMD_BOOL8X16_FUNCTION(Name, Func, Operands)        \
 bool                                                               \
 js::simd_bool8x16_##Name(JSContext* cx, unsigned argc, Value* vp)  \
 {                                                                  \
     return Func(cx, argc, vp);                                     \
 }
+
 BOOL8X16_FUNCTION_LIST(DEFINE_SIMD_BOOL8X16_FUNCTION)
 #undef DEFINE_SIMD_BOOL8X16_FUNCTION
 

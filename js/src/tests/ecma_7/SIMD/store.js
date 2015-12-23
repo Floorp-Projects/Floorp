@@ -93,6 +93,48 @@ function testStoreInt32x4(Buffer) {
     assertThrowsInstanceOf(() => SIMD.Float32x4.store(I32, 0, v), TypeError);
 }
 
+function testStoreUint8x16(Buffer) {
+    var I8 = new Uint8Array(new Buffer(32));
+
+    var v = SIMD.Uint8x16(0, 1, INT8_MAX, INT8_MIN, UINT8_MAX, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15);
+    testStore(I8, 'Uint8x16', 0, v);
+    testStore(I8, 'Uint8x16', 1, v);
+    testStore(I8, 'Uint8x16', 2, v);
+    testStore(I8, 'Uint8x16', 16, v);
+
+    assertThrowsInstanceOf(() => SIMD.Uint8x16.store(I8), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Uint8x16.store(I8, 0), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Uint16x8.store(I8, 0, v), TypeError);
+}
+
+function testStoreUint16x8(Buffer) {
+    var I16 = new Uint16Array(new Buffer(64));
+
+    var v = SIMD.Uint16x8(0, 1, INT16_MAX, INT16_MIN, 4, 5, 6, 7);
+    testStore(I16, 'Uint16x8', 0, v);
+    testStore(I16, 'Uint16x8', 1, v);
+    testStore(I16, 'Uint16x8', 2, v);
+    testStore(I16, 'Uint16x8', 24, v);
+
+    assertThrowsInstanceOf(() => SIMD.Uint16x8.store(I16), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Uint16x8.store(I16, 0), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Uint8x16.store(I16, 0, v), TypeError);
+}
+
+function testStoreUint32x4(Buffer) {
+    var I32 = new Uint32Array(new Buffer(64));
+
+    var v = SIMD.Uint32x4(0, 1, Math.pow(2,31) - 1, -Math.pow(2, 31));
+    testStore(I32, 'Uint32x4', 0, v);
+    testStore(I32, 'Uint32x4', 1, v);
+    testStore(I32, 'Uint32x4', 2, v);
+    testStore(I32, 'Uint32x4', 12, v);
+
+    assertThrowsInstanceOf(() => SIMD.Uint32x4.store(I32), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Uint32x4.store(I32, 0), TypeError);
+    assertThrowsInstanceOf(() => SIMD.Float32x4.store(I32, 0, v), TypeError);
+}
+
 function testStoreFloat32x4(Buffer) {
     var F32 = new Float32Array(new Buffer(64));
 
@@ -148,6 +190,9 @@ function testSharedArrayBufferCompat() {
     var Int8x16 = SIMD.Int8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
     var Int16x8 = SIMD.Int16x8(1, 2, 3, 4, 5, 6, 7, 8);
     var Int32x4 = SIMD.Int32x4(1, 2, 3, 4);
+    var Uint8x16 = SIMD.Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+    var Uint16x8 = SIMD.Uint16x8(1, 2, 3, 4, 5, 6, 7, 8);
+    var Uint32x4 = SIMD.Uint32x4(1, 2, 3, 4);
     var Float32x4 = SIMD.Float32x4(1, 2, 3, 4);
     var Float64x2 = SIMD.Float64x2(1, 2);
 
@@ -171,6 +216,15 @@ function testSharedArrayBufferCompat() {
         SIMD.Int32x4.store(ta, 0, Int32x4);
         for (var i = 0; i < 4; i++) assertEq(I32[i], [1, 2, 3, 4][i]);
 
+        SIMD.Uint8x16.store(ta, 0, Uint8x16);
+        for (var i = 0; i < 16; i++) assertEq(I8[i], [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16][i]);
+
+        SIMD.Uint16x8.store(ta, 0, Uint16x8);
+        for (var i = 0; i < 8; i++) assertEq(I16[i], [1, 2, 3, 4, 5, 6, 7, 8][i]);
+
+        SIMD.Uint32x4.store(ta, 0, Uint32x4);
+        for (var i = 0; i < 4; i++) assertEq(I32[i], [1, 2, 3, 4][i]);
+
         SIMD.Float32x4.store(ta, 0, Float32x4);
         for (var i = 0; i < 4; i++) assertEq(F32[i], [1, 2, 3, 4][i]);
 
@@ -188,6 +242,9 @@ function testSharedArrayBufferCompat() {
 testStoreInt8x16(ArrayBuffer);
 testStoreInt16x8(ArrayBuffer);
 testStoreInt32x4(ArrayBuffer);
+testStoreUint8x16(ArrayBuffer);
+testStoreUint16x8(ArrayBuffer);
+testStoreUint32x4(ArrayBuffer);
 testStoreFloat32x4(ArrayBuffer);
 testStoreFloat64x2(ArrayBuffer);
 
@@ -195,6 +252,9 @@ if (typeof SharedArrayBuffer != "undefined") {
   testStoreInt8x16(SharedArrayBuffer);
   testStoreInt16x8(SharedArrayBuffer);
   testStoreInt32x4(SharedArrayBuffer);
+  testStoreUint8x16(SharedArrayBuffer);
+  testStoreUint16x8(SharedArrayBuffer);
+  testStoreUint32x4(SharedArrayBuffer);
   testStoreFloat32x4(SharedArrayBuffer);
   testStoreFloat64x2(SharedArrayBuffer);
   testSharedArrayBufferCompat();

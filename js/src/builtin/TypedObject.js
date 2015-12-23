@@ -195,6 +195,44 @@ function TypedObjectGetSimd(descr, typedObj, offset) {
     var w = Load_int32(typedObj, offset + 12);
     return GetInt32x4TypeDescr()(x, y, z, w);
 
+  case JS_SIMDTYPEREPR_UINT8X16:
+    var s0 = Load_uint8(typedObj, offset + 0);
+    var s1 = Load_uint8(typedObj, offset + 1);
+    var s2 = Load_uint8(typedObj, offset + 2);
+    var s3 = Load_uint8(typedObj, offset + 3);
+    var s4 = Load_uint8(typedObj, offset + 4);
+    var s5 = Load_uint8(typedObj, offset + 5);
+    var s6 = Load_uint8(typedObj, offset + 6);
+    var s7 = Load_uint8(typedObj, offset + 7);
+    var s8 = Load_uint8(typedObj, offset + 8);
+    var s9 = Load_uint8(typedObj, offset + 9);
+    var s10 = Load_uint8(typedObj, offset + 10);
+    var s11 = Load_uint8(typedObj, offset + 11);
+    var s12 = Load_uint8(typedObj, offset + 12);
+    var s13 = Load_uint8(typedObj, offset + 13);
+    var s14 = Load_uint8(typedObj, offset + 14);
+    var s15 = Load_uint8(typedObj, offset + 15);
+    return GetUint8x16TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7,
+                                 s8, s9, s10, s11, s12, s13, s14, s15);
+
+  case JS_SIMDTYPEREPR_UINT16X8:
+    var s0 = Load_uint16(typedObj, offset + 0);
+    var s1 = Load_uint16(typedObj, offset + 2);
+    var s2 = Load_uint16(typedObj, offset + 4);
+    var s3 = Load_uint16(typedObj, offset + 6);
+    var s4 = Load_uint16(typedObj, offset + 8);
+    var s5 = Load_uint16(typedObj, offset + 10);
+    var s6 = Load_uint16(typedObj, offset + 12);
+    var s7 = Load_uint16(typedObj, offset + 14);
+    return GetUint16x8TypeDescr()(s0, s1, s2, s3, s4, s5, s6, s7);
+
+  case JS_SIMDTYPEREPR_UINT32X4:
+    var x = Load_uint32(typedObj, offset + 0);
+    var y = Load_uint32(typedObj, offset + 4);
+    var z = Load_uint32(typedObj, offset + 8);
+    var w = Load_uint32(typedObj, offset + 12);
+    return GetUint32x4TypeDescr()(x, y, z, w);
+
   case JS_SIMDTYPEREPR_BOOL8X16:
     var s0 = Load_int8(typedObj, offset + 0);
     var s1 = Load_int8(typedObj, offset + 1);
@@ -444,6 +482,40 @@ function TypedObjectSetSimd(descr, typedObj, offset, fromValue) {
       Store_int32(typedObj, offset + 8, Load_int32(fromValue, 8));
       Store_int32(typedObj, offset + 12, Load_int32(fromValue, 12));
       break;
+    case JS_SIMDTYPEREPR_UINT8X16:
+      Store_uint8(typedObj, offset + 0, Load_uint8(fromValue, 0));
+      Store_uint8(typedObj, offset + 1, Load_uint8(fromValue, 1));
+      Store_uint8(typedObj, offset + 2, Load_uint8(fromValue, 2));
+      Store_uint8(typedObj, offset + 3, Load_uint8(fromValue, 3));
+      Store_uint8(typedObj, offset + 4, Load_uint8(fromValue, 4));
+      Store_uint8(typedObj, offset + 5, Load_uint8(fromValue, 5));
+      Store_uint8(typedObj, offset + 6, Load_uint8(fromValue, 6));
+      Store_uint8(typedObj, offset + 7, Load_uint8(fromValue, 7));
+      Store_uint8(typedObj, offset + 8, Load_uint8(fromValue, 8));
+      Store_uint8(typedObj, offset + 9, Load_uint8(fromValue, 9));
+      Store_uint8(typedObj, offset + 10, Load_uint8(fromValue, 10));
+      Store_uint8(typedObj, offset + 11, Load_uint8(fromValue, 11));
+      Store_uint8(typedObj, offset + 12, Load_uint8(fromValue, 12));
+      Store_uint8(typedObj, offset + 13, Load_uint8(fromValue, 13));
+      Store_uint8(typedObj, offset + 14, Load_uint8(fromValue, 14));
+      Store_uint8(typedObj, offset + 15, Load_uint8(fromValue, 15));
+      break;
+    case JS_SIMDTYPEREPR_UINT16X8:
+      Store_uint16(typedObj, offset + 0, Load_uint16(fromValue, 0));
+      Store_uint16(typedObj, offset + 2, Load_uint16(fromValue, 2));
+      Store_uint16(typedObj, offset + 4, Load_uint16(fromValue, 4));
+      Store_uint16(typedObj, offset + 6, Load_uint16(fromValue, 6));
+      Store_uint16(typedObj, offset + 8, Load_uint16(fromValue, 8));
+      Store_uint16(typedObj, offset + 10, Load_uint16(fromValue, 10));
+      Store_uint16(typedObj, offset + 12, Load_uint16(fromValue, 12));
+      Store_uint16(typedObj, offset + 14, Load_uint16(fromValue, 14));
+      break;
+    case JS_SIMDTYPEREPR_UINT32X4:
+      Store_uint32(typedObj, offset + 0, Load_uint32(fromValue, 0));
+      Store_uint32(typedObj, offset + 4, Load_uint32(fromValue, 4));
+      Store_uint32(typedObj, offset + 8, Load_uint32(fromValue, 8));
+      Store_uint32(typedObj, offset + 12, Load_uint32(fromValue, 12));
+      break;
     default:
       assert(false, "Unhandled Simd type: " + type);
   }
@@ -575,6 +647,12 @@ function SimdProtoString(type) {
     return "Int16x8";
   case JS_SIMDTYPEREPR_INT32X4:
     return "Int32x4";
+  case JS_SIMDTYPEREPR_UINT8X16:
+    return "Uint8x16";
+  case JS_SIMDTYPEREPR_UINT16X8:
+    return "Uint16x8";
+  case JS_SIMDTYPEREPR_UINT32X4:
+    return "Uint32x4";
   case JS_SIMDTYPEREPR_FLOAT32X4:
     return "Float32x4";
   case JS_SIMDTYPEREPR_FLOAT64X2:
@@ -634,14 +712,14 @@ function SimdToSource() {
           var s6 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 5);
           var s7 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 6);
           var s8 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 7);
-          var s9 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 0);
-          var s10 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 1);
-          var s11 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 2);
-          var s12 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 3);
-          var s13 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 4);
-          var s14 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 5);
-          var s15 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 6);
-          var s16 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 7);
+          var s9 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 8);
+          var s10 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 9);
+          var s11 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 10);
+          var s12 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 11);
+          var s13 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 12);
+          var s14 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 13);
+          var s15 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 14);
+          var s16 = callFunction(std_SIMD_Int8x16_extractLane, null, this, 15);
           return `SIMD.${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8}, ${s9}, ${s10}, ${s11}, ${s12}, ${s13}, ${s14}, ${s15}, ${s16})`;
       }
       case JS_SIMDTYPEREPR_INT16X8: {
@@ -660,6 +738,43 @@ function SimdToSource() {
           var y = callFunction(std_SIMD_Int32x4_extractLane, null, this, 1);
           var z = callFunction(std_SIMD_Int32x4_extractLane, null, this, 2);
           var w = callFunction(std_SIMD_Int32x4_extractLane, null, this, 3);
+          return `SIMD.${protoString}(${x}, ${y}, ${z}, ${w})`;
+      }
+      case JS_SIMDTYPEREPR_UINT8X16: {
+          var s1 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 0);
+          var s2 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 1);
+          var s3 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 2);
+          var s4 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 3);
+          var s5 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 4);
+          var s6 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 5);
+          var s7 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 6);
+          var s8 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 7);
+          var s9 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 8);
+          var s10 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 9);
+          var s11 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 10);
+          var s12 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 11);
+          var s13 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 12);
+          var s14 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 13);
+          var s15 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 14);
+          var s16 = callFunction(std_SIMD_Uint8x16_extractLane, null, this, 15);
+          return `SIMD.${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8}, ${s9}, ${s10}, ${s11}, ${s12}, ${s13}, ${s14}, ${s15}, ${s16})`;
+      }
+      case JS_SIMDTYPEREPR_UINT16X8: {
+          var s1 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 0);
+          var s2 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 1);
+          var s3 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 2);
+          var s4 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 3);
+          var s5 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 4);
+          var s6 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 5);
+          var s7 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 6);
+          var s8 = callFunction(std_SIMD_Uint16x8_extractLane, null, this, 7);
+          return `SIMD.${protoString}(${s1}, ${s2}, ${s3}, ${s4}, ${s5}, ${s6}, ${s7}, ${s8})`;
+      }
+      case JS_SIMDTYPEREPR_UINT32X4: {
+          var x = callFunction(std_SIMD_Uint32x4_extractLane, null, this, 0);
+          var y = callFunction(std_SIMD_Uint32x4_extractLane, null, this, 1);
+          var z = callFunction(std_SIMD_Uint32x4_extractLane, null, this, 2);
+          var w = callFunction(std_SIMD_Uint32x4_extractLane, null, this, 3);
           return `SIMD.${protoString}(${x}, ${y}, ${z}, ${w})`;
       }
       case JS_SIMDTYPEREPR_FLOAT32X4: {

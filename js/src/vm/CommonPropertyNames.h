@@ -237,6 +237,9 @@
     macro(uint8Clamped, uint8Clamped, "uint8Clamped") \
     macro(uint16, uint16, "uint16") \
     macro(uint32, uint32, "uint32") \
+    macro(uint8x16, uint8x16, "Uint8x16") \
+    macro(uint16x8, uint16x8, "Uint16x8") \
+    macro(uint32x4, uint32x4, "Uint32x4") \
     macro(unsized, unsized, "unsized") \
     macro(unwatch, unwatch, "unwatch") \
     macro(url, url, "url") \

@@ -10,6 +10,9 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Uint8x16 = SIMD.Uint8x16;
+var Uint16x8 = SIMD.Uint16x8;
+var Uint32x4 = SIMD.Uint32x4;
 var Bool8x16 = SIMD.Bool8x16;
 var Bool16x8 = SIMD.Bool16x8;
 var Bool32x4 = SIMD.Bool32x4;
@@ -111,6 +114,63 @@ function testGreaterThanInt32x4(v, w) {
 }
 function testGreaterThanOrEqualInt32x4(v, w) {
     testBinaryCompare(v, w, Int32x4.greaterThanOrEqual, (x, y) => x >= y, Bool32x4);
+}
+
+function testEqualUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.equal, (x, y) => x == y, Bool8x16);
+}
+function testNotEqualUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.notEqual, (x, y) => x != y, Bool8x16);
+}
+function testLessThanUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.lessThan, (x, y) => x < y, Bool8x16);
+}
+function testLessThanOrEqualUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.lessThanOrEqual, (x, y) => x <= y, Bool8x16);
+}
+function testGreaterThanUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.greaterThan, (x, y) => x > y, Bool8x16);
+}
+function testGreaterThanOrEqualUint8x16(v, w) {
+    testBinaryCompare(v, w, Uint8x16.greaterThanOrEqual, (x, y) => x >= y, Bool8x16);
+}
+
+function testEqualUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.equal, (x, y) => x == y, Bool16x8);
+}
+function testNotEqualUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.notEqual, (x, y) => x != y, Bool16x8);
+}
+function testLessThanUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.lessThan, (x, y) => x < y, Bool16x8);
+}
+function testLessThanOrEqualUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.lessThanOrEqual, (x, y) => x <= y, Bool16x8);
+}
+function testGreaterThanUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.greaterThan, (x, y) => x > y, Bool16x8);
+}
+function testGreaterThanOrEqualUint16x8(v, w) {
+    testBinaryCompare(v, w, Uint16x8.greaterThanOrEqual, (x, y) => x >= y, Bool16x8);
+}
+
+function testEqualUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.equal, (x, y) => x == y, Bool32x4);
+}
+function testNotEqualUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.notEqual, (x, y) => x != y, Bool32x4);
+}
+function testLessThanUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.lessThan, (x, y) => x < y, Bool32x4);
+}
+function testLessThanOrEqualUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.lessThanOrEqual, (x, y) => x <= y, Bool32x4);
+}
+function testGreaterThanUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.greaterThan, (x, y) => x > y, Bool32x4);
+}
+function testGreaterThanOrEqualUint32x4(v, w) {
+    testBinaryCompare(v, w, Uint32x4.greaterThanOrEqual, (x, y) => x >= y, Bool32x4);
 }
 
 function test() {
@@ -219,6 +279,66 @@ function test() {
           testLessThanOrEqualInt32x4(v, w);
           testGreaterThanInt32x4(v, w);
           testGreaterThanOrEqualInt32x4(v, w);
+      }
+  }
+
+  var Uint8x16val = [
+      Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+      Uint8x16(-1, -2, -3, -4, -5, -6, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16),
+      Uint8x16(-1, 2, -3, 4, -5, 6, -7, 8, -9, 10, -11, 12, -13, 14, -15, 16),
+      Uint8x16(1, -2, 3, -4, 5, -6, 7, -8, 9, -10, 11, -12, 13, -14, 15, -16),
+      Uint8x16(UINT8_MAX, UINT8_MAX, 0, 0, 0 + 1, UINT8_MAX - 1, -7, -8, -9, -10, -11, -12, -13, -14, -15, -16),
+      Uint8x16(UINT8_MAX, 0, UINT8_MAX, 0, UINT8_MAX - 1, 0 + 1, 7, 8, 9, 10, 11, 12, 13, 14, 15, -16)
+  ];
+
+  for (v of Uint8x16val) {
+      for (w of Uint8x16val) {
+          testEqualUint8x16(v, w);
+          testNotEqualUint8x16(v, w);
+          testLessThanUint8x16(v, w);
+          testLessThanOrEqualUint8x16(v, w);
+          testGreaterThanUint8x16(v, w);
+          testGreaterThanOrEqualUint8x16(v, w);
+      }
+  }
+
+  var Uint16x8val = [
+      Uint16x8(1, 2, 3, 4, 5, 6, 7, 8),
+      Uint16x8(-1, -2, -3, -4, -5, -6, -7, -8),
+      Uint16x8(-1, 2, -3, 4, -5, 6, -7, 8),
+      Uint16x8(1, -2, 3, -4, 5, -6, 7, -8),
+      Uint16x8(UINT16_MAX, UINT16_MAX, 0, 0, 0 + 1, UINT16_MAX - 1, -7, -8),
+      Uint16x8(UINT16_MAX, 0, UINT16_MAX, 0, UINT16_MAX - 1, 0 + 1, 7, -8)
+  ];
+
+  for (v of Uint16x8val) {
+      for (w of Uint16x8val) {
+          testEqualUint16x8(v, w);
+          testNotEqualUint16x8(v, w);
+          testLessThanUint16x8(v, w);
+          testLessThanOrEqualUint16x8(v, w);
+          testGreaterThanUint16x8(v, w);
+          testGreaterThanOrEqualUint16x8(v, w);
+      }
+  }
+
+  var Uint32x4val = [
+      Uint32x4(1, 2, 3, 4),
+      Uint32x4(-1, -2, -3, -4),
+      Uint32x4(-1, 2, -3, 4),
+      Uint32x4(1, -2, 3, -4),
+      Uint32x4(UINT32_MAX, UINT32_MAX, 0, 0),
+      Uint32x4(UINT32_MAX, 0, UINT32_MAX, 0)
+  ];
+
+  for (v of Uint32x4val) {
+      for (w of Uint32x4val) {
+          testEqualUint32x4(v, w);
+          testNotEqualUint32x4(v, w);
+          testLessThanUint32x4(v, w);
+          testLessThanOrEqualUint32x4(v, w);
+          testGreaterThanUint32x4(v, w);
+          testGreaterThanOrEqualUint32x4(v, w);
       }
   }
 
