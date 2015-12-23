@@ -21,6 +21,7 @@
     macro(as, as, "as") \
     macro(ArrayBufferSpecies, ArrayBufferSpecies, "ArrayBufferSpecies") \
     macro(ArrayIteratorNext, ArrayIteratorNext, "ArrayIteratorNext") \
+    macro(ArraySpecies, ArraySpecies, "ArraySpecies") \
     macro(ArrayType, ArrayType, "ArrayType") \
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
