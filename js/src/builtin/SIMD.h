@@ -234,6 +234,7 @@
 
 #define INT8X16_BINARY_FUNCTION_LIST(V)                                               \
   V(add, (BinaryFunc<Int8x16, Add, Int8x16>), 2)                                      \
+  V(addSaturate, (BinaryFunc<Int8x16, AddSaturate, Int8x16>), 2)                      \
   V(and, (BinaryFunc<Int8x16, And, Int8x16>), 2)                                      \
   V(equal, (CompareFunc<Int8x16, Equal, Bool8x16>), 2)                                \
   V(extractLane, (ExtractLane<Int8x16>), 2)                                           \
@@ -246,6 +247,7 @@
   V(notEqual, (CompareFunc<Int8x16, NotEqual, Bool8x16>), 2)                          \
   V(or, (BinaryFunc<Int8x16, Or, Int8x16>), 2)                                        \
   V(sub, (BinaryFunc<Int8x16, Sub, Int8x16>), 2)                                      \
+  V(subSaturate, (BinaryFunc<Int8x16, SubSaturate, Int8x16>), 2)                      \
   V(shiftLeftByScalar, (BinaryScalar<Int8x16, ShiftLeft>), 2)                         \
   V(shiftRightByScalar, (BinaryScalar<Int8x16, ShiftRightArithmetic>), 2)             \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Int8x16, ShiftRightArithmetic>), 2)   \
@@ -283,6 +285,7 @@
 
 #define UINT8X16_BINARY_FUNCTION_LIST(V)                                              \
   V(add, (BinaryFunc<Uint8x16, Add, Uint8x16>), 2)                                    \
+  V(addSaturate, (BinaryFunc<Uint8x16, AddSaturate, Uint8x16>), 2)                    \
   V(and, (BinaryFunc<Uint8x16, And, Uint8x16>), 2)                                    \
   V(equal, (CompareFunc<Uint8x16, Equal, Bool8x16>), 2)                               \
   V(extractLane, (ExtractLane<Uint8x16>), 2)                                          \
@@ -295,6 +298,7 @@
   V(notEqual, (CompareFunc<Uint8x16, NotEqual, Bool8x16>), 2)                         \
   V(or, (BinaryFunc<Uint8x16, Or, Uint8x16>), 2)                                      \
   V(sub, (BinaryFunc<Uint8x16, Sub, Uint8x16>), 2)                                    \
+  V(subSaturate, (BinaryFunc<Uint8x16, SubSaturate, Uint8x16>), 2)                    \
   V(shiftLeftByScalar, (BinaryScalar<Uint8x16, ShiftLeft>), 2)                        \
   V(shiftRightByScalar, (BinaryScalar<Uint8x16, ShiftRightLogical>), 2)               \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Uint8x16, ShiftRightArithmetic>), 2)  \
@@ -332,6 +336,7 @@
 
 #define INT16X8_BINARY_FUNCTION_LIST(V)                                               \
   V(add, (BinaryFunc<Int16x8, Add, Int16x8>), 2)                                      \
+  V(addSaturate, (BinaryFunc<Int16x8, AddSaturate, Int16x8>), 2)                      \
   V(and, (BinaryFunc<Int16x8, And, Int16x8>), 2)                                      \
   V(equal, (CompareFunc<Int16x8, Equal, Bool16x8>), 2)                                \
   V(extractLane, (ExtractLane<Int16x8>), 2)                                           \
@@ -344,6 +349,7 @@
   V(notEqual, (CompareFunc<Int16x8, NotEqual, Bool16x8>), 2)                          \
   V(or, (BinaryFunc<Int16x8, Or, Int16x8>), 2)                                        \
   V(sub, (BinaryFunc<Int16x8, Sub, Int16x8>), 2)                                      \
+  V(subSaturate, (BinaryFunc<Int16x8, SubSaturate, Int16x8>), 2)                      \
   V(shiftLeftByScalar, (BinaryScalar<Int16x8, ShiftLeft>), 2)                         \
   V(shiftRightByScalar, (BinaryScalar<Int16x8, ShiftRightArithmetic>), 2)             \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Int16x8, ShiftRightArithmetic>), 2)   \
@@ -381,6 +387,7 @@
 
 #define UINT16X8_BINARY_FUNCTION_LIST(V)                                              \
   V(add, (BinaryFunc<Uint16x8, Add, Uint16x8>), 2)                                    \
+  V(addSaturate, (BinaryFunc<Uint16x8, AddSaturate, Uint16x8>), 2)                    \
   V(and, (BinaryFunc<Uint16x8, And, Uint16x8>), 2)                                    \
   V(equal, (CompareFunc<Uint16x8, Equal, Bool16x8>), 2)                               \
   V(extractLane, (ExtractLane<Uint16x8>), 2)                                          \
@@ -393,6 +400,7 @@
   V(notEqual, (CompareFunc<Uint16x8, NotEqual, Bool16x8>), 2)                         \
   V(or, (BinaryFunc<Uint16x8, Or, Uint16x8>), 2)                                      \
   V(sub, (BinaryFunc<Uint16x8, Sub, Uint16x8>), 2)                                    \
+  V(subSaturate, (BinaryFunc<Uint16x8, SubSaturate, Uint16x8>), 2)                    \
   V(shiftLeftByScalar, (BinaryScalar<Uint16x8, ShiftLeft>), 2)                        \
   V(shiftRightByScalar, (BinaryScalar<Uint16x8, ShiftRightLogical>), 2)               \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Uint16x8, ShiftRightArithmetic>), 2)  \

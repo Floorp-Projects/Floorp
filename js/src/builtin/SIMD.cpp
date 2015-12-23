@@ -699,6 +699,37 @@ struct ShiftRightLogical {
     }
 };
 
+// Saturating arithmetic is only defined on types smaller than int.
+// Clamp `x` into the range supported by the integral type T.
+template<typename T>
+static T
+Saturate(int x)
+{
+    static_assert(mozilla::IsIntegral<T>::value, "Only integer saturation supported");
+    static_assert(sizeof(T) < sizeof(int), "Saturating int-sized arithmetic is not safe");
+    const T lower = mozilla::MinValue<T>::value;
+    const T upper = mozilla::MaxValue<T>::value;
+    if (x > int(upper))
+        return upper;
+    if (x < int(lower))
+        return lower;
+    return T(x);
+}
+
+// Since signed integer overflow is undefined behavior in C++, it would be
+// wildly irresponsible to attempt something as dangerous as adding two numbers
+// coming from user code. However, in this case we know that T is smaller than
+// int, so there is no way these operations can cause overflow. The
+// static_assert in Saturate() enforces this for us.
+template<typename T>
+struct AddSaturate {
+    static T apply(T l, T r) { return Saturate<T>(l + r); }
+};
+template<typename T>
+struct SubSaturate {
+    static T apply(T l, T r) { return Saturate<T>(l - r); }
+};
+
 } // namespace js
 
 template<typename Out>
