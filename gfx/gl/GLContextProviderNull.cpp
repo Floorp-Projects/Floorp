@@ -9,7 +9,7 @@ namespace mozilla {
 namespace gl {
 
 already_AddRefed<GLContext>
-GLContextProviderNull::CreateForWindow(nsIWidget*)
+GLContextProviderNull::CreateForWindow(nsIWidget*, bool aForceAccelerated)
 {
     return nullptr;
 }
