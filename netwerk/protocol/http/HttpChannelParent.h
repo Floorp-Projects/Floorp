@@ -177,6 +177,7 @@ private:
                              const uint32_t& count);
   void DivertOnStopRequest(const nsresult& statusCode);
   void DivertComplete();
+  void MaybeFlushPendingDiversion();
 
   void SynthesizeResponse(nsIInterceptedChannel* aChannel);
 
@@ -215,10 +216,14 @@ private:
   nsAutoPtr<nsHttpResponseHead> mSynthesizedResponseHead;
 
   RefPtr<HttpChannelParentListener> mParentListener;
-  // This is listener we are diverting to.
+  // The listener we are diverting to or will divert to if mPendingDiversion
+  // is set.
   nsCOMPtr<nsIStreamListener> mDivertListener;
   // Set to the canceled status value if the main channel was canceled.
   nsresult mStatus;
+  // Indicates that diversion has been requested, but we could not start it
+  // yet because the channel is still being opened with a synthesized response.
+  bool mPendingDiversion;
   // Once set, no OnStart/OnData/OnStop calls should be accepted; conversely, it
   // must be set when RecvDivertOnData/~DivertOnStop/~DivertComplete are
   // received from the child channel.
