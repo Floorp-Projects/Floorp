@@ -5,6 +5,9 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Uint8x16 = SIMD.Uint8x16;
+var Uint16x8 = SIMD.Uint16x8;
+var Uint32x4 = SIMD.Uint32x4;
 var Bool8x16 = SIMD.Bool8x16;
 var Bool16x8 = SIMD.Bool16x8;
 var Bool32x4 = SIMD.Bool32x4;
@@ -57,6 +60,55 @@ function TestInt32x4Ctor() {
     assertEqX4(Int32x4(),                   [0,0,0,0]);
     assertEqX4(Int32x4(1, 2, 3, 4, 5),      [1,2,3,4]);
     assertEqX4(Int32x4(1, 2, 3, 4, 5, 6),   [1,2,3,4]);
+}
+
+function TestUint8x16Ctor() {
+    // Constructors.
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),   [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),       [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14),           [1,2,3,4,5,6,7,8,9,10,11,12,13,14,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13),               [1,2,3,4,5,6,7,8,9,10,11,12,13,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),                   [1,2,3,4,5,6,7,8,9,10,11,12,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),                       [1,2,3,4,5,6,7,8,9,10,11,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10),                           [1,2,3,4,5,6,7,8,9,10,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9),                               [1,2,3,4,5,6,7,8,9,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8),                                  [1,2,3,4,5,6,7,8,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7),                                     [1,2,3,4,5,6,7,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6),                                        [1,2,3,4,5,6,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5),                                           [1,2,3,4,5,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4),                                              [1,2,3,4,0,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3),                                                 [1,2,3,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2),                                                    [1,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1),                                                       [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(),                                                        [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+    assertEqX16(Uint8x16(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18), [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]);
+}
+
+function TestUint16x8Ctor() {
+    // Constructors.
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5, 6, 7, 8),        [1,2,3,4,5,6,7,8]);
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5, 6, 7),           [1,2,3,4,5,6,7,0]);
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5, 6),              [1,2,3,4,5,6,0,0]);
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5),                 [1,2,3,4,5,0,0,0]);
+    assertEqX8(Uint16x8(1, 2, 3, 4),                    [1,2,3,4,0,0,0,0]);
+    assertEqX8(Uint16x8(1, 2, 3),                       [1,2,3,0,0,0,0,0]);
+    assertEqX8(Uint16x8(1, 2),                          [1,2,0,0,0,0,0,0]);
+    assertEqX8(Uint16x8(1),                             [1,0,0,0,0,0,0,0]);
+    assertEqX8(Uint16x8(),                              [0,0,0,0,0,0,0,0]);
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5, 6, 7, 8, 9),     [1,2,3,4,5,6,7,8]);
+    assertEqX8(Uint16x8(1, 2, 3, 4, 5, 6, 7, 8, 9, 10), [1,2,3,4,5,6,7,8]);
+}
+
+function TestUint32x4Ctor() {
+    // Constructors.
+    assertEqX4(Uint32x4(1, 2, 3, 4),         [1,2,3,4]);
+    assertEqX4(Uint32x4(1, 2, 3),            [1,2,3,0]);
+    assertEqX4(Uint32x4(1, 2),               [1,2,0,0]);
+    assertEqX4(Uint32x4(1),                  [1,0,0,0]);
+    assertEqX4(Uint32x4(),                   [0,0,0,0]);
+    assertEqX4(Uint32x4(1, 2, 3, 4, 5),      [1,2,3,4]);
+    assertEqX4(Uint32x4(1, 2, 3, 4, 5, 6),   [1,2,3,4]);
 }
 
 function TestFloat32x4Ctor() {
@@ -159,6 +211,9 @@ function test() {
     TestInt8x16Ctor();
     TestInt16x8Ctor();
     TestInt32x4Ctor();
+    TestUint8x16Ctor();
+    TestUint16x8Ctor();
+    TestUint32x4Ctor();
     TestBool8x16Ctor();
     TestBool16x8Ctor();
     TestBool32x4Ctor();

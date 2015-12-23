@@ -3,6 +3,9 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Uint8x16 = SIMD.Uint8x16;
+var Uint16x8 = SIMD.Uint16x8;
+var Uint32x4 = SIMD.Uint32x4;
 var Bool8x16 = SIMD.Bool8x16;
 var Bool16x8 = SIMD.Bool16x8;
 var Bool32x4 = SIMD.Bool32x4;
@@ -146,6 +149,66 @@ function testInt32x4not() {
   ];
   for (var [v,w] of valsExp) {
     assertEqX4(Int32x4.not(Int32x4(...v)), w);
+  }
+}
+
+function testUint8x16neg() {
+  var vals = [
+    [[  1,   2,   3,   4,   5,   6,   7, 0, -1, -2, -3, -4, UINT8_MAX,   INT8_MAX, 0, 0],
+     [255, 254, 253, 252, 251, 250, 249, 0, 1,   2,  3,  4,         1, INT8_MAX+2, 0, 0]]
+  ];
+  for (var [v,w] of vals) {
+    assertEqX16(Uint8x16.neg(Uint8x16(...v)), w);
+  }
+}
+
+function testUint8x16not() {
+  var vals = [
+    [[1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, 0, INT8_MIN, INT8_MAX],
+     [1, 2, 3, 4, 5, 6, 7, -1, -2, -3, -4, -5, -6, 0, INT8_MIN, INT8_MAX].map((x) => ~x << 24 >>> 24)]
+  ];
+  for (var [v,w] of vals) {
+    assertEqX16(Uint8x16.not(Uint8x16(...v)), w);
+  }
+}
+
+function testUint16x8neg() {
+  var vals = [
+    [[1, 2, UINT16_MAX, -1, -2, 0, INT16_MIN, INT16_MAX],
+     [1, 2, UINT16_MAX, -1, -2, 0, INT16_MIN, INT16_MAX].map((x) => -x << 16 >>> 16)]
+  ];
+  for (var [v,w] of vals) {
+    assertEqX8(Uint16x8.neg(Uint16x8(...v)), w);
+  }
+}
+
+function testUint16x8not() {
+  var vals = [
+    [[1, 2, UINT16_MAX, -1, -2, 0, INT16_MIN, INT16_MAX],
+     [1, 2, UINT16_MAX, -1, -2, 0, INT16_MIN, INT16_MAX].map((x) => ~x << 16 >>> 16)]
+  ];
+  for (var [v,w] of vals) {
+    assertEqX8(Uint16x8.not(Uint16x8(...v)), w);
+  }
+}
+
+function testUint32x4neg() {
+  var valsExp = [
+    [[1, 2, 3, 4], [-1 >>> 0, -2 >>> 0, -3 >>> 0, -4 >>> 0]],
+    [[INT32_MAX, INT32_MIN, -0, 0], [-INT32_MAX >>> 0, -INT32_MIN >>> 0, 0, 0]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX4(Uint32x4.neg(Uint32x4(...v)), w);
+  }
+}
+
+function testUint32x4not() {
+  var valsExp = [
+    [[1, 2, 3, 4], [~1 >>> 0, ~2 >>> 0, ~3 >>> 0, ~4 >>> 0]],
+    [[INT32_MAX, INT32_MIN, UINT32_MAX, 0], [~INT32_MAX >>> 0, ~INT32_MIN >>> 0, 0,  ~0 >>> 0]]
+  ];
+  for (var [v,w] of valsExp) {
+    assertEqX4(Uint32x4.not(Uint32x4(...v)), w);
   }
 }
 
@@ -312,6 +375,15 @@ function test() {
 
   testInt32x4neg();
   testInt32x4not();
+
+  testUint8x16neg();
+  testUint8x16not();
+
+  testUint16x8neg();
+  testUint16x8not();
+
+  testUint32x4neg();
+  testUint32x4not();
 
   testBool8x16not();
   testBool8x16allTrue();
