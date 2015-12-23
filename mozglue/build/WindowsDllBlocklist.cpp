@@ -187,11 +187,6 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "grabdll.dll", MAKE_VERSION(2, 6, 1, 0) },
   { "grabkernel.dll", MAKE_VERSION(1, 0, 0, 1) },
 
-  // Nvidia Network Access Manager, bug 1233237
-  { "nvappfilter.dll", MAKE_VERSION(2, 2, 0, 6531) },
-  { "nvlsp.dll", MAKE_VERSION(2, 2, 0, 7325) },
-  { "nvlsp64.dll", MAKE_VERSION(2, 2, 0, 7325) },
-
   { nullptr, 0 }
 };
 
