@@ -10,7 +10,10 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
+
+/* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* test_simple() {
   function runTests(cx, assertTrue, finish) {
@@ -25,7 +28,7 @@ add_task(function* test_simple() {
         finish();
       }
 
-      var req = new XMLHttpRequest();
+      let req = new XMLHttpRequest();
       if (shouldFail) {
         req.addEventListener("load", failListener);
         req.addEventListener("error", passListener);

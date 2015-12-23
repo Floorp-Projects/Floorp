@@ -10,11 +10,10 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
-add_task(function* test_contentscript()
-{
+add_task(function* test_contentscript() {
   function backgroundScript() {
     browser.runtime.onMessage.addListener(([msg, expectedState, readyState], sender) => {
       if (msg == "chrome-namespace-ok") {
@@ -39,8 +38,8 @@ add_task(function* test_contentscript()
   }
 
   function contentScript() {
-    var manifest = browser.runtime.getManifest();
-    manifest.applications.gecko.id;
+    let manifest = browser.runtime.getManifest();
+    void manifest.applications.gecko.id;
     chrome.runtime.sendMessage(["chrome-namespace-ok"]);
   }
 
@@ -50,23 +49,23 @@ add_task(function* test_contentscript()
         {
           "matches": ["http://mochi.test/*/file_sample.html"],
           "js": ["content_script_start.js"],
-          "run_at": "document_start"
+          "run_at": "document_start",
         },
         {
           "matches": ["http://mochi.test/*/file_sample.html"],
           "js": ["content_script_end.js"],
-          "run_at": "document_end"
+          "run_at": "document_end",
         },
         {
           "matches": ["http://mochi.test/*/file_sample.html"],
           "js": ["content_script_idle.js"],
-          "run_at": "document_idle"
+          "run_at": "document_idle",
         },
         {
           "matches": ["http://mochi.test/*/file_sample.html"],
           "js": ["content_script.js"],
-          "run_at": "document_idle"
-        }
+          "run_at": "document_idle",
+        },
       ],
     },
     background: "(" + backgroundScript.toString() + ")()",
