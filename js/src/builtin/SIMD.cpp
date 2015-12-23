@@ -1082,6 +1082,8 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
     typedef typename V::Elem Elem;
     typedef typename Vret::Elem RetElem;
 
+    static_assert(V::lanes == Vret::lanes, "Can only convert from same number of lanes");
+
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() != 1 || !IsVectorObject<V>(args[0]))
         return ErrorBadArgs(cx);
@@ -1089,7 +1091,7 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
     Elem* val = TypedObjectMemory<Elem*>(args[0]);
 
     RetElem result[Vret::lanes];
-    for (unsigned i = 0; i < Min(V::lanes, Vret::lanes); i++) {
+    for (unsigned i = 0; i < V::lanes; i++) {
         if (ThrowOnConvert<Elem, RetElem>::value(val[i])) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                  JSMSG_SIMD_FAILED_CONVERSION);
@@ -1097,10 +1099,6 @@ FuncConvert(JSContext* cx, unsigned argc, Value* vp)
         }
         result[i] = ConvertScalar<RetElem>(val[i]);
     }
-
-    // Fill remaining lanes with 0
-    for (unsigned i = V::lanes; i < Vret::lanes; i++)
-        result[i] = 0;
 
     return StoreResult<Vret>(cx, args, result);
 }
