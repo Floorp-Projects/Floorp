@@ -254,7 +254,7 @@ Index::Index(const nsTArray<Indice>& aIndex,
     int64_t lastOffset = 0;
     for (size_t i = 0; i < aIndex.Length(); i++) {
       const Indice& indice = aIndex[i];
-      if (indice.sync) {
+      if (indice.sync || mIsAudio) {
         haveSync = true;
       }
       if (!haveSync) {
@@ -267,7 +267,7 @@ Index::Index(const nsTArray<Indice>& aIndex,
       sample.mCompositionRange = Interval<Microseconds>(indice.start_composition,
                                                         indice.end_composition);
       sample.mDecodeTime = indice.start_decode;
-      sample.mSync = indice.sync;
+      sample.mSync = indice.sync || mIsAudio;
       // FIXME: Make this infallible after bug 968520 is done.
       MOZ_ALWAYS_TRUE(mIndex.AppendElement(sample, fallible));
       if (indice.start_offset < lastOffset) {
