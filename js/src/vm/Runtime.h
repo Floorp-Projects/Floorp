@@ -842,8 +842,8 @@ struct JSRuntime : public JS::shadow::Runtime,
         return &interrupt_;
     }
 
-    /* Set when handling a signal for a thread associated with this runtime. */
-    bool handlingSignal;
+    // Set when handling a segfault in the asm.js signal handler.
+    bool handlingSegFault;
 
     JSInterruptCallback interruptCallback;
 
