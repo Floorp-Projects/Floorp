@@ -58,6 +58,10 @@ RESOURCE_FILES.child += [
 
 DEFINES['FOO'] = 'foo'
 
+JAR_MANIFESTS += [
+    'jar.mn',
+]
+
 DIRS += [
     'app',
 ]
