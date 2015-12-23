@@ -311,16 +311,10 @@ JitcodeGlobalEntry::createScriptString(JSContext* cx, JSScript* script, size_t* 
     // If the script has a function, try calculating its name.
     bool hasName = false;
     size_t nameLength = 0;
-    mozilla::UniquePtr<char, JS::FreePolicy> nameStr = nullptr;
+    UniqueChars nameStr;
     JSFunction* func = script->functionDelazifying();
     if (func && func->displayAtom()) {
-        JSAtom* atom = func->displayAtom();
-
-        JS::AutoCheckCannotGC nogc;
-        nameStr = mozilla::UniquePtr<char, JS::FreePolicy>(
-            atom->hasLatin1Chars() ?
-                JS::CharsToNewUTF8CharsZ(cx, atom->latin1Range(nogc)).c_str()
-              : JS::CharsToNewUTF8CharsZ(cx, atom->twoByteRange(nogc)).c_str());
+        nameStr = StringToNewUTF8CharsZ(cx, *func->displayAtom());
         if (!nameStr)
             return nullptr;
 
