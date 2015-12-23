@@ -1438,11 +1438,21 @@ HttpChannelParent::SuspendForDiversion()
     return NS_ERROR_UNEXPECTED;
   }
 
+  nsresult rv = NS_OK;
+
   // Try suspending the channel. Allow it to fail, since OnStopRequest may have
-  // been called and thus the channel may not be pending.
-  nsresult rv = mChannel->Suspend();
-  MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
-  mSuspendedForDiversion = NS_SUCCEEDED(rv);
+  // been called and thus the channel may not be pending.  If we've already
+  // automatically suspended after synthesizing the response, then we don't
+  // need to suspend again here.
+  if (!mSuspendAfterSynthesizeResponse) {
+    rv = mChannel->Suspend();
+    MOZ_ASSERT(NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_AVAILABLE);
+    mSuspendedForDiversion = NS_SUCCEEDED(rv);
+  } else {
+    // Take ownership of the automatic suspend that occurred after synthesizing
+    // the response.
+    mSuspendedForDiversion = true;
+  }
 
   rv = mParentListener->SuspendForDiversion();
   MOZ_ASSERT(NS_SUCCEEDED(rv));
