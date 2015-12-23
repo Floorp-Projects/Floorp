@@ -17,7 +17,7 @@
 // run_myipaddress_test();
 // run_failed_script_test();
 // run_isresolvable_test();
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var ios = Components.classes["@mozilla.org/network/io-service;1"]
                     .getService(Components.interfaces.nsIIOService);
@@ -172,10 +172,14 @@ resolveCallback.prototype = {
 };
 
 function run_filter_test() {
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
 
   // Verify initial state
   var cb = new resolveCallback();
@@ -198,10 +202,14 @@ function filter_test0_1(pi) {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test0_2;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -214,10 +222,14 @@ function filter_test0_2(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test0_3;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -232,10 +244,14 @@ function filter_test0_3(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test0_4;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -248,10 +264,14 @@ function filter_test0_4(pi)
   pps.registerChannelFilter(filter03, 10);
   var cb = new resolveCallback();
   cb.nextFunction = filter_test0_5;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -333,10 +353,14 @@ function run_filter_test2() {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test1_1;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -348,10 +372,14 @@ function filter_test1_1(pi) {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test1_2;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -364,10 +392,14 @@ function filter_test1_2(pi) {
 
   var cb = new resolveCallback();
   cb.nextFunction = filter_test1_3;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -379,10 +411,15 @@ function filter_test1_3(pi) {
 var filter_3_1;
 
 function run_filter_test3() {
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Push a filter and verify the results asynchronously
 
   filter_3_1 = new TestFilter("http", "foo", 8080, 0, 10);
@@ -400,10 +437,15 @@ function filter_test3_1(pi) {
 }
 
 function run_pref_test() {
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Verify 'direct' setting
 
   prefs.setIntPref("network.proxy.type", 0);
@@ -422,10 +464,14 @@ function pref_test1_1(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = pref_test1_2;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -440,10 +486,14 @@ function pref_test1_2(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = pref_test1_3;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -460,10 +510,14 @@ function pref_test1_3(pi)
 
   var cb = new resolveCallback();
   cb.nextFunction = pref_test1_4;
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   var req = pps.asyncResolve(channel, 0, cb);
 }
 
@@ -521,10 +575,15 @@ function run_pac_test() {
             'function FindProxyForURL(url, host) {' +
             '  return "PROXY foopy:8080; DIRECT";' +
             '}';
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Configure PAC
 
   prefs.setIntPref("network.proxy.type", 2);
@@ -537,10 +596,15 @@ function run_pac2_test() {
             'function FindProxyForURL(url, host) {' +
             '  return "HTTPS foopy:8080; DIRECT";' +
             '}';
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Configure PAC
   originalTLSProxy = prefs.getBoolPref("network.proxy.proxy_over_tls");
 
@@ -555,10 +619,15 @@ function run_pac3_test() {
             'function FindProxyForURL(url, host) {' +
             '  return "HTTPS foopy:8080; DIRECT";' +
             '}';
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Configure PAC
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
   prefs.setBoolPref("network.proxy.proxy_over_tls", false);
@@ -593,10 +662,14 @@ function run_pac4_test() {
             ' && myAppOrigin() == "' + appOrigin + '")' +
             '   return "PROXY foopy:8080; DIRECT";' +
             '}';
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   channel.notificationCallbacks =
     AppsUtils.createLoadContext(appId, isInBrowser);
 
@@ -640,10 +713,15 @@ TestResolveCancelationCallback.prototype = {
 };
 
 function run_pac_cancel_test() {
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   // Configure PAC
   var pac = 'data:text/plain,' +
             'function FindProxyForURL(url, host) {' +
@@ -683,10 +761,15 @@ function check_host_filters_cb()
 function check_host_filter(i) {
   var uri;
   dump("*** uri=" + hostList[i] + " bShouldBeFiltered=" + bShouldBeFiltered + "\n");
-    var channel = NetUtil.newChannel({
-    uri: hostList[i],
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2(hostList[i],
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   var cb = new resolveCallback();
   cb.nextFunction = host_filter_cb;
   var req = pps.asyncResolve(channel, 0, cb);
@@ -789,10 +872,15 @@ function run_myipaddress_test()
 
   // no traffic to this IP is ever sent, it is just a public IP that
   // does not require DNS to determine a route.
-  var channel = NetUtil.newChannel({
-    uri: "http://192.0.43.10/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://192.0.43.10/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
@@ -827,10 +915,14 @@ function run_myipaddress_test_2()
             ' return "PROXY " + myaddr + ":5678";' +
             '}';
 
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
@@ -859,10 +951,15 @@ function run_failed_script_test()
   var pac = 'data:text/plain,' +
             '\nfor(;\n';
 
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
@@ -888,11 +985,15 @@ function failed_script_callback(pi)
   obs = obs.QueryInterface(Components.interfaces.nsIObserverService);
   obs.addObserver(directFilterListener, "http-on-modify-request", false);
 
-  var chan = NetUtil.newChannel({
-    uri: "http://127.0.0.1:7247",
-    loadUsingSystemPrincipal: true
-  });
-  chan.asyncOpen2(directFilterListener);
+  var chan = ios.newChannel2("http://127.0.0.1:7247",
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
+  chan.asyncOpen(directFilterListener, chan);
 }
 
 var directFilterListener = {
@@ -937,10 +1038,15 @@ function run_isresolvable_test()
             ' return "PROXY 127.0.0.1:1234";' +
             '}';
 
-  var channel = NetUtil.newChannel({
-    uri: "http://www.mozilla.org/",
-    loadUsingSystemPrincipal: true
-  });
+  var channel = ios.newChannel2("http://www.mozilla.org/",
+                                null,
+                                null,
+                                null,      // aLoadingNode
+                                Services.scriptSecurityManager.getSystemPrincipal(),
+                                null,      // aTriggeringPrincipal
+                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsIContentPolicy.TYPE_OTHER);
+
   prefs.setIntPref("network.proxy.type", 2);
   prefs.setCharPref("network.proxy.autoconfig_url", pac);
 
