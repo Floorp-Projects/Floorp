@@ -349,11 +349,7 @@ SPSProfiler::allocProfileString(JSScript* script, JSFunction* maybeFun)
     // Construct the descriptive string.
     DebugOnly<size_t> ret;
     if (atom) {
-        JS::AutoCheckCannotGC nogc;
-        auto atomStr = mozilla::UniquePtr<char, JS::FreePolicy>(
-            atom->hasLatin1Chars()
-            ? JS::CharsToNewUTF8CharsZ(nullptr, atom->latin1Range(nogc)).c_str()
-            : JS::CharsToNewUTF8CharsZ(nullptr, atom->twoByteRange(nogc)).c_str());
+        UniqueChars atomStr = StringToNewUTF8CharsZ(nullptr, *atom);
         if (!atomStr)
             return nullptr;
         ret = JS_snprintf(cstr, len + 1, "%s (%s:%" PRIu64 ")", atomStr.get(), filename, lineno);
