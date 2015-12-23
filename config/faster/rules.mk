@@ -31,8 +31,6 @@
 #   preprocessing
 # - INSTALL_MANIFESTS, which defines the list of base directories handled
 #   by install manifests, see further below
-# - MANIFEST_TARGETS, which defines the file paths of chrome manifests, see
-#   further below
 #
 # A convention used between this file and the Makefile including it is that
 # global Make variables names are uppercase, while "local" Make variables
@@ -42,7 +40,6 @@
 default: $(addprefix install-,$(INSTALL_MANIFESTS))
 
 # Explicit files to be built for a default build
-default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
 ifndef TEST_MOZBUILD
 default: $(TOPOBJDIR)/dist/bin/platform.ini
 endif
@@ -112,20 +109,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		$(ACDEFINES) \
 		$(MOZ_DEBUG_DEFINES) \
 		install_$(subst /,_,$*)
-
-# Create some chrome manifests
-# This rule is forced to run every time because it may be updating files that
-# already exit.
-#
-# The list of chrome manifests is given in MANIFEST_TARGETS, relative to the
-# top object directory. The content for those manifests is given in the
-# `content` variable associated with the target. For example:
-#   MANIFEST_TARGETS = foo
-#   $(TOPOBJDIR)/foo: content = "manifest foo.manifest" "manifest bar.manifest"
-$(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
-	$(PYTHON) -m mozbuild.action.buildlist \
-		$@ \
-		$(content)
 
 # ============================================================================
 # Below is a set of additional dependencies and variables used to build things

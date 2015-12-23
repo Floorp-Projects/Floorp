@@ -33,7 +33,7 @@ class FasterMakeBackend(CommonBackend):
         self._seen_directories = set()
         self._defines = dict()
 
-        self._manifest_entries = OrderedDefaultDict(list)
+        self._manifest_entries = OrderedDefaultDict(set)
 
         self._install_manifests = OrderedDefaultDict(InstallManifest)
 
@@ -94,9 +94,8 @@ class FasterMakeBackend(CommonBackend):
             if obj.path != top_level:
                 entry = 'manifest %s' % mozpath.relpath(obj.path,
                                                         obj.install_target)
-                if entry not in self._manifest_entries[top_level]:
-                    self._manifest_entries[top_level].append(entry)
-            self._manifest_entries[obj.path].append(str(obj.entry))
+                self._manifest_entries[top_level].add(entry)
+            self._manifest_entries[obj.path].add(str(obj.entry))
 
         elif isinstance(obj, XPIDLFile):
             self._has_xpidl = True
@@ -208,15 +207,14 @@ class FasterMakeBackend(CommonBackend):
                                                      jarinfo.name))
             manifest += '.manifest'
             for m in jarinfo.chrome_manifests:
-                self._manifest_entries[manifest].append(
+                self._manifest_entries[manifest].add(
                     m.replace('%', mozpath.basename(jarinfo.name) + '/'))
 
             if jarinfo.name != 'chrome':
                 manifest = mozpath.normpath(mozpath.join(install_target,
                                                          'chrome.manifest'))
                 entry = 'manifest %s.manifest' % jarinfo.name
-                if entry not in self._manifest_entries[manifest]:
-                    self._manifest_entries[manifest].append(entry)
+                self._manifest_entries[manifest].add(entry)
 
     def consume_finished(self):
         mk = Makefile()
@@ -237,16 +235,17 @@ class FasterMakeBackend(CommonBackend):
         ):
             mk.add_statement('%s = %s' % (var, self.environment.substs[var]))
 
+        install_manifests_bases = self._install_manifests.keys()
+
         # Add information for chrome manifest generation
         manifest_targets = []
 
         for target, entries in self._manifest_entries.iteritems():
             manifest_targets.append(target)
-            target = '$(TOPOBJDIR)/%s' % target
-            mk.create_rule([target]).add_dependencies(
-                ['content = %s' % ' '.join('"%s"' % e for e in entries)])
-
-        mk.add_statement('MANIFEST_TARGETS = %s' % ' '.join(manifest_targets))
+            install_target = mozpath.basedir(target, install_manifests_bases)
+            self._install_manifests[install_target].add_content(
+                ''.join('%s\n' % e for e in sorted(entries)),
+                mozpath.relpath(target, install_target))
 
         # Add information for install manifests.
         mk.add_statement('INSTALL_MANIFESTS = %s'
