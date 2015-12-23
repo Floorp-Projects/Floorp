@@ -620,7 +620,26 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    IPC::Channel* aChannel)
 {
 #ifdef MOZ_WIDGET_GTK
+  // We need to pass a display down to gtk_init because it's not going to
+  // use the one from the environment on its own when deciding which backend
+  // to use, and when starting under XWayland, it may choose to start with
+  // the wayland backend instead of the x11 backend.
+  // The DISPLAY environment variable is normally set by the parent process.
+  char* display_name = PR_GetEnv("DISPLAY");
+  if (display_name) {
+    int argc = 3;
+    char option_name[] = "--display";
+    char* argv[] = {
+      nullptr,
+      option_name,
+      display_name,
+      nullptr
+    };
+    char** argvp = argv;
+    gtk_init(&argc, &argvp);
+  } else {
     gtk_init(nullptr, nullptr);
+  }
 #endif
 
 #ifdef MOZ_WIDGET_QT
