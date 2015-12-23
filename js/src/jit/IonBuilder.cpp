@@ -11247,6 +11247,9 @@ IonBuilder::SimdTypeDescrToMIRType(SimdTypeDescr::Type type)
       case SimdTypeDescr::Bool32x4:  return MIRType_Bool32x4;
       case SimdTypeDescr::Int8x16:
       case SimdTypeDescr::Int16x8:
+      case SimdTypeDescr::Uint8x16:
+      case SimdTypeDescr::Uint16x8:
+      case SimdTypeDescr::Uint32x4:
       case SimdTypeDescr::Float64x2:
       case SimdTypeDescr::Bool8x16:
       case SimdTypeDescr::Bool16x8:

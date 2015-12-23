@@ -10,6 +10,9 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Uint8x16 = SIMD.Uint8x16;
+var Uint16x8 = SIMD.Uint16x8;
+var Uint32x4 = SIMD.Uint32x4;
 var Bool8x16 = SIMD.Bool8x16;
 var Bool16x8 = SIMD.Bool16x8;
 var Bool32x4 = SIMD.Bool32x4;
@@ -80,6 +83,29 @@ function test() {
     ];
 
     testSelect(Int32x4, inputs);
+
+    inputs = [
+        [Uint8x16(0,4,9,16,25,36,49,64,81,121,-4,-9,-16,-25,-36,-49), Uint8x16(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16)],
+        [Uint8x16(-1, 2, INT8_MAX, INT8_MIN, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+         Uint8x16(INT8_MAX, -4, INT8_MIN, 42, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16)]
+    ];
+
+    testSelect(Uint8x16, inputs);
+
+    inputs = [
+        [Uint16x8(0,4,9,16,25,36,49,64), Uint16x8(1,2,3,4,5,6,7,8)],
+        [Uint16x8(-1, 2, INT16_MAX, INT16_MIN, 5, 6, 7, 8),
+         Uint16x8(INT16_MAX, -4, INT16_MIN, 42, 5, 6, 7, 8)]
+    ];
+
+    testSelect(Uint16x8, inputs);
+
+    inputs = [
+        [Uint32x4(0,4,9,16), Uint32x4(1,2,3,4)],
+        [Uint32x4(-1, 2, INT32_MAX, INT32_MIN), Uint32x4(INT32_MAX, -4, INT32_MIN, 42)]
+    ];
+
+    testSelect(Uint32x4, inputs);
 
     inputs = [
         [Float32x4(0.125,4.25,9.75,16.125), Float32x4(1.5,2.75,3.25,4.5)],

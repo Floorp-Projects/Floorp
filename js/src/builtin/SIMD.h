@@ -20,6 +20,7 @@
  * https://github.com/tc39/ecmascript_simd/blob/master/src/ecmascript_simd.js
  */
 
+// Bool8x16.
 #define BOOL8X16_UNARY_FUNCTION_LIST(V)                                               \
   V(not, (UnaryFunc<Bool8x16, LogicalNot, Bool8x16>), 1)                              \
   V(check, (UnaryFunc<Bool8x16, Identity, Bool8x16>), 1)                              \
@@ -41,6 +42,7 @@
   BOOL8X16_BINARY_FUNCTION_LIST(V)                                                    \
   BOOL8X16_TERNARY_FUNCTION_LIST(V)
 
+// Bool 16x8.
 #define BOOL16X8_UNARY_FUNCTION_LIST(V)                                               \
   V(not, (UnaryFunc<Bool16x8, LogicalNot, Bool16x8>), 1)                              \
   V(check, (UnaryFunc<Bool16x8, Identity, Bool16x8>), 1)                              \
@@ -62,6 +64,7 @@
   BOOL16X8_BINARY_FUNCTION_LIST(V)                                                    \
   BOOL16X8_TERNARY_FUNCTION_LIST(V)
 
+// Bool32x4.
 #define BOOL32X4_UNARY_FUNCTION_LIST(V)                                               \
   V(not, (UnaryFunc<Bool32x4, LogicalNot, Bool32x4>), 1)                              \
   V(check, (UnaryFunc<Bool32x4, Identity, Bool32x4>), 1)                              \
@@ -83,6 +86,7 @@
   BOOL32X4_BINARY_FUNCTION_LIST(V)                                                    \
   BOOL32X4_TERNARY_FUNCTION_LIST(V)
 
+// Bool64x2.
 #define BOOL64X2_UNARY_FUNCTION_LIST(V)                                               \
   V(not, (UnaryFunc<Bool64x2, LogicalNot, Bool64x2>), 1)                              \
   V(check, (UnaryFunc<Bool64x2, Identity, Bool64x2>), 1)                              \
@@ -104,14 +108,19 @@
   BOOL64X2_BINARY_FUNCTION_LIST(V)                                                    \
   BOOL64X2_TERNARY_FUNCTION_LIST(V)
 
+// Float32x4.
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                              \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1)                                   \
   V(check, (UnaryFunc<Float32x4, Identity, Float32x4>), 1)                            \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Float32x4>), 1)                    \
-  V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Float32x4>), 1)                        \
-  V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Float32x4>), 1)                        \
-  V(fromInt32x4, (FuncConvert<Int32x4, Float32x4> ), 1)                               \
-  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float32x4>), 1)                        \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Float32x4>), 1)                    \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Float32x4>), 1)                    \
+  V(fromInt32x4,       (FuncConvert<Int32x4,       Float32x4>), 1)                    \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Float32x4>), 1)                    \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Float32x4>), 1)                    \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Float32x4>), 1)                    \
+  V(fromUint32x4,      (FuncConvert<Uint32x4,      Float32x4>), 1)                    \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Float32x4>), 1)                    \
   V(neg, (UnaryFunc<Float32x4, Neg, Float32x4>), 1)                                   \
   V(reciprocalApproximation, (UnaryFunc<Float32x4, RecApprox, Float32x4>), 1)         \
   V(reciprocalSqrtApproximation, (UnaryFunc<Float32x4, RecSqrtApprox, Float32x4>), 1) \
@@ -157,13 +166,17 @@
   FLOAT32X4_TERNARY_FUNCTION_LIST(V)                                                  \
   FLOAT32X4_SHUFFLE_FUNCTION_LIST(V)
 
+// Float64x2.
 #define FLOAT64X2_UNARY_FUNCTION_LIST(V)                                              \
   V(abs, (UnaryFunc<Float64x2, Abs, Float64x2>), 1)                                   \
   V(check, (UnaryFunc<Float64x2, Identity, Float64x2>), 1)                            \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Float64x2>), 1)                    \
-  V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Float64x2>), 1)                        \
-  V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Float64x2>), 1)                        \
-  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float64x2>), 1)                        \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Float64x2>), 1)                    \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Float64x2>), 1)                    \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Float64x2>), 1)                    \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Float64x2>), 1)                    \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Float64x2>), 1)                    \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Float64x2>), 1)                    \
   V(neg, (UnaryFunc<Float64x2, Neg, Float64x2>), 1)                                   \
   V(reciprocalApproximation, (UnaryFunc<Float64x2, RecApprox, Float64x2>), 1)         \
   V(reciprocalSqrtApproximation, (UnaryFunc<Float64x2, RecSqrtApprox, Float64x2>), 1) \
@@ -205,12 +218,16 @@
   FLOAT64X2_TERNARY_FUNCTION_LIST(V)                                                  \
   FLOAT64X2_SHUFFLE_FUNCTION_LIST(V)
 
+// Int8x16.
 #define INT8X16_UNARY_FUNCTION_LIST(V)                                                \
   V(check, (UnaryFunc<Int8x16, Identity, Int8x16>), 1)                                \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int8x16>), 1)                      \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Int8x16>), 1)                      \
-  V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Int8x16>), 1)                          \
-  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Int8x16>), 1)                          \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Int8x16>), 1)                      \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Int8x16>), 1)                      \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Int8x16>), 1)                      \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Int8x16>), 1)                      \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Int8x16>), 1)                      \
   V(neg, (UnaryFunc<Int8x16, Neg, Int8x16>), 1)                                       \
   V(not, (UnaryFunc<Int8x16, Not, Int8x16>), 1)                                       \
   V(splat, (FuncSplat<Int8x16>), 1)
@@ -249,12 +266,64 @@
   INT8X16_TERNARY_FUNCTION_LIST(V)                                                    \
   INT8X16_SHUFFLE_FUNCTION_LIST(V)
 
+// Uint8x16.
+#define UINT8X16_UNARY_FUNCTION_LIST(V)                                               \
+  V(check, (UnaryFunc<Uint8x16, Identity, Uint8x16>), 1)                              \
+  V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Uint8x16>), 1)                     \
+  V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Uint8x16>), 1)                     \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Uint8x16>), 1)                     \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Uint8x16>), 1)                     \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Uint8x16>), 1)                     \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Uint8x16>), 1)                     \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Uint8x16>), 1)                     \
+  V(neg, (UnaryFunc<Uint8x16, Neg, Uint8x16>), 1)                                     \
+  V(not, (UnaryFunc<Uint8x16, Not, Uint8x16>), 1)                                     \
+  V(splat, (FuncSplat<Uint8x16>), 1)
+
+#define UINT8X16_BINARY_FUNCTION_LIST(V)                                              \
+  V(add, (BinaryFunc<Uint8x16, Add, Uint8x16>), 2)                                    \
+  V(and, (BinaryFunc<Uint8x16, And, Uint8x16>), 2)                                    \
+  V(equal, (CompareFunc<Uint8x16, Equal, Bool8x16>), 2)                               \
+  V(extractLane, (ExtractLane<Uint8x16>), 2)                                          \
+  V(greaterThan, (CompareFunc<Uint8x16, GreaterThan, Bool8x16>), 2)                   \
+  V(greaterThanOrEqual, (CompareFunc<Uint8x16, GreaterThanOrEqual, Bool8x16>), 2)     \
+  V(lessThan, (CompareFunc<Uint8x16, LessThan, Bool8x16>), 2)                         \
+  V(lessThanOrEqual, (CompareFunc<Uint8x16, LessThanOrEqual, Bool8x16>), 2)           \
+  V(load, (Load<Uint8x16, 16>), 2)                                                    \
+  V(mul, (BinaryFunc<Uint8x16, Mul, Uint8x16>), 2)                                    \
+  V(notEqual, (CompareFunc<Uint8x16, NotEqual, Bool8x16>), 2)                         \
+  V(or, (BinaryFunc<Uint8x16, Or, Uint8x16>), 2)                                      \
+  V(sub, (BinaryFunc<Uint8x16, Sub, Uint8x16>), 2)                                    \
+  V(shiftLeftByScalar, (BinaryScalar<Uint8x16, ShiftLeft>), 2)                        \
+  V(shiftRightArithmeticByScalar, (BinaryScalar<Uint8x16, ShiftRightArithmetic>), 2)  \
+  V(shiftRightLogicalByScalar, (BinaryScalar<Uint8x16, ShiftRightLogical>), 2)        \
+  V(xor, (BinaryFunc<Uint8x16, Xor, Uint8x16>), 2)
+
+#define UINT8X16_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Uint8x16>), 3)                                          \
+  V(select, (Select<Uint8x16, Bool8x16>), 3)                                          \
+  V(store, (Store<Uint8x16, 16>), 3)
+
+#define UINT8X16_SHUFFLE_FUNCTION_LIST(V)                                             \
+  V(swizzle, Swizzle<Uint8x16>, 17)                                                   \
+  V(shuffle, Shuffle<Uint8x16>, 18)
+
+#define UINT8X16_FUNCTION_LIST(V)                                                     \
+  UINT8X16_UNARY_FUNCTION_LIST(V)                                                     \
+  UINT8X16_BINARY_FUNCTION_LIST(V)                                                    \
+  UINT8X16_TERNARY_FUNCTION_LIST(V)                                                   \
+  UINT8X16_SHUFFLE_FUNCTION_LIST(V)
+
+// Int16x8.
 #define INT16X8_UNARY_FUNCTION_LIST(V)                                                \
   V(check, (UnaryFunc<Int16x8, Identity, Int16x8>), 1)                                \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int16x8>), 1)                      \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Int16x8>), 1)                      \
-  V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Int16x8>), 1)                          \
-  V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Int16x8>), 1)                          \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Int16x8>), 1)                      \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Int16x8>), 1)                      \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Int16x8>), 1)                      \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Int16x8>), 1)                      \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Int16x8>), 1)                      \
   V(neg, (UnaryFunc<Int16x8, Neg, Int16x8>), 1)                                       \
   V(not, (UnaryFunc<Int16x8, Not, Int16x8>), 1)                                       \
   V(splat, (FuncSplat<Int16x8>), 1)
@@ -293,13 +362,65 @@
   INT16X8_TERNARY_FUNCTION_LIST(V)                                                    \
   INT16X8_SHUFFLE_FUNCTION_LIST(V)
 
+// Uint16x8.
+#define UINT16X8_UNARY_FUNCTION_LIST(V)                                               \
+  V(check, (UnaryFunc<Uint16x8, Identity, Uint16x8>), 1)                              \
+  V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Uint16x8>), 1)                     \
+  V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Uint16x8>), 1)                     \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Uint16x8>), 1)                     \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Uint16x8>), 1)                     \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Uint16x8>), 1)                     \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Uint16x8>), 1)                     \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Uint16x8>), 1)                     \
+  V(neg, (UnaryFunc<Uint16x8, Neg, Uint16x8>), 1)                                     \
+  V(not, (UnaryFunc<Uint16x8, Not, Uint16x8>), 1)                                     \
+  V(splat, (FuncSplat<Uint16x8>), 1)
+
+#define UINT16X8_BINARY_FUNCTION_LIST(V)                                              \
+  V(add, (BinaryFunc<Uint16x8, Add, Uint16x8>), 2)                                    \
+  V(and, (BinaryFunc<Uint16x8, And, Uint16x8>), 2)                                    \
+  V(equal, (CompareFunc<Uint16x8, Equal, Bool16x8>), 2)                               \
+  V(extractLane, (ExtractLane<Uint16x8>), 2)                                          \
+  V(greaterThan, (CompareFunc<Uint16x8, GreaterThan, Bool16x8>), 2)                   \
+  V(greaterThanOrEqual, (CompareFunc<Uint16x8, GreaterThanOrEqual, Bool16x8>), 2)     \
+  V(lessThan, (CompareFunc<Uint16x8, LessThan, Bool16x8>), 2)                         \
+  V(lessThanOrEqual, (CompareFunc<Uint16x8, LessThanOrEqual, Bool16x8>), 2)           \
+  V(load, (Load<Uint16x8, 8>), 2)                                                     \
+  V(mul, (BinaryFunc<Uint16x8, Mul, Uint16x8>), 2)                                    \
+  V(notEqual, (CompareFunc<Uint16x8, NotEqual, Bool16x8>), 2)                         \
+  V(or, (BinaryFunc<Uint16x8, Or, Uint16x8>), 2)                                      \
+  V(sub, (BinaryFunc<Uint16x8, Sub, Uint16x8>), 2)                                    \
+  V(shiftLeftByScalar, (BinaryScalar<Uint16x8, ShiftLeft>), 2)                        \
+  V(shiftRightArithmeticByScalar, (BinaryScalar<Uint16x8, ShiftRightArithmetic>), 2)  \
+  V(shiftRightLogicalByScalar, (BinaryScalar<Uint16x8, ShiftRightLogical>), 2)        \
+  V(xor, (BinaryFunc<Uint16x8, Xor, Uint16x8>), 2)
+
+#define UINT16X8_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Uint16x8>), 3)                                          \
+  V(select, (Select<Uint16x8, Bool16x8>), 3)                                          \
+  V(store, (Store<Uint16x8, 8>), 3)
+
+#define UINT16X8_SHUFFLE_FUNCTION_LIST(V)                                             \
+  V(swizzle, Swizzle<Uint16x8>, 9)                                                    \
+  V(shuffle, Shuffle<Uint16x8>, 10)
+
+#define UINT16X8_FUNCTION_LIST(V)                                                     \
+  UINT16X8_UNARY_FUNCTION_LIST(V)                                                     \
+  UINT16X8_BINARY_FUNCTION_LIST(V)                                                    \
+  UINT16X8_TERNARY_FUNCTION_LIST(V)                                                   \
+  UINT16X8_SHUFFLE_FUNCTION_LIST(V)
+
+// Int32x4.
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                                \
   V(check, (UnaryFunc<Int32x4, Identity, Int32x4>), 1)                                \
-  V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1)                              \
+  V(fromFloat32x4,     (FuncConvert<Float32x4,     Int32x4>), 1)                      \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1)                      \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Int32x4>), 1)                      \
-  V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Int32x4>), 1)                          \
-  V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Int32x4>), 1)                          \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Int32x4>), 1)                      \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Int32x4>), 1)                      \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Int32x4>), 1)                      \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Int32x4>), 1)                      \
+  V(fromUint32x4Bits,  (FuncConvertBits<Uint32x4,  Int32x4>), 1)                      \
   V(neg, (UnaryFunc<Int32x4, Neg, Int32x4>), 1)                                       \
   V(not, (UnaryFunc<Int32x4, Not, Int32x4>), 1)                                       \
   V(splat, (FuncSplat<Int32x4>), 0)
@@ -343,6 +464,61 @@
   INT32X4_BINARY_FUNCTION_LIST(V)                                                     \
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                    \
   INT32X4_SHUFFLE_FUNCTION_LIST(V)
+
+// Uint32x4.
+#define UINT32X4_UNARY_FUNCTION_LIST(V)                                               \
+  V(check, (UnaryFunc<Uint32x4, Identity, Uint32x4>), 1)                              \
+  V(fromFloat32x4,     (FuncConvert<Float32x4,     Uint32x4>), 1)                     \
+  V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Uint32x4>), 1)                     \
+  V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Uint32x4>), 1)                     \
+  V(fromInt8x16Bits,   (FuncConvertBits<Int8x16,   Uint32x4>), 1)                     \
+  V(fromInt16x8Bits,   (FuncConvertBits<Int16x8,   Uint32x4>), 1)                     \
+  V(fromInt32x4Bits,   (FuncConvertBits<Int32x4,   Uint32x4>), 1)                     \
+  V(fromUint8x16Bits,  (FuncConvertBits<Uint8x16,  Uint32x4>), 1)                     \
+  V(fromUint16x8Bits,  (FuncConvertBits<Uint16x8,  Uint32x4>), 1)                     \
+  V(neg, (UnaryFunc<Uint32x4, Neg, Uint32x4>), 1)                                     \
+  V(not, (UnaryFunc<Uint32x4, Not, Uint32x4>), 1)                                     \
+  V(splat, (FuncSplat<Uint32x4>), 0)
+
+#define UINT32X4_BINARY_FUNCTION_LIST(V)                                              \
+  V(add, (BinaryFunc<Uint32x4, Add, Uint32x4>), 2)                                    \
+  V(and, (BinaryFunc<Uint32x4, And, Uint32x4>), 2)                                    \
+  V(equal, (CompareFunc<Uint32x4, Equal, Bool32x4>), 2)                               \
+  V(extractLane, (ExtractLane<Uint32x4>), 2)                                          \
+  V(greaterThan, (CompareFunc<Uint32x4, GreaterThan, Bool32x4>), 2)                   \
+  V(greaterThanOrEqual, (CompareFunc<Uint32x4, GreaterThanOrEqual, Bool32x4>), 2)     \
+  V(lessThan, (CompareFunc<Uint32x4, LessThan, Bool32x4>), 2)                         \
+  V(lessThanOrEqual, (CompareFunc<Uint32x4, LessThanOrEqual, Bool32x4>), 2)           \
+  V(load,  (Load<Uint32x4, 4>), 2)                                                    \
+  V(load3, (Load<Uint32x4, 3>), 2)                                                    \
+  V(load2, (Load<Uint32x4, 2>), 2)                                                    \
+  V(load1, (Load<Uint32x4, 1>), 2)                                                    \
+  V(mul, (BinaryFunc<Uint32x4, Mul, Uint32x4>), 2)                                    \
+  V(notEqual, (CompareFunc<Uint32x4, NotEqual, Bool32x4>), 2)                         \
+  V(or, (BinaryFunc<Uint32x4, Or, Uint32x4>), 2)                                      \
+  V(sub, (BinaryFunc<Uint32x4, Sub, Uint32x4>), 2)                                    \
+  V(shiftLeftByScalar, (BinaryScalar<Uint32x4, ShiftLeft>), 2)                        \
+  V(shiftRightArithmeticByScalar, (BinaryScalar<Uint32x4, ShiftRightArithmetic>), 2)  \
+  V(shiftRightLogicalByScalar, (BinaryScalar<Uint32x4, ShiftRightLogical>), 2)        \
+  V(xor, (BinaryFunc<Uint32x4, Xor, Uint32x4>), 2)
+
+#define UINT32X4_TERNARY_FUNCTION_LIST(V)                                             \
+  V(replaceLane, (ReplaceLane<Uint32x4>), 3)                                          \
+  V(select, (Select<Uint32x4, Bool32x4>), 3)                                          \
+  V(store,  (Store<Uint32x4, 4>), 3)                                                  \
+  V(store3, (Store<Uint32x4, 3>), 3)                                                  \
+  V(store2, (Store<Uint32x4, 2>), 3)                                                  \
+  V(store1, (Store<Uint32x4, 1>), 3)
+
+#define UINT32X4_SHUFFLE_FUNCTION_LIST(V)                                             \
+  V(swizzle, Swizzle<Uint32x4>, 5)                                                    \
+  V(shuffle, Shuffle<Uint32x4>, 6)
+
+#define UINT32X4_FUNCTION_LIST(V)                                                     \
+  UINT32X4_UNARY_FUNCTION_LIST(V)                                                     \
+  UINT32X4_BINARY_FUNCTION_LIST(V)                                                    \
+  UINT32X4_TERNARY_FUNCTION_LIST(V)                                                   \
+  UINT32X4_SHUFFLE_FUNCTION_LIST(V)
 
 /*
  * The FOREACH macros below partition all of the SIMD operations into disjoint
@@ -648,7 +824,7 @@ struct Int8x16 {
         return ToInt8(cx, v, out);
     }
     static Value ToValue(Elem value) {
-        return Int32Value(value);
+        return NumberValue(value);
     }
 };
 
@@ -660,7 +836,7 @@ struct Int16x8 {
         return ToInt16(cx, v, out);
     }
     static Value ToValue(Elem value) {
-        return Int32Value(value);
+        return NumberValue(value);
     }
 };
 
@@ -672,7 +848,43 @@ struct Int32x4 {
         return ToInt32(cx, v, out);
     }
     static Value ToValue(Elem value) {
-        return Int32Value(value);
+        return NumberValue(value);
+    }
+};
+
+struct Uint8x16 {
+    typedef uint8_t Elem;
+    static const unsigned lanes = 16;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint8x16;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        return ToUint8(cx, v, out);
+    }
+    static Value ToValue(Elem value) {
+        return NumberValue(value);
+    }
+};
+
+struct Uint16x8 {
+    typedef uint16_t Elem;
+    static const unsigned lanes = 8;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint16x8;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        return ToUint16(cx, v, out);
+    }
+    static Value ToValue(Elem value) {
+        return NumberValue(value);
+    }
+};
+
+struct Uint32x4 {
+    typedef uint32_t Elem;
+    static const unsigned lanes = 4;
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Uint32x4;
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
+        return ToUint32(cx, v, out);
+    }
+    static Value ToValue(Elem value) {
+        return NumberValue(value);
     }
 };
 
@@ -766,6 +978,24 @@ extern bool                                                     \
 simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
 INT32X4_FUNCTION_LIST(DECLARE_SIMD_INT32x4_FUNCTION)
 #undef DECLARE_SIMD_INT32x4_FUNCTION
+
+#define DECLARE_SIMD_UINT8X16_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_uint8x16_##Name(JSContext* cx, unsigned argc, Value* vp);
+UINT8X16_FUNCTION_LIST(DECLARE_SIMD_UINT8X16_FUNCTION)
+#undef DECLARE_SIMD_UINT8X16_FUNCTION
+
+#define DECLARE_SIMD_UINT16X8_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_uint16x8_##Name(JSContext* cx, unsigned argc, Value* vp);
+UINT16X8_FUNCTION_LIST(DECLARE_SIMD_UINT16X8_FUNCTION)
+#undef DECLARE_SIMD_UINT16X8_FUNCTION
+
+#define DECLARE_SIMD_UINT32x4_FUNCTION(Name, Func, Operands)    \
+extern bool                                                     \
+simd_uint32x4_##Name(JSContext* cx, unsigned argc, Value* vp);
+UINT32X4_FUNCTION_LIST(DECLARE_SIMD_UINT32x4_FUNCTION)
+#undef DECLARE_SIMD_UINT32x4_FUNCTION
 
 #define DECLARE_SIMD_BOOL8X16_FUNCTION(Name, Func, Operands)    \
 extern bool                                                     \
