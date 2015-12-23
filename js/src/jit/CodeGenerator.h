@@ -351,9 +351,6 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitCheckOverRecursed(LCheckOverRecursed* lir);
     void visitCheckOverRecursedFailure(CheckOverRecursedFailure* ool);
 
-    void visitInterruptCheckImplicit(LInterruptCheckImplicit* ins);
-    void visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit* ins);
-
     void visitUnboxFloatingPoint(LUnboxFloatingPoint* lir);
     void visitOutOfLineUnboxFloatingPoint(OutOfLineUnboxFloatingPoint* ool);
     void visitOutOfLineStoreElementHole(OutOfLineStoreElementHole* ool);
@@ -387,6 +384,7 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertObjectOrStringResult(Register input, MIRType type, const TemporaryTypeSet* typeset);
 
     void visitInterruptCheck(LInterruptCheck* lir);
+    void visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImplicit* ins);
     void visitAsmJSInterruptCheck(LAsmJSInterruptCheck* lir);
     void visitRecompileCheck(LRecompileCheck* ins);
 

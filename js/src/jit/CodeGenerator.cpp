@@ -1966,9 +1966,9 @@ class OutOfLineInterruptCheckImplicit : public OutOfLineCodeBase<CodeGenerator>
 {
   public:
     LBlock* block;
-    LInterruptCheckImplicit* lir;
+    LInterruptCheck* lir;
 
-    OutOfLineInterruptCheckImplicit(LBlock* block, LInterruptCheckImplicit* lir)
+    OutOfLineInterruptCheckImplicit(LBlock* block, LInterruptCheck* lir)
       : block(block), lir(lir)
     { }
 
@@ -2008,16 +2008,6 @@ CodeGenerator::visitOutOfLineInterruptCheckImplicit(OutOfLineInterruptCheckImpli
     callVM(InterruptCheckInfo, ool->lir);
     restoreLive(ool->lir);
     masm.jump(ool->rejoin());
-}
-
-void
-CodeGenerator::visitInterruptCheckImplicit(LInterruptCheckImplicit* lir)
-{
-    OutOfLineInterruptCheckImplicit* ool = new(alloc()) OutOfLineInterruptCheckImplicit(current, lir);
-    addOutOfLineCode(ool, lir->mir());
-
-    lir->setOolEntry(ool->entry());
-    masm.bind(ool->rejoin());
 }
 
 void
@@ -10212,6 +10202,15 @@ CodeGenerator::visitAssertRangeV(LAssertRangeV* ins)
 void
 CodeGenerator::visitInterruptCheck(LInterruptCheck* lir)
 {
+    if (lir->implicit()) {
+        OutOfLineInterruptCheckImplicit* ool = new(alloc()) OutOfLineInterruptCheckImplicit(current, lir);
+        addOutOfLineCode(ool, lir->mir());
+
+        lir->setOolEntry(ool->entry());
+        masm.bind(ool->rejoin());
+        return;
+    }
+
     OutOfLineCode* ool = oolCallVM(InterruptCheckInfo, lir, ArgList(), StoreNothing());
 
     AbsoluteAddress interruptAddr(GetJitContext()->runtime->addressOfInterruptUint32());
