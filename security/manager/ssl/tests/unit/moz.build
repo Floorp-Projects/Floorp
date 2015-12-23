@@ -5,6 +5,10 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += ['tlsserver']
+
+if not CONFIG['MOZ_NO_SMART_CARDS']:
+    DIRS += ['pkcs11testmodule']
+
 TEST_DIRS += [
     'bad_certs',
     'ocsp_certs',
@@ -27,6 +31,3 @@ TEST_DIRS += [
     'test_pinning_dynamic',
     'test_validity',
 ]
-
-if not CONFIG['MOZ_NO_SMART_CARDS']:
-    DIRS += ['pkcs11testmodule']
