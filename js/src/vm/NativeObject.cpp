@@ -430,9 +430,13 @@ NativeObject::growSlots(ExclusiveContext* cx, uint32_t oldCount, uint32_t newCou
 }
 
 /* static */ bool
-NativeObject::growSlotsStatic(ExclusiveContext* cx, NativeObject* obj, uint32_t newCount)
+NativeObject::growSlotsDontReportOOM(ExclusiveContext* cx, NativeObject* obj, uint32_t newCount)
 {
-    return obj->growSlots(cx, obj->numDynamicSlots(), newCount);
+    if (!obj->growSlots(cx, obj->numDynamicSlots(), newCount)) {
+        cx->recoverFromOutOfMemory();
+        return false;
+    }
+    return true;
 }
 
 static void
