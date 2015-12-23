@@ -29,6 +29,7 @@ DIRS += [
 DIRS += ['build']
 
 XPIDL_SOURCES += [
+    'nsIAboutNewTabService.idl',
     'nsIBrowserGlue.idl',
     'nsIBrowserHandler.idl',
 ]

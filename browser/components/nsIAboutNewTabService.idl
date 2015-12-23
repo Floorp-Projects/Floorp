@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Allows to override about:newtab to point to a different location
+ * than the one specified within AboutRedirector.cpp
+ */
+
+[scriptable, uuid(6c66f022-beb1-46ea-8af6-c6c6dd937ea9)]
+interface nsIAboutNewTabService : nsISupports
+{
+  /**
+   * Returns "about:newtab" if not overridden, otherwise
+   * a string represenation of the new URL.
+   */
+  attribute ACString newTabURL;
+
+  /**
+   * Returns true if the default of "about:newtab" got
+   * overridden.
+   */
+  readonly attribute bool overridden;
+
+  /**
+   * Resets "about:newtab" to the default and also resets the
+   * overridden attribute to false.
+   */
+  void resetNewTabURL();
+};

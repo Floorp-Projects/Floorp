@@ -86,9 +86,13 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::ALLOW_SCRIPT |
     nsIAboutModule::ENABLE_INDEXED_DB },
-  // the newtab's actual URL will be determined when the channel is created
-  { "newtab", "about:blank",
+  { "newtab", "chrome://browser/content/newtab/newTab.xhtml",
     nsIAboutModule::ALLOW_SCRIPT },
+#ifndef RELEASE_BUILD
+  { "remote-newtab", "chrome://browser/content/remote-newtab/newTab.xhtml",
+    nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
+    nsIAboutModule::ALLOW_SCRIPT },
+#endif
   { "preferences", "chrome://browser/content/preferences/in-content/preferences.xul",
     nsIAboutModule::ALLOW_SCRIPT },
   { "downloads", "chrome://browser/content/downloads/contentAreaDownloadsView.xul",
@@ -173,12 +177,18 @@ AboutRedirector::NewChannel(nsIURI* aURI,
     if (!strcmp(path.get(), kRedirMap[i].id)) {
       nsAutoCString url;
 
+      // check if about:newtab got overridden
       if (path.EqualsLiteral("newtab")) {
-        // let the aboutNewTabService decide where to redirect
         nsCOMPtr<nsIAboutNewTabService> aboutNewTabService =
           do_GetService("@mozilla.org/browser/aboutnewtab-service;1", &rv);
-        rv = aboutNewTabService->GetNewTabURL(url);
         NS_ENSURE_SUCCESS(rv, rv);
+        bool overridden = false;
+        rv = aboutNewTabService->GetOverridden(&overridden);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (overridden) {
+          rv = aboutNewTabService->GetNewTabURL(url);
+          NS_ENSURE_SUCCESS(rv, rv);
+        }
       }
       // fall back to the specified url in the map
       if (url.IsEmpty()) {

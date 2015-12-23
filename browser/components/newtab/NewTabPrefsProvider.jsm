@@ -17,7 +17,6 @@ XPCOMUtils.defineLazyGetter(this, "EventEmitter", function() {
 
 // Supported prefs and data type
 const gPrefsMap = new Map([
-  ["browser.newtabpage.remote", "bool"],
   ["browser.newtabpage.enabled", "bool"],
   ["browser.newtabpage.enhanced", "bool"],
   ["browser.newtabpage.pinned", "str"],

@@ -120,7 +120,6 @@
 @BINPATH@/components/browsercompsbase.xpt
 @BINPATH@/components/browser-element.xpt
 @BINPATH@/components/browser-feeds.xpt
-@BINPATH@/components/browser-newtab.xpt
 @BINPATH@/components/caps.xpt
 @BINPATH@/components/chardet.xpt
 @BINPATH@/components/chrome.xpt
