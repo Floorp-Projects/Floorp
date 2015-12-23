@@ -398,6 +398,10 @@ class Path(ContextDerivedValue, unicode):
     def __hash__(self):
         return hash(self.full_path)
 
+    @memoized_property
+    def target_basename(self):
+        return mozpath.basename(self.full_path)
+
 
 class SourcePath(Path):
     """Like Path, but limited to paths in the source directory."""
@@ -431,6 +435,24 @@ class SourcePath(Path):
         objdir (aka pseudo-rework), this is needed.
         """
         return ObjDirPath(self.context, '!%s' % self).full_path
+
+
+class RenamedSourcePath(SourcePath):
+    """Like SourcePath, but with a different base name when installed.
+
+    The constructor takes a tuple of (source, target_basename).
+
+    This class is not meant to be exposed to moz.build sandboxes as of now,
+    and is not supported by the RecursiveMake backend.
+    """
+    def __init__(self, context, value):
+        assert isinstance(value, tuple)
+        source, self._target_basename = value
+        super(RenamedSourcePath, self).__init__(context, source)
+
+    @property
+    def target_basename(self):
+        return self._target_basename
 
 
 class ObjDirPath(Path):

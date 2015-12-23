@@ -681,7 +681,7 @@ class TreeMetadataEmitter(LoggingMixin):
                                 'File listed in %s does not exist: %s'
                                 % (var, path), context)
                     else:
-                        if mozpath.basename(f.full_path) not in generated_files:
+                        if f.target_basename not in generated_files:
                             raise SandboxValidationError(
                                 ('Objdir file listed in %s not in ' +
                                  'GENERATED_FILES: %s') % (var, f), context)
