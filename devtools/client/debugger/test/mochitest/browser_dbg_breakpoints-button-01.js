@@ -42,7 +42,9 @@ function test() {
       yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT, 3);
       checkBreakpointsDisabled(false);
 
-      yield ensureThreadClientState(gPanel, "resumed");
+      if (gDebugger.gThreadClient.state !== "attached") {
+        yield waitForThreadEvents(gPanel, "resumed");
+      }
       closeDebuggerAndFinish(gPanel)
     });
   });
