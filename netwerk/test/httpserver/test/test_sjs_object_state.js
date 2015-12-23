@@ -233,7 +233,7 @@ function HTTPTestLoader(path, start, stop)
   this._stop = stop;
 
   var channel = makeChannel(path);
-  channel.asyncOpen2(this);
+  channel.asyncOpen(this, null);
 }
 HTTPTestLoader.prototype =
   {

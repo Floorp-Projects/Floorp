@@ -1,7 +1,7 @@
 // Test getLocalHost/getLocalPort and getRemoteHost/getRemotePort.
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 var httpserver = new HttpServer();
 httpserver.start(-1);
@@ -46,10 +46,17 @@ CheckGetHostListener.prototype = {
 }
 
 function make_channel(url) {
-  return NetUtil.newChannel({
-    uri: url,
-    loadUsingSystemPrincipal: true
-  }).QueryInterface(Components.interfaces.nsIHttpChannel);
+  var ios = Cc["@mozilla.org/network/io-service;1"].
+    getService(Ci.nsIIOService);
+  return ios.newChannel2(url,
+                         null,
+                         null,
+                         null,      // aLoadingNode
+                         Services.scriptSecurityManager.getSystemPrincipal(),
+                         null,      // aTriggeringPrincipal
+                         Ci.nsILoadInfo.SEC_NORMAL,
+                         Ci.nsIContentPolicy.TYPE_OTHER)
+            .QueryInterface(Components.interfaces.nsIHttpChannel);
 }
 
 function test_handler(metadata, response) {
@@ -63,6 +70,6 @@ function run_test() {
   httpserver.registerPathHandler("/testdir", test_handler);
 
   var channel = make_channel("http://localhost:" + PORT + "/testdir");
-  channel.asyncOpen2(new CheckGetHostListener());
+  channel.asyncOpen(new CheckGetHostListener(), null);
   do_test_pending();
 }
