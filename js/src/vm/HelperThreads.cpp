@@ -1337,11 +1337,10 @@ ExclusiveContext::setHelperThread(HelperThread* thread)
 frontend::CompileError&
 ExclusiveContext::addPendingCompileError()
 {
+    AutoEnterOOMUnsafeRegion oomUnsafe;
     frontend::CompileError* error = js_new<frontend::CompileError>();
-    if (!error)
-        MOZ_CRASH();
-    if (!helperThread()->parseTask()->errors.append(error))
-        MOZ_CRASH();
+    if (!error || !helperThread()->parseTask()->errors.append(error))
+        oomUnsafe.crash("ExclusiveContext::addPendingCompileError");
     return *error;
 }
 
