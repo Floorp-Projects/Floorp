@@ -930,7 +930,7 @@ function ArrayConcat(arg1) {
     var O = ToObject(this);
 
     // Step 2.
-    var A = std_Array(0);
+    var A = ArraySpeciesCreate(O, 0);
 
     // Step 3.
     var n = 0;
