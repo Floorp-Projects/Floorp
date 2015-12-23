@@ -2308,6 +2308,7 @@ nsHttpConnectionMgr::OnMsgShutdown(int32_t, ARefBase *param)
     MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread);
     LOG(("nsHttpConnectionMgr::OnMsgShutdown\n"));
 
+    gHttpHandler->StopRequestTokenBucket();
     mCT.Enumerate(ShutdownPassCB, this);
 
     if (mTimeoutTick) {
