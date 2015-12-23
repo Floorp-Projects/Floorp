@@ -3054,7 +3054,7 @@ GenerateAddSlot(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& att
         masm.passABIArg(object);
         masm.move32(Imm32(newNumDynamicSlots), temp2);
         masm.passABIArg(temp2);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsStatic));
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, NativeObject::growSlotsDontReportOOM));
 
         // Branch on ReturnReg before restoring volatile registers, so
         // ReturnReg isn't clobbered.
