@@ -2725,7 +2725,7 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   APZC_LOG_FM(aFrameMetrics,
     "Calculated displayport as (%f %f %f %f) from velocity %s paint time %f metrics",
     displayPort.x, displayPort.y, displayPort.width, displayPort.height,
-    ToString(aVelocity).c_str(), (float)estimatedPaintDurationMillis);
+    ToString(aVelocity).c_str(), paintFactor);
 
   CSSMargin cssMargins;
   cssMargins.left = -displayPort.x;

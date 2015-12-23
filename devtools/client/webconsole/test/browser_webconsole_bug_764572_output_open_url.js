@@ -14,7 +14,7 @@ const CONTEXT_MENU_ID = "#menu_openURL";
 
 var HUD = null, outputNode = null, contextMenu = null;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   Services.prefs.setBoolPref("devtools.webconsole.filter.networkinfo", true);
 
   yield loadTab(TEST_URI);

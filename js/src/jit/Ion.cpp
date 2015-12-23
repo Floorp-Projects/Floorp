@@ -743,14 +743,14 @@ JitCompartment::toggleBarriers(bool enabled)
 {
     // Toggle barriers in compartment wide stubs that have patchable pre barriers.
     if (regExpExecStub_)
-        regExpExecStub_->togglePreBarriers(enabled);
+        regExpExecStub_->togglePreBarriers(enabled, Reprotect);
     if (regExpTestStub_)
-        regExpTestStub_->togglePreBarriers(enabled);
+        regExpTestStub_->togglePreBarriers(enabled, Reprotect);
 
     // Toggle barriers in baseline IC stubs.
     for (ICStubCodeMap::Enum e(*stubCodes_); !e.empty(); e.popFront()) {
         JitCode* code = *e.front().value().unsafeGet();
-        code->togglePreBarriers(enabled);
+        code->togglePreBarriers(enabled, Reprotect);
     }
 }
 
@@ -878,20 +878,23 @@ JitCode::finalize(FreeOp* fop)
 }
 
 void
-JitCode::togglePreBarriers(bool enabled)
+JitCode::togglePreBarriers(bool enabled, ReprotectCode reprotect)
 {
-    AutoWritableJitCode awjc(this);
     uint8_t* start = code_ + preBarrierTableOffset();
     CompactBufferReader reader(start, start + preBarrierTableBytes_);
 
-    while (reader.more()) {
+    if (!reader.more())
+        return;
+
+    MaybeAutoWritableJitCode awjc(this, reprotect);
+    do {
         size_t offset = reader.readUnsigned();
         CodeLocationLabel loc(this, CodeOffset(offset));
         if (enabled)
             Assembler::ToggleToCmp(loc);
         else
             Assembler::ToggleToJmp(loc);
-    }
+    } while (reader.more());
 }
 
 IonScript::IonScript()
@@ -1269,9 +1272,9 @@ IonScript::Destroy(FreeOp* fop, IonScript* script)
 }
 
 void
-IonScript::toggleBarriers(bool enabled)
+IonScript::toggleBarriers(bool enabled, ReprotectCode reprotect)
 {
-    method()->togglePreBarriers(enabled);
+    method()->togglePreBarriers(enabled, reprotect);
 }
 
 void

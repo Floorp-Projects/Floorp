@@ -1617,6 +1617,17 @@ nsXULElement::GetFrameLoader()
 }
 
 nsresult
+nsXULElement::GetParentApplication(mozIApplication** aApplication)
+{
+    if (!aApplication) {
+        return NS_ERROR_FAILURE;
+    }
+
+    *aApplication = nullptr;
+    return NS_OK;
+}
+
+nsresult
 nsXULElement::SetIsPrerendered()
 {
   return SetAttr(kNameSpaceID_None, nsGkAtoms::prerendered, nullptr,

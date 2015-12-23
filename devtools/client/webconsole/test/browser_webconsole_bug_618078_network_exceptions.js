@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf-8,Web Console test for bug 618078";
 const TEST_URI2 = "http://example.com/browser/devtools/client/webconsole/" +
                   "test/test-bug-618078-network-exceptions.html";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

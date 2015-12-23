@@ -1,0 +1,2 @@
+exclude MANIFEST.in
+recursive-include firefox_ui_tests *

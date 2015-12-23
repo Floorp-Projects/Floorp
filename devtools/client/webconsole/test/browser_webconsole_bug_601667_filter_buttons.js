@@ -11,7 +11,7 @@ const FILTER_PREF_DOMAIN = "devtools.webconsole.filter.";
 var hud, hudId, hudBox;
 var prefs = {};
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

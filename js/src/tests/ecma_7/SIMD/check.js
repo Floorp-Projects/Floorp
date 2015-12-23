@@ -7,6 +7,10 @@ function test() {
   var i16 = SIMD.Int8x16(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16);
   var f4 = SIMD.Float32x4(NaN, -0, Infinity, 13.37);
   var f2 = SIMD.Float64x2(-0, 13.37);
+  var b2 = SIMD.Bool64x2(true, false);
+  var b4 = SIMD.Bool32x4(true, true, false, false);
+  var b8 = SIMD.Bool16x8(true, true, false, false, true, true, false, false);
+  var b16 = SIMD.Bool8x16(true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false);
 
   var ci4 = SIMD.Int32x4.check(i4);
   assertEqX4(ci4, simdToArray(i4));
@@ -14,6 +18,10 @@ function test() {
   assertThrowsInstanceOf(() => SIMD.Int32x4.check(f2), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int32x4.check(i8), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int32x4.check(i16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int32x4.check(b16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int32x4.check("i swear i'm a vector"), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int32x4.check({}), TypeError);
 
@@ -23,6 +31,10 @@ function test() {
   assertThrowsInstanceOf(() => SIMD.Int16x8.check(i16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int16x8.check(f4), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int16x8.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int16x8.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int16x8.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int16x8.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int16x8.check(b16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int16x8.check("i swear i'm a vector"), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int16x8.check({}), TypeError);
 
@@ -32,6 +44,10 @@ function test() {
   assertThrowsInstanceOf(() => SIMD.Int8x16.check(i8), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int8x16.check(f4), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int8x16.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int8x16.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int8x16.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int8x16.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Int8x16.check(b16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int8x16.check("i swear i'm a vector"), TypeError);
   assertThrowsInstanceOf(() => SIMD.Int8x16.check({}), TypeError);
 
@@ -41,6 +57,10 @@ function test() {
   assertThrowsInstanceOf(() => SIMD.Float32x4.check(i8), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float32x4.check(i16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float32x4.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float32x4.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float32x4.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float32x4.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float32x4.check(b16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float32x4.check("i swear i'm a vector"), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float32x4.check({}), TypeError);
 
@@ -50,8 +70,60 @@ function test() {
   assertThrowsInstanceOf(() => SIMD.Float64x2.check(i4), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float64x2.check(i8), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float64x2.check(i16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float64x2.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float64x2.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float64x2.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Float64x2.check(b16), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float64x2.check("i swear i'm a vector"), TypeError);
   assertThrowsInstanceOf(() => SIMD.Float64x2.check({}), TypeError);
+
+  var cb2 = SIMD.Bool64x2.check(b2);
+  assertEqX2(cb2, simdToArray(b2));
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(f4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(i8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(i16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check(b16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check("i swear i'm a vector"), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool64x2.check({}), TypeError);
+
+  var cb4 = SIMD.Bool32x4.check(b4);
+  assertEqX4(cb4, simdToArray(b4));
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(f4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(i8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(i16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check(b16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check("i swear i'm a vector"), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool32x4.check({}), TypeError);
+
+  var cb8 = SIMD.Bool16x8.check(b8);
+  assertEqX8(cb8, simdToArray(b8));
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(i4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(i16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(f4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check(b16), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check("i swear i'm a vector"), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool16x8.check({}), TypeError);
+
+  var cb16 = SIMD.Bool8x16.check(b16);
+  assertEqX16(cb16, simdToArray(b16));
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(i4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(i8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(f4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(f2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(b2), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(b4), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check(b8), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check("i swear i'm a vector"), TypeError);
+  assertThrowsInstanceOf(() => SIMD.Bool8x16.check({}), TypeError);
 
   if (typeof reportCompare === "function")
     reportCompare(true, true);

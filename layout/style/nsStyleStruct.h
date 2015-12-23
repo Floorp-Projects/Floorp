@@ -1261,55 +1261,6 @@ public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
 
-// Computed value of the grid-template-columns or grid-template-rows property
-// (but *not* grid-template-areas.)
-// http://dev.w3.org/csswg/css-grid/#track-sizing
-//
-// This represents either:
-// * none:
-//   mIsSubgrid is false, all three arrays are empty
-// * <track-list>:
-//   mIsSubgrid is false,
-//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions
-//   are of identical non-zero size,
-//   and mLineNameLists is one element longer than that.
-//   (Delimiting N columns requires N+1 lines:
-//   one before each track, plus one at the very end.)
-//
-//   An omitted <line-names> is still represented in mLineNameLists,
-//   as an empty sub-array.
-//
-//   A <track-size> specified as a single <track-breadth> is represented
-//   as identical min and max sizing functions.
-//
-//   The units for nsStyleCoord are:
-//   * eStyleUnit_Percent represents a <percentage>
-//   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
-//   * eStyleUnit_Coord represents a <length>
-//   * eStyleUnit_Enumerated represents min-content or max-content
-// * subgrid <line-name-list>?:
-//   mIsSubgrid is true,
-//   mLineNameLists may or may not be empty,
-//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions are empty.
-struct nsStyleGridTemplate {
-  bool mIsSubgrid;
-  nsTArray<nsTArray<nsString>> mLineNameLists;
-  nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
-  nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
-
-  nsStyleGridTemplate()
-    : mIsSubgrid(false)
-  {
-  }
-
-  inline bool operator!=(const nsStyleGridTemplate& aOther) const {
-    return mIsSubgrid != aOther.mIsSubgrid ||
-           mLineNameLists != aOther.mLineNameLists ||
-           mMinTrackSizingFunctions != aOther.mMinTrackSizingFunctions ||
-           mMaxTrackSizingFunctions != aOther.mMaxTrackSizingFunctions;
-  }
-};
-
 struct nsStyleGridLine {
   // http://dev.w3.org/csswg/css-grid/#typedef-grid-line
   // XXXmats we could optimize memory size here
@@ -1368,6 +1319,83 @@ struct nsStyleGridLine {
                "should not have 'span' when other components are "
                "at their initial values");
     return haveInitialValues;
+  }
+};
+
+// Computed value of the grid-template-columns or grid-template-rows property
+// (but *not* grid-template-areas.)
+// http://dev.w3.org/csswg/css-grid/#track-sizing
+//
+// This represents either:
+// * none:
+//   mIsSubgrid is false, all three arrays are empty
+// * <track-list>:
+//   mIsSubgrid is false,
+//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions
+//   are of identical non-zero size,
+//   and mLineNameLists is one element longer than that.
+//   (Delimiting N columns requires N+1 lines:
+//   one before each track, plus one at the very end.)
+//
+//   An omitted <line-names> is still represented in mLineNameLists,
+//   as an empty sub-array.
+//
+//   A <track-size> specified as a single <track-breadth> is represented
+//   as identical min and max sizing functions.
+//
+//   The units for nsStyleCoord are:
+//   * eStyleUnit_Percent represents a <percentage>
+//   * eStyleUnit_FlexFraction represents a <flex> flexible fraction
+//   * eStyleUnit_Coord represents a <length>
+//   * eStyleUnit_Enumerated represents min-content or max-content
+// * subgrid <line-name-list>?:
+//   mIsSubgrid is true,
+//   mLineNameLists may or may not be empty,
+//   mMinTrackSizingFunctions and mMaxTrackSizingFunctions are empty.
+//
+// If mRepeatAutoIndex != -1 then that index is an <auto-repeat> and
+// mIsAutoFill == true means it's an 'auto-fill', otherwise 'auto-fit'.
+// mRepeatAutoLineNameListBefore is the list of line names before the track
+// size, mRepeatAutoLineNameListAfter the names after.  (They are empty
+// when there is no <auto-repeat> track, i.e. when mRepeatAutoIndex == -1).
+// When mIsSubgrid is true, mRepeatAutoLineNameListBefore contains the line
+// names and mRepeatAutoLineNameListAfter is empty.
+struct nsStyleGridTemplate {
+  nsTArray<nsTArray<nsString>> mLineNameLists;
+  nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
+  nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
+  nsTArray<nsString> mRepeatAutoLineNameListBefore;
+  nsTArray<nsString> mRepeatAutoLineNameListAfter;
+  int16_t mRepeatAutoIndex; // -1 or the track index for an auto-fill/fit track
+  bool mIsAutoFill : 1;
+  bool mIsSubgrid : 1;
+
+  nsStyleGridTemplate()
+    : mRepeatAutoIndex(-1)
+    , mIsAutoFill(false)
+    , mIsSubgrid(false)
+  {
+  }
+
+  inline bool operator!=(const nsStyleGridTemplate& aOther) const {
+    return
+      mIsSubgrid != aOther.mIsSubgrid ||
+      mLineNameLists != aOther.mLineNameLists ||
+      mMinTrackSizingFunctions != aOther.mMinTrackSizingFunctions ||
+      mMaxTrackSizingFunctions != aOther.mMaxTrackSizingFunctions ||
+      mIsAutoFill != aOther.mIsAutoFill ||
+      mRepeatAutoIndex != aOther.mRepeatAutoIndex ||
+      mRepeatAutoLineNameListBefore != aOther.mRepeatAutoLineNameListBefore ||
+      mRepeatAutoLineNameListAfter != aOther.mRepeatAutoLineNameListAfter;
+  }
+
+  bool HasRepeatAuto() const {
+    return mRepeatAutoIndex != -1;
+  }
+
+  bool IsRepeatAutoIndex(uint32_t aIndex) const {
+    MOZ_ASSERT(aIndex < uint32_t(2*nsStyleGridLine::kMaxLine));
+    return int32_t(aIndex) == mRepeatAutoIndex;
   }
 };
 

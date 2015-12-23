@@ -58,5 +58,5 @@ skip-if(B2G||Mulet) == border-separate-opacity-table.html border-separate-opacit
 == scrollable-rowgroup-separate-border.html scrollable-rowgroup-separate-notref.html # scrolling rowgroups were removed in bug 28800
 == empty-cells-default-1.html empty-cells-default-1-ref.html
 == empty-cells-default-2.html empty-cells-default-2-ref.html
-fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(Android,1,39) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1-ref.html
+fuzzy-if(OSX,1,113) fuzzy-if(winWidget,1,12) fuzzy-if(Android,1,39) fuzzy-if(winWidget&&!layersGPUAccelerated,82,116) == table-row-opacity-dynamic-1.html table-row-opacity-dynamic-1-ref.html
 == table-row-opacity-dynamic-2.html table-row-opacity-dynamic-2-ref.html

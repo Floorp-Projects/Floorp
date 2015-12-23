@@ -36,13 +36,6 @@ struct ContainerLayerParameters;
 namespace layers {
 class Layer;
 } // namespace layers
-
-struct FrameMetricsAndClip
-{
-  layers::FrameMetrics metrics;
-  mozilla::Maybe<DisplayItemClip> clip;
-};
-
 } // namespace mozilla
 
 /**
@@ -407,11 +400,11 @@ public:
    * aLayer's animated geometry root is this frame. If there needs to be a
    * FrameMetrics contributed by this frame, append it to aOutput.
    */
-  virtual mozilla::Maybe<mozilla::FrameMetricsAndClip> ComputeFrameMetrics(
+  virtual mozilla::Maybe<mozilla::layers::FrameMetrics> ComputeFrameMetrics(
     mozilla::layers::Layer* aLayer,
     nsIFrame* aContainerReferenceFrame,
     const ContainerLayerParameters& aParameters,
-    bool aIsForCaret) const = 0;
+    const mozilla::DisplayItemClip* aClip) const = 0;
 
   /**
    * If this scroll frame is ignoring viewporting clipping
@@ -435,8 +428,6 @@ public:
    * Whether or not this frame uses containerful scrolling.
    */
   virtual bool UsesContainerScrolling() const = 0;
-
-  virtual mozilla::Maybe<mozilla::DisplayItemClip> ComputeScrollClip(bool aIsForCaret) const = 0;
 
   /**
    * Determine if we should build a scrollable layer for this scroll frame and

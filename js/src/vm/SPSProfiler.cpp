@@ -43,6 +43,9 @@ SPSProfiler::init()
     if (lock_ == nullptr)
         return false;
 
+    if (!strings.init())
+        return false;
+
     return true;
 }
 
@@ -61,8 +64,8 @@ SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max
 {
     AutoSPSLock lock(lock_);
     MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
-    if (!strings.initialized())
-        strings.init();
+    MOZ_ASSERT(strings.initialized());
+
     stack_ = stack;
     size_  = size;
     max_   = max;

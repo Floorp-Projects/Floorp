@@ -18,7 +18,7 @@ const TEST_HTTPS_URI = "https://example.com/browser/devtools/client/" +
 const LEARN_MORE_URI = "https://developer.mozilla.org/docs/Security/" +
                        "MixedContent";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   Services.prefs.setBoolPref("security.mixed_content.block_display_content",
                              false);
   Services.prefs.setBoolPref("security.mixed_content.block_active_content",

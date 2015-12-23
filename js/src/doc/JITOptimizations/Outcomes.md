@@ -211,11 +211,6 @@ Optimization failed because SIMD JIT support was not enabled.
 The type observed as being retrieved from this property access did not
 match an optimizable type.
 
-### UnknownSimdProperty
-
-The property being accessed on the object is not one of the optimizable
-property names.
-
 ### HasCommonInliningPath
 
 Inlining was abandoned because the inlining call path was repeated.  A

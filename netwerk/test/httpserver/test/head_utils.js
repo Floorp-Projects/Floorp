@@ -11,7 +11,7 @@ load(_HTTPD_JS_PATH.path);
 // if these tests fail, we'll want the debug output
 DEBUG = true;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 /**
  * Constructs a new nsHttpServer instance.  This function is intended to
@@ -32,19 +32,8 @@ function createServer()
  */
 function makeChannel(url)
 {
-  var ios = Cc["@mozilla.org/network/io-service;1"]
-              .getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER)
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
                 .QueryInterface(Ci.nsIHttpChannel);
-
-  return chan;
 }
 
 /**
@@ -297,7 +286,7 @@ function runHttpTests(testArray, done)
     }
 
     listener._channel = ch;
-    ch.asyncOpen(listener, null);
+    ch.asyncOpen2(listener);
   }
 
   /** Index of the test being run. */

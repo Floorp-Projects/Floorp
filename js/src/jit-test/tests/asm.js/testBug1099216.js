@@ -21,10 +21,11 @@ if (typeof SIMD === 'undefined' || !isSimdAvailable()) {
 
 (function(m) {
     "use asm"
+    var k = m.SIMD.Bool32x4
     var g = m.SIMD.Int32x4
     var h = g.select
     function f() {
-        var x = g(0, 0, 0, 0)
+        var x = k(0, 0, 0, 0)
         var y = g(1, 2, 3, 4)
         return g(h(x, y, y))
     }

@@ -5,6 +5,9 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
 
 function TestSplatX16(type, inputs, coerceFunc) {
     for (var x of inputs) {
@@ -55,6 +58,22 @@ function test() {
     TestSplatX2('Float64x2', [0, undefined, 3.5, 42, -13.37, Infinity, NaN, -0, good], (x) => +x);
     assertEqX2(SIMD.Float64x2.splat(), [NaN, NaN]);
     assertThrowsInstanceOf(() => SIMD.Float64x2.splat(bad), TestError);
+
+    TestSplatX16('Bool8x16', [true, false], (x) => !!x);
+    assertEqX16(Bool8x16.splat(),    [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16.splat(bad), [true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true]);
+
+    TestSplatX8('Bool16x8', [true, false], (x) => !!x);
+    assertEqX8(Bool16x8.splat(),    [false, false, false, false, false, false, false, false]);
+    assertEqX8(Bool16x8.splat(bad), [true, true, true, true, true, true, true, true]);
+
+    TestSplatX4('Bool32x4', [true, false], (x) => !!x);
+    assertEqX4(SIMD.Bool32x4.splat(),    [false, false, false, false]);
+    assertEqX4(SIMD.Bool32x4.splat(bad), [true, true, true, true]);
+
+    TestSplatX2('Bool64x2', [true, false], (x) => !!x);
+    assertEqX2(SIMD.Bool64x2.splat(),    [false, false]);
+    assertEqX2(SIMD.Bool64x2.splat(bad), [true, true]);
 
     if (typeof reportCompare === "function")
         reportCompare(true, true);

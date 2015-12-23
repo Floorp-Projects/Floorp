@@ -166,7 +166,7 @@ private:
   void DoOnDataAvailable(nsIRequest* aRequest, nsISupports* aContext, nsIInputStream* aStream,
                          uint64_t offset, uint32_t count);
   void DoPreOnStopRequest(nsresult aStatus);
-  void DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext);
+  void DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus, nsISupports* aContext);
 
   // Discard the prior interception and continue with the original network request.
   void ResetInterception();

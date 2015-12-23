@@ -31,6 +31,7 @@ final class UnusedResourcesUtil {
             R.drawable.close,
             R.drawable.homepage_banner_firstrun,
             R.drawable.icon_openinapp,
+            R.drawable.network_offline,
             R.drawable.pause,
             R.drawable.phone,
             R.drawable.play,

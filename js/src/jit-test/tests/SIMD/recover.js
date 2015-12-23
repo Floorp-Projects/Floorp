@@ -41,7 +41,20 @@ function simdBox_f4(i) {
     return 0;
 }
 
+var uceFault_simdBox_b4 = eval(uneval(uceFault).replace('uceFault', 'uceFault_simdBox_b4'));
+function simdBox_b4(i) {
+    var val1 = i%2 === 0,
+        val2 = !val1;
+
+    var a = SIMD.Bool32x4(val1, val2, val1, val2);
+    if (uceFault_simdBox_b4(i) || uceFault_simdBox_b4(i))
+        assertEqX4(a, [val1, val2, val1, val2]);
+    assertRecoveredOnBailout(a, true);
+    return 0;
+}
+
 for (var i = 0; i < 100; i++) {
     simdBox_i4(i);
     simdBox_f4(i);
+    simdBox_b4(i);
 }

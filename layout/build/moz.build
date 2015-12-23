@@ -120,10 +120,6 @@ if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
         '/media/sphinxbase',
     ]
 
-
-if CONFIG['MOZ_GSTREAMER']:
-    CXXFLAGS += CONFIG['GSTREAMER_CFLAGS']
-
 if CONFIG['MOZ_SECUREELEMENT']:
     LOCAL_INCLUDES += [
         '/dom/secureelement',

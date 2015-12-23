@@ -282,6 +282,11 @@ var PingPicker = {
       el.addEventListener("change", () => this.onPingSourceChanged(), false);
     }
 
+    let displays = document.getElementsByName("choose-ping-display");
+    for (let el of displays) {
+      el.addEventListener("change", () => this.onPingDisplayChanged(), false);
+    }
+
     document.getElementById("show-subsession-data").addEventListener("change", () => {
       this._updateCurrentPingData();
     });
@@ -298,15 +303,15 @@ var PingPicker = {
             .addEventListener("click", () => this._movePingIndex(-1), false);
     document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1), false);
-    document.getElementById("show-raw-ping")
-            .addEventListener("click", () => this._showRawPingData(), false);
-    document.getElementById("hide-raw-ping")
-            .addEventListener("click", () => this._hideRawPingData(), false);
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData), false);
   },
 
   onPingSourceChanged: function() {
+    this.update();
+  },
+
+  onPingDisplayChanged: function() {
     this.update();
   },
 
@@ -322,6 +327,15 @@ var PingPicker = {
       document.getElementById("current-ping-picker").classList.add("hidden");
       this._updateArchivedPingList().then(() =>
         document.getElementById("archived-ping-picker").classList.remove("hidden"));
+    }
+
+    let element = document.getElementById("ping-source-structured");
+    this.viewCurrentPingData = element.checked;
+
+    if (this.viewCurrentPingData) {
+      this._hideRawPingData();
+    } else {
+      this._showRawPingData();
     }
   },
 

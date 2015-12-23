@@ -4017,6 +4017,9 @@ LIRGenerator::visitSimdUnbox(MSimdUnbox* ins)
 
     BailoutKind kind;
     switch (ins->type()) {
+      case MIRType_Bool32x4:
+        kind = Bailout_NonSimdBool32x4Input;
+        break;
       case MIRType_Int32x4:
         kind = Bailout_NonSimdInt32x4Input;
         break;
@@ -4037,12 +4040,17 @@ LIRGenerator::visitSimdConstant(MSimdConstant* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
 
-    if (ins->type() == MIRType_Int32x4)
+    switch (ins->type()) {
+      case MIRType_Bool32x4:
+      case MIRType_Int32x4:
         define(new(alloc()) LInt32x4(), ins);
-    else if (ins->type() == MIRType_Float32x4)
+        break;
+      case MIRType_Float32x4:
         define(new(alloc()) LFloat32x4(), ins);
-    else
+        break;
+      default:
         MOZ_CRASH("Unknown SIMD kind when generating constant");
+    }
 }
 
 void
@@ -4083,15 +4091,25 @@ LIRGenerator::visitSimdExtractElement(MSimdExtractElement* ins)
     MOZ_ASSERT(IsSimdType(ins->input()->type()));
     MOZ_ASSERT(!IsSimdType(ins->type()));
 
-    if (ins->input()->type() == MIRType_Int32x4) {
+    switch (ins->input()->type()) {
+      case MIRType_Int32x4: {
         // Note: there could be int16x8 in the future, which doesn't use the
         // same instruction. We either need to pass the arity or create new LIns.
         LUse use = useRegisterAtStart(ins->input());
         define(new(alloc()) LSimdExtractElementI(use), ins);
-    } else if (ins->input()->type() == MIRType_Float32x4) {
+        break;
+      }
+      case MIRType_Float32x4: {
         LUse use = useRegisterAtStart(ins->input());
         define(new(alloc()) LSimdExtractElementF(use), ins);
-    } else {
+        break;
+      }
+      case MIRType_Bool32x4: {
+        LUse use = useRegisterAtStart(ins->input());
+        define(new(alloc()) LSimdExtractElementB(use), ins);
+        break;
+      }
+      default:
         MOZ_CRASH("Unknown SIMD kind when extracting element");
     }
 }
@@ -4103,31 +4121,37 @@ LIRGenerator::visitSimdInsertElement(MSimdInsertElement* ins)
 
     LUse vec = useRegisterAtStart(ins->vector());
     LUse val = useRegister(ins->value());
-    if (ins->type() == MIRType_Int32x4)
+    switch (ins->type()) {
+      case MIRType_Int32x4:
+      case MIRType_Bool32x4:
         defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
-    else if (ins->type() == MIRType_Float32x4)
+        break;
+      case MIRType_Float32x4:
         defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
-    else
+        break;
+      default:
         MOZ_CRASH("Unknown SIMD kind when generating constant");
+    }
 }
 
 void
-LIRGenerator::visitSimdSignMask(MSimdSignMask* ins)
+LIRGenerator::visitSimdAllTrue(MSimdAllTrue* ins)
 {
     MDefinition* input = ins->input();
-    MOZ_ASSERT(IsSimdType(input->type()));
-    MOZ_ASSERT(ins->type() == MIRType_Int32);
+    MOZ_ASSERT(IsBooleanSimdType(input->type()));
 
     LUse use = useRegisterAtStart(input);
+    define(new(alloc()) LSimdAllTrue(use), ins);
+}
 
-    switch (input->type()) {
-      case MIRType_Int32x4:
-      case MIRType_Float32x4:
-        define(new(alloc()) LSimdSignMaskX4(use), ins);
-        break;
-      default:
-        MOZ_CRASH("Unexpected SIMD type extracting sign bits.");
-    }
+void
+LIRGenerator::visitSimdAnyTrue(MSimdAnyTrue* ins)
+{
+    MDefinition* input = ins->input();
+    MOZ_ASSERT(IsBooleanSimdType(input->type()));
+
+    LUse use = useRegisterAtStart(input);
+    define(new(alloc()) LSimdAnyTrue(use), ins);
 }
 
 void
@@ -4208,7 +4232,7 @@ LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith* ins)
     // Cannot be at start, as the ouput is used as a temporary to store values.
     LUse in = use(ins->input());
 
-    if (ins->type() == MIRType_Int32x4) {
+    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Bool32x4) {
         LSimdUnaryArithIx4* lir = new(alloc()) LSimdUnaryArithIx4(in);
         define(lir, ins);
     } else if (ins->type() == MIRType_Float32x4) {
@@ -4224,7 +4248,7 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
     MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
-    MOZ_ASSERT(ins->type() == MIRType_Int32x4);
+    MOZ_ASSERT(IsBooleanSimdType(ins->type()));
 
     if (ShouldReorderCommutative(ins->lhs(), ins->rhs(), ins))
         ins->reverse();
@@ -4251,10 +4275,15 @@ LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise* ins)
     MDefinition* rhs = ins->rhs();
     ReorderCommutative(&lhs, &rhs, ins);
 
-    if (ins->type() == MIRType_Int32x4 || ins->type() == MIRType_Float32x4) {
+    switch (ins->type()) {
+      case MIRType_Bool32x4:
+      case MIRType_Int32x4:
+      case MIRType_Float32x4: {
         LSimdBinaryBitwiseX4* lir = new(alloc()) LSimdBinaryBitwiseX4;
         lowerForFPU(lir, ins, lhs, rhs);
-    } else {
+        break;
+      }
+      default:
         MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
     }
 }
