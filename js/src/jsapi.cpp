@@ -510,6 +510,12 @@ JS_SetRuntimePrivate(JSRuntime* rt, void* data)
     rt->data = data;
 }
 
+JS_PUBLIC_API(void)
+JS_SetFutexCanWait(JSRuntime* rt)
+{
+    rt->fx.setCanWait(true);
+}
+
 static void
 StartRequest(JSContext* cx)
 {
