@@ -151,76 +151,60 @@ namespace {
 class Int8x16Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int8x16;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Int16x8Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int16x8;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Int32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Float32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Float64x2Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Bool8x16Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Bool8x16;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Bool16x8Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Bool16x8;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Bool32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Bool32x4;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 class Bool64x2Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Bool64x2;
-    static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
 } // namespace
 
-const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
+// Shared type descriptor methods for all SIMD types.
+static const JSFunctionSpec TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
 };
 
-const JSFunctionSpec Float32x4Defn::TypedObjectMethods[] = {
+// Shared TypedObject methods for all SIMD types.
+static const JSFunctionSpec TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
@@ -233,35 +217,11 @@ const JSFunctionSpec Float32x4Defn::Methods[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec Float64x2Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END
-};
-
-const JSFunctionSpec Float64x2Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
-    JS_FS_END
-};
-
 const JSFunctionSpec Float64x2Defn::Methods[]  = {
 #define SIMD_FLOAT64X2_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_float64x2_##Name, Operands, 0),
     FLOAT64X2_FUNCTION_LIST(SIMD_FLOAT64X2_FUNCTION_ITEM)
 #undef SIMD_FLOAT64X2_FUNCTION_ITEM
-    JS_FS_END
-};
-
-const JSFunctionSpec Int8x16Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Int8x16Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
@@ -273,35 +233,11 @@ const JSFunctionSpec Int8x16Defn::Methods[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec Int16x8Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Int16x8Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
-    JS_FS_END
-};
-
 const JSFunctionSpec Int16x8Defn::Methods[] = {
 #define SIMD_INT16X8_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_int16x8_##Name, Operands, 0),
     INT16X8_FUNCTION_LIST(SIMD_INT16X8_FUNCTION_ITEM)
 #undef SIMD_INT16X8_FUNCTION_ITEM
-    JS_FS_END
-};
-
-const JSFunctionSpec Int32x4Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Int32x4Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
@@ -313,35 +249,11 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec Bool8x16Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Bool8x16Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
-    JS_FS_END
-};
-
 const JSFunctionSpec Bool8x16Defn::Methods[] = {
 #define SIMD_BOOL8X16_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_bool8x16_##Name, Operands, 0),
     BOOL8X16_FUNCTION_LIST(SIMD_BOOL8X16_FUNCTION_ITEM)
 #undef SIMD_BOOL8X16_FUNCTION_ITEM
-    JS_FS_END
-};
-
-const JSFunctionSpec Bool16x8Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Bool16x8Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
@@ -353,35 +265,11 @@ const JSFunctionSpec Bool16x8Defn::Methods[] = {
     JS_FS_END
 };
 
-const JSFunctionSpec Bool32x4Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Bool32x4Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
-    JS_FS_END
-};
-
 const JSFunctionSpec Bool32x4Defn::Methods[] = {
 #define SIMD_BOOL32X4_FUNCTION_ITEM(Name, Func, Operands) \
     JS_FN(#Name, js::simd_bool32x4_##Name, Operands, 0),
     BOOL32X4_FUNCTION_LIST(SIMD_BOOL32X4_FUNCTION_ITEM)
 #undef SIMD_BOOL32X4_FUNCTION_ITEM
-    JS_FS_END
-};
-
-const JSFunctionSpec Bool64x2Defn::TypeDescriptorMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
-    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
-    JS_FS_END,
-};
-
-const JSFunctionSpec Bool64x2Defn::TypedObjectMethods[] = {
-    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
 
@@ -431,11 +319,11 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
     typeDescr->initReservedSlot(JS_DESCR_SLOT_TYPROTO, ObjectValue(*proto));
 
     // Link constructor to prototype and install properties.
-    if (!JS_DefineFunctions(cx, typeDescr, T::TypeDescriptorMethods))
+    if (!JS_DefineFunctions(cx, typeDescr, TypeDescriptorMethods))
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, typeDescr, proto) ||
-        !JS_DefineFunctions(cx, proto, T::TypedObjectMethods))
+        !JS_DefineFunctions(cx, proto, TypedObjectMethods))
     {
         return nullptr;
     }
