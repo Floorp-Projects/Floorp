@@ -145,7 +145,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     parentRuntime(parentRuntime),
     interrupt_(false),
     telemetryCallback(nullptr),
-    handlingSignal(false),
+    handlingSegFault(false),
     interruptCallback(nullptr),
     exclusiveAccessLock(nullptr),
     exclusiveAccessOwner(nullptr),
