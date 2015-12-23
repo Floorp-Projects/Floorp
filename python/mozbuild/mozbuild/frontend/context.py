@@ -1191,7 +1191,7 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
-    'BRANDING_FILES': (HierarchicalStringList, list,
+    'BRANDING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the branding directory.
 
         ``BRANDING_FILES`` will copy (or symlink, if the platform supports it)
