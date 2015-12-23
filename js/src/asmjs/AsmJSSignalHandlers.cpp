@@ -1215,8 +1215,10 @@ static const int sInterruptSignal = SIGVTALRM;
 static void
 JitInterruptHandler(int signum, siginfo_t* info, void* context)
 {
-    if (JSRuntime* rt = RuntimeForCurrentThread())
+    if (JSRuntime* rt = RuntimeForCurrentThread()) {
         RedirectJitCodeToInterruptCheck(rt, (CONTEXT*)context);
+        rt->finishHandlingJitInterrupt();
+    }
 }
 #endif
 
@@ -1323,11 +1325,17 @@ js::InterruptRunningJitCode(JSRuntime* rt)
     if (!rt->canUseSignalHandlers())
         return;
 
+    // Do nothing if we're already handling an interrupt here, to avoid races
+    // below and in JitRuntime::patchIonBackedges.
+    if (!rt->startHandlingJitInterrupt())
+        return;
+
     // If we are on runtime's main thread, then: pc is not in asm.js code (so
     // nothing to do for asm.js) and we can patch Ion backedges without any
     // special synchronization.
     if (rt == RuntimeForCurrentThread()) {
         RedirectIonBackedgesToInterruptCheck(rt);
+        rt->finishHandlingJitInterrupt();
         return;
     }
 
@@ -1348,6 +1356,7 @@ js::InterruptRunningJitCode(JSRuntime* rt)
         }
         ResumeThread(thread);
     }
+    rt->finishHandlingJitInterrupt();
 #else
     // On Unix, we instead deliver an async signal to the main thread which
     // halts the thread and callers our JitInterruptHandler (which has already
