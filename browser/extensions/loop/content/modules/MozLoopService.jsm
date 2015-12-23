@@ -953,10 +953,7 @@ var MozLoopServiceInternal = {
               // NOTE: if you add something here, please also consider if something
               //       needs to be done on the content side as well (e.g.
               //       activeRoomStore#windowUnload).
-              LoopAPI.sendMessageToHandler({
-                name: "HangupNow",
-                data: [conversationWindowData.roomToken, windowId]
-              });
+              LoopRooms.leave(conversationWindowData.roomToken);
             }
           }
         }
@@ -1207,7 +1204,7 @@ var gServiceInitialized = false;
  */
 this.MozLoopService = {
   _DNSService: gDNSService,
-  _activeScreenShares: new Set(),
+  _activeScreenShares: [],
 
   get channelIDs() {
     // Channel ids that will be registered with the PushServer for notifications
@@ -1925,10 +1922,11 @@ this.MozLoopService = {
    */
   setScreenShareState: function(windowId, active) {
     if (active) {
-      this._activeScreenShares.add(windowId);
+      this._activeScreenShares.push(windowId);
     } else {
-      if (this._activeScreenShares.has(windowId)) {
-        this._activeScreenShares.delete(windowId);
+      var index = this._activeScreenShares.indexOf(windowId);
+      if (index != -1) {
+        this._activeScreenShares.splice(index, 1);
       }
     }
 
@@ -1939,6 +1937,6 @@ this.MozLoopService = {
    * Returns true if screen sharing is active in at least one window.
    */
   get screenShareActive() {
-    return this._activeScreenShares.size > 0;
+    return this._activeScreenShares.length > 0;
   }
 };
