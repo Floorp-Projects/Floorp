@@ -14,7 +14,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>test file URI";
 
 var hud;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   let requests = [];
   let { browser } = yield loadTab(TEST_URI);
 

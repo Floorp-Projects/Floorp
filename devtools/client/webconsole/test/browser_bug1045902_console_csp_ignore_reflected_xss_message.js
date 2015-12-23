@@ -23,7 +23,7 @@ var hud = undefined;
 var TEST_URI = "data:text/html;charset=utf8,Web Console CSP ignoring " +
                "reflected XSS (bug 1045902)";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);
 
   hud = yield openConsole();

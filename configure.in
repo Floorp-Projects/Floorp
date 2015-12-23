@@ -328,9 +328,6 @@ else
 
     case "$target" in
     *-android*|*-linuxandroid*)
-        if test -z "$ANDROID_PACKAGE_NAME" ; then
-            ANDROID_PACKAGE_NAME='org.mozilla.$(MOZ_APP_NAME)'
-        fi
         MOZ_CHROME_FILE_FORMAT=omni
         ZLIB_DIR=yes
         AC_DEFINE(ANDROID)
@@ -8598,6 +8595,10 @@ fi
 
 if test -z "$MOZ_APP_VERSION_DISPLAY"; then
    MOZ_APP_VERSION_DISPLAY=$MOZ_APP_VERSION
+fi
+
+if test -z "$ANDROID_PACKAGE_NAME" ; then
+   ANDROID_PACKAGE_NAME="org.mozilla.$MOZ_APP_NAME"
 fi
 
 # For extensions and langpacks, we require a max version that is compatible

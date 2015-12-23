@@ -14,7 +14,7 @@ const TEST_DOC = "https://example.com/browser/devtools/client/webconsole/" +
                  "test/test_bug1092055_shouldwarn.html";
 const SAMPLE_MSG = "specified a header that could not be parsed successfully.";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

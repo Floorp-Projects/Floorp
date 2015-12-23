@@ -21,9 +21,9 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="f3cf488a97ecaec43369f3e3d8a7dda52be019f9"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="94cc99aac11339e297da186ec7153ca4ae9ab8cd"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="ac7e9ae8a24ab4a3f3da801ca53f95f39a32b89f"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="5645fe28c66f0be19975d604cb33b6fdae558348"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <default remote="caf" revision="refs/tags/android-4.0.4_r2.1" sync-j="4"/>
   <!-- Gonk-specific things and forks -->
@@ -38,9 +38,9 @@
   <project name="platform_external_elfutils" path="external/elfutils" remote="b2g" revision="72940dec691fa3255e13df01f8c53b620e446066"/>
   <project name="platform_external_opensans" path="external/opensans" remote="b2g" revision="b5b4c226ca1d71e936153cf679dda6d3d60e2354"/>
   <project name="screencap-gonk" path="external/screencap-gonk" remote="b2g" revision="e6403c71e9eca8cb943739d5a0a192deac60fc51"/>
-  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="23eca997d2042442b6a7927d21ba28aa0658ae69"/>
+  <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="af8b2b782387209cc5b5803926f86bdbc31570ca"/>
   <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="6afc63abe52776ae6a1d32a2d927e630a743a86a"/>
-  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="cb4604d5a578efd027277059ce3e0f6e3af59bd1"/>
+  <project name="platform_hardware_ril" path="hardware/ril" remote="b2g" revision="5fa1b11a01e7e90dbe9681e690020d10795ec1a9"/>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="android-sdk" path="sdk" remote="b2g" revision="4f46930827957afbce500a4a920755a218bf3155"/>
   <project name="darwinstreamingserver" path="system/darwinstreamingserver" remote="b2g" revision="cf85968c7f85e0ec36e72c87ceb4837a943b8af6"/>
