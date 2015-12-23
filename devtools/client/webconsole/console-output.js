@@ -779,7 +779,6 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
    */
   _message: null,
 
-  _afterMessage: null,
   _objectActors: null,
   _groupDepthCompat: 0,
 
@@ -941,11 +940,6 @@ Messages.Simple.prototype = Heritage.extend(Messages.BaseMessage.prototype,
 
     if (this.private) {
       this.element.setAttribute("private", true);
-    }
-
-    if (this._afterMessage) {
-      this.element._outputAfterNode = this._afterMessage.element;
-      this._afterMessage = null;
     }
 
     // TODO: handle object releasing in a more elegant way once all console

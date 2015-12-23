@@ -8,7 +8,7 @@
 const TEST_URI = "data:text/html;charset=utf-8,<p>bug 585991 - autocomplete " +
                  "popup test";
 
-var test = asyncTest(function*() {
+add_task(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 

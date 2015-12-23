@@ -17,7 +17,7 @@ const CSP_VIOLATION_MSG = "Content Security Policy: The page's settings " +
                           "http://some.example.com/test.png (\"default-src " +
                             "https://example.com\").";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   let { browser } = yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

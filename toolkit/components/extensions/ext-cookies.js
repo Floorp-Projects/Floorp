@@ -1,7 +1,9 @@
 "use strict";
 
 const { interfaces: Ci, utils: Cu } = Components;
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
 var {
   EventManager,
   runSafe,
@@ -30,21 +32,110 @@ function convert(cookie) {
   return result;
 }
 
-function* query(detailsIn, props) {
+function isSubdomain(otherDomain, baseDomain) {
+  return otherDomain == baseDomain || otherDomain.endsWith("." + baseDomain);
+}
+
+// Checks that the given extension has permission to set the given cookie for
+// the given URI.
+function checkSetCookiePermissions(extension, uri, cookie) {
+  // Permission checks:
+  //
+  //  - If the extension does not have permissions for the specified
+  //    URL, it cannot set cookies for it.
+  //
+  //  - If the specified URL could not set the given cookie, neither can
+  //    the extension.
+  //
+  // Ideally, we would just have the cookie service make the latter
+  // determination, but that turns out to be quite complicated. At the
+  // moment, it requires constructing a cookie string and creating a
+  // dummy channel, both of which can be problematic. It also triggers
+  // a whole set of additional permission and preference checks, which
+  // may or may not be desirable.
+  //
+  // So instead, we do a similar set of checks here. Exactly what
+  // cookies a given URL should be able to set is not well-documented,
+  // and is not standardized in any standard that anyone actually
+  // follows. So instead, we follow the rules used by the cookie
+  // service.
+  //
+  // See source/netwerk/cookie/nsCookieService.cpp, in particular
+  // CheckDomain() and SetCookieInternal().
+
+  if (uri.scheme != "http" && uri.scheme != "https") {
+    return false;
+  }
+
+  if (!extension.whiteListedHosts.matchesIgnoringPath(uri)) {
+    return false;
+  }
+
+  // The cookie service ignores any leading '.' passed in, but adds one if the
+  // proposed domain is not the exact domain of the URL. So start by stripping
+  // it off.
+  cookie.host = cookie.host.replace(/^\./, "");
+
+  if (cookie.host != uri.host) {
+    // Not an exact match, so check for a valid subdomain.
+    let baseDomain;
+    try {
+      baseDomain = Services.eTLD.getBaseDomain(uri);
+    } catch (e) {
+      if (e.result == Cr.NS_ERROR_HOST_IS_IP_ADDRESS ||
+          e.result == Cr.NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS) {
+        // The cookie service uses these to determine whether the domain
+        // requires an exact match. We already know we don't have an exact
+        // match, so return false. In all other cases, re-raise the error.
+        return false;
+      }
+      throw e;
+    }
+
+    // The cookie domain must be a subdomain of the base domain. This prevents
+    // us from setting cookies for domains like ".co.uk".
+    // The domain of the requesting URL must likewise be a subdomain of the
+    // cookie domain. This prevents us from setting cookies for entirely
+    // unrelated domains.
+    if (!isSubdomain(cookie.host, baseDomain) ||
+        !isSubdomain(uri.host, cookie.host)) {
+      return false;
+    }
+
+    // RFC2109 suggests that we may only add cookies for sub-domains 1-level
+    // below us, but enforcing that would break the web, so we don't.
+
+    // This is a valid sub-domain cookie, so add (or re-add) a leading dot.
+    cookie.host = "." + cookie.host;
+  }
+
+  // We don't do any significant checking of path permissions. RFC2109
+  // suggests we only allow sites to add cookies for sub-paths, similar to
+  // same origin policy enforcement, but no-one implements this.
+
+  return true;
+}
+
+function* query(detailsIn, props, extension) {
   // Different callers want to filter on different properties. |props|
   // tells us which ones they're interested in.
   let details = {};
-  props.map(property => {
+  props.forEach(property => {
     if (detailsIn[property] !== null) {
       details[property] = detailsIn[property];
     }
   });
 
+  if ("domain" in details) {
+    details.domain = details.domain.toLowerCase().replace(/^\./, "");
+  }
+
   // We can use getCookiesFromHost for faster searching.
   let enumerator;
+  let uri;
   if ("url" in details) {
     try {
-      let uri = Services.io.newURI(details.url, null, null);
+      uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
       enumerator = Services.cookies.getCookiesFromHost(uri.host);
     } catch (ex) {
       // This often happens for about: URLs
@@ -63,29 +154,25 @@ function* query(detailsIn, props) {
     }
 
     function pathMatches(path) {
-      // Calculate cookie path length, excluding trailing '/'.
-      let length = cookie.path.length;
-      if (cookie.path.endsWith("/")) {
-        length -= 1;
-      }
+      let cookiePath = cookie.path.replace(/\/$/, "");
 
-      // If the path is shorter than the cookie path, don't send it back.
-      if (!path.startsWith(cookie.path.substring(0, length))) {
+      if (!path.startsWith(cookiePath)) {
         return false;
       }
 
-      let pathDelimiter = ["/", "?", "#", ";"];
-      if (path.length > length && !pathDelimiter.includes(path.charAt(length))) {
-        return false;
+      // path == cookiePath, but without the redundant string compare.
+      if (path.length == cookiePath.length) {
+        return true;
       }
 
-      return true;
+      // URL path is a substring of the cookie path, so it matches if, and
+      // only if, the next character is a path delimiter.
+      let pathDelimiters = ["/", "?", "#", ";"];
+      return pathDelimiters.includes(path[cookiePath.length]);
     }
 
     // "Restricts the retrieved cookies to those that would match the given URL."
-    if ("url" in details) {
-      let uri = Services.io.newURI(details.url, null, null);
-
+    if (uri) {
       if (!domainMatches(uri.host)) {
         return false;
       }
@@ -104,11 +191,8 @@ function* query(detailsIn, props) {
     }
 
     // "Restricts the retrieved cookies to those whose domains match or are subdomains of this one."
-    if ("domain" in details) {
-      if (cookie.rawHost != details.domain &&
-         !cookie.rawHost.endsWith("." + details.domain)) {
-        return false;
-      }
+    if ("domain" in details && !isSubdomain(cookie.rawHost, details.domain)) {
+      return false;
     }
 
     // "Restricts the retrieved cookies to those whose path exactly matches this string.""
@@ -128,6 +212,11 @@ function* query(detailsIn, props) {
       return false;
     }
 
+    // Check that the extension has permissions for this host.
+    if (!extension.whiteListedHosts.matchesCookie(cookie)) {
+      return false;
+    }
+
     return true;
   }
 
@@ -144,7 +233,7 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
     cookies: {
       get: function(details, callback) {
         // FIXME: We don't sort by length of path and creation time.
-        for (let cookie of query(details, ["url", "name", "storeId"])) {
+        for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
           runSafe(context, callback, convert(cookie));
           return;
         }
@@ -155,20 +244,17 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
 
       getAll: function(details, callback) {
         let allowed = ["url", "name", "domain", "path", "secure", "session", "storeId"];
-        let result = [];
-        for (let cookie of query(details, allowed)) {
-          result.push(convert(cookie));
-        }
+        let result = Array.from(query(details, allowed, extension), convert);
 
         runSafe(context, callback, result);
       },
 
       set: function(details, callback) {
-        let uri = Services.io.newURI(details.url, null, null);
+        let uri = NetUtil.newURI(details.url).QueryInterface(Ci.nsIURL);
 
         let domain;
         if (details.domain !== null) {
-          domain = "." + details.domain;
+          domain = details.domain.toLowerCase();
         } else {
           domain = uri.host; // "If omitted, the cookie becomes a host-only cookie."
         }
@@ -177,16 +263,11 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         if (details.path !== null) {
           path = details.path;
         } else {
-          // Chrome seems to trim the path after the last slash.
-          // /x/abc/ddd == /x/abc
-          // /xxxx?abc == /
-          // We always have at least one slash.
-          let index = uri.path.slice(1).lastIndexOf("/");
-          if (index == -1) {
-            path = "/";
-          } else {
-            path = uri.path.slice(0, index + 1); // This removes the last slash.
-          }
+          // This interface essentially emulates the behavior of the
+          // Set-Cookie header. In the case of an omitted path, the cookie
+          // service uses the directory path of the requesting URL, ignoring
+          // any filename or query parameters.
+          path = uri.directory;
         }
 
         let name = details.name !== null ? details.name : "";
@@ -195,16 +276,25 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
         let httpOnly = details.httpOnly !== null ? details.httpOnly : false;
         let isSession = details.expirationDate === null;
         let expiry = isSession ? 0 : details.expirationDate;
-        // Ingore storeID.
+        // Ignore storeID.
 
-        Services.cookies.add(domain, path, name, value, secure, httpOnly, isSession, expiry);
+        let cookieAttrs = { host: domain, path: path, isSecure: secure };
+        if (checkSetCookiePermissions(extension, uri, cookieAttrs)) {
+          // TODO: Set |lastError| when false.
+          //
+          // The permission check may have modified the domain, so use
+          // the new value instead.
+          Services.cookies.add(cookieAttrs.host, path, name, value,
+                               secure, httpOnly, isSession, expiry);
+        }
+
         if (callback) {
           self.cookies.get(details, callback);
         }
       },
 
       remove: function(details, callback) {
-        for (let cookie of query(details, ["url", "name", "storeId"])) {
+        for (let cookie of query(details, ["url", "name", "storeId"], extension)) {
           Services.cookies.remove(cookie.host, cookie.name, cookie.path, false);
           if (callback) {
             runSafe(context, callback, {
@@ -230,7 +320,11 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
       onChanged: new EventManager(context, "cookies.onChanged", fire => {
         let observer = (subject, topic, data) => {
           let notify = (removed, cookie, cause) => {
-            fire({removed, cookie: convert(cookie.QueryInterface(Ci.nsICookie2)), cause});
+            cookie.QueryInterface(Ci.nsICookie2);
+
+            if (extension.whiteListedHosts.matchesCookie(cookie)) {
+              fire({removed, cookie: convert(cookie), cause});
+            }
           };
 
           // We do our best effort here to map the incompatible states.
@@ -245,9 +339,10 @@ extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
               notify(false, subject, "overwrite");
               break;
             case "batch-deleted":
-              for (let i = 0; i < subject.length; subject++) {
+              subject.QueryInterface(Ci.nsIArray);
+              for (let i = 0; i < subject.length; i++) {
                 let cookie = subject.queryElementAt(i, Ci.nsICookie2);
-                if (!cookie.isSession && cookie.expiry < Date.now()) {
+                if (!cookie.isSession && (cookie.expiry + 1) * 1000 <= Date.now()) {
                   notify(true, cookie, "expired");
                 } else {
                   notify(true, cookie, "evicted");

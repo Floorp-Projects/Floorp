@@ -878,7 +878,6 @@ struct TelemetryHistogram {
   uint32_t id_offset;
   uint32_t expiration_offset;
   uint32_t dataset;
-  bool extendedStatisticsOK;
   bool keyed;
 
   const char *id() const;
@@ -1087,9 +1086,6 @@ GetHistogramByEnumId(Telemetry::ID id, Histogram **ret)
   }
 #endif
 
-  if (p.extendedStatisticsOK) {
-    h->SetFlags(Histogram::kExtendedStatisticsFlag);
-  }
   *ret = knownHistograms[id] = h;
   return NS_OK;
 }
@@ -1237,12 +1233,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
     return REFLECT_FAILURE;
   }
 
-  if (h->histogram_type() == Histogram::HISTOGRAM) {
-    if (!(JS_DefineProperty(cx, obj, "log_sum", ss.log_sum(), JSPROP_ENUMERATE)
-          && JS_DefineProperty(cx, obj, "log_sum_squares", ss.log_sum_squares(), JSPROP_ENUMERATE))) {
-      return REFLECT_FAILURE;
-    }
-  } else {
+  if (h->histogram_type() != Histogram::HISTOGRAM) {
     // Export |sum_squares| as two separate 32-bit properties so that we
     // can accurately reconstruct it on the analysis side.
     uint64_t sum_squares = ss.sum_squares();
@@ -1986,7 +1977,6 @@ TelemetryImpl::NewHistogram(const nsACString &name, const nsACString &expiration
   if (NS_FAILED(rv))
     return rv;
   h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  h->SetFlags(Histogram::kExtendedStatisticsFlag);
   return WrapAndReturnHistogram(h, cx, ret);
 }
 
@@ -2927,10 +2917,8 @@ CreateJSTimeHistogram(JSContext* cx, const Telemetry::TimeHistogram& time)
                          JSPROP_ENUMERATE)) {
     return nullptr;
   }
-  // TODO: calculate "sum", "log_sum", and "log_sum_squares"
-  if (!JS_DefineProperty(cx, ret, "sum", 0, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "log_sum", 0.0, JSPROP_ENUMERATE) ||
-      !JS_DefineProperty(cx, ret, "log_sum_squares", 0.0, JSPROP_ENUMERATE)) {
+  // TODO: calculate "sum"
+  if (!JS_DefineProperty(cx, ret, "sum", 0, JSPROP_ENUMERATE)) {
     return nullptr;
   }
 
@@ -4403,7 +4391,6 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
   }
 
   h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  h->SetFlags(Histogram::kExtendedStatisticsFlag);
   *histogram = h;
 
   entry = map.PutEntry(key);

@@ -14,7 +14,7 @@ var hud;
  * Repeated CSS messages get collapsed into one.
  */
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   hud = yield openConsole();

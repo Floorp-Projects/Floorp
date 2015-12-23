@@ -6,7 +6,7 @@
 
 "use strict";
 
-var test = asyncTest(function*() {
+add_task(function*() {
   const TEST_URI = "data:text/html;charset=utf8,<p>hello world, bug 916997";
   let clipboardValue = "";
 
