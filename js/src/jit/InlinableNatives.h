@@ -10,6 +10,7 @@
 #define INLINABLE_NATIVE_LIST(_)    \
     _(Array)                        \
     _(ArrayIsArray)                 \
+    _(ArrayJoin)                    \
     _(ArrayPop)                     \
     _(ArrayShift)                   \
     _(ArrayPush)                    \

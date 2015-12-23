@@ -68,6 +68,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineArray(callInfo);
       case InlinableNative::ArrayIsArray:
         return inlineArrayIsArray(callInfo);
+      case InlinableNative::ArrayJoin:
+        return inlineArrayJoin(callInfo);
       case InlinableNative::ArrayPop:
         return inlineArrayPopShift(callInfo, MArrayPopShift::Pop);
       case InlinableNative::ArrayShift:
@@ -646,6 +648,8 @@ IonBuilder::inlineArrayJoin(CallInfo& callInfo)
     current->add(ins);
     current->push(ins);
 
+    if (!resumeAfter(ins))
+        return InliningStatus_Error;
     return InliningStatus_Inlined;
 }
 

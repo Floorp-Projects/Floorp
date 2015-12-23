@@ -9523,7 +9523,9 @@ class MArrayJoin
         return true;
     }
     virtual AliasSet getAliasSet() const override {
-        return AliasSet::Load(AliasSet::Element | AliasSet::ObjectFields);
+        // Array.join might coerce the elements of the Array to strings.  This
+        // coercion might cause the evaluation of the some JavaScript code.
+        return AliasSet::Store(AliasSet::Any);
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
 };
