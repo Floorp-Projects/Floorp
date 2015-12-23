@@ -9,18 +9,12 @@
  *     as the nodePrincipal match the URL in the URL bar.
  */
 
-/* globals Cc, Ci, ok, is, content, TestRunner, addNewTabPageTab, gWindow, Services, info */
-/* exported runTests */
-
-"use strict";
+const ABOUT_NEWTAB_URI = "about:newtab";
+const PREF_URI = "http://example.com/browser/browser/base/content/test/newtab/external_newtab.html";
 
 var browser = null;
 var aboutNewTabService = Cc["@mozilla.org/browser/aboutnewtab-service;1"]
                            .getService(Ci.nsIAboutNewTabService);
-
-const ABOUT_NEWTAB_URI = "about:newtab";
-const PREF_URI = "http://example.com/browser/browser/base/content/test/newtab/external_newtab.html";
-const DEFAULT_URI = aboutNewTabService.newTabURL;
 
 function testPref() {
   // set the pref for about:newtab to point to an exteranl resource
@@ -40,7 +34,7 @@ function testPref() {
 
     // reset to about:newtab and perform sanity check
     aboutNewTabService.resetNewTabURL();
-    is(aboutNewTabService.newTabURL, DEFAULT_URI,
+    is(aboutNewTabService.newTabURL, ABOUT_NEWTAB_URI,
        "sanity check: resetting the URL to about:newtab should return about:newtab");
 
     // remove the tab and move on
