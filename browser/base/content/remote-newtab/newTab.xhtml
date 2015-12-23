@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<!DOCTYPE html [
+  <!ENTITY % newTabDTD SYSTEM "chrome://browser/locale/newTab.dtd">
+  %newTabDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>&newtab.pageTitle;</title>
+  <link rel="stylesheet" href="chrome://browser/content/remote-newtab/newTab.css"/>
+</head>
+<body>
+  <iframe id="remotedoc"/>
+  <script type="text/javascript;version=1.8"
+          src="chrome://browser/content/remote-newtab/newTab.js">
+  </script>
+</body>
+</html>
+

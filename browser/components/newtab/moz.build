@@ -4,24 +4,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
+if not CONFIG['RELEASE_BUILD']:
+    BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
 
-XPCSHELL_TESTS_MANIFESTS += [
-    'tests/xpcshell/xpcshell.ini',
-]
+    XPCSHELL_TESTS_MANIFESTS += [
+        'tests/xpcshell/xpcshell.ini',
+    ]
 
-EXTRA_JS_MODULES += [
-    'NewTabPrefsProvider.jsm',
-    'PlacesProvider.jsm',
-]
-
-XPIDL_SOURCES += [
-    'nsIAboutNewTabService.idl',
-]
-
-XPIDL_MODULE = 'browser-newtab'
-
-EXTRA_COMPONENTS += [
-    'aboutNewTabService.js',
-    'NewTabComponents.manifest',
-]
+    EXTRA_JS_MODULES += [
+        'NewTabPrefsProvider.jsm',
+        'NewTabURL.jsm',
+        'PlacesProvider.jsm',
+        'RemoteAboutNewTab.jsm',
+        'RemoteNewTabLocation.jsm',
+        'RemoteNewTabUtils.jsm',
+    ]

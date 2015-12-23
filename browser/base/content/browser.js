@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NotificationDB.jsm");
 Cu.import("resource:///modules/RecentWindow.jsm");
 
-
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Deprecated",
@@ -56,9 +55,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
                                   "resource:///modules/Pocket.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "gAboutNewTabService",
-                                   "@mozilla.org/browser/aboutnewtab-service;1",
-                                   "nsIAboutNewTabService");
 
 // Can't use XPCOMUtils for these because the scripts try to define the variables
 // on window, and so the defineProperty inside defineLazyGetter fails.
@@ -2365,11 +2361,8 @@ function URLBarSetURI(aURI) {
     } catch (e) {}
 
     // Replace initial page URIs with an empty string
-    // 1. only if there's no opener (bug 370555).
-    // 2. if remote newtab is enabled and it's the default remote newtab page
-    let defaultRemoteURL = gAboutNewTabService.remoteEnabled &&
-                           uri.spec === gAboutNewTabService.newTabURL;
-    if (gInitialPages.includes(uri.spec) || defaultRemoteURL)
+    // only if there's no opener (bug 370555).
+    if (gInitialPages.indexOf(uri.spec) != -1)
       value = gBrowser.selectedBrowser.hasContentOpener ? uri.spec : "";
     else
       value = losslessDecodeURI(uri);
@@ -3566,9 +3559,8 @@ const BrowserSearch = {
       if (!aSearchBar || document.activeElement != aSearchBar.textbox.inputField) {
         let url = gBrowser.currentURI.spec.toLowerCase();
         let mm = gBrowser.selectedBrowser.messageManager;
-        let newTabRemoted = Services.prefs.getBoolPref("browser.newtabpage.remote");
-        let localNewTabEnabled = url === "about:newtab" && !newTabRemoted && NewTabUtils.allPages.enabled;
-        if (url === "about:home" || localNewTabEnabled) {
+        if (url === "about:home" ||
+            (url === "about:newtab" && NewTabUtils.allPages.enabled)) {
           ContentSearch.focusInput(mm);
         } else {
           openUILinkIn("about:home", "current");
