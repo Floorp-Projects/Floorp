@@ -748,6 +748,20 @@ void nsDisplayListBuilder::MarkOutOfFlowFrameForDisplay(nsIFrame* aDirtyFrame,
 {
   nsRect dirtyRectRelativeToDirtyFrame = aDirtyRect;
   nsRect dirty = dirtyRectRelativeToDirtyFrame - aFrame->GetOffsetTo(aDirtyFrame);
+  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(aFrame) &&
+      IsPaintingToWindow()) {
+    NS_ASSERTION(aDirtyFrame == aFrame->GetParent(), "Dirty frame should be viewport frame");
+    // position: fixed items are reflowed into and only drawn inside the
+    // viewport, or the scroll position clamping scrollport size, if one is
+    // set.
+    nsIPresShell* ps = aFrame->PresContext()->PresShell();
+    dirtyRectRelativeToDirtyFrame.MoveTo(0, 0);
+    if (ps->IsScrollPositionClampingScrollPortSizeSet()) {
+      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetScrollPositionClampingScrollPortSize());
+    } else {
+      dirtyRectRelativeToDirtyFrame.SizeTo(aDirtyFrame->GetSize());
+    }
+  }
   nsRect overflowRect = aFrame->GetVisualOverflowRect();
 
   if (aFrame->IsTransformed() &&
