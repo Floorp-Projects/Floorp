@@ -17,7 +17,7 @@ const TEST_URI2 = "http://example.com/browser/devtools/client/webconsole/" +
 var lastFinishedRequests = {};
 var webConsoleClient;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

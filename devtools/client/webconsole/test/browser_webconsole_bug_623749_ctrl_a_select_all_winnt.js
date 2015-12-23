@@ -8,7 +8,7 @@
 
 const TEST_URI = "data:text/html;charset=utf-8,Test console for bug 623749";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();
