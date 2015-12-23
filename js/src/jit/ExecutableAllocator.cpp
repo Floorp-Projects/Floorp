@@ -120,7 +120,8 @@ ExecutablePool::available() const
     return m_end - m_freePtr;
 }
 
-ExecutableAllocator::ExecutableAllocator()
+ExecutableAllocator::ExecutableAllocator(JitRuntime* jrt)
+  : jrt_(jrt)
 {
     MOZ_ASSERT(m_smallPools.empty());
 }
@@ -212,6 +213,8 @@ ExecutableAllocator::roundUpAllocationSize(size_t request, size_t granularity)
 ExecutablePool*
 ExecutableAllocator::createPool(size_t n)
 {
+    MOZ_ASSERT(jrt_->preventBackedgePatching());
+
     size_t allocSize = roundUpAllocationSize(n, pageSize);
     if (allocSize == OVERSIZE_ALLOCATION)
         return nullptr;
@@ -241,6 +244,9 @@ ExecutableAllocator::createPool(size_t n)
 void*
 ExecutableAllocator::alloc(size_t n, ExecutablePool** poolp, CodeKind type)
 {
+    // Don't race with reprotectAll called from the signal handler.
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt_);
+
     // Caller must ensure 'n' is word-size aligned. If all allocations are
     // of word sized quantities, then all subsequent allocations will be
     // aligned.
@@ -265,6 +271,9 @@ ExecutableAllocator::alloc(size_t n, ExecutablePool** poolp, CodeKind type)
 void
 ExecutableAllocator::releasePoolPages(ExecutablePool* pool)
 {
+    // Don't race with reprotectAll called from the signal handler.
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt_);
+
     MOZ_ASSERT(pool->m_allocation.pages);
     systemRelease(pool->m_allocation);
 
@@ -278,6 +287,9 @@ ExecutableAllocator::releasePoolPages(ExecutablePool* pool)
 void
 ExecutableAllocator::purge()
 {
+    // Don't race with reprotectAll called from the signal handler.
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt_);
+
     for (size_t i = 0; i < m_smallPools.length(); i++)
         m_smallPools[i]->release();
     m_smallPools.clear();
@@ -320,6 +332,22 @@ ExecutableAllocator::addSizeOfCode(JS::CodeSizes* sizes) const
                                                        - pool->m_regexpCodeBytes
                                                        - pool->m_otherCodeBytes;
         }
+    }
+}
+
+void
+ExecutableAllocator::reprotectAll(ProtectionSetting protection)
+{
+    if (!nonWritableJitCode)
+        return;
+
+    if (!m_pools.initialized())
+        return;
+
+    for (ExecPoolHashSet::Range r = m_pools.all(); !r.empty(); r.popFront()) {
+        ExecutablePool* pool = r.front();
+        char* start = pool->m_allocation.pages;
+        reprotectRegion(start, pool->m_freePtr - start, protection);
     }
 }
 
