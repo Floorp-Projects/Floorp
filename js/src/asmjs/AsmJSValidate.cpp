@@ -4970,6 +4970,10 @@ CheckSimdOperationCall(FunctionValidator& f, ParseNode* call, const ModuleValida
 
       case AsmJSSimdOperation_shiftLeftByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::lsh, type);
+      case AsmJSSimdOperation_shiftRightByScalar:
+        return CheckSimdBinary(f, call, opType,
+                               IsSignedIntSimdType(opType) ? MSimdShift::rsh : MSimdShift::ursh,
+                               type);
       case AsmJSSimdOperation_shiftRightArithmeticByScalar:
         return CheckSimdBinary(f, call, opType, MSimdShift::rsh, type);
       case AsmJSSimdOperation_shiftRightLogicalByScalar:

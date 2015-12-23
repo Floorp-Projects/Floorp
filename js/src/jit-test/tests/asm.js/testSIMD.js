@@ -924,7 +924,8 @@ assertAsmTypeFail('glob', USE_ASM + F32 + CF32 + NOTF32 + 'function f() {var x=f
 
 // Logical ops
 const LSHI = 'var lsh=i4.shiftLeftByScalar;'
-const RSHI = 'var rsh=i4.shiftRightArithmeticByScalar;'
+const RSHI = 'var rsh=i4.shiftRightByScalar;'
+const ARSHI = 'var arsh=i4.shiftRightArithmeticByScalar;'
 const URSHI = 'var ursh=i4.shiftRightLogicalByScalar;'
 
 assertAsmTypeFail('glob', USE_ASM + I32 + CI32 + F32 + FROUND + LSHI + "function f() {var x=f4(1,2,3,4); return ci4(lsh(x,f32(42)));} return f");
@@ -940,19 +941,23 @@ var vinput = [0, 1, INT32_MIN, INT32_MAX];
 // Behave as x86 for now, fix when more broadly specified. See also bug 1068028
 function Lsh(i) {  if (i > 31) return () => 0; return function(x) { return (x << i) | 0 } }
 function Rsh(i) {  if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
+function Arsh(i) {  if (i > 31) return (x) => (x<0)?-1:0; return function(x) { return (x >> i) | 0 } }
 function Ursh(i) { if (i > 31) return () => 0; return function(x) { return (x >>> i) | 0 } }
 
 var asmLsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + LSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(lsh(v, x+y))} return f;'), this)
 var asmRsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + RSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(rsh(v, x+y))} return f;'), this)
+var asmArsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + ARSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(arsh(v, x+y))} return f;'), this)
 var asmUrsh = asmLink(asmCompile('glob', USE_ASM + I32 + CI32 + URSHI + 'function f(x, y){x=x|0;y=y|0; var v=' + input + ';return ci4(ursh(v, x+y))} return f;'), this)
 
 for (var i = 1; i < 64; i++) {
     CheckI4(LSHI,  'var x=' + input + '; x=lsh(x, ' + i + ')',   vinput.map(Lsh(i)));
     CheckI4(RSHI,  'var x=' + input + '; x=rsh(x, ' + i + ')',   vinput.map(Rsh(i)));
+    CheckI4(ARSHI, 'var x=' + input + '; x=arsh(x, ' + i + ')',  vinput.map(Arsh(i)));
     CheckI4(URSHI, 'var x=' + input + '; x=ursh(x, ' + i + ')',  vinput.map(Ursh(i)));
 
     assertEqX4(asmLsh(i, 3),  vinput.map(Lsh(i + 3)));
     assertEqX4(asmRsh(i, 3),  vinput.map(Rsh(i + 3)));
+    assertEqX4(asmArsh(i, 3), vinput.map(Arsh(i + 3)));
     assertEqX4(asmUrsh(i, 3), vinput.map(Ursh(i + 3)));
 }
 

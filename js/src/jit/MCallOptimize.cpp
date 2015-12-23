@@ -3107,8 +3107,10 @@ IonBuilder::inlineSimdInt32x4(CallInfo& callInfo, JSNative native)
 
     if (native == js::simd_int32x4_shiftLeftByScalar)
         return inlineBinarySimd<MSimdShift>(callInfo, native, MSimdShift::lsh, SimdTypeDescr::Int32x4);
-    if (native == js::simd_int32x4_shiftRightArithmeticByScalar)
+    if (native == js::simd_int32x4_shiftRightArithmeticByScalar ||
+        native == js::simd_int32x4_shiftRightByScalar) {
         return inlineBinarySimd<MSimdShift>(callInfo, native, MSimdShift::rsh, SimdTypeDescr::Int32x4);
+    }
     if (native == js::simd_int32x4_shiftRightLogicalByScalar)
         return inlineBinarySimd<MSimdShift>(callInfo, native, MSimdShift::ursh, SimdTypeDescr::Int32x4);
 

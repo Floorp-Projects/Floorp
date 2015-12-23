@@ -247,6 +247,7 @@
   V(or, (BinaryFunc<Int8x16, Or, Int8x16>), 2)                                        \
   V(sub, (BinaryFunc<Int8x16, Sub, Int8x16>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int8x16, ShiftLeft>), 2)                         \
+  V(shiftRightByScalar, (BinaryScalar<Int8x16, ShiftRightArithmetic>), 2)             \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Int8x16, ShiftRightArithmetic>), 2)   \
   V(shiftRightLogicalByScalar, (BinaryScalar<Int8x16, ShiftRightLogical>), 2)         \
   V(xor, (BinaryFunc<Int8x16, Xor, Int8x16>), 2)
@@ -295,6 +296,7 @@
   V(or, (BinaryFunc<Uint8x16, Or, Uint8x16>), 2)                                      \
   V(sub, (BinaryFunc<Uint8x16, Sub, Uint8x16>), 2)                                    \
   V(shiftLeftByScalar, (BinaryScalar<Uint8x16, ShiftLeft>), 2)                        \
+  V(shiftRightByScalar, (BinaryScalar<Uint8x16, ShiftRightLogical>), 2)               \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Uint8x16, ShiftRightArithmetic>), 2)  \
   V(shiftRightLogicalByScalar, (BinaryScalar<Uint8x16, ShiftRightLogical>), 2)        \
   V(xor, (BinaryFunc<Uint8x16, Xor, Uint8x16>), 2)
@@ -343,6 +345,7 @@
   V(or, (BinaryFunc<Int16x8, Or, Int16x8>), 2)                                        \
   V(sub, (BinaryFunc<Int16x8, Sub, Int16x8>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int16x8, ShiftLeft>), 2)                         \
+  V(shiftRightByScalar, (BinaryScalar<Int16x8, ShiftRightArithmetic>), 2)             \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Int16x8, ShiftRightArithmetic>), 2)   \
   V(shiftRightLogicalByScalar, (BinaryScalar<Int16x8, ShiftRightLogical>), 2)         \
   V(xor, (BinaryFunc<Int16x8, Xor, Int16x8>), 2)
@@ -391,6 +394,7 @@
   V(or, (BinaryFunc<Uint16x8, Or, Uint16x8>), 2)                                      \
   V(sub, (BinaryFunc<Uint16x8, Sub, Uint16x8>), 2)                                    \
   V(shiftLeftByScalar, (BinaryScalar<Uint16x8, ShiftLeft>), 2)                        \
+  V(shiftRightByScalar, (BinaryScalar<Uint16x8, ShiftRightLogical>), 2)               \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Uint16x8, ShiftRightArithmetic>), 2)  \
   V(shiftRightLogicalByScalar, (BinaryScalar<Uint16x8, ShiftRightLogical>), 2)        \
   V(xor, (BinaryFunc<Uint16x8, Xor, Uint16x8>), 2)
@@ -443,6 +447,7 @@
   V(or, (BinaryFunc<Int32x4, Or, Int32x4>), 2)                                        \
   V(sub, (BinaryFunc<Int32x4, Sub, Int32x4>), 2)                                      \
   V(shiftLeftByScalar, (BinaryScalar<Int32x4, ShiftLeft>), 2)                         \
+  V(shiftRightByScalar, (BinaryScalar<Int32x4, ShiftRightArithmetic>), 2)             \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Int32x4, ShiftRightArithmetic>), 2)   \
   V(shiftRightLogicalByScalar, (BinaryScalar<Int32x4, ShiftRightLogical>), 2)         \
   V(xor, (BinaryFunc<Int32x4, Xor, Int32x4>), 2)
@@ -498,6 +503,7 @@
   V(or, (BinaryFunc<Uint32x4, Or, Uint32x4>), 2)                                      \
   V(sub, (BinaryFunc<Uint32x4, Sub, Uint32x4>), 2)                                    \
   V(shiftLeftByScalar, (BinaryScalar<Uint32x4, ShiftLeft>), 2)                        \
+  V(shiftRightByScalar, (BinaryScalar<Uint32x4, ShiftRightLogical>), 2)               \
   V(shiftRightArithmeticByScalar, (BinaryScalar<Uint32x4, ShiftRightArithmetic>), 2)  \
   V(shiftRightLogicalByScalar, (BinaryScalar<Uint32x4, ShiftRightLogical>), 2)        \
   V(xor, (BinaryFunc<Uint32x4, Xor, Uint32x4>), 2)
@@ -572,6 +578,7 @@
 // Bitwise shifts defined on integer SIMD types.
 #define FOREACH_SHIFT_SIMD_OP(_)      \
     _(shiftLeftByScalar)              \
+    _(shiftRightByScalar)             \
     _(shiftRightArithmeticByScalar)   \
     _(shiftRightLogicalByScalar)
 
