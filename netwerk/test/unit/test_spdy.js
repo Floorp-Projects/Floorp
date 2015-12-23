@@ -1,6 +1,6 @@
 // test spdy/3.1
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Generate a small and a large post with known pre-calculated md5 sums
 function generateContent(size) {
@@ -134,8 +134,8 @@ SpdyPushListener.prototype = new SpdyCheckListener();
 SpdyPushListener.prototype.onDataAvailable = function(request, ctx, stream, off, cnt) {
   this.onDataAvailableFired = true;
   this.isSpdyConnection = checkIsSpdy(request);
-  if (ctx.originalURI.spec == "https://localhost:" + serverPort + "/push.js" ||
-      ctx.originalURI.spec == "https://localhost:" + serverPort + "/push2.js") {
+  if (request.originalURI.spec == "https://localhost:" + serverPort + "/push.js" ||
+      request.originalURI.spec == "https://localhost:" + serverPort + "/push2.js") {
     do_check_eq(request.getResponseHeader("pushed"), "yes");
   }
   read_stream(stream, cnt);
@@ -184,24 +184,15 @@ SpdyPostListener.prototype.onDataAvailable = function(request, ctx, stream, off,
 };
 
 function makeChan(url) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(url,
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
-
-  return chan;
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true})
+                .QueryInterface(Ci.nsIHttpChannel);
 }
 
 // Make sure we make a spdy connection and both us and the server mark it as such
 function test_spdy_basic() {
   var chan = makeChan("https://localhost:" + serverPort + "/");
   var listener = new SpdyCheckListener();
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 // Support for making sure XHR works over SPDY
@@ -249,7 +240,7 @@ function test_spdy_concurrent() {
   for (var i = 0; i < concurrent_listener.target; i++) {
     concurrent_channels[i] = makeChan("https://localhost:" + serverPort + "/750ms");
     concurrent_channels[i].loadFlags = Ci.nsIRequest.LOAD_BYPASS_CACHE;
-    concurrent_channels[i].asyncOpen(concurrent_listener, null);
+    concurrent_channels[i].asyncOpen2(concurrent_listener);
   }
 }
 
@@ -259,8 +250,8 @@ function test_spdy_multiplex() {
   var chan2 = makeChan("https://localhost:" + serverPort + "/multiplex2");
   var listener1 = new SpdyMultiplexListener();
   var listener2 = new SpdyMultiplexListener();
-  chan1.asyncOpen(listener1, null);
-  chan2.asyncOpen(listener2, null);
+  chan1.asyncOpen2(listener1);
+  chan2.asyncOpen2(listener2);
 }
 
 // Test to make sure we gateway non-standard headers properly
@@ -269,42 +260,42 @@ function test_spdy_header() {
   var hvalue = "Headers are fun";
   var listener = new SpdyHeaderListener(hvalue);
   chan.setRequestHeader("X-Test-Header", hvalue, false);
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 function test_spdy_push1() {
   var chan = makeChan("https://localhost:" + serverPort + "/push");
   chan.loadGroup = loadGroup;
   var listener = new SpdyPushListener();
-  chan.asyncOpen(listener, chan);
+  chan.asyncOpen2(listener);
 }
 
 function test_spdy_push2() {
   var chan = makeChan("https://localhost:" + serverPort + "/push.js");
   chan.loadGroup = loadGroup;
   var listener = new SpdyPushListener();
-  chan.asyncOpen(listener, chan);
+  chan.asyncOpen2(listener);
 }
 
 function test_spdy_push3() {
   var chan = makeChan("https://localhost:" + serverPort + "/push2");
   chan.loadGroup = loadGroup;
   var listener = new SpdyPushListener();
-  chan.asyncOpen(listener, chan);
+  chan.asyncOpen2(listener);
 }
 
 function test_spdy_push4() {
   var chan = makeChan("https://localhost:" + serverPort + "/push2.js");
   chan.loadGroup = loadGroup;
   var listener = new SpdyPushListener();
-  chan.asyncOpen(listener, chan);
+  chan.asyncOpen2(listener);
 }
 
 // Make sure we handle GETs that cover more than 2 frames properly
 function test_spdy_big() {
   var chan = makeChan("https://localhost:" + serverPort + "/big");
   var listener = new SpdyBigListener();
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 // Support for doing a POST
@@ -318,7 +309,7 @@ function do_post(content, chan, listener) {
 
   chan.requestMethod = "POST";
 
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 // Make sure we can do a simple POST
