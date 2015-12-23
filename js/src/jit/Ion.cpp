@@ -166,7 +166,8 @@ jit::InitializeIon()
 }
 
 JitRuntime::JitRuntime()
-  : execAlloc_(),
+  : execAlloc_(this),
+    backedgeExecAlloc_(this),
     exceptionTail_(nullptr),
     bailoutTail_(nullptr),
     profilerExitFrameTail_(nullptr),
@@ -179,7 +180,7 @@ JitRuntime::JitRuntime()
     baselineDebugModeOSRHandler_(nullptr),
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
-    mutatingBackedgeList_(false),
+    preventBackedgePatching_(false),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     jitcodeGlobalTable_(nullptr)
 {
@@ -357,8 +358,10 @@ JitRuntime::freeOsrTempData()
 void
 JitRuntime::patchIonBackedges(JSRuntime* rt, BackedgeTarget target)
 {
-    MOZ_ASSERT_IF(target == BackedgeLoopHeader, mutatingBackedgeList_);
-    MOZ_ASSERT_IF(target == BackedgeInterruptCheck, !mutatingBackedgeList_);
+    MOZ_ASSERT_IF(target == BackedgeLoopHeader, preventBackedgePatching_);
+    MOZ_ASSERT_IF(target == BackedgeInterruptCheck, !preventBackedgePatching_);
+
+    backedgeExecAlloc_.makeAllWritable();
 
     // Patch all loop backedges in Ion code so that they either jump to the
     // normal loop header or to an interrupt handler each time they run.
@@ -372,6 +375,8 @@ JitRuntime::patchIonBackedges(JSRuntime* rt, BackedgeTarget target)
         else
             PatchBackedge(patchableBackedge->backedge, patchableBackedge->interruptCheck, target);
     }
+
+    backedgeExecAlloc_.makeAllExecutable();
 }
 
 JitCompartment::JitCompartment()
@@ -1124,7 +1129,7 @@ IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
                                   MacroAssembler& masm)
 {
     JitRuntime* jrt = cx->runtime()->jitRuntime();
-    JitRuntime::AutoMutateBackedges amb(jrt);
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt);
 
     for (size_t i = 0; i < backedgeEntries_; i++) {
         PatchableBackedgeInfo& info = backedges[i];
@@ -1358,7 +1363,7 @@ IonScript::unlinkFromRuntime(FreeOp* fop)
     // make sure that those backedges are unlinked from the runtime and not
     // reclobbered with garbage if an interrupt is requested.
     JitRuntime* jrt = fop->runtime()->jitRuntime();
-    JitRuntime::AutoMutateBackedges amb(jrt);
+    JitRuntime::AutoPreventBackedgePatching apbp(jrt);
     for (size_t i = 0; i < backedgeEntries_; i++)
         jrt->removePatchableBackedge(&backedgeList()[i]);
 

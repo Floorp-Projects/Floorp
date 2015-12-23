@@ -5556,8 +5556,10 @@ GCRuntime::endSweepPhase(bool destroyingRuntime)
             SweepScriptData(rt);
 
         /* Clear out any small pools that we're hanging on to. */
-        if (jit::JitRuntime* jitRuntime = rt->jitRuntime())
+        if (jit::JitRuntime* jitRuntime = rt->jitRuntime()) {
             jitRuntime->execAlloc().purge();
+            jitRuntime->backedgeExecAlloc().purge();
+        }
 
         /*
          * This removes compartments from rt->compartment, so we do it last to make

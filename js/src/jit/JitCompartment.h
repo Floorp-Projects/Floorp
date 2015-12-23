@@ -83,8 +83,12 @@ class JitRuntime
 {
     friend class JitCompartment;
 
-    // Executable allocator for all code except asm.js code.
+    // Executable allocator for all code except asm.js code and Ion code with
+    // patchable backedges (see below).
     ExecutableAllocator execAlloc_;
+
+    // Executable allocator for Ion scripts with patchable backedges.
+    ExecutableAllocator backedgeExecAlloc_;
 
     // Shared exception-handler tail.
     JitCode* exceptionTail_;
@@ -145,11 +149,14 @@ class JitRuntime
     // (after returning from JIT code).
     uint8_t* osrTempData_;
 
+    // If true, the signal handler to interrupt Ion code should not attempt to
+    // patch backedges, as we're busy modifying data structures.
+    volatile bool preventBackedgePatching_;
+
     // List of all backedges in all Ion code. The backedge edge list is accessed
-    // asynchronously when the main thread is paused and mutatingBackedgeList_
-    // is false. Thus, the list must only be mutated while mutatingBackedgeList_
+    // asynchronously when the main thread is paused and preventBackedgePatching_
+    // is false. Thus, the list must only be mutated while preventBackedgePatching_
     // is true.
-    volatile bool mutatingBackedgeList_;
     InlineList<PatchableBackedge> backedgeList_;
 
     // In certain cases, we want to optimize certain opcodes to typed instructions,
@@ -202,30 +209,34 @@ class JitRuntime
     ExecutableAllocator& execAlloc() {
         return execAlloc_;
     }
+    ExecutableAllocator& backedgeExecAlloc() {
+        return backedgeExecAlloc_;
+    }
 
-    class AutoMutateBackedges
+    class AutoPreventBackedgePatching
     {
         JitRuntime* jrt_;
+        bool prev_;
       public:
-        explicit AutoMutateBackedges(JitRuntime* jrt) : jrt_(jrt) {
-            MOZ_ASSERT(!jrt->mutatingBackedgeList_);
-            jrt->mutatingBackedgeList_ = true;
+        explicit AutoPreventBackedgePatching(JitRuntime* jrt) : jrt_(jrt) {
+            prev_ = jrt->preventBackedgePatching_;
+            jrt->preventBackedgePatching_ = true;
         }
-        ~AutoMutateBackedges() {
-            MOZ_ASSERT(jrt_->mutatingBackedgeList_);
-            jrt_->mutatingBackedgeList_ = false;
+        ~AutoPreventBackedgePatching() {
+            MOZ_ASSERT(jrt_->preventBackedgePatching_);
+            jrt_->preventBackedgePatching_ = prev_;
         }
     };
 
-    bool mutatingBackedgeList() const {
-        return mutatingBackedgeList_;
+    bool preventBackedgePatching() const {
+        return preventBackedgePatching_;
     }
     void addPatchableBackedge(PatchableBackedge* backedge) {
-        MOZ_ASSERT(mutatingBackedgeList_);
+        MOZ_ASSERT(preventBackedgePatching_);
         backedgeList_.pushFront(backedge);
     }
     void removePatchableBackedge(PatchableBackedge* backedge) {
-        MOZ_ASSERT(mutatingBackedgeList_);
+        MOZ_ASSERT(preventBackedgePatching_);
         backedgeList_.remove(backedge);
     }
 
@@ -495,13 +506,16 @@ const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 // is |false|, it's a no-op.
 class MOZ_STACK_CLASS AutoWritableJitCode
 {
+    // Backedge patching from the signal handler will change memory protection
+    // flags, so don't allow it in a AutoWritableJitCode scope.
+    JitRuntime::AutoPreventBackedgePatching preventPatching_;
     JSRuntime* rt_;
     void* addr_;
     size_t size_;
 
   public:
     AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
-      : rt_(rt), addr_(addr), size_(size)
+      : preventPatching_(rt->jitRuntime()), rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
         ExecutableAllocator::makeWritable(addr_, size_);
