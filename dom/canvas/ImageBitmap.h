@@ -26,6 +26,7 @@ class ErrorResult;
 
 namespace gfx {
 class DataSourceSurface;
+class DrawTarget;
 class SourceSurface;
 }
 
