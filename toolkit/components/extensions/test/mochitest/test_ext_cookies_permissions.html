@@ -113,20 +113,22 @@ function* testCookies(options) {
 
   let cookieSvc = SpecialPowers.Services.cookies;
 
+  let domain = options.domain.replace(/^\.?/, ".");
+
   // This will be evicted after we add a fourth cookie.
-  cookieSvc.add(options.domain, "/", "evicted", "bar", options.secure, false, false, options.expiry);
+  cookieSvc.add(domain, "/", "evicted", "bar", options.secure, false, false, options.expiry);
   // This will be modified by the background script.
-  cookieSvc.add(options.domain, "/", "foo", "bar", options.secure, false, false, options.expiry);
+  cookieSvc.add(domain, "/", "foo", "bar", options.secure, false, false, options.expiry);
   // This will be deleted by the background script.
-  cookieSvc.add(options.domain, "/", "deleted", "bar", options.secure, false, false, options.expiry);
+  cookieSvc.add(domain, "/", "deleted", "bar", options.secure, false, false, options.expiry);
 
 
   yield extension.startup();
 
   yield extension.awaitMessage("change-cookies");
-  cookieSvc.add(options.domain, "/", "x", "y", options.secure, false, false, options.expiry);
-  cookieSvc.add(options.domain, "/", "x", "z", options.secure, false, false, options.expiry);
-  cookieSvc.remove(options.domain, "x", "/", false);
+  cookieSvc.add(domain, "/", "x", "y", options.secure, false, false, options.expiry);
+  cookieSvc.add(domain, "/", "x", "z", options.secure, false, false, options.expiry);
+  cookieSvc.remove(domain, "x", "/", false);
   extension.sendMessage("cookies-changed");
 
   yield extension.awaitFinish("cookie-permissions");
@@ -177,7 +179,7 @@ function* testCookies(options) {
   }
 
   for (let cookie of cookies) {
-    cookieSvc.remove(options.domain, cookie.name, "/", false);
+    cookieSvc.remove(cookie.host, cookie.name, "/", false);
   }
   // Make sure we don't silently poison subsequent tests if something goes wrong.
   is(getCookies(options.domain).length, 0, "cookies cleared");
