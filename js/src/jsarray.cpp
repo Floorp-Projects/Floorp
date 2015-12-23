@@ -36,6 +36,7 @@
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayCommon.h"
+#include "vm/WrapperObject.h"
 
 #include "jsatominlines.h"
 
@@ -868,15 +869,41 @@ AddLengthProperty(ExclusiveContext* cx, HandleArrayObject obj)
 }
 
 static bool
-IsArrayConstructor(const Value& v)
+IsArrayConstructor(const JSObject* obj)
 {
     // This must only return true if v is *the* Array constructor for the
     // current compartment; we rely on the fact that any other Array
     // constructor would be represented as a wrapper.
-    return v.isObject() &&
-           v.toObject().is<JSFunction>() &&
-           v.toObject().as<JSFunction>().isNative() &&
-           v.toObject().as<JSFunction>().native() == ArrayConstructor;
+    return obj->is<JSFunction>() &&
+           obj->as<JSFunction>().isNative() &&
+           obj->as<JSFunction>().native() == ArrayConstructor;
+}
+
+static bool
+IsArrayConstructor(const Value& v)
+{
+    return v.isObject() && IsArrayConstructor(&v.toObject());
+}
+
+bool
+js::IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result)
+{
+    if (!v.isObject()) {
+        *result = false;
+        return true;
+    }
+    if (v.toObject().is<WrapperObject>()) {
+        JSObject* obj = CheckedUnwrap(&v.toObject());
+        if (!obj) {
+            JS_ReportError(cx, "Permission denied to access object");
+            return false;
+        }
+
+        *result = IsArrayConstructor(obj);
+    } else {
+        *result = false;
+    }
+    return true;
 }
 
 /* static */ bool

@@ -206,6 +206,9 @@ ArrayInfo(JSContext* cx, unsigned argc, Value* vp);
 extern bool
 ArrayConstructor(JSContext* cx, unsigned argc, Value* vp);
 
+extern bool
+IsWrappedArrayConstructor(JSContext* cx, const Value& v, bool* result);
+
 } /* namespace js */
 
 #endif /* jsarray_h */
