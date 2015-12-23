@@ -44,7 +44,13 @@
     <hbox id="clientBox">
       <vbox id="leftBox" flex="1"/>
       <vbox id="rightBox" flex="1">
+        <hbox align="baseline">
 #expand <label id="version">__MOZ_APP_VERSION_DISPLAY__</label>
+#ifndef NIGHTLY_BUILD
+#expand <label id="releasenotes" class="text-link" href="https://www.mozilla.org/firefox/__MOZ_APP_VERSION__/releasenotes/">&releaseNotes.link;</label>
+#endif
+        </hbox>
+
         <label id="distribution" class="text-blurb"/>
         <label id="distributionId" class="text-blurb"/>
 
