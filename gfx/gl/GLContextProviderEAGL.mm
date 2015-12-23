@@ -211,7 +211,7 @@ CreateEAGLContext(bool aOffscreen, GLContextEAGL* sharedContext)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget)
+GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
     RefPtr<GLContext> glContext = CreateEAGLContext(false, GetGlobalContextEAGL());
     if (!glContext) {

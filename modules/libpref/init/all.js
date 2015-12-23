@@ -4341,9 +4341,6 @@ pref("layers.tiles.edge-padding", true);
 // use with tests.
 pref("layers.offmainthreadcomposition.testing.enabled", false);
 
-// whether to allow use of the basic compositor
-pref("layers.offmainthreadcomposition.force-basic", false);
-
 // Whether to animate simple opacity and transforms on the compositor
 pref("layers.offmainthreadcomposition.async-animations", true);
 
