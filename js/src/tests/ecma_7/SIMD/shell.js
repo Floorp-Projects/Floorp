@@ -36,6 +36,10 @@ function GetType(v) {
         case SIMD.Int32x4.prototype:   return SIMD.Int32x4;
         case SIMD.Float32x4.prototype: return SIMD.Float32x4;
         case SIMD.Float64x2.prototype: return SIMD.Float64x2;
+        case SIMD.Bool8x16.prototype:  return SIMD.Bool8x16;
+        case SIMD.Bool16x8.prototype:  return SIMD.Bool16x8;
+        case SIMD.Bool32x4.prototype:  return SIMD.Bool32x4;
+        case SIMD.Bool64x2.prototype:  return SIMD.Bool64x2;
     }
 }
 
@@ -49,9 +53,21 @@ function assertEqFloat64x2(v, arr) {
     }
 }
 
+function assertEqBool64x2(v, arr) {
+    try {
+        assertEq(SIMD.Bool64x2.extractLane(v, 0), arr[0]);
+        assertEq(SIMD.Bool64x2.extractLane(v, 1), arr[1]);
+    } catch (e) {
+        print("stack trace:", e.stack);
+        throw e;
+    }
+}
+
 function assertEqX2(v, arr) {
-    assertEq(GetType(v), SIMD.Float64x2, "Float64x2 is the only x2 vector");
-    assertEqFloat64x2(v, arr);
+    var Type = GetType(v);
+    if (Type === SIMD.Float64x2) assertEqFloat64x2(v, arr);
+    else if (Type === SIMD.Bool64x2) assertEqBool64x2(v, arr);
+    else throw new TypeError("Unknown SIMD kind.");
 }
 
 function assertEqInt32x4(v, arr) {
@@ -74,10 +90,21 @@ function assertEqFloat32x4(v, arr) {
     }
 }
 
+function assertEqBool32x4(v, arr) {
+    try {
+        for (var i = 0; i < 4; i++)
+            assertEq(SIMD.Bool32x4.extractLane(v, i), arr[i]);
+    } catch (e) {
+        print("stack trace:", e.stack);
+        throw e;
+    }
+}
+
 function assertEqX4(v, arr) {
     var Type = GetType(v);
     if (Type === SIMD.Int32x4) assertEqInt32x4(v, arr);
     else if (Type === SIMD.Float32x4) assertEqFloat32x4(v, arr);
+    else if (Type === SIMD.Bool32x4) assertEqBool32x4(v, arr);
     else throw new TypeError("Unknown SIMD kind.");
 }
 
@@ -91,9 +118,22 @@ function assertEqInt16x8(v, arr) {
     }
 }
 
+function assertEqBool16x8(v, arr) {
+    try {
+        for (var i = 0; i < 8; i++){
+            assertEq(SIMD.Bool16x8.extractLane(v, i), arr[i]);
+        }
+    } catch (e) {
+        print("stack trace:", e.stack);
+        throw e;
+    }
+}
+
 function assertEqX8(v, arr) {
-    assertEq(GetType(v), SIMD.Int16x8, "Int16x8 is the only x8 vector");
-    assertEqInt16x8(v, arr);
+    var Type = GetType(v);
+    if (Type === SIMD.Int16x8) assertEqInt16x8(v, arr);
+    else if (Type === SIMD.Bool16x8) assertEqBool16x8(v, arr);
+    else throw new TypeError("Unknown x8 vector.");
 }
 
 function assertEqInt8x16(v, arr) {
@@ -106,32 +146,44 @@ function assertEqInt8x16(v, arr) {
     }
 }
 
+function assertEqBool8x16(v, arr) {
+    try {
+        for (var i = 0; i < 16; i++)
+            assertEq(SIMD.Bool8x16.extractLane(v, i), arr[i]);
+    } catch (e) {
+        print("stack trace:", e.stack);
+        throw e;
+    }
+}
+
 function assertEqX16(v, arr) {
-    assertEq(GetType(v), SIMD.Int8x16, "Int8x16 is the only x16 vector");
-    assertEqInt8x16(v, arr);
+    var Type = GetType(v);
+    if (Type === SIMD.Int8x16) assertEqInt8x16(v, arr);
+    else if (Type === SIMD.Bool8x16) assertEqBool8x16(v, arr);
+    else throw new TypeError("Unknown x16 vector.");
 }
 
 function simdLength(v) {
     var pt = Object.getPrototypeOf(v);
-    if (pt == SIMD.Int8x16.prototype)
+    if (pt == SIMD.Int8x16.prototype || pt === SIMD.Bool8x16.prototype)
         return 16;
-    if (pt == SIMD.Int16x8.prototype)
+    if (pt == SIMD.Int16x8.prototype || pt === SIMD.Bool16x8.prototype)
         return 8;
-    if (pt === SIMD.Int32x4.prototype || pt === SIMD.Float32x4.prototype)
+    if (pt === SIMD.Int32x4.prototype || pt === SIMD.Float32x4.prototype || pt === SIMD.Bool32x4.prototype)
         return 4;
-    if (pt === SIMD.Float64x2.prototype)
+    if (pt === SIMD.Float64x2.prototype || pt == SIMD.Bool64x2.prototype)
         return 2;
     throw new TypeError("Unknown SIMD kind.");
 }
 
 function simdLengthType(t) {
-    if (t == SIMD.Int8x16)
+    if (t == SIMD.Int8x16 || t == SIMD.Bool8x16)
         return 16;
-    else if (t == SIMD.Int16x8)
+    else if (t == SIMD.Int16x8 || t == SIMD.Bool16x8)
         return 8;
-    else if (t == SIMD.Int32x4 || t == SIMD.Float32x4)
+    else if (t == SIMD.Int32x4 || t == SIMD.Float32x4 || t == SIMD.Bool32x4)
         return 4;
-    else if (t == SIMD.Float64x2)
+    else if (t == SIMD.Float64x2 || t == SIMD.Bool64x2)
         return 2;
     else
         throw new TypeError("Unknown SIMD kind.");
@@ -157,6 +209,10 @@ function assertEqVec(v, arr) {
     else if (Type === SIMD.Int32x4) assertEqInt32x4(v, arr);
     else if (Type === SIMD.Float32x4) assertEqFloat32x4(v, arr);
     else if (Type === SIMD.Float64x2) assertEqFloat64x2(v, arr);
+    else if (Type === SIMD.Bool8x16) assertEqBool8x16(v, arr);
+    else if (Type === SIMD.Bool16x8) assertEqBool16x8(v, arr);
+    else if (Type === SIMD.Bool32x4) assertEqBool32x4(v, arr);
+    else if (Type === SIMD.Bool64x2) assertEqBool64x2(v, arr);
     else throw new TypeError("Unknown SIMD Kind");
 }
 
@@ -167,6 +223,22 @@ function simdToArray(v) {
         var arr = [];
         for (var i = 0; i < n; i++) arr.push(i);
         return arr;
+    }
+
+    if (Type === SIMD.Bool8x16) {
+        return indexes(16).map((i) => SIMD.Bool8x16.extractLane(v, i));
+    }
+
+    if (Type === SIMD.Bool16x8) {
+        return indexes(8).map((i) => SIMD.Bool16x8.extractLane(v, i));
+    }
+
+    if (Type === SIMD.Bool32x4) {
+        return indexes(4).map((i) => SIMD.Bool32x4.extractLane(v, i));
+    }
+
+    if (Type === SIMD.Bool64x2) {
+        return indexes(2).map((i) => SIMD.Bool64x2.extractLane(v, i));
     }
 
     if (Type === SIMD.Int8x16) {

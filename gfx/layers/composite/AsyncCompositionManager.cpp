@@ -385,7 +385,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                                                    FrameMetrics::ViewID aTransformScrollId,
                                                    const Matrix4x4& aPreviousTransformForRoot,
                                                    const Matrix4x4& aCurrentTransformForRoot,
-                                                   const ScreenMargin& aFixedLayerMargins)
+                                                   const ScreenMargin& aFixedLayerMargins,
+                                                   bool aTransformAffectsLayerClip)
 {
   FrameMetrics::ViewID fixedTo;  // the scroll id of the scroll frame we are fixed/sticky to
   bool isRootOfFixedSubtree = aLayer->GetIsFixedPosition() &&
@@ -411,7 +412,8 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
     for (Layer* child = aLayer->GetFirstChild(); child; child = child->GetNextSibling()) {
       AlignFixedAndStickyLayers(child, aTransformedSubtreeRoot, aTransformScrollId,
                                 aPreviousTransformForRoot,
-                                aCurrentTransformForRoot, aFixedLayerMargins);
+                                aCurrentTransformForRoot, aFixedLayerMargins,
+                                true /* descendants' clip rects are always affected */);
     }
     return;
   }
@@ -489,18 +491,15 @@ AsyncCompositionManager::AlignFixedAndStickyLayers(Layer* aLayer,
                     IntervalOverlap(translation.x, stickyInner.x, stickyInner.XMost());
   }
 
-  // Finally, apply the translation to the layer transform. Note that in
-  // general we need to apply the same translation to the layer's clip rect, so
+  // Finally, apply the translation to the layer transform. Note that in cases
+  // where the async transform on |aTransformedSubtreeRoot| affects this layer's
+  // clip rect, we need to apply the same translation to said clip rect, so
   // that the effective transform on the clip rect takes it back to where it was
-  // originally, had there been no async scroll. In the case where the
-  // fixed/sticky layer is the same as aTransformedSubtreeRoot, then the clip
-  // rect is not affected by the scroll-induced async scroll transform anyway
-  // (since the clip is applied post-transform) so we don't need to make the
-  // adjustment. Also, some layers want async scrolling to move their clip rect
+  // originally, had there been no async scroll.
+  // Also, some layers want async scrolling to move their clip rect
   // (IsClipFixed() = false), so we don't make a compensating adjustment for
   // those.
-  bool adjustClipRect = aLayer != aTransformedSubtreeRoot &&
-                        aLayer->IsClipFixed();
+  bool adjustClipRect = aTransformAffectsLayerClip && aLayer->IsClipFixed();
   TranslateShadowLayer(aLayer, ThebesPoint(translation.ToUnknownPoint()), adjustClipRect);
 }
 
@@ -900,6 +899,29 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
       asyncClip = Some(TransformBy(
           ViewAs<ParentLayerToParentLayerMatrix4x4>(asyncTransform), *asyncClip));
     }
+    aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
+
+    combinedAsyncTransform *= asyncTransform;
+
+    // For the purpose of aligning fixed and sticky layers, we disregard
+    // the overscroll transform as well as any OMTA transform when computing the
+    // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
+    // and OMTA transforms are not unapplied, and therefore that the visual
+    // effects apply to fixed and sticky layers. We do this by using
+    // GetTransform() as the base transform rather than GetLocalTransform(),
+    // which would include those factors.
+    Matrix4x4 transformWithoutOverscrollOrOmta = aLayer->GetTransform() *
+        AdjustForClip(asyncTransformWithoutOverscroll, aLayer);
+
+    // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
+    // we use the ViewID from the bottommost scrollable metrics here.
+    AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
+                              transformWithoutOverscrollOrOmta, fixedLayerMargins,
+                              asyncClip.isSome());
+
+    // AlignFixedAndStickyLayers may have changed the clip rect, so we have to
+    // read it from the layer again.
+    asyncClip = aLayer->AsLayerComposite()->GetShadowClipRect();
 
     // Combine the local clip with the ancestor scrollframe clip. This is not
     // included in the async transform above, since the ancestor clip should not
@@ -932,23 +954,6 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
       Layer* ancestorMaskLayer = aLayer->GetAncestorMaskLayerAt(maskLayerIndex);
       ancestorMaskLayers.AppendElement(ancestorMaskLayer);
     }
-
-    combinedAsyncTransform *= asyncTransform;
-
-    // For the purpose of aligning fixed and sticky layers, we disregard
-    // the overscroll transform as well as any OMTA transform when computing the
-    // 'aCurrentTransformForRoot' parameter. This ensures that the overscroll
-    // and OMTA transforms are not unapplied, and therefore that the visual
-    // effects apply to fixed and sticky layers. We do this by using
-    // GetTransform() as the base transform rather than GetLocalTransform(),
-    // which would include those factors.
-    Matrix4x4 transformWithoutOverscrollOrOmta = aLayer->GetTransform() *
-        AdjustForClip(asyncTransformWithoutOverscroll, aLayer);
-
-    // Since fixed/sticky layers are relative to their nearest scrolling ancestor,
-    // we use the ViewID from the bottommost scrollable metrics here.
-    AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
-                              transformWithoutOverscrollOrOmta, fixedLayerMargins);
   }
 
   if (hasAsyncTransform || clipDeferredFromChildren) {
@@ -1331,7 +1336,8 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
   // Make sure fixed position layers don't move away from their anchor points
   // when we're asynchronously panning or zooming
   AlignFixedAndStickyLayers(aLayer, aLayer, metrics.GetScrollId(), oldTransform,
-                            aLayer->GetLocalTransform(), fixedLayerMargins);
+                            aLayer->GetLocalTransform(), fixedLayerMargins,
+                            false);
 
   ExpandRootClipRect(aLayer, fixedLayerMargins);
 }

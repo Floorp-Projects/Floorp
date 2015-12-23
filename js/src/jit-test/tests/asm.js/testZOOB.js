@@ -182,25 +182,25 @@ function testSimdX4(ctor, shift, scale, disp, simdName, simdCtor) {
 
         // Stores
         if (!t) {
-            simdCtor.store(arr, index, simdCtor.not(v));
+            simdCtor.store(arr, index, simdCtor.neg(v));
             f.store(i, v);
             assertEqX4(simdCtor.load(arr, index), v);
         } else
             assertThrowsInstanceOf(() => f.store(i, simdCtor()), RangeError);
         if (!t3) {
-            simdCtor.store3(arr, index, simdCtor.not(v3));
+            simdCtor.store3(arr, index, simdCtor.neg(v3));
             f.store3(i, v3);
             assertEqX4(simdCtor.load3(arr, index), v3);
         } else
             assertThrowsInstanceOf(() => f.store3(i, simdCtor()), RangeError);
         if (!t2) {
-            simdCtor.store2(arr, index, simdCtor.not(v2));
+            simdCtor.store2(arr, index, simdCtor.neg(v2));
             f.store2(i, v2);
             assertEqX4(simdCtor.load2(arr, index), v2);
         } else
             assertThrowsInstanceOf(() => f.store2(i, simdCtor()), RangeError);
         if (!t1) {
-            simdCtor.store1(arr, index, simdCtor.not(v1));
+            simdCtor.store1(arr, index, simdCtor.neg(v1));
             f.store1(i, v1);
             assertEqX4(simdCtor.load1(arr, index), v1);
         } else

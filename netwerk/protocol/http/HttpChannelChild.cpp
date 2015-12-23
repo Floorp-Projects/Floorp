@@ -154,7 +154,7 @@ InterceptStreamListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aConte
 {
   if (mOwner) {
     mOwner->DoPreOnStopRequest(aStatusCode);
-    mOwner->DoOnStopRequest(mOwner, mContext);
+    mOwner->DoOnStopRequest(mOwner, aStatusCode, mContext);
   }
   Cleanup();
   return NS_OK;
@@ -873,7 +873,7 @@ HttpChannelChild::OnStopRequest(const nsresult& channelStatus,
     // so make sure this goes out of scope before then.
     AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
-    DoOnStopRequest(this, mListenerContext);
+    DoOnStopRequest(this, channelStatus, mListenerContext);
   }
 
   ReleaseListeners();
@@ -902,12 +902,15 @@ HttpChannelChild::DoPreOnStopRequest(nsresult aStatus)
 }
 
 void
-HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsISupports* aContext)
+HttpChannelChild::DoOnStopRequest(nsIRequest* aRequest, nsresult aChannelStatus, nsISupports* aContext)
 {
   LOG(("HttpChannelChild::DoOnStopRequest [this=%p]\n", this));
   MOZ_ASSERT(!mIsPending);
 
-  if (mStatus == NS_ERROR_TRACKING_URI) {
+  // NB: We use aChannelStatus here instead of mStatus because if there was an
+  // nsCORSListenerProxy on this request, it will override the tracking
+  // protection's return value.
+  if (aChannelStatus == NS_ERROR_TRACKING_URI) {
     nsChannelClassifier::SetBlockedTrackingContent(this);
   }
 

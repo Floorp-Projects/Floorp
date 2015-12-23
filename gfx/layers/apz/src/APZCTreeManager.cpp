@@ -516,8 +516,14 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
     // Even though different layers associated with a given APZC may be at
     // different levels in the layer tree (e.g. one being an uncle of another),
     // we require from Layout that the CSS transforms up to their common
-    // ancestor be the same.
-    MOZ_ASSERT(aAncestorTransform == apzc->GetAncestorTransform());
+    // ancestor be roughly the same. There are cases in which the transforms
+    // are not exactly the same, for example if the parent is container layer
+    // for an opacity, and this container layer has a resolution-induced scale
+    // as its base transform and a prescale that is supposed to undo that scale.
+    // Due to floating point inaccuracies those transforms can end up not quite
+    // canceling each other. That's why we're using a fuzzy comparison here
+    // instead of an exact one.
+    MOZ_ASSERT(aAncestorTransform.FuzzyEqualsMultiplicative(apzc->GetAncestorTransform()));
 
     ParentLayerIntRegion clipRegion = ComputeClipRegion(state->mController, aLayer);
     node->SetHitTestData(GetEventRegions(aLayer), aLayer.GetTransform(), Some(clipRegion),

@@ -34,13 +34,16 @@ var moduleCode = `
   var i4add = i4.add;
   var i4and = i4.and;
   var i4ext = i4.extractLane;
+  var i4sel = i4.select;
   var f4add = f4.add;
   var f4sub = f4.sub;
   var f4mul = f4.mul;
   var f4lessThanOrEqual = f4.lessThanOrEqual;
   var f4splat = f4.splat;
   var imul = global.Math.imul;
-  const one4 = i4(1,1,1,1), two4 = f4(2,2,2,2), four4 = f4(4,4,4,4);
+  var b4 = global.SIMD.Bool32x4;
+  var b4any = b4.anyTrue;
+  const zero4 = i4(0,0,0,0), one4 = i4(1,1,1,1), two4 = f4(2,2,2,2), four4 = f4(4,4,4,4);
 
   const mk0 = 0x007fffff;
 
@@ -85,7 +88,7 @@ var moduleCode = `
     var z_re24 = f4(0,0,0,0), z_im24 = f4(0,0,0,0);
     var new_re4 = f4(0,0,0,0), new_im4 = f4(0,0,0,0);
     var i = 0;
-    var mi4 = i4(0,0,0,0);
+    var mb4 = b4(0,0,0,0);
 
     c_re4 = f4splat(xf);
     c_im4 = f4(yf, toF(yd + yf), toF(yd + toF(yd + yf)), toF(yd + toF(yd + toF(yd + yf))));
@@ -96,16 +99,16 @@ var moduleCode = `
     for (i = 0; (i | 0) < (max_iterations | 0); i = (i + 1) | 0) {
       z_re24 = f4mul(z_re4, z_re4);
       z_im24 = f4mul(z_im4, z_im4);
-      mi4 = f4lessThanOrEqual(f4add(z_re24, z_im24), four4);
+      mb4 = f4lessThanOrEqual(f4add(z_re24, z_im24), four4);
       // If all 4 values are greater than 4.0, there's no reason to continue.
-      if ((mi4.signMask | 0) == 0x00)
+      if (!b4any(mb4))
         break;
 
       new_re4 = f4sub(z_re24, z_im24);
       new_im4 = f4mul(f4mul(two4, z_re4), z_im4);
       z_re4   = f4add(c_re4, new_re4);
       z_im4   = f4add(c_im4, new_im4);
-      count4  = i4add(count4, i4and(mi4, one4));
+      count4  = i4add(count4, i4sel(mb4, one4, zero4));
     }
     return ci4(count4);
   }

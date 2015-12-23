@@ -120,10 +120,10 @@ function checkCurrentInput(currentInput)
   if (!errorMessage) {
     finishText.className = "";
     if (AppConstants.platform == "macosx") {
-      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishText");
+      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishTextMac");
     }
     else {
-      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishTextMac");
+      finishText.firstChild.data = gProfileManagerBundle.getString("profileFinishText");
     }
     canAdvance = true;
   }

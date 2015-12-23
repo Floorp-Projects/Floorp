@@ -356,8 +356,8 @@ struct BaselineScript
         templateScope_ = templateScope;
     }
 
-    void toggleBarriers(bool enabled) {
-        method()->togglePreBarriers(enabled);
+    void toggleBarriers(bool enabled, ReprotectCode reprotect = Reprotect) {
+        method()->togglePreBarriers(enabled, reprotect);
     }
 
     bool containsCodeAddress(uint8_t* addr) const {

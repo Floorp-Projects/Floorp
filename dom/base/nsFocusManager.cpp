@@ -41,7 +41,6 @@
 #include "nsIObjectFrame.h"
 #include "nsBindingManager.h"
 #include "nsStyleCoord.h"
-#include "SelectionCarets.h"
 #include "TabChild.h"
 #include "nsFrameLoader.h"
 
@@ -1690,11 +1689,6 @@ nsFocusManager::Blur(nsPIDOMWindow* aWindowToClear,
   // invisible.
   if (aIsLeavingDocument || !mActiveWindow) {
     SetCaretVisible(presShell, false, nullptr);
-  }
-
-  RefPtr<SelectionCarets> selectionCarets = presShell->GetSelectionCarets();
-  if (selectionCarets) {
-    selectionCarets->NotifyBlur(aIsLeavingDocument || !mActiveWindow);
   }
 
   RefPtr<AccessibleCaretEventHub> eventHub = presShell->GetAccessibleCaretEventHub();

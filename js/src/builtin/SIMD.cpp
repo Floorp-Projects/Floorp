@@ -66,6 +66,10 @@ template bool js::IsVectorObject<Int16x8>(HandleValue v);
 template bool js::IsVectorObject<Int32x4>(HandleValue v);
 template bool js::IsVectorObject<Float32x4>(HandleValue v);
 template bool js::IsVectorObject<Float64x2>(HandleValue v);
+template bool js::IsVectorObject<Bool8x16>(HandleValue v);
+template bool js::IsVectorObject<Bool16x8>(HandleValue v);
+template bool js::IsVectorObject<Bool32x4>(HandleValue v);
+template bool js::IsVectorObject<Bool64x2>(HandleValue v);
 
 static inline bool
 ErrorBadArgs(JSContext* cx)
@@ -117,6 +121,7 @@ js::ToSimdConstant(JSContext* cx, HandleValue v, jit::SimdConstant* out)
 
 template bool js::ToSimdConstant<Int32x4>(JSContext* cx, HandleValue v, jit::SimdConstant* out);
 template bool js::ToSimdConstant<Float32x4>(JSContext* cx, HandleValue v, jit::SimdConstant* out);
+template bool js::ToSimdConstant<Bool32x4>(JSContext* cx, HandleValue v, jit::SimdConstant* out);
 
 template<typename Elem>
 static Elem
@@ -125,54 +130,6 @@ TypedObjectMemory(HandleValue v)
     TypedObject& obj = v.toObject().as<TypedObject>();
     return reinterpret_cast<Elem>(obj.typedMem());
 }
-
-template<typename SimdType>
-static bool SignMask(JSContext* cx, unsigned argc, Value* vp)
-{
-    typedef typename SimdType::Elem Elem;
-
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.thisv().isObject() || !args.thisv().toObject().is<TypedObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SimdTypeDescr::class_.name, "signMask",
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    TypedObject& typedObj = args.thisv().toObject().as<TypedObject>();
-    TypeDescr& descr = typedObj.typeDescr();
-    if (descr.kind() != type::Simd || descr.as<SimdTypeDescr>().type() != SimdType::type) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
-                             SimdTypeDescr::class_.name, "signMask",
-                             InformalValueTypeName(args.thisv()));
-        return false;
-    }
-
-    // Load the data as integer so that we treat the sign bit consistently,
-    // since -0.0 is not less than zero, but it still has the sign bit set.
-    typedef typename mozilla::SignedStdintTypeForSize<sizeof(Elem)>::Type Int;
-    static_assert(SimdType::lanes * sizeof(Int) <= jit::Simd128DataSize,
-                  "signMask access should respect the bounds of the type");
-    const Elem* elems = reinterpret_cast<const Elem*>(typedObj.typedMem());
-    int32_t result = 0;
-    for (unsigned i = 0; i < SimdType::lanes; ++i) {
-        Int x = mozilla::BitwiseCast<Int>(elems[i]);
-        result |= (x < 0) << i;
-    }
-    args.rval().setInt32(result);
-    return true;
-}
-
-#define SIGN_MASK(type) \
-static bool type##SignMask(JSContext* cx, unsigned argc, Value* vp) { \
-    return SignMask<type>(cx, argc, vp); \
-}
-    SIGN_MASK(Float32x4);
-    SIGN_MASK(Float64x2);
-    SIGN_MASK(Int8x16);
-    SIGN_MASK(Int16x8);
-    SIGN_MASK(Int32x4);
-#undef SIGN_MASK
 
 const Class SimdTypeDescr::class_ = {
     "SIMD",
@@ -195,7 +152,6 @@ class Int8x16Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int8x16;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -203,7 +159,6 @@ class Int16x8Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int16x8;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -211,7 +166,6 @@ class Int32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Int32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -219,7 +173,6 @@ class Float32x4Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
@@ -227,11 +180,37 @@ class Float64x2Defn {
   public:
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
     static const JSFunctionSpec TypeDescriptorMethods[];
-    static const JSPropertySpec TypedObjectProperties[];
     static const JSFunctionSpec TypedObjectMethods[];
     static const JSFunctionSpec Methods[];
 };
-
+class Bool8x16Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool8x16;
+    static const JSFunctionSpec TypeDescriptorMethods[];
+    static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
+};
+class Bool16x8Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool16x8;
+    static const JSFunctionSpec TypeDescriptorMethods[];
+    static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
+};
+class Bool32x4Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool32x4;
+    static const JSFunctionSpec TypeDescriptorMethods[];
+    static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
+};
+class Bool64x2Defn {
+  public:
+    static const SimdTypeDescr::Type type = SimdTypeDescr::Bool64x2;
+    static const JSFunctionSpec TypeDescriptorMethods[];
+    static const JSFunctionSpec TypedObjectMethods[];
+    static const JSFunctionSpec Methods[];
+};
 } // namespace
 
 const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
@@ -239,11 +218,6 @@ const JSFunctionSpec Float32x4Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
-};
-
-const JSPropertySpec Float32x4Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Float32x4SignMask, JSPROP_PERMANENT),
-    JS_PS_END
 };
 
 const JSFunctionSpec Float32x4Defn::TypedObjectMethods[] = {
@@ -266,11 +240,6 @@ const JSFunctionSpec Float64x2Defn::TypeDescriptorMethods[] = {
     JS_FS_END
 };
 
-const JSPropertySpec Float64x2Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Float64x2SignMask, JSPROP_PERMANENT),
-    JS_PS_END
-};
-
 const JSFunctionSpec Float64x2Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
@@ -289,11 +258,6 @@ const JSFunctionSpec Int8x16Defn::TypeDescriptorMethods[] = {
     JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
     JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END,
-};
-
-const JSPropertySpec Int8x16Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int8x16SignMask, JSPROP_PERMANENT),
-    JS_PS_END
 };
 
 const JSFunctionSpec Int8x16Defn::TypedObjectMethods[] = {
@@ -316,11 +280,6 @@ const JSFunctionSpec Int16x8Defn::TypeDescriptorMethods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec Int16x8Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int16x8SignMask, JSPROP_PERMANENT),
-    JS_PS_END
-};
-
 const JSFunctionSpec Int16x8Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
@@ -341,11 +300,6 @@ const JSFunctionSpec Int32x4Defn::TypeDescriptorMethods[] = {
     JS_FS_END,
 };
 
-const JSPropertySpec Int32x4Defn::TypedObjectProperties[] = {
-    JS_PSG("signMask", Int32x4SignMask, JSPROP_PERMANENT),
-    JS_PS_END
-};
-
 const JSFunctionSpec Int32x4Defn::TypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
@@ -356,6 +310,86 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
     JS_INLINABLE_FN(#Name, js::simd_int32x4_##Name, Operands, 0, SimdInt32x4),
     INT32X4_FUNCTION_LIST(SIMD_INT32X4_FUNCTION_ITEM)
 #undef SIMD_INT32X4_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool8x16Defn::TypeDescriptorMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
+    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
+    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
+    JS_FS_END,
+};
+
+const JSFunctionSpec Bool8x16Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool8x16Defn::Methods[] = {
+#define SIMD_BOOL8X16_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_bool8x16_##Name, Operands, 0),
+    BOOL8X16_FUNCTION_LIST(SIMD_BOOL8X16_FUNCTION_ITEM)
+#undef SIMD_BOOL8X16_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool16x8Defn::TypeDescriptorMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
+    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
+    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
+    JS_FS_END,
+};
+
+const JSFunctionSpec Bool16x8Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool16x8Defn::Methods[] = {
+#define SIMD_BOOL16X8_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_bool16x8_##Name, Operands, 0),
+    BOOL16X8_FUNCTION_LIST(SIMD_BOOL16X8_FUNCTION_ITEM)
+#undef SIMD_BOOL16X8_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool32x4Defn::TypeDescriptorMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
+    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
+    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
+    JS_FS_END,
+};
+
+const JSFunctionSpec Bool32x4Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool32x4Defn::Methods[] = {
+#define SIMD_BOOL32X4_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_bool32x4_##Name, Operands, 0),
+    BOOL32X4_FUNCTION_LIST(SIMD_BOOL32X4_FUNCTION_ITEM)
+#undef SIMD_BOOL32X4_FUNCTION_ITEM
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool64x2Defn::TypeDescriptorMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
+    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, 0),
+    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
+    JS_FS_END,
+};
+
+const JSFunctionSpec Bool64x2Defn::TypedObjectMethods[] = {
+    JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
+    JS_FS_END
+};
+
+const JSFunctionSpec Bool64x2Defn::Methods[] = {
+#define SIMD_BOOL64X2_FUNCTION_ITEM(Name, Func, Operands) \
+    JS_FN(#Name, js::simd_bool64x2_##Name, Operands, 0),
+    BOOL64X2_FUNCTION_LIST(SIMD_BOOL64X2_FUNCTION_ITEM)
+#undef SIMD_BOOL64x2_FUNCTION_ITEM
     JS_FS_END
 };
 
@@ -401,8 +435,7 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, typeDescr, proto) ||
-        !DefinePropertiesAndFunctions(cx, proto, T::TypedObjectProperties,
-                                      T::TypedObjectMethods))
+        !JS_DefineFunctions(cx, proto, T::TypedObjectMethods))
     {
         return nullptr;
     }
@@ -456,6 +489,10 @@ SimdTypeDescr::call(JSContext* cx, unsigned argc, Value* vp)
       case SimdTypeDescr::Int32x4:   return FillLanes< ::Int32x4>(cx, result, args);
       case SimdTypeDescr::Float32x4: return FillLanes< ::Float32x4>(cx, result, args);
       case SimdTypeDescr::Float64x2: return FillLanes< ::Float64x2>(cx, result, args);
+      case SimdTypeDescr::Bool8x16:  return FillLanes< ::Bool8x16>(cx, result, args);
+      case SimdTypeDescr::Bool16x8:  return FillLanes< ::Bool16x8>(cx, result, args);
+      case SimdTypeDescr::Bool32x4:  return FillLanes< ::Bool32x4>(cx, result, args);
+      case SimdTypeDescr::Bool64x2:  return FillLanes< ::Bool64x2>(cx, result, args);
     }
 
     MOZ_CRASH("unexpected SIMD descriptor");
@@ -523,19 +560,39 @@ js::InitSIMDClass(JSContext* cx, HandleObject obj)
     if (!i16x8)
         return nullptr;
 
-    RootedObject f32x4(cx);
-    f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, globalSimdObject, cx->names().float32x4);
-    if (!f32x4)
-        return nullptr;
-
     RootedObject i32x4(cx);
     i32x4 = CreateAndBindSimdClass<Int32x4Defn>(cx, global, globalSimdObject, cx->names().int32x4);
     if (!i32x4)
         return nullptr;
 
+    RootedObject f32x4(cx);
+    f32x4 = CreateAndBindSimdClass<Float32x4Defn>(cx, global, globalSimdObject, cx->names().float32x4);
+    if (!f32x4)
+        return nullptr;
+
     RootedObject f64x2(cx);
     f64x2 = CreateAndBindSimdClass<Float64x2Defn>(cx, global, globalSimdObject, cx->names().float64x2);
     if (!f64x2)
+        return nullptr;
+
+    RootedObject b8x16(cx);
+    b8x16 = CreateAndBindSimdClass<Bool8x16Defn>(cx, global, globalSimdObject, cx->names().bool8x16);
+    if (!b8x16)
+        return nullptr;
+
+    RootedObject b16x8(cx);
+    b16x8 = CreateAndBindSimdClass<Bool16x8Defn>(cx, global, globalSimdObject, cx->names().bool16x8);
+    if (!b16x8)
+        return nullptr;
+
+    RootedObject b32x4(cx);
+    b32x4 = CreateAndBindSimdClass<Bool32x4Defn>(cx, global, globalSimdObject, cx->names().bool32x4);
+    if (!b32x4)
+        return nullptr;
+
+    RootedObject b64x2(cx);
+    b64x2 = CreateAndBindSimdClass<Bool64x2Defn>(cx, global, globalSimdObject, cx->names().bool64x2);
+    if (!b64x2)
         return nullptr;
 
     return globalSimdObject;
@@ -559,11 +616,15 @@ js::CreateSimd(JSContext* cx, const typename V::Elem* data)
     return result;
 }
 
-template JSObject* js::CreateSimd<Float32x4>(JSContext* cx, const Float32x4::Elem* data);
-template JSObject* js::CreateSimd<Float64x2>(JSContext* cx, const Float64x2::Elem* data);
 template JSObject* js::CreateSimd<Int8x16>(JSContext* cx, const Int8x16::Elem* data);
 template JSObject* js::CreateSimd<Int16x8>(JSContext* cx, const Int16x8::Elem* data);
 template JSObject* js::CreateSimd<Int32x4>(JSContext* cx, const Int32x4::Elem* data);
+template JSObject* js::CreateSimd<Float32x4>(JSContext* cx, const Float32x4::Elem* data);
+template JSObject* js::CreateSimd<Float64x2>(JSContext* cx, const Float64x2::Elem* data);
+template JSObject* js::CreateSimd<Bool8x16>(JSContext* cx, const Bool8x16::Elem* data);
+template JSObject* js::CreateSimd<Bool16x8>(JSContext* cx, const Bool16x8::Elem* data);
+template JSObject* js::CreateSimd<Bool32x4>(JSContext* cx, const Bool32x4::Elem* data);
+template JSObject* js::CreateSimd<Bool64x2>(JSContext* cx, const Bool64x2::Elem* data);
 
 namespace js {
 // Unary SIMD operators
@@ -582,6 +643,10 @@ struct Neg {
 template<typename T>
 struct Not {
     static T apply(T x) { return ~x; }
+};
+template<typename T>
+struct LogicalNot {
+    static T apply(T x) { return !x; }
 };
 template<typename T>
 struct RecApprox {
@@ -776,6 +841,44 @@ ExtractLane(JSContext* cx, unsigned argc, Value* vp)
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
     Elem val = vec[lane];
     args.rval().set(V::ToValue(val));
+    return true;
+}
+
+template<typename V>
+static bool
+AllTrue(JSContext* cx, unsigned argc, Value* vp)
+{
+    typedef typename V::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1 || !IsVectorObject<V>(args[0]))
+        return ErrorBadArgs(cx);
+
+    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    bool allTrue = true;
+    for (unsigned i = 0; allTrue && i < V::lanes; i++)
+        allTrue = vec[i];
+
+    args.rval().setBoolean(allTrue);
+    return true;
+}
+
+template<typename V>
+static bool
+AnyTrue(JSContext* cx, unsigned argc, Value* vp)
+{
+    typedef typename V::Elem Elem;
+
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() < 1 || !IsVectorObject<V>(args[0]))
+        return ErrorBadArgs(cx);
+
+    Elem* vec = TypedObjectMemory<Elem*>(args[0]);
+    bool anyTrue = false;
+    for (unsigned i = 0; !anyTrue && i < V::lanes; i++)
+        anyTrue = vec[i];
+
+    args.rval().setBoolean(anyTrue);
     return true;
 }
 
@@ -1106,7 +1209,7 @@ Select(JSContext* cx, unsigned argc, Value* vp)
 
     Elem result[V::lanes];
     for (unsigned i = 0; i < V::lanes; i++)
-        result[i] = mask[i] < 0 ? tv[i] : fv[i];
+        result[i] = mask[i] ? tv[i] : fv[i];
 
     return StoreResult<V>(cx, args, result);
 }
@@ -1242,3 +1345,39 @@ js::simd_int32x4_##Name(JSContext* cx, unsigned argc, Value* vp)   \
 }
 INT32X4_FUNCTION_LIST(DEFINE_SIMD_INT32X4_FUNCTION)
 #undef DEFINE_SIMD_INT32X4_FUNCTION
+
+#define DEFINE_SIMD_BOOL8X16_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_bool8x16_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+BOOL8X16_FUNCTION_LIST(DEFINE_SIMD_BOOL8X16_FUNCTION)
+#undef DEFINE_SIMD_BOOL8X16_FUNCTION
+
+#define DEFINE_SIMD_BOOL16X8_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_bool16x8_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+BOOL16X8_FUNCTION_LIST(DEFINE_SIMD_BOOL16X8_FUNCTION)
+#undef DEFINE_SIMD_BOOL16X8_FUNCTION
+
+#define DEFINE_SIMD_BOOL32X4_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_bool32x4_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+BOOL32X4_FUNCTION_LIST(DEFINE_SIMD_BOOL32X4_FUNCTION)
+#undef DEFINE_SIMD_BOOL32X4_FUNCTION
+
+#define DEFINE_SIMD_BOOL64X2_FUNCTION(Name, Func, Operands)        \
+bool                                                               \
+js::simd_bool64x2_##Name(JSContext* cx, unsigned argc, Value* vp)  \
+{                                                                  \
+    return Func(cx, argc, vp);                                     \
+}
+BOOL64X2_FUNCTION_LIST(DEFINE_SIMD_BOOL64X2_FUNCTION)
+#undef DEFINE_SIMD_BOOL64X2_FUNCTION

@@ -22,12 +22,14 @@
     _(SimdSplatX4)                  \
     _(Int32x4)                      \
     _(Float32x4)                    \
+    _(SimdAllTrue)                  \
+    _(SimdAnyTrue)                  \
     _(SimdReinterpretCast)          \
     _(SimdExtractElementI)          \
+    _(SimdExtractElementB)          \
     _(SimdExtractElementF)          \
     _(SimdInsertElementI)           \
     _(SimdInsertElementF)           \
-    _(SimdSignMaskX4)               \
     _(SimdGeneralShuffleI)          \
     _(SimdGeneralShuffleF)          \
     _(SimdSwizzleI)                 \

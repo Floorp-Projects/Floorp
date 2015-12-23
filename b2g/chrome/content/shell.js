@@ -430,7 +430,6 @@ var shell = {
     window.addEventListener('sizemodechange', this);
     window.addEventListener('unload', this);
     this.contentBrowser.addEventListener('mozbrowserloadstart', this, true);
-    this.contentBrowser.addEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.addEventListener('mozbrowserscrollviewchange', this, true);
     this.contentBrowser.addEventListener('mozbrowsercaretstatechanged', this);
 
@@ -464,7 +463,6 @@ var shell = {
     window.removeEventListener('MozApplicationManifest', this);
     window.removeEventListener('sizemodechange', this);
     this.contentBrowser.removeEventListener('mozbrowserloadstart', this, true);
-    this.contentBrowser.removeEventListener('mozbrowserselectionstatechanged', this, true);
     this.contentBrowser.removeEventListener('mozbrowserscrollviewchange', this, true);
     this.contentBrowser.removeEventListener('mozbrowsercaretstatechanged', this);
     ppmm.removeMessageListener("content-handler", this);
@@ -582,29 +580,6 @@ var shell = {
         this.sendChromeEvent({
           type: 'scrollviewchange',
           detail: evt.detail,
-        });
-        break;
-      case 'mozbrowserselectionstatechanged':
-        // The mozbrowserselectionstatechanged event, may have crossed the chrome-content boundary.
-        // This event always dispatch to shell.js. But the offset we got from this event is
-        // based on tab's coordinate. So get the actual offsets between shell and evt.target.
-        let elt = evt.target;
-        let win = elt.ownerDocument.defaultView;
-        let offsetX = win.mozInnerScreenX - window.mozInnerScreenX;
-        let offsetY = win.mozInnerScreenY - window.mozInnerScreenY;
-
-        let rect = elt.getBoundingClientRect();
-        offsetX += rect.left;
-        offsetY += rect.top;
-
-        let data = evt.detail;
-        data.offsetX = offsetX;
-        data.offsetY = offsetY;
-
-        DoCommandHelper.setEvent(evt);
-        shell.sendChromeEvent({
-          type: 'selectionstatechanged',
-          detail: data,
         });
         break;
       case 'mozbrowsercaretstatechanged':
@@ -883,9 +858,6 @@ var CustomEventManager = {
       case 'inputregistry-remove':
         KeyboardHelper.handleEvent(detail);
         break;
-      case 'do-command':
-        DoCommandHelper.handleEvent(detail.cmd);
-        break;
       case 'copypaste-do-command':
         Services.obs.notifyObservers({ wrappedJSObject: shell.contentBrowser },
                                      'ask-children-to-execute-copypaste-command', detail.cmd);
@@ -929,21 +901,6 @@ var CustomEventManager = {
       case 'restart':
         restart();
         break;
-    }
-  }
-}
-
-var DoCommandHelper = {
-  _event: null,
-  setEvent: function docommand_setEvent(evt) {
-    this._event = evt;
-  },
-
-  handleEvent: function docommand_handleEvent(cmd) {
-    if (this._event) {
-      Services.obs.notifyObservers({ wrappedJSObject: this._event.target },
-                                   'copypaste-docommand', cmd);
-      this._event = null;
     }
   }
 }
