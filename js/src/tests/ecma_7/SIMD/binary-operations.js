@@ -76,6 +76,17 @@ function testFloat32x4sub() {
   }
 }
 
+// Helper for saturating arithmetic.
+// See SIMD.js, 5.1.25 Saturate(descriptor, x)
+function saturate(lower, upper, x) {
+    x = x | 0;
+    if (x > upper)
+        return upper;
+    if (x < lower)
+        return lower;
+    return x;
+}
+
 var i8x16vals = [
   [[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
    [10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160]],
@@ -144,6 +155,26 @@ function testInt8x16xor() {
   }
 }
 
+function testInt8x16addSaturate() {
+  function satadd(a, b) {
+    return saturate(INT8_MIN, INT8_MAX, a + b);
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.addSaturate, satadd);
+  }
+}
+
+function testInt8x16subSaturate() {
+  function satsub(a, b) {
+    return saturate(INT8_MIN, INT8_MAX, a - b);
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(Int8x16(...v), Int8x16(...w), Int8x16.subSaturate, satsub);
+  }
+}
+
 // Uint8x16.
 function testUint8x16add() {
   function addi(a, b) {
@@ -202,6 +233,26 @@ function testUint8x16xor() {
 
   for (var [v,w] of i8x16vals) {
     testBinaryFunc(Uint8x16(...v), Uint8x16(...w), Uint8x16.xor, xori);
+  }
+}
+
+function testUint8x16addSaturate() {
+  function satadd(a, b) {
+    return saturate(0, UINT8_MAX, a + b);
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(Uint8x16(...v), Uint8x16(...w), Uint8x16.addSaturate, satadd);
+  }
+}
+
+function testUint8x16subSaturate() {
+  function satsub(a, b) {
+    return saturate(0, UINT8_MAX, a - b);
+  }
+
+  for (var [v,w] of i8x16vals) {
+    testBinaryFunc(Uint8x16(...v), Uint8x16(...w), Uint8x16.subSaturate, satsub);
   }
 }
 
@@ -273,6 +324,26 @@ function testInt16x8xor() {
   }
 }
 
+function testInt16x8addSaturate() {
+  function satadd(a, b) {
+    return saturate(INT16_MIN, INT16_MAX, a + b);
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.addSaturate, satadd);
+  }
+}
+
+function testInt16x8subSaturate() {
+  function satsub(a, b) {
+    return saturate(INT16_MIN, INT16_MAX, a - b);
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(Int16x8(...v), Int16x8(...w), Int16x8.subSaturate, satsub);
+  }
+}
+
 // Uint16x8.
 function testUint16x8add() {
   function addi(a, b) {
@@ -331,6 +402,26 @@ function testUint16x8xor() {
 
   for (var [v,w] of i16x8vals) {
     testBinaryFunc(Uint16x8(...v), Uint16x8(...w), Uint16x8.xor, xori);
+  }
+}
+
+function testUint16x8addSaturate() {
+  function satadd(a, b) {
+    return saturate(0, UINT16_MAX, a + b);
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(Uint16x8(...v), Uint16x8(...w), Uint16x8.addSaturate, satadd);
+  }
+}
+
+function testUint16x8subSaturate() {
+  function satsub(a, b) {
+    return saturate(0, UINT16_MAX, a - b);
+  }
+
+  for (var [v,w] of i16x8vals) {
+    testBinaryFunc(Uint16x8(...v), Uint16x8(...w), Uint16x8.subSaturate, satsub);
   }
 }
 
@@ -626,6 +717,8 @@ function test() {
   testInt8x16or();
   testInt8x16sub();
   testInt8x16xor();
+  testInt8x16addSaturate();
+  testInt8x16subSaturate();
 
   testUint8x16add();
   testUint8x16and();
@@ -633,6 +726,8 @@ function test() {
   testUint8x16or();
   testUint8x16sub();
   testUint8x16xor();
+  testUint8x16addSaturate();
+  testUint8x16subSaturate();
 
   testInt16x8add();
   testInt16x8and();
@@ -640,6 +735,8 @@ function test() {
   testInt16x8or();
   testInt16x8sub();
   testInt16x8xor();
+  testInt16x8addSaturate();
+  testInt16x8subSaturate();
 
   testUint16x8add();
   testUint16x8and();
@@ -647,6 +744,8 @@ function test() {
   testUint16x8or();
   testUint16x8sub();
   testUint16x8xor();
+  testUint16x8addSaturate();
+  testUint16x8subSaturate();
 
   testInt32x4add();
   testInt32x4and();
