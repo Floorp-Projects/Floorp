@@ -72,6 +72,11 @@ class TestBuildReader(unittest.TestCase):
         self.assertEqual(len(contexts), 1)
 
     def test_dirs_traversal_all_variables(self):
+        reader = self.reader('traversal-all-vars')
+
+        contexts = list(reader.read_topsrcdir())
+        self.assertEqual(len(contexts), 2)
+
         reader = self.reader('traversal-all-vars', enable_tests=True)
 
         contexts = list(reader.read_topsrcdir())
@@ -222,8 +227,7 @@ class TestBuildReader(unittest.TestCase):
             list(reader.read_topsrcdir())
 
         e = bre.exception
-        self.assertIn('Directory (foo) registered multiple times in DIRS',
-            str(e))
+        self.assertIn('Directory (foo) registered multiple times', str(e))
 
     def test_error_error_func(self):
         reader = self.reader('reader-error-error-func')

@@ -3,4 +3,4 @@
 # http://creativecommons.org/publicdomain/zero/1.0/
 
 DIRS += ['regular']
-TEST_DIRS = ['test']
+TEST_DIRS += ['test']

@@ -1127,13 +1127,8 @@ class BuildReader(object):
         # processing is performed.
         yield context
 
-        # We first collect directories populated in variables.
-        dir_vars = ['DIRS']
-
-        if context.config.substs.get('ENABLE_TESTS', False) == '1':
-            dir_vars.append('TEST_DIRS')
-
-        dirs = [(v, context[v]) for v in dir_vars if v in context]
+        # We need the list of directories pre-gyp processing for later.
+        dirs = list(context.get('DIRS', []))
 
         curdir = mozpath.dirname(path)
 
@@ -1183,20 +1178,19 @@ class BuildReader(object):
         # make backend needs order preserved. Once we autogenerate all backend
         # files, we should be able to convert this to a set.
         recurse_info = OrderedDict()
-        for var, var_dirs in dirs:
-            for d in var_dirs:
-                if d in recurse_info:
-                    raise SandboxValidationError(
-                        'Directory (%s) registered multiple times in %s' % (
-                            mozpath.relpath(d.full_path, context.srcdir), var),
-                        context)
+        for d in dirs:
+            if d in recurse_info:
+                raise SandboxValidationError(
+                    'Directory (%s) registered multiple times' % (
+                        mozpath.relpath(d.full_path, context.srcdir)),
+                    context)
 
-                recurse_info[d] = {}
-                for key in sandbox.metadata:
-                    if key == 'exports':
-                        sandbox.recompute_exports()
+            recurse_info[d] = {}
+            for key in sandbox.metadata:
+                if key == 'exports':
+                    sandbox.recompute_exports()
 
-                    recurse_info[d][key] = dict(sandbox.metadata[key])
+                recurse_info[d][key] = dict(sandbox.metadata[key])
 
         for path, child_metadata in recurse_info.items():
             child_path = path.join('moz.build').full_path
@@ -1318,7 +1312,7 @@ class BuildReader(object):
             # Explicitly set directory traversal variables to override default
             # traversal rules.
             if not isinstance(context, SubContext):
-                for v in ('DIRS', 'GYP_DIRS', 'TEST_DIRS'):
+                for v in ('DIRS', 'GYP_DIRS'):
                     context[v][:] = []
 
                 context['DIRS'] = sorted(dirs[context.main_path])

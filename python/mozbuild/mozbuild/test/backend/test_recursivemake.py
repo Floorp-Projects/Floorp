@@ -220,7 +220,17 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(p, 'rt').readlines()[2:]]
         self.assertEqual(lines, [
             'DIRS := dir1 dir2',
-            'TEST_DIRS := dir3',
+        ])
+
+        # Make env.substs writable to add ENABLE_TESTS
+        env.substs = dict(env.substs)
+        env.substs['ENABLE_TESTS'] = '1'
+        self._consume('stub0', RecursiveMakeBackend, env=env)
+        p = mozpath.join(env.topobjdir, 'backend.mk')
+
+        lines = [l.strip() for l in open(p, 'rt').readlines()[2:]]
+        self.assertEqual(lines, [
+            'DIRS := dir1 dir2 dir3',
         ])
 
     def test_mtime_no_change(self):

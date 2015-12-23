@@ -907,13 +907,6 @@ class RecursiveMakeBackend(CommonBackend):
             self._traversal.add(backend_file.relobjdir,
                 dirs=relativize(self.environment.topobjdir, obj.dirs))
 
-        if obj.test_dirs:
-            fh.write('TEST_DIRS := %s\n' % ' '.join(
-                relativize(backend_file.objdir, obj.test_dirs)))
-            if self.environment.substs.get('ENABLE_TESTS', False):
-                self._traversal.add(backend_file.relobjdir,
-                    dirs=relativize(self.environment.topobjdir, obj.test_dirs))
-
         # The directory needs to be registered whether subdirectories have been
         # registered or not.
         self._traversal.add(backend_file.relobjdir)

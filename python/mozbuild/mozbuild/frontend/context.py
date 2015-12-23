@@ -1241,15 +1241,6 @@ VARIABLES = {
         ``HOST_BIN_SUFFIX``, the name will remain unchanged.
         """, None),
 
-    'TEST_DIRS': (ContextDerivedTypedList(SourcePath), list,
-        """Like DIRS but only for directories that contain test-only code.
-
-        If tests are not enabled, this variable will be ignored.
-
-        This variable may go away once the transition away from Makefiles is
-        complete.
-        """, None),
-
     'CONFIGURE_SUBST_FILES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Output files that will be generated using configure-like substitution.
 
@@ -1877,6 +1868,10 @@ FUNCTIONS = {
         """),
 }
 
+
+TestDirsPlaceHolder = List()
+
+
 # Special variables. These complement VARIABLES.
 #
 # Each entry is a tuple of:
@@ -2000,6 +1995,15 @@ SPECIAL_VARIABLES = {
         ``TESTING_JS_MODULES.foo += ['module.jsm']``.
         """),
 
+    'TEST_DIRS': (lambda context: context['DIRS'] if context.config.substs.get('ENABLE_TESTS')
+                                  else TestDirsPlaceHolder, list,
+        """Like DIRS but only for directories that contain test-only code.
+
+        If tests are not enabled, this variable will be ignored.
+
+        This variable may go away once the transition away from Makefiles is
+        complete.
+        """),
 }
 
 # Deprecation hints.
