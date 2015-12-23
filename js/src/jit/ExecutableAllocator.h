@@ -134,12 +134,12 @@ class ExecutableAllocator
 #ifdef XP_WIN
     mozilla::Maybe<mozilla::non_crypto::XorShift128PlusRNG> randomNumberGenerator;
 #endif
-    JitRuntime* jrt_;
+    JSRuntime* rt_;
 
   public:
     enum ProtectionSetting { Writable, Executable };
 
-    explicit ExecutableAllocator(JitRuntime* jrt);
+    explicit ExecutableAllocator(JSRuntime* rt);
     ~ExecutableAllocator();
 
     void purge();
