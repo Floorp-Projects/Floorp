@@ -107,7 +107,6 @@
 #define FLOAT32X4_UNARY_FUNCTION_LIST(V)                                              \
   V(abs, (UnaryFunc<Float32x4, Abs, Float32x4>), 1)                                   \
   V(check, (UnaryFunc<Float32x4, Identity, Float32x4>), 1)                            \
-  V(fromFloat64x2, (FuncConvert<Float64x2, Float32x4> ), 1)                           \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Float32x4>), 1)                    \
   V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Float32x4>), 1)                        \
   V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Float32x4>), 1)                        \
@@ -161,11 +160,9 @@
 #define FLOAT64X2_UNARY_FUNCTION_LIST(V)                                              \
   V(abs, (UnaryFunc<Float64x2, Abs, Float64x2>), 1)                                   \
   V(check, (UnaryFunc<Float64x2, Identity, Float64x2>), 1)                            \
-  V(fromFloat32x4, (FuncConvert<Float32x4, Float64x2> ), 1)                           \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Float64x2>), 1)                    \
   V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Float64x2>), 1)                        \
   V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Float64x2>), 1)                        \
-  V(fromInt32x4, (FuncConvert<Int32x4, Float64x2> ), 1)                               \
   V(fromInt32x4Bits, (FuncConvertBits<Int32x4, Float64x2>), 1)                        \
   V(neg, (UnaryFunc<Float64x2, Neg, Float64x2>), 1)                                   \
   V(reciprocalApproximation, (UnaryFunc<Float64x2, RecApprox, Float64x2>), 1)         \
@@ -300,7 +297,6 @@
   V(check, (UnaryFunc<Int32x4, Identity, Int32x4>), 1)                                \
   V(fromFloat32x4, (FuncConvert<Float32x4, Int32x4>), 1)                              \
   V(fromFloat32x4Bits, (FuncConvertBits<Float32x4, Int32x4>), 1)                      \
-  V(fromFloat64x2, (FuncConvert<Float64x2, Int32x4>), 1)                              \
   V(fromFloat64x2Bits, (FuncConvertBits<Float64x2, Int32x4>), 1)                      \
   V(fromInt8x16Bits, (FuncConvertBits<Int8x16, Int32x4>), 1)                          \
   V(fromInt16x8Bits, (FuncConvertBits<Int16x8, Int32x4>), 1)                          \
