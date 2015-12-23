@@ -8,6 +8,7 @@
 #define jit_JitCompartment_h
 
 #include "mozilla/Array.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "jsweakcache.h"
@@ -194,7 +195,7 @@ class JitRuntime
     JitCode* generateVMWrapper(JSContext* cx, const VMFunction& f);
 
   public:
-    JitRuntime();
+    explicit JitRuntime(JSRuntime* rt);
     ~JitRuntime();
     bool initialize(JSContext* cx);
 
@@ -215,16 +216,31 @@ class JitRuntime
 
     class AutoPreventBackedgePatching
     {
+        mozilla::DebugOnly<JSRuntime*> rt_;
         JitRuntime* jrt_;
         bool prev_;
+
       public:
-        explicit AutoPreventBackedgePatching(JitRuntime* jrt) : jrt_(jrt) {
-            prev_ = jrt->preventBackedgePatching_;
-            jrt->preventBackedgePatching_ = true;
+        // This two-arg constructor is provided for JSRuntime::createJitRuntime,
+        // where we have a JitRuntime but didn't set rt->jitRuntime_ yet.
+        AutoPreventBackedgePatching(JSRuntime* rt, JitRuntime* jrt)
+          : rt_(rt), jrt_(jrt)
+        {
+            MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
+            if (jrt_) {
+                prev_ = jrt_->preventBackedgePatching_;
+                jrt_->preventBackedgePatching_ = true;
+            }
         }
+        explicit AutoPreventBackedgePatching(JSRuntime* rt)
+          : AutoPreventBackedgePatching(rt, rt->jitRuntime())
+        {}
         ~AutoPreventBackedgePatching() {
-            MOZ_ASSERT(jrt_->preventBackedgePatching_);
-            jrt_->preventBackedgePatching_ = prev_;
+            MOZ_ASSERT(jrt_ == rt_->jitRuntime());
+            if (jrt_) {
+                MOZ_ASSERT(jrt_->preventBackedgePatching_);
+                jrt_->preventBackedgePatching_ = prev_;
+            }
         }
     };
 
@@ -515,7 +531,7 @@ class MOZ_STACK_CLASS AutoWritableJitCode
 
   public:
     AutoWritableJitCode(JSRuntime* rt, void* addr, size_t size)
-      : preventPatching_(rt->jitRuntime()), rt_(rt), addr_(addr), size_(size)
+      : preventPatching_(rt), rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
         ExecutableAllocator::makeWritable(addr_, size_);

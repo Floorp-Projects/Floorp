@@ -479,9 +479,9 @@ InterruptCheck(JSContext* cx)
     gc::MaybeVerifyBarriers(cx);
 
     {
-        JitRuntime* jrt = cx->runtime()->jitRuntime();
-        JitRuntime::AutoPreventBackedgePatching apbp(jrt);
-        jrt->patchIonBackedges(cx->runtime(), JitRuntime::BackedgeLoopHeader);
+        JSRuntime* rt = cx->runtime();
+        JitRuntime::AutoPreventBackedgePatching apbp(rt);
+        rt->jitRuntime()->patchIonBackedges(rt, JitRuntime::BackedgeLoopHeader);
     }
 
     return CheckForInterrupt(cx);
