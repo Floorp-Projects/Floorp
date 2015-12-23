@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -34,8 +34,8 @@ let extensionData = {
     "content_scripts": [{
       "matches": ["http://mochi.test/*/file_sample.html"],
       "js": ["content_script.js"],
-      "run_at": "document_start"
-    }]
+      "run_at": "document_start",
+    }],
   },
 
   files: {
@@ -60,7 +60,7 @@ add_task(function* test_contentscript() {
 
   // Add an "unload" listener so that we don't put the window in the
   // bfcache. This way it gets destroyed immediately upon navigation.
-  win.addEventListener("unload", function() {});
+  win.addEventListener("unload", function() {});  // eslint-disable-line mozilla/balanced-listeners
 
   win.location = "http://example.com";
   yield extension.awaitMessage("disconnected");
