@@ -876,6 +876,53 @@ function ArraySpecies() {
     return this;
 }
 
+// ES 2016 draft Mar 25, 2016 9.4.2.3.
+function ArraySpeciesCreate(originalArray, length) {
+    // Step 1.
+    assert(typeof length == "number", "length should be a number");
+    assert(length >= 0, "length should be a non-negative number");
+
+    // Step 2.
+    if (length === -0)
+        length = 0;
+
+    // Step 4, 6.
+    if (!IsArray(originalArray))
+        return std_Array(length);
+
+    // Step 5.a.
+    var C = originalArray.constructor;
+
+    // Step 5.b.
+    if (IsConstructor(C) && IsWrappedArrayConstructor(C))
+        return std_Array(length);
+
+    // Step 5.c.
+    if (IsObject(C)) {
+        // Step 5.c.i.
+        C = C[std_species];
+
+        // Optimized path for an ordinary Array.
+        if (C === GetBuiltinConstructor("Array"))
+            return std_Array(length);
+
+        // Step 5.c.ii.
+        if (C === null)
+            return std_Array(length);
+    }
+
+    // Step 6.
+    if (C === undefined)
+        return std_Array(length);
+
+    // Step 7.
+    if (!IsConstructor(C))
+        ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "constructor property");
+
+    // Step 8.
+    return new C(length);
+}
+
 // ES 2016 draft Mar 25, 2016 22.1.3.1.
 // Note: Array.prototype.concat.length is 1.
 function ArrayConcat(arg1) {
