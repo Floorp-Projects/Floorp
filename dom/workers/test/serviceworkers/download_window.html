@@ -9,11 +9,29 @@
 <body>
 <script type="text/javascript">
 
+function wait_until_controlled() {
+  return new Promise(function(resolve) {
+    if (navigator.serviceWorker.controller) {
+      return resolve();
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', function onController() {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.removeEventListener('controllerchange', onController);
+        return resolve();
+      }
+    });
+  });
+}
 addEventListener('load', function(event) {
   var registration;
   navigator.serviceWorker.register('download_worker.js').then(function(swr) {
     registration = swr;
-    return navigator.serviceWorker.ready;
+
+    // While the iframe below is a navigation, we still wait until we are
+    // controlled here.  We want an active client to hold the service worker
+    // alive since it calls unregister() on itself.
+    return wait_until_controlled();
+
   }).then(function() {
     var frame = document.createElement('iframe');
     document.body.appendChild(frame);
