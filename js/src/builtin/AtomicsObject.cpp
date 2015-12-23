@@ -85,6 +85,13 @@ ReportOutOfRange(JSContext* cx)
 }
 
 static bool
+ReportCannotWait(JSContext* cx)
+{
+    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ATOMICS_WAIT_NOT_ALLOWED);
+    return false;
+}
+
+static bool
 GetSharedTypedArray(JSContext* cx, HandleValue v,
                     MutableHandle<TypedArrayObject*> viewp)
 {
@@ -773,6 +780,9 @@ js::atomics_futexWait(JSContext* cx, unsigned argc, Value* vp)
             timeout_ms = 0;
     }
 
+    if (!rt->fx.canWait())
+        return ReportCannotWait(cx);
+
     // This lock also protects the "waiters" field on SharedArrayRawBuffer,
     // and it provides the necessary memory fence.
     AutoLockFutexAPI lock;
@@ -1054,6 +1064,7 @@ bool
 js::FutexRuntime::wait(JSContext* cx, double timeout_ms, AtomicsObject::FutexWaitResult* result)
 {
     MOZ_ASSERT(&cx->runtime()->fx == this);
+    MOZ_ASSERT(cx->runtime()->fx.canWait());
     MOZ_ASSERT(lockHolder_ == PR_GetCurrentThread());
     MOZ_ASSERT(state_ == Idle || state_ == WaitingInterrupted);
 
