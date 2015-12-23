@@ -1574,6 +1574,25 @@ js::ToInt8Slow(JSContext *cx, const HandleValue v, int8_t *out)
 }
 
 /*
+ * Convert a value to an uint8_t, according to the ToUInt8() function in ES6
+ * ECMA-262, 7.1.10. Return converted value in *out on success, false on failure.
+ */
+JS_PUBLIC_API(bool)
+js::ToUint8Slow(JSContext *cx, const HandleValue v, uint8_t *out)
+{
+    MOZ_ASSERT(!v.isInt32());
+    double d;
+    if (v.isDouble()) {
+        d = v.toDouble();
+    } else {
+        if (!ToNumberSlow(cx, v, &d))
+            return false;
+    }
+    *out = ToInt8(d);
+    return true;
+}
+
+/*
  * Convert a value to an int16_t, according to the WebIDL rules for short
  * conversion. Return converted value in *out on success, false on failure.
  */
