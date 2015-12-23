@@ -2392,11 +2392,40 @@ CanOptimizeForDenseStorage(HandleObject arr, uint32_t startingIndex, uint32_t co
            startingIndex + count <= GetAnyBoxedOrUnboxedInitializedLength(arr);
 }
 
-/* ES5 15.4.4.12. */
+/* ES 2016 draft Mar 25, 2016 22.1.3.26. */
 static bool
 array_splice(JSContext* cx, unsigned argc, Value* vp)
 {
     return array_splice_impl(cx, argc, vp, true);
+}
+
+static inline bool
+ArraySpliceCopy(JSContext* cx, HandleObject arr, HandleObject obj,
+                uint32_t actualStart, uint32_t actualDeleteCount)
+{
+    /* Steps 14, 15, 15.e. */
+    RootedValue fromValue(cx);
+    for (uint32_t k = 0; k < actualDeleteCount; k++) {
+        /* Step 15.a (implicit). */
+
+        if (!CheckForInterrupt(cx))
+            return false;
+
+        /* Steps 15.b-c, 15.d.i-ii. */
+        bool hole;
+        if (!GetElement(cx, obj, actualStart + k, &hole, &fromValue))
+            return false;
+
+        /* Step 15.d. */
+        if (!hole) {
+            /* Step 15.d.iii-iv. */
+            if (!DefineElement(cx, arr, k, fromValue))
+                return false;
+        }
+    }
+
+    /* Steps 16-17. */
+    return SetLengthProperty(cx, arr, actualDeleteCount);
 }
 
 bool
@@ -2410,80 +2439,93 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
     if (!obj)
         return false;
 
-    /* Steps 3-4. */
+    /* Step 2. */
     uint32_t len;
     if (!GetLengthProperty(cx, obj, &len))
         return false;
 
-    /* Step 5. */
+    /* Step 3. */
     double relativeStart;
     if (!ToInteger(cx, args.get(0), &relativeStart))
         return false;
 
-    /* Step 6. */
+    /* Step 4. */
     uint32_t actualStart;
     if (relativeStart < 0)
         actualStart = Max(len + relativeStart, 0.0);
     else
         actualStart = Min(relativeStart, double(len));
 
-    /* Step 7. */
+    /* Step 5. */
     uint32_t actualDeleteCount;
-    if (args.length() != 1) {
+    if (args.length() == 0) {
+        /* Step 5.b. */
+        actualDeleteCount = 0;
+    } else if (args.length() == 1) {
+        /* Step 6.b. */
+        actualDeleteCount = len - actualStart;
+    } else {
+        /* Steps 7.b. */
         double deleteCountDouble;
-        RootedValue cnt(cx, args.length() >= 2 ? args[1] : Int32Value(0));
+        RootedValue cnt(cx, args[1]);
         if (!ToInteger(cx, cnt, &deleteCountDouble))
             return false;
+
+        /* Step 7.c. */
         actualDeleteCount = Min(Max(deleteCountDouble, 0.0), double(len - actualStart));
-    } else {
-        /*
-         * Non-standard: if start was specified but deleteCount was omitted,
-         * delete to the end of the array.  See bug 668024 for discussion.
-         */
-        actualDeleteCount = len - actualStart;
     }
+
+    /* Step 8 (implicit). */
 
     MOZ_ASSERT(len - actualStart >= actualDeleteCount);
 
-    /* Steps 2, 8-9. */
     RootedObject arr(cx);
-    if (CanOptimizeForDenseStorage(obj, actualStart, actualDeleteCount, cx)) {
-        if (returnValueIsUsed) {
+    if (IsArraySpecies(cx, obj)) {
+        if (CanOptimizeForDenseStorage(obj, actualStart, actualDeleteCount, cx)) {
+            if (returnValueIsUsed) {
+                /* Step 9. */
+                arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, actualDeleteCount);
+                if (!arr)
+                    return false;
+
+                /* Steps 10-11. */
+                DebugOnly<DenseElementResult> result =
+                    CopyAnyBoxedOrUnboxedDenseElements(cx, arr, obj, 0, actualStart, actualDeleteCount);
+                MOZ_ASSERT(result.value == DenseElementResult::Success);
+
+                /* Step 12 (implicit). */
+            }
+        } else {
+            /* Step 9. */
             arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, actualDeleteCount);
             if (!arr)
                 return false;
-            DebugOnly<DenseElementResult> result =
-                CopyAnyBoxedOrUnboxedDenseElements(cx, arr, obj, 0, actualStart, actualDeleteCount);
-            MOZ_ASSERT(result.value == DenseElementResult::Success);
+
+            /* Steps 10-12. */
+            if (!ArraySpliceCopy(cx, arr, obj, actualStart, actualDeleteCount))
+                return false;
         }
     } else {
-        arr = NewFullyAllocatedArrayTryReuseGroup(cx, obj, actualDeleteCount);
-        if (!arr)
+        /* Steps 9. */
+        if (!ArraySpeciesCreate(cx, obj, actualDeleteCount, &arr))
             return false;
 
-        RootedValue fromValue(cx);
-        for (uint32_t k = 0; k < actualDeleteCount; k++) {
-            bool hole;
-            if (!CheckForInterrupt(cx) ||
-                !GetElement(cx, obj, actualStart + k, &hole, &fromValue) ||
-                (!hole && !DefineElement(cx, arr, k, fromValue)))
-            {
-                return false;
-            }
-        }
+        /* Steps 10-12. */
+        if (!ArraySpliceCopy(cx, arr, obj, actualStart, actualDeleteCount))
+            return false;
     }
 
-    /* Step 11. */
+    /* Step 14. */
     uint32_t itemCount = (args.length() >= 2) ? (args.length() - 2) : 0;
 
     if (itemCount < actualDeleteCount) {
-        /* Step 12: the array is being shrunk. */
+        /* Step 15: the array is being shrunk. */
         uint32_t sourceIndex = actualStart + actualDeleteCount;
         uint32_t targetIndex = actualStart + itemCount;
         uint32_t finalLength = len - actualDeleteCount + itemCount;
 
         if (CanOptimizeForDenseStorage(obj, 0, len, cx)) {
-            /* Steps 12(a)-(b). */
+            /* Steps 15.a-b. */
             DenseElementResult result =
                 MoveAnyBoxedOrUnboxedDenseElements(cx, obj, targetIndex, sourceIndex,
                                                    len - sourceIndex);
@@ -2491,7 +2533,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
             if (result == DenseElementResult::Failure)
                 return false;
 
-            /* Steps 12(c)-(d). */
+            /* Steps 15.c-d. */
             SetAnyBoxedOrUnboxedInitializedLength(cx, obj, finalLength);
         } else {
             /*
@@ -2501,32 +2543,40 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
              * fallout.
              */
 
-            /* Steps 12(a)-(b). */
+            /* Steps 15.a-b. */
             RootedValue fromValue(cx);
             for (uint32_t from = sourceIndex, to = targetIndex; from < len; from++, to++) {
+                /* Steps 15.b.i-ii (implicit). */
+
                 if (!CheckForInterrupt(cx))
                     return false;
 
+                /* Steps 15.b.iii, 15.b.iv.1. */
                 bool hole;
                 if (!GetElement(cx, obj, from, &hole, &fromValue))
                     return false;
+
+                /* Steps 15.b.iv. */
                 if (hole) {
+                    /* Steps 15.b.v.1. */
                     if (!DeletePropertyOrThrow(cx, obj, to))
                         return false;
                 } else {
+                    /* Step 15.b.iv.2. */
                     if (!SetArrayElement(cx, obj, to, fromValue))
                         return false;
                 }
             }
 
-            /* Steps 12(c)-(d). */
+            /* Steps 15.c-d. */
             for (uint32_t k = len; k > finalLength; k--) {
+                /* Steps 15.d.i-ii. */
                 if (!DeletePropertyOrThrow(cx, obj, k - 1))
                     return false;
             }
         }
     } else if (itemCount > actualDeleteCount) {
-        /* Step 13. */
+        /* Step 16. */
 
         /*
          * Optimize only if the array is already dense and we can extend it to
@@ -2571,7 +2621,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
             if (result == DenseElementResult::Failure)
                 return false;
 
-            /* Steps 12(c)-(d). */
+            /* Steps 16.a-b. */
             SetAnyBoxedOrUnboxedInitializedLength(cx, obj, len + itemCount - actualDeleteCount);
         } else {
             RootedValue fromValue(cx);
@@ -2579,17 +2629,24 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
                 if (!CheckForInterrupt(cx))
                     return false;
 
+                /* Step 16.b.i. */
                 double from = k + actualDeleteCount - 1;
+
+                /* Step 16.b.ii. */
                 double to = k + itemCount - 1;
 
+                /* Steps 16.b.iii, 16.b.iv.1. */
                 bool hole;
                 if (!GetElement(cx, obj, from, &hole, &fromValue))
                     return false;
 
+                /* Steps 16.b.iv. */
                 if (hole) {
+                    /* Step 16.b.v.1. */
                     if (!DeletePropertyOrThrow(cx, obj, to))
                         return false;
                 } else {
+                    /* Step 16.b.iv.2. */
                     if (!SetArrayElement(cx, obj, to, fromValue))
                         return false;
                 }
@@ -2597,21 +2654,24 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
         }
     }
 
-    /* Step 10. */
+    /* Step 13 (reordered). */
     Value* items = args.array() + 2;
 
-    /* Steps 14-15. */
+    /* Steps 17-18. */
     for (uint32_t k = actualStart, i = 0; i < itemCount; i++, k++) {
+        /* Step 18.a (implicit). */
+
+        /* Step 18.b. */
         if (!SetArrayElement(cx, obj, k, HandleValue::fromMarkedLocation(&items[i])))
             return false;
     }
 
-    /* Step 16. */
+    /* Step 19. */
     double finalLength = double(len) - actualDeleteCount + itemCount;
     if (!SetLengthProperty(cx, obj, finalLength))
         return false;
 
-    /* Step 17. */
+    /* Step 20. */
     if (returnValueIsUsed)
         args.rval().setObject(*arr);
 
