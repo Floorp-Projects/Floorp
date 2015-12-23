@@ -424,26 +424,21 @@ MacroAssemblerARM::ma_nop()
 }
 
 void
-MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Condition c,
-                                   RelocStyle rs)
+MacroAssemblerARM::ma_movPatchable(Imm32 imm_, Register dest, Assembler::Condition c)
 {
     int32_t imm = imm_.value;
-    switch(rs) {
-      case L_MOVWT:
+    if (HasMOVWT()) {
         as_movw(dest, Imm16(imm & 0xffff), c);
         as_movt(dest, Imm16(imm >> 16 & 0xffff), c);
-        break;
-      case L_LDR:
+    } else {
         as_Imm32Pool(dest, imm, c);
-        break;
     }
 }
 
 void
-MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                                   RelocStyle rs)
+MacroAssemblerARM::ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c)
 {
-    ma_movPatchable(Imm32(int32_t(imm.value)), dest, c, rs);
+    ma_movPatchable(Imm32(int32_t(imm.value)), dest, c);
 }
 
 /* static */ void
@@ -503,13 +498,7 @@ MacroAssemblerARM::ma_mov(ImmGCPtr ptr, Register dest)
     // As opposed to x86/x64 version, the data relocation has to be executed
     // before to recover the pointer, and not after.
     writeDataRelocation(ptr);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ma_movPatchable(Imm32(uintptr_t(ptr.value)), dest, Always, rs);
+    ma_movPatchable(Imm32(uintptr_t(ptr.value)), dest, Always);
 }
 
 // Shifts (just a move with a shifting op2)
@@ -1939,14 +1928,8 @@ MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerARMCompat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
     append(AsmJSAbsoluteLink(CodeOffset(currentOffset()), imm));
-    ma_movPatchable(Imm32(-1), dest, Always, rs);
+    ma_movPatchable(Imm32(-1), dest, Always);
 }
 
 void
@@ -3575,13 +3558,7 @@ MacroAssemblerARMCompat::storeTypeTag(ImmTag tag, const BaseIndex& dest)
 void
 MacroAssemblerARM::ma_call(ImmPtr dest)
 {
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
-    ma_movPatchable(dest, CallReg, Always, rs);
+    ma_movPatchable(dest, CallReg, Always);
     as_blx(CallReg);
 }
 
@@ -3980,7 +3957,7 @@ MacroAssemblerARMCompat::toggledCall(JitCode* target, bool enabled)
     BufferOffset bo = nextOffset();
     addPendingJump(bo, ImmPtr(target->raw()), Relocation::JITCODE);
     ScratchRegisterScope scratch(asMasm());
-    ma_movPatchable(ImmPtr(target->raw()), scratch, Always, HasMOVWT() ? L_MOVWT : L_LDR);
+    ma_movPatchable(ImmPtr(target->raw()), scratch, Always);
     if (enabled)
         ma_blx(scratch);
     else
@@ -4995,14 +4972,8 @@ MacroAssembler::call(JitCode* c)
 {
     BufferOffset bo = m_buffer.nextOffset();
     addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
-    RelocStyle rs;
-    if (HasMOVWT())
-        rs = L_MOVWT;
-    else
-        rs = L_LDR;
-
     ScratchRegisterScope scratch(*this);
-    ma_movPatchable(ImmPtr(c->raw()), scratch, Always, rs);
+    ma_movPatchable(ImmPtr(c->raw()), scratch, Always);
     callJitNoProfiler(scratch);
 }
 

@@ -115,10 +115,8 @@ class MacroAssemblerARM : public Assembler
                 SBit s = LeaveCC, Condition c = Always);
     void ma_nop();
 
-    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs);
-    void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c,
-                         RelocStyle rs);
+    void ma_movPatchable(Imm32 imm, Register dest, Assembler::Condition c);
+    void ma_movPatchable(ImmPtr imm, Register dest, Assembler::Condition c);
 
     static void ma_mov_patch(Imm32 imm, Register dest, Assembler::Condition c,
                              RelocStyle rs, Instruction* i);
@@ -519,14 +517,8 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void branch(JitCode* c) {
         BufferOffset bo = m_buffer.nextOffset();
         addPendingJump(bo, ImmPtr(c->raw()), Relocation::JITCODE);
-        RelocStyle rs;
-        if (HasMOVWT())
-            rs = L_MOVWT;
-        else
-            rs = L_LDR;
-
         ScratchRegisterScope scratch(asMasm());
-        ma_movPatchable(ImmPtr(c->raw()), scratch, Always, rs);
+        ma_movPatchable(ImmPtr(c->raw()), scratch, Always);
         ma_bx(scratch);
     }
     void branch(const Register reg) {
@@ -609,7 +601,7 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
 
     CodeOffset movWithPatch(ImmWord imm, Register dest) {
         CodeOffset label = CodeOffset(currentOffset());
-        ma_movPatchable(Imm32(imm.value), dest, Always, HasMOVWT() ? L_MOVWT : L_LDR);
+        ma_movPatchable(Imm32(imm.value), dest, Always);
         return label;
     }
     CodeOffset movWithPatch(ImmPtr imm, Register dest) {

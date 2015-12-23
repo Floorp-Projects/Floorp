@@ -223,10 +223,10 @@ uint32_t maybeRD(Register r);
 uint32_t maybeRT(Register r);
 uint32_t maybeRN(Register r);
 
-Register toRN (Instruction& i);
-Register toRM (Instruction& i);
-Register toRD (Instruction& i);
-Register toR (Instruction& i);
+Register toRN(Instruction i);
+Register toRM(Instruction i);
+Register toRD(Instruction i);
+Register toR(Instruction i);
 
 class VFPRegister;
 uint32_t VD(VFPRegister vr);
@@ -1238,7 +1238,7 @@ class Assembler : public AssemblerShared
                             uint8_t* inst, uint8_t* data, ARMBuffer::PoolEntry* pe = nullptr,
                             bool markAsBranch = false, bool loadToPC = false);
 
-    Instruction* editSrc (BufferOffset bo) {
+    Instruction* editSrc(BufferOffset bo) {
         return m_buffer.getInst(bo);
     }
 
@@ -1933,11 +1933,15 @@ class Instruction
     // This is not for defaulting to always, this is for instructions that
     // cannot be made conditional, and have the usually invalid 4b1111 cond
     // field.
-    Instruction (uint32_t data_, bool fake = false) : data(data_ | 0xf0000000) {
+    explicit Instruction(uint32_t data_, bool fake = false)
+      : data(data_ | 0xf0000000)
+    {
         MOZ_ASSERT(fake || ((data_ & 0xf0000000) == 0));
     }
     // Standard constructor.
-    Instruction (uint32_t data_, Assembler::Condition c) : data(data_ | (uint32_t) c) {
+    Instruction(uint32_t data_, Assembler::Condition c)
+      : data(data_ | (uint32_t) c)
+    {
         MOZ_ASSERT((data_ & 0xf0000000) == 0);
     }
     // You should never create an instruction directly. You should create a more
@@ -1955,7 +1959,7 @@ class Instruction
     template <class C>
     C* as() const { return C::AsTHIS(*this); }
 
-    const Instruction & operator=(const Instruction& src) {
+    const Instruction& operator=(Instruction src) {
         data = src.data;
         return *this;
     }
@@ -2007,7 +2011,7 @@ class InstLDR : public InstDTR
 {
   public:
     InstLDR(Index mode, Register rt, DTRAddr addr, Assembler::Condition c)
-        : InstDTR(IsLoad, IsWord, mode, rt, addr, c)
+      : InstDTR(IsLoad, IsWord, mode, rt, addr, c)
     { }
 
     static bool IsTHIS(const Instruction& i);
