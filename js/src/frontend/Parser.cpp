@@ -6764,6 +6764,8 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
     MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_CLASS);
 
     ParseNode* classMethods = handler.newClassMethodList(pos().begin);
+    if (!classMethods)
+        return null();
 
     bool seenConstructor = false;
     for (;;) {
