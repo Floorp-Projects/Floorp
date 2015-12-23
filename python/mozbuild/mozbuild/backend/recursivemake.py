@@ -1285,19 +1285,18 @@ INSTALL_TARGETS += %(prefix)s
 
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
-        for path in (
-                'dist/bin',
-                'dist/xpi-stage',
-                '_tests',
-                'dist/include',
-        ):
-            manifest = path.replace('/', '_')
-            if target.startswith(path):
-                install_manifest = self._install_manifests[manifest]
-                reltarget = mozpath.relpath(target, path)
-                break
-        else:
+        path = mozpath.basedir(target, (
+            'dist/bin',
+            'dist/xpi-stage',
+            '_tests',
+            'dist/include',
+        ))
+        if not path:
             raise Exception("Cannot install to " + target)
+
+        manifest = path.replace('/', '_')
+        install_manifest = self._install_manifests[manifest]
+        reltarget = mozpath.relpath(target, path)
 
         for path, files in files.walk():
             target_var = (mozpath.join(target, path)
