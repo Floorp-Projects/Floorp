@@ -4085,6 +4085,14 @@ public:
             (!mFrame->Extend3DContext() &&
              mFrame->Combines3DTransformWithAncestors()));
   }
+  /**
+   * The backing frame of this item participates a 3D rendering
+   * context.
+   */
+  bool IsParticipating3DContext() {
+    return mFrame->Extend3DContext() ||
+      mFrame->Combines3DTransformWithAncestors();
+  }
 
 private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
@@ -4198,6 +4206,11 @@ public:
   }
 
   nsIFrame* TransformFrame() { return mTransformFrame; }
+
+  virtual void
+  DoUpdateBoundsPreserves3D(nsDisplayListBuilder* aBuilder) override {
+    static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop())->DoUpdateBoundsPreserves3D(aBuilder);
+  }
 
 private:
   nsDisplayWrapList mList;
