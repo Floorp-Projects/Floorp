@@ -206,20 +206,6 @@ class TestHarnessFiles(ContextDerived):
         self.srcdir_pattern_files = srcdir_pattern_files
         self.objdir_files = objdir_files
 
-class BrandingFiles(ContextDerived):
-    """Sandbox container object for BRANDING_FILES, which is a
-    HierarchicalStringList.
-
-    We need an object derived from ContextDerived for use in the backend, so
-    this object fills that role. It just has a reference to the underlying
-    HierarchicalStringList, which is created when parsing BRANDING_FILES.
-    """
-    __slots__ = ('files')
-
-    def __init__(self, sandbox, files):
-        ContextDerived.__init__(self, sandbox)
-        self.files = files
-
 class IPDLFile(ContextDerived):
     """Describes an individual .ipdl source file."""
 
@@ -824,6 +810,19 @@ class Exports(FinalTargetFiles):
     @property
     def install_target(self):
         return 'dist/include'
+
+
+class BrandingFiles(FinalTargetFiles):
+    """Sandbox container object for BRANDING_FILES, which is a
+    HierarchicalStringList.
+
+    We need an object derived from ContextDerived for use in the backend, so
+    this object fills that role. It just has a reference to the underlying
+    HierarchicalStringList, which is created when parsing BRANDING_FILES.
+    """
+    @property
+    def install_target(self):
+        return 'dist/branding'
 
 
 class GeneratedFile(ContextDerived):
