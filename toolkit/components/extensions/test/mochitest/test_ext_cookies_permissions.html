@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript">
+<script type="text/javascript">
 "use strict";
 
 function* testCookies(options) {
@@ -194,7 +194,7 @@ add_task(function* init() {
 });
 
 add_task(function* test_good_cookie_permissions() {
-  info('Test matching, non-secure domain with non-secure cookie');
+  info("Test matching, non-secure domain with non-secure cookie");
   yield testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.com/",
@@ -203,7 +203,7 @@ add_task(function* test_good_cookie_permissions() {
     shouldPass: true,
   });
 
-  info('Test matching, secure domain with non-secure cookie');
+  info("Test matching, secure domain with non-secure cookie");
   yield testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.com/",
@@ -212,7 +212,7 @@ add_task(function* test_good_cookie_permissions() {
     shouldPass: true,
   });
 
-  info('Test matching, secure domain with secure cookie');
+  info("Test matching, secure domain with secure cookie");
   yield testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.com/",
@@ -221,7 +221,7 @@ add_task(function* test_good_cookie_permissions() {
     shouldPass: true,
   });
 
-  info('Test matching subdomain with superdomain privileges, secure cookie (https)');
+  info("Test matching subdomain with superdomain privileges, secure cookie (https)");
   yield testCookies({
     permissions: ["https://foo.bar.example.com/", "cookies"],
     url: "https://foo.bar.example.com/",
@@ -230,7 +230,7 @@ add_task(function* test_good_cookie_permissions() {
     shouldPass: true,
   });
 
-  info('Test matching subdomain with superdomain privileges, non-secure cookie (https)');
+  info("Test matching subdomain with superdomain privileges, non-secure cookie (https)");
   yield testCookies({
     permissions: ["https://foo.bar.example.com/", "cookies"],
     url: "https://foo.bar.example.com/",
@@ -239,7 +239,7 @@ add_task(function* test_good_cookie_permissions() {
     shouldPass: true,
   });
 
-  info('Test matching subdomain with superdomain privileges, non-secure cookie  (http)');
+  info("Test matching subdomain with superdomain privileges, non-secure cookie  (http)");
   yield testCookies({
     permissions: ["http://foo.bar.example.com/", "cookies"],
     url: "http://foo.bar.example.com/",
@@ -250,7 +250,7 @@ add_task(function* test_good_cookie_permissions() {
 });
 
 add_task(function* test_bad_cookie_permissions() {
-  info('Test non-matching, non-secure domain with non-secure cookie');
+  info("Test non-matching, non-secure domain with non-secure cookie");
   yield testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.net/",
@@ -260,7 +260,7 @@ add_task(function* test_bad_cookie_permissions() {
     shouldWrite: false,
   });
 
-  info('Test non-matching, secure domain with non-secure cookie');
+  info("Test non-matching, secure domain with non-secure cookie");
   yield testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.net/",
@@ -270,7 +270,7 @@ add_task(function* test_bad_cookie_permissions() {
     shouldWrite: false,
   });
 
-  info('Test non-matching, secure domain with secure cookie');
+  info("Test non-matching, secure domain with secure cookie");
   yield testCookies({
     permissions: ["https://example.com/", "cookies"],
     url: "https://example.net/",
@@ -280,7 +280,7 @@ add_task(function* test_bad_cookie_permissions() {
     shouldWrite: false,
   });
 
-  info('Test matching subdomain with superdomain privileges, secure cookie (http)');
+  info("Test matching subdomain with superdomain privileges, secure cookie (http)");
   yield testCookies({
     permissions: ["http://foo.bar.example.com/", "cookies"],
     url: "http://foo.bar.example.com/",
@@ -290,7 +290,7 @@ add_task(function* test_bad_cookie_permissions() {
     shouldWrite: true,
   });
 
-  info('Test matching, non-secure domain with secure cookie');
+  info("Test matching, non-secure domain with secure cookie");
   yield testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "http://example.com/",
@@ -300,7 +300,7 @@ add_task(function* test_bad_cookie_permissions() {
     shouldWrite: true,
   });
 
-  info('Test matching, non-secure host, secure URL');
+  info("Test matching, non-secure host, secure URL");
   yield testCookies({
     permissions: ["http://example.com/", "cookies"],
     url: "https://example.com/",

@@ -10,7 +10,8 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
 
 function backgroundScript() {
   browser.test.log("running background script");
@@ -26,7 +27,7 @@ function backgroundScript() {
 }
 
 let extensionData = {
-  background: "(" + backgroundScript.toString() + ")()"
+  background: "(" + backgroundScript.toString() + ")()",
 };
 
 add_task(function* test_background() {
