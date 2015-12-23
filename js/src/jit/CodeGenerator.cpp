@@ -7917,6 +7917,10 @@ CodeGenerator::generateAsmJS(AsmJSFunctionOffsets* offsets)
     if (!generateOutOfLineCode())
         return false;
 
+    // Flush constant pools now so that pool hints encoded in the code stream
+    // get converted into actual instructions.
+    masm.flushBuffer();
+
     offsets->end = masm.currentOffset();
 
     MOZ_ASSERT(!masm.failureLabel()->used());
