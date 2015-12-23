@@ -107,11 +107,9 @@ var tests = [
     [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
     [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
     // The following test cases are all involving with one sending
-    // synthesizeKey(), the other without. They fail when the touch
-    // or selection caret is enabled. Test them with these preferences off.
-    function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false],
-                                                   ['selectioncaret.enabled', false],
-                                                   ['layout.accessiblecaret.enabled', false]]}, nextTest);} ,
+    // synthesizeKey(), the other without. They fail when accessiblecaret
+    // is enabled. Test them with the preference off.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.enabled', false]]}, nextTest);} ,
     [ 'bug240933-1.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug240933-2.html' , 'bug240933-1-ref.html' ] ,
     [ 'bug389321-1.html' , 'bug389321-1-ref.html' ] ,
@@ -157,18 +155,14 @@ var tests = [
     [ 'bug1123067-2.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1123067-3.html' , 'bug1123067-ref.html'  ] ,
     [ 'bug1132768-1.html' , 'bug1132768-1-ref.html'] ,
-    function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled'],
-                                                     ['selectioncaret.enabled'],
-                                                     ['layout.accessiblecaret.enabled']]}, nextTest);} ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.enabled']]}, nextTest);} ,
 ];
 
 if (navigator.appVersion.indexOf("Android") == -1 &&
   SpecialPowers.Services.appinfo.name != "B2G") {
-  tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false]]}, nextTest);});
   tests.push([ 'bug512295-1.html' , 'bug512295-1-ref.html' ]);
   tests.push([ 'bug512295-2.html' , 'bug512295-2-ref.html' ]);
   tests.push([ 'bug923376.html'   , 'bug923376-ref.html'   ]);
-  tests.push(function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled']]}, nextTest);});
   tests.push(function() {SpecialPowers.pushPrefEnv({'set': [['layout.css.overflow-clip-box.enabled', true]]}, nextTest);});
   tests.push([ 'bug966992-1.html' , 'bug966992-1-ref.html' ]);
   tests.push([ 'bug966992-2.html' , 'bug966992-2-ref.html' ]);
@@ -181,7 +175,6 @@ if (navigator.appVersion.indexOf("Android") == -1 &&
 if (navigator.platform.indexOf("Linux") >= 0 &&
     SpecialPowers.Services.appinfo.name != "B2G") {
   tests = tests.concat([
-    function() {SpecialPowers.pushPrefEnv({'set': [['touchcaret.enabled', false]]}, nextTest);} ,
     // eDirPrevious, Shift+click
     [ 'multi-range-user-select.html#prev1S_' , 'multi-range-user-select-ref.html#prev1S_'  ] ,
     [ 'multi-range-user-select.html#prev2S_' , 'multi-range-user-select-ref.html#prev2S_'  ] ,
@@ -274,7 +267,6 @@ if (navigator.platform.indexOf("Linux") >= 0 &&
     // eDirNext, VK_RIGHT / LEFT
     [ 'multi-range-script-select.html#next1SR' , 'multi-range-script-select-ref.html#next1SR'  ] ,
     [ 'multi-range-script-select.html#next1SL' , 'multi-range-script-select-ref.html#next1SL'  ] ,
-    function() {SpecialPowers.pushPrefEnv({'clear': [['touchcaret.enabled']]}, nextTest);} ,
   ]);
 }
 

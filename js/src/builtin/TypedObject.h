@@ -328,7 +328,7 @@ class ComplexTypeDescr : public TypeDescr
 };
 
 /*
- * Type descriptors `int8x16`, `int16x8`, `int32x4`, `float32x4` and `float64x2`
+ * SIMD Type descriptors.
  */
 class SimdTypeDescr : public ComplexTypeDescr
 {
@@ -339,7 +339,11 @@ class SimdTypeDescr : public ComplexTypeDescr
         Int32x4   = JS_SIMDTYPEREPR_INT32X4,
         Float32x4 = JS_SIMDTYPEREPR_FLOAT32X4,
         Float64x2 = JS_SIMDTYPEREPR_FLOAT64X2,
-        LAST_TYPE = Float64x2
+        Bool8x16  = JS_SIMDTYPEREPR_BOOL8X16,
+        Bool16x8  = JS_SIMDTYPEREPR_BOOL16X8,
+        Bool32x4  = JS_SIMDTYPEREPR_BOOL32X4,
+        Bool64x2  = JS_SIMDTYPEREPR_BOOL64X2,
+        LAST_TYPE = Bool64x2
     };
 
     static const type::Kind Kind = type::Simd;
@@ -843,6 +847,38 @@ bool GetFloat32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
  * been initialized for this to be safe.
  */
 bool GetFloat64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: GetBool8x16TypeDescr()
+ *
+ * Returns the bool8x16 type object. SIMD pseudo-module must have
+ * been initialized for this to be safe.
+ */
+bool GetBool8x16TypeDescr(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: GetBool16x8TypeDescr()
+ *
+ * Returns the bool16x8 type object. SIMD pseudo-module must have
+ * been initialized for this to be safe.
+ */
+bool GetBool16x8TypeDescr(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: GetBool32x4TypeDescr()
+ *
+ * Returns the bool32x4 type object. SIMD pseudo-module must have
+ * been initialized for this to be safe.
+ */
+bool GetBool32x4TypeDescr(JSContext* cx, unsigned argc, Value* vp);
+
+/*
+ * Usage: GetBool64x2TypeDescr()
+ *
+ * Returns the bool64x2 type object. SIMD pseudo-module must have
+ * been initialized for this to be safe.
+ */
+bool GetBool64x2TypeDescr(JSContext* cx, unsigned argc, Value* vp);
 
 /*
  * Usage: GetInt8x16TypeDescr()

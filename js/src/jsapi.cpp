@@ -50,9 +50,11 @@
 #include "builtin/MapObject.h"
 #include "builtin/RegExp.h"
 #include "builtin/SymbolObject.h"
+#ifdef ENABLE_SIMD
+# include "builtin/SIMD.h"
+#endif
 #ifdef ENABLE_BINARYDATA
-#include "builtin/SIMD.h"
-#include "builtin/TypedObject.h"
+# include "builtin/TypedObject.h"
 #endif
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/FullParseHandler.h"  // for JS_BufferIsCompileableUnit
@@ -1040,8 +1042,10 @@ static const JSStdName builtin_property_names[] = {
 #if JS_HAS_UNEVAL
     { EAGER_ATOM(uneval), JSProto_String },
 #endif
-#ifdef ENABLE_BINARYDATA
+#ifdef ENABLE_SIMD
     { EAGER_ATOM(SIMD), JSProto_SIMD },
+#endif
+#ifdef ENABLE_BINARYDATA
     { EAGER_ATOM(TypedObject), JSProto_TypedObject },
 #endif
 #ifdef ENABLE_SHARED_ARRAY_BUFFER

@@ -81,7 +81,7 @@ BrowserElementParentProxyCallHandler.prototype = {
     "contextmenu", "securitychange", "locationchange",
     "iconchange", "scrollareachanged", "titlechange",
     "opensearch", "manifestchange", "metachange",
-    "resize", "selectionstatechanged", "scrollviewchange",
+    "resize", "scrollviewchange",
     "caretstatechanged", "activitydone", "scroll", "opentab"]),
 
   init: function(frameElement, mm) {
@@ -380,7 +380,6 @@ BrowserElementParent.prototype = {
       "got-visible": this._gotDOMRequestResult,
       "visibilitychange": this._childVisibilityChange,
       "got-set-input-method-active": this._gotDOMRequestResult,
-      "selectionstatechanged": this._handleSelectionStateChanged,
       "scrollviewchange": this._handleScrollViewChange,
       "caretstatechanged": this._handleCaretStateChanged,
       "findchange": this._handleFindChange,
@@ -617,12 +616,6 @@ BrowserElementParent.prototype = {
       // evt.detail.unblock().
       sendUnblockMsg();
     }
-  },
-
-  _handleSelectionStateChanged: function(data) {
-    let evt = this._createEvent('selectionstatechanged', data.json,
-                                /* cancelable = */ false);
-    this._frameElement.dispatchEvent(evt);
   },
 
   // Called when state of accessible caret in child has changed.

@@ -1,6 +1,14 @@
 if (!this.hasOwnProperty("SIMD"))
     quit();
 
+function booleanBinaryX4(op, v, w) {
+    var arr = [];
+    var [varr, warr] = [simdToArray(v), simdToArray(w)];
+    for (var i = 0; i < 4; i++)
+        arr[i] = op(varr[i], warr[i]);
+    return arr;
+}
+
 function binaryX4(op, v, w) {
     var arr = [];
     var [varr, warr] = [simdToArray(v), simdToArray(w)];
@@ -27,6 +35,7 @@ function GetType(v) {
     switch (pt) {
         case SIMD.Int32x4.prototype: return SIMD.Int32x4;
         case SIMD.Float32x4.prototype: return SIMD.Float32x4;
+        case SIMD.Bool32x4.prototype: return SIMD.Bool32x4;
     }
     throw "unexpected SIMD type";
 }
@@ -35,7 +44,7 @@ function assertEqVec(v, w) {
     var typeV = GetType(v);
     var ext = typeV.extractLane;
     assertEq(GetType(w), typeV);
-    if (typeV === SIMD.Int32x4 || typeV === SIMD.Float32x4) {
+    if (typeV === SIMD.Int32x4 || typeV === SIMD.Float32x4 || typeV === SIMD.Bool32x4) {
         [0, 1, 2, 3].forEach((i) => assertEq(ext(v, i), ext(w, i)));
         return;
     }
@@ -67,6 +76,14 @@ function assertEqX4(vec, arr, ...opts) {
         return;
     }
 
+    if (Type === SIMD.Bool32x4) {
+        assertFunc(SIMD.Bool32x4.extractLane(vec, 0), arr[0]);
+        assertFunc(SIMD.Bool32x4.extractLane(vec, 1), arr[1]);
+        assertFunc(SIMD.Bool32x4.extractLane(vec, 2), arr[2]);
+        assertFunc(SIMD.Bool32x4.extractLane(vec, 3), arr[3]);
+        return;
+    }
+
     throw "unexpected SIMD type";
 }
 
@@ -88,6 +105,15 @@ function simdToArray(vec) {
             SIMD.Float32x4.extractLane(vec, 1),
             SIMD.Float32x4.extractLane(vec, 2),
             SIMD.Float32x4.extractLane(vec, 3),
+        ];
+    }
+
+    if (Type === SIMD.Bool32x4) {
+        return [
+            SIMD.Bool32x4.extractLane(vec, 0),
+            SIMD.Bool32x4.extractLane(vec, 1),
+            SIMD.Bool32x4.extractLane(vec, 2),
+            SIMD.Bool32x4.extractLane(vec, 3),
         ];
     }
 

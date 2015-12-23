@@ -239,13 +239,11 @@ BaselineCompiler::compile()
 
     // All barriers are emitted off-by-default, toggle them on if needed.
     if (cx->zone()->needsIncrementalBarrier())
-        baselineScript->toggleBarriers(true);
+        baselineScript->toggleBarriers(true, DontReprotect);
 
     // If profiler instrumentation is enabled, toggle instrumentation on.
     if (cx->runtime()->jitRuntime()->isProfilerInstrumentationEnabled(cx->runtime()))
         baselineScript->toggleProfilerInstrumentation(true);
-
-    AutoWritableJitCode awjc(code);
 
     // Patch IC loads using IC entries.
     for (size_t i = 0; i < icLoadLabels_.length(); i++) {

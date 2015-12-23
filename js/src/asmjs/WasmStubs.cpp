@@ -190,6 +190,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
                           "EntryArg must be big enough to store SIMD values");
             switch (type) {
               case MIRType_Int32x4:
+              case MIRType_Bool32x4:
                 masm.loadUnalignedInt32x4(src, iter->fpu());
                 break;
               case MIRType_Float32x4:
@@ -222,6 +223,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
                 masm.storeFloat32(ScratchFloat32Reg, Address(masm.getStackPointer(), iter->offsetFromArgBase()));
                 break;
               case MIRType_Int32x4:
+              case MIRType_Bool32x4:
                 masm.loadUnalignedInt32x4(src, ScratchSimd128Reg);
                 masm.storeAlignedInt32x4(ScratchSimd128Reg,
                                          Address(masm.getStackPointer(), iter->offsetFromArgBase()));
@@ -269,6 +271,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));
         break;
       case ExprType::I32x4:
+      case ExprType::B32x4:
         // We don't have control on argv alignment, do an unaligned access.
         masm.storeUnalignedInt32x4(ReturnSimd128Reg, Address(argv, 0));
         break;
@@ -549,6 +552,7 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
         break;
       case ExprType::I32x4:
       case ExprType::F32x4:
+      case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
     }
 
@@ -800,6 +804,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
         break;
       case ExprType::I32x4:
       case ExprType::F32x4:
+      case ExprType::B32x4:
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
     }
 

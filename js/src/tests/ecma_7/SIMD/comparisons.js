@@ -10,106 +10,107 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 var fround = Math.fround;
 
-function boolToSimdLogical(b) {
-    return b ? 0xFFFFFFFF | 0 : 0x0;
-}
 
 function testEqualFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.equal, (x, y) => boolToSimdLogical(fround(x) == fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.equal, (x, y) => fround(x) == fround(y), Bool32x4);
 }
 function testNotEqualFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.notEqual, (x, y) => boolToSimdLogical(fround(x) != fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.notEqual, (x, y) => fround(x) != fround(y), Bool32x4);
 }
 function testLessThanFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.lessThan, (x, y) => boolToSimdLogical(fround(x) < fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.lessThan, (x, y) => fround(x) < fround(y), Bool32x4);
 }
 function testLessThanOrEqualFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.lessThanOrEqual, (x, y) => boolToSimdLogical(fround(x) <= fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.lessThanOrEqual, (x, y) => fround(x) <= fround(y), Bool32x4);
 }
 function testGreaterThanFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.greaterThan, (x, y) => boolToSimdLogical(fround(x) > fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.greaterThan, (x, y) => fround(x) > fround(y), Bool32x4);
 }
 function testGreaterThanOrEqualFloat32x4(v, w) {
-    testBinaryCompare(v, w, Float32x4.greaterThanOrEqual, (x, y) => boolToSimdLogical(fround(x) >= fround(y)), Int32x4);
+    testBinaryCompare(v, w, Float32x4.greaterThanOrEqual, (x, y) => fround(x) >= fround(y), Bool32x4);
 }
 
 function testEqualFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.equal, (x, y) => boolToSimdLogical(x == y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.equal, (x, y) => x == y, Bool64x2);
 }
 function testNotEqualFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.notEqual, (x, y) => boolToSimdLogical(x != y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.notEqual, (x, y) => x != y, Bool64x2);
 }
 function testLessThanFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.lessThan, (x, y) => boolToSimdLogical(x < y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.lessThan, (x, y) => x < y, Bool64x2);
 }
 function testLessThanOrEqualFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.lessThanOrEqual, (x, y) => boolToSimdLogical(x <= y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.lessThanOrEqual, (x, y) => x <= y, Bool64x2);
 }
 function testGreaterThanFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.greaterThan, (x, y) => boolToSimdLogical(x > y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.greaterThan, (x, y) => x > y, Bool64x2);
 }
 function testGreaterThanOrEqualFloat64x2(v, w) {
-    testBinaryCompare(v, w, Float64x2.greaterThanOrEqual, (x, y) => boolToSimdLogical(x >= y), Int32x4);
+    testBinaryCompare(v, w, Float64x2.greaterThanOrEqual, (x, y) => x >= y, Bool64x2);
 }
 
 function testEqualInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.equal, (x, y) => boolToSimdLogical(x == y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.equal, (x, y) => x == y, Bool8x16);
 }
 function testNotEqualInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.notEqual, (x, y) => boolToSimdLogical(x != y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.notEqual, (x, y) => x != y, Bool8x16);
 }
 function testLessThanInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.lessThan, (x, y) => boolToSimdLogical(x < y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.lessThan, (x, y) => x < y, Bool8x16);
 }
 function testLessThanOrEqualInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.lessThanOrEqual, (x, y) => boolToSimdLogical(x <= y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.lessThanOrEqual, (x, y) => x <= y, Bool8x16);
 }
 function testGreaterThanInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.greaterThan, (x, y) => boolToSimdLogical(x > y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.greaterThan, (x, y) => x > y, Bool8x16);
 }
 function testGreaterThanOrEqualInt8x16(v, w) {
-    testBinaryCompare(v, w, Int8x16.greaterThanOrEqual, (x, y) => boolToSimdLogical(x >= y), Int8x16);
+    testBinaryCompare(v, w, Int8x16.greaterThanOrEqual, (x, y) => x >= y, Bool8x16);
 }
 
 function testEqualInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.equal, (x, y) => boolToSimdLogical(x == y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.equal, (x, y) => x == y, Bool16x8);
 }
 function testNotEqualInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.notEqual, (x, y) => boolToSimdLogical(x != y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.notEqual, (x, y) => x != y, Bool16x8);
 }
 function testLessThanInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.lessThan, (x, y) => boolToSimdLogical(x < y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.lessThan, (x, y) => x < y, Bool16x8);
 }
 function testLessThanOrEqualInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.lessThanOrEqual, (x, y) => boolToSimdLogical(x <= y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.lessThanOrEqual, (x, y) => x <= y, Bool16x8);
 }
 function testGreaterThanInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.greaterThan, (x, y) => boolToSimdLogical(x > y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.greaterThan, (x, y) => x > y, Bool16x8);
 }
 function testGreaterThanOrEqualInt16x8(v, w) {
-    testBinaryCompare(v, w, Int16x8.greaterThanOrEqual, (x, y) => boolToSimdLogical(x >= y), Int16x8);
+    testBinaryCompare(v, w, Int16x8.greaterThanOrEqual, (x, y) => x >= y, Bool16x8);
 }
 
 function testEqualInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.equal, (x, y) => boolToSimdLogical(x == y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.equal, (x, y) => x == y, Bool32x4);
 }
 function testNotEqualInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.notEqual, (x, y) => boolToSimdLogical(x != y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.notEqual, (x, y) => x != y, Bool32x4);
 }
 function testLessThanInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.lessThan, (x, y) => boolToSimdLogical(x < y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.lessThan, (x, y) => x < y, Bool32x4);
 }
 function testLessThanOrEqualInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.lessThanOrEqual, (x, y) => boolToSimdLogical(x <= y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.lessThanOrEqual, (x, y) => x <= y, Bool32x4);
 }
 function testGreaterThanInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.greaterThan, (x, y) => boolToSimdLogical(x > y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.greaterThan, (x, y) => x > y, Bool32x4);
 }
 function testGreaterThanOrEqualInt32x4(v, w) {
-    testBinaryCompare(v, w, Int32x4.greaterThanOrEqual, (x, y) => boolToSimdLogical(x >= y), Int32x4);
+    testBinaryCompare(v, w, Int32x4.greaterThanOrEqual, (x, y) => x >= y, Bool32x4);
 }
 
 function test() {

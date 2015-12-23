@@ -78,8 +78,6 @@
 #include "nsIMozBrowserFrame.h"
 #include "nsCaret.h"
 #include "AccessibleCaretEventHub.h"
-#include "TouchCaret.h"
-#include "SelectionCarets.h"
 #include "nsIDOMHTMLDocument.h"
 #include "nsFrameManager.h"
 #include "nsXPCOM.h"
@@ -705,32 +703,8 @@ nsIPresShell::FrameSelection()
 static bool sSynthMouseMove = true;
 static uint32_t sNextPresShellId;
 static bool sPointerEventEnabled = true;
-static bool sTouchCaretEnabled = false;
-static bool sSelectionCaretEnabled = false;
 static bool sAccessibleCaretEnabled = false;
 static bool sBeforeAfterKeyboardEventEnabled = false;
-
-/* static */ bool
-PresShell::TouchCaretPrefEnabled()
-{
-  static bool initialized = false;
-  if (!initialized) {
-    Preferences::AddBoolVarCache(&sTouchCaretEnabled, "touchcaret.enabled");
-    initialized = true;
-  }
-  return sTouchCaretEnabled;
-}
-
-/* static */ bool
-PresShell::SelectionCaretPrefEnabled()
-{
-  static bool initialized = false;
-  if (!initialized) {
-    Preferences::AddBoolVarCache(&sSelectionCaretEnabled, "selectioncaret.enabled");
-    initialized = true;
-  }
-  return sSelectionCaretEnabled;
-}
 
 /* static */ bool
 PresShell::AccessibleCaretEnabled()
@@ -881,18 +855,6 @@ PresShell::Init(nsIDocument* aDocument,
 
   // Add the preference style sheet.
   UpdatePreferenceStyles();
-
-  if (TouchCaretPrefEnabled() && !AccessibleCaretEnabled()) {
-    // Create touch caret handle
-    mTouchCaret = new TouchCaret(this);
-    mTouchCaret->Init();
-  }
-
-  if (SelectionCaretPrefEnabled() && !AccessibleCaretEnabled()) {
-    // Create selection caret handle
-    mSelectionCarets = new SelectionCarets(this);
-    mSelectionCarets->Init();
-  }
 
   if (AccessibleCaretEnabled()) {
     // Need to happen before nsFrameSelection has been set up.
@@ -1193,16 +1155,6 @@ PresShell::Destroy()
 
   if (mSelection) {
     mSelection->DisconnectFromPresShell();
-  }
-
-  if (mTouchCaret) {
-    mTouchCaret->Terminate();
-    mTouchCaret = nullptr;
-  }
-
-  if (mSelectionCarets) {
-    mSelectionCarets->Terminate();
-    mSelectionCarets = nullptr;
   }
 
   if (mAccessibleCaretEventHub) {
@@ -1991,19 +1943,6 @@ already_AddRefed<nsCaret> PresShell::GetCaret() const
   return caret.forget();
 }
 
-// TouchCaret
-already_AddRefed<TouchCaret> PresShell::GetTouchCaret() const
-{
-  RefPtr<TouchCaret> touchCaret = mTouchCaret;
-  return touchCaret.forget();
-}
-
-already_AddRefed<SelectionCarets> PresShell::GetSelectionCarets() const
-{
-  RefPtr<SelectionCarets> selectionCaret = mSelectionCarets;
-  return selectionCaret.forget();
-}
-
 already_AddRefed<AccessibleCaretEventHub> PresShell::GetAccessibleCaretEventHub() const
 {
   RefPtr<AccessibleCaretEventHub> eventHub = mAccessibleCaretEventHub;
@@ -2032,12 +1971,6 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(bool aInEnable)
     if (mCaret) {
       mCaret->SetVisible(mCaretEnabled);
     }
-  }
-
-  // We should sync touch caret's visibility with caret every time since touch
-  // caret might be hidden due to timeout while caret is enabled.
-  if (mTouchCaret) {
-    mTouchCaret->SyncVisibilityWithCaret();
   }
 
   return NS_OK;
@@ -2368,24 +2301,6 @@ PresShell::GetCanvasFrame() const
 {
   nsIFrame* frame = mFrameConstructor->GetDocElementContainingBlock();
   return do_QueryFrame(frame);
-}
-
-Element*
-PresShell::GetTouchCaretElement() const
-{
-  return GetCanvasFrame() ? GetCanvasFrame()->GetTouchCaretElement() : nullptr;
-}
-
-Element*
-PresShell::GetSelectionCaretsStartElement() const
-{
-  return GetCanvasFrame() ? GetCanvasFrame()->GetSelectionCaretsStartElement() : nullptr;
-}
-
-Element*
-PresShell::GetSelectionCaretsEndElement() const
-{
-  return GetCanvasFrame() ? GetCanvasFrame()->GetSelectionCaretsEndElement() : nullptr;
 }
 
 void
@@ -3786,10 +3701,6 @@ PresShell::UnsuppressAndInvalidate()
   if (rootFrame) {
     // let's assume that outline on a root frame is not supported
     rootFrame->InvalidateFrame();
-
-    if (mTouchCaret) {
-      mTouchCaret->SyncVisibilityWithCaret();
-    }
   }
 
   // now that painting is unsuppressed, focus may be set on the document
@@ -6980,47 +6891,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
 
   RecordMouseLocation(aEvent);
 
-  // Determine whether event need to be consumed by touch caret or not.
-  if (TouchCaretPrefEnabled() || SelectionCaretPrefEnabled()) {
-    // We have to target the focus window because regardless of where the
-    // touch goes, we want to access the touch caret when user is typing on an
-    // editable element.
-    nsCOMPtr<nsPIDOMWindow> window = GetFocusedDOMWindowInOurWindow();
-    nsCOMPtr<nsIDocument> retargetEventDoc = window ? window->GetExtantDoc() : nullptr;
-    nsCOMPtr<nsIPresShell> presShell = retargetEventDoc ?
-                                       retargetEventDoc->GetShell() :
-                                       nullptr;
-
-    // Bug 1057256: Touch caret should handle the event before selection carets.
-    // Otherwise, a long tap on touch caret will be incorrectly handled by
-    // selection carets which makes moving touch caret failed.
-    RefPtr<TouchCaret> touchCaret = presShell ?
-                                      presShell->GetTouchCaret() :
-                                      nullptr;
-    if (touchCaret) {
-      *aEventStatus = touchCaret->HandleEvent(aEvent);
-      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-        // If the event is consumed by the touch caret, cancel APZC panning by
-        // setting mMultipleActionsPrevented.
-        aEvent->mFlags.mMultipleActionsPrevented = true;
-        return NS_OK;
-      }
-    }
-
-    RefPtr<SelectionCarets> selectionCaret = presShell ?
-                                               presShell->GetSelectionCarets() :
-                                               nullptr;
-    if (selectionCaret) {
-      *aEventStatus = selectionCaret->HandleEvent(aEvent);
-      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
-        // If the event is consumed by the selection carets, cancel APZC panning by
-        // setting mMultipleActionsPrevented.
-        aEvent->mFlags.mMultipleActionsPrevented = true;
-        return NS_OK;
-      }
-    }
-  }
-
   if (AccessibleCaretEnabled()) {
     // We have to target the focus window because regardless of where the
     // touch goes, we want to access the copy paste manager.
@@ -8839,10 +8709,6 @@ PresShell::DidDoReflow(bool aInterruptible)
 
   if (sSynthMouseMove) {
     SynthesizeMouseMove(false);
-  }
-
-  if (mTouchCaret) {
-    mTouchCaret->UpdatePositionIfNeeded();
   }
 
   mPresContext->NotifyMissingFonts();

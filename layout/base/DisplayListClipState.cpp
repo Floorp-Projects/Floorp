@@ -5,6 +5,7 @@
 
 #include "DisplayListClipState.h"
 
+#include "DisplayItemScrollClip.h"
 #include "nsDisplayList.h"
 
 namespace mozilla {
@@ -105,6 +106,99 @@ DisplayListClipState::ClipContainingBlockDescendantsToContentBox(nsDisplayListBu
   // radius.
   ClipContainingBlockDescendants(clipRect, hasBorderRadius ? radii : nullptr,
                                  aClipOnStack);
+}
+
+const DisplayItemScrollClip*
+DisplayListClipState::GetCurrentInnermostScrollClip()
+{
+  return DisplayItemScrollClip::PickInnermost(
+    mScrollClipContentDescendants, mScrollClipContainingBlockDescendants);
+}
+
+void
+DisplayListClipState::TurnClipIntoScrollClipForContentDescendants(
+    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
+{
+  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
+  const DisplayItemScrollClip* crossStackingContextParent = parent;
+  if (!crossStackingContextParent) {
+    crossStackingContextParent = mCrossStackingContextParentScrollClip;
+  }
+  mScrollClipContentDescendants =
+    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+                                      aScrollableFrame,
+                                      GetCurrentCombinedClip(aBuilder), true);
+  Clear();
+}
+
+void
+DisplayListClipState::TurnClipIntoScrollClipForContainingBlockDescendants(
+    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
+{
+  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
+  const DisplayItemScrollClip* crossStackingContextParent = parent;
+  if (!crossStackingContextParent) {
+    crossStackingContextParent = mCrossStackingContextParentScrollClip;
+  }
+  mScrollClipContainingBlockDescendants =
+    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+                                      aScrollableFrame,
+                                      GetCurrentCombinedClip(aBuilder), true);
+  Clear();
+}
+
+const DisplayItemClip*
+WithoutRoundedCorners(nsDisplayListBuilder* aBuilder, const DisplayItemClip* aClip)
+{
+  if (!aClip) {
+    return nullptr;
+  }
+  DisplayItemClip rectClip(*aClip);
+  rectClip.RemoveRoundedCorners();
+  return aBuilder->AllocateDisplayItemClip(rectClip);
+}
+
+DisplayItemScrollClip*
+DisplayListClipState::CreateInactiveScrollClip(
+    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
+{
+  // We ignore the rounded corners on the current clip because we don't want
+  // them to be double-applied (as scroll clip and as regular clip).
+  // Double-applying rectangle clips doesn't make a visual difference so it's
+  // fine.
+  const DisplayItemClip* rectClip =
+    WithoutRoundedCorners(aBuilder, GetCurrentCombinedClip(aBuilder));
+
+  const DisplayItemScrollClip* parent = GetCurrentInnermostScrollClip();
+  const DisplayItemScrollClip* crossStackingContextParent = parent;
+  if (!crossStackingContextParent) {
+    crossStackingContextParent = mCrossStackingContextParentScrollClip;
+  }
+  DisplayItemScrollClip* scrollClip =
+    aBuilder->AllocateDisplayItemScrollClip(parent, crossStackingContextParent,
+                                            aScrollableFrame,
+                                            rectClip, false);
+  return scrollClip;
+}
+
+DisplayItemScrollClip*
+DisplayListClipState::InsertInactiveScrollClipForContentDescendants(
+    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
+{
+  DisplayItemScrollClip* scrollClip =
+    CreateInactiveScrollClip(aBuilder, aScrollableFrame);
+  mScrollClipContentDescendants = scrollClip;
+  return scrollClip;
+}
+
+DisplayItemScrollClip*
+DisplayListClipState::InsertInactiveScrollClipForContainingBlockDescendants(
+    nsDisplayListBuilder* aBuilder, nsIScrollableFrame* aScrollableFrame)
+{
+  DisplayItemScrollClip* scrollClip =
+    CreateInactiveScrollClip(aBuilder, aScrollableFrame);
+  mScrollClipContainingBlockDescendants = scrollClip;
+  return scrollClip;
 }
 
 DisplayListClipState::AutoSaveRestore::AutoSaveRestore(nsDisplayListBuilder* aBuilder)

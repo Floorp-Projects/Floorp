@@ -51,9 +51,6 @@
     // reflow so that that rare edge case doesn't lead to reftest
     // failures.
     branch.setBoolPref("layout.interruptible-reflow.enabled", false);
-    // Disable the auto-hide feature of touch caret to avoid potential
-    // intermittent issues.
-    branch.setIntPref("touchcaret.expiration.time", 0);
 
     // Tell the search service we are running in the US.  This also has the
     // desired side-effect of preventing our geoip lookup.

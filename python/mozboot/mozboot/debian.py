@@ -54,8 +54,6 @@ class DebianBootstrapper(BaseBootstrapper):
         'libdbus-1-dev',
         'libdbus-glib-1-dev',
         'libgconf2-dev',
-        'libgstreamer0.10-dev',
-        'libgstreamer-plugins-base0.10-dev',
         'libgtk2.0-dev',
         'libgtk-3-dev',
         'libiw-dev',

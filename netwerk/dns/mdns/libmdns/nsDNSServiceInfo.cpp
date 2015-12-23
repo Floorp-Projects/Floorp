@@ -196,7 +196,7 @@ NS_IMETHODIMP
 nsDNSServiceInfo::SetAttributes(nsIPropertyBag2* aAttributes)
 {
   mAttributes = aAttributes;
-  mIsAttributesSet = true;
+  mIsAttributesSet = aAttributes ? true : false;
   return NS_OK;
 }
 

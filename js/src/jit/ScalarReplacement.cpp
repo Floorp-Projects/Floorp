@@ -349,11 +349,15 @@ ObjectMemoryView::initStartingState(BlockState** pState)
     startBlock_->insertBefore(obj_, undefinedVal_);
 
     // Create a new block state and insert at it at the location of the new object.
-    BlockState* state = BlockState::New(alloc_, obj_, undefinedVal_);
+    BlockState* state = BlockState::New(alloc_, obj_);
     if (!state)
         return false;
 
     startBlock_->insertAfter(obj_, state);
+
+    // Initialize the properties of the object state.
+    if (!state->initFromTemplateObject(alloc_, undefinedVal_))
+        return false;
 
     // Hold out of resume point until it is visited.
     state->setInWorklist();

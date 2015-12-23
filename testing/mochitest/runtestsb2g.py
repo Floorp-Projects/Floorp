@@ -143,6 +143,8 @@ class MochitestB2G(MochitestBase):
                             'stream': None}
             self.marionette_args['process_args'] = process_args
             self.marionette_args['profile'] = self.profile
+            # Increase the timeout to fix bug 1208725
+            self.marionette_args['socket_timeout'] = 720
 
             self.marionette = Marionette(**self.marionette_args)
             self.runner = self.marionette.runner

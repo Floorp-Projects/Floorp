@@ -98,72 +98,72 @@ public:
   NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
                                  const LayoutDeviceIntRect& aRect,
-                                 nsWidgetInitData* aInitData = nullptr);
-  NS_IMETHOD              Destroy();
-  NS_IMETHOD              SetParent(nsIWidget *aNewParent);
-  virtual nsIWidget*      GetParent(void);
-  virtual float           GetDPI();
-  virtual double          GetDefaultScaleInternal();
-  NS_IMETHOD              Show(bool bState);
-  virtual bool            IsVisible() const;
-  NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY);
-  virtual void            SetSizeConstraints(const SizeConstraints& aConstraints);
-  NS_IMETHOD              Move(double aX, double aY);
-  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint);
-  NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint);
+                                 nsWidgetInitData* aInitData = nullptr) override;
+  NS_IMETHOD              Destroy() override;
+  NS_IMETHOD              SetParent(nsIWidget *aNewParent) override;
+  virtual nsIWidget*      GetParent(void) override;
+  virtual float           GetDPI() override;
+  virtual double          GetDefaultScaleInternal() override;
+  NS_IMETHOD              Show(bool bState) override;
+  virtual bool            IsVisible() const override;
+  NS_IMETHOD              ConstrainPosition(bool aAllowSlop, int32_t *aX, int32_t *aY) override;
+  virtual void            SetSizeConstraints(const SizeConstraints& aConstraints) override;
+  NS_IMETHOD              Move(double aX, double aY) override;
+  NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
+  NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              BeginResizeDrag(mozilla::WidgetGUIEvent* aEvent,
                                           int32_t aHorizontal,
-                                          int32_t aVertical);
-  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate);
-  NS_IMETHOD              SetSizeMode(nsSizeMode aMode);
-  NS_IMETHOD              Enable(bool aState);
-  virtual bool            IsEnabled() const;
-  NS_IMETHOD              SetFocus(bool aRaise);
+                                          int32_t aVertical) override;
+  NS_IMETHOD              PlaceBehind(nsTopLevelWidgetZPlacement aPlacement, nsIWidget *aWidget, bool aActivate) override;
+  NS_IMETHOD              SetSizeMode(nsSizeMode aMode) override;
+  NS_IMETHOD              Enable(bool aState) override;
+  virtual bool            IsEnabled() const override;
+  NS_IMETHOD              SetFocus(bool aRaise) override;
   NS_IMETHOD              GetBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              GetRestoredBounds(LayoutDeviceIntRect& aRect) override;
   NS_IMETHOD              GetClientBounds(LayoutDeviceIntRect& aRect) override;
   virtual LayoutDeviceIntPoint GetClientOffset() override;
-  void                    SetBackgroundColor(const nscolor& aColor);
+  void                    SetBackgroundColor(const nscolor& aColor) override;
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
-                                    uint32_t aHotspotX, uint32_t aHotspotY);
-  NS_IMETHOD              SetCursor(nsCursor aCursor);
-  virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations);
+                                    uint32_t aHotspotX, uint32_t aHotspotY) override;
+  NS_IMETHOD              SetCursor(nsCursor aCursor) override;
+  virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
   virtual bool PrepareForFullscreenTransition(nsISupports** aData) override;
   virtual void PerformFullscreenTransition(FullscreenTransitionStage aStage,
                                            uint16_t aDuration,
                                            nsISupports* aData,
                                            nsIRunnable* aCallback) override;
-  NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr);
-  NS_IMETHOD              HideWindowChrome(bool aShouldHide);
+  NS_IMETHOD              MakeFullScreen(bool aFullScreen, nsIScreen* aScreen = nullptr) override;
+  NS_IMETHOD              HideWindowChrome(bool aShouldHide) override;
   NS_IMETHOD              Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
   NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect);
-  virtual void*           GetNativeData(uint32_t aDataType);
+  virtual void*           GetNativeData(uint32_t aDataType) override;
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
-  virtual void            FreeNativeData(void * data, uint32_t aDataType);
-  NS_IMETHOD              SetTitle(const nsAString& aTitle);
-  NS_IMETHOD              SetIcon(const nsAString& aIconSpec);
-  virtual LayoutDeviceIntPoint WidgetToScreenOffset();
+  virtual void            FreeNativeData(void * data, uint32_t aDataType) override;
+  NS_IMETHOD              SetTitle(const nsAString& aTitle) override;
+  NS_IMETHOD              SetIcon(const nsAString& aIconSpec) override;
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual LayoutDeviceIntSize ClientToWindowSize(const LayoutDeviceIntSize& aClientSize) override;
   NS_IMETHOD              DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
-                                        nsEventStatus& aStatus);
-  NS_IMETHOD              EnableDragDrop(bool aEnable);
-  NS_IMETHOD              CaptureMouse(bool aCapture);
+                                        nsEventStatus& aStatus) override;
+  NS_IMETHOD              EnableDragDrop(bool aEnable) override;
+  NS_IMETHOD              CaptureMouse(bool aCapture) override;
   NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener,
-                                              bool aDoCapture);
-  NS_IMETHOD              GetAttention(int32_t aCycleCount);
-  virtual bool            HasPendingInputEvent();
+                                              bool aDoCapture) override;
+  NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
+  virtual bool            HasPendingInputEvent() override;
   virtual LayerManager*   GetLayerManager(PLayerTransactionChild* aShadowManager = nullptr,
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
-                                          bool* aAllowRetaining = nullptr);
+                                          bool* aAllowRetaining = nullptr) override;
   NS_IMETHOD              OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) override;
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
                                                          double aOriginalDeltaY,
                                                          double& aOverriddenDeltaX,
-                                                         double& aOverriddenDeltaY);
+                                                         double& aOverriddenDeltaY) override;
 
   virtual nsresult        SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                                    int32_t aNativeKeyCode,
@@ -189,17 +189,17 @@ public:
                                                            uint32_t aAdditionalFlags,
                                                            nsIObserver* aObserver) override;
   NS_IMETHOD_(void)       SetInputContext(const InputContext& aContext,
-                                          const InputContextAction& aAction);
-  NS_IMETHOD_(InputContext) GetInputContext();
+                                          const InputContextAction& aAction) override;
+  NS_IMETHOD_(InputContext) GetInputContext() override;
 #ifdef MOZ_XUL
-  virtual void            SetTransparencyMode(nsTransparencyMode aMode);
-  virtual nsTransparencyMode GetTransparencyMode();
-  virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion);
+  virtual void            SetTransparencyMode(nsTransparencyMode aMode) override;
+  virtual nsTransparencyMode GetTransparencyMode() override;
+  virtual void            UpdateOpaqueRegion(const LayoutDeviceIntRegion& aOpaqueRegion) override;
 #endif // MOZ_XUL
-  virtual nsIMEUpdatePreference GetIMEUpdatePreference();
+  virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
   NS_IMETHOD              GetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
   NS_IMETHOD              SetNonClientMargins(LayoutDeviceIntMargin& aMargins) override;
-  void                    SetDrawsInTitlebar(bool aState);
+  void                    SetDrawsInTitlebar(bool aState) override;
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override;
   virtual void            UpdateWindowDraggingRegion(const LayoutDeviceIntRegion& aRegion) override;
@@ -282,7 +282,7 @@ public:
   }
   void SetTaskbarPreview(nsITaskbarWindowPreview *preview) { mTaskbarPreview = do_GetWeakReference(preview); }
 
-  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent);
+  NS_IMETHOD              ReparentNativeWidget(nsIWidget* aNewParent) override;
 
   // Open file picker tracking
   void                    PickerOpen();
@@ -291,9 +291,9 @@ public:
   bool                    const DestroyCalled() { return mDestroyCalled; }
 
   bool IsPopup();
-  virtual bool ShouldUseOffMainThreadCompositing();
+  virtual bool ShouldUseOffMainThreadCompositing() override;
 
-  bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT);
+  bool CaptureWidgetOnScreen(RefPtr<mozilla::gfx::DrawTarget> aDT) override;
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 
@@ -391,7 +391,7 @@ protected:
   /**
    * Event handlers
    */
-  virtual void            OnDestroy();
+  virtual void            OnDestroy() override;
   virtual bool            OnResize(nsIntRect &aWindowRect);
   bool                    OnGesture(WPARAM wParam, LPARAM lParam);
   bool                    OnTouch(WPARAM wParam, LPARAM lParam);

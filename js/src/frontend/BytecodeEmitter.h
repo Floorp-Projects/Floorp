@@ -435,10 +435,12 @@ struct BytecodeEmitter
     bool emitSetThis(ParseNode* pn);
 
     // These functions are used to emit GETLOCAL/GETALIASEDVAR or
-    // SETLOCAL/SETALIASEDVAR for a particular binding. The CallObject must be
-    // on top of the scope chain.
-    bool emitLoadFromTopScope(BindingIter& bi);
-    bool emitStoreToTopScope(BindingIter& bi);
+    // SETLOCAL/SETALIASEDVAR for a particular binding on a function's
+    // CallObject.
+    bool emitLoadFromEnclosingFunctionScope(BindingIter& bi);
+    bool emitStoreToEnclosingFunctionScope(BindingIter& bi);
+
+    uint32_t computeHopsToEnclosingFunction();
 
     bool emitJump(JSOp op, ptrdiff_t off, ptrdiff_t* jumpOffset = nullptr);
     bool emitCall(JSOp op, uint16_t argc, ParseNode* pn = nullptr);
