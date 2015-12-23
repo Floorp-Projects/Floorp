@@ -12,7 +12,7 @@ const TEST_URI = "data:text/html;charset=utf8,<p>test JSTerm Helpers " +
 
 var jsterm;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

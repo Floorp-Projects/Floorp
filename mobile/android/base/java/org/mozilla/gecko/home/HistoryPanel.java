@@ -358,7 +358,7 @@ public class HistoryPanel extends HomeFragment {
         final ClickableSpan clickableSpan = new ClickableSpan() {
             @Override
             public void onClick(View widget) {
-                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.HOMESCREEN, "hint-private-browsing");
+                Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.PANEL, "hint-private-browsing");
                 try {
                     final JSONObject json = new JSONObject();
                     json.put("type", "Menu:Open");

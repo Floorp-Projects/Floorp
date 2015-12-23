@@ -20,6 +20,7 @@
     "runSafe": true,
     "runSafeSync": true,
     "runSafeSyncWithoutClone": true,
+    "NetUtil": true,
     "Services": true,
     "TabManager": true,
     "XPCOMUtils": true,
