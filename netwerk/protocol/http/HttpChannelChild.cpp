@@ -188,6 +188,7 @@ HttpChannelChild::HttpChannelChild()
   , mShouldInterceptSubsequentRedirect(false)
   , mRedirectingForSubsequentSynthesizedResponse(false)
   , mShouldParentIntercept(false)
+  , mSuspendParentAfterSynthesizeResponse(false)
 {
   LOG(("Creating HttpChannelChild @%x\n", this));
 
@@ -1884,8 +1885,11 @@ HttpChannelChild::ContinueAsyncOpen()
 
   if (mResponseHead) {
     openArgs.synthesizedResponseHead() = *mResponseHead;
+    openArgs.suspendAfterSynthesizeResponse() =
+      mSuspendParentAfterSynthesizeResponse;
   } else {
     openArgs.synthesizedResponseHead() = mozilla::void_t();
+    openArgs.suspendAfterSynthesizeResponse() = false;
   }
 
   nsCOMPtr<nsISerializable> secInfoSer = do_QueryInterface(mSecurityInfo);
@@ -2450,6 +2454,7 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
   // yet.  We need one, though, in order to have a parent side to divert to.
   // Therefore, create the actor just in time for us to suspend and divert it.
   if (mSynthesizedResponse && !RemoteChannelExists()) {
+    mSuspendParentAfterSynthesizeResponse = true;
     rv = ContinueAsyncOpen();
     NS_ENSURE_SUCCESS(rv, rv);
   }

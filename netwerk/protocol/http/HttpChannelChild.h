@@ -236,6 +236,10 @@ private:
   // before the network transaction is initiated.
   bool mShouldParentIntercept;
 
+  // Set if the corresponding parent channel should suspend after a response
+  // is synthesized.
+  bool mSuspendParentAfterSynthesizeResponse;
+
   // true after successful AsyncOpen until OnStopRequest completes.
   bool RemoteChannelExists() { return mIPCOpen && !mKeptAlive; }
 
