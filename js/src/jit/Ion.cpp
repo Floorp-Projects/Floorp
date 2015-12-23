@@ -165,9 +165,9 @@ jit::InitializeIon()
     return true;
 }
 
-JitRuntime::JitRuntime()
-  : execAlloc_(this),
-    backedgeExecAlloc_(this),
+JitRuntime::JitRuntime(JSRuntime* rt)
+  : execAlloc_(rt),
+    backedgeExecAlloc_(rt),
     exceptionTail_(nullptr),
     bailoutTail_(nullptr),
     profilerExitFrameTail_(nullptr),
@@ -1139,7 +1139,7 @@ IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
                                   MacroAssembler& masm)
 {
     JitRuntime* jrt = cx->runtime()->jitRuntime();
-    JitRuntime::AutoPreventBackedgePatching apbp(jrt);
+    JitRuntime::AutoPreventBackedgePatching apbp(cx->runtime());
 
     for (size_t i = 0; i < backedgeEntries_; i++) {
         PatchableBackedgeInfo& info = backedges[i];
@@ -1373,7 +1373,7 @@ IonScript::unlinkFromRuntime(FreeOp* fop)
     // make sure that those backedges are unlinked from the runtime and not
     // reclobbered with garbage if an interrupt is requested.
     JitRuntime* jrt = fop->runtime()->jitRuntime();
-    JitRuntime::AutoPreventBackedgePatching apbp(jrt);
+    JitRuntime::AutoPreventBackedgePatching apbp(fop->runtime());
     for (size_t i = 0; i < backedgeEntries_; i++)
         jrt->removePatchableBackedge(&backedgeList()[i]);
 
