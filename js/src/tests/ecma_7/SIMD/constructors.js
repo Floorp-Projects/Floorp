@@ -5,6 +5,10 @@ var Float32x4 = SIMD.Float32x4;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 function TestInt8x16Ctor() {
     // Constructors.
@@ -76,12 +80,89 @@ function TestFloat64x2Ctor() {
     assertEqX2(Float64x2(1, 2, 3, 4, 5, 6), [1,2]);
 }
 
+function TestBool8x16Ctor() {
+    assertEqX16(Bool8x16(false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true),
+                       [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true]);
+    assertEqX16(Bool8x16(false, true, true, false, false, true, true, false, false, true, true, false, false, true, true),
+                       [false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false]);
+    assertEqX16(Bool8x16(true, true, false, false, true, true, false, false, true, true, false, false, true, true),
+                       [true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, false]);
+    assertEqX16(Bool8x16(true, false, false, true, true, false, false, true, true, false, false, true, true),
+                       [true, false, false, true, true, false, false, true, true, false, false, true, true, false, false, false]);
+    assertEqX16(Bool8x16(false, false, true, true, false, false, true, true, false, false, true, true),
+                       [false, false, true, true, false, false, true, true, false, false, true, true, false, false, false, false]);
+    assertEqX16(Bool8x16(false, true, true, false, false, true, true, false, false, true, true),
+                       [false, true, true, false, false, true, true, false, false, true, true, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true, true, false, false, true, true, false, false, true, true),
+                       [true, true, false, false, true, true, false, false, true, true, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true, false, false, true, true, false, false, true, true),
+                       [true, false, false, true, true, false, false, true, true, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(false, false, true, true, false, false, true, true),
+                       [false, false, true, true, false, false, true, true, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(false, true, true, false, false, true, true),
+                       [false, true, true, false, false, true, true, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true, true, false, false, true, true),
+                       [true, true, false, false, true, true, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true, false, false, true, true),
+                       [true, false, false, true, true, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(false, false, true, true),
+                       [false, false, true, true, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(false, true, true),
+                       [false, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true, true),
+                       [true, true, false, false, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(true),
+                       [true, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(),
+                       [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]);
+    assertEqX16(Bool8x16(false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false),
+                       [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true]);
+    assertEqX16(Bool8x16(false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true, false, true),
+                       [false, false, true, true, false, false, true, true, false, false, true, true, false, false, true, true]);
+}
+
+function TestBool16x8Ctor() {
+    assertEqX8(Bool16x8(false, false, true, true, false, false, true, true),        [false, false, true, true, false, false, true, true]);
+    assertEqX8(Bool16x8(false, true, true, false, false, true, true),               [false, true, true, false, false, true, true, false]);
+    assertEqX8(Bool16x8(true, true, false, false, true, true),                      [true, true, false, false, true, true, false, false]);
+    assertEqX8(Bool16x8(true, false, false, true, true),                            [true, false, false, true, true, false, false, false]);
+    assertEqX8(Bool16x8(false, false, true, true),                                  [false, false, true, true, false, false, false, false]);
+    assertEqX8(Bool16x8(false, true, true),                                         [false, true, true, false, false, false, false, false]);
+    assertEqX8(Bool16x8(true, true),                                                [true, true, false, false, false, false, false, false]);
+    assertEqX8(Bool16x8(true),                                                      [true, false, false, false, false, false, false, false]);
+    assertEqX8(Bool16x8(),                                                          [false, false, false, false, false, false, false, false]);
+    assertEqX8(Bool16x8(false, false, true, true, false, false, true, true, true),  [false, false, true, true, false, false, true, true]);
+    assertEqX8(Bool16x8(false, false, true, true, false, false, true, true, true, true), [false, false, true, true, false, false, true, true]);
+}
+
+function TestBool32x4Ctor() {
+    assertEqX4(Bool32x4(false, false, true, true),              [false, false, true, true]);
+    assertEqX4(Bool32x4(false, false, true),                    [false, false, true, false]);
+    assertEqX4(Bool32x4(false, true),                           [false, true, false, false]);
+    assertEqX4(Bool32x4(true),                                  [true, false, false, false]);
+    assertEqX4(Bool32x4(),                                      [false, false, false, false]);
+    assertEqX4(Bool32x4(false, false, true, true, false),       [false, false, true, true]);
+    assertEqX4(Bool32x4(false, false, true, true, false, true), [false, false, true, true]);
+}
+
+function TestBool64x2Ctor() {
+    assertEqX2(Bool64x2(false, true),             [false, true]);
+    assertEqX2(Bool64x2(true),                    [true, false]);
+    assertEqX2(Bool64x2(),                        [false, false]);
+    assertEqX2(Bool64x2(false, true, true),       [false, true]);
+    assertEqX2(Bool64x2(false, true, true, true), [false, true]);
+}
+
 function test() {
     TestFloat32x4Ctor();
     TestFloat64x2Ctor();
     TestInt8x16Ctor();
     TestInt16x8Ctor();
     TestInt32x4Ctor();
+    TestBool8x16Ctor();
+    TestBool16x8Ctor();
+    TestBool32x4Ctor();
+    TestBool64x2Ctor();
     if (typeof reportCompare === "function")
         reportCompare(true, true);
 }

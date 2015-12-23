@@ -1334,20 +1334,26 @@ JSScript::initScriptCounts(JSContext* cx)
     jsbytecode* mainEntry = main();
     for (jsbytecode* pc = code(); pc != end; pc = GetNextPc(pc)) {
         if (pc == mainEntry) {
-            if (!jumpTargets.append(pc))
+            if (!jumpTargets.append(pc)) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
         }
 
         bool jump = IsJumpOpcode(JSOp(*pc));
         if (jump) {
             jsbytecode* target = pc + GET_JUMP_OFFSET(pc);
-            if (!jumpTargets.append(target))
+            if (!jumpTargets.append(target)) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
 
             if (BytecodeFallsThrough(JSOp(*pc))) {
                 jsbytecode* fallthrough = GetNextPc(pc);
-                if (!jumpTargets.append(fallthrough))
+                if (!jumpTargets.append(fallthrough)) {
+                    ReportOutOfMemory(cx);
                     return false;
+                }
             }
         }
 
@@ -1356,8 +1362,10 @@ JSScript::initScriptCounts(JSContext* cx)
             int32_t len = GET_JUMP_OFFSET(pc2);
 
             // Default target.
-            if (!jumpTargets.append(pc + len))
+            if (!jumpTargets.append(pc + len)) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
 
             pc2 += JUMP_OFFSET_LEN;
             int32_t low = GET_JUMP_OFFSET(pc2);
@@ -1369,8 +1377,10 @@ JSScript::initScriptCounts(JSContext* cx)
                 int32_t off = (int32_t) GET_JUMP_OFFSET(pc2);
                 if (off) {
                     // Case (i + low)
-                    if (!jumpTargets.append(pc + off))
+                    if (!jumpTargets.append(pc + off)) {
+                        ReportOutOfMemory(cx);
                         return false;
+                    }
                 }
             }
         }
@@ -1387,8 +1397,10 @@ JSScript::initScriptCounts(JSContext* cx)
                 continue;
 
             jsbytecode* tryTarget = tryStart + tn->length;
-            if (!jumpTargets.append(tryTarget))
+            if (!jumpTargets.append(tryTarget)) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
         }
     }
 
@@ -1399,8 +1411,10 @@ JSScript::initScriptCounts(JSContext* cx)
 
     // Initialize all PCCounts counters to 0.
     ScriptCounts::PCCountsVector base;
-    if (!base.reserve(jumpTargets.length()))
+    if (!base.reserve(jumpTargets.length())) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     for (size_t i = 0; i < jumpTargets.length(); i++)
         base.infallibleEmplaceBack(pcToOffset(jumpTargets[i]));
@@ -1409,8 +1423,10 @@ JSScript::initScriptCounts(JSContext* cx)
     ScriptCountsMap* map = compartment()->scriptCountsMap;
     if (!map) {
         map = cx->new_<ScriptCountsMap>();
-        if (!map)
+        if (!map) {
+            ReportOutOfMemory(cx);
             return false;
+        }
 
         if (!map->init()) {
             js_delete(map);
@@ -1422,8 +1438,10 @@ JSScript::initScriptCounts(JSContext* cx)
     }
 
     // Register the current ScriptCount in the compartment's map.
-    if (!map->putNew(this, Move(base)))
+    if (!map->putNew(this, Move(base))) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     // safe to set this;  we can't fail after this point.
     hasScriptCounts_ = true;

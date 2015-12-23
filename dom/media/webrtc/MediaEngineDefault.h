@@ -136,9 +136,12 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime) override
   {
-    NS_WARN_IF_FALSE(!aSource->FindTrack(aId) ||
+#ifdef DEBUG
+    StreamBuffer::Track* data = aSource->FindTrack(aId);
+    NS_WARN_IF_FALSE(!data || data->IsEnded() ||
                      aDesiredTime <= aSource->GetEndOfAppendedData(aId),
                      "MediaEngineDefaultAudioSource data underrun");
+#endif
   }
 
   virtual bool IsFake() override {

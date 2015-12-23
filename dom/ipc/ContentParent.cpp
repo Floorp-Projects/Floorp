@@ -2169,7 +2169,7 @@ ContentParent::ActorDestroy(ActorDestroyReason why)
             // There's a window in which child processes can crash
             // after IPC is established, but before a crash reporter
             // is created.
-            if (PCrashReporterParent* p = LoneManagedOrNull(ManagedPCrashReporterParent())) {
+            if (PCrashReporterParent* p = LoneManagedOrNullAsserts(ManagedPCrashReporterParent())) {
                 CrashReporterParent* crashReporter =
                     static_cast<CrashReporterParent*>(p);
 
@@ -2350,7 +2350,7 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
 jsipc::CPOWManager*
 ContentParent::GetCPOWManager()
 {
-    if (PJavaScriptParent* p = LoneManagedOrNull(ManagedPJavaScriptParent())) {
+    if (PJavaScriptParent* p = LoneManagedOrNullAsserts(ManagedPJavaScriptParent())) {
         return CPOWManagerFor(p);
     }
     return nullptr;
@@ -2371,7 +2371,7 @@ ContentParent::DestroyTestShell(TestShellParent* aTestShell)
 TestShellParent*
 ContentParent::GetTestShellSingleton()
 {
-    PTestShellParent* p = LoneManagedOrNull(ManagedPTestShellParent());
+    PTestShellParent* p = LoneManagedOrNullAsserts(ManagedPTestShellParent());
     return static_cast<TestShellParent*>(p);
 }
 
@@ -3656,7 +3656,7 @@ ContentParent::KillHard(const char* aReason)
     // We're about to kill the child process associated with this content.
     // Something has gone wrong to get us here, so we generate a minidump
     // of the parent and child for submission to the crash server.
-    if (PCrashReporterParent* p = LoneManagedOrNull(ManagedPCrashReporterParent())) {
+    if (PCrashReporterParent* p = LoneManagedOrNullAsserts(ManagedPCrashReporterParent())) {
         CrashReporterParent* crashReporter =
             static_cast<CrashReporterParent*>(p);
         // GeneratePairedMinidump creates two minidumps for us - the main

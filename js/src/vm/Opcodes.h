@@ -1811,8 +1811,8 @@
     macro(JSOP_GETIMPORT,     176,"getimport",  NULL,     5,  0,  1,  JOF_ATOM|JOF_NAME|JOF_TYPESET) \
     /*
      * Examines the top stack value, asserting that it's either a self-hosted
-     * function or a self-hosted intrinsic. This opcode does nothing in an
-     * optimized build.
+     * function or a self-hosted intrinsic. This opcode does nothing in a
+     * non-debug build.
      *   Category: Other
      *   Operands:
      *   Stack: checkVal => checkVal

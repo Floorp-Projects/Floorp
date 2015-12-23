@@ -1764,8 +1764,11 @@ GCMarker::stop()
 
     /* Free non-ballast stack memory. */
     stack.reset();
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
-        zone->gcWeakKeys.clear();
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
+        if (!zone->gcWeakKeys.clear())
+            oomUnsafe.crash("clearing weak keys in GCMarker::stop()");
+    }
 }
 
 void
@@ -1820,8 +1823,11 @@ GCMarker::leaveWeakMarkingMode()
 
     // Table is expensive to maintain when not in weak marking mode, so we'll
     // rebuild it upon entry rather than allow it to contain stale data.
-    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
-        zone->gcWeakKeys.clear();
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    for (GCZonesIter zone(runtime()); !zone.done(); zone.next()) {
+        if (!zone->gcWeakKeys.clear())
+            oomUnsafe.crash("clearing weak keys in GCMarker::leaveWeakMarkingMode()");
+    }
 }
 
 void

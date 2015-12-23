@@ -1,0 +1,14 @@
+marionette-client >= 2.0.0
+mozfile >= 1.2
+mozinfo >= 0.8
+mozinstall >= 1.12
+
+# We make use of code of other packages, which should not be required by this package.
+# Make sure that we can kill those dependencies soon. We have to comment them all out
+# to avoid installations of those packages from pypi.
+
+# Necessary because of the testcase classes
+# firefox_puppeteer == 3.0.0
+
+# Necessary because of server-root, and manifest files
+# firefox_ui_tests

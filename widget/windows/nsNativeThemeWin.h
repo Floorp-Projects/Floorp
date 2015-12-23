@@ -31,44 +31,44 @@ public:
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect);
+                                  const nsRect& aDirtyRect) override;
 
   NS_IMETHOD GetWidgetBorder(nsDeviceContext* aContext, 
                              nsIFrame* aFrame,
                              uint8_t aWidgetType,
-                             nsIntMargin* aResult);
+                             nsIntMargin* aResult) override;
 
   virtual bool GetWidgetPadding(nsDeviceContext* aContext,
                                   nsIFrame* aFrame,
                                   uint8_t aWidgetType,
-                                  nsIntMargin* aResult);
+                                  nsIntMargin* aResult) override;
 
   virtual bool GetWidgetOverflow(nsDeviceContext* aContext,
                                    nsIFrame* aFrame,
                                    uint8_t aWidgetType,
-                                   nsRect* aOverflowRect);
+                                   nsRect* aOverflowRect) override;
 
   NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
                                   uint8_t aWidgetType,
                                   mozilla::LayoutDeviceIntSize* aResult,
-                                  bool* aIsOverridable);
+                                  bool* aIsOverridable) override;
 
-  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType);
+  virtual Transparency GetWidgetTransparency(nsIFrame* aFrame, uint8_t aWidgetType) override;
 
   NS_IMETHOD WidgetStateChanged(nsIFrame* aFrame, uint8_t aWidgetType, 
-                                nsIAtom* aAttribute, bool* aShouldRepaint);
+                                nsIAtom* aAttribute, bool* aShouldRepaint) override;
 
-  NS_IMETHOD ThemeChanged();
+  NS_IMETHOD ThemeChanged() override;
 
   bool ThemeSupportsWidget(nsPresContext* aPresContext, 
                              nsIFrame* aFrame,
-                             uint8_t aWidgetType);
+                             uint8_t aWidgetType) override;
 
-  bool WidgetIsContainer(uint8_t aWidgetType);
+  bool WidgetIsContainer(uint8_t aWidgetType) override;
 
   bool ThemeDrawsFocusForWidget(uint8_t aWidgetType) override;
 
-  bool ThemeNeedsComboboxDropmarker();
+  bool ThemeNeedsComboboxDropmarker() override;
 
   virtual bool WidgetAppearanceDependsOnWindowFocus(uint8_t aWidgetType) override;
 

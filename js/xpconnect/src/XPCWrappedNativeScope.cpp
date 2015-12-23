@@ -700,7 +700,8 @@ XPCWrappedNativeScope::SetAddonInterposition(JSContext* cx,
 {
     if (!gInterpositionMap) {
         gInterpositionMap = new InterpositionMap();
-        gInterpositionMap->init();
+        bool ok = gInterpositionMap->init();
+        NS_ENSURE_TRUE(ok, false);
 
         // Make sure to clear the map at shutdown.
         // Note: this will take care of gInterpositionWhitelists too.
@@ -756,7 +757,11 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
     MOZ_RELEASE_ASSERT(MAX_INTERPOSITION > gInterpositionWhitelists->Length() + 1);
     InterpositionWhitelistPair* newPair = gInterpositionWhitelists->AppendElement();
     newPair->interposition = interposition;
-    newPair->whitelist.init();
+    if (!newPair->whitelist.init()) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
+
     whitelist = &newPair->whitelist;
 
     RootedValue whitelistVal(cx);
@@ -818,7 +823,10 @@ XPCWrappedNativeScope::UpdateInterpositionWhitelist(JSContext* cx,
             // By internizing the id's we ensure that they won't get
             // GCed so we can use them as hash keys.
             jsid id = INTERNED_STRING_TO_JSID(cx, str);
-            whitelist->put(JSID_BITS(id));
+            if (!whitelist->put(JSID_BITS(id))) {
+                JS_ReportOutOfMemory(cx);
+                return false;
+            }
         }
     }
 

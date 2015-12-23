@@ -6,20 +6,15 @@
 
 EXPORTS += [
     'NesteggPacketHolder.h',
-    'SoftwareWebMVideoDecoder.h',
     'WebMBufferedParser.h',
     'WebMDecoder.h',
     'WebMDemuxer.h',
-    'WebMReader.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AudioDecoder.cpp',
-    'SoftwareWebMVideoDecoder.cpp',
     'WebMBufferedParser.cpp',
     'WebMDecoder.cpp',
     'WebMDemuxer.cpp',
-    'WebMReader.cpp',
 ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:

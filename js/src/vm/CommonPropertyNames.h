@@ -23,6 +23,10 @@
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(Async, Async, "Async") \
+    macro(bool8x16, bool8x16, "Bool8x16") \
+    macro(bool16x8, bool16x8, "Bool16x8") \
+    macro(bool32x4, bool32x4, "Bool32x4") \
+    macro(bool64x2, bool64x2, "Bool64x2") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
@@ -199,7 +203,6 @@
     macro(sensitivity, sensitivity, "sensitivity") \
     macro(set, set, "set") \
     macro(shape, shape, "shape") \
-    macro(signMask, signMask, "signMask") \
     macro(size, size, "size") \
     macro(source, source, "source") \
     macro(stack, stack, "stack") \
@@ -250,11 +253,7 @@
     macro(watch, watch, "watch") \
     macro(WeakSet_add, WeakSet_add, "WeakSet_add") \
     macro(writable, writable, "writable") \
-    macro(w, w, "w") \
-    macro(x, x, "x") \
-    macro(y, y, "y") \
     macro(yield, yield, "yield") \
-    macro(z, z, "z") \
     macro(raw, raw, "raw") \
     /* Type names must be contiguous and ordered; see js::TypeName. */ \
     macro(undefined, undefined, "undefined") \

@@ -568,6 +568,7 @@ class LDefinition
             return LDefinition::SLOTS;
           case MIRType_Pointer:
             return LDefinition::GENERAL;
+          case MIRType_Bool32x4:
           case MIRType_Int32x4:
             return LDefinition::INT32X4;
           case MIRType_Float32x4:

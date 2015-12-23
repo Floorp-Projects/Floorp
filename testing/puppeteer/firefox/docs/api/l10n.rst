@@ -1,0 +1,11 @@
+.. py:currentmodule:: firefox_puppeteer.api.l10n
+
+Localization
+============
+
+Localization
+------------
+
+.. autoclass:: L10n
+   :members:
+   :undoc-members:

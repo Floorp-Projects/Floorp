@@ -458,6 +458,7 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
         break;
       }
       case MIRType_Float32:
+      case MIRType_Bool32x4:
       case MIRType_Int32x4:
       case MIRType_Float32x4:
       {
