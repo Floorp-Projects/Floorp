@@ -12,7 +12,7 @@ const TEST_NETWORK_URI = "http://example.com/browser/devtools/client/" +
                          "webconsole/test/test-network.html" + "?_date=" +
                          Date.now();
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab("data:text/html;charset=utf-8,Web Console basic network " +
                 "logging test");
   let hud = yield openConsole();

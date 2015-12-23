@@ -14,5 +14,9 @@ public interface AdjustHelperInterface {
      * @param appToken the (secret!) Adjust SDK per-application token to register with; may be null.
      */
     void onCreate(final Context context, final String appToken);
+    void onPause();
+    void onResume();
+
+    void setEnabled(final boolean isEnabled);
     void onReceive(final Context context, final Intent intent);
 }

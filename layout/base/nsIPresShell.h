@@ -63,8 +63,6 @@ class nsCaret;
 namespace mozilla {
 class AccessibleCaretEventHub;
 class CSSStyleSheet;
-class TouchCaret;
-class SelectionCarets;
 } // namespace mozilla
 class nsFrameSelection;
 class nsFrameManager;
@@ -806,31 +804,6 @@ public:
    * This allows any outstanding references to the frame to be cleaned up
    */
   virtual void NotifyDestroyingFrame(nsIFrame* aFrame) = 0;
-
-  /**
-   * Get the touch caret, if it exists. AddRefs it.
-   */
-  virtual already_AddRefed<mozilla::TouchCaret> GetTouchCaret() const = 0;
-
-  /**
-   * Returns the touch caret element of the presshell.
-   */
-  virtual mozilla::dom::Element* GetTouchCaretElement() const = 0;
-
-  /**
-   * Get the selection caret, if it exists. AddRefs it.
-   */
-  virtual already_AddRefed<mozilla::SelectionCarets> GetSelectionCarets() const = 0;
-
-  /**
-   * Returns the start part of selection caret element of the presshell.
-   */
-  virtual mozilla::dom::Element* GetSelectionCaretsStartElement() const = 0;
-
-  /**
-   * Returns the end part of selection caret element of the presshell.
-   */
-  virtual mozilla::dom::Element* GetSelectionCaretsEndElement() const = 0;
 
   /**
    * Get the AccessibleCaretEventHub, if it exists. AddRefs it.

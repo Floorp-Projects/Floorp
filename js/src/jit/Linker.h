@@ -22,6 +22,7 @@ namespace jit {
 class Linker
 {
     MacroAssembler& masm;
+    mozilla::Maybe<AutoWritableJitCode> awjc;
 
     JitCode* fail(JSContext* cx) {
         ReportOutOfMemory(cx);
@@ -68,7 +69,7 @@ class Linker
             return nullptr;
         if (masm.oom())
             return fail(cx);
-        AutoWritableJitCode awjc(result, bytesNeeded);
+        awjc.emplace(result, bytesNeeded);
         code->copyFrom(masm);
         masm.link(code);
         if (masm.embedsNurseryPointers())

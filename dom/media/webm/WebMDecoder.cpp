@@ -8,7 +8,6 @@
 #include "MediaDecoderStateMachine.h"
 #include "MediaFormatReader.h"
 #include "WebMDemuxer.h"
-#include "WebMReader.h"
 #include "WebMDecoder.h"
 #include "VideoUtils.h"
 
@@ -16,11 +15,8 @@ namespace mozilla {
 
 MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 {
-  bool useFormatDecoder =
-    Preferences::GetBool("media.format-reader.webm", true);
-  RefPtr<MediaDecoderReader> reader = useFormatDecoder ?
-      static_cast<MediaDecoderReader*>(new MediaFormatReader(this, new WebMDemuxer(GetResource()), GetVideoFrameContainer())) :
-      new WebMReader(this);
+  RefPtr<MediaDecoderReader> reader =
+    new MediaFormatReader(this, new WebMDemuxer(GetResource()), GetVideoFrameContainer());
   return new MediaDecoderStateMachine(this, reader);
 }
 

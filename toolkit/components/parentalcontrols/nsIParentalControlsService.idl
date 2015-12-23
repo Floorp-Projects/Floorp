@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(f17414cd-d357-476d-b894-2f7bda9e3a9b)]
+[scriptable, uuid(2e97e5dd-467b-4aea-a1bb-6773c0f2beb0)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -36,6 +36,9 @@ interface nsIParentalControlsService : nsISupports
   const short ADVANCED_SETTINGS = 17; // Advanced settings
   const short CAMERA_MICROPHONE = 18; // Camera and microphone (WebRTC)
   const short BLOCK_LIST = 19; // Block websites that include sensitive content
+  const short TELEMETRY = 20; // Submit telemetry data
+  const short HEALTH_REPORT = 21; // Submit FHR data
+  const short DEFAULT_THEME = 22; // Use default theme or a special parental controls theme
 
   /**
    * @returns true if the current user account has parental controls

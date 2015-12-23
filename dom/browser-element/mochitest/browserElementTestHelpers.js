@@ -65,10 +65,6 @@ const browserElementTestHelpers = {
     this._setPref('dom.mozBrowserFramesEnabled', value);
   },
 
-  setSelectionChangeEnabledPref: function(value) {
-    this._setPref('selectioncaret.enabled', value);
-  },
-
   setAccessibleCaretEnabledPref: function(value) {
     this._setPref('layout.accessiblecaret.enabled', value);
   },

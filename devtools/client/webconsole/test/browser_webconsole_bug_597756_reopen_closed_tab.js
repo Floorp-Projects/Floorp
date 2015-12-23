@@ -15,7 +15,7 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 var HUD;
 
-var test = asyncTest(function* () {
+add_task(function* () {
   // On e10s, the exception is triggered in child process
   // and is ignored by test harness
   if (!Services.appinfo.browserTabsRemoteAutostart) {

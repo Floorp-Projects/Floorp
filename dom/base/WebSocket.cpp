@@ -1910,9 +1910,11 @@ WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
   MOZ_ASSERT(mImpl);
   AssertIsOnTargetThread();
 
-  mImpl->mService->WebSocketClosed(mImpl->mChannel->Serial(),
-                                   mImpl->mInnerWindowID,
-                                   aWasClean, aCode, aReason);
+  if (mImpl->mChannel) {
+    mImpl->mService->WebSocketClosed(mImpl->mChannel->Serial(),
+                                     mImpl->mInnerWindowID,
+                                     aWasClean, aCode, aReason);
+  }
 
   nsresult rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {

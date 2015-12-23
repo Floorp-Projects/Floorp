@@ -1,5 +1,5 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = new HttpServer();
 var currentTestIndex = 0;
@@ -45,24 +45,17 @@ var domBranch;
 
 function setupChannel(url)
 {
-    var ios = Components.classes["@mozilla.org/network/io-service;1"].
-                         getService(Ci.nsIIOService);
-    var chan = ios.newChannel2("http://localhost:" + port + url,
-                               "",
-                               null,
-                               null,      // aLoadingNode
-                               Services.scriptSecurityManager.getSystemPrincipal(),
-                               null,      // aTriggeringPrincipal
-                               Ci.nsILoadInfo.SEC_NORMAL,
-                               Ci.nsIContentPolicy.TYPE_OTHER);
-    return chan;
+  return NetUtil.newChannel({
+    uri: "http://localhost:" + port + url,
+    loadUsingSystemPrincipal: true
+  });
 }
 
 function startIter()
 {
     var channel = setupChannel(tests[currentTestIndex].url);
-    channel.asyncOpen(new ChannelListener(completeIter,
-                                          channel, tests[currentTestIndex].flags), null);
+    channel.asyncOpen2(new ChannelListener(completeIter,
+                                          channel, tests[currentTestIndex].flags));
 }
 
 function completeIter(request, data, ctx)

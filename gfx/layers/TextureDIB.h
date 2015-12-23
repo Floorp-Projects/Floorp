@@ -30,8 +30,6 @@ public:
 
   virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
-
   virtual bool HasInternalBuffer() const override { return true; }
 
   static

@@ -12,7 +12,7 @@
 
 const TEST_URI = "http://example.com/";
 
-var test = asyncTest(function* () {
+add_task(function* () {
   yield loadTab(TEST_URI);
 
   let hud = yield openConsole();

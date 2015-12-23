@@ -2008,8 +2008,47 @@ AppendGridTemplateToString(const nsCSSValueList* val,
 
     if (unit == eCSSUnit_Enumerated &&
         val->mValue.GetIntValue() == NS_STYLE_GRID_TEMPLATE_SUBGRID) {
+      MOZ_ASSERT(!isSubgrid, "saw subgrid once already");
       isSubgrid = true;
       aResult.AppendLiteral("subgrid");
+
+    } else if (unit == eCSSUnit_Pair) {
+      // This is a repeat 'auto-fill' / 'auto-fit'.
+      const nsCSSValuePair& pair = val->mValue.GetPairValue();
+      switch (pair.mXValue.GetIntValue()) {
+        case NS_STYLE_GRID_REPEAT_AUTO_FILL:
+          aResult.AppendLiteral("repeat(auto-fill, ");
+          break;
+        case NS_STYLE_GRID_REPEAT_AUTO_FIT:
+          aResult.AppendLiteral("repeat(auto-fit, ");
+          break;
+        default:
+          MOZ_ASSERT_UNREACHABLE("unexpected enum value");
+      }
+      const nsCSSValueList* repeatList = pair.mYValue.GetListValue();
+      if (repeatList->mValue.GetUnit() != eCSSUnit_Null) {
+        aResult.Append('[');
+        AppendValueListToString(repeatList->mValue.GetListValue(), aProperty,
+                                aResult, aSerialization);
+        aResult.Append(']');
+        if (!isSubgrid) {
+          aResult.Append(' ');
+        }
+      } else if (isSubgrid) {
+        aResult.AppendLiteral("[]");
+      }
+      if (!isSubgrid) {
+        repeatList = repeatList->mNext;
+        repeatList->mValue.AppendToString(aProperty, aResult, aSerialization);
+        repeatList = repeatList->mNext;
+        if (repeatList->mValue.GetUnit() != eCSSUnit_Null) {
+          aResult.AppendLiteral(" [");
+          AppendValueListToString(repeatList->mValue.GetListValue(), aProperty,
+                                  aResult, aSerialization);
+          aResult.Append(']');
+        }
+      }
+      aResult.Append(')');
 
     } else if (unit == eCSSUnit_Null) {
       // Empty or omitted <line-names>.

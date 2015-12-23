@@ -518,8 +518,6 @@ class MOZ_STACK_CLASS AutoWritableJitCode
     }
 };
 
-enum ReprotectCode { Reprotect = true, DontReprotect = false };
-
 class MOZ_STACK_CLASS MaybeAutoWritableJitCode
 {
     mozilla::Maybe<AutoWritableJitCode> awjc_;

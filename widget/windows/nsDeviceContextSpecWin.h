@@ -23,16 +23,16 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface);
+  NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface) override;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
                            char16_t*       aPrintToFileName,
                            int32_t          aStartPage,
-                           int32_t          aEndPage) { return NS_OK; }
-  NS_IMETHOD EndDocument() { return NS_OK; }
-  NS_IMETHOD BeginPage() { return NS_OK; }
-  NS_IMETHOD EndPage() { return NS_OK; }
+                           int32_t          aEndPage) override { return NS_OK; }
+  NS_IMETHOD EndDocument() override { return NS_OK; }
+  NS_IMETHOD BeginPage() override { return NS_OK; }
+  NS_IMETHOD EndPage() override { return NS_OK; }
 
-  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview);
+  NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
 
   void GetDriverName(wchar_t *&aDriverName) const   { aDriverName = mDriverName;     }
   void GetDeviceName(wchar_t *&aDeviceName) const   { aDeviceName = mDeviceName;     }

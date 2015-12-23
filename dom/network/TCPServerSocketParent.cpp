@@ -66,7 +66,7 @@ uint32_t
 TCPServerSocketParent::GetAppId()
 {
   const PContentParent *content = Manager()->Manager();
-  if (PBrowserParent* browser = LoneManagedOrNull(content->ManagedPBrowserParent())) {
+  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
     TabParent *tab = TabParent::GetFrom(browser);
     return tab->OwnAppId();
   } else {
@@ -78,7 +78,7 @@ bool
 TCPServerSocketParent::GetInBrowser()
 {
   const PContentParent *content = Manager()->Manager();
-  if (PBrowserParent* browser = LoneManagedOrNull(content->ManagedPBrowserParent())) {
+  if (PBrowserParent* browser = SingleManagedOrNull(content->ManagedPBrowserParent())) {
     TabParent *tab = TabParent::GetFrom(browser);
     return tab->IsBrowserElement();
   } else {

@@ -610,7 +610,10 @@ public:
 class StringTable
 {
 public:
-  StringTable() { (void)mSet.init(64); }
+  StringTable()
+  {
+    MOZ_ALWAYS_TRUE(mSet.init(64));
+  }
 
   const char*
   Intern(const char* aString)
@@ -621,7 +624,7 @@ public:
     }
 
     const char* newString = InfallibleAllocPolicy::strdup_(aString);
-    (void)mSet.add(p, newString);
+    MOZ_ALWAYS_TRUE(mSet.add(p, newString));
     return newString;
   }
 
@@ -785,7 +788,7 @@ StackTrace::Get(Thread* aT)
   StackTraceTable::AddPtr p = gStackTraceTable->lookupForAdd(&tmp);
   if (!p) {
     StackTrace* stnew = InfallibleAllocPolicy::new_<StackTrace>(tmp);
-    (void)gStackTraceTable->add(p, stnew);
+    MOZ_ALWAYS_TRUE(gStackTraceTable->add(p, stnew));
   }
   return *p;
 }
@@ -934,14 +937,14 @@ public:
 
   void AddStackTracesToTable(StackTraceSet& aStackTraces) const
   {
-    aStackTraces.put(AllocStackTrace());  // never null
+    MOZ_ALWAYS_TRUE(aStackTraces.put(AllocStackTrace()));  // never null
     if (gOptions->IsDarkMatterMode()) {
       const StackTrace* st;
       if ((st = ReportStackTrace1())) {     // may be null
-        aStackTraces.put(st);
+        MOZ_ALWAYS_TRUE(aStackTraces.put(st));
       }
       if ((st = ReportStackTrace2())) {     // may be null
-        aStackTraces.put(st);
+        MOZ_ALWAYS_TRUE(aStackTraces.put(st));
       }
     }
   }
@@ -1052,7 +1055,7 @@ public:
 
   void AddStackTracesToTable(StackTraceSet& aStackTraces) const
   {
-    aStackTraces.put(AllocStackTrace());  // never null
+    MOZ_ALWAYS_TRUE(aStackTraces.put(AllocStackTrace()));  // never null
   }
 
   // Hash policy.
@@ -1090,7 +1093,7 @@ void MaybeAddToDeadBlockTable(const DeadBlock& aDb)
     if (DeadBlockTable::AddPtr p = gDeadBlockTable->lookupForAdd(aDb)) {
       p->value() += 1;
     } else {
-      gDeadBlockTable->add(p, aDb, 1);
+      MOZ_ALWAYS_TRUE(gDeadBlockTable->add(p, aDb, 1));
     }
   }
 }
@@ -1104,7 +1107,7 @@ GatherUsedStackTraces(StackTraceSet& aStackTraces)
   MOZ_ASSERT(Thread::Fetch()->InterceptsAreBlocked());
 
   aStackTraces.finish();
-  aStackTraces.init(512);
+  MOZ_ALWAYS_TRUE(aStackTraces.init(512));
 
   for (auto r = gLiveBlockTable->all(); !r.empty(); r.popFront()) {
     r.front().AddStackTracesToTable(aStackTraces);
@@ -1170,12 +1173,12 @@ AllocCallback(void* aPtr, size_t aReqSize, Thread* aT)
 
       LiveBlock b(aPtr, sampleBelowSize, StackTrace::Get(aT),
                   /* isSampled */ true);
-      (void)gLiveBlockTable->putNew(aPtr, b);
+      MOZ_ALWAYS_TRUE(gLiveBlockTable->putNew(aPtr, b));
     }
   } else {
     // If this block size is larger than the sample size, record it exactly.
     LiveBlock b(aPtr, aReqSize, StackTrace::Get(aT), /* isSampled */ false);
-    (void)gLiveBlockTable->putNew(aPtr, b);
+    MOZ_ALWAYS_TRUE(gLiveBlockTable->putNew(aPtr, b));
   }
 }
 
@@ -1590,16 +1593,17 @@ Init(const malloc_table_t* aMallocTable)
     AutoLockState lock;
 
     gStackTraceTable = InfallibleAllocPolicy::new_<StackTraceTable>();
-    gStackTraceTable->init(8192);
+    MOZ_ALWAYS_TRUE(gStackTraceTable->init(8192));
 
     gLiveBlockTable = InfallibleAllocPolicy::new_<LiveBlockTable>();
-    gLiveBlockTable->init(8192);
+    MOZ_ALWAYS_TRUE(gLiveBlockTable->init(8192));
 
     // Create this even if the mode isn't Cumulative (albeit with a small
     // size), in case the mode is changed later on (as is done by SmokeDMD.cpp,
     // for example).
     gDeadBlockTable = InfallibleAllocPolicy::new_<DeadBlockTable>();
-    gDeadBlockTable->init(gOptions->IsCumulativeMode() ? 8192 : 4);
+    size_t tableSize = gOptions->IsCumulativeMode() ? 8192 : 4;
+    MOZ_ALWAYS_TRUE(gDeadBlockTable->init(tableSize));
   }
 
   gIsDMDInitialized = true;
@@ -1720,7 +1724,11 @@ DMDFuncs::ClearReports()
 class ToIdStringConverter final
 {
 public:
-  ToIdStringConverter() : mNextId(0) { mIdMap.init(512); }
+  ToIdStringConverter()
+    : mNextId(0)
+  {
+    MOZ_ALWAYS_TRUE(mIdMap.init(512));
+  }
 
   // Converts a pointer to a unique ID. Reuses the existing ID for the pointer
   // if it's been seen before.
@@ -1730,7 +1738,7 @@ public:
     PointerIdMap::AddPtr p = mIdMap.lookupForAdd(aPtr);
     if (!p) {
       id = mNextId++;
-      (void)mIdMap.add(p, aPtr, id);
+      MOZ_ALWAYS_TRUE(mIdMap.add(p, aPtr, id));
     } else {
       id = p->value();
     }
@@ -1828,10 +1836,10 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
   auto locService = InfallibleAllocPolicy::new_<CodeAddressService>();
 
   StackTraceSet usedStackTraces;
-  usedStackTraces.init(512);
+  MOZ_ALWAYS_TRUE(usedStackTraces.init(512));
 
   PointerSet usedPcs;
-  usedPcs.init(512);
+  MOZ_ALWAYS_TRUE(usedPcs.init(512));
 
   size_t iscSize;
 
@@ -1936,7 +1944,7 @@ AnalyzeImpl(UniquePtr<JSONWriteFunc> aWriter)
           for (uint32_t i = 0; i < st->Length(); i++) {
             const void* pc = st->Pc(i);
             writer.StringElement(isc.ToIdString(pc));
-            usedPcs.put(pc);
+            MOZ_ALWAYS_TRUE(usedPcs.put(pc));
           }
         }
         writer.EndArray();

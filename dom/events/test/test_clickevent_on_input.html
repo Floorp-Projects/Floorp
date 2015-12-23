@@ -49,11 +49,10 @@ function isEnabledMiddleClickPaste()
   }
 }
 
-function isEnabledTouchCaret()
+function isEnabledAccessibleCaret()
 {
   try {
-    return SpecialPowers.getBoolPref("touchcaret.enabled") ||
-           SpecialPowers.getBoolPref("layout.accessiblecaret.enabled");
+    return SpecialPowers.getBoolPref("layout.accessiblecaret.enabled");
   } catch (e) {
     return false;
   }
@@ -69,7 +68,7 @@ function doTest(aButton)
   //          then, the click event isn't generated.
   if (aButton != 2 &&
       (aButton != 1 || !isEnabledMiddleClickPaste()) &&
-      (aButton != 0 || !isEnabledTouchCaret())) {
+      (aButton != 0 || !isEnabledAccessibleCaret())) {
     gClickCount = 0;
     // click on border of input
     synthesizeMouse(input, 5, 5, { button: aButton });

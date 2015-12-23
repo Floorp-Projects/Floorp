@@ -146,7 +146,11 @@ MakeNode(VerifyPreTracer* trc, void* thing, JS::TraceKind kind)
         node->thing = thing;
         node->count = 0;
         node->kind = kind;
-        trc->nodemap.add(p, thing, node);
+        if (!trc->nodemap.add(p, thing, node)) {
+            trc->edgeptr = trc->term;
+            return nullptr;
+        }
+
         return node;
     }
     return nullptr;

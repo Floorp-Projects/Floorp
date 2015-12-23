@@ -4,6 +4,10 @@
 # Exclude expected objdirs.
 obj*/**
 
+# Temporarily ignore HTML files that still need to be fixed.
+browser/extensions/loop/**/*.html
+devtools/**/*.html
+
 # We ignore all these directories by default, until we get them enabled.
 # If you are enabling a directory, please add directory specific exclusions
 # below.

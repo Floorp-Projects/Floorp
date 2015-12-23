@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <title>Test page for enablePrivilege</title>
+    <script>
+      function init() {
+        var result = document.getElementById("result");
+        try {
+          netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+          result.textContent = "FAIL";
+        }
+        catch (ex) {
+          result.textContent = "PASS";
+        }
+      }
+    </script>
+  </head>
+  <body onload="init();">
+    <p id="result"></p>
+  </body>
+</html>

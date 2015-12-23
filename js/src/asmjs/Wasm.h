@@ -43,13 +43,20 @@ enum class ValType
     F32,
     F64,
     I32x4,
-    F32x4
+    F32x4,
+    B32x4
 };
 
 static inline bool
 IsSimdType(ValType vt)
 {
-    return vt == ValType::I32x4 || vt == ValType::F32x4;
+    return vt == ValType::I32x4 || vt == ValType::F32x4 || vt == ValType::B32x4;
+}
+
+static inline bool
+IsSimdBoolType(ValType vt)
+{
+    return vt == ValType::B32x4;
 }
 
 static inline jit::MIRType
@@ -62,6 +69,7 @@ ToMIRType(ValType vt)
       case ValType::F64: return jit::MIRType_Double;
       case ValType::I32x4: return jit::MIRType_Int32x4;
       case ValType::F32x4: return jit::MIRType_Float32x4;
+      case ValType::B32x4: return jit::MIRType_Bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
 }
@@ -97,7 +105,11 @@ class Val
     explicit Val(uint64_t i64) : type_(ValType::I64) { u.i64_ = i64; }
     explicit Val(float f32) : type_(ValType::F32) { u.f32_ = f32; }
     explicit Val(double f64) : type_(ValType::F64) { u.f64_ = f64; }
-    explicit Val(const I32x4& i32x4) : type_(ValType::I32x4) { memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_)); }
+
+    explicit Val(const I32x4& i32x4, ValType type = ValType::I32x4) : type_(type) {
+        MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
+        memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
+    }
     explicit Val(const F32x4& f32x4) : type_(ValType::F32x4) { memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_)); }
 
     ValType type() const { return type_; }
@@ -107,7 +119,10 @@ class Val
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     float f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     double f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
-    const I32x4& i32x4() const { MOZ_ASSERT(type_ == ValType::I32x4); return u.i32x4_; }
+    const I32x4& i32x4() const {
+        MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
+        return u.i32x4_;
+    }
     const F32x4& f32x4() const { MOZ_ASSERT(type_ == ValType::F32x4); return u.f32x4_; }
 };
 
@@ -125,6 +140,7 @@ enum class ExprType : uint8_t
     F64 = uint8_t(ValType::F64),
     I32x4 = uint8_t(ValType::I32x4),
     F32x4 = uint8_t(ValType::F32x4),
+    B32x4 = uint8_t(ValType::B32x4),
     Void
 };
 

@@ -105,13 +105,13 @@ class MessagePumpForNonMainUIThreads final:
 public:
   // We don't want xpcom refing, chromium controls our lifetime via
   // RefCountedThreadSafe.
-  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) {
+  NS_IMETHOD_(MozExternalRefCountType) AddRef(void) override {
     return 2;
   }
-  NS_IMETHOD_(MozExternalRefCountType) Release(void) {
+  NS_IMETHOD_(MozExternalRefCountType) Release(void) override  {
     return 1;
   }
-  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr) override;
 
   NS_DECL_NSITHREADOBSERVER
 
@@ -124,7 +124,7 @@ public:
   }
 
   // The main run loop for this thread.
-  virtual void DoRunLoop();
+  virtual void DoRunLoop() override;
 
 protected:
   nsIThread* mThread;

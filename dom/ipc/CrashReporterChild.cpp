@@ -35,7 +35,7 @@ CrashReporterChild::GetCrashReporter()
   if (!reporters) {
     return nullptr;
   }
-  return LoneManagedOrNull(*reporters);
+  return LoneManagedOrNullAsserts(*reporters);
 }
 
 } // namespace dom

@@ -782,7 +782,6 @@ var Impl = {
    * with the following properties:
    *
    * - min, max, histogram_type, sum, sum_squares_{lo,hi}: simple integers;
-   * - log_sum, log_sum_squares: doubles;
    * - counts: array of counts for histogram buckets;
    * - ranges: array of calculated bucket sizes.
    *
@@ -795,7 +794,6 @@ var Impl = {
    *   histogram_type: <histogram_type>, sum: <sum>,
    *   sum_squares_lo: <sum_squares_lo>,
    *   sum_squares_hi: <sum_squares_hi>,
-   *   log_sum: <log_sum>, log_sum_squares: <log_sum_squares>,
    *   values: { bucket1: count1, bucket2: count2, ... } }
    */
   packHistogram: function packHistogram(hgram) {
@@ -809,10 +807,7 @@ var Impl = {
       sum: hgram.sum
     };
 
-    if (hgram.histogram_type == Telemetry.HISTOGRAM_EXPONENTIAL) {
-      retgram.log_sum = hgram.log_sum;
-      retgram.log_sum_squares = hgram.log_sum_squares;
-    } else {
+    if (hgram.histogram_type != Telemetry.HISTOGRAM_EXPONENTIAL) {
       retgram.sum_squares_lo = hgram.sum_squares_lo;
       retgram.sum_squares_hi = hgram.sum_squares_hi;
     }

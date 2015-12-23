@@ -28,6 +28,8 @@ public:
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
 
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat);
 
@@ -62,6 +64,8 @@ public:
   CreateSimilar(ISurfaceAllocator* aAllocator,
                 TextureFlags aFlags = TextureFlags::DEFAULT,
                 TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT) const override;
+
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
   static
   DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
@@ -101,6 +105,10 @@ public:
   virtual ~ShmemDIBTextureData() 
   {
     MOZ_COUNT_DTOR(ShmemDIBTextureData);
+
+    // The host side has its own references and handles to this data, we can
+    // safely clear ours.
+    DeallocateData();
   }
 
   HANDLE mFileMapping;
@@ -113,31 +121,6 @@ already_AddRefed<gfx::DrawTarget>
 DIBTextureData::BorrowDrawTarget()
 {
   return gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface, mSize);
-}
-
-bool
-DIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
-{
-  RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
-
-  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
-
-  if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
-    return false;
-  }
-
-  DataSourceSurface::MappedSurface sourceMap;
-  srcSurf->Map(DataSourceSurface::READ, &sourceMap);
-
-  for (int y = 0; y < srcSurf->GetSize().height; y++) {
-    memcpy(imgSurf->Data() + imgSurf->Stride() * y,
-           sourceMap.mData + sourceMap.mStride * y,
-           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
-  }
-
-  srcSurf->Unmap();
-  return true;
 }
 
 DIBTextureData*
@@ -192,6 +175,34 @@ MemoryDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat)
   return new MemoryDIBTextureData(aSize, aFormat, surface);
 }
 
+bool
+MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
+{
+  RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
+
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return false;
+  }
+
+  DataSourceSurface::MappedSurface sourceMap;
+  if (!srcSurf->Map(gfx::DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    return false;
+  }
+
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
+    memcpy(imgSurf->Data() + imgSurf->Stride() * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
+  }
+
+  srcSurf->Unmap();
+  return true;
+}
+
 TextureData*
 ShmemDIBTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
                                    TextureFlags aFlags,
@@ -201,6 +212,46 @@ ShmemDIBTextureData::CreateSimilar(ISurfaceAllocator* aAllocator,
     return nullptr;
   }
   return ShmemDIBTextureData::Create(mSize, mFormat, aAllocator);
+}
+
+bool
+ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
+{
+
+  RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
+
+  if (!srcSurf) {
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    return false;
+  }
+
+  DataSourceSurface::MappedSurface sourceMap;
+  if (!srcSurf->Map(gfx::DataSourceSurface::READ, &sourceMap)) {
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    return false;
+  }
+
+  GdiFlush();
+
+  uint32_t stride = mSize.width * BytesPerPixel(mFormat);
+  uint8_t* data = (uint8_t*)::MapViewOfFile(mFileMapping, FILE_MAP_WRITE, 0, 0, stride * mSize.height);
+
+  if (!data) {
+    gfxCriticalError() << "Failed to map view of file for UpdateFromSurface.";
+    srcSurf->Unmap();
+    return false;
+  }
+
+  for (int y = 0; y < srcSurf->GetSize().height; y++) {
+    memcpy(data + stride * y,
+           sourceMap.mData + sourceMap.mStride * y,
+           srcSurf->GetSize().width * BytesPerPixel(srcSurf->GetFormat()));
+  }
+
+  ::UnmapViewOfFile(data);
+
+  srcSurf->Unmap();
+  return true;
 }
 
 bool
@@ -229,14 +280,6 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
     return nullptr;
   }
 
-  uint8_t* data = (uint8_t*)::MapViewOfFile(fileMapping, FILE_MAP_WRITE | FILE_MAP_READ,
-                                            0, 0, aSize.width * aSize.height
-                                                  * BytesPerPixel(aFormat));
-
-  memset(data, 0x80, aSize.width * aSize.height * BytesPerPixel(aFormat));
-
-  ::UnmapViewOfFile(fileMapping);
-
   BITMAPV4HEADER header;
   memset(&header, 0, sizeof(BITMAPV4HEADER));
   header.bV4Size          = sizeof(BITMAPV4HEADER);
@@ -249,7 +292,11 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
   header.bV4GreenMask     = 0x0000FF00;
   header.bV4BlueMask      = 0x000000FF;
 
-  HDC dc = ::CreateCompatibleDC(::GetDC(NULL));
+  HDC nulldc = ::GetDC(NULL);
+
+  HDC dc = ::CreateCompatibleDC(nulldc);
+
+  ::ReleaseDC(nullptr, nulldc);
 
   if (!dc) {
     ::CloseHandle(fileMapping);
@@ -264,7 +311,7 @@ ShmemDIBTextureData::Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
   if (!bitmap) {
     gfxCriticalError() << "Failed to create DIB section for a bitmap of size "
-                       << aSize;
+                       << aSize << " and mapSize " << mapSize;
     ::CloseHandle(fileMapping);
     ::DeleteDC(dc);
     return nullptr;
@@ -392,6 +439,14 @@ TextureHostFileMapping::~TextureHostFileMapping()
   ::CloseHandle(mFileMapping);
 }
 
+UserDataKey kFileMappingKey;
+
+static void UnmapFileData(void* aData)
+{
+  MOZ_ASSERT(aData);
+  ::UnmapViewOfFile(aData);
+}
+
 void
 TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
 {
@@ -410,14 +465,14 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   if (data) {
     RefPtr<DataSourceSurface> surf = Factory::CreateWrappingDataSourceSurface(data, mSize.width * BytesPerPixel(mFormat), mSize, mFormat);
 
+    surf->AddUserData(&kFileMappingKey, data, UnmapFileData);
+
     if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
       mTextureSource = nullptr;
     }
   } else {
     mTextureSource = nullptr;
   }
-
-  ::UnmapViewOfFile(data);
 }
 
 }

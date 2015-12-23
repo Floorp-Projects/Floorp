@@ -10,17 +10,23 @@ var Float64x2 = SIMD.Float64x2;
 var Int8x16 = SIMD.Int8x16;
 var Int16x8 = SIMD.Int16x8;
 var Int32x4 = SIMD.Int32x4;
+var Bool8x16 = SIMD.Bool8x16;
+var Bool16x8 = SIMD.Bool16x8;
+var Bool32x4 = SIMD.Bool32x4;
+var Bool64x2 = SIMD.Bool64x2;
 
 function getMask(i, maskLength) {
     var args = [];
     for (var j = 0; j < maskLength; j++)
-        args.push((!!((i >> j) & 1)) ? -1 : 0);
-    if (maskLength == 4)
-        return Int32x4(...args);
+        args.push((i >> j) & 1);
+    if (maskLength == 2)
+        return Bool64x2(...args);
+    else if (maskLength == 4)
+        return Bool32x4(...args);
     else if (maskLength == 8)
-        return Int16x8(...args);
+        return Bool16x8(...args);
     else if (maskLength == 16)
-        return Int8x16(...args);
+        return Bool8x16(...args);
     else
         throw new Error("Invalid mask length.");
 }
@@ -30,7 +36,7 @@ function select(mask, ifTrue, ifFalse) {
     var tv = simdToArray(ifTrue);
     var fv = simdToArray(ifFalse);
     return m.map(function(v, i) {
-        return (v < 0 ? tv : fv)[i];
+        return (v ? tv : fv)[i];
     });
 }
 
@@ -44,68 +50,10 @@ function select(mask, ifTrue, ifFalse) {
 function testSelect(type, inputs) {
     var x, y;
     var maskLength = simdLengthType(type);
-    maskLength = maskLength != 2 ? maskLength : 4;
     for (var i = 0; i < Math.pow(maskLength, 2); i++) {
         var mask = getMask(i, maskLength);
         for ([x, y] of inputs)
             assertEqVec(type.select(mask, x, y), select(mask, x, y));
-    }
-}
-
-function selectBits(type, mask, ifTrue, ifFalse) {
-    var tr = type.and(mask, ifTrue);
-    var fr = type.and(type.not(mask), ifFalse);
-    var orApplied = type.or(tr, fr);
-    return simdToArray(orApplied);
-}
-
-/**
- * This tests type.selectBits on all boolean masks, as in select. For these,
- *          selectBits(mask, x, y) === select(mask, x, y)
- */
-function testSelectBitsSimple(type, inputs) {
-    var x, y;
-    var maskLength = simdLengthType(type);
-    for (var i = 0; i < Math.pow(maskLength, 2); i++) {
-        var mask = getMask(i, maskLength);
-        for ([x, y] of inputs)
-            assertEqVec(type.selectBits(mask, x, y), selectBits(type, mask, x, y));
-            assertEqVec(type.selectBits(mask, x, y), simdToArray(type.select(mask, x, y)));
-    }
-}
-
-/**
- * This tests type.selectBits on a few hand-defined masks. For these,
- *          selectBits(mask, x, y) !== select(mask, x, y)
- */
-function testSelectBitsComplex(type, inputs) {
-    var masks8 = [
-        Int8x16(0x42, 42, INT8_MAX, INT8_MIN, INT8_MAX + 1, INT8_MIN - 1, 13, 37, -42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
-    ]
-    var masks16 = [
-        Int16x8(0x42, 42, INT16_MAX, INT16_MIN, INT16_MAX + 1, INT16_MIN - 1, 13, 37),
-        Int16x8(-42, 125, -125, -1, 1, 0xA, 0xB, 0xC)
-    ]
-    var masks32 = [
-        Int32x4(1337, 0x1337, 0x42, 42),
-        Int32x4(0x00FF1CE, 0xBAADF00D, 0xDEADBEEF, 0xCAFED00D),
-        Int32x4(0xD15EA5E, 0xDEADC0DE, 0xFACEB00C, 0x4B1D4B1D)
-    ];
-
-    var masks;
-    if (type == SIMD.Int8x16)
-        masks = masks8;
-    else if (type == SIMD.Int16x8)
-        masks = masks16;
-    else if (type == SIMD.Int32x4)
-        masks = masks32;
-    else
-        throw new Error("Unknown mask type.");
-
-    var x, y;
-    for (var mask of masks) {
-        for ([x, y] of inputs)
-            assertEqVec(type.selectBits(mask, x, y), selectBits(type, mask, x, y));
     }
 }
 
@@ -117,8 +65,6 @@ function test() {
     ];
 
     testSelect(Int8x16, inputs);
-    testSelectBitsSimple(Int8x16, inputs);
-    testSelectBitsComplex(Int8x16, inputs);
 
     inputs = [
         [Int16x8(0,4,9,16,25,36,49,64), Int16x8(1,2,3,4,5,6,7,8)],
@@ -127,8 +73,6 @@ function test() {
     ];
 
     testSelect(Int16x8, inputs);
-    testSelectBitsSimple(Int16x8, inputs);
-    testSelectBitsComplex(Int16x8, inputs);
 
     inputs = [
         [Int32x4(0,4,9,16), Int32x4(1,2,3,4)],
@@ -136,8 +80,6 @@ function test() {
     ];
 
     testSelect(Int32x4, inputs);
-    testSelectBitsSimple(Int32x4, inputs);
-    testSelectBitsComplex(Int32x4, inputs);
 
     inputs = [
         [Float32x4(0.125,4.25,9.75,16.125), Float32x4(1.5,2.75,3.25,4.5)],

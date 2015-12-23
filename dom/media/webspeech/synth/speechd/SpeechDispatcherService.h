@@ -30,7 +30,10 @@ public:
   NS_DECL_NSISPEECHSERVICE
 
   SpeechDispatcherService();
+
   void Init();
+
+  void Setup();
 
   void EventNotify(uint32_t aMsgId, uint32_t aState);
 
