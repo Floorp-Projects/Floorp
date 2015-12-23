@@ -21,6 +21,7 @@ task:
         --test-packages-url {{test_packages_url}}
         --xre-url https://queue.taskcluster.net/v1/task/wXAHAaxDQpqxoWF1iljJjg/runs/0/artifacts/public/cache/xulrunner-sdk-40.zip
         --busybox-url {{busybox_url}}
+        --symbols-url {{symbols_url}}
         --this-chunk {{chunk}}
         --total-chunk {{total_chunks}}
     artifacts:
