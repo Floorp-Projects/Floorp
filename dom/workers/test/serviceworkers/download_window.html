@@ -1,0 +1,28 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+</head>
+<body>
+<script type="text/javascript">
+
+addEventListener('load', function(event) {
+  var registration;
+  navigator.serviceWorker.register('download_worker.js').then(function(swr) {
+    registration = swr;
+    return navigator.serviceWorker.ready;
+  }).then(function() {
+    var frame = document.createElement('iframe');
+    document.body.appendChild(frame);
+    frame.src = 'fake_download';
+
+    // The service worker is unregistered in the fetch event.  The window and
+    // frame are cleaned up from the browser chrome script.
+  });
+});
+</script>
+</body>
+</html>
