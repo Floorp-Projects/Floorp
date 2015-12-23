@@ -32,6 +32,7 @@
 #include "js/Conversions.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/TypedArrayCommon.h"
@@ -864,6 +865,37 @@ AddLengthProperty(ExclusiveContext* cx, HandleArrayObject obj)
                                      SHAPE_INVALID_SLOT,
                                      JSPROP_PERMANENT | JSPROP_SHARED | JSPROP_SHADOWABLE,
                                      0, /* allowDictionary = */ false);
+}
+
+static bool
+IsArrayConstructor(const Value& v)
+{
+    // This must only return true if v is *the* Array constructor for the
+    // current compartment; we rely on the fact that any other Array
+    // constructor would be represented as a wrapper.
+    return v.isObject() &&
+           v.toObject().is<JSFunction>() &&
+           v.toObject().as<JSFunction>().isNative() &&
+           v.toObject().as<JSFunction>().native() == ArrayConstructor;
+}
+
+/* static */ bool
+IsArraySpecies(JSContext* cx, HandleObject origArray)
+{
+    RootedValue ctor(cx);
+    if (!GetPropertyPure(cx, origArray, NameToId(cx->names().constructor), ctor.address()))
+        return false;
+
+    if (!IsArrayConstructor(ctor))
+        return false;
+
+    RootedObject ctorObj(cx, &ctor.toObject());
+    RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    JSFunction* getter;
+    if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
+        return false;
+
+    return IsSelfHostedFunctionWithName(getter, cx->names().ArraySpecies);
 }
 
 #if JS_HAS_TOSOURCE
@@ -2887,18 +2919,6 @@ array_isArray(JSContext* cx, unsigned argc, Value* vp)
     }
     args.rval().setBoolean(isArray);
     return true;
-}
-
-static bool
-IsArrayConstructor(const Value& v)
-{
-    // This must only return true if v is *the* Array constructor for the
-    // current compartment; we rely on the fact that any other Array
-    // constructor would be represented as a wrapper.
-    return v.isObject() &&
-           v.toObject().is<JSFunction>() &&
-           v.toObject().as<JSFunction>().isNative() &&
-           v.toObject().as<JSFunction>().native() == ArrayConstructor;
 }
 
 static bool
