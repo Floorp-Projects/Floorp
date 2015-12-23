@@ -35,11 +35,12 @@ public:
      * a GL layer manager.
      *
      * @param aWidget Widget whose surface to create a context for
+     * @param aForceAccelerated true if only accelerated contexts are allowed
      *
      * @return Context to use for the window
      */
     static already_AddRefed<GLContext>
-    CreateForWindow(nsIWidget* widget);
+    CreateForWindow(nsIWidget* widget, bool aForceAccelerated);
 
     /**
      * Create a context for offscreen rendering.  The target of this
