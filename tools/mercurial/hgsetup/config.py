@@ -253,7 +253,8 @@ class MercurialConfig(object):
             # just the username part of the author, for brevity
             '{label("grep.user", author|user)}'
             # tags and bookmarks
-            '{label("log.tag", if(tags," {tags}"))} '
+            '{label("log.tag", if(tags," {tags}"))}'
+            '{label("log.tag", if(fxheads," {fxheads}"))} '
             '{label("log.bookmark", if(bookmarks," {bookmarks}"))}'
             '\\n'
             # first line of commit message
