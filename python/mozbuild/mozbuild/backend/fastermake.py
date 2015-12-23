@@ -45,9 +45,9 @@ class FasterMakeBackend(CommonBackend):
     def _add_preprocess(self, obj, path, dest, target=None, **kwargs):
         if target is None:
             target = mozpath.basename(path)
-            # This matches what PP_TARGETS do in config/rules.
-            if target.endswith('.in'):
-                target = target[:-3]
+        # This matches what PP_TARGETS do in config/rules.
+        if target.endswith('.in'):
+            target = target[:-3]
         if target.endswith('.css'):
             kwargs['marker'] = '%'
         depfile = mozpath.join(
@@ -76,11 +76,12 @@ class FasterMakeBackend(CommonBackend):
                 for f in files:
                     if isinstance(obj, FinalTargetPreprocessedFiles):
                         self._add_preprocess(obj, f.full_path, path,
+                                             target=f.target_basename,
                                              defines=defines)
                     else:
                         self._install_manifests[obj.install_target].add_symlink(
                             f.full_path,
-                            mozpath.join(path, mozpath.basename(f))
+                            mozpath.join(path, f.target_basename)
                         )
 
         elif isinstance(obj, ChromeManifestEntry) and \
