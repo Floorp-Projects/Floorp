@@ -36,6 +36,10 @@ ToNumberSlow(JSContext* cx, JS::Value v, double* dp);
 extern JS_PUBLIC_API(bool)
 ToInt8Slow(JSContext *cx, JS::HandleValue v, int8_t *out);
 
+/* DO NOT CALL THIS. Use JS::ToUint8. */
+extern JS_PUBLIC_API(bool)
+ToUint8Slow(JSContext *cx, JS::HandleValue v, uint8_t *out);
+
 /* DO NOT CALL THIS. Use JS::ToInt16. */
 extern JS_PUBLIC_API(bool)
 ToInt16Slow(JSContext *cx, JS::HandleValue v, int16_t *out);
@@ -213,6 +217,19 @@ ToInt8(JSContext *cx, JS::HandleValue v, int8_t *out)
         return true;
     }
     return js::ToInt8Slow(cx, v, out);
+}
+
+/* ES6 ECMA-262, 7.1.10 */
+MOZ_ALWAYS_INLINE bool
+ToUint8(JSContext *cx, JS::HandleValue v, uint8_t *out)
+{
+    detail::AssertArgumentsAreSane(cx, v);
+
+    if (v.isInt32()) {
+        *out = uint8_t(v.toInt32());
+        return true;
+    }
+    return js::ToUint8Slow(cx, v, out);
 }
 
 /*
@@ -523,6 +540,13 @@ inline int8_t
 ToInt8(double d)
 {
     return detail::ToIntWidth<int8_t>(d);
+}
+
+/* ECMA-262 7.1.10 ToUInt8() specialized for doubles. */
+inline int8_t
+ToUint8(double d)
+{
+    return detail::ToUintWidth<uint8_t>(d);
 }
 
 /* WEBIDL 4.2.6 */
