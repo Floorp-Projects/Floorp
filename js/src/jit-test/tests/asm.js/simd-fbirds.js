@@ -58,6 +58,7 @@ var code = `
 
     var i4 = global.SIMD.Int32x4;
     var f4 = global.SIMD.Float32x4;
+    var b4 = global.SIMD.Bool32x4;
     var i4add = i4.add;
     var i4and = i4.and;
     var f4select = f4.select;
@@ -68,6 +69,7 @@ var code = `
     var f4splat = f4.splat;
     var f4load = f4.load;
     var f4store = f4.store;
+    var b4any = b4.anyTrue;
 
     const zerox4 = f4(0.0,0.0,0.0,0.0);
 
@@ -95,7 +97,7 @@ var code = `
         var accelx4 = f4(0.0,0.0,0.0,0.0);
         var a = 0;
         var posDeltax4 = f4(0.0,0.0,0.0,0.0);
-        var cmpx4 = i4(0,0,0,0);
+        var cmpx4 = b4(0,0,0,0);
         var newVelTruex4 = f4(0.0,0.0,0.0,0.0);
 
         steps = getAccelDataSteps | 0;
@@ -122,7 +124,7 @@ var code = `
                 newVelx4 = f4add(newVelx4, f4mul(accelx4, subTimeDeltax4));
                 cmpx4 = f4greaterThan(newPosx4, maxPosx4);
 
-                if (cmpx4.signMask) {
+                if (b4any(cmpx4)) {
                     // Work around unimplemented 'neg' operation, using 0 - x.
                     newVelTruex4 = f4sub(zerox4, newVelx4);
                     newVelx4 = f4select(cmpx4, newVelTruex4, newVelx4);

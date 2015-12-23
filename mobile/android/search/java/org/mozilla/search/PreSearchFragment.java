@@ -110,7 +110,7 @@ public class PreSearchFragment extends Fragment {
                     final Rect startBounds = new Rect();
                     view.getGlobalVisibleRect(startBounds);
 
-                    Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.HOMESCREEN, "history");
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SEARCH, TelemetryContract.Method.SUGGESTION, "history");
 
                     searchListener.onSearch(query, new SuggestionAnimation() {
                         @Override

@@ -15,7 +15,7 @@ RUN chmod u+x /home/worker/bin/buildbot_step
 
 # TODO: remove
 ADD            https://s3-us-west-2.amazonaws.com/test-caching/packages/linux64-stackwalk /usr/local/bin/linux64-minidump_stackwalk
-RUN chmod u+x /usr/local/bin/linux64-minidump_stackwalk
+RUN chmod +x /usr/local/bin/linux64-minidump_stackwalk
 
 # allow the worker user to access video devices
 RUN usermod -a -G video worker

@@ -4567,6 +4567,12 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
           GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mComposition.IsComposing())));
 
+  if (textChangeData.mCausedByComposition) {
+    // Ignore text change notifications caused by composition since it's
+    // already been handled internally.
+    return NS_OK;
+  }
+
   mDeferNotifyingTSF = false;
 
   if (IsReadLocked()) {
@@ -4652,6 +4658,12 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
           mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mIsRecordingActionsWithoutLock),
           GetBoolName(mComposition.IsComposing())));
+
+  if (selectionChangeData.mCausedByComposition) {
+    // Ignore selection change notifications caused by composition since it's
+    // already been handled internally.
+    return NS_OK;
+  }
 
   mDeferNotifyingTSF = false;
 

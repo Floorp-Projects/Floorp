@@ -798,10 +798,7 @@ UnboxedPlainObject::obj_getProperty(JSContext* cx, HandleObject obj, HandleValue
     if (UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando()) {
         if (expando->containsShapeOrElement(cx, id)) {
             RootedObject nexpando(cx, expando);
-            RootedValue nreceiver(cx, receiver);
-            if (receiver.isObject() && &receiver.toObject() == obj)
-                nreceiver.setObject(*expando);
-            return GetProperty(cx, nexpando, nreceiver, id, vp);
+            return GetProperty(cx, nexpando, receiver, id, vp);
         }
     }
 
@@ -839,10 +836,7 @@ UnboxedPlainObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id
             AddTypePropertyId(cx, obj, id, v);
 
             RootedObject nexpando(cx, expando);
-            RootedValue nreceiver(cx, (receiver.isObject() && obj == &receiver.toObject())
-                                      ? ObjectValue(*expando)
-                                      : receiver);
-            return SetProperty(cx, nexpando, id, v, nreceiver, result);
+            return SetProperty(cx, nexpando, id, v, receiver, result);
         }
     }
 

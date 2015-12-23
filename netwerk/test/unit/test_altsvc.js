@@ -1,5 +1,4 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var h2Port;
@@ -123,17 +122,10 @@ function addCertFromFile(certdb, filename, trustString) {
 }
 
 function makeChan(origin) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-  var chan = ios.newChannel2(origin + "altsvc-test",
-                             null,
-                             null,
-                             null,      // aLoadingNode
-                             Services.scriptSecurityManager.getSystemPrincipal(),
-                             null,      // aTriggeringPrincipal
-                             Ci.nsILoadInfo.SEC_NORMAL,
-                             Ci.nsIContentPolicy.TYPE_OTHER).QueryInterface(Ci.nsIHttpChannel);
-
-  return chan;
+  return NetUtil.newChannel({
+    uri: origin + "altsvc-test",
+    loadUsingSystemPrincipal: true
+  }).QueryInterface(Ci.nsIHttpChannel);
 }
 
 var origin;
@@ -212,7 +204,7 @@ function doTest()
   }
   chan.loadFlags = Ci.nsIRequest.LOAD_FRESH_CONNECTION |
 	           Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
-  chan.asyncOpen(listener, null);
+  chan.asyncOpen2(listener);
 }
 
 // xaltsvc is overloaded to do two things..

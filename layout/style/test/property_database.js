@@ -5955,7 +5955,15 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto [b c]) [d]",
       "[a] 2.5fr [z] Repeat(4, [a] 20px [] auto) [d]",
       "[a] 2.5fr [z] Repeat(4, 20px [b c] auto [b c]) [d]",
-      "[a] 2.5fr [z] Repeat(4, 20px auto) [d]"
+      "[a] 2.5fr [z] Repeat(4, 20px auto) [d]",
+      "repeat(auto-fill, 0)",
+      "[a] repeat( Auto-fill,1%)",
+      "[a] repeat(Auto-fit, 0)",
+      "repeat(Auto-fit,[] 1%)",
+      "repeat(auto-fit, [a] 1em) auto",
+      "[a] repeat( auto-fit,[a b] minmax(0,0) )",
+      "[a] 40px repeat(auto-fit,[a b] minmax(1px, 0) [])",
+      "[a] auto [b] repeat(auto-fit,[a b] minmax(1mm, 1%) [c]) [c] auto",
     ],
     invalid_values: [
       "",
@@ -5992,7 +6000,22 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "repeat(2.5, 20px)",
       "repeat(2, (foo))",
       "repeat(2, foo)",
-      "40px calc(0px + rubbish)"
+      "40px calc(0px + rubbish)",
+      "repeat(1, repeat(1, 20px))",
+      "repeat(auto-fill, auto)",
+      "repeat(auto-fit,auto)",
+      "repeat(auto-fit,[])",
+      "repeat(auto-fill, 0) repeat(auto-fit, 0) ",
+      "repeat(auto-fit, 0) repeat(auto-fill, 0) ",
+      "[a] repeat(auto-fit, 0) repeat(auto-fit, 0) ",
+      "[a] repeat(auto-fill, 0) [a] repeat(auto-fill, 0) ",
+      "repeat(auto-fill, 0 0)",
+      "repeat(auto-fill, 0 [] 0)",
+      "repeat(auto-fill, min-content)",
+      "repeat(auto-fit,max-content)",
+      "repeat(auto-fit,minmax(auto,auto))",
+      "repeat(auto-fit,[] minmax(1px, min-content))",
+      "repeat(auto-fit,[a] minmax(1%, auto) [])",
     ],
     unbalanced_values: [
       "(foo] 40px",
@@ -6006,7 +6029,11 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid",
       "subgrid [] [foo bar]",
       "subgrid repeat(1, [])",
-      "subgrid Repeat(4, [a] [b c] [] [d])"
+      "subgrid Repeat(4, [a] [b c] [] [d])",
+      "repeat(auto-fill, [])",
+      "[] repeat(Auto-fill, [a] [b c] [] [d])",
+      "[x] repeat( Auto-fill, [a b c]) []",
+      "[x] repeat(auto-fill, []) [y z]"
     );
     gCSSProperties["grid-template-columns"].invalid_values.push(
       "subgrid (foo) 40px",
@@ -6021,7 +6048,14 @@ if (IsCSSPropertyPrefEnabled("layout.css.grid.enabled")) {
       "subgrid repeat(1)",
       "subgrid repeat(1, )",
       "subgrid repeat(2, (40px))",
-      "subgrid repeat(2, foo)"
+      "subgrid repeat(2, foo)",
+      "subgrid repeat(1, repeat(1, []))",
+      "subgrid repeat(auto-fit,[])",
+      "subgrid [] repeat(auto-fit,[])",
+      "subgrid [a] repeat(auto-fit,[])",
+      "subgrid repeat(auto-fill, 1px)",
+      "subgrid repeat(auto-fill, 1px [])",
+      "subgrid repeat(auto-fill, []) repeat(auto-fill, [])"
     );
   }
   gCSSProperties["grid-template-rows"] = {

@@ -12,6 +12,9 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001-ref.html
 == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
 == grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
+== grid-placement-named-lines-001.html grid-placement-named-lines-001-ref.html
+== grid-placement-named-lines-002.html grid-placement-named-lines-002-ref.html
+== grid-placement-named-lines-003.html grid-placement-named-lines-003-ref.html
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 == grid-track-sizing-002.html grid-track-sizing-002-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
@@ -27,6 +30,8 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-abspos-items-011.html grid-abspos-items-011-ref.html
 == grid-abspos-items-012.html grid-abspos-items-012-ref.html
 == grid-abspos-items-013.html grid-abspos-items-013-ref.html
+== grid-abspos-items-014.html grid-abspos-items-014-ref.html
+== grid-abspos-items-015.html grid-abspos-items-015-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
@@ -96,3 +101,10 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-item-margin-right-auto-004.html grid-item-margin-right-auto-004-ref.html
 == grid-container-min-max-width-height-001.html grid-container-min-max-width-height-001-ref.html
 == grid-clamping-001.html grid-clamping-001-ref.html
+== grid-clamping-002.html grid-clamping-002-ref.html
+== grid-repeat-auto-fill-fit-001.html grid-repeat-auto-fill-fit-001-ref.html
+== grid-repeat-auto-fill-fit-002.html grid-repeat-auto-fill-fit-002-ref.html
+== grid-repeat-auto-fill-fit-003.html grid-repeat-auto-fill-fit-003-ref.html
+== grid-repeat-auto-fill-fit-004.html grid-repeat-auto-fill-fit-004-ref.html
+== grid-repeat-auto-fill-fit-005.html grid-repeat-auto-fill-fit-005-ref.html
+# == grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html (bug 1234644)

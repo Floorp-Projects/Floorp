@@ -483,7 +483,7 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // the layer we will construct will be clipped by the current clip.
       // In fact for nsDisplayZoom propagating it down would be incorrect since
       // nsDisplayZoom changes the meaning of appunits.
-      nestedClipState.Clear();
+      nestedClipState.ClearForStackingContextContents();
     }
 
     if (subdocRootFrame) {

@@ -125,7 +125,7 @@ function display(info, pushService) {
 
   let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));
   if (pushService) {
-    pushService.getRegistration(info.scope, info.principal, (status, pushRecord) => {
+    pushService.getSubscription(info.scope, info.principal, (status, pushRecord) => {
       if (Components.isSuccessCode(status)) {
         pushItem.data = JSON.stringify(pushRecord);
       } else {

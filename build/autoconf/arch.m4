@@ -43,6 +43,7 @@ fi
 
 if test "$MOZ_ARCH" = "armv6" -a "$OS_TARGET" = "Android"; then
    MOZ_FPU=vfp
+   MOZ_FLOAT_ABI=softfp
 fi
 
 MOZ_ARG_WITH_STRING(thumb,

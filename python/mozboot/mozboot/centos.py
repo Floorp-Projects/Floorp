@@ -36,8 +36,6 @@ class CentOSBootstrapper(BaseBootstrapper):
             'dbus-glib-devel',
             'GConf2-devel',
             'glibc-static',
-            'gstreamer-devel',
-            'gstreamer-plugins-base-devel',
             'gtk2-devel',
             'gtk3-devel',
             'libstdc++-static',

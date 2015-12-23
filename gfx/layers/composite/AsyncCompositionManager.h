@@ -177,12 +177,17 @@ private:
    * This function will also adjust layers so that the given content document
    * fixed position margins will be respected during asynchronous panning and
    * zooming.
+   * aTransformAffectsLayerClip indicates whether the transform on
+   * aTransformedSubtreeRoot affects aLayer's clip rects, so we know
+   * whether we need to perform a corresponding unadjustment to keep
+   * the clip rect fixed.
    */
   void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
                                  FrameMetrics::ViewID aTransformScrollId,
                                  const gfx::Matrix4x4& aPreviousTransformForRoot,
                                  const gfx::Matrix4x4& aCurrentTransformForRoot,
-                                 const ScreenMargin& aFixedLayerMargins);
+                                 const ScreenMargin& aFixedLayerMargins,
+                                 bool aTransformAffectsLayerClip);
 
   /**
    * DRAWING PHASE ONLY

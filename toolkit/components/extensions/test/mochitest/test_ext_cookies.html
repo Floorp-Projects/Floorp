@@ -94,11 +94,11 @@ function backgroundScript() {
 let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
-    permissions: ["cookies"]
+    permissions: ["cookies", "*://example.org/"]
   },
 };
 
-add_task(function* test_contentscript() {
+add_task(function* test_cookies() {
   let extension = ExtensionTestUtils.loadExtension(extensionData);
   yield extension.startup();
   info("extension loaded");

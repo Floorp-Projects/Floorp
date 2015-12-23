@@ -317,7 +317,7 @@ const CustomizableWidgets = [
       let formatArgs = ["android", "ios"].map(os => {
         let link = doc.createElement("label");
         link.textContent = bundle.getString(`appMenuRemoteTabs.mobilePromo.${os}`)
-        link.href = Services.prefs.getCharPref(`identity.mobilepromo.${os}`) + "synced-tabs";
+        link.setAttribute("href", Services.prefs.getCharPref(`identity.mobilepromo.${os}`) + "synced-tabs");
         link.className = "text-link remotetabs-promo-link";
         return link.outerHTML;
       });

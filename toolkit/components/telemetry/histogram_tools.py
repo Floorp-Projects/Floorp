@@ -110,7 +110,6 @@ symbol that should guard C/C++ definitions associated with the histogram."""
         self._kind = definition['kind']
         self._cpp_guard = definition.get('cpp_guard')
         self._keyed = definition.get('keyed', False)
-        self._extended_statistics_ok = definition.get('extended_statistics_ok', False)
         self._expiration = definition.get('expires_in_version')
         self.compute_bucket_parameters(definition)
         table = { 'boolean': 'BOOLEAN',
@@ -178,11 +177,6 @@ associated with the histogram.  Returns None if no guarding is necessary."""
         """Returns the dataset this histogram belongs into."""
         return self._dataset
 
-    def extended_statistics_ok(self):
-        """Return True if gathering extended statistics for this histogram
-is enabled."""
-        return self._extended_statistics_ok
-
     def ranges(self):
         """Return an array of lower bounds for each bucket in the histogram."""
         table = { 'boolean': linear_buckets,
@@ -216,7 +210,7 @@ is enabled."""
             'count': always_allowed_keys,
             'enumerated': always_allowed_keys + ['n_values'],
             'linear': general_keys,
-            'exponential': general_keys + ['extended_statistics_ok']
+            'exponential': general_keys
             }
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))

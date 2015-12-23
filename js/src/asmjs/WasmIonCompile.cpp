@@ -129,6 +129,10 @@ class FunctionCompiler
               case ValType::F32x4:
                 ins = MSimdConstant::New(alloc(), SimdConstant::CreateX4(v.f32x4()), MIRType_Float32x4);
                 break;
+              case ValType::B32x4:
+                // Bool32x4 uses the same data layout as Int32x4.
+                ins = MSimdConstant::New(alloc(), SimdConstant::CreateX4(v.i32x4()), MIRType_Bool32x4);
+                break;
             }
 
             curBlock_->add(ins);
@@ -309,17 +313,35 @@ class FunctionCompiler
         return ins;
     }
 
-    MDefinition* selectSimd(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type,
-                            bool isElementWise)
+    MDefinition* selectSimd(MDefinition* mask, MDefinition* lhs, MDefinition* rhs, MIRType type)
     {
         if (inDeadCode())
             return nullptr;
 
         MOZ_ASSERT(IsSimdType(mask->type()));
-        MOZ_ASSERT(mask->type() == MIRType_Int32x4);
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        MSimdSelect* ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type, isElementWise);
+        MSimdSelect* ins = MSimdSelect::NewAsmJS(alloc(), mask, lhs, rhs, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition* simdAllTrue(MDefinition* boolVector)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MSimdAllTrue* ins = MSimdAllTrue::NewAsmJS(alloc(), boolVector);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    MDefinition* simdAnyTrue(MDefinition* boolVector)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        MSimdAnyTrue* ins = MSimdAnyTrue::NewAsmJS(alloc(), boolVector);
         curBlock_->add(ins);
         return ins;
     }
@@ -574,17 +596,6 @@ class FunctionCompiler
         MOZ_ASSERT(IsSimdType(base->type()));
         MOZ_ASSERT(!IsSimdType(type));
         MSimdExtractElement* ins = MSimdExtractElement::NewAsmJS(alloc(), base, type, lane);
-        curBlock_->add(ins);
-        return ins;
-    }
-
-    MDefinition* extractSignMask(MDefinition* base)
-    {
-        if (inDeadCode())
-            return nullptr;
-
-        MOZ_ASSERT(IsSimdType(base->type()));
-        MSimdSignMask* ins = MSimdSignMask::NewAsmJS(alloc(), base);
         curBlock_->add(ins);
         return ins;
     }
@@ -1302,6 +1313,12 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition**def)
         *def = f.constant(lit, MIRType_Float32x4);
         return true;
       }
+      case ValType::B32x4: {
+        // Boolean vectors are stored as an Int vector with -1 / 0 lanes.
+        SimdConstant lit(f.readI32X4());
+        *def = f.constant(lit, MIRType_Bool32x4);
+        return true;
+      }
     }
     MOZ_CRASH("unexpected literal type");
 }
@@ -1329,7 +1346,9 @@ static bool EmitF32Expr(FunctionCompiler& f, MDefinition** def);
 static bool EmitF64Expr(FunctionCompiler& f, MDefinition** def);
 static bool EmitI32X4Expr(FunctionCompiler& f, MDefinition** def);
 static bool EmitF32X4Expr(FunctionCompiler& f, MDefinition** def);
+static bool EmitB32X4Expr(FunctionCompiler& f, MDefinition** def);
 static bool EmitExpr(FunctionCompiler& f, ValType type, MDefinition** def);
+static bool EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition** def);
 
 static bool
 EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
@@ -1339,16 +1358,6 @@ EmitLoadArray(FunctionCompiler& f, Scalar::Type scalarType, MDefinition** def)
     if (!EmitI32Expr(f, &ptr))
         return false;
     *def = f.loadHeap(scalarType, ptr, needsBoundsCheck);
-    return true;
-}
-
-static bool
-EmitSignMask(FunctionCompiler& f, ValType type, MDefinition** def)
-{
-    MDefinition* in;
-    if (!EmitExpr(f, type, &in))
-        return false;
-    *def = f.extractSignMask(in);
     return true;
 }
 
@@ -1548,6 +1557,7 @@ EmitCallArgs(FunctionCompiler& f, const LifoSig& sig, FunctionCompiler::Call* ca
           case ValType::F64:    if (!EmitF64Expr(f, &arg))   return false; break;
           case ValType::I32x4:  if (!EmitI32X4Expr(f, &arg)) return false; break;
           case ValType::F32x4:  if (!EmitF32X4Expr(f, &arg)) return false; break;
+          case ValType::B32x4:  if (!EmitB32X4Expr(f, &arg)) return false; break;
         }
         if (!f.passArg(arg, sig.arg(i), call))
             return false;
@@ -1756,6 +1766,7 @@ SimdToLaneType(ValType type)
     switch (type) {
       case ValType::I32x4:  return ValType::I32;
       case ValType::F32x4:  return ValType::F32;
+      case ValType::B32x4:  return ValType::I32; // Boolean lanes are Int32 in asm.
       case ValType::I32:
       case ValType::I64:
       case ValType::F32:
@@ -1811,8 +1822,12 @@ EmitSimdReplaceLane(FunctionCompiler& f, ValType simdType, MDefinition** def)
     }
 
     MDefinition* scalar;
-    if (!EmitExpr(f, SimdToLaneType(simdType), &scalar))
-        return false;
+    if (IsSimdBoolType(simdType)) {
+        if (!EmitSimdBooleanLaneExpr(f, &scalar))
+            return false;
+    } else if (!EmitExpr(f, SimdToLaneType(simdType), &scalar)) {
+            return false;
+    }
     *def = f.insertElementSimd(vector, scalar, lane, ToMIRType(simdType));
     return true;
 }
@@ -1897,15 +1912,39 @@ EmitSimdStore(FunctionCompiler& f, ValType type, MDefinition** def)
     return true;
 }
 
-typedef bool IsElementWise;
+static bool
+EmitSimdSelect(FunctionCompiler& f, ValType type, MDefinition** def)
+{
+    MDefinition* mask;
+    MDefinition* defs[2];
+
+    // The mask is a boolean vector for elementwise select.
+    if (!EmitB32X4Expr(f, &mask))
+        return false;
+
+    if (!EmitExpr(f, type, &defs[0]) || !EmitExpr(f, type, &defs[1]))
+        return false;
+    *def = f.selectSimd(mask, defs[0], defs[1], ToMIRType(type));
+    return true;
+}
 
 static bool
-EmitSimdSelect(FunctionCompiler& f, ValType type, bool isElementWise, MDefinition** def)
+EmitSimdAllTrue(FunctionCompiler& f, ValType type, MDefinition** def)
 {
-    MDefinition* defs[3];
-    if (!EmitI32X4Expr(f, &defs[0]) || !EmitExpr(f, type, &defs[1]) || !EmitExpr(f, type, &defs[2]))
+    MDefinition* in;
+    if (!EmitExpr(f, type, &in))
         return false;
-    *def = f.selectSimd(defs[0], defs[1], defs[2], ToMIRType(type), isElementWise);
+    *def = f.simdAllTrue(in);
+    return true;
+}
+
+static bool
+EmitSimdAnyTrue(FunctionCompiler& f, ValType type, MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitExpr(f, type, &in))
+        return false;
+    *def = f.simdAnyTrue(in);
     return true;
 }
 
@@ -1916,6 +1955,16 @@ EmitSimdSplat(FunctionCompiler& f, ValType type, MDefinition** def)
     if (!EmitExpr(f, SimdToLaneType(type), &in))
         return false;
     *def = f.splatSimd(in, ToMIRType(type));
+    return true;
+}
+
+static bool
+EmitSimdBooleanSplat(FunctionCompiler& f, MDefinition** def)
+{
+    MDefinition* in;
+    if (!EmitSimdBooleanLaneExpr(f, &in))
+        return false;
+    *def = f.splatSimd(in, MIRType_Bool32x4);
     return true;
 }
 
@@ -1939,6 +1988,15 @@ EmitSimdCtor(FunctionCompiler& f, ValType type, MDefinition** def)
                 return false;
         }
         *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType_Float32x4);
+        return true;
+      }
+      case ValType::B32x4: {
+        MDefinition* args[4];
+        for (unsigned i = 0; i < 4; i++) {
+            if (!EmitSimdBooleanLaneExpr(f, &args[i]))
+                return false;
+        }
+        *def = f.constructSimd<MSimdValueX4>(args[0], args[1], args[2], args[3], MIRType_Bool32x4);
         return true;
       }
       case ValType::I32:
@@ -2201,8 +2259,22 @@ EmitExpr(FunctionCompiler& f, ValType type, MDefinition** def)
       case ValType::F64:    return EmitF64Expr(f, def);
       case ValType::I32x4:  return EmitI32X4Expr(f, def);
       case ValType::F32x4:  return EmitF32X4Expr(f, def);
+      case ValType::B32x4:  return EmitB32X4Expr(f, def);
     }
     MOZ_CRASH("unexpected asm type");
+}
+
+// Emit an I32 expression and then convert it to a boolean SIMD lane value, i.e. -1 or 0.
+static bool
+EmitSimdBooleanLaneExpr(FunctionCompiler& f, MDefinition** def)
+{
+    MDefinition* i32;
+    if (!EmitI32Expr(f, &i32))
+        return false;
+    // Now compute !i32 - 1 to force the value range into {0, -1}.
+    MDefinition* noti32 = f.unary<MNot>(i32);
+    *def = f.binary<MSub>(noti32, f.constant(Int32Value(1), MIRType_Int32), MIRType_Int32);
+    return true;
 }
 
 static bool
@@ -2504,6 +2576,7 @@ EmitStatement(FunctionCompiler& f, Stmt stmt, LabelVector* maybeLabels /*= nullp
       case Stmt::F64Expr:            return EmitF64Expr(f, &_);
       case Stmt::I32X4Expr:          return EmitI32X4Expr(f, &_);
       case Stmt::F32X4Expr:          return EmitF32X4Expr(f, &_);
+      case Stmt::B32X4Expr:          return EmitB32X4Expr(f, &_);
       case Stmt::CallInternal:       return EmitInternalCall(f, ExprType::Void, &_);
       case Stmt::CallIndirect:       return EmitFuncPtrCall(f, ExprType::Void, &_);
       case Stmt::CallImport:         return EmitFFICall(f, ExprType::Void, &_);
@@ -2645,12 +2718,14 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
         return EmitAtomicsStore(f, def);
       case I32::AtomicsBinOp:
         return EmitAtomicsBinOp(f, def);
-      case I32::I32X4SignMask:
-        return EmitSignMask(f, ValType::I32x4, def);
-      case I32::F32X4SignMask:
-        return EmitSignMask(f, ValType::F32x4, def);
       case I32::I32X4ExtractLane:
         return EmitExtractLane(f, ValType::I32x4, def);
+      case I32::B32X4ExtractLane:
+        return EmitExtractLane(f, ValType::B32x4, def);
+      case I32::B32X4AllTrue:
+        return EmitSimdAllTrue(f, ValType::B32x4, def);
+      case I32::B32X4AnyTrue:
+        return EmitSimdAnyTrue(f, ValType::B32x4, def);
       case I32::Bad:
         break;
     }
@@ -2838,10 +2913,6 @@ EmitI32X4Expr(FunctionCompiler& f, MDefinition** def)
         return EmitSimdBinaryArith(f, ValType::I32x4, def);
       case I32X4::BinaryBitwise:
         return EmitSimdBinaryBitwise(f, ValType::I32x4, def);
-      case I32X4::BinaryCompI32X4:
-        return EmitSimdBinaryComp(f, ValType::I32x4, def);
-      case I32X4::BinaryCompF32X4:
-        return EmitSimdBinaryComp(f, ValType::F32x4, def);
       case I32X4::BinaryShift:
         return EmitSimdBinaryShift(f, def);
       case I32X4::ReplaceLane:
@@ -2855,9 +2926,7 @@ EmitI32X4Expr(FunctionCompiler& f, MDefinition** def)
       case I32X4::Shuffle:
         return EmitSimdShuffle(f, ValType::I32x4, def);
       case I32X4::Select:
-        return EmitSimdSelect(f, ValType::I32x4, IsElementWise(true), def);
-      case I32X4::BitSelect:
-        return EmitSimdSelect(f, ValType::I32x4, IsElementWise(false), def);
+        return EmitSimdSelect(f, ValType::I32x4, def);
       case I32X4::Splat:
         return EmitSimdSplat(f, ValType::I32x4, def);
       case I32X4::Load:
@@ -2903,8 +2972,6 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
         return EmitSimdUnary(f, ValType::F32x4, def);
       case F32X4::Binary:
         return EmitSimdBinaryArith(f, ValType::F32x4, def);
-      case F32X4::BinaryBitwise:
-        return EmitSimdBinaryBitwise(f, ValType::F32x4, def);
       case F32X4::ReplaceLane:
         return EmitSimdReplaceLane(f, ValType::F32x4, def);
       case F32X4::FromI32X4:
@@ -2916,9 +2983,7 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
       case F32X4::Shuffle:
         return EmitSimdShuffle(f, ValType::F32x4, def);
       case F32X4::Select:
-        return EmitSimdSelect(f, ValType::F32x4, IsElementWise(true), def);
-      case F32X4::BitSelect:
-        return EmitSimdSelect(f, ValType::F32x4, IsElementWise(false), def);
+        return EmitSimdSelect(f, ValType::F32x4, def);
       case F32X4::Splat:
         return EmitSimdSplat(f, ValType::F32x4, def);
       case F32X4::Load:
@@ -2929,6 +2994,55 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
         break;
     }
     MOZ_CRASH("unexpected float32x4 expression");
+}
+
+static bool
+EmitB32X4Expr(FunctionCompiler& f, MDefinition** def)
+{
+    B32X4 op = B32X4(f.readU8());
+    switch (op) {
+      case B32X4::Id:
+        return EmitB32X4Expr(f, def);
+      case B32X4::GetLocal:
+        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Bool32x4), def);
+      case B32X4::SetLocal:
+        return EmitSetLoc(f, ValType::B32x4, def);
+      case B32X4::GetGlobal:
+        return EmitGetGlo(f, MIRType_Bool32x4, def);
+      case B32X4::SetGlobal:
+        return EmitSetGlo(f, ValType::B32x4, def);
+      case B32X4::Comma:
+        return EmitComma(f, ValType::B32x4, def);
+      case B32X4::Conditional:
+        return EmitConditional(f, ValType::B32x4, def);
+      case B32X4::CallInternal:
+        return EmitInternalCall(f, ExprType::B32x4, def);
+      case B32X4::CallIndirect:
+        return EmitFuncPtrCall(f, ExprType::B32x4, def);
+      case B32X4::CallImport:
+        return EmitFFICall(f, ExprType::B32x4, def);
+      case B32X4::Literal:
+        return EmitLiteral(f, ValType::B32x4, def);
+      case B32X4::Ctor:
+        return EmitSimdCtor(f, ValType::B32x4, def);
+      case B32X4::Unary:
+        return EmitSimdUnary(f, ValType::B32x4, def);
+      case B32X4::Binary:
+        return EmitSimdBinaryArith(f, ValType::B32x4, def);
+      case B32X4::BinaryBitwise:
+        return EmitSimdBinaryBitwise(f, ValType::B32x4, def);
+      case B32X4::BinaryCompI32X4:
+        return EmitSimdBinaryComp(f, ValType::I32x4, def);
+      case B32X4::BinaryCompF32X4:
+        return EmitSimdBinaryComp(f, ValType::F32x4, def);
+      case B32X4::ReplaceLane:
+        return EmitSimdReplaceLane(f, ValType::B32x4, def);
+      case B32X4::Splat:
+        return EmitSimdBooleanSplat(f, def);
+      case B32X4::Bad:
+        break;
+    }
+    MOZ_CRASH("unexpected bool32x4 expression");
 }
 
 bool

@@ -61,8 +61,8 @@ public:
   {}
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetType(int16_t *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) { return JumpListItem::Equals(item, _retval); }
+  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override { return JumpListItem::Equals(item, _retval); }
 
   static nsresult GetSeparator(RefPtr<IShellLinkW>& aShellLink);
 };
@@ -77,8 +77,8 @@ public:
   {}
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetType(int16_t *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
+  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTLINK
 
   static nsresult GetShellItem(nsCOMPtr<nsIJumpListItem>& item, RefPtr<IShellItem2>& aShellItem);
@@ -101,8 +101,8 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(JumpListShortcut, JumpListItem)
-  NS_IMETHOD GetType(int16_t *aType) { return JumpListItem::GetType(aType); }
-  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval);
+  NS_IMETHOD GetType(int16_t *aType) override { return JumpListItem::GetType(aType); }
+  NS_IMETHOD Equals(nsIJumpListItem *item, bool *_retval) override;
   NS_DECL_NSIJUMPLISTSHORTCUT
 
   static nsresult GetShellLink(nsCOMPtr<nsIJumpListItem>& item, 

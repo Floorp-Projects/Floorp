@@ -582,7 +582,7 @@ void
 GMPParent::GetCrashID(nsString& aResult)
 {
   CrashReporterParent* cr =
-    static_cast<CrashReporterParent*>(LoneManagedOrNull(ManagedPCrashReporterParent()));
+    static_cast<CrashReporterParent*>(LoneManagedOrNullAsserts(ManagedPCrashReporterParent()));
   if (NS_WARN_IF(!cr)) {
     return;
   }

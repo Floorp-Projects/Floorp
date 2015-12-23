@@ -1128,7 +1128,8 @@ public:
         JS::AssertGCThingMustBeTenured(expando);
         if (!mDOMExpandoSet) {
             mDOMExpandoSet = new DOMExpandoSet();
-            mDOMExpandoSet->init(8);
+            if (!mDOMExpandoSet->init(8))
+                return false;
         }
         return mDOMExpandoSet->put(JS::Heap<JSObject*>(expando));
     }
