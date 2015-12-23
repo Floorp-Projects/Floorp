@@ -925,6 +925,27 @@ IsArraySpecies(JSContext* cx, HandleObject origArray)
     return IsSelfHostedFunctionWithName(getter, cx->names().ArraySpecies);
 }
 
+/* static */ bool
+ArraySpeciesCreate(JSContext* cx, HandleObject origArray, uint32_t length, MutableHandleObject arr)
+{
+    RootedId createId(cx, NameToId(cx->names().ArraySpeciesCreate));
+    RootedFunction create(cx, JS::GetSelfHostedFunction(cx, "ArraySpeciesCreate", createId, 2));
+
+    FixedInvokeArgs<2> args(cx);
+
+    args.setCallee(ObjectValue(*create));
+    args.setThis(UndefinedValue());
+    args[0].setObject(*origArray);
+    args[1].set(NumberValue(length));
+
+    if (!Invoke(cx, args))
+        return false;
+
+    MOZ_ASSERT(args.rval().isObject());
+    arr.set(&args.rval().toObject());
+    return true;
+}
+
 #if JS_HAS_TOSOURCE
 
 static bool
