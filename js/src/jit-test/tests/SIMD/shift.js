@@ -44,6 +44,13 @@ function f() {
         assertEqX4(SIMD.Int32x4.shiftRightLogicalByScalar(v, 31), a.map(ursh(31)));
         assertEqX4(SIMD.Int32x4.shiftRightLogicalByScalar(v, 32), a.map(ursh(32)));
 
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, -1), a.map(rsh(31)));
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, 0),  a.map(rsh(0)));
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, 1),  a.map(rsh(1)));
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, 2),  a.map(rsh(2)));
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, 31), a.map(rsh(31)));
+        assertEqX4(SIMD.Int32x4.shiftRightByScalar(v, 32), a.map(rsh(31)));
+
         // Non constant shift counts
         var c = shifts[i % shifts.length];
         assertEqX4(SIMD.Int32x4.shiftLeftByScalar(v, c), a.map(lsh(c)));

@@ -77,6 +77,19 @@ enum AsmJSSimdType
     AsmJSSimdType_bool32x4
 };
 
+static inline bool
+IsSignedIntSimdType(AsmJSSimdType type)
+{
+    switch (type) {
+      case AsmJSSimdType_int32x4:
+        return true;
+      case AsmJSSimdType_float32x4:
+      case AsmJSSimdType_bool32x4:
+        return false;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown SIMD type");
+}
+
 // Set of known operations, for a given SIMD type (int32x4, float32x4,...)
 enum AsmJSSimdOperation
 {
