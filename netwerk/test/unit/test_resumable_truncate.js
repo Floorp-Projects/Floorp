@@ -1,19 +1,10 @@
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var httpserver = null;
 
 function make_channel(url, callback, ctx) {
-  var ios = Cc["@mozilla.org/network/io-service;1"].
-            getService(Ci.nsIIOService);
-  return ios.newChannel2(url,
-                         "",
-                         null,
-                         null,      // aLoadingNode
-                         Services.scriptSecurityManager.getSystemPrincipal(),
-                         null,      // aTriggeringPrincipal
-                         Ci.nsILoadInfo.SEC_NORMAL,
-                         Ci.nsIContentPolicy.TYPE_OTHER);
+  return NetUtil.newChannel({uri: url, loadUsingSystemPrincipal: true});
 }
 
 const responseBody = "response body";
@@ -76,13 +67,13 @@ function finish_test() {
 function start_cache_read() {
   var chan = make_channel("http://localhost:" +
                           httpserver.identity.primaryPort + "/cached/test.gz");
-  chan.asyncOpen(new ChannelListener(finish_test, null), null);
+  chan.asyncOpen2(new ChannelListener(finish_test, null));
 }
 
 function start_canceler() {
   var chan = make_channel("http://localhost:" +
                           httpserver.identity.primaryPort + "/cached/test.gz");
-  chan.asyncOpen(new Canceler(start_cache_read), null);
+  chan.asyncOpen2(new Canceler(start_cache_read));
 }
 
 function run_test() {
@@ -92,6 +83,6 @@ function run_test() {
 
   var chan = make_channel("http://localhost:" +
                           httpserver.identity.primaryPort + "/cached/test.gz");
-  chan.asyncOpen(new ChannelListener(start_canceler, null), null);
+  chan.asyncOpen2(new ChannelListener(start_canceler, null));
   do_test_pending();
 }
