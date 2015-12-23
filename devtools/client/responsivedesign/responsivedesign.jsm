@@ -274,6 +274,7 @@ ResponsiveUI.prototype = {
           }
           this.tabClient = tabClient;
           this.userAgentInput.hidden = false;
+          ResponsiveUIManager.emit("connectedToServer", { tab: this.tab });
         });
       });
     });
