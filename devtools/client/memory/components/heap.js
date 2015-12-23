@@ -34,11 +34,11 @@ function createParentMap (node, aggregator=Object.create(null)) {
  * Creates properties to be passed into the Tree component.
  *
  * @param {censusModel} census
- * @param {Object} toolbox
+ * @param {Function} onViewSourceInDebugger
  * @param {Object} diffing
  * @return {Object}
  */
-function createTreeProperties(census, toolbox, diffing) {
+function createTreeProperties(census, onViewSourceInDebugger, diffing) {
   const report = census.report;
   let map = createParentMap(report);
   const { totalBytes, totalCount } = report;
@@ -60,7 +60,7 @@ function createTreeProperties(census, toolbox, diffing) {
     getChildren: node => node.children || [],
     renderItem: (item, depth, focused, arrow, expanded) =>
       new TreeItem({
-        toolbox,
+        onViewSourceInDebugger,
         item,
         depth,
         focused,
@@ -91,12 +91,12 @@ const Heap = module.exports = createClass({
   propTypes: {
     onSnapshotClick: PropTypes.func.isRequired,
     snapshot: snapshotModel,
-    toolbox: PropTypes.object.isRequired,
+    onViewSourceInDebugger: PropTypes.func.isRequired,
     diffing: diffingModel,
   },
 
   render() {
-    let { snapshot, diffing, onSnapshotClick, toolbox } = this.props;
+    let { snapshot, diffing, onSnapshotClick, onViewSourceInDebugger } = this.props;
 
     let census;
     let state;
@@ -184,7 +184,7 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-total-count" }, L10N.getStr("heapview.field.totalcount")),
             dom.span({ className: "heap-tree-item-name" }, L10N.getStr("heapview.field.name"))
           ),
-          Tree(createTreeProperties(census, toolbox, diffing))
+          Tree(createTreeProperties(census, onViewSourceInDebugger, diffing))
         );
         break;
 
