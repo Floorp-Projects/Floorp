@@ -5,7 +5,7 @@
 // Note: sets Cc and Ci variables
 
 Cu.import("resource://testing-common/httpd.js");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "URL", function() {
   return "http://localhost:" + httpserver.identity.primaryPort;
@@ -64,28 +64,33 @@ function setup_test() {
   setOK = channel.getRequestHeader("MergeWithEmpty");
   do_check_eq(setOK, "foo");
 
-  var uri = NetUtil.newURI("http://foo1.invalid:80");
+  var uri = ios.newURI("http://foo1.invalid:80", null, null);
   channel.referrer = uri;
   do_check_true(channel.referrer.equals(uri));
   setOK = channel.getRequestHeader("Referer");
   do_check_eq(setOK, "http://foo1.invalid/");
 
-  uri = NetUtil.newURI("http://foo2.invalid:90/bar");
+  uri = ios.newURI("http://foo2.invalid:90/bar", null, null);
   channel.referrer = uri;
   setOK = channel.getRequestHeader("Referer");
   do_check_eq(setOK, "http://foo2.invalid:90/bar");
 
   // ChannelListener defined in head_channels.js
-  channel.asyncOpen2(new ChannelListener(checkRequestResponse, channel));
+  channel.asyncOpen(new ChannelListener(checkRequestResponse, channel), null);
 
   if (dbg) { print("============== setup_test: out"); }
 }
 
 function setupChannel(path) {
-  var chan = NetUtil.newChannel({
-    uri: URL + path,
-    loadUsingSystemPrincipal: true
-  });
+  ios = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+  var chan = ios.newChannel2(URL + path,
+                             "",
+                             null,
+                             null,      // aLoadingNode
+                             Services.scriptSecurityManager.getSystemPrincipal(),
+                             null,      // aTriggeringPrincipal
+                             Ci.nsILoadInfo.SEC_NORMAL,
+                             Ci.nsIContentPolicy.TYPE_OTHER);
   chan.QueryInterface(Ci.nsIHttpChannel);
   chan.requestMethod = "GET";
   return chan;
