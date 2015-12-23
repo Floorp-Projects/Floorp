@@ -487,7 +487,7 @@ IsRelazifiableFunction(JSContext* cx, unsigned argc, Value* vp)
         !args[0].toObject().is<JSFunction>())
     {
         JS_ReportError(cx, "The first argument should be a function.");
-        return true;
+        return false;
     }
 
     JSFunction* fun = &args[0].toObject().as<JSFunction>();
