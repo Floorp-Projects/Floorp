@@ -832,7 +832,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
                             uint8_t* inst, uint8_t* data, PoolEntry* pe = nullptr,
                             bool markAsBranch = false)
     {
-        // The alloction of pool entries is not supported in a no-pool region,
+        // The allocation of pool entries is not supported in a no-pool region,
         // check.
         MOZ_ASSERT_IF(numPoolEntries, !canNotPlacePool_);
 
