@@ -10,3 +10,4 @@ DIST_SUBDIR = 'browser'
 export('DIST_SUBDIR')
 
 include('../branding-common.mozbuild')
+FirefoxBranding()

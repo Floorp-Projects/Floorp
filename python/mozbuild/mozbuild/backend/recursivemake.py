@@ -527,9 +527,6 @@ class RecursiveMakeBackend(CommonBackend):
         elif isinstance(obj, TestHarnessFiles):
             self._process_test_harness_files(obj, backend_file)
 
-        elif isinstance(obj, BrandingFiles):
-            self._process_branding_files(obj, obj.files, backend_file)
-
         elif isinstance(obj, JARManifest):
             backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
 
@@ -929,21 +926,6 @@ class RecursiveMakeBackend(CommonBackend):
         for tier in set(self._no_skip.keys()) & affected_tiers:
             self._no_skip[tier].add(backend_file.relobjdir)
 
-    def _walk_hierarchy(self, obj, element, namespace=''):
-        """Walks the ``HierarchicalStringList`` ``element`` in the context of
-        the mozbuild object ``obj`` as though by ``element.walk()``, but yield
-        tuple containing the following:
-
-        - ``source`` - The path to the source file named by the current string
-        - ``dest``   - The relative path, including the namespace, of the
-                       destination file.
-        """
-        for path, strings in element.walk():
-            for s in strings:
-                source = mozpath.normpath(mozpath.join(obj.srcdir, s))
-                dest = mozpath.join(namespace, path, mozpath.basename(s))
-                yield source, dest
-
     def _process_defines(self, obj, backend_file, which='DEFINES'):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())
@@ -973,20 +955,6 @@ INSTALL_TARGETS += %(prefix)s
         'dest': '$(DEPTH)/_tests/%s' % path,
         'files': ' '.join(mozpath.relpath(f, backend_file.objdir)
                           for f in files) })
-
-    def _process_branding_files(self, obj, files, backend_file):
-        for source, dest in self._walk_hierarchy(obj, files):
-            if not os.path.exists(source):
-                raise Exception('File listed in BRANDING_FILES does not exist: %s' % source)
-
-            self._install_manifests['dist_branding'].add_symlink(source, dest)
-
-        # Also emit the necessary rules to create $(DIST)/branding during partial
-        # tree builds. The locale makefiles rely on this working.
-        backend_file.write('NONRECURSIVE_TARGETS += export\n')
-        backend_file.write('NONRECURSIVE_TARGETS_export += branding\n')
-        backend_file.write('NONRECURSIVE_TARGETS_export_branding_DIRECTORY = $(DEPTH)\n')
-        backend_file.write('NONRECURSIVE_TARGETS_export_branding_TARGETS += install-dist/branding\n')
 
     def _process_installation_target(self, obj, backend_file):
         # A few makefiles need to be able to override the following rules via
@@ -1290,6 +1258,7 @@ INSTALL_TARGETS += %(prefix)s
             'dist/xpi-stage',
             '_tests',
             'dist/include',
+            'dist/branding',
         ))
         if not path:
             raise Exception("Cannot install to " + target)
@@ -1297,6 +1266,14 @@ INSTALL_TARGETS += %(prefix)s
         manifest = path.replace('/', '_')
         install_manifest = self._install_manifests[manifest]
         reltarget = mozpath.relpath(target, path)
+
+        # Also emit the necessary rules to create $(DIST)/branding during
+        # partial tree builds. The locale makefiles rely on this working.
+        if path == 'dist/branding':
+            backend_file.write('NONRECURSIVE_TARGETS += export\n')
+            backend_file.write('NONRECURSIVE_TARGETS_export += branding\n')
+            backend_file.write('NONRECURSIVE_TARGETS_export_branding_DIRECTORY = $(DEPTH)\n')
+            backend_file.write('NONRECURSIVE_TARGETS_export_branding_TARGETS += install-dist/branding\n')
 
         for path, files in files.walk():
             target_var = (mozpath.join(target, path)
