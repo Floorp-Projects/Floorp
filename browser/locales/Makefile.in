@@ -94,20 +94,7 @@ $(STAGEDIST): $(DIST)/branding
 $(DIST)/branding:
 	$(NSINSTALL) -D $@
 
-PROFILE_FILES = \
-	localstore.rdf \
-	mimeTypes.rdf \
-	$(NULL)
-
-PROFILE_CHROME = userChrome-example.css userContent-example.css
-
 DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc))
-
-libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
-
-libs:: $(call MERGE_FILES,$(addprefix profile/chrome/,$(PROFILE_CHROME)))
-	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile/chrome
 
 libs-%:
 	$(NSINSTALL) -D $(DIST)/install

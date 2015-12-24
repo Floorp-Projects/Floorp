@@ -20,9 +20,6 @@
 @BINPATH@/@PREF_DIR@/mobile-l10n.js
 @BINPATH@/searchplugins/*
 @BINPATH@/defaults/profile/bookmarks.html
-@BINPATH@/defaults/profile/localstore.rdf
-@BINPATH@/defaults/profile/mimeTypes.rdf
-@BINPATH@/defaults/profile/chrome/*
 #ifdef MOZ_UPDATER
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
@@ -506,7 +503,6 @@
 @BINPATH@/ua-update.json
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
-@BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine.

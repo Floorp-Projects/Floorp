@@ -29,9 +29,6 @@
 @RESPATH@/@PREF_DIR@/b2g-l10n.js
 @RESPATH@/searchplugins/*
 @RESPATH@/defaults/profile/bookmarks.html
-@RESPATH@/defaults/profile/localstore.rdf
-@RESPATH@/defaults/profile/mimeTypes.rdf
-@RESPATH@/defaults/profile/chrome/*
 #ifdef MOZ_UPDATER
 @RESPATH@/update.locale
 @RESPATH@/updater.ini
@@ -768,7 +765,6 @@
 @RESPATH@/@PREF_DIR@/channel-prefs.js
 @RESPATH@/greprefs.js
 @RESPATH@/defaults/autoconfig/prefcalls.js
-@RESPATH@/defaults/profile/prefs.js
 
 ; Services (gre) prefs
 #ifdef MOZ_SERVICES_SYNC
