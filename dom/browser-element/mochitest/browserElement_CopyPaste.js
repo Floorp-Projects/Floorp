@@ -87,7 +87,7 @@ function runTest() {
 
 function doCommand(cmd) {
   Services.obs.notifyObservers({wrappedJSObject: SpecialPowers.unwrap(iframeInner)},
-                               'copypaste-docommand', cmd);
+                               'ask-children-to-execute-copypaste-command', cmd);
 }
 
 function dispatchTest(e) {
