@@ -56,7 +56,7 @@ function run_test() {
       do_test_finished();
       return;
     case "Darwin":
-      // We don't support driver versions on Darwin.
+      // We don't support driver versions on OS X.
       do_test_finished();
       return;
     case "Android":
@@ -66,7 +66,7 @@ function run_test() {
       break;
   }
 
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "3", "8");
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "15.0", "8");
   startupManager();
 
   do_test_pending();
@@ -78,6 +78,33 @@ function run_test() {
 
     // Make sure unrelated features aren't affected
     status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_9_LAYERS);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_LAYERS);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_OPENGL_LAYERS);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_DIRECT3D_11_ANGLE);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_HARDWARE_VIDEO_DECODING);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_DECODE);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBRTC_HW_ACCELERATION_ENCODE);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_MSAA);
+    do_check_eq(status, Ci.nsIGfxInfo.FEATURE_BLOCKED_DRIVER_VERSION);
+
+    status = gfxInfo.getFeatureStatus(Ci.nsIGfxInfo.FEATURE_WEBGL_ANGLE);
     do_check_eq(status, Ci.nsIGfxInfo.FEATURE_STATUS_OK);
 
     gTestserver.stop(do_test_finished);

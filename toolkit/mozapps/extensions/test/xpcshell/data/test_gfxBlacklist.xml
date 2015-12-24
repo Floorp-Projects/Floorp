@@ -150,5 +150,140 @@
       <feature> DIRECT2D </feature>
       <featureStatus> BLOCKED_DEVICE </featureStatus>
     </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1112 </driverVersion>
+      <driverVersionMax> 8.52.323.1000 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_EXCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> OPENGL_LAYERS </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.50.322.1000 </driverVersion>
+      <driverVersionMax> 8.52.322.1112 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_EXCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> DIRECT3D_11_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1000 </driverVersion>
+      <driverVersionMax> 9.52.322.1000 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_EXCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> HARDWARE_VIDEO_DECODING </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 7.82.322.1000 </driverVersion>
+      <driverVersionMax> 9.25.322.1001 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1112 </driverVersion>
+      <driverVersionMax> 9.52.322.1300 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_DECODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1000 </driverVersion>
+      <driverVersionMax> 8.52.322.1112 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBRTC_HW_ACCELERATION_ENCODE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1112 </driverVersion>
+      <driverVersionMax> 8.52.322.1200 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE_START </driverVersionComparator>
+    </gfxBlacklistEntry>
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_MSAA </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1000 </driverVersion>
+      <driverVersionMax> 8.52.322.1200 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE_START </driverVersionComparator>
+    </gfxBlacklistEntry>
+
+    <gfxBlacklistEntry>
+      <os>All</os>
+      <vendor>0xdcdc</vendor>
+      <devices>
+        <device>0x2783</device>
+        <device>0x1234</device>
+        <device>0x2782</device>
+      </devices>
+      <feature> WEBGL_ANGLE </feature>
+      <featureStatus> BLOCKED_DRIVER_VERSION </featureStatus>
+      <driverVersion> 8.52.322.1000 </driverVersion>
+      <driverVersionMax> 8.52.322.1112 </driverVersionMax>
+      <driverVersionComparator> BETWEEN_INCLUSIVE_START </driverVersionComparator>
+    </gfxBlacklistEntry>
+
   </gfxItems>
 </blocklist>
