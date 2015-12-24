@@ -6,7 +6,7 @@
 
 interface nsIDOMWindow;
 
-[uuid(5fe83b24-38b9-4901-a4a1-d1bd57d3fe18)]
+[uuid(0a451ee0-972e-11e5-a837-0800200c9a66)]
 interface nsIAudioChannelAgentCallback : nsISupports
 {
   /**
@@ -17,7 +17,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
   /**
    * Notified when the capture state is changed.
    */
-  void windowAudioCaptureChanged();
+  void windowAudioCaptureChanged(in bool aCapture);
 };
 
 /**
