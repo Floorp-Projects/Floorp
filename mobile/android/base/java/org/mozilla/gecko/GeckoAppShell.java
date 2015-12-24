@@ -266,7 +266,6 @@ public class GeckoAppShell
     public static native void registerJavaUiThread();
 
     // helper methods
-    public static native void onResume();
     public static void callObserver(String observerKey, String topic, String data) {
         sendEventToGecko(GeckoEvent.createCallObserverEvent(observerKey, topic, data));
     }
@@ -281,8 +280,6 @@ public class GeckoAppShell
     public static void notifyUriVisited(String uri) {
         sendEventToGecko(GeckoEvent.createVisitedEvent(uri));
     }
-
-    public static native void processNextNativeEvent(boolean mayWait);
 
     public static native void notifyBatteryChange(double aLevel, boolean aCharging, double aRemainingTime);
 
