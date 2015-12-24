@@ -122,7 +122,7 @@ public class GLController extends JNIObject {
         mServerSurfaceValid = true;
 
         // we defer to a runnable the task of updating the compositor, because this is going to
-        // call back into createEGLSurfaceForCompositor, which will try to create an EGLSurface
+        // call back into createEGLSurface, which will try to create an EGLSurface
         // against mView, which we suspect might fail if called too early. By posting this to
         // mView, we hope to ensure that it is deferred until mView is actually "ready" for some
         // sense of "ready".
@@ -261,8 +261,9 @@ public class GLController extends JNIObject {
         return mEGLSurfaceForCompositor != null;
     }
 
-    @WrapForJNI(allowMultithread = true, stubName = "CreateEGLSurfaceForCompositorWrapper")
-    private synchronized EGLSurface createEGLSurfaceForCompositor() {
+    @WrapForJNI(allowMultithread = true)
+    private synchronized EGLSurface createEGLSurface() {
+        compositorCreated();
         AttemptPreallocateEGLSurfaceForCompositor();
         EGLSurface result = mEGLSurfaceForCompositor;
         mEGLSurfaceForCompositor = null;

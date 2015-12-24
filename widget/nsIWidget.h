@@ -128,6 +128,9 @@ typedef void* nsNativeWidget;
 // set/get nsPluginNativeWindowGtk, e10s specific
 #define NS_NATIVE_PLUGIN_OBJECT_PTR    104
 #endif
+#ifdef MOZ_WIDGET_ANDROID
+#define NS_NATIVE_NEW_EGL_SURFACE      100
+#endif
 
 #define NS_IWIDGET_IID \
 { 0xaaa79c8d, 0xc99d, 0x4fe1, \
