@@ -121,10 +121,14 @@ public class GeckoView extends LayerView
 
     @WrapForJNI
     private static final class Window extends JNIObject {
+        /* package */ final GLController glController = new GLController();
+
         static native void open(Window instance, GeckoView view, GLController glController,
                                 int width, int height);
+
         @Override protected native void disposeNative();
         native void close();
+        native void reattach(GeckoView view);
     }
 
     // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
@@ -292,20 +296,28 @@ public class GeckoView extends LayerView
     {
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
-        // TODO: reuse GLController when restoring state.
-        final GLController glController = new GLController();
+        if (window == null) {
+            // Open a new nsWindow if we didn't have one from before.
+            window = new Window();
 
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, glController,
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                Window.open(window, this, window.glController,
+                            metrics.widthPixels, metrics.heightPixels);
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
+                        "open", window, GeckoView.class, this, window.glController,
                         metrics.widthPixels, metrics.heightPixels);
-
+            }
         } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                    "open", window, GeckoView.class, this, glController,
-                    metrics.widthPixels, metrics.heightPixels);
+            if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+                window.reattach(this);
+            } else {
+                GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                        window, "reattach", GeckoView.class, this);
+            }
         }
 
-        setGLController(glController);
+        setGLController(window.glController);
         super.onAttachedToWindow();
     }
 

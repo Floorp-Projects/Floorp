@@ -203,7 +203,11 @@ public:
 
         mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
                 mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>
-                ::template Wrap<&Impl::Open>)
+                ::template Wrap<&Impl::Open>),
+
+        mozilla::jni::MakeNativeMethod<GeckoView::Window::Reattach_t>(
+                mozilla::jni::NativeStub<GeckoView::Window::Reattach_t, Impl>
+                ::template Wrap<&Impl::Reattach>)
     };
 };
 
