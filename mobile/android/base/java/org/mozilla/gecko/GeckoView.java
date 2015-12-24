@@ -13,6 +13,7 @@ import java.util.Set;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.gfx.GLController;
 import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.mozglue.JNIObject;
@@ -115,8 +116,8 @@ public class GeckoView extends LayerView
 
     @WrapForJNI
     private static final class Window extends JNIObject {
-        static native void open(Window instance, GeckoView view, int width, int height);
-        static native void setLayerClient(Object client);
+        static native void open(Window instance, GeckoView view, GLController glController,
+                                int width, int height);
         @Override protected native void disposeNative();
         native void close();
     }
@@ -154,14 +155,6 @@ public class GeckoView extends LayerView
         GeckoAppShell.setLayerView(this);
 
         initializeView(EventDispatcher.getInstance());
-
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.JNI_READY)) {
-            Window.setLayerClient(getLayerClientObject());
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.JNI_READY,
-                    Window.class, "setLayerClient",
-                    Object.class, getLayerClientObject());
-        }
 
         // TODO: Fennec currently takes care of its own initialization, so this
         // flag is a hack used in Fennec to prevent GeckoView initialization.
@@ -225,17 +218,23 @@ public class GeckoView extends LayerView
     @Override
     public void onAttachedToWindow()
     {
-        super.onAttachedToWindow();
-
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
 
+        // TODO: reuse GLController when restoring state.
+        final GLController glController = new GLController();
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            Window.open(window, this, metrics.widthPixels, metrics.heightPixels);
+            Window.open(window, this, glController,
+                        metrics.widthPixels, metrics.heightPixels);
+
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
-                    "open", window, GeckoView.class, this,
+                    "open", window, GeckoView.class, this, glController,
                     metrics.widthPixels, metrics.heightPixels);
         }
+
+        setGLController(glController);
+        super.onAttachedToWindow();
     }
 
     @Override

@@ -33,9 +33,7 @@ public class GLController extends JNIObject {
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final String LOGTAG = "GeckoGLController";
 
-    private static GLController sInstance;
-
-    private LayerView mView;
+    /* package */ LayerView mView;
     private boolean mServerSurfaceValid;
     private int mWidth, mHeight;
 
@@ -90,15 +88,7 @@ public class GLController extends JNIObject {
     @WrapForJNI
     /* package */ native void syncInvalidateAndScheduleComposite();
 
-    private GLController() {
-    }
-
-    static GLController getInstance(LayerView view) {
-        if (sInstance == null) {
-            sInstance = new GLController();
-        }
-        sInstance.mView = view;
-        return sInstance;
+    public GLController() {
     }
 
     synchronized void serverSurfaceDestroyed() {

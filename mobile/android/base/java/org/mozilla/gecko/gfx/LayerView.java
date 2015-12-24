@@ -55,7 +55,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private GeckoLayerClient mLayerClient;
     private PanZoomController mPanZoomController;
     private DynamicToolbarAnimator mToolbarAnimator;
-    private final GLController mGLController;
+    private GLController mGLController;
     private LayerRenderer mRenderer;
     /* Must be a PAINT_xxx constant */
     private int mPaintState;
@@ -106,7 +106,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     public LayerView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
-        mGLController = GLController.getInstance(this);
         mPaintState = PAINT_START;
         mBackgroundColor = Color.WHITE;
         mFullScreenState = FullScreenState.NONE;
@@ -198,6 +197,12 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         }
         if (mRenderer != null) {
             mRenderer.destroy();
+        }
+        if (mGLController != null) {
+            if (mGLController.mView == this) {
+                mGLController.mView = null;
+            }
+            mGLController = null;
         }
         Tabs.unregisterOnTabsChangedListener(this);
     }
@@ -324,7 +329,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     // Don't expose GeckoLayerClient to things outside this package; only expose it as an Object
     GeckoLayerClient getLayerClient() { return mLayerClient; }
-    public Object getLayerClientObject() { return mLayerClient; }
 
     public PanZoomController getPanZoomController() { return mPanZoomController; }
     public DynamicToolbarAnimator getDynamicToolbarAnimator() { return mToolbarAnimator; }
@@ -431,6 +435,18 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     Listener getListener() {
         return mListener;
+    }
+
+    public void setGLController(final GLController glController) {
+        mGLController = glController;
+        glController.mView = this;
+
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            glController.setLayerClient(mLayerClient);
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                    glController, "setLayerClient", mLayerClient);
+        }
     }
 
     public GLController getGLController() {
