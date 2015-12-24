@@ -10,8 +10,6 @@
 #include "GLContext.h"
 #include "GLLibraryEGL.h"
 
-class nsIWidget;
-
 namespace mozilla {
 namespace gl {
 
@@ -81,7 +79,7 @@ public:
 
     virtual bool IsCurrent() override;
 
-    virtual bool RenewSurface() override;
+    virtual bool RenewSurface(nsIWidget* aWidget) override;
 
     virtual void ReleaseSurface() override;
 
