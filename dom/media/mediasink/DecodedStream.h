@@ -34,7 +34,8 @@ class DecodedStream : public media::MediaSink {
 public:
   DecodedStream(AbstractThread* aOwnerThread,
                 MediaQueue<MediaData>& aAudioQueue,
-                MediaQueue<MediaData>& aVideoQueue);
+                MediaQueue<MediaData>& aVideoQueue,
+                OutputStreamManager* aOutputStreamManager);
 
   // MediaSink functions.
   const PlaybackParams& GetPlaybackParams() const override;
