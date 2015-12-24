@@ -153,6 +153,7 @@ class FasterMakeBackend(CommonBackend):
                 else:
                     src = mozpath.join(mozpath.dirname(obj.path.full_path), e.source)
 
+                src = mozpath.normpath(src)
                 if '*' in e.source:
                     if e.preprocess:
                         raise Exception('%s: Wildcards are not supported with '
