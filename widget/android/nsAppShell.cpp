@@ -185,6 +185,8 @@ public:
 };
 
 nsAppShell::nsAppShell()
+    : mSyncRunMonitor("nsAppShell.SyncRun")
+    , mSyncRunQuit(false)
 {
     {
         StaticMutexAutoLock lock(sAppShellLock);
@@ -217,13 +219,13 @@ nsAppShell::nsAppShell()
 
 nsAppShell::~nsAppShell()
 {
-    while (mEventQueue.Pop(/* mayWait */ false)) {
-        NS_WARNING("Discarded event on shutdown");
-    }
-
     {
         StaticMutexAutoLock lock(sAppShellLock);
         sAppShell = nullptr;
+    }
+
+    while (mEventQueue.Pop(/* mayWait */ false)) {
+        NS_WARNING("Discarded event on shutdown");
     }
 
     if (sPowerManagerService) {
@@ -282,6 +284,12 @@ nsAppShell::Observe(nsISupports* aSubject,
     bool removeObserver = false;
 
     if (!strcmp(aTopic, "xpcom-shutdown")) {
+        {
+            // Release any thread waiting for a sync call to finish.
+            MonitorAutoLock runLock(mSyncRunMonitor);
+            mSyncRunQuit = true;
+            runLock.NotifyAll();
+        }
         // We need to ensure no observers stick around after XPCOM shuts down
         // or we'll see crashes, as the app shell outlives XPConnect.
         mObserversHash.Clear();
@@ -383,6 +391,52 @@ nsAppShell::ProcessNextNativeEvent(bool mayWait)
 
     curEvent->Run();
     return true;
+}
+
+void
+nsAppShell::SyncRunEvent(Event&& event,
+                         UniquePtr<Event>(*eventFactory)(UniquePtr<Event>&&))
+{
+    // Perform the call on the Gecko thread in a separate lambda, and wait
+    // on the monitor on the current thread.
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    // This is the lock to check that app shell is still alive.
+    mozilla::StaticMutexAutoLock shellLock(sAppShellLock);
+    nsAppShell* const appShell = sAppShell;
+
+    if (MOZ_UNLIKELY(!appShell)) {
+        // Post-shutdown.
+        return;
+    }
+
+    // This is the monitor that we will wait on for the call to complete.
+    mozilla::MonitorAutoLock runLock(appShell->mSyncRunMonitor);
+
+    bool finished = false;
+    auto runAndNotify = [&event, &finished] {
+        nsAppShell* const appShell = sAppShell;
+        if (MOZ_UNLIKELY(!appShell || appShell->mSyncRunQuit)) {
+            return;
+        }
+        event.Run();
+        mozilla::MonitorAutoLock runLock(appShell->mSyncRunMonitor);
+        finished = true;
+        runLock.NotifyAll();
+    };
+
+    UniquePtr<Event> runAndNotifyEvent = mozilla::MakeUnique<
+            LambdaEvent<decltype(runAndNotify)>>(mozilla::Move(runAndNotify));
+
+    if (eventFactory) {
+        runAndNotifyEvent = (*eventFactory)(mozilla::Move(runAndNotifyEvent));
+    }
+
+    appShell->mEventQueue.Post(mozilla::Move(runAndNotifyEvent));
+
+    while (!finished && MOZ_LIKELY(!appShell->mSyncRunQuit)) {
+        runLock.Wait();
+    }
 }
 
 class nsAppShell::LegacyGeckoEvent : public Event

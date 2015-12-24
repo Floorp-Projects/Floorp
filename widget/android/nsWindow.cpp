@@ -381,20 +381,21 @@ class nsWindow::GLControllerSupport final
     GeckoLayerClient::GlobalRef mLayerClient;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
 
-    class GLControllerEvent final : public nsAppShell::Event
+    // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
+    // GLControllerEvent a template because each template instantiation is
+    // a different type. So implement GLControllerEvent as a ProxyEvent.
+    class GLControllerEvent final : public nsAppShell::ProxyEvent
     {
-        template<class T> using LambdaEvent = nsAppShell::LambdaEvent<T>;
         using Event = nsAppShell::Event;
 
-        // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
-        // GLControllerEvent a template because each template instantiation is
-        // a different type. So encapsulate the lambda inside baseEvent.
-        UniquePtr<Event> baseEvent;
-
     public:
-        template<class T>
-        GLControllerEvent(T* event)
-            : baseEvent(UniquePtr<T, DefaultDelete<Event>>(event))
+        static UniquePtr<Event> MakeEvent(UniquePtr<Event>&& event)
+        {
+            return MakeUnique<GLControllerEvent>(mozilla::Move(event));
+        }
+
+        GLControllerEvent(UniquePtr<Event>&& event)
+            : nsAppShell::ProxyEvent(mozilla::Move(event))
         {}
 
         void PostTo(LinkedList<Event>& queue) override
@@ -411,35 +412,7 @@ class nsWindow::GLControllerSupport final
                 queue.insertBack(this);
             }
         }
-
-        void Run() override
-        {
-            MOZ_ASSERT(baseEvent);
-            baseEvent->Run();
-        }
     };
-
-    static void SyncRunEvent(nsAppShell::Event&& event) {
-        // Create a monitor, perform the call on the Gecko thread in a custom
-        // lambda, and wait on the monitor on the current thread.
-        MOZ_ASSERT(!NS_IsMainThread());
-        Monitor monitor("GLControllerSupport");
-        MonitorAutoLock lock(monitor);
-        bool finished = false;
-        auto callAndNotify = [&event, &monitor, &finished] {
-            event.Run();
-            MonitorAutoLock lock(monitor);
-            finished = true;
-            lock.NotifyAll();
-        };
-        nsAppShell::PostEvent(
-                mozilla::MakeUnique<GLControllerEvent>(
-                new nsAppShell::LambdaEvent<decltype(callAndNotify)>(
-                mozilla::Move(callAndNotify))));
-        while (!finished) {
-            lock.Wait();
-        }
-    }
 
 public:
     typedef GLController::Natives<GLControllerSupport> Base;
@@ -453,8 +426,8 @@ public:
             aCall.IsTarget(&GLControllerSupport::PauseCompositor)) {
 
             // These calls are blocking.
-            SyncRunEvent(GeckoViewSupport::WindowEvent<Functor>(
-                    mozilla::Move(aCall)));
+            nsAppShell::SyncRunEvent(GeckoViewSupport::WindowEvent<Functor>(
+                    mozilla::Move(aCall)), &GLControllerEvent::MakeEvent);
             return;
 
         } else if (aCall.IsTarget(
@@ -475,7 +448,7 @@ public:
 
         nsAppShell::PostEvent(
                 mozilla::MakeUnique<GLControllerEvent>(
-                new GeckoViewSupport::WindowEvent<Functor>(
+                mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
                 mozilla::Move(aCall))));
     }
 
