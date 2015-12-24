@@ -9,6 +9,7 @@
 
 #include "mozilla/Alignment.h"
 #include "mozilla/Move.h"
+#include "mozilla/TypeTraits.h"
 
 #include "jit/JitFrames.h"
 #include "jit/LIR.h"
@@ -218,15 +219,6 @@ class CodeGeneratorShared : public LElementVisitor
     inline Operand ToOperand(const LDefinition* def);
 
   protected:
-    // Ensure the cache is an IonCache while expecting the size of the derived
-    // class. We only need the cache list at GC time. Everyone else can just take
-    // runtimeData offsets.
-    size_t allocateCache(const IonCache&, size_t size) {
-        size_t dataOffset = allocateData(size);
-        masm.propagateOOM(cacheList_.append(dataOffset));
-        return dataOffset;
-    }
-
 #ifdef CHECK_OSIPOINT_REGISTERS
     void resetOsiPointRegs(LSafepoint* safepoint);
     bool shouldVerifyOsiPointRegs(LSafepoint* safepoint);
@@ -271,17 +263,23 @@ class CodeGeneratorShared : public LElementVisitor
     };
 
   protected:
-
-    size_t allocateData(size_t size) {
+    MOZ_WARN_UNUSED_RESULT
+    bool allocateData(size_t size, size_t* offset) {
         MOZ_ASSERT(size % sizeof(void*) == 0);
-        size_t dataOffset = runtimeData_.length();
+        *offset = runtimeData_.length();
         masm.propagateOOM(runtimeData_.appendN(0, size));
-        return dataOffset;
+        return !masm.oom();
     }
 
+    // Ensure the cache is an IonCache while expecting the size of the derived
+    // class. We only need the cache list at GC time. Everyone else can just take
+    // runtimeData offsets.
     template <typename T>
     inline size_t allocateCache(const T& cache) {
-        size_t index = allocateCache(cache, sizeof(mozilla::AlignedStorage2<T>));
+        static_assert(mozilla::IsBaseOf<IonCache, T>::value, "T must inherit from IonCache");
+        size_t index;
+        masm.propagateOOM(allocateData(sizeof(mozilla::AlignedStorage2<T>), &index));
+        masm.propagateOOM(cacheList_.append(index));
         if (masm.oom())
             return SIZE_MAX;
         // Use the copy constructor on the allocated space.
@@ -451,7 +449,7 @@ class CodeGeneratorShared : public LElementVisitor
                                     const StoreOutputTo& out);
 
     void addCache(LInstruction* lir, size_t cacheIndex);
-    size_t addCacheLocations(const CacheLocationList& locs, size_t* numLocs);
+    bool addCacheLocations(const CacheLocationList& locs, size_t* numLocs, size_t* offset);
     ReciprocalMulConstants computeDivisionConstants(uint32_t d, int maxLog);
 
   protected:
