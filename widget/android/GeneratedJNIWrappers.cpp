@@ -1242,6 +1242,9 @@ auto DisplayPortMetrics::Resolution() const -> float
 
 constexpr char GLController::name[];
 
+constexpr char GLController::CreateCompositor_t::name[];
+constexpr char GLController::CreateCompositor_t::signature[];
+
 constexpr char GLController::CreateEGLSurfaceForCompositorWrapper_t::name[];
 constexpr char GLController::CreateEGLSurfaceForCompositorWrapper_t::signature[];
 
@@ -1249,6 +1252,21 @@ auto GLController::CreateEGLSurfaceForCompositorWrapper() const -> mozilla::jni:
 {
     return mozilla::jni::Method<CreateEGLSurfaceForCompositorWrapper_t>::Call(this, nullptr);
 }
+
+constexpr char GLController::DisposeNative_t::name[];
+constexpr char GLController::DisposeNative_t::signature[];
+
+constexpr char GLController::PauseCompositor_t::name[];
+constexpr char GLController::PauseCompositor_t::signature[];
+
+constexpr char GLController::SetLayerClient_t::name[];
+constexpr char GLController::SetLayerClient_t::signature[];
+
+constexpr char GLController::SyncInvalidateAndScheduleComposite_t::name[];
+constexpr char GLController::SyncInvalidateAndScheduleComposite_t::signature[];
+
+constexpr char GLController::SyncResumeResizeCompositor_t::name[];
+constexpr char GLController::SyncResumeResizeCompositor_t::signature[];
 
 constexpr char GeckoLayerClient::name[];
 

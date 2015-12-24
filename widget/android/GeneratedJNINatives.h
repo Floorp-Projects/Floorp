@@ -234,6 +234,41 @@ template<class Impl>
 constexpr JNINativeMethod PrefsHelper::Natives<Impl>::methods[];
 
 template<class Impl>
+class GLController::Natives : public mozilla::jni::NativeImpl<GLController, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<GLController::CreateCompositor_t>(
+                mozilla::jni::NativeStub<GLController::CreateCompositor_t, Impl>
+                ::template Wrap<&Impl::CreateCompositor>),
+
+        mozilla::jni::MakeNativeMethod<GLController::DisposeNative_t>(
+                mozilla::jni::NativeStub<GLController::DisposeNative_t, Impl>
+                ::template Wrap<&Impl::DisposeNative>),
+
+        mozilla::jni::MakeNativeMethod<GLController::PauseCompositor_t>(
+                mozilla::jni::NativeStub<GLController::PauseCompositor_t, Impl>
+                ::template Wrap<&Impl::PauseCompositor>),
+
+        mozilla::jni::MakeNativeMethod<GLController::SetLayerClient_t>(
+                mozilla::jni::NativeStub<GLController::SetLayerClient_t, Impl>
+                ::template Wrap<&Impl::SetLayerClient>),
+
+        mozilla::jni::MakeNativeMethod<GLController::SyncInvalidateAndScheduleComposite_t>(
+                mozilla::jni::NativeStub<GLController::SyncInvalidateAndScheduleComposite_t, Impl>
+                ::template Wrap<&Impl::SyncInvalidateAndScheduleComposite>),
+
+        mozilla::jni::MakeNativeMethod<GLController::SyncResumeResizeCompositor_t>(
+                mozilla::jni::NativeStub<GLController::SyncResumeResizeCompositor_t, Impl>
+                ::template Wrap<&Impl::SyncResumeResizeCompositor>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod GLController::Natives<Impl>::methods[];
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:

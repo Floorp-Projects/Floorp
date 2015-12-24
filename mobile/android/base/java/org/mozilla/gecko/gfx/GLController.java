@@ -5,11 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.GeckoThread;
+import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.util.Log;
@@ -30,7 +29,7 @@ import javax.microedition.khronos.egl.EGLSurface;
  * the mCompositorCreated field and other state variables are always
  * accurate.
  */
-public class GLController {
+public class GLController extends JNIObject {
     private static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
     private static final String LOGTAG = "GeckoGLController";
 
@@ -69,6 +68,28 @@ public class GLController {
         EGL10.EGL_NONE
     };
 
+    @WrapForJNI @Override // JNIObject
+    protected native void disposeNative();
+
+    // Gecko thread sets its layer client instance; does not block UI thread.
+    @WrapForJNI
+    /* package */ native void setLayerClient(GeckoLayerClient layerClient);
+
+    // Gecko thread creates compositor; blocks UI thread.
+    @WrapForJNI
+    private native void createCompositor(int width, int height);
+
+    // Gecko thread pauses compositor; blocks UI thread.
+    @WrapForJNI
+    private native void pauseCompositor();
+
+    // UI thread resumes compositor and notifies Gecko thread; does not block UI thread.
+    @WrapForJNI
+    private native void syncResumeResizeCompositor(int width, int height);
+
+    @WrapForJNI
+    /* package */ native void syncInvalidateAndScheduleComposite();
+
     private GLController() {
     }
 
@@ -99,7 +120,7 @@ public class GLController {
         // definitely paused -- it'll synchronize with the Gecko event loop, which
         // in turn will synchronize with the compositor thread.
         if (mCompositorCreated) {
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorPauseEvent());
+            pauseCompositor();
         }
     }
 
@@ -143,7 +164,7 @@ public class GLController {
         // happen without needing to block anywhere. Do it with a synchronous Gecko event so that the
         // Android doesn't have a chance to destroy our surface in between.
         if (mView.getLayerClient().isGeckoReady()) {
-            GeckoAppShell.sendEventToGeckoSync(GeckoEvent.createCompositorCreateEvent(mWidth, mHeight));
+            createCompositor(mWidth, mHeight);
         }
     }
 
@@ -270,8 +291,7 @@ public class GLController {
         // It is important to not notify Gecko until after the compositor has
         // been resumed, otherwise Gecko may send updates that get dropped.
         if (mCompositorCreated) {
-            GeckoAppShell.scheduleResumeComposition(width, height);
-            GeckoAppShell.sendEventToGecko(GeckoEvent.createCompositorResumeEvent());
+            syncResumeResizeCompositor(width, height);
             mView.requestRender();
         }
     }
