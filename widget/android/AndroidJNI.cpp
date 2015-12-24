@@ -163,12 +163,6 @@ Java_org_mozilla_gecko_GeckoAppShell_invalidateAndScheduleComposite(JNIEnv*, jcl
     nsWindow::InvalidateAndScheduleComposite();
 }
 
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_scheduleResumeComposition(JNIEnv*, jclass, jint width, jint height)
-{
-    nsWindow::ScheduleResumeComposition(width, height);
-}
-
 NS_EXPORT float JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_computeRenderIntegrity(JNIEnv*, jclass)
 {
