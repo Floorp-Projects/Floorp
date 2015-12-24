@@ -10,24 +10,15 @@ import os
 
 import mozpack.path as mozpath
 
-from mozpack.manifests import (
-    InstallManifest,
-)
-
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
-)
-
-from mozbuild.util import (
-    FileAvoidWrite,
 )
 
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
-    SubCommand,
 )
 
 SUCCESS = '''
@@ -86,136 +77,6 @@ class MachCommands(MachCommandBase):
     def gradle_install(self):
         pass
 
-
-class ArtifactSubCommand(SubCommand):
-    def __init__(self, *args, **kwargs):
-        SubCommand.__init__(self, *args, **kwargs)
-
-    def __call__(self, func):
-        after = SubCommand.__call__(self, func)
-        args = [
-            CommandArgument('--tree', metavar='TREE', type=str,
-                help='Firefox tree.'),
-            CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86', 'macosx64'],
-                help='Build job.'),
-            CommandArgument('--verbose', '-v', action='store_true',
-                help='Print verbose output.'),
-        ]
-        for arg in args:
-            after = arg(after)
-        return after
-
-
-@CommandProvider
-class PackageFrontend(MachCommandBase):
-    """Fetch and install binary artifacts from Mozilla automation."""
-
-    @Command('artifact', category='post-build',
-        description='Use pre-built artifacts to build Firefox.',
-        conditions=[
-            conditions.is_hg,  # mercurial only for now.
-        ])
-    def artifact(self):
-        '''Download, cache, and install pre-built binary artifacts to build Firefox.
-
-        Use |mach build| as normal to freshen your installed binary libraries:
-        artifact builds automatically download, cache, and install binary
-        artifacts from Mozilla automation, replacing whatever may be in your
-        object directory.  Use |mach artifact last| to see what binary artifacts
-        were last used.
-
-        Never build libxul again!
-
-        '''
-        pass
-
-    def _set_log_level(self, verbose):
-        self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
-
-    def _make_artifacts(self, tree=None, job=None):
-        self._activate_virtualenv()
-        self.virtualenv_manager.install_pip_package('pylru==1.0.9')
-        self.virtualenv_manager.install_pip_package('taskcluster==0.0.16')
-        self.virtualenv_manager.install_pip_package('mozregression==1.0.2')
-
-        state_dir = self._mach_context.state_dir
-        cache_dir = os.path.join(state_dir, 'package-frontend')
-
-        import which
-        hg = which.which('hg')
-
-        # Absolutely must come after the virtualenv is populated!
-        from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, hg=hg)
-        return artifacts
-
-    def _compute_defaults(self, tree=None, job=None):
-        # Firefox front-end developers mostly use fx-team.  Post auto-land, make this central.
-        tree = tree or 'fx-team'
-        if job:
-            return (tree, job)
-        if self.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
-            if self.substs['ANDROID_CPU_ARCH'] == 'x86':
-                return (tree, 'android-x86')
-            return (tree, 'android-api-11')
-        if self.defines.get('XP_MACOSX', False):
-            # TODO: check for 64 bit builds.  We'd like to use HAVE_64BIT_BUILD
-            # but that relies on the compile environment.
-            return (tree, 'macosx64')
-        raise Exception('Cannot determine default tree and job for |mach artifact|!')
-
-    @ArtifactSubCommand('artifact', 'install',
-        'Install a good pre-built artifact.')
-    @CommandArgument('source', metavar='SRC', nargs='?', type=str,
-        help='Where to fetch and install artifacts from.  Can be omitted, in '
-            'which case the current hg repository is inspected; an hg revision; '
-            'a remote URL; or a local file.',
-        default=None)
-    def artifact_install(self, source=None, tree=None, job=None, verbose=False):
-        self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
-        artifacts = self._make_artifacts(tree=tree, job=job)
-
-        manifest_path = mozpath.join(self.topobjdir, '_build_manifests', 'install', 'dist_bin')
-        manifest = InstallManifest(manifest_path)
-
-        def install_callback(path, file_existed, file_updated):
-            if path not in manifest:
-                manifest.add_optional_exists(path)
-
-        retcode = artifacts.install_from(source, self.bindir, install_callback=install_callback)
-
-        if retcode == 0:
-            manifest.write(manifest_path)
-
-        return retcode
-
-    @ArtifactSubCommand('artifact', 'last',
-        'Print the last pre-built artifact installed.')
-    def artifact_print_last(self, tree=None, job=None, verbose=False):
-        self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
-        artifacts = self._make_artifacts(tree=tree, job=job)
-        artifacts.print_last()
-        return 0
-
-    @ArtifactSubCommand('artifact', 'print-cache',
-        'Print local artifact cache for debugging.')
-    def artifact_print_cache(self, tree=None, job=None, verbose=False):
-        self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
-        artifacts = self._make_artifacts(tree=tree, job=job)
-        artifacts.print_cache()
-        return 0
-
-    @ArtifactSubCommand('artifact', 'clear-cache',
-        'Delete local artifacts and reset local artifact cache.')
-    def artifact_clear_cache(self, tree=None, job=None, verbose=False):
-        self._set_log_level(verbose)
-        tree, job = self._compute_defaults(tree, job)
-        artifacts = self._make_artifacts(tree=tree, job=job)
-        artifacts.clear_cache()
-        return 0
 
 @CommandProvider
 class AndroidEmulatorCommands(MachCommandBase):
