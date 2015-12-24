@@ -205,8 +205,7 @@ public:
 
         if (JS::IsCallable(aObj)) {
             if (mOptions->cloneFunctions) {
-                if (!mFunctions.append(aObj))
-                    return false;
+                mFunctions.append(aObj);
                 return JS_WriteUint32Pair(aWriter, SCTAG_FUNCTION, mFunctions.length() - 1);
             } else {
                 JS_ReportError(aCx, "Permission denied to pass a Function via structured clone");
