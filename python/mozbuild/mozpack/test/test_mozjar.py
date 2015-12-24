@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+from mozpack.files import FileFinder
 from mozpack.mozjar import (
     JarReaderError,
     JarWriterError,
@@ -19,6 +20,10 @@ from cStringIO import StringIO
 from urllib import pathname2url
 import mozpack.path as mozpath
 import os
+
+
+test_data_path = mozpath.abspath(mozpath.dirname(__file__))
+test_data_path = mozpath.join(test_data_path, 'data')
 
 
 class TestJarStruct(unittest.TestCase):
@@ -236,6 +241,20 @@ class TestJar(unittest.TestCase):
         self.assertEqual(files[2].filename, 'baz/qux')
         self.assertTrue(files[2].compressed)
         self.assertEqual(files[2].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+
+    def test_add_from_finder(self):
+        s = MockDest()
+        with JarWriter(fileobj=s, optimize=self.optimize) as jar:
+            finder = FileFinder(test_data_path)
+            for p, f in finder.find('test_data'):
+                jar.add('test_data', f)
+
+        jar = JarReader(fileobj=s)
+        files = [j for j in jar]
+
+        self.assertEqual(files[0].filename, 'test_data')
+        self.assertFalse(files[0].compressed)
+        self.assertEqual(files[0].read(), 'test_data')
 
 
 class TestOptimizeJar(TestJar):

@@ -600,7 +600,8 @@ class JarWriter(object):
             if isinstance(data, basestring):
                 deflater.write(data)
             elif hasattr(data, 'read'):
-                data.seek(0)
+                if hasattr(data, 'seek'):
+                    data.seek(0)
                 deflater.write(data.read())
             else:
                 raise JarWriterError("Don't know how to handle %s" %
