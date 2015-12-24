@@ -287,7 +287,7 @@ class ProxyNativeCall
                     void (Impl::*) (Args...)>::Type>::Type NativeCallType;
 
     // Destination C++ function.
-    const NativeCallType mNativeCall;
+    NativeCallType mNativeCall;
     // Saved this arg.
     typename ThisArgClass::GlobalRef mThisArg;
     // Saved arguments.
@@ -308,14 +308,16 @@ class ProxyNativeCall
 
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && ThisArg, void>::Type
-    Call(const ClassObject::LocalRef& cls, mozilla::IndexSequence<Indices...>)
+    Call(const ClassObject::LocalRef& cls,
+         mozilla::IndexSequence<Indices...>) const
     {
         (*mNativeCall)(cls, mozilla::Get<Indices>(mArgs)...);
     }
 
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<Static && !ThisArg, void>::Type
-    Call(const ClassObject::LocalRef& cls, mozilla::IndexSequence<Indices...>)
+    Call(const ClassObject::LocalRef& cls,
+         mozilla::IndexSequence<Indices...>) const
     {
         (*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
     }
@@ -323,7 +325,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<!Static && ThisArg, void>::Type
     Call(const typename Owner::LocalRef& inst,
-         mozilla::IndexSequence<Indices...>)
+         mozilla::IndexSequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
         HandleUncaughtException(inst.Env());
@@ -333,7 +335,7 @@ class ProxyNativeCall
     template<bool Static, bool ThisArg, size_t... Indices>
     typename mozilla::EnableIf<!Static && !ThisArg, void>::Type
     Call(const typename Owner::LocalRef& inst,
-         mozilla::IndexSequence<Indices...>)
+         mozilla::IndexSequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
         HandleUncaughtException(inst.Env());
@@ -365,6 +367,11 @@ public:
     bool IsTarget(NativeCallType call) const { return call == mNativeCall; }
     template<typename T> bool IsTarget(T&&) const { return false; }
 
+    // Redirect the call to another function / class member with the same
+    // signature as the original target. Crash if given a wrong signature.
+    void SetTarget(NativeCallType call) { mNativeCall = call; }
+    template<typename T> void SetTarget(T&&) const { MOZ_CRASH(); }
+
     void operator()()
     {
         JNIEnv* const env = GetEnvForThread();
@@ -377,6 +384,7 @@ public:
         // so it's more efficient to clear out the saved args here. The
         // downside is that the call can only be invoked once.
         Clear(env, typename IndexSequenceFor<Args...>::Type());
+        mThisArg.Clear(env);
     }
 };
 
