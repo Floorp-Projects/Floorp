@@ -165,6 +165,7 @@ class nsWindow::GeckoViewSupport final
 {
     nsWindow& window;
 
+public:
     template<typename T>
     class WindowEvent : public nsAppShell::LambdaEvent<T>
     {
@@ -182,7 +183,7 @@ class nsWindow::GeckoViewSupport final
             const auto& thisArg = Base::lambda.GetThisArg();
 
             const auto natives = reinterpret_cast<
-                    mozilla::WeakPtr<GeckoViewSupport>*>(
+                    mozilla::WeakPtr<typename T::TargetClass>*>(
                     jni::GetNativeHandle(env, thisArg.Get()));
             jni::HandleUncaughtException(env);
 
@@ -217,7 +218,6 @@ class nsWindow::GeckoViewSupport final
         }
     };
 
-public:
     typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
     typedef GeckoEditable::Natives<GeckoViewSupport> EditableBase;
 
@@ -270,14 +270,6 @@ public:
                      GeckoView::Window::Param aWindow,
                      GeckoView::Param aView, jni::Object::Param aGLController,
                      int32_t aWidth, int32_t aHeight);
-
-    // Set the active layer client object
-    static void SetLayerClient(jni::Object::Param aClient)
-    {
-        MOZ_ASSERT(NS_IsMainThread());
-        AndroidBridge::Bridge()->SetLayerClient(
-                widget::GeckoLayerClient::Ref::From(aClient.Get()));
-    }
 
     // Close and destroy the nsWindow.
     void Close();
@@ -385,16 +377,112 @@ class nsWindow::GLControllerSupport final
 {
     nsWindow& window;
     GLController::GlobalRef mGLController;
+    GeckoLayerClient::GlobalRef mLayerClient;
+    Atomic<bool, ReleaseAcquire> mCompositorPaused;
+
+    class GLControllerEvent final : public nsAppShell::Event
+    {
+        template<class T> using LambdaEvent = nsAppShell::LambdaEvent<T>;
+        using Event = nsAppShell::Event;
+
+        // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
+        // GLControllerEvent a template because each template instantiation is
+        // a different type. So encapsulate the lambda inside baseEvent.
+        UniquePtr<Event> baseEvent;
+
+    public:
+        template<class T>
+        GLControllerEvent(T* event)
+            : baseEvent(UniquePtr<T, DefaultDelete<Event>>(event))
+        {}
+
+        void PostTo(LinkedList<Event>& queue) override
+        {
+            // Give priority to compositor events, but keep in order with
+            // existing compositor events.
+            nsAppShell::Event* event = queue.getFirst();
+            while (event && event->HasSameTypeAs(this)) {
+                event = event->getNext();
+            }
+            if (event) {
+                event->setPrevious(this);
+            } else {
+                queue.insertBack(this);
+            }
+        }
+
+        void Run() override
+        {
+            MOZ_ASSERT(baseEvent);
+            baseEvent->Run();
+        }
+    };
+
+    static void SyncRunEvent(nsAppShell::Event&& event) {
+        // Create a monitor, perform the call on the Gecko thread in a custom
+        // lambda, and wait on the monitor on the current thread.
+        MOZ_ASSERT(!NS_IsMainThread());
+        Monitor monitor("GLControllerSupport");
+        MonitorAutoLock lock(monitor);
+        bool finished = false;
+        auto callAndNotify = [&event, &monitor, &finished] {
+            event.Run();
+            MonitorAutoLock lock(monitor);
+            finished = true;
+            lock.NotifyAll();
+        };
+        nsAppShell::gAppShell->PostEvent(
+                mozilla::MakeUnique<GLControllerEvent>(
+                new nsAppShell::LambdaEvent<decltype(callAndNotify)>(
+                mozilla::Move(callAndNotify))));
+        while (!finished) {
+            lock.Wait();
+        }
+    }
 
 public:
     typedef GLController::Natives<GLControllerSupport> Base;
 
     MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLControllerSupport);
 
+    template<class Functor>
+    static void OnNativeCall(Functor&& aCall)
+    {
+        if (aCall.IsTarget(&GLControllerSupport::CreateCompositor) ||
+            aCall.IsTarget(&GLControllerSupport::PauseCompositor)) {
+
+            // These calls are blocking.
+            SyncRunEvent(GeckoViewSupport::WindowEvent<Functor>(
+                    mozilla::Move(aCall)));
+            return;
+
+        } else if (aCall.IsTarget(
+                &GLControllerSupport::SyncResumeResizeCompositor)) {
+            // This call is synchronous. Perform the original call using a copy
+            // of the lambda. Then redirect the original lambda to
+            // OnResumedCompositor, to be run on the Gecko thread. We use
+            // Functor instead of our own lambda so that Functor can handle
+            // object lifetimes for us.
+            (Functor(aCall))();
+            aCall.SetTarget(&GLControllerSupport::OnResumedCompositor);
+
+        } else if (aCall.IsTarget(
+                &GLControllerSupport::SyncInvalidateAndScheduleComposite)) {
+            // This call is synchronous.
+            return aCall();
+        }
+
+        nsAppShell::gAppShell->PostEvent(
+                mozilla::MakeUnique<GLControllerEvent>(
+                new GeckoViewSupport::WindowEvent<Functor>(
+                mozilla::Move(aCall))));
+    }
+
     GLControllerSupport(nsWindow* aWindow,
                         const GLController::LocalRef& aInstance)
         : window(*aWindow)
         , mGLController(aInstance)
+        , mCompositorPaused(true)
     {
         Reattach(aInstance);
     }
@@ -413,6 +501,31 @@ public:
         Base::AttachNative(aInstance, this);
     }
 
+    const GeckoLayerClient::Ref& GetLayerClient() const
+    {
+        return mLayerClient;
+    }
+
+    bool CompositorPaused() const
+    {
+        return mCompositorPaused;
+    }
+
+private:
+    void OnResumedCompositor(int32_t aWidth, int32_t aHeight)
+    {
+        // When we receive this, the compositor has already been told to
+        // resume. (It turns out that waiting till we reach here to tell
+        // the compositor to resume takes too long, resulting in a black
+        // flash.) This means it's now safe for layer updates to occur.
+        // Since we might have prevented one or more draw events from
+        // occurring while the compositor was paused, we need to schedule
+        // a draw event now.
+        if (!mCompositorPaused) {
+            window.RedrawAll();
+        }
+    }
+
     /**
      * GLController methods
      */
@@ -421,27 +534,76 @@ public:
 
     void SetLayerClient(jni::Object::Param aClient)
     {
-        // TODO: implement.
+        const auto& layerClient = GeckoLayerClient::Ref::From(aClient);
+
+        AndroidBridge::Bridge()->SetLayerClient(layerClient);
+
+        // If resetting is true, Android destroyed our GeckoApp activity and we
+        // had to recreate it, but all the Gecko-side things were not
+        // destroyed.  We therefore need to link up the new java objects to
+        // Gecko, and that's what we do here.
+        const bool resetting = !!mLayerClient;
+        mLayerClient = layerClient;
+
+        if (resetting) {
+            // Since we are re-linking the new java objects to Gecko, we need
+            // to get the viewport from the compositor (since the Java copy was
+            // thrown away) and we do that by setting the first-paint flag.
+            if (window.mCompositorParent) {
+                window.mCompositorParent->ForceIsFirstPaint();
+            }
+        }
     }
 
     void CreateCompositor(int32_t aWidth, int32_t aHeight)
     {
-        // TODO: implement.
+        window.CreateLayerManager(aWidth, aHeight);
+        mCompositorPaused = false;
+        OnResumedCompositor(aWidth, aHeight);
     }
 
     void PauseCompositor()
     {
-        // TODO: implement.
+        // The compositor gets paused when the app is about to go into the
+        // background. While the compositor is paused, we need to ensure that
+        // no layer tree updates (from draw events) occur, since the compositor
+        // cannot make a GL context current in order to process updates.
+        if (window.mCompositorChild) {
+            window.mCompositorChild->SendPause();
+        }
+        mCompositorPaused = true;
+    }
+
+    void SyncPauseCompositor()
+    {
+        if (window.mCompositorParent) {
+            window.mCompositorParent->SchedulePauseOnCompositorThread();
+            mCompositorPaused = true;
+        }
+    }
+
+    void SyncResumeCompositor()
+    {
+        if (window.mCompositorParent &&
+                window.mCompositorParent->ScheduleResumeOnCompositorThread()) {
+            mCompositorPaused = false;
+        }
     }
 
     void SyncResumeResizeCompositor(int32_t aWidth, int32_t aHeight)
     {
-        // TODO: implement.
+        if (window.mCompositorParent && window.mCompositorParent->
+                ScheduleResumeOnCompositorThread(aWidth, aHeight)) {
+            mCompositorPaused = false;
+        }
     }
 
     void SyncInvalidateAndScheduleComposite()
     {
-        // TODO: implement.
+        if (window.mCompositorParent) {
+            window.mCompositorParent->InvalidateOnCompositorThread();
+            window.mCompositorParent->ScheduleRenderOnCompositorThread();
+        }
     }
 };
 
@@ -2744,8 +2906,8 @@ void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
                              LayoutDeviceIntRect aRect)
 {
-    GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
-    MOZ_ASSERT(client);
+    MOZ_ASSERT(mGLControllerSupport);
+    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
 
     LayerRenderer::Frame::LocalRef frame = client->CreateFrame();
     mLayerRendererFrame = frame;
@@ -2789,8 +2951,8 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
     GLint scissorRect[4];
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
 
-    GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
-    MOZ_ASSERT(client);
+    MOZ_ASSERT(mGLControllerSupport);
+    GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
 
     client->ActivateProgram();
     mLayerRendererFrame->DrawForeground();
