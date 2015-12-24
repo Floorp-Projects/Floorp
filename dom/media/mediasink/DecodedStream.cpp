@@ -12,6 +12,7 @@
 #include "MediaData.h"
 #include "MediaQueue.h"
 #include "MediaStreamGraph.h"
+#include "OutputStreamManager.h"
 #include "SharedBuffer.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
@@ -188,6 +189,7 @@ DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
                              MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue)
   : mOwnerThread(aOwnerThread)
+  , mOutputStreamManager(new OutputStreamManager())
   , mPlaying(false)
   , mSameOrigin(false)
   , mAudioQueue(aAudioQueue)
@@ -309,7 +311,7 @@ DecodedStream::DestroyData(UniquePtr<DecodedStreamData> aData)
   DecodedStreamData* data = aData.release();
   RefPtr<DecodedStream> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-    self->mOutputStreamManager.Disconnect();
+    self->mOutputStreamManager->Disconnect();
     delete data;
   });
   AbstractThread::MainThread()->Dispatch(r.forget());
@@ -322,15 +324,15 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
 
   // No need to create a source stream when there are no output streams. This
   // happens when RemoveOutput() is called immediately after StartPlayback().
-  if (!mOutputStreamManager.Graph()) {
+  if (!mOutputStreamManager->Graph()) {
     // Resolve the promise to indicate the end of playback.
     aPromise.Resolve(true, __func__);
     return;
   }
 
-  auto source = mOutputStreamManager.Graph()->CreateSourceStream(nullptr);
+  auto source = mOutputStreamManager->Graph()->CreateSourceStream(nullptr);
   auto data = new DecodedStreamData(source, Move(aPromise));
-  mOutputStreamManager.Connect(data->mStream);
+  mOutputStreamManager->Connect(data->mStream);
 
   class R : public nsRunnable {
     typedef void(DecodedStream::*Method)(UniquePtr<DecodedStreamData>);
@@ -352,7 +354,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
         DecodedStreamData* data = mData.release();
         RefPtr<DecodedStream> self = mThis.forget();
         nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
-          self->mOutputStreamManager.Disconnect();
+          self->mOutputStreamManager->Disconnect();
           delete data;
         });
         // We are in tail dispatching phase. Don't call
@@ -375,7 +377,7 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
 bool
 DecodedStream::HasConsumers() const
 {
-  return !mOutputStreamManager.IsEmpty();
+  return !mOutputStreamManager->IsEmpty();
 }
 
 void
@@ -399,13 +401,13 @@ DecodedStream::OnDataCreated(UniquePtr<DecodedStreamData> aData)
 void
 DecodedStream::AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
 {
-  mOutputStreamManager.Add(aStream, aFinishWhenEnded);
+  mOutputStreamManager->Add(aStream, aFinishWhenEnded);
 }
 
 void
 DecodedStream::RemoveOutput(MediaStream* aStream)
 {
-  mOutputStreamManager.Remove(aStream);
+  mOutputStreamManager->Remove(aStream);
 }
 
 void
