@@ -223,7 +223,7 @@ Tart.prototype = {
     }
 
     var recordingAbsoluteDuration;
-    function stopRecord(Handle) {
+    function stopRecord() {
       recordingAbsoluteDuration =  window.performance.now() - startRecordTimestamp;
       if (self._config.controlProfiler) {
         if (isReportResult)
@@ -287,7 +287,7 @@ Tart.prototype = {
 
         if (isMeasureNow) {
           // Get the recorded frame intervals and append result if required
-          let intervals = stopRecord(recordingHandle);
+          let intervals = stopRecord();
           if (isReportResult) {
             addResult(intervals);
           }
