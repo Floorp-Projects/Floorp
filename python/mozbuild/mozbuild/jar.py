@@ -154,7 +154,7 @@ class JarManifestParser(object):
         # - chrome manifest entries, prefixed with "%".
         m = self.regline.match(line)
         if m:
-            rline = m.group(1)
+            rline = ' '.join(m.group(1).split())
             if rline not in self._current_jar.chrome_manifests:
                 self._current_jar.chrome_manifests.append(rline)
             return

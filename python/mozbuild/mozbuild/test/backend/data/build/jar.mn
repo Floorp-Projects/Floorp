@@ -7,4 +7,4 @@ foo.jar:
 * child/hoge.js   (bar.js)
 * child/baz.jsm
 
-% override chrome://foo/bar.svg#hello chrome://bar/bar.svg#hello
+% override   chrome://foo/bar.svg#hello   chrome://bar/bar.svg#hello
