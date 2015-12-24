@@ -107,6 +107,7 @@ enum {
 };
 
 const int kTimeout = 1000;
+const int kLongTimeout = 60 * kTimeout;
 
 pid_t gParentPid = 0;
 
@@ -616,8 +617,14 @@ SharedMemoryBasic::ShareToProcess(base::ProcessId pid,
   MachReceiveMessage msg;
   err = ports->mReceiver->WaitForMessage(&msg, kTimeout);
   if (err != KERN_SUCCESS) {
-    LOG_ERROR("didn't get an id %s %x\n", mach_error_string(err), err);
-    return false;
+    LOG_ERROR("short timeout didn't get an id %s %x\n", mach_error_string(err), err);
+    MOZ_ASSERT(false, "Receiver message short time out");
+    err = ports->mReceiver->WaitForMessage(&msg, kLongTimeout);
+
+    if (err != KERN_SUCCESS) {
+      LOG_ERROR("long timeout didn't get an id %s %x\n", mach_error_string(err), err);
+      return false;
+    }
   }
   if (msg.GetDataLength() != sizeof(SharePortsReply)) {
     LOG_ERROR("Improperly formatted reply\n");
