@@ -163,15 +163,11 @@ public:
 
     virtual mozilla::layers::CompositorParent* NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight) override;
 
-    static void SetCompositor(mozilla::layers::LayerManager* aLayerManager,
-                              mozilla::layers::CompositorParent* aCompositorParent,
-                              mozilla::layers::CompositorChild* aCompositorChild);
     static bool IsCompositionPaused();
     static void InvalidateAndScheduleComposite();
     static void SchedulePauseComposition();
     static void ScheduleResumeComposition();
     static void ScheduleResumeComposition(int width, int height);
-    static void ForceIsFirstPaint();
     static float ComputeRenderIntegrity();
     static mozilla::layers::APZCTreeManager* GetAPZCTreeManager();
     /* RootLayerTreeId() can only be called when GetAPZCTreeManager() returns non-null */
@@ -229,10 +225,6 @@ private:
     mozilla::widget::LayerRenderer::Frame::GlobalRef mLayerRendererFrame;
 
     static mozilla::StaticRefPtr<mozilla::layers::APZCTreeManager> sApzcTreeManager;
-    static mozilla::StaticRefPtr<mozilla::layers::LayerManager> sLayerManager;
-    static mozilla::StaticRefPtr<mozilla::layers::CompositorParent> sCompositorParent;
-    static mozilla::StaticRefPtr<mozilla::layers::CompositorChild> sCompositorChild;
-    static bool sCompositorPaused;
 };
 
 #endif /* NSWINDOW_H_ */
