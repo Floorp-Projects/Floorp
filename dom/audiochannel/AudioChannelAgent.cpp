@@ -297,8 +297,15 @@ AudioChannelAgent::WindowID() const
   return mWindow ? mWindow->WindowID() : 0;
 }
 
+uint64_t
+AudioChannelAgent::InnerWindowID() const
+{
+  return mInnerWindowID;
+}
+
 void
-AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID)
+AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID,
+                                             bool aCapture)
 {
   if (aInnerWindowID != mInnerWindowID) {
     return;
@@ -309,5 +316,9 @@ AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID)
     return;
   }
 
-  callback->WindowAudioCaptureChanged();
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, WindowAudioCaptureChanged, this = %p, "
+          "capture = %d\n", this, aCapture));
+
+  callback->WindowAudioCaptureChanged(aCapture);
 }
