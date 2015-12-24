@@ -140,7 +140,10 @@ nsHTMLDNSPrefetch::Prefetch(const nsAString &hostname, uint16_t flags)
     // considers empty strings to be valid hostnames
     if (!hostname.IsEmpty() &&
         net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
-      gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+      // during shutdown gNeckoChild might be null
+      if (gNeckoChild) {
+        gNeckoChild->SendHTMLDNSPrefetch(nsAutoString(hostname), flags);
+      }
     }
     return NS_OK;
   }
@@ -197,8 +200,11 @@ nsHTMLDNSPrefetch::CancelPrefetch(const nsAString &hostname,
     // considers empty strings to be valid hostnames
     if (!hostname.IsEmpty() &&
         net_IsValidHostName(NS_ConvertUTF16toUTF8(hostname))) {
-      gNeckoChild->SendCancelHTMLDNSPrefetch(nsString(hostname), flags,
-                                             aReason);
+      // during shutdown gNeckoChild might be null
+      if (gNeckoChild) {
+        gNeckoChild->SendCancelHTMLDNSPrefetch(nsString(hostname), flags,
+                                               aReason);
+      }
     }
     return NS_OK;
   }
@@ -326,8 +332,11 @@ nsHTMLDNSPrefetch::nsDeferrals::SubmitQueue()
 
         if (!hostName.IsEmpty() && NS_SUCCEEDED(rv) && !isLocalResource) {
           if (IsNeckoChild()) {
-            gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
-                                           mEntries[mTail].mFlags);
+            // during shutdown gNeckoChild might be null
+            if (gNeckoChild) {
+              gNeckoChild->SendHTMLDNSPrefetch(NS_ConvertUTF8toUTF16(hostName),
+                                               mEntries[mTail].mFlags);
+            }
           } else {
             nsCOMPtr<nsICancelable> tmpOutstanding;
 
