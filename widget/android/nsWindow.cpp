@@ -268,7 +268,7 @@ public:
     // Create and attach a window.
     static void Open(const jni::ClassObject::LocalRef& aCls,
                      GeckoView::Window::Param aWindow,
-                     GeckoView::Param aView,
+                     GeckoView::Param aView, jni::Object::Param aGLController,
                      int32_t aWidth, int32_t aHeight);
 
     // Set the active layer client object
@@ -374,6 +374,77 @@ public:
     void OnImeUpdateComposition(int32_t aStart, int32_t aEnd);
 };
 
+/**
+ * GLController has some unique requirements for its native calls, so make it
+ * separate from GeckoViewSupport.
+ */
+class nsWindow::GLControllerSupport final
+    : public GLController::Natives<GLControllerSupport>
+    , public SupportsWeakPtr<GLControllerSupport>
+    , public UsesGeckoThreadProxy
+{
+    nsWindow& window;
+    GLController::GlobalRef mGLController;
+
+public:
+    typedef GLController::Natives<GLControllerSupport> Base;
+
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GLControllerSupport);
+
+    GLControllerSupport(nsWindow* aWindow,
+                        const GLController::LocalRef& aInstance)
+        : window(*aWindow)
+        , mGLController(aInstance)
+    {
+        Reattach(aInstance);
+    }
+
+    ~GLControllerSupport()
+    {
+        GLController::GlobalRef glController(mozilla::Move(mGLController));
+        nsAppShell::gAppShell->PostEvent([glController] {
+            GLControllerSupport::DisposeNative(GLController::LocalRef(
+                        jni::GetGeckoThreadEnv(), glController));
+        });
+    }
+
+    void Reattach(const GLController::LocalRef& aInstance)
+    {
+        Base::AttachNative(aInstance, this);
+    }
+
+    /**
+     * GLController methods
+     */
+public:
+    using Base::DisposeNative;
+
+    void SetLayerClient(jni::Object::Param aClient)
+    {
+        // TODO: implement.
+    }
+
+    void CreateCompositor(int32_t aWidth, int32_t aHeight)
+    {
+        // TODO: implement.
+    }
+
+    void PauseCompositor()
+    {
+        // TODO: implement.
+    }
+
+    void SyncResumeResizeCompositor(int32_t aWidth, int32_t aHeight)
+    {
+        // TODO: implement.
+    }
+
+    void SyncInvalidateAndScheduleComposite()
+    {
+        // TODO: implement.
+    }
+};
+
 nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
@@ -387,6 +458,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
 nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
                                  GeckoView::Window::Param aWindow,
                                  GeckoView::Param aView,
+                                 jni::Object::Param aGLController,
                                  int32_t aWidth, int32_t aHeight)
 {
     MOZ_ASSERT(NS_IsMainThread());
@@ -399,6 +471,10 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
         MOZ_ASSERT(gGeckoViewWindow->mGeckoViewSupport);
         gGeckoViewWindow->mGeckoViewSupport->Reattach(
                 GeckoView::Window::LocalRef(aCls.Env(), aWindow));
+
+        MOZ_ASSERT(gGeckoViewWindow->mGLControllerSupport);
+        gGeckoViewWindow->mGLControllerSupport->Reattach(GLController::LocalRef(
+                aCls.Env(), GLController::Ref::From(aGLController)));
 
         // Associate our previous GeckoEditable with the new GeckoView.
         gGeckoViewWindow->mGeckoViewSupport->mEditable->OnViewChange(aView);
@@ -443,6 +519,11 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
     window->mGeckoViewSupport  = mozilla::MakeUnique<GeckoViewSupport>(
             window, GeckoView::Window::LocalRef(aCls.Env(), aWindow), aView);
 
+    // Attach the GLController to the new window.
+    window->mGLControllerSupport = mozilla::MakeUnique<GLControllerSupport>(
+            window, GLController::LocalRef(
+            aCls.Env(), GLController::Ref::From(aGLController)));
+
     gGeckoViewWindow = window;
 }
 
@@ -470,6 +551,7 @@ nsWindow::InitNatives()
 {
     nsWindow::GeckoViewSupport::Base::Init();
     nsWindow::GeckoViewSupport::EditableBase::Init();
+    nsWindow::GLControllerSupport::Init();
 }
 
 nsWindow*

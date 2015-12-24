@@ -1113,9 +1113,6 @@ constexpr char GeckoView::Window::DisposeNative_t::signature[];
 constexpr char GeckoView::Window::Open_t::name[];
 constexpr char GeckoView::Window::Open_t::signature[];
 
-constexpr char GeckoView::Window::SetLayerClient_t::name[];
-constexpr char GeckoView::Window::SetLayerClient_t::signature[];
-
 constexpr char PrefsHelper::name[];
 
 constexpr char PrefsHelper::GetPrefsById_t::name[];
