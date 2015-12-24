@@ -373,7 +373,7 @@ final class GeckoEditable extends JNIObject
     }
 
     @WrapForJNI
-    GeckoEditable() {
+    GeckoEditable(final GeckoView v) {
         if (DEBUG) {
             // Called by nsWindow.
             ThreadUtils.assertOnGeckoThread();
@@ -389,6 +389,8 @@ final class GeckoEditable extends JNIObject
                 PROXY_INTERFACES, this);
 
         mIcRunHandler = mIcPostHandler = ThreadUtils.getUiHandler();
+
+        onViewChange(v);
     }
 
     @WrapForJNI @Override
