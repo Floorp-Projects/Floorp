@@ -148,6 +148,12 @@ public:
         return Ref<Cls>(static_cast<jobject>(obj));
     }
 
+    // Construct a Ref form a generic object reference.
+    static Ref<Cls> From(const RefBase<Object, jobject>& obj)
+    {
+        return Ref<Cls>(obj.Get());
+    }
+
     // Get the raw JNI reference.
     JNIType Get() const
     {

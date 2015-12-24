@@ -203,11 +203,7 @@ public:
 
         mozilla::jni::MakeNativeMethod<GeckoView::Window::Open_t>(
                 mozilla::jni::NativeStub<GeckoView::Window::Open_t, Impl>
-                ::template Wrap<&Impl::Open>),
-
-        mozilla::jni::MakeNativeMethod<GeckoView::Window::SetLayerClient_t>(
-                mozilla::jni::NativeStub<GeckoView::Window::SetLayerClient_t, Impl>
-                ::template Wrap<&Impl::SetLayerClient>)
+                ::template Wrap<&Impl::Open>)
     };
 };
 

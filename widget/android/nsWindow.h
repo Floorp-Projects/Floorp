@@ -53,6 +53,10 @@ private:
     // nullptr for nsWindows that were not opened from GeckoView.
     mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
 
+    class GLControllerSupport;
+    // Object that implements native GLController calls.
+    mozilla::UniquePtr<GLControllerSupport> mGLControllerSupport;
+
 public:
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static mozilla::gfx::IntSize GetAndroidScreenBounds();
