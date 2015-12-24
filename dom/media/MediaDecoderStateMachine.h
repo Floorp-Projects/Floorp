@@ -448,12 +448,6 @@ protected:
   // Returns true if we have less than aUsecs of undecoded data available.
   bool HasLowUndecodedData(int64_t aUsecs);
 
-  // Returns the number of unplayed usecs of audio we've got decoded and/or
-  // pushed to the hardware waiting to play. This is how much audio we can
-  // play without having to run the audio decoder. The decoder monitor
-  // must be held.
-  int64_t AudioDecodedUsecs();
-
   // Returns true when there's decoded audio waiting to play.
   // The decoder monitor must be held.
   bool HasFutureAudio();
