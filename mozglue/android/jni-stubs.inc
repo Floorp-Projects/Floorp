@@ -20,25 +20,6 @@ Java_org_mozilla_gecko_GeckoAppShell_registerJavaUiThread(JNIEnv * arg0, jclass 
 
 #ifdef JNI_STUBS
 
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onResume_t)(JNIEnv *, jclass);
-static Java_org_mozilla_gecko_GeckoAppShell_onResume_t f_Java_org_mozilla_gecko_GeckoAppShell_onResume;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv * arg0, jclass arg1) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_onResume) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_onResume(arg0, arg1);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_onResume", &f_Java_org_mozilla_gecko_GeckoAppShell_onResume);
-#endif
-
-#ifdef JNI_STUBS
-
 typedef void (*Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable_t)(JNIEnv *, jclass, jobject, jint);
 static Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable_t f_Java_org_mozilla_gecko_GeckoAppShell_onSurfaceTextureFrameAvailable;
 extern "C" NS_EXPORT void MOZ_JNICALL
@@ -92,25 +73,6 @@ Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash(JNIEnv * arg0, jclass arg1,
 
 #ifdef JNI_BINDINGS
   xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash", &f_Java_org_mozilla_gecko_GeckoAppShell_reportJavaCrash);
-#endif
-
-#ifdef JNI_STUBS
-
-typedef void (*Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent_t)(JNIEnv *, jclass, jboolean);
-static Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent_t f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent;
-extern "C" NS_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv * arg0, jclass arg1, jboolean arg2) {
-    if (!f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent) {
-        arg0->ThrowNew(arg0->FindClass("java/lang/UnsupportedOperationException"),
-                       "JNI Function called before it was loaded");
-        return ;
-    }
-     f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(arg0, arg1, arg2);
-}
-#endif
-
-#ifdef JNI_BINDINGS
-  xul_dlsym("Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent", &f_Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent);
 #endif
 
 #ifdef JNI_STUBS
