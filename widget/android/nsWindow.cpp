@@ -2653,19 +2653,14 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
                              LayoutDeviceIntRect aRect)
 {
     GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
-    if (!client) {
-        ALOG_BRIDGE("Exceptional Exit: %s", __PRETTY_FUNCTION__);
+    MOZ_ASSERT(client);
+
+    LayerRenderer::Frame::LocalRef frame = client->CreateFrame();
+    mLayerRendererFrame = frame;
+    if (NS_WARN_IF(!mLayerRendererFrame)) {
         return;
     }
 
-    AutoLocalJNIFrame jniFrame(client.Env());
-    auto frameObj = client->CreateFrame();
-    if (!frameObj) {
-        NS_WARNING("Warning: unable to obtain a LayerRenderer frame; aborting window underlay draw");
-        return;
-    }
-
-    mLayerRendererFrame.Init(client.Env(), frameObj.Get());
     if (!WidgetPaintsBackground()) {
         return;
     }
@@ -2678,8 +2673,8 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
 
     client->ActivateProgram();
-    if (!mLayerRendererFrame.BeginDrawing(&jniFrame)) return;
-    if (!mLayerRendererFrame.DrawBackground(&jniFrame)) return;
+    frame->BeginDrawing();
+    frame->DrawBackground();
     client->DeactivateProgramAndRestoreState(scissorEnabled,
         scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
 }
@@ -2691,14 +2686,10 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay",
         js::ProfileEntry::Category::GRAPHICS);
 
-    if (mLayerRendererFrame.isNull()) {
-        NS_WARNING("Warning: do not have a LayerRenderer frame; aborting window overlay draw");
+    if (NS_WARN_IF(!mLayerRendererFrame)) {
         return;
     }
 
-    GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
-
-    AutoLocalJNIFrame jniFrame(client.Env());
     CompositorOGL *compositor = static_cast<CompositorOGL*>(aManager->GetCompositor());
     compositor->ResetProgram();
     gl::GLContext* gl = compositor->gl();
@@ -2706,12 +2697,15 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
     GLint scissorRect[4];
     gl->fGetIntegerv(LOCAL_GL_SCISSOR_BOX, scissorRect);
 
+    GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
+    MOZ_ASSERT(client);
+
     client->ActivateProgram();
-    if (!mLayerRendererFrame.DrawForeground(&jniFrame)) return;
-    if (!mLayerRendererFrame.EndDrawing(&jniFrame)) return;
+    mLayerRendererFrame->DrawForeground();
+    mLayerRendererFrame->EndDrawing();
     client->DeactivateProgramAndRestoreState(scissorEnabled,
         scissorRect[0], scissorRect[1], scissorRect[2], scissorRect[3]);
-    mLayerRendererFrame.Dispose(client.Env());
+    mLayerRendererFrame = nullptr;
 }
 
 // off-main-thread compositor fields and functions
