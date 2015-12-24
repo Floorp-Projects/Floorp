@@ -841,18 +841,16 @@ JitCode::traceChildren(JSTracer* trc)
     if (invalidated())
         return;
 
-    // If we're moving objects, we need writable JIT code.
-    ReprotectCode reprotect = (trc->runtime()->isHeapMinorCollecting() || zone()->isGCCompacting())
-                              ? Reprotect
-                              : DontReprotect;
-    MaybeAutoWritableJitCode awjc(this, reprotect);
-
     if (jumpRelocTableBytes_) {
         uint8_t* start = code_ + jumpRelocTableOffset();
         CompactBufferReader reader(start, start + jumpRelocTableBytes_);
         MacroAssembler::TraceJumpRelocations(trc, this, reader);
     }
     if (dataRelocTableBytes_) {
+        // If we're moving objects, we need writable JIT code.
+        bool movingObjects = trc->runtime()->isHeapMinorCollecting() || zone()->isGCCompacting();
+        MaybeAutoWritableJitCode awjc(this, movingObjects ? Reprotect : DontReprotect);
+
         uint8_t* start = code_ + dataRelocTableOffset();
         CompactBufferReader reader(start, start + dataRelocTableBytes_);
         MacroAssembler::TraceDataRelocations(trc, this, reader);
@@ -872,24 +870,22 @@ JitCode::finalize(FreeOp* fop)
     }
 #endif
 
-    // Buffer can be freed at any time hereafter. Catch use-after-free bugs.
-    // Don't do this if the Ion code is protected, as the signal handler will
-    // deadlock trying to reacquire the interrupt lock.
-    {
-        AutoWritableJitCode awjc(this);
-        memset(code_, JS_SWEPT_CODE_PATTERN, bufferSize_);
-        code_ = nullptr;
-    }
+    MOZ_ASSERT(pool_);
 
-    // Code buffers are stored inside JSC pools.
-    // Pools are refcounted. Releasing the pool may free it.
-    if (pool_) {
-        // Horrible hack: if we are using perf integration, we don't
-        // want to reuse code addresses, so we just leak the memory instead.
-        if (!PerfEnabled())
-            pool_->release(headerSize_ + bufferSize_, CodeKind(kind_));
-        pool_ = nullptr;
-    }
+    // With W^X JIT code, reprotecting memory for each JitCode instance is
+    // slow, so we record the ranges and poison them later all at once. It's
+    // safe to ignore OOM here, it just means we won't poison the code.
+    if (fop->appendJitPoisonRange(JitPoisonRange(pool_, code_, bufferSize_)))
+        pool_->addRef();
+    code_ = nullptr;
+
+    // Code buffers are stored inside ExecutablePools. Pools are refcounted.
+    // Releasing the pool may free it. Horrible hack: if we are using perf
+    // integration, we don't want to reuse code addresses, so we just leak the
+    // memory instead.
+    if (!PerfEnabled())
+        pool_->release(headerSize_ + bufferSize_, CodeKind(kind_));
+    pool_ = nullptr;
 }
 
 void
@@ -1359,6 +1355,9 @@ IonScript::purgeCaches()
     // ICs therefore are required to check for invalidation before patching,
     // to ensure the same invariant.
     if (invalidated())
+        return;
+
+    if (numCaches() == 0)
         return;
 
     AutoWritableJitCode awjc(method());
