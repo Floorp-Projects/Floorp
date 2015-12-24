@@ -7,10 +7,10 @@
 #ifndef DecodedStream_h_
 #define DecodedStream_h_
 
-#include "nsTArray.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "MediaSink.h"
+#include "OutputStreamManager.h"
 
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Maybe.h"
@@ -20,73 +20,13 @@
 
 namespace mozilla {
 
-class DecodedStream;
 class DecodedStreamData;
 class MediaData;
-class MediaInputPort;
 class MediaStream;
-class MediaStreamGraph;
-class OutputStreamManager;
 class ProcessedMediaStream;
 class TimeStamp;
 
 template <class T> class MediaQueue;
-
-class OutputStreamData {
-public:
-  ~OutputStreamData();
-  void Init(OutputStreamManager* aOwner, ProcessedMediaStream* aStream);
-
-  // Connect mStream to the input stream.
-  void Connect(MediaStream* aStream);
-  // Disconnect mStream from its input stream.
-  // Return false is mStream is already destroyed, otherwise true.
-  bool Disconnect();
-  // Return true if aStream points to the same object as mStream.
-  // Used by OutputStreamManager to remove an output stream.
-  bool Equals(MediaStream* aStream)
-  {
-    return mStream == aStream;
-  }
-  // Return the graph mStream belongs to.
-  MediaStreamGraph* Graph() const;
-
-private:
-  OutputStreamManager* mOwner;
-  RefPtr<ProcessedMediaStream> mStream;
-  // mPort connects our mStream to an input stream.
-  RefPtr<MediaInputPort> mPort;
-};
-
-class OutputStreamManager {
-public:
-  // Add the output stream to the collection.
-  void Add(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
-  // Remove the output stream from the collection.
-  void Remove(MediaStream* aStream);
-  // Return true if the collection empty.
-  bool IsEmpty() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return mStreams.IsEmpty();
-  }
-  // Connect all output streams in the collection to the input stream.
-  void Connect(MediaStream* aStream);
-  // Disconnect all output streams from the input stream.
-  void Disconnect();
-  // Return the graph these streams belong to or null if empty.
-  MediaStreamGraph* Graph() const
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-    return !IsEmpty() ? mStreams[0].Graph() : nullptr;
-  }
-
-private:
-  // Keep the input stream so we can connect the output streams that
-  // are added after Connect().
-  RefPtr<MediaStream> mInputStream;
-  nsTArray<OutputStreamData> mStreams;
-};
 
 class DecodedStream : public media::MediaSink {
   using media::MediaSink::PlaybackParams;
