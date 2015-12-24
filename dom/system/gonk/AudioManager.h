@@ -41,20 +41,6 @@ typedef Observer<SwitchEvent> SwitchObserver;
 namespace dom {
 namespace gonk {
 
-/**
- * FxOS can remeber the separate volume settings on difference output profiles.
- * (1) Primary : speaker, receiver
- * (2) Headset : wired headphone/headset
- * (3) Bluetooth : BT SCO/A2DP devices
- **/
-enum AudioOutputProfiles {
-  DEVICE_ERROR        = -1,
-  DEVICE_PRIMARY      = 0,
-  DEVICE_HEADSET      = 1,
-  DEVICE_BLUETOOTH    = 2,
-  DEVICE_TOTAL_NUMBER = 3,
-};
-
 class VolumeInitCallback;
 
 class AudioManager final : public nsIAudioManager
@@ -99,12 +85,8 @@ public:
     // Set volume index to all active devices.
     // Active devices are chosen by android AudioPolicyManager.
     nsresult SetVolumeIndexToActiveDevices(uint32_t aIndex);
-    // Set volume index to all alias streams. Alias streams have same volume.
-    // It is used to update volume based on audio output profile data.
+    // Set volume index to all alias streams for device. Alias streams have same volume.
     nsresult SetVolumeIndexToAliasStreams(uint32_t aIndex, uint32_t aDevice);
-    // Set volume index to all alias devices in audio output profile.
-    // Alias devices have same volume.
-    nsresult SetVolumeIndexToAliasDevices(uint32_t aIndex, uint32_t aDevice);
     nsresult SetVolumeIndex(uint32_t aIndex, uint32_t aDevice, bool aUpdateCache = true);
     // Restore volume index to all devices. Called when AudioFlinger is restarted.
     void RestoreVolumeIndexToAllDevices();
@@ -122,11 +104,14 @@ protected:
 
   bool mIsVolumeInited;
 
-  // A bitwise variable for volume update of audio output profiles
-  uint32_t mAudioOutProfileUpdated;
+  // A bitwise variable for volume update of audio output devices,
+  // clear it after store the value into database.
+  uint32_t mAudioOutDevicesUpdated;
 
   // Connected devices that are controlled by setDeviceConnectionState()
   nsDataHashtable<nsUint32HashKey, nsCString> mConnectedDevices;
+
+  nsDataHashtable<nsUint32HashKey, uint32_t> mAudioDeviceTableIdMaps;
 
   bool mSwitchDone;
 
@@ -141,11 +126,11 @@ protected:
 
   bool IsFmOutConnected();
 
-  nsresult SetStreamVolumeForProfile(AudioOutputProfiles aProfile,
-                                     int32_t aStream,
-                                     uint32_t aIndex);
+  nsresult SetStreamVolumeForDevice(int32_t aStream,
+                                    uint32_t aIndex,
+                                    uint32_t aDevice);
   nsresult SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex);
-  nsresult GetStreamVolumeIndex(int32_t aStream, uint32_t *aIndex);
+  nsresult GetStreamVolumeIndex(int32_t aStream, uint32_t* aIndex);
 
   void UpdateCachedActiveDevicesForStreams();
   uint32_t GetDevicesForStream(int32_t aStream, bool aFromCache = true);
@@ -166,24 +151,19 @@ private:
                                     const nsCString aAddress);
   void HandleAudioChannelProcessChanged();
 
-  // Initialize volume index for audio output profile
-  void InitVolumeForProfile(AudioOutputProfiles aProfile,
-                            int32_t aStreamType,
-                            uint32_t aIndex);
-
-  // Append the audio output profile to the volume setting string.
-  nsAutoCString AppendProfileToVolumeSetting(const char* aName,
-                                             AudioOutputProfiles aProfile);
+  // Append the audio output device to the volume setting string.
+  nsAutoCString AppendDeviceToVolumeSetting(const char* aName,
+                                            uint32_t aDevice);
 
   // We store the volume setting in the database, these are related functions.
   void InitVolumeFromDatabase();
   void MaybeUpdateVolumeSettingToDatabase(bool aForce = false);
 
   // Promise functions.
-  void InitProfileVolumeSucceeded();
-  void InitProfileVolumeFailed(const char* aError);
+  void InitDeviceVolumeSucceeded();
+  void InitDeviceVolumeFailed(const char* aError);
 
-  void AudioOutProfileUpdated(AudioOutputProfiles aProfile);
+  void AudioOutDeviceUpdated(uint32_t aDevice);
 
   void UpdateHeadsetConnectionState(hal::SwitchState aState);
   void UpdateDeviceConnectionState(bool aIsConnected, uint32_t aDevice, const nsCString& aDeviceName);
