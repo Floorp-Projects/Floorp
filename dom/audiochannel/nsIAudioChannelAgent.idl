@@ -34,7 +34,7 @@ interface nsIAudioChannelAgentCallback : nsISupports
  *   1. Changes to the playable status of this channel.
  */
 
-[uuid(18222148-1b32-463d-b050-b741f43a07ba)]
+[uuid(ab7e21c0-970c-11e5-a837-0800200c9a66)]
 interface nsIAudioChannelAgent : nsISupports
 {
   const long AUDIO_AGENT_CHANNEL_NORMAL             = 0;
@@ -51,9 +51,6 @@ interface nsIAudioChannelAgent : nsISupports
   const long AUDIO_AGENT_STATE_NORMAL               = 0;
   const long AUDIO_AGENT_STATE_MUTED                = 1;
   const long AUDIO_AGENT_STATE_FADED                = 2;
-
-  const long AUDIO_AGENT_DONT_NOTIFY                = 0;
-  const long AUDIO_AGENT_NOTIFY                     = 1;
 
   /**
    * Before init() is called, this returns AUDIO_AGENT_CHANNEL_ERROR.
@@ -101,10 +98,6 @@ interface nsIAudioChannelAgent : nsISupports
    * Note: Gecko component SHOULD call this function first then start to
    *          play audio stream only when return value is true.
    *
-   * @param notifyPlaying
-   *   Whether to send audio-playback notifications, one of AUDIO_CHANNEL_NOTIFY
-   *   or AUDIO_CHANNEL_DONT_NOTIFY.
-   *
    * @return
    *    normal state: the agent has registered with audio channel service and
    *          the component should start playback.
@@ -113,7 +106,7 @@ interface nsIAudioChannelAgent : nsISupports
    *    faded state: the agent has registered with audio channel service the
    *          component should start playback as well as reducing the volume.
    */
-  void notifyStartedPlaying(in unsigned long notifyPlayback, out float volume, out bool muted);
+  void notifyStartedPlaying(out float volume, out bool muted);
 
   /**
    * Notify the agent we no longer want to play.
