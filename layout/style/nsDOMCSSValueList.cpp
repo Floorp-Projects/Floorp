@@ -6,6 +6,7 @@
 
 #include "nsDOMCSSValueList.h"
 #include "mozilla/dom/CSSValueListBinding.h"
+#include "mozilla/Move.h"
 #include "nsAutoPtr.h"
 
 using namespace mozilla;
@@ -39,9 +40,10 @@ nsDOMCSSValueList::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 }
 
 void
-nsDOMCSSValueList::AppendCSSValue(CSSValue* aValue)
+nsDOMCSSValueList::AppendCSSValue(already_AddRefed<CSSValue> aValue)
 {
-  mCSSValues.AppendElement(aValue);
+  RefPtr<CSSValue> val = aValue;
+  mCSSValues.AppendElement(Move(val));
 }
 
 // nsIDOMCSSValue

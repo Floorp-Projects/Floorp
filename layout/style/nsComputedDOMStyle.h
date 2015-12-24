@@ -607,7 +607,7 @@ private:
 
   /* Helper functions for computing the filter property style. */
   void SetCssTextToCoord(nsAString& aCssText, const nsStyleCoord& aCoord);
-  mozilla::dom::CSSValue* CreatePrimitiveValueForStyleFilter(
+  already_AddRefed<mozilla::dom::CSSValue> CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
 
   // Helper function for computing basic shape styles.
