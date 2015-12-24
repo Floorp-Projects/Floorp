@@ -375,12 +375,6 @@ DecodedStream::CreateData(MozPromiseHolder<GenericPromise>&& aPromise)
   mOwnerThread->Dispatch(r.forget(), AbstractThread::DontAssertDispatchSuccess);
 }
 
-bool
-DecodedStream::HasConsumers() const
-{
-  return !mOutputStreamManager->IsEmpty();
-}
-
 void
 DecodedStream::OnDataCreated(UniquePtr<DecodedStreamData> aData)
 {
@@ -397,18 +391,6 @@ DecodedStream::OnDataCreated(UniquePtr<DecodedStreamData> aData)
 
   // Playback has ended. Destroy aData which is not needed anymore.
   DestroyData(Move(aData));
-}
-
-void
-DecodedStream::AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded)
-{
-  mOutputStreamManager->Add(aStream, aFinishWhenEnded);
-}
-
-void
-DecodedStream::RemoveOutput(MediaStream* aStream)
-{
-  mOutputStreamManager->Remove(aStream);
 }
 
 void
