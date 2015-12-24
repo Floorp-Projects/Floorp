@@ -42,6 +42,8 @@ private:
 };
 
 class OutputStreamManager {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OutputStreamManager);
+
 public:
   // Add the output stream to the collection.
   void Add(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
@@ -65,6 +67,7 @@ public:
   }
 
 private:
+  ~OutputStreamManager() {}
   // Keep the input stream so we can connect the output streams that
   // are added after Connect().
   RefPtr<MediaStream> mInputStream;
