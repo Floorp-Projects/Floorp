@@ -21,11 +21,6 @@
     #endif
 
     #ifdef ANDROID
-        /* from widget */
-        #ifdef MOZ_WIDGET_ANDROID
-            #include "AndroidBridge.h"
-        #endif
-
         #include <android/log.h>
         #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
 
@@ -172,13 +167,12 @@ static EGLSurface
 CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
     EGLSurface newSurface = nullptr;
 
+    MOZ_ASSERT(widget);
 #ifdef MOZ_WIDGET_ANDROID
-        mozilla::AndroidBridge::Bridge()->RegisterCompositor();
-        newSurface = mozilla::AndroidBridge::Bridge()->CreateEGLSurfaceForCompositor();
+    newSurface = EGLSurface(widget->GetNativeData(NS_NATIVE_NEW_EGL_SURFACE));
 #else
-        MOZ_ASSERT(widget != nullptr);
-        newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
-                                                      GET_NATIVE_WINDOW(widget), 0);
+    newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
+                                                  GET_NATIVE_WINDOW(widget), 0);
 #endif
     return newSurface;
 }

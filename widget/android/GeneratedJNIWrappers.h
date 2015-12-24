@@ -3353,12 +3353,12 @@ public:
     };
 
 public:
-    struct CreateEGLSurfaceForCompositorWrapper_t {
+    struct CreateEGLSurface_t {
         typedef GLController Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
         typedef mozilla::jni::Object::Param SetterType;
         typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "createEGLSurfaceForCompositor";
+        static constexpr char name[] = "createEGLSurface";
         static constexpr char signature[] =
                 "()Ljavax/microedition/khronos/egl/EGLSurface;";
         static const bool isStatic = false;
@@ -3367,7 +3367,7 @@ public:
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    auto CreateEGLSurfaceForCompositorWrapper() const -> mozilla::jni::Object::LocalRef;
+    auto CreateEGLSurface() const -> mozilla::jni::Object::LocalRef;
 
 public:
     struct DisposeNative_t {
@@ -3864,23 +3864,6 @@ public:
 
 protected:
     LayerView(jobject instance) : Class(instance) {}
-
-public:
-    struct RegisterCompositorWrapper_t {
-        typedef LayerView Owner;
-        typedef mozilla::jni::Object::LocalRef ReturnType;
-        typedef mozilla::jni::Object::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "registerCxxCompositor";
-        static constexpr char signature[] =
-                "()Lorg/mozilla/gecko/gfx/GLController;";
-        static const bool isStatic = true;
-        static const bool isMultithreaded = true;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    static auto RegisterCompositorWrapper() -> mozilla::jni::Object::LocalRef;
 
 public:
     struct updateZoomedView_t {

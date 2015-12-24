@@ -218,10 +218,6 @@ public:
 
     void GetIconForExtension(const nsACString& aFileExt, uint32_t aIconSize, uint8_t * const aBuf);
 
-    // Switch Java to composite with the Gecko Compositor thread
-    void RegisterCompositor(JNIEnv* env = nullptr);
-    EGLSurface CreateEGLSurfaceForCompositor();
-
     bool GetStaticStringField(const char *classID, const char *field, nsAString &result, JNIEnv* env = nullptr);
 
     bool GetStaticIntField(const char *className, const char *fieldName, int32_t* aInt, JNIEnv* env = nullptr);
@@ -410,11 +406,6 @@ protected:
     // For native surface stuff
     jclass jSurfaceClass;
     jfieldID jSurfacePointerField;
-
-    jclass jLayerView;
-
-    jfieldID jEGLSurfacePointerField;
-    widget::GLController::GlobalRef mGLControllerObj;
 
     // some convinient types to have around
     jclass jStringClass;
