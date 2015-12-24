@@ -64,18 +64,16 @@ class FasterMakeBackend(CommonBackend):
             **kwargs)
 
     def consume_object(self, obj):
-        if isinstance(obj, (JARManifest, FinalTargetPreprocessedFiles)):
-            defines = obj.defines or {}
-            if defines:
-                defines = defines.defines
-
         if isinstance(obj, JARManifest) and \
                 obj.install_target.startswith('dist/bin'):
-            self._consume_jar_manifest(obj, defines)
+            self._consume_jar_manifest(obj)
 
         elif isinstance(obj, (FinalTargetFiles,
                               FinalTargetPreprocessedFiles)) and \
                 obj.install_target.startswith('dist/bin'):
+            defines = obj.defines or {}
+            if defines:
+                defines = defines.defines
             for path, files in obj.files.walk():
                 for f in files:
                     if isinstance(obj, FinalTargetPreprocessedFiles):
@@ -121,7 +119,7 @@ class FasterMakeBackend(CommonBackend):
         # everything.
         return True
 
-    def _consume_jar_manifest(self, obj, defines):
+    def _consume_jar_manifest(self, obj):
         # Ideally, this would all be handled somehow in the emitter, but
         # this would require all the magic surrounding l10n and addons in
         # the recursive make backend to die, which is not going to happen
@@ -132,7 +130,8 @@ class FasterMakeBackend(CommonBackend):
         # - The equivalent of -e when USE_EXTENSION_MANIFEST is set in
         #   moz.build, but it doesn't matter in dist/bin.
         pp = Preprocessor()
-        pp.context.update(defines)
+        if obj.defines:
+            pp.context.update(obj.defines.defines)
         pp.context.update(self.environment.defines)
         pp.context.update(
             AB_CD='en-US',
@@ -153,7 +152,8 @@ class FasterMakeBackend(CommonBackend):
                 install_target = mozpath.normpath(
                     mozpath.join(install_target, jarinfo.base))
             jar_context['FINAL_TARGET'] = install_target
-            jar_context['DEFINES'] = defines
+            if obj.defines:
+                jar_context['DEFINES'] = obj.defines.defines
             files = jar_context['FINAL_TARGET_FILES']
             files_pp = jar_context['FINAL_TARGET_PP_FILES']
 
