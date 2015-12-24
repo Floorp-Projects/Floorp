@@ -5287,7 +5287,7 @@ FrameLayerBuilder::BuildContainerLayerFor(nsDisplayListBuilder* aBuilder,
   const DisplayItemScrollClip* containerScrollClip = aParameters.mScrollClip;
 
   ContainerLayerParameters scaleParameters;
-  nsRect bounds = aChildren->GetClippedBoundsUpTo(aBuilder, containerScrollClip);
+  nsRect bounds = aChildren->GetScrollClippedBoundsUpTo(aBuilder, containerScrollClip);
   nsRect childrenVisible =
       aContainerItem ? aContainerItem->GetVisibleRectForChildren() :
           aContainerFrame->GetVisualOverflowRectRelativeToSelf();

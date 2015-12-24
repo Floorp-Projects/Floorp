@@ -1396,11 +1396,11 @@ nsDisplayList::GetBounds(nsDisplayListBuilder* aBuilder) const {
 }
 
 nsRect
-nsDisplayList::GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const {
+nsDisplayList::GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
+                                          const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const {
   nsRect bounds;
   for (nsDisplayItem* i = GetBottom(); i != nullptr; i = i->GetAbove()) {
-    bounds.UnionRect(bounds, i->GetClippedBoundsUpTo(aBuilder, aIncludeScrollClipsUpTo));
+    bounds.UnionRect(bounds, i->GetScrollClippedBoundsUpTo(aBuilder, aIncludeScrollClipsUpTo));
   }
   return bounds;
 }
@@ -2187,8 +2187,8 @@ nsDisplayItem::GetClippedBounds(nsDisplayListBuilder* aBuilder)
 }
 
 nsRect
-nsDisplayItem::GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo)
+nsDisplayItem::GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
+                                          const DisplayItemScrollClip* aIncludeScrollClipsUpTo)
 {
   nsRect r = GetClippedBounds(aBuilder);
   for (const DisplayItemScrollClip* sc = mScrollClip;
