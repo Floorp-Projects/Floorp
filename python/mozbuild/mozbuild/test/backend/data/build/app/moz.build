@@ -45,5 +45,9 @@ JS_PREFERENCE_FILES += [
     '../prefs.js',
 ]
 
+JAR_MANIFESTS += [
+    '../jar.mn',
+]
+
 DEFINES['FOO'] = 'bar'
 DEFINES['BAR'] = True

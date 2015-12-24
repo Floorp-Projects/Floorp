@@ -169,7 +169,21 @@ class TestBuild(unittest.TestCase):
             'bin/app/baz.ini': 'baz.ini: FOO is bar\n',
             'bin/app/child/bar.ini': 'bar.ini\n',
             'bin/app/child2/qux.ini': 'qux.ini: BAR is defined\n',
-            'bin/app/chrome.manifest': 'manifest components/components.manifest\n',
+            'bin/app/chrome.manifest':
+                'manifest chrome/foo.manifest\n'
+                'manifest components/components.manifest\n',
+            'bin/app/chrome/foo.manifest':
+                'content bar foo/child/\n'
+                'content foo foo/\n'
+                'override chrome://foo/bar.svg#hello '
+                'chrome://bar/bar.svg#hello\n',
+            'bin/app/chrome/foo/bar.js': 'bar.js\n',
+            'bin/app/chrome/foo/child/baz.jsm':
+                '//@line 2 "%sbaz.jsm"\nbaz.jsm: FOO is bar\n' % (test_path),
+            'bin/app/chrome/foo/child/hoge.js':
+                '//@line 2 "%sbar.js"\nbar.js: FOO is bar\n' % (test_path),
+            'bin/app/chrome/foo/foo.js': 'foo.js\n',
+            'bin/app/chrome/foo/qux.js': 'bar.js\n',
             'bin/app/components/bar.js':
                 '//@line 2 "%sbar.js"\nbar.js: FOO is bar\n' % (test_path),
             'bin/app/components/components.manifest':
