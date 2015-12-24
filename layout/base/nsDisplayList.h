@@ -1437,8 +1437,8 @@ public:
    * The intersection is approximate since rounded corners are not taking into
    * account.
    */
-  nsRect GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                              const DisplayItemScrollClip* aIncludeScrollClipsUpTo);
+  nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
+                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo);
 
   nsRect GetBorderRect() {
     return nsRect(ToReferenceFrame(), Frame()->GetSize());
@@ -2162,8 +2162,11 @@ public:
    * The result is not cached.
    */
   nsRect GetBounds(nsDisplayListBuilder* aBuilder) const;
-  nsRect GetClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
-                              const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const;
+  /**
+   * Return the union of the scroll clipped bounds of all children.
+   */
+  nsRect GetScrollClippedBoundsUpTo(nsDisplayListBuilder* aBuilder,
+                                    const DisplayItemScrollClip* aIncludeScrollClipsUpTo) const;
   /**
    * Find the topmost display item that returns a non-null frame, and return
    * the frame.
@@ -3187,7 +3190,7 @@ public:
    */
   virtual void UpdateBounds(nsDisplayListBuilder* aBuilder) override
   {
-    mBounds = mList.GetClippedBoundsUpTo(aBuilder, mScrollClip);
+    mBounds = mList.GetScrollClippedBoundsUpTo(aBuilder, mScrollClip);
     // The display list may contain content that's visible outside the visible
     // rect (i.e. the current dirty rect) passed in when the item was created.
     // This happens when the dirty rect has been restricted to the visual
