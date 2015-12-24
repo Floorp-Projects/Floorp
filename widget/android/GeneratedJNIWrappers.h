@@ -1543,6 +1543,24 @@ public:
     static auto SetKeepScreenOn(bool) -> void;
 
 public:
+    struct SetScreenDepthOverride_t {
+        typedef GeckoAppShell Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                int32_t> Args;
+        static constexpr char name[] = "setScreenDepthOverride";
+        static constexpr char signature[] =
+                "(I)V";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto SetScreenDepthOverride(int32_t) -> void;
+
+public:
     struct SetURITitle_t {
         typedef GeckoAppShell Owner;
         typedef void ReturnType;

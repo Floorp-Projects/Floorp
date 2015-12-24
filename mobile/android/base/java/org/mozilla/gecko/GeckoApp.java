@@ -2590,8 +2590,7 @@ public abstract class GeckoApp
         GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("Update:CheckResult", result));
     }
 
-    protected void geckoConnected() {
-        mLayerView.geckoConnected();
+    private void geckoConnected() {
         mLayerView.setOverScrollMode(View.OVER_SCROLL_NEVER);
     }
 

@@ -404,7 +404,6 @@ public class GeckoView extends LayerView
             Tabs.getInstance().notifyListeners(selectedTab, Tabs.TabEvents.SELECTED);
         }
 
-        geckoConnected();
         GeckoAppShell.sendEventToGecko(
                 GeckoEvent.createBroadcastEvent("Viewport:Flush", null));
     }

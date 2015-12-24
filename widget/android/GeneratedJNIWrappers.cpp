@@ -646,6 +646,14 @@ auto GeckoAppShell::SetKeepScreenOn(bool a0) -> void
     return mozilla::jni::Method<SetKeepScreenOn_t>::Call(nullptr, nullptr, a0);
 }
 
+constexpr char GeckoAppShell::SetScreenDepthOverride_t::name[];
+constexpr char GeckoAppShell::SetScreenDepthOverride_t::signature[];
+
+auto GeckoAppShell::SetScreenDepthOverride(int32_t a0) -> void
+{
+    return mozilla::jni::Method<SetScreenDepthOverride_t>::Call(nullptr, nullptr, a0);
+}
+
 constexpr char GeckoAppShell::SetURITitle_t::name[];
 constexpr char GeckoAppShell::SetURITitle_t::signature[];
 
