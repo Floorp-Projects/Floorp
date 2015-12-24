@@ -2996,6 +2996,39 @@ public:
     };
 
 public:
+    struct Reattach_t {
+        typedef Window Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                GeckoView::Param> Args;
+        static constexpr char name[] = "reattach";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/GeckoView;)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct GlController_t {
+        typedef Window Owner;
+        typedef mozilla::jni::Object::LocalRef ReturnType;
+        typedef mozilla::jni::Object::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "glController";
+        static constexpr char signature[] =
+                "Lorg/mozilla/gecko/gfx/GLController;";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto GlController() const -> mozilla::jni::Object::LocalRef;
+
+public:
     template<class Impl> class Natives;
 };
 

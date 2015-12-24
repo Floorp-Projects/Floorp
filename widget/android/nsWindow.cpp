@@ -144,10 +144,8 @@ NS_IMPL_ISUPPORTS(ContentCreationNotifier,
 // one.
 static nsTArray<nsWindow*> gTopLevelWindows;
 
-// FIXME: because we don't support separate nsWindow for each GeckoView
-// yet, we have to attach a new GeckoView to an existing nsWindow if it
-// exists. Eventually, an nsWindow will be opened/closed as each GeckoView
-// is created/destroyed.
+// FIXME: because we don't support multiple GeckoViews for every feature
+// yet, we have to default to a particular GeckoView for certain calls.
 static nsWindow* gGeckoViewWindow;
 
 static bool sFailedToCreateGLContext = false;
@@ -273,6 +271,9 @@ public:
 
     // Close and destroy the nsWindow.
     void Close();
+
+    // Reattach this nsWindow to a new GeckoView.
+    void Reattach(GeckoView::Param aView);
 
     /**
      * GeckoEditable methods
@@ -649,21 +650,6 @@ nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
     PROFILER_LABEL("nsWindow", "GeckoViewSupport::Open",
                    js::ProfileEntry::Category::OTHER);
 
-    if (gGeckoViewWindow) {
-        // Should have been created the first time.
-        MOZ_ASSERT(gGeckoViewWindow->mGeckoViewSupport);
-        gGeckoViewWindow->mGeckoViewSupport->Reattach(
-                GeckoView::Window::LocalRef(aCls.Env(), aWindow));
-
-        MOZ_ASSERT(gGeckoViewWindow->mGLControllerSupport);
-        gGeckoViewWindow->mGLControllerSupport->Reattach(GLController::LocalRef(
-                aCls.Env(), GLController::Ref::From(aGLController)));
-
-        // Associate our previous GeckoEditable with the new GeckoView.
-        gGeckoViewWindow->mGeckoViewSupport->mEditable->OnViewChange(aView);
-        return;
-    }
-
     nsCOMPtr<nsIWindowWatcher> ww = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
     MOZ_ASSERT(ww);
 
@@ -727,6 +713,13 @@ nsWindow::GeckoViewSupport::Close()
     MOZ_ASSERT(baseWindow);
 
     baseWindow->Destroy();
+}
+
+void
+nsWindow::GeckoViewSupport::Reattach(GeckoView::Param aView)
+{
+    // Associate our previous GeckoEditable with the new GeckoView.
+    mEditable->OnViewChange(aView);
 }
 
 void
