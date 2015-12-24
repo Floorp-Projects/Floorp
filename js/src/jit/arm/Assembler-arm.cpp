@@ -751,20 +751,8 @@ Assembler::GetCF32Target(Iter* iter)
         return dest;
     }
 
-    if (inst1->is<InstLDR>()) {
-        InstLDR* load = inst1->as<InstLDR>();
-        uint32_t inst = load->encode();
-        // Get the address of the instruction as a raw pointer.
-        char* dataInst = reinterpret_cast<char*>(load);
-        IsUp_ iu = IsUp_(inst & IsUp);
-        int32_t offset = inst & 0xfff;
-        if (iu != IsUp) {
-            offset = - offset;
-        }
-        uint32_t** ptr = (uint32_t**)&dataInst[offset + 8];
-        return *ptr;
-
-    }
+    if (inst1->is<InstLDR>())
+        return *(uint32_t**) inst1->as<InstLDR>()->dest();
 
     MOZ_CRASH("unsupported branch relocation");
 }
@@ -785,6 +773,9 @@ Assembler::GetPtr32Target(Iter* start, Register* dest, RelocStyle* style)
     Instruction* load2 = start->next();
 
     if (load1->is<InstMovW>() && load2->is<InstMovT>()) {
+        if (style)
+            *style = L_MOVWT;
+
         // See if we have the complex case:
         //  movw r_temp, #imm1
         //  movt r_temp, #imm2
@@ -807,27 +798,17 @@ Assembler::GetPtr32Target(Iter* start, Register* dest, RelocStyle* style)
 
         if (dest)
             *dest = temp;
-        if (style)
-            *style = L_MOVWT;
 
         uint32_t* value = (uint32_t*) (targ_bot.decode() | (targ_top.decode() << 16));
         return value;
     }
+
     if (load1->is<InstLDR>()) {
-        InstLDR* load = load1->as<InstLDR>();
-        uint32_t inst = load->encode();
-        // Get the address of the instruction as a raw pointer.
-        char* dataInst = reinterpret_cast<char*>(load);
-        IsUp_ iu = IsUp_(inst & IsUp);
-        int32_t offset = inst & 0xfff;
-        if (iu == IsDown)
-            offset = - offset;
-        if (dest)
-            *dest = toRD(*load);
         if (style)
             *style = L_LDR;
-        uint32_t** ptr = (uint32_t**)&dataInst[offset + 8];
-        return *ptr;
+        if (dest)
+            *dest = toRD(*load1);
+        return *(uint32_t**) load1->as<InstLDR>()->dest();
     }
 
     MOZ_CRASH("unsupported relocation");
@@ -2127,12 +2108,7 @@ Assembler::as_Imm32Pool(Register dest, uint32_t value, Condition c)
 Assembler::WritePoolEntry(Instruction* addr, Condition c, uint32_t data)
 {
     MOZ_ASSERT(addr->is<InstLDR>());
-    int32_t offset = addr->encode() & 0xfff;
-    if ((addr->encode() & IsUp) != IsUp)
-        offset = -offset;
-    char * rawAddr = reinterpret_cast<char*>(addr);
-    uint32_t * dest = reinterpret_cast<uint32_t*>(&rawAddr[offset + 8]);
-    *dest = data;
+    *addr->as<InstLDR>()->dest() = data;
     MOZ_ASSERT(addr->extractCond() == c);
 }
 
