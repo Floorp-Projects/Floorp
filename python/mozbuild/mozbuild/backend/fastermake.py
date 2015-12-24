@@ -8,6 +8,7 @@ from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.context import (
     Context,
     Path,
+    VARIABLES,
 )
 from mozbuild.frontend.data import (
     ChromeManifestEntry,
@@ -22,6 +23,7 @@ from mozbuild.jar import JarManifestParser
 from mozbuild.makeutil import Makefile
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import OrderedDefaultDict
+from mozpack.chrome.manifest import parse_manifest_line
 from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
 from collections import OrderedDict
@@ -121,14 +123,16 @@ class FasterMakeBackend(CommonBackend):
         pp.do_include(obj.path.full_path)
         self.backend_input_files |= pp.includes
 
-        jar_context = Context(config=obj._context.config)
-        jar_context.add_source(obj.path.full_path)
-
         for jarinfo in pp.out:
+            jar_context = Context(
+                allowed_variables=VARIABLES, config=obj._context.config)
+            jar_context.add_source(obj.path.full_path)
+
             install_target = obj.install_target
             if jarinfo.base:
                 install_target = mozpath.normpath(
                     mozpath.join(install_target, jarinfo.base))
+            jar_context['FINAL_TARGET'] = install_target
             for e in jarinfo.entries:
                 if e.is_locale:
                     if jarinfo.relativesrcdir:
@@ -186,18 +190,12 @@ class FasterMakeBackend(CommonBackend):
                         src.full_path,
                         mozpath.join(jarinfo.name, e.output))
 
-            manifest = mozpath.normpath(mozpath.join(install_target,
-                                                     jarinfo.name))
-            manifest += '.manifest'
             for m in jarinfo.chrome_manifests:
-                self._manifest_entries[manifest].add(
+                entry = parse_manifest_line(
+                    mozpath.dirname(jarinfo.name),
                     m.replace('%', mozpath.basename(jarinfo.name) + '/'))
-
-            if jarinfo.name != 'chrome':
-                manifest = mozpath.normpath(mozpath.join(install_target,
-                                                         'chrome.manifest'))
-                entry = 'manifest %s.manifest' % jarinfo.name
-                self._manifest_entries[manifest].add(entry)
+                self.consume_object(ChromeManifestEntry(
+                    jar_context, '%s.manifest' % jarinfo.name, entry))
 
     def consume_finished(self):
         mk = Makefile()
