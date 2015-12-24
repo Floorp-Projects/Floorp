@@ -256,6 +256,8 @@ public class GeckoView extends LayerView
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     window, "disposeNative");
         }
+
+        super.destroy();
     }
 
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {

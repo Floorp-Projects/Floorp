@@ -2177,8 +2177,6 @@ public abstract class GeckoApp
 
         deleteTempFiles();
 
-        if (mLayerView != null)
-            mLayerView.destroy();
         if (mDoorHangerPopup != null)
             mDoorHangerPopup.destroy();
         if (mFormAssistPopup != null)
