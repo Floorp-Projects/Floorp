@@ -454,8 +454,7 @@ FMRadio::EnableAudioChannelAgent()
 
   float volume = 0.0;
   bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
-                                           &volume, &muted);
+  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
   WindowVolumeChanged(volume, muted);
 
   mAudioChannelAgentEnabled = true;
