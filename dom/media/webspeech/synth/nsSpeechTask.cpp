@@ -697,7 +697,6 @@ nsSpeechTask::CreateAudioChannelAgent()
   float volume = 0.0f;
   bool muted = true;
   mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY, &volume, &muted);
-  WindowVolumeChanged(volume, muted);
 }
 
 void
