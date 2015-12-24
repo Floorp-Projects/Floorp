@@ -11,6 +11,7 @@ from mozunit import main
 
 from mozbuild.frontend.context import (
     ObjDirPath,
+    Path,
 )
 from mozbuild.frontend.data import (
     AndroidResDirs,
@@ -698,7 +699,7 @@ class TestEmitterBasic(unittest.TestCase):
         self.assertEqual(len(objs), 1)
         for obj in objs:
             self.assertIsInstance(obj, JARManifest)
-            self.assertTrue(os.path.isabs(obj.path))
+            self.assertIsInstance(obj.path, Path)
 
     def test_jar_manifests_multiple_files(self):
         with self.assertRaisesRegexp(SandboxValidationError, 'limited to one value'):

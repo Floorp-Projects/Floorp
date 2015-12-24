@@ -131,7 +131,7 @@ class FasterMakeBackend(CommonBackend):
             BUILD_FASTER=1,
         )
         pp.out = JarManifestParser()
-        pp.do_include(obj.path)
+        pp.do_include(obj.path.full_path)
         self.backend_input_files |= pp.includes
 
         for jarinfo in pp.out:
@@ -145,13 +145,13 @@ class FasterMakeBackend(CommonBackend):
                         path = mozpath.join(self.environment.topsrcdir,
                                             jarinfo.relativesrcdir)
                     else:
-                        path = mozpath.dirname(obj.path)
+                        path = mozpath.dirname(obj.path.full_path)
                     src = mozpath.join( path, 'en-US', e.source)
                 elif e.source.startswith('/'):
                     src = mozpath.join(self.environment.topsrcdir,
                                        e.source[1:])
                 else:
-                    src = mozpath.join(mozpath.dirname(obj.path), e.source)
+                    src = mozpath.join(mozpath.dirname(obj.path.full_path), e.source)
 
                 if '*' in e.source:
                     if e.preprocess:

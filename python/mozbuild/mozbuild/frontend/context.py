@@ -1307,7 +1307,7 @@ VARIABLES = {
         will be made explicit.
         """, None),
 
-    'JAR_MANIFESTS': (StrictOrderingOnAppendList, list,
+    'JAR_MANIFESTS': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """JAR manifest files that should be processed as part of the build.
 
         JAR manifests are files in the tree that define how to package files
