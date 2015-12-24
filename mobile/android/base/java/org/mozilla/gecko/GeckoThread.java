@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class GeckoThread extends Thread implements GeckoEventListener {
     private static final String LOGTAG = "GeckoThread";
@@ -79,7 +78,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     public static final State MIN_STATE = State.INITIAL;
     public static final State MAX_STATE = State.EXITED;
 
-    private static final AtomicReference<State> sState = new AtomicReference<>(State.INITIAL);
+    private static volatile State sState = State.INITIAL;
 
     private static class QueuedCall {
         public Method method;
@@ -153,6 +152,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     // Invoke the given Method and handle checked Exceptions.
     private static void invokeMethod(final Method method, final Object obj, final Object[] args) {
         try {
+            method.setAccessible(true);
             method.invoke(obj, args);
         } catch (final IllegalAccessException e) {
             throw new IllegalStateException("Unexpected exception", e);
@@ -258,40 +258,38 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     // Run all queued methods
-    private static void flushQueuedNativeCalls(final State state) {
-        synchronized (QUEUED_CALLS) {
-            int lastSkipped = -1;
-            for (int i = 0; i < QUEUED_CALLS.size(); i++) {
-                final QueuedCall call = QUEUED_CALLS.get(i);
-                if (call == null) {
-                    // We already handled the call.
-                    continue;
-                }
-                if (!state.isAtLeast(call.state)) {
-                    // The call is not ready yet; skip it.
-                    lastSkipped = i;
-                    continue;
-                }
-                // Mark as handled.
-                QUEUED_CALLS.set(i, null);
+    private static void flushQueuedNativeCallsLocked(final State state) {
+        int lastSkipped = -1;
+        for (int i = 0; i < QUEUED_CALLS.size(); i++) {
+            final QueuedCall call = QUEUED_CALLS.get(i);
+            if (call == null) {
+                // We already handled the call.
+                continue;
+            }
+            if (!state.isAtLeast(call.state)) {
+                // The call is not ready yet; skip it.
+                lastSkipped = i;
+                continue;
+            }
+            // Mark as handled.
+            QUEUED_CALLS.set(i, null);
 
-                if (call.method == null) {
-                    final GeckoEvent e = (GeckoEvent) call.target;
-                    GeckoAppShell.notifyGeckoOfEvent(e);
-                    e.recycle();
-                    continue;
-                }
-                invokeMethod(call.method, call.target, call.args);
+            if (call.method == null) {
+                final GeckoEvent e = (GeckoEvent) call.target;
+                GeckoAppShell.notifyGeckoOfEvent(e);
+                e.recycle();
+                continue;
             }
-            if (lastSkipped < 0) {
-                // We're done here; release the memory
-                QUEUED_CALLS.clear();
-                QUEUED_CALLS.trimToSize();
-            } else if (lastSkipped < QUEUED_CALLS.size() - 1) {
-                // We skipped some; free up null entries at the end,
-                // but keep all the previous entries for later.
-                QUEUED_CALLS.subList(lastSkipped + 1, QUEUED_CALLS.size()).clear();
-            }
+            invokeMethod(call.method, call.target, call.args);
+        }
+        if (lastSkipped < 0) {
+            // We're done here; release the memory
+            QUEUED_CALLS.clear();
+            QUEUED_CALLS.trimToSize();
+        } else if (lastSkipped < QUEUED_CALLS.size() - 1) {
+            // We skipped some; free up null entries at the end,
+            // but keep all the previous entries for later.
+            QUEUED_CALLS.subList(lastSkipped + 1, QUEUED_CALLS.size()).clear();
         }
     }
 
@@ -497,7 +495,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isState(final State state) {
-        return sState.get().is(state);
+        return sState.is(state);
     }
 
     /**
@@ -508,7 +506,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isStateAtLeast(final State state) {
-        return sState.get().isAtLeast(state);
+        return sState.isAtLeast(state);
     }
 
     /**
@@ -519,7 +517,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isStateAtMost(final State state) {
-        return sState.get().isAtMost(state);
+        return sState.isAtMost(state);
     }
 
     /**
@@ -531,22 +529,27 @@ public class GeckoThread extends Thread implements GeckoEventListener {
      * @return True if the current Gecko thread state matches
      */
     public static boolean isStateBetween(final State minState, final State maxState) {
-        return sState.get().isBetween(minState, maxState);
+        return sState.isBetween(minState, maxState);
     }
 
     @WrapForJNI
     private static void setState(final State newState) {
         ThreadUtils.assertOnGeckoThread();
-        sState.set(newState);
-        flushQueuedNativeCalls(newState);
+        synchronized (QUEUED_CALLS) {
+            flushQueuedNativeCallsLocked(newState);
+            sState = newState;
+        }
     }
 
     private static boolean checkAndSetState(final State currentState, final State newState) {
-        if (!sState.compareAndSet(currentState, newState)) {
-            return false;
+        synchronized (QUEUED_CALLS) {
+            if (sState == currentState) {
+                flushQueuedNativeCallsLocked(newState);
+                sState = newState;
+                return true;
+            }
         }
-        flushQueuedNativeCalls(newState);
-        return true;
+        return false;
     }
 
     @WrapForJNI(stubName = "SpeculativeConnect")
