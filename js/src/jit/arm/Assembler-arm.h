@@ -2017,6 +2017,23 @@ class InstLDR : public InstDTR
     static bool IsTHIS(const Instruction& i);
     static InstLDR* AsTHIS(const Instruction& i);
 
+    int32_t signedOffset() const {
+        int32_t offset = encode() & 0xfff;
+        if (IsUp_(encode() & IsUp) != IsUp)
+            return -offset;
+        return offset;
+    }
+    uint32_t* dest() const {
+        int32_t offset = signedOffset();
+        // When patching the load in PatchConstantPoolLoad, we ensure that the
+        // offset is a multiple of 4, offset by 8 bytes from the actual
+        // location.  Indeed, when the base register is PC, ARM's 3 stages
+        // pipeline design makes it that PC is off by 8 bytes (= 2 *
+        // sizeof(uint32*)) when we actually executed it.
+        MOZ_ASSERT(offset % 4 == 0);
+        offset >>= 2;
+        return (uint32_t*)raw() + offset + 2;
+    }
 };
 JS_STATIC_ASSERT(sizeof(InstDTR) == sizeof(InstLDR));
 
