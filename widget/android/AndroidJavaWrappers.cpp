@@ -434,12 +434,6 @@ AndroidGeckoEvent::Init(JNIEnv *jenv, jobject jobj)
             break;
         }
 
-        case COMPOSITOR_CREATE: {
-            mWidth = jenv->GetIntField(jobj, jWidthField);
-            mHeight = jenv->GetIntField(jobj, jHeightField);
-            break;
-        }
-
         case CALL_OBSERVER: {
             ReadCharactersField(jenv);
             ReadCharactersExtraField(jenv);

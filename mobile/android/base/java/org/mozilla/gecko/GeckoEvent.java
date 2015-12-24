@@ -84,9 +84,6 @@ public class GeckoEvent {
         NETWORK_CHANGED(22),
         THUMBNAIL(25),
         SCREENORIENTATION_CHANGED(27),
-        COMPOSITOR_CREATE(28),
-        COMPOSITOR_PAUSE(29),
-        COMPOSITOR_RESUME(30),
         NATIVE_GESTURE_EVENT(31),
         CALL_OBSERVER(33),
         REMOVE_OBSERVER(34),
@@ -175,21 +172,6 @@ public class GeckoEvent {
 
     public static GeckoEvent createNoOpEvent() {
         return GeckoEvent.get(NativeGeckoEvent.NOOP);
-    }
-
-    public static GeckoEvent createCompositorCreateEvent(int width, int height) {
-        GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_CREATE);
-        event.mWidth = width;
-        event.mHeight = height;
-        return event;
-    }
-
-    public static GeckoEvent createCompositorPauseEvent() {
-        return GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_PAUSE);
-    }
-
-    public static GeckoEvent createCompositorResumeEvent() {
-        return GeckoEvent.get(NativeGeckoEvent.COMPOSITOR_RESUME);
     }
 
     /**
