@@ -5,6 +5,10 @@
 from __future__ import absolute_import, unicode_literals, print_function
 
 from mozbuild.backend.common import CommonBackend
+from mozbuild.frontend.context import (
+    Context,
+    Path,
+)
 from mozbuild.frontend.data import (
     ChromeManifestEntry,
     ContextDerived,
@@ -136,6 +140,9 @@ class FasterMakeBackend(CommonBackend):
         pp.do_include(obj.path.full_path)
         self.backend_input_files |= pp.includes
 
+        jar_context = Context(config=obj._context.config)
+        jar_context.add_source(obj.path.full_path)
+
         for jarinfo in pp.out:
             install_target = obj.install_target
             if jarinfo.base:
@@ -144,62 +151,58 @@ class FasterMakeBackend(CommonBackend):
             for e in jarinfo.entries:
                 if e.is_locale:
                     if jarinfo.relativesrcdir:
-                        path = mozpath.join(self.environment.topsrcdir,
-                                            jarinfo.relativesrcdir)
+                        src = '/%s' % jarinfo.relativesrcdir
                     else:
-                        path = mozpath.dirname(obj.path.full_path)
-                    src = mozpath.join( path, 'en-US', e.source)
-                elif e.source.startswith('/'):
-                    src = mozpath.join(self.environment.topsrcdir,
-                                       e.source[1:])
+                        src = ''
+                    src = mozpath.join(src, 'en-US', e.source)
                 else:
-                    src = mozpath.join(mozpath.dirname(obj.path.full_path), e.source)
+                    src = e.source
 
-                src = mozpath.normpath(src)
+                src = Path(jar_context, src)
+
                 if '*' in e.source:
                     if e.preprocess:
                         raise Exception('%s: Wildcards are not supported with '
                                         'preprocessing' % obj.path)
                     def _prefix(s):
-                        for p in s.split('/'):
+                        for p in mozpath.split(s):
                             if '*' not in p:
                                 yield p + '/'
-                    prefix = ''.join(_prefix(src))
+                    prefix = ''.join(_prefix(src.full_path))
 
                     self._install_manifests[install_target] \
                         .add_pattern_symlink(
                         prefix,
-                        src[len(prefix):],
+                        src.full_path[len(prefix):],
                         mozpath.join(jarinfo.name, e.output))
                     continue
 
-                if not os.path.exists(src):
+                if not os.path.exists(src.full_path):
                     if e.is_locale:
                         raise Exception(
                             '%s: Cannot find %s' % (obj.path, e.source))
                     if e.source.startswith('/'):
-                        src = mozpath.join(self.environment.topobjdir,
-                                           e.source[1:])
+                        src = Path(jar_context, '!' + e.source)
                     else:
                         # This actually gets awkward if the jar.mn is not
                         # in the same directory as the moz.build declaring
                         # it, but it's how it works in the recursive make,
                         # not that anything relies on that, but it's simpler.
-                        src = mozpath.join(obj.objdir, e.source)
+                        src = Path(obj._context, '!' + e.source)
                     self._dependencies['install-%s' % install_target] \
                         .append(mozpath.relpath(
-                        src, self.environment.topobjdir))
+                        src.full_path, self.environment.topobjdir))
 
                 if e.preprocess:
                     self._add_preprocess(
                         obj,
-                        src,
+                        src.full_path,
                         mozpath.join(jarinfo.name, mozpath.dirname(e.output)),
                         mozpath.basename(e.output),
                         defines=defines)
                 else:
                     self._install_manifests[install_target].add_symlink(
-                        src,
+                        src.full_path,
                         mozpath.join(jarinfo.name, e.output))
 
             manifest = mozpath.normpath(mozpath.join(install_target,
