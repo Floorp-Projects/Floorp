@@ -739,9 +739,9 @@ constexpr char GeckoEditable::name[];
 constexpr char GeckoEditable::New_t::name[];
 constexpr char GeckoEditable::New_t::signature[];
 
-auto GeckoEditable::New() -> GeckoEditable::LocalRef
+auto GeckoEditable::New(mozilla::jni::Object::Param a0) -> GeckoEditable::LocalRef
 {
-    return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr);
+    return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr, a0);
 }
 
 constexpr char GeckoEditable::DisposeNative_t::name[];

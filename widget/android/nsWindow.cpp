@@ -157,10 +157,10 @@ static const double SWIPE_MAX_PINCH_DELTA_INCHES = 0.4;
 static const double SWIPE_MIN_DISTANCE_INCHES = 0.6;
 
 
-class nsWindow::Natives final
-    : public GeckoView::Window::Natives<Natives>
-    , public GeckoEditable::Natives<Natives>
-    , public SupportsWeakPtr<Natives>
+class nsWindow::GeckoViewSupport final
+    : public GeckoView::Window::Natives<GeckoViewSupport>
+    , public GeckoEditable::Natives<GeckoViewSupport>
+    , public SupportsWeakPtr<GeckoViewSupport>
     , public UsesGeckoThreadProxy
 {
     nsWindow& window;
@@ -181,7 +181,8 @@ class nsWindow::Natives final
             JNIEnv* const env = mozilla::jni::GetEnvForThread();
             const auto& thisArg = Base::lambda.GetThisArg();
 
-            const auto natives = reinterpret_cast<mozilla::WeakPtr<Natives>*>(
+            const auto natives = reinterpret_cast<
+                    mozilla::WeakPtr<GeckoViewSupport>*>(
                     jni::GetNativeHandle(env, thisArg.Get()));
             jni::HandleUncaughtException(env);
 
@@ -206,9 +207,9 @@ class nsWindow::Natives final
         nsAppShell::Event::Type ActivityType() const override
         {
             // Events that result in user-visible changes count as UI events.
-            if (Base::lambda.IsTarget(&Natives::OnKeyEvent) ||
-                Base::lambda.IsTarget(&Natives::OnImeReplaceText) ||
-                Base::lambda.IsTarget(&Natives::OnImeUpdateComposition))
+            if (Base::lambda.IsTarget(&GeckoViewSupport::OnKeyEvent) ||
+                Base::lambda.IsTarget(&GeckoViewSupport::OnImeReplaceText) ||
+                Base::lambda.IsTarget(&GeckoViewSupport::OnImeUpdateComposition))
             {
                 return nsAppShell::Event::Type::kUIActivity;
             }
@@ -217,10 +218,10 @@ class nsWindow::Natives final
     };
 
 public:
-    typedef GeckoView::Window::Natives<Natives> Base;
-    typedef GeckoEditable::Natives<Natives> EditableBase;
+    typedef GeckoView::Window::Natives<GeckoViewSupport> Base;
+    typedef GeckoEditable::Natives<GeckoViewSupport> EditableBase;
 
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(Natives);
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(GeckoViewSupport);
 
     template<typename Functor>
     static void OnNativeCall(Functor&& aCall)
@@ -235,16 +236,27 @@ public:
                 WindowEvent<Functor>>(mozilla::Move(aCall)));
     }
 
-    Natives(nsWindow* aWindow)
+    GeckoViewSupport(nsWindow* aWindow,
+                     const GeckoView::Window::LocalRef& aInstance,
+                     GeckoView::Param aView)
         : window(*aWindow)
+        , mEditable(GeckoEditable::New(aView))
         , mIMERanges(new TextRangeArray())
         , mIMEMaskEventsCount(1) // Mask IME events since there's no focus yet
         , mIMEUpdatingContext(false)
         , mIMESelectionChanged(false)
         , mIMETextChangedDuringFlush(false)
-    {}
+    {
+        Reattach(aInstance);
+        EditableBase::AttachNative(mEditable, this);
+    }
 
-    ~Natives();
+    ~GeckoViewSupport();
+
+    void Reattach(const GeckoView::Window::LocalRef& aInstance)
+    {
+        Base::AttachNative(aInstance, this);
+    }
 
     using Base::DisposeNative;
     using EditableBase::DisposeNative;
@@ -362,7 +374,7 @@ public:
     void OnImeUpdateComposition(int32_t aStart, int32_t aEnd);
 };
 
-nsWindow::Natives::~Natives()
+nsWindow::GeckoViewSupport::~GeckoViewSupport()
 {
     // Disassociate our GeckoEditable instance with our native object.
     // OnDestroy will call disposeNative after any pending native calls have
@@ -371,26 +383,25 @@ nsWindow::Natives::~Natives()
     mEditable->OnDestroy();
 }
 
-void
-nsWindow::Natives::Open(const jni::ClassObject::LocalRef& aCls,
-                        GeckoView::Window::Param aWindow,
-                        GeckoView::Param aView,
-                        int32_t aWidth, int32_t aHeight)
+/* static */ void
+nsWindow::GeckoViewSupport::Open(const jni::ClassObject::LocalRef& aCls,
+                                 GeckoView::Window::Param aWindow,
+                                 GeckoView::Param aView,
+                                 int32_t aWidth, int32_t aHeight)
 {
     MOZ_ASSERT(NS_IsMainThread());
 
-    PROFILER_LABEL("nsWindow", "Natives::Open",
+    PROFILER_LABEL("nsWindow", "GeckoViewSupport::Open",
                    js::ProfileEntry::Category::OTHER);
 
     if (gGeckoViewWindow) {
         // Should have been created the first time.
-        MOZ_ASSERT(gGeckoViewWindow->mNatives);
+        MOZ_ASSERT(gGeckoViewWindow->mGeckoViewSupport);
+        gGeckoViewWindow->mGeckoViewSupport->Reattach(
+                GeckoView::Window::LocalRef(aCls.Env(), aWindow));
 
         // Associate our previous GeckoEditable with the new GeckoView.
-        gGeckoViewWindow->mNatives->mEditable->OnViewChange(aView);
-
-        Base::AttachNative(GeckoView::Window::LocalRef(aCls.Env(), aWindow),
-                           gGeckoViewWindow->mNatives.get());
+        gGeckoViewWindow->mGeckoViewSupport->mEditable->OnViewChange(aView);
         return;
     }
 
@@ -418,30 +429,25 @@ nsWindow::Natives::Open(const jni::ClassObject::LocalRef& aCls,
         args->AppendElement(heightArg);
     }
 
-    nsCOMPtr<nsIDOMWindow> window;
+    nsCOMPtr<nsIDOMWindow> domWindow;
     ww->OpenWindow(nullptr, url, "_blank", "chrome,dialog=no,all",
-                   args, getter_AddRefs(window));
-    MOZ_ASSERT(window);
+                   args, getter_AddRefs(domWindow));
+    MOZ_ASSERT(domWindow);
 
-    nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(window);
+    nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(domWindow);
     MOZ_ASSERT(widget);
 
-    gGeckoViewWindow = static_cast<nsWindow*>(widget.get());
-    UniquePtr<Natives> natives = mozilla::MakeUnique<Natives>(gGeckoViewWindow);
+    const auto window = static_cast<nsWindow*>(widget.get());
 
-    // Create GeckoEditable for the new nsWindow/GeckoView pair.
-    GeckoEditable::LocalRef editable = GeckoEditable::New();
-    EditableBase::AttachNative(editable, natives.get());
-    natives->mEditable = editable;
-    editable->OnViewChange(aView);
+    // Attach a new GeckoView support object to the new window.
+    window->mGeckoViewSupport  = mozilla::MakeUnique<GeckoViewSupport>(
+            window, GeckoView::Window::LocalRef(aCls.Env(), aWindow), aView);
 
-    Base::AttachNative(GeckoView::Window::LocalRef(aCls.Env(), aWindow),
-                       natives.get());
-    gGeckoViewWindow->mNatives = mozilla::Move(natives);
+    gGeckoViewWindow = window;
 }
 
 void
-nsWindow::Natives::Close()
+nsWindow::GeckoViewSupport::Close()
 {
     nsIWidgetListener* const widgetListener = window.mWidgetListener;
 
@@ -462,8 +468,8 @@ nsWindow::Natives::Close()
 void
 nsWindow::InitNatives()
 {
-    nsWindow::Natives::Base::Init();
-    nsWindow::Natives::EditableBase::Init();
+    nsWindow::GeckoViewSupport::Base::Init();
+    nsWindow::GeckoViewSupport::EditableBase::Init();
 }
 
 nsWindow*
@@ -520,6 +526,10 @@ nsWindow::~nsWindow()
         // If this window was the one that created the global OMTC layer manager
         // and compositor, then we should null those out.
         SetCompositor(nullptr, nullptr, nullptr);
+    }
+
+    if (gGeckoViewWindow == this) {
+        gGeckoViewWindow = nullptr;
     }
 }
 
@@ -583,9 +593,9 @@ nsWindow::Destroy(void)
 {
     nsBaseWidget::mOnDestroyCalled = true;
 
-    if (mNatives) {
+    if (mGeckoViewSupport) {
         // Disassociate our native object with GeckoView.
-        mNatives = nullptr;
+        mGeckoViewSupport = nullptr;
     }
 
     while (mChildren.Length()) {
@@ -1852,7 +1862,7 @@ InitKeyEvent(WidgetKeyboardEvent& event,
 }
 
 void
-nsWindow::Natives::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
+nsWindow::GeckoViewSupport::OnKeyEvent(int32_t aAction, int32_t aKeyCode,
         int32_t aScanCode, int32_t aMetaState, int64_t aTime,
         int32_t aUnicodeChar, int32_t aBaseUnicodeChar,
         int32_t aDomPrintableKeyValue, int32_t aRepeatCount, int32_t aFlags,
@@ -1970,7 +1980,7 @@ nsWindow::RemoveIMEComposition()
  * Our dummy key events have 0 as the keycode.
  */
 void
-nsWindow::Natives::SendIMEDummyKeyEvents()
+nsWindow::GeckoViewSupport::SendIMEDummyKeyEvents()
 {
     WidgetKeyboardEvent downEvent(true, eKeyDown, &window);
     window.InitEvent(downEvent, nullptr);
@@ -1984,7 +1994,7 @@ nsWindow::Natives::SendIMEDummyKeyEvents()
 }
 
 void
-nsWindow::Natives::AddIMETextChange(const IMETextChange& aChange)
+nsWindow::GeckoViewSupport::AddIMETextChange(const IMETextChange& aChange)
 {
     mIMETextChanges.AppendElement(aChange);
 
@@ -2050,7 +2060,7 @@ nsWindow::Natives::AddIMETextChange(const IMETextChange& aChange)
 }
 
 void
-nsWindow::Natives::PostFlushIMEChanges(FlushChangesFlag aFlags)
+nsWindow::GeckoViewSupport::PostFlushIMEChanges(FlushChangesFlag aFlags)
 {
     if (aFlags != FLUSH_FLAG_RETRY &&
             (!mIMETextChanges.IsEmpty() || mIMESelectionChanged)) {
@@ -2069,7 +2079,7 @@ nsWindow::Natives::PostFlushIMEChanges(FlushChangesFlag aFlags)
 }
 
 void
-nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
+nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
 {
     // Only send change notifications if we are *not* masking events,
     // i.e. if we have a focused editor,
@@ -2154,7 +2164,7 @@ nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
 }
 
 bool
-nsWindow::Natives::NotifyIME(const IMENotification& aIMENotification)
+nsWindow::GeckoViewSupport::NotifyIME(const IMENotification& aIMENotification)
 {
     MOZ_ASSERT(mEditable);
 
@@ -2228,8 +2238,8 @@ nsWindow::Natives::NotifyIME(const IMENotification& aIMENotification)
 }
 
 void
-nsWindow::Natives::SetInputContext(const InputContext& aContext,
-                                   const InputContextAction& aAction)
+nsWindow::GeckoViewSupport::SetInputContext(const InputContext& aContext,
+                                            const InputContextAction& aAction)
 {
     MOZ_ASSERT(mEditable);
 
@@ -2287,7 +2297,7 @@ nsWindow::Natives::SetInputContext(const InputContext& aContext,
 }
 
 InputContext
-nsWindow::Natives::GetInputContext()
+nsWindow::GeckoViewSupport::GetInputContext()
 {
     InputContext context = mInputContext;
     context.mIMEState.mOpen = IMEState::OPEN_STATE_NOT_SUPPORTED;
@@ -2295,7 +2305,7 @@ nsWindow::Natives::GetInputContext()
 }
 
 void
-nsWindow::Natives::OnImeSynchronize()
+nsWindow::GeckoViewSupport::OnImeSynchronize()
 {
     if (!mIMEMaskEventsCount) {
         FlushIMEChanges();
@@ -2304,7 +2314,7 @@ nsWindow::Natives::OnImeSynchronize()
 }
 
 void
-nsWindow::Natives::OnImeAcknowledgeFocus()
+nsWindow::GeckoViewSupport::OnImeAcknowledgeFocus()
 {
     MOZ_ASSERT(mIMEMaskEventsCount > 0);
 
@@ -2330,8 +2340,8 @@ nsWindow::Natives::OnImeAcknowledgeFocus()
 }
 
 void
-nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
-                                    jni::String::Param aText)
+nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
+                                             jni::String::Param aText)
 {
     if (mIMEMaskEventsCount > 0) {
         // Not focused; still reply to events, but don't do anything else.
@@ -2445,7 +2455,7 @@ nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
 }
 
 void
-nsWindow::Natives::OnImeAddCompositionRange(
+nsWindow::GeckoViewSupport::OnImeAddCompositionRange(
         int32_t aStart, int32_t aEnd, int32_t aRangeType, int32_t aRangeStyle,
         int32_t aRangeLineStyle, bool aRangeBoldLine, int32_t aRangeForeColor,
         int32_t aRangeBackColor, int32_t aRangeLineColor)
@@ -2472,7 +2482,7 @@ nsWindow::Natives::OnImeAddCompositionRange(
 }
 
 void
-nsWindow::Natives::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
+nsWindow::GeckoViewSupport::OnImeUpdateComposition(int32_t aStart, int32_t aEnd)
 {
     if (mIMEMaskEventsCount > 0) {
         // Not focused.
@@ -2584,12 +2594,12 @@ nsWindow::NotifyIMEInternal(const IMENotification& aIMENotification)
 {
     MOZ_ASSERT(this == FindTopLevel());
 
-    if (!mNatives) {
+    if (!mGeckoViewSupport) {
         // Non-GeckoView windows don't support IME operations.
         return NS_ERROR_NOT_AVAILABLE;
     }
 
-    if (mNatives->NotifyIME(aIMENotification)) {
+    if (mGeckoViewSupport->NotifyIME(aIMENotification)) {
         return NS_OK;
     }
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -2607,7 +2617,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     nsWindow* top = FindTopLevel();
     MOZ_ASSERT(top);
 
-    if (!top->mNatives) {
+    if (!top->mGeckoViewSupport) {
         // Non-GeckoView windows don't support IME operations.
         return;
     }
@@ -2616,7 +2626,7 @@ nsWindow::SetInputContext(const InputContext& aContext,
     // will be processed by the top window. Therefore, to ensure the
     // IME event uses the correct mInputContext, we need to let the top
     // window process SetInputContext
-    top->mNatives->SetInputContext(aContext, aAction);
+    top->mGeckoViewSupport->SetInputContext(aContext, aAction);
 }
 
 NS_IMETHODIMP_(InputContext)
@@ -2625,14 +2635,14 @@ nsWindow::GetInputContext()
     nsWindow* top = FindTopLevel();
     MOZ_ASSERT(top);
 
-    if (!top->mNatives) {
+    if (!top->mGeckoViewSupport) {
         // Non-GeckoView windows don't support IME operations.
         return InputContext();
     }
 
     // We let the top window process SetInputContext,
     // so we should let it process GetInputContext as well.
-    return top->mNatives->GetInputContext();
+    return top->mGeckoViewSupport->GetInputContext();
 }
 
 nsIMEUpdatePreference

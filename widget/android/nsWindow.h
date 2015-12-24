@@ -46,11 +46,14 @@ public:
     NS_DECL_ISUPPORTS_INHERITED
 
     static void InitNatives();
-    class Natives;
-    // Object that implements native GeckoView calls;
-    // nullptr for nsWindows that were not opened from GeckoView.
-    mozilla::UniquePtr<Natives> mNatives;
 
+private:
+    class GeckoViewSupport;
+    // Object that implements native GeckoView calls and associated states.
+    // nullptr for nsWindows that were not opened from GeckoView.
+    mozilla::UniquePtr<GeckoViewSupport> mGeckoViewSupport;
+
+public:
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static mozilla::gfx::IntSize GetAndroidScreenBounds();
     static nsWindow* TopWindow();

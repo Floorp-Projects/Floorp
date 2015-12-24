@@ -1763,17 +1763,18 @@ public:
         typedef GeckoEditable Owner;
         typedef GeckoEditable::LocalRef ReturnType;
         typedef GeckoEditable::Param SetterType;
-        typedef mozilla::jni::Args<> Args;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param> Args;
         static constexpr char name[] = "<init>";
         static constexpr char signature[] =
-                "()V";
+                "(Lorg/mozilla/gecko/GeckoView;)V";
         static const bool isStatic = false;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto New() -> GeckoEditable::LocalRef;
+    static auto New(mozilla::jni::Object::Param) -> GeckoEditable::LocalRef;
 
 public:
     struct DisposeNative_t {
