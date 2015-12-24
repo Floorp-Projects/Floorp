@@ -70,6 +70,27 @@ public:
         void Run() override { return lambda(); }
     };
 
+    class ProxyEvent : public Event
+    {
+    protected:
+        mozilla::UniquePtr<Event> baseEvent;
+
+    public:
+        ProxyEvent(mozilla::UniquePtr<Event>&& event)
+            : baseEvent(mozilla::Move(event))
+        {}
+
+        void PostTo(mozilla::LinkedList<Event>& queue) override
+        {
+            baseEvent->PostTo(queue);
+        }
+
+        void Run() override
+        {
+            baseEvent->Run();
+        }
+    };
+
     static nsAppShell* Get()
     {
         MOZ_ASSERT(NS_IsMainThread());
@@ -112,6 +133,11 @@ public:
     }
 
     static void PostEvent(mozilla::AndroidGeckoEvent* event);
+
+    // Post a event and wait for it to finish running on the Gecko thread.
+    static void SyncRunEvent(Event&& event,
+                             mozilla::UniquePtr<Event>(*eventFactory)(
+                                    mozilla::UniquePtr<Event>&&) = nullptr);
 
     void ResendLastResizeEvent(nsWindow* aDest);
 
@@ -188,6 +214,9 @@ protected:
         }
 
     } mEventQueue;
+
+    mozilla::Monitor mSyncRunMonitor;
+    bool mSyncRunQuit;
 
     bool mAllowCoalescingTouches;
 
