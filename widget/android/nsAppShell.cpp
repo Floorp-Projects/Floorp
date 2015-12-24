@@ -75,7 +75,8 @@ PRLogModuleInfo *gWidgetLog = nullptr;
 nsIGeolocationUpdate *gLocationCallback = nullptr;
 nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 
-nsAppShell *nsAppShell::gAppShell = nullptr;
+nsAppShell* nsAppShell::sAppShell;
+StaticMutex nsAppShell::sAppShellLock;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
@@ -185,7 +186,10 @@ public:
 
 nsAppShell::nsAppShell()
 {
-    gAppShell = this;
+    {
+        StaticMutexAutoLock lock(sAppShellLock);
+        sAppShell = this;
+    }
 
     if (!XRE_IsParentProcess()) {
         return;
@@ -217,7 +221,10 @@ nsAppShell::~nsAppShell()
         NS_WARNING("Discarded event on shutdown");
     }
 
-    gAppShell = nullptr;
+    {
+        StaticMutexAutoLock lock(sAppShellLock);
+        sAppShell = nullptr;
+    }
 
     if (sPowerManagerService) {
         sPowerManagerService->RemoveWakeLockListener(sWakeLockListener);
@@ -398,7 +405,11 @@ public:
 void
 nsAppShell::PostEvent(AndroidGeckoEvent* event)
 {
-    mEventQueue.Post(mozilla::MakeUnique<LegacyGeckoEvent>(event));
+    mozilla::StaticMutexAutoLock lock(sAppShellLock);
+    if (!sAppShell) {
+        return;
+    }
+    sAppShell->mEventQueue.Post(mozilla::MakeUnique<LegacyGeckoEvent>(event));
 }
 
 void
@@ -410,7 +421,7 @@ nsAppShell::LegacyGeckoEvent::Run()
 
     switch (curEvent->Type()) {
     case AndroidGeckoEvent::NATIVE_POKE:
-        nsAppShell::gAppShell->NativeEventCallback();
+        nsAppShell::Get()->NativeEventCallback();
         break;
 
     case AndroidGeckoEvent::SENSOR_EVENT: {
@@ -519,19 +530,19 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::THUMBNAIL: {
-        if (!nsAppShell::gAppShell->mBrowserApp)
+        if (!nsAppShell::Get()->mBrowserApp)
             break;
 
         int32_t tabId = curEvent->MetaState();
         const nsTArray<nsIntPoint>& points = curEvent->Points();
         RefCountedJavaObject* buffer = curEvent->ByteBuffer();
-        RefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::gAppShell->mBrowserApp, tabId, points, buffer);
+        RefPtr<ThumbnailRunnable> sr = new ThumbnailRunnable(nsAppShell::Get()->mBrowserApp, tabId, points, buffer);
         MessageLoop::current()->PostIdleTask(FROM_HERE, NewRunnableMethod(sr.get(), &ThumbnailRunnable::Run));
         break;
     }
 
     case AndroidGeckoEvent::ZOOMEDVIEW: {
-        if (!nsAppShell::gAppShell->mBrowserApp)
+        if (!nsAppShell::Get()->mBrowserApp)
             break;
         int32_t tabId = curEvent->MetaState();
         const nsTArray<nsIntPoint>& points = curEvent->Points();
@@ -541,7 +552,7 @@ nsAppShell::LegacyGeckoEvent::Run()
 
         nsCOMPtr<nsIDOMWindow> domWindow;
         nsCOMPtr<nsIBrowserTab> tab;
-        nsAppShell::gAppShell->mBrowserApp->GetBrowserTab(tabId, getter_AddRefs(tab));
+        nsAppShell::Get()->mBrowserApp->GetBrowserTab(tabId, getter_AddRefs(tab));
         if (!tab) {
             NS_ERROR("Can't find tab!");
             break;
@@ -577,7 +588,7 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::gAppShell->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
         if (!obs)
             break;
 
@@ -594,7 +605,7 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::gAppShell->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
         if (!obs)
             break;
 
@@ -610,7 +621,7 @@ nsAppShell::LegacyGeckoEvent::Run()
             break;
 
         nsCOMPtr<nsIUITelemetryObserver> obs;
-        nsAppShell::gAppShell->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
+        nsAppShell::Get()->mBrowserApp->GetUITelemetryObserver(getter_AddRefs(obs));
         if (!obs)
             break;
 
@@ -713,7 +724,7 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::CALL_OBSERVER:
     {
         nsCOMPtr<nsIObserver> observer;
-        nsAppShell::gAppShell->mObserversHash.Get(curEvent->Characters(), getter_AddRefs(observer));
+        nsAppShell::Get()->mObserversHash.Get(curEvent->Characters(), getter_AddRefs(observer));
 
         if (observer) {
             observer->Observe(nullptr, NS_ConvertUTF16toUTF8(curEvent->CharactersExtra()).get(),
@@ -726,11 +737,11 @@ nsAppShell::LegacyGeckoEvent::Run()
     }
 
     case AndroidGeckoEvent::REMOVE_OBSERVER:
-        nsAppShell::gAppShell->mObserversHash.Remove(curEvent->Characters());
+        nsAppShell::Get()->mObserversHash.Remove(curEvent->Characters());
         break;
 
     case AndroidGeckoEvent::ADD_OBSERVER:
-        nsAppShell::gAppShell->AddObserver(curEvent->Characters(), curEvent->Observer());
+        nsAppShell::Get()->AddObserver(curEvent->Characters(), curEvent->Observer());
         break;
 
     case AndroidGeckoEvent::LOW_MEMORY:
@@ -850,7 +861,7 @@ nsAppShell::LegacyGeckoEvent::PostTo(mozilla::LinkedList<Event>& queue)
 
         case AndroidGeckoEvent::MOTION_EVENT:
         case AndroidGeckoEvent::APZ_INPUT_EVENT:
-            if (nsAppShell::gAppShell->mAllowCoalescingTouches) {
+            if (sAppShell->mAllowCoalescingTouches) {
                 Event* const event = queue.getLast();
                 if (event && event->HasSameTypeAs(this) && ae->CanCoalesceWith(
                         static_cast<LegacyGeckoEvent*>(event)->ae.get())) {
@@ -891,18 +902,21 @@ namespace mozilla {
 
 bool ProcessNextEvent()
 {
-    if (!nsAppShell::gAppShell) {
+    nsAppShell* const appShell = nsAppShell::Get();
+    if (!appShell) {
         return false;
     }
 
-    return nsAppShell::gAppShell->ProcessNextNativeEvent(true) ? true : false;
+    return appShell->ProcessNextNativeEvent(true) ? true : false;
 }
 
 void NotifyEvent()
 {
-    if (nsAppShell::gAppShell) {
-        nsAppShell::gAppShell->NotifyNativeEvent();
+    nsAppShell* const appShell = nsAppShell::Get();
+    if (!appShell) {
+        return;
     }
+    appShell->NotifyNativeEvent();
 }
 
 }

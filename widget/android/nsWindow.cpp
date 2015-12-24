@@ -230,7 +230,7 @@ public:
             // can get a head start on opening our window.
             return aCall();
         }
-        return nsAppShell::gAppShell->PostEvent(mozilla::MakeUnique<
+        return nsAppShell::PostEvent(mozilla::MakeUnique<
                 WindowEvent<Functor>>(mozilla::Move(aCall)));
     }
 
@@ -432,7 +432,7 @@ class nsWindow::GLControllerSupport final
             finished = true;
             lock.NotifyAll();
         };
-        nsAppShell::gAppShell->PostEvent(
+        nsAppShell::PostEvent(
                 mozilla::MakeUnique<GLControllerEvent>(
                 new nsAppShell::LambdaEvent<decltype(callAndNotify)>(
                 mozilla::Move(callAndNotify))));
@@ -473,7 +473,7 @@ public:
             return aCall();
         }
 
-        nsAppShell::gAppShell->PostEvent(
+        nsAppShell::PostEvent(
                 mozilla::MakeUnique<GLControllerEvent>(
                 new GeckoViewSupport::WindowEvent<Functor>(
                 mozilla::Move(aCall))));
@@ -491,7 +491,7 @@ public:
     ~GLControllerSupport()
     {
         GLController::GlobalRef glController(mozilla::Move(mGLController));
-        nsAppShell::gAppShell->PostEvent([glController] {
+        nsAppShell::PostEvent([glController] {
             GLControllerSupport::DisposeNative(GLController::LocalRef(
                         jni::GetGeckoThreadEnv(), glController));
         });
@@ -1220,7 +1220,7 @@ nsWindow::BringToFront()
     }
 
     // force a window resize
-    nsAppShell::gAppShell->ResendLastResizeEvent(newTop);
+    nsAppShell::Get()->ResendLastResizeEvent(newTop);
     RedrawAll();
 }
 
@@ -2289,7 +2289,7 @@ nsWindow::GeckoViewSupport::PostFlushIMEChanges(FlushChangesFlag aFlags)
     // Keep a strong reference to the window to keep 'this' alive.
     RefPtr<nsWindow> window(&this->window);
 
-    nsAppShell::gAppShell->PostEvent([this, window, aFlags] {
+    nsAppShell::PostEvent([this, window, aFlags] {
         if (!window->Destroyed()) {
             FlushIMEChanges(aFlags);
         }
@@ -2501,7 +2501,7 @@ nsWindow::GeckoViewSupport::SetInputContext(const InputContext& aContext,
     RefPtr<nsWindow> window(&this->window);
     mIMEUpdatingContext = true;
 
-    nsAppShell::gAppShell->PostEvent([this, window] {
+    nsAppShell::PostEvent([this, window] {
         mIMEUpdatingContext = false;
         if (window->Destroyed()) {
             return;

@@ -77,7 +77,7 @@ AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
 
         CSSIntPoint rounded = RoundedToInt(point);
         nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", rounded.x, rounded.y);
-        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
+        nsAppShell::PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
                 NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
     }
 

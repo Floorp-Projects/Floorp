@@ -10,6 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/jni/Natives.h"
@@ -69,7 +70,11 @@ public:
         void Run() override { return lambda(); }
     };
 
-    static nsAppShell *gAppShell;
+    static nsAppShell* Get()
+    {
+        MOZ_ASSERT(NS_IsMainThread());
+        return sAppShell;
+    }
 
     nsAppShell();
 
@@ -84,25 +89,31 @@ public:
     // Post a subclass of Event.
     // e.g. PostEvent(mozilla::MakeUnique<MyEvent>());
     template<typename T, typename D>
-    void PostEvent(mozilla::UniquePtr<T, D>&& event)
+    static void PostEvent(mozilla::UniquePtr<T, D>&& event)
     {
-        mEventQueue.Post(mozilla::Move(event));
+        mozilla::StaticMutexAutoLock lock(sAppShellLock);
+        if (!sAppShell) {
+            return;
+        }
+        sAppShell->mEventQueue.Post(mozilla::Move(event));
     }
 
     // Post a event that will call a lambda
     // e.g. PostEvent([=] { /* do something */ });
     template<typename T>
-    void PostEvent(T&& lambda)
+    static void PostEvent(T&& lambda)
     {
-        mEventQueue.Post(mozilla::MakeUnique<LambdaEvent<T>>(
+        mozilla::StaticMutexAutoLock lock(sAppShellLock);
+        if (!sAppShell) {
+            return;
+        }
+        sAppShell->mEventQueue.Post(mozilla::MakeUnique<LambdaEvent<T>>(
                 mozilla::Move(lambda)));
     }
 
-    void PostEvent(mozilla::AndroidGeckoEvent* event);
+    static void PostEvent(mozilla::AndroidGeckoEvent* event);
 
     void ResendLastResizeEvent(nsWindow* aDest);
-
-    void OnResume() {}
 
     void SetBrowserApp(nsIAndroidBrowserApp* aBrowserApp) {
         mBrowserApp = aBrowserApp;
@@ -113,6 +124,9 @@ public:
     }
 
 protected:
+    static nsAppShell* sAppShell;
+    static mozilla::StaticMutex sAppShellLock;
+
     virtual ~nsAppShell();
 
     nsresult AddObserver(const nsAString &aObserverKey, nsIObserver *aObserver);
@@ -190,7 +204,7 @@ public:
     template<class Functor>
     static void OnNativeCall(Functor&& call)
     {
-        nsAppShell::gAppShell->PostEvent(mozilla::Move(call));
+        nsAppShell::PostEvent(mozilla::Move(call));
     }
 };
 

@@ -61,8 +61,7 @@ NS_EXPORT void JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoOfEvent(JNIEnv *jenv, jclass jc, jobject event)
 {
     // poke the appshell
-    if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeFromJavaObject(jenv, event));
+    nsAppShell::PostEvent(AndroidGeckoEvent::MakeFromJavaObject(jenv, event));
 }
 
 NS_EXPORT void JNICALL
@@ -342,7 +341,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env,
     MultiTouchInput input = wrapper->MakeMultiTouchInput(nsWindow::TopWindow());
     delete wrapper;
 
-    if (input.mType < 0 || !nsAppShell::gAppShell) {
+    if (input.mType < 0) {
         return false;
     }
 
@@ -350,7 +349,7 @@ Java_org_mozilla_gecko_gfx_NativePanZoomController_handleTouchEvent(JNIEnv* env,
     uint64_t blockId;
     nsEventStatus status = controller->ReceiveInputEvent(input, &guid, &blockId);
     if (status != nsEventStatus_eConsumeNoDefault) {
-        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeApzInputEvent(input, guid, blockId, status));
+        nsAppShell::PostEvent(AndroidGeckoEvent::MakeApzInputEvent(input, guid, blockId, status));
     }
     return true;
 }

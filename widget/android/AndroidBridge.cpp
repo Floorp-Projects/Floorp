@@ -512,9 +512,9 @@ AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
                                      const nsAString& aAlertName,
                                      nsIPrincipal* aPrincipal)
 {
-    if (nsAppShell::gAppShell && aAlertListener) {
+    if (aAlertListener) {
         // This will remove any observers already registered for this id
-        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
+        nsAppShell::PostEvent(AndroidGeckoEvent::MakeAddObserver(aAlertName, aAlertListener));
     }
 
     nsAutoString host;
@@ -1706,15 +1706,17 @@ AndroidBridge::PumpMessageLoop()
 
 NS_IMETHODIMP nsAndroidBridge::GetBrowserApp(nsIAndroidBrowserApp * *aBrowserApp)
 {
-    if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->GetBrowserApp(aBrowserApp);
+    nsAppShell* const appShell = nsAppShell::Get();
+    if (appShell)
+        appShell->GetBrowserApp(aBrowserApp);
     return NS_OK;
 }
 
 NS_IMETHODIMP nsAndroidBridge::SetBrowserApp(nsIAndroidBrowserApp *aBrowserApp)
 {
-    if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->SetBrowserApp(aBrowserApp);
+    nsAppShell* const appShell = nsAppShell::Get();
+    if (appShell)
+        appShell->SetBrowserApp(aBrowserApp);
     return NS_OK;
 }
 
