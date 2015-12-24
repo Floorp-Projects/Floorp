@@ -49,6 +49,7 @@ import pickle
 import re
 import shutil
 import subprocess
+import tempfile
 import urlparse
 import zipfile
 
@@ -59,6 +60,8 @@ from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
 )
+import mozinstall
+from mozpack.files import FileFinder
 from mozpack.mozjar import (
     JarReader,
     JarWriter,
@@ -127,6 +130,83 @@ class AndroidArtifactJob(ArtifactJob):
                 writer.add(basename.encode('utf-8'), f)
 
 
+class MacArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        tempdir = tempfile.mkdtemp()
+        try:
+            self.log(logging.INFO, 'artifact',
+                {'tempdir': tempdir},
+                'Unpacking DMG into {tempdir}')
+            mozinstall.install(filename, tempdir) # Doesn't handle already mounted DMG files nicely:
+
+            # InstallError: Failed to install "/Users/nalexander/.mozbuild/package-frontend/b38eeeb54cdcf744-firefox-44.0a1.en-US.mac.dmg (local variable 'appDir' referenced before assignment)"
+
+            #   File "/Users/nalexander/Mozilla/gecko/mobile/android/mach_commands.py", line 250, in artifact_install
+            #     return artifacts.install_from(source, self.distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 457, in install_from
+            #     return self.install_from_hg(source, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 445, in install_from_hg
+            #     return self.install_from_url(url, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 418, in install_from_url
+            #     return self.install_from_file(filename, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 336, in install_from_file
+            #     mozinstall.install(filename, tempdir)
+            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 117, in install
+            #     install_dir = _install_dmg(src, dest)
+            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 261, in _install_dmg
+            #     subprocess.call('hdiutil detach %s -quiet' % appDir,
+
+            # TODO: Extract 'MOZ_MACBUNDLE_NAME' from buildconfig.
+            bundle_name = 'Nightly.app'
+            source = mozpath.join(tempdir, bundle_name)
+
+            paths = [
+                'Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter',
+                'Contents/MacOS/firefox',
+                'Contents/MacOS/firefox-bin',
+                'Contents/MacOS/libfreebl3.dylib',
+                'Contents/MacOS/liblgpllibs.dylib',
+                # 'Contents/MacOS/liblogalloc.dylib',
+                'Contents/MacOS/libmozglue.dylib',
+                'Contents/MacOS/libnss3.dylib',
+                'Contents/MacOS/libnssckbi.dylib',
+                'Contents/MacOS/libnssdbm3.dylib',
+                'Contents/MacOS/libplugin_child_interpose.dylib',
+                # 'Contents/MacOS/libreplace_jemalloc.dylib',
+                # 'Contents/MacOS/libreplace_malloc.dylib',
+                'Contents/MacOS/libsoftokn3.dylib',
+                'Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container',
+                'Contents/MacOS/updater.app/Contents/MacOS/updater',
+                # 'Contents/MacOS/xpcshell',
+                'Contents/MacOS/XUL',
+                'Contents/Resources/browser/components/components.manifest',
+                'Contents/Resources/browser/components/libbrowsercomps.dylib',
+                'Contents/Resources/dependentlibs.list',
+                # 'Contents/Resources/firefox',
+                'Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib',
+                # 'Contents/Resources/gmp-fake/1.0/libfake.dylib',
+                # 'Contents/Resources/gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                'Contents/Resources/webapprt-stub',
+            ]
+
+            with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+                finder = FileFinder(source)
+                for path in paths:
+                    for p, f in finder.find(path):
+                        self.log(logging.INFO, 'artifact',
+                            {'path': path},
+                            'Adding {path} to processed archive')
+                        writer.add(os.path.basename(p).encode('utf-8'), f, mode=os.stat(mozpath.join(source, p)).st_mode)
+        finally:
+            try:
+                shutil.rmtree(tempdir)
+            except (OSError, IOError):
+                self.log(logging.WARN, 'artifact',
+                    {'tempdir': tempdir},
+                    'Unable to delete {tempdir}')
+                pass
+
+
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
@@ -134,7 +214,7 @@ JOB_DETAILS = {
     'android-x86': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
     # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
     # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
-    # 'macosx64': (ArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
+    'macosx64': (MacArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
 }
 
 def get_job_details(job, log=None):
