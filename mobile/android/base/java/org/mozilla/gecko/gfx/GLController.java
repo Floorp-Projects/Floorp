@@ -44,9 +44,9 @@ public class GLController {
      * is blocked on it) and read by the UI thread. */
     private volatile boolean mCompositorCreated;
 
-    private EGL10 mEGL;
-    private EGLDisplay mEGLDisplay;
-    private EGLConfig mEGLConfig;
+    private static EGL10 sEGL;
+    private static EGLDisplay sEGLDisplay;
+    private static EGLConfig sEGLConfig;
     private EGLSurface mEGLSurfaceForCompositor;
 
     private static final int LOCAL_EGL_OPENGL_ES2_BIT = 4;
@@ -86,7 +86,7 @@ public class GLController {
         mServerSurfaceValid = false;
 
         if (mEGLSurfaceForCompositor != null) {
-          mEGL.eglDestroySurface(mEGLDisplay, mEGLSurfaceForCompositor);
+          sEGL.eglDestroySurface(sEGLDisplay, mEGLSurfaceForCompositor);
           mEGLSurfaceForCompositor = null;
         }
 
@@ -157,16 +157,16 @@ public class GLController {
         return mServerSurfaceValid;
     }
 
-    private void initEGL() {
-        if (mEGL != null) {
+    private static void initEGL() {
+        if (sEGL != null) {
             return;
         }
 
-        mEGL = (EGL10)EGLContext.getEGL();
+        sEGL = (EGL10)EGLContext.getEGL();
 
-        mEGLDisplay = mEGL.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-        if (mEGLDisplay == EGL10.EGL_NO_DISPLAY) {
-            Log.w(LOGTAG, "Can't get EGL display!");
+        sEGLDisplay = sEGL.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
+        if (sEGLDisplay == EGL10.EGL_NO_DISPLAY) {
+            Log.w(LOGTAG, "can't get EGL display!");
             return;
         }
 
@@ -179,15 +179,15 @@ public class GLController {
         // (at least Android's HardwareRenderer does it for us already), it is necessary
         // on Android 2.x.
         int[] returnedVersion = new int[2];
-        if (!mEGL.eglInitialize(mEGLDisplay, returnedVersion)) {
+        if (!sEGL.eglInitialize(sEGLDisplay, returnedVersion)) {
             Log.w(LOGTAG, "eglInitialize failed");
             return;
         }
 
-        mEGLConfig = chooseConfig();
+        sEGLConfig = chooseConfig();
     }
 
-    private EGLConfig chooseConfig() {
+    private static EGLConfig chooseConfig() {
         int[] desiredConfig;
         int rSize, gSize, bSize;
         int[] numConfigs = new int[1];
@@ -204,14 +204,14 @@ public class GLController {
             break;
         }
 
-        if (!mEGL.eglChooseConfig(mEGLDisplay, desiredConfig, null, 0, numConfigs) ||
+        if (!sEGL.eglChooseConfig(sEGLDisplay, desiredConfig, null, 0, numConfigs) ||
                 numConfigs[0] <= 0) {
             throw new GLControllerException("No available EGL configurations " +
                                             getEGLError());
         }
 
         EGLConfig[] configs = new EGLConfig[numConfigs[0]];
-        if (!mEGL.eglChooseConfig(mEGLDisplay, desiredConfig, configs, numConfigs[0], numConfigs)) {
+        if (!sEGL.eglChooseConfig(sEGLDisplay, desiredConfig, configs, numConfigs[0], numConfigs)) {
             throw new GLControllerException("No EGL configuration for that specification " +
                                             getEGLError());
         }
@@ -219,9 +219,9 @@ public class GLController {
         // Select the first configuration that matches the screen depth.
         int[] red = new int[1], green = new int[1], blue = new int[1];
         for (EGLConfig config : configs) {
-            mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_RED_SIZE, red);
-            mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_GREEN_SIZE, green);
-            mEGL.eglGetConfigAttrib(mEGLDisplay, config, EGL10.EGL_BLUE_SIZE, blue);
+            sEGL.eglGetConfigAttrib(sEGLDisplay, config, EGL10.EGL_RED_SIZE, red);
+            sEGL.eglGetConfigAttrib(sEGLDisplay, config, EGL10.EGL_GREEN_SIZE, green);
+            sEGL.eglGetConfigAttrib(sEGLDisplay, config, EGL10.EGL_BLUE_SIZE, blue);
             if (red[0] == rSize && green[0] == gSize && blue[0] == bSize) {
                 return config;
             }
@@ -234,7 +234,7 @@ public class GLController {
         if (mEGLSurfaceForCompositor == null) {
             initEGL();
             try {
-                mEGLSurfaceForCompositor = mEGL.eglCreateWindowSurface(mEGLDisplay, mEGLConfig, mView.getNativeWindow(), null);
+                mEGLSurfaceForCompositor = sEGL.eglCreateWindowSurface(sEGLDisplay, sEGLConfig, mView.getNativeWindow(), null);
                 // In failure cases, eglCreateWindowSurface should return EGL_NO_SURFACE.
                 // We currently normalize this to null, and compare to null in all our checks.
                 if (mEGLSurfaceForCompositor == EGL10.EGL_NO_SURFACE) {
@@ -258,8 +258,8 @@ public class GLController {
         return result;
     }
 
-    private String getEGLError() {
-        return "Error " + (mEGL == null ? "(no mEGL)" : mEGL.eglGetError());
+    private static String getEGLError() {
+        return "Error " + (sEGL == null ? "(no sEGL)" : sEGL.eglGetError());
     }
 
     void resumeCompositor(int width, int height) {
