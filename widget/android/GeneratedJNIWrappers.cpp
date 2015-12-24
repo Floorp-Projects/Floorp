@@ -1242,12 +1242,12 @@ constexpr char GLController::name[];
 constexpr char GLController::CreateCompositor_t::name[];
 constexpr char GLController::CreateCompositor_t::signature[];
 
-constexpr char GLController::CreateEGLSurfaceForCompositorWrapper_t::name[];
-constexpr char GLController::CreateEGLSurfaceForCompositorWrapper_t::signature[];
+constexpr char GLController::CreateEGLSurface_t::name[];
+constexpr char GLController::CreateEGLSurface_t::signature[];
 
-auto GLController::CreateEGLSurfaceForCompositorWrapper() const -> mozilla::jni::Object::LocalRef
+auto GLController::CreateEGLSurface() const -> mozilla::jni::Object::LocalRef
 {
-    return mozilla::jni::Method<CreateEGLSurfaceForCompositorWrapper_t>::Call(this, nullptr);
+    return mozilla::jni::Method<CreateEGLSurface_t>::Call(this, nullptr);
 }
 
 constexpr char GLController::DisposeNative_t::name[];
@@ -1402,14 +1402,6 @@ auto LayerRenderer::Frame::EndDrawing() const -> void
 }
 
 constexpr char LayerView::name[];
-
-constexpr char LayerView::RegisterCompositorWrapper_t::name[];
-constexpr char LayerView::RegisterCompositorWrapper_t::signature[];
-
-auto LayerView::RegisterCompositorWrapper() -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<RegisterCompositorWrapper_t>::Call(nullptr, nullptr);
-}
 
 constexpr char LayerView::updateZoomedView_t::name[];
 constexpr char LayerView::updateZoomedView_t::signature[];

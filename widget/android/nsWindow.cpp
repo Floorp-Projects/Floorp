@@ -511,6 +511,27 @@ public:
         return mCompositorPaused;
     }
 
+    EGLSurface CreateEGLSurface()
+    {
+        static jfieldID eglSurfacePointerField;
+
+        JNIEnv* const env = jni::GetEnvForThread();
+
+        if (!eglSurfacePointerField) {
+            AutoJNIClass egl(env, "com/google/android/gles_jni/EGLSurfaceImpl");
+            // The pointer type moved to a 'long' in Android L, API version 20
+            eglSurfacePointerField = egl.getField("mEGLSurface",
+                    AndroidBridge::Bridge()->GetAPIVersion() >= 20 ? "J" : "I");
+        }
+
+        // Called on the compositor thread.
+        auto eglSurface = mGLController->CreateEGLSurface();
+        return reinterpret_cast<EGLSurface>(
+                AndroidBridge::Bridge()->GetAPIVersion() >= 20 ?
+                env->GetLongField(eglSurface.Get(), eglSurfacePointerField) :
+                env->GetIntField(eglSurface.Get(), eglSurfacePointerField));
+    }
+
 private:
     void OnResumedCompositor(int32_t aWidth, int32_t aHeight)
     {
@@ -1484,6 +1505,11 @@ nsWindow::GetNativeData(uint32_t aDataType)
             // We assume that there is only one context per process on Android
             return NS_ONLY_ONE_NATIVE_IME_CONTEXT;
 
+        case NS_NATIVE_NEW_EGL_SURFACE:
+            if (!mGLControllerSupport) {
+                return nullptr;
+            }
+            return static_cast<void*>(mGLControllerSupport->CreateEGLSurface());
     }
 
     return nullptr;
