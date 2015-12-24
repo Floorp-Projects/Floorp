@@ -241,6 +241,7 @@ typedef enum {
 
 #if ANDROID_VERSION < 17
 typedef enum {
+    AUDIO_DEVICE_NONE                          = 0x0,
     /* output devices */
     AUDIO_DEVICE_OUT_EARPIECE                  = 0x1,
     AUDIO_DEVICE_OUT_SPEAKER                   = 0x2,
