@@ -766,11 +766,6 @@ nsWindow::~nsWindow()
 {
     gTopLevelWindows.RemoveElement(this);
     ALOG("nsWindow %p destructor", (void*)this);
-    if (mLayerManager == sLayerManager) {
-        // If this window was the one that created the global OMTC layer manager
-        // and compositor, then we should null those out.
-        SetCompositor(nullptr, nullptr, nullptr);
-    }
 
     if (gGeckoViewWindow == this) {
         gGeckoViewWindow = nullptr;
@@ -1288,11 +1283,6 @@ nsWindow::GetLayerManager(PLayerTransactionChild*, LayersBackend, LayerManagerPe
     if (mLayerManager) {
         return mLayerManager;
     }
-    // for OMTC allow use of the single layer manager/compositor
-    // shared across all windows
-    if (ShouldUseOffMainThreadCompositing()) {
-        return sLayerManager;
-    }
     return nullptr;
 }
 
@@ -1310,15 +1300,8 @@ nsWindow::CreateLayerManager(int aCompositorWidth, int aCompositorHeight)
     }
 
     if (ShouldUseOffMainThreadCompositing()) {
-        if (sLayerManager) {
-            return;
-        }
         CreateCompositor(aCompositorWidth, aCompositorHeight);
         if (mLayerManager) {
-            // for OMTC create a single layer manager and compositor that will be
-            // used for all windows.
-            SetCompositor(mLayerManager, mCompositorParent, mCompositorChild);
-            sCompositorPaused = false;
             return;
         }
 
@@ -2965,50 +2948,38 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
 // off-main-thread compositor fields and functions
 
 StaticRefPtr<mozilla::layers::APZCTreeManager> nsWindow::sApzcTreeManager;
-StaticRefPtr<mozilla::layers::LayerManager> nsWindow::sLayerManager;
-StaticRefPtr<mozilla::layers::CompositorParent> nsWindow::sCompositorParent;
-StaticRefPtr<mozilla::layers::CompositorChild> nsWindow::sCompositorChild;
-bool nsWindow::sCompositorPaused = true;
-
-void
-nsWindow::SetCompositor(mozilla::layers::LayerManager* aLayerManager,
-                        mozilla::layers::CompositorParent* aCompositorParent,
-                        mozilla::layers::CompositorChild* aCompositorChild)
-{
-    sLayerManager = aLayerManager;
-    sCompositorParent = aCompositorParent;
-    sCompositorChild = aCompositorChild;
-}
 
 void
 nsWindow::InvalidateAndScheduleComposite()
 {
-    if (sCompositorParent) {
-        sCompositorParent->InvalidateOnCompositorThread();
-        sCompositorParent->ScheduleRenderOnCompositorThread();
+    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
+        gGeckoViewWindow->mGLControllerSupport->
+                SyncInvalidateAndScheduleComposite();
     }
 }
 
 bool
 nsWindow::IsCompositionPaused()
 {
-    return sCompositorPaused;
+    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
+        return gGeckoViewWindow->mGLControllerSupport->CompositorPaused();
+    }
+    return false;
 }
 
 void
 nsWindow::SchedulePauseComposition()
 {
-    if (sCompositorParent) {
-        sCompositorParent->SchedulePauseOnCompositorThread();
-        sCompositorPaused = true;
+    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
+        return gGeckoViewWindow->mGLControllerSupport->SyncPauseCompositor();
     }
 }
 
 void
 nsWindow::ScheduleResumeComposition()
 {
-    if (sCompositorParent && sCompositorParent->ScheduleResumeOnCompositorThread()) {
-        sCompositorPaused = false;
+    if (gGeckoViewWindow && gGeckoViewWindow->mGLControllerSupport) {
+        return gGeckoViewWindow->mGLControllerSupport->SyncResumeCompositor();
     }
 }
 
@@ -3020,19 +2991,11 @@ nsWindow::ScheduleResumeComposition(int width, int height)
     }
 }
 
-void
-nsWindow::ForceIsFirstPaint()
-{
-    if (sCompositorParent) {
-        sCompositorParent->ForceIsFirstPaint();
-    }
-}
-
 float
 nsWindow::ComputeRenderIntegrity()
 {
-    if (sCompositorParent) {
-        return sCompositorParent->ComputeRenderIntegrity();
+    if (gGeckoViewWindow && gGeckoViewWindow->mCompositorParent) {
+        return gGeckoViewWindow->mCompositorParent->ComputeRenderIntegrity();
     }
 
     return 1.f;
@@ -3057,10 +3020,12 @@ nsWindow::WidgetPaintsBackground()
 bool
 nsWindow::NeedsPaint()
 {
-  if (sCompositorPaused || FindTopLevel() != nsWindow::TopWindow() || !GetLayerManager(nullptr)) {
-    return false;
-  }
-  return nsIWidget::NeedsPaint();
+    if (!mGLControllerSupport || mGLControllerSupport->CompositorPaused() ||
+            // FindTopLevel() != nsWindow::TopWindow() ||
+            !GetLayerManager(nullptr)) {
+        return false;
+    }
+    return nsIWidget::NeedsPaint();
 }
 
 CompositorParent*
@@ -3100,8 +3065,8 @@ nsWindow::CreateRootContentController()
 uint64_t
 nsWindow::RootLayerTreeId()
 {
-    MOZ_ASSERT(sCompositorParent);
-    return sCompositorParent->RootLayerTreeId();
+    MOZ_ASSERT(gGeckoViewWindow && gGeckoViewWindow->mCompositorParent);
+    return gGeckoViewWindow->mCompositorParent->RootLayerTreeId();
 }
 
 uint32_t
