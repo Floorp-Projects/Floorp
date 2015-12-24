@@ -171,7 +171,8 @@ public class GeckoView extends LayerView
             };
     }
 
-    private final Window window = new Window();
+    private Window window;
+    private boolean stateSaved;
 
     public GeckoView(Context context) {
         super(context);
@@ -265,6 +266,28 @@ public class GeckoView extends LayerView
     }
 
     @Override
+    protected Parcelable onSaveInstanceState()
+    {
+        final Parcelable superState = super.onSaveInstanceState();
+        stateSaved = true;
+        return new StateBinder(superState, this.window);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(final Parcelable state)
+    {
+        final StateBinder stateBinder = (StateBinder) state;
+        // We have to always call super.onRestoreInstanceState because View keeps
+        // track of these calls and throws an exception when we don't call it.
+        super.onRestoreInstanceState(stateBinder.superState);
+
+        if (stateBinder.window != null) {
+            this.window = stateBinder.window;
+        }
+        stateSaved = false;
+    }
+
+    @Override
     public void onAttachedToWindow()
     {
         final DisplayMetrics metrics = getContext().getResources().getDisplayMetrics();
@@ -290,22 +313,22 @@ public class GeckoView extends LayerView
     public void onDetachedFromWindow()
     {
         super.onDetachedFromWindow();
+        super.destroy();
 
-        // FIXME: because we don't support separate nsWindow for each GeckoView
-        // yet, we have to keep this window around in case another GeckoView
-        // wants to attach. So don't call window.close() for now.
+        if (stateSaved) {
+            // If we saved state earlier, we don't want to close the nsWindow.
+            return;
+        }
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            // window.close();
+            window.close();
             window.disposeNative();
         } else {
-            // GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-            //        window, "close");
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                    window, "close");
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
                     window, "disposeNative");
         }
-
-        super.destroy();
     }
 
     /* package */ void setInputConnectionListener(final InputConnectionListener icl) {
