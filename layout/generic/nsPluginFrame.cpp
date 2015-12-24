@@ -1019,7 +1019,10 @@ nsDisplayPlugin::ComputeVisibility(nsDisplayListBuilder* aBuilder,
         rAncestor.ToNearestPixels(appUnitsPerDevPixel));
 
       nsRegion visibleRegion;
-      visibleRegion.And(*aVisibleRegion, GetClippedBounds(aBuilder));
+      // Apply all scroll clips when computing the clipped bounds of this item.
+      // We hide windowed plugins during APZ scrolling, so there never is an
+      // async transform that we need to take into account when clipping.
+      visibleRegion.And(*aVisibleRegion, GetScrollClippedBoundsUpTo(aBuilder, nullptr));
       // Make visibleRegion relative to f
       visibleRegion.MoveBy(-ToReferenceFrame());
 
