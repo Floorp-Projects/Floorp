@@ -562,8 +562,7 @@ Telephony::HandleAudioAgentState()
     mIsAudioStartPlaying = true;
     float volume;
     bool muted;
-    rv = mAudioAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
-                                           &volume, &muted);
+    rv = mAudioAgent->NotifyStartedPlaying(&volume, &muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
