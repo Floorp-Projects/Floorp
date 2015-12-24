@@ -7,7 +7,9 @@ from __future__ import absolute_import, unicode_literals, print_function
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.context import (
     Context,
+    ObjDirPath,
     Path,
+    RenamedSourcePath,
     VARIABLES,
 )
 from mozbuild.frontend.data import (
@@ -80,11 +82,28 @@ class FasterMakeBackend(CommonBackend):
                         self._add_preprocess(obj, f.full_path, path,
                                              target=f.target_basename,
                                              defines=defines)
+                    elif '*' in f:
+                        def _prefix(s):
+                            for p in mozpath.split(s):
+                                if '*' not in p:
+                                    yield p + '/'
+                        prefix = ''.join(_prefix(f.full_path))
+
+                        self._install_manifests[obj.install_target] \
+                            .add_pattern_symlink(
+                                prefix,
+                                f.full_path[len(prefix):],
+                                mozpath.join(path, f.target_basename))
                     else:
                         self._install_manifests[obj.install_target].add_symlink(
                             f.full_path,
                             mozpath.join(path, f.target_basename)
                         )
+                    if isinstance(f, ObjDirPath):
+                        dep_target = 'install-%s' % obj.install_target
+                        self._dependencies[dep_target].append(
+                            mozpath.relpath(f.full_path,
+                                            self.environment.topobjdir))
 
         elif isinstance(obj, ChromeManifestEntry) and \
                 obj.install_target.startswith('dist/bin'):
@@ -126,13 +145,18 @@ class FasterMakeBackend(CommonBackend):
         for jarinfo in pp.out:
             jar_context = Context(
                 allowed_variables=VARIABLES, config=obj._context.config)
-            jar_context.add_source(obj.path.full_path)
+            jar_context.push_source(obj._context.main_path)
+            jar_context.push_source(obj.path.full_path)
 
             install_target = obj.install_target
             if jarinfo.base:
                 install_target = mozpath.normpath(
                     mozpath.join(install_target, jarinfo.base))
             jar_context['FINAL_TARGET'] = install_target
+            jar_context['DEFINES'] = defines
+            files = jar_context['FINAL_TARGET_FILES']
+            files_pp = jar_context['FINAL_TARGET_PP_FILES']
+
             for e in jarinfo.entries:
                 if e.is_locale:
                     if jarinfo.relativesrcdir:
@@ -145,24 +169,7 @@ class FasterMakeBackend(CommonBackend):
 
                 src = Path(jar_context, src)
 
-                if '*' in e.source:
-                    if e.preprocess:
-                        raise Exception('%s: Wildcards are not supported with '
-                                        'preprocessing' % obj.path)
-                    def _prefix(s):
-                        for p in mozpath.split(s):
-                            if '*' not in p:
-                                yield p + '/'
-                    prefix = ''.join(_prefix(src.full_path))
-
-                    self._install_manifests[install_target] \
-                        .add_pattern_symlink(
-                        prefix,
-                        src.full_path[len(prefix):],
-                        mozpath.join(jarinfo.name, e.output))
-                    continue
-
-                if not os.path.exists(src.full_path):
+                if '*' not in e.source and not os.path.exists(src.full_path):
                     if e.is_locale:
                         raise Exception(
                             '%s: Cannot find %s' % (obj.path, e.source))
@@ -174,21 +181,26 @@ class FasterMakeBackend(CommonBackend):
                         # it, but it's how it works in the recursive make,
                         # not that anything relies on that, but it's simpler.
                         src = Path(obj._context, '!' + e.source)
-                    self._dependencies['install-%s' % install_target] \
-                        .append(mozpath.relpath(
-                        src.full_path, self.environment.topobjdir))
+
+                output_basename = mozpath.basename(e.output)
+                if output_basename != src.target_basename:
+                    src = RenamedSourcePath(jar_context,
+                                            (src, output_basename))
+                path = mozpath.dirname(mozpath.join(jarinfo.name, e.output))
 
                 if e.preprocess:
-                    self._add_preprocess(
-                        obj,
-                        src.full_path,
-                        mozpath.join(jarinfo.name, mozpath.dirname(e.output)),
-                        mozpath.basename(e.output),
-                        defines=defines)
+                    if '*' in e.source:
+                        raise Exception('%s: Wildcards are not supported with '
+                                        'preprocessing' % obj.path)
+                    files_pp[path] += [src]
                 else:
-                    self._install_manifests[install_target].add_symlink(
-                        src.full_path,
-                        mozpath.join(jarinfo.name, e.output))
+                    files[path] += [src]
+
+            if files:
+                self.consume_object(FinalTargetFiles(jar_context, files))
+            if files_pp:
+                self.consume_object(
+                    FinalTargetPreprocessedFiles(jar_context, files_pp))
 
             for m in jarinfo.chrome_manifests:
                 entry = parse_manifest_line(
