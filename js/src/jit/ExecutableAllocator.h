@@ -98,7 +98,10 @@ class ExecutablePool
     Allocation m_allocation;
 
     // Reference count for automatic reclamation.
-    unsigned m_refCount;
+    unsigned m_refCount:31;
+
+    // Flag that can be used by algorithms operating on pools.
+    bool m_mark:1;
 
     // Number of bytes currently used for Method and Regexp JIT code.
     size_t m_ionCodeBytes;
@@ -110,24 +113,49 @@ class ExecutablePool
     void release(bool willDestroy = false);
     void release(size_t n, CodeKind kind);
 
+    void addRef();
+
     ExecutablePool(ExecutableAllocator* allocator, Allocation a)
       : m_allocator(allocator), m_freePtr(a.pages), m_end(m_freePtr + a.size), m_allocation(a),
-        m_refCount(1), m_ionCodeBytes(0), m_baselineCodeBytes(0), m_regexpCodeBytes(0),
-        m_otherCodeBytes(0)
+        m_refCount(1), m_mark(false), m_ionCodeBytes(0), m_baselineCodeBytes(0),
+        m_regexpCodeBytes(0), m_otherCodeBytes(0)
     { }
 
     ~ExecutablePool();
+
+    void mark() {
+        MOZ_ASSERT(!m_mark);
+        m_mark = true;
+    }
+    void unmark() {
+        MOZ_ASSERT(m_mark);
+        m_mark = false;
+    }
+    bool isMarked() const {
+        return m_mark;
+    }
 
   private:
     ExecutablePool(const ExecutablePool&) = delete;
     void operator=(const ExecutablePool&) = delete;
 
-    void addRef();
-
     void* alloc(size_t n, CodeKind kind);
 
     size_t available() const;
 };
+
+struct JitPoisonRange
+{
+    jit::ExecutablePool* pool;
+    void* start;
+    size_t size;
+
+    JitPoisonRange(jit::ExecutablePool* pool, void* start, size_t size)
+      : pool(pool), start(start), size(size)
+    {}
+};
+
+typedef Vector<JitPoisonRange, 0, SystemAllocPolicy> JitPoisonRangeVector;
 
 class ExecutableAllocator
 {
@@ -173,6 +201,8 @@ class ExecutableAllocator
     ExecutablePool* createPool(size_t n);
     ExecutablePool* poolForSize(size_t n);
 
+    static void reprotectPool(JSRuntime* rt, ExecutablePool* pool, ProtectionSetting protection);
+
   public:
     static void makeWritable(void* start, size_t size)
     {
@@ -194,6 +224,8 @@ class ExecutableAllocator
     }
 
     static unsigned initialProtectionFlags(ProtectionSetting protection);
+
+    static void poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges);
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
     static void cacheFlush(void*, size_t)
