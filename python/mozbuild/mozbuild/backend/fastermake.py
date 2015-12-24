@@ -47,6 +47,8 @@ class FasterMakeBackend(CommonBackend):
             # This matches what PP_TARGETS do in config/rules.
             if target.endswith('.in'):
                 target = target[:-3]
+        if target.endswith('.css'):
+            kwargs['marker'] = '%'
         depfile = mozpath.join(
             self.environment.topobjdir, 'faster', '.deps',
             mozpath.join(obj.install_target, dest, target).replace('/', '_'))
@@ -189,16 +191,12 @@ class FasterMakeBackend(CommonBackend):
                         src, self.environment.topobjdir))
 
                 if e.preprocess:
-                    kwargs = {}
-                    if src.endswith('.css'):
-                        kwargs['marker'] = '%'
                     self._add_preprocess(
                         obj,
                         src,
                         mozpath.join(jarinfo.name, mozpath.dirname(e.output)),
                         mozpath.basename(e.output),
-                        defines=defines,
-                        **kwargs)
+                        defines=defines)
                 else:
                     self._install_manifests[install_target].add_symlink(
                         src,
