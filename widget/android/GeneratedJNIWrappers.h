@@ -3647,6 +3647,109 @@ public:
 
 };
 
+class LayerRenderer : public mozilla::jni::Class<LayerRenderer>
+{
+public:
+    typedef mozilla::jni::Ref<LayerRenderer> Ref;
+    typedef mozilla::jni::LocalRef<LayerRenderer> LocalRef;
+    typedef mozilla::jni::GlobalRef<LayerRenderer> GlobalRef;
+    typedef const mozilla::jni::Param<LayerRenderer>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/gfx/LayerRenderer";
+
+protected:
+    LayerRenderer(jobject instance) : Class(instance) {}
+
+public:
+    class Frame;
+
+};
+
+class LayerRenderer::Frame : public mozilla::jni::Class<Frame>
+{
+public:
+    typedef mozilla::jni::Ref<Frame> Ref;
+    typedef mozilla::jni::LocalRef<Frame> LocalRef;
+    typedef mozilla::jni::GlobalRef<Frame> GlobalRef;
+    typedef const mozilla::jni::Param<Frame>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/gfx/LayerRenderer$Frame";
+
+protected:
+    Frame(jobject instance) : Class(instance) {}
+
+public:
+    struct BeginDrawing_t {
+        typedef Frame Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "beginDrawing";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto BeginDrawing() const -> void;
+
+public:
+    struct DrawBackground_t {
+        typedef Frame Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "drawBackground";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto DrawBackground() const -> void;
+
+public:
+    struct DrawForeground_t {
+        typedef Frame Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "drawForeground";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto DrawForeground() const -> void;
+
+public:
+    struct EndDrawing_t {
+        typedef Frame Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "endDrawing";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto EndDrawing() const -> void;
+
+};
+
 class LayerView : public mozilla::jni::Class<LayerView>
 {
 public:

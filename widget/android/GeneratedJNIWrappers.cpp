@@ -1342,6 +1342,42 @@ auto ImmutableViewportMetrics::New(float a0, float a1, float a2, float a3, float
     return mozilla::jni::Constructor<New_t>::Call(nullptr, nullptr, a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12);
 }
 
+constexpr char LayerRenderer::name[];
+
+constexpr char LayerRenderer::Frame::name[];
+
+constexpr char LayerRenderer::Frame::BeginDrawing_t::name[];
+constexpr char LayerRenderer::Frame::BeginDrawing_t::signature[];
+
+auto LayerRenderer::Frame::BeginDrawing() const -> void
+{
+    return mozilla::jni::Method<BeginDrawing_t>::Call(this, nullptr);
+}
+
+constexpr char LayerRenderer::Frame::DrawBackground_t::name[];
+constexpr char LayerRenderer::Frame::DrawBackground_t::signature[];
+
+auto LayerRenderer::Frame::DrawBackground() const -> void
+{
+    return mozilla::jni::Method<DrawBackground_t>::Call(this, nullptr);
+}
+
+constexpr char LayerRenderer::Frame::DrawForeground_t::name[];
+constexpr char LayerRenderer::Frame::DrawForeground_t::signature[];
+
+auto LayerRenderer::Frame::DrawForeground() const -> void
+{
+    return mozilla::jni::Method<DrawForeground_t>::Call(this, nullptr);
+}
+
+constexpr char LayerRenderer::Frame::EndDrawing_t::name[];
+constexpr char LayerRenderer::Frame::EndDrawing_t::signature[];
+
+auto LayerRenderer::Frame::EndDrawing() const -> void
+{
+    return mozilla::jni::Method<EndDrawing_t>::Call(this, nullptr);
+}
+
 constexpr char LayerView::name[];
 
 constexpr char LayerView::RegisterCompositorWrapper_t::name[];
