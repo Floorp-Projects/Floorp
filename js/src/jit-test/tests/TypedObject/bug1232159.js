@@ -1,3 +1,6 @@
+if (!this.hasOwnProperty("TypedObject"))
+    quit();
+
 Function.prototype.prototype = function() {}
 
 var type = TypedObject.uint8.array(4).array(4);
