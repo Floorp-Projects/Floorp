@@ -603,6 +603,12 @@ var BrowserApp = {
         InitLater(() => WebcompatReporter.init());
       }
 
+      // Collect telemetry data.
+      // We do this at startup because we want to move away from "gather-telemetry" (bug 1127907)
+      InitLater(() => {
+        Telemetry.addData("ZOOMED_VIEW_ENABLED", Services.prefs.getBoolPref("ui.zoomedview.enabled"));
+      });
+
       InitLater(() => LightWeightThemeWebInstaller.init());
       InitLater(() => SpatialNavigation.init(BrowserApp.deck, null), window, "SpatialNavigation");
       InitLater(() => CastingApps.init(), window, "CastingApps");
