@@ -61,10 +61,7 @@ public:
   bool IsPlaying() const override;
 
   // TODO: fix these functions that don't fit into the interface of MediaSink.
-  void AddOutput(ProcessedMediaStream* aStream, bool aFinishWhenEnded);
-  void RemoveOutput(MediaStream* aStream);
   void SetSameOrigin(bool aSameOrigin);
-  bool HasConsumers() const;
 
 protected:
   virtual ~DecodedStream();
