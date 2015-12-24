@@ -219,7 +219,7 @@ private:
     void CreateLayerManager(int aCompositorWidth, int aCompositorHeight);
     void RedrawAll();
 
-    mozilla::AndroidLayerRendererFrame mLayerRendererFrame;
+    mozilla::widget::LayerRenderer::Frame::GlobalRef mLayerRendererFrame;
 
     static mozilla::StaticRefPtr<mozilla::layers::APZCTreeManager> sApzcTreeManager;
     static mozilla::StaticRefPtr<mozilla::layers::LayerManager> sLayerManager;
