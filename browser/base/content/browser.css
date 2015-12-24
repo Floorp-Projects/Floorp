@@ -1020,37 +1020,15 @@ toolbar[mode="text"] > #downloads-button > .toolbarbutton-icon {
   visibility: collapse;
 }
 
-/* full screen chat window support */
-chatbar:-moz-full-screen-ancestor,
-chatbox:-moz-full-screen-ancestor  {
-  border: none;
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  margin: 0 !important;
-  min-width: 0 !important;
-  max-width: none !important;
-  min-height: 0 !important;
-  max-height: none !important;
-  box-sizing: border-box !important;
-}
-
 /* hide chat chrome when chat is fullscreen */
-chatbox:-moz-full-screen-ancestor > .chat-titlebar {
+#chat-window[sizemode="fullscreen"] chatbox > .chat-titlebar {
   display: none;
 }
 
-/* hide chatbar if browser tab is fullscreen */
-*:-moz-full-screen-ancestor chatbar:not(:-moz-full-screen-ancestor) {
-  display: none;
-}
-
-/* hide sidebar when fullscreen */
-*:-moz-full-screen-ancestor #social-sidebar-box:not(:-moz-full-screen-ancestor) {
+/* hide chatbar and sidebar if browser tab is fullscreen */
+#main-window[inFullscreen][inDOMFullscreen] chatbar,
+#main-window[inFullscreen][inDOMFullscreen] #social-sidebar-box,
+#main-window[inFullscreen][inDOMFullscreen] #social-sidebar-splitter {
   display: none;
 }
 
