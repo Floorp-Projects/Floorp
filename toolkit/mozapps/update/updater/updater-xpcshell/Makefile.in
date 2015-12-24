@@ -18,6 +18,7 @@ MOZ_WINCONSOLE = 0
 endif
 endif
 
+ifdef COMPILE_ENVIRONMENT
 libs::
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	# Copy for xpcshell tests
@@ -26,8 +27,7 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/../macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
 	  iconv -f UTF-8 -t UTF-16 > $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS/updater-xpcshell
-	$(NSINSTALL) $(PROGRAM) $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
-	rm -f $(PROGRAM)
+	$(NSINSTALL) updater-xpcshell $(XPCSHELLTESTROOT)/data/updater-xpcshell.app/Contents/MacOS
 	rm -Rf $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater-xpcshell.app $(XPCSHELLTESTROOT)/data/updater.app
 	mv $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater-xpcshell $(XPCSHELLTESTROOT)/data/updater.app/Contents/MacOS/updater
@@ -38,3 +38,4 @@ else
 	cp $(PROGRAM) $(XPCSHELLTESTROOT)/data/updater$(BIN_SUFFIX)
 	cp $(PROGRAM) $(MOCHITESTROOT)/data/updater$(BIN_SUFFIX)
 endif
+endif # COMPILE_ENVIRONMENT
