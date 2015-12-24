@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.gfx.GLController;
 import org.mozilla.gecko.gfx.LayerView;
@@ -30,8 +31,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.TypedArray;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.IBinder;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -120,6 +125,50 @@ public class GeckoView extends LayerView
                                 int width, int height);
         @Override protected native void disposeNative();
         native void close();
+    }
+
+    // Object to hold onto our nsWindow connection when GeckoView gets destroyed.
+    private static class StateBinder extends Binder implements Parcelable {
+        public final Parcelable superState;
+        public final Window window;
+
+        public StateBinder(Parcelable superState, Window window) {
+            this.superState = superState;
+            this.window = window;
+        }
+
+        @Override
+        public int describeContents() {
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            // Always write out the super-state, so that even if we lose this binder, we
+            // will still have something to pass into super.onRestoreInstanceState.
+            out.writeParcelable(superState, flags);
+            out.writeStrongBinder(this);
+        }
+
+        @ReflectionTarget
+        public static final Parcelable.Creator<StateBinder> CREATOR
+            = new Parcelable.Creator<StateBinder>() {
+                @Override
+                public StateBinder createFromParcel(Parcel in) {
+                    final Parcelable superState = in.readParcelable(null);
+                    final IBinder binder = in.readStrongBinder();
+                    if (binder instanceof StateBinder) {
+                        return (StateBinder) binder;
+                    }
+                    // Not the original object we saved; return null state.
+                    return new StateBinder(superState, null);
+                }
+
+                @Override
+                public StateBinder[] newArray(int size) {
+                    return new StateBinder[size];
+                }
+            };
     }
 
     private final Window window = new Window();
