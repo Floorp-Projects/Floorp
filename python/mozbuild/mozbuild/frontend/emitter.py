@@ -1269,7 +1269,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 'it is currently limited to one value.', context)
 
         for path in jar_manifests:
-            yield JARManifest(context, mozpath.join(context.srcdir, path))
+            yield JARManifest(context, path)
 
         # Temporary test to look for jar.mn files that creep in without using
         # the new declaration. Before, we didn't require jar.mn files to
