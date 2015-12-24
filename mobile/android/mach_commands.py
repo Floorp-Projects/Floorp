@@ -96,7 +96,7 @@ class ArtifactSubCommand(SubCommand):
         args = [
             CommandArgument('--tree', metavar='TREE', type=str,
                 help='Firefox tree.'),
-            CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86'],
+            CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86', 'macosx64'],
                 help='Build job.'),
             CommandArgument('--verbose', '-v', action='store_true',
                 help='Print verbose output.'),
@@ -111,24 +111,21 @@ class PackageFrontend(MachCommandBase):
     """Fetch and install binary artifacts from Mozilla automation."""
 
     @Command('artifact', category='post-build',
-        description='Use pre-built artifacts to build Fennec.',
+        description='Use pre-built artifacts to build Firefox.',
         conditions=[
-            conditions.is_android,  # mobile/android only for now.
             conditions.is_hg,  # mercurial only for now.
         ])
     def artifact(self):
-        '''Download, cache, and install pre-built binary artifacts to build Fennec.
+        '''Download, cache, and install pre-built binary artifacts to build Firefox.
 
-        Invoke |mach artifact| before each |mach package| to freshen your installed
-        binary libraries.  That is, package using
-
-        mach artifact install && mach package
-
-        to download, cache, and install binary artifacts from Mozilla automation,
-        replacing whatever may be in your object directory.  Use |mach artifact last|
-        to see what binary artifacts were last used.
+        Use |mach build| as normal to freshen your installed binary libraries:
+        artifact builds automatically download, cache, and install binary
+        artifacts from Mozilla automation, replacing whatever may be in your
+        object directory.  Use |mach artifact last| to see what binary artifacts
+        were last used.
 
         Never build libxul again!
+
         '''
         pass
 
@@ -157,9 +154,15 @@ class PackageFrontend(MachCommandBase):
         tree = tree or 'fx-team'
         if job:
             return (tree, job)
-        if self.substs['ANDROID_CPU_ARCH'] == 'x86':
-            return (tree, 'android-x86')
-        return (tree, 'android-api-11')
+        if self.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
+            if self.substs['ANDROID_CPU_ARCH'] == 'x86':
+                return (tree, 'android-x86')
+            return (tree, 'android-api-11')
+        if self.defines.get('XP_MACOSX', False):
+            # TODO: check for 64 bit builds.  We'd like to use HAVE_64BIT_BUILD
+            # but that relies on the compile environment.
+            return (tree, 'macosx64')
+        raise Exception('Cannot determine default tree and job for |mach artifact|!')
 
     @ArtifactSubCommand('artifact', 'install',
         'Install a good pre-built artifact.')
