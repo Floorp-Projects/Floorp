@@ -18,6 +18,7 @@ import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAccessibility;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
+import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
@@ -68,7 +69,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
     private Listener mListener;
 
     private PointF mInitialTouchPoint;
-    private boolean mGeckoIsReady;
 
     private float mSurfaceTranslation;
 
@@ -154,23 +154,8 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
                          (int)event.getToolMinor() / 2);
     }
 
-    public void geckoConnected() {
-        // See if we want to force 16-bit colour before doing anything
-        PrefsHelper.getPref("gfx.android.rgb16.force", new PrefsHelper.PrefHandlerBase() {
-            @Override public void prefValue(String pref, boolean force16bit) {
-                if (force16bit) {
-                    GeckoAppShell.setScreenDepthOverride(16);
-                }
-            }
-        });
-
-        mLayerClient.notifyGeckoReady();
-        mInitialTouchPoint = null;
-        mGeckoIsReady = true;
-    }
-
     private boolean sendEventToGecko(MotionEvent event) {
-        if (!mGeckoIsReady) {
+        if (!mLayerClient.isGeckoReady()) {
             return false;
         }
 
@@ -237,7 +222,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (mToolbarAnimator != null && mToolbarAnimator.onInterceptTouchEvent(event)) {
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -265,7 +250,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         if (AndroidGamepadManager.handleMotionEvent(event)) {
             return true;
         }
-        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;
@@ -278,6 +263,14 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     protected void onAttachedToWindow() {
+        // Configure GeckoLayerClient once Gecko is ready, but after GeckoView has opened a window.
+        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
+            mLayerClient.onGeckoReady();
+        } else {
+            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
+                    mLayerClient, "onGeckoReady");
+        }
+
         // We are adding descendants to this LayerView, but we don't want the
         // descendants to affect the way LayerView retains its focus.
         setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);
@@ -376,7 +369,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (AppConstants.MOZ_ANDROID_APZ && !mGeckoIsReady) {
+        if (AppConstants.MOZ_ANDROID_APZ && !mLayerClient.isGeckoReady()) {
             // If gecko isn't loaded yet, don't try sending events to the
             // native code because it's just going to crash
             return true;

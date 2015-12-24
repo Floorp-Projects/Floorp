@@ -1402,6 +1402,7 @@ public class GeckoAppShell
         return sScreenDepth;
     }
 
+    @WrapForJNI
     public static synchronized void setScreenDepthOverride(int aScreenDepth) {
         if (sScreenDepth != 0) {
             Log.e(LOGTAG, "Tried to override screen depth after it's already been set");
