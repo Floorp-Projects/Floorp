@@ -88,14 +88,6 @@ Java_org_mozilla_gecko_GeckoAppShell_notifyGeckoObservers(JNIEnv *aEnv, jclass,
     obsServ->NotifyObservers(nullptr, topic.get(), data.get());
 }
 
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_processNextNativeEvent(JNIEnv *jenv, jclass, jboolean mayWait)
-{
-    // poke the appshell
-    if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->ProcessNextNativeEvent(mayWait != JNI_FALSE);
-}
-
 NS_EXPORT jlong JNICALL
 Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv* env, jclass)
 {
@@ -104,13 +96,6 @@ Java_org_mozilla_gecko_GeckoAppShell_runUiThreadCallback(JNIEnv* env, jclass)
     }
 
     return AndroidBridge::Bridge()->RunDelayedUiThreadTasks();
-}
-
-NS_EXPORT void JNICALL
-Java_org_mozilla_gecko_GeckoAppShell_onResume(JNIEnv *jenv, jclass jc)
-{
-    if (nsAppShell::gAppShell)
-        nsAppShell::gAppShell->OnResume();
 }
 
 NS_EXPORT void JNICALL
