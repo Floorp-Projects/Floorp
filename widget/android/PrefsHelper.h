@@ -26,7 +26,9 @@ struct PrefsHelper
                              bool observe)
     {
         MOZ_ASSERT(NS_IsMainThread());
-        MOZ_ASSERT(nsAppShell::gAppShell);
+
+        nsAppShell* const appShell = nsAppShell::Get();
+        MOZ_ASSERT(appShell);
 
         nsTArray<jni::Object::LocalRef> namesRefArray(prefNames.GetElements());
         const size_t len = namesRefArray.Length();
@@ -48,7 +50,7 @@ struct PrefsHelper
         }
 
         nsIAndroidBrowserApp* browserApp = nullptr;
-        nsAppShell::gAppShell->GetBrowserApp(&browserApp);
+        appShell->GetBrowserApp(&browserApp);
         MOZ_ASSERT(browserApp);
 
         if (observe) {
@@ -63,10 +65,12 @@ struct PrefsHelper
     static void RemovePrefsObserver(int32_t requestId)
     {
         MOZ_ASSERT(NS_IsMainThread());
-        MOZ_ASSERT(nsAppShell::gAppShell);
+
+        nsAppShell* const appShell = nsAppShell::Get();
+        MOZ_ASSERT(appShell);
 
         nsIAndroidBrowserApp* browserApp = nullptr;
-        nsAppShell::gAppShell->GetBrowserApp(&browserApp);
+        appShell->GetBrowserApp(&browserApp);
         MOZ_ASSERT(browserApp);
 
         browserApp->RemovePreferenceObservers(requestId);
