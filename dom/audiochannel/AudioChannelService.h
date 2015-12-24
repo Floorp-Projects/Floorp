@@ -56,15 +56,13 @@ public:
    * this service, sharing the AudioChannel.
    */
   void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                 uint32_t aNotifyPlayback,
                                  AudioChannel aChannel);
 
   /**
    * Any audio channel agent that stops playing should unregister itself to
    * this service.
    */
-  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                   uint32_t aNotifyPlayback);
+  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
   /**
    * For nested iframes.

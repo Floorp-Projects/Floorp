@@ -746,8 +746,7 @@ AudioDestinationNode::InputMuted(bool aMuted)
 
   float volume = 0.0;
   bool muted = true;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
-                                                         &volume, &muted);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }

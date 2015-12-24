@@ -268,7 +268,6 @@ AudioChannelService::~AudioChannelService()
 
 void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                               uint32_t aNotifyPlayback,
                                                AudioChannel aChannel)
 {
   uint64_t windowID = aAgent->WindowID();
@@ -289,8 +288,7 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
   }
 
   // If this is the first agent for this window, we must notify the observers.
-  if (aNotifyPlayback == nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY &&
-      winData->mAgents.Length() == 1) {
+  if (winData->mAgents.Length() == 1) {
     RefPtr<MediaPlaybackRunnable> runnable =
       new MediaPlaybackRunnable(aAgent->Window(), true /* active */);
     NS_DispatchToCurrentThread(runnable);
@@ -300,8 +298,7 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
 }
 
 void
-AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                                 uint32_t aNotifyPlayback)
+AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
   AudioChannelWindow* winData = GetWindowData(aAgent->WindowID());
   if (!winData) {
@@ -333,8 +330,7 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
 #endif
 
   // If this is the last agent for this window, we must notify the observers.
-  if (aNotifyPlayback == nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY &&
-      winData->mAgents.IsEmpty()) {
+  if (winData->mAgents.IsEmpty()) {
     RefPtr<MediaPlaybackRunnable> runnable =
       new MediaPlaybackRunnable(aAgent->Window(), false /* active */);
     NS_DispatchToCurrentThread(runnable);
