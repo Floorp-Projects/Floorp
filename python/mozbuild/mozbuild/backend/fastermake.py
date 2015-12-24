@@ -6,32 +6,19 @@ from __future__ import absolute_import, unicode_literals, print_function
 
 from mozbuild.backend.common import CommonBackend
 from mozbuild.frontend.context import (
-    Context,
     ObjDirPath,
-    Path,
-    RenamedSourcePath,
-    VARIABLES,
 )
 from mozbuild.frontend.data import (
     ChromeManifestEntry,
-    ContextDerived,
-    Defines,
     FinalTargetPreprocessedFiles,
     FinalTargetFiles,
     JARManifest,
     XPIDLFile,
 )
-from mozbuild.jar import JarManifestParser
 from mozbuild.makeutil import Makefile
-from mozbuild.preprocessor import Preprocessor
 from mozbuild.util import OrderedDefaultDict
-from mozpack.chrome.manifest import parse_manifest_line
 from mozpack.manifests import InstallManifest
 import mozpack.path as mozpath
-from collections import OrderedDict
-from itertools import chain
-import os
-import sys
 
 
 class FasterMakeBackend(CommonBackend):
@@ -118,96 +105,6 @@ class FasterMakeBackend(CommonBackend):
         # We currently ignore a lot of object types, so just acknowledge
         # everything.
         return True
-
-    def _consume_jar_manifest(self, obj):
-        # Ideally, this would all be handled somehow in the emitter, but
-        # this would require all the magic surrounding l10n and addons in
-        # the recursive make backend to die, which is not going to happen
-        # any time soon enough.
-        # Notably missing:
-        # - DEFINES from config/config.mk
-        # - L10n support
-        # - The equivalent of -e when USE_EXTENSION_MANIFEST is set in
-        #   moz.build, but it doesn't matter in dist/bin.
-        pp = Preprocessor()
-        if obj.defines:
-            pp.context.update(obj.defines.defines)
-        pp.context.update(self.environment.defines)
-        pp.context.update(
-            AB_CD='en-US',
-            BUILD_FASTER=1,
-        )
-        pp.out = JarManifestParser()
-        pp.do_include(obj.path.full_path)
-        self.backend_input_files |= pp.includes
-
-        for jarinfo in pp.out:
-            jar_context = Context(
-                allowed_variables=VARIABLES, config=obj._context.config)
-            jar_context.push_source(obj._context.main_path)
-            jar_context.push_source(obj.path.full_path)
-
-            install_target = obj.install_target
-            if jarinfo.base:
-                install_target = mozpath.normpath(
-                    mozpath.join(install_target, jarinfo.base))
-            jar_context['FINAL_TARGET'] = install_target
-            if obj.defines:
-                jar_context['DEFINES'] = obj.defines.defines
-            files = jar_context['FINAL_TARGET_FILES']
-            files_pp = jar_context['FINAL_TARGET_PP_FILES']
-
-            for e in jarinfo.entries:
-                if e.is_locale:
-                    if jarinfo.relativesrcdir:
-                        src = '/%s' % jarinfo.relativesrcdir
-                    else:
-                        src = ''
-                    src = mozpath.join(src, 'en-US', e.source)
-                else:
-                    src = e.source
-
-                src = Path(jar_context, src)
-
-                if '*' not in e.source and not os.path.exists(src.full_path):
-                    if e.is_locale:
-                        raise Exception(
-                            '%s: Cannot find %s' % (obj.path, e.source))
-                    if e.source.startswith('/'):
-                        src = Path(jar_context, '!' + e.source)
-                    else:
-                        # This actually gets awkward if the jar.mn is not
-                        # in the same directory as the moz.build declaring
-                        # it, but it's how it works in the recursive make,
-                        # not that anything relies on that, but it's simpler.
-                        src = Path(obj._context, '!' + e.source)
-
-                output_basename = mozpath.basename(e.output)
-                if output_basename != src.target_basename:
-                    src = RenamedSourcePath(jar_context,
-                                            (src, output_basename))
-                path = mozpath.dirname(mozpath.join(jarinfo.name, e.output))
-
-                if e.preprocess:
-                    if '*' in e.source:
-                        raise Exception('%s: Wildcards are not supported with '
-                                        'preprocessing' % obj.path)
-                    files_pp[path] += [src]
-                else:
-                    files[path] += [src]
-
-            if files:
-                self.consume_object(FinalTargetFiles(jar_context, files))
-            if files_pp:
-                self.consume_object(
-                    FinalTargetPreprocessedFiles(jar_context, files_pp))
-
-            for m in jarinfo.chrome_manifests:
-                entry = parse_manifest_line(
-                    mozpath.dirname(jarinfo.name),
-                    m.replace('%', mozpath.basename(jarinfo.name) + '/'))
-                self.consume_object(ChromeManifestEntry(
-                    jar_context, '%s.manifest' % jarinfo.name, entry))
 
     def consume_finished(self):
         mk = Makefile()
