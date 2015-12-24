@@ -60,7 +60,8 @@ public:
         return mBackbufferFB;
     }
 
-    virtual bool RenewSurface() override {
+    virtual bool RenewSurface(nsIWidget* aWidget) override {
+        // FIXME: should use the passed widget instead of the existing one.
         return RecreateRB();
     }
 
