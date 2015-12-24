@@ -576,7 +576,8 @@ nsPluginTag::GetClicktoplay(bool *aClicktoplay)
 }
 
 NS_IMETHODIMP
-nsPluginTag::GetEnabledState(uint32_t *aEnabledState) {
+nsPluginTag::GetEnabledState(uint32_t *aEnabledState)
+{
   int32_t enabledState;
   nsresult rv = Preferences::GetInt(GetStatePrefNameForPlugin(this).get(),
                                     &enabledState);
@@ -601,7 +602,8 @@ nsPluginTag::GetEnabledState(uint32_t *aEnabledState) {
 }
 
 NS_IMETHODIMP
-nsPluginTag::SetEnabledState(uint32_t aEnabledState) {
+nsPluginTag::SetEnabledState(uint32_t aEnabledState)
+{
   if (aEnabledState >= ePluginState_MaxValue)
     return NS_ERROR_ILLEGAL_VALUE;
   uint32_t oldState = nsIPluginTag::STATE_DISABLED;
