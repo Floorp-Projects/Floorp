@@ -1,0 +1,318 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Tests restyles caused by animations</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/paint_listener.js"></script>
+<script src="../testcommon.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<style>
+@keyframes opacity {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes background-color {
+  from { background-color: red; }
+  to { background-color: blue; }
+}
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+div {
+  /* Element needs geometry to be eligible for layerization */
+  width: 100px;
+  height: 100px;
+  background-color: white;
+}
+</style>
+</head>
+<body>
+<script>
+'use strict';
+
+function observeStyling(frameCount, onFrame) {
+  var docShell = window.QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                       .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                       .QueryInterface(SpecialPowers.Ci.nsIDocShell);
+
+  docShell.recordProfileTimelineMarkers = true;
+  docShell.popProfileTimelineMarkers();
+
+  return new Promise(function(resolve) {
+    return waitForAnimationFrames(frameCount, onFrame).then(function() {
+      var markers = docShell.popProfileTimelineMarkers();
+      docShell.recordProfileTimelineMarkers = false;
+      var stylingMarkers = markers.filter(function(marker, index) {
+        return marker.name == 'Styles';
+      });
+      resolve(stylingMarkers);
+    });
+  });
+}
+
+SimpleTest.waitForExplicitFinish();
+
+const OMTAPrefKey = 'layers.offmainthreadcomposition.async-animations';
+var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
+                  SpecialPowers.getBoolPref(OMTAPrefKey);
+
+function add_task_if_omta_enabled(test) {
+  if (!omtaEnabled) {
+    info(test.name + " is skipped because OMTA is disabled");
+    return;
+  }
+  add_task(test);
+}
+
+// We need to wait for all paints before running tests to avoid contaminations
+// from styling of this document itself.
+waitForAllPaints(function() {
+  add_task_if_omta_enabled(function* no_restyling_for_compositor_animations() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'CSS animations running on the compositor should not update style ' +
+       'on the main thread');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_for_compositor_transitions() {
+    var div = addDiv(null, { style: 'transition: opacity 100s; opacity: 0' });
+    getComputedStyle(div).opacity;
+    div.style.opacity = 1;
+
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'CSS transitions running on the compositor should not update style ' +
+       'on the main thread');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_when_animation_duration_is_changed() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    div.animationDuration = '200s';
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Animations running on the compositor should not update style ' +
+       'on the main thread');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* only_one_restyling_after_finish_is_called() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    animation.finish();
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 1,
+       'Animations running on the compositor should only update style ' +
+       'once after finish() is called');
+    div.remove(div);
+  });
+
+  add_task(function* no_restyling_mouse_movement_on_finished_transition() {
+    var div = addDiv(null, { style: 'transition: opacity 1ms; opacity: 0' });
+    getComputedStyle(div).opacity;
+    div.style.opacity = 1;
+
+    var animation = div.getAnimations()[0];
+    var initialRect = div.getBoundingClientRect();
+
+    yield animation.finished;
+
+    var mouseX = initialRect.left + initialRect.width / 2;
+    var mouseY = initialRect.top + initialRect.height / 2;
+    var markers = yield observeStyling(5, function() {
+      // We can't use synthesizeMouse here since synthesizeMouse causes
+      // layout flush.
+      synthesizeMouseAtPoint(mouseX++, mouseY++,
+                             { type: 'mousemove' }, window);
+    });
+
+    is(markers.length, 0,
+       'Bug 1219236: Finished transitions should never cause restyles ' +
+       'when mouse is moved on the animations');
+    div.remove(div);
+  });
+
+  add_task(function* no_restyling_mouse_movement_on_finished_animation() {
+    var div = addDiv(null, { style: 'animation: opacity 1ms' });
+    var animation = div.getAnimations()[0];
+
+    var initialRect = div.getBoundingClientRect();
+
+    yield animation.finished;
+
+    var mouseX = initialRect.left + initialRect.width / 2;
+    var mouseY = initialRect.top + initialRect.height / 2;
+    var markers = yield observeStyling(5, function() {
+      // We can't use synthesizeMouse here since synthesizeMouse causes
+      // layout flush.
+      synthesizeMouseAtPoint(mouseX++, mouseY++,
+                             { type: 'mousemove' }, window);
+    });
+
+    is(markers.length, 0,
+       'Bug 1219236: Finished animations should never cause restyles ' +
+       'when mouse is moved on the animations');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_compositor_animations_out_of_view_element() {
+    var div = addDiv(null,
+      { style: 'animation: opacity 100s; transform: translateY(-400px);' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(!animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1166500: Animations running on the compositor in out of ' +
+            'view element should never cause restyles');
+    div.remove(div);
+  });
+
+  add_task(function* no_restyling_main_thread_animations_out_of_view_element() {
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; transform: translateY(-400px);' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1166500: Animations running on the main-thread in out of ' +
+            'view element should never cause restyles');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_scrolled_out_element() {
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: opacity 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(!animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1166500: Animations running on the compositor in elements ' +
+            'which are scrolled out should never cause restyles');
+    parentElement.remove(div);
+  });
+
+  add_task(function* no_restyling_main_thread_animations_in_scrolled_out_element() {
+    var parentElement = addDiv(null,
+      { style: 'overflow-y: scroll; height: 20px;' });
+    var div = addDiv(null,
+      { style: 'animation: background-color 100s; position: relative; top: 100px;' });
+    parentElement.appendChild(div);
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1166500: Animations running on the main-thread in elements ' +
+            'which are scrolled out should never cause restyles');
+    parentElement.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_visiblily_hidden_element() {
+    var div = addDiv(null,
+     { style: 'animation: opacity 100s; visibility: hidden' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(!animation.isRunningOnCompositor);
+
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1237454: Animations running on the compositor in ' +
+            'visibility hidden element should never cause restyles');
+    div.remove(div);
+  });
+
+  add_task(function* no_restyling_main_thread_animations_in_visiblily_hidden_element() {
+    var div = addDiv(null,
+     { style: 'animation: background-color 100s; visibility: hidden' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    var markers = yield observeStyling(5);
+
+    todo_is(markers.length, 0,
+            'Bug 1237454: Animations running on the main-thread in ' +
+            'visibility hidden element should never cause restyles');
+    div.remove(div);
+  });
+
+  add_task_if_omta_enabled(function* no_restyling_compositor_animations_after_pause_is_called() {
+    var div = addDiv(null, { style: 'animation: opacity 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+    ok(animation.isRunningOnCompositor);
+
+    animation.pause();
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Bug 1232563: Paused animations running on the compositor should ' +
+       'never cause restyles once after pause() is called');
+    div.remove(div);
+  });
+
+  add_task(function* no_restyling_matn_thread_animations_after_pause_is_called() {
+    var div = addDiv(null, { style: 'animation: background-color 100s' });
+    var animation = div.getAnimations()[0];
+
+    yield animation.ready;
+
+    animation.pause();
+
+    yield animation.ready;
+
+    var markers = yield observeStyling(5);
+    is(markers.length, 0,
+       'Bug 1232563: Paused animations running on the main-thread should ' +
+       'never cause restyles after pause() is called');
+    div.remove(div);
+  });
+
+});
+
+</script>
+</body>
