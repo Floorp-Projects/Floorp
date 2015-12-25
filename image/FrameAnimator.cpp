@@ -439,7 +439,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
   // Calculate area that needs updating
   switch (prevFrameData.mDisposalMethod) {
     default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected DisposalMethod");
+      MOZ_FALLTHROUGH_ASSERT("Unexpected DisposalMethod");
     case DisposalMethod::NOT_SPECIFIED:
     case DisposalMethod::KEEP:
       *aDirtyRect = nextFrameData.mRect;
@@ -573,7 +573,7 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
         break;
 
       default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected DisposalMethod");
+        MOZ_FALLTHROUGH_ASSERT("Unexpected DisposalMethod");
       case DisposalMethod::NOT_SPECIFIED:
       case DisposalMethod::KEEP:
         // Copy previous frame into compositingFrame before we put the new
