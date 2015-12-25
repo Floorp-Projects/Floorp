@@ -461,6 +461,7 @@ class SharedLibrary(Library):
     __slots__ = (
         'soname',
         'variant',
+        'symbols_file',
     )
 
     FRAMEWORK = 1
@@ -468,7 +469,7 @@ class SharedLibrary(Library):
     MAX_VARIANT = 3
 
     def __init__(self, context, basename, real_name=None, is_sdk=False,
-            soname=None, variant=None):
+            soname=None, variant=None, symbols_file=False):
         assert(variant in range(1, self.MAX_VARIANT) or variant is None)
         Library.__init__(self, context, basename, real_name, is_sdk)
         self.variant = variant
@@ -496,6 +497,11 @@ class SharedLibrary(Library):
             )
         else:
             self.soname = self.lib_name
+
+        if symbols_file:
+            self.symbols_file = '%s.symbols' % self.lib_name
+        else:
+            self.symbols_file = None
 
 
 class ExternalLibrary(object):

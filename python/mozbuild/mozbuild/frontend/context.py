@@ -1213,6 +1213,16 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
+    'SYMBOLS_FILE': (SourcePath, unicode,
+        """A file containing a list of symbols to export from a shared library.
+
+        The given file contains a list of symbols to be exported, and is
+        preprocessed.
+        A special marker "@DATA@" must be added after a symbol name if it
+        points to data instead of code, so that the Windows linker can treat
+        them correctly.
+        """, None),
+
     'BRANDING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the branding directory.
 
