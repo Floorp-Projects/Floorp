@@ -397,6 +397,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
             mInfo.output_width, mInfo.output_height));
 
     mState = JPEG_START_DECOMPRESS;
+    MOZ_FALLTHROUGH; // to start decompressing.
   }
 
   case JPEG_START_DECOMPRESS: {
@@ -423,6 +424,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
     // If this is a progressive JPEG ...
     mState = mInfo.buffered_image ?
              JPEG_DECOMPRESS_PROGRESSIVE : JPEG_DECOMPRESS_SEQUENTIAL;
+    MOZ_FALLTHROUGH; // to decompress sequential JPEG.
   }
 
   case JPEG_DECOMPRESS_SEQUENTIAL: {
@@ -444,6 +446,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
                    "We didn't process all of the data!");
       mState = JPEG_DONE;
     }
+    MOZ_FALLTHROUGH; // to decompress progressive JPEG.
   }
 
   case JPEG_DECOMPRESS_PROGRESSIVE: {
@@ -516,6 +519,7 @@ nsJPEGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 
       mState = JPEG_DONE;
     }
+    MOZ_FALLTHROUGH; // to finish decompressing.
   }
 
   case JPEG_DONE: {
