@@ -76,7 +76,7 @@ def process_define_file(output, input):
 
             output.write(l)
 
-    return {config.source}
+    return {path, config.source}
 
 
 def main(argv):
