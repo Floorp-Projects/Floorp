@@ -1,5 +1,9 @@
 #filter substitution
 #include @BOOKMARKS_INCLUDE_DIR@/bookmarks.inc
+#define ja_jp_mac ja-JP-mac
+#if AB_CD == ja_jp_mac
+#define AB_CD ja
+#endif
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
