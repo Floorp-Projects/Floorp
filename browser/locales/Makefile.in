@@ -105,7 +105,7 @@ NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
 
 %/chrome/$(AB_CD)/locale/browser/bookmarks.html: $(call MERGE_FILE,profile/bookmarks.inc) generic/profile/bookmarks.html.in $(GLOBAL_DEPS)
 	$(call py_action,preprocessor, \
-	  -I $< \
+	  -DBOOKMARKS_INCLUDE_DIR=$(<D) \
 	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
 	  $(srcdir)/generic/profile/bookmarks.html.in \
 	  -o $@)
