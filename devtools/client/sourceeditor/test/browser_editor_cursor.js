@@ -18,8 +18,10 @@ function test() {
     ch(ed.getPosition(7, 1)[1], { line: 0, ch: 1}, "getPosition(num, num)[1]");
 
     ch(ed.getOffset({ line: 1, ch: 0 }), 7, "getOffset(num)");
-    ch(ed.getOffset({ line: 1, ch: 0 }, { line: 0, ch: 1 })[0], 7, "getOffset(num, num)[0]");
-    ch(ed.getOffset({ line: 1, ch: 0 }, { line: 0, ch: 1 })[0], 2, "getOffset(num, num)[1]");
+    ch(ed.getOffset({ line: 1, ch: 0 }, { line: 0, ch: 1 })[0], 7,
+      "getOffset(num, num)[0]");
+    ch(ed.getOffset({ line: 1, ch: 0 }, { line: 0, ch: 1 })[0], 2,
+      "getOffset(num, num)[1]");
 
     is(ed.getSelection(), "", "nothing is selected");
     ed.setSelection({ line: 0, ch: 0 }, { line: 0, ch: 5 });
@@ -30,9 +32,11 @@ function test() {
 
     // Check that shift-click on a gutter selects the whole line (bug 919707)
     let iframe = win.document.querySelector("iframe");
-    let gutter = iframe.contentWindow.document.querySelector(".CodeMirror-gutters");
+    let gutter =
+      iframe.contentWindow.document.querySelector(".CodeMirror-gutters");
 
-    EventUtils.sendMouseEvent({ type: "mousedown", shiftKey: true }, gutter, iframe.contentWindow);
+    EventUtils.sendMouseEvent({ type: "mousedown", shiftKey: true }, gutter,
+      iframe.contentWindow);
     is(ed.getSelection(), "Hello.", "shift-click");
 
     teardown(ed, win);
