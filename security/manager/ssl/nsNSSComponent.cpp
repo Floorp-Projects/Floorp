@@ -135,7 +135,7 @@ bool EnsureNSSInitialized(EnsureNSSOperator op)
   case nssInitFailed:
     NS_ASSERTION(loading, "Bad call to EnsureNSSInitialized(nssInitFailed)");
     loading = false;
-    // no break
+    MOZ_FALLTHROUGH;
 
   case nssShutdown:
     PR_AtomicSet(&haveLoaded, 0);
