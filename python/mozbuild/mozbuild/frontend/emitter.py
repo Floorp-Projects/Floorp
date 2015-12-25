@@ -507,6 +507,23 @@ class TreeMetadataEmitter(LoggingMixin):
                         'STATIC_LIBRARY_NAME. Please change one of them.',
                         context)
 
+            symbols_file = context.get('SYMBOLS_FILE')
+            if symbols_file:
+                if not shared_lib:
+                    raise SandboxValidationError(
+                        'SYMBOLS_FILE can only be used with a SHARED_LIBRARY.',
+                        context)
+                if context.get('DEFFILE') or context.get('LD_VERSION_SCRIPT'):
+                    raise SandboxValidationError(
+                        'SYMBOLS_FILE cannot be used along DEFFILE or '
+                        'LD_VERSION_SCRIPT.', context)
+                if not os.path.exists(symbols_file.full_path):
+                    raise SandboxValidationError(
+                        'Path specified in SYMBOLS_FILE does not exist: %s '
+                        '(resolved to %s)' % (symbols_file,
+                        symbols_file.full_path), context)
+                shared_args['symbols_file'] = True
+
             if shared_lib:
                 lib = SharedLibrary(context, libname, **shared_args)
                 self._libs[libname].append(lib)
@@ -515,6 +532,13 @@ class TreeMetadataEmitter(LoggingMixin):
                     yield ChromeManifestEntry(context,
                         'components/components.manifest',
                         ManifestBinaryComponent('components', lib.lib_name))
+                if symbols_file:
+                    script = mozpath.join(
+                        mozpath.dirname(mozpath.dirname(__file__)),
+                        'action', 'generate_symbols_file.py')
+                    yield GeneratedFile(context, script,
+                        'generate_symbols_file', lib.symbols_file,
+                        [symbols_file.full_path])
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)
