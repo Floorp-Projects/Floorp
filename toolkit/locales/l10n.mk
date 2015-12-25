@@ -175,7 +175,7 @@ langpack-%: libs-%
 	@echo 'Making langpack $(LANGPACK_FILE)'
 	$(NSINSTALL) -D $(DIST)/$(PKG_LANGPACK_PATH)
 	$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) \
-	  -I$(TK_DEFINES) -I$(APP_DEFINES) $(MOZILLA_DIR)/toolkit/locales/generic/install.rdf -o $(DIST)/xpi-stage/$(XPI_NAME)/install.rdf)
+	  -DTK_DEFINES=$(TK_DEFINES) -DAPP_DEFINES=$(APP_DEFINES) $(MOZILLA_DIR)/toolkit/locales/generic/install.rdf -o $(DIST)/xpi-stage/$(XPI_NAME)/install.rdf)
 	$(call py_action,zip,-C $(DIST)/xpi-stage/locale-$(AB_CD) $(LANGPACK_FILE) install.rdf $(PKG_ZIP_DIRS) chrome.manifest)
 
 # This variable is to allow the wget-en-US target to know which ftp server to download from

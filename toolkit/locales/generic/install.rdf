@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #filter substitution
+#include @TK_DEFINES@
+#include @APP_DEFINES@
 -->
 
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
