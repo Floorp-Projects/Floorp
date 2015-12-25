@@ -101,14 +101,7 @@ PROFILE_FILES = \
 
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
-%/chrome/$(AB_CD)/locale/browser/bookmarks.html: $(call MERGE_FILE,profile/bookmarks.inc) generic/profile/bookmarks.html.in $(GLOBAL_DEPS)
-	$(call py_action,preprocessor, \
-	  -DBOOKMARKS_INCLUDE_DIR=$(<D) \
-	  -DAB_CD=$(AB_CD) \
-	  $(srcdir)/generic/profile/bookmarks.html.in \
-	  -o $@)
-
-libs:: $(FINAL_TARGET)/chrome/$(AB_CD)/locale/browser/bookmarks.html ;
+DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc))
 
 libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile
