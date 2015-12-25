@@ -19,7 +19,6 @@
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/mobile-l10n.js
 @BINPATH@/searchplugins/*
-@BINPATH@/defaults/profile/bookmarks.html
 #ifdef MOZ_UPDATER
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
