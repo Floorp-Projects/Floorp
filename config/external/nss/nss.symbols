@@ -1,11 +1,20 @@
-; This Source Code Form is subject to the terms of the Mozilla Public
-; License, v. 2.0. If a copy of the MPL was not distributed with this
-; file, You can obtain one at http://mozilla.org/MPL/2.0/.
-;
-; This is a fake .def file, to be used for generating linker scripts
-; for our folded libnss when MOZ_FOLD_LIBS.
-LIBRARY nss3
-EXPORTS
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#ifndef XP_WIN
+# NSPR, unlike NSS, exports symbols with symbol visibility (Unix) or __declspec
+# (Windows).  When using a linker script, however, we need to explicitly
+# specify that NSPR's symbols should be globally visible.  Otherwise, NSPR's
+# exported symbols would be hidden.
+# .def files on Windows don't allow wildcards, of course, which is why this is
+# excluded on Windows, but it doesn't matter because the symbols are already
+# exported in NSPR (Windows peculiarity).
+PR_*
+_PR_*
+PL_*
+#endif
+#include ../../../db/sqlite3/src/sqlite.symbols
 ATOB_AsciiToData
 ATOB_AsciiToData_Util
 ATOB_ConvertAsciiToItem
@@ -21,8 +30,8 @@ __CERT_AddTempCertToPerm
 CERT_AsciiToName
 CERT_CacheOCSPResponseFromSideChannel
 CERT_CertChainFromCert
-CERT_CertificateRequestTemplate DATA
-CERT_CertificateTemplate DATA
+CERT_CertificateRequestTemplate @DATA@
+CERT_CertificateTemplate @DATA@
 CERT_CertListFromCert
 CERT_ChangeCertTrust
 CERT_CheckCertUsage
@@ -38,7 +47,7 @@ CERT_CreateCertificate
 CERT_CreateCertificateRequest
 CERT_CreateSubjectCertList
 CERT_CreateValidity
-CERT_CrlTemplate DATA
+CERT_CrlTemplate @DATA@
 CERT_DecodeAltNameExtension
 CERT_DecodeAuthInfoAccessExtension
 CERT_DecodeAuthKeyID
@@ -128,7 +137,7 @@ CERT_IsCACert
 CERT_IsUserCert
 CERT_MakeCANickname
 CERT_MergeExtensions
-CERT_NameTemplate DATA
+CERT_NameTemplate @DATA@
 CERT_NameToAscii
 CERT_NewCertList
 CERT_NewTempCertificate
@@ -138,15 +147,15 @@ CERT_PKIXVerifyCert
 CERT_RemoveCertListNode
 CERT_RFC1485_EscapeAndQuote
 CERT_SaveSMimeProfile
-CERT_SequenceOfCertExtensionTemplate DATA
+CERT_SequenceOfCertExtensionTemplate @DATA@
 CERT_SetOCSPFailureMode
 CERT_SetOCSPTimeout
-CERT_SignedCrlTemplate DATA
-CERT_SignedDataTemplate DATA
+CERT_SignedCrlTemplate @DATA@
+CERT_SignedDataTemplate @DATA@
 CERT_StartCertExtensions
 CERT_StartCertificateRequestAttributes
-CERT_SubjectPublicKeyInfoTemplate DATA
-CERT_TimeChoiceTemplate DATA
+CERT_SubjectPublicKeyInfoTemplate @DATA@
+CERT_TimeChoiceTemplate @DATA@
 CERT_VerifyCertificate
 CERT_VerifySignedDataWithPublicKeyInfo
 DER_AsciiToTime_Util
@@ -462,7 +471,7 @@ PORT_UCS2_UTF8Conversion_Util
 PORT_ZAlloc
 PORT_ZAlloc_Util
 PORT_ZFree_Util
-SEC_AnyTemplate_Util DATA
+SEC_AnyTemplate_Util @DATA@
 SEC_ASN1Decode
 SEC_ASN1DecodeInteger
 SEC_ASN1DecodeItem
@@ -473,20 +482,20 @@ SEC_ASN1EncodeItem
 SEC_ASN1EncodeItem_Util
 SEC_ASN1EncodeUnsignedInteger_Util
 SEC_ASN1Encode_Util
-SEC_BitStringTemplate DATA
-SEC_BitStringTemplate_Util DATA
-SEC_BMPStringTemplate DATA
-SEC_BooleanTemplate_Util DATA
+SEC_BitStringTemplate @DATA@
+SEC_BitStringTemplate_Util @DATA@
+SEC_BMPStringTemplate @DATA@
+SEC_BooleanTemplate_Util @DATA@
 SEC_CertNicknameConflict
 SEC_DeletePermCertificate
 SEC_DerSignData
 SEC_DestroyCrl
-SEC_GeneralizedTimeTemplate_Util DATA
+SEC_GeneralizedTimeTemplate_Util @DATA@
 SEC_GetSignatureAlgorithmOidTag
-SEC_IA5StringTemplate DATA
-SEC_IA5StringTemplate_Util DATA
-SEC_IntegerTemplate DATA
-SEC_IntegerTemplate_Util DATA
+SEC_IA5StringTemplate @DATA@
+SEC_IA5StringTemplate_Util @DATA@
+SEC_IntegerTemplate @DATA@
+SEC_IntegerTemplate_Util @DATA@
 SECITEM_AllocArray
 SECITEM_AllocItem
 SECITEM_AllocItem_Util
@@ -524,7 +533,7 @@ SECKEY_ExtractPublicKey
 SECKEY_GetPublicKeyType
 SECKEY_ImportDERPublicKey
 SECKEY_PublicKeyStrength
-SECKEY_RSAPSSParamsTemplate DATA
+SECKEY_RSAPSSParamsTemplate @DATA@
 SECKEY_SignatureLen
 SECMIME_DecryptionAllowed
 SECMOD_AddNewModule
@@ -555,14 +564,14 @@ SECMOD_ReleaseReadLock
 SECMOD_UnloadUserModule
 SECMOD_UpdateModule
 SECMOD_WaitForAnyTokenEvent
-SEC_NullTemplate_Util DATA
-SEC_ObjectIDTemplate_Util DATA
-SEC_OctetStringTemplate DATA
-SEC_OctetStringTemplate_Util DATA
+SEC_NullTemplate_Util @DATA@
+SEC_ObjectIDTemplate_Util @DATA@
+SEC_OctetStringTemplate @DATA@
+SEC_OctetStringTemplate_Util @DATA@
 SECOID_AddEntry
 SECOID_AddEntry_Util
-SECOID_AlgorithmIDTemplate DATA
-SECOID_AlgorithmIDTemplate_Util DATA
+SECOID_AlgorithmIDTemplate @DATA@
+SECOID_AlgorithmIDTemplate_Util @DATA@
 SECOID_CopyAlgorithmID_Util
 SECOID_DestroyAlgorithmID
 SECOID_DestroyAlgorithmID_Util
@@ -618,10 +627,10 @@ SEC_QuickDERDecodeItem
 SEC_QuickDERDecodeItem_Util
 SEC_RegisterDefaultHttpClient
 SEC_SignData
-SEC_SignedCertificateTemplate DATA
+SEC_SignedCertificateTemplate @DATA@
 SEC_StringToOID
-SEC_UTF8StringTemplate DATA
-SEC_UTF8StringTemplate_Util DATA
+SEC_UTF8StringTemplate @DATA@
+SEC_UTF8StringTemplate_Util @DATA@
 SGN_Begin
 SGN_CreateDigestInfo_Util
 SGN_DecodeDigestInfo
@@ -650,9 +659,9 @@ SSL_GetNumImplementedCiphers
 SSL_GetSRTPCipher
 SSL_HandshakeCallback
 SSL_HandshakeNegotiatedExtension
-SSL_ImplementedCiphers DATA
+SSL_ImplementedCiphers @DATA@
 SSL_ImportFD
-SSL_NumImplementedCiphers DATA
+SSL_NumImplementedCiphers @DATA@
 SSL_OptionSet
 SSL_OptionSetDefault
 SSL_PeerCertificate
@@ -684,3 +693,6 @@ VFY_VerifyDataWithAlgorithmID
 VFY_VerifyDigestDirect
 _SGN_VerifyPKCS1DigestInfo
 __PK11_SetCertificateNickname
+#ifdef NSS_EXTRA_SYMBOLS_FILE
+#include @NSS_EXTRA_SYMBOLS_FILE@
+#endif

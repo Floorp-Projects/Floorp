@@ -1,10 +1,7 @@
-; This Source Code Form is subject to the terms of the Mozilla Public
-; License, v. 2.0. If a copy of the MPL was not distributed with this
-; file, You can obtain one at http://mozilla.org/MPL/2.0/.
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-LIBRARY mozsqlite3.dll
-
-EXPORTS
         sqlite3_aggregate_context
         sqlite3_aggregate_count
         sqlite3_auto_extension
