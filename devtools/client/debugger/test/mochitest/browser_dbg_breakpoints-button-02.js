@@ -34,7 +34,7 @@ function test() {
         actions.addBreakpoint({ actor: gSources.values[1], line: 6 }),
         actions.addBreakpoint({ actor: gSources.values[1], line: 7 })
       ]);
-      if(gDebugger.gThreadClient.state !== "attached") {
+      if (gDebugger.gThreadClient.state !== "attached") {
         yield waitForThreadEvents(gPanel, "resumed");
       }
 
@@ -51,7 +51,7 @@ function test() {
       yield waitForDispatch(gPanel, gDebugger.constants.ADD_BREAKPOINT, 3);
       checkBreakpointsDisabled(false);
 
-      if(gDebugger.gThreadClient.state !== "attached") {
+      if (gDebugger.gThreadClient.state !== "attached") {
         yield waitForThreadEvents(gPanel, "resumed");
       }
       closeDebuggerAndFinish(gPanel);

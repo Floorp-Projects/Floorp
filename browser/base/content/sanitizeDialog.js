@@ -46,22 +46,6 @@ var gSanitizePromptDialog = {
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
 
-    let tasks = [];
-    let sanitizeItemList = document.querySelectorAll("#itemList > [preference]");
-    for (let i = 0; i < sanitizeItemList.length; i++) {
-      let prefItem = sanitizeItemList[i];
-      let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      let promise = s.promiseCanClearItem(name).then(canClear => {
-        if (canClear) {
-          return;
-        }
-        prefItem.preference = null;
-        prefItem.checked = false;
-        prefItem.disabled = true;
-      });
-      tasks.push(promise);
-    }
-
     document.documentElement.getButton("accept").label =
       this.bundleBrowser.getString("sanitizeButtonOK");
 
@@ -73,10 +57,6 @@ var gSanitizePromptDialog = {
     }
     else
       this.warningBox.hidden = true;
-
-    Promise.all(tasks).then(() => {
-      Services.obs.notifyObservers(null, "sanitize-dialog-setup-complete", "");
-    });
   },
 
   selectByTimespan: function ()
@@ -301,19 +281,6 @@ var gSanitizePromptDialog = {
 
     var s = new Sanitizer();
     s.prefDomain = "privacy.cpd.";
-
-    let sanitizeItemList = document.querySelectorAll("#itemList > [preference]");
-    for (let i = 0; i < sanitizeItemList.length; i++) {
-      let prefItem = sanitizeItemList[i];
-      let name = s.getNameFromPreference(prefItem.getAttribute("preference"));
-      s.canClearItem(name, function canClearCallback(aCanClear) {
-        if (!aCanClear) {
-          prefItem.preference = null;
-          prefItem.checked = false;
-          prefItem.disabled = true;
-        }
-      });
-    }
 
     document.documentElement.getButton("accept").label =
       this.bundleBrowser.getString("sanitizeButtonOK");

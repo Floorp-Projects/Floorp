@@ -12,11 +12,8 @@ DIRS += ['locales']
 XPCSHELL_TESTS_MANIFESTS += ['tests/unit/xpcshell.ini']
 
 EXTRA_COMPONENTS += [
-    'Weave.js',
-]
-
-EXTRA_PP_COMPONENTS += [
     'SyncComponents.manifest',
+    'Weave.js',
 ]
 
 EXTRA_JS_MODULES['services-sync'] += [
@@ -25,7 +22,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/browserid_identity.js',
     'modules/engines.js',
     'modules/FxaMigrator.jsm',
-    'modules/healthreport.jsm',
     'modules/identity.js',
     'modules/jpakeclient.js',
     'modules/keys.js',

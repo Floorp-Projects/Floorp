@@ -4902,13 +4902,6 @@ if test -n "$MOZ_ANDROID_MLS_STUMBLER"; then
     AC_DEFINE(MOZ_ANDROID_MLS_STUMBLER)
 fi
 
-dnl = Include Tab Queue on Android
-dnl = Temporary build flag to allow development in Nightly
-dnl ========================================================
-if test -n "$MOZ_ANDROID_TAB_QUEUE"; then
-    AC_DEFINE(MOZ_ANDROID_TAB_QUEUE)
-fi
-
 dnl =========================================================
 dnl = Whether to exclude hyphenations files in the build
 dnl =========================================================
@@ -8519,7 +8512,6 @@ AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_READING_LIST_SERVICE)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
-AC_SUBST(MOZ_ANDROID_TAB_QUEUE)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
 AC_SUBST(MOZ_ANDROID_APPLICATION_CLASS)

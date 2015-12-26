@@ -47,7 +47,7 @@ function openSearchBox(ed) {
   ok(input, "find again command key opens the search box");
 }
 
-function testFindAgain (ed, inputLine, expectCursor, shiftKey=false) {
+function testFindAgain(ed, inputLine, expectCursor, shiftKey = false) {
   let edDoc = ed.container.contentDocument;
   let edWin = edDoc.defaultView;
 

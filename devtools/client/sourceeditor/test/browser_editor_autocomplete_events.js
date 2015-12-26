@@ -7,7 +7,8 @@
 const {InspectorFront} = require("devtools/server/actors/inspector");
 const {TargetFactory} = require("devtools/client/framework/target");
 const AUTOCOMPLETION_PREF = "devtools.editor.autocomplete";
-const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar><div id='baz'></div><body></html>";
+const TEST_URI = "data:text/html;charset=UTF-8,<html><body><bar></bar>" +
+                 "<div id='baz'></div><body></html>";
 
 const wait = (delay) => new Promise(resolve => setTimeout(resolve, delay));
 
@@ -41,14 +42,15 @@ function* testKeyboard(ed, win) {
 
   let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  let autocompleteKey =
+    Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
-  info ("Waiting for popup to be opened");
+  info("Waiting for popup to be opened");
   yield popupOpened;
 
   EventUtils.synthesizeKey("VK_RETURN", { }, win);
-  is (ed.getText(), "bar", "Editor text has been updated");
+  is(ed.getText(), "bar", "Editor text has been updated");
 }
 
 function* testKeyboardCycle(ed, win) {
@@ -58,20 +60,21 @@ function* testKeyboardCycle(ed, win) {
 
   let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  let autocompleteKey =
+    Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
-  info ("Waiting for popup to be opened");
+  info("Waiting for popup to be opened");
   yield popupOpened;
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
-  is (ed.getText(), "bar", "Editor text has been updated");
+  is(ed.getText(), "bar", "Editor text has been updated");
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
-  is (ed.getText(), "body", "Editor text has been updated");
+  is(ed.getText(), "body", "Editor text has been updated");
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
-  is (ed.getText(), "#baz", "Editor text has been updated");
+  is(ed.getText(), "#baz", "Editor text has been updated");
 }
 
 function* testKeyboardCycleForPrefixedString(ed, win) {
@@ -81,14 +84,15 @@ function* testKeyboardCycleForPrefixedString(ed, win) {
 
   let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  let autocompleteKey =
+    Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
-  info ("Waiting for popup to be opened");
+  info("Waiting for popup to be opened");
   yield popupOpened;
 
   EventUtils.synthesizeKey("VK_DOWN", { }, win);
-  is (ed.getText(), "#baz", "Editor text has been updated");
+  is(ed.getText(), "#baz", "Editor text has been updated");
 }
 
 function* testKeyboardCSSComma(ed, win) {
@@ -114,11 +118,12 @@ function* testMouse(ed, win) {
 
   let popupOpened = ed.getAutocompletionPopup().once("popup-opened");
 
-  let autocompleteKey = Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
+  let autocompleteKey =
+    Editor.keyFor("autocompletion", { noaccel: true }).toUpperCase();
   EventUtils.synthesizeKey("VK_" + autocompleteKey, { ctrlKey: true }, win);
 
-  info ("Waiting for popup to be opened");
+  info("Waiting for popup to be opened");
   yield popupOpened;
   ed.getAutocompletionPopup()._list.children[2].click();
-  is (ed.getText(), "#baz", "Editor text has been updated");
+  is(ed.getText(), "#baz", "Editor text has been updated");
 }

@@ -9,6 +9,7 @@ const {
   MozLoopServiceInternal,
   MozLoopService
 } = Cu.import("chrome://loop/content/modules/MozLoopService.jsm", {});
+const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 const { LoopRooms } = Cu.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 
 // Cache this value only once, at the beginning of a
@@ -68,7 +69,7 @@ function promisePanelLoaded() {
 function waitForCondition(condition, nextTest, errorMsg) {
   var tries = 0;
   var interval = setInterval(function() {
-    if (tries >= 30) {
+    if (tries >= 100) {
       ok(false, errorMsg);
       moveOn();
     }

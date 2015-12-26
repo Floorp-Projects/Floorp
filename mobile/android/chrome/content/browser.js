@@ -7501,6 +7501,7 @@ var Tabs = {
           // Ignore any about: pages, especially about:neterror since it means we failed to find the page in cache.
           let targetURI = targetDoc.documentURI;
           if (isTopLevel && !targetURI.startsWith("about:")) {
+            UITelemetry.addEvent("neterror.1", "toast", null, "usecache");
             Snackbars.show(Strings.browser.GetStringFromName("networkOffline.message"), Snackbars.LENGTH_INDEFINITE);
           }
         }

@@ -23,7 +23,3 @@ contract @mozilla.org/network/protocol/about;1?what=sync-log {d28f8a0b-95da-48f4
 # Register resource aliases
 # (Note, for tests these are also set up in addResourceAlias)
 resource services-sync resource://gre/modules/services-sync/
-
-#ifdef MOZ_SERVICES_HEALTHREPORT
-category healthreport-js-provider-default SyncProvider resource://services-sync/healthreport.jsm
-#endif

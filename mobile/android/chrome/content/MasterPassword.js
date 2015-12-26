@@ -3,6 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 var MasterPassword = {
   pref: "privacy.masterpassword.enabled",
   _tokenName: "",
@@ -61,7 +63,7 @@ var MasterPassword = {
     } catch(e) {
       dump("MasterPassword.removePassword: " + e + "\n");
     }
-    NativeWindow.toast.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), "short");
+    Snackbars.show(Strings.browser.GetStringFromName("masterPassword.incorrect"), Snackbars.LENGTH_SHORT);
     return false;
   }
 };
