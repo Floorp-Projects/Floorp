@@ -154,10 +154,14 @@ var SessionHistoryInternal = {
     if (shEntry.contentType)
       entry.contentType = shEntry.contentType;
 
-    let x = {}, y = {};
-    shEntry.getScrollPosition(x, y);
-    if (x.value != 0 || y.value != 0)
-      entry.scroll = x.value + "," + y.value;
+    if (shEntry.scrollRestorationIsManual) {
+      entry.scrollRestorationIsManual = true;
+    } else {
+      let x = {}, y = {};
+      shEntry.getScrollPosition(x, y);
+      if (x.value != 0 || y.value != 0)
+        entry.scroll = x.value + "," + y.value;
+    }
 
     // Collect owner data for the current history entry.
     try {
@@ -338,7 +342,9 @@ var SessionHistoryInternal = {
                                        entry.structuredCloneVersion);
     }
 
-    if (entry.scroll) {
+    if (entry.scrollRestorationIsManual) {
+      shEntry.scrollRestorationIsManual = true;
+    } else if (entry.scroll) {
       var scrollPos = (entry.scroll || "0,0").split(",");
       scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
       shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);
