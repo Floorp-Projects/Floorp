@@ -43,7 +43,7 @@ interface BluetoothAdapter : EventTarget {
   readonly attribute BluetoothGattServer?   gattServer;
 
   [AvailableIn=CertifiedApps]
-  readonly attribute BluetoothPairingListener pairingReqs;
+  readonly attribute BluetoothPairingListener? pairingReqs;
 
   // Fired when attribute(s) of BluetoothAdapter changed
            attribute EventHandler   onattributechanged;
