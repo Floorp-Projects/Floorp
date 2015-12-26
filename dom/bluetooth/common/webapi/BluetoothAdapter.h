@@ -75,7 +75,7 @@ public:
     return mDiscoverable;
   }
 
-  BluetoothPairingListener* PairingReqs() const
+  BluetoothPairingListener* GetPairingReqs() const
   {
     return mPairingReqs;
   }

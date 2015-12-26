@@ -4,21 +4,23 @@
 
 package org.mozilla.gecko.fxa;
 
-import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
-
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.annotation.TargetApi;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Handler;
-import android.support.v4.content.AsyncTaskLoader;
+import android.content.AsyncTaskLoader;
+
+import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 
 /**
- * A Loader that queries and updates based on the existence of Firefox and
- * legacy Sync Android Accounts.
+ * A Loader that queries and updates based on the existence of only Firefox Android Account.
+ *
+ * The loader is similar to @Link{AccountLoader} that is intended to be used with native LoaderManager.
+ * Note: This loader available only on devices running Honeycomb or later Android version.
  *
  * The loader returns an Android Account (of either Account type) if an account
  * exists, and null to indicate no Account is present.
@@ -32,11 +34,12 @@ import android.support.v4.content.AsyncTaskLoader;
  * This implementation is based on
  * <a href="http://www.androiddesignpatterns.com/2012/08/implementing-loaders.html">http://www.androiddesignpatterns.com/2012/08/implementing-loaders.html</a>.
  */
-public class AccountLoader extends AsyncTaskLoader<Account> {
+public class AccountLoaderNative extends AsyncTaskLoader<Account> {
   protected Account account = null;
   protected BroadcastReceiver broadcastReceiver = null;
 
-  public AccountLoader(Context context) {
+  @TargetApi(11)
+  public AccountLoaderNative(Context context) {
     super(context);
   }
 
@@ -44,14 +47,7 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
   @Override
   public Account loadInBackground() {
     final Context context = getContext();
-    Account foundAccount = FirefoxAccounts.getFirefoxAccount(context);
-    if (foundAccount == null) {
-      final Account[] syncAccounts = SyncAccounts.syncAccounts(context);
-      if (syncAccounts != null && syncAccounts.length > 0) {
-        foundAccount = syncAccounts[0];
-      }
-    }
-    return foundAccount;
+    return FirefoxAccounts.getFirefoxAccount(context);
   }
 
   // Deliver the results to the registered listener.

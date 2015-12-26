@@ -3,66 +3,65 @@
 
 "use strict";
 
-
 const TWO_SPACES_CODE = [
-"/*",
-" * tricky comment block",
-" */",
-"div {",
-"  color: red;",
-"  background: blue;",
-"}",
-"     ",
-"span {",
-"  padding-left: 10px;",
-"}"
+  "/*",
+  " * tricky comment block",
+  " */",
+  "div {",
+  "  color: red;",
+  "  background: blue;",
+  "}",
+  "     ",
+  "span {",
+  "  padding-left: 10px;",
+  "}"
 ].join("\n");
 
 const FOUR_SPACES_CODE = [
-"var obj = {",
-"    addNumbers: function() {",
-"        var x = 5;",
-"        var y = 18;",
-"        return x + y;",
-"    },",
-"   ",
-"    /*",
-"     * Do some stuff to two numbers",
-"     * ",
-"     * @param x",
-"     * @param y",
-"     * ",
-"     * @return the result of doing stuff",
-"     */",
-"    subtractNumbers: function(x, y) {",
-"        var x += 7;",
-"        var y += 18;",
-"        var result = x - y;",
-"        result %= 2;",
-"    }",
-"}"
+  "var obj = {",
+  "    addNumbers: function() {",
+  "        var x = 5;",
+  "        var y = 18;",
+  "        return x + y;",
+  "    },",
+  "   ",
+  "    /*",
+  "     * Do some stuff to two numbers",
+  "     * ",
+  "     * @param x",
+  "     * @param y",
+  "     * ",
+  "     * @return the result of doing stuff",
+  "     */",
+  "    subtractNumbers: function(x, y) {",
+  "        var x += 7;",
+  "        var y += 18;",
+  "        var result = x - y;",
+  "        result %= 2;",
+  "    }",
+  "}"
 ].join("\n");
 
 const TABS_CODE = [
-"/*",
-" * tricky comment block",
-" */",
-"div {",
-"\tcolor: red;",
-"\tbackground: blue;",
-"}",
-"",
-"span {",
-"\tpadding-left: 10px;",
-"}"
+  "/*",
+  " * tricky comment block",
+  " */",
+  "div {",
+  "\tcolor: red;",
+  "\tbackground: blue;",
+  "}",
+  "",
+  "span {",
+  "\tpadding-left: 10px;",
+  "}"
 ].join("\n");
 
 const NONE_CODE = [
-"var x = 0;",
-"           // stray thing",
-"var y = 9;",
-"    ",
-""
+  "var x = 0;",
+  "           // stray thing",
+  "var y = 9;",
+  "    ",
+  ""
 ].join("\n");
 
 function test() {

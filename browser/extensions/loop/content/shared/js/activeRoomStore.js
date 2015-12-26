@@ -979,7 +979,7 @@ loop.store.ActiveRoomStore = (function() {
     endScreenShare: function() {
       if (this._browserSharingListener) {
         // Remove the browser sharing listener as we don't need it now.
-        loop.request("RemoveBrowserSharingListener");
+        loop.request("RemoveBrowserSharingListener", this.getStoreState().windowId);
         loop.unsubscribe("BrowserSwitch", this._browserSharingListener);
         this._browserSharingListener = null;
       }
@@ -1117,13 +1117,8 @@ loop.store.ActiveRoomStore = (function() {
         loop.standaloneMedia.multiplexGum.reset();
       }
 
-      var requests = [
-        ["SetScreenShareState", this.getStoreState().windowId, false]
-      ];
-
       if (this._browserSharingListener) {
         // Remove the browser sharing listener as we don't need it now.
-        requests.push(["RemoveBrowserSharingListener"]);
         loop.unsubscribe("BrowserSwitch", this._browserSharingListener);
         this._browserSharingListener = null;
       }
@@ -1145,16 +1140,14 @@ loop.store.ActiveRoomStore = (function() {
         delete this._timeout;
       }
 
-      if (!failedJoinRequest &&
-          (this._storeState.roomState === ROOM_STATES.JOINING ||
-           this._storeState.roomState === ROOM_STATES.JOINED ||
-           this._storeState.roomState === ROOM_STATES.SESSION_CONNECTED ||
-           this._storeState.roomState === ROOM_STATES.HAS_PARTICIPANTS)) {
-        requests.push(["Rooms:Leave", this._storeState.roomToken,
-          this._storeState.sessionToken]);
+      // If we're not going to close the window, we can hangup the call ourselves.
+      // NOTE: when the window _is_ closed, hanging up the call is performed by
+      //       MozLoopService, because we can't get a message across to LoopAPI
+      //       in time whilst a window is closing.
+      if ((nextState === ROOM_STATES.FAILED || !this._isDesktop) && !failedJoinRequest) {
+        loop.request("HangupNow", this._storeState.roomToken,
+          this._storeState.sessionToken, this._storeState.windowId);
       }
-
-      loop.requestMulti.apply(null, requests);
 
       this.setStoreState({ roomState: nextState });
     },
