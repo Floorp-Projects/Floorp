@@ -63,7 +63,7 @@
                        android:src="@drawable/overlay_check"/>
 
             <TextView android:id="@+id/import_link"
-                      android:layout_width="@dimen/firstrun_content_width"
+                      android:layout_width="wrap_content"
                       android:layout_height="wrap_content"
                       android:padding="20dp"
                       android:gravity="center"

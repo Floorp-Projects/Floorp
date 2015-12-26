@@ -4133,8 +4133,7 @@ SearchService.prototype = {
 
   get currentEngine() {
     this._ensureInitialized();
-    let currentEngine = this._currentEngine;
-    if (!currentEngine) {
+    if (!this._currentEngine) {
       let name = this.getGlobalAttr("current");
       let engine = this.getEngineByName(name);
       if (engine && (this.getGlobalAttr("hash") == getVerificationHash(name) ||
@@ -4142,32 +4141,38 @@ SearchService.prototype = {
         // If the current engine is a default one, we can relax the
         // verification hash check to reduce the annoyance for users who
         // backup/sync their profile in custom ways.
-        currentEngine = engine;
+        this._currentEngine = engine;
       }
+      if (!name)
+        this._currentEngine = this._originalDefaultEngine;
     }
 
-    if (!currentEngine || currentEngine.hidden)
-      currentEngine = this._originalDefaultEngine;
-    if (!currentEngine || currentEngine.hidden)
-      currentEngine = this._getSortedEngines(false)[0];
+    // If the current engine is not set or hidden, we fallback...
+    if (!this._currentEngine || this._currentEngine.hidden) {
+      // first to the original default engine
+      let originalDefault = this._originalDefaultEngine;
+      if (!originalDefault || originalDefault.hidden) {
+        // then to the first visible engine
+        let firstVisible = this._getSortedEngines(false)[0];
+        if (firstVisible && !firstVisible.hidden) {
+          this.currentEngine = firstVisible;
+          return firstVisible;
+        }
+        // and finally as a last resort we unhide the original default engine.
+        if (originalDefault)
+          originalDefault.hidden = false;
+      }
+      if (!originalDefault)
+        return null;
 
-    if (!currentEngine) {
-      // Last resort fallback: unhide the original default engine.
-      currentEngine = this._originalDefaultEngine;
-      if (currentEngine)
-        currentEngine.hidden = false;
-    }
-
-    if (currentEngine) {
       // If the current engine wasn't set or was hidden, we used a fallback
       // to pick a new current engine. As soon as we return it, this new
       // current engine will become user-visible, so we should persist it.
-      // Calling the setter achieves this, and is a no-op when we haven't
-      // actually changed the current engine.
-      this.currentEngine = currentEngine;
+      // by calling the setter.
+      this.currentEngine = originalDefault;
     }
 
-    return currentEngine;
+    return this._currentEngine;
   },
 
   set currentEngine(val) {

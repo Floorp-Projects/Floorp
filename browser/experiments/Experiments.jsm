@@ -6,7 +6,6 @@
 
 this.EXPORTED_SYMBOLS = [
   "Experiments",
-  "ExperimentsProvider",
 ];
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
@@ -2111,8 +2110,6 @@ Experiments.ExperimentEntry.prototype = {
   },
 };
 
-
-
 /**
  * Strip a Date down to its UTC midnight.
  *
@@ -2124,119 +2121,6 @@ var stripDateToMidnight = function (d) {
 
   return m;
 };
-
-function ExperimentsLastActiveMeasurement1() {
-  Metrics.Measurement.call(this);
-}
-function ExperimentsLastActiveMeasurement2() {
-  Metrics.Measurement.call(this);
-}
-
-const FIELD_DAILY_LAST_TEXT = {type: Metrics.Storage.FIELD_DAILY_LAST_TEXT};
-
-ExperimentsLastActiveMeasurement1.prototype = Object.freeze({
-  __proto__: Metrics.Measurement.prototype,
-
-  name: "info",
-  version: 1,
-
-  fields: {
-    lastActive: FIELD_DAILY_LAST_TEXT,
-  }
-});
-ExperimentsLastActiveMeasurement2.prototype = Object.freeze({
-  __proto__: Metrics.Measurement.prototype,
-
-  name: "info",
-  version: 2,
-
-  fields: {
-    lastActive: FIELD_DAILY_LAST_TEXT,
-    lastActiveBranch: FIELD_DAILY_LAST_TEXT,
-  }
-});
-
-this.ExperimentsProvider = function () {
-  Metrics.Provider.call(this);
-
-  this._experiments = null;
-};
-
-ExperimentsProvider.prototype = Object.freeze({
-  __proto__: Metrics.Provider.prototype,
-
-  name: "org.mozilla.experiments",
-
-  measurementTypes: [
-    ExperimentsLastActiveMeasurement1,
-    ExperimentsLastActiveMeasurement2,
-  ],
-
-  _OBSERVERS: [
-    EXPERIMENTS_CHANGED_TOPIC,
-  ],
-
-  postInit: function () {
-    for (let o of this._OBSERVERS) {
-      Services.obs.addObserver(this, o, false);
-    }
-
-    return Promise.resolve();
-  },
-
-  onShutdown: function () {
-    for (let o of this._OBSERVERS) {
-      Services.obs.removeObserver(this, o);
-    }
-
-    return Promise.resolve();
-  },
-
-  observe: function (subject, topic, data) {
-    switch (topic) {
-      case EXPERIMENTS_CHANGED_TOPIC:
-        this.recordLastActiveExperiment();
-        break;
-    }
-  },
-
-  collectDailyData: function () {
-    return this.recordLastActiveExperiment();
-  },
-
-  recordLastActiveExperiment: function () {
-    if (!gExperimentsEnabled) {
-      return Promise.resolve();
-    }
-
-    if (!this._experiments) {
-      this._experiments = Experiments.instance();
-    }
-
-    let m = this.getMeasurement(ExperimentsLastActiveMeasurement2.prototype.name,
-                                ExperimentsLastActiveMeasurement2.prototype.version);
-
-    return this.enqueueStorageOperation(() => {
-      return Task.spawn(function* recordTask() {
-        let todayActive = yield this._experiments.lastActiveToday();
-        if (!todayActive) {
-          this._log.info("No active experiment on this day: " +
-                         this._experiments._policy.now());
-          return;
-        }
-
-        this._log.info("Recording last active experiment: " + todayActive.id);
-        yield m.setDailyLastText("lastActive", todayActive.id,
-                                 this._experiments._policy.now());
-        let branch = todayActive.branch;
-        if (branch) {
-          yield m.setDailyLastText("lastActiveBranch", branch,
-                                   this._experiments._policy.now());
-        }
-      }.bind(this));
-    });
-  },
-});
 
 /**
  * An Add-ons Manager provider that knows about old experiments.

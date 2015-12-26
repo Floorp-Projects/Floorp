@@ -58,7 +58,3 @@ if CONFIG['NIGHTLY_BUILD']:
     EXTRA_JS_MODULES += [
         'SignInToWebsite.jsm',
     ]
-
-EXTRA_PP_COMPONENTS += [
-    'browsermodules.manifest',
-]

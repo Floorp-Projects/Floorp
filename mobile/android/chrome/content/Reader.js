@@ -5,6 +5,8 @@
 
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 /*globals MAX_URI_LENGTH, MAX_TITLE_LENGTH */
 
 var Reader = {
@@ -179,7 +181,7 @@ var Reader = {
 
       case "Reader:ToolbarHidden":
         if (!this._hasUsedToolbar) {
-          NativeWindow.toast.show(Strings.browser.GetStringFromName("readerMode.toolbarTip"), "short");
+          Snackbars.show(Strings.browser.GetStringFromName("readerMode.toolbarTip"), Snackbars.LENGTH_SHORT);
           Services.prefs.setBoolPref("reader.has_used_toolbar", true);
           this._hasUsedToolbar = true;
         }

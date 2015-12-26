@@ -393,6 +393,9 @@ loop.shared.mixins = (function() {
             console.error(error);
             return;
           }
+          if (!blob) {
+            return;
+          }
 
           var url = URL.createObjectURL(blob);
           this.audio = new Audio(url);
@@ -411,7 +414,7 @@ loop.shared.mixins = (function() {
 
         if (this._isLoopDesktop()) {
           loop.request("GetAudioBlob", name).then(function(result) {
-            if (result.isError) {
+            if (result && result.isError) {
               callback(result);
               return;
             }
