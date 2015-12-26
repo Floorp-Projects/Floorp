@@ -844,9 +844,6 @@ var CustomEventManager = {
       case 'webapps-uninstall-denied':
         WebappsHelper.handleEvent(detail);
         break;
-      case 'select-choicechange':
-        FormsHelper.handleEvent(detail);
-        break;
       case 'system-message-listener-ready':
         Services.obs.notifyObservers(null, 'system-message-listener-ready', null);
         break;
