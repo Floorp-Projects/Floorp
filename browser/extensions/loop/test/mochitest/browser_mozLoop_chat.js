@@ -18,22 +18,17 @@ add_task(function* test_mozLoop_nochat() {
 });
 
 add_task(function* test_mozLoop_openchat() {
-  let windowData = {
-    roomToken: "fake1234",
-    type: "room"
-  };
-
-  LoopRooms.open(windowData);
+  let windowId = LoopRooms.open("fake1234");
   Assert.ok(isAnyLoopChatOpen(), "chat window should have been opened");
+
+  let chatboxesForRoom = [...Chat.chatboxes].filter(chatbox => {
+    return chatbox.src == MozLoopServiceInternal.getChatURL(windowId);
+  });
+  Assert.strictEqual(chatboxesForRoom.length, 1, "Only one chatbox should be open");
 });
 
 add_task(function* test_mozLoop_hangupAllChatWindows() {
-  let windowData = {
-    roomToken: "fake2345",
-    type: "room"
-  };
-
-  LoopRooms.open(windowData);
+  LoopRooms.open("fake2345");
 
   yield promiseWaitForCondition(() => {
     MozLoopService.hangupAllChatWindows();
@@ -41,4 +36,31 @@ add_task(function* test_mozLoop_hangupAllChatWindows() {
   });
 
   Assert.ok(!isAnyLoopChatOpen(), "chat window should have been closed");
+});
+
+add_task(function* test_mozLoop_hangupOnClose() {
+  let roomToken = "fake1234";
+
+  let hangupNowCalls = [];
+  LoopAPI.stubMessageHandlers({
+    HangupNow: function(message, reply) {
+      hangupNowCalls.push(message);
+      reply();
+    }
+  });
+
+  let windowId = LoopRooms.open(roomToken);
+
+  yield promiseWaitForCondition(() => {
+    MozLoopService.hangupAllChatWindows();
+    return !isAnyLoopChatOpen();
+  });
+
+  Assert.greaterOrEqual(hangupNowCalls.length, 1, "HangupNow handler should be called at least once");
+  Assert.deepEqual(hangupNowCalls.pop(), {
+    name: "HangupNow",
+    data: [roomToken, windowId]
+  }, "Messages should be the same");
+
+  LoopAPI.restore();
 });

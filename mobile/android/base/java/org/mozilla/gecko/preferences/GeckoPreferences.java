@@ -107,6 +107,7 @@ OnSharedPreferenceChangeListener
     public static final String INTENT_EXTRA_RESOURCES = "resource";
     public static final String PREFS_TRACKING_PROTECTION_PROMPT_SHOWN = NON_PREF_PREFIX + "trackingProtectionPromptShown";
     public static String PREFS_HEALTHREPORT_UPLOAD_ENABLED = NON_PREF_PREFIX + "healthreport.uploadEnabled";
+    public static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
 
     private static boolean sIsCharEncodingEnabled;
     private boolean mInitialized;
@@ -128,7 +129,6 @@ OnSharedPreferenceChangeListener
     private static final String PREFS_DEVTOOLS_REMOTE_USB_ENABLED = "devtools.remote.usb.enabled";
     private static final String PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED = "devtools.remote.wifi.enabled";
     private static final String PREFS_DEVTOOLS_REMOTE_LINK = NON_PREF_PREFIX + "remote_debugging.link";
-    private static final String PREFS_SYNC = NON_PREF_PREFIX + "sync";
     private static final String PREFS_TRACKING_PROTECTION = "privacy.trackingprotection.state";
     private static final String PREFS_TRACKING_PROTECTION_PB = "privacy.trackingprotection.pbmode.enabled";
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";

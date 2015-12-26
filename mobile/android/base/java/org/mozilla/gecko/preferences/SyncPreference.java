@@ -30,6 +30,7 @@ import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.sync.setup.activities.SetupSyncActivity;
+import org.mozilla.gecko.util.ThreadUtils;
 
 class SyncPreference extends Preference {
     private static final boolean DEFAULT_TO_FXA = true;
@@ -64,20 +65,33 @@ class SyncPreference extends Preference {
         mContext.startActivity(intent);
     }
 
-    @Override
-    protected void onBindView(View view) {
-        super.onBindView(view);
+    public void update(final AndroidFxAccount fxAccount) {
+        if (fxAccount == null) {
+            ThreadUtils.postToUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    setTitle(R.string.pref_sync);
+                    setSummary(R.string.pref_sync_summary);
+                    if (AppConstants.Versions.feature11Plus) {
+                        // Cancel any pending task.
+                        Picasso.with(mContext).cancelRequest(profileAvatarTarget);
+                        // Clear previously set icon.
+                        setIcon(R.drawable.sync_avatar_default);
+                    }
 
-        Account account = FirefoxAccounts.getFirefoxAccount(mContext);
-        if (account == null) {
+                }
+            });
             return;
         }
 
-        final AndroidFxAccount fxAccount = new AndroidFxAccount(mContext, account);
-        final TextView title = (TextView) view.findViewById(android.R.id.title);
-        final TextView summary = (TextView) view.findViewById(android.R.id.summary);
-        title.setText(fxAccount.getEmail());
-        summary.setVisibility(View.GONE);
+        // Update title from account email.
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                setTitle(fxAccount.getEmail());
+                setSummary("");
+            }
+        });
 
         // Updating icons from Java is not supported prior to API 11.
         if (!AppConstants.Versions.feature11Plus) {

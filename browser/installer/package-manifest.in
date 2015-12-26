@@ -167,7 +167,6 @@
 @RESPATH@/components/browser-element.xpt
 @RESPATH@/browser/components/browsercompsbase.xpt
 @RESPATH@/browser/components/browser-feeds.xpt
-@RESPATH@/browser/components/browsermodules.manifest
 @RESPATH@/components/caps.xpt
 @RESPATH@/components/chrome.xpt
 @RESPATH@/components/commandhandler.xpt

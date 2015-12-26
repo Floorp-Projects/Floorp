@@ -8,7 +8,6 @@
 "use strict";
 
 const BASE_URL = Services.prefs.getCharPref("loop.server");
-const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 
 function* checkFxA401() {
   let err = MozLoopService.errors.get("login");

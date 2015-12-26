@@ -7,7 +7,8 @@
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-    var simpleProg = "function foo() {\n  let i = 1;\n  let j = 2;\n  return bar;\n}";
+    let simpleProg = "function foo() {\n  let i = 1;\n  let j = 2;\n  " +
+                     "return bar;\n}";
     ed.setText(simpleProg);
 
     // Move first line up
