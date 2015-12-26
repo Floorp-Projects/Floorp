@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 const PHONE_REGEX = /^\+?[0-9\s,-.\(\)*#pw]{1,30}$/; // Are we a phone #?
 
 
@@ -326,7 +328,7 @@ var ActionBarHandler = {
         clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
-        NativeWindow.toast.show(msg, "short");
+        Snackbars.show(msg, Snackbars.LENGTH_SHORT);
 
         // Then cut the selection text.
         ActionBarHandler._getSelection(element, win).deleteFromDocument();
@@ -361,7 +363,7 @@ var ActionBarHandler = {
         clipboard.copyString(selectedText);
 
         let msg = Strings.browser.GetStringFromName("selectionHelper.textCopied");
-        NativeWindow.toast.show(msg, "short");
+        Snackbars.show(msg, Snackbars.LENGTH_SHORT);
 
         ActionBarHandler._uninit();
         UITelemetry.addEvent("action.1", "actionbar", null, "copy");

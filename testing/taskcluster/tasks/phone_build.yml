@@ -50,6 +50,7 @@ task:
 
     env:
       # Common environment variables for checking out gecko
+      MOZ_BUILD_DATE: '{{pushdate}}'
       GECKO_BASE_REPOSITORY: '{{base_repository}}'
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'

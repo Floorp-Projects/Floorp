@@ -255,6 +255,13 @@ loop.StandaloneMozLoop = (function(mozL10n) {
   };
 
   var kMessageHandlers = {
+    AddConversationContext: function() {},
+    HangupNow: function(data, reply) {
+      var roomToken = data[0];
+      var sessionToken = data[1];
+      StandaloneLoopRooms.leave(roomToken, sessionToken, reply);
+    },
+
     "Rooms:*": function(action, data, reply) {
       var funcName = action.split(":").pop();
       funcName = funcName.charAt(0).toLowerCase() + funcName.substr(1);

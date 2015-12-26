@@ -21,9 +21,9 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="94cc99aac11339e297da186ec7153ca4ae9ab8cd"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="adf75f7a97ea0627b3211f0eef61eb72073f2dff"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="5645fe28c66f0be19975d604cb33b6fdae558348"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
   <project name="platform_build" path="build" remote="b2g" revision="660169a3d7e034a892359e39135e8c2785a6ad6f">
@@ -32,7 +32,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="fake-qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="939b377d55a2f081d94029a30a75d05e5a20daf3"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="835f6f56495be85457dbd0201be4e47700bcea7e"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="b516c3e0f6770d8acb6b4dff18b39e19cb4e4731"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
   <!-- Stock Android things -->

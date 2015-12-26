@@ -2,9 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
- "use strict";
+"use strict";
 
-const {Cu} = require("chrome");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const promise = require("promise");
 const dbginfo = new WeakMap();
@@ -42,8 +41,10 @@ function doSearch(ctx, rev, query) {
     return;
   }
 
-  cm.operation(function () {
-    if (state.query) return;
+  cm.operation(function() {
+    if (state.query) {
+      return;
+    }
 
     state.query = query;
     state.posFrom = state.posTo = { line: 0, ch: 0 };
@@ -56,15 +57,17 @@ function doSearch(ctx, rev, query) {
  */
 function searchNext(ctx, rev) {
   let { cm, ed } = ctx;
-  cm.operation(function () {
-    let state = getSearchState(cm)
-    let cursor = getSearchCursor(cm, state.query, rev ? state.posFrom : state.posTo);
+  cm.operation(function() {
+    let state = getSearchState(cm);
+    let cursor = getSearchCursor(cm, state.query,
+                                 rev ? state.posFrom : state.posTo);
 
     if (!cursor.find(rev)) {
       cursor = getSearchCursor(cm, state.query, rev ?
         { line: cm.lastLine(), ch: null } : { line: cm.firstLine(), ch: 0 });
-      if (!cursor.find(rev))
+      if (!cursor.find(rev)) {
         return;
+      }
     }
 
     ed.alignLine(cursor.from().line, "center");
@@ -80,8 +83,9 @@ function searchNext(ctx, rev) {
 function clearSearch(cm) {
   let state = getSearchState(cm);
 
-  if (!state.query)
+  if (!state.query) {
     return;
+  }
 
   state.query = null;
 }
@@ -96,7 +100,7 @@ function initialize(ctx) {
   let { ed } = ctx;
 
   dbginfo.set(ed, {
-    breakpoints:   {},
+    breakpoints: {},
     debugLocation: null
   });
 }
@@ -152,8 +156,9 @@ function addBreakpoint(ctx, line, cond) {
     deferred.resolve();
   }
 
-  if (hasBreakpoint(ctx, line))
-    return;
+  if (hasBreakpoint(ctx, line)) {
+    return null;
+  }
 
   let deferred = promise.defer();
   // If lineInfo() returns null, wait a tick to give the editor a chance to
@@ -171,8 +176,9 @@ function addBreakpoint(ctx, line, cond) {
  * makes Editor to emit a breakpointRemoved event.
  */
 function removeBreakpoint(ctx, line) {
-  if (!hasBreakpoint(ctx, line))
+  if (!hasBreakpoint(ctx, line)) {
     return;
+  }
 
   let { ed, cm } = ctx;
   let meta = dbginfo.get(ed);
@@ -186,24 +192,24 @@ function removeBreakpoint(ctx, line) {
 function moveBreakpoint(ctx, fromLine, toLine) {
   let { ed, cm } = ctx;
 
-  var fromTop = cm.cursorCoords({ line: fromLine }).top;
-  var toTop = cm.cursorCoords({ line: toLine }).top;
+  let fromTop = cm.cursorCoords({ line: fromLine }).top;
+  let toTop = cm.cursorCoords({ line: toLine }).top;
 
   ed.removeBreakpoint(fromLine);
   ed.addBreakpoint(toLine);
   let info = cm.lineInfo(toLine);
-  var marker = ed.getMarker(info.line, "breakpoints", "breakpoint");
+  let marker = ed.getMarker(info.line, "breakpoints", "breakpoint");
   if (marker) {
     marker.setAttribute("adding", "");
-    marker.style.position = 'relative';
-    marker.style.top = -(toTop - fromTop) + 'px';
+    marker.style.position = "relative";
+    marker.style.top = -(toTop - fromTop) + "px";
     marker.style.transform = "translateY(" + (toTop - fromTop) + "px)";
-    marker.addEventListener('transitionend', function(e) {
+    marker.addEventListener("transitionend", function(e) {
       // For some reason, we have to reset the styles after the marker
       // is already removed, not before.
       e.target.removeAttribute("adding");
       e.target.style.transform = "none";
-      e.target.style.top = '0px';
+      e.target.style.top = "0px";
     });
   }
 }
@@ -216,8 +222,9 @@ function getBreakpoints(ctx) {
   let meta = dbginfo.get(ed);
 
   return Object.keys(meta.breakpoints).reduce((acc, line) => {
-    if (meta.breakpoints[line] != null)
+    if (meta.breakpoints[line] != null) {
       acc.push({ line: line, condition: meta.breakpoints[line].condition });
+    }
     return acc;
   }, []);
 }
@@ -286,11 +293,10 @@ function findPrev(ctx, query) {
   doSearch(ctx, true, query);
 }
 
-
 // Export functions
 
 [
   initialize, hasBreakpoint, addBreakpoint, removeBreakpoint,
   moveBreakpoint, getBreakpoints, setDebugLocation, getDebugLocation,
   clearDebugLocation, find, findNext, findPrev
-].forEach(function (func) { module.exports[func.name] = func; });
+].forEach(func => module.exports[func.name] = func);

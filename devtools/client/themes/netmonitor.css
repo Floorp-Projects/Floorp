@@ -212,7 +212,7 @@
 }
 
 .requests-menu-status-icon[code^="1"] {
-  background-color: var(---theme-highlight-blue);
+  background-color: var(--theme-highlight-blue);
 }
 
 .requests-menu-status-icon[code^="2"] {

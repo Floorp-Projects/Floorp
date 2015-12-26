@@ -1211,13 +1211,19 @@ Navigator::SendBeacon(const nsAString& aUrl,
     return false;
   }
 
+  nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL |
+    nsIChannel::LOAD_CLASSIFY_URI;
+
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel),
                      uri,
                      doc,
                      nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS |
                        nsILoadInfo::SEC_COOKIES_INCLUDE,
-                     nsIContentPolicy::TYPE_BEACON);
+                     nsIContentPolicy::TYPE_BEACON,
+                     nullptr, // aLoadGroup
+                     nullptr, // aCallbacks
+                     loadFlags);
 
   if (NS_FAILED(rv)) {
     aRv.Throw(rv);
