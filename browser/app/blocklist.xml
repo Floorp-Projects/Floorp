@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1449088954000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1450742506000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -455,7 +455,7 @@
               </prefs>
     </emItem>
       <emItem  blockID="i1056" id="{82AF8DCA-6DE9-405D-BD5E-43525BDAD38A}">
-                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                        <versionRange  minVersion="0" maxVersion="7.5.0.9082" severity="1">
                       <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="43.0a1" maxVersion="*" />
                           </targetApplication>
@@ -3339,6 +3339,18 @@
       <match name="name" exp="Java(\(TM\))? Plug-in 11\.(4[6-9]|5\d|6[0-4])(\.[0-9]+)?([^\d\._]|$)" />            <match name="filename" exp="libnpjp2\.so" />                      <versionRange  severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://java.com/</infoURL>
           </pluginItem>
+      <pluginItem  os="Linux" blockID="p1065">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.540" maxVersion="11.2.202.548" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1066">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.255" maxVersion="18.0.0.261" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1067">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="19.0.0.226" maxVersion="19.0.0.245" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -3435,6 +3447,54 @@
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g1057">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>WEBGL_ANGLE</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>6.14.10.5218</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1068">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1851</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1069">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1855</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1070">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1872</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1071">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1883</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1072">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1892</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1073">      <vendor>0x8086</vendor>              <devices>
+                      <device>0x2a42</device>
+                      <device>0x2e22</device>
+                      <device>0x2e12</device>
+                      <device>0x2e32</device>
+                      <device>0x0046</device>
+                  </devices>
+            <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.1994</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>
