@@ -11,7 +11,6 @@
 # excluded on Windows, but it doesn't matter because the symbols are already
 # exported in NSPR (Windows peculiarity).
 PR_*
-_PR_*
 PL_*
 #endif
 #include ../../../db/sqlite3/src/sqlite.symbols
