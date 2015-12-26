@@ -4,13 +4,13 @@
 
 "use strict";
 
-const cssAutoCompleter  = require("devtools/client/sourceeditor/css-autocompleter");
+const CSSCompleter = require("devtools/client/sourceeditor/css-autocompleter");
 const { Cc, Ci } = require("chrome");
 
 const CSS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
                 "/test/css_statemachine_testcases.css";
-const TESTS_URI = "http://mochi.test:8888/browser/devtools/client/sourceeditor" +
-                  "/test/css_statemachine_tests.json";
+const TESTS_URI = "http://mochi.test:8888/browser/devtools/client" +
+                  "/sourceeditor/test/css_statemachine_tests.json";
 
 const source = read(CSS_URI);
 const tests = eval(read(TESTS_URI));
@@ -66,22 +66,22 @@ function test() {
 }
 
 function runTests() {
-  let completer = new cssAutoCompleter();
+  let completer = new CSSCompleter();
   let checkState = state => {
-    if (state[0] == 'null' && (!completer.state || completer.state == 'null')) {
+    if (state[0] == "null" && (!completer.state || completer.state == "null")) {
       return true;
-    } else if (state[0] == completer.state && state[0] == 'selector' &&
+    } else if (state[0] == completer.state && state[0] == "selector" &&
                state[1] == completer.selectorState &&
                state[2] == completer.completing &&
                state[3] == completer.selector) {
       return true;
-    } else if (state[0] == completer.state && state[0] == 'value' &&
+    } else if (state[0] == completer.state && state[0] == "value" &&
                state[2] == completer.completing &&
                state[3] == completer.propertyName) {
       return true;
     } else if (state[0] == completer.state &&
                state[2] == completer.completing &&
-               state[0] != 'selector' && state[0] != 'value') {
+               state[0] != "selector" && state[0] != "value") {
       return true;
     }
     return false;
@@ -92,16 +92,15 @@ function runTests() {
   let i = 0;
   for (let test of tests) {
     progress.dataset.progress = ++i;
-    progressDiv.style.width = 100*i/tests.length + "%";
+    progressDiv.style.width = 100 * i / tests.length + "%";
     completer.resolveState(limit(source, test[0]),
                            {line: test[0][0], ch: test[0][1]});
     if (checkState(test[1])) {
       ok(true, "Test " + i + " passed. ");
-    }
-    else {
-      ok(false, "Test " + i + " failed. Expected state : [" + test[1] + "] but" +
-         " found [" + completer.state + ", " + completer.selectorState + ", " +
-         completer.completing + ", " +
+    } else {
+      ok(false, "Test " + i + " failed. Expected state : [" + test[1] + "] " +
+         "but found [" + completer.state + ", " + completer.selectorState +
+         ", " + completer.completing + ", " +
          (completer.propertyName || completer.selector) + "].");
       progress.classList.add("failed");
     }

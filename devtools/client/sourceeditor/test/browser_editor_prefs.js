@@ -6,18 +6,17 @@
 
 // Test to make sure that the editor reacts to preference changes
 
-const TAB_SIZE    = "devtools.editor.tabsize";
+const TAB_SIZE = "devtools.editor.tabsize";
 const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
-const EXPAND_TAB  = "devtools.editor.expandtab";
-const KEYMAP      = "devtools.editor.keymap";
-const AUTO_CLOSE  = "devtools.editor.autoclosebrackets";
-const AUTOCOMPLETE  = "devtools.editor.autocomplete";
+const EXPAND_TAB = "devtools.editor.expandtab";
+const KEYMAP = "devtools.editor.keymap";
+const AUTO_CLOSE = "devtools.editor.autoclosebrackets";
+const AUTOCOMPLETE = "devtools.editor.autocomplete";
 const DETECT_INDENT = "devtools.editor.detectindentation";
 
 function test() {
   waitForExplicitFinish();
   setup((ed, win) => {
-
     Assert.deepEqual(ed.getOption("gutters"), [
       "CodeMirror-linenumbers",
       "breakpoints",
@@ -25,7 +24,7 @@ function test() {
 
     ed.setText("Checking preferences.");
 
-    info ("Turning prefs off");
+    info("Turning prefs off");
 
     ed.setOption("autocomplete", true);
 
@@ -44,14 +43,15 @@ function test() {
     is(ed.getOption("tabSize"), 2, "tabSize is correct");
     is(ed.getOption("indentUnit"), 2, "indentUnit is correct");
     is(ed.getOption("foldGutter"), false, "foldGutter is correct");
-    is(ed.getOption("enableCodeFolding"), undefined, "enableCodeFolding is correct");
+    is(ed.getOption("enableCodeFolding"), undefined,
+      "enableCodeFolding is correct");
     is(ed.getOption("indentWithTabs"), true, "indentWithTabs is correct");
     is(ed.getOption("keyMap"), "default", "keyMap is correct");
     is(ed.getOption("autoCloseBrackets"), "", "autoCloseBrackets is correct");
     is(ed.getOption("autocomplete"), true, "autocomplete is correct");
     ok(!ed.isAutocompletionEnabled(), "Autocompletion is not enabled");
 
-    info ("Turning prefs on");
+    info("Turning prefs on");
 
     Services.prefs.setIntPref(TAB_SIZE, 4);
     Services.prefs.setBoolPref(ENABLE_CODE_FOLDING, true);
@@ -68,23 +68,26 @@ function test() {
     is(ed.getOption("tabSize"), 4, "tabSize is correct");
     is(ed.getOption("indentUnit"), 4, "indentUnit is correct");
     is(ed.getOption("foldGutter"), true, "foldGutter is correct");
-    is(ed.getOption("enableCodeFolding"), undefined, "enableCodeFolding is correct");
+    is(ed.getOption("enableCodeFolding"), undefined,
+      "enableCodeFolding is correct");
     is(ed.getOption("indentWithTabs"), false, "indentWithTabs is correct");
     is(ed.getOption("keyMap"), "sublime", "keyMap is correct");
-    is(ed.getOption("autoCloseBrackets"), "()[]{}''\"\"``", "autoCloseBrackets is correct");
+    is(ed.getOption("autoCloseBrackets"), "()[]{}''\"\"``",
+      "autoCloseBrackets is correct");
     is(ed.getOption("autocomplete"), true, "autocomplete is correct");
     ok(ed.isAutocompletionEnabled(), "Autocompletion is enabled");
 
-    info ("Forcing foldGutter off using enableCodeFolding");
+    info("Forcing foldGutter off using enableCodeFolding");
     ed.setOption("enableCodeFolding", false);
 
     is(ed.getOption("foldGutter"), false, "foldGutter is correct");
-    is(ed.getOption("enableCodeFolding"), false, "enableCodeFolding is correct");
+    is(ed.getOption("enableCodeFolding"), false,
+      "enableCodeFolding is correct");
     Assert.deepEqual(ed.getOption("gutters"), [
       "CodeMirror-linenumbers",
       "breakpoints"], "gutters is correct");
 
-    info ("Forcing foldGutter on using enableCodeFolding");
+    info("Forcing foldGutter on using enableCodeFolding");
     ed.setOption("enableCodeFolding", true);
 
     is(ed.getOption("foldGutter"), true, "foldGutter is correct");
@@ -94,7 +97,7 @@ function test() {
       "breakpoints",
       "CodeMirror-foldgutter"], "gutters is correct");
 
-    info ("Checking indentation detection");
+    info("Checking indentation detection");
 
     Services.prefs.setBoolPref(DETECT_INDENT, true);
 
