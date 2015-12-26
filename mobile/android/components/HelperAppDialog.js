@@ -37,17 +37,6 @@ HelperAppLauncherDialog.prototype = {
   classID: Components.ID("{e9d277a0-268a-4ec2-bb8c-10fdf3e44611}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIHelperAppLauncherDialog]),
 
-  getNativeWindow: function () {
-    try {
-      let win = Services.wm.getMostRecentWindow("navigator:browser");
-      if (win && win.NativeWindow) {
-        return win.NativeWindow;
-      }
-    } catch (e) {
-    }
-    return null;
-  },
-
   /**
    * Returns false if `url` represents a local or special URL that we don't
    * wish to ever download.
