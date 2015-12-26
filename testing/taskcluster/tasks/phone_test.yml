@@ -23,6 +23,7 @@ task:
     cache:
       tc-vcs: '/home/worker/.tc-vcs'
     env:
+      MOZ_BUILD_DATE: '{{pushdate}}'
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
       GAIA_REF: '{{{gaia_ref}}}'
