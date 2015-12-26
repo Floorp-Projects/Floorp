@@ -21,8 +21,6 @@ interface mozISpellCheckingEngine : nsISupports {
    * Setting this attribute to a value not in getDictionaryList will throw
    * NS_ERROR_FILE_NOT_FOUND.
    *
-   * The spellcheck engine will send a notification with
-   * "spellcheck-dictionary-update" as topic when this changes.
    * If the dictionary is changed to no dictionary (the empty string), an
    * observer is allowed to set another dictionary before it returns.
    */
@@ -30,9 +28,6 @@ interface mozISpellCheckingEngine : nsISupports {
 
   /**
    * The language this spellchecker is using when checking
-   *
-   * The spellcheck engine will send a notification with
-   * "spellcheck-dictionary-update" as topic when this changes.
    */
   readonly attribute wstring language;
 
@@ -68,17 +63,11 @@ interface mozISpellCheckingEngine : nsISupports {
 
   /**
    * check a word
-   *
-   * The spellcheck engine will send a notification with
-   * "spellcheck-dictionary-update" as topic when this changes.
    */
   boolean check(in wstring word);
 
   /**
    * get a list of suggestions for a misspelled word
-   *
-   * The spellcheck engine will send a notification with
-   * "spellcheck-dictionary-update" as topic when this changes.
    */
   void suggest(in wstring word,[array, size_is(count)] out wstring suggestions, out uint32_t count);
 
