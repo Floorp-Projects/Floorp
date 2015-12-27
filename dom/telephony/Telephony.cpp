@@ -562,7 +562,8 @@ Telephony::HandleAudioAgentState()
     mIsAudioStartPlaying = true;
     float volume;
     bool muted;
-    rv = mAudioAgent->NotifyStartedPlaying(&volume, &muted);
+    rv = mAudioAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
+                                           &volume, &muted);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -711,7 +712,7 @@ Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
-Telephony::WindowAudioCaptureChanged(bool aCapture)
+Telephony::WindowAudioCaptureChanged()
 {
   // Do nothing, it's useless for the telephony object.
   return NS_OK;

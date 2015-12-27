@@ -34,7 +34,7 @@ public:
   AudioChannelAgent();
 
   void WindowVolumeChanged();
-  void WindowAudioCaptureChanged(uint64_t aInnerWindowID, bool aCapture);
+  void WindowAudioCaptureChanged(uint64_t aInnerWindowID);
 
   nsPIDOMWindow* Window() const
   {
@@ -42,7 +42,6 @@ public:
   }
 
   uint64_t WindowID() const;
-  uint64_t InnerWindowID() const;
 
 private:
   virtual ~AudioChannelAgent();
@@ -67,6 +66,7 @@ private:
   int32_t mAudioChannelType;
   uint64_t mInnerWindowID;
   bool mIsRegToService;
+  bool mNotifyPlayback;
 };
 
 } // namespace dom

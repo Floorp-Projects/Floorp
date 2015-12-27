@@ -114,18 +114,31 @@ using mozilla::net::nsMediaFragmentURIParser;
 class MOZ_STACK_CLASS AutoNotifyAudioChannelAgent
 {
   RefPtr<mozilla::dom::HTMLMediaElement> mElement;
+  bool mShouldNotify;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 public:
-  explicit AutoNotifyAudioChannelAgent(mozilla::dom::HTMLMediaElement* aElement
-                                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+  AutoNotifyAudioChannelAgent(mozilla::dom::HTMLMediaElement* aElement,
+                              bool aNotify
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
     : mElement(aElement)
+    , mShouldNotify(aNotify)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (mShouldNotify) {
+      // The audio channel agent may not exist now.
+      if (mElement->MaybeCreateAudioChannelAgent()) {
+        mElement->NotifyAudioChannelAgent(false);
+      }
+    }
   }
-
   ~AutoNotifyAudioChannelAgent()
   {
-    mElement->UpdateAudioChannelPlayingState();
+    if (mShouldNotify) {
+      // The audio channel agent is destroyed at this point.
+      if (mElement->MaybeCreateAudioChannelAgent()) {
+        mElement->NotifyAudioChannelAgent(true);
+      }
+    }
   }
 };
 
@@ -3386,7 +3399,10 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   // If the element is gaining or losing an audio track, we need to notify
   // the audio channel agent so that the correct audio-playback events will
   // get dispatched.
-  AutoNotifyAudioChannelAgent autoNotify(this);
+  bool audioTrackChanging = mMediaInfo.HasAudio() != aInfo->HasAudio();
+  AutoNotifyAudioChannelAgent autoNotify(this,
+                                         audioTrackChanging &&
+                                         mPlayingThroughTheAudioChannel);
 
   mMediaInfo = *aInfo;
   mIsEncrypted = aInfo->IsEncrypted()
@@ -4745,11 +4761,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return false;
   }
 
-  // If this element doesn't have any audio tracks.
-  if (!HasAudio()) {
-    return false;
-  }
-
   // The volume should not be ~0
   if (std::fabs(Volume()) <= 1e-7) {
     return false;
@@ -4805,15 +4816,23 @@ HTMLMediaElement::UpdateAudioChannelPlayingState()
 void
 HTMLMediaElement::NotifyAudioChannelAgent(bool aPlaying)
 {
+  // Immediately check if this should go to the MSG instead of the normal
+  // media playback route.
+  WindowAudioCaptureChanged();
+
   // This is needed to pass nsContentUtils::IsCallerChrome().
   // AudioChannel API should not called from content but it can happen that
   // this method has some content JS in its stack.
   AutoNoJSAPI nojsapi;
 
   if (aPlaying) {
+    // Don't notify playback if this element doesn't have any audio tracks.
+    uint32_t notify = HasAudio() ? nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY :
+                                   nsIAudioChannelAgent::AUDIO_AGENT_DONT_NOTIFY;
+
     float volume = 0.0;
     bool muted = true;
-    mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+    mAudioChannelAgent->NotifyStartedPlaying(notify, &volume, &muted);
     WindowVolumeChanged(volume, muted);
   } else {
     mAudioChannelAgent->NotifyStoppedPlaying();
@@ -4975,17 +4994,17 @@ HTMLMediaElement::GetTopLevelPrincipal()
 }
 #endif // MOZ_EME
 
-NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
+NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged()
 {
   MOZ_ASSERT(mAudioChannelAgent);
-  MOZ_ASSERT(HasAudio());
 
   if (!OwnerDoc()->GetInnerWindow()) {
     return NS_OK;
   }
+  bool captured = OwnerDoc()->GetInnerWindow()->GetAudioCaptured();
 
-  if (aCapture != mAudioCapturedByWindow) {
-    if (aCapture) {
+  if (captured != mAudioCapturedByWindow) {
+    if (captured) {
       mAudioCapturedByWindow = true;
       nsCOMPtr<nsPIDOMWindow> window =
         do_QueryInterface(OwnerDoc()->GetParentObject());
@@ -5021,7 +5040,7 @@ NS_IMETHODIMP HTMLMediaElement::WindowAudioCaptureChanged(bool aCapture)
     }
   }
 
-  return NS_OK;
+   return NS_OK;
 }
 
 AudioTrackList*

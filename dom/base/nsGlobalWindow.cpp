@@ -3743,7 +3743,7 @@ nsPIDOMWindow::SetAudioCapture(bool aCapture)
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->SetWindowAudioCaptured(GetOuterWindow(), mWindowID, aCapture);
+    service->RefreshAgentsCapture(GetOuterWindow(), mWindowID);
   }
 
   return NS_OK;
