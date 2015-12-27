@@ -34,7 +34,7 @@ painting.
 - C++ Async pan zoom controller (July 2012 - Bug 750974)
 The existing APZ code was in Java for Fennec so this was reimplemented.
 
-- Streaming WebGL Buffers (February 203 - Bug 716859)
+- Streaming WebGL Buffers (February 2013 - Bug 716859)
 Infrastructure to allow OMTC WebGL and avoid the need to glFinish() every
 frame.
 
@@ -55,6 +55,6 @@ of the sync messages to the compositor.
 to allocate gralloc buffers without sync messages to the compositor thread.
 
 - B2G WebGL performance (May 2014 - Bug 1006957, 1001417, 1024144)
-This worked improved the synchronization mechanism between the compositor
+This work improved the synchronization mechanism between the compositor
 and the producer.
 
