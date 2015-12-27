@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <meta charset="utf-8"/>
     <style type="text/css">
-      math {
+      math, mspace {
         font-size: 10px;
       }
       @font-face {
@@ -43,6 +43,10 @@
       @font-face {
         font-family: scripts-8;
         src: url(/tests/fonts/math/scripts-8.otf);
+      }
+      @font-face {
+        font-family: scripts-9;
+        src: url(/tests/fonts/math/scripts-9.otf);
       }
     </style>
     <script type="text/javascript">
@@ -106,6 +110,14 @@
 
         ok(almostEqual(getBox("ref10").bottom - getBox("sup10").bottom, 9 * 10),
            "Bad SuperscriptBottomMin");
+
+        ok(almostEqual(getBox("base11").bottom + 3 * 10,
+                       getBox("sub11").top),
+           "Bad SubscriptBaselineDrop");
+
+        ok(almostEqual(getBox("base11").top + 5 * 10,
+                       getBox("sup11").bottom),
+           "Bad SuperscriptBaselineDrop");
 
         SimpleTest.finish();
       }
@@ -264,5 +276,17 @@
       </math>
     </p>
 
+    <p>
+      <math style="font-family: scripts-9;">
+        <msubsup>
+          <mspace id="base11" height="10em" depth="10em"
+                  width="1em" mathbackground="red"/>
+          <mspace id="sub11"
+                  height="0em" depth="1em" width="1em" mathbackground="green"/>
+          <mspace id="sup11"
+                  height="1em" depth="0em" width="1em" mathbackground="blue"/>
+        </msubsup>
+      </math>
+    </p>
   </body>
 </html>
