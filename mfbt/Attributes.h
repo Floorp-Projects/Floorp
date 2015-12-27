@@ -339,16 +339,27 @@
 /**
  * MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
  * cases that fall through without a break or return statement. MOZ_FALLTHROUGH
- * is only needed on cases that have code:
+ * is only needed on cases that have code.
+ *
+ * MOZ_FALLTHROUGH_ASSERT is an annotation to suppress compiler warnings about
+ * switch cases that MOZ_ASSERT(false) (or its alias MOZ_ASSERT_UNREACHABLE) in
+ * debug builds, but intentionally fall through in release builds. See comment
+ * in Assertions.h for more details.
  *
  * switch (foo) {
  *   case 1: // These cases have no code. No fallthrough annotations are needed.
  *   case 2:
- *   case 3:
- *     foo = 4; // This case has code, so a fallthrough annotation is needed:
+ *   case 3: // This case has code, so a fallthrough annotation is needed!
+ *     foo++;
  *     MOZ_FALLTHROUGH;
- *   default:
+ *   case 4:
  *     return foo;
+ *
+ *   default:
+ *     // This case asserts in debug builds, falls through in release.
+ *     MOZ_FALLTHROUGH_ASSERT("Unexpected foo value?!");
+ *   case 5:
+ *     return 5;
  * }
  */
 #if defined(__clang__) && __cplusplus >= 201103L
