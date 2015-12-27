@@ -1378,7 +1378,6 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // code also includes Fennec which is rendered async.  Fennec uses
     // its own platform-specific async rendering that is done partially
     // in Gecko and partially in Java.
-    wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), aCurrentFrame);
     bool foundRoot = false;
     Maybe<ParentLayerIntRect> clipDeferredFromChildren;
     if (ApplyAsyncContentTransformToTree(root, &foundRoot, clipDeferredFromChildren)) {
@@ -1402,6 +1401,7 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
         }
       }
     }
+    wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), aCurrentFrame);
   }
 
   LayerComposite* rootComposite = root->AsLayerComposite();
