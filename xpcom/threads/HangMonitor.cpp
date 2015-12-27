@@ -109,12 +109,8 @@ Crash()
 #endif
 
 #ifdef MOZ_CRASHREPORTER
-  // If you change this, you must also deal with the threadsafety of AnnotateCrashReport in
-  // non-chrome processes!
-  if (GeckoProcessType_Default == XRE_GetProcessType()) {
-    CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Hang"),
-                                       NS_LITERAL_CSTRING("1"));
-  }
+  CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("Hang"),
+                                     NS_LITERAL_CSTRING("1"));
 #endif
 
   NS_RUNTIMEABORT("HangMonitor triggered");
@@ -260,8 +256,10 @@ ThreadMain(void*)
 void
 Startup()
 {
-  if (GeckoProcessType_Default != XRE_GetProcessType() &&
-      GeckoProcessType_Content != XRE_GetProcessType()) {
+  // The hang detector only runs in chrome processes. If you change this,
+  // you must also deal with the threadsafety of AnnotateCrashReport in
+  // non-chrome processes!
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
     return;
   }
 
@@ -295,8 +293,7 @@ Startup()
 void
 Shutdown()
 {
-  if (GeckoProcessType_Default != XRE_GetProcessType() &&
-      GeckoProcessType_Content != XRE_GetProcessType()) {
+  if (GeckoProcessType_Default != XRE_GetProcessType()) {
     return;
   }
 
