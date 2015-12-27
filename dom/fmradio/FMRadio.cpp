@@ -454,7 +454,8 @@ FMRadio::EnableAudioChannelAgent()
 
   float volume = 0.0;
   bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
+  mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
+                                           &volume, &muted);
   WindowVolumeChanged(volume, muted);
 
   mAudioChannelAgentEnabled = true;
@@ -469,7 +470,7 @@ FMRadio::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
-FMRadio::WindowAudioCaptureChanged(bool aCapture)
+FMRadio::WindowAudioCaptureChanged()
 {
   return NS_OK;
 }
