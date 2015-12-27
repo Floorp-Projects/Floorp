@@ -479,6 +479,11 @@ f = newMathFont("scripts-8")
 f.math.SuperscriptBottomMin = 9 * em
 saveMathFont(f)
 
+f = newMathFont("scripts-9")
+f.math.SubscriptBaselineDropMin = 3 * em
+f.math.SuperscriptBaselineDropMax = 5 * em
+saveMathFont(f)
+
 ################################################################################
 # Testing Limits Parameters
 f = newMathFont("limits-1")
