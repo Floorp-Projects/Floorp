@@ -69,7 +69,6 @@ HandleExecutionInterrupt()
 static void
 OnDetached()
 {
-    // See hasDetachedHeap comment in LinkAsmJS.
     JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
 }

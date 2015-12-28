@@ -141,11 +141,8 @@ class Export
 typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 // An Import describes a wasm module import. Currently, only functions can be
-// imported in wasm and a function import also includes the signature used
-// within the module to call that import. An import is slightly different than
-// an asm.js FFI function: a single asm.js FFI function can be called with many
-// different signatures. When compiled to wasm, each unique FFI function paired
-// with signature generates a wasm import.
+// imported in wasm. A function import includes the signature used within the
+// module to call it.
 
 class Import
 {
@@ -345,10 +342,8 @@ AllocateCode(ExclusiveContext* cx, size_t bytes);
 //    once. However, a dynamically-linked module may be cloned so that the clone
 //    can be independently dynamically linked.
 //
-// Once fully dynamically linked, a module can have its exports invoked (via
-// entryTrampoline). While executing, profiling may be enabled/disabled (when
-// the Module is not active()) via setProfilingEnabled(). When profiling is
-// enabled, a module's frames will be visible to wasm::ProfilingFrameIterator.
+// Once fully dynamically linked, a Module can have its exports invoked via
+// callExport().
 
 class Module
 {
@@ -358,6 +353,11 @@ class Module
         HeapPtrFunction fun;
         static_assert(sizeof(HeapPtrFunction) == sizeof(void*), "for JIT access");
     };
+    struct EntryArg {
+        uint64_t lo;
+        uint64_t hi;
+    };
+    typedef int32_t (*EntryFuncPtr)(EntryArg* args, uint8_t* global);
     struct FuncPtrTable {
         uint32_t globalDataOffset;
         uint32_t numElems;
@@ -414,9 +414,11 @@ class Module
     uint32_t totalBytes() const;
     uint8_t* rawHeapPtr() const;
     uint8_t*& rawHeapPtr();
+    WasmActivation*& activation();
     void specializeToHeap(ArrayBufferObjectMaybeShared* heap);
     void despecializeFromHeap(ArrayBufferObjectMaybeShared* heap);
     void sendCodeRangesToProfiler(JSContext* cx);
+    void setProfilingEnabled(bool enabled, JSContext* cx);
     ImportExit& importToExit(const Import& import);
 
     enum CacheBool { NotLoadedFromCache = false, LoadedFromCache = true };
@@ -439,10 +441,12 @@ class Module
            FuncLabelVector&& funcLabels);
 
     template <class> friend struct js::MallocProvider;
+    friend class js::WasmActivation;
 
   public:
     static const unsigned SizeOfImportExit = sizeof(ImportExit);
     static const unsigned OffsetOfImportExitFun = offsetof(ImportExit, fun);
+    static const unsigned SizeOfEntryArg = sizeof(EntryArg);
 
     enum HeapBool { DoesntUseHeap = false, UsesHeap = true };
     enum SharedBool { UnsharedHeap = false, SharedHeap = true };
@@ -482,7 +486,6 @@ class Module
     bool loadedFromCache() const { return loadedFromCache_; }
     bool staticallyLinked() const { return staticallyLinked_; }
     bool dynamicallyLinked() const { return dynamicallyLinked_; }
-    bool profilingEnabled() const { return profilingEnabled_; }
 
     // The range [0, functionBytes) is a subrange of [0, codeBytes) that
     // contains only function body code, not the stub code. This distinction is
@@ -509,7 +512,6 @@ class Module
 
     bool dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
                          const AutoVectorRooter<JSFunction*>& imports);
-    Module* nextLinked() const;
 
     // The wasm heap, established by dynamicallyLink.
 
@@ -520,25 +522,19 @@ class Module
     // asm.js may detach and change the heap at any time. As an internal detail,
     // the heap may not be changed while the module has been asynchronously
     // interrupted.
+    //
+    // N.B. These methods and asm.js change-heap support will be removed soon.
 
-    bool hasDetachedHeap() const;
     bool changeHeap(Handle<ArrayBufferObject*> newBuffer, JSContext* cx);
     bool detachHeap(JSContext* cx);
     void setInterrupted(bool interrupted);
+    Module* nextLinked() const;
 
     // The exports of a wasm module are called by preparing an array of
     // arguments (coerced to the corresponding types of the Export signature)
-    // and calling the export's entry trampoline. All such calls must be
-    // associated with a containing WasmActivation. The innermost
-    // WasmActivation must be maintained in the Module::activation field.
+    // and calling the export's entry trampoline.
 
-    struct EntryArg {
-        uint64_t lo;
-        uint64_t hi;
-    };
-    typedef int32_t (*EntryFuncPtr)(EntryArg* args, uint8_t* global);
-    EntryFuncPtr entryTrampoline(const Export& func) const;
-    WasmActivation*& activation();
+    bool callExport(JSContext* cx, uint32_t exportIndex, CallArgs args);
 
     // Initially, calls to imports in wasm code call out through the generic
     // callImport method. If the imported callee gets JIT compiled and the types
@@ -557,12 +553,12 @@ class Module
     uint8_t* interrupt() const { MOZ_ASSERT(staticallyLinked_); return interrupt_; }
     uint8_t* outOfBounds() const { MOZ_ASSERT(staticallyLinked_); return outOfBounds_; }
 
-    // When a module is inactive (no live activations), the profiling mode
-    // can be toggled. WebAssembly frames only show up in the
-    // ProfilingFrameIterator when profiling is enabled.
+    // Each Module has a profilingEnabled state which is updated to match
+    // SPSProfiler::enabled() on the next Module::callExport when there are no
+    // frames from the Module on the stack. The ProfilingFrameIterator only
+    // shows frames for Module activations that have profilingEnabled.
 
-    bool active() { return !!activation(); }
-    void setProfilingEnabled(bool enabled, JSContext* cx);
+    bool profilingEnabled() const { return profilingEnabled_; }
     const char* profilingLabel(uint32_t funcIndex) const;
 
     // See WASM_DECLARE_SERIALIZABLE.

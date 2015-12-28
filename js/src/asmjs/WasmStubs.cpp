@@ -170,7 +170,7 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHe
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
     for (ABIArgValTypeIter iter(sig.args()); !iter.done(); iter++) {
-        unsigned argOffset = iter.index() * sizeof(Module::EntryArg);
+        unsigned argOffset = iter.index() * Module::SizeOfEntryArg;
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
         switch (iter->kind()) {
@@ -179,11 +179,11 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHe
             break;
 #ifdef JS_CODEGEN_REGISTER_PAIR
           case ABIArg::GPR_PAIR:
-            MOZ_CRASH("AsmJS uses hardfp for function calls.");
+            MOZ_CRASH("wasm uses hardfp for function calls.");
             break;
 #endif
           case ABIArg::FPU: {
-            static_assert(sizeof(Module::EntryArg) >= jit::Simd128DataSize,
+            static_assert(Module::SizeOfEntryArg >= jit::Simd128DataSize,
                           "EntryArg must be big enough to store SIMD values");
             switch (type) {
               case MIRType_Int32x4:
