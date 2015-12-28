@@ -41,7 +41,8 @@ using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 
 JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options = JS::CompartmentOptions())
-  : options_(options),
+  : creationOptions_(options.creationOptions()),
+    behaviors_(options.behaviors()),
     zone_(zone),
     runtime_(zone->runtimeFromMainThread()),
     principals_(nullptr),
@@ -51,7 +52,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     warnedAboutFlagsArgument(false),
     warnedAboutExprClosure(false),
     warnedAboutRegExpMultiline(false),
-    addonId(options.addonIdOrNull()),
 #ifdef DEBUG
     firedOnNewGlobalObject(false),
 #endif
@@ -71,7 +71,6 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     lazyArrayBuffers(nullptr),
     nonSyntacticLexicalScopes_(nullptr),
     gcIncomingGrayPointers(nullptr),
-    gcPreserveJitCode(options.preserveJitCode()),
     debugModeBits(0),
     watchpointMap(nullptr),
     scriptCountsMap(nullptr),
@@ -88,7 +87,8 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
 {
     PodArrayZero(sawDeprecatedLanguageExtension);
     runtime_->numCompartments++;
-    MOZ_ASSERT_IF(options.mergeable(), options.invisibleToDebugger());
+    MOZ_ASSERT_IF(creationOptions_.mergeable(),
+                  creationOptions_.invisibleToDebugger());
 }
 
 JSCompartment::~JSCompartment()
@@ -1148,7 +1148,7 @@ JSCompartment::reportTelemetry()
     // Hazard analysis can't tell that the telemetry callbacks don't GC.
     JS::AutoSuppressGCAnalysis nogc;
 
-    int id = addonId
+    int id = creationOptions_.addonIdOrNull()
              ? JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_ADDONS
              : JS_TELEMETRY_DEPRECATED_LANGUAGE_EXTENSIONS_IN_CONTENT;
 
@@ -1163,7 +1163,9 @@ void
 JSCompartment::addTelemetry(const char* filename, DeprecatedLanguageExtension e)
 {
     // Only report telemetry for web content and add-ons, not chrome JS.
-    if (isSystem_ || (!addonId && (!filename || strncmp(filename, "http", 4) != 0)))
+    if (isSystem_)
+        return;
+    if (!creationOptions_.addonIdOrNull() && (!filename || strncmp(filename, "http", 4) != 0))
         return;
 
     sawDeprecatedLanguageExtension[e] = true;

@@ -2988,13 +2988,13 @@ END_CASE(JSOP_SYMBOL)
 CASE(JSOP_OBJECT)
 {
     ReservedRooted<JSObject*> ref(&rootObject0, script->getObject(REGS.pc));
-    if (JS::CompartmentOptionsRef(cx).cloneSingletons()) {
+    if (cx->compartment()->creationOptions().cloneSingletons()) {
         JSObject* obj = DeepCloneObjectLiteral(cx, ref, TenuredObject);
         if (!obj)
             goto error;
         PUSH_OBJECT(*obj);
     } else {
-        JS::CompartmentOptionsRef(cx).setSingletonsAsValues();
+        cx->compartment()->behaviors().setSingletonsAsValues();
         PUSH_OBJECT(*ref);
     }
 }
