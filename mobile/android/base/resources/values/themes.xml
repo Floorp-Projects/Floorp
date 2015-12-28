@@ -111,6 +111,8 @@
 
     <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
         <item name="floatingHintEditTextStyle">@style/FloatingHintEditText</item>
+        <!-- This fixed bug 1233412 (Crash in GeckoPrefs due to missing colorAccent in JB) -->
+        <item name="colorAccent">@color/action_orange</item>
     </style>
 
     <!-- Make an activity appear like an overlay. -->
