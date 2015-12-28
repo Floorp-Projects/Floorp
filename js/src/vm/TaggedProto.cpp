@@ -14,18 +14,19 @@
 namespace js {
 
 /* static */ void
-InternalGCMethods<TaggedProto>::preBarrier(TaggedProto& proto)
+InternalBarrierMethods<TaggedProto>::preBarrier(TaggedProto& proto)
 {
-    InternalGCMethods<JSObject*>::preBarrier(proto.toObjectOrNull());
+    InternalBarrierMethods<JSObject*>::preBarrier(proto.toObjectOrNull());
 }
 
 /* static */ void
-InternalGCMethods<TaggedProto>::postBarrier(TaggedProto* vp, TaggedProto prev, TaggedProto next)
+InternalBarrierMethods<TaggedProto>::postBarrier(TaggedProto* vp, TaggedProto prev,
+                                                 TaggedProto next)
 {
     JSObject* prevObj = prev.isObject() ? prev.toObject() : nullptr;
     JSObject* nextObj = next.isObject() ? next.toObject() : nullptr;
-    InternalGCMethods<JSObject*>::postBarrier(reinterpret_cast<JSObject**>(vp), prevObj,
-                                              nextObj);
+    InternalBarrierMethods<JSObject*>::postBarrier(reinterpret_cast<JSObject**>(vp), prevObj,
+                                                   nextObj);
 }
 
 } // namespace js

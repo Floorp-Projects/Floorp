@@ -52,12 +52,14 @@ class TaggedProto : public JS::Traceable
     JSObject* proto;
 };
 
-template <> struct GCMethods<TaggedProto>
+template <>
+struct GCPolicy<TaggedProto>
 {
     static TaggedProto initial() { return TaggedProto(); }
 };
 
-template <> struct InternalGCMethods<TaggedProto>
+template <>
+struct InternalBarrierMethods<TaggedProto>
 {
     static void preBarrier(TaggedProto& proto);
 
