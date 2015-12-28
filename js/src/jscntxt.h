@@ -11,7 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "js/TraceableVector.h"
+#include "js/GCVector.h"
 #include "js/Vector.h"
 #include "vm/Runtime.h"
 
