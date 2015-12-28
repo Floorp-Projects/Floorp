@@ -123,7 +123,6 @@ BEGIN_TEST(testGCFinalizeCallback)
 JSObject* createTestGlobal()
 {
     JS::CompartmentOptions options;
-    options.setVersion(JSVERSION_LATEST);
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook, options);
 }
 
