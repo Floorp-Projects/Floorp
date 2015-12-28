@@ -64,6 +64,7 @@ private:
   bool mURIWasModified;
   nsCOMPtr<nsIStructuredCloneContainer> mStateData;
   bool mIsSrcdocEntry;
+  bool mScrollRestorationIsManual;
   nsString mSrcdocData;
   nsCOMPtr<nsIURI> mBaseURI;
 };

@@ -423,7 +423,7 @@ nsContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
                ("nsContainerFrame::CreateViewForFrame: frame=%p view=%p",
-                aFrame));
+                aFrame, view));
 }
 
 /**
