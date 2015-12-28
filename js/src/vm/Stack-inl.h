@@ -1023,12 +1023,6 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
     return true;
 }
 
-inline JSContext*
-AsmJSActivation::cx()
-{
-    return cx_->asJSContext();
-}
-
 inline bool
 FrameIter::hasCachedSavedFrame() const
 {

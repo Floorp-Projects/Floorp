@@ -19,12 +19,14 @@ class JSScript;
 
 namespace js {
     class Activation;
-    class AsmJSProfilingFrameIterator;
     namespace jit {
         class JitActivation;
         class JitProfilingFrameIterator;
         class JitcodeGlobalEntry;
     } // namespace jit
+    namespace wasm {
+        class ProfilingFrameIterator;
+    } // namespace wasm
 } // namespace js
 
 namespace JS {
@@ -49,15 +51,15 @@ class JS_PUBLIC_API(ProfilingFrameIterator)
 
     static const unsigned StorageSpace = 8 * sizeof(void*);
     mozilla::AlignedStorage<StorageSpace> storage_;
-    js::AsmJSProfilingFrameIterator& asmJSIter() {
+    js::wasm::ProfilingFrameIterator& asmJSIter() {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isAsmJS());
-        return *reinterpret_cast<js::AsmJSProfilingFrameIterator*>(storage_.addr());
+        return *reinterpret_cast<js::wasm::ProfilingFrameIterator*>(storage_.addr());
     }
-    const js::AsmJSProfilingFrameIterator& asmJSIter() const {
+    const js::wasm::ProfilingFrameIterator& asmJSIter() const {
         MOZ_ASSERT(!done());
         MOZ_ASSERT(isAsmJS());
-        return *reinterpret_cast<const js::AsmJSProfilingFrameIterator*>(storage_.addr());
+        return *reinterpret_cast<const js::wasm::ProfilingFrameIterator*>(storage_.addr());
     }
 
     js::jit::JitProfilingFrameIterator& jitIter() {

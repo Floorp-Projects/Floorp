@@ -36,7 +36,6 @@
 
 #include <float.h>
 
-#include "asmjs/AsmJSValidate.h"
 #include "jit/mips64/Assembler-mips64.h"
 #include "vm/Runtime.h"
 

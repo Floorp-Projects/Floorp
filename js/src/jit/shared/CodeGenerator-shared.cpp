@@ -1521,7 +1521,7 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
         masm.call(mir->desc(), ToRegister(ins->getOperand(mir->dynamicCalleeOperandIndex())));
         break;
       case MAsmJSCall::Callee::Builtin:
-        masm.call(BuiltinToImmediate(callee.builtin()));
+        masm.call(callee.builtin());
         break;
     }
 

@@ -16,22 +16,21 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_generator_h
-#define asmjs_wasm_generator_h
+#ifndef wasm_generator_h
+#define wasm_generator_h
 
 #include "asmjs/WasmIonCompile.h"
-#include "asmjs/WasmStubs.h"
+#include "asmjs/WasmIR.h"
+#include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
 namespace js {
-
-class AsmJSModule;
-namespace fronted { class TokenStream; }
-
 namespace wasm {
 
 class FunctionGenerator;
 
+// A slow function describes a function that took longer than msThreshold to
+// validate and compile.
 struct SlowFunction
 {
     SlowFunction(PropertyName* name, unsigned ms, unsigned line, unsigned column)
@@ -45,7 +44,6 @@ struct SlowFunction
     unsigned line;
     unsigned column;
 };
-
 typedef Vector<SlowFunction> SlowFunctionVector;
 
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
@@ -55,19 +53,7 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 // compilation and extract the resulting wasm module.
 class MOZ_STACK_CLASS ModuleGenerator
 {
-  public:
-    typedef Vector<uint32_t, 0, SystemAllocPolicy> FuncIndexVector;
-
-  private:
-    struct FuncPtrTable
-    {
-        uint32_t numDeclared;
-        FuncIndexVector elems;
-
-        explicit FuncPtrTable(uint32_t numDeclared) : numDeclared(numDeclared) {}
-        FuncPtrTable(FuncPtrTable&& rhs) : numDeclared(rhs.numDeclared), elems(Move(rhs.elems)) {}
-    };
-    typedef Vector<FuncPtrTable> FuncPtrTableVector;
+    typedef Vector<uint32_t> FuncOffsetVector;
 
     struct SigHashPolicy
     {
@@ -77,45 +63,95 @@ class MOZ_STACK_CLASS ModuleGenerator
     };
     typedef HashSet<const LifoSig*, SigHashPolicy> SigSet;
 
-    ExclusiveContext*                      cx_;
-    ScopedJSDeletePtr<AsmJSModule>         module_;
+    ExclusiveContext*             cx_;
+    CompileArgs                   args_;
 
-    LifoAlloc                              lifo_;
-    jit::TempAllocator                     alloc_;
-    jit::MacroAssembler                    masm_;
-    SigSet                                 sigs_;
+    // Data handed over to the Module in finish()
+    uint32_t                      globalBytes_;
+    ImportVector                  imports_;
+    ExportVector                  exports_;
+    CodeRangeVector               codeRanges_;
+    CacheableCharsVector          funcNames_;
 
-    bool                                   parallel_;
-    uint32_t                               outstanding_;
-    Vector<CompileTask>                    tasks_;
-    Vector<CompileTask*>                   freeTasks_;
+    // Data handed back to the caller in finish()
+    UniqueStaticLinkData          staticLinkData_;
+    SlowFunctionVector            slowFuncs_;
 
-    FuncOffsetVector                       funcEntryOffsets_;
-    FuncPtrTableVector                     funcPtrTables_;
+    // Data scoped to the ModuleGenerator's lifetime
+    LifoAlloc                     lifo_;
+    jit::JitContext               jcx_;
+    jit::TempAllocator            alloc_;
+    jit::MacroAssembler           masm_;
+    SigSet                        sigs_;
 
-    SlowFunctionVector                     slowFuncs_;
-    mozilla::DebugOnly<FunctionGenerator*> active_;
+    // Parallel compilation
+    bool                          parallel_;
+    uint32_t                      outstanding_;
+    Vector<IonCompileTask>        tasks_;
+    Vector<IonCompileTask*>       freeTasks_;
 
+    // Function compilation
+    uint32_t                      funcBytes_;
+    FuncOffsetVector              funcEntryOffsets_;
+    DebugOnly<FunctionGenerator*> activeFunc_;
+    DebugOnly<bool>               finishedFuncs_;
+
+    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
     bool finishOutstandingTask();
-    bool finishTask(CompileTask* task);
-    CompileArgs args() const;
+    bool finishTask(IonCompileTask* task);
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init(ScriptSource* ss, uint32_t srcStart, uint32_t srcBodyStart, bool strict);
-    AsmJSModule& module() const { return *module_; }
+    bool init();
+
+    CompileArgs args() const { return args_; }
+    jit::MacroAssembler& masm() { return masm_; }
+    const FuncOffsetVector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
     const LifoSig* newLifoSig(const MallocSig& sig);
-    bool declareFuncPtrTable(uint32_t numElems, uint32_t* funcPtrTableIndex);
-    bool defineFuncPtrTable(uint32_t funcPtrTableIndex, FuncIndexVector&& elems);
 
+    // Global data:
+    bool allocateGlobalVar(ValType type, uint32_t* globalDataOffset);
+
+    // Imports:
+    bool declareImport(MallocSig&& sig, uint32_t* index);
+    uint32_t numDeclaredImports() const;
+    uint32_t importExitGlobalDataOffset(uint32_t index) const;
+    const MallocSig& importSig(uint32_t index) const;
+    bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
+
+    // Exports:
+    bool declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* index);
+    uint32_t numDeclaredExports() const;
+    uint32_t exportFuncIndex(uint32_t index) const;
+    const MallocSig& exportSig(uint32_t index) const;
+    bool defineExport(uint32_t index, Offsets offsets);
+
+    // Functions:
     bool startFunc(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
     bool finishFunc(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime, FunctionGenerator* fg);
+    bool finishFuncs();
 
-    bool finish(frontend::TokenStream& ts, ScopedJSDeletePtr<AsmJSModule>* module,
-                SlowFunctionVector* slowFuncs);
+    // Function-pointer tables:
+    bool declareFuncPtrTable(uint32_t numElems, uint32_t* index);
+    uint32_t funcPtrTableGlobalDataOffset(uint32_t index) const;
+    void defineFuncPtrTable(uint32_t index, const Vector<uint32_t>& elemFuncIndices);
+
+    // Stubs:
+    bool defineInlineStub(Offsets offsets);
+    bool defineSyncInterruptStub(ProfilingOffsets offsets);
+    bool defineAsyncInterruptStub(Offsets offsets);
+    bool defineOutOfBoundsStub(Offsets offsets);
+
+    // Null return indicates failure. The caller must immediately root a
+    // non-null return value.
+    Module* finish(Module::HeapBool usesHeap,
+                   Module::SharedBool sharedHeap,
+                   UniqueChars filename,
+                   UniqueStaticLinkData* staticLinkData,
+                   SlowFunctionVector* slowFuncs);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
@@ -128,7 +164,7 @@ class MOZ_STACK_CLASS FunctionGenerator
     friend class ModuleGenerator;
 
     ModuleGenerator* m_;
-    CompileTask*     task_;
+    IonCompileTask*  task_;
     FuncIR*          func_;
 
   public:
@@ -139,4 +175,4 @@ class MOZ_STACK_CLASS FunctionGenerator
 } // namespace wasm
 } // namespace js
 
-#endif // asmjs_wasm_generator_h
+#endif // wasm_generator_h
