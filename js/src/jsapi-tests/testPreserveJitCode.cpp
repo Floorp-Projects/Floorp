@@ -90,8 +90,8 @@ JSObject*
 createTestGlobal(bool preserveJitCode)
 {
     JS::CompartmentOptions options;
-    options.setVersion(JSVERSION_LATEST);
-    options.setPreserveJitCode(preserveJitCode);
+    options.creationOptions().setPreserveJitCode(preserveJitCode);
+    options.behaviors().setVersion(JSVERSION_LATEST);
     return JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook, options);
 }
 END_TEST(test_PreserveJitCode)

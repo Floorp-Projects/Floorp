@@ -199,7 +199,7 @@ BytecodeCompiler::maybeCompressSource()
         sourceCompressor = maybeSourceCompressor.ptr();
     }
 
-    if (!cx->compartment()->options().discardSource()) {
+    if (!cx->compartment()->behaviors().discardSource()) {
         if (options.sourceIsLazy) {
             scriptSource->setSourceRetrievable();
         } else if (!scriptSource->setSourceCopy(cx, sourceBuffer, sourceArgumentsNotIncluded,
@@ -217,8 +217,8 @@ BytecodeCompiler::canLazilyParse()
 {
     return options.canLazilyParse &&
            !HasNonSyntacticStaticScopeChain(enclosingStaticScope) &&
-           !cx->compartment()->options().disableLazyParsing() &&
-           !cx->compartment()->options().discardSource() &&
+           !cx->compartment()->behaviors().disableLazyParsing() &&
+           !cx->compartment()->behaviors().discardSource() &&
            !options.sourceIsLazy &&
            !cx->lcovEnabled();
 }

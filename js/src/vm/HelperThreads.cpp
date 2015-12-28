@@ -350,20 +350,26 @@ js::StartOffThreadParseScript(JSContext* cx, const ReadOnlyCompileOptions& optio
     // which could require barriers on the atoms compartment.
     gc::AutoSuppressGC suppress(cx);
 
-    JS::CompartmentOptions compartmentOptions(cx->compartment()->options());
-    compartmentOptions.setZone(JS::FreshZone);
-    compartmentOptions.setInvisibleToDebugger(true);
-    compartmentOptions.setMergeable(true);
+    JSCompartment* currentCompartment = cx->compartment();
+
+    JS::CompartmentOptions compartmentOptions(currentCompartment->creationOptions(),
+                                              currentCompartment->behaviors());
+
+    auto& creationOptions = compartmentOptions.creationOptions();
+
+    creationOptions.setInvisibleToDebugger(true)
+                   .setMergeable(true)
+                   .setZone(JS::FreshZone);
 
     // Don't falsely inherit the host's global trace hook.
-    compartmentOptions.setTrace(nullptr);
+    creationOptions.setTrace(nullptr);
 
     JSObject* global = JS_NewGlobalObject(cx, &parseTaskGlobalClass, nullptr,
                                           JS::FireOnNewGlobalHook, compartmentOptions);
     if (!global)
         return false;
 
-    JS_SetCompartmentPrincipals(global->compartment(), cx->compartment()->principals());
+    JS_SetCompartmentPrincipals(global->compartment(), currentCompartment->principals());
 
     // Initialize all classes required for parsing while still on the main
     // thread, for both the target and the new global so that prototype

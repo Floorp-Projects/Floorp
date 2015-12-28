@@ -284,7 +284,7 @@ CompileCompartment::hasObjectMetadataCallback()
 void
 CompileCompartment::setSingletonsAsValues()
 {
-    return JS::CompartmentOptionsRef(compartment()).setSingletonsAsValues();
+    compartment()->behaviors().setSingletonsAsValues();
 }
 
 JitCompileOptions::JitCompileOptions()
@@ -296,8 +296,7 @@ JitCompileOptions::JitCompileOptions()
 
 JitCompileOptions::JitCompileOptions(JSContext* cx)
 {
-    JS::CompartmentOptions& options = cx->compartment()->options();
-    cloneSingletons_ = options.cloneSingletons();
+    cloneSingletons_ = cx->compartment()->creationOptions().cloneSingletons();
     spsSlowAssertionsEnabled_ = cx->runtime()->spsProfiler.enabled() &&
                                 cx->runtime()->spsProfiler.slowAssertionsEnabled();
     offThreadCompilationAvailable_ = OffThreadCompilationAvailable(cx);
