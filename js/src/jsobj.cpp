@@ -38,7 +38,7 @@
 #include "jswin.h"
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSModule.h"
+#include "asmjs/AsmJS.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SymbolObject.h"

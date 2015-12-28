@@ -9,7 +9,7 @@
 #include "jscntxt.h"
 #include "jsscript.h"
 
-#include "asmjs/AsmJSLink.h"
+#include "asmjs/AsmJS.h"
 #include "builtin/ModuleObject.h"
 #include "frontend/BytecodeEmitter.h"
 #include "frontend/FoldConstants.h"
@@ -663,7 +663,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
         }
     } else {
         fun.set(fn->pn_funbox->function());
-        MOZ_ASSERT(IsAsmJSModuleNative(fun->native()));
+        MOZ_ASSERT(IsAsmJSModule(fun));
     }
 
     if (!maybeCompleteCompressSource())
