@@ -27,7 +27,6 @@
 
 #include "jit/Registers.h"
 #include "js/TypeDecls.h"
-#include "vm/NativeObject.h"
 
 namespace js {
 

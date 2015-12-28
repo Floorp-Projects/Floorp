@@ -16,7 +16,7 @@
 #include "jsscript.h"
 #include "jsutil.h"
 
-#include "asmjs/AsmJSFrameIterator.h"
+#include "asmjs/WasmFrameIterator.h"
 #include "gc/Rooting.h"
 #include "jit/JitFrameIterator.h"
 #ifdef CHECK_OSIPOINT_REGISTERS
@@ -1804,13 +1804,12 @@ class AsmJSActivation : public Activation
     void* entrySP_;
     void* resumePC_;
     uint8_t* fp_;
-    uint32_t packedExitReason_;
+    wasm::ExitReason exitReason_;
 
   public:
     AsmJSActivation(JSContext* cx, AsmJSModule& module);
     ~AsmJSActivation();
 
-    inline JSContext* cx();
     AsmJSModule& module() const { return module_; }
     AsmJSActivation* prevAsmJS() const { return prevAsmJS_; }
 
@@ -1823,7 +1822,7 @@ class AsmJSActivation : public Activation
     uint8_t* fp() const { return fp_; }
 
     // Returns the reason why asm.js code called out of asm.js code.
-    wasm::ExitReason exitReason() const { return wasm::ExitReason::unpack(packedExitReason_); }
+    wasm::ExitReason exitReason() const { return exitReason_; }
 
     // Read by JIT code:
     static unsigned offsetOfContext() { return offsetof(AsmJSActivation, cx_); }
@@ -1832,7 +1831,7 @@ class AsmJSActivation : public Activation
     // Written by JIT code:
     static unsigned offsetOfEntrySP() { return offsetof(AsmJSActivation, entrySP_); }
     static unsigned offsetOfFP() { return offsetof(AsmJSActivation, fp_); }
-    static unsigned offsetOfPackedExitReason() { return offsetof(AsmJSActivation, packedExitReason_); }
+    static unsigned offsetOfExitReason() { return offsetof(AsmJSActivation, exitReason_); }
 
     // Read/written from SIGSEGV handler:
     void setResumePC(void* pc) { resumePC_ = pc; }
@@ -1889,7 +1888,7 @@ class FrameIter
 
         jit::JitFrameIterator jitFrames_;
         unsigned ionInlineFrameNo_;
-        AsmJSFrameIterator asmJSFrames_;
+        wasm::FrameIterator asmJSFrames_;
 
         Data(JSContext* cx, SavedOption savedOption, ContextOption contextOption,
              DebuggerEvalOption debuggerEvalOption, JSPrincipals* principals);

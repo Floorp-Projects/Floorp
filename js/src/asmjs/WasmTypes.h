@@ -16,10 +16,13 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_h
-#define asmjs_wasm_h
+#ifndef wasm_types_h
+#define wasm_types_h
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
+#include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #include "ds/LifoAlloc.h"
 #include "jit/IonTypes.h"
@@ -27,9 +30,15 @@
 #include "js/Vector.h"
 
 namespace js {
+
+class PropertyName;
+
 namespace wasm {
 
 using mozilla::Move;
+using mozilla::DebugOnly;
+using mozilla::UniquePtr;
+using mozilla::MallocSizeOf;
 
 // The ValType enum represents the WebAssembly "value type", which are used to
 // specify the type of locals and parameters.
@@ -264,6 +273,76 @@ class LifoSig : public Sig<LifoAllocPolicy<Fallible>>
     }
 };
 
+// The (,Profiling,Func)Offsets classes are used to record the offsets of
+// different key points in a CodeRange during compilation.
+
+struct Offsets
+{
+    MOZ_IMPLICIT Offsets(uint32_t begin = 0, uint32_t end = 0)
+      : begin(begin), end(end)
+    {}
+
+    // These define a [begin, end) contiguous range of instructions compiled
+    // into a CodeRange.
+    uint32_t begin;
+    uint32_t end;
+
+    void offsetBy(uint32_t offset) {
+        begin += offset;
+        end += offset;
+    }
+};
+
+struct ProfilingOffsets : Offsets
+{
+    MOZ_IMPLICIT ProfilingOffsets(uint32_t profilingReturn = 0)
+      : Offsets(), profilingReturn(profilingReturn)
+    {}
+
+    // For CodeRanges with ProfilingOffsets, 'begin' is the offset of the
+    // profiling entry.
+    uint32_t profilingEntry() const { return begin; }
+
+    // The profiling return is the offset of the return instruction, which
+    // precedes the 'end' by a variable number of instructions due to
+    // out-of-line codegen.
+    uint32_t profilingReturn;
+
+    void offsetBy(uint32_t offset) {
+        Offsets::offsetBy(offset);
+        profilingReturn += offset;
+    }
+};
+
+struct FuncOffsets : ProfilingOffsets
+{
+    MOZ_IMPLICIT FuncOffsets(uint32_t nonProfilingEntry = 0,
+                             uint32_t profilingJump = 0,
+                             uint32_t profilingEpilogue = 0)
+      : ProfilingOffsets(),
+        nonProfilingEntry(nonProfilingEntry),
+        profilingJump(profilingJump),
+        profilingEpilogue(profilingEpilogue)
+    {}
+
+    // Function CodeRanges have an additional non-profiling entry that comes
+    // after the profiling entry and a non-profiling epilogue that comes before
+    // the profiling epilogue.
+    uint32_t nonProfilingEntry;
+
+    // When profiling is enabled, the 'nop' at offset 'profilingJump' is
+    // overwritten to be a jump to 'profilingEpilogue'.
+    uint32_t profilingJump;
+    uint32_t profilingEpilogue;
+
+    void offsetBy(uint32_t offset) {
+        ProfilingOffsets::offsetBy(offset);
+        nonProfilingEntry += offset;
+        profilingJump += offset;
+        profilingEpilogue += offset;
+    }
+};
+
 // While the frame-pointer chain allows the stack to be unwound without
 // metadata, Error.stack still needs to know the line/column of every call in
 // the chain. A CallSiteDesc describes a single callsite to which CallSite adds
@@ -438,10 +517,14 @@ class HeapAccess {
 
 typedef Vector<HeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
 
-// A wasm::Builtin represents a function implemented by the engine that is
-// called directly from wasm code and should show up in the callstack.
+// A wasm::SymbolicAddress represents a pointer to a well-known function or
+// object that is embedded in wasm code. Since wasm code is serialized and
+// later deserialized into a different address space, symbolic addresses must be
+// used for *all* pointers into the address space. The MacroAssembler records a
+// list of all SymbolicAddresses and the offsets of their use in the code for
+// later patching during static linking.
 
-enum class Builtin : uint16_t
+enum class SymbolicAddress
 {
     ToInt32,
 #if defined(JS_CODEGEN_ARM)
@@ -470,45 +553,6 @@ enum class Builtin : uint16_t
     LogD,
     PowD,
     ATan2D,
-    Limit
-};
-
-// A wasm::SymbolicAddress represents a pointer to a well-known function or
-// object that is embedded in wasm code. Since wasm code is serialized and
-// later deserialized into a different address space, symbolic addresses must be
-// used for *all* pointers into the address space. The MacroAssembler records a
-// list of all SymbolicAddresses and the offsets of their use in the code for
-// later patching during static linking.
-
-enum class SymbolicAddress
-{
-    ToInt32         = unsigned(Builtin::ToInt32),
-#if defined(JS_CODEGEN_ARM)
-    aeabi_idivmod   = unsigned(Builtin::aeabi_idivmod),
-    aeabi_uidivmod  = unsigned(Builtin::aeabi_uidivmod),
-    AtomicCmpXchg   = unsigned(Builtin::AtomicCmpXchg),
-    AtomicXchg      = unsigned(Builtin::AtomicXchg),
-    AtomicFetchAdd  = unsigned(Builtin::AtomicFetchAdd),
-    AtomicFetchSub  = unsigned(Builtin::AtomicFetchSub),
-    AtomicFetchAnd  = unsigned(Builtin::AtomicFetchAnd),
-    AtomicFetchOr   = unsigned(Builtin::AtomicFetchOr),
-    AtomicFetchXor  = unsigned(Builtin::AtomicFetchXor),
-#endif
-    ModD            = unsigned(Builtin::ModD),
-    SinD            = unsigned(Builtin::SinD),
-    CosD            = unsigned(Builtin::CosD),
-    TanD            = unsigned(Builtin::TanD),
-    ASinD           = unsigned(Builtin::ASinD),
-    ACosD           = unsigned(Builtin::ACosD),
-    ATanD           = unsigned(Builtin::ATanD),
-    CeilD           = unsigned(Builtin::CeilD),
-    CeilF           = unsigned(Builtin::CeilF),
-    FloorD          = unsigned(Builtin::FloorD),
-    FloorF          = unsigned(Builtin::FloorF),
-    ExpD            = unsigned(Builtin::ExpD),
-    LogD            = unsigned(Builtin::LogD),
-    PowD            = unsigned(Builtin::PowD),
-    ATan2D          = unsigned(Builtin::ATan2D),
     Runtime,
     RuntimeInterruptUint32,
     StackLimit,
@@ -517,80 +561,41 @@ enum class SymbolicAddress
     OnOutOfBounds,
     OnImpreciseConversion,
     HandleExecutionInterrupt,
-    InvokeFromAsmJS_Ignore,
-    InvokeFromAsmJS_ToInt32,
-    InvokeFromAsmJS_ToNumber,
+    InvokeImport_Void,
+    InvokeImport_I32,
+    InvokeImport_F64,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
     Limit
 };
 
-static inline SymbolicAddress
-BuiltinToImmediate(Builtin b)
+void*
+AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
+
+// The CompileArgs struct captures global parameters that affect all wasm code
+// generation. It also currently is the single source of truth for whether or
+// not to use signal handlers for different purposes.
+
+struct CompileArgs
 {
-    return SymbolicAddress(b);
-}
+    bool useSignalHandlersForOOB;
+    bool useSignalHandlersForInterrupt;
 
-static inline bool
-ImmediateIsBuiltin(SymbolicAddress imm, Builtin* builtin)
-{
-    if (uint32_t(imm) < uint32_t(Builtin::Limit)) {
-        *builtin = Builtin(imm);
-        return true;
-    }
-    return false;
-}
-
-// An ExitReason describes the possible reasons for leaving compiled wasm code
-// or the state of not having left compiled wasm code (ExitReason::None).
-
-class ExitReason
-{
-  public:
-    // List of reasons for execution leaving compiled wasm code (or None, if
-    // control hasn't exited).
-    enum Kind
-    {
-        None,       // default state, the pc is in wasm code
-        Jit,        // fast-path exit to JIT code
-        Slow,       // general case exit to C++ Invoke
-        Interrupt,  // executing an interrupt callback
-        Builtin     // calling into a builtin (native) function
-    };
-
-  private:
-    Kind kind_;
-    wasm::Builtin builtin_;
-
-  public:
-    ExitReason() = default;
-    MOZ_IMPLICIT ExitReason(Kind kind) : kind_(kind) { MOZ_ASSERT(kind != Builtin); }
-    MOZ_IMPLICIT ExitReason(wasm::Builtin builtin) : kind_(Builtin), builtin_(builtin) {}
-    Kind kind() const { return kind_; }
-    wasm::Builtin builtin() const { MOZ_ASSERT(kind_ == Builtin); return builtin_; }
-
-    uint32_t pack() const {
-        static_assert(sizeof(wasm::Builtin) == 2, "fits");
-        return uint16_t(kind_) | (uint16_t(builtin_) << 16);
-    }
-    static ExitReason unpack(uint32_t u32) {
-        static_assert(sizeof(wasm::Builtin) == 2, "fits");
-        ExitReason r;
-        r.kind_ = Kind(uint16_t(u32));
-        r.builtin_ = wasm::Builtin(uint16_t(u32 >> 16));
-        return r;
-    }
+    CompileArgs() = default;
+    explicit CompileArgs(ExclusiveContext* cx);
+    bool operator==(CompileArgs rhs) const;
+    bool operator!=(CompileArgs rhs) const { return !(*this == rhs); }
 };
 
-// A hoisting of constants that would otherwise require #including WasmModule.h
-// everywhere. Values are asserted in WasmModule.h.
+// Constants:
 
 static const unsigned ActivationGlobalDataOffset = 0;
-static const unsigned HeapGlobalDataOffset = sizeof(void*);
-static const unsigned NaN64GlobalDataOffset = 2 * sizeof(void*);
-static const unsigned NaN32GlobalDataOffset = 2 * sizeof(void*) + sizeof(double);
+static const unsigned HeapGlobalDataOffset = ActivationGlobalDataOffset + sizeof(void*);
+static const unsigned NaN64GlobalDataOffset = HeapGlobalDataOffset + sizeof(void*);
+static const unsigned NaN32GlobalDataOffset = NaN64GlobalDataOffset + sizeof(double);
+static const unsigned InitialGlobalDataBytes = NaN32GlobalDataOffset + sizeof(float);
 
 } // namespace wasm
 } // namespace js
 
-#endif // asmjs_wasm_h
+#endif // wasm_types_h

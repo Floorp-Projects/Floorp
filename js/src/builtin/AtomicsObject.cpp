@@ -523,9 +523,9 @@ static void
 GetCurrentAsmJSHeap(SharedMem<void*>* heap, size_t* length)
 {
     JSRuntime* rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
-    AsmJSModule& mod = rt->asmJSActivationStack()->module();
-    *heap = mod.maybeHeap().cast<void*>();
-    *length = mod.heapLength();
+    wasm::Module& module = rt->asmJSActivationStack()->module().wasm();
+    *heap = module.maybeHeap().cast<void*>();
+    *length = module.heapLength();
 }
 
 int32_t

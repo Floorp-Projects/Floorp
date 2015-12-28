@@ -778,7 +778,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
     }
     void movePtr(wasm::SymbolicAddress imm, Register dest) {
         BufferOffset off = movePatchablePtr(ImmWord(0xffffffffffffffffULL), dest);
-        append(AsmJSAbsoluteLink(CodeOffset(off.getOffset()), imm));
+        append(AsmJSAbsoluteAddress(CodeOffset(off.getOffset()), imm));
     }
     void movePtr(ImmGCPtr imm, Register dest) {
         BufferOffset load = movePatchablePtr(ImmPtr(imm.value), dest);

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 
+#include "builtin/ModuleObject.h"
 #include "frontend/TokenStream.h"
 
 namespace js {
