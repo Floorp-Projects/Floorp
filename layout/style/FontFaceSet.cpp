@@ -17,6 +17,7 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/SizePrintfMacros.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsCORSListenerProxy.h"
@@ -792,7 +793,7 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   mUserFontSet->mLocalRulesUsed = false;
 
   if (LOG_ENABLED() && !mRuleFaces.IsEmpty()) {
-    LOG(("userfonts (%p) userfont rules update (%s) rule count: %d",
+    LOG(("userfonts (%p) userfont rules update (%s) rule count: %" PRIuSIZE,
          mUserFontSet.get(),
          (modified ? "modified" : "not modified"),
          mRuleFaces.Length()));

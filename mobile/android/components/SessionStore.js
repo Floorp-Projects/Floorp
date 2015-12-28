@@ -756,10 +756,14 @@ SessionStore.prototype = {
       entry.contentType = aEntry.contentType;
     }
 
-    let x = {}, y = {};
-    aEntry.getScrollPosition(x, y);
-    if (x.value != 0 || y.value != 0) {
-      entry.scroll = x.value + "," + y.value;
+    if (aEntry.scrollRestorationIsManual) {
+      entry.scrollRestorationIsManual = true;
+    } else {
+      let x = {}, y = {};
+      aEntry.getScrollPosition(x, y);
+      if (x.value != 0 || y.value != 0) {
+        entry.scroll = x.value + "," + y.value;
+      }
     }
 
     if (aEntry.owner) {
@@ -862,7 +866,9 @@ SessionStore.prototype = {
       shEntry.stateData.initFromBase64(aEntry.structuredCloneState, aEntry.structuredCloneVersion);
     }
 
-    if (aEntry.scroll) {
+    if (aEntry.scrollRestorationIsManual) {
+      shEntry.scrollRestorationIsManual = true;
+    } else if (aEntry.scroll) {
       let scrollPos = aEntry.scroll.split(",");
       scrollPos = [parseInt(scrollPos[0]) || 0, parseInt(scrollPos[1]) || 0];
       shEntry.setScrollPosition(scrollPos[0], scrollPos[1]);

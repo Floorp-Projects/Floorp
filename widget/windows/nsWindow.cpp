@@ -5083,7 +5083,7 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
     case WM_MOUSEMOVE:
     {
       if (!mMousePresent) {
-        // First MOOUSEMOVE over the client area. Ask for MOUSELEAVE
+        // First MOUSEMOVE over the client area. Ask for MOUSELEAVE
         TRACKMOUSEEVENT mTrack;
         mTrack.cbSize = sizeof(TRACKMOUSEEVENT);
         mTrack.dwFlags = TME_LEAVE;

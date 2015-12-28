@@ -43,7 +43,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(bc3524bd-023c-4fc8-ace1-472bc999fb12)]
+[scriptable, builtinclass, uuid(811aa3e1-7c4d-45ae-89da-ea1b107c60ed)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -1090,4 +1090,10 @@ interface nsIDocShell : nsIDocShellTreeItem
    * top level chrome docshell.
    */
   attribute boolean windowDraggingAllowed;
+
+  /**
+   * Sets/gets the current scroll restoration mode.
+   * @see https://html.spec.whatwg.org/#dom-history-scroll-restoration
+  */
+  attribute boolean currentScrollRestorationIsManual;
 };
