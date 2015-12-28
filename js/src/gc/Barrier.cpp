@@ -90,7 +90,7 @@ template <typename T>
 void
 ReadBarrierFunctor<S>::operator()(T* t)
 {
-    InternalGCMethods<T*>::readBarrier(t);
+    InternalBarrierMethods<T*>::readBarrier(t);
 }
 template void ReadBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
 template void ReadBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
@@ -101,7 +101,7 @@ template <typename T>
 void
 PreBarrierFunctor<S>::operator()(T* t)
 {
-    InternalGCMethods<T*>::preBarrier(t);
+    InternalBarrierMethods<T*>::preBarrier(t);
 }
 template void PreBarrierFunctor<JS::Value>::operator()<JS::Symbol>(JS::Symbol*);
 template void PreBarrierFunctor<JS::Value>::operator()<JSObject>(JSObject*);
@@ -170,12 +170,12 @@ JS_PUBLIC_API(void)
 JS::HeapObjectPostBarrier(JSObject** objp, JSObject* prev, JSObject* next)
 {
     MOZ_ASSERT(objp);
-    js::InternalGCMethods<JSObject*>::postBarrier(objp, prev, next);
+    js::InternalBarrierMethods<JSObject*>::postBarrier(objp, prev, next);
 }
 
 JS_PUBLIC_API(void)
 JS::HeapValuePostBarrier(JS::Value* valuep, const Value& prev, const Value& next)
 {
     MOZ_ASSERT(valuep);
-    js::InternalGCMethods<JS::Value>::postBarrier(valuep, prev, next);
+    js::InternalBarrierMethods<JS::Value>::postBarrier(valuep, prev, next);
 }

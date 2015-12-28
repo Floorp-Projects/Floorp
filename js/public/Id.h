@@ -169,9 +169,14 @@ extern JS_PUBLIC_DATA(const JS::HandleId) JSID_EMPTYHANDLE;
 namespace js {
 
 template <>
-struct GCMethods<jsid>
+struct GCPolicy<jsid>
 {
     static jsid initial() { return JSID_VOID; }
+};
+
+template <>
+struct BarrierMethods<jsid>
+{
     static void postBarrier(jsid* idp, jsid prev, jsid next) {}
 };
 

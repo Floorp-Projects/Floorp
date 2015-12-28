@@ -1699,14 +1699,15 @@ JS_PUBLIC_API(void) HeapValuePostBarrier(Value* valuep, const Value& prev, const
 
 namespace js {
 
-template <> struct GCMethods<const JS::Value>
+template <>
+struct GCPolicy<JS::Value>
 {
     static JS::Value initial() { return JS::UndefinedValue(); }
 };
 
-template <> struct GCMethods<JS::Value>
+template <>
+struct BarrierMethods<JS::Value>
 {
-    static JS::Value initial() { return JS::UndefinedValue(); }
     static gc::Cell* asGCThingOrNull(const JS::Value& v) {
         return v.isMarkable() ? v.toGCThing() : nullptr;
     }
