@@ -683,6 +683,14 @@ add_task(function test_common_initialize()
   gHttpServer = new HttpServer();
   gHttpServer.registerDirectory("/", do_get_file("../data"));
   gHttpServer.start(-1);
+  do_register_cleanup(() => {
+    return new Promise(resolve => {
+      // Ensure all the pending HTTP requests have a chance to finish.
+      continueResponses();
+      // Stop the HTTP server, calling resolve when it's done.
+      gHttpServer.stop(resolve);
+    });
+  });
 
   // Cache locks might prevent concurrent requests to the same resource, and
   // this may block tests that use the interruptible handlers.
