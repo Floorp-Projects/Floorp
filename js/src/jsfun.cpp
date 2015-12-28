@@ -362,7 +362,6 @@ static bool
 ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId id)
 {
     MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
-    MOZ_ASSERT(!fun->isFunctionPrototype());
     MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
     // Assert that fun is not a compiler-created function object, which
@@ -752,7 +751,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
-    functionProto->setIsFunctionPrototype();
 
     const char* rawSource = "() {\n}";
     size_t sourceLen = strlen(rawSource);
