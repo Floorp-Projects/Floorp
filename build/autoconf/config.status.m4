@@ -100,10 +100,6 @@ dnl Picked from autoconf 2.13
 trap '' 1 2 15
 AC_CACHE_SAVE
 
-test "x$prefix" = xNONE && prefix=$ac_default_prefix
-# Let make expand exec_prefix.
-test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
-
 trap 'rm -f $CONFIG_STATUS conftest*; exit 1' 1 2 15
 : ${CONFIG_STATUS=./config.status}
 

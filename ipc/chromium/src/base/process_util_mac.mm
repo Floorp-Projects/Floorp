@@ -129,6 +129,7 @@ bool LaunchApp(const std::vector<std::string>& argv,
       break;
     case PROCESS_ARCH_PPC:
       cpu_types[0] = CPU_TYPE_POWERPC;
+      break;
     default:
       cpu_types[0] = CPU_TYPE_ANY;
       break;
