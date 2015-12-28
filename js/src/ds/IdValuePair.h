@@ -11,8 +11,8 @@
 
 #include "NamespaceImports.h"
 #include "gc/Tracer.h"
+#include "js/GCVector.h"
 #include "js/Id.h"
-#include "js/TraceableVector.h"
 
 namespace js {
 
@@ -37,7 +37,7 @@ struct IdValuePair
     }
 };
 
-using IdValueVector = TraceableVector<IdValuePair>;
+using IdValueVector = GCVector<IdValuePair>;
 
 } /* namespace js */
 
