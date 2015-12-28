@@ -16,6 +16,7 @@
 #include "nsAutoPtr.h"
 
 #include "nsWindowsDllInterceptor.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsWindowsHelpers.h"
 
@@ -478,8 +479,8 @@ DllBlockSet::Write(HANDLE file)
   ::LeaveCriticalSection(&sLock);
 }
 
-static
-wchar_t* getFullPath (PWCHAR filePath, wchar_t* fname)
+static UniquePtr<wchar_t[]>
+getFullPath (PWCHAR filePath, wchar_t* fname)
 {
   // In Windows 8, the first parameter seems to be used for more than just the
   // path name.  For example, its numerical value can be 1.  Passing a non-valid
@@ -494,14 +495,14 @@ wchar_t* getFullPath (PWCHAR filePath, wchar_t* fname)
     return nullptr;
   }
 
-  wchar_t* full_fname = new wchar_t[pathlen+1];
+  auto full_fname = MakeUnique<wchar_t[]>(pathlen+1);
   if (!full_fname) {
     // couldn't allocate memory?
     return nullptr;
   }
 
   // now actually grab it
-  SearchPathW(sanitizedFilePath, fname, L".dll", pathlen + 1, full_fname,
+  SearchPathW(sanitizedFilePath, fname, L".dll", pathlen + 1, full_fname.get(),
               nullptr);
   return full_fname;
 }
@@ -529,7 +530,7 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
 
   int len = moduleFileName->Length / 2;
   wchar_t *fname = moduleFileName->Buffer;
-  nsAutoArrayPtr<wchar_t> full_fname;
+  UniquePtr<wchar_t[]> full_fname;
 
   // The filename isn't guaranteed to be null terminated, but in practice
   // it always will be; ensure that this is so, and bail if not.
@@ -652,23 +653,23 @@ patched_LdrLoadDll (PWCHAR filePath, PULONG flags, PUNICODE_STRING moduleFileNam
       }
 
       if (info->flags & DllBlockInfo::USE_TIMESTAMP) {
-        fVersion = GetTimestamp(full_fname);
+        fVersion = GetTimestamp(full_fname.get());
         if (fVersion > info->maxVersion) {
           load_ok = true;
         }
       } else {
         DWORD zero;
-        DWORD infoSize = GetFileVersionInfoSizeW(full_fname, &zero);
+        DWORD infoSize = GetFileVersionInfoSizeW(full_fname.get(), &zero);
 
         // If we failed to get the version information, we block.
 
         if (infoSize != 0) {
-          nsAutoArrayPtr<unsigned char> infoData(new unsigned char[infoSize]);
+          auto infoData = MakeUnique<unsigned char[]>(infoSize);
           VS_FIXEDFILEINFO *vInfo;
           UINT vInfoLen;
 
-          if (GetFileVersionInfoW(full_fname, 0, infoSize, infoData) &&
-              VerQueryValueW(infoData, L"\\", (LPVOID*) &vInfo, &vInfoLen))
+          if (GetFileVersionInfoW(full_fname.get(), 0, infoSize, infoData.get()) &&
+              VerQueryValueW(infoData.get(), L"\\", (LPVOID*) &vInfo, &vInfoLen))
           {
             fVersion =
               ((unsigned long long)vInfo->dwFileVersionMS) << 32 |
@@ -704,7 +705,7 @@ continue_loading:
       return STATUS_DLL_NOT_FOUND;
     }
 
-    if (IsVistaOrLater() && !CheckASLR(full_fname)) {
+    if (IsVistaOrLater() && !CheckASLR(full_fname.get())) {
       printf_stderr("LdrLoadDll: Blocking load of '%s'.  XPCOM components must support ASLR.\n", dllName);
       return STATUS_DLL_NOT_FOUND;
     }

@@ -20,6 +20,10 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+@keyframes rotate_and_opacity {
+  from { transform: rotate(0deg); opacity: 1;}
+  to { transform: rotate(360deg); opacity: 0;}
+}
 div {
   /* Element needs geometry to be eligible for layerization */
   width: 100px;
@@ -265,5 +269,22 @@ promise_test(function(t) {
   }));
 }, 'isRunningOnCompositor for transitions');
 
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: rotate_and_opacity 100s; ' +
+                               'backface-visibility: hidden; ' +
+                               'transform: none !important;' });
+  var animation = div.getAnimations()[0];
+
+  return animation.ready.then(t.step_func(function() {
+    assert_equals(animation.isRunningOnCompositor, omtaEnabled,
+       'If an animation has a property that can run on the compositor and a '
+       + 'property that cannot (due to Gecko limitations) but where the latter'
+       + 'property is overridden in the CSS cascade, the animation should '
+       + 'still report that it is running on the compositor');
+  }));
+}, 'isRunningOnCompositor is true when a property that would otherwise block ' +
+   'running on the compositor is overridden in the CSS cascade');
+
+</script>
 </script>
 </body>

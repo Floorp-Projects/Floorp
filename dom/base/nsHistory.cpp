@@ -7,7 +7,6 @@
 #include "nsHistory.h"
 
 #include "jsapi.h"
-#include "mozilla/dom/HistoryBinding.h"
 #include "nsCOMPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocument.h"
@@ -94,6 +93,38 @@ nsHistory::GetLength(ErrorResult& aRv) const
   }
 
   return len >= 0 ? len : 0;
+}
+
+ScrollRestoration
+nsHistory::GetScrollRestoration(mozilla::ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !win->HasActiveDocument() || !win->GetDocShell()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return mozilla::dom::ScrollRestoration::Auto;
+  }
+
+  bool currentScrollRestorationIsManual = false;
+  win->GetDocShell()->
+    GetCurrentScrollRestorationIsManual(&currentScrollRestorationIsManual);
+  return currentScrollRestorationIsManual ?
+    mozilla::dom::ScrollRestoration::Manual :
+    mozilla::dom::ScrollRestoration::Auto;
+}
+
+void
+nsHistory::SetScrollRestoration(mozilla::dom::ScrollRestoration aMode,
+                                mozilla::ErrorResult& aRv)
+{
+  nsCOMPtr<nsPIDOMWindow> win(do_QueryReferent(mInnerWindow));
+  if (!win || !win->HasActiveDocument() || !win->GetDocShell()) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  win->GetDocShell()->
+    SetCurrentScrollRestorationIsManual(
+      aMode == mozilla::dom::ScrollRestoration::Manual);
 }
 
 void

@@ -23,7 +23,6 @@ public:
     NS_DECL_NSIRESPROTOCOLHANDLER
 
     NS_FORWARD_NSIPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
-    NS_FORWARD_NSISUBSTITUTINGPROTOCOLHANDLER(mozilla::SubstitutingProtocolHandler::)
 
     nsResProtocolHandler()
       : SubstitutingProtocolHandler("resource", URI_STD | URI_IS_UI_RESOURCE | URI_IS_LOCAL_RESOURCE,
@@ -32,9 +31,33 @@ public:
 
     nsresult Init();
 
+    NS_IMETHOD SetSubstitution(const nsACString& aRoot, nsIURI* aBaseURI) override;
+
+    NS_IMETHOD GetSubstitution(const nsACString& aRoot, nsIURI** aResult) override
+    {
+        return mozilla::SubstitutingProtocolHandler::GetSubstitution(aRoot, aResult);
+    }
+
+    NS_IMETHOD HasSubstitution(const nsACString& aRoot, bool* aResult) override
+    {
+        return mozilla::SubstitutingProtocolHandler::HasSubstitution(aRoot, aResult);
+    }
+
+    NS_IMETHOD ResolveURI(nsIURI *aResURI, nsACString& aResult) override
+    {
+        return mozilla::SubstitutingProtocolHandler::ResolveURI(aResURI, aResult);
+    }
+
 protected:
     nsresult GetSubstitutionInternal(const nsACString& aRoot, nsIURI** aResult) override;
     virtual ~nsResProtocolHandler() {}
+
+    bool ResolveSpecialCases(const nsACString& aHost, const nsACString& aPath,
+                             nsACString& aResult) override;
+
+private:
+    nsCString mAppURI;
+    nsCString mGREURI;
 };
 
 #endif /* nsResProtocolHandler_h___ */

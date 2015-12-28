@@ -18,8 +18,8 @@ class nsPresState;
 template<typename> struct already_AddRefed;
 
 #define NS_ILAYOUTHISTORYSTATE_IID \
-{ 0x5208993e, 0xd812, 0x431e, \
-  { 0x95, 0x9c, 0xc3, 0x84, 0x5b, 0x6e, 0x5a, 0xce } }
+{ 0xaef27cb3, 0x4df9, 0x4eeb, \
+  { 0xb0, 0xb0, 0xac, 0x56, 0xcf, 0x86, 0x1d, 0x04 } }
 
 class nsILayoutHistoryState : public nsISupports {
  public: 
@@ -53,6 +53,11 @@ class nsILayoutHistoryState : public nsISupports {
    * or all possible history
    */
   virtual void SetScrollPositionOnly(const bool aFlag) = 0;
+
+  /**
+   * Resets nsPresState::GetScrollState of all nsPresState objects to 0,0.
+   */
+  virtual void ResetScrollState() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutHistoryState,
