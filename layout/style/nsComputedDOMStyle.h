@@ -148,10 +148,6 @@ private:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-  // All of the property getters below return a pointer to a refcounted object
-  // that has just been created, but the refcount is still 0. Caller must take
-  // ownership.
-
   already_AddRefed<CSSValue> GetEllipseRadii(const nsStyleCorners& aRadius,
                                           uint8_t aFullCorner,
                                           bool aIsBorder); // else outline
