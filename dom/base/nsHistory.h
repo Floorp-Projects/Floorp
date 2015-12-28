@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/dom/HistoryBinding.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIDOMHistory.h"
@@ -36,6 +37,9 @@ public:
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   uint32_t GetLength(mozilla::ErrorResult& aRv) const;
+  mozilla::dom::ScrollRestoration GetScrollRestoration(mozilla::ErrorResult& aRv);
+  void SetScrollRestoration(mozilla::dom::ScrollRestoration aMode,
+                            mozilla::ErrorResult& aRv);
   void GetState(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                 mozilla::ErrorResult& aRv) const;
   void Go(int32_t aDelta, mozilla::ErrorResult& aRv);

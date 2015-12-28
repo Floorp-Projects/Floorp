@@ -1813,7 +1813,7 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
     SheetLoadData* data = datasToNotify[i];
     NS_ASSERTION(data && data->mMustNotify, "How did this data get here?");
     if (data->mObserver) {
-      LOG(("  Notifying observer 0x%x for data 0x%x.  wasAlternate: %d",
+      LOG(("  Notifying observer %p for data %p.  wasAlternate: %d",
            data->mObserver.get(), data, data->mWasAlternate));
       data->mObserver->StyleSheetLoaded(data->mSheet, data->mWasAlternate,
                                         aStatus);
@@ -1823,7 +1823,7 @@ Loader::SheetComplete(SheetLoadData* aLoadData, nsresult aStatus)
     nsCOMPtr<nsICSSLoaderObserver> obs;
     while (iter.HasMore()) {
       obs = iter.GetNext();
-      LOG(("  Notifying global observer 0x%x for data 0x%s.  wasAlternate: %d",
+      LOG(("  Notifying global observer %p for data %p.  wasAlternate: %d",
            obs.get(), data, data->mWasAlternate));
       obs->StyleSheetLoaded(data->mSheet, data->mWasAlternate, aStatus);
     }

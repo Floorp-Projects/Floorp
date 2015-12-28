@@ -15,6 +15,11 @@ define([_MOZ_AC_INIT_PREPARE], defn([AC_INIT_PREPARE]))
 define([AC_INIT_PREPARE],
 [_MOZ_AC_INIT_PREPARE($1)
 MOZ_CONFIG_LOG_TRAP
+
+test "x$prefix" = xNONE && prefix=$ac_default_prefix
+# Let make expand exec_prefix.
+test "x$exec_prefix" = xNONE && exec_prefix='${prefix}'
+
 > subconfigures
 > skip_subconfigures
 ])

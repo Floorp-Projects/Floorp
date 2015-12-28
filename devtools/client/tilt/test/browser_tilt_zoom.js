@@ -20,6 +20,25 @@ function test() {
 
   waitForExplicitFinish();
 
+  if (window.windowState == window.STATE_MAXIMIZED) {
+    registerCleanupFunction(function () {
+      window.maximize();
+    });
+
+    window.addEventListener("resize", function onResize(event) {
+      if (event.target == window) {
+        window.removeEventListener("resize", onResize, false);
+        executeSoon(testTilt);
+      }
+    }, false);
+
+    window.restore();
+  } else {
+    testTilt();
+  }
+}
+
+function testTilt() {
   createTab(function() {
     TiltUtils.setDocumentZoom(window, ZOOM);
 
@@ -51,10 +70,17 @@ function test() {
         ok(isApprox(contentWindow.innerHeight * ZOOM, arcball.height, 1),
           "The arcball height wasn't set correctly before the resize.");
 
-
+        window.addEventListener("resize", onResize, false);
         window.resizeBy(-RESIZE * ZOOM, -RESIZE * ZOOM);
 
-        executeSoon(function() {
+        function onResize(event) {
+          if (event.target == window) {
+            window.removeEventListener("resize", onResize, false);
+            executeSoon(afterResize);
+          }
+        }
+
+        function afterResize() {
           ok(isApprox(contentWindow.innerWidth + RESIZE, initialWidth, 1),
             "The content window width wasn't set correctly after the resize.");
           ok(isApprox(contentWindow.innerHeight + RESIZE, initialHeight, 1),
@@ -70,13 +96,11 @@ function test() {
           ok(isApprox(contentWindow.innerHeight * ZOOM, arcball.height, 1),
             "The arcball height wasn't set correctly after the resize.");
 
-
           window.resizeBy(RESIZE * ZOOM, RESIZE * ZOOM);
-
 
           Services.obs.addObserver(cleanup, DESTROYED, false);
           Tilt.destroy(Tilt.currentWindowId);
-        });
+        }
       }
     }, false, function suddenDeath()
     {

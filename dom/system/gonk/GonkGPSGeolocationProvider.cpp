@@ -153,30 +153,53 @@ GonkGPSGeolocationProvider::LocationCallback(GpsLocation* location)
 #endif
 }
 
+class NotifyObserversGPSTask final : public nsRunnable
+{
+public:
+  explicit NotifyObserversGPSTask(const char16_t* aData)
+    : mData(aData)
+  {}
+  NS_IMETHOD Run() override {
+    RefPtr<nsIGeolocationProvider> provider =
+    GonkGPSGeolocationProvider::GetSingleton();
+    nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+    obsService->NotifyObservers(provider, "geolocation-device-events", mData);
+    return NS_OK;
+  }
+private:
+  const char16_t* mData;
+};
+
+
+
 void
 GonkGPSGeolocationProvider::StatusCallback(GpsStatus* status)
 {
-  if (gDebug_isLoggingEnabled) {
-    switch (status->status) {
-      case GPS_STATUS_NONE:
-        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_NONE\n");
-        break;
-      case GPS_STATUS_SESSION_BEGIN:
-        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_SESSION_BEGIN\n");
-        break;
-      case GPS_STATUS_SESSION_END:
-        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_SESSION_END\n");
-        break;
-      case GPS_STATUS_ENGINE_ON:
-        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_ENGINE_ON\n");
-        break;
-      case GPS_STATUS_ENGINE_OFF:
-        nsContentUtils::LogMessageToConsole("geo: GPS_STATUS_ENGINE_OFF\n");
-        break;
-      default:
-        nsContentUtils::LogMessageToConsole("geo: Unknown GPS status\n");
-        break;
-    }
+  const char* msgStream=0;
+  switch (status->status) {
+    case GPS_STATUS_NONE:
+      msgStream = "geo: GPS_STATUS_NONE\n";
+      break;
+    case GPS_STATUS_SESSION_BEGIN:
+      msgStream = "geo: GPS_STATUS_SESSION_BEGIN\n";
+      break;
+    case GPS_STATUS_SESSION_END:
+      msgStream = "geo: GPS_STATUS_SESSION_END\n";
+      break;
+    case GPS_STATUS_ENGINE_ON:
+      msgStream = "geo: GPS_STATUS_ENGINE_ON\n";
+      NS_DispatchToMainThread(new NotifyObserversGPSTask( MOZ_UTF16("GPSStarting")));
+      break;
+    case GPS_STATUS_ENGINE_OFF:
+      msgStream = "geo: GPS_STATUS_ENGINE_OFF\n";
+      NS_DispatchToMainThread(new NotifyObserversGPSTask( MOZ_UTF16("GPSShutdown")));
+      break;
+    default:
+      msgStream = "geo: Unknown GPS status\n";
+      break;
+  }
+  if (gDebug_isLoggingEnabled){
+    nsContentUtils::LogMessageToConsole(msgStream);
   }
 }
 

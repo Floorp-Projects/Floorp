@@ -1,0 +1,128 @@
+<html>
+  <head>
+    <script>
+      var oldHistoryObject = null;
+
+      function test(event) {
+        if (!opener.scrollRestorationTest) {
+          opener.scrollRestorationTest = 0;
+        }
+        ++opener.scrollRestorationTest;
+
+        switch (opener.scrollRestorationTest) {
+          case 1: {
+            opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
+            opener.ok(history.scrollRestoration, "History object has scrollRestoration property.");
+            opener.ok(history.scrollRestoration, "auto", "history.scrollRestoration's default value should be 'auto'.");
+            history.scrollRestoration = "foobar";
+            opener.ok(history.scrollRestoration, "auto", "Invalid enum value should not change the value of an attribute.");
+            history.scrollRestoration = "manual";
+            opener.ok(history.scrollRestoration, "manual", "Valid enum value should change the value of an attribute.");
+            history.scrollRestoration = "auto";
+            opener.ok(history.scrollRestoration, "auto", "Valid enum value should change the value of an attribute.");
+            document.getElementById("bottom").scrollIntoView();
+            window.location.reload(false);
+            break;
+          }
+          case 2: {
+            opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
+            opener.isnot(window.scrollY, 0, "Should have restored scrolling.");
+            opener.is(history.scrollRestoration, "auto", "Should have the same scrollRestoration as before reload.");
+            history.scrollRestoration = "manual";
+            window.onunload = function() {} // Disable bfcache.
+            window.location.reload(false);
+            break;
+          }
+          case 3: {
+            opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
+            opener.is(window.scrollY, 0, "Should not have restored scrolling.");
+            opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload.");
+            document.getElementById("bottom").scrollIntoView();
+            window.onunload = null; // Should get bfcache behavior.
+            opener.setTimeout("testWindow.history.back();", 250);
+            window.location.href = 'data:text/html,';
+            break;
+          }
+          case 4: {
+            opener.is(event.persisted, true, "Should have persisted session history entry.");
+            opener.isnot(window.scrollY, 0, "Should have kept the old scroll position.");
+            opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration as before reload.");
+            window.scrollTo(0, 0);
+            window.location.hash = "hash";
+            requestAnimationFrame(test);
+            break;
+          }
+          case 5: {
+            opener.isnot(window.scrollY, 0, "Should have scrolled to #hash.");
+            opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation.");
+            window.onunload = function() {} // Disable bfcache.
+            opener.setTimeout("is(testWindow.history.scrollRestoration, 'auto'); testWindow.history.back();", 250);
+            window.location.href = 'data:text/html,';
+            break;
+          }
+          case 6: {
+            opener.is(event.persisted, false, "Shouldn't have persisted session history entry.");
+            opener.is(window.scrollY, 0, "Shouldn't have kept the old scroll position.");
+            opener.is(history.scrollRestoration, "manual", "Should have the same scrollRestoration mode as before fragment navigation.");
+            history.scrollRestoration = "auto";
+            document.getElementById("bottom").scrollIntoView();
+            history.pushState({ state: "state1" }, "state1");
+            history.pushState({ state: "state2" }, "state2");
+            window.scrollTo(0, 0);
+            history.back();
+            opener.isnot(window.scrollY, 0, "Should have scrolled back to the state1's position");
+            opener.is(history.state.state, "state1", "Unexpected state.");
+
+            history.scrollRestoration = "manual";
+            document.getElementById("bottom").scrollIntoView();
+            history.pushState({ state: "state3" }, "state3");
+            history.pushState({ state: "state4" }, "state4");
+            window.scrollTo(0, 0);
+            history.back();
+            opener.is(window.scrollY, 0, "Shouldn't have scrolled back to the state3's position");
+            opener.is(history.state.state, "state3", "Unexpected state.");
+
+            var ifr = document.createElement("iframe");
+            ifr.src = "data:text/html,";
+            document.body.appendChild(ifr);
+            ifr.onload = test;
+            break;
+          }
+          case 7: {
+            oldHistoryObject = event.target.contentWindow.history;
+            event.target.src = "about:blank";
+            break;
+          }
+          case 8: {
+            try {
+              var sr = oldHistoryObject.scrollRestoration;
+              opener.ok(false, "Should have thrown an exception.");
+            } catch(ex) {
+              opener.isnot(ex, null, "Did get an exception");
+            }
+            try {
+              oldHistoryObject.scrollRestoration = "auto";
+              opener.ok(false, "Should have thrown an exception.");
+            } catch(ex) {
+              opener.isnot(ex, null, "Did get an exception");
+            }
+            opener.nextTest();
+            window.close();
+            break;
+          }
+        }
+      }
+
+      window.addEventListener("pageshow",
+          function(e) {
+            setTimeout(test, 0, e);
+          });
+    </script>
+  </head>
+  <body>
+  <div style="border: 1px solid black; height: 5000px;">
+  &nbsp;</div>
+  <div id="bottom">Hello world</div>
+  <a href="#hash" name="hash">hash</a>
+  </body>
+</html>
