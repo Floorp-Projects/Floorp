@@ -408,8 +408,4 @@ ExecutableAllocator::poisonCode(JSRuntime* rt, JitPoisonRangeVector& ranges)
     }
 }
 
-#if TARGET_OS_IPHONE
 bool ExecutableAllocator::nonWritableJitCode = true;
-#else
-bool ExecutableAllocator::nonWritableJitCode = false;
-#endif
