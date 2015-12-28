@@ -30,7 +30,7 @@ class nsSHEntryShared;
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsSHEntryShared(nsSHEntryShared);
 
-[scriptable, uuid(3a5e5fa0-5364-4fbb-a87a-3f12a6b51903)]
+[scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
 interface nsISHEntry : nsISupports
 {
     /**
@@ -301,6 +301,12 @@ interface nsISHEntry : nsISupports
      * for example with view-source.
      */
     attribute nsIURI baseURI;
+
+    /**
+     * Sets/gets the current scroll restoration state,
+     * if true == "manual", false == "auto".
+     */
+    attribute boolean scrollRestorationIsManual;
 };
 
 [scriptable, uuid(bb66ac35-253b-471f-a317-3ece940f04c5)]

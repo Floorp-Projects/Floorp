@@ -165,7 +165,7 @@ SafepointWriter::writeGcSlots(LSafepoint* safepoint)
 
 #ifdef JS_JITSPEW
     for (uint32_t i = 0; i < slots.length(); i++)
-        JitSpew(JitSpew_Safepoints, "    gc slot: %d", slots[i]);
+        JitSpew(JitSpew_Safepoints, "    gc slot: %u", slots[i].slot);
 #endif
 
     MapSlotsToBitset(frameSlots_, argumentSlots_, stream_, slots);
@@ -195,7 +195,7 @@ SafepointWriter::writeValueSlots(LSafepoint* safepoint)
 
 #ifdef JS_JITSPEW
     for (uint32_t i = 0; i < slots.length(); i++)
-        JitSpew(JitSpew_Safepoints, "    gc value: %d", slots[i]);
+        JitSpew(JitSpew_Safepoints, "    gc value: %u", slots[i].slot);
 #endif
 
     MapSlotsToBitset(frameSlots_, argumentSlots_, stream_, slots);
