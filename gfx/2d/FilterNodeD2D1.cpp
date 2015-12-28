@@ -575,6 +575,10 @@ FilterNodeD2D1::Create(ID2D1DeviceContext *aDC, FilterType aType)
     return nullptr;
   }
 
+  if (aType == FilterType::ARITHMETIC_COMBINE) {
+    effect->SetValue(D2D1_ARITHMETICCOMPOSITE_PROP_CLAMP_OUTPUT, TRUE);
+  }
+
   RefPtr<FilterNodeD2D1> filter = new FilterNodeD2D1(effect, aType);
 
   if (HasUnboundedOutputRegion(aType)) {
