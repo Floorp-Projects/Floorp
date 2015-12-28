@@ -1136,7 +1136,7 @@ NameToId(PropertyName* name)
     return NON_INTEGER_ATOM_TO_JSID(name);
 }
 
-using PropertyNameVector = js::TraceableVector<PropertyName*>;
+using PropertyNameVector = js::GCVector<PropertyName*>;
 
 template <typename CharT>
 void
