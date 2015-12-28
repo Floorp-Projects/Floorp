@@ -47,6 +47,7 @@ using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
 using mozilla::Move;
+using mozilla::PodCopy;
 using mozilla::PositiveInfinity;
 using JS::AsmJSOption;
 using JS::GenericNaN;
@@ -1387,12 +1388,25 @@ class MOZ_STACK_CLASS ModuleValidator
 
         auto usesHeap = Module::HeapBool(module_->hasArrayView());
         auto sharedHeap = Module::SharedBool(module_->isSharedView());
-        UniqueChars filename = make_string_copy(parser_.ss->filename());
+        auto mutedErrors = Module::MutedBool(parser_.ss->mutedErrors());
+
+        CacheableChars filename = make_string_copy(parser_.ss->filename());
         if (!filename)
             return false;
 
+        CacheableTwoByteChars displayURL;
+        if (parser_.ss->hasDisplayURL()) {
+            uint32_t length = js_strlen(parser_.ss->displayURL());
+            displayURL.reset(js_pod_calloc<char16_t>(length + 1));
+            if (!displayURL)
+                return false;
+            PodCopy(displayURL.get(), parser_.ss->displayURL(), length);
+        }
+
         UniqueStaticLinkData linkData;
-        Module* wasm = mg_.finish(usesHeap, sharedHeap, Move(filename), &linkData, slowFuncs);
+        Module* wasm = mg_.finish(usesHeap, sharedHeap, mutedErrors,
+                                  Move(filename), Move(displayURL),
+                                  &linkData, slowFuncs);
         if (!wasm)
             return false;
 

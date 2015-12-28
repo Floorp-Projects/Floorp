@@ -260,7 +260,7 @@ PopulateReportBlame(JSContext* cx, JSErrorReport* report)
     if (iter.done())
         return;
 
-    report->filename = iter.scriptFilename();
+    report->filename = iter.filename();
     report->lineno = iter.computeLine(&report->column);
     // XXX: Make the column 1-based as in other browsers, instead of 0-based
     // which is how SpiderMonkey stores it internally. This will be

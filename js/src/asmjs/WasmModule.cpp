@@ -46,6 +46,7 @@ using namespace js::jit;
 using namespace js::wasm;
 using mozilla::BinarySearch;
 using mozilla::MakeEnumeratedRange;
+using mozilla::PodCopy;
 using mozilla::PodZero;
 using mozilla::Swap;
 using JS::GenericNaN;
@@ -406,40 +407,62 @@ CodeRange::CodeRange(uint32_t nameIndex, uint32_t lineNumber, FuncOffsets offset
     end_ = offsets.end;
 }
 
+static inline size_t StringLength(const char *s) { return s ? strlen(s) : 0; }
+static inline size_t StringLength(const char16_t *s) { return s ? js_strlen(s) : 0; }
+
+template <class CharT>
 size_t
-CacheableChars::serializedSize() const
+CacheableUniquePtr<CharT>::serializedSize() const
 {
-    return sizeof(uint32_t) + strlen(get());
+    return sizeof(uint32_t) + StringLength(this->get()) * sizeof(CharT);
 }
 
+template <class CharT>
 uint8_t*
-CacheableChars::serialize(uint8_t* cursor) const
+CacheableUniquePtr<CharT>::serialize(uint8_t* cursor) const
 {
-    uint32_t length = strlen(get());
+    uint32_t length = StringLength(this->get());
     cursor = WriteBytes(cursor, &length, sizeof(uint32_t));
-    cursor = WriteBytes(cursor, get(), length);
+    cursor = WriteBytes(cursor, this->get(), length * sizeof(CharT));
     return cursor;
 }
 
+template <class CharT>
 const uint8_t*
-CacheableChars::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+CacheableUniquePtr<CharT>::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
     uint32_t length;
     cursor = ReadBytes(cursor, &length, sizeof(uint32_t));
 
-    reset(js_pod_calloc<char>(length + 1));
-    if (!get())
+    this->reset(cx->pod_calloc<CharT>(length + 1));
+    if (!this->get())
         return nullptr;
 
-    cursor = ReadBytes(cursor, get(), length);
+    cursor = ReadBytes(cursor, this->get(), length * sizeof(CharT));
     return cursor;
 }
 
+template <class CharT>
 bool
-CacheableChars::clone(JSContext* cx, CacheableChars* out) const
+CacheableUniquePtr<CharT>::clone(JSContext* cx, CacheableUniquePtr* out) const
 {
-    *out = make_string_copy(get());
-    return !!*out;
+    uint32_t length = StringLength(this->get());
+
+    UPtr chars(cx->pod_calloc<CharT>(length + 1));
+    if (!chars)
+        return false;
+
+    PodCopy(chars.get(), this->get(), length);
+
+    *out = Move(chars);
+    return true;
+}
+
+namespace js {
+namespace wasm {
+template struct CacheableUniquePtr<char>;
+template struct CacheableUniquePtr<char16_t>;
+}
 }
 
 class Module::AutoMutateCode
@@ -611,7 +634,7 @@ Module::importToExit(const Import& import)
 /* static */ Module::CacheablePod
 Module::zeroPod()
 {
-    CacheablePod pod = {0, 0, 0, false, false, false, false};
+    CacheablePod pod = {0, 0, 0, false, false, false, false, false};
     return pod;
 }
 
@@ -640,6 +663,7 @@ Module::Module(const CacheablePod& pod,
                CallSiteVector&& callSites,
                CacheableCharsVector&& funcNames,
                CacheableChars filename,
+               CacheableTwoByteChars displayURL,
                CacheBool loadedFromCache,
                ProfilingBool profilingEnabled,
                FuncLabelVector&& funcLabels)
@@ -652,6 +676,7 @@ Module::Module(const CacheablePod& pod,
     callSites_(Move(callSites)),
     funcNames_(Move(funcNames)),
     filename_(Move(filename)),
+    displayURL_(Move(displayURL)),
     loadedFromCache_(loadedFromCache),
     profilingEnabled_(profilingEnabled),
     funcLabels_(Move(funcLabels))
@@ -668,6 +693,7 @@ Module::Module(CompileArgs args,
                uint32_t globalBytes,
                HeapBool usesHeap,
                SharedBool sharedHeap,
+               MutedBool mutedErrors,
                UniqueCodePtr code,
                ImportVector&& imports,
                ExportVector&& exports,
@@ -675,7 +701,8 @@ Module::Module(CompileArgs args,
                CodeRangeVector&& codeRanges,
                CallSiteVector&& callSites,
                CacheableCharsVector&& funcNames,
-               CacheableChars filename)
+               CacheableChars filename,
+               CacheableTwoByteChars displayURL)
   : pod(zeroPod()),
     code_(Move(code)),
     imports_(Move(imports)),
@@ -685,6 +712,7 @@ Module::Module(CompileArgs args,
     callSites_(Move(callSites)),
     funcNames_(Move(funcNames)),
     filename_(Move(filename)),
+    displayURL_(Move(displayURL)),
     loadedFromCache_(false),
     profilingEnabled_(false)
 {
@@ -694,6 +722,7 @@ Module::Module(CompileArgs args,
     const_cast<uint32_t&>(pod.globalBytes_) = globalBytes;
     const_cast<bool&>(pod.usesHeap_) = bool(usesHeap);
     const_cast<bool&>(pod.sharedHeap_) = bool(sharedHeap);
+    const_cast<bool&>(pod.mutedErrors_) = bool(mutedErrors);
     const_cast<bool&>(pod.usesSignalHandlersForOOB_) = args.useSignalHandlersForOOB;
     const_cast<bool&>(pod.usesSignalHandlersForInterrupt_) = args.useSignalHandlersForInterrupt;
 
@@ -1022,11 +1051,11 @@ Module::setInterrupted(bool interrupted)
     interrupted_ = interrupted;
 }
 
-AsmJSActivation*&
+WasmActivation*&
 Module::activation()
 {
     MOZ_ASSERT(dynamicallyLinked_);
-    return *reinterpret_cast<AsmJSActivation**>(globalData() + ActivationGlobalDataOffset);
+    return *reinterpret_cast<WasmActivation**>(globalData() + ActivationGlobalDataOffset);
 }
 
 Module::EntryFuncPtr
@@ -1182,7 +1211,8 @@ Module::serializedSize() const
            SerializedPodVectorSize(codeRanges_) +
            SerializedPodVectorSize(callSites_) +
            SerializedVectorSize(funcNames_) +
-           filename_.serializedSize();
+           filename_.serializedSize() +
+           displayURL_.serializedSize();
 }
 
 uint8_t*
@@ -1199,6 +1229,7 @@ Module::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, callSites_);
     cursor = SerializeVector(cursor, funcNames_);
     cursor = filename_.serialize(cursor);
+    cursor = displayURL_.serialize(cursor);
     return cursor;
 }
 
@@ -1251,6 +1282,11 @@ Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniqueModule* o
     if (!cursor)
         return nullptr;
 
+    CacheableTwoByteChars displayURL;
+    cursor = displayURL.deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
     *out = cx->make_unique<Module>(pod,
                                    Move(code),
                                    Move(imports),
@@ -1260,6 +1296,7 @@ Module::deserialize(ExclusiveContext* cx, const uint8_t* cursor, UniqueModule* o
                                    Move(callSites),
                                    Move(funcNames),
                                    Move(filename),
+                                   Move(displayURL),
                                    Module::LoadedFromCache,
                                    Module::ProfilingDisabled,
                                    FuncLabelVector());
@@ -1320,6 +1357,10 @@ Module::clone(JSContext* cx, const StaticLinkData& linkData) const
     if (!filename_.clone(cx, &filename))
         return nullptr;
 
+    CacheableTwoByteChars displayURL;
+    if (!displayURL_.clone(cx, &displayURL))
+        return nullptr;
+
     FuncLabelVector funcLabels;
     if (!CloneVector(cx, funcLabels_, &funcLabels))
         return nullptr;
@@ -1334,6 +1375,7 @@ Module::clone(JSContext* cx, const StaticLinkData& linkData) const
                                        Move(callSites),
                                        Move(funcNames),
                                        Move(filename),
+                                       Move(displayURL),
                                        CacheBool::NotLoadedFromCache,
                                        ProfilingBool(profilingEnabled_),
                                        Move(funcLabels));

@@ -21,7 +21,7 @@
 #include "jslibmath.h"
 #include "jsmath.h"
 
-#include "asmjs/AsmJSModule.h"
+#include "asmjs/WasmModule.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
 
@@ -49,17 +49,17 @@ namespace wasm {
 void
 ReportOverRecursed()
 {
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
     ReportOverRecursed(cx);
 }
 
 bool
 HandleExecutionInterrupt()
 {
-    AsmJSActivation* act = JSRuntime::innermostAsmJSActivation();
-    act->module().wasm().setInterrupted(true);
+    WasmActivation* act = JSRuntime::innermostWasmActivation();
+    act->module().setInterrupted(true);
     bool ret = CheckForInterrupt(act->cx());
-    act->module().wasm().setInterrupted(false);
+    act->module().setInterrupted(false);
     return ret;
 }
 
@@ -70,28 +70,28 @@ static void
 OnDetached()
 {
     // See hasDetachedHeap comment in LinkAsmJS.
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
 }
 
 static void
 OnOutOfBounds()
 {
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_INDEX);
 }
 
 static void
 OnImpreciseConversion()
 {
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
     JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_SIMD_FAILED_CONVERSION);
 }
 
 static int32_t
 CoerceInPlace_ToInt32(MutableHandleValue val)
 {
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
 
     int32_t i32;
     if (!ToInt32(cx, val, &i32))
@@ -104,7 +104,7 @@ CoerceInPlace_ToInt32(MutableHandleValue val)
 static int32_t
 CoerceInPlace_ToNumber(MutableHandleValue val)
 {
-    JSContext* cx = JSRuntime::innermostAsmJSActivation()->cx();
+    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
 
     double dbl;
     if (!ToNumber(cx, val, &dbl))
@@ -119,12 +119,11 @@ CoerceInPlace_ToNumber(MutableHandleValue val)
 static int32_t
 InvokeImport_Void(int32_t importIndex, int32_t argc, Value* argv)
 {
-    AsmJSActivation* activation = JSRuntime::innermostAsmJSActivation();
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
-    Module& module = activation->module().wasm();
 
     RootedValue rval(cx);
-    return module.callImport(cx, importIndex, argc, argv, &rval);
+    return activation->module().callImport(cx, importIndex, argc, argv, &rval);
 }
 
 // Use an int32_t return type instead of bool since bool does not have a
@@ -132,12 +131,11 @@ InvokeImport_Void(int32_t importIndex, int32_t argc, Value* argv)
 static int32_t
 InvokeImport_I32(int32_t importIndex, int32_t argc, Value* argv)
 {
-    AsmJSActivation* activation = JSRuntime::innermostAsmJSActivation();
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
-    Module& module = activation->module().wasm();
 
     RootedValue rval(cx);
-    if (!module.callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
         return false;
 
     int32_t i32;
@@ -153,12 +151,11 @@ InvokeImport_I32(int32_t importIndex, int32_t argc, Value* argv)
 static int32_t
 InvokeImport_F64(int32_t importIndex, int32_t argc, Value* argv)
 {
-    AsmJSActivation* activation = JSRuntime::innermostAsmJSActivation();
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
     JSContext* cx = activation->cx();
-    Module& module = activation->module().wasm();
 
     RootedValue rval(cx);
-    if (!module.callImport(cx, importIndex, argc, argv, &rval))
+    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
         return false;
 
     double dbl;

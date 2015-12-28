@@ -411,7 +411,7 @@ FrameIter::unaliasedForEachActual(JSContext* cx, Op op)
 {
     switch (data_.state_) {
       case DONE:
-      case ASMJS:
+      case WASM:
         break;
       case INTERP:
         interpFrame()->unaliasedForEachActual(op);
@@ -943,8 +943,8 @@ Activation::isProfiling() const
     if (isJit())
         return asJit()->isProfiling();
 
-    MOZ_ASSERT(isAsmJS());
-    return asAsmJS()->isProfiling();
+    MOZ_ASSERT(isWasm());
+    return asWasm()->isProfiling();
 }
 
 Activation*
@@ -1026,7 +1026,7 @@ InterpreterActivation::resumeGeneratorFrame(HandleFunction callee, HandleValue n
 inline bool
 FrameIter::hasCachedSavedFrame() const
 {
-    if (isAsmJS())
+    if (isWasm())
         return false;
 
     if (hasUsableAbstractFramePtr())
@@ -1042,7 +1042,7 @@ FrameIter::hasCachedSavedFrame() const
 inline void
 FrameIter::setHasCachedSavedFrame()
 {
-    MOZ_ASSERT(!isAsmJS());
+    MOZ_ASSERT(!isWasm());
 
     if (hasUsableAbstractFramePtr()) {
         abstractFramePtr().setHasCachedSavedFrame();

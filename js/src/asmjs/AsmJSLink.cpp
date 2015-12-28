@@ -731,12 +731,12 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
     }
 
     {
-        // Push an AsmJSActivation to describe the asm.js frames we're about to
+        // Push a WasmActivation to describe the asm.js frames we're about to
         // push when running this module. Additionally, push a JitActivation so
         // that the optimized asm.js-to-Ion FFI call path (which we want to be
         // very fast) can avoid doing so. The JitActivation is marked as
         // inactive so stack iteration will skip over it.
-        AsmJSActivation activation(cx, asmJSModule);
+        WasmActivation activation(cx, module);
         JitActivation jitActivation(cx, /* active */ false);
 
         // Call the per-exported-function trampoline created by GenerateEntry.
