@@ -82,6 +82,13 @@ class PatchableBackedge : public InlineListNode<PatchableBackedge>
 
 class JitRuntime
 {
+  public:
+    enum BackedgeTarget {
+        BackedgeLoopHeader,
+        BackedgeInterruptCheck
+    };
+
+  private:
     friend class JitCompartment;
 
     // Executable allocator for all code except asm.js code and Ion code with
@@ -152,7 +159,11 @@ class JitRuntime
 
     // If true, the signal handler to interrupt Ion code should not attempt to
     // patch backedges, as we're busy modifying data structures.
-    volatile bool preventBackedgePatching_;
+    mozilla::Atomic<bool> preventBackedgePatching_;
+
+    // Whether patchable backedges currently jump to the loop header or the
+    // interrupt check.
+    BackedgeTarget backedgeTarget_;
 
     // List of all backedges in all Ion code. The backedge edge list is accessed
     // asynchronously when the main thread is paused and preventBackedgePatching_
@@ -247,6 +258,9 @@ class JitRuntime
     bool preventBackedgePatching() const {
         return preventBackedgePatching_;
     }
+    BackedgeTarget backedgeTarget() const {
+        return backedgeTarget_;
+    }
     void addPatchableBackedge(PatchableBackedge* backedge) {
         MOZ_ASSERT(preventBackedgePatching_);
         backedgeList_.pushFront(backedge);
@@ -255,11 +269,6 @@ class JitRuntime
         MOZ_ASSERT(preventBackedgePatching_);
         backedgeList_.remove(backedge);
     }
-
-    enum BackedgeTarget {
-        BackedgeLoopHeader,
-        BackedgeInterruptCheck
-    };
 
     void patchIonBackedges(JSRuntime* rt, BackedgeTarget target);
 
