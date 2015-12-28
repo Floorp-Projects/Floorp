@@ -6,6 +6,9 @@
 
 TEST_DIRS += ['compiledtest']
 
+# Number changes to this file to avoid bug 1081323 (clobber after changing a manifest):
+# 2
+
 MOCHITEST_MANIFESTS += [
     'test/crossorigin/mochitest.ini',
     'test/mochitest-subsuite-webgl.ini',
@@ -170,4 +173,3 @@ CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
 CXXFLAGS += CONFIG['TK_CFLAGS']
 
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
-
