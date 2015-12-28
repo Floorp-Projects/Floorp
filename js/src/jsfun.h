@@ -48,7 +48,7 @@ class JSFunction : public js::NativeObject
         INTERPRETED      = 0x0001,  /* function has a JSScript and environment. */
         CONSTRUCTOR      = 0x0002,  /* function that can be called as a constructor */
         EXTENDED         = 0x0004,  /* structure is FunctionExtended */
-        IS_FUN_PROTO     = 0x0008,  /* function is Function.prototype for some global object */
+        /* 0x0008 unused */
         EXPR_BODY        = 0x0010,  /* arrow function with expression body or
                                      * expression closure: function(x) x*x */
         HAS_GUESSED_ATOM = 0x0020,  /* function had no explicit name, but a
@@ -93,8 +93,8 @@ class JSFunction : public js::NativeObject
         INTERPRETED_GENERATOR = INTERPRETED,
         NO_XDR_FLAGS = RESOLVED_LENGTH | RESOLVED_NAME,
 
-        STABLE_ACROSS_CLONES = IS_FUN_PROTO | CONSTRUCTOR | EXPR_BODY | HAS_GUESSED_ATOM |
-                               LAMBDA | SELF_HOSTED |  HAS_REST | FUNCTION_KIND_MASK
+        STABLE_ACROSS_CLONES = CONSTRUCTOR | EXPR_BODY | HAS_GUESSED_ATOM | LAMBDA |
+                               SELF_HOSTED |  HAS_REST | FUNCTION_KIND_MASK
     };
 
     static_assert((INTERPRETED | INTERPRETED_LAZY) == js::JS_FUNCTION_INTERPRETED_BITS,
@@ -183,7 +183,6 @@ class JSFunction : public js::NativeObject
     bool isAsmJSNative()            const { return kind() == AsmJS; }
 
     /* Possible attributes of an interpreted function: */
-    bool isFunctionPrototype()      const { return flags() & IS_FUN_PROTO; }
     bool isExprBody()               const { return flags() & EXPR_BODY; }
     bool hasGuessedAtom()           const { return flags() & HAS_GUESSED_ATOM; }
     bool isLambda()                 const { return flags() & LAMBDA; }
@@ -285,11 +284,6 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(isNative());
         MOZ_ASSERT(!isIntrinsic());
         flags_ |= SELF_HOSTED;
-    }
-
-    void setIsFunctionPrototype() {
-        MOZ_ASSERT(!isFunctionPrototype());
-        flags_ |= IS_FUN_PROTO;
     }
 
     // Can be called multiple times by the parser.
