@@ -308,7 +308,7 @@ class RobocopTestRunner(MochitestDesktop):
 
     def logTestSummary(self):
         """
-           Print a summary of all tests run to stdout, for treeherder parsing 
+           Print a summary of all tests run to stdout, for treeherder parsing
            (logging via self.log does not work here).
         """
         print("0 INFO TEST-START | Shutdown")
