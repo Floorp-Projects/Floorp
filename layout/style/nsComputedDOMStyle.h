@@ -130,8 +130,8 @@ private:
 
   // Helper method for DoGetTextAlign[Last].
   already_AddRefed<CSSValue> CreateTextAlignValue(uint8_t aAlign,
-                                               bool aAlignTrue,
-                                               const KTableEntry aTable[]);
+                                                  bool aAlignTrue,
+                                                  const KTableEntry aTable[]);
   // This indicates error by leaving mStyleContext null.
   void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
   void ClearCurrentStyleSources();
@@ -149,8 +149,8 @@ private:
 #undef STYLE_STRUCT
 
   already_AddRefed<CSSValue> GetEllipseRadii(const nsStyleCorners& aRadius,
-                                          uint8_t aFullCorner,
-                                          bool aIsBorder); // else outline
+                                             uint8_t aFullCorner,
+                                             bool aIsBorder); // else outline
 
   already_AddRefed<CSSValue> GetOffsetWidthFor(mozilla::css::Side aSide);
 
@@ -187,20 +187,22 @@ private:
                            const nsTArray<nsString>& aLineNames1,
                            const nsTArray<nsString>& aLineNames2);
   already_AddRefed<CSSValue> GetGridTrackSize(const nsStyleCoord& aMinSize,
-                                           const nsStyleCoord& aMaxSize);
-  already_AddRefed<CSSValue> GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList,
-                                                     const nsTArray<nscoord>* aTrackSizes);
+                                              const nsStyleCoord& aMaxSize);
+  already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
+    const nsStyleGridTemplate& aTrackList,
+    const nsTArray<nscoord>* aTrackSizes);
   already_AddRefed<CSSValue> GetGridLine(const nsStyleGridLine& aGridLine);
 
   bool GetLineHeightCoord(nscoord& aCoord);
 
   already_AddRefed<CSSValue> GetCSSShadowArray(nsCSSShadowArray* aArray,
-                                            const nscolor& aDefaultColor,
-                                            bool aIsBoxShadow);
+                                               const nscolor& aDefaultColor,
+                                               bool aIsBoxShadow);
 
-  already_AddRefed<CSSValue> GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
-                                            uint32_t nsStyleBackground::* aCount,
-                                            const KTableEntry aTable[]);
+  already_AddRefed<CSSValue> GetBackgroundList(
+    uint8_t nsStyleBackground::Layer::* aMember,
+    uint32_t nsStyleBackground::* aCount,
+    const KTableEntry aTable[]);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,
                             nsAString& aString);
