@@ -361,7 +361,7 @@ Error(JSContext* cx, unsigned argc, Value* vp)
     } else {
         fileName = cx->runtime()->emptyString;
         if (!iter.done()) {
-            if (const char* cfilename = iter.scriptFilename())
+            if (const char* cfilename = iter.filename())
                 fileName = JS_NewStringCopyZ(cx, cfilename);
         }
     }
@@ -936,7 +936,7 @@ ErrorReport::populateUncaughtExceptionReportVA(JSContext* cx, va_list ap)
     // could accept a passed-in stack of some sort instead.
     NonBuiltinFrameIter iter(cx, cx->compartment()->principals());
     if (!iter.done()) {
-        ownedReport.filename = iter.scriptFilename();
+        ownedReport.filename = iter.filename();
         ownedReport.lineno = iter.computeLine(&ownedReport.column);
         // XXX: Make the column 1-based as in other browsers, instead of 0-based
         // which is how SpiderMonkey stores it internally. This will be

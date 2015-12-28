@@ -5905,24 +5905,8 @@ JS_IsIdentifier(const char16_t* chars, size_t length)
 
 namespace JS {
 
-void
-AutoFilename::reset(void* newScriptSource)
-{
-    if (newScriptSource)
-        reinterpret_cast<ScriptSource*>(newScriptSource)->incref();
-    if (scriptSource_)
-        reinterpret_cast<ScriptSource*>(scriptSource_)->decref();
-    scriptSource_ = newScriptSource;
-}
-
-const char*
-AutoFilename::get() const
-{
-    return scriptSource_ ? reinterpret_cast<ScriptSource*>(scriptSource_)->filename() : nullptr;
-}
-
 JS_PUBLIC_API(bool)
-DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
+DescribeScriptedCaller(JSContext* cx, UniqueChars* filename, unsigned* lineno,
                        unsigned* column)
 {
     if (lineno)
@@ -5939,8 +5923,12 @@ DescribeScriptedCaller(JSContext* cx, AutoFilename* filename, unsigned* lineno,
     if (i.activation()->scriptedCallerIsHidden())
         return false;
 
-    if (filename)
-        filename->reset(i.scriptSource());
+    if (filename) {
+        UniqueChars copy = make_string_copy(i.filename());
+        if (!copy)
+            return false;
+        *filename = Move(copy);
+    }
 
     if (lineno)
         *lineno = i.computeLine(column);

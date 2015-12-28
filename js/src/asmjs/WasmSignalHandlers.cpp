@@ -21,8 +21,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
-#include "asmjs/AsmJSModule.h"
 #include "asmjs/AsmJSValidate.h"
+#include "asmjs/WasmModule.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
 #include "vm/Runtime.h"
@@ -753,11 +753,11 @@ HandleFault(PEXCEPTION_POINTERS exception)
         return false;
     AutoSetHandlingSegFault handling(rt);
 
-    AsmJSActivation* activation = rt->asmJSActivationStack();
+    WasmActivation* activation = rt->wasmActivationStack();
     if (!activation)
         return false;
 
-    const Module& module = activation->module().wasm();
+    const Module& module = activation->module();
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
@@ -896,11 +896,11 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (request.body.exception != EXC_BAD_ACCESS || request.body.codeCnt != 2)
         return false;
 
-    AsmJSActivation* activation = rt->asmJSActivationStack();
+    WasmActivation* activation = rt->wasmActivationStack();
     if (!activation)
         return false;
 
-    const Module& module = activation->module().wasm();
+    const Module& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
@@ -1106,11 +1106,11 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
         return false;
     AutoSetHandlingSegFault handling(rt);
 
-    AsmJSActivation* activation = rt->asmJSActivationStack();
+    WasmActivation* activation = rt->wasmActivationStack();
     if (!activation)
         return false;
 
-    const Module& module = activation->module().wasm();
+    const Module& module = activation->module();
     if (!module.containsFunctionPC(pc))
         return false;
 
@@ -1182,8 +1182,8 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
 {
     RedirectIonBackedgesToInterruptCheck(rt);
 
-    if (AsmJSActivation* activation = rt->asmJSActivationStack()) {
-        const Module& module = activation->module().wasm();
+    if (WasmActivation* activation = rt->wasmActivationStack()) {
+        const Module& module = activation->module();
 
 #ifdef JS_SIMULATOR
         if (module.containsFunctionPC(rt->simulator()->get_pc_as<void*>()))

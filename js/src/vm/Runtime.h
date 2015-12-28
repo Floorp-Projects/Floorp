@@ -88,8 +88,8 @@ ReportOverRecursed(ExclusiveContext* cx);
 
 class Activation;
 class ActivationIterator;
-class AsmJSActivation;
 class MathCache;
+class WasmActivation;
 
 namespace jit {
 class JitRuntime;
@@ -657,7 +657,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend class js::Activation;
     friend class js::ActivationIterator;
     friend class js::jit::JitActivation;
-    friend class js::AsmJSActivation;
+    friend class js::WasmActivation;
     friend class js::jit::CompileRuntime;
 #ifdef DEBUG
     friend void js::AssertCurrentThreadCanLock(js::RuntimeLock which);
@@ -690,8 +690,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferGen_;
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferLapCount_;
 
-    /* See AsmJSActivation comment. */
-    js::AsmJSActivation * volatile asmJSActivationStack_;
+    /* See WasmActivation comment. */
+    js::WasmActivation * volatile wasmActivationStack_;
 
   public:
     /*
@@ -777,12 +777,12 @@ struct JSRuntime : public JS::shadow::Runtime,
         }
     }
 
-    js::AsmJSActivation* asmJSActivationStack() const {
-        return asmJSActivationStack_;
+    js::WasmActivation* wasmActivationStack() const {
+        return wasmActivationStack_;
     }
-    static js::AsmJSActivation* innermostAsmJSActivation() {
+    static js::WasmActivation* innermostWasmActivation() {
         js::PerThreadData* ptd = js::TlsPerThreadData.get();
-        return ptd ? ptd->runtimeFromMainThread()->asmJSActivationStack_ : nullptr;
+        return ptd ? ptd->runtimeFromMainThread()->wasmActivationStack_ : nullptr;
     }
 
     js::Activation* activation() const {

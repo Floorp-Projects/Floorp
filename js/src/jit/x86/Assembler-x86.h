@@ -903,7 +903,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.currentOffset());
     }
 
-    void loadAsmJSActivation(Register dest) {
+    void loadWasmActivation(Register dest) {
         CodeOffset label = movlWithPatch(PatchedAbsoluteAddress(), dest);
         append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }

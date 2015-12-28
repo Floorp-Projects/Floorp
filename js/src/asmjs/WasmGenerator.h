@@ -149,7 +149,9 @@ class MOZ_STACK_CLASS ModuleGenerator
     // non-null return value.
     Module* finish(Module::HeapBool usesHeap,
                    Module::SharedBool sharedHeap,
-                   UniqueChars filename,
+                   Module::MutedBool mutedErrors,
+                   CacheableChars filename,
+                   CacheableTwoByteChars displayURL,
                    UniqueStaticLinkData* staticLinkData,
                    SlowFunctionVector* slowFuncs);
 };

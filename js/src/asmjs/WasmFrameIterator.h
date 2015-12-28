@@ -25,7 +25,7 @@ class JSAtom;
 
 namespace js {
 
-class AsmJSActivation;
+class WasmActivation;
 namespace jit { class MacroAssembler; class Label; }
 
 namespace wasm {
@@ -36,7 +36,7 @@ class Module;
 struct FuncOffsets;
 struct ProfilingOffsets;
 
-// Iterates over the frames of a single AsmJSActivation, called synchronously
+// Iterates over the frames of a single WasmActivation, called synchronously
 // from C++ in the thread of the asm.js. The one exception is that this iterator
 // may be called from the interrupt callback which may be called asynchronously
 // from asm.js code; in this case, the backtrace may not be correct.
@@ -52,7 +52,7 @@ class FrameIterator
 
   public:
     explicit FrameIterator();
-    explicit FrameIterator(const AsmJSActivation& activation);
+    explicit FrameIterator(const WasmActivation& activation);
     void operator++();
     bool done() const { return !fp_; }
     JSAtom* functionDisplayAtom() const;
@@ -69,7 +69,7 @@ enum class ExitReason : uint32_t
     Native         // call to native C++ code (e.g., Math.sin, ToInt32(), interrupt)
 };
 
-// Iterates over the frames of a single AsmJSActivation, given an
+// Iterates over the frames of a single WasmActivation, given an
 // asynchrously-interrupted thread's state. If the activation's
 // module is not in profiling mode, the activation is skipped.
 class ProfilingFrameIterator
@@ -81,12 +81,12 @@ class ProfilingFrameIterator
     void* stackAddress_;
     ExitReason exitReason_;
 
-    void initFromFP(const AsmJSActivation& activation);
+    void initFromFP(const WasmActivation& activation);
 
   public:
     ProfilingFrameIterator();
-    explicit ProfilingFrameIterator(const AsmJSActivation& activation);
-    ProfilingFrameIterator(const AsmJSActivation& activation,
+    explicit ProfilingFrameIterator(const WasmActivation& activation);
+    ProfilingFrameIterator(const WasmActivation& activation,
                            const JS::ProfilingFrameIterator::RegisterState& state);
     void operator++();
     bool done() const { return !codeRange_; }

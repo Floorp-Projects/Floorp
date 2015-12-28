@@ -153,11 +153,11 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHe
 
     // Save the stack pointer to the saved non-volatile registers. We will use
     // this on two paths: normal return and exceptional return. Since
-    // loadAsmJSActivation uses GlobalReg, we must do this after loading
+    // loadWasmActivation uses GlobalReg, we must do this after loading
     // GlobalReg.
     MOZ_ASSERT(masm.framePushed() == FramePushedForEntrySP);
-    masm.loadAsmJSActivation(scratch);
-    masm.storeStackPtr(Address(scratch, AsmJSActivation::offsetOfEntrySP()));
+    masm.loadWasmActivation(scratch);
+    masm.storeStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
 
     // Dynamically align the stack since ABIStackAlignment is not necessarily
     // AsmJSStackAlignment. We'll use entrySP to recover the original stack
@@ -244,8 +244,8 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHe
     masm.call(CallSiteDesc(CallSiteDesc::Relative), &target);
 
     // Recover the stack pointer value before dynamic alignment.
-    masm.loadAsmJSActivation(scratch);
-    masm.loadStackPtr(Address(scratch, AsmJSActivation::offsetOfEntrySP()));
+    masm.loadWasmActivation(scratch);
+    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
     masm.setFramePushed(FramePushedForEntrySP);
 
     // Recover the 'argv' pointer which was saved before aligning the stack.
@@ -575,8 +575,8 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool 
         size_t offsetOfJitJSContext = offsetof(JSRuntime, jitJSContext);
         size_t offsetOfJitActivation = offsetof(JSRuntime, jitActivation);
         size_t offsetOfProfilingActivation = JSRuntime::offsetOfProfilingActivation();
-        masm.loadAsmJSActivation(reg0);
-        masm.loadPtr(Address(reg0, AsmJSActivation::offsetOfContext()), reg3);
+        masm.loadWasmActivation(reg0);
+        masm.loadPtr(Address(reg0, WasmActivation::offsetOfContext()), reg3);
         masm.loadPtr(Address(reg3, JSContext::offsetOfRuntime()), reg0);
         masm.loadPtr(Address(reg0, offsetOfActivation), reg1);
 
@@ -803,15 +803,15 @@ GenerateStackOverflowStub(ModuleGenerator& mg, Label* throwLabel)
     offsets.begin = masm.currentOffset();
     masm.bind(masm.asmStackOverflowLabel());
 
-    // If we reach here via the non-profiling prologue, AsmJSActivation::fp has
+    // If we reach here via the non-profiling prologue, WasmActivation::fp has
     // not been updated. To enable stack unwinding from C++, store to it now. If
     // we reached here via the profiling prologue, we'll just store the same
     // value again. Do not update AsmJSFrame::callerFP as it is not necessary in
     // the non-profiling case (there is no return path from this point) and, in
     // the profiling case, it is already correct.
     Register activation = ABIArgGenerator::NonArgReturnReg0;
-    masm.loadAsmJSActivation(activation);
-    masm.storePtr(masm.getStackPointer(), Address(activation, AsmJSActivation::offsetOfFP()));
+    masm.loadWasmActivation(activation);
+    masm.storePtr(masm.getStackPointer(), Address(activation, WasmActivation::offsetOfFP()));
 
     // Prepare the stack for calling C++.
     if (uint32_t d = StackDecrementForCall(ABIStackAlignment, sizeof(AsmJSFrame), ShadowStackSpace))
@@ -924,7 +924,7 @@ static const LiveRegisterSet AllRegsExceptSP(
 // code. That means we must first save *all* registers and restore *all*
 // registers (except the stack pointer) when we resume. The address to resume to
 // (assuming that js::HandleExecutionInterrupt doesn't indicate that the
-// execution should be aborted) is stored in AsmJSActivation::resumePC_.
+// execution should be aborted) is stored in WasmActivation::resumePC_.
 // Unfortunately, loading this requires a scratch register which we don't have
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
@@ -949,8 +949,8 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Module::HeapBool usesHeap, Label
     Register scratch = ABIArgGenerator::NonArgReturnReg0;
 
     // Store resumePC into the reserved space.
-    masm.loadAsmJSActivation(scratch);
-    masm.loadPtr(Address(scratch, AsmJSActivation::offsetOfResumePC()), scratch);
+    masm.loadWasmActivation(scratch);
+    masm.loadPtr(Address(scratch, WasmActivation::offsetOfResumePC()), scratch);
     masm.storePtr(scratch, Address(masm.getStackPointer(), masm.framePushed() + sizeof(void*)));
 
     // We know that StackPointer is word-aligned, but not necessarily
@@ -989,8 +989,8 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Module::HeapBool usesHeap, Label
     masm.ma_and(StackPointer, StackPointer, Imm32(~(ABIStackAlignment - 1)));
 
     // Store resumePC into the reserved space.
-    masm.loadAsmJSActivation(IntArgReg0);
-    masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfResumePC()), IntArgReg1);
+    masm.loadWasmActivation(IntArgReg0);
+    masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(s0, masm.framePushed()));
 
     // MIPS ABI requires rewserving stack for registes $a0 to $a3.
@@ -1029,8 +1029,8 @@ GenerateAsyncInterruptStub(ModuleGenerator& mg, Module::HeapBool usesHeap, Label
     masm.ma_and(Imm32(~7), sp, sp);
 
     // Store resumePC into the return PC stack slot.
-    masm.loadAsmJSActivation(IntArgReg0);
-    masm.loadPtr(Address(IntArgReg0, AsmJSActivation::offsetOfResumePC()), IntArgReg1);
+    masm.loadWasmActivation(IntArgReg0);
+    masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(r6, 14 * sizeof(uint32_t*)));
 
     // When this platform supports SIMD extensions, we'll need to push and pop
@@ -1102,15 +1102,15 @@ GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
     offsets.begin = masm.currentOffset();
     masm.bind(throwLabel);
 
-    // We are about to pop all frames in this AsmJSActivation. Set fp to null to
+    // We are about to pop all frames in this WasmActivation. Set fp to null to
     // maintain the invariant that fp is either null or pointing to a valid
     // frame.
     Register scratch = ABIArgGenerator::NonArgReturnReg0;
-    masm.loadAsmJSActivation(scratch);
-    masm.storePtr(ImmWord(0), Address(scratch, AsmJSActivation::offsetOfFP()));
+    masm.loadWasmActivation(scratch);
+    masm.storePtr(ImmWord(0), Address(scratch, WasmActivation::offsetOfFP()));
 
     masm.setFramePushed(FramePushedForEntrySP);
-    masm.loadStackPtr(Address(scratch, AsmJSActivation::offsetOfEntrySP()));
+    masm.loadStackPtr(Address(scratch, WasmActivation::offsetOfEntrySP()));
     masm.Pop(scratch);
     masm.PopRegsInMask(NonVolatileRegs);
     MOZ_ASSERT(masm.framePushed() == 0);

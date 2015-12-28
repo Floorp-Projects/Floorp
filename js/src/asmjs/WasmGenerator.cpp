@@ -501,7 +501,9 @@ ModuleGenerator::defineOutOfBoundsStub(Offsets offsets)
 Module*
 ModuleGenerator::finish(Module::HeapBool usesHeap,
                         Module::SharedBool sharedHeap,
-                        UniqueChars filename,
+                        Module::MutedBool mutedErrors,
+                        CacheableChars filename,
+                        CacheableTwoByteChars displayURL,
                         UniqueStaticLinkData* staticLinkData,
                         SlowFunctionVector* slowFuncs)
 {
@@ -616,6 +618,7 @@ ModuleGenerator::finish(Module::HeapBool usesHeap,
                              globalBytes_,
                              usesHeap,
                              sharedHeap,
+                             mutedErrors,
                              Move(code),
                              Move(imports_),
                              Move(exports_),
@@ -623,5 +626,6 @@ ModuleGenerator::finish(Module::HeapBool usesHeap,
                              Move(codeRanges_),
                              Move(callSites),
                              Move(funcNames_),
-                             Move(filename));
+                             Move(filename),
+                             Move(displayURL));
 }
