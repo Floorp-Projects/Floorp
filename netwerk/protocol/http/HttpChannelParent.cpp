@@ -262,7 +262,7 @@ HttpChannelParent::SynthesizeResponse(nsIInterceptedChannel* aChannel)
 
   if (!mSynthesizedResponseHead) {
     // Near-term crash fix for bug 1219469.
-    mozilla::Unused << SendReportRedirectionError();
+    mozilla::unused << SendReportRedirectionError();
     return;
   }
 
