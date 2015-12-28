@@ -28,6 +28,22 @@
   border-bottom-width: 0;
 }
 
+.devtools-responsiveui-textinput {
+  -moz-appearance: none;
+  background: #333;
+  color: #fff;
+  border: 1px solid #111;
+  border-radius: 2px;
+  padding: 5px;
+  width: 200px;
+  margin: 0;
+}
+
+.devtools-responsiveui-textinput[attention] {
+  border-color: #38ace6;
+  background: rgba(56,172,230,0.4);
+}
+
 .devtools-responsiveui-menulist,
 .devtools-responsiveui-toolbarbutton {
   -moz-appearance: none;
