@@ -137,7 +137,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     profilingActivation_(nullptr),
     profilerSampleBufferGen_(0),
     profilerSampleBufferLapCount_(1),
-    asmJSActivationStack_(nullptr),
+    wasmActivationStack_(nullptr),
     asyncStackForNewActivations(this),
     asyncCauseForNewActivations(this),
     asyncCallIsExplicit(false),

@@ -672,7 +672,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.leaq_rip(dest.encoding()).offset());
     }
 
-    void loadAsmJSActivation(Register dest) {
+    void loadWasmActivation(Register dest) {
         CodeOffset label = loadRipRelativeInt64(dest);
         append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }

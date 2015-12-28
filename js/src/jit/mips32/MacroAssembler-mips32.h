@@ -1287,7 +1287,7 @@ class MacroAssemblerMIPSCompat : public MacroAssemblerMIPS
     void branchValueIsNurseryObject(Condition cond, ValueOperand value, Register temp,
                                     Label* label);
 
-    void loadAsmJSActivation(Register dest) {
+    void loadWasmActivation(Register dest) {
         loadPtr(Address(GlobalReg, wasm::ActivationGlobalDataOffset - AsmJSGlobalRegBias), dest);
     }
     void loadAsmJSHeapRegisterFromGlobalData() {
