@@ -2483,7 +2483,6 @@ NetworkDetailsView.prototype = {
       }));
     this._params = new VariablesView($("#request-params"),
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
-        onlyEnumVisible: true,
         emptyText: L10N.getStr("paramsEmptyText"),
         searchPlaceholder: L10N.getStr("paramsFilterText")
       }));
@@ -2866,6 +2865,8 @@ NetworkDetailsView.prototype = {
     let formDataSections = yield RequestsMenuView.prototype._getFormDataSections(
       aHeaders, aUploadHeaders, aPostData);
 
+    this._params.onlyEnumVisible = false;
+
     // Handle urlencoded form data sections (e.g. "?foo=bar&baz=42").
     if (formDataSections.length > 0) {
       formDataSections.forEach(section => {
@@ -2881,6 +2882,7 @@ NetworkDetailsView.prototype = {
         jsonVal = JSON.parse(postData);
       } catch (ex) { }
       if (jsonVal) {
+        this._params.onlyEnumVisible = true;
         let jsonScopeName = L10N.getStr("jsonScopeName");
         let jsonVar = { label: jsonScopeName, rawObject: jsonVal };
         let jsonScope = this._params.addScope(jsonScopeName);
