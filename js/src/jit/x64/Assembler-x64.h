@@ -601,7 +601,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(wasm::SymbolicAddress imm, Register dest) {
         masm.movq_i64r(-1, dest.encoding());
-        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm));
+        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), imm));
     }
     void mov(const Operand& src, Register dest) {
         movq(src, dest);

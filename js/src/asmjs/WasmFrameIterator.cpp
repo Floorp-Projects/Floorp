@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-#include "asmjs/AsmJSFrameIterator.h"
+#include "asmjs/WasmFrameIterator.h"
+
+#include "jsatom.h"
 
 #include "asmjs/AsmJSModule.h"
 #include "jit/MacroAssembler-inl.h"
@@ -26,9 +28,10 @@ using namespace js::jit;
 using namespace js::wasm;
 
 using mozilla::DebugOnly;
+using mozilla::Swap;
 
 /*****************************************************************************/
-// AsmJSFrameIterator implementation
+// FrameIterator implementation
 
 static void*
 ReturnAddressFromFP(void* fp)
@@ -42,17 +45,29 @@ CallerFPFromFP(void* fp)
     return reinterpret_cast<AsmJSFrame*>(fp)->callerFP;
 }
 
-AsmJSFrameIterator::AsmJSFrameIterator(const AsmJSActivation& activation)
-  : module_(&activation.module()),
+FrameIterator::FrameIterator()
+  : cx_(nullptr),
+    module_(nullptr),
+    callsite_(nullptr),
+    codeRange_(nullptr),
+    fp_(nullptr)
+{
+    MOZ_ASSERT(done());
+}
+
+FrameIterator::FrameIterator(const AsmJSActivation& activation)
+  : cx_(activation.cx()),
+    module_(&activation.module().wasm()),
+    callsite_(nullptr),
+    codeRange_(nullptr),
     fp_(activation.fp())
 {
-    if (!fp_)
-        return;
-    settle();
+    if (fp_)
+        settle();
 }
 
 void
-AsmJSFrameIterator::operator++()
+FrameIterator::operator++()
 {
     MOZ_ASSERT(!done());
     DebugOnly<uint8_t*> oldfp = fp_;
@@ -62,41 +77,57 @@ AsmJSFrameIterator::operator++()
 }
 
 void
-AsmJSFrameIterator::settle()
+FrameIterator::settle()
 {
     void* returnAddress = ReturnAddressFromFP(fp_);
 
-    const AsmJSModule::CodeRange* codeRange = module_->lookupCodeRange(returnAddress);
+    const CodeRange* codeRange = module_->lookupCodeRange(returnAddress);
     MOZ_ASSERT(codeRange);
     codeRange_ = codeRange;
 
     switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Function:
+        case CodeRange::Function:
         callsite_ = module_->lookupCallSite(returnAddress);
         MOZ_ASSERT(callsite_);
         break;
-      case AsmJSModule::CodeRange::Entry:
+      case CodeRange::Entry:
         fp_ = nullptr;
         MOZ_ASSERT(done());
         break;
-      case AsmJSModule::CodeRange::JitFFI:
-      case AsmJSModule::CodeRange::SlowFFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Inline:
-      case AsmJSModule::CodeRange::Thunk:
+      case CodeRange::ImportJitExit:
+      case CodeRange::ImportInterpExit:
+      case CodeRange::Interrupt:
+      case CodeRange::Inline:
         MOZ_CRASH("Should not encounter an exit during iteration");
     }
 }
 
 JSAtom*
-AsmJSFrameIterator::functionDisplayAtom() const
+FrameIterator::functionDisplayAtom() const
 {
     MOZ_ASSERT(!done());
-    return reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_)->functionName(*module_);
+
+    const char* chars = module_->functionName(codeRange_->funcNameIndex());
+    UTF8Chars utf8(chars, strlen(chars));
+
+    size_t twoByteLength;
+    UniquePtr<char16_t> twoByte(JS::UTF8CharsToNewTwoByteCharsZ(cx_, utf8, &twoByteLength).get());
+    if (!twoByte) {
+        cx_->clearPendingException();
+        return cx_->names().empty;
+    }
+
+    JSAtom* atom = AtomizeChars(cx_, twoByte.get(), twoByteLength);
+    if (!atom) {
+        cx_->clearPendingException();
+        return cx_->names().empty;
+    }
+
+    return atom;
 }
 
 unsigned
-AsmJSFrameIterator::computeLine(uint32_t* column) const
+FrameIterator::computeLine(uint32_t* column) const
 {
     MOZ_ASSERT(!done());
     if (column)
@@ -163,11 +194,11 @@ PushRetAddr(MacroAssembler& masm)
 }
 
 // Generate a prologue that maintains AsmJSActivation::fp as the virtual frame
-// pointer so that AsmJSProfilingFrameIterator can walk the stack at any pc in
+// pointer so that ProfilingFrameIterator can walk the stack at any pc in
 // generated code.
 static void
 GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                          AsmJSProfilingOffsets* offsets, Label* maybeEntry = nullptr)
+                          ProfilingOffsets* offsets, Label* maybeEntry = nullptr)
 {
 #if !defined (JS_CODEGEN_ARM)
     Register scratch = ABIArgGenerator::NonArg_VolatileReg;
@@ -179,7 +210,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
     masm.setSecondScratchReg(InvalidReg);
 #endif
 
-    // AsmJSProfilingFrameIterator needs to know the offsets of several key
+    // ProfilingFrameIterator needs to know the offsets of several key
     // instructions from entry. To save space, we make these offsets static
     // constants and assert that they match the actual codegen below. On ARM,
     // this requires AutoForbidPools to prevent a constant pool from being
@@ -204,9 +235,9 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
         MOZ_ASSERT_IF(!masm.oom(), StoredFP == masm.currentOffset() - offsets->begin);
     }
 
-    if (reason.kind() != ExitReason::None) {
-        masm.store32_NoSecondScratch(Imm32(reason.pack()),
-                                     Address(scratch, AsmJSActivation::offsetOfPackedExitReason()));
+    if (reason != ExitReason::None) {
+        masm.store32_NoSecondScratch(Imm32(int32_t(reason)),
+                                     Address(scratch, AsmJSActivation::offsetOfExitReason()));
     }
 
 #if defined(JS_CODEGEN_ARM)
@@ -220,7 +251,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason
 // Generate the inverse of GenerateProfilingPrologue.
 static void
 GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                          AsmJSProfilingOffsets* offsets)
+                          ProfilingOffsets* offsets)
 {
     Register scratch = ABIArgGenerator::NonReturn_VolatileReg0;
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
@@ -233,12 +264,12 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
 
     masm.loadAsmJSActivation(scratch);
 
-    if (reason.kind() != ExitReason::None) {
-        masm.store32(Imm32(ExitReason::None),
-                     Address(scratch, AsmJSActivation::offsetOfPackedExitReason()));
+    if (reason != ExitReason::None) {
+        masm.store32(Imm32(int32_t(ExitReason::None)),
+                     Address(scratch, AsmJSActivation::offsetOfExitReason()));
     }
 
-    // AsmJSProfilingFrameIterator assumes fixed offsets of the last few
+    // ProfilingFrameIterator assumes fixed offsets of the last few
     // instructions from profilingReturn, so AutoForbidPools to ensure that
     // unintended instructions are not automatically inserted.
     {
@@ -272,11 +303,10 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason
 // to call out to C++ so, as an optimization, we don't update fp. To avoid
 // recompilation when the profiling mode is toggled, we generate both prologues
 // a priori and switch between prologues when the profiling mode is toggled.
-// Specifically, AsmJSModule::setProfilingEnabled patches all callsites to
+// Specifically, Module::setProfilingEnabled patches all callsites to
 // either call the profiling or non-profiling entry point.
 void
-js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
-                                  AsmJSFunctionOffsets* offsets)
+wasm::GenerateFunctionPrologue(MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
@@ -301,14 +331,13 @@ js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
     masm.setFramePushed(framePushed);
 }
 
-// Similar to GenerateAsmJSFunctionPrologue (see comment), we generate both a
+// Similar to GenerateFunctionPrologue (see comment), we generate both a
 // profiling and non-profiling epilogue a priori. When the profiling mode is
-// toggled, AsmJSModule::setProfilingEnabled patches the 'profiling jump' to
+// toggled, Module::setProfilingEnabled patches the 'profiling jump' to
 // either be a nop (falling through to the normal prologue) or a jump (jumping
 // to the profiling epilogue).
 void
-js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
-                                  AsmJSFunctionOffsets* offsets)
+wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets)
 {
     MOZ_ASSERT(masm.framePushed() == framePushed);
 
@@ -329,7 +358,7 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
 #endif
 
         // The exact form of this instruction must be kept consistent with the
-        // patching in AsmJSModule::setProfilingEnabled.
+        // patching in Module::setProfilingEnabled.
         offsets->profilingJump = masm.currentOffset();
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         masm.twoByteNop();
@@ -361,8 +390,8 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
 }
 
 void
-js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                              AsmJSProfilingOffsets* offsets, Label* maybeEntry)
+wasm::GenerateExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
+                           ProfilingOffsets* offsets, Label* maybeEntry)
 {
     masm.haltingAlign(CodeAlignment);
     GenerateProfilingPrologue(masm, framePushed, reason, offsets, maybeEntry);
@@ -370,25 +399,36 @@ js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, ExitRe
 }
 
 void
-js::GenerateAsmJSExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
-                              AsmJSProfilingOffsets* offsets)
+wasm::GenerateExitEpilogue(MacroAssembler& masm, unsigned framePushed, ExitReason reason,
+                           ProfilingOffsets* offsets)
 {
-    // Inverse of GenerateAsmJSExitPrologue:
+    // Inverse of GenerateExitPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
     GenerateProfilingEpilogue(masm, framePushed, reason, offsets);
     masm.setFramePushed(0);
 }
 
 /*****************************************************************************/
-// AsmJSProfilingFrameIterator
+// ProfilingFrameIterator
 
-AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& activation)
-  : module_(&activation.module()),
+ProfilingFrameIterator::ProfilingFrameIterator()
+  : module_(nullptr),
+    codeRange_(nullptr),
     callerFP_(nullptr),
     callerPC_(nullptr),
     stackAddress_(nullptr),
-    exitReason_(ExitReason::None),
-    codeRange_(nullptr)
+    exitReason_(ExitReason::None)
+{
+    MOZ_ASSERT(done());
+}
+
+ProfilingFrameIterator::ProfilingFrameIterator(const AsmJSActivation& activation)
+  : module_(&activation.module().wasm()),
+    codeRange_(nullptr),
+    callerFP_(nullptr),
+    callerPC_(nullptr),
+    stackAddress_(nullptr),
+    exitReason_(ExitReason::None)
 {
     // If profiling hasn't been enabled for this module, then CallerFPFromFP
     // will be trash, so ignore the entire activation. In practice, this only
@@ -404,30 +444,24 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
 }
 
 static inline void
-AssertMatchesCallSite(const AsmJSModule& module, const AsmJSModule::CodeRange* calleeCodeRange,
-                      void* callerPC, void* callerFP, void* fp)
+AssertMatchesCallSite(const Module& module, void* callerPC, void* callerFP, void* fp)
 {
 #ifdef DEBUG
-    const AsmJSModule::CodeRange* callerCodeRange = module.lookupCodeRange(callerPC);
+    const CodeRange* callerCodeRange = module.lookupCodeRange(callerPC);
     MOZ_ASSERT(callerCodeRange);
-    if (callerCodeRange->isEntry()) {
+    if (callerCodeRange->kind() == CodeRange::Entry) {
         MOZ_ASSERT(callerFP == nullptr);
         return;
     }
 
     const CallSite* callsite = module.lookupCallSite(callerPC);
-    if (calleeCodeRange->isThunk()) {
-        MOZ_ASSERT(!callsite);
-        MOZ_ASSERT(callerCodeRange->isFunction());
-    } else {
-        MOZ_ASSERT(callsite);
-        MOZ_ASSERT(callerFP == (uint8_t*)fp + callsite->stackDepth());
-    }
+    MOZ_ASSERT(callsite);
+    MOZ_ASSERT(callerFP == (uint8_t*)fp + callsite->stackDepth());
 #endif
 }
 
 void
-AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation& activation)
+ProfilingFrameIterator::initFromFP(const AsmJSActivation& activation)
 {
     uint8_t* fp = activation.fp();
 
@@ -441,59 +475,57 @@ AsmJSProfilingFrameIterator::initFromFP(const AsmJSActivation& activation)
     // Since we don't have the pc for fp, start unwinding at the caller of fp
     // (ReturnAddressFromFP(fp)). This means that the innermost frame is
     // skipped. This is fine because:
-    //  - for FFI calls, the innermost frame is a thunk, so the first frame that
-    //    shows up is the function calling the FFI;
-    //  - for Math and other builtin calls, when profiling is activated, we
-    //    patch all call sites to instead call through a thunk; and
-    //  - for interrupts, we just accept that we'll lose the innermost frame.
+    //  - for import exit calls, the innermost frame is a thunk, so the first
+    //    frame that shows up is the function calling the import;
+    //  - for Math and other builtin calls as well as interrupts, we note the absence
+    //    of an exit reason and inject a fake "builtin" frame; and
+    //  - for async interrupts, we just accept that we'll lose the innermost frame.
     void* pc = ReturnAddressFromFP(fp);
-    const AsmJSModule::CodeRange* codeRange = module_->lookupCodeRange(pc);
+    const CodeRange* codeRange = module_->lookupCodeRange(pc);
     MOZ_ASSERT(codeRange);
     codeRange_ = codeRange;
     stackAddress_ = fp;
 
     switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Entry:
+      case CodeRange::Entry:
         callerPC_ = nullptr;
         callerFP_ = nullptr;
         break;
-      case AsmJSModule::CodeRange::Function:
+      case CodeRange::Function:
         fp = CallerFPFromFP(fp);
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
         break;
-      case AsmJSModule::CodeRange::JitFFI:
-      case AsmJSModule::CodeRange::SlowFFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Inline:
-      case AsmJSModule::CodeRange::Thunk:
+      case CodeRange::ImportJitExit:
+      case CodeRange::ImportInterpExit:
+      case CodeRange::Interrupt:
+      case CodeRange::Inline:
         MOZ_CRASH("Unexpected CodeRange kind");
     }
 
-    // Despite the above reasoning for skipping a frame, we do actually want FFI
-    // trampolines and interrupts to show up in the profile (so they can
-    // accumulate self time and explain performance faults). To do this, an
-    // "exit reason" is stored on all the paths leaving asm.js and this iterator
-    // treats this exit reason as its own frame. If we have exited asm.js code
-    // without setting an exit reason, the reason will be None and this means
-    // the code was asynchronously interrupted.
+    // The iterator inserts a pretend innermost frame for non-None ExitReasons.
+    // This allows the variety of exit reasons to show up in the callstack.
     exitReason_ = activation.exitReason();
-    if (exitReason_.kind() == ExitReason::None)
-        exitReason_ = ExitReason::Interrupt;
+
+    // In the case of calls to builtins or asynchronous interrupts, no exit path
+    // is taken so the exitReason is None. Coerce these to the Native exit
+    // reason so that self-time is accounted for.
+    if (exitReason_ == ExitReason::None)
+        exitReason_ = ExitReason::Native;
 
     MOZ_ASSERT(!done());
 }
 
 typedef JS::ProfilingFrameIterator::RegisterState RegisterState;
 
-AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& activation,
-                                                         const RegisterState& state)
-  : module_(&activation.module()),
+ProfilingFrameIterator::ProfilingFrameIterator(const AsmJSActivation& activation,
+                                               const RegisterState& state)
+  : module_(&activation.module().wasm()),
+    codeRange_(nullptr),
     callerFP_(nullptr),
     callerPC_(nullptr),
-    exitReason_(ExitReason::None),
-    codeRange_(nullptr)
+    exitReason_(ExitReason::None)
 {
     // If profiling hasn't been enabled for this module, then CallerFPFromFP
     // will be trash, so ignore the entire activation. In practice, this only
@@ -515,13 +547,12 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
     // Note: fp may be null while entering and leaving the activation.
     uint8_t* fp = activation.fp();
 
-    const AsmJSModule::CodeRange* codeRange = module_->lookupCodeRange(state.pc);
+    const CodeRange* codeRange = module_->lookupCodeRange(state.pc);
     switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::JitFFI:
-      case AsmJSModule::CodeRange::SlowFFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Thunk: {
+      case CodeRange::Function:
+      case CodeRange::ImportJitExit:
+      case CodeRange::ImportInterpExit:
+      case CodeRange::Interrupt: {
         // When the pc is inside the prologue/epilogue, the innermost
         // call's AsmJSFrame is not complete and thus fp points to the the
         // second-to-innermost call's AsmJSFrame. Since fp can only tell you
@@ -529,8 +560,8 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
         // while pc is in the prologue/epilogue would skip the second-to-
         // innermost call. To avoid this problem, we use the static structure of
         // the code in the prologue and epilogue to do the Right Thing.
-        uint32_t offsetInModule = (uint8_t*)state.pc - module_->codeBase();
-        MOZ_ASSERT(offsetInModule < module_->codeBytes());
+        MOZ_ASSERT(module_->containsCodePC(state.pc));
+        uint32_t offsetInModule = (uint8_t*)state.pc - module_->code();
         MOZ_ASSERT(offsetInModule >= codeRange->begin());
         MOZ_ASSERT(offsetInModule < codeRange->end());
         uint32_t offsetInCodeRange = offsetInModule - codeRange->begin();
@@ -541,13 +572,13 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
             // still in lr and fp still holds the caller's fp.
             callerPC_ = state.lr;
             callerFP_ = fp;
-            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 2);
+            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp - 2);
         } else if (offsetInModule == codeRange->profilingReturn() - PostStorePrePopFP) {
             // Second-to-last instruction of the ARM/MIPS function; fp points to
             // the caller's fp; have not yet popped AsmJSFrame.
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);
-            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp);
+            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp);
         } else
 #endif
         if (offsetInCodeRange < PushedFP || offsetInModule == codeRange->profilingReturn()) {
@@ -555,32 +586,32 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
             // still points to the caller's fp.
             callerPC_ = *sp;
             callerFP_ = fp;
-            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp - 1);
+            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp - 1);
         } else if (offsetInCodeRange < StoredFP) {
             // The full AsmJSFrame has been pushed; fp still points to the
             // caller's frame.
             MOZ_ASSERT(fp == CallerFPFromFP(sp));
             callerPC_ = ReturnAddressFromFP(sp);
             callerFP_ = CallerFPFromFP(sp);
-            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, sp);
+            AssertMatchesCallSite(*module_, callerPC_, callerFP_, sp);
         } else {
             // Not in the prologue/epilogue.
             callerPC_ = ReturnAddressFromFP(fp);
             callerFP_ = CallerFPFromFP(fp);
-            AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
+            AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
         }
         break;
       }
-      case AsmJSModule::CodeRange::Entry: {
+      case CodeRange::Entry: {
         // The entry trampoline is the final frame in an AsmJSActivation. The entry
-        // trampoline also doesn't GenerateAsmJSPrologue/Epilogue so we can't use
+        // trampoline also doesn't GeneratePrologue/Epilogue so we can't use
         // the general unwinding logic above.
         MOZ_ASSERT(!fp);
         callerPC_ = nullptr;
         callerFP_ = nullptr;
         break;
       }
-      case AsmJSModule::CodeRange::Inline: {
+      case CodeRange::Inline: {
         // The throw stub clears AsmJSActivation::fp on it's way out.
         if (!fp) {
             MOZ_ASSERT(done());
@@ -594,7 +625,7 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
         // skipped frames. Thus, we use simply unwind based on fp.
         callerPC_ = ReturnAddressFromFP(fp);
         callerFP_ = CallerFPFromFP(fp);
-        AssertMatchesCallSite(*module_, codeRange, callerPC_, callerFP_, fp);
+        AssertMatchesCallSite(*module_, callerPC_, callerFP_, fp);
         break;
       }
     }
@@ -605,9 +636,9 @@ AsmJSProfilingFrameIterator::AsmJSProfilingFrameIterator(const AsmJSActivation& 
 }
 
 void
-AsmJSProfilingFrameIterator::operator++()
+ProfilingFrameIterator::operator++()
 {
-    if (exitReason_.kind() != ExitReason::None) {
+    if (exitReason_ != ExitReason::None) {
         MOZ_ASSERT(codeRange_);
         exitReason_ = ExitReason::None;
         MOZ_ASSERT(!done());
@@ -621,25 +652,23 @@ AsmJSProfilingFrameIterator::operator++()
         return;
     }
 
-    MOZ_ASSERT(callerPC_);
-    const AsmJSModule::CodeRange* codeRange = module_->lookupCodeRange(callerPC_);
+    const CodeRange* codeRange = module_->lookupCodeRange(callerPC_);
     MOZ_ASSERT(codeRange);
     codeRange_ = codeRange;
 
     switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Entry:
+      case CodeRange::Entry:
         MOZ_ASSERT(callerFP_ == nullptr);
         callerPC_ = nullptr;
         break;
-      case AsmJSModule::CodeRange::Function:
-      case AsmJSModule::CodeRange::JitFFI:
-      case AsmJSModule::CodeRange::SlowFFI:
-      case AsmJSModule::CodeRange::Interrupt:
-      case AsmJSModule::CodeRange::Inline:
-      case AsmJSModule::CodeRange::Thunk:
+      case CodeRange::Function:
+      case CodeRange::ImportJitExit:
+      case CodeRange::ImportInterpExit:
+      case CodeRange::Interrupt:
+      case CodeRange::Inline:
         stackAddress_ = callerFP_;
         callerPC_ = ReturnAddressFromFP(callerFP_);
-        AssertMatchesCallSite(*module_, codeRange, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
+        AssertMatchesCallSite(*module_, callerPC_, CallerFPFromFP(callerFP_), callerFP_);
         callerFP_ = CallerFPFromFP(callerFP_);
         break;
     }
@@ -647,82 +676,175 @@ AsmJSProfilingFrameIterator::operator++()
     MOZ_ASSERT(!done());
 }
 
-static const char*
-BuiltinToName(Builtin builtin)
-{
-    // Note: this label is regexp-matched by
-    // devtools/client/profiler/cleopatra/js/parserWorker.js.
-
-    switch (builtin) {
-      case Builtin::ToInt32:         return "ToInt32 (in asm.js)";
-#if defined(JS_CODEGEN_ARM)
-      case Builtin::aeabi_idivmod:   return "software idivmod (in asm.js)";
-      case Builtin::aeabi_uidivmod:  return "software uidivmod (in asm.js)";
-      case Builtin::AtomicCmpXchg:   return "Atomics.compareExchange (in asm.js)";
-      case Builtin::AtomicXchg:      return "Atomics.exchange (in asm.js)";
-      case Builtin::AtomicFetchAdd:  return "Atomics.add (in asm.js)";
-      case Builtin::AtomicFetchSub:  return "Atomics.sub (in asm.js)";
-      case Builtin::AtomicFetchAnd:  return "Atomics.and (in asm.js)";
-      case Builtin::AtomicFetchOr:   return "Atomics.or (in asm.js)";
-      case Builtin::AtomicFetchXor:  return "Atomics.xor (in asm.js)";
-#endif
-      case Builtin::ModD:    return "fmod (in asm.js)";
-      case Builtin::SinD:    return "Math.sin (in asm.js)";
-      case Builtin::CosD:    return "Math.cos (in asm.js)";
-      case Builtin::TanD:    return "Math.tan (in asm.js)";
-      case Builtin::ASinD:   return "Math.asin (in asm.js)";
-      case Builtin::ACosD:   return "Math.acos (in asm.js)";
-      case Builtin::ATanD:   return "Math.atan (in asm.js)";
-      case Builtin::CeilD:
-      case Builtin::CeilF:   return "Math.ceil (in asm.js)";
-      case Builtin::FloorD:
-      case Builtin::FloorF:  return "Math.floor (in asm.js)";
-      case Builtin::ExpD:    return "Math.exp (in asm.js)";
-      case Builtin::LogD:    return "Math.log (in asm.js)";
-      case Builtin::PowD:    return "Math.pow (in asm.js)";
-      case Builtin::ATan2D:  return "Math.atan2 (in asm.js)";
-      case Builtin::Limit:   break;
-    }
-    MOZ_CRASH("symbolic immediate not a builtin");
-}
-
 const char*
-AsmJSProfilingFrameIterator::label() const
+ProfilingFrameIterator::label() const
 {
     MOZ_ASSERT(!done());
 
     // Use the same string for both time inside and under so that the two
     // entries will be coalesced by the profiler.
     //
-    // NB: these labels are regexp-matched by
-    //     devtools/client/profiler/cleopatra/js/parserWorker.js.
-    const char* jitFFIDescription = "fast FFI trampoline (in asm.js)";
-    const char* slowFFIDescription = "slow FFI trampoline (in asm.js)";
-    const char* interruptDescription = "interrupt due to out-of-bounds or long execution (in asm.js)";
+    // NB: these labels are parsed for location by
+    //     devtools/client/performance/modules/logic/frame-utils.js
+    const char* importJitDescription = "fast FFI trampoline (in asm.js)";
+    const char* importInterpDescription = "slow FFI trampoline (in asm.js)";
+    const char* nativeDescription = "native call (in asm.js)";
 
-    switch (exitReason_.kind()) {
+    switch (exitReason_) {
       case ExitReason::None:
         break;
-      case ExitReason::Jit:
-        return jitFFIDescription;
-      case ExitReason::Slow:
-        return slowFFIDescription;
-      case ExitReason::Interrupt:
-        return interruptDescription;
-      case ExitReason::Builtin:
-        return BuiltinToName(exitReason_.builtin());
+      case ExitReason::ImportJit:
+        return importJitDescription;
+      case ExitReason::ImportInterp:
+        return importInterpDescription;
+      case ExitReason::Native:
+        return nativeDescription;
     }
 
-    auto codeRange = reinterpret_cast<const AsmJSModule::CodeRange*>(codeRange_);
-    switch (codeRange->kind()) {
-      case AsmJSModule::CodeRange::Function:  return codeRange->functionProfilingLabel(*module_);
-      case AsmJSModule::CodeRange::Entry:     return "entry trampoline (in asm.js)";
-      case AsmJSModule::CodeRange::JitFFI:    return jitFFIDescription;
-      case AsmJSModule::CodeRange::SlowFFI:   return slowFFIDescription;
-      case AsmJSModule::CodeRange::Interrupt: return interruptDescription;
-      case AsmJSModule::CodeRange::Inline:    return "inline stub (in asm.js)";
-      case AsmJSModule::CodeRange::Thunk:     return BuiltinToName(codeRange->thunkTarget());
+    switch (codeRange_->kind()) {
+      case CodeRange::Function:         return module_->profilingLabel(codeRange_->funcNameIndex());
+      case CodeRange::Entry:            return "entry trampoline (in asm.js)";
+      case CodeRange::ImportJitExit:    return importJitDescription;
+      case CodeRange::ImportInterpExit: return importInterpDescription;
+      case CodeRange::Interrupt:        return nativeDescription;
+      case CodeRange::Inline:           return "inline stub (in asm.js)";
     }
 
     MOZ_CRASH("bad code range kind");
+}
+
+/*****************************************************************************/
+// Runtime patching to enable/disable profiling
+
+// Patch all internal (asm.js->asm.js) callsites to call the profiling
+// prologues:
+void
+wasm::EnableProfilingPrologue(const Module& module, const CallSite& callSite, bool enabled)
+{
+    if (callSite.kind() != CallSite::Relative)
+        return;
+
+    uint8_t* callerRetAddr = module.code() + callSite.returnAddressOffset();
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    void* callee = X86Encoding::GetRel32Target(callerRetAddr);
+#elif defined(JS_CODEGEN_ARM)
+    uint8_t* caller = callerRetAddr - 4;
+    Instruction* callerInsn = reinterpret_cast<Instruction*>(caller);
+    BOffImm calleeOffset;
+    callerInsn->as<InstBLImm>()->extractImm(&calleeOffset);
+    void* callee = calleeOffset.getDest(callerInsn);
+#elif defined(JS_CODEGEN_ARM64)
+    MOZ_CRASH();
+    void* callee = nullptr;
+    (void)callerRetAddr;
+#elif defined(JS_CODEGEN_MIPS32)
+    Instruction* instr = (Instruction*)(callerRetAddr - 4 * sizeof(uint32_t));
+    void* callee = (void*)Assembler::ExtractLuiOriValue(instr, instr->next());
+#elif defined(JS_CODEGEN_MIPS64)
+    Instruction* instr = (Instruction*)(callerRetAddr - 6 * sizeof(uint32_t));
+    void* callee = (void*)Assembler::ExtractLoad64Value(instr);
+#elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
+    void* callee = nullptr;
+#else
+# error "Missing architecture"
+#endif
+
+    const CodeRange* codeRange = module.lookupCodeRange(callee);
+    if (!codeRange->isFunction())
+        return;
+
+    uint8_t* from = module.code() + codeRange->funcNonProfilingEntry();
+    uint8_t* to = module.code() + codeRange->funcProfilingEntry();
+    if (!enabled)
+        Swap(from, to);
+
+    MOZ_ASSERT(callee == from);
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    X86Encoding::SetRel32(callerRetAddr, to);
+#elif defined(JS_CODEGEN_ARM)
+    new (caller) InstBLImm(BOffImm(to - caller), Assembler::Always);
+#elif defined(JS_CODEGEN_ARM64)
+    (void)to;
+    MOZ_CRASH();
+#elif defined(JS_CODEGEN_MIPS32)
+    Assembler::WriteLuiOriInstructions(instr, instr->next(),
+                                       ScratchRegister, (uint32_t)to);
+    instr[2] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
+#elif defined(JS_CODEGEN_MIPS64)
+    Assembler::WriteLoad64Instructions(instr, ScratchRegister, (uint64_t)to);
+    instr[4] = InstReg(op_special, ScratchRegister, zero, ra, ff_jalr);
+#elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
+#else
+# error "Missing architecture"
+#endif
+}
+
+// Replace all the nops in all the epilogues of asm.js functions with jumps
+// to the profiling epilogues.
+void
+wasm::EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, bool enabled)
+{
+    if (!codeRange.isFunction())
+        return;
+
+    uint8_t* jump = module.code() + codeRange.functionProfilingJump();
+    uint8_t* profilingEpilogue = module.code() + codeRange.funcProfilingEpilogue();
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+    // An unconditional jump with a 1 byte offset immediate has the opcode
+    // 0x90. The offset is relative to the address of the instruction after
+    // the jump. 0x66 0x90 is the canonical two-byte nop.
+    ptrdiff_t jumpImmediate = profilingEpilogue - jump - 2;
+    MOZ_ASSERT(jumpImmediate > 0 && jumpImmediate <= 127);
+    if (enabled) {
+        MOZ_ASSERT(jump[0] == 0x66);
+        MOZ_ASSERT(jump[1] == 0x90);
+        jump[0] = 0xeb;
+        jump[1] = jumpImmediate;
+    } else {
+        MOZ_ASSERT(jump[0] == 0xeb);
+        MOZ_ASSERT(jump[1] == jumpImmediate);
+        jump[0] = 0x66;
+        jump[1] = 0x90;
+    }
+#elif defined(JS_CODEGEN_ARM)
+    if (enabled) {
+        MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstNOP>());
+        new (jump) InstBImm(BOffImm(profilingEpilogue - jump), Assembler::Always);
+    } else {
+        MOZ_ASSERT(reinterpret_cast<Instruction*>(jump)->is<InstBImm>());
+        new (jump) InstNOP();
+    }
+#elif defined(JS_CODEGEN_ARM64)
+    (void)jump;
+    (void)profilingEpilogue;
+    MOZ_CRASH();
+#elif defined(JS_CODEGEN_MIPS32)
+    Instruction* instr = (Instruction*)jump;
+    if (enabled) {
+        Assembler::WriteLuiOriInstructions(instr, instr->next(),
+                                           ScratchRegister, (uint32_t)profilingEpilogue);
+        instr[2] = InstReg(op_special, ScratchRegister, zero, zero, ff_jr);
+    } else {
+        for (unsigned i = 0; i < 3; i++)
+            instr[i].makeNop();
+    }
+#elif defined(JS_CODEGEN_MIPS64)
+    Instruction* instr = (Instruction*)jump;
+    if (enabled) {
+        Assembler::WriteLoad64Instructions(instr, ScratchRegister, (uint64_t)profilingEpilogue);
+        instr[4] = InstReg(op_special, ScratchRegister, zero, zero, ff_jr);
+    } else {
+        for (unsigned i = 0; i < 5; i++)
+            instr[i].makeNop();
+    }
+#elif defined(JS_CODEGEN_NONE)
+    MOZ_CRASH();
+#else
+# error "Missing architecture"
+#endif
 }

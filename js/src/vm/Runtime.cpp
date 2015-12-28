@@ -39,7 +39,7 @@
 #include "jswin.h"
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSSignalHandlers.h"
+#include "asmjs/WasmSignalHandlers.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/JitCompartment.h"
@@ -202,7 +202,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     destroyPrincipals(nullptr),
     readPrincipals(nullptr),
     errorReporter(nullptr),
-    linkedAsmJSModules(nullptr),
+    linkedWasmModules(nullptr),
     propertyRemovals(0),
 #if !EXPOSE_INTL_API
     thousandsSeparator(0),
@@ -346,7 +346,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     jitSupportsFloatingPoint = js::jit::JitSupportsFloatingPoint();
     jitSupportsSimd = js::jit::JitSupportsSimd();
 
-    signalHandlersInstalled_ = EnsureSignalHandlersInstalled(this);
+    signalHandlersInstalled_ = wasm::EnsureSignalHandlersInstalled(this);
     canUseSignalHandlers_ = signalHandlersInstalled_ && !SignalBasedTriggersDisabled();
 
     if (!spsProfiler.init())

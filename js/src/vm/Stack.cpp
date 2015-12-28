@@ -10,8 +10,8 @@
 
 #include "jscntxt.h"
 
-#include "asmjs/AsmJSFrameIterator.h"
 #include "asmjs/AsmJSModule.h"
+#include "asmjs/WasmFrameIterator.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
@@ -608,7 +608,7 @@ FrameIter::settleOnActivation()
         }
 
         if (activation->isAsmJS()) {
-            data_.asmJSFrames_ = AsmJSFrameIterator(*data_.activations_->asAsmJS());
+            data_.asmJSFrames_ = wasm::FrameIterator(*data_.activations_->asAsmJS());
 
             if (data_.asmJSFrames_.done()) {
                 ++data_.activations_;
@@ -986,7 +986,7 @@ FrameIter::scriptFilename() const
       case JIT:
         return script()->filename();
       case ASMJS:
-        return data_.activations_->asAsmJS()->module().scriptSource()->filename();
+        return data_.activations_->asAsmJS()->module().wasm().filename();
     }
 
     MOZ_CRASH("Unexpected state");
@@ -1744,12 +1744,12 @@ AsmJSActivation::AsmJSActivation(JSContext* cx, AsmJSModule& module)
     entrySP_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),
-    packedExitReason_(wasm::ExitReason(wasm::ExitReason::None).pack())
+    exitReason_(wasm::ExitReason::None)
 {
     (void) entrySP_;  // squelch GCC warning
 
-    prevAsmJSForModule_ = module.activation();
-    module.activation() = this;
+    prevAsmJSForModule_ = module.wasm().activation();
+    module.wasm().activation() = this;
 
     prevAsmJS_ = cx->runtime()->asmJSActivationStack_;
     cx->runtime()->asmJSActivationStack_ = this;
@@ -1766,8 +1766,8 @@ AsmJSActivation::~AsmJSActivation()
 
     MOZ_ASSERT(fp_ == nullptr);
 
-    MOZ_ASSERT(module_.activation() == this);
-    module_.activation() = prevAsmJSForModule_;
+    MOZ_ASSERT(module_.wasm().activation() == this);
+    module_.wasm().activation() = prevAsmJSForModule_;
 
     JSContext* cx = cx_->asJSContext();
     MOZ_ASSERT(cx->runtime()->asmJSActivationStack_ == this);
@@ -1860,7 +1860,7 @@ JS::ProfilingFrameIterator::ProfilingFrameIterator(JSRuntime* rt, const Register
 
     MOZ_ASSERT(activation_->isProfiling());
 
-    static_assert(sizeof(AsmJSProfilingFrameIterator) <= StorageSpace &&
+    static_assert(sizeof(wasm::ProfilingFrameIterator) <= StorageSpace &&
                   sizeof(jit::JitProfilingFrameIterator) <= StorageSpace,
                   "Need to increase storage");
 
@@ -1916,7 +1916,7 @@ JS::ProfilingFrameIterator::iteratorConstruct(const RegisterState& state)
     MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
     if (activation_->isAsmJS()) {
-        new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS(), state);
+        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asAsmJS(), state);
         // Set savedPrevJitTop_ to the actual jitTop_ from the runtime.
         savedPrevJitTop_ = activation_->cx()->runtime()->jitTop;
         return;
@@ -1933,7 +1933,7 @@ JS::ProfilingFrameIterator::iteratorConstruct()
     MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
     if (activation_->isAsmJS()) {
-        new (storage_.addr()) AsmJSProfilingFrameIterator(*activation_->asAsmJS());
+        new (storage_.addr()) wasm::ProfilingFrameIterator(*activation_->asAsmJS());
         return;
     }
 
@@ -1949,7 +1949,7 @@ JS::ProfilingFrameIterator::iteratorDestroy()
     MOZ_ASSERT(activation_->isAsmJS() || activation_->isJit());
 
     if (activation_->isAsmJS()) {
-        asmJSIter().~AsmJSProfilingFrameIterator();
+        asmJSIter().~ProfilingFrameIterator();
         return;
     }
 

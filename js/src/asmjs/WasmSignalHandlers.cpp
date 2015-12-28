@@ -16,18 +16,20 @@
  * limitations under the License.
  */
 
-#include "asmjs/AsmJSSignalHandlers.h"
+#include "asmjs/WasmSignalHandlers.h"
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
 #include "asmjs/AsmJSModule.h"
+#include "asmjs/AsmJSValidate.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
 #include "vm/Runtime.h"
 
 using namespace js;
 using namespace js::jit;
+using namespace js::wasm;
 
 using JS::GenericNaN;
 using mozilla::DebugOnly;
@@ -600,12 +602,12 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const HeapAccess* heapAccess, const AsmJSModule& module)
+                  const HeapAccess* heapAccess, const Module& module)
 {
     MOZ_RELEASE_ASSERT(module.containsFunctionPC(pc));
-    MOZ_RELEASE_ASSERT(module.usesSignalHandlersForOOB());
+    MOZ_RELEASE_ASSERT(module.compileArgs().useSignalHandlersForOOB);
     MOZ_RELEASE_ASSERT(!heapAccess->hasLengthCheck());
-    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - module.codeBase()));
+    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - module.code()));
 
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
@@ -704,7 +706,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         // load/store that we should handle.
 
         if (heapAccess->throwOnOOB())
-            return module.outOfBoundsExit();
+            return module.outOfBounds();
 
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
@@ -755,7 +757,7 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    const AsmJSModule& module = activation->module();
+    const Module& module = activation->module().wasm();
 
     // These checks aren't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
@@ -772,18 +774,14 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // between a faulting heap access and the handling of the fault due
         // to InterruptRunningCode's use of SuspendThread. When this happens,
         // after ResumeThread, the exception handler is called with pc equal to
-        // module.interruptExit, which is logically wrong. The Right Thing would
+        // module.interrupt, which is logically wrong. The Right Thing would
         // be for the OS to make fault-handling atomic (so that CONTEXT.pc was
         // always the logically-faulting pc). Fortunately, we can detect this
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
-        if (pc == module.interruptExit() &&
-            module.containsFunctionPC(activation->resumePC()) &&
-            module.lookupHeapAccess(activation->resumePC()))
-        {
-            return true;
-        }
-        return false;
+        return pc == module.interrupt() &&
+               module.containsFunctionPC(activation->resumePC()) &&
+               module.lookupHeapAccess(activation->resumePC());
     }
 
     const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
@@ -902,7 +900,7 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (!activation)
         return false;
 
-    const AsmJSModule& module = activation->module();
+    const Module& module = activation->module().wasm();
     if (!module.containsFunctionPC(pc))
         return false;
 
@@ -939,11 +937,11 @@ static const mach_msg_id_t sExceptionId = 2405;
 // The choice of id here is arbitrary, the only constraint is that sQuitId != sExceptionId.
 static const mach_msg_id_t sQuitId = 42;
 
-void
-AsmJSMachExceptionHandlerThread(void* threadArg)
+static void
+MachExceptionHandlerThread(void* threadArg)
 {
     JSRuntime* rt = reinterpret_cast<JSRuntime*>(threadArg);
-    mach_port_t port = rt->asmJSMachExceptionHandler.port();
+    mach_port_t port = rt->wasmMachExceptionHandler.port();
     kern_return_t kret;
 
     while(true) {
@@ -954,7 +952,7 @@ AsmJSMachExceptionHandlerThread(void* threadArg)
         // If we fail even receiving the message, we can't even send a reply!
         // Rather than hanging the faulting thread (hanging the browser), crash.
         if (kret != KERN_SUCCESS) {
-            fprintf(stderr, "AsmJSMachExceptionHandlerThread: mach_msg failed with %d\n", (int)kret);
+            fprintf(stderr, "MachExceptionHandlerThread: mach_msg failed with %d\n", (int)kret);
             MOZ_CRASH();
         }
 
@@ -992,14 +990,14 @@ AsmJSMachExceptionHandlerThread(void* threadArg)
     }
 }
 
-AsmJSMachExceptionHandler::AsmJSMachExceptionHandler()
+MachExceptionHandler::MachExceptionHandler()
   : installed_(false),
     thread_(nullptr),
     port_(MACH_PORT_NULL)
 {}
 
 void
-AsmJSMachExceptionHandler::uninstall()
+MachExceptionHandler::uninstall()
 {
     if (installed_) {
         thread_port_t thread = mach_thread_self();
@@ -1025,7 +1023,7 @@ AsmJSMachExceptionHandler::uninstall()
         kern_return_t kret = mach_msg(&msg, MACH_SEND_MSG, sizeof(msg), 0, MACH_PORT_NULL,
                                       MACH_MSG_TIMEOUT_NONE, MACH_PORT_NULL);
         if (kret != KERN_SUCCESS) {
-            fprintf(stderr, "AsmJSMachExceptionHandler: failed to send quit message: %d\n", (int)kret);
+            fprintf(stderr, "MachExceptionHandler: failed to send quit message: %d\n", (int)kret);
             MOZ_CRASH();
         }
 
@@ -1041,7 +1039,7 @@ AsmJSMachExceptionHandler::uninstall()
 }
 
 bool
-AsmJSMachExceptionHandler::install(JSRuntime* rt)
+MachExceptionHandler::install(JSRuntime* rt)
 {
     MOZ_ASSERT(!installed());
     kern_return_t kret;
@@ -1056,7 +1054,7 @@ AsmJSMachExceptionHandler::install(JSRuntime* rt)
         goto error;
 
     // Create a thread to block on reading port_.
-    thread_ = PR_CreateThread(PR_USER_THREAD, AsmJSMachExceptionHandlerThread, rt,
+    thread_ = PR_CreateThread(PR_USER_THREAD, MachExceptionHandlerThread, rt,
                               PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD, 0);
     if (!thread_)
         goto error;
@@ -1112,7 +1110,7 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!activation)
         return false;
 
-    const AsmJSModule& module = activation->module();
+    const Module& module = activation->module().wasm();
     if (!module.containsFunctionPC(pc))
         return false;
 
@@ -1185,18 +1183,18 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
     RedirectIonBackedgesToInterruptCheck(rt);
 
     if (AsmJSActivation* activation = rt->asmJSActivationStack()) {
-        const AsmJSModule& module = activation->module();
+        const Module& module = activation->module().wasm();
 
 #ifdef JS_SIMULATOR
         if (module.containsFunctionPC(rt->simulator()->get_pc_as<void*>()))
-            rt->simulator()->set_resume_pc(module.interruptExit());
+            rt->simulator()->set_resume_pc(module.interrupt());
 #endif
 
         uint8_t** ppc = ContextToPC(context);
         uint8_t* pc = *ppc;
         if (module.containsFunctionPC(pc)) {
             activation->setResumePC(pc);
-            *ppc = module.interruptExit();
+            *ppc = module.interrupt();
             return true;
         }
     }
@@ -1223,11 +1221,11 @@ JitInterruptHandler(int signum, siginfo_t* info, void* context)
 #endif
 
 bool
-js::EnsureSignalHandlersInstalled(JSRuntime* rt)
+wasm::EnsureSignalHandlersInstalled(JSRuntime* rt)
 {
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     // On OSX, each JSRuntime gets its own handler thread.
-    if (!rt->asmJSMachExceptionHandler.installed() && !rt->asmJSMachExceptionHandler.install(rt))
+    if (!rt->wasmMachExceptionHandler.installed() && !rt->wasmMachExceptionHandler.install(rt))
         return false;
 #endif
 

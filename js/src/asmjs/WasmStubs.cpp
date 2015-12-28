@@ -21,8 +21,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/EnumeratedRange.h"
 
-#include "asmjs/AsmJSModule.h"
-
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
@@ -97,20 +95,18 @@ static const unsigned FramePushedAfterSave = NonVolatileRegs.gprs().size() * siz
 static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void*);
 
 // Generate a stub that enters wasm from a C++ caller via the native ABI.
-// The signature of the entry point is AsmJSModule::CodePtr. The exported wasm
+// The signature of the entry point is Module::CodePtr. The exported wasm
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of CodePtr to the export's signature's ABI.
 static bool
-GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
-              const FuncOffsetVector& funcOffsets)
+GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHeap)
 {
-    AsmJSModule::ExportedFunction& exp = module.exportedFunction(exportIndex);
-    if (exp.isChangeHeap())
-        return true;
+    MacroAssembler& masm = mg.masm();
+    const MallocSig& sig = mg.exportSig(exportIndex);
 
     masm.haltingAlign(CodeAlignment);
 
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
 
     // Save the return address if it wasn't already saved by the call insn.
@@ -139,7 +135,8 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
     // ARM, MIPS/MIPS64 and x64 have a globally-pinned HeapReg (x86 uses immediates in
     // effective addresses). Loading the heap register depends on the global
     // register already having been loaded.
-    masm.loadAsmJSHeapRegisterFromGlobalData();
+    if (usesHeap)
+        masm.loadAsmJSHeapRegisterFromGlobalData();
 
     // Put the 'argv' argument into a non-argument/return register so that we
     // can use 'argv' while we fill in the arguments for the asm.js callee.
@@ -168,12 +165,12 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
     masm.andToStackPtr(Imm32(~(AsmJSStackAlignment - 1)));
 
     // Bump the stack for the call.
-    masm.reserveStack(AlignBytes(StackArgBytes(exp.sig().args()), AsmJSStackAlignment));
+    masm.reserveStack(AlignBytes(StackArgBytes(sig.args()), AsmJSStackAlignment));
 
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
-    for (ABIArgValTypeIter iter(exp.sig().args()); !iter.done(); iter++) {
-        unsigned argOffset = iter.index() * sizeof(AsmJSModule::EntryArg);
+    for (ABIArgValTypeIter iter(sig.args()); !iter.done(); iter++) {
+        unsigned argOffset = iter.index() * sizeof(Module::EntryArg);
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
         switch (iter->kind()) {
@@ -186,7 +183,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
             break;
 #endif
           case ABIArg::FPU: {
-            static_assert(sizeof(AsmJSModule::EntryArg) >= jit::Simd128DataSize,
+            static_assert(sizeof(Module::EntryArg) >= jit::Simd128DataSize,
                           "EntryArg must be big enough to store SIMD values");
             switch (type) {
               case MIRType_Int32x4:
@@ -243,7 +240,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
     // Call into the real function.
     masm.assertStackAlignment(AsmJSStackAlignment);
     Label target;
-    target.bind(funcOffsets[exp.funcIndex()]);
+    target.bind(mg.funcEntryOffsets()[mg.exportFuncIndex(exportIndex)]);
     masm.call(CallSiteDesc(CallSiteDesc::Relative), &target);
 
     // Recover the stack pointer value before dynamic alignment.
@@ -255,7 +252,7 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
     masm.Pop(argv);
 
     // Store the return value in argv[0]
-    switch (exp.sig().ret()) {
+    switch (sig.ret()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -291,117 +288,8 @@ GenerateEntry(MacroAssembler& masm, AsmJSModule& module, unsigned exportIndex,
     if (masm.oom())
         return false;
 
-    exp.initCodeOffset(offsets.begin);
     offsets.end = masm.currentOffset();
-    return module.addCodeRange(AsmJSModule::CodeRange::Entry, offsets);
-}
-
-// Generate a thunk that updates fp before calling the given builtin so that
-// both the builtin and the calling function show up in profiler stacks. (This
-// thunk is dynamically patched in when profiling is enabled.) Since the thunk
-// pushes an AsmJSFrame on the stack, that means we must rebuild the stack
-// frame. Fortunately, these are low arity functions and everything is passed in
-// regs on everything but x86 anyhow.
-//
-// NB: Since this thunk is being injected at system ABI callsites, it must
-//     preserve the argument registers (going in) and the return register
-//     (coming out) and preserve non-volatile registers.
-static bool
-GenerateBuiltinThunk(MacroAssembler& masm, AsmJSModule& module, Builtin builtin)
-{
-    MIRTypeVector args;
-    switch (builtin) {
-      case Builtin::ToInt32:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        break;
-#if defined(JS_CODEGEN_ARM)
-      case Builtin::aeabi_idivmod:
-      case Builtin::aeabi_uidivmod:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        break;
-      case Builtin::AtomicCmpXchg:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        break;
-      case Builtin::AtomicXchg:
-      case Builtin::AtomicFetchAdd:
-      case Builtin::AtomicFetchSub:
-      case Builtin::AtomicFetchAnd:
-      case Builtin::AtomicFetchOr:
-      case Builtin::AtomicFetchXor:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Int32));
-        break;
-#endif
-      case Builtin::SinD:
-      case Builtin::CosD:
-      case Builtin::TanD:
-      case Builtin::ASinD:
-      case Builtin::ACosD:
-      case Builtin::ATanD:
-      case Builtin::CeilD:
-      case Builtin::FloorD:
-      case Builtin::ExpD:
-      case Builtin::LogD:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
-        break;
-      case Builtin::ModD:
-      case Builtin::PowD:
-      case Builtin::ATan2D:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Double));
-        break;
-      case Builtin::CeilF:
-      case Builtin::FloorF:
-        MOZ_ALWAYS_TRUE(args.append(MIRType_Float32));
-        break;
-      case Builtin::Limit:
-        MOZ_CRASH("Bad builtin");
-    }
-
-    MOZ_ASSERT(args.length() <= 4);
-    static_assert(MIRTypeVector::InlineLength >= 4, "infallibility of append");
-
-    MOZ_ASSERT(masm.framePushed() == 0);
-    uint32_t framePushed = StackDecrementForCall(masm, ABIStackAlignment, args);
-
-    AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason(builtin), &offsets);
-
-    for (ABIArgMIRTypeIter i(args); !i.done(); i++) {
-        if (i->kind() != ABIArg::Stack)
-            continue;
-#if !defined(JS_CODEGEN_ARM)
-        unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
-        Address srcAddr(masm.getStackPointer(), offsetToCallerStackArgs + i->offsetFromArgBase());
-        Address dstAddr(masm.getStackPointer(), i->offsetFromArgBase());
-        if (i.mirType() == MIRType_Int32 || i.mirType() == MIRType_Float32) {
-            masm.load32(srcAddr, ABIArgGenerator::NonArg_VolatileReg);
-            masm.store32(ABIArgGenerator::NonArg_VolatileReg, dstAddr);
-        } else {
-            MOZ_ASSERT(i.mirType() == MIRType_Double);
-            masm.loadDouble(srcAddr, ScratchDoubleReg);
-            masm.storeDouble(ScratchDoubleReg, dstAddr);
-        }
-#else
-        MOZ_CRASH("Architecture should have enough registers for all builtin calls");
-#endif
-    }
-
-    AssertStackAlignment(masm, ABIStackAlignment);
-    masm.call(BuiltinToImmediate(builtin));
-
-    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason(builtin), &offsets);
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return module.addBuiltinThunkCodeRange(builtin, offsets);
+    return mg.defineExport(exportIndex, offsets);
 }
 
 static void
@@ -444,17 +332,13 @@ FillArgumentArray(MacroAssembler& masm, const MallocSig::ArgVector& args, unsign
     }
 }
 
-// If an FFI detaches its heap (viz., via ArrayBuffer.transfer), it must
+// If an import call detaches its heap (viz., via ArrayBuffer.transfer), it must
 // call change-heap to another heap (viz., the new heap returned by transfer)
 // before returning to asm.js code. If the application fails to do this (if the
 // heap pointer is null), jump to a stub.
 static void
-CheckForHeapDetachment(MacroAssembler& masm, const AsmJSModule& module, Register scratch,
-                       Label* onDetached)
+CheckForHeapDetachment(MacroAssembler& masm, Register scratch, Label* onDetached)
 {
-    if (!module.hasArrayView())
-        return;
-
     MOZ_ASSERT(int(masm.framePushed()) >= int(ShadowStackSpace));
     AssertStackAlignment(masm, ABIStackAlignment);
 #if defined(JS_CODEGEN_X86)
@@ -467,18 +351,19 @@ CheckForHeapDetachment(MacroAssembler& masm, const AsmJSModule& module, Register
 }
 
 // Generate a stub that is called via the internal ABI derived from the
-// signature of the exit and calls into an appropriate InvokeFromAsmJS_* C++
+// signature of the import and calls into an appropriate InvokeImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
 static bool
-GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
-                   Label* throwLabel, Label* onDetached)
+GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool usesHeap,
+                       Label* throwLabel, Label* onDetached, ProfilingOffsets* offsets)
 {
-    AsmJSModule::Exit& exit = module.exit(exitIndex);
+    MacroAssembler& masm = mg.masm();
+    const MallocSig& sig = mg.importSig(importIndex);
 
     masm.setFramePushed(0);
 
-    // Argument types for InvokeFromAsmJS_*:
-    static const MIRType typeArray[] = { MIRType_Pointer,   // exitDatum
+    // Argument types for InvokeImport_*:
+    static const MIRType typeArray[] = { MIRType_Pointer,   // ImportExit
                                          MIRType_Int32,     // argc
                                          MIRType_Pointer }; // argv
     MIRTypeVector invokeArgTypes;
@@ -489,29 +374,28 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
     // The padding between stack args and argv ensures that argv is aligned. The
     // padding between argv and retaddr ensures that sp is aligned.
     unsigned argOffset = AlignBytes(StackArgBytes(invokeArgTypes), sizeof(double));
-    unsigned argBytes = Max<size_t>(1, exit.sig().args().length()) * sizeof(Value);
+    unsigned argBytes = Max<size_t>(1, sig.args().length()) * sizeof(Value);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, argOffset + argBytes);
 
-    AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason::Slow, &offsets);
+    GenerateExitPrologue(masm, framePushed, ExitReason::ImportInterp, offsets);
 
     // Fill the argument array.
     unsigned offsetToCallerStackArgs = sizeof(AsmJSFrame) + masm.framePushed();
     Register scratch = ABIArgGenerator::NonArgReturnReg0;
-    FillArgumentArray(masm, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
+    FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch);
 
-    // Prepare the arguments for the call to InvokeFromAsmJS_*.
+    // Prepare the arguments for the call to InvokeImport_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
 
-    // argument 0: exitIndex
+    // argument 0: importIndex
     if (i->kind() == ABIArg::GPR)
-        masm.mov(ImmWord(exitIndex), i->gpr());
+        masm.mov(ImmWord(importIndex), i->gpr());
     else
-        masm.store32(Imm32(exitIndex), Address(masm.getStackPointer(), i->offsetFromArgBase()));
+        masm.store32(Imm32(importIndex), Address(masm.getStackPointer(), i->offsetFromArgBase()));
     i++;
 
     // argument 1: argc
-    unsigned argc = exit.sig().args().length();
+    unsigned argc = sig.args().length();
     if (i->kind() == ABIArg::GPR)
         masm.mov(ImmWord(argc), i->gpr());
     else
@@ -531,13 +415,13 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
 
     // Make the call, test whether it succeeded, and extract the return value.
     AssertStackAlignment(masm, ABIStackAlignment);
-    switch (exit.sig().ret()) {
+    switch (sig.ret()) {
       case ExprType::Void:
-        masm.call(SymbolicAddress::InvokeFromAsmJS_Ignore);
+        masm.call(SymbolicAddress::InvokeImport_Void);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         break;
       case ExprType::I32:
-        masm.call(SymbolicAddress::InvokeFromAsmJS_ToInt32);
+        masm.call(SymbolicAddress::InvokeImport_I32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.unboxInt32(argv, ReturnReg);
         break;
@@ -546,7 +430,7 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
       case ExprType::F32:
         MOZ_CRASH("Float32 shouldn't be returned from a FFI");
       case ExprType::F64:
-        masm.call(SymbolicAddress::InvokeFromAsmJS_ToNumber);
+        masm.call(SymbolicAddress::InvokeImport_F64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;
@@ -558,17 +442,18 @@ GenerateInterpExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex
 
     // The heap pointer may have changed during the FFI, so reload it and test
     // for detachment.
-    masm.loadAsmJSHeapRegisterFromGlobalData();
-    CheckForHeapDetachment(masm, module, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
+    if (usesHeap) {
+        masm.loadAsmJSHeapRegisterFromGlobalData();
+        CheckForHeapDetachment(masm, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
+    }
 
-    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason::Slow, &offsets);
+    GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, offsets);
 
     if (masm.oom())
         return false;
 
-    offsets.end = masm.currentOffset();
-    exit.initInterpOffset(offsets.begin);
-    return module.addCodeRange(AsmJSModule::CodeRange::SlowFFI, offsets);
+    offsets->end = masm.currentOffset();
+    return true;
 }
 
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
@@ -578,34 +463,35 @@ static const unsigned MaybeSavedGlobalReg = 0;
 #endif
 
 // Generate a stub that is called via the internal ABI derived from the
-// signature of the exit and calls into a compatible Ion-compiled JIT function,
-// having boxed all the ABI arguments into the Ion stack frame layout.
+// signature of the import and calls into a compatible JIT function,
+// having boxed all the ABI arguments into the JIT stack frame layout.
 static bool
-GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
-                Label* throwLabel, Label* onDetached)
+GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool usesHeap,
+                    Label* throwLabel, Label* onDetached, ProfilingOffsets* offsets)
 {
-    AsmJSModule::Exit& exit = module.exit(exitIndex);
+    MacroAssembler& masm = mg.masm();
+    const MallocSig& sig = mg.importSig(importIndex);
 
     masm.setFramePushed(0);
 
-    // Ion calls use the following stack layout (sp grows to the left):
+    // JIT calls use the following stack layout (sp grows to the left):
     //   | retaddr | descriptor | callee | argc | this | arg1..N |
-    // After the Ion frame, the global register (if present) is saved since Ion
-    // does not preserve non-volatile regs. Also, unlike most ABIs, Ion requires
-    // that sp be JitStackAlignment-aligned *after* pushing the return address.
+    // After the JIT frame, the global register (if present) is saved since the
+    // JIT's ABI does not preserve non-volatile regs. Also, unlike most ABIs,
+    // the JIT ABI requires that sp be JitStackAlignment-aligned *after* pushing
+    // the return address.
     static_assert(AsmJSStackAlignment >= JitStackAlignment, "subsumes");
     unsigned sizeOfRetAddr = sizeof(void*);
-    unsigned ionFrameBytes = 3 * sizeof(void*) + (1 + exit.sig().args().length()) * sizeof(Value);
-    unsigned totalIonBytes = sizeOfRetAddr + ionFrameBytes + MaybeSavedGlobalReg;
-    unsigned ionFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalIonBytes) -
+    unsigned jitFrameBytes = 3 * sizeof(void*) + (1 + sig.args().length()) * sizeof(Value);
+    unsigned totalJitFrameBytes = sizeOfRetAddr + jitFrameBytes + MaybeSavedGlobalReg;
+    unsigned jitFramePushed = StackDecrementForCall(masm, JitStackAlignment, totalJitFrameBytes) -
                               sizeOfRetAddr;
 
-    AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, ionFramePushed, ExitReason::Jit, &offsets);
+    GenerateExitPrologue(masm, jitFramePushed, ExitReason::ImportJit, offsets);
 
     // 1. Descriptor
     size_t argOffset = 0;
-    uint32_t descriptor = MakeFrameDescriptor(ionFramePushed, JitFrame_Entry);
+    uint32_t descriptor = MakeFrameDescriptor(jitFramePushed, JitFrame_Entry);
     masm.storePtr(ImmWord(uintptr_t(descriptor)), Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
@@ -614,17 +500,18 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
-    unsigned globalDataOffset = module.exit(exitIndex).globalDataOffset();
+    unsigned globalDataOffset = mg.importExitGlobalDataOffset(importIndex);
 #if defined(JS_CODEGEN_X64)
     masm.append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)
     masm.append(AsmJSGlobalAccess(masm.movlWithPatch(Imm32(0), callee), globalDataOffset));
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     masm.computeEffectiveAddress(Address(GlobalReg, globalDataOffset - AsmJSGlobalRegBias), callee);
 #endif
 
     // 2.2. Get callee
-    masm.loadPtr(Address(callee, offsetof(AsmJSModule::ExitDatum, fun)), callee);
+    masm.loadPtr(Address(callee, Module::OffsetOfImportExitFun), callee);
 
     // 2.3. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));
@@ -635,7 +522,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     masm.loadBaselineOrIonNoArgCheck(callee, callee, nullptr);
 
     // 3. Argc
-    unsigned argc = exit.sig().args().length();
+    unsigned argc = sig.args().length();
     masm.storePtr(ImmWord(uintptr_t(argc)), Address(masm.getStackPointer(), argOffset));
     argOffset += sizeof(size_t);
 
@@ -644,10 +531,10 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     argOffset += sizeof(Value);
 
     // 5. Fill the arguments
-    unsigned offsetToCallerStackArgs = ionFramePushed + sizeof(AsmJSFrame);
-    FillArgumentArray(masm, exit.sig().args(), argOffset, offsetToCallerStackArgs, scratch);
-    argOffset += exit.sig().args().length() * sizeof(Value);
-    MOZ_ASSERT(argOffset == ionFrameBytes);
+    unsigned offsetToCallerStackArgs = jitFramePushed + sizeof(AsmJSFrame);
+    FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch);
+    argOffset += sig.args().length() * sizeof(Value);
+    MOZ_ASSERT(argOffset == jitFrameBytes);
 
     // 6. Jit code will clobber all registers, even non-volatiles. GlobalReg and
     //    HeapReg are removed from the general register set for asm.js code, so
@@ -657,7 +544,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     //    heap may change during the FFI call.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
-    masm.storePtr(GlobalReg, Address(masm.getStackPointer(), ionFrameBytes));
+    masm.storePtr(GlobalReg, Address(masm.getStackPointer(), jitFrameBytes));
 #endif
 
     {
@@ -770,13 +657,13 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
         masm.storePtr(reg2, Address(reg0, offsetOfJitActivation));
     }
 
-    // Reload the global register since Ion code can clobber any register.
+    // Reload the global register since JIT code can clobber any register.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
-    masm.loadPtr(Address(masm.getStackPointer(), ionFrameBytes), GlobalReg);
+    masm.loadPtr(Address(masm.getStackPointer(), jitFrameBytes), GlobalReg);
 #endif
 
-    // As explained above, the frame was aligned for Ion such that
+    // As explained above, the frame was aligned for the JIT ABI such that
     //   (sp + sizeof(void*)) % JitStackAlignment == 0
     // But now we possibly want to call one of several different C++ functions,
     // so subtract the sizeof(void*) so that sp is aligned for an ABI call.
@@ -788,7 +675,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     masm.branchTestMagic(Assembler::Equal, JSReturnOperand, throwLabel);
 
     Label oolConvert;
-    switch (exit.sig().ret()) {
+    switch (sig.ret()) {
       case ExprType::Void:
         break;
       case ExprType::I32:
@@ -798,25 +685,27 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
-        MOZ_CRASH("Float shouldn't be returned from a FFI");
+        MOZ_CRASH("Float shouldn't be returned from an import");
       case ExprType::F64:
         masm.convertValueToDouble(JSReturnOperand, ReturnDoubleReg, &oolConvert);
         break;
       case ExprType::I32x4:
       case ExprType::F32x4:
       case ExprType::B32x4:
-        MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
+        MOZ_CRASH("SIMD types shouldn't be returned from an import");
     }
 
     Label done;
     masm.bind(&done);
 
-    // The heap pointer has to be reloaded anyway since Ion could have clobbered
-    // it. Additionally, the FFI may have detached the heap buffer.
-    masm.loadAsmJSHeapRegisterFromGlobalData();
-    CheckForHeapDetachment(masm, module, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
+    // The heap pointer has to be reloaded anyway since JIT code could have
+    // clobbered it. Additionally, the import may have detached the heap buffer.
+    if (usesHeap) {
+        masm.loadAsmJSHeapRegisterFromGlobalData();
+        CheckForHeapDetachment(masm, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
+    }
 
-    GenerateAsmJSExitEpilogue(masm, masm.framePushed(), ExitReason::Jit, &offsets);
+    GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, offsets);
 
     if (oolConvert.used()) {
         masm.bind(&oolConvert);
@@ -847,7 +736,7 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
 
         // Call coercion function
         AssertStackAlignment(masm, ABIStackAlignment);
-        switch (exit.sig().ret()) {
+        switch (sig.ret()) {
           case ExprType::I32:
             masm.call(SymbolicAddress::CoerceInPlace_ToInt32);
             masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, throwLabel);
@@ -871,9 +760,8 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
     if (masm.oom())
         return false;
 
-    offsets.end = masm.currentOffset();
-    exit.initJitOffset(offsets.begin);
-    return module.addCodeRange(AsmJSModule::CodeRange::JitFFI, offsets);
+    offsets->end = masm.currentOffset();
+    return true;
 }
 
 // Generate a stub that is called when returning from an exit where the module's
@@ -881,11 +769,12 @@ GenerateIonExit(MacroAssembler& masm, AsmJSModule& module, unsigned exitIndex,
 // exception and then jumps to the generic throw stub to pop everything off the
 // stack.
 static bool
-GenerateOnDetachedExit(MacroAssembler& masm, AsmJSModule& module, Label* onDetached,
-                       Label* throwLabel)
+GenerateOnDetachedStub(ModuleGenerator& mg, Label* onDetached, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
     masm.bind(onDetached);
 
@@ -898,17 +787,19 @@ GenerateOnDetachedExit(MacroAssembler& masm, AsmJSModule& module, Label* onDetac
         return false;
 
     offsets.end = masm.currentOffset();
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineInlineStub(offsets);
 }
 
 // Generate a stub that is called immediately after the prologue when there is a
 // stack overflow. This stub calls a C++ function to report the error and then
 // jumps to the throw stub to pop the activation.
 static bool
-GenerateStackOverflowExit(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateStackOverflowStub(ModuleGenerator& mg, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
     masm.bind(masm.asmStackOverflowLabel());
 
@@ -935,43 +826,47 @@ GenerateStackOverflowExit(MacroAssembler& masm, AsmJSModule& module, Label* thro
         return false;
 
     offsets.end = masm.currentOffset();
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineInlineStub(offsets);
 }
 
 // Generate a stub that is called from the synchronous, inline interrupt checks
 // when the interrupt flag is set. This stub calls the C++ function to handle
 // the interrupt which returns whether execution has been interrupted.
 static bool
-GenerateSyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateSyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.setFramePushed(0);
     unsigned framePushed = StackDecrementForCall(masm, ABIStackAlignment, ShadowStackSpace);
 
-    AsmJSProfilingOffsets offsets;
-    GenerateAsmJSExitPrologue(masm, framePushed, ExitReason::Interrupt, &offsets,
-                              masm.asmSyncInterruptLabel());
+    ProfilingOffsets offsets;
+    GenerateExitPrologue(masm, framePushed, ExitReason::Native, &offsets,
+                         masm.asmSyncInterruptLabel());
 
     AssertStackAlignment(masm, ABIStackAlignment);
     masm.call(SymbolicAddress::HandleExecutionInterrupt);
     masm.branchIfFalseBool(ReturnReg, throwLabel);
 
-    GenerateAsmJSExitEpilogue(masm, framePushed, ExitReason::Interrupt, &offsets);
+    GenerateExitEpilogue(masm, framePushed, ExitReason::Native, &offsets);
 
     if (masm.oom())
         return false;
 
     offsets.end = masm.currentOffset();
-    return module.addCodeRange(AsmJSModule::CodeRange::Interrupt, offsets);
+    return mg.defineSyncInterruptStub(offsets);
 }
 
 // Generate a stub that is jumped to from an out-of-bounds heap access when
 // there are throwing semantics. This stub calls a C++ function to report an
 // error and then jumps to the throw stub to pop the activation.
 static bool
-GenerateConversionErrorExit(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateConversionErrorStub(ModuleGenerator& mg, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
     masm.bind(masm.asmOnConversionErrorLabel());
 
@@ -979,7 +874,7 @@ GenerateConversionErrorExit(MacroAssembler& masm, AsmJSModule& module, Label* th
     // into C++.  We unconditionally jump to throw so don't worry about restoring sp.
     masm.andToStackPtr(Imm32(~(ABIStackAlignment - 1)));
 
-    // OnOutOfBounds always throws.
+    // OnImpreciseConversion always throws.
     masm.assertStackAlignment(ABIStackAlignment);
     masm.call(SymbolicAddress::OnImpreciseConversion);
     masm.jump(throwLabel);
@@ -988,18 +883,19 @@ GenerateConversionErrorExit(MacroAssembler& masm, AsmJSModule& module, Label* th
         return false;
 
     offsets.end = masm.currentOffset();
-    module.setOnOutOfBoundsExitOffset(offsets.begin);
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineInlineStub(offsets);
 }
 
 // Generate a stub that is jumped to from an out-of-bounds heap access when
 // there are throwing semantics. This stub calls a C++ function to report an
 // error and then jumps to the throw stub to pop the activation.
 static bool
-GenerateOutOfBoundsExit(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateOutOfBoundsStub(ModuleGenerator& mg, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
     masm.bind(masm.asmOnOutOfBoundsLabel());
 
@@ -1016,8 +912,7 @@ GenerateOutOfBoundsExit(MacroAssembler& masm, AsmJSModule& module, Label* throwL
         return false;
 
     offsets.end = masm.currentOffset();
-    module.setOnOutOfBoundsExitOffset(offsets.begin);
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineOutOfBoundsStub(offsets);
 }
 
 static const LiveRegisterSet AllRegsExceptSP(
@@ -1034,10 +929,12 @@ static const LiveRegisterSet AllRegsExceptSP(
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 static bool
-GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateAsyncInterruptStub(ModuleGenerator& mg, Module::HeapBool usesHeap, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
@@ -1187,8 +1084,7 @@ GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thr
         return false;
 
     offsets.end = masm.currentOffset();
-    module.setAsyncInterruptOffset(offsets.begin);
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineAsyncInterruptStub(offsets);
 }
 
 // If an exception is thrown, simply pop all frames (since asm.js does not
@@ -1197,10 +1093,12 @@ GenerateAsyncInterruptExit(MacroAssembler& masm, AsmJSModule& module, Label* thr
 //  2. PopRegsInMask to restore the caller's non-volatile registers.
 //  3. Return (to CallAsmJS).
 static bool
-GenerateThrowStub(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
+GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
 {
+    MacroAssembler& masm = mg.masm();
+
     masm.haltingAlign(CodeAlignment);
-    AsmJSOffsets offsets;
+    Offsets offsets;
     offsets.begin = masm.currentOffset();
     masm.bind(throwLabel);
 
@@ -1224,19 +1122,14 @@ GenerateThrowStub(MacroAssembler& masm, AsmJSModule& module, Label* throwLabel)
         return false;
 
     offsets.end = masm.currentOffset();
-    return module.addCodeRange(AsmJSModule::CodeRange::Inline, offsets);
+    return mg.defineInlineStub(offsets);
 }
 
 bool
-wasm::GenerateStubs(MacroAssembler& masm, AsmJSModule& module, const FuncOffsetVector& funcOffsets)
+wasm::GenerateStubs(ModuleGenerator& mg, Module::HeapBool usesHeap)
 {
-    for (unsigned i = 0; i < module.numExportedFunctions(); i++) {
-        if (!GenerateEntry(masm, module, i, funcOffsets))
-            return false;
-    }
-
-    for (auto builtin : MakeEnumeratedRange(Builtin::Limit)) {
-        if (!GenerateBuiltinThunk(masm, module, builtin))
+    for (unsigned i = 0; i < mg.numDeclaredExports(); i++) {
+        if (!GenerateEntry(mg, i, usesHeap))
             return false;
     }
 
@@ -1245,45 +1138,51 @@ wasm::GenerateStubs(MacroAssembler& masm, AsmJSModule& module, const FuncOffsetV
     {
         Label onDetached;
 
-        for (size_t i = 0; i < module.numExits(); i++) {
-            if (!GenerateInterpExit(masm, module, i, &onThrow, &onDetached))
+        for (size_t i = 0; i < mg.numDeclaredImports(); i++) {
+            ProfilingOffsets interp;
+            if (!GenerateInterpExitStub(mg, i, usesHeap, &onThrow, &onDetached, &interp))
                 return false;
-            if (!GenerateIonExit(masm, module, i, &onThrow, &onDetached))
+
+            ProfilingOffsets jit;
+            if (!GenerateJitExitStub(mg, i, usesHeap, &onThrow, &onDetached, &jit))
+                return false;
+
+            if (!mg.defineImport(i, interp, jit))
                 return false;
         }
 
         if (onDetached.used()) {
-            if (!GenerateOnDetachedExit(masm, module, &onDetached, &onThrow))
+            if (!GenerateOnDetachedStub(mg, &onDetached, &onThrow))
                 return false;
         }
     }
 
-    if (masm.asmStackOverflowLabel()->used()) {
-        if (!GenerateStackOverflowExit(masm, module, &onThrow))
+    if (mg.masm().asmStackOverflowLabel()->used()) {
+        if (!GenerateStackOverflowStub(mg, &onThrow))
             return false;
     }
 
-    if (masm.asmSyncInterruptLabel()->used()) {
-        if (!GenerateSyncInterruptExit(masm, module, &onThrow))
+    if (mg.masm().asmSyncInterruptLabel()->used()) {
+        if (!GenerateSyncInterruptStub(mg, &onThrow))
             return false;
     }
 
-    if (masm.asmOnConversionErrorLabel()->used()) {
-        if (!GenerateConversionErrorExit(masm, module, &onThrow))
+    if (mg.masm().asmOnConversionErrorLabel()->used()) {
+        if (!GenerateConversionErrorStub(mg, &onThrow))
             return false;
     }
 
     // Generate unconditionally: the out-of-bounds exit may be used later even
     // if signal handling isn't used for out-of-bounds at the moment.
-    if (!GenerateOutOfBoundsExit(masm, module, &onThrow))
+    if (!GenerateOutOfBoundsStub(mg, &onThrow))
         return false;
 
     // Generate unconditionally: the async interrupt may be taken at any time.
-    if (!GenerateAsyncInterruptExit(masm, module, &onThrow))
+    if (!GenerateAsyncInterruptStub(mg, usesHeap, &onThrow))
         return false;
 
     if (onThrow.used()) {
-        if (!GenerateThrowStub(masm, module, &onThrow))
+        if (!GenerateThrowStub(mg, &onThrow))
             return false;
     }
 
