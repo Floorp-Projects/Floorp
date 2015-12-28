@@ -13,6 +13,14 @@ public class StubAdjustHelper implements AdjustHelperInterface {
         // Do nothing.
     }
 
+    public void onPause() {
+        // Do nothing.
+    }
+
+    public void onResume() {
+        // Do nothing.
+    }
+
     public void setEnabled(final boolean isEnabled) {
         // Do nothing.
     }
