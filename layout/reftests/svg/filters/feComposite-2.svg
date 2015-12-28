@@ -10,4 +10,18 @@
   <rect x="50" y="0" width="50" height="100" fill="#00ff00" opacity="0"/>
 </g>
 
+<!-- Test that the arithmetic operator actually clamp the result -->
+<filter id="f2" filterUnits="userSpaceOnUse" primitiveUnits="userSpaceOnUse" style="color-interpolation-filters:sRGB">
+  <feFlood flood-color="#ffffff" result="flood" x="100" y="0" width="50" height="100"/>
+  <feComposite result="c" in="SourceGraphic" in2="flood" operator="arithmetic" k2="1" k3="1"/>
+  <feComponentTransfer in="c">
+    <feFuncR type="linear" slope="0.5"/>
+    <feFuncG type="linear" slope="0.5"/>
+    <feFuncB type="linear" slope="0.5"/>
+  </feComponentTransfer>
+</filter>
+<g filter="url(#f2)">
+  <rect x="100" y="0" width="50" height="100" fill="#ff0000"/>
+</g>
+
 </svg>
