@@ -142,9 +142,7 @@ EXPORTS.js += [
 ]
 
 UNIFIED_SOURCES += [
-    'asmjs/AsmJSLink.cpp',
-    'asmjs/AsmJSModule.cpp',
-    'asmjs/AsmJSValidate.cpp',
+    'asmjs/AsmJS.cpp',
     'asmjs/WasmFrameIterator.cpp',
     'asmjs/WasmGenerator.cpp',
     'asmjs/WasmIonCompile.cpp',

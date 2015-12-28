@@ -34,8 +34,7 @@
 #endif
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSModule.h"
-#include "asmjs/AsmJSValidate.h"
+#include "asmjs/AsmJS.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
 #include "gc/Memory.h"

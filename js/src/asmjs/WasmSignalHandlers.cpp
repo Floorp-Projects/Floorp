@@ -21,7 +21,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
 
-#include "asmjs/AsmJSValidate.h"
+#include "asmjs/AsmJS.h"
 #include "asmjs/WasmModule.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
