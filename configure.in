@@ -1459,6 +1459,7 @@ if test "$GNU_CC"; then
 
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wsometimes-initialized - catches some uninitialized values
+    # -Wunreachable-code-aggressive - catches lots of dead code
     #
     # XXX: at the time of writing, the version of clang used on the OS X test
     # machines has a bug that causes it to reject some valid files if both
@@ -1471,6 +1472,7 @@ if test "$GNU_CC"; then
         MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
     fi
     MOZ_C_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_c_has_sometimes_uninitialized)
+    MOZ_C_SUPPORTS_WARNING(-W, unreachable-code-aggressive, ac_c_has_wunreachable_code_aggressive)
 
     # -Wcast-align - catches problems with cast alignment
     if test -z "$INTEL_CC" -a -z "$CLANG_CC"; then
@@ -1543,6 +1545,8 @@ if test "$GNU_CXX"; then
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wrange-loop-analysis - catches copies during range-based for loops.
     # -Wsometimes-initialized - catches some uninitialized values
+    # -Wunreachable-code - catches some dead code
+    # -Wunreachable-code-return - catches dead code after return call
     #
     # XXX: at the time of writing, the version of clang used on the OS X test
     # machines has a bug that causes it to reject some valid files if both
@@ -1556,6 +1560,8 @@ if test "$GNU_CXX"; then
     fi
     MOZ_CXX_SUPPORTS_WARNING(-W, range-loop-analysis, ac_cxx_has_range_loop_analysis)
     MOZ_CXX_SUPPORTS_WARNING(-W, sometimes-uninitialized, ac_cxx_has_sometimes_uninitialized)
+    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code, ac_cxx_has_wunreachable_code)
+    MOZ_CXX_SUPPORTS_WARNING(-W, unreachable-code-return, ac_cxx_has_wunreachable_code_return)
 
     # -Wcast-align - catches problems with cast alignment
     if test -z "$INTEL_CXX" -a -z "$CLANG_CXX"; then
