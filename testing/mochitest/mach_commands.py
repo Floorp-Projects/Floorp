@@ -348,6 +348,7 @@ class MochitestRunner(MozbuildObject):
 
 # parser
 
+
 def setup_argument_parser():
     build_obj = MozbuildObject.from_environment(cwd=here)
 
