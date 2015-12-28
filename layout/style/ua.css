@@ -282,7 +282,6 @@
   left: 0 !important;
   right: 0 !important;
   bottom: 0 !important;
-  z-index: 2147483647 !important;
   background: black;
   width: 100% !important;
   height: 100% !important;
@@ -292,6 +291,8 @@
   min-height: 0 !important;
   max-height: none !important;
   box-sizing: border-box !important;
+  object-fit: contain !important;
+  transform: none !important;
 }
 
 /* Selectors here should match the check in
