@@ -363,6 +363,15 @@ TextureClient::Lock(OpenMode aMode)
   mIsLocked = mData->Lock(aMode, mReleaseFenceHandle.IsValid() ? &mReleaseFenceHandle : nullptr);
   mOpenMode = aMode;
 
+  if (mIsLocked && CanExposeDrawTarget() && (aMode & OpenMode::OPEN_WRITE) && NS_IsMainThread()) {
+    if (!BorrowDrawTarget()) {
+      // Failed to get a DrawTarget, means we won't be able to write into the
+      // texture, might as well fail now.
+      Unlock();
+      return false;
+    }
+  }
+
   return mIsLocked;
 }
 
