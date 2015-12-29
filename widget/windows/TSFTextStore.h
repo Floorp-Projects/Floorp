@@ -296,7 +296,8 @@ protected:
 
   void     NotifyTSFOfTextChange(const TS_TEXTCHANGE& aTextChange);
   void     NotifyTSFOfSelectionChange();
-  bool     NotifyTSFOfLayoutChange(bool aFlush);
+  bool     NotifyTSFOfLayoutChange();
+  void     NotifyTSFOfLayoutChangeAgain();
 
   HRESULT  HandleRequestAttrs(DWORD aFlags,
                               ULONG aFilterCount,
@@ -828,11 +829,14 @@ protected:
   // mSink->OnSelectionChange() after mLock becomes 0.
   bool                         mPendingOnSelectionChange;
   // If GetTextExt() or GetACPFromPoint() is called and the layout hasn't been
-  // calculated yet, these methods return TS_E_NOLAYOUT.  Then, RequestLock()
-  // will call mSink->OnLayoutChange() and
-  // ITfContextOwnerServices::OnLayoutChange() after the layout is fixed and
-  // the document is unlocked.
-  bool                         mPendingOnLayoutChange;
+  // calculated yet, these methods return TS_E_NOLAYOUT.  At that time,
+  // mHasReturnedNoLayoutError is set to true.
+  bool                         mHasReturnedNoLayoutError;
+  // Before calling ITextStoreACPSink::OnLayoutChange() and
+  // ITfContextOwnerServices::OnLayoutChange(), mWaitingQueryLayout is set to
+  // true.  This is set to  false when GetTextExt() or GetACPFromPoint() is
+  // called.
+  bool                         mWaitingQueryLayout;
   // During the documet is locked, we shouldn't destroy the instance.
   // If this is true, the instance will be destroyed after unlocked.
   bool                         mPendingDestroy;
