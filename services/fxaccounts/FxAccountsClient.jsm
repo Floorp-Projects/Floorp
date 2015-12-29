@@ -204,7 +204,7 @@ this.FxAccountsClient.prototype = {
   signOut: function (sessionTokenHex, options = {}) {
     let path = "/session/destroy";
     if (options.service) {
-      path += "?service=" + encodeURIComponent(options.service);
+      path += "?service=" + options.service;
     }
     return this._request(path, "POST",
       deriveHawkCredentials(sessionTokenHex, "sessionToken"));
@@ -357,116 +357,6 @@ this.FxAccountsClient.prototype = {
         return Promise.reject(error);
       }
     );
-  },
-
-  /**
-   * Register a new device
-   *
-   * @method registerDevice
-   * @param  sessionTokenHex
-   *         Session token obtained from signIn
-   * @param  name
-   *         Device name
-   * @param  type
-   *         Device type (mobile|desktop)
-   * @return Promise
-   *         Resolves to an object:
-   *         {
-   *           id: Device identifier
-   *           createdAt: Creation time (milliseconds since epoch)
-   *           name: Name of device
-   *           type: Type of device (mobile|desktop)
-   *         }
-   */
-  registerDevice(sessionTokenHex, name, type) {
-    let path = "/account/device";
-
-    let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
-    let body = { name, type };
-
-    return this._request(path, "POST", creds, body);
-  },
-
-  /**
-   * Update the session or name for an existing device
-   *
-   * @method updateDevice
-   * @param  sessionTokenHex
-   *         Session token obtained from signIn
-   * @param  id
-   *         Device identifier
-   * @param  name
-   *         Device name
-   * @return Promise
-   *         Resolves to an object:
-   *         {
-   *           id: Device identifier
-   *           name: Device name
-   *         }
-   */
-  updateDevice(sessionTokenHex, id, name) {
-    let path = "/account/device";
-
-    let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
-    let body = { id, name };
-
-    return this._request(path, "POST", creds, body);
-  },
-
-  /**
-   * Delete a device and its associated session token, signing the user
-   * out of the server.
-   *
-   * @method signOutAndDestroyDevice
-   * @param  sessionTokenHex
-   *         Session token obtained from signIn
-   * @param  id
-   *         Device identifier
-   * @param  [options]
-   *         Options object
-   * @param  [options.service]
-   *         `service` query parameter
-   * @return Promise
-   *         Resolves to an empty object:
-   *         {}
-   */
-  signOutAndDestroyDevice(sessionTokenHex, id, options={}) {
-    let path = "/account/device/destroy";
-
-    if (options.service) {
-      path += "?service=" + encodeURIComponent(options.service);
-    }
-
-    let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
-    let body = { id };
-
-    return this._request(path, "POST", creds, body);
-  },
-
-  /**
-   * Get a list of currently registered devices
-   *
-   * @method getDeviceList
-   * @param  sessionTokenHex
-   *         Session token obtained from signIn
-   * @return Promise
-   *         Resolves to an array of objects:
-   *         [
-   *           {
-   *             id: Device id
-   *             isCurrentDevice: Boolean indicating whether the item
-   *                              represents the current device
-   *             name: Device name
-   *             type: Device type (mobile|desktop)
-   *           },
-   *           ...
-   *         ]
-   */
-  getDeviceList(sessionTokenHex) {
-    let path = "/account/devices";
-    let creds = deriveHawkCredentials(sessionTokenHex, "sessionToken");
-
-    return this._request(path, "GET", creds, {});
   },
 
   _clearBackoff: function() {
