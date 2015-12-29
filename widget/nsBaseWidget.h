@@ -217,6 +217,9 @@ public:
                           { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD              SetPluginFocused(bool& aFocused) override
                           { return NS_ERROR_NOT_IMPLEMENTED; }
+  virtual void            SetCandidateWindowForPlugin(int32_t aX,
+                                                      int32_t aY) override
+                          { }
   NS_IMETHOD              AttachNativeKeyEvent(mozilla::WidgetKeyboardEvent& aEvent) override { return NS_ERROR_NOT_IMPLEMENTED; }
   NS_IMETHOD_(bool)       ExecuteNativeKeyBinding(
                             NativeKeyBindingsType aType,

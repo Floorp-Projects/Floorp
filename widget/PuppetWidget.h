@@ -254,6 +254,9 @@ public:
   virtual uint32_t GetMaxTouchPoints() const override;
 
   virtual void StartAsyncScrollbarDrag(const AsyncDragMetrics& aDragMetrics) override;
+
+  virtual void SetCandidateWindowForPlugin(int32_t aX, int32_t aY) override;
+
 protected:
   virtual nsresult NotifyIMEInternal(
                      const IMENotification& aIMENotification) override;

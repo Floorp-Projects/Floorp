@@ -29,6 +29,7 @@ class nsPluginFrame;
 class nsDisplayListBuilder;
 
 namespace mozilla {
+class TextComposition;
 namespace dom {
 struct MozPluginParameter;
 } // namespace dom
@@ -260,6 +261,11 @@ public:
   void NotifyHostCreateWidget();
   void NotifyDestroyPending();
 
+  bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
+                            int32_t* aLength);
+  bool SetCandidateWindow(int32_t aX, int32_t aY);
+  bool RequestCommitOrCancel(bool aCommitted);
+
 private:
   virtual ~nsPluginInstanceOwner();
 
@@ -282,6 +288,7 @@ private:
 
 #if defined(XP_WIN)
   nsIWidget* GetContainingWidgetIfOffset();
+  already_AddRefed<mozilla::TextComposition> GetTextComposition();
 #endif
  
   nsPluginNativeWindow       *mPluginWindow;
