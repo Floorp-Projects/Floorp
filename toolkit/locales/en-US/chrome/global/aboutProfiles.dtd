@@ -8,3 +8,5 @@
 <!ENTITY aboutProfiles.restart.title "Restart">
 <!ENTITY aboutProfiles.restart.inSafeMode "Restart with Add-ons Disabled…">
 <!ENTITY aboutProfiles.restart.normal "Restart normally…">
+<!ENTITY aboutProfiles.profileManager.workOffline "Work Offline">
+<!ENTITY aboutProfiles.profileManager.autoSelect "Use the selected profile without asking at startup">
