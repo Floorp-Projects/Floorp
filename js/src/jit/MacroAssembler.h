@@ -1427,7 +1427,7 @@ class MacroAssembler : public MacroAssemblerSpecific
         return &asmOnConversionErrorLabel_;
     }
 
-    bool asmMergeWith(const MacroAssembler& masm);
+    bool asmMergeWith(MacroAssembler& masm);
     void finish();
     void link(JitCode* code);
 
