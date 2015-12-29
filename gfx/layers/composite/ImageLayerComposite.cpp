@@ -50,7 +50,6 @@ ImageLayerComposite::SetCompositableHost(CompositableHost* aHost)
 {
   switch (aHost->GetType()) {
     case CompositableType::IMAGE:
-    case CompositableType::IMAGE_OVERLAY:
       mImageHost = aHost;
       return true;
     default:

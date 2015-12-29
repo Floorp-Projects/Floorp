@@ -3173,17 +3173,7 @@ void HTMLMediaElement::UpdateSrcMediaStreamPlaying(uint32_t aFlags)
     stream->AddAudioOutput(this);
     SetVolumeInternal();
 
-  #ifdef MOZ_WIDGET_GONK
-    bool bUseOverlayImage = mSrcStream->AsDOMHwMediaStream() != nullptr;
-  #else
-    bool bUseOverlayImage = false;
-  #endif
-    VideoFrameContainer* container;
-    if (bUseOverlayImage) {
-      container = GetOverlayImageVideoFrameContainer();
-    } else {
-      container = GetVideoFrameContainer();
-    }
+    VideoFrameContainer* container = GetVideoFrameContainer();
     if (container) {
       stream->AddVideoOutput(container);
     }
@@ -4026,22 +4016,6 @@ VideoFrameContainer* HTMLMediaElement::GetVideoFrameContainer()
 
   mVideoFrameContainer =
     new VideoFrameContainer(this, LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS));
-
-  return mVideoFrameContainer;
-}
-
-VideoFrameContainer* HTMLMediaElement::GetOverlayImageVideoFrameContainer()
-{
-  if (mVideoFrameContainer)
-    return mVideoFrameContainer;
-
-  // Only video frames need an image container.
-  if (!IsVideo()) {
-    return nullptr;
-  }
-
-  mVideoFrameContainer =
-    new VideoFrameContainer(this, LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS_OVERLAY));
 
   return mVideoFrameContainer;
 }
