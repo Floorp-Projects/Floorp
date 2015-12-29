@@ -305,6 +305,7 @@ private:
     void HookSetWindowLongPtr();
     void SetUnityHooks();
     void ClearUnityHooks();
+    void InitImm32Hook();
     static inline bool SetWindowLongHookCheck(HWND hWnd,
                                                 int nIndex,
                                                 LONG_PTR newLong);
@@ -349,6 +350,15 @@ private:
                                           int nIndex,
                                           LONG newLong);
 #endif
+
+    static HIMC WINAPI ImmGetContextProc(HWND aWND);
+    static BOOL WINAPI ImmReleaseContextProc(HWND aWND, HIMC aIMC);
+    static LONG WINAPI ImmGetCompositionStringProc(HIMC aIMC, DWORD aIndex,
+                                                   LPVOID aBuf, DWORD aLen);
+    static BOOL WINAPI ImmSetCandidateWindowProc(HIMC hIMC,
+                                                 LPCANDIDATEFORM plCandidate);
+    static BOOL WINAPI ImmNotifyIME(HIMC aIMC, DWORD aAction, DWORD aIndex,
+                                    DWORD aValue);
 
     class FlashThrottleAsyncMsg : public ChildAsyncCall
     {

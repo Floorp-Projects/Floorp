@@ -103,6 +103,11 @@ public:
    */
   static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
 
+  /*
+   * For windowless plugin helper.
+   */
+  static void SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm);
+
 #ifdef DEBUG
   /**
    * Returns true when current keyboard layout has IME.  Otherwise, false.

@@ -133,8 +133,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xaaa79c8d, 0xc99d, 0x4fe1, \
-  { 0xa5, 0x11, 0xd3, 0xeb, 0xb1, 0x61, 0x9e, 0x26 } }
+{ 0xa3db64d2, 0x5a73, 0x425f, \
+  { 0x9b, 0xb0, 0x57, 0x7f, 0xe5, 0x56, 0x43, 0x15 } }
 
 /*
  * Window shadow styles
@@ -1798,6 +1798,11 @@ public:
     {
       return GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN;
     }
+
+    /**
+     * Set IME candidate window position by windowless plugin.
+     */
+    virtual void SetCandidateWindowForPlugin(int32_t aX, int32_t aY) = 0;
 
     /*
      * Notifies the input context changes.
