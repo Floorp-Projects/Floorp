@@ -95,6 +95,11 @@ public:
   {
     return mRequiresPermissionChecks;
   }
+
+  // CC methods
+  virtual void Unlink() {}
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) {}
+
 protected:
   virtual ~FileSystemBase();
 
