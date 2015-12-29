@@ -267,7 +267,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         changeZoomFactorButton = (TextView) findViewById(R.id.change_zoom_factor);
         zoomedImageView = (ImageView) findViewById(R.id.zoomed_image_view);
 
-        setTextInZoomFactorButton(zoomFactor);
+        updateUI();
 
         toolbarHeight = getResources().getDimensionPixelSize(R.dimen.zoomed_view_toolbar_height);
         containterSize = getResources().getDimensionPixelSize(R.dimen.drawable_dropshadow_size);
@@ -504,19 +504,30 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         return (GeckoAppShell.getScreenDepth() == 24) ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
     }
 
+    private void updateUI() {
+        // onFinishInflate is not yet completed, the update of the UI will be done later
+        if (changeZoomFactorButton == null) {
+            return;
+        }
+        if (isSimplifiedUI) {
+            changeZoomFactorButton.setVisibility(View.INVISIBLE);
+        } else {
+            setTextInZoomFactorButton(zoomFactor);
+            changeZoomFactorButton.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void getPrefs() {
         prefSimplifiedUIObserverId = PrefsHelper.getPref("ui.zoomedview.simplified", new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(String pref, boolean simplified) {
                 isSimplifiedUI = simplified;
                 if (simplified) {
-                    changeZoomFactorButton.setVisibility(View.INVISIBLE);
                     zoomFactor = (float) defaultZoomFactor;
                 } else {
                     zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
-                    setTextInZoomFactorButton(zoomFactor);
-                    changeZoomFactorButton.setVisibility(View.VISIBLE);
                 }
+                updateUI();
             }
 
             @Override
@@ -533,8 +544,8 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
                     zoomFactor = (float) defaultZoomFactor;
                 } else {
                     zoomFactor = ZOOM_FACTORS_LIST[currentZoomFactorIndex];
-                    setTextInZoomFactorButton(zoomFactor);
                 }
+                updateUI();
             }
 
             @Override
