@@ -287,6 +287,11 @@ parent:
     async SetCandidateWindowForPlugin(int32_t aX, int32_t aY);
 
     /**
+     *  When plugin event isn't consumed, call this
+     */
+    async DefaultProcOfPluginEvent(WidgetPluginEvent aEvent);
+
+    /**
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */

@@ -220,6 +220,8 @@ public:
                             nsString& aCommitted) override;
 
   NS_IMETHOD SetPluginFocused(bool& aFocused) override;
+  virtual void DefaultProcOfPluginEvent(
+                 const mozilla::WidgetPluginEvent& aEvent) override;
 
   virtual nsresult SynthesizeNativeKeyEvent(int32_t aNativeKeyboardLayout,
                                             int32_t aNativeKeyCode,
