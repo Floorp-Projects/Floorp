@@ -4282,7 +4282,7 @@ nsGlobalWindow::IsShowModalDialogEnabled(JSContext*, JSObject*)
     sAddedPrefCache = true;
   }
 
-  return !sIsDisabled;
+  return !sIsDisabled && !XRE_IsContentProcess();
 }
 
 nsIDOMOfflineResourceList*
@@ -8790,7 +8790,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl, nsIVariant* aArgumen
     mDoc->WarnOnceAbout(nsIDocument::eShowModalDialog);
   }
 
-  if (!IsShowModalDialogEnabled() || XRE_IsContentProcess()) {
+  if (!IsShowModalDialogEnabled()) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
