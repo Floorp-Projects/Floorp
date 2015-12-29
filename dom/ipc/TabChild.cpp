@@ -1943,19 +1943,6 @@ TabChild::RecvRealDragEvent(const WidgetDragEvent& aEvent,
   return true;
 }
 
-bool
-TabChild::RecvPluginEvent(const WidgetPluginEvent& aEvent)
-{
-  WidgetPluginEvent localEvent(aEvent);
-  localEvent.widget = mPuppetWidget;
-  nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
-  if (status != nsEventStatus_eConsumeNoDefault) {
-    // If not consumed, we should call default action
-    SendDefaultProcOfPluginEvent(aEvent);
-  }
-  return true;
-}
-
 void
 TabChild::RequestNativeKeyBindings(AutoCacheNativeKeyCommands* aAutoCache,
                                    WidgetKeyboardEvent* aEvent)

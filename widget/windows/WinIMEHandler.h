@@ -8,7 +8,6 @@
 
 #include "nscore.h"
 #include "nsIWidget.h"
-#include "npapi.h"
 #include <windows.h>
 #include <inputscope.h>
 
@@ -103,17 +102,6 @@ public:
    * Called when the window is created.
    */
   static void InitInputContext(nsWindow* aWindow, InputContext& aInputContext);
-
-  /*
-   * For windowless plugin helper.
-   */
-  static void SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm);
-
-  /*
-   * For WM_IME_*COMPOSITION messages and e10s with windowless plugin
-   */
-  static void DefaultProcOfPluginEvent(nsWindow* aWindow,
-                                       const NPEvent* aPluginEvent);
 
 #ifdef DEBUG
   /**
