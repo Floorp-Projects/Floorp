@@ -100,6 +100,18 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
 
             case WM_SETFOCUS:
             case WM_KILLFOCUS:
+
+            case WM_IME_STARTCOMPOSITION:
+            case WM_IME_COMPOSITION:
+            case WM_IME_ENDCOMPOSITION:
+            case WM_IME_CHAR:
+            case WM_IME_SETCONTEXT:
+            case WM_IME_COMPOSITIONFULL:
+            case WM_IME_KEYDOWN:
+            case WM_IME_KEYUP:
+            case WM_IME_SELECT:
+            case WM_INPUTLANGCHANGEREQUEST:
+            case WM_INPUTLANGCHANGE:
                 break;
 
             default:
