@@ -2108,6 +2108,18 @@ DumpObject(JSContext* cx, unsigned argc, Value* vp)
 }
 #endif
 
+static bool
+SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
+    args.rval().setBoolean(true);
+#else
+    args.rval().setBoolean(false);
+#endif
+    return true;
+}
+
 #ifdef NIGHTLY_BUILD
 static bool
 ObjectAddress(JSContext* cx, unsigned argc, Value* vp)
@@ -3507,6 +3519,10 @@ gc::ZealModeHelpText),
 "dumpObject()",
 "  Dump an internal representation of an object."),
 #endif
+
+    JS_FN_HELP("sharedMemoryEnabled", SharedMemoryEnabled, 0, 0,
+"sharedMemoryEnabled()",
+"  Return true if SharedArrayBuffer and Atomics are enabled"),
 
 #ifdef NIGHTLY_BUILD
     JS_FN_HELP("objectAddress", ObjectAddress, 1, 0,

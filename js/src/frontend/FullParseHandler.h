@@ -594,11 +594,24 @@ class FullParseHandler
         return pn;
     }
 
+    ParseNode* newComprehensionBinding(ParseNode* kid) {
+        MOZ_ASSERT(kid->isKind(PNK_NAME));
+        return new_<ListNode>(PNK_LET, JSOP_NOP, kid);
+    }
+
     ParseNode* newForHead(ParseNodeKind kind, ParseNode* pn1, ParseNode* pn2, ParseNode* pn3,
                           const TokenPos& pos)
     {
         MOZ_ASSERT(kind == PNK_FORIN || kind == PNK_FOROF || kind == PNK_FORHEAD);
         return new_<TernaryNode>(kind, JSOP_NOP, pn1, pn2, pn3, pos);
+    }
+
+    void initForLetBlock(ParseNode* forLetImpliedBlock, ParseNode* nestedForLoop) {
+        MOZ_ASSERT(forLetImpliedBlock->isKind(PNK_LEXICALSCOPE));
+        MOZ_ASSERT(nestedForLoop->isKind(PNK_FOR));
+
+        forLetImpliedBlock->pn_expr = nestedForLoop;
+        forLetImpliedBlock->pn_pos = nestedForLoop->pn_pos;
     }
 
     ParseNode* newSwitchStatement(uint32_t begin, ParseNode* discriminant, ParseNode* caseList) {
@@ -774,26 +787,58 @@ class FullParseHandler
         return pn->pn_pos;
     }
 
+    bool isDeclarationKind(ParseNodeKind kind) {
+        return kind == PNK_VAR || kind == PNK_LET || kind == PNK_CONST;
+    }
+
     ParseNode* newList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind != PNK_VAR);
-        return new_<ListNode>(kind, op, pos());
-    }
-    ParseNode* newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
-        return new_<ListNode>(kind, op, TokenPos(begin, begin + 1));
-    }
-    ParseNode* newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET);
+        MOZ_ASSERT(!isDeclarationKind(kind));
         return new_<ListNode>(kind, op, pos());
     }
 
-    /* New list with one initial child node. kid must be non-null. */
+    ParseNode* newList(ParseNodeKind kind, uint32_t begin, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(!isDeclarationKind(kind));
+        return new_<ListNode>(kind, op, TokenPos(begin, begin + 1));
+    }
+
     ParseNode* newList(ParseNodeKind kind, ParseNode* kid, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind != PNK_VAR);
+        MOZ_ASSERT(!isDeclarationKind(kind));
         return new_<ListNode>(kind, op, kid);
     }
+
+    ParseNode* newDeclarationList(ParseNodeKind kind, JSOp op = JSOP_NOP) {
+        MOZ_ASSERT(isDeclarationKind(kind));
+        return new_<ListNode>(kind, op, pos());
+    }
+
     ParseNode* newDeclarationList(ParseNodeKind kind, ParseNode* kid, JSOp op = JSOP_NOP) {
-        MOZ_ASSERT(kind == PNK_VAR || kind == PNK_CONST || kind == PNK_LET);
+        MOZ_ASSERT(isDeclarationKind(kind));
         return new_<ListNode>(kind, op, kid);
+    }
+
+    bool isDeclarationList(ParseNode* node) {
+        return isDeclarationKind(node->getKind());
+    }
+
+    bool declarationIsVar(ParseNode* node) {
+        MOZ_ASSERT(isDeclarationList(node));
+        return node->isKind(PNK_VAR);
+    }
+
+    bool declarationIsLet(ParseNode* node) {
+        MOZ_ASSERT(isDeclarationList(node));
+        return node->isKind(PNK_LET);
+    }
+
+    bool declarationIsConst(ParseNode* node) {
+        MOZ_ASSERT(isDeclarationList(node));
+        return node->isKind(PNK_CONST);
+    }
+
+    ParseNode* singleBindingFromDeclaration(ParseNode* decl) {
+        MOZ_ASSERT(isDeclarationList(decl));
+        MOZ_ASSERT(decl->pn_count == 1);
+        return decl->pn_head;
     }
 
     ParseNode* newCatchList() {

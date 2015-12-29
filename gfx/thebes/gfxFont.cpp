@@ -48,6 +48,7 @@
 #include "graphite2/Font.h"
 
 #include <algorithm>
+#include <limits>
 #include <cmath>
 
 using namespace mozilla;
@@ -1859,13 +1860,14 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
     gfxFloat& inlineCoord = aParams.isVertical ? aPt->y : aPt->x;
     uint32_t markLength = aParams.mark->GetLength();
 
-    gfxFloat clusterStart = NAN;
+    gfxFloat clusterStart = -std::numeric_limits<gfxFloat>::infinity();
     bool shouldDrawEmphasisMark = false;
     for (uint32_t i = 0, idx = aOffset; i < aCount; ++i, ++idx) {
         if (aParams.spacing) {
             inlineCoord += aParams.direction * aParams.spacing[i].mBefore;
         }
-        if (aShapedText->IsClusterStart(idx)) {
+        if (aShapedText->IsClusterStart(idx) ||
+            clusterStart == -std::numeric_limits<gfxFloat>::infinity()) {
             clusterStart = inlineCoord;
         }
         if (aShapedText->CharMayHaveEmphasisMark(idx)) {
@@ -1874,7 +1876,6 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
         inlineCoord += aParams.direction * aShapedText->GetAdvanceForGlyph(idx);
         if (shouldDrawEmphasisMark &&
             (i + 1 == aCount || aShapedText->IsClusterStart(idx + 1))) {
-            MOZ_ASSERT(!std::isnan(clusterStart), "Should have cluster start");
             gfxFloat clusterAdvance = inlineCoord - clusterStart;
             // Move the coord backward to get the needed start point.
             gfxFloat delta = (clusterAdvance + aParams.advance) / 2;
