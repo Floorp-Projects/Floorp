@@ -52,7 +52,6 @@ using class mozilla::WidgetDragEvent from "ipc/nsGUIEventIPC.h";
 using struct nsRect from "nsRect.h";
 using class mozilla::WidgetSelectionEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetTouchEvent from "ipc/nsGUIEventIPC.h";
-using class mozilla::WidgetPluginEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::dom::RemoteDOMEvent from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
@@ -280,16 +279,6 @@ parent:
      * aFocused  Whether or not a plugin is focused
      */
     prio(urgent) async SetPluginFocused(bool aFocused);
-
-    /**
-     * Set IME candidate window by windowless plugin if plugin has focus.
-     */
-    async SetCandidateWindowForPlugin(int32_t aX, int32_t aY);
-
-    /**
-     *  When plugin event isn't consumed, call this
-     */
-    async DefaultProcOfPluginEvent(WidgetPluginEvent aEvent);
 
     /**
      * Request that the parent process move focus to the browser's frame. If
@@ -645,7 +634,6 @@ child:
                        uint64_t aInputBlockId,
                        nsEventStatus aApzResponse);
     RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
-    PluginEvent(WidgetPluginEvent aEvent);
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.

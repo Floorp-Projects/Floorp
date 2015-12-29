@@ -585,8 +585,7 @@ IMMHandler::MaybeAdjustCompositionFont(nsWindow* aWindow,
   // Like Navi-Bar of ATOK, some IMEs may require proper composition font even
   // before sending WM_IME_STARTCOMPOSITION.
   IMEContext context(aWindow);
-  gIMMHandler->AdjustCompositionFont(aWindow, context, aWritingMode,
-                                     aForceUpdate);
+  gIMMHandler->AdjustCompositionFont(context, aWritingMode, aForceUpdate);
 }
 
 // static
@@ -624,13 +623,10 @@ IMMHandler::ProcessMessage(nsWindow* aWindow,
   // if the new window handle is not focused, probably, we should not start
   // the composition, however, such case should not be, it's just bad scenario.
 
-  // When a plug-in has focus, we should dispatch the IME events to
-  // the plug-in at first.
-  if (aWindow->PluginHasFocus()) {
-      bool ret = false;
-      if (ProcessMessageForPlugin(aWindow, msg, wParam, lParam, ret, aResult)) {
-        return ret;
-      }
+  // When a plug-in has focus or compsition, we should dispatch the IME events
+  // to the plug-in.
+  if (aWindow->PluginHasFocus() || IsComposingOnPlugin()) {
+      return ProcessMessageForPlugin(aWindow, msg, wParam, lParam, aResult);
   }
 
   aResult.mResult = 0;
@@ -675,7 +671,6 @@ IMMHandler::ProcessMessageForPlugin(nsWindow* aWindow,
                                     UINT msg,
                                     WPARAM& wParam,
                                     LPARAM& lParam,
-                                    bool& aRet,
                                     MSGResult& aResult)
 {
   aResult.mResult = 0;
@@ -684,35 +679,38 @@ IMMHandler::ProcessMessageForPlugin(nsWindow* aWindow,
     case WM_INPUTLANGCHANGEREQUEST:
     case WM_INPUTLANGCHANGE:
       aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
-      aRet = ProcessInputLangChangeMessage(aWindow, wParam, lParam, aResult);
-      return true;
+      return ProcessInputLangChangeMessage(aWindow, wParam, lParam, aResult);
+    case WM_IME_COMPOSITION:
+      EnsureHandlerInstance();
+      return gIMMHandler->OnIMECompositionOnPlugin(aWindow, wParam, lParam,
+                                                   aResult);
+    case WM_IME_STARTCOMPOSITION:
+      EnsureHandlerInstance();
+      return gIMMHandler->OnIMEStartCompositionOnPlugin(aWindow, wParam,
+                                                        lParam, aResult);
+    case WM_IME_ENDCOMPOSITION:
+      EnsureHandlerInstance();
+      return gIMMHandler->OnIMEEndCompositionOnPlugin(aWindow, wParam, lParam,
+                                                      aResult);
     case WM_IME_CHAR:
       EnsureHandlerInstance();
-      aRet = gIMMHandler->OnIMECharOnPlugin(aWindow, wParam, lParam, aResult);
-      return true;
+      return gIMMHandler->OnIMECharOnPlugin(aWindow, wParam, lParam, aResult);
     case WM_IME_SETCONTEXT:
-      aRet = OnIMESetContextOnPlugin(aWindow, wParam, lParam, aResult);
-      return true;
+      return OnIMESetContextOnPlugin(aWindow, wParam, lParam, aResult);
     case WM_CHAR:
       if (!gIMMHandler) {
-        return true;
+        return false;
       }
-      aRet = gIMMHandler->OnCharOnPlugin(aWindow, wParam, lParam, aResult);
-      return true;
+      return gIMMHandler->OnCharOnPlugin(aWindow, wParam, lParam, aResult);
     case WM_IME_COMPOSITIONFULL:
     case WM_IME_CONTROL:
     case WM_IME_KEYDOWN:
     case WM_IME_KEYUP:
+    case WM_IME_REQUEST:
     case WM_IME_SELECT:
       aResult.mConsumed =
         aWindow->DispatchPluginEvent(msg, wParam, lParam, false);
-      aRet = true;
       return true;
-    case WM_IME_REQUEST:
-       // Our plugin implementation is alwasy OOP.  So WM_IME_REQUEST doesn't
-       // allow that parameter is pointer and shouldn't handle into Gecko.
-       aRet = false;
-       return true;
   }
   return false;
 }
@@ -773,6 +771,9 @@ IMMHandler::OnIMEComposition(nsWindow* aWindow,
      GetBoolName(lParam & GCS_RESULTSTR), GetBoolName(lParam & GCS_COMPSTR),
      GetBoolName(lParam & GCS_COMPATTR), GetBoolName(lParam & GCS_COMPCLAUSE),
      GetBoolName(lParam & GCS_CURSORPOS)));
+
+  MOZ_ASSERT(!aWindow->PluginHasFocus(),
+    "OnIMEComposition should not be called when a plug-in has focus");
 
   IMEContext context(aWindow);
   aResult.mConsumed = HandleComposition(aWindow, context, lParam);
@@ -1088,10 +1089,11 @@ IMMHandler::OnChar(nsWindow* aWindow,
  * message handlers for plug-in
  ****************************************************************************/
 
-void
+bool
 IMMHandler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
                                           WPARAM wParam,
-                                          LPARAM lParam)
+                                          LPARAM lParam,
+                                          MSGResult& aResult)
 {
   MOZ_LOG(gIMMLog, LogLevel::Info,
     ("IMM: OnIMEStartCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s",
@@ -1102,13 +1104,18 @@ IMMHandler::OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
   SetIMERelatedWindowsPosOnPlugin(aWindow, context);
   // On widnowless plugin, we should assume that the focused editor is always
   // in horizontal writing mode.
-  AdjustCompositionFont(aWindow, context, WritingMode());
+  AdjustCompositionFont(context, WritingMode());
+  aResult.mConsumed =
+    aWindow->DispatchPluginEvent(WM_IME_STARTCOMPOSITION, wParam, lParam,
+                                 false);
+  return true;
 }
 
-void
+bool
 IMMHandler::OnIMECompositionOnPlugin(nsWindow* aWindow,
                                      WPARAM wParam,
-                                     LPARAM lParam)
+                                     LPARAM lParam,
+                                     MSGResult& aResult)
 {
   MOZ_LOG(gIMMLog, LogLevel::Info,
     ("IMM: OnIMECompositionOnPlugin, hWnd=%08x, lParam=%08x, "
@@ -1122,7 +1129,6 @@ IMMHandler::OnIMECompositionOnPlugin(nsWindow* aWindow,
   if (IS_COMMITTING_LPARAM(lParam)) {
     mIsComposingOnPlugin = false;
     mComposingWindow = nullptr;
-    return;
   }
   // Continue composition if there is still a string being composed.
   if (IS_COMPOSING_LPARAM(lParam)) {
@@ -1131,12 +1137,16 @@ IMMHandler::OnIMECompositionOnPlugin(nsWindow* aWindow,
     IMEContext context(aWindow);
     SetIMERelatedWindowsPosOnPlugin(aWindow, context);
   }
+  aResult.mConsumed =
+    aWindow->DispatchPluginEvent(WM_IME_COMPOSITION, wParam, lParam, true);
+  return true;
 }
 
-void
+bool
 IMMHandler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
                                         WPARAM wParam,
-                                        LPARAM lParam)
+                                        LPARAM lParam,
+                                        MSGResult& aResult)
 {
   MOZ_LOG(gIMMLog, LogLevel::Info,
     ("IMM: OnIMEEndCompositionOnPlugin, hWnd=%08x, mIsComposingOnPlugin=%s",
@@ -1149,6 +1159,11 @@ IMMHandler::OnIMEEndCompositionOnPlugin(nsWindow* aWindow,
     ::DestroyCaret();
     mNativeCaretIsCreated = false;
   }
+
+  aResult.mConsumed =
+    aWindow->DispatchPluginEvent(WM_IME_ENDCOMPOSITION, wParam, lParam,
+                                 false);
+  return true;
 }
 
 bool
@@ -1217,12 +1232,6 @@ IMMHandler::OnCharOnPlugin(nsWindow* aWindow,
                            LPARAM lParam,
                            MSGResult& aResult)
 {
-  NS_WARNING("OnCharOnPlugin");
-  if (mIsComposing) {
-    aWindow->NotifyIME(REQUEST_TO_COMMIT_COMPOSITION);
-    return true;
-  }
-
   // We should never consume char message on windowless plugin.
   aResult.mConsumed = false;
   if (IsIMECharRecordsEmpty()) {
@@ -1255,6 +1264,8 @@ IMMHandler::HandleStartComposition(nsWindow* aWindow,
 {
   NS_PRECONDITION(!mIsComposing,
     "HandleStartComposition is called but mIsComposing is TRUE");
+  NS_PRECONDITION(!aWindow->PluginHasFocus(),
+    "HandleStartComposition should not be called when a plug-in has focus");
 
   Selection& selection = GetSelection();
   if (!selection.EnsureValidSelection(aWindow)) {
@@ -1264,7 +1275,7 @@ IMMHandler::HandleStartComposition(nsWindow* aWindow,
     return;
   }
 
-  AdjustCompositionFont(aWindow, aContext, selection.mWritingMode);
+  AdjustCompositionFont(aContext, selection.mWritingMode);
 
   mCompositionStart = selection.mOffset;
   mCursorPosition = NO_IME_CARET;
@@ -1287,6 +1298,9 @@ IMMHandler::HandleComposition(nsWindow* aWindow,
                               const IMEContext& aContext,
                               LPARAM lParam)
 {
+  NS_PRECONDITION(!aWindow->PluginHasFocus(),
+    "HandleComposition should not be called when a plug-in has focus");
+
   // for bug #60050
   // MS-IME 95/97/98/2000 may send WM_IME_COMPOSITION with non-conversion
   // mode before it send WM_IME_STARTCOMPOSITION.
@@ -1527,6 +1541,8 @@ IMMHandler::HandleEndComposition(nsWindow* aWindow,
 {
   MOZ_ASSERT(mIsComposing,
     "HandleEndComposition is called but mIsComposing is FALSE");
+  MOZ_ASSERT(!aWindow->PluginHasFocus(),
+    "HandleComposition should not be called when a plug-in has focus");
 
   MOZ_LOG(gIMMLog, LogLevel::Info,
     ("IMM: HandleEndComposition(aWindow=0x%p, aCommitString=0x%p (\"%s\"))",
@@ -1832,8 +1848,9 @@ IMMHandler::CommitCompositionOnPreviousWindow(nsWindow* aWindow)
   }
 
   MOZ_LOG(gIMMLog, LogLevel::Info,
-    ("IMM: CommitCompositionOnPreviousWindow, mIsComposing=%s",
-     GetBoolName(mIsComposing)));
+    ("IMM: CommitCompositionOnPreviousWindow, mIsComposing=%s, "
+     "mIsComposingOnPlugin=%s",
+     GetBoolName(mIsComposing), GetBoolName(mIsComposingOnPlugin)));
 
   // If we have composition, we should dispatch composition events internally.
   if (mIsComposing) {
@@ -1844,7 +1861,9 @@ IMMHandler::CommitCompositionOnPreviousWindow(nsWindow* aWindow)
     return true;
   }
 
-  return false;
+  // XXX When plug-in has composition, we should commit composition on the
+  // plug-in.  However, we need some more work for that.
+  return mIsComposingOnPlugin;
 }
 
 static uint32_t
@@ -2512,8 +2531,7 @@ SetVerticalFontToLogFont(const nsAString& aFontFace,
 }
 
 void
-IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
-                                  const IMEContext& aContext,
+IMMHandler::AdjustCompositionFont(const IMEContext& aContext,
                                   const WritingMode& aWritingMode,
                                   bool aForceUpdate)
 {
@@ -2599,8 +2617,8 @@ IMMHandler::AdjustCompositionFont(nsWindow* aWindow,
   logFont.lfClipPrecision = CLIP_DEFAULT_PRECIS;
   logFont.lfPitchAndFamily = DEFAULT_PITCH;
 
-  if (!aWindow->PluginHasFocus() &&
-    aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
+  if (!mIsComposingOnPlugin &&
+      aWritingMode.IsVertical() && IsVerticalWritingSupported()) {
     SetVerticalFontToLogFont(
       IsJapanist2003Active() ? sCompositionFontForJapanist2003 :
                                sCompositionFont, logFont);
@@ -2738,41 +2756,6 @@ IMMHandler::OnKeyDownEvent(nsWindow* aWindow,
       return false;
     default:
       return false;
-  }
-}
-
-// static
-void
-IMMHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm)
-{
-  IMEContext context(aWindow);
-  ImmSetCandidateWindow(context.get(), aForm);
-}
-
-// staitc
-void
-IMMHandler::DefaultProcOfPluginEvent(nsWindow* aWindow, const NPEvent* aEvent)
-{
-  switch (aEvent->event) {
-    case WM_IME_STARTCOMPOSITION:
-      EnsureHandlerInstance();
-      gIMMHandler->OnIMEStartCompositionOnPlugin(aWindow, aEvent->wParam,
-                                                 aEvent->lParam);
-      break;
-
-    case WM_IME_COMPOSITION:
-      if (gIMMHandler) {
-        gIMMHandler->OnIMECompositionOnPlugin(aWindow, aEvent->wParam,
-                                              aEvent->lParam);
-      }
-      break;
-
-    case WM_IME_ENDCOMPOSITION:
-      if (gIMMHandler) {
-        gIMMHandler->OnIMEEndCompositionOnPlugin(aWindow, aEvent->wParam,
-                                                 aEvent->lParam);
-      }
-      break;
   }
 }
 

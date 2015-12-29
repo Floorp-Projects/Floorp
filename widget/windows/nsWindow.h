@@ -297,11 +297,6 @@ public:
 
   const IMEContext& DefaultIMC() const { return mDefaultIMC; }
 
-  virtual void SetCandidateWindowForPlugin(int32_t aX,
-                                           int32_t aY) override;
-  virtual void DefaultProcOfPluginEvent(
-                 const mozilla::WidgetPluginEvent& aEvent) override;
-
 protected:
   virtual ~nsWindow();
 
