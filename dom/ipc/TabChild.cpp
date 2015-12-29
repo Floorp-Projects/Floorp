@@ -1948,8 +1948,11 @@ TabChild::RecvPluginEvent(const WidgetPluginEvent& aEvent)
 {
   WidgetPluginEvent localEvent(aEvent);
   localEvent.widget = mPuppetWidget;
-  APZCCallbackHelper::DispatchWidgetEvent(localEvent);
-  // XXX If not consumed, we should call default action (ex. DefWindowProc)?
+  nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
+  if (status != nsEventStatus_eConsumeNoDefault) {
+    // If not consumed, we should call default action
+    SendDefaultProcOfPluginEvent(aEvent);
+  }
   return true;
 }
 
