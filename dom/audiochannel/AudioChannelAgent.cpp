@@ -41,7 +41,6 @@ AudioChannelAgent::AudioChannelAgent()
   : mAudioChannelType(AUDIO_AGENT_CHANNEL_ERROR)
   , mInnerWindowID(0)
   , mIsRegToService(false)
-  , mNotifyPlayback(false)
 {
 }
 
@@ -208,8 +207,7 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   return NS_OK;
 }
 
-NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
-                                                      float *aVolume,
+NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(float *aVolume,
                                                       bool* aMuted)
 {
   MOZ_ASSERT(aVolume);
@@ -228,7 +226,7 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
     return NS_ERROR_FAILURE;
   }
 
-  service->RegisterAudioChannelAgent(this, aNotifyPlayback,
+  service->RegisterAudioChannelAgent(this,
     static_cast<AudioChannel>(mAudioChannelType));
 
   service->GetState(mWindow, mAudioChannelType, aVolume, aMuted);
@@ -237,7 +235,6 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
          ("AudioChannelAgent, NotifyStartedPlaying, this = %p, mute = %d, "
           "volume = %f\n", this, *aMuted, *aVolume));
 
-  mNotifyPlayback = aNotifyPlayback;
   mIsRegToService = true;
   return NS_OK;
 }
@@ -254,7 +251,7 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying()
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
+    service->UnregisterAudioChannelAgent(this);
   }
 
   mIsRegToService = false;
@@ -300,8 +297,15 @@ AudioChannelAgent::WindowID() const
   return mWindow ? mWindow->WindowID() : 0;
 }
 
+uint64_t
+AudioChannelAgent::InnerWindowID() const
+{
+  return mInnerWindowID;
+}
+
 void
-AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID)
+AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID,
+                                             bool aCapture)
 {
   if (aInnerWindowID != mInnerWindowID) {
     return;
@@ -312,5 +316,9 @@ AudioChannelAgent::WindowAudioCaptureChanged(uint64_t aInnerWindowID)
     return;
   }
 
-  callback->WindowAudioCaptureChanged();
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, WindowAudioCaptureChanged, this = %p, "
+          "capture = %d\n", this, aCapture));
+
+  callback->WindowAudioCaptureChanged(aCapture);
 }

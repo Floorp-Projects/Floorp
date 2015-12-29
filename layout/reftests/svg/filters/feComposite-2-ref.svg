@@ -4,4 +4,6 @@
 <rect x="0" y="0" width="50" height="100" fill="#ff0000" opacity="0.5"/>
 <rect x="50" y="0" width="50" height="100" fill="#ff0000" opacity="0.5"/>
 
+<rect x="100" y="0" width="50" height="100" fill="#808080"/>
+
 </svg>
