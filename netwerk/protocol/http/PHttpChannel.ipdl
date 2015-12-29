@@ -156,9 +156,6 @@ child:
 
   // Tell the child to issue a deprecation warning.
   IssueDeprecationWarning(uint32_t warning, bool asError);
-
-  // Tell the child to report an error processing a redirection.
-  ReportRedirectionError();
 };
 
 
