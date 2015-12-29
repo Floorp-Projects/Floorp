@@ -959,5 +959,16 @@ IMEHandler::SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm)
   IMMHandler::SetCandidateWindow(aWindow, aForm);
 }
 
+// static
+void
+IMEHandler::DefaultProcOfPluginEvent(nsWindow* aWindow,
+                                     const NPEvent* aPluginEvent)
+{
+  if (!sPluginHasFocus) {
+    return;
+  }
+  IMMHandler::DefaultProcOfPluginEvent(aWindow, aPluginEvent);
+}
+
 } // namespace widget
 } // namespace mozilla
