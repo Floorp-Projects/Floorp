@@ -24,6 +24,7 @@
 #include "jit/VMFunctions.h"
 #include "js/Proxy.h"
 #include "vm/Shape.h"
+#include "vm/Stack.h"
 
 #include "jit/JitFrames-inl.h"
 #include "jit/MacroAssembler-inl.h"
@@ -740,15 +741,16 @@ CheckDOMProxyExpandoDoesNotShadow(JSContext* cx, MacroAssembler& masm, JSObject*
 
 static void
 GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
-                 IonCache::StubAttacher& attacher, JSObject* obj, JSObject* holder,
-                 Shape* shape, Register object, TypedOrValueRegister output,
-                 Label* failures = nullptr)
+                 IonCache::StubAttacher& attacher, MaybeCheckLexical checkLexical,
+                 JSObject* obj, JSObject* holder, Shape* shape, Register object,
+                 TypedOrValueRegister output, Label* failures = nullptr)
 {
     // If there's a single jump to |failures|, we can patch the shape guard
     // jump directly. Otherwise, jump to the end of the stub, so there's a
     // common point to patch.
     bool multipleFailureJumps = (obj != holder)
                              || obj->is<UnboxedPlainObject>()
+                             || (checkLexical && output.hasValue())
                              || (failures != nullptr && failures->used());
 
     // If we have multiple failure jumps but didn't get a label from the
@@ -835,10 +837,13 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
     }
 
     // Slot access.
-    if (holder)
+    if (holder) {
         EmitLoadSlot(masm, &holder->as<NativeObject>(), shape, holderReg, output, scratchReg);
-    else
+        if (checkLexical && output.hasValue())
+            masm.branchTestMagic(Assembler::Equal, output.valueReg(), failures);
+    } else {
         masm.moveValue(UndefinedValue(), output.valueReg());
+    }
 
     // Restore scratch on success.
     if (restoreScratch)
@@ -852,7 +857,6 @@ GenerateReadSlot(JSContext* cx, IonScript* ion, MacroAssembler& masm,
     masm.bind(failures);
 
     attacher.jumpNextStub(masm);
-
 }
 
 static void
@@ -1486,7 +1490,7 @@ GetPropertyIC::tryAttachNative(JSContext* cx, HandleScript outerScript, IonScrip
 
     switch (type) {
       case CanAttachReadSlot:
-        GenerateReadSlot(cx, ion, masm, attacher, obj, holder,
+        GenerateReadSlot(cx, ion, masm, attacher, DontCheckLexical, obj, holder,
                          shape, object(), output(), maybeFailures);
         attachKind = idempotent() ? "idempotent reading"
                                     : "non idempotent reading";
@@ -1569,7 +1573,7 @@ GetPropertyIC::tryAttachUnboxedExpando(JSContext* cx, HandleScript outerScript, 
     Label* maybeFailures = failures.used() ? &failures : nullptr;
 
     StubAttacher attacher(*this);
-    GenerateReadSlot(cx, ion, masm, attacher, obj, obj,
+    GenerateReadSlot(cx, ion, masm, attacher, DontCheckLexical, obj, obj,
                      shape, object(), output(), maybeFailures);
     return linkAndAttachStub(cx, masm, attacher, ion, "read unboxed expando",
                              JS::TrackedOutcome::ICGetPropStub_UnboxedReadExpando);
@@ -4810,7 +4814,9 @@ NameIC::attachReadSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
 
     // GenerateScopeChain leaves the last scope chain in scratchReg, even though it
     // doesn't generate the extra guard.
-    GenerateReadSlot(cx, ion, masm, attacher, holderBase, holder, shape, scratchReg,
+    //
+    // NAME ops must do their own TDZ checks.
+    GenerateReadSlot(cx, ion, masm, attacher, CheckLexical, holderBase, holder, shape, scratchReg,
                      outputReg(), failures.used() ? &failures : nullptr);
 
     return linkAndAttachStub(cx, masm, attacher, ion, "generic",
