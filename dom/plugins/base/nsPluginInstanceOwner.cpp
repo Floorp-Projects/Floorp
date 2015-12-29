@@ -60,6 +60,8 @@ using mozilla::DefaultXDisplay;
 #include "nsFrameSelection.h"
 #include "PuppetWidget.h"
 #include "nsPIWindowRoot.h"
+#include "mozilla/IMEStateManager.h"
+#include "mozilla/TextComposition.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -791,7 +793,182 @@ nsPluginInstanceOwner::SetNetscapeWindowAsParent(HWND aWindowToAdopt)
                             reinterpret_cast<uintptr_t>(aWindowToAdopt));
   return NS_OK;
 }
-#endif
+
+bool
+nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
+                                            nsTArray<uint8_t>* aDist,
+                                            int32_t* aLength)
+{
+  RefPtr<TextComposition> composition = GetTextComposition();
+  if (NS_WARN_IF(!composition)) {
+    return false;
+  }
+
+  switch(aType) {
+    case GCS_COMPSTR: {
+      if (!composition->IsComposing()) {
+        *aLength = 0;
+        return true;
+      }
+
+      uint32_t len = composition->LastData().Length() * sizeof(char16_t);
+      if (len) {
+        aDist->SetLength(len);
+        memcpy(aDist->Elements(), composition->LastData().get(), len);
+      }
+      *aLength = len;
+      return true;
+    }
+
+    case GCS_RESULTSTR: {
+      if (composition->IsComposing()) {
+        *aLength = 0;
+        return true;
+      }
+
+      uint32_t len = composition->LastData().Length() * sizeof(char16_t);
+      if (len) {
+        aDist->SetLength(len);
+        memcpy(aDist->Elements(), composition->LastData().get(), len);
+      }
+      *aLength = len;
+      return true;
+    }
+
+    case GCS_CURSORPOS: {
+      *aLength = 0;
+      TextRangeArray* ranges = composition->GetLastRanges();
+      if (!ranges) {
+        return true;
+      }
+      *aLength = ranges->GetCaretPosition();
+      if (*aLength < 0) {
+        return false;
+      }
+      return true;
+    }
+
+    case GCS_COMPATTR: {
+      TextRangeArray* ranges = composition->GetLastRanges();
+      if (!ranges || ranges->IsEmpty()) {
+        *aLength = 0;
+        return true;
+      }
+
+      aDist->SetLength(composition->LastData().Length());
+      memset(aDist->Elements(), ATTR_INPUT, aDist->Length());
+
+      for (TextRange& range : *ranges) {
+        uint8_t type = ATTR_INPUT;
+        switch(range.mRangeType) {
+          case NS_TEXTRANGE_RAWINPUT:
+            type = ATTR_INPUT;
+            break;
+          case NS_TEXTRANGE_SELECTEDRAWTEXT:
+            type = ATTR_TARGET_NOTCONVERTED;
+            break;
+          case NS_TEXTRANGE_CONVERTEDTEXT:
+            type = ATTR_CONVERTED;
+            break;
+          case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
+            type = ATTR_TARGET_CONVERTED;
+            break;
+          default:
+            continue;
+        }
+
+        size_t minLen = std::min<size_t>(range.mEndOffset, aDist->Length());
+        for (size_t i = range.mStartOffset; i < minLen; i++) {
+          (*aDist)[i] = type;
+        }
+      }
+      *aLength = aDist->Length();
+      return true;
+    }
+
+    case GCS_COMPCLAUSE: {
+      RefPtr<TextRangeArray> ranges = composition->GetLastRanges();
+      if (!ranges || ranges->IsEmpty()) {
+        aDist->SetLength(sizeof(uint32_t));
+        memset(aDist->Elements(), 0, sizeof(uint32_t));
+        *aLength = aDist->Length();
+        return true;
+      }
+      nsAutoTArray<uint32_t, 16> clauses;
+      clauses.AppendElement(0);
+      for (TextRange& range : *ranges) {
+        if (!range.IsClause()) {
+          continue;
+        }
+        clauses.AppendElement(range.mEndOffset);
+      }
+
+      aDist->SetLength(clauses.Length() * sizeof(uint32_t));
+      memcpy(aDist->Elements(), clauses.Elements(), aDist->Length());
+      *aLength = aDist->Length();
+      return true;
+    }
+
+    case GCS_RESULTREADSTR: {
+      // When returning error causes unexpected error, so we return 0 instead.
+      *aLength = 0;
+      return true;
+    }
+
+    case GCS_RESULTCLAUSE: {
+      // When returning error causes unexpected error, so we return 0 instead.
+      *aLength = 0;
+      return true;
+    }
+
+    default:
+      NS_WARNING(
+        nsPrintfCString("Unsupported type %x of ImmGetCompositionStringW hook",
+                        aType).get());
+      break;
+  }
+
+  return false;
+}
+
+bool
+nsPluginInstanceOwner::SetCandidateWindow(int32_t aX, int32_t aY)
+{
+  if (NS_WARN_IF(!mPluginFrame)) {
+    return false;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return false;
+    }
+  }
+
+  widget->SetCandidateWindowForPlugin(aX, aY);
+  return true;
+}
+
+bool
+nsPluginInstanceOwner::RequestCommitOrCancel(bool aCommitted)
+{
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return false;
+    }
+  }
+
+  if (aCommitted) {
+    widget->NotifyIME(widget::REQUEST_TO_COMMIT_COMPOSITION); 
+  } else {
+    widget->NotifyIME(widget::REQUEST_TO_CANCEL_COMPOSITION); 
+  }
+  return true;
+}
+#endif // #ifdef XP_WIN
 
 NS_IMETHODIMP nsPluginInstanceOwner::SetEventModel(int32_t eventModel)
 {
@@ -1597,6 +1774,32 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
   return NS_OK;
 }
 
+#ifdef XP_WIN
+already_AddRefed<TextComposition>
+nsPluginInstanceOwner::GetTextComposition()
+{
+  if (NS_WARN_IF(!mPluginFrame)) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return nullptr;
+    }
+  }
+
+  RefPtr<TextComposition> composition =
+    IMEStateManager::GetTextCompositionFor(widget);
+  if (NS_WARN_IF(!composition)) {
+    return nullptr;
+  }
+
+  return composition.forget();
+}
+#endif
+
 nsresult
 nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
 {
@@ -1611,6 +1814,16 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
   if (NS_WARN_IF(!compositionEvent)) {
       return NS_ERROR_INVALID_ARG;
   }
+
+  if (compositionEvent->mMessage == eCompositionChange) {
+    RefPtr<TextComposition> composition = GetTextComposition();
+    if (NS_WARN_IF(!composition)) {
+      return NS_ERROR_FAILURE;
+    }
+    TextComposition::CompositionChangeEventHandlingMarker
+      compositionChangeEventHandlingMarker(composition, compositionEvent);
+  }
+
   nsEventStatus rv = ProcessEvent(*compositionEvent);
   // XXX This isn't e10s aware.
   // If the event isn't consumed, we cannot post result to chrome process.

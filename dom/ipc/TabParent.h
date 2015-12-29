@@ -196,6 +196,8 @@ public:
                                     const int32_t& aPanelY,
                                     nsString* aCommitted) override;
     virtual bool RecvSetPluginFocused(const bool& aFocused) override;
+    virtual bool RecvSetCandidateWindowForPlugin(const int32_t& aX,
+                                                 const int32_t& aY) override;
     virtual bool RecvGetInputContext(int32_t* aIMEEnabled,
                                      int32_t* aIMEOpen) override;
     virtual bool RecvSetInputContext(const int32_t& aIMEEnabled,
