@@ -490,6 +490,7 @@ function openRemotePrompt(domWin, args, tabPrompt) {
     let promptPrincipal = domWin.document.nodePrincipal;
     args.promptPrincipal = promptPrincipal;
     args.showAlertOrigin = topPrincipal.equals(promptPrincipal);
+    args.inPermitUnload = inPermitUnload;
 
     args._remoteId = id;
 
