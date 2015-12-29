@@ -159,9 +159,6 @@ int main()
       TestHook("gdi32.dll", "CreateDIBSection") &&
       TestHook("kernel32.dll", "CreateFileW") &&
 #endif
-      TestHook("imm32.dll", "ImmGetContext") &&
-      TestHook("imm32.dll", "ImmGetCompositionStringW") &&
-      TestHook("imm32.dll", "ImmSetCandidateWindow") &&
       TestDetour("ntdll.dll", "LdrLoadDll")) {
     printf("TEST-PASS | WindowsDllInterceptor | all checks passed\n");
     return 0;
