@@ -284,12 +284,8 @@ class SubContext(Context, ContextDerivedValue):
 class InitializedDefines(ContextDerivedValue, OrderedDict):
     def __init__(self, context, value=None):
         OrderedDict.__init__(self)
-        for define in context.config.substs.get('MOZ_DEBUG_DEFINES', '').split():
-            assert define[:2] == "-D"
-            pair = define[2:].split('=', 1)
-            if len(pair) == 1:
-                pair.append(1)
-            self[pair[0]] = pair[1]
+        for define in context.config.substs.get('MOZ_DEBUG_DEFINES', ()):
+            self[define] = 1
         if value:
             self.update(value)
 
