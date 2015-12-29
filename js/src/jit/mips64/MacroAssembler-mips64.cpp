@@ -258,10 +258,10 @@ MacroAssemblerMIPS64::ma_li(Register dest, ImmWord imm)
             as_lui(dest, Imm16::Upper(Imm32(imm.value >> 32)).encode());
             if ((imm.value >> 32) & 0xffff)
               as_ori(dest, dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
+            as_dsll(dest, dest, 16);
         } else {
-            as_ori(dest, zero, Imm16::Lower(Imm32(imm.value >> 32)).encode());
+            as_lui(dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
         }
-        as_dsll(dest, dest, 16);
         if ((imm.value >> 16) & 0xffff)
           as_ori(dest, dest, Imm16::Upper(Imm32(imm.value)).encode());
         as_dsll(dest, dest, 16);
