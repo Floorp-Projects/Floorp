@@ -41,7 +41,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     var isE10S = !SpecialPowers.isMainProcess();
     var asyncStack = SpecialPowers.getBoolPref("javascript.options.asyncstack");
     var ourFile = location.href;
-    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:121:1
+    var parentFrame = (asyncStack && !isE10S) ? `Async*@${ourFile}:121:3
 ` : "";
 
     Promise.all([
