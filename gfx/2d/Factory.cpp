@@ -326,7 +326,7 @@ already_AddRefed<DrawTarget>
 Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFormat aFormat)
 {
   if (!AllowedSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size (CDT) " << aSize;
     return nullptr;
   }
 
@@ -417,7 +417,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
 {
   MOZ_ASSERT(aData);
   if (!AllowedSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size (DTD) " << aSize;
     return nullptr;
   }
 
@@ -892,7 +892,7 @@ Factory::CreateDataSourceSurface(const IntSize &aSize,
                                  bool aZero)
 {
   if (!AllowedSurfaceSize(aSize)) {
-    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size " << aSize;
+    gfxCriticalError(LoggerOptionsBasedOnSize(aSize)) << "Failed to allocate a surface due to invalid size (DSS) " << aSize;
     return nullptr;
   }
 
