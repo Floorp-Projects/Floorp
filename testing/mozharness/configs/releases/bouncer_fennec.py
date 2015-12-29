@@ -1,17 +1,24 @@
 # lint_ignore=E501
 config = {
-    "shipped-locales-url": "https://hg.mozilla.org/%(repo)s/raw-file/%(revision)s/mobile/android/locales/all-locales",    
     "products": {
-        "installer": {
+        "apk": {
             "product-name": "Fennec-%(version)s",
             "ssl-only": False,
-            "add-locales": True,
+            "add-locales": False,  # Do not add locales to let "multi" work
             "paths": {
-                "android": {
-                    "path": "/mobile/releases/%(version)s/android/:lang/fennec-%(version)s.:lang.android-arm.apk",
+                "android-api-11": {
+                    "path": "/mobile/releases/%(version)s/android-api-11/:lang/fennec-%(version)s.:lang.android-arm.apk",
                     "bouncer-platform": "android",
+                },
+                "android-api-9": {
+                    "path": "/mobile/releases/%(version)s/android-api-9/:lang/fennec-%(version)s.:lang.android-arm.apk",
+                    "bouncer-platform": "android-api-9",
+                },
+                "android-x86": {
+                    "path": "/mobile/releases/%(version)s/android-x86/:lang/fennec-%(version)s.:lang.android-i386.apk",
+                    "bouncer-platform": "android-x86",
                 },
             },
         },
-    },   
+    },
 }
