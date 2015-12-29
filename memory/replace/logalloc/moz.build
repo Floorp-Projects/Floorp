@@ -16,6 +16,7 @@ USE_STATIC_LIBS = True
 DEFINES['MOZ_NO_MOZALLOC'] = True
 # Avoid Lock_impl code depending on mozilla::Logger.
 DEFINES['NDEBUG'] = True
+DEFINES['DEBUG'] = False
 
 # Use locking code from the chromium stack.
 if CONFIG['OS_TARGET'] == 'WINNT':

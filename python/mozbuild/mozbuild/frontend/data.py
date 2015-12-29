@@ -79,7 +79,7 @@ class ContextDerived(TreeMetadata):
 
     @property
     def defines(self):
-        defines = self._context.get('DEFINES')
+        defines = self._context['DEFINES']
         return Defines(self._context, defines) if defines else None
 
     @property
@@ -90,7 +90,7 @@ class ContextDerived(TreeMetadata):
 class HostMixin(object):
     @property
     def defines(self):
-        defines = self._context.get('HOST_DEFINES')
+        defines = self._context['HOST_DEFINES']
         return HostDefines(self._context, defines) if defines else None
 
 
