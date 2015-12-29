@@ -87,9 +87,3 @@ add_task(function test_DownloadError()
   do_check_true(error.becauseBlocked);
   do_check_true(error.becauseBlockedByParentalControls);
 });
-
-////////////////////////////////////////////////////////////////////////////////
-//// Termination
-
-var tailFile = do_get_file("tail.js");
-Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
