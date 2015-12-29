@@ -289,6 +289,9 @@ private:
 #if defined(XP_WIN)
   nsIWidget* GetContainingWidgetIfOffset();
   already_AddRefed<mozilla::TextComposition> GetTextComposition();
+
+  bool mGotCompositionData;
+  bool mSentStartComposition;
 #endif
  
   nsPluginNativeWindow       *mPluginWindow;
@@ -341,6 +344,10 @@ private:
                                  bool aAllowPropagate = false);
   nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
   nsresult DispatchCompositionToPlugin(nsIDOMEvent* aEvent);
+
+#ifdef XP_WIN
+  void CallDefaultProc(const mozilla::WidgetGUIEvent* aEvent);
+#endif
 
 #ifdef XP_MACOSX
   static NPBool ConvertPointPuppet(PuppetWidget *widget, nsPluginFrame* pluginFrame,
