@@ -4369,9 +4369,11 @@
           if (tabForEvent.selected)
             return;
 
-          // If this is a tabprompt, we won't switch tabs
-          // (unless this behaviour has been disabled entirely using the pref)
+          // If this is a tabprompt, we won't switch tabs, unless:
+          // - this is a beforeunload prompt
+          // - this behaviour has been disabled entirely using the pref
           if (event.detail && event.detail.tabPrompt &&
+              !event.detail.inPermitUnload &&
               Services.prefs.getBoolPref("browser.tabs.dontfocusfordialogs")) {
             let docPrincipal = targetIsWindow ? event.target.document.nodePrincipal : null;
             // At least one of these should/will be non-null:
