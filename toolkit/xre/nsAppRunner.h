@@ -93,9 +93,6 @@ NS_LockProfilePath(nsIFile* aPath, nsIFile* aTempPath,
 void
 WriteConsoleLog();
 
-void
-OverrideDefaultLocaleIfNeeded();
-
 #ifdef XP_WIN
 void
 UseParentConsole();

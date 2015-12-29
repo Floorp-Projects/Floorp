@@ -4150,8 +4150,6 @@ XREMain::XRE_mainRun()
 
   mDirProvider.DoStartup();
 
-  OverrideDefaultLocaleIfNeeded();
-
 #ifdef MOZ_CRASHREPORTER
   nsCString userAgentLocale;
   // Try a localized string first. This pref is always a localized string in
@@ -4814,16 +4812,4 @@ SetupErrorHandling(const char* progname)
 
   // Unbuffer stdout, needed for tinderbox tests.
   setbuf(stdout, 0);
-}
-
-void
-OverrideDefaultLocaleIfNeeded() {
-  // Read pref to decide whether to override default locale with US English.
-  if (mozilla::Preferences::GetBool("javascript.use_us_english_locale", false)) {
-    // Set the application-wide C-locale. Needed to resist fingerprinting
-    // of Date.toLocaleFormat(). We use the locale to "C.UTF-8" if possible,
-    // to avoid interfering with non-ASCII keyboard input on some Linux desktops.
-    // Otherwise fall back to the "C" locale, which is available on all platforms.
-    setlocale(LC_ALL, "C.UTF-8") || setlocale(LC_ALL, "C");
-  }
 }
