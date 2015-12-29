@@ -7,14 +7,6 @@ ifeq ($(OS_ARCH),WINNT)
 MOZ_WINCONSOLE = 0
 endif
 
-ifdef MOZ_WIDGET_GTK
-OS_CXXFLAGS += $(TK_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
-endif
-
-ifeq ($(OS_ARCH),SunOS)
-OS_CXXFLAGS += $(MOZ_GTK2_CFLAGS) $(MOZ_GTHREAD_CFLAGS)
-endif
-
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),Darwin)
