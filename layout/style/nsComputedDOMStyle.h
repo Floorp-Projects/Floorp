@@ -47,9 +47,12 @@ struct nsTimingFunction;
 class nsComputedDOMStyle final : public nsDOMCSSDeclaration
                                , public nsStubMutationObserver
 {
-public:
+private:
+  // Convenience typedefs:
   typedef nsCSSProps::KTableEntry KTableEntry;
+  typedef mozilla::dom::CSSValue CSSValue;
 
+public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SKIPPABLE_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsComputedDOMStyle,
                                                                    nsICSSDeclaration)
@@ -57,7 +60,7 @@ public:
   NS_DECL_NSICSSDECLARATION
 
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
-  virtual already_AddRefed<mozilla::dom::CSSValue>
+  virtual already_AddRefed<CSSValue>
   GetPropertyCSSValue(const nsAString& aProp, mozilla::ErrorResult& aRv)
     override;
   using nsICSSDeclaration::GetPropertyCSSValue;
@@ -106,7 +109,8 @@ public:
   virtual nsIDocument* DocToUpdate() override;
   virtual void GetCSSParsingEnvironment(CSSParsingEnvironment& aCSSParseEnv) override;
 
-  static nsROCSSPrimitiveValue* MatrixToCSSValue(const mozilla::gfx::Matrix4x4& aMatrix);
+  static already_AddRefed<nsROCSSPrimitiveValue>
+    MatrixToCSSValue(const mozilla::gfx::Matrix4x4& aMatrix);
 
   static void RegisterPrefChangeCallbacks();
   static void UnregisterPrefChangeCallbacks();
@@ -125,9 +129,9 @@ private:
   nsMargin GetAdjustedValuesForBoxSizing();
 
   // Helper method for DoGetTextAlign[Last].
-  mozilla::dom::CSSValue* CreateTextAlignValue(uint8_t aAlign,
-                                               bool aAlignTrue,
-                                               const KTableEntry aTable[]);
+  already_AddRefed<CSSValue> CreateTextAlignValue(uint8_t aAlign,
+                                                  bool aAlignTrue,
+                                                  const KTableEntry aTable[]);
   // This indicates error by leaving mStyleContext null.
   void UpdateCurrentStyleSources(bool aNeedsLayoutFlush);
   void ClearCurrentStyleSources();
@@ -144,37 +148,33 @@ private:
 #include "nsStyleStructList.h"
 #undef STYLE_STRUCT
 
-  // All of the property getters below return a pointer to a refcounted object
-  // that has just been created, but the refcount is still 0. Caller must take
-  // ownership.
+  already_AddRefed<CSSValue> GetEllipseRadii(const nsStyleCorners& aRadius,
+                                             uint8_t aFullCorner,
+                                             bool aIsBorder); // else outline
 
-  mozilla::dom::CSSValue* GetEllipseRadii(const nsStyleCorners& aRadius,
-                                          uint8_t aFullCorner,
-                                          bool aIsBorder); // else outline
+  already_AddRefed<CSSValue> GetOffsetWidthFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetOffsetWidthFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetAbsoluteOffset(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetAbsoluteOffset(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetRelativeOffset(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetRelativeOffset(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetStickyOffset(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetStickyOffset(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetStaticOffset(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetStaticOffset(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetPaddingWidthFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetPaddingWidthFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetBorderColorsFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetBorderColorsFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetBorderStyleFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetBorderStyleFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetBorderWidthFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetBorderWidthFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetBorderColorFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetBorderColorFor(mozilla::css::Side aSide);
+  already_AddRefed<CSSValue> GetMarginWidthFor(mozilla::css::Side aSide);
 
-  mozilla::dom::CSSValue* GetMarginWidthFor(mozilla::css::Side aSide);
-
-  mozilla::dom::CSSValue* GetSVGPaintFor(bool aFill);
+  already_AddRefed<CSSValue> GetSVGPaintFor(bool aFill);
 
   // Appends all aLineNames (must be non-empty) space-separated to aResult.
   void AppendGridLineNames(nsString& aResult,
@@ -186,28 +186,30 @@ private:
   void AppendGridLineNames(nsDOMCSSValueList* aValueList,
                            const nsTArray<nsString>& aLineNames1,
                            const nsTArray<nsString>& aLineNames2);
-  mozilla::dom::CSSValue* GetGridTrackSize(const nsStyleCoord& aMinSize,
-                                           const nsStyleCoord& aMaxSize);
-  mozilla::dom::CSSValue* GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrackList,
-                                                     const nsTArray<nscoord>* aTrackSizes);
-  mozilla::dom::CSSValue* GetGridLine(const nsStyleGridLine& aGridLine);
+  already_AddRefed<CSSValue> GetGridTrackSize(const nsStyleCoord& aMinSize,
+                                              const nsStyleCoord& aMaxSize);
+  already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
+    const nsStyleGridTemplate& aTrackList,
+    const nsTArray<nscoord>* aTrackSizes);
+  already_AddRefed<CSSValue> GetGridLine(const nsStyleGridLine& aGridLine);
 
   bool GetLineHeightCoord(nscoord& aCoord);
 
-  mozilla::dom::CSSValue* GetCSSShadowArray(nsCSSShadowArray* aArray,
-                                            const nscolor& aDefaultColor,
-                                            bool aIsBoxShadow);
+  already_AddRefed<CSSValue> GetCSSShadowArray(nsCSSShadowArray* aArray,
+                                               const nscolor& aDefaultColor,
+                                               bool aIsBoxShadow);
 
-  mozilla::dom::CSSValue* GetBackgroundList(uint8_t nsStyleBackground::Layer::* aMember,
-                                            uint32_t nsStyleBackground::* aCount,
-                                            const KTableEntry aTable[]);
+  already_AddRefed<CSSValue> GetBackgroundList(
+    uint8_t nsStyleBackground::Layer::* aMember,
+    uint32_t nsStyleBackground::* aCount,
+    const KTableEntry aTable[]);
 
   void GetCSSGradientString(const nsStyleGradient* aGradient,
                             nsAString& aString);
   void GetImageRectString(nsIURI* aURI,
                           const nsStyleSides& aCropRect,
                           nsString& aString);
-  mozilla::dom::CSSValue* GetScrollSnapPoints(const nsStyleCoord& aCoord);
+  already_AddRefed<CSSValue> GetScrollSnapPoints(const nsStyleCoord& aCoord);
   void AppendTimingFunction(nsDOMCSSValueList *aValueList,
                             const nsTimingFunction& aTimingFunction);
 
@@ -216,334 +218,334 @@ private:
    * DoGetXXX instead of GetXXX.
    */
 
-  mozilla::dom::CSSValue* DoGetAppearance();
+  already_AddRefed<CSSValue> DoGetAppearance();
 
   /* Box properties */
-  mozilla::dom::CSSValue* DoGetBoxAlign();
-  mozilla::dom::CSSValue* DoGetBoxDecorationBreak();
-  mozilla::dom::CSSValue* DoGetBoxDirection();
-  mozilla::dom::CSSValue* DoGetBoxFlex();
-  mozilla::dom::CSSValue* DoGetBoxOrdinalGroup();
-  mozilla::dom::CSSValue* DoGetBoxOrient();
-  mozilla::dom::CSSValue* DoGetBoxPack();
-  mozilla::dom::CSSValue* DoGetBoxSizing();
+  already_AddRefed<CSSValue> DoGetBoxAlign();
+  already_AddRefed<CSSValue> DoGetBoxDecorationBreak();
+  already_AddRefed<CSSValue> DoGetBoxDirection();
+  already_AddRefed<CSSValue> DoGetBoxFlex();
+  already_AddRefed<CSSValue> DoGetBoxOrdinalGroup();
+  already_AddRefed<CSSValue> DoGetBoxOrient();
+  already_AddRefed<CSSValue> DoGetBoxPack();
+  already_AddRefed<CSSValue> DoGetBoxSizing();
 
-  mozilla::dom::CSSValue* DoGetWidth();
-  mozilla::dom::CSSValue* DoGetHeight();
-  mozilla::dom::CSSValue* DoGetMaxHeight();
-  mozilla::dom::CSSValue* DoGetMaxWidth();
-  mozilla::dom::CSSValue* DoGetMinHeight();
-  mozilla::dom::CSSValue* DoGetMinWidth();
-  mozilla::dom::CSSValue* DoGetMixBlendMode();
-  mozilla::dom::CSSValue* DoGetIsolation();
-  mozilla::dom::CSSValue* DoGetObjectFit();
-  mozilla::dom::CSSValue* DoGetObjectPosition();
-  mozilla::dom::CSSValue* DoGetLeft();
-  mozilla::dom::CSSValue* DoGetTop();
-  mozilla::dom::CSSValue* DoGetRight();
-  mozilla::dom::CSSValue* DoGetBottom();
-  mozilla::dom::CSSValue* DoGetStackSizing();
+  already_AddRefed<CSSValue> DoGetWidth();
+  already_AddRefed<CSSValue> DoGetHeight();
+  already_AddRefed<CSSValue> DoGetMaxHeight();
+  already_AddRefed<CSSValue> DoGetMaxWidth();
+  already_AddRefed<CSSValue> DoGetMinHeight();
+  already_AddRefed<CSSValue> DoGetMinWidth();
+  already_AddRefed<CSSValue> DoGetMixBlendMode();
+  already_AddRefed<CSSValue> DoGetIsolation();
+  already_AddRefed<CSSValue> DoGetObjectFit();
+  already_AddRefed<CSSValue> DoGetObjectPosition();
+  already_AddRefed<CSSValue> DoGetLeft();
+  already_AddRefed<CSSValue> DoGetTop();
+  already_AddRefed<CSSValue> DoGetRight();
+  already_AddRefed<CSSValue> DoGetBottom();
+  already_AddRefed<CSSValue> DoGetStackSizing();
 
   /* Font properties */
-  mozilla::dom::CSSValue* DoGetColor();
-  mozilla::dom::CSSValue* DoGetFontFamily();
-  mozilla::dom::CSSValue* DoGetFontFeatureSettings();
-  mozilla::dom::CSSValue* DoGetFontKerning();
-  mozilla::dom::CSSValue* DoGetFontLanguageOverride();
-  mozilla::dom::CSSValue* DoGetFontSize();
-  mozilla::dom::CSSValue* DoGetFontSizeAdjust();
-  mozilla::dom::CSSValue* DoGetOsxFontSmoothing();
-  mozilla::dom::CSSValue* DoGetFontStretch();
-  mozilla::dom::CSSValue* DoGetFontStyle();
-  mozilla::dom::CSSValue* DoGetFontSynthesis();
-  mozilla::dom::CSSValue* DoGetFontVariant();
-  mozilla::dom::CSSValue* DoGetFontVariantAlternates();
-  mozilla::dom::CSSValue* DoGetFontVariantCaps();
-  mozilla::dom::CSSValue* DoGetFontVariantEastAsian();
-  mozilla::dom::CSSValue* DoGetFontVariantLigatures();
-  mozilla::dom::CSSValue* DoGetFontVariantNumeric();
-  mozilla::dom::CSSValue* DoGetFontVariantPosition();
-  mozilla::dom::CSSValue* DoGetFontWeight();
+  already_AddRefed<CSSValue> DoGetColor();
+  already_AddRefed<CSSValue> DoGetFontFamily();
+  already_AddRefed<CSSValue> DoGetFontFeatureSettings();
+  already_AddRefed<CSSValue> DoGetFontKerning();
+  already_AddRefed<CSSValue> DoGetFontLanguageOverride();
+  already_AddRefed<CSSValue> DoGetFontSize();
+  already_AddRefed<CSSValue> DoGetFontSizeAdjust();
+  already_AddRefed<CSSValue> DoGetOsxFontSmoothing();
+  already_AddRefed<CSSValue> DoGetFontStretch();
+  already_AddRefed<CSSValue> DoGetFontStyle();
+  already_AddRefed<CSSValue> DoGetFontSynthesis();
+  already_AddRefed<CSSValue> DoGetFontVariant();
+  already_AddRefed<CSSValue> DoGetFontVariantAlternates();
+  already_AddRefed<CSSValue> DoGetFontVariantCaps();
+  already_AddRefed<CSSValue> DoGetFontVariantEastAsian();
+  already_AddRefed<CSSValue> DoGetFontVariantLigatures();
+  already_AddRefed<CSSValue> DoGetFontVariantNumeric();
+  already_AddRefed<CSSValue> DoGetFontVariantPosition();
+  already_AddRefed<CSSValue> DoGetFontWeight();
 
   /* Grid properties */
-  mozilla::dom::CSSValue* DoGetGridAutoFlow();
-  mozilla::dom::CSSValue* DoGetGridAutoColumns();
-  mozilla::dom::CSSValue* DoGetGridAutoRows();
-  mozilla::dom::CSSValue* DoGetGridTemplateAreas();
-  mozilla::dom::CSSValue* DoGetGridTemplateColumns();
-  mozilla::dom::CSSValue* DoGetGridTemplateRows();
-  mozilla::dom::CSSValue* DoGetGridColumnStart();
-  mozilla::dom::CSSValue* DoGetGridColumnEnd();
-  mozilla::dom::CSSValue* DoGetGridRowStart();
-  mozilla::dom::CSSValue* DoGetGridRowEnd();
-  mozilla::dom::CSSValue* DoGetGridColumnGap();
-  mozilla::dom::CSSValue* DoGetGridRowGap();
+  already_AddRefed<CSSValue> DoGetGridAutoFlow();
+  already_AddRefed<CSSValue> DoGetGridAutoColumns();
+  already_AddRefed<CSSValue> DoGetGridAutoRows();
+  already_AddRefed<CSSValue> DoGetGridTemplateAreas();
+  already_AddRefed<CSSValue> DoGetGridTemplateColumns();
+  already_AddRefed<CSSValue> DoGetGridTemplateRows();
+  already_AddRefed<CSSValue> DoGetGridColumnStart();
+  already_AddRefed<CSSValue> DoGetGridColumnEnd();
+  already_AddRefed<CSSValue> DoGetGridRowStart();
+  already_AddRefed<CSSValue> DoGetGridRowEnd();
+  already_AddRefed<CSSValue> DoGetGridColumnGap();
+  already_AddRefed<CSSValue> DoGetGridRowGap();
 
   /* Background properties */
-  mozilla::dom::CSSValue* DoGetBackgroundAttachment();
-  mozilla::dom::CSSValue* DoGetBackgroundColor();
-  mozilla::dom::CSSValue* DoGetBackgroundImage();
-  mozilla::dom::CSSValue* DoGetBackgroundPosition();
-  mozilla::dom::CSSValue* DoGetBackgroundRepeat();
-  mozilla::dom::CSSValue* DoGetBackgroundClip();
-  mozilla::dom::CSSValue* DoGetBackgroundBlendMode();
-  mozilla::dom::CSSValue* DoGetBackgroundOrigin();
-  mozilla::dom::CSSValue* DoGetBackgroundSize();
+  already_AddRefed<CSSValue> DoGetBackgroundAttachment();
+  already_AddRefed<CSSValue> DoGetBackgroundColor();
+  already_AddRefed<CSSValue> DoGetBackgroundImage();
+  already_AddRefed<CSSValue> DoGetBackgroundPosition();
+  already_AddRefed<CSSValue> DoGetBackgroundRepeat();
+  already_AddRefed<CSSValue> DoGetBackgroundClip();
+  already_AddRefed<CSSValue> DoGetBackgroundBlendMode();
+  already_AddRefed<CSSValue> DoGetBackgroundOrigin();
+  already_AddRefed<CSSValue> DoGetBackgroundSize();
 
   /* Padding properties */
-  mozilla::dom::CSSValue* DoGetPaddingTop();
-  mozilla::dom::CSSValue* DoGetPaddingBottom();
-  mozilla::dom::CSSValue* DoGetPaddingLeft();
-  mozilla::dom::CSSValue* DoGetPaddingRight();
+  already_AddRefed<CSSValue> DoGetPaddingTop();
+  already_AddRefed<CSSValue> DoGetPaddingBottom();
+  already_AddRefed<CSSValue> DoGetPaddingLeft();
+  already_AddRefed<CSSValue> DoGetPaddingRight();
 
   /* Table Properties */
-  mozilla::dom::CSSValue* DoGetBorderCollapse();
-  mozilla::dom::CSSValue* DoGetBorderSpacing();
-  mozilla::dom::CSSValue* DoGetCaptionSide();
-  mozilla::dom::CSSValue* DoGetEmptyCells();
-  mozilla::dom::CSSValue* DoGetTableLayout();
-  mozilla::dom::CSSValue* DoGetVerticalAlign();
+  already_AddRefed<CSSValue> DoGetBorderCollapse();
+  already_AddRefed<CSSValue> DoGetBorderSpacing();
+  already_AddRefed<CSSValue> DoGetCaptionSide();
+  already_AddRefed<CSSValue> DoGetEmptyCells();
+  already_AddRefed<CSSValue> DoGetTableLayout();
+  already_AddRefed<CSSValue> DoGetVerticalAlign();
 
   /* Border Properties */
-  mozilla::dom::CSSValue* DoGetBorderTopStyle();
-  mozilla::dom::CSSValue* DoGetBorderBottomStyle();
-  mozilla::dom::CSSValue* DoGetBorderLeftStyle();
-  mozilla::dom::CSSValue* DoGetBorderRightStyle();
-  mozilla::dom::CSSValue* DoGetBorderTopWidth();
-  mozilla::dom::CSSValue* DoGetBorderBottomWidth();
-  mozilla::dom::CSSValue* DoGetBorderLeftWidth();
-  mozilla::dom::CSSValue* DoGetBorderRightWidth();
-  mozilla::dom::CSSValue* DoGetBorderTopColor();
-  mozilla::dom::CSSValue* DoGetBorderBottomColor();
-  mozilla::dom::CSSValue* DoGetBorderLeftColor();
-  mozilla::dom::CSSValue* DoGetBorderRightColor();
-  mozilla::dom::CSSValue* DoGetBorderBottomColors();
-  mozilla::dom::CSSValue* DoGetBorderLeftColors();
-  mozilla::dom::CSSValue* DoGetBorderRightColors();
-  mozilla::dom::CSSValue* DoGetBorderTopColors();
-  mozilla::dom::CSSValue* DoGetBorderBottomLeftRadius();
-  mozilla::dom::CSSValue* DoGetBorderBottomRightRadius();
-  mozilla::dom::CSSValue* DoGetBorderTopLeftRadius();
-  mozilla::dom::CSSValue* DoGetBorderTopRightRadius();
-  mozilla::dom::CSSValue* DoGetFloatEdge();
+  already_AddRefed<CSSValue> DoGetBorderTopStyle();
+  already_AddRefed<CSSValue> DoGetBorderBottomStyle();
+  already_AddRefed<CSSValue> DoGetBorderLeftStyle();
+  already_AddRefed<CSSValue> DoGetBorderRightStyle();
+  already_AddRefed<CSSValue> DoGetBorderTopWidth();
+  already_AddRefed<CSSValue> DoGetBorderBottomWidth();
+  already_AddRefed<CSSValue> DoGetBorderLeftWidth();
+  already_AddRefed<CSSValue> DoGetBorderRightWidth();
+  already_AddRefed<CSSValue> DoGetBorderTopColor();
+  already_AddRefed<CSSValue> DoGetBorderBottomColor();
+  already_AddRefed<CSSValue> DoGetBorderLeftColor();
+  already_AddRefed<CSSValue> DoGetBorderRightColor();
+  already_AddRefed<CSSValue> DoGetBorderBottomColors();
+  already_AddRefed<CSSValue> DoGetBorderLeftColors();
+  already_AddRefed<CSSValue> DoGetBorderRightColors();
+  already_AddRefed<CSSValue> DoGetBorderTopColors();
+  already_AddRefed<CSSValue> DoGetBorderBottomLeftRadius();
+  already_AddRefed<CSSValue> DoGetBorderBottomRightRadius();
+  already_AddRefed<CSSValue> DoGetBorderTopLeftRadius();
+  already_AddRefed<CSSValue> DoGetBorderTopRightRadius();
+  already_AddRefed<CSSValue> DoGetFloatEdge();
 
   /* Border Image */
-  mozilla::dom::CSSValue* DoGetBorderImageSource();
-  mozilla::dom::CSSValue* DoGetBorderImageSlice();
-  mozilla::dom::CSSValue* DoGetBorderImageWidth();
-  mozilla::dom::CSSValue* DoGetBorderImageOutset();
-  mozilla::dom::CSSValue* DoGetBorderImageRepeat();
+  already_AddRefed<CSSValue> DoGetBorderImageSource();
+  already_AddRefed<CSSValue> DoGetBorderImageSlice();
+  already_AddRefed<CSSValue> DoGetBorderImageWidth();
+  already_AddRefed<CSSValue> DoGetBorderImageOutset();
+  already_AddRefed<CSSValue> DoGetBorderImageRepeat();
 
   /* Box Shadow */
-  mozilla::dom::CSSValue* DoGetBoxShadow();
+  already_AddRefed<CSSValue> DoGetBoxShadow();
 
   /* Window Shadow */
-  mozilla::dom::CSSValue* DoGetWindowShadow();
+  already_AddRefed<CSSValue> DoGetWindowShadow();
 
   /* Margin Properties */
-  mozilla::dom::CSSValue* DoGetMarginTopWidth();
-  mozilla::dom::CSSValue* DoGetMarginBottomWidth();
-  mozilla::dom::CSSValue* DoGetMarginLeftWidth();
-  mozilla::dom::CSSValue* DoGetMarginRightWidth();
+  already_AddRefed<CSSValue> DoGetMarginTopWidth();
+  already_AddRefed<CSSValue> DoGetMarginBottomWidth();
+  already_AddRefed<CSSValue> DoGetMarginLeftWidth();
+  already_AddRefed<CSSValue> DoGetMarginRightWidth();
 
   /* Outline Properties */
-  mozilla::dom::CSSValue* DoGetOutlineWidth();
-  mozilla::dom::CSSValue* DoGetOutlineStyle();
-  mozilla::dom::CSSValue* DoGetOutlineColor();
-  mozilla::dom::CSSValue* DoGetOutlineOffset();
-  mozilla::dom::CSSValue* DoGetOutlineRadiusBottomLeft();
-  mozilla::dom::CSSValue* DoGetOutlineRadiusBottomRight();
-  mozilla::dom::CSSValue* DoGetOutlineRadiusTopLeft();
-  mozilla::dom::CSSValue* DoGetOutlineRadiusTopRight();
+  already_AddRefed<CSSValue> DoGetOutlineWidth();
+  already_AddRefed<CSSValue> DoGetOutlineStyle();
+  already_AddRefed<CSSValue> DoGetOutlineColor();
+  already_AddRefed<CSSValue> DoGetOutlineOffset();
+  already_AddRefed<CSSValue> DoGetOutlineRadiusBottomLeft();
+  already_AddRefed<CSSValue> DoGetOutlineRadiusBottomRight();
+  already_AddRefed<CSSValue> DoGetOutlineRadiusTopLeft();
+  already_AddRefed<CSSValue> DoGetOutlineRadiusTopRight();
 
   /* Content Properties */
-  mozilla::dom::CSSValue* DoGetContent();
-  mozilla::dom::CSSValue* DoGetCounterIncrement();
-  mozilla::dom::CSSValue* DoGetCounterReset();
-  mozilla::dom::CSSValue* DoGetMarkerOffset();
+  already_AddRefed<CSSValue> DoGetContent();
+  already_AddRefed<CSSValue> DoGetCounterIncrement();
+  already_AddRefed<CSSValue> DoGetCounterReset();
+  already_AddRefed<CSSValue> DoGetMarkerOffset();
 
   /* Quotes Properties */
-  mozilla::dom::CSSValue* DoGetQuotes();
+  already_AddRefed<CSSValue> DoGetQuotes();
 
   /* z-index */
-  mozilla::dom::CSSValue* DoGetZIndex();
+  already_AddRefed<CSSValue> DoGetZIndex();
 
   /* List properties */
-  mozilla::dom::CSSValue* DoGetListStyleImage();
-  mozilla::dom::CSSValue* DoGetListStylePosition();
-  mozilla::dom::CSSValue* DoGetListStyleType();
-  mozilla::dom::CSSValue* DoGetImageRegion();
+  already_AddRefed<CSSValue> DoGetListStyleImage();
+  already_AddRefed<CSSValue> DoGetListStylePosition();
+  already_AddRefed<CSSValue> DoGetListStyleType();
+  already_AddRefed<CSSValue> DoGetImageRegion();
 
   /* Text Properties */
-  mozilla::dom::CSSValue* DoGetLineHeight();
-  mozilla::dom::CSSValue* DoGetRubyAlign();
-  mozilla::dom::CSSValue* DoGetRubyPosition();
-  mozilla::dom::CSSValue* DoGetTextAlign();
-  mozilla::dom::CSSValue* DoGetTextAlignLast();
-  mozilla::dom::CSSValue* DoGetTextCombineUpright();
-  mozilla::dom::CSSValue* DoGetTextDecoration();
-  mozilla::dom::CSSValue* DoGetTextDecorationColor();
-  mozilla::dom::CSSValue* DoGetTextDecorationLine();
-  mozilla::dom::CSSValue* DoGetTextDecorationStyle();
-  mozilla::dom::CSSValue* DoGetTextEmphasisColor();
-  mozilla::dom::CSSValue* DoGetTextEmphasisPosition();
-  mozilla::dom::CSSValue* DoGetTextEmphasisStyle();
-  mozilla::dom::CSSValue* DoGetTextIndent();
-  mozilla::dom::CSSValue* DoGetTextOrientation();
-  mozilla::dom::CSSValue* DoGetTextOverflow();
-  mozilla::dom::CSSValue* DoGetTextTransform();
-  mozilla::dom::CSSValue* DoGetTextShadow();
-  mozilla::dom::CSSValue* DoGetLetterSpacing();
-  mozilla::dom::CSSValue* DoGetWordSpacing();
-  mozilla::dom::CSSValue* DoGetWhiteSpace();
-  mozilla::dom::CSSValue* DoGetWordBreak();
-  mozilla::dom::CSSValue* DoGetWordWrap();
-  mozilla::dom::CSSValue* DoGetHyphens();
-  mozilla::dom::CSSValue* DoGetTabSize();
-  mozilla::dom::CSSValue* DoGetTextSizeAdjust();
+  already_AddRefed<CSSValue> DoGetLineHeight();
+  already_AddRefed<CSSValue> DoGetRubyAlign();
+  already_AddRefed<CSSValue> DoGetRubyPosition();
+  already_AddRefed<CSSValue> DoGetTextAlign();
+  already_AddRefed<CSSValue> DoGetTextAlignLast();
+  already_AddRefed<CSSValue> DoGetTextCombineUpright();
+  already_AddRefed<CSSValue> DoGetTextDecoration();
+  already_AddRefed<CSSValue> DoGetTextDecorationColor();
+  already_AddRefed<CSSValue> DoGetTextDecorationLine();
+  already_AddRefed<CSSValue> DoGetTextDecorationStyle();
+  already_AddRefed<CSSValue> DoGetTextEmphasisColor();
+  already_AddRefed<CSSValue> DoGetTextEmphasisPosition();
+  already_AddRefed<CSSValue> DoGetTextEmphasisStyle();
+  already_AddRefed<CSSValue> DoGetTextIndent();
+  already_AddRefed<CSSValue> DoGetTextOrientation();
+  already_AddRefed<CSSValue> DoGetTextOverflow();
+  already_AddRefed<CSSValue> DoGetTextTransform();
+  already_AddRefed<CSSValue> DoGetTextShadow();
+  already_AddRefed<CSSValue> DoGetLetterSpacing();
+  already_AddRefed<CSSValue> DoGetWordSpacing();
+  already_AddRefed<CSSValue> DoGetWhiteSpace();
+  already_AddRefed<CSSValue> DoGetWordBreak();
+  already_AddRefed<CSSValue> DoGetWordWrap();
+  already_AddRefed<CSSValue> DoGetHyphens();
+  already_AddRefed<CSSValue> DoGetTabSize();
+  already_AddRefed<CSSValue> DoGetTextSizeAdjust();
 
   /* Visibility properties */
-  mozilla::dom::CSSValue* DoGetOpacity();
-  mozilla::dom::CSSValue* DoGetPointerEvents();
-  mozilla::dom::CSSValue* DoGetVisibility();
-  mozilla::dom::CSSValue* DoGetWritingMode();
+  already_AddRefed<CSSValue> DoGetOpacity();
+  already_AddRefed<CSSValue> DoGetPointerEvents();
+  already_AddRefed<CSSValue> DoGetVisibility();
+  already_AddRefed<CSSValue> DoGetWritingMode();
 
   /* Direction properties */
-  mozilla::dom::CSSValue* DoGetDirection();
-  mozilla::dom::CSSValue* DoGetUnicodeBidi();
+  already_AddRefed<CSSValue> DoGetDirection();
+  already_AddRefed<CSSValue> DoGetUnicodeBidi();
 
   /* Display properties */
-  mozilla::dom::CSSValue* DoGetBinding();
-  mozilla::dom::CSSValue* DoGetClear();
-  mozilla::dom::CSSValue* DoGetFloat();
-  mozilla::dom::CSSValue* DoGetDisplay();
-  mozilla::dom::CSSValue* DoGetContain();
-  mozilla::dom::CSSValue* DoGetPosition();
-  mozilla::dom::CSSValue* DoGetClip();
-  mozilla::dom::CSSValue* DoGetImageOrientation();
-  mozilla::dom::CSSValue* DoGetWillChange();
-  mozilla::dom::CSSValue* DoGetOverflow();
-  mozilla::dom::CSSValue* DoGetOverflowX();
-  mozilla::dom::CSSValue* DoGetOverflowY();
-  mozilla::dom::CSSValue* DoGetOverflowClipBox();
-  mozilla::dom::CSSValue* DoGetResize();
-  mozilla::dom::CSSValue* DoGetPageBreakAfter();
-  mozilla::dom::CSSValue* DoGetPageBreakBefore();
-  mozilla::dom::CSSValue* DoGetPageBreakInside();
-  mozilla::dom::CSSValue* DoGetTouchAction();
-  mozilla::dom::CSSValue* DoGetTransform();
-  mozilla::dom::CSSValue* DoGetTransformBox();
-  mozilla::dom::CSSValue* DoGetTransformOrigin();
-  mozilla::dom::CSSValue* DoGetPerspective();
-  mozilla::dom::CSSValue* DoGetBackfaceVisibility();
-  mozilla::dom::CSSValue* DoGetPerspectiveOrigin();
-  mozilla::dom::CSSValue* DoGetTransformStyle();
-  mozilla::dom::CSSValue* DoGetOrient();
-  mozilla::dom::CSSValue* DoGetScrollBehavior();
-  mozilla::dom::CSSValue* DoGetScrollSnapType();
-  mozilla::dom::CSSValue* DoGetScrollSnapTypeX();
-  mozilla::dom::CSSValue* DoGetScrollSnapTypeY();
-  mozilla::dom::CSSValue* DoGetScrollSnapPointsX();
-  mozilla::dom::CSSValue* DoGetScrollSnapPointsY();
-  mozilla::dom::CSSValue* DoGetScrollSnapDestination();
-  mozilla::dom::CSSValue* DoGetScrollSnapCoordinate();
+  already_AddRefed<CSSValue> DoGetBinding();
+  already_AddRefed<CSSValue> DoGetClear();
+  already_AddRefed<CSSValue> DoGetFloat();
+  already_AddRefed<CSSValue> DoGetDisplay();
+  already_AddRefed<CSSValue> DoGetContain();
+  already_AddRefed<CSSValue> DoGetPosition();
+  already_AddRefed<CSSValue> DoGetClip();
+  already_AddRefed<CSSValue> DoGetImageOrientation();
+  already_AddRefed<CSSValue> DoGetWillChange();
+  already_AddRefed<CSSValue> DoGetOverflow();
+  already_AddRefed<CSSValue> DoGetOverflowX();
+  already_AddRefed<CSSValue> DoGetOverflowY();
+  already_AddRefed<CSSValue> DoGetOverflowClipBox();
+  already_AddRefed<CSSValue> DoGetResize();
+  already_AddRefed<CSSValue> DoGetPageBreakAfter();
+  already_AddRefed<CSSValue> DoGetPageBreakBefore();
+  already_AddRefed<CSSValue> DoGetPageBreakInside();
+  already_AddRefed<CSSValue> DoGetTouchAction();
+  already_AddRefed<CSSValue> DoGetTransform();
+  already_AddRefed<CSSValue> DoGetTransformBox();
+  already_AddRefed<CSSValue> DoGetTransformOrigin();
+  already_AddRefed<CSSValue> DoGetPerspective();
+  already_AddRefed<CSSValue> DoGetBackfaceVisibility();
+  already_AddRefed<CSSValue> DoGetPerspectiveOrigin();
+  already_AddRefed<CSSValue> DoGetTransformStyle();
+  already_AddRefed<CSSValue> DoGetOrient();
+  already_AddRefed<CSSValue> DoGetScrollBehavior();
+  already_AddRefed<CSSValue> DoGetScrollSnapType();
+  already_AddRefed<CSSValue> DoGetScrollSnapTypeX();
+  already_AddRefed<CSSValue> DoGetScrollSnapTypeY();
+  already_AddRefed<CSSValue> DoGetScrollSnapPointsX();
+  already_AddRefed<CSSValue> DoGetScrollSnapPointsY();
+  already_AddRefed<CSSValue> DoGetScrollSnapDestination();
+  already_AddRefed<CSSValue> DoGetScrollSnapCoordinate();
 
   /* User interface properties */
-  mozilla::dom::CSSValue* DoGetCursor();
-  mozilla::dom::CSSValue* DoGetForceBrokenImageIcon();
-  mozilla::dom::CSSValue* DoGetIMEMode();
-  mozilla::dom::CSSValue* DoGetUserFocus();
-  mozilla::dom::CSSValue* DoGetUserInput();
-  mozilla::dom::CSSValue* DoGetUserModify();
-  mozilla::dom::CSSValue* DoGetUserSelect();
-  mozilla::dom::CSSValue* DoGetWindowDragging();
+  already_AddRefed<CSSValue> DoGetCursor();
+  already_AddRefed<CSSValue> DoGetForceBrokenImageIcon();
+  already_AddRefed<CSSValue> DoGetIMEMode();
+  already_AddRefed<CSSValue> DoGetUserFocus();
+  already_AddRefed<CSSValue> DoGetUserInput();
+  already_AddRefed<CSSValue> DoGetUserModify();
+  already_AddRefed<CSSValue> DoGetUserSelect();
+  already_AddRefed<CSSValue> DoGetWindowDragging();
 
   /* Column properties */
-  mozilla::dom::CSSValue* DoGetColumnCount();
-  mozilla::dom::CSSValue* DoGetColumnFill();
-  mozilla::dom::CSSValue* DoGetColumnWidth();
-  mozilla::dom::CSSValue* DoGetColumnGap();
-  mozilla::dom::CSSValue* DoGetColumnRuleWidth();
-  mozilla::dom::CSSValue* DoGetColumnRuleStyle();
-  mozilla::dom::CSSValue* DoGetColumnRuleColor();
+  already_AddRefed<CSSValue> DoGetColumnCount();
+  already_AddRefed<CSSValue> DoGetColumnFill();
+  already_AddRefed<CSSValue> DoGetColumnWidth();
+  already_AddRefed<CSSValue> DoGetColumnGap();
+  already_AddRefed<CSSValue> DoGetColumnRuleWidth();
+  already_AddRefed<CSSValue> DoGetColumnRuleStyle();
+  already_AddRefed<CSSValue> DoGetColumnRuleColor();
 
   /* CSS Transitions */
-  mozilla::dom::CSSValue* DoGetTransitionProperty();
-  mozilla::dom::CSSValue* DoGetTransitionDuration();
-  mozilla::dom::CSSValue* DoGetTransitionDelay();
-  mozilla::dom::CSSValue* DoGetTransitionTimingFunction();
+  already_AddRefed<CSSValue> DoGetTransitionProperty();
+  already_AddRefed<CSSValue> DoGetTransitionDuration();
+  already_AddRefed<CSSValue> DoGetTransitionDelay();
+  already_AddRefed<CSSValue> DoGetTransitionTimingFunction();
 
   /* CSS Animations */
-  mozilla::dom::CSSValue* DoGetAnimationName();
-  mozilla::dom::CSSValue* DoGetAnimationDuration();
-  mozilla::dom::CSSValue* DoGetAnimationDelay();
-  mozilla::dom::CSSValue* DoGetAnimationTimingFunction();
-  mozilla::dom::CSSValue* DoGetAnimationDirection();
-  mozilla::dom::CSSValue* DoGetAnimationFillMode();
-  mozilla::dom::CSSValue* DoGetAnimationIterationCount();
-  mozilla::dom::CSSValue* DoGetAnimationPlayState();
+  already_AddRefed<CSSValue> DoGetAnimationName();
+  already_AddRefed<CSSValue> DoGetAnimationDuration();
+  already_AddRefed<CSSValue> DoGetAnimationDelay();
+  already_AddRefed<CSSValue> DoGetAnimationTimingFunction();
+  already_AddRefed<CSSValue> DoGetAnimationDirection();
+  already_AddRefed<CSSValue> DoGetAnimationFillMode();
+  already_AddRefed<CSSValue> DoGetAnimationIterationCount();
+  already_AddRefed<CSSValue> DoGetAnimationPlayState();
 
   /* CSS Flexbox properties */
-  mozilla::dom::CSSValue* DoGetFlexBasis();
-  mozilla::dom::CSSValue* DoGetFlexDirection();
-  mozilla::dom::CSSValue* DoGetFlexGrow();
-  mozilla::dom::CSSValue* DoGetFlexShrink();
-  mozilla::dom::CSSValue* DoGetFlexWrap();
+  already_AddRefed<CSSValue> DoGetFlexBasis();
+  already_AddRefed<CSSValue> DoGetFlexDirection();
+  already_AddRefed<CSSValue> DoGetFlexGrow();
+  already_AddRefed<CSSValue> DoGetFlexShrink();
+  already_AddRefed<CSSValue> DoGetFlexWrap();
 
   /* CSS Flexbox/Grid properties */
-  mozilla::dom::CSSValue* DoGetOrder();
+  already_AddRefed<CSSValue> DoGetOrder();
 
   /* CSS Box Alignment properties */
-  mozilla::dom::CSSValue* DoGetAlignContent();
-  mozilla::dom::CSSValue* DoGetAlignItems();
-  mozilla::dom::CSSValue* DoGetAlignSelf();
-  mozilla::dom::CSSValue* DoGetJustifyContent();
-  mozilla::dom::CSSValue* DoGetJustifyItems();
-  mozilla::dom::CSSValue* DoGetJustifySelf();
+  already_AddRefed<CSSValue> DoGetAlignContent();
+  already_AddRefed<CSSValue> DoGetAlignItems();
+  already_AddRefed<CSSValue> DoGetAlignSelf();
+  already_AddRefed<CSSValue> DoGetJustifyContent();
+  already_AddRefed<CSSValue> DoGetJustifyItems();
+  already_AddRefed<CSSValue> DoGetJustifySelf();
 
   /* SVG properties */
-  mozilla::dom::CSSValue* DoGetFill();
-  mozilla::dom::CSSValue* DoGetStroke();
-  mozilla::dom::CSSValue* DoGetMarkerEnd();
-  mozilla::dom::CSSValue* DoGetMarkerMid();
-  mozilla::dom::CSSValue* DoGetMarkerStart();
-  mozilla::dom::CSSValue* DoGetStrokeDasharray();
+  already_AddRefed<CSSValue> DoGetFill();
+  already_AddRefed<CSSValue> DoGetStroke();
+  already_AddRefed<CSSValue> DoGetMarkerEnd();
+  already_AddRefed<CSSValue> DoGetMarkerMid();
+  already_AddRefed<CSSValue> DoGetMarkerStart();
+  already_AddRefed<CSSValue> DoGetStrokeDasharray();
 
-  mozilla::dom::CSSValue* DoGetStrokeDashoffset();
-  mozilla::dom::CSSValue* DoGetStrokeWidth();
-  mozilla::dom::CSSValue* DoGetVectorEffect();
+  already_AddRefed<CSSValue> DoGetStrokeDashoffset();
+  already_AddRefed<CSSValue> DoGetStrokeWidth();
+  already_AddRefed<CSSValue> DoGetVectorEffect();
 
-  mozilla::dom::CSSValue* DoGetFillOpacity();
-  mozilla::dom::CSSValue* DoGetFloodOpacity();
-  mozilla::dom::CSSValue* DoGetStopOpacity();
-  mozilla::dom::CSSValue* DoGetStrokeMiterlimit();
-  mozilla::dom::CSSValue* DoGetStrokeOpacity();
+  already_AddRefed<CSSValue> DoGetFillOpacity();
+  already_AddRefed<CSSValue> DoGetFloodOpacity();
+  already_AddRefed<CSSValue> DoGetStopOpacity();
+  already_AddRefed<CSSValue> DoGetStrokeMiterlimit();
+  already_AddRefed<CSSValue> DoGetStrokeOpacity();
 
-  mozilla::dom::CSSValue* DoGetClipRule();
-  mozilla::dom::CSSValue* DoGetFillRule();
-  mozilla::dom::CSSValue* DoGetStrokeLinecap();
-  mozilla::dom::CSSValue* DoGetStrokeLinejoin();
-  mozilla::dom::CSSValue* DoGetTextAnchor();
+  already_AddRefed<CSSValue> DoGetClipRule();
+  already_AddRefed<CSSValue> DoGetFillRule();
+  already_AddRefed<CSSValue> DoGetStrokeLinecap();
+  already_AddRefed<CSSValue> DoGetStrokeLinejoin();
+  already_AddRefed<CSSValue> DoGetTextAnchor();
 
-  mozilla::dom::CSSValue* DoGetColorInterpolation();
-  mozilla::dom::CSSValue* DoGetColorInterpolationFilters();
-  mozilla::dom::CSSValue* DoGetDominantBaseline();
-  mozilla::dom::CSSValue* DoGetImageRendering();
-  mozilla::dom::CSSValue* DoGetShapeRendering();
-  mozilla::dom::CSSValue* DoGetTextRendering();
+  already_AddRefed<CSSValue> DoGetColorInterpolation();
+  already_AddRefed<CSSValue> DoGetColorInterpolationFilters();
+  already_AddRefed<CSSValue> DoGetDominantBaseline();
+  already_AddRefed<CSSValue> DoGetImageRendering();
+  already_AddRefed<CSSValue> DoGetShapeRendering();
+  already_AddRefed<CSSValue> DoGetTextRendering();
 
-  mozilla::dom::CSSValue* DoGetFloodColor();
-  mozilla::dom::CSSValue* DoGetLightingColor();
-  mozilla::dom::CSSValue* DoGetStopColor();
+  already_AddRefed<CSSValue> DoGetFloodColor();
+  already_AddRefed<CSSValue> DoGetLightingColor();
+  already_AddRefed<CSSValue> DoGetStopColor();
 
-  mozilla::dom::CSSValue* DoGetClipPath();
-  mozilla::dom::CSSValue* DoGetFilter();
-  mozilla::dom::CSSValue* DoGetMask();
-  mozilla::dom::CSSValue* DoGetMaskType();
-  mozilla::dom::CSSValue* DoGetPaintOrder();
+  already_AddRefed<CSSValue> DoGetClipPath();
+  already_AddRefed<CSSValue> DoGetFilter();
+  already_AddRefed<CSSValue> DoGetMask();
+  already_AddRefed<CSSValue> DoGetMaskType();
+  already_AddRefed<CSSValue> DoGetPaintOrder();
 
   /* Custom properties */
-  mozilla::dom::CSSValue* DoGetCustomProperty(const nsAString& aPropertyName);
+  already_AddRefed<CSSValue> DoGetCustomProperty(const nsAString& aPropertyName);
 
   nsDOMCSSValueList* GetROCSSValueList(bool aCommaDelimited);
 
@@ -607,11 +609,11 @@ private:
 
   /* Helper functions for computing the filter property style. */
   void SetCssTextToCoord(nsAString& aCssText, const nsStyleCoord& aCoord);
-  already_AddRefed<mozilla::dom::CSSValue> CreatePrimitiveValueForStyleFilter(
+  already_AddRefed<CSSValue> CreatePrimitiveValueForStyleFilter(
     const nsStyleFilter& aStyleFilter);
 
   // Helper function for computing basic shape styles.
-  mozilla::dom::CSSValue* CreatePrimitiveValueForClipPath(
+  already_AddRefed<CSSValue> CreatePrimitiveValueForClipPath(
     const nsStyleBasicShape* aStyleBasicShape, uint8_t aSizingBox);
   void BoxValuesToString(nsAString& aString,
                          const nsTArray<nsStyleCoord>& aBoxValues);
