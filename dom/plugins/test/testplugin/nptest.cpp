@@ -173,7 +173,6 @@ static bool startAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t 
 static bool stopAudioPlayback(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool getAudioMuted(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 static bool nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
-static bool getLastCompositionText(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result);
 
 static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "npnEvaluateTest",
@@ -245,7 +244,6 @@ static const NPUTF8* sPluginMethodIdentifierNames[] = {
   "stopAudioPlayback",
   "audioMuted",
   "nativeWidgetIsVisible",
-  "getLastCompositionText",
 };
 static NPIdentifier sPluginMethodIdentifiers[MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames)];
 static const ScriptableFunction sPluginMethodFunctions[] = {
@@ -318,7 +316,6 @@ static const ScriptableFunction sPluginMethodFunctions[] = {
   stopAudioPlayback,
   getAudioMuted,
   nativeWidgetIsVisible,
-  getLastCompositionText,
 };
 
 static_assert(MOZ_ARRAY_LENGTH(sPluginMethodIdentifierNames) ==
@@ -855,7 +852,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
   instanceData->asyncDrawing = AD_NONE;
   instanceData->frontBuffer = nullptr;
   instanceData->backBuffer = nullptr;
-  instanceData->placeholderWnd = nullptr;
   instance->pdata = instanceData;
 
   TestNPObject* scriptableObject = (TestNPObject*)NPN_CreateObject(instance, &sNPClass);
@@ -3517,26 +3513,6 @@ nativeWidgetIsVisible(NPObject* npobj, const NPVariant* args,
   return false;
 }
 #endif
-
-bool
-getLastCompositionText(NPObject* npobj, const NPVariant* args,
-                       uint32_t argCount, NPVariant* result)
-{
-#ifdef XP_WIN
-  if (argCount != 0) {
-    return false;
-  }
-
-  NPP npp = static_cast<TestNPObject*>(npobj)->npp;
-  InstanceData* id = static_cast<InstanceData*>(npp->pdata);
-  char *outval = NPN_StrDup(id->lastComposition.c_str());
-  STRINGZ_TO_NPVARIANT(outval, *result);
-  return true;
-#else
-  // XXX not implemented
-  return false;
-#endif
-}
 
 bool
 callOnDestroy(NPObject* npobj, const NPVariant* args, uint32_t argCount, NPVariant* result)
