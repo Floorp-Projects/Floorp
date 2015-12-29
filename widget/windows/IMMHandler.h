@@ -118,7 +118,7 @@ public:
                              MSGResult& aResult);
   static bool IsComposing()
   {
-    return IsComposingOnOurEditor() || IsComposingOnPlugin();
+    return IsComposingOnOurEditor();
   }
   static bool IsComposingOn(nsWindow* aWindow)
   {
@@ -180,7 +180,7 @@ protected:
                                               MSGResult& aResult);
   static bool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
-                                        MSGResult& aResult);
+                                        bool &aRet, MSGResult& aResult);
 
   IMMHandler();
   ~IMMHandler();
@@ -326,7 +326,8 @@ protected:
    * If aForceUpdate is true, it will update composition font even if writing
    * mode isn't being changed.
    */
-  void AdjustCompositionFont(const IMEContext& aContext,
+  void AdjustCompositionFont(nsWindow* aWindow,
+                             const IMEContext& aContext,
                              const mozilla::WritingMode& aWritingMode,
                              bool aForceUpdate = false);
 
