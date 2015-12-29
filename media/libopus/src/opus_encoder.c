@@ -81,6 +81,9 @@ struct OpusEncoder {
     int          lsb_depth;
     int          encoder_buffer;
     int          lfe;
+#ifndef DISABLE_FLOAT_API
+    TonalityAnalysisState analysis;
+#endif
 
 #define OPUS_ENCODER_RESET_START stream_channels
     int          stream_channels;
@@ -100,7 +103,6 @@ struct OpusEncoder {
     StereoWidthState width_mem;
     opus_val16   delay_buffer[MAX_ENCODER_BUFFER*2];
 #ifndef DISABLE_FLOAT_API
-    TonalityAnalysisState analysis;
     int          detected_bandwidth;
     int          analysis_offset;
 #endif
@@ -242,6 +244,10 @@ int opus_encoder_init(OpusEncoder* st, opus_int32 Fs, int channels, int applicat
     st->first = 1;
     st->mode = MODE_HYBRID;
     st->bandwidth = OPUS_BANDWIDTH_FULLBAND;
+
+#ifndef DISABLE_FLOAT_API
+    tonality_analysis_init(&st->analysis);
+#endif
 
     return OPUS_OK;
 }
@@ -1006,7 +1012,7 @@ opus_int32 opus_encode_native(OpusEncoder *st, const opus_val16 *pcm, int frame_
        analysis_read_subframe_bak = st->analysis.read_subframe;
        run_analysis(&st->analysis, celt_mode, analysis_pcm, analysis_size, frame_size,
              c1, c2, analysis_channels, st->Fs,
-             lsb_depth, downmix, &analysis_info, st->arch);
+             lsb_depth, downmix, &analysis_info);
     }
 #else
     (void)analysis_pcm;
@@ -2450,10 +2456,12 @@ int opus_encoder_ctl(OpusEncoder *st, int request, ...)
            void *silk_enc;
            silk_EncControlStruct dummy;
            silk_enc = (char*)st+st->silk_enc_offset;
+#ifndef DISABLE_FLOAT_API
+           tonality_analysis_reset(&st->analysis);
+#endif
 
-           OPUS_CLEAR((char*)&st->OPUS_ENCODER_RESET_START,
-                 sizeof(OpusEncoder)-
-                 ((char*)&st->OPUS_ENCODER_RESET_START - (char*)st));
+           char *start = (char*)&st->OPUS_ENCODER_RESET_START;
+           OPUS_CLEAR(start, sizeof(OpusEncoder) - (start - (char*)st));
 
            celt_encoder_ctl(celt_enc, OPUS_RESET_STATE);
            silk_InitEncoder( silk_enc, st->arch, &dummy );
