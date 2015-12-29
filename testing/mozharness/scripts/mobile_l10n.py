@@ -127,7 +127,7 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
                 'virtualenv_modules': [
                     'requests==2.8.1',
                     'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.15',
+                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
             },
