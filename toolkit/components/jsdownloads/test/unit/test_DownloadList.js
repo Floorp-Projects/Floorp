@@ -564,9 +564,3 @@ add_task(function* test_DownloadSummary_notifications()
   yield download.start();
   do_check_true(receivedOnSummaryChanged);
 });
-
-////////////////////////////////////////////////////////////////////////////////
-//// Termination
-
-var tailFile = do_get_file("tail.js");
-Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
