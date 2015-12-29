@@ -56,15 +56,13 @@ public:
    * this service, sharing the AudioChannel.
    */
   void RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                 uint32_t aNotifyPlayback,
                                  AudioChannel aChannel);
 
   /**
    * Any audio channel agent that stops playing should unregister itself to
    * this service.
    */
-  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                   uint32_t aNotifyPlayback);
+  void UnregisterAudioChannelAgent(AudioChannelAgent* aAgent);
 
   /**
    * For nested iframes.
@@ -124,8 +122,9 @@ public:
   // group agents per top outer window, but we can have multiple innerWindow per
   // top outerWindow (subiframes, etc.) and we have to identify all the agents
   // just for a particular innerWindow.
-  void RefreshAgentsCapture(nsPIDOMWindow* aWindow,
-                            uint64_t aInnerWindowID);
+  void SetWindowAudioCaptured(nsPIDOMWindow* aWindow,
+                              uint64_t aInnerWindowID,
+                              bool aCapture);
 
 
 #ifdef MOZ_WIDGET_GONK
@@ -189,13 +188,15 @@ private:
   struct AudioChannelWindow final
   {
     explicit AudioChannelWindow(uint64_t aWindowID)
-      : mWindowID(aWindowID)
+      : mWindowID(aWindowID),
+        mIsAudioCaptured(false)
     {
       // Workaround for bug1183033, system channel type can always playback.
       mChannels[(int16_t)AudioChannel::System].mMuted = false;
     }
 
     uint64_t mWindowID;
+    bool mIsAudioCaptured;
     AudioChannelConfig mChannels[NUMBER_OF_AUDIO_CHANNELS];
 
     // Raw pointer because the AudioChannelAgent must unregister itself.
