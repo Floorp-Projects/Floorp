@@ -260,6 +260,15 @@ parent:
   // returned by NPN_GetValue_NPNVnetscapeWindow. Only used on Windows.
   async SetNetscapeWindowAsParent(NativeWindowHandle childWindow);
 
+  sync GetCompositionString(uint32_t aType)
+                            returns (uint8_t[] aDist, int32_t aLength);
+  // Set candidate window position.
+  //
+  // @param aX  x position of candidate window
+  // @param aY  y position of candidate window
+  async SetCandidateWindow(int32_t aX, int32_t aY);
+  sync RequestCommitOrCancel(bool aCommitted);
+
 both:
   async PPluginScriptableObject();
 

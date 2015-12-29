@@ -1568,6 +1568,16 @@ PluginInstanceParent::NPP_HandleEvent(void* event)
                 // We send this in nsPluginFrame just before painting
                 return SendWindowPosChanged(npremoteevent);
             }
+
+            case WM_IME_STARTCOMPOSITION:
+            case WM_IME_COMPOSITION:
+            case WM_IME_ENDCOMPOSITION:
+                if (!(mParent->GetQuirks() & QUIRK_WINLESS_HOOK_IME)) {
+                  // IME message will be posted on allowed plugins only such as
+                  // Flash.  Because if we cannot know that plugin can handle
+                  // IME correctly.
+                  return 0;
+                }
             break;
         }
     }
@@ -2366,6 +2376,50 @@ PluginInstanceParent::Cast(NPP aInstance, PluginAsyncSurrogate** aSurrogate)
     }
 
     return instancePtr;
+}
+
+bool
+PluginInstanceParent::RecvGetCompositionString(const uint32_t& aIndex,
+                                               nsTArray<uint8_t>* aDist,
+                                               int32_t* aLength)
+{
+#if defined(OS_WIN)
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (!owner) {
+        *aLength = IMM_ERROR_GENERAL;
+        return true;
+    }
+
+    if (!owner->GetCompositionString(aIndex, aDist, aLength)) {
+        *aLength = IMM_ERROR_NODATA;
+    }
+#endif
+    return true;
+}
+
+bool
+PluginInstanceParent::RecvSetCandidateWindow(const int32_t& aX,
+                                             const int32_t& aY)
+{
+#if defined(OS_WIN)
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (owner) {
+        owner->SetCandidateWindow(aX, aY);
+    }
+#endif
+    return true;
+}
+
+bool
+PluginInstanceParent::RecvRequestCommitOrCancel(const bool& aCommitted)
+{
+#if defined(OS_WIN)
+    nsPluginInstanceOwner* owner = GetOwner();
+    if (owner) {
+        owner->RequestCommitOrCancel(aCommitted);
+    }
+#endif
+    return true;
 }
 
 void

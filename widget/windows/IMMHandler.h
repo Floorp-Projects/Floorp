@@ -150,6 +150,7 @@ public:
   // IME.  Otherwise, NS_OK.
   static nsresult OnMouseButtonEvent(nsWindow* aWindow,
                                      const IMENotification& aIMENotification);
+  static void SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm);
 
 protected:
   static void EnsureHandlerInstance();
