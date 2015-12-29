@@ -282,6 +282,11 @@ parent:
     prio(urgent) async SetPluginFocused(bool aFocused);
 
     /**
+     * Set IME candidate window by windowless plugin if plugin has focus.
+     */
+    async SetCandidateWindowForPlugin(int32_t aX, int32_t aY);
+
+    /**
      * Request that the parent process move focus to the browser's frame. If
      * canRaise is true, the window can be raised if it is inactive.
      */

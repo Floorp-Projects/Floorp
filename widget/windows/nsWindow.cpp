@@ -7751,6 +7751,18 @@ nsWindow::ComputeShouldAccelerate()
   return nsBaseWidget::ComputeShouldAccelerate();
 }
 
+void
+nsWindow::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
+{
+  CANDIDATEFORM form;
+  form.dwIndex = 0;
+  form.dwStyle = CFS_CANDIDATEPOS;
+  form.ptCurrentPos.x = aX;
+  form.ptCurrentPos.y = aY;
+
+  IMEHandler::SetCandidateWindow(this, &form);
+}
+
 /**************************************************************
  **************************************************************
  **
