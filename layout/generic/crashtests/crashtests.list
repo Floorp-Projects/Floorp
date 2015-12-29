@@ -602,7 +602,7 @@ pref(layout.css.grid.enabled,true) load 1225376.html
 pref(layout.css.grid.enabled,true) load 1225592.html
 load first-letter-638937-1.html
 load first-letter-638937-2.html
-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,1-100) load font-inflation-762332.html # bug 762332
+pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,0-100) load font-inflation-762332.html # bug 762332
 load outline-on-frameset.xhtml
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
