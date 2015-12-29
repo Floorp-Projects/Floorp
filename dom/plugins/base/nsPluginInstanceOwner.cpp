@@ -62,6 +62,7 @@ using mozilla::DefaultXDisplay;
 #include "nsPIWindowRoot.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/TextComposition.h"
+#include "mozilla/AutoRestore.h"
 
 #include "nsContentCID.h"
 #include "nsWidgetsCID.h"
@@ -367,6 +368,11 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #ifdef MOZ_WIDGET_ANDROID
   mFullScreen = false;
   mJavaView = nullptr;
+#endif
+
+#ifdef XP_WIN
+  mGotCompositionData = false;
+  mSentStartComposition = false;
 #endif
 }
 
@@ -799,6 +805,9 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
                                             nsTArray<uint8_t>* aDist,
                                             int32_t* aLength)
 {
+  // Mark pkugin calls ImmGetCompositionStringW correctly
+  mGotCompositionData = true;
+
   RefPtr<TextComposition> composition = GetTextComposition();
   if (NS_WARN_IF(!composition)) {
     return false;
@@ -1775,6 +1784,28 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
 }
 
 #ifdef XP_WIN
+void
+nsPluginInstanceOwner::CallDefaultProc(const WidgetGUIEvent* aEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return;
+    }
+  }
+
+  const NPEvent* npEvent =
+    static_cast<const NPEvent*>(aEvent->mPluginEvent);
+  if (NS_WARN_IF(!npEvent)) {
+    return;
+  }
+
+  WidgetPluginEvent pluginEvent(true, ePluginInputEvent, widget);
+  pluginEvent.mPluginEvent.Copy(*npEvent);
+  widget->DefaultProcOfPluginEvent(pluginEvent);
+}
+
 already_AddRefed<TextComposition>
 nsPluginInstanceOwner::GetTextComposition()
 {
@@ -1824,13 +1855,79 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
       compositionChangeEventHandlingMarker(composition, compositionEvent);
   }
 
-  nsEventStatus rv = ProcessEvent(*compositionEvent);
-  // XXX This isn't e10s aware.
-  // If the event isn't consumed, we cannot post result to chrome process.
-  if (nsEventStatus_eConsumeNoDefault == rv) {
-    aEvent->StopImmediatePropagation();
+  // Protected mode Flash returns noDefault by NPP_HandleEvent, but
+  // composition information into plugin is invalid because plugin's bug.
+  // So if plugin doesn't get composition data by WM_IME_COMPOSITION, we
+  // recongnize it isn't handled
+  AutoRestore<bool> restore(mGotCompositionData);
+  mGotCompositionData = false;
+
+  nsEventStatus status = ProcessEvent(*compositionEvent);
+  aEvent->StopImmediatePropagation();
+
+  // Composition event isn't handled by plugin, so we have to call default proc.
+  const NPEvent* pPluginEvent =
+    static_cast<const NPEvent*>(compositionEvent->mPluginEvent);
+  if (NS_WARN_IF(!pPluginEvent)) {
+    return NS_OK;
   }
-#endif
+
+  if (pPluginEvent->event == WM_IME_STARTCOMPOSITION) {
+    // Flash's protected mode lies that composition event is handled, but it
+    // cannot do it well.  So even if handled, we should post this message when
+    // no IMM API calls during WM_IME_COMPOSITION.
+    if (nsEventStatus_eConsumeNoDefault != status)  {
+      CallDefaultProc(compositionEvent);
+      mSentStartComposition = true;
+    } else {
+      mSentStartComposition = false;
+    }
+    return NS_OK;
+  }
+
+  if (pPluginEvent->event == WM_IME_ENDCOMPOSITION) {
+    // Always post WM_END_COMPOSITION to default proc. Because Flash may lie
+    // that it doesn't handle composition well, but event is handled.
+    // Even if posting this message, default proc do nothing if unnecessary.
+    CallDefaultProc(compositionEvent);
+    return NS_OK;
+  }
+
+  if (pPluginEvent->event == WM_IME_COMPOSITION && !mGotCompositionData) {
+    nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+    if (!widget) {
+      widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    }
+
+    if (pPluginEvent->lParam & GCS_RESULTSTR) {
+      // GCS_RESULTSTR's default proc will generate WM_CHAR. So emulate it.
+      for (size_t i = 0; i < compositionEvent->mData.Length(); i++) {
+        WidgetPluginEvent charEvent(true, ePluginInputEvent, widget);
+        NPEvent event;
+        event.event = WM_CHAR;
+        event.wParam = compositionEvent->mData[i];
+        event.lParam = 0;
+        charEvent.mPluginEvent.Copy(event);
+        ProcessEvent(charEvent);
+      }
+      return NS_OK;
+    }
+    if (!mSentStartComposition) {
+      // We post WM_IME_COMPOSITION to default proc, but
+      // WM_IME_STARTCOMPOSITION isn't post yet.  We should post it at first.
+      WidgetPluginEvent event(true, ePluginInputEvent, widget);
+      NPEvent npevent;
+      npevent.event = WM_IME_STARTCOMPOSITION;
+      npevent.wParam = 0;
+      npevent.lParam = 0;
+      event.mPluginEvent.Copy(npevent);
+      CallDefaultProc(&event);
+      mSentStartComposition = true;
+    }
+
+    CallDefaultProc(compositionEvent);
+  }
+#endif // #ifdef XP_WIN
   return NS_OK;
 }
 

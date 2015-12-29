@@ -7777,6 +7777,9 @@ nsWindow::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
     return;
   }
 
+  // For WM_IME_*COMPOSITION
+  IMEHandler::DefaultProcOfPluginEvent(this, pPluginEvent);
+
   CallWindowProcW(GetPrevWindowProc(), mWnd, pPluginEvent->event,
                   pPluginEvent->wParam, pPluginEvent->lParam);
 }
