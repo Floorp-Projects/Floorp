@@ -42,6 +42,13 @@
  *      usedTags:         All used tags from within the extension sorted by recency
  */
 
+const {classes: Cc, interfaces: Ci, utils: Cu, manager: Cm} = Components;
+this.EXPORTED_SYMBOLS = ["pktApi"];
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+
 var pktApi = (function() {
 
     /**
@@ -49,20 +56,20 @@ var pktApi = (function() {
      */
 
     // Base url for all api calls
-    var pocketAPIhost = Services.prefs.getCharPref("browser.pocket.api"); 	// api.getpocket.com
-    var pocketSiteHost = Services.prefs.getCharPref("browser.pocket.site"); // getpocket.com
+    var pocketAPIhost = Services.prefs.getCharPref("extensions.pocket.api"); 	// api.getpocket.com
+    var pocketSiteHost = Services.prefs.getCharPref("extensions.pocket.site"); // getpocket.com
     var baseAPIUrl = "https://" + pocketAPIhost + "/v3";
 
 
     /**
      * Auth keys for the API requests
      */
-    var oAuthConsumerKey = Services.prefs.getCharPref("browser.pocket.oAuthConsumerKey");
+    var oAuthConsumerKey = Services.prefs.getCharPref("extensions.pocket.oAuthConsumerKey");
 
 	/**
 	 *
 	 */
-	var prefBranch = Services.prefs.getBranch("browser.pocket.settings.");
+	var prefBranch = Services.prefs.getBranch("extensions.pocket.settings.");
 
     /**
      * Helper

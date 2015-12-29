@@ -13,7 +13,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI", "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils","resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "UITour", "resource:///modules/UITour.jsm");
@@ -25,11 +24,9 @@ var ReaderParent = {
 
   MESSAGES: [
     "Reader:AddToList",
-    "Reader:AddToPocket",
     "Reader:ArticleGet",
     "Reader:FaviconRequest",
     "Reader:ListStatusRequest",
-    "Reader:PocketEnabledGet",
     "Reader:RemoveFromList",
     "Reader:Share",
     "Reader:SystemUIVisibility",
@@ -47,24 +44,6 @@ var ReaderParent = {
 
   receiveMessage: function(message) {
     switch (message.name) {
-      case "Reader:AddToPocket": {
-        let doc = message.target.ownerDocument;
-        let pocketWidget = doc.getElementById("pocket-button");
-        let placement = CustomizableUI.getPlacementOfWidget("pocket-button");
-        if (placement) {
-          if (placement.area == CustomizableUI.AREA_PANEL) {
-            doc.defaultView.PanelUI.show().then(function() {
-              // The DOM node might not exist yet if the panel wasn't opened before.
-              pocketWidget = doc.getElementById("pocket-button");
-              pocketWidget.doCommand();
-            });
-          } else {
-            pocketWidget.doCommand();
-          }
-        }
-        break;
-      }
-
       case "Reader:ArticleGet":
         this._getArticle(message.data.url, message.target).then((article) => {
           // Make sure the target browser is still alive before trying to send data back.
@@ -77,13 +56,6 @@ var ReaderParent = {
           }
         });
         break;
-
-      case "Reader:PocketEnabledGet": {
-        let pocketPlacement = CustomizableUI.getPlacementOfWidget("pocket-button");
-        let isPocketEnabled = pocketPlacement && pocketPlacement.area;
-        message.target.messageManager.sendAsyncMessage("Reader:PocketEnabledData", { enabled: !!isPocketEnabled});
-        break;
-      }
 
       case "Reader:FaviconRequest": {
         if (message.target.messageManager) {

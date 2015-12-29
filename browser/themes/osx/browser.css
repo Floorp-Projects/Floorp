@@ -593,24 +593,6 @@ toolbarpaletteitem[place="palette"] > #personal-bookmarks > #bookmarks-toolbar-p
   }
 }
 
-#panelMenu_pocket,
-#menu_pocket,
-#BMB_pocket {
-  list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16.png");
-}
-
-@media (min-resolution: 2dppx) {
-  #panelMenu_pocket,
-  #menu_pocket,
-  #BMB_pocket {
-    list-style-image: url("chrome://browser/content/pocket/panels/img/pocketmenuitem16@2x.png");
-  }
-
-  #panelMenu_pocket > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
 /* ----- PRIMARY TOOLBAR BUTTONS ----- */
 
 :-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
@@ -839,10 +821,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 738px, 36px, 720px);
   }
 
-  #pocket-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(18px, 774px, 36px, 756px);
-  }
-
   #new-tab-button@toolbarButtonPressed@ {
     -moz-image-region: rect(18px, 360px, 36px, 342px);
   }
@@ -1004,10 +982,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #webide-button@toolbarButtonPressed@ {
     -moz-image-region: rect(36px, 1476px, 72px, 1440px);
-  }
-
-  #pocket-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(36px, 1548px, 72px, 1512px);
   }
 
   #new-tab-button@toolbarButtonPressed@ {

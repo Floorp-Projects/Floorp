@@ -11,10 +11,6 @@ Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm");
 
 
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
-  "resource:///modules/Pocket.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
   "resource://gre/modules/LoginHelper.jsm");
 
@@ -216,25 +212,6 @@ nsContextMenu.prototype = {
                      SimpleServiceDiscovery.services.length > 0 &&
                      CastingApps.getServicesForVideo(this.target).length > 0;
     this.setItemAttr("context-castvideo", "disabled", !shouldShowCast);
-
-    this.initPocketItems();
-  },
-
-  initPocketItems: function CM_initPocketItems() {
-    var showSaveCurrentPageToPocket = !(this.onTextInput || this.onLink ||
-                                        this.isContentSelected || this.onImage ||
-                                        this.onCanvas || this.onVideo || this.onAudio);
-    let targetURI = (this.onSaveableLink || this.onPlainTextLink) ? this.linkURI : this.browser.currentURI;
-    let canPocket = CustomizableUI.getPlacementOfWidget("pocket-button") &&
-                    window.pktApi && window.pktApi.isUserLoggedIn();
-    canPocket = canPocket && (targetURI.schemeIs("http") || targetURI.schemeIs("https") ||
-                              (targetURI.schemeIs("about") && ReaderMode.getOriginalUrl(targetURI.spec)));
-    canPocket = canPocket && window.gBrowser && this.browser.getTabBrowser() == window.gBrowser;
-
-    this.showItem("context-pocket", canPocket && showSaveCurrentPageToPocket);
-    let showSaveLinkToPocket = canPocket && !showSaveCurrentPageToPocket &&
-                               (this.onSaveableLink || this.onPlainTextLink);
-    this.showItem("context-savelinktopocket", showSaveLinkToPocket);
   },
 
   initViewItems: function CM_initViewItems() {
@@ -1719,14 +1696,6 @@ nsContextMenu.prototype = {
 
   savePageAs: function CM_savePageAs() {
     saveBrowser(this.browser);
-  },
-
-  saveLinkToPocket: function CM_saveLinkToPocket() {
-    Pocket.savePage(this.browser, this.linkURL);
-  },
-
-  savePageToPocket: function CM_saveToPocket() {
-    Pocket.savePage(this.browser, this.browser.currentURI.spec, this.browser.contentTitle);
   },
 
   printFrame: function CM_printFrame() {
