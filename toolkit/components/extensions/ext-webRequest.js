@@ -48,7 +48,7 @@ function WebRequestEventManager(context, eventName) {
         return;
       }
 
-      let optional = ["requestHeaders", "responseHeaders", "statusCode"];
+      let optional = ["requestHeaders", "responseHeaders", "statusCode", "redirectUrl"];
       for (let opt of optional) {
         if (opt in data) {
           data2[opt] = data[opt];
@@ -100,6 +100,7 @@ extensions.registerSchemaAPI("webRequest", "webRequest", (extension, context) =>
       onBeforeSendHeaders: new WebRequestEventManager(context, "onBeforeSendHeaders").api(),
       onSendHeaders: new WebRequestEventManager(context, "onSendHeaders").api(),
       onHeadersReceived: new WebRequestEventManager(context, "onHeadersReceived").api(),
+      onBeforeRedirect: new WebRequestEventManager(context, "onBeforeRedirect").api(),
       onResponseStarted: new WebRequestEventManager(context, "onResponseStarted").api(),
       onCompleted: new WebRequestEventManager(context, "onCompleted").api(),
       handlerBehaviorChanged: function() {
@@ -107,7 +108,6 @@ extensions.registerSchemaAPI("webRequest", "webRequest", (extension, context) =>
       },
 
       // TODO
-      onBeforeRedirect: ignoreEvent(context, "webRequest.onBeforeRedirect"),
       onErrorOccurred: ignoreEvent(context, "webRequest.onErrorOccurred"),
     },
   };
