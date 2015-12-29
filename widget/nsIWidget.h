@@ -1792,6 +1792,14 @@ public:
     NS_IMETHOD SetPluginFocused(bool& aFocused) = 0;
 
     /*
+     * Tell the plugin has focus.  It is unnecessary to use IPC
+     */
+    bool PluginHasFocus() 
+    {
+      return GetInputContext().mIMEState.mEnabled == IMEState::PLUGIN;
+    }
+
+    /*
      * Notifies the input context changes.
      */
     NS_IMETHOD_(void) SetInputContext(const InputContext& aContext,
