@@ -14,8 +14,7 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
   "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 
-const PREF_NORMAL = "browser.sessionstore.privacy_level";
-const PREF_DEFERRED = "browser.sessionstore.privacy_level_deferred";
+const PREF = "browser.sessionstore.privacy_level";
 
 // The following constants represent the different possible privacy levels that
 // can be set by the user and that we need to consider when collecting text
@@ -29,39 +28,19 @@ const PRIVACY_ENCRYPTED = 1;
 const PRIVACY_FULL = 2;
 
 /**
- * Determines the current privacy level as set by the user.
- *
- * @param isPinned
- *        Whether to return the privacy level for pinned tabs.
- * @return {int} The privacy level as read from the user's preferences.
- */
-function getCurrentLevel(isPinned) {
-  let pref = PREF_NORMAL;
-
-  // If we're in the process of quitting and we're not autoresuming the session
-  // then we will use the deferred privacy level for non-pinned tabs.
-  if (!isPinned && Services.startup.shuttingDown && !gSessionStartup.isAutomaticRestoreEnabled()) {
-    pref = PREF_DEFERRED;
-  }
-
-  return Services.prefs.getIntPref(pref);
-}
-
-/**
  * The external API as exposed by this module.
  */
 var PrivacyLevel = Object.freeze({
   /**
    * Checks whether we're allowed to save data for a specific site.
    *
-   * @param {isHttps: boolean, isPinned: boolean}
-   *        An object that must have two properties: 'isHttps' and 'isPinned'.
+   * @param {isHttps: boolean}
+   *        An object that must have one property: 'isHttps'.
    *        'isHttps' tells whether the site us secure communication (HTTPS).
-   *        'isPinned' tells whether the site is loaded in a pinned tab.
    * @return {bool} Whether we can save data for the specified site.
    */
-  canSave: function ({isHttps, isPinned}) {
-    let level = getCurrentLevel(isPinned);
+  canSave: function ({isHttps}) {
+    let level = Services.prefs.getIntPref(PREF);
 
     // Never save any data when full privacy is requested.
     if (level == PRIVACY_FULL) {
