@@ -692,7 +692,8 @@ toolbarpaletteitem[place="palette"] > toolbaritem > toolbarbutton {
   background-color: #0096dd;
   color: white;
   border-radius: 2px;
-  margin: 10px;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding: 8px;
   text-shadow: none;
   min-width: 200px;
