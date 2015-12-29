@@ -10,6 +10,7 @@
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
+#include "nsPluginInstanceOwner.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
@@ -118,9 +119,22 @@ TextComposition::CloneAndDispatchAs(
   if (aMessage == eCompositionUpdate) {
     mLastData = compositionEvent.mData;
   }
-  EventDispatcher::Dispatch(mNode, mPresContext,
-                            &compositionEvent, nullptr, status, aCallBack);
+
+  DispatchEvent(&compositionEvent, status, aCallBack, aCompositionEvent);
   return compositionEvent.mFlags;
+}
+
+void
+TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
+                               nsEventStatus* aStatus,
+                               EventDispatchingCallback* aCallBack,
+                               const WidgetCompositionEvent *aOriginalEvent)
+{
+  nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent,
+                                             aDispatchEvent);
+
+  EventDispatcher::Dispatch(mNode, mPresContext,
+                            aDispatchEvent, nullptr, aStatus, aCallBack);
 }
 
 void
@@ -341,8 +355,7 @@ TextComposition::DispatchCompositionEvent(
         CloneAndDispatchAs(aCompositionEvent, eCompositionChange,
                            aStatus, aCallBack);
     } else {
-      EventDispatcher::Dispatch(mNode, mPresContext,
-                                aCompositionEvent, nullptr, aStatus, aCallBack);
+      DispatchEvent(aCompositionEvent, aStatus, aCallBack);
     }
   } else {
     *aStatus = nsEventStatus_eConsumeNoDefault;
