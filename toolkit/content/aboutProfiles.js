@@ -52,11 +52,30 @@ function findCurrentProfile() {
   }
 }
 
-function refreshUI() {
+function initializeUI() {
   if (gManage) {
-    document.getElementById('action-box').style.display = 'none';
+    document.getElementById('about-profile-action-box').style.display = 'none';
+    document.getElementById('profile-manager-action-box').style.display = 'block';
+
+    let autoSelect = document.getElementById("auto-select");
+    autoSelect.checked = ProfileService.startWithLastProfile;
+    autoSelect.addEventListener('change', function() {
+      ProfileService.startWithLastProfile = autoSelect.checked;
+    });
+
+    let offline = document.getElementById("work-offline");
+    offline.addEventListener('change', function() {
+      ProfileService.startOffline = offline.checked;
+    });
+  } else {
+    document.getElementById('about-profile-action-box').style.display = 'block';
+    document.getElementById('profile-manager-action-box').style.display = 'none';
   }
 
+  refreshUI();
+}
+
+function refreshUI() {
   let parent = document.getElementById('profiles');
   while (parent.firstChild) {
     parent.removeChild(parent.firstChild);
@@ -310,5 +329,5 @@ function restart(safeMode) {
 
 window.addEventListener('DOMContentLoaded', function load() {
   window.removeEventListener('DOMContentLoaded', load);
-  refreshUI();
+  initializeUI();
 });
