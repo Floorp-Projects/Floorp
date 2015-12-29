@@ -133,8 +133,8 @@ typedef void* nsNativeWidget;
 #endif
 
 #define NS_IWIDGET_IID \
-{ 0xa3db64d2, 0x5a73, 0x425f, \
-  { 0x9b, 0xb0, 0x57, 0x7f, 0xe5, 0x56, 0x43, 0x15 } }
+{ 0x73c0a475, 0x450f, 0x4202, \
+  { 0xab, 0xb4, 0x62, 0xf8, 0x9d, 0xbe, 0xf7, 0x9a } }
 
 /*
  * Window shadow styles
@@ -1803,6 +1803,12 @@ public:
      * Set IME candidate window position by windowless plugin.
      */
     virtual void SetCandidateWindowForPlugin(int32_t aX, int32_t aY) = 0;
+
+    /**
+     * Handle default action when PluginEvent isn't handled
+     */
+    virtual void DefaultProcOfPluginEvent(
+                   const mozilla::WidgetPluginEvent& aEvent) = 0;
 
     /*
      * Notifies the input context changes.

@@ -7763,6 +7763,24 @@ nsWindow::SetCandidateWindowForPlugin(int32_t aX, int32_t aY)
   IMEHandler::SetCandidateWindow(this, &form);
 }
 
+void
+nsWindow::DefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
+{
+  const NPEvent* pPluginEvent =
+   static_cast<const NPEvent*>(aEvent.mPluginEvent);
+
+  if (NS_WARN_IF(!pPluginEvent)) {
+    return;
+  }
+
+  if (!mWnd) {
+    return;
+  }
+
+  CallWindowProcW(GetPrevWindowProc(), mWnd, pPluginEvent->event,
+                  pPluginEvent->wParam, pPluginEvent->lParam);
+}
+
 /**************************************************************
  **************************************************************
  **
