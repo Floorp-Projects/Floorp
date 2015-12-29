@@ -268,7 +268,6 @@ AudioChannelService::~AudioChannelService()
 
 void
 AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                               uint32_t aNotifyPlayback,
                                                AudioChannel aChannel)
 {
   uint64_t windowID = aAgent->WindowID();
@@ -289,19 +288,24 @@ AudioChannelService::RegisterAudioChannelAgent(AudioChannelAgent* aAgent,
   }
 
   // If this is the first agent for this window, we must notify the observers.
-  if (aNotifyPlayback == nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY &&
-      winData->mAgents.Length() == 1) {
+  if (winData->mAgents.Length() == 1) {
     RefPtr<MediaPlaybackRunnable> runnable =
       new MediaPlaybackRunnable(aAgent->Window(), true /* active */);
     NS_DispatchToCurrentThread(runnable);
+  }
+
+  // If the window has already been captured, the agent of that window should
+  // also be captured.
+  if (winData->mIsAudioCaptured) {
+    aAgent->WindowAudioCaptureChanged(aAgent->InnerWindowID(),
+                                      winData->mIsAudioCaptured);
   }
 
   MaybeSendStatusUpdate();
 }
 
 void
-AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
-                                                 uint32_t aNotifyPlayback)
+AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent)
 {
   AudioChannelWindow* winData = GetWindowData(aAgent->WindowID());
   if (!winData) {
@@ -333,11 +337,15 @@ AudioChannelService::UnregisterAudioChannelAgent(AudioChannelAgent* aAgent,
 #endif
 
   // If this is the last agent for this window, we must notify the observers.
-  if (aNotifyPlayback == nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY &&
-      winData->mAgents.IsEmpty()) {
+  if (winData->mAgents.IsEmpty()) {
     RefPtr<MediaPlaybackRunnable> runnable =
       new MediaPlaybackRunnable(aAgent->Window(), false /* active */);
     NS_DispatchToCurrentThread(runnable);
+  }
+
+  // No need to capture non-audible object.
+  if (winData->mIsAudioCaptured) {
+    aAgent->WindowAudioCaptureChanged(aAgent->InnerWindowID(), false);
   }
 
   MaybeSendStatusUpdate();
@@ -627,11 +635,17 @@ AudioChannelService::RefreshAgentsVolume(nsPIDOMWindow* aWindow)
 }
 
 void
-AudioChannelService::RefreshAgentsCapture(nsPIDOMWindow* aWindow,
-                                          uint64_t aInnerWindowID)
+AudioChannelService::SetWindowAudioCaptured(nsPIDOMWindow* aWindow,
+                                            uint64_t aInnerWindowID,
+                                            bool aCapture)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
+
+  MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelService, SetWindowAudioCaptured, window = %p, "
+          "aCapture = %d\n", aWindow, aCapture));
 
   nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
   if (!topWindow) {
@@ -649,10 +663,13 @@ AudioChannelService::RefreshAgentsCapture(nsPIDOMWindow* aWindow,
     return;
   }
 
-  nsTObserverArray<AudioChannelAgent*>::ForwardIterator
-    iter(winData->mAgents);
-  while (iter.HasMore()) {
-    iter.GetNext()->WindowAudioCaptureChanged(aInnerWindowID);
+  if (aCapture != winData->mIsAudioCaptured) {
+    winData->mIsAudioCaptured = aCapture;
+    nsTObserverArray<AudioChannelAgent*>::ForwardIterator
+      iter(winData->mAgents);
+    while (iter.HasMore()) {
+      iter.GetNext()->WindowAudioCaptureChanged(aInnerWindowID, aCapture);
+    }
   }
 }
 
@@ -790,7 +807,7 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindow* aWindow,
 
   MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %d, "
-          "volume = %d\n", aWindow, aAudioChannel, aVolume));
+          "volume = %f\n", aWindow, aAudioChannel, aVolume));
 
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
