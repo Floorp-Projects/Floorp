@@ -537,7 +537,7 @@ AudioDestinationNode::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
-AudioDestinationNode::WindowAudioCaptureChanged()
+AudioDestinationNode::WindowAudioCaptureChanged(bool aCapture)
 {
   MOZ_ASSERT(mAudioChannelAgent);
 
@@ -550,10 +550,8 @@ AudioDestinationNode::WindowAudioCaptureChanged()
     return NS_OK;
   }
 
-  bool captured = ownerWindow->GetAudioCaptured();
-
-  if (captured != mCaptured) {
-    if (captured) {
+  if (aCapture != mCaptured) {
+    if (aCapture) {
       nsCOMPtr<nsPIDOMWindow> window = Context()->GetParentObject();
       uint64_t id = window->WindowID();
       mCaptureStreamPort =
@@ -561,7 +559,7 @@ AudioDestinationNode::WindowAudioCaptureChanged()
     } else {
       mCaptureStreamPort->Destroy();
     }
-    mCaptured = captured;
+    mCaptured = aCapture;
   }
 
   return NS_OK;
@@ -653,10 +651,7 @@ AudioDestinationNode::CreateAudioChannelAgent()
     return rv;
   }
 
-  rv = WindowAudioCaptureChanged();
-  NS_WARN_IF(NS_FAILED(rv));
-  return rv;
-
+  return NS_OK;
 }
 
 void
@@ -746,13 +741,11 @@ AudioDestinationNode::InputMuted(bool aMuted)
 
   float volume = 0.0;
   bool muted = true;
-  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY,
-                                                         &volume, &muted);
+  nsresult rv = mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;
   }
 
-  WindowAudioCaptureChanged();
   WindowVolumeChanged(volume, muted);
 }
 

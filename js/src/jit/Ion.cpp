@@ -181,6 +181,7 @@ JitRuntime::JitRuntime(JSRuntime* rt)
     functionWrappers_(nullptr),
     osrTempData_(nullptr),
     preventBackedgePatching_(false),
+    backedgeTarget_(BackedgeLoopHeader),
     ionReturnOverride_(MagicValue(JS_ARG_POISON)),
     jitcodeGlobalTable_(nullptr)
 {
@@ -370,6 +371,12 @@ JitRuntime::patchIonBackedges(JSRuntime* rt, BackedgeTarget target)
         MOZ_ASSERT(!preventBackedgePatching_);
         MOZ_ASSERT(rt->handlingJitInterrupt());
     }
+
+    // Do nothing if we know all backedges are already jumping to `target`.
+    if (backedgeTarget_ == target)
+        return;
+
+    backedgeTarget_ = target;
 
     backedgeExecAlloc_.makeAllWritable();
 
@@ -1147,11 +1154,9 @@ IonScript::copyPatchableBackedges(JSContext* cx, JitCode* code,
         CodeLocationLabel interruptCheck(code, CodeOffset(info.interruptCheck->offset()));
         new(patchableBackedge) PatchableBackedge(backedge, loopHeader, interruptCheck);
 
-        // Point the backedge to either of its possible targets, according to
-        // whether an interrupt is currently desired, matching the targets
-        // established by ensureIonCodeAccessible() above. We don't handle the
-        // interrupt immediately as the interrupt lock is held here.
-        if (cx->runtime()->hasPendingInterrupt())
+        // Point the backedge to either of its possible targets, matching the
+        // other backedges in the runtime.
+        if (jrt->backedgeTarget() == JitRuntime::BackedgeInterruptCheck)
             PatchBackedge(backedge, interruptCheck, JitRuntime::BackedgeInterruptCheck);
         else
             PatchBackedge(backedge, loopHeader, JitRuntime::BackedgeLoopHeader);

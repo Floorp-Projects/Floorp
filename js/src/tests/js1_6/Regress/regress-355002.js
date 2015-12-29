@@ -20,7 +20,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  expect = 'SyntaxError: invalid for/in left-hand side';
+  expect = 'SyntaxError: invalid for-in/of left-hand side';
   actual = '';
   try
   { 

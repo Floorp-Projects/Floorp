@@ -974,11 +974,16 @@ CreateECPublicKey(const SECItem* aKeyData, const nsString& aNamedCurve)
     return nullptr;
   }
 
-  SECKEYPublicKey* key = PORT_ArenaZNew(arena, SECKEYPublicKey);
+  // It's important that this be a ScopedSECKEYPublicKey, as this ensures that
+  // SECKEY_DestroyPublicKey will be called on it. If this doesn't happen, when
+  // CryptoKey::PublicKeyValid is called on it and it gets moved to the internal
+  // PKCS#11 slot, it will leak a reference to the slot.
+  ScopedSECKEYPublicKey key(PORT_ArenaZNew(arena, SECKEYPublicKey));
   if (!key) {
     return nullptr;
   }
 
+  key->arena = nullptr; // key doesn't own the arena; it won't get double-freed
   key->keyType = ecKey;
   key->pkcs11Slot = nullptr;
   key->pkcs11ID = CK_INVALID_HANDLE;
