@@ -63,7 +63,8 @@ int dl_iterate_phdr(
           void *data);
 #endif
 
-int dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
+static int
+dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 {
   SharedLibraryInfo& info = *reinterpret_cast<SharedLibraryInfo*>(data);
 
@@ -90,7 +91,8 @@ int dl_iterate_callback(struct dl_phdr_info *dl_info, size_t size, void *data)
 
   return 0;
 }
-#endif
+
+#endif // !MOZ_WIDGET_GONK
 
 SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
 {
@@ -105,13 +107,12 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     // not call it.
     return info;
   }
-#endif
-  dl_iterate_phdr(dl_iterate_callback, &info);
-#ifndef ANDROID
-  return info;
-#endif
-#endif
+#endif // ANDROID
 
+  dl_iterate_phdr(dl_iterate_callback, &info);
+#endif // !MOZ_WIDGET_GONK
+
+#if defined(ANDROID) || defined(MOZ_WIDGET_GONK)
   pid_t pid = getpid();
   char path[PATH_MAX];
   snprintf(path, PATH_MAX, "/proc/%d/maps", pid);
@@ -158,5 +159,7 @@ SharedLibraryInfo SharedLibraryInfo::GetInfoForSelf()
     }
     count++;
   }
+#endif // ANDROID || MOZ_WIDGET_GONK
+
   return info;
 }
