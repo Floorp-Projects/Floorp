@@ -2396,6 +2396,19 @@ TabParent::RecvSetPluginFocused(const bool& aFocused)
   return true;
 }
 
+ bool
+TabParent::RecvSetCandidateWindowForPlugin(const int32_t& aX,
+                                           const int32_t& aY)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  widget->SetCandidateWindowForPlugin(aX, aY);
+  return true;
+}
+
 bool
 TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
                                int32_t* aIMEOpen)
