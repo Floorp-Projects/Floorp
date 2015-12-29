@@ -582,6 +582,11 @@ def _find_sdk_exe(substs, exe, tools):
         except KeyError:
             _log_debug("%s not set" % exe.upper())
 
+    # Append '.exe' to the name on Windows if it's not present,
+    # so that the executable can be found.
+    if (os.name == 'nt' and not exe.lower().endswith('.exe')):
+        exe += '.exe'
+
     if not found:
         # Can exe be found in the Android SDK?
         try:
