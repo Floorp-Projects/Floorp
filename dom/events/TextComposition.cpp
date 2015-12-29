@@ -10,7 +10,6 @@
 #include "nsIEditor.h"
 #include "nsIPresShell.h"
 #include "nsPresContext.h"
-#include "nsPluginInstanceOwner.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/IMEStateManager.h"
@@ -20,6 +19,21 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/unused.h"
 #include "mozilla/dom/TabParent.h"
+
+#ifdef XP_MACOSX
+// Some defiens will be conflict with OSX SDK
+#define TextRange _TextRange
+#define TextRangeArray _TextRangeArray
+#define Comment _Comment
+#endif
+
+#include "nsPluginInstanceOwner.h"
+
+#ifdef XP_MACOSX
+#undef TextRange
+#undef TextRangeArray
+#undef Comment
+#endif
 
 using namespace mozilla::widget;
 
