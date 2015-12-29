@@ -44,16 +44,8 @@ function getLoginMgrData() {
   return logins[0];
 }
 
-function createFxAccounts() {
-  return new FxAccounts({
-    _getDeviceName() {
-      return "mock device name";
-    }
-  });
-}
-
-add_task(function* test_simple() {
-  let fxa = createFxAccounts();
+add_task(function test_simple() {
+  let fxa = new FxAccounts({});
 
   let creds = {
     uid: "abcd",
@@ -92,8 +84,8 @@ add_task(function* test_simple() {
   Assert.strictEqual(getLoginMgrData(), null, "login mgr data deleted on logout");
 });
 
-add_task(function* test_MPLocked() {
-  let fxa = createFxAccounts();
+add_task(function test_MPLocked() {
+  let fxa = new FxAccounts({});
 
   let creds = {
     uid: "abcd",
@@ -126,10 +118,10 @@ add_task(function* test_MPLocked() {
 });
 
 
-add_task(function* test_consistentWithMPEdgeCases() {
+add_task(function test_consistentWithMPEdgeCases() {
   setLoginMgrLoggedInState(true);
 
-  let fxa = createFxAccounts();
+  let fxa = new FxAccounts({});
 
   let creds1 = {
     uid: "uid1",
@@ -169,7 +161,7 @@ add_task(function* test_consistentWithMPEdgeCases() {
   // Make a new FxA instance (otherwise the values in memory will be used)
   // and we want the login manager to be unlocked.
   setLoginMgrLoggedInState(true);
-  fxa = createFxAccounts();
+  fxa = new FxAccounts({});
 
   let accountData = yield fxa.getSignedInUser();
   Assert.strictEqual(accountData.email, creds2.email);
@@ -180,7 +172,7 @@ add_task(function* test_consistentWithMPEdgeCases() {
 
 // A test for the fact we will accept either a UID or email when looking in
 // the login manager.
-add_task(function* test_uidMigration() {
+add_task(function test_uidMigration() {
   setLoginMgrLoggedInState(true);
   Assert.strictEqual(getLoginMgrData(), null, "expect no logins at the start");
 

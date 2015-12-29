@@ -181,7 +181,4 @@ MIN_PASS_LENGTH:                       8,
 
 LOG_DATE_FORMAT:                       "%Y-%m-%d %H:%M:%S",
 
-DEVICE_TYPE_DESKTOP:                   "desktop",
-DEVICE_TYPE_MOBILE:                    "mobile",
-
 }))];

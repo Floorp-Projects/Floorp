@@ -5,7 +5,6 @@
 
 Cu.import("resource://gre/modules/FxAccountsCommon.js");
 Cu.import("resource://gre/modules/FxAccountsOAuthGrantClient.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 const CLIENT_OPTIONS = {
   serverURL: "http://127.0.0.1:9010/v1",
@@ -146,7 +145,6 @@ add_test(function networkErrorResponse () {
     serverURL: "http://",
     client_id: "abc123"
   });
-  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
   client.getTokenFromAssertion("assertion", "scope")
     .then(
       null,
@@ -157,8 +155,7 @@ add_test(function networkErrorResponse () {
         do_check_eq(e.error, ERROR_NETWORK);
         run_next_test();
       }
-    ).catch(() => {}).then(() =>
-      Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration"));
+    );
 });
 
 add_test(function unsupportedMethod () {
