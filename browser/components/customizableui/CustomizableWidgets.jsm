@@ -18,18 +18,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUIUtils",
   "resource:///modules/PlacesUIUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentlyClosedTabsAndWindowsMenuUtils",
   "resource:///modules/sessionstore/RecentlyClosedTabsAndWindowsMenuUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
-  "resource:///modules/Pocket.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "ShortcutUtils",
   "resource://gre/modules/ShortcutUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CharsetMenu",
   "resource://gre/modules/CharsetMenu.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SocialService",
-  "resource://gre/modules/SocialService.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "SyncedTabs",
   "resource://services-sync/SyncedTabs.jsm");
 
@@ -1223,68 +1217,6 @@ if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {
       forgetButton.removeEventListener("command", this);
     },
   });
-}
-
-if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
-  let isEnabledForLocale = true;
-  if (Services.prefs.getBoolPref("browser.pocket.useLocaleList")) {
-    let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                           .getService(Ci.nsIXULChromeRegistry);
-    let browserLocale = chromeRegistry.getSelectedLocale("browser");
-    let enabledLocales = [];
-    try {
-      enabledLocales = Services.prefs.getCharPref("browser.pocket.enabledLocales").split(' ');
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-    isEnabledForLocale = enabledLocales.indexOf(browserLocale) != -1;
-  }
-
-  if (isEnabledForLocale) {
-    let pocketButton = {
-      id: "pocket-button",
-      defaultArea: CustomizableUI.AREA_NAVBAR,
-      introducedInVersion: "pref",
-      type: "view",
-      viewId: "PanelUI-pocketView",
-      // Use forwarding functions here to avoid loading Pocket.jsm on startup:
-      onViewShowing: function() {
-        return Pocket.onPanelViewShowing.apply(this, arguments);
-      },
-      onViewHiding: function() {
-        return Pocket.onPanelViewHiding.apply(this, arguments);
-      },
-
-      // If the user has the "classic" Pocket add-on installed, use that instead
-      // and destroy the widget.
-      conditionalDestroyPromise: new Promise(resolve => {
-        AddonManager.getAddonByID("isreaditlater@ideashower.com", addon => {
-          resolve(addon && addon.isActive);
-        });
-      }),
-    };
-
-    CustomizableWidgets.push(pocketButton);
-    CustomizableUI.addListener(pocketButton);
-
-    // Uninstall the Pocket social provider if it exists, but only if we haven't
-    // already uninstalled it in this manner.  That way the user can reinstall
-    // it if they prefer it without its being uninstalled every time they start
-    // the browser.
-    let origin = "https://getpocket.com";
-    SocialService.getProvider(origin, provider => {
-      if (provider) {
-        let pref = "social.backup.getpocket-com";
-        if (!Services.prefs.prefHasUserValue(pref)) {
-          let str = Cc["@mozilla.org/supports-string;1"].
-                    createInstance(Ci.nsISupportsString);
-          str.data = JSON.stringify(provider.manifest);
-          Services.prefs.setComplexValue(pref, Ci.nsISupportsString, str);
-          SocialService.uninstallProvider(origin, () => {});
-        }
-      }
-    });
-  }
 }
 
 #ifdef E10S_TESTING_ONLY
