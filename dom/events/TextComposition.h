@@ -61,6 +61,10 @@ public:
   // Note that mString and mLastData are different between dispatcing
   // compositionupdate and compositionchange event handled by focused editor.
   const nsString& String() const { return mString; }
+  // The latest clauses range of the composition string.
+  // During compositionupdate event, GetRanges() returns old ranges.
+  // So if getting on compositionupdate, Use GetLastRange instead of GetRange().
+  TextRangeArray* GetLastRanges() const { return mLastRanges; }
   // Returns the clauses and/or caret range of the composition string.
   // This is modified at a call of EditorWillHandleCompositionChangeEvent().
   // This may return null if there is no clauses and caret.
@@ -191,6 +195,9 @@ private:
   // This is the clause and caret range information which is managed by
   // the focused editor.  This may be null if there is no clauses or caret.
   RefPtr<TextRangeArray> mRanges;
+  // Same as mRange, but mRange will have old data during compositionupdate.
+  // So this will be valied during compositionupdate.
+  RefPtr<TextRangeArray> mLastRanges;
 
   // mNativeContext stores a opaque pointer.  This works as the "ID" for this
   // composition.  Don't access the instance, it may not be available.
