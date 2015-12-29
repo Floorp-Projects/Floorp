@@ -2410,6 +2410,18 @@ TabParent::RecvSetCandidateWindowForPlugin(const int32_t& aX,
 }
 
 bool
+TabParent::RecvDefaultProcOfPluginEvent(const WidgetPluginEvent& aEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return true;
+  }
+
+  widget->DefaultProcOfPluginEvent(aEvent);
+  return true;
+}
+
+bool
 TabParent::RecvGetInputContext(int32_t* aIMEEnabled,
                                int32_t* aIMEOpen)
 {
