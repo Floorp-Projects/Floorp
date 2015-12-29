@@ -22,11 +22,3 @@ add_task(function* test_private_temp() {
   // 488 is the decimal value of 0700.
   equal(targetFile.parent.permissions, 448);
 });
-
-
-////////////////////////////////////////////////////////////////////////////////
-//// Termination
-
-var tailFile = do_get_file("tail.js");
-Services.scriptloader.loadSubScript(NetUtil.newURI(tailFile).spec);
-
