@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class OSFileSystem : public FileSystemBase
+class OSFileSystem final : public FileSystemBase
 {
 public:
   explicit OSFileSystem(const nsAString& aRootDir);
@@ -33,6 +33,10 @@ public:
 
   virtual bool
   IsSafeDirectory(Directory* aDir) const override;
+
+  // CC methods
+  virtual void Unlink() override;
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) override;
 
 private:
   virtual ~OSFileSystem() {}
