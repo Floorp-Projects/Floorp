@@ -6889,7 +6889,7 @@ nsLayoutUtils::IsReallyFixedPos(nsIFrame* aFrame)
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
                                           uint32_t aSurfaceFlags,
-                                          DrawTarget* aTarget)
+                                          RefPtr<DrawTarget>& aTarget)
 {
   SurfaceFromElementResult result;
 
@@ -6904,7 +6904,7 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
     if (!result.mSourceSurface) {
       // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
       // draw nothing, so return an empty surface.
-      DrawTarget *ref = aTarget ? aTarget : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+      DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
       RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
                                                            SurfaceFormat::B8G8R8A8);
     if (dt) {
@@ -6927,7 +6927,7 @@ nsLayoutUtils::SurfaceFromOffscreenCanvas(OffscreenCanvas* aOffscreenCanvas,
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
                                   uint32_t aSurfaceFlags,
-                                  DrawTarget* aTarget)
+                                  RefPtr<DrawTarget>& aTarget)
 {
   SurfaceFromElementResult result;
   nsresult rv;
@@ -7020,7 +7020,7 @@ nsLayoutUtils::SurfaceFromElement(nsIImageLoadingContent* aElement,
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(HTMLImageElement *aElement,
                                   uint32_t aSurfaceFlags,
-                                  DrawTarget* aTarget)
+                                  RefPtr<DrawTarget>& aTarget)
 {
   return SurfaceFromElement(static_cast<nsIImageLoadingContent*>(aElement),
                             aSurfaceFlags, aTarget);
@@ -7029,7 +7029,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLImageElement *aElement,
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
                                   uint32_t aSurfaceFlags,
-                                  DrawTarget* aTarget)
+                                  RefPtr<DrawTarget>& aTarget)
 {
   SurfaceFromElementResult result;
 
@@ -7044,7 +7044,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
   if (!result.mSourceSurface) {
      // If the element doesn't have a context then we won't get a snapshot. The canvas spec wants us to not error and just
      // draw nothing, so return an empty surface.
-     DrawTarget *ref = aTarget ? aTarget : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
+     DrawTarget *ref = aTarget ? aTarget.get() : gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
      RefPtr<DrawTarget> dt = ref->CreateSimilarDrawTarget(IntSize(size.width, size.height),
                                                           SurfaceFormat::B8G8R8A8);
      if (dt) {
@@ -7072,7 +7072,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLCanvasElement* aElement,
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
                                   uint32_t aSurfaceFlags,
-                                  DrawTarget* aTarget)
+                                  RefPtr<DrawTarget>& aTarget)
 {
   SurfaceFromElementResult result;
 
@@ -7132,7 +7132,7 @@ nsLayoutUtils::SurfaceFromElement(HTMLVideoElement* aElement,
 nsLayoutUtils::SurfaceFromElementResult
 nsLayoutUtils::SurfaceFromElement(dom::Element* aElement,
                                   uint32_t aSurfaceFlags,
-                                  DrawTarget* aTarget)
+                                  RefPtr<DrawTarget>& aTarget)
 {
   // If it's a <canvas>, we may be able to just grab its internal surface
   if (HTMLCanvasElement* canvas =
