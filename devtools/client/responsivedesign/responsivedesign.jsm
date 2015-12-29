@@ -7,23 +7,20 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var Services = require("Services");
-var {gDevTools} = require("resource://devtools/client/framework/gDevTools.jsm");
-var EventEmitter = require("devtools/shared/event-emitter");
-var {ViewHelpers} =
-    require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+Cu.import("resource://devtools/shared/event-emitter.js");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SystemAppProxy",
+                                  "resource://gre/modules/SystemAppProxy.jsm");
+
+var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Telemetry = require("devtools/client/shared/telemetry");
-var {showDoorhanger} = require("devtools/client/shared/doorhanger");
-var {TouchEventSimulator} = require("devtools/shared/touch/simulator");
-var {Task} = require("resource://gre/modules/Task.jsm");
+var { showDoorhanger } = require("devtools/client/shared/doorhanger");
+var { TouchEventSimulator } = require("devtools/shared/touch/simulator");
+var { Task } = require("resource://gre/modules/Task.jsm");
 var promise = require("promise");
-loader.lazyImporter(this, "SystemAppProxy",
-                          "resource://gre/modules/SystemAppProxy.jsm");
-loader.lazyRequireGetter(this, "DebuggerClient",
-                         "devtools/shared/client/main", true);
-loader.lazyRequireGetter(this, "DebuggerServer",
-                         "devtools/server/main", true);
 
 this.EXPORTED_SYMBOLS = ["ResponsiveUIManager"];
 
@@ -212,7 +209,6 @@ function ResponsiveUI(aWindow, aTab)
   this.bound_startResizing = this.startResizing.bind(this);
   this.bound_stopResizing = this.stopResizing.bind(this);
   this.bound_onDrag = this.onDrag.bind(this);
-  this.bound_changeUA = this.changeUA.bind(this);
 
   // Events
   this.tab.addEventListener("TabClose", this);
@@ -241,8 +237,6 @@ function ResponsiveUI(aWindow, aTab)
     type: "deveditionpromo",
     anchor: this.chromeDoc.querySelector("#content")
   });
-
-  this.connectToServer();
 }
 
 ResponsiveUI.prototype = {
@@ -257,27 +251,6 @@ ResponsiveUI.prototype = {
     } else if (!aValue) {
       this.stack.setAttribute("notransition", "true");
     }
-  },
-
-  connectToServer: function() {
-    if (!DebuggerServer.initialized) {
-      DebuggerServer.init();
-      DebuggerServer.addBrowserActors();
-    }
-    this.client = new DebuggerClient(DebuggerServer.connectPipe());
-    this.client.connect(() => {
-      this.client.getTab().then(({tab}) => {
-        this.client.attachTab(tab.actor, (response, tabClient) => {
-          if (!tabClient) {
-            Cu.reportError("Responsive mode error: failed to attach tab");
-            return;
-          }
-          this.tabClient = tabClient;
-          this.userAgentInput.hidden = false;
-          ResponsiveUIManager.emit("connectedToServer", { tab: this.tab });
-        });
-      });
-    });
   },
 
   /**
@@ -331,7 +304,6 @@ ResponsiveUI.prototype = {
     if (this.touchEventSimulator) {
       this.touchEventSimulator.stop();
     }
-    this.client.close();
     this._telemetry.toolClosed("responsive");
     let childOff = () => {
       this.mm.removeMessageListener("ResponsiveMode:Stop:Done", childOff);
@@ -484,14 +456,6 @@ ResponsiveUI.prototype = {
     this.toolbar.appendChild(this.touchbutton);
 
     this.toolbar.appendChild(this.screenshotbutton);
-
-    this.userAgentInput = this.chromeDoc.createElement("textbox");
-    this.userAgentInput.className = "devtools-responsiveui-textinput";
-    this.userAgentInput.setAttribute("placeholder",
-      this.strings.GetStringFromName("responsiveUI.userAgentPlaceholder"));
-    this.userAgentInput.addEventListener("blur", this.bound_changeUA, true);
-    this.userAgentInput.hidden = true;
-    this.toolbar.appendChild(this.userAgentInput);
 
     // Resizers
     let resizerTooltip = this.strings.GetStringFromName("responsiveUI.resizerTooltip");
@@ -888,18 +852,6 @@ ResponsiveUI.prototype = {
      }
    }),
 
-  changeUA: function() {
-    var value = this.userAgentInput.value;
-    if (value !== "") {
-      this.userAgentInput.setAttribute("attention", "true");
-    } else {
-      this.userAgentInput.removeAttribute("attention", "true");
-    }
-    this.tabClient.reconfigure({customUserAgent: value}, () => {
-      ResponsiveUIManager.emit("userAgentChanged", { tab: this.tab });
-    });
-  },
-
   /**
    * Change the size of the browser.
    *
@@ -1075,6 +1027,6 @@ ResponsiveUI.prototype = {
   },
 }
 
-loader.lazyGetter(ResponsiveUI.prototype, "strings", function () {
+XPCOMUtils.defineLazyGetter(ResponsiveUI.prototype, "strings", function () {
   return Services.strings.createBundle("chrome://devtools/locale/responsiveUI.properties");
 });
