@@ -256,6 +256,16 @@ public:
       ElementAt(i).RemoveCharacter(aOffset);
     }
   }
+
+  bool HasCaret() const
+  {
+    for (const TextRange& range : *this) {
+      if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+        return true;
+      }
+    }
+    return false;
+  }
 };
 
 } // namespace mozilla

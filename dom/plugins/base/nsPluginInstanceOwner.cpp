@@ -1598,6 +1598,30 @@ nsresult nsPluginInstanceOwner::DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
 }
 
 nsresult
+nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
+{
+#ifdef XP_WIN
+  if (!mPluginWindow) {
+    // CompositionEvent isn't cancellable.  So it is unnecessary to call
+    // PreventDefaults() to consume event
+    return NS_OK;
+  }
+  WidgetCompositionEvent* compositionEvent =
+    aEvent->GetInternalNSEvent()->AsCompositionEvent();
+  if (NS_WARN_IF(!compositionEvent)) {
+      return NS_ERROR_INVALID_ARG;
+  }
+  nsEventStatus rv = ProcessEvent(*compositionEvent);
+  // XXX This isn't e10s aware.
+  // If the event isn't consumed, we cannot post result to chrome process.
+  if (nsEventStatus_eConsumeNoDefault == rv) {
+    aEvent->StopImmediatePropagation();
+  }
+#endif
+  return NS_OK;
+}
+
+nsresult
 nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 {
   NS_ASSERTION(mInstance, "Should have a valid plugin instance or not receive events.");
@@ -1650,6 +1674,11 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
   }
   if (eventType.EqualsLiteral("keypress")) {
     return ProcessKeyPress(aEvent);
+  }
+  if (eventType.EqualsLiteral("compositionstart") ||
+      eventType.EqualsLiteral("compositionend") ||
+      eventType.EqualsLiteral("text")) {
+    return DispatchCompositionToPlugin(aEvent);
   }
 
   nsCOMPtr<nsIDOMDragEvent> dragEvent(do_QueryInterface(aEvent));
@@ -2477,6 +2506,11 @@ nsPluginInstanceOwner::Destroy()
   content->RemoveEventListener(NS_LITERAL_STRING("dragstart"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("draggesture"), this, true);
   content->RemoveEventListener(NS_LITERAL_STRING("dragend"), this, true);
+  content->RemoveSystemEventListener(NS_LITERAL_STRING("compositionstart"),
+                                     this, true);
+  content->RemoveSystemEventListener(NS_LITERAL_STRING("compositionend"),
+                                     this, true);
+  content->RemoveSystemEventListener(NS_LITERAL_STRING("text"), this, true);
 
 #if MOZ_WIDGET_ANDROID
   RemovePluginView();
@@ -2872,6 +2906,11 @@ nsresult nsPluginInstanceOwner::Init(nsIContent* aContent)
   aContent->AddEventListener(NS_LITERAL_STRING("dragstart"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("draggesture"), this, true);
   aContent->AddEventListener(NS_LITERAL_STRING("dragend"), this, true);
+  aContent->AddSystemEventListener(NS_LITERAL_STRING("compositionstart"),
+    this, true);
+  aContent->AddSystemEventListener(NS_LITERAL_STRING("compositionend"), this,
+    true);
+  aContent->AddSystemEventListener(NS_LITERAL_STRING("text"), this, true);
 
   return NS_OK;
 }
@@ -3372,6 +3411,51 @@ already_AddRefed<nsIURI> nsPluginInstanceOwner::GetBaseURI() const
     return nullptr;
   }
   return content->GetBaseURI();
+}
+
+// static
+void
+nsPluginInstanceOwner::GeneratePluginEvent(
+  const WidgetCompositionEvent* aSrcCompositionEvent,
+  WidgetCompositionEvent* aDistCompositionEvent)
+{
+#ifdef XP_WIN
+  NPEvent newEvent;
+  switch (aDistCompositionEvent->mMessage) {
+    case eCompositionChange: {
+      newEvent.event = WM_IME_COMPOSITION;
+      newEvent.wParam = 0;
+      if (aSrcCompositionEvent &&
+          (aSrcCompositionEvent->mMessage == eCompositionCommit ||
+           aSrcCompositionEvent->mMessage == eCompositionCommitAsIs)) {
+        newEvent.lParam = GCS_RESULTSTR;
+      } else {
+        newEvent.lParam = GCS_COMPSTR | GCS_COMPATTR | GCS_COMPCLAUSE;
+      }
+      TextRangeArray* ranges = aDistCompositionEvent->mRanges;
+      if (ranges && ranges->HasCaret()) {
+        newEvent.lParam |= GCS_CURSORPOS;
+      }
+      break;
+    }
+
+    case eCompositionStart:
+      newEvent.event = WM_IME_STARTCOMPOSITION;
+      newEvent.wParam = 0;
+      newEvent.lParam = 0;
+      break;
+
+    case eCompositionEnd:
+      newEvent.event = WM_IME_ENDCOMPOSITION;
+      newEvent.wParam = 0;
+      newEvent.lParam = 0;
+      break;
+
+    default:
+      return;
+  }
+  aDistCompositionEvent->mPluginEvent.Copy(newEvent);
+#endif
 }
 
 // nsPluginDOMContextMenuListener class implementation
