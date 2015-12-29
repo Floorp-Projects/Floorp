@@ -456,6 +456,9 @@ class RecursiveMakeBackend(CommonBackend):
         if consumed:
             return True
 
+        if not isinstance(obj, Defines):
+            self.consume_object(obj.defines)
+
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
         elif isinstance(obj, ConfigFileSubstitution):
@@ -924,10 +927,8 @@ class RecursiveMakeBackend(CommonBackend):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())
         if defines:
-            backend_file.write(which + ' +=')
-            for define in defines:
-                backend_file.write(' %s' % define)
-            backend_file.write('\n')
+            defines = ' '.join(defines)
+            backend_file.write_once('%s += %s\n' % (which, defines))
 
     def _process_test_harness_files(self, obj, backend_file):
         for path, files in obj.srcdir_files.iteritems():
@@ -1449,7 +1450,7 @@ INSTALL_TARGETS += %(prefix)s
                 # which would modify content in the source directory.
                 '$(RM) $@',
                 '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
-                    '$(MOZ_DEBUG_DEFINES) $< -o $@)'
+                    '$< -o $@)'
             ])
 
         self._add_unified_build_rules(mk,

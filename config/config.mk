@@ -159,8 +159,6 @@ _DEBUG_ASFLAGS :=
 _DEBUG_CFLAGS :=
 _DEBUG_LDFLAGS :=
 
-_DEBUG_CFLAGS += $(MOZ_DEBUG_DEFINES)
-
 ifneq (,$(MOZ_DEBUG)$(MOZ_DEBUG_SYMBOLS))
   ifeq ($(AS),yasm)
     ifeq ($(OS_ARCH)_$(GNU_CC),WINNT_)

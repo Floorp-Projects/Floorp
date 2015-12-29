@@ -281,6 +281,19 @@ class SubContext(Context, ContextDerivedValue):
         self._sandbox().pop_subcontext(self)
 
 
+class InitializedDefines(ContextDerivedValue, OrderedDict):
+    def __init__(self, context, value=None):
+        OrderedDict.__init__(self)
+        for define in context.config.substs.get('MOZ_DEBUG_DEFINES', '').split():
+            assert define[:2] == "-D"
+            pair = define[2:].split('=', 1)
+            if len(pair) == 1:
+                pair.append(1)
+            self[pair[0]] = pair[1]
+        if value:
+            self.update(value)
+
+
 class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
@@ -957,7 +970,7 @@ VARIABLES = {
         indicating extra files the output depends on.
         """, 'export'),
 
-    'DEFINES': (OrderedDict, dict,
+    'DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare.
 
         These are passed in to the compiler as ``-Dkey='value'`` for string
@@ -1598,7 +1611,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'HOST_DEFINES': (OrderedDict, dict,
+    'HOST_DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare for host compilation.
         See ``DEFINES`` for specifics.
         """, None),

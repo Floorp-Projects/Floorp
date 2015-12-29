@@ -57,7 +57,7 @@ $(DIST)/branding:
 
 libs::
 	@if test -f '$(LOCALE_SRCDIR)/existing-profile-defaults.js'; then \
-	  $(PYTHON) -m mozbuild.action.preprocessor $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES) \
+	  $(PYTHON) -m mozbuild.action.preprocessor $(PREF_PPFLAGS) $(DEFINES) $(ACDEFINES) \
 	    $(LOCALE_SRCDIR)/existing-profile-defaults.js -o $(FINAL_TARGET)/defaults/existing-profile-defaults.js; \
 	fi
 
