@@ -218,9 +218,6 @@ public:
 
   virtual bool IsHidden() const final override;
 
-  // In order to create overlayImageContainer to support DOMHwMediaStream.
-  VideoFrameContainer* GetOverlayImageVideoFrameContainer();
-
   // Called by the media decoder and the video frame to get the
   // ImageContainer containing the video data.
   B2G_ACL_EXPORT virtual VideoFrameContainer* GetVideoFrameContainer() final override;
