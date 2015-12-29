@@ -191,10 +191,6 @@
                        observes="bookmarkThisPageBroadcaster"
                        command="Browser:AddBookmarkAs"
                        onclick="PanelUI.hide();"/>
-        <toolbarseparator id="panelMenu_pocketSeparator"/>
-        <toolbarbutton id="panelMenu_pocket" label="&pocketMenuitem.label;"
-                       class="subviewbutton cui-withicon"
-                       oncommand="openUILink(Pocket.listURL, event);"/>
         <toolbarseparator/>
         <toolbarbutton id="panelMenu_viewBookmarksSidebar"
                        label="&viewBookmarksSidebar2.label;"
@@ -309,12 +305,6 @@
                 label="&panicButton.view.forgetButton;"/>
       </vbox>
     </panelview>
-
-    <panelview id="PanelUI-pocketView" flex="1">
-      <vbox class="panel-subview-body">
-      </vbox>
-    </panelview>
-
 
   </panelmultiview>
   <!-- These menupopups are located here to prevent flickering,
