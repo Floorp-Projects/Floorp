@@ -895,7 +895,9 @@ ResponsiveUI.prototype = {
     } else {
       this.userAgentInput.removeAttribute("attention", "true");
     }
-    this.tabClient.reconfigure({customUserAgent: value});
+    this.tabClient.reconfigure({customUserAgent: value}, () => {
+      ResponsiveUIManager.emit("userAgentChanged", { tab: this.tab });
+    });
   },
 
   /**

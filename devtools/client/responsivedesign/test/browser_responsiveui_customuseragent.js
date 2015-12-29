@@ -20,15 +20,15 @@ add_task(function*() {
   yield testUserAgent(DEFAULT_UA);
 
   info("Setting UA to " + CHROME_UA);
-  setUserAgent(CHROME_UA);
+  yield setUserAgent(CHROME_UA);
   yield testUserAgent(CHROME_UA);
 
   info("Resetting UA");
-  setUserAgent("");
+  yield setUserAgent("");
   yield testUserAgent(DEFAULT_UA);
 
   info("Setting UA to " + CHROME_UA);
-  setUserAgent(CHROME_UA);
+  yield setUserAgent(CHROME_UA);
   yield testUserAgent(CHROME_UA);
 
   info("Closing responsive mode");
@@ -38,14 +38,16 @@ add_task(function*() {
   yield testUserAgent(DEFAULT_UA);
 });
 
-function setUserAgent(ua) {
+function* setUserAgent(ua) {
   let mgr = ResponsiveUI.ResponsiveUIManager;
   let instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
   let input = instance.userAgentInput;
 
   input.focus();
   input.value = ua;
+  let onUAChanged = once(mgr, "userAgentChanged");
   input.blur();
+  yield onUAChanged;
 
   if (ua !== "") {
     ok(input.hasAttribute("attention"), "UA input should be highlighted");
