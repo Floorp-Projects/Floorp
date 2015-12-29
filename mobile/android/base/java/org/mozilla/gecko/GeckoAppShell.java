@@ -23,6 +23,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -32,11 +33,14 @@ import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 
+import android.content.ContentResolver;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
+import org.mozilla.gecko.db.LocalURLMetadata;
+import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.gfx.BitmapUtils;
@@ -293,21 +297,6 @@ public class GeckoAppShell
     public static native void removePresentationSurface(Surface surface);
 
     public static native void onFullScreenPluginHidden(View view);
-
-    public static class CreateShortcutFaviconLoadedListener implements OnFaviconLoadedListener {
-        private final String title;
-        private final String url;
-
-        public CreateShortcutFaviconLoadedListener(final String url, final String title) {
-            this.url = url;
-            this.title = title;
-        }
-
-        @Override
-        public void onFaviconLoaded(String pageUrl, String faviconURL, Bitmap favicon) {
-            GeckoAppShell.createShortcut(title, url, favicon);
-        }
-    }
 
     private static LayerView sLayerView;
 
@@ -767,21 +756,41 @@ public class GeckoAppShell
     // Creates a homescreen shortcut for a web page.
     // This is the entry point from nsIShellService.
     @WrapForJNI
-    static void createShortcut(final String aTitle, final String aURI, final String aIconData) {
-        // We have the favicon data (base64) decoded on the background thread, callback here, then
-        // call the other createShortcut method with the decoded favicon.
-        // This is slightly contrived, but makes the images available to the favicon cache.
-        Favicons.getSizedFavicon(getApplicationContext(), aURI, aIconData, Integer.MAX_VALUE, 0,
-            new OnFaviconLoadedListener() {
-                @Override
-                public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
-                    createShortcut(aTitle, url, favicon);
-                }
-            }
+    public static void createShortcut(final String aTitle, final String aURI) {
+        final BrowserDB db = GeckoProfile.get(getApplicationContext()).getDB();
+
+        final ContentResolver cr = getContext().getContentResolver();
+        final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
+                Collections.singletonList(aURI),
+                Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
         );
+
+        final Map<String, Object> row = metadata.get(aURI);
+
+        String touchIconURL = null;
+
+        if (row != null) {
+            touchIconURL = (String) row.get(URLMetadataTable.TOUCH_ICON_COLUMN);
+        }
+
+        OnFaviconLoadedListener listener = new OnFaviconLoadedListener() {
+            @Override
+            public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
+                createShortcutWithBitmap(aTitle, url, favicon);
+            }
+        };
+
+        if (touchIconURL != null) {
+            // We have the favicon data (base64) decoded on the background thread, callback here, then
+            // call the other createShortcut method with the decoded favicon.
+            // This is slightly contrived, but makes the images available to the favicon cache.
+            Favicons.getSizedFavicon(getApplicationContext(), aURI, touchIconURL, Integer.MAX_VALUE, 0, listener);
+        } else {
+            Favicons.getPreferredSizeFaviconForPage(getApplicationContext(), aURI, listener);
+        }
     }
 
-    public static void createShortcut(final String aTitle, final String aURI, final Bitmap aBitmap) {
+    private static void createShortcutWithBitmap(final String aTitle, final String aURI, final Bitmap aBitmap) {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
