@@ -225,9 +225,9 @@ var TabStateInternal = {
       // Filter sensitive data according to the current privacy level.
       if (!includePrivateData) {
         if (key === "storage") {
-          value = PrivacyFilter.filterSessionStorageData(value, isPinned);
+          value = PrivacyFilter.filterSessionStorageData(value);
         } else if (key === "formdata") {
-          value = PrivacyFilter.filterFormData(value, isPinned);
+          value = PrivacyFilter.filterFormData(value);
         }
       }
 
