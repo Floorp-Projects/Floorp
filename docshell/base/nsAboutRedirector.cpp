@@ -100,10 +100,12 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::ALLOW_SCRIPT
   },
+#ifndef ANDROID
   {
     "profiles", "chrome://global/content/aboutProfiles.xhtml",
     nsIAboutModule::ALLOW_SCRIPT
   },
+#endif
   // about:srcdoc is unresolvable by specification.  It is included here
   // because the security manager would disallow srcdoc iframes otherwise.
   {
