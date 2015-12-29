@@ -696,7 +696,7 @@ nsSpeechTask::CreateAudioChannelAgent()
                                            this);
   float volume = 0.0f;
   bool muted = true;
-  mAudioChannelAgent->NotifyStartedPlaying(nsIAudioChannelAgent::AUDIO_AGENT_NOTIFY, &volume, &muted);
+  mAudioChannelAgent->NotifyStartedPlaying(&volume, &muted);
 }
 
 void
@@ -716,7 +716,7 @@ nsSpeechTask::WindowVolumeChanged(float aVolume, bool aMuted)
 }
 
 NS_IMETHODIMP
-nsSpeechTask::WindowAudioCaptureChanged()
+nsSpeechTask::WindowAudioCaptureChanged(bool aCapture)
 {
   // This is not supported yet.
   return NS_OK;

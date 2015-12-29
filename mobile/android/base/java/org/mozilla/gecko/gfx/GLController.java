@@ -86,7 +86,7 @@ public class GLController extends JNIObject {
     private native void syncResumeResizeCompositor(int width, int height);
 
     @WrapForJNI
-    /* package */ native void syncInvalidateAndScheduleComposite();
+    private native void syncInvalidateAndScheduleComposite();
 
     public GLController() {
     }
@@ -284,6 +284,12 @@ public class GLController extends JNIObject {
         if (mCompositorCreated) {
             syncResumeResizeCompositor(width, height);
             mView.requestRender();
+        }
+    }
+
+    /* package */ void invalidateAndScheduleComposite() {
+        if (mCompositorCreated) {
+            syncInvalidateAndScheduleComposite();
         }
     }
 
