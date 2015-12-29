@@ -78,14 +78,6 @@ public:
   virtual bool DispatchPluginEvent(const MSG& aMsg);
 
   /*
-   * Returns true if a plugin has focus on this widget.  Otherwise, false.
-   */
-  virtual bool PluginHasFocus() const final
-  {
-    return (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN);
-  }
-
-  /*
    * Touch input injection apis
    */
   virtual nsresult SynthesizeNativeTouchPoint(uint32_t aPointerId,
