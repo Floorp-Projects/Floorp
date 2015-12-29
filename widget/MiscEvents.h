@@ -15,6 +15,11 @@
 
 namespace mozilla {
 
+namespace dom {
+  class PBrowserParent;
+  class PBrowserChild;
+} // namespace dom
+
 /******************************************************************************
  * mozilla::WidgetContentCommandEvent
  ******************************************************************************/
@@ -142,6 +147,10 @@ public:
 
 class WidgetPluginEvent : public WidgetGUIEvent
 {
+private:
+  friend class dom::PBrowserParent;
+  friend class dom::PBrowserChild;
+
 public:
   virtual WidgetPluginEvent* AsPluginEvent() override { return this; }
 
@@ -174,6 +183,11 @@ public:
     AssignGUIEventData(aEvent, aCopyTargets);
 
     retargetToFocusedDocument = aEvent.retargetToFocusedDocument;
+  }
+
+protected:
+  WidgetPluginEvent()
+  {
   }
 };
 
