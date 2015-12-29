@@ -37,7 +37,7 @@ if CONFIG['INTEL_ARCHITECTURE']:
 if CONFIG['OS_ARCH'] != 'WINNT':
     # GCC/Clang require permissions to be explicitly set for the soundtouch
     # header.
-    CXXFLAGS += ['-include', 'soundtouch_perms.h']
+    CXXFLAGS += ['-include', SRCDIR + '/soundtouch_perms.h']
 else:
     # Windows need alloca renamed to _alloca
     DEFINES['alloca'] = '_alloca'
