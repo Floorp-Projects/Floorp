@@ -85,6 +85,7 @@ namespace SkOpts {
     decltype(matrix_affine)          matrix_affine          = sk_default::matrix_affine;
 
     // Each Init_foo() is defined in src/opts/SkOpts_foo.cpp.
+    void Init_sse2();
     void Init_ssse3();
     void Init_sse41();
     void Init_sse42() {}
@@ -97,6 +98,7 @@ namespace SkOpts {
     #if defined(SK_CPU_X86) && !defined(SK_BUILD_FOR_IOS)
         uint32_t abcd[] = {0,0,0,0};
         cpuid(abcd);
+        if (abcd[3] & (1<<26)) { Init_sse2(); }
         if (abcd[2] & (1<< 9)) { Init_ssse3(); }
         if (abcd[2] & (1<<19)) { Init_sse41(); }
         if (abcd[2] & (1<<20)) { Init_sse42(); }
