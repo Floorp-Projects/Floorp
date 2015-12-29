@@ -294,6 +294,15 @@ private:
                                 bool aIsSynthesized);
 
   /**
+   * Simply calling EventDispatcher::Dispatch() with plugin event.
+   * If dispatching event has no orginal clone, aOriginalEvent can be null.
+   */
+  void DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
+                     nsEventStatus* aStatus,
+                     EventDispatchingCallback* aCallback,
+                     const WidgetCompositionEvent *aOriginalEvent = nullptr);
+
+  /**
    * HandleSelectionEvent() sends the selection event to ContentEventHandler
    * or dispatches it to the focused child process.
    */

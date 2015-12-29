@@ -118,6 +118,10 @@ public:
 
   nsEventStatus ProcessEvent(const mozilla::WidgetGUIEvent& anEvent);
 
+  static void GeneratePluginEvent(
+                const mozilla::WidgetCompositionEvent* aSrcCompositionEvent,
+                mozilla::WidgetCompositionEvent* aDistCompositionEvent);
+
 #if defined(XP_WIN)
   void SetWidgetWindowAsParent(HWND aWindowToAdopt);
   nsresult SetNetscapeWindowAsParent(HWND aWindowToAdopt);
@@ -329,6 +333,7 @@ private:
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
                                  bool aAllowPropagate = false);
   nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
+  nsresult DispatchCompositionToPlugin(nsIDOMEvent* aEvent);
 
 #ifdef XP_MACOSX
   static NPBool ConvertPointPuppet(PuppetWidget *widget, nsPluginFrame* pluginFrame,
