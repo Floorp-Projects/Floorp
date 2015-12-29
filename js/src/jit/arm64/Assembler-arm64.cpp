@@ -573,7 +573,11 @@ TraceDataRelocations(JSTracer* trc, uint8_t* buffer, CompactBufferReader& reader
             layout.asBits = literal;
             Value v = IMPL_TO_JSVAL(layout);
             TraceManuallyBarrieredEdge(trc, &v, "ion-masm-value");
-            *literalAddr = JSVAL_TO_IMPL(v).asBits;
+            if (*literalAddr != JSVAL_TO_IMPL(v).asBits) {
+                // Only update the code if the value changed, because the code
+                // is not writable if we're not moving objects.
+                *literalAddr = JSVAL_TO_IMPL(v).asBits;
+            }
 
             // TODO: When we can, flush caches here if a pointer was moved.
             continue;
