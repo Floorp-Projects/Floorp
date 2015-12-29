@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.os.AsyncTask;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -1108,11 +1109,11 @@ public class BrowserApp extends GeckoApp
                     Telemetry.sendUIEvent(TelemetryContract.Event.ACTION,
                         TelemetryContract.Method.DIALOG, extrasId);
 
-                    String url = tab.getURL();
-                    String title = tab.getDisplayTitle();
-                    Bitmap favicon = tab.getFavicon();
+                    final String url = tab.getURL();
+                    final String title = tab.getDisplayTitle();
+
                     if (url != null && title != null) {
-                        GeckoAppShell.createShortcut(title, url, favicon);
+                        GeckoAppShell.createShortcut(title, url);
                     }
                 }
             }
@@ -1237,7 +1238,7 @@ public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.add_to_launcher) {
-            Tab tab = Tabs.getInstance().getSelectedTab();
+            final Tab tab = Tabs.getInstance().getSelectedTab();
             if (tab == null) {
                 return true;
             }
@@ -1248,13 +1249,13 @@ public class BrowserApp extends GeckoApp
                 return true;
             }
 
-            final OnFaviconLoadedListener listener = new GeckoAppShell.CreateShortcutFaviconLoadedListener(url, title);
-            Favicons.getSizedFavicon(getContext(),
-                                     url,
-                                     tab.getFaviconURL(),
-                                     Integer.MAX_VALUE,
-                                     LoadFaviconTask.FLAG_PERSIST,
-                                     listener);
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    GeckoAppShell.createShortcut(title, url);
+                    return null;
+                }
+            }.execute();
 
             Telemetry.sendUIEvent(TelemetryContract.Event.ACTION, TelemetryContract.Method.CONTEXT_MENU,
                 getResources().getResourceEntryName(itemId));
