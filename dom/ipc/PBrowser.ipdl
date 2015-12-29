@@ -52,6 +52,7 @@ using class mozilla::WidgetDragEvent from "ipc/nsGUIEventIPC.h";
 using struct nsRect from "nsRect.h";
 using class mozilla::WidgetSelectionEvent from "ipc/nsGUIEventIPC.h";
 using class mozilla::WidgetTouchEvent from "ipc/nsGUIEventIPC.h";
+using class mozilla::WidgetPluginEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::dom::RemoteDOMEvent from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
@@ -634,6 +635,7 @@ child:
                        uint64_t aInputBlockId,
                        nsEventStatus aApzResponse);
     RealDragEvent(WidgetDragEvent aEvent, uint32_t aDragAction, uint32_t aDropEffect);
+    PluginEvent(WidgetPluginEvent aEvent);
 
     /**
      * @see nsIDOMWindowUtils sendKeyEvent.
