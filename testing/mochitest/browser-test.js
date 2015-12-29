@@ -314,7 +314,8 @@ Tester.prototype = {
           type = "browser window";
           break;
         case null:
-          type = "unknown window";
+          type = "unknown window with document URI: " + win.document.documentURI +
+                 " and title: " + win.document.title;
           break;
         }
         let msg = baseMsg.replace("{elt}", type);
