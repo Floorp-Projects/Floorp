@@ -981,6 +981,23 @@ Notification::Notification(nsIGlobalObject* aGlobal, const nsAString& aID,
   }
 }
 
+nsresult
+Notification::Init()
+{
+  if (!mWorkerPrivate) {
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    NS_ENSURE_TRUE(obs, NS_ERROR_FAILURE);
+
+    nsresult rv = obs->AddObserver(this, DOM_WINDOW_DESTROYED_TOPIC, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = obs->AddObserver(this, DOM_WINDOW_FROZEN_TOPIC, true);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
+}
+
 void
 Notification::SetAlertName()
 {
@@ -1150,6 +1167,7 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
                              const nsAString& aTitle,
                              const NotificationOptions& aOptions)
 {
+  nsresult rv;
   nsString id;
   if (!aID.IsEmpty()) {
     id = aID;
@@ -1158,7 +1176,7 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
       do_GetService("@mozilla.org/uuid-generator;1");
     NS_ENSURE_TRUE(uuidgen, nullptr);
     nsID uuid;
-    nsresult rv = uuidgen->GenerateUUIDInPlace(&uuid);
+    rv = uuidgen->GenerateUUIDInPlace(&uuid);
     NS_ENSURE_SUCCESS(rv, nullptr);
 
     char buffer[NSID_LENGTH];
@@ -1174,6 +1192,8 @@ Notification::CreateInternal(nsIGlobalObject* aGlobal,
                                                          aOptions.mTag,
                                                          aOptions.mIcon,
                                                          aOptions.mMozbehavior);
+  rv = notification->Init();
+  NS_ENSURE_SUCCESS(rv, nullptr);
   return notification.forget();
 }
 
@@ -1202,6 +1222,8 @@ NS_IMPL_ADDREF_INHERITED(Notification, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(Notification, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(Notification)
+  NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 nsIPrincipal*
@@ -2719,6 +2741,29 @@ Notification::OpenSettings(nsIPrincipal* aPrincipal)
   }
   // Notify other observers so they can show settings UI.
   obs->NotifyObservers(aPrincipal, "notifications-open-settings", nullptr);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+Notification::Observe(nsISupports* aSubject, const char* aTopic,
+                      const char16_t* aData)
+{
+  AssertIsOnMainThread();
+
+  if (!strcmp(aTopic, DOM_WINDOW_DESTROYED_TOPIC) ||
+      !strcmp(aTopic, DOM_WINDOW_FROZEN_TOPIC)) {
+
+    if (SameCOMIdentity(aSubject, GetOwner())) {
+      nsCOMPtr<nsIObserverService> obs =
+        mozilla::services::GetObserverService();
+      if (obs) {
+        obs->RemoveObserver(this, DOM_WINDOW_DESTROYED_TOPIC);
+        obs->RemoveObserver(this, DOM_WINDOW_FROZEN_TOPIC);
+      }
+      CloseInternal();
+    }
+  }
+
   return NS_OK;
 }
 
