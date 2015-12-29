@@ -261,9 +261,7 @@ this.FxAccountsWebChannelHelpers.prototype = {
   logout(uid) {
     return fxAccounts.getSignedInUser().then(userData => {
       if (userData.uid === uid) {
-        // true argument is `localOnly`, because server-side stuff
-        // has already been taken care of by the content server
-        return fxAccounts.signOut(true);
+        return fxAccounts.signOut();
       }
     });
   },

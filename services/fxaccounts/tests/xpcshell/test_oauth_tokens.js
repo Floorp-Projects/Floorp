@@ -67,10 +67,6 @@ function MockFxAccountsClient() {
   };
 
   this.signOut = function() { return Promise.resolve(); };
-  this.registerDevice = function() { return Promise.resolve(); };
-  this.updateDevice = function() { return Promise.resolve(); };
-  this.signOutAndDestroyDevice = function() { return Promise.resolve(); };
-  this.getDeviceList = function() { return Promise.resolve(); };
 
   FxAccountsClient.apply(this);
 }
@@ -95,9 +91,6 @@ function MockFxAccounts(mockGrantClient) {
         Services.obs.notifyObservers(null, "testhelper-fxa-revoke-complete", null);
       });
     },
-    _getDeviceName() {
-      return "mock device name";
-    }
   });
 }
 
@@ -145,7 +138,7 @@ MockFxAccountsOAuthGrantClient.prototype = {
   activeTokens: null,
 }
 
-add_task(function* testRevoke() {
+add_task(function testRevoke() {
   let client = new MockFxAccountsOAuthGrantClient();
   let tokenOptions = { scope: "test-scope", client: client };
   let fxa = yield createMockFxA(client);
@@ -172,7 +165,7 @@ add_task(function* testRevoke() {
   notEqual(token1, token2, "got a different token");
 });
 
-add_task(function* testSignOutDestroysTokens() {
+add_task(function testSignOutDestroysTokens() {
   let client = new MockFxAccountsOAuthGrantClient();
   let fxa = yield createMockFxA(client);
 
@@ -197,7 +190,7 @@ add_task(function* testSignOutDestroysTokens() {
   equal(client.activeTokens.size, 0);
 });
 
-add_task(function* testTokenRaces() {
+add_task(function testTokenRaces() {
   // Here we do 2 concurrent fetches each for 2 different token scopes (ie,
   // 4 token fetches in total).
   // This should provoke a potential race in the token fetching but we should
