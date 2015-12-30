@@ -39,5 +39,6 @@ DevToolsModules(
     'telemetry.js',
     'theme-switching.js',
     'theme.js',
-    'undo.js'
+    'undo.js',
+    'view-source.js',
 )

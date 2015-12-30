@@ -157,7 +157,7 @@ BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,
 // declare it here to avoid including that entire header file.
 #define BZ2_CRC32TABLE_UNDECLARED
 
-#if MOZ_IS_GCC
+#if MOZ_IS_GCC || defined(__clang__)
 extern "C"  __attribute__((visibility("default"))) unsigned int BZ2_crc32Table[256];
 #undef BZ2_CRC32TABLE_UNDECLARED
 #elif defined(__SUNPRO_C) || defined(__SUNPRO_CC)

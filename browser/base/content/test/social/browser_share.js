@@ -48,7 +48,6 @@ function test() {
       CustomizableUI.removeWidgetFromArea("social-share-button", CustomizableUI.AREA_NAVBAR)
       shareButton.remove();
     }
-    ok(CustomizableUI.inDefaultState, "Should start in default state.");
     next();
   });
 }

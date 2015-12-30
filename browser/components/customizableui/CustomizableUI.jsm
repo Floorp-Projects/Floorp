@@ -56,7 +56,7 @@ const kSubviewEvents = [
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 5;
+var kVersion = 6;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -64,7 +64,8 @@ var kVersion = 5;
  * version the button is removed in as the value.  e.g. "pocket-button": 5
  */
 var ObsoleteBuiltinButtons = {
-  "loop-button": 5
+  "loop-button": 5,
+  "pocket-button": 6
 };
 
 /**
@@ -221,15 +222,6 @@ var CustomizableUIInternal = {
       "home-button",
       "loop-button",
     ];
-
-    // Insert the Pocket button after the bookmarks button if it's present.
-    for (let widgetDefinition of CustomizableWidgets) {
-      if (widgetDefinition.id == "pocket-button") {
-        let idx = navbarPlacements.indexOf("bookmarks-menu-button") + 1;
-        navbarPlacements.splice(idx, 0, widgetDefinition.id);
-        break;
-      }
-    }
 
     if (Services.prefs.getBoolPref(kPrefWebIDEInNavbar)) {
       navbarPlacements.push("webide-button");
@@ -3473,8 +3465,8 @@ this.CustomizableUI = {
    *
    *   null // if the widget is not placed anywhere (ie in the palette)
    */
-  getPlacementOfWidget: function(aWidgetId) {
-    return CustomizableUIInternal.getPlacementOfWidget(aWidgetId, true);
+  getPlacementOfWidget: function(aWidgetId, aOnlyRegistered=true, aDeadAreas=false) {
+    return CustomizableUIInternal.getPlacementOfWidget(aWidgetId, aOnlyRegistered, aDeadAreas);
   },
   /**
    * Check if a widget can be removed from the area it's in.
