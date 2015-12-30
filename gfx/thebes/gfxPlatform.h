@@ -135,6 +135,11 @@ enum class DeviceResetReason
   UNKNOWN
 };
 
+enum class ForcedDeviceResetReason
+{
+  OPENSHAREDHANDLE = 0
+};
+
 class gfxPlatform {
     friend class SRGBOverrideObserver;
 
