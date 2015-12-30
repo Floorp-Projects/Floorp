@@ -291,21 +291,6 @@ PresentationSessionTransport::EnableDataNotification()
 }
 
 NS_IMETHODIMP
-PresentationSessionTransport::GetCallback(nsIPresentationSessionTransportCallback** aCallback)
-{
-  nsCOMPtr<nsIPresentationSessionTransportCallback> callback = mCallback;
-  callback.forget(aCallback);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PresentationSessionTransport::SetCallback(nsIPresentationSessionTransportCallback* aCallback)
-{
-  mCallback = aCallback;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 PresentationSessionTransport::GetSelfAddress(nsINetAddr** aSelfAddress)
 {
   if (NS_WARN_IF(!mTransport)) {
@@ -405,6 +390,7 @@ PresentationSessionTransport::SetReadyState(ReadyState aReadyState)
   } else if (mReadyState == CLOSED && mCallback) {
     // Notify the transport channel has been shut down.
     NS_WARN_IF(NS_FAILED(mCallback->NotifyTransportClosed(mCloseStatus)));
+    mCallback = nullptr;
   }
 }
 

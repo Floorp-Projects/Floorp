@@ -126,18 +126,6 @@ static RedirEntry kRedirMap[] = {
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::MAKE_UNLINKABLE |
     nsIAboutModule::HIDE_FROM_ABOUTABOUT },
-  {
-    "pocket-saved", "chrome://browser/content/pocket/panels/saved.html",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-    nsIAboutModule::ALLOW_SCRIPT |
-    nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-    nsIAboutModule::MAKE_UNLINKABLE },
-  {
-    "pocket-signup", "chrome://browser/content/pocket/panels/signup.html",
-    nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
-    nsIAboutModule::ALLOW_SCRIPT |
-    nsIAboutModule::HIDE_FROM_ABOUTABOUT |
-    nsIAboutModule::MAKE_UNLINKABLE },
 };
 static const int kRedirTotal = ArrayLength(kRedirMap);
 

@@ -1011,7 +1011,17 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             String[] selectionArgs) {
         trace("Updating history on URI: " + uri);
 
-        int updated = 0;
+        final SQLiteDatabase db = getWritableDatabase(uri);
+
+        if (!values.containsKey(History.DATE_MODIFIED)) {
+            values.put(History.DATE_MODIFIED, System.currentTimeMillis());
+        }
+
+        // Use the simple code path for easy updates.
+        if (!shouldIncrementVisits(uri)) {
+            trace("Updating history meta data only");
+            return db.update(TABLE_HISTORY, values, selection, selectionArgs);
+        }
 
         final String[] historyProjection = new String[] {
             History._ID,   // 0
@@ -1019,27 +1029,22 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             History.VISITS // 2
         };
 
-        final SQLiteDatabase db = getWritableDatabase(uri);
         final Cursor cursor = db.query(TABLE_HISTORY, historyProjection, selection,
                                        selectionArgs, null, null, null);
 
-        try {
-            if (!values.containsKey(Bookmarks.DATE_MODIFIED)) {
-                values.put(Bookmarks.DATE_MODIFIED,  System.currentTimeMillis());
-            }
+        int updated = 0;
 
+        try {
             while (cursor.moveToNext()) {
                 long id = cursor.getLong(0);
 
                 trace("Updating history entry with ID: " + id);
 
-                if (shouldIncrementVisits(uri)) {
-                    long existing = cursor.getLong(2);
-                    Long additional = values.getAsLong(History.VISITS);
+                long existing = cursor.getLong(2);
+                Long additional = values.getAsLong(History.VISITS);
 
-                    // Increment visit count by a specified amount, or default to increment by 1
-                    values.put(History.VISITS, existing + ((additional != null) ? additional : 1));
-                }
+                // Increment visit count by a specified amount, or default to increment by 1
+                values.put(History.VISITS, existing + ((additional != null) ? additional : 1));
 
                 updated += db.update(TABLE_HISTORY, values, "_id = ?",
                                      new String[] { Long.toString(id) });

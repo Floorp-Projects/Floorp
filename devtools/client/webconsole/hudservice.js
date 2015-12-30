@@ -21,7 +21,7 @@ loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "DebuggerClient", "devtools/shared/client/main", true);
 loader.lazyGetter(this, "showDoorhanger", () => require("devtools/client/shared/doorhanger").showDoorhanger);
-loader.lazyRequireGetter(this, "sourceUtils", "devtools/client/shared/source-utils");
+loader.lazyRequireGetter(this, "viewSource", "devtools/client/shared/view-source");
 
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
@@ -502,7 +502,7 @@ WebConsole.prototype = {
    *        The URL of the file which corresponds to a Scratchpad id.
    */
   viewSourceInScratchpad: function WC_viewSourceInScratchpad(aSourceURL, aSourceLine) {
-    sourceUtils.viewSourceInScratchpad(aSourceURL, aSourceLine);
+    viewSource.viewSourceInScratchpad(aSourceURL, aSourceLine);
   },
 
   /**

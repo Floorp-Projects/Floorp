@@ -21,7 +21,7 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="63c3a57ad9935b9c61057a29ee27a1c6ed6a9e23"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="1899109c9fd9b9e2244155c4b9e966c0a48368fc"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
@@ -139,7 +139,7 @@
   <project name="init_sh" path="external/init_sh" remote="b2g" revision="feb58d2b397e45ead9b904d5c4d9255df408db56"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
   <project name="platform_external_bluetooth_bluedroid" path="external/bluetooth/bluedroid" remote="b2g" revision="70f536bd97d901b96b94669ae1aa2fd0fb54b258"/>
-  <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="b2g" revision="2d017f975f4542c6d23b226ec172b9b30383c31c"/>
+  <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="b2g" revision="2a52bd77d2ca0cefbf02acc6863492d16b6ccfec"/>
   <project name="platform_external_libnfc-pn547" path="external/libnfc-pn547" remote="b2g" revision="5bb999b84b8adc14f6bea004d523ba258dea8188"/>
   <project name="platform/external/wpa_supplicant_8" path="external/wpa_supplicant_8" revision="5b71e40213f650459e95d35b6f14af7e88d8ab62"/>
   <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="5d5bcc83d6c32874701f0df78ed1119e006bd10a"/>

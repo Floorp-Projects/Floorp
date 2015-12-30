@@ -8,18 +8,14 @@ function makeMarkProvider(origin) {
     markedIcon: "https://" + origin + ".example.com/browser/browser/base/content/test/social/unchecked.jpg",
     unmarkedIcon: "https://" + origin + ".example.com/browser/browser/base/content/test/social/checked.jpg",
     iconURL: "https://" + origin + ".example.com/browser/browser/base/content/test/general/moz.png",
-    version: 1
+    version: "1.0"
   }
 }
 
 function test() {
   waitForExplicitFinish();
 
-  runSocialTests(tests, undefined, undefined, function () {
-    ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
-    CustomizableUI.reset();
-    finish();
-  });
+  runSocialTests(tests, undefined, undefined, finish);
 }
 
 var tests = {

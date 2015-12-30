@@ -12,7 +12,7 @@ var manifest2 = { // used for testing install
   origin: "https://test1.example.com",
   sidebarURL: "https://test1.example.com/browser/browser/base/content/test/social/social_sidebar_empty.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 var manifestUpgrade = { // used for testing install
   name: "provider 3",
@@ -20,7 +20,7 @@ var manifestUpgrade = { // used for testing install
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   workerURL: "https://test2.example.com/browser/browser/base/content/test/social/social_worker.js",
   iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 
 function test() {
