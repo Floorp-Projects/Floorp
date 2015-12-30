@@ -262,6 +262,13 @@
     "kind": "boolean",
     "description": "Was Fetch request initiated from the main thread?"
   },
+  "FORCED_DEVICE_RESET_REASON": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 50,
+    "releaseChannelCollection": "opt-out",
+    "description": "GPU Forced Device Reset Reason (OpenSharedHandle)"
+  },
   "FORGET_SKIPPABLE_MAX": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
