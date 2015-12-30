@@ -41,7 +41,7 @@ class Element;
 class ServiceWorkerRegistrationMainThread;
 } // namespace dom
 namespace gfx {
-class VRHMDInfo;
+class VRDeviceProxy;
 } // namespace gfx
 } // namespace mozilla
 
@@ -511,7 +511,7 @@ public:
    */
   virtual nsresult SetFullscreenInternal(
     FullscreenReason aReason, bool aIsFullscreen,
-    mozilla::gfx::VRHMDInfo *aHMD = nullptr) = 0;
+    mozilla::gfx::VRDeviceProxy *aHMD = nullptr) = 0;
 
   /**
    * This function should be called when the fullscreen state is flipped.

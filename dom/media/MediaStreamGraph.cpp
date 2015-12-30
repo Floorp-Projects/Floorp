@@ -2572,6 +2572,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
     RefPtr<MediaInputPort> mPort;
   };
 
+  MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
   MOZ_ASSERT(aTrackID != TRACK_NONE && aTrackID != TRACK_INVALID,
              "Only TRACK_ANY and explicit ID are allowed");
   RefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,

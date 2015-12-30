@@ -40,7 +40,7 @@ public class testEventDispatcher extends UITest
     private static final String BACKGROUND_EVENT = "Robocop:TestBackgroundEvent";
     private static final String BACKGROUND_RESPONSE_EVENT = "Robocop:TestBackgrondResponse";
 
-    private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 10000; // 10 seconds
+    private static final long WAIT_FOR_BUNDLE_EVENT_TIMEOUT_MILLIS = 20000; // 20 seconds
 
     private JavascriptBridge js;
     private NativeJSObject savedMessage;

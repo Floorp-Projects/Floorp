@@ -3008,6 +3008,7 @@ nsLineLayout::ExpandRubyBox(PerFrameData* aFrame, nscoord aReservedISize,
       }
       // If there are no justification opportunities for space-between,
       // fall-through to center per spec.
+      MOZ_FALLTHROUGH;
     }
     case NS_STYLE_RUBY_ALIGN_CENTER:
       // Indent all children by half of the reserved inline size.
@@ -3199,6 +3200,7 @@ nsLineLayout::TextAlignLine(nsLineBox* aLine,
         }
         // Fall through to the default case if we could not justify to fill
         // the space.
+        MOZ_FALLTHROUGH;
       }
 
       case NS_STYLE_TEXT_ALIGN_DEFAULT:

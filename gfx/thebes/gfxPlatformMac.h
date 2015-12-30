@@ -83,9 +83,11 @@ public:
       return true;
     }
 
-    bool SupportsBasicCompositor() const override {
-      // At the moment, BasicCompositor is broken on mac.
-      return false;
+    bool RequiresAcceleratedGLContextForCompositorOGL() const override {
+      // On OS X in a VM, unaccelerated CompositorOGL shows black flashes, so we
+      // require accelerated GL for CompositorOGL but allow unaccelerated GL for
+      // BasicCompositor.
+      return true;
     }
 
     bool UseAcceleratedCanvas();

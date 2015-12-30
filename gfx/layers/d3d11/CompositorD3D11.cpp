@@ -676,7 +676,7 @@ CompositorD3D11::DrawVRDistortion(const gfx::Rect& aRect,
   TextureSourceD3D11* source = vrEffect->mTexture->AsSourceD3D11();
 
   VRHMDInfo* hmdInfo = vrEffect->mHMD;
-  VRHMDType hmdType = hmdInfo->GetType();
+  VRHMDType hmdType = hmdInfo->GetDeviceInfo().GetType();
 
   if (!mAttachments->mVRDistortionVS[hmdType] ||
       !mAttachments->mVRDistortionPS[hmdType])

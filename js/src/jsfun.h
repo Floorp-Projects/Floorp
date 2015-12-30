@@ -695,6 +695,18 @@ class FunctionExtended : public JSFunction
 
     static const unsigned METHOD_HOMEOBJECT_SLOT = 0;
 
+    /*
+     * All asm.js/wasm functions store their compiled module (either
+     * WasmModuleObject or AsmJSModuleObject) in the first extended slot.
+     */
+    static const unsigned ASM_MODULE_SLOT = 0;
+
+    /*
+     * wasm/asm.js exported functions store the index of the export in the
+     * module's export vector in the second slot.
+     */
+    static const unsigned ASM_EXPORT_INDEX_SLOT = 1;
+
     static inline size_t offsetOfExtendedSlot(unsigned which) {
         MOZ_ASSERT(which < NUM_EXTENDED_SLOTS);
         return offsetof(FunctionExtended, extendedSlots) + which * sizeof(HeapValue);

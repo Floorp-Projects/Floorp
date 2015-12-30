@@ -612,6 +612,10 @@ private:
     AllocPProcessHangMonitorParent(Transport* aTransport,
                                    ProcessId aOtherProcess) override;
 
+    PVRManagerParent*
+    AllocPVRManagerParent(Transport* aTransport,
+                          ProcessId aOtherProcess) override;
+
     virtual bool RecvGetProcessAttributes(ContentParentId* aCpId,
                                           bool* aIsForApp,
                                           bool* aIsForBrowser) override;

@@ -1177,7 +1177,7 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
         mGIFStruct.interlaced = true;
         mGIFStruct.ipass = 1;
         if (mDownscaler) {
-          mDeinterlacer.emplace(mDownscaler->OriginalSize());
+          mDeinterlacer.emplace(mDownscaler->FrameSize());
         }
       } else {
         mGIFStruct.interlaced = false;

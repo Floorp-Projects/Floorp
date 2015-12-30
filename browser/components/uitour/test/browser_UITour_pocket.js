@@ -62,7 +62,7 @@ function checkPanelIsHidden(aPanel) {
   is(button.hasAttribute("open"), false, "Pocket button should know that the panel is closed");
 }
 
-if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
+if (Services.prefs.getBoolPref("extensions.pocket.enabled")) {
   let placement = CustomizableUI.getPlacementOfWidget("pocket-button");
 
   // Add the button to the nav-bar by default.

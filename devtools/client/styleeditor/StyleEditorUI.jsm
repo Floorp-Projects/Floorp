@@ -11,25 +11,23 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
-Cu.import("resource://devtools/shared/event-emitter.js");
-Cu.import("resource://devtools/client/framework/gDevTools.jsm");
+const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const Services = require("Services");
+const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
+const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
+const EventEmitter = require("devtools/shared/event-emitter");
+const {gDevTools} = require("resource://devtools/client/framework/gDevTools.jsm");
 Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
-Cu.import("resource://devtools/client/shared/SplitView.jsm");
-Cu.import("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
-                                  "resource://gre/modules/PluralForm.jsm");
-
-const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const { PrefObserver, PREF_ORIG_SOURCES } = require("devtools/client/styleeditor/utils");
+const {SplitView} = Cu.import("resource://devtools/client/shared/SplitView.jsm", {});
+const {StyleSheetEditor} = Cu.import("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
+loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const csscoverage = require("devtools/server/actors/csscoverage");
-const console = require("resource://gre/modules/Console.jsm").console;
+const {console} = require("resource://gre/modules/Console.jsm");
 const promise = require("promise");
+const {ResponsiveUIManager} =
+  Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -879,9 +877,13 @@ StyleEditorUI.prototype = {
 
         let cond = this._panelDoc.createElement("div");
         cond.textContent = rule.conditionText;
-        cond.className = "media-rule-condition"
+        cond.className = "media-rule-condition";
         if (!rule.matches) {
           cond.classList.add("media-condition-unmatched");
+        }
+        if (this._target.tab.tagName == "tab") {
+          cond.innerHTML = cond.textContent.replace(/(min\-|max\-)(width|height):\s\d+(px)/ig, "<a href='#' class='media-responsive-mode-toggle'>$&</a>");
+          cond.addEventListener("click", this._onMediaConditionClick.bind(this));
         }
         div.appendChild(cond);
 
@@ -899,6 +901,49 @@ StyleEditorUI.prototype = {
 
       this.emit("media-list-changed", editor);
     }.bind(this)).then(null, Cu.reportError);
+  },
+
+  /**
+    * Called when a media condition is clicked
+    * If a responsive mode link is clicked, it will launch it.
+    *
+    * @param {object} e
+    *        Event object
+    */
+  _onMediaConditionClick: function(e) {
+    if (!e.target.matches(".media-responsive-mode-toggle")) {
+      return;
+    }
+    let conditionText = e.target.textContent;
+    let isWidthCond = conditionText.toLowerCase().indexOf("width") > -1;
+    let mediaVal = parseInt(/\d+/.exec(conditionText));
+
+    let options = isWidthCond ? {width: mediaVal} : {height: mediaVal};
+    this._launchResponsiveMode(options);
+    e.preventDefault();
+    e.stopPropagation();
+  },
+
+  /**
+   * Launches the responsive mode with a specific width or height
+   *
+   * @param  {object} options
+   *         Object with width or/and height properties.
+   */
+  _launchResponsiveMode: function(options = {}) {
+    let tab = this._target.tab;
+    let win = this._target.tab.ownerGlobal;
+
+    ResponsiveUIManager.runIfNeeded(win, tab);
+    if (options.width && options.height) {
+      ResponsiveUIManager.getResponsiveUIForTab(tab).setSize(options.width, options.height);
+    }
+    else if (options.width) {
+      ResponsiveUIManager.getResponsiveUIForTab(tab).setWidth(options.width);
+    }
+    else if (options.height) {
+      ResponsiveUIManager.getResponsiveUIForTab(tab).setHeight(options.height);
+    }
   },
 
   /**

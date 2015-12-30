@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
-    'frame.js',
     'heap.js',
     'list.js',
     'snapshot-list-item.js',
