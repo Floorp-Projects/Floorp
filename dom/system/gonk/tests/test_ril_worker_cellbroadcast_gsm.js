@@ -193,3 +193,38 @@ add_test(function test_ril_worker_GsmPDUHelper_readGsmCbData() {
 
   run_next_test();
 });
+
+add_test(function test_ril_worker_Sim_Download_Message() {
+  let worker = newWorker({
+    postRILMessage: function(data) {
+      // Do nothing
+    },
+    postMessage: function(message) {
+      ok(message.rilMessageType !== "cellbroadcast-received",
+         "Data-Download message shall be ignored.");
+    }
+  });
+
+  function buildPdu(aMessageId) {
+    return "C002" + aMessageId + "011154741914AFA7C76B9058" +
+      "FEBEBB41E6371EA4AEB7E173D0DB5E96" +
+      "83E8E832881DD6E741E4F7B9D168341A" +
+      "8D46A3D168341A8D46A3D168341A8D46" +
+      "A3D168341A8D46A3D168341A8D46A3D1" +
+      "68341A8D46A3D100";
+  }
+
+  ["1000", "107F", "1080", "10FF"].forEach(aMessageId => {
+    worker.onRILMessage(
+      0,
+      newIncomingParcel(
+        -1,
+        RESPONSE_TYPE_UNSOLICITED,
+        UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS,
+        hexStringToParcelByteArrayData(buildPdu(aMessageId))));
+  });
+
+  ok(true, "All Data-Download Messages are ingored.");
+
+  run_next_test();
+});
