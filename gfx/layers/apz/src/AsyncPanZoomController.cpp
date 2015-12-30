@@ -2987,7 +2987,7 @@ bool AsyncPanZoomController::AdvanceAnimations(const TimeStamp& aSampleTime)
   return requestAnimationFrame;
 }
 
-void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutTransform,
+void AsyncPanZoomController::SampleContentTransformForFrame(AsyncTransform* aOutTransform,
                                                             ParentLayerPoint& aScrollOffset)
 {
   ReentrantMonitorAutoEnter lock(mMonitor);
@@ -2996,7 +2996,7 @@ void AsyncPanZoomController::SampleContentTransformForFrame(ViewTransform* aOutT
   *aOutTransform = GetCurrentAsyncTransform();
 }
 
-ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
+AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
   ReentrantMonitorAutoEnter lock(mMonitor);
 
   CSSPoint lastPaintScrollOffset;
@@ -3028,7 +3028,7 @@ ViewTransform AsyncPanZoomController::GetCurrentAsyncTransform() const {
   ParentLayerPoint translation = (currentScrollOffset - lastPaintScrollOffset)
                                * mFrameMetrics.GetZoom() * mTestAsyncZoom.scale;
 
-  return ViewTransform(
+  return AsyncTransform(
     LayerToParentLayerScale(mFrameMetrics.GetAsyncZoom().scale * mTestAsyncZoom.scale),
     -translation);
 }
