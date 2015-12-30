@@ -76,18 +76,5 @@ OSFileSystem::IsSafeDirectory(Directory* aDir) const
   return true;
 }
 
-void
-OSFileSystem::Unlink()
-{
-  mWindow = nullptr;
-}
-
-void
-OSFileSystem::Traverse(nsCycleCollectionTraversalCallback &cb)
-{
-  OSFileSystem* tmp = this;
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow);
-}
-
 } // namespace dom
 } // namespace mozilla
