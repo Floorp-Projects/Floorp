@@ -3,14 +3,10 @@
 // http://creativecommons.org/licenses/publicdomain/
 
 function test() {
-    // Note: -8 and -200 will trigger asm.js link failures because 8 and 200
-    // bytes are below the minimum allowed size, and the buffer will not
-    // actually be converted to an asm.js buffer.
     for (var size of [0, 8, 16, 200, 1000, 4096, -8, -200, -8192, -65536]) {
-        var buffer_ctor = (size < 0) ? AsmJSArrayBuffer : ArrayBuffer;
         size = Math.abs(size);
 
-        var old = new buffer_ctor(size);
+        var old = new ArrayBuffer(size);
         var copy = deserialize(serialize(old, [old]));
         assertEq(old.byteLength, 0);
         assertEq(copy.byteLength, size);
@@ -29,7 +25,7 @@ function test() {
         for (var ctor of constructors) {
             var dataview = (ctor === DataView);
 
-            var buf = new buffer_ctor(size);
+            var buf = new ArrayBuffer(size);
             var old_arr = new ctor(buf);
             assertEq(buf.byteLength, size);
             assertEq(buf, old_arr.buffer);
@@ -52,7 +48,7 @@ function test() {
         for (var ctor of constructors) {
             var dataview = (ctor === DataView);
 
-            var buf = new buffer_ctor(size);
+            var buf = new ArrayBuffer(size);
             var old_arr = new ctor(buf);
             var dv = new DataView(buf); // Second view
             var copy_arr = deserialize(serialize(old_arr, [ buf ]));
@@ -69,7 +65,7 @@ function test() {
 
         // Mutate the buffer during the clone operation. The modifications should be visible.
         if (size >= 4) {
-            old = new buffer_ctor(size);
+            old = new ArrayBuffer(size);
             var view = new Int32Array(old);
             view[0] = 1;
             var mutator = { get foo() { view[0] = 2; } };
@@ -81,7 +77,7 @@ function test() {
 
         // Neuter the buffer during the clone operation. Should throw an exception.
         if (size >= 4) {
-            old = new buffer_ctor(size);
+            old = new ArrayBuffer(size);
             var mutator = {
                 get foo() {
                     deserialize(serialize(old, [old]));
