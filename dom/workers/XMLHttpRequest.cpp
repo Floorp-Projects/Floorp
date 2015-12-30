@@ -559,8 +559,8 @@ public:
   private:
     virtual void trace(JSTracer* aTrc)
     {
-      JS_CallValueTracer(aTrc, &mStateData->mResponse,
-                         "XMLHttpRequest::StateData::mResponse");
+      JS::TraceEdge(aTrc, &mStateData->mResponse,
+                    "XMLHttpRequest::StateData::mResponse");
     }
   };
 
