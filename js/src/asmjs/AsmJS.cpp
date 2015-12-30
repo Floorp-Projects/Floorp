@@ -2842,6 +2842,12 @@ class MOZ_STACK_CLASS FunctionValidator
 
     size_t numLocals() const { return locals_.count(); }
 
+    bool noteLineCol(ParseNode* pn) {
+        uint32_t line, column;
+        m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
+        return funcIR().addSourceCoords(line, column);
+    }
+
     /************************************************* Packing interface */
 
     bool startedPacking() const {
@@ -4560,15 +4566,6 @@ CheckIsVarType(FunctionValidator& f, ParseNode* argNode, Type type)
     return true;
 }
 
-static void
-WriteCallLineCol(FunctionValidator& f, ParseNode* pn)
-{
-    uint32_t line, column;
-    f.m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
-    f.writeU32(line);
-    f.writeU32(column);
-}
-
 static bool
 CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calleeName,
                   ExprType ret, Type* type)
@@ -4588,8 +4585,9 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
     size_t funcIndexAt = f.temp32();
     // Function's signature in lifo
     size_t sigAt = f.tempPtr();
-    // Call node position (asm.js specific)
-    WriteCallLineCol(f, callNode);
+
+    if (!f.noteLineCol(callNode))
+        return false;
 
     MallocSig::ArgVector args;
     if (!CheckCallArgs<CheckIsVarType>(f, callNode, &args))
@@ -4680,8 +4678,9 @@ CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* 
     size_t globalDataOffsetAt = f.temp32();
     // Signature
     size_t sigAt = f.tempPtr();
-    // Call node position (asm.js specific)
-    WriteCallLineCol(f, callNode);
+
+    if (!f.noteLineCol(callNode))
+        return false;
 
     Type indexType;
     if (!CheckExpr(f, indexNode, &indexType))
@@ -4741,8 +4740,9 @@ CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprT
     size_t offsetAt = f.temp32();
     // Pointer to the import's signature in the module's lifo
     size_t sigAt = f.tempPtr();
-    // Call node position (asm.js specific)
-    WriteCallLineCol(f, callNode);
+
+    if (!f.noteLineCol(callNode))
+        return false;
 
     MallocSig::ArgVector args;
     if (!CheckCallArgs<CheckIsExternType>(f, callNode, &args))
@@ -4884,8 +4884,9 @@ CheckMathBuiltinCall(FunctionValidator& f, ParseNode* callNode, AsmJSMathBuiltin
         return f.failf(callNode, "call passed %u arguments, expected %u", actualArity, arity);
 
     size_t opcodeAt = f.tempOp();
-    // Call node position (asm.js specific)
-    WriteCallLineCol(f, callNode);
+
+    if (!f.noteLineCol(callNode))
+        return false;
 
     Type firstType;
     ParseNode* argNode = CallArgList(callNode);
