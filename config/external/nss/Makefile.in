@@ -85,15 +85,6 @@ NSS_EXTRA_DLLS += freebl_64int_3
 NSS_EXTRA_DLLS += freebl_64fpu_3
 endif
 
-ABS_DIST := $(abspath $(DIST))
-ifeq ($(HOST_OS_ARCH),WINNT)
-ifdef CYGDRIVE_MOUNT
-ABS_DIST := $(shell cygpath -w $(ABS_DIST) | sed -e 's|\\|/|g')
-endif
-ifneq (,$(filter mingw%,$(host_os)))
-ABS_DIST := $(shell cd $(DIST) && pwd -W)
-endif
-endif
 # For all variables such as DLLFLAGS, that may contain $(DIST)
 DIST := $(ABS_DIST)
 NSPR_INCLUDE_DIR = $(firstword $(filter -I%,$(NSPR_CFLAGS)))
