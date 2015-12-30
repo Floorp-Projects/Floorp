@@ -5239,6 +5239,18 @@ RilObject.prototype[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICIT
   try {
     message =
       this.context.GsmPDUHelper.readCbMessage(this.context.Buf.readInt32());
+
+    // "Data-Download" message is expected to be handled by the modem.
+    // Ignore it here to prevent any garbage messages to be displayed.
+    // See 9.4.1.2.2 Message Identifier of TS 32.041 for the range of
+    // Message-identifier of the Data-Download CB messages.
+    if (message.messageId >= 0x1000 && message.messageId <= 0x10FF) {
+      if (DEBUG) {
+        this.context.debug("Ignore a Data-Download message, messageId: " +
+                           message.messageId);
+      }
+      return;
+    }
   } catch (e) {
     if (DEBUG) {
       this.context.debug("Failed to parse Cell Broadcast message: " + e);
