@@ -5,7 +5,8 @@
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
-const FrameView = createFactory(require("./frame"));
+const FrameView = createFactory(require("devtools/client/shared/components/frame"));
+const unknownSourceString = L10N.getStr("unknownSource");
 
 const INDENT = 10;
 const MAX_SOURCE_LENGTH = 200;
@@ -55,6 +56,7 @@ const TreeItem = module.exports = createClass({
       getPercentBytes,
       getPercentCount,
       showSign,
+      onViewSourceInDebugger,
     } = this.props;
 
     const bytes = this.formatNumber(showSign, item.bytes);
@@ -84,14 +86,21 @@ const TreeItem = module.exports = createClass({
                dom.span({ className: "heap-tree-percent" }, percentTotalCount)),
       dom.span({ className: "heap-tree-item-field heap-tree-item-name", style: { marginLeft: depth * INDENT }},
         arrow,
-        this.toLabel(item.name, toolbox)
+        this.toLabel(item.name, onViewSourceInDebugger)
       )
     );
   },
 
-  toLabel(name, toolbox) {
+  toLabel(name, linkToDebugger) {
     if (isSavedFrame(name)) {
-      return FrameView({ frame: name, toolbox });
+      let onClickTooltipString =
+        L10N.getFormatStr("viewsourceindebugger",`${name.source}:${name.line}:${name.column}`);
+      return FrameView({
+        frame: name,
+        onClick: () => linkToDebugger(name),
+        onClickTooltipString,
+        unknownSourceString
+      });
     }
 
     if (name === null) {
