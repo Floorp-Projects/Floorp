@@ -2360,5 +2360,5 @@ XPCJSObjectHolder::~XPCJSObjectHolder()
 void
 XPCJSObjectHolder::TraceJS(JSTracer* trc)
 {
-    JS_CallObjectTracer(trc, &mJSObj, "XPCJSObjectHolder::mJSObj");
+    JS::TraceEdge(trc, &mJSObj, "XPCJSObjectHolder::mJSObj");
 }

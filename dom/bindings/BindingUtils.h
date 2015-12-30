@@ -334,9 +334,7 @@ class ProtoAndIfaceCache
 
     void Trace(JSTracer* aTracer) {
       for (size_t i = 0; i < ArrayLength(*this); ++i) {
-        if ((*this)[i]) {
-          JS_CallObjectTracer(aTracer, &(*this)[i], "protoAndIfaceCache[i]");
-        }
+        JS::TraceNullableEdge(aTracer, &(*this)[i], "protoAndIfaceCache[i]");
       }
     }
 
@@ -395,9 +393,7 @@ class ProtoAndIfaceCache
         Page* p = mPages[i];
         if (p) {
           for (size_t j = 0; j < ArrayLength(*p); ++j) {
-            if ((*p)[j]) {
-              JS_CallObjectTracer(trc, &(*p)[j], "protoAndIfaceCache[i]");
-            }
+            JS::TraceNullableEdge(trc, &(*p)[j], "protoAndIfaceCache[i]");
           }
         }
       }
