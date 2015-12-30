@@ -28,7 +28,7 @@ TraceArray(JSTracer* trc, void* data)
 {
   ArrayT* array = static_cast<ArrayT *>(data);
   for (unsigned i = 0; i < array->Length(); ++i)
-    JS::TraceEdge(trc, &array->ElementAt(i), "array-element");
+    JS_CallObjectTracer(trc, &array->ElementAt(i), "array-element");
 }
 
 /*
