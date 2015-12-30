@@ -202,7 +202,8 @@ ParseTask::ParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal, JSC
     alloc(JSRuntime::TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
     exclusiveContextGlobal(initCx->runtime(), exclusiveContextGlobal),
     callback(callback), callbackData(callbackData),
-    script(nullptr), sourceObject(nullptr), errors(cx), overRecursed(false)
+    script(initCx->runtime()), sourceObject(initCx->runtime()),
+    errors(cx), overRecursed(false)
 {
 }
 
@@ -1385,7 +1386,7 @@ HelperThread::handleParseWorkload()
                                                task->options, srcBuf,
                                                /* source_ = */ nullptr,
                                                /* extraSct = */ nullptr,
-                                               /* sourceObjectOut = */ &(task->sourceObject));
+                                               /* sourceObjectOut = */ task->sourceObject.address());
     }
 
     // The callback is invoked while we are still off the main thread.
