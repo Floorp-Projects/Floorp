@@ -657,8 +657,8 @@ class TestRecursiveMakeBackend(BackendTester):
         topobjdir = env.topobjdir.replace('\\', '/')
 
         expected = [
-            'LOCAL_INCLUDES += -Ibar/baz',
-            'LOCAL_INCLUDES += -Ifoo',
+            'LOCAL_INCLUDES += -I$(CURDIR)/bar/baz',
+            'LOCAL_INCLUDES += -I$(CURDIR)/foo',
         ]
 
         found = [str for str in lines if str.startswith('LOCAL_INCLUDES')]
