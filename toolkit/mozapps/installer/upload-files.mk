@@ -116,7 +116,7 @@ endif # WINNT
 endif # MOZ_STATIC_JS
 MAKE_JSSHELL  = $(call py_action,zip,-C $(DIST)/bin $(abspath $(PKG_JSSHELL)) $(JSSHELL_BINS))
 
-JARLOG_DIR = $(abspath $(DEPTH)/jarlog/)
+JARLOG_DIR = $(topobjdir)/jarlog/
 JARLOG_FILE_AB_CD = $(JARLOG_DIR)/$(AB_CD).log
 
 TAR_CREATE_FLAGS := --exclude=.mkdir.done $(TAR_CREATE_FLAGS)
@@ -319,7 +319,7 @@ UPLOAD_EXTRA_FILES += gecko-unsigned-unaligned.apk
 
 DIST_FILES += $(MOZ_CHILD_PROCESS_NAME)
 
-GECKO_APP_AP_PATH = $(abspath $(DEPTH)/mobile/android/base)
+GECKO_APP_AP_PATH = $(topobjdir)/mobile/android/base
 
 ifdef ENABLE_TESTS
 INNER_ROBOCOP_PACKAGE=echo
@@ -333,7 +333,7 @@ UPLOAD_EXTRA_FILES += ../embedding/android/geckoview_example/geckoview_example.a
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
 
-ROBOCOP_PATH = $(abspath $(DEPTH)/mobile/android/tests/browser/robocop)
+ROBOCOP_PATH = $(topobjdir)/mobile/android/tests/browser/robocop
 # Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
 # is used in a series of commands that run under a "cd something", while
 # $(NSINSTALL) is relative.
@@ -497,8 +497,8 @@ endif
 ifeq ($(MOZ_BUILD_APP),mobile/android/b2gdroid)
 INNER_MAKE_PACKAGE	= \
   $(INNER_SZIP_LIBRARIES) && \
-  cp $(abspath $(DEPTH)/mobile/android/b2gdroid/app)/classes.dex $(ABS_DIST)/classes.dex && \
-  cp $(abspath $(DEPTH)/mobile/android/b2gdroid/app)/b2gdroid-unsigned-unaligned.apk $(ABS_DIST)/gecko.ap_ && \
+  cp $(topobjdir)/mobile/android/b2gdroid/app/classes.dex $(ABS_DIST)/classes.dex && \
+  cp $(topobjdir)/mobile/android/b2gdroid/app/b2gdroid-unsigned-unaligned.apk $(ABS_DIST)/gecko.ap_ && \
   $(INNER_MAKE_APK)
 endif
 
