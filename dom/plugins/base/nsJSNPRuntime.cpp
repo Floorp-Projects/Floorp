@@ -286,7 +286,7 @@ TraceJSObjWrappers(JSTracer *trc, void *data)
   // any of them moved.
   for (JSObjWrapperTable::Enum e(sJSObjWrappers); !e.empty(); e.popFront()) {
     nsJSObjWrapperKey key = e.front().key();
-    JS_CallUnbarrieredObjectTracer(trc, &key.mJSObj, "sJSObjWrappers key object");
+    JS::UnsafeTraceRoot(trc, &key.mJSObj, "sJSObjWrappers key object");
     nsJSObjWrapper *wrapper = e.front().value();
     JS::TraceNullableEdge(trc, &wrapper->mJSObj, "sJSObjWrappers wrapper object");
     if (key != e.front().key()) {
@@ -1101,7 +1101,7 @@ JSObjWrapperKeyMarkCallback(JSTracer *trc, JSObject *obj, void *data) {
   if (!p)
     return;
 
-  JS_CallUnbarrieredObjectTracer(trc, &obj, "sJSObjWrappers key object");
+  js::UnsafeTraceManuallyBarrieredEdge(trc, &obj, "sJSObjWrappers key object");
   nsJSObjWrapperKey newKey(obj, npp);
   sJSObjWrappers.rekeyIfMoved(oldKey, newKey);
 }
