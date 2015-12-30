@@ -454,7 +454,7 @@ RenderMinimap(ContainerT* aContainer, LayerManagerComposite* aManager,
     return;
   }
 
-  ViewTransform asyncTransformWithoutOverscroll;
+  AsyncTransform asyncTransformWithoutOverscroll;
   ParentLayerPoint scrollOffset;
   controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                            scrollOffset);

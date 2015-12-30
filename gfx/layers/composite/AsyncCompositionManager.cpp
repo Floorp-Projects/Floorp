@@ -835,7 +835,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
 
     hasAsyncTransform = true;
 
-    ViewTransform asyncTransformWithoutOverscroll;
+    AsyncTransform asyncTransformWithoutOverscroll;
     ParentLayerPoint scrollOffset;
     controller->SampleContentTransformForFrame(&asyncTransformWithoutOverscroll,
                                                scrollOffset);
@@ -1294,7 +1294,7 @@ AsyncCompositionManager::TransformScrollableLayer(Layer* aLayer)
 
   LayerToParentLayerScale asyncZoom = userZoom / metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
   ParentLayerPoint translation = userRect.TopLeft() - geckoScroll;
-  Matrix4x4 treeTransform = ViewTransform(asyncZoom, -translation);
+  Matrix4x4 treeTransform = AsyncTransform(asyncZoom, -translation);
 
   // Apply the tree transform on top of GetLocalTransform() here (rather than
   // GetTransform()) in case the OMTA code in SampleAnimations already set a
