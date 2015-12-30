@@ -43,11 +43,11 @@ endif
 # pulls. You may override them if you provide your own files. You _must_
 # override them when MOZ_PKG_PRETTYNAMES is defined - the defaults will not
 # work in that case.
-ZIP_IN ?= $(_ABS_DIST)/$(PACKAGE)
-WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
+ZIP_IN ?= $(ABS_DIST)/$(PACKAGE)
+WIN32_INSTALLER_IN ?= $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 
 # Allows overriding the final destination of the repackaged file
-ZIP_OUT ?= $(_ABS_DIST)/$(PACKAGE)
+ZIP_OUT ?= $(ABS_DIST)/$(PACKAGE)
 
 ACDEFINES += \
 	-DAB_CD=$(AB_CD) \
@@ -68,15 +68,15 @@ clobber-%:
 PACKAGER_NO_LIBS = 1
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
-STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources
+STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)/$(_APPNAME)/Contents/Resources
 else
-STAGEDIST = $(_ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
+STAGEDIST = $(ABS_DIST)/l10n-stage/$(MOZ_PKG_DIR)
 endif
 
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/signing.mk
 include $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.mk
 
-PACKAGE_BASE_DIR = $(_ABS_DIST)/l10n-stage
+PACKAGE_BASE_DIR = $(ABS_DIST)/l10n-stage
 
 $(STAGEDIST): AB_CD:=en-US
 $(STAGEDIST): UNPACKAGE=$(call ESCAPE_WILDCARD,$(ZIP_IN))
@@ -141,7 +141,7 @@ endif
 ifdef MAKE_COMPLETE_MAR
 	$(MAKE) -C $(MOZDEPTH)/tools/update-packaging full-update AB_CD=$(AB_CD) \
 	  MOZ_PKG_PRETTYNAMES=$(MOZ_PKG_PRETTYNAMES) \
-	  PACKAGE_BASE_DIR='$(_ABS_DIST)/l10n-stage'
+	  PACKAGE_BASE_DIR='$(ABS_DIST)/l10n-stage'
 endif
 # packaging done, undo l10n stuff
 ifneq (en,$(LPROJ_ROOT))
@@ -168,7 +168,7 @@ TK_DEFINES = $(firstword \
 # chrome directory.
 PKG_ZIP_DIRS = chrome $(or $(DIST_SUBDIRS),$(DIST_SUBDIR))
 
-langpack-%: LANGPACK_FILE=$(_ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
+langpack-%: LANGPACK_FILE=$(ABS_DIST)/$(PKG_LANGPACK_PATH)$(PKG_LANGPACK_BASENAME).xpi
 langpack-%: AB_CD=$*
 langpack-%: XPI_NAME=locale-$*
 langpack-%: libs-%
@@ -190,20 +190,20 @@ wget-en-US:
 ifndef WGET
 	$(error Wget not installed)
 endif
-	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_PATH)
-	(cd $(_ABS_DIST)/$(PKG_PATH) && $(WGET) --no-cache -nv -N  '$(EN_US_BINARY_URL)/$(PACKAGE)')
-	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(_ABS_DIST)/$(PKG_PATH)/$(PACKAGE)'
+	$(NSINSTALL) -D $(ABS_DIST)/$(PKG_PATH)
+	(cd $(ABS_DIST)/$(PKG_PATH) && $(WGET) --no-cache -nv -N  '$(EN_US_BINARY_URL)/$(PACKAGE)')
+	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PACKAGE) to $(ABS_DIST)/$(PKG_PATH)/$(PACKAGE)'
 ifdef RETRIEVE_WINDOWS_INSTALLER
 ifeq ($(OS_ARCH), WINNT)
-	$(NSINSTALL) -D $(_ABS_DIST)/$(PKG_INST_PATH)
-	(cd $(_ABS_DIST)/$(PKG_INST_PATH) && $(WGET) --no-cache -nv -N '$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe')
-	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe'
+	$(NSINSTALL) -D $(ABS_DIST)/$(PKG_INST_PATH)
+	(cd $(ABS_DIST)/$(PKG_INST_PATH) && $(WGET) --no-cache -nv -N '$(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe')
+	@echo 'Downloaded $(EN_US_BINARY_URL)/$(PKG_PATH)$(PKG_INST_BASENAME).exe to $(ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe'
 endif
 endif
 
 generate-snippet-%:
 	$(PYTHON) $(MOZILLA_DIR)/tools/update-packaging/generatesnippet.py \
-          --mar-path=$(_ABS_DIST)/update \
+          --mar-path=$(ABS_DIST)/update \
           --application-ini-file=$(STAGEDIST)/application.ini \
           --locale=$* \
           --product=$(MOZ_PKG_APPNAME) \
