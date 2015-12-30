@@ -132,6 +132,7 @@ enum class DeviceResetReason
   DRIVER_ERROR,
   INVALID_CALL,
   OUT_OF_MEMORY,
+  FORCED_RESET,
   UNKNOWN
 };
 
