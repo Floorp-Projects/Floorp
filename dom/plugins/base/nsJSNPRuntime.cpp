@@ -288,7 +288,9 @@ TraceJSObjWrappers(JSTracer *trc, void *data)
     nsJSObjWrapperKey key = e.front().key();
     JS_CallUnbarrieredObjectTracer(trc, &key.mJSObj, "sJSObjWrappers key object");
     nsJSObjWrapper *wrapper = e.front().value();
-    JS::TraceNullableEdge(trc, &wrapper->mJSObj, "sJSObjWrappers wrapper object");
+    if (wrapper->mJSObj) {
+      JS_CallObjectTracer(trc, &wrapper->mJSObj, "sJSObjWrappers wrapper object");
+    }
     if (key != e.front().key()) {
       e.rekeyFront(key);
     }
@@ -2258,16 +2260,21 @@ NPObjectMember_Trace(JSTracer *trc, JSObject *obj)
   if (!memberPrivate)
     return;
 
-  // Our NPIdentifier is not always interned, so we must trace it.
-  JS::TraceEdge(trc, &memberPrivate->methodName, "NPObjectMemberPrivate.methodName");
+  // Our NPIdentifier is not always interned, so we must root it explicitly.
+  JS_CallIdTracer(trc, &memberPrivate->methodName, "NPObjectMemberPrivate.methodName");
 
-  JS::TraceEdge(trc, &memberPrivate->fieldValue, "NPObject Member => fieldValue");
+  if (!memberPrivate->fieldValue.isPrimitive()) {
+    JS_CallValueTracer(trc, &memberPrivate->fieldValue,
+                       "NPObject Member => fieldValue");
+  }
 
   // There's no strong reference from our private data to the
   // NPObject, so make sure to mark the NPObject wrapper to keep the
   // NPObject alive as long as this NPObjectMember is alive.
-  JS::TraceNullableEdge(trc, &memberPrivate->npobjWrapper,
+  if (memberPrivate->npobjWrapper) {
+    JS_CallObjectTracer(trc, &memberPrivate->npobjWrapper,
                         "NPObject Member => npobjWrapper");
+  }
 }
 
 static bool

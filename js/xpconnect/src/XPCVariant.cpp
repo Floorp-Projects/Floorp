@@ -66,7 +66,7 @@ XPCTraceableVariant::~XPCTraceableVariant()
 void XPCTraceableVariant::TraceJS(JSTracer* trc)
 {
     MOZ_ASSERT(mJSVal.isMarkable());
-    JS::TraceEdge(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
+    JS_CallValueTracer(trc, &mJSVal, "XPCTraceableVariant::mJSVal");
 }
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XPCVariant)
