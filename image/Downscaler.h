@@ -171,6 +171,7 @@ public:
   bool HasInvalidation() const { return false; }
   DownscalerInvalidRect TakeInvalidRect() { return DownscalerInvalidRect(); }
   void ResetForNextProgressivePass() { }
+  const nsIntSize FrameSize() const { return nsIntSize(0, 0); }
 };
 
 #endif // MOZ_ENABLE_SKIA
