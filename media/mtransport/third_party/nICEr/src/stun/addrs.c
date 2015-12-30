@@ -190,6 +190,8 @@ stun_get_win32_addrs(nr_local_addr addrs[], int maxaddrs, int *count)
         continue;
 
       snprintf(munged_ifname, IFNAMSIZ, "%S%c", tmpAddress->FriendlyName, 0);
+      munged_ifname[IFNAMSIZ-1] = '\0';
+
       /* replace spaces with underscores */
       c = strchr(munged_ifname, ' ');
       while (c != NULL) {
