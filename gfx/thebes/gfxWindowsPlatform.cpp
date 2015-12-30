@@ -555,6 +555,15 @@ gfxWindowsPlatform::UpdateRenderMode()
   }
 }
 
+void
+gfxWindowsPlatform::ForceDeviceReset(ForcedDeviceResetReason aReason)
+{
+  Telemetry::Accumulate(Telemetry::FORCED_DEVICE_RESET_REASON, uint32_t(aReason));
+
+  mDeviceResetReason = DeviceResetReason::FORCED_RESET;
+  mHasDeviceReset = true;
+}
+
 mozilla::gfx::BackendType
 gfxWindowsPlatform::GetContentBackendFor(mozilla::layers::LayersBackend aLayers)
 {
