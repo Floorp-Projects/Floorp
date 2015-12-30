@@ -59,7 +59,7 @@ ifndef MOZ_THUNDERBIRD
 	# Package mozharness
 	$(call py_action,test_archive, \
 		mozharness \
-		$(abspath $(DIST))/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
+		$(ABS_DIST)/$(PKG_PATH)$(MOZHARNESS_PACKAGE))
 endif # MOZ_THUNDERBIRD
 ifdef MOZ_PACKAGE_JSSHELL
 	# Package JavaScript Shell

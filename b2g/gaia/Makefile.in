@@ -19,4 +19,4 @@ include $(topsrcdir)/config/rules.mk
 libs::
 	+$(MAKE) -j1 -C $(GAIADIR) clean
 	+$(GAIA_OPTIONS) $(MAKE) -j1 -C $(GAIADIR) profile
-	(cd $(GAIADIR)/profile && tar $(TAR_CREATE_FLAGS) - .) | (cd $(abspath $(DIST))/bin/$(GAIA_PATH) && tar -xf -)
+	(cd $(GAIADIR)/profile && tar $(TAR_CREATE_FLAGS) - .) | (cd $(ABS_DIST)/bin/$(GAIA_PATH) && tar -xf -)

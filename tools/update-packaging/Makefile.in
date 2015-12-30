@@ -11,7 +11,7 @@ STANDALONE_MAKEFILE := 1
 PACKAGE_BASE_DIR	= $(DIST)
 
 # Default output location for update archive
-STAGE_DIR      = $(abspath $(DIST)/$(PKG_UPDATE_PATH))
+STAGE_DIR      = $(ABS_DIST)/$(PKG_UPDATE_PATH)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef UNIVERSAL_BINARY
