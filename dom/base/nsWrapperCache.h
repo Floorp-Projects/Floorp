@@ -258,7 +258,7 @@ protected:
   void TraceWrapper(JSTracer* aTrc, const char* name)
   {
     if (mWrapper) {
-      js::UnsafeTraceManuallyBarrieredEdge(aTrc, &mWrapper, name);
+      JS_CallUnbarrieredObjectTracer(aTrc, &mWrapper, name);
     }
   }
 
