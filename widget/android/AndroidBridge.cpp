@@ -2148,20 +2148,20 @@ Object::LocalRef AndroidBridge::ChannelCreate(Object::Param stream) {
     JNIEnv* const env = GetEnvForThread();
     auto rv = Object::LocalRef::Adopt(env, env->CallStaticObjectMethod(
             sBridge->jChannels, sBridge->jChannelCreate, stream.Get()));
-    HandleUncaughtException(env);
+    MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
 void AndroidBridge::InputStreamClose(Object::Param obj) {
     JNIEnv* const env = GetEnvForThread();
     env->CallVoidMethod(obj.Get(), sBridge->jClose);
-    HandleUncaughtException(env);
+    MOZ_CATCH_JNI_EXCEPTION(env);
 }
 
 uint32_t AndroidBridge::InputStreamAvailable(Object::Param obj) {
     JNIEnv* const env = GetEnvForThread();
     auto rv = env->CallIntMethod(obj.Get(), sBridge->jAvailable);
-    HandleUncaughtException(env);
+    MOZ_CATCH_JNI_EXCEPTION(env);
     return rv;
 }
 
