@@ -6204,7 +6204,6 @@ nsTextFrame::DrawEmphasisMarks(gfxContext* aContext, WritingMode aWM,
   auto info = static_cast<const EmphasisMarkInfo*>(
     Properties().Get(EmphasisMarkProperty()));
   if (!info) {
-    MOZ_ASSERT(!StyleText()->HasTextEmphasis());
     return;
   }
 
