@@ -39,7 +39,7 @@ interface nsIHttpUpgradeListener : nsISupports
  * using any feature exposed by this interface, be aware that this interface
  * will change and you will be broken.  You have been warned.
  */
-[scriptable, uuid(f292a080-f2f6-41d6-8aa4-71337e477360)]
+[scriptable, uuid(01b8296a-e206-4e5f-acab-82bd8b6a900c)]
 interface nsIHttpChannelInternal : nsISupports
 {
     /**
@@ -264,4 +264,12 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [noscript, notxpcom, nostdcall]
     void setCorsPreflightParameters(in StringArrayRef unsafeHeaders);
+
+    /**
+     * When set to true, the channel will not pop any authentication prompts up
+     * to the user.  When provided or cached credentials lead to an
+     * authentication failure, that failure will be propagated to the channel
+     * listener.  Must be called before opening the channel, otherwise throws.
+     */
+    attribute boolean blockAuthPrompt;
 };
