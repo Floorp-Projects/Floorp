@@ -106,7 +106,6 @@ VRManagerParent::CreateSameProcess()
 void
 VRManagerParent::DeferredDestroy()
 {
-  MOZ_ASSERT(mCompositorThreadHolder);
   mCompositorThreadHolder = nullptr;
   mSelfRef = nullptr;
 }
