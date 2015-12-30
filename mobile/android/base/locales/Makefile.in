@@ -18,7 +18,7 @@ STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
 ifeq (,$(XPI_NAME))
 BRANDPATH = $(abspath $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd)
 else
-BRANDPATH = $(abspath $(DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd)
+BRANDPATH = $(ABS_DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd
 endif
 $(warnIfEmpty,AB_CD) # todo: $(errorIfEmpty )
 
