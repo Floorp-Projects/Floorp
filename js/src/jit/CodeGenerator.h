@@ -61,7 +61,7 @@ class CodeGenerator : public CodeGeneratorSpecific
 
   public:
     bool generate();
-    bool generateAsmJS(AsmJSFunctionOffsets *offsets);
+    bool generateAsmJS(wasm::FuncOffsets *offsets);
     bool link(JSContext* cx, CompilerConstraintList* constraints);
     bool linkSharedStubs(JSContext* cx);
 

@@ -217,7 +217,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
     case CompositableOperation::TOpUseOverlaySource: {
       const OpUseOverlaySource& op = aEdit.get_OpUseOverlaySource();
       CompositableHost* compositable = AsCompositable(op);
-      MOZ_ASSERT(compositable->GetType() == CompositableType::IMAGE_OVERLAY, "Invalid operation!");
       if (!ValidatePictureRect(op.overlay().size(), op.picture())) {
         return false;
       }

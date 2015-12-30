@@ -10,6 +10,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/dom/TouchBinding.h"
 #include "nsWrapperCache.h"
 #include "nsAutoPtr.h"
 #include "Units.h"
@@ -27,6 +28,10 @@ class Touch final : public nsISupports
 {
 public:
   static bool PrefEnabled(JSContext* aCx, JSObject* aGlobal);
+
+  static already_AddRefed<Touch> Constructor(const GlobalObject& aGlobal,
+                                             const TouchInit& aParam,
+                                             ErrorResult& aRv);
 
   Touch(EventTarget* aTarget,
         int32_t aIdentifier,

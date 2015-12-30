@@ -1,0 +1,63 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ * vim: sw=2 ts=8 et :
+ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "VRMessageUtils.h";
+
+using struct mozilla::gfx::VRFieldOfView from "gfxVR.h";
+using struct mozilla::gfx::VRDeviceUpdate from "gfxVR.h";
+using struct mozilla::gfx::VRSensorUpdate from "gfxVR.h";
+
+namespace mozilla {
+namespace gfx {
+
+/**
+ * The PVRManager protocol is used to enable communication of VR device
+ * enumeration and sensor state between the compositor thread and
+ * content threads/processes.
+ */
+sync protocol PVRManager
+{
+parent:
+  // (Re)Enumerate VR Devices.  An updated list of VR devices will be returned
+  // asynchronously to children via UpdateDeviceInfo.
+  async RefreshDevices();
+
+  // Reset the sensor of the device identified by aDeviceID so that the current
+  // sensor state is the "Zero" position.
+  async ResetSensor(uint32_t aDeviceID);
+
+  // KeepSensorTracking is called continuously by children to indicate their
+  // interest in receiving sensor data from the device identified by aDeviceID.
+  // This will activate any physical sensor tracking system requiring
+  // initialization and guarantee that it will remain active until at least one
+  // second has passed since the last KeepSensorTracking call has been made.
+  // Sensor data will be sent asynchronously via UpdateDeviceSensors
+  async KeepSensorTracking(uint32_t aDeviceID);
+
+  // Set the field of view parameters for an HMD identified by aDeviceID
+  async SetFOV(uint32_t aDeviceID, VRFieldOfView aFOVLeft,
+               VRFieldOfView aFOVRight, double zNear, double zFar);
+
+child:
+
+  // Notify children of updated VR device enumeration and details.  This will
+  // be sent to all children when the parent receives RefreshDevices, even
+  // if no changes have been detected.  This ensures that Promises exposed
+  // through DOM calls are always resolved.
+  async UpdateDeviceInfo(VRDeviceUpdate[] aDeviceUpdates);
+
+  // Notify children of updated VR device sensor states.  This will be
+  // sent once per frame for at least one second after the parent receives
+  // KeepSensorTracking.
+  async UpdateDeviceSensors(VRSensorUpdate[] aDeviceSensorUpdates);
+
+  async __delete__();
+
+};
+
+} // gfx
+} // mozilla

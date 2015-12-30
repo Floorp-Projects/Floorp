@@ -21,3 +21,9 @@ div {
     color: green;
   }
 }
+
+@media (min-height: 200px) and (max-height: 250px) {
+  div {
+    color: orange;
+  }
+}

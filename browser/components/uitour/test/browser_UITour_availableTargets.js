@@ -9,25 +9,7 @@ var gContentWindow;
 
 var hasWebIDE = Services.prefs.getBoolPref("devtools.webide.widget.enabled");
 
-var hasPocket = false;
-if (Services.prefs.getBoolPref("browser.pocket.enabled")) {
-  let isEnabledForLocale = true;
-  if (Services.prefs.getBoolPref("browser.pocket.useLocaleList")) {
-    let chromeRegistry = Cc["@mozilla.org/chrome/chrome-registry;1"]
-                           .getService(Ci.nsIXULChromeRegistry);
-    let browserLocale = chromeRegistry.getSelectedLocale("browser");
-    let enabledLocales = [];
-    try {
-      enabledLocales = Services.prefs.getCharPref("browser.pocket.enabledLocales").split(' ');
-    } catch (ex) {
-      Cu.reportError(ex);
-    }
-    isEnabledForLocale = enabledLocales.indexOf(browserLocale) != -1;
-  }
-  if (isEnabledForLocale) {
-    hasPocket = true;
-  }
-}
+var hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 
 function test() {
   requestLongerTimeout(2);

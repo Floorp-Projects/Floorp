@@ -388,15 +388,14 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     // asm.js compilation handles its own JitContext-pushing
     struct AsmJSToken {};
-    explicit MacroAssembler(AsmJSToken, TempAllocator *alloc)
+    explicit MacroAssembler(AsmJSToken, TempAllocator& alloc)
       : framePushed_(0),
 #ifdef DEBUG
         inCall_(false),
 #endif
         emitProfilingInstrumentation_(false)
     {
-        if (alloc)
-            moveResolver_.setAllocator(*alloc);
+        moveResolver_.setAllocator(alloc);
 
 #if defined(JS_CODEGEN_ARM)
         initWithAllocator();

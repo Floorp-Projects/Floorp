@@ -496,6 +496,45 @@ struct AssertionConditionType
      MOZ_ASSUME_UNREACHABLE_MARKER(); \
    } while (0)
 
+/**
+ * MOZ_FALLTHROUGH_ASSERT is an annotation to suppress compiler warnings about
+ * switch cases that MOZ_ASSERT(false) (or its alias MOZ_ASSERT_UNREACHABLE) in
+ * debug builds, but intentionally fall through in release builds to handle
+ * unexpected values.
+ *
+ * Why do we need MOZ_FALLTHROUGH_ASSERT in addition to MOZ_FALLTHROUGH? In
+ * release builds, the MOZ_ASSERT(false) will expand to `do { } while (0)`,
+ * requiring a MOZ_FALLTHROUGH annotation to suppress a -Wimplicit-fallthrough
+ * warning. In debug builds, the MOZ_ASSERT(false) will expand to something like
+ * `if (true) { MOZ_CRASH(); }` and the MOZ_FALLTHROUGH annotation will cause
+ * a -Wunreachable-code warning. The MOZ_FALLTHROUGH_ASSERT macro breaks this
+ * warning stalemate.
+ *
+ * // Example before MOZ_FALLTHROUGH_ASSERT:
+ * switch (foo) {
+ *   default:
+ *     // This case wants to assert in debug builds, fall through in release.
+ *     MOZ_ASSERT(false); // -Wimplicit-fallthrough warning in release builds!
+ *     MOZ_FALLTHROUGH;   // but -Wunreachable-code warning in debug builds!
+ *   case 5:
+ *     return 5;
+ * }
+ *
+ * // Example with MOZ_FALLTHROUGH_ASSERT:
+ * switch (foo) {
+ *   default:
+ *     // This case asserts in debug builds, falls through in release.
+ *     MOZ_FALLTHROUGH_ASSERT("Unexpected foo value?!");
+ *   case 5:
+ *     return 5;
+ * }
+ */
+#ifdef DEBUG
+#  define MOZ_FALLTHROUGH_ASSERT(reason) MOZ_CRASH("MOZ_FALLTHROUGH_ASSERT: " reason)
+#else
+#  define MOZ_FALLTHROUGH_ASSERT(...) MOZ_FALLTHROUGH
+#endif
+
 /*
  * MOZ_ALWAYS_TRUE(expr) and MOZ_ALWAYS_FALSE(expr) always evaluate the provided
  * expression, in debug builds and in release builds both.  Then, in debug

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <!-- Enable relevant checks disabled by default -->
+    <issue id="NegativeMargin" severity="warning" />
+
+    <!-- We have a custom menu and don't conform to the recommended styles. -->
+    <issue id="IconColors" severity="ignore" />
+
+    <!-- We want all lint warnings to be fatal errors.
+         Right now, we set these to lint warnings so:
+
+         DO NOT ADD TO THIS LIST.
+
+         We did this so we can land lint in automation
+         and not fail everything. -->
+    <issue id="AppCompatResource" severity="warning" />
+    <issue id="Instantiatable" severity="warning" />
+    <issue id="LongLogTag" severity="warning" />
+    <issue id="MissingPermission" severity="warning" />
+    <issue id="MissingSuperCall" severity="warning" />
+    <issue id="NewApi" severity="warning" />
+    <issue id="OnClick" severity="warning" />
+    <issue id="ReferenceType" severity="warning" />
+    <issue id="ResourceAsColor" severity="warning" />
+    <issue id="ResourceType" severity="warning" />
+    <issue id="ValidFragment" severity="warning" />
+    <issue id="WrongConstant" severity="warning" />
+
+</lint>

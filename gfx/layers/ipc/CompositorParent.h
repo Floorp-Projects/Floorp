@@ -134,6 +134,7 @@ private:
   void ObserveVsync();
   void UnobserveVsync();
   void DispatchTouchEvents(TimeStamp aVsyncTimestamp);
+  void DispatchVREvents(TimeStamp aVsyncTimestamp);
   void CancelCurrentSetNeedsCompositeTask();
 
   class Observer final : public VsyncObserver
@@ -295,7 +296,8 @@ public:
   /**
    * Returns the compositor thread's message loop.
    *
-   * This message loop is used by CompositorParent and ImageBridgeParent.
+   * This message loop is used by CompositorParent, ImageBridgeParent,
+   * and VRManagerParent
    */
   static MessageLoop* CompositorLoop();
 

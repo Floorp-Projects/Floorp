@@ -55,11 +55,6 @@ ImageClient::CreateImageClient(CompositableType aCompositableHostType,
   case CompositableType::UNKNOWN:
     result = nullptr;
     break;
-#ifdef MOZ_WIDGET_GONK
-  case CompositableType::IMAGE_OVERLAY:
-    result = new ImageClientOverlay(aForwarder, aFlags);
-    break;
-#endif
   default:
     MOZ_CRASH("GFX: unhandled program type image");
   }
@@ -154,6 +149,21 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 
   for (auto& img : images) {
     Image* image = img.mImage;
+
+#ifdef MOZ_WIDGET_GONK
+    if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
+      OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
+      uint32_t overlayId = overlayImage->GetOverlayId();
+      gfx::IntSize size = overlayImage->GetSize();
+
+      OverlaySource source;
+      source.handle() = OverlayHandle(overlayId);
+      source.size() = size;
+      GetForwarder()->UseOverlaySource(this, source, image->GetPictureRect());
+      continue;
+    }
+#endif
+
     RefPtr<TextureClient> texture = image->GetTextureClient(this);
 
     for (int32_t i = mBuffers.Length() - 1; i >= 0; --i) {
@@ -316,40 +326,5 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   return true;
 }
 
-#ifdef MOZ_WIDGET_GONK
-ImageClientOverlay::ImageClientOverlay(CompositableForwarder* aFwd,
-                                       TextureFlags aFlags)
-  : ImageClient(aFwd, aFlags, CompositableType::IMAGE_OVERLAY)
-{
-}
-
-bool
-ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags)
-{
-  AutoLockImage autoLock(aContainer);
-
-  Image *image = autoLock.GetImage();
-  if (!image) {
-    return false;
-  }
-
-  if (mLastUpdateGenerationCounter == (uint32_t)image->GetSerial()) {
-    return true;
-  }
-  mLastUpdateGenerationCounter = (uint32_t)image->GetSerial();
-
-  if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
-    OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
-    uint32_t overlayId = overlayImage->GetOverlayId();
-    gfx::IntSize size = overlayImage->GetSize();
-
-    OverlaySource source;
-    source.handle() = OverlayHandle(overlayId);
-    source.size() = size;
-    GetForwarder()->UseOverlaySource(this, source, image->GetPictureRect());
-  }
-  return true;
-}
-#endif
 } // namespace layers
 } // namespace mozilla

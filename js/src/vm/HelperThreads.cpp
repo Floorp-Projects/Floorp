@@ -79,7 +79,7 @@ js::SetFakeCPUCount(size_t count)
 }
 
 bool
-js::StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::CompileTask* task)
+js::StartOffThreadWasmCompile(ExclusiveContext* cx, wasm::IonCompileTask* task)
 {
     AutoLockHelperThreadState lock;
 
@@ -737,7 +737,7 @@ GlobalHelperThreadState::canStartWasmCompile()
 
     // Honor the maximum allowed threads to compile wasm jobs at once,
     // to avoid oversaturating the machine.
-    if (!checkTaskThreadLimit<wasm::CompileTask*>(maxWasmCompilationThreads()))
+    if (!checkTaskThreadLimit<wasm::IonCompileTask*>(maxWasmCompilationThreads()))
         return false;
 
     return true;
@@ -1201,11 +1201,11 @@ HelperThread::handleWasmWorkload()
     currentTask.emplace(HelperThreadState().wasmWorklist().popCopy());
     bool success = false;
 
-    wasm::CompileTask* task = wasmTask();
+    wasm::IonCompileTask* task = wasmTask();
     {
         AutoUnlockHelperThreadState unlock;
-        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->args().runtime);
-        success = wasm::CompileFunction(task);
+        PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->runtime());
+        success = wasm::IonCompileFunction(task);
     }
 
     // On success, try to move work to the finished list.

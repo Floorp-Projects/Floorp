@@ -268,6 +268,8 @@ using namespace mozilla::system;
 #include "mozilla/dom/GamepadMonitoring.h"
 #endif
 
+#include "VRManagerParent.h"            // for VRManagerParent
+
 static NS_DEFINE_CID(kCClipboardCID, NS_CLIPBOARD_CID);
 
 #if defined(XP_WIN)
@@ -2639,6 +2641,9 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 
             opened = PImageBridge::Open(this);
             MOZ_ASSERT(opened);
+
+            opened = gfx::PVRManager::Open(this);
+            MOZ_ASSERT(opened);
         }
 #ifdef MOZ_WIDGET_GONK
         DebugOnly<bool> opened = PSharedBufferManager::Open(this);
@@ -3409,6 +3414,13 @@ ContentParent::AllocPCompositorParent(mozilla::ipc::Transport* aTransport,
                                       base::ProcessId aOtherProcess)
 {
     return CompositorParent::Create(aTransport, aOtherProcess);
+}
+
+gfx::PVRManagerParent*
+ContentParent::AllocPVRManagerParent(Transport* aTransport,
+                                     ProcessId aOtherProcess)
+{
+  return gfx::VRManagerParent::CreateCrossProcess(aTransport, aOtherProcess);
 }
 
 PImageBridgeParent*

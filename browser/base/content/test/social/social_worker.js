@@ -126,7 +126,7 @@ onconnect = function(e) {
       case "social.manifest":
         if (updatingManifest) {
           updatingManifest = false;
-          event.data.data.version = 2;
+          event.data.data.version = "2.0";
           apiPort.postMessage({topic: 'social.manifest-set', data: event.data.data});
         } else if (testPort) {
           testPort.postMessage({topic:"social.manifest", data: event.data.data});

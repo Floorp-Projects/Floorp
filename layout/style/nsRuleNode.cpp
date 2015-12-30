@@ -187,6 +187,7 @@ nsRuleNode::EnsureBlockDisplay(uint8_t& display,
       display = NS_STYLE_DISPLAY_BLOCK;
       break;
     } // else, fall through to share the 'break' for non-changing display vals
+    MOZ_FALLTHROUGH;
   case NS_STYLE_DISPLAY_NONE :
   case NS_STYLE_DISPLAY_CONTENTS :
     // never change display:none or display:contents *ever*
@@ -751,8 +752,7 @@ GetFloatFromBoxPosition(int32_t aEnumValue)
   case NS_STYLE_BG_POSITION_BOTTOM:
     return 1.0f;
   default:
-    NS_NOTREACHED("unexpected value");
-    // fall through
+    MOZ_FALLTHROUGH_ASSERT("unexpected box position value");
   case NS_STYLE_BG_POSITION_CENTER:
     return 0.5f;
   }

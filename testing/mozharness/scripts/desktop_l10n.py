@@ -13,8 +13,6 @@ import re
 import sys
 import time
 import shlex
-import logging
-
 import subprocess
 
 # load modules from parent dir
@@ -36,7 +34,6 @@ from mozharness.mozilla.updates.balrog import BalrogMixin
 from mozharness.mozilla.taskcluster_helper import Taskcluster
 from mozharness.base.python import VirtualenvMixin
 from mozharness.mozilla.mock import ERROR_MSGS
-from mozharness.base.log import FATAL
 
 try:
     import simplejson as json
@@ -184,7 +181,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 'virtualenv_modules': [
                     'requests==2.8.1',
                     'PyHawk-with-a-single-extra-commit==0.1.5',
-                    'taskcluster==0.0.15',
+                    'taskcluster==0.0.26',
                 ],
                 'virtualenv_path': 'venv',
             },
@@ -960,7 +957,6 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.activate_virtualenv()
 
         branch = self.config['branch']
-        platform = self.config['platform']
         revision = self._query_revision()
         repo = self.query_l10n_repo()
         if not repo:
@@ -973,6 +969,19 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         with open(routes_json) as f:
             contents = json.load(f)
             templates = contents['l10n']
+
+        # Release promotion creates a special task to accumulate all artifacts
+        # under the same task
+        artifacts_task = None
+        self.read_buildbot_config()
+        if "artifactsTaskId" in self.buildbot_config.get("properties", {}):
+            artifacts_task_id = self.buildbot_config["properties"]["artifactsTaskId"]
+            artifacts_tc = Taskcluster(
+                    branch=branch, rank=pushinfo.pushdate, client_id=client_id,
+                    access_token=access_token, log_obj=self.log_obj,
+                    task_id=artifacts_task_id)
+            artifacts_task = artifacts_tc.get_task(artifacts_task_id)
+            artifacts_tc.claim_task(artifacts_task)
 
         for locale, files in self.upload_files.iteritems():
             self.info("Uploading files to S3 for locale '%s': %s" % (locale, files))
@@ -1009,8 +1018,15 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
                 # check the uploaded file against the property conditions so that we
                 # can set the buildbot config with the correct URLs for package
                 # locations.
-                tc.create_artifact(task, upload_file)
+                artifact_url = tc.create_artifact(task, upload_file)
+                if artifacts_task:
+                    artifacts_tc.create_reference_artifact(
+                            artifacts_task, upload_file, artifact_url)
+
             tc.report_completed(task)
+
+        if artifacts_task:
+            artifacts_tc.report_completed(artifacts_task)
 
 # main {{{
 if __name__ == '__main__':

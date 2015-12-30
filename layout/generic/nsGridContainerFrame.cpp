@@ -1196,6 +1196,7 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
       NS_WARNING("NYI: baseline/last-baseline for grid (bug 1151204)"); // XXX
+      MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_START:
       offset = marginStart;
       break;
@@ -2959,6 +2960,7 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
       NS_WARNING("'NYI: baseline/last-baseline' (bug 1151204)"); // XXX
+      MOZ_FALLTHROUGH;
     case NS_STYLE_ALIGN_START:
       distribute = false;
       break;

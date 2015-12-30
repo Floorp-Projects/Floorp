@@ -6,6 +6,11 @@
 
 EXPORTS += [
     'gfxVR.h',
+    'ipc/VRManagerChild.h',
+    'ipc/VRManagerParent.h',
+    'ipc/VRMessageUtils.h',
+    'VRDeviceProxy.h',
+    'VRManager.h',
 ]
 
 LOCAL_INCLUDES += [
@@ -16,10 +21,19 @@ UNIFIED_SOURCES += [
     'gfxVR.cpp',
     'gfxVRCardboard.cpp',
     'gfxVROculus.cpp',
+    'ipc/VRManagerChild.cpp',
+    'ipc/VRManagerParent.cpp',
+    'VRDeviceProxy.cpp',
+    'VRDeviceProxyOrientationFallBack.cpp',
+    'VRManager.cpp',
 ]
 
 SOURCES += [
     'gfxVROculus050.cpp',
+]
+
+IPDL_SOURCES = [
+    'ipc/PVRManager.ipdl',
 ]
 
 # For building with the real SDK instead of our local hack

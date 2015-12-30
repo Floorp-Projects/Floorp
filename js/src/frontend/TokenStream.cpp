@@ -638,9 +638,9 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
                                  FrameIter::ALL_CONTEXTS, FrameIter::GO_THROUGH_SAVED,
                                  FrameIter::FOLLOW_DEBUGGER_EVAL_PREV_LINK,
                                  cx->compartment()->principals());
-        if (!iter.done() && iter.scriptFilename()) {
+        if (!iter.done() && iter.filename()) {
             callerFilename = true;
-            err.report.filename = iter.scriptFilename();
+            err.report.filename = iter.filename();
             err.report.lineno = iter.computeLine(&err.report.column);
         }
     }

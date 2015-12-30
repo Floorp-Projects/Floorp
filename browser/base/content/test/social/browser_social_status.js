@@ -17,14 +17,14 @@ var manifest2 = { // used for testing install
   workerURL: "https://test1.example.com/browser/browser/base/content/test/social/social_worker.js",
   statusURL: "https://test1.example.com/browser/browser/base/content/test/social/social_panel.html",
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 var manifest3 = { // used for testing install
   name: "provider test2",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 
 
@@ -45,7 +45,6 @@ function test() {
       Services.prefs.clearUserPref("social.remote-install.enabled");
       // just in case the tests failed, clear these here as well
       Services.prefs.clearUserPref("social.whitelist");
-      ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
       CustomizableUI.reset();
       finishcb();
     });

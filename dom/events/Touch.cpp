@@ -7,7 +7,6 @@
 #include "mozilla/dom/Touch.h"
 
 #include "mozilla/dom/EventTarget.h"
-#include "mozilla/dom/TouchBinding.h"
 #include "mozilla/dom/TouchEvent.h"
 #include "nsGlobalWindow.h"
 #include "nsContentUtils.h"
@@ -15,6 +14,29 @@
 
 namespace mozilla {
 namespace dom {
+
+// static
+already_AddRefed<Touch>
+Touch::Constructor(const GlobalObject& aGlobal,
+                   const TouchInit& aParam,
+                   ErrorResult& aRv)
+{
+  // Annoyingly many parameters, make sure the ordering is the same as in the
+  // Touch constructor.
+  RefPtr<Touch> touch = new Touch(aParam.mTarget,
+                                  aParam.mIdentifier,
+                                  aParam.mPageX,
+                                  aParam.mPageY,
+                                  aParam.mScreenX,
+                                  aParam.mScreenY,
+                                  aParam.mClientX,
+                                  aParam.mClientY,
+                                  aParam.mRadiusX,
+                                  aParam.mRadiusY,
+                                  aParam.mRotationAngle,
+                                  aParam.mForce);
+  return touch.forget();
+}
 
 Touch::Touch(EventTarget* aTarget,
              int32_t aIdentifier,

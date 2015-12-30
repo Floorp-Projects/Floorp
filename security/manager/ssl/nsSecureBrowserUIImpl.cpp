@@ -1324,7 +1324,7 @@ nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
       break;
 
     default:
-      NS_NOTREACHED("if this is reached you must add more entries to the switch");
+      MOZ_FALLTHROUGH_ASSERT("if this is reached you must add more entries to the switch");
     case lis_no_security:
       *_result = nullptr;
       return NS_OK;
