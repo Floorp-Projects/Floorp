@@ -181,22 +181,56 @@ function* test_playing_icon_on_tab(tab, browser, isPinned) {
   yield test_muting_using_menu(tab, true);
 }
 
-function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
+function* test_swapped_browser_while_playing(oldTab, newBrowser) {
   ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
-  is(oldTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the old tab");
+  ok(oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
 
   let newTab = gBrowser.getTabForBrowser(newBrowser);
   let AttrChangePromise = BrowserTestUtils.waitForEvent(newTab, "TabAttrModified", false, event => {
-    return (event.detail.changed.indexOf("soundplaying") >= 0 || !isPlaying) &&
+    return event.detail.changed.indexOf("soundplaying") >= 0 &&
            event.detail.changed.indexOf("muted") >= 0;
   });
+
+  gBrowser.swapBrowsersAndCloseOther(newTab, oldTab);
+  yield AttrChangePromise;
+
+  ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  ok(newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
+
+  let receivedSoundPlaying = 0;
+  // We need to receive two TabAttrModified events with 'soundplaying'
+  // because swapBrowsersAndCloseOther involves nsDocument::OnPageHide and
+  // nsDocument::OnPageShow. Each methods lead to TabAttrModified event.
+  yield BrowserTestUtils.waitForEvent(newTab, "TabAttrModified", false, event => {
+    if (event.detail.changed.indexOf("soundplaying") >= 0) {
+      return (++receivedSoundPlaying == 2);
+    }
+  });
+
+  ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
+  ok(newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
+
+  let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
+                                                     "soundplaying-icon");
+  yield test_tooltip(icon, "Unmute tab", true);
+}
+
+function* test_swapped_browser_while_not_playing(oldTab, newBrowser) {
+  ok(oldTab.hasAttribute("muted"), "Expected the correct muted attribute on the old tab");
+  ok(!oldTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the old tab");
+
+  let newTab = gBrowser.getTabForBrowser(newBrowser);
+  let AttrChangePromise = BrowserTestUtils.waitForEvent(newTab, "TabAttrModified", false, event => {
+    return event.detail.changed.indexOf("muted") >= 0;
+  });
+
   let AudioPlaybackPromise = new Promise(resolve => {
     let observer = (subject, topic, data) => {
-      ok(true, "Should see an audio-playback notification");
+      ok(false, "Should not see an audio-playback notification");
     };
-    Services.obs.addObserver(observer, "audio-playback", false);
+    Services.obs.addObserver(observer, "audiochannel-activity-normal", false);
     setTimeout(() => {
-      Services.obs.removeObserver(observer, "audio-playback");
+      Services.obs.removeObserver(observer, "audiochannel-activity-normal");
       resolve();
     }, 100);
   });
@@ -205,13 +239,13 @@ function* test_swapped_browser(oldTab, newBrowser, isPlaying) {
   yield AttrChangePromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
-  is(newTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the new tab");
+  ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   // Wait to see if an audio-playback event is dispatched.
   yield AudioPlaybackPromise;
 
   ok(newTab.hasAttribute("muted"), "Expected the correct muted attribute on the new tab");
-  is(newTab.hasAttribute("soundplaying"), isPlaying, "Expected the correct soundplaying attribute on the new tab");
+  ok(!newTab.hasAttribute("soundplaying"), "Expected the correct soundplaying attribute on the new tab");
 
   let icon = document.getAnonymousElementByAttribute(newTab, "anonid",
                                                      "soundplaying-icon");
@@ -230,7 +264,7 @@ function* test_browser_swapping(tab, browser) {
     gBrowser,
     url: "about:blank",
   }, function*(newBrowser) {
-    yield test_swapped_browser(tab, newBrowser, true)
+    yield test_swapped_browser_while_playing(tab, newBrowser)
 
     // Now, test swapping with a muted but not playing tab.
     // Note that the tab remains muted, so we only need to pause playback.
@@ -240,7 +274,7 @@ function* test_browser_swapping(tab, browser) {
     yield BrowserTestUtils.withNewTab({
       gBrowser,
       url: "about:blank",
-    }, newBrowser => test_swapped_browser(tab, newBrowser, false));
+    }, newBrowser => test_swapped_browser_while_not_playing(tab, newBrowser));
   });
 }
 
