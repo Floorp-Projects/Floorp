@@ -1470,6 +1470,12 @@ TabActor.prototype = {
       );
     }
 
+    if ((typeof options.customUserAgent !== "undefined") &&
+         options.customUserAgent !== this._getCustomUserAgent()) {
+      this._setCustomUserAgent(options.customUserAgent);
+      reload = true;
+    }
+
     // Reload if:
     //  - there's an explicit `performReload` flag and it's true
     //  - there's no `performReload` flag, but it makes sense to do so
@@ -1488,6 +1494,7 @@ TabActor.prototype = {
     this._restoreJavascript();
     this._setCacheDisabled(false);
     this._setServiceWorkersTestingEnabled(false);
+    this._restoreUserAgent();
   },
 
   /**
@@ -1569,6 +1576,38 @@ TabActor.prototype = {
     let windowUtils = this.window.QueryInterface(Ci.nsIInterfaceRequestor)
                                  .getInterface(Ci.nsIDOMWindowUtils);
     return windowUtils.serviceWorkersTestingEnabled;
+  },
+
+  _previousCustomUserAgent: null,
+
+  /**
+   * Return custom user agent.
+   */
+  _getCustomUserAgent: function() {
+    if (!this.docShell) {
+      // The tab is already closed.
+      return null;
+    }
+    return this.docShell.customUserAgent;
+  },
+
+  /**
+   * Sets custom user agent for the current tab
+   */
+  _setCustomUserAgent: function(userAgent) {
+    if (this._previousCustomUserAgent === null) {
+      this._previousCustomUserAgent = this.docShell.customUserAgent;
+    }
+    this.docShell.customUserAgent = userAgent;
+  },
+
+  /**
+   * Restore the user agent, before the actor modified it
+   */
+  _restoreUserAgent: function() {
+    if (this._previousCustomUserAgent !== null) {
+      this.docShell.customUserAgent = this._previousCustomUserAgent;
+    }
   },
 
   /**

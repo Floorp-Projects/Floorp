@@ -49,22 +49,3 @@ add_task(function *() {
   ok(utils.breakdownEquals(utils.getCustomBreakdowns()["My Breakdown"], custom),
     "utils.getCustomBreakdowns() returns custom breakdowns");
 });
-
-// Test `utils.parseSource`.
-add_task(function* () {
-  const url = "http://example.com/foo/bar/baz.js";
-  let results = utils.parseSource(url);
-  equal(results.short, "baz.js");
-  equal(results.long, url);
-  equal(results.host, "example.com");
-
-  results = utils.parseSource("self-hosted");
-  equal(results.short, "self-hosted");
-  equal(results.long, "self-hosted");
-  equal(results.host, undefined);
-
-  results = utils.parseSource("");
-  equal(typeof results.short, "string");
-  equal(typeof results.long, "string");
-  equal(results.host, undefined);
-});

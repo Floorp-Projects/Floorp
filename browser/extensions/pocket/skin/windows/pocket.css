@@ -1,0 +1,9 @@
+@media (min-resolution: 1.1dppx) {
+  #pocket-button[cui-areatype="toolbar"] {
+    -moz-image-region: rect(0, 1548px, 36px, 1512px);
+  }
+
+  #pocket-button[cui-areatype="toolbar"][open] {
+    -moz-image-region: rect(36px, 1548px, 72px, 1512px);
+  }
+}

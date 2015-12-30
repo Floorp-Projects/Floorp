@@ -648,9 +648,9 @@
 @RESPATH@/components/Push.js
 @RESPATH@/components/Push.manifest
 #ifdef MOZ_SIMPLEPUSH
-@RESPATH@/components/PushComponents.js
-#else
 @RESPATH@/components/PushServiceLauncher.js
+#else
+@RESPATH@/components/PushComponents.js
 #endif
 
 @RESPATH@/components/InterAppComm.manifest

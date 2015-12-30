@@ -28,10 +28,9 @@ interface nsIPresentationSessionTransportCallback : nsISupports
 /*
  * App-to-App transport channel for the presentation session.
  */
-[scriptable, uuid(5d23ea5f-a7e5-4cf0-8fa5-6b0abd106bf2)]
+[scriptable, uuid(b6a416cf-03ae-4e74-9cda-88828e8ff418)]
 interface nsIPresentationSessionTransport : nsISupports
 {
-  attribute nsIPresentationSessionTransportCallback callback;
   readonly attribute nsINetAddr selfAddress;
 
   /*
