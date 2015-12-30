@@ -4,7 +4,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=1077002
 -->
 <head>
-  <title>Test for Bug 1077002</title>
+  <title>Test for showModalDialog unavailability in e10s</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
@@ -20,15 +20,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1077002
 <pre id="test">
 <script type="application/javascript;version=1.7">
 
-/** Test for Bug 1077002 **/
+/** Test for showModalDialog unavailability in e10s **/
 
-try {
-    // NB: This test runs in e10s only. In e10s showModalDialog should only
-    // ever throw NS_ERROR_NOT_AVAILABLE.
-    window.showModalDialog("http://example.org");
-} catch (e) {
-    is(e.name, "NS_ERROR_NOT_AVAILABLE", "throw the correct error message");
-}
+// NB: This test runs in e10s only. In e10s showModalDialog should not
+// exist.
+ok(!window.showModalDialog, "showModalDialog should not exist");
 
 </script>
 </pre>

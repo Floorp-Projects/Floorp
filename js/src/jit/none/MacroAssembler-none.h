@@ -421,7 +421,7 @@ class MacroAssemblerNone : public Assembler
 
     void buildFakeExitFrame(Register, uint32_t*) { MOZ_CRASH(); }
     bool buildOOLFakeExitFrame(void*) { MOZ_CRASH(); }
-    void loadAsmJSActivation(Register) { MOZ_CRASH(); }
+    void loadWasmActivation(Register) { MOZ_CRASH(); }
     void loadAsmJSHeapRegisterFromGlobalData() { MOZ_CRASH(); }
     void memIntToValue(Address, Address) { MOZ_CRASH(); }
 

@@ -3334,7 +3334,7 @@ void Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction* inst)
 
     *inst = InstALU(InvalidReg, index, imm8, OpCmp, SetCC, Always);
     // NOTE: we don't update the Auto Flush Cache!  this function is currently
-    // only called from within AsmJSModule::patchHeapAccesses, which does that
+    // only called from within ModuleGenerator::finish, which does that
     // for us. Don't call this!
 }
 

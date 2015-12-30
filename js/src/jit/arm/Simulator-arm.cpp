@@ -35,7 +35,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/SizePrintfMacros.h"
 
-#include "asmjs/AsmJSValidate.h"
 #include "jit/arm/Assembler-arm.h"
 #include "jit/arm/disasm/Constants-arm.h"
 #include "jit/AtomicOperations.h"
@@ -4463,7 +4462,7 @@ Simulator::execute()
             int32_t rpc = resume_pc_;
             if (MOZ_UNLIKELY(rpc != 0)) {
                 // AsmJS signal handler ran and we have to adjust the pc.
-                JSRuntime::innermostAsmJSActivation()->setResumePC((void*)get_pc());
+                JSRuntime::innermostWasmActivation()->setResumePC((void*)get_pc());
                 set_pc(rpc);
                 resume_pc_ = 0;
             }

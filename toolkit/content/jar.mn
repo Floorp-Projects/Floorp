@@ -23,8 +23,10 @@ toolkit.jar:
 #endif
    content/global/aboutNetworking.js
    content/global/aboutNetworking.xhtml
+#ifndef ANDROID
 *  content/global/aboutProfiles.js
    content/global/aboutProfiles.xhtml
+#endif
    content/global/aboutServiceWorkers.js
    content/global/aboutServiceWorkers.xhtml
    content/global/aboutwebrtc/aboutWebrtc.css   (aboutwebrtc/aboutWebrtc.css)

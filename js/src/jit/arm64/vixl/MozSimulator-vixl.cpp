@@ -198,7 +198,7 @@ void Simulator::ExecuteInstruction() {
   increment_pc();
 
   if (MOZ_UNLIKELY(rpc)) {
-    JSRuntime::innermostAsmJSActivation()->setResumePC((void*)pc());
+    JSRuntime::innermostWasmActivation()->setResumePC((void*)pc());
     set_pc(rpc);
     // Just calling set_pc turns the pc_modified_ flag on, which means it doesn't
     // auto-step after executing the next instruction.  Force that to off so it

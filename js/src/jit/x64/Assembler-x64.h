@@ -601,7 +601,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(wasm::SymbolicAddress imm, Register dest) {
         masm.movq_i64r(-1, dest.encoding());
-        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm));
+        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), imm));
     }
     void mov(const Operand& src, Register dest) {
         movq(src, dest);
@@ -672,7 +672,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.leaq_rip(dest.encoding()).offset());
     }
 
-    void loadAsmJSActivation(Register dest) {
+    void loadWasmActivation(Register dest) {
         CodeOffset label = loadRipRelativeInt64(dest);
         append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }

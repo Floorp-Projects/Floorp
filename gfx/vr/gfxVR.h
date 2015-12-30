@@ -7,14 +7,15 @@
 #define GFX_VR_H
 
 #include "nsTArray.h"
-#include "nsIScreen.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/gfx/2D.h"
-#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Atomics.h"
+#include "mozilla/EnumeratedArray.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/TypedEnumBits.h"
 
 namespace mozilla {
 namespace layers {
@@ -30,6 +31,15 @@ enum class VRHMDType : uint16_t {
   Oculus050,
   NumHMDTypes
 };
+
+enum class VRStateValidFlags : uint16_t {
+  State_None = 0,
+  State_Position = 1 << 1,
+  State_Orientation = 1 << 2,
+  // State_All used for validity checking during IPC serialization
+  State_All = (1 << 3) - 1
+};
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(VRStateValidFlags)
 
 struct VRFieldOfView {
   VRFieldOfView() {}
@@ -63,13 +73,6 @@ struct VRFieldOfView {
   double leftDegrees;
 };
 
-// 12 floats per vertex. Position, tex coordinates
-// for each channel, and 4 generic attributes
-struct VRDistortionConstants {
-  float eyeToSourceScaleAndOffset[4];
-  float destinationScaleAndOffset[4];
-};
-
 struct VRDistortionVertex {
   float values[12];
 };
@@ -79,9 +82,86 @@ struct VRDistortionMesh {
   nsTArray<uint16_t> mIndices;
 };
 
+// 12 floats per vertex. Position, tex coordinates
+// for each channel, and 4 generic attributes
+struct VRDistortionConstants {
+  float eyeToSourceScaleAndOffset[4];
+  float destinationScaleAndOffset[4];
+};
+
+struct VRDeviceInfo
+{
+  VRHMDType GetType() const { return mType; }
+  uint32_t GetDeviceID() const { return mDeviceID; }
+  const nsCString& GetDeviceName() const { return mDeviceName; }
+  VRStateValidFlags GetSupportedSensorStateBits() const { return mSupportedSensorBits; }
+  const VRFieldOfView& GetRecommendedEyeFOV(uint32_t whichEye) const { return mRecommendedEyeFOV[whichEye]; }
+  const VRFieldOfView& GetMaximumEyeFOV(uint32_t whichEye) const { return mMaximumEyeFOV[whichEye]; }
+
+  const IntSize& SuggestedEyeResolution() const { return mEyeResolution; }
+  const Point3D& GetEyeTranslation(uint32_t whichEye) const { return mEyeTranslation[whichEye]; }
+  const Matrix4x4& GetEyeProjectionMatrix(uint32_t whichEye) const { return mEyeProjectionMatrix[whichEye]; }
+  const VRFieldOfView& GetEyeFOV(uint32_t whichEye) const { return mEyeFOV[whichEye]; }
+  bool GetUseMainThreadOrientation() const { return mUseMainThreadOrientation; }
+
+  enum Eye {
+    Eye_Left,
+    Eye_Right,
+    NumEyes
+  };
+
+  uint32_t mDeviceID;
+  VRHMDType mType;
+  nsCString mDeviceName;
+  VRStateValidFlags mSupportedSensorBits;
+  VRFieldOfView mMaximumEyeFOV[VRDeviceInfo::NumEyes];
+  VRFieldOfView mRecommendedEyeFOV[VRDeviceInfo::NumEyes];
+  VRFieldOfView mEyeFOV[VRDeviceInfo::NumEyes];
+  Point3D mEyeTranslation[VRDeviceInfo::NumEyes];
+  Matrix4x4 mEyeProjectionMatrix[VRDeviceInfo::NumEyes];
+  /* Suggested resolution for rendering a single eye.
+   * Assumption is that left/right rendering will be 2x of this size.
+   * XXX fix this for vertical displays
+   */
+  IntSize mEyeResolution;
+  IntRect mScreenRect;
+
+  bool mIsFakeScreen;
+  bool mUseMainThreadOrientation;
+
+
+
+  bool operator==(const VRDeviceInfo& other) const {
+    return mType == other.mType &&
+           mDeviceID == other.mDeviceID &&
+           mDeviceName == other.mDeviceName &&
+           mSupportedSensorBits == other.mSupportedSensorBits &&
+           mEyeResolution == other.mEyeResolution &&
+           mScreenRect == other.mScreenRect &&
+           mIsFakeScreen == other.mIsFakeScreen &&
+           mUseMainThreadOrientation == other.mUseMainThreadOrientation &&
+           mMaximumEyeFOV[0] == other.mMaximumEyeFOV[0] &&
+           mMaximumEyeFOV[1] == other.mMaximumEyeFOV[1] &&
+           mRecommendedEyeFOV[0] == other.mRecommendedEyeFOV[0] &&
+           mRecommendedEyeFOV[1] == other.mRecommendedEyeFOV[1] &&
+           mEyeFOV[0] == other.mEyeFOV[0] &&
+           mEyeFOV[1] == other.mEyeFOV[1] &&
+           mEyeTranslation[0] == other.mEyeTranslation[0] &&
+           mEyeTranslation[1] == other.mEyeTranslation[1] &&
+           mEyeProjectionMatrix[0] == other.mEyeProjectionMatrix[0] &&
+           mEyeProjectionMatrix[1] == other.mEyeProjectionMatrix[1];
+  }
+
+  bool operator!=(const VRDeviceInfo& other) const {
+    return !(*this == other);
+  }
+};
+
+
+
 struct VRHMDSensorState {
   double timestamp;
-  uint32_t flags;
+  VRStateValidFlags flags;
   float orientation[4];
   float position[3];
   float angularVelocity[3];
@@ -92,6 +172,27 @@ struct VRHMDSensorState {
   void Clear() {
     memset(this, 0, sizeof(VRHMDSensorState));
   }
+};
+
+struct VRSensorUpdate {
+  VRSensorUpdate() { }; // Required for ipdl binding
+  VRSensorUpdate(uint32_t aDeviceID, const VRHMDSensorState& aSensorState)
+   : mDeviceID(aDeviceID)
+   , mSensorState(aSensorState) { };
+
+  uint32_t mDeviceID;
+  VRHMDSensorState mSensorState;
+};
+
+struct VRDeviceUpdate {
+  VRDeviceUpdate() { }; // Required for ipdl binding
+  VRDeviceUpdate(const VRDeviceInfo& aDeviceInfo,
+                 const VRHMDSensorState& aSensorState)
+   : mDeviceInfo(aDeviceInfo)
+   , mSensorState(aSensorState) { };
+
+  VRDeviceInfo mDeviceInfo;
+  VRHMDSensorState mSensorState;
 };
 
 /* A pure data struct that can be used to see if
@@ -149,50 +250,22 @@ protected:
 };
 
 class VRHMDInfo {
-public:
-  enum Eye {
-    Eye_Left,
-    Eye_Right,
-    NumEyes
-  };
-
-  enum StateValidFlags {
-    State_Position = 1 << 1,
-    State_Orientation = 1 << 2
-  };
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDInfo)
 
-  VRHMDType GetType() const { return mType; }
-  uint32_t GetDeviceIndex() const { return mDeviceIndex; }
-  const nsCString& GetDeviceName() const { return mDeviceName; }
-
-  virtual const VRFieldOfView& GetRecommendedEyeFOV(uint32_t whichEye) { return mRecommendedEyeFOV[whichEye]; }
-  virtual const VRFieldOfView& GetMaximumEyeFOV(uint32_t whichEye) { return mMaximumEyeFOV[whichEye]; }
-
   const VRHMDConfiguration& GetConfiguration() const { return mConfiguration; }
+  const VRDeviceInfo& GetDeviceInfo() const { return mDeviceInfo; }
 
   /* set the FOV for this HMD unit; this triggers a computation of all the remaining bits.  Returns false if it fails */
   virtual bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
                       double zNear, double zFar) = 0;
-  const VRFieldOfView& GetEyeFOV(uint32_t whichEye)  { return mEyeFOV[whichEye]; }
 
-  /* Suggested resolution for rendering a single eye.
-   * Assumption is that left/right rendering will be 2x of this size.
-   * XXX fix this for vertical displays
-   */
-  const IntSize& SuggestedEyeResolution() const { return mEyeResolution; }
-  const Point3D& GetEyeTranslation(uint32_t whichEye) const { return mEyeTranslation[whichEye]; }
-  const Matrix4x4& GetEyeProjectionMatrix(uint32_t whichEye) const { return mEyeProjectionMatrix[whichEye]; }
-
-  virtual uint32_t GetSupportedSensorStateBits() { return mSupportedSensorBits; }
-  virtual bool StartSensorTracking() = 0;
+  virtual bool KeepSensorTracking() = 0;
+  virtual void NotifyVsync(const TimeStamp& aVsyncTimestamp) = 0;
   virtual VRHMDSensorState GetSensorState(double timeOffset = 0.0) = 0;
-  virtual void StopSensorTracking() = 0;
 
   virtual void ZeroSensor() = 0;
-
 
   // if rendering is offloaded
   virtual VRHMDRenderingSupport *GetRenderingSupport() { return nullptr; }
@@ -205,50 +278,27 @@ public:
                                        const Rect& destRect,       // the rectangle within the dest viewport that this should be rendered
                                        VRDistortionConstants& values) = 0;
 
-  virtual const VRDistortionMesh& GetDistortionMesh(uint32_t whichEye) const { return mDistortionMesh[whichEye]; }
-
-  // The nsIScreen that represents this device
-  virtual nsIScreen* GetScreen() { return mScreen; }
-
+  const VRDistortionMesh& GetDistortionMesh(uint32_t whichEye) const { return mDistortionMesh[whichEye]; }
 protected:
-  explicit VRHMDInfo(VRHMDType aType);
-  virtual ~VRHMDInfo() { MOZ_COUNT_DTOR(VRHMDInfo); }
+  explicit VRHMDInfo(VRHMDType aType, bool aUseMainThreadOrientation);
+  virtual ~VRHMDInfo();
 
-  VRHMDType mType;
   VRHMDConfiguration mConfiguration;
-  uint32_t mDeviceIndex;
-  nsCString mDeviceName;
-
-  VRFieldOfView mEyeFOV[NumEyes];
-  IntSize mEyeResolution;
-  Point3D mEyeTranslation[NumEyes];
-  Matrix4x4 mEyeProjectionMatrix[NumEyes];
-  VRDistortionMesh mDistortionMesh[NumEyes];
-  uint32_t mSupportedSensorBits;
-
-  VRFieldOfView mRecommendedEyeFOV[NumEyes];
-  VRFieldOfView mMaximumEyeFOV[NumEyes];
-
-  nsCOMPtr<nsIScreen> mScreen;
+  VRDeviceInfo mDeviceInfo;
+  VRDistortionMesh mDistortionMesh[VRDeviceInfo::NumEyes];
 };
 
 class VRHMDManager {
 public:
-  static void ManagerInit();
-  static void ManagerDestroy();
-  static void GetAllHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult);
-  static uint32_t AllocateDeviceIndex();
-  static already_AddRefed<nsIScreen> MakeFakeScreen(int32_t x, int32_t y, uint32_t width, uint32_t height);
+  static uint32_t AllocateDeviceID();
 
 protected:
-  typedef nsTArray<RefPtr<VRHMDManager>> VRHMDManagerArray;
-  static VRHMDManagerArray *sManagers;
   static Atomic<uint32_t> sDeviceBase;
+
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(VRHMDManager)
 
-  virtual bool PlatformInit() = 0;
   virtual bool Init() = 0;
   virtual void Destroy() = 0;
   virtual void GetHMDs(nsTArray<RefPtr<VRHMDInfo>>& aHMDResult) = 0;

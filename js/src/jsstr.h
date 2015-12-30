@@ -437,6 +437,10 @@ str_split(JSContext* cx, unsigned argc, Value* vp);
 JSObject*
 str_split_string(JSContext* cx, HandleObjectGroup group, HandleString str, HandleString sep);
 
+JSString *
+str_flat_replace_string(JSContext *cx, HandleString string, HandleString pattern,
+                        HandleString replacement);
+
 JSString*
 str_replace_string_raw(JSContext* cx, HandleString string, HandleString pattern,
                        HandleString replacement);

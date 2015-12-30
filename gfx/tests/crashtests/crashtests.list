@@ -12,9 +12,6 @@ load 345576-1.html
 load 345629-1.html
 load 348462-1.html
 load 348462-2.html
-skip load 358732-1.xhtml # Bug 1226751
-load 358732-2.svg
-load 358732-3.html
 load 366643.html
 load 369688-1.html
 load 369947-1.html

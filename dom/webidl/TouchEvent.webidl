@@ -4,7 +4,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-[Func="mozilla::dom::TouchEvent::PrefEnabled"]
+dictionary TouchEventInit : EventModifierInit {
+  sequence<Touch> touches = [];
+  sequence<Touch> targetTouches = [];
+  sequence<Touch> changedTouches = [];
+};
+
+[Constructor(DOMString type, optional TouchEventInit eventInitDict),
+ Func="mozilla::dom::TouchEvent::PrefEnabled"]
 interface TouchEvent : UIEvent {
   readonly attribute TouchList touches;
   readonly attribute TouchList targetTouches;

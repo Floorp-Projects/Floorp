@@ -132,7 +132,13 @@ enum class DeviceResetReason
   DRIVER_ERROR,
   INVALID_CALL,
   OUT_OF_MEMORY,
+  FORCED_RESET,
   UNKNOWN
+};
+
+enum class ForcedDeviceResetReason
+{
+  OPENSHAREDHANDLE = 0
 };
 
 class gfxPlatform {
@@ -644,6 +650,12 @@ public:
       return false;
     }
 
+    // Some platforms don't support CompositorOGL in an unaccelerated OpenGL
+    // context. These platforms should return true here.
+    virtual bool RequiresAcceleratedGLContextForCompositorOGL() const {
+      return false;
+    }
+
 protected:
     gfxPlatform();
     virtual ~gfxPlatform();
@@ -658,11 +670,6 @@ protected:
 
     // Returns a prioritized list of available compositor backends for acceleration.
     virtual void GetAcceleratedCompositorBackends(nsTArray<mozilla::layers::LayersBackend>& aBackends);
-
-    // Returns whether or not the basic compositor is supported.
-    virtual bool SupportsBasicCompositor() const {
-      return true;
-    }
 
     /**
      * Initialise the preferred and fallback canvas backends

@@ -24,7 +24,7 @@
 #include "jsscript.h"
 
 #ifdef XP_DARWIN
-# include "asmjs/AsmJSSignalHandlers.h"
+# include "asmjs/WasmSignalHandlers.h"
 #endif
 #include "builtin/AtomicsObject.h"
 #include "ds/FixedSizeHash.h"
@@ -88,9 +88,8 @@ ReportOverRecursed(ExclusiveContext* cx);
 
 class Activation;
 class ActivationIterator;
-class AsmJSActivation;
-class AsmJSModule;
 class MathCache;
+class WasmActivation;
 
 namespace jit {
 class JitRuntime;
@@ -105,6 +104,10 @@ typedef vixl::Simulator Simulator;
 class Simulator;
 #endif
 } // namespace jit
+
+namespace wasm {
+class Module;
+} // namespace wasm
 
 /*
  * GetSrcNote cache to avoid O(n^2) growth in finding a source note for a
@@ -654,7 +657,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     friend class js::Activation;
     friend class js::ActivationIterator;
     friend class js::jit::JitActivation;
-    friend class js::AsmJSActivation;
+    friend class js::WasmActivation;
     friend class js::jit::CompileRuntime;
 #ifdef DEBUG
     friend void js::AssertCurrentThreadCanLock(js::RuntimeLock which);
@@ -687,8 +690,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferGen_;
     mozilla::Atomic<uint32_t, mozilla::ReleaseAcquire> profilerSampleBufferLapCount_;
 
-    /* See AsmJSActivation comment. */
-    js::AsmJSActivation * volatile asmJSActivationStack_;
+    /* See WasmActivation comment. */
+    js::WasmActivation * volatile wasmActivationStack_;
 
   public:
     /*
@@ -774,12 +777,12 @@ struct JSRuntime : public JS::shadow::Runtime,
         }
     }
 
-    js::AsmJSActivation* asmJSActivationStack() const {
-        return asmJSActivationStack_;
+    js::WasmActivation* wasmActivationStack() const {
+        return wasmActivationStack_;
     }
-    static js::AsmJSActivation* innermostAsmJSActivation() {
+    static js::WasmActivation* innermostWasmActivation() {
         js::PerThreadData* ptd = js::TlsPerThreadData.get();
-        return ptd ? ptd->runtimeFromMainThread()->asmJSActivationStack_ : nullptr;
+        return ptd ? ptd->runtimeFromMainThread()->wasmActivationStack_ : nullptr;
     }
 
     js::Activation* activation() const {
@@ -1146,7 +1149,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     void*               data;
 
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-    js::AsmJSMachExceptionHandler asmJSMachExceptionHandler;
+    js::wasm::MachExceptionHandler wasmMachExceptionHandler;
 #endif
 
   private:
@@ -1187,8 +1190,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* AsmJSCache callbacks are runtime-wide. */
     JS::AsmJSCacheOps   asmJSCacheOps;
 
-    /* Head of the linked list of linked asm.js modules. */
-    js::AsmJSModule*   linkedAsmJSModules;
+    /* Head of the linked list of linked wasm modules. */
+    js::wasm::Module*   linkedWasmModules;
 
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,

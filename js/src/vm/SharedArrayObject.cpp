@@ -22,11 +22,13 @@
 # include <valgrind/memcheck.h>
 #endif
 
-#include "asmjs/AsmJSValidate.h"
+#include "asmjs/AsmJS.h"
 #include "vm/SharedMem.h"
 #include "vm/TypedArrayCommon.h"
 
 #include "jsobjinlines.h"
+
+#include "vm/NativeObject-inl.h"
 
 using namespace js;
 

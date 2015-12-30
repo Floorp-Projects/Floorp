@@ -17,8 +17,7 @@
 #include "jsprf.h"
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSLink.h"
-#include "asmjs/AsmJSValidate.h"
+#include "asmjs/AsmJS.h"
 #include "jit/InlinableNatives.h"
 #include "jit/JitFrameIterator.h"
 #include "js/Debug.h"
@@ -38,6 +37,7 @@
 #include "jsobjinlines.h"
 
 #include "vm/NativeObject-inl.h"
+#include "vm/ScopeObject-inl.h"
 
 using namespace js;
 

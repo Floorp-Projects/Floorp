@@ -29,7 +29,7 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "asmjs/AsmJSLink.h"
+#include "asmjs/AsmJS.h"
 #include "frontend/Parser.h"
 #include "frontend/TokenStream.h"
 #include "vm/Debugger.h"
@@ -6363,7 +6363,7 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
         if (outersc->isFunctionBox())
             outersc->asFunctionBox()->function()->nonLazyScript()->setHasInnerFunctions(true);
     } else {
-        MOZ_ASSERT(IsAsmJSModuleNative(fun->native()));
+        MOZ_ASSERT(IsAsmJSModule(fun));
     }
 
     /* Make the function object a literal in the outer script's pool. */
@@ -7048,8 +7048,7 @@ BytecodeEmitter::emitStatement(ParseNode* pn)
                     directive = js_useStrict_str;
             } else if (atom == cx->names().useAsm) {
                 if (sc->isFunctionBox()) {
-                    JSFunction* fun = sc->asFunctionBox()->function();
-                    if (fun->isNative() && IsAsmJSModuleNative(fun->native()))
+                    if (IsAsmJSModule(sc->asFunctionBox()->function()))
                         directive = js_useAsm_str;
                 }
             }

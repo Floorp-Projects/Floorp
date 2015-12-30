@@ -199,6 +199,7 @@
 #include "GMPDecoderModule.h"
 #include "gfxPlatform.h"
 #include "nscore.h" // for NS_FREE_PERMANENT_DATA
+#include "VRManagerChild.h"
 
 using namespace mozilla;
 using namespace mozilla::docshell;
@@ -1258,6 +1259,13 @@ ContentChild::AllocPImageBridgeChild(mozilla::ipc::Transport* aTransport,
                                      base::ProcessId aOtherProcess)
 {
     return ImageBridgeChild::StartUpInChildProcess(aTransport, aOtherProcess);
+}
+
+gfx::PVRManagerChild*
+ContentChild::AllocPVRManagerChild(Transport* aTransport,
+                                   ProcessId aOtherProcess)
+{
+  return gfx::VRManagerChild::StartUpInChildProcess(aTransport, aOtherProcess);
 }
 
 PBackgroundChild*

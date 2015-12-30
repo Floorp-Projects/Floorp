@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_AsmJSSignalHandlers_h
-#define asmjs_AsmJSSignalHandlers_h
+#ifndef wasm_signal_handlers_h
+#define wasm_signal_handlers_h
 
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 # include <mach/mach.h>
@@ -28,16 +28,18 @@ struct JSRuntime;
 
 namespace js {
 
+// Force any currently-executing asm.js/ion code to call HandleExecutionInterrupt.
+extern void
+InterruptRunningJitCode(JSRuntime* rt);
+
+namespace wasm {
+
 // Set up any signal/exception handlers needed to execute code in the given
 // runtime. Return whether runtime can:
 //  - rely on fault handler support for avoiding asm.js heap bounds checks
 //  - rely on InterruptRunningJitCode to halt running Ion/asm.js from any thread
 bool
 EnsureSignalHandlersInstalled(JSRuntime* rt);
-
-// Force any currently-executing asm.js code to call HandleExecutionInterrupt.
-extern void
-InterruptRunningJitCode(JSRuntime* rt);
 
 #if defined(XP_DARWIN) && defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 // On OSX we are forced to use the lower-level Mach exception mechanism instead
@@ -46,7 +48,7 @@ InterruptRunningJitCode(JSRuntime* rt);
 // per JSRuntime (upon the first use of asm.js in the JSRuntime). This thread
 // and related resources are owned by AsmJSMachExceptionHandler which is owned
 // by JSRuntime.
-class AsmJSMachExceptionHandler
+class MachExceptionHandler
 {
     bool installed_;
     PRThread* thread_;
@@ -55,14 +57,15 @@ class AsmJSMachExceptionHandler
     void uninstall();
 
   public:
-    AsmJSMachExceptionHandler();
-    ~AsmJSMachExceptionHandler() { uninstall(); }
+    MachExceptionHandler();
+    ~MachExceptionHandler() { uninstall(); }
     mach_port_t port() const { return port_; }
     bool installed() const { return installed_; }
     bool install(JSRuntime* rt);
 };
 #endif
 
+} // namespace wasm
 } // namespace js
 
-#endif // asmjs_AsmJSSignalHandlers_h
+#endif // wasm_signal_handlers_h

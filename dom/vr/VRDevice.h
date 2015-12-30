@@ -21,9 +21,11 @@
 #include "nsWrapperCache.h"
 
 #include "gfxVR.h"
+#include "VRDeviceProxy.h"
 
 namespace mozilla {
 namespace dom {
+class Navigator;
 
 class VRFieldOfViewReadOnly : public nsWrapperCache
 {
@@ -177,10 +179,7 @@ class VRDevice : public nsISupports,
                  public nsWrapperCache
 {
 public:
-  // create new VRDevice objects for all known underlying gfx::vr devices
-  static bool CreateAllKnownVRDevices(nsISupports *aParent, nsTArray<RefPtr<VRDevice>>& aDevices);
 
-public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(VRDevice)
 
@@ -189,8 +188,6 @@ public:
   void GetDeviceName(nsAString& aDeviceName) const { aDeviceName = mDeviceName; }
 
   bool IsValid() { return mValid; }
-
-  virtual void Shutdown() { }
 
   nsISupports* GetParentObject() const
   {
@@ -204,22 +201,36 @@ public:
 
   VRDeviceType GetType() const { return mType; }
 
+  static bool RefreshVRDevices(dom::Navigator* aNavigator);
+  static void UpdateVRDevices(nsTArray<RefPtr<VRDevice> >& aDevices,
+                              nsISupports* aParent);
+
+  gfx::VRDeviceProxy *GetHMD() {
+    return mHMD;
+  }
+
 protected:
-  VRDevice(nsISupports* aParent, VRDeviceType aType)
+  VRDevice(nsISupports* aParent,
+           gfx::VRDeviceProxy* aHMD,
+           VRDeviceType aType)
     : mParent(aParent)
+    , mHMD(aHMD)
     , mType(aType)
     , mValid(false)
   {
+    MOZ_COUNT_CTOR(VRDevice);
     mHWID.AssignLiteral("uknown");
     mDeviceId.AssignLiteral("unknown");
     mDeviceName.AssignLiteral("unknown");
   }
 
-  virtual ~VRDevice() {
-    Shutdown();
+  virtual ~VRDevice()
+  {
+    MOZ_COUNT_DTOR(VRDevice);
   }
 
   nsCOMPtr<nsISupports> mParent;
+  RefPtr<gfx::VRDeviceProxy> mHMD;
   nsString mHWID;
   nsString mDeviceId;
   nsString mDeviceName;
@@ -240,36 +251,64 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  gfx::VRHMDInfo *GetHMD() { return mHMD.get(); }
-
 protected:
-  HMDVRDevice(nsISupports* aParent, gfx::VRHMDInfo* aHMD)
-    : VRDevice(aParent, VRDevice::HMD)
-    , mHMD(aHMD)
-  { }
+  HMDVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD)
+    : VRDevice(aParent, aHMD, VRDevice::HMD)
+  {
+    MOZ_COUNT_CTOR_INHERITED(HMDVRDevice, VRDevice);
+  }
 
-  virtual ~HMDVRDevice() { }
+  virtual ~HMDVRDevice()
+  {
+    MOZ_COUNT_DTOR_INHERITED(HMDVRDevice, VRDevice);
+  }
+};
 
-  RefPtr<gfx::VRHMDInfo> mHMD;
+class HMDInfoVRDevice : public HMDVRDevice
+{
+public:
+  HMDInfoVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD);
+  virtual ~HMDInfoVRDevice();
+
+  /* If a field of view that is set to all 0's is passed in,
+   * the recommended field of view for that eye is used.
+   */
+  virtual void SetFieldOfView(const VRFieldOfViewInit& aLeftFOV,
+                              const VRFieldOfViewInit& aRightFOV,
+                              double zNear, double zFar) override;
+  virtual already_AddRefed<VREyeParameters> GetEyeParameters(VREye aEye) override;
 };
 
 class PositionSensorVRDevice : public VRDevice
 {
 public:
   virtual already_AddRefed<VRPositionState> GetState() = 0;
-
   virtual already_AddRefed<VRPositionState> GetImmediateState() = 0;
-
   virtual void ResetSensor() = 0;
-
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
 protected:
-  explicit PositionSensorVRDevice(nsISupports* aParent)
-    : VRDevice(aParent, VRDevice::PositionSensor)
-  { }
+  explicit PositionSensorVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD)
+    : VRDevice(aParent, aHMD, VRDevice::PositionSensor)
+  {
+    MOZ_COUNT_CTOR_INHERITED(PositionSensorVRDevice, VRDevice);
+  }
 
-  virtual ~PositionSensorVRDevice() { }
+  virtual ~PositionSensorVRDevice()
+  {
+    MOZ_COUNT_DTOR_INHERITED(PositionSensorVRDevice, VRDevice);
+  }
+};
+
+class HMDPositionVRDevice : public PositionSensorVRDevice
+{
+public:
+  HMDPositionVRDevice(nsISupports* aParent, gfx::VRDeviceProxy* aHMD);
+  ~HMDPositionVRDevice();
+
+  virtual already_AddRefed<VRPositionState> GetState() override;
+  virtual already_AddRefed<VRPositionState> GetImmediateState() override;
+  virtual void ResetSensor() override;
 };
 
 } // namespace dom

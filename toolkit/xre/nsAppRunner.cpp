@@ -4686,15 +4686,10 @@ mozilla::BrowserTabsRemoteAutostart()
                      gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
 #endif
 
-  // Disable for VR
-  bool disabledForVR = Preferences::GetBool("dom.vr.enabled", false);
-
   if (e10sAllowed && prefEnabled) {
     if (disabledForA11y) {
       status = kE10sDisabledForAccessibility;
       LogE10sBlockedReason("An accessibility tool is or was active. See bug 1198459.");
-    } else if (disabledForVR) {
-      LogE10sBlockedReason("Experimental VR interfaces are enabled");
     } else {
       gBrowserTabsRemoteAutostart = true;
     }

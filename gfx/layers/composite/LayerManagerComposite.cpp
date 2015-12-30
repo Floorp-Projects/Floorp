@@ -1042,7 +1042,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   EGLSurface surface = mirrorScreen->GetEGLSurface();
   if (surface == LOCAL_EGL_NO_SURFACE) {
     // Create GLContext
-    RefPtr<GLContext> gl = gl::GLContextProvider::CreateForWindow(mirrorScreenWidget);
+    RefPtr<GLContext> gl = gl::GLContextProvider::CreateForWindow(mirrorScreenWidget, false);
     mirrorScreenWidget->SetNativeData(NS_NATIVE_OPENGL_CONTEXT,
                                       reinterpret_cast<uintptr_t>(gl.get()));
     surface = mirrorScreen->GetEGLSurface();

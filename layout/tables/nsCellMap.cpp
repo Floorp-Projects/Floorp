@@ -926,7 +926,7 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
   switch(aSide) {
   case eLogicalSideBEnd:
     aRowIndex++;
-    // FALLTHROUGH
+    MOZ_FALLTHROUGH;
   case eLogicalSideBStart:
     cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex, aColIndex);
     if (cellData) {
@@ -949,7 +949,7 @@ nsTableCellMap::ResetBStartStart(LogicalSide aSide,
     break;
   case eLogicalSideIEnd:
     aColIndex++;
-    // FALLTHROUGH
+    MOZ_FALLTHROUGH;
   case eLogicalSideIStart:
     cellData = (BCCellData*)aCellMap.GetDataAt(aRowIndex, aColIndex);
     if (cellData) {
@@ -994,6 +994,7 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
   case eLogicalSideBEnd:
     rgYPos++;
     yPos++;
+    MOZ_FALLTHROUGH;
   case eLogicalSideBStart:
     lastIndex = xPos + aLength - 1;
     for (xIndex = xPos; xIndex <= lastIndex; xIndex++) {
@@ -1040,6 +1041,7 @@ nsTableCellMap::SetBCBorderEdge(LogicalSide aSide,
     break;
   case eLogicalSideIEnd:
     xPos++;
+    MOZ_FALLTHROUGH;
   case eLogicalSideIStart:
     // since bStart, bEnd borders were set, there should already be a cellData entry
     lastIndex = rgYPos + aLength - 1;

@@ -54,6 +54,7 @@ include protocol PRemoteSpellcheckEngine;
 include protocol PWebBrowserPersistDocument;
 include protocol PWebrtcGlobal;
 include protocol PPresentation;
+include protocol PVRManager;
 include DOMTypes;
 include JavaScriptTypes;
 include InputStreamParams;
@@ -451,6 +452,7 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PSharedBufferManager;
     parent opens PImageBridge;
     parent opens PGMPService;
+    parent opens PVRManager;
     child opens PBackground;
 
     manages PBlob;

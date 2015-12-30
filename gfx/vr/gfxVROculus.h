@@ -7,8 +7,6 @@
 #define GFX_VR_OCULUS_H
 
 #include "nsTArray.h"
-#include "nsIScreen.h"
-#include "nsCOMPtr.h"
 #include "mozilla/RefPtr.h"
 
 #include "mozilla/gfx/2D.h"
@@ -25,15 +23,15 @@ namespace impl {
 
 class HMDInfoOculus : public VRHMDInfo, public VRHMDRenderingSupport {
 public:
-  explicit HMDInfoOculus(ovrHmd aHMD);
+  explicit HMDInfoOculus(ovrHmd aHMD, bool aDebug, int aDeviceID);
 
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar) override;
 
-  bool StartSensorTracking() override;
   VRHMDSensorState GetSensorState(double timeOffset) override;
-  void StopSensorTracking() override;
   void ZeroSensor() override;
+  bool KeepSensorTracking() override;
+  void NotifyVsync(const TimeStamp& aVsyncTimestamp) override;
 
   void FillDistortionConstants(uint32_t whichEye,
                                const IntSize& textureSize, const IntRect& eyeViewport,
@@ -50,8 +48,18 @@ public:
   void SubmitFrame(RenderTargetSet *aRTSet) override;
 
   ovrHmd GetOculusHMD() const { return mHMD; }
+  bool GetIsDebug() const;
+  int GetDeviceID() const;
 
 protected:
+  virtual ~HMDInfoOculus() {
+      Destroy();
+      MOZ_COUNT_DTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
+  }
+
+  bool StartSensorTracking();
+  void StopSensorTracking();
+
   // must match the size of VRDistortionVertex
   struct DistortionVertex {
     float pos[2];
@@ -61,15 +69,15 @@ protected:
     float genericAttribs[4];
   };
 
-  virtual ~HMDInfoOculus() {
-      Destroy();
-      MOZ_COUNT_DTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
-  }
-
   ovrHmd mHMD;
   ovrFovPort mFOVPort[2];
-  uint32_t mStartCount;
+  bool mTracking;
   ovrTrackingState mLastTrackingState;
+
+  bool mDebug; // True if this is a debug HMD
+  int mDeviceID; // Index of device passed to ovrHmd_Create
+
+  uint32_t mSensorTrackingFramesRemaining;
 };
 
 } // namespace impl
@@ -77,18 +85,18 @@ protected:
 class VRHMDManagerOculus : public VRHMDManager
 {
 public:
-  VRHMDManagerOculus()
-    : mOculusInitialized(false), mOculusPlatformInitialized(false)
-  { }
-
-  virtual bool PlatformInit() override;
+  static already_AddRefed<VRHMDManagerOculus> Create();
   virtual bool Init() override;
   virtual void Destroy() override;
   virtual void GetHMDs(nsTArray<RefPtr<VRHMDInfo> >& aHMDResult) override;
 protected:
+  VRHMDManagerOculus()
+    : mOculusInitialized(false)
+  { }
+
   nsTArray<RefPtr<impl::HMDInfoOculus>> mOculusHMDs;
   bool mOculusInitialized;
-  bool mOculusPlatformInitialized;
+  RefPtr<nsIThread> mOculusThread;
 };
 
 } // namespace gfx

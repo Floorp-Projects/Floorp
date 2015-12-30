@@ -649,7 +649,7 @@ static inline bool UseHardFpABI()
 // have ABIArg which are represented by pair of general purpose registers.
 #define JS_CODEGEN_REGISTER_PAIR 1
 
-// See the comments above AsmJSMappedSize in AsmJSValidate.h for more info.
+// See the comments above AsmJSMappedSize in AsmJS.cpp for more info.
 // TODO: Implement this for ARM. Note that it requires Codegen to respect the
 // offset field of AsmJSHeapAccess.
 static const size_t AsmJSCheckedImmediateRange = 0;
