@@ -220,6 +220,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Navigator)
 #endif
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDeviceStorageAreaListener)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPresentation)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVRGetDevicesPromises)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -360,6 +361,8 @@ Navigator::Invalidate()
   if (mDeviceStorageAreaListener) {
     mDeviceStorageAreaListener = nullptr;
   }
+
+  mVRGetDevicesPromises.Clear();
 }
 
 //*****************************************************************************
@@ -1939,16 +1942,35 @@ Navigator::GetVRDevices(ErrorResult& aRv)
     return nullptr;
   }
 
+  // We pass ourself to RefreshVRDevices, so NotifyVRDevicesUpdated will
+  // be called asynchronously, resolving the promises in mVRGetDevicesPromises.
+  if (!VRDevice::RefreshVRDevices(this)) {
+    p->MaybeReject(NS_ERROR_FAILURE);
+    return p.forget();
+  }
+
+  mVRGetDevicesPromises.AppendElement(p);
+  return p.forget();
+}
+
+void
+Navigator::NotifyVRDevicesUpdated()
+{
+  // Synchronize the VR devices and resolve the promises in
+  // mVRGetDevicesPromises
   nsGlobalWindow* win = static_cast<nsGlobalWindow*>(mWindow.get());
 
   nsTArray<RefPtr<VRDevice>> vrDevs;
-  if (!win->GetVRDevices(vrDevs)) {
-    p->MaybeReject(NS_ERROR_FAILURE);
+  if (win->UpdateVRDevices(vrDevs)) {
+    for (auto p: mVRGetDevicesPromises) {
+      p->MaybeResolve(vrDevs);
+    }
   } else {
-    p->MaybeResolve(vrDevs);
+    for (auto p: mVRGetDevicesPromises) {
+      p->MaybeReject(NS_ERROR_FAILURE);
+    }
   }
-
-  return p.forget();
+  mVRGetDevicesPromises.Clear();
 }
 
 //*****************************************************************************

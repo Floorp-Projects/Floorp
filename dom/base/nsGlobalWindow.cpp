@@ -1177,8 +1177,7 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
     mCleanedUp(false),
     mDialogAbuseCount(0),
     mAreDialogsEnabled(true),
-    mCanSkipCCGeneration(0),
-    mVRDevicesInitialized(false)
+    mCanSkipCCGeneration(0)
 {
   AssertIsOnMainThread();
 
@@ -4282,7 +4281,7 @@ nsGlobalWindow::IsShowModalDialogEnabled(JSContext*, JSObject*)
     sAddedPrefCache = true;
   }
 
-  return !sIsDisabled;
+  return !sIsDisabled && !XRE_IsContentProcess();
 }
 
 nsIDOMOfflineResourceList*
@@ -5964,7 +5963,7 @@ FullscreenTransitionTask::Observer::Observe(nsISupports* aSubject,
 }
 
 static bool
-MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRHMDInfo* aHMD,
+MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRDeviceProxy* aHMD,
                      nsPIDOMWindow::FullscreenReason aReason, bool aFullscreen)
 {
   nsCOMPtr<nsIWidget> widget = aWindow->GetMainWidget();
@@ -5997,7 +5996,7 @@ MakeWidgetFullscreen(nsGlobalWindow* aWindow, gfx::VRHMDInfo* aHMD,
 nsresult
 nsGlobalWindow::SetFullscreenInternal(FullscreenReason aReason,
                                       bool aFullScreen,
-                                      gfx::VRHMDInfo* aHMD)
+                                      gfx::VRDeviceProxy* aHMD)
 {
   MOZ_ASSERT(IsOuterWindow());
   MOZ_ASSERT(nsContentUtils::IsSafeToRunScript(),
@@ -8790,7 +8789,7 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl, nsIVariant* aArgumen
     mDoc->WarnOnceAbout(nsIDocument::eShowModalDialog);
   }
 
-  if (!IsShowModalDialogEnabled() || XRE_IsContentProcess()) {
+  if (!IsShowModalDialogEnabled()) {
     aError.Throw(NS_ERROR_NOT_AVAILABLE);
     return nullptr;
   }
@@ -12941,19 +12940,11 @@ nsGlobalWindow::SyncGamepadState()
 #endif // MOZ_GAMEPAD
 
 bool
-nsGlobalWindow::GetVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices)
+nsGlobalWindow::UpdateVRDevices(nsTArray<RefPtr<mozilla::dom::VRDevice>>& aDevices)
 {
-  FORWARD_TO_INNER(GetVRDevices, (aDevices), false);
+  FORWARD_TO_INNER(UpdateVRDevices, (aDevices), false);
 
-  if (!mVRDevicesInitialized) {
-    bool ok = mozilla::dom::VRDevice::CreateAllKnownVRDevices(ToSupports(this), mVRDevices);
-    if (!ok) {
-      mVRDevices.Clear();
-      return false;
-    }
-  }
-
-  mVRDevicesInitialized = true;
+  VRDevice::UpdateVRDevices(mVRDevices, ToSupports(this));
   aDevices = mVRDevices;
   return true;
 }

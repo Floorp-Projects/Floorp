@@ -11,7 +11,7 @@
 
 #include <limits.h>
 
-#include "asmjs/AsmJSFrameIterator.h"
+#include "asmjs/WasmTypes.h"
 #include "jit/JitAllocPolicy.h"
 #include "jit/Label.h"
 #include "jit/Registers.h"
@@ -681,10 +681,10 @@ struct AsmJSGlobalAccess
 
 // Represents an instruction to be patched and the intended pointee. These
 // links are accumulated in the MacroAssembler, but patching is done outside
-// the MacroAssembler (in AsmJSModule::staticallyLink).
-struct AsmJSAbsoluteLink
+// the MacroAssembler (in Module::staticallyLink).
+struct AsmJSAbsoluteAddress
 {
-    AsmJSAbsoluteLink(CodeOffset patchAt, wasm::SymbolicAddress target)
+    AsmJSAbsoluteAddress(CodeOffset patchAt, wasm::SymbolicAddress target)
       : patchAt(patchAt), target(target) {}
 
     CodeOffset patchAt;
@@ -711,7 +711,7 @@ class AssemblerShared
     wasm::CallSiteAndTargetVector callsites_;
     wasm::HeapAccessVector heapAccesses_;
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
-    Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
+    Vector<AsmJSAbsoluteAddress, 0, SystemAllocPolicy> asmJSAbsoluteAddresses_;
 
   protected:
     Vector<CodeLabel, 0, SystemAllocPolicy> codeLabels_;
@@ -758,9 +758,9 @@ class AssemblerShared
     size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
     AsmJSGlobalAccess asmJSGlobalAccess(size_t i) const { return asmJSGlobalAccesses_[i]; }
 
-    void append(AsmJSAbsoluteLink link) { enoughMemory_ &= asmJSAbsoluteLinks_.append(link); }
-    size_t numAsmJSAbsoluteLinks() const { return asmJSAbsoluteLinks_.length(); }
-    AsmJSAbsoluteLink asmJSAbsoluteLink(size_t i) const { return asmJSAbsoluteLinks_[i]; }
+    void append(AsmJSAbsoluteAddress link) { enoughMemory_ &= asmJSAbsoluteAddresses_.append(link); }
+    size_t numAsmJSAbsoluteAddresses() const { return asmJSAbsoluteAddresses_.length(); }
+    AsmJSAbsoluteAddress asmJSAbsoluteAddress(size_t i) const { return asmJSAbsoluteAddresses_[i]; }
 
     static bool canUseInSingleByteInstruction(Register reg) { return true; }
 
@@ -792,10 +792,10 @@ class AssemblerShared
         for (; i < asmJSGlobalAccesses_.length(); i++)
             asmJSGlobalAccesses_[i].patchAt.offsetBy(delta);
 
-        i = asmJSAbsoluteLinks_.length();
-        enoughMemory_ &= asmJSAbsoluteLinks_.appendAll(other.asmJSAbsoluteLinks_);
-        for (; i < asmJSAbsoluteLinks_.length(); i++)
-            asmJSAbsoluteLinks_[i].patchAt.offsetBy(delta);
+        i = asmJSAbsoluteAddresses_.length();
+        enoughMemory_ &= asmJSAbsoluteAddresses_.appendAll(other.asmJSAbsoluteAddresses_);
+        for (; i < asmJSAbsoluteAddresses_.length(); i++)
+            asmJSAbsoluteAddresses_[i].patchAt.offsetBy(delta);
 
         i = codeLabels_.length();
         enoughMemory_ &= codeLabels_.appendAll(other.codeLabels_);

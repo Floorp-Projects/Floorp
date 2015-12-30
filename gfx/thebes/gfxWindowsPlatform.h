@@ -150,6 +150,11 @@ public:
     void UpdateRenderMode();
 
     /**
+     * Forces all GPU resources to be recreated on the next frame.
+     */
+    void ForceDeviceReset(ForcedDeviceResetReason aReason);
+
+    /**
      * Verifies a D2D device is present and working, will attempt to create one
      * it is non-functional or non-existant.
      *

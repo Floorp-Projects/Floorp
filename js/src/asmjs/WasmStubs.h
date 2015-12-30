@@ -16,23 +16,18 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_stubs_h
-#define asmjs_wasm_stubs_h
+#ifndef wasm_stubs_h
+#define wasm_stubs_h
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmGenerator.h"
 
 namespace js {
-
-class AsmJSModule;
-namespace jit { class MacroAssembler; }
-
 namespace wasm {
 
-typedef Vector<uint32_t> FuncOffsetVector;
-
 bool
-GenerateStubs(jit::MacroAssembler& masm, AsmJSModule& module, const FuncOffsetVector& funcOffsets);
+GenerateStubs(ModuleGenerator& mg, Module::HeapBool usesHeap);
 
 } // namespace wasm
 } // namespace js
-#endif // asmjs_wasm_stubs_h
+
+#endif // wasm_stubs_h

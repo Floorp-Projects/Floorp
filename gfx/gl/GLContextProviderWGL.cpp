@@ -438,7 +438,7 @@ GLContextProviderWGL::CreateWrappingExisting(void*, void*)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderWGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;

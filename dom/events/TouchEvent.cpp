@@ -207,6 +207,39 @@ TouchEvent::PrefEnabled(JSContext* aCx, JSObject* aGlobal)
   return prefValue;
 }
 
+// static
+already_AddRefed<Event>
+TouchEvent::Constructor(const GlobalObject& aGlobal,
+                        const nsAString& aType,
+                        const TouchEventInit& aParam,
+                        ErrorResult& aRv)
+{
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<TouchEvent> e = new TouchEvent(t, nullptr, nullptr);
+  bool trusted = e->Init(t);
+  RefPtr<TouchList> touches = e->CopyTouches(aParam.mTouches);
+  RefPtr<TouchList> targetTouches = e->CopyTouches(aParam.mTargetTouches);
+  RefPtr<TouchList> changedTouches = e->CopyTouches(aParam.mChangedTouches);
+  e->InitTouchEvent(aType, aParam.mBubbles, aParam.mCancelable, aParam.mView,
+                    aParam.mDetail, aParam.mCtrlKey, aParam.mAltKey,
+                    aParam.mShiftKey, aParam.mMetaKey, touches, targetTouches,
+                    changedTouches);
+  e->SetTrusted(trusted);
+  return e.forget();
+}
+
+
+already_AddRefed<TouchList>
+TouchEvent::CopyTouches(const Sequence<OwningNonNull<Touch>>& aTouches)
+{
+  RefPtr<TouchList> list = new TouchList(GetParentObject());
+  size_t len = aTouches.Length();
+  for (size_t i = 0; i < len; ++i) {
+    list->Append(aTouches[i]);
+  }
+  return list.forget();
+}
+
 bool
 TouchEvent::AltKey()
 {

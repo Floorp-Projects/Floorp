@@ -10,7 +10,23 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="mozilla::dom::Touch::PrefEnabled"]
+dictionary TouchInit {
+  required long identifier;
+  required EventTarget target;
+  long clientX = 0;
+  long clientY = 0;
+  long screenX = 0;
+  long screenY = 0;
+  long pageX = 0;
+  long pageY = 0;
+  float radiusX = 0;
+  float radiusY = 0;
+  float rotationAngle = 0;
+  float force = 0;
+};
+
+[Constructor(TouchInit touchInitDict), 
+ Func="mozilla::dom::Touch::PrefEnabled"]
 interface Touch {
   readonly    attribute long         identifier;
   readonly    attribute EventTarget? target;

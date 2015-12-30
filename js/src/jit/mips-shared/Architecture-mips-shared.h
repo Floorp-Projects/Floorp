@@ -322,7 +322,7 @@ hasMultiAlias() {
     return true;
 }
 
-// See the comments above AsmJSMappedSize in AsmJSValidate.h for more info.
+// See the comments above AsmJSMappedSize in AsmJS.cpp for more info.
 // TODO: Implement this for MIPS. Note that it requires Codegen to respect the
 // offset field of AsmJSHeapAccess.
 static const size_t AsmJSCheckedImmediateRange = 0;
