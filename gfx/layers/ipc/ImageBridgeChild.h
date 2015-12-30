@@ -141,6 +141,15 @@ public:
    * Can be called from any thread.
    */
   static bool IsCreated();
+  /**
+   * Returns true if the singleton's ShutDown() was called.
+   *
+   * Can be called from any thread.
+   */
+  static bool IsShutDown()
+  {
+    return sIsShutDown;
+  }
 
   /**
    * returns the singleton instance.
@@ -318,6 +327,7 @@ protected:
 
   CompositableTransaction* mTxn;
   Atomic<bool> mShuttingDown;
+  static Atomic<bool> sIsShutDown;
 };
 
 } // namespace layers

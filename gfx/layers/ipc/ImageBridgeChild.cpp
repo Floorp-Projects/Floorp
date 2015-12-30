@@ -108,6 +108,9 @@ struct AutoEndTransaction {
   CompositableTransaction* mTxn;
 };
 
+/* static */
+Atomic<bool> ImageBridgeChild::sIsShutDown(false);
+
 void
 ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                               const nsTArray<TimedTextureClient>& aTextures)
@@ -371,7 +374,7 @@ static void ReleaseImageClientNow(ImageClient* aClient,
   if (aClient) {
     aClient->Release();
   }
-  if (aChild && ImageBridgeChild::IsCreated()) {
+  if (aChild && ImageBridgeChild::IsCreated() && !ImageBridgeChild::IsShutDown()) {
     aChild->SendAsyncDelete();
   }
 }
@@ -463,7 +466,7 @@ void ImageBridgeChild::DispatchReleaseTextureClient(TextureClient* aClient)
 
 static void UpdateImageClientNow(ImageClient* aClient, RefPtr<ImageContainer>&& aContainer)
 {
-  if (!ImageBridgeChild::IsCreated()) {
+  if (!ImageBridgeChild::IsCreated() || ImageBridgeChild::IsShutDown()) {
     NS_WARNING("Something is holding on to graphics resources after the shutdown"
                "of the graphics subsystem!");
     return;
@@ -479,7 +482,7 @@ static void UpdateImageClientNow(ImageClient* aClient, RefPtr<ImageContainer>&& 
 void ImageBridgeChild::DispatchImageClientUpdate(ImageClient* aClient,
                                                  ImageContainer* aContainer)
 {
-  if (!ImageBridgeChild::IsCreated()) {
+  if (!ImageBridgeChild::IsCreated() || ImageBridgeChild::IsShutDown()) {
     NS_WARNING("Something is holding on to graphics resources after the shutdown"
                "of the graphics subsystem!");
     return;
@@ -545,7 +548,7 @@ void ImageBridgeChild::UpdateAsyncCanvasRendererNow(AsyncCanvasRenderer* aWrappe
 static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
                                RefPtr<AsyncTransactionWaiter>&& aWaiter)
 {
-  if (!ImageBridgeChild::IsCreated()) {
+  if (!ImageBridgeChild::IsCreated() || ImageBridgeChild::IsShutDown()) {
     // How sad. If we get into this branch it means that the ImageBridge
     // got destroyed between the time we ImageBridgeChild::FlushAllImage
     // was called on some thread, and the time this function was proxied
@@ -574,7 +577,7 @@ static void FlushAllImagesSync(ImageClient* aClient, ImageContainer* aContainer,
 void ImageBridgeChild::FlushAllImages(ImageClient* aClient,
                                       ImageContainer* aContainer)
 {
-  if (!IsCreated()) {
+  if (!IsCreated() || IsShutDown()) {
     return;
   }
   MOZ_ASSERT(aClient);
@@ -705,6 +708,9 @@ ImageBridgeChild::StartUpInChildProcess(Transport* aTransport,
 void ImageBridgeChild::ShutDown()
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  sIsShutDown = true;
+
   if (ImageBridgeChild::IsCreated()) {
     MOZ_ASSERT(!sImageBridgeChildSingleton->mShuttingDown);
 
