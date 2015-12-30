@@ -1,0 +1,84 @@
+---
+metadata:
+    name: "Beet Mover Manifest"
+    description: "Maps artifact locations to s3 key names for the en-US locale"
+    owner: "release@mozilla.com"
+
+mapping:
+{% for locale in locales %}
+  # common deliverables
+  {{ locale }}:
+    complete_mar:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.complete.mar
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/update/{{ platform }}/{{ locale }}/firefox-{{ version }}.complete.mar
+    checksum:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums
+    checksum_sig:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.checksums.asc
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.checksums.asc
+    buildinfo:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.json
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.json
+    mozinfo:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.mozinfo.json
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.mozinfo.json
+    socorroinfo:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.txt
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.txt
+
+  {% if platform == "win32" %}
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    stub_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer-stub.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup Stub {{ version }}.exe
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+    symbols:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+  {% endif %}
+
+  {% if platform == "win64" %}
+    full_installer:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.installer.exe
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox Setup {{ version }}.exe
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.zip
+    symbols:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+  {% endif %}
+
+  {% if platform == "linux-i686" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+    symbols:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+  {% endif %}
+
+  {% if platform == "linux-x86_64" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.tar.bz2
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.tar.bz2
+    symbols:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/firefox-{{ version }}.crashreporter-symbols.zip
+  {% endif %}
+
+  {% if platform == "mac" %}
+    package:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.dmg
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox {{ version }}.dmg
+    symbols:
+      artifact: {{ artifact_base_url }}/firefox-{{ app_version }}.{{ locale }}.{{ platform }}.crashreporter-symbols.zip
+      s3_key: {{ s3_prefix }}/{{ version }}-candidates/{{ build_num }}/{{ platform }}/{{ locale }}/Firefox {{ version }}.crashreporter-symbols.zip
+  {% endif %}
+
+{% endfor %}
