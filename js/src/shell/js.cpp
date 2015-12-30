@@ -3781,11 +3781,13 @@ EscapeForShell(AutoCStringVector& argv)
 
 static Vector<const char*, 4, js::SystemAllocPolicy> sPropagatedFlags;
 
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static bool
 PropagateFlagToNestedShells(const char* flag)
 {
     return sPropagatedFlags.append(flag);
 }
+#endif
 
 static bool
 NestedShell(JSContext* cx, unsigned argc, Value* vp)
@@ -6690,7 +6692,7 @@ main(int argc, char** argv, char** envp)
         || !op.addIntOption('\0', "baseline-warmup-threshold", "COUNT",
                             "Wait for COUNT calls or iterations before baseline-compiling "
                             "(default: 10)", -1)
-        || !op.addBoolOption('\0', "non-writable-jitcode", "Allocate JIT code as non-writable memory.")
+        || !op.addBoolOption('\0', "non-writable-jitcode", "(NOP for fuzzers) Allocate JIT code as non-writable memory.")
         || !op.addBoolOption('\0', "no-fpu", "Pretend CPU does not support floating-point operations "
                              "to test JIT codegen (no-op on platforms other than x86).")
         || !op.addBoolOption('\0', "no-sse3", "Pretend CPU does not support SSE3 instructions and above "
@@ -6768,11 +6770,6 @@ main(int argc, char** argv, char** envp)
      */
     OOM_printAllocationCount = op.getBoolOption('O');
 #endif
-
-    if (op.getBoolOption("non-writable-jitcode")) {
-        js::jit::ExecutableAllocator::nonWritableJitCode = true;
-        PropagateFlagToNestedShells("--non-writable-jitcode");
-    }
 
 #ifdef JS_CODEGEN_X86
     if (op.getBoolOption("no-fpu"))
