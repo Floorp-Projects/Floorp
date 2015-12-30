@@ -140,28 +140,6 @@ protected:
   uint64_t mAsyncContainerID;
 };
 
-#ifdef MOZ_WIDGET_GONK
-/**
- * And ImageClient to handle opaque video stream.
- * Such video stream does not upload new Image for each frame.
- * Gecko have no way to get the buffer content from the Image, since the Image
- * does not contain the real buffer.
- * It need special hardware to display the Image
- */
-class ImageClientOverlay : public ImageClient
-{
-public:
-  ImageClientOverlay(CompositableForwarder* aFwd,
-                     TextureFlags aFlags);
-
-  virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
-  TextureInfo GetTextureInfo() const override
-  {
-    return TextureInfo(CompositableType::IMAGE_OVERLAY);
-  }
-};
-#endif
-
 } // namespace layers
 } // namespace mozilla
 

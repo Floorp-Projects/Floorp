@@ -24,7 +24,6 @@
     locale/browser/browser.dtd                     (%chrome/browser/browser.dtd)
     locale/browser/baseMenuOverlay.dtd             (%chrome/browser/baseMenuOverlay.dtd)
     locale/browser/browser.properties              (%chrome/browser/browser.properties)
-    locale/browser/browser-pocket.properties       (%chrome/browser/browser-pocket.properties)
     locale/browser/customizableui/customizableWidgets.properties (%chrome/browser/customizableui/customizableWidgets.properties)
     locale/browser/lightweightThemes.properties    (%chrome/browser/lightweightThemes.properties)
     locale/browser/loop/loop.properties            (%chrome/browser/loop/loop.properties)

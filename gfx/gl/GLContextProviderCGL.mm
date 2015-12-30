@@ -17,6 +17,10 @@
 
 #include <OpenGL/OpenGL.h>
 
+// When running inside a VM, creating an accelerated OpenGL context usually
+// fails. Uncomment this line to emulate that behavior.
+// #define EMULATE_VM
+
 namespace mozilla {
 namespace gl {
 
@@ -174,12 +178,23 @@ GLContextProviderCGL::CreateWrappingExisting(void*, void*)
 }
 
 static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered[] = {
+    NSOpenGLPFAAllowOfflineRenderers,
+    0
+};
+
+static const NSOpenGLPixelFormatAttribute kAttribs_singleBuffered_accel[] = {
     NSOpenGLPFAAccelerated,
     NSOpenGLPFAAllowOfflineRenderers,
     0
 };
 
 static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered[] = {
+    NSOpenGLPFAAllowOfflineRenderers,
+    NSOpenGLPFADoubleBuffer,
+    0
+};
+
+static const NSOpenGLPixelFormatAttribute kAttribs_doubleBuffered_accel[] = {
     NSOpenGLPFAAccelerated,
     NSOpenGLPFAAllowOfflineRenderers,
     NSOpenGLPFADoubleBuffer,
@@ -225,17 +240,23 @@ CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nullptr;
     }
 
+#ifdef EMULATE_VM
+    if (aForceAccelerated) {
+        return nullptr;
+    }
+#endif
+
     const NSOpenGLPixelFormatAttribute* attribs;
     if (sCGLLibrary.UseDoubleBufferedWindows()) {
-        attribs = kAttribs_doubleBuffered;
+        attribs = aForceAccelerated ? kAttribs_doubleBuffered_accel : kAttribs_doubleBuffered;
     } else {
-        attribs = kAttribs_singleBuffered;
+        attribs = aForceAccelerated ? kAttribs_singleBuffered_accel : kAttribs_singleBuffered;
     }
     NSOpenGLContext* context = CreateWithFormat(attribs);
     if (!context) {

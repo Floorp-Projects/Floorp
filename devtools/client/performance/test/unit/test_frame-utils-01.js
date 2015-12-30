@@ -59,8 +59,8 @@ add_task(function () {
     ok(!isContent.apply(null, frameify(frame)), `${frame[0]} should not be considered a content frame.`);
   }
 
-  // functionName, fileName, hostName, url, line, column
-  const FIELDS = ["functionName", "fileName", "hostName", "url", "line", "column", "host", "port"];
+  // functionName, fileName, host, url, line, column
+  const FIELDS = ["functionName", "fileName", "host", "url", "line", "column", "host", "port"];
   const PARSED_CONTENT = [
     ["hello/<.world", "bar.js", "foo", "https://foo/bar.js", 123, 987, "foo", null],
     ["hello/<.world", "bar.js", "foo", "http://foo/bar.js", 123, 987, "foo", null],
@@ -70,12 +70,12 @@ add_task(function () {
     ["hello/<.world", "/", "foo", "http://foo/#bar", 123, 987, "foo", null],
     ["hello/<.world", "/", "foo", "http://foo/", 123, 987, "foo", null],
     ["hello/<.world", "file.js", "myfxosapp", "app://myfxosapp/file.js", 100, 1, "myfxosapp", null],
-    ["hello/<.world", "file.js", "localhost", "http://localhost:8888/file.js", 100, 1, "localhost:8888", 8888],
-    ["hello/<.world", "file.js", "localhost", "http://localhost:8888/file.js", 100, null, "localhost:8888", 8888],
-    ["hello/<.world", "/", "localhost", "http://localhost:8888/", 1, null, "localhost:8888", 8888],
-    ["hello/<.world", "/", "localhost", "http://localhost:8888/", 100, 50, "localhost:8888", 8888],
-    ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost", "http://localhost:8888/profiler.html", 4, null, "localhost:8888", 8888],
-    ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost", "http://localhost:8888/profiler.html", 4, 5, "localhost:8888", 8888],
+    ["hello/<.world", "file.js", "localhost:8888", "http://localhost:8888/file.js", 100, 1, "localhost:8888", 8888],
+    ["hello/<.world", "file.js", "localhost:8888", "http://localhost:8888/file.js", 100, null, "localhost:8888", 8888],
+    ["hello/<.world", "/", "localhost:8888", "http://localhost:8888/", 1, null, "localhost:8888", 8888],
+    ["hello/<.world", "/", "localhost:8888", "http://localhost:8888/", 100, 50, "localhost:8888", 8888],
+    ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost:8888", "http://localhost:8888/profiler.html", 4, null, "localhost:8888", 8888],
+    ["Native[\"arraycopy(blah)\"]", "profiler.html", "localhost:8888", "http://localhost:8888/profiler.html", 4, 5, "localhost:8888", 8888],
   ];
 
   for (let i = 0; i < PARSED_CONTENT.length; i++) {

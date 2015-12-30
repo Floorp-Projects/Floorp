@@ -13,25 +13,20 @@ var manifest2 = { // used for testing install
   unmarkedIcon: "https://test1.example.com/browser/browser/base/content/test/social/checked.jpg",
 
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 var manifest3 = { // used for testing install
   name: "provider test2",
   origin: "https://test2.example.com",
   sidebarURL: "https://test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
   iconURL: "https://test2.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 
 function test() {
   waitForExplicitFinish();
 
-  runSocialTests(tests, undefined, undefined, function () {
-    // Bug 1232207 - something breaks this on aurora on most platforms
-    // ok(CustomizableUI.inDefaultState, "Should be in the default state when we finish");
-    CustomizableUI.reset();
-    finish();
-  });
+  runSocialTests(tests, undefined, undefined, finish);
 }
 
 var tests = {

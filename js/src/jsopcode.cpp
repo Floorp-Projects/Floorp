@@ -33,7 +33,6 @@
 #include "jstypes.h"
 #include "jsutil.h"
 
-#include "asmjs/AsmJSModule.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/SourceNotes.h"
 #include "gc/GCInternals.h"

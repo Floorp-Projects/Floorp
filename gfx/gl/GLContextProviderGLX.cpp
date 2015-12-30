@@ -1052,7 +1052,7 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
 {
     if (!sGLXLibrary.EnsureInitialized()) {
         return nullptr;

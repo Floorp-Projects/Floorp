@@ -54,9 +54,6 @@ AudioNode::AudioNode(AudioContext* aContext,
   , mChannelInterpretation(aChannelInterpretation)
   , mId(gId++)
   , mPassThrough(false)
-#ifdef DEBUG
-  , mDemiseNotified(false)
-#endif
 {
   MOZ_ASSERT(aContext);
   DOMEventTargetHelper::BindToOwner(aContext->GetParentObject());
@@ -68,10 +65,8 @@ AudioNode::~AudioNode()
   MOZ_ASSERT(mInputNodes.IsEmpty());
   MOZ_ASSERT(mOutputNodes.IsEmpty());
   MOZ_ASSERT(mOutputParams.IsEmpty());
-#ifdef DEBUG
-  MOZ_ASSERT(mDemiseNotified,
+  MOZ_ASSERT(!mStream,
              "The webaudio-node-demise notification must have been sent");
-#endif
   if (mContext) {
     mContext->UnregisterNode(this);
   }
@@ -390,9 +385,6 @@ AudioNode::DestroyMediaStream()
       id.AppendPrintf("%u", mId);
       obs->NotifyObservers(nullptr, "webaudio-node-demise", id.get());
     }
-#ifdef DEBUG
-    mDemiseNotified = true;
-#endif
   }
 }
 

@@ -468,7 +468,7 @@ JSContext::currentScript(jsbytecode** ppc,
         return script;
     }
 
-    if (act->isAsmJS())
+    if (act->isWasm())
         return nullptr;
 
     MOZ_ASSERT(act->isInterpreter());

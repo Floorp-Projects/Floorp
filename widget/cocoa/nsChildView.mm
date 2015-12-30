@@ -336,7 +336,9 @@ class GLPresenter : public GLManager
 public:
   static GLPresenter* CreateForWindow(nsIWidget* aWindow)
   {
-    RefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow);
+    // Contrary to CompositorOGL, we allow unaccelerated OpenGL contexts to be
+    // used. BasicCompositor only requires very basic GL functionality.
+    RefPtr<GLContext> context = gl::GLContextProvider::CreateForWindow(aWindow, false);
     return context ? new GLPresenter(context) : nullptr;
   }
 

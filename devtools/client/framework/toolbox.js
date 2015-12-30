@@ -19,7 +19,7 @@ var promise = require("promise");
 var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 var HUDService = require("devtools/client/webconsole/hudservice");
-var sourceUtils = require("devtools/client/shared/source-utils");
+var viewSource = require("devtools/client/shared/view-source");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/client/framework/gDevTools.jsm");
@@ -2136,7 +2136,7 @@ Toolbox.prototype = {
    * @see devtools/client/shared/source-utils.js
    */
   viewSourceInStyleEditor: function(sourceURL, sourceLine) {
-    return sourceUtils.viewSourceInStyleEditor(this, sourceURL, sourceLine);
+    return viewSource.viewSourceInStyleEditor(this, sourceURL, sourceLine);
   },
 
   /**
@@ -2144,7 +2144,7 @@ Toolbox.prototype = {
    * @see devtools/client/shared/source-utils.js
    */
   viewSourceInDebugger: function(sourceURL, sourceLine) {
-    return sourceUtils.viewSourceInDebugger(this, sourceURL, sourceLine);
+    return viewSource.viewSourceInDebugger(this, sourceURL, sourceLine);
   },
 
   /**
@@ -2157,7 +2157,7 @@ Toolbox.prototype = {
    * @see devtools/client/shared/source-utils.js
    */
   viewSourceInScratchpad: function(sourceURL, sourceLine) {
-    return sourceUtils.viewSourceInScratchpad(sourceURL, sourceLine);
+    return viewSource.viewSourceInScratchpad(sourceURL, sourceLine);
   },
 
   /**
@@ -2165,6 +2165,6 @@ Toolbox.prototype = {
    * @see devtools/client/shared/source-utils.js
    */
   viewSource: function(sourceURL, sourceLine) {
-    return sourceUtils.viewSource(this, sourceURL, sourceLine);
+    return viewSource.viewSource(this, sourceURL, sourceLine);
   },
 };

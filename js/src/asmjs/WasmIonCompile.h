@@ -16,60 +16,69 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_ion_compile_h
-#define asmjs_wasm_ion_compile_h
+#ifndef wasm_ion_compile_h
+#define wasm_ion_compile_h
 
-#include "asmjs/AsmJSFrameIterator.h"
-#include "asmjs/WasmCompileArgs.h"
 #include "asmjs/WasmIR.h"
 #include "jit/MacroAssembler.h"
 
 namespace js {
 namespace wasm {
 
-class FunctionCompileResults
+// The FuncCompileResults contains the results of compiling a single function
+// body, ready to be merged into the whole-module MacroAssembler.
+class FuncCompileResults
 {
     jit::TempAllocator alloc_;
     jit::MacroAssembler masm_;
-    AsmJSFunctionOffsets offsets_;
+    FuncOffsets offsets_;
     unsigned compileTime_;
 
-    FunctionCompileResults(const FunctionCompileResults&) = delete;
-    FunctionCompileResults& operator=(const FunctionCompileResults&) = delete;
+    FuncCompileResults(const FuncCompileResults&) = delete;
+    FuncCompileResults& operator=(const FuncCompileResults&) = delete;
 
   public:
-    explicit FunctionCompileResults(LifoAlloc& lifo)
+    explicit FuncCompileResults(LifoAlloc& lifo)
       : alloc_(&lifo),
-        masm_(jit::MacroAssembler::AsmJSToken(), &alloc_),
+        masm_(jit::MacroAssembler::AsmJSToken(), alloc_),
         compileTime_(0)
     {}
 
     jit::TempAllocator& alloc() { return alloc_; }
     jit::MacroAssembler& masm() { return masm_; }
-
-    AsmJSFunctionOffsets& offsets() { return offsets_; }
-    const AsmJSFunctionOffsets& offsets() const { return offsets_; }
+    FuncOffsets& offsets() { return offsets_; }
 
     void setCompileTime(unsigned t) { MOZ_ASSERT(!compileTime_); compileTime_ = t; }
     unsigned compileTime() const { return compileTime_; }
 };
 
-class CompileTask
+// An IonCompileTask represents the task of compiling a single function body. An
+// IonCompileTask is filled with the wasm code to be compiled on the main
+// validation thread, sent off to an Ion compilation helper thread which creates
+// the FuncCompileResults, and finally sent back to the validation thread. To
+// save time allocating and freeing memory, IonCompileTasks are reset() and
+// reused.
+class IonCompileTask
 {
-    LifoAlloc lifo_;
+    JSRuntime* const runtime_;
     const CompileArgs args_;
+    LifoAlloc lifo_;
     const FuncIR* func_;
-    mozilla::Maybe<FunctionCompileResults> results_;
+    mozilla::Maybe<FuncCompileResults> results_;
 
-    CompileTask(const CompileTask&) = delete;
-    CompileTask& operator=(const CompileTask&) = delete;
+    IonCompileTask(const IonCompileTask&) = delete;
+    IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    CompileTask(size_t defaultChunkSize, CompileArgs args)
-      : lifo_(defaultChunkSize),
+    IonCompileTask(JSRuntime* runtime, CompileArgs args, size_t defaultChunkSize)
+      : runtime_(runtime),
         args_(args),
+        lifo_(defaultChunkSize),
         func_(nullptr)
     {}
+    JSRuntime* runtime() const {
+        return runtime_;
+    }
     LifoAlloc& lifo() {
         return lifo_;
     }
@@ -84,7 +93,7 @@ class CompileTask
         MOZ_ASSERT(func_);
         return *func_;
     }
-    FunctionCompileResults& results() {
+    FuncCompileResults& results() {
         return *results_;
     }
     void reset() {
@@ -95,9 +104,9 @@ class CompileTask
 };
 
 bool
-CompileFunction(CompileTask* task);
+IonCompileFunction(IonCompileTask* task);
 
 } // namespace wasm
 } // namespace js
 
-#endif // asmjs_wasm_ion_compile_h
+#endif // wasm_ion_compile_h

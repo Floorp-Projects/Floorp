@@ -11,6 +11,7 @@
 #include "jsiter.h"
 
 #include "builtin/SelfHostingDefines.h"
+#include "builtin/WeakMapObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/SelfHosting.h"
 

@@ -38,7 +38,7 @@ class Linker
 
     template <AllowGC allowGC>
     JitCode* newCode(JSContext* cx, CodeKind kind, bool hasPatchableBackedges = false) {
-        MOZ_ASSERT(masm.numAsmJSAbsoluteLinks() == 0);
+        MOZ_ASSERT(masm.numAsmJSAbsoluteAddresses() == 0);
         MOZ_ASSERT_IF(hasPatchableBackedges, kind == ION_CODE);
 
         gc::AutoSuppressGC suppressGC(cx);

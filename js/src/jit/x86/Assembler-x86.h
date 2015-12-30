@@ -288,7 +288,7 @@ class Assembler : public AssemblerX86Shared
     }
     void mov(wasm::SymbolicAddress imm, Register dest) {
         masm.movl_i32r(-1, dest.encoding());
-        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), imm));
+        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), imm));
     }
     void mov(const Operand& src, Register dest) {
         movl(src, dest);
@@ -367,11 +367,11 @@ class Assembler : public AssemblerX86Shared
     }
     void cmpl(Register rhs, wasm::SymbolicAddress lhs) {
         masm.cmpl_rm_disp32(rhs.encoding(), (void*)-1);
-        append(AsmJSAbsoluteLink(CodeOffset(masm.currentOffset()), lhs));
+        append(AsmJSAbsoluteAddress(CodeOffset(masm.currentOffset()), lhs));
     }
     void cmpl(Imm32 rhs, wasm::SymbolicAddress lhs) {
         JmpSrc src = masm.cmpl_im_disp32(rhs.value, (void*)-1);
-        append(AsmJSAbsoluteLink(CodeOffset(src.offset()), lhs));
+        append(AsmJSAbsoluteAddress(CodeOffset(src.offset()), lhs));
     }
 
     void adcl(Imm32 imm, Register dest) {
@@ -903,7 +903,7 @@ class Assembler : public AssemblerX86Shared
         return CodeOffset(masm.currentOffset());
     }
 
-    void loadAsmJSActivation(Register dest) {
+    void loadWasmActivation(Register dest) {
         CodeOffset label = movlWithPatch(PatchedAbsoluteAddress(), dest);
         append(AsmJSGlobalAccess(label, wasm::ActivationGlobalDataOffset));
     }

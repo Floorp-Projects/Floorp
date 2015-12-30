@@ -36,7 +36,6 @@
 
 #include <float.h>
 
-#include "asmjs/AsmJSValidate.h"
 #include "jit/mips64/Assembler-mips64.h"
 #include "vm/Runtime.h"
 
@@ -3697,7 +3696,7 @@ Simulator::execute()
     // Get the PC to simulate. Cannot use the accessor here as we need the
     // raw PC value and not the one used as input to arithmetic instructions.
     int64_t program_counter = get_pc();
-    AsmJSActivation* activation = TlsPerThreadData.get()->runtimeFromMainThread()->asmJSActivationStack();
+    WasmActivation* activation = TlsPerThreadData.get()->runtimeFromMainThread()->wasmActivationStack();
 
     while (program_counter != end_sim_pc) {
         if (enableStopSimAt && (icount_ == Simulator::StopSimAt)) {

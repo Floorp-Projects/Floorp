@@ -1149,10 +1149,10 @@ nsHTMLReflowState::CalculateBorderPaddingMargin(
   switch (mStylePosition->mBoxSizing) {
     case StyleBoxSizing::Border:
       inside += borderStartEnd;
-      // fall through
+      MOZ_FALLTHROUGH;
     case StyleBoxSizing::Padding:
       inside += paddingStartEnd;
-      // fall through
+      MOZ_FALLTHROUGH;
     case StyleBoxSizing::Content:
       // nothing
       break;

@@ -38,7 +38,7 @@
 #include "jswin.h"
 #include "jswrapper.h"
 
-#include "asmjs/AsmJSModule.h"
+#include "asmjs/AsmJS.h"
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
 #include "builtin/SymbolObject.h"
@@ -3653,7 +3653,7 @@ js::DumpBacktrace(JSContext* cx)
             i.isInterp() ? 'i' :
             i.isBaseline() ? 'b' :
             i.isIon() ? 'I' :
-            i.isAsmJS() ? 'A' :
+            i.isWasm() ? 'W' :
             '?';
 
         sprinter.printf("#%d %14p %c   %s:%d (%p @ %d)\n",

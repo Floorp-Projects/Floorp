@@ -13,7 +13,7 @@ var manifest = { // used for testing install
   unmarkedIcon: "https://test1.example.com/browser/browser/base/content/test/social/checked.jpg",
 
   iconURL: "https://test1.example.com/browser/browser/base/content/test/general/moz.png",
-  version: 1
+  version: "1.0"
 };
 
 function test() {
