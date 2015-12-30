@@ -28,10 +28,10 @@ class LayerManagerComposite;
 class AutoResolveRefLayers;
 class CompositorParent;
 
-// Represents (affine) transforms that are calculated from a content view.
-struct ViewTransform {
-  explicit ViewTransform(LayerToParentLayerScale aScale = LayerToParentLayerScale(),
-                         ParentLayerPoint aTranslation = ParentLayerPoint())
+// Represents async transforms consisting of a scale and a translation.
+struct AsyncTransform {
+  explicit AsyncTransform(LayerToParentLayerScale aScale = LayerToParentLayerScale(),
+                          ParentLayerPoint aTranslation = ParentLayerPoint())
     : mScale(aScale)
     , mTranslation(aTranslation)
   {}
@@ -45,15 +45,15 @@ struct ViewTransform {
 
   // For convenience, to avoid writing the cumbersome
   // "gfx::Matrix4x4(a) * gfx::Matrix4x4(b)".
-  friend gfx::Matrix4x4 operator*(const ViewTransform& a, const ViewTransform& b) {
+  friend gfx::Matrix4x4 operator*(const AsyncTransform& a, const AsyncTransform& b) {
     return gfx::Matrix4x4(a) * gfx::Matrix4x4(b);
   }
 
-  bool operator==(const ViewTransform& rhs) const {
+  bool operator==(const AsyncTransform& rhs) const {
     return mTranslation == rhs.mTranslation && mScale == rhs.mScale;
   }
 
-  bool operator!=(const ViewTransform& rhs) const {
+  bool operator!=(const AsyncTransform& rhs) const {
     return !(*this == rhs);
   }
 
