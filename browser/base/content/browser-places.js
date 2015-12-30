@@ -1554,12 +1554,6 @@ var BookmarkingUI = {
     PlacesCommandHook.updateBookmarkAllTabsCommand();
   },
 
-  updatePocketItemVisibility: function BUI_updatePocketItemVisibility(prefix) {
-    let hidden = !CustomizableUI.getPlacementOfWidget("pocket-button");
-    document.getElementById(prefix + "pocket").hidden = hidden;
-    document.getElementById(prefix + "pocketSeparator").hidden = hidden;
-  },
-
   _showBookmarkedNotification: function BUI_showBookmarkedNotification() {
     function getCenteringTransformForRects(rectToPosition, referenceRect) {
       let topDiff = referenceRect.top - rectToPosition.top;
@@ -1681,7 +1675,6 @@ var BookmarkingUI = {
 
   onPanelMenuViewShowing: function BUI_onViewShowing(aEvent) {
     this._updateBookmarkPageMenuItem();
-    this.updatePocketItemVisibility("panelMenu_");
     // Update checked status of the toolbar toggle.
     let viewToolbar = document.getElementById("panelMenu_viewBookmarksToolbar");
     let personalToolbar = document.getElementById("PersonalToolbar");

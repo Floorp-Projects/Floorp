@@ -28,29 +28,43 @@ void UpdateLog::Init(NS_tchar* sourcePath,
 
 #ifdef XP_WIN
   GetTempFileNameW(sourcePath, L"log", 0, mTmpFilePath);
-  if (append) {
-    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
-      NS_T("%s/%s"), sourcePath, alternateFileName);
-    MoveFileExW(mDstFilePath, mTmpFilePath, MOVEFILE_REPLACE_EXISTING);
-  } else {
-    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
-                 NS_T("%s/%s"), sourcePath, fileName);
-  }
+  int dstFilePathLen = NS_tsnprintf(mDstFilePath,
+    sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+    NS_T("%s/%s"), sourcePath, append ? alternateFileName : fileName);
 
-  logFP = NS_tfopen(mTmpFilePath, append ? NS_T("a") : NS_T("w"));
-  // Delete this file now so it is possible to tell from the unelevated
-  // updater process if the elevated updater process has written the log.
-  DeleteFileW(mDstFilePath);
+  // If the destination path was over the length limit,
+  // disable logging by skipping opening the file and setting logFP.
+  if ((dstFilePathLen > 0) &&
+      (dstFilePathLen <
+         static_cast<int>(sizeof(mDstFilePath)/sizeof(mDstFilePath[0])))) {
+    if (append) {
+      MoveFileExW(mDstFilePath, mTmpFilePath, MOVEFILE_REPLACE_EXISTING);
+    }
+    logFP = NS_tfopen(mTmpFilePath, append ? NS_T("a") : NS_T("w"));
+
+    // Delete this file now so it is possible to tell from the unelevated
+    // updater process if the elevated updater process has written the log.
+    DeleteFileW(mDstFilePath);
+  }
 #else
-  NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
-               NS_T("%s/%s"), sourcePath, fileName);
-
+  int dstFilePathLen = 0;
   if (alternateFileName && NS_taccess(mDstFilePath, F_OK)) {
-    NS_tsnprintf(mDstFilePath, sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+    dstFilePathLen = NS_tsnprintf(mDstFilePath,
+      sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
       NS_T("%s/%s"), sourcePath, alternateFileName);
+  } else {
+    dstFilePathLen = NS_tsnprintf(mDstFilePath,
+      sizeof(mDstFilePath)/sizeof(mDstFilePath[0]),
+      NS_T("%s/%s"), sourcePath, fileName);
   }
 
-  logFP = NS_tfopen(mDstFilePath, append ? NS_T("a") : NS_T("w"));
+  // If the destination path was over the length limit,
+  // disable logging by skipping opening the file and setting logFP.
+  if ((dstFilePathLen > 0) &&
+      (dstFilePathLen <
+         static_cast<int>(sizeof(mDstFilePath)/sizeof(mDstFilePath[0])))) {
+    logFP = NS_tfopen(mDstFilePath, append ? NS_T("a") : NS_T("w"));
+  }
 #endif
 }
 

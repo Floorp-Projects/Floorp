@@ -620,9 +620,9 @@
              fullscreentoolbar="true" mode="icons" customizable="true"
              iconsize="small"
 #ifdef MOZ_DEV_EDITION
-             defaultset="urlbar-container,search-container,developer-button,bookmarks-menu-button,pocket-button,downloads-button,home-button,loop-button"
+             defaultset="urlbar-container,search-container,developer-button,bookmarks-menu-button,downloads-button,home-button,loop-button"
 #else
-             defaultset="urlbar-container,search-container,bookmarks-menu-button,pocket-button,downloads-button,home-button,loop-button"
+             defaultset="urlbar-container,search-container,bookmarks-menu-button,downloads-button,home-button,loop-button"
 #endif
              customizationtarget="nav-bar-customization-target"
              overflowable="true"
@@ -798,7 +798,6 @@
                      oncommand="BookmarksEventHandler.onCommand(event, this.parentNode._placesView);"
                      onclick="BookmarksEventHandler.onClick(event, this.parentNode._placesView);"
                      onpopupshowing="BookmarkingUI.onPopupShowing(event);
-                                     BookmarkingUI.updatePocketItemVisibility('BMB_');
                                      BookmarkingUI.attachPlacesView(event, this);"
                      tooltip="bhTooltip" popupsinherittooltip="true">
             <menuitem id="BMB_viewBookmarksSidebar"
@@ -815,11 +814,6 @@
                       command="Browser:ShowAllBookmarks"
                       key="manBookmarkKb"/>
             <menuseparator/>
-            <menuitem id="BMB_pocket"
-                      class="menuitem-iconic bookmark-item subviewbutton"
-                      label="&pocketMenuitem.label;"
-                      oncommand="openUILink(Pocket.listURL, event);"/>
-            <menuseparator id="BMB_pocketSeparator"/>
             <menuitem id="BMB_subscribeToPageMenuitem"
 #ifndef XP_MACOSX
                       class="menuitem-iconic subviewbutton"

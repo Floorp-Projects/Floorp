@@ -98,7 +98,7 @@ const App = createClass({
             snapshot: selectedSnapshot,
             diffing,
             onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
-            toolbox
+            onViewSourceInDebugger: frame => toolbox.viewSourceInDebugger(frame.source, frame.line),
           })
         )
       )

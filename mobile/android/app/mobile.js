@@ -435,17 +435,17 @@ pref("ui.zoomedview.defaultZoomFactor", 2);
 pref("ui.zoomedview.simplified", true); // Do not display all the zoomed view controls, do not use size heurisistic
 
 pref("ui.touch.radius.enabled", false);
-pref("ui.touch.radius.leftmm", 8);
-pref("ui.touch.radius.topmm", 8);
-pref("ui.touch.radius.rightmm", 8);
-pref("ui.touch.radius.bottommm", 8);
+pref("ui.touch.radius.leftmm", 3);
+pref("ui.touch.radius.topmm", 5);
+pref("ui.touch.radius.rightmm", 3);
+pref("ui.touch.radius.bottommm", 2);
 pref("ui.touch.radius.visitedWeight", 120);
 
 pref("ui.mouse.radius.enabled", true);
-pref("ui.mouse.radius.leftmm", 8);
-pref("ui.mouse.radius.topmm", 8);
-pref("ui.mouse.radius.rightmm", 8);
-pref("ui.mouse.radius.bottommm", 8);
+pref("ui.mouse.radius.leftmm", 3);
+pref("ui.mouse.radius.topmm", 5);
+pref("ui.mouse.radius.rightmm", 3);
+pref("ui.mouse.radius.bottommm", 2);
 pref("ui.mouse.radius.visitedWeight", 120);
 pref("ui.mouse.radius.reposition", true);
 
