@@ -14,6 +14,7 @@
 #ifdef MOZ_LOGGING
 #include "mozilla/Logging.h"
 #endif
+#include "mozilla/Tuple.h"
 
 #if defined(MOZ_WIDGET_GONK) || defined(MOZ_WIDGET_ANDROID)
 #include "nsDebug.h"
@@ -220,19 +221,23 @@ struct CriticalLogger {
   static void CrashAction(LogReason aReason);
 };
 
+// The int is the index of the Log call; if the number of logs exceeds some preset
+// capacity we may not get all of them, so the indices help figure out which
+// ones we did save.  The double is expected to be the "TimeDuration", 
+// time in seconds since the process creation.
+typedef mozilla::Tuple<int32_t,std::string,double> LoggingRecordEntry;
+
 // Implement this interface and init the Factory with an instance to
 // forward critical logs.
+typedef std::vector<LoggingRecordEntry> LoggingRecord;
 class LogForwarder {
 public:
   virtual ~LogForwarder() {}
   virtual void Log(const std::string &aString) = 0;
   virtual void CrashAction(LogReason aReason) = 0;
 
-  // Provide a copy of the logs to the caller.  The int is the index
-  // of the Log call, if the number of logs exceeds some preset capacity
-  // we may not get all of them, so the indices help figure out which
-  // ones we did save.
-  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() = 0;
+  // Provide a copy of the logs to the caller.
+  virtual LoggingRecord LoggingRecordCopy() = 0;
 };
 
 class NoLog
