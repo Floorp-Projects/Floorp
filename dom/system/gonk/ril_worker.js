@@ -5263,6 +5263,22 @@ RilObject.prototype[UNSOLICITED_RESPONSE_NEW_BROADCAST_SMS] = function UNSOLICIT
     return;
   }
 
+  // Bug 1235697, failed to deactivate CBS in some modem.
+  // Workaround it according to the settings.
+  // Note: ETWS/CMAS/PWS can be received even disabled.
+  //       It will be displayed according to the setting in application layer.
+  if (this.cellBroadcastDisabled && (
+      !(message.messageId >= 0x1100 && message.messageId <= 0x1107) && // ETWS
+      !(message.messageId >= 0x1112 && message.messageId <= 0x112F) && // CMAS
+      !(message.messageId >= 0x1130 && message.messageId <= 0x18FF) // PWS
+    )) {
+    if (DEBUG) {
+      this.context.debug("Ignore a CB message when disabled, messageId: " +
+                         message.messageId);
+    }
+    return;
+  }
+
   message.rilMessageType = "cellbroadcast-received";
   this.sendChromeMessage(message);
 };
