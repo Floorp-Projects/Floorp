@@ -16,10 +16,10 @@
  * limitations under the License.
  */
 
-#ifndef asmjs_wasm_ir_h
-#define asmjs_wasm_ir_h
+#ifndef wasm_ir_h
+#define wasm_ir_h
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmTypes.h"
 
 namespace js {
 
@@ -434,8 +434,7 @@ class FuncIR
     typedef Vector<uint8_t, 4096, LifoAllocPolicy<Fallible>> Bytecode;
 
     // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
-    // asm.js compilation. Wasm compilation will require an alternative way to
-    // name CodeRanges (index).
+    // asm.js compilation.
     PropertyName* name_;
     unsigned line_;
     unsigned column_;
@@ -572,4 +571,4 @@ class FuncIR
 } // namespace wasm
 } // namespace js
 
-#endif // asmjs_wasm_ir_h
+#endif // wasm_ir_h

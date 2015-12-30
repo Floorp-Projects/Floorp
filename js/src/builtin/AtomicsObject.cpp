@@ -53,7 +53,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 
-#include "asmjs/AsmJSModule.h"
+#include "asmjs/WasmModule.h"
 #include "jit/AtomicOperations.h"
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
@@ -523,9 +523,9 @@ static void
 GetCurrentAsmJSHeap(SharedMem<void*>* heap, size_t* length)
 {
     JSRuntime* rt = js::TlsPerThreadData.get()->runtimeFromMainThread();
-    AsmJSModule& mod = rt->asmJSActivationStack()->module();
-    *heap = mod.maybeHeap().cast<void*>();
-    *length = mod.heapLength();
+    wasm::Module& module = rt->wasmActivationStack()->module();
+    *heap = module.maybeHeap().cast<void*>();
+    *length = module.heapLength();
 }
 
 int32_t

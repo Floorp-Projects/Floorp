@@ -116,8 +116,6 @@ if CONFIG['GNU_CXX']:
             '-Wno-macro-redefined',
             '-Wno-unused-private-field',
         ]
-        # work around inline function linking bug with template arguments
-        SOURCES['skia/src/gpu/GrResourceCache.cpp'].flags += ['-fkeep-inline-functions']
     else:
         CXXFLAGS += [
             '-Wno-logical-op',

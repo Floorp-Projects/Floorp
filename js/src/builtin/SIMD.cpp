@@ -219,7 +219,7 @@ static const JSFunctionSpec TypeDescriptorMethods[] = {
 };
 
 // Shared TypedObject methods for all SIMD types.
-static const JSFunctionSpec TypedObjectMethods[] = {
+static const JSFunctionSpec SimdTypedObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "SimdToSource", 0, 0),
     JS_FS_END
 };
@@ -362,7 +362,7 @@ CreateAndBindSimdClass(JSContext* cx, Handle<GlobalObject*> global, HandleObject
         return nullptr;
 
     if (!LinkConstructorAndPrototype(cx, typeDescr, proto) ||
-        !JS_DefineFunctions(cx, proto, TypedObjectMethods))
+        !JS_DefineFunctions(cx, proto, SimdTypedObjectMethods))
     {
         return nullptr;
     }

@@ -1043,7 +1043,7 @@ DOMAudioNodeMediaStream::CreateTrackUnionStream(nsIDOMWindow* aWindow,
 DOMHwMediaStream::DOMHwMediaStream()
 {
 #ifdef MOZ_WIDGET_GONK
-  mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS_OVERLAY);
+  mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS);
   mOverlayImage = mImageContainer->CreateOverlayImage();
   nsAutoTArray<ImageContainer::NonOwningImage,1> images;
   images.AppendElement(ImageContainer::NonOwningImage(mOverlayImage));

@@ -258,10 +258,10 @@ MacroAssemblerMIPS64::ma_li(Register dest, ImmWord imm)
             as_lui(dest, Imm16::Upper(Imm32(imm.value >> 32)).encode());
             if ((imm.value >> 32) & 0xffff)
               as_ori(dest, dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
+            as_dsll(dest, dest, 16);
         } else {
-            as_ori(dest, zero, Imm16::Lower(Imm32(imm.value >> 32)).encode());
+            as_lui(dest, Imm16::Lower(Imm32(imm.value >> 32)).encode());
         }
-        as_dsll(dest, dest, 16);
         if ((imm.value >> 16) & 0xffff)
           as_ori(dest, dest, Imm16::Upper(Imm32(imm.value)).encode());
         as_dsll(dest, dest, 16);
@@ -895,7 +895,7 @@ MacroAssemblerMIPS64Compat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerMIPS64Compat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
-    append(AsmJSAbsoluteLink(CodeOffset(nextOffset().getOffset()), imm));
+    append(AsmJSAbsoluteAddress(CodeOffset(nextOffset().getOffset()), imm));
     ma_liPatchable(dest, ImmWord(-1));
 }
 

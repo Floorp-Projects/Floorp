@@ -40,33 +40,30 @@ class FunctionCompiler
     typedef Vector<size_t, 4, SystemAllocPolicy> PositionStack;
     typedef Vector<ValType, 4, SystemAllocPolicy> LocalTypes;
 
-    CompileArgs              args_;
-    const FuncIR&            func_;
-    size_t                   pc_;
+    const FuncIR&       func_;
+    size_t              pc_;
 
-    TempAllocator&           alloc_;
-    MIRGraph&                graph_;
-    const CompileInfo&       info_;
-    MIRGenerator&            mirGen_;
+    TempAllocator&      alloc_;
+    MIRGraph&           graph_;
+    const CompileInfo&  info_;
+    MIRGenerator&       mirGen_;
 
-    MBasicBlock*             curBlock_;
+    MBasicBlock*        curBlock_;
 
-    PositionStack            loopStack_;
-    PositionStack            breakableStack_;
-    UnlabeledBlockMap        unlabeledBreaks_;
-    UnlabeledBlockMap        unlabeledContinues_;
-    LabeledBlockMap          labeledBreaks_;
-    LabeledBlockMap          labeledContinues_;
+    PositionStack       loopStack_;
+    PositionStack       breakableStack_;
+    UnlabeledBlockMap   unlabeledBreaks_;
+    UnlabeledBlockMap   unlabeledContinues_;
+    LabeledBlockMap     labeledBreaks_;
+    LabeledBlockMap     labeledContinues_;
 
-    LocalTypes               localTypes_;
+    LocalTypes          localTypes_;
 
-    FunctionCompileResults&  compileResults_;
+    FuncCompileResults& compileResults_;
 
   public:
-    FunctionCompiler(CompileArgs args, const FuncIR& func, MIRGenerator& mirGen,
-                     FunctionCompileResults& compileResults)
-      : args_(args),
-        func_(func),
+    FunctionCompiler(const FuncIR& func, MIRGenerator& mirGen, FuncCompileResults& compileResults)
+      : func_(func),
         pc_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
@@ -770,7 +767,7 @@ class FunctionCompiler
         return callPrivate(MAsmJSCall::Callee(ptrFun), call, ret, def);
     }
 
-    bool builtinCall(Builtin builtin, const Call& call, ValType type, MDefinition** def)
+    bool builtinCall(SymbolicAddress builtin, const Call& call, ValType type, MDefinition** def)
     {
         return callPrivate(MAsmJSCall::Callee(builtin), call, ToExprType(type), def);
     }
@@ -1648,7 +1645,7 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
 
     f.finishCallArgs(&call);
 
-    Builtin callee = f32 == F32::Ceil ? Builtin::CeilF : Builtin::FloorF;
+    SymbolicAddress callee = f32 == F32::Ceil ? SymbolicAddress::CeilF : SymbolicAddress::FloorF;
     return f.builtinCall(callee, call, ValType::F32, def);
 }
 
@@ -1671,20 +1668,20 @@ EmitMathBuiltinCall(FunctionCompiler& f, F64 f64, MDefinition** def)
             return false;
     }
 
-    Builtin callee;
+    SymbolicAddress callee;
     switch (f64) {
-      case F64::Ceil:  callee = Builtin::CeilD; break;
-      case F64::Floor: callee = Builtin::FloorD; break;
-      case F64::Sin:   callee = Builtin::SinD; break;
-      case F64::Cos:   callee = Builtin::CosD; break;
-      case F64::Tan:   callee = Builtin::TanD; break;
-      case F64::Asin:  callee = Builtin::ASinD; break;
-      case F64::Acos:  callee = Builtin::ACosD; break;
-      case F64::Atan:  callee = Builtin::ATanD; break;
-      case F64::Exp:   callee = Builtin::ExpD; break;
-      case F64::Log:   callee = Builtin::LogD; break;
-      case F64::Pow:   callee = Builtin::PowD; break;
-      case F64::Atan2: callee = Builtin::ATan2D; break;
+      case F64::Ceil:  callee = SymbolicAddress::CeilD; break;
+      case F64::Floor: callee = SymbolicAddress::FloorD; break;
+      case F64::Sin:   callee = SymbolicAddress::SinD; break;
+      case F64::Cos:   callee = SymbolicAddress::CosD; break;
+      case F64::Tan:   callee = SymbolicAddress::TanD; break;
+      case F64::Asin:  callee = SymbolicAddress::ASinD; break;
+      case F64::Acos:  callee = SymbolicAddress::ACosD; break;
+      case F64::Atan:  callee = SymbolicAddress::ATanD; break;
+      case F64::Exp:   callee = SymbolicAddress::ExpD; break;
+      case F64::Log:   callee = SymbolicAddress::LogD; break;
+      case F64::Pow:   callee = SymbolicAddress::PowD; break;
+      case F64::Atan2: callee = SymbolicAddress::ATan2D; break;
       default: MOZ_CRASH("unexpected double math builtin callee");
     }
 
@@ -3046,26 +3043,25 @@ EmitB32X4Expr(FunctionCompiler& f, MDefinition** def)
 }
 
 bool
-wasm::CompileFunction(CompileTask* task)
+wasm::IonCompileFunction(IonCompileTask* task)
 {
     int64_t before = PRMJ_Now();
 
-    CompileArgs args = task->args();
     const FuncIR& func = task->func();
-    FunctionCompileResults& results = task->results();
+    FuncCompileResults& results = task->results();
 
-    JitContext jitContext(CompileRuntime::get(args.runtime), &results.alloc());
+    JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
 
     const JitCompileOptions options;
     MIRGraph graph(&results.alloc());
     CompileInfo compileInfo(func.numLocals());
     MIRGenerator mir(nullptr, options, &results.alloc(), &graph, &compileInfo,
                      IonOptimizations.get(OptimizationLevel::AsmJS),
-                     args.usesSignalHandlersForOOB);
+                     task->args().useSignalHandlersForOOB);
 
     // Build MIR graph
     {
-        FunctionCompiler f(args, func, mir, results);
+        FunctionCompiler f(func, mir, results);
         if (!f.init())
             return false;
 

@@ -111,7 +111,7 @@ private:
   RefPtr<nsDocument> mDocument;
 
 public:
-  RefPtr<gfx::VRHMDInfo> mVRHMDDevice;
+  RefPtr<gfx::VRDeviceProxy> mVRHMDDevice;
   // This value should be true if the fullscreen request is
   // originated from chrome code.
   bool mIsCallerChrome = false;

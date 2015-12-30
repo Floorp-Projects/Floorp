@@ -556,6 +556,7 @@ nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
         //we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
         return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
       }
+      break;
 
     default:
       break;

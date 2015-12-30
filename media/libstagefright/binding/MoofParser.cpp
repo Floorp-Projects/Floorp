@@ -182,7 +182,9 @@ MoofParser::Metadata()
   MediaByteRange ftyp;
   MediaByteRange moov;
   ScanForMetadata(ftyp, moov);
-  if (!ftyp.Length() || !moov.Length()) {
+  if (!ftyp.Length() || !moov.Length() ||
+      ftyp.Length() > Box::kMAX_BOX_READ || moov.Length() > Box::kMAX_BOX_READ) {
+    // No ftyp or moov, or trying to read bigger-that-readable box (32MB).
     return nullptr;
   }
   RefPtr<MediaByteBuffer> metadata = new MediaByteBuffer();

@@ -134,11 +134,6 @@ ImageContainer::ImageContainer(Mode flag)
         mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE, this).take();
         MOZ_ASSERT(mImageClient);
         break;
-      case ASYNCHRONOUS_OVERLAY:
-        mIPDLChild = new ImageContainerChild(this);
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(CompositableType::IMAGE_OVERLAY, this).take();
-        MOZ_ASSERT(mImageClient);
-        break;
       default:
         MOZ_ASSERT(false, "This flag is invalid.");
         break;
@@ -179,13 +174,8 @@ RefPtr<OverlayImage>
 ImageContainer::CreateOverlayImage()
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  if (mImageClient && mImageClient->GetTextureInfo().mCompositableType != CompositableType::IMAGE_OVERLAY) {
-    // If this ImageContainer is async but the image type mismatch, fix it here
-    if (ImageBridgeChild::IsCreated()) {
-      ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
-      mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(
-          CompositableType::IMAGE_OVERLAY, this).take();
-    }
+  if (!mImageClient || !mImageClient->AsImageClientSingle()) {
+    return nullptr;
   }
   return new OverlayImage();
 }

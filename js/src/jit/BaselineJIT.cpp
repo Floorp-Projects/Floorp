@@ -8,7 +8,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "asmjs/AsmJSModule.h"
+#include "asmjs/WasmModule.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
@@ -51,7 +51,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
   : method_(nullptr),
     templateScope_(nullptr),
     fallbackStubSpace_(),
-    dependentAsmJSModules_(nullptr),
+    dependentWasmModules_(nullptr),
     prologueOffset_(prologueOffset),
     epilogueOffset_(epilogueOffset),
     profilerEnterToggleOffset_(profilerEnterToggleOffset),
@@ -485,60 +485,57 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
 
     MOZ_ASSERT(!script->hasPendingIonBuilder());
 
-    script->unlinkDependentAsmJSModules(fop);
+    script->unlinkDependentWasmModules(fop);
 
     fop->delete_(script);
 }
 
 void
-BaselineScript::clearDependentAsmJSModules()
+BaselineScript::clearDependentWasmModules()
 {
-    // Remove any links from AsmJSModules that contain optimized FFI calls into
+    // Remove any links from wasm::Modules that contain optimized import calls into
     // this BaselineScript.
-    if (dependentAsmJSModules_) {
-        for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
-            DependentAsmJSModuleExit exit = (*dependentAsmJSModules_)[i];
-            exit.module->exit(exit.exitIndex).deoptimize(*exit.module);
-        }
-
-        dependentAsmJSModules_->clear();
+    if (dependentWasmModules_) {
+        for (DependentWasmModuleImport dep : *dependentWasmModules_)
+            dep.module->deoptimizeImportExit(dep.importIndex);
+        dependentWasmModules_->clear();
     }
 }
 
 void
-BaselineScript::unlinkDependentAsmJSModules(FreeOp* fop)
+BaselineScript::unlinkDependentWasmModules(FreeOp* fop)
 {
-    // Remove any links from AsmJSModules that contain optimized FFI calls into
+    // Remove any links from wasm::Modules that contain optimized FFI calls into
     // this BaselineScript.
-    clearDependentAsmJSModules();
-    if (dependentAsmJSModules_) {
-        fop->delete_(dependentAsmJSModules_);
-        dependentAsmJSModules_ = nullptr;
+    clearDependentWasmModules();
+    if (dependentWasmModules_) {
+        fop->delete_(dependentWasmModules_);
+        dependentWasmModules_ = nullptr;
     }
 }
 
 bool
-BaselineScript::addDependentAsmJSModule(JSContext* cx, DependentAsmJSModuleExit exit)
+BaselineScript::addDependentWasmModule(JSContext* cx, wasm::Module& module, uint32_t importIndex)
 {
-    if (!dependentAsmJSModules_) {
-        dependentAsmJSModules_ = cx->new_<Vector<DependentAsmJSModuleExit> >(cx);
-        if (!dependentAsmJSModules_)
+    if (!dependentWasmModules_) {
+        dependentWasmModules_ = cx->new_<Vector<DependentWasmModuleImport> >(cx);
+        if (!dependentWasmModules_)
             return false;
     }
-    return dependentAsmJSModules_->append(exit);
+    return dependentWasmModules_->emplaceBack(&module, importIndex);
 }
 
 void
-BaselineScript::removeDependentAsmJSModule(DependentAsmJSModuleExit exit)
+BaselineScript::removeDependentWasmModule(wasm::Module& module, uint32_t importIndex)
 {
-    if (!dependentAsmJSModules_)
+    if (!dependentWasmModules_)
         return;
 
-    for (size_t i = 0; i < dependentAsmJSModules_->length(); i++) {
-        if ((*dependentAsmJSModules_)[i].module == exit.module &&
-            (*dependentAsmJSModules_)[i].exitIndex == exit.exitIndex)
+    for (size_t i = 0; i < dependentWasmModules_->length(); i++) {
+        if ((*dependentWasmModules_)[i].module == &module &&
+            (*dependentWasmModules_)[i].importIndex == importIndex)
         {
-            dependentAsmJSModules_->erase(dependentAsmJSModules_->begin() + i);
+            dependentWasmModules_->erase(dependentWasmModules_->begin() + i);
             break;
         }
     }

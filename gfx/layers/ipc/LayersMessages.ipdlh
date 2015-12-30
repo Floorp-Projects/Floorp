@@ -248,10 +248,7 @@ struct ContainerLayerAttributes {
   float presShellResolution;
   bool scaleToResolution;
   EventRegionsOverride eventRegionsOverride;
-  // This is a bare pointer; LayerTransactionParent::RecvUpdate prevents this
-  // from being used when !IsSameProcess(), but we should make this truly
-  // cross process at some point by passing the HMDConfig
-  uint64_t hmdInfo;
+  uint32_t hmdDeviceID;
 };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
 struct CanvasLayerAttributes    { Filter filter; IntRect bounds; };

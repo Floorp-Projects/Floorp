@@ -749,7 +749,7 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget)
+GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
 {
     if (!sEGLLibrary.EnsureInitialized()) {
         MOZ_CRASH("GFX: Failed to load EGL library 3!\n");

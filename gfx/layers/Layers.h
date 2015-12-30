@@ -2129,8 +2129,12 @@ public:
   /**
    * VR
    */
-  void SetVRHMDInfo(gfx::VRHMDInfo* aHMD) { mHMDInfo = aHMD; }
-  gfx::VRHMDInfo* GetVRHMDInfo() { return mHMDInfo; }
+  void SetVRDeviceID(uint32_t aVRDeviceID) {
+    mVRDeviceID = aVRDeviceID;
+  }
+  uint32_t GetVRDeviceID() {
+    return mVRDeviceID;
+  }
 
   /**
    * Replace the current effective transform with the given one,
@@ -2206,7 +2210,7 @@ protected:
   // the intermediate surface.
   bool mChildrenChanged;
   EventRegionsOverride mEventRegionsOverride;
-  RefPtr<gfx::VRHMDInfo> mHMDInfo;
+  uint32_t mVRDeviceID;
 };
 
 /**

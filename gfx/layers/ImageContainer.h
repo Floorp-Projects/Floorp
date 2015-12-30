@@ -350,7 +350,7 @@ class ImageContainer final : public SupportsWeakPtr<ImageContainer> {
 public:
   MOZ_DECLARE_WEAKREFERENCE_TYPENAME(ImageContainer)
 
-  enum Mode { SYNCHRONOUS = 0x0, ASYNCHRONOUS = 0x01, ASYNCHRONOUS_OVERLAY = 0x02 };
+  enum Mode { SYNCHRONOUS = 0x0, ASYNCHRONOUS = 0x01 };
 
   explicit ImageContainer(ImageContainer::Mode flag = SYNCHRONOUS);
 

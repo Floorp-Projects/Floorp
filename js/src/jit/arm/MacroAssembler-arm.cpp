@@ -1928,7 +1928,7 @@ MacroAssemblerARMCompat::movePtr(ImmPtr imm, Register dest)
 void
 MacroAssemblerARMCompat::movePtr(wasm::SymbolicAddress imm, Register dest)
 {
-    append(AsmJSAbsoluteLink(CodeOffset(currentOffset()), imm));
+    append(AsmJSAbsoluteAddress(CodeOffset(currentOffset()), imm));
     ma_movPatchable(Imm32(-1), dest, Always);
 }
 

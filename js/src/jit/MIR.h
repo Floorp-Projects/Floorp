@@ -7644,8 +7644,10 @@ class MStringReplace
 {
   private:
 
+    bool isFlatReplacement_;
+
     MStringReplace(MDefinition* string, MDefinition* pattern, MDefinition* replacement)
-      : MStrReplace< StringPolicy<1> >(string, pattern, replacement)
+      : MStrReplace< StringPolicy<1> >(string, pattern, replacement), isFlatReplacement_(false)
     {
     }
 
@@ -7656,7 +7658,20 @@ class MStringReplace
         return new(alloc) MStringReplace(string, pattern, replacement);
     }
 
+    void setFlatReplacement() {
+        MOZ_ASSERT(!isFlatReplacement_);
+        isFlatReplacement_ = true;
+    }
+
+    bool isFlatReplacement() const {
+        return isFlatReplacement_;
+    }
+
     bool congruentTo(const MDefinition* ins) const override {
+        if (!ins->isStringReplace())
+            return false;
+        if (isFlatReplacement_ != ins->toStringReplace()->isFlatReplacement())
+            return false;
         return congruentIfOperandsEqual(ins);
     }
 
@@ -7666,6 +7681,8 @@ class MStringReplace
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
+        if (isFlatReplacement_)
+            return false;
         if (pattern()->isRegExp())
             return !pattern()->toRegExp()->source()->global();
         return false;
@@ -13916,17 +13933,17 @@ class MAsmJSCall final
         union {
             AsmJSInternalCallee internal_;
             MDefinition* dynamic_;
-            wasm::Builtin builtin_;
+            wasm::SymbolicAddress builtin_;
         } u;
       public:
         Callee() {}
         explicit Callee(AsmJSInternalCallee callee) : which_(Internal) { u.internal_ = callee; }
         explicit Callee(MDefinition* callee) : which_(Dynamic) { u.dynamic_ = callee; }
-        explicit Callee(wasm::Builtin callee) : which_(Builtin) { u.builtin_ = callee; }
+        explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) { u.builtin_ = callee; }
         Which which() const { return which_; }
         AsmJSInternalCallee internal() const { MOZ_ASSERT(which_ == Internal); return u.internal_; }
         MDefinition* dynamic() const { MOZ_ASSERT(which_ == Dynamic); return u.dynamic_; }
-        wasm::Builtin builtin() const { MOZ_ASSERT(which_ == Builtin); return u.builtin_; }
+        wasm::SymbolicAddress builtin() const { MOZ_ASSERT(which_ == Builtin); return u.builtin_; }
     };
 
   private:

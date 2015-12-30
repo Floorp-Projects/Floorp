@@ -68,13 +68,17 @@ class Taskcluster(LogMixin):
     def claim_task(self, task):
         self.taskcluster_queue.claimTask(
             task['status']['taskId'],
-            task['status']['runs'][0]['runId'],
+            task['status']['runs'][-1]['runId'],
             {
                 "workerGroup": self.buildbot,
                 "workerId": self.buildbot,
             })
 
-    def create_artifact(self, task, filename):
+    def get_task(self, task_id):
+        return self.taskcluster_queue.status(task_id)
+
+    @staticmethod
+    def get_mime_type(ext, default='application/octet-stream'):
         mime_types = {
             ".asc": "text/plain",
             ".checksums": "text/plain",
@@ -85,30 +89,50 @@ class Taskcluster(LogMixin):
             ".xpi": "application/x-xpinstall",
             ".zip": "application/zip",
         }
-        mime_type = mime_types.get(os.path.splitext(filename)[1], 'application/octet-stream')
+        return mime_types.get(ext, default)
+
+    @property
+    def expiration(self):
+        return datetime.utcnow() + timedelta(weeks=52)
+
+    def create_artifact(self, task, filename):
+        mime_type = self.get_mime_type(os.path.splitext(filename)[1])
         content_length = os.path.getsize(filename)
-
-        self.info("Uploading to S3: filename=%s mimetype=%s length=%s" % (filename, mime_type, content_length))
-
-        expiration = datetime.utcnow() + timedelta(weeks=52)
+        self.info("Uploading to S3: filename=%s mimetype=%s length=%s" % (
+            filename, mime_type, content_length))
         artifact = self.taskcluster_queue.createArtifact(
             task['status']['taskId'],
-            task['status']['runs'][0]['runId'],
+            task['status']['runs'][-1]['runId'],
             'public/build/%s' % os.path.basename(filename),
             {
                 "storageType": "s3",
-                "expires": expiration,
+                "expires": self.expiration,
                 "contentType": mime_type,
             })
         self.put_file(filename, artifact['putUrl'], mime_type)
+        return self.get_taskcluster_url(filename)
+
+    def create_reference_artifact(self, task, filename, url):
+        mime_type = self.get_mime_type(os.path.splitext(filename)[1])
+        self.info("Create reference artifact: filename=%s mimetype=%s url=%s" %
+                  (filename, mime_type, url))
+        self.taskcluster_queue.createArtifact(
+            task['status']['taskId'],
+            task['status']['runs'][-1]['runId'],
+            'public/build/%s' % os.path.basename(filename),
+            {
+                "storageType": "reference",
+                "expires": self.expiration,
+                "contentType": mime_type,
+                "url": url,
+            })
 
     def report_completed(self, task):
-        self.taskcluster_queue.reportCompleted(
-            task['status']['taskId'],
-            task['status']['runs'][0]['runId'],
-            {
-                "success": True,
-            })
+        task_id = task['status']['taskId']
+        run_id = task['status']['runs'][-1]['runId']
+        self.info("Resolving %s, run %s. Full task:" % (task_id, run_id))
+        self.info(str(task))
+        self.taskcluster_queue.reportCompleted(task_id, run_id)
 
     def get_taskcluster_url(self, filename):
         return 'https://queue.taskcluster.net/v1/task/%s/artifacts/public/build/%s' % (

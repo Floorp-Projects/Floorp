@@ -13,6 +13,10 @@ using namespace mozilla;
 
 namespace mp4_demuxer {
 
+// Limit reads to 32MiB max.
+// static
+const uint64_t Box::kMAX_BOX_READ = 32 * 1024 * 1024;
+
 // Returns the offset from the start of the body of a box of type |aType|
 // to the start of its first child.
 static uint32_t
@@ -149,8 +153,8 @@ Box::Read(nsTArray<uint8_t>* aDest, const MediaByteRange& aRange)
   int64_t length;
   if (!mContext->mSource->Length(&length)) {
     // The HTTP server didn't give us a length to work with.
-    // Limit the read to 32MiB max.
-    length = std::min(aRange.mEnd - mChildOffset, uint64_t(32 * 1024 * 1024));
+    // Limit the read to kMAX_BOX_READ max.
+    length = std::min(aRange.mEnd - mChildOffset, kMAX_BOX_READ);
   } else {
     length = aRange.mEnd - mChildOffset;
   }
