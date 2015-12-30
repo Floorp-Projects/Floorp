@@ -1272,7 +1272,7 @@ if test "$GNU_CC"; then
        esac
     fi
 
-    _DEFINES_CFLAGS='-include $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+    _DEFINES_CFLAGS='-include $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
     _USE_CPP_INCLUDE_FLAG=1
 
 elif test "$SOLARIS_SUNPRO_CC"; then
@@ -1384,7 +1384,7 @@ if test "$GNU_CXX"; then
        esac
     fi
 
-    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(DEPTH)/js/src/js-confdefs.h'
+    _DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -include $(topobjdir)/js/src/js-confdefs.h'
     _USE_CPP_INCLUDE_FLAG=1
 
     # Recent clang and gcc support C++11 deleted functions without warnings if
@@ -1744,8 +1744,8 @@ ia64*-hpux*)
         WIN32_GUI_EXE_LDFLAGS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         DSO_LDOPTS=-SUBSYSTEM:WINDOWS,$WIN32_SUBSYSTEM_VERSION
         _USE_CPP_INCLUDE_FLAG=1
-        _DEFINES_CFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
-        _DEFINES_CXXFLAGS='-FI $(DEPTH)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+        _DEFINES_CFLAGS='-FI $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
+        _DEFINES_CXXFLAGS='-FI $(topobjdir)/js/src/js-confdefs.h -DMOZILLA_CLIENT'
         CFLAGS="$CFLAGS -W3 -Gy"
         CXXFLAGS="$CXXFLAGS -W3 -Gy"
         if test "$CPU_ARCH" = "x86" -a -z "$CLANG_CL"; then
