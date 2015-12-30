@@ -12,9 +12,6 @@ DIRS += [
     'examples',
 ]
 
-if CONFIG['MAKENSISU']:
-    DIRS += ['installer/windows']
-
 if CONFIG['OS_ARCH'] == 'WINNT':
     DIRS += ['tools/redit']
 
