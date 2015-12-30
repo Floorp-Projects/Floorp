@@ -136,6 +136,42 @@ JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* na
 }
 
 JS_PUBLIC_API(void)
+JS_CallValueTracer(JSTracer* trc, JS::Heap<JS::Value>* valuep, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, valuep->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallIdTracer(JSTracer* trc, JS::Heap<jsid>* idp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, idp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallObjectTracer(JSTracer* trc, JS::Heap<JSObject*>* objp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, objp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, strp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, scriptp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
+JS_CallFunctionTracer(JSTracer* trc, JS::Heap<JSFunction*>* funp, const char* name)
+{
+    TraceManuallyBarrieredEdge(trc, funp->unsafeGet(), name);
+}
+
+JS_PUBLIC_API(void)
 JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, const char* name)
 {
     JSObject* obj = objp->getPtr();
