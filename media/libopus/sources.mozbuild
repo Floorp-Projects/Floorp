@@ -2,8 +2,6 @@
 celt_sources = [
     'celt/bands.c',
     'celt/celt.c',
-    'celt/celt_decoder.c',
-    'celt/celt_encoder.c',
     'celt/celt_lpc.c',
     'celt/cwrs.c',
     'celt/entcode.c',
@@ -18,6 +16,13 @@ celt_sources = [
     'celt/quant_bands.c',
     'celt/rate.c',
     'celt/vq.c',
+]
+
+opus_nonunified_sources = [
+    'celt/celt_decoder.c',
+    'celt/celt_encoder.c',
+    'silk/LPC_inv_pred_gain.c',
+    'silk/NLSF2A.c',
 ]
 
 celt_sources_sse = [
@@ -105,8 +110,6 @@ silk_sources = [
     'silk/log2lin.c',
     'silk/LP_variable_cutoff.c',
     'silk/LPC_analysis_filter.c',
-    'silk/LPC_inv_pred_gain.c',
-    'silk/NLSF2A.c',
     'silk/NLSF_decode.c',
     'silk/NLSF_del_dec_quant.c',
     'silk/NLSF_encode.c',
