@@ -16,7 +16,7 @@ SEARCHSTRINGSPATH = $(abspath $(call MERGE_FILE,search_strings.dtd))
 SYNCSTRINGSPATH = $(abspath $(call MERGE_FILE,sync_strings.dtd))
 STRINGSPATH = $(abspath $(call MERGE_FILE,android_strings.dtd))
 ifeq (,$(XPI_NAME))
-BRANDPATH = $(abspath $(DEPTH)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd)
+BRANDPATH = $(topobjdir)/dist/bin/chrome/$(AB_CD)/locale/branding/brand.dtd
 else
 BRANDPATH = $(ABS_DIST)/xpi-stage/$(XPI_NAME)/chrome/$(AB_CD)/locale/branding/brand.dtd
 endif
