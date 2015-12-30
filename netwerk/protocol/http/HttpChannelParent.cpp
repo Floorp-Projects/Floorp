@@ -131,7 +131,8 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.loadInfo(), a.synthesizedResponseHead(),
                        a.synthesizedSecurityInfoSerialization(),
                        a.cacheKey(), a.schedulingContextID(), a.preflightArgs(),
-                       a.initialRwin(), a.suspendAfterSynthesizeResponse(),
+                       a.initialRwin(), a.blockAuthPrompt(),
+                       a.suspendAfterSynthesizeResponse(),
                        a.allowStaleCacheContent());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
@@ -265,6 +266,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const nsCString&           aSchedulingContextID,
                                  const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                                  const uint32_t&            aInitialRwin,
+                                 const bool&                aBlockAuthPrompt,
                                  const bool&                aSuspendAfterSynthesizeResponse,
                                  const bool&                aAllowStaleCacheContent)
 {
@@ -430,6 +432,7 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   mChannel->SetAllowSpdy(allowSpdy);
   mChannel->SetAllowAltSvc(allowAltSvc);
   mChannel->SetInitialRwin(aInitialRwin);
+  mChannel->SetBlockAuthPrompt(aBlockAuthPrompt);
 
   nsCOMPtr<nsIApplicationCacheChannel> appCacheChan =
     do_QueryObject(mChannel);
