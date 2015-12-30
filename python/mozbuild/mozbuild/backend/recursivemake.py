@@ -858,20 +858,23 @@ class RecursiveMakeBackend(CommonBackend):
 
         ensureParentDir(mozpath.join(self.environment.topobjdir, 'dist', 'foo'))
 
-    def _pretty_path(self, path, backend_file):
+    def _pretty_path_parts(self, path, backend_file):
         assert isinstance(path, Path)
         if isinstance(path, SourcePath):
             if path.full_path.startswith(backend_file.srcdir):
-                return '$(srcdir)' + path.full_path[len(backend_file.srcdir):]
+                return '$(srcdir)', path.full_path[len(backend_file.srcdir):]
             if path.full_path.startswith(backend_file.topsrcdir):
-                return '$(topsrcdir)' + path.full_path[len(backend_file.topsrcdir):]
+                return '$(topsrcdir)', path.full_path[len(backend_file.topsrcdir):]
         elif isinstance(path, ObjDirPath):
             if path.full_path.startswith(backend_file.objdir):
-                return path.full_path[len(backend_file.objdir) + 1:]
+                return '', path.full_path[len(backend_file.objdir) + 1:]
             if path.full_path.startswith(self.environment.topobjdir):
-                return '$(DEPTH)' + path.full_path[len(self.environment.topobjdir):]
+                return '$(DEPTH)', path.full_path[len(self.environment.topobjdir):]
 
-        return path.full_path
+        return '', path.full_path
+
+    def _pretty_path(self, path, backend_file):
+        return ''.join(self._pretty_path_parts(path, backend_file))
 
     def _process_unified_sources(self, obj):
         backend_file = self._get_backend_file_for(obj)
@@ -1112,11 +1115,18 @@ INSTALL_TARGETS += %(prefix)s
             self.backend_input_files |= obj.manifest.manifests
 
     def _process_local_include(self, local_include, backend_file):
-        path = self._pretty_path(local_include, backend_file)
-        if ' ' in path:
-            backend_file.write('LOCAL_INCLUDES += -I\'%s\'\n' % path)
+        d, path = self._pretty_path_parts(local_include, backend_file)
+        if isinstance(local_include, ObjDirPath) and not d:
+            # path doesn't start with a slash in this case
+            d = '$(CURDIR)/'
+        elif d == '$(DEPTH)':
+            d = '$(topobjdir)'
+        quoted_path = shell_quote(path) if path else path
+        if quoted_path != path:
+            path = quoted_path[0] + d + quoted_path[1:]
         else:
-            backend_file.write('LOCAL_INCLUDES += -I%s\n' % path)
+            path = d + path
+        backend_file.write('LOCAL_INCLUDES += -I%s\n' % path)
 
     def _process_per_source_flag(self, per_source_flag, backend_file):
         for flag in per_source_flag.flags:
