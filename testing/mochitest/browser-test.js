@@ -818,16 +818,6 @@ Tester.prototype = {
           }
           this.finish();
         }.bind(currentScope));
-      } else if ("generatorTest" in this.currentTest.scope) {
-        if ("test" in this.currentTest.scope) {
-          throw "Cannot run both a generator test and a normal test at the same time.";
-        }
-
-        // This test is a generator. It will not finish immediately.
-        this.currentTest.scope.waitForExplicitFinish();
-        var result = this.currentTest.scope.generatorTest();
-        this.currentTest.scope.__generator = result;
-        result.next();
       } else if (typeof this.currentTest.scope.test == "function") {
         this.currentTest.scope.test();
       } else {
@@ -1017,35 +1007,6 @@ function testScope(aTester, aTest, expected) {
     }, Ci.nsIThread.DISPATCH_NORMAL);
   };
 
-  this.nextStep = function test_nextStep(arg) {
-    if (self.__done) {
-      aTest.addResult(new testResult(false, "nextStep was called too many times", "", false));
-      return;
-    }
-
-    if (!self.__generator) {
-      aTest.addResult(new testResult(false, "nextStep called with no generator", "", false));
-      self.finish();
-      return;
-    }
-
-    try {
-      self.__generator.send(arg);
-    } catch (ex if ex instanceof StopIteration) {
-      // StopIteration means test is finished.
-      self.finish();
-    } catch (ex) {
-      var isExpected = !!self.SimpleTest.isExpectingUncaughtException();
-      if (!self.SimpleTest.isIgnoringAllUncaughtExceptions()) {
-        aTest.addResult(new testResult(isExpected, "Exception thrown", ex, false));
-        self.SimpleTest.expectUncaughtException(false);
-      } else {
-        aTest.addResult(new testMessage("Exception thrown: " + ex));
-      }
-      self.finish();
-    }
-  };
-
   this.waitForExplicitFinish = function test_waitForExplicitFinish() {
     self.__done = false;
   };
@@ -1125,7 +1086,6 @@ function testScope(aTester, aTest, expected) {
 }
 testScope.prototype = {
   __done: true,
-  __generator: null,
   __tasks: null,
   __waitTimer: null,
   __cleanupFunctions: [],
