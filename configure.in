@@ -7991,6 +7991,15 @@ MOZ_ARG_ENABLE_BOOL(skia,
 MOZ_ENABLE_SKIA=1,
 MOZ_ENABLE_SKIA=)
 
+dnl Skia GPU support may not reliably build on certain *BSDs (see bug 1234494).
+if test "${OS_TARGET}" = "OpenBSD" -o \
+        "${OS_TARGET}" = "NetBSD" -o \
+        "${OS_ARCH}" = "SunOS"; then
+    MOZ_DISABLE_SKIA_GPU=1
+else
+    MOZ_DISABLE_SKIA_GPU=
+fi
+
 MOZ_ARG_DISABLE_BOOL(skia-gpu,
 [  --disable-skia-gpu  Disable use of Skia-GPU],
 MOZ_DISABLE_SKIA_GPU=1,
