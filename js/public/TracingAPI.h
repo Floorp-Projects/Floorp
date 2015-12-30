@@ -304,32 +304,17 @@ template <typename T>
 extern JS_PUBLIC_API(void)
 TraceNullableEdge(JSTracer* trc, JS::Heap<T>* edgep, const char* name);
 
+extern JS_PUBLIC_API(void)
+TraceNullableEdge(JSTracer* trc, JS::TenuredHeap<JSObject*>* edgep, const char* name);
+
+// Edges that are always traced as part of root marking do not require
+// incremental barriers. This function allows for marking non-barriered
+// pointers, but asserts that this happens during root marking.
+template <typename T>
+extern JS_PUBLIC_API(void)
+UnsafeTraceRoot(JSTracer* trc, T* edgep, const char* name);
+
 } // namespace JS
-
-// The following JS_CallUnbarriered*Tracer functions should only be called where
-// you know for sure that a heap post barrier is not required.  Use with extreme
-// caution!
-extern JS_PUBLIC_API(void)
-JS_CallUnbarrieredValueTracer(JSTracer* trc, JS::Value* valuep, const char* name);
-
-extern JS_PUBLIC_API(void)
-JS_CallUnbarrieredIdTracer(JSTracer* trc, jsid* idp, const char* name);
-
-extern JS_PUBLIC_API(void)
-JS_CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name);
-
-extern JS_PUBLIC_API(void)
-JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name);
-
-extern JS_PUBLIC_API(void)
-JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* name);
-
-/**
- * Trace an object that is known to always be tenured.  No post barriers are
- * required in this case.
- */
-extern JS_PUBLIC_API(void)
-JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, const char* name);
 
 extern JS_PUBLIC_API(void)
 JS_TraceRuntime(JSTracer* trc);
@@ -353,6 +338,10 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc,
                      void* thing, JS::TraceKind kind, bool includeDetails);
 
 namespace js {
+template <typename T>
+extern JS_PUBLIC_API(void)
+UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* edgep, const char* name);
+
 namespace gc {
 template <typename T>
 extern JS_PUBLIC_API(bool)
@@ -396,8 +385,8 @@ struct DefaultGCPolicy : public StructGCPolicy<T> {};
 template <>
 struct DefaultGCPolicy<jsid>
 {
-    static void trace(JSTracer* trc, jsid* id, const char* name) {
-        JS_CallUnbarrieredIdTracer(trc, id, name);
+    static void trace(JSTracer* trc, jsid* idp, const char* name) {
+        js::UnsafeTraceManuallyBarrieredEdge(trc, idp, name);
     }
 };
 
