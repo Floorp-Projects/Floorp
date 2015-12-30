@@ -132,7 +132,7 @@ class js::AsmJSModule
     {
       public:
         enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction,
-                     AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation, ByteLength };
+                     AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation };
         enum VarInitKind { InitConstant, InitImport };
         enum ConstantKind { GlobalConstant, MathConstant };
 
@@ -301,21 +301,19 @@ class js::AsmJSModule
         PropertyName* name_;
         PropertyName* maybeFieldName_;
         struct CacheablePod {
-            uint32_t wasmIndex_;
             uint32_t startOffsetInModule_;  // Store module-start-relative offsets
             uint32_t endOffsetInModule_;    // so preserved by serialization.
         } pod;
 
       public:
         Export() {}
-        Export(PropertyName* name, PropertyName* maybeFieldName, uint32_t wasmIndex,
+        Export(PropertyName* name, PropertyName* maybeFieldName,
                uint32_t startOffsetInModule, uint32_t endOffsetInModule)
           : name_(name),
             maybeFieldName_(maybeFieldName)
         {
             MOZ_ASSERT(name_->isTenured());
             MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
-            pod.wasmIndex_ = wasmIndex;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
         }
@@ -338,14 +336,6 @@ class js::AsmJSModule
         uint32_t endOffsetInModule() const {
             return pod.endOffsetInModule_;
         }
-        static const uint32_t ChangeHeap = UINT32_MAX;
-        bool isChangeHeap() const {
-            return pod.wasmIndex_ == ChangeHeap;
-        }
-        uint32_t wasmIndex() const {
-            MOZ_ASSERT(!isChangeHeap());
-            return pod.wasmIndex_;
-        }
 
         WASM_DECLARE_SERIALIZABLE(Export)
     };
@@ -359,15 +349,12 @@ class js::AsmJSModule
     wasm::UniqueStaticLinkData  linkData_;
     struct CacheablePod {
         uint32_t                minHeapLength_;
-        uint32_t                maxHeapLength_;
-        uint32_t                heapLengthMask_;
         uint32_t                numFFIs_;
         uint32_t                srcLength_;
         uint32_t                srcLengthWithRightBrace_;
         bool                    strict_;
         bool                    hasArrayView_;
         bool                    isSharedView_;
-        bool                    hasFixedMinHeapLength_;
     } pod;
     const ScriptSourceHolder    scriptSource_;
     const uint32_t              srcStart_;
@@ -391,7 +378,6 @@ class js::AsmJSModule
     {
         mozilla::PodZero(&pod);
         pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
-        pod.maxHeapLength_ = 0x80000000;
         pod.strict_ = strict;
 
         MOZ_ASSERT(srcStart_ <= srcBodyStart_);
@@ -445,13 +431,6 @@ class js::AsmJSModule
     // change as the module is compiled.
     uint32_t minHeapLength() const {
         return pod.minHeapLength_;
-    }
-    uint32_t maxHeapLength() const {
-        return pod.maxHeapLength_;
-    }
-    uint32_t heapLengthMask() const {
-        MOZ_ASSERT(pod.hasFixedMinHeapLength_);
-        return pod.heapLengthMask_;
     }
 
     void initGlobalArgumentName(PropertyName* n) {
@@ -520,11 +499,6 @@ class js::AsmJSModule
         g.pod.u.viewType_ = vt;
         return globals_.append(g);
     }
-    bool addByteLength() {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::ByteLength, nullptr);
-        return globals_.append(g);
-    }
     bool addMathBuiltinFunction(AsmJSMathBuiltinFunction func, PropertyName* field) {
         MOZ_ASSERT(!isFinished());
         Global g(Global::MathBuiltinFunction, field);
@@ -569,30 +543,16 @@ class js::AsmJSModule
         MOZ_ASSERT(imports_.length() == importIndex);
         return imports_.emplaceBack(ffiIndex);
     }
-    bool addExport(PropertyName* name, PropertyName* maybeFieldName, uint32_t wasmIndex,
-                   uint32_t funcSrcBegin, uint32_t funcSrcEnd)
-    {
-        // NB: funcSrcBegin/funcSrcEnd are given relative to the ScriptSource
-        // (the entire file) and ExportedFunctions store offsets relative to
-        // the beginning of the module (so that they are caching-invariant).
+    bool addExport(PropertyName* name, PropertyName* maybeFieldName, uint32_t begin, uint32_t end) {
+        // The begin/end offsets are given relative to the ScriptSource (the
+        // entire file) and ExportedFunctions store offsets relative to the
+        // beginning of the module (so that they are caching-invariant).
         MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT(srcStart_ < funcSrcBegin);
-        MOZ_ASSERT(funcSrcBegin < funcSrcEnd);
-        return exports_.emplaceBack(name, maybeFieldName, wasmIndex,
-                                    funcSrcBegin - srcStart_, funcSrcEnd - srcStart_);
-    }
-    bool addChangeHeap(uint32_t mask, uint32_t min, uint32_t max) {
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT(!pod.hasFixedMinHeapLength_);
-        MOZ_ASSERT(IsValidAsmJSHeapLength(mask + 1));
-        MOZ_ASSERT(min >= RoundUpToNextValidAsmJSHeapLength(0));
-        MOZ_ASSERT(max <= pod.maxHeapLength_);
-        MOZ_ASSERT(min <= max);
-        pod.heapLengthMask_ = mask;
-        pod.minHeapLength_ = min;
-        pod.maxHeapLength_ = max;
-        pod.hasFixedMinHeapLength_ = true;
-        return true;
+        MOZ_ASSERT(srcStart_ < begin);
+        MOZ_ASSERT(begin < end);
+        uint32_t startOffsetInModule = begin - srcStart_;
+        uint32_t endOffsetInModule = end - srcStart_;
+        return exports_.emplaceBack(name, maybeFieldName, startOffsetInModule, endOffsetInModule);
     }
 
     const GlobalVector& globals() const {
@@ -615,16 +575,11 @@ class js::AsmJSModule
     bool isSharedView() const {
         return pod.isSharedView_;
     }
-    bool tryRequireHeapLengthToBeAtLeast(uint32_t len) {
+    void requireHeapLengthToBeAtLeast(uint32_t len) {
         MOZ_ASSERT(!isFinished());
-        if (pod.hasFixedMinHeapLength_ && len > pod.minHeapLength_)
-            return false;
-        if (len > pod.maxHeapLength_)
-            return false;
         len = RoundUpToNextValidAsmJSHeapLength(len);
         if (len > pod.minHeapLength_)
             pod.minHeapLength_ = len;
-        return true;
     }
 
     /*************************************************************************/
@@ -1720,9 +1675,7 @@ class MOZ_STACK_CLASS ModuleValidator
             MathBuiltinFunction,
             AtomicsBuiltinFunction,
             SimdCtor,
-            SimdOperation,
-            ByteLength,
-            ChangeHeap
+            SimdOperation
         };
 
       private:
@@ -1746,10 +1699,6 @@ class MOZ_STACK_CLASS ModuleValidator
                 AsmJSSimdType type_;
                 AsmJSSimdOperation which_;
             } simdOp;
-            struct {
-                uint32_t srcBegin_;
-                uint32_t srcEnd_;
-            } changeHeap;
         } u;
 
         friend class ModuleValidator;
@@ -1826,14 +1775,6 @@ class MOZ_STACK_CLASS ModuleValidator
         AsmJSSimdType simdOperationType() const {
             MOZ_ASSERT(which_ == SimdOperation);
             return u.simdOp.type_;
-        }
-        uint32_t changeHeapSrcBegin() const {
-            MOZ_ASSERT(which_ == ChangeHeap);
-            return u.changeHeap.srcBegin_;
-        }
-        uint32_t changeHeapSrcEnd() const {
-            MOZ_ASSERT(which_ == ChangeHeap);
-            return u.changeHeap.srcEnd_;
         }
     };
 
@@ -1931,8 +1872,6 @@ class MOZ_STACK_CLASS ModuleValidator
     uint32_t             errorOffset_;
     bool                 errorOverRecursed_;
 
-    bool                 canValidateChangeHeap_;
-    bool                 hasChangeHeap_;
     bool                 supportsSimd_;
     bool                 atomicsPresent_;
 
@@ -1955,8 +1894,6 @@ class MOZ_STACK_CLASS ModuleValidator
         errorString_(nullptr),
         errorOffset_(UINT32_MAX),
         errorOverRecursed_(false),
-        canValidateChangeHeap_(false),
-        hasChangeHeap_(false),
         supportsSimd_(cx->jitSupportsSimd()),
         atomicsPresent_(false)
     {
@@ -2089,8 +2026,12 @@ class MOZ_STACK_CLASS ModuleValidator
         JS_ALWAYS_TRUE(tokenStream().peekTokenPos(&pos, TokenStream::Operand));
         uint32_t endAfterCurly = pos.end;
 
-        auto usesHeap = Module::HeapBool(module_->hasArrayView());
-        auto sharedHeap = Module::SharedBool(module_->isSharedView());
+        HeapUsage heapUsage = module_->hasArrayView()
+                              ? module_->isSharedView()
+                                ? HeapUsage::Shared
+                                : HeapUsage::Unshared
+                              : HeapUsage::None;
+
         auto mutedErrors = Module::MutedBool(parser_.ss->mutedErrors());
 
         CacheableChars filename = make_string_copy(parser_.ss->filename());
@@ -2107,8 +2048,7 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 
         UniqueStaticLinkData linkData;
-        Module* wasm = mg_.finish(usesHeap, sharedHeap, mutedErrors,
-                                  Move(filename), Move(displayURL),
+        Module* wasm = mg_.finish(heapUsage, mutedErrors, Move(filename), Move(displayURL),
                                   &linkData, slowFuncs);
         if (!wasm)
             return false;
@@ -2219,23 +2159,6 @@ class MOZ_STACK_CLASS ModuleValidator
         return globals_.putNew(var, global) &&
                module().addSimdOperation(type, op, opName);
     }
-    bool addByteLength(PropertyName* name) {
-        canValidateChangeHeap_ = true;
-        Global* global = validationLifo_.new_<Global>(Global::ByteLength);
-        return global &&
-               globals_.putNew(name, global) &&
-               module().addByteLength();
-    }
-    bool addChangeHeap(PropertyName* name, ParseNode* fn, uint32_t mask, uint32_t min, uint32_t max) {
-        hasChangeHeap_ = true;
-        Global* global = validationLifo_.new_<Global>(Global::ChangeHeap);
-        if (!global)
-            return false;
-        global->u.changeHeap.srcBegin_ = fn->pn_pos.begin;
-        global->u.changeHeap.srcEnd_ = fn->pn_pos.end;
-        return globals_.putNew(name, global) &&
-               module().addChangeHeap(mask, min, max);
-    }
     bool addArrayViewCtor(PropertyName* var, Scalar::Type vt, PropertyName* field) {
         Global* global = validationLifo_.new_<Global>(Global::ArrayViewCtor);
         if (!global)
@@ -2259,17 +2182,8 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!args.appendAll(func.sig().args()))
             return false;
         MallocSig sig(Move(args), func.sig().ret());
-        uint32_t wasmIndex;
-        if (!mg_.declareExport(Move(sig), func.index(), &wasmIndex))
-            return false;
-        if (wasmIndex == AsmJSModule::Export::ChangeHeap)
-            return fail(pn, "too many exports");
-        return module().addExport(func.name(), maybeFieldName, wasmIndex,
-                                  func.srcBegin(), func.srcEnd());
-    }
-    bool addChangeHeapExport(PropertyName* name, const Global& g, PropertyName* maybeFieldName) {
-        return module().addExport(name, maybeFieldName, AsmJSModule::Export::ChangeHeap,
-                                  g.changeHeapSrcBegin(), g.changeHeapSrcEnd());
+        return mg_.declareExport(Move(sig), func.index()) &&
+               module().addExport(func.name(), maybeFieldName, func.srcBegin(), func.srcEnd());
     }
   private:
     const LifoSig* getLifoSig(const LifoSig& sig) {
@@ -2338,19 +2252,13 @@ class MOZ_STACK_CLASS ModuleValidator
                module().addImport(ffiIndex, *importIndex);
     }
 
-    bool tryOnceToValidateChangeHeap() {
-        bool ret = canValidateChangeHeap_;
-        canValidateChangeHeap_ = false;
-        return ret;
-    }
-    bool hasChangeHeap() const {
-        return hasChangeHeap_;
-    }
-    bool tryRequireHeapLengthToBeAtLeast(uint32_t len) {
-        return module().tryRequireHeapLengthToBeAtLeast(len);
-    }
-    uint32_t minHeapLength() const {
-        return module().minHeapLength();
+    bool tryConstantAccess(uint64_t start, uint64_t width) {
+        MOZ_ASSERT(UINT64_MAX - start > width);
+        uint64_t end = start + width;
+        if (end > uint64_t(INT32_MAX) + 1)
+            return false;
+        module().requireHeapLengthToBeAtLeast(end);
+        return true;
     }
 
     bool usesSharedMemory() const {
@@ -2822,8 +2730,6 @@ class MOZ_STACK_CLASS FunctionValidator
     LocalMap          locals_;
     LabelMap          labels_;
 
-    unsigned          heapExpressionDepth_;
-
     bool              hasAlreadyReturned_;
     ExprType          ret_;
 
@@ -2833,7 +2739,6 @@ class MOZ_STACK_CLASS FunctionValidator
         fn_(fn),
         locals_(m.cx()),
         labels_(m.cx()),
-        heapExpressionDepth_(0),
         hasAlreadyReturned_(false)
     {}
 
@@ -2885,19 +2790,6 @@ class MOZ_STACK_CLASS FunctionValidator
         if (!locals_.add(p, name, Local(init.type(), locals_.count())))
             return false;
         return funcIR().addVariable(init.value());
-    }
-
-    /*************************************************************************/
-
-    void enterHeapExpression() {
-        heapExpressionDepth_++;
-    }
-    void leaveHeapExpression() {
-        MOZ_ASSERT(heapExpressionDepth_ > 0);
-        heapExpressionDepth_--;
-    }
-    bool canCall() const {
-        return heapExpressionDepth_ == 0 || !m_.hasChangeHeap();
     }
 
     /****************************** For consistency of returns in a function */
@@ -3471,8 +3363,6 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
             return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
             return m.addGlobalConstant(varName, PositiveInfinity<double>(), field);
-        if (field == m.cx()->names().byteLength)
-            return m.addByteLength(varName);
 
         Scalar::Type type;
         if (IsArrayViewCtorName(m, field, &type))
@@ -3783,8 +3673,6 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::ArrayViewCtor:
           case ModuleValidator::Global::SimdCtor:
           case ModuleValidator::Global::SimdOperation:
-          case ModuleValidator::Global::ByteLength:
-          case ModuleValidator::Global::ChangeHeap:
             return f.failName(varRef, "'%s' may not be accessed by ordinary expressions", name);
         }
         return true;
@@ -3819,7 +3707,7 @@ FoldMaskedArrayIndex(FunctionValidator& f, ParseNode** indexExpr, int32_t* mask,
         // constraint. The unsigned maximum of a masked index is the mask
         // itself, so check that the mask is not negative and compare the mask
         // to the known minimum heap length.
-        if (int32_t(mask2) >= 0 && mask2 < f.m().minHeapLength())
+        if (int32_t(mask2) >= 0 && mask2 < f.m().module().minHeapLength())
             *needsBoundsCheck = NO_BOUNDS_CHECK;
         *mask &= mask2;
         *indexExpr = indexNode;
@@ -3849,15 +3737,8 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
     uint32_t index;
     if (IsLiteralOrConstInt(f, indexExpr, &index)) {
         uint64_t byteOffset = uint64_t(index) << TypedArrayShift(*viewType);
-        if (byteOffset > INT32_MAX)
+        if (!f.m().tryConstantAccess(byteOffset, TypedArrayElemSize(*viewType)))
             return f.fail(indexExpr, "constant index out of range");
-
-        unsigned elementSize = TypedArrayElemSize(*viewType);
-        if (!f.m().tryRequireHeapLengthToBeAtLeast(byteOffset + elementSize)) {
-            return f.failf(indexExpr, "constant index outside heap size range declared by the "
-                                      "change-heap function (0x%x - 0x%x)",
-                                      f.m().minHeapLength(), f.m().module().maxHeapLength());
-        }
 
         *mask = NoMask;
         *needsBoundsCheck = NO_BOUNDS_CHECK;
@@ -3886,13 +3767,9 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
         if (pointerNode->isKind(PNK_BITAND))
             FoldMaskedArrayIndex(f, &pointerNode, mask, needsBoundsCheck);
 
-        f.enterHeapExpression();
-
         Type pointerType;
         if (!CheckExpr(f, pointerNode, &pointerType))
             return false;
-
-        f.leaveHeapExpression();
 
         if (!pointerType.isIntish())
             return f.failf(pointerNode, "%s is not a subtype of int", pointerType.toChars());
@@ -3909,13 +3786,9 @@ CheckArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode* indexExpr
         if (pointerNode->isKind(PNK_BITAND))
             folded = FoldMaskedArrayIndex(f, &pointerNode, mask, needsBoundsCheck);
 
-        f.enterHeapExpression();
-
         Type pointerType;
         if (!CheckExpr(f, pointerNode, &pointerType))
             return false;
-
-        f.leaveHeapExpression();
 
         if (folded) {
             if (!pointerType.isIntish())
@@ -4010,13 +3883,9 @@ CheckStoreArray(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
     if (!CheckAndPrepareArrayAccess(f, ElemBase(lhs), ElemIndex(lhs), &viewType, &needsBoundsCheck, &mask))
         return false;
 
-    f.enterHeapExpression();
-
     Type rhsType;
     if (!CheckExpr(f, rhs, &rhsType))
         return false;
-
-    f.leaveHeapExpression();
 
     switch (viewType) {
       case Scalar::Int8:
@@ -4657,11 +4526,6 @@ static bool
 CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calleeName,
                   ExprType ret, Type* type)
 {
-    if (!f.canCall()) {
-        return f.fail(callNode, "call expressions may not be nested inside heap expressions "
-                                "when the module contains a change-heap function");
-    }
-
     switch (ret) {
       case ExprType::Void:   f.writeOp(Stmt::CallInternal);  break;
       case ExprType::I32:    f.writeOp(I32::CallInternal);   break;
@@ -4728,11 +4592,6 @@ CheckFuncPtrTableAgainstExisting(ModuleValidator& m, ParseNode* usepn, PropertyN
 static bool
 CheckFuncPtrCall(FunctionValidator& f, ParseNode* callNode, ExprType ret, Type* type)
 {
-    if (!f.canCall()) {
-        return f.fail(callNode, "function-pointer call expressions may not be nested inside heap "
-                                "expressions when the module contains a change-heap function");
-    }
-
     ParseNode* callee = CallCallee(callNode);
     ParseNode* tableNode = ElemBase(callee);
     ParseNode* indexExpr = ElemIndex(callee);
@@ -4813,11 +4672,6 @@ static bool
 CheckFFICall(FunctionValidator& f, ParseNode* callNode, unsigned ffiIndex, ExprType ret,
              Type* type)
 {
-    if (!f.canCall()) {
-        return f.fail(callNode, "FFI call expressions may not be nested inside heap "
-                                "expressions when the module contains a change-heap function");
-    }
-
     PropertyName* calleeName = CallCallee(callNode)->name();
 
     if (ret == ExprType::F32)
@@ -5504,29 +5358,20 @@ CheckSimdLoadStoreArgs(FunctionValidator& f, ParseNode* call, AsmJSSimdType opTy
     ParseNode* indexExpr = NextNode(view);
     uint32_t indexLit;
     if (IsLiteralOrConstInt(f, indexExpr, &indexLit)) {
-        if (indexLit > INT32_MAX)
+        if (!f.m().tryConstantAccess(indexLit, Simd128DataSize))
             return f.fail(indexExpr, "constant index out of range");
-
-        if (!f.m().tryRequireHeapLengthToBeAtLeast(indexLit + Simd128DataSize)) {
-            return f.failf(indexExpr, "constant index outside heap size range declared by the "
-                                      "change-heap function (0x%x - 0x%x)",
-                                      f.m().minHeapLength(), f.m().module().maxHeapLength());
-        }
 
         *needsBoundsCheck = NO_BOUNDS_CHECK;
         f.writeInt32Lit(indexLit);
         return true;
     }
 
-    f.enterHeapExpression();
-
     Type indexType;
     if (!CheckExpr(f, indexExpr, &indexType))
         return false;
+
     if (!indexType.isIntish())
         return f.failf(indexExpr, "%s is not a subtype of intish", indexType.toChars());
-
-    f.leaveHeapExpression();
 
     return true;
 }
@@ -5953,8 +5798,6 @@ CheckCoercedCall(FunctionValidator& f, ParseNode* call, ExprType ret, Type* type
           case ModuleValidator::Global::FuncPtrTable:
           case ModuleValidator::Global::ArrayView:
           case ModuleValidator::Global::ArrayViewCtor:
-          case ModuleValidator::Global::ByteLength:
-          case ModuleValidator::Global::ChangeHeap:
             return f.failName(callee, "'%s' is not callable function", callee->name());
           case ModuleValidator::Global::SimdCtor:
           case ModuleValidator::Global::SimdOperation:
@@ -7021,225 +6864,6 @@ CheckStatement(FunctionValidator& f, ParseNode* stmt)
 }
 
 static bool
-CheckByteLengthCall(ModuleValidator& m, ParseNode* pn, PropertyName* newBufferName)
-{
-    if (!pn->isKind(PNK_CALL) || !CallCallee(pn)->isKind(PNK_NAME))
-        return m.fail(pn, "expecting call to imported byteLength");
-
-    const ModuleValidator::Global* global = m.lookupGlobal(CallCallee(pn)->name());
-    if (!global || global->which() != ModuleValidator::Global::ByteLength)
-        return m.fail(pn, "expecting call to imported byteLength");
-
-    if (CallArgListLength(pn) != 1 || !IsUseOfName(CallArgList(pn), newBufferName))
-        return m.failName(pn, "expecting %s as argument to byteLength call", newBufferName);
-
-    return true;
-}
-
-static bool
-CheckHeapLengthCondition(ModuleValidator& m, ParseNode* cond, PropertyName* newBufferName,
-                         uint32_t* mask, uint32_t* minLength, uint32_t* maxLength)
-{
-    if (!cond->isKind(PNK_OR) || !AndOrLeft(cond)->isKind(PNK_OR))
-        return m.fail(cond, "expecting byteLength & K || byteLength <= L || byteLength > M");
-
-    ParseNode* cond1 = AndOrLeft(AndOrLeft(cond));
-    ParseNode* cond2 = AndOrRight(AndOrLeft(cond));
-    ParseNode* cond3 = AndOrRight(cond);
-
-    if (!cond1->isKind(PNK_BITAND))
-        return m.fail(cond1, "expecting byteLength & K");
-
-    if (!CheckByteLengthCall(m, BitwiseLeft(cond1), newBufferName))
-        return false;
-
-    ParseNode* maskNode = BitwiseRight(cond1);
-    if (!IsLiteralInt(m, maskNode, mask))
-        return m.fail(maskNode, "expecting integer literal mask");
-    if (*mask == UINT32_MAX)
-        return m.fail(maskNode, "invalid mask value");
-    if ((*mask & 0xffffff) != 0xffffff)
-        return m.fail(maskNode, "mask value must have the bits 0xffffff set");
-
-    if (!cond2->isKind(PNK_LE))
-        return m.fail(cond2, "expecting byteLength <= L");
-
-    if (!CheckByteLengthCall(m, RelationalLeft(cond2), newBufferName))
-        return false;
-
-    ParseNode* minLengthNode = RelationalRight(cond2);
-    uint32_t minLengthExclusive;
-    if (!IsLiteralInt(m, minLengthNode, &minLengthExclusive))
-        return m.fail(minLengthNode, "expecting integer literal");
-    if (minLengthExclusive < 0xffffff || minLengthExclusive == UINT32_MAX)
-        return m.fail(minLengthNode, "literal must be >= 0xffffff and < 0xffffffff");
-
-    // Add one to convert from exclusive (the branch rejects if ==) to inclusive.
-    *minLength = minLengthExclusive + 1;
-
-    if (!cond3->isKind(PNK_GT))
-        return m.fail(cond3, "expecting byteLength > M");
-
-    if (!CheckByteLengthCall(m, RelationalLeft(cond3), newBufferName))
-        return false;
-
-    ParseNode* maxLengthNode = RelationalRight(cond3);
-    if (!IsLiteralInt(m, maxLengthNode, maxLength))
-        return m.fail(maxLengthNode, "expecting integer literal");
-    if (*maxLength > 0x80000000)
-        return m.fail(maxLengthNode, "literal must be <= 0x80000000");
-
-    if (*maxLength < *minLength)
-        return m.fail(maxLengthNode, "maximum length must be greater or equal to minimum length");
-
-    return true;
-}
-
-static bool
-CheckReturnBoolLiteral(ModuleValidator& m, ParseNode* stmt, bool retval)
-{
-    if (stmt->isKind(PNK_STATEMENTLIST)) {
-        ParseNode* next = SkipEmptyStatements(ListHead(stmt));
-        if (!next)
-            return m.fail(stmt, "expected return statement");
-        stmt = next;
-        if (NextNonEmptyStatement(stmt))
-            return m.fail(stmt, "expected single return statement");
-    }
-
-    if (!stmt->isKind(PNK_RETURN))
-        return m.fail(stmt, "expected return statement");
-
-    ParseNode* returnExpr = ReturnExpr(stmt);
-    if (!returnExpr || !returnExpr->isKind(retval ? PNK_TRUE : PNK_FALSE))
-        return m.failf(stmt, "expected 'return %s;'", retval ? "true" : "false");
-
-    return true;
-}
-
-static bool
-CheckReassignmentTo(ModuleValidator& m, ParseNode* stmt, PropertyName* lhsName, ParseNode** rhs)
-{
-    if (!stmt->isKind(PNK_SEMI))
-        return m.fail(stmt, "missing reassignment");
-
-    ParseNode* assign = UnaryKid(stmt);
-    if (!assign || !assign->isKind(PNK_ASSIGN))
-        return m.fail(stmt, "missing reassignment");
-
-    ParseNode* lhs = BinaryLeft(assign);
-    if (!IsUseOfName(lhs, lhsName))
-        return m.failName(lhs, "expecting reassignment of %s", lhsName);
-
-    *rhs = BinaryRight(assign);
-    return true;
-}
-
-static bool
-CheckChangeHeap(ModuleValidator& m, ParseNode* fn, bool* validated)
-{
-    MOZ_ASSERT(fn->isKind(PNK_FUNCTION));
-
-    // We don't yet know whether this is a change-heap function.
-    // The point at which we know we have a change-heap function is once we see
-    // whether the argument is coerced according to the normal asm.js rules. If
-    // it is coerced, it's not change-heap and must validate according to normal
-    // rules; otherwise it must validate as a change-heap function.
-    *validated = false;
-
-    PropertyName* changeHeapName = FunctionName(fn);
-    if (!CheckModuleLevelName(m, fn, changeHeapName))
-        return false;
-
-    unsigned numFormals;
-    ParseNode* arg = FunctionArgsList(fn, &numFormals);
-    if (numFormals != 1)
-        return true;
-
-    PropertyName* newBufferName;
-    if (!CheckArgument(m, arg, &newBufferName))
-        return false;
-
-    ParseNode* stmtIter = SkipEmptyStatements(ListHead(FunctionStatementList(fn)));
-    if (!stmtIter || !stmtIter->isKind(PNK_IF))
-        return true;
-
-    // We can now issue validation failures if we see something that isn't a
-    // valid change-heap function.
-    *validated = true;
-
-    PropertyName* bufferName = m.module().bufferArgumentName();
-    if (!bufferName)
-        return m.fail(fn, "to change heaps, the module must have a buffer argument");
-
-    ParseNode* cond = TernaryKid1(stmtIter);
-    ParseNode* thenStmt = TernaryKid2(stmtIter);
-    if (ParseNode* elseStmt = TernaryKid3(stmtIter))
-        return m.fail(elseStmt, "unexpected else statement");
-
-    uint32_t mask, min = 0, max;  // initialize min to silence GCC warning
-    if (!CheckHeapLengthCondition(m, cond, newBufferName, &mask, &min, &max))
-        return false;
-
-    if (!CheckReturnBoolLiteral(m, thenStmt, false))
-        return false;
-
-    ParseNode* next = NextNonEmptyStatement(stmtIter);
-
-    for (unsigned i = 0; i < m.numArrayViews(); i++, next = NextNonEmptyStatement(stmtIter)) {
-        if (!next)
-            return m.failOffset(stmtIter->pn_pos.end, "missing reassignment");
-        stmtIter = next;
-
-        const ModuleValidator::ArrayView& view = m.arrayView(i);
-
-        ParseNode* rhs;
-        if (!CheckReassignmentTo(m, stmtIter, view.name, &rhs))
-            return false;
-
-        if (!rhs->isKind(PNK_NEW))
-            return m.failName(rhs, "expecting assignment of new array view to %s", view.name);
-
-        ParseNode* ctorExpr = ListHead(rhs);
-        if (!ctorExpr->isKind(PNK_NAME))
-            return m.fail(rhs, "expecting name of imported typed array constructor");
-
-        const ModuleValidator::Global* global = m.lookupGlobal(ctorExpr->name());
-        if (!global || global->which() != ModuleValidator::Global::ArrayViewCtor)
-            return m.fail(rhs, "expecting name of imported typed array constructor");
-        if (global->viewType() != view.type)
-            return m.fail(rhs, "can't change the type of a global view variable");
-
-        if (!CheckNewArrayViewArgs(m, ctorExpr, newBufferName))
-            return false;
-    }
-
-    if (!next)
-        return m.failOffset(stmtIter->pn_pos.end, "missing reassignment");
-    stmtIter = next;
-
-    ParseNode* rhs;
-    if (!CheckReassignmentTo(m, stmtIter, bufferName, &rhs))
-        return false;
-    if (!IsUseOfName(rhs, newBufferName))
-        return m.failName(stmtIter, "expecting assignment of new buffer to %s", bufferName);
-
-    next = NextNonEmptyStatement(stmtIter);
-    if (!next)
-        return m.failOffset(stmtIter->pn_pos.end, "expected return statement");
-    stmtIter = next;
-
-    if (!CheckReturnBoolLiteral(m, stmtIter, true))
-        return false;
-
-    stmtIter = NextNonEmptyStatement(stmtIter);
-    if (stmtIter)
-        return m.fail(stmtIter, "expecting end of function");
-
-    return m.addChangeHeap(changeHeapName, fn, mask, min, max);
-}
-
-static bool
 ParseFunction(ModuleValidator& m, ParseNode** fnOut, unsigned* line, unsigned* column)
 {
     TokenStream& tokenStream = m.tokenStream();
@@ -7318,14 +6942,6 @@ CheckFunction(ModuleValidator& m)
 
     if (!CheckFunctionHead(m, fn))
         return false;
-
-    if (m.tryOnceToValidateChangeHeap()) {
-        bool validated;
-        if (!CheckChangeHeap(m, fn, &validated))
-            return false;
-        if (validated)
-            return true;
-    }
 
     FunctionValidator f(m, fn);
     if (!f.init(FunctionName(fn), line, column))
@@ -7493,13 +7109,10 @@ CheckModuleExportFunction(ModuleValidator& m, ParseNode* pn, PropertyName* maybe
     if (!global)
         return m.failName(pn, "exported function name '%s' not found", funcName);
 
-    if (global->which() == ModuleValidator::Global::Function)
-        return m.addExport(pn, m.function(global->funcIndex()), maybeFieldName);
+    if (global->which() != ModuleValidator::Global::Function)
+        return m.failName(pn, "'%s' is not a function", funcName);
 
-    if (global->which() == ModuleValidator::Global::ChangeHeap)
-        return m.addChangeHeapExport(funcName, *global, maybeFieldName);
-
-    return m.failName(pn, "'%s' is not a function", funcName);
+    return m.addExport(pn, m.function(global->funcIndex()), maybeFieldName);
 }
 
 static bool
@@ -7636,13 +7249,13 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, Hand
 }
 
 /*****************************************************************************/
-// Runtime calls to asm.js module exports
+// Link-time validation
 
 static AsmJSModuleObject&
 FunctionToModuleObject(JSFunction* fun)
 {
     MOZ_ASSERT(IsAsmJSFunction(fun) || IsAsmJSModule(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::ASM_MODULE_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_MODULE_SLOT);
     return v.toObject().as<AsmJSModuleObject>();
 }
 
@@ -7650,42 +7263,8 @@ static unsigned
 FunctionToExportIndex(JSFunction* fun)
 {
     MOZ_ASSERT(IsAsmJSFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::ASM_EXPORT_INDEX_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT);
     return v.toInt32();
-}
-
-static bool
-ChangeHeap(JSContext* cx, AsmJSModule& module, const CallArgs& args)
-{
-    HandleValue bufferArg = args.get(0);
-    if (!IsArrayBuffer(bufferArg)) {
-        ReportIncompatible(cx, args);
-        return false;
-    }
-
-    Rooted<ArrayBufferObject*> newBuffer(cx, &bufferArg.toObject().as<ArrayBufferObject>());
-    uint32_t heapLength = newBuffer->byteLength();
-    if (heapLength & module.heapLengthMask() ||
-        heapLength < module.minHeapLength() ||
-        heapLength > module.maxHeapLength())
-    {
-        args.rval().set(BooleanValue(false));
-        return true;
-    }
-
-    if (!module.hasArrayView()) {
-        args.rval().set(BooleanValue(true));
-        return true;
-    }
-
-    MOZ_ASSERT(IsValidAsmJSHeapLength(heapLength));
-
-    bool useSignalHandlers = module.wasmModule().compileArgs().useSignalHandlersForOOB;
-    if (!ArrayBufferObject::prepareForAsmJS(cx, newBuffer, useSignalHandlers))
-        return false;
-
-    args.rval().set(BooleanValue(module.wasmModule().changeHeap(newBuffer, cx)));
-    return true;
 }
 
 static bool
@@ -7695,17 +7274,10 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
     RootedFunction callee(cx, &args.callee().as<JSFunction>());
 
     AsmJSModule& module = FunctionToModuleObject(callee).module();
-    const AsmJSModule::Export& exp = module.exports()[FunctionToExportIndex(callee)];
+    uint32_t exportIndex = FunctionToExportIndex(callee);
 
-    // The heap-changing function is a special-case and is implemented by C++.
-    if (exp.isChangeHeap())
-        return ChangeHeap(cx, module, args);
-
-    return module.wasmModule().callExport(cx, exp.wasmIndex(), args);
+    return module.wasmModule().callExport(cx, exportIndex, args);
 }
-
-/*****************************************************************************/
-// Link-time validation
 
 static bool
 LinkFail(JSContext* cx, const char* str)
@@ -7881,30 +7453,6 @@ ValidateArrayView(JSContext* cx, const AsmJSModule::Global& global, HandleValue 
     bool tac = IsTypedArrayConstructor(v, global.viewType());
     if (!tac)
         return LinkFail(cx, "bad typed array constructor");
-
-    return true;
-}
-
-static bool
-ValidateByteLength(JSContext* cx, HandleValue globalVal)
-{
-    RootedPropertyName field(cx, cx->names().byteLength);
-    RootedValue v(cx);
-    if (!GetDataProperty(cx, globalVal, field, &v))
-        return false;
-
-    if (!v.isObject() || !v.toObject().isBoundFunction())
-        return LinkFail(cx, "byteLength must be a bound function object");
-
-    RootedFunction fun(cx, &v.toObject().as<JSFunction>());
-
-    RootedValue boundTarget(cx, ObjectValue(*fun->getBoundFunctionTarget()));
-    if (!IsNativeFunction(boundTarget, fun_call))
-        return LinkFail(cx, "bound target of byteLength must be Function.prototype.call");
-
-    RootedValue boundThis(cx, fun->getBoundFunctionThis());
-    if (!IsNativeFunction(boundThis, ArrayBufferObject::byteLengthGetter))
-        return LinkFail(cx, "bound this value must be ArrayBuffer.protototype.byteLength accessor");
 
     return true;
 }
@@ -8151,17 +7699,9 @@ CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
     if (heapLength < module.minHeapLength()) {
         UniqueChars msg(
             JS_smprintf("ArrayBuffer byteLength of 0x%x is less than 0x%x (the size implied "
-                        "by const heap accesses and/or change-heap minimum-length requirements).",
+                        "by const heap accesses).",
                         heapLength,
                         module.minHeapLength()));
-        return LinkFail(cx, msg.get());
-    }
-
-    if (heapLength > module.maxHeapLength()) {
-        UniqueChars msg(
-            JS_smprintf("ArrayBuffer byteLength 0x%x is greater than maximum length of 0x%x",
-                        heapLength,
-                        module.maxHeapLength()));
         return LinkFail(cx, msg.get());
     }
 
@@ -8211,10 +7751,6 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
             if (!ValidateArrayView(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::ByteLength:
-            if (!ValidateByteLength(cx, globalVal))
-                return false;
-            break;
           case AsmJSModule::Global::MathBuiltinFunction:
             if (!ValidateMathBuiltinFunction(cx, global, globalVal))
                 return false;
@@ -8251,9 +7787,7 @@ static JSFunction*
 NewExportedFunction(JSContext* cx, const AsmJSModule& module, const AsmJSModule::Export& func,
                     HandleObject moduleObj, unsigned exportIndex)
 {
-    unsigned numArgs = func.isChangeHeap()
-                       ? 1
-                       : module.wasmModule().exports()[func.wasmIndex()].sig().args().length();
+    unsigned numArgs = module.wasmModule().exports()[exportIndex].sig().args().length();
 
     RootedPropertyName name(cx, func.name());
     JSFunction* fun =
@@ -8263,8 +7797,8 @@ NewExportedFunction(JSContext* cx, const AsmJSModule& module, const AsmJSModule:
     if (!fun)
         return nullptr;
 
-    fun->setExtendedSlot(FunctionExtended::ASM_MODULE_SLOT, ObjectValue(*moduleObj));
-    fun->setExtendedSlot(FunctionExtended::ASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
+    fun->setExtendedSlot(FunctionExtended::WASM_MODULE_SLOT, ObjectValue(*moduleObj));
+    fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
     return fun;
 }
 
@@ -8434,7 +7968,7 @@ NewModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject module
     if (!moduleFun)
         return nullptr;
 
-    moduleFun->setExtendedSlot(FunctionExtended::ASM_MODULE_SLOT, ObjectValue(*moduleObj));
+    moduleFun->setExtendedSlot(FunctionExtended::WASM_MODULE_SLOT, ObjectValue(*moduleObj));
     return moduleFun;
 }
 
@@ -9390,14 +8924,3 @@ js::RoundUpToNextValidAsmJSHeapLength(uint32_t length)
     MOZ_ASSERT(length <= 0xff000000);
     return (length + 0x00ffffff) & ~0x00ffffff;
 }
-
-bool
-js::OnDetachAsmJSArrayBuffer(JSContext* cx, Handle<ArrayBufferObject*> buffer)
-{
-    for (Module* m = cx->runtime()->linkedWasmModules; m; m = m->nextLinked()) {
-        if (buffer == m->maybeBuffer() && !m->detachHeap(cx))
-            return false;
-    }
-    return true;
-}
-

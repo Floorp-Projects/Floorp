@@ -130,9 +130,6 @@ const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
 
 const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
     JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
-#ifdef NIGHTLY_BUILD
-    JS_FN("transfer", ArrayBufferObject::fun_transfer, 2, 0),
-#endif
     JS_FS_END
 };
 
@@ -233,223 +230,6 @@ ArrayBufferObject::fun_isView(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-static void
-ReleaseAsmJSMappedData(void* base)
-{
-    MOZ_ASSERT(uintptr_t(base) % AsmJSPageSize == 0);
-#  ifdef XP_WIN
-    VirtualFree(base, 0, MEM_RELEASE);
-#  else
-    munmap(base, AsmJSMappedSize);
-#   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
-    // Tell Valgrind/Memcheck to recommence reporting accesses in the
-    // previously-inaccessible region.
-    if (AsmJSMappedSize > 0) {
-        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, AsmJSMappedSize);
-    }
-#   endif
-#  endif
-    MemProfiler::RemoveNative(base);
-}
-#else
-static void
-ReleaseAsmJSMappedData(void* base)
-{
-    MOZ_CRASH("asm.js only uses mapped buffers when using signal-handler OOB checking");
-}
-#endif
-
-#ifdef NIGHTLY_BUILD
-# if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-static bool
-TransferAsmJSMappedBuffer(JSContext* cx, const CallArgs& args,
-                          Handle<ArrayBufferObject*> oldBuffer, size_t newByteLength)
-{
-    size_t oldByteLength = oldBuffer->byteLength();
-    MOZ_ASSERT(oldByteLength % AsmJSPageSize == 0);
-    MOZ_ASSERT(newByteLength % AsmJSPageSize == 0);
-
-    ArrayBufferObject::BufferContents stolen =
-        ArrayBufferObject::stealContents(cx, oldBuffer, /* hasStealableContents = */ true);
-    if (!stolen)
-        return false;
-
-    MOZ_ASSERT(stolen.kind() == ArrayBufferObject::ASMJS_MAPPED);
-    uint8_t* data = stolen.data();
-
-    if (newByteLength > oldByteLength) {
-        void* diffStart = data + oldByteLength;
-        size_t diffLength = newByteLength - oldByteLength;
-#  ifdef XP_WIN
-        if (!VirtualAlloc(diffStart, diffLength, MEM_COMMIT, PAGE_READWRITE)) {
-            ReleaseAsmJSMappedData(data);
-            ReportOutOfMemory(cx);
-            return false;
-        }
-#  else
-        // To avoid memset, use MAP_FIXED to clobber the newly-accessible pages
-        // with zero pages.
-        int flags = MAP_FIXED | MAP_PRIVATE | MAP_ANON;
-        if (mmap(diffStart, diffLength, PROT_READ | PROT_WRITE, flags, -1, 0) == MAP_FAILED) {
-            ReleaseAsmJSMappedData(data);
-            ReportOutOfMemory(cx);
-            return false;
-        }
-#  endif
-        MemProfiler::SampleNative(diffStart, diffLength);
-    } else if (newByteLength < oldByteLength) {
-        void* diffStart = data + newByteLength;
-        size_t diffLength = oldByteLength - newByteLength;
-#  ifdef XP_WIN
-        if (!VirtualFree(diffStart, diffLength, MEM_DECOMMIT)) {
-            ReleaseAsmJSMappedData(data);
-            ReportOutOfMemory(cx);
-            return false;
-        }
-#  else
-        if (madvise(diffStart, diffLength, MADV_DONTNEED) ||
-            mprotect(diffStart, diffLength, PROT_NONE))
-        {
-            ReleaseAsmJSMappedData(data);
-            ReportOutOfMemory(cx);
-            return false;
-        }
-#  endif
-    }
-
-    ArrayBufferObject::BufferContents newContents =
-        ArrayBufferObject::BufferContents::create<ArrayBufferObject::ASMJS_MAPPED>(data);
-
-    RootedObject newBuffer(cx, ArrayBufferObject::create(cx, newByteLength, newContents));
-    if (!newBuffer) {
-        ReleaseAsmJSMappedData(data);
-        return false;
-    }
-
-    args.rval().setObject(*newBuffer);
-    return true;
-}
-# endif  // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-
-/*
- * Experimental implementation of ArrayBuffer.transfer:
- *   https://gist.github.com/andhow/95fb9e49996615764eff
- * which is currently in the early stages of proposal for ES7.
- */
-bool
-ArrayBufferObject::fun_transfer(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    HandleValue oldBufferArg = args.get(0);
-    HandleValue newByteLengthArg = args.get(1);
-
-    if (!oldBufferArg.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-        return false;
-    }
-
-    RootedObject oldBufferObj(cx, &oldBufferArg.toObject());
-    ESClassValue cls;
-    if (!GetBuiltinClass(cx, oldBufferObj, &cls))
-        return false;
-    if (cls != ESClass_ArrayBuffer) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-        return false;
-    }
-
-    // Beware: oldBuffer can point across compartment boundaries. ArrayBuffer
-    // contents are not compartment-specific so this is safe.
-    Rooted<ArrayBufferObject*> oldBuffer(cx);
-    if (oldBufferObj->is<ArrayBufferObject>()) {
-        oldBuffer = &oldBufferObj->as<ArrayBufferObject>();
-    } else {
-        JSObject* unwrapped = CheckedUnwrap(oldBufferObj);
-        if (!unwrapped || !unwrapped->is<ArrayBufferObject>()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
-            return false;
-        }
-        oldBuffer = &unwrapped->as<ArrayBufferObject>();
-    }
-
-    size_t oldByteLength = oldBuffer->byteLength();
-    size_t newByteLength;
-    if (newByteLengthArg.isUndefined()) {
-        newByteLength = oldByteLength;
-    } else {
-        int32_t i32;
-        if (!ToInt32(cx, newByteLengthArg, &i32))
-            return false;
-        if (i32 < 0) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_BAD_ARRAY_LENGTH);
-            return false;
-        }
-        newByteLength = size_t(i32);
-    }
-
-    if (oldBuffer->isNeutered()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
-        return false;
-    }
-
-    UniquePtr<uint8_t, JS::FreePolicy> newData;
-    if (!newByteLength) {
-        if (!ArrayBufferObject::neuter(cx, oldBuffer, oldBuffer->contents()))
-            return false;
-    } else {
-# if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
-        // With a 4gb mapped asm.js buffer, we can simply enable/disable access
-        // to the delta as long as the requested length is page-sized.
-        if (oldBuffer->isAsmJSMapped() && (newByteLength % AsmJSPageSize) == 0)
-            return TransferAsmJSMappedBuffer(cx, args, oldBuffer, newByteLength);
-# endif
-
-        // Since we try to realloc below, only allow stealing malloc'd buffers.
-        // If !hasMallocedContents, stealContents will malloc a copy which we
-        // can then realloc.
-        bool steal = oldBuffer->hasMallocedContents();
-        auto stolenContents = ArrayBufferObject::stealContents(cx, oldBuffer, steal);
-        if (!stolenContents)
-            return false;
-
-        UniquePtr<uint8_t, JS::FreePolicy> oldData(stolenContents.data());
-        if (newByteLength > oldByteLength) {
-            // In theory, realloc+memset(0) can be optimized to avoid touching
-            // any pages (by using OS page mapping tricks). However, in
-            // practice, we don't seem to get this optimization in Firefox with
-            // jemalloc so calloc+memcpy are faster.
-            newData.reset(cx->runtime()->pod_callocCanGC<uint8_t>(newByteLength));
-            if (newData) {
-                memcpy(newData.get(), oldData.get(), oldByteLength);
-            } else {
-                // Try malloc before giving up since it might be able to succed
-                // by resizing oldData in-place.
-                newData.reset(cx->pod_realloc(oldData.get(), oldByteLength, newByteLength));
-                if (!newData)
-                    return false;
-                oldData.release();
-                memset(newData.get() + oldByteLength, 0, newByteLength - oldByteLength);
-            }
-        } else if (newByteLength < oldByteLength) {
-            newData.reset(cx->pod_realloc(oldData.get(), oldByteLength, newByteLength));
-            if (!newData)
-                return false;
-            oldData.release();
-        } else {
-            newData = Move(oldData);
-        }
-    }
-
-    RootedObject newBuffer(cx, JS_NewArrayBufferWithContents(cx, newByteLength, newData.get()));
-    if (!newBuffer)
-        return false;
-    newData.release();
-
-    args.rval().setObject(*newBuffer);
-    return true;
-}
-#endif  // defined(NIGHTLY_BUILD)
-
 /*
  * new ArrayBuffer(byteLength)
  */
@@ -511,8 +291,10 @@ ArrayBufferObject::neuterView(JSContext* cx, ArrayBufferViewObject* view,
 ArrayBufferObject::neuter(JSContext* cx, Handle<ArrayBufferObject*> buffer,
                           BufferContents newContents)
 {
-    if (buffer->isAsmJS() && !OnDetachAsmJSArrayBuffer(cx, buffer))
+    if (buffer->isAsmJS()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
         return false;
+    }
 
     // When neutering buffers where we don't know all views, the new data must
     // match the old data. All missing views are typed objects, which do not
@@ -741,6 +523,33 @@ ArrayBufferObject::dataPointerShared() const
 {
     return SharedMem<uint8_t*>::unshared(getSlot(DATA_SLOT).toPrivate());
 }
+
+#if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
+static void
+ReleaseAsmJSMappedData(void* base)
+{
+    MOZ_ASSERT(uintptr_t(base) % AsmJSPageSize == 0);
+#  ifdef XP_WIN
+    VirtualFree(base, 0, MEM_RELEASE);
+#  else
+    munmap(base, AsmJSMappedSize);
+#   if defined(MOZ_VALGRIND) && defined(VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE)
+    // Tell Valgrind/Memcheck to recommence reporting accesses in the
+    // previously-inaccessible region.
+    if (AsmJSMappedSize > 0) {
+        VALGRIND_ENABLE_ADDR_ERROR_REPORTING_IN_RANGE(base, AsmJSMappedSize);
+    }
+#   endif
+#  endif
+    MemProfiler::RemoveNative(base);
+}
+#else
+static void
+ReleaseAsmJSMappedData(void* base)
+{
+    MOZ_CRASH("asm.js only uses mapped buffers when using signal-handler OOB checking");
+}
+#endif
 
 void
 ArrayBufferObject::releaseData(FreeOp* fop)

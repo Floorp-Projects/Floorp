@@ -109,9 +109,6 @@ IsValidAsmJSHeapLength(uint32_t length);
 extern uint32_t
 RoundUpToNextValidAsmJSHeapLength(uint32_t length);
 
-extern bool
-OnDetachAsmJSArrayBuffer(JSContext* cx, Handle<ArrayBufferObject*> buffer);
-
 // The assumed page size; dynamically checked in CompileAsmJS.
 #ifdef _MIPS_ARCH_LOONGSON3A
 static const size_t AsmJSPageSize = 16384;
