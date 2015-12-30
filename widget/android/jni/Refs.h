@@ -571,7 +571,7 @@ public:
         MOZ_ASSERT(ObjectArray::mInstance);
         JNIEnv* const env = GetEnvForThread();
         const size_t ret = env->GetArrayLength(jarray(ObjectArray::mInstance));
-        HandleUncaughtException(env);
+        MOZ_CATCH_JNI_EXCEPTION(env);
         return ret;
     }
 
@@ -581,7 +581,7 @@ public:
         JNIEnv* const env = GetEnvForThread();
         auto ret = Object::LocalRef::Adopt(env, env->GetObjectArrayElement(
                 jobjectArray(ObjectArray::mInstance), jsize(index)));
-        HandleUncaughtException(env);
+        MOZ_CATCH_JNI_EXCEPTION(env);
         return ret;
     }
 
@@ -597,7 +597,7 @@ public:
             array.AppendElement(Object::LocalRef::Adopt(
                     env, env->GetObjectArrayElement(
                             jobjectArray(ObjectArray::mInstance), i)));
-            HandleUncaughtException(env);
+            MOZ_CATCH_JNI_EXCEPTION(env);
         }
         return array;
     }
@@ -613,7 +613,7 @@ public:
         JNIEnv* const env = GetEnvForThread();
         env->SetObjectArrayElement(jobjectArray(ObjectArray::mInstance),
                                    jsize(index), element.Get());
-        HandleUncaughtException(env);
+        MOZ_CATCH_JNI_EXCEPTION(env);
     }
 };
 
@@ -677,7 +677,7 @@ private:
         const jstring result = env->NewString(
                 reinterpret_cast<const jchar*>(str.BeginReading()),
                 str.Length());
-        HandleUncaughtException(env);
+        MOZ_CATCH_JNI_EXCEPTION(env);
         return result;
     }
 
