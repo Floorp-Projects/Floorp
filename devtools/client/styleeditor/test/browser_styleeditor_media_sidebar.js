@@ -9,8 +9,9 @@ const TESTCASE_URI = TEST_BASE_HTTPS + "media-rules.html";
 const MEDIA_PREF = "devtools.styleeditor.showMediaSidebar";
 
 const RESIZE = 300;
-const LABELS = ["not all", "all", "(max-width: 400px)", "(max-width: 600px)"];
-const LINE_NOS = [1, 7, 19, 25];
+const LABELS = ["not all", "all", "(max-width: 400px)",
+                "(min-height: 200px) and (max-height: 250px)", "(max-width: 600px)"];
+const LINE_NOS = [1, 7, 19, 25, 30];
 const NEW_RULE = "\n@media (max-width: 600px) { div { color: blue; } }";
 
 waitForExplicitFinish();
@@ -59,11 +60,12 @@ function testMediaEditor(editor) {
   is(sidebar.hidden, false, "sidebar is showing on editor with @media");
 
   let entries = [...sidebar.querySelectorAll(".media-rule-label")];
-  is(entries.length, 3, "three @media rules displayed in sidebar");
+  is(entries.length, 4, "four @media rules displayed in sidebar");
 
   testRule(entries[0], LABELS[0], false, LINE_NOS[0]);
   testRule(entries[1], LABELS[1], true, LINE_NOS[1]);
   testRule(entries[2], LABELS[2], false, LINE_NOS[2]);
+  testRule(entries[3], LABELS[3], false, LINE_NOS[3]);
 }
 
 function testMediaMatchChanged(editor) {
@@ -102,9 +104,9 @@ function* testMediaRuleAdded(UI, editor) {
 
   let sidebar = editor.details.querySelector(".stylesheet-sidebar");
   let entries = [...sidebar.querySelectorAll(".media-rule-label")];
-  is(entries.length, 4, "four @media rules after changing text");
+  is(entries.length, 5, "five @media rules after changing text");
 
-  testRule(entries[3], LABELS[3], false, LINE_NOS[3]);
+  testRule(entries[4], LABELS[4], false, LINE_NOS[4]);
 }
 
 function testRule(rule, text, matches, lineno) {

@@ -1,0 +1,68 @@
+/* Bug 1164419 - increase Pocket panel size to accomidate wider Russian text. */
+panelmultiview[mainViewId=PanelUI-pocketView] > .panel-viewcontainer > .panel-viewstack > .panel-mainview:not([panelid="PanelUI-popup"]) {
+  max-width: 33em; /* standaloneSubviewWidth + 3 */
+}
+
+.cui-widget-panel[viewId="PanelUI-pocketView"] > .panel-arrowcontainer > .panel-arrowcontent {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+#PanelUI-pocketView > .panel-subview-body,
+#PanelUI-pocketView {
+  overflow: visible;
+}
+
+#pocket-button {
+  list-style-image: url("chrome://browser/skin/Toolbar.png");
+}
+
+toolbar[brighttext] #pocket-button {
+  list-style-image: url(chrome://browser/skin/Toolbar-inverted.png);
+}
+
+@media not all and (min-resolution: 1.1dppx) {
+  #pocket-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #pocket-button {
+    list-style-image: var(--menupanel-list-style-image);
+    -moz-image-region: rect(0px, 992px, 32px, 960px);
+  }
+
+  #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+    -moz-image-region: rect(32px, 992px, 64px, 960px);
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #pocket-button {
+    list-style-image: url("chrome://browser/skin/Toolbar@2x.png");
+  }
+
+  toolbar[brighttext] #pocket-button {
+    list-style-image: url("chrome://browser/skin/Toolbar-inverted@2x.png");
+  }
+
+  #pocket-button[cui-areatype="menu-panel"],
+  toolbarpaletteitem[place="palette"] > #pocket-button {
+    list-style-image: var(--menupanel-list-style-image-2x);
+    -moz-image-region: rect(0px, 1984px, 64px, 1920px);
+  }
+
+  #pocket-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
+    -moz-image-region: rect(64px, 1984px, 128px, 1920px);
+  }
+}
+
+#pocket-button[cui-areatype="toolbar"] {
+  -moz-image-region: rect(0, 774px, 18px, 756px);
+}
+
+#pocket-button[cui-areatype="toolbar"][open] {
+  -moz-image-region: rect(18px, 774px, 36px, 756px);
+}
+
+#panelMenu_pocket,
+#menu_pocket,
+#BMB_pocket {
+  list-style-image: url("chrome://pocket/content/panels/img/pocketmenuitem16.png");
+}

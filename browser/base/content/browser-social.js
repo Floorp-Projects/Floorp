@@ -1348,9 +1348,8 @@ SocialMarks = {
     // also means that populateToolbarPalette must be called prior to using this
     // method, otherwise you get a big fat zero. For our use case with context
     // menu's, this is ok.
-    let tbh = this._toolbarHelper;
     return [p for (p of Social.providers) if (p.markURL &&
-                                              document.getElementById(tbh.idFromOrigin(p.origin)))];
+                                              document.getElementById(this._toolbarHelper.idFromOrigin(p.origin)))];
   },
 
   populateContextMenu: function() {
