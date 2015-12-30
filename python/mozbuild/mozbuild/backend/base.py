@@ -218,6 +218,7 @@ class BuildBackend(LoggingMixin):
         pp.context.update(obj.config.substs)
         pp.context.update(
             top_srcdir=obj.topsrcdir,
+            topobjdir=obj.topobjdir,
             srcdir=srcdir,
             relativesrcdir=mozpath.relpath(srcdir, obj.topsrcdir) or '.',
             DEPTH=mozpath.relpath(obj.topobjdir, mozpath.dirname(obj.output_path)) or '.',

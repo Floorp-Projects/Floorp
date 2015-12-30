@@ -188,6 +188,7 @@ class TestRecursiveMakeBackend(BackendTester):
         lines = [l.strip() for l in open(p, 'rt').readlines()[1:] if not l.startswith('#')]
         self.assertEqual(lines, [
             'DEPTH := .',
+            'topobjdir := %s' % env.topobjdir,
             'topsrcdir := %s' % env.topsrcdir,
             'srcdir := %s' % env.topsrcdir,
             'VPATH := %s' % env.topsrcdir,
@@ -207,7 +208,7 @@ class TestRecursiveMakeBackend(BackendTester):
         self.assertTrue(os.path.exists(p))
 
         lines = [l.strip() for l in open(p, 'rt').readlines()]
-        self.assertEqual(len(lines), 9)
+        self.assertEqual(len(lines), 10)
 
         self.assertTrue(lines[0].startswith('# THIS FILE WAS AUTOMATICALLY'))
 

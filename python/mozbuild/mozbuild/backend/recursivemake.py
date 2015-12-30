@@ -1378,6 +1378,7 @@ INSTALL_TARGETS += %(prefix)s
                 pp.context['autoconfmk'] = 'autoconf.mk'
             pp.handleLine(b'# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n');
             pp.handleLine(b'DEPTH := @DEPTH@\n')
+            pp.handleLine(b'topobjdir := @topobjdir@\n')
             pp.handleLine(b'topsrcdir := @top_srcdir@\n')
             pp.handleLine(b'srcdir := @srcdir@\n')
             pp.handleLine(b'VPATH := @srcdir@\n')
