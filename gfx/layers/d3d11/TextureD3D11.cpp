@@ -844,6 +844,7 @@ DXGITextureHostD3D11::Lock()
   }
   if (!mTextureSource) {
     if (!mTexture && !OpenSharedHandle()) {
+      gfxWindowsPlatform::GetPlatform()->ForceDeviceReset(ForcedDeviceResetReason::OPENSHAREDHANDLE);
       return false;
     }
 
