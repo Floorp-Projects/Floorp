@@ -41,6 +41,7 @@ class FunctionCompiler
 
     const FuncIR&       func_;
     size_t              pc_;
+    size_t              lastReadCallSite_;
 
     TempAllocator&      alloc_;
     MIRGraph&           graph_;
@@ -62,6 +63,7 @@ class FunctionCompiler
     FunctionCompiler(const FuncIR& func, MIRGenerator& mirGen, FuncCompileResults& compileResults)
       : func_(func),
         pc_(0),
+        lastReadCallSite_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
         info_(mirGen.info()),
@@ -1168,10 +1170,15 @@ class FunctionCompiler
     SimdConstant   readF32X4()  { return func_.readF32X4(&pc_); }
     Stmt           readStmtOp() { return Stmt(readU8()); }
 
+    void readCallLineCol(uint32_t* line, uint32_t* column) {
+        const FuncIR::SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
+        MOZ_ASSERT(pc_ == sc.offset);
+        *line = sc.line;
+        *column = sc.column;
+    }
+
     void assertDebugCheckPoint() {
-#ifdef DEBUG
         MOZ_ASSERT(Stmt(readU8()) == Stmt::DebugCheckPoint);
-#endif
     }
 
     bool done() const { return pc_ == func_.size(); }
@@ -1555,13 +1562,6 @@ EmitCallArgs(FunctionCompiler& f, const LifoSig& sig, FunctionCompiler::Call* ca
     return true;
 }
 
-static void
-ReadCallLineCol(FunctionCompiler& f, uint32_t* line, uint32_t* column)
-{
-    *line = f.readU32();
-    *column = f.readU32();
-}
-
 static bool
 EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
@@ -1570,7 +1570,7 @@ EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
@@ -1589,7 +1589,7 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     MDefinition *index;
     if (!EmitI32Expr(f, &index))
@@ -1611,7 +1611,7 @@ EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
@@ -1626,7 +1626,7 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
     MOZ_ASSERT(f32 == F32::Ceil || f32 == F32::Floor);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);
@@ -1645,7 +1645,7 @@ static bool
 EmitMathBuiltinCall(FunctionCompiler& f, F64 f64, MDefinition** def)
 {
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);
