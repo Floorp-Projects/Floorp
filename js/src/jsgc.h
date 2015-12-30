@@ -51,8 +51,20 @@ enum State {
     COMPACT
 };
 
+// Expand the given macro D for each publicly exposed GC reference type.
+#define FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
+    D(JS::Symbol*) \
+    D(JSAtom*) \
+    D(JSFunction*) \
+    D(JSObject*) \
+    D(JSScript*) \
+    D(JSString*) \
+    D(JS::Value) \
+    D(jsid)
+
 // Expand the given macro D for each valid GC reference type.
 #define FOR_EACH_GC_POINTER_TYPE(D) \
+    FOR_EACH_PUBLIC_GC_POINTER_TYPE(D) \
     D(AccessorShape*) \
     D(BaseShape*) \
     D(UnownedBaseShape*) \
@@ -65,8 +77,6 @@ enum State {
     D(ArrayBufferViewObject*) \
     D(DebugScopeObject*) \
     D(GlobalObject*) \
-    D(JSObject*) \
-    D(JSFunction*) \
     D(ModuleObject*) \
     D(ModuleEnvironmentObject*) \
     D(ModuleNamespaceObject*) \
@@ -78,18 +88,12 @@ enum State {
     D(SharedArrayBufferObject*) \
     D(ImportEntryObject*) \
     D(ExportEntryObject*) \
-    D(JSScript*) \
     D(LazyScript*) \
     D(Shape*) \
-    D(JSAtom*) \
-    D(JSString*) \
     D(JSFlatString*) \
     D(JSLinearString*) \
     D(PropertyName*) \
-    D(JS::Symbol*) \
     D(js::ObjectGroup*) \
-    D(Value) \
-    D(jsid) \
     D(TaggedProto)
 
 /* Map from C++ type to alloc kind. JSObject does not have a 1:1 mapping, so must use Arena::thingSize. */
