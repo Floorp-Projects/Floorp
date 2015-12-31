@@ -12,6 +12,7 @@
 #include "builtin/Intl.h"
 
 #include "mozilla/Range.h"
+#include "mozilla/ScopeExit.h"
 
 #include <string.h>
 
@@ -45,6 +46,7 @@ using namespace js;
 
 using mozilla::IsFinite;
 using mozilla::IsNegativeZero;
+using mozilla::MakeScopeExit;
 
 #if ENABLE_INTL_API
 using icu::Locale;
@@ -381,6 +383,14 @@ udat_format(const UDateFormat* format, UDate dateToFormat, UChar* result,
             int32_t resultLength, UFieldPosition* position, UErrorCode* status)
 {
     MOZ_CRASH("udat_format: Intl API disabled");
+}
+
+static int32_t
+udat_formatForFields(const UDateFormat* format, UDate dateToFormat,
+                     UChar* result, int32_t resultLength, UFieldPositionIterator* fpositer,
+                     UErrorCode* status)
+{
+    MOZ_CRASH("udat_formatForFields: Intl API disabled");
 }
 
 static void
@@ -1669,11 +1679,9 @@ InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     if (!JS_DefineFunctions(cx, proto, dateTimeFormat_methods))
         return nullptr;
 
-    /*
-     * Install the getter for DateTimeFormat.prototype.format, which returns a
-     * bound formatting function for the specified DateTimeFormat object
-     * (suitable for passing to methods like Array.prototype.map).
-     */
+    // Install a getter for DateTimeFormat.prototype.format that returns a
+    // formatting function bound to a specified DateTimeFormat object (suitable
+    // for passing to methods like Array.prototype.map).
     RootedValue getter(cx);
     if (!GlobalObject::getIntrinsicValue(cx, cx->global(), cx->names().DateTimeFormatFormatGet,
                                          &getter))
@@ -1685,6 +1693,22 @@ InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
                         nullptr, JSPROP_GETTER | JSPROP_SHARED))
     {
         return nullptr;
+    }
+
+    // If the still-experimental DateTimeFormat.prototype.formatToParts method
+    // is enabled, also add its getter.
+    if (cx->compartment()->creationOptions().experimentalDateTimeFormatFormatToPartsEnabled()) {
+        if (!GlobalObject::getIntrinsicValue(cx, cx->global(),
+                                             cx->names().DateTimeFormatFormatToPartsGet, &getter))
+        {
+            return nullptr;
+        }
+        if (!DefineProperty(cx, proto, cx->names().formatToParts, UndefinedHandleValue,
+                            JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
+                            nullptr, JSPROP_GETTER | JSPROP_SHARED))
+        {
+            return nullptr;
+        }
     }
 
     RootedValue options(cx);
@@ -1986,6 +2010,211 @@ intl_FormatDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue
         return false;
 
     result.setString(str);
+
+    return true;
+}
+
+using FieldType = ImmutablePropertyNamePtr JSAtomState::*;
+
+static FieldType
+GetFieldTypeForFormatField(UDateFormatField fieldName)
+{
+    // See intl/icu/source/i18n/unicode/udat.h for a detailed field list.  This
+    // switch is deliberately exhaustive: cases might have to be added/removed
+    // if this code is compiled with a different ICU with more
+    // UDateFormatField enum initializers.  Please guard such cases with
+    // appropriate ICU version-testing #ifdefs, should cross-version divergence
+    // occur.
+    switch (fieldName) {
+      case UDAT_ERA_FIELD:
+        return &JSAtomState::era;
+
+      case UDAT_YEAR_FIELD:
+      case UDAT_YEAR_WOY_FIELD:
+      case UDAT_EXTENDED_YEAR_FIELD:
+      case UDAT_YEAR_NAME_FIELD:
+        return &JSAtomState::year;
+
+      case UDAT_MONTH_FIELD:
+      case UDAT_STANDALONE_MONTH_FIELD:
+        return &JSAtomState::month;
+
+      case UDAT_DATE_FIELD:
+      case UDAT_JULIAN_DAY_FIELD:
+        return &JSAtomState::day;
+
+      case UDAT_HOUR_OF_DAY1_FIELD:
+      case UDAT_HOUR_OF_DAY0_FIELD:
+      case UDAT_HOUR1_FIELD:
+      case UDAT_HOUR0_FIELD:
+        return &JSAtomState::hour;
+
+      case UDAT_MINUTE_FIELD:
+        return &JSAtomState::minute;
+
+      case UDAT_SECOND_FIELD:
+        return &JSAtomState::second;
+
+      case UDAT_DAY_OF_WEEK_FIELD:
+      case UDAT_STANDALONE_DAY_FIELD:
+      case UDAT_DOW_LOCAL_FIELD:
+      case UDAT_DAY_OF_WEEK_IN_MONTH_FIELD:
+        return &JSAtomState::weekday;
+
+      case UDAT_AM_PM_FIELD:
+        return &JSAtomState::dayperiod;
+
+      case UDAT_TIMEZONE_FIELD:
+        return &JSAtomState::timeZoneName;
+
+      case UDAT_FRACTIONAL_SECOND_FIELD:
+      case UDAT_DAY_OF_YEAR_FIELD:
+      case UDAT_WEEK_OF_YEAR_FIELD:
+      case UDAT_WEEK_OF_MONTH_FIELD:
+      case UDAT_MILLISECONDS_IN_DAY_FIELD:
+      case UDAT_TIMEZONE_RFC_FIELD:
+      case UDAT_TIMEZONE_GENERIC_FIELD:
+      case UDAT_QUARTER_FIELD:
+      case UDAT_STANDALONE_QUARTER_FIELD:
+      case UDAT_TIMEZONE_SPECIAL_FIELD:
+      case UDAT_TIMEZONE_LOCALIZED_GMT_OFFSET_FIELD:
+      case UDAT_TIMEZONE_ISO_FIELD:
+      case UDAT_TIMEZONE_ISO_LOCAL_FIELD:
+#ifndef U_HIDE_INTERNAL_API
+      case UDAT_RELATED_YEAR_FIELD:
+#endif
+#ifndef U_HIDE_DRAFT_API
+      case UDAT_TIME_SEPARATOR_FIELD:
+#endif
+        // These fields are all unsupported.
+        return nullptr;
+
+      case UDAT_FIELD_COUNT:
+        MOZ_ASSERT_UNREACHABLE("format field sentinel value returned by "
+                               "iterator!");
+    }
+
+    MOZ_ASSERT_UNREACHABLE("unenumerated, undocumented format field returned "
+                           "by iterator");
+    return nullptr;
+}
+
+static bool
+intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHandleValue result)
+{
+    if (!IsFinite(x)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_DATE_NOT_FINITE);
+        return false;
+    }
+
+    Vector<char16_t, INITIAL_CHAR_BUFFER_SIZE> chars(cx);
+    if (!chars.resize(INITIAL_CHAR_BUFFER_SIZE))
+        return false;
+
+    UErrorCode status = U_ZERO_ERROR;
+    UFieldPositionIterator* fpositer = ufieldpositer_open(&status);
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+    auto closeFieldPosIter = MakeScopeExit([&]() { ufieldpositer_close(fpositer); });
+
+    int resultSize =
+        udat_formatForFields(df, x, Char16ToUChar(chars.begin()), INITIAL_CHAR_BUFFER_SIZE,
+                             fpositer, &status);
+    if (status == U_BUFFER_OVERFLOW_ERROR) {
+        if (!chars.resize(resultSize))
+            return false;
+        status = U_ZERO_ERROR;
+        udat_formatForFields(df, x, Char16ToUChar(chars.begin()), resultSize, fpositer, &status);
+    }
+    if (U_FAILURE(status)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INTERNAL_INTL_ERROR);
+        return false;
+    }
+
+    RootedArrayObject partsArray(cx, NewDenseEmptyArray(cx));
+    if (!partsArray)
+        return false;
+    if (resultSize == 0) {
+        // An empty string contains no parts, so avoid extra work below.
+        result.setObject(*partsArray);
+        return true;
+    }
+
+    RootedString overallResult(cx, NewStringCopyN<CanGC>(cx, chars.begin(), resultSize));
+    if (!overallResult)
+        return false;
+
+    size_t lastEndIndex = 0;
+
+    uint32_t partIndex = 0;
+    RootedObject singlePart(cx);
+    RootedValue partType(cx);
+    RootedString partSubstr(cx);
+    RootedValue val(cx);
+
+    auto AppendPart = [&](FieldType type, size_t beginIndex, size_t endIndex) {
+        singlePart = NewBuiltinClassInstance<PlainObject>(cx);
+        if (!singlePart)
+            return false;
+
+        partType = StringValue(cx->names().*type);
+        if (!DefineProperty(cx, singlePart, cx->names().type, partType))
+            return false;
+
+        partSubstr = SubstringKernel(cx, overallResult, beginIndex, endIndex - beginIndex);
+        if (!partSubstr)
+            return false;
+
+        val = StringValue(partSubstr);
+        if (!DefineProperty(cx, singlePart, cx->names().value, val))
+            return false;
+
+        val = ObjectValue(*singlePart);
+        if (!DefineElement(cx, partsArray, partIndex, val))
+            return false;
+
+        lastEndIndex = endIndex;
+        partIndex++;
+        return true;
+    };
+
+    int32_t fieldInt, beginIndexInt, endIndexInt;
+    while ((fieldInt = ufieldpositer_next(fpositer, &beginIndexInt, &endIndexInt)) >= 0) {
+        MOZ_ASSERT(beginIndexInt >= 0);
+        MOZ_ASSERT(endIndexInt >= 0);
+        MOZ_ASSERT(beginIndexInt <= endIndexInt,
+                   "field iterator returning invalid range");
+
+        size_t beginIndex(beginIndexInt);
+        size_t endIndex(endIndexInt);
+
+        // Technically this isn't guaranteed.  But it appears true in pratice,
+        // and http://bugs.icu-project.org/trac/ticket/12024 is expected to
+        // correct the documentation lapse.
+        MOZ_ASSERT(lastEndIndex <= beginIndex,
+                   "field iteration didn't return fields in order start to "
+                   "finish as expected");
+
+        if (FieldType type = GetFieldTypeForFormatField(static_cast<UDateFormatField>(fieldInt))) {
+            if (lastEndIndex < beginIndex) {
+                if (!AppendPart(&JSAtomState::separator, lastEndIndex, beginIndex))
+                    return false;
+            }
+
+            if (!AppendPart(type, beginIndex, endIndex))
+                return false;
+        }
+    }
+
+    // Append any final separator.
+    if (lastEndIndex < overallResult->length()) {
+        if (!AppendPart(&JSAtomState::separator, lastEndIndex, overallResult->length()))
+            return false;
+    }
+
+    result.setObject(*partsArray);
     return true;
 }
 
@@ -1993,9 +2222,10 @@ bool
 js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args.length() == 3);
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[1].isNumber());
+    MOZ_ASSERT(args[2].isBoolean());
 
     RootedObject dateTimeFormat(cx, &args[0].toObject());
 
@@ -2024,7 +2254,9 @@ js::intl_FormatDateTime(JSContext* cx, unsigned argc, Value* vp)
 
     // Use the UDateFormat to actually format the time stamp.
     RootedValue result(cx);
-    bool success = intl_FormatDateTime(cx, df, args[1].toNumber(), &result);
+    bool success = args[2].toBoolean()
+                   ? intl_FormatToPartsDateTime(cx, df, args[1].toNumber(), &result)
+                   : intl_FormatDateTime(cx, df, args[1].toNumber(), &result);
 
     if (!isDateTimeFormatInstance)
         udat_close(df);
