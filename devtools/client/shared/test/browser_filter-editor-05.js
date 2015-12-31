@@ -3,6 +3,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Tests the Filter Editor Widget's label-dragging
 
 const TEST_URI = "chrome://devtools/content/shared/widgets/filter-frame.xhtml";
