@@ -8209,6 +8209,13 @@
     "description": "Whether or not a user has tap-to-load enabled.",
     "bug_numbers": [1208167]
   },
+  "ZOOMED_VIEW_ENABLED": {
+    "expires_in_version": "50",
+    "kind": "boolean",
+    "description": "Whether or not a user has the zoomed view (a.k.a. \"Magnify small areas\") enabled.",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "bug_numbers": [1235061]
+  },
   "TRACKING_PROTECTION_ENABLED": {
     "expires_in_version": "never",
     "kind": "boolean",

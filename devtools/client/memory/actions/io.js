@@ -3,9 +3,9 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { reportException, assert } = require("devtools/shared/DevToolsUtils");
+const { immutableUpdate, reportException, assert } = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, actions } = require("../constants");
-const { immutableUpdate, L10N, openFilePicker, createSnapshot } = require("../utils");
+const { L10N, openFilePicker, createSnapshot } = require("../utils");
 const { readSnapshot, takeCensus, selectSnapshot } = require("./snapshot");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];

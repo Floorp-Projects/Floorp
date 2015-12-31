@@ -3,8 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { immutableUpdate } = require("devtools/shared/DevToolsUtils");
 const { actions, snapshotState: states } = require("../constants");
-const { immutableUpdate } = require("../utils");
 
 const handlers = Object.create(null);
 
