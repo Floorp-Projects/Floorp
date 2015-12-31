@@ -124,45 +124,46 @@ ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
 }
 
 static void
-MapSinglePropertyInto(nsCSSProperty aProp,
-                      const nsCSSValue* aValue,
-                      nsCSSValue* aTarget,
+MapSinglePropertyInto(nsCSSProperty aTargetProp,
+                      const nsCSSValue* aSrcValue,
+                      nsCSSValue* aTargetValue,
                       nsRuleData* aRuleData)
 {
-    MOZ_ASSERT(aValue->GetUnit() != eCSSUnit_Null, "oops");
+    MOZ_ASSERT(aSrcValue->GetUnit() != eCSSUnit_Null, "oops");
 
-    // Although aTarget is the nsCSSValue we are going to write into,
+    // Although aTargetValue is the nsCSSValue we are going to write into,
     // we also look at its value before writing into it.  This is done
-    // when aTarget is a token stream value, which is the case when we
+    // when aTargetValue is a token stream value, which is the case when we
     // have just re-parsed a property that had a variable reference (in
     // nsCSSParser::ParsePropertyWithVariableReferences).  TryToStartImageLoad
     // then records any resulting ImageValue objects in the
     // CSSVariableImageTable, to give them the appropriate lifetime.
-    MOZ_ASSERT(aTarget->GetUnit() == eCSSUnit_TokenStream ||
-               aTarget->GetUnit() == eCSSUnit_Null,
-               "aTarget must only be a token stream (when re-parsing "
+    MOZ_ASSERT(aTargetValue->GetUnit() == eCSSUnit_TokenStream ||
+               aTargetValue->GetUnit() == eCSSUnit_Null,
+               "aTargetValue must only be a token stream (when re-parsing "
                "properties with variable references) or null");
 
-    if (ShouldStartImageLoads(aRuleData, aProp)) {
+    if (ShouldStartImageLoads(aRuleData, aTargetProp)) {
         nsIDocument* doc = aRuleData->mPresContext->Document();
-        TryToStartImageLoad(*aValue, doc, aRuleData->mStyleContext, aProp,
-                            aTarget->GetUnit() == eCSSUnit_TokenStream);
+        TryToStartImageLoad(*aSrcValue, doc, aRuleData->mStyleContext,
+                            aTargetProp,
+                            aTargetValue->GetUnit() == eCSSUnit_TokenStream);
     }
-    *aTarget = *aValue;
-    if (nsCSSProps::PropHasFlags(aProp,
+    *aTargetValue = *aSrcValue;
+    if (nsCSSProps::PropHasFlags(aTargetProp,
             CSS_PROPERTY_IGNORED_WHEN_COLORS_DISABLED) &&
         ShouldIgnoreColors(aRuleData))
     {
-        if (aProp == eCSSProperty_background_color) {
+        if (aTargetProp == eCSSProperty_background_color) {
             // Force non-'transparent' background
             // colors to the user's default.
-            if (aTarget->IsNonTransparentColor()) {
-                aTarget->SetColorValue(aRuleData->mPresContext->
-                                       DefaultBackgroundColor());
+            if (aTargetValue->IsNonTransparentColor()) {
+                aTargetValue->SetColorValue(aRuleData->mPresContext->
+                                            DefaultBackgroundColor());
             }
         } else {
             // Ignore 'color', 'border-*-color', etc.
-            *aTarget = nsCSSValue();
+            *aTargetValue = nsCSSValue();
         }
     }
 }
