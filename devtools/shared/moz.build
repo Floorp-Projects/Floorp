@@ -49,4 +49,5 @@ DevToolsModules(
     'Parser.jsm',
     'path.js',
     'system.js',
+    'ThreadSafeDevToolsUtils.js',
 )

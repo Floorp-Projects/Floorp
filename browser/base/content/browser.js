@@ -7923,13 +7923,17 @@ TabModalPromptBox.prototype = {
     delete this._allowTabFocusByPromptPrincipal;
 
     let allowFocusCheckbox; // Define outside the if block so we can bind it into the callback.
-    if (principalToAllowFocusFor) {
+    let hostForAllowFocusCheckbox = "";
+    try {
+      hostForAllowFocusCheckbox = principalToAllowFocusFor.URI.host;
+    } catch (ex) { /* Ignore exceptions for host-less URIs */ }
+    if (hostForAllowFocusCheckbox) {
       let allowFocusRow = document.createElementNS(XUL_NS, "row");
       allowFocusCheckbox = document.createElementNS(XUL_NS, "checkbox");
       let spacer = document.createElementNS(XUL_NS, "spacer");
       allowFocusRow.appendChild(spacer);
       let label = gBrowser.mStringBundle.getFormattedString("tabs.allowTabFocusByPromptForSite",
-                                                            [principalToAllowFocusFor.URI.host]);
+                                                            [hostForAllowFocusCheckbox]);
       allowFocusCheckbox.setAttribute("label", label);
       allowFocusRow.appendChild(allowFocusCheckbox);
       newPrompt.appendChild(allowFocusRow);
