@@ -48,6 +48,7 @@ import os
 import pickle
 import re
 import shutil
+import stat
 import subprocess
 import tempfile
 import urlparse
@@ -524,7 +525,9 @@ class Artifacts(object):
                 if not file_existed or file_updated:
                     # Libraries and binaries may need to be marked executable,
                     # depending on platform.
-                    os.chmod(n, info.external_attr >> 16) # See http://stackoverflow.com/a/434689.
+                    perms = info.external_attr >> 16 # See http://stackoverflow.com/a/434689.
+                    perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH # u+w, a+r.
+                    os.chmod(n, perms)
                 if install_callback:
                     install_callback(info.filename, file_existed, file_updated)
         return 0
