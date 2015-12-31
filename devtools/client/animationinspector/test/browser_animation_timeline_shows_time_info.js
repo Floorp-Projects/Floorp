@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline displays animations' duration, delay and iteration
 // counts in tooltips.
 
