@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 const isOSX = (Services.appinfo.OS === "Darwin");
 
 // Right-click on the home button should
