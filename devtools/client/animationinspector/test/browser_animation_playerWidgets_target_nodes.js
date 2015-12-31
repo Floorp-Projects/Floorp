@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that player widgets display information about target nodes
 
 add_task(function*() {
