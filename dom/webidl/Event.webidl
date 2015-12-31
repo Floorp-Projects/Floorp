@@ -11,7 +11,7 @@
  */
 
 [Constructor(DOMString type, optional EventInit eventInitDict),
- Exposed=(Window,Worker,System), ProbablyShortLivingObject]
+ Exposed=(Window,Worker,System)]
 interface Event {
   [Pure]
   readonly attribute DOMString type;
