@@ -64,8 +64,6 @@ struct TraceCallbacks
                      void* aClosure) const = 0;
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const = 0;
-  virtual void Trace(JSObject** aPtr, const char* aName,
-                     void* aClosure) const = 0;
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const = 0;
   virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
@@ -91,8 +89,6 @@ struct TraceCallbackFunc : public TraceCallbacks
   virtual void Trace(JS::Heap<jsid>* aPtr, const char* aName,
                      void* aClosure) const override;
   virtual void Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
-                     void* aClosure) const override;
-  virtual void Trace(JSObject** aPtr, const char* aName,
                      void* aClosure) const override;
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const override;
