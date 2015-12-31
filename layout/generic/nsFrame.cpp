@@ -2249,8 +2249,11 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     // Revert to the outer reference frame and offset because all display
     // items we create from now on are outside the transform.
     nsPoint toOuterReferenceFrame;
-    const nsIFrame* outerReferenceFrame =
-      aBuilder->FindReferenceFrameFor(GetParent(), &toOuterReferenceFrame);
+    const nsIFrame* outerReferenceFrame = this;
+    if (this != aBuilder->RootReferenceFrame()) {
+      outerReferenceFrame =
+        aBuilder->FindReferenceFrameFor(GetParent(), &toOuterReferenceFrame);
+    }
     buildingDisplayList.SetReferenceFrameAndCurrentOffset(outerReferenceFrame,
       GetOffsetToCrossDoc(outerReferenceFrame));
 

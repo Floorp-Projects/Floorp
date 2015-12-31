@@ -1190,9 +1190,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* AsmJSCache callbacks are runtime-wide. */
     JS::AsmJSCacheOps   asmJSCacheOps;
 
-    /* Head of the linked list of linked wasm modules. */
-    js::wasm::Module*   linkedWasmModules;
-
     /*
      * The propertyRemovals counter is incremented for every JSObject::clear,
      * and for each JSObject::remove method call that frees a slot in the given

@@ -27,8 +27,10 @@
 
 class JSObject2WrappedJSMap
 {
-    typedef js::HashMap<JSObject*, nsXPCWrappedJS*, js::PointerHasher<JSObject*, 3>,
-                        js::SystemAllocPolicy> Map;
+    using Map = js::HashMap<JS::Heap<JSObject*>,
+                            nsXPCWrappedJS*,
+                            js::MovableCellHasher<JS::Heap<JSObject*>>,
+                            js::SystemAllocPolicy>;
 
 public:
     static JSObject2WrappedJSMap* newMap(int length) {
@@ -66,7 +68,6 @@ public:
             return p->value();
         if (!mTable.add(p, obj, wrapper))
             return nullptr;
-        JS_StoreObjectPostBarrierCallback(cx, KeyMarkCallback, obj, this);
         return wrapper;
     }
 
@@ -94,17 +95,6 @@ public:
 
 private:
     JSObject2WrappedJSMap() {}
-
-    /*
-     * This function is called during minor GCs for each key in the HashMap that
-     * has been moved.
-     */
-    static void KeyMarkCallback(JSTracer* trc, JSObject* key, void* data) {
-        JSObject2WrappedJSMap* self = static_cast<JSObject2WrappedJSMap*>(data);
-        JSObject* prior = key;
-        JS_CallUnbarrieredObjectTracer(trc, &key, "XPCJSRuntime::mWrappedJSMap key");
-        self->mTable.rekeyIfMoved(prior, key);
-    }
 
     Map mTable;
 };

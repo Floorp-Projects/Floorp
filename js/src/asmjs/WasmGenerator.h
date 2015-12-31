@@ -123,7 +123,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
 
     // Exports:
-    bool declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* index);
+    bool declareExport(MallocSig&& sig, uint32_t funcIndex);
     uint32_t numDeclaredExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
     const MallocSig& exportSig(uint32_t index) const;
@@ -147,8 +147,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Null return indicates failure. The caller must immediately root a
     // non-null return value.
-    Module* finish(Module::HeapBool usesHeap,
-                   Module::SharedBool sharedHeap,
+    Module* finish(HeapUsage heapUsage,
                    Module::MutedBool mutedErrors,
                    CacheableChars filename,
                    CacheableTwoByteChars displayURL,

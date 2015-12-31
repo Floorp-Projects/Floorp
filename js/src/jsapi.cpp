@@ -637,7 +637,7 @@ JS_GetVersion(JSContext* cx)
 JS_PUBLIC_API(void)
 JS_SetVersionForCompartment(JSCompartment* compartment, JSVersion version)
 {
-    compartment->options().setVersion(version);
+    compartment->behaviors().setVersion(version);
 }
 
 static const struct v2smap {
@@ -827,7 +827,7 @@ JS::StringOfAddonId(JSAddonId* id)
 JS_PUBLIC_API(JSAddonId*)
 JS::AddonIdOfObject(JSObject* obj)
 {
-    return obj->compartment()->addonId;
+    return obj->compartment()->creationOptions().addonIdOrNull();
 }
 
 JS_PUBLIC_API(void)
@@ -1395,6 +1395,14 @@ JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data)
     rt->gc.setGCCallback(cb, data);
 }
 
+JS_PUBLIC_API(void)
+JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+                             void* data)
+{
+    AssertHeapIsIdle(rt);
+    rt->gc.setObjectsTenuredCallback(cb, data);
+}
+
 JS_PUBLIC_API(bool)
 JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data)
 {
@@ -1787,47 +1795,65 @@ JS_GetConstructor(JSContext* cx, HandleObject proto)
 }
 
 bool
-JS::CompartmentOptions::extraWarnings(JSRuntime* rt) const
+JS::CompartmentBehaviors::extraWarnings(JSRuntime* rt) const
 {
     return extraWarningsOverride_.get(rt->options().extraWarnings());
 }
 
 bool
-JS::CompartmentOptions::extraWarnings(JSContext* cx) const
+JS::CompartmentBehaviors::extraWarnings(JSContext* cx) const
 {
     return extraWarnings(cx->runtime());
 }
 
-JS::CompartmentOptions&
-JS::CompartmentOptions::setZone(ZoneSpecifier spec)
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setZone(ZoneSpecifier spec)
 {
     zone_.spec = spec;
     return *this;
 }
 
-JS::CompartmentOptions&
-JS::CompartmentOptions::setSameZoneAs(JSObject* obj)
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setSameZoneAs(JSObject* obj)
 {
     zone_.pointer = static_cast<void*>(obj->zone());
     return *this;
 }
 
-JS::CompartmentOptions&
-JS::CompartmentOptionsRef(JSCompartment* compartment)
+const JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptionsRef(JSCompartment* compartment)
 {
-    return compartment->options();
+    return compartment->creationOptions();
 }
 
-JS::CompartmentOptions&
-JS::CompartmentOptionsRef(JSObject* obj)
+const JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptionsRef(JSObject* obj)
 {
-    return obj->compartment()->options();
+    return obj->compartment()->creationOptions();
 }
 
-JS::CompartmentOptions&
-JS::CompartmentOptionsRef(JSContext* cx)
+const JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptionsRef(JSContext* cx)
 {
-    return cx->compartment()->options();
+    return cx->compartment()->creationOptions();
+}
+
+JS::CompartmentBehaviors&
+JS::CompartmentBehaviorsRef(JSCompartment* compartment)
+{
+    return compartment->behaviors();
+}
+
+JS::CompartmentBehaviors&
+JS::CompartmentBehaviorsRef(JSObject* obj)
+{
+    return obj->compartment()->behaviors();
+}
+
+JS::CompartmentBehaviors&
+JS::CompartmentBehaviorsRef(JSContext* cx)
+{
+    return cx->compartment()->behaviors();
 }
 
 JS_PUBLIC_API(JSObject*)
@@ -1857,8 +1883,7 @@ JS_GlobalObjectTraceHook(JSTracer* trc, JSObject* global)
     // compartment is live.
     global->compartment()->trace(trc);
 
-    JSTraceOp trace = global->compartment()->options().getTrace();
-    if (trace)
+    if (JSTraceOp trace = global->compartment()->creationOptions().getTrace())
         trace(trc, global);
 }
 
@@ -3889,7 +3914,7 @@ JS::CompileOptions::CompileOptions(JSContext* cx, JSVersion version)
     this->version = (version != JSVERSION_UNKNOWN) ? version : cx->findVersion();
 
     strictOption = cx->runtime()->options().strictMode();
-    extraWarningsOption = cx->compartment()->options().extraWarnings(cx);
+    extraWarningsOption = cx->compartment()->behaviors().extraWarnings(cx);
     werrorOption = cx->runtime()->options().werror();
     if (!cx->runtime()->options().asmJS())
         asmJSOption = AsmJSOption::Disabled;
@@ -5909,6 +5934,8 @@ JS_PUBLIC_API(bool)
 DescribeScriptedCaller(JSContext* cx, UniqueChars* filename, unsigned* lineno,
                        unsigned* column)
 {
+    if (filename)
+        filename->reset();
     if (lineno)
         *lineno = 0;
     if (column)
@@ -5923,7 +5950,7 @@ DescribeScriptedCaller(JSContext* cx, UniqueChars* filename, unsigned* lineno,
     if (i.activation()->scriptedCallerIsHidden())
         return false;
 
-    if (filename) {
+    if (filename && i.filename()) {
         UniqueChars copy = make_string_copy(i.filename());
         if (!copy)
             return false;

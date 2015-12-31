@@ -99,7 +99,7 @@ static const unsigned FramePushedForEntrySP = FramePushedAfterSave + sizeof(void
 // function has an ABI derived from its specific signature, so this function
 // must map from the ABI of CodePtr to the export's signature's ABI.
 static bool
-GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, Module::HeapBool usesHeap)
+GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
 {
     MacroAssembler& masm = mg.masm();
     const MallocSig& sig = mg.exportSig(exportIndex);
@@ -332,30 +332,12 @@ FillArgumentArray(MacroAssembler& masm, const MallocSig::ArgVector& args, unsign
     }
 }
 
-// If an import call detaches its heap (viz., via ArrayBuffer.transfer), it must
-// call change-heap to another heap (viz., the new heap returned by transfer)
-// before returning to asm.js code. If the application fails to do this (if the
-// heap pointer is null), jump to a stub.
-static void
-CheckForHeapDetachment(MacroAssembler& masm, Register scratch, Label* onDetached)
-{
-    MOZ_ASSERT(int(masm.framePushed()) >= int(ShadowStackSpace));
-    AssertStackAlignment(masm, ABIStackAlignment);
-#if defined(JS_CODEGEN_X86)
-    CodeOffset offset = masm.movlWithPatch(PatchedAbsoluteAddress(), scratch);
-    masm.append(AsmJSGlobalAccess(offset, HeapGlobalDataOffset));
-    masm.branchTestPtr(Assembler::Zero, scratch, scratch, onDetached);
-#else
-    masm.branchTestPtr(Assembler::Zero, HeapReg, HeapReg, onDetached);
-#endif
-}
-
 // Generate a stub that is called via the internal ABI derived from the
 // signature of the import and calls into an appropriate InvokeImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
 static bool
-GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool usesHeap,
-                       Label* throwLabel, Label* onDetached, ProfilingOffsets* offsets)
+GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLabel,
+                       ProfilingOffsets* offsets)
 {
     MacroAssembler& masm = mg.masm();
     const MallocSig& sig = mg.importSig(importIndex);
@@ -440,13 +422,6 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBo
         MOZ_CRASH("SIMD types shouldn't be returned from a FFI");
     }
 
-    // The heap pointer may have changed during the FFI, so reload it and test
-    // for detachment.
-    if (usesHeap) {
-        masm.loadAsmJSHeapRegisterFromGlobalData();
-        CheckForHeapDetachment(masm, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
-    }
-
     GenerateExitEpilogue(masm, framePushed, ExitReason::ImportInterp, offsets);
 
     if (masm.oom())
@@ -466,8 +441,8 @@ static const unsigned MaybeSavedGlobalReg = 0;
 // signature of the import and calls into a compatible JIT function,
 // having boxed all the ABI arguments into the JIT stack frame layout.
 static bool
-GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool usesHeap,
-                    Label* throwLabel, Label* onDetached, ProfilingOffsets* offsets)
+GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
+                    Label* throwLabel, ProfilingOffsets* offsets)
 {
     MacroAssembler& masm = mg.masm();
     const MallocSig& sig = mg.importSig(importIndex);
@@ -540,8 +515,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool 
     //    HeapReg are removed from the general register set for asm.js code, so
     //    these will not have been saved by the caller like all other registers,
     //    so they must be explicitly preserved. Only save GlobalReg since
-    //    HeapReg must be reloaded (from global data) after the call since the
-    //    heap may change during the FFI call.
+    //    HeapReg can be reloaded (from global data) after the call.
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     static_assert(MaybeSavedGlobalReg == sizeof(void*), "stack frame accounting");
     masm.storePtr(GlobalReg, Address(masm.getStackPointer(), jitFrameBytes));
@@ -698,12 +672,10 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool 
     Label done;
     masm.bind(&done);
 
-    // The heap pointer has to be reloaded anyway since JIT code could have
-    // clobbered it. Additionally, the import may have detached the heap buffer.
-    if (usesHeap) {
+    // Ion code does not respect system callee-saved register conventions so
+    // reload the heap register.
+    if (usesHeap)
         masm.loadAsmJSHeapRegisterFromGlobalData();
-        CheckForHeapDetachment(masm, ABIArgGenerator::NonReturn_VolatileReg0, onDetached);
-    }
 
     GenerateExitEpilogue(masm, masm.framePushed(), ExitReason::ImportJit, offsets);
 
@@ -762,32 +734,6 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, Module::HeapBool 
 
     offsets->end = masm.currentOffset();
     return true;
-}
-
-// Generate a stub that is called when returning from an exit where the module's
-// buffer has been detached. This stub first calls a C++ function to report an
-// exception and then jumps to the generic throw stub to pop everything off the
-// stack.
-static bool
-GenerateOnDetachedStub(ModuleGenerator& mg, Label* onDetached, Label* throwLabel)
-{
-    MacroAssembler& masm = mg.masm();
-
-    masm.haltingAlign(CodeAlignment);
-    Offsets offsets;
-    offsets.begin = masm.currentOffset();
-    masm.bind(onDetached);
-
-    // For now, OnDetached always throws (see OnDetached comment).
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(SymbolicAddress::OnDetached);
-    masm.jump(throwLabel);
-
-    if (masm.oom())
-        return false;
-
-    offsets.end = masm.currentOffset();
-    return mg.defineInlineStub(offsets);
 }
 
 // Generate a stub that is called immediately after the prologue when there is a
@@ -929,7 +875,7 @@ static const LiveRegisterSet AllRegsExceptSP(
 // after restoring all registers. To hack around this, push the resumePC on the
 // stack so that it can be popped directly into PC.
 static bool
-GenerateAsyncInterruptStub(ModuleGenerator& mg, Module::HeapBool usesHeap, Label* throwLabel)
+GenerateAsyncInterruptStub(ModuleGenerator& mg, Label* throwLabel)
 {
     MacroAssembler& masm = mg.masm();
 
@@ -1126,7 +1072,7 @@ GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
 }
 
 bool
-wasm::GenerateStubs(ModuleGenerator& mg, Module::HeapBool usesHeap)
+wasm::GenerateStubs(ModuleGenerator& mg, bool usesHeap)
 {
     for (unsigned i = 0; i < mg.numDeclaredExports(); i++) {
         if (!GenerateEntry(mg, i, usesHeap))
@@ -1135,26 +1081,17 @@ wasm::GenerateStubs(ModuleGenerator& mg, Module::HeapBool usesHeap)
 
     Label onThrow;
 
-    {
-        Label onDetached;
+    for (size_t i = 0; i < mg.numDeclaredImports(); i++) {
+        ProfilingOffsets interp;
+        if (!GenerateInterpExitStub(mg, i, &onThrow, &interp))
+            return false;
 
-        for (size_t i = 0; i < mg.numDeclaredImports(); i++) {
-            ProfilingOffsets interp;
-            if (!GenerateInterpExitStub(mg, i, usesHeap, &onThrow, &onDetached, &interp))
-                return false;
+        ProfilingOffsets jit;
+        if (!GenerateJitExitStub(mg, i, usesHeap, &onThrow, &jit))
+            return false;
 
-            ProfilingOffsets jit;
-            if (!GenerateJitExitStub(mg, i, usesHeap, &onThrow, &onDetached, &jit))
-                return false;
-
-            if (!mg.defineImport(i, interp, jit))
-                return false;
-        }
-
-        if (onDetached.used()) {
-            if (!GenerateOnDetachedStub(mg, &onDetached, &onThrow))
-                return false;
-        }
+        if (!mg.defineImport(i, interp, jit))
+            return false;
     }
 
     if (mg.masm().asmStackOverflowLabel()->used()) {
@@ -1178,7 +1115,7 @@ wasm::GenerateStubs(ModuleGenerator& mg, Module::HeapBool usesHeap)
         return false;
 
     // Generate unconditionally: the async interrupt may be taken at any time.
-    if (!GenerateAsyncInterruptStub(mg, usesHeap, &onThrow))
+    if (!GenerateAsyncInterruptStub(mg, &onThrow))
         return false;
 
     if (onThrow.used()) {

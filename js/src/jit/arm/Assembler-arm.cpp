@@ -634,9 +634,10 @@ Assembler::finish()
 }
 
 bool
-Assembler::asmMergeWith(const Assembler& other)
+Assembler::asmMergeWith(Assembler& other)
 {
     flush();
+    other.flush();
     if (!AssemblerShared::asmMergeWith(size(), other))
         return false;
     return m_buffer.appendBuffer(other.m_buffer);
