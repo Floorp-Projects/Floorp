@@ -398,13 +398,13 @@ checkReportFlags(JSContext* cx, unsigned* flags)
         JSScript* script = cx->currentScript(&pc);
         if (script && IsCheckStrictOp(JSOp(*pc)))
             *flags &= ~JSREPORT_WARNING;
-        else if (cx->compartment()->options().extraWarnings(cx))
+        else if (cx->compartment()->behaviors().extraWarnings(cx))
             *flags |= JSREPORT_WARNING;
         else
             return true;
     } else if (JSREPORT_IS_STRICT(*flags)) {
         /* Warning/error only when JSOPTION_STRICT is set. */
-        if (!cx->compartment()->options().extraWarnings(cx))
+        if (!cx->compartment()->behaviors().extraWarnings(cx))
             return true;
     }
 
@@ -1160,8 +1160,8 @@ JSContext::findVersion() const
     if (JSScript* script = currentScript(nullptr, ALLOW_CROSS_COMPARTMENT))
         return script->getVersion();
 
-    if (compartment() && compartment()->options().version() != JSVERSION_UNKNOWN)
-        return compartment()->options().version();
+    if (compartment() && compartment()->behaviors().version() != JSVERSION_UNKNOWN)
+        return compartment()->behaviors().version();
 
     return runtime()->defaultVersion();
 }

@@ -93,7 +93,7 @@ CreateGlobalAndRunTest(JSRuntime* rt, JSContext* cx)
   };
 
   JS::CompartmentOptions options;
-  options.setVersion(JSVERSION_LATEST);
+  options.behaviors().setVersion(JSVERSION_LATEST);
   JS::PersistentRootedObject global(cx);
   global = JS_NewGlobalObject(cx, &GlobalClass, nullptr, JS::FireOnNewGlobalHook, options);
   ASSERT_TRUE(global != nullptr);

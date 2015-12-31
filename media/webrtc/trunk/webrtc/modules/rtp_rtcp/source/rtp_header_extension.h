@@ -26,6 +26,8 @@ const size_t kAudioLevelLength = 2;
 const size_t kAbsoluteSendTimeLength = 4;
 const size_t kVideoRotationLength = 2;
 const size_t kTransportSequenceNumberLength = 3;
+// kRIDLength is variable
+const size_t kRIDLength = 4; // max 1-byte header extension length
 
 struct HeaderExtension {
   HeaderExtension(RTPExtensionType extension_type)
@@ -57,6 +59,9 @@ struct HeaderExtension {
         break;
       case kRtpExtensionTransportSequenceNumber:
         length = kTransportSequenceNumberLength;
+        break;
+      case kRtpExtensionRID:
+        length = kRIDLength;
         break;
       default:
         assert(false);

@@ -30,7 +30,9 @@ RTPHeaderExtension::RTPHeaderExtension()
       hasAudioLevel(false),
       audioLevel(0),
       hasVideoRotation(false),
-      videoRotation(0) {
+      videoRotation(0),
+      hasRID(false),
+      rid(NULL) {
 }
 
 RTPHeader::RTPHeader()
