@@ -370,6 +370,9 @@ skip-if(Android) include ../xul/reftest/reftest.list
 # xul grid (no XUL theme on Android)
 skip-if(Android) include ../xul/grid/reftests/reftest.list
 
+# -webkit-box & associated properties (mapped to modern flexbox)
+include webkit-box/reftest.list
+
 # -webkit-gradient expressions
 include webkit-gradient/reftest.list
 
