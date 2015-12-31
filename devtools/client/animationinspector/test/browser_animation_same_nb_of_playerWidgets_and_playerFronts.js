@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that when playerFronts are updated, the same number of playerWidgets
 // are created in the panel.
 
