@@ -3,7 +3,7 @@
 
 function test() {
   waitForExplicitFinish();
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
   testRunner.runTests();
 }
 
