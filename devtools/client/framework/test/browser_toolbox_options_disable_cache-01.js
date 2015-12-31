@@ -3,6 +3,8 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+requestLongerTimeout(2);
+
 // Tests that disabling the cache for a tab works as it should when toolboxes
 // are not toggled.
 loadHelperScript("helper_disable_cache.js");
