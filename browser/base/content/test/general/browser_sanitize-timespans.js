@@ -1,6 +1,8 @@
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+requestLongerTimeout(2);
+
 // Bug 453440 - Test the timespan-based logic of the sanitizer code
 var now_mSec = Date.now();
 var now_uSec = now_mSec * 1000;
