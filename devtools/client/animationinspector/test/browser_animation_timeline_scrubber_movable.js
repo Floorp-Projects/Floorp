@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the scrubber in the timeline can be moved by clicking & dragging
 // in the header area.
 // Also check that doing so changes the timeline's play/pause button to paused
