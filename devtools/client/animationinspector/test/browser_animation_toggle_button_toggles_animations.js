@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the main toggle button actually toggles animations.
 // This test doesn't need to be extra careful about checking that *all*
 // animations have been paused (including inside iframes) because there's an
