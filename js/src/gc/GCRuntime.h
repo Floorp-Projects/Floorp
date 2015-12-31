@@ -756,9 +756,6 @@ class GCRuntime
 
     void setGCCallback(JSGCCallback callback, void* data);
     void callGCCallback(JSGCStatus status) const;
-    void setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
-                                   void* data);
-    void callObjectsTenuredCallback();
     bool addFinalizeCallback(JSFinalizeCallback callback, void* data);
     void removeFinalizeCallback(JSFinalizeCallback func);
     bool addWeakPointerZoneGroupCallback(JSWeakPointerZoneGroupCallback callback, void* data);
@@ -1276,7 +1273,6 @@ class GCRuntime
     bool fullCompartmentChecks;
 
     Callback<JSGCCallback> gcCallback;
-    Callback<JSObjectsTenuredCallback> tenuredCallback;
     CallbackVector<JSFinalizeCallback> finalizeCallbacks;
     CallbackVector<JSWeakPointerZoneGroupCallback> updateWeakPointerZoneGroupCallbacks;
     CallbackVector<JSWeakPointerCompartmentCallback> updateWeakPointerCompartmentCallbacks;
