@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+requestLongerTimeout(2);
+
 /**
  * Tests if opening the variables inspection popup preserves the highlighting
  * associated with the currently debugged line.
