@@ -2320,15 +2320,12 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   return NS_OK;
 }
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 NS_IMETHODIMP
 PeerConnectionImpl::SetParameters(MediaStreamTrack& aTrack,
                                   const RTCRtpParameters& aParameters) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   std::vector<JsepTrack::JsConstraints> constraints;
   if (aParameters.mEncodings.WasPassed()) {
     for (auto& encoding : aParameters.mEncodings.Value()) {
@@ -2342,27 +2339,31 @@ PeerConnectionImpl::SetParameters(MediaStreamTrack& aTrack,
       constraints.push_back(constraint);
     }
   }
-  nsresult rv = mJsepSession->SetParameters(streamId, trackId, constraints);
-  if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
-  }
+  return SetParameters(aTrack, constraints);
+}
 #endif
-  return NS_OK;
+
+nsresult
+PeerConnectionImpl::SetParameters(
+    MediaStreamTrack& aTrack,
+    const std::vector<JsepTrack::JsConstraints>& aConstraints)
+{
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+
+  return mJsepSession->SetParameters(streamId, trackId, aConstraints);
 }
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
 NS_IMETHODIMP
 PeerConnectionImpl::GetParameters(MediaStreamTrack& aTrack,
                                   RTCRtpParameters& aOutParameters) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
-
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
   std::vector<JsepTrack::JsConstraints> constraints;
   nsresult rv = GetParameters(aTrack, &constraints);
   if (NS_FAILED(rv)) {
-    return NS_ERROR_FAILURE;
+    return rv;
   }
   aOutParameters.mEncodings.Construct();
   for (auto& constraint : constraints) {
@@ -2371,8 +2372,19 @@ PeerConnectionImpl::GetParameters(MediaStreamTrack& aTrack,
     encoding.mMaxBitrate.Construct(constraint.constraints.maxBr);
     aOutParameters.mEncodings.Value().AppendElement(Move(encoding), fallible);
   }
-#endif
   return NS_OK;
+}
+#endif
+
+nsresult
+PeerConnectionImpl::GetParameters(
+    MediaStreamTrack& aTrack,
+    std::vector<JsepTrack::JsConstraints>* aOutConstraints)
+{
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+
+  return mJsepSession->GetParameters(streamId, trackId, aOutConstraints);
 }
 
 nsresult

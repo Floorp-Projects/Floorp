@@ -446,15 +446,15 @@ public:
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   NS_IMETHODIMP_TO_ERRORRESULT(SetParameters, ErrorResult &rv,
-                               mozilla::dom::MediaStreamTrack& aTrack,
-                               const mozilla::dom::RTCRtpParameters& aParameters)
+                               dom::MediaStreamTrack& aTrack,
+                               const dom::RTCRtpParameters& aParameters)
   {
     rv = SetParameters(aTrack, aParameters);
   }
 
   NS_IMETHODIMP_TO_ERRORRESULT(GetParameters, ErrorResult &rv,
-                               mozilla::dom::MediaStreamTrack& aTrack,
-                               mozilla::dom::RTCRtpParameters& aOutParameters)
+                               dom::MediaStreamTrack& aTrack,
+                               dom::RTCRtpParameters& aOutParameters)
   {
     rv = GetParameters(aTrack, aOutParameters);
   }
