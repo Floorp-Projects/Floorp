@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Verify that if the animation's duration, iterations or delay change in
 // content, then the widget reflects the changes.
 
