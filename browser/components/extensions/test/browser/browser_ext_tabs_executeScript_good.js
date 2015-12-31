@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+requestLongerTimeout(2);
+
 function* testHasPermission(params) {
   let contentSetup = params.contentSetup || (() => Promise.resolve());
 
