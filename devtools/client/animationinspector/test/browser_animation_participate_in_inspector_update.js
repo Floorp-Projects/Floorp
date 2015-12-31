@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the update of the animation panel participate in the
 // inspector-updated event. This means that the test verifies that the
 // inspector-updated event is emitted *after* the animation panel is ready.
