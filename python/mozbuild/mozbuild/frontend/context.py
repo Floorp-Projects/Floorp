@@ -1607,7 +1607,7 @@ VARIABLES = {
            appear in the moz.build file.
         """, None),
 
-    'HOST_DEFINES': (InitializedDefines, dict,
+    'HOST_DEFINES': (OrderedDict, dict,
         """Dictionary of compiler defines to declare for host compilation.
         See ``DEFINES`` for specifics.
         """, None),
