@@ -1039,6 +1039,21 @@ RTCPeerConnection.prototype = {
   },
 
   _setParameters: function(sender, parameters) {
+
+    // validate parameters input
+    var encodings = parameters.encodings || [];
+
+    encodings.reduce((uniqueRids, encoding) => {
+      if (!encoding.rid && encodings.length > 1) {
+        throw new this._win.DOMException("Missing rid", "TypeError");
+      }
+      if (uniqueRids[encoding.rid]) {
+        throw new this._win.DOMException("Duplicate rid", "TypeError");
+      }
+      uniqueRids[encoding.rid] = true;
+      return uniqueRids;
+    }, {});
+
     this._impl.setParameters(sender.track, parameters);
   },
 
