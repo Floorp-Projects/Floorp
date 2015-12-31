@@ -274,7 +274,7 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   pointer-events: auto;
 }
 
-.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([visuallyselected="true"]),
+.tabbrowser-tab:-moz-any([image], [pinned]) > .tab-stack > .tab-content[attention]:not([visuallyselected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([visuallyselected="true"]) {
   background-image: var(--pinned-tab-glow);
   background-position: center;
