@@ -123,6 +123,7 @@ ViEChannel::ViEChannel(int32_t channel_id,
       send_timestamp_extension_id_(kInvalidRtpExtensionId),
       absolute_send_time_extension_id_(kInvalidRtpExtensionId),
       video_rotation_extension_id_(kInvalidRtpExtensionId),
+      rid_extension_id_(kInvalidRtpExtensionId),
       external_transport_(NULL),
       decoder_reset_(true),
       wait_for_key_frame_(false),
@@ -370,10 +371,19 @@ int32_t ViEChannel::SetSendCodec(const VideoCodec& video_codec,
   if (rtp_rtcp_->Sending() && new_stream) {
     restart_rtp = true;
     rtp_rtcp_->SetSendingStatus(false);
+    int i = 0;
     for (std::list<RtpRtcp*>::iterator it = simulcast_rtp_rtcp_.begin();
-         it != simulcast_rtp_rtcp_.end(); ++it) {
+         it != simulcast_rtp_rtcp_.end(); ++it, ++i) {
       (*it)->SetSendingStatus(false);
       (*it)->SetSendingMediaStatus(false);
+      if (video_codec.simulcastStream[i].rid[0] != 0) {
+        (*it)->RegisterSendRtpHeaderExtension(
+          kRtpExtensionRID, video_codec.ridId);
+        (*it)->SetRID(video_codec.simulcastStream[i].rid);
+      } else {
+        (*it)->DeregisterSendRtpHeaderExtension(
+          kRtpExtensionRID);
+      }
     }
   }
 
@@ -502,6 +512,19 @@ int32_t ViEChannel::SetSendCodec(const VideoCodec& video_codec,
         } else {
           rtp_rtcp->DeregisterSendRtpHeaderExtension(
               kRtpExtensionVideoRotation);
+        }
+        if (rid_extension_id_ != kInvalidRtpExtensionId) {
+          // Deregister in case the extension was previously enabled.
+          rtp_rtcp->DeregisterSendRtpHeaderExtension(
+              kRtpExtensionRID);
+          if (rtp_rtcp->RegisterSendRtpHeaderExtension(
+                  kRtpExtensionRID,
+                  rid_extension_id_) != 0) {
+            LOG(LS_WARNING) << "Register RID extension failed";
+          }
+        } else {
+          rtp_rtcp->DeregisterSendRtpHeaderExtension(
+              kRtpExtensionRID);
         }
         rtp_rtcp->RegisterRtcpStatisticsCallback(
             rtp_rtcp_->GetRtcpStatisticsCallback());
@@ -966,6 +989,37 @@ int ViEChannel::SetReceiveVideoRotationStatus(bool enable, int id) {
   return vie_receiver_.SetReceiveVideoRotationStatus(enable, id) ? 0 : -1;
 }
 
+int ViEChannel::SetSendRIDStatus(bool enable, int id, const char *rid) {
+  CriticalSectionScoped cs(rtp_rtcp_cs_.get());
+  int error = 0;
+  if (enable) {
+    // Enable the extension, but disable possible old id to avoid errors.
+    rid_extension_id_ = id;
+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionRID);
+    error = rtp_rtcp_->RegisterSendRtpHeaderExtension(
+        kRtpExtensionRID, id);
+    rtp_rtcp_->SetRID(rid);
+    // NOTE: simulcast streams must be set via the SetSendCodec() API
+  } else {
+    // Disable the extension.
+    rid_extension_id_ = kInvalidRtpExtensionId;
+    rtp_rtcp_->DeregisterSendRtpHeaderExtension(
+        kRtpExtensionRID);
+    // This may be overkill...
+    for (std::list<RtpRtcp*>::iterator it = simulcast_rtp_rtcp_.begin();
+         it != simulcast_rtp_rtcp_.end(); it++) {
+      (*it)->DeregisterSendRtpHeaderExtension(
+          kRtpExtensionRID);
+    }
+  }
+  return error;
+}
+
+int ViEChannel::SetReceiveRIDStatus(bool enable, int id) {
+  return vie_receiver_.SetReceiveRIDStatus(enable, id) ? 0 : -1;
+}
+
 void ViEChannel::SetRtcpXrRrtrStatus(bool enable) {
   CriticalSectionScoped cs(rtp_rtcp_cs_.get());
   rtp_rtcp_->SetRtcpXrRrtrStatus(enable);
@@ -1034,6 +1088,12 @@ int32_t ViEChannel::GetRemoteCSRC(uint32_t CSRCs[kRtpCsrcSize]) {
   if (num_csrcs > 0) {
     memcpy(CSRCs, arrayCSRC, num_csrcs * sizeof(uint32_t));
   }
+  return 0;
+}
+
+int32_t ViEChannel::GetRemoteRID(char rid[256])
+{
+  vie_receiver_.GetRID(rid);
   return 0;
 }
 

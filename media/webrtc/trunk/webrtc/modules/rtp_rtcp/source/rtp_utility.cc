@@ -291,7 +291,7 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
   header.headerLength   = 12 + (CC * 4);
   // not a full validation, just safety against underflow.  Padding must
   // start after the header.  We can have 0 payload bytes left, note.
-  if (header.paddingLength + header.headerLength > length) {
+  if (header.paddingLength + header.headerLength > (ptrdiff_t) length) {
     return false;
   }
 
@@ -300,7 +300,7 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
     ptr += 4;
     header.arrOfCSRCs[i] = CSRC;
   }
-  assert((ptr - _ptrRTPDataBegin) == header.headerLength);
+  assert((ptr - _ptrRTPDataBegin) == (ptrdiff_t) header.headerLength);
 
   // If in effect, MAY be omitted for those packets for which the offset
   // is zero.
@@ -318,6 +318,10 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
   // May not be present in packet.
   header.extension.hasVideoRotation = false;
   header.extension.videoRotation = 0;
+
+  // May not be present in packet.
+  header.extension.hasRID = false;
+  header.extension.rid = NULL;
 
   if (X) {
     /* RTP header extension, RFC 3550.
@@ -481,6 +485,21 @@ void RtpHeaderParser::ParseOneByteExtensionHeader(
           sequence_number += ptr[1];
           header.extension.transportSequenceNumber = sequence_number;
           header.extension.hasTransportSequenceNumber = true;
+          break;
+        }
+        case kRtpExtensionRID: {
+          //   0                   1                   2
+          //   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+          //  |  ID   | L=?   |UTF-8 RID value......          |...
+          //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+          // TODO(jesup) - avoid allocating on each packet - high watermark the RID buffer?
+          char* ptrRID = new char[len+1];
+          memcpy(ptrRID, ptr, len);
+          ptrRID[len] = '\0';
+          header.extension.rid = ptrRID;
+          header.extension.hasRID = true;
           break;
         }
         default: {

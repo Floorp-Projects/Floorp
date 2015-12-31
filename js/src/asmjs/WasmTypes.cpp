@@ -43,34 +43,16 @@ __aeabi_uidivmod(int, int);
 }
 #endif
 
-namespace js {
-namespace wasm {
-
-void
-ReportOverRecursed()
-{
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    ReportOverRecursed(cx);
-}
-
-bool
-HandleExecutionInterrupt()
-{
-    WasmActivation* act = JSRuntime::innermostWasmActivation();
-    act->module().setInterrupted(true);
-    bool ret = CheckForInterrupt(act->cx());
-    act->module().setInterrupted(false);
-    return ret;
-}
-
-} // namespace wasm
-} // namespace js
-
 static void
-OnDetached()
+WasmReportOverRecursed()
 {
-    JSContext* cx = JSRuntime::innermostWasmActivation()->cx();
-    JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_OUT_OF_MEMORY);
+    ReportOverRecursed(JSRuntime::innermostWasmActivation()->cx());
+}
+
+static bool
+WasmHandleExecutionInterrupt()
+{
+    return CheckForInterrupt(JSRuntime::innermostWasmActivation()->cx());
 }
 
 static void
@@ -187,15 +169,13 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::StackLimit:
         return cx->stackLimitAddressForJitCode(StackForUntrustedScript);
       case SymbolicAddress::ReportOverRecursed:
-        return FuncCast(wasm::ReportOverRecursed, Args_General0);
-      case SymbolicAddress::OnDetached:
-        return FuncCast(OnDetached, Args_General0);
+        return FuncCast(WasmReportOverRecursed, Args_General0);
       case SymbolicAddress::OnOutOfBounds:
         return FuncCast(OnOutOfBounds, Args_General0);
       case SymbolicAddress::OnImpreciseConversion:
         return FuncCast(OnImpreciseConversion, Args_General0);
       case SymbolicAddress::HandleExecutionInterrupt:
-        return FuncCast(wasm::HandleExecutionInterrupt, Args_General0);
+        return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::InvokeImport_Void:
         return FuncCast(InvokeImport_Void, Args_General3);
       case SymbolicAddress::InvokeImport_I32:

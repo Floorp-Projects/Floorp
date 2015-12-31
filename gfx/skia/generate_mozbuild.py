@@ -102,6 +102,9 @@ elif CONFIG['CLANG_CL']:
 
 DEFINES['SKIA_IMPLEMENTATION'] = 1
 
+if not CONFIG['MOZ_ENABLE_SKIA_GPU']:
+    DEFINES['SK_SUPPORT_GPU'] = 0
+
 if CONFIG['GNU_CXX']:
     CXXFLAGS += [
         '-Wno-deprecated-declarations',
@@ -227,7 +230,8 @@ def generate_separated_sources(platform_sources):
       'skia/src/opts/SkOpts_neon.cpp',
       'skia/src/opts/SkBitmapProcState_arm_neon.cpp',
     },
-    'none': set()
+    'none': set(),
+    'gpu': set()
   })
 
   for plat in platform_sources.keys():
@@ -248,6 +252,8 @@ def generate_separated_sources(platform_sources):
         key = 'arm'
       elif '_none' in value:
         key = 'none'
+      elif 'gpu' in value or 'Gpu' in value:
+        key = 'gpu'
       elif all(value in platform_sources.get(p, {})
                for p in platforms if p != plat):
         key = 'common'
@@ -357,6 +363,9 @@ def write_mozbuild(sources):
   f.write(header)
 
   write_sources(f, sources['common'], 0)
+
+  f.write("if CONFIG['MOZ_ENABLE_SKIA_GPU']:\n")
+  write_sources(f, sources['gpu'], 4)
 
   f.write("if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):\n")
   write_sources(f, sources['android'], 4)
