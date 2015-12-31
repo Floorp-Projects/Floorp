@@ -18,6 +18,7 @@ import org.mozilla.gecko.db.BrowserContract.History;
 import org.mozilla.gecko.db.BrowserContract.Schema;
 import org.mozilla.gecko.db.BrowserContract.Tabs;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
+import org.mozilla.gecko.db.DBUtils.UpdateOperation;
 import org.mozilla.gecko.sync.Utils;
 
 import android.content.ContentProviderOperation;
@@ -1023,37 +1024,32 @@ public class BrowserProvider extends SharedBrowserDatabaseProvider {
             return db.update(TABLE_HISTORY, values, selection, selectionArgs);
         }
 
-        final String[] historyProjection = new String[] {
-            History._ID,   // 0
-            History.URL,   // 1
-            History.VISITS // 2
-        };
+        trace("Updating history meta data and incrementing visits");
 
-        final Cursor cursor = db.query(TABLE_HISTORY, historyProjection, selection,
-                                       selectionArgs, null, null, null);
+        // We might be altering the ContentValues, so let's use a copy.
+        final ContentValues valuesForUpdate = new ContentValues(values);
 
-        int updated = 0;
-
-        try {
-            while (cursor.moveToNext()) {
-                long id = cursor.getLong(0);
-
-                trace("Updating history entry with ID: " + id);
-
-                long existing = cursor.getLong(2);
-                Long additional = values.getAsLong(History.VISITS);
-
-                // Increment visit count by a specified amount, or default to increment by 1
-                values.put(History.VISITS, existing + ((additional != null) ? additional : 1));
-
-                updated += db.update(TABLE_HISTORY, values, "_id = ?",
-                                     new String[] { Long.toString(id) });
+        // Update data and increment visits by 1.
+        long incVisits = 1;
+        if (valuesForUpdate.containsKey(History.VISITS)) {
+            // Use a given visit count, if found.
+            Long additional = valuesForUpdate.getAsLong(History.VISITS);
+            if (additional != null) {
+                incVisits = additional;
             }
-        } finally {
-            cursor.close();
+            // Remove the visits from this set of values so we can pass the visits
+            // as an expression.
+            valuesForUpdate.remove(History.VISITS);
         }
 
-        return updated;
+        // Create a separate set of values that will be updated as an expression.
+        final ContentValues visits = new ContentValues();
+        visits.put(History.VISITS, History.VISITS + " + " + incVisits);
+
+        final ContentValues[] valuesAndVisits = { valuesForUpdate,  visits };
+        final UpdateOperation[] ops = { UpdateOperation.ASSIGN, UpdateOperation.EXPRESSION };
+
+        return DBUtils.updateArrays(db, TABLE_HISTORY, valuesAndVisits, ops, selection, selectionArgs);
     }
 
     private void updateFaviconIdsForUrl(SQLiteDatabase db, String pageUrl, Long faviconId) {
