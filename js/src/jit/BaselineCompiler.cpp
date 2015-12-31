@@ -1491,7 +1491,8 @@ static const VMFunction DeepCloneObjectLiteralInfo =
 bool
 BaselineCompiler::emit_JSOP_OBJECT()
 {
-    if (JS::CompartmentOptionsRef(cx).cloneSingletons()) {
+    JSCompartment* comp = cx->compartment();
+    if (comp->creationOptions().cloneSingletons()) {
         RootedObject obj(cx, script->getObject(GET_UINT32_INDEX(pc)));
         if (!obj)
             return false;
@@ -1510,7 +1511,7 @@ BaselineCompiler::emit_JSOP_OBJECT()
         return true;
     }
 
-    JS::CompartmentOptionsRef(cx).setSingletonsAsValues();
+    comp->behaviors().setSingletonsAsValues();
     frame.push(ObjectValue(*script->getObject(pc)));
     return true;
 }

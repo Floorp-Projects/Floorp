@@ -17,6 +17,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/dom/EncodingUtils.h"
+#include "mozilla/Preferences.h"
 #include "nsIUnicodeDecoder.h"
 
 #include "xpcpublic.h"
@@ -252,6 +253,15 @@ xpc_LocalizeRuntime(JSRuntime* rt)
   JS_SetLocaleCallbacks(rt, new XPCLocaleCallbacks());
 
   // Set the default locale.
+
+  // Check a pref to see if we should use US English locale regardless
+  // of the system locale.
+  if (Preferences::GetBool("javascript.use_us_english_locale", false)) {
+    return JS_SetDefaultLocale(rt, "en-US");
+  }
+
+  // No pref has been found, so get the default locale from the
+  // application's locale.
   nsCOMPtr<nsILocaleService> localeService =
     do_GetService(NS_LOCALESERVICE_CONTRACTID);
   if (!localeService)

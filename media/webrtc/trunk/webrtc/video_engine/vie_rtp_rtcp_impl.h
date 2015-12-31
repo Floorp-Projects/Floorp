@@ -39,6 +39,8 @@ class ViERTP_RTCPImpl
                             unsigned int& SSRC) const;  // NOLINT
   virtual int GetRemoteCSRCs(const int video_channel,
                              unsigned int CSRCs[kRtpCsrcSize]) const;
+  virtual int GetRemoteRID(const int video_channel,
+                           char rid[256]) const;
   virtual int SetRtxSendPayloadType(const int video_channel,
                                     const uint8_t payload_type);
   virtual int SetRtxReceivePayloadType(const int video_channel,
@@ -105,6 +107,13 @@ class ViERTP_RTCPImpl
   virtual int SetReceiveVideoRotationStatus(int video_channel,
                                             bool enable,
                                             int id);
+  virtual int SetSendRIDStatus(int video_channel,
+                               bool enable,
+                               int id,
+                               const char *rid);
+  virtual int SetReceiveRIDStatus(int video_channel,
+                                  bool enable,
+                                  int id);
   virtual int SetRtcpXrRrtrStatus(int video_channel, bool enable);
   virtual int SetTransmissionSmoothingStatus(int video_channel, bool enable);
   virtual int SetMinTransmitBitrate(int video_channel,

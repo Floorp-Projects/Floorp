@@ -6769,9 +6769,11 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 {
     // The source compartment must be specifically flagged as mergable.  This
     // also implies that the compartment is not visible to the debugger.
-    MOZ_ASSERT(source->options_.mergeable());
+    MOZ_ASSERT(source->creationOptions_.mergeable());
+    MOZ_ASSERT(source->creationOptions_.invisibleToDebugger());
 
-    MOZ_ASSERT(source->addonId == target->addonId);
+    MOZ_ASSERT(source->creationOptions().addonIdOrNull() ==
+               target->creationOptions().addonIdOrNull());
 
     JSRuntime* rt = source->runtimeFromMainThread();
 

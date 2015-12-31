@@ -18,11 +18,6 @@
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/mobile-l10n.js
-@BINPATH@/searchplugins/*
-@BINPATH@/defaults/profile/bookmarks.html
-@BINPATH@/defaults/profile/localstore.rdf
-@BINPATH@/defaults/profile/mimeTypes.rdf
-@BINPATH@/defaults/profile/chrome/*
 #ifdef MOZ_UPDATER
 @BINPATH@/update.locale
 @BINPATH@/updater.ini
@@ -81,31 +76,15 @@
 @BINPATH@/@MOZ_CHILD_PROCESS_NAME_PIE@
 
 [xpcom]
-@BINPATH@/dependentlibs.list
-
-@BINPATH@/AndroidManifest.xml
-@BINPATH@/resources.arsc
 @BINPATH@/package-name.txt
 @BINPATH@/classes.dex
-@BINPATH@/res/drawable
-@BINPATH@/res/drawable-hdpi
-@BINPATH@/res/layout
 @BINPATH@/distribution/*
 
 [browser]
 ; [Base Browser Files]
-#ifndef XP_UNIX
-@BINPATH@/@MOZ_APP_NAME@.exe
-#else
-@BINPATH@/@MOZ_APP_NAME@-bin
-@BINPATH@/@MOZ_APP_NAME@
-#endif
 @BINPATH@/application.ini
 @BINPATH@/platform.ini
 @BINPATH@/blocklist.xml
-#ifdef XP_UNIX
-@BINPATH@/run-mozilla.sh
-#endif
 
 ; [Components]
 @BINPATH@/components/components.manifest
@@ -117,11 +96,8 @@
 @BINPATH@/components/appstartup.xpt
 @BINPATH@/components/autocomplete.xpt
 @BINPATH@/components/autoconfig.xpt
-@BINPATH@/components/browsercompsbase.xpt
 @BINPATH@/components/browser-element.xpt
-@BINPATH@/components/browser-feeds.xpt
 @BINPATH@/components/caps.xpt
-@BINPATH@/components/chardet.xpt
 @BINPATH@/components/chrome.xpt
 @BINPATH@/components/commandhandler.xpt
 @BINPATH@/components/commandlines.xpt
@@ -164,10 +140,8 @@
 @BINPATH@/components/dom_storage.xpt
 @BINPATH@/components/dom_stylesheets.xpt
 @BINPATH@/components/dom_system.xpt
-@BINPATH@/components/dom_threads.xpt
 @BINPATH@/components/dom_traversal.xpt
 @BINPATH@/components/dom_tv.xpt
-@BINPATH@/components/dom_views.xpt
 #ifdef MOZ_WEBSPEECH
 @BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
@@ -187,7 +161,6 @@
 @BINPATH@/components/fastfind.xpt
 @BINPATH@/components/feeds.xpt
 @BINPATH@/components/find.xpt
-@BINPATH@/components/fuel.xpt
 @BINPATH@/components/gfx.xpt
 @BINPATH@/components/html5.xpt
 @BINPATH@/components/htmlparser.xpt
@@ -209,7 +182,6 @@
 #ifdef MOZ_ENABLE_PROFILER_SPS
 @BINPATH@/components/memory_profiler.xpt
 #endif
-@BINPATH@/components/migration.xpt
 @BINPATH@/components/mimetype.xpt
 @BINPATH@/components/mozfind.xpt
 @BINPATH@/components/necko_about.xpt
@@ -226,7 +198,9 @@
 @BINPATH@/components/necko_strconv.xpt
 @BINPATH@/components/necko_viewsource.xpt
 @BINPATH@/components/necko_websocket.xpt
+#ifdef NECKO_WIFI
 @BINPATH@/components/necko_wifi.xpt
+#endif
 @BINPATH@/components/necko_wyciwyg.xpt
 @BINPATH@/components/necko.xpt
 @BINPATH@/components/loginmgr.xpt
@@ -240,14 +214,11 @@
 #ifdef MOZ_ENABLE_PROFILER_SPS
 @BINPATH@/components/profiler.xpt
 #endif
-@BINPATH@/components/proxyObject.xpt
 @BINPATH@/components/rdf.xpt
 @BINPATH@/components/satchel.xpt
 @BINPATH@/components/saxparser.xpt
-@BINPATH@/components/sessionstore.xpt
 @BINPATH@/components/services-crypto-component.xpt
 @BINPATH@/components/captivedetect.xpt
-@BINPATH@/components/shellservice.xpt
 @BINPATH@/components/shistory.xpt
 @BINPATH@/components/spellchecker.xpt
 @BINPATH@/components/storage.xpt
@@ -274,7 +245,6 @@
 @BINPATH@/components/urlformatter.xpt
 @BINPATH@/components/webBrowser_core.xpt
 @BINPATH@/components/webbrowserpersist.xpt
-@BINPATH@/components/webshell_idls.xpt
 @BINPATH@/components/widget.xpt
 @BINPATH@/components/widget_android.xpt
 @BINPATH@/components/windowds.xpt
@@ -316,38 +286,23 @@
 @BINPATH@/components/FeedProcessor.js
 @BINPATH@/components/PackagedAppUtils.manifest
 @BINPATH@/components/PackagedAppUtils.js
-@BINPATH@/components/BrowserFeeds.manifest
-@BINPATH@/components/FeedConverter.js
-@BINPATH@/components/FeedWriter.js
 @BINPATH@/components/PermissionSettings.js
 @BINPATH@/components/PermissionSettings.manifest
 @BINPATH@/components/PermissionPromptService.js
 @BINPATH@/components/PermissionPromptService.manifest
-@BINPATH@/components/fuelApplication.manifest
-@BINPATH@/components/fuelApplication.js
-@BINPATH@/components/WebContentConverter.js
-@BINPATH@/components/BrowserComponents.manifest
-@BINPATH@/components/nsBrowserContentHandler.js
-@BINPATH@/components/nsBrowserGlue.js
 @BINPATH@/components/nsDNSServiceDiscovery.manifest
 @BINPATH@/components/nsDNSServiceDiscovery.js
-@BINPATH@/components/nsSetDefaultBrowser.manifest
-@BINPATH@/components/nsSetDefaultBrowser.js
 @BINPATH@/components/toolkitsearch.manifest
 @BINPATH@/components/nsSearchService.js
-@BINPATH@/components/nsSearchSuggestions.js
+@BINPATH@/components/nsSidebar.js
 @BINPATH@/components/passwordmgr.manifest
 @BINPATH@/components/nsLoginInfo.js
 @BINPATH@/components/nsLoginManager.js
 @BINPATH@/components/nsLoginManagerPrompter.js
 @BINPATH@/components/storage-mozStorage.js
 @BINPATH@/components/crypto-SDR.js
-@BINPATH@/components/nsHelperAppDlg.manifest
-@BINPATH@/components/nsHelperAppDlg.js
 @BINPATH@/components/NetworkGeolocationProvider.manifest
 @BINPATH@/components/NetworkGeolocationProvider.js
-@BINPATH@/components/nsSidebar.manifest
-@BINPATH@/components/nsSidebar.js
 @BINPATH@/components/extensions.manifest
 @BINPATH@/components/addonManager.js
 @BINPATH@/components/amContentHandler.js
@@ -372,18 +327,12 @@
 @BINPATH@/components/ProcessSingleton.manifest
 @BINPATH@/components/MainProcessSingleton.js
 @BINPATH@/components/ContentProcessSingleton.js
-@BINPATH@/components/nsSessionStore.manifest
-@BINPATH@/components/nsSessionStartup.js
-@BINPATH@/components/nsSessionStore.js
 @BINPATH@/components/nsURLFormatter.manifest
 @BINPATH@/components/nsURLFormatter.js
-@BINPATH@/components/@DLL_PREFIX@browsercomps@DLL_SUFFIX@
 @BINPATH@/components/txEXSLTRegExFunctions.manifest
 @BINPATH@/components/txEXSLTRegExFunctions.js
 @BINPATH@/components/nsContentPrefService.manifest
 @BINPATH@/components/nsContentPrefService.js
-@BINPATH@/components/nsContentDispatchChooser.manifest
-@BINPATH@/components/nsContentDispatchChooser.js
 @BINPATH@/components/nsHandlerService.manifest
 @BINPATH@/components/nsHandlerService.js
 @BINPATH@/components/nsWebHandlerApp.manifest
@@ -404,8 +353,6 @@
 @BINPATH@/components/messageWakeupService.manifest
 @BINPATH@/components/nsINIProcessor.manifest
 @BINPATH@/components/nsINIProcessor.js
-@BINPATH@/components/nsPrompter.manifest
-@BINPATH@/components/nsPrompter.js
 @BINPATH@/components/servicesComponents.manifest
 @BINPATH@/components/TelemetryStartup.js
 @BINPATH@/components/TelemetryStartup.manifest
@@ -436,11 +383,6 @@
 #ifdef MOZ_WEBRTC
 @BINPATH@/components/PeerConnection.js
 @BINPATH@/components/PeerConnection.manifest
-#endif
-
-#ifdef MOZ_SERVICES_HEALTHREPORT
-@BINPATH@/components/HealthReportComponents.manifest
-@BINPATH@/components/HealthReportService.js
 #endif
 
 @BINPATH@/components/CaptivePortalDetectComponents.manifest
@@ -493,39 +435,24 @@
 @BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
 ; [Browser Chrome Files]
-@BINPATH@/chrome/browser@JAREXT@
-@BINPATH@/chrome/browser.manifest
 #ifdef NIGHTLY_BUILD
 @BINPATH@/chrome/shumway.manifest
 @BINPATH@/chrome/shumway/*
 #endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
-#ifdef XP_UNIX
-@BINPATH@/chrome/icons/default/default16.png
-@BINPATH@/chrome/icons/default/default32.png
-@BINPATH@/chrome/icons/default/default48.png
-#endif
 
 ; DevTools
 @BINPATH@/chrome/devtools@JAREXT@
 @BINPATH@/chrome/devtools.manifest
 
-; shell icons
-#ifdef XP_UNIX
-@BINPATH@/icons/*.xpm
-@BINPATH@/icons/*.png
-#endif
-
 ; [Default Preferences]
 ; All the pref files must be part of base to prevent migration bugs
 @BINPATH@/@PREF_DIR@/mobile.js
-@BINPATH@/@PREF_DIR@/mobile-branding.js
 @BINPATH@/@PREF_DIR@/channel-prefs.js
 @BINPATH@/ua-update.json
 @BINPATH@/greprefs.js
 @BINPATH@/defaults/autoconfig/prefcalls.js
-@BINPATH@/defaults/profile/prefs.js
 
 ; [Layout Engine Resources]
 ; Style Sheets, Graphics and other Resources used by the layout engine.
@@ -585,28 +512,11 @@
 
 ; [Personal Security Manager]
 ;
-@BINPATH@/components/pipboot.xpt
 @BINPATH@/components/pipnss.xpt
 
 ; For process sandboxing
 #if defined(MOZ_SANDBOX)
 @BINPATH@/@DLL_PREFIX@mozsandbox@DLL_SUFFIX@
-#endif
-
-; for Solaris SPARC
-#ifdef SOLARIS
-bin/libfreebl_32fpu_3.chk
-bin/libfreebl_32fpu_3.so
-bin/libfreebl_32int_3.chk
-bin/libfreebl_32int_3.so
-bin/libfreebl_32int64_3.chk
-bin/libfreebl_32int64_3.so
-#endif
-
-; [Updater]
-;
-#ifdef MOZ_UPDATER
-@BINPATH@/updater@BIN_SUFFIX@
 #endif
 
 ; [Crash Reporter]
@@ -618,7 +528,6 @@ bin/libfreebl_32int64_3.so
 #endif
 
 [mobile]
-@BINPATH@/chrome/icons/
 @BINPATH@/chrome/chrome@JAREXT@
 @BINPATH@/chrome/chrome.manifest
 @BINPATH@/components/AboutRedirector.js
@@ -638,7 +547,6 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/NSSDialogService.js
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
-@BINPATH@/components/Sidebar.js
 @BINPATH@/components/SiteSpecificUserAgent.js
 @BINPATH@/components/Snippets.js
 
@@ -649,11 +557,7 @@ bin/libfreebl_32int64_3.so
 @BINPATH@/components/PaymentsUI.js
 @BINPATH@/components/PaymentProviderStrategy.js
 
-#ifdef MOZ_SAFE_BROWSING
-@BINPATH@/components/SafeBrowsing.jsm
-#endif
 @BINPATH@/components/XPIDialogService.js
-@BINPATH@/components/browsercomps.xpt
 
 #ifdef ENABLE_MARIONETTE
 @BINPATH@/chrome/marionette@JAREXT@

@@ -191,6 +191,21 @@ int ViERTP_RTCPImpl::GetRemoteCSRCs(const int video_channel,
   return 0;
 }
 
+int ViERTP_RTCPImpl::GetRemoteRID(const int video_channel,
+                                  char rid[256]) const {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
+    return -1;
+  }
+  if (vie_channel->GetRemoteRID(rid) != 0) {
+    shared_data_->SetLastError(kViERtpRtcpUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
 int ViERTP_RTCPImpl::SetRtxSendPayloadType(const int video_channel,
                                            const uint8_t payload_type) {
   LOG_F(LS_INFO) << "channel: " << video_channel
@@ -677,6 +692,44 @@ int ViERTP_RTCPImpl::SetReceiveVideoRotationStatus(int video_channel,
     return -1;
   }
   if (vie_channel->SetReceiveVideoRotationStatus(enable, id) != 0) {
+    shared_data_->SetLastError(kViERtpRtcpUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
+int ViERTP_RTCPImpl::SetSendRIDStatus(int video_channel,
+                                      bool enable,
+                                      int id,
+                                      const char *rid) {
+  LOG_F(LS_INFO) << "channel: " << video_channel
+                 << " enable: " << (enable ? "on" : "off") << " id: " << id << " RID: " << rid;
+
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
+    return -1;
+  }
+  if (vie_channel->SetSendRIDStatus(enable, id, rid) != 0) {
+    shared_data_->SetLastError(kViERtpRtcpUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
+int ViERTP_RTCPImpl::SetReceiveRIDStatus(int video_channel,
+                                         bool enable,
+                                         int id) {
+  LOG_F(LS_INFO) << "channel: " << video_channel
+                 << " enable: " << (enable ? "on" : "off") << " id: " << id;
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
+    return -1;
+  }
+  if (vie_channel->SetReceiveRIDStatus(enable, id) != 0) {
     shared_data_->SetLastError(kViERtpRtcpUnknownError);
     return -1;
   }

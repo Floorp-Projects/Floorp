@@ -542,9 +542,12 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
         NS_ENSURE_SUCCESS(rv, nullptr);
 
         CompartmentOptions options;
-        options.setZone(SystemZone)
-               .setVersion(JSVERSION_LATEST)
+
+        options.creationOptions()
+               .setZone(SystemZone)
                .setAddonId(aReuseLoaderGlobal ? nullptr : MapURIToAddonID(aURI));
+
+        options.behaviors().setVersion(JSVERSION_LATEST);
 
         // Defer firing OnNewGlobalObject until after the __URI__ property has
         // been defined so the JS debugger can tell what module the global is

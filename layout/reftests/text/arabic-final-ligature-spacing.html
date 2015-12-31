@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<style>
+p { font: 36px Geeza Pro, serif; }
+span { font-variant: small-caps; }
+</style>
+
+<!-- bug 739117: breaking the run after the lam-alef ligature
+     should NOT cause extra space to appear -->
+<p>&#x633;&#x644;&#x627;<span>&#x645;</span></p>

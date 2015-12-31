@@ -727,7 +727,7 @@ ErrorReport::ReportAddonExceptionToTelementry(JSContext* cx)
         return;
 
     JSCompartment* comp = stack->compartment();
-    JSAddonId* addonId = comp->addonId;
+    JSAddonId* addonId = comp->creationOptions().addonIdOrNull();
 
     // We only want to send the report if the scope that just have thrown belongs to an add-on.
     // Let's check the compartment of the youngest function on the stack, to determine that.
