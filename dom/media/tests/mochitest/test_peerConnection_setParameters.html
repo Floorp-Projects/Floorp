@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    bug: "1230184",
+    title: "Set parameters on sender",
+    visible: true
+  });
+
+  function parameterstest(wrapper) {
+    var pc = wrapper._pc;
+    ok(pc.getSenders().length > 0, "have senders");
+    var sender = pc.getSenders()[0];
+
+    var testParameters = (params, errorName, errorMsg) => {
+      var compareParameters = (a, b) => {
+        var compareEncoding = (a, b) => {
+          is(a.rid, b.rid || "", "same rid");
+          is(a.maxBitrate, b.maxBitrate, "same maxBitrate");
+        };
+        is(a.encodings.length, (b.encodings || []).length, "same encodings");
+        a.encodings.forEach((en, i) => compareEncoding(en, b.encodings[i]));
+      };
+      try {
+        sender.setParameters(params);
+        compareParameters(sender.getParameters(), params);
+        is(null, errorName || null, "is success expected");
+      } catch (e) {
+        is(e.name, errorName, "correct error name");
+        is(e.message, errorMsg, "correct error message");
+      }
+    };
+
+    testParameters({
+      encodings: [
+        { rid: "foo", maxBitrate: 40000 },
+        { rid: "bar", maxBitrate: 10000 },
+      ]
+    });
+    testParameters({
+      encodings: [
+        { maxBitrate: 10000 },
+      ]
+    });
+    testParameters({
+      encodings: [
+        { maxBitrate: 40000 },
+        { rid: "bar", maxBitrate: 10000 },
+      ]
+    }, "TypeError", "Missing rid");
+    testParameters({
+      encodings: [
+        { rid: "foo", maxBitrate: 40000 },
+        { rid: "bar", maxBitrate: 10000 },
+        { rid: "bar", maxBitrate: 20000 },
+      ]
+    }, "TypeError", "Duplicate rid");
+    testParameters({});
+  }
+
+  runNetworkTest(function () {
+    test = new PeerConnectionTest();
+    test.setMediaConstraints([{video: true}], [{video: true}]);
+    test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
+
+    // Test sender parameters.
+    test.chain.append([
+      function PC_LOCAL_SET_PARAMETERS(test) {
+        return parameterstest(test.pcLocal);
+      }
+    ]);
+
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
