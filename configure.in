@@ -5244,7 +5244,7 @@ dnl ========================================================
 dnl FFmpeg H264/AAC Decoding Support
 dnl ========================================================
 case "$OS_TARGET" in
-Android)
+WINNT|Darwin|Android)
     ;;
 *)
     MOZ_FFMPEG=1
@@ -6205,29 +6205,6 @@ if test -n "$LIBAV_FFT_ASFLAGS"; then
 elif test -n "$MOZ_LIBAV_FFT" -a "${CPU_ARCH}" != "arm"; then
   dnl Warn if we're not building either libav or opendl-max optimized routines.
   AC_MSG_WARN([No assembler or assembly support for libav-fft.  Using unoptimized C routines.])
-fi
-
-dnl ========================================================
-dnl = FFmpeg's ffvpx configuration
-dnl ========================================================
-
-MOZ_FFVPX=
-case "$CPU_ARCH" in
-  x86)
-      MOZ_FFVPX=1
-  ;;
-  x86_64)
-      MOZ_FFVPX=1
-  ;;
-esac
-
-dnl Use same conditional as MOZ_LIBAV_FFT to enable FFmpeg's ffvpx assembly decoder.
-if test -n "$MOZ_LIBAV_FFT"; then
-  FFVPX_ASFLAGS=$LIBAV_FFT_ASFLAGS
-  FFVPX_AS=$LIBAV_FFT_AS
-fi
-if test -n "$MOZ_FFVPX"; then
-  AC_DEFINE(MOZ_FFVPX)
 fi
 
 dnl ========================================================
@@ -8911,9 +8888,6 @@ AC_SUBST(MOZ_VORBIS)
 AC_SUBST(MOZ_TREMOR)
 AC_SUBST(MOZ_WMF)
 AC_SUBST(MOZ_FFMPEG)
-AC_SUBST(MOZ_FFVPX)
-AC_SUBST(FFVPX_AS)
-AC_SUBST_LIST(FFVPX_ASFLAGS)
 AC_SUBST(MOZ_FMP4)
 AC_SUBST(MOZ_EME)
 AC_SUBST(MOZ_DIRECTSHOW)
