@@ -303,7 +303,7 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
       case Scalar::Int16:
         if (kind == HeapAccess::Load)
             kind = HeapAccess::LoadSext32;
-        // FALL THROUGH
+        MOZ_FALLTHROUGH;
       case Scalar::Uint8:
       case Scalar::Uint16:
       case Scalar::Int32:
