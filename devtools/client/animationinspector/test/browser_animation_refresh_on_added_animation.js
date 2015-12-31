@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the panel content refreshes when new animations are added.
 
 add_task(function*() {
