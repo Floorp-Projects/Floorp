@@ -339,8 +339,8 @@ DebuggerClient.prototype = {
   connect: function (aOnConnected) {
     this.emit("connect");
 
-    // Also emit the event on the |DebuggerServer| object (not on
-    // the instance), so it's possible to track all instances.
+    // Also emit the event on the |DebuggerClient| object (not on the instance),
+    // so it's possible to track all instances.
     events.emit(DebuggerClient, "connect", this);
 
     this.addOneTimeListener("connected", (aName, aApplicationType, aTraits) => {
