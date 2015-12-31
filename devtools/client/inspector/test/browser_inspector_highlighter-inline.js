@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that highlighting various inline boxes displays the right number of
 // polygons in the page.
 
