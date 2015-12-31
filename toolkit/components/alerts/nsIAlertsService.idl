@@ -93,9 +93,11 @@ interface nsIAlertNotification : nsISupports
   readonly attribute boolean inPrivateBrowsing;
 };
 
-[scriptable, uuid(9d0284bf-db40-42da-8f0d-c2769dbde7aa)]
+[scriptable, uuid(f7a36392-d98b-4141-a7d7-4e46642684e3)]
 interface nsIAlertsService : nsISupports
 {
+  void showAlert(in nsIAlertNotification alert,
+                 [optional] in nsIObserver alertListener);
   /**
    * Displays a sliding notification window.
    *
