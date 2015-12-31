@@ -1039,7 +1039,9 @@ RTCPeerConnection.prototype = {
   },
 
   _setParameters: function(sender, parameters) {
-
+    if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
+      return;
+    }
     // validate parameters input
     var encodings = parameters.encodings || [];
 
@@ -1058,6 +1060,9 @@ RTCPeerConnection.prototype = {
   },
 
   _getParameters: function(sender) {
+    if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
+      return;
+    }
     return this._impl.getParameters(sender.track);
   },
 
