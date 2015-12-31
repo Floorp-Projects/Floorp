@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the DOM element targets displayed in animation player widgets can
 // be used to highlight elements in the DOM and select them in the inspector.
 
