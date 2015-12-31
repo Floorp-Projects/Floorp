@@ -2787,13 +2787,9 @@ class MOZ_STACK_CLASS FunctionValidator
         return locals_.add(p, name, Local(type, locals_.count()));
     }
 
-    bool addVariable(ParseNode* pn, PropertyName* name, const NumLit& init) {
-        LocalMap::AddPtr p = locals_.lookupForAdd(name);
-        if (p)
-            return failName(pn, "duplicate local name '%s' not allowed", name);
-        if (!locals_.add(p, name, Local(init.type(), locals_.count())))
-            return false;
-        return funcIR().addVariable(init.value());
+    bool addVariable(ParseNode* pn, PropertyName* name, ValType type) {
+        return addFormal(pn, name, type) &&
+               funcIR().addVariable(type);
     }
 
     /****************************** For consistency of returns in a function */
@@ -3570,6 +3566,17 @@ CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
     return true;
 }
 
+template<class T>
+static bool
+SetLocal(FunctionValidator& f, Stmt exprStmt, T setLocal, NumLit lit)
+{
+    f.writeOp(exprStmt);
+    f.writeOp(setLocal);
+    f.writeU32(f.numLocals());
+    f.writeLit(lit);
+    return true;
+}
+
 static bool
 CheckVariable(FunctionValidator& f, ParseNode* var)
 {
@@ -3592,7 +3599,43 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
     if (!lit.valid())
         return f.failName(var, "var '%s' initializer out of range", name);
 
-    return f.addVariable(var, name, lit);
+    switch (lit.which()) {
+      case NumLit::Fixnum:
+      case NumLit::NegativeInt:
+      case NumLit::BigUnsigned:
+        if (lit.toInt32() != 0 && !SetLocal(f, Stmt::I32Expr, I32::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::Double:
+        if ((lit.toDouble() != 0.0 || IsNegativeZero(lit.toDouble())) &&
+            !SetLocal(f, Stmt::F64Expr, F64::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::Float:
+        if ((lit.toFloat() != 0.f || !IsNegativeZero(lit.toFloat())) &&
+            !SetLocal(f, Stmt::F32Expr, F32::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::Int32x4:
+        if (lit.simdValue() != SimdConstant::SplatX4(0) &&
+            !SetLocal(f, Stmt::I32X4Expr, I32X4::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::Float32x4:
+        if (lit.simdValue() != SimdConstant::SplatX4(0.f) &&
+            !SetLocal(f, Stmt::F32X4Expr, F32X4::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::Bool32x4:
+        if (lit.simdValue() != SimdConstant::SplatX4(0) &&
+            !SetLocal(f, Stmt::B32X4Expr, B32X4::SetLocal, lit))
+            return false;
+        break;
+      case NumLit::OutOfRangeInt:
+        MOZ_CRASH("can't be here because of valid() check above");
+    }
+
+    return f.addVariable(var, name, lit.type());
 }
 
 static bool
@@ -6959,11 +7002,11 @@ CheckFunction(ModuleValidator& m)
     if (!CheckArguments(f, &stmtIter, &args))
         return false;
 
-    if (!CheckVariables(f, &stmtIter))
-        return false;
-
     MOZ_ASSERT(!f.startedPacking(), "No bytecode should be written at this point.");
     MaybeAddInterruptCheck(f, InterruptCheckPosition::Head, fn);
+
+    if (!CheckVariables(f, &stmtIter))
+        return false;
 
     ParseNode* lastNonEmptyStmt = nullptr;
     for (; stmtIter; stmtIter = NextNode(stmtIter)) {
