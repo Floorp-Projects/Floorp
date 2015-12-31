@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+requestLongerTimeout(2);
+
 var {Toolbox} = require("devtools/client/framework/toolbox");
 
 var toolbox, toolIDs, idIndex, secondTime = false,
