@@ -2180,8 +2180,7 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         invisibleToDebugger_(false),
         mergeable_(false),
         preserveJitCode_(false),
-        cloneSingletons_(false),
-        experimentalDateTimeFormatFormatToPartsEnabled_(false)
+        cloneSingletons_(false)
     {
         zone_.spec = JS::FreshZone;
     }
@@ -2244,24 +2243,6 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
         return *this;
     }
 
-    // ECMA-402 is considering adding a "formatToParts" DateTimeFormat method,
-    // that exposes not just a formatted string but its ordered subcomponents.
-    // The method, its semantics, and its name are all well short of being
-    // finalized, so for now it's exposed *only* if requested.
-    //
-    // Until "formatToParts" is included in a final specification edition, it's
-    // subject to change or removal at any time.  Do *not* rely on it in
-    // mission-critical code that can't be changed if ECMA-402 decides not to
-    // accept the method in its current form.
-    bool experimentalDateTimeFormatFormatToPartsEnabled() const {
-        return experimentalDateTimeFormatFormatToPartsEnabled_;
-    }
-    CompartmentCreationOptions& setExperimentalDateTimeFormatFormatToPartsEnabled(bool flag) {
-        experimentalDateTimeFormatFormatToPartsEnabled_ = flag;
-        return *this;
-    }
-
-
   private:
     JSAddonId* addonId_;
     JSTraceOp traceGlobal_;
@@ -2273,7 +2254,6 @@ class JS_PUBLIC_API(CompartmentCreationOptions)
     bool mergeable_;
     bool preserveJitCode_;
     bool cloneSingletons_;
-    bool experimentalDateTimeFormatFormatToPartsEnabled_;
 };
 
 /**
