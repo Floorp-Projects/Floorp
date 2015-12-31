@@ -8,7 +8,7 @@ android {
 
     defaultConfig {
         targetSdkVersion 22
-        minSdkVersion 14 
+        minSdkVersion 9
         applicationId mozconfig.substs.ANDROID_PACKAGE_NAME
         testApplicationId 'org.mozilla.roboexample.test'
         testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
