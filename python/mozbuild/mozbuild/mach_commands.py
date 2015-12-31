@@ -387,7 +387,7 @@ class Build(MachCommandBase):
                     line_handler=output.on_line, log=False,
                     print_directory=False)
 
-                if self.substs['MOZ_ARTIFACT_BUILDS']:
+                if self.substs.get('MOZ_ARTIFACT_BUILDS', False):
                     self._run_mach_artifact_install()
 
                 # Build target pairs.
@@ -405,7 +405,7 @@ class Build(MachCommandBase):
                         break
             else:
                 try:
-                    if self.substs['MOZ_ARTIFACT_BUILDS']:
+                    if self.substs.get('MOZ_ARTIFACT_BUILDS', False):
                         self._run_mach_artifact_install()
                 except BuildEnvironmentNotFoundException:
                     # Can't read self.substs from config.status?  That means we
