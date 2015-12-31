@@ -43,7 +43,7 @@ protected:
   virtual ~nsAlertsService();
 
   bool ShouldShowAlert();
-  nsXULAlerts mXULAlerts;
+  nsCOMPtr<nsIAlertsService> mXULAlerts;
 };
 
 #endif /* nsAlertsService_h__ */

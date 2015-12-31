@@ -12,7 +12,7 @@ interface nsIPrincipal;
 #define ALERT_NOTIFICATION_CONTRACTID "@mozilla.org/alert-notification;1"
 %}
 
-[scriptable, uuid(b26b4a67-81b0-4270-8311-1e00a097ef92)]
+[scriptable, uuid(9e87fc34-8dbb-4b14-a724-b27be6822ec8)]
 interface nsIAlertNotification : nsISupports
 {
   /** Initializes an alert notification. */
@@ -81,8 +81,7 @@ interface nsIAlertNotification : nsISupports
 
   /**
    * The principal of the page that created the alert. Used for IPC security
-   * checks, and to determine whether the alert should show the source string
-   * and action buttons.
+   * checks, and to determine whether the alert is actionable.
    */
   readonly attribute nsIPrincipal principal;
 
@@ -91,6 +90,19 @@ interface nsIAlertNotification : nsISupports
    * in private browsing mode.
    */
   readonly attribute boolean inPrivateBrowsing;
+
+  /**
+   * Indicates whether this alert should show the source string and action
+   * buttons. False for system alerts (which can omit the principal), or
+   * expanded, system, and null principals.
+   */
+  readonly attribute boolean actionable;
+
+  /**
+   * The host and port of the originating page, or an empty string if the alert
+   * is not actionable.
+   */
+  readonly attribute AString source;
 };
 
 [scriptable, uuid(f7a36392-d98b-4141-a7d7-4e46642684e3)]
