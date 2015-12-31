@@ -110,6 +110,15 @@ public:
                                 const std::string& oldTrackId,
                                 const std::string& newStreamId,
                                 const std::string& newTrackId) = 0;
+  virtual nsresult SetParameters(
+      const std::string& streamId,
+      const std::string& trackId,
+      const std::vector<JsepTrack::JsConstraints>& constraints) = 0;
+
+  virtual nsresult GetParameters(
+      const std::string& streamId,
+      const std::string& trackId,
+      std::vector<JsepTrack::JsConstraints>* outConstraints) = 0;
 
   virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const = 0;
 

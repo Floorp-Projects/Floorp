@@ -77,6 +77,7 @@
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/dom/RTCCertificate.h"
 #include "mozilla/dom/RTCConfigurationBinding.h"
+#include "mozilla/dom/RTCRtpSenderBinding.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
@@ -2316,6 +2317,61 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
     return NS_ERROR_UNEXPECTED;
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::SetParameters(MediaStreamTrack& aTrack,
+                                  const RTCRtpParameters& aParameters) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  std::vector<JsepTrack::JsConstraints> constraints;
+  if (aParameters.mEncodings.WasPassed()) {
+    for (auto& encoding : aParameters.mEncodings.Value()) {
+      JsepTrack::JsConstraints constraint;
+      if (encoding.mRid.WasPassed()) {
+        constraint.rid = NS_ConvertUTF16toUTF8(encoding.mRid.Value()).get();
+      }
+      if (encoding.mMaxBitrate.WasPassed()) {
+        constraint.constraints.maxBr = encoding.mMaxBitrate.Value();
+      }
+      constraints.push_back(constraint);
+    }
+  }
+  nsresult rv = mJsepSession->SetParameters(streamId, trackId, constraints);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PeerConnectionImpl::GetParameters(MediaStreamTrack& aTrack,
+                                  RTCRtpParameters& aOutParameters) {
+  PC_AUTO_ENTER_API_CALL(true);
+
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  std::vector<JsepTrack::JsConstraints> constraints;
+  nsresult rv = GetParameters(aTrack, &constraints);
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+  aOutParameters.mEncodings.Construct();
+  for (auto& constraint : constraints) {
+    RTCRtpEncodingParameters encoding;
+    encoding.mRid.Construct(NS_ConvertASCIItoUTF16(constraint.rid.c_str()));
+    encoding.mMaxBitrate.Construct(constraint.constraints.maxBr);
+    aOutParameters.mEncodings.Value().AppendElement(Move(encoding), fallible);
+  }
+#endif
   return NS_OK;
 }
 
