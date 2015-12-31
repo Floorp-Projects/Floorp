@@ -1,3 +1,5 @@
+requestLongerTimeout(2);
+
 const DUMMY_PATH = "browser/browser/base/content/test/general/dummy_page.html";
 
 const gExpectedHistory = {
