@@ -1,3 +1,4 @@
+requestLongerTimeout(2);
 add_task(function* ()
 {
   function pushPref(name, value) {
