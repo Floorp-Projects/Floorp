@@ -32,7 +32,6 @@ class Deinterlacer
 {
 public:
   explicit Deinterlacer(const nsIntSize& aImageSize);
-  bool IsValid() { return !!mBuffer; }
 
   uint8_t* RowBuffer(uint32_t aRow);
   void PropagatePassToDownscaler(Downscaler& aDownscaler);
