@@ -160,43 +160,58 @@ class MacArtifactJob(ArtifactJob):
             bundle_name = 'Nightly.app'
             source = mozpath.join(tempdir, bundle_name)
 
-            paths = [
-                'Contents/MacOS/crashreporter.app/Contents/MacOS/crashreporter',
-                'Contents/MacOS/firefox',
-                'Contents/MacOS/firefox-bin',
-                'Contents/MacOS/libfreebl3.dylib',
-                'Contents/MacOS/liblgpllibs.dylib',
-                # 'Contents/MacOS/liblogalloc.dylib',
-                'Contents/MacOS/libmozglue.dylib',
-                'Contents/MacOS/libnss3.dylib',
-                'Contents/MacOS/libnssckbi.dylib',
-                'Contents/MacOS/libnssdbm3.dylib',
-                'Contents/MacOS/libplugin_child_interpose.dylib',
-                # 'Contents/MacOS/libreplace_jemalloc.dylib',
-                # 'Contents/MacOS/libreplace_malloc.dylib',
-                'Contents/MacOS/libsoftokn3.dylib',
-                'Contents/MacOS/plugin-container.app/Contents/MacOS/plugin-container',
-                'Contents/MacOS/updater.app/Contents/MacOS/updater',
-                # 'Contents/MacOS/xpcshell',
-                'Contents/MacOS/XUL',
-                'Contents/Resources/browser/components/components.manifest',
-                'Contents/Resources/browser/components/libbrowsercomps.dylib',
-                'Contents/Resources/dependentlibs.list',
-                # 'Contents/Resources/firefox',
-                'Contents/Resources/gmp-clearkey/0.1/libclearkey.dylib',
-                # 'Contents/Resources/gmp-fake/1.0/libfake.dylib',
-                # 'Contents/Resources/gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
-                'Contents/Resources/webapprt-stub',
-            ]
+            # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
+            paths_no_keep_path = ('Contents/MacOS', [
+                'crashreporter.app/Contents/MacOS/crashreporter',
+                'firefox',
+                'firefox-bin',
+                'libfreebl3.dylib',
+                'liblgpllibs.dylib',
+                # 'liblogalloc.dylib',
+                'libmozglue.dylib',
+                'libnss3.dylib',
+                'libnssckbi.dylib',
+                'libnssdbm3.dylib',
+                'libplugin_child_interpose.dylib',
+                # 'libreplace_jemalloc.dylib',
+                # 'libreplace_malloc.dylib',
+                'libsoftokn3.dylib',
+                'plugin-container.app/Contents/MacOS/plugin-container',
+                'updater.app/Contents/MacOS/updater',
+                # 'xpcshell',
+                'XUL',
+            ])
+
+            # These get copied into dist/bin with the path, so "root/a/b/c" -> "dist/bin/a/b/c".
+            paths_keep_path = ('Contents/Resources', [
+                'browser/components/libbrowsercomps.dylib',
+                'dependentlibs.list',
+                # 'firefox',
+                'gmp-clearkey/0.1/libclearkey.dylib',
+                # 'gmp-fake/1.0/libfake.dylib',
+                # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                'webapprt-stub',
+            ])
 
             with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-                finder = FileFinder(source)
+                root, paths = paths_no_keep_path
+                finder = FileFinder(mozpath.join(source, root))
                 for path in paths:
                     for p, f in finder.find(path):
                         self.log(logging.INFO, 'artifact',
                             {'path': path},
                             'Adding {path} to processed archive')
-                        writer.add(os.path.basename(p).encode('utf-8'), f, mode=os.stat(mozpath.join(source, p)).st_mode)
+                        writer.add(os.path.basename(p).encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+
+                root, paths = paths_keep_path
+                finder = FileFinder(mozpath.join(source, root))
+                for path in paths:
+                    for p, f in finder.find(path):
+                        self.log(logging.INFO, 'artifact',
+                            {'path': path},
+                            'Adding {path} to processed archive')
+                        writer.add(p.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+
         finally:
             try:
                 shutil.rmtree(tempdir)
