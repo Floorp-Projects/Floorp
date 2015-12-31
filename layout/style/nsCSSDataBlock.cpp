@@ -124,11 +124,18 @@ ShouldStartImageLoads(nsRuleData *aRuleData, nsCSSProperty aProperty)
 }
 
 static void
-MapSinglePropertyInto(nsCSSProperty aTargetProp,
+MapSinglePropertyInto(nsCSSProperty aSrcProp,
                       const nsCSSValue* aSrcValue,
+                      nsCSSProperty aTargetProp,
                       nsCSSValue* aTargetValue,
                       nsRuleData* aRuleData)
 {
+    MOZ_ASSERT(!nsCSSProps::PropHasFlags(aTargetProp, CSS_PROPERTY_LOGICAL),
+               "Can't map into a logical property");
+    MOZ_ASSERT(aSrcProp == aTargetProp ||
+               nsCSSProps::PropHasFlags(aSrcProp, CSS_PROPERTY_LOGICAL),
+               "Source & target property must be the same, except when we're "
+               "doing a logical-to-physical property mapping");
     MOZ_ASSERT(aSrcValue->GetUnit() != eCSSUnit_Null, "oops");
 
     // Although aTargetValue is the nsCSSValue we are going to write into,
@@ -277,7 +284,8 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 if (val->GetUnit() == eCSSUnit_TokenStream) {
                   val->GetTokenStreamValue()->mLevel = aRuleData->mLevel;
                 }
-                MapSinglePropertyInto(physicalProp, val, target, aRuleData);
+                MapSinglePropertyInto(iProp, val, physicalProp, target,
+                                      aRuleData);
             }
         }
     }
@@ -730,7 +738,7 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
              dest->GetTokenStreamValue()->mPropertyID == aPropID);
 
   CSSVariableImageTable::ReplaceAll(aRuleData->mStyleContext, aPropID, [=] {
-    MapSinglePropertyInto(physicalProp, src, dest, aRuleData);
+    MapSinglePropertyInto(aPropID, src, physicalProp, dest, aRuleData);
   });
 }
 
