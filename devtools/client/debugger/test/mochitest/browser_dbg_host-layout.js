@@ -12,7 +12,7 @@ var gDefaultHostType = Services.prefs.getCharPref("devtools.toolbox.host");
 
 function test() {
   // test is too slow on some platforms due to the number of test cases
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
 
   Task.spawn(function*() {
     yield testHosts(["bottom", "side", "window:big"], ["horizontal", "vertical", "horizontal"]);
