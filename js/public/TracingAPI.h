@@ -281,29 +281,40 @@ JSTracer::asCallbackTracer()
     return static_cast<JS::CallbackTracer*>(this);
 }
 
-namespace JS {
-
-// The JS::TraceEdge family of functions traces the given GC thing reference.
-// This performs the tracing action configured on the given JSTracer: typically
-// calling the JSTracer::callback or marking the thing as live.
+// The JS_Call*Tracer family of functions traces the given GC thing reference.
+// This performs the tracing action configured on the given JSTracer:
+// typically calling the JSTracer::callback or marking the thing as live.
 //
-// The argument to JS::TraceEdge is an in-out param: when the function returns,
-// the garbage collector might have moved the GC thing. In this case, the
-// reference passed to JS::TraceEdge will be updated to the thing's new
-// location. Callers of this method are responsible for updating any state that
-// is dependent on the object's address. For example, if the object's address
-// is used as a key in a hashtable, then the object must be removed and
-// re-inserted with the correct hash.
+// The argument to JS_Call*Tracer is an in-out param: when the function
+// returns, the garbage collector might have moved the GC thing. In this case,
+// the reference passed to JS_Call*Tracer will be updated to the object's new
+// location. Callers of this method are responsible for updating any state
+// that is dependent on the object's address. For example, if the object's
+// address is used as a key in a hashtable, then the object must be removed
+// and re-inserted with the correct hash.
+//
+extern JS_PUBLIC_API(void)
+JS_CallValueTracer(JSTracer* trc, JS::Heap<JS::Value>* valuep, const char* name);
+
+extern JS_PUBLIC_API(void)
+JS_CallIdTracer(JSTracer* trc, JS::Heap<jsid>* idp, const char* name);
+
+extern JS_PUBLIC_API(void)
+JS_CallObjectTracer(JSTracer* trc, JS::Heap<JSObject*>* objp, const char* name);
+
+extern JS_PUBLIC_API(void)
+JS_CallStringTracer(JSTracer* trc, JS::Heap<JSString*>* strp, const char* name);
+
+extern JS_PUBLIC_API(void)
+JS_CallScriptTracer(JSTracer* trc, JS::Heap<JSScript*>* scriptp, const char* name);
+
+extern JS_PUBLIC_API(void)
+JS_CallFunctionTracer(JSTracer* trc, JS::Heap<JSFunction*>* funp, const char* name);
+
+namespace JS {
 template <typename T>
 extern JS_PUBLIC_API(void)
 TraceEdge(JSTracer* trc, JS::Heap<T>* edgep, const char* name);
-
-// As with JS::TraceEdge, but checks if *edgep is a nullptr before proceeding.
-// Note that edgep itself must always be non-null.
-template <typename T>
-extern JS_PUBLIC_API(void)
-TraceNullableEdge(JSTracer* trc, JS::Heap<T>* edgep, const char* name);
-
 } // namespace JS
 
 // The following JS_CallUnbarriered*Tracer functions should only be called where

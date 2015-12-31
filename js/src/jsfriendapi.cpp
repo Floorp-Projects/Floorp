@@ -1072,7 +1072,7 @@ JS::ObjectPtr::updateWeakPointerAfterGC()
 void
 JS::ObjectPtr::trace(JSTracer* trc, const char* name)
 {
-    JS::TraceEdge(trc, &value, name);
+    JS_CallObjectTracer(trc, &value, name);
 }
 
 JS_FRIEND_API(JSObject*)
