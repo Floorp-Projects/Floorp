@@ -26,40 +26,29 @@ PromptService.prototype = {
   /* ----------  nsIPromptFactory  ---------- */
   // XXX Copied from nsPrompter.js.
   getPrompt: function getPrompt(domWin, iid) {
-    let doc = this.getDocument();
-    if (!doc) {
-      let fallback = this._getFallbackService();
-      return fallback.QueryInterface(Ci.nsIPromptFactory).getPrompt(domWin, iid);
+    // This is still kind of dumb; the C++ code delegated to login manager
+    // here, which in turn calls back into us via nsIPromptService2.
+    if (iid.equals(Ci.nsIAuthPrompt2) || iid.equals(Ci.nsIAuthPrompt)) {
+      try {
+        let pwmgr = Cc["@mozilla.org/passwordmanager/authpromptfactory;1"].getService(Ci.nsIPromptFactory);
+        return pwmgr.getPrompt(domWin, iid);
+      } catch (e) {
+        Cu.reportError("nsPrompter: Delegation to password manager failed: " + e);
+      }
     }
 
-    let p = new InternalPrompt(domWin, doc);
+    let p = new InternalPrompt(domWin);
     p.QueryInterface(iid);
     return p;
   },
 
   /* ----------  private memebers  ---------- */
 
-  _getFallbackService: function _getFallbackService() {
-    return Components.classesByID["{7ad1b327-6dfa-46ec-9234-f2a620ea7e00}"]
-                     .getService(Ci.nsIPromptService);
-  },
-
-  getDocument: function getDocument() {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
-    return win ? win.document : null;
-  },
-
   // nsIPromptService and nsIPromptService2 methods proxy to our Prompt class
-  // if we can show in-document popups, or to the fallback service otherwise.
   callProxy: function(aMethod, aArguments) {
     let prompt;
-    let doc = this.getDocument();
-    if (!doc) {
-      let fallback = this._getFallbackService();
-      return fallback[aMethod].apply(fallback, aArguments);
-    }
     let domWin = aArguments[0];
-    prompt = new InternalPrompt(domWin, doc);
+    prompt = new InternalPrompt(domWin);
     return prompt[aMethod].apply(prompt, Array.prototype.slice.call(aArguments, 1));
   },
 
@@ -102,14 +91,12 @@ PromptService.prototype = {
   }
 };
 
-function InternalPrompt(aDomWin, aDocument) {
+function InternalPrompt(aDomWin) {
   this._domWin = aDomWin;
-  this._doc = aDocument;
 }
 
 InternalPrompt.prototype = {
   _domWin: null,
-  _doc: null,
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPrompt, Ci.nsIAuthPrompt, Ci.nsIAuthPrompt2]),
 
@@ -373,11 +360,11 @@ InternalPrompt.prototype = {
     return this.nsIPrompt_prompt(title, text, result, null, {});
   },
 
-  nsIAuthPrompt_promptUsernameAndPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass) {
+  nsIAuthPrompt_promptUsernameAndPassword : function(aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass) {
     return this.nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, aUser, aPass);
   },
 
-  nsIAuthPrompt_promptPassword : function (aTitle, aText, aPasswordRealm, aSavePassword, aPass) {
+  nsIAuthPrompt_promptPassword : function(aTitle, aText, aPasswordRealm, aSavePassword, aPass) {
     return this.nsIAuthPrompt_loginPrompt(aTitle, aText, aPasswordRealm, aSavePassword, null, aPass);
   },
 
@@ -828,4 +815,59 @@ XPCOMUtils.defineLazyGetter(PromptUtils, "bundle", function () {
   return Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
 });
 
-this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService]);
+
+// Factory for wrapping nsIAuthPrompt interfaces to make them usable via an nsIAuthPrompt2 interface.
+// XXX Copied from nsPrompter.js.
+function AuthPromptAdapterFactory() {
+}
+
+AuthPromptAdapterFactory.prototype = {
+  classID: Components.ID("{80dae1e9-e0d2-4974-915f-f97050fa8068}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPromptAdapterFactory]),
+
+  /* ----------  nsIAuthPromptAdapterFactory ---------- */
+
+  createAdapter: function(aPrompt) {
+    return new AuthPromptAdapter(aPrompt);
+  }
+};
+
+
+// Takes an nsIAuthPrompt implementation, wraps it with a nsIAuthPrompt2 shell.
+// XXX Copied from nsPrompter.js.
+function AuthPromptAdapter(aPrompt) {
+  this.prompt = aPrompt;
+}
+
+AuthPromptAdapter.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAuthPrompt2]),
+  prompt: null,
+
+  /* ----------  nsIAuthPrompt2 ---------- */
+
+  promptAuth: function(aChannel, aLevel, aAuthInfo, aCheckLabel, aCheckValue) {
+    let message = PromptUtils.makeDialogText(aChannel, aAuthInfo);
+
+    let [username, password] = PromptUtils.getAuthInfo(aAuthInfo);
+    let [host, realm]  = PromptUtils.getAuthTarget(aChannel, aAuthInfo);
+    let authTarget = host + " (" + realm + ")";
+
+    let ok;
+    if (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD) {
+      ok = this.prompt.promptPassword(null, message, authTarget, Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, password);
+    } else {
+      ok = this.prompt.promptUsernameAndPassword(null, message, authTarget, Ci.nsIAuthPrompt.SAVE_PASSWORD_PERMANENTLY, username, password);
+    }
+
+    if (ok) {
+      PromptUtils.setAuthInfo(aAuthInfo, username.value, password.value);
+    }
+    return ok;
+  },
+
+  asyncPromptAuth: function(aChannel, aCallback, aContext, aLevel, aAuthInfo, aCheckLabel, aCheckValue) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  }
+};
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PromptService, AuthPromptAdapterFactory]);
