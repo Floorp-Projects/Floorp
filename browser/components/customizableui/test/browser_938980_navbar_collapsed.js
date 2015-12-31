@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 var bookmarksToolbar = document.getElementById("PersonalToolbar");
 var navbar = document.getElementById("nav-bar");
 var tabsToolbar = document.getElementById("TabsToolbar");
