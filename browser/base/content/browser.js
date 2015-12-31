@@ -1188,6 +1188,7 @@ var gBrowserInit = {
     gBrowser.tabContainer.updateVisibility();
 
     BookmarkingUI.init();
+    AutoShowBookmarksToolbar.init();
 
     gPrefService.addObserver(gHomeButton.prefDomain, gHomeButton, false);
 
@@ -1422,8 +1423,6 @@ var gBrowserInit = {
 
     PlacesToolbarHelper.uninit();
 
-    BookmarkingUI.uninit();
-
     TabsInTitlebar.uninit();
 
     ToolbarIconColor.uninit();
@@ -1484,6 +1483,8 @@ var gBrowserInit = {
       IndexedDBPromptHelper.uninit();
       LightweightThemeListener.uninit();
       PanelUI.uninit();
+      BookmarkingUI.uninit();
+      AutoShowBookmarksToolbar.uninit();
     }
 
     // Final window teardown, do this last.
