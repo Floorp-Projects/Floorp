@@ -291,7 +291,7 @@ void
 nsXPCWrappedJS::TraceJS(JSTracer* trc)
 {
     MOZ_ASSERT(mRefCnt >= 2 && IsValid(), "must be strongly referenced");
-    JS::TraceEdge(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
+    JS_CallObjectTracer(trc, &mJSObj, "nsXPCWrappedJS::mJSObj");
 }
 
 NS_IMETHODIMP

@@ -467,7 +467,7 @@ XPCWrappedNativeScope::~XPCWrappedNativeScope()
 void
 XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntime* rt)
 {
-    // Do JS::TraceEdge for all wrapped natives with external references, as
+    // Do JS_CallTracer for all wrapped natives with external references, as
     // well as any DOM expando objects.
     for (XPCWrappedNativeScope* cur = gScopes; cur; cur = cur->mNext) {
         for (auto i = cur->mWrappedNativeMap->Iter(); !i.Done(); i.Next()) {
@@ -479,7 +479,7 @@ XPCWrappedNativeScope::TraceWrappedNativesInAllScopes(JSTracer* trc, XPCJSRuntim
 
         if (cur->mDOMExpandoSet) {
             for (DOMExpandoSet::Enum e(*cur->mDOMExpandoSet); !e.empty(); e.popFront())
-                JS::TraceEdge(trc, &e.mutableFront(), "DOM expando object");
+                JS_CallObjectTracer(trc, &e.mutableFront(), "DOM expando object");
         }
     }
 }
