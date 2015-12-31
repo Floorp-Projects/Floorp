@@ -19,7 +19,6 @@
 
     <org.mozilla.gecko.preferences.LinkPreference android:key="android.not_a_preference.feedback.link"
                                                   android:title="@string/pref_vendor_feedback"
-                                                  android:persistent="false"
-                                                  url="about:feedback" />
+                                                  android:persistent="false"/>
 
 </PreferenceScreen>
