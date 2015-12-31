@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+requestLongerTimeout(2);
+
 /*
  * These tests make sure that blocking/removing sites from the grid works
  * as expected. Pinned tabs should not be moved. Gaps will be re-filled
