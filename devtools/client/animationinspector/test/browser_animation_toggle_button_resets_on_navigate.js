@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that a page navigation resets the state of the global toggle button.
 
 add_task(function*() {
