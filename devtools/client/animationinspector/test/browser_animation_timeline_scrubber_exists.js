@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline does have a scrubber element.
 
 add_task(function*() {
