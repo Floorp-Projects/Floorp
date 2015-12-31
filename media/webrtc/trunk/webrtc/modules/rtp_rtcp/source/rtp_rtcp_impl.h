@@ -79,6 +79,8 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
 
   void SetCsrcs(const std::vector<uint32_t>& csrcs) override;
 
+  int32_t SetRID(const char *rid) override;
+
   RTCPSender::FeedbackState GetFeedbackState();
 
   int CurrentSendFrequencyHz() const;

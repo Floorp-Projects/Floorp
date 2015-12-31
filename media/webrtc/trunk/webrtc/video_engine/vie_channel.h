@@ -138,6 +138,8 @@ class ViEChannel
   bool GetReceiveAbsoluteSendTimeStatus() const;
   int SetSendVideoRotationStatus(bool enable, int id);
   int SetReceiveVideoRotationStatus(bool enable, int id);
+  int SetSendRIDStatus(bool enable, int id, const char *rid);
+  int SetReceiveRIDStatus(bool enable, int id);
   void SetRtcpXrRrtrStatus(bool enable);
   void SetTransmissionSmoothingStatus(bool enable);
   void EnableTMMBR(bool enable);
@@ -156,6 +158,9 @@ class ViEChannel
 
   // Gets the CSRC for the incoming stream.
   int32_t GetRemoteCSRC(uint32_t CSRCs[kRtpCsrcSize]);
+
+  // Gets the RID (if any) for the incoming stream.
+  int32_t GetRemoteRID(char rid[256]);
 
   int SetRtxSendPayloadType(int payload_type);
   void SetRtxReceivePayloadType(int payload_type);
@@ -554,6 +559,7 @@ class ViEChannel
   int send_timestamp_extension_id_;
   int absolute_send_time_extension_id_;
   int video_rotation_extension_id_;
+  int rid_extension_id_;
 
   Transport* external_transport_;
 

@@ -113,6 +113,11 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int GetRemoteCSRCs(const int video_channel,
                              unsigned int CSRCs[kRtpCsrcSize]) const = 0;
 
+  // This function gets the RID value (if any) for the incoming RTP stream
+  // for the specified channel.
+  virtual int GetRemoteRID(const int video_channel,
+                           char rid[256]) const = 0;
+
   // This sets a specific payload type for the RTX stream. Note that this
   // doesn't enable RTX, SetLocalSSRC must still be called to enable RTX.
   virtual int SetRtxSendPayloadType(const int video_channel,
@@ -264,6 +269,15 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int SetReceiveVideoRotationStatus(int video_channel,
                                             bool enable,
                                             int id) = 0;
+
+  virtual int SetSendRIDStatus(int video_channel,
+                               bool enable,
+                               int id,
+                               const char *rid) = 0;
+
+  virtual int SetReceiveRIDStatus(int video_channel,
+                                  bool enable,
+                                  int id) = 0;
 
   // Enables/disables RTCP Receiver Reference Time Report Block extension/
   // DLRR Report Block extension (RFC 3611).

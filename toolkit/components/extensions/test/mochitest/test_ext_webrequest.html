@@ -28,9 +28,10 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_script_xhr.js",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
+                            BASE + "/redirection.sjs",
                             BASE + "/xhr_resource"];
 
-const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
+const expected_beforeSendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_style_good.css",
                               BASE + "/file_style_redirect.css",
                               BASE + "/file_image_good.png",
@@ -40,7 +41,15 @@ const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_script_xhr.js",
                               BASE + "/file_WebRequest_page2.html",
                               BASE + "/nonexistent_script_url.js",
+                              BASE + "/redirection.sjs",
+                              BASE + "/dummy_page.html",
                               BASE + "/xhr_resource"];
+
+const expected_sendHeaders = expected_beforeSendHeaders.filter(u => !/_redirect\./.test(u))
+                            .concat(BASE + "/redirection.sjs");
+
+const expected_redirect = expected_beforeSendHeaders.filter(u => /_redirect\./.test(u))
+                            .concat(BASE + "/redirection.sjs");
 
 const expected_complete = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/file_style_good.css",
@@ -49,6 +58,7 @@ const expected_complete = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/file_script_xhr.js",
                            BASE + "/file_WebRequest_page2.html",
                            BASE + "/nonexistent_script_url.js",
+                           BASE + "/dummy_page.html",
                            BASE + "/xhr_resource"];
 
 function removeDupes(list)
@@ -91,7 +101,7 @@ function backgroundScript()
       expected_type = "script";
     } else if (details.url.indexOf("page1") != -1) {
       expected_type = "main_frame";
-    } else if (details.url.indexOf("page2") != -1) {
+    } else if (/page2|redirection|dummy_page/.test(details.url)) {
       expected_type = "sub_frame";
     } else if (details.url.indexOf("xhr") != -1) {
       expected_type = "xmlhttprequest";
@@ -103,6 +113,7 @@ function backgroundScript()
 
   var recorded = {requested: [],
                   beforeSendHeaders: [],
+                  beforeRedirect: [],
                   sendHeaders: [],
                   responseStarted: [],
                   completed: []};
@@ -164,6 +175,27 @@ function backgroundScript()
     return {};
   }
 
+  function onBeforeRedirect(details)
+  {
+    browser.test.log(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
+    checkResourceType(details.type);
+    if (details.url.startsWith(BASE)) {
+      recorded.beforeRedirect.push(details.url);
+
+      browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
+      checkType(details);
+
+      var id = frameIDs.get(details.url);
+      browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeRedirect as onBeforeRequest");
+      frameIDs.set(details.redirectUrl, details.frameId);
+    }
+    if (details.url.indexOf("_redirect.") != -1) {
+      let expectedUrl = details.url.replace("_redirect.", "_good.");
+      browser.test.assertEq(details.redirectUrl, expectedUrl, "correct redirectUrl value");
+    }
+    return {};
+  }
+
   function onRecord(kind, details)
   {
     checkResourceType(details.type);
@@ -175,6 +207,7 @@ function backgroundScript()
   browser.webRequest.onBeforeRequest.addListener(onBeforeRequest, {urls: ["<all_urls>"]}, ["blocking"]);
   browser.webRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, {urls: ["<all_urls>"]}, ["blocking"]);
   browser.webRequest.onSendHeaders.addListener(onRecord.bind(null, "sendHeaders"), {urls: ["<all_urls>"]});
+  browser.webRequest.onBeforeRedirect.addListener(onBeforeRedirect, {urls: ["<all_urls>"]});
   browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
   browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
 
@@ -243,8 +276,9 @@ function* test_once()
   let recorded = yield extension.awaitMessage("results");
 
   compareLists(recorded.requested, expected_requested, "requested");
-  compareLists(recorded.beforeSendHeaders, expected_sendHeaders, "beforeSendHeaders");
-  compareLists(recorded.sendHeaders, expected_complete, "sendHeaders");
+  compareLists(recorded.beforeSendHeaders, expected_beforeSendHeaders, "beforeSendHeaders");
+  compareLists(recorded.sendHeaders, expected_sendHeaders, "sendHeaders");
+  compareLists(recorded.beforeRedirect, expected_redirect, "beforeRedirect");
   compareLists(recorded.responseStarted, expected_complete, "responseStarted");
   compareLists(recorded.completed, expected_complete, "completed");
 
