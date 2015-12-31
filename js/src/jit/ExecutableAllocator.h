@@ -157,6 +157,8 @@ struct JitPoisonRange
 
 typedef Vector<JitPoisonRange, 0, SystemAllocPolicy> JitPoisonRangeVector;
 
+#define NON_WRITABLE_JIT_CODE 1
+
 class ExecutableAllocator
 {
 #ifdef XP_WIN
@@ -183,8 +185,6 @@ class ExecutableAllocator
 
     static void initStatic();
 
-    static bool nonWritableJitCode;
-
   private:
     static size_t pageSize;
     static size_t largeAllocSize;
@@ -206,14 +206,16 @@ class ExecutableAllocator
   public:
     static void makeWritable(void* start, size_t size)
     {
-        if (nonWritableJitCode)
-            reprotectRegion(start, size, Writable);
+#ifdef NON_WRITABLE_JIT_CODE
+        reprotectRegion(start, size, Writable);
+#endif
     }
 
     static void makeExecutable(void* start, size_t size)
     {
-        if (nonWritableJitCode)
-            reprotectRegion(start, size, Executable);
+#ifdef NON_WRITABLE_JIT_CODE
+        reprotectRegion(start, size, Executable);
+#endif
     }
 
     void makeAllWritable() {

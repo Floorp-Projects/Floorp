@@ -280,20 +280,21 @@ GlobalObject::new_(JSContext* cx, const Class* clasp, JSPrincipals* principals,
 
     JSRuntime* rt = cx->runtime();
 
+    auto zoneSpecifier = options.creationOptions().zoneSpecifier();
     Zone* zone;
-    if (options.zoneSpecifier() == JS::SystemZone)
+    if (zoneSpecifier == JS::SystemZone)
         zone = rt->gc.systemZone;
-    else if (options.zoneSpecifier() == JS::FreshZone)
+    else if (zoneSpecifier == JS::FreshZone)
         zone = nullptr;
     else
-        zone = static_cast<Zone*>(options.zonePointer());
+        zone = static_cast<Zone*>(options.creationOptions().zonePointer());
 
     JSCompartment* compartment = NewCompartment(cx, zone, principals, options);
     if (!compartment)
         return nullptr;
 
     // Lazily create the system zone.
-    if (!rt->gc.systemZone && options.zoneSpecifier() == JS::SystemZone) {
+    if (!rt->gc.systemZone && zoneSpecifier == JS::SystemZone) {
         rt->gc.systemZone = compartment->zone();
         rt->gc.systemZone->isSystem = true;
     }
