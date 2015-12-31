@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Restoring default should show an "undo" option which undoes the restoring operation.
 add_task(function() {
   let homeButtonId = "home-button";
