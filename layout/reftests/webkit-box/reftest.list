@@ -5,7 +5,9 @@ default-preferences pref(layout.css.prefixes.webkit,true)
 # Tests for "-webkit-box-align" (cross-axis alignment):
 == webkit-box-align-horiz-1a.html webkit-box-align-horiz-1-ref.html
 == webkit-box-align-horiz-1b.html webkit-box-align-horiz-1-ref.html
+== webkit-box-align-vert-1.html webkit-box-align-vert-1-ref.html
 
 # Tests for "-webkit-box-pack" (main-axis alignment):
 == webkit-box-pack-horiz-1a.html webkit-box-pack-horiz-1-ref.html
 == webkit-box-pack-horiz-1b.html webkit-box-pack-horiz-1-ref.html
+== webkit-box-pack-vert-1.html webkit-box-pack-vert-1-ref.html
