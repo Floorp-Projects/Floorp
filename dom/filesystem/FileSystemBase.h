@@ -20,7 +20,7 @@ class Directory;
 
 class FileSystemBase
 {
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FileSystemBase)
+  NS_INLINE_DECL_REFCOUNTING(FileSystemBase)
 public:
 
   // Create file system object from its string representation.
@@ -95,6 +95,11 @@ public:
   {
     return mRequiresPermissionChecks;
   }
+
+  // CC methods
+  virtual void Unlink() {}
+  virtual void Traverse(nsCycleCollectionTraversalCallback &cb) {}
+
 protected:
   virtual ~FileSystemBase();
 

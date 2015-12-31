@@ -363,6 +363,24 @@ TextureClient::Lock(OpenMode aMode)
   mIsLocked = mData->Lock(aMode, mReleaseFenceHandle.IsValid() ? &mReleaseFenceHandle : nullptr);
   mOpenMode = aMode;
 
+  auto format = GetFormat();
+  if (mIsLocked && CanExposeDrawTarget() &&
+      aMode == OpenMode::OPEN_READ_WRITE &&
+      NS_IsMainThread() &&
+      // the formats that we apparently expect, in the cairo backend. Any other
+      // format will trigger an assertion in GfxFormatToCairoFormat.
+      (format == SurfaceFormat::A8R8G8B8_UINT32 ||
+      format == SurfaceFormat::X8R8G8B8_UINT32 ||
+      format == SurfaceFormat::A8 ||
+      format == SurfaceFormat::R5G6B5_UINT16)) {
+    if (!BorrowDrawTarget()) {
+      // Failed to get a DrawTarget, means we won't be able to write into the
+      // texture, might as well fail now.
+      Unlock();
+      return false;
+    }
+  }
+
   return mIsLocked;
 }
 
@@ -427,6 +445,9 @@ TextureClient::UpdateFromSurface(gfx::SourceSurface* aSurface)
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(mIsLocked);
   MOZ_ASSERT(aSurface);
+  // If you run into this assertion, make sure the texture was locked write-only
+  // rather than read-write.
+  MOZ_ASSERT(!mBorrowedDrawTarget);
 
   // XXX - It would be better to first try the DrawTarget approach and fallback
   // to the backend-specific implementation because the latter will usually do

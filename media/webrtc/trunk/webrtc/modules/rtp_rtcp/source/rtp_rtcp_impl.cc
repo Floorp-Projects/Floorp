@@ -317,6 +317,11 @@ void ModuleRtpRtcpImpl::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   rtp_sender_.SetCsrcs(csrcs);
 }
 
+int32_t ModuleRtpRtcpImpl::SetRID(const char *rid) {
+  //XXX rtcp_sender_.SetRID(rid);
+  return rtp_sender_.SetRID(rid);
+}
+
 // TODO(pbos): Handle media and RTX streams separately (separate RTCP
 // feedbacks).
 RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {

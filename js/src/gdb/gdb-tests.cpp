@@ -60,7 +60,7 @@ void breakpoint() {
 GDBFragment* GDBFragment::allFragments = nullptr;
 
 int
-main (int argc, const char** argv)
+main(int argc, const char** argv)
 {
     if (!JS_Init()) return 1;
     JSRuntime* runtime = checkPtr(JS_NewRuntime(1024 * 1024));
@@ -74,7 +74,8 @@ main (int argc, const char** argv)
 
     /* Create the global object. */
     JS::CompartmentOptions options;
-    options.setVersion(JSVERSION_LATEST);
+    options.behaviors().setVersion(JSVERSION_LATEST);
+
     RootedObject global(cx, checkPtr(JS_NewGlobalObject(cx, &global_class,
                         nullptr, JS::FireOnNewGlobalHook, options)));
     JSAutoCompartment ac(cx, global);

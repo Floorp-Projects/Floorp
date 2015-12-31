@@ -16,9 +16,33 @@
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 #include "mozilla/unused.h"
+#include "nsProxyRelease.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+class FileSystemReleaseRunnable : public nsRunnable
+{
+public:
+  explicit FileSystemReleaseRunnable(RefPtr<FileSystemBase>& aDoomed)
+    : mDoomed(nullptr)
+  {
+    aDoomed.swap(mDoomed);
+  }
+
+  NS_IMETHOD Run()
+  {
+    mDoomed->Release();
+    return NS_OK;
+  }
+
+private:
+  FileSystemBase* MOZ_OWNING_REF mDoomed;
+};
+
+} // anonymous namespace
 
 FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem)
   : mErrorValue(NS_OK)
@@ -43,6 +67,12 @@ FileSystemTaskBase::FileSystemTaskBase(FileSystemBase* aFileSystem,
 
 FileSystemTaskBase::~FileSystemTaskBase()
 {
+  if (!NS_IsMainThread()) {
+    RefPtr<FileSystemReleaseRunnable> runnable =
+      new FileSystemReleaseRunnable(mFileSystem);
+    MOZ_ASSERT(!mFileSystem);
+    NS_DispatchToMainThread(runnable);
+  }
 }
 
 FileSystemBase*
