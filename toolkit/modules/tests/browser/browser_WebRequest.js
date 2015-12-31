@@ -20,7 +20,7 @@ function checkType(details)
     expected_type = "script";
   } else if (details.url.indexOf("page1") != -1) {
     expected_type = "main_frame";
-  } else if (details.url.indexOf("page2") != -1) {
+  } else if (/page2|_redirection\.|dummy_page/.test(details.url)) {
     expected_type = "sub_frame";
   } else if (details.url.indexOf("xhr") != -1) {
     expected_type = "xmlhttprequest";
@@ -72,6 +72,28 @@ function onBeforeSendHeaders(details)
   }
 }
 
+var beforeRedirect = [];
+
+function onBeforeRedirect(details)
+{
+  info(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
+  checkType(details);
+  if (details.url.startsWith(BASE)) {
+    beforeRedirect.push(details.url);
+
+    is(details.browser, expected_browser, "correct <browser> element");
+    checkType(details);
+
+    let expectedUrl = details.url.replace("_redirect.", "_good.").replace(/\w+_redirection\..*/, "dummy_page.html")
+    is(details.redirectUrl, expectedUrl, "Correct redirectUrl value");
+  }
+  let id = windowIDs.get(details.url);
+  is(id, details.windowId, "window ID same in onBeforeRedirect as onBeforeRequest");
+  // associate stored windowId with final url
+  windowIDs.set(details.redirectUrl, details.windowId);
+  return {};
+}
+
 var headersReceived = [];
 
 function onResponseStarted(details)
@@ -94,6 +116,7 @@ const expected_requested = [BASE + "/file_WebRequest_page1.html",
                             BASE + "/file_script_xhr.js",
                             BASE + "/file_WebRequest_page2.html",
                             BASE + "/nonexistent_script_url.js",
+                            BASE +  "/WebRequest_redirection.sjs",
                             BASE + "/xhr_resource"];
 
 const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
@@ -106,7 +129,12 @@ const expected_sendHeaders = [BASE + "/file_WebRequest_page1.html",
                               BASE + "/file_script_xhr.js",
                               BASE + "/file_WebRequest_page2.html",
                               BASE + "/nonexistent_script_url.js",
+                              BASE +  "/WebRequest_redirection.sjs",
+                              BASE + "/dummy_page.html",
                               BASE + "/xhr_resource"];
+
+const expected_beforeRedirect = expected_sendHeaders.filter(u => /_redirect\./.test(u))
+                                  .concat(BASE +  "/WebRequest_redirection.sjs");
 
 const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
                                   BASE + "/file_style_good.css",
@@ -115,6 +143,7 @@ const expected_headersReceived = [BASE + "/file_WebRequest_page1.html",
                                   BASE + "/file_script_xhr.js",
                                   BASE + "/file_WebRequest_page2.html",
                                   BASE + "/nonexistent_script_url.js",
+                                  BASE + "/dummy_page.html",
                                   BASE + "/xhr_resource"];
 
 function removeDupes(list)
@@ -144,17 +173,20 @@ function* test_once()
 {
   WebRequest.onBeforeRequest.addListener(onBeforeRequest, null, ["blocking"]);
   WebRequest.onBeforeSendHeaders.addListener(onBeforeSendHeaders, null, ["blocking"]);
+  WebRequest.onBeforeRedirect.addListener(onBeforeRedirect);
   WebRequest.onResponseStarted.addListener(onResponseStarted);
 
   gBrowser.selectedTab = gBrowser.addTab();
   let browser = gBrowser.selectedBrowser;
   expected_browser = browser;
 
-  yield waitForLoad();
+  yield BrowserTestUtils.browserLoaded(expected_browser);
 
   browser.messageManager.loadFrameScript(`data:,content.location = "${URL}";`, false);
 
-  yield waitForLoad();
+  yield BrowserTestUtils.browserLoaded(expected_browser);
+
+  expected_browser = null;
 
   let win = browser.contentWindow.wrappedJSObject;
   is(win.success, 2, "Good script ran");
@@ -163,26 +195,19 @@ function* test_once()
   let style = browser.contentWindow.getComputedStyle(browser.contentDocument.getElementById("test"), null);
   is(style.getPropertyValue("color"), "rgb(255, 0, 0)", "Good CSS loaded");
 
-  gBrowser.removeCurrentTab();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
   compareLists(requested, expected_requested, "requested");
   compareLists(sendHeaders, expected_sendHeaders, "sendHeaders");
+  compareLists(beforeRedirect, expected_beforeRedirect, "beforeRedirect");
   compareLists(headersReceived, expected_headersReceived, "headersReceived");
 
   WebRequest.onBeforeRequest.removeListener(onBeforeRequest);
   WebRequest.onBeforeSendHeaders.removeListener(onBeforeSendHeaders);
+  WebRequest.onBeforeRedirect.removeListener(onBeforeRedirect);
   WebRequest.onResponseStarted.removeListener(onResponseStarted);
 }
 
 // Run the test twice to make sure it works with caching.
 add_task(test_once);
 add_task(test_once);
-
-function waitForLoad(browser = gBrowser.selectedBrowser) {
-  return new Promise(resolve => {
-    browser.addEventListener("load", function listener() {
-      browser.removeEventListener("load", listener, true);
-      resolve();
-    }, true);
-  });
-}

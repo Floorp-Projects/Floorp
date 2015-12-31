@@ -289,6 +289,7 @@ class nsStyleSet final
 
   // Test if style is dependent on the presence of an attribute.
   nsRestyleHint HasAttributeDependentStyle(mozilla::dom::Element* aElement,
+                                           int32_t        aNameSpaceID,
                                            nsIAtom*       aAttribute,
                                            int32_t        aModType,
                                            bool           aAttrHasChanged,

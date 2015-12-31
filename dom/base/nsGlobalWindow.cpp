@@ -2325,13 +2325,11 @@ CreateNativeGlobalForInner(JSContext* aCx,
   // windows or inside a browser element. In such cases we want to tag the
   // window's compartment with the add-on ID. See bug 1092156.
   if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
-    options.setAddonId(MapURIToAddonID(aURI));
+    options.creationOptions().setAddonId(MapURIToAddonID(aURI));
   }
 
-  if (top) {
-    if (top->GetGlobalJSObject()) {
-      options.setSameZoneAs(top->GetGlobalJSObject());
-    }
+  if (top && top->GetGlobalJSObject()) {
+    options.creationOptions().setSameZoneAs(top->GetGlobalJSObject());
   }
 
   // Determine if we need the Components object.

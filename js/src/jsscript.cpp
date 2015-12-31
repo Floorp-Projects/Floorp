@@ -658,8 +658,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             // JSOP_OBJECT that then got modified.  So throw if we're not
             // cloning in JSOP_OBJECT or if we ever didn't clone in it in the
             // past.
-            const JS::CompartmentOptions& opts = JS::CompartmentOptionsRef(cx);
-            if (!opts.cloneSingletons() || !opts.getSingletonsAsTemplates()) {
+            JSCompartment* comp = cx->compartment();
+            if (!comp->creationOptions().cloneSingletons() ||
+                !comp->behaviors().getSingletonsAsTemplates())
+            {
                 JS_ReportError(cx,
                                "Can't serialize a run-once non-function script "
                                "when we're not doing singleton cloning");

@@ -770,14 +770,15 @@ nsSVGEffects::InvalidateRenderingObservers(nsIFrame *aFrame)
 {
   NS_ASSERTION(!aFrame->GetPrevContinuation(), "aFrame must be first continuation");
 
-  if (!aFrame->GetContent()->IsElement())
+  nsIContent* content = aFrame->GetContent();
+  if (!content || !content->IsElement())
     return;
 
   // If the rendering has changed, the bounds may well have changed too:
   aFrame->Properties().Delete(nsSVGUtils::ObjectBoundingBoxProperty());
 
   nsSVGRenderingObserverList *observerList =
-    GetObserverList(aFrame->GetContent()->AsElement());
+    GetObserverList(content->AsElement());
   if (observerList) {
     observerList->InvalidateAll();
     return;
@@ -821,7 +822,8 @@ nsSVGEffects::InvalidateDirectRenderingObservers(Element *aElement, uint32_t aFl
 void
 nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFlags /* = 0 */)
 {
-  if (aFrame->GetContent() && aFrame->GetContent()->IsElement()) {
-    InvalidateDirectRenderingObservers(aFrame->GetContent()->AsElement(), aFlags);
+  nsIContent* content = aFrame->GetContent();
+  if (content && content->IsElement()) {
+    InvalidateDirectRenderingObservers(content->AsElement(), aFlags);
   }
 }

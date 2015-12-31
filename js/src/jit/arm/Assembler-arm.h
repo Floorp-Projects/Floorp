@@ -1396,7 +1396,7 @@ class Assembler : public AssemblerShared
     bool isFinished;
   public:
     void finish();
-    bool asmMergeWith(const Assembler& other);
+    bool asmMergeWith(Assembler& other);
     void executableCopy(void* buffer);
     void copyJumpRelocationTable(uint8_t* dest);
     void copyDataRelocationTable(uint8_t* dest);

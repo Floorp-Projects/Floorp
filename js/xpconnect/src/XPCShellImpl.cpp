@@ -1478,8 +1478,8 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
         // Make the default XPCShell global use a fresh zone (rather than the
         // System Zone) to improve cross-zone test coverage.
         JS::CompartmentOptions options;
-        options.setZone(JS::FreshZone)
-               .setVersion(JSVERSION_LATEST);
+        options.creationOptions().setZone(JS::FreshZone);
+        options.behaviors().setVersion(JSVERSION_LATEST);
         nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
         rv = xpc->InitClassesWithNewWrappedGlobal(cx,
                                                   static_cast<nsIGlobalObject*>(backstagePass),
@@ -1504,7 +1504,7 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
             // Even if we're building in a configuration where source is
             // discarded, there's no reason to do that on XPCShell, and doing so
             // might break various automation scripts.
-            JS::CompartmentOptionsRef(glob).setDiscardSource(false);
+            JS::CompartmentBehaviorsRef(glob).setDiscardSource(false);
 
             backstagePass->SetGlobalObject(glob);
 
