@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+requestLongerTimeout(2);
+
 // This file tests message ports and semantics of the frameworker which aren't
 // directly related to the sandbox.  See also browser_frameworker_sandbox.js.
 
