@@ -28,7 +28,8 @@ using mozilla::dom::ContentChild;
 
 NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsProgressListener)
 
-nsAlertsService::nsAlertsService()
+nsAlertsService::nsAlertsService() :
+  mXULAlerts(nsXULAlerts::GetInstance())
 {
 }
 
@@ -104,6 +105,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
     return NS_OK;
   }
 
+#ifdef MOZ_WIDGET_ANDROID
   nsAutoString imageUrl;
   rv = aAlert->GetImageURL(imageUrl);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -124,7 +126,6 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
   rv = aAlert->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
 
-#ifdef MOZ_WIDGET_ANDROID
   mozilla::AndroidBridge::Bridge()->ShowAlertNotification(imageUrl, title, text, cookie,
                                                           aAlertListener, name, principal);
   return NS_OK;
@@ -144,26 +145,8 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
     return NS_OK;
   }
 
-  bool textClickable;
-  rv = aAlert->GetTextClickable(&textClickable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString bidi;
-  rv = aAlert->GetDir(bidi);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsAutoString lang;
-  rv = aAlert->GetLang(lang);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool inPrivateBrowsing;
-  rv = aAlert->GetInPrivateBrowsing(&inPrivateBrowsing);
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // Use XUL notifications as a fallback if above methods have failed.
-  rv = mXULAlerts.ShowAlertNotification(imageUrl, title, text, textClickable,
-                                        cookie, aAlertListener, name,
-                                        bidi, lang, principal, inPrivateBrowsing);
+  rv = mXULAlerts->ShowAlert(aAlert, aAlertListener);
   return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }
@@ -188,7 +171,7 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
     return sysAlerts->CloseAlert(aAlertName, nullptr);
   }
 
-  return mXULAlerts.CloseAlert(aAlertName);
+  return mXULAlerts->CloseAlert(aAlertName, aPrincipal);
 #endif // !MOZ_WIDGET_ANDROID
 }
 
@@ -209,7 +192,8 @@ NS_IMETHODIMP nsAlertsService::GetManualDoNotDisturb(bool* aRetVal)
     return alertsDND->GetManualDoNotDisturb(aRetVal);
   }
 
-  return mXULAlerts.GetManualDoNotDisturb(aRetVal);
+  nsCOMPtr<nsIAlertsDoNotDisturb> xulDND(do_QueryInterface(mXULAlerts));
+  return xulDND ? xulDND->GetManualDoNotDisturb(aRetVal) : NS_ERROR_FAILURE;
 #endif
 }
 
@@ -228,7 +212,11 @@ NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
     }
     rv = alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
   } else {
-    rv = mXULAlerts.SetManualDoNotDisturb(aDoNotDisturb);
+    nsCOMPtr<nsIAlertsDoNotDisturb> xulDND(do_QueryInterface(mXULAlerts));
+    if (!xulDND) {
+      return NS_ERROR_FAILURE;
+    }
+    rv = xulDND->SetManualDoNotDisturb(aDoNotDisturb);
   }
 
   Telemetry::Accumulate(Telemetry::ALERTS_SERVICE_DND_ENABLED, 1);

@@ -4,6 +4,8 @@
 
 #include "mozilla/AlertNotification.h"
 
+#include "nsAlertsUtils.h"
+
 namespace mozilla {
 
 NS_IMPL_CYCLE_COLLECTION(AlertNotification, mPrincipal)
@@ -119,6 +121,20 @@ NS_IMETHODIMP
 AlertNotification::GetInPrivateBrowsing(bool* aInPrivateBrowsing)
 {
   *aInPrivateBrowsing = mInPrivateBrowsing;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlertNotification::GetActionable(bool* aActionable)
+{
+  *aActionable = nsAlertsUtils::IsActionablePrincipal(mPrincipal);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+AlertNotification::GetSource(nsAString& aSource)
+{
+  nsAlertsUtils::GetSourceHostPort(mPrincipal, aSource);
   return NS_OK;
 }
 
