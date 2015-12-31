@@ -78,8 +78,7 @@ var ignoreCallees = {
     "z_stream_s.zfree" : true,
     "GrGLInterface.fCallback" : true,
     "std::strstreambuf._M_alloc_fun" : true,
-    "std::strstreambuf._M_free_fun" : true,
-    "struct js::gc::Callback<void (*)(JSRuntime*, void*)>.op" : true,
+    "std::strstreambuf._M_free_fun" : true
 };
 
 function fieldCallCannotGC(csu, fullfield)
@@ -188,8 +187,6 @@ var ignoreFunctions = {
     "void test::RingbufferDumper::OnTestPartResult(testing::TestPartResult*)" : true,
 
     "float64 JS_GetCurrentEmbedderTime()" : true,
-
-    "uint64 js::TenuringTracer::moveObjectToTenured(JSObject*, JSObject*, int32)" : true,
 };
 
 function isProtobuf(name)

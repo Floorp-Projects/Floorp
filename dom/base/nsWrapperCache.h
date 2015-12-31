@@ -258,15 +258,14 @@ protected:
   void TraceWrapper(JSTracer* aTrc, const char* name)
   {
     if (mWrapper) {
-      JS_CallUnbarrieredObjectTracer(aTrc, &mWrapper, name);
+      JS_CallObjectTracer(aTrc, &mWrapper, name);
     }
   }
 
   void PoisonWrapper()
   {
     if (mWrapper) {
-      // See setToCrashOnTouch() in RootingAPI.h
-      mWrapper = reinterpret_cast<JSObject*>(1);
+      mWrapper.setToCrashOnTouch();
     }
   }
 
@@ -288,7 +287,13 @@ private:
     return mWrapper;
   }
 
-  void SetWrapperJSObject(JSObject* aWrapper);
+  void SetWrapperJSObject(JSObject* aWrapper)
+  {
+    mWrapper = aWrapper;
+    UnsetWrapperFlags(kWrapperFlagsMask & ~WRAPPER_IS_NOT_DOM_BINDING);
+  }
+
+  void TraceWrapperJSObject(JSTracer* aTrc, const char* aName);
 
   FlagsType GetWrapperFlags() const
   {
@@ -313,8 +318,8 @@ private:
     mFlags &= ~aFlagsToUnset;
   }
 
-  void HoldJSObjects(void* aScriptObjectHolder,
-                     nsScriptObjectTracer* aTracer);
+  static void HoldJSObjects(void* aScriptObjectHolder,
+                            nsScriptObjectTracer* aTracer);
 
 #ifdef DEBUG
 public:
@@ -344,8 +349,8 @@ private:
 
   enum { kWrapperFlagsMask = (WRAPPER_BIT_PRESERVED | WRAPPER_IS_NOT_DOM_BINDING) };
 
-  JSObject* mWrapper;
-  FlagsType mFlags;
+  JS::Heap<JSObject*> mWrapper;
+  FlagsType           mFlags;
 };
 
 enum { WRAPPER_CACHE_FLAGS_BITS_USED = 2 };
