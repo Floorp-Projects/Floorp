@@ -271,6 +271,13 @@ static_assert((CSS_PROPERTY_PARSE_PROPERTY_MASK &
 // CSS_PROPERTY_FIXPOS_CB set.
 #define CSS_PROPERTY_ABSPOS_CB                    (1<<30)
 
+// XXXdholbert Move this up to be with other _LOGICAL flags in a later patch.
+// This property is a logical property which always maps to the same physical
+// property, and its values have some custom processing when being mapped to
+// the physical property's values.  Must not be used in conjunction with
+// CSS_PROPERTY_LOGICAL_{AXIS,BLOCK_AXIS,END_EDGE}.
+#define CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING (1u << 31)
+
 /**
  * Types of animatable values.
  */
@@ -543,8 +550,11 @@ public:
    * by the sentinel.
    *
    * When called with a property that has the CSS_PROPERTY_LOGICAL_AXIS
-   * flag, the returned array will have two values preceding the sentinel;
-   * otherwise it will have four.
+   * flag, the returned array will have two values preceding the sentinel.
+   * When called with a property that has the
+   * CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING flag, the returned array
+   * will have one value preceding the sentinel.
+   * Otherwise it will have four values preceding the sentinel.
    *
    * (Note that the running time of this function is proportional to the
    * number of logical longhand properties that exist.  If we start

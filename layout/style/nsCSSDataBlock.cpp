@@ -13,6 +13,7 @@
 #include "CSSVariableImageTable.h"
 #include "mozilla/css/Declaration.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/WritingModes.h"
 #include "nsIDocument.h"
@@ -37,6 +38,50 @@ MoveValue(nsCSSValue* aSource, nsCSSValue* aDest)
     memcpy(aDest, aSource, sizeof(nsCSSValue));
     new (aSource) nsCSSValue();
     return changed;
+}
+
+/**
+ * This function maps "-webkit-box-orient" values to "flex-direction" values,
+ * for a given writing-mode (taken from aRuleData).
+ *
+ * Specifically:
+ *  - If aBoxOrientVal is an enumerated value (representing a physical axis),
+ * then we'll map it to the appropriate logical "flex-direction" value, using
+ * the writing mode.  The converted value will be emplace()'d into in the
+ * outparam aConvertedValStorage, and we'll return a pointer to that value.
+ *  - Otherwise (e.g. if we have "inherit" or "initial"), we won't do any
+ * mapping, and we'll directly return the passed-in aBoxOrientVal.
+ *
+ * Either way, the idea is that our caller can treat the returned value as if
+ * it were a value for "flex-direction".
+ */
+static const nsCSSValue*
+ConvertBoxOrientToFlexDirection(const nsCSSValue* aBoxOrientVal,
+                                const nsRuleData* aRuleData,
+                                Maybe<nsCSSValue>& aConvertedValStorage)
+{
+  MOZ_ASSERT(aBoxOrientVal, "expecting a non-null value to convert");
+  MOZ_ASSERT(aConvertedValStorage.isNothing(),
+             "expecting outparam for converted-value to be initially empty");
+
+  if (aBoxOrientVal->GetUnit() != eCSSUnit_Enumerated) {
+    // We probably have "inherit" or "initial" -- just return that & have the
+    // caller directly use it as a "flex-direction" value.
+    return aBoxOrientVal;
+  }
+
+  // OK, we have an enumerated value -- "horizontal" or "vertical".
+
+  WritingMode wm(aRuleData->mStyleContext);
+  // In a horizontal writing-mode, "horizontal" maps to "row".
+  // In a vertical writing-mode, "horizontal" maps to "column".
+  bool isRow = wm.IsVertical() !=
+    (aBoxOrientVal->GetIntValue() == NS_STYLE_BOX_ORIENT_HORIZONTAL);
+
+  aConvertedValStorage.emplace(isRow ? NS_STYLE_FLEX_DIRECTION_ROW :
+                                       NS_STYLE_FLEX_DIRECTION_COLUMN,
+                               eCSSUnit_Enumerated);
+  return aConvertedValStorage.ptr();
 }
 
 static bool
@@ -138,6 +183,18 @@ MapSinglePropertyInto(nsCSSProperty aSrcProp,
                "doing a logical-to-physical property mapping");
     MOZ_ASSERT(aSrcValue->GetUnit() != eCSSUnit_Null, "oops");
 
+    // Handle logical properties that have custom value-mapping behavior:
+    Maybe<nsCSSValue> convertedVal; // storage for converted value, if needed
+    bool hasCustomValMapping =
+        nsCSSProps::PropHasFlags(aSrcProp,
+                                 CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING);
+    if (hasCustomValMapping) {
+        if (aSrcProp == eCSSProperty_webkit_box_orient) {
+            aSrcValue = ConvertBoxOrientToFlexDirection(aSrcValue, aRuleData,
+                                                        convertedVal);
+        }
+    }
+
     // Although aTargetValue is the nsCSSValue we are going to write into,
     // we also look at its value before writing into it.  This is done
     // when aTargetValue is a token stream value, which is the case when we
@@ -187,6 +244,9 @@ EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
     return aProperty;
   }
 
+  bool isSingleProperty =
+      nsCSSProps::PropHasFlags(aProperty,
+                               CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING);
   bool isAxisProperty =
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_AXIS);
   bool isBlock =
@@ -194,7 +254,9 @@ EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
 
   int index;
 
-  if (isAxisProperty) {
+  if (isSingleProperty) {
+    index = 0; // We always map to the same physical property.
+  } else if (isAxisProperty) {
     LogicalAxis logicalAxis = isBlock ? eLogicalAxisBlock : eLogicalAxisInline;
     uint8_t wm = aRuleData->mStyleContext->StyleVisibility()->mWritingMode;
     PhysicalAxis axis =
@@ -234,7 +296,8 @@ EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
   const nsCSSProperty* props = nsCSSProps::LogicalGroup(aProperty);
 #ifdef DEBUG
   {
-    size_t len = isAxisProperty ? 2 : 4;
+    // Table-length is 1 for single prop, 2 for axis prop, 4 for block prop.
+    size_t len = isSingleProperty ? 1 : (isAxisProperty ? 2 : 4);
     for (size_t i = 0; i < len; i++) {
       MOZ_ASSERT(props[i] != eCSSProperty_UNKNOWN,
                  "unexpected logical group length");
