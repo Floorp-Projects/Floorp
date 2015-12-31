@@ -526,9 +526,9 @@ void FinishInvalidation(FreeOp* fop, JSScript* script);
 const unsigned WINDOWS_BIG_FRAME_TOUCH_INCREMENT = 4096 - 1;
 #endif
 
-// If ExecutableAllocator::nonWritableJitCode is |true|, this class will ensure
-// JIT code is writable (has RW permissions) in its scope. If nonWritableJitCode
-// is |false|, it's a no-op.
+// If NON_WRITABLE_JIT_CODE is enabled, this class will ensure
+// JIT code is writable (has RW permissions) in its scope.
+// Otherwise it's a no-op.
 class MOZ_STACK_CLASS AutoWritableJitCode
 {
     // Backedge patching from the signal handler will change memory protection

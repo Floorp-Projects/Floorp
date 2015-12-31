@@ -1573,10 +1573,8 @@ pref("browser.tabs.crashReporting.includeURL", false);
 pref("browser.tabs.crashReporting.emailMe", false);
 pref("browser.tabs.crashReporting.email", "");
 
-#ifdef NIGHTLY_BUILD
 #ifndef MOZ_MULET
 pref("layers.async-pan-zoom.enabled", true);
-#endif
 #endif
 
 #ifdef E10S_TESTING_ONLY

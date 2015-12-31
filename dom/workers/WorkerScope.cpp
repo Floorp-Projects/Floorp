@@ -432,8 +432,9 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   const bool extraWarnings = usesSystemPrincipal &&
                              xpc::ExtraWarningsForSystemJS();
 
-  options.setDiscardSource(discardSource)
-         .extraWarningsOverride().set(extraWarnings);
+  JS::CompartmentBehaviors& behaviors = options.behaviors();
+  behaviors.setDiscardSource(discardSource)
+           .extraWarningsOverride().set(extraWarnings);
 
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
@@ -796,7 +797,7 @@ WorkerDebuggerGlobalScope::CreateSandbox(JSContext* aCx, const nsAString& aName,
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   JS::CompartmentOptions options;
-  options.setInvisibleToDebugger(true);
+  options.creationOptions().setInvisibleToDebugger(true);
 
   JS::Rooted<JSObject*> sandbox(aCx,
     JS_NewGlobalObject(aCx, js::Jsvalify(&workerdebuggersandbox_class), nullptr,

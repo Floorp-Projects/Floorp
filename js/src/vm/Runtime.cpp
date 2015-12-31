@@ -202,7 +202,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     destroyPrincipals(nullptr),
     readPrincipals(nullptr),
     errorReporter(nullptr),
-    linkedWasmModules(nullptr),
     propertyRemovals(0),
 #if !EXPOSE_INTL_API
     thousandsSeparator(0),

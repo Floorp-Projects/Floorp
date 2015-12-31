@@ -202,16 +202,6 @@ var stacks = disableSingleStepProfiling();
 assertStackContainsSeq(stacks, ">,f1,>,<,f1,>,>,<,f1,>,f2,>,<,f1,>,<,f2,>,<,f1,>,f2,>,<,f1,>,>,<,f1,>,<,f1,>,f1,>,>");
 
 
-// Detachment exit
-var buf = new ArrayBuffer(BUF_CHANGE_MIN);
-var ffi = function() { neuter(buf, 'change-data') }
-var f = asmLink(asmCompile('g','ffis','buf', USE_ASM + 'var ffi = ffis.ffi; var i32 = new g.Int32Array(buf); function f() { ffi() } return f'), this, {ffi:ffi}, buf);
-enableSingleStepProfiling();
-assertThrowsInstanceOf(f, InternalError);
-var stacks = disableSingleStepProfiling();
-assertStackContainsSeq(stacks, ">,f,>,<,f,>,inline stub,f,>,<,f,>,inline stub,f,>");
-
-
 if (isSimdAvailable() && typeof SIMD !== 'undefined') {
     // SIMD out-of-bounds exit
     var buf = new ArrayBuffer(0x10000);
