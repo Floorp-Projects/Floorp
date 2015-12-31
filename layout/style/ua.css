@@ -43,10 +43,10 @@
   justify-self: inherit;
   order: inherit;   /* needed for "order" to work on table flex/grid items */
   /* Bug 722777 */
-  -moz-transform: inherit;
-  -moz-transform-origin: inherit;
+  transform: inherit;
+  transform-origin: inherit;
   /* Bug 724750 */
-  -moz-backface-visibility: inherit;
+  backface-visibility: inherit;
   clip: inherit;
 }
 
