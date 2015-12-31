@@ -2215,6 +2215,8 @@ js::TenuringTracer::moveObjectToTenured(JSObject* dst, JSObject* src, AllocKind 
             tenuredSize += UnboxedArrayObject::objectMovedDuringMinorGC(this, dst, src, dstKind);
         } else if (src->is<ArgumentsObject>()) {
             tenuredSize += ArgumentsObject::objectMovedDuringMinorGC(this, dst, src);
+        } else if (JSObjectMovedOp op = dst->getClass()->ext.objectMovedOp) {
+            op(dst, src);
         } else {
             // Objects with JSCLASS_SKIP_NURSERY_FINALIZE need to be handled above
             // to ensure any additional nursery buffers they hold are moved.
