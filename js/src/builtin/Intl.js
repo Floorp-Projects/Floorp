@@ -2712,8 +2712,9 @@ function dateTimeFormatFormatToBind() {
     var x = (date === undefined) ? std_Date_now() : ToNumber(date);
 
     // Step 1.a.iii.
-    return intl_FormatDateTime(this, x, false);
+    return intl_FormatDateTime(this, x);
 }
+
 
 /**
  * Returns a function bound to this DateTimeFormat that returns a String value
@@ -2738,35 +2739,6 @@ function Intl_DateTimeFormat_format_get() {
 
     // Step 2.
     return internals.boundFormat;
-}
-
-
-function dateTimeFormatFormatToPartsToBind() {
-    // Steps 1.a.i-ii
-    var date = arguments.length > 0 ? arguments[0] : undefined;
-    var x = (date === undefined) ? std_Date_now() : ToNumber(date);
-
-    // Step 1.a.iii.
-    return intl_FormatDateTime(this, x, true);
-}
-
-
-function Intl_DateTimeFormat_formatToParts_get() {
-    // Check "this DateTimeFormat object" per introduction of section 12.3.
-    var internals = getDateTimeFormatInternals(this, "formatToParts");
-
-    // Step 1.
-    if (internals.boundFormatToParts === undefined) {
-        // Step 1.a.
-        var F = dateTimeFormatFormatToPartsToBind;
-
-        // Step 1.b-d.
-        var bf = callFunction(std_Function_bind, F, this);
-        internals.boundFormatToParts = bf;
-    }
-
-    // Step 2.
-    return internals.boundFormatToParts;
 }
 
 
