@@ -18,6 +18,7 @@
 
 #include "asmjs/AsmJS.h"
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Compression.h"
 #include "mozilla/MathAlgorithms.h"
 
@@ -2545,6 +2546,7 @@ IsSimdLiteral(ModuleValidator& m, ParseNode* pn)
           case AsmJSSimdType_bool32x4:
             if (!IsLiteralInt(m, arg, &_))
                 return false;
+            MOZ_FALLTHROUGH;
           case AsmJSSimdType_float32x4:
             if (!IsNumericNonFloatLiteral(arg))
                 return false;
@@ -3108,6 +3110,7 @@ CheckTypeAnnotation(ModuleValidator& m, ParseNode* coercionNode, ValType* coerce
       case PNK_CALL: {
         if (IsCoercionCall(m, coercionNode, coerceTo, coercedExpr))
             return true;
+        break;
       }
       default:;
     }
