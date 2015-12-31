@@ -211,7 +211,7 @@ def config_status(topobjdir='.', topsrcdir='.',
         if 'AndroidEclipse' not in options.backend:
             print(ANDROID_IDE_ADVERTISEMENT)
 
-    if env.substs['MOZ_ARTIFACT_BUILDS']:
+    if env.substs.get('MOZ_ARTIFACT_BUILDS', False):
         # Execute |mach artifact install| from the top source directory.
         os.chdir(topsrcdir)
         return subprocess.check_call([sys.executable, os.path.join(topsrcdir, 'mach'), 'artifact', 'install'])
