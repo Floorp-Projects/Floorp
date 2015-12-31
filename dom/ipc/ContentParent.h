@@ -787,13 +787,7 @@ private:
 
     bool HasNotificationPermission(const IPC::Principal& aPrincipal);
 
-    virtual bool RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
-                                           const nsString& aText, const bool& aTextClickable,
-                                           const nsString& aCookie, const nsString& aName,
-                                           const nsString& aBidi, const nsString& aLang,
-                                           const nsString& aData,
-                                           const IPC::Principal& aPrincipal,
-                                           const bool& aInPrivateBrowsing) override;
+    virtual bool RecvShowAlert(const AlertNotificationType& aAlert) override;
 
     virtual bool RecvCloseAlert(const nsString& aName,
                                 const IPC::Principal& aPrincipal) override;
