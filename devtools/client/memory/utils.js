@@ -16,10 +16,6 @@ const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, diffingState, breakdowns } = require("./constants");
 
-exports.immutableUpdate = function (...objs) {
-  return Object.freeze(Object.assign({}, ...objs));
-};
-
 /**
  * Takes a snapshot object and returns the
  * localized form of its timestamp to be used as a title.
