@@ -168,12 +168,12 @@ MapSinglePropertyInto(nsCSSProperty aProp,
 }
 
 /**
- * If aProperty is a logical property, converts it to the equivalent physical
+ * If aProperty is a logical property, returns the equivalent physical
  * property based on writing mode information obtained from aRuleData's
  * style context.
  */
-static inline void
-EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
+static inline nsCSSProperty
+EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
 {
   bool isAxisProperty =
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_AXIS);
@@ -231,7 +231,7 @@ EnsurePhysicalProperty(nsCSSProperty& aProperty, nsRuleData* aRuleData)
                "unexpected logical group length");
   }
 #endif
-  aProperty = props[index];
+  return props[index];
 }
 
 void
@@ -252,7 +252,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
             if (nsCSSProps::PropHasFlags(iProp, CSS_PROPERTY_LOGICAL)) {
-                EnsurePhysicalProperty(iProp, aRuleData);
+                iProp = EnsurePhysicalProperty(iProp, aRuleData);
                 // We can't cache anything on the rule tree if we use any data from
                 // the style context, since data cached in the rule tree could be
                 // used with a style context with a different value.
@@ -715,7 +715,7 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
 
   nsCSSProperty physicalProp = aPropID;
   if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_LOGICAL)) {
-    EnsurePhysicalProperty(physicalProp, aRuleData);
+    physicalProp = EnsurePhysicalProperty(physicalProp, aRuleData);
     uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
     aRuleData->mConditions.SetWritingModeDependency(wm);
   }
