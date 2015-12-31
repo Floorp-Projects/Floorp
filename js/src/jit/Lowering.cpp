@@ -1815,7 +1815,7 @@ LIRGenerator::visitToDouble(MToDouble* convert)
 
       case MIRType_Boolean:
         MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly);
-        /* FALLTHROUGH */
+        MOZ_FALLTHROUGH;
 
       case MIRType_Int32:
       {
@@ -1871,7 +1871,7 @@ LIRGenerator::visitToFloat32(MToFloat32* convert)
 
       case MIRType_Boolean:
         MOZ_ASSERT(conversion != MToFPInstruction::NumbersOnly);
-        /* FALLTHROUGH */
+        MOZ_FALLTHROUGH;
 
       case MIRType_Int32:
       {

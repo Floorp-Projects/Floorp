@@ -3815,7 +3815,7 @@ EmitAtomLetter(RegExpCompiler* compiler,
       }
       case 4:
         macro_assembler->CheckCharacter(chars[3], &ok);
-        // Fall through!
+        MOZ_FALLTHROUGH;
       case 3:
         macro_assembler->CheckCharacter(chars[0], &ok);
         macro_assembler->CheckCharacter(chars[1], &ok);

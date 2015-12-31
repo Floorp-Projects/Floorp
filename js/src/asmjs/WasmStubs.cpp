@@ -262,7 +262,7 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
         MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:
         masm.convertFloat32ToDouble(ReturnFloat32Reg, ReturnDoubleReg);
-        // Fall through as ReturnDoubleReg now contains a Double
+        MOZ_FALLTHROUGH; // as ReturnDoubleReg now contains a Double
       case ExprType::F64:
         masm.canonicalizeDouble(ReturnDoubleReg);
         masm.storeDouble(ReturnDoubleReg, Address(argv, 0));

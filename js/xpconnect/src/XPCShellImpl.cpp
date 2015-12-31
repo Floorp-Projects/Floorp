@@ -963,6 +963,7 @@ ProcessArgsForCompartment(JSContext* cx, char** argv, int argc)
             break;
         case 'S':
             RuntimeOptionsRef(cx).toggleWerror();
+            MOZ_FALLTHROUGH; // because -S implies -s
         case 's':
             RuntimeOptionsRef(cx).toggleExtraWarnings();
             break;

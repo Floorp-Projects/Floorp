@@ -923,6 +923,7 @@ class JitcodeGlobalEntry
             break;
           case IonCache:
             markedAny |= ionCacheEntry().mark<ShouldMarkProvider>(trc);
+            break;
           case Dummy:
             break;
           default:
@@ -941,6 +942,7 @@ class JitcodeGlobalEntry
             break;
           case IonCache:
             ionCacheEntry().sweepChildren(rt);
+            break;
           case Dummy:
             break;
           default:

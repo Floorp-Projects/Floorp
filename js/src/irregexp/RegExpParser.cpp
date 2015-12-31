@@ -1563,7 +1563,7 @@ RegExpParser<CharT>::ParseDisjunction()
                     Advance();
                     break;
                 }
-                // Fall through
+                MOZ_FALLTHROUGH;
               case 'd': case 's': case 'w': {
                 widechar c = Next();
                 Advance(2);
@@ -1605,8 +1605,8 @@ RegExpParser<CharT>::ParseDisjunction()
                     Advance(2);
                     break;
                 }
+                MOZ_FALLTHROUGH;
               }
-                // FALLTHROUGH
               case '0': {
                 if (unicode_) {
                     Advance(2);
@@ -1735,7 +1735,7 @@ RegExpParser<CharT>::ParseDisjunction()
             int dummy;
             if (ParseIntervalQuantifier(&dummy, &dummy))
                 return ReportError(JSMSG_NOTHING_TO_REPEAT);
-            // fallthrough
+            MOZ_FALLTHROUGH;
           }
           default:
             if (unicode_) {
