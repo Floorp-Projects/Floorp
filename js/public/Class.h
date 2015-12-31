@@ -337,8 +337,8 @@ typedef JSString*
  * (e.g., the DOM attributes for a given node reflected as obj) on demand.
  *
  * JS looks for a property in an object, and if not found, tries to resolve
- * the given id. *resolvedp should be set to true iff the property was
- * was defined on |obj|.
+ * the given id. *resolvedp should be set to true iff the property was defined
+ * on |obj|.
  */
 typedef bool
 (* JSResolveOp)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,

@@ -3060,15 +3060,15 @@ CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
 static bool
 IsSimdTypeName(ModuleValidator& m, PropertyName* name, AsmJSSimdType* type)
 {
-    if (name == m.cx()->names().int32x4) {
+    if (name == m.cx()->names().Int32x4) {
         *type = AsmJSSimdType_int32x4;
         return true;
     }
-    if (name == m.cx()->names().float32x4) {
+    if (name == m.cx()->names().Float32x4) {
         *type = AsmJSSimdType_float32x4;
         return true;
     }
-    if (name == m.cx()->names().bool32x4) {
+    if (name == m.cx()->names().Bool32x4) {
         *type = AsmJSSimdType_bool32x4;
         return true;
     }
@@ -7496,9 +7496,9 @@ static PropertyName*
 SimdTypeToName(JSContext* cx, AsmJSSimdType type)
 {
     switch (type) {
-      case AsmJSSimdType_int32x4:   return cx->names().int32x4;
-      case AsmJSSimdType_float32x4: return cx->names().float32x4;
-      case AsmJSSimdType_bool32x4:  return cx->names().bool32x4;
+      case AsmJSSimdType_int32x4:   return cx->names().Int32x4;
+      case AsmJSSimdType_float32x4: return cx->names().Float32x4;
+      case AsmJSSimdType_bool32x4:  return cx->names().Bool32x4;
     }
     MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected SIMD type");
 }
