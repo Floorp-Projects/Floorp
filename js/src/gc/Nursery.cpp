@@ -496,6 +496,10 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     forwardedBuffers.finish();
     TIME_END(updateJitActivations);
 
+    TIME_START(objectsTenuredCallback);
+    rt->gc.callObjectsTenuredCallback();
+    TIME_END(objectsTenuredCallback);
+
     // Sweep.
     TIME_START(freeMallocedBuffers);
     freeMallocedBuffers();
@@ -576,6 +580,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
             {"mkDbgr", TIME_TOTAL(markDebugger)},
             {"clrNOC", TIME_TOTAL(clearNewObjectCache)},
             {"collct", TIME_TOTAL(collectToFP)},
+            {" tenCB", TIME_TOTAL(objectsTenuredCallback)},
             {"swpABO", TIME_TOTAL(sweepArrayBufferViewList)},
             {"updtIn", TIME_TOTAL(updateJitActivations)},
             {"frSlts", TIME_TOTAL(freeMallocedBuffers)},

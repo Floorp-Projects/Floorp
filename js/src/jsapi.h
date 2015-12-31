@@ -572,6 +572,9 @@ typedef enum JSGCStatus {
 typedef void
 (* JSGCCallback)(JSRuntime* rt, JSGCStatus status, void* data);
 
+typedef void
+(* JSObjectsTenuredCallback)(JSRuntime* rt, void* data);
+
 typedef enum JSFinalizeStatus {
     /**
      * Called when preparing to sweep a group of compartments, before anything
@@ -1653,6 +1656,10 @@ JS_MaybeGC(JSContext* cx);
 
 extern JS_PUBLIC_API(void)
 JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data);
+
+extern JS_PUBLIC_API(void)
+JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+                             void* data);
 
 extern JS_PUBLIC_API(bool)
 JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data);

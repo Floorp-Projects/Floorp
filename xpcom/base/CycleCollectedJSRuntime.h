@@ -10,7 +10,9 @@
 #include <queue>
 
 #include "mozilla/DeferredFinalize.h"
+#include "mozilla/mozalloc.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/SegmentedVector.h"
 #include "jsapi.h"
 
 #include "nsCycleCollectionParticipant.h"
@@ -22,6 +24,7 @@ class nsCycleCollectionNoteRootCallback;
 class nsIException;
 class nsIRunnable;
 class nsThread;
+class nsWrapperCache;
 
 namespace js {
 struct Class;
@@ -280,6 +283,10 @@ public:
   bool AreGCGrayBitsValid() const;
   void GarbageCollect(uint32_t aReason) const;
 
+  void NurseryWrapperAdded(nsWrapperCache* aCache);
+  void NurseryWrapperPreserved(JSObject* aWrapper);
+  void JSObjectsTenured(JSRuntime* aRuntime);
+
   void DeferredFinalize(DeferredFinalizeAppendFunction aAppendFunc,
                         DeferredFinalizeFunction aFunc,
                         void* aThing);
@@ -361,6 +368,13 @@ private:
 
   OOMState mOutOfMemoryState;
   OOMState mLargeAllocationFailureState;
+
+  static const size_t kSegmentSize = 512;
+  SegmentedVector<nsWrapperCache*, kSegmentSize, InfallibleAllocPolicy>
+    mNurseryObjects;
+  SegmentedVector<JS::PersistentRooted<JSObject*>, kSegmentSize,
+                  InfallibleAllocPolicy>
+    mPreservedNurseryObjects;
 };
 
 void TraceScriptHolder(nsISupports* aHolder, JSTracer* aTracer);
