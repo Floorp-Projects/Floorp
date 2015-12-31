@@ -286,7 +286,6 @@ function pktUIGetter(prop, window) {
 
 var PocketOverlay = {
   startup: function(reason) {
-    this.registerStylesheet();
     CreatePocketWidget(reason);
     Services.obs.addObserver(this,
                              "browser-delayed-startup-finished",
@@ -298,6 +297,7 @@ var PocketOverlay = {
     if (reason == ADDON_ENABLE) {
       for (let win of allBrowserWindows()) {
         this.setWindowScripts(win);
+        this.addStyles(win);
         this.updateWindow(win);
       }
     }
@@ -312,6 +312,7 @@ var PocketOverlay = {
         if (element)
           element.remove();
       }
+      this.removeStyles(window);
       // remove script getters/objects
       delete window.Pocket;
       delete window.pktUI;
@@ -320,12 +321,12 @@ var PocketOverlay = {
     CustomizableUI.destroyWidget("pocket-button");
     PocketContextMenu.shutdown();
     PocketReader.shutdown();
-    this.unregisterStylesheet();
   },
   observe: function(aSubject, aTopic, aData) {
     // new browser window, initialize the "overlay"
     let window = aSubject;
     this.setWindowScripts(window);
+    this.addStyles(window);
     this.updateWindow(window);
   },
   setWindowScripts: function(window) {
@@ -433,25 +434,21 @@ var PocketOverlay = {
     }
   },
 
-  registerStylesheet: function() {
-    let styleSheetService= Components.classes["@mozilla.org/content/style-sheet-service;1"]
-                                     .getService(Components.interfaces.nsIStyleSheetService);
-    let styleSheetURI = Services.io.newURI("chrome://pocket/skin/pocket.css", null, null);
-    styleSheetService.loadAndRegisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
-    styleSheetURI = Services.io.newURI("chrome://pocket-shared/skin/pocket.css", null, null);
-    styleSheetService.loadAndRegisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+  addStyles: function(win) {
+    let xmlPI = win.document.createProcessingInstruction("xml-stylesheet",
+        "type=\"text/css\" href=\"chrome://pocket/skin/pocket.css\"");
+    win.document.insertBefore(xmlPI, win.document.documentElement);
   },
 
-  unregisterStylesheet: function() {
-    let styleSheetService = Components.classes["@mozilla.org/content/style-sheet-service;1"]
-                                      .getService(Components.interfaces.nsIStyleSheetService);
-    let styleSheetURI = Services.io.newURI("chrome://pocket/skin/pocket.css", null, null);
-    if (styleSheetService.sheetRegistered(styleSheetURI, styleSheetService.AUTHOR_SHEET)) {
-      styleSheetService.unregisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
-    }
-    styleSheetURI = Services.io.newURI("chrome://pocket-shared/skin/pocket.css", null, null);
-    if (styleSheetService.sheetRegistered(styleSheetURI, styleSheetService.AUTHOR_SHEET)) {
-      styleSheetService.unregisterSheet(styleSheetURI, styleSheetService.AUTHOR_SHEET);
+  removeStyles: function(win) {
+    let el = win.document.documentElement.previousSibling;
+    while (el) {
+      if (el.nodeType == el.PROCESSING_INSTRUCTION_NODE &&
+          el.sheet && el.sheet.href == "chrome://pocket/skin/pocket.css") {
+        el.remove();
+        break;
+      }
+      el = el.previousSibling;
     }
   }
 
