@@ -81,6 +81,7 @@ class RTCCertificate;
 struct RTCConfiguration;
 struct RTCIceServer;
 struct RTCOfferOptions;
+struct RTCRtpParameters;
 #ifdef USE_FAKE_MEDIA_STREAMS
 typedef Fake_MediaStreamTrack MediaStreamTrack;
 #else
@@ -442,6 +443,30 @@ public:
   {
     rv = ReplaceTrack(aThisTrack, aWithTrack);
   }
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  NS_IMETHODIMP_TO_ERRORRESULT(SetParameters, ErrorResult &rv,
+                               mozilla::dom::MediaStreamTrack& aTrack,
+                               const mozilla::dom::RTCRtpParameters& aParameters)
+  {
+    rv = SetParameters(aTrack, aParameters);
+  }
+
+  NS_IMETHODIMP_TO_ERRORRESULT(GetParameters, ErrorResult &rv,
+                               mozilla::dom::MediaStreamTrack& aTrack,
+                               mozilla::dom::RTCRtpParameters& aOutParameters)
+  {
+    rv = GetParameters(aTrack, aOutParameters);
+  }
+#endif
+
+  nsresult
+  SetParameters(dom::MediaStreamTrack& aTrack,
+                const std::vector<JsepTrack::JsConstraints>& aConstraints);
+
+  nsresult
+  GetParameters(dom::MediaStreamTrack& aTrack,
+                std::vector<JsepTrack::JsConstraints>* aOutConstraints);
 
   nsresult GetPeerIdentity(nsAString& peerIdentity)
   {
