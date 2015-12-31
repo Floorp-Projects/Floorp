@@ -175,6 +175,10 @@ MapSinglePropertyInto(nsCSSProperty aProp,
 static inline nsCSSProperty
 EnsurePhysicalProperty(nsCSSProperty aProperty, nsRuleData* aRuleData)
 {
+  if (!nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL)) {
+    return aProperty;
+  }
+
   bool isAxisProperty =
     nsCSSProps::PropHasFlags(aProperty, CSS_PROPERTY_LOGICAL_AXIS);
   bool isBlock =
@@ -251,15 +255,16 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
         nsCSSProperty iProp = PropertyAtIndex(i);
         if (nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[iProp]) &
             aRuleData->mSIDs) {
-            if (nsCSSProps::PropHasFlags(iProp, CSS_PROPERTY_LOGICAL)) {
-                iProp = EnsurePhysicalProperty(iProp, aRuleData);
+            nsCSSProperty physicalProp = EnsurePhysicalProperty(iProp,
+                                                                aRuleData);
+            if (physicalProp != iProp) {
                 // We can't cache anything on the rule tree if we use any data from
                 // the style context, since data cached in the rule tree could be
                 // used with a style context with a different value.
                 uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
                 aRuleData->mConditions.SetWritingModeDependency(wm);
             }
-            nsCSSValue* target = aRuleData->ValueFor(iProp);
+            nsCSSValue* target = aRuleData->ValueFor(physicalProp);
             if (target->GetUnit() == eCSSUnit_Null) {
                 const nsCSSValue *val = ValueAtIndex(i);
                 // In order for variable resolution to have the right information
@@ -271,7 +276,7 @@ nsCSSCompressedDataBlock::MapRuleInfoInto(nsRuleData *aRuleData) const
                 if (val->GetUnit() == eCSSUnit_TokenStream) {
                   val->GetTokenStreamValue()->mLevel = aRuleData->mLevel;
                 }
-                MapSinglePropertyInto(iProp, val, target, aRuleData);
+                MapSinglePropertyInto(physicalProp, val, target, aRuleData);
             }
         }
     }
@@ -713,9 +718,8 @@ nsCSSExpandedDataBlock::MapRuleInfoInto(nsCSSProperty aPropID,
   const nsCSSValue* src = PropertyAt(aPropID);
   MOZ_ASSERT(src->GetUnit() != eCSSUnit_Null);
 
-  nsCSSProperty physicalProp = aPropID;
-  if (nsCSSProps::PropHasFlags(aPropID, CSS_PROPERTY_LOGICAL)) {
-    physicalProp = EnsurePhysicalProperty(physicalProp, aRuleData);
+  nsCSSProperty physicalProp = EnsurePhysicalProperty(aPropID, aRuleData);
+  if (physicalProp != aPropID) {
     uint8_t wm = WritingMode(aRuleData->mStyleContext).GetBits();
     aRuleData->mConditions.SetWritingModeDependency(wm);
   }
