@@ -64,10 +64,8 @@ private:
   static void ReleaseBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
 
   RefPtr<ImageContainer> mImageContainer;
-  uint32_t mPictureWidth;
-  uint32_t mPictureHeight;
-  uint32_t mDisplayWidth;
-  uint32_t mDisplayHeight;
+  nsIntSize mDisplay;
+  nsIntRect mImage;
 
   class PtsCorrectionContext {
   public:
