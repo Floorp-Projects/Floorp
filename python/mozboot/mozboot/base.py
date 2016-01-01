@@ -74,7 +74,9 @@ We recommend the following tools for installing Python:
 
 
 # Upgrade Mercurial older than this.
-MODERN_MERCURIAL_VERSION = StrictVersion('3.2.4')
+# This should match OLDEST_NON_LEGACY_VERSION from
+# tools/mercurial/hgsetup/wizard.py.
+MODERN_MERCURIAL_VERSION = StrictVersion('3.5.2')
 
 # Upgrade Python older than this.
 MODERN_PYTHON_VERSION = LooseVersion('2.7.3')
