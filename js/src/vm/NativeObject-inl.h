@@ -590,6 +590,14 @@ ThrowIfNotConstructing(JSContext *cx, const CallArgs &args, const char *builtinN
                                         JSMSG_BUILTIN_CTOR_NO_NEW, builtinName);
 }
 
+inline bool
+IsPackedArray(JSObject* obj)
+{
+    return obj->is<ArrayObject>() && !obj->hasLazyGroup() &&
+           !obj->group()->hasAllFlags(OBJECT_FLAG_NON_PACKED) &&
+           obj->as<ArrayObject>().getDenseInitializedLength() == obj->as<ArrayObject>().length();
+}
+
 } // namespace js
 
 #endif /* vm_NativeObject_inl_h */
