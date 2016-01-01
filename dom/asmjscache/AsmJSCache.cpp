@@ -12,6 +12,7 @@
 #include "jsfriendapi.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/CondVar.h"
+#include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryChild.h"
 #include "mozilla/dom/asmjscache/PAsmJSCacheEntryParent.h"
 #include "mozilla/dom/ContentChild.h"
@@ -34,7 +35,6 @@
 #include "nsIRunnable.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIThread.h"
-#include "nsIXULAppInfo.h"
 #include "nsJSPrincipals.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
@@ -1707,29 +1707,6 @@ CloseEntryForWrite(size_t aSize,
                     childRunnable->FileSize()) == PR_SUCCESS) {
     *(AsmJSCookieType*)childRunnable->MappedMemory() = sAsmJSCookie;
   }
-}
-
-bool
-GetBuildId(JS::BuildIdCharVector* aBuildID)
-{
-  nsCOMPtr<nsIXULAppInfo> info = do_GetService("@mozilla.org/xre/app-info;1");
-  if (!info) {
-    return false;
-  }
-
-  nsCString buildID;
-  nsresult rv = info->GetPlatformBuildID(buildID);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  if (!aBuildID->resize(buildID.Length())) {
-    return false;
-  }
-
-  for (size_t i = 0; i < buildID.Length(); i++) {
-    (*aBuildID)[i] = buildID[i];
-  }
-
-  return true;
 }
 
 class Client : public quota::Client
