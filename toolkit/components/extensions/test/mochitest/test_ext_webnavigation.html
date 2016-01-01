@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -26,10 +26,9 @@ function backgroundScript() {
     "onReferenceFragmentUpdated",
   ];
 
-  var expectedTabId = -1;
+  let expectedTabId = -1;
 
-  function gotEvent(event, details)
-  {
+  function gotEvent(event, details) {
     if (!details.url.startsWith(BASE)) {
       return;
     }
@@ -56,8 +55,8 @@ function backgroundScript() {
     browser.test.assertTrue(details.parentFrameId !== undefined);
   }
 
-  var listeners = {};
-  for (var event of EVENTS) {
+  let listeners = {};
+  for (let event of EVENTS) {
     listeners[event] = gotEvent.bind(null, event);
     browser.webNavigation[event].addListener(listeners[event]);
   }
@@ -81,13 +80,12 @@ var received = [];
 var completedResolve;
 var waitingURL, waitingEvent;
 
-function loadAndWait(win, event, url, script)
-{
+function loadAndWait(win, event, url, script) {
   received = [];
   waitingEvent = event;
   waitingURL = url;
   dump(`RUN ${script}\n`);
-  eval(script);
+  script();
   return new Promise(resolve => { completedResolve = resolve; });
 }
 
@@ -116,7 +114,7 @@ add_task(function* webnav_ordering() {
 
   let win = window.open();
 
-  yield loadAndWait(win, "onCompleted", URL, `win.location = "${URL}";`);
+  yield loadAndWait(win, "onCompleted", URL, () => { win.location = URL; });
 
   function checkRequired(url) {
     for (let event of REQUIRED) {
@@ -153,12 +151,12 @@ add_task(function* webnav_ordering() {
   checkBefore({url: URL, event: "onCommitted"}, {url: FRAME, event: "onBeforeNavigate"});
   checkBefore({url: FRAME, event: "onCompleted"}, {url: URL, event: "onCompleted"});
 
-  yield loadAndWait(win, "onCompleted", FRAME2, `win.frames[0].location = "${FRAME2}";`);
+  yield loadAndWait(win, "onCompleted", FRAME2, () => { win.frames[0].location = FRAME2; });
 
   checkRequired(FRAME2);
 
   yield loadAndWait(win, "onReferenceFragmentUpdated", FRAME2 + "#ref",
-                    "win.frames[0].document.getElementById('elt').click();");
+                    () => { win.frames[0].document.getElementById("elt").click(); });
 
   info("Received onReferenceFragmentUpdated from FRAME2");
 

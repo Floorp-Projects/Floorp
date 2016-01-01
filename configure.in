@@ -150,6 +150,18 @@ MOZ_ARG_DISABLE_BOOL(compile-environment,
     COMPILE_ENVIRONMENT= )
 AC_SUBST(COMPILE_ENVIRONMENT)
 
+MOZ_ARG_ENABLE_BOOL(artifact-builds,
+[  --enable-artifact-builds
+                          Download and use prebuilt binary artifacts.],
+    MOZ_ARTIFACT_BUILDS=1,
+    MOZ_ARTIFACT_BUILDS= )
+AC_SUBST(MOZ_ARTIFACT_BUILDS)
+
+if test -n "$MOZ_ARTIFACT_BUILDS"; then
+    dnl Artifact builds imply --disable-compile-environment.
+    COMPILE_ENVIRONMENT=
+fi
+
 MOZ_ARG_WITH_STRING(l10n-base,
 [  --with-l10n-base=DIR    path to l10n repositories],
     L10NBASEDIR=$withval)
@@ -6411,7 +6423,12 @@ MOZ_ARG_ENABLE_BOOL(signmar,
     MOZ_ENABLE_SIGNMAR= )
 
 if test -n "$MOZ_ENABLE_SIGNMAR"; then
-  AC_DEFINE(MOZ_ENABLE_SIGNMAR)
+  if test -z "$COMPILE_ENVIRONMENT" ; then
+    AC_MSG_WARN([Cannot --enable-signmar with --disable-compile-environment])
+    MOZ_ENABLE_SIGNMAR=
+  else
+    AC_DEFINE(MOZ_ENABLE_SIGNMAR)
+  fi
 fi
 
 dnl ========================================================

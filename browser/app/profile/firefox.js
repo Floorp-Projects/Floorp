@@ -1630,3 +1630,5 @@ pref("toolkit.pageThumbs.minHeight", 190);
 // Enable speech synthesis, only Nightly for now
 pref("media.webspeech.synth.enabled", true);
 #endif
+
+pref("browser.esedbreader.loglevel", "Error");

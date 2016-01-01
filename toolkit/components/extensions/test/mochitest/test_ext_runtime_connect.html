@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -19,7 +19,7 @@ function backgroundScript() {
     browser.test.assertTrue(port.sender.url.endsWith("file_sample.html"), "URL correct");
     browser.test.assertTrue(port.sender.tab.url.endsWith("file_sample.html"), "tab URL correct");
 
-    var expected = "message 1";
+    let expected = "message 1";
     port.onMessage.addListener(msg => {
       browser.test.assertEq(msg, expected, "message is expected");
       if (expected == "message 1") {
@@ -37,7 +37,7 @@ function backgroundScript() {
 }
 
 function contentScript() {
-  var port = browser.runtime.connect({name: "ernie"});
+  let port = browser.runtime.connect({name: "ernie"});
   port.postMessage("message 1");
   port.onMessage.addListener(msg => {
     if (msg == "message 2") {
@@ -54,8 +54,8 @@ let extensionData = {
     "content_scripts": [{
       "matches": ["http://mochi.test/*/file_sample.html"],
       "js": ["content_script.js"],
-      "run_at": "document_start"
-    }]
+      "run_at": "document_start",
+    }],
   },
 
   files: {

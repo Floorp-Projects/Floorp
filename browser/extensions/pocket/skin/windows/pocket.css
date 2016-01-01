@@ -1,3 +1,5 @@
+@import url("chrome://pocket-shared/skin/pocket.css");
+
 @media (min-resolution: 1.1dppx) {
   #pocket-button[cui-areatype="toolbar"] {
     -moz-image-region: rect(0, 1548px, 36px, 1512px);

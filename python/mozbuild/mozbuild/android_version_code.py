@@ -18,12 +18,12 @@ def android_version_code_v0(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
     # None is interpreted as arm.
     if not cpu_arch or cpu_arch in ['armeabi', 'armeabi-v7a']:
         # Increment by MIN_SDK_VERSION -- this adds 9 to every build ID as a
-        # minimum.  Our split APK starts at 11.
+        # minimum.  Our split APK starts at 14.
         return base + min_sdk + 0
     elif cpu_arch in ['x86']:
         # Increment the version code by 3 for x86 builds so they are offered to
         # x86 phones that have ARM emulators, beating the 2-point advantage that
-        # the v11+ ARMv7 APK has.  If we change our splits in the future, we'll
+        # the v14+ ARMv7 APK has.  If we change our splits in the future, we'll
         # need to do this further still.
         return base + min_sdk + 3
     else:
@@ -55,12 +55,11 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
 
     The bit labelled 'p' is a placeholder that is always 0 (for now).
 
-    The bit labelled 'g' is 1 if the build is targeting Android API 11/14+ and 0
-    otherwise, which means the build targets Android API 9-10 (Gingerbread).
+    The bit labelled 'g' is 1 if the build is an ARM build targeting API 14+
+    and 0 otherwise, which means the build targets Android API 9-10 (Gingerbread).
 
     Fennec no longer supports Android API 8 or earlier. After Bug 1155801 it
     no longer supports API 11-13. API 9 is still supported due to significant usage.
-    We temporarily treat both 11 and 14 the same: Bug 1219512.
 
     We throw an explanatory exception when we are within one calendar year of
     running out of build events.  This gives lots of time to update the version
@@ -112,7 +111,7 @@ def android_version_code_v1(buildid, cpu_arch=None, min_sdk=0, max_sdk=0):
             pass
         # This used to compare to 11. The 14+ APK directly supersedes 11+, so
         # we reuse this check.
-        elif min_sdk == 14 or min_sdk == 11:
+        elif min_sdk == 14:
             version |= 1 << 0
         else:
             raise ValueError("Don't know how to compute android:versionCode "

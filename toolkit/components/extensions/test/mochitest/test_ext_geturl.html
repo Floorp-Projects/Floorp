@@ -10,12 +10,13 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
 
 function backgroundScript() {
   browser.runtime.onMessage.addListener(([url1, url2]) => {
-    var url3 = browser.runtime.getURL("test_file.html");
-    var url4 = browser.extension.getURL("test_file.html");
+    let url3 = browser.runtime.getURL("test_file.html");
+    let url4 = browser.extension.getURL("test_file.html");
 
     browser.test.assertTrue(url1 !== undefined, "url1 defined");
 
@@ -31,8 +32,8 @@ function backgroundScript() {
 }
 
 function contentScript() {
-  var url1 = browser.runtime.getURL("test_file.html");
-  var url2 = browser.extension.getURL("test_file.html");
+  let url1 = browser.runtime.getURL("test_file.html");
+  let url2 = browser.extension.getURL("test_file.html");
   browser.runtime.sendMessage([url1, url2]);
 }
 
@@ -42,8 +43,8 @@ let extensionData = {
     "content_scripts": [{
       "matches": ["http://mochi.test/*/file_sample.html"],
       "js": ["content_script.js"],
-      "run_at": "document_start"
-    }]
+      "run_at": "document_start",
+    }],
   },
 
   files: {

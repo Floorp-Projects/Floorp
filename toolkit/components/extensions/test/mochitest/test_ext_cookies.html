@@ -10,7 +10,9 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
+
 function backgroundScript() {
   function get(details) {
     return new Promise(resolve => {
@@ -43,17 +45,17 @@ function backgroundScript() {
   }
 
   function assertExpected(cookie, expected) {
-    for (var key of Object.keys(cookie)) {
+    for (let key of Object.keys(cookie)) {
       browser.test.assertTrue(key in expected, "found property " + key);
       browser.test.assertEq(cookie[key], expected[key], "property value for " + key + " is wrong");
     }
     browser.test.assertEq(Object.keys(cookie).length, Object.keys(expected).length, "all expected properties found");
   }
 
-  var TEST_URL = "http://example.org/";
-  var THE_FUTURE = Date.now() + 5 * 60;
+  let TEST_URL = "http://example.org/";
+  let THE_FUTURE = Date.now() + 5 * 60;
 
-  var expected = {
+  let expected = {
     name: "name1",
     value: "value1",
     domain: "example.org",
@@ -63,7 +65,7 @@ function backgroundScript() {
     httpOnly: false,
     session: false,
     expirationDate: THE_FUTURE,
-    storeId: "firefox-default"
+    storeId: "firefox-default",
   };
 
   set({url: TEST_URL, name: "name1", value: "value1", expirationDate: THE_FUTURE}).then(cookie => {
@@ -71,7 +73,7 @@ function backgroundScript() {
     return get({url: TEST_URL, name: "name1"});
   }).then(cookie => {
     assertExpected(cookie, expected);
-    return getAll({domain: "example.org"})
+    return getAll({domain: "example.org"});
   }).then(cookies => {
     browser.test.assertEq(cookies.length, 1, "only found one cookie for example.org");
     assertExpected(cookies[0], expected);
@@ -94,7 +96,7 @@ function backgroundScript() {
 let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
-    permissions: ["cookies", "*://example.org/"]
+    permissions: ["cookies", "*://example.org/"],
   },
 };
 

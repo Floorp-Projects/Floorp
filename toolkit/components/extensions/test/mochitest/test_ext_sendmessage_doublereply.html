@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
@@ -41,7 +41,7 @@ function backgroundScript() {
     }
   }
 
-  var done_count = 0;
+  let done_count = 0;
   browser.runtime.onMessage.addListener((msg, sender, sendReply) => {
     browser.test.assertTrue(sender.tab.url.endsWith("file_sample.html"), "sender url correct");
 
@@ -73,8 +73,8 @@ let extensionData = {
     "content_scripts": [{
       "matches": ["http://mochi.test/*/file_sample.html"],
       "js": ["content_script.js"],
-      "run_at": "document_start"
-    }]
+      "run_at": "document_start",
+    }],
   },
 
   files: {

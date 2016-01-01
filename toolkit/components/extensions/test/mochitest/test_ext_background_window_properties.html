@@ -10,38 +10,39 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
 
 add_task(function* testBackgroundWindowProperties() {
   let extension = ExtensionTestUtils.loadExtension({
     background: "(" + function() {
-      var expectedValues = {
+      let expectedValues = {
         screenX: 0,
         screenY: 0,
         outerWidth: 0,
-        outerHeight: 0
+        outerHeight: 0,
       };
 
-      for (var k in window) {
+      for (let k in window) {
         try {
           if (k in expectedValues) {
             browser.test.assertEq(expectedValues[k], window[k],
-                                  `should return the expected value for window property: ${k}`)
+                                  `should return the expected value for window property: ${k}`);
           } else {
-            window[k];
+            void window[k];
           }
-        } catch(e) {
-          browser.test.assertEq(null, e, `unexpected exception accessing window property: ${k}`)
+        } catch (e) {
+          browser.test.assertEq(null, e, `unexpected exception accessing window property: ${k}`);
         }
       }
 
-      browser.test.notifyPass("background.testWindowProperties.done")
-    } + ")();"
+      browser.test.notifyPass("background.testWindowProperties.done");
+    } + ")();",
   });
   info("load complete");
   yield extension.startup();
   info("startup complete");
-  yield extension.awaitFinish("background.testWindowProperties.done")
+  yield extension.awaitFinish("background.testWindowProperties.done");
   yield extension.unload();
   info("extension unloaded successfully");
 });

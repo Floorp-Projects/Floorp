@@ -90,7 +90,7 @@ clean clobber repackage::
 MAC_BUNDLE_VERSION = $(shell $(PYTHON) $(srcdir)/macversion.py --version=$(MOZ_APP_VERSION) --buildid=$(DEPTH)/config/buildid)
 
 .PHONY: repackage
-tools repackage:: $(PROGRAM)
+tools repackage:: $(DIST)/bin/$(MOZ_APP_NAME)
 	$(MKDIR) -p $(dist_dest)/Contents/MacOS
 	$(MKDIR) -p $(dist_dest)/$(LPROJ)
 	rsync -a --exclude '*.in' $(srcdir)/macbuild/Contents $(dist_dest) --exclude English.lproj
@@ -99,8 +99,8 @@ tools repackage:: $(PROGRAM)
 	sed -e 's/%MAC_APP_NAME%/$(MAC_APP_NAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | iconv -f UTF-8 -t UTF-16 > $(dist_dest)/$(LPROJ)/InfoPlist.strings
 	rsync -a --exclude-from='$(srcdir)/macbuild/Contents/MacOS-files.in' $(DIST)/bin/ $(dist_dest)/Contents/Resources
 	rsync -a --include-from='$(srcdir)/macbuild/Contents/MacOS-files.in' --exclude '*' $(DIST)/bin/ $(dist_dest)/Contents/MacOS
-	$(RM) $(dist_dest)/Contents/MacOS/$(PROGRAM)
-	rsync -aL $(PROGRAM) $(dist_dest)/Contents/MacOS
+	$(RM) $(dist_dest)/Contents/MacOS/$(MOZ_APP_NAME)
+	rsync -aL $(DIST)/bin/$(MOZ_APP_NAME) $(dist_dest)/Contents/MacOS
 	cp -RL $(DIST)/branding/firefox.icns $(dist_dest)/Contents/Resources/firefox.icns
 	cp -RL $(DIST)/branding/document.icns $(dist_dest)/Contents/Resources/document.icns
 	printf APPLMOZB > $(dist_dest)/Contents/PkgInfo

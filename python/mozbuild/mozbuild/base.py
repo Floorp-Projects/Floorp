@@ -257,7 +257,7 @@ class MozbuildObject(ProcessExecutionMixin):
         config_status = os.path.join(self.topobjdir, 'config.status')
 
         if not os.path.exists(config_status):
-            raise Exception('config.status not available. Run configure.')
+            raise BuildEnvironmentNotFoundException('config.status not available. Run configure.')
 
         self._config_environment = \
             ConfigEnvironment.from_config_status(config_status)

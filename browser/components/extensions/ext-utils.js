@@ -44,7 +44,6 @@ global.IconDetails = {
         // an ImageData property. But Schema.jsm doesn't normalize
         // actual ImageData objects, so they will come from a global
         // with the right property.
-        let global = Cu.getGlobalForObject(imageData);
         if (instanceOf(imageData, "ImageData")) {
           imageData = {"19": imageData};
         }

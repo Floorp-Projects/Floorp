@@ -7,6 +7,11 @@
 <body>
 
 <script>
+"use strict";
+
+/* globals privilegedXHR */
+/* eslint-disable mozilla/balanced-listeners */
+
 addEventListener("message", function rcv(event) {
   removeEventListener("message", rcv, false);
 
@@ -18,7 +23,7 @@ addEventListener("message", function rcv(event) {
     postMessage(false, "*");
   }
 
-  var exc = null;
+  let exc = null;
   try {
     new privilegedXHR();
   } catch (e) {
@@ -29,7 +34,7 @@ addEventListener("message", function rcv(event) {
     return;
   }
 
-  var req = new XMLHttpRequest();
+  let req = new XMLHttpRequest();
   req.addEventListener("load", failListener);
   req.addEventListener("error", passListener);
   req.open("GET", "http://example.org/example.txt");
