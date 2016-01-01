@@ -530,10 +530,10 @@ size. -->
      as an advisory message on how to add content to the reading list when the reading list empty.
      The placeholder &formatI; will be replaced by a small image of the icon described, and can be moved to wherever
      it is applicable. -->
-<!ENTITY home_reading_list_hint3 "TIP: Save articles to your reading list by long pressing the &formatI; icon when it appears in the URL bar.">
+<!ENTITY home_reading_list_hint3 "Tip: Save articles to your reading list by long pressing the &formatI; icon when it appears in the URL bar.">
 <!-- Localization note (home_reading_list_hint_accessible2): This string is used
      as alternate text for accessibility. It is not visible in the UI. -->
-<!ENTITY home_reading_list_hint_accessible2 "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the URL bar.">
+<!ENTITY home_reading_list_hint_accessible2 "Tip: Save articles to your reading list by long pressing the reader mode button when it appears in the URL bar.">
 
 <!-- Localization note (home_default_empty): This string is used as the default text when there
      is no data to show in an about:home panel that was created by an add-on. -->

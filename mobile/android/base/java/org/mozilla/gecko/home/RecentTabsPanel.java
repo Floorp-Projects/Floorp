@@ -105,7 +105,7 @@ public class RecentTabsPanel extends HomeFragment
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_recent_tabs_panel, container, false);
+        return inflater.inflate(R.layout.home_list_panel, container, false);
     }
 
     @Override
