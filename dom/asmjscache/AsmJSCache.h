@@ -132,9 +132,6 @@ CloseEntryForWrite(size_t aSize,
                    uint8_t* aMemory,
                    intptr_t aHandle);
 
-bool
-GetBuildId(JS::BuildIdCharVector* aBuildId);
-
 // Called from QuotaManager.cpp:
 
 quota::Client*
