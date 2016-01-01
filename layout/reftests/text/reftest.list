@@ -326,4 +326,4 @@ pref(layout.css.control-characters.visible,true) != control-chars-04d.html contr
 HTTP(..) == space-font-1.html space-font-1-ref.html
 
 # handling of highly negative letter-spacing and intrinsic width
-fails == negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
+== negative-letter-spacing-1.html negative-letter-spacing-1-ref.html
