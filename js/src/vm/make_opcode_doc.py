@@ -3,7 +3,7 @@
 """ Usage: make_opcode_doc.py PATH_TO_MOZILLA_CENTRAL
 
     This script generates SpiderMonkey bytecode documentation
-    from js/src/vm/Opcodes.h and js/src/vm/Xdr.h.
+    from js/src/vm/Opcodes.h.
 
     Output is written to stdout and should be pasted into the following
     MDN page:
@@ -20,25 +20,6 @@ SOURCE_BASE = 'http://mxr.mozilla.org/mozilla-central/source'
 def error(message):
     print("Error: {message}".format(message=message), file=sys.stderr)
     sys.exit(1)
-
-def get_xdr_version(dir):
-    subtrahend_pat = re.compile('XDR_BYTECODE_VERSION_SUBTRAHEND\s*=\s*(\d+);', re.S)
-    version_expr_pat = re.compile('XDR_BYTECODE_VERSION\s*=\s*uint32_t\(0xb973c0de\s*-\s*(.+?)\);', re.S)
-
-    with open('{dir}/js/src/vm/Xdr.h'.format(dir=dir), 'r') as f:
-        data = f.read()
-
-    m = subtrahend_pat.search(data)
-    if not m:
-        error('XDR_BYTECODE_VERSION_SUBTRAHEND is not recognized.')
-
-    subtrahend = int(m.group(1))
-
-    m = version_expr_pat.search(data)
-    if not m:
-        error('XDR_BYTECODE_VERSION is not recognized.')
-
-    return subtrahend
 
 quoted_pat = re.compile(r"([^A-Za-z0-9]|^)'([^']+)'")
 js_pat = re.compile(r"([^A-Za-z0-9]|^)(JS[A-Z0-9_\*]+)")
@@ -355,21 +336,15 @@ def make_element_id(category, type=''):
     id_cache[key] = id
     return id
 
-def print_doc(version, index):
+def print_doc(index):
     print("""<div>{{{{SpiderMonkeySidebar("Internals")}}}}</div>
 
 <h2 id="Bytecode_Listing">Bytecode Listing</h2>
 
 <p>This document is automatically generated from
-<a href="{source_base}/js/src/vm/Opcodes.h">Opcodes.h</a> and
-<a href="{source_base}/js/src/vm/Xdr.h">Xdr.h</a> by
+<a href="{source_base}/js/src/vm/Opcodes.h">Opcodes.h</a> by
 <a href="{source_base}/js/src/vm/make_opcode_doc.py">make_opcode_doc.py</a>.</p>
-
-<p>Bytecode version: <code>{version}</code>
-(<code>0x{actual_version:08x}</code>).</p>
-""".format(source_base=SOURCE_BASE,
-           version=version,
-           actual_version=0xb973c0de - version))
+""".format(source_base=SOURCE_BASE))
 
     for (category_name, types) in index:
         print('<h3 id="{id}">{name}</h3>'.format(name=category_name,
@@ -390,6 +365,5 @@ if __name__ == '__main__':
               file=sys.stderr)
         sys.exit(1)
     dir = sys.argv[1]
-    version = get_xdr_version(dir)
     index = get_opcodes(dir)
-    print_doc(version, index)
+    print_doc(index)
