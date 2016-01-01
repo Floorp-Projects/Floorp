@@ -20,7 +20,6 @@ libs::
 TEST_HARNESS_BINS := \
   xpcshell$(BIN_SUFFIX) \
   ssltunnel$(BIN_SUFFIX) \
-  fileid$(BIN_SUFFIX) \
   certutil$(BIN_SUFFIX) \
   pk12util$(BIN_SUFFIX) \
   BadCertServer$(BIN_SUFFIX) \
