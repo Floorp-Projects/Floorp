@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript(token) {
@@ -43,7 +43,7 @@ function contentScript(token) {
     port.disconnect();
   });
 
-  var port = browser.runtime.connect(null, {name: token});
+  let port = browser.runtime.connect(null, {name: token});
   port.onMessage.addListener(function(msg) {
     if (msg != token + "-done" || !gotTabMessage || badTabMessage) {
       return; // test failed
@@ -65,8 +65,8 @@ function makeExtension() {
       "content_scripts": [{
         "matches": ["http://mochi.test/*/file_sample.html"],
         "js": ["content_script.js"],
-        "run_at": "document_start"
-      }]
+        "run_at": "document_start",
+      }],
     },
 
     files: {
@@ -74,7 +74,7 @@ function makeExtension() {
     },
   };
   return extensionData;
-};
+}
 
 add_task(function* test_contentscript() {
   let extension1 = ExtensionTestUtils.loadExtension(makeExtension());

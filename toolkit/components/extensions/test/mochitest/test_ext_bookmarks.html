@@ -10,7 +10,9 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
+
 function backgroundScript() {
   function get(idOrIdList) {
     return new Promise(resolve => {
@@ -27,7 +29,7 @@ function backgroundScript() {
   function getChildren(id) {
     return new Promise(resolve => {
       browser.bookmarks.getChildren(id, resolve);
-    })
+    });
   }
 
   function update(id, changes) {
@@ -39,7 +41,7 @@ function backgroundScript() {
   function getTree(id) {
     return new Promise(resolve => {
       browser.bookmarks.getTree(resolve);
-    })
+    });
   }
 
   function remove(idOrIdList) {
@@ -48,15 +50,7 @@ function backgroundScript() {
     });
   }
 
-  function assertExpected(cookie, expected) {
-    for (var key of Object.keys(cookie)) {
-      browser.test.assertTrue(key in expected, "found property " + key);
-      browser.test.assertEq(cookie[key], expected[key], "property value for " + key + " is wrong");
-    }
-    browser.test.assertEq(Object.keys(cookie).length, Object.keys(expected).length, "all expected properties found");
-  }
-
-  var unsortedId, ourId;
+  let unsortedId, ourId;
 
   function checkOurBookmark(bookmark) {
     browser.test.assertEq(bookmark.id, ourId);
@@ -71,7 +65,7 @@ function backgroundScript() {
 
   get(["not-a-bookmark-guid"]).then(result => {
     // TODO: check lastError
-    browser.test.assertEq(result.length, 0, "invalid bookmark guid returned nothing")
+    browser.test.assertEq(result.length, 0, "invalid bookmark guid returned nothing");
     return get(["000000000000"]);
   }).then(results => {
     // TODO: check lastError
@@ -89,7 +83,7 @@ function backgroundScript() {
     unsortedId = results[0].parentId;
     return get(unsortedId);
   }).then(results => {
-    var folder = results[0];
+    let folder = results[0];
     browser.test.assertEq(results.length, 1);
 
     browser.test.assertEq(folder.id, unsortedId);
@@ -114,7 +108,7 @@ function backgroundScript() {
     return getTree();
   }).then(results => {
     browser.test.assertEq(results.length, 1);
-    var bookmark = results[0].children.find(bookmark => bookmark.id == unsortedId);
+    let bookmark = results[0].children.find(bookmark => bookmark.id == unsortedId);
     browser.test.assertEq(bookmark.title, "Unsorted Bookmarks");
 
     return create({parentId: "invalid"});
@@ -140,7 +134,7 @@ function backgroundScript() {
 let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
-    permissions: ["bookmarks"]
+    permissions: ["bookmarks"],
   },
 };
 

@@ -32,11 +32,10 @@ ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT)) #{
 
 libs::
 	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app
-	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/$(PROGRAM).app 
-	sed -e 's/%PROGRAM%/$(PROGRAM)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/bin/$(PROGRAM).app/Contents/Info.plist
+	rsync -a -C --exclude '*.in' $(srcdir)/macbuild/Contents $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app 
+	sed -e 's/%PROGRAM%/$(MOZ_CHILD_PROCESS_NAME)/' $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Info.plist
 	sed -e 's/%APP_NAME%/$(MOZ_APP_DISPLAYNAME)/' $(srcdir)/macbuild/Contents/Resources/English.lproj/InfoPlist.strings.in | \
-	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/$(PROGRAM).app/Contents/Resources/English.lproj/InfoPlist.strings
-	$(NSINSTALL) -D $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
-	$(NSINSTALL) $(PROGRAM) $(DIST)/bin/$(PROGRAM).app/Contents/MacOS
-	$(RM) $(DIST)/bin/$(PROGRAM)
+	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/Resources/English.lproj/InfoPlist.strings
+	$(NSINSTALL) -D $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS
+	$(NSINSTALL) $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME) $(DIST)/bin/$(MOZ_CHILD_PROCESS_NAME).app/Contents/MacOS
 endif #}

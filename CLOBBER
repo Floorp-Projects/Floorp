@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1082598 - updating Skia
+Bug 1216817 - Run |mach artifact| automatically when --disable-compile-environment is set

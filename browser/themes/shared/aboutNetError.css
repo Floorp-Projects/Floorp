@@ -64,7 +64,9 @@ ul {
 }
 
 @media (max-width: 675px) {
-  #errorTitle {
+  #errorTitle,
+  #errorTitle[sslv3=true],
+  #errorTitle[weakCrypto=true] {
     padding-top: 0;
     background-image: none;
     -moz-padding-start: 0;
