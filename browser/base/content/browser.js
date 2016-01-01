@@ -7904,7 +7904,8 @@ function TabModalPromptBox(browser) {
 
 TabModalPromptBox.prototype = {
   _promptCloseCallback(onCloseCallback, principalToAllowFocusFor, allowFocusCheckbox, ...args) {
-    if (principalToAllowFocusFor && allowFocusCheckbox.checked) {
+    if (principalToAllowFocusFor && allowFocusCheckbox &&
+        allowFocusCheckbox.checked) {
       Services.perms.addFromPrincipal(principalToAllowFocusFor, "focus-tab-by-prompt",
                                       Services.perms.ALLOW_ACTION);
     }
