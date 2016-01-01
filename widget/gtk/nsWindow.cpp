@@ -10,7 +10,6 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
-#include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include <algorithm>
@@ -4912,8 +4911,8 @@ public:
                              uint16_t aDuration, nsIRunnable* aCallback,
                              FullscreenTransitionWindow* aWindow)
         : mStage(aStage)
-        , mStartTime(TimeStamp::Now())
-        , mDuration(TimeDuration::FromMilliseconds(aDuration))
+        , mStep(0)
+        , mTotalSteps(aDuration / sInterval)
         , mCallback(aCallback)
         , mWindow(aWindow) { }
 
@@ -4922,8 +4921,7 @@ public:
 
 private:
     nsIWidget::FullscreenTransitionStage mStage;
-    TimeStamp mStartTime;
-    TimeDuration mDuration;
+    uint16_t mStep, mTotalSteps;
     nsCOMPtr<nsIRunnable> mCallback;
     RefPtr<FullscreenTransitionWindow> mWindow;
 };
@@ -4931,19 +4929,15 @@ private:
 /* static */ gboolean
 FullscreenTransitionData::TimeoutCallback(gpointer aData)
 {
-    bool finishing = false;
     auto data = static_cast<FullscreenTransitionData*>(aData);
-    gdouble opacity = (TimeStamp::Now() - data->mStartTime) / data->mDuration;
-    if (opacity >= 1.0) {
-        opacity = 1.0;
-        finishing = true;
-    }
+    data->mStep++;
+    gdouble opacity = data->mStep / gdouble(data->mTotalSteps);
     if (data->mStage == nsIWidget::eAfterFullscreenToggle) {
         opacity = 1.0 - opacity;
     }
     gtk_window_set_opacity(GTK_WINDOW(data->mWindow->mWindow), opacity);
 
-    if (!finishing) {
+    if (data->mStep != data->mTotalSteps) {
         return TRUE;
     }
     NS_DispatchToMainThread(data->mCallback.forget());
