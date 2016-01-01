@@ -12,9 +12,18 @@
 
 #include "jsscriptinlines.h"
 
+static bool
+GetBuildId(JS::BuildIdCharVector* buildId)
+{
+    const char buildid[] = "testXDR";
+    return buildId->append(buildid, sizeof(buildid));
+}
+
 static JSScript*
 FreezeThaw(JSContext* cx, JS::HandleScript script)
 {
+    JS::SetBuildIdOp(cx->runtime(), GetBuildId);
+
     // freeze
     uint32_t nbytes;
     void* memory = JS_EncodeScript(cx, script, &nbytes);
