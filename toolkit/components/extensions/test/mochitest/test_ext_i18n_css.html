@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 add_task(function* test_i18n_css() {
@@ -18,16 +18,15 @@ add_task(function* test_i18n_css() {
     background: "new " + function() {
       function fetch(url) {
         return new Promise((resolve, reject) => {
-          let xhr = new XMLHttpRequest;
+          let xhr = new XMLHttpRequest();
           xhr.open("GET", url);
-          xhr.onload = () => { resolve(xhr.responseText) };
+          xhr.onload = () => { resolve(xhr.responseText); };
           xhr.onerror = reject;
           xhr.send();
         });
       }
 
       Promise.all([fetch("foo.css"), fetch("bar.CsS?x#y"), fetch("foo.txt")]).then(results => {
-
         browser.test.assertEq("body { max-width: 42px; }", results[0], "CSS file localized");
         browser.test.assertEq("body { max-width: 42px; }", results[1], "CSS file localized");
 
@@ -70,9 +69,9 @@ add_task(function* test_i18n_css() {
 
   function fetch(url) {
     return new Promise((resolve, reject) => {
-      let xhr = new XMLHttpRequest;
+      let xhr = new XMLHttpRequest();
       xhr.open("GET", url);
-      xhr.onload = () => { resolve(xhr.responseText) };
+      xhr.onload = () => { resolve(xhr.responseText); };
       xhr.onerror = reject;
       xhr.send();
     });

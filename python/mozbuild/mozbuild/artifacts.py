@@ -20,6 +20,10 @@ This module performs the following steps:
 * fetch fresh Task Cluster artifacts and purge old artifacts, using a simple
   Least Recently Used cache.
 
+* post-process fresh artifacts, to speed future installation.  In particular,
+  extract relevant files from Mac OS X DMG files into a friendly archive format
+  so we don't have to mount DMG files frequently.
+
 The bulk of the complexity is in managing and persisting several caches.  If
 we found a Python LRU cache that pickled cleanly, we could remove a lot of
 this code!  Sadly, I found no such candidate implementations, so we pickle
@@ -44,7 +48,9 @@ import os
 import pickle
 import re
 import shutil
+import stat
 import subprocess
+import tempfile
 import urlparse
 import zipfile
 
@@ -55,8 +61,13 @@ from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
 )
+import mozinstall
+from mozpack.files import FileFinder
+from mozpack.mozjar import (
+    JarReader,
+    JarWriter,
+)
 import mozpack.path as mozpath
-from mozversion import mozversion
 from mozregression.download_manager import (
     DownloadManager,
 )
@@ -73,17 +84,158 @@ MAX_CACHED_TASKS = 400  # Number of pushheads to cache Task Cluster task data fo
 # so don't make this to large!  TODO: make this a size (like 500 megs) rather than an artifact count.
 MAX_CACHED_ARTIFACTS = 6
 
-# TODO: handle multiple artifacts with the same filename.
-# TODO: handle installing binaries from different types of artifacts (.tar.bz2, .dmg, etc).
+# Downloaded artifacts are cached, and a subset of their contents extracted for
+# easy installation.  This is most noticeable on Mac OS X: since mounting and
+# copying from DMG files is very slow, we extract the desired binaries to a
+# separate archive for fast re-installation.
+PROCESSED_SUFFIX = '.processed.jar'
+
+class ArtifactJob(object):
+    def __init__(self, regexp, log=None):
+        self._regexp = re.compile(regexp)
+        self._log = log
+
+    def log(self, *args, **kwargs):
+        if self._log:
+            self._log(*args, **kwargs)
+
+    def find_candidate_artifacts(self, artifacts):
+        # TODO: Handle multiple artifacts, taking the latest one.
+        for artifact in artifacts:
+            name = artifact['name']
+            if self._regexp.match(name):
+                yield artifact
+            else:
+                self.log(logging.DEBUG, 'artifact',
+                    {'name': name},
+                    'Not yielding artifact named {name} as a candidate artifact')
+
+    def process_artifact(self, filename, processed_filename):
+        raise NotImplementedError("Subclasses must specialize process_artifact!")
+
+
+class AndroidArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        # Extract all .so files into the root, which will get copied into dist/bin.
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            for f in JarReader(filename):
+                if not f.filename.endswith('.so') and \
+                   not f.filename in ('platform.ini', 'application.ini'):
+                    continue
+
+                basename = os.path.basename(f.filename)
+                self.log(logging.INFO, 'artifact',
+                    {'basename': basename},
+                    'Adding {basename} to processed archive')
+
+                writer.add(basename.encode('utf-8'), f)
+
+
+class MacArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        tempdir = tempfile.mkdtemp()
+        try:
+            self.log(logging.INFO, 'artifact',
+                {'tempdir': tempdir},
+                'Unpacking DMG into {tempdir}')
+            mozinstall.install(filename, tempdir) # Doesn't handle already mounted DMG files nicely:
+
+            # InstallError: Failed to install "/Users/nalexander/.mozbuild/package-frontend/b38eeeb54cdcf744-firefox-44.0a1.en-US.mac.dmg (local variable 'appDir' referenced before assignment)"
+
+            #   File "/Users/nalexander/Mozilla/gecko/mobile/android/mach_commands.py", line 250, in artifact_install
+            #     return artifacts.install_from(source, self.distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 457, in install_from
+            #     return self.install_from_hg(source, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 445, in install_from_hg
+            #     return self.install_from_url(url, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 418, in install_from_url
+            #     return self.install_from_file(filename, distdir)
+            #   File "/Users/nalexander/Mozilla/gecko/python/mozbuild/mozbuild/artifacts.py", line 336, in install_from_file
+            #     mozinstall.install(filename, tempdir)
+            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 117, in install
+            #     install_dir = _install_dmg(src, dest)
+            #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 261, in _install_dmg
+            #     subprocess.call('hdiutil detach %s -quiet' % appDir,
+
+            # TODO: Extract 'MOZ_MACBUNDLE_NAME' from buildconfig.
+            bundle_name = 'Nightly.app'
+            source = mozpath.join(tempdir, bundle_name)
+
+            # These get copied into dist/bin without the path, so "root/a/b/c" -> "dist/bin/c".
+            paths_no_keep_path = ('Contents/MacOS', [
+                'crashreporter.app/Contents/MacOS/crashreporter',
+                'firefox',
+                'firefox-bin',
+                'libfreebl3.dylib',
+                'liblgpllibs.dylib',
+                # 'liblogalloc.dylib',
+                'libmozglue.dylib',
+                'libnss3.dylib',
+                'libnssckbi.dylib',
+                'libnssdbm3.dylib',
+                'libplugin_child_interpose.dylib',
+                # 'libreplace_jemalloc.dylib',
+                # 'libreplace_malloc.dylib',
+                'libsoftokn3.dylib',
+                'plugin-container.app/Contents/MacOS/plugin-container',
+                'updater.app/Contents/MacOS/updater',
+                # 'xpcshell',
+                'XUL',
+            ])
+
+            # These get copied into dist/bin with the path, so "root/a/b/c" -> "dist/bin/a/b/c".
+            paths_keep_path = ('Contents/Resources', [
+                'browser/components/libbrowsercomps.dylib',
+                'dependentlibs.list',
+                # 'firefox',
+                'gmp-clearkey/0.1/libclearkey.dylib',
+                # 'gmp-fake/1.0/libfake.dylib',
+                # 'gmp-fakeopenh264/1.0/libfakeopenh264.dylib',
+                'webapprt-stub',
+            ])
+
+            with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+                root, paths = paths_no_keep_path
+                finder = FileFinder(mozpath.join(source, root))
+                for path in paths:
+                    for p, f in finder.find(path):
+                        self.log(logging.INFO, 'artifact',
+                            {'path': path},
+                            'Adding {path} to processed archive')
+                        writer.add(os.path.basename(p).encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+
+                root, paths = paths_keep_path
+                finder = FileFinder(mozpath.join(source, root))
+                for path in paths:
+                    for p, f in finder.find(path):
+                        self.log(logging.INFO, 'artifact',
+                            {'path': path},
+                            'Adding {path} to processed archive')
+                        writer.add(p.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+
+        finally:
+            try:
+                shutil.rmtree(tempdir)
+            except (OSError, IOError):
+                self.log(logging.WARN, 'artifact',
+                    {'tempdir': tempdir},
+                    'Unable to delete {tempdir}')
+                pass
+
+
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
-    # 'android-api-9': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
-    'android-api-11': {'re': re.compile('public/build/fennec-(.*)\.android-arm\.apk')},
-    'android-x86': {'re': re.compile('public/build/fennec-(.*)\.android-i386\.apk')},
-    # 'linux': {'re': re.compile('public/build/firefox-(.*)\.linux-i686\.tar\.bz2')},
-    # 'linux64': {'re': re.compile('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2')},
-    # 'macosx64': {'re': re.compile('public/build/firefox-(.*)\.mac\.dmg')},
+    # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-api-11': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
+    'android-x86': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
+    # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
+    # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
+    'macosx64': (MacArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
 }
+
+def get_job_details(job, log=None):
+    cls, re = JOB_DETAILS[job]
+    return cls(re, log=log)
 
 
 def cachedmethod(cachefunc):
@@ -209,7 +361,7 @@ class TaskCache(CacheManager):
     @cachedmethod(operator.attrgetter('_cache'))
     def artifact_url(self, tree, job, rev):
         try:
-            artifact_re = JOB_DETAILS[job]['re']
+            artifact_job = get_job_details(job, log=self._log)
         except KeyError:
             self.log(logging.INFO, 'artifact',
                 {'job': job},
@@ -226,22 +378,14 @@ class TaskCache(CacheManager):
             raise ValueError('Task for {key} does not exist (yet)!'.format(key=key))
         taskId = task['taskId']
 
-        # TODO: Make this not Android-only by matching a regular expression.
         artifacts = self._queue.listLatestArtifacts(taskId)['artifacts']
 
-        def names():
-            for artifact in artifacts:
-                name = artifact['name']
-                if artifact_re.match(name):
-                    yield name
-
-        # TODO: Handle multiple artifacts, taking the latest one.
-        for name in names():
+        for artifact in artifact_job.find_candidate_artifacts(artifacts):
             # We can easily extract the task ID from the URL.  We can't easily
             # extract the build ID; we use the .ini files embedded in the
             # downloaded artifact for this.  We could also use the uploaded
             # public/build/buildprops.json for this purpose.
-            url = self._queue.buildUrl('getLatestArtifact', taskId, name)
+            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact['name'])
             return url
         raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
 
@@ -270,15 +414,24 @@ class ArtifactCache(CacheManager):
             self.log(logging.INFO, 'artifact',
                 {'filename': value},
                 'Purged artifact {filename}')
-        except IOError:
+        except (OSError, IOError):
+            pass
+
+        try:
+            os.remove(value + PROCESSED_SUFFIX)
+            self.log(logging.INFO, 'artifact',
+                {'filename': value + PROCESSED_SUFFIX},
+                'Purged processed artifact {filename}')
+        except (OSError, IOError):
             pass
 
     @cachedmethod(operator.attrgetter('_cache'))
     def fetch(self, url, force=False):
         # We download to a temporary name like HASH[:16]-basename to
-        # differentiate among URLs with the same basenames.  We then extract the
-        # build ID from the downloaded artifact and use it to make a human
-        # readable unique name.
+        # differentiate among URLs with the same basenames.  We used to then
+        # extract the build ID from the downloaded artifact and use it to make a
+        # human readable unique name, but extracting build IDs is time consuming
+        # (especially on Mac OS X, where we must mount a large DMG file).
         hash = hashlib.sha256(url).hexdigest()[:16]
         fname = hash + '-' + os.path.basename(url)
         self.log(logging.INFO, 'artifact',
@@ -288,18 +441,10 @@ class ArtifactCache(CacheManager):
             dl = self._download_manager.download(url, fname)
             if dl:
                 dl.wait()
-            # Version information is extracted from {application,platform}.ini
-            # in the package itself.
-            info = mozversion.get_version(mozpath.join(self._cache_dir, fname))
-            buildid = info['platform_buildid'] or info['application_buildid']
-            if not buildid:
-                raise ValueError('Artifact for {url} existed, but no build ID could be extracted!'.format(url=url))
-            newname = buildid + '-' + os.path.basename(url)
-            os.rename(mozpath.join(self._cache_dir, fname), mozpath.join(self._cache_dir, newname))
             self.log(logging.INFO, 'artifact',
-                {'path': os.path.abspath(mozpath.join(self._cache_dir, newname))},
+                {'path': os.path.abspath(mozpath.join(self._cache_dir, fname))},
                 'Downloaded artifact to {path}')
-            return os.path.abspath(mozpath.join(self._cache_dir, newname))
+            return os.path.abspath(mozpath.join(self._cache_dir, fname))
         finally:
             # Cancel any background downloads in progress.
             self._download_manager.cancel()
@@ -312,6 +457,9 @@ class ArtifactCache(CacheManager):
         self.log(logging.INFO, 'artifact',
             {'filename': result},
             'Last installed binaries from local file {filename}')
+        self.log(logging.INFO, 'artifact',
+            {'filename': result + PROCESSED_SUFFIX},
+            'Last installed binaries from local processed file {filename}')
 
 
 class Artifacts(object):
@@ -324,6 +472,14 @@ class Artifacts(object):
         self._hg = hg
         self._cache_dir = cache_dir
 
+        try:
+            self._artifact_job = get_job_details(self._job, log=self._log)
+        except KeyError:
+            self.log(logging.INFO, 'artifact',
+                {'job': self._job},
+                'Unknown job {job}')
+            raise KeyError("Unknown job")
+
         self._pushhead_cache = PushHeadCache(self._hg, self._cache_dir, log=self._log)
         self._task_cache = TaskCache(self._cache_dir, log=self._log)
         self._artifact_cache = ArtifactCache(self._cache_dir, log=self._log)
@@ -332,36 +488,59 @@ class Artifacts(object):
         if self._log:
             self._log(*args, **kwargs)
 
-    def install_from_file(self, filename, distdir):
+    def install_from_file(self, filename, bindir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'filename': filename},
             'Installing from {filename}')
 
-        # Copy all .so files to dist/bin, avoiding modification where possible.
-        ensureParentDir(os.path.join(distdir, 'bin', '.dummy'))
+        # Do we need to post-process?
+        processed_filename = filename + PROCESSED_SUFFIX
+        if not os.path.exists(processed_filename):
+            self.log(logging.INFO, 'artifact',
+                {'filename': filename},
+                'Processing contents of {filename}')
+            self.log(logging.INFO, 'artifact',
+                {'processed_filename': processed_filename},
+                'Writing processed {processed_filename}')
+            self._artifact_job.process_artifact(filename, processed_filename)
 
-        with zipfile.ZipFile(filename) as zf:
+        self.log(logging.INFO, 'artifact',
+            {'processed_filename': processed_filename},
+            'Installing from processed {processed_filename}')
+
+        # Copy all .so files, avoiding modification where possible.
+        ensureParentDir(mozpath.join(bindir, '.dummy'))
+
+        with zipfile.ZipFile(processed_filename) as zf:
             for info in zf.infolist():
-                if not info.filename.endswith('.so'):
+                if info.filename.endswith('.ini'):
                     continue
-                n = os.path.join(distdir, 'bin', os.path.basename(info.filename))
+                n = mozpath.join(bindir, info.filename)
                 fh = FileAvoidWrite(n, mode='r')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
                     {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
                     '{updating} {filename}')
+                if not file_existed or file_updated:
+                    # Libraries and binaries may need to be marked executable,
+                    # depending on platform.
+                    perms = info.external_attr >> 16 # See http://stackoverflow.com/a/434689.
+                    perms |= stat.S_IWUSR | stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH # u+w, a+r.
+                    os.chmod(n, perms)
+                if install_callback:
+                    install_callback(info.filename, file_existed, file_updated)
         return 0
 
-    def install_from_url(self, url, distdir):
+    def install_from_url(self, url, bindir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
         with self._artifact_cache as artifact_cache:  # The with block handles persistence.
             filename = artifact_cache.fetch(url)
-        return self.install_from_file(filename, distdir)
+        return self.install_from_file(filename, bindir, install_callback=install_callback)
 
-    def install_from_hg(self, revset, distdir):
+    def install_from_hg(self, revset, bindir, install_callback=None):
         if not revset:
             revset = '.'
         if len(revset) != 40:
@@ -389,19 +568,27 @@ class Artifacts(object):
                 except ValueError:
                     pass
         if url:
-            return self.install_from_url(url, distdir)
+            return self.install_from_url(url, bindir, install_callback=install_callback)
         self.log(logging.ERROR, 'artifact',
                  {'revset': revset},
                  'No built artifacts for {revset} found.')
         return 1
 
-    def install_from(self, source, distdir):
+    def install_from(self, source, bindir, install_callback=None):
+        """Install artifacts from a ``source`` into the given ``bindir``.
+
+        If ``callback`` is given, it is called once with arguments ``(path,
+        existed, updated)``, where ``path`` is the file path written relative
+        to ``bindir``; ``existed`` is a boolean indicating whether the file
+        existed; and ``updated`` is a boolean indicating whether the file was
+        updated.
+        """
         if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir)
+            return self.install_from_file(source, bindir, install_callback=install_callback)
         elif source and urlparse.urlparse(source).scheme:
-            return self.install_from_url(source, distdir)
+            return self.install_from_url(source, bindir, install_callback=install_callback)
         else:
-            return self.install_from_hg(source, distdir)
+            return self.install_from_hg(source, bindir, install_callback=install_callback)
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',

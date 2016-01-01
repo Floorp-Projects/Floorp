@@ -25,7 +25,6 @@ libs::
 	  iconv -f UTF-8 -t UTF-16 > $(DIST)/bin/crashreporter.app/Contents/Resources/English.lproj/InfoPlist.strings
 	$(NSINSTALL) -D $(DIST)/bin/crashreporter.app/Contents/MacOS
 	$(NSINSTALL) $(DIST)/bin/crashreporter $(DIST)/bin/crashreporter.app/Contents/MacOS
-	rm -f $(DIST)/bin/crashreporter
 endif
 
 ifeq (,$(filter-out Linux SunOS,$(OS_ARCH)))

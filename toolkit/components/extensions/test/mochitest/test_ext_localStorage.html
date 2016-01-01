@@ -10,18 +10,18 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 function backgroundScript() {
-  var hasRun = localStorage.getItem("has-run");
-  var result;
+  let hasRun = localStorage.getItem("has-run");
+  let result;
   if (!hasRun) {
     localStorage.setItem("has-run", "yup");
     localStorage.setItem("test-item", "item1");
     result = "item1";
   } else {
-    var data = localStorage.getItem("test-item");
+    let data = localStorage.getItem("test-item");
     if (data == "item1") {
       localStorage.setItem("test-item", "item2");
       result = "item2";

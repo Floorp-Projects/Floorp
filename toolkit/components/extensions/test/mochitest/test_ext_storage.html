@@ -10,7 +10,8 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
+"use strict";
 
 function backgroundScript() {
   function set(items) {
@@ -52,7 +53,7 @@ function backgroundScript() {
     });
   }
 
-  var globalChanges = {};
+  let globalChanges = {};
 
   browser.storage.onChanged.addListener((changes, storage) => {
     browser.test.assertEq(storage, "local", "storage is local");
@@ -61,7 +62,7 @@ function backgroundScript() {
 
   function checkChanges(changes) {
     function checkSub(obj1, obj2) {
-      for (var prop in obj1) {
+      for (let prop in obj1) {
         browser.test.assertEq(obj1[prop].oldValue, obj2[prop].oldValue);
         browser.test.assertEq(obj1[prop].newValue, obj2[prop].newValue);
       }
@@ -71,6 +72,8 @@ function backgroundScript() {
     checkSub(globalChanges, changes);
     globalChanges = {};
   }
+
+  /* eslint-disable dot-notation */
 
   // Set some data and then test getters.
   set({"test-prop1": "value1", "test-prop2": "value2"}).then(() => {
@@ -149,7 +152,7 @@ function backgroundScript() {
     globalChanges = {};
     return get({"test-prop1": undefined});
   }).then(data => {
-    var obj = data["test-prop1"];
+    let obj = data["test-prop1"];
 
     browser.test.assertEq(obj.str, "hello", "string part correct");
     browser.test.assertEq(obj.bool, true, "bool part correct");
@@ -159,7 +162,6 @@ function backgroundScript() {
     browser.test.assertEq(obj.arr[0], 1, "arr[0] part correct");
     browser.test.assertEq(obj.arr[1], 2, "arr[1] part correct");
     browser.test.assertEq(obj.arr.length, 2, "arr.length part correct");
-
   }).then(() => {
     browser.test.notifyPass("storage");
   });
@@ -168,7 +170,7 @@ function backgroundScript() {
 let extensionData = {
   background: "(" + backgroundScript.toString() + ")()",
   manifest: {
-    permissions: ["storage"]
+    permissions: ["storage"],
   },
 };
 

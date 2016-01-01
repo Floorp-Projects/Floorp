@@ -10,7 +10,7 @@
 </head>
 <body>
 
-<script type="application/javascript;version=1.8">
+<script type="text/javascript">
 "use strict";
 
 const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
@@ -61,8 +61,7 @@ const expected_complete = [BASE + "/file_WebRequest_page1.html",
                            BASE + "/dummy_page.html",
                            BASE + "/xhr_resource"];
 
-function removeDupes(list)
-{
+function removeDupes(list) {
   let j = 0;
   for (let i = 1; i < list.length; i++) {
     if (list[i] != list[j]) {
@@ -75,8 +74,7 @@ function removeDupes(list)
   list.length = j + 1;
 }
 
-function compareLists(list1, list2, kind)
-{
+function compareLists(list1, list2, kind) {
   list1.sort();
   removeDupes(list1);
   list2.sort();
@@ -84,15 +82,13 @@ function compareLists(list1, list2, kind)
   is(String(list1), String(list2), `${kind} URLs correct`);
 }
 
-function backgroundScript()
-{
+function backgroundScript() {
   const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
 
-  var savedTabId = -1;
+  let savedTabId = -1;
 
-  function checkType(details)
-  {
-    var expected_type = "???";
+  function checkType(details) {
+    let expected_type = "???";
     if (details.url.indexOf("style") != -1) {
       expected_type = "stylesheet";
     } else if (details.url.indexOf("image") != -1) {
@@ -109,23 +105,21 @@ function backgroundScript()
     browser.test.assertEq(details.type, expected_type, "resource type is correct");
   }
 
-  var frameIDs = new Map();
+  let frameIDs = new Map();
 
-  var recorded = {requested: [],
+  let recorded = {requested: [],
                   beforeSendHeaders: [],
                   beforeRedirect: [],
                   sendHeaders: [],
                   responseStarted: [],
                   completed: []};
 
-  function checkResourceType(type)
-  {
-    var key = type.toUpperCase();
+  function checkResourceType(type) {
+    let key = type.toUpperCase();
     browser.test.assertTrue(key in browser.webRequest.ResourceType);
   }
 
-  function onBeforeRequest(details)
-  {
+  function onBeforeRequest(details) {
     browser.test.log(`onBeforeRequest ${details.url}`);
     checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
@@ -156,8 +150,7 @@ function backgroundScript()
     return {};
   }
 
-  function onBeforeSendHeaders(details)
-  {
+  function onBeforeSendHeaders(details) {
     browser.test.log(`onBeforeSendHeaders ${details.url}`);
     checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
@@ -166,7 +159,7 @@ function backgroundScript()
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
 
-      var id = frameIDs.get(details.url);
+      let id = frameIDs.get(details.url);
       browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeSendHeaders as onBeforeRequest");
     }
     if (details.url.indexOf("_redirect.") != -1) {
@@ -175,8 +168,7 @@ function backgroundScript()
     return {};
   }
 
-  function onBeforeRedirect(details)
-  {
+  function onBeforeRedirect(details) {
     browser.test.log(`onBeforeRedirect ${details.url} -> ${details.redirectUrl}`);
     checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
@@ -185,7 +177,7 @@ function backgroundScript()
       browser.test.assertEq(details.tabId, savedTabId, "correct tab ID");
       checkType(details);
 
-      var id = frameIDs.get(details.url);
+      let id = frameIDs.get(details.url);
       browser.test.assertEq(id, details.frameId, "frame ID same in onBeforeRedirect as onBeforeRequest");
       frameIDs.set(details.redirectUrl, details.frameId);
     }
@@ -196,8 +188,7 @@ function backgroundScript()
     return {};
   }
 
-  function onRecord(kind, details)
-  {
+  function onRecord(kind, details) {
     checkResourceType(details.type);
     if (details.url.startsWith(BASE)) {
       recorded[kind].push(details.url);
@@ -211,8 +202,7 @@ function backgroundScript()
   browser.webRequest.onResponseStarted.addListener(onRecord.bind(null, "responseStarted"), {urls: ["<all_urls>"]});
   browser.webRequest.onCompleted.addListener(onRecord.bind(null, "completed"), {urls: ["<all_urls>"]});
 
-  function onTestMessage()
-  {
+  function onTestMessage() {
     browser.test.sendMessage("results", recorded);
   }
 
@@ -221,13 +211,12 @@ function backgroundScript()
   browser.test.sendMessage("ready", browser.webRequest.ResourceType);
 }
 
-function* test_once()
-{
+function* test_once() {
   let extensionData = {
     manifest: {
       permissions: [
         "webRequest",
-        "webRequestBlocking"
+        "webRequestBlocking",
       ],
     },
     background: "(" + backgroundScript.toString() + ")()",
@@ -237,8 +226,8 @@ function* test_once()
   let [, resourceTypes] = yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
   info("webrequest extension loaded");
 
-  for (var key in resourceTypes) {
-    var value = resourceTypes[key];
+  for (let key in resourceTypes) {
+    let value = resourceTypes[key];
     is(key, value.toUpperCase());
   }
 
@@ -252,11 +241,11 @@ function* test_once()
   let win = window.open();
 
   // Clear the image cache, since it gets in the way otherwise.
-  var imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
-  var cache = imgTools.getImgCacheForDocument(win.document);
+  let imgTools = SpecialPowers.Cc["@mozilla.org/image/tools;1"].getService(SpecialPowers.Ci.imgITools);
+  let cache = imgTools.getImgCacheForDocument(win.document);
   cache.clearCache(false);
 
-  //yield waitForLoad(win);
+  // yield waitForLoad(win);
   info("about:blank loaded");
 
   win.location = "file_WebRequest_page1.html";

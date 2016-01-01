@@ -1,3 +1,5 @@
+@import url("chrome://pocket-shared/skin/pocket.css");
+
 #pocket-button[cui-areatype="toolbar"][open] {
   -moz-image-region: rect(36px, 774px, 54px, 756px);
 }

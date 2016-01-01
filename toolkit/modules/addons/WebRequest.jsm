@@ -151,6 +151,8 @@ StartStopListener.prototype = {
   },
 };
 
+var HttpObserverManager;
+
 var ChannelEventSink = {
   _classDescription: "WebRequest channel event sink",
   _classID: Components.ID("115062f8-92f1-11e5-8b7f-080027b0f7ec"),
@@ -190,12 +192,12 @@ var ChannelEventSink = {
       throw Cr.NS_ERROR_NO_AGGREGATION;
     }
     return this.QueryInterface(iid);
-  }
-}
+  },
+};
 
 ChannelEventSink.init();
 
-var HttpObserverManager = {
+HttpObserverManager = {
   modifyInitialized: false,
   examineInitialized: false,
   redirectInitialized: false,
