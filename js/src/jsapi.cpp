@@ -1395,6 +1395,14 @@ JS_SetGCCallback(JSRuntime* rt, JSGCCallback cb, void* data)
     rt->gc.setGCCallback(cb, data);
 }
 
+JS_PUBLIC_API(void)
+JS_SetObjectsTenuredCallback(JSRuntime* rt, JSObjectsTenuredCallback cb,
+                             void* data)
+{
+    AssertHeapIsIdle(rt);
+    rt->gc.setObjectsTenuredCallback(cb, data);
+}
+
 JS_PUBLIC_API(bool)
 JS_AddFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb, void* data)
 {

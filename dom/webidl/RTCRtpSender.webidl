@@ -4,13 +4,73 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  *
  * The origin of this IDL file is
- * http://lists.w3.org/Archives/Public/public-webrtc/2014May/0067.html
+ * http://w3c.github.io/webrtc-pc/#rtcrtpsender-interface
  */
+
+enum RTCPriorityType {
+  "very-low",
+  "low",
+  "medium",
+  "high"
+};
+
+enum RTCDegradationPreference {
+  "maintain-framerate",
+  "maintain-resolution",
+  "balanced"
+};
+
+dictionary RTCRtxParameters {
+  unsigned long ssrc;
+};
+
+dictionary RTCFecParameters {
+  unsigned long ssrc;
+};
+
+dictionary RTCRtpEncodingParameters {
+  unsigned long            ssrc;
+  RTCRtxParameters         rtx;
+  RTCFecParameters         fec;
+  boolean                  active;
+  RTCPriorityType          priority;
+  unsigned long            maxBitrate;
+  RTCDegradationPreference degradationPreference = "balanced";
+  DOMString                rid;
+  float                    scaleResolutionDownBy = 1.0;
+};
+
+dictionary RTCRtpHeaderExtensionParameters {
+  DOMString      uri;
+  unsigned short id;
+  boolean        encrypted;
+};
+
+dictionary RTCRtcpParameters {
+  DOMString cname;
+  boolean   reducedSize;
+};
+
+dictionary RTCRtpCodecParameters {
+  unsigned short payloadType;
+  DOMString      mimeType;
+  unsigned long  clockRate;
+  unsigned short channels = 1;
+  DOMString      sdpFmtpLine;
+};
+
+dictionary RTCRtpParameters {
+  sequence<RTCRtpEncodingParameters>        encodings;
+  sequence<RTCRtpHeaderExtensionParameters> headerExtensions;
+  RTCRtcpParameters                         rtcp;
+  sequence<RTCRtpCodecParameters>           codecs;
+};
 
 [Pref="media.peerconnection.enabled",
  JSImplementation="@mozilla.org/dom/rtpsender;1"]
 interface RTCRtpSender {
   readonly attribute MediaStreamTrack track;
-
+  void setParameters (optional RTCRtpParameters parameters);
+  RTCRtpParameters getParameters();
   Promise<void> replaceTrack(MediaStreamTrack track);
 };

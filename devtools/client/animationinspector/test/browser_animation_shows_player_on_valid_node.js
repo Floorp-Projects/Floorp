@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the panel shows an animation player when an animated node is
 // selected.
 

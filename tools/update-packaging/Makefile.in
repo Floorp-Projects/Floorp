@@ -11,7 +11,7 @@ STANDALONE_MAKEFILE := 1
 PACKAGE_BASE_DIR	= $(DIST)
 
 # Default output location for update archive
-STAGE_DIR      = $(abspath $(DIST)/$(PKG_UPDATE_PATH))
+STAGE_DIR      = $(ABS_DIST)/$(PKG_UPDATE_PATH)
 
 ifeq (cocoa,$(MOZ_WIDGET_TOOLKIT))
 ifdef UNIVERSAL_BINARY
@@ -35,7 +35,7 @@ full-update:: complete-patch
 
 ifeq ($(OS_TARGET), WINNT)
 MOZ_PKG_FORMAT	:= SFX7Z
-UNPACKAGE	= '$(subst $(DIST),$(_ABS_DIST),$(INSTALLER_PACKAGE))'
+UNPACKAGE	= '$(subst $(DIST),$(ABS_DIST),$(INSTALLER_PACKAGE))'
 ifdef AB_CD
 UNPACKAGE	= '$(PACKAGE_BASE_DIR)/$(PACKAGE)'
 endif

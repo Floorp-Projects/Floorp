@@ -57,9 +57,10 @@
         if (document.mozFullScreenElement === parentDiv) {
           if (parentDivFullScreen === true) {
             document.mozCancelFullScreen();
+          } else {
+            parentDivFullScreen = true;
+            parentDiv.mozRequestPointerLock();
           }
-          parentDivFullScreen = true;
-          parentDiv.mozRequestPointerLock();
         }
         else if (document.mozFullScreenElement === childDiv) {
           pointerLocked = !!document.mozPointerLockElement;

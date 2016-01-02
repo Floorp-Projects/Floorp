@@ -28,6 +28,9 @@
 #if CONFIG_ERROR_CONCEALMENT
 #include "error_concealment.h"
 #endif
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 #define CALLOC_ARRAY(p, n) CHECK_MEM_ERROR((p), vpx_calloc(sizeof(*(p)), (n)))
 #define CALLOC_ARRAY_ALIGNED(p, n, algn) do {                      \

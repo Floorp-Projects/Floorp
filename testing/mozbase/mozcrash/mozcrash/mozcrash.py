@@ -445,3 +445,18 @@ def kill_and_get_minidump(pid, dump_directory=None):
         needs_killing = False
     if needs_killing:
         kill_pid(pid)
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--stackwalk-binary', '-b')
+    parser.add_argument('--dump-save-path', '-o')
+    parser.add_argument('--test-name', '-n')
+    parser.add_argument('dump_directory')
+    parser.add_argument('symbols_path')
+    args = parser.parse_args()
+
+    check_for_crashes(args.dump_directory, args.symbols_path,
+                      stackwalk_binary=args.stackwalk_binary,
+                      dump_save_path=args.dump_save_path,
+                      test_name=args.test_name)

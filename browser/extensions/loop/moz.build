@@ -4,13 +4,11 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-FINAL_TARGET = 'dist/bin/browser/features/loop@mozilla.org'
-
-FINAL_TARGET_FILES += [
+FINAL_TARGET_FILES.features['loop@mozilla.org'] += [
  'bootstrap.js'
 ]
 
-FINAL_TARGET_PP_FILES += [
+FINAL_TARGET_PP_FILES.features['loop@mozilla.org'] += [
   'install.rdf.in'
 ]
 

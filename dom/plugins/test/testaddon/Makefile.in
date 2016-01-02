@@ -13,7 +13,7 @@ addon_file_name = testaddon.xpi
 endif
 
 # This is so hacky. Waiting on bug 988938.
-testdir = $(abspath $(DEPTH)/_tests/xpcshell/dom/plugins/test/unit/)
+testdir = $(topobjdir)/_tests/xpcshell/dom/plugins/test/unit/
 addonpath = $(testdir)/$(addon_file_name)
 
 ifdef COMPILE_ENVIRONMENT

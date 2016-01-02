@@ -29,7 +29,7 @@ AutoMemMap::~AutoMemMap()
 }
 
 nsresult
-AutoMemMap::init(const char* filePath, PRIntn flags, PRIntn mode, PRFileMapProtect prot)
+AutoMemMap::init(const char* filePath, int flags, int mode, PRFileMapProtect prot)
 {
   MOZ_ASSERT(!fd);
   MOZ_ASSERT(!fileMap);

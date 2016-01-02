@@ -352,6 +352,16 @@ public:
     static PluginInstanceParent* Cast(NPP instance,
                                       PluginAsyncSurrogate** aSurrogate = nullptr);
 
+    // for IME hook
+    virtual bool
+    RecvGetCompositionString(const uint32_t& aIndex,
+                             nsTArray<uint8_t>* aBuffer,
+                             int32_t* aLength) override;
+    virtual bool
+    RecvSetCandidateWindow(const int32_t& aX, const int32_t& aY) override;
+    virtual bool
+    RecvRequestCommitOrCancel(const bool& aCommitted) override;
+
 private:
     // Create an appropriate platform surface for a background of size
     // |aSize|.  Return true if successful.

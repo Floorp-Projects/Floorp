@@ -3,7 +3,7 @@
 const URL = "http://mochi.test:8888/browser/browser/components/" +
             "sessionstore/test/browser_formdata_sample.html";
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 /**
  * This test ensures that credit card numbers in form data will not be

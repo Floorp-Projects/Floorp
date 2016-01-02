@@ -408,7 +408,7 @@ static nsresult GetDownloadDirectory(nsIFile **_directory,
   // creating. Note that Creating directories with specified permission only
   // supported on Unix platform right now. That's why above if exists.
 
-  PRUint32 permissions;
+  uint32_t permissions;
   rv = dir->GetPermissions(&permissions);
   NS_ENSURE_SUCCESS(rv, rv);
 

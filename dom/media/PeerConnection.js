@@ -1038,6 +1038,34 @@ RTCPeerConnection.prototype = {
     });
   },
 
+  _setParameters: function(sender, parameters) {
+    if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
+      return;
+    }
+    // validate parameters input
+    var encodings = parameters.encodings || [];
+
+    encodings.reduce((uniqueRids, encoding) => {
+      if (!encoding.rid && encodings.length > 1) {
+        throw new this._win.DOMException("Missing rid", "TypeError");
+      }
+      if (uniqueRids[encoding.rid]) {
+        throw new this._win.DOMException("Duplicate rid", "TypeError");
+      }
+      uniqueRids[encoding.rid] = true;
+      return uniqueRids;
+    }, {});
+
+    this._impl.setParameters(sender.track, parameters);
+  },
+
+  _getParameters: function(sender) {
+    if (!Services.prefs.getBoolPref("media.peerconnection.simulcast")) {
+      return;
+    }
+    return this._impl.getParameters(sender.track);
+  },
+
   close: function() {
     if (this._closed) {
       return;
@@ -1494,6 +1522,14 @@ RTCRtpSender.prototype = {
 
   replaceTrack: function(withTrack) {
     return this._pc._chain(() => this._pc._replaceTrack(this, withTrack));
+  },
+
+  setParameters: function(parameters) {
+    return this._pc._setParameters(this, parameters);
+  },
+
+  getParameters: function() {
+    return this._pc._getParameters(this);
   }
 };
 

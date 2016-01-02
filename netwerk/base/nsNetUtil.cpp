@@ -1220,13 +1220,12 @@ bool
 NS_UsePrivateBrowsing(nsIChannel *channel)
 {
     bool isPrivate = false;
-    bool isOverriden = false;
     nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
-    if (pbChannel &&
-        NS_SUCCEEDED(pbChannel->IsPrivateModeOverriden(&isPrivate, &isOverriden)) &&
-        isOverriden) {
+    if (pbChannel && NS_SUCCEEDED(pbChannel->GetIsChannelPrivate(&isPrivate))) {
         return isPrivate;
     }
+
+    // Some channels may not implement nsIPrivateBrowsingChannel
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(channel, loadContext);
     return loadContext && loadContext->UsePrivateBrowsing();

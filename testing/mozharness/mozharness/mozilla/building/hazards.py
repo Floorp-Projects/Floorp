@@ -36,7 +36,12 @@ class HazardAnalysis(object):
                               env=builder.env,
                               error_list=MakefileErrorList)
         if rc != 0:
-            raise HazardError("autoconf failed, can't continue.")
+            rc = builder.run_command(['autoconf2.13'],
+                                     cwd=js_src_dir,
+                                     env=builder.env,
+                                     error_list=MakefileErrorList)
+            if rc != 0:
+                raise HazardError("autoconf failed, can't continue.")
 
         rc = builder.run_command([os.path.join(js_src_dir, 'configure'),
                                '--enable-optimize',

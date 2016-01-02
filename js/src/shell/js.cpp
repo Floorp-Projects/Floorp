@@ -3977,6 +3977,11 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
         if (v.isBoolean())
             creationOptions.setCloneSingletons(v.toBoolean());
 
+        if (!JS_GetProperty(cx, opts, "experimentalDateTimeFormatFormatToPartsEnabled", &v))
+            return true;
+        if (v.isBoolean())
+            creationOptions.setExperimentalDateTimeFormatFormatToPartsEnabled(v.toBoolean());
+
         if (!JS_GetProperty(cx, opts, "sameZoneAs", &v))
             return false;
         if (v.isObject())

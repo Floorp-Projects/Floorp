@@ -53,10 +53,4 @@ nsWrapperCache::IsBlackAndDoesNotNeedTracing(nsISupports* aThis)
   return IsBlack() && HasNothingToTrace(aThis);
 }
 
-inline void
-nsWrapperCache::TraceWrapperJSObject(JSTracer* aTrc, const char* aName)
-{
-  JS_CallObjectTracer(aTrc, &mWrapper, aName);
-}
-
 #endif /* nsWrapperCache_h___ */
