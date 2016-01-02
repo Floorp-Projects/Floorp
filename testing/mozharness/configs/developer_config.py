@@ -25,6 +25,7 @@ config = {
     "exes": {
         "hgtool.py": os.path.join(LOCAL_WORKDIR, "hgtool.py"),
         "gittool.py": os.path.join(LOCAL_WORKDIR, "gittool.py"),
+        "virtualenv": ["python", "-m", "virtualenv"],
     },
     "env": {
         "PIP_TRUSTED_HOST": "pypi.pub.build.mozilla.org",

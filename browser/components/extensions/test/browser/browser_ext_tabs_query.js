@@ -2,6 +2,8 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+requestLongerTimeout(2);
+
 add_task(function* () {
   let tab1 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
   let tab2 = yield BrowserTestUtils.openNewForegroundTab(gBrowser, "about:config");

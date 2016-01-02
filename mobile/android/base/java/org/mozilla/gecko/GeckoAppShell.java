@@ -396,8 +396,20 @@ public class GeckoAppShell
      */
 
     @WrapForJNI(allowMultithread = true, noThrow = true)
-    public static void handleUncaughtException(Thread thread, Throwable e) {
-        CRASH_HANDLER.uncaughtException(thread, e);
+    public static String handleUncaughtException(Throwable e) {
+        if (AppConstants.MOZ_CRASHREPORTER) {
+            final Throwable exc = CrashHandler.getRootException(e);
+            final StackTraceElement[] stack = exc.getStackTrace();
+            if (stack.length >= 1 && stack[0].isNativeMethod()) {
+                // The exception occurred when running native code. Return an exception
+                // string and trigger the crash reporter inside the caller so that we get
+                // a better native stack in Socorro.
+                CrashHandler.logException(Thread.currentThread(), exc);
+                return CrashHandler.getExceptionStackTrace(exc);
+            }
+        }
+        CRASH_HANDLER.uncaughtException(null, e);
+        return null;
     }
 
     private static final Object sEventAckLock = new Object();

@@ -128,13 +128,13 @@ fi
 
 AC_SUBST(MOZ_NO_DEBUG_RTL)
 
-MOZ_DEBUG_ENABLE_DEFS="-DDEBUG -DTRACING"
+MOZ_DEBUG_ENABLE_DEFS="DEBUG TRACING"
 MOZ_ARG_WITH_STRING(debug-label,
 [  --with-debug-label=LABELS
                           Define DEBUG_<value> for each comma-separated
                           value given.],
 [ for option in `echo $withval | sed 's/,/ /g'`; do
-    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS -DDEBUG_${option}"
+    MOZ_DEBUG_ENABLE_DEFS="$MOZ_DEBUG_ENABLE_DEFS DEBUG_${option}"
 done])
 
 if test -n "$MOZ_DEBUG"; then
@@ -153,10 +153,10 @@ if test -n "$MOZ_DEBUG"; then
 
     MOZ_DEBUG_DEFINES="$MOZ_DEBUG_ENABLE_DEFS"
 else
-    MOZ_DEBUG_DEFINES="-DNDEBUG -DTRIMMED"
+    MOZ_DEBUG_DEFINES="NDEBUG TRIMMED"
 fi
 
-AC_SUBST(MOZ_DEBUG_DEFINES)
+AC_SUBST_LIST(MOZ_DEBUG_DEFINES)
 
 dnl ========================================================
 dnl = Enable generation of debug symbols

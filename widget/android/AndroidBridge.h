@@ -561,7 +561,7 @@ public:
 
     bool CheckForException() {
         if (mJNIEnv->ExceptionCheck()) {
-            jni::HandleUncaughtException(mJNIEnv);
+            MOZ_CATCH_JNI_EXCEPTION(mJNIEnv);
             return true;
         }
         return false;

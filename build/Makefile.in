@@ -33,7 +33,7 @@ endif
 # NOTE: Keep .gdbinit in the topsrcdir for people who run gdb from the topsrcdir.
 # needs to be absolute to be distinct from $(topsrcdir)/.gdbinit
 GDBINIT_OBJDIR_FILES = $(topsrcdir)/.gdbinit
-GDBINIT_OBJDIR_DEST = $(abspath $(DEPTH))
+GDBINIT_OBJDIR_DEST = $(topobjdir)
 INSTALL_TARGETS += GDBINIT_OBJDIR
 
 # Put a .lldbinit in the bin directory and the objdir, to be picked up
@@ -52,7 +52,7 @@ INSTALL_TARGETS += LLDBINIT_FINAL_TARGET
 # Put the .ycm_extra_conf.py file at the root of the objdir. It is used by
 # the vim plugin YouCompleteMe.
 YCM_FILES := $(topsrcdir)/.ycm_extra_conf.py
-YCM_DEST := $(abspath $(DEPTH))
+YCM_DEST := $(topobjdir)
 YCM_TARGET := export
 INSTALL_TARGETS += YCM
 

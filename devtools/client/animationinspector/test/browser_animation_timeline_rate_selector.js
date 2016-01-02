@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline toolbar contains a playback rate selector UI and that
 // it can be used to change the playback rate of animations in the timeline.
 // Also check that it displays the rate of the current animations in case they

@@ -54,7 +54,7 @@ public:
   ~AutoMemMap();
 
   // Initialize this AutoMemMap.
-  nsresult init(const char* filePath, PRIntn flags = PR_RDONLY, PRIntn mode = 0,
+  nsresult init(const char* filePath, int flags = PR_RDONLY, int mode = 0,
                 PRFileMapProtect prot = PR_PROT_READONLY);
 
   // Get the size of the memory mapped file.

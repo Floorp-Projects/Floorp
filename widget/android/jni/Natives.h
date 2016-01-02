@@ -107,7 +107,7 @@ struct NativePtr
         Clear(instance);
         SetNativeHandle(instance.Env(), instance.Get(),
                           reinterpret_cast<uintptr_t>(ptr.release()));
-        HandleUncaughtException(instance.Env());
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
     }
 
     template<class LocalRef>
@@ -115,11 +115,11 @@ struct NativePtr
     {
         UniquePtr<Impl> ptr(reinterpret_cast<Impl*>(
                 GetNativeHandle(instance.Env(), instance.Get())));
-        HandleUncaughtException(instance.Env());
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
 
         if (ptr) {
             SetNativeHandle(instance.Env(), instance.Get(), 0);
-            HandleUncaughtException(instance.Env());
+            MOZ_CATCH_JNI_EXCEPTION(instance.Env());
         }
     }
 };
@@ -155,7 +155,7 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
         Clear(instance);
         SetNativeHandle(instance.Env(), instance.Get(),
                           reinterpret_cast<uintptr_t>(new WeakPtr<Impl>(ptr)));
-        HandleUncaughtException(instance.Env());
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
     }
 
     template<class LocalRef>
@@ -163,11 +163,11 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
     {
         const auto ptr = reinterpret_cast<WeakPtr<Impl>*>(
                 GetNativeHandle(instance.Env(), instance.Get()));
-        HandleUncaughtException(instance.Env());
+        MOZ_CATCH_JNI_EXCEPTION(instance.Env());
 
         if (ptr) {
             SetNativeHandle(instance.Env(), instance.Get(), 0);
-            HandleUncaughtException(instance.Env());
+            MOZ_CATCH_JNI_EXCEPTION(instance.Env());
             delete ptr;
         }
     }
@@ -328,7 +328,7 @@ class ProxyNativeCall
          mozilla::IndexSequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
-        HandleUncaughtException(inst.Env());
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
         (impl->*mNativeCall)(inst, mozilla::Get<Indices>(mArgs)...);
     }
 
@@ -338,7 +338,7 @@ class ProxyNativeCall
          mozilla::IndexSequence<Indices...>) const
     {
         Impl* const impl = NativePtr<Impl>::Get(inst);
-        HandleUncaughtException(inst.Env());
+        MOZ_CATCH_JNI_EXCEPTION(inst.Env());
         (impl->*mNativeCall)(mozilla::Get<Indices>(mArgs)...);
     }
 

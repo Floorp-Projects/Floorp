@@ -11,6 +11,9 @@
 #define RTCD_C
 #include "./vp8_rtcd.h"
 #include "vpx_ports/vpx_once.h"
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 
 void vp8_rtcd()
