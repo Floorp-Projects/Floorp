@@ -38,6 +38,7 @@ elif toolkit == 'windows':
     ]
     OS_LIBS += [
         'msimg32',
+        'imm32'
     ]
 
 # must link statically with the CRT; nptest isn't Gecko code

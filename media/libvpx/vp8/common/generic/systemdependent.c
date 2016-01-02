@@ -24,6 +24,7 @@
 #include <unistd.h>
 #elif defined(_WIN32)
 #include <windows.h>
+#include <intrin.h>
 typedef void (WINAPI *PGNSI)(LPSYSTEM_INFO);
 #elif defined(__OS2__)
 #define INCL_DOS

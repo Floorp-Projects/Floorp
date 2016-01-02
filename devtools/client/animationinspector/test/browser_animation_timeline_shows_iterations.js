@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline is displays as many iteration elements as there are
 // iterations in an animation.
 

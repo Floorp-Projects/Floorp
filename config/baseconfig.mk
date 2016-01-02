@@ -11,6 +11,7 @@ DIST = dist
 else
 DIST = $(DEPTH)/dist
 endif
+ABS_DIST = $(topobjdir)/dist
 
 # We do magic with OBJ_SUFFIX in config.mk, the following ensures we don't
 # manually use it before config.mk inclusion

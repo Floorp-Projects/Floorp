@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the panel shows no animation data for invalid or not animated nodes
 
 add_task(function*() {

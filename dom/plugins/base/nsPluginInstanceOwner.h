@@ -29,6 +29,7 @@ class nsPluginFrame;
 class nsDisplayListBuilder;
 
 namespace mozilla {
+class TextComposition;
 namespace dom {
 struct MozPluginParameter;
 } // namespace dom
@@ -117,6 +118,10 @@ public:
   void ReleasePluginPort(void* pluginPort);
 
   nsEventStatus ProcessEvent(const mozilla::WidgetGUIEvent& anEvent);
+
+  static void GeneratePluginEvent(
+                const mozilla::WidgetCompositionEvent* aSrcCompositionEvent,
+                mozilla::WidgetCompositionEvent* aDistCompositionEvent);
 
 #if defined(XP_WIN)
   void SetWidgetWindowAsParent(HWND aWindowToAdopt);
@@ -256,6 +261,11 @@ public:
   void NotifyHostCreateWidget();
   void NotifyDestroyPending();
 
+  bool GetCompositionString(uint32_t aIndex, nsTArray<uint8_t>* aString,
+                            int32_t* aLength);
+  bool SetCandidateWindow(int32_t aX, int32_t aY);
+  bool RequestCommitOrCancel(bool aCommitted);
+
 private:
   virtual ~nsPluginInstanceOwner();
 
@@ -278,6 +288,10 @@ private:
 
 #if defined(XP_WIN)
   nsIWidget* GetContainingWidgetIfOffset();
+  already_AddRefed<mozilla::TextComposition> GetTextComposition();
+
+  bool mGotCompositionData;
+  bool mSentStartComposition;
 #endif
  
   nsPluginNativeWindow       *mPluginWindow;
@@ -329,6 +343,11 @@ private:
   nsresult DispatchMouseToPlugin(nsIDOMEvent* aMouseEvent,
                                  bool aAllowPropagate = false);
   nsresult DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent);
+  nsresult DispatchCompositionToPlugin(nsIDOMEvent* aEvent);
+
+#ifdef XP_WIN
+  void CallDefaultProc(const mozilla::WidgetGUIEvent* aEvent);
+#endif
 
 #ifdef XP_MACOSX
   static NPBool ConvertPointPuppet(PuppetWidget *widget, nsPluginFrame* pluginFrame,

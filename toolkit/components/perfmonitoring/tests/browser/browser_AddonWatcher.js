@@ -5,6 +5,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 Cu.import("resource://gre/modules/Promise.jsm", this);
 Cu.import("resource://gre/modules/AddonManager.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);

@@ -58,6 +58,8 @@ enum PluginQuirks {
   QUIRK_FLASH_RETURN_EMPTY_DOCUMENT_ORIGIN        = 1 << 11,
   // Win: Addresses a Unity bug with mouse capture.
   QUIRK_UNITY_FIXUP_MOUSE_CAPTURE                 = 1 << 12,
+  // Win: Hook IMM32 API to handle IME event on windowless plugin
+  QUIRK_WINLESS_HOOK_IME                          = 1 << 13,
 };
 
 int GetQuirksFromMimeTypeAndFilename(const nsCString& aMimeType,

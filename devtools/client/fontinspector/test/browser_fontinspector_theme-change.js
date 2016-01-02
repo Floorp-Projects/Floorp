@@ -3,6 +3,8 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the preview images are updated when the theme changes.
 
 const { getTheme, setTheme } = require("devtools/client/shared/theme");

@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+requestLongerTimeout(2);
+
 /**
  * Tests that when setting recording features in the UI (like enabling framerate or memory),
  * if the target does not support these features, then the target's support overrides

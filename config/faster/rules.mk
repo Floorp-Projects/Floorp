@@ -107,7 +107,6 @@ $(addprefix install-,$(INSTALL_MANIFESTS)): install-%: $(TOPOBJDIR)/config/build
 		-DAB_CD=en-US \
 		-DMOZ_APP_BUILDID=$(shell cat $(TOPOBJDIR)/config/buildid) \
 		$(ACDEFINES) \
-		$(MOZ_DEBUG_DEFINES) \
 		install_$(subst /,_,$*)
 
 # ============================================================================

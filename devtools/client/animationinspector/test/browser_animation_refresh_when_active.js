@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the panel only refreshes when it is visible in the sidebar.
 
 add_task(function*() {

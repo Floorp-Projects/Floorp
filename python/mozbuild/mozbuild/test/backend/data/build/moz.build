@@ -32,6 +32,7 @@ FINAL_TARGET_PP_FILES += [
 ]
 
 FINAL_TARGET_PP_FILES.child2 += [
+    'foo.css',
     'qux.ini',
 ]
 

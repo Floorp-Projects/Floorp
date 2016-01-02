@@ -475,7 +475,7 @@ update-generated-wrappers:
 # does most of the packaging step, and then updates omni.ja in
 # place. If you're not using an IDE, you should be using |mach build
 # mobile/android && mach package|.
-$(abspath $(DIST)/fennec/$(OMNIJAR_NAME)): FORCE
+$(ABS_DIST)/fennec/$(OMNIJAR_NAME): FORCE
 	$(REPORT_BUILD)
 	$(MAKE) -C ../../../faster
 	$(MAKE) -C ../installer stage-package
@@ -488,7 +488,7 @@ gradle-targets: $(foreach f,$(constants_PP_JAVAFILES),$(f))
 gradle-targets: $(abspath AndroidManifest.xml)
 gradle-targets: $(ANDROID_GENERATED_RESFILES)
 
-gradle-omnijar: $(abspath $(DIST)/fennec/$(OMNIJAR_NAME))
+gradle-omnijar: $(ABS_DIST)/fennec/$(OMNIJAR_NAME)
 
 .PHONY: gradle-targets gradle-omnijar
 

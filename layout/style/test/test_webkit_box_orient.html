@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<title>
+  Test the writing-mode-dependent mapping of '-webkit-box-orient' values to
+  'flex-direction' values, when emulating -webkit-box styles with modern flexbox
+</title>
+<link rel="author" title="Daniel Holbert" href="mailto:dholbert@mozilla.com">
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<div id="testDiv" style="display: none"></div>
+<script>
+// Mappings from "-webkit-box-orient" values to "flex-direction" values,
+// when writing-mode is horizontal:
+const horizMapping =
+  { "horizontal" : "row",
+    "vertical"   : "column" };
+
+// Same as above, but now when writing-mode is vertical:
+const vertMapping =
+  { "horizontal" : "column",
+    "vertical"   : "row" };
+
+const div = document.getElementById("testDiv");
+
+// Test the various writing-mode values:
+testWM("unset", horizMapping);
+testWM("horizontal-tb", horizMapping);
+testWM("vertical-lr", vertMapping);
+testWM("vertical-rl", vertMapping);
+testWM("sideways-lr", vertMapping);
+testWM("sideways-rl", vertMapping);
+
+/**
+ * Main test function:
+ * @param aWritingMode The writing-mode value to test.
+ * @param aMapping Mapping from -webkit-box-orient values to equivalent
+ *        flex-direction values, for this writing-mode.
+ */
+function testWM(aWritingMode, aMapping) {
+  div.style.writingMode = aWritingMode;
+  for (var webkitBoxOrientVal in aMapping) {
+    div.style.webkitBoxOrient = webkitBoxOrientVal;
+    test(function() {
+      var expectedFlexDir = aMapping[webkitBoxOrientVal];
+      var actualFlexDir = window.getComputedStyle(div, "").flexDirection;
+      assert_equals(actualFlexDir, expectedFlexDir,
+                    "Testing the 'flex-direction' value produced by " +
+                    "'-webkit-box-orient:" + webkitBoxOrientVal + "'");
+    }, "Testing how '-webkit-box-orient' values influence 'flex-direction' " +
+       "in presence of 'writing-mode:" + aWritingMode + "'");
+  }
+}
+
+</script>

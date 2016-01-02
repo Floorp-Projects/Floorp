@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-[.] chrome.jar:
+[features/loop@mozilla.org] chrome.jar:
 % content loop %content/ contentaccessible=yes
 % skin loop classic/1.0 %skin/linux/ os=Linux
 % skin loop classic/1.0 %skin/osx/ os=Darwin

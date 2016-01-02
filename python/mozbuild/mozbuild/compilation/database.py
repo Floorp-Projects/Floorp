@@ -15,7 +15,10 @@ from mozbuild.frontend.data import (
     UnifiedSources,
     GeneratedSources,
 )
-from mozbuild.shellutil import quote as shell_quote
+from mozbuild.shellutil import (
+    split as shell_split,
+    quote as shell_quote,
+)
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
 
@@ -107,8 +110,7 @@ class CompileDBBackend(CommonBackend):
             if name not in build_vars:
                 continue
 
-            build_vars[name] = util.get_flags(self.environment.topobjdir, directory,
-                                              build_vars, name)
+            build_vars[name] = shell_split(build_vars[name])
 
         self._flags[directory] = build_vars
         return self._flags[directory]
