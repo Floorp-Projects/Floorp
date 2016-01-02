@@ -598,6 +598,8 @@ def apply_patches():
     os.system("patch -p3 < clamp_abs_lvl_seg.patch")
     # Bug 1224361 - Clamp QIndex also in abs-value mode.
     os.system("patch -p3 < clamp-abs-QIndex.patch")
+    # Bug 1233983 - Make libvpx build with clang-cl
+    os.system("patch -p3 < clang-cl.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test XBL anonymous content in the markupview
 const TEST_URL = "chrome://devtools/content/scratchpad/scratchpad.xul";
 

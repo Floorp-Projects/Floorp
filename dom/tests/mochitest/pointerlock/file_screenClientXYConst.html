@@ -24,6 +24,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
        */
 
       SimpleTest.waitForExplicitFinish();
+      SimpleTest.requestFlakyTimeout("We may need to wait for window's moving");
 
       var div
         , divRect

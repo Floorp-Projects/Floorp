@@ -26,6 +26,7 @@ FINAL_TARGET_FILES.child += [
 
 FINAL_TARGET_PP_FILES += [
     '../baz.ini',
+    '../foo.css',
 ]
 
 FINAL_TARGET_PP_FILES.child2 += [
@@ -43,6 +44,10 @@ EXTRA_PP_COMPONENTS += [
 
 JS_PREFERENCE_FILES += [
     '../prefs.js',
+]
+
+JAR_MANIFESTS += [
+    '../jar.mn',
 ]
 
 DEFINES['FOO'] = 'bar'

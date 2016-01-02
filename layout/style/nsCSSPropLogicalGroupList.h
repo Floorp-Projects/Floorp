@@ -44,6 +44,17 @@
 //     defined in nCSSProps.cpp named g<name_>LogicalGroupTable
 //     containing the two physical properties in vertical/horizontal
 //     order, followed by an nsCSSProperty_UNKNOWN entry.
+//
+//   CSS_PROP_LOGICAL_GROUP_SINGLE(name_)
+//     Defines a logical property group in which the logical property always
+//     maps to the same physical property. For such properties, the
+//     "logicalness" is in the value-mapping, not in the property-mapping.  For
+//     example, the logical property "-webkit-box-orient" is always mapped to
+//     "flex-direction", but its values ("horizontal", "vertical") map to
+//     different flex-direction values ("row", "column") depending on the
+//     writing-mode.  A table must be defined in nsCSSProps.cpp named
+//     g<name_>LogicalGroupTable containing the one physical property,
+//     followed by an nsCSSProperty_UNKNOWN entry.
 
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderColor)
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(BorderStyle)
@@ -54,3 +65,4 @@ CSS_PROP_LOGICAL_GROUP_BOX(Offset)
 CSS_PROP_LOGICAL_GROUP_SHORTHAND(Padding)
 CSS_PROP_LOGICAL_GROUP_AXIS(MinSize)
 CSS_PROP_LOGICAL_GROUP_AXIS(Size)
+CSS_PROP_LOGICAL_GROUP_SINGLE(WebkitBoxOrient)

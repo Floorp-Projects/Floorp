@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline toolbar contains a rewind button and that it can be
 // clicked. Check that when it is, the current animations displayed in the
 // timeline get their playstates changed to paused, and their currentTimes

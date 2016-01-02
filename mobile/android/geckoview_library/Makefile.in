@@ -29,16 +29,14 @@ GARBAGE_DIRS = \
 
 include $(topsrcdir)/config/rules.mk
 
-abs_dist = $(abspath $(DIST))
-
-dist_files = $(addprefix $(abs_dist)/bin/, libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(MOZ_CHILD_PROCESS_NAME_PIE))
+dist_files = $(addprefix $(ABS_DIST)/bin/, libmozglue.so $(MOZ_CHILD_PROCESS_NAME) $(MOZ_CHILD_PROCESS_NAME_PIE))
 
 package: local.properties project.properties AndroidManifest.xml FORCE
 	# Make directory for the zips
-	$(MKDIR) -p $(abs_dist)/geckoview_library
+	$(MKDIR) -p $(ABS_DIST)/geckoview_library
 
 	# Zip the assets into $(DIST)/geckoview_library/geckoview_assets.zip
-	$(call py_action,zip,-C $(abs_dist)/$(MOZ_APP_NAME) $(abs_dist)/geckoview_library/geckoview_assets.zip assets)
+	$(call py_action,zip,-C $(ABS_DIST)/$(MOZ_APP_NAME) $(ABS_DIST)/geckoview_library/geckoview_assets.zip assets)
 
 	# Make empty directories to fit an Android project structure
 	$(MKDIR) -p bin gen libs/$(ANDROID_CPU_ARCH) src
@@ -55,8 +53,8 @@ package: local.properties project.properties AndroidManifest.xml FORCE
 	$(RM) -rf res
 	$(MKDIR) -p res
 	cd res && \
-	$(UNZIP) -q -u -o $(abs_dist)/bin/geckoview_resources.zip
+	$(UNZIP) -q -u -o $(ABS_DIST)/bin/geckoview_resources.zip
 
 	# Zip the directory
 	cd $(DEPTH)/mobile/android && \
-	$(ZIP) -q -r $(abs_dist)/geckoview_library/geckoview_library.zip geckoview_library -x geckoview_library/backend.mk geckoview_library/Makefile
+	$(ZIP) -q -r $(ABS_DIST)/geckoview_library/geckoview_library.zip geckoview_library -x geckoview_library/backend.mk geckoview_library/Makefile

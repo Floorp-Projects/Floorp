@@ -47,6 +47,11 @@ interface PeerConnectionImpl  {
   [Throws]
   void replaceTrack(MediaStreamTrack thisTrack, MediaStreamTrack withTrack);
   [Throws]
+  void setParameters(MediaStreamTrack track,
+                     optional RTCRtpParameters parameters);
+  [Throws]
+  RTCRtpParameters getParameters(MediaStreamTrack track);
+  [Throws]
   void closeStreams();
 
   sequence<MediaStream> getLocalStreams();

@@ -256,6 +256,26 @@ public:
       ElementAt(i).RemoveCharacter(aOffset);
     }
   }
+
+  bool HasCaret() const
+  {
+    for (const TextRange& range : *this) {
+      if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  uint32_t GetCaretPosition() const
+  {
+    for (const TextRange& range : *this) {
+      if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+        return range.mStartOffset;
+      }
+    }
+    return UINT32_MAX;
+  }
 };
 
 } // namespace mozilla

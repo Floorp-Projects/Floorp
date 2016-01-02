@@ -15,6 +15,7 @@
 #include "mozilla/EventForwards.h"
 #include "nsRect.h"
 #include "WritingModes.h"
+#include "npapi.h"
 
 class nsWindow;
 
@@ -118,7 +119,7 @@ public:
                              MSGResult& aResult);
   static bool IsComposing()
   {
-    return IsComposingOnOurEditor() || IsComposingOnPlugin();
+    return IsComposingOnOurEditor();
   }
   static bool IsComposingOn(nsWindow* aWindow)
   {
@@ -150,6 +151,9 @@ public:
   // IME.  Otherwise, NS_OK.
   static nsresult OnMouseButtonEvent(nsWindow* aWindow,
                                      const IMENotification& aIMENotification);
+  static void SetCandidateWindow(nsWindow* aWindow, CANDIDATEFORM* aForm);
+  static void DefaultProcOfPluginEvent(nsWindow* aWindow,
+                                       const NPEvent* aEvent);
 
 protected:
   static void EnsureHandlerInstance();
@@ -180,7 +184,7 @@ protected:
                                               MSGResult& aResult);
   static bool ProcessMessageForPlugin(nsWindow* aWindow, UINT msg,
                                         WPARAM &wParam, LPARAM &lParam,
-                                        MSGResult& aResult);
+                                        bool &aRet, MSGResult& aResult);
 
   IMMHandler();
   ~IMMHandler();
@@ -191,16 +195,15 @@ protected:
                              MSGResult& aResult);
 
   bool OnIMEStartComposition(nsWindow* aWindow, MSGResult& aResult);
-  bool OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
-                                     WPARAM wParam, LPARAM lParam,
-                                     MSGResult& aResult);
+  void OnIMEStartCompositionOnPlugin(nsWindow* aWindow,
+                                     WPARAM wParam, LPARAM lParam);
   bool OnIMEComposition(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                         MSGResult& aResult);
-  bool OnIMECompositionOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
-                                MSGResult& aResult);
+  void OnIMECompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
+                                LPARAM lParam);
   bool OnIMEEndComposition(nsWindow* aWindow, MSGResult& aResult);
-  bool OnIMEEndCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
-                                   LPARAM lParam, MSGResult& aResult);
+  void OnIMEEndCompositionOnPlugin(nsWindow* aWindow, WPARAM wParam,
+                                   LPARAM lParam);
   bool OnIMERequest(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
                     MSGResult& aResult);
   bool OnIMECharOnPlugin(nsWindow* aWindow, WPARAM wParam, LPARAM lParam,
@@ -326,7 +329,8 @@ protected:
    * If aForceUpdate is true, it will update composition font even if writing
    * mode isn't being changed.
    */
-  void AdjustCompositionFont(const IMEContext& aContext,
+  void AdjustCompositionFont(nsWindow* aWindow,
+                             const IMEContext& aContext,
                              const mozilla::WritingMode& aWritingMode,
                              bool aForceUpdate = false);
 

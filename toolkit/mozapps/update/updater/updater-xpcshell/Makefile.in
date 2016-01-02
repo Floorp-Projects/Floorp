@@ -5,8 +5,8 @@
 
 # For changes here, also consider ../Makefile.in
 
-XPCSHELLTESTROOT = $(abspath $(DEPTH))/_tests/xpcshell/toolkit/mozapps/update/tests
-MOCHITESTROOT = $(abspath $(DEPTH))/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
+XPCSHELLTESTROOT = $(topobjdir)/_tests/xpcshell/toolkit/mozapps/update/tests
+MOCHITESTROOT = $(topobjdir)/_tests/testing/mochitest/chrome/toolkit/mozapps/update/tests
 
 include $(topsrcdir)/config/rules.mk
 

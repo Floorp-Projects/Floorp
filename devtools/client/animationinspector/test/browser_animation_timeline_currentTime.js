@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline toolbar displays the current time, and that it
 // changes when animations are playing, gets back to 0 when animations are
 // rewound, and stops when animations are paused.

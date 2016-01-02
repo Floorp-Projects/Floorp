@@ -30,6 +30,7 @@
 #include "AudioChannelService.h"
 #include "BlobParent.h"
 #include "CrashReporterParent.h"
+#include "DeviceStorageStatics.h"
 #include "GMPServiceParent.h"
 #include "HandlerServiceParent.h"
 #include "IHistory.h"
@@ -5778,6 +5779,13 @@ ContentParent::RecvGetDeviceStorageLocation(const nsString& aType,
 #else
   return false;
 #endif
+}
+
+bool
+ContentParent::RecvGetDeviceStorageLocations(DeviceStorageLocationInfo* info)
+{
+    DeviceStorageStatics::GetDeviceStorageLocationsForIPC(info);
+    return true;
 }
 
 bool

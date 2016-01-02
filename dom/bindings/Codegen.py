@@ -422,6 +422,8 @@ class CGDOMJSClass(CGThing):
             classFlags += "JSCLASS_HAS_RESERVED_SLOTS(%d)" % slotCount
             traceHook = 'nullptr'
             reservedSlots = slotCount
+        if self.descriptor.interface.isProbablyShortLivingObject():
+            classFlags += " | JSCLASS_SKIP_NURSERY_FINALIZE"
         if self.descriptor.interface.getExtendedAttribute("NeedResolve"):
             resolveHook = RESOLVE_HOOK_NAME
             mayResolveHook = MAY_RESOLVE_HOOK_NAME

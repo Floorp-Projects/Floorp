@@ -8,6 +8,10 @@
 #include "AndroidBridge.h"
 #include "GeneratedJNIWrappers.h"
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsExceptionHandler.h"
+#endif
+
 namespace mozilla {
 namespace jni {
 
@@ -129,23 +133,34 @@ bool ThrowException(JNIEnv *aEnv, const char *aClass,
     return !aEnv->ThrowNew(cls.Get(), aMessage);
 }
 
-void HandleUncaughtException(JNIEnv *aEnv)
+bool HandleUncaughtException(JNIEnv* aEnv)
 {
     MOZ_ASSERT(aEnv, "Invalid thread JNI env");
 
     if (!aEnv->ExceptionCheck()) {
-        return;
+        return false;
     }
+
+#ifdef DEBUG
+    aEnv->ExceptionDescribe();
+#endif
 
     Throwable::LocalRef e =
             Throwable::LocalRef::Adopt(aEnv->ExceptionOccurred());
     MOZ_ASSERT(e);
 
     aEnv->ExceptionClear();
-    widget::GeckoAppShell::HandleUncaughtException(nullptr, e);
+    String::LocalRef stack = widget::GeckoAppShell::HandleUncaughtException(e);
 
-    // Should be dead by now...
-    MOZ_CRASH("Failed to handle uncaught exception");
+#ifdef MOZ_CRASHREPORTER
+    if (stack) {
+        // GeckoAppShell wants us to annotate and trigger the crash reporter.
+        CrashReporter::AnnotateCrashReport(
+                NS_LITERAL_CSTRING("AuxiliaryJavaStack"), nsCString(stack));
+    }
+#endif // MOZ_CRASHREPORTER
+
+    return true;
 }
 
 namespace {

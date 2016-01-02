@@ -26,6 +26,7 @@ import mozpack.path as mozpath
 
 from mozbuild.frontend.context import (
     Path,
+    RenamedSourcePath,
     SourcePath,
     ObjDirPath,
 )
@@ -455,6 +456,9 @@ class RecursiveMakeBackend(CommonBackend):
         if consumed:
             return True
 
+        if not isinstance(obj, Defines):
+            self.consume_object(obj.defines)
+
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
         elif isinstance(obj, ConfigFileSubstitution):
@@ -528,7 +532,7 @@ class RecursiveMakeBackend(CommonBackend):
             self._process_test_harness_files(obj, backend_file)
 
         elif isinstance(obj, JARManifest):
-            backend_file.write('JAR_MANIFEST := %s\n' % obj.path)
+            backend_file.write('JAR_MANIFEST := %s\n' % obj.path.full_path)
 
         elif isinstance(obj, Program):
             self._process_program(obj.program, backend_file)
@@ -854,20 +858,23 @@ class RecursiveMakeBackend(CommonBackend):
 
         ensureParentDir(mozpath.join(self.environment.topobjdir, 'dist', 'foo'))
 
-    def _pretty_path(self, path, backend_file):
+    def _pretty_path_parts(self, path, backend_file):
         assert isinstance(path, Path)
         if isinstance(path, SourcePath):
             if path.full_path.startswith(backend_file.srcdir):
-                return '$(srcdir)' + path.full_path[len(backend_file.srcdir):]
+                return '$(srcdir)', path.full_path[len(backend_file.srcdir):]
             if path.full_path.startswith(backend_file.topsrcdir):
-                return '$(topsrcdir)' + path.full_path[len(backend_file.topsrcdir):]
+                return '$(topsrcdir)', path.full_path[len(backend_file.topsrcdir):]
         elif isinstance(path, ObjDirPath):
             if path.full_path.startswith(backend_file.objdir):
-                return path.full_path[len(backend_file.objdir) + 1:]
+                return '', path.full_path[len(backend_file.objdir) + 1:]
             if path.full_path.startswith(self.environment.topobjdir):
-                return '$(DEPTH)' + path.full_path[len(self.environment.topobjdir):]
+                return '$(DEPTH)', path.full_path[len(self.environment.topobjdir):]
 
-        return path.full_path
+        return '', path.full_path
+
+    def _pretty_path(self, path, backend_file):
+        return ''.join(self._pretty_path_parts(path, backend_file))
 
     def _process_unified_sources(self, obj):
         backend_file = self._get_backend_file_for(obj)
@@ -923,10 +930,8 @@ class RecursiveMakeBackend(CommonBackend):
         """Output the DEFINES rules to the given backend file."""
         defines = list(obj.get_defines())
         if defines:
-            backend_file.write(which + ' +=')
-            for define in defines:
-                backend_file.write(' %s' % define)
-            backend_file.write('\n')
+            defines = ' '.join(shell_quote(d) for d in defines)
+            backend_file.write_once('%s += %s\n' % (which, defines))
 
     def _process_test_harness_files(self, obj, backend_file):
         for path, files in obj.srcdir_files.iteritems():
@@ -1110,11 +1115,18 @@ INSTALL_TARGETS += %(prefix)s
             self.backend_input_files |= obj.manifest.manifests
 
     def _process_local_include(self, local_include, backend_file):
-        path = self._pretty_path(local_include, backend_file)
-        if ' ' in path:
-            backend_file.write('LOCAL_INCLUDES += -I\'%s\'\n' % path)
+        d, path = self._pretty_path_parts(local_include, backend_file)
+        if isinstance(local_include, ObjDirPath) and not d:
+            # path doesn't start with a slash in this case
+            d = '$(CURDIR)/'
+        elif d == '$(DEPTH)':
+            d = '$(topobjdir)'
+        quoted_path = shell_quote(path) if path else path
+        if quoted_path != path:
+            path = quoted_path[0] + d + quoted_path[1:]
         else:
-            backend_file.write('LOCAL_INCLUDES += -I%s\n' % path)
+            path = d + path
+        backend_file.write('LOCAL_INCLUDES += -I%s\n' % path)
 
     def _process_per_source_flag(self, per_source_flag, backend_file):
         for flag in per_source_flag.flags:
@@ -1170,6 +1182,8 @@ INSTALL_TARGETS += %(prefix)s
             backend_file.write('DSO_SONAME := %s\n' % libdef.soname)
         if libdef.is_sdk:
             backend_file.write('SDK_LIBRARY := %s\n' % libdef.import_name)
+        if libdef.symbols_file:
+            backend_file.write('SYMBOLS_FILE := %s\n' % libdef.symbols_file)
 
     def _process_static_library(self, libdef, backend_file):
         backend_file.write_once('LIBRARY_NAME := %s\n' % libdef.basename)
@@ -1242,7 +1256,7 @@ INSTALL_TARGETS += %(prefix)s
                 backend_file.write_once('HOST_EXTRA_LIBS += %s\n' % lib)
 
         # Process library-based defines
-        self._process_defines(obj.defines, backend_file)
+        self._process_defines(obj.lib_defines, backend_file)
 
     def _process_final_target_files(self, obj, files, backend_file):
         target = obj.install_target
@@ -1273,8 +1287,8 @@ INSTALL_TARGETS += %(prefix)s
                           if path else target).replace('/', '_')
             have_objdir_files = False
             for f in files:
-                dest = mozpath.join(reltarget, path,
-                                    mozpath.basename(f.full_path))
+                assert not isinstance(f, RenamedSourcePath)
+                dest = mozpath.join(reltarget, path, f.target_basename)
                 if not isinstance(f, ObjDirPath):
                     install_manifest.add_symlink(f.full_path, dest)
                 else:
@@ -1374,6 +1388,7 @@ INSTALL_TARGETS += %(prefix)s
                 pp.context['autoconfmk'] = 'autoconf.mk'
             pp.handleLine(b'# THIS FILE WAS AUTOMATICALLY GENERATED. DO NOT MODIFY BY HAND.\n');
             pp.handleLine(b'DEPTH := @DEPTH@\n')
+            pp.handleLine(b'topobjdir := @topobjdir@\n')
             pp.handleLine(b'topsrcdir := @top_srcdir@\n')
             pp.handleLine(b'srcdir := @srcdir@\n')
             pp.handleLine(b'VPATH := @srcdir@\n')
@@ -1446,7 +1461,7 @@ INSTALL_TARGETS += %(prefix)s
                 # which would modify content in the source directory.
                 '$(RM) $@',
                 '$(call py_action,preprocessor,$(DEFINES) $(ACDEFINES) '
-                    '$(MOZ_DEBUG_DEFINES) $< -o $@)'
+                    '$< -o $@)'
             ])
 
         self._add_unified_build_rules(mk,
