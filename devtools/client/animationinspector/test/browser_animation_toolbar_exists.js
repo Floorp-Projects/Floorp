@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that the animation panel has a top toolbar that contains the play/pause
 // button and that is displayed at all times.
 // Also test that this toolbar gets replaced by the timeline toolbar when there

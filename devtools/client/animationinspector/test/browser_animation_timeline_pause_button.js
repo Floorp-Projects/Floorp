@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the timeline toolbar contains a pause button and that this pause
 // button can be clicked. Check that when it is, the current animations
 // displayed in the timeline get their playstates changed accordingly, and check

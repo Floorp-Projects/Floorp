@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 

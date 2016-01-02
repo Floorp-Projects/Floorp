@@ -1210,6 +1210,10 @@ EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
 
     return retval;
   }
+  case ePluginEventClass: {
+    *aStatus = nsEventStatus_eConsumeNoDefault;
+    return remote->SendPluginEvent(*aEvent->AsPluginEvent());
+  }
   default: {
     MOZ_CRASH("Attempt to send non-whitelisted event?");
   }

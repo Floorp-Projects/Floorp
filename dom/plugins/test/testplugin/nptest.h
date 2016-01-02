@@ -156,6 +156,8 @@ typedef struct InstanceData {
   AsyncDrawing asyncDrawing;
   NPAsyncSurface *frontBuffer;
   NPAsyncSurface *backBuffer;
+  std::string lastComposition;
+  void* placeholderWnd;
 } InstanceData;
 
 void notifyDidPaint(InstanceData* instanceData);

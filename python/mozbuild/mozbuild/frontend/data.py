@@ -18,7 +18,6 @@ structures.
 from __future__ import absolute_import, unicode_literals
 
 from mozbuild.util import StrictOrderingOnAppendList
-from mozbuild.shellutil import quote as shell_quote
 from mozpack.chrome.manifest import ManifestEntry
 
 import mozpack.path as mozpath
@@ -78,8 +77,20 @@ class ContextDerived(TreeMetadata):
         return self._context['FINAL_TARGET']
 
     @property
+    def defines(self):
+        defines = self._context['DEFINES']
+        return Defines(self._context, defines) if defines else None
+
+    @property
     def relobjdir(self):
         return mozpath.relpath(self.objdir, self.topobjdir)
+
+
+class HostMixin(object):
+    @property
+    def defines(self):
+        defines = self._context['HOST_DEFINES']
+        return HostDefines(self._context, defines) if defines else None
 
 
 class DirectoryTraversal(ContextDerived):
@@ -174,7 +185,7 @@ class BaseDefines(ContextDerived):
             elif value is False:
                 yield('-U%s' % define)
             else:
-                yield('-D%s=%s' % (define, shell_quote(value)))
+                yield('-D%s=%s' % (define, value))
 
     def update(self, more_defines):
         if isinstance(more_defines, Defines):
@@ -311,7 +322,7 @@ class LinkageWrongKindError(Exception):
 class Linkable(ContextDerived):
     """Generic context derived container object for programs and libraries"""
     __slots__ = (
-        'defines',
+        'lib_defines',
         'linked_libraries',
         'linked_system_libs',
     )
@@ -320,7 +331,7 @@ class Linkable(ContextDerived):
         ContextDerived.__init__(self, context)
         self.linked_libraries = []
         self.linked_system_libs = []
-        self.defines = Defines(context, {})
+        self.lib_defines = Defines(context, {})
 
     def link_library(self, obj):
         assert isinstance(obj, BaseLibrary)
@@ -374,7 +385,7 @@ class Program(BaseProgram):
     KIND = 'target'
 
 
-class HostProgram(BaseProgram):
+class HostProgram(HostMixin, BaseProgram):
     """Context derived container object for HOST_PROGRAM"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
     KIND = 'host'
@@ -386,7 +397,7 @@ class SimpleProgram(BaseProgram):
     KIND = 'target'
 
 
-class HostSimpleProgram(BaseProgram):
+class HostSimpleProgram(HostMixin, BaseProgram):
     """Context derived container object for each program in
     HOST_SIMPLE_PROGRAMS"""
     SUFFIX_VAR = 'HOST_BIN_SUFFIX'
@@ -449,6 +460,7 @@ class SharedLibrary(Library):
     __slots__ = (
         'soname',
         'variant',
+        'symbols_file',
     )
 
     FRAMEWORK = 1
@@ -456,7 +468,7 @@ class SharedLibrary(Library):
     MAX_VARIANT = 3
 
     def __init__(self, context, basename, real_name=None, is_sdk=False,
-            soname=None, variant=None):
+            soname=None, variant=None, symbols_file=False):
         assert(variant in range(1, self.MAX_VARIANT) or variant is None)
         Library.__init__(self, context, basename, real_name, is_sdk)
         self.variant = variant
@@ -485,6 +497,11 @@ class SharedLibrary(Library):
         else:
             self.soname = self.lib_name
 
+        if symbols_file:
+            self.symbols_file = '%s.symbols' % self.lib_name
+        else:
+            self.symbols_file = None
+
 
 class ExternalLibrary(object):
     """Empty mixin for libraries built by an external build system."""
@@ -500,7 +517,7 @@ class ExternalSharedLibrary(SharedLibrary, ExternalLibrary):
     build system."""
 
 
-class HostLibrary(BaseLibrary):
+class HostLibrary(HostMixin, BaseLibrary):
     """Context derived container object for a host library"""
     KIND = 'host'
 
@@ -694,7 +711,7 @@ class GeneratedSources(BaseSources):
         BaseSources.__init__(self, context, files, canonical_suffix)
 
 
-class HostSources(BaseSources):
+class HostSources(HostMixin, BaseSources):
     """Represents files to be compiled for the host during the build."""
 
     def __init__(self, context, files, canonical_suffix):

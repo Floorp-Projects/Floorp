@@ -497,6 +497,17 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
         ("ContentCacheInParent: 0x%p HandleQueryContentEvent("
          "aEvent={ mMessage=eQuerySelectedText }, aWidget=0x%p)",
          this, aWidget));
+      if (aWidget->PluginHasFocus()) {
+        MOZ_LOG(sContentCacheLog, LogLevel::Info,
+          ("ContentCacheInParent: 0x%p HandleQueryContentEvent(), "
+           "return emtpy selection becasue plugin has focus",
+           this));
+        aEvent.mSucceeded = true;
+        aEvent.mReply.mOffset = 0;
+        aEvent.mReply.mReversed = false;
+        aEvent.mReply.mHasSelection = false;
+        return true;
+      }
       if (NS_WARN_IF(!IsSelectionValid())) {
         // If content cache hasn't been initialized properly, make the query
         // failed.
@@ -835,7 +846,12 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   // We must be able to simulate the selection because
   // we might not receive selection updates in time
   if (!mIsComposing) {
-    mCompositionStart = mSelection.StartOffset();
+    if (aEvent.widget && aEvent.widget->PluginHasFocus()) {
+      // If focus is on plugin, we cannot get selection range
+      mCompositionStart = 0;
+    } else {
+      mCompositionStart = mSelection.StartOffset();
+    }
   }
 
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();

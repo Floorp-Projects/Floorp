@@ -4390,6 +4390,16 @@
         "url": "/html/rendering/non-replaced-elements/lists/ol-type-unsupported-disc.html"
       },
       {
+        "path": "html/rendering/non-replaced-elements/lists/ol-type-unsupported-invalid.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/lists/ol-type-unsupported-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/lists/ol-type-unsupported-invalid.html"
+      },
+      {
         "path": "html/rendering/non-replaced-elements/lists/ol-type-unsupported-lower-alpha.html",
         "references": [
           [
@@ -4488,6 +4498,16 @@
           ]
         ],
         "url": "/html/rendering/non-replaced-elements/lists/ul-type-unsupported-decimal.html"
+      },
+      {
+        "path": "html/rendering/non-replaced-elements/lists/ul-type-unsupported-invalid.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/lists/ul-type-unsupported-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/lists/ul-type-unsupported-invalid.html"
       },
       {
         "path": "html/rendering/non-replaced-elements/lists/ul-type-unsupported-lower-alpha.html",

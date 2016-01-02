@@ -1606,6 +1606,21 @@ GCRuntime::callGCCallback(JSGCStatus status) const
         gcCallback.op(rt, status, gcCallback.data);
 }
 
+void
+GCRuntime::setObjectsTenuredCallback(JSObjectsTenuredCallback callback,
+                                     void* data)
+{
+    tenuredCallback.op = callback;
+    tenuredCallback.data = data;
+}
+
+void
+GCRuntime::callObjectsTenuredCallback()
+{
+    if (tenuredCallback.op)
+        tenuredCallback.op(rt, tenuredCallback.data);
+}
+
 namespace {
 
 class AutoNotifyGCActivity {

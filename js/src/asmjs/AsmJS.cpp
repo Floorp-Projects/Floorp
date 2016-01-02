@@ -2034,9 +2034,12 @@ class MOZ_STACK_CLASS ModuleValidator
 
         auto mutedErrors = Module::MutedBool(parser_.ss->mutedErrors());
 
-        CacheableChars filename = make_string_copy(parser_.ss->filename());
-        if (!filename)
-            return false;
+        CacheableChars filename;
+        if (parser_.ss->filename()) {
+            filename = make_string_copy(parser_.ss->filename());
+            if (!filename)
+                return false;
+        }
 
         CacheableTwoByteChars displayURL;
         if (parser_.ss->hasDisplayURL()) {
@@ -6738,7 +6741,6 @@ CheckSwitch(FunctionValidator& f, ParseNode* switchStmt)
 
         if (!CheckStatement(f, CaseBody(stmt)))
             return false;
-
     }
 
     bool hasDefault = false;

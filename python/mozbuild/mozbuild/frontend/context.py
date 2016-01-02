@@ -281,6 +281,15 @@ class SubContext(Context, ContextDerivedValue):
         self._sandbox().pop_subcontext(self)
 
 
+class InitializedDefines(ContextDerivedValue, OrderedDict):
+    def __init__(self, context, value=None):
+        OrderedDict.__init__(self)
+        for define in context.config.substs.get('MOZ_DEBUG_DEFINES', ()):
+            self[define] = 1
+        if value:
+            self.update(value)
+
+
 class FinalTargetValue(ContextDerivedValue, unicode):
     def __new__(cls, context, value=""):
         if not value:
@@ -398,6 +407,10 @@ class Path(ContextDerivedValue, unicode):
     def __hash__(self):
         return hash(self.full_path)
 
+    @memoized_property
+    def target_basename(self):
+        return mozpath.basename(self.full_path)
+
 
 class SourcePath(Path):
     """Like Path, but limited to paths in the source directory."""
@@ -431,6 +444,24 @@ class SourcePath(Path):
         objdir (aka pseudo-rework), this is needed.
         """
         return ObjDirPath(self.context, '!%s' % self).full_path
+
+
+class RenamedSourcePath(SourcePath):
+    """Like SourcePath, but with a different base name when installed.
+
+    The constructor takes a tuple of (source, target_basename).
+
+    This class is not meant to be exposed to moz.build sandboxes as of now,
+    and is not supported by the RecursiveMake backend.
+    """
+    def __init__(self, context, value):
+        assert isinstance(value, tuple)
+        source, self._target_basename = value
+        super(RenamedSourcePath, self).__init__(context, source)
+
+    @property
+    def target_basename(self):
+        return self._target_basename
 
 
 class ObjDirPath(Path):
@@ -935,7 +966,7 @@ VARIABLES = {
         indicating extra files the output depends on.
         """, 'export'),
 
-    'DEFINES': (OrderedDict, dict,
+    'DEFINES': (InitializedDefines, dict,
         """Dictionary of compiler defines to declare.
 
         These are passed in to the compiler as ``-Dkey='value'`` for string
@@ -1191,6 +1222,16 @@ VARIABLES = {
         This variable can only be used on Linux.
         """, None),
 
+    'SYMBOLS_FILE': (SourcePath, unicode,
+        """A file containing a list of symbols to export from a shared library.
+
+        The given file contains a list of symbols to be exported, and is
+        preprocessed.
+        A special marker "@DATA@" must be added after a symbol name if it
+        points to data instead of code, so that the Windows linker can treat
+        them correctly.
+        """, None),
+
     'BRANDING_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the branding directory.
 
@@ -1307,7 +1348,7 @@ VARIABLES = {
         will be made explicit.
         """, None),
 
-    'JAR_MANIFESTS': (StrictOrderingOnAppendList, list,
+    'JAR_MANIFESTS': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """JAR manifest files that should be processed as part of the build.
 
         JAR manifests are files in the tree that define how to package files

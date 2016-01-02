@@ -62,6 +62,13 @@ TraceCallbackFunc::Trace(JS::Heap<JSObject*>* aPtr, const char* aName,
 }
 
 void
+TraceCallbackFunc::Trace(JSObject** aPtr, const char* aName,
+                         void* aClosure) const
+{
+  mCallback(JS::GCCellPtr(*aPtr), aName, aClosure);
+}
+
+void
 TraceCallbackFunc::Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                          void* aClosure) const
 {

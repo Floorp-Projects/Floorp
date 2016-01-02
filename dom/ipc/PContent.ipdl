@@ -219,6 +219,15 @@ union DeviceStorageParams
   DeviceStorageUnmountParams;
 };
 
+struct DeviceStorageLocationInfo {
+  nsString music;
+  nsString pictures;
+  nsString videos;
+  nsString sdcard;
+  nsString apps;
+  nsString crashes;
+};
+
 struct FMRadioRequestEnableParams
 {
   double frequency;
@@ -1162,6 +1171,9 @@ parent:
 
     sync GetDeviceStorageLocation(nsString type)
         returns (nsString path);
+
+    sync GetDeviceStorageLocations()
+	returns (DeviceStorageLocationInfo info);
 
     sync GetAndroidSystemInfo()
         returns (AndroidSystemInfo info);

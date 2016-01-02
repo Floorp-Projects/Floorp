@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that animation delay is visualized in the timeline when the animation
 // is delayed.
 // Also check that negative delays do not overflow the UI, and are shown like

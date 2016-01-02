@@ -133,6 +133,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(result, {
             'bin/baz.ini': 'baz.ini: FOO is foo\n',
             'bin/child/bar.ini': 'bar.ini\n',
+            'bin/child2/foo.css': 'foo.css: FOO is foo\n',
             'bin/child2/qux.ini': 'qux.ini: BAR is not defined\n',
             'bin/chrome.manifest':
                 'manifest chrome/foo.manifest\n'
@@ -147,6 +148,7 @@ class TestBuild(unittest.TestCase):
                 '//@line 2 "%sbaz.jsm"\nbaz.jsm: FOO is foo\n' % (test_path),
             'bin/chrome/foo/child/hoge.js':
                 '//@line 2 "%sbar.js"\nbar.js: FOO is foo\n' % (test_path),
+            'bin/chrome/foo/foo.css': 'foo.css: FOO is foo\n',
             'bin/chrome/foo/foo.js': 'foo.js\n',
             'bin/chrome/foo/qux.js': 'bar.js\n',
             'bin/components/bar.js':
@@ -169,13 +171,29 @@ class TestBuild(unittest.TestCase):
             'bin/app/baz.ini': 'baz.ini: FOO is bar\n',
             'bin/app/child/bar.ini': 'bar.ini\n',
             'bin/app/child2/qux.ini': 'qux.ini: BAR is defined\n',
-            'bin/app/chrome.manifest': 'manifest components/components.manifest\n',
+            'bin/app/chrome.manifest':
+                'manifest chrome/foo.manifest\n'
+                'manifest components/components.manifest\n',
+            'bin/app/chrome/foo.manifest':
+                'content bar foo/child/\n'
+                'content foo foo/\n'
+                'override chrome://foo/bar.svg#hello '
+                'chrome://bar/bar.svg#hello\n',
+            'bin/app/chrome/foo/bar.js': 'bar.js\n',
+            'bin/app/chrome/foo/child/baz.jsm':
+                '//@line 2 "%sbaz.jsm"\nbaz.jsm: FOO is bar\n' % (test_path),
+            'bin/app/chrome/foo/child/hoge.js':
+                '//@line 2 "%sbar.js"\nbar.js: FOO is bar\n' % (test_path),
+            'bin/app/chrome/foo/foo.css': 'foo.css: FOO is bar\n',
+            'bin/app/chrome/foo/foo.js': 'foo.js\n',
+            'bin/app/chrome/foo/qux.js': 'bar.js\n',
             'bin/app/components/bar.js':
                 '//@line 2 "%sbar.js"\nbar.js: FOO is bar\n' % (test_path),
             'bin/app/components/components.manifest':
                 'component {foo} foo.js\ncomponent {bar} bar.js\n',
             'bin/app/components/foo.js': 'foo.js\n',
             'bin/app/defaults/preferences/prefs.js': 'prefs.js\n',
+            'bin/app/foo.css': 'foo.css: FOO is bar\n',
             'bin/app/foo.ini': 'foo.ini\n',
             'bin/app/modules/baz.jsm':
                 '//@line 2 "%sbaz.jsm"\nbaz.jsm: FOO is bar\n' % (test_path),

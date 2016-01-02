@@ -4849,6 +4849,25 @@ function logical_box_prop_get_computed(cs, property)
   return cs.getPropertyValue(property);
 }
 
+// Helper to get computed style of "-webkit-box-orient" from "flex-direction"
+// and the "writing-mode".
+function webkit_orient_get_computed(cs, property)
+{
+  var writingMode = cs.getPropertyValue("writing-mode") || "horizontal-tb";
+
+  var mapping; // map from flex-direction values to -webkit-box-orient values.
+  if (writingMode == "horizontal-tb") {
+    // Horizontal writing-mode
+    mapping = { "row" : "horizontal", "column" : "vertical"};
+  } else {
+    // Vertical writing-mode
+    mapping = { "row" : "vertical",   "column" : "horizontal"};
+  }
+
+  var flexDirection = cs.getPropertyValue("flex-direction");
+  return mapping[flexDirection];
+}
+
 // Get the computed value for a property.  For shorthands, return the
 // computed values of all the subproperties, delimited by " ; ".
 function get_computed_value(cs, property)
@@ -6946,6 +6965,21 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "order",
     subproperties: [ "order" ],
+  };
+  /* This one is not an alias - it's implemented as a logical property: */
+  gCSSProperties["-webkit-box-orient"] = {
+    domProp: "webkitBoxOrient",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    logical: true,
+    get_computed: webkit_orient_get_computed,
+    initial_values: [ "horizontal" ],
+    other_values: [ "vertical" ],
+    invalid_values: [
+      "0", "0px", "auto",
+      /* Flex-direction values: */
+      "row", "column", "row-reverse", "column-reverse",
+    ],
   };
   gCSSProperties["-webkit-box-align"] = {
     domProp: "webkitBoxAlign",
