@@ -948,6 +948,8 @@ private:
     virtual bool RecvGetDeviceStorageLocation(const nsString& aType,
                                               nsString* aPath) override;
 
+    virtual bool RecvGetDeviceStorageLocations(DeviceStorageLocationInfo* info) override;
+
     virtual bool RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo) override;
 
     // If you add strong pointers to cycle collected objects here, be sure to

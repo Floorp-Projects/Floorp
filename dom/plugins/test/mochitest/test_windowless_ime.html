@@ -1,0 +1,46 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=539565
+-->
+<head>
+  <title>Test #1 for Bug 539565</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <script class="testbody" type="text/javascript">
+function runTests() {
+  var plugin = document.getElementById("plugin1");
+
+  plugin.focus();
+  synthesizeComposition({ type: "compositionstart", data: "" });
+  let data = "composition";
+  synthesizeCompositionChange({
+    composition: {
+      string: data,
+      clauses: [
+        { length: data.length, attr: COMPOSITION_ATTR_RAW_CLAUSE }
+      ]
+    },
+    caret: {start: data.length, length: 0}
+  });
+  is(plugin.getLastCompositionText(), data, "can get composition string");
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+
+  synthesizeComposition({ type: "compositionstart", data: "" });
+  is(plugin.getLastCompositionText(), "", "can get empty composition string");
+  synthesizeComposition({ type: "compositioncommit", data: "" });
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
+</head>
+
+<body onload="runTests()">
+  <embed id="plugin1" type="application/x-test" wmode="transparent" width="200" height="200"></embed>
+</body>
+</html>

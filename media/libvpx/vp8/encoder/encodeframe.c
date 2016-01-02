@@ -34,6 +34,9 @@
 #include "bitstream.h"
 #endif
 #include "encodeframe.h"
+#ifdef _MSC_VER
+#include <intrin.h>
+#endif
 
 extern void vp8_stuff_mb(VP8_COMP *cpi, MACROBLOCK *x, TOKENEXTRA **t) ;
 extern void vp8_calc_ref_frame_costs(int *ref_frame_cost,

@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Test different kinds of drag and drop node re-ordering.
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop.html";

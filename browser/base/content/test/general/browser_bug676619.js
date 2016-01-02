@@ -1,5 +1,5 @@
 function test () {
-  requestLongerTimeout(2);
+  requestLongerTimeout(3);
   waitForExplicitFinish();
 
   var isHTTPS = false;

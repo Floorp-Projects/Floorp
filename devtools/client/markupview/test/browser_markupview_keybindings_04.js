@@ -5,6 +5,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Tests that selecting a node using the browser context menu (inspect element)
 // or the element picker focuses that node so that the keyboard can be used
 // immediately.

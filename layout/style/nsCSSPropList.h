@@ -1644,6 +1644,22 @@ CSS_PROP_POSITION(
     kFlexDirectionKTable,
     offsetof(nsStylePosition, mFlexDirection),
     eStyleAnimType_EnumU8)
+/* We treat -webkit-box-orient as a writing-mode-aware logical alias
+ * for "flex-direction": */
+CSS_PROP_LOGICAL(
+    -webkit-box-orient,
+    webkit_box_orient,
+    WebkitBoxOrient,
+    CSS_PROPERTY_PARSE_VALUE |
+      CSS_PROPERTY_LOGICAL |
+      CSS_PROPERTY_LOGICAL_SINGLE_CUSTOM_VALMAPPING,
+    "layout.css.prefixes.webkit",
+    VARIANT_HK,
+    kBoxOrientKTable,
+    WebkitBoxOrient,
+    Position,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     flex-flow,
     flex_flow,

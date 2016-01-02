@@ -99,11 +99,8 @@ HTMLSharedListElement::MapAttributesIntoRule(const nsMappedAttributes* aAttribut
     if (listStyleType->GetUnit() == eCSSUnit_Null) {
       // type: enum
       const nsAttrValue* value = aAttributes->GetAttr(nsGkAtoms::type);
-      if (value) {
-        if (value->Type() == nsAttrValue::eEnum)
-          listStyleType->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
-        else
-          listStyleType->SetIntValue(NS_STYLE_LIST_STYLE_DECIMAL, eCSSUnit_Enumerated);
+      if (value && value->Type() == nsAttrValue::eEnum) {
+        listStyleType->SetIntValue(value->GetEnumValue(), eCSSUnit_Enumerated);
       }
     }
   }

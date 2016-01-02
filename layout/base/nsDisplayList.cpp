@@ -1062,6 +1062,9 @@ IsStickyFrameActive(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame, nsIFrame* 
   // Find the nearest scrollframe.
   nsIFrame* cursor = aFrame;
   nsIFrame* parent = aParent;
+  if (!parent) {
+    parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+  }
   while (parent->GetType() != nsGkAtoms::scrollFrame) {
     cursor = parent;
     if ((parent = nsLayoutUtils::GetCrossDocParentFrame(cursor)) == nullptr) {
@@ -4951,6 +4954,12 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
     // We want our frame to be our AGR because FrameLayerBuilder uses our AGR to
     // determine if we are inside a fixed pos subtree. If we use the outer AGR
     // from outside the fixed pos subtree FLB can't tell that we are fixed pos.
+    mAnimatedGeometryRoot = mAnimatedGeometryRootForChildren;
+  } else if (mFrame->StyleDisplay()->mPosition == NS_STYLE_POSITION_STICKY &&
+             IsStickyFrameActive(aBuilder, mFrame, nullptr)) {
+    // Similar to the IsFixedPosFrameInDisplayPort case we are our own AGR.
+    // We are inside the sticky position, so our AGR is the sticky positioned
+    // frame, which is our AGR, not the parent AGR.
     mAnimatedGeometryRoot = mAnimatedGeometryRootForChildren;
   } else if (mAnimatedGeometryRoot->mParentAGR) {
     mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;

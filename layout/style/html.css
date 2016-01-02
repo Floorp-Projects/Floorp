@@ -759,7 +759,7 @@ audio:not([controls]) {
 *|*::-moz-html-canvas-content {
   display: block !important;
   /* we want to be an absolute and fixed container */
-  -moz-transform: translate(0) !important;
+  transform: translate(0) !important;
 }
 
 video > .caption-box {

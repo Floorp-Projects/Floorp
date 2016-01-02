@@ -6,7 +6,7 @@ function test() {
   /** Test for Bug 522545 **/
 
   waitForExplicitFinish();
-  requestLongerTimeout(3);
+  requestLongerTimeout(4);
 
   // This tests the following use case:
   // User opens a new tab which gets focus. The user types something into the

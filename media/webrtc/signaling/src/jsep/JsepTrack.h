@@ -185,6 +185,12 @@ public:
     mJsEncodeConstraints = constraintsList;
   }
 
+  void GetJsConstraints(std::vector<JsConstraints>* outConstraintsList) const
+  {
+    MOZ_ASSERT(outConstraintsList);
+    *outConstraintsList = mJsEncodeConstraints;
+  }
+
   static void AddToMsection(const std::vector<JsConstraints>& constraintsList,
                             sdp::Direction direction,
                             SdpMediaSection* msection);

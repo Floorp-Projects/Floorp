@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the AnimationPlayerFront objects lifecycle is managed by the
 // AnimationController.
 

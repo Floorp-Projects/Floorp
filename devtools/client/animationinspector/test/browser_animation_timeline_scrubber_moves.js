@@ -4,6 +4,8 @@
 
 "use strict";
 
+requestLongerTimeout(2);
+
 // Check that the scrubber in the timeline moves when animations are playing.
 // The animations in the test page last for a very long time, so the test just
 // measures the position of the scrubber once, then waits for some time to pass

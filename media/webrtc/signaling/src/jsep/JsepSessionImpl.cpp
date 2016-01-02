@@ -264,6 +264,37 @@ JsepSessionImpl::ReplaceTrack(const std::string& oldStreamId,
   return NS_OK;
 }
 
+nsresult
+JsepSessionImpl::SetParameters(const std::string& streamId,
+                               const std::string& trackId,
+                               const std::vector<JsepTrack::JsConstraints>& constraints)
+{
+  auto it = FindTrackByIds(mLocalTracks, streamId, trackId);
+
+  if (it == mLocalTracks.end()) {
+    JSEP_SET_ERROR("Track " << streamId << "/" << trackId << " was never added.");
+    return NS_ERROR_INVALID_ARG;
+  }
+  it->mTrack->SetJsConstraints(constraints);
+  return NS_OK;
+}
+
+nsresult
+JsepSessionImpl::GetParameters(const std::string& streamId,
+                               const std::string& trackId,
+                               std::vector<JsepTrack::JsConstraints>* outConstraints)
+{
+  auto it = FindTrackByIds(mLocalTracks, streamId, trackId);
+
+  if (it == mLocalTracks.end()) {
+    JSEP_SET_ERROR("Track " << streamId << "/" << trackId << " was never added.");
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  it->mTrack->GetJsConstraints(outConstraints);
+  return NS_OK;
+}
+
 std::vector<RefPtr<JsepTrack>>
 JsepSessionImpl::GetLocalTracks() const
 {

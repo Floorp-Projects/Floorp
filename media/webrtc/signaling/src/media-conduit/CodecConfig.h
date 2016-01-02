@@ -79,6 +79,11 @@ public:
   std::vector<std::string> mCcmFbTypes;
 
   EncodingConstraints mEncodingConstraints;
+  struct SimulcastEncoding {
+    std::string rid;
+    EncodingConstraints constraints;
+  };
+  std::vector<SimulcastEncoding> mSimulcastEncodings;
   std::string mSpropParameterSets;
   uint8_t mProfile;
   uint8_t mConstraints;

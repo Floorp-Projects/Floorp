@@ -87,6 +87,16 @@ public:
                                 const std::string& newStreamId,
                                 const std::string& newTrackId) override;
 
+  virtual nsresult SetParameters(
+      const std::string& streamId,
+      const std::string& trackId,
+      const std::vector<JsepTrack::JsConstraints>& constraints) override;
+
+  virtual nsresult GetParameters(
+      const std::string& streamId,
+      const std::string& trackId,
+      std::vector<JsepTrack::JsConstraints>* outConstraints) override;
+
   virtual std::vector<RefPtr<JsepTrack>> GetLocalTracks() const override;
 
   virtual std::vector<RefPtr<JsepTrack>> GetRemoteTracks() const override;

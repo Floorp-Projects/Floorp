@@ -20,6 +20,21 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/TabParent.h"
 
+#ifdef XP_MACOSX
+// Some defiens will be conflict with OSX SDK
+#define TextRange _TextRange
+#define TextRangeArray _TextRangeArray
+#define Comment _Comment
+#endif
+
+#include "nsPluginInstanceOwner.h"
+
+#ifdef XP_MACOSX
+#undef TextRange
+#undef TextRangeArray
+#undef Comment
+#endif
+
 using namespace mozilla::widget;
 
 namespace mozilla {
@@ -117,10 +132,24 @@ TextComposition::CloneAndDispatchAs(
   nsEventStatus* status = aStatus ? aStatus : &dummyStatus;
   if (aMessage == eCompositionUpdate) {
     mLastData = compositionEvent.mData;
+    mLastRanges = aCompositionEvent->mRanges;
   }
-  EventDispatcher::Dispatch(mNode, mPresContext,
-                            &compositionEvent, nullptr, status, aCallBack);
+
+  DispatchEvent(&compositionEvent, status, aCallBack, aCompositionEvent);
   return compositionEvent.mFlags;
+}
+
+void
+TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
+                               nsEventStatus* aStatus,
+                               EventDispatchingCallback* aCallBack,
+                               const WidgetCompositionEvent *aOriginalEvent)
+{
+  nsPluginInstanceOwner::GeneratePluginEvent(aOriginalEvent,
+                                             aDispatchEvent);
+
+  EventDispatcher::Dispatch(mNode, mPresContext,
+                            aDispatchEvent, nullptr, aStatus, aCallBack);
 }
 
 void
@@ -217,6 +246,7 @@ TextComposition::DispatchCompositionEvent(
     aCompositionEvent->mFlags.mPropagationStopped = true;
     if (aCompositionEvent->CausesDOMTextEvent()) {
       mLastData = aCompositionEvent->mData;
+      mLastRanges = aCompositionEvent->mRanges;
       // Although, the composition event hasn't been actually handled yet,
       // emulate an editor to be handling the composition event.
       EditorWillHandleCompositionChangeEvent(aCompositionEvent);
@@ -341,8 +371,7 @@ TextComposition::DispatchCompositionEvent(
         CloneAndDispatchAs(aCompositionEvent, eCompositionChange,
                            aStatus, aCallBack);
     } else {
-      EventDispatcher::Dispatch(mNode, mPresContext,
-                                aCompositionEvent, nullptr, aStatus, aCallBack);
+      DispatchEvent(aCompositionEvent, aStatus, aCallBack);
     }
   } else {
     *aStatus = nsEventStatus_eConsumeNoDefault;

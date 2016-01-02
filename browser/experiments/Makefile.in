@@ -6,7 +6,7 @@ include $(topsrcdir)/config/rules.mk
 
 # This is so hacky. Waiting on bug 988938.
 addondir = $(srcdir)/test/addons
-testdir = $(abspath $(DEPTH)/_tests/xpcshell/browser/experiments/test/xpcshell)
+testdir = $(topobjdir)/_tests/xpcshell/browser/experiments/test/xpcshell
 
 misc:: $(call mkdir_deps,$(testdir))
 	$(EXIT_ON_ERROR) \

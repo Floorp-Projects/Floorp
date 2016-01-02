@@ -31,11 +31,7 @@ elif CONFIG['MOZ_FOLD_LIBS']:
 
     OS_LIBS += CONFIG['REALTIME_LIBS']
 
-    if CONFIG['OS_TARGET'] == 'WINNT':
-        DEFFILE = 'nss3.def'
-
-    if CONFIG['OS_ARCH'] == 'Linux' and CONFIG['GCC_USE_GNU_LD']:
-        LD_VERSION_SCRIPT = 'nss3.def'
+    SYMBOLS_FILE = 'nss.symbols'
 else:
     Library('nss')
     USE_LIBS += [

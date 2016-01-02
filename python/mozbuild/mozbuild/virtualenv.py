@@ -144,7 +144,8 @@ class VirtualenvManager(object):
             stderr=subprocess.STDOUT, env=env)
 
         if result:
-            raise Exception('Error creating virtualenv.')
+            raise Exception(
+                'Failed to create virtualenv: %s' % self.virtualenv_root)
 
         return self.virtualenv_root
 

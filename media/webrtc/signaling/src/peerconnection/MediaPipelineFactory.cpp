@@ -162,8 +162,12 @@ NegotiatedDetailsToVideoCodecConfigs(const JsepTrackNegotiatedDetails& aDetails,
     }
 
     for (size_t i = 0; i < aDetails.GetEncodingCount(); ++i) {
-      if (aDetails.GetEncoding(i).HasFormat(codec->mDefaultPt)) {
-        // TODO(bug 1192390): Roll constraints into simulcast entries
+      const JsepTrackEncoding& jsepEncoding(aDetails.GetEncoding(i));
+      if (jsepEncoding.HasFormat(codec->mDefaultPt)) {
+        VideoCodecConfig::SimulcastEncoding encoding;
+        encoding.rid = jsepEncoding.mRid;
+        encoding.constraints = jsepEncoding.mConstraints;
+        config->mSimulcastEncodings.push_back(encoding);
       }
     }
     aConfigs->values.push_back(config);
