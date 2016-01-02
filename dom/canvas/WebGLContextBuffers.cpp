@@ -177,9 +177,7 @@ WebGLContext::BufferData(GLenum target, WebGLsizeiptr size, GLenum usage)
     }
 
     boundBuffer->SetByteLength(size);
-
     if (!boundBuffer->ElementArrayCacheBufferData(nullptr, size)) {
-		boundBuffer->SetByteLength(0);
         return ErrorOutOfMemory("bufferData: out of memory");
     }
 }
@@ -229,12 +227,9 @@ WebGLContext::BufferDataT(GLenum target,
     }
 
     boundBuffer->SetByteLength(data.LengthAllowShared());
-
     // Warning: Possibly shared memory.  See bug 1225033.
-    if (!boundBuffer->ElementArrayCacheBufferData(data.DataAllowShared(), data.LengthAllowShared())) {
-		boundBuffer->SetByteLength(0);
+    if (!boundBuffer->ElementArrayCacheBufferData(data.DataAllowShared(), data.LengthAllowShared()))
         return ErrorOutOfMemory("bufferData: out of memory");
-	}
 }
 
 void
