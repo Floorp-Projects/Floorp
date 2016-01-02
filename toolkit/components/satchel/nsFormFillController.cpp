@@ -961,7 +961,7 @@ nsFormFillController::KeyPress(nsIDOMEvent* aEvent)
       if (isCtrl || isAlt || isMeta)
         break;
     }
-    /* fall through */
+    MOZ_FALLTHROUGH;
   case nsIDOMKeyEvent::DOM_VK_UP:
   case nsIDOMKeyEvent::DOM_VK_DOWN:
   case nsIDOMKeyEvent::DOM_VK_LEFT:
