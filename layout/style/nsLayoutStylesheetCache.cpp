@@ -876,9 +876,9 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
           "input[type=\"button\"]::-moz-focus-inner, "
           "input[type=\"submit\"]::-moz-focus-inner { "
           "padding: 1px 2px 1px 2px; "
-          "border: %d %s transparent !important; }",
+          "border: %dpx %s transparent !important; }",
           focusRingWidth,
-          focusRingWidth == 0 ? (const char*) "solid" : (const char*) "dotted");
+          focusRingStyle == 0 ? (const char*) "solid" : (const char*) "dotted");
       AppendPreferenceRule(aSheet, rule);
 
       // NS_LITERAL_STRING doesn't work with concatenated string literals, hence
