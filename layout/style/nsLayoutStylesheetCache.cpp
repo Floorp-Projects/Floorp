@@ -817,8 +817,10 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
   aSheet->SetURIs(uri, uri, uri);
   aSheet->SetComplete();
 
+  static const uint32_t kPreallocSize = 1024;
+
   nsString sheetText;
-  sheetText.SetCapacity(1024);
+  sheetText.SetCapacity(kPreallocSize);
 
 #define NS_GET_R_G_B(color_) \
   NS_GET_R(color_), NS_GET_G(color_), NS_GET_B(color_)
@@ -895,6 +897,10 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
         NS_GET_R_G_B(focusText),
         NS_GET_R_G_B(focusBG));
   }
+
+  NS_ASSERTION(sheetText.Length() <= kPreallocSize,
+               "kPreallocSize should be big enough to build preference style "
+               "sheet without reallocation");
 
   aSheet->ReparseSheet(sheetText);
 
