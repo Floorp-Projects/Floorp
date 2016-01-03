@@ -88,6 +88,12 @@ function backgroundScript() {
     browser.test.assertEq(stores.length, 1);
     browser.test.assertEq(stores[0].id, "firefox-default");
     browser.test.assertEq(stores[0].tabIds.length, 0); // Todo: Implement this.
+    return set({url: TEST_URL, name: "name2", domain: ".example.org", expirationDate: THE_FUTURE});
+  }).then(cookie => {
+    browser.test.assertEq(cookie.hostOnly, false, "not a hostOnly cookie");
+    return remove({url: TEST_URL, name: "name2"});
+  }).then(details => {
+    assertExpected(details, {url: TEST_URL, name: "name2", storeId: "firefox-default"});
   }).then(() => {
     browser.test.notifyPass("cookies");
   });
