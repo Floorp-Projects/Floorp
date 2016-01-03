@@ -732,6 +732,7 @@ function ArrayValuesAt(n) {
 function ArrayValues() {
     return CreateArrayIterator(this, ITEM_KIND_VALUE);
 }
+_SetCanonicalName(ArrayValues, "values");
 
 function ArrayEntries() {
     return CreateArrayIterator(this, ITEM_KIND_KEY_AND_VALUE);

@@ -88,3 +88,4 @@ function MapSpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(MapSpecies, "get [Symbol.species]");

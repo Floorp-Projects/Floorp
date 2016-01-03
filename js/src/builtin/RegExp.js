@@ -35,6 +35,7 @@ function RegExpFlagsGetter() {
     // Step 19.
     return result;
 }
+_SetCanonicalName(RegExpFlagsGetter, "get flags");
 
 // ES6 draft rc1 21.2.5.14.
 function RegExpToString()
@@ -53,3 +54,4 @@ function RegExpToString()
     // Step 7.
     return '/' + pattern + '/' + flags;
 }
+_SetCanonicalName(RegExpToString, "toString");
