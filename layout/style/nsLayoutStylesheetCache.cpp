@@ -804,25 +804,6 @@ nsLayoutStylesheetCache::InvalidatePreferenceSheets()
   gStyleCache->mChromePreferenceSheet = nullptr;
 }
 
-/* static */ void
-nsLayoutStylesheetCache::AppendPreferenceRule(CSSStyleSheet* aSheet,
-                                              const nsAString& aString)
-{
-  uint32_t result;
-  aSheet->InsertRuleInternal(aString, aSheet->StyleRuleCount(), &result);
-}
-
-/* static */ void
-nsLayoutStylesheetCache::AppendPreferenceColorRule(CSSStyleSheet* aSheet,
-                                                   const char* aString,
-                                                   nscolor aColor)
-{
-  nsAutoString rule;
-  rule.AppendPrintf(
-      aString, NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
-  AppendPreferenceRule(aSheet, rule);
-}
-
 void
 nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
                                               nsPresContext* aPresContext)
@@ -836,29 +817,35 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
   aSheet->SetURIs(uri, uri, uri);
   aSheet->SetComplete();
 
-  AppendPreferenceRule(aSheet,
-      NS_LITERAL_STRING("@namespace url(http://www.w3.org/1999/xhtml);"));
-  AppendPreferenceRule(aSheet,
-      NS_LITERAL_STRING("@namespace svg url(http://www.w3.org/2000/svg);"));
+  nsString sheetText;
+  sheetText.SetCapacity(1024);
+
+#define NS_GET_R_G_B(color_) \
+  NS_GET_R(color_), NS_GET_G(color_), NS_GET_B(color_)
+
+  sheetText.AppendLiteral(
+      "@namespace url(http://www.w3.org/1999/xhtml);\n"
+      "@namespace svg url(http://www.w3.org/2000/svg);\n");
 
   // Rules for link styling.
+  nscolor linkColor = aPresContext->DefaultLinkColor();
+  nscolor activeColor = aPresContext->DefaultActiveLinkColor();
+  nscolor visitedColor = aPresContext->DefaultVisitedLinkColor();
 
-  AppendPreferenceColorRule(aSheet,
-      "*|*:link { color: #%02x%02x%02x; }",
-      aPresContext->DefaultLinkColor());
-  AppendPreferenceColorRule(aSheet,
-      "*|*:-moz-any-link:active { color: #%02x%02x%02x; }",
-      aPresContext->DefaultActiveLinkColor());
-  AppendPreferenceColorRule(aSheet,
-      "*|*:visited { color: #%02x%02x%02x; }",
-      aPresContext->DefaultVisitedLinkColor());
+  sheetText.AppendPrintf(
+      "*|*:link { color: #%02x%02x%02x; }\n"
+      "*|*:-moz-any-link:active { color: #%02x%02x%02x; }\n"
+      "*|*:visited { color: #%02x%02x%02x; }\n",
+      NS_GET_R_G_B(linkColor),
+      NS_GET_R_G_B(activeColor),
+      NS_GET_R_G_B(visitedColor));
 
-  AppendPreferenceRule(aSheet,
-      aPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks) ?
-        NS_LITERAL_STRING(
-            "*|*:-moz-any-link:not(svg|a) { text-decoration: underline; }") :
-        NS_LITERAL_STRING(
-            "*|*:-moz-any-link{ text-decoration: none; }"));
+  bool underlineLinks =
+    aPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks);
+  sheetText.AppendPrintf(
+      "*|*:-moz-any-link%s { text-decoration: %s; }\n",
+      underlineLinks ? ":not(svg|a)" : "",
+      underlineLinks ? "underline" : "none");
 
   // Rules for focus styling.
 
@@ -870,54 +857,48 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
     if (focusRingWidth != 1) {
       // If the focus ring width is different from the default, fix buttons
       // with rings.
-      nsString rule;
-      rule.AppendPrintf(
+      sheetText.AppendPrintf(
           "button::-moz-focus-inner, input[type=\"reset\"]::-moz-focus-inner, "
           "input[type=\"button\"]::-moz-focus-inner, "
           "input[type=\"submit\"]::-moz-focus-inner { "
           "padding: 1px 2px 1px 2px; "
-          "border: %dpx %s transparent !important; }",
+          "border: %dpx %s transparent !important; }\n",
           focusRingWidth,
-          focusRingStyle == 0 ? (const char*) "solid" : (const char*) "dotted");
-      AppendPreferenceRule(aSheet, rule);
+          focusRingStyle == 0 ? "solid" : "dotted");
 
-      // NS_LITERAL_STRING doesn't work with concatenated string literals, hence
-      // the newline escaping.
-      AppendPreferenceRule(aSheet, NS_LITERAL_STRING("\
-button:focus::-moz-focus-inner, \
-input[type=\"reset\"]:focus::-moz-focus-inner, \
-input[type=\"button\"]:focus::-moz-focus-inner, \
-input[type=\"submit\"]:focus::-moz-focus-inner { \
-border-color: ButtonText !important; }"));
+      sheetText.AppendLiteral(
+          "button:focus::-moz-focus-inner, "
+          "input[type=\"reset\"]:focus::-moz-focus-inner, "
+          "input[type=\"button\"]:focus::-moz-focus-inner, "
+          "input[type=\"submit\"]:focus::-moz-focus-inner { "
+          "border-color: ButtonText !important; }\n");
     }
 
-    nsString rule;
-    if (focusRingOnAnything) {
-      rule.AppendLiteral(":focus");
-    } else {
-      rule.AppendLiteral("*|*:link:focus, *|*:visited:focus");
-    }
-    rule.AppendPrintf(" { outline: %dpx ", focusRingWidth);
-    if (focusRingStyle == 0) { // solid
-      rule.AppendLiteral("solid -moz-mac-focusring !important; "
-                         "-moz-outline-radius: 3px; outline-offset: 1px; }");
-    } else {
-      rule.AppendLiteral("dotted WindowText !important; }");
-    }
-    AppendPreferenceRule(aSheet, rule);
+    sheetText.AppendPrintf(
+        "%s { outline: %dpx %s !important; %s}\n",
+        focusRingOnAnything ?
+          ":focus" :
+          "*|*:link:focus, *|*:visited:focus",
+        focusRingWidth,
+        focusRingStyle == 0 ? // solid
+          "solid -moz-mac-focusring" : "dotted WindowText",
+        focusRingStyle == 0 ? // solid
+          "-moz-outline-radius: 3px; outline-offset: 1px; " : "");
   }
 
   if (aPresContext->GetUseFocusColors()) {
-    nsString rule;
     nscolor focusText = aPresContext->FocusTextColor();
     nscolor focusBG = aPresContext->FocusBackgroundColor();
-    rule.AppendPrintf(
+    sheetText.AppendPrintf(
         "*:focus, *:focus > font { color: #%02x%02x%02x !important; "
-        "background-color: #%02x%02x%02x !important; }",
-        NS_GET_R(focusText), NS_GET_G(focusText), NS_GET_B(focusText),
-        NS_GET_R(focusBG), NS_GET_G(focusBG), NS_GET_B(focusBG));
-    AppendPreferenceRule(aSheet, rule);
+        "background-color: #%02x%02x%02x !important; }\n",
+        NS_GET_R_G_B(focusText),
+        NS_GET_R_G_B(focusBG));
   }
+
+  aSheet->ReparseSheet(sheetText);
+
+#undef NS_GET_R_G_B
 }
 
 mozilla::StaticRefPtr<nsLayoutStylesheetCache>
