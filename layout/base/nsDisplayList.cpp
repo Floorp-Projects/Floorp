@@ -1959,7 +1959,6 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
             point = aRect.Center();
           }
           temp.AppendElement(FramesWithDepth(transform->GetHitDepthAtPoint(aBuilder, point)));
-          printf("depth %p %f\n", transform, transform->GetHitDepthAtPoint(aBuilder, point));
           writeFrames = &temp[temp.Length() - 1].mFrames;
         }
       } else {
