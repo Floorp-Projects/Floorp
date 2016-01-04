@@ -77,10 +77,6 @@ private:
   static void DependentPrefChanged(const char* aPref, void* aData);
   void BuildPreferenceSheet(RefPtr<mozilla::CSSStyleSheet>& aSheet,
                             nsPresContext* aPresContext);
-  static void AppendPreferenceRule(mozilla::CSSStyleSheet* aSheet,
-                                   const nsAString& aRule);
-  static void AppendPreferenceColorRule(mozilla::CSSStyleSheet* aSheet,
-                                        const char* aString, nscolor aColor);
 
   static mozilla::StaticRefPtr<nsLayoutStylesheetCache> gStyleCache;
   static mozilla::css::Loader* gCSSLoader;
