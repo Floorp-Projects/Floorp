@@ -26,6 +26,8 @@ var onClickedCallbacksMap = new WeakMap();
 // If id is not specified for an item we use an integer.
 var nextID = 0;
 
+var gMaxLabelLength = 64;
+
 // When a new contextMenu is opened, this function is called and
 // we populate the |xulMenu| with all the items from extensions
 // to be displayed. We always clear all the items again when
@@ -102,8 +104,22 @@ var menuBuilder = {
   },
 
   customizeElement(element, item, contextData) {
-    // FIXME: handle %s in the title
-    element.setAttribute("label", item.title);
+    let label = item.title;
+    if (label) {
+      if (contextData.isTextSelected && label.indexOf('%s') > -1) {
+        let selection = contextData.selectionText;
+        // The rendering engine will truncate the title if it's longer than 64 characters.
+        // But if it makes sense let's try truncate selection text only, to handle cases like
+        // 'look up "%s" in MyDictionary' more elegantly.
+        let maxSelectionLength = gMaxLabelLength - label.length + 2;
+        if (maxSelectionLength > 4) {
+          selection = selection.substring(0, maxSelectionLength - 3) + "...";
+        }
+        label = label.replace(/%s/g, selection);
+      }
+
+      element.setAttribute("label", label);
+    }
 
     if (!item.enabled) {
       element.setAttribute("disabled", true);

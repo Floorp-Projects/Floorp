@@ -32,7 +32,7 @@ add_task(function* () {
                                                onclick: genericOnClick });
         if (context == "selection") {
           browser.contextMenus.update("ext-selection", {
-            title: "selection-edited",
+            title: "selection is: '%s'",
             onclick: (info) => {
               browser.contextMenus.removeAll();
               genericOnClick(info);
@@ -126,7 +126,7 @@ add_task(function* () {
     selection.removeAllRanges();
     let textNode = doc.getElementById("img1").previousSibling;
     range.setStart(textNode, 0);
-    range.setEnd(textNode, 20);
+    range.setEnd(textNode, 100);
     selection.addRange(range);
   });
 
@@ -141,7 +141,7 @@ add_task(function* () {
   top = items.item(0).childNodes[0];
 
   // Check some menu items
-  items = top.getElementsByAttribute("label", "selection-edited");
+  items = top.getElementsByAttribute("label", "selection is: 'just some text 123456789012345678901234567890...'");
   is(items.length, 1, "contextMenu item for selection was found (context=selection)");
   let selectionItem = items.item(0);
 
@@ -152,7 +152,7 @@ add_task(function* () {
   expectedClickInfo = {
     menuItemId: "ext-selection",
     pageUrl: "http://mochi.test:8888/browser/browser/components/extensions/test/browser/context.html",
-    selectionText: "just some text",
+    selectionText: "just some text 1234567890123456789012345678901234567890123456789012345678901234567890123456789012",
   };
   top.openPopup(topItem, "end_before", 0, 0, true, false);
   EventUtils.synthesizeMouseAtCenter(selectionItem, {});
