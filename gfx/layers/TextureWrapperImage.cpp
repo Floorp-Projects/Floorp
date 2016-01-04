@@ -40,7 +40,12 @@ TextureWrapperImage::GetAsSourceSurface()
     return nullptr;
   }
 
-  return mTextureClient->BorrowDrawTarget()->Snapshot();
+  RefPtr<DrawTarget> dt = mTextureClient->BorrowDrawTarget();
+  if (!dt) {
+    return nullptr;
+  }
+
+  return dt->Snapshot();
 }
 
 TextureClient*
