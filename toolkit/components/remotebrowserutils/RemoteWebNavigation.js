@@ -35,13 +35,7 @@ RemoteWebNavigation.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebNavigation, Ci.nsISupports]),
 
   swapBrowser: function(aBrowser) {
-    if (this._messageManager) {
-      this._messageManager.removeMessageListener("WebNavigation:setHistory", this);
-    }
-
     this._browser = aBrowser;
-    this._messageManager = aBrowser.messageManager;
-    this._messageManager.addMessageListener("WebNavigation:setHistory", this);
   },
 
   LOAD_FLAGS_MASK: 65535,
@@ -118,9 +112,14 @@ RemoteWebNavigation.prototype = {
 
   referringURI: null,
 
-  _sessionHistory: null,
-  get sessionHistory() { return this._sessionHistory; },
-  set sessionHistory(aValue) { },
+  // Bug 1233803 - accessing the sessionHistory of remote browsers should be
+  // done in content scripts.
+  get sessionHistory() {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
+  set sessionHistory(aValue) {
+    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+  },
 
   _sendMessage: function(aMessage, aData) {
     try {
@@ -130,14 +129,6 @@ RemoteWebNavigation.prototype = {
       Cu.reportError(e);
     }
   },
-
-  receiveMessage: function(aMessage) {
-    switch (aMessage.name) {
-      case "WebNavigation:setHistory":
-        this._sessionHistory = aMessage.objects.history;
-        break;
-    }
-  }
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteWebNavigation]);
