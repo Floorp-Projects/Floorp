@@ -1439,9 +1439,12 @@ js::InitArrayBufferClass(JSContext* cx, HandleObject obj)
         return nullptr;
 
     RootedId byteLengthId(cx, NameToId(cx->names().byteLength));
+    RootedAtom atom(cx, IdToFunctionName(cx, byteLengthId, "get"));
+    if (!atom)
+        return nullptr;
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
     JSObject* getter =
-        NewNativeFunction(cx, ArrayBufferObject::byteLengthGetter, 0, nullptr);
+        NewNativeFunction(cx, ArrayBufferObject::byteLengthGetter, 0, atom);
     if (!getter)
         return nullptr;
 
