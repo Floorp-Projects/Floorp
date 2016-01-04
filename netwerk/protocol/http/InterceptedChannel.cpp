@@ -72,18 +72,10 @@ InterceptedChannelBase::DoNotifyController()
       return;
     }
 
-    nsCOMPtr<nsIFetchEventDispatcher> dispatcher;
-    rv = mController->ChannelIntercepted(this, getter_AddRefs(dispatcher));
-
-    if (NS_WARN_IF(NS_FAILED(rv) || !dispatcher)) {
+    rv = mController->ChannelIntercepted(this);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
       rv = ResetInterception();
       NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
-    } else {
-      rv = dispatcher->Dispatch();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        rv = ResetInterception();
-        NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to resume intercepted network request");
-      }
     }
     mController = nullptr;
 }
