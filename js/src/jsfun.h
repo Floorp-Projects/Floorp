@@ -308,6 +308,8 @@ class JSFunction : public js::NativeObject
 
     void initAtom(JSAtom* atom) { atom_.init(atom); }
 
+    void setAtom(JSAtom* atom) { atom_ = atom; }
+
     JSAtom* displayAtom() const {
         return atom_;
     }
