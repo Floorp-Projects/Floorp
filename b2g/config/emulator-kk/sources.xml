@@ -137,7 +137,7 @@
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
-  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="58800ecb50e4e41cfb0a36cb43c82b73fb3612e5"/>
+  <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="49f5591508df408fab7d7d8322681b004a2750f3"/>
   <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="39bdda3051dd1d96da3ab369bc654290cb8d463c"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
