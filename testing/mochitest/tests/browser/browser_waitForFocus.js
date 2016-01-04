@@ -50,7 +50,7 @@ add_task(function *() {
 
   yield SimpleTest.promiseFocus(browser.contentWindowAsCPOW.frames[0]);
 
-  is(browser.contentDocumentAsCPOW.activeElement.localName, "iframe", "Child iframe is focused");
+  is(browser.contentWindowAsCPOW.document.activeElement.localName, "iframe", "Child iframe is focused");
 
   gBrowser.removeCurrentTab();
 });
