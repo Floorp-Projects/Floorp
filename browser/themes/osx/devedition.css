@@ -41,6 +41,18 @@
 
 #forward-button {
   -moz-border-start: none !important;
+  /* browser.css and friends set up the width of the button to be 32px.
+   * They then set margin-left to -2px to ensure the button is not too wide
+   * compared to the back button, and set padding-left to center the icon
+   * correctly.
+   * In our theme, the back and forward buttons are the same width, with the
+   * back button being 32px with 1px border on both sides. To ensure the
+   * forward button's content box looks like it is the same size with width
+   * set to 32px and a 1px border on only 1 side, we overlap by 1px, so both
+   * buttons end up with a content box that looks like it's 30px.
+   */
+  margin-left: -1px;
+  padding-left: 1px;
 }
 
 #forward-button > .toolbarbutton-icon {
