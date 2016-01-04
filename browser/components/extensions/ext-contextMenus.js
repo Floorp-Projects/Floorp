@@ -240,20 +240,33 @@ MenuItem.prototype = {
     return this._id;
   },
 
+  ensureValidParentId(parentId) {
+    if (parentId === undefined) {
+      return;
+    }
+    let menuMap = contextMenuMap.get(this.extension);
+    if (!menuMap.has(parentId)) {
+      throw new Error("Could not find any MenuItem with id: " + parentId);
+    }
+    for (let item = menuMap.get(parentId); item; item = item.parent) {
+      if (item === this) {
+        throw new Error("MenuItem cannot be an ancestor (or self) of its new parent.");
+      }
+    }
+  },
+
   set parentId(parentId) {
-    // TODO: cycle check here
+    this.ensureValidParentId(parentId);
+
     if (this.parent) {
       this.parent.detachChild(this);
     }
 
-    let menuMap = contextMenuMap.get(this.extension);
-    if (menuMap.has(parentId)) {
+    if (parentId === undefined) {
+      this.root.addChild(this);
+    } else {
+      let menuMap = contextMenuMap.get(this.extension);
       menuMap.get(parentId).addChild(this);
-    } else if (parentId !== undefined) {
-      // Unless the intention was to null the parentId, if we cannot find
-      // any item with the given id, we should throw.
-      let e = new Error("Could not find any MenuItem with id: " + parentId);
-      throw e;
     }
   },
 
