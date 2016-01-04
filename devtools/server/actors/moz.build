@@ -24,6 +24,7 @@ DevToolsModules(
     'director-manager.js',
     'director-registry.js',
     'eventlooplag.js',
+    'frame.js',
     'framerate.js',
     'gcli.js',
     'heap-snapshot-file.js',
