@@ -141,7 +141,16 @@ DataStorage::Init(bool& aDataWillPersist)
   // Clear private data as appropriate.
   os->AddObserver(this, "last-pb-context-exited", false);
   // Observe shutdown; save data and prevent any further writes.
-  os->AddObserver(this, "profile-before-change", false);
+  // In the parent process, we need to write to the profile directory, so
+  // we should listen for profile-before-change so that we can safely
+  // write to the profile.  In the content process however we don't have
+  // access to the profile directory and profile notifications are not
+  // dispatched, so we need to clean up on xpcom-shutdown.
+  if (XRE_IsParentProcess()) {
+    os->AddObserver(this, "profile-before-change", false);
+  } else {
+    os->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  }
 
   // For test purposes, we can set the write timer to be very fast.
   mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
@@ -856,26 +865,28 @@ DataStorage::Observe(nsISupports* aSubject, const char* aTopic,
     MutexAutoLock lock(mMutex);
     mPrivateDataTable.Clear();
   } else if (strcmp(aTopic, "profile-before-change") == 0) {
-    if (XRE_IsParentProcess()) {
-      {
-        MutexAutoLock lock(mMutex);
-        rv = AsyncWriteData(lock);
-        mShuttingDown = true;
+    MOZ_ASSERT(XRE_IsParentProcess());
+    {
+      MutexAutoLock lock(mMutex);
+      rv = AsyncWriteData(lock);
+      mShuttingDown = true;
+      Unused << NS_WARN_IF(NS_FAILED(rv));
+      if (mTimer) {
+        rv = DispatchShutdownTimer(lock);
         Unused << NS_WARN_IF(NS_FAILED(rv));
-        if (mTimer) {
-          rv = DispatchShutdownTimer(lock);
-          Unused << NS_WARN_IF(NS_FAILED(rv));
-        }
-      }
-      // Run the thread to completion and prevent any further events
-      // being scheduled to it. The thread may need the lock, so we can't
-      // hold it here.
-      rv = mWorkerThread->Shutdown();
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
       }
     }
+    // Run the thread to completion and prevent any further events
+    // being scheduled to it. The thread may need the lock, so we can't
+    // hold it here.
+    rv = mWorkerThread->Shutdown();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
 
+    sDataStorages->Clear();
+  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+    MOZ_ASSERT(!XRE_IsParentProcess());
     sDataStorages->Clear();
   } else if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     MutexAutoLock lock(mMutex);
