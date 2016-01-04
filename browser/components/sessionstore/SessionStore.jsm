@@ -1575,7 +1575,7 @@ var SessionStoreInternal = {
     }
 
     this._clearRestoringWindows();
-    this._saveableClosedWindowData.clear();
+    this._saveableClosedWindowData = new WeakSet();
   },
 
   /**
@@ -4330,7 +4330,7 @@ var DirtyWindows = {
   },
 
   clear: function (window) {
-    this._data.clear();
+    this._data = new WeakMap();
   }
 };
 
