@@ -940,7 +940,7 @@ var MozLoopServiceInternal = {
         let window = chatbox.contentWindow;
 
         function socialFrameChanged(eventName) {
-          UITour.availableTargetsCache.clear();
+          UITour.clearAvailableTargetsCache();
           UITour.notify(eventName);
 
           if (eventName == "Loop:ChatWindowDetached" || eventName == "Loop:ChatWindowAttached") {
