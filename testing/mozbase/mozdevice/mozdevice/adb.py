@@ -67,6 +67,16 @@ class ADBError(Exception):
     """
     pass
 
+class ADBListDevicesError(ADBError):
+    """ADBListDevicesError is raised when errors are found listing the
+    devices, typically not any permissions.
+
+    The devices information is stocked with the *devices* member.
+    """
+    def __init__(self, msg, devices):
+        ADBError.__init__(self, msg)
+        self.devices = devices
+
 class ADBRootError(Exception):
     """ADBRootError is raised when a shell command is to be executed as
     root but the device does not support it. This error is fatal since
@@ -432,6 +442,7 @@ class ADBHost(ADBCommand):
         :type timeout: integer or None
         :returns: an object contain
         :raises: * ADBTimeoutError
+                 * ADBListDevicesError
                  * ADBError
 
         The output of adb devices -l ::
@@ -468,6 +479,14 @@ class ADBHost(ADBCommand):
                         self._logger.warning('devices: Unable to parse '
                                              'remainder for device %s' % line)
                 devices.append(device)
+        for device in devices:
+            if device['state'] == 'no permissions':
+                raise ADBListDevicesError(
+                    "No permissions to detect devices. You should restart the"
+                    " adb server as root:\n"
+                    "\n# adb kill-server\n# adb start-server\n"
+                    "\nor maybe configure your udev rules.",
+                    devices)
         return devices
 
 
