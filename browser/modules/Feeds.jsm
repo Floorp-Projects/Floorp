@@ -11,6 +11,8 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "BrowserUtils",
                                   "resource://gre/modules/BrowserUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
+                                  "resource:///modules/RecentWindow.jsm");
 
 const { interfaces: Ci, classes: Cc } = Components;
 
@@ -18,12 +20,15 @@ this.Feeds = {
   init() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
     mm.addMessageListener("WCCR:registerProtocolHandler", this);
+
+    Services.ppmm.addMessageListener("WCCR:setAutoHandler", this);
+    Services.ppmm.addMessageListener("FeedConverter:addLiveBookmark", this);
   },
 
   receiveMessage(aMessage) {
+    let data = aMessage.data;
     switch (aMessage.name) {
       case "WCCR:registerProtocolHandler": {
-        let data = aMessage.data;
         let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
                           getService(Ci.nsIWebContentHandlerRegistrar);
         registrar.registerProtocolHandler(data.protocol, data.uri, data.title,
@@ -32,11 +37,24 @@ this.Feeds = {
       }
 
       case "WCCR:registerContentHandler": {
-        let data = aMessage.data;
         let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
                           getService(Ci.nsIWebContentHandlerRegistrar);
         registrar.registerContentHandler(data.contentType, data.uri, data.title,
                                          aMessage.target);
+        break;
+      }
+
+      case "WCCR:setAutoHandler": {
+        let registrar = Cc["@mozilla.org/embeddor.implemented/web-content-handler-registrar;1"].
+                          getService(Ci.nsIWebContentHandlerRegistrar);
+        registrar.setAutoHandler(data.contentType, data.handler);
+        break;
+      }
+
+      case "FeedConverter:addLiveBookmark": {
+        let topWindow = RecentWindow.getMostRecentBrowserWindow();
+        topWindow.PlacesCommandHook.addLiveBookmark(data.spec, data.title, data.subtitle)
+                                   .catch(Components.utils.reportError);
         break;
       }
     }

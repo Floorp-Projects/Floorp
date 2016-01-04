@@ -12,7 +12,7 @@ interface nsIFeedResult;
  * nsIFeedResultService provides a globally-accessible object for retrieving
  * the results of feed processing.
  */
-[scriptable, uuid(950a829e-c20e-4dc3-b447-f8b753ae54da)]
+[scriptable, uuid(95309fd2-7b3a-47fb-97f3-5c460d9473cd)]
 interface nsIFeedResultService : nsISupports
 {
   /**
@@ -22,8 +22,8 @@ interface nsIFeedResultService : nsISupports
   attribute boolean forcePreviewPage;
 
   /**
-   * Adds a URI to the user's specified external feed handler, or live 
-   * bookmarks. 
+   * Adds a URI to the user's specified external feed handler, or live
+   * bookmarks.
    * @param   uri
    *          The uri of the feed to add.
    * @param   title
@@ -32,11 +32,15 @@ interface nsIFeedResultService : nsISupports
    *          The subtitle of the feed to add.
    * @param   feedType
    *          The nsIFeed type of the feed.  See nsIFeed.idl
+   * @param   feedReader
+   *          The type of feed reader we're using (client, bookmarks, default)
+   *          If this parameter is null, the type is set to default
    */
-  void addToClientReader(in AUTF8String uri, 
+  void addToClientReader(in AUTF8String uri,
                          in AString title,
                          in AString subtitle,
-                         in unsigned long feedType);
+                         in unsigned long feedType,
+                         [optional] in AString feedReader);
 
   /**
    * Registers a Feed Result object with a globally accessible service
