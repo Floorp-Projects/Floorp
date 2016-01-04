@@ -16,6 +16,15 @@ function Deferred() {
 }
 
 SimpleTest.waitForExplicitFinish();
+// XXX This actually exposes a true race condition, but it could rarely
+// happen in real world, because it only happens when requestFullscreen
+// is called immediately after exiting fullscreen in certain condition,
+// and in real life, requestFullscreen can only be called inside a user
+// event handler. But we want to fix this race condition at some point,
+// via queuing all exiting request as well as entering request together
+// which we may eventually need to do for bug 1188256.
+SimpleTest.requestFlakyTimeout(
+  "Need to wait for potential fullscreen transition");
 addLoadEvent(function () {
   SpecialPowers.pushPrefEnv({
     "set": [["full-screen-api.allow-trusted-requests-only", false]]
@@ -132,7 +141,9 @@ function next() {
     }).catch(() => {
       ok(false, "Fail to run test " +
          `${test.openWinFunc.name}, ${test.actionFunc.name}`);
-    }).then(() => SimpleTest.waitForFocus(next));
+    }).then(() => {
+      setTimeout(() => SimpleTest.waitForFocus(next), 1000);
+    });
   } else {
     SimpleTest.finish();
     return;
