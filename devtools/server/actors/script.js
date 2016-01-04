@@ -9,6 +9,7 @@
 const Services = require("Services");
 const { Cc, Ci, Cu, components, ChromeWorker } = require("chrome");
 const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
+const { FrameActor } = require("devtools/server/actors/frame");
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
@@ -2971,92 +2972,6 @@ update(PauseScopedObjectActor.prototype, {
 update(PauseScopedObjectActor.prototype.requestTypes, {
   "threadGrip": PauseScopedObjectActor.prototype.onThreadGrip,
 });
-
-/**
- * Creates an actor for the specified stack frame.
- *
- * @param aFrame Debugger.Frame
- *        The debuggee frame.
- * @param aThreadActor ThreadActor
- *        The parent thread actor for this frame.
- */
-function FrameActor(aFrame, aThreadActor)
-{
-  this.frame = aFrame;
-  this.threadActor = aThreadActor;
-}
-
-FrameActor.prototype = {
-  actorPrefix: "frame",
-
-  /**
-   * A pool that contains frame-lifetime objects, like the environment.
-   */
-  _frameLifetimePool: null,
-  get frameLifetimePool() {
-    if (!this._frameLifetimePool) {
-      this._frameLifetimePool = new ActorPool(this.conn);
-      this.conn.addActorPool(this._frameLifetimePool);
-    }
-    return this._frameLifetimePool;
-  },
-
-  /**
-   * Finalization handler that is called when the actor is being evicted from
-   * the pool.
-   */
-  disconnect: function () {
-    this.conn.removeActorPool(this._frameLifetimePool);
-    this._frameLifetimePool = null;
-  },
-
-  /**
-   * Returns a frame form for use in a protocol message.
-   */
-  form: function () {
-    let threadActor = this.threadActor;
-    let form = { actor: this.actorID,
-                 type: this.frame.type };
-    if (this.frame.type === "call") {
-      form.callee = createValueGrip(this.frame.callee, threadActor._pausePool,
-        threadActor.objectGrip);
-    }
-
-    if (this.frame.environment) {
-      let envActor = threadActor.createEnvironmentActor(
-        this.frame.environment,
-        this.frameLifetimePool
-      );
-      form.environment = envActor.form();
-    }
-    form.this = createValueGrip(this.frame.this, threadActor._pausePool,
-      threadActor.objectGrip);
-    form.arguments = this._args();
-    if (this.frame.script) {
-      var generatedLocation = this.threadActor.sources.getFrameLocation(this.frame);
-      form.where = {
-        source: generatedLocation.generatedSourceActor.form(),
-        line: generatedLocation.generatedLine,
-        column: generatedLocation.generatedColumn
-      };
-    }
-
-    if (!this.frame.older) {
-      form.oldest = true;
-    }
-
-    return form;
-  },
-
-  _args: function () {
-    if (!this.frame.arguments) {
-      return [];
-    }
-
-    return this.frame.arguments.map(arg => createValueGrip(arg,
-      this.threadActor._pausePool, this.threadActor.objectGrip));
-  },
-};
 
 /**
  * Creates a BreakpointActor. BreakpointActors exist for the lifetime of their
