@@ -4512,7 +4512,13 @@ Tab.prototype = {
     let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
     let appOrigin = ss.getTabValue(this, "appOrigin");
     if (appOrigin) {
-      let originHost = Services.io.newURI(appOrigin, null, null).host;
+      let originHost = "";
+      try {
+        let originHost = Services.io.newURI(appOrigin, null, null).host;
+      } catch (e if (e.result == Cr.NS_ERROR_FAILURE)) {
+        // NS_ERROR_FAILURE can be thrown by nsIURI.host if the URI scheme does not possess a host - in this case
+        // we just act as if we have an empty host.
+      }
       if (originHost != aLocationURI.host) {
         // Note: going 'back' will not make this tab pinned again
         ss.deleteTabValue(this, "appOrigin");
