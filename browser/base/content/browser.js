@@ -1483,6 +1483,8 @@ var gBrowserInit = {
 
     BrowserOnClick.uninit();
 
+    FeedHandler.uninit();
+
     DevEdition.uninit();
 
     TrackingProtection.uninit();
