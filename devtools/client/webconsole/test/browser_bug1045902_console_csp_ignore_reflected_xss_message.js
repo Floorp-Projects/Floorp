@@ -35,9 +35,16 @@ add_task(function* () {
 });
 
 function loadDocument(browser) {
+  let deferred = promise.defer();
+
   hud.jsterm.clearOutput();
-  browser.loadURI(TEST_FILE);
-  return BrowserTestUtils.browserLoaded(browser);
+  browser.addEventListener("load", function onLoad() {
+    browser.removeEventListener("load", onLoad, true);
+    deferred.resolve();
+  }, true);
+  content.location = TEST_FILE;
+
+  return deferred.promise;
 }
 
 function testViolationMessage() {

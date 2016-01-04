@@ -46,12 +46,6 @@ InterceptedJARChannel::GetChannel(nsIChannel** aChannel)
 }
 
 NS_IMETHODIMP
-InterceptedJARChannel::GetSecureUpgradedChannelURI(nsIURI** aURI)
-{
-  return mChannel->GetURI(aURI);
-}
-
-NS_IMETHODIMP
 InterceptedJARChannel::ResetInterception()
 {
   if (!mChannel) {
