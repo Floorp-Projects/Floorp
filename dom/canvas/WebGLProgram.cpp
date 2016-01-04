@@ -172,10 +172,12 @@ QueryProgramInfo(WebGLProgram* prog, gl::GLContext* gl)
 
         // Collect active locations:
         GLint loc = gl->fGetAttribLocation(prog->mGLName, mappedName.BeginReading());
-        if (loc == -1)
-            MOZ_CRASH("Active attrib has no location.");
-
-        info->activeAttribLocs.insert(loc);
+        if (loc == -1) {
+            if (mappedName != "gl_InstanceID")
+                MOZ_CRASH("Active attrib has no location.");
+        } else {
+            info->activeAttribLocs.insert(loc);
+        }
     }
 
     // Uniforms
