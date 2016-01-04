@@ -191,7 +191,7 @@ SetScreenBrightness(double aBrightness)
   Hal()->SendSetScreenBrightness(aBrightness);
 }
 
-void 
+void
 AdjustSystemClock(int64_t aDeltaMilliseconds)
 {
   Hal()->SendAdjustSystemClock(aDeltaMilliseconds);
@@ -201,7 +201,7 @@ void
 SetTimezone(const nsCString& aTimezoneSpec)
 {
   Hal()->SendSetTimezone(nsCString(aTimezoneSpec));
-} 
+}
 
 nsCString
 GetTimezone()
@@ -466,6 +466,23 @@ bool IsHeadphoneEventFromInputDev()
   return false;
 }
 
+nsresult StartSystemService(const char* aSvcName, const char* aArgs)
+{
+  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+void StopSystemService(const char* aSvcName)
+{
+  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+}
+
+bool SystemServiceIsRunning(const char* aSvcName)
+{
+  NS_RUNTIMEABORT("System services cannot be controlled from sandboxed contexts.");
+  return false;
+}
+
 class HalParent : public PHalParent
                 , public BatteryObserver
                 , public NetworkObserver
@@ -703,14 +720,14 @@ public:
     return true;
   }
 
-  virtual bool 
+  virtual bool
   RecvSetTimezone(const nsCString& aTimezoneSpec) override
   {
     if (!AssertAppProcessPermission(this, "time")) {
       return false;
     }
     hal::SetTimezone(aTimezoneSpec);
-    return true;  
+    return true;
   }
 
   virtual bool
@@ -768,13 +785,13 @@ public:
     hal::RegisterSensorObserver(aSensor, this);
     return true;
   }
-   
+
   virtual bool
   RecvDisableSensorNotifications(const SensorType &aSensor) override {
     hal::UnregisterSensorObserver(aSensor, this);
     return true;
   }
-  
+
   void Notify(const SensorData& aSensorData) override {
     Unused << SendNotifySensorChange(aSensorData);
   }
@@ -799,7 +816,7 @@ public:
     hal::RegisterWakeLockObserver(this);
     return true;
   }
-   
+
   virtual bool
   RecvDisableWakeLockNotifications() override
   {
@@ -813,7 +830,7 @@ public:
     hal::GetWakeLockInfo(aTopic, aWakeLockInfo);
     return true;
   }
-  
+
   void Notify(const WakeLockInformation& aWakeLockInfo) override
   {
     Unused << SendNotifyWakeLockChange(aWakeLockInfo);
@@ -951,7 +968,7 @@ public:
 bool
 HalChild::RecvNotifySensorChange(const hal::SensorData &aSensorData) {
   hal::NotifySensorChange(aSensorData);
-  
+
   return true;
 }
 
