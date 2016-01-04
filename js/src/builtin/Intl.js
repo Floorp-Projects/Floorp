@@ -100,8 +100,8 @@ function removeUnicodeExtensions(locale) {
     if (pos < 0)
         pos = locale.length;
 
-    var left = callFunction(std_String_substring, locale, 0, pos);
-    var right = callFunction(std_String_substring, locale, pos);
+    var left = callFunction(String_substring, locale, 0, pos);
+    var right = callFunction(String_substring, locale, pos);
 
     var extensions;
     var unicodeLocaleExtensionSequenceRE = getUnicodeLocaleExtensionSequenceRE();
@@ -332,7 +332,7 @@ function IsStructurallyValidLanguageTag(locale) {
         return true;
     var pos = callFunction(std_String_indexOf, locale, "-x-");
     if (pos !== -1)
-        locale = callFunction(std_String_substring, locale, 0, pos);
+        locale = callFunction(String_substring, locale, 0, pos);
 
     // Check for duplicate variant or singleton subtags.
     var duplicateVariantRE = getDuplicateVariantRE();
@@ -401,7 +401,7 @@ function CanonicalizeLanguageTag(locale) {
             // 4-character subtags are script codes; their first character
             // needs to be capitalized. "hans" -> "Hans"
             subtag = callFunction(std_String_toUpperCase, subtag[0]) +
-                     callFunction(std_String_substring, subtag, 1);
+                     callFunction(String_substring, subtag, 1);
         } else if (i !== 0 && subtag.length === 2) {
             // 2-character subtags that are not in initial position are region
             // codes; they need to be upper case. "bu" -> "BU"
@@ -678,7 +678,7 @@ function CanonicalizeLocaleList(locales) {
             if (!IsStructurallyValidLanguageTag(tag))
                 ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, tag);
             tag = CanonicalizeLanguageTag(tag);
-            if (callFunction(std_Array_indexOf, seen, tag) === -1)
+            if (callFunction(ArrayIndexOf, seen, tag) === -1)
                 callFunction(std_Array_push, seen, tag);
         }
         k++;
@@ -726,7 +726,7 @@ function BestAvailableLocaleHelper(availableLocales, locale, considerDefaultLoca
         if (pos >= 2 && candidate[pos - 2] === "-")
             pos -= 2;
 
-        candidate = callFunction(std_String_substring, candidate, 0, pos);
+        candidate = callFunction(String_substring, candidate, 0, pos);
     }
 }
 
@@ -879,7 +879,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
         // Step 11.g.
         if (extensionSubtags !== undefined) {
             // Step 11.g.i.
-            var keyPos = callFunction(std_Array_indexOf, extensionSubtags, key);
+            var keyPos = callFunction(ArrayIndexOf, extensionSubtags, key);
 
             // Step 11.g.ii.
             if (keyPos !== -1) {
@@ -891,7 +891,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
                     var requestedValue = extensionSubtags[keyPos + 1];
 
                     // Step 11.g.ii.1.b.
-                    valuePos = callFunction(std_Array_indexOf, keyLocaleData, requestedValue);
+                    valuePos = callFunction(ArrayIndexOf, keyLocaleData, requestedValue);
 
                     // Step 11.g.ii.1.c.
                     if (valuePos !== -1) {
@@ -905,7 +905,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
                     // and true is an allowed value, it's used.
 
                     // Step 11.g.ii.2.a.
-                    valuePos = callFunction(std_Array_indexOf, keyLocaleData, "true");
+                    valuePos = callFunction(ArrayIndexOf, keyLocaleData, "true");
 
                     // Step 11.g.ii.2.b.
                     if (valuePos !== -1)
@@ -921,7 +921,7 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
         // Step 11.h, 11.h.ii.
         if (optionsValue !== undefined &&
-            callFunction(std_Array_indexOf, keyLocaleData, optionsValue) !== -1)
+            callFunction(ArrayIndexOf, keyLocaleData, optionsValue) !== -1)
         {
             // Step 11.h.ii.1.
             if (optionsValue !== value) {
@@ -938,8 +938,8 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
     // Step 12.
     if (supportedExtension.length > 2) {
-        var preExtension = callFunction(std_String_substring, foundLocale, 0, extensionIndex);
-        var postExtension = callFunction(std_String_substring, foundLocale, extensionIndex);
+        var preExtension = callFunction(String_substring, foundLocale, 0, extensionIndex);
+        var postExtension = callFunction(String_substring, foundLocale, extensionIndex);
         foundLocale = preExtension + supportedExtension + postExtension;
     }
 
@@ -1060,7 +1060,7 @@ function GetOption(options, property, type, values, fallback) {
             assert(false, "GetOption");
 
         // Step 2.d.
-        if (values !== undefined && callFunction(std_Array_indexOf, values, value) === -1)
+        if (values !== undefined && callFunction(ArrayIndexOf, values, value) === -1)
             ThrowRangeError(JSMSG_INVALID_OPTION_VALUE, property, value);
 
         // Step 2.e.
@@ -2612,8 +2612,8 @@ function BasicFormatMatcher(options, formats) {
                 score -= removalPenalty;
             } else {
                 // Step 11.c.vi.
-                var optionsPropIndex = callFunction(std_Array_indexOf, values, optionsProp);
-                var formatPropIndex = callFunction(std_Array_indexOf, values, formatProp);
+                var optionsPropIndex = callFunction(ArrayIndexOf, values, optionsProp);
+                var formatPropIndex = callFunction(ArrayIndexOf, values, formatProp);
                 var delta = std_Math_max(std_Math_min(formatPropIndex - optionsPropIndex, 2), -2);
                 if (delta === 2)
                     score -= longMorePenalty;

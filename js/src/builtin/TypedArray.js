@@ -964,6 +964,7 @@ function TypedArrayValues() {
     // Step 7.
     return CreateArrayIterator(O, ITEM_KIND_VALUE);
 }
+_SetCanonicalName(TypedArrayValues, "values");
 
 // Proposed for ES7:
 // https://github.com/tc39/Array.prototype.includes/blob/7c023c19a0/spec.md

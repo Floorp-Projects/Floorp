@@ -228,7 +228,7 @@ function StringIteratorNext() {
     }
 
     UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, index + charCount);
-    result.value = callFunction(std_String_substring, S, index, index + charCount);
+    result.value = callFunction(String_substring, S, index, index + charCount);
 
     return result;
 }
@@ -433,14 +433,14 @@ function EscapeAttributeValue(v) {
     var chunkStart = 0;
     for (var i = 0; i < inputLen; i++) {
         if (inputStr[i] === '"') {
-            outputStr += callFunction(std_String_substring, inputStr, chunkStart, i) + '&quot;';
+            outputStr += callFunction(String_substring, inputStr, chunkStart, i) + '&quot;';
             chunkStart = i + 1;
         }
     }
     if (chunkStart === 0)
         return inputStr;
     if (chunkStart < inputLen)
-        outputStr += callFunction(std_String_substring, inputStr, chunkStart);
+        outputStr += callFunction(String_substring, inputStr, chunkStart);
     return outputStr;
 }
 

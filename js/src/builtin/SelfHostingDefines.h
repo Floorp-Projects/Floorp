@@ -34,6 +34,11 @@
 // stored.
 #define LAZY_FUNCTION_NAME_SLOT 0
 
+// The extended slot which contains a boolean value that indicates whether
+// that the canonical name of the self-hosted builtins is set in self-hosted
+// global. This slot is used only in debug build.
+#define HAS_SELFHOSTED_CANONICAL_NAME_SLOT 0
+
 // Stores the private WeakMap slot used for WeakSets
 #define WEAKSET_MAP_SLOT 0
 
