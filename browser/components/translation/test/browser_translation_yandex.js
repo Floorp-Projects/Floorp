@@ -10,8 +10,6 @@ const kEnginePref = "browser.translation.engine";
 const kApiKeyPref = "browser.translation.yandex.apiKeyOverride";
 const kShowUIPref = "browser.translation.ui.show";
 
-const {YandexTranslator} = Cu.import("resource:///modules/translation/YandexTranslator.jsm", {});
-const {TranslationDocument} = Cu.import("resource:///modules/translation/TranslationDocument.jsm", {});
 const {Promise} = Cu.import("resource://gre/modules/Promise.jsm", {});
 const {Translation} = Cu.import("resource:///modules/translation/Translation.jsm", {});
 
@@ -40,11 +38,17 @@ add_task(function* test_yandex_translation() {
   // Translating the contents of the loaded tab.
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  let client = new YandexTranslator(
-    new TranslationDocument(browser.contentDocument), "fr", "en");
-  let result = yield client.translate();
 
-  Assert.ok(result, "There should be a result.");
+  yield ContentTask.spawn(browser, null, function*() {
+    Cu.import("resource:///modules/translation/TranslationDocument.jsm");
+    Cu.import("resource:///modules/translation/YandexTranslator.jsm");
+
+    let client = new YandexTranslator(
+      new TranslationDocument(content.document), "fr", "en");
+    let result = yield client.translate();
+
+    ok(result, "There should be a result.");
+  });
 
   gBrowser.removeTab(tab);
 });

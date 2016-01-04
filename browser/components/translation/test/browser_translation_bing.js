@@ -38,12 +38,18 @@ add_task(function* test_bing_translation() {
   // Translating the contents of the loaded tab.
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  let client = new BingTranslator(
-    new TranslationDocument(browser.contentDocument), "fr", "en");
-  let result = yield client.translate();
 
-  // XXXmikedeboer; here you would continue the test/ content inspection.
-  Assert.ok(result, "There should be a result.");
+  yield ContentTask.spawn(browser, null, function*() {
+    Cu.import("resource:///modules/translation/BingTranslator.jsm");
+    Cu.import("resource:///modules/translation/TranslationDocument.jsm");
+
+    let client = new BingTranslator(
+      new TranslationDocument(content.document), "fr", "en");
+    let result = yield client.translate();
+
+    // XXXmikedeboer; here you would continue the test/ content inspection.
+    ok(result, "There should be a result");
+  });
 
   gBrowser.removeTab(tab);
 });
@@ -67,18 +73,24 @@ add_task(function* test_handling_out_of_valid_key_error() {
   // Translating the contents of the loaded tab.
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  let client = new BingTranslator(
-    new TranslationDocument(browser.contentDocument), "fr", "en");
-  client._resetToken();
-  try {
-    yield client.translate();
-  } catch (ex) {
-    // It is alright that the translation fails.
-  }
-  client._resetToken();
 
-  // Checking if the client detected service and unavailable.
-  Assert.ok(client._serviceUnavailable, "Service should be detected unavailable.");
+  yield ContentTask.spawn(browser, null, function*() {
+    Cu.import("resource:///modules/translation/BingTranslator.jsm");
+    Cu.import("resource:///modules/translation/TranslationDocument.jsm");
+
+    let client = new BingTranslator(
+      new TranslationDocument(content.document), "fr", "en");
+    client._resetToken();
+    try {
+      yield client.translate();
+    } catch (ex) {
+      // It is alright that the translation fails.
+    }
+    client._resetToken();
+
+    // Checking if the client detected service and unavailable.
+    ok(client._serviceUnavailable, "Service should be detected unavailable.");
+  });
 
   // Cleaning up.
   Services.prefs.setCharPref(kClientIdPref, "testClient");
