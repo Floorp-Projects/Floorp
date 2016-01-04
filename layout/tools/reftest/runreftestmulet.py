@@ -9,8 +9,6 @@ import sys
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-from runreftest import RefTest
-
 from marionette_driver import expected
 from marionette_driver.by import By
 from marionette_driver.marionette import Marionette
@@ -20,6 +18,10 @@ from mozprocess import ProcessHandler
 from mozrunner import FirefoxRunner
 import mozinfo
 import mozlog
+
+from runreftest import RefTest
+import reftestcommandline
+
 
 log = mozlog.unstructured.getLogger('REFTEST')
 
@@ -207,3 +209,12 @@ def run_test_harness(parser, options):
         raise Exception("must specify --profile when specifying --mulet")
 
     sys.exit(reftest.run_tests(options.tests, options))
+
+
+def run(**kwargs):
+    # Mach gives us kwargs; this is a way to turn them back into an
+    # options object
+    parser = reftestcommandline.B2GArgumentParser()
+    parser.set_defaults(**kwargs)
+    options = parser.parse_args(kwargs['tests'])
+    return run_test_harness(parser, options)

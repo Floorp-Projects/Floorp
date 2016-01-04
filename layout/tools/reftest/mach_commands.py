@@ -4,7 +4,6 @@
 
 from __future__ import absolute_import, unicode_literals
 
-import mozpack.path as mozpath
 import os
 import re
 import sys
@@ -18,7 +17,6 @@ from mozbuild.base import (
 )
 
 from mach.decorators import (
-    CommandArgument,
     CommandProvider,
     Command,
 )
@@ -33,8 +31,8 @@ If you have a B2G build, this can be found in
 '''.lstrip()
 
 GAIA_PROFILE_NOT_FOUND = '''
-The %s command requires a non-debug gaia profile. Either pass in --profile,
-or set the GAIA_PROFILE environment variable.
+The reftest command requires a non-debug gaia profile on Mulet.
+Either pass in --profile, or set the GAIA_PROFILE environment variable.
 
 If you do not have a non-debug gaia profile, you can build one:
     $ git clone https://github.com/mozilla-b2g/gaia
@@ -45,8 +43,8 @@ The profile should be generated in a directory called 'profile'.
 '''.lstrip()
 
 GAIA_PROFILE_IS_DEBUG = '''
-The %s command requires a non-debug gaia profile. The specified profile,
-%s, is a debug profile.
+The reftest command requires a non-debug gaia profile on Mulet.
+The specified profile, %s, is a debug profile.
 
 If you do not have a non-debug gaia profile, you can build one:
     $ git clone https://github.com/mozilla-b2g/gaia
@@ -57,11 +55,12 @@ The profile should be generated in a directory called 'profile'.
 '''.lstrip()
 
 MARIONETTE_DISABLED = '''
-The %s command requires a marionette enabled build.
+The reftest command requires a marionette enabled build on Mulet.
 
 Add 'ENABLE_MARIONETTE=1' to your mozconfig file and re-build the application.
 Your currently active mozconfig is %s.
 '''.lstrip()
+
 
 class ReftestRunner(MozbuildObject):
     """Easily run reftests.
@@ -83,13 +82,28 @@ class ReftestRunner(MozbuildObject):
     def _make_shell_string(self, s):
         return "'%s'" % re.sub("'", r"'\''", s)
 
+    def _setup_objdir(self, **kwargs):
+        # reftest imports will happen from the objdir
+        sys.path.insert(0, self.reftest_dir)
+
+        if not kwargs["tests"]:
+            test_subdir = {
+                "reftest": os.path.join('layout', 'reftests'),
+                "crashtest": os.path.join('layout', 'crashtest'),
+            }[kwargs['suite']]
+            kwargs["tests"] = [test_subdir]
+
+        tests = os.path.join(self.reftest_dir, 'tests')
+        if not os.path.isdir(tests):
+            os.symlink(self.topsrcdir, tests)
+
     def run_b2g_test(self, b2g_home=None, xre_path=None, **kwargs):
         """Runs a b2g reftest.
 
         filter is a regular expression (in JS syntax, as could be passed to the
         RegExp constructor) to select which reftests to run from the manifest.
 
-        test_file is a path to a test file. It can be a relative path from the
+        tests is a list of paths. It can be a relative path from the
         top source directory, an absolute filename, or a directory containing
         test files.
 
@@ -99,21 +113,8 @@ class ReftestRunner(MozbuildObject):
         if kwargs["suite"] not in ('reftest', 'crashtest'):
             raise Exception('None or unrecognized reftest suite type.')
 
-        sys.path.insert(0, self.reftest_dir)
-
-        test_subdir = {"reftest": os.path.join('layout', 'reftests'),
-                       "crashtest": os.path.join('layout', 'crashtest')}[kwargs["suite"]]
-
-        # Find the manifest file
-        if not kwargs["tests"]:
-            if not os.path.exists(os.path.join(self.topsrcdir, test_subdir)):
-                test_file = mozpath.relpath(os.path.abspath(test_subdir),
-                                            self.topsrcdir)
-            kwargs["tests"] = [test_subdir]
-
-        tests = os.path.join(self.reftest_dir, 'tests')
-        if not os.path.isdir(tests):
-            os.symlink(self.topsrcdir, tests)
+        self._setup_objdir(**kwargs)
+        import runreftestb2g
 
         for i, path in enumerate(kwargs["tests"]):
             # Non-absolute paths are relative to the packaged directory, which
@@ -121,11 +122,6 @@ class ReftestRunner(MozbuildObject):
             if os.path.exists(os.path.abspath(path)):
                 path = os.path.relpath(path, os.path.join(self.topsrcdir))
             kwargs["tests"][i] = os.path.join('tests', path)
-
-        return self.run_b2g_remote(b2g_home, xre_path, **kwargs)
-
-    def run_b2g_remote(self, b2g_home, xre_path, **kwargs):
-        import runreftestb2g
 
         try:
             which.which('adb')
@@ -143,7 +139,41 @@ class ReftestRunner(MozbuildObject):
         if kwargs["suite"] == 'reftest':
             kwargs["oop"] = True
 
-        return runreftestb2g.run_remote(**kwargs)
+        return runreftestb2g.run(**kwargs)
+
+    def run_mulet_test(self, **kwargs):
+        """Runs a mulet reftest."""
+        self._setup_objdir(**kwargs)
+        import runreftestmulet
+
+        if self.substs.get('ENABLE_MARIONETTE') != '1':
+            print(MARIONETTE_DISABLED % self.mozconfig['path'])
+            return 1
+
+        if not kwargs["profile"]:
+            gaia_profile = os.environ.get('GAIA_PROFILE')
+            if not gaia_profile:
+                print(GAIA_PROFILE_NOT_FOUND)
+                return 1
+            kwargs["profile"] = gaia_profile
+
+        if os.path.isfile(os.path.join(kwargs["profile"], 'extensions',
+                                       'httpd@gaiamobile.org')):
+            print(GAIA_PROFILE_IS_DEBUG % kwargs["profile"])
+            return 1
+
+        kwargs['app'] = self.get_binary_path()
+        kwargs['mulet'] = True
+        kwargs['oop'] = True
+
+        if kwargs['oop']:
+            kwargs['browser_arg'] = '-oop'
+        if not kwargs['app'].endswith('-bin'):
+            kwargs['app'] = '%s-bin' % kwargs['app']
+        if not os.path.isfile(kwargs['app']):
+            kwargs['app'] = kwargs['app'][:-len('-bin')]
+
+        return runreftestmulet.run(**kwargs)
 
     def run_desktop_test(self, **kwargs):
         """Runs a reftest, in desktop Firefox."""
@@ -173,7 +203,7 @@ class ReftestRunner(MozbuildObject):
         if not kwargs["runTestsInParallel"]:
             kwargs["logFile"] = "%s.log" % kwargs["suite"]
 
-        #Remove the stdout handler from the internal logger and let mach deal with it
+        # Remove the stdout handler from the internal logger and let mach deal with it
         runreftest.log.removeHandler(runreftest.log.handlers[0])
         self.log_manager.enable_unstructured()
         try:
@@ -260,6 +290,7 @@ class ReftestRunner(MozbuildObject):
 
         return rv
 
+
 def process_test_objects(kwargs):
     """|mach test| works by providing a test_objects argument, from
     which the test path must be extracted and converted into a normal
@@ -271,13 +302,17 @@ def process_test_objects(kwargs):
         kwargs["tests"].extend(item["path"] for item in kwargs["test_objects"])
         del kwargs["test_objects"]
 
+
 def get_parser():
     here = os.path.abspath(os.path.dirname(__file__))
     build_obj = MozbuildObject.from_environment(cwd=here)
     if conditions.is_android(build_obj):
         return reftestcommandline.RemoteArgumentsParser()
+    elif conditions.is_mulet(build_obj):
+        return reftestcommandline.B2GArgumentParser()
     else:
         return reftestcommandline.DesktopArgumentsParser()
+
 
 @CommandProvider
 class MachCommands(MachCommandBase):
@@ -333,6 +368,8 @@ class MachCommands(MachCommandBase):
             from mozrunner.devices.android_device import verify_android_device
             verify_android_device(self, install=True, xre=True)
             return reftest.run_android_test(**kwargs)
+        elif conditions.is_mulet(self):
+            return reftest.run_mulet_test(**kwargs)
         return reftest.run_desktop_test(**kwargs)
 
 
