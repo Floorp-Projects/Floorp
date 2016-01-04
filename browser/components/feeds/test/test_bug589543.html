@@ -21,8 +21,7 @@ SimpleTest.waitForExplicitFinish();
 
 addLoadEvent(function() {
   var doc = SpecialPowers.wrap($("testFrame")).contentDocument;
-  var daddy = doc.getElementById("feedSubscribeLine");
-  var popup = doc.getAnonymousElementByAttribute(daddy, "anonid", "handlersMenuPopup");
+  var popup = doc.getElementById("handlersMenuList");
   isnot(popup, null, "Feed preview should have a handlers popup");
 });
 addLoadEvent(SimpleTest.finish);
