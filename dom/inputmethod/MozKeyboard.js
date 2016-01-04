@@ -739,24 +739,67 @@ InputContextDOMRequestIpcHelper.prototype = {
   }
 };
 
+function MozInputContextSelectionChangeEventDetail(ctx, ownAction) {
+  this._ctx = ctx;
+  this.ownAction = ownAction;
+}
+
+MozInputContextSelectionChangeEventDetail.prototype = {
+  classID: Components.ID("ef35443e-a400-4ae3-9170-c2f4e05f7aed"),
+  QueryInterface: XPCOMUtils.generateQI([]),
+
+  ownAction: false,
+
+  get selectionStart() {
+    return this._ctx.selectionStart;
+  },
+
+  get selectionEnd() {
+    return this._ctx.selectionEnd;
+  }
+};
+
+function MozInputContextSurroundingTextChangeEventDetail(ctx, ownAction) {
+  this._ctx = ctx;
+  this.ownAction = ownAction;
+}
+
+MozInputContextSurroundingTextChangeEventDetail.prototype = {
+  classID: Components.ID("1c50fdaf-74af-4b2e-814f-792caf65a168"),
+  QueryInterface: XPCOMUtils.generateQI([]),
+
+  ownAction: false,
+
+  get text() {
+    return this._ctx.text;
+  },
+
+  get textBeforeCursor() {
+    return this._ctx.textBeforeCursor;
+  },
+
+  get textAfterCursor() {
+    return this._ctx.textAfterCursor;
+  }
+};
+
  /**
  * ==============================================
  * InputContext
  * ==============================================
  */
-function MozInputContext(ctx) {
+function MozInputContext(data) {
   this._context = {
-    type: ctx.type,
-    inputType: ctx.inputType,
-    inputMode: ctx.inputMode,
-    lang: ctx.lang,
-    selectionStart: ctx.selectionStart,
-    selectionEnd: ctx.selectionEnd,
-    textBeforeCursor: ctx.textBeforeCursor,
-    textAfterCursor: ctx.textAfterCursor
+    type: data.type,
+    inputType: data.inputType,
+    inputMode: data.inputMode,
+    lang: data.lang,
+    selectionStart: data.selectionStart,
+    selectionEnd: data.selectionEnd,
+    text: data.value
   };
 
-  this._contextId = ctx.contextId;
+  this._contextId = data.contextId;
 }
 
 MozInputContext.prototype = {
@@ -849,46 +892,43 @@ MozInputContext.prototype = {
     }
   },
 
-  updateSelectionContext: function ic_updateSelectionContext(ctx, ownAction) {
+  updateSelectionContext: function ic_updateSelectionContext(data, ownAction) {
     if (!this._context) {
       return;
     }
 
-    let selectionDirty = this._context.selectionStart !== ctx.selectionStart ||
-          this._context.selectionEnd !== ctx.selectionEnd;
-    let surroundDirty = this._context.textBeforeCursor !== ctx.textBeforeCursor ||
-          this._context.textAfterCursor !== ctx.textAfterCursor;
+    let selectionDirty =
+      this._context.selectionStart !== data.selectionStart ||
+      this._context.selectionEnd !== data.selectionEnd;
+    let surroundDirty = selectionDirty || data.text !== this._contextId.text;
 
-    this._context.selectionStart = ctx.selectionStart;
-    this._context.selectionEnd = ctx.selectionEnd;
-    this._context.textBeforeCursor = ctx.textBeforeCursor;
-    this._context.textAfterCursor = ctx.textAfterCursor;
+    this._context.text = data.text;
+    this._context.selectionStart = data.selectionStart;
+    this._context.selectionEnd = data.selectionEnd;
 
     if (selectionDirty) {
-      this._fireEvent("selectionchange", {
-        selectionStart: ctx.selectionStart,
-        selectionEnd: ctx.selectionEnd,
-        ownAction: ownAction
-      });
+      let selectionChangeDetail =
+        new MozInputContextSelectionChangeEventDetail(this, ownAction);
+      let wrappedSelectionChangeDetail =
+        this._window.MozInputContextSelectionChangeEventDetail
+          ._create(this._window, selectionChangeDetail);
+      let selectionChangeEvent = new this._window.CustomEvent("selectionchange",
+        { cancelable: false, detail: wrappedSelectionChangeDetail });
+
+      this.__DOM_IMPL__.dispatchEvent(selectionChangeEvent);
     }
 
     if (surroundDirty) {
-      this._fireEvent("surroundingtextchange", {
-        beforeString: ctx.textBeforeCursor,
-        afterString: ctx.textAfterCursor,
-        ownAction: ownAction
-      });
+      let surroundingTextChangeDetail =
+        new MozInputContextSurroundingTextChangeEventDetail(this, ownAction);
+      let wrappedSurroundingTextChangeDetail =
+        this._window.MozInputContextSurroundingTextChangeEventDetail
+          ._create(this._window, surroundingTextChangeDetail);
+      let selectionChangeEvent = new this._window.CustomEvent("surroundingtextchange",
+        { cancelable: false, detail: wrappedSurroundingTextChangeDetail });
+
+      this.__DOM_IMPL__.dispatchEvent(selectionChangeEvent);
     }
-  },
-
-  _fireEvent: function ic_fireEvent(eventName, aDetail) {
-    let detail = {
-      detail: aDetail
-    };
-
-    let event = new this._window.CustomEvent(eventName,
-                                             Cu.cloneInto(detail, this._window));
-    this.__DOM_IMPL__.dispatchEvent(event);
   },
 
   // tag name of the input field
@@ -910,15 +950,16 @@ MozInputContext.prototype = {
   },
 
   getText: function ic_getText(offset, length) {
-    let self = this;
-    return this._sendPromise(function(resolverId) {
-      cpmmSendAsyncMessageWithKbID(self, 'Keyboard:GetText', {
-        contextId: self._contextId,
-        requestId: resolverId,
-        offset: offset,
-        length: length
-      });
-    });
+    let text;
+    if (offset && length) {
+      text = this._context.text.substr(offset, length);
+    } else if (offset) {
+      text = this._context.text.substr(offset);
+    } else {
+      text = this._context.text;
+    }
+
+    return this._window.Promise.resolve(text);
   },
 
   get selectionStart() {
@@ -929,12 +970,23 @@ MozInputContext.prototype = {
     return this._context.selectionEnd;
   },
 
+  get text() {
+    return this._context.text;
+  },
+
   get textBeforeCursor() {
-    return this._context.textBeforeCursor;
+    let text = this._context.text;
+    let start = this._context.selectionStart;
+    return (start < 100) ?
+      text.substr(0, start) :
+      text.substr(start - 100, 100);
   },
 
   get textAfterCursor() {
-    return this._context.textAfterCursor;
+    let text = this._context.text;
+    let start = this._context.selectionStart;
+    let end = this._context.selectionEnd;
+    return text.substr(start, end - start + 100);
   },
 
   setSelectionRange: function ic_setSelectionRange(start, length) {
