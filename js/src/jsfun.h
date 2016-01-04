@@ -666,7 +666,7 @@ NewFunctionWithProto(ExclusiveContext* cx, JSNative native, unsigned nargs,
                      NewFunctionProtoHandling protoHandling = NewFunctionClassProto);
 
 extern JSAtom*
-IdToFunctionName(JSContext* cx, HandleId id);
+IdToFunctionName(JSContext* cx, HandleId id, const char* prefix = nullptr);
 
 extern JSFunction*
 DefineFunction(JSContext* cx, HandleObject obj, HandleId id, JSNative native,
