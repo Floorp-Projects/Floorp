@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <math.h>
 
-#include "prprf.h"
 #include "DecoderTraits.h"
 #include "harfbuzz/hb.h"
 #include "imgICache.h"
@@ -3525,7 +3524,7 @@ nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
 }
 
 void
-nsContentUtils::LogMessageToConsole(const char* aMsg, ...)
+nsContentUtils::LogMessageToConsole(const char* aMsg)
 {
   if (!sConsoleService) { // only need to bother null-checking here
     CallGetService(NS_CONSOLESERVICE_CONTRACTID, &sConsoleService);
@@ -3533,17 +3532,7 @@ nsContentUtils::LogMessageToConsole(const char* aMsg, ...)
       return;
     }
   }
-
-  va_list args;
-  va_start(args, aMsg);
-  char* formatted = PR_vsmprintf(aMsg, args);
-  va_end(args);
-  if (!formatted) {
-    return;
-  }
-
-  sConsoleService->LogStringMessage(NS_ConvertUTF8toUTF16(formatted).get());
-  PR_smprintf_free(formatted);
+  sConsoleService->LogStringMessage(NS_ConvertUTF8toUTF16(aMsg).get());
 }
 
 bool
