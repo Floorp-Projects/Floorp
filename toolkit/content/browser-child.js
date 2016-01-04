@@ -223,19 +223,6 @@ var WebNavigation =  {
     addMessageListener("WebNavigation:LoadURI", this);
     addMessageListener("WebNavigation:Reload", this);
     addMessageListener("WebNavigation:Stop", this);
-
-    // Send a CPOW for the sessionHistory object. We need to make sure
-    // it stays alive as long as the content script since CPOWs are
-    // weakly held.
-    let history = this.webNavigation.sessionHistory;
-    this._sessionHistory = history;
-    sendAsyncMessage("WebNavigation:setHistory", {}, {history: history});
-
-    addEventListener("unload", this.uninit);
-  },
-
-  uninit: function() {
-    this._sessionHistory = null;
   },
 
   get webNavigation() {
