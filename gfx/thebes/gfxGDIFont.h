@@ -42,7 +42,7 @@ public:
     /* overrides for the pure virtual methods in gfxFont */
     virtual uint32_t GetSpaceGlyph() override;
 
-    virtual bool SetupCairoFont(gfxContext *aContext) override;
+    virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
     /* override Measure to add padding for antialiasing */
     virtual RunMetrics Measure(gfxTextRun *aTextRun,

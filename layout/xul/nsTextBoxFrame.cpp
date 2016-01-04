@@ -476,7 +476,6 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
         presContext->RoundAppUnitsToNearestDevPixels(aTextRect.y + ascent);
     }
 
-    RefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
     Point pt(presContext->AppUnitsToGfxUnits(aTextRect.x),
              presContext->AppUnitsToGfxUnits(aTextRect.y));
     Float width = presContext->AppUnitsToGfxUnits(aTextRect.width);

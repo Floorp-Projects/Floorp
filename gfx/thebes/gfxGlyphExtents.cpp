@@ -45,11 +45,11 @@ gfxGlyphExtents::GetTightGlyphExtentsAppUnits(gfxFont *aFont,
             return false;
         }
 
-        if (aFont->SetupCairoFont(aContext)) {
+        if (aFont->SetupCairoFont(aContext->GetDrawTarget())) {
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
             ++gGlyphExtentsSetupLazyTight;
 #endif
-            aFont->SetupGlyphExtents(aContext, aGlyphID, true, this);
+            aFont->SetupGlyphExtents(aContext->GetDrawTarget(), aGlyphID, true, this);
             entry = mTightGlyphExtents.GetEntry(aGlyphID);
         }
         if (!entry) {

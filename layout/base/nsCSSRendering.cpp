@@ -929,10 +929,9 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              Float(width / twipsPerPixel) };
 
   // start drawing
-  gfxContext *ctx = aRenderingContext.ThebesContext();
 
   nsCSSBorderRenderer br(aPresContext->Type(),
-                         ctx->GetDrawTarget(),
+                         aRenderingContext.GetDrawTarget(),
                          oRect,
                          outlineStyles,
                          outlineWidths,

@@ -549,6 +549,90 @@ gfxFontShaper::MergeFontFeatures(
     }
 }
 
+// Work out whether cairo will snap inter-glyph spacing to pixels.
+//
+// Layout does not align text to pixel boundaries, so, with font drawing
+// backends that snap glyph positions to pixels, it is important that
+// inter-glyph spacing within words is always an integer number of pixels.
+// This ensures that the drawing backend snaps all of the word's glyphs in the
+// same direction and so inter-glyph spacing remains the same.
+//
+/* static */ void
+gfxFontShaper::GetRoundOffsetsToPixels(DrawTarget* aDrawTarget,
+                                       bool* aRoundX, bool* aRoundY)
+{
+    *aRoundX = false;
+    // Could do something fancy here for ScaleFactors of
+    // AxisAlignedTransforms, but we leave things simple.
+    // Not much point rounding if a matrix will mess things up anyway.
+    // Also return false for non-cairo contexts.
+    if (aDrawTarget->GetTransform().HasNonTranslation()) {
+        *aRoundY = false;
+        return;
+    }
+
+    // All raster backends snap glyphs to pixels vertically.
+    // Print backends set CAIRO_HINT_METRICS_OFF.
+    *aRoundY = true;
+
+    cairo_t* cr = gfxFont::RefCairo(aDrawTarget);
+    cairo_scaled_font_t *scaled_font = cairo_get_scaled_font(cr);
+
+    // bug 1198921 - this sometimes fails under Windows for whatver reason
+    NS_ASSERTION(scaled_font, "null cairo scaled font should never be returned "
+                 "by cairo_get_scaled_font");
+    if (!scaled_font) {
+        *aRoundX = true; // default to the same as the fallback path below
+        return;
+    }
+
+    // Sometimes hint metrics gets set for us, most notably for printing.
+    cairo_font_options_t *font_options = cairo_font_options_create();
+    cairo_scaled_font_get_font_options(scaled_font, font_options);
+    cairo_hint_metrics_t hint_metrics =
+        cairo_font_options_get_hint_metrics(font_options);
+    cairo_font_options_destroy(font_options);
+
+    switch (hint_metrics) {
+    case CAIRO_HINT_METRICS_OFF:
+        *aRoundY = false;
+        return;
+    case CAIRO_HINT_METRICS_DEFAULT:
+        // Here we mimic what cairo surface/font backends do.  Printing
+        // surfaces have already been handled by hint_metrics.  The
+        // fallback show_glyphs implementation composites pixel-aligned
+        // glyph surfaces, so we just pick surface/font combinations that
+        // override this.
+        switch (cairo_scaled_font_get_type(scaled_font)) {
+#if CAIRO_HAS_DWRITE_FONT // dwrite backend is not in std cairo releases yet
+        case CAIRO_FONT_TYPE_DWRITE:
+            // show_glyphs is implemented on the font and so is used for
+            // all surface types; however, it may pixel-snap depending on
+            // the dwrite rendering mode
+            if (!cairo_dwrite_scaled_font_get_force_GDI_classic(scaled_font) &&
+                gfxWindowsPlatform::GetPlatform()->DWriteMeasuringMode() ==
+                    DWRITE_MEASURING_MODE_NATURAL) {
+                return;
+            }
+            MOZ_FALLTHROUGH;
+#endif
+        case CAIRO_FONT_TYPE_QUARTZ:
+            // Quartz surfaces implement show_glyphs for Quartz fonts
+            if (cairo_surface_get_type(cairo_get_target(cr)) ==
+                CAIRO_SURFACE_TYPE_QUARTZ) {
+                return;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
+    case CAIRO_HINT_METRICS_ON:
+        break;
+    }
+    *aRoundX = true;
+}
+
 void
 gfxShapedText::SetupClusterBoundaries(uint32_t        aOffset,
                                       const char16_t *aString,
@@ -781,7 +865,7 @@ gfxFont::~gfxFont()
 gfxFloat
 gfxFont::GetGlyphHAdvance(gfxContext *aCtx, uint16_t aGID)
 {
-    if (!SetupCairoFont(aCtx)) {
+    if (!SetupCairoFont(aCtx->GetDrawTarget())) {
         return 0;
     }
     if (ProvidesGlyphWidths()) {
@@ -1642,10 +1726,10 @@ private:
 // the second draw occurs at a constant offset in device pixels.
 
 double
-gfxFont::CalcXScale(gfxContext *aContext)
+gfxFont::CalcXScale(DrawTarget* aDrawTarget)
 {
     // determine magnitude of a 1px x offset in device space
-    Size t = aContext->UserToDevice(Size(1.0, 0.0));
+    Size t = aDrawTarget->GetTransform() * Size(1.0, 0.0);
     if (t.width == 1.0 && t.height == 0.0) {
         // short-circuit the most common case to avoid sqrt() and division
         return 1.0;
@@ -1716,8 +1800,9 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
     }
 
     if (fontParams.haveColorGlyphs &&
-        RenderColorGlyph(runParams.context, fontParams.scaledFont,
-                         fontParams.renderingOptions, fontParams.drawOptions,
+        RenderColorGlyph(runParams.dt,
+                         fontParams.scaledFont, fontParams.renderingOptions,
+                         fontParams.drawOptions,
                          fontParams.matInv * gfx::Point(devPt.x, devPt.y),
                          aGlyphID)) {
         return;
@@ -1969,7 +2054,7 @@ gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
     // Synthetic-bold strikes are each offset one device pixel in run direction.
     // (these values are only needed if IsSyntheticBold() is true)
     if (IsSyntheticBold()) {
-        double xscale = CalcXScale(aRunParams.context);
+        double xscale = CalcXScale(aRunParams.context->GetDrawTarget());
         fontParams.synBoldOnePixelOffset = aRunParams.direction * xscale;
         if (xscale != 0.0) {
             // use as many strikes as needed for the the increased advance
@@ -2098,7 +2183,7 @@ gfxFont::RenderSVGGlyph(gfxContext *aContext, gfxPoint aPoint, DrawMode aDrawMod
 }
 
 bool
-gfxFont::RenderColorGlyph(gfxContext* aContext,
+gfxFont::RenderColorGlyph(DrawTarget* aDrawTarget,
                           mozilla::gfx::ScaledFont* scaledFont,
                           GlyphRenderingOptions* aRenderingOptions,
                           mozilla::gfx::DrawOptions aDrawOptions,
@@ -2112,7 +2197,6 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         return false;
     }
 
-    RefPtr<DrawTarget> dt = aContext->GetDrawTarget();
     for (uint32_t layerIndex = 0; layerIndex < layerGlyphs.Length();
          layerIndex++) {
         Glyph glyph;
@@ -2123,9 +2207,9 @@ gfxFont::RenderColorGlyph(gfxContext* aContext,
         buffer.mGlyphs = &glyph;
         buffer.mNumGlyphs = 1;
 
-        dt->FillGlyphs(scaledFont, buffer,
-                       ColorPattern(layerColors[layerIndex]),
-                       aDrawOptions, aRenderingOptions);
+        aDrawTarget->FillGlyphs(scaledFont, buffer,
+                                ColorPattern(layerColors[layerIndex]),
+                                aDrawOptions, aRenderingOptions);
     }
     return true;
 }
@@ -2577,26 +2661,26 @@ gfxFont::ShapeText(gfxContext      *aContext,
 
     NS_WARN_IF_FALSE(ok, "shaper failed, expect scrambled or missing text");
 
-    PostShapingFixup(aContext, aText, aOffset, aLength, aVertical,
-                     aShapedText);
+    PostShapingFixup(aContext->GetDrawTarget(), aText, aOffset, aLength,
+                     aVertical, aShapedText);
 
     return ok;
 }
 
 void
-gfxFont::PostShapingFixup(gfxContext      *aContext,
-                          const char16_t *aText,
-                          uint32_t         aOffset,
-                          uint32_t         aLength,
-                          bool             aVertical,
-                          gfxShapedText   *aShapedText)
+gfxFont::PostShapingFixup(DrawTarget*     aDrawTarget,
+                          const char16_t* aText,
+                          uint32_t        aOffset,
+                          uint32_t        aLength,
+                          bool            aVertical,
+                          gfxShapedText*  aShapedText)
 {
     if (IsSyntheticBold()) {
         const Metrics& metrics =
             GetMetrics(aVertical ? eVertical : eHorizontal);
         if (metrics.maxAdvance > metrics.aveCharWidth) {
             float synBoldOffset =
-                    GetSyntheticBoldOffset() * CalcXScale(aContext);
+                    GetSyntheticBoldOffset() * CalcXScale(aDrawTarget);
             aShapedText->AdjustAdvancesForSyntheticBold(synBoldOffset,
                                                         aOffset, aLength);
         }
@@ -3172,6 +3256,40 @@ gfxFont::GetSubSuperscriptFont(int32_t aAppUnitsPerDevPixel)
     return fe->FindOrMakeFont(&style, needsBold, mUnicodeRangeMap);
 }
 
+static void
+DestroyRefCairo(void* aData)
+{
+  cairo_t* refCairo = static_cast<cairo_t*>(aData);
+  MOZ_ASSERT(refCairo);
+  cairo_destroy(refCairo);
+}
+
+/* static */ cairo_t *
+gfxFont::RefCairo(DrawTarget* aDT)
+{
+  // DrawTargets that don't use a Cairo backend can be given a 1x1 "reference"
+  // |cairo_t*|, stored in the DrawTarget's user data, for doing font-related
+  // operations.
+  static UserDataKey sRefCairo;
+
+  cairo_t* refCairo = nullptr;
+  if (aDT->GetBackendType() == BackendType::CAIRO) {
+    refCairo = static_cast<cairo_t*>
+      (aDT->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+    if (refCairo) {
+      return refCairo;
+    }
+  }
+
+  refCairo = static_cast<cairo_t*>(aDT->GetUserData(&sRefCairo));
+  if (!refCairo) {
+    refCairo = cairo_create(gfxPlatform::GetPlatform()->ScreenReferenceSurface()->CairoSurface());
+    aDT->AddUserData(&sRefCairo, refCairo, DestroyRefCairo);
+  }
+
+  return refCairo;
+}
+
 gfxGlyphExtents *
 gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
     uint32_t i, count = mGlyphExtentsArray.Length();
@@ -3190,16 +3308,12 @@ gfxFont::GetOrCreateGlyphExtents(int32_t aAppUnitsPerDevUnit) {
 }
 
 void
-gfxFont::SetupGlyphExtents(gfxContext *aContext,
-                           uint32_t aGlyphID, bool aNeedTight,
-                           gfxGlyphExtents *aExtents)
+gfxFont::SetupGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphID,
+                           bool aNeedTight, gfxGlyphExtents *aExtents)
 {
-    gfxContextMatrixAutoSaveRestore matrixRestore(aContext);
-    aContext->SetMatrix(gfxMatrix());
-
     gfxRect svgBounds;
     if (mFontEntry->TryGetSVGData(this) && mFontEntry->HasSVGGlyph(aGlyphID) &&
-        mFontEntry->GetSVGGlyphExtents(aContext, aGlyphID, &svgBounds)) {
+        mFontEntry->GetSVGGlyphExtents(aDrawTarget, aGlyphID, &svgBounds)) {
         gfxFloat d2a = aExtents->GetAppUnitsPerDevUnit();
         aExtents->SetTightGlyphExtents(aGlyphID,
                                        gfxRect(svgBounds.x * d2a,
@@ -3214,8 +3328,7 @@ gfxFont::SetupGlyphExtents(gfxContext *aContext,
     glyph.x = 0;
     glyph.y = 0;
     cairo_text_extents_t extents;
-    cairo_glyph_extents(gfxContext::RefCairo(aContext->GetDrawTarget()),
-                        &glyph, 1, &extents);
+    cairo_glyph_extents(gfxFont::RefCairo(aDrawTarget), &glyph, 1, &extents);
 
     const Metrics& fontMetrics = GetMetrics(eHorizontal);
     int32_t appUnitsPerDevUnit = aExtents->GetAppUnitsPerDevUnit();
