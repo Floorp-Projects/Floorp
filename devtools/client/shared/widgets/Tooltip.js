@@ -1509,7 +1509,6 @@ EventTooltip.prototype = {
         editor.destroy();
       }
 
-      this._tooltip.eventEditors.clear();
       this._tooltip.eventEditors = null;
     }
 
