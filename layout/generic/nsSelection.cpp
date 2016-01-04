@@ -2150,6 +2150,14 @@ nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
       rv = MoveCaret(mapping.direction, aExtend, mapping.amounts[aAmount + 1],
                      eVisual);
     }
+    // And if it was an intra-line move that failed, just move to line-edge
+    // in the given direction.
+    else if (mapping.amounts[aAmount] < eSelectLine) {
+      nsCOMPtr<nsISelectionController> controller = do_QueryInterface(mShell);
+      if (controller) {
+        rv = controller->CompleteMove(mapping.direction == eDirNext, aExtend);
+      }
+    }
   }
 
   return rv;
