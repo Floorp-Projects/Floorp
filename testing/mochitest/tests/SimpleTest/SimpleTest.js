@@ -646,12 +646,18 @@ SimpleTest.requestFlakyTimeout = function (reason) {
 SimpleTest._pendingWaitForFocusCount = 0;
 
 /**
- * Version of waitForFocus that returns a promise.
+ * Version of waitForFocus that returns a promise. The Promise will
+ * not resolve to the focused window, as it might be a CPOW (and Promises
+ * cannot be resolved with CPOWs). If you require the focused window,
+ * you should use waitForFocus instead.
  */
 SimpleTest.promiseFocus = function *(targetWindow, expectBlankPage)
 {
     return new Promise(function (resolve, reject) {
-        SimpleTest.waitForFocus(win => resolve(win), targetWindow, expectBlankPage);
+        SimpleTest.waitForFocus(win => {
+            // Just resolve, without passing the window (see bug 1233497)
+            resolve();
+        }, targetWindow, expectBlankPage);
     });
 }
 
