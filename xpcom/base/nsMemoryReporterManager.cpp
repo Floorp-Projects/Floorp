@@ -153,6 +153,7 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
   return GetProcSelfSmapsPrivate(aN);
 }
 
+#ifdef HAVE_MALLINFO
 #define HAVE_SYSTEM_HEAP_REPORTER 1
 nsresult
 SystemHeapSize(int64_t* aSizeOut)
@@ -172,6 +173,7 @@ SystemHeapSize(int64_t* aSizeOut)
     *aSizeOut = size_t(info.hblkhd) + size_t(info.uordblks);
     return NS_OK;
 }
+#endif
 
 #elif defined(__DragonFly__) || defined(__FreeBSD__) \
     || defined(__NetBSD__) || defined(__OpenBSD__) \

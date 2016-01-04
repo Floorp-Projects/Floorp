@@ -153,8 +153,7 @@ public:
      * breaks are the same as the old
      */
     virtual bool SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
-                                          uint8_t *aBreakBefore,
-                                          gfxContext *aRefContext);
+                                        uint8_t *aBreakBefore);
 
     /**
      * Layout provides PropertyProvider objects. These allow detection of
