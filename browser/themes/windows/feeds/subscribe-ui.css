@@ -5,25 +5,3 @@
 .alwaysUse {
   padding: 5px;
 }
-
-.handlersMenuPopup > menuitem {
-  -moz-padding-start: 23px;
-}
-
-.handlersMenuPopup > menuitem.menuitem-iconic {
-  -moz-padding-start: 2px;
-}
-
-.handlersMenuPopup > .menuitem-iconic  > .menu-iconic-left {
-  display: -moz-box;
-  min-width: 16px;
-  -moz-padding-end: 2px;
-}
-
-.chooseApplicationMenuItem {
-  list-style-image: url("chrome://browser/skin/preferences/application.png");
-}
-
-#feedHeader[dir="rtl"] .handlersMenuList > menupopup {
-  direction: rtl;
-}
