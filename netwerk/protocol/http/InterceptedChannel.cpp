@@ -135,21 +135,6 @@ InterceptedChannelBase::SetReleaseHandle(nsISupports* aHandle)
   return NS_OK;
 }
 
-/* static */
-already_AddRefed<nsIURI>
-InterceptedChannelBase::SecureUpgradeChannelURI(nsIChannel* aChannel)
-{
-  nsCOMPtr<nsIURI> uri;
-  nsresult rv = aChannel->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIURI> upgradedURI;
-  rv = HttpBaseChannel::GetSecureUpgradedURI(uri, getter_AddRefs(upgradedURI));
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return upgradedURI.forget();
-}
-
 InterceptedChannelChrome::InterceptedChannelChrome(nsHttpChannel* aChannel,
                                                    nsINetworkInterceptController* aController,
                                                    nsICacheEntry* aEntry)
@@ -344,20 +329,12 @@ InterceptedChannelChrome::GetInternalContentPolicyType(nsContentPolicyType* aPol
   return NS_OK;
 }
 
-NS_IMETHODIMP
-InterceptedChannelChrome::GetSecureUpgradedChannelURI(nsIURI** aURI)
-{
-  return mChannel->GetURI(aURI);
-}
-
 InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
                                                      nsINetworkInterceptController* aController,
-                                                     InterceptStreamListener* aListener,
-                                                     bool aSecureUpgrade)
+                                                     InterceptStreamListener* aListener)
 : InterceptedChannelBase(aController)
 , mChannel(aChannel)
 , mStreamListener(aListener)
-, mSecureUpgrade(aSecureUpgrade)
 {
 }
 
@@ -435,10 +412,6 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
   if (!aFinalURLSpec.IsEmpty()) {
     nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
     NS_ENSURE_SUCCESS(rv, rv);
-  } else if (mSecureUpgrade) {
-    nsresult rv = HttpBaseChannel::GetSecureUpgradedURI(originalURI,
-                                                        getter_AddRefs(responseURI));
-    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     responseURI = originalURI;
   }
@@ -503,23 +476,6 @@ InterceptedChannelContent::GetInternalContentPolicyType(nsContentPolicyType* aPo
 
   *aPolicyType = loadInfo->InternalContentPolicyType();
   return NS_OK;
-}
-
-NS_IMETHODIMP
-InterceptedChannelContent::GetSecureUpgradedChannelURI(nsIURI** aURI)
-{
-  nsCOMPtr<nsIURI> uri;
-  if (mSecureUpgrade) {
-    uri = SecureUpgradeChannelURI(mChannel);
-  } else {
-    nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  if (uri) {
-    uri.forget(aURI);
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
 }
 
 } // namespace net
