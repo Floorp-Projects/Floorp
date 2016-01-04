@@ -977,7 +977,8 @@ final class GeckoEditable extends JNIObject
         if (start < 0 || start > mText.length() || end < 0 || end > mText.length()) {
             Log.e(LOGTAG, "invalid selection notification range: " +
                   start + " to " + end + ", length: " + mText.length());
-            throw new IllegalArgumentException("invalid selection notification range");
+            // Ignore selection offsets that are invalid because something changed from under us.
+            return;
         }
         final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
