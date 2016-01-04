@@ -34,6 +34,7 @@ CacheChild::CacheChild()
   : mListener(nullptr)
   , mNumChildActors(0)
   , mDelayedDestroy(false)
+  , mLocked(false)
 {
   MOZ_COUNT_CTOR(cache::CacheChild);
 }
@@ -44,6 +45,7 @@ CacheChild::~CacheChild()
   NS_ASSERT_OWNINGTHREAD(CacheChild);
   MOZ_ASSERT(!mListener);
   MOZ_ASSERT(!mNumChildActors);
+  MOZ_ASSERT(!mLocked);
 }
 
 void
@@ -103,8 +105,9 @@ CacheChild::StartDestroy()
   // If we have outstanding child actors, then don't destroy ourself yet.
   // The child actors should be short lived and we should allow them to complete
   // if possible.  NoteDeletedActor() will call back into this Shutdown()
-  // method when the last child actor is gone.
-  if (mNumChildActors) {
+  // method when the last child actor is gone.  Also, delay destruction if we
+  // have been explicitly locked by someone using us on the stack.
+  if (mNumChildActors || mLocked) {
     mDelayedDestroy = true;
     return;
   }
@@ -175,9 +178,32 @@ void
 CacheChild::NoteDeletedActor()
 {
   mNumChildActors -= 1;
-  if (!mNumChildActors && mDelayedDestroy) {
+  MaybeFlushDelayedDestroy();
+}
+
+void
+CacheChild::MaybeFlushDelayedDestroy()
+{
+  if (!mNumChildActors && !mLocked && mDelayedDestroy) {
     StartDestroy();
   }
+}
+
+void
+CacheChild::Lock()
+{
+  NS_ASSERT_OWNINGTHREAD(CacheChild);
+  MOZ_ASSERT(!mLocked);
+  mLocked = true;
+}
+
+void
+CacheChild::Unlock()
+{
+  NS_ASSERT_OWNINGTHREAD(CacheChild);
+  MOZ_ASSERT(mLocked);
+  mLocked = false;
+  MaybeFlushDelayedDestroy();
 }
 
 } // namespace cache
