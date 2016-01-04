@@ -807,6 +807,15 @@ nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame)
   return widget->AsyncPanZoomEnabled();
 }
 
+float
+nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+  return aShell ? aShell->GetCumulativeNonRootScaleResolution() : 1.0;
+#else
+  return 1.0f;
+#endif
+}
+
 // Return the maximum displayport size, based on the LayerManager's maximum
 // supported texture size. The result is in app units.
 static nscoord
@@ -2021,7 +2030,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
       nsPoint pt(presContext->DevPixelsToAppUnits(aPoint.x),
                  presContext->DevPixelsToAppUnits(aPoint.y));
       pt = pt - view->ViewToWidgetOffset();
-      pt = pt.RemoveResolution(presContext->PresShell()->GetCumulativeNonRootScaleResolution());
+      pt = pt.RemoveResolution(GetCurrentAPZResolutionScale(presContext->PresShell()));
       return pt;
     }
   }
@@ -2060,7 +2069,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
   nsIPresShell* shell = aFrame->PresContext()->PresShell();
 
   // XXX Bug 1224748 - Update nsLayoutUtils functions to correctly handle nsPresShell resolution
-  widgetToView = widgetToView.RemoveResolution(shell->GetCumulativeNonRootScaleResolution());
+  widgetToView = widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(shell));
 
   /* If we encountered a transform, we can't do simple arithmetic to figure
    * out how to convert back to aFrame's coordinates and must use the CTM.
@@ -2809,7 +2818,7 @@ nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
   }
 
   nsPoint pt = (aPt +
-  viewOffset).ApplyResolution(aPresContext->PresShell()->GetCumulativeNonRootScaleResolution());
+  viewOffset).ApplyResolution(GetCurrentAPZResolutionScale(aPresContext->PresShell()));
   LayoutDeviceIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(pt.x),
                                             aPresContext->AppUnitsToDevPixels(pt.y));
   return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
