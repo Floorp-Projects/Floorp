@@ -103,6 +103,13 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
          "dest": "test_path",
          "help": "Path of tests to run",
          }
+    ], [
+        ["--symbols-url"],
+        {"action": "store",
+         "dest": "symbols_url",
+         "default": None,
+         "help": "URL to the symbols which is used for crash reporter",
+         }
     ]] + copy.deepcopy(testing_config_options) \
        + copy.deepcopy(blobupload_config_options)
 
@@ -146,6 +153,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
         self.test_packages_url = c.get('test_packages_url')
         self.test_manifest = c.get('test_manifest')
         self.busybox_path = None
+        self.symbols_url = c.get('symbols_url')
 
     # TODO detect required config items and fail if not set
 
