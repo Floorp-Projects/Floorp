@@ -32,6 +32,10 @@ if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 mkdir -p ~/artifacts/public
 
 cleanup() {
+    if [[ -s /home/worker/.xsession-errors ]]; then
+      # To share X issues
+      cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
+    fi
     # When you call this script with START_VNC we make sure we
     # don't kill xvfb so you don't loose your VNC connection
     if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] ; then
@@ -88,27 +92,16 @@ if $START_VNC; then
 fi
 
 if $NEED_WINDOW_MANAGER; then
-    # start up the gnome session, using a semaphore file to know when the session has
-    # fully started (at least to the point where apps are automatically started)
-    semaphore=/tmp/gnome-session-started
-    rm -f $semaphore
-    mkdir -p ~/.config/autostart
-    cat <<EOF > ~/.config/autostart/gnome-started.desktop
-[Desktop Entry]
-Type=Application
-Exec=touch $semaphore
-Hidden=false
-X-GNOME-Autostart-enabled=true
-Name=Startup Complete
-Comment=Notify test-linux.sh that GNOME session startup is complete
-StartupNotify=false
-Terminal=false
-Type=Application
-EOF
-    gnome-session > ~/artifacts/public/gnome-session.log 2>&1 &
-    while [ ! -f $semaphore ]; do
-        sleep 1
-    done
+    # This is read by xsession to select the window manager
+    echo DESKTOP_SESSION=ubuntu > /home/worker/.xsessionrc
+
+    # note that doing anything with this display before running Xsession will cause sadness (like,
+    # crashes in compiz). Make sure that X has enough time to start
+    sleep 15
+    # DISPLAY has already been set above
+    # XXX: it would be ideal to add a semaphore logic to make sure that the
+    # window manager is ready
+    /etc/X11/Xsession > ~/artifacts/public/xsession.log 2>&1 &
 
     # Turn off the screen saver and screen locking
     gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
