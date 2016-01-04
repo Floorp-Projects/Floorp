@@ -255,7 +255,7 @@ private:
   void        ChangeDownstreamState(enum internalStateType);
   void        ResetDownstreamState();
   nsresult    ReadyToProcessDataFrame(enum internalStateType);
-  nsresult    UncompressAndDiscard();
+  nsresult    UncompressAndDiscard(bool);
   void        GeneratePing(bool);
   void        GenerateSettingsAck();
   void        GeneratePriority(uint32_t, uint8_t);
