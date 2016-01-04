@@ -13,16 +13,21 @@ const { Cu } = require("chrome");
 function makeGetterFor(Type) {
   let cache = new WeakMap();
 
-  return function getFor(target) {
-    if (!cache.has(target))
-      cache.set(target, new Type());
+  return {
+    getFor(target) {
+      if (!cache.has(target))
+        cache.set(target, new Type());
 
-    return cache.get(target);
+      return cache.get(target);
+    },
+    clearFor(target) {
+      return cache.delete(target)
+    }
   }
 }
 
-var getLookupFor = makeGetterFor(WeakMap);
-var getRefsFor = makeGetterFor(Set);
+var {getFor: getLookupFor, clearFor: clearLookupFor} = makeGetterFor(WeakMap);
+var {getFor: getRefsFor, clearFor: clearRefsFor} = makeGetterFor(Set);
 
 function add(target, value) {
   if (has(target, value))
@@ -44,8 +49,8 @@ function has(target, value) {
 exports.has = has;
 
 function clear(target) {
-  getLookupFor(target).clear();
-  getRefsFor(target).clear();
+  clearLookupFor(target);
+  clearRefsFor(target);
 }
 exports.clear = clear;
 
