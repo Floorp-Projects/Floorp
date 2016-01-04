@@ -147,7 +147,42 @@ add_task(function*() {
     let popupToolbars = yield getToolbarsFromBrowserContent(popupBrowser);
     testNonDefaultContentToolbars(popupToolbars);
 
-    // Cleanup
+    // Ensure that chrome toolbars agree with content
+    let chromeToolbars = getToolbarsFromWindowChrome(popupWindow);
+    testNonDefaultContentToolbars(chromeToolbars);
+
+    // Close the new window
+    yield BrowserTestUtils.closeWindow(popupWindow);
+  });
+});
+
+/**
+ * Ensure that toolbars of a window opened to about:blank in the content context
+ * have the correct visibility.
+ *
+ * A window opened with "location=no, personalbar=no, toolbar=no, scrollbars=no,
+ * menubar=no, status=no", should only have location visible.
+ */
+add_task(function*() {
+  yield BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: CONTENT_PAGE,
+  }, function*(browser) {
+    // Open a blank window with toolbars hidden
+    let winPromise = BrowserTestUtils.waitForNewWindow();
+    yield BrowserTestUtils.synthesizeMouseAtCenter("#winOpenNoURLNonDefault", {}, browser);
+    let popupWindow = yield winPromise;
+
+    // No need to wait for this window to load, since it's loading about:blank
+    let popupBrowser = popupWindow.gBrowser.selectedBrowser;
+    let popupToolbars = yield getToolbarsFromBrowserContent(popupBrowser);
+    testNonDefaultContentToolbars(popupToolbars);
+
+    // Ensure that chrome toolbars agree with content
+    let chromeToolbars = getToolbarsFromWindowChrome(popupWindow);
+    testNonDefaultContentToolbars(chromeToolbars);
+
+    // Close the new window
     yield BrowserTestUtils.closeWindow(popupWindow);
   });
 });
