@@ -22,30 +22,36 @@ add_task(function* () {
         browser.test.sendMessage("menuItemClick", JSON.stringify(info));
       }
 
-      browser.contextMenus.create({ "contexts": ["all"], "type": "separator" });
+      browser.contextMenus.create({ contexts: ["all"], type: "separator" });
 
       let contexts = ["page", "selection", "image"];
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
-        browser.contextMenus.create({ "title": title, "contexts": [context], "id": "ext-" + context,
-                                      "onclick": genericOnClick });
+        var id = browser.contextMenus.create({ title: title, contexts: [context], id: "ext-" + context,
+                                               onclick: genericOnClick });
         if (context == "selection") {
-          browser.contextMenus.update("ext-selection", { "title": "selection-edited" });
+          browser.contextMenus.update("ext-selection", {
+            title: "selection-edited",
+            onclick: (info) => {
+              browser.contextMenus.removeAll();
+              genericOnClick(info);
+            }
+          });
         }
       }
 
-      let parent = browser.contextMenus.create({ "title": "parent" });
+      var parent = browser.contextMenus.create({ title: "parent" });
       browser.contextMenus.create(
-        { "title": "child1", "parentId": parent, "onclick": genericOnClick });
+        { title: "child1", parentId: parent, onclick: genericOnClick });
       browser.contextMenus.create(
-        { "title": "child2", "parentId": parent, "onclick": genericOnClick });
+        { title: "child2", parentId: parent, onclick: genericOnClick });
 
-      let parentToDel = browser.contextMenus.create({ "title": "parentToDel" });
+      var parentToDel = browser.contextMenus.create({ title: "parentToDel" });
       browser.contextMenus.create(
-        { "title": "child1", "parentId": parentToDel, "onclick": genericOnClick });
+        { title: "child1", parentId: parentToDel, onclick: genericOnClick });
       browser.contextMenus.create(
-        { "title": "child2", "parentId": parentToDel, "onclick": genericOnClick });
+        { title: "child2", parentId: parentToDel, onclick: genericOnClick });
       browser.contextMenus.remove(parentToDel);
 
       browser.test.notifyPass();
@@ -148,6 +154,14 @@ add_task(function* () {
   clickInfo = yield extension.awaitMessage("menuItemClick");
   checkClickInfo(clickInfo);
   yield popupHiddenPromise;
+
+  popupShownPromise = BrowserTestUtils.waitForEvent(contentAreaContextMenu, "popupshown");
+  yield BrowserTestUtils.synthesizeMouseAtCenter("#img1",
+    { type: "contextmenu", button: 2 }, gBrowser.selectedBrowser);
+  yield popupShownPromise;
+
+  items = contentAreaContextMenu.getElementsByAttribute("ext-type", "top-level-menu");
+  is(items.length, 0, "top level item was not found (after removeAll()");
 
   yield extension.unload();
 
