@@ -7055,9 +7055,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-emphasis.enabled")) {
     domProp: "textEmphasis",
     inherited: true,
     type: CSS_TYPE_TRUE_SHORTHAND,
+    prerequisites: { "color": "black" },
     subproperties: [ "text-emphasis-style", "text-emphasis-color" ],
-    initial_values: [ "none currentColor", "currentColor none", "none", "currentColor" ],
-    other_values: [ "filled dot black", "#f00 circle open", "sesame filled rgba(0,0,255,0.5)", "red", "none black", "green none", "currentColor filled", "currentColor open" ],
+    initial_values: [ "none currentColor", "currentColor none", "none", "currentColor", "none black" ],
+    other_values: [ "filled dot black", "#f00 circle open", "sesame filled rgba(0,0,255,0.5)", "red", "green none", "currentColor filled", "currentColor open" ],
     invalid_values: [ "filled black dot", "filled filled red", "open open circle #000", "circle dot #f00", "rubbish" ]
   };
   gCSSProperties["text-emphasis-color"] = {
@@ -7065,7 +7066,7 @@ if (IsCSSPropertyPrefEnabled("layout.css.text-emphasis.enabled")) {
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     prerequisites: { "color": "black" },
-    initial_values: [ "currentColor", "-moz-use-text-color" ],
+    initial_values: [ "currentColor", "black", "rgb(0,0,0)" ],
     other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
     invalid_values: [ "#0", "#00", "#0000", "#00000", "#0000000", "#00000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
   };

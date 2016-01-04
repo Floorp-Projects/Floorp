@@ -33,7 +33,7 @@ public:
 
     virtual uint32_t GetSpaceGlyph() override;
 
-    virtual bool SetupCairoFont(gfxContext *aContext) override;
+    virtual bool SetupCairoFont(DrawTarget* aDrawTarget) override;
 
     virtual bool AllowSubpixelAA() override
     { return mAllowManualShowGlyphs; }

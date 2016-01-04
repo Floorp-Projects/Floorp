@@ -975,7 +975,7 @@ public:
     virtual void SetBreaks(uint32_t aOffset, uint32_t aLength,
                            uint8_t* aBreakBefore) override {
       if (mTextRun->SetPotentialLineBreaks(aOffset + mOffsetIntoTextRun, aLength,
-                                           aBreakBefore, mContext)) {
+                                           aBreakBefore)) {
         // Be conservative and assume that some breaks have been set
         mTextRun->ClearFlagBits(nsTextFrameUtils::TEXT_NO_BREAKS);
       }
@@ -989,7 +989,7 @@ public:
         nsTransformedTextRun* transformedTextRun =
           static_cast<nsTransformedTextRun*>(mTextRun);
         transformedTextRun->SetCapitalization(aOffset + mOffsetIntoTextRun, aLength,
-                                              aCapitalize, mContext);
+                                              aCapitalize);
       }
     }
 
