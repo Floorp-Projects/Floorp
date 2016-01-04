@@ -38,3 +38,4 @@ function SetSpecies() {
     // Step 1.
     return this;
 }
+_SetCanonicalName(SetSpecies, "get [Symbol.species]");

@@ -85,12 +85,6 @@ public:
         return CurrentSurface(nullptr, nullptr);
     }
 
-    /**
-     * Return the reference cairo_t object from aDT.
-     * XXX this should be moved into gfxFont at some point.
-     */
-    static cairo_t* RefCairo(mozilla::gfx::DrawTarget* aDT);
-
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 
     /**
@@ -444,9 +438,6 @@ public:
     void PopGroupAndBlend();
 
     mozilla::gfx::Point GetDeviceOffset() const;
-
-    // Work out whether cairo will snap inter-glyph spacing to pixels.
-    void GetRoundOffsetsToPixels(bool *aRoundX, bool *aRoundY);
 
 #ifdef MOZ_DUMP_PAINTING
     /**

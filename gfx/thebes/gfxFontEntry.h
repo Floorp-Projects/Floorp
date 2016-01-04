@@ -97,6 +97,8 @@ private:
 
 class gfxFontEntry {
 public:
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
     NS_INLINE_DECL_REFCOUNTING(gfxFontEntry)
 
     explicit gfxFontEntry(const nsAString& aName, bool aIsStandardFace = false);
@@ -180,7 +182,7 @@ public:
 
     bool TryGetSVGData(gfxFont* aFont);
     bool HasSVGGlyph(uint32_t aGlyphId);
-    bool GetSVGGlyphExtents(gfxContext *aContext, uint32_t aGlyphId,
+    bool GetSVGGlyphExtents(DrawTarget* aDrawTarget, uint32_t aGlyphId,
                             gfxRect *aResult);
     bool RenderSVGGlyph(gfxContext *aContext, uint32_t aGlyphId, int aDrawMode,
                         gfxTextContextPaint *aContextPaint);

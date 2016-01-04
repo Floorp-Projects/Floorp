@@ -454,7 +454,7 @@ gfxDWriteFont::GetSpaceGlyph()
 }
 
 bool
-gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
+gfxDWriteFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
     cairo_scaled_font_t *scaledFont = GetCairoScaledFont();
     if (cairo_scaled_font_status(scaledFont) != CAIRO_STATUS_SUCCESS) {
@@ -462,8 +462,7 @@ gfxDWriteFont::SetupCairoFont(gfxContext *aContext)
         // the cairo_t, precluding any further drawing.
         return false;
     }
-    cairo_set_scaled_font(gfxContext::RefCairo(aContext->GetDrawTarget()),
-                          scaledFont);
+    cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), scaledFont);
     return true;
 }
 

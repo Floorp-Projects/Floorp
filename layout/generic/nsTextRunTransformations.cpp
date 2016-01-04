@@ -57,8 +57,7 @@ nsTransformedTextRun::Create(const gfxTextRunFactory::Parameters* aParams,
 
 void
 nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
-                                        bool* aCapitalization,
-                                        gfxContext* aRefContext)
+                                        bool* aCapitalization)
 {
   if (mCapitalize.IsEmpty()) {
     if (!mCapitalize.AppendElements(GetLength()))
@@ -71,11 +70,10 @@ nsTransformedTextRun::SetCapitalization(uint32_t aStart, uint32_t aLength,
 
 bool
 nsTransformedTextRun::SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
-                                             uint8_t* aBreakBefore,
-                                             gfxContext* aRefContext)
+                                             uint8_t* aBreakBefore)
 {
-  bool changed = gfxTextRun::SetPotentialLineBreaks(aStart, aLength,
-      aBreakBefore, aRefContext);
+  bool changed =
+    gfxTextRun::SetPotentialLineBreaks(aStart, aLength, aBreakBefore);
   if (changed) {
     mNeedsRebuild = true;
   }
@@ -648,7 +646,7 @@ nsCaseTransformTextRunFactory::RebuildTextRun(nsTransformedTextRun* aTextRun,
   NS_ASSERTION(convertedString.Length() == canBreakBeforeArray.Length(),
                "Dropped characters or break-before values somewhere!");
   child->SetPotentialLineBreaks(0, canBreakBeforeArray.Length(),
-      canBreakBeforeArray.Elements(), aRefContext);
+                                canBreakBeforeArray.Elements());
   if (transformedChild) {
     transformedChild->FinishSettingProperties(aRefContext, aMFR);
   }

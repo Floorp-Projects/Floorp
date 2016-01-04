@@ -658,16 +658,37 @@ GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
                                     HandlePropertyName selfHostedName, HandleAtom name,
                                     unsigned nargs, MutableHandleValue funVal)
 {
-    if (GlobalObject::maybeGetIntrinsicValue(cx, global, selfHostedName, funVal))
-        return true;
+    if (GlobalObject::maybeGetIntrinsicValue(cx, global, selfHostedName, funVal)) {
+        RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
+        if (fun->atom() == name)
+            return true;
 
-    JSFunction* fun =
-        NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
-                            name, gc::AllocKind::FUNCTION_EXTENDED, SingletonObject);
-    if (!fun)
+        if (fun->atom() == selfHostedName) {
+            // This function was initially cloned because it was called by
+            // other self-hosted code, so the clone kept its self-hosted name,
+            // instead of getting the name it's intended to have in content
+            // compartments. This can happen when a lazy builtin is initialized
+            // after self-hosted code for another builtin used the same
+            // function. In that case, we need to change the function's name,
+            // which is ok because it can't have been exposed to content
+            // before.
+            fun->initAtom(name);
+            return true;
+        }
+
+
+        // The function might be installed multiple times on the same or
+        // different builtins, under different property names, so its name
+        // might be neither "selfHostedName" nor "name". In that case, its
+        // canonical name must've been set using the `_SetCanonicalName`
+        // intrinsic.
+        cx->runtime()->assertSelfHostedFunctionHasCanonicalName(cx, selfHostedName);
+        return true;
+    }
+
+    RootedFunction fun(cx);
+    if (!cx->runtime()->createLazySelfHostedFunctionClone(cx, selfHostedName, name, nargs, &fun))
         return false;
-    fun->setIsSelfHostedBuiltin();
-    fun->setExtendedSlot(LAZY_FUNCTION_NAME_SLOT, StringValue(selfHostedName));
     funVal.setObject(*fun);
 
     return GlobalObject::addIntrinsicValue(cx, global, selfHostedName, funVal);

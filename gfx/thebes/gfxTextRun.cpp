@@ -211,8 +211,7 @@ gfxTextRun::ReleaseFontGroup()
 
 bool
 gfxTextRun::SetPotentialLineBreaks(uint32_t aStart, uint32_t aLength,
-                                   uint8_t *aBreakBefore,
-                                   gfxContext *aRefContext)
+                                   uint8_t *aBreakBefore)
 {
     NS_ASSERTION(aStart + aLength <= GetLength(), "Overflow");
 
@@ -1411,7 +1410,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     uint32_t glyphIndex = glyphData->GetSimpleGlyph();
                     if (!extents->IsGlyphKnown(glyphIndex)) {
                         if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefContext)) {
+                            if (!font->SetupCairoFont(aRefContext->GetDrawTarget())) {
                                 NS_WARNING("failed to set up font for glyph extents");
                                 break;
                             }
@@ -1420,7 +1419,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerSimple;
 #endif
-                        font->SetupGlyphExtents(aRefContext,
+                        font->SetupGlyphExtents(aRefContext->GetDrawTarget(),
                                                 glyphIndex, false, extents);
                     }
                 }
@@ -1437,7 +1436,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
                     uint32_t glyphIndex = details->mGlyphID;
                     if (!extents->IsGlyphKnownWithTightExtents(glyphIndex)) {
                         if (!fontIsSetup) {
-                            if (!font->SetupCairoFont(aRefContext)) {
+                            if (!font->SetupCairoFont(aRefContext->GetDrawTarget())) {
                                 NS_WARNING("failed to set up font for glyph extents");
                                 break;
                             }
@@ -1446,7 +1445,7 @@ gfxTextRun::FetchGlyphExtents(gfxContext *aRefContext)
 #ifdef DEBUG_TEXT_RUN_STORAGE_METRICS
                         ++gGlyphExtentsSetupEagerTight;
 #endif
-                        font->SetupGlyphExtents(aRefContext,
+                        font->SetupGlyphExtents(aRefContext->GetDrawTarget(),
                                                 glyphIndex, true, extents);
                     }
                 }
