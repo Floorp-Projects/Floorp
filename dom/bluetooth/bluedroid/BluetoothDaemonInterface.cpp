@@ -16,11 +16,11 @@
 #include "BluetoothDaemonHelpers.h"
 #include "BluetoothDaemonSetupInterface.h"
 #include "BluetoothDaemonSocketInterface.h"
+#include "mozilla/Hal.h"
 #include "mozilla/ipc/DaemonRunnables.h"
 #include "mozilla/ipc/DaemonSocket.h"
 #include "mozilla/ipc/DaemonSocketConnector.h"
 #include "mozilla/ipc/ListenSocket.h"
-#include "mozilla/unused.h"
 
 BEGIN_BLUETOOTH_NAMESPACE
 
@@ -281,19 +281,6 @@ BluetoothDaemonProtocol::FetchResultHandler(
 // Interface
 //
 
-static bool
-IsDaemonRunning()
-{
-  char value[PROPERTY_VALUE_MAX];
-  NS_WARN_IF(property_get("init.svc.bluetoothd", value, "") < 0);
-  if (strcmp(value, "running")) {
-    BT_LOGR("[RESTART] Bluetooth daemon state <%s>", value);
-    return false;
-  }
-
-  return true;
-}
-
 BluetoothDaemonInterface*
 BluetoothDaemonInterface::GetInstance()
 {
@@ -313,42 +300,6 @@ BluetoothDaemonInterface::BluetoothDaemonInterface()
 
 BluetoothDaemonInterface::~BluetoothDaemonInterface()
 { }
-
-class BluetoothDaemonInterface::StartDaemonTask final : public Task
-{
-public:
-  StartDaemonTask(BluetoothDaemonInterface* aInterface,
-                  const nsACString& aCommand)
-    : mInterface(aInterface)
-    , mCommand(aCommand)
-  {
-    MOZ_ASSERT(mInterface);
-  }
-
-  void Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    BT_LOGR("Start Daemon Task");
-    // Start Bluetooth daemon again
-    if (NS_WARN_IF(property_set("ctl.start", mCommand.get()) < 0)) {
-      mInterface->OnConnectError(CMD_CHANNEL);
-    }
-
-    // We're done if Bluetooth daemon is already running
-    if (IsDaemonRunning()) {
-      return;
-    }
-
-    // Otherwise try again later
-    MessageLoop::current()->PostDelayedTask(FROM_HERE,
-      new StartDaemonTask(mInterface, mCommand), sRetryInterval);
-  }
-
-private:
-  BluetoothDaemonInterface* mInterface;
-  nsCString mCommand;
-};
 
 class BluetoothDaemonInterface::InitResultHandler final
   : public BluetoothSetupResultHandler
@@ -445,7 +396,7 @@ BluetoothDaemonInterface::Init(
   // If we could not cleanup properly before and an old
   // instance of the daemon is still running, we kill it
   // here.
-  Unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
+  mozilla::hal::StopSystemService("bluetoothd");
 
   mResultHandlerQ.AppendElement(aRes);
 
@@ -694,24 +645,9 @@ BluetoothDaemonInterface::OnConnectSuccess(int aIndex)
   switch (aIndex) {
     case LISTEN_SOCKET: {
         // Init, step 2: Start Bluetooth daemon */
-        nsCString value("bluetoothd:-a ");
-        value.Append(mListenSocketName);
-        if (NS_WARN_IF(property_set("ctl.start", value.get()) < 0)) {
-          OnConnectError(CMD_CHANNEL);
-        }
-
-        /*
-         * If Bluetooth daemon is not running, retry to start it later.
-         *
-         * This condition happens when when we restart Bluetooth daemon
-         * immediately after it crashed, as the daemon state remains 'stopping'
-         * instead of 'stopped'. Due to the limitation of property service,
-         * hereby add delay. See Bug 1143925 Comment 41.
-         */
-        if (!IsDaemonRunning()) {
-          MessageLoop::current()->PostDelayedTask(FROM_HERE,
-              new StartDaemonTask(this, value), sRetryInterval);
-        }
+        nsCString args("-a ");
+        args.Append(mListenSocketName);
+        mozilla::hal::StartSystemService("bluetoothd", args.get());
       }
       break;
     case CMD_CHANNEL:
@@ -757,7 +693,7 @@ BluetoothDaemonInterface::OnConnectError(int aIndex)
       mCmdChannel->Close();
     case CMD_CHANNEL:
       // Stop daemon and close listen socket
-      Unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
+      mozilla::hal::StopSystemService("bluetoothd");
       mListenSocket->Close();
     case LISTEN_SOCKET:
       if (!mResultHandlerQ.IsEmpty()) {
