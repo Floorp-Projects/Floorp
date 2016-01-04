@@ -14661,8 +14661,7 @@ CSSParserImpl::ParseTextEmphasis()
   }
 
   if (!(found & 1)) { // Provide default text-emphasis-style
-    values[0].SetIntValue(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE,
-                          eCSSUnit_Enumerated);
+    values[0].SetNoneValue();
   }
   if (!(found & 2)) { // Provide default text-emphasis-color
     values[1].SetIntValue(NS_COLOR_CURRENTCOLOR, eCSSUnit_EnumColor);

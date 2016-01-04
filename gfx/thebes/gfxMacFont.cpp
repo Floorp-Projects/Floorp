@@ -142,8 +142,8 @@ gfxMacFont::ShapeText(gfxContext     *aContext,
         }
         if (mCoreTextShaper->ShapeText(aContext, aText, aOffset, aLength,
                                        aScript, aVertical, aShapedText)) {
-            PostShapingFixup(aContext, aText, aOffset, aLength, aVertical,
-                             aShapedText);
+            PostShapingFixup(aContext->GetDrawTarget(), aText, aOffset,
+                             aLength, aVertical, aShapedText);
             return true;
         }
     }
@@ -153,15 +153,14 @@ gfxMacFont::ShapeText(gfxContext     *aContext,
 }
 
 bool
-gfxMacFont::SetupCairoFont(gfxContext *aContext)
+gfxMacFont::SetupCairoFont(DrawTarget* aDrawTarget)
 {
     if (cairo_scaled_font_status(mScaledFont) != CAIRO_STATUS_SUCCESS) {
         // Don't cairo_set_scaled_font as that would propagate the error to
         // the cairo_t, precluding any further drawing.
         return false;
     }
-    cairo_set_scaled_font(gfxContext::RefCairo(aContext->GetDrawTarget()),
-                          mScaledFont);
+    cairo_set_scaled_font(gfxFont::RefCairo(aDrawTarget), mScaledFont);
     return true;
 }
 
