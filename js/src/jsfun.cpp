@@ -2253,17 +2253,18 @@ js::CloneFunctionAndScript(JSContext* cx, HandleFunction fun, HandleObject paren
  * property id.
  *
  * Function names are always strings. If id is the well-known @@iterator
- * symbol, this returns "[Symbol.iterator]".
+ * symbol, this returns "[Symbol.iterator]".  If a prefix is supplied the final
+ * name is |prefix + " " + name|.
  *
- * Implements step 4 of SetFunctionName in ES6 draft rev 27 (24 Aug 2014).
+ * Implements step 4 and 5 of SetFunctionName in ES 2016 draft Dec 20, 2015.
  */
 JSAtom*
-js::IdToFunctionName(JSContext* cx, HandleId id)
+js::IdToFunctionName(JSContext* cx, HandleId id, const char* prefix /* = nullptr */)
 {
-    if (JSID_IS_ATOM(id))
+    if (JSID_IS_ATOM(id) && !prefix)
         return JSID_TO_ATOM(id);
 
-    if (JSID_IS_SYMBOL(id)) {
+    if (JSID_IS_SYMBOL(id) && !prefix) {
         RootedAtom desc(cx, JSID_TO_SYMBOL(id)->description());
         StringBuffer sb(cx);
         if (!sb.append('[') || !sb.append(desc) || !sb.append(']'))
@@ -2272,7 +2273,13 @@ js::IdToFunctionName(JSContext* cx, HandleId id)
     }
 
     RootedValue idv(cx, IdToValue(id));
-    return ToAtom<CanGC>(cx, idv);
+    if (!prefix)
+        return ToAtom<CanGC>(cx, idv);
+
+    StringBuffer sb(cx);
+    if (!sb.append(prefix, strlen(prefix)) || !sb.append(' ') || !sb.append(ToAtom<CanGC>(cx, idv)))
+        return nullptr;
+    return sb.finishAtom();
 }
 
 JSFunction*
