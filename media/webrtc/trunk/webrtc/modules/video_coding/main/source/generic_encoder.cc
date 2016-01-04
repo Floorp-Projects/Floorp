@@ -87,6 +87,7 @@ int32_t VCMGenericEncoder::Release()
 {
     _bitRate = 0;
     _frameRate = 0;
+    _encoder.RegisterEncodeCompleteCallback(NULL);
     _VCMencodedFrameCallback = NULL;
     return _encoder.Release();
 }
