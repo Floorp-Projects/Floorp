@@ -330,6 +330,7 @@ function removeProfile(profile) {
 
 function defaultProfile(profile) {
   ProfileService.defaultProfile = profile;
+  ProfileService.selectedProfile = profile;
   ProfileService.flush();
   refreshUI();
 }
