@@ -124,7 +124,8 @@ public:
 
   void Forget() { mStream = nullptr; }
 
-  void DoNotifyTrackCreated(TrackID aTrackId, MediaSegment::Type aType)
+  void DoNotifyTrackCreated(TrackID aTrackID, MediaSegment::Type aType,
+                            MediaStream* aInputStream, TrackID aInputTrackID)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -132,8 +133,8 @@ public:
       return;
     }
 
-    MediaStreamTrack* track = mStream->FindOwnedDOMTrack(
-      mStream->GetOwnedStream(), aTrackId);
+    MediaStreamTrack* track =
+      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID);
     if (!track) {
       // Track had not been created on main thread before, create it now.
       NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
@@ -143,17 +144,17 @@ public:
                        "synchronously be available to JS.");
       RefPtr<MediaStreamTrackSource> source;
       if (mStream->mTrackSourceGetter) {
-        source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackId);
+        source = mStream->mTrackSourceGetter->GetMediaStreamTrackSource(aTrackID);
       }
       if (!source) {
         NS_ASSERTION(false, "Dynamic track created without an explicit TrackSource");
         source = new BasicUnstoppableTrackSource();
       }
-      track = mStream->CreateOwnDOMTrack(aTrackId, aType, nsString(), source);
+      track = mStream->CreateOwnDOMTrack(aTrackID, aType, nsString(), source);
     }
   }
 
-  void DoNotifyTrackEnded(TrackID aTrackId)
+  void DoNotifyTrackEnded(MediaStream* aInputStream, TrackID aInputTrackID)
   {
     MOZ_ASSERT(NS_IsMainThread());
 
@@ -162,7 +163,7 @@ public:
     }
 
     RefPtr<MediaStreamTrack> track =
-      mStream->FindOwnedDOMTrack(mStream->GetOwnedStream(), aTrackId);
+      mStream->FindOwnedDOMTrack(aInputStream, aInputTrackID);
     NS_ASSERTION(track, "Owned MediaStreamTracks must be known by the DOMMediaStream");
     if (track) {
       LOG(LogLevel::Debug, ("DOMMediaStream %p MediaStreamTrack %p ended at the source. Marking it ended.",
@@ -179,14 +180,15 @@ public:
   {
     if (aTrackEvents & TRACK_EVENT_CREATED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethodWithArgs<TrackID, MediaSegment::Type>(
+        NS_NewRunnableMethodWithArgs<TrackID, MediaSegment::Type, MediaStream*, TrackID>(
           this, &OwnedStreamListener::DoNotifyTrackCreated,
-          aID, aQueuedMedia.GetType());
+          aID, aQueuedMedia.GetType(), aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     } else if (aTrackEvents & TRACK_EVENT_ENDED) {
       nsCOMPtr<nsIRunnable> runnable =
-        NS_NewRunnableMethodWithArgs<TrackID>(
-          this, &OwnedStreamListener::DoNotifyTrackEnded, aID);
+        NS_NewRunnableMethodWithArgs<MediaStream*, TrackID>(
+          this, &OwnedStreamListener::DoNotifyTrackEnded,
+          aInputStream, aInputTrackID);
       aGraph->DispatchToMainThreadAfterStreamStateUpdate(runnable.forget());
     }
   }
@@ -808,7 +810,7 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
   MOZ_RELEASE_ASSERT(mInputStream);
   MOZ_RELEASE_ASSERT(mOwnedStream);
 
-  MOZ_ASSERT(FindOwnedDOMTrack(GetOwnedStream(), aTrackID) == nullptr);
+  MOZ_ASSERT(FindOwnedDOMTrack(GetInputStream(), aTrackID) == nullptr);
 
   MediaStreamTrack* track;
   switch (aType) {
@@ -837,16 +839,16 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
 }
 
 MediaStreamTrack*
-DOMMediaStream::FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const
+DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
+                                  TrackID aInputTrackID) const
 {
   MOZ_RELEASE_ASSERT(mOwnedStream);
 
-  if (aOwningStream != mOwnedStream) {
-    return nullptr;
-  }
-
   for (const RefPtr<TrackPort>& info : mOwnedTracks) {
-    if (info->GetTrack()->GetTrackID() == aTrackID) {
+    if (info->GetInputPort() &&
+        info->GetInputPort()->GetSource() == aInputStream &&
+        info->GetTrack()->GetInputTrackID() == aInputTrackID) {
+      // This track is owned externally but in our playback stream.
       return info->GetTrack();
     }
   }
