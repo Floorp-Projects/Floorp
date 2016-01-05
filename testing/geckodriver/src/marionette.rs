@@ -816,7 +816,7 @@ impl MarionetteResponse {
                                            "Expected object or null error"));
         };
 
-        let result = if data[3].is_null() || data[3].is_object() {
+        let result = if data[3].is_null() || data[3].is_object() || data[3].is_array() {
             data[3].clone()
         } else {
             return Err(WebDriverError::new(ErrorStatus::UnknownError,
