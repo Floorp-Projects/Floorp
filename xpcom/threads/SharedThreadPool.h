@@ -55,6 +55,11 @@ public:
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);
 
+  // Call this when dispatching from an event on the same
+  // threadpool that is about to complete. We should not create a new thread
+  // in that case since a thread is about to become idle.
+  nsresult TailDispatch(nsIRunnable *event) { return Dispatch(event, NS_DISPATCH_TAIL); }
+
   NS_IMETHOD DispatchFromScript(nsIRunnable *event, uint32_t flags) override {
       return Dispatch(event, flags);
   }
