@@ -83,8 +83,6 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
-  mCodecContext->get_buffer = AllocateBufferCb;
-  mCodecContext->release_buffer = ReleaseBufferCb;
   mCodecContext->width = mImage.width;
   mCodecContext->height = mImage.height;
 
@@ -255,120 +253,6 @@ FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
       mTaskQueue->IsEmpty()) {
     mCallback->InputExhausted();
   }
-}
-
-/* static */ int
-FFmpegH264Decoder<LIBAV_VER>::AllocateBufferCb(AVCodecContext* aCodecContext,
-                                               AVFrame* aFrame)
-{
-  MOZ_ASSERT(aCodecContext->codec_type == AVMEDIA_TYPE_VIDEO);
-
-  FFmpegH264Decoder* self =
-    static_cast<FFmpegH264Decoder*>(aCodecContext->opaque);
-
-  switch (aCodecContext->pix_fmt) {
-  case PIX_FMT_YUV420P:
-    return self->AllocateYUV420PVideoBuffer(aCodecContext, aFrame);
-  default:
-    return avcodec_default_get_buffer(aCodecContext, aFrame);
-  }
-}
-
-/* static */ void
-FFmpegH264Decoder<LIBAV_VER>::ReleaseBufferCb(AVCodecContext* aCodecContext,
-                                              AVFrame* aFrame)
-{
-  switch (aCodecContext->pix_fmt) {
-    case PIX_FMT_YUV420P: {
-      Image* image = static_cast<Image*>(aFrame->opaque);
-      if (image) {
-        image->Release();
-      }
-      for (uint32_t i = 0; i < AV_NUM_DATA_POINTERS; i++) {
-        aFrame->data[i] = nullptr;
-      }
-      break;
-    }
-    default:
-      avcodec_default_release_buffer(aCodecContext, aFrame);
-      break;
-  }
-}
-
-int
-FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
-  AVCodecContext* aCodecContext, AVFrame* aFrame)
-{
-  bool needAlign = aCodecContext->codec->capabilities & CODEC_CAP_DR1;
-  bool needEdge = !(aCodecContext->flags & CODEC_FLAG_EMU_EDGE);
-  int edgeWidth = needEdge ? avcodec_get_edge_width() : 0;
-
-  int decodeWidth = aCodecContext->width + edgeWidth * 2;
-  int decodeHeight = aCodecContext->height + edgeWidth * 2;
-
-  if (needAlign) {
-    // Align width and height to account for CODEC_CAP_DR1.
-    // Make sure the decodeWidth is a multiple of 64, so a UV plane stride will be
-    // a multiple of 32. FFmpeg uses SSE3 accelerated code to copy a frame line by
-    // line.
-    // VP9 decoder uses MOVAPS/VEX.256 which requires 32-bytes aligned memory.
-    decodeWidth = (decodeWidth + 63) & ~63;
-    decodeHeight = (decodeHeight + 63) & ~63;
-  }
-
-  PodZero(&aFrame->data[0], AV_NUM_DATA_POINTERS);
-  PodZero(&aFrame->linesize[0], AV_NUM_DATA_POINTERS);
-
-  int pitch = decodeWidth;
-  int chroma_pitch  = (pitch + 1) / 2;
-  int chroma_height = (decodeHeight +1) / 2;
-
-  // Get strides for each plane.
-  aFrame->linesize[0] = pitch;
-  aFrame->linesize[1] = aFrame->linesize[2] = chroma_pitch;
-
-  size_t allocSize = pitch * decodeHeight + (chroma_pitch * chroma_height) * 2;
-
-  RefPtr<PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
-  uint8_t* buffer = image->AllocateAndGetNewBuffer(allocSize + 64);
-  // FFmpeg requires a 16/32 bytes-aligned buffer, align it on 64 to be safe
-  buffer = reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(buffer) + 63) & ~63);
-
-  if (!buffer) {
-    NS_WARNING("Failed to allocate buffer for FFmpeg video decoding");
-    return -1;
-  }
-
-  int offsets[3] = {
-    0,
-    pitch * decodeHeight,
-    pitch * decodeHeight + chroma_pitch * chroma_height };
-
-  // Add a horizontal bar |edgeWidth| pixels high at the
-  // top of the frame, plus |edgeWidth| pixels from the left of the frame.
-  int planesEdgeWidth[3] = {
-    edgeWidth * aFrame->linesize[0] + edgeWidth,
-    edgeWidth / 2 * aFrame->linesize[1] + edgeWidth / 2,
-    edgeWidth / 2 * aFrame->linesize[2] + edgeWidth / 2 };
-
-  for (uint32_t i = 0; i < 3; i++) {
-    aFrame->data[i] = buffer + offsets[i] + planesEdgeWidth[i];
-  }
-
-  aFrame->extended_data = aFrame->data;
-  aFrame->width = aCodecContext->width;
-  aFrame->height = aCodecContext->height;
-
-  aFrame->opaque = static_cast<void*>(image.forget().take());
-
-  aFrame->type = FF_BUFFER_TYPE_USER;
-  aFrame->reordered_opaque = aCodecContext->reordered_opaque;
-#if LIBAVCODEC_VERSION_MAJOR == 53
-  if (aCodecContext->pkt) {
-    aFrame->pkt_pts = aCodecContext->pkt->pts;
-  }
-#endif
-  return 0;
 }
 
 nsresult
