@@ -154,10 +154,19 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Paired")) {
     mPaired = value.get_bool();
   } else if (name.EqualsLiteral("UUIDs")) {
-    // We assume the received uuids array is sorted without duplicate items.
-    // If it's not, we require additional processing before assigning it
-    // directly.
-    mUuids = value.get_ArrayOfnsString();
+    // While converting to strings, we sort the received UUIDs and remove
+    // any duplicates.
+    const nsTArray<BluetoothUuid>& uuids = value.get_ArrayOfBluetoothUuid();
+    nsTArray<nsString> uuidStrs;
+    for (uint32_t index = 0; index < uuids.Length(); ++index) {
+      nsAutoString uuidStr;
+      UuidToString(uuids[index], uuidStr);
+
+      if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate UUIDs
+        uuidStrs.InsertElementSorted(uuidStr);
+      }
+    }
+    mUuids = Move(uuidStrs);
     BluetoothDeviceBinding::ClearCachedUuidsValue(this);
   } else if (name.EqualsLiteral("Type")) {
     mType = ConvertUint32ToDeviceType(value.get_uint32_t());
@@ -260,12 +269,25 @@ BluetoothDevice::IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
       return mPaired != aValue.get_bool();
     case BluetoothDeviceAttribute::Uuids: {
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfnsString);
-      const InfallibleTArray<nsString>& uuids = aValue.get_ArrayOfnsString();
+      MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothUuid);
+      const auto& uuids = aValue.get_ArrayOfBluetoothUuid();
+
+      nsTArray<nsString> uuidStrs;
+
+      // Construct a sorted uuid set
+      for (size_t index = 0; index < uuids.Length(); ++index) {
+        nsAutoString uuidStr;
+        UuidToString(uuids[index], uuidStr);
+
+        if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate uuids
+          uuidStrs.InsertElementSorted(uuidStr);
+        }
+      }
+
       // We assume the received uuids array is sorted without duplicate items.
       // If it's not, we require additional processing before comparing it
       // directly.
-      return mUuids != uuids;
+      return mUuids != uuidStrs;
     }
     default:
       BT_WARNING("Type %d is not handled", uint32_t(aType));
