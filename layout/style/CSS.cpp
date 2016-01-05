@@ -85,14 +85,9 @@ CSS::Supports(const GlobalObject& aGlobal,
 /* static */ void
 CSS::Escape(const GlobalObject& aGlobal,
             const nsAString& aIdent,
-            nsAString& aReturn,
-            ErrorResult& aRv)
+            nsAString& aReturn)
 {
-  bool success = nsStyleUtil::AppendEscapedCSSIdent(aIdent, aReturn);
-
-  if (!success) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_CHARACTER_ERR);
-  }
+  nsStyleUtil::AppendEscapedCSSIdent(aIdent, aReturn);
 }
 
 } // namespace dom
