@@ -720,15 +720,6 @@ DOMMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
   return stream.forget();
 }
 
-void
-DOMMediaStream::SetTrackEnabled(TrackID aTrackID, bool aEnabled)
-{
-  // XXX Bug 1208371 - This enables/disables the track across clones.
-  if (mInputStream) {
-    mInputStream->SetTrackEnabled(aTrackID, aEnabled);
-  }
-}
-
 already_AddRefed<Promise>
 DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
                                         const MediaTrackConstraints& aConstraints,
