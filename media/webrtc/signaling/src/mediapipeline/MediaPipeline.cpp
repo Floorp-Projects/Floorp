@@ -22,6 +22,7 @@
 #include "LayersLogging.h"
 #include "ImageTypes.h"
 #include "ImageContainer.h"
+#include "MediaStreamTrack.h"
 #include "VideoUtils.h"
 #ifdef WEBRTC_GONK
 #include "GrallocImages.h"
@@ -58,6 +59,7 @@
 #define DEFAULT_SAMPLE_RATE 32000
 
 using namespace mozilla;
+using namespace mozilla::dom;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
@@ -685,18 +687,23 @@ void MediaPipelineTransmit::AttachToTrack(const std::string& track_id) {
 void MediaPipelineTransmit::UpdateSinkIdentity_m(nsIPrincipal* principal,
                                                  const PeerIdentity* sinkIdentity) {
   ASSERT_ON_THREAD(main_thread_);
-  bool enableStream = principal->Subsumes(domstream_->GetPrincipal());
-  if (!enableStream) {
+
+  MediaStreamTrack* track =
+    domstream_->GetOwnedTrackById(NS_ConvertUTF8toUTF16(trackid().c_str()));
+  MOZ_RELEASE_ASSERT(track);
+
+  bool enableTrack = principal->Subsumes(track->GetPrincipal());
+  if (!enableTrack) {
     // first try didn't work, but there's a chance that this is still available
-    // if our stream is bound to a peerIdentity, and the peer connection (our
-    // sink) is bound to the same identity, then we can enable the stream
-    PeerIdentity* streamIdentity = domstream_->GetPeerIdentity();
-    if (sinkIdentity && streamIdentity) {
-      enableStream = (*sinkIdentity == *streamIdentity);
+    // if our track is bound to a peerIdentity, and the peer connection (our
+    // sink) is bound to the same identity, then we can enable the track.
+    const PeerIdentity* trackIdentity = track->GetPeerIdentity();
+    if (sinkIdentity && trackIdentity) {
+      enableTrack = (*sinkIdentity == *trackIdentity);
     }
   }
 
-  listener_->SetEnabled(enableStream);
+  listener_->SetEnabled(enableTrack);
 }
 #endif
 
