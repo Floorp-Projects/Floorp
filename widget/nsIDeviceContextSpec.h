@@ -12,6 +12,12 @@ class nsIWidget;
 class nsIPrintSettings;
 class gfxASurface;
 
+namespace mozilla {
+namespace gfx{
+class DrawEventRecorder;
+}
+}
+
 #define NS_IDEVICE_CONTEXT_SPEC_IID   \
 { 0xf407cfba, 0xbe28, 0x46c9, \
   { 0x8a, 0xba, 0x04, 0x2d, 0xae, 0xbb, 0x4f, 0x23 } }
@@ -35,6 +41,19 @@ public:
    NS_IMETHOD GetSurfaceForPrinter(gfxASurface **nativeSurface) = 0;
 
    /**
+    * If required override to return a recorder to record the print.
+    *
+    * @param aDrawEventRecorder out param for the recorder to use
+    * @return NS_OK or a suitable error code
+    */
+   NS_IMETHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder)
+   {
+     MOZ_ASSERT(aDrawEventRecorder);
+     *aDrawEventRecorder = nullptr;
+     return NS_OK;
+   }
+
+   /**
     * Override to return something other than the default.
     *
     * @return DPI for printing.
@@ -49,11 +68,12 @@ public:
    virtual float GetPrintingScale() { return 1.0f;  }
 
    NS_IMETHOD BeginDocument(const nsAString& aTitle,
-                            char16_t*       aPrintToFileName,
+                            const nsAString& aPrintToFileName,
                             int32_t          aStartPage,
                             int32_t          aEndPage) = 0;
 
    NS_IMETHOD EndDocument() = 0;
+   NS_IMETHOD AbortDocument() { return EndDocument(); }
    NS_IMETHOD BeginPage() = 0;
    NS_IMETHOD EndPage() = 0;
 };

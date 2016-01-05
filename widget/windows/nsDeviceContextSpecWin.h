@@ -26,7 +26,7 @@ public:
 
   NS_IMETHOD GetSurfaceForPrinter(gfxASurface **surface) override;
   NS_IMETHOD BeginDocument(const nsAString& aTitle,
-                           char16_t*       aPrintToFileName,
+                           const nsAString& aPrintToFileName,
                            int32_t          aStartPage,
                            int32_t          aEndPage) override { return NS_OK; }
   NS_IMETHOD EndDocument() override { return NS_OK; }
