@@ -15,7 +15,6 @@
 #include "nsIPrincipal.h"
 #include "mozilla/PeerIdentity.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
@@ -445,8 +444,6 @@ public:
    * can only be accessed by principals subsuming this principal.
    */
   nsIPrincipal* GetPrincipal() { return mPrincipal; }
-  mozilla::CORSMode GetCORSMode();
-  void SetCORSMode(mozilla::CORSMode aCORSMode);
 
   /**
    * These are used in WebRTC.  A peerIdentity constrained MediaStream cannot be sent
