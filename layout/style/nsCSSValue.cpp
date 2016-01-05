@@ -1026,10 +1026,12 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
               aValue != NS_STYLE_ALIGN_LAST_BASELINE) ||
              (!legacy && !overflowPos),
              "auto/baseline/last-baseline never have any flags");
+  MOZ_ASSERT(legacy == 0 || overflowPos == 0,
+             "'legacy' together with <overflow-position>");
   const auto& kwtable(nsCSSProps::kAlignAllKeywords);
   AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(aValue, kwtable), aResult);
-  if (MOZ_UNLIKELY(overflowPos != 0)) {
-    MOZ_ASSERT(legacy == 0, "'legacy' together with <overflow-position>");
+  // Don't serialize the 'unsafe' keyword; it's the default.
+  if (MOZ_UNLIKELY(overflowPos == NS_STYLE_ALIGN_SAFE)) {
     aResult.Append(' ');
     AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(overflowPos, kwtable),
                        aResult);
