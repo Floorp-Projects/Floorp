@@ -50,7 +50,7 @@ public:
 
     virtual bool
     DeallocPPrintSettingsDialogParent(PPrintSettingsDialogParent* aActor);
-    
+
     virtual PRemotePrintJobParent*
     AllocPRemotePrintJobParent();
 
