@@ -344,7 +344,7 @@ class PushHeadCache(CacheManager):
     def pushheads(self, tree, parent):
         pushheads = subprocess.check_output([self._hg, 'log',
             '--template', '{node}\n',
-            '-r', 'last(pushhead("{tree}") & ::"{parent}", {num})'.format(
+            '-r', 'last(pushhead({tree}) and ::{parent}, {num})'.format(
                 tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
         pushheads = pushheads.strip().split('\n')
         return pushheads
@@ -516,7 +516,7 @@ class Artifacts(object):
                 if info.filename.endswith('.ini'):
                     continue
                 n = mozpath.join(bindir, info.filename)
-                fh = FileAvoidWrite(n, mode='r')
+                fh = FileAvoidWrite(n, mode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
