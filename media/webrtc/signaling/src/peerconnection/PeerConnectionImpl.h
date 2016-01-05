@@ -770,7 +770,7 @@ private:
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // The entity on the other end of the peer-to-peer connection;
   // void if they are not yet identified, and no identity setting has been set
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
+  RefPtr<PeerIdentity> mPeerIdentity;
   // The certificate we are using.
   RefPtr<mozilla::dom::RTCCertificate> mCertificate;
 #else
