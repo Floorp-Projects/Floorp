@@ -501,10 +501,6 @@
 @RESPATH@/components/nsINIProcessor.js
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
-#ifdef MOZ_DATA_REPORTING
-@RESPATH@/components/DataReporting.manifest
-@RESPATH@/components/DataReportingService.js
-#endif
 #ifdef MOZ_SERVICES_HEALTHREPORT
 @RESPATH@/components/HealthReportComponents.manifest
 @RESPATH@/browser/components/SelfSupportService.manifest
