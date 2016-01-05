@@ -20,25 +20,6 @@ var path = require("path");
 
 module.exports = function(context) {
   // ---------------------------------------------------------------------------
-  // Helpers
-  // ---------------------------------------------------------------------------
-
-  function importGlobalsFrom(filePath) {
-    // If the file can't be found, let the error go up to the caller so it can
-    // be logged as an error in the current file.
-    var content = fs.readFileSync(filePath, "utf8");
-
-    // Parse the content and get the globals from the ast.
-    var ast = helpers.getAST(content);
-    var globalVars = helpers.getGlobals(ast);
-
-    for (var i = 0; i < globalVars.length; i++) {
-      var varName = globalVars[i];
-      helpers.addVarToScope(varName, context);
-    }
-  }
-
-  // ---------------------------------------------------------------------------
   // Public
   // ---------------------------------------------------------------------------
 
@@ -60,7 +41,8 @@ module.exports = function(context) {
           }
 
           try {
-            importGlobalsFrom(filePath);
+            let globals = helpers.getGlobalsForFile(filePath);
+            helpers.addGlobals(globals, context);
           } catch (e) {
             context.report(
               node,

@@ -3,6 +3,10 @@
   "plugins": [
     "mozilla"
   ],
+  "rules": {
+    "mozilla/components-imports": 1,
+    "mozilla/import-globals-from": 1,
+  },
   "env": {
     "es6": true
   },

@@ -22,8 +22,8 @@ module.exports = function(context) {
 
   return {
     ExpressionStatement: function(node) {
-      var source = helpers.getSource(node, context);
-      var name = helpers.getVarNameFromImportSource(source);
+      var scope = context.getScope();
+      var name = helpers.convertExpressionToGlobal(node, scope.type == "global");
 
       if (name) {
         helpers.addVarToScope(name, context);
