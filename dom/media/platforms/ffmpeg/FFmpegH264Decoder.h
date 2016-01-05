@@ -60,9 +60,6 @@ private:
   int AllocateYUV420PVideoBuffer(AVCodecContext* aCodecContext,
                                  AVFrame* aFrame);
 
-  static int AllocateBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
-  static void ReleaseBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
-
   RefPtr<ImageContainer> mImageContainer;
   nsIntSize mDisplay;
   nsIntRect mImage;
