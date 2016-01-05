@@ -94,6 +94,12 @@ public:
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect &aRect) override;
   virtual void PopClip() override;
+  virtual void PushLayer(bool aOpaque, Float aOpacity,
+                         SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
+                         bool aCopyBackground = false) override;
+  virtual void PopLayer() override;
 
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                                   const IntSize &aSize,
@@ -117,6 +123,7 @@ public:
   virtual already_AddRefed<FilterNode> CreateFilter(FilterType aType) override;
 
   virtual bool SupportsRegionClipping() const override { return false; }
+  virtual bool IsCurrentGroupOpaque() override { return CurrentLayer().mIsOpaque; }
 
   virtual void *GetNativeSurface(NativeSurfaceType aType) override { return nullptr; }
 
@@ -167,6 +174,9 @@ private:
   }
   void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
 
+  // Must be called with all clips popped and an identity matrix set.
+  already_AddRefed<ID2D1Image> GetImageForLayerContent();
+
   ID2D1Image* CurrentTarget()
   {
     if (CurrentLayer().mCurrentList) {
@@ -211,7 +221,6 @@ private:
   mutable RefPtr<ID2D1DeviceContext> mDC;
   RefPtr<ID2D1Bitmap1> mBitmap;
   RefPtr<ID2D1CommandList> mCommandList;
-  RefPtr<ID2D1Effect> mBlendEffect;
 
   RefPtr<ID2D1SolidColorBrush> mSolidColorBrush;
 
