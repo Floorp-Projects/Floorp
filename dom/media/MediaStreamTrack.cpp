@@ -27,9 +27,10 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION_0(MediaStreamTrackSource)
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                                   const nsString& aLabel,
+                                   TrackID aInputTrackID, const nsString& aLabel,
                                    MediaStreamTrackSource* aSource)
-  : mOwningStream(aStream), mTrackID(aTrackID), mLabel(aLabel), mSource(aSource),
+  : mOwningStream(aStream), mTrackID(aTrackID),
+    mInputTrackID(aInputTrackID), mSource(aSource), mLabel(aLabel),
     mEnded(false), mEnabled(true), mRemote(aSource->IsRemote()), mStopped(false)
 {
 
