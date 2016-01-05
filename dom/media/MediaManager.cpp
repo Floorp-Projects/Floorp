@@ -251,7 +251,7 @@ public:
   MediaOperationTask(MediaOperation aType,
     GetUserMediaCallbackMediaStreamListener* aListener,
     DOMMediaStream* aStream,
-    DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
+    OnTracksAvailableCallback* aOnTracksAvailableCallback,
     AudioDevice* aAudioDevice,
     VideoDevice* aVideoDevice,
     bool aBool,
@@ -378,7 +378,7 @@ public:
 private:
   MediaOperation mType;
   RefPtr<DOMMediaStream> mStream;
-  nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
+  nsAutoPtr<OnTracksAvailableCallback> mOnTracksAvailableCallback;
   RefPtr<AudioDevice> mAudioDevice; // threadsafe
   RefPtr<VideoDevice> mVideoDevice; // threadsafe
   RefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
@@ -886,7 +886,7 @@ public:
 
   ~GetUserMediaStreamRunnable() {}
 
-  class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
+  class TracksAvailableCallback : public OnTracksAvailableCallback
   {
   public:
     TracksAvailableCallback(MediaManager* aManager,

@@ -3124,12 +3124,11 @@ private:
 };
 
 class HTMLMediaElement::MediaStreamTracksAvailableCallback:
-    public DOMMediaStream::OnTracksAvailableCallback
+  public OnTracksAvailableCallback
 {
 public:
   explicit MediaStreamTracksAvailableCallback(HTMLMediaElement* aElement):
-      DOMMediaStream::OnTracksAvailableCallback(),
-      mElement(aElement)
+      OnTracksAvailableCallback(), mElement(aElement)
     {}
   virtual void NotifyTracksAvailable(DOMMediaStream* aStream)
   {

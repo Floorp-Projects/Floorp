@@ -350,7 +350,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
 
     GetUserMediaNotificationEvent(GetUserMediaStatus aStatus,
                                   already_AddRefed<DOMMediaStream> aStream,
-                                  DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback,
+                                  OnTracksAvailableCallback* aOnTracksAvailableCallback,
                                   bool aIsAudio, bool aIsVideo, uint64_t aWindowID,
                                   already_AddRefed<nsIDOMGetUserMediaErrorCallback> aError)
     : mStream(aStream), mOnTracksAvailableCallback(aOnTracksAvailableCallback),
@@ -366,7 +366,7 @@ class GetUserMediaNotificationEvent: public nsRunnable
   protected:
     RefPtr<GetUserMediaCallbackMediaStreamListener> mListener; // threadsafe
     RefPtr<DOMMediaStream> mStream;
-    nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
+    nsAutoPtr<OnTracksAvailableCallback> mOnTracksAvailableCallback;
     GetUserMediaStatus mStatus;
     bool mIsAudio;
     bool mIsVideo;
@@ -388,13 +388,13 @@ class ReleaseMediaOperationResource : public nsRunnable
 {
 public:
   ReleaseMediaOperationResource(already_AddRefed<DOMMediaStream> aStream,
-    DOMMediaStream::OnTracksAvailableCallback* aOnTracksAvailableCallback):
+    OnTracksAvailableCallback* aOnTracksAvailableCallback):
     mStream(aStream),
     mOnTracksAvailableCallback(aOnTracksAvailableCallback) {}
   NS_IMETHOD Run() override {return NS_OK;}
 private:
   RefPtr<DOMMediaStream> mStream;
-  nsAutoPtr<DOMMediaStream::OnTracksAvailableCallback> mOnTracksAvailableCallback;
+  nsAutoPtr<OnTracksAvailableCallback> mOnTracksAvailableCallback;
 };
 
 typedef nsTArray<RefPtr<GetUserMediaCallbackMediaStreamListener> > StreamListeners;
