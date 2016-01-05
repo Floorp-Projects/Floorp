@@ -68,7 +68,8 @@ class FilePickerParent : public PFilePickerParent
     nsCOMPtr<nsIEventTarget> mEventTarget;
 
   public:
-    FileSizeAndDateRunnable(FilePickerParent *aFPParent, nsTArray<RefPtr<BlobImpl>>& aBlobs);
+    FileSizeAndDateRunnable(FilePickerParent *aFPParent,
+                            nsTArray<RefPtr<BlobImpl>>& aBlobs);
     bool Dispatch();
     NS_IMETHOD Run();
     void Destroy();
@@ -86,4 +87,4 @@ class FilePickerParent : public PFilePickerParent
 } // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // mozilla_dom_FilePickerParent_h
