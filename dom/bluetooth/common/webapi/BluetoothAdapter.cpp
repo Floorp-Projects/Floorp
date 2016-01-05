@@ -456,7 +456,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
       }
     }
   } else if (name.EqualsLiteral("Name")) {
-    mName = value.get_nsString();
+    RemoteNameToString(value.get_BluetoothRemoteName(), mName);
   } else if (name.EqualsLiteral("Address")) {
     AddressToString(value.get_BluetoothAddress(), mAddress);
   } else if (name.EqualsLiteral("Discoverable")) {
@@ -788,9 +788,10 @@ BluetoothAdapter::SetName(const nsAString& aName, ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   // Wrap property to set and runnable to handle result
-  nsString name(aName);
   BluetoothNamedValue property(NS_LITERAL_STRING("Name"),
-                               BluetoothValue(name));
+                               BluetoothValue(
+                                 BluetoothRemoteName(
+                                   NS_ConvertUTF16toUTF8(aName))));
   BT_ENSURE_SUCCESS_REJECT(
     bs->SetProperty(BluetoothObjectType::TYPE_ADAPTER, property,
                     new BluetoothVoidReplyRunnable(nullptr, promise)),
@@ -1035,9 +1036,12 @@ BluetoothAdapter::IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
       return aValue.get_bool() ? mState != BluetoothAdapterState::Enabled
                                : mState != BluetoothAdapterState::Disabled;
-    case BluetoothAdapterAttribute::Name:
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
-      return !mName.Equals(aValue.get_nsString());
+    case BluetoothAdapterAttribute::Name: {
+        MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothRemoteName);
+        nsAutoString name;
+        RemoteNameToString(aValue.get_BluetoothRemoteName(), name);
+        return !name.Equals(mName);
+      }
     case BluetoothAdapterAttribute::Address: {
         MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothAddress);
         BluetoothAddress address;
@@ -1221,7 +1225,7 @@ BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
 
   MOZ_ASSERT(arr.Length() == 3 &&
              arr[0].value().type() == BluetoothValue::TBluetoothAddress && // Address
-             arr[1].value().type() == BluetoothValue::TnsString && // Name
+             arr[1].value().type() == BluetoothValue::TBluetoothRemoteName && // Name
              arr[2].value().type() == BluetoothValue::Tbool);      // Paired
   MOZ_ASSERT(!arr[0].value().get_BluetoothAddress().IsCleared() &&
              arr[2].value().get_bool());

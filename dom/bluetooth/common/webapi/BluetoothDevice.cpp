@@ -146,7 +146,7 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   const nsString& name = aValue.name();
   const BluetoothValue& value = aValue.value();
   if (name.EqualsLiteral("Name")) {
-    mName = value.get_nsString();
+    RemoteNameToString(value.get_BluetoothRemoteName(), mName);
   } else if (name.EqualsLiteral("Address")) {
     AddressToString(value.get_BluetoothAddress(), mAddress);
   } else if (name.EqualsLiteral("Cod")) {
@@ -250,9 +250,12 @@ BluetoothDevice::IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
     case BluetoothDeviceAttribute::Cod:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tuint32_t);
       return !mCod->Equals(aValue.get_uint32_t());
-    case BluetoothDeviceAttribute::Name:
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
-      return !mName.Equals(aValue.get_nsString());
+    case BluetoothDeviceAttribute::Name: {
+        MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothRemoteName);
+        nsAutoString remoteNameStr;
+        RemoteNameToString(aValue.get_BluetoothRemoteName(), remoteNameStr);
+        return !mName.Equals(remoteNameStr);
+      }
     case BluetoothDeviceAttribute::Paired:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
       return mPaired != aValue.get_bool();
