@@ -16,6 +16,8 @@ namespace mozilla {
 
 class DOMMediaStream;
 class MediaEnginePhotoCallback;
+class MediaStream;
+class ProcessedMediaStream;
 
 namespace dom {
 
@@ -193,6 +195,16 @@ public:
 
 protected:
   virtual ~MediaStreamTrack();
+
+  // Returns the original DOMMediaStream's underlying input stream.
+  MediaStream* GetInputStream();
+
+  // Returns the owning DOMMediaStream's underlying owned stream.
+  ProcessedMediaStream* GetOwnedStream();
+
+  // Returns the original DOMMediaStream. If this track is a clone,
+  // the original track's owning DOMMediaStream is returned.
+  DOMMediaStream* GetInputDOMStream();
 
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
