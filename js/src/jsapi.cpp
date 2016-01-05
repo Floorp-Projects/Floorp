@@ -1471,19 +1471,6 @@ JS_GetGCParameter(JSRuntime* rt, JSGCParamKey key)
     return rt->gc.getParameter(key, lock);
 }
 
-JS_PUBLIC_API(void)
-JS_SetGCParameterForThread(JSContext* cx, JSGCParamKey key, uint32_t value)
-{
-    MOZ_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-}
-
-JS_PUBLIC_API(uint32_t)
-JS_GetGCParameterForThread(JSContext* cx, JSGCParamKey key)
-{
-    MOZ_ASSERT(key == JSGC_MAX_CODE_CACHE_BYTES);
-    return 0;
-}
-
 static const size_t NumGCConfigs = 14;
 struct JSGCConfig {
     JSGCParamKey key;
