@@ -45,7 +45,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       return 0;
     }
 
-    nsresult TakePhoto(PhotoCallback* aCallback) override
+    nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override
     {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
