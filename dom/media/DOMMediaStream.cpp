@@ -633,7 +633,7 @@ DOMMediaStream::HasTrack(const MediaStreamTrack& aTrack) const
 bool
 DOMMediaStream::OwnsTrack(const MediaStreamTrack& aTrack) const
 {
-  return (aTrack.GetStream() == this) && HasTrack(aTrack);
+  return !!FindOwnedTrackPort(aTrack);
 }
 
 bool
@@ -894,6 +894,18 @@ DOMMediaStream::FindOwnedDOMTrack(MediaStream* aInputStream,
   }
   return nullptr;
 }
+
+DOMMediaStream::TrackPort*
+DOMMediaStream::FindOwnedTrackPort(const MediaStreamTrack& aTrack) const
+{
+  for (const RefPtr<TrackPort>& info : mOwnedTracks) {
+    if (info->GetTrack() == &aTrack) {
+      return info;
+    }
+  }
+  return nullptr;
+}
+
 
 MediaStreamTrack*
 DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTrackID) const

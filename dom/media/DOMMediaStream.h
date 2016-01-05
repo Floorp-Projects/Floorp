@@ -386,6 +386,12 @@ public:
                                       TrackID aInputTrackID) const;
 
   /**
+   * Returns the TrackPort connecting aTrack's input stream to mOwnedStream,
+   * or nullptr if aTrack is not owned by this DOMMediaStream.
+   */
+  TrackPort* FindOwnedTrackPort(const MediaStreamTrack& aTrack) const;
+
+  /**
    * Returns the corresponding MediaStreamTrack if it's in our mPlaybackStream.
    * aInputTrackID should match the track's TrackID in its owned stream.
    */
