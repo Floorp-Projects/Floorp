@@ -8,19 +8,28 @@
 
 var escope = require("escope");
 var espree = require("espree");
+var estraverse = require("estraverse");
 var path = require("path");
+var fs = require("fs");
 
-var regexes = [
-  /^(?:Cu|Components\.utils)\.import\(".*\/(.*?)\.jsm?"\);?$/,
-  /^loader\.lazyImporter\(\w+, "(\w+)"/,
-  /^loader\.lazyRequireGetter\(\w+, "(\w+)"/,
-  /^loader\.lazyServiceGetter\(\w+, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyModuleGetter\(\w+, "(\w+)"/,
-  /^DevToolsUtils\.defineLazyModuleGetter\(\w+, "(\w+)"/,
-  /^loader\.lazyGetter\(\w+, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyGetter\(\w+, "(\w+)"/,
-  /^XPCOMUtils\.defineLazyServiceGetter\(\w+, "(\w+)"/,
-  /^DevToolsUtils\.defineLazyGetter\(\w+, "(\w+)"/,
+var definitions = [
+  /^loader\.lazyGetter\(this, "(\w+)"/,
+  /^loader\.lazyImporter\(this, "(\w+)"/,
+  /^loader\.lazyServiceGetter\(this, "(\w+)"/,
+  /^loader\.lazyRequireGetter\(this, "(\w+)"/,
+  /^XPCOMUtils\.defineLazyGetter\(this, "(\w+)"/,
+  /^XPCOMUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
+  /^XPCOMUtils\.defineLazyServiceGetter\(this, "(\w+)"/,
+  /^XPCOMUtils\.defineConstant\(this, "(\w+)"/,
+  /^DevToolsUtils\.defineLazyModuleGetter\(this, "(\w+)"/,
+  /^DevToolsUtils\.defineLazyGetter\(this, "(\w+)"/,
+  /^Object\.defineProperty\(this, "(\w+)"/,
+  /^Reflect\.defineProperty\(this, "(\w+)"/,
+  /^this\.__defineGetter__\("(\w+)"/,
+];
+
+var imports = [
+  /^(?:Cu|Components\.utils)\.import\(".*\/(.*?)\.jsm?"(?:, this)?\)/,
 ];
 
 module.exports = {
@@ -43,55 +52,120 @@ module.exports = {
   },
 
   /**
-   * Gets the source text of an AST node.
+   * A simplistic conversion of some AST nodes to a standard string form.
    *
-   * @param  {ASTNode} node
-   *         The AST node representing the source text.
-   * @param  {ASTContext} context
-   *         The current context.
+   * @param  {Object} node
+   *         The AST node to convert.
    *
    * @return {String}
-   *         The source text representing the AST node.
+   *         The JS source for the node.
    */
-  getSource: function(node, context) {
-    return context.getSource(node).replace(/[\r\n]+\s*/g, " ")
-                                  .replace(/\s*=\s*/g, " = ")
-                                  .replace(/\s+\./g, ".")
-                                  .replace(/,\s+/g, ", ")
-                                  .replace(/;\n(\d+)/g, ";$1")
-                                  .replace(/\s+/g, " ");
+  getASTSource: function(node) {
+    switch (node.type) {
+      case "MemberExpression":
+        if (node.computed)
+          throw new Error("getASTSource unsupported computed MemberExpression");
+        return this.getASTSource(node.object) + "." + this.getASTSource(node.property);
+      case "ThisExpression":
+        return "this";
+      case "Identifier":
+        return node.name;
+      case "Literal":
+        return JSON.stringify(node.value);
+      case "CallExpression":
+        var args = node.arguments.map(a => this.getASTSource(a)).join(", ");
+        return this.getASTSource(node.callee) + "(" + args + ")";
+      case "ObjectExpression":
+        return "{}";
+      case "ExpressionStatement":
+        return this.getASTSource(node.expression) + ";";
+      case "FunctionExpression":
+        return "function() {}";
+      default:
+        throw new Error("getASTSource unsupported node type: " + node.type);
+    }
   },
 
   /**
-   * Gets the variable name from an import source
-   * e.g. Cu.import("path/to/someName") will return "someName."
+   * Attempts to convert an ExpressionStatement to a likely global variable
+   * definition.
    *
-   * Some valid input strings:
-   *  - Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
-   *  - loader.lazyImporter(this, "name1");
-   *  - loader.lazyRequireGetter(this, "name2"
-   *  - loader.lazyServiceGetter(this, "name3"
-   *  - XPCOMUtils.defineLazyModuleGetter(this, "setNamedTimeout", ...)
-   *  - loader.lazyGetter(this, "toolboxStrings"
-   *  - XPCOMUtils.defineLazyGetter(this, "clipboardHelper"
+   * @param  {Object} node
+   *         The AST node to convert.
    *
-   * @param  {String} source
-   *         The source representing an import statement.
-   *
-   * @return {String}
-   *         The variable name imported.
+   * @return {String or null}
+   *         The variable name defined.
    */
-  getVarNameFromImportSource: function(source) {
-    for (var i = 0; i < regexes.length; i++) {
-      var regex = regexes[i];
-      var matches = source.match(regex);
+  convertExpressionToGlobal: function(node, isGlobal) {
+    try {
+      var source = this.getASTSource(node);
+    }
+    catch (e) {
+      return null;
+    }
 
-      if (matches) {
-        var name = matches[1];
+    for (var reg of definitions) {
+      var match = source.match(reg);
+      if (match) {
+        // Must be in the global scope
+        if (!isGlobal) {
+          return null;
+        }
 
-        return name;
+        return match[1];
       }
     }
+
+    for (reg of imports) {
+      var match = source.match(reg);
+      if (match) {
+        // The two argument form is only acceptable in the global scope
+        if (node.expression.arguments.length > 1 && !isGlobal) {
+          return null;
+        }
+
+        return match[1];
+      }
+    }
+
+    return null;
+  },
+
+  /**
+   * Walks over an AST and calls a callback for every ExpressionStatement found.
+   *
+   * @param  {Object} ast
+   *         The AST to traverse.
+   *
+   * @return {Function}
+   *         The callback to call for each ExpressionStatement.
+   */
+  expressionTraverse: function(ast, callback) {
+    var helpers = this;
+    var parents = new Map();
+
+    // Walk the parents of a node to see if any are functions
+    function isGlobal(node) {
+      var parent = parents.get(node);
+      while (parent) {
+        if (parent.type == "FunctionExpression" ||
+            parent.type == "FunctionDeclaration") {
+          return false;
+        }
+        parent = parents.get(parent);
+      }
+      return true;
+    }
+
+    estraverse.traverse(ast, {
+      enter: function(node, parent) {
+        parents.set(node, parent);
+
+        if (node.type == "ExpressionStatement") {
+          callback(node, isGlobal(node));
+        }
+      }
+    });
   },
 
   /**
@@ -112,6 +186,15 @@ module.exports = {
       var name = globalScope.variables[variable].name;
       result.push(name);
     }
+
+    var helpers = this;
+    this.expressionTraverse(ast, function(node, isGlobal) {
+      var name = helpers.convertExpressionToGlobal(node, isGlobal);
+
+      if (name) {
+        result.push(name);
+      }
+    });
 
     return result;
   },
@@ -142,25 +225,45 @@ module.exports = {
     }
   },
 
-  /**
-   * Get the single line text represented by a particular AST node.
-   *
-   * @param  {ASTNode} node
-   *         The AST node representing the source text.
-   * @param  {String} text
-   *         The text representing the AST node.
-   *
-   * @return {String}
-   *         A single line version of the string represented by node.
-   */
-  getTextForNode: function(node, text) {
-    var source = text.substr(node.range[0], node.range[1] - node.range[0]);
+  // Caches globals found in a file so we only have to parse a file once.
+  globalCache: new Map(),
 
-    return source.replace(/[\r\n]+\s*/g, "")
-                 .replace(/\s*=\s*/g, " = ")
-                 .replace(/\s+\./g, ".")
-                 .replace(/,\s+/g, ", ")
-                 .replace(/;\n(\d+)/g, ";$1");
+  /**
+   * Finds all the globals defined in a given file.
+   *
+   * @param {String} fileName
+   *        The file to parse for globals.
+   */
+  getGlobalsForFile: function(fileName) {
+    // If the file can't be found, let the error go up to the caller so it can
+    // be logged as an error in the current file.
+    var content = fs.readFileSync(fileName, "utf8");
+
+    if (this.globalCache.has(fileName)) {
+      return this.globalCache.get(fileName);
+    }
+
+    // Parse the content and get the globals from the ast.
+    var ast = this.getAST(content);
+    var globalVars = this.getGlobals(ast);
+    this.globalCache.set(fileName, globalVars);
+
+    return globalVars;
+  },
+
+  /**
+   * Adds a set of globals to a context.
+   *
+   * @param {Array} globalVars
+   *        An array of global variable names.
+   * @param {ASTContext} context
+   *        The current context.
+   */
+  addGlobals: function(globalVars, context) {
+    for (var i = 0; i < globalVars.length; i++) {
+      var varName = globalVars[i];
+      this.addVarToScope(varName, context);
+    }
   },
 
   /**
@@ -236,6 +339,49 @@ module.exports = {
     var pathAndFilename = scope.getFilename();
 
     return /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
+  },
+
+  /**
+   * Check whether we are in a test of some kind.
+   *
+   * @param  {RuleContext} scope
+   *         You should pass this from within a rule
+   *         e.g. helpers.getIsTest(this)
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsTest: function(scope) {
+    var pathAndFilename = scope.getFilename();
+
+    if (/.*[\\/]test_.+\.js$/.test(pathAndFilename)) {
+      return true;
+    }
+
+    return this.getIsBrowserMochitest(scope);
+  },
+
+  /**
+   * Gets the root directory of the repository by walking up directories until
+   * a .eslintignore file is found.
+   * @param {ASTContext} context
+   *        The current context.
+   *
+   * @return {String} The absolute path of the repository directory
+   */
+  getRootDir: function(context) {
+    var fileName = this.getAbsoluteFilePath(context);
+    var dirName = path.dirname(fileName);
+
+    while (dirName && !fs.existsSync(path.join(dirName, ".eslintignore"))) {
+      dirName = path.dirname(dirName);
+    }
+
+    if (!dirName) {
+      throw new Error("Unable to find root of repository");
+    }
+
+    return dirName;
   },
 
   /**

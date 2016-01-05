@@ -24,7 +24,6 @@ XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 if not CONFIG['MOZ_JSDOWNLOADS']:
     XPCSHELL_TESTS_MANIFESTS += ['test/schema_migration/xpcshell.ini']
     BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
-    MOCHITEST_MANIFESTS += ['test/browser/mochitest.ini']
 
 XPIDL_SOURCES += [
     'nsIApplicationReputation.idl',
