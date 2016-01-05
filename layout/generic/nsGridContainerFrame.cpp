@@ -1287,9 +1287,7 @@ AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
   if (alignSelf == NS_STYLE_ALIGN_LEFT || alignSelf == NS_STYLE_ALIGN_RIGHT) {
     alignSelf = NS_STYLE_ALIGN_START;
   }
-  if (MOZ_UNLIKELY(alignSelf == NS_STYLE_ALIGN_AUTO)) {
-    // Happens in rare edge cases when 'position' was ignored by the frame
-    // constructor (and the style system computed 'auto' based on 'position').
+  if (MOZ_LIKELY(alignSelf == NS_STYLE_ALIGN_NORMAL)) {
     alignSelf = NS_STYLE_ALIGN_STRETCH;
   }
   WritingMode childWM = aRS.GetWritingMode();
@@ -1316,9 +1314,7 @@ JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBW
   auto justifySelf = aJustifySelf;
   bool overflowSafe = justifySelf & NS_STYLE_JUSTIFY_SAFE;
   justifySelf &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
-  if (MOZ_UNLIKELY(justifySelf == NS_STYLE_ALIGN_AUTO)) {
-    // Happens in rare edge cases when 'position' was ignored by the frame
-    // constructor (and the style system computed 'auto' based on 'position').
+  if (MOZ_LIKELY(justifySelf == NS_STYLE_ALIGN_NORMAL)) {
     justifySelf = NS_STYLE_ALIGN_STRETCH;
   }
   WritingMode childWM = aRS.GetWritingMode();
@@ -2915,12 +2911,12 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
   auto stylePos = aReflowState.mStylePosition;
   const auto valueAndFallback = isAlign ?
     stylePos->ComputedAlignContent() :
-    stylePos->ComputedJustifyContent(aReflowState.mStyleDisplay);
+    stylePos->ComputedJustifyContent();
   WritingMode wm = aReflowState.GetWritingMode();
   bool overflowSafe;
   auto alignment = ::GetAlignJustifyValue(valueAndFallback, wm, isAlign,
                                           &overflowSafe);
-  if (alignment == NS_STYLE_ALIGN_AUTO) {
+  if (alignment == NS_STYLE_ALIGN_NORMAL) {
     alignment = NS_STYLE_ALIGN_START;
   }
 
@@ -3182,12 +3178,10 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     if (isGridItem) {
       LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
       LogicalSize newContentSize(childWM);
-      auto align = childRS->mStylePosition->ComputedAlignSelf(
-                     childRS->mStyleDisplay, containerSC);
+      auto align = childRS->mStylePosition->ComputedAlignSelf(containerSC);
       Maybe<LogicalAxis> alignResize =
         AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
-      auto justify = childRS->mStylePosition->ComputedJustifySelf(
-                       childRS->mStyleDisplay, containerSC);
+      auto justify = childRS->mStylePosition->ComputedJustifySelf(containerSC);
       Maybe<LogicalAxis> justifyResize =
         JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
       if (alignResize || justifyResize) {

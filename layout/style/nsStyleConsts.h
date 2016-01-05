@@ -473,29 +473,31 @@ enum class FillMode : uint32_t;
 
 // Shared constants for all align/justify properties (nsStylePosition):
 #define NS_STYLE_ALIGN_AUTO             0
-#define NS_STYLE_ALIGN_START            1
-#define NS_STYLE_ALIGN_END              2
-#define NS_STYLE_ALIGN_FLEX_START       3
-#define NS_STYLE_ALIGN_FLEX_END         4
-#define NS_STYLE_ALIGN_CENTER           5
-#define NS_STYLE_ALIGN_LEFT             6
-#define NS_STYLE_ALIGN_RIGHT            7
-#define NS_STYLE_ALIGN_BASELINE         8
-#define NS_STYLE_ALIGN_LAST_BASELINE    9
-#define NS_STYLE_ALIGN_STRETCH          10
-#define NS_STYLE_ALIGN_SELF_START       11
-#define NS_STYLE_ALIGN_SELF_END         12
-#define NS_STYLE_ALIGN_SPACE_BETWEEN    13
-#define NS_STYLE_ALIGN_SPACE_AROUND     14
-#define NS_STYLE_ALIGN_SPACE_EVENLY     15
-#define NS_STYLE_ALIGN_LEGACY        0x10 // mutually exclusive w. SAFE & UNSAFE
-#define NS_STYLE_ALIGN_SAFE          0x20
-#define NS_STYLE_ALIGN_UNSAFE        0x40 // mutually exclusive w. SAFE
-#define NS_STYLE_ALIGN_FLAG_BITS     0xF0
+#define NS_STYLE_ALIGN_NORMAL           1
+#define NS_STYLE_ALIGN_START            2
+#define NS_STYLE_ALIGN_END              3
+#define NS_STYLE_ALIGN_FLEX_START       4
+#define NS_STYLE_ALIGN_FLEX_END         5
+#define NS_STYLE_ALIGN_CENTER           6
+#define NS_STYLE_ALIGN_LEFT             7
+#define NS_STYLE_ALIGN_RIGHT            8
+#define NS_STYLE_ALIGN_BASELINE         9
+#define NS_STYLE_ALIGN_LAST_BASELINE    10
+#define NS_STYLE_ALIGN_STRETCH          11
+#define NS_STYLE_ALIGN_SELF_START       12
+#define NS_STYLE_ALIGN_SELF_END         13
+#define NS_STYLE_ALIGN_SPACE_BETWEEN    14
+#define NS_STYLE_ALIGN_SPACE_AROUND     15
+#define NS_STYLE_ALIGN_SPACE_EVENLY     16
+#define NS_STYLE_ALIGN_LEGACY        0x20 // mutually exclusive w. SAFE & UNSAFE
+#define NS_STYLE_ALIGN_SAFE          0x40
+#define NS_STYLE_ALIGN_UNSAFE        0x80 // mutually exclusive w. SAFE
+#define NS_STYLE_ALIGN_FLAG_BITS     0xE0
 #define NS_STYLE_ALIGN_ALL_BITS      0xFF
 #define NS_STYLE_ALIGN_ALL_SHIFT        8
 
 #define NS_STYLE_JUSTIFY_AUTO             NS_STYLE_ALIGN_AUTO
+#define NS_STYLE_JUSTIFY_NORMAL           NS_STYLE_ALIGN_NORMAL
 #define NS_STYLE_JUSTIFY_START            NS_STYLE_ALIGN_START
 #define NS_STYLE_JUSTIFY_END              NS_STYLE_ALIGN_END
 #define NS_STYLE_JUSTIFY_FLEX_START       NS_STYLE_ALIGN_FLEX_START
