@@ -268,7 +268,7 @@ public:
   void NotifyDecoderPrincipalChanged() final override;
 
   // An interface for observing principal changes on the media elements
-  // MediaDecoder.
+  // MediaDecoder. This will also be notified if the active CORSMode changes.
   class DecoderPrincipalChangeObserver
   {
   public:
