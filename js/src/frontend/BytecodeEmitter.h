@@ -638,6 +638,8 @@ struct BytecodeEmitter
     bool pushInitialConstants(JSOp op, unsigned n);
     bool initializeBlockScopedLocalsFromStack(Handle<StaticBlockObject*> blockObj);
 
+    // Emit bytecode for the spread operator.
+    //
     // emitSpread expects the current index (I) of the array, the array itself
     // and the iterator to be on the stack in that order (iterator on the bottom).
     // It will pop the iterator and I, then iterate over the iterator by calling
@@ -646,15 +648,9 @@ struct BytecodeEmitter
     // iteration count). The stack after iteration will look like |ARRAY INDEX|.
     bool emitSpread(bool allowSelfHosted = false);
 
-    // If type is StmtType::FOR_OF_LOOP, emit bytecode for a for-of loop.
-    // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
-    //
-    // If type is StmtType::SPREAD, emit bytecode for spread operator.
-    // pn should be nullptr.
-    //
-    // Please refer the comment above emitSpread for additional information about
-    // stack convention.
-    bool emitForOf(StmtType type, ParseNode* pn);
+    // Emit bytecode for a for-of loop.  pn should be PNK_FOR, and pn->pn_left
+    // should be PNK_FOROF.
+    bool emitForOf(ParseNode* pn);
 
     bool emitClass(ParseNode* pn);
     bool emitSuperPropLHS(ParseNode* superBase, bool isCall = false);
