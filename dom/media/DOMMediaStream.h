@@ -530,17 +530,17 @@ public:
    *
    * Creates a MediaStreamTrack, adds it to mTracks and returns it.
    */
-  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
-                                      const nsString& aLabel,
-                                      MediaStreamTrackSource* aSource);
+  MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
+                                   const nsString& aLabel,
+                                   MediaStreamTrackSource* aSource);
 
   /**
    * Creates a MediaStreamTrack cloned from aTrack, adds it to mTracks and
    * returns it.
    * aCloneTrackID is the TrackID the new track will get in mOwnedStream.
    */
-  already_AddRefed<MediaStreamTrack> CreateClonedDOMTrack(MediaStreamTrack& aTrack,
-                                                          TrackID aCloneTrackID);
+  already_AddRefed<MediaStreamTrack> CloneDOMTrack(MediaStreamTrack& aTrack,
+                                                   TrackID aCloneTrackID);
 
   // When the initial set of tracks has been added, run
   // aCallback->NotifyTracksAvailable.

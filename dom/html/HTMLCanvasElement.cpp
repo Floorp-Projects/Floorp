@@ -681,8 +681,8 @@ HTMLCanvasElement::CaptureStream(const Optional<double>& aFrameRate,
   }
 
   nsCOMPtr<nsIPrincipal> principal = NodePrincipal();
-  stream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO, nsString(),
-                            new BasicUnstoppableTrackSource(principal));
+  stream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO, nsString(),
+                         new BasicUnstoppableTrackSource(principal));
 
   rv = RegisterFrameCaptureListener(stream->FrameCaptureListener());
   if (NS_FAILED(rv)) {

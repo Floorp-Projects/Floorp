@@ -213,7 +213,7 @@ MediaStreamTrack::Clone()
   newStream->InitOwnedStreamCommon(graph);
   newStream->InitPlaybackStreamCommon(graph);
 
-  return newStream->CreateClonedDOMTrack(*this, mTrackID);
+  return newStream->CloneDOMTrack(*this, mTrackID);
 }
 
 DOMMediaStream*
