@@ -13,6 +13,7 @@
 #include "nsISupportsPrimitives.h"
 #include <windows.h>
 #include "mozilla/Attributes.h"
+#include "mozilla/RefPtr.h"
 
 class nsIWidget;
 
@@ -33,6 +34,10 @@ public:
   NS_IMETHOD EndPage() override { return NS_OK; }
 
   NS_IMETHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPS, bool aIsPrintPreview) override;
+
+  float GetDPI() final  { return 144.0f; }
+
+  float GetPrintingScale() final;
 
   void GetDriverName(wchar_t *&aDriverName) const   { aDriverName = mDriverName;     }
   void GetDeviceName(wchar_t *&aDeviceName) const   { aDeviceName = mDeviceName;     }
@@ -64,6 +69,7 @@ protected:
   LPDEVMODEW mDevMode;
 
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  RefPtr<gfxASurface> mPrintingSurface;
 };
 
 

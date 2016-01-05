@@ -9,7 +9,11 @@
 #include "nsIPrintingPromptService.h"
 #include "mozilla/embedding/PPrintingChild.h"
 
-typedef mozilla::layout::PRemotePrintJobChild PRemotePrintJobChild;
+namespace mozilla {
+namespace layout {
+class PRemotePrintJobChild;
+}
+}
 
 class nsPrintingProxy: public nsIPrintingPromptService,
                        public mozilla::embedding::PPrintingChild
