@@ -369,12 +369,8 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
-  mWatchManager.Watch(mSameOriginMedia, &MediaDecoderStateMachine::SameOriginMediaChanged);
   mWatchManager.Watch(mSentFirstFrameLoadedEvent, &MediaDecoderStateMachine::AdjustAudioThresholds);
   mWatchManager.Watch(mAudioCaptured, &MediaDecoderStateMachine::AdjustAudioThresholds);
-
-  // Propagate mSameOriginMedia to mDecodedStream.
-  SameOriginMediaChanged();
 }
 
 media::MediaSink*
@@ -1456,12 +1452,6 @@ void MediaDecoderStateMachine::LogicallySeekingChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
   ScheduleStateMachine();
-}
-
-void MediaDecoderStateMachine::SameOriginMediaChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mStreamSink->SetSameOrigin(mSameOriginMedia);
 }
 
 void MediaDecoderStateMachine::BufferedRangeUpdated()

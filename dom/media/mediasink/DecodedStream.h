@@ -61,9 +61,6 @@ public:
   bool IsStarted() const override;
   bool IsPlaying() const override;
 
-  // TODO: fix these functions that don't fit into the interface of MediaSink.
-  void SetSameOrigin(bool aSameOrigin);
-
 protected:
   virtual ~DecodedStream();
 
