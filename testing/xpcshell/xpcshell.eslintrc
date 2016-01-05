@@ -1,0 +1,43 @@
+// Parent config file for all xpcshell files.
+{
+  rules: {
+    // Head files want to define globals so don't warn for unused globals
+    "no-unused-vars": [2, {"vars": "local", "args": "none"}],
+    "mozilla/import-headjs-globals": 1,
+  },
+
+  // All globals made available in the test environment.
+  "globals": {
+    "add_task": false,
+    "add_test": false,
+    "Assert": false,
+    "deepEqual": false,
+    "do_check_eq": false,
+    "do_check_false": false,
+    "do_check_neq": false,
+    "do_check_null": false,
+    "do_check_true": false,
+    "do_execute_soon": false,
+    "do_get_cwd": false,
+    "do_get_file": false,
+    "do_get_idle": false,
+    "do_get_profile": false,
+    "do_load_module": false,
+    "do_parse_document": false,
+    "do_print": false,
+    "do_register_cleanup": false,
+    "do_test_finished": false,
+    "do_test_pending": false,
+    "do_throw": false,
+    "do_timeout": false,
+    "equal": false,
+    "load": false,
+    "notDeepEqual": false,
+    "notEqual": false,
+    "notStrictEqual": false,
+    "ok": false,
+    "run_next_test": false,
+    "run_test": false,
+    "strictEqual": false,
+  }
+}

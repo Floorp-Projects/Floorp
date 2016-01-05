@@ -5,8 +5,6 @@
 
 package org.mozilla.gecko.dlc.catalog;
 
-import org.mozilla.gecko.dlc.catalog.DownloadContentBootstrap;
-
 import android.content.Context;
 import android.support.v4.util.AtomicFile;
 import android.util.Log;
@@ -33,16 +31,23 @@ public class DownloadContentCatalog {
     private static final String LOGTAG = "GeckoDLCCatalog";
     private static final String FILE_NAME = "download_content_catalog";
 
+    private static final int MAX_FAILURES_UNTIL_PERMANENTLY_FAILED = 10;
+
     private final AtomicFile file;          // Guarded by 'file'
     private List<DownloadContent> content;  // Guarded by 'this'
     private boolean hasLoadedCatalog;       // Guarded by 'this
     private boolean hasCatalogChanged;      // Guarded by 'this'
 
     public DownloadContentCatalog(Context context) {
-        content = Collections.emptyList();
-        file = new AtomicFile(new File(context.getApplicationInfo().dataDir, FILE_NAME));
+        this(new AtomicFile(new File(context.getApplicationInfo().dataDir, FILE_NAME)));
 
         startLoadFromDisk();
+    }
+
+    // For injecting mocked AtomicFile objects during test
+    protected DownloadContentCatalog(AtomicFile file) {
+        this.content = Collections.emptyList();
+        this.file = file;
     }
 
     public synchronized List<DownloadContent> getContentWithoutState() {
@@ -104,6 +109,7 @@ public class DownloadContentCatalog {
 
     public synchronized void markAsDownloaded(DownloadContent content) {
         content.setState(DownloadContent.STATE_DOWNLOADED);
+        content.resetFailures();
         hasCatalogChanged = true;
     }
 
@@ -115,6 +121,17 @@ public class DownloadContentCatalog {
     public synchronized void markAsIgnored(DownloadContent content) {
         content.setState(DownloadContent.STATE_IGNORED);
         hasCatalogChanged = true;
+    }
+
+    public synchronized void rememberFailure(DownloadContent content, int failureType) {
+        if (content.getFailures() >= MAX_FAILURES_UNTIL_PERMANENTLY_FAILED) {
+            Log.d(LOGTAG, "Maximum number of failures reached. Marking content has permanently failed.");
+
+            markAsPermanentlyFailed(content);
+        } else {
+            content.rememberFailure(failureType);
+            hasCatalogChanged = true;
+        }
     }
 
     public void persistChanges() {
@@ -145,14 +162,18 @@ public class DownloadContentCatalog {
         }
     }
 
-    private synchronized void loadFromDisk() {
+    protected synchronized boolean hasCatalogChanged() {
+        return hasCatalogChanged;
+    }
+
+    protected synchronized void loadFromDisk() {
         Log.d(LOGTAG, "Loading from disk");
 
         if (hasLoadedCatalog) {
             return;
         }
 
-        List<DownloadContent> content = new ArrayList<DownloadContent>();
+        List<DownloadContent> content = new ArrayList<>();
 
         try {
             JSONArray array;
@@ -180,15 +201,19 @@ public class DownloadContentCatalog {
             Log.d(LOGTAG, "Can't read catalog due to IOException", e);
         }
 
-        this.content = content;
-        this.hasLoadedCatalog = true;
+        onCatalogLoaded(content);
 
         notifyAll();
 
         Log.d(LOGTAG, "Loaded " + content.size() + " elements");
     }
 
-    private synchronized void writeToDisk() {
+    protected void onCatalogLoaded(List<DownloadContent> content) {
+        this.content = content;
+        this.hasLoadedCatalog = true;
+    }
+
+    protected synchronized void writeToDisk() {
         if (!hasCatalogChanged) {
             Log.v(LOGTAG, "Not persisting: Catalog has not changed");
             return;

@@ -20,7 +20,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1107592
     /* Async parent frames from pushPrefEnv don't show up in e10s.  */
     var isE10S = !SpecialPowers.isMainProcess();
     if (!isE10S && SpecialPowers.getBoolPref("javascript.options.asyncstack")) {
-      asyncFrame = `Async*@${file}:153:1
+      asyncFrame = `Async*@${file}:153:3
 `;
     } else {
       asyncFrame = "";

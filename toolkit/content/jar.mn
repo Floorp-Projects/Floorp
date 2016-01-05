@@ -44,15 +44,19 @@ toolkit.jar:
    content/global/browser-content.js
 *+  content/global/buildconfig.html
 *  content/global/contentAreaUtils.js
+#ifndef MOZ_FENNEC
    content/global/customizeToolbar.css
    content/global/customizeToolbar.js
    content/global/customizeToolbar.xul
+#endif
    content/global/devicestorage.properties
+#ifndef MOZ_FENNEC
    content/global/editMenuOverlay.js
 *+ content/global/editMenuOverlay.xul
    content/global/finddialog.js
 *+ content/global/finddialog.xul
    content/global/findUtils.js
+#endif
    content/global/filepicker.properties
 +  content/global/globalOverlay.js
 +  content/global/mozilla.xhtml
