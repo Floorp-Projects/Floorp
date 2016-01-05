@@ -2755,6 +2755,11 @@
     "kind": "boolean",
     "description": "The URL path contains !//"
   },
+  "NETWORK_AUTODIAL": {
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "description": "session used autodialer"
+  },
   "FIND_PLUGINS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
