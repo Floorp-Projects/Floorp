@@ -8,16 +8,6 @@ task:
   workerType: flame-kk-0-sim
 
   payload:
-    capabilities:
-      devices:
-        phone:
-          type: 'flame'
-          memory: '319'
-          sims: '0'
-          build: '{{{img_url}}}'
-    features:
-      testdroidProxy: true
-    maxRunTime: 7200
     command:
       - >
         gaiatest
@@ -28,7 +18,7 @@ task:
         --address=$PROXY_HOST:$MARIONETTE_PORT
         --device $SERIAL_ID
         --xml-output=/home/worker/upload/logs/xml_output.xml
-        --timeout=10000
+        --timeout=$TESTS_TIMEOUT_IN_MS
         --log-html=/home/worker/upload/logs/index.html
         --restart
         --type=b2g

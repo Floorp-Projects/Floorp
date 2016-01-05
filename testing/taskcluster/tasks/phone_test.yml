@@ -19,7 +19,7 @@ task:
 
   payload:
     image: '{{#docker_image}}tester-device{{/docker_image}}'
-    maxRunTime: 3600
+    maxRunTime: 7200
     cache:
       tc-vcs: '/home/worker/.tc-vcs'
     env:
@@ -28,6 +28,7 @@ task:
       GAIA_BASE_REPOSITORY: '{{{gaia_base_repository}}}'
       GAIA_REF: '{{{gaia_ref}}}'
       GAIA_REV: '{{{gaia_rev}}}'
+      TESTS_TIMEOUT_IN_MS: 30000
 
     log: 'private/b2g/logs/live.log'
 
@@ -42,6 +43,17 @@ task:
         type: directory
         path: '/home/worker/upload/logs/'
         expires: '{{#from_now}}1 year{{/from_now}}'
+
+    features:
+      testdroidProxy: true
+
+    capabilities:
+      devices:
+        phone:
+          type: 'flame'
+          memory: '512'
+          sims: '0'
+          build: '{{{img_url}}}'
 
   extra:
     treeherder:
