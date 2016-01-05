@@ -75,6 +75,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISelectionController.h"
 
 // Misc
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
@@ -3482,6 +3483,16 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
     RefPtr<nsPagePrintTimer> timer =
       new nsPagePrintTimer(this, mDocViewerPrint, printPageDelay);
     timer.forget(&mPagePrintTimer);
+
+    nsCOMPtr<nsIPrintSession> printSession;
+    nsresult rv = mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
+    if (NS_SUCCEEDED(rv) && printSession) {
+      RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+      if (NS_SUCCEEDED(rv) && remotePrintJob) {
+        remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
+      }
+    }
   }
 
   return mPagePrintTimer->Start(aPO);
