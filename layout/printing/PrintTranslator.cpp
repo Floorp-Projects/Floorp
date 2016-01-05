@@ -53,7 +53,7 @@ PrintTranslator::TranslateRecording(std::istream& aRecording)
       static_cast<RecordedEvent::EventType>(eventType)));
 
     // Make sure that the whole event was read from the stream successfully.
-    if (!aRecording.good()) {
+    if (!aRecording.good() || !recordedEvent) {
       return false;
     }
 

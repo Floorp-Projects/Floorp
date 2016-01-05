@@ -118,8 +118,6 @@ RemotePrintJobParent::PrintPage(const Shmem& aStoredPage)
     return rv;
   }
 
-  mPrintTranslator->ClearSavedFonts();
-
   return NS_OK;
 }
 

@@ -21,6 +21,7 @@
 
 #if defined(WIN32)
 #include "ScaledFontWin.h"
+#include "NativeFontResourceGDI.h"
 #endif
 
 #ifdef XP_DARWIN
@@ -36,6 +37,7 @@
 #include "DrawTargetD2D.h"
 #include "DrawTargetD2D1.h"
 #include "ScaledFontDWrite.h"
+#include "NativeFontResourceDWrite.h"
 #include <d3d10_1.h>
 #include "HelpersD2D.h"
 #endif
@@ -540,41 +542,35 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
   }
 }
 
-already_AddRefed<ScaledFont>
-Factory::CreateScaledFontForTrueTypeData(uint8_t *aData, uint32_t aSize,
-                                         uint32_t aFaceIndex, Float aGlyphSize,
-                                         FontType aType)
+already_AddRefed<NativeFontResource>
+Factory::CreateNativeFontResource(uint8_t *aData, uint32_t aSize,
+                                  FontType aType)
 {
   switch (aType) {
 #ifdef WIN32
   case FontType::DWRITE:
     {
-      return MakeAndAddRef<ScaledFontDWrite>(aData, aSize, aFaceIndex, aGlyphSize);
+      return NativeFontResourceDWrite::Create(aData, aSize,
+                                              /* aNeedsCairo = */ false);
     }
 #endif
   case FontType::CAIRO:
     {
-      RefPtr<ScaledFontBase> scaledFont;
-
 #ifdef WIN32
       if (GetDirect3D11Device()) {
-        scaledFont = new ScaledFontDWrite(aData, aSize, aFaceIndex, aGlyphSize);
+        return NativeFontResourceDWrite::Create(aData, aSize,
+                                                /* aNeedsCairo = */ true);
       } else {
-        scaledFont = new ScaledFontWin(aData, aSize, aFaceIndex, aGlyphSize);
-      }
-
-      if (!scaledFont->PopulateCairoScaledFont()) {
-        gfxWarning() << "Unable to create cairo scaled font from truetype data";
-        return nullptr;
+        return NativeFontResourceGDI::Create(aData, aSize,
+                                             /* aNeedsCairo = */ true);
       }
 #else
       gfxWarning() << "Unable to create cairo scaled font from truetype data";
+      return nullptr;
 #endif
-
-      return scaledFont.forget();
     }
   default:
-    gfxWarning() << "Unable to create requested font type from truetype data";
+    gfxWarning() << "Unable to create requested font resource from truetype data";
     return nullptr;
   }
 }

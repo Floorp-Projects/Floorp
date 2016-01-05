@@ -12,7 +12,6 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Filters.h"
 #include "mozilla/gfx/RecordedEvent.h"
-#include "mozilla/unused.h"
 #include "nsRefPtrHashtable.h"
 
 class nsDeviceContext;
@@ -28,6 +27,7 @@ using gfx::SourceSurface;
 using gfx::FilterNode;
 using gfx::GradientStops;
 using gfx::ScaledFont;
+using gfx::NativeFontResource;
 
 class PrintTranslator final : public Translator
 {
@@ -78,6 +78,13 @@ public:
     return result;
   }
 
+  NativeFontResource* LookupNativeFontResource(uint64_t aKey) final
+  {
+    NativeFontResource* result = mNativeFontResources.GetWeak(aKey);
+    MOZ_ASSERT(result);
+    return result;
+  }
+
   void AddDrawTarget(ReferencePtr aRefPtr, DrawTarget *aDT) final
   {
     mDrawTargets.Put(aRefPtr, aDT);
@@ -106,7 +113,12 @@ public:
   void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) final
   {
     mScaledFonts.Put(aRefPtr, aScaledFont);
-    Unused << mSavedScaledFonts.PutEntry(aScaledFont);
+  }
+
+  void AddNativeFontResource(uint64_t aKey,
+                             NativeFontResource *aScaledFontResouce) final
+  {
+    mNativeFontResources.Put(aKey, aScaledFontResouce);
   }
 
   void RemoveDrawTarget(ReferencePtr aRefPtr) final
@@ -139,8 +151,6 @@ public:
     mScaledFonts.Remove(aRefPtr);
   }
 
-  void ClearSavedFonts() { mSavedScaledFonts.Clear(); }
-
   already_AddRefed<DrawTarget> CreateDrawTarget(ReferencePtr aRefPtr,
                                                 const gfx::IntSize &aSize,
                                                 gfx::SurfaceFormat aFormat) final;
@@ -159,11 +169,7 @@ private:
   nsRefPtrHashtable<nsPtrHashKey<void>, FilterNode> mFilterNodes;
   nsRefPtrHashtable<nsPtrHashKey<void>, GradientStops> mGradientStops;
   nsRefPtrHashtable<nsPtrHashKey<void>, ScaledFont> mScaledFonts;
-
-  // We keep an extra reference to each scaled font, because they currently
-  // always get removed immediately. These can be cleared using ClearSavedFonts,
-  // when we know that things have been flushed to the print device.
-  nsTHashtable<nsRefPtrHashKey<ScaledFont>> mSavedScaledFonts;
+  nsRefPtrHashtable<nsUint64HashKey, NativeFontResource> mNativeFontResources;
 };
 
 } // namespace layout

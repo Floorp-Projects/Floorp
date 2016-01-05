@@ -392,7 +392,15 @@ DrawTargetRecording::FillGlyphs(ScaledFont *aFont,
   if (!aFont->GetUserData(reinterpret_cast<UserDataKey*>(mRecorder.get()))) {
   // TODO support font in b2g recordings
 #ifndef MOZ_WIDGET_GONK
-    mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, aFont));
+    RecordedFontData fontData(aFont);
+    RecordedFontDetails fontDetails;
+    if (fontData.GetFontDetails(fontDetails)) {
+      if (!mRecorder->HasStoredFontData(fontDetails.fontDataKey)) {
+        mRecorder->RecordEvent(fontData);
+        mRecorder->AddStoredFontData(fontDetails.fontDataKey);
+      }
+      mRecorder->RecordEvent(RecordedScaledFontCreation(aFont, fontDetails));
+    }
 #endif
     RecordingFontUserData *userData = new RecordingFontUserData;
     userData->refPtr = aFont;
