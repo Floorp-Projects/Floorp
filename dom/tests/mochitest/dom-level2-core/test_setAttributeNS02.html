@@ -100,8 +100,7 @@ function setAttributeNS02() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      // Changed for bug 492933.
-      elementList = doc.getElementsByTagName("employee");
+      elementList = doc.getElementsByTagName("emp:employee");
       testAddr = elementList.item(0);
       
 	{
