@@ -329,25 +329,6 @@ SharedSurface_D3D11Interop::UnlockProdImpl()
 { }
 
 void
-SharedSurface_D3D11Interop::Fence()
-{
-    // TODO fence properly. This kills performance.
-    mGL->fFinish();
-}
-
-bool
-SharedSurface_D3D11Interop::WaitSync()
-{
-    return true;
-}
-
-bool
-SharedSurface_D3D11Interop::PollSync()
-{
-    return true;
-}
-
-void
 SharedSurface_D3D11Interop::ProducerAcquireImpl()
 {
     MOZ_ASSERT(!mLockedForGL);
@@ -382,81 +363,9 @@ SharedSurface_D3D11Interop::ProducerReleaseImpl()
     if (mKeyedMutex) {
         mKeyedMutex->ReleaseSync(0);
     }
-    Fence();
-}
 
-void
-SharedSurface_D3D11Interop::ConsumerAcquireImpl()
-{
-    if (!mConsumerTexture) {
-        RefPtr<ID3D11Texture2D> tex;
-        RefPtr<ID3D11Device> device = gfxWindowsPlatform::GetPlatform()->GetD3D11Device();
-        HRESULT hr = device->OpenSharedResource(mSharedHandle,
-                                                __uuidof(ID3D11Texture2D),
-                                                (void**)(ID3D11Texture2D**) getter_AddRefs(tex));
-        if (SUCCEEDED(hr)) {
-            mConsumerTexture = tex;
-            RefPtr<IDXGIKeyedMutex> mutex;
-            hr = tex->QueryInterface((IDXGIKeyedMutex**) getter_AddRefs(mutex));
-
-            if (SUCCEEDED(hr)) {
-                mConsumerKeyedMutex = mutex;
-            }
-        }
-    }
-
-    if (mConsumerKeyedMutex) {
-        const uint64_t keyValue = 0;
-        const DWORD timeoutMs = 10000;
-        HRESULT hr = mConsumerKeyedMutex->AcquireSync(keyValue, timeoutMs);
-        if (hr == WAIT_TIMEOUT) {
-            MOZ_CRASH();
-        }
-    }
-}
-
-void
-SharedSurface_D3D11Interop::ConsumerReleaseImpl()
-{
-    if (mConsumerKeyedMutex) {
-        mConsumerKeyedMutex->ReleaseSync(0);
-    }
-}
-
-void
-SharedSurface_D3D11Interop::Fence_ContentThread_Impl()
-{
-    if (mFence) {
-        MOZ_ASSERT(mGL->IsExtensionSupported(GLContext::NV_fence));
-        mGL->fSetFence(mFence, LOCAL_GL_ALL_COMPLETED_NV);
-        mGL->fFlush();
-        return;
-    }
-
-    Fence();
-}
-
-bool
-SharedSurface_D3D11Interop::WaitSync_ContentThread_Impl()
-{
-    if (mFence) {
-        mGL->MakeCurrent();
-        mGL->fFinishFence(mFence);
-        return true;
-    }
-
-    return WaitSync();
-}
-
-bool
-SharedSurface_D3D11Interop::PollSync_ContentThread_Impl()
-{
-    if (mFence) {
-        mGL->MakeCurrent();
-        return mGL->fTestFence(mFence);
-    }
-
-    return PollSync();
+    // TODO fence properly. This kills performance.
+    mGL->fFinish();
 }
 
 bool
