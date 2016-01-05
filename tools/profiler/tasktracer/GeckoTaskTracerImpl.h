@@ -94,7 +94,7 @@ void LogBegin(uint64_t aTaskId, uint64_t aSourceEventId);
 
 void LogEnd(uint64_t aTaskId, uint64_t aSourceEventId);
 
-void LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, int* aVptr);
+void LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr);
 
 } // namespace mozilla
 } // namespace tasktracer

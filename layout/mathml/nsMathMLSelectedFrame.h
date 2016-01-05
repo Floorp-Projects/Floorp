@@ -30,7 +30,7 @@ public:
                                 const nsDisplayListSet& aLists) override;
 
   virtual nsresult
-  Place(nsRenderingContext& aRenderingContext,
+  Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) override;
 

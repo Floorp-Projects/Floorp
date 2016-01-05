@@ -234,6 +234,8 @@ Cache::Match(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
+  CacheChild::AutoLock actorLock(mActor);
+
   RefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -260,6 +262,8 @@ Cache::MatchAll(const Optional<RequestOrUSVString>& aRequest,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  CacheChild::AutoLock actorLock(mActor);
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -290,6 +294,8 @@ Cache::Add(JSContext* aContext, const RequestOrUSVString& aRequest,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  CacheChild::AutoLock actorLock(mActor);
 
   if (!IsValidPutRequestMethod(aRequest, aRv)) {
     return nullptr;
@@ -324,6 +330,8 @@ Cache::AddAll(JSContext* aContext,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  CacheChild::AutoLock actorLock(mActor);
 
   GlobalObject global(aContext, mGlobal->GetGlobalJSObject());
   MOZ_ASSERT(!global.Failed());
@@ -371,6 +379,8 @@ Cache::Put(const RequestOrUSVString& aRequest, Response& aResponse,
     return nullptr;
   }
 
+  CacheChild::AutoLock actorLock(mActor);
+
   if (NS_WARN_IF(!IsValidPutRequestMethod(aRequest, aRv))) {
     return nullptr;
   }
@@ -400,6 +410,8 @@ Cache::Delete(const RequestOrUSVString& aRequest,
     return nullptr;
   }
 
+  CacheChild::AutoLock actorLock(mActor);
+
   RefPtr<InternalRequest> ir = ToInternalRequest(aRequest, IgnoreBody, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
@@ -426,6 +438,8 @@ Cache::Keys(const Optional<RequestOrUSVString>& aRequest,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  CacheChild::AutoLock actorLock(mActor);
 
   CacheQueryParams params;
   ToCacheQueryParams(params, aOptions);
@@ -529,6 +543,8 @@ Cache::~Cache()
 already_AddRefed<Promise>
 Cache::ExecuteOp(AutoChildOpArgs& aOpArgs, ErrorResult& aRv)
 {
+  MOZ_ASSERT(mActor);
+
   RefPtr<Promise> promise = Promise::Create(mGlobal, aRv);
   if (NS_WARN_IF(!promise)) {
     return nullptr;
@@ -602,6 +618,8 @@ Cache::PutAll(const nsTArray<RefPtr<Request>>& aRequestList,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
+
+  CacheChild::AutoLock actorLock(mActor);
 
   AutoChildOpArgs args(this, CachePutAllArgs());
 

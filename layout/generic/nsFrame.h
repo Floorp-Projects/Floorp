@@ -273,7 +273,7 @@ public:
 
   // Compute tight bounds assuming this frame honours its border, background
   // and outline, its children's tight bounds, and nothing else.
-  nsRect ComputeSimpleTightBounds(gfxContext* aContext) const;
+  nsRect ComputeSimpleTightBounds(mozilla::gfx::DrawTarget* aDrawTarget) const;
   
   /**
    * A helper, used by |nsFrame::ComputeSize| (for frames that need to

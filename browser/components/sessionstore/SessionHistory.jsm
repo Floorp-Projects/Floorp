@@ -65,7 +65,6 @@ var SessionHistoryInternal = {
    */
   collect: function (docShell) {
     let data = {entries: []};
-    let isPinned = docShell.isAppTab;
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
 
@@ -73,7 +72,7 @@ var SessionHistoryInternal = {
       // Loop over the transaction linked list directly so we can get the
       // persist property for each transaction.
       for (let txn = history.rootTransaction; txn; txn = txn.next) {
-        let entry = this.serializeEntry(txn.sHEntry, isPinned);
+        let entry = this.serializeEntry(txn.sHEntry);
         entry.persist = txn.persist;
         data.entries.push(entry);
       }
@@ -107,11 +106,9 @@ var SessionHistoryInternal = {
    *
    * @param shEntry
    *        nsISHEntry instance
-   * @param isPinned
-   *        The tab is pinned and should be treated differently for privacy.
    * @return object
    */
-  serializeEntry: function (shEntry, isPinned) {
+  serializeEntry: function (shEntry) {
     let entry = { url: shEntry.URI.spec };
 
     // Save some bytes and don't include the title property
@@ -199,7 +196,7 @@ var SessionHistoryInternal = {
             break;
           }
 
-          children.push(this.serializeEntry(child, isPinned));
+          children.push(this.serializeEntry(child));
         }
       }
 

@@ -1707,7 +1707,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(nsDisplayListBuilder* aB
   if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
     nsIContent* content = rootScrollFrame->GetContent();
     if (content) {
-      usingDisplayport = nsLayoutUtils::GetDisplayPort(content, nullptr);
+      usingDisplayport = nsLayoutUtils::HasDisplayPort(content);
     }
   }
   if (usingDisplayport &&
@@ -4457,7 +4457,7 @@ nsDisplaySubDocument::BuildLayer(nsDisplayListBuilder* aBuilder,
   ContainerLayerParameters params = aContainerParameters;
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
-      nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {
+      nsLayoutUtils::HasCriticalDisplayPort(rootScrollFrame->GetContent())) {
     params.mInLowPrecisionDisplayPort = true; 
   }
 
@@ -4486,7 +4486,7 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
       nsIntPoint(), aContainerParameters);
   if ((mFlags & GENERATE_SCROLLABLE_LAYER) &&
       rootScrollFrame->GetContent() &&
-      nsLayoutUtils::GetCriticalDisplayPort(rootScrollFrame->GetContent(), nullptr)) {
+      nsLayoutUtils::HasCriticalDisplayPort(rootScrollFrame->GetContent())) {
     params.mInLowPrecisionDisplayPort = true;
   }
 
@@ -4757,7 +4757,7 @@ nsDisplayScrollInfoLayer::BuildLayer(nsDisplayListBuilder* aBuilder,
 
   ContainerLayerParameters params = aContainerParameters;
   if (mScrolledFrame->GetContent() &&
-      nsLayoutUtils::GetCriticalDisplayPort(mScrolledFrame->GetContent(), nullptr)) {
+      nsLayoutUtils::HasCriticalDisplayPort(mScrolledFrame->GetContent())) {
     params.mInLowPrecisionDisplayPort = true;
   }
 
@@ -4781,7 +4781,7 @@ nsDisplayScrollInfoLayer::ComputeFrameMetrics(Layer* aLayer,
 {
   ContainerLayerParameters params = aContainerParameters;
   if (mScrolledFrame->GetContent() &&
-      nsLayoutUtils::GetCriticalDisplayPort(mScrolledFrame->GetContent(), nullptr)) {
+      nsLayoutUtils::HasCriticalDisplayPort(mScrolledFrame->GetContent())) {
     params.mInLowPrecisionDisplayPort = true; 
   }
 

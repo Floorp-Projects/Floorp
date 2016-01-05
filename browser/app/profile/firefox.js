@@ -1615,10 +1615,8 @@ pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
 pref("dom.serviceWorkers.openWindow.enabled", true);
 
-#ifndef RELEASE_BUILD
 // Enable Push API.
 pref("dom.push.enabled", true);
-#endif
 
 // These are the thumbnail width/height set in about:newtab.
 // If you change this, ENSURE IT IS THE SAME SIZE SET

@@ -26,19 +26,19 @@ public:
   TransmitAutomaticData() override;
 
   virtual nsresult
-  Place(nsRenderingContext& aRenderingContext,
+  Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) override;
 
   static nsresult
-  PlaceMultiScript(nsPresContext*      aPresContext,
-                    nsRenderingContext& aRenderingContext,
-                    bool                 aPlaceOrigin,
-                    nsHTMLReflowMetrics& aDesiredSize,
-                    nsMathMLContainerFrame* aForFrame,
-                    nscoord              aUserSubScriptShift,
-                    nscoord              aUserSupScriptShift,
-                    float                aFontSizeInflation);
+  PlaceMultiScript(nsPresContext*          aPresContext,
+                   DrawTarget*             aDrawTarget,
+                   bool                    aPlaceOrigin,
+                   nsHTMLReflowMetrics&    aDesiredSize,
+                   nsMathMLContainerFrame* aForFrame,
+                   nscoord                 aUserSubScriptShift,
+                   nscoord                 aUserSupScriptShift,
+                   float                   aFontSizeInflation);
 
   uint8_t
   ScriptIncrement(nsIFrame* aFrame) override;

@@ -40,7 +40,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 // error handlers
 // provide a feedback to the user when a frame with bad markup can not be rendered
 nsresult
-nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::ReflowError(DrawTarget* aDrawTarget,
                                     nsHTMLReflowMetrics& aDesiredSize)
 {
   // clear all other flags and record that there is an error with this frame
@@ -58,7 +58,7 @@ nsMathMLContainerFrame::ReflowError(nsRenderingContext& aRenderingContext,
   nsAutoString errorMsg; errorMsg.AssignLiteral("invalid-markup");
   mBoundingMetrics =
     nsLayoutUtils::AppUnitBoundsOfString(errorMsg.get(), errorMsg.Length(),
-                                         *fm, aRenderingContext);
+                                         *fm, aDrawTarget);
 
   // reflow metrics
   WritingMode wm = aDesiredSize.GetWritingMode();
@@ -188,7 +188,7 @@ nsMathMLContainerFrame::ClearSavedChildMetrics()
 // helper to get the preferred size that a container frame should use to fire
 // the stretch on its stretchy child frames.
 void
-nsMathMLContainerFrame::GetPreferredStretchSize(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::GetPreferredStretchSize(DrawTarget*          aDrawTarget,
                                                 uint32_t             aOptions,
                                                 nsStretchDirection   aStretchDirection,
                                                 nsBoundingMetrics&   aPreferredStretchSize)
@@ -200,7 +200,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsRenderingContext& aRenderingCo
   else if (aOptions & STRETCH_CONSIDER_EMBELLISHMENTS) {
     // compute our up-to-date size using Place()
     nsHTMLReflowMetrics metrics(GetWritingMode()); // ???
-    Place(aRenderingContext, false, metrics);
+    Place(aDrawTarget, false, metrics);
     aPreferredStretchSize = metrics.mBoundingMetrics;
   }
   else {
@@ -289,7 +289,7 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsRenderingContext& aRenderingCo
 }
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::Stretch(DrawTarget*          aDrawTarget,
                                 nsStretchDirection   aStretchDirection,
                                 nsBoundingMetrics&   aContainerSize,
                                 nsHTMLReflowMetrics& aDesiredStretchSize)
@@ -339,7 +339,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
           if (mEmbellishData.direction == NS_STRETCH_DIRECTION_VERTICAL ?
               NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) :
               NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags)) {
-            GetPreferredStretchSize(aRenderingContext, 0,
+            GetPreferredStretchSize(aDrawTarget, 0,
                                     mEmbellishData.direction, containerSize);
             // Stop further recalculations
             aStretchDirection = mEmbellishData.direction;
@@ -350,7 +350,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
         }
 
         // do the stretching...
-        mathMLFrame->Stretch(aRenderingContext,
+        mathMLFrame->Stretch(aDrawTarget,
                              aStretchDirection, containerSize, childSize);
         // store the updated metrics
         SaveReflowAndBoundingMetricsFor(baseFrame, childSize,
@@ -367,7 +367,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
             NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ?
               NS_STRETCH_DIRECTION_VERTICAL : NS_STRETCH_DIRECTION_HORIZONTAL;
 
-          GetPreferredStretchSize(aRenderingContext, STRETCH_CONSIDER_EMBELLISHMENTS,
+          GetPreferredStretchSize(aDrawTarget, STRETCH_CONSIDER_EMBELLISHMENTS,
                                   stretchDir, containerSize);
 
           nsIFrame* childFrame = mFrames.FirstChild();
@@ -379,7 +379,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
                 GetReflowAndBoundingMetricsFor(childFrame, 
                   childSize, childSize.mBoundingMetrics);
                 // do the stretching...
-                mathMLFrame->Stretch(aRenderingContext, stretchDir,
+                mathMLFrame->Stretch(aDrawTarget, stretchDir,
                                      containerSize, childSize);
                 // store the updated metrics
                 SaveReflowAndBoundingMetricsFor(childFrame, childSize,
@@ -391,7 +391,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
         }
 
         // re-position all our children
-        nsresult rv = Place(aRenderingContext, true, aDesiredStretchSize);
+        nsresult rv = Place(aDrawTarget, true, aDesiredStretchSize);
         if (NS_MATHML_HAS_ERROR(mPresentationData.flags) || NS_FAILED(rv)) {
           // Make sure the child frames get their DidReflow() calls.
           DidReflowChildren(mFrames.FirstChild());
@@ -445,7 +445,7 @@ nsMathMLContainerFrame::Stretch(nsRenderingContext& aRenderingContext,
 }
 
 nsresult
-nsMathMLContainerFrame::FinalizeReflow(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::FinalizeReflow(DrawTarget* aDrawTarget,
                                        nsHTMLReflowMetrics& aDesiredSize)
 {
   // During reflow, we use rect.x and rect.y as placeholders for the child's ascent
@@ -472,7 +472,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsRenderingContext& aRenderingContext,
   bool placeOrigin = !NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) ||
                        (mEmbellishData.coreFrame != this && !mPresentationData.baseFrame &&
                         mEmbellishData.direction == NS_STRETCH_DIRECTION_UNSUPPORTED);
-  nsresult rv = Place(aRenderingContext, placeOrigin, aDesiredSize);
+  nsresult rv = Place(aDrawTarget, placeOrigin, aDesiredSize);
 
   // Place() will call FinishReflowChild() when placeOrigin is true but if
   // it returns before reaching FinishReflowChild() due to errors we need
@@ -526,8 +526,7 @@ nsMathMLContainerFrame::FinalizeReflow(nsRenderingContext& aRenderingContext,
       // The stretch call will detect if this is incorrect and recalculate the size.
       nsBoundingMetrics defaultSize = aDesiredSize.mBoundingMetrics;
 
-      Stretch(aRenderingContext, stretchDir, defaultSize,
-              aDesiredSize);
+      Stretch(aDrawTarget, stretchDir, defaultSize, aDesiredSize);
 #ifdef DEBUG
       {
         // The Place() call above didn't request FinishReflowChild(),
@@ -874,7 +873,7 @@ nsMathMLContainerFrame::ReflowChild(nsIFrame*                aChildFrame,
   }
   if (IsForeignChild(aChildFrame)) {
     // use ComputeTightBounds API as aDesiredSize.mBoundingMetrics is not set.
-    nsRect r = aChildFrame->ComputeTightBounds(aReflowState.rendContext->ThebesContext());
+    nsRect r = aChildFrame->ComputeTightBounds(aReflowState.rendContext->GetDrawTarget());
     aDesiredSize.mBoundingMetrics.leftBearing = r.x;
     aDesiredSize.mBoundingMetrics.rightBearing = r.XMost();
     aDesiredSize.mBoundingMetrics.ascent = aDesiredSize.BlockStartAscent() - r.y;
@@ -924,6 +923,8 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
   // The stretching of siblings of an embellished child is _deferred_ until
   // after finishing the stretching of the embellished child - bug 117652
 
+  DrawTarget* drawTarget = aReflowState.rendContext->GetDrawTarget();
+
   if (!NS_MATHML_IS_EMBELLISH_OPERATOR(mEmbellishData.flags) &&
       (NS_MATHML_WILL_STRETCH_ALL_CHILDREN_VERTICALLY(mPresentationData.flags) ||
        NS_MATHML_WILL_STRETCH_ALL_CHILDREN_HORIZONTALLY(mPresentationData.flags))) {
@@ -939,8 +940,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
     // We don't use STRETCH_CONSIDER_EMBELLISHMENTS -- because we don't want to
     // include them in the caculations of the size of stretchy elements
     nsBoundingMetrics containerSize;
-    GetPreferredStretchSize(*aReflowState.rendContext, 0, stretchDir,
-                            containerSize);
+    GetPreferredStretchSize(drawTarget, 0, stretchDir, containerSize);
 
     // fire the stretch on each child
     childFrame = mFrames.FirstChild();
@@ -952,7 +952,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
         GetReflowAndBoundingMetricsFor(childFrame,
           childDesiredSize, childDesiredSize.mBoundingMetrics);
 
-        mathMLFrame->Stretch(*aReflowState.rendContext, stretchDir,
+        mathMLFrame->Stretch(drawTarget, stretchDir,
                              containerSize, childDesiredSize);
         // store the updated metrics
         SaveReflowAndBoundingMetricsFor(childFrame, childDesiredSize,
@@ -964,7 +964,7 @@ nsMathMLContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   /////////////
   // Place children now by re-adjusting the origins to align the baselines
-  FinalizeReflow(*aReflowState.rendContext, aDesiredSize);
+  FinalizeReflow(drawTarget, aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
@@ -1055,19 +1055,19 @@ nsMathMLContainerFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingC
   }
 
   // Measure
-  nsresult rv = MeasureForWidth(*aRenderingContext, aDesiredSize);
+  nsresult rv = MeasureForWidth(aRenderingContext->GetDrawTarget(), aDesiredSize);
   if (NS_FAILED(rv)) {
-    ReflowError(*aRenderingContext, aDesiredSize);
+    ReflowError(aRenderingContext->GetDrawTarget(), aDesiredSize);
   }
 
   ClearSavedChildMetrics();
 }
 
 /* virtual */ nsresult
-nsMathMLContainerFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::MeasureForWidth(DrawTarget* aDrawTarget,
                                         nsHTMLReflowMetrics& aDesiredSize)
 {
-  return Place(aRenderingContext, false, aDesiredSize);
+  return Place(aDrawTarget, false, aDesiredSize);
 }
 
 
@@ -1278,7 +1278,7 @@ private:
 };
 
 /* virtual */ nsresult
-nsMathMLContainerFrame::Place(nsRenderingContext& aRenderingContext,
+nsMathMLContainerFrame::Place(DrawTarget*          aDrawTarget,
                               bool                 aPlaceOrigin,
                               nsHTMLReflowMetrics& aDesiredSize)
 {

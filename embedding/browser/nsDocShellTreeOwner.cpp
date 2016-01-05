@@ -1124,10 +1124,13 @@ DefaultTooltipTextProvider::GetNodeText(nsIDOMNode* aNode, char16_t** aText,
                                          mTag_dialogheader,
                                          mTag_window)) {
           // first try the normal title attribute...
-          currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
-          if (outText.Length()) {
-            found = true;
-          } else {
+          if (!content->IsSVGElement()) {
+            currElement->GetAttribute(NS_LITERAL_STRING("title"), outText);
+            if (outText.Length()) {
+              found = true;
+            }
+          }
+          if (!found) {
             // ...ok, that didn't work, try it in the XLink namespace
             NS_NAMED_LITERAL_STRING(xlinkNS, "http://www.w3.org/1999/xlink");
             nsCOMPtr<mozilla::dom::Link> linkContent(
