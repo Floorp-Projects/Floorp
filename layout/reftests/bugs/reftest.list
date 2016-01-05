@@ -1944,4 +1944,3 @@ fuzzy(1,74) fuzzy-if(gtkWidget,6,79) == 1174332-1.html 1174332-1-ref.html
 == 1222226-1.html 1222226-1-ref.html
 pref(layout.css.overflow-clip-box.enabled,true) == 1226278.html 1226278-ref.html
 == 1230466.html about:blank
-# pref(browser.display.focus_ring_width,2) == 1234758-1.html 1234758-1-ref.html # disabled until a followup fix in bug 1234758
