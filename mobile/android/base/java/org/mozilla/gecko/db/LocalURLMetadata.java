@@ -9,11 +9,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.Assert;
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -52,6 +56,12 @@ public class LocalURLMetadata implements URLMetadata {
     /**
      * Converts a JSON object into a unmodifiable Map of known metadata properties.
      * Will throw away any properties that aren't stored in the database.
+     *
+     * Incoming data can include a list like: {touchIconList:{56:"http://x.com/56.png", 76:"http://x.com/76.png"}}.
+     * This will then be filtered to find the most appropriate touchIcon, i.e. the closest icon size that is larger
+     * than (or equal to) the preferred homescreen launcher icon size, which is then stored in the "touchIcon" property.
+     *
+     * @see #getModel() Returns the list of properties that will be stored in the database.
      */
     @Override
     public Map<String, Object> fromJSON(JSONObject obj) {
@@ -62,6 +72,44 @@ public class LocalURLMetadata implements URLMetadata {
             if (obj.has(key)) {
                 data.put(key, obj.optString(key));
             }
+        }
+
+
+        try {
+            JSONObject icons;
+            if (obj.has("touchIconList") &&
+                    (icons = obj.getJSONObject("touchIconList")).length() > 0) {
+                int preferredSize = GeckoAppShell.getPreferredIconSize();
+                int bestSizeFound = -1;
+
+                Iterator<String> keys = icons.keys();
+
+                ArrayList<Integer> sizes = new ArrayList<Integer>(icons.length());
+                while (keys.hasNext()) {
+                    sizes.add(new Integer(keys.next()));
+                }
+
+                Collections.sort(sizes);
+                for (int size : sizes) {
+                    if (size >= preferredSize) {
+                        bestSizeFound = size;
+                        break;
+                    }
+                }
+
+                // If all icons are smaller than the preferred size then we don't have an icon
+                // selected yet (bestSizeFound == -1), therefore just take the largest (last) icon.
+                if (bestSizeFound == -1) {
+                    bestSizeFound = sizes.get(sizes.size() - 1);
+                }
+
+                String iconURL = icons.getString(Integer.toString(bestSizeFound));
+
+                data.put(URLMetadataTable.TOUCH_ICON_COLUMN, iconURL);
+            }
+        } catch (JSONException e) {
+            Log.w(LOGTAG, "Exception processing touchIconList for LocalURLMetadata; ignoring.", e);
+            Assert.isTrue(false);
         }
 
         return Collections.unmodifiableMap(data);
