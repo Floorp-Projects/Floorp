@@ -2788,6 +2788,7 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
 
 already_AddRefed<MediaInputPort>
 ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
+                                        TrackID aDestTrackID,
                                         uint16_t aInputNumber, uint16_t aOutputNumber)
 {
   // This method creates two references to the MediaInputPort: one for
@@ -2814,8 +2815,13 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
   MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
   MOZ_ASSERT(aTrackID == TRACK_ANY || IsTrackIDExplicit(aTrackID),
              "Only TRACK_ANY and explicit ID are allowed for source track");
-  RefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,
-                                                     aInputNumber, aOutputNumber);
+  MOZ_ASSERT(aDestTrackID == TRACK_ANY || IsTrackIDExplicit(aDestTrackID),
+             "Only TRACK_ANY and explicit ID are allowed for destination track");
+  MOZ_ASSERT(aTrackID != TRACK_ANY || aDestTrackID == TRACK_ANY,
+             "Generic MediaInputPort cannot produce a single destination track");
+  RefPtr<MediaInputPort> port =
+    new MediaInputPort(aStream, aTrackID, this, aDestTrackID,
+                       aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(MakeUnique<Message>(port));
   return port.forget();
