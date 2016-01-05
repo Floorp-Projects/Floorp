@@ -587,11 +587,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
         D2DFactory()->CreatePathGeometry(getter_AddRefs(path));
         RefPtr<ID2D1GeometrySink> sink;
         path->Open(getter_AddRefs(sink));
-        sink->BeginFigure(D2D1::Point2F(userRect.left, userRect.top), D2D1_FIGURE_BEGIN_FILLED);
-        sink->AddLine(D2D1::Point2F(userRect.right, userRect.top));
-        sink->AddLine(D2D1::Point2F(userRect.right, userRect.bottom));
-        sink->AddLine(D2D1::Point2F(userRect.left, userRect.bottom));
-        sink->EndFigure(D2D1_FIGURE_END_CLOSED);
+        AddRectToSink(sink, userRect);
         sink->Close();
 
         mDC->PushLayer(D2D1::LayerParameters1(D2D1::InfiniteRect(), path, D2D1_ANTIALIAS_MODE_ALIASED,
@@ -727,6 +723,82 @@ DrawTargetD2D1::PopClip()
     }
   }
   CurrentLayer().mPushedClips.pop_back();
+}
+
+void
+DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                          const Matrix& aMaskTransform, const IntRect& aBounds,
+                          bool aCopyBackground)
+{
+  D2D1_LAYER_OPTIONS1 options = D2D1_LAYER_OPTIONS1_NONE;
+
+  if (aOpaque) {
+    options |= D2D1_LAYER_OPTIONS1_IGNORE_ALPHA;
+  }
+  if (aCopyBackground) {
+    options |= D2D1_LAYER_OPTIONS1_INITIALIZE_FROM_BACKGROUND;
+  }
+
+  RefPtr<ID2D1BitmapBrush> mask;
+
+  Matrix maskTransform = aMaskTransform;
+
+  RefPtr<ID2D1PathGeometry> clip;
+  if (aMask) {
+    mDC->SetTransform(D2D1::IdentityMatrix());
+    mTransformDirty = true;
+
+    RefPtr<ID2D1Image> image = GetImageForSurface(aMask, maskTransform, ExtendMode::CLAMP);
+
+    // The mask is given in user space. Our layer will apply it in device space.
+    maskTransform = maskTransform * mTransform;
+
+    if (image) {
+      RefPtr<ID2D1Bitmap> bitmap;
+      image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
+
+      mDC->CreateBitmapBrush(bitmap, D2D1::BitmapBrushProperties(), D2D1::BrushProperties(1.0f, D2DMatrix(maskTransform)), getter_AddRefs(mask));
+      MOZ_ASSERT(bitmap); // This should always be true since it was created for a surface.
+
+      factory()->CreatePathGeometry(getter_AddRefs(clip));
+      RefPtr<ID2D1GeometrySink> sink;
+      clip->Open(getter_AddRefs(sink));
+      AddRectToSink(sink, D2D1::RectF(0, 0, aMask->GetSize().width, aMask->GetSize().height));
+      sink->Close();
+    } else {
+      gfxCriticalError() << "Failed to get image for mask surface!";
+    }
+  }
+
+  PushAllClips();
+
+  mDC->PushLayer(D2D1::LayerParameters1(D2D1::InfiniteRect(), clip, D2D1_ANTIALIAS_MODE_ALIASED, D2DMatrix(maskTransform), aOpacity, mask, options), nullptr);
+  PushedLayer pushedLayer;
+  pushedLayer.mClipsArePushed = false;
+  pushedLayer.mIsOpaque = aOpaque;
+  mDC->CreateCommandList(getter_AddRefs(pushedLayer.mCurrentList));
+  mPushedLayers.push_back(pushedLayer);
+
+  mDC->SetTarget(CurrentTarget());
+}
+
+void
+DrawTargetD2D1::PopLayer()
+{
+  MOZ_ASSERT(CurrentLayer().mPushedClips.size() == 0);
+
+  RefPtr<ID2D1CommandList> list = CurrentLayer().mCurrentList;
+  mPushedLayers.pop_back();
+  mDC->SetTarget(CurrentTarget());
+
+  list->Close();
+  mDC->SetTransform(D2D1::IdentityMatrix());
+  mTransformDirty = true;
+
+  DCCommandSink sink(mDC);
+  list->Stream(&sink);
+
+  mDC->PopLayer();
 }
 
 already_AddRefed<SourceSurface>
@@ -1065,31 +1137,23 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     if (D2DSupportsCompositeMode(aOp)) {
       D2D1_RECT_F rect;
       bool isAligned;
-      RefPtr<ID2D1Bitmap> tmpBitmap;
+      RefPtr<ID2D1Image> tmpImage;
       bool clipIsComplex = CurrentLayer().mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
 
       if (clipIsComplex) {
         if (!IsOperatorBoundByMask(aOp)) {
-          HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), getter_AddRefs(tmpBitmap));
-          if (FAILED(hr)) {
-            gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 6CreateBitmap failure " << mSize << " Code: " << hexa(hr) << " format " << (int)mFormat;
-            // For now, crash in this scenario; this should happen because tmpBitmap is
-            // null and CopyFromBitmap call below dereferences it.
-            // return;
-          }
-          mDC->Flush();
-
-          tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
+          tmpImage = GetImageForLayerContent();
         }
       } else {
         PushAllClips();
       }
       mDC->DrawImage(source, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
 
-      if (tmpBitmap) {
-        RefPtr<ID2D1BitmapBrush> brush;
+      if (tmpImage) {
+        RefPtr<ID2D1ImageBrush> brush;
         RefPtr<ID2D1Geometry> inverseGeom = GetInverseClippedGeometry();
-        mDC->CreateBitmapBrush(tmpBitmap, getter_AddRefs(brush));
+        mDC->CreateImageBrush(tmpImage, D2D1::ImageBrushProperties(D2D1::RectF(0, 0, mSize.width, mSize.height)),
+                              getter_AddRefs(brush));
 
         mDC->SetPrimitiveBlend(D2D1_PRIMITIVE_BLEND_COPY);
         mDC->FillGeometry(inverseGeom, brush);
@@ -1098,37 +1162,23 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
       return;
     }
 
-    if (!mBlendEffect) {
-      HRESULT hr = mDC->CreateEffect(CLSID_D2D1Blend, getter_AddRefs(mBlendEffect));
+    RefPtr<ID2D1Effect> blendEffect;
+    HRESULT hr = mDC->CreateEffect(CLSID_D2D1Blend, getter_AddRefs(blendEffect));
 
-      if (FAILED(hr) || !mBlendEffect) {
-        gfxWarning() << "Failed to create blend effect!";
-        return;
-      }
-    }
-
-    RefPtr<ID2D1Bitmap> tmpBitmap;
-    HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), getter_AddRefs(tmpBitmap));
-    if (FAILED(hr)) {
-      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 5CreateBitmap failure " << mSize << " Code: " << hexa(hr) << " format " << (int)mFormat;
+    if (FAILED(hr) || !blendEffect) {
+      gfxWarning() << "Failed to create blend effect!";
       return;
     }
 
-    // This flush is important since the copy method will not know about the context drawing to the surface.
-    // We also need to pop all the clips to make sure any drawn content will have made it to the final bitmap.
-    mDC->Flush();
+    RefPtr<ID2D1Image> tmpImage = GetImageForLayerContent();
 
-    // We need to use a copy here because affects don't accept a surface on
-    // both their in- and outputs.
-    tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
-
-    mBlendEffect->SetInput(0, tmpBitmap);
-    mBlendEffect->SetInput(1, source);
-    mBlendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
+    blendEffect->SetInput(0, tmpImage);
+    blendEffect->SetInput(1, source);
+    blendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
 
     PushAllClips();
 
-    mDC->DrawImage(mBlendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
+    mDC->DrawImage(blendEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_BOUNDED_SOURCE_COPY);
     return;
   }
 
@@ -1203,6 +1253,35 @@ DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAli
     }
   }
   return true;
+}
+
+already_AddRefed<ID2D1Image>
+DrawTargetD2D1::GetImageForLayerContent()
+{
+  if (!CurrentLayer().mCurrentList) {
+    RefPtr<ID2D1Bitmap> tmpBitmap;
+    HRESULT hr = mDC->CreateBitmap(D2DIntSize(mSize), D2D1::BitmapProperties(D2DPixelFormat(mFormat)), getter_AddRefs(tmpBitmap));
+    if (FAILED(hr)) {
+      gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 6CreateBitmap failure " << mSize << " Code: " << hexa(hr) << " format " << (int)mFormat;
+      // For now, crash in this scenario; this should happen because tmpBitmap is
+      // null and CopyFromBitmap call below dereferences it.
+      // return;
+    }
+    mDC->Flush();
+
+    tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
+    return tmpBitmap.forget();
+  } else {
+    RefPtr<ID2D1CommandList> list = CurrentLayer().mCurrentList;
+    mDC->CreateCommandList(getter_AddRefs(CurrentLayer().mCurrentList));
+    mDC->SetTarget(CurrentTarget());
+    list->Close();
+
+    DCCommandSink sink(mDC);
+    list->Stream(&sink);
+
+    return list.forget();
+  }
 }
 
 already_AddRefed<ID2D1Geometry>
