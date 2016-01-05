@@ -71,7 +71,6 @@ class MediaPipeline;
 
 #ifdef USE_FAKE_MEDIA_STREAMS
 typedef Fake_DOMMediaStream DOMMediaStream;
-typedef Fake_MediaStreamTrack MediaStreamTrack;
 #else
 class DOMMediaStream;
 #endif
