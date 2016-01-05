@@ -15,6 +15,9 @@
 #include "mozilla/Mutex.h"
 
 namespace mozilla {
+
+class OriginAttributesPattern;
+
 namespace dom {
 
 class DOMLocalStorageManager;
@@ -52,35 +55,41 @@ public:
 
   virtual void AsyncClearAll()
   {
-    if (mScopesHavingData) {
-      mScopesHavingData->Clear(); /* NO-OP on the child process otherwise */
+    if (mOriginsHavingData) {
+      mOriginsHavingData->Clear(); /* NO-OP on the child process otherwise */
     }
   }
 
-  virtual void AsyncClearMatchingScope(const nsACString& aScope)
+  virtual void AsyncClearMatchingOrigin(const nsACString& aOriginNoSuffix)
+    { /* NO-OP on the child process */ }
+
+  virtual void AsyncClearMatchingOriginAttributes(const OriginAttributesPattern& aPattern)
     { /* NO-OP on the child process */ }
 
   virtual void AsyncFlush()
     { SendAsyncFlush(); }
 
-  virtual bool ShouldPreloadScope(const nsACString& aScope);
-  virtual void GetScopesHavingData(InfallibleTArray<nsCString>* aScopes)
+  virtual bool ShouldPreloadOrigin(const nsACString& aOriginNoSuffix);
+  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins)
     { NS_NOTREACHED("Not implemented for child process"); }
 
 private:
   bool RecvObserve(const nsCString& aTopic,
-                   const nsCString& aScopePrefix);
-  bool RecvLoadItem(const nsCString& aScope,
+                   const nsString& aOriginAttributesPattern,
+                   const nsCString& aOriginScope);
+  bool RecvLoadItem(const nsCString& aOriginSuffix,
+                    const nsCString& aOriginNoSuffix,
                     const nsString& aKey,
                     const nsString& aValue);
-  bool RecvLoadDone(const nsCString& aScope,
+  bool RecvLoadDone(const nsCString& aOriginSuffix,
+                    const nsCString& aOriginNoSuffix,
                     const nsresult& aRv);
-  bool RecvScopesHavingData(nsTArray<nsCString>&& aScopes);
-  bool RecvLoadUsage(const nsCString& aScope,
+  bool RecvOriginsHavingData(nsTArray<nsCString>&& aOrigins);
+  bool RecvLoadUsage(const nsCString& aOriginNoSuffix,
                      const int64_t& aUsage);
   bool RecvError(const nsresult& aRv);
 
-  nsTHashtable<nsCStringHashKey>& ScopesHavingData();
+  nsTHashtable<nsCStringHashKey>& OriginsHavingData();
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD
@@ -88,12 +97,12 @@ private:
   // Held to get caches to forward answers to.
   RefPtr<DOMLocalStorageManager> mManager;
 
-  // Scopes having data hash, for optimization purposes only
-  nsAutoPtr<nsTHashtable<nsCStringHashKey> > mScopesHavingData;
+  // Origins having data hash, for optimization purposes only
+  nsAutoPtr<nsTHashtable<nsCStringHashKey>> mOriginsHavingData;
 
   // List of caches waiting for preload.  This ensures the contract that
   // AsyncPreload call references the cache for time of the preload.
-  nsTHashtable<nsRefPtrHashKey<DOMStorageCacheBridge> > mLoadingCaches;
+  nsTHashtable<nsRefPtrHashKey<DOMStorageCacheBridge>> mLoadingCaches;
 
   // Status of the remote database
   nsresult mStatus;
@@ -132,13 +141,20 @@ public:
   // them back to appropriate cache object on the child process.
   class CacheParentBridge : public DOMStorageCacheBridge {
   public:
-    CacheParentBridge(DOMStorageDBParent* aParentDB, const nsACString& aScope)
-      : mParent(aParentDB), mScope(aScope), mLoaded(false), mLoadedCount(0) {}
+    CacheParentBridge(DOMStorageDBParent* aParentDB,
+                      const nsACString& aOriginSuffix,
+                      const nsACString& aOriginNoSuffix)
+      : mParent(aParentDB)
+      , mOriginSuffix(aOriginSuffix), mOriginNoSuffix(aOriginNoSuffix)
+      , mLoaded(false), mLoadedCount(0) {}
     virtual ~CacheParentBridge() {}
 
     // DOMStorageCacheBridge
-    virtual const nsCString& Scope() const
-      { return mScope; }
+    virtual const nsCString Origin() const;
+    virtual const nsCString& OriginNoSuffix() const
+      { return mOriginNoSuffix; }
+    virtual const nsCString& OriginSuffix() const
+      { return mOriginSuffix; }
     virtual bool Loaded()
       { return mLoaded; }
     virtual uint32_t LoadedCount()
@@ -150,7 +166,7 @@ public:
 
   private:
     RefPtr<DOMStorageDBParent> mParent;
-    nsCString mScope;
+    nsCString mOriginSuffix, mOriginNoSuffix;
     bool mLoaded;
     uint32_t mLoadedCount;
   };
@@ -159,38 +175,38 @@ public:
   class UsageParentBridge : public DOMStorageUsageBridge
   {
   public:
-    UsageParentBridge(DOMStorageDBParent* aParentDB, const nsACString& aScope)
-      : mParent(aParentDB), mScope(aScope) {}
+    UsageParentBridge(DOMStorageDBParent* aParentDB, const nsACString& aOriginScope)
+      : mParent(aParentDB), mOriginScope(aOriginScope) {}
     virtual ~UsageParentBridge() {}
 
     // DOMStorageUsageBridge
-    virtual const nsCString& Scope() { return mScope; }
+    virtual const nsCString& OriginScope() { return mOriginScope; }
     virtual void LoadUsage(const int64_t usage);
 
   private:
     RefPtr<DOMStorageDBParent> mParent;
-    nsCString mScope;
+    nsCString mOriginScope;
   };
 
 private:
   // IPC
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
-  bool RecvAsyncPreload(const nsCString& aScope, const bool& aPriority) override;
-  bool RecvPreload(const nsCString& aScope, const uint32_t& aAlreadyLoadedCount,
+  bool RecvAsyncPreload(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix, const bool& aPriority) override;
+  bool RecvPreload(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix, const uint32_t& aAlreadyLoadedCount,
                    InfallibleTArray<nsString>* aKeys, InfallibleTArray<nsString>* aValues,
                    nsresult* aRv) override;
-  bool RecvAsyncGetUsage(const nsCString& aScope) override;
-  bool RecvAsyncAddItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) override;
-  bool RecvAsyncUpdateItem(const nsCString& aScope, const nsString& aKey, const nsString& aValue) override;
-  bool RecvAsyncRemoveItem(const nsCString& aScope, const nsString& aKey) override;
-  bool RecvAsyncClear(const nsCString& aScope) override;
+  bool RecvAsyncGetUsage(const nsCString& aOriginNoSuffix) override;
+  bool RecvAsyncAddItem(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix, const nsString& aKey, const nsString& aValue) override;
+  bool RecvAsyncUpdateItem(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix, const nsString& aKey, const nsString& aValue) override;
+  bool RecvAsyncRemoveItem(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix, const nsString& aKey) override;
+  bool RecvAsyncClear(const nsCString& aOriginSuffix, const nsCString& aOriginNoSuffix) override;
   bool RecvAsyncFlush() override;
 
   // DOMStorageObserverSink
-  virtual nsresult Observe(const char* aTopic, const nsACString& aScopePrefix) override;
+  virtual nsresult Observe(const char* aTopic, const nsAString& aOriginAttrPattern, const nsACString& aOriginScope) override;
 
 private:
-  CacheParentBridge* NewCache(const nsACString& aScope);
+  CacheParentBridge* NewCache(const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix);
 
   ThreadSafeAutoRefCnt mRefCnt;
   NS_DECL_OWNINGTHREAD

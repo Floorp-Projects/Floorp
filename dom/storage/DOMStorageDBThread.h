@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/BasePrincipal.h"
 #include "mozilla/storage/StatementCache.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
@@ -73,17 +74,20 @@ public:
   // Called when chrome deletes e.g. cookies, schedules delete of the whole database
   virtual void AsyncClearAll() = 0;
 
-  // Called when only a domain and its subdomains or an app data is about to clear
-  virtual void AsyncClearMatchingScope(const nsACString& aScope) = 0;
+  // Called when only a domain and its subdomains is about to clear
+  virtual void AsyncClearMatchingOrigin(const nsACString& aOriginNoSuffix) = 0;
+
+  // Called when data matching an origin pattern have to be cleared
+  virtual void AsyncClearMatchingOriginAttributes(const OriginAttributesPattern& aPattern) = 0;
 
   // Forces scheduled DB operations to be early flushed to the disk
   virtual void AsyncFlush() = 0;
 
   // Check whether the scope has any data stored on disk and is thus allowed to preload
-  virtual bool ShouldPreloadScope(const nsACString& aScope) = 0;
+  virtual bool ShouldPreloadOrigin(const nsACString& aOriginNoSuffix) = 0;
 
   // Get the complete list of scopes having data
-  virtual void GetScopesHavingData(InfallibleTArray<nsCString>* aScopes) = 0;
+  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins) = 0;
 };
 
 // The implementation of the the database engine, this directly works
@@ -114,11 +118,17 @@ public:
       opAddItem,
       opUpdateItem,
       opRemoveItem,
+      // Clears a specific single origin data
       opClear,
 
       // Operations invoked by chrome
+
+      // Clear all the data stored in the database, for all scopes, no exceptions
       opClearAll,
-      opClearMatchingScope,
+      // Clear data under a domain and all its subdomains regardless OriginAttributes value
+      opClearMatchingOrigin,
+      // Clear all data matching an OriginAttributesPattern regardless a domain
+      opClearMatchingOriginAttributes,
     } OperationType;
 
     explicit DBOperation(const OperationType aType,
@@ -128,7 +138,9 @@ public:
     DBOperation(const OperationType aType,
                 DOMStorageUsageBridge* aUsage);
     DBOperation(const OperationType aType,
-                const nsACString& aScope);
+                const nsACString& aOriginNoSuffix);
+    DBOperation(const OperationType aType,
+                const OriginAttributesPattern& aOriginNoSuffix);
     ~DBOperation();
 
     // Executes the operation, doesn't necessarity have to be called on the I/O thread
@@ -138,13 +150,23 @@ public:
     void Finalize(nsresult aRv);
 
     // The operation type
-    OperationType Type() { return mType; }
+    OperationType Type() const { return mType; }
 
-    // The operation scope (=origin)
-    const nsCString Scope();
+    // The origin in the database usage format (reversed)
+    const nsCString OriginNoSuffix() const;
 
-    // |Scope + key| the operation is working with
-    const nsCString Target();
+    // The origin attributes suffix
+    const nsCString OriginSuffix() const;
+
+    // |origin suffix + origin key| the operation is working with
+    // or a scope pattern to delete with simple SQL's "LIKE %" from the database.
+    const nsCString Origin() const;
+
+    // |origin suffix + origin key + key| the operation is working with
+    const nsCString Target() const;
+
+    // Pattern to delete matching data with this op
+    const OriginAttributesPattern& OriginPattern() const { return mOriginPattern; }
 
   private:
     // The operation implementation body
@@ -154,9 +176,10 @@ public:
     OperationType mType;
     RefPtr<DOMStorageCacheBridge> mCache;
     RefPtr<DOMStorageUsageBridge> mUsage;
-    nsString mKey;
-    nsString mValue;
-    nsCString mScope;
+    nsString const mKey;
+    nsString const mValue;
+    nsCString const mOrigin;
+    OriginAttributesPattern const mOriginPattern;
   };
 
   // Encapsulation of collective and coalescing logic for all pending operations
@@ -166,11 +189,11 @@ public:
     PendingOperations();
 
     // Method responsible for coalescing redundant update operations with the same
-    // |Target()| or clear operations with the same or matching |Scope()|
+    // |Target()| or clear operations with the same or matching |Origin()|
     void Add(DBOperation* aOperation);
 
     // True when there are some scheduled operations to flush on disk
-    bool HasTasks();
+    bool HasTasks() const;
 
     // Moves collected operations to a local flat list to allow execution of the operation
     // list out of the thread lock
@@ -184,12 +207,13 @@ public:
     // to flush what indicates a long standing issue with the database access.
     bool Finalize(nsresult aRv);
 
-    // true when a clear that deletes the given |scope| is among the pending operations;
-    // when a preload for that scope is being scheduled, it must be finished right away
-    bool IsScopeClearPending(const nsACString& aScope);
+    // true when a clear that deletes the given origin attr pattern and/or origin key
+    // is among the pending operations; when a preload for that scope is being scheduled,
+    // it must be finished right away
+    bool IsOriginClearPending(const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix) const;
 
-    // Checks whether there is a pending update (or clear, actually) operation for this scope.
-    bool IsScopeUpdatePending(const nsACString& aScope);
+    // Checks whether there is a pending update operation for this scope.
+    bool IsOriginUpdatePending(const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix) const;
 
   private:
     // Returns true iff new operation is of type newType and there is a pending 
@@ -269,13 +293,16 @@ public:
   virtual void AsyncClearAll()
     { InsertDBOp(new DBOperation(DBOperation::opClearAll)); }
 
-  virtual void AsyncClearMatchingScope(const nsACString& aScope)
-    { InsertDBOp(new DBOperation(DBOperation::opClearMatchingScope, aScope)); }
+  virtual void AsyncClearMatchingOrigin(const nsACString& aOriginNoSuffix)
+    { InsertDBOp(new DBOperation(DBOperation::opClearMatchingOrigin, aOriginNoSuffix)); }
+
+  virtual void AsyncClearMatchingOriginAttributes(const OriginAttributesPattern& aPattern)
+    { InsertDBOp(new DBOperation(DBOperation::opClearMatchingOriginAttributes, aPattern)); }
 
   virtual void AsyncFlush();
 
-  virtual bool ShouldPreloadScope(const nsACString& aScope);
-  virtual void GetScopesHavingData(InfallibleTArray<nsCString>* aScopes);
+  virtual bool ShouldPreloadOrigin(const nsACString& aOrigin);
+  virtual void GetOriginsHavingData(InfallibleTArray<nsCString>* aOrigins);
 
 private:
   nsCOMPtr<nsIFile> mDatabaseFile;
@@ -298,8 +325,8 @@ private:
   // State of the database initiation
   nsresult mStatus;
 
-  // List of scopes having data, for optimization purposes only
-  nsTHashtable<nsCStringHashKey> mScopesHavingData;
+  // List of origins (including origin attributes suffix) having data, for optimization purposes only
+  nsTHashtable<nsCStringHashKey> mOriginsHavingData;
 
   // Connection used by the worker thread for all read and write ops
   nsCOMPtr<mozIStorageConnection> mWorkerConnection;
@@ -328,7 +355,7 @@ private:
   int32_t mPriorityCounter;
 
   // Helper to direct an operation to one of the arrays above;
-  // also checks IsScopeClearPending for preloads
+  // also checks IsOriginClearPending for preloads
   nsresult InsertDBOp(DBOperation* aOperation);
 
   // Opens the database, first thing we do after start of the thread.
