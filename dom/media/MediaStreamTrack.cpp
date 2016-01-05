@@ -121,8 +121,7 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
                        this, aEnabled ? "Enabled" : "Disabled"));
 
   mEnabled = aEnabled;
-  // XXX Bug 1208371 - This enables/disables the track across clones.
-  GetInputStream()->SetTrackEnabled(mTrackID, aEnabled);
+  GetOwnedStream()->SetTrackEnabled(mTrackID, aEnabled);
 }
 
 void
