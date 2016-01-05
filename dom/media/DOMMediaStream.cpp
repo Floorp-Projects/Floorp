@@ -1156,8 +1156,7 @@ DOMMediaStream::NotifyTrackAdded(const RefPtr<MediaStreamTrack>& aTrack)
   aTrack->AddPrincipalChangeObserver(this);
 
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const RefPtr<TrackListener>& listener = mTrackListeners[i];
-    listener->NotifyTrackAdded(aTrack);
+    mTrackListeners[i]->NotifyTrackAdded(aTrack);
   }
 }
 
@@ -1169,8 +1168,7 @@ DOMMediaStream::NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack)
   aTrack->RemovePrincipalChangeObserver(this);
 
   for (int32_t i = mTrackListeners.Length() - 1; i >= 0; --i) {
-    const RefPtr<TrackListener>& listener = mTrackListeners[i];
-    listener->NotifyTrackRemoved(aTrack);
+    mTrackListeners[i]->NotifyTrackRemoved(aTrack);
   }
 
   RecomputePrincipal();
