@@ -1404,6 +1404,12 @@ RecordedScaledFontCreation::PlayEvent(Translator *aTranslator) const
 void
 RecordedScaledFontCreation::RecordToStream(std::ostream &aStream) const
 {
+  if (!mGetFontFileDataSucceeded) {
+    gfxWarning()
+      << "Unable to record ScaledFont creation as no data was retrieved.";
+    return;
+  }
+
   WriteElement(aStream, mRefPtr);
   WriteElement(aStream, mIndex);
   WriteElement(aStream, mGlyphSize);
