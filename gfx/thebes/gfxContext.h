@@ -482,6 +482,7 @@ private:
       , color(0, 0, 0, 1.0f)
       , aaMode(mozilla::gfx::AntialiasMode::SUBPIXEL)
       , patternTransformChanged(false)
+      , mBlendOpacity(0.0f)
     {}
 
     mozilla::gfx::CompositionOp op;

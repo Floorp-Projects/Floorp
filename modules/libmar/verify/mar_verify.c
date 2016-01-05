@@ -194,11 +194,8 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
                                      CryptoX_ProviderHandle provider,
                                      CryptoX_PublicKey *keys,
                                      uint32_t keyCount) {
-  char buf[5] = {0};
   uint32_t signatureCount, signatureLen, numVerified = 0;
   uint32_t signatureAlgorithmIDs[MAX_SIGNATURES];
-  int rv = -1;
-  int64_t curPos;
   uint8_t *extractedSignatures[MAX_SIGNATURES];
   uint32_t i;
 
@@ -286,13 +283,17 @@ mar_extract_and_verify_signatures_fp(FILE *fp,
     }
   }
 
-  curPos = ftello(fp);
-  rv = mar_verify_signatures_for_fp(fp,
-                                    provider,
-                                    keys,
-                                    (const uint8_t * const *)extractedSignatures,
-                                    signatureCount,
-                                    &numVerified);
+  if (ftello(fp) == -1) {
+    return CryptoX_Error;
+  }
+  if (mar_verify_signatures_for_fp(fp,
+                                   provider,
+                                   keys,
+                                   (const uint8_t * const *)extractedSignatures,
+                                   signatureCount,
+                                   &numVerified) == CryptoX_Error) {
+    return CryptoX_Error;
+  }
   for (i = 0; i < signatureCount; ++i) {
     free(extractedSignatures[i]);
   }

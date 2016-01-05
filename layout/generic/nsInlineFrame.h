@@ -80,7 +80,7 @@ public:
               const mozilla::LogicalSize& aBorder,
               const mozilla::LogicalSize& aPadding,
               ComputeSizeFlags aFlags) override;
-  virtual nsRect ComputeTightBounds(gfxContext* aContext) const override;
+  virtual nsRect ComputeTightBounds(DrawTarget* aDrawTarget) const override;
   virtual void Reflow(nsPresContext* aPresContext,
                       nsHTMLReflowMetrics& aDesiredSize,
                       const nsHTMLReflowState& aReflowState,

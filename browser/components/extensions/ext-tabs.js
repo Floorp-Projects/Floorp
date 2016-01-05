@@ -536,6 +536,82 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
         }
         return context.messenger.sendMessage(mm, message, recipient, responseCallback);
       },
+
+      move: function(tabIds, moveProperties, callback) {
+        let index = moveProperties.index;
+        let tabsMoved = [];
+        if (!Array.isArray(tabIds)) {
+          tabIds = [tabIds];
+        }
+
+        let destinationWindow = null;
+        if (moveProperties.windowId !== null) {
+           destinationWindow = WindowManager.getWindow(moveProperties.windowId);
+           // Ignore invalid window.
+           if (!destinationWindow) {
+             return;
+           }
+        }
+
+        /*
+          Indexes are maintained on a per window basis so that a call to
+            move([tabA, tabB], {index: 0})
+              -> tabA to 0, tabB to 1 if tabA and tabB are in the same window
+            move([tabA, tabB], {index: 0})
+              -> tabA to 0, tabB to 0 if tabA and tabB are in different windows
+        */
+        let indexMap = new Map();
+
+        for (let tabId of tabIds) {
+          let tab = TabManager.getTab(tabId);
+          // Ignore invalid tab ids.
+          if (!tab) {
+            continue;
+          }
+
+          // If the window is not specified, use the window from the tab.
+          let window = destinationWindow || tab.ownerDocument.defaultView;
+          let windowId = WindowManager.getId(window);
+          let gBrowser = window.gBrowser;
+
+          let getInsertionPoint = () => {
+            let point = indexMap.get(window) || index;
+            // If the index is -1 it should go to the end of the tabs.
+            if (point == -1) {
+              point = gBrowser.tabs.length;
+            }
+            indexMap.set(window, point + 1);
+            return point;
+          };
+
+          if (WindowManager.getId(tab.ownerDocument.defaultView) !== windowId) {
+            // If the window we are moving the tab in is different, then move the tab
+            // to the new window.
+            let newTab = gBrowser.addTab('about:blank');
+            let newBrowser = gBrowser.getBrowserForTab(newTab);
+            gBrowser.updateBrowserRemotenessByURL(newBrowser, tab.linkedBrowser.currentURI.spec);
+            newBrowser.stop();
+            newBrowser.docShell;
+
+            if (tab.pinned) {
+              gBrowser.pinTab(newTab);
+            }
+
+            gBrowser.moveTabTo(newTab, getInsertionPoint());
+
+            tab.parentNode._finishAnimateTabMove();
+            gBrowser.swapBrowsersAndCloseOther(newTab, tab);
+          } else {
+            // If the window we are moving is the same, just move the tab.
+            gBrowser.moveTabTo(tab, getInsertionPoint());
+          }
+          tabsMoved.push(tab);
+        }
+
+        if (callback) {
+          runSafe(context, callback, tabsMoved.map(tab => TabManager.convert(extension, tab)));
+        }
+      },
     },
   };
   return self;

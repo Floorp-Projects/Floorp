@@ -613,6 +613,7 @@ function BuildConditionSandbox(aURL) {
       sandbox.d2d = false;
     }
     var info = gfxInfo.getInfo();
+    sandbox.azureCairo = info.AzureCanvasBackend == "cairo";
     sandbox.azureQuartz = info.AzureCanvasBackend == "quartz";
     sandbox.azureSkia = info.AzureCanvasBackend == "skia";
     sandbox.skiaContent = info.AzureContentBackend == "skia";

@@ -21,7 +21,6 @@ class nsDisplayListSet;
 // Concrete base class with default methods that derived MathML frames can override
 class nsMathMLFrame : public nsIMathMLFrame {
 public:
-
   // nsIMathMLFrame ---
 
   virtual bool
@@ -50,7 +49,7 @@ public:
   virtual eMathMLFrameType GetMathMLFrameType() override;
 
   NS_IMETHOD
-  Stretch(nsRenderingContext& aRenderingContext,
+  Stretch(mozilla::gfx::DrawTarget* aDrawTarget,
           nsStretchDirection   aStretchDirection,
           nsBoundingMetrics&   aContainerSize,
           nsHTMLReflowMetrics& aDesiredStretchSize) override
@@ -336,14 +335,14 @@ public:
   // Here are some slower variants to obtain the desired metrics
   // by actually measuring some characters
   static void
-  GetRuleThickness(nsRenderingContext& aRenderingContext, 
-                   nsFontMetrics*      aFontMetrics,
-                   nscoord&             aRuleThickness);
+  GetRuleThickness(mozilla::gfx::DrawTarget* aDrawTarget,
+                   nsFontMetrics* aFontMetrics,
+                   nscoord& aRuleThickness);
 
   static void
-  GetAxisHeight(nsRenderingContext& aRenderingContext, 
-                nsFontMetrics*      aFontMetrics,
-                nscoord&             aAxisHeight);
+  GetAxisHeight(mozilla::gfx::DrawTarget* aDrawTarget,
+                nsFontMetrics* aFontMetrics,
+                nscoord& aAxisHeight);
 
   static void
   GetRadicalParameters(nsFontMetrics* aFontMetrics,

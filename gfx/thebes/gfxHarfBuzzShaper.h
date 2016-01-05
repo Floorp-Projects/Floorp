@@ -27,7 +27,7 @@ public:
     };
 
     bool Initialize();
-    virtual bool ShapeText(gfxContext      *aContext,
+    virtual bool ShapeText(DrawTarget      *aDrawTarget,
                            const char16_t *aText,
                            uint32_t         aOffset,
                            uint32_t         aLength,
@@ -98,7 +98,7 @@ public:
     }
 
 protected:
-    nsresult SetGlyphsFromRun(gfxContext     *aContext,
+    nsresult SetGlyphsFromRun(DrawTarget     *aDrawTarget,
                               gfxShapedText  *aShapedText,
                               uint32_t        aOffset,
                               uint32_t        aLength,

@@ -2212,12 +2212,14 @@ class MOZ_STACK_CLASS nsIRenderingContextBidiProcessor final
   : public nsBidiPresUtils::BidiProcessor
 {
 public:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
   nsIRenderingContextBidiProcessor(nsRenderingContext* aCtx,
-                                   nsRenderingContext* aTextRunConstructionContext,
+                                   DrawTarget* aTextRunConstructionDrawTarget,
                                    nsFontMetrics* aFontMetrics,
                                    const nsPoint&       aPt)
     : mCtx(aCtx)
-    , mTextRunConstructionContext(aTextRunConstructionContext)
+    , mTextRunConstructionDrawTarget(aTextRunConstructionDrawTarget)
     , mFontMetrics(aFontMetrics)
     , mPt(aPt)
   {}
@@ -2239,7 +2241,7 @@ public:
   virtual nscoord GetWidth() override
   {
     return nsLayoutUtils::AppUnitWidthOfString(mText, mLength, *mFontMetrics,
-                                               *mTextRunConstructionContext);
+                                               mTextRunConstructionDrawTarget);
   }
 
   virtual void DrawText(nscoord aIOffset,
@@ -2252,12 +2254,12 @@ public:
       pt.x += aIOffset;
     }
     mFontMetrics->DrawString(mText, mLength, pt.x, pt.y,
-                             mCtx, mTextRunConstructionContext);
+                             mCtx, mTextRunConstructionDrawTarget);
   }
 
 private:
   nsRenderingContext* mCtx;
-  nsRenderingContext* mTextRunConstructionContext;
+  DrawTarget* mTextRunConstructionDrawTarget;
   nsFontMetrics* mFontMetrics;
   nsPoint mPt;
   const char16_t* mText;
@@ -2269,7 +2271,7 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       a
                                                          nsBidiLevel            aBaseLevel,
                                                          nsPresContext*         aPresContext,
                                                          nsRenderingContext&   aRenderingContext,
-                                                         nsRenderingContext&   aTextRunConstructionContext,
+                                                         DrawTarget*           aTextRunConstructionDrawTarget,
                                                          nsFontMetrics&         aFontMetrics,
                                                          Mode                   aMode,
                                                          nscoord                aX,
@@ -2279,7 +2281,7 @@ nsresult nsBidiPresUtils::ProcessTextForRenderingContext(const char16_t*       a
                                                          nscoord*               aWidth)
 {
   nsIRenderingContextBidiProcessor processor(&aRenderingContext,
-                                             &aTextRunConstructionContext,
+                                             aTextRunConstructionDrawTarget,
                                              &aFontMetrics,
                                              nsPoint(aX, aY));
   nsBidi bidiEngine;

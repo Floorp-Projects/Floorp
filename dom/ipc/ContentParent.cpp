@@ -2761,6 +2761,9 @@ bool
 ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
                                         InfallibleTArray<DataStorageItem>* aValues)
 {
+    // Ensure the SSS is initialized before we try to use its storage.
+    nsCOMPtr<nsISiteSecurityService> sss = do_GetService("@mozilla.org/ssservice;1");
+
     RefPtr<DataStorage> storage = DataStorage::Get(aFilename);
     storage->GetAll(aValues);
     return true;

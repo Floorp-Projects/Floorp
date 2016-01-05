@@ -56,7 +56,7 @@ public:
                                     bool aOwnsFactory);
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
-                              gfxContext* aRefContext,
+                              mozilla::gfx::DrawTarget* aRefDrawTarget,
                               gfxMissingFontRecorder* aMFR) = 0;
 };
 
@@ -79,7 +79,7 @@ public:
       mAllUppercase(aAllUppercase) {}
 
   virtual void RebuildTextRun(nsTransformedTextRun* aTextRun,
-                              gfxContext* aRefContext,
+                              mozilla::gfx::DrawTarget* aRefDrawTarget,
                               gfxMissingFontRecorder* aMFR) override;
 
   // Perform a transformation on the given string, writing the result into
@@ -137,12 +137,12 @@ public:
    * are done and before we request any data from the textrun. Also always
    * called after a Create.
    */
-  void FinishSettingProperties(gfxContext* aRefContext,
+  void FinishSettingProperties(mozilla::gfx::DrawTarget* aRefDrawTarget,
                                gfxMissingFontRecorder* aMFR)
   {
     if (mNeedsRebuild) {
       mNeedsRebuild = false;
-      mFactory->RebuildTextRun(this, aRefContext, aMFR);
+      mFactory->RebuildTextRun(this, aRefDrawTarget, aMFR);
     }
   }
 
@@ -209,7 +209,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
 
 gfxTextRunFactory::Parameters
 GetParametersForInner(nsTransformedTextRun* aTextRun, uint32_t* aFlags,
-                      gfxContext* aRefContext);
+                      mozilla::gfx::DrawTarget* aRefDrawTarget);
 
 
 #endif /*NSTEXTRUNTRANSFORMATIONS_H_*/

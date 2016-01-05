@@ -51,7 +51,7 @@ add_task(function* runTest() {
     },
     {
       asyncCause: "promise callback",
-      columnNumber: 1,
+      columnNumber: 3,
       filename: TEST_URI,
       functionName: "time1",
       language: 2,

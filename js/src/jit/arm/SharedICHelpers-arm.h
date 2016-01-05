@@ -199,7 +199,13 @@ inline void
 EmitIonEnterStubFrame(MacroAssembler& masm, Register scratch)
 {
     MOZ_ASSERT(ICTailCallReg == lr);
-    masm.Push(ICTailCallReg);
+
+    // In arm the link register contains the return address,
+    // but in jit frames we expect it to be on the stack. As a result
+    // push the link register (which is actually part of the previous frame.
+    // Therefore using push instead of Push).
+    masm.push(ICTailCallReg);
+
     masm.Push(ICStubReg);
 }
 
@@ -234,7 +240,7 @@ inline void
 EmitIonLeaveStubFrame(MacroAssembler& masm)
 {
     masm.Pop(ICStubReg);
-    masm.Pop(ICTailCallReg);
+    masm.pop(ICTailCallReg); // See EmitIonEnterStubFrame for explanation on pop/Pop.
 }
 
 inline void

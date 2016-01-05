@@ -499,7 +499,7 @@ vpx_codec_err_t vp9_parse_superframe_index(const uint8_t *data,
         uint32_t this_sz = 0;
 
         for (j = 0; j < mag; ++j)
-          this_sz |= (*x++) << (j * 8);
+          this_sz |= (uint32_t)(*x++) << (j * 8);
         sizes[i] = this_sz;
       }
       *count = frames;
