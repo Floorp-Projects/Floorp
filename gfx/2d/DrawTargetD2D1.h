@@ -243,13 +243,14 @@ private:
   // List of pushed layers.
   struct PushedLayer
   {
-    PushedLayer() : mClipsArePushed(false), mIsOpaque(false) {}
+    PushedLayer() : mClipsArePushed(false), mIsOpaque(false), mOldPermitSubpixelAA(false) {}
 
     std::vector<PushedClip> mPushedClips;
     RefPtr<ID2D1CommandList> mCurrentList;
     // True if the current clip stack is pushed to the CurrentTarget().
     bool mClipsArePushed;
     bool mIsOpaque;
+    bool mOldPermitSubpixelAA;
   };
   std::vector<PushedLayer> mPushedLayers;
   PushedLayer& CurrentLayer()

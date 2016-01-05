@@ -776,6 +776,9 @@ DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
   PushedLayer pushedLayer;
   pushedLayer.mClipsArePushed = false;
   pushedLayer.mIsOpaque = aOpaque;
+  pushedLayer.mOldPermitSubpixelAA = mPermitSubpixelAA;
+  mPermitSubpixelAA = aOpaque;
+
   mDC->CreateCommandList(getter_AddRefs(pushedLayer.mCurrentList));
   mPushedLayers.push_back(pushedLayer);
 
@@ -788,6 +791,8 @@ DrawTargetD2D1::PopLayer()
   MOZ_ASSERT(CurrentLayer().mPushedClips.size() == 0);
 
   RefPtr<ID2D1CommandList> list = CurrentLayer().mCurrentList;
+  mPermitSubpixelAA = CurrentLayer().mOldPermitSubpixelAA;
+
   mPushedLayers.pop_back();
   mDC->SetTarget(CurrentTarget());
 
