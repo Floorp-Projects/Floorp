@@ -1177,23 +1177,31 @@ public:
   /**
    * Allocates a new input port attached to source aStream.
    * This stream can be removed by calling MediaInputPort::Remove().
+   *
    * The input port is tied to aTrackID in the source stream.
    * aTrackID can be set to TRACK_ANY to automatically forward all tracks from
    * aStream.
+   *
    * If aTrackID is an explicit ID, aDestTrackID can also be made explicit
    * to ensure that the track is assigned this ID in the destination stream.
    * To avoid intermittent TrackID collisions the destination stream may not
    * have any existing generic input ports (with TRACK_ANY source track) when
    * you allocate an input port with a destination TrackID.
+   *
    * To end a track in the destination stream forwarded with TRACK_ANY,
    * it can be blocked in the input port through MediaInputPort::BlockTrackId().
+   *
+   * Tracks in aBlockedTracks will be blocked in the input port initially. This
+   * ensures that they don't get created by the MSG-thread before we can
+   * BlockTrackId() on the main thread.
    */
   already_AddRefed<MediaInputPort>
   AllocateInputPort(MediaStream* aStream,
                     TrackID aTrackID = TRACK_ANY,
                     TrackID aDestTrackID = TRACK_ANY,
                     uint16_t aInputNumber = 0,
-                    uint16_t aOutputNumber = 0);
+                    uint16_t aOutputNumber = 0,
+                    nsTArray<TrackID>* aBlockedTracks = nullptr);
   /**
    * Force this stream into the finished state.
    */
