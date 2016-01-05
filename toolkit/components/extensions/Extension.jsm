@@ -46,6 +46,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
                                   "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
@@ -911,6 +913,10 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   broadcast(msg, data) {
     return new Promise(resolve => {
       let count = Services.ppmm.childCount;
+      if (AppConstants.MOZ_NUWA_PROCESS) {
+        // The nuwa process is frozen, so don't expect it to answer.
+        count--;
+      }
       Services.ppmm.addMessageListener(msg + "Complete", function listener() {
         count--;
         if (count == 0) {

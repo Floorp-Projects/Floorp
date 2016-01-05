@@ -65,7 +65,7 @@ function makeExtension() {
       "content_scripts": [{
         "matches": ["http://mochi.test/*/file_sample.html"],
         "js": ["content_script.js"],
-        "run_at": "document_start",
+        "run_at": "document_idle",
       }],
     },
 
