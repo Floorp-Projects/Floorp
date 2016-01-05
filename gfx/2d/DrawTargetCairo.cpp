@@ -1715,7 +1715,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-  if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
+  if (aSurface.mType == NativeSurfaceType::CAIRO_CONTEXT) {
     if (aSurface.mSize.width <= 0 ||
         aSurface.mSize.height <= 0) {
       gfxWarning() << "Can't create a SourceSurface without a valid size";
@@ -1864,9 +1864,6 @@ DrawTargetCairo::Init(unsigned char* aData, const IntSize &aSize, int32_t aStrid
 void *
 DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
 {
-  if (aType == NativeSurfaceType::CAIRO_SURFACE) {
-    return cairo_get_group_target(mContext);
-  }
   if (aType == NativeSurfaceType::CAIRO_CONTEXT) {
     return mContext;
   }
