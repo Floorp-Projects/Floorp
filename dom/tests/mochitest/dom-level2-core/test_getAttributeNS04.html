@@ -105,8 +105,7 @@ function getAttributeNS04() {
       }
       doc = load(docRef, "doc", "staffNS");
       newAttribute = doc.createAttributeNS(namespaceURI,qualifiedName);
-      // Changed for bug 492933.
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("emp:address");
       testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
 testAddr.setAttributeNS(namespaceURI,qualifiedName,"NewValue");
