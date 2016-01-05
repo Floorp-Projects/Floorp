@@ -1403,7 +1403,7 @@ GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
                                    const LayerRect& aClip)
 {
   LayerToParentLayerMatrix4x4 transform = aTransformToCompBounds *
-      ViewAs<ParentLayerToParentLayerMatrix4x4>(aAPZTransform);
+      AsyncTransformComponentMatrix(aAPZTransform);
 
   return UntransformBy(transform.Inverse(),
     aScrollAncestor.Metrics().GetCompositionBounds(), aClip);
