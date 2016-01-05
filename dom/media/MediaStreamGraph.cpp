@@ -2781,7 +2781,7 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
     TrackID mTrackId;
   };
 
-  MOZ_ASSERT(aTrackId != TRACK_NONE && aTrackId != TRACK_INVALID && aTrackId != TRACK_ANY,
+  MOZ_ASSERT(IsTrackIDExplicit(aTrackId),
              "Only explicit TrackID is allowed");
   GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId));
 }
@@ -2812,8 +2812,8 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
   };
 
   MOZ_ASSERT(aStream->GraphImpl() == GraphImpl());
-  MOZ_ASSERT(aTrackID != TRACK_NONE && aTrackID != TRACK_INVALID,
-             "Only TRACK_ANY and explicit ID are allowed");
+  MOZ_ASSERT(aTrackID == TRACK_ANY || IsTrackIDExplicit(aTrackID),
+             "Only TRACK_ANY and explicit ID are allowed for source track");
   RefPtr<MediaInputPort> port = new MediaInputPort(aStream, aTrackID, this,
                                                      aInputNumber, aOutputNumber);
   port->SetGraphImpl(GraphImpl());

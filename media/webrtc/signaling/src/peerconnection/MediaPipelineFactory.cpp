@@ -490,7 +490,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   RefPtr<MediaPipelineReceive> pipeline;
 
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
-  MOZ_ASSERT(numericTrackId != TRACK_INVALID);
+  MOZ_ASSERT(IsTrackIDExplicit(numericTrackId));
 
   bool queue_track = stream->ShouldQueueTracks();
 
