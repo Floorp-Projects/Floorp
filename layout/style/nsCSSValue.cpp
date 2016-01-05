@@ -1017,7 +1017,7 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
     aValue &= ~legacy;
     aResult.AppendLiteral("legacy ");
   }
-  auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_TRUE);
+  auto overflowPos = aValue & (NS_STYLE_ALIGN_SAFE | NS_STYLE_ALIGN_UNSAFE);
   aValue &= ~overflowPos;
   MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
              "unknown bits in align/justify value");
