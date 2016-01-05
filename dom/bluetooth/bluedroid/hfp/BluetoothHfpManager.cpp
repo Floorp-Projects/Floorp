@@ -624,7 +624,7 @@ BluetoothHfpManager::NotifyConnectionStateChanged(const nsAString& aType)
     return;
   }
 
-  DispatchStatusChangedEvent(eventName, deviceAddressStr, status);
+  DispatchStatusChangedEvent(eventName, mDeviceAddress, status);
 
   // Notify profile controller
   if (aType.EqualsLiteral(BLUETOOTH_HFP_STATUS_CHANGED_ID)) {

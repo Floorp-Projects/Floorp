@@ -25,7 +25,7 @@ public:
     Create(nsPIDOMWindow* aWindow);
 
   void DispatchPairingEvent(const nsAString& aName,
-                            const nsAString& aAddress,
+                            const BluetoothAddress& aAddress,
                             const nsAString& aPasskey,
                             const nsAString& aType);
 
