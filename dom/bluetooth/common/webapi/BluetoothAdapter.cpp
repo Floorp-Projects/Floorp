@@ -406,9 +406,6 @@ void
 BluetoothAdapter::GetPairedDeviceProperties(
   const nsTArray<nsString>& aDeviceAddresses)
 {
-  BluetoothService* bs = BluetoothService::Get();
-  NS_ENSURE_TRUE_VOID(bs);
-
   nsTArray<BluetoothAddress> deviceAddresses;
   deviceAddresses.SetLength(aDeviceAddresses.Length());
 
@@ -420,10 +417,20 @@ BluetoothAdapter::GetPairedDeviceProperties(
     }
   }
 
+  GetPairedDeviceProperties(deviceAddresses);
+}
+
+void
+BluetoothAdapter::GetPairedDeviceProperties(
+  const nsTArray<BluetoothAddress>& aDeviceAddresses)
+{
+  BluetoothService* bs = BluetoothService::Get();
+  NS_ENSURE_TRUE_VOID(bs);
+
   RefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(nullptr);
 
-  auto rv = bs->GetPairedDevicePropertiesInternal(deviceAddresses, results);
+  auto rv = bs->GetPairedDevicePropertiesInternal(aDeviceAddresses, results);
   if (NS_FAILED(rv)) {
     BT_WARNING("GetPairedDeviceProperties failed");
     return;
@@ -451,7 +458,7 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
   } else if (name.EqualsLiteral("Name")) {
     mName = value.get_nsString();
   } else if (name.EqualsLiteral("Address")) {
-    mAddress = value.get_nsString();
+    AddressToString(value.get_BluetoothAddress(), mAddress);
   } else if (name.EqualsLiteral("Discoverable")) {
     mDiscoverable = value.get_bool();
   } else if (name.EqualsLiteral("Discovering")) {
@@ -461,11 +468,14 @@ BluetoothAdapter::SetPropertyByValue(const BluetoothNamedValue& aValue)
       SetDiscoveryHandleInUse(nullptr);
     }
   } else if (name.EqualsLiteral("PairedDevices")) {
-    const InfallibleTArray<nsString>& pairedDeviceAddresses
-      = value.get_ArrayOfnsString();
+    const InfallibleTArray<BluetoothAddress>& pairedDeviceAddresses
+      = value.get_ArrayOfBluetoothAddress();
 
     for (uint32_t i = 0; i < pairedDeviceAddresses.Length(); i++) {
-      if (mDevices.Contains(pairedDeviceAddresses[i])) {
+      nsString pairedDeviceAddressStr;
+      AddressToString(pairedDeviceAddresses[i], pairedDeviceAddressStr);
+
+      if (mDevices.Contains(pairedDeviceAddressStr)) {
         // Existing paired devices handle 'PropertyChanged' signal
         // in BluetoothDevice::Notify()
         continue;
@@ -535,15 +545,15 @@ BluetoothAdapter::Notify(const BluetoothSignal& aData)
       v.get_ArrayOfBluetoothNamedValue();
 
     MOZ_ASSERT(arr.Length() == 2 &&
-               arr[0].value().type() == BluetoothValue::TnsString &&
+               arr[0].value().type() == BluetoothValue::TBluetoothAddress &&
                arr[1].value().type() == BluetoothValue::Tbool);
-    nsString address = arr[0].value().get_nsString();
+    BluetoothAddress address = arr[0].value().get_BluetoothAddress();
     bool status = arr[1].value().get_bool();
 
     BluetoothStatusChangedEventInit init;
     init.mBubbles = false;
     init.mCancelable = false;
-    init.mAddress = address;
+    AddressToString(address, init.mAddress);
     init.mStatus = status;
     RefPtr<BluetoothStatusChangedEvent> event =
       BluetoothStatusChangedEvent::Constructor(this, aData.name(), init);
@@ -1028,9 +1038,12 @@ BluetoothAdapter::IsAdapterAttributeChanged(BluetoothAdapterAttribute aType,
     case BluetoothAdapterAttribute::Name:
       MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
       return !mName.Equals(aValue.get_nsString());
-    case BluetoothAdapterAttribute::Address:
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
-      return !mAddress.Equals(aValue.get_nsString());
+    case BluetoothAdapterAttribute::Address: {
+        MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothAddress);
+        BluetoothAddress address;
+        StringToAddress(mAddress, address);
+        return address != aValue.get_BluetoothAddress();
+      }
     case BluetoothAdapterAttribute::Discoverable:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
       return mDiscoverable != aValue.get_bool();
@@ -1207,14 +1220,16 @@ BluetoothAdapter::HandleDevicePaired(const BluetoothValue& aValue)
     aValue.get_ArrayOfBluetoothNamedValue();
 
   MOZ_ASSERT(arr.Length() == 3 &&
-             arr[0].value().type() == BluetoothValue::TnsString && // Address
+             arr[0].value().type() == BluetoothValue::TBluetoothAddress && // Address
              arr[1].value().type() == BluetoothValue::TnsString && // Name
              arr[2].value().type() == BluetoothValue::Tbool);      // Paired
-  MOZ_ASSERT(!arr[0].value().get_nsString().IsEmpty() &&
+  MOZ_ASSERT(!arr[0].value().get_BluetoothAddress().IsCleared() &&
              arr[2].value().get_bool());
 
   // Append the paired device if it doesn't exist in adapter's devices array
-  size_t index = mDevices.IndexOf(arr[0].value().get_nsString());
+  nsString addressStr;
+  AddressToString(arr[0].value().get_BluetoothAddress(), addressStr);
+  size_t index = mDevices.IndexOf(addressStr);
   if (index == mDevices.NoIndex) {
     index = mDevices.Length(); // the new device's index
     mDevices.AppendElement(
@@ -1240,13 +1255,14 @@ BluetoothAdapter::HandleDeviceUnpaired(const BluetoothValue& aValue)
     aValue.get_ArrayOfBluetoothNamedValue();
 
   MOZ_ASSERT(arr.Length() == 2 &&
-             arr[0].value().type() == BluetoothValue::TnsString && // Address
-             arr[1].value().type() == BluetoothValue::Tbool);      // Paired
-  MOZ_ASSERT(!arr[0].value().get_nsString().IsEmpty() &&
+             arr[0].value().type() == BluetoothValue::TBluetoothAddress && // Address
+             arr[1].value().type() == BluetoothValue::Tbool);              // Paired
+  MOZ_ASSERT(!arr[0].value().get_BluetoothAddress().IsCleared() &&
              !arr[1].value().get_bool());
 
   // Remove the device with the same address
-  nsString deviceAddress = arr[0].value().get_nsString();
+  nsString deviceAddress;
+  AddressToString(arr[0].value().get_BluetoothAddress(), deviceAddress);
   mDevices.RemoveElement(deviceAddress);
 
   // Notify application of unpaired device

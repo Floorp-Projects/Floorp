@@ -193,6 +193,9 @@ public:
                                JS::Handle<JSObject*> aGivenProto) override;
   virtual void DisconnectFromOwner() override;
 
+  void GetPairedDeviceProperties(
+    const nsTArray<BluetoothAddress>& aDeviceAddresses);
+
   /**
    * Set this adapter's discovery handle in use (mDiscoveryHandleInUse).
    *
