@@ -33,6 +33,7 @@ namespace mozilla {
 
 class DOMHwMediaStream;
 class DOMLocalMediaStream;
+class DOMMediaStream;
 class MediaStream;
 class MediaEngineSource;
 class MediaInputPort;
@@ -63,6 +64,12 @@ class MediaStreamDirectListener;
 #define NS_DOMMEDIASTREAM_IID \
 { 0x8cb65468, 0x66c0, 0x444e, \
   { 0x89, 0x9f, 0x89, 0x1d, 0x9e, 0xd2, 0xbe, 0x7c } }
+
+class OnTracksAvailableCallback {
+public:
+  virtual ~OnTracksAvailableCallback() {}
+  virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
+};
 
 /**
  * DOM wrapper for MediaStreams.
@@ -478,11 +485,6 @@ public:
    */
   MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel);
 
-  class OnTracksAvailableCallback {
-  public:
-    virtual ~OnTracksAvailableCallback() {}
-    virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
-  };
   // When the initial set of tracks has been added, run
   // aCallback->NotifyTracksAvailable.
   // It is allowed to do anything, including run script.

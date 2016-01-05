@@ -172,14 +172,14 @@ private:
 }
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
+class TracksAvailableCallback : public OnTracksAvailableCallback
 {
 public:
   TracksAvailableCallback(size_t numNewAudioTracks,
                           size_t numNewVideoTracks,
                           const std::string& pcHandle,
                           RefPtr<PeerConnectionObserver> aObserver)
-  : DOMMediaStream::OnTracksAvailableCallback()
+  : OnTracksAvailableCallback()
   , mObserver(aObserver)
   , mPcHandle(pcHandle)
   {}
