@@ -448,11 +448,8 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
 
   for (MediaStreamTrack& track : aTracks) {
     if (!newStream->GetPlaybackStream()) {
-      MOZ_RELEASE_ASSERT(track.GetStream());
-      MOZ_RELEASE_ASSERT(track.GetStream()->GetPlaybackStream());
-      MOZ_RELEASE_ASSERT(track.GetStream()->GetPlaybackStream()->Graph());
-      MediaStreamGraph* graph = track.GetStream()->GetPlaybackStream()->Graph();
-      newStream->InitPlaybackStreamCommon(graph);
+      MOZ_RELEASE_ASSERT(track.Graph());
+      newStream->InitPlaybackStreamCommon(track.Graph());
     }
     newStream->AddTrack(track);
   }
@@ -528,12 +525,10 @@ DOMMediaStream::AddTrack(MediaStreamTrack& aTrack)
   LOG(LogLevel::Info, ("DOMMediaStream %p Adding track %p (from stream %p with ID %d)",
                        this, &aTrack, aTrack.GetStream(), aTrack.GetTrackID()));
 
-  if (mPlaybackStream->Graph() !=
-      aTrack.GetStream()->mPlaybackStream->Graph()) {
+  if (mPlaybackStream->Graph() != aTrack.Graph()) {
     NS_ASSERTION(false, "Cannot combine tracks from different MediaStreamGraphs");
     LOG(LogLevel::Error, ("DOMMediaStream %p Own MSG %p != aTrack's MSG %p",
-                         this, mPlaybackStream->Graph(),
-                         aTrack.GetStream()->mPlaybackStream->Graph()));
+                         this, mPlaybackStream->Graph(), aTrack.Graph()));
 
     nsAutoString trackId;
     aTrack.GetId(trackId);

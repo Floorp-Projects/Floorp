@@ -138,6 +138,12 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
   return GetStream()->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
 }
 
+MediaStreamGraph*
+MediaStreamTrack::Graph()
+{
+  return GetOwnedStream()->Graph();
+}
+
 DOMMediaStream*
 MediaStreamTrack::GetInputDOMStream()
 {
