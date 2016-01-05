@@ -187,9 +187,6 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "grabdll.dll", MAKE_VERSION(2, 6, 1, 0) },
   { "grabkernel.dll", MAKE_VERSION(1, 0, 0, 1) },
 
-  // Old versions of G DATA BankGuard, bug 1235537
-  { "banksafe.dll", MAKE_VERSION(1, 2, 15299, 65535) },
-
   { nullptr, 0 }
 };
 
