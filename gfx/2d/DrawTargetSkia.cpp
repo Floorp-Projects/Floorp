@@ -493,6 +493,10 @@ DrawTargetSkia::Stroke(const Path *aPath,
     return;
   }
 
+  if (!skiaPath->GetPath().isFinite()) {
+    return;
+  }
+
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }
 
@@ -542,6 +546,10 @@ DrawTargetSkia::Fill(const Path *aPath,
   const PathSkia *skiaPath = static_cast<const PathSkia*>(aPath);
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
+
+  if (!skiaPath->GetPath().isFinite()) {
+    return;
+  }
 
   mCanvas->drawPath(skiaPath->GetPath(), paint.mPaint);
 }

@@ -213,7 +213,6 @@ static void
 copydir( char *from, char *to, mode_t mode, char *group, char *owner,
          int dotimes, uid_t uid, gid_t gid)
 {
-  int i;
   DIR *dir;
   struct dirent *ep;
   struct stat sb;
@@ -262,13 +261,12 @@ copydir( char *from, char *to, mode_t mode, char *group, char *owner,
 int
 main(int argc, char **argv)
 {
-    int onlydir, dodir, dolink, dorelsymlink, dotimes, opt, len, lplen, tdlen, bnlen, exists, fromfd, tofd, cc, wc;
+    int onlydir, dodir, dolink, dorelsymlink, dotimes, opt, len, lplen, tdlen, bnlen, exists;
     mode_t mode = 0755;
-    char *linkprefix, *owner, *group, *cp, *cwd, *todir, *toname, *name, *base, *linkname, *bp, buf[BUFSIZ];
+    char *linkprefix, *owner, *group, *cp, *cwd, *todir, *toname, *name, *base, *linkname, buf[BUFSIZ];
     uid_t uid;
     gid_t gid;
     struct stat sb, tosb, fromsb;
-    struct utimbuf utb;
 
     program = argv[0];
     cwd = linkname = linkprefix = owner = group = 0;

@@ -874,7 +874,7 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   hr = mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), getter_AddRefs(mSolidColorBrush));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush.";
+    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush (I1).";
     return false;
   }
 
@@ -927,7 +927,7 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   hr = mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), getter_AddRefs(mSolidColorBrush));
 
   if (FAILED(hr)) {
-    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush.";
+    gfxCriticalError() << "[D2D1.1] Failure creating solid color brush (I2).";
     return false;
   }
 

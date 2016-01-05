@@ -20,12 +20,15 @@
 #include "nsHttpChannel.h"
 #include "nsIAuthPromptProvider.h"
 #include "mozilla/dom/ipc/IdType.h"
-#include "nsINetworkInterceptController.h"
 #include "nsIDeprecationWarner.h"
 #include "nsIPackagedAppChannelListener.h"
 
 class nsICacheEntry;
 class nsIAssociatedContentSecurity;
+
+#define HTTP_CHANNEL_PARENT_IID \
+  { 0x982b2372, 0x7aa5, 0x4e8a, \
+      { 0xbd, 0x9f, 0x89, 0x74, 0xd7, 0xf0, 0x58, 0xeb } }
 
 namespace mozilla {
 
@@ -38,13 +41,16 @@ namespace net {
 
 class HttpChannelParentListener;
 
-class HttpChannelParent final : public PHttpChannelParent
+// Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
+// works correctly on this object, as it's needed to compute a void* pointing to
+// the beginning of this object.
+
+class HttpChannelParent final : public nsIInterfaceRequestor
+                              , public PHttpChannelParent
                               , public nsIParentRedirectingChannel
                               , public nsIProgressEventSink
-                              , public nsIInterfaceRequestor
                               , public ADivertableParentChannel
                               , public nsIAuthPromptProvider
-                              , public nsINetworkInterceptController
                               , public nsIDeprecationWarner
                               , public DisconnectableParent
                               , public nsIPackagedAppChannelListener
@@ -62,8 +68,9 @@ public:
   NS_DECL_NSIPROGRESSEVENTSINK
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIAUTHPROMPTPROVIDER
-  NS_DECL_NSINETWORKINTERCEPTCONTROLLER
   NS_DECL_NSIDEPRECATIONWARNER
+
+  NS_DECLARE_STATIC_IID_ACCESSOR(HTTP_CHANNEL_PARENT_IID)
 
   HttpChannelParent(const dom::PBrowserOrId& iframeEmbedding,
                     nsILoadContext* aLoadContext,
@@ -179,13 +186,11 @@ private:
   void DivertOnStopRequest(const nsresult& statusCode);
   void DivertComplete();
   void MaybeFlushPendingDiversion();
-
-  void SynthesizeResponse(nsIInterceptedChannel* aChannel);
+  void ResponseSynthesized();
 
   friend class DivertDataAvailableEvent;
   friend class DivertStopRequestEvent;
   friend class DivertCompleteEvent;
-  friend class ResponseSynthesizer;
 
   RefPtr<nsHttpChannel>       mChannel;
   nsCOMPtr<nsICacheEntry>       mCacheEntry;
@@ -214,8 +219,6 @@ private:
   nsCOMPtr<nsILoadContext> mLoadContext;
   RefPtr<nsHttpHandler>  mHttpHandler;
 
-  nsAutoPtr<nsHttpResponseHead> mSynthesizedResponseHead;
-
   RefPtr<HttpChannelParentListener> mParentListener;
   // The listener we are diverting to or will divert to if mPendingDiversion
   // is set.
@@ -235,20 +238,18 @@ private:
 
   bool mSuspendedForDiversion;
 
-  // Set if this channel should be intercepted before it sets up the HTTP transaction.
-  bool mShouldIntercept : 1;
-  // Set if this channel should suspend on interception.
-  bool mShouldSuspendIntercept : 1;
   // Set if this channel should be suspended after synthesizing a response.
-  bool mSuspendAfterSynthesizeResponse : 1;
+  bool mSuspendAfterSynthesizeResponse;
+  // Set if this channel will synthesize its response.
+  bool mWillSynthesizeResponse;
 
   dom::TabId mNestedFrameId;
 
-  // Handle to the channel wrapper if this channel has been intercepted.
-  nsCOMPtr<nsIInterceptedChannel> mInterceptedChannel;
-
   RefPtr<ChannelEventQueue> mEventQ;
 };
+
+NS_DEFINE_STATIC_IID_ACCESSOR(HttpChannelParent,
+                              HTTP_CHANNEL_PARENT_IID)
 
 } // namespace net
 } // namespace mozilla

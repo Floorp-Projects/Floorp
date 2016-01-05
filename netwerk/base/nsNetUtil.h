@@ -979,6 +979,16 @@ bool NS_IsReasonableHTTPHeaderValue(const nsACString &aValue);
  */
 bool NS_IsValidHTTPToken(const nsACString &aToken);
 
+/**
+ * Return true if the given request must be upgraded to HTTPS.
+ */
+nsresult NS_ShouldSecureUpgrade(nsIURI* aURI,
+                                nsILoadInfo* aLoadInfo,
+                                nsIPrincipal* aChannelResultPrincipal,
+                                bool aPrivateBrowsing,
+                                bool aAllowSTS,
+                                bool& aShouldUpgrade);
+
 namespace mozilla {
 namespace net {
 

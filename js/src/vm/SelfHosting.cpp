@@ -551,7 +551,7 @@ intrinsic_SetCanonicalName(JSContext* cx, unsigned argc, Value* vp)
     if (!atom)
         return false;
 
-    fun->initAtom(atom);
+    fun->setAtom(atom);
 #ifdef DEBUG
     fun->setExtendedSlot(HAS_SELFHOSTED_CANONICAL_NAME_SLOT, BooleanValue(true));
 #endif

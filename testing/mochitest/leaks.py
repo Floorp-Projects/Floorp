@@ -141,7 +141,7 @@ class ShutdownLeaks(object):
         counted = set()
 
         for url in leakedWindows:
-            if not url in counted:
+            if url not in counted:
                 counts.append((url, leakedWindows.count(url)))
                 counted.add(url)
 

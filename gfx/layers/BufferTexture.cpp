@@ -303,19 +303,19 @@ BufferTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   RefPtr<gfx::DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (BT).";
     return false;
   }
 
   if (surface->GetSize() != srcSurf->GetSize() || surface->GetFormat() != srcSurf->GetFormat()) {
-    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format! This: " << surface->GetSize() << " " << surface->GetFormat() << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
+    gfxCriticalError() << "Attempt to update texture client from a surface with a different size or format (BT)! This: " << surface->GetSize() << " " << surface->GetFormat() << " Other: " << aSurface->GetSize() << " " << aSurface->GetFormat();
     return false;
   }
 
   gfx::DataSourceSurface::MappedSurface sourceMap;
   gfx::DataSourceSurface::MappedSurface destMap;
   if (!srcSurf->Map(gfx::DataSourceSurface::READ, &sourceMap)) {
-    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface (BT).";
     return false;
   }
 
