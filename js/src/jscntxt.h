@@ -165,8 +165,10 @@ class ExclusiveContext : public ContextFriendFields,
     }
 
     void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
-        if (!isJSContext())
+        if (!isJSContext()) {
+            addPendingOutOfMemory();
             return nullptr;
+        }
         return runtime_->onOutOfMemory(allocFunc, nbytes, reallocPtr, asJSContext());
     }
 
@@ -280,8 +282,9 @@ class ExclusiveContext : public ContextFriendFields,
     }
 
     // Methods specific to any HelperThread for the context.
-    frontend::CompileError& addPendingCompileError();
+    bool addPendingCompileError(frontend::CompileError** err);
     void addPendingOverRecursed();
+    void addPendingOutOfMemory();
 };
 
 } /* namespace js */
