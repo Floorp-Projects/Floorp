@@ -906,18 +906,18 @@ ModuleBuilder::ModuleBuilder(JSContext* cx, HandleModuleObject module)
 {}
 
 bool
-ModuleBuilder::initModule()
+ModuleBuilder::buildTables()
 {
     for (const auto& e : exportEntries_) {
         RootedExportEntryObject exp(cx_, e);
         if (!exp->moduleRequest()) {
             RootedImportEntryObject importEntry(cx_, importEntryFor(exp->localName()));
             if (!importEntry) {
-                if (!appendLocalExportEntry(exp))
+                if (!localExportEntries_.append(exp))
                     return false;
             } else {
                 if (importEntry->importName() == cx_->names().star) {
-                    if (!appendLocalExportEntry(exp))
+                    if (!localExportEntries_.append(exp))
                         return false;
                 } else {
                     RootedAtom exportName(cx_, exp->exportName());
@@ -942,6 +942,12 @@ ModuleBuilder::initModule()
         }
     }
 
+    return true;
+}
+
+bool
+ModuleBuilder::initModule()
+{
     RootedArrayObject requestedModules(cx_, createArray<JSAtom*>(requestedModules_));
     if (!requestedModules)
         return false;
@@ -970,19 +976,6 @@ ModuleBuilder::initModule()
                                  starExportEntries);
 
     return true;
-}
-
-bool
-ModuleBuilder::appendLocalExportEntry(HandleExportEntryObject exp)
-{
-    if (!module_->initialEnvironment().lookup(cx_, AtomToId(exp->localName()))) {
-        JSAutoByteString str;
-        str.encodeLatin1(cx_, exp->localName());
-        JS_ReportErrorNumber(cx_, GetErrorMessage, nullptr, JSMSG_MISSING_EXPORT, str.ptr());
-        return false;
-    }
-
-    return localExportEntries_.append(exp);
 }
 
 bool
