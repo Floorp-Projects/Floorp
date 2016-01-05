@@ -37,6 +37,7 @@
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/dom/ElementBinding.h"
 #include "Units.h"
+#include "nsContentListDeclarations.h"
 
 class nsIFrame;
 class nsIDOMMozNamedAttrMap;
@@ -60,11 +61,6 @@ namespace dom {
 } // namespace dom
 } // namespace mozilla
 
-
-already_AddRefed<nsContentList>
-NS_GetContentList(nsINode* aRootNode,
-                  int32_t  aMatchNameSpaceId,
-                  const nsAString& aTagname);
 
 #define ELEMENT_FLAG_BIT(n_) NODE_FLAG_BIT(NODE_TYPE_SPECIFIC_BITS_OFFSET + (n_))
 
