@@ -11,6 +11,7 @@
 #include "nsID.h"
 #include "StreamBuffer.h"
 #include "MediaTrackConstraints.h"
+#include "mozilla/CORSMode.h"
 #include "PrincipalChangeObserver.h"
 
 namespace mozilla {
@@ -65,6 +66,13 @@ public:
    * Get this TrackSource's principal.
    */
   nsIPrincipal* GetPrincipal() const { return mPrincipal; }
+
+  /**
+   * Get the source's current CORSMode. If not applicable CORS_NONE is returned.
+   * The sink will be notified of changes to our CORSMode through
+   * NotifyPrincipalChanged().
+   */
+  virtual CORSMode GetCORSMode() const { return CORS_NONE; }
 
   /**
    * Indicates whether the track is remote or not per the MediaCapture and
@@ -225,6 +233,11 @@ public:
    * Get this track's principal.
    */
   nsIPrincipal* GetPrincipal() const { return GetSource().GetPrincipal(); }
+
+  /**
+   * Get this track's CORS mode.
+   */
+  CORSMode GetCORSMode() const { return GetSource().GetCORSMode(); }
 
   MediaStreamGraph* Graph();
 
