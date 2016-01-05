@@ -36,17 +36,10 @@ struct AsyncTransform {
     , mTranslation(aTranslation)
   {}
 
-  operator gfx::Matrix4x4() const
+  operator AsyncTransformComponentMatrix() const
   {
-    return
-      gfx::Matrix4x4::Scaling(mScale.scale, mScale.scale, 1)
-                      .PostTranslate(mTranslation.x, mTranslation.y, 0);
-  }
-
-  // For convenience, to avoid writing the cumbersome
-  // "gfx::Matrix4x4(a) * gfx::Matrix4x4(b)".
-  friend gfx::Matrix4x4 operator*(const AsyncTransform& a, const AsyncTransform& b) {
-    return gfx::Matrix4x4(a) * gfx::Matrix4x4(b);
+    return AsyncTransformComponentMatrix::Scaling(mScale.scale, mScale.scale, 1)
+        .PostTranslate(mTranslation.x, mTranslation.y, 0);
   }
 
   bool operator==(const AsyncTransform& rhs) const {
@@ -184,8 +177,8 @@ private:
    */
   void AlignFixedAndStickyLayers(Layer* aLayer, Layer* aTransformedSubtreeRoot,
                                  FrameMetrics::ViewID aTransformScrollId,
-                                 const gfx::Matrix4x4& aPreviousTransformForRoot,
-                                 const gfx::Matrix4x4& aCurrentTransformForRoot,
+                                 const LayerToParentLayerMatrix4x4& aPreviousTransformForRoot,
+                                 const LayerToParentLayerMatrix4x4& aCurrentTransformForRoot,
                                  const ScreenMargin& aFixedLayerMargins,
                                  bool aTransformAffectsLayerClip);
 
