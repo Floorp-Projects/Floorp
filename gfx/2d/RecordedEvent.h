@@ -92,6 +92,9 @@ public:
   virtual void AddScaledFont(ReferencePtr aRefPtr, ScaledFont *aScaledFont) = 0;
   virtual void RemoveScaledFont(ReferencePtr aRefPtr) = 0;
 
+  virtual already_AddRefed<DrawTarget> CreateDrawTarget(ReferencePtr aRefPtr,
+                                                        const IntSize &aSize,
+                                                        SurfaceFormat aFormat);
   virtual DrawTarget *GetReferenceDrawTarget() = 0;
   virtual FontType GetDesiredFontType() = 0;
 };
@@ -173,7 +176,8 @@ public:
     FILTERNODEDESTRUCTION,
     DRAWFILTER,
     FILTERNODESETATTRIBUTE,
-    FILTERNODESETINPUT
+    FILTERNODESETINPUT,
+    CREATESIMILARDRAWTARGET
   };
   static const uint32_t kTotalEventTypes = RecordedEvent::FILTERNODESETINPUT + 1;
 
@@ -281,6 +285,34 @@ private:
   friend class RecordedEvent;
 
   MOZ_IMPLICIT RecordedDrawTargetDestruction(std::istream &aStream);
+};
+
+class RecordedCreateSimilarDrawTarget : public RecordedEvent
+{
+public:
+  RecordedCreateSimilarDrawTarget(ReferencePtr aRefPtr, const IntSize &aSize,
+                                  SurfaceFormat aFormat)
+    : RecordedEvent(CREATESIMILARDRAWTARGET)
+    , mRefPtr(aRefPtr) , mSize(aSize), mFormat(aFormat)
+  {
+  }
+
+  virtual void PlayEvent(Translator *aTranslator) const;
+
+  virtual void RecordToStream(std::ostream &aStream) const;
+  virtual void OutputSimpleEventInfo(std::stringstream &aStringStream) const;
+
+  virtual std::string GetName() const { return "CreateSimilarDrawTarget"; }
+  virtual ReferencePtr GetObjectRef() const { return mRefPtr; }
+
+  ReferencePtr mRefPtr;
+  IntSize mSize;
+  SurfaceFormat mFormat;
+
+private:
+  friend class RecordedEvent;
+
+  MOZ_IMPLICIT RecordedCreateSimilarDrawTarget(std::istream &aStream);
 };
 
 class RecordedFillRect : public RecordedDrawingEvent {
