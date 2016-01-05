@@ -530,7 +530,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         return newFunctionBox(fn, fun, outerpc, directives, generatorKind, enclosing);
     }
 
-    ModuleBox* newModuleBox(Node pn, HandleModuleObject module);
+    ModuleBox* newModuleBox(Node pn, HandleModuleObject module, ModuleBuilder& builder);
 
     /*
      * Create a new function object given a name (which is optional if this is
