@@ -497,8 +497,8 @@ pref("security.mixed_content.block_active_content", true);
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
-// Allow SHA-1 certificates only before 2016-01-01
-pref("security.pki.sha1_enforcement_level", 2);
+// Allow SHA-1 certificates
+pref("security.pki.sha1_enforcement_level", 0);
 
 // Required blocklist freshness for OneCRL OCSP bypass
 // (default is 1.25x extensions.blocklist.interval, or 30 hours)
