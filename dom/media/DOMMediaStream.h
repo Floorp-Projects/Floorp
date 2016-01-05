@@ -13,7 +13,6 @@
 #include "StreamBuffer.h"
 #include "nsIDOMWindow.h"
 #include "nsIPrincipal.h"
-#include "mozilla/PeerIdentity.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "PrincipalChangeObserver.h"
 
@@ -448,19 +447,6 @@ public:
    */
   nsIPrincipal* GetVideoPrincipal() { return mVideoPrincipal; }
 
-  /**
-   * These are used in WebRTC.  A peerIdentity constrained MediaStream cannot be sent
-   * across the network to anything other than a peer with the provided identity.
-   * If this is set, then mPrincipal should be an instance of nsNullPrincipal.
-   */
-  PeerIdentity* GetPeerIdentity() const { return mPeerIdentity; }
-  void SetPeerIdentity(PeerIdentity* aPeerIdentity)
-  {
-    mPeerIdentity = aPeerIdentity;
-  }
-
-
-
   // From PrincipalChangeObserver<MediaStreamTrack>.
   void PrincipalChanged(MediaStreamTrack* aTrack) override;
 
@@ -690,9 +676,6 @@ private:
   // image data.
   nsCOMPtr<nsIPrincipal> mVideoPrincipal;
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
-  // this is used in gUM and WebRTC to identify peers that this stream
-  // is allowed to be sent to
-  RefPtr<PeerIdentity> mPeerIdentity;
   CORSMode mCORSMode;
 };
 
