@@ -327,3 +327,7 @@ pref("devtools.telemetry.tools.opened.version", "{}");
 #else
   pref("devtools.jsonview.enabled", false);
 #endif
+
+// Disable the HTML responsive design tool by default.  Currently disabled until
+// ready to replace the legacy XUL version.
+pref("devtools.responsive.html.enabled", false);
