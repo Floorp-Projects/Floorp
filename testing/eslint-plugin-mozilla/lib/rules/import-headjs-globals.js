@@ -87,15 +87,17 @@ module.exports = function(context) {
 
   return {
     Program: function() {
-      if (!helpers.getIsBrowserMochitest(this)) {
+      if (!helpers.getIsTest(this)) {
         return;
       }
 
       var currentFilePath = helpers.getAbsoluteFilePath(context);
       var dirName = path.dirname(currentFilePath);
       var fullHeadjsPath = path.resolve(dirName, "head.js");
-
-      checkFile([currentFilePath, fullHeadjsPath]);
+      if (fs.existsSync(fullHeadjsPath)) {
+        let globals = helpers.getGlobalsForFile(fullHeadjsPath);
+        helpers.addGlobals(globals, context);
+      }
     }
   };
 };
