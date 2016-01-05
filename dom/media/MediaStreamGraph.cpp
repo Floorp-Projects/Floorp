@@ -2859,7 +2859,8 @@ MediaInputPort::BlockTrackId(TrackID aTrackId)
 already_AddRefed<MediaInputPort>
 ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
                                         TrackID aDestTrackID,
-                                        uint16_t aInputNumber, uint16_t aOutputNumber)
+                                        uint16_t aInputNumber, uint16_t aOutputNumber,
+                                        nsTArray<TrackID>* aBlockedTracks)
 {
   // This method creates two references to the MediaInputPort: one for
   // the main thread, and one for the MediaStreamGraph.
@@ -2892,6 +2893,11 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
   RefPtr<MediaInputPort> port =
     new MediaInputPort(aStream, aTrackID, this, aDestTrackID,
                        aInputNumber, aOutputNumber);
+  if (aBlockedTracks) {
+    for (TrackID trackID : *aBlockedTracks) {
+      port->BlockTrackIdImpl(trackID);
+    }
+  }
   port->SetGraphImpl(GraphImpl());
   GraphImpl()->AppendMessage(MakeUnique<Message>(port));
   return port.forget();
