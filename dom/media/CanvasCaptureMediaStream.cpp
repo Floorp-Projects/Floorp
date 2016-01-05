@@ -207,8 +207,10 @@ NS_IMPL_RELEASE_INHERITED(CanvasCaptureMediaStream, DOMMediaStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(CanvasCaptureMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
-CanvasCaptureMediaStream::CanvasCaptureMediaStream(HTMLCanvasElement* aCanvas)
-  : mCanvas(aCanvas)
+CanvasCaptureMediaStream::CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow,
+                                                   HTMLCanvasElement* aCanvas)
+  : DOMMediaStream(aWindow)
+  , mCanvas(aCanvas)
   , mOutputStreamDriver(nullptr)
 {
 }
@@ -257,11 +259,11 @@ already_AddRefed<CanvasCaptureMediaStream>
 CanvasCaptureMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                              HTMLCanvasElement* aCanvas)
 {
-  RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aCanvas);
+  RefPtr<CanvasCaptureMediaStream> stream = new CanvasCaptureMediaStream(aWindow, aCanvas);
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);
-  stream->InitSourceStream(aWindow, graph);
+  stream->InitSourceStream(graph);
   return stream.forget();
 }
 
