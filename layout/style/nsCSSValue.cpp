@@ -1022,10 +1022,11 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
   MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
              "unknown bits in align/justify value");
   MOZ_ASSERT((aValue != NS_STYLE_ALIGN_AUTO &&
+              aValue != NS_STYLE_ALIGN_NORMAL &&
               aValue != NS_STYLE_ALIGN_BASELINE &&
               aValue != NS_STYLE_ALIGN_LAST_BASELINE) ||
              (!legacy && !overflowPos),
-             "auto/baseline/last-baseline never have any flags");
+             "auto/normal/baseline/last-baseline never have any flags");
   MOZ_ASSERT(legacy == 0 || overflowPos == 0,
              "'legacy' together with <overflow-position>");
   const auto& kwtable(nsCSSProps::kAlignAllKeywords);

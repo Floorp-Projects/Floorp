@@ -1248,6 +1248,7 @@ const KTableEntry nsCSSProps::kEmptyCellsKTable[] = {
 
 const KTableEntry nsCSSProps::kAlignAllKeywords[] = {
   { eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO },
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_start,         NS_STYLE_ALIGN_START },
   { eCSSKeyword_end,           NS_STYLE_ALIGN_END },
   { eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START },
@@ -1300,16 +1301,25 @@ const KTableEntry nsCSSProps::kAlignLegacyPosition[] = {
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
-const KTableEntry nsCSSProps::kAlignAutoStretchBaseline[] = {
+const KTableEntry nsCSSProps::kAlignAutoNormalStretchBaseline[] = {
   { eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO },
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
   { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
-const KTableEntry nsCSSProps::kAlignAutoBaseline[] = {
-  { eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO },
+const KTableEntry nsCSSProps::kAlignNormalStretchBaseline[] = {
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
+  { eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH },
+  { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
+  { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
+  { eCSSKeyword_UNKNOWN,       -1 }
+};
+
+const KTableEntry nsCSSProps::kAlignNormalBaseline[] = {
+  { eCSSKeyword_normal,        NS_STYLE_ALIGN_NORMAL },
   { eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE },
   { eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE },
   { eCSSKeyword_UNKNOWN,       -1 }
