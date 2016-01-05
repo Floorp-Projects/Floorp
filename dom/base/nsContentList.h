@@ -218,7 +218,7 @@ public:
    *                   The special value "*" always matches whatever aMatchAtom
    *                   is matched against.
    * @param aMatchNameSpaceId If kNameSpaceID_Unknown, then aMatchAtom is the
-   *                          localName to match.
+   *                          tagName to match.
    *                          If kNameSpaceID_Wildcard, then aMatchAtom is the
    *                          localName to match.
    *                          Otherwise we match nodes whose namespace is
@@ -246,8 +246,7 @@ public:
    *              deeper.  If true, then look at the whole subtree rooted at
    *              our root.
    * @param aMatchAtom an atom to be passed back to aFunc
-   * @param aMatchNameSpaceId a namespace id to be passed back to aFunc.  Is
-                              allowed to be kNameSpaceID_Unknown.
+   * @param aMatchNameSpaceId a namespace id to be passed back to aFunc
    * @param aFuncMayDependOnAttr a boolean that indicates whether this list is
    *                             sensitive to attribute changes.
    */  
