@@ -44,6 +44,11 @@ public:
 #endif
 
   RefPtr<IDWriteFontFace> mFontFace;
+
+protected:
+#ifdef USE_CAIRO_SCALED_FONT
+  cairo_font_face_t* GetCairoFontFace() override;
+#endif
 };
 
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
