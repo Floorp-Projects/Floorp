@@ -614,6 +614,12 @@ class CIBuild(object):
 
         head_ref = params['head_ref'] or head_rev
 
+        # Default to current time if querying the head rev fails
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
+        pushinfo = query_pushinfo(params['head_repository'], params['head_rev'])
+        if pushinfo:
+            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(pushinfo.pushdate))
+
         from taskcluster_graph.from_now import (
             json_time_from_now,
             current_json_time,
@@ -627,6 +633,11 @@ class CIBuild(object):
             'head_repository': head_repository,
             'head_rev': head_rev,
             'head_ref': head_ref,
+            'pushdate': pushdate,
+            'pushtime': pushdate[8:],
+            'year': pushdate[0:4],
+            'month': pushdate[4:6],
+            'day': pushdate[6:8],
         }.items())
 
         try:
