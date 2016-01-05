@@ -1184,6 +1184,15 @@ nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags)
     mActiveTimer->AddRefreshDriver(this);
   }
 
+  // When switching from an inactive timer to an active timer, the root
+  // refresh driver is skipped due to being set to the content refresh
+  // driver's timestamp. In case of EnsureTimerStarted is called from
+  // ScheduleViewManagerFlush, we should avoid this behavior to flush
+  // a paint in the same tick on the root refresh driver.
+  if (aFlags & eNeverAdjustTimer) {
+    return;
+  }
+
   // Since the different timers are sampled at different rates, when switching
   // timers, the most recent refresh of the new timer may be *before* the
   // most recent refresh of the old timer. However, the refresh driver time
@@ -2108,7 +2117,7 @@ nsRefreshDriver::ScheduleViewManagerFlush()
   NS_ASSERTION(mPresContext->IsRoot(),
                "Should only schedule view manager flush on root prescontexts");
   mViewManagerFlushIsPending = true;
-  EnsureTimerStarted();
+  EnsureTimerStarted(eNeverAdjustTimer);
 }
 
 void
