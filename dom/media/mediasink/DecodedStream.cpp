@@ -432,13 +432,6 @@ DecodedStream::SetPreservesPitch(bool aPreservesPitch)
 }
 
 void
-DecodedStream::SetSameOrigin(bool aSameOrigin)
-{
-  AssertOwnerThread();
-  mSameOrigin = aSameOrigin;
-}
-
-void
 DecodedStream::InitTracks()
 {
   AssertOwnerThread();
