@@ -167,14 +167,24 @@ private:
   }
   void AddDependencyOnSource(SourceSurfaceD2D1* aSource);
 
+  ID2D1Image* CurrentTarget()
+  {
+    if (CurrentLayer().mCurrentList) {
+      return CurrentLayer().mCurrentList;
+    }
+    return mBitmap;
+  }
+
   // This returns the clipped geometry, in addition it returns aClipBounds which
   // represents the intersection of all pixel-aligned rectangular clips that
   // are currently set. The returned clipped geometry must be clipped by these
-  // bounds to correctly reflect the total clip. This is in device space.
+  // bounds to correctly reflect the total clip. This is in device space and
+  // only for clips applied to the -current layer-.
   already_AddRefed<ID2D1Geometry> GetClippedGeometry(IntRect *aClipBounds);
 
   already_AddRefed<ID2D1Geometry> GetInverseClippedGeometry();
 
+  // This gives the device space clip rect applied to the -current layer-.
   bool GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned);
 
   void PopAllClips();
@@ -220,7 +230,23 @@ private:
     };
     RefPtr<PathD2D> mPath;
   };
-  std::vector<PushedClip> mPushedClips;
+
+  // List of pushed layers.
+  struct PushedLayer
+  {
+    PushedLayer() : mClipsArePushed(false), mIsOpaque(false) {}
+
+    std::vector<PushedClip> mPushedClips;
+    RefPtr<ID2D1CommandList> mCurrentList;
+    // True if the current clip stack is pushed to the CurrentTarget().
+    bool mClipsArePushed;
+    bool mIsOpaque;
+  };
+  std::vector<PushedLayer> mPushedLayers;
+  PushedLayer& CurrentLayer()
+  {
+    return mPushedLayers.back();
+  }
 
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.
@@ -230,8 +256,6 @@ private:
   // A list of targets which have this object in their mDependentTargets set
   TargetSet mDependingOnTargets;
 
-  // True of the current clip stack is pushed to the main RT.
-  bool mClipsArePushed;
   static ID2D1Factory1 *mFactory;
   static IDWriteFactory *mDWriteFactory;
 };
