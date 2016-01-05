@@ -31,7 +31,7 @@ ID2D1Factory1 *D2DFactory1()
 }
 
 DrawTargetD2D1::DrawTargetD2D1()
-  : mClipsArePushed(false)
+  : mPushedLayers(1)
 {
 }
 
@@ -267,7 +267,7 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
   mDC->FillGeometry(geom, brush);
   mDC->PopAxisAlignedClip();
 
-  mDC->SetTarget(mBitmap);
+  mDC->SetTarget(CurrentTarget());
   list->Close();
 
   mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_DESTINATION_OUT);
@@ -515,7 +515,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   PrepareForDrawing(aOptions.mCompositionOp, aPattern);
 
   bool forceClearType = false;
-  if (mFormat == SurfaceFormat::B8G8R8A8 && mPermitSubpixelAA &&
+  if (!CurrentLayer().mIsOpaque && mPermitSubpixelAA &&
       aOptions.mCompositionOp == CompositionOp::OP_OVER && aaMode == AntialiasMode::SUBPIXEL) {
     forceClearType = true;    
   }
@@ -538,7 +538,7 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   }
 
   if (d2dAAMode == D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE &&
-      mFormat != SurfaceFormat::B8G8R8X8 && !forceClearType) {
+      !CurrentLayer().mIsOpaque && !forceClearType) {
     d2dAAMode = D2D1_TEXT_ANTIALIAS_MODE_GRAYSCALE;
   }
 
@@ -555,10 +555,10 @@ DrawTargetD2D1::FillGlyphs(ScaledFont *aFont,
   DWriteGlyphRunFromGlyphs(aBuffer, font, &autoRun);
 
   bool needsRepushedLayers = false;
-  if (d2dAAMode == D2D1_TEXT_ANTIALIAS_MODE_CLEARTYPE && mFormat != SurfaceFormat::B8G8R8X8) {
+  if (forceClearType) {
     D2D1_RECT_F rect;
     bool isAligned;
-    needsRepushedLayers = mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
+    needsRepushedLayers = CurrentLayer().mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
 
     // If we have a complex clip in our stack and we have a transparent
     // background, and subpixel AA is permitted, we need to repush our layer
@@ -664,14 +664,14 @@ DrawTargetD2D1::PushClip(const Path *aPath)
   
   pathD2D->mGeometry->GetBounds(clip.mTransform, &clip.mBounds);
 
-  mPushedClips.push_back(clip);
+  CurrentLayer().mPushedClips.push_back(clip);
 
   // The transform of clips is relative to the world matrix, since we use the total
   // transform for the clips, make the world matrix identity.
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
-  if (mClipsArePushed) {
+  if (CurrentLayer().mClipsArePushed) {
     PushD2DLayer(mDC, pathD2D->mGeometry, clip.mTransform);
   }
 }
@@ -704,12 +704,12 @@ DrawTargetD2D1::PushClipRect(const Rect &aRect)
   // Do not store the transform, just store the device space rectangle directly.
   clip.mBounds = D2DRect(rect);
 
-  mPushedClips.push_back(clip);
+  CurrentLayer().mPushedClips.push_back(clip);
 
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
-  if (mClipsArePushed) {
+  if (CurrentLayer().mClipsArePushed) {
     mDC->PushAxisAlignedClip(clip.mBounds, clip.mIsPixelAligned ? D2D1_ANTIALIAS_MODE_ALIASED : D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
   }
 }
@@ -719,14 +719,14 @@ DrawTargetD2D1::PopClip()
 {
   mCurrentClippedGeometry = nullptr;
 
-  if (mClipsArePushed) {
-    if (mPushedClips.back().mPath) {
+  if (CurrentLayer().mClipsArePushed) {
+    if (CurrentLayer().mPushedClips.back().mPath) {
       mDC->PopLayer();
     } else {
       mDC->PopAxisAlignedClip();
     }
   }
-  mPushedClips.pop_back();
+  CurrentLayer().mPushedClips.pop_back();
 }
 
 already_AddRefed<SourceSurface>
@@ -878,9 +878,11 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
     return false;
   }
 
-  mDC->SetTarget(mBitmap);
+  mDC->SetTarget(CurrentTarget());
 
   mDC->BeginDraw();
+
+  CurrentLayer().mIsOpaque = aFormat == SurfaceFormat::B8G8R8X8;
 
   return true;
 }
@@ -922,7 +924,7 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
     return false;
   }
 
-  mDC->SetTarget(mBitmap);
+  mDC->SetTarget(CurrentTarget());
 
   hr = mDC->CreateSolidColorBrush(D2D1::ColorF(0, 0), getter_AddRefs(mSolidColorBrush));
 
@@ -932,6 +934,8 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
   }
 
   mDC->BeginDraw();
+
+  CurrentLayer().mIsOpaque = aFormat == SurfaceFormat::B8G8R8X8;
 
   mDC->Clear();
 
@@ -1048,7 +1052,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   PopAllClips();
 
-  mDC->SetTarget(mBitmap);
+  mDC->SetTarget(CurrentTarget());
   mCommandList->Close();
 
   RefPtr<ID2D1CommandList> source = mCommandList;
@@ -1062,7 +1066,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
       D2D1_RECT_F rect;
       bool isAligned;
       RefPtr<ID2D1Bitmap> tmpBitmap;
-      bool clipIsComplex = mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
+      bool clipIsComplex = CurrentLayer().mPushedClips.size() && !GetDeviceSpaceClipRect(rect, isAligned);
 
       if (clipIsComplex) {
         if (!IsOperatorBoundByMask(aOp)) {
@@ -1184,12 +1188,12 @@ IntersectRect(const D2D1_RECT_F& aRect1, const D2D1_RECT_F& aRect2)
 bool
 DrawTargetD2D1::GetDeviceSpaceClipRect(D2D1_RECT_F& aClipRect, bool& aIsPixelAligned)
 {
-  if (!mPushedClips.size()) {
+  if (!CurrentLayer().mPushedClips.size()) {
     return false;
   }
 
   aClipRect = D2D1::RectF(0, 0, mSize.width, mSize.height);
-  for (auto iter = mPushedClips.begin();iter != mPushedClips.end(); iter++) {
+  for (auto iter = CurrentLayer().mPushedClips.begin();iter != CurrentLayer().mPushedClips.end(); iter++) {
     if (iter->mPath) {
       return false;
     }
@@ -1210,7 +1214,7 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
     return clippedGeometry.forget();
   }
 
-  MOZ_ASSERT(mPushedClips.size());
+  MOZ_ASSERT(CurrentLayer().mPushedClips.size());
 
   mCurrentClipBounds = IntRect(IntPoint(0, 0), mSize);
 
@@ -1218,7 +1222,7 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
   RefPtr<ID2D1Geometry> pathGeom;
   D2D1_RECT_F pathRect;
   bool pathRectIsAxisAligned = false;
-  auto iter = mPushedClips.begin();
+  auto iter = CurrentLayer().mPushedClips.begin();
 
   if (iter->mPath) {
     pathGeom = GetTransformedGeometry(iter->mPath->GetGeometry(), iter->mTransform);
@@ -1228,7 +1232,7 @@ DrawTargetD2D1::GetClippedGeometry(IntRect *aClipBounds)
   }
 
   iter++;
-  for (;iter != mPushedClips.end(); iter++) {
+  for (;iter != CurrentLayer().mPushedClips.end(); iter++) {
     // Do nothing but add it to the current clip bounds.
     if (!iter->mPath && iter->mIsPixelAligned) {
       mCurrentClipBounds.IntersectRect(mCurrentClipBounds,
@@ -1313,20 +1317,20 @@ DrawTargetD2D1::GetInverseClippedGeometry()
 void
 DrawTargetD2D1::PopAllClips()
 {
-  if (mClipsArePushed) {
+  if (CurrentLayer().mClipsArePushed) {
     PopClipsFromDC(mDC);
   
-    mClipsArePushed = false;
+    CurrentLayer().mClipsArePushed = false;
   }
 }
 
 void
 DrawTargetD2D1::PushAllClips()
 {
-  if (!mClipsArePushed) {
+  if (!CurrentLayer().mClipsArePushed) {
     PushClipsToDC(mDC);
   
-    mClipsArePushed = true;
+    CurrentLayer().mClipsArePushed = true;
   }
 }
 
@@ -1336,8 +1340,7 @@ DrawTargetD2D1::PushClipsToDC(ID2D1DeviceContext *aDC, bool aForceIgnoreAlpha, c
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
 
-  for (std::vector<PushedClip>::iterator iter = mPushedClips.begin();
-        iter != mPushedClips.end(); iter++) {
+  for (auto iter = CurrentLayer().mPushedClips.begin(); iter != CurrentLayer().mPushedClips.end(); iter++) {
     if (iter->mPath) {
       PushD2DLayer(aDC, iter->mPath->mGeometry, iter->mTransform, aForceIgnoreAlpha, aMaxRect);
     } else {
@@ -1349,8 +1352,8 @@ DrawTargetD2D1::PushClipsToDC(ID2D1DeviceContext *aDC, bool aForceIgnoreAlpha, c
 void
 DrawTargetD2D1::PopClipsFromDC(ID2D1DeviceContext *aDC)
 {
-  for (int i = mPushedClips.size() - 1; i >= 0; i--) {
-    if (mPushedClips[i].mPath) {
+  for (int i = CurrentLayer().mPushedClips.size() - 1; i >= 0; i--) {
+    if (CurrentLayer().mPushedClips[i].mPath) {
       aDC->PopLayer();
     } else {
       aDC->PopAxisAlignedClip();
