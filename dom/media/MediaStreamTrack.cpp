@@ -260,10 +260,23 @@ MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
 already_AddRefed<MediaInputPort>
 MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   MOZ_RELEASE_ASSERT(aStream);
   RefPtr<MediaInputPort> port =
     aStream->AllocateInputPort(GetOwnedStream(), mTrackID);
   return port.forget();
+}
+
+bool
+MediaStreamTrack::IsForwardedThrough(MediaInputPort* aPort)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aPort);
+  if (!aPort) {
+    return false;
+  }
+  return aPort->GetSource() == GetOwnedStream() &&
+         aPort->PassTrackThrough(mTrackID);
 }
 
 } // namespace dom
