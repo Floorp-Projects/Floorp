@@ -3984,7 +3984,12 @@ Tab.prototype = {
       };
     }
 
-    if (!this.metatags[type] || this.metatags[type + "_quality"] < quality) {
+    if (type == "touchIconList") {
+      if (!this.metatags['touchIconList']) {
+        this.metatags['touchIconList'] = {};
+      }
+      this.metatags.touchIconList[quality] = value;
+    } else if (!this.metatags[type] || this.metatags[type + "_quality"] < quality) {
       this.metatags[type] = value;
       this.metatags[type + "_quality"] = quality;
     }
@@ -4221,6 +4226,9 @@ Tab.prototype = {
         let list = this.sanitizeRelString(target.rel);
         if (list.indexOf("[icon]") != -1) {
           jsonMessage = this.makeFaviconMessage(target);
+        } else if (list.indexOf("[apple-touch-icon]") != -1) {
+          let message = this.makeFaviconMessage(target);
+          this.addMetadata("touchIconList", message.href, message.size);
         } else if (list.indexOf("[alternate]") != -1 && aEvent.type == "DOMLinkAdded") {
           let type = target.type.toLowerCase().replace(/^\s+|\s*(?:;.*)?$/g, "");
           let isFeed = (type == "application/rss+xml" || type == "application/atom+xml");
