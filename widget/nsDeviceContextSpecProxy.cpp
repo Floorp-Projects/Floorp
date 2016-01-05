@@ -123,10 +123,9 @@ nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
                                         int32_t aStartPage, int32_t aEndPage)
 {
   mRecorder = new DrawEventRecorderMemory();
-  Unused << mRemotePrintJob->SendInitializePrint(nsString(aTitle),
-                                                 nsString(aPrintToFileName),
-                                                 aStartPage, aEndPage);
-  return NS_OK;
+  return mRemotePrintJob->InitializePrint(nsString(aTitle),
+                                          nsString(aPrintToFileName),
+                                          aStartPage, aEndPage);
 }
 
 NS_IMETHODIMP

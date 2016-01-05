@@ -10,8 +10,12 @@
 #include "mozilla/layout/PRemotePrintJobParent.h"
 
 #include "nsCOMPtr.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
+class nsDeviceContext;
 class nsIPrintSettings;
+class PrintTranslator;
 
 namespace mozilla {
 namespace layout {
@@ -37,7 +41,16 @@ public:
 private:
   ~RemotePrintJobParent() final;
 
+  nsresult InitializePrintDevice(const nsString& aDocumentTitle,
+                                 const nsString& aPrintToFile,
+                                 const int32_t& aStartPage,
+                                 const int32_t& aEndPage);
+
+  nsresult PrintPage(const Shmem& aStoredPage);
+
   nsCOMPtr<nsIPrintSettings> mPrintSettings;
+  RefPtr<nsDeviceContext> mPrintDeviceContext;
+  UniquePtr<PrintTranslator> mPrintTranslator;
 };
 
 } // namespace layout
