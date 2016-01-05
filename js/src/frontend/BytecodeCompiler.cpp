@@ -602,7 +602,7 @@ ModuleObject* BytecodeCompiler::compileModule()
         return nullptr;
     }
 
-    if (!builder.buildAndInit(pn))
+    if (!builder.initModule())
         return nullptr;
 
     parser->handler.freeTree(pn);

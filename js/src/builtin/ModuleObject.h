@@ -276,7 +276,11 @@ class MOZ_STACK_CLASS ModuleBuilder
   public:
     explicit ModuleBuilder(JSContext* cx, HandleModuleObject module);
 
-    bool buildAndInit(frontend::ParseNode* pn);
+    bool processImport(frontend::ParseNode* pn);
+    bool processExport(frontend::ParseNode* pn);
+    bool processExportFrom(frontend::ParseNode* pn);
+
+    bool initModule();
 
   private:
     using AtomVector = TraceableVector<JSAtom*>;
@@ -295,10 +299,6 @@ class MOZ_STACK_CLASS ModuleBuilder
     RootedExportEntryVector localExportEntries_;
     RootedExportEntryVector indirectExportEntries_;
     RootedExportEntryVector starExportEntries_;
-
-    bool processImport(frontend::ParseNode* pn);
-    bool processExport(frontend::ParseNode* pn);
-    bool processExportFrom(frontend::ParseNode* pn);
 
     ImportEntryObject* importEntryFor(JSAtom* localName);
 

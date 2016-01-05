@@ -419,11 +419,12 @@ class ModuleBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings bindings;
+    ModuleBuilder& builder;
     TraceableVector<JSAtom*> exportNames;
 
     template <typename ParseHandler>
     ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObject* module,
-              ParseContext<ParseHandler>* pc);
+              ModuleBuilder& builder, ParseContext<ParseHandler>* pc);
 
     ObjectBox* toObjectBox() override { return this; }
     ModuleObject* module() const { return &object->as<ModuleObject>(); }
