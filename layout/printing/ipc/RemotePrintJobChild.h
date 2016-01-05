@@ -11,6 +11,8 @@
 
 #include "mozilla/RefPtr.h"
 
+class nsPagePrintTimer;
+
 namespace mozilla {
 namespace layout {
 
@@ -29,8 +31,12 @@ public:
 
   void ProcessPage(Shmem& aStoredPage);
 
+  void SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer);
+
 private:
   ~RemotePrintJobChild() final;
+
+  RefPtr<nsPagePrintTimer> mPagePrintTimer;
 };
 
 } // namespace layout
