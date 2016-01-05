@@ -4190,7 +4190,7 @@ nsComputedDOMStyle::DoGetAlignItems()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto align = StylePosition()->ComputedAlignItems(StyleDisplay());
+  auto align = StylePosition()->ComputedAlignItems();
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
   return val.forget();
@@ -4200,8 +4200,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetAlignSelf()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  auto align = StylePosition()->
-    ComputedAlignSelf(StyleDisplay(), mStyleContext->GetParent());
+  auto align = StylePosition()->ComputedAlignSelf(mStyleContext->GetParent());
   nsAutoString str;
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
@@ -4213,7 +4212,7 @@ nsComputedDOMStyle::DoGetJustifyContent()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->ComputedJustifyContent(StyleDisplay());
+  auto justify = StylePosition()->ComputedJustifyContent();
   nsCSSValue::AppendAlignJustifyValueToString(justify & NS_STYLE_JUSTIFY_ALL_BITS, str);
   auto fallback = justify >> NS_STYLE_JUSTIFY_ALL_SHIFT;
   if (fallback) {
@@ -4232,8 +4231,8 @@ nsComputedDOMStyle::DoGetJustifyItems()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->
-    ComputedJustifyItems(StyleDisplay(), mStyleContext->GetParent());
+  auto justify =
+    StylePosition()->ComputedJustifyItems(mStyleContext->GetParent());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();
@@ -4244,8 +4243,8 @@ nsComputedDOMStyle::DoGetJustifySelf()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->
-    ComputedJustifySelf(StyleDisplay(), mStyleContext->GetParent());
+  auto justify =
+    StylePosition()->ComputedJustifySelf(mStyleContext->GetParent());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();
