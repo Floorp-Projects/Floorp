@@ -1161,6 +1161,16 @@ var gDevToolsBrowser = {
     };
   },
 
+  hasToolboxOpened: function(win) {
+    let tab = win.gBrowser.selectedTab;
+    for (let [target, toolbox] of gDevTools._toolboxes) {
+      if (target.tab == tab) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   /**
    * Update the "Toggle Tools" checkbox in the developer tools menu. This is
    * called when a toolbox is created or destroyed.
@@ -1168,13 +1178,7 @@ var gDevToolsBrowser = {
   _updateMenuCheckbox: function DT_updateMenuCheckbox() {
     for (let win of gDevToolsBrowser._trackedBrowserWindows) {
 
-      let hasToolbox = false;
-      if (TargetFactory.isKnownTab(win.gBrowser.selectedTab)) {
-        let target = TargetFactory.forTab(win.gBrowser.selectedTab);
-        if (gDevTools._toolboxes.has(target)) {
-          hasToolbox = true;
-        }
-      }
+      let hasToolbox = gDevToolsBrowser.hasToolboxOpened(win);
 
       let broadcaster = win.document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
       if (hasToolbox) {
