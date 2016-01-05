@@ -187,6 +187,8 @@ HttpChannelChild::HttpChannelChild()
   , mSynthesizedResponse(false)
   , mShouldInterceptSubsequentRedirect(false)
   , mRedirectingForSubsequentSynthesizedResponse(false)
+  , mPostRedirectChannelShouldIntercept(false)
+  , mPostRedirectChannelShouldUpgrade(false)
   , mShouldParentIntercept(false)
   , mSuspendParentAfterSynthesizeResponse(false)
 {
@@ -1270,11 +1272,24 @@ HttpChannelChild::SetupRedirect(nsIURI* uri,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIHttpChannelChild> httpChannelChild = do_QueryInterface(newChannel);
-  if (mShouldInterceptSubsequentRedirect && httpChannelChild) {
-    // In the case where there was a synthesized response that caused a redirection,
-    // we must force the new channel to intercept the request in the parent before a
-    // network transaction is initiated.
-    httpChannelChild->ForceIntercepted();
+  if (httpChannelChild) {
+    bool shouldUpgrade = false;
+    if (mShouldInterceptSubsequentRedirect) {
+      // In the case where there was a synthesized response that caused a redirection,
+      // we must force the new channel to intercept the request in the parent before a
+      // network transaction is initiated.
+      httpChannelChild->ForceIntercepted(false, false);
+    } else if (mRedirectMode == nsIHttpChannelInternal::REDIRECT_MODE_MANUAL &&
+               ((redirectFlags & (nsIChannelEventSink::REDIRECT_TEMPORARY |
+                                  nsIChannelEventSink::REDIRECT_PERMANENT)) != 0) &&
+               ShouldInterceptURI(newChannel, uri, shouldUpgrade)) {
+      // In the case where the redirect mode is manual, we need to check whether
+      // the post-redirect channel needs to be intercepted.  If that is the
+      // case, force the new channel to intercept the request in the parent
+      // similar to the case above, but also remember that ShouldInterceptURI()
+      // returned true to avoid calling it a second time.
+      httpChannelChild->ForceIntercepted(true, shouldUpgrade);
+    }
   }
 
   mRedirectChannelChild = do_QueryInterface(newChannel);
@@ -1813,30 +1828,11 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // Set user agent override
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrincipal> resultPrincipal;
-  if (!isHttps && mLoadInfo) {
-      nsContentUtils::GetSecurityManager()->
-        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
-  }
-  bool shouldUpgrade = false;
-  rv = NS_ShouldSecureUpgrade(mURI,
-                              mLoadInfo,
-                              resultPrincipal,
-                              mPrivateBrowsing,
-                              mAllowSTS,
-                              shouldUpgrade);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> upgradedURI;
-  if (shouldUpgrade) {
-    rv = GetSecureUpgradedURI(mURI, getter_AddRefs(upgradedURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (ShouldIntercept(upgradedURI)) {
+  MOZ_ASSERT_IF(mPostRedirectChannelShouldUpgrade,
+                mPostRedirectChannelShouldIntercept);
+  bool shouldUpgrade = mPostRedirectChannelShouldUpgrade;
+  if (mPostRedirectChannelShouldIntercept ||
+      ShouldInterceptURI(this, mURI, shouldUpgrade)) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
@@ -2606,9 +2602,12 @@ HttpChannelChild::OverrideWithSynthesizedResponse(nsAutoPtr<nsHttpResponseHead>&
 }
 
 NS_IMETHODIMP
-HttpChannelChild::ForceIntercepted()
+HttpChannelChild::ForceIntercepted(bool aPostRedirectChannelShouldIntercept,
+                                   bool aPostRedirectChannelShouldUpgrade)
 {
   mShouldParentIntercept = true;
+  mPostRedirectChannelShouldIntercept = aPostRedirectChannelShouldIntercept;
+  mPostRedirectChannelShouldUpgrade = aPostRedirectChannelShouldUpgrade;
   return NS_OK;
 }
 
@@ -2636,6 +2635,36 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
     warner->IssueWarning(warning, asError);
   }
   return true;
+}
+
+bool
+HttpChannelChild::ShouldInterceptURI(nsIChannel* aChannel,
+                                     nsIURI* aURI,
+                                     bool& aShouldUpgrade)
+{
+  bool isHttps = false;
+  nsresult rv = aURI->SchemeIs("https", &isHttps);
+  NS_ENSURE_SUCCESS(rv, false);
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  if (!isHttps && mLoadInfo) {
+      nsContentUtils::GetSecurityManager()->
+        GetChannelResultPrincipal(aChannel, getter_AddRefs(resultPrincipal));
+  }
+  rv = NS_ShouldSecureUpgrade(aURI,
+                              mLoadInfo,
+                              resultPrincipal,
+                              mPrivateBrowsing,
+                              mAllowSTS,
+                              aShouldUpgrade);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  nsCOMPtr<nsIURI> upgradedURI;
+  if (aShouldUpgrade) {
+    rv = GetSecureUpgradedURI(aURI, getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv, false);
+  }
+
+  return ShouldIntercept(upgradedURI ? upgradedURI.get() : aURI);
 }
 
 } // namespace net
