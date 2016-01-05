@@ -1199,10 +1199,13 @@ PeerConnectionMedia::AnyLocalStreamHasPeerIdentity() const
   ASSERT_ON_THREAD(mMainThread);
 
   for (uint32_t u = 0; u < mLocalSourceStreams.Length(); u++) {
-    // check if we should be asking for a private call for this stream
     DOMMediaStream* stream = mLocalSourceStreams[u]->GetMediaStream();
-    if (stream->GetPeerIdentity()) {
-      return true;
+    nsTArray<RefPtr<MediaStreamTrack>> tracks;
+    stream->GetTracks(tracks);
+    for (const RefPtr<MediaStreamTrack>& track : tracks) {
+      if (track->GetPeerIdentity() != nullptr) {
+        return true;
+      }
     }
   }
   return false;
