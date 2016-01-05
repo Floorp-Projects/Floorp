@@ -87,13 +87,11 @@ var WebcompatReporter = {
   },
 
   reportIssue: function(url) {
-    let webcompatURL = new URL("https://webcompat.com/");
-    webcompatURL.searchParams.append("open", "1");
-    webcompatURL.searchParams.append("url", url);
+    let webcompatURL = `https://webcompat.com/?open=1&url=${url}`;
     if (PrivateBrowsingUtils.isBrowserPrivate(BrowserApp.selectedTab.browser)) {
-      BrowserApp.addTab(webcompatURL.href, {parentId: BrowserApp.selectedTab.id, isPrivate: true});
+      BrowserApp.addTab(webcompatURL, {parentId: BrowserApp.selectedTab.id, isPrivate: true});
     } else {
-      BrowserApp.addTab(webcompatURL.href);
+      BrowserApp.addTab(webcompatURL);
     }
   }
 };
