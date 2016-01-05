@@ -1627,6 +1627,10 @@ class JSScript : public js::gc::TenuredCell
     }
     inline void setModule(js::ModuleObject* module);
 
+    bool isGlobalCode() const {
+        return !function_ && !module_;
+    }
+
     JSFlatString* sourceData(JSContext* cx);
 
     static bool loadSource(JSContext* cx, js::ScriptSource* ss, bool* worked);
