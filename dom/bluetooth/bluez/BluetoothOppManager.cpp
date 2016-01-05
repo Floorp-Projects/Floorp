@@ -1383,16 +1383,13 @@ BluetoothOppManager::FileTransferComplete()
     return;
   }
 
-  nsAutoString connectedDeviceAddressStr;
-  AddressToString(mConnectedDeviceAddress, connectedDeviceAddressStr);
-
   nsString type, name;
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
   type.AssignLiteral("bluetooth-opp-transfer-complete");
 
   name.AssignLiteral("address");
-  v = connectedDeviceAddressStr;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("success");
@@ -1426,16 +1423,13 @@ BluetoothOppManager::FileTransferComplete()
 void
 BluetoothOppManager::StartFileTransfer()
 {
-  nsAutoString connectedDeviceAddressStr;
-  AddressToString(mConnectedDeviceAddress, connectedDeviceAddressStr);
-
   nsString type, name;
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
   type.AssignLiteral("bluetooth-opp-transfer-start");
 
   name.AssignLiteral("address");
-  v = connectedDeviceAddressStr;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("received");
@@ -1465,16 +1459,13 @@ BluetoothOppManager::StartFileTransfer()
 void
 BluetoothOppManager::UpdateProgress()
 {
-  nsAutoString connectedDeviceAddressStr;
-  AddressToString(mConnectedDeviceAddress, connectedDeviceAddressStr);
-
   nsString type, name;
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
   type.AssignLiteral("bluetooth-opp-update-progress");
 
   name.AssignLiteral("address");
-  v = connectedDeviceAddressStr;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("received");
@@ -1498,16 +1489,13 @@ BluetoothOppManager::UpdateProgress()
 void
 BluetoothOppManager::ReceivingFileConfirmation()
 {
-  nsAutoString connectedDeviceAddressStr;
-  AddressToString(mConnectedDeviceAddress, connectedDeviceAddressStr);
-
   nsString type, name;
   BluetoothValue v;
   InfallibleTArray<BluetoothNamedValue> parameters;
   type.AssignLiteral("bluetooth-opp-receiving-file-confirmation");
 
   name.AssignLiteral("address");
-  v = connectedDeviceAddressStr;
+  v = mConnectedDeviceAddress;
   parameters.AppendElement(BluetoothNamedValue(name, v));
 
   name.AssignLiteral("fileName");

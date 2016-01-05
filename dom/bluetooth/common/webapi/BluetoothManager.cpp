@@ -196,11 +196,12 @@ BluetoothManager::HandleAdapterAdded(const BluetoothValue& aValue)
 void
 BluetoothManager::HandleAdapterRemoved(const BluetoothValue& aValue)
 {
-  MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
+  MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothAddress);
   MOZ_ASSERT(DefaultAdapterExists());
 
   // Remove the adapter of given address from adapters array
-  nsString addressToRemove = aValue.get_nsString();
+  nsString addressToRemove;
+  AddressToString(aValue.get_BluetoothAddress(), addressToRemove);
 
   uint32_t i;
   for (i = 0; i < mAdapters.Length(); i++) {

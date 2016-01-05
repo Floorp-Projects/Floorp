@@ -517,7 +517,18 @@ SetJsObject(JSContext* aContext,
     const BluetoothValue& v = arr[i].value();
 
     switch(v.type()) {
-       case BluetoothValue::TnsString: {
+       case BluetoothValue::TBluetoothAddress: {
+        nsAutoString addressStr;
+        AddressToString(v.get_BluetoothAddress(), addressStr);
+
+        JSString* jsData = JS_NewUCStringCopyN(aContext,
+                                               addressStr.BeginReading(),
+                                               addressStr.Length());
+        NS_ENSURE_TRUE(jsData, false);
+        val.setString(jsData);
+        break;
+      }
+      case BluetoothValue::TnsString: {
         JSString* jsData = JS_NewUCStringCopyN(aContext,
                                      v.get_nsString().BeginReading(),
                                      v.get_nsString().Length());
@@ -673,13 +684,13 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
-                           const nsAString& aAddress,
+                           const BluetoothAddress& aAddress,
                            bool aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> data;
-  AppendNamedValue(data, "address", nsString(aAddress));
+  AppendNamedValue(data, "address", aAddress);
   AppendNamedValue(data, "status", aStatus);
 
   BluetoothService* bs = BluetoothService::Get();
