@@ -257,5 +257,14 @@ MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
   GetOwnedStream()->RemoveTrackListener(aListener, mTrackID);
 }
 
+already_AddRefed<MediaInputPort>
+MediaStreamTrack::ForwardTrackContentsTo(ProcessedMediaStream* aStream)
+{
+  MOZ_RELEASE_ASSERT(aStream);
+  RefPtr<MediaInputPort> port =
+    aStream->AllocateInputPort(GetOwnedStream(), mTrackID);
+  return port.forget();
+}
+
 } // namespace dom
 } // namespace mozilla
