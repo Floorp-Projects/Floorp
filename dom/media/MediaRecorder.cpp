@@ -388,7 +388,25 @@ public:
     LOG(LogLevel::Debug, ("Session.Start %p", this));
     MOZ_ASSERT(NS_IsMainThread());
 
-    SetupStreams();
+    // Create a Track Union Stream
+    MediaStreamGraph* gm = mRecorder->GetSourceMediaStream()->Graph();
+    mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
+    MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
+
+    mTrackUnionStream->SetAutofinish(true);
+
+    // Bind this Track Union Stream with Source Media.
+    mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream());
+
+    DOMMediaStream* domStream = mRecorder->Stream();
+    if (domStream) {
+      // Get the track type hint from DOM media stream.
+      TracksAvailableCallback* tracksAvailableCallback = new TracksAvailableCallback(this);
+      domStream->OnTracksAvailable(tracksAvailableCallback);
+    } else {
+      // Web Audio node has only audio.
+      InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK);
+    }
   }
 
   void Stop()
@@ -533,32 +551,6 @@ private:
       } else {
         mLastBlobTimeStamp = TimeStamp::Now();
       }
-    }
-  }
-
-  // Bind media source with MediaEncoder to receive raw media data.
-  void SetupStreams()
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Create a Track Union Stream
-    MediaStreamGraph* gm = mRecorder->GetSourceMediaStream()->Graph();
-    mTrackUnionStream = gm->CreateTrackUnionStream(nullptr);
-    MOZ_ASSERT(mTrackUnionStream, "CreateTrackUnionStream failed");
-
-    mTrackUnionStream->SetAutofinish(true);
-
-    // Bind this Track Union Stream with Source Media.
-    mInputPort = mTrackUnionStream->AllocateInputPort(mRecorder->GetSourceMediaStream());
-
-    DOMMediaStream* domStream = mRecorder->Stream();
-    if (domStream) {
-      // Get the track type hint from DOM media stream.
-      TracksAvailableCallback* tracksAvailableCallback = new TracksAvailableCallback(this);
-      domStream->OnTracksAvailable(tracksAvailableCallback);
-    } else {
-      // Web Audio node has only audio.
-      InitEncoder(ContainerWriter::CREATE_AUDIO_TRACK);
     }
   }
 
