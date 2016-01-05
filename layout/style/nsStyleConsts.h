@@ -488,9 +488,9 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_ALIGN_SPACE_BETWEEN    13
 #define NS_STYLE_ALIGN_SPACE_AROUND     14
 #define NS_STYLE_ALIGN_SPACE_EVENLY     15
-#define NS_STYLE_ALIGN_LEGACY        0x10 // mutually exclusive w. SAFE & TRUE
+#define NS_STYLE_ALIGN_LEGACY        0x10 // mutually exclusive w. SAFE & UNSAFE
 #define NS_STYLE_ALIGN_SAFE          0x20
-#define NS_STYLE_ALIGN_TRUE          0x40 // mutually exclusive w. SAFE
+#define NS_STYLE_ALIGN_UNSAFE        0x40 // mutually exclusive w. SAFE
 #define NS_STYLE_ALIGN_FLAG_BITS     0xF0
 #define NS_STYLE_ALIGN_ALL_BITS      0xFF
 #define NS_STYLE_ALIGN_ALL_SHIFT        8
@@ -513,7 +513,7 @@ enum class FillMode : uint32_t;
 #define NS_STYLE_JUSTIFY_SPACE_EVENLY     NS_STYLE_ALIGN_SPACE_EVENLY
 #define NS_STYLE_JUSTIFY_LEGACY           NS_STYLE_ALIGN_LEGACY
 #define NS_STYLE_JUSTIFY_SAFE             NS_STYLE_ALIGN_SAFE
-#define NS_STYLE_JUSTIFY_TRUE             NS_STYLE_ALIGN_TRUE
+#define NS_STYLE_JUSTIFY_UNSAFE           NS_STYLE_ALIGN_UNSAFE
 #define NS_STYLE_JUSTIFY_FLAG_BITS        NS_STYLE_ALIGN_FLAG_BITS
 #define NS_STYLE_JUSTIFY_ALL_BITS         NS_STYLE_ALIGN_ALL_BITS
 #define NS_STYLE_JUSTIFY_ALL_SHIFT        NS_STYLE_ALIGN_ALL_SHIFT
