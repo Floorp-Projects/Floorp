@@ -48,13 +48,17 @@ BluetoothPairingListener::~BluetoothPairingListener()
 }
 
 void
-BluetoothPairingListener::DispatchPairingEvent(const nsAString& aName,
-                                               const BluetoothAddress& aAddress,
-                                               const nsAString& aPasskey,
-                                               const nsAString& aType)
+BluetoothPairingListener::DispatchPairingEvent(
+  const BluetoothRemoteName& aName,
+  const BluetoothAddress& aAddress,
+  const nsAString& aPasskey,
+  const nsAString& aType)
 {
   MOZ_ASSERT(!aAddress.IsCleared());
-  MOZ_ASSERT(!aName.IsEmpty() && !aType.IsEmpty());
+  MOZ_ASSERT(!aName.IsCleared() && !aType.IsEmpty());
+
+  nsString nameStr;
+  RemoteNameToString(aName, nameStr);
 
   nsString addressStr;
   AddressToString(aAddress, addressStr);
@@ -66,7 +70,7 @@ BluetoothPairingListener::DispatchPairingEvent(const nsAString& aName,
                                    aPasskey);
 
   BluetoothPairingEventInit init;
-  init.mDeviceName = aName;
+  init.mDeviceName = nameStr;
   init.mHandle = handle;
 
   RefPtr<BluetoothPairingEvent> event =
@@ -92,12 +96,12 @@ BluetoothPairingListener::Notify(const BluetoothSignal& aData)
 
     MOZ_ASSERT(arr.Length() == 4 &&
                arr[0].value().type() == BluetoothValue::TBluetoothAddress && // address
-               arr[1].value().type() == BluetoothValue::TnsString && // name
+               arr[1].value().type() == BluetoothValue::TBluetoothRemoteName && // name
                arr[2].value().type() == BluetoothValue::TnsString && // passkey
                arr[3].value().type() == BluetoothValue::TnsString);  // type
 
     BluetoothAddress address = arr[0].value().get_BluetoothAddress();
-    nsString name = arr[1].value().get_nsString();
+    const BluetoothRemoteName& name = arr[1].value().get_BluetoothRemoteName();
     nsString passkey = arr[2].value().get_nsString();
     nsString type = arr[3].value().get_nsString();
 
