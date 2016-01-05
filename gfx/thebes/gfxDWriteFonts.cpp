@@ -544,17 +544,16 @@ gfxDWriteFont::GetCairoScaledFont()
 }
 
 gfxFont::RunMetrics
-gfxDWriteFont::Measure(gfxTextRun *aTextRun,
-                    uint32_t aStart, uint32_t aEnd,
-                    BoundingBoxType aBoundingBoxType,
-                    gfxContext *aRefContext,
-                    Spacing *aSpacing,
-                    uint16_t aOrientation)
+gfxDWriteFont::Measure(gfxTextRun* aTextRun,
+                       uint32_t aStart, uint32_t aEnd,
+                       BoundingBoxType aBoundingBoxType,
+                       DrawTarget* aRefDrawTarget,
+                       Spacing* aSpacing,
+                       uint16_t aOrientation)
 {
     gfxFont::RunMetrics metrics =
-        gfxFont::Measure(aTextRun, aStart, aEnd,
-                         aBoundingBoxType, aRefContext, aSpacing,
-                         aOrientation);
+        gfxFont::Measure(aTextRun, aStart, aEnd, aBoundingBoxType,
+                         aRefDrawTarget, aSpacing, aOrientation);
 
     // if aBoundingBoxType is LOOSE_INK_EXTENTS
     // and the underlying cairo font may be antialiased,

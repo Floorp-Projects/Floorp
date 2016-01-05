@@ -183,7 +183,7 @@ MemoryDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (DIB).";
     return false;
   }
 
@@ -221,7 +221,7 @@ ShmemDIBTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (DTD).";
     return false;
   }
 

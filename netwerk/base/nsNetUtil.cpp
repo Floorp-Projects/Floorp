@@ -4,6 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// HttpLog.h should generally be included first
+#include "HttpLog.h"
+
 #include "mozilla/LoadContext.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
@@ -58,6 +61,10 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "plstr.h"
 #include "nsINestedURI.h"
+#include "mozilla/dom/nsCSPUtils.h"
+#include "nsIScriptError.h"
+#include "nsISiteSecurityService.h"
+#include "nsHttpHandler.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -2223,6 +2230,100 @@ NS_IsSrcdocChannel(nsIChannel *aChannel)
     return isSrcdoc;
   }
   return false;
+}
+
+nsresult
+NS_ShouldSecureUpgrade(nsIURI* aURI,
+                       nsILoadInfo* aLoadInfo,
+                       nsIPrincipal* aChannelResultPrincipal,
+                       bool aPrivateBrowsing,
+                       bool aAllowSTS,
+                       bool& aShouldUpgrade)
+{
+  // Even if we're in private browsing mode, we still enforce existing STS
+  // data (it is read-only).
+  // if the connection is not using SSL and either the exact host matches or
+  // a superdomain wants to force HTTPS, do it.
+  bool isHttps = false;
+  nsresult rv = aURI->SchemeIs("https", &isHttps);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!isHttps) {
+    // If any of the documents up the chain to the root doucment makes use of
+    // the CSP directive 'upgrade-insecure-requests', then it's time to fulfill
+    // the promise to CSP and mixed content blocking to upgrade the channel
+    // from http to https.
+    if (aLoadInfo) {
+      bool isPreload = nsContentUtils::IsPreloadType(aLoadInfo->InternalContentPolicyType());
+      bool upgradeRequests =
+        ((isPreload && aLoadInfo->GetUpgradeInsecurePreloads()) ||
+         (aLoadInfo->GetUpgradeInsecureRequests()));
+
+      // Please note that cross origin top level navigations are not subject
+      // to upgrade-insecure-requests, see:
+      // http://www.w3.org/TR/upgrade-insecure-requests/#examples
+      bool crossOriginNavigation =
+        (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
+        (!aChannelResultPrincipal->Equals(aLoadInfo->LoadingPrincipal()));
+
+      if (upgradeRequests && !crossOriginNavigation) {
+        // let's log a message to the console that we are upgrading a request
+        nsAutoCString spec, scheme;
+        aURI->GetSpec(spec);
+        aURI->GetScheme(scheme);
+        // append the additional 's' for security to the scheme :-)
+        scheme.AppendASCII("s");
+        NS_ConvertUTF8toUTF16 reportSpec(spec);
+        NS_ConvertUTF8toUTF16 reportScheme(scheme);
+
+        const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
+        uint32_t innerWindowId = aLoadInfo->GetInnerWindowID();
+        CSP_LogLocalizedStr(MOZ_UTF16("upgradeInsecureRequest"),
+                            params, ArrayLength(params),
+                            EmptyString(), // aSourceFile
+                            EmptyString(), // aScriptSample
+                            0, // aLineNumber
+                            0, // aColumnNumber
+                            nsIScriptError::warningFlag, "CSP",
+                            innerWindowId);
+
+        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 4);
+        aShouldUpgrade = true;
+        return NS_OK;
+      }
+    }
+
+    // enforce Strict-Transport-Security
+    nsISiteSecurityService* sss = gHttpHandler->GetSSService();
+    NS_ENSURE_TRUE(sss, NS_ERROR_OUT_OF_MEMORY);
+
+    bool isStsHost = false;
+    uint32_t flags = aPrivateBrowsing ? nsISocketProvider::NO_PERMANENT_STORAGE : 0;
+    rv = sss->IsSecureURI(nsISiteSecurityService::HEADER_HSTS, aURI, flags,
+                          &isStsHost);
+
+    // if the SSS check fails, it's likely because this load is on a
+    // malformed URI or something else in the setup is wrong, so any error
+    // should be reported.
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (isStsHost) {
+      LOG(("nsHttpChannel::Connect() STS permissions found\n"));
+      if (aAllowSTS) {
+        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 3);
+        aShouldUpgrade = true;
+        return NS_OK;
+      } else {
+        Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 2);
+      }
+    } else {
+      Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 1);
+    }
+  } else {
+    Telemetry::Accumulate(Telemetry::HTTP_SCHEME_UPGRADE, 0);
+  }
+  aShouldUpgrade = false;
+  return NS_OK;
 }
 
 namespace mozilla {

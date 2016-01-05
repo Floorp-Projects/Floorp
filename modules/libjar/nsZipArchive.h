@@ -27,7 +27,7 @@
   __except(GetExceptionCode()==EXCEPTION_IN_PAGE_ERROR ?            \
            EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH)   \
   {                                                                 \
-    NS_WARNING("EXCEPTION_IN_PAGE_ERROR in " __FUNCTION__);         \
+    NS_WARNING("unexpected EXCEPTION_IN_PAGE_ERROR");               \
     cmd;                                                            \
   }
 #else

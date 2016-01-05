@@ -121,12 +121,6 @@ private:
     }
 
 public:
-    StrongGLenum(const StrongGLenum& other)
-        : mValue(other.mValue)
-    {
-        AssertOnceThatEnumValuesAreSorted();
-    }
-
     StrongGLenum()
 #ifdef DEBUG
         : mValue(NonexistantGLenum)

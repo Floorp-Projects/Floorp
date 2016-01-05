@@ -16,6 +16,8 @@ echo "running as" $(id)
 : NEED_XVFB                     ${NEED_XVFB:=true}
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
+: START_VNC                     ${START_VNC:=false}
+: SKIP_MOZHARNESS_RUN           ${SKIP_MOZHARNESS_RUN:=false}
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 : mozharness args               "${@}"
 
@@ -30,7 +32,9 @@ if [[ -z ${MOZHARNESS_CONFIG} ]]; then exit 1; fi
 mkdir -p ~/artifacts/public
 
 cleanup() {
-    if [ -n "$xvfb_pid" ]; then
+    # When you call this script with START_VNC we make sure we
+    # don't kill xvfb so you don't loose your VNC connection
+    if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] ; then
         kill $xvfb_pid || true
     fi
 }
@@ -56,7 +60,8 @@ fi
 
 # run XVfb in the background, if necessary
 if $NEED_XVFB; then
-    Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 &
+    Xvfb :0 -nolisten tcp -screen 0 1600x1200x24 \
+       > ~/artifacts/public/xvfb.log 2>&1 &
     export DISPLAY=:0
     xvfb_pid=$!
     # Only error code 255 matters, because it signifies that no
@@ -78,9 +83,13 @@ if $NEED_XVFB; then
     if [ $xvfb_test == 255 ]; then exit 255; fi
 fi
 
+if $START_VNC; then
+    x11vnc > ~/artifacts/public/x11vnc.log 2>&1 &
+fi
+
 if $NEED_WINDOW_MANAGER; then
-    # start up the gnome session, using a semaphore file to know when the session has fully started
-    # (at least to the point where apps are automatically started)
+    # start up the gnome session, using a semaphore file to know when the session has
+    # fully started (at least to the point where apps are automatically started)
     semaphore=/tmp/gnome-session-started
     rm -f $semaphore
     mkdir -p ~/.config/autostart
@@ -108,7 +117,15 @@ for cfg in $MOZHARNESS_CONFIG; do
   config_cmds="${config_cmds} --config-file ${cfg}"
 done
 
-# run the given mozharness script and configs, but pass the rest of the
-# arguments in from our own invocation
-python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"
-
+if [ ${SKIP_MOZHARNESS_RUN} == true ]; then
+  # Skipping Mozharness is to allow the developer start the window manager
+  # properly and letting them change the execution of Mozharness without
+  # exiting the container
+  echo "We skipped running Mozharness."
+  echo "Make sure you export DISPLAY=:0 before calling Mozharness."
+  echo "Don't forget to call it with 'sudo -E -u worker'."
+else
+  # run the given mozharness script and configs, but pass the rest of the
+  # arguments in from our own invocation
+  python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"
+fi

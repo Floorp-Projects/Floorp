@@ -1,0 +1,28 @@
+# HG changeset patch
+# User Gerald Squelart <gsquelart@mozilla.com>
+# Parent  3d0a39b9f8cd9b07dac0263cfbaa23649d8b3138
+Bug 1224371 - Cast uint8_t to uint32_t before shift - r=jya
+
+Note: C-style cast because it is C code.
+
+diff --git a/media/libvpx/vp9/decoder/vp9_decoder.c b/media/libvpx/vp9/decoder/vp9_decoder.c
+--- a/media/libvpx/vp9/decoder/vp9_decoder.c
++++ b/media/libvpx/vp9/decoder/vp9_decoder.c
+@@ -494,16 +494,16 @@ vpx_codec_err_t vp9_parse_superframe_ind
+         decrypt_cb(decrypt_state, x, clear_buffer, frames * mag);
+         x = clear_buffer;
+       }
+ 
+       for (i = 0; i < frames; ++i) {
+         uint32_t this_sz = 0;
+ 
+         for (j = 0; j < mag; ++j)
+-          this_sz |= (*x++) << (j * 8);
++          this_sz |= (uint32_t)(*x++) << (j * 8);
+         sizes[i] = this_sz;
+       }
+       *count = frames;
+     }
+   }
+   return VPX_CODEC_OK;
+ }

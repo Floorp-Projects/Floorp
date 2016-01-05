@@ -21,6 +21,10 @@
 #include <math.h>
 
 using namespace mozilla;
+#ifdef MOZ_TASK_TRACER
+#include "GeckoTaskTracerImpl.h"
+using namespace mozilla::tasktracer;
+#endif
 
 NS_IMPL_ISUPPORTS(TimerThread, nsIRunnable, nsIObserver)
 

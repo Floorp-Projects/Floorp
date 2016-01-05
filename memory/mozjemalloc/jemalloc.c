@@ -1703,6 +1703,9 @@ malloc_mutex_unlock(malloc_mutex_t *mutex)
 #endif
 }
 
+#if (defined(__GNUC__))
+__attribute__((unused))
+#  endif
 static bool
 malloc_spin_init(malloc_spinlock_t *lock)
 {
@@ -6655,8 +6658,6 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
 		for (j = 0; j < ntbins + nqbins + nsbins; j++) {
 			arena_bin_t* bin = &arena->bins[j];
 			size_t bin_unused = 0;
-			const size_t run_header_size = sizeof(arena_run_t) +
-			    (sizeof(unsigned) * (bin->regs_mask_nelms - 1));
 
 			rb_foreach_begin(arena_chunk_map_t, link, &bin->runs, mapelm) {
 				run = (arena_run_t *)(mapelm->bits & ~pagesize_mask);

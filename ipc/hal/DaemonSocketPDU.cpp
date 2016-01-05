@@ -61,7 +61,7 @@ DaemonSocketPDU::~DaemonSocketPDU()
 {
   MOZ_COUNT_DTOR_INHERITED(DaemonSocketPDU, UnixSocketIOBuffer);
 
-  nsAutoArrayPtr<uint8_t> data(GetBuffer());
+  UniquePtr<uint8_t[]> data(GetBuffer());
   ResetBuffer(nullptr, 0, 0, 0);
 }
 

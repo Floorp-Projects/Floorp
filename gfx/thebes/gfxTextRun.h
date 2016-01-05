@@ -82,7 +82,6 @@ struct gfxTextRunDrawCallbacks {
  */
 class gfxTextRun : public gfxShapedText {
 public:
-
     // Override operator delete to properly free the object that was
     // allocated via malloc.
     void operator delete(void* p) {
@@ -92,6 +91,7 @@ public:
     virtual ~gfxTextRun();
 
     typedef gfxFont::RunMetrics Metrics;
+    typedef mozilla::gfx::DrawTarget DrawTarget;
 
     // Public textrun API for general use
 
@@ -194,7 +194,7 @@ public:
 
         // Returns a gfxContext that can be used to measure the hyphen glyph.
         // Only called if the hyphen width is requested.
-        virtual already_AddRefed<gfxContext> GetContext() = 0;
+        virtual already_AddRefed<DrawTarget> GetDrawTarget() = 0;
 
         // Return the appUnitsPerDevUnit value to be used when measuring.
         // Only called if the hyphen width is requested.
@@ -267,8 +267,8 @@ public:
      */
     Metrics MeasureText(uint32_t aStart, uint32_t aLength,
                         gfxFont::BoundingBoxType aBoundingBoxType,
-                        gfxContext *aRefContextForTightBoundingBox,
-                        PropertyProvider *aProvider);
+                        DrawTarget* aDrawTargetForTightBoundingBox,
+                        PropertyProvider* aProvider);
 
     /**
      * Computes just the advance width for a substring.
@@ -310,8 +310,7 @@ public:
      */
     virtual bool SetLineBreaks(uint32_t aStart, uint32_t aLength,
                                  bool aLineBreakBefore, bool aLineBreakAfter,
-                                 gfxFloat *aAdvanceWidthDelta,
-                                 gfxContext *aRefContext);
+                                 gfxFloat* aAdvanceWidthDelta);
 
     enum SuppressBreak {
       eNoSuppressBreak,
@@ -355,7 +354,7 @@ public:
      * @param aMetrics if non-null, we fill this in for the returned substring.
      * If a hyphenation break was used, the hyphen is NOT included in the returned metrics.
      * @param aBoundingBoxType whether to make the bounding box in aMetrics tight
-     * @param aRefContextForTightBoundingBox a reference context to get the
+     * @param aDrawTargetForTightBoundingbox a reference DrawTarget to get the
      * tight bounding box, if requested
      * @param aUsedHyphenation if non-null, records if we selected a hyphenation break
      * @param aLastBreak if non-null and result is aMaxLength, we set this to
@@ -383,7 +382,7 @@ public:
                                  gfxFloat *aTrimWhitespace,
                                  Metrics *aMetrics,
                                  gfxFont::BoundingBoxType aBoundingBoxType,
-                                 gfxContext *aRefContextForTightBoundingBox,
+                                 DrawTarget* aDrawTargetForTightBoundingBox,
                                  bool *aUsedHyphenation,
                                  uint32_t *aLastBreak,
                                  bool aCanWordWrap,
@@ -490,8 +489,8 @@ public:
     // clean out results from shaping in progress, used for fallback scenarios
     void ClearGlyphsAndCharacters();
 
-    void SetSpaceGlyph(gfxFont *aFont, gfxContext *aContext, uint32_t aCharIndex,
-                       uint16_t aOrientation);
+    void SetSpaceGlyph(gfxFont* aFont, DrawTarget* aDrawTarget,
+                       uint32_t aCharIndex, uint16_t aOrientation);
 
     // Set the glyph data for the given character index to the font's
     // space glyph, IF this can be done as a "simple" glyph record
@@ -531,7 +530,7 @@ public:
      * that some glyph extents might not be fetched due to OOM or other
      * errors.
      */
-    void FetchGlyphExtents(gfxContext *aRefContext);
+    void FetchGlyphExtents(DrawTarget* aRefDrawTarget);
 
     uint32_t CountMissingGlyphs();
     const GlyphRun *GetGlyphRuns(uint32_t *aNumGlyphRuns) {
@@ -696,7 +695,7 @@ private:
     void AccumulatePartialLigatureMetrics(gfxFont *aFont,
                                           uint32_t aStart, uint32_t aEnd,
                                           gfxFont::BoundingBoxType aBoundingBoxType,
-                                          gfxContext *aRefContext,
+                                          DrawTarget* aRefDrawTarget,
                                           PropertyProvider *aProvider,
                                           uint16_t aOrientation,
                                           Metrics *aMetrics);
@@ -704,7 +703,7 @@ private:
     // **** measurement helper ****
     void AccumulateMetricsForRun(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
                                  gfxFont::BoundingBoxType aBoundingBoxType,
-                                 gfxContext *aRefContext,
+                                 DrawTarget* aRefDrawTarget,
                                  PropertyProvider *aProvider,
                                  uint32_t aSpacingStart, uint32_t aSpacingEnd,
                                  uint16_t aOrientation,
@@ -793,14 +792,14 @@ public:
      * a full Parameters record.
      */
     template<typename T>
-    gfxTextRun *MakeTextRun(const T *aString, uint32_t aLength,
-                            gfxContext *aRefContext,
+    gfxTextRun* MakeTextRun(const T* aString, uint32_t aLength,
+                            DrawTarget* aRefDrawTarget,
                             int32_t aAppUnitsPerDevUnit,
                             uint32_t aFlags,
                             gfxMissingFontRecorder *aMFR)
     {
         gfxTextRunFactory::Parameters params = {
-            aRefContext, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevUnit
+            aRefDrawTarget, nullptr, nullptr, nullptr, 0, aAppUnitsPerDevUnit
         };
         return MakeTextRun(aString, aLength, &params, aFlags, aMFR);
     }
@@ -820,7 +819,7 @@ public:
      * The caller is responsible for deleting the returned text run
      * when no longer required.
      */
-    gfxTextRun *MakeHyphenTextRun(gfxContext *aCtx,
+    gfxTextRun* MakeHyphenTextRun(DrawTarget* aDrawTarget,
                                   uint32_t aAppUnitsPerDevUnit);
 
     /**
@@ -871,9 +870,9 @@ public:
         return mSkipDrawing;
     }
 
-    class LazyReferenceContextGetter {
+    class LazyReferenceDrawTargetGetter {
     public:
-      virtual already_AddRefed<gfxContext> GetRefContext() = 0;
+      virtual already_AddRefed<DrawTarget> GetRefDrawTarget() = 0;
     };
     // The gfxFontGroup keeps ownership of this textrun.
     // It is only guaranteed to exist until the next call to GetEllipsisTextRun
@@ -881,7 +880,7 @@ public:
     // group, or until UpdateUserFonts is called, or the fontgroup is destroyed.
     // Get it/use it/forget it :) - don't keep a reference that might go stale.
     gfxTextRun* GetEllipsisTextRun(int32_t aAppUnitsPerDevPixel, uint32_t aFlags,
-                                   LazyReferenceContextGetter& aRefContextGetter);
+                                   LazyReferenceDrawTargetGetter& aRefDrawTargetGetter);
 
 protected:
     // search through pref fonts for a character, return nullptr if no matching pref font
@@ -1102,7 +1101,7 @@ protected:
     // Set up the textrun glyphs for an entire text run:
     // find script runs, and then call InitScriptRun for each
     template<typename T>
-    void InitTextRun(gfxContext *aContext,
+    void InitTextRun(DrawTarget* aDrawTarget,
                      gfxTextRun *aTextRun,
                      const T *aString,
                      uint32_t aLength,
@@ -1111,7 +1110,7 @@ protected:
     // InitTextRun helper to handle a single script run, by finding font ranges
     // and calling each font's InitTextRun() as appropriate
     template<typename T>
-    void InitScriptRun(gfxContext *aContext,
+    void InitScriptRun(DrawTarget* aDrawTarget,
                        gfxTextRun *aTextRun,
                        const T *aString,
                        uint32_t aScriptRunStart,

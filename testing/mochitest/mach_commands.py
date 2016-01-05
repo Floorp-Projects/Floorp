@@ -12,7 +12,6 @@ import os
 import shutil
 import sys
 import warnings
-import which
 
 from mozbuild.base import (
     MachCommandBase,
@@ -349,6 +348,7 @@ class MochitestRunner(MozbuildObject):
 
 # parser
 
+
 def setup_argument_parser():
     build_obj = MozbuildObject.from_environment(cwd=here)
 
@@ -565,8 +565,8 @@ class RobocopCommands(MachCommandBase):
              description='Run a Robocop test.',
              parser=setup_argument_parser)
     @CommandArgument('--serve', default=False, action='store_true',
-        help='Run no tests but start the mochi.test web server and launch '
-             'Fennec with a test profile.')
+                     help='Run no tests but start the mochi.test web server '
+                     'and launch Fennec with a test profile.')
     def run_robocop(self, serve=False, **kwargs):
         if serve:
             kwargs['autorun'] = False
@@ -592,7 +592,7 @@ class RobocopCommands(MachCommandBase):
         from mozbuild.testing import TestResolver
         resolver = self._spawn(TestResolver)
         tests = list(resolver.resolve_tests(paths=test_paths, cwd=self._mach_context.cwd,
-            flavor='instrumentation', subsuite='robocop'))
+                                            flavor='instrumentation', subsuite='robocop'))
 
         mochitest = self._spawn(MochitestRunner)
         return mochitest.run_robocop_test(self._mach_context, tests, 'robocop', **kwargs)

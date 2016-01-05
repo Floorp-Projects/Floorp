@@ -48,7 +48,7 @@ public:
     virtual RunMetrics Measure(gfxTextRun *aTextRun,
                                uint32_t aStart, uint32_t aEnd,
                                BoundingBoxType aBoundingBoxType,
-                               gfxContext *aContextForTightBoundingBox,
+                               DrawTarget *aDrawTargetForTightBoundingBox,
                                Spacing *aSpacing,
                                uint16_t aOrientation) override;
 
@@ -82,7 +82,7 @@ protected:
     virtual const Metrics& GetHorizontalMetrics() override;
 
     /* override to ensure the cairo font is set up properly */
-    virtual bool ShapeText(gfxContext     *aContext,
+    virtual bool ShapeText(DrawTarget     *aDrawTarget,
                            const char16_t *aText,
                            uint32_t        aOffset,
                            uint32_t        aLength,
