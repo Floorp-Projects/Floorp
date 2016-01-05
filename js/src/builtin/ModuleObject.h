@@ -282,6 +282,12 @@ class MOZ_STACK_CLASS ModuleBuilder
 
     bool hasExportedName(JSAtom* name) const;
 
+    using ExportEntryVector = TraceableVector<ExportEntryObject*>;
+    const ExportEntryVector& localExportEntries() const {
+        return localExportEntries_;
+    }
+
+    bool buildTables();
     bool initModule();
 
   private:
@@ -289,8 +295,7 @@ class MOZ_STACK_CLASS ModuleBuilder
     using RootedAtomVector = JS::Rooted<AtomVector>;
     using ImportEntryVector = TraceableVector<ImportEntryObject*>;
     using RootedImportEntryVector = JS::Rooted<ImportEntryVector>;
-    using ExportEntryVector = TraceableVector<ExportEntryObject*> ;
-    using RootedExportEntryVector = JS::Rooted<ExportEntryVector> ;
+    using RootedExportEntryVector = JS::Rooted<ExportEntryVector>;
 
     JSContext* cx_;
     RootedModuleObject module_;
@@ -309,8 +314,6 @@ class MOZ_STACK_CLASS ModuleBuilder
                                HandleAtom importName);
 
     bool maybeAppendRequestedModule(HandleAtom module);
-
-    bool appendLocalExportEntry(HandleExportEntryObject exp);
 
     template <typename T>
     ArrayObject* createArray(const TraceableVector<T>& vector);

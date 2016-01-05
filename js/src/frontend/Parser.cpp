@@ -305,8 +305,6 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
             if (!checkLocalsOverflow(ts))
                 return false;
         }
-        if (atModuleScope())
-            dn->pn_dflags |= PND_CLOSED;
         if (!decls_.addUnique(name, dn))
             return false;
         break;
@@ -316,8 +314,6 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         // See FullParseHandler::setLexicalDeclarationOp.
         dn->setOp(dn->pn_scopecoord.isFree() ? JSOP_INITGLEXICAL : JSOP_INITLEXICAL);
         dn->pn_dflags |= (PND_LEXICAL | PND_BOUND);
-        if (atModuleLevel())
-            dn->pn_dflags |= PND_CLOSED;
         if (atBodyLevel()) {
             if (!bodyLevelLexicals_.append(dn))
                 return false;
@@ -335,7 +331,7 @@ ParseContext<FullParseHandler>::define(TokenStream& ts,
         break;
 
       case Definition::IMPORT:
-        dn->pn_dflags |= PND_LEXICAL | PND_CLOSED;
+        dn->pn_dflags |= PND_LEXICAL;
         MOZ_ASSERT(atBodyLevel());
         if (!decls_.addShadow(name, dn))
             return false;
@@ -945,9 +941,9 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, Node pn)
     return true;
 }
 
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::standaloneModule(HandleModuleObject module, ModuleBuilder& builder)
+template <>
+ParseNode*
+Parser<FullParseHandler>::standaloneModule(HandleModuleObject module, ModuleBuilder& builder)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -979,6 +975,28 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module, ModuleBuilder&
     if (tt != TOK_EOF) {
         report(ParseError, false, null(), JSMSG_GARBAGE_AFTER_INPUT, "module", TokenKindToDesc(tt));
         return null();
+    }
+
+    if (!builder.buildTables())
+        return null();
+
+    // Check exported local bindings exist and mark them as closed over.
+    for (auto entry : modulebox->builder.localExportEntries()) {
+        JSAtom* name = entry->localName();
+        MOZ_ASSERT(name);
+
+        Definition* def = modulepc.decls().lookupFirst(name);
+        if (!def) {
+            JSAutoByteString str;
+            if (!str.encodeLatin1(context, name))
+                return null();
+
+            JS_ReportErrorNumber(context->asJSContext(), GetErrorMessage, nullptr,
+                                 JSMSG_MISSING_EXPORT, str.ptr());
+            return null();
+        }
+
+        def->pn_dflags |= PND_CLOSED;
     }
 
     if (!FoldConstants(context, &pn, this))
@@ -2831,6 +2849,10 @@ Parser<FullParseHandler>::functionArgsAndBody(InHandling inHandling, ParseNode* 
                                               Directives* newDirectives)
 {
     ParseContext<FullParseHandler>* outerpc = pc;
+
+    // Close over top level function definitions in modules.
+    if (pc->sc->isModuleBox())
+        pn->pn_dflags |= PND_CLOSED;
 
     // Create box for fun->object early to protect against last-ditch GC.
     FunctionBox* funbox = newFunctionBox(pn, fun, pc, inheritedDirectives, generatorKind);
@@ -5057,7 +5079,7 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
         // const variables which are initialized during the
         // ModuleDeclarationInstantiation step. Thus we don't set the PND_IMPORT
         // flag on the definition.
-        bindingName->pn_dflags |= PND_CONST;
+        bindingName->pn_dflags |= PND_CONST | PND_CLOSED;
         BindData<FullParseHandler> data(context);
         data.initLexical(HoistVars, JSOP_DEFLET, nullptr, JSMSG_TOO_MANY_LOCALS);
         handler.setPosition(bindingName, pos());
