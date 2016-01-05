@@ -43,6 +43,7 @@ namespace dom {
 class AudioNode;
 class HTMLCanvasElement;
 class MediaStreamTrack;
+class MediaStreamTrackSource;
 class AudioStreamTrack;
 class VideoStreamTrack;
 class MediaStreamTrackSource;
@@ -69,6 +70,33 @@ class OnTracksAvailableCallback {
 public:
   virtual ~OnTracksAvailableCallback() {}
   virtual void NotifyTracksAvailable(DOMMediaStream* aStream) = 0;
+};
+
+/**
+ * Interface through which a DOMMediaStream can query its producer for a
+ * MediaStreamTrackSource. This will be used whenever a track occurs in the
+ * DOMMediaStream's owned stream that has not yet been created on the main
+ * thread (see DOMMediaStream::CreateOwnDOMTrack).
+ */
+class MediaStreamTrackSourceGetter : public nsISupports
+{
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_CLASS(MediaStreamTrackSourceGetter)
+
+public:
+  MediaStreamTrackSourceGetter()
+  {
+    MOZ_COUNT_CTOR(MediaStreamTrackSourceGetter);
+  }
+
+  virtual already_AddRefed<dom::MediaStreamTrackSource>
+  GetMediaStreamTrackSource(TrackID aInputTrackID) = 0;
+
+protected:
+  virtual ~MediaStreamTrackSourceGetter()
+  {
+    MOZ_COUNT_DTOR(MediaStreamTrackSourceGetter);
+  }
 };
 
 /**
@@ -291,7 +319,8 @@ public:
     const InputPortOwnership mOwnership;
   };
 
-  explicit DOMMediaStream(nsPIDOMWindowInner* aWindow);
+  DOMMediaStream(nsPIDOMWindowInner* aWindow,
+                 MediaStreamTrackSourceGetter* aTrackSourceGetter);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
@@ -455,14 +484,16 @@ public:
   /**
    * Create a DOMMediaStream whose underlying input stream is a SourceMediaStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream> CreateSourceStream(nsPIDOMWindowInner* aWindow,
+                                                             MediaStreamGraph* aGraph,
+                                                             MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create a DOMMediaStream whose underlying input stream is a TrackUnionStream.
    */
-  static already_AddRefed<DOMMediaStream>
-  CreateTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  static already_AddRefed<DOMMediaStream> CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
+                                                                 MediaStreamGraph* aGraph,
+                                                                 MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create an DOMMediaStream whose underlying input stream is an
@@ -591,6 +622,10 @@ protected:
   // MediaStreamTracks corresponding to tracks in our mPlaybackStream.
   AutoTArray<RefPtr<TrackPort>, 2> mTracks;
 
+  // The interface through which we can query the stream producer for
+  // track sources.
+  RefPtr<MediaStreamTrackSourceGetter> mTrackSourceGetter;
+
   RefPtr<OwnedStreamListener> mOwnedListener;
   RefPtr<PlaybackStreamListener> mPlaybackListener;
 
@@ -632,8 +667,9 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,
 class DOMLocalMediaStream : public DOMMediaStream
 {
 public:
-  explicit DOMLocalMediaStream(nsPIDOMWindowInner* aWindow)
-    : DOMMediaStream(aWindow) {}
+  explicit DOMLocalMediaStream(nsPIDOMWindowInner* aWindow,
+                               MediaStreamTrackSourceGetter* aTrackSourceGetter)
+    : DOMMediaStream(aWindow, aTrackSourceGetter) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMLOCALMEDIASTREAM_IID)
@@ -647,14 +683,16 @@ public:
    */
   static already_AddRefed<DOMLocalMediaStream>
   CreateSourceStream(nsPIDOMWindowInner* aWindow,
-                     MediaStreamGraph* aGraph);
+                     MediaStreamGraph* aGraph,
+                     MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is a TrackUnionStream.
    */
   static already_AddRefed<DOMLocalMediaStream>
   CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
-                         MediaStreamGraph* aGraph);
+                         MediaStreamGraph* aGraph,
+                         MediaStreamTrackSourceGetter* aTrackSourceGetter = nullptr);
 
   /**
    * Create an nsDOMLocalMediaStream whose underlying stream is an
