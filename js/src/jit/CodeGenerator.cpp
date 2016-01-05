@@ -3599,7 +3599,7 @@ CodeGenerator::visitCallDirectEval(LCallDirectEval* lir)
     pushArg(string);
     pushArg(ToValue(lir, LCallDirectEval::NewTarget));
     pushArg(ToValue(lir, LCallDirectEval::ThisValue));
-    pushArg(ImmGCPtr(gen->info().script()));
+    pushArg(ImmGCPtr(current->mir()->info().script()));
     pushArg(scopeChain);
 
     callVM(DirectEvalStringInfo, lir);
