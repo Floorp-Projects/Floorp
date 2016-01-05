@@ -21,11 +21,18 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=955860
 // Tests taken from:
 // https://github.com/mathiasbynens/CSS.escape/blob/master/tests/tests.js
 
-SimpleTest.doesThrow(() => CSS.escape('\0'), "InvalidCharacterError Character :\\0");
-SimpleTest.doesThrow(() => CSS.escape('a\0'), "InvalidCharacterError Character : a\\0");
-SimpleTest.doesThrow(() => CSS.escape('\0b'), "InvalidCharacterError Character : \\0b");
-SimpleTest.doesThrow(() => CSS.escape('a\0b'), "InvalidCharacterError Character : a\\0b");
 SimpleTest.doesThrow(() => CSS.escape(), 'undefined');
+
+is(CSS.escape('\0'), '\uFFFD', "escaping for 0 char (1)");
+is(CSS.escape('a\0'), 'a\uFFFD', "escaping for 0 char (2)");
+is(CSS.escape('\0b'), '\uFFFDb', "escaping for 0 char (3)");
+is(CSS.escape('a\0b'), 'a\uFFFDb', "escaping for 0 char (4)");
+
+is(CSS.escape('\uFFFD'), '\uFFFD', "escaping for replacement char (1)");
+is(CSS.escape('a\uFFFD'), 'a\uFFFD', "escaping replacement char (2)");
+is(CSS.escape('\uFFFDb'), '\uFFFDb', "escaping replacement char (3)");
+is(CSS.escape('a\uFFFDb'), 'a\uFFFDb', "escaping replacement char (4)");
+
 is(CSS.escape(true), 'true', "escapingFailed Character : true(bool)");
 is(CSS.escape(false), 'false', "escapingFailed Character : false(bool)");
 is(CSS.escape(null), 'null', "escapingFailed Character : null");
