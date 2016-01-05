@@ -1,0 +1,147 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1219711",
+  title: "Disabling locally should be reflected remotely, individually for clones"
+});
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+
+  var originalStream;
+  var localVideoOriginal;
+
+  // Always use fake tracks since we depend on audio to have a large 1000Hz
+  // component.
+  test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function PC_LOCAL_GUM_CLONE() {
+      return getUserMedia(test.pcLocal.constraints[0]).then(stream => {
+        originalStream = stream;
+        localVideoOriginal =
+          createMediaElement("audiovideo", "local-original");
+        localVideoOriginal.srcObject = stream;
+        test.pcLocal.attachMedia(originalStream.clone(), "audiovideo", "local");
+      });
+    }
+  ]);
+  test.chain.append([
+    function CHECK_ASSUMPTIONS() {
+      is(test.pcLocal.mediaElements.length, 1,
+         "pcLocal should have one media element");
+      is(test.pcRemote.mediaElements.length, 1,
+         "pcRemote should have one media element");
+      is(test.pcLocal.streams.length, 1,
+         "pcLocal should have one stream");
+      is(test.pcRemote.streams.length, 1,
+         "pcRemote should have one stream");
+    },
+    function CHECK_VIDEO() {
+      info("Checking video");
+      var h = new CaptureStreamTestHelper2D();
+      var localVideoClone = test.pcLocal.mediaElements[0];
+      var remoteVideoClone = test.pcRemote.mediaElements[0];
+
+      // We check a pixel somewhere away from the top left corner since
+      // MediaEngineDefault puts semi-transparent time indicators there.
+      const offsetX = 50;
+      const offsetY = 50;
+      const threshold = 128;
+      const remoteDisabledColor = h.black;
+
+      // We're regarding black as disabled here, and we're setting the alpha
+      // channel of the pixel to 255 to disregard alpha when testing.
+      var checkVideoEnabled = video =>
+        h.waitForPixel(video, offsetX, offsetY,
+                       px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)));
+      var checkVideoDisabled = video =>
+        h.waitForPixel(video, offsetX, offsetY,
+                       px => (px[3] = 255, h.isPixel(px, h.black, threshold)));
+
+      return Promise.resolve()
+        .then(() => info("Checking local original enabled"))
+        .then(() => checkVideoEnabled(localVideoOriginal))
+        .then(() => info("Checking local clone enabled"))
+        .then(() => checkVideoEnabled(localVideoClone))
+        .then(() => info("Checking remote clone enabled"))
+        .then(() => checkVideoEnabled(remoteVideoClone))
+
+        .then(() => info("Disabling original"))
+        .then(() => originalStream.getVideoTracks()[0].enabled = false)
+
+        .then(() => info("Checking local original disabled"))
+        .then(() => checkVideoDisabled(localVideoOriginal))
+        .then(() => info("Checking local clone enabled"))
+        .then(() => checkVideoEnabled(localVideoClone))
+        .then(() => info("Checking remote clone enabled"))
+        .then(() => checkVideoEnabled(remoteVideoClone))
+
+        .then(() => info("Re-enabling original; disabling clone"))
+        .then(() => originalStream.getVideoTracks()[0].enabled = true)
+        .then(() => test.pcLocal.streams[0].getVideoTracks()[0].enabled = false)
+
+        .then(() => info("Checking local original enabled"))
+        .then(() => checkVideoEnabled(localVideoOriginal))
+        .then(() => info("Checking local clone disabled"))
+        .then(() => checkVideoDisabled(localVideoClone))
+        .then(() => info("Checking remote clone disabled"))
+        .then(() => checkVideoDisabled(remoteVideoClone))
+    },
+    function CHECK_AUDIO() {
+      info("Checking audio");
+      var ac = new AudioContext();
+      var localAnalyserOriginal = new AudioStreamAnalyser(ac, originalStream);
+      var localAnalyserClone =
+        new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
+      var remoteAnalyserClone =
+        new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
+
+      var freq1k = localAnalyserOriginal.binIndexForFrequency(1000);
+      var checkAudioEnabled = analyser =>
+        analyser.waitForAnalysisSuccess(array => array[freq1k] > 200);
+      var checkAudioDisabled = analyser =>
+        analyser.waitForAnalysisSuccess(array => array[freq1k] < 50);
+
+      return Promise.resolve()
+        .then(() => info("Checking local original enabled"))
+        .then(() => checkAudioEnabled(localAnalyserOriginal))
+        .then(() => info("Checking local clone enabled"))
+        .then(() => checkAudioEnabled(localAnalyserClone))
+        .then(() => info("Checking remote clone enabled"))
+        .then(() => checkAudioEnabled(remoteAnalyserClone))
+
+        .then(() => info("Disabling original"))
+        .then(() => originalStream.getAudioTracks()[0].enabled = false)
+
+        .then(() => info("Checking local original disabled"))
+        .then(() => checkAudioDisabled(localAnalyserOriginal))
+        .then(() => info("Checking local clone enabled"))
+        .then(() => checkAudioEnabled(localAnalyserClone))
+        .then(() => info("Checking remote clone enabled"))
+        .then(() => checkAudioEnabled(remoteAnalyserClone))
+
+        .then(() => info("Re-enabling original; disabling clone"))
+        .then(() => originalStream.getAudioTracks()[0].enabled = true)
+        .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = false)
+
+        .then(() => info("Checking local original enabled"))
+        .then(() => checkAudioEnabled(localAnalyserOriginal))
+        .then(() => info("Checking local clone disabled"))
+        .then(() => checkAudioDisabled(localAnalyserClone))
+        .then(() => info("Checking remote clone disabled"))
+        .then(() => checkAudioDisabled(remoteAnalyserClone))
+    }
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>
