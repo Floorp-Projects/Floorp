@@ -33,12 +33,13 @@ try {
 function AudioStreamAnalyser(ac, stream) {
   this.audioContext = ac;
   this.stream = stream;
-  this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
+  this.sourceNodes = this.stream.getAudioTracks().map(
+    t => this.audioContext.createMediaStreamSource(new MediaStream([t])));
   this.analyser = this.audioContext.createAnalyser();
   // Setting values lower than default for speedier testing on emulators
   this.analyser.smoothingTimeConstant = 0.2;
   this.analyser.fftSize = 1024;
-  this.sourceNode.connect(this.analyser);
+  this.sourceNodes.forEach(n => n.connect(this.analyser));
   this.data = new Uint8Array(this.analyser.frequencyBinCount);
 }
 
