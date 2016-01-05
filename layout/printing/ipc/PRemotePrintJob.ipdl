@@ -33,6 +33,10 @@ parent:
 
 
 child:
+  // Inform the child that the print has been initialized in the parent or has
+  // failed with result aRv.
+  async PrintInitializationResult(nsresult aRv);
+
   // Inform the child that the latest page has been processed remotely.
   async PageProcessed();
 
