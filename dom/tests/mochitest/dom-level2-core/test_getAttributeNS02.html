@@ -105,11 +105,13 @@ function getAttributeNS02() {
       }
       doc = load(docRef, "doc", "staffNS");
       newAttribute = doc.createAttributeNS(namespaceURI,qualifiedName);
-      elementList = doc.getElementsByTagName("emp:address");
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("address");
       testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
 districtAttr = testAddr.setAttributeNodeNS(newAttribute);
-      elementList = doc.getElementsByTagName("emp:address");
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("address");
       testAddr = elementList.item(0);
       attrValue = testAddr.getAttributeNS(namespaceURI,localName);
       assertEquals("throw_Equals","",attrValue);

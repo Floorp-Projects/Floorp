@@ -94,7 +94,8 @@ function nodehasattributes03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      elementList = doc.getElementsByTagName("emp:employee");
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("employee");
       element = elementList.item(0);
       assertNotNull("empEmployeeNotNull",element);
 hasAttributes = element.hasAttributes();
