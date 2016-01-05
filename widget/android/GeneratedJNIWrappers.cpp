@@ -449,9 +449,9 @@ auto GeckoAppShell::HandleGeckoMessageWrapper(mozilla::jni::Object::Param a0) ->
 constexpr char GeckoAppShell::HandleUncaughtException_t::name[];
 constexpr char GeckoAppShell::HandleUncaughtException_t::signature[];
 
-auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Object::Param a0, mozilla::jni::Throwable::Param a1) -> void
+auto GeckoAppShell::HandleUncaughtException(mozilla::jni::Throwable::Param a0) -> mozilla::jni::String::LocalRef
 {
-    return mozilla::jni::Method<HandleUncaughtException_t>::Call(nullptr, nullptr, a0, a1);
+    return mozilla::jni::Method<HandleUncaughtException_t>::Call(nullptr, nullptr, a0);
 }
 
 constexpr char GeckoAppShell::HideProgressDialog_t::name[];

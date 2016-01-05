@@ -183,7 +183,7 @@ class nsWindow::Natives final
 
             const auto natives = reinterpret_cast<mozilla::WeakPtr<Natives>*>(
                     jni::GetNativeHandle(env, thisArg.Get()));
-            jni::HandleUncaughtException(env);
+            MOZ_CATCH_JNI_EXCEPTION(env);
 
             // The call is stale if the nsWindow has been destroyed on the
             // Gecko side, but the Java object is still attached to it through
