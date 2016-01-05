@@ -576,7 +576,8 @@ ModuleObject* BytecodeCompiler::compileModule()
 
     module->init(script);
 
-    ParseNode* pn = parser->standaloneModule(module);
+    ModuleBuilder builder(cx->asJSContext(), module);
+    ParseNode* pn = parser->standaloneModule(module, builder);
     if (!pn)
         return nullptr;
 
@@ -601,7 +602,6 @@ ModuleObject* BytecodeCompiler::compileModule()
         return nullptr;
     }
 
-    ModuleBuilder builder(cx->asJSContext(), module);
     if (!builder.buildAndInit(pn))
         return nullptr;
 

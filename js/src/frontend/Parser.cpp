@@ -947,7 +947,7 @@ Parser<ParseHandler>::checkStrictBinding(PropertyName* name, Node pn)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
+Parser<ParseHandler>::standaloneModule(HandleModuleObject module, ModuleBuilder& builder)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -995,7 +995,7 @@ Parser<ParseHandler>::standaloneModule(HandleModuleObject module)
 
 template <>
 SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module)
+Parser<SyntaxParseHandler>::standaloneModule(HandleModuleObject module, ModuleBuilder& builder)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
