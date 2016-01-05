@@ -172,7 +172,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   aDesiredSize.SetBlockStartAscent(0);
 
   nsBoundingMetrics bmSqr, bmBase, bmIndex;
-  nsRenderingContext& renderingContext = *aReflowState.rendContext;
+  DrawTarget* drawTarget = aReflowState.rendContext->GetDrawTarget();
 
   //////////////////
   // Reflow Children
@@ -214,7 +214,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   if (2 != count) {
     // report an error, encourage people to get their markups in order
     ReportChildCountError();
-    ReflowError(renderingContext, aDesiredSize);
+    ReflowError(drawTarget, aDesiredSize);
     aStatus = NS_FRAME_COMPLETE;
     NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
     // Call DidReflow() for the child frames we successfully did reflow.
@@ -238,7 +238,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
   // built-in: adjust clearance psi to emulate \mathstrut using '1' (TexBook, p.131)
   char16_t one = '1';
   nsBoundingMetrics bmOne =
-    nsLayoutUtils::AppUnitBoundsOfString(&one, 1, *fm, renderingContext);
+    nsLayoutUtils::AppUnitBoundsOfString(&one, 1, *fm, drawTarget);
   if (bmOne.ascent > bmBase.ascent)
     psi += bmOne.ascent - bmBase.ascent;
 
@@ -261,7 +261,7 @@ nsMathMLmrootFrame::Reflow(nsPresContext*          aPresContext,
 
   // height(radical) should be >= height(base) + psi + ruleThickness
   nsBoundingMetrics radicalSize;
-  mSqrChar.Stretch(aPresContext, renderingContext,
+  mSqrChar.Stretch(aPresContext, drawTarget,
                    fontSizeInflation,
                    NS_STRETCH_DIRECTION_VERTICAL, 
                    contSize, radicalSize,
@@ -366,7 +366,7 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingConte
   if (baseFrame)
     indexFrame = baseFrame->GetNextSibling();
   if (!indexFrame || indexFrame->GetNextSibling()) {
-    ReflowError(*aRenderingContext, aDesiredSize);
+    ReflowError(aRenderingContext->GetDrawTarget(), aDesiredSize);
     return;
   }
 
@@ -377,7 +377,8 @@ nsMathMLmrootFrame::GetIntrinsicISizeMetrics(nsRenderingContext* aRenderingConte
   nscoord indexWidth =
     nsLayoutUtils::IntrinsicForContainer(aRenderingContext, indexFrame,
                                          nsLayoutUtils::PREF_ISIZE);
-  nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(), *aRenderingContext,
+  nscoord sqrWidth = mSqrChar.GetMaxWidth(PresContext(),
+                                          aRenderingContext->GetDrawTarget(),
                                           fontSizeInflation);
 
   nscoord dxSqr;

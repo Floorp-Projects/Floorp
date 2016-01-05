@@ -120,7 +120,7 @@ nsMathMLmspaceFrame::Reflow(nsPresContext*          aPresContext,
 }
 
 /* virtual */ nsresult
-nsMathMLmspaceFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
+nsMathMLmspaceFrame::MeasureForWidth(DrawTarget* aDrawTarget,
                                      nsHTMLReflowMetrics& aDesiredSize)
 {
   ProcessAttributes(PresContext());

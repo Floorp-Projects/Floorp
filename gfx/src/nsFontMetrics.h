@@ -46,6 +46,8 @@ struct nsBoundingMetrics;
 class nsFontMetrics final
 {
 public:
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
     nsFontMetrics();
 
     NS_INLINE_DECL_REFCOUNTING(nsFontMetrics)
@@ -187,9 +189,9 @@ public:
     // width in points, not twips.  Callers must convert it if they
     // want it in another format.
     nscoord GetWidth(const char* aString, uint32_t aLength,
-                     nsRenderingContext *aContext);
+                     DrawTarget* aDrawTarget);
     nscoord GetWidth(const char16_t* aString, uint32_t aLength,
-                     nsRenderingContext *aContext);
+                     DrawTarget* aDrawTarget);
 
     // Draw a string using this font handle on the surface passed in.
     void DrawString(const char *aString, uint32_t aLength,
@@ -198,17 +200,17 @@ public:
     void DrawString(const char16_t* aString, uint32_t aLength,
                     nscoord aX, nscoord aY,
                     nsRenderingContext *aContext,
-                    nsRenderingContext *aTextRunConstructionContext);
+                    DrawTarget* aTextRunConstructionDrawTarget);
 
     nsBoundingMetrics GetBoundingMetrics(const char16_t *aString,
                                          uint32_t aLength,
-                                         nsRenderingContext *aContext);
+                                         DrawTarget* aDrawTarget);
 
     // Returns the LOOSE_INK_EXTENTS bounds of the text for determing the
     // overflow area of the string.
     nsBoundingMetrics GetInkBoundsForVisualOverflow(const char16_t *aString,
                                                     uint32_t aLength,
-                                                    nsRenderingContext *aContext);
+                                                    DrawTarget* aDrawTarget);
 
     void SetTextRunRTL(bool aIsRTL) { mTextRunRTL = aIsRTL; }
     bool GetTextRunRTL() const { return mTextRunRTL; }

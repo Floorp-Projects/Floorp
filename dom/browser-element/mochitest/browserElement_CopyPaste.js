@@ -86,8 +86,14 @@ function runTest() {
 }
 
 function doCommand(cmd) {
-  Services.obs.notifyObservers({wrappedJSObject: SpecialPowers.unwrap(iframeInner)},
-                               'copypaste-docommand', cmd);
+  var COMMAND_MAP = {
+    'cut': 'cmd_cut',
+    'copy': 'cmd_copyAndCollapseToEnd',
+    'paste': 'cmd_paste',
+    'selectall': 'cmd_selectAll'
+  };
+  var script = 'data:,docShell.doCommand("' + COMMAND_MAP[cmd] + '");';
+  mm.loadFrameScript(script, false);
 }
 
 function dispatchTest(e) {

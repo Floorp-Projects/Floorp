@@ -150,8 +150,6 @@ protected:
   bool RecvIssueDeprecationWarning(const uint32_t& warning,
                                    const bool& asError) override;
 
-  bool RecvReportRedirectionError() override;
-
   bool GetAssociatedContentSecurity(nsIAssociatedContentSecurity** res = nullptr);
   virtual void DoNotifyListenerCleanup() override;
 

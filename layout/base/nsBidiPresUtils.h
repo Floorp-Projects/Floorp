@@ -11,6 +11,7 @@
 #include "nsBidiUtils.h"
 #include "nsHashKeys.h"
 #include "nsCoord.h"
+#include "nsRenderingContext.h"
 
 #ifdef DrawText
 #undef DrawText
@@ -93,6 +94,8 @@ struct nsBidiPositionResolve
 
 class nsBidiPresUtils {
 public:
+  typedef mozilla::gfx::DrawTarget DrawTarget;
+
   nsBidiPresUtils();
   ~nsBidiPresUtils();
   
@@ -212,7 +215,7 @@ public:
                              nsBidiLevel            aBaseLevel,
                              nsPresContext*         aPresContext,
                              nsRenderingContext&    aRenderingContext,
-                             nsRenderingContext&    aTextRunConstructionContext,
+                             DrawTarget*            aTextRunConstructionDrawTarget,
                              nsFontMetrics&         aFontMetrics,
                              nscoord                aX,
                              nscoord                aY,
@@ -220,7 +223,7 @@ public:
                              int32_t                aPosResolveCount = 0)
   {
     return ProcessTextForRenderingContext(aText, aLength, aBaseLevel, aPresContext, aRenderingContext,
-                                          aTextRunConstructionContext,
+                                          aTextRunConstructionDrawTarget,
                                           aFontMetrics,
                                           MODE_DRAW, aX, aY, aPosResolve, aPosResolveCount, nullptr);
   }
@@ -234,7 +237,8 @@ public:
   {
     nscoord length;
     nsresult rv = ProcessTextForRenderingContext(aText, aLength, aBaseLevel, aPresContext,
-                                                 aRenderingContext, aRenderingContext,
+                                                 aRenderingContext,
+                                                 aRenderingContext.GetDrawTarget(),
                                                  aFontMetrics,
                                                  MODE_MEASURE, 0, 0, nullptr, 0, &length);
     return NS_SUCCEEDED(rv) ? length : 0;
@@ -377,7 +381,7 @@ private:
                                  nsBidiLevel            aBaseLevel,
                                  nsPresContext*         aPresContext,
                                  nsRenderingContext&    aRenderingContext,
-                                 nsRenderingContext&    aTextRunConstructionContext,
+                                 DrawTarget*            aTextRunConstructionDrawTarget,
                                  nsFontMetrics&         aFontMetrics,
                                  Mode                   aMode,
                                  nscoord                aX, // DRAW only

@@ -308,7 +308,7 @@ class RobocopTestRunner(MochitestDesktop):
 
     def logTestSummary(self):
         """
-           Print a summary of all tests run to stdout, for treeherder parsing 
+           Print a summary of all tests run to stdout, for treeherder parsing
            (logging via self.log does not work here).
         """
         print("0 INFO TEST-START | Shutdown")
@@ -432,7 +432,7 @@ class RobocopTestRunner(MochitestDesktop):
             self.dm.default_timeout = sys.maxint  # Forever.
             self.log.info("")
             self.log.info("Serving mochi.test Robocop root at http://%s:%s/tests/robocop/" %
-                         (self.options.remoteWebServer, self.options.httpPort))
+                          (self.options.remoteWebServer, self.options.httpPort))
             self.log.info("")
         result = -1
         log_result = -1
@@ -491,7 +491,7 @@ class RobocopTestRunner(MochitestDesktop):
                 continue
             if 'disabled' in test:
                 self.log.info('TEST-INFO | skipping %s | %s' %
-                             (test['name'], test['disabled']))
+                              (test['name'], test['disabled']))
                 continue
             active_tests.append(test)
         self.log.suite_start([t['name'] for t in active_tests])

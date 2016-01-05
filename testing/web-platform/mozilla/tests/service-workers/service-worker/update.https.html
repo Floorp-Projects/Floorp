@@ -5,10 +5,11 @@
 <script src="resources/test-helpers.sub.js"></script>
 <script>
 promise_test(function(t) {
-    var scope = 'resources/scope/update';
+    var scope = 'resources/simple.txt';
     var worker_url = 'resources/update-worker.py';
     var expected_url = normalizeURL(worker_url);
     var registration;
+    var iframe;
     return service_worker_unregister_and_register(t, worker_url, scope)
       .then(function(r) {
           registration = r;
@@ -99,7 +100,27 @@ promise_test(function(t) {
           assert_equals(registration.active.scriptURL, expected_url,
                         'active should still exist after update found.');
 
-          return service_worker_unregister_and_done(t, scope);
+          // We need to hold a client alive so that unregister() below doesn't
+          // remove the registration before update() has had a chance to look
+          // at the pending uninstall flag.
+          return with_iframe(scope);
+        })
+      .then(function(frame) {
+          iframe = frame;
+
+          return Promise.all([registration.unregister(),
+                              registration.update()]);
+        })
+      .then(
+        unreached_fulfillment(t),
+        function(e) {
+          assert_throws('InvalidStateError', function() { throw e; },
+                        'Calling update() while the uninstalling flag is set' +
+                        'should return a promise that rejects with an ' +
+                        'InvalidStateError.');
+
+          iframe.remove();
+          return t.done();
         });
   }, 'Update a registration.');
 </script>

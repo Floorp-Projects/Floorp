@@ -173,6 +173,7 @@ if CONFIG['ENABLE_TESTS']:
         '/testing/mochitest',
         '/testing/xpcshell',
         '/testing/tools/screenshot',
+        '/testing/tools/fileid',
         '/testing/profiles',
         '/testing/mozbase',
         '/testing/modules',
@@ -180,7 +181,7 @@ if CONFIG['ENABLE_TESTS']:
         '/testing/web-platform',
     ]
 
-    if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
+    if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and not CONFIG['MOZ_TASK_TRACER']:
             DIRS += [
                 '/media/webrtc/signaling/test',
                 '/media/webrtc/signaling/test/standalone',

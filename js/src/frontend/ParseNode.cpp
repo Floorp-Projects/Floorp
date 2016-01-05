@@ -1162,6 +1162,12 @@ ObjectBox::asFunctionBox()
     return static_cast<FunctionBox*>(this);
 }
 
+bool
+ObjectBox::isModuleBox()
+{
+    return object->is<ModuleObject>();
+}
+
 ModuleBox*
 ObjectBox::asModuleBox()
 {
