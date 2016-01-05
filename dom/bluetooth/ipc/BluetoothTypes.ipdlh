@@ -61,6 +61,7 @@ union BluetoothValue
   BluetoothAttributeHandle;
   BluetoothRemoteName;
   BluetoothUuid;
+  BluetoothUuid[];
 };
 
 /**

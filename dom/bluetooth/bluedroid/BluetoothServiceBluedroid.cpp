@@ -2207,19 +2207,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       }
 
       // Handler for |FetchUuidsInternal|
-
-      nsTArray<nsString> uuids;
-
-      // Construct a sorted uuid set
-      for (index = 0; index < p.mUuidArray.Length(); ++index) {
-        nsAutoString uuid;
-        UuidToString(p.mUuidArray[index], uuid);
-
-        if (!uuids.Contains(uuid)) { // filter out duplicate uuids
-          uuids.InsertElementSorted(uuid);
-        }
-      }
-      AppendNamedValue(propertiesArray, "UUIDs", uuids);
+      AppendNamedValue(propertiesArray, "UUIDs", p.mUuidArray);
 
     } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
       AppendNamedValue(propertiesArray, "Type",
@@ -2327,18 +2315,7 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
       AppendNamedValue(propertiesArray, "Cod", p.mUint32);
 
     } else if (p.mType == PROPERTY_UUIDS) {
-      nsTArray<nsString> uuids;
-
-      // Construct a sorted uuid set
-      for (uint32_t index = 0; index < p.mUuidArray.Length(); ++index) {
-        nsAutoString uuid;
-        UuidToString(p.mUuidArray[index], uuid);
-
-        if (!uuids.Contains(uuid)) { // filter out duplicate uuids
-          uuids.InsertElementSorted(uuid);
-        }
-      }
-      AppendNamedValue(propertiesArray, "UUIDs", uuids);
+      AppendNamedValue(propertiesArray, "UUIDs", p.mUuidArray);
 
     } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
       AppendNamedValue(propertiesArray, "Type",
