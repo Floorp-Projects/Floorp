@@ -1265,12 +1265,12 @@ const KTableEntry nsCSSProps::kAlignAllKeywords[] = {
   { eCSSKeyword_space_evenly,  NS_STYLE_ALIGN_SPACE_EVENLY },
   { eCSSKeyword_legacy,        NS_STYLE_ALIGN_LEGACY },
   { eCSSKeyword_safe,          NS_STYLE_ALIGN_SAFE },
-  { eCSSKeyword_true,          NS_STYLE_ALIGN_TRUE },
+  { eCSSKeyword_unsafe,        NS_STYLE_ALIGN_UNSAFE },
   { eCSSKeyword_UNKNOWN,       -1 }
 };
 
 const KTableEntry nsCSSProps::kAlignOverflowPosition[] = {
-  { eCSSKeyword_true,          NS_STYLE_ALIGN_TRUE },
+  { eCSSKeyword_unsafe,        NS_STYLE_ALIGN_UNSAFE },
   { eCSSKeyword_safe,          NS_STYLE_ALIGN_SAFE },
   { eCSSKeyword_UNKNOWN,       -1 }
 };
