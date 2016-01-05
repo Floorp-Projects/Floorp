@@ -28,6 +28,16 @@ static std::string NameFromBackend(BackendType aType)
   }
 }
 
+already_AddRefed<DrawTarget>
+Translator::CreateDrawTarget(ReferencePtr aRefPtr, const IntSize &aSize,
+                             SurfaceFormat aFormat)
+{
+  RefPtr<DrawTarget> newDT =
+    GetReferenceDrawTarget()->CreateSimilarDrawTarget(aSize, aFormat);
+  AddDrawTarget(aRefPtr, newDT);
+  return newDT.forget();
+}
+
 #define LOAD_EVENT_TYPE(_typeenum, _class) \
   case _typeenum: return new _class(aStream)
 
@@ -67,6 +77,7 @@ RecordedEvent::LoadEventFromStream(std::istream &aStream, EventType aType)
     LOAD_EVENT_TYPE(MASKSURFACE, RecordedMaskSurface);
     LOAD_EVENT_TYPE(FILTERNODESETATTRIBUTE, RecordedFilterNodeSetAttribute);
     LOAD_EVENT_TYPE(FILTERNODESETINPUT, RecordedFilterNodeSetInput);
+    LOAD_EVENT_TYPE(CREATESIMILARDRAWTARGET, RecordedCreateSimilarDrawTarget);
   default:
     return nullptr;
   }
@@ -140,6 +151,8 @@ RecordedEvent::GetEventName(EventType aType)
     return "SetAttribute";
   case FILTERNODESETINPUT:
     return "SetInput";
+  case CREATESIMILARDRAWTARGET:
+    return "CreateSimilarDrawTarget";
   default:
     return "Unknown";
   }
@@ -367,10 +380,9 @@ void
 RecordedDrawTargetCreation::PlayEvent(Translator *aTranslator) const
 {
   RefPtr<DrawTarget> newDT =
-    aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize, mFormat);
-  aTranslator->AddDrawTarget(mRefPtr, newDT);
+    aTranslator->CreateDrawTarget(mRefPtr, mSize, mFormat);
 
-  if (mHasExistingData) {
+  if (newDT && mHasExistingData) {
     Rect dataRect(0, 0, mExistingData->GetSize().width, mExistingData->GetSize().height);
     newDT->DrawSurface(mExistingData, dataRect, dataRect);
   }
@@ -451,6 +463,36 @@ void
 RecordedDrawTargetDestruction::OutputSimpleEventInfo(stringstream &aStringStream) const
 {
   aStringStream << "[" << mRefPtr << "] DrawTarget Destruction";
+}
+
+void
+RecordedCreateSimilarDrawTarget::PlayEvent(Translator *aTranslator) const
+{
+  RefPtr<DrawTarget> newDT =
+    aTranslator->GetReferenceDrawTarget()->CreateSimilarDrawTarget(mSize, mFormat);
+  aTranslator->AddDrawTarget(mRefPtr, newDT);
+}
+
+void
+RecordedCreateSimilarDrawTarget::RecordToStream(ostream &aStream) const
+{
+  WriteElement(aStream, mRefPtr);
+  WriteElement(aStream, mSize);
+  WriteElement(aStream, mFormat);
+}
+
+RecordedCreateSimilarDrawTarget::RecordedCreateSimilarDrawTarget(istream &aStream)
+  : RecordedEvent(CREATESIMILARDRAWTARGET)
+{
+  ReadElement(aStream, mRefPtr);
+  ReadElement(aStream, mSize);
+  ReadElement(aStream, mFormat);
+}
+
+void
+RecordedCreateSimilarDrawTarget::OutputSimpleEventInfo(stringstream &aStringStream) const
+{
+  aStringStream << "[" << mRefPtr << "] CreateSimilarDrawTarget (Size: " << mSize.width << "x" << mSize.height << ")";
 }
 
 struct GenericPattern
