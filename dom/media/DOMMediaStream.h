@@ -222,9 +222,9 @@ public:
   typedef dom::MediaTrackConstraints MediaTrackConstraints;
 
   class TrackListener {
-    NS_INLINE_DECL_REFCOUNTING(TrackListener)
-
   public:
+    virtual ~TrackListener() {}
+
     /**
      * Called when the DOMMediaStream has a new track added, either by
      * JS (addTrack()) or the source creating one.
@@ -238,9 +238,6 @@ public:
      */
     virtual void
     NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack) {};
-
-  protected:
-    virtual ~TrackListener() {}
   };
 
   /**
@@ -566,7 +563,14 @@ public:
     }
   }
 
+  // Registers a track listener to this MediaStream, for listening to changes
+  // to our track set. The caller must call UnregisterTrackListener before
+  // being destroyed, so we don't hold on to a dead pointer. Main thread only.
   void RegisterTrackListener(TrackListener* aListener);
+
+  // Unregisters a track listener from this MediaStream. The caller must call
+  // UnregisterTrackListener before being destroyed, so we don't hold on to
+  // a dead pointer. Main thread only.
   void UnregisterTrackListener(TrackListener* aListener);
 
 protected:
@@ -675,7 +679,7 @@ protected:
   bool mNotifiedOfMediaStreamGraphShutdown;
 
   // The track listeners subscribe to changes in this stream's track set.
-  nsTArray<RefPtr<TrackListener>> mTrackListeners;
+  nsTArray<TrackListener*> mTrackListeners;
 
 private:
   void NotifyPrincipalChanged();
