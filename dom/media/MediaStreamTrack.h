@@ -23,6 +23,7 @@ class MediaStream;
 class MediaStreamGraph;
 class MediaStreamTrackListener;
 class PeerConnectionImpl;
+class PeerIdentity;
 class ProcessedMediaStream;
 class RemoteSourceStreamInfo;
 
@@ -74,6 +75,17 @@ public:
    * NotifyPrincipalChanged().
    */
   virtual CORSMode GetCORSMode() const { return CORS_NONE; }
+
+  /**
+   * This is used in WebRTC. A peerIdentity constrained MediaStreamTrack cannot
+   * be sent across the network to anything other than a peer with the provided
+   * identity. If this is set, then GetPrincipal() should return an instance of
+   * nsNullPrincipal.
+   *
+   * A track's PeerIdentity is immutable and will not change during the track's
+   * lifetime.
+   */
+  virtual const PeerIdentity* GetPeerIdentity() const { return nullptr; }
 
   /**
    * Indicates whether the track is remote or not per the MediaCapture and
@@ -239,6 +251,11 @@ public:
    * Get this track's CORS mode.
    */
   CORSMode GetCORSMode() const { return GetSource().GetCORSMode(); }
+
+  /**
+   * Get this track's PeerIdentity.
+   */
+  const PeerIdentity* GetPeerIdentity() const { return GetSource().GetPeerIdentity(); }
 
   MediaStreamGraph* Graph();
 
