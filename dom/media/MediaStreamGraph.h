@@ -971,6 +971,14 @@ protected:
  * only this track will be forwarded to the destination stream. TRACK_ANY
  * can used to signal that all tracks shall be forwarded.
  *
+ * When a port is locked to a specific track in the source stream, it may also
+ * indicate a TrackID to map this source track to in the destination stream
+ * by setting aDestTrack to an explicit ID. When we do this, we must know
+ * that this TrackID in the destination stream is available. We assert during
+ * processing that the ID is available and that there are no generic input
+ * ports already attached to the destination stream.
+ * Note that this is currently only handled by TrackUnionStreams.
+ *
  * When a port's source or destination stream dies, the stream's DestroyImpl
  * calls MediaInputPort::Disconnect to disconnect the port from
  * the source and destination streams.
@@ -987,11 +995,12 @@ class MediaInputPort final
 private:
   // Do not call this constructor directly. Instead call aDest->AllocateInputPort.
   MediaInputPort(MediaStream* aSource, TrackID& aSourceTrack,
-                 ProcessedMediaStream* aDest,
+                 ProcessedMediaStream* aDest, TrackID& aDestTrack,
                  uint16_t aInputNumber, uint16_t aOutputNumber)
     : mSource(aSource)
     , mSourceTrack(aSourceTrack)
     , mDest(aDest)
+    , mDestTrack(aDestTrack)
     , mInputNumber(aInputNumber)
     , mOutputNumber(aOutputNumber)
     , mGraph(nullptr)
@@ -1025,6 +1034,7 @@ public:
   MediaStream* GetSource() { return mSource; }
   TrackID GetSourceTrackId() { return mSourceTrack; }
   ProcessedMediaStream* GetDestination() { return mDest; }
+  TrackID GetDestinationTrackId() { return mDestTrack; }
 
   // Block aTrackId in the port. Consumers will interpret this track as ended.
   void BlockTrackId(TrackID aTrackId);
@@ -1086,6 +1096,7 @@ private:
   MediaStream* mSource;
   TrackID mSourceTrack;
   ProcessedMediaStream* mDest;
+  TrackID mDestTrack;
   // The input and output numbers are optional, and are currently only used by
   // Web Audio.
   const uint16_t mInputNumber;
@@ -1114,13 +1125,21 @@ public:
    * This stream can be removed by calling MediaInputPort::Remove().
    * The input port is tied to aTrackID in the source stream.
    * aTrackID can be set to TRACK_ANY to automatically forward all tracks from
-   * aStream. To end a track in the destination stream forwarded with TRACK_ANY,
+   * aStream.
+   * If aTrackID is an explicit ID, aDestTrackID can also be made explicit
+   * to ensure that the track is assigned this ID in the destination stream.
+   * To avoid intermittent TrackID collisions the destination stream may not
+   * have any existing generic input ports (with TRACK_ANY source track) when
+   * you allocate an input port with a destination TrackID.
+   * To end a track in the destination stream forwarded with TRACK_ANY,
    * it can be blocked in the input port through MediaInputPort::BlockTrackId().
    */
-  already_AddRefed<MediaInputPort> AllocateInputPort(MediaStream* aStream,
-                                                     TrackID aTrackID = TRACK_ANY,
-                                                     uint16_t aInputNumber = 0,
-                                                     uint16_t aOutputNumber = 0);
+  already_AddRefed<MediaInputPort>
+  AllocateInputPort(MediaStream* aStream,
+                    TrackID aTrackID = TRACK_ANY,
+                    TrackID aDestTrackID = TRACK_ANY,
+                    uint16_t aInputNumber = 0,
+                    uint16_t aOutputNumber = 0);
   /**
    * Force this stream into the finished state.
    */
