@@ -308,8 +308,23 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
     return;
   }
 
+  BOOL isSupported;
+  DWRITE_FONT_FILE_TYPE fileType;
+  DWRITE_FONT_FACE_TYPE faceType;
+  UINT32 numberOfFaces;
+  fontFile->Analyze(&isSupported, &fileType, &faceType, &numberOfFaces);
+  if (!isSupported) {
+    gfxWarning() << "Font file is not supported.";
+    return;
+  }
+
+  if (aIndex >= numberOfFaces) {
+    gfxWarning() << "Font face index is greater than number of fonts in file.";
+    return;
+  }
+
   IDWriteFontFile *ff = fontFile;
-  if (FAILED(factory->CreateFontFace(DWRITE_FONT_FACE_TYPE_TRUETYPE, 1, &ff, aIndex, DWRITE_FONT_SIMULATIONS_NONE, getter_AddRefs(mFontFace)))) {
+  if (FAILED(factory->CreateFontFace(faceType, 1, &ff, aIndex, DWRITE_FONT_SIMULATIONS_NONE, getter_AddRefs(mFontFace)))) {
     gfxWarning() << "Failed to create font face from font file data!";
     return;
   }
