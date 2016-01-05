@@ -250,7 +250,7 @@ nsDOMCameraControl::nsDOMCameraControl(uint32_t aCameraId,
                                        const CameraConfiguration& aInitialConfig,
                                        Promise* aPromise,
                                        nsPIDOMWindowInner* aWindow)
-  : DOMMediaStream()
+  : DOMMediaStream(aWindow)
   , mCameraControl(nullptr)
   , mAudioChannelAgent(nullptr)
   , mGetCameraPromise(aPromise)

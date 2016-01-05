@@ -317,9 +317,10 @@ NS_IMPL_RELEASE_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DOMAudioNodeMediaStream)
 NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
-DOMMediaStream::DOMMediaStream()
-  : mLogicalStreamStartTime(0), mInputStream(nullptr), mOwnedStream(nullptr),
-    mPlaybackStream(nullptr), mOwnedPort(nullptr), mPlaybackPort(nullptr),
+DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow)
+  : mLogicalStreamStartTime(0), mWindow(aWindow),
+    mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
+    mOwnedPort(nullptr), mPlaybackPort(nullptr),
     mTracksCreated(false), mNotifiedOfMediaStreamGraphShutdown(false),
     mCORSMode(CORS_NONE)
 {
@@ -425,8 +426,7 @@ DOMMediaStream::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<DOMMediaStream> newStream = new DOMMediaStream();
-  newStream->mWindow = ownerWindow;
+  RefPtr<DOMMediaStream> newStream = new DOMMediaStream(ownerWindow);
 
   for (MediaStreamTrack& track : aTracks) {
     if (!newStream->GetPlaybackStream()) {
@@ -597,31 +597,24 @@ DOMMediaStream::IsFinished()
 }
 
 void
-DOMMediaStream::InitSourceStream(nsPIDOMWindowInner* aWindow,
-                                 MediaStreamGraph* aGraph)
+DOMMediaStream::InitSourceStream(MediaStreamGraph* aGraph)
 {
-  mWindow = aWindow;
   InitInputStreamCommon(aGraph->CreateSourceStream(nullptr), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
 
 void
-DOMMediaStream::InitTrackUnionStream(nsPIDOMWindowInner* aWindow,
-                                     MediaStreamGraph* aGraph)
+DOMMediaStream::InitTrackUnionStream(MediaStreamGraph* aGraph)
 {
-  mWindow = aWindow;
   InitInputStreamCommon(aGraph->CreateTrackUnionStream(nullptr), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
 }
 
 void
-DOMMediaStream::InitAudioCaptureStream(nsPIDOMWindowInner* aWindow,
-                                       MediaStreamGraph* aGraph)
+DOMMediaStream::InitAudioCaptureStream(MediaStreamGraph* aGraph)
 {
-  mWindow = aWindow;
-
   const TrackID AUDIO_TRACK = 1;
 
   InitInputStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK), aGraph);
@@ -677,8 +670,8 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                    MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitSourceStream(aWindow, aGraph);
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream(aWindow);
+  stream->InitSourceStream(aGraph);
   return stream.forget();
 }
 
@@ -686,8 +679,8 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                        MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitTrackUnionStream(aWindow, aGraph);
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream(aWindow);
+  stream->InitTrackUnionStream(aGraph);
   return stream.forget();
 }
 
@@ -695,8 +688,8 @@ already_AddRefed<DOMMediaStream>
 DOMMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
                                          MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMMediaStream> stream = new DOMMediaStream();
-  stream->InitAudioCaptureStream(aWindow, aGraph);
+  RefPtr<DOMMediaStream> stream = new DOMMediaStream(aWindow);
+  stream->InitAudioCaptureStream(aGraph);
   return stream.forget();
 }
 
@@ -1016,8 +1009,8 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateSourceStream(nsPIDOMWindowInner* aWindow,
                                         MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitSourceStream(aWindow, aGraph);
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream(aWindow);
+  stream->InitSourceStream(aGraph);
   return stream.forget();
 }
 
@@ -1025,8 +1018,8 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                             MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitTrackUnionStream(aWindow, aGraph);
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream(aWindow);
+  stream->InitTrackUnionStream(aGraph);
   return stream.forget();
 }
 
@@ -1034,13 +1027,14 @@ already_AddRefed<DOMLocalMediaStream>
 DOMLocalMediaStream::CreateAudioCaptureStream(nsPIDOMWindowInner* aWindow,
                                               MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream();
-  stream->InitAudioCaptureStream(aWindow, aGraph);
+  RefPtr<DOMLocalMediaStream> stream = new DOMLocalMediaStream(aWindow);
+  stream->InitAudioCaptureStream(aGraph);
   return stream.forget();
 }
 
-DOMAudioNodeMediaStream::DOMAudioNodeMediaStream(AudioNode* aNode)
-: mStreamNode(aNode)
+DOMAudioNodeMediaStream::DOMAudioNodeMediaStream(nsPIDOMWindowInner* aWindow, AudioNode* aNode)
+  : DOMMediaStream(aWindow),
+    mStreamNode(aNode)
 {
 }
 
@@ -1053,12 +1047,13 @@ DOMAudioNodeMediaStream::CreateTrackUnionStream(nsPIDOMWindowInner* aWindow,
                                                 AudioNode* aNode,
                                                 MediaStreamGraph* aGraph)
 {
-  RefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aNode);
-  stream->InitTrackUnionStream(aWindow, aGraph);
+  RefPtr<DOMAudioNodeMediaStream> stream = new DOMAudioNodeMediaStream(aWindow, aNode);
+  stream->InitTrackUnionStream(aGraph);
   return stream.forget();
 }
 
-DOMHwMediaStream::DOMHwMediaStream()
+DOMHwMediaStream::DOMHwMediaStream(nsPIDOMWindowInner* aWindow)
+  : DOMLocalMediaStream(aWindow)
 {
 }
 
@@ -1070,12 +1065,12 @@ already_AddRefed<DOMHwMediaStream>
 DOMHwMediaStream::CreateHwStream(nsPIDOMWindowInner* aWindow,
                                  OverlayImage* aImage)
 {
-  RefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream();
+  RefPtr<DOMHwMediaStream> stream = new DOMHwMediaStream(aWindow);
 
   MediaStreamGraph* graph =
     MediaStreamGraph::GetInstance(MediaStreamGraph::SYSTEM_THREAD_DRIVER,
                                   AudioChannel::Normal);
-  stream->InitSourceStream(aWindow, graph);
+  stream->InitSourceStream(graph);
   stream->Init(stream->GetInputStream(), aImage);
 
   return stream.forget();

@@ -670,16 +670,19 @@ public:
                      VideoDevice* aVideoDevice,
                      MediaStreamGraph* aMSG)
   {
-    RefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aListener,
+    RefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aWindow,
+                                                                   aListener,
                                                                    aAudioDevice,
-                                                                     aVideoDevice);
-    stream->InitSourceStream(aWindow, aMSG);
+                                                                   aVideoDevice);
+    stream->InitSourceStream(aMSG);
     return stream.forget();
   }
 
-  nsDOMUserMediaStream(GetUserMediaCallbackMediaStreamListener* aListener,
+  nsDOMUserMediaStream(nsPIDOMWindowInner* aWindow,
+                       GetUserMediaCallbackMediaStreamListener* aListener,
                        AudioDevice *aAudioDevice,
                        VideoDevice *aVideoDevice) :
+    DOMLocalMediaStream(aWindow),
     mListener(aListener),
     mAudioDevice(aAudioDevice),
     mVideoDevice(aVideoDevice)
@@ -2290,7 +2293,7 @@ MediaManager::EnumerateDevicesImpl(uint64_t aWindowId,
                                    bool aFake, bool aFakeTracks)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  nsPIDOMWindowInner* window = 
+  nsPIDOMWindowInner* window =
     nsGlobalWindow::GetInnerWindowWithId(aWindowId)->AsInner();
 
   // This function returns a pledge, a promise-like object with the future result

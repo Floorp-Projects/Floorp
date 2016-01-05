@@ -283,7 +283,7 @@ public:
     const InputPortOwnership mOwnership;
   };
 
- DOMMediaStream();
+  explicit DOMMediaStream(nsPIDOMWindowInner* aWindow);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(DOMEventTargetHelper)
@@ -511,9 +511,9 @@ protected:
   virtual ~DOMMediaStream();
 
   void Destroy();
-  void InitSourceStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
-  void InitTrackUnionStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
-  void InitAudioCaptureStream(nsPIDOMWindowInner* aWindow, MediaStreamGraph* aGraph);
+  void InitSourceStream(MediaStreamGraph* aGraph);
+  void InitTrackUnionStream(MediaStreamGraph* aGraph);
+  void InitAudioCaptureStream(MediaStreamGraph* aGraph);
 
   // Sets up aStream as mInputStream. A producer may append data to a
   // SourceMediaStream input stream, or connect another stream to a
@@ -629,7 +629,8 @@ NS_DEFINE_STATIC_IID_ACCESSOR(DOMMediaStream,
 class DOMLocalMediaStream : public DOMMediaStream
 {
 public:
-  DOMLocalMediaStream() {}
+  explicit DOMLocalMediaStream(nsPIDOMWindowInner* aWindow)
+    : DOMMediaStream(aWindow) {}
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_DOMLOCALMEDIASTREAM_IID)
@@ -674,7 +675,7 @@ class DOMAudioNodeMediaStream : public DOMMediaStream
 {
   typedef dom::AudioNode AudioNode;
 public:
-  explicit DOMAudioNodeMediaStream(AudioNode* aNode);
+  DOMAudioNodeMediaStream(nsPIDOMWindowInner* aWindow, AudioNode* aNode);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DOMAudioNodeMediaStream, DOMMediaStream)
@@ -705,7 +706,7 @@ class DOMHwMediaStream : public DOMLocalMediaStream
 #endif
 
 public:
-  DOMHwMediaStream();
+  explicit DOMHwMediaStream(nsPIDOMWindowInner* aWindow);
 
   static already_AddRefed<DOMHwMediaStream> CreateHwStream(nsPIDOMWindowInner* aWindow,
                                                            OverlayImage* aImage = nullptr);

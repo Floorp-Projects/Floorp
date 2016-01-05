@@ -96,7 +96,7 @@ private:
 class CanvasCaptureMediaStream : public DOMMediaStream
 {
 public:
-  explicit CanvasCaptureMediaStream(HTMLCanvasElement* aCanvas);
+  CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow, HTMLCanvasElement* aCanvas);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(CanvasCaptureMediaStream, DOMMediaStream)
