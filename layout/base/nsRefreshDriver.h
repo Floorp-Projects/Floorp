@@ -345,7 +345,7 @@ private:
 
   enum EnsureTimerStartedFlags {
     eNone = 0,
-    eAdjustingTimer = 1 << 0,
+    eForceAdjustTimer = 1 << 0,
     eAllowTimeToGoBackwards = 1 << 1
   };
   void EnsureTimerStarted(EnsureTimerStartedFlags aFlags = eNone);
