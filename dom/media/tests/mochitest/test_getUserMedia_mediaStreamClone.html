@@ -144,6 +144,7 @@
                      // array[analyser.binIndexForFrequency(5000)] < 50 &&
                      array[analyser.binIndexForFrequency(10000)] < 50);
           })
+          .then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output of stream clone (1k + 5k)");
         var stream = new MediaStream();
@@ -156,7 +157,8 @@
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50);
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output of clone of clone (1k + 5k)");
         var stream = new MediaStream([audioTrack1kClone, audioTrack5kClone]).clone();
@@ -167,7 +169,8 @@
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50);
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output of clone() + addTrack()ed tracks (1k + 5k)");
         var stream =
@@ -181,7 +184,8 @@
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50);
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output of clone()d tracks in original stream (1k) " +
              "and clone()d tracks in stream clone (5k)");
@@ -199,12 +203,14 @@
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] < 50)
           .then(() => {
+            analyser.disconnect();
             var cloneAnalyser = new AudioStreamAnalyser(ac, streamClone);
             return cloneAnalyser.waitForAnalysisSuccess(array =>
                      array[cloneAnalyser.binIndexForFrequency(1000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(3000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(5000)] > 200 &&
-                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50);
+                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50)
+              .then(() => cloneAnalyser.disconnect());
           });
       }).then(() => {
         info("Analysing audio output enabled and disabled tracks that don't affect each other");
@@ -224,12 +230,14 @@
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] < 50)
           .then(() => {
+            analyser.disconnect();
             var cloneAnalyser = new AudioStreamAnalyser(ac, clone);
             return cloneAnalyser.waitForAnalysisSuccess(array =>
                      array[cloneAnalyser.binIndexForFrequency(1000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(3000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(5000)] > 200 &&
-                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50);
+                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50)
+            .then(() => cloneAnalyser.disconnect());
           })
           // Restore original tracks
           .then(() => stream.getTracks().forEach(t => t.enabled = true));

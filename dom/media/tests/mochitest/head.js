@@ -98,6 +98,17 @@ AudioStreamAnalyser.prototype = {
   },
 
   /**
+   * Disconnects the input stream from our internal analyser node.
+   * Call this to reduce main thread processing, mostly necessary on slow
+   * devices.
+   */
+  disconnect: function() {
+    this.disableDebugCanvas();
+    this.sourceNodes.forEach(n => n.disconnect());
+    this.sourceNodes = [];
+  },
+
+  /**
    * Return a Promise, that will be resolved when the function passed as
    * argument, when called, returns true (meaning the analysis was a
    * success).

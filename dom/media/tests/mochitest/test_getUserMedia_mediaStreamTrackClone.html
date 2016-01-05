@@ -108,7 +108,7 @@
                      array[analyser.binIndexForFrequency(3000)] < 50 &&
                      // array[analyser.binIndexForFrequency(5000)] < 50 &&
                      array[analyser.binIndexForFrequency(10000)] < 50);
-          });
+          }).then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output of clones of clones (1kx2 + 5kx5)");
         var stream = new MediaStream([audioTrack1kClone.clone(),
@@ -120,7 +120,8 @@
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
                  array[analyser.binIndexForFrequency(5000)] > 200 &&
-                 array[analyser.binIndexForFrequency(10000)] < 50);
+                 array[analyser.binIndexForFrequency(10000)] < 50)
+          .then(() => analyser.disconnect());
       }).then(() => {
         info("Analysing audio output enabled and disabled tracks that don't affect each other");
         audioTrack1kOriginal.enabled = true;
@@ -136,7 +137,8 @@
                  array[analyser.binIndexForFrequency(50)] < 50 &&
                  array[analyser.binIndexForFrequency(1000)] > 200 &&
                  array[analyser.binIndexForFrequency(3000)] < 50 &&
-                 array[analyser.binIndexForFrequency(5000)] < 50);
+                 array[analyser.binIndexForFrequency(5000)] < 50)
+          .then(() => analyser.disconnect())
           .then(() => {
             var cloneAnalyser =
               new AudioStreamAnalyser(ac, new MediaStream([audioTrack1kClone,
@@ -145,7 +147,8 @@
                      array[cloneAnalyser.binIndexForFrequency(1000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(3000)] < 50 &&
                      array[cloneAnalyser.binIndexForFrequency(5000)] > 200 &&
-                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50);
+                     array[cloneAnalyser.binIndexForFrequency(10000)] < 50)
+              .then(() => cloneAnalyser.disconnect());
           })
           // Restore original tracks
           .then(() => [audioTrack1kOriginal,
