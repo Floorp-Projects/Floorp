@@ -860,9 +860,9 @@ gfxDWriteFontList::InitFontList()
     char nowTime[256], nowDate[256];
 
     if (LOG_FONTINIT_ENABLED()) {
-        GetTimeFormat(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT,
+        GetTimeFormatA(LOCALE_INVARIANT, TIME_FORCE24HOURFORMAT,
                       nullptr, nullptr, nowTime, 256);
-        GetDateFormat(LOCALE_INVARIANT, 0, nullptr, nullptr, nowDate, 256);
+        GetDateFormatA(LOCALE_INVARIANT, 0, nullptr, nullptr, nowDate, 256);
         upTime = (double) GetTickCount();
     }
     QueryPerformanceFrequency(&frequency);

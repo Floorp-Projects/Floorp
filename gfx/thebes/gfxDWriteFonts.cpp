@@ -232,7 +232,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 
     UINT32 ucs = L' ';
     UINT16 glyph;
-    HRESULT hr = mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph);
+    HRESULT hr = mFontFace->GetGlyphIndicesW(&ucs, 1, &glyph);
     if (FAILED(hr)) {
         mMetrics->spaceWidth = 0;
     } else {
@@ -262,7 +262,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
 
     if (mMetrics->aveCharWidth < 1) {
         ucs = L'x';
-        if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph))) {
+        if (SUCCEEDED(mFontFace->GetGlyphIndicesW(&ucs, 1, &glyph))) {
             mMetrics->aveCharWidth = MeasureGlyphWidth(glyph);
         }
         if (mMetrics->aveCharWidth < 1) {
@@ -272,7 +272,7 @@ gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption)
     }
 
     ucs = L'0';
-    if (SUCCEEDED(mFontFace->GetGlyphIndicesA(&ucs, 1, &glyph))) {
+    if (SUCCEEDED(mFontFace->GetGlyphIndicesW(&ucs, 1, &glyph))) {
         mMetrics->zeroOrAveCharWidth = MeasureGlyphWidth(glyph);
     }
     if (mMetrics->zeroOrAveCharWidth < 1) {
