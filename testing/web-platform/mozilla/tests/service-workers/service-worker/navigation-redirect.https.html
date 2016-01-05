@@ -150,7 +150,7 @@ promise_test(function(t) {
         return test_redirect(
             OUT_SCOPE + 'url=' + encodeURIComponent(SCOPE1),
             SCOPE1,
-            [[SCOPE1], [], []]);
+            [[], [], []]);
       });
   }, 'Normal redirect to same-origin scope.');
 promise_test(function(t) {
@@ -158,7 +158,7 @@ promise_test(function(t) {
         return test_redirect(
             OUT_SCOPE + 'url=' + encodeURIComponent(OTHER_ORIGIN_SCOPE),
             OTHER_ORIGIN_SCOPE,
-            [[], [], [OTHER_ORIGIN_SCOPE]]);
+            [[], [], []]);
       });
   }, 'Normal redirect to other-origin scope.');
 

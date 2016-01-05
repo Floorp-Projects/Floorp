@@ -81,6 +81,14 @@ var mustSupport = [
   'viewportOffsetX', 'viewportOffsetY', 'viewportWidth', 'viewportHeight'
 ];
 
+var mustFailWith = (msg, reason, constraint, f) =>
+  f().then(() => ok(false, msg + " must fail"), e => {
+    is(e.name, reason, msg + " must fail: " + e.message);
+    if (constraint !== undefined) {
+      is(e.constraint, constraint, msg + " must fail w/correct constraint.");
+    }
+  });
+
 /**
  * Starts the test run by running through each constraint
  * test by verifying that the right resolution and rejection is fired.
@@ -120,6 +128,11 @@ runTest(function() {
       .then(() => stream.getAudioTracks()[0].applyConstraints({ })))
     .then(() => ok(true, "applyConstraints code exercised"))
     // TODO: Test outcome once fake devices support constraints (Bug 1088621)
+    .then(() => mustFailWith("applyConstraints fails on non-Gum tracks",
+                             "OverconstrainedError", "",
+                             () => (new AudioContext())
+                                 .createMediaStreamDestination().stream
+                                 .getAudioTracks()[0].applyConstraints()))
 });
 
 </script>

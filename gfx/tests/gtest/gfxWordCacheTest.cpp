@@ -81,23 +81,21 @@ MakeTextRun(const char16_t *aText, uint32_t aLength, gfxFontGroup *aFontGroup,
   return textRun.forget();
 }
 
-static already_AddRefed<gfxContext>
-MakeContext ()
+static already_AddRefed<DrawTarget>
+MakeDrawTarget()
 {
   const int size = 200;
 
   RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(IntSize(size, size),
                                        SurfaceFormat::B8G8R8X8);
-  RefPtr<gfxContext> ctx = new gfxContext(drawTarget);
-
-  return ctx.forget();
+  return drawTarget.forget();
 }
 
 TEST(Gfx, WordCache) {
   gTextRuns = new FrameTextRunCache();
 
-  RefPtr<gfxContext> ctx = MakeContext();
+  RefPtr<DrawTarget> dt = MakeDrawTarget();
   {
     gfxFontStyle style(mozilla::gfx::FontStyle::NORMAL,
                        139,
@@ -114,7 +112,7 @@ TEST(Gfx, WordCache) {
         nullptr, nullptr, 1.0);
 
     gfxTextRunFactory::Parameters params = {
-      ctx, nullptr, nullptr, nullptr, 0, 60
+      dt, nullptr, nullptr, nullptr, 0, 60
     };
 
     uint32_t flags = gfxTextRunFactory::TEXT_IS_PERSISTENT;

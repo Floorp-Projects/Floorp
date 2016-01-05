@@ -3197,35 +3197,7 @@ FrameActor.prototype = {
     return this.frame.arguments.map(arg => createValueGrip(arg,
       this.threadActor._pausePool, this.threadActor.objectGrip));
   },
-
-  /**
-   * Handle a protocol request to pop this frame from the stack.
-   *
-   * @param aRequest object
-   *        The protocol request object.
-   */
-  onPop: function (aRequest) {
-    // TODO: remove this when Debugger.Frame.prototype.pop is implemented
-    if (typeof this.frame.pop != "function") {
-      return { error: "notImplemented",
-               message: "Popping frames is not yet implemented." };
-    }
-
-    while (this.frame != this.threadActor.dbg.getNewestFrame()) {
-      this.threadActor.dbg.getNewestFrame().pop();
-    }
-    this.frame.pop(aRequest.completionValue);
-
-    // TODO: return the watches property when frame pop watch actors are
-    // implemented.
-    return { from: this.actorID };
-  }
 };
-
-FrameActor.prototype.requestTypes = {
-  "pop": FrameActor.prototype.onPop,
-};
-
 
 /**
  * Creates a BreakpointActor. BreakpointActors exist for the lifetime of their

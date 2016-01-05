@@ -31,9 +31,11 @@ else:
     else:
         SOURCES += [
             'xptcinvoke.cpp',
+            'xptcinvoke_asm_x86_msvc.asm',
             'xptcstubs.cpp',
         ]
         SOURCES['xptcinvoke.cpp'].no_pgo = True
+        SOURCES['xptcinvoke_asm_x86_msvc.asm'].flags += ['-safeseh']
 
 FINAL_LIBRARY = 'xul'
 

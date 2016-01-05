@@ -32,7 +32,6 @@
 #include "nsIOService.h"
 #include "nsICachingChannel.h"
 #include "mozilla/LoadInfo.h"
-#include "nsIHttpHeaderVisitor.h"
 #include "nsQueryObject.h"
 #include "mozilla/BasePrincipal.h"
 #include "nsCORSListenerProxy.h"
@@ -64,9 +63,8 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   , mDivertingFromChild(false)
   , mDivertedOnStartRequest(false)
   , mSuspendedForDiversion(false)
-  , mShouldIntercept(false)
-  , mShouldSuspendIntercept(false)
   , mSuspendAfterSynthesizeResponse(false)
+  , mWillSynthesizeResponse(false)
   , mNestedFrameId(0)
 {
   LOG(("Creating HttpChannelParent [this=%p]\n", this));
@@ -107,9 +105,8 @@ HttpChannelParent::ActorDestroy(ActorDestroyReason why)
 
   // If this is an intercepted channel, we need to make sure that any resources are
   // cleaned up to avoid leaks.
-  if (mInterceptedChannel) {
-    mInterceptedChannel->Cancel(NS_ERROR_INTERCEPTION_FAILED);
-    mInterceptedChannel = nullptr;
+  if (mParentListener) {
+    mParentListener->ClearInterceptedChannel();
   }
 }
 
@@ -150,143 +147,23 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
 // HttpChannelParent::nsISupports
 //-----------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(HttpChannelParent,
-                  nsIInterfaceRequestor,
-                  nsIProgressEventSink,
-                  nsIRequestObserver,
-                  nsIStreamListener,
-                  nsIPackagedAppChannelListener,
-                  nsIParentChannel,
-                  nsIAuthPromptProvider,
-                  nsIParentRedirectingChannel,
-                  nsINetworkInterceptController,
-                  nsIDeprecationWarner)
-
-NS_IMETHODIMP
-HttpChannelParent::ShouldPrepareForIntercept(nsIURI* aURI,
-                                             bool aIsNonSubresourceRequest,
-                                             bool* aShouldIntercept)
-{
-  *aShouldIntercept = mShouldIntercept;
-  return NS_OK;
-}
-
-class HeaderVisitor final : public nsIHttpHeaderVisitor
-{
-  nsCOMPtr<nsIInterceptedChannel> mChannel;
-  ~HeaderVisitor()
-  {
-  }
-public:
-  explicit HeaderVisitor(nsIInterceptedChannel* aChannel) : mChannel(aChannel)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD VisitHeader(const nsACString& aHeader, const nsACString& aValue) override
-  {
-    mChannel->SynthesizeHeader(aHeader, aValue);
-    return NS_OK;
-  }
-};
-
-NS_IMPL_ISUPPORTS(HeaderVisitor, nsIHttpHeaderVisitor)
-
-class FinishSynthesizedResponse : public nsRunnable
-{
-  nsCOMPtr<nsIInterceptedChannel> mChannel;
-public:
-  explicit FinishSynthesizedResponse(nsIInterceptedChannel* aChannel)
-  : mChannel(aChannel)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    // The URL passed as an argument here doesn't matter, since the child will
-    // receive a redirection notification as a result of this synthesized response.
-    mChannel->FinishSynthesizedResponse(EmptyCString());
-    return NS_OK;
-  }
-};
-
-class ResponseSynthesizer final : public nsIFetchEventDispatcher
-{
-public:
-  ResponseSynthesizer(nsIInterceptedChannel* aChannel,
-                       HttpChannelParent* aParentChannel)
-    : mChannel(aChannel)
-    , mParentChannel(aParentChannel)
-  {
-  }
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFETCHEVENTDISPATCHER
-
-private:
-  ~ResponseSynthesizer()
-  {
-  }
-
-  nsCOMPtr<nsIInterceptedChannel> mChannel;
-  RefPtr<HttpChannelParent> mParentChannel;
-};
-
-NS_IMPL_ISUPPORTS(ResponseSynthesizer, nsIFetchEventDispatcher)
-
-NS_IMETHODIMP
-ResponseSynthesizer::Dispatch()
-{
-  mParentChannel->SynthesizeResponse(mChannel);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpChannelParent::ChannelIntercepted(nsIInterceptedChannel* aChannel,
-                                      nsIFetchEventDispatcher** aDispatcher)
-{
-  RefPtr<ResponseSynthesizer> dispatcher =
-    new ResponseSynthesizer(aChannel, this);
-  dispatcher.forget(aDispatcher);
-  return NS_OK;
-}
-
-void
-HttpChannelParent::SynthesizeResponse(nsIInterceptedChannel* aChannel)
-{
-  if (mShouldSuspendIntercept) {
-    mInterceptedChannel = aChannel;
-    return;
-  }
-
-  if (!mSynthesizedResponseHead) {
-    // Near-term crash fix for bug 1219469.
-    mozilla::Unused << SendReportRedirectionError();
-    return;
-  }
-
-  aChannel->SynthesizeStatus(mSynthesizedResponseHead->Status(),
-                             mSynthesizedResponseHead->StatusText());
-  nsCOMPtr<nsIHttpHeaderVisitor> visitor = new HeaderVisitor(aChannel);
-  mSynthesizedResponseHead->Headers().VisitHeaders(visitor);
-
-  nsCOMPtr<nsIRunnable> event = new FinishSynthesizedResponse(aChannel);
-  NS_DispatchToCurrentThread(event);
-
-  mSynthesizedResponseHead = nullptr;
-
-  // Suspend now even though the FinishSynthesizeResponse runnable has
-  // not executed.  We want to suspend after we get far enough to trigger
-  // the synthesis, but not actually allow the nsHttpChannel to trigger
-  // any OnStartRequests().
-  if (mSuspendAfterSynthesizeResponse) {
-    mChannel->Suspend();
-  }
-
-  MaybeFlushPendingDiversion();
-}
+NS_IMPL_ADDREF(HttpChannelParent)
+NS_IMPL_RELEASE(HttpChannelParent)
+NS_INTERFACE_MAP_BEGIN(HttpChannelParent)
+  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+  NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+  NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIPackagedAppChannelListener)
+  NS_INTERFACE_MAP_ENTRY(nsIParentChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
+  NS_INTERFACE_MAP_ENTRY(nsIParentRedirectingChannel)
+  NS_INTERFACE_MAP_ENTRY(nsIDeprecationWarner)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIParentRedirectingChannel)
+  if (aIID.Equals(NS_GET_IID(HttpChannelParent))) {
+    foundInterface = static_cast<nsIInterfaceRequestor*>(this);
+  } else
+NS_INTERFACE_MAP_END
 
 //-----------------------------------------------------------------------------
 // HttpChannelParent::nsIInterfaceRequestor
@@ -505,8 +382,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
   }
 
   if (aSynthesizedResponseHead.type() == OptionalHttpResponseHead::TnsHttpResponseHead) {
-    mSynthesizedResponseHead = new nsHttpResponseHead(aSynthesizedResponseHead.get_nsHttpResponseHead());
-    mShouldIntercept = true;
+    mParentListener->SetupInterception(aSynthesizedResponseHead.get_nsHttpResponseHead());
+    mWillSynthesizeResponse = true;
     mChannel->SetCouldBeSynthesized();
 
     if (!aSecurityInfoSerialization.IsEmpty()) {
@@ -625,12 +502,11 @@ HttpChannelParent::ConnectChannel(const uint32_t& channelId, const bool& shouldI
   mChannel = static_cast<nsHttpChannel*>(channel.get());
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
 
-  mShouldIntercept = shouldIntercept;
-  if (mShouldIntercept) {
-    // When an interception occurs, this channel should suspend all further activity.
-    // It will be torn down and recreated if necessary.
-    mShouldSuspendIntercept = true;
-  }
+  nsCOMPtr<nsINetworkInterceptController> controller;
+  NS_QueryNotificationCallbacks(channel, controller);
+  RefPtr<HttpChannelParentListener> parentListener = do_QueryObject(controller);
+  MOZ_ASSERT(parentListener);
+  parentListener->SetupInterceptionAfterRedirect(shouldIntercept);
 
   if (mPBOverride != kPBOverride_Unset) {
     // redirected-to channel may not support PB
@@ -1081,6 +957,22 @@ HttpChannelParent::MaybeFlushPendingDiversion()
   return;
 }
 
+void
+HttpChannelParent::ResponseSynthesized()
+{
+  // Suspend now even though the FinishSynthesizeResponse runnable has
+  // not executed.  We want to suspend after we get far enough to trigger
+  // the synthesis, but not actually allow the nsHttpChannel to trigger
+  // any OnStartRequests().
+  if (mSuspendAfterSynthesizeResponse) {
+    mChannel->Suspend();
+  }
+
+  mWillSynthesizeResponse = false;
+
+  MaybeFlushPendingDiversion();
+}
+
 bool
 HttpChannelParent::RecvRemoveCorsPreflightCacheEntry(const URIParams& uri,
   const mozilla::ipc::PrincipalInfo& requestingPrincipal)
@@ -1428,7 +1320,7 @@ HttpChannelParent::SuspendForDiversion()
   // If we're in the process of opening a synthesized response, we must wait
   // to perform the diversion.  Some of our diversion listeners clear callbacks
   // which breaks the synthesis process.
-  if (mSynthesizedResponseHead) {
+  if (mWillSynthesizeResponse) {
     mPendingDiversion = true;
     return NS_OK;
   }
@@ -1503,7 +1395,7 @@ HttpChannelParent::DivertTo(nsIStreamListener *aListener)
   // If we're in the process of opening a synthesized response, we must wait
   // to perform the diversion.  Some of our diversion listeners clear callbacks
   // which breaks the synthesis process.
-  if (mSynthesizedResponseHead) {
+  if (mWillSynthesizeResponse) {
     // We should already have started pending the diversion when
     // SuspendForDiversion() was called.
     MOZ_ASSERT(mPendingDiversion);

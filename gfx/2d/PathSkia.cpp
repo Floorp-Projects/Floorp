@@ -201,6 +201,10 @@ PathSkia::StrokeContainsPoint(const StrokeOptions &aStrokeOptions,
 Rect
 PathSkia::GetBounds(const Matrix &aTransform) const
 {
+  if (!mPath.isFinite()) {
+    return Rect();
+  }
+
   Rect bounds = SkRectToRect(mPath.getBounds());
   return aTransform.TransformBounds(bounds);
 }
@@ -209,6 +213,10 @@ Rect
 PathSkia::GetStrokedBounds(const StrokeOptions &aStrokeOptions,
                            const Matrix &aTransform) const
 {
+  if (!mPath.isFinite()) {
+    return Rect();
+  }
+
   SkPaint paint;
   StrokeOptionsToPaint(paint, aStrokeOptions);
   

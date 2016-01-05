@@ -195,7 +195,7 @@ DataSourceSurfaceD2D1::Map(MapType aMapType, MappedSurface *aMappedSurface)
 
   D2D1_MAPPED_RECT map;
   if (FAILED(mBitmap->Map(D2D1_MAP_OPTIONS_READ, &map))) {
-    gfxCriticalError() << "Failed to map bitmap.";
+    gfxCriticalError() << "Failed to map bitmap (M).";
     return false;
   }
   aMappedSurface->mData = map.bits;
@@ -231,7 +231,7 @@ DataSourceSurfaceD2D1::EnsureMapped()
     return;
   }
   if (FAILED(mBitmap->Map(D2D1_MAP_OPTIONS_READ, &mMap))) {
-    gfxCriticalError() << "Failed to map bitmap.";
+    gfxCriticalError() << "Failed to map bitmap (EM).";
     return;
   }
   mMapped = true;

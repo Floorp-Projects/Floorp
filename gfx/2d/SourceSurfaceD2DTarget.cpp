@@ -65,7 +65,7 @@ SourceSurfaceD2DTarget::GetDataSurface()
   desc.MiscFlags = 0;
 
   if (!Factory::GetDirect3D10Device()) {
-    gfxCriticalError() << "Invalid D3D10 device in D2D target surface";
+    gfxCriticalError() << "Invalid D3D10 device in D2D target surface (GDS)";
     return nullptr;
   }
 
@@ -97,7 +97,7 @@ SourceSurfaceD2DTarget::GetSRView()
   }
 
   if (!Factory::GetDirect3D10Device()) {
-    gfxCriticalError() << "Invalid D3D10 device in D2D target surface";
+    gfxCriticalError() << "Invalid D3D10 device in D2D target surface (SRV)";
     return nullptr;
   }
 

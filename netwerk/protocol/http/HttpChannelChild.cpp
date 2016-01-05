@@ -1813,7 +1813,30 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // Set user agent override
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
-  if (ShouldIntercept()) {
+  bool isHttps = false;
+  rv = mURI->SchemeIs("https", &isHttps);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  if (!isHttps && mLoadInfo) {
+      nsContentUtils::GetSecurityManager()->
+        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
+  }
+  bool shouldUpgrade = false;
+  rv = NS_ShouldSecureUpgrade(mURI,
+                              mLoadInfo,
+                              resultPrincipal,
+                              mPrivateBrowsing,
+                              mAllowSTS,
+                              shouldUpgrade);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> upgradedURI;
+  if (shouldUpgrade) {
+    rv = GetSecureUpgradedURI(mURI, getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (ShouldIntercept(upgradedURI)) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
@@ -1822,7 +1845,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     mInterceptListener = new InterceptStreamListener(this, mListenerContext);
 
     RefPtr<InterceptedChannelContent> intercepted =
-        new InterceptedChannelContent(this, controller, mInterceptListener);
+        new InterceptedChannelContent(this, controller,
+                                      mInterceptListener, shouldUpgrade);
     intercepted->NotifyController();
     return NS_OK;
   }
@@ -2611,34 +2635,6 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
   if (warner) {
     warner->IssueWarning(warning, asError);
   }
-  return true;
-}
-
-bool
-HttpChannelChild::RecvReportRedirectionError()
-{
-  nsCOMPtr<nsIURI> uri;
-  GetURI(getter_AddRefs(uri));
-  nsCString spec;
-  uri->GetSpec(spec);
-  nsString wideSpec = NS_ConvertUTF8toUTF16(spec);
-
-  nsCOMPtr<nsIDocument> doc;
-  GetCallback(doc);
-
-  nsString msg = NS_LITERAL_STRING("Failed to load '");
-  msg.Append(wideSpec);
-  msg.AppendLiteral("'. A Service Worker for a multiprocess window encountered a redirection ");
-  msg.AppendLiteral("response, which is currently unsupported and tracked in bug 1219469.");
-  nsContentUtils::ReportToConsoleNonLocalized(msg,
-                                              nsIScriptError::errorFlag,
-                                              NS_LITERAL_CSTRING("Service Worker Interception"),
-                                              doc,
-                                              uri,
-                                              EmptyString(),
-                                              0,
-                                              0);
-  Cancel(NS_ERROR_NOT_AVAILABLE);
   return true;
 }
 

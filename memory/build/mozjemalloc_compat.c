@@ -142,7 +142,7 @@ jemalloc_stats_impl(jemalloc_stats_t *stats)
   // src/ctl.c
   uint64_t epoch = 0;
   size_t esz = sizeof(epoch);
-  int ret = je_(mallctl)("epoch", &epoch, &esz, &epoch, esz);
+  je_(mallctl)("epoch", &epoch, &esz, &epoch, esz);
 
   CTL_GET("arenas.narenas", narenas);
   CTL_GET("arenas.page", page);
