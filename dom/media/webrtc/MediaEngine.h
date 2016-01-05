@@ -76,6 +76,25 @@ protected:
 };
 
 /**
+ * Callback interface for TakePhoto(). Either PhotoComplete() or PhotoError()
+ * should be called.
+ */
+class MediaEnginePhotoCallback {
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaEnginePhotoCallback)
+
+  // aBlob is the image captured by MediaEngineSource. It is
+  // called on main thread.
+  virtual nsresult PhotoComplete(already_AddRefed<dom::Blob> aBlob) = 0;
+
+  // It is called on main thread. aRv is the error code.
+  virtual nsresult PhotoError(nsresult aRv) = 0;
+
+protected:
+  virtual ~MediaEnginePhotoCallback() {}
+};
+
+/**
  * Common abstract base class for audio and video sources.
  */
 class MediaEngineSource : public nsISupports
@@ -129,28 +148,11 @@ public:
   /* Returns the type of media source (camera, microphone, screen, window, etc) */
   virtual dom::MediaSourceEnum GetMediaSource() const = 0;
 
-  // Callback interface for TakePhoto(). Either PhotoComplete() or PhotoError()
-  // should be called.
-  class PhotoCallback {
-  public:
-    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PhotoCallback)
-
-    // aBlob is the image captured by MediaEngineSource. It is
-    // called on main thread.
-    virtual nsresult PhotoComplete(already_AddRefed<dom::Blob> aBlob) = 0;
-
-    // It is called on main thread. aRv is the error code.
-    virtual nsresult PhotoError(nsresult aRv) = 0;
-
-  protected:
-    virtual ~PhotoCallback() {}
-  };
-
   /* If implementation of MediaEngineSource supports TakePhoto(), the picture
    * should be return via aCallback object. Otherwise, it returns NS_ERROR_NOT_IMPLEMENTED.
    * Currently, only Gonk MediaEngineSource implementation supports it.
    */
-  virtual nsresult TakePhoto(PhotoCallback* aCallback) = 0;
+  virtual nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) = 0;
 
   /* Return false if device is currently allocated or started */
   bool IsAvailable() {
