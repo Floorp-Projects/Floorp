@@ -1611,6 +1611,7 @@ pref("view_source.tab", true);
 pref("dom.serviceWorkers.enabled", true);
 pref("dom.serviceWorkers.interception.enabled", true);
 pref("dom.serviceWorkers.openWindow.enabled", true);
+pref("dom.webnotifications.serviceworker.enabled", true);
 
 // Enable Push API.
 pref("dom.push.enabled", true);
