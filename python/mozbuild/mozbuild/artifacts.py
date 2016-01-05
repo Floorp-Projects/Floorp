@@ -223,6 +223,32 @@ class MacArtifactJob(ArtifactJob):
                 pass
 
 
+class WinArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            prefix = 'firefox/'
+            whitelist = {
+                'dependentlibs.list',
+                'platform.ini',
+                'application.ini',
+            }
+            for f in JarReader(filename):
+                if not f.filename.startswith(prefix):
+                    raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.filename))
+                basename = f.filename[len(prefix):]
+
+                if not basename.endswith('.dll') and \
+                   not basename.endswith('.exe') and \
+                   basename not in whitelist:
+                    continue
+
+                self.log(logging.INFO, 'artifact',
+                    {'basename': basename},
+                    'Adding {basename} to processed archive')
+
+                writer.add(basename.encode('utf-8'), f)
+
+
 # Keep the keys of this map in sync with the |mach artifact| --job options.
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
@@ -231,6 +257,8 @@ JOB_DETAILS = {
     # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
     # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
     'macosx64': (MacArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
+    'win32': (WinArtifactJob, 'public/build/firefox-(.*)\.win32.zip'),
+    'win64': (WinArtifactJob, 'public/build/firefox-(.*)\.win64.zip'),
 }
 
 def get_job_details(job, log=None):
@@ -344,7 +372,7 @@ class PushHeadCache(CacheManager):
     def pushheads(self, tree, parent):
         pushheads = subprocess.check_output([self._hg, 'log',
             '--template', '{node}\n',
-            '-r', 'last(pushhead({tree}) and ::{parent}, {num})'.format(
+            '-r', 'last(pushhead("{tree}") and ::"{parent}", {num})'.format(
                 tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
         pushheads = pushheads.strip().split('\n')
         return pushheads
