@@ -31,6 +31,7 @@
     "is": false,
     "ok": false,
     "registerCleanupFunction": false,
+    "requestLongerTimeout": false,
     "SimpleTest": false,
     "SpecialPowers": false,
     "waitForFocus": false,
