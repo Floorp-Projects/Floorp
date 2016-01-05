@@ -291,7 +291,7 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
 #endif
 
     if (!cxArg->isJSContext())
-        return;
+        return cxArg->addPendingOutOfMemory();
 
     JSContext* cx = cxArg->asJSContext();
     cx->runtime()->hadOutOfMemory = true;
@@ -645,7 +645,6 @@ js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                 */
                 reportp->ucmessage = out = cx->pod_malloc<char16_t>(expandedLength + 1);
                 if (!out) {
-                    ReportOutOfMemory(cx);
                     js_free(buffer);
                     goto error;
                 }
@@ -937,13 +936,16 @@ ExclusiveContext::ExclusiveContext(JSRuntime* rt, PerThreadData* pt, ContextKind
 void
 ExclusiveContext::recoverFromOutOfMemory()
 {
-    // If this is not a JSContext, there's nothing to do.
     if (JSContext* maybecx = maybeJSContext()) {
         if (maybecx->isExceptionPending()) {
             MOZ_ASSERT(maybecx->isThrowingOutOfMemory());
             maybecx->clearPendingException();
         }
+        return;
     }
+    // Keep in sync with addPendingOutOfMemory.
+    if (ParseTask* task = helperThread()->parseTask())
+        task->outOfMemory = false;
 }
 
 JSContext::JSContext(JSRuntime* rt)
