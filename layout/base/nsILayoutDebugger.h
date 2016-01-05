@@ -13,9 +13,10 @@
 class nsIDocument;
 class nsIPresShell;
 
-/* a6cf90f8-15b3-11d2-932e-00805f8add32 */
+// 1295f7c0-96b3-41fc-93ed-c95dfb712ce7
 #define NS_ILAYOUT_DEBUGGER_IID \
- { 0xa6cf90f8, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
+{ 0x1295f7c0, 0x96b3, 0x41fc, \
+  { 0x93, 0xed, 0xc9, 0x5d, 0xfb, 0x71, 0x2c, 0xe7 } }
 
 /**
  * API for access and control of layout debugging
@@ -31,15 +32,6 @@ public:
   NS_IMETHOD SetShowEventTargetFrameBorder(bool aEnable) = 0;
 
   NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult) = 0;
-
-  NS_IMETHOD GetContentSize(nsIDocument* aDocument,
-                            int32_t* aSizeInBytesResult) = 0;
-
-  NS_IMETHOD GetFrameSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult) = 0;
-
-  NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsILayoutDebugger, NS_ILAYOUT_DEBUGGER_IID)
