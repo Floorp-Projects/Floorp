@@ -1114,13 +1114,23 @@ ModuleBuilder::processExportFrom(frontend::ParseNode* pn)
 }
 
 ImportEntryObject*
-ModuleBuilder::importEntryFor(JSAtom* localName)
+ModuleBuilder::importEntryFor(JSAtom* localName) const
 {
     for (auto import : importEntries_) {
         if (import->localName() == localName)
             return import;
     }
     return nullptr;
+}
+
+bool
+ModuleBuilder::hasExportedName(JSAtom* name) const
+{
+    for (auto entry : exportEntries_) {
+        if (entry->exportName() == name)
+            return true;
+    }
+    return false;
 }
 
 bool
