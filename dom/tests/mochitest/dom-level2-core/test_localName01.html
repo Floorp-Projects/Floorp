@@ -101,9 +101,8 @@ function localName01() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      // Changed for bug 492933.
-      elementList = doc.getElementsByTagName("address");
-      testAddr = elementList.item(3);
+      elementList = doc.getElementsByTagName("emp:address");
+      testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
 addrAttr = testAddr.getAttributeNode("emp:domestic");
       localName = addrAttr.localName;

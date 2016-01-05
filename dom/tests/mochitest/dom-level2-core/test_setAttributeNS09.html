@@ -108,8 +108,7 @@ function setAttributeNS09() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      // Changed for bug 492933.
-      elementList = doc.getElementsByTagName("address");
+      elementList = doc.getElementsByTagName("emp:address");
       testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
 testAddr.setAttributeNS(namespaceURI,qualifiedName,"newValue");
