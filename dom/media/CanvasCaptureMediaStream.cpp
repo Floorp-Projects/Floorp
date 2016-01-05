@@ -209,7 +209,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMMediaStream)
 
 CanvasCaptureMediaStream::CanvasCaptureMediaStream(nsPIDOMWindowInner* aWindow,
                                                    HTMLCanvasElement* aCanvas)
-  : DOMMediaStream(aWindow)
+  : DOMMediaStream(aWindow, nullptr)
   , mCanvas(aCanvas)
   , mOutputStreamDriver(nullptr)
 {

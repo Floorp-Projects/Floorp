@@ -1868,6 +1868,19 @@ already_AddRefed<DOMMediaStream>
 HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
                                         MediaStreamGraph* aGraph)
 {
+  class CaptureStreamTrackSourceGetter : public MediaStreamTrackSourceGetter
+  {
+  public:
+    already_AddRefed<dom::MediaStreamTrackSource>
+    GetMediaStreamTrackSource(TrackID aInputTrackID) override
+    {
+      return do_AddRef(new BasicUnstoppableTrackSource());
+    }
+
+  protected:
+    virtual ~CaptureStreamTrackSourceGetter() {}
+  };
+
   nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
   if (!window) {
     return nullptr;
@@ -1891,7 +1904,8 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   }
 
   OutputMediaStream* out = mOutputStreams.AppendElement();
-  out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph);
+  MediaStreamTrackSourceGetter* getter = new CaptureStreamTrackSourceGetter();
+  out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph, getter);
   RefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
   out->mStream->CombineWithPrincipal(principal);
   out->mStream->SetCORSMode(mCORSMode);
