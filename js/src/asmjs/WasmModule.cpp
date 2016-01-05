@@ -1003,7 +1003,10 @@ Module::dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> hea
         specializeToHeap(heap);
 
     // See AllocateCode comment above.
-    ExecutableAllocator::makeExecutable(code(), pod.codeBytes_);
+    if (!ExecutableAllocator::makeExecutable(code(), pod.codeBytes_)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
 
     sendCodeRangesToProfiler(cx);
     return true;
