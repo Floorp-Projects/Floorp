@@ -35,7 +35,8 @@ public:
 
   static void Escape(const GlobalObject& aGlobal,
                      const nsAString& aIdent,
-                     nsAString& aReturn);
+                     nsAString& aReturn,
+                     ErrorResult& aRv);
 };
 
 } // namespace dom
