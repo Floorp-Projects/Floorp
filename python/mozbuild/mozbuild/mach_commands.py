@@ -633,7 +633,7 @@ class Build(MachCommandBase):
         self.log(logging.INFO, 'artifact',
                  {}, "Running |mach artifact install|.")
         args = [os.path.join(self.topsrcdir, 'mach'), 'artifact', 'install']
-        self._run_command_in_srcdir(args=args,
+        self._run_command_in_srcdir(args=args, require_unix_environment=True,
             pass_thru=True, ensure_exit_code=True)
 
 @CommandProvider
@@ -1446,7 +1446,10 @@ class PackageFrontend(MachCommandBase):
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
         import which
-        hg = which.which('hg')
+        if self._is_windows():
+          hg = which.which('hg.exe')
+        else:
+          hg = which.which('hg')
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
