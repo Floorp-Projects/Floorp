@@ -115,8 +115,10 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
     (cairo_surface_t*)mDT->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
     if (s) {
       if (dx && dy) {
-        *dx = -CurrentState().deviceOffset.x;
-        *dy = -CurrentState().deviceOffset.y;
+        double sdx, sdy;
+        cairo_surface_get_device_offset(s, &sdx, &sdy);
+        *dx = -CurrentState().deviceOffset.x + sdx;
+        *dy = -CurrentState().deviceOffset.y + sdy;
       }
       return gfxASurface::Wrap(s);
     }
