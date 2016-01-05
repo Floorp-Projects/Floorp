@@ -12,19 +12,8 @@ Cu.import("resource://gre/modules/services/healthreport/providers.jsm");
 Cu.import("resource://testing-common/services/healthreport/utils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
-  () => Cc["@mozilla.org/datareporting/service;1"]
-          .getService(Ci.nsISupports)
-          .wrappedJSObject);
-
-
 function run_test() {
   do_get_profile();
-
-  // Send the needed startup notifications to the datareporting service
-  // to ensure that it has been initialized.
-  gDatareportingService.observe(null, "app-startup", null);
-  gDatareportingService.observe(null, "profile-after-change", null);
 
   run_next_test();
 }
