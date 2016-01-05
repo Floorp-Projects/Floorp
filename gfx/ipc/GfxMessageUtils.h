@@ -376,7 +376,7 @@ struct RegionParamTraits
   {
     Iter it(param);
     while (const Rect* r = it.Next()) {
-      MOZ_ASSERT(!r->IsEmpty());
+      MOZ_RELEASE_ASSERT(!r->IsEmpty());
       WriteParam(msg, *r);
     }
     // empty rects are sentinel values because nsRegions will never
