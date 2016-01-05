@@ -16,7 +16,7 @@
 using namespace js;
 using namespace js::frontend;
 
-template<typename T, Value ValueGetter(T* obj)>
+template<typename T, Value ValueGetter(const T* obj)>
 static bool
 ModuleValueGetterImpl(JSContext* cx, const CallArgs& args)
 {
@@ -24,7 +24,7 @@ ModuleValueGetterImpl(JSContext* cx, const CallArgs& args)
     return true;
 }
 
-template<typename T, Value ValueGetter(T* obj)>
+template<typename T, Value ValueGetter(const T* obj)>
 static bool
 ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -34,7 +34,7 @@ ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
 
 #define DEFINE_GETTER_FUNCTIONS(cls, name, slot)                              \
     static Value                                                              \
-    cls##_##name##Value(cls* obj) {                                           \
+    cls##_##name##Value(const cls* obj) {                                     \
         return obj->getFixedSlot(cls::slot);                                  \
     }                                                                         \
                                                                               \
@@ -46,7 +46,7 @@ ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
 
 #define DEFINE_ATOM_ACCESSOR_METHOD(cls, name)                                \
     JSAtom*                                                                   \
-    cls::name()                                                               \
+    cls::name() const                                                         \
     {                                                                         \
         Value value = cls##_##name##Value(this);                              \
         return &value.toString()->asAtom();                                   \
@@ -54,7 +54,7 @@ ModuleValueGetter(JSContext* cx, unsigned argc, Value* vp)
 
 #define DEFINE_ATOM_OR_NULL_ACCESSOR_METHOD(cls, name)                        \
     JSAtom*                                                                   \
-    cls::name()                                                               \
+    cls::name() const                                                         \
     {                                                                         \
         Value value = cls##_##name##Value(this);                              \
         if (value.isNull())                                                   \
