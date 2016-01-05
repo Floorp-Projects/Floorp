@@ -328,22 +328,45 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static const struct ParamPair {
+#define FOR_EACH_GC_PARAM(_)                                                            \
+    _("maxBytes",                   JSGC_MAX_BYTES,                      true,  false)  \
+    _("maxMallocBytes",             JSGC_MAX_MALLOC_BYTES,               true,  false)  \
+    _("gcBytes",                    JSGC_BYTES,                          false, false)  \
+    _("gcNumber",                   JSGC_NUMBER,                         false, false)  \
+    _("mode",                       JSGC_MODE,                           true,  true)   \
+    _("unusedChunks",               JSGC_UNUSED_CHUNKS,                  false, false)  \
+    _("totalChunks",                JSGC_TOTAL_CHUNKS,                   false, false)  \
+    _("sliceTimeBudget",            JSGC_SLICE_TIME_BUDGET,              true,  false)  \
+    _("markStackLimit",             JSGC_MARK_STACK_LIMIT,               true,  false)  \
+    _("highFrequencyTimeLimit",     JSGC_HIGH_FREQUENCY_TIME_LIMIT,      true,  false)  \
+    _("highFrequencyLowLimit",      JSGC_HIGH_FREQUENCY_LOW_LIMIT,       true,  false)  \
+    _("highFrequencyHighLimit",     JSGC_HIGH_FREQUENCY_HIGH_LIMIT,      true,  false)  \
+    _("highFrequencyHeapGrowthMax", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, true,  false)  \
+    _("highFrequencyHeapGrowthMin", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, true,  false)  \
+    _("lowFrequencyHeapGrowth",     JSGC_LOW_FREQUENCY_HEAP_GROWTH,      true,  false)  \
+    _("dynamicHeapGrowth",          JSGC_DYNAMIC_HEAP_GROWTH,            true,  true)   \
+    _("dynamicMarkSlice",           JSGC_DYNAMIC_MARK_SLICE,             true,  true)   \
+    _("allocationThreshold",        JSGC_ALLOCATION_THRESHOLD,           true,  false)  \
+    _("decommitThreshold",          JSGC_DECOMMIT_THRESHOLD,             true,  false)  \
+    _("minEmptyChunkCount",         JSGC_MIN_EMPTY_CHUNK_COUNT,          true,  true)   \
+    _("maxEmptyChunkCount",         JSGC_MAX_EMPTY_CHUNK_COUNT,          true,  true)   \
+    _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true,  true)
+
+static const struct ParamInfo {
     const char*     name;
     JSGCParamKey    param;
+    bool            writable;
+    bool            allowZero;
 } paramMap[] = {
-    {"maxBytes",            JSGC_MAX_BYTES },
-    {"maxMallocBytes",      JSGC_MAX_MALLOC_BYTES},
-    {"gcBytes",             JSGC_BYTES},
-    {"gcNumber",            JSGC_NUMBER},
-    {"sliceTimeBudget",     JSGC_SLICE_TIME_BUDGET},
-    {"markStackLimit",      JSGC_MARK_STACK_LIMIT},
-    {"minEmptyChunkCount",  JSGC_MIN_EMPTY_CHUNK_COUNT},
-    {"maxEmptyChunkCount",  JSGC_MAX_EMPTY_CHUNK_COUNT}
+#define DEFINE_PARAM_INFO(name, key, writable, allowZero)                     \
+    {name, key, writable, allowZero},
+FOR_EACH_GC_PARAM(DEFINE_PARAM_INFO)
+#undef DEFINE_PARAM_INFO
 };
 
-// Keep this in sync with above params.
-#define GC_PARAMETER_ARGS_LIST "maxBytes, maxMallocBytes, gcBytes, gcNumber, sliceTimeBudget, markStackLimit, minEmptyChunkCount or maxEmptyChunkCount"
+#define PARAM_NAME_LIST_ENTRY(name, key, writable, allowZero)                 \
+    " " name
+#define GC_PARAMETER_ARGS_LIST FOR_EACH_GC_PARAM(PARAM_NAME_LIST_ENTRY)
 
 static bool
 GCParameter(JSContext* cx, unsigned argc, Value* vp)
@@ -362,13 +385,14 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     for (;; paramIndex++) {
         if (paramIndex == ArrayLength(paramMap)) {
             JS_ReportError(cx,
-                           "the first argument must be one of " GC_PARAMETER_ARGS_LIST);
+                           "the first argument must be one of:" GC_PARAMETER_ARGS_LIST);
             return false;
         }
         if (JS_FlatStringEqualsAscii(flatStr, paramMap[paramIndex].name))
             break;
     }
-    JSGCParamKey param = paramMap[paramIndex].param;
+    const ParamInfo& info = paramMap[paramIndex];
+    JSGCParamKey param = info.param;
 
     // Request mode.
     if (args.length() == 1) {
@@ -377,9 +401,8 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    if (param == JSGC_NUMBER || param == JSGC_BYTES) {
-        JS_ReportError(cx, "Attempt to change read-only parameter %s",
-                       paramMap[paramIndex].name);
+    if (!info.writable) {
+        JS_ReportError(cx, "Attempt to change read-only parameter %s", info.name);
         return false;
     }
 
@@ -392,7 +415,7 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     if (!ToUint32(cx, args[1], &value))
         return false;
 
-    if (!value) {
+    if (!info.allowZero && value == 0) {
         JS_ReportError(cx, "the second argument must be convertable to uint32_t "
                            "with non-zero value");
         return false;
@@ -3138,7 +3161,7 @@ static const JSFunctionSpecWithHelp TestingFunctions[] = {
 
     JS_FN_HELP("gcparam", GCParameter, 2, 0,
 "gcparam(name [, value])",
-"  Wrapper for JS_[GS]etGCParameter. The name is one of " GC_PARAMETER_ARGS_LIST),
+"  Wrapper for JS_[GS]etGCParameter. The name is one of:" GC_PARAMETER_ARGS_LIST),
 
     JS_FN_HELP("relazifyFunctions", RelazifyFunctions, 0, 0,
 "relazifyFunctions(...)",
