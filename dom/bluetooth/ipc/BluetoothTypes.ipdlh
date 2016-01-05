@@ -22,6 +22,8 @@ using mozilla::dom::bluetooth::BluetoothGattServiceId
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothGattWriteType
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothRemoteName
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothSspVariant
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothStatus
@@ -57,6 +59,7 @@ union BluetoothValue
   BluetoothAddress;
   BluetoothAddress[];
   BluetoothAttributeHandle;
+  BluetoothRemoteName;
   BluetoothUuid;
 };
 

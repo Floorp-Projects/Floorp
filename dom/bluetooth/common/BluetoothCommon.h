@@ -713,6 +713,52 @@ struct BluetoothRemoteInfo {
 
 struct BluetoothRemoteName {
   uint8_t mName[248]; /* not \0-terminated */
+  uint8_t mLength;
+
+  BluetoothRemoteName()
+    : mLength(0)
+  { }
+
+  explicit BluetoothRemoteName(const nsACString_internal& aString)
+    : mLength(0)
+  {
+    MOZ_ASSERT(aString.Length() <= MOZ_ARRAY_LENGTH(mName));
+    memcpy(mName, aString.Data(), aString.Length());
+    mLength = aString.Length();
+  }
+
+  BluetoothRemoteName(const BluetoothRemoteName&) = default;
+
+  BluetoothRemoteName& operator=(const BluetoothRemoteName&) = default;
+
+  bool operator==(const BluetoothRemoteName& aRhs) const
+  {
+    MOZ_ASSERT(mLength <= MOZ_ARRAY_LENGTH(mName));
+    return (mLength == aRhs.mLength) &&
+            std::equal(aRhs.mName, aRhs.mName + aRhs.mLength, mName);
+  }
+
+  bool operator!=(const BluetoothRemoteName& aRhs) const
+  {
+    return !operator==(aRhs);
+  }
+
+  void Assign(const uint8_t* aName, size_t aLength)
+  {
+    MOZ_ASSERT(aLength <= MOZ_ARRAY_LENGTH(mName));
+    memcpy(mName, aName, aLength);
+    mLength = aLength;
+  }
+
+  void Clear()
+  {
+    mLength = 0;
+  }
+
+  bool IsCleared() const
+  {
+    return !mLength;
+  }
 };
 
 struct BluetoothProperty {
@@ -725,8 +771,10 @@ struct BluetoothProperty {
   /* PROPERTY_BDADDR */
   BluetoothAddress mBdAddress;
 
-  /* PROPERTY_BDNAME
-     PROPERTY_REMOTE_FRIENDLY_NAME */
+  /* PROPERTY_BDNAME */
+  BluetoothRemoteName mRemoteName;
+
+  /* PROPERTY_REMOTE_FRIENDLY_NAME */
   nsString mString;
 
   /* PROPERTY_UUIDS */
@@ -762,6 +810,12 @@ struct BluetoothProperty {
                              const BluetoothAddress& aBdAddress)
     : mType(aType)
     , mBdAddress(aBdAddress)
+  { }
+
+  explicit BluetoothProperty(BluetoothPropertyType aType,
+                             const BluetoothRemoteName& aRemoteName)
+    : mType(aType)
+    , mRemoteName(aRemoteName)
   { }
 
   explicit BluetoothProperty(BluetoothPropertyType aType,
