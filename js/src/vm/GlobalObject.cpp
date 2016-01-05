@@ -120,6 +120,12 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
 {
     MOZ_ASSERT(!global->isStandardClassResolved(key));
 
+    // Prohibit collection of allocation metadata. Metadata builders shouldn't
+    // need to observe lazily-constructed prototype objects coming into
+    // existence. And assertions start to fail when the builder itself attempts
+    // an allocation that re-entrantly tries to create the same prototype.
+    AutoSuppressObjectMetadataCallback suppressMetadata(cx);
+
     // There are two different kinds of initialization hooks. One of them is
     // the class js::InitFoo hook, defined in a JSProtoKey-keyed table at the
     // top of this file. The other lives in the ClassSpec for classes that
