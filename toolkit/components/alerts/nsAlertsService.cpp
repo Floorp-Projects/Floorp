@@ -29,8 +29,11 @@ using mozilla::dom::ContentChild;
 NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsProgressListener)
 
 nsAlertsService::nsAlertsService() :
-  mXULAlerts(nsXULAlerts::GetInstance())
+  mBackend(nullptr)
 {
+#ifndef MOZ_WIDGET_ANDROID
+  mBackend = do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID);
+#endif // MOZ_WIDGET_ANDROID
 }
 
 nsAlertsService::~nsAlertsService()
@@ -131,11 +134,14 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
   return NS_OK;
 #else
   // Check if there is an optional service that handles system-level notifications
-  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  if (sysAlerts) {
-    rv = sysAlerts->ShowAlert(aAlert, aAlertListener);
-    if (NS_SUCCEEDED(rv))
-      return NS_OK;
+  if (mBackend) {
+    rv = mBackend->ShowAlert(aAlert, aAlertListener);
+    if (NS_SUCCEEDED(rv)) {
+      return rv;
+    }
+    // If the system backend failed to show the alert, clear the backend and
+    // retry with XUL notifications. Future alerts will always use XUL.
+    mBackend = nullptr;
   }
 
   if (!ShouldShowAlert()) {
@@ -146,8 +152,9 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
   }
 
   // Use XUL notifications as a fallback if above methods have failed.
-  rv = mXULAlerts->ShowAlert(aAlert, aAlertListener);
-  return rv;
+  nsCOMPtr<nsIAlertsService> xulBackend(nsXULAlerts::GetInstance());
+  NS_ENSURE_TRUE(xulBackend, NS_ERROR_FAILURE);
+  return xulBackend->ShowAlert(aAlert, aAlertListener);
 #endif // !MOZ_WIDGET_ANDROID
 }
 
@@ -165,13 +172,21 @@ NS_IMETHODIMP nsAlertsService::CloseAlert(const nsAString& aAlertName,
   return NS_OK;
 #else
 
+  nsresult rv;
   // Try the system notification service.
-  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  if (sysAlerts) {
-    return sysAlerts->CloseAlert(aAlertName, nullptr);
+  if (mBackend) {
+    rv = mBackend->CloseAlert(aAlertName, aPrincipal);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      // If the system backend failed to close the alert, fall back to XUL for
+      // future alerts.
+      mBackend = nullptr;
+    }
+  } else {
+    nsCOMPtr<nsIAlertsService> xulBackend(nsXULAlerts::GetInstance());
+    NS_ENSURE_TRUE(xulBackend, NS_ERROR_FAILURE);
+    rv = xulBackend->CloseAlert(aAlertName, aPrincipal);
   }
-
-  return mXULAlerts->CloseAlert(aAlertName, aPrincipal);
+  return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }
 
@@ -182,18 +197,9 @@ NS_IMETHODIMP nsAlertsService::GetManualDoNotDisturb(bool* aRetVal)
 #ifdef MOZ_WIDGET_ANDROID
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  // Try the system notification service.
-  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  if (sysAlerts) {
-    nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-    if (!alertsDND) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    return alertsDND->GetManualDoNotDisturb(aRetVal);
-  }
-
-  nsCOMPtr<nsIAlertsDoNotDisturb> xulDND(do_QueryInterface(mXULAlerts));
-  return xulDND ? xulDND->GetManualDoNotDisturb(aRetVal) : NS_ERROR_FAILURE;
+  nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(GetDNDBackend());
+  NS_ENSURE_TRUE(alertsDND, NS_ERROR_NOT_IMPLEMENTED);
+  return alertsDND->GetManualDoNotDisturb(aRetVal);
 #endif
 }
 
@@ -202,24 +208,13 @@ NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
 #ifdef MOZ_WIDGET_ANDROID
   return NS_ERROR_NOT_IMPLEMENTED;
 #else
-  // Try the system notification service.
-  nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  nsresult rv;
-  if (sysAlerts) {
-    nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-    if (!alertsDND) {
-      return NS_ERROR_NOT_IMPLEMENTED;
-    }
-    rv = alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
-  } else {
-    nsCOMPtr<nsIAlertsDoNotDisturb> xulDND(do_QueryInterface(mXULAlerts));
-    if (!xulDND) {
-      return NS_ERROR_FAILURE;
-    }
-    rv = xulDND->SetManualDoNotDisturb(aDoNotDisturb);
-  }
+  nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(GetDNDBackend());
+  NS_ENSURE_TRUE(alertsDND, NS_ERROR_NOT_IMPLEMENTED);
 
-  Telemetry::Accumulate(Telemetry::ALERTS_SERVICE_DND_ENABLED, 1);
+  nsresult rv = alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
+  if (NS_SUCCEEDED(rv)) {
+    Telemetry::Accumulate(Telemetry::ALERTS_SERVICE_DND_ENABLED, 1);
+  }
   return rv;
 #endif
 }
@@ -247,4 +242,17 @@ NS_IMETHODIMP nsAlertsService::OnCancel(const nsAString & aAlertName)
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
 #endif // !MOZ_WIDGET_ANDROID
+}
+
+already_AddRefed<nsIAlertsDoNotDisturb>
+nsAlertsService::GetDNDBackend()
+{
+  // Try the system notification service.
+  nsCOMPtr<nsIAlertsService> backend = mBackend;
+  if (!backend) {
+    backend = nsXULAlerts::GetInstance();
+  }
+
+  nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_QueryInterface(backend));
+  return alertsDND.forget();
 }
