@@ -338,7 +338,7 @@ DOMMediaStream::DOMMediaStream(nsPIDOMWindowInner* aWindow,
   : mLogicalStreamStartTime(0), mWindow(aWindow),
     mInputStream(nullptr), mOwnedStream(nullptr), mPlaybackStream(nullptr),
     mTrackSourceGetter(aTrackSourceGetter), mTracksCreated(false),
-    mNotifiedOfMediaStreamGraphShutdown(false), mCORSMode(CORS_NONE)
+    mNotifiedOfMediaStreamGraphShutdown(false)
 {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -890,20 +890,6 @@ DOMMediaStream::RecomputePrincipal()
   if (previousPrincipal != mPrincipal) {
     NotifyPrincipalChanged();
   }
-}
-
-void
-DOMMediaStream::SetCORSMode(CORSMode aCORSMode)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  mCORSMode = aCORSMode;
-}
-
-CORSMode
-DOMMediaStream::GetCORSMode()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  return mCORSMode;
 }
 
 void
