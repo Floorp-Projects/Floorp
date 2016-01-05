@@ -7,7 +7,7 @@
 
 #include "mozilla/Preferences.h"
 #include "MainThreadUtils.h"
-#include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/Preferences.h"
 
 using namespace mozilla;
 
