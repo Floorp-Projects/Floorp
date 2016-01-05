@@ -20,6 +20,7 @@ Cu.import("resource://services-common/bagheeraclient.js");
 
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
+Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
@@ -132,10 +133,7 @@ HealthReporterState.prototype = Object.freeze({
     return Task.spawn(function* init() {
       yield OS.File.makeDir(this._stateDir);
 
-      let drs = Cc["@mozilla.org/datareporting/service;1"]
-                  .getService(Ci.nsISupports)
-                  .wrappedJSObject;
-      let drsClientID = yield drs.getClientID();
+      let drsClientID = yield ClientID.getClientID();
 
       let resetObjectState = function () {
         this._s = {

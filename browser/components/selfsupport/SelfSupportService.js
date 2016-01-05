@@ -12,24 +12,6 @@ Cu.import("resource://gre/modules/Preferences.jsm");
 
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
-XPCOMUtils.defineLazyGetter(this, "gPolicy", () => {
-  try {
-    return Cc["@mozilla.org/datareporting/service;1"]
-             .getService(Ci.nsISupports)
-             .wrappedJSObject
-             .policy;
-  } catch (e) {
-    return undefined;
-  }
-});
-
-XPCOMUtils.defineLazyGetter(this, "reporter", () => {
-  return Cc["@mozilla.org/datareporting/service;1"]
-           .getService(Ci.nsISupports)
-           .wrappedJSObject
-           .healthReporter;
-});
-
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryArchive",
                                   "resource://gre/modules/TelemetryArchive.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
@@ -53,43 +35,11 @@ MozSelfSupportInterface.prototype = {
   },
 
   get healthReportDataSubmissionEnabled() {
-    if (gPolicy) {
-      return gPolicy.healthReportUploadEnabled;
-    }
-
-    // The datareporting service is unavailable or disabled.
     return Preferences.get(PREF_FHR_UPLOAD_ENABLED, false);
   },
 
   set healthReportDataSubmissionEnabled(enabled) {
-    if (gPolicy) {
-      let reason = "Self-support interface sent " +
-                   (enabled ? "opt-in" : "opt-out") +
-                   " command.";
-      gPolicy.recordHealthReportUploadEnabled(enabled, reason);
-      return;
-    }
-
-    // The datareporting service is unavailable or disabled.
     Preferences.set(PREF_FHR_UPLOAD_ENABLED, enabled);
-  },
-
-  getHealthReportPayload: function () {
-    return new this._window.Promise(function (aResolve, aReject) {
-      if (reporter) {
-        let resolvePayload = function () {
-          reporter.collectAndObtainJSONPayload(true).then(aResolve, aReject);
-        };
-
-        if (reporter.initialized) {
-          resolvePayload();
-        } else {
-          reporter.onInit().then(resolvePayload, aReject);
-        }
-      } else {
-        aReject(new Error("No reporter"));
-      }
-    }.bind(this));
   },
 
   resetPref: function(name) {
