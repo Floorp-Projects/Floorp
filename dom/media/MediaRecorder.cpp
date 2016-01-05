@@ -288,7 +288,7 @@ class MediaRecorder::Session: public nsIObserver
   };
 
   // For Ensure recorder has tracks to record.
-  class TracksAvailableCallback : public DOMMediaStream::OnTracksAvailableCallback
+  class TracksAvailableCallback : public OnTracksAvailableCallback
   {
   public:
     explicit TracksAvailableCallback(Session *aSession)
