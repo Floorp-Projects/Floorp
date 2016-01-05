@@ -9,12 +9,23 @@
 #include "nsIUUIDGenerator.h"
 #include "nsServiceManagerUtils.h"
 
+#ifdef LOG
+#undef LOG
+#endif
+
+static PRLogModuleInfo* gMediaStreamTrackLog;
+#define LOG(type, msg) MOZ_LOG(gMediaStreamTrackLog, type, msg)
+
 namespace mozilla {
 namespace dom {
 
 MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
   : mOwningStream(aStream), mTrackID(aTrackID), mLabel(aLabel), mEnded(false), mEnabled(true)
 {
+
+  if (!gMediaStreamTrackLog) {
+    gMediaStreamTrackLog = PR_NewLogModule("MediaStreamTrack");
+  }
 
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -52,6 +63,9 @@ MediaStreamTrack::GetId(nsAString& aID) const
 void
 MediaStreamTrack::SetEnabled(bool aEnabled)
 {
+  LOG(LogLevel::Info, ("MediaStreamTrack %p %s",
+                       this, aEnabled ? "Enabled" : "Disabled"));
+
   mEnabled = aEnabled;
   mOwningStream->SetTrackEnabled(mTrackID, aEnabled);
 }
@@ -59,6 +73,8 @@ MediaStreamTrack::SetEnabled(bool aEnabled)
 void
 MediaStreamTrack::Stop()
 {
+  LOG(LogLevel::Info, ("MediaStreamTrack %p Stop()", this));
+
   mOwningStream->StopTrack(mTrackID);
 }
 
@@ -66,6 +82,14 @@ already_AddRefed<Promise>
 MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                                    ErrorResult &aRv)
 {
+  if (MOZ_LOG_TEST(gMediaStreamTrackLog, LogLevel::Info)) {
+    nsString str;
+    aConstraints.ToJSON(str);
+
+    LOG(LogLevel::Info, ("MediaStreamTrack %p ApplyConstraints() with "
+                         "constraints %s", this, NS_ConvertUTF16toUTF8(str).get()));
+  }
+
   return GetStream()->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
 }
 
