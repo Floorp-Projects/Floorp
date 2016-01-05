@@ -354,11 +354,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent);
     printf("abs pos ");
-    if (aKidFrame) {
-      nsAutoString name;
-      aKidFrame->GetFrameName(name);
-      printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
-    }
+    nsAutoString name;
+    aKidFrame->GetFrameName(name);
+    printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
 
     char width[16];
     char height[16];
@@ -510,11 +508,9 @@ nsAbsoluteContainingBlock::ReflowAbsoluteFrame(nsIFrame*                aDelegat
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout,nsBlockFrame::gNoiseIndent - 1);
     printf("abs pos ");
-    if (aKidFrame) {
-      nsAutoString name;
-      aKidFrame->GetFrameName(name);
-      printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
-    }
+    nsAutoString name;
+    aKidFrame->GetFrameName(name);
+    printf("%s ", NS_LossyConvertUTF16toASCII(name).get());
     printf("%p rect=%d,%d,%d,%d\n", static_cast<void*>(aKidFrame),
            r.x, r.y, r.width, r.height);
   }
