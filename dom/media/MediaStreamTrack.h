@@ -17,6 +17,7 @@ namespace mozilla {
 class DOMMediaStream;
 class MediaEnginePhotoCallback;
 class MediaStream;
+class MediaStreamGraph;
 class ProcessedMediaStream;
 
 namespace dom {
@@ -182,6 +183,8 @@ public:
   bool Ended() const { return mEnded; }
   // Notifications from the MediaStreamGraph
   void NotifyEnded() { mEnded = true; }
+
+  MediaStreamGraph* Graph();
 
   MediaStreamTrackSource& GetSource() const
   {
