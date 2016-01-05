@@ -125,6 +125,15 @@ this.AddonWatcher = {
         return;
       }
 
+      let jankThreshold = Preferences.get("browser.addon-watch.jank-threshold-micros", /* 128 ms == 7 frames*/ 128000);
+      let occurrencesBetweenAlerts = Preferences.get("browser.addon-watch.occurrences-between-alerts", 3);
+      let delayBetweenAlerts = Preferences.get("browser.addon-watch.delay-between-alerts-ms", .5 * 3600 * 1000 /* 1/2h */);
+      let prescriptionDelay = Preferences.get("browser.addon-watch.prescription-delay", 2 * 3600 * 1000 /* 2 hours */);
+      let highestNumberOfAddonsToReport = Preferences.get("browser.addon-watch.max-simultaneous-reports", 1);
+
+      addons = addons.filter(x => x.details.highestJank >= jankThreshold).
+        sort((a, b) => a.details.highestJank - b.details.highestJank);
+
       // Report immediately to Telemetry, regardless of whether we report to
       // the user.
       for (let {source: {addonId}, details} of addons) {
@@ -133,26 +142,6 @@ this.AddonWatcher = {
         Telemetry.getKeyedHistogramById("PERF_MONITORING_SLOW_ADDON_CPOW_US").
           add(addonId, details.highestCPOW);
       }
-
-      // We expect that users don't care about real-time alerts unless their
-      // browser is going very, very slowly. Therefore, we use the following
-      // heuristic:
-      // - if jank is above freezeThreshold (e.g. 5 seconds), report immediately; otherwise
-      // - if jank is below jankThreshold (e.g. 128ms), disregard; otherwise
-      // - if the latest jank was more than prescriptionDelay (e.g. 5 minutes) ago, reset number of occurrences;
-      // - if we have had fewer than occurrencesBetweenAlerts janks (e.g. 3) since last alert, disregard; otherwise
-      // - if we have displayed an alert for this add-on less than delayBetweenAlerts ago (e.g. 6h), disregard; otherwise
-      // - also, don't report more than highestNumberOfAddonsToReport (e.g. 1) at once.
-      let freezeThreshold = Preferences.get("browser.addon-watch.freeze-threshold-micros", /* 5 seconds */ 5000000);
-      let jankThreshold = Preferences.get("browser.addon-watch.jank-threshold-micros", /* 256 ms == 8 frames*/ 256000);
-      let occurrencesBetweenAlerts = Preferences.get("browser.addon-watch.occurrences-between-alerts", 3);
-      let delayBetweenAlerts = Preferences.get("browser.addon-watch.delay-between-alerts-ms", 6 * 3600 * 1000 /* 6h */);
-      let delayBetweenFreeeAlerts = Preferences.get("browser.addon-watch.delay-between-freeze-alerts-ms", 2 * 60 * 1000 /* 2 min */);
-      let prescriptionDelay = Preferences.get("browser.addon-watch.prescription-delay", 5 * 60 * 1000 /* 5 minutes */);
-      let highestNumberOfAddonsToReport = Preferences.get("browser.addon-watch.max-simultaneous-reports", 1);
-
-      addons = addons.filter(x => x.details.highestJank >= jankThreshold).
-        sort((a, b) => a.details.highestJank - b.details.highestJank);
 
       for (let {source: {addonId}, details} of addons) {
         if (highestNumberOfAddonsToReport <= 0) {
@@ -172,25 +161,15 @@ this.AddonWatcher = {
 
         alerts.occurrencesSinceLastNotification++;
         alerts.occurrences++;
-
-        if (details.highestJank < freezeThreshold) {
-          if (alerts.occurrencesSinceLastNotification <= occurrencesBetweenAlerts) {
-            // While the add-on has caused jank at least once, we are only
-            // interested in repeat offenders. Store the data for future use.
-            continue;
-          }
-          if (now - alerts.latestNotificationTimeStamp <= delayBetweenAlerts) {
-            // We have already displayed an alert for this add-on recently.
-            // Wait a little before displaying another one.
-            continue;
-          }
-        } else {
-          // Even in case of freeze, we want to avoid needlessly spamming the user.
-          if (now - alerts.latestNotificationTimeStamp <= delayBetweenFreezeAlerts) {
-            // We have already displayed an alert for this add-on recently.
-            // Wait a little before displaying another one.
-            continue;
-          }
+        if (alerts.occurrencesSinceLastNotification <= occurrencesBetweenAlerts) {
+          // While the add-on has caused jank at least once, we are only
+          // interested in repeat offenders. Store the data for future use.
+          continue;
+        }
+        if (now - alerts.latestNotificationTimeStamp <= delayBetweenAlerts) {
+          // We have already displayed an alert for this add-on recently.
+          // Wait a little before displaying another one.
+          continue;
         }
 
         // Ok, time to inform the user.
