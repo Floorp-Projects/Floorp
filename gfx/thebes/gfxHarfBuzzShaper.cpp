@@ -1462,7 +1462,7 @@ gfxHarfBuzzShaper::InitializeVertical()
 }
 
 bool
-gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
+gfxHarfBuzzShaper::ShapeText(DrawTarget      *aDrawTarget,
                              const char16_t *aText,
                              uint32_t         aOffset,
                              uint32_t         aLength,
@@ -1471,11 +1471,11 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
                              gfxShapedText   *aShapedText)
 {
     // some font back-ends require this in order to get proper hinted metrics
-    if (!mFont->SetupCairoFont(aContext->GetDrawTarget())) {
+    if (!mFont->SetupCairoFont(aDrawTarget)) {
         return false;
     }
 
-    mCallbackData.mDrawTarget = aContext->GetDrawTarget();
+    mCallbackData.mDrawTarget = aDrawTarget;
     mUseVerticalPresentationForms = false;
 
     if (!Initialize()) {
@@ -1565,7 +1565,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
         hb_buffer_reverse(buffer);
     }
 
-    nsresult rv = SetGlyphsFromRun(aContext, aShapedText, aOffset, aLength,
+    nsresult rv = SetGlyphsFromRun(aDrawTarget, aShapedText, aOffset, aLength,
                                    aText, buffer, aVertical);
 
     NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "failed to store glyphs into gfxShapedWord");
@@ -1579,7 +1579,7 @@ gfxHarfBuzzShaper::ShapeText(gfxContext      *aContext,
                             // for charToGlyphArray
 
 nsresult
-gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext     *aContext,
+gfxHarfBuzzShaper::SetGlyphsFromRun(DrawTarget     *aDrawTarget,
                                     gfxShapedText  *aShapedText,
                                     uint32_t        aOffset,
                                     uint32_t        aLength,
@@ -1618,11 +1618,10 @@ gfxHarfBuzzShaper::SetGlyphsFromRun(gfxContext     *aContext,
     int32_t charStart = 0; // and this char index within the range of the run
 
     bool roundI, roundB;
-    DrawTarget* drawTarget = aContext->GetDrawTarget();
     if (aVertical) {
-        GetRoundOffsetsToPixels(drawTarget, &roundB, &roundI);
+        GetRoundOffsetsToPixels(aDrawTarget, &roundB, &roundI);
     } else {
-        GetRoundOffsetsToPixels(drawTarget, &roundI, &roundB);
+        GetRoundOffsetsToPixels(aDrawTarget, &roundI, &roundB);
     }
 
     int32_t appUnitsPerDevUnit = aShapedText->GetAppUnitsPerDevUnit();

@@ -39,11 +39,9 @@ class BluetoothDaemonInterface final
 public:
   class CleanupResultHandler;
   class InitResultHandler;
-  class StartDaemonTask;
 
   friend class CleanupResultHandler;
   friend class InitResultHandler;
-  friend class StartDaemonTask;
 
   static BluetoothDaemonInterface* GetInstance();
 

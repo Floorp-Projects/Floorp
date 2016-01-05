@@ -843,13 +843,13 @@ nsBlockFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 }
 
 nsRect
-nsBlockFrame::ComputeTightBounds(gfxContext* aContext) const
+nsBlockFrame::ComputeTightBounds(DrawTarget* aDrawTarget) const
 {
   // be conservative
   if (StyleContext()->HasTextDecorationLines()) {
     return GetVisualOverflowRect();
   }
-  return ComputeSimpleTightBounds(aContext);
+  return ComputeSimpleTightBounds(aDrawTarget);
 }
 
 /* virtual */ nsresult

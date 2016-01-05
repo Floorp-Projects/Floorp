@@ -121,9 +121,9 @@ EXPORTS += [
 
 if CONFIG['MOZ_TASK_TRACER']:
     EXPORTS += [
-        'public/GeckoTaskTracer.h',
-        'public/GeckoTaskTracerImpl.h',
-        'public/TracedTaskCommon.h',
+        'tasktracer/GeckoTaskTracer.h',
+        'tasktracer/GeckoTaskTracerImpl.h',
+        'tasktracer/TracedTaskCommon.h',
     ]
     UNIFIED_SOURCES += [
         'tasktracer/GeckoTaskTracer.cpp',

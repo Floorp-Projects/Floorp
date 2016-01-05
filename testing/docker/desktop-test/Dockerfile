@@ -1,10 +1,12 @@
-FROM          taskcluster/ubuntu1204-test-upd:0.1.4.20151130132801
+FROM          taskcluster/ubuntu1204-test-upd:0.1.5.20151222110000
 MAINTAINER    Jonas Finnemann Jensen <jopsen@gmail.com>
 
 # Add utilities and configuration
 COPY           dot-config                    /home/worker/.config
 COPY           dot-pulse                     /home/worker/.pulse
 COPY           bin                           /home/worker/bin
+# This removes the requirement of a developer to call it with bash
+RUN            chmod +x bin/test.sh
 # TODO: remove this when buildbot is gone
 COPY           buildprops.json               /home/worker/buildprops.json
 COPY           tc-vcs-config.yml /etc/taskcluster-vcs.yml
@@ -42,6 +44,14 @@ RUN rm -Rf .cache && mkdir -p .cache
 # Disable Ubuntu update prompt
 # http://askubuntu.com/questions/515161/ubuntu-12-04-disable-release-notification-of-14-04-in-update-manager
 ADD release-upgrades /etc/update-manager/release-upgrades
+
+# In test.sh we accept START_VNC to start a vnc daemon.
+# Exposing this port allows it to work.
+EXPOSE 5900
+
+# This helps not forgetting setting DISPLAY=:0 when running
+# tests outside of test.sh
+ENV DISPLAY :0
 
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

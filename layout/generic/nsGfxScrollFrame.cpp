@@ -2166,7 +2166,7 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
           mApzSmoothScrollDestination = Some(mDestination);
           mScrollGeneration = ++sScrollGenerationCounter;
 
-          if (!nsLayoutUtils::GetDisplayPort(mOuter->GetContent())) {
+          if (!nsLayoutUtils::HasDisplayPort(mOuter->GetContent())) {
             // If this frame doesn't have a displayport then there won't be an
             // APZC instance for it and so there won't be anything to process
             // this smooth scroll request. We should set a displayport on this
@@ -2926,7 +2926,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
   if (aBuilder->GetIgnoreScrollFrame() == mOuter || IsIgnoringViewportClipping()) {
     bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
-      nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
+      nsLayoutUtils::HasDisplayPort(mOuter->GetContent());
 
     // Root scrollframes have FrameMetrics and clipping on their container
     // layers, so don't apply clipping again.
@@ -2977,7 +2977,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
               /* aAllowCreateDisplayPort = */ !mIsRoot);
 
   bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
-    nsLayoutUtils::GetDisplayPort(mOuter->GetContent());
+    nsLayoutUtils::HasDisplayPort(mOuter->GetContent());
 
   // Whether we might want to build a scrollable layer for this scroll frame
   // at some point in the future. This controls whether we add the information
@@ -3224,7 +3224,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
   bool usingDisplayPort = false;
   nsIContent* content = mOuter->GetContent();
   if (aBuilder->IsPaintingToWindow()) {
-    wasUsingDisplayPort = nsLayoutUtils::GetDisplayPort(content);
+    wasUsingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
 
     nsRect displayportBase = *aDirtyRect;
     nsPresContext* pc = mOuter->PresContext();

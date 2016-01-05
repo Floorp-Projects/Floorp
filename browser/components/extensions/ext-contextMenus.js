@@ -12,11 +12,13 @@ var {
   runSafe,
 } = ExtensionUtils;
 
-
 // Map[Extension -> Map[ID -> MenuItem]]
 // Note: we want to enumerate all the menu items so
 // this cannot be a weak map.
 var contextMenuMap = new Map();
+
+// Map[Extension -> MenuItem]
+var rootItems = new Map();
 
 // Not really used yet, will be used for event pages.
 var onClickedCallbacksMap = new WeakMap();
@@ -24,104 +26,131 @@ var onClickedCallbacksMap = new WeakMap();
 // If id is not specified for an item we use an integer.
 var nextID = 0;
 
+var gMaxLabelLength = 64;
+
 // When a new contextMenu is opened, this function is called and
 // we populate the |xulMenu| with all the items from extensions
 // to be displayed. We always clear all the items again when
-// popuphidden fires. Since most of the info we need is already
-// calculated in nsContextMenu.jsm we simple reuse its flags here.
-// For remote processes there is a gContextMenuContentData where all
-// the important info is stored from the child process. We get
-// this data in |contextData|.
+// popuphidden fires.
 var menuBuilder = {
   build: function(contextData) {
-    // TODO: icons should be set for items
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
-    let doc = xulMenu.ownerDocument;
-    for (let [ext, menuItemMap] of contextMenuMap) {
-      let parentMap = new Map();
-      let topLevelItems = new Set();
-      for (let entry of menuItemMap) {
-        // We need a closure over |item|, and we don't currently get a
-        // fresh binding per loop if we declare it in the loop head.
-        let [id, item] = entry;
-
-        if (item.enabledForContext(contextData)) {
-          let element;
-          if (item.isMenu) {
-            element = doc.createElement("menu");
-            // Menu elements need to have a menupopup child for
-            // its menu items.
-            let menupopup = doc.createElement("menupopup");
-            element.appendChild(menupopup);
-            // Storing the menupopup in a map, so we can find it for its
-            // menu item children later.
-            parentMap.set(id, menupopup);
-          } else {
-            element =
-             (item.type == "separator") ? doc.createElement("menuseparator")
-                                        : doc.createElement("menuitem");
-          }
-
-          // FIXME: handle %s in the title
-          element.setAttribute("label", item.title);
-
-          if (!item.enabled) {
-            element.setAttribute("disabled", true);
-          }
-
-          let parentId = item.parentId;
-          if (parentId && parentMap.has(parentId)) {
-            // If parentId is set we have to look up its parent
-            // and appened to its menupopup.
-            let parentElement = parentMap.get(parentId);
-            parentElement.appendChild(element);
-          } else {
-            topLevelItems.add(element);
-          }
-
-          element.addEventListener("command", event => { // eslint-disable-line mozilla/balanced-listeners
-            item.tabManager.addActiveTabPermission();
-            if (item.onclick) {
-              let clickData = item.getClickData(contextData, event);
-              runSafe(item.extContext, item.onclick, clickData);
-            }
-          });
-        }
+    this.xulMenu = xulMenu;
+    for (let [extension, root] of rootItems) {
+      let rootElement = this.buildElementWithChildren(root, contextData);
+      if (!rootElement.childNodes.length) {
+        // If the root has no visible children, there is no reason to show
+        // the root menu item itself either.
+        continue;
       }
-      if (topLevelItems.size > 1) {
-        // If more than one top level items are visible, callopse them.
-        let top = doc.createElement("menu");
-        top.setAttribute("label", ext.name);
-        top.setAttribute("ext-type", "top-level-menu");
-        let menupopup = doc.createElement("menupopup");
-        top.appendChild(menupopup);
-        for (let i of topLevelItems) {
-          menupopup.appendChild(i);
-        }
-        xulMenu.appendChild(top);
-        this._itemsToCleanUp.add(top);
-      } else if (topLevelItems.size == 1) {
-        // If there is only one visible item, we can just append it.
-        let singleItem = topLevelItems.values().next().value;
-        xulMenu.appendChild(singleItem);
-        this._itemsToCleanUp.add(singleItem);
+      rootElement.setAttribute("ext-type", "top-level-menu");
+      rootElement = this.removeTopLevelMenuIfNeeded(rootElement);
+      xulMenu.appendChild(rootElement);
+      this.itemsToCleanUp.add(rootElement);
+    }
+  },
+
+  buildElementWithChildren(item, contextData) {
+    let doc = contextData.menu.ownerDocument;
+    let element = this.buildSingleElement(item, contextData);
+    for (let child of item.children) {
+      if (child.enabledForContext(contextData)) {
+        let childElement = this.buildElementWithChildren(child, contextData);
+        // Here element must be a menu element and its first child
+        // is a menupopup, we have to append its children to this
+        // menupopup.
+        element.firstChild.appendChild(childElement);
       }
     }
+
+    return element;
+  },
+
+  removeTopLevelMenuIfNeeded(element) {
+    // If there is only one visible top level element we don't need the
+    // root menu element for the extension.
+    let menuPopup = element.firstChild;
+    if (menuPopup && menuPopup.childNodes.length == 1) {
+      let onlyChild = menuPopup.firstChild;
+      onlyChild.remove();
+      return onlyChild;
+    }
+
+    return element;
+  },
+
+  buildSingleElement(item, contextData) {
+    let doc = contextData.menu.ownerDocument;
+    let element;
+    if (item.children.length > 0) {
+      element = this.createMenuElement(doc, item);
+    } else if (item.type == "separator") {
+      element = doc.createElement("menuseparator");
+    } else {
+      element = doc.createElement("menuitem");
+    }
+
+    return this.customizeElement(element, item, contextData);
+  },
+
+  createMenuElement(doc, item) {
+    let element = doc.createElement("menu");
+    // Menu elements need to have a menupopup child for
+    // its menu items.
+    let menupopup = doc.createElement("menupopup");
+    element.appendChild(menupopup);
+    return element;
+  },
+
+  customizeElement(element, item, contextData) {
+    let label = item.title;
+    if (label) {
+      if (contextData.isTextSelected && label.indexOf('%s') > -1) {
+        let selection = contextData.selectionText;
+        // The rendering engine will truncate the title if it's longer than 64 characters.
+        // But if it makes sense let's try truncate selection text only, to handle cases like
+        // 'look up "%s" in MyDictionary' more elegantly.
+        let maxSelectionLength = gMaxLabelLength - label.length + 2;
+        if (maxSelectionLength > 4) {
+          selection = selection.substring(0, maxSelectionLength - 3) + "...";
+        }
+        label = label.replace(/%s/g, selection);
+      }
+
+      element.setAttribute("label", label);
+    }
+
+    if (!item.enabled) {
+      element.setAttribute("disabled", true);
+    }
+
+    element.addEventListener("command", event => {
+      item.tabManager.addActiveTabPermission();
+      if (item.onclick) {
+        let clickData = item.getClickData(contextData, event);
+        runSafe(item.extContext, item.onclick, clickData);
+       }
+    });
+
+    return element;
   },
 
   handleEvent: function(event) {
-    let target = event.target;
-
-    target.removeEventListener("popuphidden", this);
-    for (let item of this._itemsToCleanUp) {
-      target.removeChild(item);
+    if (this.xulMenu != event.target || event.type != "popuphidden") {
+      return;
     }
-    // Let's detach the top level items.
-    this._itemsToCleanUp.clear();
+
+    delete this.xulMenu;
+    let target = event.target;
+    target.removeEventListener("popuphidden", this);
+    for (let item of this.itemsToCleanUp) {
+      item.remove();
+    }
+    this.itemsToCleanUp.clear();
   },
 
-  _itemsToCleanUp: new Set(),
+  itemsToCleanUp: new Set(),
 };
 
 function contextMenuObserver(subject, topic, data) {
@@ -165,111 +194,144 @@ function getContexts(contextData) {
   return contexts;
 }
 
-function MenuItem(extension, extContext, createProperties) {
+function MenuItem(extension, extContext, createProperties, isRoot = false) {
   this.extension = extension;
   this.extContext = extContext;
-
+  this.children = [];
+  this.parent = null;
   this.tabManager = TabManager.for(extension);
 
-  this.init(createProperties);
+  this.setDefaults();
+  this.setProps(createProperties);
+  if (!this.hasOwnProperty("_id")) {
+    this.id = nextID++;
+  }
+  // If the item is not the root and has no parent
+  // it must be a child of the root.
+  if (!isRoot && !this.parent) {
+    this.root.addChild(this);
+  }
 }
 
 MenuItem.prototype = {
-  // init is called from the MenuItem ctor and from update. The |update|
-  // flag is for the later case.
-  init(createProperties, update = false) {
-    let item = this;
-    // return true if the prop was set on |this|
-    function parseProp(propName, defaultValue = null) {
-      if (createProperties[propName] !== null) {
-        item[propName] = createProperties[propName];
-        return true;
-      } else if (!update && defaultValue !== null) {
-        item[propName] = defaultValue;
-        return true;
+  setProps(createProperties) {
+    for (let propName in createProperties) {
+      if (createProperties[propName] === null) {
+        // Omitted optional argument.
+        continue;
       }
-      return false;
+      this[propName] = createProperties[propName];
     }
 
-    if (!update) {
-      let isIdUsed = contextMenuMap.get(this.extension).has(createProperties.id);
-      if (createProperties.id && isIdUsed) {
-        throw new Error("Id already exists");
-      }
-      this.id = createProperties.id ? createProperties.id : nextID++;
-    }
-
-    parseProp("type", "normal");
-    parseProp("title");
-    parseProp("checked", false);
-    parseProp("contexts", ["all"]);
-
-    if (createProperties.onclick !== null) {
-      this.onclick = createProperties.onclick;
-    }
-
-    if (parseProp("parentId")) {
-      let found = false;
-      let menuMap = contextMenuMap.get(this.extension);
-      if (menuMap.has(this.parentId)) {
-        found = true;
-        menuMap.get(this.parentId).isMenu = true;
-      }
-      if (!found) {
-        throw new Error("MenuItem with this parentId not found");
-      }
-    } else {
-      this.parentId = undefined;
-    }
-
-    if (parseProp("documentUrlPatterns")) {
+    if (createProperties.documentUrlPatterns != null) {
       this.documentUrlMatchPattern = new MatchPattern(this.documentUrlPatterns);
     }
 
-    if (parseProp("targetUrlPatterns")) {
-      this.targetUrlPatterns = new MatchPattern(this.targetUrlPatterns);
+    if (createProperties.targetUrlPatterns != null) {
+      this.targetUrlMatchPattern = new MatchPattern(this.targetUrlPatterns);
+    }
+  },
+
+  setDefaults() {
+    this.setProps({
+      type: "normal",
+      checked: "false",
+      contexts: ["all"],
+      enabled: "true"
+    });
+  },
+
+  set id(id) {
+    if (this.hasOwnProperty("_id")) {
+      throw new Error("Id of a MenuItem cannot be changed");
+    }
+    let isIdUsed = contextMenuMap.get(this.extension).has(id);
+    if (isIdUsed) {
+      throw new Error("Id already exists");
+    }
+    this._id = id;
+  },
+
+  get id() {
+    return this._id;
+  },
+
+  ensureValidParentId(parentId) {
+    if (parentId === undefined) {
+      return;
+    }
+    let menuMap = contextMenuMap.get(this.extension);
+    if (!menuMap.has(parentId)) {
+      throw new Error("Could not find any MenuItem with id: " + parentId);
+    }
+    for (let item = menuMap.get(parentId); item; item = item.parent) {
+      if (item === this) {
+        throw new Error("MenuItem cannot be an ancestor (or self) of its new parent.");
+      }
+    }
+  },
+
+  set parentId(parentId) {
+    this.ensureValidParentId(parentId);
+
+    if (this.parent) {
+      this.parent.detachChild(this);
     }
 
-    parseProp("enabled", true);
+    if (parentId === undefined) {
+      this.root.addChild(this);
+    } else {
+      let menuMap = contextMenuMap.get(this.extension);
+      menuMap.get(parentId).addChild(this);
+    }
+  },
+
+  get parentId() {
+    return this.parent ? this.parent.id : undefined;
+  },
+
+  addChild(child) {
+    if (child.parent) {
+      throw new Error("Child MenuItem already has a parent.");
+    }
+    this.children.push(child);
+    child.parent = this;
+  },
+
+  detachChild(child) {
+    let idx = this.children.indexOf(child);
+    if (idx < 0) {
+      throw new Error("Child MenuItem not found, it cannot be removed.");
+    }
+    this.children.splice(idx, 1);
+    child.parent = null;
+  },
+
+  get root() {
+    let extension = this.extension;
+    if (!rootItems.has(extension)) {
+      let root = new MenuItem(extension, this.context,
+                              { title: extension.name },
+                              /* isRoot = */ true);
+      rootItems.set(extension, root);
+    }
+
+    return rootItems.get(extension);
   },
 
   remove() {
-    let menuMap = contextMenuMap.get(this.extension);
-    // We want to remove all the items that has |this| in its parent chain.
-    // The |checked| map is only an optimisation to avoid checking any item
-    // twice in the algorithm.
-    let checked = new Map();
-    function hasAncestorWithId(item, id) {
-      if (checked.has(item)) {
-        return checked.get(item);
-      }
-      if (item.parentId === undefined) {
-        checked.set(item, false);
-        return false;
-      }
-      let parent = menuMap.get(item.parentId);
-      if (!parent) {
-        checked.set(item, false);
-        return false;
-      }
-      if (parent.id === id) {
-        checked.set(item, true);
-        return true;
-      }
-      let rv = hasAncestorWithId(parent, id);
-      checked.set(item, rv);
-      return rv;
+    if (this.parent) {
+      this.parent.detachChild(this);
+    }
+    let children = this.children.slice(0);
+    for (let child of children) {
+      child.remove();
     }
 
-    let toRemove = new Set();
-    toRemove.add(this.id);
-    for (let [, item] of menuMap) {
-      if (hasAncestorWithId(item, this.id)) {
-        toRemove.add(item.id);
-      }
-    }
-    for (let id of toRemove) {
-      menuMap.delete(id);
+    let menuMap = contextMenuMap.get(this.extension);
+    menuMap.delete(this.id);
+    if (this.root == this) {
+      rootItems.delete(this.extension);
     }
   },
 
@@ -295,7 +357,8 @@ MenuItem.prototype = {
       }
     }
 
-    let tab = contextData.tab ? TabManager.convert(this.extension, contextData.tab) : undefined;
+    let tab = contextData.tab ? TabManager.convert(this.extension, contextData.tab)
+                              : undefined;
 
     setIfDefined("parentMenuItemId", this.parentId);
     setIfDefined("mediaType", mediaType);
@@ -311,38 +374,32 @@ MenuItem.prototype = {
   },
 
   enabledForContext(contextData) {
-    let enabled = false;
     let contexts = getContexts(contextData);
-    for (let c of this.contexts) {
-      if (contexts.has(c)) {
-        enabled = true;
-        break;
-      }
-    }
-    if (!enabled) {
+    if (!this.contexts.some(n => contexts.has(n))) {
       return false;
     }
 
-    if (this.documentUrlMatchPattern &&
-        !this.documentUrlMatchPattern.matches(contextData.documentURIObject)) {
+    let docPattern = this.documentUrlMatchPattern;
+    if (docPattern && !docPattern.matches(contextData.pageUrl)) {
       return false;
     }
 
-    if (this.targetUrlPatterns &&
-        (contextData.onImage || contextData.onAudio || contextData.onVideo) &&
-        !this.targetUrlPatterns.matches(contextData.mediaURL)) {
+    let isMedia = contextData.onImage || contextData.onAudio || contextData.onVideo;
+    let targetPattern = this.targetUrlMatchPattern;
+    if (isMedia && targetPattern && !targetPattern.matches(contextData.srcURL)) {
       // TODO: double check if mediaURL is always set when we need it
       return false;
     }
 
     return true;
-  },
+  }
 };
 
 var extCount = 0;
 /* eslint-disable mozilla/balanced-listeners */
 extensions.on("startup", (type, extension) => {
   contextMenuMap.set(extension, new Map());
+  rootItems.delete(extension);
   if (++extCount == 1) {
     Services.obs.addObserver(contextMenuObserver,
                              "on-build-contextmenu",
@@ -374,7 +431,7 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
       update: function(id, updateProperties, callback) {
         let menuItem = contextMenuMap.get(extension).get(id);
         if (menuItem) {
-          menuItem.init(updateProperties, true);
+          menuItem.setProps(updateProperties);
         }
         if (callback) {
           runSafe(context, callback);
@@ -392,8 +449,9 @@ extensions.registerSchemaAPI("contextMenus", "contextMenus", (extension, context
       },
 
       removeAll: function(callback) {
-        for (let [, menuItem] of contextMenuMap.get(extension)) {
-          menuItem.remove();
+        let root = rootItems.get(extension);
+        if (root) {
+          root.remove();
         }
         if (callback) {
           runSafe(context, callback);
