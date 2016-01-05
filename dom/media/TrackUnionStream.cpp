@@ -303,7 +303,9 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
       for (uint32_t j = 0; j < mListeners.Length(); ++j) {
         MediaStreamListener* l = mListeners[j];
         l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
-                                    outputStart, 0, *segment);
+                                    outputStart, 0, *segment,
+                                    map->mInputPort->GetSource(),
+                                    map->mInputTrackID);
       }
       for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
         if (b.mTrackID != outputTrack->GetID()) {
