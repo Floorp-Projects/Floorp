@@ -813,10 +813,10 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    track = new AudioStreamTrack(this, aTrackID, aLabel, aSource);
+    track = new AudioStreamTrack(this, aTrackID, aTrackID, aLabel, aSource);
     break;
   case MediaSegment::VIDEO:
-    track = new VideoStreamTrack(this, aTrackID, aLabel, aSource);
+    track = new VideoStreamTrack(this, aTrackID, aTrackID, aLabel, aSource);
     break;
   default:
     MOZ_CRASH("Unhandled track type");
@@ -861,7 +861,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
   for (const RefPtr<TrackPort>& info : mTracks) {
     if (info->GetInputPort() == mPlaybackPort &&
         aInputStream == mOwnedStream &&
-        aInputTrackID == info->GetTrack()->GetTrackID()) {
+        info->GetTrack()->GetInputTrackID() == aInputTrackID) {
       // This track is in our owned and playback streams.
       return info->GetTrack();
     }

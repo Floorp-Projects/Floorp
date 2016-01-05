@@ -15,9 +15,9 @@ namespace dom {
 class VideoStreamTrack : public MediaStreamTrack {
 public:
   VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                   const nsString& aLabel,
+                   TrackID aInputTrackID, const nsString& aLabel,
                    MediaStreamTrackSource* aSource)
-    : MediaStreamTrack(aStream, aTrackID, aLabel, aSource) {}
+    : MediaStreamTrack(aStream, aTrackID, aInputTrackID, aLabel, aSource) {}
 
   JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
