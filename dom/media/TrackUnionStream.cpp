@@ -149,13 +149,35 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
   uint32_t TrackUnionStream::AddTrack(MediaInputPort* aPort, StreamBuffer::Track* aTrack,
                     GraphTime aFrom)
   {
-    TrackID id = aTrack->GetID();
-    if (id > mNextAvailableTrackID &&
-       mUsedTracks.BinaryIndexOf(id) == mUsedTracks.NoIndex) {
+    STREAM_LOG(LogLevel::Verbose, ("TrackUnionStream %p adding track %d for "
+                                   "input stream %p track %d, desired id %d",
+                                   this, aTrack->GetID(), aPort->GetSource(),
+                                   aTrack->GetID(),
+                                   aPort->GetDestinationTrackId()));
+
+    TrackID id;
+    if (IsTrackIDExplicit(id = aPort->GetDestinationTrackId())) {
+      MOZ_ASSERT(id >= mNextAvailableTrackID &&
+                 mUsedTracks.BinaryIndexOf(id) == mUsedTracks.NoIndex,
+                 "Desired destination id taken. Only provide a destination ID "
+                 "if you can assure its availability, or we may not be able "
+                 "to bind to the correct DOM-side track.");
+#ifdef DEBUG
+      for (size_t i = 0; mInputs[i] != aPort; ++i) {
+        MOZ_ASSERT(mInputs[i]->GetSourceTrackId() != TRACK_ANY,
+                   "You are adding a MediaInputPort with a track mapping "
+                   "while there already exist generic MediaInputPorts for this "
+                   "destination stream. This can lead to TrackID collisions!");
+      }
+#endif
+      mUsedTracks.InsertElementSorted(id);
+    } else if ((id = aTrack->GetID()) &&
+               id > mNextAvailableTrackID &&
+               mUsedTracks.BinaryIndexOf(id) == mUsedTracks.NoIndex) {
       // Input id available. Mark it used in mUsedTracks.
       mUsedTracks.InsertElementSorted(id);
     } else {
-      // Input id taken, allocate a new one.
+      // No desired destination id and Input id taken, allocate a new one.
       id = mNextAvailableTrackID;
 
       // Update mNextAvailableTrackID and prune any mUsedTracks members it now
@@ -185,9 +207,9 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
     segment->AppendNullData(outputStart);
     StreamBuffer::Track* track =
       &mBuffer.AddTrack(id, outputStart, segment.forget());
-    STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p adding track %d for input stream %p track %d, start ticks %lld",
-                              this, id, aPort->GetSource(), aTrack->GetID(),
-                              (long long)outputStart));
+    STREAM_LOG(LogLevel::Debug, ("TrackUnionStream %p added track %d for input stream %p track %d, start ticks %lld",
+                                 this, track->GetID(), aPort->GetSource(), aTrack->GetID(),
+                                 (long long)outputStart));
 
     TrackMapEntry* map = mTrackMap.AppendElement();
     map->mEndOfConsumedInputTicks = 0;
