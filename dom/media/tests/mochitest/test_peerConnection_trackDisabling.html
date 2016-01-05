@@ -39,23 +39,28 @@ runNetworkTest(() => {
       const offsetX = 50;
       const offsetY = 50;
       const threshold = 128;
+
+      // We're regarding black as disabled here, and we're setting the alpha
+      // channel of the pixel to 255 to disregard alpha when testing.
+      var checkVideoEnabled = video =>
+        h.waitForPixel(video, offsetX, offsetY,
+                       px => (px[3] = 255, h.isPixelNot(px, h.black, threshold)));
+      var checkVideoDisabled = video =>
+        h.waitForPixel(video, offsetX, offsetY,
+                       px => (px[3] = 255, h.isPixel(px, h.black, threshold, offsetX*2, offsetY*2)));
       return Promise.resolve()
         .then(() => info("Checking local video enabled"))
-        .then(() => h.waitForPixel(localVideo, offsetX, offsetY,
-                                   px => h.isPixelNot(px, h.black, 128)))
+        .then(() => checkVideoEnabled(localVideo))
         .then(() => info("Checking remote video enabled"))
-        .then(() => h.waitForPixel(remoteVideo, offsetX, offsetY,
-                                   px => h.isPixelNot(px, h.black, 128)))
+        .then(() => checkVideoEnabled(remoteVideo))
 
+        .then(() => info("Disabling original"))
         .then(() => test.pcLocal.streams[0].getVideoTracks()[0].enabled = false)
 
         .then(() => info("Checking local video disabled"))
-        .then(() => h.waitForPixel(localVideo, offsetX, offsetY,
-                                   px => h.isPixel(px, h.blackTransparent,
-                                   128), offsetX*2, offsetY*2))
+        .then(() => checkVideoDisabled(localVideo))
         .then(() => info("Checking remote video disabled"))
-        .then(() => h.waitForPixel(remoteVideo, offsetX, offsetY,
-                                   px => h.isPixel(px, h.black, 128), offsetX*2, offsetY*2))
+        .then(() => checkVideoDisabled(remoteVideo))
     },
     function CHECK_AUDIO() {
       var ac = new AudioContext();
