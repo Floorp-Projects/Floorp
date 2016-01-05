@@ -8,6 +8,7 @@
 
 #include "mozilla/unused.h"
 #include "nsPagePrintTimer.h"
+#include "nsPrintEngine.h"
 
 namespace mozilla {
 namespace layout {
@@ -29,8 +30,10 @@ RemotePrintJobChild::RecvPageProcessed()
 bool
 RemotePrintJobChild::RecvAbortPrint(const nsresult& aRv)
 {
-  NS_NOTREACHED("RemotePrintJobChild::RecvAbortPrint not implemented!");
-  return false;
+  MOZ_ASSERT(mPrintEngine);
+
+  mPrintEngine->CleanupOnFailure(aRv, true);
+  return true;
 }
 
 void
@@ -50,6 +53,14 @@ RemotePrintJobChild::SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer)
   mPagePrintTimer = aPagePrintTimer;
 }
 
+void
+RemotePrintJobChild::SetPrintEngine(nsPrintEngine* aPrintEngine)
+{
+  MOZ_ASSERT(aPrintEngine);
+
+  mPrintEngine = aPrintEngine;
+}
+
 RemotePrintJobChild::~RemotePrintJobChild()
 {
   MOZ_COUNT_DTOR(RemotePrintJobChild);
@@ -59,6 +70,7 @@ void
 RemotePrintJobChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mPagePrintTimer = nullptr;
+  mPrintEngine = nullptr;
 }
 
 } // namespace layout

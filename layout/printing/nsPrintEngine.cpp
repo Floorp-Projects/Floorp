@@ -3491,6 +3491,7 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
       printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
       if (NS_SUCCEEDED(rv) && remotePrintJob) {
         remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
+        remotePrintJob->SetPrintEngine(this);
       }
     }
   }
