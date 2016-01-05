@@ -802,13 +802,19 @@ public:
         LocalTrackSource(nsIPrincipal* aPrincipal,
                          GetUserMediaCallbackMediaStreamListener* aListener,
                          const MediaSourceEnum aSource,
-                         const TrackID aTrackID)
+                         const TrackID aTrackID,
+                         const PeerIdentity* aPeerIdentity)
           : MediaStreamTrackSource(aPrincipal, false), mListener(aListener),
-            mSource(aSource), mTrackID(aTrackID) {}
+            mSource(aSource), mTrackID(aTrackID), mPeerIdentity(aPeerIdentity) {}
 
         MediaSourceEnum GetMediaSource() const override
         {
           return mSource;
+        }
+
+        const PeerIdentity* GetPeerIdentity() const override
+        {
+          return mPeerIdentity;
         }
 
         already_AddRefed<Promise>
@@ -854,6 +860,7 @@ public:
         RefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
         const MediaSourceEnum mSource;
         const TrackID mTrackID;
+        const RefPtr<const PeerIdentity> mPeerIdentity;
       };
 
       nsCOMPtr<nsIPrincipal> principal;
@@ -869,17 +876,14 @@ public:
       domStream =
         DOMLocalMediaStream::CreateSourceStream(window, msg, nullptr);
 
-      if (mPeerIdentity) {
-        domStream->SetPeerIdentity(mPeerIdentity);
-      }
-
       if (mAudioDevice) {
         nsString audioDeviceName;
         mAudioDevice->GetName(audioDeviceName);
         const MediaSourceEnum source =
           mAudioDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> audioSource =
-          new LocalTrackSource(principal, mListener, source, kAudioTrack);
+          new LocalTrackSource(principal, mListener, source, kAudioTrack,
+                               mPeerIdentity);
         domStream->CreateDOMTrack(kAudioTrack, MediaSegment::AUDIO,
                                   audioDeviceName, audioSource);
       }
@@ -889,7 +893,8 @@ public:
         const MediaSourceEnum source =
           mVideoDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> videoSource =
-          new LocalTrackSource(principal, mListener, source, kVideoTrack);
+          new LocalTrackSource(principal, mListener, source, kVideoTrack,
+                               mPeerIdentity);
         domStream->CreateDOMTrack(kVideoTrack, MediaSegment::VIDEO,
                                   videoDeviceName, videoSource);
       }
