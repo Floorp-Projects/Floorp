@@ -1191,7 +1191,7 @@ if test "$GNU_CC"; then
 
     # -Wall - lots of useful warnings
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
-    # -Wignored-qualifiers - catches returns types with qualifiers like const
+    # -Wignored-qualifiers - catches return types with qualifiers like const
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
     # -Wtype-limits - catches overflow bugs, few false positives
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wall"
@@ -1268,11 +1268,13 @@ if test "$GNU_CXX"; then
 
     # -Wall - lots of useful warnings
     # -Wempty-body - catches bugs, e.g. "if (c); foo();", few false positives
+    # -Wignored-qualifiers - catches return types with qualifiers like const
     # -Woverloaded-virtual - function declaration hides virtual function from base class
     # -Wpointer-arith - catches pointer arithmetic using NULL or sizeof(void)
     # -Wtype-limits - catches overflow bugs, few false positives
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wall"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wempty-body"
+    _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wignored-qualifiers"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Woverloaded-virtual"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
