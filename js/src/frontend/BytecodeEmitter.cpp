@@ -5515,7 +5515,153 @@ BytecodeEmitter::emitForInOrOfVariables(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, bool allowSelfHosted)
+BytecodeEmitter::emitSpread(bool allowSelfHosted)
+{
+    StmtType type = StmtType::SPREAD;
+    ParseNode* pn = nullptr;
+
+    MOZ_ASSERT(type == StmtType::FOR_OF_LOOP || type == StmtType::SPREAD);
+#ifdef DEBUG
+    if (type == StmtType::FOR_OF_LOOP) {
+        MOZ_ASSERT(pn);
+        MOZ_ASSERT(pn->pn_left->isKind(PNK_FOROF));
+    } else {
+        MOZ_ASSERT(!pn);
+    }
+#endif
+
+    ptrdiff_t top = offset();
+    ParseNode* forHead = pn ? pn->pn_left : nullptr;
+    ParseNode* forHeadExpr = forHead ? forHead->pn_kid3 : nullptr;
+    ParseNode* forBody = pn ? pn->pn_right : nullptr;
+
+    ParseNode* loopDecl = forHead ? forHead->pn_kid1 : nullptr;
+    if (loopDecl && !emitForInOrOfVariables(loopDecl))
+        return false;
+
+    if (type == StmtType::FOR_OF_LOOP) {
+        // For-of loops run with two values on the stack: the iterator and the
+        // current result object.
+
+        // Compile the object expression to the right of 'of'.
+        if (!emitTree(forHeadExpr))
+            return false;
+        if (!emitIterator())
+            return false;
+
+        // Push a dummy result so that we properly enter iteration midstream.
+        if (!emit1(JSOP_UNDEFINED))                // ITER RESULT
+            return false;
+    }
+
+    LoopStmtInfo stmtInfo(cx);
+    pushLoopStatement(&stmtInfo, type, top);
+
+    // Jump down to the loop condition to minimize overhead assuming at least
+    // one iteration, as the other loop forms do.  Annotate so IonMonkey can
+    // find the loop-closing jump.
+    unsigned noteIndex;
+    if (!newSrcNote(SRC_FOR_OF, &noteIndex))
+        return false;
+    ptrdiff_t jmp;
+    if (!emitJump(JSOP_GOTO, 0, &jmp))
+        return false;
+
+    top = offset();
+    stmtInfo.setTop(top);
+    if (!emitLoopHead(nullptr))
+        return false;
+
+    if (type == StmtType::SPREAD)
+        this->stackDepth++;
+
+#ifdef DEBUG
+    int loopDepth = this->stackDepth;
+#endif
+
+    // Emit code to assign result.value to the iteration variable.
+    if (type == StmtType::FOR_OF_LOOP) {
+        if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
+            return false;
+    }
+    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ... RESULT VALUE
+        return false;
+    if (type == StmtType::FOR_OF_LOOP) {
+        if (!emitAssignment(forHead->pn_kid2, JSOP_NOP, nullptr)) // ITER RESULT VALUE
+            return false;
+        if (!emit1(JSOP_POP))                             // ITER RESULT
+            return false;
+
+        // The stack should be balanced around the assignment opcode sequence.
+        MOZ_ASSERT(this->stackDepth == loopDepth);
+
+        // Emit code for the loop body.
+        if (!emitTree(forBody))
+            return false;
+
+        // Set loop and enclosing "update" offsets, for continue.
+        StmtInfoBCE* stmt = &stmtInfo;
+        do {
+            stmt->update = offset();
+        } while ((stmt = stmt->enclosing) != nullptr && stmt->type == StmtType::LABEL);
+    } else {
+        if (!emit1(JSOP_INITELEM_INC))                    // ITER ARR (I+1)
+            return false;
+
+        MOZ_ASSERT(this->stackDepth == loopDepth - 1);
+
+        // StmtType::SPREAD never contain continue, so do not set "update" offset.
+    }
+
+    // COME FROM the beginning of the loop to here.
+    setJumpOffsetAt(jmp);
+    if (!emitLoopEntry(forHeadExpr))
+        return false;
+
+    if (type == StmtType::FOR_OF_LOOP) {
+        if (!emit1(JSOP_POP))                             // ITER
+            return false;
+        if (!emit1(JSOP_DUP))                             // ITER ITER
+            return false;
+    } else {
+        if (!emitDupAt(2))                                // ITER ARR I ITER
+            return false;
+    }
+    if (!emitIteratorNext(forHead, allowSelfHosted))                       // ... RESULT
+        return false;
+    if (!emit1(JSOP_DUP))                                 // ... RESULT RESULT
+        return false;
+    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ... RESULT DONE?
+        return false;
+
+    ptrdiff_t beq;
+    if (!emitJump(JSOP_IFEQ, top - offset(), &beq))       // ... RESULT
+        return false;
+
+    MOZ_ASSERT(this->stackDepth == loopDepth);
+
+    // Let Ion know where the closing jump of this loop is.
+    if (!setSrcNoteOffset(noteIndex, 0, beq - jmp))
+        return false;
+
+    // Fixup breaks and continues.
+    // For StmtType::SPREAD, just pop innermostStmt().
+    popStatement();
+
+    if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top, offset()))
+        return false;
+
+    if (type == StmtType::SPREAD) {
+        if (!emit2(JSOP_PICK, 3))      // ARR I RESULT ITER
+            return false;
+    }
+
+    // Pop the result and the iter.
+    return emitUint16Operand(JSOP_POPN, 2);
+}
+
+bool
+BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn)
 {
     MOZ_ASSERT(type == StmtType::FOR_OF_LOOP || type == StmtType::SPREAD);
 #ifdef DEBUG
@@ -5624,7 +5770,7 @@ BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, bool allowSelfHosted)
         if (!emitDupAt(2))                                // ITER ARR I ITER
             return false;
     }
-    if (!emitIteratorNext(forHead, allowSelfHosted))      // ... RESULT
+    if (!emitIteratorNext(forHead))                       // ... RESULT
         return false;
     if (!emit1(JSOP_DUP))                                 // ... RESULT RESULT
         return false;
@@ -7947,12 +8093,6 @@ BytecodeEmitter::emitArrayComp(ParseNode* pn)
     arrayCompDepth = saveDepth;
 
     return true;
-}
-
-bool
-BytecodeEmitter::emitSpread(bool allowSelfHosted)
-{
-    return emitForOf(StmtType::SPREAD, nullptr, allowSelfHosted);
 }
 
 bool
