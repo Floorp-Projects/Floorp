@@ -911,10 +911,11 @@ public:
       class LocalTrackSource : public MediaStreamTrackSource
       {
       public:
-        LocalTrackSource(GetUserMediaCallbackMediaStreamListener* aListener,
+        LocalTrackSource(nsIPrincipal* aPrincipal,
+                         GetUserMediaCallbackMediaStreamListener* aListener,
                          const MediaSourceEnum aSource,
                          const TrackID aTrackID)
-          : MediaStreamTrackSource(nullptr, false), mListener(aListener),
+          : MediaStreamTrackSource(aPrincipal, false), mListener(aListener),
             mSource(aSource), mTrackID(aTrackID) {}
 
         MediaSourceEnum GetMediaSource() const override
@@ -938,11 +939,22 @@ public:
         const TrackID mTrackID;
       };
 
+      nsCOMPtr<nsIPrincipal> principal;
+      if (mPeerIdentity) {
+        principal = nsNullPrincipal::Create();
+      } else {
+        principal = window->GetExtantDoc()->NodePrincipal();
+      }
+
       // Normal case, connect the source stream to the track union stream to
       // avoid us blocking. Pass a null TrackSourceGetter since gUM should never
       // add tracks dynamically.
       domStream =
         nsDOMUserMediaStream::CreateSourceStream(window, mListener, msg, nullptr);
+
+      if (mPeerIdentity) {
+        domStream->SetPeerIdentity(mPeerIdentity.forget());
+      }
 
       if (mAudioDevice) {
         nsString audioDeviceName;
@@ -950,7 +962,7 @@ public:
         const MediaSourceEnum source =
           mAudioDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> audioSource =
-          new LocalTrackSource(mListener, source, kAudioTrack);
+          new LocalTrackSource(principal, mListener, source, kAudioTrack);
         domStream->CreateOwnDOMTrack(kAudioTrack, MediaSegment::AUDIO,
                                      audioDeviceName, audioSource);
       }
@@ -960,19 +972,10 @@ public:
         const MediaSourceEnum source =
           mVideoDevice->GetSource()->GetMediaSource();
         RefPtr<MediaStreamTrackSource> videoSource =
-          new LocalTrackSource(mListener, source, kVideoTrack);
+          new LocalTrackSource(principal, mListener, source, kVideoTrack);
         domStream->CreateOwnDOMTrack(kVideoTrack, MediaSegment::VIDEO,
                                      videoDeviceName, videoSource);
       }
-
-      nsCOMPtr<nsIPrincipal> principal;
-      if (mPeerIdentity) {
-        principal = nsNullPrincipal::Create();
-        domStream->SetPeerIdentity(mPeerIdentity.forget());
-      } else {
-        principal = window->GetExtantDoc()->NodePrincipal();
-      }
-      domStream->CombineWithPrincipal(principal);
       stream = domStream->GetInputStream()->AsSourceStream();
     }
 
