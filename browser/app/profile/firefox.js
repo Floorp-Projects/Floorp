@@ -1407,8 +1407,8 @@ pref("security.insecure_password.ui.enabled", false);
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 
-// 2 = allow SHA-1 only before 2016-01-01
-pref("security.pki.sha1_enforcement_level", 2);
+// 0 = allow SHA-1
+pref("security.pki.sha1_enforcement_level", 0);
 
 // Required blocklist freshness for OneCRL OCSP bypass
 // (default is 1.25x extensions.blocklist.interval, or 30 hours)
