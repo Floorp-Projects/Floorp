@@ -99,7 +99,7 @@ const backgroundPageThumbsContent = {
   onStateChange: function (webProgress, req, flags, status) {
     if (webProgress.isTopLevel &&
         (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
-        this._currentCapture && Components.isSuccessCode(status)) {
+        this._currentCapture) {
       if (req.name == "about:blank") {
         if (this._state == STATE_CAPTURING) {
           // about:blank has loaded, ending the current capture.
@@ -114,10 +114,14 @@ const backgroundPageThumbsContent = {
           this._startNextCapture();
         }
       }
-      else if (this._state == STATE_LOADING) {
+      else if (this._state == STATE_LOADING &&
+               Components.isSuccessCode(status)) {
         // The requested page has loaded.  Capture it.
         this._state = STATE_CAPTURING;
         this._captureCurrentPage();
+      } else {
+        this._state = STATE_CANCELED;
+        this._loadAboutBlank();
       }
     }
   },
