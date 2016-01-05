@@ -1872,6 +1872,16 @@ JSStructuredCloneReader::readTransferMap()
                 obj = JS_NewMappedArrayBufferWithContents(cx, nbytes, content);
         } else if (tag == SCTAG_TRANSFER_MAP_SHARED_BUFFER) {
             MOZ_ASSERT(data == JS::SCTAG_TMO_SHARED_BUFFER);
+            // There's no guarantee that the receiving agent has enabled
+            // shared memory even if the transmitting agent has done so.
+            // Ideally we'd check at the transmission point, but that's
+            // tricky, and it will be a very rare problem in any case.
+            // Just fail at the receiving end if we can't handle it.
+            if (!context()->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled()) {
+                JS_ReportErrorNumber(context(), GetErrorMessage, nullptr,
+                                     JSMSG_SC_NOT_TRANSFERABLE);
+                return false;
+            }
             obj = SharedArrayBufferObject::New(context(), (SharedArrayRawBuffer*)content);
         } else {
             if (!callbacks || !callbacks->readTransfer) {
