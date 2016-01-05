@@ -124,13 +124,18 @@ function getPref(name) {
   return pref;
 }
 
+function IsSupportedAndroid() {
+  return getAndroidVersion() >= 14;
+}
+
 function IsJellyBeanOrLater() {
-  return androidVersion >= 16;
+  return getAndroidVersion() >= 16;
 }
 
 var haveMp4 = (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
               IsMacOSSnowLeopardOrLater() ||
-              IsJellyBeanOrLater() ||
+              (IsSupportedAndroid() &&
+               (IsJellyBeanOrLater() || getPref("media.plugins.enabled"))) ||
               getPref("media.omx.enabled") ||
               (IsLinux() && getPref("media.ffmpeg.enabled"));
 
@@ -138,8 +143,10 @@ check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||
               (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
-              (IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
               (IsLinux() && getPref("media.ffmpeg.enabled")) ||
+              (IsSupportedAndroid() &&
+               ((IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
+                getPref("media.plugins.enabled"))) ||
               getPref("media.apple.mp3.enabled");
 check_mp3(document.getElementById('v'), haveMp3);
 
