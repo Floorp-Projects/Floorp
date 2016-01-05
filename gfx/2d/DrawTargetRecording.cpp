@@ -297,6 +297,16 @@ DrawTargetRecording::DrawTargetRecording(DrawEventRecorder *aRecorder, DrawTarge
   mFormat = mFinalDT->GetFormat();
 }
 
+DrawTargetRecording::DrawTargetRecording(const DrawTargetRecording *aDT,
+                                         const IntSize &aSize,
+                                         SurfaceFormat aFormat)
+  : mRecorder(aDT->mRecorder)
+  , mFinalDT(aDT->mFinalDT->CreateSimilarDrawTarget(aSize, aFormat))
+{
+  mRecorder->RecordEvent(RecordedCreateSimilarDrawTarget(this, aSize, aFormat));
+  mFormat = mFinalDT->GetFormat();
+}
+
 DrawTargetRecording::~DrawTargetRecording()
 {
   mRecorder->RecordEvent(RecordedDrawTargetDestruction(this));
@@ -589,8 +599,7 @@ DrawTargetRecording::CreateSourceSurfaceFromNativeSurface(const NativeSurface &a
 already_AddRefed<DrawTarget>
 DrawTargetRecording::CreateSimilarDrawTarget(const IntSize &aSize, SurfaceFormat aFormat) const
 {
-  RefPtr<DrawTarget> dt = mFinalDT->CreateSimilarDrawTarget(aSize, aFormat);
-  return MakeAndAddRef<DrawTargetRecording>(mRecorder.get(), dt);
+  return MakeAndAddRef<DrawTargetRecording>(this, aSize, aFormat);
 }
 
 already_AddRefed<PathBuilder>
