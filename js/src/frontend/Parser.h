@@ -598,7 +598,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node globalBody();
 
     // Parse a module.
-    Node standaloneModule(Handle<ModuleObject*> module);
+    Node standaloneModule(Handle<ModuleObject*> module, ModuleBuilder& builder);
 
     // Parse a function, given only its body. Used for the Function and
     // Generator constructors.
