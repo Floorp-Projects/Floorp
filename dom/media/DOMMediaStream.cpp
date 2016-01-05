@@ -151,7 +151,7 @@ public:
         nsIPrincipal* principal = doc ? doc->NodePrincipal() : nullptr;
         source = new BasicUnstoppableTrackSource(principal);
       }
-      track = mStream->CreateOwnDOMTrack(aTrackID, aType, nsString(), source);
+      track = mStream->CreateDOMTrack(aTrackID, aType, nsString(), source);
     }
   }
 
@@ -667,7 +667,7 @@ DOMMediaStream::CloneInternal(TrackForwardingOption aForwarding)
     LOG(LogLevel::Debug, ("DOMMediaStream %p forwarding external track %p to clone %p",
                           this, &track, newStream.get()));
     RefPtr<MediaStreamTrack> trackClone =
-      newStream->CreateClonedDOMTrack(track, allocatedTrackID++);
+      newStream->CloneDOMTrack(track, allocatedTrackID++);
   }
 
   if (aForwarding == TrackForwardingOption::ALL) {
@@ -787,7 +787,7 @@ DOMMediaStream::InitAudioCaptureStream(nsIPrincipal* aPrincipal, MediaStreamGrap
   InitInputStreamCommon(audioCaptureStream, aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
-  CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString(), audioCaptureSource);
+  CreateDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString(), audioCaptureSource);
   audioCaptureStream->Start();
 }
 
@@ -943,9 +943,9 @@ DOMMediaStream::RemovePrincipalChangeObserver(
 }
 
 MediaStreamTrack*
-DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
-                                  const nsString& aLabel,
-                                  MediaStreamTrackSource* aSource)
+DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
+                               const nsString& aLabel,
+                               MediaStreamTrackSource* aSource)
 {
   MOZ_RELEASE_ASSERT(mInputStream);
   MOZ_RELEASE_ASSERT(mOwnedStream);
@@ -977,8 +977,8 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
 }
 
 already_AddRefed<MediaStreamTrack>
-DOMMediaStream::CreateClonedDOMTrack(MediaStreamTrack& aTrack,
-                                     TrackID aCloneTrackID)
+DOMMediaStream::CloneDOMTrack(MediaStreamTrack& aTrack,
+                              TrackID aCloneTrackID)
 {
   MOZ_RELEASE_ASSERT(mOwnedStream);
   MOZ_RELEASE_ASSERT(mPlaybackStream);

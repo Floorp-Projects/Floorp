@@ -2013,15 +2013,15 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
         TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
         RefPtr<MediaStreamTrackSource> trackSource =
           getter->GetMediaStreamTrackSource(audioTrackId);
-        out->mStream->CreateOwnDOMTrack(audioTrackId, MediaSegment::AUDIO,
-                                        nsString(), trackSource);
+        out->mStream->CreateDOMTrack(audioTrackId, MediaSegment::AUDIO,
+                                     nsString(), trackSource);
       }
       if (HasVideo()) {
         TrackID videoTrackId = mMediaInfo.mVideo.mTrackId;
         RefPtr<MediaStreamTrackSource> trackSource =
           getter->GetMediaStreamTrackSource(videoTrackId);
-        out->mStream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO,
-                                        nsString(), trackSource);
+        out->mStream->CreateDOMTrack(videoTrackId, MediaSegment::VIDEO,
+                                     nsString(), trackSource);
       }
     }
   }

@@ -1815,15 +1815,15 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
                                 "Did someone add a track from elsewhere?");
         TrackID trackID = info->GetNumericTrackId(track->GetTrackId());
         if (track->GetMediaType() == SdpMediaSection::kAudio) {
-          info->GetMediaStream()->CreateOwnDOMTrack(trackID,
-                                                    MediaSegment::AUDIO,
-                                                    nsString(),
-                                                    source);
+          info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                 MediaSegment::AUDIO,
+                                                 nsString(),
+                                                 source);
         } else {
-          info->GetMediaStream()->CreateOwnDOMTrack(trackID,
-                                                    MediaSegment::VIDEO,
-                                                    nsString(),
-                                                    source);
+          info->GetMediaStream()->CreateDOMTrack(trackID,
+                                                 MediaSegment::VIDEO,
+                                                 nsString(),
+                                                 source);
         }
 #endif
         CSFLogDebug(logTag, "Added remote track %s/%s",
