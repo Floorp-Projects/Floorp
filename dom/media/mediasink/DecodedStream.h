@@ -35,7 +35,8 @@ public:
   DecodedStream(AbstractThread* aOwnerThread,
                 MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue,
-                OutputStreamManager* aOutputStreamManager);
+                OutputStreamManager* aOutputStreamManager,
+                const bool& aSameOrigin);
 
   // MediaSink functions.
   const PlaybackParams& GetPlaybackParams() const override;
@@ -98,7 +99,7 @@ private:
   RefPtr<GenericPromise> mFinishPromise;
 
   bool mPlaying;
-  bool mSameOrigin;
+  const bool& mSameOrigin; // valid until Shutdown() is called.
   PlaybackParams mParams;
 
   Maybe<int64_t> mStartTime;

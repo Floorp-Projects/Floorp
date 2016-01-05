@@ -188,11 +188,12 @@ DecodedStreamData::SetPlaying(bool aPlaying)
 DecodedStream::DecodedStream(AbstractThread* aOwnerThread,
                              MediaQueue<MediaData>& aAudioQueue,
                              MediaQueue<MediaData>& aVideoQueue,
-                             OutputStreamManager* aOutputStreamManager)
+                             OutputStreamManager* aOutputStreamManager,
+                             const bool& aSameOrigin)
   : mOwnerThread(aOwnerThread)
   , mOutputStreamManager(aOutputStreamManager)
   , mPlaying(false)
-  , mSameOrigin(false)
+  , mSameOrigin(aSameOrigin)
   , mAudioQueue(aAudioQueue)
   , mVideoQueue(aVideoQueue)
 {
