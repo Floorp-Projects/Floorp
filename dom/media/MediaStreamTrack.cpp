@@ -137,5 +137,28 @@ MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
   return GetStream()->ApplyConstraintsToTrack(mTrackID, aConstraints, aRv);
 }
 
+DOMMediaStream*
+MediaStreamTrack::GetInputDOMStream()
+{
+  MediaStreamTrack* originalTrack =
+    mOriginalTrack ? mOriginalTrack.get() : this;
+  MOZ_RELEASE_ASSERT(originalTrack->GetStream());
+  return originalTrack->GetStream();
+}
+
+MediaStream*
+MediaStreamTrack::GetInputStream()
+{
+  DOMMediaStream* inputDOMStream = GetInputDOMStream();
+  MOZ_RELEASE_ASSERT(inputDOMStream->GetInputStream());
+  return inputDOMStream->GetInputStream();
+}
+
+ProcessedMediaStream*
+MediaStreamTrack::GetOwnedStream()
+{
+  return GetStream()->GetOwnedStream();
+}
+
 } // namespace dom
 } // namespace mozilla
