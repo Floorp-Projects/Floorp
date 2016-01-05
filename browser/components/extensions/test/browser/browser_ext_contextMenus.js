@@ -28,26 +28,26 @@ add_task(function* () {
       for (let i = 0; i < contexts.length; i++) {
         let context = contexts[i];
         let title = context;
-        var id = browser.contextMenus.create({ title: title, contexts: [context], id: "ext-" + context,
-                                               onclick: genericOnClick });
+        browser.contextMenus.create({ title: title, contexts: [context], id: "ext-" + context,
+                                      onclick: genericOnClick });
         if (context == "selection") {
           browser.contextMenus.update("ext-selection", {
             title: "selection is: '%s'",
             onclick: (info) => {
               browser.contextMenus.removeAll();
               genericOnClick(info);
-            }
+            },
           });
         }
       }
 
-      var parent = browser.contextMenus.create({ title: "parent" });
+      let parent = browser.contextMenus.create({ title: "parent" });
       browser.contextMenus.create(
         { title: "child1", parentId: parent, onclick: genericOnClick });
-      browser.contextMenus.create(
+      let child2 = browser.contextMenus.create(
         { title: "child2", parentId: parent, onclick: genericOnClick });
 
-      var parentToDel = browser.contextMenus.create({ title: "parentToDel" });
+      let parentToDel = browser.contextMenus.create({ title: "parentToDel" });
       browser.contextMenus.create(
         { title: "child1", parentId: parentToDel, onclick: genericOnClick });
       browser.contextMenus.create(
@@ -57,7 +57,7 @@ add_task(function* () {
       try {
         browser.contextMenus.update(parent, { parentId: child2 });
         browser.test.notifyFail();
-      } catch(e) {
+      } catch (e) {
         browser.test.notifyPass();
       }
     },
