@@ -19362,9 +19362,6 @@ FactoryOp::WaitForTransactions()
   MOZ_ASSERT(!mDatabaseId.IsEmpty());
   MOZ_ASSERT(!IsActorDestroyed());
 
-  nsTArray<nsCString> databaseIds;
-  databaseIds.AppendElement(mDatabaseId);
-
   mState = State::WaitingForTransactionsToComplete;
 
   RefPtr<WaitForTransactionsHelper> helper =

@@ -29,7 +29,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(64439e24-eda5-4f39-9a7e-162c4b5e0150)]
+[scriptable, uuid(f4b82975-6a86-4cc4-87fe-9a1fd430c86d)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -75,6 +75,12 @@ interface nsIInterceptedChannel : nsISupports
      * The underlying channel object that was intercepted.
      */
     readonly attribute nsIChannel channel;
+
+    /**
+     * The URL of the underlying channel object, corrected for a potential
+     * secure upgrade.
+     */
+    readonly attribute nsIURI secureUpgradedChannelURI;
 
     /**
      * This method allows to override the channel info for the channel.

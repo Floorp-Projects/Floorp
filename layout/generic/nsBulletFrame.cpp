@@ -608,8 +608,7 @@ nsBulletFrame::GetDesiredSize(nsPresContext*  aCX,
       GetListItemText(text);
       finalSize.BSize(wm) = fm->MaxHeight();
       finalSize.ISize(wm) =
-        nsLayoutUtils::AppUnitWidthOfStringBidi(text, this, *fm,
-                                                *aRenderingContext);
+        nsLayoutUtils::AppUnitWidthOfStringBidi(text, this, *fm, *aRenderingContext);
       aMetrics.SetBlockStartAscent(wm.IsLineInverted()
                                      ? fm->MaxDescent() : fm->MaxAscent());
       break;
@@ -631,8 +630,8 @@ nsBulletFrame::Reflow(nsPresContext* aPresContext,
   SetFontSizeInflation(inflation);
 
   // Get the base size
-  GetDesiredSize(aPresContext, aReflowState.rendContext,
-                 aMetrics, inflation, &mPadding);
+  GetDesiredSize(aPresContext, aReflowState.rendContext, aMetrics, inflation,
+                 &mPadding);
 
   // Add in the border and padding; split the top/bottom between the
   // ascent and descent to make things look nice

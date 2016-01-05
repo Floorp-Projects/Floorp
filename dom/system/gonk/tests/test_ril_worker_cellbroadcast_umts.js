@@ -15,23 +15,6 @@ function buildHexStr(aNum, aNumSemiOctets) {
   return str;
 }
 
-function hexStringToParcelByteArrayData(hexString) {
-  let bytes = [];
-
-  let length = hexString.length / 2;
-
-  bytes.push(length & 0xFF);
-  bytes.push((length >>  8) & 0xFF);
-  bytes.push((length >> 16) & 0xFF);
-  bytes.push((length >> 24) & 0xFF);
-
-  for (let i = 0; i < hexString.length; i += 2) {
-    bytes.push(Number.parseInt(hexString.substr(i, 2), 16));
-  }
-
-  return bytes;
-}
-
 /**
  * Verify GsmPDUHelper#readUmtsCbMessage with numOfPages from 1 to 15.
  */

@@ -19,13 +19,25 @@
 
 #include <stdarg.h>
 
+// We need a definition of gettid(), but glibc doesn't provide a
+// wrapper for it.
 #if defined(__GLIBC__)
-// glibc doesn't implement gettid(2).
+#include <unistd.h>
 #include <sys/syscall.h>
-static pid_t gettid()
+static inline pid_t gettid()
 {
   return (pid_t) syscall(SYS_gettid);
 }
+#elif defined(XP_MACOSX)
+#include <unistd.h>
+#include <sys/syscall.h>
+static inline pid_t gettid()
+{
+  return (pid_t) syscall(SYS_thread_selfid);
+}
+#elif defined(LINUX)
+#include <sys/types.h>
+pid_t gettid();
 #endif
 
 // NS_ENSURE_TRUE_VOID() without the warning on the debug build.
@@ -114,12 +126,12 @@ CreateSourceEvent(SourceEventType aType)
   info->mCurTraceSourceType = aType;
   info->mCurTaskId = newId;
 
-  int* namePtr;
+  uintptr_t* namePtr;
 #define SOURCE_EVENT_NAME(type)         \
   case SourceEventType::type:           \
   {                                     \
     static int CreateSourceEvent##type; \
-    namePtr = &CreateSourceEvent##type; \
+    namePtr = (uintptr_t*)&CreateSourceEvent##type; \
     break;                              \
   }
 
@@ -368,7 +380,7 @@ LogEnd(uint64_t aTaskId, uint64_t aSourceEventId)
 }
 
 void
-LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, int* aVptr)
+LogVirtualTablePtr(uint64_t aTaskId, uint64_t aSourceEventId, uintptr_t* aVptr)
 {
   TraceInfo* info = GetOrCreateTraceInfo();
   ENSURE_TRUE_VOID(info);

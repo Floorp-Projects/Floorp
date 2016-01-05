@@ -163,7 +163,7 @@ class B2gMultilocale(LocalesMixin, BaseScript, VCSMixin, GaiaLocalesMixin):
         make = self.query_exe('make', return_type='string')
         env = self.query_env(
             partial_env={
-                'LOCALE_MERGEDIR': dirs['abs_merge_dir'],
+                'LOCALE_MERGEDIR': dirs['abs_merge_dir'].replace(os.sep, '/'),
                 'MOZ_CHROME_MULTILOCALE': 'en-US ' + ' '.join(gecko_locales),
             }
         )
@@ -176,12 +176,14 @@ class B2gMultilocale(LocalesMixin, BaseScript, VCSMixin, GaiaLocalesMixin):
             }
         )
         for locale in gecko_locales:
-            command = make + ' merge-%s L10NBASEDIR=%s LOCALE_MERGEDIR=%s' % (locale, dirs['abs_l10n_dir'], dirs['abs_merge_dir'])
+            command = make + ' merge-%s L10NBASEDIR=%s LOCALE_MERGEDIR=%s' % (
+                locale, dirs['abs_l10n_dir'], dirs['abs_merge_dir'].replace(os.sep, '/'))
             status = self.run_command(command,
                                       cwd=dirs['abs_locales_dir'],
                                       error_list=MakefileErrorList,
                                       env=merge_env)
-            command = make + ' chrome-%s L10NBASEDIR=%s LOCALE_MERGEDIR=%s' % (locale, dirs['abs_l10n_dir'], dirs['abs_merge_dir'])
+            command = make + ' chrome-%s L10NBASEDIR=%s LOCALE_MERGEDIR=%s' % (
+                locale, dirs['abs_l10n_dir'], dirs['abs_merge_dir'].replace(os.sep, '/'))
             status = self.run_command(command,
                                       cwd=dirs['abs_locales_dir'],
                                       error_list=MakefileErrorList)

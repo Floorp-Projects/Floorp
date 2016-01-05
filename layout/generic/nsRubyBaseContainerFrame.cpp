@@ -63,7 +63,7 @@ nsRubyBaseContainerFrame::GetFrameName(nsAString& aResult) const
 
 static gfxBreakPriority
 LineBreakBefore(nsIFrame* aFrame,
-                nsRenderingContext* aRenderingContext,
+                DrawTarget* aDrawTarget,
                 nsIFrame* aLineContainerFrame,
                 const nsLineList::iterator* aLine)
 {
@@ -79,8 +79,7 @@ LineBreakBefore(nsIFrame* aFrame,
 
     auto textFrame = static_cast<nsTextFrame*>(child);
     gfxSkipCharsIterator iter =
-      textFrame->EnsureTextRun(nsTextFrame::eInflated,
-                               aRenderingContext->ThebesContext(),
+      textFrame->EnsureTextRun(nsTextFrame::eInflated, aDrawTarget,
                                aLineContainerFrame, aLine);
     iter.SetOriginalOffset(textFrame->GetContentOffset());
     uint32_t pos = iter.GetSkippedOffset();
@@ -208,7 +207,8 @@ nsRubyBaseContainerFrame::AddInlineMinISize(
         nsIFrame* baseFrame = enumerator.GetFrameAtLevel(0);
         if (baseFrame) {
           gfxBreakPriority breakPriority =
-            LineBreakBefore(baseFrame, aRenderingContext, nullptr, nullptr);
+            LineBreakBefore(baseFrame, aRenderingContext->GetDrawTarget(),
+                            nullptr, nullptr);
           if (breakPriority != gfxBreakPriority::eNoBreak) {
             aData->OptionallyBreak();
           }
@@ -582,7 +582,7 @@ nsRubyBaseContainerFrame::ReflowOneColumn(const ReflowState& aReflowState,
       aReflowState.mAllowLineBreak : aReflowState.mAllowInitialLineBreak;
     if (allowBreakBefore) {
       gfxBreakPriority breakPriority = LineBreakBefore(
-        aColumn.mBaseFrame, baseReflowState.rendContext,
+        aColumn.mBaseFrame, baseReflowState.rendContext->GetDrawTarget(),
         baseReflowState.mLineLayout->LineContainerFrame(),
         baseReflowState.mLineLayout->GetLine());
       if (breakPriority != gfxBreakPriority::eNoBreak) {

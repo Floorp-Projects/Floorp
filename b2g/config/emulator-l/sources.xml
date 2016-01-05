@@ -21,12 +21,12 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="765d98a20f903ed34b91814e1ad0ce4181fba548"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="78b2bc4cad3fcf83cbbbe4aeb77079cf956972cf"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
-  <project name="platform_build" path="build" remote="b2g" revision="c9d4fe680662ee44a4bdea42ae00366f5df399cf">
+  <project name="platform_build" path="build" remote="b2g" revision="be4b291a90b371b41b62ade68c31ad173bb87baa">
     <copyfile dest="Makefile" src="core/root.mk"/>
   </project>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
@@ -34,7 +34,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="b516c3e0f6770d8acb6b4dff18b39e19cb4e4731"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="edc099cff55a6a3f9ad191acfbc8cc39f36228db"/>
   <!-- Stock Android things -->
   <project groups="pdk,linux" name="platform/prebuilts/clang/linux-x86/host/3.5" path="prebuilts/clang/linux-x86/host/3.5" revision="ffc05a232799fe8fcb3e47b7440b52b1fb4244c0"/>
   <project groups="pdk,linux,arm" name="platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" path="prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.8" revision="337e0ef5e40f02a1ae59b90db0548976c70a7226"/>
@@ -132,7 +132,7 @@
   <project name="platform/libcore" path="libcore" revision="bdec7d684c083760bef7bc4ba2429cceccaaf7d0"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="27bcc086236cedd31c056303e255c6d0ea3d4a50"/>
   <project name="platform/ndk" path="ndk" revision="42e85f81cc6c74af145056ee80b06e520cccb9a7"/>
-  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="179d485578c6907c0daf343a3bd7bc53b5e137a1"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="25b96077aeae7bd0e3a5e7c284fb636664337013"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="1d080491f26dfdfd76d5bbc3e6b40c660e8565af"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="61a10cbd19d6b7fc052a8cb92dfa1b37b93754f3"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="9e892a67a01671f312c76b0880dedaa6ba478148"/>
@@ -143,11 +143,11 @@
   <project name="platform/system/netd" path="system/netd" revision="d113f0ceefa9ce29eb3c86e2d23c7417a70b4048"/>
   <project name="platform/system/security" path="system/security" revision="94e1617f6f2bc2286d005e79cffa6bf0721b06b3"/>
   <project name="platform/system/vold" path="system/vold" revision="c065e301e38ea0c241164e2a373e1ecefbeaf2ec"/>
-  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="6971327dda6bead878724ac1c767ee2d23a2a9e1"/>
-  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="04e26ebdc36ca83f4ee3e9e2082b3fcf04c5b971"/>
-  <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="0dbf5baafadf6d233c0a29e392fa3293f0121673"/>
-  <project name="platform_system_core" path="system/core" remote="b2g" revision="f594bc64eacac490857748b1139ffcb34c856bbd"/>
-  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="3f6be48a46c54dd8cacaf216ab5b145de5ffefd2"/>
+  <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="479a404164986b3e95212eecdae7e67da4fba9ed"/>
+  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="10592803994aa01fa3dc0d0bd36d0d29f006d779"/>
+  <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="174bb44bb9af7583e6337e1e1b6cc18d0217ae82"/>
+  <project name="platform_system_core" path="system/core" remote="b2g" revision="1b8322b228f717ff2a4d48fa8b44240d8e3f62bc"/>
+  <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="246c603d9fe181fa8893af7293dbc63e870fe5e0"/>
   <default remote="caf" revision="refs/tags/android-5.1.0_r1" sync-j="4"/>
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="fe7df1bc8dd0fd71571505d7be1c31a4ad1e40fb"/>
