@@ -591,6 +591,32 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   LOG(LogLevel::Debug, ("DOMMediaStream %p Removed track %p", this, &aTrack));
 }
 
+MediaStreamTrack*
+DOMMediaStream::GetTrackById(const nsString& aId)
+{
+  for (const RefPtr<TrackPort>& info : mTracks) {
+    nsString id;
+    info->GetTrack()->GetId(id);
+    if (id == aId) {
+      return info->GetTrack();
+    }
+  }
+  return nullptr;
+}
+
+MediaStreamTrack*
+DOMMediaStream::GetOwnedTrackById(const nsString& aId)
+{
+  for (const RefPtr<TrackPort>& info : mOwnedTracks) {
+    nsString id;
+    info->GetTrack()->GetId(id);
+    if (id == aId) {
+      return info->GetTrack();
+    }
+  }
+  return nullptr;
+}
+
 bool
 DOMMediaStream::HasTrack(const MediaStreamTrack& aTrack) const
 {

@@ -362,6 +362,10 @@ public:
 
   // NON-WebIDL
 
+  MediaStreamTrack* GetTrackById(const nsString& aId);
+
+  MediaStreamTrack* GetOwnedTrackById(const nsString& aId);
+
   /**
    * Returns true if this DOMMediaStream has aTrack in its mPlaybackStream.
    */
