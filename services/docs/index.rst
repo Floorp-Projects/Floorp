@@ -14,4 +14,3 @@ the directory remains.
    :maxdepth: 1
 
    metrics
-   datareporting
