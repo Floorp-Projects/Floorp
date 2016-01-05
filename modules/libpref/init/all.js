@@ -1004,6 +1004,9 @@ pref("print.print_edge_left", 0);
 pref("print.print_edge_right", 0);
 pref("print.print_edge_bottom", 0);
 
+// Print via the parent process. This is only used when e10s is enabled.
+pref("print.print_via_parent", false);
+
 // Pref used by the spellchecker extension to control the
 // maximum number of misspelled words that will be underlined
 // in a document.
