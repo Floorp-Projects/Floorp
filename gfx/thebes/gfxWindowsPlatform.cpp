@@ -87,19 +87,20 @@ DCFromDrawTarget::DCFromDrawTarget(DrawTarget& aDrawTarget)
 {
   mDC = nullptr;
   if (aDrawTarget.GetBackendType() == BackendType::CAIRO) {
-    cairo_surface_t *surf = (cairo_surface_t*)
-        aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE);
-    if (surf) {
-      cairo_surface_type_t surfaceType = cairo_surface_get_type(surf);
-      if (surfaceType == CAIRO_SURFACE_TYPE_WIN32 ||
-          surfaceType == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
-        mDC = cairo_win32_surface_get_dc(surf);
-        mNeedsRelease = false;
-        SaveDC(mDC);
-        cairo_t* ctx = (cairo_t*)
-            aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT);
-        cairo_scaled_font_t* scaled = cairo_get_scaled_font(ctx);
-        cairo_win32_scaled_font_select_font(scaled, mDC);
+    cairo_t* ctx = static_cast<cairo_t*>
+      (aDrawTarget.GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+    if (ctx) {
+      cairo_surface_t* surf = cairo_get_group_target(ctx);
+      if (surf) {
+        cairo_surface_type_t surfaceType = cairo_surface_get_type(surf);
+        if (surfaceType == CAIRO_SURFACE_TYPE_WIN32 ||
+            surfaceType == CAIRO_SURFACE_TYPE_WIN32_PRINTING) {
+          mDC = cairo_win32_surface_get_dc(surf);
+          mNeedsRelease = false;
+          SaveDC(mDC);
+          cairo_scaled_font_t* scaled = cairo_get_scaled_font(ctx);
+          cairo_win32_scaled_font_select_font(scaled, mDC);
+        }
       }
     }
   }
