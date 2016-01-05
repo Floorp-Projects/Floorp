@@ -10,11 +10,13 @@
 #include <ostream>
 #include <sstream>
 #include <cstring>
-#include "RecordingTypes.h"
-#include "PathRecording.h"
+#include <vector>
 
 namespace mozilla {
 namespace gfx {
+
+struct PathOp;
+class PathRecording;
 
 // A change in major revision means a change in event binary format, causing
 // loss of backwards compatibility. Old streams will not work in a player

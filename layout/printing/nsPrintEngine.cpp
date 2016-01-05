@@ -1678,14 +1678,15 @@ nsPrintEngine::SetupToPrintContent()
     mPrt->OnStartPrinting();    
   }
 
-  char16_t* fileName = nullptr;
+  nsAutoString fileNameStr;
   // check to see if we are printing to a file
   bool isPrintToFile = false;
   mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
   if (isPrintToFile) {
-  // On some platforms The BeginDocument needs to know the name of the file
-  // and it uses the PrintService to get it, so we need to set it into the PrintService here
+    // On some platforms The BeginDocument needs to know the name of the file.
+    char16_t* fileName = nullptr;
     mPrt->mPrintSettings->GetToFileName(&fileName);
+    fileNameStr = fileName;
   }
 
   nsAutoString docTitleStr;
@@ -1711,7 +1712,8 @@ nsPrintEngine::SetupToPrintContent()
   //      to the "File Name" dialog, this comes back as an error
   // Don't start printing when regression test are executed  
   if (!mPrt->mDebugFilePtr && mIsDoingPrinting) {
-    rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileName, startPage, endPage);
+    rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileNameStr, startPage,
+                                       endPage);
   } 
 
   if (mIsCreatingPrintPreview) {
