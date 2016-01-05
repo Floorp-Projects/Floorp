@@ -49,9 +49,9 @@ class ImportEntryObject : public NativeObject
                                      HandleAtom moduleRequest,
                                      HandleAtom importName,
                                      HandleAtom localName);
-    JSAtom* moduleRequest();
-    JSAtom* importName();
-    JSAtom* localName();
+    JSAtom* moduleRequest() const;
+    JSAtom* importName() const;
+    JSAtom* localName() const;
 };
 
 typedef Rooted<ImportEntryObject*> RootedImportEntryObject;
@@ -77,10 +77,10 @@ class ExportEntryObject : public NativeObject
                                      HandleAtom maybeModuleRequest,
                                      HandleAtom maybeImportName,
                                      HandleAtom maybeLocalName);
-    JSAtom* exportName();
-    JSAtom* moduleRequest();
-    JSAtom* importName();
-    JSAtom* localName();
+    JSAtom* exportName() const;
+    JSAtom* moduleRequest() const;
+    JSAtom* importName() const;
+    JSAtom* localName() const;
 };
 
 typedef Rooted<ExportEntryObject*> RootedExportEntryObject;
