@@ -155,6 +155,8 @@ public:
 
   void Destroy();
 
+  static bool DestroyFallback(PCompositableChild* aActor);
+
   bool IsConnected() const;
 
   PCompositableChild* GetIPDLActor() const;
