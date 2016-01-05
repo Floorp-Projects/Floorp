@@ -667,17 +667,19 @@ public:
   static already_AddRefed<nsDOMUserMediaStream>
   CreateSourceStream(nsPIDOMWindowInner* aWindow,
                      GetUserMediaCallbackMediaStreamListener* aListener,
-                     MediaStreamGraph* aMSG)
+                     MediaStreamGraph* aMSG,
+                     MediaStreamTrackSourceGetter* aTrackSourceGetter)
   {
-    RefPtr<nsDOMUserMediaStream> stream = new nsDOMUserMediaStream(aWindow,
-                                                                   aListener);
+    RefPtr<nsDOMUserMediaStream> stream =
+      new nsDOMUserMediaStream(aWindow, aListener, aTrackSourceGetter);
     stream->InitSourceStream(aMSG);
     return stream.forget();
   }
 
   nsDOMUserMediaStream(nsPIDOMWindowInner* aWindow,
-                       GetUserMediaCallbackMediaStreamListener* aListener) :
-    DOMLocalMediaStream(aWindow),
+                       GetUserMediaCallbackMediaStreamListener* aListener,
+                       MediaStreamTrackSourceGetter* aTrackSourceGetter) :
+    DOMLocalMediaStream(aWindow, aTrackSourceGetter),
     mListener(aListener)
   {}
 
@@ -937,9 +939,10 @@ public:
       };
 
       // Normal case, connect the source stream to the track union stream to
-      // avoid us blocking
-      domStream = nsDOMUserMediaStream::CreateSourceStream(window, mListener,
-                                                           msg);
+      // avoid us blocking. Pass a null TrackSourceGetter since gUM should never
+      // add tracks dynamically.
+      domStream =
+        nsDOMUserMediaStream::CreateSourceStream(window, mListener, msg, nullptr);
 
       if (mAudioDevice) {
         nsString audioDeviceName;
