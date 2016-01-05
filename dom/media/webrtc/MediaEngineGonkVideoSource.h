@@ -92,7 +92,7 @@ public:
   void RotateImage(layers::Image* aImage, uint32_t aWidth, uint32_t aHeight);
   void Notify(const mozilla::hal::ScreenConfiguration& aConfiguration);
 
-  nsresult TakePhoto(PhotoCallback* aCallback) override;
+  nsresult TakePhoto(MediaEnginePhotoCallback* aCallback) override;
 
   // It sets the correct photo orientation via camera parameter according to
   // current screen orientation.
@@ -125,7 +125,7 @@ protected:
   android::sp<android::GonkCameraSource> mCameraSource;
 
   // These are protected by mMonitor in parent class
-  nsTArray<RefPtr<PhotoCallback>> mPhotoCallbacks;
+  nsTArray<RefPtr<MediaEnginePhotoCallback>> mPhotoCallbacks;
   int mRotation;
   int mCameraAngle; // See dom/base/ScreenOrientation.h
   bool mBackCamera;
