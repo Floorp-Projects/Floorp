@@ -400,6 +400,12 @@ nsDeviceContext::CreateRenderingContext()
         return nullptr;
     }
 
+    RefPtr<DrawEventRecorder> recorder;
+    nsresult rv = mDeviceContextSpec->GetDrawEventRecorder(getter_AddRefs(recorder));
+    if (NS_SUCCEEDED(rv) && recorder) {
+      dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dt);
+    }
+
 #ifdef XP_MACOSX
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
 #endif
@@ -506,18 +512,16 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 
 nsresult
 nsDeviceContext::BeginDocument(const nsAString& aTitle,
-                               char16_t*       aPrintToFileName,
+                               const nsAString& aPrintToFileName,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
-    static const char16_t kEmpty[] = { '\0' };
-    nsresult rv;
+    nsresult rv = mPrintingSurface->BeginPrinting(aTitle, aPrintToFileName);
 
-    rv = mPrintingSurface->BeginPrinting(aTitle,
-                                         nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
-
-    if (NS_SUCCEEDED(rv) && mDeviceContextSpec)
-        rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
+    if (NS_SUCCEEDED(rv) && mDeviceContextSpec) {
+      rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
+                                             aStartPage, aEndPage);
+    }
 
     return rv;
 }
