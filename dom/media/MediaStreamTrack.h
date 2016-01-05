@@ -74,6 +74,7 @@ protected:
 
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
+  RefPtr<MediaStreamTrack> mOriginalTrack;
   nsString mID;
   nsString mLabel;
   bool mEnded;
