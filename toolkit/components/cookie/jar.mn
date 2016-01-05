@@ -3,6 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+#ifndef MOZ_FENNEC
 % content cookie %content/cookie/
   content/cookie/cookieAcceptDialog.xul          (content/cookieAcceptDialog.xul)
   content/cookie/cookieAcceptDialog.js           (content/cookieAcceptDialog.js)
+#endif
