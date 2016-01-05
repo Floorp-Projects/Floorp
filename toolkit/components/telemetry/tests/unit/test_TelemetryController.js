@@ -31,7 +31,6 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_OPTOUT_SAMPLE = PREF_BRANCH + "optoutSample";
 
@@ -100,7 +99,6 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
-  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, true);
 
   Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(run_next_test));
 }
