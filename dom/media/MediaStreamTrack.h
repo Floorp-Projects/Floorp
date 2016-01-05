@@ -138,7 +138,7 @@ public:
    * MediaStream owned by aStream.
    */
   MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
-                   const nsString& aLabel,
+                   TrackID aInputTrackID, const nsString& aLabel,
                    MediaStreamTrackSource* aSource);
 
   NS_DECL_ISUPPORTS_INHERITED
@@ -158,6 +158,12 @@ public:
    * stream.
    */
   TrackID GetTrackID() const { return mTrackID; }
+
+  /**
+   * Returns the TrackID this MediaStreamTrack has in its input MSG-MediaStream.
+   */
+  TrackID GetInputTrackID() const { return mInputTrackID; }
+
   virtual AudioStreamTrack* AsAudioStreamTrack() { return nullptr; }
   virtual VideoStreamTrack* AsVideoStreamTrack() { return nullptr; }
 
