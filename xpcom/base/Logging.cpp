@@ -12,6 +12,9 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticPtr.h"
 #include "nsClassHashtable.h"
+#include "NSPRLogModulesParser.h"
+
+#include "prenv.h"
 
 // NB: Initial amount determined by auditing the codebase for the total amount
 //     of unique module names and padding up to the next power of 2.
@@ -42,21 +45,23 @@ public:
     //     its destructor.
   }
 
+  /**
+   * Loads config from env vars if present.
+   */
+  void Init()
+  {
+    const char* modules = PR_GetEnv("NSPR_LOG_MODULES");
+    NSPRLogModulesParser(modules, [] (const char* aName, LogLevel aLevel) {
+        LogModule::Get(aName)->SetLevel(aLevel);
+    });
+  }
+
   LogModule* CreateOrGetModule(const char* aName)
   {
     OffTheBooksMutexAutoLock guard(mModulesLock);
     LogModule* module = nullptr;
     if (!mModules.Get(aName, &module)) {
-      // Create the PRLogModule, this will read any env vars that set the log
-      // level ahead of time. The module is held internally by NSPR, so it's
-      // okay to drop the pointer when leaving this scope.
-      PRLogModuleInfo* prModule = PR_NewLogModule(aName);
-
-      // NSPR does not impose a restriction on the values that log levels can
-      // be. LogModule uses the LogLevel enum class so we must clamp the value
-      // to a max of Verbose.
-      LogLevel logLevel = ToLogLevel(prModule->level);
-      module = new LogModule(logLevel);
+      module = new LogModule(LogLevel::Disabled);
       mModules.Put(aName, module);
     }
 
@@ -93,6 +98,7 @@ LogModule::Init()
   //     before all logging is complete. And, yes, that means we leak, but
   //     we're doing that intentionally.
   sLogModuleManager = new LogModuleManager();
+  sLogModuleManager->Init();
 }
 
 } // namespace mozilla
