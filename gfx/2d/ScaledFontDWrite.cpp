@@ -9,6 +9,7 @@
 #include "Logging.h"
 
 #include <vector>
+#include <unordered_map>
 
 #ifdef USE_CAIRO_SCALED_FONT
 #include "cairo-win32.h"
@@ -17,11 +18,8 @@
 namespace mozilla {
 namespace gfx {
 
-struct ffReferenceKey
-{
-    uint8_t *mData;
-    uint32_t mSize;
-};
+static Atomic<uint64_t> sNextFontFileKey;
+static std::unordered_map<uint64_t, IDWriteFontFileStream*> sFontFileStreams;
 
 class DWriteFontFileLoader : public IDWriteFontFileLoader
 {
@@ -94,7 +92,7 @@ public:
     *
     * @param aData Font data
     */
-  DWriteFontFileStream(uint8_t *aData, uint32_t aSize);
+  DWriteFontFileStream(uint8_t *aData, uint32_t aSize, uint64_t aFontFileKey);
   ~DWriteFontFileStream();
 
   // IUnknown interface
@@ -142,6 +140,7 @@ public:
 private:
   std::vector<uint8_t> mData;
   uint32_t mRefCnt;
+  uint64_t mFontFileKey;
 };
 
 static BYTE
@@ -228,19 +227,22 @@ DWriteFontFileLoader::CreateStreamFromKey(const void *fontFileReferenceKey,
     return E_POINTER;
   }
 
-  const ffReferenceKey *key = static_cast<const ffReferenceKey*>(fontFileReferenceKey);
-  *fontFileStream = 
-    new DWriteFontFileStream(key->mData, key->mSize);
-
-  if (!*fontFileStream) {
-    return E_OUTOFMEMORY;
+  uint64_t fontFileKey = *static_cast<const uint64_t*>(fontFileReferenceKey);
+  auto found = sFontFileStreams.find(fontFileKey);
+  if (found == sFontFileStreams.end()) {
+    *fontFileStream = nullptr;
+    return E_FAIL;
   }
-  (*fontFileStream)->AddRef();
+
+  found->second->AddRef();
+  *fontFileStream = found->second;
   return S_OK;
 }
 
-DWriteFontFileStream::DWriteFontFileStream(uint8_t *aData, uint32_t aSize)
+DWriteFontFileStream::DWriteFontFileStream(uint8_t *aData, uint32_t aSize,
+                                           uint64_t aFontFileKey)
   : mRefCnt(0)
+  , mFontFileKey(aFontFileKey)
 {
   mData.resize(aSize);
   memcpy(&mData.front(), aData, aSize);
@@ -248,6 +250,7 @@ DWriteFontFileStream::DWriteFontFileStream(uint8_t *aData, uint32_t aSize)
 
 DWriteFontFileStream::~DWriteFontFileStream()
 {
+  sFontFileStreams.erase(mFontFileKey);
 }
 
 HRESULT STDMETHODCALLTYPE
@@ -294,12 +297,13 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
 {
   IDWriteFactory *factory = DrawTargetD2D::GetDWriteFactory();
 
-  ffReferenceKey key;
-  key.mData = aData;
-  key.mSize = aSize;
+  uint64_t fontFileKey = sNextFontFileKey++;
+  sFontFileStreams[fontFileKey] =
+    new DWriteFontFileStream(aData, aSize, fontFileKey);
+  RefPtr<IDWriteFontFileStream> ffsRef = sFontFileStreams[fontFileKey];
 
   RefPtr<IDWriteFontFile> fontFile;
-  if (FAILED(factory->CreateCustomFontFileReference(&key, sizeof(ffReferenceKey), DWriteFontFileLoader::Instance(), getter_AddRefs(fontFile)))) {
+  if (FAILED(factory->CreateCustomFontFileReference(&fontFileKey, sizeof(fontFileKey), DWriteFontFileLoader::Instance(), getter_AddRefs(fontFile)))) {
     gfxWarning() << "Failed to load font file from data!";
     return;
   }
@@ -307,7 +311,13 @@ ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
   IDWriteFontFile *ff = fontFile;
   if (FAILED(factory->CreateFontFace(DWRITE_FONT_FACE_TYPE_TRUETYPE, 1, &ff, aIndex, DWRITE_FONT_SIMULATIONS_NONE, getter_AddRefs(mFontFace)))) {
     gfxWarning() << "Failed to create font face from font file data!";
+    return;
   }
+
+  // Now that we've successfully created the font take ownership of the
+  // reference, so that we know that the font file stream will be around if
+  // someone calls GetFontFileData.
+  mFontFileStream = ffsRef.forget();
 }
 
 already_AddRefed<Path>

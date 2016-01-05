@@ -49,6 +49,9 @@ protected:
 #ifdef USE_CAIRO_SCALED_FONT
   cairo_font_face_t* GetCairoFontFace() override;
 #endif
+
+private:
+  RefPtr<IDWriteFontFileStream> mFontFileStream;
 };
 
 class GlyphRenderingOptionsDWrite : public GlyphRenderingOptions
