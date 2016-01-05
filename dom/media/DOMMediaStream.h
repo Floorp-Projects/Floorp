@@ -374,13 +374,17 @@ public:
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mOwnedStream.
+   * aInputTrackID should match the track's TrackID in its input stream.
    */
-  MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
+  MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aOwningStream,
+                                      TrackID aInputTrackID) const;
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mPlaybackStream.
+   * aInputTrackID should match the track's TrackID in its owned stream.
    */
-  MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aOwningStream, TrackID aTrackID) const;
+  MediaStreamTrack* FindPlaybackDOMTrack(MediaStream* aOwningStream,
+                                         TrackID aInputTrackID) const;
 
   /**
    * Returns the TrackPort connecting mOwnedStream to mPlaybackStream for aTrack.
