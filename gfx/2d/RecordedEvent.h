@@ -18,6 +18,8 @@ namespace gfx {
 struct PathOp;
 class PathRecording;
 
+const uint32_t kMagicInt = 0xc001feed;
+
 // A change in major revision means a change in event binary format, causing
 // loss of backwards compatibility. Old streams will not work in a player
 // using a newer major revision. And new streams will not work in a player
