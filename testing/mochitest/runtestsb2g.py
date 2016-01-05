@@ -364,7 +364,6 @@ class MochitestB2G(MochitestBase):
             test_url += "?" + "&".join(self.urlOpts)
         self.test_script_args.append(test_url)
 
-
         options.profilePath = self.app_ctx.remote_profile
         options.logFile = self.local_log
 

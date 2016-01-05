@@ -2535,7 +2535,7 @@ MainAxisPositionTracker::
         }
         break;
       default:
-        MOZ_CRASH("Unexpected justify-content value");
+        MOZ_ASSERT_UNREACHABLE("Unexpected justify-content value");
     }
   }
 
@@ -2747,7 +2747,7 @@ CrossAxisPositionTracker::
         break;
       }
       default:
-        MOZ_CRASH("Unexpected align-content value");
+        MOZ_ASSERT_UNREACHABLE("Unexpected align-content value");
     }
   }
 }
@@ -3018,7 +3018,7 @@ SingleLineCrossAxisPositionTracker::
       break;
     }
     default:
-      NS_NOTREACHED("Unexpected align-self value");
+      MOZ_ASSERT_UNREACHABLE("Unexpected align-self value");
       break;
   }
 }
@@ -3099,7 +3099,7 @@ FlexboxAxisTracker::FlexboxAxisTracker(const nsStylePosition* aStylePosition,
       mIsMainAxisReversed = true;
       break;
     default:
-      MOZ_CRASH("Unexpected computed value for 'flex-flow' property");
+      MOZ_ASSERT_UNREACHABLE("Unexpected flex-direction value");
   }
 
   // Determine cross axis:

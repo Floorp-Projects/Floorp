@@ -518,8 +518,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 
     nsRenderingContext refContext(
         PresContext()->PresShell()->CreateReferenceRenderingContext());
+    DrawTarget* refDrawTarget = refContext.GetDrawTarget();
 
-    CalculateUnderline(refContext, *fontMet);
+    CalculateUnderline(refDrawTarget, *fontMet);
 
     nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
     ColorPattern color(ToDeviceColor(c));
@@ -537,7 +538,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           posResolve.logicalIndex = mAccessKeyInfo->mAccesskeyIndex;
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
-                                           refContext, *fontMet,
+                                           refDrawTarget, *fontMet,
                                            baselinePt.x, baselinePt.y,
                                            &posResolve,
                                            1);
@@ -548,7 +549,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       {
           rv = nsBidiPresUtils::RenderText(mCroppedTitle.get(), mCroppedTitle.Length(), level,
                                            presContext, aRenderingContext,
-                                           refContext, *fontMet,
+                                           refDrawTarget, *fontMet,
                                            baselinePt.x, baselinePt.y);
       }
     }
@@ -563,14 +564,14 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                mAccessKeyInfo->mBeforeWidth = nsLayoutUtils::
                    AppUnitWidthOfString(mCroppedTitle.get(),
                                         mAccessKeyInfo->mAccesskeyIndex,
-                                        *fontMet, refContext);
+                                        *fontMet, refDrawTarget);
            else
                mAccessKeyInfo->mBeforeWidth = 0;
        }
 
        fontMet->DrawString(mCroppedTitle.get(), mCroppedTitle.Length(),
                            baselinePt.x, baselinePt.y, &aRenderingContext,
-                           &refContext);
+                           refDrawTarget);
     }
 
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -599,7 +600,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
 }
 
 void
-nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext,
+nsTextBoxFrame::CalculateUnderline(DrawTarget* aDrawTarget,
                                    nsFontMetrics& aFontMetrics)
 {
     if (mAccessKeyInfo && mAccessKeyInfo->mAccesskeyIndex != kNotFound) {
@@ -609,7 +610,7 @@ nsTextBoxFrame::CalculateUnderline(nsRenderingContext& aRenderingContext,
          aFontMetrics.SetTextRunRTL(false);
          mAccessKeyInfo->mAccessWidth = nsLayoutUtils::
              AppUnitWidthOfString(titleString[mAccessKeyInfo->mAccesskeyIndex],
-                                  aFontMetrics, aRenderingContext);
+                                  aFontMetrics, aDrawTarget);
 
          nscoord offset, baseline;
          aFontMetrics.GetUnderline(offset, mAccessKeyInfo->mAccessUnderlineSize);
@@ -622,6 +623,8 @@ nscoord
 nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                                        nscoord              aWidth)
 {
+    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+
     if (mTitle.IsEmpty()) {
         mCroppedTitle.Truncate();
         return 0;
@@ -651,7 +654,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
     // if so, clear the text (XXX set as many '.' as we can?).
     fm->SetTextRunRTL(false);
     titleWidth = nsLayoutUtils::AppUnitWidthOfString(kEllipsis, *fm,
-                                                     aRenderingContext);
+                                                     drawTarget);
 
     if (titleWidth > aWidth) {
         mCroppedTitle.SetLength(0);
@@ -680,7 +683,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                 char16_t ch = mTitle.CharAt(i);
                 // still in LTR mode
                 cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, *fm,
-                                                             aRenderingContext);
+                                                             drawTarget);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -709,7 +712,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
             for (i=length-1; i >= 0; --i) {
                 char16_t ch = mTitle.CharAt(i);
                 cwidth = nsLayoutUtils::AppUnitWidthOfString(ch, *fm,
-                                                             aRenderingContext);
+                                                             drawTarget);
                 if (twidth + cwidth > aWidth)
                     break;
 
@@ -752,7 +755,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                 // look at the next character on the left end
                 ch = mTitle.CharAt(leftPos);
                 charWidth = nsLayoutUtils::AppUnitWidthOfString(ch, *fm,
-                                                                aRenderingContext);
+                                                                drawTarget);
                 totalWidth += charWidth;
                 if (totalWidth > aWidth)
                     // greater than the allowable width
@@ -768,7 +771,7 @@ nsTextBoxFrame::CalculateTitleForWidth(nsRenderingContext& aRenderingContext,
                     ch = mTitle.CharAt(rightPos);
                     charWidth =
                         nsLayoutUtils::AppUnitWidthOfString(ch, *fm,
-                                                            aRenderingContext);
+                                                            drawTarget);
                     totalWidth += charWidth;
                     if (totalWidth > aWidth)
                         // greater than the allowable width
@@ -962,7 +965,7 @@ nsTextBoxFrame::DoLayout(nsBoxLayoutState& aBoxLayoutState)
     nsBoundingMetrics metrics = 
       fontMet->GetInkBoundsForVisualOverflow(mCroppedTitle.get(),
                                              mCroppedTitle.Length(),
-                                             aBoxLayoutState.GetRenderingContext());
+                                             aBoxLayoutState.GetRenderingContext()->GetDrawTarget());
 
     WritingMode wm = GetWritingMode();
     LogicalRect tr(wm, textRect, GetSize());

@@ -524,7 +524,7 @@ nsPersistentProperties::SetStringProperty(const nsACString& aKey,
 {
   const nsAFlatCString&  flatKey = PromiseFlatCString(aKey);
   auto entry = static_cast<PropertyTableEntry*>
-                          (mTable.Add(flatKey.get(), mozilla::fallible));
+                          (mTable.Add(flatKey.get()));
 
   if (entry->mKey) {
     aOldValue = entry->mValue;

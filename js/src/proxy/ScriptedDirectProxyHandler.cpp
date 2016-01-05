@@ -18,18 +18,6 @@ using namespace js;
 using JS::IsArrayAnswer;
 using mozilla::ArrayLength;
 
-static inline bool
-IsDataDescriptor(const PropertyDescriptor& desc)
-{
-    return desc.obj && !(desc.attrs & (JSPROP_GETTER | JSPROP_SETTER));
-}
-
-static inline bool
-IsAccessorDescriptor(const PropertyDescriptor& desc)
-{
-    return desc.obj && desc.attrs & (JSPROP_GETTER | JSPROP_SETTER);
-}
-
 // ES6 (5 April 2014) ValidateAndApplyPropertyDescriptor(O, P, Extensible, Desc, Current)
 // Since we are actually performing 9.1.6.2 IsCompatiblePropertyDescriptor(Extensible, Desc,
 // Current), some parameters are omitted.

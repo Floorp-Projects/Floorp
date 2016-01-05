@@ -27,23 +27,25 @@ namespace {
 
 class AutoTextRun {
 public:
-    AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
+    typedef mozilla::gfx::DrawTarget DrawTarget;
+
+    AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
                 const char* aString, int32_t aLength)
     {
         mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             reinterpret_cast<const uint8_t*>(aString), aLength,
-            aRC->ThebesContext(),
+            aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
             ComputeFlags(aMetrics),
             nullptr);
     }
 
-    AutoTextRun(nsFontMetrics* aMetrics, nsRenderingContext* aRC,
+    AutoTextRun(nsFontMetrics* aMetrics, DrawTarget* aDrawTarget,
                 const char16_t* aString, int32_t aLength)
     {
         mTextRun = aMetrics->GetThebesFontGroup()->MakeTextRun(
             aString, aLength,
-            aRC->ThebesContext(),
+            aDrawTarget,
             aMetrics->AppUnitsPerDevPixel(),
             ComputeFlags(aMetrics),
             nullptr);
@@ -91,7 +93,7 @@ public:
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return 0;
     }
-    virtual already_AddRefed<gfxContext> GetContext() {
+    virtual already_AddRefed<mozilla::gfx::DrawTarget> GetDrawTarget() {
         NS_ERROR("This shouldn't be called because we never enable hyphens");
         return nullptr;
     }
@@ -313,7 +315,7 @@ nsFontMetrics::GetMaxStringLength()
 
 nscoord
 nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
-                        nsRenderingContext *aContext)
+                        DrawTarget* aDrawTarget)
 {
     if (aLength == 0)
         return 0;
@@ -322,14 +324,14 @@ nsFontMetrics::GetWidth(const char* aString, uint32_t aLength,
         return SpaceWidth();
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength);
+    AutoTextRun textRun(this, aDrawTarget, aString, aLength);
     return textRun.get() ?
         NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider)) : 0;
 }
 
 nscoord
 nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
-                        nsRenderingContext *aContext)
+                        DrawTarget* aDrawTarget)
 {
     if (aLength == 0)
         return 0;
@@ -338,7 +340,7 @@ nsFontMetrics::GetWidth(const char16_t* aString, uint32_t aLength,
         return SpaceWidth();
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength);
+    AutoTextRun textRun(this, aDrawTarget, aString, aLength);
     return textRun.get() ?
         NSToCoordRound(textRun->GetAdvanceWidth(0, aLength, &provider)) : 0;
 }
@@ -353,7 +355,7 @@ nsFontMetrics::DrawString(const char *aString, uint32_t aLength,
         return;
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aContext, aString, aLength);
+    AutoTextRun textRun(this, aContext->GetDrawTarget(), aString, aLength);
     if (!textRun.get()) {
         return;
     }
@@ -373,13 +375,13 @@ void
 nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
                           nscoord aX, nscoord aY,
                           nsRenderingContext *aContext,
-                          nsRenderingContext *aTextRunConstructionContext)
+                          DrawTarget* aTextRunConstructionDrawTarget)
 {
     if (aLength == 0)
         return;
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(this, aTextRunConstructionContext, aString, aLength);
+    AutoTextRun textRun(this, aTextRunConstructionDrawTarget, aString, aLength);
     if (!textRun.get()) {
         return;
     }
@@ -396,20 +398,19 @@ nsFontMetrics::DrawString(const char16_t* aString, uint32_t aLength,
 }
 
 static nsBoundingMetrics
-GetTextBoundingMetrics(nsFontMetrics* aMetrics, const char16_t *aString, uint32_t aLength,
-                       nsRenderingContext *aContext, gfxFont::BoundingBoxType aType)
+GetTextBoundingMetrics(nsFontMetrics* aMetrics, const char16_t* aString,
+                       uint32_t aLength, mozilla::gfx::DrawTarget* aDrawTarget,
+                       gfxFont::BoundingBoxType aType)
 {
     if (aLength == 0)
         return nsBoundingMetrics();
 
     StubPropertyProvider provider;
-    AutoTextRun textRun(aMetrics, aContext, aString, aLength);
+    AutoTextRun textRun(aMetrics, aDrawTarget, aString, aLength);
     nsBoundingMetrics m;
     if (textRun.get()) {
         gfxTextRun::Metrics theMetrics =
-            textRun->MeasureText(0, aLength,
-                                 aType,
-                                 aContext->ThebesContext(), &provider);
+            textRun->MeasureText(0, aLength, aType, aDrawTarget, &provider);
 
         m.leftBearing  = NSToCoordFloor( theMetrics.mBoundingBox.X());
         m.rightBearing = NSToCoordCeil(  theMetrics.mBoundingBox.XMost());
@@ -422,16 +423,17 @@ GetTextBoundingMetrics(nsFontMetrics* aMetrics, const char16_t *aString, uint32_
 
 nsBoundingMetrics
 nsFontMetrics::GetBoundingMetrics(const char16_t *aString, uint32_t aLength,
-                                  nsRenderingContext *aContext)
+                                  DrawTarget* aDrawTarget)
 {
-  return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
-  
+  return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
+                                gfxFont::TIGHT_HINTED_OUTLINE_EXTENTS);
 }
 
 nsBoundingMetrics
 nsFontMetrics::GetInkBoundsForVisualOverflow(const char16_t *aString, uint32_t aLength,
-                                             nsRenderingContext *aContext)
+                                             DrawTarget* aDrawTarget)
 {
-  return GetTextBoundingMetrics(this, aString, aLength, aContext, gfxFont::LOOSE_INK_EXTENTS);
+  return GetTextBoundingMetrics(this, aString, aLength, aDrawTarget,
+                                gfxFont::LOOSE_INK_EXTENTS);
 }
 

@@ -68,15 +68,6 @@ const OBSERVED_EVENTS = [
   'invalid-widget'
 ];
 
-const COMMAND_MAP = {
-  'cut': 'cmd_cut',
-  'copy': 'cmd_copyAndCollapseToEnd',
-  'copyImage': 'cmd_copyImage',
-  'copyLink': 'cmd_copyLink',
-  'paste': 'cmd_paste',
-  'selectall': 'cmd_selectAll'
-};
-
 /**
  * The BrowserElementChild implements one half of <iframe mozbrowser>.
  * (The other half is, unsurprisingly, BrowserElementParent.)
@@ -278,7 +269,6 @@ BrowserElementChild.prototype = {
       "activate-next-paint-listener": this._activateNextPaintListener.bind(this),
       "set-input-method-active": this._recvSetInputMethodActive.bind(this),
       "deactivate-next-paint-listener": this._deactivateNextPaintListener.bind(this),
-      "do-command": this._recvDoCommand,
       "find-all": this._recvFindAll.bind(this),
       "find-next": this._recvFindNext.bind(this),
       "clear-match": this._recvClearMatch.bind(this),
@@ -405,15 +395,6 @@ BrowserElementChild.prototype = {
         args.promptType == 'custom-prompt') {
       return returnValue;
     }
-  },
-
-  _isCommandEnabled: function(cmd) {
-    let command = COMMAND_MAP[cmd];
-    if (!command) {
-      return false;
-    }
-
-    return docShell.isCommandEnabled(command);
   },
 
   /**
@@ -1196,14 +1177,16 @@ BrowserElementChild.prototype = {
   _recvFireCtxCallback: function(data) {
     debug("Received fireCtxCallback message: (" + data.json.menuitem + ")");
 
+    let doCommandIfEnabled = (command) => {
+      if (docShell.isCommandEnabled(command)) {
+        docShell.doCommand(command);
+      }
+    };
+
     if (data.json.menuitem == 'copy-image') {
-      // Set command
-      data.json.command = 'copyImage';
-      this._recvDoCommand(data);
+      doCommandIfEnabled('cmd_copyImage');
     } else if (data.json.menuitem == 'copy-link') {
-      // Set command
-      data.json.command = 'copyLink';
-      this._recvDoCommand(data);
+      doCommandIfEnabled('cmd_copyLink');
     } else if (data.json.menuitem in this._ctxHandlers) {
       this._ctxHandlers[data.json.menuitem].click();
       this._ctxHandlers = {};
@@ -1380,12 +1363,6 @@ BrowserElementChild.prototype = {
 
   _recvZoom: function(data) {
     docShell.contentViewer.fullZoom = data.json.zoom;
-  },
-
-  _recvDoCommand: function(data) {
-    if (this._isCommandEnabled(data.json.command)) {
-      docShell.doCommand(COMMAND_MAP[data.json.command]);
-    }
   },
 
   _recvGetAudioChannelVolume: function(data) {

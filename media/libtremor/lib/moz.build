@@ -31,3 +31,5 @@ LOCAL_INCLUDES += [
     '/media/libtremor/include/tremor',
 ]
 
+# We allow warnings for third-party code that can be updated from upstream.
+ALLOW_COMPILER_WARNINGS = True

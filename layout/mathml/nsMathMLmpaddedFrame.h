@@ -34,7 +34,7 @@ public:
          nsReflowStatus&          aStatus) override;
   
   virtual nsresult
-  Place(nsRenderingContext& aRenderingContext,
+  Place(DrawTarget*          aDrawTarget,
         bool                 aPlaceOrigin,
         nsHTMLReflowMetrics& aDesiredSize) override;
 
@@ -47,9 +47,9 @@ public:
 protected:
   explicit nsMathMLmpaddedFrame(nsStyleContext* aContext) : nsMathMLContainerFrame(aContext) {}
   virtual ~nsMathMLmpaddedFrame();
-  
+
   virtual nsresult
-  MeasureForWidth(nsRenderingContext& aRenderingContext,
+  MeasureForWidth(DrawTarget* aDrawTarget,
                   nsHTMLReflowMetrics& aDesiredSize) override;
 
 private:

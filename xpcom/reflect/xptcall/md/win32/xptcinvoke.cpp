@@ -11,7 +11,7 @@
 #error "This code is for Win32 only"
 #endif
 
-static void __fastcall
+extern "C" void __fastcall
 invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
 {
     for(; paramCount > 0; paramCount--, d++, s++)
@@ -43,32 +43,3 @@ invoke_copy_to_stack(uint32_t* d, uint32_t paramCount, nsXPTCVariant* s)
         }
     }
 }
-
-#pragma warning(disable : 4035) // OK to have no return value
-// Tell the PDB file this function has a standard frame pointer, and not to use
-// a custom FPO program.
-#pragma optimize( "y", off )
-extern "C" NS_EXPORT nsresult NS_FROZENCALL
-NS_InvokeByIndex(nsISupports* that, uint32_t methodIndex,
-                 uint32_t paramCount, nsXPTCVariant* params)
-{
-    __asm {
-        mov     edx,paramCount      // Save paramCount for later
-        test    edx,edx             // maybe we don't have any params to copy
-        jz      noparams
-        mov     eax,edx             
-        shl     eax,3               // *= 8 (max possible param size)
-        sub     esp,eax             // make space for params
-        mov     ecx,esp
-        push    params
-        call    invoke_copy_to_stack // fastcall, ecx = d, edx = paramCount, params is on the stack
-noparams:
-        mov     ecx,that            // instance in ecx
-        push    ecx                 // push this
-        mov     edx,[ecx]           // vtable in edx
-        mov     eax,methodIndex
-        call    dword ptr[edx+eax*4] // stdcall, i.e. callee cleans up stack.
-        mov     esp,ebp
-    }
-}
-#pragma warning(default : 4035) // restore default

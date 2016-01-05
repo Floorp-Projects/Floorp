@@ -165,13 +165,10 @@ nsMathMLmfracFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 /* virtual */ nsresult
-nsMathMLmfracFrame::MeasureForWidth(nsRenderingContext& aRenderingContext,
+nsMathMLmfracFrame::MeasureForWidth(DrawTarget* aDrawTarget,
                                     nsHTMLReflowMetrics& aDesiredSize)
 {
-  return PlaceInternal(aRenderingContext,
-                       false,
-                       aDesiredSize,
-                       true);
+  return PlaceInternal(aDrawTarget, false, aDesiredSize, true);
 }
 
 nscoord
@@ -185,18 +182,15 @@ nsMathMLmfracFrame::FixInterFrameSpacing(nsHTMLReflowMetrics& aDesiredSize)
 }
 
 /* virtual */ nsresult
-nsMathMLmfracFrame::Place(nsRenderingContext& aRenderingContext,
+nsMathMLmfracFrame::Place(DrawTarget*          aDrawTarget,
                           bool                 aPlaceOrigin,
                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  return PlaceInternal(aRenderingContext,
-                       aPlaceOrigin,
-                       aDesiredSize,
-                       false);
+  return PlaceInternal(aDrawTarget, aPlaceOrigin, aDesiredSize, false);
 }
 
 nsresult
-nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
+nsMathMLmfracFrame::PlaceInternal(DrawTarget*          aDrawTarget,
                                   bool                 aPlaceOrigin,
                                   nsHTMLReflowMetrics& aDesiredSize,
                                   bool                 aWidthOnly)
@@ -215,7 +209,7 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
     if (aPlaceOrigin) {
       ReportChildCountError();
     }
-    return ReflowError(aRenderingContext, aDesiredSize);
+    return ReflowError(aDrawTarget, aDesiredSize);
   }
   GetReflowAndBoundingMetricsFor(frameNum, sizeNum, bmNum);
   GetReflowAndBoundingMetricsFor(frameDen, sizeDen, bmDen);
@@ -236,9 +230,9 @@ nsMathMLmfracFrame::PlaceInternal(nsRenderingContext& aRenderingContext,
       mathFont->GetMathConstant(gfxFontEntry::FractionRuleThickness,
                                 oneDevPixel);
   } else {
-    GetRuleThickness(aRenderingContext, fm, defaultRuleThickness);
+    GetRuleThickness(aDrawTarget, fm, defaultRuleThickness);
   }
-  GetAxisHeight(aRenderingContext, fm, axisHeight);
+  GetAxisHeight(aDrawTarget, fm, axisHeight);
 
   bool outermostEmbellished = false;
   if (mEmbellishData.coreFrame) {

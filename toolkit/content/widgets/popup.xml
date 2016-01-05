@@ -615,7 +615,7 @@
             if (tipElement.nodeType == Node.ELEMENT_NODE) {
               if (tipElement.namespaceURI == XULNS)
                 XULtooltiptextText = tipElement.getAttribute("tooltiptext");
-              else
+              else if (!(tipElement instanceof SVGElement))
                 titleText = tipElement.getAttribute("title");
 
               if ((tipElement instanceof HTMLAnchorElement ||

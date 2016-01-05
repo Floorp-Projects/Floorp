@@ -2445,13 +2445,13 @@ HttpBaseChannel::BypassServiceWorker() const
 }
 
 bool
-HttpBaseChannel::ShouldIntercept()
+HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
 {
   nsCOMPtr<nsINetworkInterceptController> controller;
   GetCallback(controller);
   bool shouldIntercept = false;
   if (controller && !BypassServiceWorker() && mLoadInfo) {
-    nsresult rv = controller->ShouldPrepareForIntercept(mURI,
+    nsresult rv = controller->ShouldPrepareForIntercept(aURI ? aURI : mURI.get(),
                                                         nsContentUtils::IsNonSubresourceRequest(this),
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {
@@ -3151,6 +3151,35 @@ HttpBaseChannel::SetCorsPreflightParameters(const nsTArray<nsCString>& aUnsafeHe
 
   mRequireCORSPreflight = true;
   mUnsafeHeaders = aUnsafeHeaders;
+}
+
+// static
+nsresult
+HttpBaseChannel::GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI)
+{
+  nsCOMPtr<nsIURI> upgradedURI;
+
+  nsresult rv = aURI->Clone(getter_AddRefs(upgradedURI));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  upgradedURI->SetScheme(NS_LITERAL_CSTRING("https"));
+
+  int32_t oldPort = -1;
+  rv = aURI->GetPort(&oldPort);
+  if (NS_FAILED(rv)) return rv;
+
+  // Keep any nonstandard ports so only the scheme is changed.
+  // For example:
+  //  http://foo.com:80 -> https://foo.com:443
+  //  http://foo.com:81 -> https://foo.com:81
+
+  if (oldPort == 80 || oldPort == -1)
+      upgradedURI->SetPort(-1);
+  else
+      upgradedURI->SetPort(oldPort);
+
+  upgradedURI.forget(aUpgradedURI);
+  return NS_OK;
 }
 
 } // namespace net

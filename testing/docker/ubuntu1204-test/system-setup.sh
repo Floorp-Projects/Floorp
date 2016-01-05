@@ -107,6 +107,9 @@ apt_packages+=('zip')
 # get xvinfo for test-linux.sh to monitor Xvfb startup
 apt_packages+=('x11-utils')
 
+# Bug 1232407 - this allows the user to start vnc
+apt_packages+=('x11vnc')
+
 # Bug 1176031: need `xset` to disable screensavers
 apt_packages+=('x11-xserver-utils')
 

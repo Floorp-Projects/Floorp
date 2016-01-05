@@ -168,7 +168,12 @@ public:
   /**
    * Get display port for the given element.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult = nullptr);
+  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+
+  /**
+   * Check whether the given element has a displayport.
+   */
+  static bool HasDisplayPort(nsIContent* aContent);
 
   /**
    * @return the display port for the given element which should be used for
@@ -218,7 +223,12 @@ public:
   /**
    * Get the critical display port for the given element.
    */
-  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult = nullptr);
+  static bool GetCriticalDisplayPort(nsIContent* aContent, nsRect* aResult);
+
+  /**
+   * Check whether the given element has a critical display port.
+   */
+  static bool HasCriticalDisplayPort(nsIContent* aContent);
 
   /**
    * Use heuristics to figure out the child list that
@@ -528,8 +538,7 @@ public:
    * aDisplayPort, if non-null, is set to the display port rectangle (relative to
    * the viewport).
    */
-  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame,
-                                           nsRect* aDisplayPort = nullptr);
+  static bool IsFixedPosFrameInDisplayPort(const nsIFrame* aFrame);
 
   /**
    * Store whether aThumbFrame wants its own layer. This sets a property on
@@ -1050,7 +1059,7 @@ public:
    * falls.
    */
   static bool
-  BinarySearchForPosition(nsRenderingContext* acx,
+  BinarySearchForPosition(DrawTarget* aDrawTarget,
                           nsFontMetrics& aFontMetrics,
                           const char16_t* aText,
                           int32_t    aBaseWidth,
@@ -1562,19 +1571,19 @@ public:
 
   static nscoord AppUnitWidthOfString(char16_t aC,
                                       nsFontMetrics& aFontMetrics,
-                                      nsRenderingContext& aContext) {
-    return AppUnitWidthOfString(&aC, 1, aFontMetrics, aContext);
+                                      DrawTarget* aDrawTarget) {
+    return AppUnitWidthOfString(&aC, 1, aFontMetrics, aDrawTarget);
   }
   static nscoord AppUnitWidthOfString(const nsString& aString,
                                       nsFontMetrics& aFontMetrics,
-                                      nsRenderingContext& aContext) {
+                                      DrawTarget* aDrawTarget) {
     return nsLayoutUtils::AppUnitWidthOfString(aString.get(), aString.Length(),
-                                               aFontMetrics, aContext);
+                                               aFontMetrics, aDrawTarget);
   }
   static nscoord AppUnitWidthOfString(const char16_t *aString,
                                       uint32_t aLength,
                                       nsFontMetrics& aFontMetrics,
-                                      nsRenderingContext& aContext);
+                                      DrawTarget* aDrawTarget);
   static nscoord AppUnitWidthOfStringBidi(const nsString& aString,
                                           const nsIFrame* aFrame,
                                           nsFontMetrics& aFontMetrics,
@@ -1591,13 +1600,13 @@ public:
 
   static bool StringWidthIsGreaterThan(const nsString& aString,
                                        nsFontMetrics& aFontMetrics,
-                                       nsRenderingContext& aContext,
+                                       DrawTarget* aDrawTarget,
                                        nscoord aWidth);
 
   static nsBoundingMetrics AppUnitBoundsOfString(const char16_t* aString,
                                                  uint32_t aLength,
                                                  nsFontMetrics& aFontMetrics,
-                                                 nsRenderingContext& aContext);
+                                                 DrawTarget* aDrawTarget);
 
   static void DrawString(const nsIFrame*       aFrame,
                          nsFontMetrics&        aFontMetrics,

@@ -242,7 +242,7 @@ GrallocTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   RefPtr<DataSourceSurface> srcSurf = aSurface->GetDataSurface();
 
   if (!srcSurf) {
-    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface.";
+    gfxCriticalError() << "Failed to GetDataSurface in UpdateFromSurface (GTC).";
     return false;
   }
 
@@ -258,7 +258,7 @@ GrallocTextureData::UpdateFromSurface(gfx::SourceSurface* aSurface)
   DataSourceSurface::MappedSurface sourceMap;
 
   if (!srcSurf->Map(DataSourceSurface::READ, &sourceMap)) {
-    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface.";
+    gfxCriticalError() << "Failed to map source surface for UpdateFromSurface (GTC).";
     return false;
   }
 

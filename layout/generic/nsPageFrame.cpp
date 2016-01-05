@@ -333,6 +333,9 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
 
   nscoord contentWidth = aWidth - (mPD->mEdgePaperMargin.left + mPD->mEdgePaperMargin.right);
 
+  gfxContext* gfx = aRenderingContext.ThebesContext();
+  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
+
   if ((aHeaderFooter == eHeader && aHeight < mPD->mReflowMargin.top) ||
       (aHeaderFooter == eFooter && aHeight < mPD->mReflowMargin.bottom)) {
     nsAutoString str;
@@ -347,9 +350,10 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
       return; // bail is empty string
     }
     // find how much text fits, the "position" is the size of the available area
-    if (nsLayoutUtils::BinarySearchForPosition(&aRenderingContext, aFontMetrics,
-                                               text, 0, 0, 0, len,
-                                int32_t(contentWidth), indx, textWidth)) {
+    if (nsLayoutUtils::BinarySearchForPosition(drawTarget, aFontMetrics, text,
+                                               0, 0, 0, len,
+                                               int32_t(contentWidth), indx,
+                                               textWidth)) {
       if (indx < len-1 ) {
         // we can't fit in all the text
         if (indx > 3) {
@@ -383,14 +387,11 @@ nsPageFrame::DrawHeaderFooter(nsRenderingContext& aRenderingContext,
       y = aRect.YMost() - aHeight - mPD->mEdgePaperMargin.bottom;
     }
 
-    DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
-    gfxContext* gfx = aRenderingContext.ThebesContext();
-
     // set up new clip and draw the text
     gfx->Save();
     gfx->Clip(NSRectToSnappedRect(aRect, PresContext()->AppUnitsPerDevPixel(),
                                   *drawTarget));
-    aRenderingContext.ThebesContext()->SetColor(Color(0.f, 0.f, 0.f));
+    gfx->SetColor(Color(0.f, 0.f, 0.f));
     nsLayoutUtils::DrawString(this, aFontMetrics, &aRenderingContext,
                               str.get(), str.Length(),
                               nsPoint(x, y + aAscent));

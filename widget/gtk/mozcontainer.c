@@ -264,8 +264,6 @@ moz_container_size_allocate (GtkWidget     *widget,
     MozContainer   *container;
     GList          *tmp_list;
     GtkAllocation   tmp_allocation;
-    GtkRequisition  tmp_requisition;
-    GtkWidget      *tmp_child;
 
     g_return_if_fail (IS_MOZ_CONTAINER (widget));
 
@@ -385,13 +383,10 @@ moz_container_allocate_child (MozContainer *container,
                               MozContainerChild *child)
 {
     GtkAllocation  allocation;
-    GtkRequisition requisition;
 
     gtk_widget_get_allocation (child->widget, &allocation);
     allocation.x = child->x;
     allocation.y = child->y;
-    /* gtk_widget_get_child_requisition (child->widget, &requisition); */
-    /* gtk_widget_size_request (child->widget, &requisition); */
 
     gtk_widget_size_allocate (child->widget, &allocation);
 }

@@ -298,6 +298,31 @@ function removeProfile(profile) {
     }
   }
 
+  // If we are deleting the selected or the default profile we must choose a
+  // different one.
+  let isSelected = ProfileService.selectedProfile == profile;
+  let isDefault = ProfileService.defaultProfile == profile;
+
+  if (isSelected || isDefault) {
+    let itr = ProfileService.profiles;
+    while(itr.hasMoreElements()) {
+      let p = itr.getNext().QueryInterface(Ci.nsIToolkitProfile);
+      if (profile == p) {
+        continue;
+      }
+
+      if (isSelected) {
+        ProfileService.selectedProfile = p;
+      }
+
+      if (isDefault) {
+        ProfileService.defaultProfile = p;
+      }
+
+      break;
+    }
+  }
+
   profile.remove(deleteFiles);
   ProfileService.flush();
   refreshUI();
@@ -305,6 +330,7 @@ function removeProfile(profile) {
 
 function defaultProfile(profile) {
   ProfileService.defaultProfile = profile;
+  ProfileService.selectedProfile = profile;
   ProfileService.flush();
   refreshUI();
 }
