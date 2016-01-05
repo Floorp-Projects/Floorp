@@ -692,7 +692,7 @@ private:
   nsTArray<dom::PrincipalChangeObserver<DOMMediaStream>*> mPrincipalChangeObservers;
   // this is used in gUM and WebRTC to identify peers that this stream
   // is allowed to be sent to
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
+  RefPtr<PeerIdentity> mPeerIdentity;
   CORSMode mCORSMode;
 };
 

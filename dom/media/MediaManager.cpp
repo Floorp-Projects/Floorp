@@ -870,7 +870,7 @@ public:
         DOMLocalMediaStream::CreateSourceStream(window, msg, nullptr);
 
       if (mPeerIdentity) {
-        domStream->SetPeerIdentity(mPeerIdentity.forget());
+        domStream->SetPeerIdentity(mPeerIdentity);
       }
 
       if (mAudioDevice) {
@@ -949,7 +949,7 @@ private:
   uint64_t mWindowID;
   RefPtr<GetUserMediaCallbackMediaStreamListener> mListener;
   nsCString mOrigin;
-  nsAutoPtr<PeerIdentity> mPeerIdentity;
+  RefPtr<PeerIdentity> mPeerIdentity;
   RefPtr<MediaManager> mManager; // get ref to this when creating the runnable
 };
 
