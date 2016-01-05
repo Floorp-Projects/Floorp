@@ -39,10 +39,9 @@ public:
 
   // Append the identifier given by |aIdent| to |aResult|, with
   // appropriate escaping so that it can be reparsed to the same
-  // identifier.
-  // Returns false if |aIdent| contains U+0000
-  // Returns true for all other cases
-  static bool AppendEscapedCSSIdent(const nsAString& aIdent,
+  // identifier.  An exception is if aIdent contains U+0000, which
+  // will be escaped as U+FFFD and then reparsed back to U+FFFD.
+  static void AppendEscapedCSSIdent(const nsAString& aIdent,
                                     nsAString& aResult);
 
   static void

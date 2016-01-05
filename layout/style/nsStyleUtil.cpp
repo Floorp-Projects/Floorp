@@ -79,7 +79,7 @@ void nsStyleUtil::AppendEscapedCSSString(const nsAString& aString,
   aReturn.Append(quoteChar);
 }
 
-/* static */ bool
+/* static */ void
 nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
 {
   // The relevant parts of the CSS grammar are:
@@ -98,7 +98,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   const char16_t* const end = aIdent.EndReading();
 
   if (in == end)
-    return true;
+    return;
 
   // A leading dash does not need to be escaped as long as it is not the
   // *only* character in the identifier.
@@ -106,7 +106,7 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
     if (in + 1 == end) {
       aReturn.Append(char16_t('\\'));
       aReturn.Append(char16_t('-'));
-      return true;
+      return;
     }
 
     aReturn.Append(char16_t('-'));
@@ -124,9 +124,8 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
   for (; in != end; ++in) {
     char16_t ch = *in;
     if (ch == 0x00) {
-      return false;
-    }
-    if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
+      aReturn.Append(char16_t(0xFFFD));
+    } else if (ch < 0x20 || (0x7F <= ch && ch < 0xA0)) {
       // Escape U+0000 through U+001F and U+007F through U+009F numerically.
       aReturn.AppendPrintf("\\%hx ", *in);
     } else {
@@ -142,7 +141,6 @@ nsStyleUtil::AppendEscapedCSSIdent(const nsAString& aIdent, nsAString& aReturn)
       aReturn.Append(ch);
     }
   }
-  return true;
 }
 
 // unquoted family names must be a sequence of idents
