@@ -71,6 +71,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'ExtendInputEffectD2D1.cpp',
         'FilterNodeD2D1.cpp',
         'JobScheduler_win32.cpp',
+        'NativeFontResourceDWrite.cpp',
+        'NativeFontResourceGDI.cpp',
         'PathD2D.cpp',
         'RadialGradientEffectD2D1.cpp',
         'ScaledFontDWrite.cpp',

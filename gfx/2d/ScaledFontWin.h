@@ -7,9 +7,6 @@
 #define MOZILLA_GFX_SCALEDFONTWIN_H_
 
 #include "ScaledFontBase.h"
-#include <windows.h>
-
-#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace gfx {
@@ -19,9 +16,6 @@ class ScaledFontWin : public ScaledFontBase
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontWin)
   ScaledFontWin(LOGFONT* aFont, Float aSize);
-
-  ScaledFontWin(uint8_t* aFontData, uint32_t aFontDataLength, uint32_t aIndex,
-                Float aGlyphSize);
 
   virtual FontType GetType() const { return FontType::GDI; }
 
@@ -41,15 +35,6 @@ private:
   friend class DrawTargetSkia;
 #endif
   LOGFONT mLogFont;
-
-  struct MemoryFontRemover
-  {
-    HANDLE memFontHandle;
-    MemoryFontRemover(HANDLE aMemFontHandle) : memFontHandle(aMemFontHandle) {}
-    ~MemoryFontRemover() { ::RemoveFontMemResourceEx(memFontHandle); }
-  };
-
-  UniquePtr<MemoryFontRemover> mMemoryFontRemover;
 };
 
 }
