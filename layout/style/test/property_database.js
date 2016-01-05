@@ -4237,11 +4237,11 @@ var gCSSProperties = {
     other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
                     "right", "space-between", "space-around", "space-evenly",
                     "baseline", "last-baseline", "stretch", "start safe",
-                    "true end", "true end stretch", "end safe space-evenly" ],
-    invalid_values: [ "none", "5", "self-end", "safe", "auto true", "true safe",
-                      "safe baseline", "baseline true", "baseline end", "end auto",
-                      "safe end true start", "safe end true", "auto safe start",
-                      "true end start", "end start safe", "space-between true",
+                    "unsafe end", "unsafe end stretch", "end safe space-evenly" ],
+    invalid_values: [ "none", "5", "self-end", "safe", "auto unsafe", "unsafe safe",
+                      "safe baseline", "baseline unsafe", "baseline end", "end auto",
+                      "safe end unsafe start", "safe end unsafe", "auto safe start",
+                      "unsafe end start", "end start safe", "space-between unsafe",
                       "stretch safe" ]
   },
   "align-items": {
@@ -4251,11 +4251,11 @@ var gCSSProperties = {
     initial_values: [ "auto", "start" ],
     // Can't test 'left'/'right' here since that computes to 'start' for blocks.
     other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
-                    "center", "stretch", "baseline", "true left",
-                    "center true", "safe right", "center safe" ],
+                    "center", "stretch", "baseline", "unsafe left",
+                    "center unsafe", "safe right", "center safe" ],
     invalid_values: [ "space-between", "abc", "5%", "legacy", "legacy end",
-                      "end legacy", "true", "true baseline", "auto true",
-                      "safe left true", "safe stretch", "end end" ]
+                      "end legacy", "unsafe", "unsafe baseline", "auto unsafe",
+                      "safe left unsafe", "safe stretch", "end end" ]
   },
   "align-self": {
     domProp: "alignSelf",
@@ -4264,7 +4264,7 @@ var gCSSProperties = {
     // (Assuming defaults on the parent, 'auto' will compute to 'start'.)
     initial_values: [ "auto", "start" ],
     other_values: [ "flex-start", "flex-end", "center", "stretch",
-                    "baseline", "last-baseline", "right safe", "true center",
+                    "baseline", "last-baseline", "right safe", "unsafe center",
                     "self-start", "self-end safe" ],
     invalid_values: [ "space-between", "abc", "30px", "stretch safe", "safe" ]
   },
@@ -4276,11 +4276,11 @@ var gCSSProperties = {
     other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
                     "right", "space-between", "space-around", "space-evenly",
                     "baseline", "last-baseline", "stretch", "start safe",
-                    "true end", "true end stretch", "end safe space-evenly" ],
-    invalid_values: [ "30px", "5%", "self-end", "safe", "auto true", "true safe",
-                      "safe baseline", "baseline true", "baseline end", "auto end",
-                      "safe end true start", "safe end true", "auto safe start",
-                      "true end start", "end start safe", "space-around true",
+                    "unsafe end", "unsafe end stretch", "end safe space-evenly" ],
+    invalid_values: [ "30px", "5%", "self-end", "safe", "auto unsafe", "unsafe safe",
+                      "safe baseline", "baseline unsafe", "baseline end", "auto end",
+                      "safe end unsafe start", "safe end unsafe", "auto safe start",
+                      "unsafe end start", "end start safe", "space-around unsafe",
                       "safe stretch"]
   },
   "justify-items": {
@@ -4291,12 +4291,12 @@ var gCSSProperties = {
     other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
                     "center", "left", "right", "baseline", "stretch",
                     "legacy left", "right legacy", "legacy center",
-                    "true right", "left true", "safe right", "center safe" ],
+                    "unsafe right", "left unsafe", "safe right", "center safe" ],
     invalid_values: [ "space-between", "abc", "30px", "legacy", "legacy start",
-                      "end legacy", "legacy baseline", "legacy legacy", "true",
+                      "end legacy", "legacy baseline", "legacy legacy", "unsafe",
                       "safe legacy left", "legacy left safe", "legacy safe left",
-                      "safe left legacy", "legacy left legacy", "baseline true",
-                      "safe true", "safe left true", "safe stretch" ]
+                      "safe left legacy", "legacy left legacy", "baseline unsafe",
+                      "safe unsafe", "safe left unsafe", "safe stretch" ]
   },
   "justify-self": {
     domProp: "justifySelf",
@@ -4305,7 +4305,7 @@ var gCSSProperties = {
     initial_values: [ "auto", "start" ],
     other_values: [ "end", "flex-start", "flex-end", "self-start",
                     "self-end", "center", "left", "right", "baseline",
-                    "last-baseline", "stretch", "left true", "true right",
+                    "last-baseline", "stretch", "left unsafe", "unsafe right",
                     "safe right", "center safe" ],
     invalid_values: [ "space-between", "abc", "30px", "none",
                       "legacy left", "right legacy" ]
