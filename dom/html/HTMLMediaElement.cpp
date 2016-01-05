@@ -1886,6 +1886,11 @@ public:
     return MediaSourceEnum::Other;
   }
 
+  CORSMode GetCORSMode() const override
+  {
+    return mElement->GetCORSMode();
+  }
+
   already_AddRefed<Promise>
   ApplyConstraints(nsPIDOMWindowInner* aWindow,
                    const dom::MediaTrackConstraints& aConstraints,
@@ -2000,7 +2005,6 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
   OutputMediaStream* out = mOutputStreams.AppendElement();
   MediaStreamTrackSourceGetter* getter = new CaptureStreamTrackSourceGetter(this);
   out->mStream = DOMMediaStream::CreateTrackUnionStream(window, aGraph, getter);
-  out->mStream->SetCORSMode(mCORSMode);
   out->mFinishWhenEnded = aFinishWhenEnded;
 
   mAudioCaptured = true;
@@ -4279,10 +4283,6 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
   RefPtr<nsIPrincipal> principal = GetCurrentPrincipal();
 
   mDecoder->UpdateSameOriginStatus(!principal || IsCORSSameOrigin());
-
-  for (OutputMediaStream& ms : mOutputStreams) {
-    ms.mStream->SetCORSMode(mCORSMode);
-  }
 
   for (DecoderPrincipalChangeObserver* observer :
          mDecoderPrincipalChangeObservers) {
