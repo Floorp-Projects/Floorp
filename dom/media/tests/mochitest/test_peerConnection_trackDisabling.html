@@ -9,8 +9,7 @@
 <script type="application/javascript;version=1.8">
 createHTML({
   bug: "1219711",
-  title: "Disabling locally should be reflected remotely",
-  visible: true
+  title: "Disabling locally should be reflected remotely"
 });
 
 runNetworkTest(() => {
@@ -67,11 +66,7 @@ runNetworkTest(() => {
       var localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
       var remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
 
-      var checkAudio = (analyser, fun) => {
-        analyser.enableDebugCanvas();
-        return analyser.waitForAnalysisSuccess(fun)
-          .then(() => analyser.disableDebugCanvas());
-      };
+      var checkAudio = (analyser, fun) => analyser.waitForAnalysisSuccess(fun);
 
       var freq1k = localAnalyser.binIndexForFrequency(1000);
       var checkAudioEnabled = analyser =>
