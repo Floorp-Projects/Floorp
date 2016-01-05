@@ -307,6 +307,12 @@ public:
    */
   already_AddRefed<MediaInputPort> ForwardTrackContentsTo(ProcessedMediaStream* aStream);
 
+  /**
+   * Returns true if this track is connected to aPort and forwarded to aPort's
+   * output stream.
+   */
+  bool IsForwardedThrough(MediaInputPort* aPort);
+
 protected:
   virtual ~MediaStreamTrack();
 
