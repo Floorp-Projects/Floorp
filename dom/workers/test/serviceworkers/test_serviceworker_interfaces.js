@@ -162,9 +162,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MessagePort",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "Notification", release: false },
+    { name: "Notification", b2g: false, android: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "NotificationEvent", release: false },
+    { name: "NotificationEvent", b2g: false, android: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Performance",
 // IMPORTANT: Do not change this list without review from a DOM peer!
