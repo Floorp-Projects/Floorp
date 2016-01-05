@@ -83,6 +83,7 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_debugAddons"/>
     <command id="cmd_back"/>
     <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
@@ -202,6 +203,10 @@
                       label="&installAddonFromFile.label;"
                       accesskey="&installAddonFromFile.accesskey;"
                       command="cmd_installFromFile"/>
+            <menuitem id="utils-debugAddons"
+                      label="&debugAddons.label;"
+                      accesskey="&debugAddons.accesskey;"
+                      command="cmd_debugAddons"/>
             <menuseparator/>
             <menuitem id="utils-autoUpdateDefault"
                       label="&updates.updateAddonsAutomatically.label;"
