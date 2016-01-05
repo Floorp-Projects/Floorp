@@ -5518,41 +5518,11 @@ bool
 BytecodeEmitter::emitSpread(bool allowSelfHosted)
 {
     StmtType type = StmtType::SPREAD;
-    ParseNode* pn = nullptr;
-
-    MOZ_ASSERT(type == StmtType::FOR_OF_LOOP || type == StmtType::SPREAD);
-#ifdef DEBUG
-    if (type == StmtType::FOR_OF_LOOP) {
-        MOZ_ASSERT(pn);
-        MOZ_ASSERT(pn->pn_left->isKind(PNK_FOROF));
-    } else {
-        MOZ_ASSERT(!pn);
-    }
-#endif
 
     ptrdiff_t top = offset();
-    ParseNode* forHead = pn ? pn->pn_left : nullptr;
-    ParseNode* forHeadExpr = forHead ? forHead->pn_kid3 : nullptr;
-    ParseNode* forBody = pn ? pn->pn_right : nullptr;
-
-    ParseNode* loopDecl = forHead ? forHead->pn_kid1 : nullptr;
-    if (loopDecl && !emitForInOrOfVariables(loopDecl))
-        return false;
-
-    if (type == StmtType::FOR_OF_LOOP) {
-        // For-of loops run with two values on the stack: the iterator and the
-        // current result object.
-
-        // Compile the object expression to the right of 'of'.
-        if (!emitTree(forHeadExpr))
-            return false;
-        if (!emitIterator())
-            return false;
-
-        // Push a dummy result so that we properly enter iteration midstream.
-        if (!emit1(JSOP_UNDEFINED))                // ITER RESULT
-            return false;
-    }
+    ParseNode* forHead = nullptr;
+    ParseNode* forHeadExpr = nullptr;
+    ParseNode* forBody = nullptr;
 
     LoopStmtInfo stmtInfo(cx);
     pushLoopStatement(&stmtInfo, type, top);
@@ -5572,11 +5542,14 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     if (!emitLoopHead(nullptr))
         return false;
 
-    if (type == StmtType::SPREAD)
-        this->stackDepth++;
+    // When we enter the goto above, we have ITER ARR I on the stack.  But when
+    // we reach this point on the loop backedge (if spreading produces at least
+    // one value), we've additionally pushed a RESULT iteration value.
+    // Increment manually to reflect this.
+    this->stackDepth++;
 
 #ifdef DEBUG
-    int loopDepth = this->stackDepth;
+    auto loopDepth = this->stackDepth;
 #endif
 
     // Emit code to assign result.value to the iteration variable.
