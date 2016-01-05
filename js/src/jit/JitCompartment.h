@@ -543,7 +543,8 @@ class MOZ_STACK_CLASS AutoWritableJitCode
       : preventPatching_(rt), rt_(rt), addr_(addr), size_(size)
     {
         rt_->toggleAutoWritableJitCodeActive(true);
-        ExecutableAllocator::makeWritable(addr_, size_);
+        if (!ExecutableAllocator::makeWritable(addr_, size_))
+            MOZ_CRASH();
     }
     AutoWritableJitCode(void* addr, size_t size)
       : AutoWritableJitCode(TlsPerThreadData.get()->runtimeFromMainThread(), addr, size)
@@ -552,7 +553,8 @@ class MOZ_STACK_CLASS AutoWritableJitCode
       : AutoWritableJitCode(code->runtimeFromMainThread(), code->raw(), code->bufferSize())
     {}
     ~AutoWritableJitCode() {
-        ExecutableAllocator::makeExecutable(addr_, size_);
+        if (!ExecutableAllocator::makeExecutable(addr_, size_))
+            MOZ_CRASH();
         rt_->toggleAutoWritableJitCodeActive(false);
     }
 };
