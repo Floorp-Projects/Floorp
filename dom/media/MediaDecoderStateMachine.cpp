@@ -241,8 +241,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentFirstFrameLoadedEvent(false, "MediaDecoderStateMachine::mSentFirstFrameLoadedEvent"),
   mSentPlaybackEndedEvent(false),
   mOutputStreamManager(new OutputStreamManager()),
-  mStreamSink(new DecodedStream(
-    mTaskQueue, mAudioQueue, mVideoQueue, mOutputStreamManager)),
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
   mBuffered(mTaskQueue, TimeIntervals(),
@@ -338,6 +336,9 @@ void
 MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(OnTaskQueue());
+
+  mStreamSink = new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
+                                  mOutputStreamManager, mSameOriginMedia.Ref());
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
