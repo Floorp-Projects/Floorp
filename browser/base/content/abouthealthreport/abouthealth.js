@@ -23,10 +23,6 @@ var healthReportWrapper = {
     let iframe = document.getElementById("remote-report");
     iframe.addEventListener("load", healthReportWrapper.initRemotePage, false);
     iframe.src = this._getReportURI().spec;
-    iframe.onload = () => {
-      MozSelfSupport.getHealthReportPayload().then(this.updatePayload,
-                                                   this.handleInitFailure);
-    };
     prefs.observe("uploadEnabled", this.updatePrefState, healthReportWrapper);
   },
 
@@ -103,15 +99,6 @@ var healthReportWrapper = {
     });
   },
 
-  refreshPayload: function () {
-    MozSelfSupport.getHealthReportPayload().then(this.updatePayload,
-                                                 this.handlePayloadFailure);
-  },
-
-  updatePayload: function (payload) {
-    healthReportWrapper.injectData("payload", JSON.stringify(payload));
-  },
-
   injectData: function (type, content) {
     let report = this._getReportURI();
 
@@ -138,9 +125,6 @@ var healthReportWrapper = {
         break;
       case "RequestCurrentPrefs":
         this.updatePrefState();
-        break;
-      case "RequestCurrentPayload":
-        this.refreshPayload();
         break;
       case "RequestTelemetryPingList":
         this.sendTelemetryPingList();
