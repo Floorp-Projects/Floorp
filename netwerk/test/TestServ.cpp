@@ -14,7 +14,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsStringAPI.h"
 #include "nsCOMPtr.h"
-#include "mozilla/Logging.h"
+#include "NetwerkTestLogging.h"
 
 //
 // set NSPR_LOG_MODULES=Test:5

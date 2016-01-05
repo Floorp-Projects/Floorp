@@ -22,6 +22,7 @@
 #include "nsThreadUtils.h"
 #include "FakeMediaStreams.h"
 #include "FakeMediaStreamsImpl.h"
+#include "FakeLogging.h"
 #include "PeerConnectionImpl.h"
 #include "PeerConnectionCtx.h"
 
