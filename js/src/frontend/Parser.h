@@ -822,8 +822,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     Node newBoundImportForCurrentName();
     bool namedImportsOrNamespaceImport(TokenKind tt, Node importSpecSet);
-    bool addExportName(JSAtom* exportName);
-    bool addExportNamesForDeclaration(Node node);
+    bool checkExportedName(JSAtom* exportName);
+    bool checkExportedNamesForDeclaration(Node node);
 
     enum ClassContext { ClassStatement, ClassExpression };
     Node classDefinition(YieldHandling yieldHandling, ClassContext classContext, DefaultHandling defaultHandling);

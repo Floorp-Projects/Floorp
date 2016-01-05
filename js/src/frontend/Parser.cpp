@@ -808,8 +808,7 @@ ModuleBox::ModuleBox(ExclusiveContext* cx, ObjectBox* traceListHead, ModuleObjec
   : ObjectBox(module, traceListHead),
     SharedContext(cx, Directives(true), false),
     bindings(),
-    builder(builder),
-    exportNames(cx)
+    builder(builder)
 {
     computeThisBinding(staticScope());
 }
@@ -5196,24 +5195,22 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
 
 template<>
 bool
-Parser<FullParseHandler>::addExportName(JSAtom* exportName)
+Parser<FullParseHandler>::checkExportedName(JSAtom* exportName)
 {
-    TraceableVector<JSAtom*>& exportNames = pc->sc->asModuleBox()->exportNames;
-    for (JSAtom* name : exportNames) {
-        if (name == exportName) {
-            JSAutoByteString str;
-            if (AtomToPrintableString(context, exportName, &str))
-                report(ParseError, false, null(), JSMSG_DUPLICATE_EXPORT_NAME, str.ptr());
-            return false;
-        }
-    }
+    if (!pc->sc->asModuleBox()->builder.hasExportedName(exportName))
+        return true;
 
-    return exportNames.append(exportName);
+    JSAutoByteString str;
+    if (!AtomToPrintableString(context, exportName, &str))
+        return false;
+
+    report(ParseError, false, null(), JSMSG_DUPLICATE_EXPORT_NAME, str.ptr());
+    return false;
 }
 
 template<>
 bool
-Parser<SyntaxParseHandler>::addExportName(JSAtom* exportName)
+Parser<SyntaxParseHandler>::checkExportedName(JSAtom* exportName)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -5221,14 +5218,14 @@ Parser<SyntaxParseHandler>::addExportName(JSAtom* exportName)
 
 template<>
 bool
-Parser<FullParseHandler>::addExportNamesForDeclaration(ParseNode* node)
+Parser<FullParseHandler>::checkExportedNamesForDeclaration(ParseNode* node)
 {
     MOZ_ASSERT(node->isArity(PN_LIST));
     for (ParseNode* binding = node->pn_head; binding; binding = binding->pn_next) {
         if (binding->isKind(PNK_ASSIGN))
             binding = binding->pn_left;
         MOZ_ASSERT(binding->isKind(PNK_NAME));
-        if (!addExportName(binding->pn_atom))
+        if (!checkExportedName(binding->pn_atom))
             return false;
     }
 
@@ -5237,7 +5234,7 @@ Parser<FullParseHandler>::addExportNamesForDeclaration(ParseNode* node)
 
 template<>
 bool
-Parser<SyntaxParseHandler>::addExportNamesForDeclaration(Node node)
+Parser<SyntaxParseHandler>::checkExportedNamesForDeclaration(Node node)
 {
     MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
     return false;
@@ -5296,7 +5293,7 @@ Parser<FullParseHandler>::exportDeclaration()
             if (!exportName)
                 return null();
 
-            if (!addExportName(exportName->pn_atom))
+            if (!checkExportedName(exportName->pn_atom))
                 return null();
 
             Node exportSpec = handler.newBinary(PNK_EXPORT_SPEC, bindingName, exportName);
@@ -5404,7 +5401,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!kid)
             return null();
 
-        if (!addExportName(kid->pn_funbox->function()->atom()))
+        if (!checkExportedName(kid->pn_funbox->function()->atom()))
             return null();
         break;
 
@@ -5415,7 +5412,7 @@ Parser<FullParseHandler>::exportDeclaration()
 
         const ClassNode& cls = kid->as<ClassNode>();
         MOZ_ASSERT(cls.names());
-        if (!addExportName(cls.names()->innerBinding()->pn_atom))
+        if (!checkExportedName(cls.names()->innerBinding()->pn_atom))
             return null();
         break;
       }
@@ -5426,7 +5423,7 @@ Parser<FullParseHandler>::exportDeclaration()
             return null();
         if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
             return null();
-        if (!addExportNamesForDeclaration(kid))
+        if (!checkExportedNamesForDeclaration(kid))
             return null();
         break;
 
@@ -5434,7 +5431,7 @@ Parser<FullParseHandler>::exportDeclaration()
         if (!tokenStream.getToken(&tt, TokenStream::Operand))
             return null();
 
-        if (!addExportName(context->names().default_))
+        if (!checkExportedName(context->names().default_))
             return null();
 
         ParseNode* binding = nullptr;
@@ -5475,7 +5472,7 @@ Parser<FullParseHandler>::exportDeclaration()
         kid = lexicalDeclaration(YieldIsName, tt == TOK_CONST);
         if (!kid)
             return null();
-        if (!addExportNamesForDeclaration(kid))
+        if (!checkExportedNamesForDeclaration(kid))
             return null();
         break;
 
