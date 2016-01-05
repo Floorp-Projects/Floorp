@@ -280,6 +280,8 @@ class MOZ_STACK_CLASS ModuleBuilder
     bool processExport(frontend::ParseNode* pn);
     bool processExportFrom(frontend::ParseNode* pn);
 
+    bool hasExportedName(JSAtom* name) const;
+
     bool initModule();
 
   private:
@@ -300,7 +302,7 @@ class MOZ_STACK_CLASS ModuleBuilder
     RootedExportEntryVector indirectExportEntries_;
     RootedExportEntryVector starExportEntries_;
 
-    ImportEntryObject* importEntryFor(JSAtom* localName);
+    ImportEntryObject* importEntryFor(JSAtom* localName) const;
 
     bool appendExportEntry(HandleAtom exportName, HandleAtom localName);
     bool appendExportFromEntry(HandleAtom exportName, HandleAtom moduleRequest,
