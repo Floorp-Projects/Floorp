@@ -240,10 +240,7 @@ public:
 
     RefPtr<TrackPort> endedPort = mStream->FindPlaybackTrackPort(*track);
     NS_ASSERTION(endedPort, "Playback track should have a TrackPort");
-    if (endedPort &&
-        endedPort->GetSourceTrackId() != TRACK_ANY &&
-        endedPort->GetSourceTrackId() != TRACK_INVALID &&
-        endedPort->GetSourceTrackId() != TRACK_NONE) {
+    if (endedPort && IsTrackIDExplicit(endedPort->GetSourceTrackId())) {
       // If a track connected to a locked-track input port ends, we destroy the
       // port to allow our playback stream to finish.
       // XXX (bug 1208316) This should not be necessary when MediaStreams don't
@@ -871,9 +868,7 @@ DOMMediaStream::FindPlaybackDOMTrack(MediaStream* aInputStream, TrackID aInputTr
         info->GetInputPort()->GetSource() == aInputStream &&
         info->GetSourceTrackId() == aInputTrackID) {
       // This track is owned externally but in our playback stream.
-      MOZ_ASSERT(aInputTrackID != TRACK_NONE);
-      MOZ_ASSERT(aInputTrackID != TRACK_INVALID);
-      MOZ_ASSERT(aInputTrackID != TRACK_ANY);
+      MOZ_ASSERT(IsTrackIDExplicit(aInputTrackID));
       return info->GetTrack();
     }
   }
