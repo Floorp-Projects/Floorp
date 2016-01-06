@@ -291,21 +291,20 @@ SetPropertyOperation(JSContext* cx, JSOp op, HandleValue lval, HandleId id, Hand
 }
 
 static JSFunction*
-MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom)
+MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
 {
-    RootedAtom name(cx, atom == cx->names().empty ? nullptr : atom);
-    JSNative native = DefaultClassConstructor;
-    return NewFunctionWithProto(cx, native, 0, JSFunction::NATIVE_CLASS_CTOR, nullptr, name, nullptr);
-}
+    bool derived = op == JSOP_DERIVEDCONSTRUCTOR;
+    MOZ_ASSERT(derived == !!proto);
 
-static JSFunction*
-MakeDerivedDefaultConstructor(JSContext* cx, JSAtom* atom, HandleObject proto)
-{
-    RootedPropertyName selfHostedName(cx, cx->names().DefaultDerivedClassConstructor);
+    PropertyName* lookup = derived ? cx->names().DefaultDerivedClassConstructor
+                                   : cx->names().DefaultBaseClassConstructor;
+
+    RootedPropertyName selfHostedName(cx, lookup);
     RootedAtom name(cx, atom == cx->names().empty ? nullptr : atom);
 
     RootedFunction ctor(cx);
-    if (!cx->runtime()->createLazySelfHostedFunctionClone(cx, selfHostedName, name, /* nargs = */ 1,
+    if (!cx->runtime()->createLazySelfHostedFunctionClone(cx, selfHostedName, name,
+                                                          /* nargs = */ !!derived,
                                                           proto, TenuredObject, &ctor))
     {
         return nullptr;
@@ -3902,7 +3901,8 @@ CASE(JSOP_DERIVEDCONSTRUCTOR)
     MOZ_ASSERT(REGS.sp[-1].isObject());
     ReservedRooted<JSObject*> proto(&rootObject0, &REGS.sp[-1].toObject());
 
-    JSFunction* constructor = MakeDerivedDefaultConstructor(cx, script->getAtom(REGS.pc), proto);
+    JSFunction* constructor = MakeDefaultConstructor(cx, JSOp(*REGS.pc), script->getAtom(REGS.pc),
+                                                     proto);
     if (!constructor)
         goto error;
 
@@ -3912,7 +3912,8 @@ END_CASE(JSOP_DERIVEDCONSTRUCTOR)
 
 CASE(JSOP_CLASSCONSTRUCTOR)
 {
-    JSFunction* constructor = MakeDefaultConstructor(cx, JSOp(*REGS.pc), script->getAtom(REGS.pc));
+    JSFunction* constructor = MakeDefaultConstructor(cx, JSOp(*REGS.pc), script->getAtom(REGS.pc),
+                                                     nullptr);
     if (!constructor)
         goto error;
     PUSH_OBJECT(*constructor);
@@ -4811,24 +4812,6 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
     }
 
     ReportRuntimeLexicalError(cx, errorNumber, name);
-}
-
-bool
-js::DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
-        return false;
-    }
-
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    JSObject* obj = CreateThis(cx, &PlainObject::class_, newTarget);
-    if (!obj)
-        return false;
-
-    args.rval().set(ObjectValue(*obj));
-    return true;
 }
 
 void
