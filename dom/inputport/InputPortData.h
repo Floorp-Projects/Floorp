@@ -33,7 +33,7 @@ public:
 
   const nsString& GetId() const;
 
-  const InputPortType GetType() const;
+  InputPortType GetType() const;
 
 private:
   ~InputPortData();

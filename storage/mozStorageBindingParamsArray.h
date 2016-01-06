@@ -46,7 +46,7 @@ public:
   /**
    * @return the number of elemets the array contains.
    */
-  const size_type length() const { return mArray.Length(); }
+  size_type length() const { return mArray.Length(); }
 
   class iterator {
   public:
