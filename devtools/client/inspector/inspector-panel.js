@@ -367,7 +367,7 @@ InspectorPanel.prototype = {
     }
 
     this.sidebar.addTab("layoutview",
-                        "chrome://devtools/content/layoutview/view.xhtml",
+                        "chrome://devtools/content/inspector/layout/layout.xhtml",
                         "layoutview" == defaultTab);
 
     if (this.target.form.animationsActor) {

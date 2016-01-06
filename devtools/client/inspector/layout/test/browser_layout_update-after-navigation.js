@@ -8,7 +8,7 @@
 // it also works after going back
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_layoutview_iframe1.html");
+  yield addTab(TEST_URL_ROOT + "doc_layout_iframe1.html");
   let {toolbox, inspector, view} = yield openLayoutView();
   yield runTests(inspector, view);
 });
@@ -34,7 +34,7 @@ function*(inspector, view) {
 
 addTest("Navigate to the second page",
 function*(inspector, view) {
-  yield navigateTo(TEST_URL_ROOT + "doc_layoutview_iframe2.html");
+  yield navigateTo(TEST_URL_ROOT + "doc_layout_iframe2.html");
   yield inspector.once("markuploaded");
 });
 
