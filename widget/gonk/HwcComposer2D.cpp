@@ -353,7 +353,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     LayerRenderState state = aLayer->GetRenderState();
 
 #if ANDROID_VERSION >= 21
-    if (!state.GetGrallocBuffer() && !state.GetSidebandStream()) {
+    if (!state.GetGrallocBuffer() && !state.GetSidebandStream().IsValid()) {
 #else
     if (!state.GetGrallocBuffer()) {
 #endif
@@ -450,8 +450,8 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
     mHal->SetCrop(hwcLayer, sourceCrop);
     buffer_handle_t handle = nullptr;
 #if ANDROID_VERSION >= 21
-    if (state.GetSidebandStream()) {
-        handle = state.GetSidebandStream()->handle();
+    if (state.GetSidebandStream().IsValid()) {
+        handle = state.GetSidebandStream().GetRawNativeHandle();
     } else if (state.GetGrallocBuffer()) {
         handle = state.GetGrallocBuffer()->getNativeBuffer()->handle;
     }
@@ -468,7 +468,7 @@ HwcComposer2D::PrepareLayerList(Layer* aLayer,
 #if ANDROID_VERSION >= 17
     hwcLayer.compositionType = HWC_FRAMEBUFFER;
 #if ANDROID_VERSION >= 21
-    if (state.GetSidebandStream()) {
+    if (state.GetSidebandStream().IsValid()) {
         hwcLayer.compositionType = HWC_SIDEBAND;
     }
 #endif
