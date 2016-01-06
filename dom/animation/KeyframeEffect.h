@@ -229,7 +229,7 @@ public:
   const AnimationTiming& Timing() const { return mTiming; }
   AnimationTiming& Timing() { return mTiming; }
   void SetTiming(const AnimationTiming& aTiming);
-  void NotifyAnimationTimingUpdated() { UpdateTargetRegistration(); }
+  void NotifyAnimationTimingUpdated();
 
   Nullable<TimeDuration> GetLocalTime() const;
 
