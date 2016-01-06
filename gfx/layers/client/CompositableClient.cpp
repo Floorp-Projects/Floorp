@@ -180,18 +180,13 @@ CompositableClient::Destroy()
   if (!IsConnected()) {
     return;
   }
-
-  mCompositableChild->mCompositableClient = nullptr;
-  mCompositableChild->Destroy(mForwarder);
-  mCompositableChild = nullptr;
-
+  // Send pending AsyncMessages before deleting CompositableChild.
+  // They might have dependency to the mCompositableChild.
   mForwarder->SendPendingAsyncMessges();
-}
-
-bool
-CompositableClient::DestroyFallback(PCompositableChild* aActor)
-{
-  return aActor->SendDestroySync();
+  // Destroy CompositableChild.
+  mCompositableChild->mCompositableClient = nullptr;
+  mCompositableChild->Destroy();
+  mCompositableChild = nullptr;
 }
 
 uint64_t
