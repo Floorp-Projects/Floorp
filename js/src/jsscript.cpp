@@ -623,6 +623,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         HasInnerFunctions,
         NeedsHomeObject,
         IsDerivedClassConstructor,
+        IsDefaultClassConstructor,
     };
 
     uint32_t length, lineno, column, nslots;
@@ -768,6 +769,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             scriptBits |= (1 << NeedsHomeObject);
         if (script->isDerivedClassConstructor())
             scriptBits |= (1 << IsDerivedClassConstructor);
+        if (script->isDefaultClassConstructor())
+            scriptBits |= (1 << IsDefaultClassConstructor);
     }
 
     if (!xdr->codeUint32(&prologueLength))
@@ -912,6 +915,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             script->needsHomeObject_ = true;
         if (scriptBits & (1 << IsDerivedClassConstructor))
             script->isDerivedClassConstructor_ = true;
+        if (scriptBits & (1 << IsDefaultClassConstructor))
+            script->isDefaultClassConstructor_ = true;
 
         if (scriptBits & (1 << IsLegacyGenerator)) {
             MOZ_ASSERT(!(scriptBits & (1 << IsStarGenerator)));
@@ -3584,6 +3589,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->setGeneratorKind(src->generatorKind());
     dst->isDerivedClassConstructor_ = src->isDerivedClassConstructor();
     dst->needsHomeObject_ = src->needsHomeObject();
+    dst->isDefaultClassConstructor_ = src->isDefaultClassConstructor();
 
     if (nconsts != 0) {
         HeapValue* vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
