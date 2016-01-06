@@ -1393,6 +1393,9 @@ PeerConnectionWrapper.prototype = {
       var rtpStatsKey = Object.keys(stats)
         .find(key => !stats[key].isRemote && stats[key].type.endsWith("boundrtp"));
       ok(rtpStatsKey, "Should have RTP stats for track " + track.id);
+      if (!rtpStatsKey) {
+        return false;
+      }
       var rtp = stats[rtpStatsKey];
       var nrPackets = rtp[rtp.type == "outboundrtp" ? "packetsSent"
                                                     : "packetsReceived"];
@@ -1401,21 +1404,12 @@ PeerConnectionWrapper.prototype = {
       return nrPackets > 0;
     };
 
-    return new Promise(resolve => {
-      info("Checking RTP packet flow for track " + track.id);
+    info("Checking RTP packet flow for track " + track.id);
 
-      var waitForFlow = () => {
-        this._pc.getStats(track).then(stats => {
-          if (hasFlow(stats)) {
-            ok(true, "RTP flowing for track " + track.id);
-            resolve();
-          } else {
-            wait(200).then(waitForFlow);
-          }
-        });
-      };
-      waitForFlow();
-    });
+    var retry = () => this._pc.getStats(track)
+      .then(stats => hasFlow(stats)? ok(true, "RTP flowing for track " + track.id) :
+                                     wait(200).then(retry));
+    return retry();
   },
 
   /**
