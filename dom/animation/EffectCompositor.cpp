@@ -12,10 +12,15 @@
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/LayerAnimationInfo.h"
+#include "AnimationCommon.h" // For AnimationCollection
+#include "nsAnimationManager.h"
+#include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertySet.h"
+#include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
 #include "nsTArray.h"
+#include "nsTransitionManager.h"
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;
@@ -110,6 +115,57 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
   return result;
 }
 
+/* static */ void
+EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
+                                            nsCSSPseudoElements::Type
+                                              aPseudoType,
+                                            nsStyleContext* aStyleContext)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effects || !effects->CascadeNeedsUpdate()) {
+    return;
+  }
+
+  UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
+
+  MOZ_ASSERT(!effects->CascadeNeedsUpdate(), "Failed to update cascade state");
+}
+
+namespace {
+  class EffectCompositeOrderComparator {
+  public:
+    bool Equals(const KeyframeEffectReadOnly* a,
+                const KeyframeEffectReadOnly* b) const
+    {
+      return a == b;
+    }
+
+    bool LessThan(const KeyframeEffectReadOnly* a,
+                  const KeyframeEffectReadOnly* b) const
+    {
+      MOZ_ASSERT(a->GetAnimation() && b->GetAnimation());
+      MOZ_ASSERT(
+        Equals(a, b) ||
+        a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation()) !=
+          b->GetAnimation()->HasLowerCompositeOrderThan(*a->GetAnimation()));
+      return a->GetAnimation()->HasLowerCompositeOrderThan(*b->GetAnimation());
+    }
+  };
+}
+
+/* static */ void
+EffectCompositor::UpdateCascadeResults(Element* aElement,
+                                       nsCSSPseudoElements::Type aPseudoType,
+                                       nsStyleContext* aStyleContext)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effects) {
+    return;
+  }
+
+  UpdateCascadeResults(*effects, aElement, aPseudoType, aStyleContext);
+}
+
 /* static */ Maybe<Pair<Element*, nsCSSPseudoElements::Type>>
 EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 {
@@ -165,6 +221,118 @@ EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
   nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
                                                    aStyleContext,
                                                    aPropertiesOverridden);
+}
+
+/* static */ void
+EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
+                                       Element* aElement,
+                                       nsCSSPseudoElements::Type aPseudoType,
+                                       nsStyleContext* aStyleContext)
+{
+  MOZ_ASSERT(EffectSet::GetEffectSet(aElement, aPseudoType) == &aEffectSet,
+             "Effect set should correspond to the specified (pseudo-)element");
+  if (aEffectSet.IsEmpty()) {
+    aEffectSet.MarkCascadeUpdated();
+    return;
+  }
+
+  // Get a list of effects sorted by composite order.
+  nsTArray<KeyframeEffectReadOnly*> sortedEffectList;
+  for (KeyframeEffectReadOnly* effect : aEffectSet) {
+    sortedEffectList.AppendElement(effect);
+  }
+  sortedEffectList.Sort(EffectCompositeOrderComparator());
+
+  // Get properties that override the *animations* level of the cascade.
+  //
+  // We only do this for properties that we can animate on the compositor
+  // since we will apply other properties on the main thread where the usual
+  // cascade applies.
+  nsCSSPropertySet overriddenProperties;
+  if (aStyleContext) {
+    GetOverriddenProperties(aStyleContext, overriddenProperties);
+  }
+
+  bool changed = false;
+  nsCSSPropertySet animatedProperties;
+
+  // Iterate from highest to lowest composite order.
+  for (KeyframeEffectReadOnly* effect : Reversed(sortedEffectList)) {
+    MOZ_ASSERT(effect->GetAnimation(),
+               "Effects on a target element should have an Animation");
+    bool inEffect = effect->IsInEffect();
+    for (AnimationProperty& prop : effect->Properties()) {
+
+      bool winsInCascade = !animatedProperties.HasProperty(prop.mProperty) &&
+                           inEffect;
+
+      // If this property wins in the cascade, add it to the set of animated
+      // properties. We need to do this even if the property is overridden
+      // (in which case we set winsInCascade to false below) since we don't
+      // want to fire transitions on these properties.
+      if (winsInCascade) {
+        animatedProperties.AddProperty(prop.mProperty);
+      }
+
+      // For effects that will be applied to the animations level of the
+      // cascade, we need to check that the property isn't being set by
+      // something with higher priority in the cascade.
+      //
+      // We only do this, however, for properties that can be animated on
+      // the compositor. For properties animated on the main thread the usual
+      // cascade ensures these animations will be correctly overridden.
+      if (winsInCascade &&
+          !effect->GetAnimation()->AppliesToTransitionsLevel() &&
+          overriddenProperties.HasProperty(prop.mProperty)) {
+        winsInCascade = false;
+      }
+
+      if (winsInCascade != prop.mWinsInCascade) {
+        changed = true;
+      }
+      prop.mWinsInCascade = winsInCascade;
+    }
+  }
+
+  aEffectSet.MarkCascadeUpdated();
+
+  // If there is any change in the cascade result, update animations on
+  // layers with the winning animations.
+  nsPresContext* presContext = GetPresContext(aElement);
+  if (changed && presContext) {
+    // We currently unconditionally update both animations and transitions
+    // even if we could, for example, get away with only updating animations.
+    // This is a temporary measure until we unify all animation style updating
+    // under EffectCompositor.
+    AnimationCollection* animations =
+      presContext->AnimationManager()->GetAnimationCollection(aElement,
+                                                              aPseudoType,
+                                                              false);
+                                                             /* don't create */
+    if (animations) {
+      animations->RequestRestyle(AnimationCollection::RestyleType::Layer);
+    }
+
+    AnimationCollection* transitions =
+      presContext->TransitionManager()->GetAnimationCollection(aElement,
+                                                               aPseudoType,
+                                                               false);
+                                                             /* don't create */
+    if (transitions) {
+      transitions->RequestRestyle(AnimationCollection::RestyleType::Layer);
+    }
+  }
+}
+
+/* static */ nsPresContext*
+EffectCompositor::GetPresContext(Element* aElement)
+{
+  MOZ_ASSERT(aElement);
+  nsIPresShell* shell = nsComputedDOMStyle::GetPresShellForContent(aElement);
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
 }
 
 } // namespace mozilla
