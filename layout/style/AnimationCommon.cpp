@@ -444,30 +444,16 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
                                               PseudoElementType(),
                                               styleContext);
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(mElement,
-                                                 PseudoElementType());
-  if (!effectSet) {
-    return;
-  }
-
   mStyleRuleRefreshTime = aRefreshTime;
-  RefPtr<AnimValuesStyleRule>& styleRule =
-      IsForAnimations() ?
-      effectSet->AnimationRule(EffectCompositor::CascadeLevel::Animations) :
-      effectSet->AnimationRule(EffectCompositor::CascadeLevel::Transitions);
-  styleRule = nullptr;
-  // We'll set mStyleChanging to true below if necessary.
-  mStyleChanging = false;
 
-  // If multiple animations specify behavior for the same property the
-  // animation which occurs last in the value of animation-name wins.
-  // As a result, we iterate from last animation to first and, if a
-  // property has already been set, we don't leave it.
-  nsCSSPropertySet properties;
-
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    mAnimations[animIdx]->ComposeStyle(styleRule, properties, mStyleChanging);
-  }
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsForAnimations() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  EffectCompositor::ComposeAnimationRule(mElement,
+                                         PseudoElementType(),
+                                         cascadeLevel,
+                                         mStyleChanging);
 }
 
 void
