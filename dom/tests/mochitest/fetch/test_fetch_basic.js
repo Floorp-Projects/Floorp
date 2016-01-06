@@ -72,10 +72,33 @@ function testSameOriginBlobURL() {
   });
 }
 
+function testNonGetBlobURL() {
+  var blob = new Blob(["english ", "sentence"], { type: "text/plain" });
+  var url = URL.createObjectURL(blob);
+  return Promise.all(
+    [
+      "HEAD",
+      "POST",
+      "PUT",
+      "DELETE"
+    ].map(method => {
+      var req = new Request(url, { method: method });
+      return fetch(req).then(function(res) {
+        ok(false, "Blob URL with non-GET request should not succeed");
+      }).catch(function(e) {
+        ok(e instanceof TypeError, "Blob URL with non-GET request should get a TypeError");
+      });
+    })
+  ).then(function() {
+    URL.revokeObjectURL(url);
+  });
+}
+
 function runTest() {
   return Promise.resolve()
     .then(testAboutURL)
     .then(testDataURL)
     .then(testSameOriginBlobURL)
+    .then(testNonGetBlobURL)
     // Put more promise based tests here.
 }
