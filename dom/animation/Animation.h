@@ -285,6 +285,18 @@ public:
    */
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
 
+   /**
+   * Returns true if effect(s) associated with this Animation are applied to
+   * the transitions level of the cascade. Otherwise, it is assumed that
+   * animated values are applies to the animations level of the cascade.
+   *
+   * This is used in determining which animations are sent to the compositor
+   * since animations applied to the transitions level of the cascade are not
+   * overridden by higher-priority style values in the same way that
+   * regular animations that apply to the animations level of the cascade are.
+   */
+  virtual bool AppliesToTransitionsLevel() const { return false; }
+
   /**
    * Returns true if this animation does not currently need to update
    * style on the main thread (e.g. because it is empty, or is

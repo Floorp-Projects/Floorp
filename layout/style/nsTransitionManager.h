@@ -133,6 +133,8 @@ public:
   nsCSSProperty TransitionProperty() const;
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
+  bool AppliesToTransitionsLevel() const override { return IsTiedToMarkup(); }
+
   void SetCreationSequence(uint64_t aIndex)
   {
     MOZ_ASSERT(IsTiedToMarkup());
