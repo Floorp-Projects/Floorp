@@ -7,12 +7,14 @@
 #include "EffectCompositor.h"
 
 #include "mozilla/dom/Animation.h"
-#include "mozilla/dom/KeyframeEffect.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/KeyframeEffect.h" // For KeyframeEffectReadOnly
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
 #include "nsLayoutUtils.h"
 
 using mozilla::dom::Animation;
+using mozilla::dom::Element;
 using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
@@ -100,6 +102,48 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
     FindAnimationsForCompositor(aFrame, aProperty, &result);
   MOZ_ASSERT(!foundSome || !result.IsEmpty(),
              "If return value is true, matches array should be non-empty");
+
+  return result;
+}
+
+/* static */ Maybe<Pair<Element*, nsCSSPseudoElements::Type>>
+EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
+{
+  // Always return the same object to benefit from return-value optimization.
+  Maybe<Pair<Element*, nsCSSPseudoElements::Type>> result;
+
+  nsIContent* content = aFrame->GetContent();
+  if (!content) {
+    return result;
+  }
+
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+
+  if (aFrame->IsGeneratedContentFrame()) {
+    nsIFrame* parent = aFrame->GetParent();
+    if (parent->IsGeneratedContentFrame()) {
+      return result;
+    }
+    nsIAtom* name = content->NodeInfo()->NameAtom();
+    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
+      pseudoType = nsCSSPseudoElements::ePseudo_before;
+    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
+      pseudoType = nsCSSPseudoElements::ePseudo_after;
+    } else {
+      return result;
+    }
+    content = content->GetParent();
+    if (!content) {
+      return result;
+    }
+  }
+
+  if (!content->IsElement()) {
+    return result;
+  }
+
+  result = Some(MakePair(content->AsElement(), pseudoType));
 
   return result;
 }
