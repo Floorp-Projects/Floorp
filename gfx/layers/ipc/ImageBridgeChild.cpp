@@ -56,7 +56,6 @@ using namespace mozilla::gfx;
 using namespace mozilla::media;
 
 typedef std::vector<CompositableOperation> OpVector;
-typedef nsTArray<OpDestroy> OpDestroyVector;
 
 struct CompositableTransaction
 {
@@ -82,11 +81,10 @@ struct CompositableTransaction
     mFinished = true;
     mSwapRequired = false;
     mOperations.clear();
-    mDestroyedActors.Clear();
   }
   bool IsEmpty() const
   {
-    return mOperations.empty() && mDestroyedActors.IsEmpty();
+    return mOperations.empty();
   }
   void AddNoSwapEdit(const CompositableOperation& op)
   {
@@ -96,35 +94,10 @@ struct CompositableTransaction
   void AddEdit(const CompositableOperation& op)
   {
     AddNoSwapEdit(op);
-    MarkSyncTransaction();
-  }
-  void MarkSyncTransaction()
-  {
     mSwapRequired = true;
   }
 
-  void FallbackDestroyActors()
-  {
-    for (auto& actor : mDestroyedActors) {
-      switch (actor.type()) {
-      case OpDestroy::TPTextureChild: {
-        DebugOnly<bool> ok = TextureClient::DestroyFallback(actor.get_PTextureChild());
-        MOZ_ASSERT(ok);
-        break;
-      }
-      case OpDestroy::TPCompositableChild: {
-        DebugOnly<bool> ok = CompositableClient::DestroyFallback(actor.get_PCompositableChild());
-        MOZ_ASSERT(ok);
-        break;
-      }
-      default: MOZ_CRASH();
-      }
-    }
-    mDestroyedActors.Clear();
-  }
-
   OpVector mOperations;
-  OpDestroyVector mDestroyedActors;
   bool mSwapRequired;
   bool mFinished;
 };
@@ -205,12 +178,6 @@ void ReleaseImageBridgeParentSingleton() {
   sImageBridgeParentSingleton = nullptr;
 }
 
-void
-ImageBridgeChild::FallbackDestroyActors() {
-  if (mTxn && !mTxn->mDestroyedActors.IsEmpty()) {
-    mTxn->FallbackDestroyActors();
-  }
-}
 
 // dispatched function
 static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
@@ -237,8 +204,6 @@ static void ImageBridgeShutdownStep1(ReentrantMonitor *aBarrier, bool *aDone)
         client->Destroy();
       }
     }
-    sImageBridgeChildSingleton->FallbackDestroyActors();
-
     sImageBridgeChildSingleton->SendWillStop();
     sImageBridgeChildSingleton->MarkShutDown();
     // From now on, no message can be sent through the image bridge from the
@@ -642,6 +607,20 @@ ImageBridgeChild::BeginTransaction()
   mTxn->Begin();
 }
 
+class MOZ_STACK_CLASS AutoRemoveTexturesFromImageBridge
+{
+public:
+  explicit AutoRemoveTexturesFromImageBridge(ImageBridgeChild* aImageBridge)
+    : mImageBridge(aImageBridge) {}
+
+  ~AutoRemoveTexturesFromImageBridge()
+  {
+    mImageBridge->RemoveTexturesIfNecessary();
+  }
+private:
+  ImageBridgeChild* mImageBridge;
+};
+
 void
 ImageBridgeChild::EndTransaction()
 {
@@ -649,6 +628,7 @@ ImageBridgeChild::EndTransaction()
   MOZ_ASSERT(!mTxn->Finished(), "forgot BeginTransaction?");
 
   AutoEndTransaction _(mTxn);
+  AutoRemoveTexturesFromImageBridge autoRemoveTextures(this);
 
   if (mTxn->IsEmpty()) {
     return;
@@ -667,17 +647,15 @@ ImageBridgeChild::EndTransaction()
   AutoInfallibleTArray<EditReply, 10> replies;
 
   if (mTxn->mSwapRequired) {
-    if (!SendUpdate(cset, mTxn->mDestroyedActors, &replies)) {
+    if (!SendUpdate(cset, &replies)) {
       NS_WARNING("could not send async texture transaction");
-      mTxn->FallbackDestroyActors();
       return;
     }
   } else {
     // If we don't require a swap we can call SendUpdateNoSwap which
     // assumes that aReplies is empty (DEBUG assertion)
-    if (!SendUpdateNoSwap(cset, mTxn->mDestroyedActors)) {
+    if (!SendUpdateNoSwap(cset)) {
       NS_WARNING("could not send async texture transaction (no swap)");
-      mTxn->FallbackDestroyActors();
       return;
     }
   }
@@ -1118,35 +1096,6 @@ ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
   return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags);
 }
 
-static bool
-IBCAddOpDestroy(CompositableTransaction* aTxn, const OpDestroy& op, bool synchronously)
-{
-  if (aTxn->Finished()) {
-    return false;
-  }
-
-  aTxn->mDestroyedActors.AppendElement(op);
-
-  if (synchronously) {
-    aTxn->MarkSyncTransaction();
-  }
-
-  return true;
-}
-
-bool
-ImageBridgeChild::DestroyInTransaction(PTextureChild* aTexture, bool synchronously)
-{
-  return IBCAddOpDestroy(mTxn, OpDestroy(aTexture), synchronously);
-}
-
-bool
-ImageBridgeChild::DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously)
-{
-  return IBCAddOpDestroy(mTxn, OpDestroy(aCompositable), synchronously);
-}
-
-
 void
 ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                                 TextureClient* aTexture)
@@ -1165,6 +1114,8 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
     mTxn->AddNoSwapEdit(OpRemoveTexture(nullptr, aCompositable->GetIPDLActor(),
                                         nullptr, aTexture->GetIPDLActor()));
   }
+  // Hold texture until transaction complete.
+  HoldUntilTransaction(aTexture);
 }
 
 void
