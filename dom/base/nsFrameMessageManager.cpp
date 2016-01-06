@@ -1812,6 +1812,10 @@ nsMessageManagerScriptExecutor::InitChildGlobalInternal(
   options.creationOptions().setZone(JS::SystemZone);
   options.behaviors().setVersion(JSVERSION_LATEST);
 
+  if (xpc::SharedMemoryEnabled()) {
+    options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
+  }
+
   nsresult rv =
     xpc->InitClassesWithNewWrappedGlobal(cx, aScope, mPrincipal,
                                          flags, options, getter_AddRefs(mGlobal));
