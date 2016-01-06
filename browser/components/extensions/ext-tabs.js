@@ -261,27 +261,21 @@ extensions.registerSchemaAPI("tabs", null, (extension, context) => {
       }).api(),
 
       create: function(createProperties, callback) {
-        if (!createProperties) {
-          createProperties = {};
-        }
-
         let url = createProperties.url || aboutNewTabService.newTabURL;
-        url = extension.baseURI.resolve(url);
+        url = context.uri.resolve(url);
 
         function createInWindow(window) {
           let tab = window.gBrowser.addTab(url);
 
           let active = true;
-          if ("active" in createProperties) {
+          if (createProperties.active !== null) {
             active = createProperties.active;
-          } else if ("selected" in createProperties) {
-            active = createProperties.selected;
           }
           if (active) {
             window.gBrowser.selectedTab = tab;
           }
 
-          if ("index" in createProperties) {
+          if (createProperties.index !== null) {
             window.gBrowser.moveTabTo(tab, createProperties.index);
           }
 
