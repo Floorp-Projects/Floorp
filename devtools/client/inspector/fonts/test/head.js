@@ -2,12 +2,13 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 // shared-head.js handles imports, constants, and utility functions
 Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
-const BASE_URI = "http://mochi.test:8888/browser/devtools/client/fontinspector/test/"
+const BASE_URI = "http://mochi.test:8888/browser/devtools/client/inspector/fonts/test/";
 
 /**
  * Open the toolbox, with the inspector tool visible.

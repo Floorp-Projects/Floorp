@@ -4,6 +4,7 @@
 
 DIRS += [
     'computed',
+    'fonts',
     'layout',
     'rules'
 ]
