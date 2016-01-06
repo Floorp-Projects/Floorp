@@ -251,3 +251,39 @@ DominatorTreeNode.insert = function (tree, path, newChildren, moreChildrenAvaila
 
   return insert(tree, 0);
 };
+
+/**
+ * Get the new canonical node with the given `id` in `tree` that exists along
+ * `path`. If there is no such node along `path`, return null.
+ *
+ * This is useful if we have a reference to a now-outdated DominatorTreeNode due
+ * to a recent call to DominatorTreeNode.insert and want to get the up-to-date
+ * version. We don't have to walk the whole tree: if there is an updated version
+ * of the node then it *must* be along the path.
+ *
+ * @param {NodeId} id
+ * @param {DominatorTreeNode} tree
+ * @param {Array<NodeId>} path
+ *
+ * @returns {DominatorTreeNode|null}
+ */
+DominatorTreeNode.getNodeByIdAlongPath = function (id, tree, path) {
+  function find(node, i) {
+    if (!node || node.nodeId !== path[i]) {
+      return null;
+    }
+
+    if (node.nodeId === id) {
+      return node;
+    }
+
+    if (i === path.length - 1 || !node.children) {
+      return null;
+    }
+
+    const nextId = path[i + 1];
+    return find(node.children.find(c => c.nodeId === nextId), i + 1);
+  }
+
+  return find(tree, 0);
+};
