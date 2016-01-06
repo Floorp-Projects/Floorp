@@ -4,6 +4,7 @@
 "use strict";
 
 const { Visitor, walk } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
+const { immutableUpdate } = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
 
 const DEFAULT_MAX_DEPTH = 4;
 const DEFAULT_MAX_SIBLINGS = 15;
@@ -212,4 +213,41 @@ DominatorTreeNode.partialTraversal = function (dominatorTree,
   }
 
   return dfs(dominatorTree.root, 0);
+};
+
+/**
+ * Insert more children into the given (partially complete) dominator tree.
+ *
+ * The tree is updated in an immutable and persistent manner: a new tree is
+ * returned, but all unmodified subtrees (which is most) are shared with the
+ * original tree. Only the modified nodes are re-allocated.
+ *
+ * @param {DominatorTreeNode} tree
+ * @param {Array<NodeId>} path
+ * @param {Array<DominatorTreeNode>} newChildren
+ * @param {Boolean} moreChildrenAvailable
+ *
+ * @returns {DominatorTreeNode}
+ */
+DominatorTreeNode.insert = function (tree, path, newChildren, moreChildrenAvailable) {
+  function insert(tree, i) {
+    if (tree.nodeId !== path[i]) {
+      return tree;
+    }
+
+    if (i == path.length - 1) {
+      return immutableUpdate(tree, {
+        children: (tree.children || []).concat(newChildren),
+        moreChildrenAvailable,
+      });
+    }
+
+    return tree.children
+      ? immutableUpdate(tree, {
+        children: tree.children.map(c => insert(c, i + 1))
+      })
+      : tree;
+  }
+
+  return insert(tree, 0);
 };

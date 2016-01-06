@@ -214,6 +214,9 @@ HeapAnalysesClient.prototype.getDominatorTree = function (opts) {
  *          - {Boolean} moreChildrenAvailable
  *            True iff there are more children available after the returned
  *            nodes.
+ *          - {Array<NodeId>} path
+ *            The path through the tree from the root to these node's parent, eg
+ *            [root's id, child of root's id, child of child of root's id, ..., `nodeId`].
  */
 HeapAnalysesClient.prototype.getImmediatelyDominated = function (opts) {
   return this._worker.performTask("getImmediatelyDominated", opts);
