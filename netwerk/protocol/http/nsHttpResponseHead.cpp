@@ -442,6 +442,20 @@ nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
         return NS_OK;
     }
 
+    // These responses can be cached indefinitely.
+    if ((mStatus == 300) || (mStatus == 410) || nsHttp::IsPermanentRedirect(mStatus)) {
+        LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %p] "
+             "Assign an infinite heuristic lifetime\n", this));
+        *result = uint32_t(-1);
+        return NS_OK;
+    }
+
+    if (mStatus >= 400) {
+        LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %p] "
+             "Do not calculate heuristic max-age for most responses >= 400\n", this));
+        return NS_OK;
+    }
+
     // Fallback on heuristic using last modified header...
     if (NS_SUCCEEDED(GetLastModifiedValue(&date2))) {
         LOG(("using last-modified to determine freshness-lifetime\n"));
@@ -453,13 +467,7 @@ nsHttpResponseHead::ComputeFreshnessLifetime(uint32_t *result) const
         }
     }
 
-    // These responses can be cached indefinitely.
-    if ((mStatus == 300) || nsHttp::IsPermanentRedirect(mStatus)) {
-        *result = uint32_t(-1);
-        return NS_OK;
-    }
-
-    LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %x] "
+    LOG(("nsHttpResponseHead::ComputeFreshnessLifetime [this = %p] "
          "Insufficient information to compute a non-zero freshness "
          "lifetime!\n", this));
 
@@ -485,6 +493,8 @@ nsHttpResponseHead::MustValidate() const
     case 304:
     case 307:
     case 308:
+        // Gone forever
+    case 410:
         break;
         // Uncacheable redirects
     case 303:

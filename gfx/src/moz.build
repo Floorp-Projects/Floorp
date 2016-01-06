@@ -59,7 +59,6 @@ UNIFIED_SOURCES += [
     'nsFontMetrics.cpp',
     'nsRect.cpp',
     'nsRegion.cpp',
-    'nsRenderingContext.cpp',
     'nsScriptableRegion.cpp',
     'nsThebesFontEnumerator.cpp',
     'nsThebesGfxFactory.cpp',

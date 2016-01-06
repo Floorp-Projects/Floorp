@@ -10,6 +10,7 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
@@ -284,6 +285,15 @@ public:
    * Returns true if this Animation has a lower composite order than aOther.
    */
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
+
+   /**
+   * Returns the level at which the effect(s) associated with this Animation
+   * are applied to the CSS cascade.
+   */
+  virtual EffectCompositor::CascadeLevel CascadeLevel() const
+  {
+    return EffectCompositor::CascadeLevel::Animations;
+  }
 
   /**
    * Returns true if this animation does not currently need to update

@@ -100,6 +100,7 @@
   locale/@AB_CD@/mozapps/downloads/settingsChange.dtd             (%chrome/mozapps/downloads/settingsChange.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.dtd                  (%chrome/mozapps/downloads/downloads.dtd)
   locale/@AB_CD@/mozapps/downloads/downloads.properties           (%chrome/mozapps/downloads/downloads.properties)
+#ifndef MOZ_FENNEC
   locale/@AB_CD@/mozapps/extensions/extensions.dtd                (%chrome/mozapps/extensions/extensions.dtd)
   locale/@AB_CD@/mozapps/extensions/extensions.properties         (%chrome/mozapps/extensions/extensions.properties)
   locale/@AB_CD@/mozapps/extensions/blocklist.dtd                 (%chrome/mozapps/extensions/blocklist.dtd)
@@ -110,6 +111,7 @@
   locale/@AB_CD@/mozapps/extensions/update.properties             (%chrome/mozapps/extensions/update.properties)
   locale/@AB_CD@/mozapps/extensions/newaddon.dtd                  (%chrome/mozapps/extensions/newaddon.dtd)
   locale/@AB_CD@/mozapps/extensions/newaddon.properties           (%chrome/mozapps/extensions/newaddon.properties)
+#endif
   locale/@AB_CD@/mozapps/handling/handling.dtd                    (%chrome/mozapps/handling/handling.dtd)
   locale/@AB_CD@/mozapps/handling/handling.properties             (%chrome/mozapps/handling/handling.properties)
   locale/@AB_CD@/mozapps/preferences/changemp.dtd                 (%chrome/mozapps/preferences/changemp.dtd)

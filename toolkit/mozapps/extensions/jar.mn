@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+#ifndef MOZ_FENNEC
 % content mozapps %content/mozapps/
 * content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
@@ -31,6 +32,7 @@ toolkit.jar:
   content/mozapps/extensions/pluginPrefs.xul                    (content/pluginPrefs.xul)
   content/mozapps/extensions/gmpPrefs.xul                       (content/gmpPrefs.xul)
   content/mozapps/extensions/OpenH264-license.txt               (content/OpenH264-license.txt)
+#endif
   content/mozapps/xpinstall/xpinstallConfirm.xul                (content/xpinstallConfirm.xul)
   content/mozapps/xpinstall/xpinstallConfirm.js                 (content/xpinstallConfirm.js)
   content/mozapps/xpinstall/xpinstallConfirm.css                (content/xpinstallConfirm.css)

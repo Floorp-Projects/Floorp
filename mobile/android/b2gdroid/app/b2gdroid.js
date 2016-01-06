@@ -598,11 +598,6 @@ pref("media.mediasource.enabled", true);
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
 
-#ifdef NIGHTLY_BUILD
-// Shumway component (SWF player) is disabled by default. Also see bug 904346.
-pref("shumway.disabled", true);
-#endif
-
 #ifdef MOZ_SAFE_BROWSING
 pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);

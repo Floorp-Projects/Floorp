@@ -47,7 +47,7 @@ const VIEW_NODE_LOCATION_TYPE = exports.VIEW_NODE_LOCATION_TYPE = 5;
 function HighlightersOverlay(view) {
   this.view = view;
 
-  let {CssRuleView} = require("devtools/client/styleinspector/rule-view");
+  let {CssRuleView} = require("devtools/client/inspector/rules/rules");
   this.isRuleView = view instanceof CssRuleView;
 
   this.highlighterUtils = this.view.inspector.toolbox.highlighterUtils;
@@ -240,7 +240,7 @@ HighlightersOverlay.prototype = {
 function TooltipsOverlay(view) {
   this.view = view;
 
-  let {CssRuleView} = require("devtools/client/styleinspector/rule-view");
+  let {CssRuleView} = require("devtools/client/inspector/rules/rules");
   this.isRuleView = view instanceof CssRuleView;
 
   this._onNewSelection = this._onNewSelection.bind(this);

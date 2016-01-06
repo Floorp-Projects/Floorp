@@ -412,6 +412,7 @@ ClientTiledPaintedLayer::RenderLayer()
 
   IntSize layerSize = mVisibleRegion.ToUnknownRegion().GetBounds().Size();
   if (mContentClient && !mContentClient->SupportsLayerSize(layerSize, ClientManager())) {
+    ClientManager()->AsShadowForwarder()->HoldUntilTransaction(mContentClient);
     mContentClient = nullptr;
     mValidRegion.SetEmpty();
   }

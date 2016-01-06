@@ -107,4 +107,4 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-repeat-auto-fill-fit-003.html grid-repeat-auto-fill-fit-003-ref.html
 == grid-repeat-auto-fill-fit-004.html grid-repeat-auto-fill-fit-004-ref.html
 == grid-repeat-auto-fill-fit-005.html grid-repeat-auto-fill-fit-005-ref.html
-# == grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html (bug 1234644)
+== grid-repeat-auto-fill-fit-006.html grid-repeat-auto-fill-fit-006-ref.html

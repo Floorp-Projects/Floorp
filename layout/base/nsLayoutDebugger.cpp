@@ -35,15 +35,6 @@ public:
 
   NS_IMETHOD GetShowEventTargetFrameBorder(bool* aResult) override;
 
-  NS_IMETHOD GetContentSize(nsIDocument* aDocument,
-                            int32_t* aSizeInBytesResult) override;
-
-  NS_IMETHOD GetFrameSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult) override;
-
-  NS_IMETHOD GetStyleSize(nsIPresShell* aPresentation,
-                          int32_t* aSizeInBytesResult) override;
-
 protected:
   virtual ~nsLayoutDebugger();
 };
@@ -97,29 +88,6 @@ nsLayoutDebugger::GetShowEventTargetFrameBorder(bool* aResult)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsLayoutDebugger::GetContentSize(nsIDocument* aDocument,
-                                 int32_t* aSizeInBytesResult)
-{
-  *aSizeInBytesResult = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsLayoutDebugger::GetFrameSize(nsIPresShell* aPresentation,
-                               int32_t* aSizeInBytesResult)
-{
-  *aSizeInBytesResult = 0;
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsLayoutDebugger::GetStyleSize(nsIPresShell* aPresentation,
-                               int32_t* aSizeInBytesResult)
-{
-  *aSizeInBytesResult = 0;
-  return NS_ERROR_FAILURE;
-}
 #endif
 
 std::ostream& operator<<(std::ostream& os, const nsPrintfCString& rhs) {

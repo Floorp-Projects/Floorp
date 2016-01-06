@@ -249,27 +249,6 @@ SharedSurface::UnlockProd()
     mIsLocked = false;
 }
 
-void
-SharedSurface::Fence_ContentThread()
-{
-    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-    Fence_ContentThread_Impl();
-}
-
-bool
-SharedSurface::WaitSync_ContentThread()
-{
-    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-    return WaitSync_ContentThread_Impl();
-}
-
-bool
-SharedSurface::PollSync_ContentThread()
-{
-    MOZ_ASSERT(NS_GetCurrentThread() == mOwningThread);
-    return PollSync_ContentThread_Impl();
-}
-
 ////////////////////////////////////////////////////////////////////////
 // SurfaceFactory
 
