@@ -1,62 +1,68 @@
 /* Any copyright is dedicated to the Public Domain.
 http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test() {
-  let instance;
-  let mgr = ResponsiveUI.ResponsiveUIManager;
+"use strict";
 
-  waitForExplicitFinish();
+add_task(function*() {
+  let tab = yield addTab("about:logo");
+  let {rdm} = yield openRDM(tab);
+  ok(rdm, "An instance of the RDM should be attached to the tab.");
+  rdm.setSize(110, 500);
 
-  gBrowser.selectedTab = gBrowser.addTab("about:logo");
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    startTest();
-  }, true);
+  info("Checking initial width/height properties.");
+  yield doInitialChecks();
 
-  function startTest() {
-    mgr.once("on", function() {executeSoon(onUIOpen)});
-    document.getElementById("Tools:ResponsiveUI").doCommand();
-  }
+  info("Changing the RDM size");
+  rdm.setSize(90, 500);
 
-  function onUIOpen() {
-    instance = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
-    instance.stack.setAttribute("notransition", "true");
-    ok(instance, "instance of the module is attached to the tab.");
+  info("Checking for screen props");
+  yield checkScreenProps();
 
-    instance.setSize(110, 500);
-    ok(content.innerWidth, 110, "initial width is valid");
-
-    let mql = content.matchMedia("(max-device-width:100px)")
-
-    ok(!mql.matches, "media query doesn't match.");
-
-    mql.addListener(onMediaChange);
-    instance.setSize(90, 500);
-  }
-
-  function onMediaChange(mql) {
-    mql.removeListener(onMediaChange);
-    ok(mql.matches, "media query matches.");
-    ok(window.screen.width != content.screen.width, "screen.width is not the size of the screen.");
-    is(content.screen.width, 90, "screen.width is the width of the page.");
-    is(content.screen.height, 500, "screen.height is the height of the page.");
-
-
+  info("Setting docShell.deviceSizeIsPageSize to false");
+  yield ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
     let docShell = content.QueryInterface(Ci.nsIInterfaceRequestor)
                           .getInterface(Ci.nsIWebNavigation)
                           .QueryInterface(Ci.nsIDocShell);
-
-    mql.addListener(onMediaChange2);
     docShell.deviceSizeIsPageSize = false;
-  }
+  });
 
-  function onMediaChange2(mql) {
-    mql.removeListener(onMediaChange);
-    ok(!mql.matches, "media query has been re-evaluated.");
-    ok(window.screen.width == content.screen.width, "screen.width is not the size of the screen.");
-    instance.stack.removeAttribute("notransition");
-    document.getElementById("Tools:ResponsiveUI").doCommand();
-    gBrowser.removeCurrentTab();
-    finish();
-  }
+  info("Checking for screen props once again.");
+  yield checkScreenProps2();
+
+  yield closeRDM(rdm);
+});
+
+function* doInitialChecks() {
+  let {innerWidth, matchesMedia} = yield grabContentInfo();
+  is(innerWidth, 110, "initial width should be 110px");
+  ok(!matchesMedia, "media query shouldn't match.");
+}
+
+function* checkScreenProps() {
+  let {matchesMedia, screen} = yield grabContentInfo();
+  ok(matchesMedia, "media query should match");
+  isnot(window.screen.width, screen.width,
+        "screen.width should not be the size of the screen.");
+  is(screen.width, 90, "screen.width should be the page width");
+  is(screen.height, 500, "screen.height should be the page height");
+}
+
+function* checkScreenProps2() {
+  let {matchesMedia, screen} = yield grabContentInfo();
+  ok(!matchesMedia, "media query should be re-evaluated.");
+  is(window.screen.width, screen.width,
+     "screen.width should be the size of the screen.");
+}
+
+function grabContentInfo() {
+  return ContentTask.spawn(gBrowser.selectedBrowser, {}, function*() {
+    return {
+      screen: {
+        width: content.screen.width,
+        height: content.screen.height
+      },
+      innerWidth: content.innerWidth,
+      matchesMedia: content.matchMedia("(max-device-width:100px)").matches
+    };
+  });
 }
