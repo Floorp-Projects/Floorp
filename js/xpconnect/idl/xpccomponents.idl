@@ -123,7 +123,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(3ce3a6f8-2b59-439c-a57e-74e7b122fb3c)]
+[scriptable, uuid(86003fe3-ee9a-4620-91dc-eef8b1e58815)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -443,6 +443,15 @@ interface nsIXPCComponents_Utils : nsISupports
      * with this function, getCrossProcessWrapperTag.
      */
     ACString getCrossProcessWrapperTag(in jsval obj);
+
+    /**
+     * If CPOWs are disabled for browser code via the
+     * dom.ipc.cpows.forbid-unsafe-from-browser preferences, then only
+     * add-ons can use CPOWs. This function allows a non-addon scope
+     * to opt into CPOWs. It's necessary for the implementation of
+     * RemoteAddonsParent.jsm.
+     */
+    void permitCPOWsInScope(in jsval obj);
 
     /*
      * To be called from JS only. This is for Gecko internal use only, and may
