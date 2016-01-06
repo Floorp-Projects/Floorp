@@ -80,6 +80,36 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothPinCode>
 };
 
 template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothRemoteName>
+{
+  typedef mozilla::dom::bluetooth::BluetoothRemoteName paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mLength);
+    for (size_t i = 0; i < aParam.mLength; ++i) {
+      WriteParam(aMsg, aParam.mName[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mLength)) {
+      return false;
+    }
+    if (aResult->mLength > MOZ_ARRAY_LENGTH(aResult->mName)) {
+      return false;
+    }
+    for (uint8_t i = 0; i < aResult->mLength; ++i) {
+      if (!ReadParam(aMsg, aIter, aResult->mName + i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothSspVariant>
   : public ContiguousEnumSerializer<
              mozilla::dom::bluetooth::BluetoothSspVariant,

@@ -171,14 +171,18 @@ void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
 }))
 #endif
 
-/* Define ReadSysFile() only on GONK to avoid unnecessary lubxul bloat.
-Also define it in debug builds, so that unit tests for it can be written
-and run in non-GONK builds. */
+/* Define ReadSysFile() and WriteSysFile() only on GONK to avoid unnecessary
+ * libxul bloat. Also define it in debug builds, so that unit tests for it can
+ * be written and run in non-GONK builds. */
 #if (defined(MOZ_WIDGET_GONK) || defined(DEBUG)) && defined(XP_UNIX)
 
 #ifndef ReadSysFile_PRESENT
 #define ReadSysFile_PRESENT
 #endif /* ReadSysFile_PRESENT */
+
+#ifndef WriteSysFile_PRESENT
+#define WriteSysFile_PRESENT
+#endif /* WriteSysFile_PRESENT */
 
 /**
  * Read the contents of a file.
@@ -206,6 +210,8 @@ bool ReadSysFile(const char* aFilename, int* aVal);
  * @return true on success
  */
 bool ReadSysFile(const char* aFilename, bool* aVal);
+
+bool WriteSysFile(const char* aFilename, const char* aBuf);
 
 #endif /* (MOZ_WIDGET_GONK || DEBUG) && XP_UNIX */
 

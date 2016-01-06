@@ -4,6 +4,8 @@
 
 %include ../shared/devedition.inc.css
 
+:root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),
+:root[devtoolstheme="dark"] #sidebar-header > .close-icon:not(:hover),
 .tab-close-button[visuallyselected]:not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
@@ -76,8 +78,9 @@
   border-top-width: 0 !important;
 }
 
-/* Prevent devedition foreground color from seeping into the sidebar-box (since
- * its background colors aren't affected by the devedition theme) */
-#sidebar-box {
-  color: initial;
+/* Fix the bad-looking text-shadow in the sidebar header: */
+.sidebar-header,
+#sidebar-header {
+  text-shadow: none;
 }
+

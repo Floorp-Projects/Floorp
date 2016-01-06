@@ -556,7 +556,8 @@ var WindowListener = {
               buttonNode.accessKey = paused ? this._getString("infobar_button_resume_accesskey") :
                 this._getString("infobar_button_pause_accesskey");
               return true;
-            }
+            },
+            type: "pause"
           },
           {
             label: this._getString("infobar_button_stop_label"),
@@ -565,7 +566,8 @@ var WindowListener = {
             callback: () => {
               this._hideBrowserSharingInfoBar();
               LoopUI.MozLoopService.hangupAllChatWindows();
-            }
+            },
+            type: "stop"
           }]
         );
 

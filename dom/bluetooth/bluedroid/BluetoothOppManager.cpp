@@ -1420,13 +1420,10 @@ BluetoothOppManager::FileTransferComplete()
     return;
   }
 
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-complete");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
   AppendNamedValue(parameters, "success", mSuccessFlag);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "fileName", mFileName);
@@ -1441,13 +1438,10 @@ BluetoothOppManager::FileTransferComplete()
 void
 BluetoothOppManager::StartFileTransfer()
 {
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-start");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "fileName", mFileName);
   AppendNamedValue(parameters, "fileLength", mFileLength);
@@ -1461,13 +1455,10 @@ BluetoothOppManager::StartFileTransfer()
 void
 BluetoothOppManager::UpdateProgress()
 {
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-update-progress");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "processedLength", mSentFileLength);
   AppendNamedValue(parameters, "fileLength", mFileLength);
@@ -1478,13 +1469,10 @@ BluetoothOppManager::UpdateProgress()
 void
 BluetoothOppManager::ReceivingFileConfirmation()
 {
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-receiving-file-confirmation");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
   AppendNamedValue(parameters, "fileName", mFileName);
   AppendNamedValue(parameters, "fileLength", mFileLength);
   AppendNamedValue(parameters, "contentType", mContentType);

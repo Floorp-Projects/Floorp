@@ -313,7 +313,7 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
-                           const nsAString& aDeviceAddress,
+                           const BluetoothAddress& aDeviceAddress,
                            bool aStatus);
 
 //
