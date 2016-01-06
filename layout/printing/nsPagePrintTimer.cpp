@@ -4,6 +4,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsPagePrintTimer.h"
+
+#include "mozilla/unused.h"
 #include "nsIContentViewer.h"
 #include "nsIServiceManager.h"
 #include "nsPrintEngine.h"
@@ -118,25 +120,38 @@ nsPagePrintTimer::Notify(nsITimer *timer)
     return NS_OK;
   }
 
-  // There are three things that call Notify with different values for timer:
+  // There are four things that call Notify with different values for timer:
   // 1) the delay between pages (timer == mTimer)
   // 2) canvasPrintState done (timer == null)
   // 3) the watch dog timer (timer == mWatchDogTimer)
-  if (timer && timer == mWatchDogTimer) {
+  // 4) the waiting for remote print "timer" (timer == mWaitingForRemotePrint)
+  if (!timer) {
+    // Reset the counter since a mozPrintCallback has finished.
+    mWatchDogCount = 0;
+  } else if (timer == mTimer) {
+    // Reset the watchdog timer before the start of every page.
+    mWatchDogCount = 0;
+    mTimer = nullptr;
+  } else if (timer == mWaitingForRemotePrint) {
+    mWaitingForRemotePrint = nullptr;
+
+    // If we are still waiting for the page delay timer, don't let the
+    // notification from the remote print job trigger the next page.
+    if (mTimer) {
+      return NS_OK;
+    }
+  } else if (timer == mWatchDogTimer) {
     mWatchDogCount++;
     if (mWatchDogCount > WATCH_DOG_MAX_COUNT) {
       Fail();
       return NS_OK;
     }
-  } else if(!timer) {
-    // Reset the counter since a mozPrintCallback has finished.
-    mWatchDogCount = 0;
   }
 
   if (mDocViewerPrint) {
     bool donePrePrint = mPrintEngine->PrePrintPage();
 
-    if (donePrePrint) {
+    if (donePrePrint && !mWaitingForRemotePrint) {
       StopWatchDogTimer();
       NS_DispatchToMainThread(this);
     } else {
@@ -149,11 +164,33 @@ nsPagePrintTimer::Notify(nsITimer *timer)
   return NS_OK;
 }
 
+
+void
+nsPagePrintTimer::WaitForRemotePrint()
+{
+  nsresult result;
+  mWaitingForRemotePrint = do_CreateInstance("@mozilla.org/timer;1", &result);
+  if (NS_FAILED(result)) {
+    NS_WARNING("Failed to wait for remote print, we might time-out.");
+    mWaitingForRemotePrint = nullptr;
+  }
+}
+
+void
+nsPagePrintTimer::RemotePrintFinished()
+{
+  if (!mWaitingForRemotePrint) {
+    return;
+  }
+
+  mozilla::Unused <<
+    mWaitingForRemotePrint->InitWithCallback(this, 0, nsITimer::TYPE_ONE_SHOT);
+}
+
 nsresult 
 nsPagePrintTimer::Start(nsPrintObject* aPO)
 {
   mPrintObj = aPO;
-  mWatchDogCount = 0;
   mDone = false;
   return StartTimer(false);
 }

@@ -36,7 +36,7 @@ interface HTMLDocument : Document {
   [Throws]
   Document open(optional DOMString type = "text/html", optional DOMString replace = "");
   [Throws]
-  WindowProxy open(DOMString url, DOMString name, DOMString features, optional boolean replace = false);
+  WindowProxy? open(DOMString url, DOMString name, DOMString features, optional boolean replace = false);
   [Throws]
   void close();
   [Throws]

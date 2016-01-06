@@ -245,7 +245,12 @@ AudioBlockPanStereoToStereo(const float aInputL[WEBAUDIO_BLOCK_SIZE],
                             float aOutputR[WEBAUDIO_BLOCK_SIZE])
 {
 #ifdef BUILD_ARM_NEON
-  // No NEON version yet: bug 1105513
+   if (mozilla::supports_neon()) {
+     AudioBlockPanStereoToStereo_NEON(aInputL, aInputR,
+                                      aGainL, aGainR, aIsOnTheLeft,
+                                      aOutputL, aOutputR);
+    return;
+  }
 #endif
 
   uint32_t i;

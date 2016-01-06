@@ -43,16 +43,18 @@ if (typeof parseModule === "function")
 if (typeof Reflect.parse === "function")
 {
   var twoStatementAST =
-    Reflect.parse(`export { x } /* ASI should trigger here */
+    Reflect.parse(`let x = 0;
+                  export { x } /* ASI should trigger here */
                   fro\\u006D`,
                   { target: "module" });
 
   var statements = twoStatementAST.body;
-  assertEq(statements.length, 2,
+  assertEq(statements.length, 3,
            "should have two items in the module, not one ExportDeclaration");
-  assertEq(statements[0].type, "ExportDeclaration");
-  assertEq(statements[1].type, "ExpressionStatement");
-  assertEq(statements[1].expression.name, "from");
+  assertEq(statements[0].type, "VariableDeclaration");
+  assertEq(statements[1].type, "ExportDeclaration");
+  assertEq(statements[2].type, "ExpressionStatement");
+  assertEq(statements[2].expression.name, "from");
 
   var oneStatementAST =
     Reflect.parse(`export { x } /* no ASI here */

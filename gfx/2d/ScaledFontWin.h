@@ -7,7 +7,6 @@
 #define MOZILLA_GFX_SCALEDFONTWIN_H_
 
 #include "ScaledFontBase.h"
-#include <windows.h>
 
 namespace mozilla {
 namespace gfx {
@@ -19,9 +18,18 @@ public:
   ScaledFontWin(LOGFONT* aFont, Float aSize);
 
   virtual FontType GetType() const { return FontType::GDI; }
+
+  bool GetFontFileData(FontFileDataOutput aDataCallback, void *aBaton) override;
+
 #ifdef USE_SKIA
   virtual SkTypeface* GetSkTypeface();
 #endif
+
+protected:
+#ifdef USE_CAIRO_SCALED_FONT
+  cairo_font_face_t* GetCairoFontFace() override;
+#endif
+
 private:
 #ifdef USE_SKIA
   friend class DrawTargetSkia;

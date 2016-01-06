@@ -79,7 +79,7 @@ PathBuilderRecording::Finish()
 PathRecording::~PathRecording()
 {
   for (size_t i = 0; i < mStoredRecorders.size(); i++) {
-    mStoredRecorders[i]->RemoveStoredPath(this);
+    mStoredRecorders[i]->RemoveStoredObject(this);
     mStoredRecorders[i]->RecordEvent(RecordedPathDestruction(this));
   }
 }

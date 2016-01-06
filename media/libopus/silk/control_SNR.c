@@ -70,11 +70,6 @@ opus_int silk_control_SNR(
                 break;
             }
         }
-
-        /* Reduce coding quality whenever LBRR is enabled, to free up some bits */
-        if( psEncC->LBRR_enabled ) {
-            psEncC->SNR_dB_Q7 = silk_SMLABB( psEncC->SNR_dB_Q7, 12 - psEncC->LBRR_GainIncreases, SILK_FIX_CONST( -0.25, 7 ) );
-        }
     }
 
     return ret;

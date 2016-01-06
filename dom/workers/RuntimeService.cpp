@@ -900,6 +900,9 @@ public:
     js::SetPreserveWrapperCallback(rt, PreserveWrapper);
     JS_InitDestroyPrincipalsCallback(rt, DestroyWorkerPrincipals);
     JS_SetWrapObjectCallbacks(rt, &WrapObjectCallbacks);
+    if (aWorkerPrivate->IsDedicatedWorker()) {
+      JS_SetFutexCanWait(rt);
+    }
   }
 
   ~WorkerJSRuntime()

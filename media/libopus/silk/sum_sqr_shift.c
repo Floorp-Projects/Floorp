@@ -53,6 +53,7 @@ void silk_sum_sqr_shift(
             /* Scale down */
             nrg = (opus_int32)silk_RSHIFT_uint( (opus_uint32)nrg, 2 );
             shft = 2;
+            i+=2;
             break;
         }
     }

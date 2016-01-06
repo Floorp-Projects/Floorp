@@ -55,28 +55,29 @@ public:
   BlobParent* GetOrCreateActorForBlob(Blob* aBlob);
   BlobParent* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
 
-  virtual ContentParentId ChildID() = 0;
-  virtual bool IsForApp() = 0;
-  virtual bool IsForBrowser() = 0;
+  virtual ContentParentId ChildID() const = 0;
+  virtual bool IsForApp() const = 0;
+  virtual bool IsForBrowser() const = 0;
 
-  MOZ_WARN_UNUSED_RESULT
-  virtual PBlobParent* SendPBlobConstructor(
-    PBlobParent* aActor,
-    const BlobConstructorParams& aParams) = 0;
+  MOZ_WARN_UNUSED_RESULT virtual PBlobParent*
+  SendPBlobConstructor(PBlobParent* aActor,
+                       const BlobConstructorParams& aParams) = 0;
 
-  MOZ_WARN_UNUSED_RESULT
-  virtual PBrowserParent* SendPBrowserConstructor(
-    PBrowserParent* actor,
-    const TabId& aTabId,
-    const IPCTabContext& context,
-    const uint32_t& chromeFlags,
-    const ContentParentId& aCpId,
-    const bool& aIsForApp,
-    const bool& aIsForBrowser) = 0;
+  MOZ_WARN_UNUSED_RESULT virtual PBrowserParent*
+  SendPBrowserConstructor(PBrowserParent* actor,
+                          const TabId& aTabId,
+                          const IPCTabContext& context,
+                          const uint32_t& chromeFlags,
+                          const ContentParentId& aCpId,
+                          const bool& aIsForApp,
+                          const bool& aIsForBrowser) = 0;
 
-  virtual bool IsContentParent() { return false; }
+  virtual bool IsContentParent() const { return false; }
+
   ContentParent* AsContentParent();
-  virtual bool IsContentBridgeParent() { return false; }
+
+  virtual bool IsContentBridgeParent() const { return false; }
+
   ContentBridgeParent* AsContentBridgeParent();
 
 protected: // methods

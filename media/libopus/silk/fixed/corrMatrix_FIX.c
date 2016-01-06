@@ -42,7 +42,8 @@ void silk_corrVector_FIX(
     const opus_int                  L,                                      /* I    Length of vectors                                                           */
     const opus_int                  order,                                  /* I    Max lag for correlation                                                     */
     opus_int32                      *Xt,                                    /* O    Pointer to X'*t correlation vector [order]                                  */
-    const opus_int                  rshifts                                 /* I    Right shifts of correlations                                                */
+    const opus_int                  rshifts,                                /* I    Right shifts of correlations                                                */
+    int                             arch                                    /* I    Run-time architecture                                                       */
 )
 {
     opus_int         lag, i;
@@ -65,7 +66,7 @@ void silk_corrVector_FIX(
     } else {
         silk_assert( rshifts == 0 );
         for( lag = 0; lag < order; lag++ ) {
-            Xt[ lag ] = silk_inner_prod_aligned( ptr1, ptr2, L ); /* X[:,lag]'*t */
+            Xt[ lag ] = silk_inner_prod_aligned( ptr1, ptr2, L, arch ); /* X[:,lag]'*t */
             ptr1--; /* Go to next column of X */
         }
     }
@@ -78,7 +79,8 @@ void silk_corrMatrix_FIX(
     const opus_int                  order,                                  /* I    Max lag for correlation                                                     */
     const opus_int                  head_room,                              /* I    Desired headroom                                                            */
     opus_int32                      *XX,                                    /* O    Pointer to X'*X correlation matrix [ order x order ]                        */
-    opus_int                        *rshifts                                /* I/O  Right shifts of correlations                                                */
+    opus_int                        *rshifts,                               /* I/O  Right shifts of correlations                                                */
+    int                             arch                                    /* I    Run-time architecture                                                       */
 )
 {
     opus_int         i, j, lag, rshifts_local, head_room_rshifts;
@@ -138,7 +140,7 @@ void silk_corrMatrix_FIX(
     } else {
         for( lag = 1; lag < order; lag++ ) {
             /* Inner product of column 0 and column lag: X[:,0]'*X[:,lag] */
-            energy = silk_inner_prod_aligned( ptr1, ptr2, L );
+            energy = silk_inner_prod_aligned( ptr1, ptr2, L, arch );
             matrix_ptr( XX, lag, 0, order ) = energy;
             matrix_ptr( XX, 0, lag, order ) = energy;
             /* Calculate remaining off diagonal: X[:,j]'*X[:,j + lag] */
