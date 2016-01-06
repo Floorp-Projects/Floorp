@@ -47,7 +47,11 @@ enum class PixelCastJustification : uint8_t {
   LayoutDeviceIsScreenForTabDims,
   // A combination of LayoutDeviceIsScreenForBounds and
   // ScreenIsParentLayerForRoot, which is how we're using it.
-  LayoutDeviceIsParentLayerForRCDRSF
+  LayoutDeviceIsParentLayerForRCDRSF,
+  // Used to treat the product of AsyncTransformComponentMatrix objects
+  // as an AsyncTransformMatrix. See the definitions of these matrices in
+  // LayersTypes.h for details.
+  MultipleAsyncTransforms
 };
 
 template <class TargetUnits, class SourceUnits>
