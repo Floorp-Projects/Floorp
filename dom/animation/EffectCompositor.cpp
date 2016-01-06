@@ -225,6 +225,50 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 }
 
 /* static */ void
+EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
+                                       nsCSSPseudoElements::Type aPseudoType,
+                                       CascadeLevel aCascadeLevel,
+                                       bool& aStyleChanging)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effects) {
+    return;
+  }
+
+  // The caller is responsible for calling MaybeUpdateCascadeResults first.
+  MOZ_ASSERT(!effects->CascadeNeedsUpdate(),
+             "Animation cascade out of date when composing animation rule");
+
+  // Get a list of effects for the current level sorted by composite order.
+  nsTArray<KeyframeEffectReadOnly*> sortedEffectList;
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    MOZ_ASSERT(effect->GetAnimation());
+    if (effect->GetAnimation()->CascadeLevel() == aCascadeLevel) {
+      sortedEffectList.AppendElement(effect);
+    }
+  }
+  sortedEffectList.Sort(EffectCompositeOrderComparator());
+
+  RefPtr<AnimValuesStyleRule>& animationRule =
+    effects->AnimationRule(aCascadeLevel);
+  animationRule = nullptr;
+
+  // We'll set aStyleChanging to true below if necessary.
+  aStyleChanging = false;
+
+  // If multiple animations specify behavior for the same property the
+  // animation with the *highest* composite order wins.
+  // As a result, we iterate from last animation to first and, if a
+  // property has already been set, we don't change it.
+  nsCSSPropertySet properties;
+
+  for (KeyframeEffectReadOnly* effect : Reversed(sortedEffectList)) {
+    effect->GetAnimation()->ComposeStyle(animationRule, properties,
+                                         aStyleChanging);
+  }
+}
+
+/* static */ void
 EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
                                           EffectSet& aEffectSet,
                                           nsCSSPropertySet&

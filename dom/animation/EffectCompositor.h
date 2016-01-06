@@ -87,6 +87,13 @@ public:
   static Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
+  // Rebuilds the animation rule corresponding to |aCascadeLevel| on the
+  // EffectSet associated with the specified (pseudo-)element.
+  static void ComposeAnimationRule(dom::Element* aElement,
+                                   nsCSSPseudoElements::Type aPseudoType,
+                                   CascadeLevel aCascadeLevel,
+                                   bool& aStyleChanging);
+
 private:
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade
