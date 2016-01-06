@@ -151,8 +151,6 @@ const Tree = module.exports = createClass({
 
     // Optional props
 
-    // A predicate function to filter out unwanted items from the tree.
-    filter: PropTypes.func,
     // The depth to which we should automatically expand new items.
     autoExpandDepth: PropTypes.number,
     // A predicate that returns true if the last DFS traversal that was cached
@@ -166,7 +164,6 @@ const Tree = module.exports = createClass({
 
   getDefaultProps() {
     return {
-      filter: item => true,
       expanded: new Set(),
       seen: new Set(),
       focused: undefined,
@@ -301,10 +298,6 @@ const Tree = module.exports = createClass({
    * Perform a pre-order depth-first search from item.
    */
   _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
-    if (!this.props.filter(item)) {
-      return traversal;
-    }
-
     traversal.push({ item, depth: _depth });
 
     if (!this.state.expanded.has(item)) {
