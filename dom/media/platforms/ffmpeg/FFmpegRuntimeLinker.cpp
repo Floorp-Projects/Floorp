@@ -35,28 +35,17 @@ static const char* sLibs[] = {
   "libavcodec.55.dylib",
   "libavcodec.54.dylib",
   "libavcodec.53.dylib",
-#if defined(MOZ_FFVPX)
-  "libmozavcodec.dylib"
-#endif
-#elif defined(XP_WIN)
-#if defined(MOZ_FFVPX)
-  "mozavcodec.dll"
-#endif
 #else
   "libavcodec-ffmpeg.so.56",
   "libavcodec.so.56",
   "libavcodec.so.55",
   "libavcodec.so.54",
   "libavcodec.so.53",
-#if defined(MOZ_FFVPX)
-  "libmozavcodec.so"
-#endif
 #endif
 };
 
 PRLibrary* FFmpegRuntimeLinker::sLinkedLib = nullptr;
 PRLibrary* FFmpegRuntimeLinker::sLinkedUtilLib = nullptr;
-const char* FFmpegRuntimeLinker::sLib = nullptr;
 static unsigned (*avcodec_version)() = nullptr;
 
 #ifdef __GNUC__
@@ -69,6 +58,15 @@ static unsigned (*avcodec_version)() = nullptr;
 #undef LIBAVCODEC_ALLVERSION
 #undef AV_FUNC
 
+static PRLibrary*
+MozAVLink(const char* aName)
+{
+  PRLibSpec lspec;
+  lspec.type = PR_LibSpec_Pathname;
+  lspec.value.pathname = aName;
+  return PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
+}
+
 /* static */ bool
 FFmpegRuntimeLinker::Link()
 {
@@ -80,24 +78,10 @@ FFmpegRuntimeLinker::Link()
 
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
     const char* lib = sLibs[i];
-    PRLibSpec lspec;
-    lspec.type = PR_LibSpec_Pathname;
-    lspec.value.pathname = lib;
-    sLinkedLib = PR_LoadLibraryWithFlags(lspec, PR_LD_NOW | PR_LD_LOCAL);
-#if defined(XP_WIN) && defined(MOZ_FFVPX)
-    // Unlike Unix, Linux and Mac ; loading libavcodec doesn't automatically
-    // load libavutil even though libavcodec depends on it.
-    // So manually load it.
-    PRLibSpec lspec2;
-    lspec2.type = PR_LibSpec_Pathname;
-    lspec2.value.pathname = "mozavutil.dll";
-    sLinkedUtilLib = PR_LoadLibraryWithFlags(lspec2, PR_LD_NOW | PR_LD_LOCAL);
-#else
-    sLinkedUtilLib = sLinkedLib;
-#endif
-    if (sLinkedLib && sLinkedUtilLib) {
+    sLinkedLib = MozAVLink(lib);
+    if (sLinkedLib) {
+      sLinkedUtilLib = sLinkedLib;
       if (Bind(lib)) {
-        sLib = lib;
         sLinkStatus = LinkStatus_SUCCEEDED;
         return true;
       }
@@ -111,6 +95,25 @@ FFmpegRuntimeLinker::Link()
     FFMPEG_LOG("%s %s", i ? "," : "", sLibs[i]);
   }
   FFMPEG_LOG(" ]\n");
+
+#ifdef MOZ_FFVPX
+  char* libname = NULL;
+  /* Get the platform-dependent library name of the module */
+  libname = PR_GetLibraryName(nullptr, "mozavutil");
+  MOZ_ASSERT(libname);
+  sLinkedUtilLib = MozAVLink(libname);
+  PR_FreeLibraryName(libname);
+  libname = PR_GetLibraryName(nullptr, "mozavcodec");
+  MOZ_ASSERT(libname);
+  sLinkedLib = MozAVLink(libname);
+  PR_FreeLibraryName(libname);
+  if (sLinkedLib && sLinkedUtilLib) {
+    if (Bind("mozavcodec")) {
+      sLinkStatus = LinkStatus_SUCCEEDED;
+      return true;
+    }
+  }
+#endif
 
   Unlink();
 
@@ -178,7 +181,6 @@ FFmpegRuntimeLinker::Unlink()
   if (sLinkedLib) {
     PR_UnloadLibrary(sLinkedLib);
     sLinkedLib = nullptr;
-    sLib = nullptr;
     sLinkStatus = LinkStatus_INIT;
     avcodec_version = nullptr;
   }
