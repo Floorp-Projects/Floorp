@@ -245,7 +245,7 @@ interface MozInputContextFocusEventDetail {
    */
 
   /**
-   * Current value of the input/select element.
+   * Current value of the input.
    */
   readonly attribute DOMString? value;
   /**
@@ -270,7 +270,7 @@ dictionary MozInputContextChoicesInfo {
 };
 
 /**
- * Content the header (<optgroup>) or an option (<option>).
+ * Content of the option header (<optgroup>) or an option (<option>).
  */
 dictionary MozInputMethodChoiceDict {
   boolean group;
@@ -358,7 +358,15 @@ interface MozInputContext: EventTarget {
   readonly attribute long selectionEnd;
 
   /**
+   * The text in the current input.
+   */
+  readonly attribute DOMString? text;
+
+  /**
    * The text before and after the begining of the selected text.
+   *
+   * You should use the text property instead because these properties are
+   * truncated at 100 characters.
    */
   readonly attribute DOMString? textBeforeCursor;
   readonly attribute DOMString? textAfterCursor;
@@ -380,9 +388,7 @@ interface MozInputContext: EventTarget {
   /* User moves the cursor, or changes the selection with other means. If the text around
    * cursor has changed, but the cursor has not been moved, the IME won't get notification.
    *
-   * A dict is provided in the detail property of the event containing the new values, and
-   * an "ownAction" property to denote the event is the result of our own mutation to
-   * the input field.
+   * evt.detail is defined by MozInputContextSelectionChangeEventDetail.
    */
   attribute EventHandler onselectionchange;
 
@@ -411,9 +417,7 @@ interface MozInputContext: EventTarget {
    * editing or cursor movement. If the cursor has been moved, but the text around has not
    * changed, the IME won't get notification.
    *
-   * A dict is provided in the detail property of the event containing the new values, and
-   * an "ownAction" property to denote the event is the result of our own mutation to
-   * the input field.
+   * evt.detail is defined by MozInputContextSurroundingTextChangeEventDetail.
    */
   attribute EventHandler onsurroundingtextchange;
 
@@ -521,6 +525,62 @@ interface MozInputContext: EventTarget {
    */
   Promise<boolean> endComposition(optional DOMString text,
                                   optional MozInputMethodKeyboardEventDict dict);
+};
+
+/**
+ * Detail of the selectionchange event.
+ */
+[JSImplementation="@mozilla.org/b2g-imm-selectionchange;1",
+ Pref="dom.mozInputMethod.enabled",
+ CheckAnyPermissions="input"]
+interface MozInputContextSelectionChangeEventDetail {
+  /**
+   * Indicate whether or not the change is due to our own action from, 
+   * for example, sendKey() call.
+   *
+   * Note: this property is untrustworthy because it would still be true even
+   * if script in the page changed the text synchronously upon responding to
+   * events trigger by the call.
+   */
+  readonly attribute boolean ownAction;
+
+  /**
+   * The start and stop position of the current selection.
+   */
+  readonly attribute long selectionStart;
+  readonly attribute long selectionEnd;
+};
+
+/**
+ * Detail of the surroundingtextchange event.
+ */
+[JSImplementation="@mozilla.org/b2g-imm-surroundingtextchange;1",
+ Pref="dom.mozInputMethod.enabled",
+ CheckAnyPermissions="input"]
+interface MozInputContextSurroundingTextChangeEventDetail {
+  /**
+   * Indicate whether or not the change is due to our own action from, 
+   * for example, sendKey() call.
+   *
+   * Note: this property is untrustworthy because it would still be true even
+   * if script in the page changed the text synchronously upon responding to
+   * events trigger by the call.
+   */
+  readonly attribute boolean ownAction;
+
+  /**
+   * The text in the current input.
+   */
+  readonly attribute DOMString? text;
+
+  /**
+   * The text before and after the begining of the selected text.
+   *
+   * You should use the text property instead because these properties are
+   * truncated at 100 characters.
+   */
+  readonly attribute DOMString? textBeforeCursor;
+  readonly attribute DOMString? textAfterCursor;
 };
 
 enum CompositionClauseSelectionType {

@@ -291,7 +291,7 @@ this.MigratorPrototype = {
           doMigrate();
         };
         BookmarkHTMLUtils.importFromURL(
-          "resource:///defaults/profile/bookmarks.html", true).then(
+          "chrome://browser/locale/bookmarks.html", true).then(
           onImportComplete, onImportComplete);
         return;
       }

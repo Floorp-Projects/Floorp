@@ -75,6 +75,8 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 #include "nsISelectionController.h"
 
 // Misc
+#include "mozilla/gfx/DrawEventRecorder.h"
+#include "mozilla/layout/RemotePrintJobChild.h"
 #include "nsISupportsUtils.h"
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
@@ -90,6 +92,7 @@ static const char kPrintingPromptService[] = "@mozilla.org/embedcomp/printingpro
 
 #include "nsWidgetsCID.h"
 #include "nsIDeviceContextSpec.h"
+#include "nsDeviceContextSpecProxy.h"
 #include "nsViewManager.h"
 #include "nsView.h"
 #include "nsRenderingContext.h"
@@ -568,9 +571,13 @@ nsPrintEngine::DoCommonPrint(bool                    aIsPrintPreview,
   mPrt->mPrintSettings->SetPrintOptions(nsIPrintSettings::kEnableSelectionRB,
                                         isSelection || mPrt->mIsIFrameSelected);
 
-  nsCOMPtr<nsIDeviceContextSpec> devspec
-    (do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDeviceContextSpec> devspec;
+  if (XRE_IsContentProcess() && Preferences::GetBool("print.print_via_parent")) {
+    devspec = new nsDeviceContextSpecProxy();
+  } else {
+    devspec = do_CreateInstance("@mozilla.org/gfx/devicecontextspec;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   nsScriptSuppressor scriptSuppressor(this);
   if (!aIsPrintPreview) {
@@ -1678,14 +1685,15 @@ nsPrintEngine::SetupToPrintContent()
     mPrt->OnStartPrinting();    
   }
 
-  char16_t* fileName = nullptr;
+  nsAutoString fileNameStr;
   // check to see if we are printing to a file
   bool isPrintToFile = false;
   mPrt->mPrintSettings->GetPrintToFile(&isPrintToFile);
   if (isPrintToFile) {
-  // On some platforms The BeginDocument needs to know the name of the file
-  // and it uses the PrintService to get it, so we need to set it into the PrintService here
+    // On some platforms The BeginDocument needs to know the name of the file.
+    char16_t* fileName = nullptr;
     mPrt->mPrintSettings->GetToFileName(&fileName);
+    fileNameStr = fileName;
   }
 
   nsAutoString docTitleStr;
@@ -1711,7 +1719,8 @@ nsPrintEngine::SetupToPrintContent()
   //      to the "File Name" dialog, this comes back as an error
   // Don't start printing when regression test are executed  
   if (!mPrt->mDebugFilePtr && mIsDoingPrinting) {
-    rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileName, startPage, endPage);
+    rv = mPrt->mPrintDC->BeginDocument(docTitleStr, fileNameStr, startPage,
+                                       endPage);
   } 
 
   if (mIsCreatingPrintPreview) {
@@ -3480,6 +3489,17 @@ nsPrintEngine::StartPagePrintTimer(nsPrintObject* aPO)
     RefPtr<nsPagePrintTimer> timer =
       new nsPagePrintTimer(this, mDocViewerPrint, printPageDelay);
     timer.forget(&mPagePrintTimer);
+
+    nsCOMPtr<nsIPrintSession> printSession;
+    nsresult rv = mPrt->mPrintSettings->GetPrintSession(getter_AddRefs(printSession));
+    if (NS_SUCCEEDED(rv) && printSession) {
+      RefPtr<mozilla::layout::RemotePrintJobChild> remotePrintJob;
+      printSession->GetRemotePrintJob(getter_AddRefs(remotePrintJob));
+      if (NS_SUCCEEDED(rv) && remotePrintJob) {
+        remotePrintJob->SetPagePrintTimer(mPagePrintTimer);
+        remotePrintJob->SetPrintEngine(this);
+      }
+    }
   }
 
   return mPagePrintTimer->Start(aPO);

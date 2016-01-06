@@ -205,7 +205,8 @@ void silk_quant_LTP_gains_FLP(
     const silk_float                W[ MAX_NB_SUBFR * LTP_ORDER * LTP_ORDER ], /* I    Error weights                        */
     const opus_int                  mu_Q10,                             /* I    Mu value (R/D tradeoff)                     */
     const opus_int                  lowComplexity,                      /* I    Flag for low complexity                     */
-    const opus_int                  nb_subfr                            /* I    number of subframes                         */
+    const opus_int                  nb_subfr,                           /* I    number of subframes                         */
+    int                             arch                                /* I    Run-time architecture                       */
 );
 
 /* Residual energy: nrg = wxx - 2 * wXx * c + c' * wXX * c */

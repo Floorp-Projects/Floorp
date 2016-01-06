@@ -230,13 +230,24 @@ class CrashInfo(object):
         err = None
         retcode = None
         if (self.symbols_path and self.stackwalk_binary and
-            os.path.exists(self.stackwalk_binary)):
+            os.path.exists(self.stackwalk_binary) and
+            os.access(self.stackwalk_binary, os.X_OK)):
+
+            command = [
+                self.stackwalk_binary,
+                path,
+                self.symbols_path
+            ]
+            self.logger.info('Copy/paste: ' + ' '.join(command))
             # run minidump_stackwalk
-            p = subprocess.Popen([self.stackwalk_binary, path, self.symbols_path],
-                                 stdout=subprocess.PIPE,
-                                 stderr=subprocess.PIPE)
+            p = subprocess.Popen(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
             (out, err) = p.communicate()
             retcode = p.returncode
+
             if len(out) > 3:
                 # minidump_stackwalk is chatty,
                 # so ignore stderr when it succeeds.
@@ -255,6 +266,7 @@ class CrashInfo(object):
                         break
             else:
                 include_stderr = True
+
         else:
             if not self.symbols_path:
                 errors.append("No symbols path given, can't process dump.")
@@ -262,6 +274,8 @@ class CrashInfo(object):
                 errors.append("MINIDUMP_STACKWALK not set, can't process dump.")
             elif self.stackwalk_binary and not os.path.exists(self.stackwalk_binary):
                 errors.append("MINIDUMP_STACKWALK binary not found: %s" % self.stackwalk_binary)
+            elif not os.access(self.stackwalk_binary, os.X_OK):
+                errors.append('This user cannot execute the MINIDUMP_STACKWALK binary.')
 
         if self.dump_save_path:
             self._save_dump_file(path, extra)

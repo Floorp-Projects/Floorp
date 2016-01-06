@@ -1,0 +1,47 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PPrinting;
+
+namespace mozilla {
+namespace layout {
+
+async protocol PRemotePrintJob
+{
+  manager PPrinting;
+
+both:
+  // Tell either side to abort printing and clean up.
+  async AbortPrint(nsresult aRv);
+
+parent:
+  // Initialize the real print device with the given information.
+  async InitializePrint(nsString aDocumentTitle, nsString aPrintToFile,
+                        int32_t aStartPage, int32_t aEndPage);
+
+  // Translate the stored page recording and play back the events to the real
+  // print device.
+  // This will always deallocate the shared memory.
+  async ProcessPage(Shmem aStoredPage);
+
+  // This informs the real print device that we've finished, so it can trigger
+  // the actual print.
+  async FinalizePrint();
+
+
+child:
+  // Inform the child that the print has been initialized in the parent or has
+  // failed with result aRv.
+  async PrintInitializationResult(nsresult aRv);
+
+  // Inform the child that the latest page has been processed remotely.
+  async PageProcessed();
+
+  async __delete__();
+};
+
+} // namespace layout
+} // namespace mozilla
