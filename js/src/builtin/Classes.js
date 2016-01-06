@@ -9,3 +9,9 @@ var DefaultDerivedClassConstructor =
         }
     };
 MakeDefaultConstructor(DefaultDerivedClassConstructor);
+
+var DefaultBaseClassConstructor =
+    class {
+        constructor() { }
+    };
+MakeDefaultConstructor(DefaultBaseClassConstructor);
