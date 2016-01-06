@@ -754,44 +754,37 @@ JSCompartment::sweepNativeIterators()
 void
 JSCompartment::sweepCrossCompartmentWrappers()
 {
-    /* Remove dead wrappers from the table. */
-    for (WrapperMap::Enum e(crossCompartmentWrappers); !e.empty(); e.popFront()) {
-        CrossCompartmentKey key = e.front().key();
-        bool keyDying;
-        switch (key.kind) {
-          case CrossCompartmentKey::ObjectWrapper:
-          case CrossCompartmentKey::DebuggerObject:
-          case CrossCompartmentKey::DebuggerEnvironment:
-          case CrossCompartmentKey::DebuggerSource:
-              MOZ_ASSERT(IsInsideNursery(key.wrapped) ||
-                         key.wrapped->asTenured().getTraceKind() == JS::TraceKind::Object);
-              keyDying = IsAboutToBeFinalizedUnbarriered(
-                  reinterpret_cast<JSObject**>(&key.wrapped));
-              break;
-          case CrossCompartmentKey::StringWrapper:
-              MOZ_ASSERT(key.wrapped->asTenured().getTraceKind() == JS::TraceKind::String);
-              keyDying = IsAboutToBeFinalizedUnbarriered(
-                  reinterpret_cast<JSString**>(&key.wrapped));
-              break;
-          case CrossCompartmentKey::DebuggerScript:
-              MOZ_ASSERT(key.wrapped->asTenured().getTraceKind() == JS::TraceKind::Script);
-              keyDying = IsAboutToBeFinalizedUnbarriered(
-                  reinterpret_cast<JSScript**>(&key.wrapped));
-              break;
-          default:
-              MOZ_CRASH("Unknown key kind");
-        }
-        bool valDying = IsAboutToBeFinalized(&e.front().value());
-        bool dbgDying = key.debugger && IsAboutToBeFinalizedUnbarriered(&key.debugger);
-        if (keyDying || valDying || dbgDying) {
-            MOZ_ASSERT(key.kind != CrossCompartmentKey::StringWrapper);
-            e.removeFront();
-        } else if (key.wrapped != e.front().key().wrapped ||
-                   key.debugger != e.front().key().debugger)
-        {
-            e.rekeyFront(key);
-        }
+    crossCompartmentWrappers.sweep();
+}
+
+bool
+CrossCompartmentKey::needsSweep()
+{
+    bool keyDying;
+    switch (kind) {
+      case CrossCompartmentKey::ObjectWrapper:
+      case CrossCompartmentKey::DebuggerObject:
+      case CrossCompartmentKey::DebuggerEnvironment:
+      case CrossCompartmentKey::DebuggerSource:
+          MOZ_ASSERT(IsInsideNursery(wrapped) ||
+                     wrapped->asTenured().getTraceKind() == JS::TraceKind::Object);
+          keyDying = IsAboutToBeFinalizedUnbarriered(reinterpret_cast<JSObject**>(&wrapped));
+          break;
+      case CrossCompartmentKey::StringWrapper:
+          MOZ_ASSERT(wrapped->asTenured().getTraceKind() == JS::TraceKind::String);
+          keyDying = IsAboutToBeFinalizedUnbarriered(reinterpret_cast<JSString**>(&wrapped));
+          break;
+      case CrossCompartmentKey::DebuggerScript:
+          MOZ_ASSERT(wrapped->asTenured().getTraceKind() == JS::TraceKind::Script);
+          keyDying = IsAboutToBeFinalizedUnbarriered(reinterpret_cast<JSScript**>(&wrapped));
+          break;
+      default:
+          MOZ_CRASH("Unknown key kind");
     }
+
+    bool dbgDying = debugger && IsAboutToBeFinalizedUnbarriered(&debugger);
+    MOZ_ASSERT_IF(keyDying || dbgDying, kind != CrossCompartmentKey::StringWrapper);
+    return keyDying || dbgDying;
 }
 
 void
