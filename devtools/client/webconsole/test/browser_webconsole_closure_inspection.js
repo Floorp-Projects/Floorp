@@ -18,13 +18,6 @@ function test() {
     gWebConsole = gJSTerm = gVariablesView = null;
   });
 
-  function resumeDebugger(toolbox, panelWin, deferred) {
-    panelWin.gThreadClient.addOneTimeListener("resumed", () => {
-      ok(true, "Debugger resumed");
-      deferred.resolve({ toolbox: toolbox, panelWin: panelWin });
-    });
-  }
-
   function fetchScopes(hud, toolbox, panelWin, deferred) {
     panelWin.once(panelWin.EVENTS.FETCHED_SCOPES, () => {
       ok(true, "Scopes were fetched");
@@ -36,11 +29,6 @@ function test() {
   loadTab(TEST_URI).then(() => {
     openConsole().then((hud) => {
       openDebugger().then(({ toolbox, panelWin }) => {
-        let deferred = promise.defer();
-        resumeDebugger(toolbox, panelWin, deferred);
-
-        return deferred.promise;
-      }).then(({ toolbox, panelWin }) => {
         let deferred = promise.defer();
         fetchScopes(hud, toolbox, panelWin, deferred);
 
