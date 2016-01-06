@@ -3730,6 +3730,13 @@ public:
     // scope.
     bool waiveInterposition;
 
+    // If CPOWs are disabled for browser code via the
+    // dom.ipc.cpows.forbid-unsafe-from-browser preferences, then only
+    // add-ons can use CPOWs. This flag allows a non-addon scope
+    // to opt into CPOWs. It's necessary for the implementation of
+    // RemoteAddonsParent.jsm.
+    bool allowCPOWs;
+
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out
     // enablePrivilege. Once set, this value is never unset (i.e., it doesn't follow
