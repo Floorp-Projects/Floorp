@@ -10,9 +10,7 @@
 
 #ifdef MOZ_WIDGET_GONK
 #include <utils/RefBase.h>
-#if ANDROID_VERSION >= 21
-#include <utils/NativeHandle.h>
-#endif
+#include "mozilla/layers/GonkNativeHandle.h"
 #endif
 
 #include "mozilla/gfx/Point.h"          // for IntPoint
@@ -116,13 +114,16 @@ struct LayerRenderState {
   void SetOverlayId(const int32_t& aId)
   { mOverlayId = aId; }
 
+  void SetSidebandStream(const GonkNativeHandle& aStream)
+  {
+    mSidebandStream = aStream;
+  }
+
   android::GraphicBuffer* GetGrallocBuffer() const
   { return mSurface.get(); }
 
-#if ANDROID_VERSION >= 21
-  android::NativeHandle* GetSidebandStream() const
-  { return mSidebandStream.get(); }
-#endif
+  const GonkNativeHandle& GetSidebandStream()
+  { return mSidebandStream; }
 #endif
 
   void SetOffset(const nsIntPoint& aOffset)
@@ -146,9 +147,7 @@ struct LayerRenderState {
   // size of mSurface
   gfx::IntSize mSize;
   TextureHost* mTexture;
-#if ANDROID_VERSION >= 21
-  android::sp<android::NativeHandle> mSidebandStream;
-#endif
+  GonkNativeHandle mSidebandStream;
 #endif
 };
 

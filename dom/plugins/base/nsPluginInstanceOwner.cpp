@@ -268,25 +268,24 @@ nsPluginInstanceOwner::SetBackgroundUnknown()
   }
 }
 
-already_AddRefed<gfxContext>
+already_AddRefed<mozilla::gfx::DrawTarget>
 nsPluginInstanceOwner::BeginUpdateBackground(const nsIntRect& aRect)
 {
   nsIntRect rect = aRect;
-  RefPtr<gfxContext> ctx;
+  RefPtr<DrawTarget> dt;
   if (mInstance &&
-      NS_SUCCEEDED(mInstance->BeginUpdateBackground(&rect, getter_AddRefs(ctx)))) {
-    return ctx.forget();
+      NS_SUCCEEDED(mInstance->BeginUpdateBackground(&rect, getter_AddRefs(dt)))) {
+    return dt.forget();
   }
   return nullptr;
 }
 
 void
-nsPluginInstanceOwner::EndUpdateBackground(gfxContext* aContext,
-                                           const nsIntRect& aRect)
+nsPluginInstanceOwner::EndUpdateBackground(const nsIntRect& aRect)
 {
   nsIntRect rect = aRect;
   if (mInstance) {
-    mInstance->EndUpdateBackground(aContext, &rect);
+    mInstance->EndUpdateBackground(&rect);
   }
 }
 

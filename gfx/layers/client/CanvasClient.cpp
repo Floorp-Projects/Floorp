@@ -335,8 +335,13 @@ CloneSurface(gl::SharedSurface* src, gl::SurfaceFactory* factory)
     if (!dest) {
       return nullptr;
     }
+
+    gl::SharedSurface* destSurf = dest->Surf();
+
+    destSurf->ProducerAcquire();
     SharedSurface::ProdCopy(src, dest->Surf(), factory);
-    dest->Surf()->Fence();
+    destSurf->ProducerRelease();
+
     return dest.forget();
 }
 

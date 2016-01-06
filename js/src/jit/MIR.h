@@ -5433,13 +5433,16 @@ class MBinaryBitwiseInstruction
 {
   protected:
     MBinaryBitwiseInstruction(MDefinition* left, MDefinition* right)
-      : MBinaryInstruction(left, right)
+      : MBinaryInstruction(left, right), maskMatchesLeftRange(false),
+        maskMatchesRightRange(false)
     {
         setResultType(MIRType_Int32);
         setMovable();
     }
 
     void specializeAsInt32();
+    bool maskMatchesLeftRange;
+    bool maskMatchesRightRange;
 
   public:
     MDefinition* foldsTo(TempAllocator& alloc) override;
@@ -5447,7 +5450,9 @@ class MBinaryBitwiseInstruction
     virtual MDefinition* foldIfZero(size_t operand) = 0;
     virtual MDefinition* foldIfNegOne(size_t operand) = 0;
     virtual MDefinition* foldIfEqual()  = 0;
+    virtual MDefinition* foldIfAllBitsSet(size_t operand)  = 0;
     virtual void infer(BaselineInspector* inspector, jsbytecode* pc);
+    void collectRangeInfoPreTrunc() override;
 
     bool congruentTo(const MDefinition* ins) const override {
         return binaryCongruentTo(ins);
@@ -5481,6 +5486,10 @@ class MBitAnd : public MBinaryBitwiseInstruction
     MDefinition* foldIfEqual() override {
         return getOperand(0); // x & x => x;
     }
+    MDefinition* foldIfAllBitsSet(size_t operand) override {
+        // e.g. for uint16: x & 0xffff => x;
+        return getOperand(1 - operand);
+    }
     void computeRange(TempAllocator& alloc) override;
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
@@ -5511,6 +5520,9 @@ class MBitOr : public MBinaryBitwiseInstruction
     MDefinition* foldIfEqual() override {
         return getOperand(0); // x | x => x
     }
+    MDefinition* foldIfAllBitsSet(size_t operand) override {
+        return this;
+    }
     void computeRange(TempAllocator& alloc) override;
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
@@ -5540,6 +5552,9 @@ class MBitXor : public MBinaryBitwiseInstruction
     MDefinition* foldIfEqual() override {
         return this;
     }
+    MDefinition* foldIfAllBitsSet(size_t operand) override {
+        return this;
+    }
     void computeRange(TempAllocator& alloc) override;
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
@@ -5563,6 +5578,9 @@ class MShiftInstruction
         return this;
     }
     MDefinition* foldIfEqual() override {
+        return this;
+    }
+    MDefinition* foldIfAllBitsSet(size_t operand) override {
         return this;
     }
     virtual void infer(BaselineInspector* inspector, jsbytecode* pc) override;

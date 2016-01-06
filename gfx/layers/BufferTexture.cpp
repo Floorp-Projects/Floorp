@@ -109,6 +109,8 @@ BufferTextureData::CreateInternal(ISurfaceAllocator* aAllocator,
       return nullptr;
     }
 
+    GfxMemoryImageReporter::DidAlloc(buffer);
+
     return new MemoryTextureData(aDesc, aMoz2DBackend, buffer, aBufferSize);
   } else {
     ipc::Shmem shm;

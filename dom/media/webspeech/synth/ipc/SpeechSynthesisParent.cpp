@@ -82,7 +82,11 @@ SpeechSynthesisRequestParent::SpeechSynthesisRequestParent(SpeechTaskParent* aTa
 
 SpeechSynthesisRequestParent::~SpeechSynthesisRequestParent()
 {
-
+  if (mTask) {
+    mTask->mActor = nullptr;
+    // If we still have a task, cancel it.
+    mTask->Cancel();
+  }
   MOZ_COUNT_DTOR(SpeechSynthesisRequestParent);
 }
 
@@ -157,7 +161,11 @@ SpeechTaskParent::DispatchStartImpl(const nsAString& aUri)
 nsresult
 SpeechTaskParent::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
 {
-  MOZ_ASSERT(mActor);
+  if (!mActor) {
+    // Child is already gone.
+    return NS_OK;
+  }
+
   if(NS_WARN_IF(!(mActor->SendOnEnd(false, aElapsedTime, aCharIndex)))) {
     return NS_ERROR_FAILURE;
   }

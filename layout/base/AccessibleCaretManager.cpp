@@ -196,7 +196,7 @@ AccessibleCaretManager::UpdateCarets(UpdateCaretsHint aHint)
     UpdateCaretsForCursorMode(aHint);
     break;
   case CaretMode::Selection:
-    UpdateCaretsForSelectionMode(aHint);
+    UpdateCaretsForSelectionMode();
     break;
   }
 }
@@ -297,7 +297,7 @@ AccessibleCaretManager::UpdateCaretsForCursorMode(UpdateCaretsHint aHint)
 }
 
 void
-AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
+AccessibleCaretManager::UpdateCaretsForSelectionMode()
 {
   AC_LOG("%s: selection: %p", __FUNCTION__, GetSelection());
 

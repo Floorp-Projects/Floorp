@@ -537,8 +537,7 @@ nsCaret::GetPaintGeometry(nsRect* aRect)
   return frame;
 }
 
-void nsCaret::PaintCaret(nsDisplayListBuilder *aBuilder,
-                         DrawTarget& aDrawTarget,
+void nsCaret::PaintCaret(DrawTarget& aDrawTarget,
                          nsIFrame* aForFrame,
                          const nsPoint &aOffset)
 {
