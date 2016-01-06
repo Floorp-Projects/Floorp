@@ -20,7 +20,7 @@
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSValue.h"
 #include "nsStyleUtil.h"
-#include <algorithm>    // std::max
+#include <algorithm> // For std::max
 
 namespace mozilla {
 
@@ -163,6 +163,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // Request restyle if necessary.
+  ComputedTiming computedTiming = GetComputedTiming();
   AnimationCollection* collection = GetCollection();
   // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
   // However, currently we don't properly encapsulate mProperties so we can't
@@ -173,9 +174,9 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   // currently just request the restyle regardless of whether mProperties is
   // empty or not.
   if (collection &&
-      inEffect) {
-    // FIXME: Detect when the progress is not changing and don't request a
-    // restyle in that case
+      // Bug 1216843: When we implement iteration composite modes, we need to
+      // also detect if the current iteration has changed.
+      computedTiming.mProgress != mProgressOnLastCompose) {
     collection->RequestRestyle(CanThrottle() ?
                                AnimationCollection::RestyleType::Throttled :
                                AnimationCollection::RestyleType::Standard);
@@ -426,6 +427,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                      nsCSSPropertySet& aSetProperties)
 {
   ComputedTiming computedTiming = GetComputedTiming();
+  mProgressOnLastCompose = computedTiming.mProgress;
 
   // If the progress is null, we don't have fill data for the current
   // time so we shouldn't animate.
@@ -1822,15 +1824,14 @@ KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
 bool
 KeyframeEffectReadOnly::CanThrottle() const
 {
-  // NotifyAnimationTimingUpdated checks that we are in effect before
-  // calling this.
-  MOZ_ASSERT(IsInEffect(), "Effect should be in effect");
-
-  // Unthrottle if this animation is not current (i.e. it has passed the end).
-  // In future we may be able to throttle this case too, but we should only get
-  // occasional ticks while the animation is in this state so it doesn't matter
-  // too much.
-  if (!IsCurrent()) {
+  // Unthrottle if we are not in effect or current. This will be the case when
+  // our owning animation has finished, is idle, or when we are in the delay
+  // phase (but without a backwards fill). In each case the computed progress
+  // value produced on each tick will be the same so we will skip requesting
+  // unnecessary restyles in NotifyAnimationTimingUpdated. Any calls we *do* get
+  // here will be because of a change in state (e.g. we are newly finished or
+  // newly no longer in effect) in which case we shouldn't throttle the sample.
+  if (!IsInEffect() || !IsCurrent()) {
     return false;
   }
 
