@@ -16,6 +16,7 @@
 #include "nsAnimationManager.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertySet.h"
+#include "nsCSSProps.h"
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
@@ -225,14 +226,34 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 
 /* static */ void
 EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
+                                          EffectSet& aEffectSet,
                                           nsCSSPropertySet&
                                             aPropertiesOverridden)
 {
   nsAutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
-  for (const LayerAnimationInfo::Record& record :
-         LayerAnimationInfo::sRecords) {
-    propertiesToTrack.AppendElement(record.mProperty);
+  {
+    nsCSSPropertySet propertiesToTrackAsSet;
+    for (KeyframeEffectReadOnly* effect : aEffectSet) {
+      for (const AnimationProperty& property : effect->Properties()) {
+        if (nsCSSProps::PropHasFlags(property.mProperty,
+                                     CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR) &&
+            !propertiesToTrackAsSet.HasProperty(property.mProperty)) {
+          propertiesToTrackAsSet.AddProperty(property.mProperty);
+          propertiesToTrack.AppendElement(property.mProperty);
+        }
+      }
+      // Skip iterating over the rest of the effects if we've already
+      // found all the compositor-animatable properties.
+      if (propertiesToTrack.Length() == LayerAnimationInfo::kRecords) {
+        break;
+      }
+    }
   }
+
+  if (propertiesToTrack.IsEmpty()) {
+    return;
+  }
+
   nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
                                                    aStyleContext,
                                                    aPropertiesOverridden);
@@ -265,7 +286,7 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   // cascade applies.
   nsCSSPropertySet overriddenProperties;
   if (aStyleContext) {
-    GetOverriddenProperties(aStyleContext, overriddenProperties);
+    GetOverriddenProperties(aStyleContext, aEffectSet, overriddenProperties);
   }
 
   bool changed = false;
