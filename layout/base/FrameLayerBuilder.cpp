@@ -3195,6 +3195,18 @@ void ContainerState::FinishPaintedLayerData(PaintedLayerData& aData, FindOpaqueB
     FLB_LOG_PAINTED_LAYER_DECISION(data, "  Selected painted layer=%p\n", layer.get());
   }
 
+  // If the layer is a fixed background layer, the clip on the fixed background
+  // display item was not applied to the opaque region in
+  // ContainerState::ComputeOpaqueRect(), but was saved in data->mItemClip.
+  // Apply it to the opaque region now. Note that it's important to do this
+  // before the opaque region is propagated to the NewLayerEntry below.
+  if (data->mSingleItemFixedToViewport && data->mItemClip.HasClip()) {
+    nsRect clipRect = data->mItemClip.GetClipRect();
+    nsRect insideRoundedCorners = data->mItemClip.ApproximateIntersectInward(clipRect);
+    nsIntRect insideRoundedCornersScaled = ScaleToInsidePixels(insideRoundedCorners);
+    data->mOpaqueRegion.AndWith(insideRoundedCornersScaled);
+  }
+
   if (mLayerBuilder->IsBuildingRetainedLayers()) {
     newLayerEntry->mVisibleRegion = data->mVisibleRegion;
     newLayerEntry->mOpaqueRegion = data->mOpaqueRegion;
