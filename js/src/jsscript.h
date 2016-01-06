@@ -1619,6 +1619,10 @@ class JSScript : public js::gc::TenuredCell
     }
     inline void setModule(js::ModuleObject* module);
 
+    // Returns true if the script may read formal arguments on the stack
+    // directly, via lazy arguments or a rest parameter.
+    bool mayReadFrameArgsDirectly();
+
     JSFlatString* sourceData(JSContext* cx);
 
     static bool loadSource(JSContext* cx, js::ScriptSource* ss, bool* worked);
