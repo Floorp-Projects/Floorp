@@ -1082,7 +1082,8 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
     } else {
         MOZ_ASSERT(!fun->isExprBody());
 
-        if (fun->infallibleIsDefaultClassConstructor(cx) && fun->isDerivedClassConstructor()) {
+        bool derived = fun->infallibleIsDefaultClassConstructor(cx);
+        if (derived && fun->isDerivedClassConstructor()) {
             if (!out.append("(...args) {\n    ") ||
                 !out.append("super(...args);\n}"))
             {
@@ -1092,7 +1093,7 @@ js::FunctionToString(JSContext* cx, HandleFunction fun, bool lambdaParen)
             if (!out.append("() {\n    "))
                 return nullptr;
 
-            if (!fun->isNative() || fun->native() != js::DefaultClassConstructor) {
+            if (!derived) {
                 if (!out.append("[native code]"))
                     return nullptr;
             }
@@ -1277,7 +1278,8 @@ JSFunction::infallibleIsDefaultClassConstructor(JSContext* cx) const
     bool isDefault = false;
     if (isInterpretedLazy()) {
         JSAtom* name = &getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->asAtom();
-        isDefault = name == cx->names().DefaultDerivedClassConstructor;
+        isDefault = name == cx->names().DefaultDerivedClassConstructor ||
+                    name == cx->names().DefaultBaseClassConstructor;
     } else {
         isDefault = nonLazyScript()->isDefaultClassConstructor();
     }
