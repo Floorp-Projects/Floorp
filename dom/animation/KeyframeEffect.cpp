@@ -164,8 +164,15 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
 
   // Request restyle if necessary.
   AnimationCollection* collection = GetCollection();
+  // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
+  // However, currently we don't properly encapsulate mProperties so we can't
+  // detect when it changes. As a result, if we skip requesting restyles when
+  // mProperties is empty and we play an animation and *then* add properties to
+  // it (as we currently do when building CSS animations), we will fail to
+  // request a restyle at all. Since animations without properties are rare, we
+  // currently just request the restyle regardless of whether mProperties is
+  // empty or not.
   if (collection &&
-      !mProperties.IsEmpty() &&
       inEffect) {
     // FIXME: Detect when the progress is not changing and don't request a
     // restyle in that case
