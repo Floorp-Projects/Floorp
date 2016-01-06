@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.os.UserManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -134,6 +135,19 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     @Override
     public synchronized void update() {
         isCacheInvalid = true;
+    }
+
+    public static List<Restrictable> getVisibleRestrictions() {
+        final List<Restrictable> visibleList = new ArrayList<>();
+
+        for (Restrictable restrictable : configuration.keySet()) {
+            if (hiddenRestrictions.contains(restrictable)) {
+                continue;
+            }
+            visibleList.add(restrictable);
+        }
+
+        return visibleList;
     }
 
     /**

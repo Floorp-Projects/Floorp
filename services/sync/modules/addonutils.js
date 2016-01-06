@@ -38,20 +38,9 @@ AddonUtilsInternal.prototype = {
    *        Function to be called with result of operation.
    */
   getInstallFromSearchResult:
-    function getInstallFromSearchResult(addon, cb, requireSecureURI=true) {
+    function getInstallFromSearchResult(addon, cb) {
 
     this._log.debug("Obtaining install for " + addon.id);
-
-    // Verify that the source URI uses TLS. We don't allow installs from
-    // insecure sources for security reasons. The Addon Manager ensures that
-    // cert validation, etc is performed.
-    if (requireSecureURI) {
-      let scheme = addon.sourceURI.scheme;
-      if (scheme != "https") {
-        cb(new Error("Insecure source URI scheme: " + scheme), addon.install);
-        return;
-      }
-    }
 
     // We should theoretically be able to obtain (and use) addon.install if
     // it is available. However, the addon.sourceURI rewriting won't be
@@ -80,8 +69,6 @@ AddonUtilsInternal.prototype = {
    *   syncGUID - Sync GUID to use for the new add-on.
    *   enabled - Boolean indicating whether the add-on should be enabled upon
    *             install.
-   *   requireSecureURI - Boolean indicating whether to require a secure
-   *     URI to install from. This defaults to true.
    *
    * When complete it calls a callback with 2 arguments, error and result.
    *
@@ -104,10 +91,6 @@ AddonUtilsInternal.prototype = {
   installAddonFromSearchResult:
     function installAddonFromSearchResult(addon, options, cb) {
     this._log.info("Trying to install add-on from search result: " + addon.id);
-
-    if (options.requireSecureURI === undefined) {
-      options.requireSecureURI = true;
-    }
 
     this.getInstallFromSearchResult(addon, function onResult(error, install) {
       if (error) {
@@ -167,7 +150,7 @@ AddonUtilsInternal.prototype = {
         this._log.error("Error installing add-on: " + Utils.exceptionstr(ex));
         cb(ex, null);
       }
-    }.bind(this), options.requireSecureURI);
+    }.bind(this));
   },
 
   /**
@@ -261,6 +244,7 @@ AddonUtilsInternal.prototype = {
           installedIDs: [],
           installs:     [],
           addons:       [],
+          skipped:      [],
           errors:       []
         };
 
@@ -299,14 +283,20 @@ AddonUtilsInternal.prototype = {
         // ideally send proper URLs, but this solution was deemed too
         // complicated at the time the functionality was implemented.
         for (let addon of addons) {
-          // sourceURI presence isn't enforced by AddonRepository. So, we skip
-          // add-ons without a sourceURI.
-          if (!addon.sourceURI) {
-            this._log.info("Skipping install of add-on because missing " +
-                           "sourceURI: " + addon.id);
+          // Find the specified options for this addon.
+          let options;
+          for (let install of installs) {
+            if (install.id == addon.id) {
+              options = install;
+              break;
+            }
+          }
+          if (!this.canInstallAddon(addon, options)) {
+            ourResult.skipped.push(addon.id);
             continue;
           }
 
+          // We can go ahead and attempt to install it.
           toInstall.push(addon);
 
           // We should always be able to QI the nsIURI to nsIURL. If not, we
@@ -363,9 +353,48 @@ AddonUtilsInternal.prototype = {
   },
 
   /**
+   * Returns true if we are able to install the specified addon, false
+   * otherwise. It is expected that this will log the reason if it returns
+   * false.
+   *
+   * @param addon
+   *        (Addon) Add-on instance to check.
+   * @param options
+   *        (object) The options specified for this addon. See installAddons()
+   *        for the valid elements.
+   */
+  canInstallAddon(addon, options) {
+    // sourceURI presence isn't enforced by AddonRepository. So, we skip
+    // add-ons without a sourceURI.
+    if (!addon.sourceURI) {
+      this._log.info("Skipping install of add-on because missing " +
+                     "sourceURI: " + addon.id);
+      return false;
+    }
+    // Verify that the source URI uses TLS. We don't allow installs from
+    // insecure sources for security reasons. The Addon Manager ensures
+    // that cert validation etc is performed.
+    let requireSecureURI = true;
+    if (options && options.requireSecureURI !== undefined) {
+      requireSecureURI = options.requireSecureURI;
+    }
+
+    if (requireSecureURI) {
+      let scheme = addon.sourceURI.scheme;
+      if (scheme != "https") {
+        this._log.info(`Skipping install of add-on "${addon.id}" because sourceURI's scheme of "${scheme}" is not trusted`);
+        return false;
+      }
+    }
+    this._log.info(`Add-on "${addon.id}" is able to be installed`);
+    return true;
+  },
+
+
+  /**
    * Update the user disabled flag for an add-on.
    *
-   * The supplied callback will ba called when the operation is
+   * The supplied callback will be called when the operation is
    * complete. If the new flag matches the existing or if the add-on
    * isn't currently active, the function will fire the callback
    * immediately. Else, the callback is invoked when the AddonManager
