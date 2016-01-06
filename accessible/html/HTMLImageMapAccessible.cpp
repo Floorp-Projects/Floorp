@@ -121,7 +121,7 @@ HTMLImageMapAccessible::UpdateChildAreas(bool aDoFireEvents)
       }
 
       if (aDoFireEvents) {
-        RefPtr<AccShowEvent> event = new AccShowEvent(area, areaContent);
+        RefPtr<AccShowEvent> event = new AccShowEvent(area);
         mDoc->FireDelayedEvent(event);
         reorderEvent->AddSubMutationEvent(event);
       }

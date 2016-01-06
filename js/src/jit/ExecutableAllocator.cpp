@@ -357,7 +357,8 @@ ExecutableAllocator::reprotectPool(JSRuntime* rt, ExecutablePool* pool, Protecti
     MOZ_ASSERT(rt->jitRuntime()->preventBackedgePatching() || rt->handlingJitInterrupt());
 
     char* start = pool->m_allocation.pages;
-    reprotectRegion(start, pool->m_freePtr - start, protection);
+    if (!reprotectRegion(start, pool->m_freePtr - start, protection))
+        MOZ_CRASH();
 #endif
 }
 

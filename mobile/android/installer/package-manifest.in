@@ -435,10 +435,6 @@
 @BINPATH@/components/PrivateBrowsingTrackingProtectionWhitelist.js
 
 ; [Browser Chrome Files]
-#ifdef NIGHTLY_BUILD
-@BINPATH@/chrome/shumway.manifest
-@BINPATH@/chrome/shumway/*
-#endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 

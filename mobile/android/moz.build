@@ -24,7 +24,6 @@ DIRS += [
     'app',
     'fonts',
     'geckoview_library',
-    'extensions',
 ]
 
 DIRS += ['../../xulrunner/tools/redit']

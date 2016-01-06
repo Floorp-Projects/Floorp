@@ -158,7 +158,7 @@ SharedSurface_Gralloc::~SharedSurface_Gralloc()
 }
 
 void
-SharedSurface_Gralloc::Fence()
+SharedSurface_Gralloc::ProducerReleaseImpl()
 {
     if (mSync) {
         MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
@@ -220,54 +220,6 @@ SharedSurface_Gralloc::Fence()
         UniquePtr<char[]> buf = MakeUnique<char[]>(4);
         mGL->fReadPixels(0, 0, 1, 1, LOCAL_GL_RGBA, LOCAL_GL_UNSIGNED_BYTE, buf.get());
     }
-}
-
-bool
-SharedSurface_Gralloc::WaitSync()
-{
-    if (!mSync) {
-        // We must not be needed.
-        return true;
-    }
-    MOZ_ASSERT(mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
-
-    EGLint status = mEGL->fClientWaitSync(mEGL->Display(),
-                                          mSync,
-                                          0,
-                                          LOCAL_EGL_FOREVER);
-
-    if (status != LOCAL_EGL_CONDITION_SATISFIED) {
-        return false;
-    }
-
-    MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
-    mSync = 0;
-
-    return true;
-}
-
-bool
-SharedSurface_Gralloc::PollSync()
-{
-    if (!mSync) {
-        // We must not be needed.
-        return true;
-    }
-    MOZ_ASSERT(mEGL->IsExtensionSupported(GLLibraryEGL::KHR_fence_sync));
-
-    EGLint status = 0;
-    MOZ_ALWAYS_TRUE( mEGL->fGetSyncAttrib(mEGL->Display(),
-                                         mSync,
-                                         LOCAL_EGL_SYNC_STATUS_KHR,
-                                         &status) );
-    if (status != LOCAL_EGL_SIGNALED_KHR) {
-        return false;
-    }
-
-    MOZ_ALWAYS_TRUE( mEGL->fDestroySync(mEGL->Display(), mSync) );
-    mSync = 0;
-
-    return true;
 }
 
 void

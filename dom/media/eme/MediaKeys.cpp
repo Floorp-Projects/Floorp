@@ -504,5 +504,12 @@ MediaKeys::Bind(HTMLMediaElement* aElement)
   return NS_OK;
 }
 
+void
+MediaKeys::Unbind()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  mElement = nullptr;
+}
+
 } // namespace dom
 } // namespace mozilla

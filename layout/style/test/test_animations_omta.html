@@ -951,10 +951,11 @@ addAsyncAnimTest(function *() {
                  RunningOn.Compositor,
                  "animation-iteration-count test 3 at 24s");
   advance_clock(200);
+  yield waitForPaints();
   omta_is("opacity", 1, RunningOn.Either,
           "animation-iteration-count test 2 at 25s");
   omta_is_approx("transform", { ty: 100 * gTF.ease_out(0.8) }, 0.01,
-                 RunningOn.Compositor,
+                 RunningOn.MainThread,
                  "animation-iteration-count test 3 at 25s");
   done_div();
 

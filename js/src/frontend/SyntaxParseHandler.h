@@ -354,7 +354,7 @@ class SyntaxParseHandler
         // Careful: we're asking this well after the name was parsed, so the
         // value returned may not correspond to |kid|'s actual name.  But it
         // *will* be truthy iff |kid| was a name, so we're safe.
-        MOZ_ASSERT(maybeUnparenthesizedName(kid));
+        MOZ_ASSERT(isUnparenthesizedName(kid));
         return NodeGeneric;
     }
 
@@ -551,30 +551,35 @@ class SyntaxParseHandler
 
     bool isConstant(Node pn) { return false; }
 
-    PropertyName* maybeUnparenthesizedName(Node node) {
-        if (node == NodeUnparenthesizedName ||
-            node == NodeUnparenthesizedArgumentsName ||
-            node == NodeUnparenthesizedEvalName)
-        {
-            return lastAtom->asPropertyName();
-        }
-        return nullptr;
+    bool isUnparenthesizedName(Node node) {
+        return node == NodeUnparenthesizedArgumentsName ||
+               node == NodeUnparenthesizedEvalName ||
+               node == NodeUnparenthesizedName;
     }
 
-    PropertyName* maybeParenthesizedName(Node node) {
-        if (node == NodeParenthesizedName ||
-            node == NodeParenthesizedArgumentsName ||
-            node == NodeParenthesizedEvalName)
-        {
-            return lastAtom->asPropertyName();
-        }
-        return nullptr;
+    bool isNameAnyParentheses(Node node) {
+        if (isUnparenthesizedName(node))
+            return true;
+        return node == NodeParenthesizedArgumentsName ||
+               node == NodeParenthesizedEvalName ||
+               node == NodeParenthesizedName;
     }
 
-    PropertyName* maybeNameAnyParentheses(Node node) {
-        if (PropertyName* name = maybeUnparenthesizedName(node))
-            return name;
-        return maybeParenthesizedName(node);
+    bool nameIsEvalAnyParentheses(Node node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this function on known names");
+        return node == NodeUnparenthesizedEvalName || node == NodeParenthesizedEvalName;
+    }
+
+    const char* nameIsArgumentsEvalAnyParentheses(Node node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this method on known names");
+
+        if (nameIsEvalAnyParentheses(node, cx))
+            return js_eval_str;
+        if (node == NodeUnparenthesizedArgumentsName || node == NodeParenthesizedArgumentsName)
+            return js_arguments_str;
+        return nullptr;
     }
 
     PropertyName* maybeDottedProperty(Node node) {

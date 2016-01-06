@@ -6132,6 +6132,16 @@
         ]]>
         </body>
       </method>
+
+      <method name="setUserContextId">
+        <parameter name="aUserContextId"/>
+        <body>
+        <![CDATA[
+          this.linkedBrowser.setAttribute("usercontextid", aUserContextId);
+          this.setAttribute("usercontextid", aUserContextId);
+        ]]>
+        </body>
+      </method>
     </implementation>
 
     <handlers>

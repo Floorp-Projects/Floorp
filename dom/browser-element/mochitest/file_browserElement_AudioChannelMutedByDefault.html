@@ -1,0 +1,65 @@
+<html>
+<body>
+<script>
+var audio = new Audio("audio.ogg");
+var context = new AudioContext();
+var node = context.createMediaElementSource(audio);
+var sp = context.createScriptProcessor(2048, 1);
+node.connect(sp);
+var expectedSamplesCount;
+var nonzeroSamplesCount = 0;
+var isStarted = false;
+
+function ok(aVal, aMsg) {
+  alert((!!aVal ? "OK" : "KO") + ", " + aMsg);
+}
+
+function finish() {
+  audio.onended = null;
+  audio.pause();
+  alert("DONE");
+}
+
+function processSamples(e) {
+  var buf = e.inputBuffer.getChannelData(0);
+  for (var i = 0; i < buf.length; ++i) {
+    if (buf[i] != 0) {
+      if (!isStarted) {
+        isStarted = true;
+        ok(true, "Start process audio sample.");
+      }
+      nonzeroSamplesCount++;
+    }
+  }
+
+  if (nonzeroSamplesCount >= expectedSamplesCount) {
+    finish();
+  }
+}
+
+audio.oncanplaythrough = function() {
+  var testDuration = audio.duration > 1.0 ? 1.0 : audio.duration * 0.5;
+  expectedSamplesCount = Math.floor(testDuration * context.sampleRate);
+  sp.onaudioprocess = processSamples;
+};
+
+function runCommands()
+{
+  switch(location.hash) {
+    case '#play':
+      ok(true, "Audio starts playing.")
+      audio.play();
+      audio.onended = () => {
+        audio.onended = null;
+        ok(false, "Audio shouldn't go ended in this test!")
+      };
+      break;
+    default :
+      ok(false, "Undefined command!");
+  }
+}
+
+window.addEventListener('hashchange', runCommands);
+</script>
+</body>
+</html>

@@ -480,10 +480,6 @@
 ; [Browser Chrome Files]
 @BINPATH@/chrome/browser@JAREXT@
 @BINPATH@/chrome/browser.manifest
-#ifdef NIGHTLY_BUILD
-@BINPATH@/chrome/shumway.manifest
-@BINPATH@/chrome/shumway/*
-#endif
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 #ifdef XP_UNIX
