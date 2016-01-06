@@ -82,6 +82,15 @@
             opener.is(window.scrollY, 0, "Shouldn't have scrolled back to the state3's position");
             opener.is(history.state.state, "state3", "Unexpected state.");
 
+            history.pushState({ state: "state5" }, "state5");
+            history.scrollRestoration = "auto";
+            document.getElementById("bottom").scrollIntoView();
+            opener.isnot(window.scrollY, 0, "Should have scrolled to 'bottom'.");
+            history.back();
+            window.scrollTo(0, 0);
+            history.forward();
+            opener.isnot(window.scrollY, 0, "Should have scrolled back to the state5's position");
+
             var ifr = document.createElement("iframe");
             ifr.src = "data:text/html,";
             document.body.appendChild(ifr);

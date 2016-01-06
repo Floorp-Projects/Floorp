@@ -2480,41 +2480,39 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
   uint32_t numSizes = aTrackList.mMinTrackSizingFunctions.Length();
   MOZ_ASSERT(aTrackList.mMaxTrackSizingFunctions.Length() == numSizes,
              "Different number of min and max track sizing functions");
+  if (aTrackSizes) {
+    numSizes = aTrackSizes->Length();
+    MOZ_ASSERT(numSizes > 0 ||
+               (aTrackList.HasRepeatAuto() && !aTrackList.mIsAutoFill),
+               "only 'auto-fit' can result in zero tracks");
+  }
   // An empty <track-list> is represented as "none" in syntax.
   if (numSizes == 0) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword_none);
     return val.forget();
   }
+  // Delimiting N (specified) tracks requires N+1 lines:
+  // one before each track, plus one at the very end.
+  MOZ_ASSERT(aTrackList.mLineNameLists.Length() ==
+               aTrackList.mMinTrackSizingFunctions.Length() + 1,
+             "Unexpected number of line name lists");
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(false);
-  // Delimiting N tracks requires N+1 lines:
-  // one before each track, plus one at the very end.
-  MOZ_ASSERT(aTrackList.mLineNameLists.Length() == numSizes + 1,
-             "Unexpected number of line name lists");
   if (aTrackSizes) {
     // We've done layout on the grid and have resolved the sizes of its tracks,
     // so we'll return those sizes here.  The grid spec says we MAY use
     // repeat(<positive-integer>, Npx) here for consecutive tracks with the same
     // size, but that doesn't seem worth doing since even for repeat(auto-*)
     // the resolved size might differ for the repeated tracks.
-    const uint32_t numTracks = aTrackSizes->Length();
-    MOZ_ASSERT(numTracks > 0 ||
-               (aTrackList.HasRepeatAuto() && !aTrackList.mIsAutoFill),
-               "only 'auto-fit' can result in zero tracks");
-    if (numTracks == 0) {
-      RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-      val->SetIdent(eCSSKeyword_none);
-      return val.forget();
-    }
     int32_t endOfRepeat = 0;  // first index after any repeat() tracks
     int32_t offsetToLastRepeat = 0;
     if (aTrackList.HasRepeatAuto()) {
       // offsetToLastRepeat is -1 if all repeat(auto-fit) tracks are empty
-      offsetToLastRepeat = numTracks + 1 - aTrackList.mLineNameLists.Length();
+      offsetToLastRepeat = numSizes + 1 - aTrackList.mLineNameLists.Length();
       endOfRepeat = aTrackList.mRepeatAutoIndex + offsetToLastRepeat + 1;
     }
-    MOZ_ASSERT(numTracks > 0);
+    MOZ_ASSERT(numSizes > 0);
     for (int32_t i = 0;; i++) {
       if (aTrackList.HasRepeatAuto()) {
         if (i == aTrackList.mRepeatAutoIndex) {
@@ -2547,7 +2545,7 @@ nsComputedDOMStyle::GetGridTemplateColumnsRows(const nsStyleGridTemplate& aTrack
         const nsTArray<nsString>& lineNames = aTrackList.mLineNameLists[i];
         AppendGridLineNames(valueList, lineNames);
       }
-      if (uint32_t(i) == numTracks) {
+      if (uint32_t(i) == numSizes) {
         break;
       }
       RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
@@ -4192,7 +4190,7 @@ nsComputedDOMStyle::DoGetAlignItems()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto align = StylePosition()->ComputedAlignItems(StyleDisplay());
+  auto align = StylePosition()->ComputedAlignItems();
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
   return val.forget();
@@ -4202,8 +4200,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetAlignSelf()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  auto align = StylePosition()->
-    ComputedAlignSelf(StyleDisplay(), mStyleContext->GetParent());
+  auto align = StylePosition()->ComputedAlignSelf(mStyleContext->GetParent());
   nsAutoString str;
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
@@ -4215,7 +4212,7 @@ nsComputedDOMStyle::DoGetJustifyContent()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->ComputedJustifyContent(StyleDisplay());
+  auto justify = StylePosition()->ComputedJustifyContent();
   nsCSSValue::AppendAlignJustifyValueToString(justify & NS_STYLE_JUSTIFY_ALL_BITS, str);
   auto fallback = justify >> NS_STYLE_JUSTIFY_ALL_SHIFT;
   if (fallback) {
@@ -4234,8 +4231,8 @@ nsComputedDOMStyle::DoGetJustifyItems()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->
-    ComputedJustifyItems(StyleDisplay(), mStyleContext->GetParent());
+  auto justify =
+    StylePosition()->ComputedJustifyItems(mStyleContext->GetParent());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();
@@ -4246,8 +4243,8 @@ nsComputedDOMStyle::DoGetJustifySelf()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   nsAutoString str;
-  auto justify = StylePosition()->
-    ComputedJustifySelf(StyleDisplay(), mStyleContext->GetParent());
+  auto justify =
+    StylePosition()->ComputedJustifySelf(mStyleContext->GetParent());
   nsCSSValue::AppendAlignJustifyValueToString(justify, str);
   val->SetString(str);
   return val.forget();

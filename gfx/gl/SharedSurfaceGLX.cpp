@@ -55,7 +55,7 @@ SharedSurface_GLXDrawable::SharedSurface_GLXDrawable(GLContext* gl,
 {}
 
 void
-SharedSurface_GLXDrawable::Fence()
+SharedSurface_GLXDrawable::ProducerReleaseImpl()
 {
     mGL->MakeCurrent();
     mGL->fFlush();

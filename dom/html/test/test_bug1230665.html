@@ -1,0 +1,46 @@
+<html>
+<head>
+  <title>Test for Bug 1230665</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(function() {
+  document.getElementById("flexbutton1").focus();
+  synthesizeKey("VK_TAB", { });
+  var e = document.getElementById("flexbutton2");
+  is(document.activeElement, e, "focus in flexbutton2 after TAB");
+
+  document.getElementById("gridbutton1").focus();
+  synthesizeKey("VK_TAB", { });
+  e = document.getElementById("gridbutton2");
+  is(document.activeElement, e, "focus in gridbutton2 after TAB");
+
+  SimpleTest.finish();
+});
+
+</script>
+
+<div tabindex="0" style="display:flex">
+  <button id="flexbutton1"></button>
+  text <!-- this text will force a :-moz-anonymous-flex-item frame -->
+  <div style="">
+    <button id="flexbutton2"></button>
+  </div>
+</div>
+
+
+<div tabindex="0" style="display:grid">
+  <button id="gridbutton1"></button>
+  text <!-- this text will force a :-moz-anonymous-grid-item frame -->
+  <div style="">
+    <button id="gridbutton2"></button>
+  </div>
+</div>
+
+</body>
+</html>

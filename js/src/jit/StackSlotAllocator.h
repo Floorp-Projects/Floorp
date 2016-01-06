@@ -16,42 +16,32 @@ class StackSlotAllocator
 {
     js::Vector<uint32_t, 4, SystemAllocPolicy> normalSlots;
     js::Vector<uint32_t, 4, SystemAllocPolicy> doubleSlots;
-    js::Vector<uint32_t, 4, SystemAllocPolicy> quadSlots;
     uint32_t height_;
 
-    void freeSlot(uint32_t index) {
-        normalSlots.append(index);
+    void addAvailableSlot(uint32_t index) {
+        // Ignoring OOM here (and below) is fine; it just means the stack slot
+        // will be unused.
+        (void)normalSlots.append(index);
     }
-    void freeDoubleSlot(uint32_t index) {
-        doubleSlots.append(index);
-    }
-    void freeQuadSlot(uint32_t index) {
-        MOZ_ASSERT(SupportsSimd);
-        quadSlots.append(index);
+    void addAvailableDoubleSlot(uint32_t index) {
+        (void)doubleSlots.append(index);
     }
 
     uint32_t allocateQuadSlot() {
         MOZ_ASSERT(SupportsSimd);
         // This relies on the fact that any architecture specific
         // alignment of the stack pointer is done a priori.
-        if (!quadSlots.empty())
-            return quadSlots.popCopy();
         if (height_ % 8 != 0)
-            normalSlots.append(height_ += 4);
+            addAvailableSlot(height_ += 4);
         if (height_ % 16 != 0)
-            doubleSlots.append(height_ += 8);
+            addAvailableDoubleSlot(height_ += 8);
         return height_ += 16;
     }
     uint32_t allocateDoubleSlot() {
         if (!doubleSlots.empty())
             return doubleSlots.popCopy();
-        if (!quadSlots.empty()) {
-            uint32_t index = quadSlots.popCopy();
-            doubleSlots.append(index - 8);
-            return index;
-        }
         if (height_ % 8 != 0)
-            normalSlots.append(height_ += 4);
+            addAvailableSlot(height_ += 4);
         return height_ += 8;
     }
     uint32_t allocateSlot() {
@@ -59,13 +49,7 @@ class StackSlotAllocator
             return normalSlots.popCopy();
         if (!doubleSlots.empty()) {
             uint32_t index = doubleSlots.popCopy();
-            normalSlots.append(index - 4);
-            return index;
-        }
-        if (!quadSlots.empty()) {
-            uint32_t index = quadSlots.popCopy();
-            normalSlots.append(index - 4);
-            doubleSlots.append(index - 8);
+            addAvailableSlot(index - 4);
             return index;
         }
         return height_ += 4;
@@ -102,15 +86,6 @@ class StackSlotAllocator
           case LDefinition::INT32X4:   return 16;
         }
         MOZ_CRASH("Unknown slot type");
-    }
-
-    void freeSlot(LDefinition::Type type, uint32_t index) {
-        switch (width(type)) {
-          case 4:  return freeSlot(index);
-          case 8:  return freeDoubleSlot(index);
-          case 16: return freeQuadSlot(index);
-        }
-        MOZ_CRASH("Unknown slot width");
     }
 
     uint32_t allocateSlot(LDefinition::Type type) {

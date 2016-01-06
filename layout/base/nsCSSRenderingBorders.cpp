@@ -1300,7 +1300,6 @@ DrawBorderRadius(DrawTarget* aDrawTarget,
 // seams when anti-aliased drawing is used.
 static void
 DrawCorner(DrawTarget* aDrawTarget,
-           mozilla::css::Corner c,
            const Point& aOuterCorner, const Point& aInnerCorner,
            const twoFloats& aCornerMultPrev, const twoFloats& aCornerMultNext,
            const Size& aCornerDims,
@@ -1455,7 +1454,7 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     } else if (!mBorderCornerDimensions[c].IsEmpty()) {
       // a corner with no border radius
       DrawCorner(mDrawTarget,
-                 c, outerCorner, innerCorner,
+                 outerCorner, innerCorner,
                  cornerMults[i], cornerMults[i3],
                  mBorderCornerDimensions[c],
                  firstColor, secondColor, skirtSize, skirtSlope);

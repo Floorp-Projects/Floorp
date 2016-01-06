@@ -111,7 +111,7 @@ HTMLLIAccessible::UpdateBullet(bool aHasBullet)
     document->BindToDocument(mBullet, nullptr);
     InsertChildAt(0, mBullet);
 
-    RefPtr<AccShowEvent> event = new AccShowEvent(mBullet, mBullet->GetContent());
+    RefPtr<AccShowEvent> event = new AccShowEvent(mBullet);
     mDoc->FireDelayedEvent(event);
     reorderEvent->AddSubMutationEvent(event);
   } else {

@@ -349,7 +349,7 @@ nsButtonFrameRenderer::PaintBorderAndBackground(
                                     aDirtyRect, buttonRect, bgFlags);
 
   nsCSSRendering::PaintBoxShadowInner(aPresContext, aRenderingContext,
-                                      mFrame, buttonRect, aDirtyRect);
+                                      mFrame, buttonRect);
 
   result &=
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mFrame,

@@ -707,7 +707,8 @@ AsmJSModuleObject::module() const
 void
 AsmJSModuleObject::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
 {
-    module().addSizeOfMisc(mallocSizeOf, code, data);
+    if (hasModule())
+        module().addSizeOfMisc(mallocSizeOf, code, data);
 }
 
 /*****************************************************************************/

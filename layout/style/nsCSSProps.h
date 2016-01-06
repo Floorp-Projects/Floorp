@@ -727,8 +727,9 @@ public:
   static const KTableEntry kAlignSelfPosition[];     // <self-position>
   static const KTableEntry kAlignLegacy[];           // 'legacy'
   static const KTableEntry kAlignLegacyPosition[];   // 'left/right/center'
-  static const KTableEntry kAlignAutoStretchBaseline[]; // 'auto/stretch/baseline/last-baseline'
-  static const KTableEntry kAlignAutoBaseline[]; // 'auto/baseline/last-baseline'
+  static const KTableEntry kAlignAutoNormalStretchBaseline[]; // 'auto/normal/stretch/baseline/last-baseline'
+  static const KTableEntry kAlignNormalStretchBaseline[]; // 'normal/stretch/baseline/last-baseline'
+  static const KTableEntry kAlignNormalBaseline[]; // 'normal/baseline/last-baseline'
   static const KTableEntry kAlignContentDistribution[]; // <content-distribution>
   static const KTableEntry kAlignContentPosition[]; // <content-position>
   static const KTableEntry kAlignSelfKTable[];

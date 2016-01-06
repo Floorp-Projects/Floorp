@@ -57,9 +57,8 @@ protected:
 public:
     virtual ~SharedSurface_Gralloc();
 
-    virtual void Fence() override;
-    virtual bool WaitSync() override;
-    virtual bool PollSync() override;
+    virtual void ProducerAcquireImpl() override {}
+    virtual void ProducerReleaseImpl() override;
 
     virtual void WaitForBufferOwnership() override;
 
