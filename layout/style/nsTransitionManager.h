@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -133,7 +134,12 @@ public:
   nsCSSProperty TransitionProperty() const;
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
-  bool AppliesToTransitionsLevel() const override { return IsTiedToMarkup(); }
+  EffectCompositor::CascadeLevel CascadeLevel() const override
+  {
+    return IsTiedToMarkup() ?
+           EffectCompositor::CascadeLevel::Transitions :
+           EffectCompositor::CascadeLevel::Animations;
+  }
 
   void SetCreationSequence(uint64_t aIndex)
   {
