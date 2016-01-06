@@ -327,15 +327,6 @@ public:
 
   AnimationPtrArray mAnimations;
 
-  // This style rule contains the style data for currently animating
-  // values.  It only matches when styling with animation.  When we
-  // style without animation, we need to not use it so that we can
-  // detect any new changes; if necessary we restyle immediately
-  // afterwards with animation.
-  // NOTE: If we don't need to apply any styles, mStyleRule will be
-  // null, but mStyleRuleRefreshTime will still be valid.
-  RefPtr<AnimValuesStyleRule> mStyleRule;
-
   // For CSS transitions only, we record the most recent generation
   // for which we've done the transition update, so that we avoid doing
   // it more than once per style change.
@@ -345,10 +336,10 @@ public:
   // Update mCheckGeneration to RestyleManager's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
-  // The refresh time associated with mStyleRule.
+  // The refresh time associated with the animation rule on the EffectSet.
   TimeStamp mStyleRuleRefreshTime;
 
-  // False when we know that our current style rule is valid
+  // False when we know that our current animation rule is valid
   // indefinitely into the future (because all of our animations are
   // either completed or paused).  May be invalidated by a style change.
   bool mStyleChanging;
