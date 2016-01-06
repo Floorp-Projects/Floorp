@@ -7,6 +7,7 @@
 
 #include "JavaScriptParent.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "nsJSUtils.h"
 #include "jsfriendapi.h"
 #include "jswrapper.h"
@@ -68,8 +69,11 @@ JavaScriptParent::allowMessage(JSContext* cx)
         return true;
 
     if (ForbidUnsafeBrowserCPOWs()) {
-        if (JSObject* global = JS::CurrentGlobalOrNull(cx)) {
-            if (!JS::AddonIdOfObject(global)) {
+        nsIGlobalObject* global = dom::GetIncumbentGlobal();
+        JSObject* jsGlobal = global ? global->GetGlobalJSObject() : nullptr;
+        if (jsGlobal) {
+            JSAutoCompartment ac(cx, jsGlobal);
+            if (!JS::AddonIdOfObject(jsGlobal) && !xpc::CompartmentPrivate::Get(jsGlobal)->allowCPOWs) {
                 JS_ReportError(cx, "unsafe CPOW usage forbidden");
                 return false;
             }

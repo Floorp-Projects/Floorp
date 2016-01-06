@@ -2861,6 +2861,17 @@ nsXPCComponents_Utils::GetCrossProcessWrapperTag(HandleValue obj, nsACString& ou
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::PermitCPOWsInScope(HandleValue obj)
+{
+    if (!obj.isObject())
+        return NS_ERROR_INVALID_ARG;
+
+    JSObject* scopeObj = js::UncheckedUnwrap(&obj.toObject());
+    CompartmentPrivate::Get(scopeObj)->allowCPOWs = true;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::RecomputeWrappers(HandleValue vobj, JSContext* cx)
 {
     // Determine the compartment of the given object, if any.
