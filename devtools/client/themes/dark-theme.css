@@ -168,7 +168,7 @@ body {
 .devtools-toolbar,
 .devtools-sidebar-tabs tabs,
 .devtools-sidebar-alltabs,
-.CodeMirror-dialog { /* General toolbar styling */
+.cm-s-mozilla .CodeMirror-dialog { /* General toolbar styling */
   color: var(--theme-body-color-alt);
   background-color: var(--theme-toolbar-background);
   border-color: hsla(210,8%,5%,.6);

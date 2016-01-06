@@ -1440,6 +1440,10 @@ richlistitem[type~="action"][actiontype$="tab"] > .ac-url-box > .ac-action-icon 
   background-color: Window;
 }
 
+#sidebar-header > .close-icon:not(:hover):-moz-lwtheme-brighttext {
+  background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
+}
+
 .browserContainer > findbar {
   background-color: -moz-dialog;
   color: -moz-DialogText;

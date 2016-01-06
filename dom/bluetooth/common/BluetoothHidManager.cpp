@@ -247,14 +247,11 @@ BluetoothHidManager::NotifyStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, BLUETOOTH_HID_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
   AppendNamedValue(parameters, "connected", mConnected);
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
 
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }

@@ -739,8 +739,6 @@ HistoryMenu.prototype = {
       return;
     }
 
-    let enabled = PlacesUIUtils.shouldEnableTabsFromOtherComputersMenuitem();
-    menuitem.setAttribute("disabled", !enabled);
     menuitem.setAttribute("hidden", false);
   },
 

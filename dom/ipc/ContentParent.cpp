@@ -4415,25 +4415,26 @@ ContentParent::HasNotificationPermission(const IPC::Principal& aPrincipal)
 }
 
 bool
-ContentParent::RecvShowAlertNotification(const nsString& aImageUrl, const nsString& aTitle,
-                                         const nsString& aText, const bool& aTextClickable,
-                                         const nsString& aCookie, const nsString& aName,
-                                         const nsString& aBidi, const nsString& aLang,
-                                         const nsString& aData,
-                                         const IPC::Principal& aPrincipal,
-                                         const bool& aInPrivateBrowsing)
+ContentParent::RecvShowAlert(const AlertNotificationType& aAlert)
 {
-  if (!HasNotificationPermission(aPrincipal)) {
+  nsCOMPtr<nsIAlertNotification> alert(dont_AddRef(aAlert));
+  if (NS_WARN_IF(!alert)) {
     return true;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal;
+  nsresult rv = alert->GetPrincipal(getter_AddRefs(principal));
+  if (NS_WARN_IF(NS_FAILED(rv)) ||
+      !HasNotificationPermission(IPC::Principal(principal))) {
+
+      return true;
   }
 
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_ALERTSERVICE_CONTRACTID));
   if (sysAlerts) {
-    sysAlerts->ShowAlertNotification(aImageUrl, aTitle, aText, aTextClickable,
-                                     aCookie, this, aName, aBidi, aLang,
-                                     aData, aPrincipal, aInPrivateBrowsing);
-    }
-    return true;
+      sysAlerts->ShowAlert(alert, this);
+  }
+  return true;
 }
 
 bool

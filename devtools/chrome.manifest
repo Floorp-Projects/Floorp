@@ -1,0 +1,6 @@
+content devtools client/
+skin devtools classic/1.0 client/themes/
+resource devtools .
+
+content webide client/webide/content/
+skin webide classic/1.0 client/webide/themes/
