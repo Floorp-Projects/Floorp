@@ -9,11 +9,10 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 Cu.import("resource://gre/modules/ClientID.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://services-common/utils.js");
 Cu.import("resource://gre/modules/Promise.jsm");
-Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
-
+XPCOMUtils.defineLazyModuleGetter(this, "Log",
+                                  "resource://gre/modules/Log.jsm");
 
 const ROOT_BRANCH = "datareporting.";
 const POLICY_BRANCH = ROOT_BRANCH + "policy.";
@@ -122,7 +121,7 @@ DataReportingService.prototype = Object.freeze({
           this._os.addObserver(this, "sessionstore-windows-restored", true);
         } catch (ex) {
           Cu.reportError("Exception when initializing data reporting service: " +
-                         CommonUtils.exceptionStr(ex));
+                         Log.exceptionStr(ex));
         }
         break;
 
@@ -215,7 +214,7 @@ DataReportingService.prototype = Object.freeze({
     } catch (ex) {
       this._healthReporter = null;
       Cu.reportError("Exception when obtaining health reporter: " +
-                     CommonUtils.exceptionStr(ex));
+                     Log.exceptionStr(ex));
     }
 
     return this._healthReporter;
@@ -230,9 +229,7 @@ DataReportingService.prototype = Object.freeze({
     let ns = {};
     // Lazy import so application startup isn't adversely affected.
 
-    Cu.import("resource://gre/modules/Task.jsm", ns);
     Cu.import("resource://gre/modules/HealthReport.jsm", ns);
-    Cu.import("resource://gre/modules/Log.jsm", ns);
 
     // How many times will we rewrite this code before rolling it up into a
     // generic module? See also bug 451283.
@@ -247,22 +244,22 @@ DataReportingService.prototype = Object.freeze({
     let loggingPrefs = new Preferences(HEALTHREPORT_LOGGING_BRANCH);
     if (loggingPrefs.get("consoleEnabled", true)) {
       let level = loggingPrefs.get("consoleLevel", "Warn");
-      let appender = new ns.Log.ConsoleAppender();
-      appender.level = ns.Log.Level[level] || ns.Log.Level.Warn;
+      let appender = new Log.ConsoleAppender();
+      appender.level = Log.Level[level] || Log.Level.Warn;
 
       for (let name of LOGGERS) {
-        let logger = ns.Log.repository.getLogger(name);
+        let logger = Log.repository.getLogger(name);
         logger.addAppender(appender);
       }
     }
 
     if (loggingPrefs.get("dumpEnabled", false)) {
       let level = loggingPrefs.get("dumpLevel", "Debug");
-      let appender = new ns.Log.DumpAppender();
-      appender.level = ns.Log.Level[level] || ns.Log.Level.Debug;
+      let appender = new Log.DumpAppender();
+      appender.level = Log.Level[level] || Log.Level.Debug;
 
       for (let name of LOGGERS) {
-        let logger = ns.Log.repository.getLogger(name);
+        let logger = Log.repository.getLogger(name);
         logger.addAppender(appender);
       }
     }
