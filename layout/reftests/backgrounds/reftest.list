@@ -122,6 +122,7 @@ fails == background-size-zoom-repeat.html background-size-zoom-repeat-ref.html
 == background-moz-default-background-color.html background-moz-default-background-color-ref.html
 
 random-if(B2G||Mulet) == fixed-bg-with-transform-outside-viewport-1.html fixed-bg-with-transform-outside-viewport-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy(2,83) == fixed-bg-border-radius.html fixed-bg-border-radius-ref.html
 
 HTTP == root-background-1.html root-background-ref.html
 HTTP != root-background-1.html about:blank
