@@ -290,8 +290,6 @@ public:
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
 
-  bool CanThrottle() const;
-
   // Returns true if this effect, applied to |aFrame|, contains
   // properties that mean we shouldn't run *any* compositor animations on this
   // element.
@@ -353,6 +351,7 @@ protected:
 private:
   nsIFrame* GetAnimationFrame() const;
 
+  bool CanThrottle() const;
   bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
 
   // Returns true unless Gecko limitations prevent performing transform
