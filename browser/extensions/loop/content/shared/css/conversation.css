@@ -219,6 +219,7 @@ html[dir="rtl"] .conversation-toolbar-btn-box.btn-edit-entry {
   margin: .5rem 0 0;
   position: absolute;
   right: -10rem;
+  font-size: 0.8rem;
 }
 
 .call-action-group > .invite-button.triggered > p,
@@ -554,7 +555,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 .room-invitation-content,
 .room-context-header {
   color: #333;
-  font-size: 1.2rem;
+  font-size: 1rem;
   font-weight: bold;
   margin: 1rem auto;
 }
