@@ -81,6 +81,14 @@ this.GMPUtils = {
       return false;
     }
 
+    if (Services.sysinfo.getPropertyAsInt32("version") < 6) {
+      // Windows versions before Vista are unsupported.
+      this.maybeReportTelemetry(aPlugin.id,
+                                "VIDEO_EME_ADOBE_UNSUPPORTED_REASON",
+                                GMPPluginUnsupportedReason.WINDOWS_VERSION);
+      return false;
+    }
+
     return true;
   },
 
