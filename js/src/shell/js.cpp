@@ -3979,7 +3979,7 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
             creationOptions.setCloneSingletons(v.toBoolean());
 
         if (!JS_GetProperty(cx, opts, "experimentalDateTimeFormatFormatToPartsEnabled", &v))
-            return true;
+            return false;
         if (v.isBoolean())
             creationOptions.setExperimentalDateTimeFormatFormatToPartsEnabled(v.toBoolean());
 
