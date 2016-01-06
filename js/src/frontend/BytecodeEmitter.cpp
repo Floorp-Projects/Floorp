@@ -3056,15 +3056,15 @@ BytecodeEmitter::enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp 
         switchToPrologue();
     }
 
+    if (!enterNestedScope(stmtInfo, objbox, StmtType::BLOCK))
+        return false;
+
     // Initial values for block-scoped locals. Whether it is undefined or the
     // JS_UNINITIALIZED_LEXICAL magic value depends on the context. The
     // current way we emit for-in and for-of heads means its let bindings will
     // always be initialized, so we can initialize them to undefined.
     Rooted<StaticBlockObject*> blockObj(cx, &objbox->object->as<StaticBlockObject>());
     if (!pushInitialConstants(initialValueOp, blockObj->numVariables() - alreadyPushed))
-        return false;
-
-    if (!enterNestedScope(stmtInfo, objbox, StmtType::BLOCK))
         return false;
 
     if (!initializeBlockScopedLocalsFromStack(blockObj))
