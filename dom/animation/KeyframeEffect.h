@@ -349,6 +349,10 @@ protected:
 
   InfallibleTArray<AnimationProperty> mProperties;
 
+  // We need to track when we go to or from being "in effect" since
+  // we need to re-evaluate the cascade of animations when that changes.
+  bool mInEffectOnLastAnimationTimingUpdate;
+
 private:
   nsIFrame* GetAnimationFrame() const;
 
