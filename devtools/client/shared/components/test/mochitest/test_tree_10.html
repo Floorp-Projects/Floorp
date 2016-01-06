@@ -1,13 +1,14 @@
 <!DOCTYPE HTML>
 <html>
 <!--
-Test Tree's autoExpandDepth.
+Test that when an item in the Tree component is expanded or collapsed the appropriate event handler fires.
 -->
 <head>
   <meta charset="utf-8">
   <title>Tree component test</title>
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
 </head>
 <body>
 <pre id="test">
@@ -15,22 +16,27 @@ Test Tree's autoExpandDepth.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
-    let ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
-    let React = browserRequire("devtools/client/shared/vendor/react");
-    let Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
 
-    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+    const tree = ReactDOM.render(Tree(Object.assign({
       autoExpandDepth: 1
-    })), window.document.body);
+    }, TEST_TREE_INTERFACE)), window.document.body);
+
+    yield setState(tree, {
+      focused: "A"
+    });
 
     isRenderedTree(document.body.textContent, [
-      "A:false",
+      "A:true",
       "-B:false",
       "-C:false",
       "-D:false",
       "M:false",
       "-N:false",
-    ], "Tree should be auto expanded one level");
+    ], "Should have auto-expanded one level.");
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {
