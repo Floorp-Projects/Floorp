@@ -659,7 +659,7 @@ Port.prototype = {
 function getMessageManager(target) {
   if (target instanceof Ci.nsIFrameLoaderOwner) {
     return target.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
-   }
+  }
   return target;
 }
 
