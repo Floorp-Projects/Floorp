@@ -444,11 +444,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
 
   if (newAnimations.IsEmpty()) {
     if (collection) {
-      // There might be transitions that run now that animations don't
-      // override them.
-      mPresContext->TransitionManager()->
-        UpdateCascadeResultsWithAnimationsToBeDestroyed(collection);
-
       collection->Destroy();
     }
     return nullptr;
@@ -583,7 +578,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     newAnimations[newAnimIdx]->CancelFromStyle();
   }
 
-  UpdateCascadeResults(aStyleContext, collection);
+  EffectCompositor::UpdateCascadeResults(aElement,
+                                         aStyleContext->GetPseudoType(),
+                                         aStyleContext);
 
   TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
   collection->EnsureStyleRuleFor(refreshTime);

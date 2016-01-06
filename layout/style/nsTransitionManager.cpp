@@ -18,6 +18,7 @@
 #include "nsRuleProcessorData.h"
 #include "nsRuleWalker.h"
 #include "nsCSSPropertySet.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -480,7 +481,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
              "must have element transitions if we started any transitions");
 
   if (collection) {
-    UpdateCascadeResultsWithTransitions(collection);
+    EffectCompositor::UpdateCascadeResults(aElement, pseudoType,
+                                           newStyleContext);
 
     // Set the style rule refresh time to null so that EnsureStyleRuleFor
     // creates a new style rule if we started *or* stopped transitions.
