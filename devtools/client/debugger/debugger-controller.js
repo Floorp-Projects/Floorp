@@ -224,7 +224,7 @@ var DebuggerController = {
       return;
     }
 
-    DebuggerView.initialize();
+    yield DebuggerView.initialize();
     this._startup = true;
   }),
 
@@ -259,26 +259,23 @@ var DebuggerController = {
    *         A promise that is resolved when the debugger finishes connecting.
    */
   connect: Task.async(function*() {
-    if (this._connected) {
-      return;
-    }
-
     let target = this._target;
-    let { client, form: { chromeDebugger, actor } } = target;
+
+    let { client } = target;
     target.on("close", this._onTabDetached);
     target.on("navigate", this._onNavigate);
     target.on("will-navigate", this._onWillNavigate);
     this.client = client;
+    this.activeThread = this._toolbox.threadClient;
 
-    if (target.isAddon) {
-      yield this._startAddonDebugging(actor);
-    } else if (!target.isTabActor) {
-      // Some actors like AddonActor or RootActor for chrome debugging
-      // do not support attach/detach and can be used directly
-      yield this._startChromeDebugging(chromeDebugger);
-    } else {
-      yield this._startDebuggingTab();
-    }
+    // Disable asm.js so that we can set breakpoints and other things
+    // on asm.js scripts
+    yield this.reconfigureThread({ observeAsmJS: true });
+    yield this.connectThread();
+
+    // We need to call this to sync the state of the resume
+    // button in the toolbar with the state of the thread.
+    this.ThreadState._update();
 
     this._hideUnsupportedFeatures();
   }),
@@ -307,7 +304,20 @@ var DebuggerController = {
     // emit individual `newSource` notifications, which trigger
     // separate actions, so this won't do anything other than force
     // the server to traverse sources.
-    this.dispatch(actions.loadSources());
+    this.dispatch(actions.loadSources()).then(() => {
+      // If the engine is already paused, update the UI to represent the
+      // paused state
+      if (this.activeThread) {
+        const pausedPacket = this.activeThread.getLastPausePacket();
+        DebuggerView.Toolbar.toggleResumeButtonState(
+          this.activeThread.state,
+          !!pausedPacket
+        );
+        if (pausedPacket) {
+          this.StackFrames._onPaused("paused", pausedPacket);
+        }
+      }
+    });
   },
 
   /**
@@ -380,116 +390,36 @@ var DebuggerController = {
   },
 
   /**
-   * Sets up a debugging session.
-   *
-   * @return object
-   *         A promise resolved once the client attaches to the active thread.
-   */
-  _startDebuggingTab: function() {
-    let deferred = promise.defer();
-    let threadOptions = {
-      useSourceMaps: Prefs.sourceMapsEnabled,
-      autoBlackBox: Prefs.autoBlackBox
-    };
-
-    this._target.activeTab.attachThread(threadOptions, (aResponse, aThreadClient) => {
-      if (!aThreadClient) {
-        deferred.reject(new Error("Couldn't attach to thread: " + aResponse.error));
-        return;
-      }
-      this.activeThread = aThreadClient;
-      this.connectThread();
-
-      if (aThreadClient.paused) {
-        aThreadClient.resume(res => {
-          this._ensureResumptionOrder(res)
-        });
-      }
-
-      deferred.resolve();
-    });
-
-    return deferred.promise;
-  },
-
-  /**
-   * Sets up an addon debugging session.
-   *
-   * @param object aAddonActor
-   *        The actor for the addon that is being debugged.
-   * @return object
-   *        A promise resolved once the client attaches to the active thread.
-   */
-  _startAddonDebugging: function(aAddonActor) {
-    let deferred = promise.defer();
-
-    this.client.attachAddon(aAddonActor, aResponse => {
-      this._startChromeDebugging(aResponse.threadActor).then(deferred.resolve);
-    });
-
-    return deferred.promise;
-  },
-
-  /**
-   * Sets up a chrome debugging session.
-   *
-   * @param object aChromeDebugger
-   *        The remote protocol grip of the chrome debugger.
-   * @return object
-   *         A promise resolved once the client attaches to the active thread.
-   */
-  _startChromeDebugging: function(aChromeDebugger) {
-    let deferred = promise.defer();
-    let threadOptions = {
-      useSourceMaps: Prefs.sourceMapsEnabled,
-      autoBlackBox: Prefs.autoBlackBox
-    };
-
-    this.client.attachThread(aChromeDebugger, (aResponse, aThreadClient) => {
-      if (!aThreadClient) {
-        deferred.reject(new Error("Couldn't attach to thread: " + aResponse.error));
-        return;
-      }
-      this.activeThread = aThreadClient;
-      this.connectThread();
-
-      if (aThreadClient.paused) {
-        aThreadClient.resume(this._ensureResumptionOrder);
-      }
-
-      deferred.resolve();
-    }, threadOptions);
-
-    return deferred.promise;
-  },
-
-  /**
    * Detach and reattach to the thread actor with useSourceMaps true, blow
    * away old sources and get them again.
    */
-  reconfigureThread: function({ useSourceMaps, autoBlackBox }) {
-    this.activeThread.reconfigure({
-      useSourceMaps: useSourceMaps,
-      autoBlackBox: autoBlackBox
-    }, aResponse => {
-      if (aResponse.error) {
-        let msg = "Couldn't reconfigure thread: " + aResponse.message;
-        Cu.reportError(msg);
-        dumpn(msg);
-        return;
-      }
+  reconfigureThread: function(opts) {
+    const deferred = promise.defer();
+    this.activeThread.reconfigure(
+      opts,
+      aResponse => {
+        if (aResponse.error) {
+          deferred.reject(aResponse.error);
+          return;
+        }
 
-      // Reset the view and fetch all the sources again.
-      DebuggerView.handleTabNavigation();
-      this.dispatch(actions.unload());
-      this.dispatch(actions.loadSources());
+        if (('useSourceMaps' in opts) || ('autoBlackBox' in opts)) {
+          // Reset the view and fetch all the sources again.
+          DebuggerView.handleTabNavigation();
+          this.dispatch(actions.unload());
+          this.dispatch(actions.loadSources());
 
-      // Update the stack frame list.
-      if (this.activeThread.paused) {
-        this.activeThread._clearFrames();
-        this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+          // Update the stack frame list.
+          if (this.activeThread.paused) {
+            this.activeThread._clearFrames();
+            this.activeThread.fillFrames(CALL_STACK_PAGE_SIZE);
+          }
+        }
+
+        deferred.resolve();
       }
-    });
+    );
+    return deferred.promise;
   },
 
   waitForSourcesLoaded: function() {
@@ -606,8 +536,6 @@ ThreadState.prototype = {
     dumpn("ThreadState is connecting...");
     this.activeThread.addListener("paused", this._update);
     this.activeThread.addListener("resumed", this._update);
-    this.activeThread.pauseOnExceptions(Prefs.pauseOnExceptions,
-                                        Prefs.ignoreCaughtExceptions);
   },
 
   /**
@@ -637,13 +565,12 @@ ThreadState.prototype = {
    * Update the UI after a thread state change.
    */
   _update: function(aEvent, aPacket) {
-    // Ignore "interrupted" events, to avoid UI flicker. These are generated
-    // by the slow script dialog and internal events such as setting
-    // breakpoints. Pressing the resume button does need to be shown, though.
     if (aEvent == "paused") {
       if (aPacket.why.type == "interrupted" &&
-          !this.interruptedByResumeButton) {
-        return;
+          this.interruptedByResumeButton) {
+        // Interrupt requests suppressed by default, but if this is an
+        // explicit interrupt by the pause button we want to emit it.
+        gTarget.emit("thread-paused", aPacket);
       } else if (aPacket.why.type == "breakpointConditionThrown" && aPacket.why.message) {
         let where = aPacket.frame.where;
         let aLocation = {
@@ -663,10 +590,6 @@ ThreadState.prototype = {
       this.activeThread.state,
       aPacket ? aPacket.frame : false
     );
-
-    if (gTarget && (aEvent == "paused" || aEvent == "resumed")) {
-      gTarget.emit("thread-" + aEvent);
-    }
   }
 };
 

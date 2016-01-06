@@ -18,6 +18,7 @@
       window.onload = function() {
         SimpleTest.waitForExplicitFinish();
 
+        const { DebuggerServer } = require("devtools/server/main");
         let win;
 
         SimpleTest.registerCleanupFunction(() => {
@@ -38,8 +39,6 @@
           function isStopActive() {
             return !win.document.querySelector("#cmd_stop").hasAttribute("disabled");
           }
-
-          const { DebuggerServer } = require("devtools/server/main");
 
           if (!DebuggerServer.initialized) {
             DebuggerServer.init();

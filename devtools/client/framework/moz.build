@@ -7,6 +7,7 @@
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 
 DevToolsModules(
+    'attach-thread.js',
     'gDevTools.jsm',
     'selection.js',
     'sidebar.js',

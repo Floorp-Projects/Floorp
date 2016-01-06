@@ -60,10 +60,11 @@ var DebuggerView = {
    *         A promise that is resolved when the view finishes initializing.
    */
   initialize: function() {
-    if (this._hasStartup) {
-      return;
+    if (this._startup) {
+      return this._startup;
     }
-    this._hasStartup = true;
+    const deferred = promise.defer();
+    this._startup = deferred.promise;
 
     this._initializePanes();
     this.Toolbar.initialize();
@@ -78,7 +79,8 @@ var DebuggerView = {
     this.EventListeners.initialize();
     this.GlobalSearch.initialize();
     this._initializeVariablesView();
-    this._initializeEditor();
+
+    this._initializeEditor(deferred.resolve);
     this._editorSource = {};
 
     document.title = L10N.getStr("DebuggerWindowTitle");
@@ -108,6 +110,8 @@ var DebuggerView = {
         }
       }
     }, this);
+
+    return deferred.promise;
   },
 
   /**
@@ -279,7 +283,7 @@ var DebuggerView = {
    * @param function aCallback
    *        Called after the editor finishes initializing.
    */
-  _initializeEditor: function() {
+  _initializeEditor: function(callback) {
     dumpn("Initializing the DebuggerView editor");
 
     let extraKeys = {};
@@ -311,6 +315,7 @@ var DebuggerView = {
     this.editor.appendTo(document.getElementById("editor")).then(() => {
       this.editor.extend(DebuggerEditor);
       this._loadingText = L10N.getStr("loadingText");
+      callback();
     });
 
     this.editor.on("gutterClick", (ev, line, button) => {

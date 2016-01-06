@@ -172,7 +172,7 @@ InspectorPanel.prototype = {
         let notificationBox = this._toolbox.getNotificationBox();
         let notification = notificationBox.getNotificationWithValue("inspector-script-paused");
         if (!notification && this._toolbox.currentToolId == "inspector" &&
-            this.target.isThreadPaused) {
+            this._toolbox.threadClient.paused) {
           let message = strings.GetStringFromName("debuggerPausedWarning.message");
           notificationBox.appendNotification(message,
             "inspector-script-paused", "", notificationBox.PRIORITY_WARNING_HIGH);
@@ -182,7 +182,7 @@ InspectorPanel.prototype = {
           notificationBox.removeNotification(notification);
         }
 
-        if (notification && !this.target.isThreadPaused) {
+        if (notification && !this._toolbox.threadClient.paused) {
           notificationBox.removeNotification(notification);
         }
 
