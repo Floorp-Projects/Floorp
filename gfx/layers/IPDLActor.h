@@ -7,7 +7,6 @@
 #define MOZILLA_LAYERS_IPDLACTOR_H
 
 #include "mozilla/ipc/ProtocolUtils.h"
-#include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/unused.h"
 
 namespace mozilla {
@@ -49,15 +48,13 @@ public:
   ///
   /// This will asynchronously send a Destroy message to the parent actor, whom
   /// will send the delete message.
-  void Destroy(CompositableForwarder* aFwd = nullptr)
+  void Destroy()
   {
     MOZ_ASSERT(!mDestroyed);
     if (!mDestroyed) {
       mDestroyed = true;
       DestroyManagees();
-      if (!aFwd || !aFwd->DestroyInTransaction(this, false)) {
-        this->SendDestroy();
-      }
+      this->SendDestroy();
     }
   }
 
@@ -66,25 +63,16 @@ public:
   /// This will block until the Parent actor has handled the Destroy message,
   /// and then start the asynchronous handshake (and destruction will already
   /// be done on the parent side, when the async part happens).
-  void DestroySynchronously(CompositableForwarder* aFwd = nullptr)
+  void DestroySynchronously()
   {
     MOZ_PERFORMANCE_WARNING("gfx", "IPDL actor requires synchronous deallocation");
     MOZ_ASSERT(!mDestroyed);
     if (!mDestroyed) {
       DestroyManagees();
       mDestroyed = true;
-      if (!aFwd || !aFwd->DestroyInTransaction(this, true)) {
-        this->SendDestroySync();
-        this->SendDestroy();
-      }
+      this->SendDestroySync();
+      this->SendDestroy();
     }
-  }
-
-  /// If the transaction that was supposed to destroy the texture fails for
-  /// whatever reason, fallback to destroying the actor synchronously.
-  static bool DestroyFallback(Protocol* aActor)
-  {
-    return aActor->SendDestroySync();
   }
 
   /// Override this if the protocol manages other protocols, and destroy the

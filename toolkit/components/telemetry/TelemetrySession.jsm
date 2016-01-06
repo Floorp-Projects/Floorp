@@ -1682,9 +1682,7 @@ var Impl = {
       Services.obs.removeObserver(this, "content-child-shutdown");
       this.uninstall();
 
-      if (Telemetry.isOfficialTelemetry) {
-        this.sendContentProcessPing(REASON_SAVED_SESSION);
-      }
+      this.sendContentProcessPing(REASON_SAVED_SESSION);
       break;
     case TOPIC_CYCLE_COLLECTOR_BEGIN:
       let now = new Date();
@@ -1741,15 +1739,13 @@ var Impl = {
       //    send the live data while in the foreground, or create the file again on the next
       //    backgrounding), or not (in which case we will delete it on submit, or overwrite
       //    it on the next backgrounding). Not deleting it is faster, so that's what we do.
-      if (Telemetry.isOfficialTelemetry) {
-        let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
-        let options = {
-          addClientId: true,
-          addEnvironment: true,
-          overwrite: true,
-        };
-        TelemetryController.addPendingPing(getPingType(payload), payload, options);
-      }
+      let payload = this.getSessionPayload(REASON_SAVED_SESSION, false);
+      let options = {
+        addClientId: true,
+        addEnvironment: true,
+        overwrite: true,
+      };
+      TelemetryController.addPendingPing(getPingType(payload), payload, options);
       break;
     }
   },
@@ -1774,17 +1770,15 @@ var Impl = {
         this._initialized = false;
       };
 
-      if (Telemetry.isOfficialTelemetry || testing) {
-        return Task.spawn(function*() {
-          yield this.saveShutdownPings();
+      return Task.spawn(function*() {
+        yield this.saveShutdownPings();
 
-          if (IS_UNIFIED_TELEMETRY) {
-            yield TelemetryController.removeAbortedSessionPing();
-          }
+        if (IS_UNIFIED_TELEMETRY) {
+          yield TelemetryController.removeAbortedSessionPing();
+        }
 
-          reset();
-        }.bind(this));
-      }
+        reset();
+      }.bind(this));
 
       reset();
       return Promise.resolve();

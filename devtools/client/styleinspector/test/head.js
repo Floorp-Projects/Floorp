@@ -8,8 +8,7 @@ var Cu = Components.utils;
 var {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
-var {CssComputedView} = require("devtools/client/styleinspector/computed-view");
-var {CssRuleView, _ElementStyle} = require("devtools/client/styleinspector/rule-view");
+var {CssRuleView, _ElementStyle} = require("devtools/client/inspector/rules/rules");
 var {CssLogic, CssSelector} = require("devtools/shared/styleinspector/css-logic");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
@@ -148,24 +147,6 @@ function getNode(nodeOrSelector) {
 function getNodeFront(selector, {walker}) {
   return walker.querySelector(walker.rootNode, selector);
 }
-
-/**
- * Highlight a node that matches the given css selector and set the inspector's
- * current selection to this node.
- *
- * @param {String} selector
- * @param {InspectorPanel} inspector
- *        The instance of InspectorPanel currently loaded in the toolbox
- * @return {Promise} Resolves when the inspector is updated with the new node
- */
-var selectAndHighlightNode = Task.async(function*(selector, inspector) {
-  info("Highlighting and selecting the node for " + selector);
-
-  let nodeFront = yield getNodeFront(selector, inspector);
-  let updated = inspector.toolbox.once("highlighter-ready");
-  inspector.selection.setNodeFront(nodeFront, "test-highlight");
-  yield updated;
-});
 
 /*
  * Set the inspector's current selection to a node or to the first match of the
@@ -516,47 +497,6 @@ function assertHoverTooltipOn(tooltip, element) {
 }
 
 /**
- * Same as assertHoverTooltipOn but fails the test if there is a tooltip defined
- * on hover of the given element
- *
- * @return a promise
- */
-function assertNoHoverTooltipOn(tooltip, element) {
-  return isHoverTooltipTarget(tooltip, element).then(() => {
-    ok(false, "A tooltip is defined on hover of the given element");
-  }, () => {
-    ok(true, "No tooltip is defined on hover of the given element");
-  });
-}
-
-/**
- * Listen for a new window to open and return a promise that resolves when one
- * does and completes its load.
- * Only resolves when the new window topic isn't domwindowopened.
- *
- * @return a promise that resolves to the window object
- */
-function waitForWindow() {
-  let def = promise.defer();
-
-  info("Waiting for a window to open");
-  Services.ww.registerNotification(function onWindow(subject, topic) {
-    if (topic != "domwindowopened") {
-      return;
-    }
-    info("A window has been opened");
-    let win = subject.QueryInterface(Ci.nsIDOMWindow);
-    once(win, "load").then(() => {
-      info("The window load completed");
-      Services.ww.unregisterNotification(onWindow);
-      def.resolve(win);
-    });
-  });
-
-  return def.promise;
-}
-
-/**
  * Listen for a new tab to open and return a promise that resolves when one
  * does and completes the load event.
  *
@@ -587,15 +527,6 @@ function waitForClipboard(setup, expected) {
   let def = promise.defer();
   SimpleTest.waitForClipboard(expected, setup, def.resolve, def.reject);
   return def.promise;
-}
-
-/**
- * Dispatch the copy event on the given element
- */
-function fireCopyEvent(element) {
-  let evt = element.ownerDocument.createEvent("Event");
-  evt.initEvent("copy", true, true);
-  element.dispatchEvent(evt);
 }
 
 /**
@@ -981,63 +912,6 @@ function getComputedViewProperty(view, name) {
 }
 
 /**
- * Get an instance of PropertyView from the computed-view.
- *
- * @param {CssComputedView} view
- *        The instance of the computed view panel
- * @param {String} name
- *        The name of the property to retrieve
- * @return {PropertyView}
- */
-function getComputedViewPropertyView(view, name) {
-  let propView;
-  for (let propertyView of view.propertyViews) {
-    if (propertyView._propertyInfo.name === name) {
-      propView = propertyView;
-      break;
-    }
-  }
-  return propView;
-}
-
-/**
- * Get a reference to the property-content element for a given property name in
- * the computed-view.
- * A property-content element always follows (nextSibling) the property itself
- * and is only shown when the twisty icon is expanded on the property.
- * A property-content element contains matched rules, with selectors,
- * properties, values and stylesheet links
- *
- * @param {CssComputedView} view
- *        The instance of the computed view panel
- * @param {String} name
- *        The name of the property to retrieve
- * @return {Promise} A promise that resolves to the property matched rules
- * container
- */
-var getComputedViewMatchedRules = Task.async(function*(view, name) {
-  let expander;
-  let propertyContent;
-  for (let property of view.styleDocument.querySelectorAll(".property-view")) {
-    let nameSpan = property.querySelector(".property-name");
-    if (nameSpan.textContent === name) {
-      expander = property.querySelector(".expandable");
-      propertyContent = property.nextSibling;
-      break;
-    }
-  }
-
-  if (!expander.hasAttribute("open")) {
-    // Need to expand the property
-    let onExpand = view.inspector.once("computed-view-property-expanded");
-    expander.click();
-    yield onExpand;
-  }
-
-  return propertyContent;
-});
-
-/**
  * Get the text value of the property corresponding to a given name in the
  * computed-view
  *
@@ -1050,43 +924,6 @@ var getComputedViewMatchedRules = Task.async(function*(view, name) {
 function getComputedViewPropertyValue(view, name, propertyName) {
   return getComputedViewProperty(view, name, propertyName)
     .valueSpan.textContent;
-}
-
-/**
- * Expand a given property, given its index in the current property list of
- * the computed view
- *
- * @param {CssComputedView} view
- *        The instance of the computed view panel
- * @param {Number} index
- *        The index of the property to be expanded
- * @return a promise that resolves when the property has been expanded, or
- * rejects if the property was not found
- */
-function expandComputedViewPropertyByIndex(view, index) {
-  info("Expanding property " + index + " in the computed view");
-  let expandos = view.styleDocument.querySelectorAll(".expandable");
-  if (!expandos.length || !expandos[index]) {
-    return promise.reject();
-  }
-
-  let onExpand = view.inspector.once("computed-view-property-expanded");
-  expandos[index].click();
-  return onExpand;
-}
-
-/**
- * Get a rule-link from the computed-view given its index
- *
- * @param {CssComputedView} view
- *        The instance of the computed view panel
- * @param {Number} index
- *        The index of the link to be retrieved
- * @return {DOMNode} The link at the given index, if one exists, null otherwise
- */
-function getComputedViewLinkByIndex(view, index) {
-  let links = view.styleDocument.querySelectorAll(".rule-link .link");
-  return links[index];
 }
 
 /* *********************************************
