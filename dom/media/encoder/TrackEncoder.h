@@ -132,8 +132,8 @@ protected:
   bool mCanceled;
 
   // How many times we have tried to initialize the encoder.
-  uint32_t mAudioInitCounter;
-  uint32_t mVideoInitCounter;
+  uint32_t mInitCounter;
+  StreamTime mNotInitDuration;
 };
 
 class AudioTrackEncoder : public TrackEncoder
