@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     '/dom/base',
+    '/layout/base',
     '/layout/style',
 ]
 

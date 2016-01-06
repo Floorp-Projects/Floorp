@@ -542,7 +542,11 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     // Prompt layers to re-sync their animations.
     presContext->ClearLastStyleUpdateForAllAnimations();
     presContext->RestyleManager()->IncrementAnimationGeneration();
-    UpdateAnimationGeneration(presContext);
+    EffectSet* effectSet =
+      EffectSet::GetEffectSet(mElement, PseudoElementType());
+    if (effectSet) {
+      effectSet->UpdateAnimationGeneration(presContext);
+    }
   }
 
   // Steps for RestyleType::Standard and above:
@@ -562,13 +566,6 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
   MOZ_ASSERT(aRestyleType == RestyleType::Throttled,
              "Should have already handled all non-throttled restyles");
   presContext->Document()->SetNeedStyleFlush();
-}
-
-void
-AnimationCollection::UpdateAnimationGeneration(nsPresContext* aPresContext)
-{
-  mAnimationGeneration =
-    aPresContext->RestyleManager()->GetAnimationGeneration();
 }
 
 void
