@@ -304,19 +304,18 @@ PluginPRLibrary::SetBackgroundUnknown(NPP instance)
 }
 
 nsresult
-PluginPRLibrary::BeginUpdateBackground(NPP instance,
-                                       const nsIntRect&, gfxContext** aCtx)
+PluginPRLibrary::BeginUpdateBackground(NPP instance, const nsIntRect&,
+                                       DrawTarget** aDrawTarget)
 {
   nsNPAPIPluginInstance* inst = (nsNPAPIPluginInstance*)instance->ndata;
   NS_ENSURE_TRUE(inst, NS_ERROR_NULL_POINTER);
   NS_ERROR("Unexpected use of async APIs for in-process plugin.");
-  *aCtx = nullptr;
+  *aDrawTarget = nullptr;
   return NS_OK;
 }
 
 nsresult
-PluginPRLibrary::EndUpdateBackground(NPP instance,
-                                     gfxContext*, const nsIntRect&)
+PluginPRLibrary::EndUpdateBackground(NPP instance, const nsIntRect&)
 {
   NS_RUNTIMEABORT("This should never be called");
   return NS_ERROR_NOT_AVAILABLE;

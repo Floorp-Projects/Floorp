@@ -180,6 +180,7 @@ Script.prototype = {
         // `document_idle` state.
         if (AppConstants.platform == "gonk" && scheduled != "document_idle") {
           Cu.reportError(`Script injection: ignoring ${url} at ${scheduled}`);
+          continue;
         }
         url = extension.baseURI.resolve(url);
 

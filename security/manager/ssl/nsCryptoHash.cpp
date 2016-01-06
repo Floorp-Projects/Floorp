@@ -301,7 +301,7 @@ nsCryptoHMAC::Init(uint32_t aAlgorithm, nsIKeyObject *aKeyObject)
 
   PK11SymKey* key;
   // GetKeyObj doesn't addref the key
-  rv = aKeyObject->GetKeyObj((void**)&key);
+  rv = aKeyObject->GetKeyObj(&key);
   NS_ENSURE_SUCCESS(rv, rv);
 
   SECItem rawData;

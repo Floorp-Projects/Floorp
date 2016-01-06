@@ -700,9 +700,9 @@ public:
       // (on element that have status pointer capture override
       // or on element that have status pending pointer capture)
       if (pointerCaptureInfo->mOverrideContent == this) {
-        nsIPresShell::ReleasePointerCapturingContent(aPointerId, this);
+        nsIPresShell::ReleasePointerCapturingContent(aPointerId);
       } else if (pointerCaptureInfo->mPendingContent == this) {
-        nsIPresShell::ReleasePointerCapturingContent(aPointerId, this);
+        nsIPresShell::ReleasePointerCapturingContent(aPointerId);
       }
     }
   }

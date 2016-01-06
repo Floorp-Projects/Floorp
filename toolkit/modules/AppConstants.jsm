@@ -280,5 +280,12 @@ this.AppConstants = Object.freeze({
   // URL to the hg revision this was built from (e.g.
   // "https://hg.mozilla.org/mozilla-central/rev/6256ec9113c1")
   // On unofficial builds, this is an empty string.
-  SOURCE_REVISION_URL: "@SOURCE_REV_URL@"
+  SOURCE_REVISION_URL: "@SOURCE_REV_URL@",
+
+  MOZ_NUWA_PROCESS:
+#ifdef MOZ_NUWA_PROCESS
+    true
+#else
+    false
+#endif
 });

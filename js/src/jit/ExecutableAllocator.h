@@ -204,17 +204,23 @@ class ExecutableAllocator
     static void reprotectPool(JSRuntime* rt, ExecutablePool* pool, ProtectionSetting protection);
 
   public:
-    static void makeWritable(void* start, size_t size)
+    MOZ_WARN_UNUSED_RESULT
+    static bool makeWritable(void* start, size_t size)
     {
 #ifdef NON_WRITABLE_JIT_CODE
-        reprotectRegion(start, size, Writable);
+        return reprotectRegion(start, size, Writable);
+#else
+        return true;
 #endif
     }
 
-    static void makeExecutable(void* start, size_t size)
+    MOZ_WARN_UNUSED_RESULT
+    static bool makeExecutable(void* start, size_t size)
     {
 #ifdef NON_WRITABLE_JIT_CODE
-        reprotectRegion(start, size, Executable);
+        return reprotectRegion(start, size, Executable);
+#else
+        return true;
 #endif
     }
 
@@ -301,7 +307,8 @@ class ExecutableAllocator
     ExecutableAllocator(const ExecutableAllocator&) = delete;
     void operator=(const ExecutableAllocator&) = delete;
 
-    static void reprotectRegion(void*, size_t, ProtectionSetting);
+    MOZ_WARN_UNUSED_RESULT
+    static bool reprotectRegion(void*, size_t, ProtectionSetting);
     void reprotectAll(ProtectionSetting);
 
     // These are strong references;  they keep pools alive.

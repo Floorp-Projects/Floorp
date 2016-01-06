@@ -300,13 +300,13 @@ DeallocateTextureClient(TextureDeallocParams params)
   if (params.syncDeallocation) {
     MOZ_PERFORMANCE_WARNING("gfx",
       "TextureClient/Host pair requires synchronous deallocation");
-    actor->DestroySynchronously(actor->GetForwarder());
+    actor->DestroySynchronously();
     DestroyTextureData(params.data, params.allocator, params.clientDeallocation,
                        actor->mMainThreadOnly);
   } else {
     actor->mTextureData = params.data;
     actor->mOwnsTextureData = params.clientDeallocation;
-    actor->Destroy(actor->GetForwarder());
+    actor->Destroy();
     // DestroyTextureData will be called by TextureChild::ActorDestroy
   }
 }
@@ -344,14 +344,6 @@ void TextureClient::Destroy(bool aForceSync)
     params.syncDeallocation = !!(mFlags & TextureFlags::DEALLOCATE_CLIENT) || aForceSync;
     DeallocateTextureClient(params);
   }
-}
-
-bool
-TextureClient::DestroyFallback(PTextureChild* aActor)
-{
-  // should not end up here so crash debug builds.
-  MOZ_ASSERT(false);
-  return aActor->SendDestroySync();
 }
 
 bool

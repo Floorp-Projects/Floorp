@@ -1832,7 +1832,6 @@ bool
 Parser<FullParseHandler>::leaveFunction(ParseNode* fn, ParseContext<FullParseHandler>* outerpc,
                                         FunctionSyntaxKind kind)
 {
-    bool bodyLevel = outerpc->atBodyLevel();
     FunctionBox* funbox = fn->pn_funbox;
     MOZ_ASSERT(funbox == pc->sc->asFunctionBox());
 
@@ -1902,10 +1901,10 @@ Parser<FullParseHandler>::leaveFunction(ParseNode* fn, ParseContext<FullParseHan
             if (dn != outer_dn) {
                 if (ParseNode* pnu = dn->dn_uses) {
                     // In ES6, lexical bindings cannot be accessed until
-                    // initialized. If we are parsing a body-level function,
-                    // it is hoisted to the top, so we conservatively mark all
-                    // uses linked to an outer lexical binding as needing TDZ
-                    // checks. e.g.,
+                    // initialized. If we are parsing a function statement it
+                    // is hoisted to the top of its lexical scope, so we
+                    // conservatively mark all uses linked to an outer lexical
+                    // binding as needing TDZ checks. e.g.,
                     //
                     // function outer() {
                     //   inner2();
@@ -1928,7 +1927,7 @@ Parser<FullParseHandler>::leaveFunction(ParseNode* fn, ParseContext<FullParseHan
                     // be marked as needing dead zone checks.
                     RootedAtom name(context, atom);
                     bool markUsesAsLexical = outer_dn->isLexical() &&
-                                             (bodyLevel ||
+                                             (kind == Statement ||
                                               IsNonDominatingInScopedSwitch(outerpc, name, outer_dn));
                     AssociateUsesWithOuterDefinition(pnu, dn, outer_dn, markUsesAsLexical);
                 }
@@ -4079,7 +4078,7 @@ Parser<FullParseHandler>::checkDestructuringName(BindData<FullParseHandler>* dat
     if (data) {
         // Destructuring patterns in declarations must only contain
         // unparenthesized names.
-        if (!handler.maybeUnparenthesizedName(expr)) {
+        if (!handler.isUnparenthesizedName(expr)) {
             report(ParseError, false, expr, JSMSG_NO_VARIABLE_NAME);
             return false;
         }
@@ -4095,7 +4094,7 @@ Parser<FullParseHandler>::checkDestructuringName(BindData<FullParseHandler>* dat
                "function calls shouldn't be considered valid targets in "
                "destructuring patterns");
 
-    if (handler.maybeNameAnyParentheses(expr)) {
+    if (handler.isNameAnyParentheses(expr)) {
         // The arguments/eval identifiers are simple in non-strict mode code.
         // Warn to discourage their use nonetheless.
         if (!reportIfArgumentsEvalTarget(expr))
@@ -5666,7 +5665,7 @@ Parser<ParseHandler>::validateForInOrOfLHSExpression(Node target)
     if (handler.isPropertyAccess(target))
         return true;
 
-    if (handler.maybeNameAnyParentheses(target)) {
+    if (handler.isNameAnyParentheses(target)) {
         // The arguments/eval identifiers are simple in non-strict mode code,
         // but warn to discourage use nonetheless.
         if (!reportIfArgumentsEvalTarget(target))
@@ -5954,7 +5953,7 @@ Parser<ParseHandler>::forStatement(YieldHandling yieldHandling)
 
         pn3 = iteratedExpr;
 
-        if (handler.maybeNameAnyParentheses(pn2)) {
+        if (handler.isNameAnyParentheses(pn2)) {
             // Beware 'for (arguments in ...)' with or without a 'var'.
             handler.markAsAssigned(pn2);
         }
@@ -7520,7 +7519,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
     if (handler.isPropertyAccess(target))
         return true;
 
-    if (handler.maybeNameAnyParentheses(target)) {
+    if (handler.isNameAnyParentheses(target)) {
         // The arguments/eval identifiers are simple in non-strict mode code,
         // but warn to discourage use nonetheless.
         if (!reportIfArgumentsEvalTarget(target))
@@ -7701,11 +7700,11 @@ Parser<ParseHandler>::isValidSimpleAssignmentTarget(Node node,
     // error for the various syntaxes that fail this, and warning for the
     // various syntaxes that "pass" this but should not, occurs elsewhere.
 
-    if (PropertyName* name = handler.maybeNameAnyParentheses(node)) {
+    if (handler.isNameAnyParentheses(node)) {
         if (!pc->sc->strict())
             return true;
 
-        return name != context->names().arguments && name != context->names().eval;
+        return !handler.nameIsArgumentsEvalAnyParentheses(node, context);
     }
 
     if (handler.isPropertyAccess(node))
@@ -7723,21 +7722,16 @@ template <typename ParseHandler>
 bool
 Parser<ParseHandler>::reportIfArgumentsEvalTarget(Node nameNode)
 {
-    PropertyName* name = handler.maybeNameAnyParentheses(nameNode);
-    MOZ_ASSERT(name, "must only call this function on known names");
-
-    const char* chars = (name == context->names().arguments)
-                        ? js_arguments_str
-                        : (name == context->names().eval)
-                        ? js_eval_str
-                        : nullptr;
+    const char* chars = handler.nameIsArgumentsEvalAnyParentheses(nameNode, context);
     if (!chars)
         return true;
 
     if (!report(ParseStrictError, pc->sc->strict(), nameNode, JSMSG_BAD_STRICT_ASSIGN, chars))
         return false;
 
-    MOZ_ASSERT(!pc->sc->strict(), "in strict mode an error should have been reported");
+    MOZ_ASSERT(!pc->sc->strict(),
+               "an error should have been reported if this was strict mode "
+               "code");
     return true;
 }
 
@@ -7751,7 +7745,7 @@ Parser<ParseHandler>::reportIfNotValidSimpleAssignmentTarget(Node target, Assign
     if (isValidSimpleAssignmentTarget(target, behavior))
         return true;
 
-    if (handler.maybeNameAnyParentheses(target)) {
+    if (handler.isNameAnyParentheses(target)) {
         // Use a special error if the target is arguments/eval.  This ensures
         // targeting these names is consistently a SyntaxError (which error numbers
         // below don't guarantee) while giving us a nicer error message.
@@ -7802,7 +7796,7 @@ Parser<ParseHandler>::checkAndMarkAsIncOperand(Node target, AssignmentFlavor fla
         return false;
 
     // Mark.
-    if (handler.maybeNameAnyParentheses(target)) {
+    if (handler.isNameAnyParentheses(target)) {
         // Assignment to arguments/eval is allowed outside strict mode code,
         // but it's dodgy.  Report a strict warning (error, if werror was set).
         if (!reportIfArgumentsEvalTarget(target))
@@ -7894,7 +7888,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling t
 
         // Per spec, deleting any unary expression is valid -- it simply
         // returns true -- except for one case that is illegal in strict mode.
-        if (handler.maybeNameAnyParentheses(expr)) {
+        if (handler.isNameAnyParentheses(expr)) {
             if (!report(ParseStrictError, pc->sc->strict(), expr, JSMSG_DEPRECATED_DELETE_OPERAND))
                 return null();
             pc->sc->setBindingsAccessedDynamically();
@@ -9090,8 +9084,8 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                 return null();
 
             JSOp op = JSOP_CALL;
-            if (PropertyName* name = handler.maybeNameAnyParentheses(lhs)) {
-                if (tt == TOK_LP && name == context->names().eval) {
+            if (handler.isNameAnyParentheses(lhs)) {
+                if (tt == TOK_LP && handler.nameIsEvalAnyParentheses(lhs, context)) {
                     /* Select JSOP_EVAL and flag pc as needsCallObject. */
                     op = pc->sc->strict() ? JSOP_STRICTEVAL : JSOP_EVAL;
                     pc->sc->setBindingsAccessedDynamically();

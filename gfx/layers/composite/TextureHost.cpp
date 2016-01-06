@@ -835,12 +835,6 @@ TextureParent::Destroy()
   mTextureHost = nullptr;
 }
 
-void
-TextureHost::ReceivedDestroy(PTextureParent* aActor)
-{
-  static_cast<TextureParent*>(aActor)->RecvDestroy();
-}
-
 bool
 TextureParent::RecvRecycleTexture(const TextureFlags& aTextureFlags)
 {

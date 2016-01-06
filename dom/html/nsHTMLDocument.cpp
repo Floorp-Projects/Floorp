@@ -269,7 +269,7 @@ nsHTMLDocument::CreateShell(nsPresContext* aContext,
                             nsViewManager* aViewManager,
                             nsStyleSet* aStyleSet)
 {
-  return doCreateShell(aContext, aViewManager, aStyleSet, mCompatMode);
+  return doCreateShell(aContext, aViewManager, aStyleSet);
 }
 
 void

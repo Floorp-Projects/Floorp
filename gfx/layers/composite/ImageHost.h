@@ -156,6 +156,8 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ImageHostOverlay)
   ImageHostOverlay();
 
+  static bool IsValid(OverlaySource aOverlay);
+
   virtual void Composite(Compositor* aCompositor,
                          uint32_t aFlashCounter,
                          LayerComposite* aLayer,

@@ -33,7 +33,7 @@ namespace layers {
 
 NS_IMPL_ISUPPORTS(GfxMemoryImageReporter, nsIMemoryReporter)
 
-mozilla::Atomic<size_t> GfxMemoryImageReporter::sAmount(0);
+mozilla::Atomic<ptrdiff_t> GfxMemoryImageReporter::sAmount(0);
 
 mozilla::ipc::SharedMemory::SharedMemoryType OptimalShmemType()
 {

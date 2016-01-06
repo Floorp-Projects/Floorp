@@ -153,12 +153,13 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 #ifdef MOZ_WIDGET_GONK
     if (image->GetFormat() == ImageFormat::OVERLAY_IMAGE) {
       OverlayImage* overlayImage = static_cast<OverlayImage*>(image);
-      uint32_t overlayId = overlayImage->GetOverlayId();
-      gfx::IntSize size = overlayImage->GetSize();
-
       OverlaySource source;
-      source.handle() = OverlayHandle(overlayId);
-      source.size() = size;
+      if (overlayImage->GetSidebandStream().IsValid()) {
+        source.handle() = OverlayHandle(overlayImage->GetSidebandStream());
+      } else {
+        source.handle() = OverlayHandle(overlayImage->GetOverlayId());
+      }
+      source.size() = overlayImage->GetSize();
       GetForwarder()->UseOverlaySource(this, source, image->GetPictureRect());
       continue;
     }

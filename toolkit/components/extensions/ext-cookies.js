@@ -3,6 +3,7 @@
 const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var {
   EventManager,
