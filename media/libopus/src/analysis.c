@@ -39,8 +39,6 @@
 #include "mlp.h"
 #include "stack_alloc.h"
 
-extern const MLP net;
-
 #ifndef M_PI
 #define M_PI 3.141592653
 #endif
@@ -140,6 +138,21 @@ static OPUS_INLINE float fast_atan2f(float y, float x) {
    }
 }
 
+void tonality_analysis_init(TonalityAnalysisState *tonal)
+{
+  /* Initialize reusable fields. */
+  tonal->arch = opus_select_arch();
+  /* Clear remaining fields. */
+  tonality_analysis_reset(tonal);
+}
+
+void tonality_analysis_reset(TonalityAnalysisState *tonal)
+{
+  /* Clear non-reusable fields. */
+  char *start = (char*)&tonal->TONALITY_ANALYSIS_RESET_START;
+  OPUS_CLEAR(start, sizeof(TonalityAnalysisState) - (start - (char*)tonal));
+}
+
 void tonality_get_info(TonalityAnalysisState *tonal, AnalysisInfo *info_out, int len)
 {
    int pos;
@@ -189,7 +202,7 @@ void tonality_get_info(TonalityAnalysisState *tonal, AnalysisInfo *info_out, int
    info_out->music_prob = psum;
 }
 
-void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info_out, const CELTMode *celt_mode, const void *x, int len, int offset, int c1, int c2, int C, int lsb_depth, downmix_func downmix)
+static void tonality_analysis(TonalityAnalysisState *tonal, const CELTMode *celt_mode, const void *x, int len, int offset, int c1, int c2, int C, int lsb_depth, downmix_func downmix)
 {
     int i, b;
     const kiss_fft_state *kfft;
@@ -262,7 +275,16 @@ void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info_out, con
     remaining = len - (ANALYSIS_BUF_SIZE-tonal->mem_fill);
     downmix(x, &tonal->inmem[240], remaining, offset+ANALYSIS_BUF_SIZE-tonal->mem_fill, c1, c2, C);
     tonal->mem_fill = 240 + remaining;
-    opus_fft(kfft, in, out);
+    opus_fft(kfft, in, out, tonal->arch);
+#ifndef FIXED_POINT
+    /* If there's any NaN on the input, the entire output will be NaN, so we only need to check one value. */
+    if (celt_isnan(out[0].r))
+    {
+       info->valid = 0;
+       RESTORE_STACK;
+       return;
+    }
+#endif
 
     for (i=1;i<N2;i++)
     {
@@ -334,6 +356,16 @@ void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info_out, con
           tE += binE*tonality[i];
           nE += binE*2.f*(.5f-noisiness[i]);
        }
+#ifndef FIXED_POINT
+       /* Check for extreme band energies that could cause NaNs later. */
+       if (!(E<1e9f) || celt_isnan(E))
+       {
+          info->valid = 0;
+          RESTORE_STACK;
+          return;
+       }
+#endif
+
        tonal->E[tonal->E_count][b] = E;
        frame_noisiness += nE/(1e-15f+E);
 
@@ -611,8 +643,6 @@ void tonality_analysis(TonalityAnalysisState *tonal, AnalysisInfo *info_out, con
     /*printf("%d %d\n", info->bandwidth, info->opus_bandwidth);*/
     info->noisiness = frame_noisiness;
     info->valid = 1;
-    if (info_out!=NULL)
-       OPUS_COPY(info_out, info, 1);
     RESTORE_STACK;
 }
 
@@ -631,7 +661,7 @@ void run_analysis(TonalityAnalysisState *analysis, const CELTMode *celt_mode, co
       pcm_len = analysis_frame_size - analysis->analysis_offset;
       offset = analysis->analysis_offset;
       do {
-         tonality_analysis(analysis, NULL, celt_mode, analysis_pcm, IMIN(480, pcm_len), offset, c1, c2, C, lsb_depth, downmix);
+         tonality_analysis(analysis, celt_mode, analysis_pcm, IMIN(480, pcm_len), offset, c1, c2, C, lsb_depth, downmix);
          offset += 480;
          pcm_len -= 480;
       } while (pcm_len>0);

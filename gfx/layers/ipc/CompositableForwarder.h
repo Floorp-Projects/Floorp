@@ -84,6 +84,9 @@ public:
                                 const gfx::IntRect& aPictureRect) = 0;
 #endif
 
+  virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) = 0;
+  virtual bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) = 0;
+
   /**
    * Tell the CompositableHost on the compositor side to remove the texture
    * from the CompositableHost.
@@ -107,40 +110,6 @@ public:
   virtual void RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aAsyncTransactionTracker,
                                                   CompositableClient* aCompositable,
                                                   TextureClient* aTexture) {}
-
-  /**
-   * Holds a reference to a TextureClient until after the next
-   * compositor transaction, and then drops it.
-   */
-  virtual void HoldUntilTransaction(TextureClient* aClient)
-  {
-    if (aClient) {
-      mTexturesToRemove.AppendElement(aClient);
-    }
-  }
-
-  /**
-   * Forcibly remove texture data from TextureClient
-   * This function needs to be called after a tansaction with Compositor.
-   */
-  virtual void RemoveTexturesIfNecessary()
-  {
-    mTexturesToRemove.Clear();
-  }
-
-  /**
-   * The same as above, but for CompositableClients.
-   */
-  void HoldUntilTransaction(CompositableClient* aClient)
-  {
-    if (aClient) {
-      mCompositableClientsToRemove.AppendElement(aClient);
-    }
-  }
-  void RemoveCompositablesIfNecessary()
-  {
-    mCompositableClientsToRemove.Clear();
-  }
 
   struct TimedTextureClient {
     TimedTextureClient()

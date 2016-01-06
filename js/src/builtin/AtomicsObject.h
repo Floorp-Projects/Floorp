@@ -104,6 +104,16 @@ public:
 
     bool isWaiting();
 
+    // If canWait() returns false (the default) then futexWait is disabled
+    // on the runtime to which the FutexRuntime belongs.
+    bool canWait() {
+        return canWait_;
+    }
+
+    void setCanWait(bool flag) {
+        canWait_ = flag;
+    }
+
   private:
     enum FutexState {
         Idle,                        // We are not waiting or woken
@@ -133,6 +143,9 @@ public:
     // Null or the thread holding the lock.
     static mozilla::Atomic<PRThread*> lockHolder_;
 #endif
+
+    // A flag that controls whether waiting is allowed.
+    bool canWait_;
 };
 
 JSObject*

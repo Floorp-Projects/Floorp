@@ -46,7 +46,6 @@
 @RESPATH@/browser/chrome/@AB_CD@.manifest
 @RESPATH@/chrome/@AB_CD@@JAREXT@
 @RESPATH@/chrome/@AB_CD@.manifest
-@RESPATH@/browser/defaults/profile/bookmarks.html
 @RESPATH@/browser/defaults/profile/chrome/*
 @RESPATH@/browser/defaults/profile/localstore.rdf
 @RESPATH@/browser/defaults/profile/mimeTypes.rdf

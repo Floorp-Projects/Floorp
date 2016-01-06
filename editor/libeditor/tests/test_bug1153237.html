@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1153237
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1153237</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Avoid platform selection differences
+  SimpleTest.waitForFocus(function() {
+    SpecialPowers.pushPrefEnv({
+      "set": [["layout.word_select.eat_space_to_next_word", true]]
+    }, runTests);
+  });
+
+  function runTests()
+  {
+    var element = document.getElementById("editor");
+    var sel = window.getSelection();
+
+    element.focus();
+    ok(sel.getRangeAt(0).startOffset == 0, "offset is zero");
+
+    const kSelectRight2 = "cmd_selectRight2";
+    var controller =
+      top.document.commandDispatcher.getControllerForCommand(kSelectRight2);
+    ok((controller && controller.isCommandEnabled(kSelectRight2)),
+       "have " + kSelectRight2 + " command");
+
+    controller.doCommand(kSelectRight2);
+    ok(sel.toString() == "Some ",
+       "first word + space is selected: got '" + sel.toString() + "'");
+
+    controller.doCommand(kSelectRight2);
+    ok(sel.toString() == "Some text",
+       "both words are selected: got '" + sel.toString() + "'");
+
+    SimpleTest.finish();
+  }
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1153237">Mozilla Bug 1153237</a>
+<div id="editor" contenteditable>Some text</div><span></span>
+
+<pre id="test">
+</pre>
+</body>
+</html>

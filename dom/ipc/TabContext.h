@@ -104,8 +104,8 @@ public:
   bool HasOwnOrContainingApp() const;
 
   /**
-   * OriginAttributesRef() returns the DocShellOriginAttributes of this frame to the
-   * caller. This is used to store any attribute associated with the frame's
+   * OriginAttributesRef() returns the DocShellOriginAttributes of this frame to
+   * the caller. This is used to store any attribute associated with the frame's
    * docshell, such as the AppId.
    */
   const DocShellOriginAttributes& OriginAttributesRef() const;
@@ -196,10 +196,11 @@ public:
     return TabContext::SetTabContext(aContext);
   }
 
-  bool SetTabContext(mozIApplication* aOwnApp,
-                     mozIApplication* aAppFrameOwnerApp,
-                     const DocShellOriginAttributes& aOriginAttributes,
-                     const nsACString& aSignedPkgOriginNoSuffix = EmptyCString())
+  bool
+  SetTabContext(mozIApplication* aOwnApp,
+                mozIApplication* aAppFrameOwnerApp,
+                const DocShellOriginAttributes& aOriginAttributes,
+                const nsACString& aSignedPkgOriginNoSuffix = EmptyCString())
   {
     return TabContext::SetTabContext(aOwnApp,
                                      aAppFrameOwnerApp,

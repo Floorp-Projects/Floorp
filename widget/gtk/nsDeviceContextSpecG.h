@@ -34,7 +34,8 @@ public:
 
   NS_IMETHOD Init(nsIWidget *aWidget, nsIPrintSettings* aPS,
                   bool aIsPrintPreview) override;
-  NS_IMETHOD BeginDocument(const nsAString& aTitle, char16_t * aPrintToFileName,
+  NS_IMETHOD BeginDocument(const nsAString& aTitle,
+                           const nsAString& aPrintToFileName,
                            int32_t aStartPage, int32_t aEndPage) override;
   NS_IMETHOD EndDocument() override;
   NS_IMETHOD BeginPage() override { return NS_OK; }
