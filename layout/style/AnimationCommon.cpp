@@ -9,7 +9,6 @@
 
 #include "ActiveLayerTracker.h"
 #include "gfxPlatform.h"
-#include "nsRuleData.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
 #include "nsCycleCollectionParticipant.h"
@@ -341,74 +340,6 @@ CommonAnimationManager::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
     effect->SetIsRunningOnCompositor(aProperty, false);
   }
 }
-
-NS_IMPL_ISUPPORTS(AnimValuesStyleRule, nsIStyleRule)
-
-/* virtual */ void
-AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
-{
-  nsStyleContext *contextParent = aRuleData->mStyleContext->GetParent();
-  if (contextParent && contextParent->HasPseudoElementData()) {
-    // Don't apply transitions or animations to things inside of
-    // pseudo-elements.
-    // FIXME (Bug 522599): Add tests for this.
-
-    // Prevent structs from being cached on the rule node since we're inside
-    // a pseudo-element, as we could determine cacheability differently
-    // when walking the rule tree for a style context that is not inside
-    // a pseudo-element.  Note that nsRuleNode::GetStyle##name_ and GetStyleData
-    // will never look at cached structs when we're animating things inside
-    // a pseduo-element, so that we don't incorrectly return a struct that
-    // is only appropriate for non-pseudo-elements.
-    aRuleData->mConditions.SetUncacheable();
-    return;
-  }
-
-  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    PropertyValuePair &cv = mPropertyValuePairs[i];
-    if (aRuleData->mSIDs & nsCachedStyleData::GetBitForSID(
-                             nsCSSProps::kSIDTable[cv.mProperty]))
-    {
-      nsCSSValue *prop = aRuleData->ValueFor(cv.mProperty);
-      if (prop->GetUnit() == eCSSUnit_Null) {
-#ifdef DEBUG
-        bool ok =
-#endif
-          StyleAnimationValue::UncomputeValue(cv.mProperty, cv.mValue, *prop);
-        MOZ_ASSERT(ok, "could not store computed value");
-      }
-    }
-  }
-}
-
-/* virtual */ bool
-AnimValuesStyleRule::MightMapInheritedStyleData()
-{
-  return mStyleBits & NS_STYLE_INHERITED_STRUCT_MASK;
-}
-
-#ifdef DEBUG
-/* virtual */ void
-AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
-{
-  nsAutoCString str;
-  for (int32_t index = aIndent; --index >= 0; ) {
-    str.AppendLiteral("  ");
-  }
-  str.AppendLiteral("[anim values] { ");
-  for (uint32_t i = 0, i_end = mPropertyValuePairs.Length(); i < i_end; ++i) {
-    const PropertyValuePair &pair = mPropertyValuePairs[i];
-    str.Append(nsCSSProps::GetStringValue(pair.mProperty));
-    str.AppendLiteral(": ");
-    nsAutoString value;
-    StyleAnimationValue::UncomputeValue(pair.mProperty, pair.mValue, value);
-    AppendUTF16toUTF8(value, str);
-    str.AppendLiteral("; ");
-  }
-  str.AppendLiteral("}\n");
-  fprintf_stderr(out, "%s", str.get());
-}
-#endif
 
 /*static*/ nsString
 AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
