@@ -829,13 +829,15 @@
 
           let nodes = this.getElement("findbar-container").childNodes;
           let wrapper = this.getElement("findbar-textbox-wrapper");
+          let foundMatches = this._foundMatches;
           for (let node of nodes) {
-            if (node == wrapper)
+            if (node == wrapper || node == foundMatches)
                continue;
             node.hidden = showMinimalUI;
           }
           this.getElement("find-next").hidden =
             this.getElement("find-previous").hidden = showMinimalUI;
+          foundMatches.hidden = showMinimalUI || !foundMatches.value;
           this._updateCaseSensitivity();
 
           if (showMinimalUI)
