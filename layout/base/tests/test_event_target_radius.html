@@ -17,7 +17,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
 <div id="content">
   <div id="ruler" style="position:absolute; left:0; top:0; width:1mozmm; height:0;"></div>
 
-  <div class="target" id="t" onmousedown="x=1"></div>
+  <!-- the iframe holding this test is only 300px tall on B2G, so we need to
+       make the t target shorter than normal to test the bottom edge fluffing
+  -->
+  <div class="target" style="height:80px" id="t" onmousedown="x=1"></div>
 
   <div class="target" id="t2" hidden></div>
 
@@ -37,11 +40,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=780847
   <div class="target" style="left:106px;" id="t5_right" onmousedown="x=1" hidden></div>
   <div class="target" style="left:0; top:210px;" id="t5_below" onmousedown="x=1" hidden></div>
 
-  <div class="target" id="t6" onmousedown="x=1" hidden>
+  <div class="target" id="t6" onmousedown="x=1" style="width: 300px" hidden>
     <div id="t6_inner" style="position:absolute; left:-40px; top:20px; width:60px; height:60px; background:yellow;"></div>
     <div id="t6_inner_clickable" style="position:absolute; left:-40px; top: 80px; width: 60px; height: 5px; background:red" onmousedown="x=1"></div>
   </div>
-  <div id="t6_outer" style="position:absolute; left:160px; top:120px; width:60px; height:60px; background:green;" onmousedown="x=1" hidden></div>
+  <div id="t6_outer" style="position:absolute; left:360px; top:120px; width:60px; height:60px; background:green;" onmousedown="x=1" hidden></div>
 
   <div class="target" id="t7" onmousedown="x=1" hidden></div>
   <div class="target" id="t7_over" hidden></div>
@@ -96,7 +99,16 @@ function setShowing(id, show) {
 
 var mm;
 function runTest() {
-  mm = document.getElementById("ruler").getBoundingClientRect().width;
+  let resolution = 1;
+  if (SpecialPowers.Services.appinfo.name == "B2G") {
+    // This test runs on B2G as well, zoomed out. Therefore we need to account
+    // for the resolution as well, because the fluff area is relative to screen
+    // pixels rather than CSS pixels.
+    let out = {};
+    SpecialPowers.getDOMWindowUtils(window.top).getResolution(out);
+    resolution = 1.0 / out.value;
+  }
+  mm = document.getElementById("ruler").getBoundingClientRect().width * resolution;
   ok(4*mm >= 10, "WARNING: mm " + mm + " too small in this configuration. Test results will be bogus");
 
   // Test basic functionality: clicks sufficiently close to the element
@@ -104,8 +116,8 @@ function runTest() {
   // just outside the edges we set up in the prefs.
   testMouseClick("t", 100 + 13*mm, 10, "body", "basic functionality");
   testMouseClick("t", 100 + 11*mm, 10, "t", "basic functionality");
-  testMouseClick("t", 10, 100 + 9*mm, "body", "basic functionality");
-  testMouseClick("t", 10, 100 + 7*mm, "t", "basic functionality");
+  testMouseClick("t", 10, 80 + 9*mm, "body", "basic functionality");
+  testMouseClick("t", 10, 80 + 7*mm, "t", "basic functionality");
   testMouseClick("t", -5*mm, 10, "body", "basic functionality");
   testMouseClick("t", -3*mm, 10, "t", "basic functionality");
   testMouseClick("t", 10, -5*mm, "body", "basic functionality");
@@ -206,8 +218,12 @@ function test3() {
     "clicking on inner_clickable while backed by its parent still doesn't get redirected to inner");
   testMouseClick("t6_inner_clickable", 45, 6, "t6_inner_clickable",
     "clicking on parent near inner_clickable gets redirected to inner_clickable rather than inner because it is closer");
-  ok(13*mm < 80, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
-  testMouseClick("t6_outer", -40 + 13*mm, -1, "t6",
+  // 280 is the distance from t6_inner's right edge to t6's right edge
+  // 240 is the distance from t6_inner's right edge to t6_outer's right edge.
+  // we want to click on t6, but at least 13mm away from t6_inner, so that
+  // t6_inner doesn't steal the click.
+  ok(13*mm < 280, "no point inside t6 that's not within radius of t6_inner; adjust layout of t6/inner/outer as needed");
+  testMouseClick("t6_outer", -240 + 13*mm, -1, "t6",
     "clicking in clickable container close to outer activates parent, not outer");
   testMouseClick("t6_outer", 1, 1, "t6_outer",
     "clicking directly on the outer activates it");
