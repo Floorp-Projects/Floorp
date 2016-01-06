@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1226015
 
 function testFunc(done_cb) {
   var utterance = new SpeechSynthesisUtterance();
-  utterance.lang = 'it-IT-error';
+  utterance.lang = 'it-IT-failatstart';
 
   speechSynthesis.speak(utterance);
   speechSynthesis.cancel();

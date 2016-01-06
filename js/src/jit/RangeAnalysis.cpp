@@ -3293,6 +3293,44 @@ MUrsh::collectRangeInfoPreTrunc()
         bailoutsDisabled_ = true;
 }
 
+static bool
+DoesMaskMatchRange(int32_t mask, Range& range)
+{
+    // Check if range is positive, because the bitand operator in `(-3) & 0xff` can't be
+    // eliminated.
+    if (range.lower() >= 0) {
+        MOZ_ASSERT(range.isInt32());
+        // Check that the mask value has all bits set given the range upper bound. Note that the
+        // upper bound does not have to be exactly the mask value. For example, consider `x &
+        // 0xfff` where `x` is a uint8. That expression can still be optimized to `x`.
+        int bits = 1 + FloorLog2(range.upper());
+        uint32_t maskNeeded = (bits == 32) ? 0xffffffff : (uint32_t(1) << bits) - 1;
+        if ((mask & maskNeeded) == maskNeeded)
+            return true;
+    }
+
+    return false;
+}
+
+void
+MBinaryBitwiseInstruction::collectRangeInfoPreTrunc()
+{
+    Range lhsRange(lhs());
+    Range rhsRange(rhs());
+
+    if (lhs()->isConstantValue() && lhs()->type() == MIRType_Int32 &&
+         DoesMaskMatchRange(lhs()->constantValue().toInt32(), rhsRange))
+    {
+        maskMatchesRightRange = true;
+    }
+
+    if (rhs()->isConstantValue() && rhs()->type() == MIRType_Int32 &&
+         DoesMaskMatchRange(rhs()->constantValue().toInt32(), lhsRange))
+    {
+        maskMatchesLeftRange = true;
+    }
+}
+
 bool
 RangeAnalysis::prepareForUCE(bool* shouldRemoveDeadCode)
 {

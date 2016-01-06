@@ -644,6 +644,8 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
     mTransactionIdAllocator->RevokeTransactionId(mLatestTransactionId);
   }
 
+  mForwarder->RemoveTexturesIfNecessary();
+  mForwarder->RemoveCompositablesIfNecessary();
   mForwarder->SendPendingAsyncMessges();
   mPhase = PHASE_NONE;
 

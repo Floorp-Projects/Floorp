@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/ContentEvents.h"
+#include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -133,6 +134,13 @@ public:
   nsCSSProperty TransitionProperty() const;
 
   bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
+  EffectCompositor::CascadeLevel CascadeLevel() const override
+  {
+    return IsTiedToMarkup() ?
+           EffectCompositor::CascadeLevel::Transitions :
+           EffectCompositor::CascadeLevel::Animations;
+  }
+
   void SetCreationSequence(uint64_t aIndex)
   {
     MOZ_ASSERT(IsTiedToMarkup());
@@ -275,13 +283,6 @@ public:
   void PruneCompletedTransitions(mozilla::dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType,
                                  nsStyleContext* aNewStyleContext);
-
-  void UpdateCascadeResultsWithTransitions(AnimationCollection* aTransitions);
-  void UpdateCascadeResultsWithAnimations(AnimationCollection* aAnimations);
-  void UpdateCascadeResultsWithAnimationsToBeDestroyed(
-         const AnimationCollection* aAnimations);
-  void UpdateCascadeResults(AnimationCollection* aTransitions,
-                            AnimationCollection* aAnimations);
 
   void SetInAnimationOnlyStyleUpdate(bool aInAnimationOnlyUpdate) {
     mInAnimationOnlyStyleUpdate = aInAnimationOnlyUpdate;

@@ -14,8 +14,9 @@ var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // Import the GCLI test helper
-var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
+  this);
 
 DevToolsUtils.testing = true;
 SimpleTest.registerCleanupFunction(() => {

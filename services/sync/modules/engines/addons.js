@@ -298,6 +298,14 @@ AddonsStore.prototype = {
     // engine and the record will try to be applied later.
     let results = cb.wait();
 
+    if (results.skipped.includes(record.addonID)) {
+      this._log.info("Add-on skipped: " + record.addonID);
+      // Just early-return for skipped addons - we don't want to arrange to
+      // try again next time because the condition that caused up to skip
+      // will remain true for this addon forever.
+      return;
+    }
+
     let addon;
     for (let a of results.addons) {
       if (a.id == record.addonID) {

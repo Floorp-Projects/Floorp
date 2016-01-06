@@ -1179,8 +1179,7 @@ nsListBoxBodyFrame::GetFirstItemBox(int32_t aOffset, bool* aCreated)
     nsPresContext* presContext = PresContext();
     nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
     nsIFrame* topFrame = nullptr;
-    fc->CreateListBoxContent(this, nullptr, startContent,
-                             &topFrame, isAppend, false, nullptr);
+    fc->CreateListBoxContent(this, nullptr, startContent, &topFrame, isAppend);
     mTopFrame = topFrame;
     if (mTopFrame) {
       if (aCreated)
@@ -1233,7 +1232,7 @@ nsListBoxBodyFrame::GetNextItemBox(nsIFrame* aBox, int32_t aOffset,
         nsPresContext* presContext = PresContext();
         nsCSSFrameConstructor* fc = presContext->PresShell()->FrameConstructor();
         fc->CreateListBoxContent(this, prevFrame, nextContent,
-                                 &result, isAppend, false, nullptr);
+                                 &result, isAppend);
 
         if (result) {
           if (aCreated)

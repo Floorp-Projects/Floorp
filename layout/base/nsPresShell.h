@@ -79,8 +79,7 @@ public:
   static bool BeforeAfterKeyboardEventEnabled();
 
   void Init(nsIDocument* aDocument, nsPresContext* aPresContext,
-            nsViewManager* aViewManager, nsStyleSet* aStyleSet,
-            nsCompatibility aCompatMode);
+            nsViewManager* aViewManager, nsStyleSet* aStyleSet);
   virtual void Destroy() override;
   virtual void MakeZombie() override;
 

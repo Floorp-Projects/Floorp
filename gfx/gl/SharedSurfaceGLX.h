@@ -24,9 +24,8 @@ public:
                                                        bool deallocateClient,
                                                        bool inSameProcess);
 
-    virtual void Fence() override;
-    virtual bool WaitSync() override { return true; }
-    virtual bool PollSync() override { return true; }
+    virtual void ProducerAcquireImpl() override {}
+    virtual void ProducerReleaseImpl() override;
 
     virtual void LockProdImpl() override;
     virtual void UnlockProdImpl() override;

@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html><head>
+    <meta charset="utf-8">
+    <title>Testcase for bug 1235152</title>
+    <style type="text/css">
+html,body {
+  color:black; background-color:white; font: 16px monospace;
+}
+
+div {
+  float: left;
+  background: #ccc;
+  clear: both;
+  padding-left: 10px;
+}
+
+.rtl {
+  direction: rtl;
+}
+.pr {
+  padding-left: 0;
+  padding-right: 13px;
+}
+.plr {
+  padding-right: 13px;
+}
+
+</style>
+</head>
+<body>
+
+<div class="rtl">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+<div class="rtl pr">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+<div class="rtl plr">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+<div class="rtl" style="width:190px">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+<div class="rtl pr" style="width:187px">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+<div class="rtl plr" style="width:177px">
+  <span>לורם איפסום דולור סיט אמט, קונסקטורר אדיפיסינג אלית קונסקטורר</span>
+</div>
+
+</body>
+</html>

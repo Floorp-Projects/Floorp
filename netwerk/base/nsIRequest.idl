@@ -143,8 +143,7 @@ interface nsIRequest : nsISupports
 
     /**
      * This flag prevents caching on disk (or other persistent media), which
-     * may be needed to preserve privacy.  For HTTPS, this flag is set auto-
-     * matically.
+     * may be needed to preserve privacy.
      */
     const unsigned long INHIBIT_PERSISTENT_CACHING = 1 << 8;
 

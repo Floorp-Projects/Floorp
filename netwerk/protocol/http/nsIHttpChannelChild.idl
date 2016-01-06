@@ -11,14 +11,15 @@
 interface nsIPrincipal;
 interface nsIURI;
 
-[uuid(893e29fb-2e84-454e-afc7-41fadbe93fd9)]
+[uuid(d02b96ed-2789-4f42-a25c-7abe63de7c18)]
 interface nsIHttpChannelChild : nsISupports
 {
   void addCookiesToRequest();
 
   // Mark this channel as requiring an interception; this will propagate
   // to the corresponding parent channel when a redirect occurs.
-  void forceIntercepted();
+  void forceIntercepted(in boolean postRedirectChannelShouldIntercept,
+                        in boolean postRedirectChannelShouldUpgrade);
 
   // Headers that the channel client has set via SetRequestHeader.
   readonly attribute RequestHeaderTuples clientSetRequestHeaders;

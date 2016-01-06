@@ -2162,6 +2162,16 @@ MBinaryBitwiseInstruction::foldUnnecessaryBitop()
     if (lhs == rhs)
         return foldIfEqual();
 
+    if (maskMatchesRightRange) {
+        MOZ_ASSERT(lhs->isConstantValue() && lhs->type() == MIRType_Int32);
+        return foldIfAllBitsSet(0);
+    }
+
+    if (maskMatchesLeftRange) {
+        MOZ_ASSERT(rhs->isConstantValue() && rhs->type() == MIRType_Int32);
+        return foldIfAllBitsSet(1);
+    }
+
     return this;
 }
 

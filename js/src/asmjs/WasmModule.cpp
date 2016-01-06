@@ -920,11 +920,19 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
     for (StaticLinkData::InternalLink link : linkData.internalLinks) {
         uint8_t* patchAt = code() + link.patchAtOffset;
         void* target = code() + link.targetOffset;
+
+        // If the target of an InternalLink is the non-profiling entry of a
+        // function, then we assume it is for a call that wants to call the
+        // profiling entry when profiling is enabled. Note that the target may
+        // be in the middle of a function (e.g., for a switch table) and in
+        // these cases we should not modify the target.
         if (profilingEnabled_) {
-            const CodeRange* codeRange = lookupCodeRange(target);
-            if (codeRange && codeRange->isFunction())
-                target = code() + codeRange->funcProfilingEntry();
+            if (const CodeRange* cr = lookupCodeRange(target)) {
+                if (cr->isFunction() && link.targetOffset == cr->funcNonProfilingEntry())
+                    target = code() + cr->funcProfilingEntry();
+            }
         }
+
         if (link.isRawPointerPatch())
             *(void**)(patchAt) = target;
         else
@@ -995,7 +1003,10 @@ Module::dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> hea
         specializeToHeap(heap);
 
     // See AllocateCode comment above.
-    ExecutableAllocator::makeExecutable(code(), pod.codeBytes_);
+    if (!ExecutableAllocator::makeExecutable(code(), pod.codeBytes_)) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
 
     sendCodeRangesToProfiler(cx);
     return true;

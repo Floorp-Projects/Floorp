@@ -47,6 +47,20 @@ function registerPage(aEvent) {
                                ioService.newURI(manifestURI, null, null));
 }
 
+function uninstallApp() {
+  if (app) {
+    var request = navigator.mozApps.mgmt.uninstall(app);
+    app = null;
+    request.onerror = () => {
+      error("Uninstall app failed!");
+    };
+    request.onsuccess = () => {
+      is(request.result, manifestURI, "App uninstalled.");
+      runNextTest();
+    }
+  }
+}
+
 function runTest(aEnable) {
   var request = navigator.mozApps.install(manifestURI, {});
   request.onerror = () => {
@@ -63,9 +77,10 @@ function runTest(aEnable) {
     iframe.setAttribute('remote', aEnable);
     iframe.setAttribute('mozapp', manifestURI);
     iframe.src = srcURI;
-    document.body.appendChild(iframe);
 
-    iframe.addEventListener('mozbrowserloadend', () => {
+    function loadend() {
+      iframe.removeEventListener('mozbrowserloadend', loadend);
+      iframe.addEventListener("mozbrowsershowmodalprompt", getInterruption);
       var channels = iframe.allowedAudioChannels;
       is(channels.length, 1, "1 audio channel by default");
 
@@ -76,23 +91,19 @@ function runTest(aEnable) {
       var message = "audiochannel-interruption-begin";
       registerPage(message);
       ac.notifyChannel(message);
-      iframe.addEventListener("mozbrowsershowmodalprompt", function (e) {
+
+      function getInterruption(e) {
+        e.target.removeEventListener("mozbrowsershowmodalprompt", getInterruption);
         is(e.detail.message, message,
            "App got audiochannel-interruption-begin.");
 
-        if (app) {
-          request = navigator.mozApps.mgmt.uninstall(app);
-          app = null;
-          request.onerror = () => {
-            error("Uninstall app failed!");
-          };
-          request.onsuccess = () => {
-            is(request.result, manifestURI, "App uninstalled.");
-            runNextTest();
-          }
-        }
-      });
-    });
+        document.body.removeChild(iframe);
+        uninstallApp();
+      }
+    };
+
+    iframe.addEventListener("mozbrowserloadend", loadend);
+    document.body.appendChild(iframe);
   };
 }
 

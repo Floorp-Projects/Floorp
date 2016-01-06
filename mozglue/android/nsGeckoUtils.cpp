@@ -68,8 +68,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZip(JNIEnv *jenv, jclass, jstring pa
         JNI_Throw(jenv, "java/lang/IllegalArgumentException", "Invalid path or invalid zip");
         return 0;
     }
-    zip->AddRef();
-    return (jlong) zip.get();
+    return reinterpret_cast<jlong>(zip.forget().take());
 }
 
 extern "C"
@@ -84,8 +83,7 @@ Java_org_mozilla_gecko_mozglue_NativeZip_getZipFromByteBuffer(JNIEnv *jenv, jcla
         JNI_Throw(jenv, "java/lang/IllegalArgumentException", "Invalid zip");
         return 0;
     }
-    zip->AddRef();
-    return (jlong) zip.get();
+    return reinterpret_cast<jlong>(zip.forget().take());
 }
 
  extern "C"

@@ -37,7 +37,7 @@ var menuBuilder = {
     let xulMenu = contextData.menu;
     xulMenu.addEventListener("popuphidden", this);
     this.xulMenu = xulMenu;
-    for (let [extension, root] of rootItems) {
+    for (let [, root] of rootItems) {
       let rootElement = this.buildElementWithChildren(root, contextData);
       if (!rootElement.childNodes.length) {
         // If the root has no visible children, there is no reason to show
@@ -52,7 +52,6 @@ var menuBuilder = {
   },
 
   buildElementWithChildren(item, contextData) {
-    let doc = contextData.menu.ownerDocument;
     let element = this.buildSingleElement(item, contextData);
     for (let child of item.children) {
       if (child.enabledForContext(contextData)) {
@@ -106,7 +105,7 @@ var menuBuilder = {
   customizeElement(element, item, contextData) {
     let label = item.title;
     if (label) {
-      if (contextData.isTextSelected && label.indexOf('%s') > -1) {
+      if (contextData.isTextSelected && label.indexOf("%s") > -1) {
         let selection = contextData.selectionText;
         // The rendering engine will truncate the title if it's longer than 64 characters.
         // But if it makes sense let's try truncate selection text only, to handle cases like
@@ -125,12 +124,12 @@ var menuBuilder = {
       element.setAttribute("disabled", true);
     }
 
-    element.addEventListener("command", event => {
+    element.addEventListener("command", event => {  // eslint-disable-line mozilla/balanced-listeners
       item.tabManager.addActiveTabPermission();
       if (item.onclick) {
         let clickData = item.getClickData(contextData, event);
         runSafe(item.extContext, item.onclick, clickData);
-       }
+      }
     });
 
     return element;
@@ -237,7 +236,7 @@ MenuItem.prototype = {
       type: "normal",
       checked: "false",
       contexts: ["all"],
-      enabled: "true"
+      enabled: "true",
     });
   },
 
@@ -392,7 +391,7 @@ MenuItem.prototype = {
     }
 
     return true;
-  }
+  },
 };
 
 var extCount = 0;

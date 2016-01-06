@@ -3,6 +3,7 @@ pref("loop.textChat.enabled", true);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.linkClicker.url", "https://hello.firefox.com/");
 pref("loop.gettingStarted.latestFTUVersion", 0);
+pref("loop.facebook.shareUrl", "https://www.facebook.com/sharer/sharer.php?u=%ROOM_URL%");
 pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start/");
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
 pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");

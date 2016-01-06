@@ -13,6 +13,31 @@
 <script type="text/javascript">
 "use strict";
 
+add_task(function* test_alarm_without_permissions() {
+  function backgroundScript() {
+    browser.test.log("running alarm script");
+
+    browser.test.assertTrue(!browser.alarms,
+                            "alarm API should not be available if the alarm permission is not required");
+    browser.test.notifyPass("alarms_permission");
+  }
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {
+      permissions: [],
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  info("extension loaded");
+  yield extension.awaitFinish("alarms_permission");
+  yield extension.unload();
+  info("extension unloaded");
+});
+
+
 add_task(function* test_alarm_fires() {
   function backgroundScript() {
     let ALARM_NAME = "test_ext_alarms";

@@ -58,7 +58,7 @@ public:
    * We don't support partially unknown backgrounds. Therefore, the
    * first BeginUpdate after a SetUnknown will have the complete background.
    */
-  virtual already_AddRefed<gfxContext>
+  virtual already_AddRefed<gfx::DrawTarget>
       BeginUpdate(const gfx::IntRect& aRect, uint64_t aSequenceNumber) = 0;
   /**
    * EndUpdate must be called immediately after BeginUpdate, without returning
@@ -66,7 +66,7 @@ public:
    * @param aContext the context returned by BeginUpdate
    * Implicitly Restore()s the state of aContext.
    */
-  virtual void EndUpdate(gfxContext* aContext, const gfx::IntRect& aRect) = 0;
+  virtual void EndUpdate(const gfx::IntRect& aRect) = 0;
 };
 
 /**

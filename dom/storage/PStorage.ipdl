@@ -19,22 +19,24 @@ prio(normal upto urgent) sync protocol PStorage
 parent:
   async __delete__();
 
-  prio(urgent) sync Preload(nsCString scope, uint32_t alreadyLoadedCount)
+  prio(urgent) sync Preload(nsCString originSuffix, nsCString originNoSuffix, uint32_t alreadyLoadedCount)
     returns (nsString[] keys, nsString[] values, nsresult rv);
 
-  async AsyncPreload(nsCString scope, bool priority);
+  async AsyncPreload(nsCString originSuffix, nsCString originNoSuffix, bool priority);
   async AsyncGetUsage(nsCString scope);
-  async AsyncAddItem(nsCString scope, nsString key, nsString value);
-  async AsyncUpdateItem(nsCString scope, nsString key, nsString value);
-  async AsyncRemoveItem(nsCString scope, nsString key);
-  async AsyncClear(nsCString scope);
+  async AsyncAddItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
+  async AsyncUpdateItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
+  async AsyncRemoveItem(nsCString originSuffix, nsCString originNoSuffix, nsString key);
+  async AsyncClear(nsCString originSuffix, nsCString originNoSuffix);
   async AsyncFlush();
   
 child:
-  async Observe(nsCString topic, nsCString scopePrefix);
-  async ScopesHavingData(nsCString[] scopes);
-  async LoadItem(nsCString scope, nsString key, nsString value);
-  async LoadDone(nsCString scope, nsresult rv);
+  async Observe(nsCString topic,
+                nsString originAttributesPattern,
+                nsCString originScope);
+  async OriginsHavingData(nsCString[] origins);
+  async LoadItem(nsCString originSuffix, nsCString originNoSuffix, nsString key, nsString value);
+  async LoadDone(nsCString originSuffix, nsCString originNoSuffix, nsresult rv);
   async LoadUsage(nsCString scope, int64_t usage);
   async Error(nsresult rv);
 };
