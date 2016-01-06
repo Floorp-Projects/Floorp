@@ -80,6 +80,12 @@ this.UserCustomizations = {
   },
 
   isFromExtension: function(aURI) {
+    if (!aURI && Services.prefs.getBoolPref("webextensions.tests")) {
+      // That's the case in mochitests because of the packaging setup:
+      // aURI is expected to be the appURI from the jarChannel but there is
+      // no real app associated to mochitest's jar:remoteopenfile:/// uris.
+      return true;
+    }
     return this.appId.has(aURI.host);
   },
 
