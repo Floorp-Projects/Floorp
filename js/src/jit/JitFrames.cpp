@@ -1061,7 +1061,7 @@ MarkThisAndArguments(JSTracer* trc, const JitFrameIterator& frame)
     if (CalleeTokenIsFunction(layout->calleeToken())) {
         JSFunction* fun = CalleeTokenToFunction(layout->calleeToken());
         if (!frame.isExitFrameLayout<LazyLinkExitFrameLayout>() &&
-            !fun->nonLazyScript()->argumentsHasVarBinding())
+            !fun->nonLazyScript()->mayReadFrameArgsDirectly())
         {
             nformals = fun->nargs();
         }
