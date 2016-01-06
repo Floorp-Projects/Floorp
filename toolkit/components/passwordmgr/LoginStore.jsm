@@ -268,6 +268,8 @@ LoginStore.prototype = {
     if (!this.data.logins) {
       this.data.logins = [];
     }
+
+    // Stub needed for login imports before data has been migrated.
     if (!this.data.disabledHosts) {
       this.data.disabledHosts = [];
     }
