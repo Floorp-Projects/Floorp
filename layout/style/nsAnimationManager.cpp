@@ -8,6 +8,7 @@
 #include "mozilla/dom/CSSAnimationBinding.h"
 
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -416,7 +417,11 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   if (collection) {
     collection->mStyleRule = nullptr;
     collection->mStyleRuleRefreshTime = TimeStamp();
-    collection->UpdateAnimationGeneration(mPresContext);
+    EffectSet* effectSet =
+      EffectSet::GetEffectSet(aElement, aStyleContext->GetPseudoType());
+    if (effectSet) {
+      effectSet->UpdateAnimationGeneration(mPresContext);
+    }
 
     // Copy over the start times and (if still paused) pause starts
     // for each animation (matching on name only) that was also in the

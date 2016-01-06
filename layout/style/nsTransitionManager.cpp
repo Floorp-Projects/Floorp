@@ -19,6 +19,7 @@
 #include "nsRuleWalker.h"
 #include "nsCSSPropertySet.h"
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/EffectSet.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -464,7 +465,10 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
           currentValue != segment.mToValue) {
         // stop the transition
         if (anim->HasCurrentEffect()) {
-          collection->UpdateAnimationGeneration(mPresContext);
+          EffectSet* effectSet = EffectSet::GetEffectSet(aElement, pseudoType);
+          if (effectSet) {
+            effectSet->UpdateAnimationGeneration(mPresContext);
+          }
         }
         anim->CancelFromStyle();
         animations.RemoveElementAt(i);
@@ -604,7 +608,11 @@ nsTransitionManager::ConsiderStartingTransition(
       animations[currentIndex]->CancelFromStyle();
       oldPT = nullptr; // Clear pointer so it doesn't dangle
       animations.RemoveElementAt(currentIndex);
-      aElementTransitions->UpdateAnimationGeneration(mPresContext);
+      EffectSet* effectSet =
+        EffectSet::GetEffectSet(aElement, aNewStyleContext->GetPseudoType());
+      if (effectSet) {
+        effectSet->UpdateAnimationGeneration(mPresContext);
+      }
 
       if (animations.IsEmpty()) {
         aElementTransitions->Destroy();
@@ -735,7 +743,12 @@ nsTransitionManager::ConsiderStartingTransition(
       return;
     }
   }
-  aElementTransitions->UpdateAnimationGeneration(mPresContext);
+
+  EffectSet* effectSet =
+    EffectSet::GetEffectSet(aElement, aNewStyleContext->GetPseudoType());
+  if (effectSet) {
+    effectSet->UpdateAnimationGeneration(mPresContext);
+  }
 
   *aStartedAny = true;
   aWhichStarted->AddProperty(aProperty);

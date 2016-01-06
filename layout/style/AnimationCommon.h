@@ -201,7 +201,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     : mElement(aElement)
     , mElementProperty(aElementProperty)
     , mManager(aManager)
-    , mAnimationGeneration(0)
     , mCheckGeneration(0)
     , mStyleChanging(true)
     , mHasPendingAnimationRestyle(false)
@@ -337,24 +336,13 @@ public:
   // null, but mStyleRuleRefreshTime will still be valid.
   RefPtr<AnimValuesStyleRule> mStyleRule;
 
-  // RestyleManager keeps track of the number of animation
-  // 'mini-flushes' (see nsTransitionManager::UpdateAllThrottledStyles()).
-  // mAnimationGeneration is the sequence number of the last flush where a
-  // transition/animation changed.  We keep a similar count on the
-  // corresponding layer so we can check that the layer is up to date with
-  // the animation manager.
-  uint64_t mAnimationGeneration;
-  // Update mAnimationGeneration to nsCSSFrameConstructor's count
-  void UpdateAnimationGeneration(nsPresContext* aPresContext);
-
-  // For CSS transitions only, we also record the most recent generation
+  // For CSS transitions only, we record the most recent generation
   // for which we've done the transition update, so that we avoid doing
-  // it more than once per style change.  This should be greater than or
-  // equal to mAnimationGeneration, except when the generation counter
-  // cycles, or when animations are updated through the DOM Animation
-  // interfaces.
+  // it more than once per style change.
+  // (Note that we also store an animation generation on each EffectSet in
+  // order to track when we need to update animations on layers.)
   uint64_t mCheckGeneration;
-  // Update mAnimationGeneration to nsCSSFrameConstructor's count
+  // Update mCheckGeneration to RestyleManager's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
   // The refresh time associated with mStyleRule.

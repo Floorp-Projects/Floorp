@@ -522,7 +522,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   // Otherwise, in RestyleManager we'll notice the discrepancy between the
   // animation generation numbers and update the layer indefinitely.
   uint64_t animationGeneration =
-    RestyleManager::GetMaxAnimationGenerationForFrame(aFrame);
+    RestyleManager::GetAnimationGenerationForFrame(aFrame);
   aLayer->SetAnimationGeneration(animationGeneration);
 
   nsPresContext* presContext = aFrame->PresContext();

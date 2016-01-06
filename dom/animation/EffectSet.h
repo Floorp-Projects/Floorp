@@ -11,6 +11,8 @@
 #include "nsHashKeys.h" // For nsPtrHashKey
 #include "nsTHashtable.h" // For nsTHashtable
 
+class nsPresContext;
+
 namespace mozilla {
 
 namespace dom {
@@ -25,6 +27,7 @@ class EffectSet
 public:
   EffectSet()
     : mCascadeNeedsUpdate(false)
+    , mAnimationGeneration(0)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -125,6 +128,9 @@ public:
   void MarkCascadeNeedsUpdate() { mCascadeNeedsUpdate = true; }
   void MarkCascadeUpdated() { mCascadeNeedsUpdate = false; }
 
+  void UpdateAnimationGeneration(nsPresContext* aPresContext);
+  uint64_t GetAnimationGeneration() const { return mAnimationGeneration; }
+
   static nsIAtom** GetEffectSetPropertyAtoms();
 
 private:
@@ -139,6 +145,14 @@ private:
   // Set to true any time the set of effects is changed or when
   // one the effects goes in or out of the "in effect" state.
   bool mCascadeNeedsUpdate;
+
+  // RestyleManager keeps track of the number of animation restyles.
+  // 'mini-flushes' (see nsTransitionManager::UpdateAllThrottledStyles()).
+  // mAnimationGeneration is the sequence number of the last flush where a
+  // transition/animation changed.  We keep a similar count on the
+  // corresponding layer so we can check that the layer is up to date with
+  // the animation manager.
+  uint64_t mAnimationGeneration;
 
 #ifdef DEBUG
   bool mCalledPropertyDtor;
