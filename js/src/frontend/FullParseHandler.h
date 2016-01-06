@@ -881,22 +881,30 @@ class FullParseHandler
         return pn->isConstant();
     }
 
-    PropertyName* maybeUnparenthesizedName(ParseNode* pn) {
-        if (!pn->isInParens() && pn->isKind(PNK_NAME))
-            return pn->pn_atom->asPropertyName();
-        return nullptr;
+    bool isUnparenthesizedName(ParseNode* node) {
+        return node->isKind(PNK_NAME) && !node->isInParens();
     }
 
-    PropertyName* maybeParenthesizedName(ParseNode* pn) {
-        if (pn->isInParens() && pn->isKind(PNK_NAME))
-            return pn->pn_atom->asPropertyName();
-        return nullptr;
+    bool isNameAnyParentheses(ParseNode* node) {
+        return node->isKind(PNK_NAME);
     }
 
-    PropertyName* maybeNameAnyParentheses(ParseNode* node) {
-        if (PropertyName* name = maybeUnparenthesizedName(node))
-            return name;
-        return maybeParenthesizedName(node);
+    bool nameIsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this function on known names");
+
+        return node->pn_atom == cx->names().eval;
+    }
+
+    const char* nameIsArgumentsEvalAnyParentheses(ParseNode* node, ExclusiveContext* cx) {
+        MOZ_ASSERT(isNameAnyParentheses(node),
+                   "must only call this function on known names");
+
+        if (nameIsEvalAnyParentheses(node, cx))
+            return js_eval_str;
+        if (node->pn_atom == cx->names().arguments)
+            return js_arguments_str;
+        return nullptr;
     }
 
     bool isCall(ParseNode* pn) {

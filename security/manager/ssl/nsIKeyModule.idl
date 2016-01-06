@@ -4,46 +4,34 @@
 
 #include "nsISupports.idl"
 
+%{ C++
+ /* forward declaration */
+ typedef struct PK11SymKeyStr PK11SymKey;
+%}
+[ptr] native PK11SymKeyPtr(PK11SymKey);
+
 // An opaque key object.
-[scriptable, uuid(4b31f4ed-9424-4710-b946-79b7e33cf3a8)]
+[scriptable, uuid(ee2dc516-ba7b-4e77-89fe-c43b886ef715)]
 interface nsIKeyObject : nsISupports
 {
   // Key types
   const short SYM_KEY = 1;
-  const short PRIVATE_KEY = 2;
-  const short PUBLIC_KEY = 3;
 
   // Algorithm types
-  const short RC4 = 1;
-  const short AES_CBC = 2;
   const short HMAC = 257;
 
-  // aAlgorithm is an algorithm type
-  // aKey is either a PK11SymKey, SECKEYPublicKey, or a SECKEYPrivateKey.
   // The nsIKeyObject will take ownership of the key and be responsible
   // for freeing the key memory when destroyed.
-  [noscript] void initKey(in short aAlgorithm, in voidPtr aKey);
+  [noscript] void initKey(in short aAlgorithm, in PK11SymKeyPtr aKey);
 
-  // Return a pointer to the underlying key object
-  [noscript] voidPtr getKeyObj();
+  // Returns a pointer to the underlying key object.
+  [noscript] PK11SymKeyPtr getKeyObj();
 
-  // Will return NS_ERROR_NOT_INITIALIZED if initKey hasn't been run
   short getType();
 };
 
-[scriptable, uuid(264eb54d-e20d-49a0-890c-1a5986ea81c4)]
+[scriptable, uuid(838bdbf1-8244-448f-8bcd-cede70227d75)]
 interface nsIKeyObjectFactory : nsISupports
 {
-  nsIKeyObject lookupKeyByName(in ACString aName);
-
-  nsIKeyObject unwrapKey(in short aAlgorithm,
-                         [const, array, size_is(aWrappedKeyLen)] in octet aWrappedKey,
-                         in unsigned long aWrappedKeyLen);
-
-  // TODO: deriveKeyFrom*
-
-
-  // DO NOT USE
-  // This is not FIPS compliant and should not be used.
   nsIKeyObject keyFromString(in short aAlgorithm, in ACString aKey);
 };

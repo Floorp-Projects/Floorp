@@ -30,7 +30,7 @@ SharedSurface_IOSurface::Create(const RefPtr<MacIOSurface>& ioSurf,
 }
 
 void
-SharedSurface_IOSurface::Fence()
+SharedSurface_IOSurface::ProducerReleaseImpl()
 {
     mGL->MakeCurrent();
     mGL->fFlush();

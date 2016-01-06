@@ -15,7 +15,7 @@
 
 function backgroundScript() {
   browser.runtime.getPlatformInfo(info => {
-    let validOSs = ["mac", "win", "android", "cros", "linux", "openbsd"];
+    let validOSs = ["mac", "win", "android", "cros", "linux", "openbsd", "gonk"];
     let validArchs = ["arm", "x86-32", "x86-64"];
 
     browser.test.assertTrue(validOSs.indexOf(info.os) != -1, "OS is valid");

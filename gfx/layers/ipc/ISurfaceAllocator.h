@@ -216,7 +216,11 @@ public:
   }
 
 private:
-  static mozilla::Atomic<size_t> sAmount;
+  // Typically we use |size_t| in memory reporters, but in the past this
+  // variable has sometimes gone negative due to missing DidAlloc() calls.
+  // Therefore, we use a signed type so that any such negative values show up
+  // as negative in about:memory, rather than as enormous positive numbers.
+  static mozilla::Atomic<ptrdiff_t> sAmount;
 };
 
 } // namespace layers

@@ -114,15 +114,14 @@ ReadbackProcessor::BuildUpdatesForLayer(ReadbackLayer* aLayer)
       aLayer->mBackgroundColor = colorLayer->GetColor();
       NS_ASSERTION(aLayer->mBackgroundColor.a == 1.f,
                    "Color layer said it was opaque!");
-      RefPtr<gfxContext> ctx =
+      RefPtr<DrawTarget> dt =
           aLayer->mSink->BeginUpdate(aLayer->GetRect(),
                                      aLayer->AllocateSequenceNumber());
-      if (ctx) {
+      if (dt) {
         ColorPattern color(ToDeviceColor(aLayer->mBackgroundColor));
         IntSize size = aLayer->GetSize();
-        ctx->GetDrawTarget()->FillRect(Rect(0, 0, size.width, size.height),
-                                       color);
-        aLayer->mSink->EndUpdate(ctx, aLayer->GetRect());
+        dt->FillRect(Rect(0, 0, size.width, size.height), color);
+        aLayer->mSink->EndUpdate(aLayer->GetRect());
       }
     }
   } else {

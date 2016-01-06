@@ -1440,37 +1440,32 @@ struct nsStylePosition {
   uint16_t ComputedAlignContent() const { return mAlignContent; }
 
   /**
-   * Return the computed value for 'align-items' given our 'display' value in
-   * aDisplay.
+   * Return the computed value for 'align-items'.
    */
-  uint8_t ComputedAlignItems(const nsStyleDisplay* aDisplay) const;
+  uint8_t ComputedAlignItems() const { return mAlignItems; }
 
   /**
-   * Return the computed value for 'align-self' given our 'display' value in
-   * aDisplay and the parent StyleContext aParent (or null for the root).
+   * Return the computed value for 'align-self' given our parent StyleContext
+   * aParent (or null for the root).
    */
-  uint8_t ComputedAlignSelf(const nsStyleDisplay* aDisplay,
-                            nsStyleContext* aParent) const;
+  uint8_t ComputedAlignSelf(nsStyleContext* aParent) const;
 
   /**
-   * Return the computed value for 'justify-content' given our 'display' value
-   * in aDisplay.
+   * Return the computed value for 'justify-content'.
    */
-  uint16_t ComputedJustifyContent(const nsStyleDisplay* aDisplay) const;
+  uint16_t ComputedJustifyContent() const { return mJustifyContent; }
 
   /**
-   * Return the computed value for 'justify-items' given our 'display' value in
-   * aDisplay and the parent StyleContext aParent (or null for the root).
+   * Return the computed value for 'justify-items' given our parent StyleContext
+   * aParent (or null for the root).
    */
-  uint8_t ComputedJustifyItems(const nsStyleDisplay* aDisplay,
-                               nsStyleContext* aParent) const;
+  uint8_t ComputedJustifyItems(nsStyleContext* aParent) const;
 
   /**
-   * Return the computed value for 'justify-self' given our 'display' value in
-   * aDisplay and the parent StyleContext aParent (or null for the root).
+   * Return the computed value for 'justify-self' given our parent StyleContext
+   * aParent (or null for the root).
    */
-  uint8_t ComputedJustifySelf(const nsStyleDisplay* aDisplay,
-                              nsStyleContext* aParent) const;
+  uint8_t ComputedJustifySelf(nsStyleContext* aParent) const;
 
   Position      mObjectPosition;        // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto

@@ -9,13 +9,13 @@
 #include "DOMStorageDBThread.h"
 #include "DOMStorageCache.h"
 
+#include "mozilla/BasePrincipal.h"
 #include "nsIObserverService.h"
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermission.h"
 #include "nsIIDNService.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "nsICookiePermission.h"
 
 #include "nsPrintfCString.h"
@@ -62,7 +62,7 @@ DOMStorageObserver::Init()
   obs->AddObserver(sSelf, "perm-changed", true);
   obs->AddObserver(sSelf, "browser:purge-domain-data", true);
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
-  obs->AddObserver(sSelf, "webapps-clear-data", true);
+  obs->AddObserver(sSelf, "clear-origin-data", true);
 
   // Shutdown
   obs->AddObserver(sSelf, "profile-after-change", true);
@@ -111,11 +111,13 @@ DOMStorageObserver::RemoveSink(DOMStorageObserverSink* aObs)
 }
 
 void
-DOMStorageObserver::Notify(const char* aTopic, const nsACString& aData)
+DOMStorageObserver::Notify(const char* aTopic,
+                           const nsAString& aOriginAttributesPattern,
+                           const nsACString& aOriginScope)
 {
   for (uint32_t i = 0; i < mSinks.Length(); ++i) {
     DOMStorageObserverSink* sink = mSinks[i];
-    sink->Observe(aTopic, aData);
+    sink->Observe(aTopic, aOriginAttributesPattern, aOriginScope);
   }
 }
 
@@ -202,6 +204,9 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
+    nsAutoCString originSuffix;
+    BasePrincipal::Cast(principal)->OriginAttributesRef().CreateSuffix(originSuffix);
+
     nsCOMPtr<nsIURI> origin;
     principal->GetURI(getter_AddRefs(origin));
     if (!origin) {
@@ -214,11 +219,11 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
       return NS_OK;
     }
 
-    nsAutoCString scope;
-    rv = CreateReversedDomain(host, scope);
+    nsAutoCString originScope;
+    rv = CreateReversedDomain(host, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    Notify("session-only-cleared", scope);
+    Notify("session-only-cleared", NS_ConvertUTF8toUTF16(originSuffix), originScope);
 
     return NS_OK;
   }
@@ -239,16 +244,16 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
                    aceDomain);
     }
 
-    nsAutoCString scopePrefix;
-    rv = CreateReversedDomain(aceDomain, scopePrefix);
+    nsAutoCString originScope;
+    rv = CreateReversedDomain(aceDomain, originScope);
     NS_ENSURE_SUCCESS(rv, rv);
 
     DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
-    db->AsyncClearMatchingScope(scopePrefix);
+    db->AsyncClearMatchingOrigin(originScope);
 
-    Notify("domain-data-cleared", scopePrefix);
+    Notify("domain-data-cleared", EmptyString(), originScope);
 
     return NS_OK;
   }
@@ -260,42 +265,20 @@ DOMStorageObserver::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  // Clear data beloging to an app.
-  if (!strcmp(aTopic, "webapps-clear-data")) {
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-      do_QueryInterface(aSubject);
-    if (!params) {
-      NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
-      return NS_ERROR_UNEXPECTED;
+  // Clear data of the origins whose prefixes will match the suffix.
+  if (!strcmp(aTopic, "clear-origin-data")) {
+    OriginAttributesPattern pattern;
+    if (!pattern.Init(nsDependentString(aData))) {
+      NS_ERROR("Cannot parse origin attributes pattern");
+      return NS_ERROR_FAILURE;
     }
-
-    uint32_t appId;
-    bool browserOnly;
-
-    rv = params->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = params->GetBrowserOnly(&browserOnly);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(appId != nsIScriptSecurityManager::UNKNOWN_APP_ID);
 
     DOMStorageDBBridge* db = DOMStorageCache::StartDatabase();
     NS_ENSURE_TRUE(db, NS_ERROR_FAILURE);
 
-    nsAutoCString scope;
-    scope.AppendInt(appId);
-    scope.AppendLiteral(":t:");
-    db->AsyncClearMatchingScope(scope);
-    Notify("app-data-cleared", scope);
+    db->AsyncClearMatchingOriginAttributes(pattern);
 
-    if (!browserOnly) {
-      scope.Truncate();
-      scope.AppendInt(appId);
-      scope.AppendLiteral(":f:");
-      db->AsyncClearMatchingScope(scope);
-      Notify("app-data-cleared", scope);
-    }
+    Notify("origin-attr-pattern-cleared", nsDependentString(aData));
 
     return NS_OK;
   }
