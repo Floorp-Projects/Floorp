@@ -133,7 +133,7 @@ add_task(function*() {
       node: ruleEditor.source,
       menuItem: contextmenu.menuitemCopyLocation,
       expectedPattern: "http://example.com/browser/devtools/client/" +
-                       "styleinspector/test/doc_copystyles.css",
+                       "inspector/rules/test/doc_copystyles.css",
       hidden: {
         copyLocation: false,
         copyPropertyDeclaration: true,
