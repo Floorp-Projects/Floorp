@@ -370,8 +370,7 @@ struct nsCSSRendering {
   static void PaintBoxShadowInner(nsPresContext* aPresContext,
                                   nsRenderingContext& aRenderingContext,
                                   nsIFrame* aForFrame,
-                                  const nsRect& aFrameArea,
-                                  const nsRect& aDirtyRect);
+                                  const nsRect& aFrameArea);
 
   static void PaintBoxShadowOuter(nsPresContext* aPresContext,
                                   nsRenderingContext& aRenderingContext,
