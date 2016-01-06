@@ -17,7 +17,7 @@ loader.lazyGetter(this, "gDevTools", () =>
 loader.lazyGetter(this, "RuleView",
   () => require("devtools/client/styleinspector/rule-view"));
 loader.lazyGetter(this, "ComputedView",
-  () => require("devtools/client/styleinspector/computed-view"));
+  () => require("devtools/client/inspector/computed/computed"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties"));
 
