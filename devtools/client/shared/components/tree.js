@@ -159,6 +159,9 @@ const Tree = module.exports = createClass({
     // can be reused, false otherwise. The predicate function is passed the
     // cached traversal as an array of nodes.
     reuseCachedTraversal: PropTypes.func,
+    // Optional event handlers for when items are expanded or collapsed.
+    onExpand: PropTypes.func,
+    onCollapse: PropTypes.func,
   },
 
   getDefaultProps() {
@@ -336,9 +339,17 @@ const Tree = module.exports = createClass({
   _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
     this.state.expanded.add(item);
 
+    if (this.props.onExpand) {
+      this.props.onExpand(item);
+    }
+
     if (expandAllChildren) {
       for (let { item: child } of this._dfs(item)) {
         this.state.expanded.add(child);
+
+        if (this.props.onExpand) {
+          this.props.onExpand(child);
+        }
       }
     }
 
@@ -355,6 +366,11 @@ const Tree = module.exports = createClass({
    */
   _onCollapse: oncePerAnimationFrame(function (item) {
     this.state.expanded.delete(item);
+
+    if (this.props.onCollapse) {
+      this.props.onCollapse(item);
+    }
+
     this.setState({
       expanded: this.state.expanded,
       cachedTraversal: null,
