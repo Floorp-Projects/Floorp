@@ -502,7 +502,6 @@
 @RESPATH@/components/nsPrompter.manifest
 @RESPATH@/components/nsPrompter.js
 #ifdef MOZ_SERVICES_HEALTHREPORT
-@RESPATH@/components/HealthReportComponents.manifest
 @RESPATH@/browser/components/SelfSupportService.manifest
 @RESPATH@/browser/components/SelfSupportService.js
 #endif
