@@ -5517,15 +5517,8 @@ BytecodeEmitter::emitForInOrOfVariables(ParseNode* pn)
 bool
 BytecodeEmitter::emitSpread(bool allowSelfHosted)
 {
-    StmtType type = StmtType::SPREAD;
-
-    ptrdiff_t top = offset();
-    ParseNode* forHead = nullptr;
-    ParseNode* forHeadExpr = nullptr;
-    ParseNode* forBody = nullptr;
-
     LoopStmtInfo stmtInfo(cx);
-    pushLoopStatement(&stmtInfo, type, top);
+    pushLoopStatement(&stmtInfo, StmtType::SPREAD, offset());
 
     // Jump down to the loop condition to minimize overhead assuming at least
     // one iteration, as the other loop forms do.  Annotate so IonMonkey can
@@ -5533,13 +5526,17 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     unsigned noteIndex;
     if (!newSrcNote(SRC_FOR_OF, &noteIndex))
         return false;
-    ptrdiff_t jmp;
-    if (!emitJump(JSOP_GOTO, 0, &jmp))
+
+    // Jump down to the loop condition to minimize overhead, assuming at least
+    // one iteration.  (This is also what we do for loops; whether this
+    // assumption holds for spreads is an unanswered question.)
+    ptrdiff_t initialJump;
+    if (!emitJump(JSOP_GOTO, 0, &initialJump))            // ITER ARR I (during the goto)
         return false;
 
-    top = offset();
+    ptrdiff_t top = offset();
     stmtInfo.setTop(top);
-    if (!emitLoopHead(nullptr))
+    if (!emitLoopHead(nullptr))                           // ITER ARR I
         return false;
 
     // When we enter the goto above, we have ITER ARR I on the stack.  But when
@@ -5548,89 +5545,56 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     // Increment manually to reflect this.
     this->stackDepth++;
 
+    ptrdiff_t beq;
+    {
 #ifdef DEBUG
-    auto loopDepth = this->stackDepth;
+        auto loopDepth = this->stackDepth;
 #endif
 
-    // Emit code to assign result.value to the iteration variable.
-    if (type == StmtType::FOR_OF_LOOP) {
-        if (!emit1(JSOP_DUP))                             // ITER RESULT RESULT
+        // Emit code to assign result.value to the iteration variable.
+        if (!emitAtomOp(cx->names().value, JSOP_GETPROP)) // ITER ARR I VALUE
             return false;
-    }
-    if (!emitAtomOp(cx->names().value, JSOP_GETPROP))     // ... RESULT VALUE
-        return false;
-    if (type == StmtType::FOR_OF_LOOP) {
-        if (!emitAssignment(forHead->pn_kid2, JSOP_NOP, nullptr)) // ITER RESULT VALUE
-            return false;
-        if (!emit1(JSOP_POP))                             // ITER RESULT
-            return false;
-
-        // The stack should be balanced around the assignment opcode sequence.
-        MOZ_ASSERT(this->stackDepth == loopDepth);
-
-        // Emit code for the loop body.
-        if (!emitTree(forBody))
-            return false;
-
-        // Set loop and enclosing "update" offsets, for continue.
-        StmtInfoBCE* stmt = &stmtInfo;
-        do {
-            stmt->update = offset();
-        } while ((stmt = stmt->enclosing) != nullptr && stmt->type == StmtType::LABEL);
-    } else {
         if (!emit1(JSOP_INITELEM_INC))                    // ITER ARR (I+1)
             return false;
 
         MOZ_ASSERT(this->stackDepth == loopDepth - 1);
 
-        // StmtType::SPREAD never contain continue, so do not set "update" offset.
-    }
+        // Spread operations can't contain |continue|, so don't bother setting loop
+        // and enclosing "update" offsets, as we do with for-loops.
 
-    // COME FROM the beginning of the loop to here.
-    setJumpOffsetAt(jmp);
-    if (!emitLoopEntry(forHeadExpr))
-        return false;
+        // COME FROM the beginning of the loop to here.
+        setJumpOffsetAt(initialJump);
+        if (!emitLoopEntry(nullptr))                      // ITER ARR I
+            return false;
 
-    if (type == StmtType::FOR_OF_LOOP) {
-        if (!emit1(JSOP_POP))                             // ITER
-            return false;
-        if (!emit1(JSOP_DUP))                             // ITER ITER
-            return false;
-    } else {
         if (!emitDupAt(2))                                // ITER ARR I ITER
             return false;
+        if (!emitIteratorNext(nullptr, allowSelfHosted))  // ITER ARR I RESULT
+            return false;
+        if (!emit1(JSOP_DUP))                             // ITER ARR I RESULT RESULT
+            return false;
+        if (!emitAtomOp(cx->names().done, JSOP_GETPROP))  // ITER ARR I RESULT DONE?
+            return false;
+
+        if (!emitJump(JSOP_IFEQ, top - offset(), &beq))   // ITER ARR I RESULT
+            return false;
+
+        MOZ_ASSERT(this->stackDepth == loopDepth);
     }
-    if (!emitIteratorNext(forHead, allowSelfHosted))                       // ... RESULT
-        return false;
-    if (!emit1(JSOP_DUP))                                 // ... RESULT RESULT
-        return false;
-    if (!emitAtomOp(cx->names().done, JSOP_GETPROP))      // ... RESULT DONE?
-        return false;
-
-    ptrdiff_t beq;
-    if (!emitJump(JSOP_IFEQ, top - offset(), &beq))       // ... RESULT
-        return false;
-
-    MOZ_ASSERT(this->stackDepth == loopDepth);
 
     // Let Ion know where the closing jump of this loop is.
-    if (!setSrcNoteOffset(noteIndex, 0, beq - jmp))
+    if (!setSrcNoteOffset(noteIndex, 0, beq - initialJump))
         return false;
 
-    // Fixup breaks and continues.
-    // For StmtType::SPREAD, just pop innermostStmt().
     popStatement();
 
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top, offset()))
         return false;
 
-    if (type == StmtType::SPREAD) {
-        if (!emit2(JSOP_PICK, 3))      // ARR I RESULT ITER
-            return false;
-    }
+    if (!emit2(JSOP_PICK, 3))                             // ARR FINAL_INDEX RESULT ITER
+        return false;
 
-    // Pop the result and the iter.
-    return emitUint16Operand(JSOP_POPN, 2);
+    return emitUint16Operand(JSOP_POPN, 2);               // ARR FINAL_INDEX
 }
 
 bool
