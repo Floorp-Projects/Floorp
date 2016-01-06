@@ -51,6 +51,21 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
     return false;
   }
 
+  // The animation cascade will almost always be up-to-date by this point
+  // but there are some cases such as when we are restoring the refresh driver
+  // from test control after seeking where it might not be the case.
+  //
+  // Those cases are probably not important but just to be safe, let's make
+  // sure the cascade is up to date since if it *is* up to date, this is
+  // basically a no-op.
+  Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>> pseudoElement =
+    EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+  if (pseudoElement) {
+    EffectCompositor::MaybeUpdateCascadeResults(pseudoElement->first(),
+                                                pseudoElement->second(),
+                                                aFrame->StyleContext());
+  }
+
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
       nsCString message;
