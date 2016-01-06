@@ -60,6 +60,9 @@ add_test(function test_handle_empty_source_uri() {
   do_check_true("installedIDs" in result);
   do_check_eq(0, result.installedIDs.length);
 
+  do_check_true("skipped" in result);
+  do_check_true(result.skipped.includes(ID));
+
   server.stop(run_next_test);
 });
 
@@ -79,44 +82,18 @@ add_test(function test_ignore_untrusted_source_uris() {
     let sourceURI = ioService.newURI(s, null, null);
     let addon = {sourceURI: sourceURI, name: "bad", id: "bad"};
 
-    try {
-      let cb = Async.makeSpinningCallback();
-      AddonUtils.getInstallFromSearchResult(addon, cb, true);
-      cb.wait();
-    } catch (ex) {
-      do_check_neq(null, ex);
-      do_check_eq(0, ex.message.indexOf("Insecure source URI"));
-      continue;
-    }
-
-    // We should never get here if an exception is thrown.
-    do_check_true(false);
+    let canInstall = AddonUtils.canInstallAddon(addon);
+    do_check_false(canInstall, "Correctly rejected a bad URL");
   }
 
-  let count = 0;
   for (let s of good) {
     let sourceURI = ioService.newURI(s, null, null);
     let addon = {sourceURI: sourceURI, name: "good", id: "good"};
 
-    // Despite what you might think, we don't get an error in the callback.
-    // The install won't work because the underlying Addon instance wasn't
-    // proper. But, that just results in an AddonInstall that is missing
-    // certain values. We really just care that the callback is being invoked
-    // anyway.
-    let callback = function onInstall(error, install) {
-      do_check_null(error);
-      do_check_neq(null, install);
-      do_check_eq(sourceURI.spec, install.sourceURI.spec);
-
-      count += 1;
-
-      if (count >= good.length) {
-        run_next_test();
-      }
-    };
-
-    AddonUtils.getInstallFromSearchResult(addon, callback, true);
+    let canInstall = AddonUtils.canInstallAddon(addon);
+    do_check_true(canInstall, "Correctly accepted a good URL");
   }
+  run_next_test();
 });
 
 add_test(function test_source_uri_rewrite() {
@@ -151,7 +128,11 @@ add_test(function test_source_uri_rewrite() {
   let server = createAndStartHTTPServer();
 
   let installCallback = Async.makeSpinningCallback();
-  AddonUtils.installAddons([{id: "rewrite@tests.mozilla.org"}], installCallback);
+  let installOptions = {
+    id: "rewrite@tests.mozilla.org",
+    requireSecureURI: false,
+  }
+  AddonUtils.installAddons([installOptions], installCallback);
 
   installCallback.wait();
   do_check_true(installCalled);

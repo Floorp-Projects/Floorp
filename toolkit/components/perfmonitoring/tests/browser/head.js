@@ -93,15 +93,19 @@ CPUBurner.frameScript = function() {
       });
     }
 
-    sendAsyncMessage("test-performance-watcher:cpow-init", {}, {
-      burnCPOWInSandbox: function(addonId) {
-        try {
-          burnCPUInSandbox(addonId);
-        } catch (ex) {
-          dump(`This is the addon attempting to burn CPOW: error ${ex}\n`);
-          dump(`${ex.stack}\n`);
-        }
+    // Bind the function to the global context or it might be GC'd during test
+    // causing failures (bug 1230027)
+    this.burnCPOWInSandbox = function(addonId) {
+      try {
+        burnCPUInSandbox(addonId);
+      } catch (ex) {
+        dump(`This is the addon attempting to burn CPOW: error ${ex}\n`);
+        dump(`${ex.stack}\n`);
       }
+    }
+
+    sendAsyncMessage("test-performance-watcher:cpow-init", {}, {
+      burnCPOWInSandbox: this.burnCPOWInSandbox
     });
 
   } catch (ex) {
