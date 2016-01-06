@@ -72,6 +72,7 @@ public:
   static Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
+private:
   // Get the properties that we are able to animate on the compositor that
   // are specified at a higher level in the cascade than the animations
   // level in |aStyleContext|.
@@ -79,7 +80,6 @@ public:
   GetOverriddenProperties(nsStyleContext* aStyleContext,
                           nsCSSPropertySet& aPropertiesOverridden);
 
-private:
   static void
   UpdateCascadeResults(EffectSet& aEffectSet,
                        dom::Element* aElement,
