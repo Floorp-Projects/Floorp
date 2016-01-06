@@ -1366,15 +1366,16 @@ PeerConnectionObserver.prototype = {
   //                 STUN requests.
 
   handleIceConnectionStateChange: function(iceConnectionState) {
-    if (this._dompc.iceConnectionState === 'new') {
+    let pc = this._dompc;
+    if (pc.iceConnectionState === 'new') {
       var checking_histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_CHECKING_RATE");
       if (iceConnectionState === 'checking') {
         checking_histogram.add(true);
       } else if (iceConnectionState === 'failed') {
         checking_histogram.add(false);
       }
-    } else if (this._dompc.iceConnectionState === 'checking') {
-      var success_histogram = Services.telemetry.getHistogramById(this._dompc._isLoop ?
+    } else if (pc.iceConnectionState === 'checking') {
+      var success_histogram = Services.telemetry.getHistogramById(pc._isLoop ?
         "LOOP_ICE_SUCCESS_RATE" : "WEBRTC_ICE_SUCCESS_RATE");
       if (iceConnectionState === 'completed' ||
           iceConnectionState === 'connected') {
@@ -1385,10 +1386,10 @@ PeerConnectionObserver.prototype = {
     }
 
     if (iceConnectionState === 'failed') {
-      this._dompc.logError("ICE failed, see about:webrtc for more details", null, 0);
+      pc.logError("ICE failed, see about:webrtc for more details", null, 0);
     }
 
-    this._dompc.changeIceConnectionState(iceConnectionState);
+    pc.changeIceConnectionState(iceConnectionState);
   },
 
   // This method is responsible for updating iceGatheringState. This
@@ -1443,11 +1444,11 @@ PeerConnectionObserver.prototype = {
   },
 
   onGetStatsSuccess: function(dict) {
-    let chromeobj = new RTCStatsReport(this._dompc._win, dict);
-    let webidlobj = this._dompc._win.RTCStatsReport._create(this._dompc._win,
-                                                            chromeobj);
+    let pc = this._dompc;
+    let chromeobj = new RTCStatsReport(pc._win, dict);
+    let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
     chromeobj.makeStatsPublic();
-    this._dompc._onGetStatsSuccess(webidlobj);
+    pc._onGetStatsSuccess(webidlobj);
   },
 
   onGetStatsError: function(code, message) {
@@ -1460,7 +1461,7 @@ PeerConnectionObserver.prototype = {
     this.dispatchEvent(ev);
   },
 
-  onRemoveStream: function(stream, type) {
+  onRemoveStream: function(stream) {
     this.dispatchEvent(new this._dompc._win.MediaStreamEvent("removestream",
                                                              { stream: stream }));
   },
@@ -1471,24 +1472,23 @@ PeerConnectionObserver.prototype = {
                                                   new RTCRtpReceiver(this,
                                                                      track));
     pc._receivers.push(receiver);
-    let ev = new this._dompc._win.RTCTrackEvent("track",
-                                                { receiver: receiver,
-                                                  track: track,
-                                                  streams: streams });
+    let ev = new pc._win.RTCTrackEvent("track",
+                                       { receiver: receiver,
+                                         track: track,
+                                         streams: streams });
     this.dispatchEvent(ev);
 
     // Fire legacy event as well for a little bit.
-    ev = new this._dompc._win.MediaStreamTrackEvent("addtrack", { track: track });
+    ev = new pc._win.MediaStreamTrackEvent("addtrack", { track: track });
     this.dispatchEvent(ev);
   },
 
-  onRemoveTrack: function(track, type) {
-    let i = this._dompc._receivers.findIndex(receiver => receiver.track == track);
+  onRemoveTrack: function(track) {
+    let pc = this._dompc;
+    let i = pc._receivers.findIndex(receiver => receiver.track == track);
     if (i >= 0) {
-      this._receivers.splice(i, 1);
+      pc._receivers.splice(i, 1);
     }
-    this.dispatchEvent(new this._dompc._win.MediaStreamTrackEvent("removetrack",
-                                                                  { track: track }));
   },
 
   onReplaceTrackSuccess: function() {
