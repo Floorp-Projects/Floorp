@@ -7,6 +7,6 @@
 #if MOZ_WIDGET_TOOLKIT == android
 #include ../../mobile/android/chrome/content/healthreport-prefs.js
 #else
-#include ../../services/healthreport/healthreport-prefs.js
+#include ../../toolkit/components/telemetry/healthreport-prefs.js
 #endif
 #endif
