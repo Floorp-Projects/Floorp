@@ -161,6 +161,18 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
     }
     mInEffectOnLastAnimationTimingUpdate = inEffect;
   }
+
+  // Request restyle if necessary.
+  AnimationCollection* collection = GetCollection();
+  if (collection &&
+      !mProperties.IsEmpty() &&
+      inEffect) {
+    // FIXME: Detect when the progress is not changing and don't request a
+    // restyle in that case
+    collection->RequestRestyle(CanThrottle() ?
+                               AnimationCollection::RestyleType::Throttled :
+                               AnimationCollection::RestyleType::Standard);
+  }
 }
 
 Nullable<TimeDuration>
@@ -1803,8 +1815,8 @@ KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
 bool
 KeyframeEffectReadOnly::CanThrottle() const
 {
-  // Animation::CanThrottle checks for not in effect animations
-  // before calling this.
+  // NotifyAnimationTimingUpdated checks that we are in effect before
+  // calling this.
   MOZ_ASSERT(IsInEffect(), "Effect should be in effect");
 
   // Unthrottle if this animation is not current (i.e. it has passed the end).
