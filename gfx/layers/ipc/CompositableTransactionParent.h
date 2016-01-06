@@ -46,8 +46,6 @@ protected:
    */
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                  EditReplyVector& replyv);
-  void DestroyActor(const OpDestroy& aOp);
-
   bool IsOnCompositorSide() const override { return true; }
 
   /**
@@ -59,7 +57,6 @@ protected:
   virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
 
   std::vector<AsyncParentMessageData> mPendingAsyncMessage;
-  std::vector<PTextureParent*> mDestroyedTextures;
 };
 
 } // namespace layers
