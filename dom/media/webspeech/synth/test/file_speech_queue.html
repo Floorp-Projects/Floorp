@@ -30,9 +30,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=525444
 var langUriMap = {};
 
 for (var voice of speechSynthesis.getVoices()) {
-  if (voice.voiceURI.indexOf('urn:moz-tts:fake-direct') < 0) {
-    continue;
-  }
   langUriMap[voice.lang] = voice.voiceURI;
   ok(true, voice.lang + ' ' + voice.voiceURI + ' ' + voice.default);
   is(voice.default, voice.lang == 'en-JM', 'Only Jamaican voice should be default');
@@ -43,6 +40,7 @@ ok(langUriMap['en-GB'], 'No English-British voice');
 ok(langUriMap['en-CA'], 'No English-Canadian voice');
 ok(langUriMap['fr-CA'], 'No French-Canadian voice');
 ok(langUriMap['es-MX'], 'No Spanish-Mexican voice');
+ok(langUriMap['it-IT-fail'], 'No Failing Italian voice');
 
 function testFunc(done_cb) {
   synthTestQueue(
@@ -53,6 +51,8 @@ function testFunc(done_cb) {
       { uri: langUriMap['fr-CA'], rate: 0.5, pitch: 0.75}],
      [{text: "How are you doing?", args: { lang: "en-GB" } },
       { rate: 1, pitch: 1, uri: langUriMap['en-GB']}],
+     [{text: "Come stai?", args: { lang: "it-IT-fail" } },
+      { rate: 1, pitch: 1, uri: langUriMap['it-IT-fail'], err: true }],
      [{text: "¡hasta mañana!", args: { lang: "es-MX" } },
       { uri: langUriMap['es-MX'] }]],
     function () {
