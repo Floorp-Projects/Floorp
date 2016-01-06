@@ -3582,6 +3582,8 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
     dst->hasInnerFunctions_ = src->hasInnerFunctions();
     dst->isGeneratorExp_ = src->isGeneratorExp();
     dst->setGeneratorKind(src->generatorKind());
+    dst->isDerivedClassConstructor_ = src->isDerivedClassConstructor();
+    dst->needsHomeObject_ = src->needsHomeObject();
 
     if (nconsts != 0) {
         HeapValue* vector = Rebase<HeapValue>(dst, src, src->consts()->vector);
