@@ -26,6 +26,8 @@ static const int DEFAULT_SAMPLING_RATE = 16000;
 static const int DEFAULT_FRAME_WIDTH = 640;
 static const int DEFAULT_FRAME_HEIGHT = 480;
 static const int DEFAULT_TRACK_RATE = USECS_PER_S;
+// 30 seconds threshold if the encoder still can't not be initialized.
+static const int INIT_FAILED_DURATION = 30;
 
 TrackEncoder::TrackEncoder()
   : mReentrantMonitor("media.TrackEncoder")
@@ -34,8 +36,8 @@ TrackEncoder::TrackEncoder()
   , mInitialized(false)
   , mEndOfStream(false)
   , mCanceled(false)
-  , mAudioInitCounter(0)
-  , mVideoInitCounter(0)
+  , mInitCounter(0)
+  , mNotInitDuration(0)
 {
 }
 
@@ -54,8 +56,8 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
   // Check and initialize parameters for codec encoder.
   if (!mInitialized) {
-    mAudioInitCounter++;
-    TRACK_LOG(LogLevel::Debug, ("Init the audio encoder %d times", mAudioInitCounter));
+    mInitCounter++;
+    TRACK_LOG(LogLevel::Debug, ("Init the audio encoder %d times", mInitCounter));
     AudioSegment::ChunkIterator iter(const_cast<AudioSegment&>(audio));
     while (!iter.IsEnded()) {
       AudioChunk chunk = *iter;
@@ -72,6 +74,15 @@ AudioTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       }
 
       iter.Next();
+    }
+
+    mNotInitDuration += aQueuedMedia.GetDuration();
+    if (!mInitialized &&
+        (mNotInitDuration / aGraph->GraphRate() > INIT_FAILED_DURATION) &&
+        mInitCounter > 1) {
+      LOG("[AudioTrackEncoder]: Initialize failed for 30s.");
+      NotifyEndOfStream();
+      return;
     }
   }
 
@@ -187,8 +198,8 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
 
    // Check and initialize parameters for codec encoder.
   if (!mInitialized) {
-    mVideoInitCounter++;
-    TRACK_LOG(LogLevel::Debug, ("Init the video encoder %d times", mVideoInitCounter));
+    mInitCounter++;
+    TRACK_LOG(LogLevel::Debug, ("Init the video encoder %d times", mInitCounter));
     VideoSegment::ChunkIterator iter(const_cast<VideoSegment&>(video));
     while (!iter.IsEnded()) {
       VideoChunk chunk = *iter;
@@ -206,6 +217,15 @@ VideoTrackEncoder::NotifyQueuedTrackChanges(MediaStreamGraph* aGraph,
       }
 
       iter.Next();
+    }
+
+    mNotInitDuration += aQueuedMedia.GetDuration();
+    if (!mInitialized &&
+        (mNotInitDuration / aGraph->GraphRate() > INIT_FAILED_DURATION) &&
+        mInitCounter > 1) {
+      LOG("[VideoTrackEncoder]: Initialize failed for 30s.");
+      NotifyEndOfStream();
+      return;
     }
   }
 
