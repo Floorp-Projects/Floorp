@@ -1868,19 +1868,31 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
       mJsepSession->GetRemoteTracksRemoved();
 
     for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
-      RefPtr<RemoteSourceStreamInfo> info =
-        mMedia->GetRemoteStreamById((*i)->GetStreamId());
+      const std::string& streamId = (*i)->GetStreamId();
+      const std::string& trackId = (*i)->GetTrackId();
+
+      RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
       if (!info) {
         MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
                           "This is a bug.");
         continue;
       }
 
-      mMedia->RemoveRemoteTrack((*i)->GetStreamId(), (*i)->GetTrackId());
+      mMedia->RemoveRemoteTrack(streamId, trackId);
+
+      DOMMediaStream* stream = info->GetMediaStream();
+      nsTArray<RefPtr<MediaStreamTrack>> tracks;
+      stream->GetTracks(tracks);
+      for (auto& track : tracks) {
+        if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
+          pco->OnRemoveTrack(*track, jrv);
+          break;
+        }
+      }
 
       // We might be holding the last ref, but that's ok.
       if (!info->GetTrackCount()) {
-        pco->OnRemoveStream(*info->GetMediaStream(), jrv);
+        pco->OnRemoveStream(*stream, jrv);
       }
     }
 
