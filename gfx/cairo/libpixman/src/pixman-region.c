@@ -1334,14 +1334,6 @@ PREFIX(_intersect_rect) (region_type_t *dest,
     region.extents.x2 = x + width;
     region.extents.y2 = y + height;
 
-    if (!GOOD_RECT (&region.extents))
-    {
-        if (BAD_RECT (&region.extents))
-            _pixman_log_error (FUNC, "Invalid rectangle passed");
-        PREFIX (_init) (dest);
-        return;
-    }
-
     return PREFIX(_intersect) (dest, source, &region);
 }
 
