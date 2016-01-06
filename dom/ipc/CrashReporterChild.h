@@ -11,18 +11,19 @@
 
 namespace mozilla {
 namespace dom {
-class CrashReporterChild :
-    public PCrashReporterChild
-{
- public:
-    CrashReporterChild() {
-        MOZ_COUNT_CTOR(CrashReporterChild);
-    }
-    ~CrashReporterChild() {
-        MOZ_COUNT_DTOR(CrashReporterChild);
-    }
 
-    static PCrashReporterChild* GetCrashReporter();
+class CrashReporterChild :
+  public PCrashReporterChild
+{
+public:
+  CrashReporterChild() {
+    MOZ_COUNT_CTOR(CrashReporterChild);
+  }
+  ~CrashReporterChild() {
+    MOZ_COUNT_DTOR(CrashReporterChild);
+  }
+
+  static PCrashReporterChild* GetCrashReporter();
 };
 
 } // namespace dom

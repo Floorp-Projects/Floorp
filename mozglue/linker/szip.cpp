@@ -425,7 +425,11 @@ int SzipCompress::do_compress(Buffer &origBuf, Buffer &outBuf,
     zStream.avail_in = avail;
     zStream.next_in = data;
     ret = deflate(&zStream, Z_FINISH);
-    MOZ_ASSERT(ret == Z_STREAM_END);
+    /* Under normal conditions, deflate returns Z_STREAM_END. If there is not
+     * enough room to compress, deflate returns Z_OK and avail_out is 0. We
+     * still want to deflateEnd in that case, so fall through. It will bail
+     * on the avail_out test that follows. */
+    MOZ_ASSERT(ret == Z_STREAM_END || ret == Z_OK);
     ret = deflateEnd(&zStream);
     MOZ_ASSERT(ret == Z_OK);
     if (zStream.avail_out <= 0)

@@ -42,6 +42,7 @@ function runTest() {
     is(gContext.inputType, 'text', 'The inputType should match.');
     is(gContext.inputMode, 'verbatim', 'The inputMode should match.');
     is(gContext.lang, 'zh', 'The language should match.');
+    is(gContext.text, 'Yuan', 'Should get the text.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Yuan',
        'Should get the text around the cursor.');
 
@@ -65,6 +66,7 @@ function test_setSelectionRange() {
     test_sendKey();
   }, function(e) {
     ok(false, 'setSelectionRange failed:' + e.name);
+    console.error(e);
     inputmethod_cleanup();
   });
 }
@@ -72,6 +74,8 @@ function test_setSelectionRange() {
 function test_sendKey() {
   // Add '-' to current cursor posistion and move the cursor position to 3.
   gContext.sendKey(0, '-'.charCodeAt(0), 0).then(function() {
+    is(gContext.text, 'Yu-an',
+       'sendKey should changed the input field correctly.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Yu-an',
        'sendKey should changed the input field correctly.');
     test_deleteSurroundingText();
@@ -86,6 +90,8 @@ function test_deleteSurroundingText() {
   // position back to 2.
   gContext.deleteSurroundingText(-1, 1).then(function() {
     ok(true, 'deleteSurroundingText finished');
+    is(gContext.text, 'Yuan',
+       'deleteSurroundingText should changed the input field correctly.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Yuan',
        'deleteSurroundingText should changed the input field correctly.');
     test_replaceSurroundingText();
@@ -99,6 +105,8 @@ function test_replaceSurroundingText() {
   // Replace 'Yuan' with 'Xulei'.
   gContext.replaceSurroundingText('Xulei', -2, 4).then(function() {
     ok(true, 'replaceSurroundingText finished');
+    is(gContext.text, 'Xulei',
+       'replaceSurroundingText changed the input field correctly.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Xulei',
        'replaceSurroundingText changed the input field correctly.');
     test_setComposition();
@@ -120,6 +128,8 @@ function test_setComposition() {
 
 function test_endComposition() {
   gContext.endComposition('2013').then(function() {
+    is(gContext.text, 'Xulei2013',
+       'endComposition changed the input field correctly.');
     is(gContext.textBeforeCursor + gContext.textAfterCursor, 'Xulei2013',
        'endComposition changed the input field correctly.');
     test_onSelectionChange();
@@ -181,8 +191,9 @@ function test_onSurroundingTextChange() {
 
   gContext.onsurroundingtextchange = function(evt) {
     ok(true, 'onsurroundingtextchange fired');
-    is(evt.detail.beforeString, 'Xulei2013jj');
-    is(evt.detail.afterString, '');
+    is(evt.detail.text, 'Xulei2013jj');
+    is(evt.detail.textBeforeCursor, 'Xulei2013jj');
+    is(evt.detail.textAfterCursor, '');
     ok(evt.detail.ownAction);
   };
 

@@ -31,8 +31,8 @@
 #define NS_IPC_IOSERVICE_SET_OFFLINE_TOPIC "ipc:network:set-offline"
 #define NS_IPC_IOSERVICE_SET_CONNECTIVITY_TOPIC "ipc:network:set-connectivity"
 
-static const char gScheme[][sizeof("resource")] =
-    {"chrome", "file", "http", "https", "jar", "data", "resource"};
+static const char gScheme[][sizeof("moz-safe-about")] =
+    {"chrome", "file", "http", "https", "jar", "data", "about", "moz-safe-about", "resource"};
 
 class nsAsyncRedirectVerifyHelper;
 class nsINetworkLinkService;
