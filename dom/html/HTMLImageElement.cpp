@@ -1151,7 +1151,12 @@ HTMLImageElement::UpdateResponsiveSource()
     mResponsiveSelector = nullptr;
   }
 
-  return !hadSelector || mResponsiveSelector;
+  // If we reach this point, either:
+  // - there was no selector originally, and there is not one now
+  // - there was no selector originally, and there is one now
+  // - there was a selector, and there is a different one now
+  // - there was a selector, and there is not one now
+  return hadSelector || mResponsiveSelector;
 }
 
 /*static */ bool
