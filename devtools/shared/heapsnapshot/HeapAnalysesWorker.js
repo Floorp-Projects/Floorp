@@ -194,7 +194,15 @@ workerHelper.createTask(self, "getImmediatelyDominated", request => {
       return node;
     });
 
+  const path = [];
+  let id = nodeId;
+  do {
+    path.push(id);
+    id = dominatorTree.getImmediateDominator(id);
+  } while (id !== null);
+  path.reverse();
+
   const moreChildrenAvailable = childIds.length > end;
 
-  return { nodes, moreChildrenAvailable };
+  return { nodes, moreChildrenAvailable, path };
 });
