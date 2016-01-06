@@ -2095,7 +2095,7 @@ class SequenceTracer<JSObject*, false, false, false>
 public:
   static void TraceSequence(JSTracer* trc, JSObject** objp, JSObject** end) {
     for (; objp != end; ++objp) {
-      JS::UnsafeTraceRoot(trc, objp, "sequence<object>");
+      JS_CallUnbarrieredObjectTracer(trc, objp, "sequence<object>");
     }
   }
 };
@@ -2109,7 +2109,7 @@ class SequenceTracer<JS::Value, false, false, false>
 public:
   static void TraceSequence(JSTracer* trc, JS::Value* valp, JS::Value* end) {
     for (; valp != end; ++valp) {
-      JS::UnsafeTraceRoot(trc, valp, "sequence<any>");
+      JS_CallUnbarrieredValueTracer(trc, valp, "sequence<any>");
     }
   }
 };
