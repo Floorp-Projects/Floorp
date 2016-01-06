@@ -123,7 +123,7 @@ var pktApi = (function() {
      	// https://developer.mozilla.org/en-US/Add-ons/Overlay_Extensions/XUL_School/Local_Storage
      	
 		if (!prefBranch.prefHasUserValue(key))
-			return;
+			return undefined;
 		
 		return prefBranch.getComplexValue(key, Components.interfaces.nsISupportsString).data;
      }
