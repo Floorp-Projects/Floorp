@@ -1366,7 +1366,6 @@ protected:
 
   already_AddRefed<Layer> CreateMaskLayer(
     Layer *aLayer, const DisplayItemClip& aClip,
-    const nsIntRegion& aLayerVisibleRegion,
     const Maybe<size_t>& aForAncestorMaskLayer,
     uint32_t aRoundedRectClipCount = UINT32_MAX);
 
@@ -4777,7 +4776,7 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
       // layer as an additional, separate clip.
       Maybe<size_t> nextIndex = Some(maskLayers.Length());
       RefPtr<Layer> maskLayer =
-        CreateMaskLayer(aEntry->mLayer, *clip, aEntry->mVisibleRegion, nextIndex, clip->GetRoundedRectCount());
+        CreateMaskLayer(aEntry->mLayer, *clip, nextIndex, clip->GetRoundedRectCount());
       if (maskLayer) {
         metrics->SetMaskLayerIndex(nextIndex);
         maskLayers.AppendElement(maskLayer);
@@ -6016,7 +6015,7 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
   }
 
   RefPtr<Layer> maskLayer =
-    CreateMaskLayer(aLayer, aClip, aLayerVisibleRegion, Nothing(), aRoundedRectClipCount);
+    CreateMaskLayer(aLayer, aClip, Nothing(), aRoundedRectClipCount);
 
   if (!maskLayer) {
     SetClipCount(paintedData, 0);
@@ -6030,7 +6029,6 @@ ContainerState::SetupMaskLayer(Layer *aLayer,
 already_AddRefed<Layer>
 ContainerState::CreateMaskLayer(Layer *aLayer,
                                const DisplayItemClip& aClip,
-                               const nsIntRegion& aLayerVisibleRegion,
                                const Maybe<size_t>& aForAncestorMaskLayer,
                                uint32_t aRoundedRectClipCount)
 {

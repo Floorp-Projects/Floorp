@@ -304,9 +304,7 @@ public:
                                 nsIFrame*         aPrevFrame,
                                 nsIContent*       aChild,
                                 nsIFrame**        aResult,
-                                bool              aIsAppend,
-                                bool              aIsScrollbar,
-                                nsILayoutHistoryState* aFrameState);
+                                bool              aIsAppend);
 
   // GetInitialContainingBlock() is deprecated in favor of GetRootElementFrame();
   // nsIFrame* GetInitialContainingBlock() { return mRootElementFrame; }
@@ -1740,7 +1738,6 @@ private:
   // @param aPendingBinding the pending binding  from this block's frame
   // construction item.
   void ConstructBlock(nsFrameConstructorState& aState,
-                      const nsStyleDisplay*    aDisplay,
                       nsIContent*              aContent,
                       nsContainerFrame*        aParentFrame,
                       nsContainerFrame*        aContentParentFrame,
