@@ -577,7 +577,7 @@ struct BytecodeEmitter
 
     // Pops iterator from the top of the stack. Pushes the result of |.next()|
     // onto the stack.
-    bool emitIteratorNext(ParseNode* pn);
+    bool emitIteratorNext(ParseNode* pn, bool allowSelfHosted = false);
 
     // Check if the value on top of the stack is "undefined". If so, replace
     // that value on the stack with the value defined by |defaultExpr|.
@@ -614,6 +614,7 @@ struct BytecodeEmitter
     bool emitSelfHostedCallFunction(ParseNode* pn);
     bool emitSelfHostedResumeGenerator(ParseNode* pn);
     bool emitSelfHostedForceInterpreter(ParseNode* pn);
+    bool emitSelfHostedAllowContentSpread(ParseNode* pn);
 
     bool emitComprehensionFor(ParseNode* compFor);
     bool emitComprehensionForIn(ParseNode* pn);
@@ -643,7 +644,7 @@ struct BytecodeEmitter
     // |.next()| and put the results into the I-th element of array with
     // incrementing I, then push the result I (it will be original I +
     // iteration count). The stack after iteration will look like |ARRAY INDEX|.
-    bool emitSpread();
+    bool emitSpread(bool allowSelfHosted = false);
 
     // If type is StmtType::FOR_OF_LOOP, emit bytecode for a for-of loop.
     // pn should be PNK_FOR, and pn->pn_left should be PNK_FOROF.
@@ -653,7 +654,7 @@ struct BytecodeEmitter
     //
     // Please refer the comment above emitSpread for additional information about
     // stack convention.
-    bool emitForOf(StmtType type, ParseNode* pn);
+    bool emitForOf(StmtType type, ParseNode* pn, bool allowSelfHosted = false);
 
     bool emitClass(ParseNode* pn);
     bool emitSuperPropLHS(ParseNode* superBase, bool isCall = false);
