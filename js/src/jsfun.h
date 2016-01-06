@@ -192,6 +192,8 @@ class JSFunction : public js::NativeObject
     bool hasScript()                const { return flags() & INTERPRETED; }
     bool isBeingParsed()            const { return flags() & BEING_PARSED; }
 
+    bool infallibleIsDefaultClassConstructor(JSContext* cx) const;
+
     // Arrow functions store their lexical new.target in the first extended slot.
     bool isArrow()                  const { return kind() == Arrow; }
     // Every class-constructor is also a method.
@@ -253,6 +255,13 @@ class JSFunction : public js::NativeObject
         MOZ_ASSERT(!isConstructor());
         MOZ_ASSERT(isSelfHostedBuiltin());
         flags_ |= CONSTRUCTOR;
+    }
+
+    void setIsClassConstructor() {
+        MOZ_ASSERT(!isClassConstructor());
+        MOZ_ASSERT(isConstructor());
+
+        setKind(ClassConstructor);
     }
 
     // Can be called multiple times by the parser.
@@ -643,7 +652,8 @@ NewNativeConstructor(ExclusiveContext* cx, JSNative native, unsigned nargs, Hand
 // the global.
 extern JSFunction*
 NewScriptedFunction(ExclusiveContext* cx, unsigned nargs, JSFunction::Flags flags,
-                    HandleAtom atom, gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
+                    HandleAtom atom, HandleObject proto = nullptr,
+                    gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
                     NewObjectKind newKind = GenericObject,
                     HandleObject enclosingDynamicScope = nullptr);
 
