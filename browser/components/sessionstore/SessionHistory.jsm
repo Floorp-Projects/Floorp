@@ -64,11 +64,9 @@ var SessionHistoryInternal = {
    *        The docShell that owns the session history.
    */
   collect: function (docShell) {
-    let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
+    let data = {entries: [], userContextId: docShell.userContextId };
     let webNavigation = docShell.QueryInterface(Ci.nsIWebNavigation);
     let history = webNavigation.sessionHistory.QueryInterface(Ci.nsISHistoryInternal);
-
-    let data = {entries: [], userContextId: loadContext.originAttributes.userContextId };
 
     if (history && history.count > 0) {
       // Loop over the transaction linked list directly so we can get the
