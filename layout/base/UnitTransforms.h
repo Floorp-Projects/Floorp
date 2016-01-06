@@ -92,6 +92,19 @@ gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
     PixelCastJustification) {
   return gfx::ScaleFactor<SourceUnits, NewTargetUnits>(aScaleFactor.scale);
 }
+// Unlike the other functions in this category, this function takes the
+// target matrix type, rather than its source and target unit types, as
+// the explicit template argument, so an example invocation is:
+//    ViewAs<ScreenToLayerMatrix4x4>(otherTypedMatrix, justification)
+// The reason is that if it took the source and target unit types as two
+// template arguments, there may be some confusion as to which is the
+// source and which is the target.
+template <class TargetMatrix, class SourceMatrixSourceUnits, class SourceMatrixTargetUnits>
+TargetMatrix ViewAs(
+    const gfx::Matrix4x4Typed<SourceMatrixSourceUnits, SourceMatrixTargetUnits>& aMatrix,
+    PixelCastJustification) {
+  return TargetMatrix::FromUnknownMatrix(aMatrix.ToUnknownMatrix());
+}
 
 // Convenience functions for casting untyped entities to typed entities.
 // Using these functions does not require a justification, but once we convert
