@@ -1799,10 +1799,13 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   if (!userContextIdStr.IsEmpty()) {
-    nsresult err;
-    nsDocShell * ds = nsDocShell::Cast(mDocShell);
-    ds->SetUserContextId(userContextIdStr.ToInteger(&err));
-    NS_ENSURE_SUCCESS(err, err);
+    nsresult rv;
+    uint32_t userContextId =
+      static_cast<uint32_t>(userContextIdStr.ToInteger(&rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = mDocShell->SetUserContextId(userContextId);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   // Inform our docShell that it has a new child.
