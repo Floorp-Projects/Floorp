@@ -1396,10 +1396,10 @@ nsStylePosition::nsStylePosition(void)
 
   mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
   mBoxSizing = StyleBoxSizing::Content;
-  mAlignContent = NS_STYLE_ALIGN_AUTO;
-  mAlignItems = NS_STYLE_ALIGN_AUTO;
+  mAlignContent = NS_STYLE_ALIGN_NORMAL;
+  mAlignItems = NS_STYLE_ALIGN_NORMAL;
   mAlignSelf = NS_STYLE_ALIGN_AUTO;
-  mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
+  mJustifyContent = NS_STYLE_JUSTIFY_NORMAL;
   mJustifyItems = NS_STYLE_JUSTIFY_AUTO;
   mJustifySelf = NS_STYLE_JUSTIFY_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
@@ -1645,90 +1645,50 @@ nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
 }
 
 uint8_t
-nsStylePosition::ComputedAlignItems(const nsStyleDisplay* aDisplay) const
-{
-  if (mAlignItems != NS_STYLE_ALIGN_AUTO) {
-    return mAlignItems;
-  }
-  return aDisplay->IsFlexOrGridDisplayType() ? NS_STYLE_ALIGN_STRETCH
-                                             : NS_STYLE_ALIGN_START;
-}
-
-uint8_t
-nsStylePosition::ComputedAlignSelf(const nsStyleDisplay* aDisplay,
-                                   nsStyleContext*       aParent) const
+nsStylePosition::ComputedAlignSelf(nsStyleContext* aParent) const
 {
   if (mAlignSelf != NS_STYLE_ALIGN_AUTO) {
     return mAlignSelf;
   }
-  if (MOZ_UNLIKELY(aDisplay->IsAbsolutelyPositionedStyle())) {
-    return NS_STYLE_ALIGN_AUTO;
-  }
   if (MOZ_LIKELY(aParent)) {
-    auto parentAlignItems = aParent->StylePosition()->
-      ComputedAlignItems(aParent->StyleDisplay());
+    auto parentAlignItems = aParent->StylePosition()->ComputedAlignItems();
     MOZ_ASSERT(!(parentAlignItems & NS_STYLE_ALIGN_LEGACY),
                "align-items can't have 'legacy'");
     return parentAlignItems;
   }
-  return NS_STYLE_ALIGN_START;
-}
-
-uint16_t
-nsStylePosition::ComputedJustifyContent(const nsStyleDisplay* aDisplay) const
-{
-  switch (aDisplay->mDisplay) {
-    case NS_STYLE_DISPLAY_FLEX:
-    case NS_STYLE_DISPLAY_INLINE_FLEX:
-      // For flex containers, css-align-3 says the justify-content value
-      // "'stretch' computes to 'flex-start'."
-      // https://drafts.csswg.org/css-align-3/#propdef-justify-content
-      // XXX maybe map 'auto' too? (ISSUE 8 in the spec)
-      // https://drafts.csswg.org/css-align-3/#content-distribution
-      if ((mJustifyContent & NS_STYLE_ALIGN_ALL_BITS) ==
-          NS_STYLE_JUSTIFY_STRETCH) {
-        return NS_STYLE_JUSTIFY_FLEX_START;
-      }
-      break;
-  }
-  return mJustifyContent;
+  return NS_STYLE_ALIGN_NORMAL;
 }
 
 uint8_t
-nsStylePosition::ComputedJustifyItems(const nsStyleDisplay* aDisplay,
-                                      nsStyleContext*       aParent) const
+nsStylePosition::ComputedJustifyItems(nsStyleContext* aParent) const
 {
   if (mJustifyItems != NS_STYLE_JUSTIFY_AUTO) {
     return mJustifyItems;
   }
   if (MOZ_LIKELY(aParent)) {
     auto inheritedJustifyItems =
-      aParent->StylePosition()->ComputedJustifyItems(aParent->StyleDisplay(),
-                                                     aParent->GetParent());
+      aParent->StylePosition()->ComputedJustifyItems(aParent->GetParent());
+    // "If the inherited value of justify-items includes the 'legacy' keyword,
+    // 'auto' computes to the inherited value."  Otherwise, 'normal'.
     if (inheritedJustifyItems & NS_STYLE_JUSTIFY_LEGACY) {
       return inheritedJustifyItems;
     }
   }
-  return aDisplay->IsFlexOrGridDisplayType() ? NS_STYLE_JUSTIFY_STRETCH
-                                             : NS_STYLE_JUSTIFY_START;
+  return NS_STYLE_JUSTIFY_NORMAL;
 }
 
 uint8_t
-nsStylePosition::ComputedJustifySelf(const nsStyleDisplay* aDisplay,
-                                     nsStyleContext*       aParent) const
+nsStylePosition::ComputedJustifySelf(nsStyleContext* aParent) const
 {
   if (mJustifySelf != NS_STYLE_JUSTIFY_AUTO) {
     return mJustifySelf;
   }
-  if (MOZ_UNLIKELY(aDisplay->IsAbsolutelyPositionedStyle())) {
-    return NS_STYLE_JUSTIFY_AUTO;
-  }
   if (MOZ_LIKELY(aParent)) {
     auto inheritedJustifyItems = aParent->StylePosition()->
-      ComputedJustifyItems(aParent->StyleDisplay(), aParent->GetParent());
+      ComputedJustifyItems(aParent->GetParent());
     return inheritedJustifyItems & ~NS_STYLE_JUSTIFY_LEGACY;
   }
-  return NS_STYLE_JUSTIFY_START;
+  return NS_STYLE_JUSTIFY_NORMAL;
 }
 
 // --------------------

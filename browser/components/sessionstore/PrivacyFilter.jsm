@@ -18,12 +18,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
  * |url|.
  *
  * @param url The URL we want to save data for.
- * @param isPinned Whether the given |url| is contained in a pinned tab.
  * @return bool
  */
-function checkPrivacyLevel(url, isPinned) {
+function checkPrivacyLevel(url) {
   let isHttps = url.startsWith("https:");
-  return PrivacyLevel.canSave({isHttps: isHttps, isPinned: isPinned});
+  return PrivacyLevel.canSave({isHttps});
 }
 
 /**
@@ -37,14 +36,13 @@ this.PrivacyFilter = Object.freeze({
    * we're allowed to store.
    *
    * @param data The session storage data as collected from a tab.
-   * @param isPinned Whether the tab we collected from is pinned.
    * @return object
    */
-  filterSessionStorageData: function (data, isPinned) {
+  filterSessionStorageData: function (data) {
     let retval = {};
 
     for (let host of Object.keys(data)) {
-      if (checkPrivacyLevel(host, isPinned)) {
+      if (checkPrivacyLevel(host)) {
         retval[host] = data[host];
       }
     }
@@ -58,14 +56,13 @@ this.PrivacyFilter = Object.freeze({
    * allowed to store.
    *
    * @param data The form data as collected from a tab.
-   * @param isPinned Whether the tab we collected from is pinned.
    * @return object
    */
-  filterFormData: function (data, isPinned) {
+  filterFormData: function (data) {
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
-    if (data.url && !checkPrivacyLevel(data.url, isPinned)) {
+    if (data.url && !checkPrivacyLevel(data.url)) {
       return;
     }
 
@@ -73,7 +70,7 @@ this.PrivacyFilter = Object.freeze({
 
     for (let key of Object.keys(data)) {
       if (key === "children") {
-        let recurse = child => this.filterFormData(child, isPinned);
+        let recurse = child => this.filterFormData(child);
         let children = data.children.map(recurse).filter(child => child);
 
         if (children.length) {

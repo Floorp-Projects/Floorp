@@ -6,7 +6,9 @@
 
 #include "EffectSet.h"
 #include "mozilla/dom/Element.h" // For Element
+#include "RestyleManager.h"
 #include "nsCycleCollectionNoteChild.h" // For CycleCollectionNoteChild
+#include "nsPresContext.h"
 
 namespace mozilla {
 
@@ -106,6 +108,13 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
   return effectSet;
 }
 
+void
+EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext)
+{
+  mAnimationGeneration =
+    aPresContext->RestyleManager()->GetAnimationGeneration();
+}
+
 /* static */ nsIAtom**
 EffectSet::GetEffectSetPropertyAtoms()
 {
@@ -143,13 +152,23 @@ EffectSet::GetEffectSetPropertyAtom(nsCSSPseudoElements::Type aPseudoType)
 void
 EffectSet::AddEffect(dom::KeyframeEffectReadOnly& aEffect)
 {
+  if (mEffects.Contains(&aEffect)) {
+    return;
+  }
+
   mEffects.PutEntry(&aEffect);
+  MarkCascadeNeedsUpdate();
 }
 
 void
 EffectSet::RemoveEffect(dom::KeyframeEffectReadOnly& aEffect)
 {
+  if (!mEffects.Contains(&aEffect)) {
+    return;
+  }
+
   mEffects.RemoveEntry(&aEffect);
+  MarkCascadeNeedsUpdate();
 }
 
 } // namespace mozilla

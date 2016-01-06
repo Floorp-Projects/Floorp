@@ -1571,11 +1571,8 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
              "out-of-flow frames should not be treated as flex items");
 
   mAlignSelf = aFlexItemReflowState.mStylePosition->ComputedAlignSelf(
-                 aFlexItemReflowState.mStyleDisplay,
                  mFrame->StyleContext()->GetParent());
-  if (MOZ_UNLIKELY(mAlignSelf == NS_STYLE_ALIGN_AUTO)) {
-    // Happens in rare edge cases when 'position' was ignored by the frame
-    // constructor (and the style system computed 'auto' based on 'position').
+  if (MOZ_LIKELY(mAlignSelf == NS_STYLE_ALIGN_NORMAL)) {
     mAlignSelf = NS_STYLE_ALIGN_STRETCH;
   }
 
@@ -2432,8 +2429,11 @@ MainAxisPositionTracker::
     mNumPackingSpacesRemaining(0),
     mJustifyContent(aJustifyContent)
 {
-  // 'auto' behaves as 'stretch' which behaves as 'flex-start' in the main axis
-  if (mJustifyContent == NS_STYLE_JUSTIFY_AUTO) {
+  // 'normal' behaves as 'stretch', and 'stretch' behaves as 'flex-start',
+  // in the main axis
+  // https://drafts.csswg.org/css-align-3/#propdef-justify-content
+  if (mJustifyContent == NS_STYLE_JUSTIFY_NORMAL ||
+      mJustifyContent == NS_STYLE_JUSTIFY_STRETCH) {
     mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
   }
 
@@ -2607,8 +2607,8 @@ CrossAxisPositionTracker::
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
-  // 'auto' behaves as 'stretch'
-  if (mAlignContent == NS_STYLE_ALIGN_AUTO) {
+  // 'normal' behaves as 'stretch'
+  if (mAlignContent == NS_STYLE_ALIGN_NORMAL) {
     mAlignContent = NS_STYLE_ALIGN_STRETCH;
   }
 
@@ -3839,8 +3839,7 @@ nsFlexContainerFrame::DoFlexLayout(nsPresContext*           aPresContext,
 
     // Main-Axis Alignment - Flexbox spec section 9.5
     // ==============================================
-    auto justifyContent =
-      aReflowState.mStylePosition->ComputedJustifyContent(aReflowState.mStyleDisplay);
+    auto justifyContent = aReflowState.mStylePosition->ComputedJustifyContent();
     line->PositionItemsInMainAxis(justifyContent,
                                   aContentBoxMainSize,
                                   aAxisTracker);

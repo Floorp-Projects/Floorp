@@ -65,10 +65,10 @@ abs4 { right: 35px; }
 .vlr { writing-mode: vertical-lr; direction:rtl; }
 .vrl { writing-mode: vertical-rl; direction:ltr; }
 
-.true.hl.aend,  .true.hl.aflexend  { offset-block-start:-15px; }
-.true.vrl.aend, .true.vrl.aflexend { offset-inline-start:-15px; }
-.true.hl.acenter { offset-block-start:-7px; }
-.true.vrl.acenter { offset-inline-start:-7px; }
+.unsafe.hl.aend,  .unsafe.hl.aflexend  { offset-block-start:-15px; }
+.unsafe.vrl.aend, .unsafe.vrl.aflexend { offset-inline-start:-15px; }
+.unsafe.hl.acenter { offset-block-start:-7px; }
+.unsafe.vrl.acenter { offset-inline-start:-7px; }
 .astretch2 { width:40px; height:15px; }
 .astretch3 { height:15px; }
 .astretch4 { width:0; }
@@ -83,7 +83,7 @@ abs4 { right: 35px; }
 
 <script>
 var gridwm = [ "hl" ];
-var wm = [ "hl true", "vrl true", "hl safe", "vrl safe" ];
+var wm = [ "hl unsafe", "vrl unsafe", "hl safe", "vrl safe" ];
 var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
              "stretch1", "stretch2", "stretch3", "stretch4", "stretch5",
              "stretch6", "stretch7", "auto" ];

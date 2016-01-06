@@ -119,7 +119,7 @@ public:
     mFrame->mInstanceOwner->SetBackgroundUnknown();
   }
 
-  virtual already_AddRefed<gfxContext>
+  virtual already_AddRefed<DrawTarget>
       BeginUpdate(const nsIntRect& aRect, uint64_t aSequenceNumber)
   {
     if (!AcceptUpdate(aSequenceNumber))
@@ -127,9 +127,9 @@ public:
     return mFrame->mInstanceOwner->BeginUpdateBackground(aRect);
   }
 
-  virtual void EndUpdate(gfxContext* aContext, const nsIntRect& aRect)
+  virtual void EndUpdate(const nsIntRect& aRect)
   {
-    return mFrame->mInstanceOwner->EndUpdateBackground(aContext, aRect);
+    return mFrame->mInstanceOwner->EndUpdateBackground(aRect);
   }
 
   void Destroy() { mFrame = nullptr; }

@@ -62,9 +62,6 @@ private:
   // Private partner function to SuspendForDiversion.
   nsresult ResumeForDiversion();
 
-  void SynthesizeResponse(nsIInterceptedChannel* aChannel);
-  friend class ResponseSynthesizer;
-
   // Can be the original HttpChannelParent that created this object (normal
   // case), a different {HTTP|FTP}ChannelParent that we've been redirected to,
   // or some other listener that we have been diverted to via

@@ -271,6 +271,7 @@ nsDisplayCanvasBackgroundColor::WriteDebugInfo(std::stringstream& aStream)
 }
 #endif
 
+#ifndef MOZ_GFX_OPTIMIZE_MOBILE
 static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSource)
 {
   RefPtr<SourceSurface> source = aSource->Snapshot();
@@ -278,6 +279,7 @@ static void BlitSurface(DrawTarget* aDest, const gfxRect& aRect, DrawTarget* aSo
                      Rect(aRect.x, aRect.y, aRect.width, aRect.height),
                      Rect(0, 0, aRect.width, aRect.height));
 }
+#endif
 
 void
 nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
@@ -287,42 +289,40 @@ nsDisplayCanvasBackgroundImage::Paint(nsDisplayListBuilder* aBuilder,
   nsPoint offset = ToReferenceFrame();
   nsRect bgClipRect = frame->CanvasArea() + offset;
 
-  nsRenderingContext context;
-  RefPtr<gfxContext> dest = aCtx->ThebesContext();
-  RefPtr<DrawTarget> dt;
-  gfxRect destRect;
 #ifndef MOZ_GFX_OPTIMIZE_MOBILE
+  RefPtr<gfxContext> dest = aCtx->ThebesContext();
+  gfxRect destRect;
   if (IsSingleFixedPositionImage(aBuilder, bgClipRect, &destRect) &&
       aBuilder->IsPaintingToWindow() && !aBuilder->IsCompositingCheap() &&
       !dest->CurrentMatrix().HasNonIntegerTranslation()) {
     // Snap image rectangle to nearest pixel boundaries. This is the right way
-    // to snap for this context, because we checked HasNonIntegerTranslation above.
+    // to snap for this context, because we checked HasNonIntegerTranslation
+    // above.
     destRect.Round();
-    dt = static_cast<DrawTarget*>(Frame()->Properties().Get(nsIFrame::CachedBackgroundImageDT()));
+    RefPtr<DrawTarget> dt = static_cast<DrawTarget*>(
+      Frame()->Properties().Get(nsIFrame::CachedBackgroundImageDT()));
     DrawTarget* destDT = dest->GetDrawTarget();
     if (dt) {
       BlitSurface(destDT, destRect, dt);
       return;
     }
-    dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width), ceil(destRect.height)), SurfaceFormat::B8G8R8A8);
+
+    dt = destDT->CreateSimilarDrawTarget(IntSize(ceil(destRect.width),
+                                                 ceil(destRect.height)),
+                                         SurfaceFormat::B8G8R8A8);
     if (dt) {
       RefPtr<gfxContext> ctx = new gfxContext(dt);
-      ctx->SetMatrix(
-        ctx->CurrentMatrix().Translate(-destRect.x, -destRect.y));
-      context.Init(ctx);
+      ctx->SetMatrix(ctx->CurrentMatrix().Translate(-destRect.x, -destRect.y));
+      nsRenderingContext context(ctx);
+      PaintInternal(aBuilder, &context, bgClipRect, &bgClipRect);
+      BlitSurface(dest->GetDrawTarget(), destRect, dt);
+      frame->Properties().Set(nsIFrame::CachedBackgroundImageDT(),
+                              dt.forget().take());
+      return;
     }
   }
 #endif
-
-  PaintInternal(aBuilder,
-                dt ? &context : aCtx,
-                dt ? bgClipRect: mVisibleRect,
-                &bgClipRect);
-
-  if (dt) {
-    BlitSurface(dest->GetDrawTarget(), destRect, dt);
-    frame->Properties().Set(nsIFrame::CachedBackgroundImageDT(), dt.forget().take());
-  }
+  PaintInternal(aBuilder, aCtx, mVisibleRect, &bgClipRect);
 }
 
 void
