@@ -45,10 +45,10 @@ TestBinarySearch()
   size_t m;
 
   Vector<int> v1;
-  v1.append(2);
-  v1.append(4);
-  v1.append(6);
-  v1.append(8);
+  MOZ_RELEASE_ASSERT(v1.append(2));
+  MOZ_RELEASE_ASSERT(v1.append(4));
+  MOZ_RELEASE_ASSERT(v1.append(6));
+  MOZ_RELEASE_ASSERT(v1.append(8));
 
   MOZ_RELEASE_ASSERT(!BinarySearch(v1, 0, v1.length(), 1, &m) && m == 0);
   MOZ_RELEASE_ASSERT( BinarySearch(v1, 0, v1.length(), 2, &m) && m == 0);
@@ -78,9 +78,9 @@ TestBinarySearch()
   MOZ_RELEASE_ASSERT(!BinarySearch(v2, 0, 0, 9, &m) && m == 0);
 
   Vector<Person> v3;
-  v3.append(Person(2, 42));
-  v3.append(Person(4, 13));
-  v3.append(Person(6, 360));
+  MOZ_RELEASE_ASSERT(v3.append(Person(2, 42)));
+  MOZ_RELEASE_ASSERT(v3.append(Person(4, 13)));
+  MOZ_RELEASE_ASSERT(v3.append(Person(6, 360)));
 
   A(!BinarySearch(GetAge(v3), 0, v3.length(), 1, &m) && m == 0);
   A( BinarySearch(GetAge(v3), 0, v3.length(), 2, &m) && m == 0);
