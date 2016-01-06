@@ -14,12 +14,14 @@ using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 using mozilla::gfx::IntSize from "mozilla/gfx/Point.h";
 using gfxImageFormat from "gfxTypes.h";
+using struct mozilla::layers::GonkNativeHandle from "mozilla/layers/GonkNativeHandleUtils.h";
 
 namespace mozilla {
 namespace layers {
 
 union OverlayHandle {
   int32_t;
+  GonkNativeHandle;
   null_t;
 };
 
