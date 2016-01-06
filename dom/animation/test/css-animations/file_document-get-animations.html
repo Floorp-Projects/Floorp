@@ -24,7 +24,7 @@
 'use strict';
 
 test(function(t) {
-  assert_equals(document.timeline.getAnimations().length, 0,
+  assert_equals(document.getAnimations().length, 0,
     'getAnimations returns an empty sequence for a document'
     + ' with no animations');
 }, 'getAnimations for non-animated content');
@@ -34,17 +34,17 @@ test(function(t) {
 
   // Add an animation
   div.style.animation = 'animLeft 100s';
-  assert_equals(document.timeline.getAnimations().length, 1,
+  assert_equals(document.getAnimations().length, 1,
                 'getAnimations returns a running CSS Animation');
 
   // Add another animation
   div.style.animation = 'animLeft 100s, animTop 100s';
-  assert_equals(document.timeline.getAnimations().length, 2,
+  assert_equals(document.getAnimations().length, 2,
                 'getAnimations returns two running CSS Animations');
 
   // Remove both
   div.style.animation = '';
-  assert_equals(document.timeline.getAnimations().length, 0,
+  assert_equals(document.getAnimations().length, 0,
                 'getAnimations returns no running CSS Animations');
 }, 'getAnimations for CSS Animations');
 
@@ -53,7 +53,7 @@ test(function(t) {
   div.style.animation = 'animLeft 100s, animTop 100s, animRight 100s, ' +
                         'animBottom 100s';
 
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, 4,
                 'getAnimations returns all running CSS Animations');
   assert_equals(animations[0].animationName, 'animLeft',
@@ -72,7 +72,7 @@ test(function(t) {
   var div3 = addDiv(t, { style: 'animation: animLeft 100s' });
   var div4 = addDiv(t, { style: 'animation: animLeft 100s' });
 
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, 4,
                 'getAnimations returns all running CSS Animations');
   assert_equals(animations[0].effect.target, div1,
@@ -95,7 +95,7 @@ test(function(t) {
   // Which should give: 2, 1, 4, 3
   div2.appendChild(div1);
   div2.appendChild(div4);
-  animations = document.timeline.getAnimations();
+  animations = document.getAnimations();
   assert_equals(animations[0].effect.target, div2,
                 'Order of first animation returned after tree surgery');
   assert_equals(animations[1].effect.target, div1,
@@ -114,7 +114,7 @@ test(function(t) {
   var expectedResults = [ [ div1, 'animLeft' ],
                           [ div1, 'animTop' ],
                           [ div2, 'animBottom' ] ];
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, expectedResults.length,
                 'getAnimations returns all running CSS Animations');
   animations.forEach(function(anim, i) {
@@ -132,7 +132,7 @@ test(function(t) {
                       [ div1, 'animLeft' ],
                       [ div1, 'animRight' ],
                       [ div1, 'animTop' ] ];
-  animations = document.timeline.getAnimations();
+  animations = document.getAnimations();
   assert_equals(animations.length, expectedResults.length,
                 'getAnimations returns all running CSS Animations after ' +
                 'making changes');
@@ -148,7 +148,7 @@ test(function(t) {
   cancelAllAnimationsOnEnd(t);
 
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
-  var animLeft = document.timeline.getAnimations()[0];
+  var animLeft = document.getAnimations()[0];
   assert_equals(animLeft.animationName, 'animLeft',
                 'Originally, animLeft animation comes first');
 
@@ -156,7 +156,7 @@ test(function(t) {
   div.style.animation = 'animTop 100s';
   animLeft.play();
 
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, 2,
                 'getAnimations returns markup-bound and free animations');
   assert_equals(animations[0].animationName, 'animTop',
@@ -168,15 +168,15 @@ test(function(t) {
   cancelAllAnimationsOnEnd(t);
 
   var div = addDiv(t, { style: 'animation: animLeft 100s, animTop 100s' });
-  var animLeft = document.timeline.getAnimations()[0];
-  var animTop  = document.timeline.getAnimations()[1];
+  var animLeft = document.getAnimations()[0];
+  var animTop  = document.getAnimations()[1];
 
   // Disassociate both animations from markup and restart in opposite order
   div.style.animation = '';
   animTop.play();
   animLeft.play();
 
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, 2,
                 'getAnimations returns free animations');
   assert_equals(animations[0], animTop,
@@ -187,7 +187,7 @@ test(function(t) {
   // Restarting an animation should have no effect
   animTop.cancel();
   animTop.play();
-  assert_equals(document.timeline.getAnimations()[0], animTop,
+  assert_equals(document.getAnimations()[0], animTop,
                 'After restarting, the ordering of free animations' +
                 ' does not change');
 }, 'Order of CSS Animations - free animations');
@@ -204,7 +204,7 @@ test(function(t) {
   flushComputedStyle(div);
 
   // Although the transition was added later, it should come first in the list
-  var animations = document.timeline.getAnimations();
+  var animations = document.getAnimations();
   assert_equals(animations.length, 2,
                 'Both CSS animations and transitions are returned');
   assert_class_string(animations[0], 'CSSTransition', 'Transition comes first');
@@ -214,27 +214,27 @@ test(function(t) {
 test(function(t) {
   var div = addDiv(t, { style: 'animation: animLeft 100s forwards' });
   div.getAnimations()[0].finish();
-  assert_equals(document.timeline.getAnimations().length, 1,
+  assert_equals(document.getAnimations().length, 1,
                 'Forwards-filling CSS animations are returned');
 }, 'Finished but filling CSS Animations are returned');
 
 test(function(t) {
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.getAnimations()[0].finish();
-  assert_equals(document.timeline.getAnimations().length, 0,
+  assert_equals(document.getAnimations().length, 0,
                 'Non-filling finished CSS animations are not returned');
 }, 'Finished but not filling CSS Animations are not returned');
 
 test(function(t) {
   var div = addDiv(t, { style: 'animation: animLeft 100s 100s' });
-  assert_equals(document.timeline.getAnimations().length, 1,
+  assert_equals(document.getAnimations().length, 1,
                 'Yet-to-start CSS animations are returned');
 }, 'Yet-to-start CSS Animations are returned');
 
 test(function(t) {
   var div = addDiv(t, { style: 'animation: animLeft 100s' });
   div.getAnimations()[0].cancel();
-  assert_equals(document.timeline.getAnimations().length, 0,
+  assert_equals(document.getAnimations().length, 0,
                 'CSS animations cancelled by the API are not returned');
 }, 'CSS Animations cancelled via the API are not returned');
 
@@ -245,7 +245,7 @@ test(function(t) {
   var anim = div.getAnimations()[0];
   anim.cancel();
   anim.play();
-  assert_equals(document.timeline.getAnimations().length, 1,
+  assert_equals(document.getAnimations().length, 1,
                 'CSS animations cancelled and restarted by the API are ' +
                 'returned');
 }, 'CSS Animations cancelled and restarted via the API are returned');
@@ -256,7 +256,7 @@ test(function(t) {
   // but we haven't implemented a PseudoElement interface to use as
   // animation's target (bug 1174575) so we simply don't return these animations
   // until we can support them properly.
-  assert_equals(document.timeline.getAnimations().length, 0,
+  assert_equals(document.getAnimations().length, 0,
                 'CSS animations on pseudo elements are not returned');
 }, 'CSS Animations targetting pseudo-elements are not returned');
 
