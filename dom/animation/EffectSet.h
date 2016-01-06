@@ -7,6 +7,9 @@
 #ifndef mozilla_EffectSet_h
 #define mozilla_EffectSet_h
 
+#include "mozilla/EffectCompositor.h"
+#include "mozilla/EnumeratedArray.h"
+#include "AnimationCommon.h" // For AnimValuesStyleRule
 #include "nsCSSPseudoElements.h" // For nsCSSPseudoElements::Type
 #include "nsHashKeys.h" // For nsPtrHashKey
 #include "nsTHashtable.h" // For nsTHashtable
@@ -124,6 +127,12 @@ public:
   }
   bool IsEmpty() const { return mEffects.IsEmpty(); }
 
+  RefPtr<AnimValuesStyleRule>& AnimationRule(EffectCompositor::CascadeLevel
+                                             aCascadeLevel)
+  {
+    return mAnimationRule[aCascadeLevel];
+  }
+
   bool CascadeNeedsUpdate() const { return mCascadeNeedsUpdate; }
   void MarkCascadeNeedsUpdate() { mCascadeNeedsUpdate = true; }
   void MarkCascadeUpdated() { mCascadeNeedsUpdate = false; }
@@ -138,6 +147,16 @@ private:
                                              aPseudoType);
 
   OwningEffectSet mEffects;
+
+  // These style rules contain the style data for currently animating
+  // values.  They only match when styling with animation.  When we
+  // style without animation, we need to not use them so that we can
+  // detect any new changes; if necessary we restyle immediately
+  // afterwards with animation.
+  EnumeratedArray<EffectCompositor::CascadeLevel,
+                  EffectCompositor::CascadeLevel(
+                    EffectCompositor::kCascadeLevelCount),
+                  RefPtr<AnimValuesStyleRule>> mAnimationRule;
 
   // Dirty flag to represent when the mWinsInCascade flag on effects in
   // this set might need to be updated.

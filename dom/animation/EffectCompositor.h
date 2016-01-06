@@ -39,6 +39,10 @@ public:
     // The transitions sheet (CSS transitions that are tied to CSS markup)
     Transitions
   };
+  // We don't define this as part of CascadeLevel as then we'd have to add
+  // explicit checks for the Count enum value everywhere CascadeLevel is used.
+  static const size_t kCascadeLevelCount =
+    static_cast<size_t>(CascadeLevel::Transitions) + 1;
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
