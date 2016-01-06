@@ -5,7 +5,7 @@
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
-const AUTO_EXPAND_DEPTH = 3; // depth
+const AUTO_EXPAND_DEPTH = 0; // depth
 
 /**
  * An arrow that displays whether its node is expanded (▼) or collapsed
@@ -16,7 +16,7 @@ const ArrowExpander = createFactory(createClass({
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item !== nextProps.item
-      || this.props.visible != nextProps.visible
+      || this.props.visible !== nextProps.visible
       || this.props.expanded !== nextProps.expanded;
   },
 
@@ -188,6 +188,7 @@ const Tree = module.exports = createClass({
 
   componentDidMount() {
     window.addEventListener("resize", this._updateHeight);
+    this._autoExpand();
     this._updateHeight();
   },
 
@@ -196,16 +197,33 @@ const Tree = module.exports = createClass({
   },
 
   componentWillReceiveProps(nextProps) {
+    this._autoExpand();
+  },
+
+  _autoExpand() {
     if (!this.props.autoExpandDepth) {
       return;
     }
 
-    // Automatically expand the first autoExpandDepth levels for new items.
-    for (let { item } of this._dfsFromRoots(this.props.autoExpandDepth)) {
-      if (!this.state.seen.has(item)) {
-        this.state.expanded.add(item);
-        this.state.seen.add(item);
+    // Automatically expand the first autoExpandDepth levels for new items. Do
+    // not use the usual DFS infrastructure because we don't want to ignore
+    // collapsed nodes.
+    const autoExpand = (item, currentDepth) => {
+      if (currentDepth >= this.props.autoExpandDepth ||
+          this.state.seen.has(item)) {
+        return;
       }
+
+      this.state.expanded.add(item);
+      this.state.seen.add(item);
+
+      for (let child of this.props.getChildren(item)) {
+        autoExpand(item, currentDepth + 1);
+      }
+    };
+
+    for (let root of this.props.getRoots()) {
+      autoExpand(root, 0);
     }
   },
 
