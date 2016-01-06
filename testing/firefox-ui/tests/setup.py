@@ -4,14 +4,14 @@
 
 from setuptools import setup, find_packages
 
-PACKAGE_VERSION = '0.3'
+PACKAGE_VERSION = '0.3.1'
 
 deps = [
-    'firefox_puppeteer >= 3.0.0, <4.0.0',
-    'firefox_ui_harness == 1.1.0',
+    'firefox-puppeteer >= 3.1.0, <4.0.0',
+    'firefox-ui-harness == 1.1.2',
 ]
 
-setup(name='firefox_ui_tests',
+setup(name='firefox-ui-tests',
       version=PACKAGE_VERSION,
       description='A collection of Mozilla Firefox UI tests run with Marionette',
       long_description='See https://github.com/mozilla/firefox-ui-tests',
