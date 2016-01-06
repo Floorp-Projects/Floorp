@@ -114,7 +114,19 @@ FFmpegH264Decoder<LIBAV_VER>::InitCodecContext()
   mCodecContext->width = mImage.width;
   mCodecContext->height = mImage.height;
 
-  mCodecContext->thread_count = PR_GetNumberOfProcessors();
+  // We use the same logic as libvpx in determining the number of threads to use
+  // so that we end up behaving in the same fashion when using ffmpeg as
+  // we would otherwise cause various crashes (see bug 1236167)
+  int decode_threads = 2;
+  if (mCodecID != AV_CODEC_ID_VP8) {
+    if (mDisplay.width >= 2048) {
+      decode_threads = 8;
+    } else if (mDisplay.width >= 1024) {
+      decode_threads = 4;
+    }
+  }
+  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
+  mCodecContext->thread_count = decode_threads;
   mCodecContext->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
 
   // FFmpeg will call back to this to negotiate a video pixel format.
