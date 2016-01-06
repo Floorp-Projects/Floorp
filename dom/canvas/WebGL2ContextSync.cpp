@@ -125,7 +125,7 @@ WebGL2Context::GetSyncParameter(JSContext*, WebGLSync* sync, GLenum pname, JS::M
         MakeContextCurrent();
         gl->fGetSynciv(sync->mGLName, pname, 1, nullptr, &result);
         retval.set(JS::Int32Value(result));
-        break;
+        return;
     }
 
     ErrorInvalidEnum("getSyncParameter: Invalid pname 0x%04x", pname);
