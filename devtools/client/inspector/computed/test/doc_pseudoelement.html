@@ -1,0 +1,131 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<html>
+  <head>
+    <style>
+
+body {
+    color: #333;
+}
+
+.box {
+    float:left;
+    width: 128px;
+    height: 128px;
+    background: #ddd;
+    padding: 32px;
+    margin: 32px;
+    position:relative;
+}
+
+.box:first-line {
+    color: orange;
+    background: red;
+}
+
+.box:first-letter {
+    color: green;
+}
+
+* {
+    cursor: default;
+}
+
+nothing {
+    cursor: pointer;
+}
+
+p::-moz-selection {
+    color: white;
+    background: black;
+}
+p::selection {
+    color: white;
+    background: black;
+}
+
+p:first-line {
+   background: blue;
+}
+p:first-letter {
+  color: red;
+  font-size: 130%;
+}
+
+.box:before {
+    background: green;
+    content: " ";
+    position: absolute;
+    height:32px;
+    width:32px;
+}
+
+.box:after {
+    background: red;
+    content: " ";
+    position: absolute;
+    border-radius: 50%;
+    height:32px;
+    width:32px;
+    top: 50%;
+    left: 50%;
+    margin-top: -16px;
+    margin-left: -16px;
+}
+
+.topleft:before {
+    top:0;
+    left:0;
+}
+
+.topleft:first-line {
+    color: orange;
+}
+.topleft::selection {
+    color: orange;
+}
+
+.topright:before {
+    top:0;
+    right:0;
+}
+
+.bottomright:before {
+    bottom:10px;
+    right:10px;
+    color: red;
+}
+
+.bottomright:before {
+    bottom:0;
+    right:0;
+}
+
+.bottomleft:before {
+    bottom:0;
+    left:0;
+}
+
+    </style>
+  </head>
+  <body>
+    <h1>ruleview pseudoelement($("test"));</h1>
+
+    <div id="topleft" class="box topleft">
+        <p>Top Left<br />Position</p>
+    </div>
+
+    <div id="topright" class="box topright">
+        <p>Top Right<br />Position</p>
+    </div>
+
+    <div id="bottomright" class="box bottomright">
+        <p>Bottom Right<br />Position</p>
+    </div>
+
+    <div id="bottomleft" class="box bottomleft">
+        <p>Bottom Left<br />Position</p>
+    </div>
+
+  </body>
+</html>
