@@ -1,26 +1,17 @@
 {
-  "extends": "../../.eslintrc",
+  "extends": "../../../../../testing/mochitest/mochitest.eslintrc",
+
+  "env": {
+    "webextensions": true,
+  },
 
   "globals": {
     "sendAsyncMessage": false,
 
+    "waitForLoad": true,
+
     "ExtensionTestUtils": false,
     "NetUtil": true,
     "XPCOMUtils": true,
-
-    "waitForLoad": true,
-
-    // Test harness globals
-    "add_task": false,
-    "info": false,
-    "is": false,
-    "ok": false,
-    "SimpleTest": false,
-    "SpecialPowers": true,
   },
-
-  "env": {
-    "browser": true,
-    "webextensions": true,
-  }
 }
