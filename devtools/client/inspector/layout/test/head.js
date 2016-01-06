@@ -15,7 +15,8 @@ var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 // All test are asynchronous
 waitForExplicitFinish();
 
-const TEST_URL_ROOT = "http://example.com/browser/devtools/client/layoutview/test/";
+const TEST_URL_ROOT =
+  "http://example.com/browser/devtools/client/inspector/layout/test/";
 
 // Uncomment this pref to dump all devtools emitted events to the console.
 // Services.prefs.setBoolPref("devtools.dump.emit", true);
@@ -100,7 +101,6 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
   let updated = inspector.toolbox.once("highlighter-ready");
   inspector.selection.setNode(node, "test-highlight");
   return updated;
-
 }
 
 /**
@@ -115,7 +115,7 @@ function selectAndHighlightNode(nodeOrSelector, inspector) {
  * @return a promise that resolves when the inspector is updated with the new
  * node
  */
-function selectNode(nodeOrSelector, inspector, reason="test") {
+function selectNode(nodeOrSelector, inspector, reason = "test") {
   info("Selecting the node " + nodeOrSelector);
 
   let node = getNode(nodeOrSelector);
@@ -139,10 +139,10 @@ var openInspector = Task.async(function*() {
   function mockHighlighter({highlighter}) {
     highlighter.showBoxModel = function(nodeFront, options) {
       return promise.resolve();
-    }
+    };
     highlighter.hideBoxModel = function() {
       return promise.resolve();
-    }
+    };
   }
 
   // Checking if the toolbox and the inspector are already loaded
@@ -247,7 +247,7 @@ function waitForUpdate(inspector) {
 var TESTS = [];
 
 function addTest(message, func) {
-  TESTS.push([message, Task.async(func)])
+  TESTS.push([message, Task.async(func)]);
 }
 
 var runTests = Task.async(function*(...args) {

@@ -8,7 +8,7 @@
 // change
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_layoutview_iframe1.html");
+  yield addTab(TEST_URL_ROOT + "doc_layout_iframe1.html");
   let iframe2 = getNode("iframe").contentDocument.querySelector("iframe");
 
   let {toolbox, inspector, view} = yield openLayoutView();
