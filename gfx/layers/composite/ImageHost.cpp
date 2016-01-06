@@ -136,8 +136,7 @@ void
 ImageHost::UseOverlaySource(OverlaySource aOverlay,
                             const gfx::IntRect& aPictureRect)
 {
-  if ((aOverlay.handle().type() == OverlayHandle::Tint32_t) &&
-      aOverlay.handle().get_int32_t() != INVALID_OVERLAY) {
+  if (ImageHostOverlay::IsValid(aOverlay)) {
     if (!mImageHostOverlay) {
       mImageHostOverlay = new ImageHostOverlay();
     }
@@ -590,6 +589,18 @@ ImageHostOverlay::~ImageHostOverlay()
   MOZ_COUNT_DTOR(ImageHostOverlay);
 }
 
+/* static */ bool
+ImageHostOverlay::IsValid(OverlaySource aOverlay)
+{
+  if ((aOverlay.handle().type() == OverlayHandle::Tint32_t) &&
+      aOverlay.handle().get_int32_t() != INVALID_OVERLAY) {
+    return true;
+  } else if (aOverlay.handle().type() == OverlayHandle::TGonkNativeHandle) {
+    return true;
+  }
+  return false;
+}
+
 void
 ImageHostOverlay::Composite(Compositor* aCompositor,
                             uint32_t aFlashCounter,
@@ -627,7 +638,11 @@ ImageHostOverlay::GetRenderState()
 #ifdef MOZ_WIDGET_GONK
   if (mOverlay.handle().type() == OverlayHandle::Tint32_t) {
     state.SetOverlayId(mOverlay.handle().get_int32_t());
+  } else if (mOverlay.handle().type() == OverlayHandle::TGonkNativeHandle) {
+    state.SetSidebandStream(mOverlay.handle().get_GonkNativeHandle());
   }
+  state.mSize.width = mPictureRect.Width();
+  state.mSize.height = mPictureRect.Height();
 #endif
   return state;
 }
