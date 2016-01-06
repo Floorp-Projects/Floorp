@@ -1839,14 +1839,15 @@ KeyframeEffectReadOnly::CanThrottle() const
       continue;
     }
 
-    AnimationCollection* collection = GetCollection();
-    MOZ_ASSERT(collection,
-      "CanThrottle should be called on an effect associated with an animation");
+    EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+    MOZ_ASSERT(effectSet, "CanThrottle should be called on an effect "
+                          "associated with a target element");
     layers::Layer* layer =
       FrameLayerBuilder::GetDedicatedLayer(frame, record.mLayerType);
-    // Unthrottle if the layer needs to be brought up to date with the animation.
+    // Unthrottle if the layer needs to be brought up to date
     if (!layer ||
-        collection->mAnimationGeneration > layer->GetAnimationGeneration()) {
+        effectSet->GetAnimationGeneration() !=
+          layer->GetAnimationGeneration()) {
       return false;
     }
 
