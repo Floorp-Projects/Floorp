@@ -13,6 +13,8 @@
 #include "nsCSSPseudoElements.h"
 #include "nsTArray.h"
 
+class nsCSSPropertySet;
+
 namespace mozilla {
 
 namespace dom {
@@ -41,6 +43,13 @@ public:
   // animations.
   static Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
+
+  // Get the properties that we are able to animate on the compositor that
+  // are specified at a higher level in the cascade than the animations
+  // level in |aStyleContext|.
+  static void
+  GetOverriddenProperties(nsStyleContext* aStyleContext,
+                          nsCSSPropertySet& aPropertiesOverridden);
 };
 
 } // namespace mozilla
