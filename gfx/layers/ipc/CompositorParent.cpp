@@ -742,6 +742,13 @@ CompositorParent::RecvMakeSnapshot(const SurfaceDescriptor& aInSnapshot,
                                    const gfx::IntRect& aRect)
 {
   RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  MOZ_ASSERT(target);
+  if (!target) {
+    // We kill the content process rather than have it continue with an invalid
+    // snapshot, that may be too harsh and we could decide to return some sort
+    // of error to the child process and let it deal with it...
+    return false;
+  }
   ForceComposeToTarget(target, &aRect);
   return true;
 }
@@ -754,6 +761,10 @@ CompositorParent::RecvMakeWidgetSnapshot(const SurfaceDescriptor& aInSnapshot)
   }
 
   RefPtr<DrawTarget> target = GetDrawTargetForDescriptor(aInSnapshot, gfx::BackendType::CAIRO);
+  MOZ_ASSERT(target);
+  if (!target) {
+    return false;
+  }
   mCompositor->GetWidget()->CaptureWidgetOnScreen(target);
   return true;
 }
