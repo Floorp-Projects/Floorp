@@ -2637,7 +2637,7 @@ class SnowWhiteKiller : public TraceCallbacks
     ObjectsVector;
 
 public:
-  SnowWhiteKiller(nsCycleCollector* aCollector)
+  explicit SnowWhiteKiller(nsCycleCollector* aCollector)
     : mCollector(aCollector)
     , mObjects(kSegmentSize)
   {
