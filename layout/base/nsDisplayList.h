@@ -1570,8 +1570,7 @@ public:
   virtual bool ClearsBackground()
   { return false; }
 
-  virtual bool ProvidesFontSmoothingBackgroundColor(nsDisplayListBuilder* aBuilder,
-                                                    nscolor* aColor)
+  virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor)
   { return false; }
 
   /**
@@ -1689,7 +1688,7 @@ public:
    * (also for correctness).
    * @return true if the merge was successful and the other item should be deleted
    */
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) {
+  virtual bool TryMerge(nsDisplayItem* aItem) {
     return false;
   }
 
@@ -2770,8 +2769,7 @@ public:
   virtual nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
                                    bool* aSnap) override;
   virtual bool IsUniform(nsDisplayListBuilder* aBuilder, nscolor* aColor) override;
-  virtual bool ProvidesFontSmoothingBackgroundColor(nsDisplayListBuilder* aBuilder,
-                                                    nscolor* aColor) override;
+  virtual bool ProvidesFontSmoothingBackgroundColor(nscolor* aColor) override;
 
   /**
    * GetBounds() returns the background painting area.
@@ -3203,7 +3201,7 @@ public:
   virtual void Paint(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override {
+  virtual bool TryMerge(nsDisplayItem* aItem) override {
     return false;
   }
   virtual void GetMergedFrames(nsTArray<nsIFrame*>* aFrames) override
@@ -3344,7 +3342,7 @@ public:
                                    const ContainerLayerParameters& aParameters) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override;
+  virtual bool TryMerge(nsDisplayItem* aItem) override;
   virtual void ComputeInvalidationRegion(nsDisplayListBuilder* aBuilder,
                                          const nsDisplayItemGeometry* aGeometry,
                                          nsRegion* aInvalidRegion) override
@@ -3374,7 +3372,7 @@ private:
 class nsDisplayMixBlendMode : public nsDisplayWrapList {
 public:
   nsDisplayMixBlendMode(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                        nsDisplayList* aList, uint32_t aFlags = 0);
+                        nsDisplayList* aList);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplayMixBlendMode();
 #endif
@@ -3396,7 +3394,7 @@ public:
                                    const ContainerLayerParameters& aParameters) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override;
+  virtual bool TryMerge(nsDisplayItem* aItem) override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
@@ -3420,7 +3418,7 @@ public:
     virtual LayerState GetLayerState(nsDisplayListBuilder* aBuilder,
                                      LayerManager* aManager,
                                      const ContainerLayerParameters& aParameters) override;
-    virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override;
+    virtual bool TryMerge(nsDisplayItem* aItem) override;
     virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
       return false;
     }
@@ -3480,7 +3478,7 @@ public:
   {
     return mozilla::LAYER_ACTIVE_FORCE;
   }
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override
+  virtual bool TryMerge(nsDisplayItem* aItem) override
   {
     // Don't allow merging, each sublist must have its own layer
     return false;
@@ -3577,7 +3575,7 @@ public:
   {
     return mozilla::LAYER_ACTIVE;
   }
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem) override;
+  virtual bool TryMerge(nsDisplayItem* aItem) override;
 };
 
 /**
@@ -3708,8 +3706,7 @@ public:
   }
   virtual bool ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                  nsRegion* aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayListBuilder* aBuilder,
-                        nsDisplayItem* aItem) override;
+  virtual bool TryMerge(nsDisplayItem* aItem) override;
   virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
     return false;
   }
@@ -3853,7 +3850,7 @@ public:
   virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override;
   virtual bool ComputeVisibility(nsDisplayListBuilder *aBuilder,
                                  nsRegion *aVisibleRegion) override;
-  virtual bool TryMerge(nsDisplayListBuilder *aBuilder, nsDisplayItem *aItem) override;
+  virtual bool TryMerge(nsDisplayItem *aItem) override;
   
   virtual uint32_t GetPerFrameKey() override { return (mIndex << nsDisplayItem::TYPE_BITS) | nsDisplayItem::GetPerFrameKey(); }
   
