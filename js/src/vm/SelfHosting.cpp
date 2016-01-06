@@ -292,6 +292,21 @@ intrinsic_MakeConstructible(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+static bool
+intrinsic_MakeDefaultConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].toObject().as<JSFunction>().isSelfHostedBuiltin());
+
+    RootedFunction ctor(cx, &args[0].toObject().as<JSFunction>());
+
+    ctor->nonLazyScript()->setIsDefaultClassConstructor();
+
+    args.rval().setUndefined();
+    return true;
+}
+
 /*
  * Used to decompile values in the nearest non-builtin stack frame, falling
  * back to decompiling in the current frame. Helpful for printing higher-order
@@ -1503,6 +1518,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ThrowSyntaxError",        intrinsic_ThrowSyntaxError,        4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
     JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
+    JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
@@ -1996,6 +2012,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     if (selfHostedObject->is<JSFunction>()) {
         RootedFunction selfHostedFunction(cx, &selfHostedObject->as<JSFunction>());
         bool hasName = selfHostedFunction->atom() != nullptr;
+
         // Arrow functions use the first extended slot for their lexical |this| value.
         MOZ_ASSERT(!selfHostedFunction->isArrow());
         js::gc::AllocKind kind = hasName
@@ -2041,6 +2058,7 @@ CloneObject(JSContext* cx, HandleNativeObject selfHostedObject)
     }
     if (!clone)
         return nullptr;
+
     if (!CloneProperties(cx, selfHostedObject, clone))
         return nullptr;
     return clone;
@@ -2081,8 +2099,11 @@ CloneValue(JSContext* cx, HandleValue selfHostedValue, MutableHandleValue vp)
 bool
 JSRuntime::createLazySelfHostedFunctionClone(JSContext* cx, HandlePropertyName selfHostedName,
                                              HandleAtom name, unsigned nargs,
+                                             HandleObject proto, NewObjectKind newKind,
                                              MutableHandleFunction fun)
 {
+    MOZ_ASSERT(newKind != GenericObject);
+
     RootedAtom funName(cx, name);
     JSFunction* selfHostedFun = getUnclonedSelfHostedFunction(cx, selfHostedName);
     if (!selfHostedFun)
@@ -2094,7 +2115,7 @@ JSRuntime::createLazySelfHostedFunctionClone(JSContext* cx, HandlePropertyName s
     }
 
     fun.set(NewScriptedFunction(cx, nargs, JSFunction::INTERPRETED_LAZY,
-                                funName, gc::AllocKind::FUNCTION_EXTENDED, SingletonObject));
+                                funName, proto, gc::AllocKind::FUNCTION_EXTENDED, newKind));
     if (!fun)
         return false;
     fun->setIsSelfHostedBuiltin();
