@@ -408,7 +408,15 @@ function format(msg) {
   msg.styles = [];
 
   // Remove and get the first log (in which the specifiers are).
-  let firstString = msg.logs.shift();
+  // Note that the first string doesn't have to be specified.
+  // An example of a log on the server side:
+  // ChromePhp::log("server info: ", $_SERVER);
+  // ChromePhp::log($_SERVER);
+  let firstString = "";
+  if (typeof msg.logs[0] == "string") {
+    firstString = msg.logs.shift();
+  }
+
   // All the specifiers present in the first string.
   let splitLogRegExp = /(.*?)(%[oOcsdif]|$)/g;
   let splitLogRegExpRes;

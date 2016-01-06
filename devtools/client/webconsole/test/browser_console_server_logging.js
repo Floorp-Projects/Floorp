@@ -37,6 +37,37 @@ add_task(function* () {
   yield updateServerLoggingListener(hud);
 });
 
+add_task(function* () {
+  const TEST_URI = "http://example.com/browser/devtools/client/webconsole/test/test-console-server-logging-array.sjs";
+
+  yield loadTab(TEST_URI);
+
+  let hud = yield openConsole();
+
+  // Set logging filter and wait till it's set on the backend
+  hud.setFilterState("serverlog", true);
+  yield updateServerLoggingListener(hud);
+
+  BrowserReloadSkipCache();
+
+  // Note that the test is also checking out the (printf like)
+  // formatters and encoding of UTF8 characters (see the one at the end).
+  let text = "Object { best: \"Firefox\", reckless: \"Chrome\", new_ie: \"Safari\", new_new_ie: \"Edge\" }";
+
+  yield waitForMessages({
+    webconsole: hud,
+    messages: [{
+      text: text,
+      category: CATEGORY_SERVER,
+      severity: SEVERITY_LOG,
+    }],
+  })
+
+  // Clean up filter
+  hud.setFilterState("serverlog", false);
+  yield updateServerLoggingListener(hud);
+});
+
 function updateServerLoggingListener(hud) {
   let deferred = promise.defer();
   hud.ui._updateServerLoggingListener(response => {
