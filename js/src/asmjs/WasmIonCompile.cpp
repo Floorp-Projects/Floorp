@@ -1160,14 +1160,15 @@ class FunctionCompiler
 
     /************************************************************ DECODING ***/
 
-    uint8_t        readU8()     { return func_.readU8(&pc_); }
-    uint32_t       readU32()    { return func_.readU32(&pc_); }
-    int32_t        readI32()    { return func_.readI32(&pc_); }
-    float          readF32()    { return func_.readF32(&pc_); }
-    double         readF64()    { return func_.readF64(&pc_); }
-    const LifoSig* readSig()    { return func_.readSig(&pc_); }
-    SimdConstant   readI32X4()  { return func_.readI32X4(&pc_); }
-    SimdConstant   readF32X4()  { return func_.readF32X4(&pc_); }
+    uint8_t        readU8()     { return func_.uncheckedReadU8(&pc_); }
+    uint32_t       readU32()    { return func_.uncheckedReadU32(&pc_); }
+    int32_t        readI32()    { return func_.uncheckedReadI32(&pc_); }
+    float          readF32()    { return func_.uncheckedReadF32(&pc_); }
+    double         readF64()    { return func_.uncheckedReadF64(&pc_); }
+    const LifoSig* readSig()    { return func_.uncheckedReadSig(&pc_); }
+    SimdConstant   readI32X4()  { return func_.uncheckedReadI32X4(&pc_); }
+    SimdConstant   readF32X4()  { return func_.uncheckedReadF32X4(&pc_); }
+
     Stmt           readStmtOp() { return Stmt(readU8()); }
 
     void readCallLineCol(uint32_t* line, uint32_t* column) {
