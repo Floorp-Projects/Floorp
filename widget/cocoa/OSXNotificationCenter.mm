@@ -11,6 +11,7 @@
 #include "nsNetUtil.h"
 #include "imgLoader.h"
 #import "nsCocoaUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsObjCExceptions.h"
 #include "nsString.h"
@@ -241,14 +242,38 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
                                              nsIPrincipal * aPrincipal,
                                              bool aInPrivateBrowsing)
 {
+  nsCOMPtr<nsIAlertNotification> alert =
+    do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
+  NS_ENSURE_TRUE(alert, NS_ERROR_FAILURE);
+  nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
+                            aAlertText, aAlertTextClickable,
+                            aAlertCookie, aBidi, aLang, aData,
+                            aPrincipal, aInPrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return ShowAlert(alert, aAlertListener);
+}
+
+NS_IMETHODIMP
+OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
+                                 nsIObserver* aAlertListener)
+{
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  NS_ENSURE_ARG(aAlert);
 
   Class unClass = NSClassFromString(@"NSUserNotification");
   id<FakeNSUserNotification> notification = [[unClass alloc] init];
-  notification.title = nsCocoaUtils::ToNSString(aAlertTitle);
 
+  nsAutoString title;
+  nsresult rv = aAlert->GetTitle(title);
+  NS_ENSURE_SUCCESS(rv, rv);
+  notification.title = nsCocoaUtils::ToNSString(title);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = aAlert->GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString hostPort;
-  nsAlertsUtils::GetSourceHostPort(aPrincipal, hostPort);
+  nsAlertsUtils::GetSourceHostPort(principal, hostPort);
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
@@ -263,12 +288,16 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
     notification.subtitle = nsCocoaUtils::ToNSString(notificationSource);
   }
 
-  notification.informativeText = nsCocoaUtils::ToNSString(aAlertText);
+  nsAutoString text;
+  rv = aAlert->GetText(text);
+  NS_ENSURE_SUCCESS(rv, rv);
+  notification.informativeText = nsCocoaUtils::ToNSString(text);
+
   notification.soundName = NSUserNotificationDefaultSoundName;
   notification.hasActionButton = NO;
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
-  if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
+  if (nsAlertsUtils::IsActionablePrincipal(principal)) {
     if (bundle) {
       nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
       bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
@@ -307,24 +336,39 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
       }
     }
   }
-  NSString *alertName = nsCocoaUtils::ToNSString(aAlertName);
+  nsAutoString name;
+  rv = aAlert->GetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NSString *alertName = nsCocoaUtils::ToNSString(name);
   if (!alertName) {
     return NS_ERROR_FAILURE;
   }
   notification.userInfo = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:alertName, nil]
                                                       forKeys:[NSArray arrayWithObjects:@"name", nil]];
 
-  OSXNotificationInfo *osxni = new OSXNotificationInfo(alertName, aAlertListener, aAlertCookie);
+  nsAutoString cookie;
+  rv = aAlert->GetCookie(cookie);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  OSXNotificationInfo *osxni = new OSXNotificationInfo(alertName, aAlertListener, cookie);
+
+  nsAutoString imageUrl;
+  rv = aAlert->GetImageURL(imageUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool inPrivateBrowsing;
+  rv = aAlert->GetInPrivateBrowsing(&inPrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Show the notification without waiting for an image if there is no icon URL or
   // notification icons are not supported on this version of OS X.
-  if (aImageUrl.IsEmpty() || ![unClass instancesRespondToSelector:@selector(setContentImage:)]) {
+  if (imageUrl.IsEmpty() || ![unClass instancesRespondToSelector:@selector(setContentImage:)]) {
     CloseAlertCocoaString(alertName);
     mActiveAlerts.AppendElement(osxni);
     [GetNotificationCenter() deliverNotification:notification];
     [notification release];
     if (aAlertListener) {
-      aAlertListener->Observe(nullptr, "alertshow", PromiseFlatString(aAlertCookie).get());
+      aAlertListener->Observe(nullptr, "alertshow", cookie.get());
     }
   } else {
     mPendingAlerts.AppendElement(osxni);
@@ -332,17 +376,17 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
     RefPtr<imgLoader> il = imgLoader::GetInstance();
     if (il) {
       nsCOMPtr<nsIURI> imageUri;
-      NS_NewURI(getter_AddRefs(imageUri), aImageUrl);
+      NS_NewURI(getter_AddRefs(imageUri), imageUrl);
       if (imageUri) {
-        nsresult rv = il->LoadImage(imageUri, nullptr, nullptr,
-                                    mozilla::net::RP_Default,
-                                    aPrincipal, nullptr,
-                                    this, nullptr,
-                                    aInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
-                                                         nsIRequest::LOAD_NORMAL,
-                                    nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                                    EmptyString(),
-                                    getter_AddRefs(osxni->mIconRequest));
+        rv = il->LoadImage(imageUri, nullptr, nullptr,
+                           mozilla::net::RP_Default,
+                           principal, nullptr,
+                           this, nullptr,
+                           inPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
+                                               nsIRequest::LOAD_NORMAL,
+                           nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+                           EmptyString(),
+                           getter_AddRefs(osxni->mIconRequest));
         if (NS_SUCCEEDED(rv)) {
           // Set a timer for six seconds. If we don't have an icon by the time this
           // goes off then we go ahead without an icon.
