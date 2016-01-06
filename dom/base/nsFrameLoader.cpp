@@ -3085,19 +3085,17 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
 
   // set the userContextId on the attrs before we pass them into
   // the tab context
-  if (mOwnerContent) {
-    nsAutoString userContextIdStr;
-    if (mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usercontextid)) {
-      mOwnerContent->GetAttr(kNameSpaceID_None,
-                             nsGkAtoms::usercontextid,
-                             userContextIdStr);
-    }
-    if (!userContextIdStr.IsEmpty()) {
-      nsresult err;
-      uint32_t userContextId = userContextIdStr.ToInteger(&err);
-      NS_ENSURE_SUCCESS(err, err);
-      attrs.mUserContextId = userContextId;
-    }
+  nsAutoString userContextIdStr;
+  if (mOwnerContent->HasAttr(kNameSpaceID_None, nsGkAtoms::usercontextid)) {
+    mOwnerContent->GetAttr(kNameSpaceID_None,
+                           nsGkAtoms::usercontextid,
+                           userContextIdStr);
+  }
+  if (!userContextIdStr.IsEmpty()) {
+    nsresult err;
+    uint32_t userContextId = userContextIdStr.ToInteger(&err);
+    NS_ENSURE_SUCCESS(err, err);
+    attrs.mUserContextId = userContextId;
   }
 
   bool tabContextUpdated =
