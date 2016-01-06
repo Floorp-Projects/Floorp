@@ -357,7 +357,7 @@ InspectorPanel.prototype = {
                         "ruleview" == defaultTab);
 
     this.sidebar.addTab("computedview",
-                        "chrome://devtools/content/styleinspector/computedview.xhtml",
+                        "chrome://devtools/content/inspector/computed/computed.xhtml",
                         "computedview" == defaultTab);
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
