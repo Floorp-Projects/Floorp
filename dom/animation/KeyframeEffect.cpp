@@ -132,6 +132,23 @@ KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming)
   // update our registration with the target element.
 }
 
+void
+KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
+{
+  UpdateTargetRegistration();
+
+  // If the effect is not relevant it will be removed from the target
+  // element's effect set. However, effects not in the effect set
+  // will not be included in the set of candidate effects for running on
+  // the compositor and hence they won't have their compositor status
+  // updated. As a result, we need to make sure we clear their compositor
+  // status here.
+  bool isRelevant = mAnimation && mAnimation->IsRelevant();
+  if (!isRelevant) {
+    ResetIsRunningOnCompositor();
+  }
+}
+
 Nullable<TimeDuration>
 KeyframeEffectReadOnly::GetLocalTime() const
 {
@@ -533,10 +550,6 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     if (effectSet) {
       effectSet->RemoveEffect(*this);
     }
-    // Any effects not in the effect set will not be included in the set of
-    // candidate effects for running on the compositor and hence they won't
-    // have their compositor status updated so we should do that now.
-    ResetIsRunningOnCompositor();
   }
 }
 
