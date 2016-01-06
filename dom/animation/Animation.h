@@ -10,6 +10,7 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/EffectCompositor.h" // For EffectCompositor::CascadeLevel
 #include "mozilla/LinkedList.h"
 #include "mozilla/TimeStamp.h" // for TimeStamp, TimeDuration
 #include "mozilla/dom/AnimationBinding.h" // for AnimationPlayState
@@ -286,16 +287,13 @@ public:
   virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
 
    /**
-   * Returns true if effect(s) associated with this Animation are applied to
-   * the transitions level of the cascade. Otherwise, it is assumed that
-   * animated values are applies to the animations level of the cascade.
-   *
-   * This is used in determining which animations are sent to the compositor
-   * since animations applied to the transitions level of the cascade are not
-   * overridden by higher-priority style values in the same way that
-   * regular animations that apply to the animations level of the cascade are.
+   * Returns the level at which the effect(s) associated with this Animation
+   * are applied to the CSS cascade.
    */
-  virtual bool AppliesToTransitionsLevel() const { return false; }
+  virtual EffectCompositor::CascadeLevel CascadeLevel() const
+  {
+    return EffectCompositor::CascadeLevel::Animations;
+  }
 
   /**
    * Returns true if this animation does not currently need to update

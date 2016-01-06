@@ -10,10 +10,12 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/Pair.h"
 #include "mozilla/RefPtr.h"
+#include "nsCSSProperty.h"
 #include "nsCSSPseudoElements.h"
 #include "nsTArray.h"
 
 class nsCSSPropertySet;
+class nsIFrame;
 class nsPresContext;
 class nsStyleContext;
 
@@ -29,6 +31,15 @@ class Element;
 class EffectCompositor
 {
 public:
+  // Animations can be applied at two different levels in the CSS cascade:
+  enum class CascadeLevel {
+    // The animations sheet (CSS animations, script-generated animations,
+    // and CSS transitions that are no longer tied to CSS markup)
+    Animations,
+    // The transitions sheet (CSS transitions that are tied to CSS markup)
+    Transitions
+  };
+
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
 

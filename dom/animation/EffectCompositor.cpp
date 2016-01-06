@@ -318,7 +318,7 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
       // the compositor. For properties animated on the main thread the usual
       // cascade ensures these animations will be correctly overridden.
       if (winsInCascade &&
-          !effect->GetAnimation()->AppliesToTransitionsLevel() &&
+          effect->GetAnimation()->CascadeLevel() == CascadeLevel::Animations &&
           overriddenProperties.HasProperty(prop.mProperty)) {
         winsInCascade = false;
       }
