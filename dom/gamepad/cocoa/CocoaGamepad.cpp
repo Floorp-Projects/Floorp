@@ -93,7 +93,7 @@ class Gamepad {
   // Index given by our superclass.
   uint32_t mSuperIndex;
 
-  const bool isDpad(IOHIDElementRef element) const
+  bool isDpad(IOHIDElementRef element) const
   {
     return element == mDpad;
   }
