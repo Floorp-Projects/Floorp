@@ -11,7 +11,11 @@
 #include "mozilla/dom/KeyframeEffect.h" // For KeyframeEffectReadOnly
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/LayerAnimationInfo.h"
+#include "nsCSSPropertySet.h"
 #include "nsLayoutUtils.h"
+#include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
+#include "nsTArray.h"
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;
@@ -146,6 +150,21 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
   result = Some(MakePair(content->AsElement(), pseudoType));
 
   return result;
+}
+
+/* static */ void
+EffectCompositor::GetOverriddenProperties(nsStyleContext* aStyleContext,
+                                          nsCSSPropertySet&
+                                            aPropertiesOverridden)
+{
+  nsAutoTArray<nsCSSProperty, LayerAnimationInfo::kRecords> propertiesToTrack;
+  for (const LayerAnimationInfo::Record& record :
+         LayerAnimationInfo::sRecords) {
+    propertiesToTrack.AppendElement(record.mProperty);
+  }
+  nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
+                                                   aStyleContext,
+                                                   aPropertiesOverridden);
 }
 
 } // namespace mozilla

@@ -7,6 +7,7 @@
 #include "nsTransitionManager.h"
 #include "mozilla/dom/CSSAnimationBinding.h"
 
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/dom/DocumentTimeline.h"
@@ -927,49 +928,12 @@ nsAnimationManager::UpdateCascadeResults(
                       AnimationCollection* aElementAnimations)
 {
   /*
-   * Figure out which properties we need to examine.
-   */
-
-  // size of 2 since we only currently have 2 properties we animate on
-  // the compositor
-  nsAutoTArray<nsCSSProperty, 2> propertiesToTrack;
-
-  {
-    nsCSSPropertySet propertiesToTrackAsSet;
-
-    for (size_t animIdx = aElementAnimations->mAnimations.Length();
-         animIdx-- != 0; ) {
-      const Animation* anim = aElementAnimations->mAnimations[animIdx];
-      const KeyframeEffectReadOnly* effect = anim->GetEffect();
-      if (!effect) {
-        continue;
-      }
-
-      for (size_t propIdx = 0, propEnd = effect->Properties().Length();
-           propIdx != propEnd; ++propIdx) {
-        const AnimationProperty& prop = effect->Properties()[propIdx];
-        // We only bother setting mWinsInCascade for properties that we
-        // can animate on the compositor.
-        if (nsCSSProps::PropHasFlags(prop.mProperty,
-                                     CSS_PROPERTY_CAN_ANIMATE_ON_COMPOSITOR)) {
-          if (!propertiesToTrackAsSet.HasProperty(prop.mProperty)) {
-            propertiesToTrack.AppendElement(prop.mProperty);
-            propertiesToTrackAsSet.AddProperty(prop.mProperty);
-          }
-        }
-      }
-    }
-  }
-
-  /*
-   * Determine whether those properties are set in things that
+   * Look for compositor-animatable properties that are set in things that
    * override animations.
    */
-
   nsCSSPropertySet propertiesOverridden;
-  nsRuleNode::ComputePropertiesOverridingAnimation(propertiesToTrack,
-                                                   aStyleContext,
-                                                   propertiesOverridden);
+  EffectCompositor::GetOverriddenProperties(aStyleContext,
+                                            propertiesOverridden);
 
   /*
    * Set mWinsInCascade based both on what is overridden at levels
