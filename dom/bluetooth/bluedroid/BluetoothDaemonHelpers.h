@@ -464,6 +464,10 @@ UnpackPDU(DaemonSocketPDU& aPDU, BluetoothRemoteName& aOut)
   if (!aPDU.Consume(1)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+
+  auto end = std::find(aOut.mName, aOut.mName + sizeof(aOut.mName), '\0');
+
+  aOut.mLength = end - aOut.mName;
   return NS_OK;
 }
 

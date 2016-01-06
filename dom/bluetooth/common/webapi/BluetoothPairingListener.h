@@ -24,8 +24,8 @@ public:
   static already_AddRefed<BluetoothPairingListener>
     Create(nsPIDOMWindow* aWindow);
 
-  void DispatchPairingEvent(const nsAString& aName,
-                            const nsAString& aAddress,
+  void DispatchPairingEvent(const BluetoothRemoteName& aName,
+                            const BluetoothAddress& aAddress,
                             const nsAString& aPasskey,
                             const nsAString& aType);
 

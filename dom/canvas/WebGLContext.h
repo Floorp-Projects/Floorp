@@ -1303,7 +1303,8 @@ public:
     nsLayoutUtils::SurfaceFromElementResult
     SurfaceFromElement(dom::Element* elem)
     {
-        uint32_t flags = nsLayoutUtils::SFE_WANT_IMAGE_SURFACE;
+        uint32_t flags = nsLayoutUtils::SFE_WANT_IMAGE_SURFACE |
+                         nsLayoutUtils::SFE_USE_ELEMENT_SIZE_IF_VECTOR;
 
         if (mPixelStore_ColorspaceConversion == LOCAL_GL_NONE)
             flags |= nsLayoutUtils::SFE_NO_COLORSPACE_CONVERSION;

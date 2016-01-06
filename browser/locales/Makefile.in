@@ -12,13 +12,6 @@ vpath crashreporter%.ini $(LOCALE_SRCDIR)/crashreporter
 ifdef LOCALE_MERGEDIR
 vpath crashreporter%.ini @srcdir@/en-US/crashreporter
 endif
-ifdef LOCALE_MERGEDIR
-vpath book%.inc $(LOCALE_MERGEDIR)/browser/profile
-endif
-vpath book%.inc $(LOCALE_SRCDIR)/profile
-ifdef LOCALE_MERGEDIR
-vpath book%.inc @srcdir@/en-US/profile
-endif
 
 
 SUBMAKEFILES += \
@@ -108,16 +101,7 @@ PROFILE_FILES = \
 
 PROFILE_CHROME = userChrome-example.css userContent-example.css
 
-NO_JA_JP_MAC_AB_CD := $(if $(filter ja-JP-mac, $(AB_CD)),ja,$(AB_CD))
-
-%/defaults/profile/bookmarks.html: bookmarks.inc generic/profile/bookmarks.html.in
-	$(call py_action,preprocessor, \
-	  -I $< \
-	  -DAB_CD=$(NO_JA_JP_MAC_AB_CD) \
-	  $(srcdir)/generic/profile/bookmarks.html.in \
-	  -o $@)
-
-libs:: $(FINAL_TARGET)/defaults/profile/bookmarks.html ;
+DEFINES += -DBOOKMARKS_INCLUDE_DIR=$(dir $(call MERGE_FILE,profile/bookmarks.inc))
 
 libs:: $(addprefix generic/profile/,$(PROFILE_FILES))
 	$(SYSINSTALL) $(IFLAGS1) $^ $(FINAL_TARGET)/defaults/profile

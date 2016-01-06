@@ -70,4 +70,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // mozilla_dom_NuwaParent_h

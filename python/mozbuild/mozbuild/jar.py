@@ -253,21 +253,6 @@ class JarMaker(object):
                      )
         return p
 
-    def processIncludes(self, includes):
-        '''Process given includes with the inner PreProcessor.
-
-        Only use this for #defines, the includes shouldn't generate
-        content.
-        '''
-
-        self.pp.out = StringIO()
-        for inc in includes:
-            self.pp.do_include(inc)
-        includesvalue = self.pp.out.getvalue()
-        if includesvalue:
-            logging.info('WARNING: Includes produce non-empty output')
-        self.pp.out = None
-
     def finalizeJar(self, jardir, jarbase, jarname, chromebasepath, register, doZip=True):
         '''Helper method to write out the chrome registration entries to
          jarfile.manifest or chrome.manifest, or both.
@@ -560,7 +545,6 @@ def main(args=None):
     jm = JarMaker()
     p = jm.getCommandLineParser()
     (options, args) = p.parse_args(args)
-    jm.processIncludes(options.I)
     jm.outputFormat = options.f
     jm.sourcedirs = options.s
     jm.topsourcedir = options.t

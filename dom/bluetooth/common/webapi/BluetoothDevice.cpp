@@ -146,18 +146,27 @@ BluetoothDevice::SetPropertyByValue(const BluetoothNamedValue& aValue)
   const nsString& name = aValue.name();
   const BluetoothValue& value = aValue.value();
   if (name.EqualsLiteral("Name")) {
-    mName = value.get_nsString();
+    RemoteNameToString(value.get_BluetoothRemoteName(), mName);
   } else if (name.EqualsLiteral("Address")) {
-    mAddress = value.get_nsString();
+    AddressToString(value.get_BluetoothAddress(), mAddress);
   } else if (name.EqualsLiteral("Cod")) {
     mCod->Update(value.get_uint32_t());
   } else if (name.EqualsLiteral("Paired")) {
     mPaired = value.get_bool();
   } else if (name.EqualsLiteral("UUIDs")) {
-    // We assume the received uuids array is sorted without duplicate items.
-    // If it's not, we require additional processing before assigning it
-    // directly.
-    mUuids = value.get_ArrayOfnsString();
+    // While converting to strings, we sort the received UUIDs and remove
+    // any duplicates.
+    const nsTArray<BluetoothUuid>& uuids = value.get_ArrayOfBluetoothUuid();
+    nsTArray<nsString> uuidStrs;
+    for (uint32_t index = 0; index < uuids.Length(); ++index) {
+      nsAutoString uuidStr;
+      UuidToString(uuids[index], uuidStr);
+
+      if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate UUIDs
+        uuidStrs.InsertElementSorted(uuidStr);
+      }
+    }
+    mUuids = Move(uuidStrs);
     BluetoothDeviceBinding::ClearCachedUuidsValue(this);
   } else if (name.EqualsLiteral("Type")) {
     mType = ConvertUint32ToDeviceType(value.get_uint32_t());
@@ -250,19 +259,35 @@ BluetoothDevice::IsDeviceAttributeChanged(BluetoothDeviceAttribute aType,
     case BluetoothDeviceAttribute::Cod:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tuint32_t);
       return !mCod->Equals(aValue.get_uint32_t());
-    case BluetoothDeviceAttribute::Name:
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TnsString);
-      return !mName.Equals(aValue.get_nsString());
+    case BluetoothDeviceAttribute::Name: {
+        MOZ_ASSERT(aValue.type() == BluetoothValue::TBluetoothRemoteName);
+        nsAutoString remoteNameStr;
+        RemoteNameToString(aValue.get_BluetoothRemoteName(), remoteNameStr);
+        return !mName.Equals(remoteNameStr);
+      }
     case BluetoothDeviceAttribute::Paired:
       MOZ_ASSERT(aValue.type() == BluetoothValue::Tbool);
       return mPaired != aValue.get_bool();
     case BluetoothDeviceAttribute::Uuids: {
-      MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfnsString);
-      const InfallibleTArray<nsString>& uuids = aValue.get_ArrayOfnsString();
+      MOZ_ASSERT(aValue.type() == BluetoothValue::TArrayOfBluetoothUuid);
+      const auto& uuids = aValue.get_ArrayOfBluetoothUuid();
+
+      nsTArray<nsString> uuidStrs;
+
+      // Construct a sorted uuid set
+      for (size_t index = 0; index < uuids.Length(); ++index) {
+        nsAutoString uuidStr;
+        UuidToString(uuids[index], uuidStr);
+
+        if (!uuidStrs.Contains(uuidStr)) { // filter out duplicate uuids
+          uuidStrs.InsertElementSorted(uuidStr);
+        }
+      }
+
       // We assume the received uuids array is sorted without duplicate items.
       // If it's not, we require additional processing before comparing it
       // directly.
-      return mUuids != uuids;
+      return mUuids != uuidStrs;
     }
     default:
       BT_WARNING("Type %d is not handled", uint32_t(aType));
