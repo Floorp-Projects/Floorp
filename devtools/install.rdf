@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!--
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+-->
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+  <Description about="urn:mozilla:install-manifest"
+               em:id="devtools@mozilla.org"
+               em:name="Developer Tools (local version)"
+               em:description="Add-on to load DevTools from local sources and easily reload them with Ctrl+Alt+r shortcut"
+               em:version="44.0a1"
+               em:type="2"
+               em:creator="Mozilla">
+
+    <em:bootstrap>true</em:bootstrap>
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>44.0a1</em:minVersion>
+        <em:maxVersion>*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+  </Description>
+</RDF>

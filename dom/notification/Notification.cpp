@@ -23,6 +23,7 @@
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
 
 #include "nsAlertsUtils.h"
+#include "nsComponentManagerUtils.h"
 #include "nsContentPermissionHelper.h"
 #include "nsContentUtils.h"
 #include "nsCRTGlue.h"
@@ -1787,11 +1788,19 @@ Notification::ShowInternal()
 
   nsAutoString alertName;
   GetAlertName(alertName);
-  alertService->ShowAlertNotification(iconUrl, mTitle, mBody, true,
-                                      uniqueCookie, alertObserver, alertName,
-                                      DirectionToString(mDir), mLang,
-                                      mDataAsBase64, GetPrincipal(),
-                                      inPrivateBrowsing);
+  nsCOMPtr<nsIAlertNotification> alert =
+    do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
+  NS_ENSURE_TRUE_VOID(alert);
+  rv = alert->Init(alertName, iconUrl, mTitle, mBody,
+                   true,
+                   uniqueCookie,
+                   DirectionToString(mDir),
+                   mLang,
+                   mDataAsBase64,
+                   GetPrincipal(),
+                   inPrivateBrowsing);
+  NS_ENSURE_SUCCESS_VOID(rv);
+  alertService->ShowAlert(alert, alertObserver);
 }
 
 /* static */ bool

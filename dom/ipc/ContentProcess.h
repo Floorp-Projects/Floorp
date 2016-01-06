@@ -20,26 +20,26 @@ namespace dom {
  */
 class ContentProcess : public mozilla::ipc::ProcessChild
 {
-    typedef mozilla::ipc::ProcessChild ProcessChild;
+  typedef mozilla::ipc::ProcessChild ProcessChild;
 
 public:
-    explicit ContentProcess(ProcessId aParentPid)
-        : ProcessChild(aParentPid)
-    { }
+  explicit ContentProcess(ProcessId aParentPid)
+    : ProcessChild(aParentPid)
+  { }
 
-    ~ContentProcess()
-    { }
+  ~ContentProcess()
+  { }
 
-    virtual bool Init() override;
-    virtual void CleanUp() override;
+  virtual bool Init() override;
+  virtual void CleanUp() override;
 
-    void SetAppDir(const nsACString& aPath);
+  void SetAppDir(const nsACString& aPath);
 
 private:
-    ContentChild mContent;
-    mozilla::ipc::ScopedXREEmbed mXREEmbed;
+  ContentChild mContent;
+  mozilla::ipc::ScopedXREEmbed mXREEmbed;
 
-    DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
+  DISALLOW_EVIL_CONSTRUCTORS(ContentProcess);
 };
 
 } // namespace dom

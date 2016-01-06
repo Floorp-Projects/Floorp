@@ -73,40 +73,66 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
                                                      nsIPrincipal * aPrincipal,
                                                      bool aInPrivateBrowsing)
 {
+  nsCOMPtr<nsIAlertNotification> alert =
+    do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
+  NS_ENSURE_TRUE(alert, NS_ERROR_FAILURE);
+  nsresult rv = alert->Init(aAlertName, aImageUrl, aAlertTitle,
+                            aAlertText, aAlertTextClickable,
+                            aAlertCookie, aBidi, aLang, aData,
+                            aPrincipal, aInPrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return ShowAlert(alert, aAlertListener);
+}
+
+
+NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
+                                         nsIObserver * aAlertListener)
+{
+  NS_ENSURE_ARG(aAlert);
+
+  nsAutoString cookie;
+  nsresult rv = aAlert->GetCookie(cookie);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (XRE_IsContentProcess()) {
     ContentChild* cpc = ContentChild::GetSingleton();
 
     if (aAlertListener)
-      cpc->AddRemoteAlertObserver(PromiseFlatString(aAlertCookie), aAlertListener);
+      cpc->AddRemoteAlertObserver(cookie, aAlertListener);
 
-    cpc->SendShowAlertNotification(PromiseFlatString(aImageUrl),
-                                   PromiseFlatString(aAlertTitle),
-                                   PromiseFlatString(aAlertText),
-                                   aAlertTextClickable,
-                                   PromiseFlatString(aAlertCookie),
-                                   PromiseFlatString(aAlertName),
-                                   PromiseFlatString(aBidi),
-                                   PromiseFlatString(aLang),
-                                   PromiseFlatString(aData),
-                                   IPC::Principal(aPrincipal),
-                                   aInPrivateBrowsing);
+    cpc->SendShowAlert(aAlert);
     return NS_OK;
   }
 
+  nsAutoString imageUrl;
+  rv = aAlert->GetImageURL(imageUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString title;
+  rv = aAlert->GetTitle(title);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString text;
+  rv = aAlert->GetText(text);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString name;
+  rv = aAlert->GetName(name);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  rv = aAlert->GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
 #ifdef MOZ_WIDGET_ANDROID
-  mozilla::AndroidBridge::Bridge()->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertCookie,
-                                                          aAlertListener, aAlertName, aPrincipal);
+  mozilla::AndroidBridge::Bridge()->ShowAlertNotification(imageUrl, title, text, cookie,
+                                                          aAlertListener, name, principal);
   return NS_OK;
 #else
   // Check if there is an optional service that handles system-level notifications
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
-  nsresult rv;
   if (sysAlerts) {
-    rv = sysAlerts->ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                          aAlertCookie, aAlertListener, aAlertName,
-                                          aBidi, aLang, aData,
-                                          IPC::Principal(aPrincipal),
-                                          aInPrivateBrowsing);
+    rv = sysAlerts->ShowAlert(aAlert, aAlertListener);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
   }
@@ -114,14 +140,30 @@ NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl
   if (!ShouldShowAlert()) {
     // Do not display the alert. Instead call alertfinished and get out.
     if (aAlertListener)
-      aAlertListener->Observe(nullptr, "alertfinished", PromiseFlatString(aAlertCookie).get());
+      aAlertListener->Observe(nullptr, "alertfinished", cookie.get());
     return NS_OK;
   }
 
+  bool textClickable;
+  rv = aAlert->GetTextClickable(&textClickable);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString bidi;
+  rv = aAlert->GetDir(bidi);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString lang;
+  rv = aAlert->GetLang(lang);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  bool inPrivateBrowsing;
+  rv = aAlert->GetInPrivateBrowsing(&inPrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Use XUL notifications as a fallback if above methods have failed.
-  rv = mXULAlerts.ShowAlertNotification(aImageUrl, aAlertTitle, aAlertText, aAlertTextClickable,
-                                        aAlertCookie, aAlertListener, aAlertName,
-                                        aBidi, aLang, aPrincipal, aInPrivateBrowsing);
+  rv = mXULAlerts.ShowAlertNotification(imageUrl, title, text, textClickable,
+                                        cookie, aAlertListener, name,
+                                        bidi, lang, principal, inPrivateBrowsing);
   return rv;
 #endif // !MOZ_WIDGET_ANDROID
 }

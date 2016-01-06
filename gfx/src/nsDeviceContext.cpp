@@ -314,30 +314,10 @@ nsDeviceContext::SetDPI()
 {
     float dpi = -1.0f;
 
-    // PostScript, PDF and Mac (when printing) all use 72 dpi
-    // Use a printing DC to determine the other dpi values
-    if (mPrintingSurface) {
-        switch (mPrintingSurface->GetType()) {
-        case gfxSurfaceType::PDF:
-        case gfxSurfaceType::PS:
-        case gfxSurfaceType::Quartz:
-            dpi = 72.0f;
-            break;
-#ifdef XP_WIN
-        case gfxSurfaceType::Win32:
-        case gfxSurfaceType::Win32Printing: {
-            HDC dc = reinterpret_cast<gfxWindowsSurface*>(mPrintingSurface.get())->GetDC();
-            int32_t OSVal = GetDeviceCaps(dc, LOGPIXELSY);
-            dpi = 144.0f;
-            mPrintingScale = float(OSVal) / dpi;
-            break;
-        }
-#endif
-        default:
-            NS_NOTREACHED("Unexpected printing surface type");
-            break;
-        }
-
+    // Use the printing DC to determine DPI values, if we have one.
+    if (mDeviceContextSpec) {
+        dpi = mDeviceContextSpec->GetDPI();
+        mPrintingScale = mDeviceContextSpec->GetPrintingScale();
         mAppUnitsPerDevPixelAtUnitFullZoom =
             NS_lround((AppUnitsPerCSSPixel() * 96) / dpi);
     } else {
@@ -418,6 +398,12 @@ nsDeviceContext::CreateRenderingContext()
     if (!dt) {
         gfxCriticalNote << "Failed to create draw target in device context sized " << mWidth << "x" << mHeight << " and pointers " << hexa(mPrintingSurface) << " and " << hexa(printingSurface);
         return nullptr;
+    }
+
+    RefPtr<DrawEventRecorder> recorder;
+    nsresult rv = mDeviceContextSpec->GetDrawEventRecorder(getter_AddRefs(recorder));
+    if (NS_SUCCEEDED(rv) && recorder) {
+      dt = gfx::Factory::CreateRecordingDrawTarget(recorder, dt);
     }
 
 #ifdef XP_MACOSX
@@ -526,18 +512,16 @@ nsDeviceContext::InitForPrinting(nsIDeviceContextSpec *aDevice)
 
 nsresult
 nsDeviceContext::BeginDocument(const nsAString& aTitle,
-                               char16_t*       aPrintToFileName,
+                               const nsAString& aPrintToFileName,
                                int32_t          aStartPage,
                                int32_t          aEndPage)
 {
-    static const char16_t kEmpty[] = { '\0' };
-    nsresult rv;
+    nsresult rv = mPrintingSurface->BeginPrinting(aTitle, aPrintToFileName);
 
-    rv = mPrintingSurface->BeginPrinting(aTitle,
-                                         nsDependentString(aPrintToFileName ? aPrintToFileName : kEmpty));
-
-    if (NS_SUCCEEDED(rv) && mDeviceContextSpec)
-        rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName, aStartPage, aEndPage);
+    if (NS_SUCCEEDED(rv) && mDeviceContextSpec) {
+      rv = mDeviceContextSpec->BeginDocument(aTitle, aPrintToFileName,
+                                             aStartPage, aEndPage);
+    }
 
     return rv;
 }
@@ -698,34 +682,7 @@ nsDeviceContext::CalcPrintingSize()
 
     gfxSize size(0, 0);
     switch (mPrintingSurface->GetType()) {
-    case gfxSurfaceType::Image:
-        inPoints = false;
-        size = reinterpret_cast<gfxImageSurface*>(mPrintingSurface.get())->GetSize();
-        break;
-
-#if defined(MOZ_PDF_PRINTING)
-    case gfxSurfaceType::PDF:
-        inPoints = true;
-        size = reinterpret_cast<gfxPDFSurface*>(mPrintingSurface.get())->GetSize();
-        break;
-#endif
-
-#ifdef MOZ_WIDGET_GTK
-    case gfxSurfaceType::PS:
-        inPoints = true;
-        size = reinterpret_cast<gfxPSSurface*>(mPrintingSurface.get())->GetSize();
-        break;
-#endif
-
-#ifdef XP_MACOSX
-    case gfxSurfaceType::Quartz:
-        inPoints = true; // this is really only true when we're printing
-        size = reinterpret_cast<gfxQuartzSurface*>(mPrintingSurface.get())->GetSize();
-        break;
-#endif
-
 #ifdef XP_WIN
-    case gfxSurfaceType::Win32:
     case gfxSurfaceType::Win32Printing:
         {
             inPoints = false;
@@ -740,10 +697,8 @@ nsDeviceContext::CalcPrintingSize()
             break;
         }
 #endif
-
     default:
-        gfxCriticalError() << "Printing to unknown surface type " << (int)mPrintingSurface->GetType();
-        NS_ERROR("trying to print to unknown surface type");
+        size = mPrintingSurface->GetSize();
     }
 
     if (inPoints) {

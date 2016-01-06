@@ -231,7 +231,7 @@ struct FieldInfo
   size_t              mOffset;  // offset of the field in the struct, in bytes
 
   void trace(JSTracer* trc) {
-    JS_CallObjectTracer(trc, &mType, "fieldType");
+    JS::TraceEdge(trc, &mType, "fieldType");
   }
 };
 

@@ -19,8 +19,17 @@ function testHasNames(names, expected) {
     });
 }
 
-let a = moduleRepo['a'] = parseModule("export var a = 1; export var b = 2;");
-let b = moduleRepo['b'] = parseModule("import * as ns from 'a'; var x = ns.a + ns.b;");
+let a = moduleRepo['a'] = parseModule(
+    `export var a = 1;
+     export var b = 2;`
+);
+
+let b = moduleRepo['b'] = parseModule(
+    `import * as ns from 'a';
+     export { ns };
+     export var x = ns.a + ns.b;`
+);
+
 b.declarationInstantiation();
 b.evaluation();
 testHasNames(getModuleEnvironmentNames(b), ["ns", "x"]);
