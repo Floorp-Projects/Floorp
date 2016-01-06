@@ -2088,7 +2088,7 @@ JSRuntime::createLazySelfHostedFunctionClone(JSContext* cx, HandlePropertyName s
     if (!selfHostedFun)
         return false;
 
-    if (selfHostedFun->atom() != selfHostedName) {
+    if (!selfHostedFun->hasGuessedAtom() && selfHostedFun->atom() != selfHostedName) {
         MOZ_ASSERT(selfHostedFun->getExtendedSlot(HAS_SELFHOSTED_CANONICAL_NAME_SLOT).toBoolean());
         funName = selfHostedFun->atom();
     }
