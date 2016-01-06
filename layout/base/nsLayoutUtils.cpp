@@ -7973,9 +7973,7 @@ nsLayoutUtils::GetContentViewerSize(nsPresContext* aPresContext,
 static bool
 UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
                                  nsPresContext* aPresContext,
-                                 const nsRect& aFrameBounds,
-                                 bool aScaleContentViewerSize,
-                                 const LayoutDeviceToLayerScale2D& aCumulativeResolution)
+                                 bool aScaleContentViewerSize)
 {
   nsIFrame* rootFrame = aPresContext->PresShell()->GetRootFrame();
   if (!rootFrame) {
@@ -8058,11 +8056,7 @@ nsLayoutUtils::CalculateCompositionSizeForFrame(nsIFrame* aFrame, bool aSubtract
                                       && aFrame == presShell->GetRootScrollFrame();
   if (isRootContentDocRootScrollFrame) {
     ParentLayerRect compBounds;
-    LayoutDeviceToLayerScale2D cumulativeResolution(
-        presShell->GetCumulativeResolution()
-      * nsLayoutUtils::GetTransformToAncestorScale(aFrame));
-    if (UpdateCompositionBoundsForRCDRSF(compBounds, presContext, rect,
-        false, cumulativeResolution)) {
+    if (UpdateCompositionBoundsForRCDRSF(compBounds, presContext, false)) {
       int32_t auPerDevPixel = presContext->AppUnitsPerDevPixel();
       size = nsSize(compBounds.width * auPerDevPixel, compBounds.height * auPerDevPixel);
     }
@@ -8104,8 +8098,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
         rootPresShell->GetCumulativeResolution()
       * nsLayoutUtils::GetTransformToAncestorScale(rootFrame));
       ParentLayerRect compBounds;
-      if (UpdateCompositionBoundsForRCDRSF(compBounds, rootPresContext,
-          rootFrame->GetRect(), true, cumulativeResolution)) {
+      if (UpdateCompositionBoundsForRCDRSF(compBounds, rootPresContext, true)) {
         rootCompositionSize = ViewAs<ScreenPixel>(compBounds.Size(),
             PixelCastJustification::ScreenIsParentLayerForRoot);
       } else {
@@ -8639,8 +8632,7 @@ nsLayoutUtils::ComputeFrameMetrics(nsIFrame* aForFrame,
   bool isRootContentDocRootScrollFrame = isRootScrollFrame
                                       && presContext->IsRootContentDocument();
   if (isRootContentDocRootScrollFrame) {
-    UpdateCompositionBoundsForRCDRSF(frameBounds, presContext,
-      compositionBounds, true, metrics.GetCumulativeResolution());
+    UpdateCompositionBoundsForRCDRSF(frameBounds, presContext, true);
   }
 
   nsMargin sizes = ScrollbarAreaToExcludeFromCompositionBoundsFor(aScrollFrame);

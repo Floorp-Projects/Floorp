@@ -33,7 +33,6 @@
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
 #include "nsColor.h"
-#include "nsCompatibility.h"
 #include "nsFrameManagerBase.h"
 #include "nsRect.h"
 #include "nsRegionFwd.h"
