@@ -11,19 +11,26 @@
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {
+  var registration;
+
   window.onmessage = function(evt) {
     var msg = evt.data || {};
     if (msg.type == "test") {
       ok(msg.result, msg.name);
     }
     if (msg.type == "finish") {
-      SimpleTest.finish();
+      registration.unregister().then(function() {
+        SimpleTest.finish();
+      });
     }
   }
 
   navigator.serviceWorker.register('offscreencanvas.js', { scope: "."})
     // Wait until the service worker is active.
-    .then(navigator.serviceWorker.ready)
+    .then(function(swr) {
+      registration = swr;
+      return navigator.serviceWorker.ready;
+    })
     // ...and then show the interface for the commands once it's ready.
     .then(function() {
       iframe = document.createElement("iframe");
