@@ -3760,6 +3760,19 @@ nsGlobalWindow::GetSpeechSynthesis(ErrorResult& aError)
 
   return mSpeechSynthesis;
 }
+
+bool
+nsGlobalWindow::HasActiveSpeechSynthesis()
+{
+  MOZ_ASSERT(IsInnerWindow());
+
+  if (mSpeechSynthesis) {
+    return !mSpeechSynthesis->HasEmptyQueue();
+  }
+
+  return false;
+}
+
 #endif
 
 already_AddRefed<nsIDOMWindow>
