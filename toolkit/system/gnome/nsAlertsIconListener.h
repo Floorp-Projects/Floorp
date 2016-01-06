@@ -15,6 +15,7 @@
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
 class imgIRequest;
+class nsIAlertNotification;
 
 struct NotifyNotification;
 
@@ -29,13 +30,8 @@ public:
 
   nsAlertsIconListener();
 
-  nsresult InitAlertAsync(const nsAString & aImageUrl,
-                          const nsAString & aAlertTitle, 
-                          const nsAString & aAlertText,
-                          bool aAlertTextClickable,
-                          const nsAString & aAlertCookie,
-                          nsIObserver * aAlertListener,
-                          bool aInPrivateBrowsing);
+  nsresult InitAlertAsync(nsIAlertNotification* aAlert,
+                          nsIObserver* aAlertListener);
 
   void SendCallback();
   void SendClosed();

@@ -52,8 +52,8 @@
 
   @media (-moz-os-version: windows-vista),
          (-moz-os-version: windows-win7) {
-    .sidebar-header,
-    #sidebar-header {
+    .sidebar-header:not(:-moz-lwtheme),
+    #sidebar-header:not(:-moz-lwtheme) {
       background-color: #EEF3FA;
     }
 
