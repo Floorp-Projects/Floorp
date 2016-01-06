@@ -17,7 +17,6 @@ DIRS += [
     'framework',
     'inspector',
     'jsonview',
-    'layoutview',
     'locales',
     'markupview',
     'memory',
