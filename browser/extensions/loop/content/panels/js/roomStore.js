@@ -85,6 +85,7 @@ loop.store = loop.store || {};
       "deleteRoom",
       "deleteRoomError",
       "emailRoomUrl",
+      "facebookShareRoomUrl",
       "getAllRooms",
       "getAllRoomsError",
       "openRoom",
@@ -349,6 +350,29 @@ loop.store = loop.store || {};
       loop.requestMulti(
         ["NotifyUITour", "Loop:RoomURLEmailed"],
         ["TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket]);
+    },
+
+    /**
+     * Share a room url with Facebook
+     *
+     * @param  {sharedActions.FacebookShareRoomUrl} actionData The action data.
+     */
+    facebookShareRoomUrl: function(actionData) {
+      var encodedRoom = encodeURIComponent(actionData.roomUrl);
+      loop.request("GetLoopPref", "facebook.shareUrl")
+        .then(shareUrl => {
+          loop.request("OpenURL", shareUrl.replace("%ROOM_URL%", encodedRoom));
+        }).then(() => {
+          loop.request("NotifyUITour", "Loop:RoomURLShared");
+        });
+
+      var from = actionData.from;
+      var bucket = this._constants.SHARING_ROOM_URL["FACEBOOK_FROM_" + from.toUpperCase()];
+      if (typeof bucket === "undefined") {
+        console.error("No URL sharing type bucket found for '" + from + "'");
+        return;
+      }
+      loop.request("TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket);
     },
 
     /**

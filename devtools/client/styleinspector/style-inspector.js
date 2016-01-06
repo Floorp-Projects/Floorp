@@ -15,9 +15,9 @@ const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 loader.lazyGetter(this, "gDevTools", () =>
   Cu.import("resource://devtools/client/framework/gDevTools.jsm", {}).gDevTools);
 loader.lazyGetter(this, "RuleView",
-  () => require("devtools/client/styleinspector/rule-view"));
+  () => require("devtools/client/inspector/rules/rules"));
 loader.lazyGetter(this, "ComputedView",
-  () => require("devtools/client/styleinspector/computed-view"));
+  () => require("devtools/client/inspector/computed/computed"));
 loader.lazyGetter(this, "_strings", () => Services.strings
   .createBundle("chrome://devtools-shared/locale/styleinspector.properties"));
 
