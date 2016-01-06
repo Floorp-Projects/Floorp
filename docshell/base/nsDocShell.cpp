@@ -10072,6 +10072,11 @@ nsDocShell::InternalLoad(nsIURI* aURI,
         }
       }
 
+      // If we're doing a history load, use its scroll restoration state.
+      if (aSHEntry) {
+        aSHEntry->GetScrollRestorationIsManual(&scrollRestorationIsManual);
+      }
+
       /* Assign mOSHE to mLSHE. This will either be a new entry created
        * by OnNewURI() for normal loads or aSHEntry for history loads.
        */
