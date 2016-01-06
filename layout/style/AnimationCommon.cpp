@@ -20,6 +20,7 @@
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/KeyframeEffect.h"
@@ -118,42 +119,20 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
 AnimationCollection*
 CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
 {
-  nsIContent* content = aFrame->GetContent();
-  if (!content) {
+  Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>> pseudoElement =
+    EffectCompositor::GetAnimationElementAndPseudoForFrame(aFrame);
+  if (!pseudoElement) {
     return nullptr;
   }
 
-  nsCSSPseudoElements::Type pseudoType =
-    nsCSSPseudoElements::ePseudo_NotPseudoElement;
-
-  if (aFrame->IsGeneratedContentFrame()) {
-    nsIFrame* parent = aFrame->GetParent();
-    if (parent->IsGeneratedContentFrame()) {
-      return nullptr;
-    }
-    nsIAtom* name = content->NodeInfo()->NameAtom();
-    if (name == nsGkAtoms::mozgeneratedcontentbefore) {
-      pseudoType = nsCSSPseudoElements::ePseudo_before;
-    } else if (name == nsGkAtoms::mozgeneratedcontentafter) {
-      pseudoType = nsCSSPseudoElements::ePseudo_after;
-    } else {
-      return nullptr;
-    }
-    content = content->GetParent();
-    if (!content) {
-      return nullptr;
-    }
-  } else {
-    if (!content->MayHaveAnimations()) {
-      return nullptr;
-    }
-  }
-
-  if (!content->IsElement()) {
+  if (pseudoElement->second() ==
+        nsCSSPseudoElements::ePseudo_NotPseudoElement &&
+      !pseudoElement->first()->MayHaveAnimations()) {
     return nullptr;
   }
 
-  return GetAnimationCollection(content->AsElement(), pseudoType,
+  return GetAnimationCollection(pseudoElement->first(),
+                                pseudoElement->second(),
                                 false /* aCreateIfNeeded */);
 }
 
