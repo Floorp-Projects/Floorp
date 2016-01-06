@@ -194,7 +194,7 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   
   // Now we have to sort everything by content order, since the caption
   // may be somewhere inside the table
-  set.SortAllByContentOrder(aBuilder, GetContent());
+  set.SortAllByContentOrder(GetContent());
   set.MoveTo(aLists);
 }
 

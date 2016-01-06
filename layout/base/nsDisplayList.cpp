@@ -2063,21 +2063,19 @@ static bool IsZOrderLEQ(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
   return aItem1->ZIndex() <= aItem2->ZIndex();
 }
 
-void nsDisplayList::SortByZOrder(nsDisplayListBuilder* aBuilder) {
-  Sort(aBuilder, IsZOrderLEQ, nullptr);
+void nsDisplayList::SortByZOrder() {
+  Sort(IsZOrderLEQ, nullptr);
 }
 
-void nsDisplayList::SortByContentOrder(nsDisplayListBuilder* aBuilder,
-                                       nsIContent* aCommonAncestor) {
-  Sort(aBuilder, IsContentLEQ, aCommonAncestor);
+void nsDisplayList::SortByContentOrder(nsIContent* aCommonAncestor) {
+  Sort(IsContentLEQ, aCommonAncestor);
 }
 
-void nsDisplayList::SortByCSSOrder(nsDisplayListBuilder* aBuilder) {
-  Sort(aBuilder, IsCSSOrderLEQ, nullptr);
+void nsDisplayList::SortByCSSOrder() {
+  Sort(IsCSSOrderLEQ, nullptr);
 }
 
-void nsDisplayList::Sort(nsDisplayListBuilder* aBuilder,
-                         SortLEQ aCmp, void* aClosure) {
+void nsDisplayList::Sort(SortLEQ aCmp, void* aClosure) {
   ::Sort(this, Count(), aCmp, aClosure);
 }
 

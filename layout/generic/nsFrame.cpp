@@ -2117,7 +2117,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
   // across lines and has absolutely positioned children; all the abs-pos
   // children should be z-ordered after all the boxes for the position:relative
   // element itself.
-  set.PositionedDescendants()->SortByZOrder(aBuilder);
+  set.PositionedDescendants()->SortByZOrder();
 
   nsDisplayList resultList;
   // Now follow the rules of http://www.w3.org/TR/CSS21/zindex.html
@@ -2149,7 +2149,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
     content = PresContext()->Document()->GetRootElement();
   }
   if (content) {
-    set.Outlines()->SortByContentOrder(aBuilder, content);
+    set.Outlines()->SortByContentOrder(content);
   }
 #ifdef DEBUG
   DisplayDebugBorders(aBuilder, this, set);

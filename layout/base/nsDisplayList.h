@@ -2038,7 +2038,7 @@ public:
    * each item. 'auto' is counted as zero.
    * It is assumed that the list is already in content document order.
    */
-  void SortByZOrder(nsDisplayListBuilder* aBuilder);
+  void SortByZOrder();
   /**
    * Stable sort the list by the tree order of the content of
    * GetUnderlyingFrame() on each item. z-index is ignored.
@@ -2047,14 +2047,14 @@ public:
    * checks, or nullptr if not known; it's only a hint, if it is not an
    * ancestor of some elements, then we lose performance but not correctness
    */
-  void SortByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor);
+  void SortByContentOrder(nsIContent* aCommonAncestor);
   /**
    * Stable sort this list by CSS 'order' property order.
    * http://dev.w3.org/csswg/css-flexbox-1/#order-property
    * (also applies to CSS Grid although it's in the Flexbox spec ATM)
    * It is assumed that the list is already in document content order.
    */
-  void SortByCSSOrder(nsDisplayListBuilder* aBuilder);
+  void SortByCSSOrder();
 
   /**
    * Generic stable sort. Take care, because some of the items might be nsDisplayLists
@@ -2064,7 +2064,7 @@ public:
    */
   typedef bool (* SortLEQ)(nsDisplayItem* aItem1, nsDisplayItem* aItem2,
                              void* aClosure);
-  void Sort(nsDisplayListBuilder* aBuilder, SortLEQ aCmp, void* aClosure);
+  void Sort(SortLEQ aCmp, void* aClosure);
 
   /**
    * Compute visiblity for the items in the list.
@@ -2305,9 +2305,9 @@ struct nsDisplayListCollection : public nsDisplayListSet {
   /**
    * Sort all lists by content order.
    */                     
-  void SortAllByContentOrder(nsDisplayListBuilder* aBuilder, nsIContent* aCommonAncestor) {
+  void SortAllByContentOrder(nsIContent* aCommonAncestor) {
     for (int32_t i = 0; i < 6; ++i) {
-      mLists[i].SortByContentOrder(aBuilder, aCommonAncestor);
+      mLists[i].SortByContentOrder(aCommonAncestor);
     }
   }
 
