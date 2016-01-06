@@ -239,18 +239,18 @@ private:
     }
 
     /* Returns offset + length */
-    const off_t endOffset() const {
+    off_t endOffset() const {
       return offset + length;
     }
 
     /* Returns the offset corresponding to the given address */
-    const off_t offsetOf(const void *ptr) const {
+    off_t offsetOf(const void *ptr) const {
       return reinterpret_cast<uintptr_t>(ptr)
              - reinterpret_cast<uintptr_t>(addr) + offset;
     }
 
     /* Returns whether the given address is in the LazyMap range */
-    const bool Contains(const void *ptr) const {
+    bool Contains(const void *ptr) const {
       return (ptr >= addr) && (ptr < end());
     }
   };

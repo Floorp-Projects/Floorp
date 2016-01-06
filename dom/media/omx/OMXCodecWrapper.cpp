@@ -805,7 +805,7 @@ public:
 private:
   uint8_t* GetPointer() { return mData + mOffset; }
 
-  const size_t AvailableSize() { return mCapicity - mOffset; }
+  size_t AvailableSize() const { return mCapicity - mOffset; }
 
   void IncreaseOffset(size_t aValue)
   {
@@ -814,12 +814,12 @@ private:
     mOffset += aValue;
   }
 
-  bool IsEmpty()
+  bool IsEmpty() const
   {
     return (mOffset == 0);
   }
 
-  const size_t GetCapacity()
+  size_t GetCapacity() const
   {
     return mCapicity;
   }

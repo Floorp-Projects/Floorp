@@ -194,7 +194,7 @@ class Message : public Pickle {
     header()->seqno = aSeqno;
   }
 
-  const char* const name() const {
+  const char* name() const {
     return name_;
   }
 

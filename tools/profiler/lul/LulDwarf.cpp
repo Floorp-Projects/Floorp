@@ -1803,7 +1803,7 @@ void CallFrameInfo::Reporter::ClearingCFARule(uint64 offset,
 }
 
 
-const unsigned int DwarfCFIToModule::RegisterNames::I386() {
+unsigned int DwarfCFIToModule::RegisterNames::I386() {
   /*
    8 "$eax", "$ecx", "$edx", "$ebx", "$esp", "$ebp", "$esi", "$edi",
    3 "$eip", "$eflags", "$unused1",
@@ -1818,7 +1818,7 @@ const unsigned int DwarfCFIToModule::RegisterNames::I386() {
   return 8 + 3 + 8 + 2 + 8 + 8 + 3 + 8 + 2;
 }
 
-const unsigned int DwarfCFIToModule::RegisterNames::X86_64() {
+unsigned int DwarfCFIToModule::RegisterNames::X86_64() {
   /*
    8 "$rax", "$rdx", "$rcx", "$rbx", "$rsi", "$rdi", "$rbp", "$rsp",
    8 "$r8",  "$r9",  "$r10", "$r11", "$r12", "$r13", "$r14", "$r15",
@@ -1837,7 +1837,7 @@ const unsigned int DwarfCFIToModule::RegisterNames::X86_64() {
 }
 
 // Per ARM IHI 0040A, section 3.1
-const unsigned int DwarfCFIToModule::RegisterNames::ARM() {
+unsigned int DwarfCFIToModule::RegisterNames::ARM() {
   /*
    8 "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
    8 "r8",  "r9",  "r10", "r11", "r12", "sp",  "lr",  "pc",

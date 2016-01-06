@@ -16,7 +16,7 @@
  * pointer identity.
  */
  
-[scriptable, builtinclass, uuid(1f341018-521a-49de-b806-1bef5c9a00b0)]
+[scriptable, builtinclass, uuid(8b8c11d4-3ed5-4079-8974-73c7576cdb34)]
 interface nsIAtom : nsISupports
 {
   /**
@@ -48,7 +48,7 @@ interface nsIAtom : nsISupports
     return mString;
   }
 
-  inline const uint32_t GetLength() const {
+  inline uint32_t GetLength() const {
     return mLength;
   }
 

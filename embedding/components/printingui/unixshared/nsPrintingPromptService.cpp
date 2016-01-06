@@ -43,7 +43,7 @@ public:
       return CallCreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &mBlock);
     }
     nsIDialogParamBlock * operator->() const MOZ_NO_ADDREF_RELEASE_ON_RETURN { return mBlock; }
-    operator nsIDialogParamBlock * const ()  { return mBlock; }
+    operator nsIDialogParamBlock * () const { return mBlock; }
 
 private:
     nsIDialogParamBlock *mBlock;
