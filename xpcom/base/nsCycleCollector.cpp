@@ -2637,7 +2637,7 @@ class SnowWhiteKiller : public TraceCallbacks
     ObjectsVector;
 
 public:
-  SnowWhiteKiller(nsCycleCollector* aCollector, uint32_t aMaxCount)
+  SnowWhiteKiller(nsCycleCollector* aCollector)
     : mCollector(aCollector)
     , mObjects(kSegmentSize)
   {
@@ -2740,10 +2740,10 @@ class RemoveSkippableVisitor : public SnowWhiteKiller
 {
 public:
   RemoveSkippableVisitor(nsCycleCollector* aCollector,
-                         uint32_t aMaxCount, bool aRemoveChildlessNodes,
+                         bool aRemoveChildlessNodes,
                          bool aAsyncSnowWhiteFreeing,
                          CC_ForgetSkippableCallback aCb)
-    : SnowWhiteKiller(aCollector, aAsyncSnowWhiteFreeing ? 0 : aMaxCount)
+    : SnowWhiteKiller(aCollector)
     , mRemoveChildlessNodes(aRemoveChildlessNodes)
     , mAsyncSnowWhiteFreeing(aAsyncSnowWhiteFreeing)
     , mDispatchedDeferredDeletion(false)
@@ -2800,7 +2800,7 @@ nsPurpleBuffer::RemoveSkippable(nsCycleCollector* aCollector,
                                 bool aAsyncSnowWhiteFreeing,
                                 CC_ForgetSkippableCallback aCb)
 {
-  RemoveSkippableVisitor visitor(aCollector, Count(), aRemoveChildlessNodes,
+  RemoveSkippableVisitor visitor(aCollector, aRemoveChildlessNodes,
                                  aAsyncSnowWhiteFreeing, aCb);
   VisitEntries(visitor);
 }
@@ -2819,7 +2819,7 @@ nsCycleCollector::FreeSnowWhite(bool aUntilNoSWInPurpleBuffer)
 
   bool hadSnowWhiteObjects = false;
   do {
-    SnowWhiteKiller visitor(this, mPurpleBuf.Count());
+    SnowWhiteKiller visitor(this);
     mPurpleBuf.VisitEntries(visitor);
     hadSnowWhiteObjects = hadSnowWhiteObjects ||
                           visitor.HasSnowWhiteObjects();
