@@ -176,6 +176,12 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_11_b2gdroid.yml
+  eslint-gecko:
+    platforms:
+      - lint
+    types:
+      opt:
+        task: tasks/tests/eslint-gecko.yml
 
 tests:
   cppunit:
