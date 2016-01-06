@@ -9,6 +9,7 @@
 #include "imgIRequest.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
+#include "nsIAlertsService.h"
 #include "nsIImageToPixbuf.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
@@ -186,6 +187,11 @@ nsAlertsIconListener::ShowAlert(GdkPixbuf* aPixbuf)
   if (!mNotification)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  nsCOMPtr<nsIObserverService> obsServ =
+      do_GetService("@mozilla.org/observer-service;1");
+  if (obsServ)
+    obsServ->AddObserver(this, "quit-application", true);
+
   if (aPixbuf)
     notify_notification_set_icon_from_pixbuf(mNotification, aPixbuf);
 
@@ -277,13 +283,8 @@ nsAlertsIconListener::Observe(nsISupports *aSubject, const char *aTopic,
 }
 
 nsresult
-nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
-                                     const nsAString & aAlertTitle, 
-                                     const nsAString & aAlertText,
-                                     bool aAlertTextClickable,
-                                     const nsAString & aAlertCookie,
-                                     nsIObserver * aAlertListener,
-                                     bool aInPrivateBrowsing)
+nsAlertsIconListener::InitAlertAsync(nsIAlertNotification* aAlert,
+                                     nsIObserver* aAlertListener)
 {
   if (!libNotifyHandle)
     return NS_ERROR_FAILURE;
@@ -335,27 +336,38 @@ nsAlertsIconListener::InitAlertAsync(const nsAString & aImageUrl,
     return NS_ERROR_FAILURE;
   }
 
-  if (!gHasActions && aAlertTextClickable)
+  nsresult rv = aAlert->GetTextClickable(&mAlertHasAction);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!gHasActions && mAlertHasAction)
     return NS_ERROR_FAILURE; // No good, fallback to XUL
 
-  nsCOMPtr<nsIObserverService> obsServ =
-      do_GetService("@mozilla.org/observer-service;1");
-  if (obsServ)
-    obsServ->AddObserver(this, "quit-application", true);
-
+  nsAutoString title;
+  rv = aAlert->GetTitle(title);
+  NS_ENSURE_SUCCESS(rv, rv);
   // Workaround for a libnotify bug - blank titles aren't dealt with
   // properly so we use a space
-  if (aAlertTitle.IsEmpty()) {
+  if (title.IsEmpty()) {
     mAlertTitle = NS_LITERAL_CSTRING(" ");
   } else {
-    mAlertTitle = NS_ConvertUTF16toUTF8(aAlertTitle);
+    mAlertTitle = NS_ConvertUTF16toUTF8(title);
   }
 
-  mAlertText = NS_ConvertUTF16toUTF8(aAlertText);
-  mAlertHasAction = aAlertTextClickable;
+  nsAutoString text;
+  rv = aAlert->GetText(text);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mAlertText = NS_ConvertUTF16toUTF8(text);
 
   mAlertListener = aAlertListener;
-  mAlertCookie = aAlertCookie;
 
-  return StartRequest(aImageUrl, aInPrivateBrowsing);
+  rv = aAlert->GetCookie(mAlertCookie);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoString imageUrl;
+  rv = aAlert->GetImageURL(imageUrl);
+  NS_ENSURE_SUCCESS(rv, rv);
+  bool inPrivateBrowsing;
+  rv = aAlert->GetInPrivateBrowsing(&inPrivateBrowsing);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return StartRequest(imageUrl, inPrivateBrowsing);
 }

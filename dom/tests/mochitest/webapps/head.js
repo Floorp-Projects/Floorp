@@ -117,6 +117,9 @@ var AlertsService = {
       "", ALERTS_SERVICE_CONTRACT_ID, null);
   },
 
+  showAlert: function() {
+  },
+
   showAlertNotification: function() {
   },
 };

@@ -51,9 +51,8 @@ var TreeView = React.createClass({
     }
 
     return (
-      DOM.div({className: "domTable", cellPadding: 0, cellSpacing: 0,
-        onClick: this.onClick},
-          children
+      DOM.div({className: "domTable", cellPadding: 0, cellSpacing: 0},
+        children
       )
     );
   },
@@ -151,8 +150,9 @@ var TreeNode = React.createFactory(React.createClass({
     }
 
     return (
-      DOM.div({className: classNames.join(" "), onClick: this.onClick},
-        DOM.span({className: "memberLabelCell"},
+      DOM.div({className: classNames.join(" ")},
+        DOM.span({className: "memberLabelCell", onClick: this.onClick},
+          DOM.span({className: "memberIcon"}),
           DOM.span({className: "memberLabel " + member.type + "Label"},
             member.name)
         ),

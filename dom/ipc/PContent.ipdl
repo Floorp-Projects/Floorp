@@ -74,6 +74,7 @@ include ProfilerTypes;
 include "mozilla/dom/PContentBridgeParent.h";
 
 using GeoPosition from "nsGeoPositionIPCSerialiser.h";
+using AlertNotificationType from "mozilla/AlertNotificationIPCSerializer.h";
 
 using struct ChromePackage from "mozilla/chrome/RegistryMessageUtils.h";
 using struct SubstitutionMapping from "mozilla/chrome/RegistryMessageUtils.h";
@@ -881,17 +882,7 @@ parent:
                                CpowEntry[] aCpows, Principal aPrincipal)
       returns (StructuredCloneData[] retval);
 
-    ShowAlertNotification(nsString imageUrl,
-                          nsString title,
-                          nsString text,
-                          bool textClickable,
-                          nsString cookie,
-                          nsString name,
-                          nsString bidi,
-                          nsString lang,
-                          nsString data,
-                          Principal principal,
-                          bool inPrivateBrowsing);
+    ShowAlert(AlertNotificationType alert);
 
     CloseAlert(nsString name, Principal principal);
 

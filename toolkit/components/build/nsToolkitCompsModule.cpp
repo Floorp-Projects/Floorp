@@ -16,6 +16,7 @@
 #include "nsParentalControlsService.h"
 #endif
 
+#include "mozilla/AlertNotification.h"
 #include "nsAlertsService.h"
 
 #include "nsDownloadManager.h"
@@ -82,6 +83,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFindService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsParentalControlsService)
 #endif
 
+NS_GENERIC_FACTORY_CONSTRUCTOR(AlertNotification)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsDownloadManager,
@@ -138,6 +140,7 @@ NS_DEFINE_NAMED_CID(NS_TOOLKIT_PERFORMANCESTATSSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_TOOLKIT_TERMINATOR_CID);
 #endif
 NS_DEFINE_NAMED_CID(NS_USERINFO_CID);
+NS_DEFINE_NAMED_CID(ALERT_NOTIFICATION_CID);
 NS_DEFINE_NAMED_CID(NS_ALERTSSERVICE_CID);
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
 NS_DEFINE_NAMED_CID(NS_PARENTALCONTROLSSERVICE_CID);
@@ -173,6 +176,7 @@ static const Module::CIDEntry kToolkitCIDs[] = {
   { &kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID, false, nullptr, nsPerformanceStatsServiceConstructor },
 #endif // defined (MOZ_HAS_PERFSTATS)
   { &kNS_USERINFO_CID, false, nullptr, nsUserInfoConstructor },
+  { &kALERT_NOTIFICATION_CID, false, nullptr, AlertNotificationConstructor },
   { &kNS_ALERTSSERVICE_CID, false, nullptr, nsAlertsServiceConstructor },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { &kNS_PARENTALCONTROLSSERVICE_CID, false, nullptr, nsParentalControlsServiceConstructor },
@@ -210,6 +214,7 @@ static const Module::ContractIDEntry kToolkitContracts[] = {
   { NS_TOOLKIT_PERFORMANCESTATSSERVICE_CONTRACTID, &kNS_TOOLKIT_PERFORMANCESTATSSERVICE_CID },
 #endif // defined (MOZ_HAS_PERFSTATS)
   { NS_USERINFO_CONTRACTID, &kNS_USERINFO_CID },
+  { ALERT_NOTIFICATION_CONTRACTID, &kALERT_NOTIFICATION_CID },
   { NS_ALERTSERVICE_CONTRACTID, &kNS_ALERTSSERVICE_CID },
 #if !defined(MOZ_DISABLE_PARENTAL_CONTROLS)
   { NS_PARENTALCONTROLSSERVICE_CONTRACTID, &kNS_PARENTALCONTROLSSERVICE_CID },

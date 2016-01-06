@@ -1872,6 +1872,18 @@ richlistitem[type~="action"][actiontype$="tab"] > .ac-url-box > .ac-action-icon 
   border: none;
 }
 
+@media not all and (min-resolution: 1.1dppx) {
+  #sidebar-header > .close-icon:-moz-lwtheme-brighttext {
+    list-style-image: url("chrome://global/skin/icons/close-inverted.png");
+  }
+}
+
+@media (min-resolution: 1.1dppx) {
+  #sidebar-header > .close-icon:-moz-lwtheme-brighttext {
+    list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
+  }
+}
+
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {

@@ -18,7 +18,7 @@ const CALL_STACK_PAGE_SIZE = 25; // frames
 const EVENTS = {
   // When the debugger's source editor instance finishes loading or unloading.
   EDITOR_LOADED: "Debugger:EditorLoaded",
-  EDITOR_UNLOADED: "Debugger:EditorUnoaded",
+  EDITOR_UNLOADED: "Debugger:EditorUnloaded",
 
   // When new sources are received from the debugger server.
   NEW_SOURCE: "Debugger:NewSource",
