@@ -162,7 +162,6 @@ def verify_android_device(build_obj, install=False, xre=False, debugger=False):
                 "Download and setup your host utilities? (Y/n) ").strip()
             if response.lower().startswith('y') or response == '':
                 _log_info("Installing host utilities. This may take a while...")
-                _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
                 host_platform = _get_host_platform()
                 if host_platform:
                     path = os.path.join(MANIFEST_PATH, host_platform, 'hostutils.manifest')
@@ -354,7 +353,6 @@ class AndroidEmulator(object):
         if force and os.path.exists(avd):
             shutil.rmtree(avd)
         if not os.path.exists(avd):
-            _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
             url = '%s/%s' % (TRY_URL, self.avd_info.tooltool_manifest)
             _download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
             _tooltool_fetch()
@@ -652,6 +650,11 @@ def _download_file(url, filename, path):
     return True
 
 def _get_tooltool_manifest(substs, src_path, dst_path, filename):
+    if not os.path.isdir(dst_path):
+        try:
+            os.makedirs(dst_path)
+        except Exception, e:
+            _log_warning(str(e))
     copied = False
     if substs and 'top_srcdir' in substs:
         src = os.path.join(substs['top_srcdir'], src_path)
@@ -667,6 +670,7 @@ def _get_tooltool_manifest(substs, src_path, dst_path, filename):
 def _tooltool_fetch():
     def outputHandler(line):
         _log_debug(line)
+    _download_file(TOOLTOOL_URL, 'tooltool.py', EMULATOR_HOME_DIR)
     command = ['python', 'tooltool.py', 'fetch', '-o', '-m', 'releng.manifest']
     proc = ProcessHandler(
         command, processOutputLine=outputHandler, storeOutput=False,
