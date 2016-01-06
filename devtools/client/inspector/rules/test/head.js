@@ -8,7 +8,8 @@ var Cu = Components.utils;
 var {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
-var {CssRuleView, _ElementStyle} = require("devtools/client/inspector/rules/rules");
+var {CssRuleView, _ElementStyle} =
+    require("devtools/client/inspector/rules/rules");
 var {CssLogic, CssSelector} = require("devtools/shared/styleinspector/css-logic");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
@@ -21,9 +22,9 @@ var {console} =
 waitForExplicitFinish();
 
 const TEST_URL_ROOT =
-  "http://example.com/browser/devtools/client/styleinspector/test/";
+  "http://example.com/browser/devtools/client/inspector/rules/test/";
 const TEST_URL_ROOT_SSL =
-  "https://example.com/browser/devtools/client/styleinspector/test/";
+  "https://example.com/browser/devtools/client/inspector/rules/test/";
 const ROOT_TEST_DIR = getRootDirectory(gTestPath);
 const FRAME_SCRIPT_URL = ROOT_TEST_DIR + "doc_frame_script.js";
 
