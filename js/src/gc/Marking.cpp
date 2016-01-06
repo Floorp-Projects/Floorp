@@ -414,26 +414,9 @@ JS::TraceNullableEdge(JSTracer* trc, JS::Heap<T>* thingp, const char* name)
         DispatchToTracer(trc, ConvertToBase(thingp->unsafeGet()), name);
 }
 
-JS_PUBLIC_API(void)
-JS::TraceNullableEdge(JSTracer* trc, JS::TenuredHeap<JSObject*>* thingp, const char* name)
-{
-    MOZ_ASSERT(thingp);
-    if (JSObject* ptr = thingp->getPtr()) {
-        DispatchToTracer(trc, &ptr, name);
-        thingp->setPtr(ptr);
-    }
-}
-
 template <typename T>
 void
 js::TraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
-{
-    DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-JS_PUBLIC_API(void)
-js::UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* thingp, const char* name)
 {
     DispatchToTracer(trc, ConvertToBase(thingp), name);
 }
@@ -456,13 +439,6 @@ js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
 {
     AssertRootMarkingPhase(trc);
     DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-JS_PUBLIC_API(void)
-JS::UnsafeTraceRoot(JSTracer* trc, T* thingp, const char* name)
-{
-    js::TraceRoot(trc, thingp, name);
 }
 
 template <typename T>
@@ -530,10 +506,7 @@ FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
 #define INSTANTIATE_PUBLIC_TRACE_FUNCTIONS(type) \
     template JS_PUBLIC_API(void) JS::TraceEdge<type>(JSTracer*, JS::Heap<type>*, const char*); \
     template JS_PUBLIC_API(void) JS::TraceNullableEdge<type>(JSTracer*, JS::Heap<type>*, \
-                                                             const char*); \
-    template JS_PUBLIC_API(void) JS::UnsafeTraceRoot<type>(JSTracer*, type*, const char*); \
-    template JS_PUBLIC_API(void) js::UnsafeTraceManuallyBarrieredEdge<type>(JSTracer*, type*, \
-                                                                            const char*);
+                                                             const char*);
 FOR_EACH_PUBLIC_GC_POINTER_TYPE(INSTANTIATE_PUBLIC_TRACE_FUNCTIONS)
 #undef INSTANTIATE_PUBLIC_TRACE_FUNCTIONS
 
