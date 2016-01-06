@@ -353,7 +353,7 @@ InspectorPanel.prototype = {
     this.sidebar.on("select", this._setDefaultSidebar);
 
     this.sidebar.addTab("ruleview",
-                        "chrome://devtools/content/styleinspector/cssruleview.xhtml",
+                        "chrome://devtools/content/inspector/rules/rules.xhtml",
                         "ruleview" == defaultTab);
 
     this.sidebar.addTab("computedview",

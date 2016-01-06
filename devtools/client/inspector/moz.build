@@ -4,6 +4,7 @@
 
 DIRS += [
     'computed',
+    'rules'
 ]
 
 DevToolsModules(
