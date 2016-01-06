@@ -657,11 +657,10 @@ Port.prototype = {
 };
 
 function getMessageManager(target) {
-  if (target instanceof Ci.nsIDOMXULElement) {
-    return target.messageManager;
-  } else {
-    return target;
-  }
+  if (target instanceof Ci.nsIFrameLoaderOwner) {
+    return target.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader.messageManager;
+   }
+  return target;
 }
 
 // Each extension scope gets its own Messenger object. It handles the
