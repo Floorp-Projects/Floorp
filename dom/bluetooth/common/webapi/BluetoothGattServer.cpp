@@ -89,11 +89,11 @@ void BluetoothGattServer::HandleConnectionStateChanged(
 
   MOZ_ASSERT(arr.Length() == 2 &&
              arr[0].value().type() == BluetoothValue::Tbool &&
-             arr[1].value().type() == BluetoothValue::TnsString);
+             arr[1].value().type() == BluetoothValue::TBluetoothAddress);
 
   BluetoothStatusChangedEventInit init;
   init.mStatus = arr[0].value().get_bool();
-  init.mAddress = arr[1].value().get_nsString();
+  AddressToString(arr[1].value().get_BluetoothAddress(), init.mAddress);
 
   RefPtr<BluetoothStatusChangedEvent> event =
     BluetoothStatusChangedEvent::Constructor(
@@ -190,14 +190,15 @@ BluetoothGattServer::HandleReadWriteRequest(const BluetoothValue& aValue,
   MOZ_ASSERT(arr.Length() == 5 &&
     arr[0].value().type() == BluetoothValue::Tint32_t &&
     arr[1].value().type() == BluetoothValue::TBluetoothAttributeHandle &&
-    arr[2].value().type() == BluetoothValue::TnsString &&
+    arr[2].value().type() == BluetoothValue::TBluetoothAddress &&
     arr[3].value().type() == BluetoothValue::Tbool &&
     arr[4].value().type() == BluetoothValue::TArrayOfuint8_t);
 
   int32_t requestId = arr[0].value().get_int32_t();
   BluetoothAttributeHandle handle =
     arr[1].value().get_BluetoothAttributeHandle();
-  nsString address = arr[2].value().get_nsString();
+  nsString address;
+  AddressToString(arr[2].value().get_BluetoothAddress(), address);
   bool needResponse = arr[3].value().get_bool();
   nsTArray<uint8_t> value;
   value = arr[4].value().get_ArrayOfuint8_t();

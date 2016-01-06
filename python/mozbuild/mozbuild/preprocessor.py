@@ -456,7 +456,6 @@ class Preprocessor:
         options, args = p.parse_args(args=args)
         out = self.out
         depfile = None
-        includes = options.I
 
         if options.output:
             out = get_output_file(options.output)
@@ -475,10 +474,9 @@ class Preprocessor:
                 raise Preprocessor.Error(self, "--depend requires the "
                                                "mozbuild.makeutil module", None)
             depfile = get_output_file(options.depend)
-        includes.extend(args)
 
-        if includes:
-            for f in includes:
+        if args:
+            for f in args:
                 with open(f, 'rU') as input:
                     self.processFile(input=input, output=out)
             if depfile:
@@ -512,8 +510,6 @@ class Preprocessor:
         def handleSilenceDirectiveWarnings(option, opt, value, parse):
             self.setSilenceDirectiveWarnings(True)
         p = OptionParser()
-        p.add_option('-I', action='append', type="string", default = [],
-                     metavar="FILENAME", help='Include file')
         p.add_option('-D', action='callback', callback=handleD, type="string",
                      metavar="VAR[=VAL]", help='Define a variable')
         p.add_option('-U', action='callback', callback=handleU, type="string",

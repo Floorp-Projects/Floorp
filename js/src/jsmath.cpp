@@ -13,6 +13,7 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/unused.h"
 
 #include <algorithm>  // for std::max
 #include <fcntl.h>
@@ -753,7 +754,7 @@ GenerateSeed()
 #elif defined(XP_UNIX)
     int fd = open("/dev/urandom", O_RDONLY);
     if (fd >= 0) {
-        read(fd, static_cast<void*>(&seed), sizeof(seed));
+        mozilla::Unused << read(fd, static_cast<void*>(&seed), sizeof(seed));
         close(fd);
     }
 #else

@@ -36,7 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 /*********************************************/
 void silk_decode_pulses(
     ec_dec                      *psRangeDec,                    /* I/O  Compressor data structure                   */
-    opus_int                    pulses[],                       /* O    Excitation signal                           */
+    opus_int16                  pulses[],                       /* O    Excitation signal                           */
     const opus_int              signalType,                     /* I    Sigtype                                     */
     const opus_int              quantOffsetType,                /* I    quantOffsetType                             */
     const opus_int              frame_length                    /* I    Frame length                                */
@@ -44,7 +44,7 @@ void silk_decode_pulses(
 {
     opus_int   i, j, k, iter, abs_q, nLS, RateLevelIndex;
     opus_int   sum_pulses[ MAX_NB_SHELL_BLOCKS ], nLshifts[ MAX_NB_SHELL_BLOCKS ];
-    opus_int   *pulses_ptr;
+    opus_int16 *pulses_ptr;
     const opus_uint8 *cdf_ptr;
 
     /*********************/
@@ -84,7 +84,7 @@ void silk_decode_pulses(
         if( sum_pulses[ i ] > 0 ) {
             silk_shell_decoder( &pulses[ silk_SMULBB( i, SHELL_CODEC_FRAME_LENGTH ) ], psRangeDec, sum_pulses[ i ] );
         } else {
-            silk_memset( &pulses[ silk_SMULBB( i, SHELL_CODEC_FRAME_LENGTH ) ], 0, SHELL_CODEC_FRAME_LENGTH * sizeof( opus_int ) );
+            silk_memset( &pulses[ silk_SMULBB( i, SHELL_CODEC_FRAME_LENGTH ) ], 0, SHELL_CODEC_FRAME_LENGTH * sizeof( pulses[0] ) );
         }
     }
 

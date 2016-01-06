@@ -112,7 +112,7 @@ void silk_find_pitch_lags_FIX(
     /*****************************************/
     /* LPC analysis filtering                */
     /*****************************************/
-    silk_LPC_analysis_filter( res, x_buf, A_Q12, buf_len, psEnc->sCmn.pitchEstimationLPCOrder );
+    silk_LPC_analysis_filter( res, x_buf, A_Q12, buf_len, psEnc->sCmn.pitchEstimationLPCOrder, psEnc->sCmn.arch );
 
     if( psEnc->sCmn.indices.signalType != TYPE_NO_VOICE_ACTIVITY && psEnc->sCmn.first_frame_after_reset == 0 ) {
         /* Threshold for pitch estimator */

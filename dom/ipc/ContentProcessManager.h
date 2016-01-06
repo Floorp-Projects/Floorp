@@ -74,8 +74,9 @@ public:
   /**
    * Allocate a tab id for the given content process's id.
    * Used when a content process wants to create a new tab. aOpenerTabId and
-   * aContext are saved in RemoteFrameInfo, which is a part of ContentProcessInfo.
-   * We can use the tab id and process id to locate the TabContext for future use.
+   * aContext are saved in RemoteFrameInfo, which is a part of
+   * ContentProcessInfo.  We can use the tab id and process id to locate the
+   * TabContext for future use.
    */
   TabId AllocateTabId(const TabId& aOpenerTabId,
                       const IPCTabContext& aContext,
@@ -162,4 +163,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif
+#endif // mozilla_dom_ContentProcessManager_h

@@ -126,17 +126,19 @@ public:
      *
      * \param aFaceName The name of the corresponding font face.
      * \param aFontFile DirectWrite fontfile object
+     * \param aFontFileStream DirectWrite fontfile stream object
      * \param aWeight Weight of the font
      * \param aStretch Stretch of the font
      * \param aStyle italic or oblique of font
      */
     gfxDWriteFontEntry(const nsAString& aFaceName,
                               IDWriteFontFile *aFontFile,
+                              IDWriteFontFileStream *aFontFileStream,
                               uint16_t aWeight,
                               int16_t aStretch,
                               uint8_t aStyle)
       : gfxFontEntry(aFaceName), mFont(nullptr), mFontFile(aFontFile),
-        mForceGDIClassic(false)
+        mFontFileStream(aFontFileStream), mForceGDIClassic(false)
     {
         mWeight = aWeight;
         mStretch = aStretch;
@@ -185,6 +187,10 @@ protected:
      */
     RefPtr<IDWriteFont> mFont;
     RefPtr<IDWriteFontFile> mFontFile;
+
+    // For custom fonts, we hold a reference to the IDWriteFontFileStream for
+    // for the IDWriteFontFile, so that the data is available.
+    RefPtr<IDWriteFontFileStream> mFontFileStream;
 
     // font face corresponding to the mFont/mFontFile *without* any DWrite
     // style simulations applied

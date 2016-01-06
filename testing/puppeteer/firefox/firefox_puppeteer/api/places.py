@@ -84,7 +84,7 @@ class Places(BaseLib):
 
           // Default bookmarks.html file is stored inside omni.jar,
           // so get it via a resource URI
-          let defaultBookmarks = 'resource:///defaults/profile/bookmarks.html';
+          let defaultBookmarks = 'chrome://browser/locale/bookmarks.html';
 
           let observer = {
             observe: function (aSubject, aTopic, aData) {

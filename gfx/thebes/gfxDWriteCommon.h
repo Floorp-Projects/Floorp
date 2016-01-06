@@ -113,8 +113,7 @@ public:
 
     // IDWriteFontFileLoader methods
     /**
-     * Important! Note the key here -has- to be a pointer to an
-     * FallibleTArray<uint8_t>.
+     * Important! Note the key here -has- to be a pointer to a uint64_t.
      */
     virtual HRESULT STDMETHODCALLTYPE 
         CreateStreamFromKey(void const* fontFileReferenceKey,
@@ -123,8 +122,7 @@ public:
 
     /**
      * Gets the singleton loader instance. Note that when using this font
-     * loader, the key must be a pointer to an FallibleTArray<uint8_t>. This
-     * array will be empty when the function returns.
+     * loader, the key must be a pointer to a unint64_t.
      */
     static IDWriteFontFileLoader* Instance()
     {
@@ -136,71 +134,21 @@ public:
         return mInstance;
     }
 
+    /**
+     * Creates a IDWriteFontFile and IDWriteFontFileStream from aFontData.
+     * aFontData will be empty on return as it swaps out the data.
+     *
+     * @param aFontData the font data for the custom font file
+     * @param aFontFile out param for the created font file
+     * @param aFontFileStream out param for the corresponding stream
+     * @return HRESULT of internal calls
+     */
+    static HRESULT CreateCustomFontFile(FallibleTArray<uint8_t>& aFontData,
+                                        IDWriteFontFile** aFontFile,
+                                        IDWriteFontFileStream** aFontFileStream);
+
 private:
     static IDWriteFontFileLoader* mInstance;
-}; 
-
-class gfxDWriteFontFileStream final : public IDWriteFontFileStream
-{
-public:
-    /**
-     * Used by the FontFileLoader to create a new font stream,
-     * this font stream is created from data in memory. The memory
-     * passed may be released after object creation, it will be
-     * copied internally.
-     *
-     * @param aData Font data
-     */
-    gfxDWriteFontFileStream(FallibleTArray<uint8_t> *aData);
-    ~gfxDWriteFontFileStream();
-
-    // IUnknown interface
-    IFACEMETHOD(QueryInterface)(IID const& iid, OUT void** ppObject)
-    {
-        if (iid == __uuidof(IDWriteFontFileStream)) {
-            *ppObject = static_cast<IDWriteFontFileStream*>(this);
-            return S_OK;
-        } else if (iid == __uuidof(IUnknown)) {
-            *ppObject = static_cast<IUnknown*>(this);
-            return S_OK;
-        } else {
-            return E_NOINTERFACE;
-        }
-    }
-
-    IFACEMETHOD_(ULONG, AddRef)()
-    {
-        NS_PRECONDITION(int32_t(mRefCnt) >= 0, "illegal refcnt");
-        ++mRefCnt;
-        return mRefCnt;
-    }
-
-    IFACEMETHOD_(ULONG, Release)()
-    {
-        NS_PRECONDITION(0 != mRefCnt, "dup release");
-        --mRefCnt;
-        if (mRefCnt == 0) {
-            delete this;
-            return 0;
-        }
-        return mRefCnt;
-    }
-
-    // IDWriteFontFileStream methods
-    virtual HRESULT STDMETHODCALLTYPE ReadFileFragment(void const** fragmentStart,
-                                                       UINT64 fileOffset,
-                                                       UINT64 fragmentSize,
-                                                       OUT void** fragmentContext);
-
-    virtual void STDMETHODCALLTYPE ReleaseFileFragment(void* fragmentContext);
-
-    virtual HRESULT STDMETHODCALLTYPE GetFileSize(OUT UINT64* fileSize);
-
-    virtual HRESULT STDMETHODCALLTYPE GetLastWriteTime(OUT UINT64* lastWriteTime);
-
-private:
-    FallibleTArray<uint8_t> mData;
-    nsAutoRefCnt mRefCnt;
 }; 
 
 #endif /* GFX_DWRITECOMMON_H */

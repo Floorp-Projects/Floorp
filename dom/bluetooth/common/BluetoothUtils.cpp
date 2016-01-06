@@ -150,12 +150,12 @@ NamedValueToProperty(const BluetoothNamedValue& aValue,
 
   switch (aProperty.mType) {
     case PROPERTY_BDNAME:
-      if (aValue.value().type() != BluetoothValue::TnsString) {
-        BT_LOGR("Bluetooth property value is not a string");
+      if (aValue.value().type() != BluetoothValue::TBluetoothRemoteName) {
+        BT_LOGR("Bluetooth property value is not a remote name");
         return NS_ERROR_ILLEGAL_VALUE;
       }
       // Set name
-      aProperty.mString = aValue.value().get_nsString();
+      aProperty.mRemoteName = aValue.value().get_BluetoothRemoteName();
       break;
 
     case PROPERTY_ADAPTER_SCAN_MODE:
@@ -191,13 +191,14 @@ NamedValueToProperty(const BluetoothNamedValue& aValue,
 void
 RemoteNameToString(const BluetoothRemoteName& aRemoteName, nsAString& aString)
 {
+  MOZ_ASSERT(aRemoteName.mLength <= sizeof(aRemoteName.mName));
+
   auto name = reinterpret_cast<const char*>(aRemoteName.mName);
 
   /* The content in |BluetoothRemoteName| is not a C string and not
-   * terminated by \0. We use |strnlen| to limit its length.
+   * terminated by \0. We use |mLength| to limit its length.
    */
-  aString =
-    NS_ConvertUTF8toUTF16(name, strnlen(name, sizeof(aRemoteName.mName)));
+  aString = NS_ConvertUTF8toUTF16(name, aRemoteName.mLength);
 }
 
 nsresult
@@ -517,7 +518,18 @@ SetJsObject(JSContext* aContext,
     const BluetoothValue& v = arr[i].value();
 
     switch(v.type()) {
-       case BluetoothValue::TnsString: {
+       case BluetoothValue::TBluetoothAddress: {
+        nsAutoString addressStr;
+        AddressToString(v.get_BluetoothAddress(), addressStr);
+
+        JSString* jsData = JS_NewUCStringCopyN(aContext,
+                                               addressStr.BeginReading(),
+                                               addressStr.Length());
+        NS_ENSURE_TRUE(jsData, false);
+        val.setString(jsData);
+        break;
+      }
+      case BluetoothValue::TnsString: {
         JSString* jsData = JS_NewUCStringCopyN(aContext,
                                      v.get_nsString().BeginReading(),
                                      v.get_nsString().Length());
@@ -673,13 +685,13 @@ DispatchReplyError(BluetoothReplyRunnable* aRunnable,
 
 void
 DispatchStatusChangedEvent(const nsAString& aType,
-                           const nsAString& aAddress,
+                           const BluetoothAddress& aAddress,
                            bool aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   InfallibleTArray<BluetoothNamedValue> data;
-  AppendNamedValue(data, "address", nsString(aAddress));
+  AppendNamedValue(data, "address", aAddress);
   AppendNamedValue(data, "status", aStatus);
 
   BluetoothService* bs = BluetoothService::Get();

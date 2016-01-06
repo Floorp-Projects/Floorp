@@ -10,6 +10,7 @@
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
 #include "mozilla/Telemetry.h"
+#include "mozilla/TimeStamp.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -191,7 +192,7 @@ public:
   virtual void Log(const std::string& aString) override;
   virtual void CrashAction(LogReason aReason) override;
 
-  virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() override;
+  virtual LoggingRecord LoggingRecordCopy() override;
 
   void SetCircularBufferSize(uint32_t aCapacity);
 
@@ -201,7 +202,7 @@ private:
   void UpdateCrashReport();
 
 private:
-  std::vector<std::pair<int32_t,std::string> > mBuffer;
+  LoggingRecord mBuffer;
   nsCString mCrashCriticalKey;
   uint32_t mMaxCapacity;
   int32_t mIndex;
@@ -225,8 +226,8 @@ void CrashStatsLogForwarder::SetCircularBufferSize(uint32_t aCapacity)
   mBuffer.reserve(static_cast<size_t>(aCapacity));
 }
 
-std::vector<std::pair<int32_t,std::string> >
-CrashStatsLogForwarder::StringsVectorCopy()
+LoggingRecord
+CrashStatsLogForwarder::LoggingRecordCopy()
 {
   MutexAutoLock lock(mMutex);
   return mBuffer;
@@ -248,9 +249,12 @@ CrashStatsLogForwarder::UpdateStringsVector(const std::string& aString)
   MOZ_ASSERT(index >= 0 && index < (int32_t)mMaxCapacity);
   MOZ_ASSERT(index <= mIndex && index <= (int32_t)mBuffer.size());
 
+  bool ignored;
+  double tStamp = (TimeStamp::NowLoRes()-TimeStamp::ProcessCreation(ignored)).ToSecondsSigDigits();
+
   // Checking for index >= mBuffer.size(), rather than index == mBuffer.size()
   // just out of paranoia, but we know index <= mBuffer.size().
-  std::pair<int32_t,std::string> newEntry(mIndex,aString);
+  LoggingRecordEntry newEntry(mIndex,aString,tStamp);
   if (index >= static_cast<int32_t>(mBuffer.size())) {
     mBuffer.push_back(newEntry);
   } else {
@@ -262,8 +266,8 @@ CrashStatsLogForwarder::UpdateStringsVector(const std::string& aString)
 void CrashStatsLogForwarder::UpdateCrashReport()
 {
   std::stringstream message;
-  for(std::vector<std::pair<int32_t, std::string> >::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
-    message << "|[" << (*it).first << "]" << (*it).second;
+  for(LoggingRecord::iterator it = mBuffer.begin(); it != mBuffer.end(); ++it) {
+    message << "|[" << Get<0>(*it) << "]" << Get<1>(*it) << " (t=" << Get<2>(*it) << ")";
   }
 
 #ifdef MOZ_CRASHREPORTER
