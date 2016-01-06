@@ -104,7 +104,8 @@ JS_Init(void)
     if (!FutexRuntime::initialize())
         return false;
 
-    js::gcstats::Statistics::initialize();
+    if (!js::gcstats::Statistics::initialize())
+        return false;
 
     libraryInitState = InitState::Running;
     return true;
