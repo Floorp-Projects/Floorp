@@ -52,11 +52,23 @@ private:
 
   void SetNameValuePair(FormDataTuple* aData,
                         const nsAString& aName,
-                        const nsAString& aValue);
+                        const nsAString& aValue)
+  {
+    MOZ_ASSERT(aData);
+    aData->name = aName;
+    aData->value.SetAsUSVString() = aValue;
+  }
 
   void SetNameFilePair(FormDataTuple* aData,
                        const nsAString& aName,
-                       File* aFile);
+                       File* aFile)
+  {
+    MOZ_ASSERT(aData);
+    aData->name = aName;
+    if (aFile) {
+      aData->value.SetAsFile() = aFile;
+    }
+  }
 
 public:
   explicit nsFormData(nsISupports* aOwner = nullptr);
