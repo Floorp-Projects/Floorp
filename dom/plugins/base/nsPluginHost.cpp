@@ -137,6 +137,7 @@ using mozilla::dom::FakePluginTagInit;
 #define kPluginTmpDirName NS_LITERAL_CSTRING("plugtmp")
 
 static const char *kPrefWhitelist = "plugin.allowed_types";
+static const char *kPrefLoadInParentPrefix = "plugin.load_in_parent_process.";
 static const char *kPrefDisableFullPage = "plugin.disable_full_page_plugin_for_types";
 static const char *kPrefJavaMIME = "plugin.java.mime";
 
@@ -2760,6 +2761,14 @@ nsPluginHost::IsTypeWhitelisted(const char *aMimeType)
   }
   nsDependentCString wrap(aMimeType);
   return IsTypeInList(wrap, whitelist);
+}
+
+/* static */ bool
+nsPluginHost::ShouldLoadTypeInParent(const nsACString& aMimeType)
+{
+  nsCString prefName(kPrefLoadInParentPrefix);
+  prefName += aMimeType;
+  return Preferences::GetBool(prefName.get(), false);
 }
 
 void
