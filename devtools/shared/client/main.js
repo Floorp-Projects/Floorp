@@ -298,7 +298,6 @@ DebuggerClient.requester = function (aPacketSkeleton,
         histogram.add(+new Date - startTime);
       }
     }, "DebuggerClient.requester request callback"));
-
   }, "DebuggerClient.requester");
 };
 
@@ -1437,6 +1436,9 @@ WorkerClient.prototype = {
   _onClose: function () {
     this.removeListener("close", this._onClose);
 
+    if (this.thread) {
+      this.client.unregisterClient(this.thread);
+    }
     this.client.unregisterClient(this);
     this._isClosed = true;
   },
@@ -2169,10 +2171,18 @@ ThreadClient.prototype = {
    */
   _onThreadState: function (aPacket) {
     this._state = ThreadStateTypes[aPacket.type];
+    // The debugger UI may not be initialized yet so we want to keep
+    // the packet around so it knows what to pause state to display
+    // when it's initialized
+    this._lastPausePacket = aPacket.type === 'resumed' ? null : aPacket;
     this._clearFrames();
     this._clearPauseGrips();
     aPacket.type === ThreadStateTypes.detached && this._clearThreadGrips();
     this.client._eventsEnabled && this.emit(aPacket.type, aPacket);
+  },
+
+  getLastPausePacket: function() {
+    return this._lastPausePacket;
   },
 
   /**
