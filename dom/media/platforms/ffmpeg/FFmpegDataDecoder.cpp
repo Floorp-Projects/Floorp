@@ -32,7 +32,6 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
   , mCodecID(aCodecID)
   , mMonitor("FFMpegaDataDecoder")
   , mIsFlushing(false)
-  , mCodecParser(nullptr)
 {
   MOZ_COUNT_CTOR(FFmpegDataDecoder);
 }
@@ -40,31 +39,6 @@ FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
 FFmpegDataDecoder<LIBAV_VER>::~FFmpegDataDecoder()
 {
   MOZ_COUNT_DTOR(FFmpegDataDecoder);
-  if (mCodecParser) {
-    av_parser_close(mCodecParser);
-    mCodecParser = nullptr;
-  }
-}
-
-/**
- * FFmpeg calls back to this function with a list of pixel formats it supports.
- * We choose a pixel format that we support and return it.
- * For now, we just look for YUV420P as it is the only non-HW accelerated format
- * supported by FFmpeg's H264 decoder.
- */
-static PixelFormat
-ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
-{
-  FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
-  for (; *aFormats > -1; aFormats++) {
-    if (*aFormats == PIX_FMT_YUV420P || *aFormats == PIX_FMT_YUVJ420P) {
-      FFMPEG_LOG("Requesting pixel format YUV420P.");
-      return PIX_FMT_YUV420P;
-    }
-  }
-
-  NS_WARNING("FFmpeg does not share any supported pixel formats.");
-  return PIX_FMT_NONE;
 }
 
 nsresult
@@ -87,19 +61,7 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 
   mCodecContext->opaque = this;
 
-  // FFmpeg takes this as a suggestion for what format to use for audio samples.
-  uint32_t major, minor;
-  FFmpegRuntimeLinker::GetVersion(major, minor);
-  // LibAV 0.8 produces rubbish float interleaved samples, request 16 bits audio.
-  mCodecContext->request_sample_fmt = major == 53 ?
-    AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;
-
-  // FFmpeg will call back to this to negotiate a video pixel format.
-  mCodecContext->get_format = ChoosePixelFormat;
-
-  mCodecContext->thread_count = PR_GetNumberOfProcessors();
-  mCodecContext->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
-  mCodecContext->thread_safe_callbacks = false;
+  InitCodecContext();
 
   if (mExtraData) {
     mCodecContext->extradata_size = mExtraData->Length();
@@ -129,11 +91,6 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
       mCodecContext->sample_fmt != AV_SAMPLE_FMT_S16P) {
     NS_WARNING("FFmpeg audio decoder outputs unsupported audio format.");
     return NS_ERROR_FAILURE;
-  }
-
-  mCodecParser = av_parser_init(mCodecID);
-  if (mCodecParser) {
-    mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
   }
 
   FFMPEG_LOG("FFmpeg init successful.");
