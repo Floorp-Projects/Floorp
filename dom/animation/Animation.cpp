@@ -478,13 +478,19 @@ Animation::Tick()
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 
   // FIXME: Detect the no-change case and don't request a restyle at all
-  // FIXME: Detect changes to IsPlaying() state and request RestyleType::Layer
-  //        so that layers get updated immediately
   AnimationCollection* collection = GetCollection();
   if (collection) {
     collection->RequestRestyle(CanThrottle() ?
       AnimationCollection::RestyleType::Throttled :
       AnimationCollection::RestyleType::Standard);
+  }
+
+  // Update layers if we are newly finished.
+  if (mEffect &&
+      !mEffect->Properties().IsEmpty() &&
+      !mFinishedAtLastComposeStyle &&
+      PlayState() == AnimationPlayState::Finished) {
+    PostUpdate();
   }
 }
 
@@ -682,14 +688,6 @@ Animation::CanThrottle() const
   // Ignore animations that were never going to have any effect anyway.
   if (!mEffect || mEffect->Properties().IsEmpty()) {
     return true;
-  }
-
-  // Finished animations can be throttled unless this is the first
-  // sample since finishing. In that case we need an unthrottled sample
-  // so we can apply the correct end-of-animation behavior on the main
-  // thread (either removing the animation style or applying the fill mode).
-  if (PlayState() == AnimationPlayState::Finished) {
-    return mFinishedAtLastComposeStyle;
   }
 
   // We should also ignore animations which are not "in effect"--i.e. not
