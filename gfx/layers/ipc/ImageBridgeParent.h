@@ -43,6 +43,7 @@ class ImageBridgeParent final : public PImageBridgeParent,
 {
 public:
   typedef InfallibleTArray<CompositableOperation> EditArray;
+  typedef InfallibleTArray<OpDestroy> OpDestroyArray;
   typedef InfallibleTArray<EditReply> EditReplyArray;
   typedef InfallibleTArray<AsyncChildMessageData> AsyncChildMessageArray;
 
@@ -67,8 +68,9 @@ public:
 
   // PImageBridge
   virtual bool RecvImageBridgeThreadId(const PlatformThreadId& aThreadId) override;
-  virtual bool RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply) override;
-  virtual bool RecvUpdateNoSwap(EditArray&& aEdits) override;
+  virtual bool RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
+                          EditReplyArray* aReply) override;
+  virtual bool RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy) override;
 
   virtual bool IsAsync() const override { return true; }
 

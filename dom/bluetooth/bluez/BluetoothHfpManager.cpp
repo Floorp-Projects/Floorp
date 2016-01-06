@@ -547,7 +547,7 @@ BluetoothHfpManager::NotifyConnectionStatusChanged(const nsAString& aType)
     return;
   }
 
-  DispatchStatusChangedEvent(eventName, deviceAddressStr, status);
+  DispatchStatusChangedEvent(eventName, mDeviceAddress, status);
 }
 
 #ifdef MOZ_B2G_RIL

@@ -692,7 +692,6 @@ pref("layout.css.scroll-snap.enabled", true);
 pref("dom.ipc.processPriorityManager.enabled", true);
 pref("dom.ipc.processPriorityManager.backgroundGracePeriodMS", 1000);
 pref("dom.ipc.processPriorityManager.backgroundPerceivableGracePeriodMS", 5000);
-pref("dom.ipc.processPriorityManager.memoryPressureGracePeriodMS", 3000);
 pref("dom.ipc.processPriorityManager.temporaryPriorityLockMS", 5000);
 
 // Number of different background/foreground levels for background/foreground
@@ -780,7 +779,12 @@ pref("hal.gonk.COMPOSITOR.nice", -4);
 // this too high, then we'll send out a memory pressure event every Z seconds
 // (see below), even while we have processes that we would happily kill in
 // order to free up memory.
-pref("hal.processPriorityManager.gonk.notifyLowMemUnderKB", 14336);
+pref("gonk.notifyHardLowMemUnderKB", 14336);
+
+// Fire a memory pressure event when the system has less than Xmb of memory
+// remaining and then switch to the hard trigger, see above.  This should be
+// placed above the BACKGROUND priority class.
+pref("gonk.notifySoftLowMemUnderKB", 43008);
 
 // We wait this long before polling the memory-pressure fd after seeing one
 // memory pressure event.  (When we're not under memory pressure, we sit

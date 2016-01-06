@@ -129,7 +129,8 @@ private:
 };
 
 bool
-ImageBridgeParent::RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply)
+ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
+                              EditReplyArray* aReply)
 {
   AutoImageBridgeParentAsyncMessageSender autoAsyncMessageSender(this);
 
@@ -138,6 +139,10 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply)
     if (!ReceiveCompositableUpdate(aEdits[i], replyv)) {
       return false;
     }
+  }
+
+  for (const auto& op : aToDestroy) {
+    DestroyActor(op);
   }
 
   aReply->SetCapacity(replyv.size());
@@ -156,10 +161,10 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, EditReplyArray* aReply)
 }
 
 bool
-ImageBridgeParent::RecvUpdateNoSwap(EditArray&& aEdits)
+ImageBridgeParent::RecvUpdateNoSwap(EditArray&& aEdits, OpDestroyArray&& aToDestroy)
 {
   InfallibleTArray<EditReply> noReplies;
-  bool success = RecvUpdate(Move(aEdits), &noReplies);
+  bool success = RecvUpdate(Move(aEdits), Move(aToDestroy), &noReplies);
   MOZ_ASSERT(noReplies.Length() == 0, "RecvUpdateNoSwap requires a sync Update to carry Edits");
   return success;
 }

@@ -1006,6 +1006,9 @@ JS_BeginRequest(JSContext* cx);
 extern JS_PUBLIC_API(void)
 JS_EndRequest(JSContext* cx);
 
+extern JS_PUBLIC_API(void)
+JS_SetFutexCanWait(JSRuntime* rt);
+
 namespace js {
 
 void
@@ -1733,9 +1736,6 @@ typedef enum JSGCParamKey {
     /** Number of times GC has been invoked. Includes both major and minor GC. */
     JSGC_NUMBER = 4,
 
-    /** Max size of the code cache in bytes. */
-    JSGC_MAX_CODE_CACHE_BYTES = 5,
-
     /** Select GC mode. */
     JSGC_MODE = 6,
 
@@ -1801,7 +1801,7 @@ typedef enum JSGCParamKey {
     JSGC_MAX_EMPTY_CHUNK_COUNT = 22,
 
     /** Whether compacting GC is enabled. */
-    JSGC_COMPACTING_ENABLED = 23
+    JSGC_COMPACTING_ENABLED = 23,
 } JSGCParamKey;
 
 extern JS_PUBLIC_API(void)
@@ -1809,12 +1809,6 @@ JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value);
 
 extern JS_PUBLIC_API(uint32_t)
 JS_GetGCParameter(JSRuntime* rt, JSGCParamKey key);
-
-extern JS_PUBLIC_API(void)
-JS_SetGCParameterForThread(JSContext* cx, JSGCParamKey key, uint32_t value);
-
-extern JS_PUBLIC_API(uint32_t)
-JS_GetGCParameterForThread(JSContext* cx, JSGCParamKey key);
 
 extern JS_PUBLIC_API(void)
 JS_SetGCParametersBasedOnAvailableMemory(JSRuntime* rt, uint32_t availMem);

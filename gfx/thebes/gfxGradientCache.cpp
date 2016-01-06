@@ -197,9 +197,13 @@ gfxGradientCache::GetGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>
   return nullptr;
 }
 
-GradientStops *
+already_AddRefed<GradientStops>
 gfxGradientCache::GetOrCreateGradientStops(const DrawTarget *aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend)
 {
+  if (aDT->IsRecording()) {
+    return aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
+  }
+
   RefPtr<GradientStops> gs = GetGradientStops(aDT, aStops, aExtend);
   if (!gs) {
     gs = aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
@@ -213,7 +217,7 @@ gfxGradientCache::GetOrCreateGradientStops(const DrawTarget *aDT, nsTArray<Gradi
       delete cached;
     }
   }
-  return gs;
+  return gs.forget();
 }
 
 void

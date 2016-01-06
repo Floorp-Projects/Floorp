@@ -541,11 +541,12 @@ StringFromMIRType(MIRType type)
       return "Float32x4";
     case MIRType_Int32x4:
       return "Int32x4";
+    case MIRType_Bool32x4:
+      return "Bool32x4";
     case MIRType_Doublex2:
       return "Doublex2";
-    default:
-      MOZ_CRASH("Unknown MIRType.");
   }
+  MOZ_CRASH("Unknown MIRType.");
 }
 
 static inline bool

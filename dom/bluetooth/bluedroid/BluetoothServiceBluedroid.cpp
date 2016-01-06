@@ -784,26 +784,15 @@ BluetoothServiceBluedroid::GetAdaptersInternal(
   InfallibleTArray<BluetoothNamedValue> adaptersProperties;
   uint32_t numAdapters = 1; // Bluedroid supports single adapter only
 
-  nsAutoString bdAddressStr;
-  AddressToString(mBdAddress, bdAddressStr);
-
-  nsTArray<nsString> bondedAddresses;
-
-  for (uint32_t i = 0; i < mBondedAddresses.Length(); ++i) {
-    nsAutoString bondedAddressStr;
-    AddressToString(mBondedAddresses[i], bondedAddressStr);
-    bondedAddresses.AppendElement(bondedAddressStr);
-  }
-
   for (uint32_t i = 0; i < numAdapters; i++) {
     InfallibleTArray<BluetoothNamedValue> properties;
 
     AppendNamedValue(properties, "State", mEnabled);
-    AppendNamedValue(properties, "Address", bdAddressStr);
+    AppendNamedValue(properties, "Address", mBdAddress);
     AppendNamedValue(properties, "Name", mBdName);
     AppendNamedValue(properties, "Discoverable", mDiscoverable);
     AppendNamedValue(properties, "Discovering", mDiscovering);
-    AppendNamedValue(properties, "PairedDevices", bondedAddresses);
+    AppendNamedValue(properties, "PairedDevices", mBondedAddresses);
 
     AppendNamedValue(adaptersProperties, "Adapter",
                      BluetoothValue(properties));
@@ -2014,14 +2003,11 @@ BluetoothServiceBluedroid::AdapterStateChangedNotification(bool aState)
 
     // Cleanup static adapter properties and notify adapter.
     mBdAddress.Clear();
-    mBdName.Truncate();
-
-    nsAutoString bdAddressStr;
-    AddressToString(mBdAddress, bdAddressStr);
+    mBdName.Clear();
 
     InfallibleTArray<BluetoothNamedValue> props;
     AppendNamedValue(props, "Name", mBdName);
-    AppendNamedValue(props, "Address", bdAddressStr);
+    AppendNamedValue(props, "Address", mBdAddress);
     if (mDiscoverable) {
       mDiscoverable = false;
       AppendNamedValue(props, "Discoverable", false);
@@ -2120,13 +2106,10 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
 
     if (p.mType == PROPERTY_BDADDR) {
       mBdAddress = p.mBdAddress;
-      nsAutoString addressStr;
-      AddressToString(mBdAddress, addressStr);
-
-      AppendNamedValue(propertiesArray, "Address", addressStr);
+      AppendNamedValue(propertiesArray, "Address", mBdAddress);
 
     } else if (p.mType == PROPERTY_BDNAME) {
-      mBdName = p.mString;
+      mBdName = p.mRemoteName;
       AppendNamedValue(propertiesArray, "Name", mBdName);
 
     } else if (p.mType == PROPERTY_ADAPTER_SCAN_MODE) {
@@ -2149,15 +2132,7 @@ BluetoothServiceBluedroid::AdapterPropertiesNotification(
       mBondedAddresses.Clear();
       mBondedAddresses.AppendElements(p.mBdAddressArray);
 
-      nsTArray<nsString> bondedAddresses;
-
-      for (unsigned int j = 0; j < p.mBdAddressArray.Length(); ++j) {
-        nsAutoString addressStr;
-        AddressToString(p.mBdAddressArray[j], addressStr);
-        bondedAddresses.AppendElement(addressStr);
-      }
-
-      AppendNamedValue(propertiesArray, "PairedDevices", bondedAddresses);
+      AppendNamedValue(propertiesArray, "PairedDevices", mBondedAddresses);
     } else if (p.mType == PROPERTY_UNKNOWN) {
       /* Bug 1065999: working around unknown properties */
     } else {
@@ -2197,21 +2172,18 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
 
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
-  nsAutoString bdAddrStr;
-  AddressToString(aBdAddr, bdAddrStr);
-
-  AppendNamedValue(propertiesArray, "Address", bdAddrStr);
+  AppendNamedValue(propertiesArray, "Address", aBdAddr);
 
   for (int i = 0; i < aNumProperties; ++i) {
 
     const BluetoothProperty& p = aProperties[i];
 
     if (p.mType == PROPERTY_BDNAME) {
-      AppendNamedValue(propertiesArray, "Name", p.mString);
+      AppendNamedValue(propertiesArray, "Name", p.mRemoteName);
 
       // Update <address, name> mapping
       mDeviceNameMap.Remove(aBdAddr);
-      mDeviceNameMap.Put(aBdAddr, p.mString);
+      mDeviceNameMap.Put(aBdAddr, p.mRemoteName);
     } else if (p.mType == PROPERTY_CLASS_OF_DEVICE) {
       uint32_t cod = p.mUint32;
       AppendNamedValue(propertiesArray, "Cod", cod);
@@ -2235,19 +2207,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       }
 
       // Handler for |FetchUuidsInternal|
-
-      nsTArray<nsString> uuids;
-
-      // Construct a sorted uuid set
-      for (index = 0; index < p.mUuidArray.Length(); ++index) {
-        nsAutoString uuid;
-        UuidToString(p.mUuidArray[index], uuid);
-
-        if (!uuids.Contains(uuid)) { // filter out duplicate uuids
-          uuids.InsertElementSorted(uuid);
-        }
-      }
-      AppendNamedValue(propertiesArray, "UUIDs", uuids);
+      AppendNamedValue(propertiesArray, "UUIDs", p.mUuidArray);
 
     } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
       AppendNamedValue(propertiesArray, "Type",
@@ -2293,6 +2253,8 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
   // changing the order of (1,2) and (3).
 
   // Update to registered BluetoothDevice objects
+  nsAutoString bdAddrStr;
+  AddressToString(aBdAddr, bdAddrStr);
   BluetoothSignal signal(NS_LITERAL_STRING("PropertyChanged"),
                          bdAddrStr, propertiesArray);
 
@@ -2337,36 +2299,23 @@ BluetoothServiceBluedroid::DeviceFoundNotification(
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
   BluetoothAddress bdAddr;
-  nsString bdName;
+  BluetoothRemoteName bdName;
 
   for (int i = 0; i < aNumProperties; i++) {
 
     const BluetoothProperty& p = aProperties[i];
 
     if (p.mType == PROPERTY_BDADDR) {
-      nsAutoString addressStr;
-      AddressToString(p.mBdAddress, addressStr);
-      AppendNamedValue(propertiesArray, "Address", addressStr);
+      AppendNamedValue(propertiesArray, "Address", p.mBdAddress);
       bdAddr = p.mBdAddress;
     } else if (p.mType == PROPERTY_BDNAME) {
-      AppendNamedValue(propertiesArray, "Name", p.mString);
-      bdName = p.mString;
+      AppendNamedValue(propertiesArray, "Name", p.mRemoteName);
+      bdName = p.mRemoteName;
     } else if (p.mType == PROPERTY_CLASS_OF_DEVICE) {
       AppendNamedValue(propertiesArray, "Cod", p.mUint32);
 
     } else if (p.mType == PROPERTY_UUIDS) {
-      nsTArray<nsString> uuids;
-
-      // Construct a sorted uuid set
-      for (uint32_t index = 0; index < p.mUuidArray.Length(); ++index) {
-        nsAutoString uuid;
-        UuidToString(p.mUuidArray[index], uuid);
-
-        if (!uuids.Contains(uuid)) { // filter out duplicate uuids
-          uuids.InsertElementSorted(uuid);
-        }
-      }
-      AppendNamedValue(propertiesArray, "UUIDs", uuids);
+      AppendNamedValue(propertiesArray, "UUIDs", p.mUuidArray);
 
     } else if (p.mType == PROPERTY_TYPE_OF_DEVICE) {
       AppendNamedValue(propertiesArray, "Type",
@@ -2417,24 +2366,20 @@ BluetoothServiceBluedroid::PinRequestNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothRemoteName bdName;
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
   // If |aBdName| is empty, get device name from |mDeviceNameMap|;
   // Otherwise update <address, name> mapping with |aBdName|
-  nsAutoString bdAddr;
-  AddressToString(aRemoteBdAddr, bdAddr);
-
-  nsAutoString bdName;
-  RemoteNameToString(aBdName, bdName);
-
-  if (bdName.IsEmpty()) {
+  if (aBdName.IsCleared()) {
     mDeviceNameMap.Get(aRemoteBdAddr, &bdName);
   } else {
+    bdName.Assign(aBdName.mName, aBdName.mLength);
     mDeviceNameMap.Remove(aRemoteBdAddr);
     mDeviceNameMap.Put(aRemoteBdAddr, bdName);
   }
 
-  AppendNamedValue(propertiesArray, "address", bdAddr);
+  AppendNamedValue(propertiesArray, "address", aRemoteBdAddr);
   AppendNamedValue(propertiesArray, "name", bdName);
   AppendNamedValue(propertiesArray, "passkey", EmptyString());
   AppendNamedValue(propertiesArray, "type",
@@ -2452,19 +2397,15 @@ BluetoothServiceBluedroid::SspRequestNotification(
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothRemoteName bdName;
   InfallibleTArray<BluetoothNamedValue> propertiesArray;
 
   // If |aBdName| is empty, get device name from |mDeviceNameMap|;
   // Otherwise update <address, name> mapping with |aBdName|
-  nsAutoString bdAddr;
-  AddressToString(aRemoteBdAddr, bdAddr);
-
-  nsAutoString bdName;
-  RemoteNameToString(aBdName, bdName);
-
-  if (bdName.IsEmpty()) {
+  if (aBdName.IsCleared()) {
     mDeviceNameMap.Get(aRemoteBdAddr, &bdName);
   } else {
+    bdName.Assign(aBdName.mName, aBdName.mLength);
     mDeviceNameMap.Remove(aRemoteBdAddr);
     mDeviceNameMap.Put(aRemoteBdAddr, bdName);
   }
@@ -2496,7 +2437,7 @@ BluetoothServiceBluedroid::SspRequestNotification(
       return;
   }
 
-  AppendNamedValue(propertiesArray, "address", bdAddr);
+  AppendNamedValue(propertiesArray, "address", aRemoteBdAddr);
   AppendNamedValue(propertiesArray, "name", bdName);
   AppendNamedValue(propertiesArray, "passkey", passkey);
   AppendNamedValue(propertiesArray, "type", pairingType);
@@ -2544,10 +2485,7 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   }
 
   // Query pairing device name from hash table
-  nsAutoString remoteBdAddr;
-  AddressToString(aRemoteBdAddr, remoteBdAddr);
-
-  nsString remotebdName;
+  BluetoothRemoteName remotebdName;
   mDeviceNameMap.Get(aRemoteBdAddr, &remotebdName);
 
   // Update bonded address array and append pairing device name
@@ -2567,13 +2505,15 @@ BluetoothServiceBluedroid::BondStateChangedNotification(
   }
 
   // Notify device of attribute changed
+  nsAutoString remoteBdAddr;
+  AddressToString(aRemoteBdAddr, remoteBdAddr);
   AppendNamedValue(propertiesArray, "Paired", bonded);
   DistributeSignal(NS_LITERAL_STRING("PropertyChanged"),
                    remoteBdAddr,
                    BluetoothValue(propertiesArray));
 
   // Notify adapter of device paired/unpaired
-  InsertNamedValue(propertiesArray, 0, "Address", remoteBdAddr);
+  InsertNamedValue(propertiesArray, 0, "Address", aRemoteBdAddr);
   DistributeSignal(bonded ? NS_LITERAL_STRING(DEVICE_PAIRED_ID)
                           : NS_LITERAL_STRING(DEVICE_UNPAIRED_ID),
                    NS_LITERAL_STRING(KEY_ADAPTER),

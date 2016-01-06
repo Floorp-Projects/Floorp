@@ -75,3 +75,5 @@ python gen-sources.py $1
 
 # apply outstanding local patches
 patch -p3 < ./gcc-4.8-ICE.patch
+patch -p1 < ./tonality_init.patch
+patch -p0 < nonunified.patch

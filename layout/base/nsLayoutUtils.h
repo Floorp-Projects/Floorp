@@ -2063,7 +2063,10 @@ public:
     SFE_PREFER_NO_PREMULTIPLY_ALPHA = 1 << 3,
     /* Whether we should skip getting a surface for vector images and
        return a DirectDrawInfo containing an imgIContainer instead. */
-    SFE_NO_RASTERIZING_VECTORS = 1 << 4
+    SFE_NO_RASTERIZING_VECTORS = 1 << 4,
+    /* If image type is vector, the return surface size will same as
+       element size, not image's intrinsic size. */
+    SFE_USE_ELEMENT_SIZE_IF_VECTOR = 1 << 5
   };
 
   struct DirectDrawInfo {

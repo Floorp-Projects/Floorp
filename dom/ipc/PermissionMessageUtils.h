@@ -13,12 +13,19 @@
 
 namespace IPC {
 
-class Principal {
+class Principal
+{
   friend struct ParamTraits<Principal>;
 
 public:
-  Principal() : mPrincipal(nullptr) {}
-  explicit Principal(nsIPrincipal* aPrincipal) : mPrincipal(aPrincipal) {}
+  Principal()
+    : mPrincipal(nullptr)
+  {}
+
+  explicit Principal(nsIPrincipal* aPrincipal)
+    : mPrincipal(aPrincipal)
+  {}
+
   operator nsIPrincipal*() const { return mPrincipal.get(); }
 
 private:
