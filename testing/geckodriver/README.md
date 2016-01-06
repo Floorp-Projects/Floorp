@@ -1,19 +1,28 @@
-wires
-================
+# Wires
 
-> WebDriver <-> Marionette proxy
+
+WebDriver <-> Marionette proxy
 
 ## Build Project
 
 Download rust from [rust-lang.org](https://www.rust-lang.org/)
 
-To build the project:
+To build the project for release:
 
-```
-cargo build
+```bash
+cargo build --no-default-features --release
 ```
 
+If you want to build a debug version just use:
+
+```bash
+cargo build --no-default-features
+```
+The `--no-default-features` argument is required to compile on Windows due to the
+ way dependencies need to be compiled.
 ## Usage
+
+To use wires, follow the steps on [MDN](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette/WebDriver) or you can use the steps below and use a cURL client.
 
 ```
 cargo run [options] [--] [<args>...]
