@@ -353,21 +353,21 @@ InspectorPanel.prototype = {
     this.sidebar.on("select", this._setDefaultSidebar);
 
     this.sidebar.addTab("ruleview",
-                        "chrome://devtools/content/styleinspector/cssruleview.xhtml",
+                        "chrome://devtools/content/inspector/rules/rules.xhtml",
                         "ruleview" == defaultTab);
 
     this.sidebar.addTab("computedview",
-                        "chrome://devtools/content/styleinspector/computedview.xhtml",
+                        "chrome://devtools/content/inspector/computed/computed.xhtml",
                         "computedview" == defaultTab);
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
       this.sidebar.addTab("fontinspector",
-                          "chrome://devtools/content/fontinspector/font-inspector.xhtml",
+                          "chrome://devtools/content/inspector/fonts/fonts.xhtml",
                           "fontinspector" == defaultTab);
     }
 
     this.sidebar.addTab("layoutview",
-                        "chrome://devtools/content/layoutview/view.xhtml",
+                        "chrome://devtools/content/inspector/layout/layout.xhtml",
                         "layoutview" == defaultTab);
 
     if (this.target.form.animationsActor) {

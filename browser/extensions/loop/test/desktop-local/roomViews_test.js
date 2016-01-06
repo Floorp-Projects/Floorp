@@ -246,6 +246,27 @@ describe("loop.roomViews", function() {
           }));
       });
 
+    it("should dispatch a FacebookShareRoomUrl action when the facebook button is clicked",
+      function() {
+        var url = "http://invalid";
+        view = mountTestComponent({
+          roomData: {
+            roomUrl: url
+          }
+        });
+
+        var facebookBtn = view.getDOMNode().querySelector(".btn-facebook");
+
+        React.addons.TestUtils.Simulate.click(facebookBtn);
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWith(dispatcher.dispatch,
+          new sharedActions.FacebookShareRoomUrl({
+            from: "conversation",
+            roomUrl: url
+          }));
+    });
+
     describe("Copy Button", function() {
       beforeEach(function() {
         view = mountTestComponent();

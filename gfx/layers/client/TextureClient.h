@@ -421,8 +421,6 @@ public:
    */
   static PTextureChild* CreateIPDLActor();
   static bool DestroyIPDLActor(PTextureChild* actor);
-  // call this if the transaction that was supposed to destroy the actor failed.
-  static bool DestroyFallback(PTextureChild* actor);
 
   /**
    * Get the TextureClient corresponding to the actor passed in parameter.
