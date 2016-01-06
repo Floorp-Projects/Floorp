@@ -66,9 +66,8 @@ public:
     virtual void LockProdImpl() override {}
     virtual void UnlockProdImpl() override {}
 
-    virtual void Fence() override {}
-    virtual bool WaitSync() override { return true; }
-    virtual bool PollSync() override { return true; }
+    virtual void ProducerAcquireImpl() override {}
+    virtual void ProducerReleaseImpl() override {}
 
     virtual GLuint ProdTexture() override {
         return mTex;
@@ -134,11 +133,8 @@ public:
     virtual void LockProdImpl() override {}
     virtual void UnlockProdImpl() override {}
 
+    virtual void ProducerAcquireImpl() override {}
     virtual void ProducerReleaseImpl() override;
-
-    virtual void Fence() override {}
-    virtual bool WaitSync() override { MOZ_CRASH("should not be called"); }
-    virtual bool PollSync() override { MOZ_CRASH("should not be called"); }
 
     virtual GLuint ProdTexture() override {
         return mTex;

@@ -235,7 +235,7 @@ nsFieldSetFrame::PaintBorderBackground(
                                     aDirtyRect, rect, bgFlags);
 
   nsCSSRendering::PaintBoxShadowInner(presContext, aRenderingContext,
-                                      this, rect, aDirtyRect);
+                                      this, rect);
 
   if (nsIFrame* legend = GetLegend()) {
     css::Side legendSide = wm.PhysicalSide(eLogicalSideBStart);

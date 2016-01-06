@@ -842,9 +842,7 @@ nsBidiPresUtils::ResolveParagraph(nsBlockFrame* aBlockFrame,
           currentLine->MarkDirty();
           nsIFrame* nextBidi;
           int32_t runEnd = contentOffset + runLength;
-          rv = EnsureBidiContinuation(frame, &nextBidi, frameIndex,
-                                      contentOffset,
-                                      runEnd);
+          rv = EnsureBidiContinuation(frame, &nextBidi, contentOffset, runEnd);
           if (NS_FAILED(rv)) {
             break;
           }
@@ -1275,8 +1273,7 @@ nsBidiPresUtils::ReorderFrames(nsIFrame* aFirstFrameOnLine,
   }
 
   BidiLineData bld(aFirstFrameOnLine, aNumFramesOnLine);
-  return RepositionInlineFrames(&bld, aFirstFrameOnLine, aLineWM,
-                                containerSize, aStart);
+  return RepositionInlineFrames(&bld, aLineWM, containerSize, aStart);
 }
 
 nsIFrame*
@@ -1570,17 +1567,22 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
   nscoord frameISize = aFrame->ISize();
   LogicalMargin frameMargin = aFrame->GetLogicalUsedMargin(frameWM);
   LogicalMargin borderPadding = aFrame->GetLogicalUsedBorderAndPadding(frameWM);
-  // Since the visual order of frame could be different from the
-  // continuation order, we need to remove any border/padding first,
-  // so that we can get the correct isize of the current frame.
+  // Since the visual order of frame could be different from the continuation
+  // order, we need to remove any inline border/padding [that is already applied
+  // based on continuation order] and then add it back based on the visual order
+  // (i.e. isFirst/isLast) to get the correct isize for the current frame.
+  // We don't need to do that for 'box-decoration-break:clone' because then all
+  // continuations have border/padding/margin applied.
   if (aFrame->StyleBorder()->mBoxDecorationBreak ==
         NS_STYLE_BOX_DECORATION_BREAK_SLICE) {
+    // First remove the border/padding that was applied based on logical order.
     if (!aFrame->GetPrevContinuation()) {
       frameISize -= borderPadding.IStart(frameWM);
     }
     if (!aFrame->GetNextContinuation()) {
       frameISize -= borderPadding.IEnd(frameWM);
     }
+    // Set margin/border/padding based on visual order.
     if (!isFirst) {
       frameMargin.IStart(frameWM) = 0;
       borderPadding.IStart(frameWM) = 0;
@@ -1589,8 +1591,9 @@ nsBidiPresUtils::RepositionFrame(nsIFrame* aFrame,
       frameMargin.IEnd(frameWM) = 0;
       borderPadding.IEnd(frameWM) = 0;
     }
+    // Add the border/padding which is now based on visual order.
+    frameISize += borderPadding.IStartEnd(frameWM);
   }
-  frameISize += borderPadding.IStartEnd(frameWM);
 
   nscoord icoord = 0;
   if (!IsBidiLeaf(aFrame)) {
@@ -1659,7 +1662,6 @@ nsBidiPresUtils::InitContinuationStates(nsIFrame*              aFrame,
 
 /* static */ nscoord
 nsBidiPresUtils::RepositionInlineFrames(BidiLineData *aBld,
-                                        nsIFrame* aFirstChild,
                                         WritingMode aLineWM,
                                         const nsSize& aContainerSize,
                                         nscoord aStart)
@@ -1761,7 +1763,6 @@ nsBidiPresUtils::GetFrameToLeftOf(const nsIFrame*  aFrame,
 inline nsresult
 nsBidiPresUtils::EnsureBidiContinuation(nsIFrame*       aFrame,
                                         nsIFrame**      aNewFrame,
-                                        int32_t&        aFrameIndex,
                                         int32_t         aStart,
                                         int32_t         aEnd)
 {
@@ -1826,8 +1827,7 @@ nsresult
 nsBidiPresUtils::FormatUnicodeText(nsPresContext*  aPresContext,
                                    char16_t*       aText,
                                    int32_t&        aTextLength,
-                                   nsCharType      aCharType,
-                                   nsBidiDirection aDir)
+                                   nsCharType      aCharType)
 {
   nsresult rv = NS_OK;
   // ahmed 
@@ -2084,7 +2084,7 @@ nsresult nsBidiPresUtils::ProcessText(const char16_t*       aText,
       if (int32_t(runVisualText.Length()) < subRunLength)
         return NS_ERROR_OUT_OF_MEMORY;
       FormatUnicodeText(aPresContext, runVisualText.BeginWriting(),
-                        subRunLength, (nsCharType)charType, dir);
+                        subRunLength, (nsCharType)charType);
 
       aprocessor.SetText(runVisualText.get(), subRunLength, dir);
       width = aprocessor.GetWidth();

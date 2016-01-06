@@ -671,19 +671,7 @@ var Impl = {
     const enabled = Utils.isTelemetryEnabled;
     const isOptout = IS_UNIFIED_TELEMETRY && (!Policy.isUnifiedOptin() || this._isInOptoutSample());
     Telemetry.canRecordBase = enabled || isOptout;
-
-    if (AppConstants.MOZILLA_OFFICIAL) {
-      // Enable extended telemetry if:
-      //  * the telemetry preference is set and
-      //  * this is an official build or we are in test-mode
-      // We only do the latter check for official builds so that e.g. developer builds
-      // still enable Telemetry based on prefs.
-      Telemetry.canRecordExtended = enabled && (Telemetry.isOfficialTelemetry || this._testMode);
-    } else {
-      // Turn off extended telemetry recording if disabled by preferences or if base/telemetry
-      // telemetry recording is off.
-      Telemetry.canRecordExtended = enabled;
-    }
+    Telemetry.canRecordExtended = enabled;
 
     this._log.config("enableTelemetryRecording - canRecordBase:" + Telemetry.canRecordBase +
                      ", canRecordExtended: " + Telemetry.canRecordExtended);

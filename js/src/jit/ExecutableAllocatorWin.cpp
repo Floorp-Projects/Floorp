@@ -239,7 +239,7 @@ ExecutableAllocator::systemRelease(const ExecutablePool::Allocation& alloc)
     DeallocateExecutableMemory(alloc.pages, alloc.size, pageSize);
 }
 
-void
+bool
 ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting setting)
 {
     MOZ_ASSERT(NON_WRITABLE_JIT_CODE);
@@ -258,8 +258,7 @@ ExecutableAllocator::reprotectRegion(void* start, size_t size, ProtectionSetting
 
     DWORD oldProtect;
     int flags = (setting == Writable) ? PAGE_READWRITE : PAGE_EXECUTE_READ;
-    if (!VirtualProtect(pageStart, size, flags, &oldProtect))
-        MOZ_CRASH();
+    return VirtualProtect(pageStart, size, flags, &oldProtect);
 }
 
 /* static */ unsigned

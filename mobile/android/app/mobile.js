@@ -497,8 +497,8 @@ pref("security.mixed_content.block_active_content", true);
 // Enable pinning
 pref("security.cert_pinning.enforcement_level", 1);
 
-// Allow SHA-1 certificates only before 2016-01-01
-pref("security.pki.sha1_enforcement_level", 2);
+// Allow SHA-1 certificates
+pref("security.pki.sha1_enforcement_level", 0);
 
 // Required blocklist freshness for OneCRL OCSP bypass
 // (default is 1.25x extensions.blocklist.interval, or 30 hours)
@@ -623,11 +623,6 @@ pref("media.mediasource.enabled", true);
 
 // optimize images memory usage
 pref("image.downscale-during-decode.enabled", true);
-
-#ifdef NIGHTLY_BUILD
-// Shumway component (SWF player) is disabled by default. Also see bug 904346.
-pref("shumway.disabled", true);
-#endif
 
 #ifdef MOZ_SAFE_BROWSING
 pref("browser.safebrowsing.enabled", true);

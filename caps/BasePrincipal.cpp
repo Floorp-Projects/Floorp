@@ -132,6 +132,7 @@ OriginAttributes::CreateSuffix(nsACString& aStr) const
   }
 
   if (!mSignedPkg.IsEmpty()) {
+    MOZ_RELEASE_ASSERT(mSignedPkg.FindCharInSet(dom::quota::QuotaManager::kReplaceChars) == kNotFound);
     params->Set(NS_LITERAL_STRING("signedPkg"), mSignedPkg);
   }
 

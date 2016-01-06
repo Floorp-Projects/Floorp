@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<video id="v" controls></video>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+const keysystem = 'org.w3.clearkey';
+
+function createAndSet() {
+  return new Promise(function(resolve, reject) {
+    var m;
+    navigator.requestMediaKeySystemAccess(keysystem, [{initDataType: 'cenc'}])
+    .then(function (access) {
+      return access.createMediaKeys();
+    }).then(function (mediaKeys) {
+      m = mediaKeys;
+      return document.getElementById("v").setMediaKeys(mediaKeys);
+    }).then(function() {
+      resolve(m);
+    });
+  }
+)}
+
+var m1,m2;
+
+// Test that if we create and set two MediaKeys on one video element,
+// that if the first MediaKeys we set on the media elemnt is still usable
+// after the second MediaKeys has been set on the media element.
+SetupEMEPref(() => {
+  createAndSet().then((m) => {
+    m1 = m; // Stash MediaKeys.
+    return createAndSet();
+  })
+  .then((m) => {
+    m2 = m;
+    is(document.getElementById("v").mediaKeys, m2, "Should have set MediaKeys on media element");
+    ok(document.getElementById("v").mediaKeys != m1, "First MediaKeys should no longer be set on media element");
+    var s = m1.createSession("temporary");
+    return s.generateRequest("webm", StringToArrayBuffer(atob('YAYeAX5Hfod+V9ANHtANHg==')));
+  })
+  .then(() => {
+    ok(true, "Was able to generateRequest using second CDM");
+    SimpleTest.finish();
+  }, () => {
+    ok(false, "Was *NOT* able to generateRequest using second CDM");
+    SimpleTest.finish();
+  });
+});
+  
+</script>
+</pre>
+</body>
+</html>
