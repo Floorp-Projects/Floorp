@@ -30,5 +30,4 @@ private:
 } // namespace dom
 } // namespace mozilla
 
-#endif
-
+#endif // mozilla_dom_NuwaChild_h

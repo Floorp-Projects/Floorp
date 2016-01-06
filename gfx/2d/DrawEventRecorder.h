@@ -29,22 +29,29 @@ public:
   explicit DrawEventRecorderPrivate(std::ostream *aStream);
   virtual ~DrawEventRecorderPrivate() { }
 
+  void WriteHeader();
+
   void RecordEvent(const RecordedEvent &aEvent);
   void WritePath(const PathRecording *aPath);
 
-  void AddStoredPath(const ReferencePtr aPath) {
-    mStoredPaths.insert(aPath);
+  void AddStoredObject(const ReferencePtr aObject) {
+    mStoredObjects.insert(aObject);
   }
 
-  void RemoveStoredPath(const ReferencePtr aPath) {
-    mStoredPaths.erase(aPath);
+  void RemoveStoredObject(const ReferencePtr aObject) {
+    mStoredObjects.erase(aObject);
   }
 
-  bool HasStoredPath(const ReferencePtr aPath) {
-    if (mStoredPaths.find(aPath) != mStoredPaths.end()) {
-      return true;
-    }
-    return false;
+  bool HasStoredObject(const ReferencePtr aObject) {
+    return mStoredObjects.find(aObject) != mStoredObjects.end();
+  }
+
+  void AddStoredFontData(const uint64_t aFontDataKey) {
+    mStoredFontData.insert(aFontDataKey);
+  }
+
+  bool HasStoredFontData(const uint64_t aFontDataKey) {
+    return mStoredFontData.find(aFontDataKey) != mStoredFontData.end();
   }
 
 protected:
@@ -54,12 +61,14 @@ protected:
 
 #if defined(_MSC_VER)
   typedef std::unordered_set<const void*> ObjectSet;
+  typedef std::unordered_set<uint64_t> Uint64Set;
 #else
   typedef std::set<const void*> ObjectSet;
+  typedef std::set<uint64_t> Uint64Set;
 #endif
 
-  ObjectSet mStoredPaths;
-  ObjectSet mStoredScaledFonts;
+  ObjectSet mStoredObjects;
+  Uint64Set mStoredFontData;
 };
 
 class DrawEventRecorderFile : public DrawEventRecorderPrivate
@@ -73,6 +82,45 @@ private:
   virtual void Flush();
 
   std::ofstream mOutputFile;
+};
+
+class DrawEventRecorderMemory final : public DrawEventRecorderPrivate
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderMemory)
+
+  /**
+   * Constructs a DrawEventRecorder that stores the recording in memory.
+   */
+  DrawEventRecorderMemory();
+
+  /**
+   * @return the current size of the recording (in chars).
+   */
+  size_t RecordingSize();
+
+  /**
+   * Copies at most aBufferLen chars of the recording into aBuffer.
+   *
+   * @param aBuffer buffer to receive the recording chars
+   * @param aBufferLen length of aBuffer
+   * @return true if copied successfully
+   */
+  bool CopyRecording(char* aBuffer, size_t aBufferLen);
+
+  /**
+   * Wipes the internal recording buffer, but the recorder does NOT forget which
+   * objects it has recorded. This can be used so that a recording can be copied
+   * and processed in chunks, releasing memory as it goes.
+   */
+  void WipeRecording();
+
+private:
+  ~DrawEventRecorderMemory() {};
+
+  void Flush() final;
+
+  std::stringstream mMemoryStream;
 };
 
 } // namespace gfx

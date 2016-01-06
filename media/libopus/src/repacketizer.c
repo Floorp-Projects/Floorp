@@ -219,8 +219,9 @@ opus_int32 opus_repacketizer_out_range_impl(OpusRepacketizer *rp, int begin, int
    }
    if (pad)
    {
-      for (i=ptr-data;i<maxlen;i++)
-         data[i] = 0;
+      /* Fill padding with zeros. */
+      while (ptr<data+maxlen)
+         *ptr++=0;
    }
    return tot_size;
 }

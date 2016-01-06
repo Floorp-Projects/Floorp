@@ -37,6 +37,11 @@
 #include "entdec.h"
 #include "modes.h"
 
+#if defined(MIPSr1_ASM)
+#include "mips/vq_mipsr1.h"
+#endif
+
+
 /** Algebraic pulse-vector quantiser. The signal x is replaced by the sum of
   * the pitch and a combination of pulses such that its norm is still equal
   * to 1. This is the function that will typically require the most CPU.
@@ -63,8 +68,8 @@ unsigned alg_quant(celt_norm *X, int N, int K, int spread, int B,
 unsigned alg_unquant(celt_norm *X, int N, int K, int spread, int B,
       ec_dec *dec, opus_val16 gain);
 
-void renormalise_vector(celt_norm *X, int N, opus_val16 gain);
+void renormalise_vector(celt_norm *X, int N, opus_val16 gain, int arch);
 
-int stereo_itheta(celt_norm *X, celt_norm *Y, int stereo, int N);
+int stereo_itheta(const celt_norm *X, const celt_norm *Y, int stereo, int N, int arch);
 
 #endif /* VQ_H */

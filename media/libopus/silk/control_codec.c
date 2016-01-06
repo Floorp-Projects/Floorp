@@ -397,9 +397,10 @@ static OPUS_INLINE opus_int silk_setup_LBRR(
     const opus_int32            TargetRate_bps      /* I                        */
 )
 {
-    opus_int   ret = SILK_NO_ERROR;
+    opus_int   LBRR_in_previous_packet, ret = SILK_NO_ERROR;
     opus_int32 LBRR_rate_thres_bps;
 
+    LBRR_in_previous_packet = psEncC->LBRR_enabled;
     psEncC->LBRR_enabled = 0;
     if( psEncC->useInBandFEC && psEncC->PacketLoss_perc > 0 ) {
         if( psEncC->fs_kHz == 8 ) {
@@ -413,8 +414,13 @@ static OPUS_INLINE opus_int silk_setup_LBRR(
 
         if( TargetRate_bps > LBRR_rate_thres_bps ) {
             /* Set gain increase for coding LBRR excitation */
+            if( LBRR_in_previous_packet == 0 ) {
+                /* Previous packet did not have LBRR, and was therefore coded at a higher bitrate */
+                psEncC->LBRR_GainIncreases = 7;
+            } else {
+                psEncC->LBRR_GainIncreases = silk_max_int( 7 - silk_SMULWB( (opus_int32)psEncC->PacketLoss_perc, SILK_FIX_CONST( 0.4, 16 ) ), 2 );
+            }
             psEncC->LBRR_enabled = 1;
-            psEncC->LBRR_GainIncreases = silk_max_int( 7 - silk_SMULWB( (opus_int32)psEncC->PacketLoss_perc, SILK_FIX_CONST( 0.4, 16 ) ), 2 );
         }
     }
 

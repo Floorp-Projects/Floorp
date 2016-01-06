@@ -222,4 +222,97 @@ AudioBlockPanStereoToStereo_NEON(const float aInputL[WEBAUDIO_BLOCK_SIZE],
     }
   }
 }
+
+void
+AudioBlockPanStereoToStereo_NEON(const float aInputL[WEBAUDIO_BLOCK_SIZE],
+                                 const float aInputR[WEBAUDIO_BLOCK_SIZE],
+                                 float aGainL[WEBAUDIO_BLOCK_SIZE],
+                                 float aGainR[WEBAUDIO_BLOCK_SIZE],
+                                 const bool aIsOnTheLeft[WEBAUDIO_BLOCK_SIZE],
+                                 float aOutputL[WEBAUDIO_BLOCK_SIZE],
+                                 float aOutputR[WEBAUDIO_BLOCK_SIZE])
+{
+  ASSERT_ALIGNED(aInputL);
+  ASSERT_ALIGNED(aInputR);
+  ASSERT_ALIGNED(aGainL);
+  ASSERT_ALIGNED(aGainR);
+  ASSERT_ALIGNED(aIsOnTheLeft);
+  ASSERT_ALIGNED(aOutputL);
+  ASSERT_ALIGNED(aOutputR);
+
+  float32x4_t vinL0, vinL1;
+  float32x4_t vinR0, vinR1;
+  float32x4_t voutL0, voutL1;
+  float32x4_t voutR0, voutR1;
+  float32x4_t vscaleL0, vscaleL1;
+  float32x4_t vscaleR0, vscaleR1;
+  float32x4_t onleft0, onleft1, notonleft0, notonleft1;
+
+  float32x4_t zero = {0, 0, 0, 0};
+  uint8x8_t isOnTheLeft;
+
+  for (uint32_t i = 0; i < WEBAUDIO_BLOCK_SIZE; i+=8) {
+    vinL0 = vld1q_f32(ADDRESS_OF(aInputL, i));
+    vinL1 = vld1q_f32(ADDRESS_OF(aInputL, i+4));
+
+    vinR0 = vld1q_f32(ADDRESS_OF(aInputR, i));
+    vinR1 = vld1q_f32(ADDRESS_OF(aInputR, i+4));
+
+    vscaleL0 = vld1q_f32(ADDRESS_OF(aGainL, i));
+    vscaleL1 = vld1q_f32(ADDRESS_OF(aGainL, i+4));
+
+    vscaleR0 = vld1q_f32(ADDRESS_OF(aGainR, i));
+    vscaleR1 = vld1q_f32(ADDRESS_OF(aGainR, i+4));
+
+    // Load output with boolean "on the left" values. This assumes that
+    // bools are stored as a single byte.
+    isOnTheLeft = vld1_u8((uint8_t *)&aIsOnTheLeft[i]);
+    voutL0 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 0), voutL0, 0);
+    voutL0 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 1), voutL0, 1);
+    voutL0 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 2), voutL0, 2);
+    voutL0 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 3), voutL0, 3);
+    voutL1 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 4), voutL1, 0);
+    voutL1 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 5), voutL1, 1);
+    voutL1 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 6), voutL1, 2);
+    voutL1 = vsetq_lane_f32(vget_lane_u8(isOnTheLeft, 7), voutL1, 3);
+
+    // Convert the boolean values into masks by setting all bits to 1
+    // if true.
+    voutL0 = (float32x4_t)vcgtq_f32(voutL0, zero);
+    voutL1 = (float32x4_t)vcgtq_f32(voutL1, zero);
+
+    // The right output masks are the same as the left masks
+    voutR0 = voutL0;
+    voutR1 = voutL1;
+
+    // Calculate left channel assuming isOnTheLeft
+    onleft0 = vmlaq_f32(vinL0, vinR0, vscaleL0);
+    onleft1 = vmlaq_f32(vinL1, vinR1, vscaleL0);
+
+    // Calculate left channel assuming not isOnTheLeft
+    notonleft0 = vmulq_f32(vinL0, vscaleL0);
+    notonleft1 = vmulq_f32(vinL1, vscaleL1);
+
+    // Write results using previously stored masks
+    voutL0 = vbslq_f32((uint32x4_t)voutL0, onleft0, notonleft0);
+    voutL1 = vbslq_f32((uint32x4_t)voutL1, onleft1, notonleft1);
+
+    // Calculate right channel assuming isOnTheLeft
+    onleft0 = vmulq_f32(vinR0, vscaleR0);
+    onleft1 = vmulq_f32(vinR1, vscaleR1);
+
+    // Calculate right channel assuming not isOnTheLeft
+    notonleft0 = vmlaq_f32(vinR0, vinL0, vscaleR0);
+    notonleft1 = vmlaq_f32(vinR1, vinL1, vscaleR1);
+
+    // Write results using previously stored masks
+    voutR0 = vbslq_f32((uint32x4_t)voutR0, onleft0, notonleft0);
+    voutR1 = vbslq_f32((uint32x4_t)voutR1, onleft1, notonleft1);
+
+    vst1q_f32(ADDRESS_OF(aOutputL, i), voutL0);
+    vst1q_f32(ADDRESS_OF(aOutputL, i+4), voutL1);
+    vst1q_f32(ADDRESS_OF(aOutputR, i), voutR0);
+    vst1q_f32(ADDRESS_OF(aOutputR, i+4), voutR1);
+  }
+}
 }

@@ -35,10 +35,8 @@ IdToObjectMap::init()
 void
 IdToObjectMap::trace(JSTracer* trc)
 {
-    for (Table::Range r(table_.all()); !r.empty(); r.popFront()) {
-        DebugOnly<JSObject*> prior = r.front().value().get();
-        JS_CallObjectTracer(trc, &r.front().value(), "ipc-object");
-    }
+    for (Table::Range r(table_.all()); !r.empty(); r.popFront())
+        JS::TraceEdge(trc, &r.front().value(), "ipc-object");
 }
 
 void

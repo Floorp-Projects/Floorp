@@ -26,6 +26,7 @@ function startup()
   gBrandBundle = document.getElementById("bundle_brand");
 
   document.documentElement.centerWindowOnScreen();
+  document.documentElement.getButton('accept').focus();
 }
 
 function acceptDialog()

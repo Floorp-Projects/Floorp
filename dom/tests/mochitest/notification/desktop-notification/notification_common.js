@@ -8,17 +8,23 @@ var registrar = SpecialPowers.wrap(SpecialPowers.Components).manager.
   QueryInterface(SpecialPowers.Ci.nsIComponentRegistrar);
 
 var mockAlertsService = {
+  showAlert: function(alert, alertListener) {
+    // probably should do this async....
+    SpecialPowers.wrap(alertListener).observe(null, "alertshow", alert.cookie);
+
+    if (SpecialPowers.getBoolPref("notification.prompt.testing.click_on_notification") == true) {
+       SpecialPowers.wrap(alertListener).observe(null, "alertclickcallback", alert.cookie);
+    }
+
+    SpecialPowers.wrap(alertListener).observe(null, "alertfinished", alert.cookie);
+  },
+
   showAlertNotification: function(imageUrl, title, text, textClickable,
                                   cookie, alertListener, name, bidi,
                                   lang, data) {
-    // probably should do this async....
-    SpecialPowers.wrap(alertListener).observe(null, "alertshow", cookie);
-
-    if (SpecialPowers.getBoolPref("notification.prompt.testing.click_on_notification") == true) {
-       SpecialPowers.wrap(alertListener).observe(null, "alertclickcallback", cookie);
-    }
-
-    SpecialPowers.wrap(alertListener).observe(null, "alertfinished", cookie);
+    return this.showAlert({
+      cookie: cookie
+    }, alertListener);
   },
 
   showAppNotification: function(imageUrl, title, text, alertListener, details) {

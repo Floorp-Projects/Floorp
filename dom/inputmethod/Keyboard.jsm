@@ -57,7 +57,7 @@ this.Keyboard = {
     'RemoveFocus',
     'SetSelectionRange', 'ReplaceSurroundingText', 'ShowInputMethodPicker',
     'SwitchToNextInputMethod', 'HideInputMethod',
-    'GetText', 'SendKey', 'GetContext',
+    'SendKey', 'GetContext',
     'SetComposition', 'EndComposition',
     'RegisterSync', 'Unregister'
   ],
@@ -162,8 +162,6 @@ this.Keyboard = {
     mm.addMessageListener('Forms:Focus', this);
     mm.addMessageListener('Forms:Blur', this);
     mm.addMessageListener('Forms:SelectionChange', this);
-    mm.addMessageListener('Forms:GetText:Result:OK', this);
-    mm.addMessageListener('Forms:GetText:Result:Error', this);
     mm.addMessageListener('Forms:SetSelectionRange:Result:OK', this);
     mm.addMessageListener('Forms:SetSelectionRange:Result:Error', this);
     mm.addMessageListener('Forms:ReplaceSurroundingText:Result:OK', this);
@@ -226,8 +224,6 @@ this.Keyboard = {
         this.handleBlur(msg);
         break;
       case 'Forms:SelectionChange':
-      case 'Forms:GetText:Result:OK':
-      case 'Forms:GetText:Result:Error':
       case 'Forms:SetSelectionRange:Result:OK':
       case 'Forms:ReplaceSurroundingText:Result:OK':
       case 'Forms:SendKey:Result:OK':
@@ -287,9 +283,6 @@ this.Keyboard = {
         break;
       case 'Keyboard:ShowInputMethodPicker':
         this.showInputMethodPicker();
-        break;
-      case 'Keyboard:GetText':
-        this.getText(msg);
         break;
       case 'Keyboard:SendKey':
         this.sendKey(msg);
@@ -421,10 +414,6 @@ this.Keyboard = {
     SystemAppProxy.dispatchEvent({
       type: "inputmethod-next"
     });
-  },
-
-  getText: function keyboardGetText(msg) {
-    this.sendToForm('Forms:GetText', msg.data);
   },
 
   sendKey: function keyboardSendKey(msg) {

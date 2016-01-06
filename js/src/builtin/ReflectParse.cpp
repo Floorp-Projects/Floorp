@@ -3745,7 +3745,8 @@ reflect_parse(JSContext* cx, uint32_t argc, Value* vp)
         if (!module)
             return false;
 
-        pn = parser.standaloneModule(module);
+        ModuleBuilder builder(cx, module);
+        pn = parser.standaloneModule(module, builder);
         if (!pn)
             return false;
 

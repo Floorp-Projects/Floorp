@@ -51,9 +51,9 @@ public:
   BlobChild* GetOrCreateActorForBlob(Blob* aBlob);
   BlobChild* GetOrCreateActorForBlobImpl(BlobImpl* aImpl);
 
-  virtual PBlobChild* SendPBlobConstructor(
-    PBlobChild* aActor,
-    const BlobConstructorParams& aParams) = 0;
+  virtual PBlobChild*
+  SendPBlobConstructor(PBlobChild* aActor,
+                       const BlobConstructorParams& aParams) = 0;
 
   virtual bool
   SendPBrowserConstructor(PBrowserChild* aActor,
