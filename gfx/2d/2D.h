@@ -42,6 +42,9 @@ struct ID3D11Texture2D;
 struct ID3D11Device;
 struct ID2D1Device;
 struct IDWriteRenderingParams;
+struct IDWriteFont;
+struct IDWriteFontFamily;
+struct IDWriteFontFace;
 
 class GrContext;
 
@@ -1370,6 +1373,12 @@ public:
   static uint64_t GetD2DVRAMUsageDrawTarget();
   static uint64_t GetD2DVRAMUsageSourceSurface();
   static void D2DCleanup();
+
+  static already_AddRefed<ScaledFont>
+    CreateScaledFontForDWriteFont(IDWriteFont* aFont,
+                                  IDWriteFontFamily* aFontFamily,
+                                  IDWriteFontFace* aFontFace,
+                                  Float aSize);
 
 private:
   static ID2D1Device *mD2D1Device;

@@ -57,6 +57,7 @@ public:
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;
 
+    already_AddRefed<IDWriteFont> GetDefaultFont();
 protected:
     /** This font family's directwrite fontfamily object */
     RefPtr<IDWriteFontFamily> mDWFamily;
@@ -164,6 +165,10 @@ public:
                                         FontListSizes* aSizes) const;
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                         FontListSizes* aSizes) const;
+
+    IDWriteFont* GetFont() {
+      return mFont;
+    }
 
 protected:
     friend class gfxDWriteFont;
