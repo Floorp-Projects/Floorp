@@ -366,8 +366,6 @@ this.LoginManagerStorage_json.prototype = {
 
   /**
    * Removes all logins from storage.
-   *
-   * Disabled hosts are kept, as one presumably doesn't want to erase those.
    */
   removeAllLogins() {
     this._store.ensureDataReady();
