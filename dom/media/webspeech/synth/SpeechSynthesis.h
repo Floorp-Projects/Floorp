@@ -8,9 +8,11 @@
 #define mozilla_dom_SpeechSynthesis_h
 
 #include "nsCOMPtr.h"
-#include "nsString.h"
-#include "nsWrapperCache.h"
+#include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"
+#include "nsString.h"
+#include "nsWeakReference.h"
+#include "nsWrapperCache.h"
 #include "js/TypeDecls.h"
 
 #include "SpeechSynthesisUtterance.h"
@@ -23,14 +25,17 @@ namespace dom {
 
 class nsSpeechTask;
 
-class SpeechSynthesis final : public nsISupports,
-                              public nsWrapperCache
+class SpeechSynthesis final : public nsIObserver
+                            , public nsWrapperCache
+                            , public nsSupportsWeakReference
 {
 public:
   explicit SpeechSynthesis(nsPIDOMWindow* aParent);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(SpeechSynthesis)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(SpeechSynthesis,
+                                                         nsIObserver)
+  NS_DECL_NSIOBSERVER
 
   nsIDOMWindow* GetParentObject() const;
 
@@ -41,6 +46,8 @@ public:
   bool Speaking() const;
 
   bool Paused() const;
+
+  bool HasEmptyQueue() const;
 
   void Speak(SpeechSynthesisUtterance& aUtterance);
 
@@ -70,6 +77,8 @@ private:
   nsRefPtrHashtable<nsStringHashKey, SpeechSynthesisVoice> mVoiceCache;
 
   bool mHoldQueue;
+
+  uint64_t mInnerID;
 };
 
 } // namespace dom
