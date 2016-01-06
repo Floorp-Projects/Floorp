@@ -9,7 +9,7 @@
 
 const TEST_URI = TEST_URL_ROOT + "doc_media_queries.html";
 
-var {PropertyView} = require("devtools/client/styleinspector/computed-view");
+var {PropertyView} = require("devtools/client/inspector/computed/computed");
 var {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 
 add_task(function*() {
