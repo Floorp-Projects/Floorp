@@ -143,13 +143,23 @@ EffectSet::GetEffectSetPropertyAtom(nsCSSPseudoElements::Type aPseudoType)
 void
 EffectSet::AddEffect(dom::KeyframeEffectReadOnly& aEffect)
 {
+  if (mEffects.Contains(&aEffect)) {
+    return;
+  }
+
   mEffects.PutEntry(&aEffect);
+  MarkCascadeNeedsUpdate();
 }
 
 void
 EffectSet::RemoveEffect(dom::KeyframeEffectReadOnly& aEffect)
 {
+  if (!mEffects.Contains(&aEffect)) {
+    return;
+  }
+
   mEffects.RemoveEntry(&aEffect);
+  MarkCascadeNeedsUpdate();
 }
 
 } // namespace mozilla
