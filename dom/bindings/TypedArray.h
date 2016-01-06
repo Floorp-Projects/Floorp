@@ -45,10 +45,10 @@ public:
   inline void TraceSelf(JSTracer* trc)
   {
     if (mTypedObj) {
-      JS::UnsafeTraceRoot(trc, &mTypedObj, "TypedArray.mTypedObj");
+      JS_CallUnbarrieredObjectTracer(trc, &mTypedObj, "TypedArray.mTypedObj");
     }
     if (mWrappedObj) {
-      JS::UnsafeTraceRoot(trc, &mTypedObj, "TypedArray.mWrappedObj");
+      JS_CallUnbarrieredObjectTracer(trc, &mTypedObj, "TypedArray.mWrappedObj");
     }
   }
 
