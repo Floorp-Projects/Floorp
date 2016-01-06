@@ -362,7 +362,7 @@ InspectorPanel.prototype = {
 
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") && this.canGetUsedFontFaces) {
       this.sidebar.addTab("fontinspector",
-                          "chrome://devtools/content/fontinspector/font-inspector.xhtml",
+                          "chrome://devtools/content/inspector/fonts/fonts.xhtml",
                           "fontinspector" == defaultTab);
     }
 
