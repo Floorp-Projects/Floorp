@@ -29,7 +29,11 @@ var props = {
   mgmt: "object",
 };
 
-isDeeply([p for (p in navigator.mozApps)].sort(), Object.keys(props).sort(),
+var apps = [];
+for (let p in navigator.mozApps) {
+  apps.push(p);
+}
+isDeeply(apps.sort(), Object.keys(props).sort(),
          "navigator.mozApps has only the expected properties");
 
 for (var p in props) {
@@ -56,7 +60,12 @@ var mgmtProps = {
   setEnabled: "function"
 };
 
-isDeeply([p for (p in navigator.mozApps.mgmt)].sort(),
+var mgmts = [];
+for (let p in navigator.mozApps.mgmt) {
+  mgmts.push(p);
+}
+
+isDeeply(mgmts.sort(),
          Object.keys(mgmtProps).sort(),
          "navigator.mozApps.mgmt has only the expected properties");
 

@@ -70,10 +70,10 @@ function installAppFromOtherOrigin(next) {
 
 function getInstalled(next) {
   navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
-    var app1 = [a for (a of this.result) if (a.manifestURL == url1)][0];
+    var app1 = Array.from(this.result).filter((a) => a.manifestURL == url1)[0];
     ok(app1, "getInstalled() includes app installed from own origin");
 
-    var app2 = [a for (a of this.result) if (a.manifestURL == url2)][0];
+    var app2 = Array.from(this.result).filter((a) => a.manifestURL == url2)[0];
     ok(!app2, "getInstalled() excludes app installed from other origin");
 
     next();
@@ -82,10 +82,10 @@ function getInstalled(next) {
 
 function getAll(next) {
   navigator.mozApps.mgmt.getAll().onsuccess = function onMgmtGetAll() {
-    var app1 = [a for (a of this.result) if (a.manifestURL == url1)][0];
+    var app1 = Array.from(this.result).filter((a) => a.manifestURL == url1)[0];
     ok(app1, "mgmt.getAll() includes app installed from own origin");
 
-    var app2 = [a for (a of this.result) if (a.manifestURL == url2)][0];
+    var app2 = Array.from(this.result).filter((a) => a.manifestURL == url2)[0];
     ok(app2, "mgmt.getAll() includes app installed from other origin");
 
     next();

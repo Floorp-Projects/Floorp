@@ -27,7 +27,7 @@ this.TestingUtils = {
     }
 
     let ret = {};
-    let props = [p for (p in thing)];
+    let props = Object.keys(thing);
 
     if (!noSort) {
       props = props.sort();

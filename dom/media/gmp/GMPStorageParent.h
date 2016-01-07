@@ -54,6 +54,7 @@ private:
 
   const nsCString mNodeId;
   RefPtr<GMPParent> mPlugin;
+  // True after Shutdown(), or if Init() has not completed successfully.
   bool mShutdown;
 };
 

@@ -296,9 +296,26 @@ MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
     bool derived = op == JSOP_DERIVEDCONSTRUCTOR;
     MOZ_ASSERT(derived == !!proto);
 
+    PropertyName* lookup = derived ? cx->names().DefaultDerivedClassConstructor
+                                   : cx->names().DefaultBaseClassConstructor;
+
+    RootedPropertyName selfHostedName(cx, lookup);
     RootedAtom name(cx, atom == cx->names().empty ? nullptr : atom);
-    JSNative native = derived ? DefaultDerivedClassConstructor : DefaultClassConstructor;
-    return NewFunctionWithProto(cx, native, 0, JSFunction::NATIVE_CLASS_CTOR, nullptr, name, proto);
+
+    RootedFunction ctor(cx);
+    if (!cx->runtime()->createLazySelfHostedFunctionClone(cx, selfHostedName, name,
+                                                          /* nargs = */ !!derived,
+                                                          proto, TenuredObject, &ctor))
+    {
+        return nullptr;
+    }
+
+    ctor->setIsConstructor();
+    ctor->setIsClassConstructor();
+
+    MOZ_ASSERT(ctor->infallibleIsDefaultClassConstructor(cx));
+
+    return ctor;
 }
 
 bool
@@ -4795,50 +4812,6 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
     }
 
     ReportRuntimeLexicalError(cx, errorNumber, name);
-}
-
-bool
-js::DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
-        return false;
-    }
-
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    JSObject* obj = CreateThis(cx, &PlainObject::class_, newTarget);
-    if (!obj)
-        return false;
-
-    args.rval().set(ObjectValue(*obj));
-    return true;
-}
-
-bool
-js::DefaultDerivedClassConstructor(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.isConstructing()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CALL_CLASS_CONSTRUCTOR);
-        return false;
-    }
-
-    RootedObject fun(cx, &args.callee());
-    RootedObject superFun(cx);
-    if (!GetPrototype(cx, fun, &superFun))
-        return false;
-
-    RootedValue fval(cx, ObjectOrNullValue(superFun));
-    if (!IsConstructor(fval)) {
-        ReportValueError(cx, JSMSG_NOT_CONSTRUCTOR, JSDVG_IGNORE_STACK, fval, nullptr);
-        return false;
-    }
-
-    ConstructArgs constArgs(cx);
-    if (!FillArgumentsFromArraylike(cx, constArgs, args))
-        return false;
-    return Construct(cx, fval, constArgs, args.newTarget(), args.rval());
 }
 
 void

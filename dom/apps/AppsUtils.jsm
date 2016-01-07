@@ -787,7 +787,7 @@ this.AppsUtils = {
     }
 
     // Convert the binary hash data to a hex string.
-    return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
   },
 
   // Returns the hash for a JS object.

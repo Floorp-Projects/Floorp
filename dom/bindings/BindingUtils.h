@@ -61,36 +61,13 @@ UnwrapArg(JS::Handle<JSObject*> src, Interface** ppArg)
                        reinterpret_cast<void**>(ppArg));
 }
 
-inline const ErrNum
-GetInvalidThisErrorForMethod(bool aSecurityError)
-{
-  return aSecurityError ? MSG_METHOD_THIS_UNWRAPPING_DENIED :
-                          MSG_METHOD_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
-}
-
-inline const ErrNum
-GetInvalidThisErrorForGetter(bool aSecurityError)
-{
-  return aSecurityError ? MSG_GETTER_THIS_UNWRAPPING_DENIED :
-                          MSG_GETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
-}
-
-inline const ErrNum
-GetInvalidThisErrorForSetter(bool aSecurityError)
-{
-  return aSecurityError ? MSG_SETTER_THIS_UNWRAPPING_DENIED :
-                          MSG_SETTER_THIS_DOES_NOT_IMPLEMENT_INTERFACE;
-}
+bool
+ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
+                 bool aSecurityError, const char* aInterfaceName);
 
 bool
 ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                 const ErrNum aErrorNumber,
-                 const char* aInterfaceName);
-
-bool
-ThrowInvalidThis(JSContext* aCx, const JS::CallArgs& aArgs,
-                 const ErrNum aErrorNumber,
-                 prototypes::ID aProtoId);
+                 bool aSecurityError, prototypes::ID aProtoId);
 
 // Returns true if the JSClass is used for DOM objects.
 inline bool

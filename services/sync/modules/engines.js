@@ -484,7 +484,11 @@ EngineManager.prototype = {
   },
 
   getAll: function () {
-    return [engine for ([name, engine] in Iterator(this._engines))];
+    let engines = [];
+    for (let [name, engine] in Iterator(this._engines)) {
+      engines.push(engine);
+    }
+    return engines;
   },
 
   /**

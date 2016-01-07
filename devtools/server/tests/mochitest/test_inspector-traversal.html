@@ -328,7 +328,7 @@ addTest(function testReleaseWalker() {
   checkActorIDs.push(gWalker.actorID);
 
   promiseDone(gWalker.release().then(() => {
-    let promises = [checkMissing(gClient, id) for (id of checkActorIDs)];
+    let promises = Array.from(checkActorIDs, (id) => checkMissing(gClient, id));
     return promise.all(promises)
   }).then(runNextTest));
 });

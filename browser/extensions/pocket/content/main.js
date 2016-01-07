@@ -197,7 +197,7 @@ var pktUI = (function() {
                 // Send error message for invalid url
                 if (!isValidURL) {
                     // TODO: Pass key for localized error in error object
-                    var error = {
+                    let error = {
                         message: 'Only links can be saved',
                         localizedKey: "onlylinkssaved"
                     };
@@ -208,7 +208,7 @@ var pktUI = (function() {
                 // Check online state
                 if (!navigator.onLine) {
                     // TODO: Pass key for localized error in error object
-                    var error = {
+                    let error = {
                         message: 'You must be connected to the Internet in order to save to Pocket. Please connect to the Internet and try again.'
                     };
                     pktUIMessaging.sendErrorMessageToPanel(panelId, saveLinkMessageId, error);

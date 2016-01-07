@@ -63,5 +63,10 @@ var gCSSFontFaceDescriptors = {
 		domProp: null,
 		values: [ "U+0-10FFFF", "U+3-7B3", "U+3??", "U+6A", "U+3????", "U+???", "U+302-302", "U+0-7,U+A-C", "U+100-17F,U+200-17F", "U+3??, U+500-513 ,U+612 , U+4????", "U+1FFF,U+200-27F" ],
 		invalid_values: [ "U+1????-2????", "U+0-7,A-C", "U+100-17F,200-17F", "U+6A!important", "U+6A)" ]
+	},
+	"font-display": {
+		domProp: null,
+		values: [ "auto", "block", "swap", "fallback", "optional" ],
+		invalid_values: [ "normal", "initial" ]
 	}
 }

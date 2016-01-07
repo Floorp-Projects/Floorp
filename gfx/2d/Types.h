@@ -143,7 +143,6 @@ enum class FontType : int8_t {
 
 enum class NativeSurfaceType : int8_t {
   D3D10_TEXTURE,
-  CAIRO_SURFACE,
   CAIRO_CONTEXT,
   CGCONTEXT,
   CGCONTEXT_ACCELERATED,

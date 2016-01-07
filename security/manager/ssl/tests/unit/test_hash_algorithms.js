@@ -60,7 +60,7 @@ function hexdigest(data) {
    * The array comprehension just creates an array whose elements are these
    * two-character strings.
    */
-  return [("0" + data.charCodeAt(i).toString(16)).slice(-2) for (i in data)].join("");
+  return Array.from(data, (c, i) => ("0" + data.charCodeAt(i).toString(16)).slice(-2)).join("");
 }
 
 function doHash(algo, value, cmp) {

@@ -446,7 +446,10 @@ AllocationIntegrityState::dump()
     // were discovered.
 
     Vector<IntegrityItem, 20, SystemAllocPolicy> seenOrdered;
-    seenOrdered.appendN(IntegrityItem(), seen.count());
+    if (!seenOrdered.appendN(IntegrityItem(), seen.count())) {
+        fprintf(stderr, "OOM while dumping allocations\n");
+        return;
+    }
 
     for (IntegrityItemSet::Enum iter(seen); !iter.empty(); iter.popFront()) {
         IntegrityItem item = iter.front();

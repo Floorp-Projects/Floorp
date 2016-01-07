@@ -112,6 +112,10 @@ function IsMacOSSnowLeopardOrLater() {
   return major == 10 && minor >= 6;
 }
 
+function IsLinux() {
+  return navigator.userAgent.indexOf("Linux") != -1;
+}
+
 function getPref(name) {
   var pref = false;
   try {
@@ -128,14 +132,14 @@ var haveMp4 = (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
               IsMacOSSnowLeopardOrLater() ||
               IsJellyBeanOrLater() ||
               getPref("media.omx.enabled") ||
-              getPref("media.ffmpeg.enabled");
+              (IsLinux() && getPref("media.ffmpeg.enabled"));
 
 check_mp4(document.getElementById('v'), haveMp4);
 
 var haveMp3 = getPref("media.directshow.enabled") ||
               (getPref("media.wmf.enabled") && IsWindowsVistaOrLater()) ||
               (IsJellyBeanOrLater() && getPref("media.android-media-codec.enabled")) ||
-              getPref("media.ffmpeg.enabled") ||
+              (IsLinux() && getPref("media.ffmpeg.enabled")) ||
               getPref("media.apple.mp3.enabled");
 check_mp3(document.getElementById('v'), haveMp3);
 

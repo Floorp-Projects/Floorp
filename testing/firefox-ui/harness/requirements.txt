@@ -8,7 +8,7 @@ mozinstall >= 1.12
 # to avoid installations of those packages from pypi.
 
 # Necessary because of the testcase classes
-# firefox_puppeteer == 3.0.0
+# firefox-puppeteer == 3.1.0
 
 # Necessary because of server-root, and manifest files
-# firefox_ui_tests
+# firefox-ui-tests

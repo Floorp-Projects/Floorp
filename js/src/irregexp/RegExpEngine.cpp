@@ -1116,9 +1116,7 @@ ChoiceNode::FilterASCII(int depth, bool ignore_case, bool unicode)
             alternatives()[i].node()->FilterASCII(depth - 1, ignore_case, unicode);
         if (replacement != nullptr) {
             alternatives()[i].set_node(replacement);
-            AutoEnterOOMUnsafeRegion oomUnsafe;
-            if (!new_alternatives.append(alternatives()[i]))
-                oomUnsafe.crash("ChoiceNode::FilterASCII");
+            new_alternatives.append(alternatives()[i]);
         }
     }
 
@@ -3249,7 +3247,7 @@ EmitDoubleBoundaryTest(RegExpMacroAssembler* masm,
     }
 }
 
-typedef Vector<int, 4, LifoAllocPolicy<Infallible> > RangeBoundaryVector;
+typedef InfallibleVector<int, 4> RangeBoundaryVector;
 
 // even_label is for ranges[i] to ranges[i + 1] where i - start_index is even.
 // odd_label is for ranges[i] to ranges[i + 1] where i - start_index is odd.
@@ -4234,15 +4232,15 @@ class AlternativeGenerationList
     AlternativeGenerationList(LifoAlloc* alloc, size_t count)
       : alt_gens_(*alloc)
     {
-        AutoEnterOOMUnsafeRegion oomUnsafe;
         alt_gens_.reserve(count);
         for (size_t i = 0; i < count && i < kAFew; i++)
-            alt_gens_.infallibleAppend(a_few_alt_gens_ + i);
+            alt_gens_.append(a_few_alt_gens_ + i);
         for (size_t i = kAFew; i < count; i++) {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
             AlternativeGeneration* gen = js_new<AlternativeGeneration>();
             if (!gen)
                 oomUnsafe.crash("AlternativeGenerationList js_new");
-            alt_gens_.infallibleAppend(gen);
+            alt_gens_.append(gen);
         }
     }
 
@@ -4259,7 +4257,7 @@ class AlternativeGenerationList
 
   private:
     static const size_t kAFew = 10;
-    Vector<AlternativeGeneration*, 1, LifoAllocPolicy<Infallible> > alt_gens_;
+    InfallibleVector<AlternativeGeneration*, 1> alt_gens_;
     AlternativeGeneration a_few_alt_gens_[kAFew];
 };
 

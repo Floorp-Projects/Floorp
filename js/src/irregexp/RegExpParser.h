@@ -60,7 +60,7 @@ template <typename T, int initial_size>
 class BufferedVector
 {
   public:
-    typedef Vector<T*, 1, LifoAllocPolicy<Infallible> > VectorType;
+    typedef InfallibleVector<T*, 1> VectorType;
 
     BufferedVector() : list_(nullptr), last_(nullptr) {}
 

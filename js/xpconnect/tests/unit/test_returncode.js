@@ -8,7 +8,7 @@ Cu.import("resource:///modules/XPCOMUtils.jsm");
 
 function getConsoleMessages() {
   let consoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
-  let messages = [m.toString() for (m of consoleService.getMessageArray())];
+  let messages = consoleService.getMessageArray().map((m) => m.toString());
   // reset ready for the next call.
   consoleService.reset();
   return messages;

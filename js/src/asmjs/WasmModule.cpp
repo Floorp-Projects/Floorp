@@ -640,28 +640,35 @@ Module::sendCodeRangesToProfiler(JSContext* cx)
 #endif
 }
 
-void
-Module::setProfilingEnabled(bool enabled, JSContext* cx)
+bool
+Module::setProfilingEnabled(JSContext* cx, bool enabled)
 {
     MOZ_ASSERT(dynamicallyLinked_);
     MOZ_ASSERT(!activation());
 
     if (profilingEnabled_ == enabled)
-        return;
+        return true;
 
     // When enabled, generate profiling labels for every name in funcNames_
     // that is the name of some Function CodeRange. This involves malloc() so
     // do it now since, once we start sampling, we'll be in a signal-handing
     // context where we cannot malloc.
     if (enabled) {
-        funcLabels_.resize(funcNames_.length());
+        if (!funcLabels_.resize(funcNames_.length())) {
+            ReportOutOfMemory(cx);
+            return false;
+        }
         for (const CodeRange& codeRange : codeRanges_) {
             if (!codeRange.isFunction())
                 continue;
             unsigned lineno = codeRange.funcLineNumber();
             const char* name = funcNames_[codeRange.funcNameIndex()].get();
-            funcLabels_[codeRange.funcNameIndex()] =
-                UniqueChars(JS_smprintf("%s (%s:%u)", name, filename_.get(), lineno));
+            UniqueChars label(JS_smprintf("%s (%s:%u)", name, filename_.get(), lineno));
+            if (!label) {
+                ReportOutOfMemory(cx);
+                return false;
+            }
+            funcLabels_[codeRange.funcNameIndex()] = Move(label);
         }
     } else {
         funcLabels_.clear();
@@ -693,6 +700,7 @@ Module::setProfilingEnabled(bool enabled, JSContext* cx)
     }
 
     profilingEnabled_ = enabled;
+    return true;
 }
 
 Module::ImportExit&
@@ -1052,8 +1060,10 @@ Module::callExport(JSContext* cx, uint32_t exportIndex, CallArgs args)
     // profiling state. Don't do this if the Module is already active on the
     // stack since this would leave the Module in a state where profiling is
     // enabled but the stack isn't unwindable.
-    if (profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !activation())
-        setProfilingEnabled(cx->runtime()->spsProfiler.enabled(), cx);
+    if (profilingEnabled() != cx->runtime()->spsProfiler.enabled() && !activation()) {
+        if (!setProfilingEnabled(cx, cx->runtime()->spsProfiler.enabled()))
+            return false;
+    }
 
     // The calling convention for an external call into wasm is to pass an
     // array of 16-byte values where each value contains either a coerced int32

@@ -530,9 +530,12 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
     DrawingMethod method;
     Matrix dtTransform = drawTarget->GetTransform();
     gfxPoint deviceTranslation = gfxPoint(dtTransform._31, dtTransform._32);
-    cairo_surface_t* cairoTarget = static_cast<cairo_surface_t*>
-            (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_SURFACE));
+    cairo_t* cairo = static_cast<cairo_t*>
+        (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
+    if (!cairo)
+        return;
 
+    cairo_surface_t* cairoTarget = cairo_get_group_target(cairo);
     cairo_surface_t* tempXlibSurface =
         CreateTempXlibSurface(cairoTarget, drawTarget, size,
                               canDrawOverBackground, flags, screen, visual,
@@ -573,7 +576,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
         if (drawTarget) {
             NativeSurface native;
             native.mFormat = moz2DFormat;
-            native.mType = NativeSurfaceType::CAIRO_SURFACE;
+            native.mType = NativeSurfaceType::CAIRO_CONTEXT;
             native.mSurface = tempXlibSurface;
             native.mSize = size;
             RefPtr<SourceSurface> sourceSurface =
@@ -615,7 +618,7 @@ gfxXlibNativeRenderer::Draw(gfxContext* ctx, IntSize size,
         if (drawTarget) {
             NativeSurface native;
             native.mFormat = moz2DFormat;
-            native.mType = NativeSurfaceType::CAIRO_SURFACE;
+            native.mType = NativeSurfaceType::CAIRO_CONTEXT;
             native.mSurface = paintSurface->CairoSurface();
             native.mSize = size;
             RefPtr<SourceSurface> sourceSurface =

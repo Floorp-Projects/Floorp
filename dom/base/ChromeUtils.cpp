@@ -70,5 +70,23 @@ ChromeUtils::OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
   return pattern.Matches(attrs);
 }
 
+/* static */ void
+ChromeUtils::CreateOriginAttributesWithUserContextId(dom::GlobalObject& aGlobal,
+                                                     const nsAString& aOrigin,
+                                                     uint32_t aUserContextId,
+                                                     dom::OriginAttributesDictionary& aAttrs,
+                                                     ErrorResult& aRv)
+{
+  GenericOriginAttributes attrs;
+  nsAutoCString suffix;
+  if (!attrs.PopulateFromOrigin(NS_ConvertUTF16toUTF8(aOrigin), suffix)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
+  attrs.mUserContextId = aUserContextId;
+  aAttrs = attrs;
+}
+
 } // namespace dom
 } // namespace mozilla

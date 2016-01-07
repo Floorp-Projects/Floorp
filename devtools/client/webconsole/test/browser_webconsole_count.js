@@ -16,9 +16,7 @@ function test() {
     const {tab} = yield loadTab(TEST_URI);
     const hud = yield openConsole(tab);
 
-    let button = content.document.querySelector("#local");
-    ok(button, "we have the local-tests button");
-    EventUtils.sendMouseEvent({ type: "click" }, button, content);
+    BrowserTestUtils.synthesizeMouseAtCenter("#local", {}, gBrowser.selectedBrowser);
     let messages = [];
     [
       "start",
@@ -49,9 +47,7 @@ function test() {
 
     hud.jsterm.clearOutput();
 
-    button = content.document.querySelector("#external");
-    ok(button, "we have the external-tests button");
-    EventUtils.sendMouseEvent({ type: "click" }, button, content);
+    BrowserTestUtils.synthesizeMouseAtCenter("#external", {}, gBrowser.selectedBrowser);
     messages = [];
     [
       "start",

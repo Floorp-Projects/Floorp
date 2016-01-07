@@ -40,17 +40,17 @@ skip-if(B2G||Mulet) == border-collapse-table-column.html border-collapse-table-c
 skip-if(B2G||Mulet) == border-collapse-table-row-group.html border-collapse-table-row-group-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == border-collapse-table-row.html border-collapse-table-row-ref.html
 == border-collapse-table.html border-collapse-table-ref.html
-skip-if(B2G||Mulet) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,1083) == border-collapse-opacity-table-cell.html border-collapse-opacity-table-cell-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 fails == border-collapse-opacity-table-column-group.html border-collapse-opacity-table-column-group-ref.html # bug 424274
 fails == border-collapse-opacity-table-column.html border-collapse-opacity-table-column-ref.html # bug 424274
-skip-if(B2G||Mulet) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,16359) == border-collapse-opacity-table-row-group.html border-collapse-opacity-table-row-group-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,5453) == border-collapse-opacity-table-row.html border-collapse-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,29973) == border-collapse-opacity-table.html border-collapse-opacity-table-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,2478) == border-separate-opacity-table-cell.html border-separate-opacity-table-cell-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 fails == border-separate-opacity-table-column-group.html border-separate-opacity-table-column-group-ref.html # bug 424274
 fails == border-separate-opacity-table-column.html border-separate-opacity-table-column-ref.html # bug 424274
-== border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
-skip-if(B2G||Mulet) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+fuzzy-if(d2d,1,37170) == border-separate-opacity-table-row-group.html border-separate-opacity-table-row-group-ref.html
+skip-if(B2G||Mulet) fuzzy-if(d2d,1,12390) == border-separate-opacity-table-row.html border-separate-opacity-table-row-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == border-separate-opacity-table.html border-separate-opacity-table-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 != scrollable-rowgroup-collapse-background.html scrollable-rowgroup-collapse-notref.html 
 != scrollable-rowgroup-collapse-border.html scrollable-rowgroup-collapse-notref.html     

@@ -514,26 +514,27 @@ ClientLayerManager::MakeSnapshotIfRequired()
       if (!bounds.IsEmpty() &&
           mForwarder->AllocSurfaceDescriptor(bounds.Size(),
                                              gfxContentType::COLOR_ALPHA,
-                                             &inSnapshot) &&
-          remoteRenderer->SendMakeSnapshot(inSnapshot, bounds)) {
-        RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
-        DrawTarget* dt = mShadowTarget->GetDrawTarget();
+                                             &inSnapshot)) {
+        if (remoteRenderer->SendMakeSnapshot(inSnapshot, bounds)) {
+          RefPtr<DataSourceSurface> surf = GetSurfaceForDescriptor(inSnapshot);
+          DrawTarget* dt = mShadowTarget->GetDrawTarget();
 
-        Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);
-        Rect srcRect(0, 0, bounds.width, bounds.height);
+          Rect dstRect(bounds.x, bounds.y, bounds.width, bounds.height);
+          Rect srcRect(0, 0, bounds.width, bounds.height);
 
-        gfx::Matrix rotate =
-          ComputeTransformForUnRotation(outerBounds.ToUnknownRect(),
-                                        mTargetRotation);
+          gfx::Matrix rotate =
+            ComputeTransformForUnRotation(outerBounds.ToUnknownRect(),
+                                          mTargetRotation);
 
-        gfx::Matrix oldMatrix = dt->GetTransform();
-        dt->SetTransform(rotate * oldMatrix);
-        dt->DrawSurface(surf, dstRect, srcRect,
-                        DrawSurfaceOptions(),
-                        DrawOptions(1.0f, CompositionOp::OP_OVER));
-        dt->SetTransform(oldMatrix);
+          gfx::Matrix oldMatrix = dt->GetTransform();
+          dt->SetTransform(rotate * oldMatrix);
+          dt->DrawSurface(surf, dstRect, srcRect,
+                          DrawSurfaceOptions(),
+                          DrawOptions(1.0f, CompositionOp::OP_OVER));
+          dt->SetTransform(oldMatrix);
+        }
+        mForwarder->DestroySharedSurface(&inSnapshot);
       }
-      mForwarder->DestroySharedSurface(&inSnapshot);
     }
   }
   mShadowTarget = nullptr;

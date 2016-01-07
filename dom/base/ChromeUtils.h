@@ -57,6 +57,13 @@ public:
   OriginAttributesMatchPattern(dom::GlobalObject& aGlobal,
                                const dom::OriginAttributesDictionary& aAttrs,
                                const dom::OriginAttributesPatternDictionary& aPattern);
+
+  static void
+  CreateOriginAttributesWithUserContextId(dom::GlobalObject& aGlobal,
+                                          const nsAString& aOrigin,
+                                          uint32_t aUserContextId,
+                                          dom::OriginAttributesDictionary& aAttrs,
+                                          ErrorResult& aRv);
 };
 
 } // namespace dom

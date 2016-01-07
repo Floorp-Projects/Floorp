@@ -221,7 +221,7 @@ protected:
 class TextureSourceD3D11
 {
 public:
-  TextureSourceD3D11() {}
+  TextureSourceD3D11() : mFormatOverride(DXGI_FORMAT_UNKNOWN) {}
   virtual ~TextureSourceD3D11() {}
 
   virtual ID3D11Texture2D* GetD3D11Texture() const { return mTexture; }
@@ -232,6 +232,7 @@ protected:
   gfx::IntSize mSize;
   RefPtr<ID3D11Texture2D> mTexture;
   RefPtr<ID3D11ShaderResourceView> mSRV;
+  DXGI_FORMAT mFormatOverride;
 };
 
 /**
@@ -404,7 +405,8 @@ class CompositingRenderTargetD3D11 : public CompositingRenderTarget,
 {
 public:
   CompositingRenderTargetD3D11(ID3D11Texture2D* aTexture,
-                               const gfx::IntPoint& aOrigin);
+                               const gfx::IntPoint& aOrigin,
+                               DXGI_FORMAT aFormatOverride = DXGI_FORMAT_UNKNOWN);
 
   virtual TextureSourceD3D11* AsSourceD3D11() override { return this; }
 

@@ -1249,11 +1249,6 @@
     "kind": "boolean",
     "description": "Whether a HTTP transaction routed via Alt-Svc was scheme=http"
   },
-  "HTTP_WAP_CONTENT_TYPE_RECEIVED": {
-    "expires_in_version": "45",
-    "kind": "boolean",
-    "description": "Whether a WAP content type response is served to the browser."
-  },
   "HTTP_SCHEME_UPGRADE": {
     "expires_in_version": "never",
     "kind": "enumerated",

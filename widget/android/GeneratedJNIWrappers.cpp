@@ -121,9 +121,9 @@ auto GeckoAppShell::CreateMessageCursorWrapper(int64_t a0, int64_t a1, mozilla::
 constexpr char GeckoAppShell::CreateShortcut_t::name[];
 constexpr char GeckoAppShell::CreateShortcut_t::signature[];
 
-auto GeckoAppShell::CreateShortcut(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1, mozilla::jni::String::Param a2) -> void
+auto GeckoAppShell::CreateShortcut(mozilla::jni::String::Param a0, mozilla::jni::String::Param a1) -> void
 {
-    return mozilla::jni::Method<CreateShortcut_t>::Call(nullptr, nullptr, a0, a1, a2);
+    return mozilla::jni::Method<CreateShortcut_t>::Call(nullptr, nullptr, a0, a1);
 }
 
 constexpr char GeckoAppShell::CreateThreadCursorWrapper_t::name[];
@@ -763,14 +763,6 @@ auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1,
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(this, nullptr, a0, a1, a2, a3);
 }
 
-constexpr char GeckoEditable::OnDestroy_t::name[];
-constexpr char GeckoEditable::OnDestroy_t::signature[];
-
-auto GeckoEditable::OnDestroy() const -> void
-{
-    return mozilla::jni::Method<OnDestroy_t>::Call(this, nullptr);
-}
-
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
 
@@ -1261,6 +1253,14 @@ auto GLController::CreateEGLSurface() const -> mozilla::jni::Object::LocalRef
     return mozilla::jni::Method<CreateEGLSurface_t>::Call(this, nullptr);
 }
 
+constexpr char GLController::Destroy_t::name[];
+constexpr char GLController::Destroy_t::signature[];
+
+auto GLController::Destroy() const -> void
+{
+    return mozilla::jni::Method<Destroy_t>::Call(this, nullptr);
+}
+
 constexpr char GLController::DisposeNative_t::name[];
 constexpr char GLController::DisposeNative_t::signature[];
 
@@ -1324,6 +1324,14 @@ constexpr char GeckoLayerClient::IsContentDocumentDisplayed_t::signature[];
 auto GeckoLayerClient::IsContentDocumentDisplayed() const -> bool
 {
     return mozilla::jni::Method<IsContentDocumentDisplayed_t>::Call(this, nullptr);
+}
+
+constexpr char GeckoLayerClient::OnGeckoReady_t::name[];
+constexpr char GeckoLayerClient::OnGeckoReady_t::signature[];
+
+auto GeckoLayerClient::OnGeckoReady() const -> void
+{
+    return mozilla::jni::Method<OnGeckoReady_t>::Call(this, nullptr);
 }
 
 constexpr char GeckoLayerClient::ProgressiveUpdateCallback_t::name[];

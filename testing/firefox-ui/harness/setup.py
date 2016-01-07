@@ -22,7 +22,7 @@ long_description = """Custom Marionette runner classes and entry scripts for Fir
 specific Marionette tests.
 """
 
-setup(name='firefox_ui_harness',
+setup(name='firefox-ui-harness',
       version=get_version(),
       description="Firefox UI Harness",
       long_description=long_description,

@@ -20,6 +20,7 @@ new
 algorithm
 atomic
 deque
+initializer_list
 ios
 iosfwd
 iostream

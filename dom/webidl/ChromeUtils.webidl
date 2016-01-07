@@ -28,6 +28,15 @@ interface ChromeUtils : ThreadSafeChromeUtils {
   static boolean
   originAttributesMatchPattern(optional OriginAttributesDictionary originAttrs,
                                optional OriginAttributesPatternDictionary pattern);
+
+  /**
+   * Returns an OriginAttributes dictionary using the origin URI but forcing
+   * the passed userContextId.
+   */
+  [Throws]
+  static OriginAttributesDictionary
+  createOriginAttributesWithUserContextId(DOMString origin,
+                                          unsigned long userContextId);
 };
 
 /**
