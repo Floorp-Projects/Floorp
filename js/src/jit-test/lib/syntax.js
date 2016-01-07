@@ -1181,62 +1181,6 @@ function test_syntax(postfixes, check_error, ignore_opts) {
   test("for each (let x in y ");
   test("for each (let x in y) ");
 
-  // Legacy array comprehensions
-
-  test("[x ");
-  test("[x for ");
-  test("[x for ( ");
-  test("[x for (x ");
-  test("[x for (x of ");
-  test("[x for (x of y ");
-  test("[x for (x of y) ");
-  test("[x for (x of y) if ");
-  test("[x for (x of y) if ( ");
-  test("[x for (x of y) if (x ");
-  test("[x for (x of y) if (x == ");
-  test("[x for (x of y) if (x == 1 ");
-  test("[x for (x of y) if (x == 1) ");
-  test("[x for (x of y) if (x == 1)] ");
-
-  test("[x for (x in ");
-  test("[x for (x in y ");
-  test("[x for (x in y) ");
-
-  test("[x for each ");
-  test("[x for each ( ");
-  test("[x for each (x ");
-  test("[x for each (x in ");
-  test("[x for each (x in y ");
-  test("[x for each (x in y) ");
-
-  // Generator expressions
-
-  test("(x ");
-  test("(x for ");
-  test("(x for ( ");
-  test("(x for (x ");
-  test("(x for (x of ");
-  test("(x for (x of y ");
-  test("(x for (x of y) ");
-  test("(x for (x of y) if ");
-  test("(x for (x of y) if ( ");
-  test("(x for (x of y) if (x ");
-  test("(x for (x of y) if (x == ");
-  test("(x for (x of y) if (x == 1 ");
-  test("(x for (x of y) if (x == 1) ");
-  test("(x for (x of y) if (x == 1)) ");
-
-  test("(x for (x in ");
-  test("(x for (x in y ");
-  test("(x for (x in y) ");
-
-  test("(x for each ");
-  test("(x for each ( ");
-  test("(x for each (x ");
-  test("(x for each (x in ");
-  test("(x for each (x in y ");
-  test("(x for each (x in y) ");
-
   // asm.js
 
   test("(function() { 'use asm'; ");
