@@ -799,9 +799,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                  ParseContext<ParseHandler>* outerpc,
                                  unsigned innerBlockScopeDepth);
     Node legacyArrayComprehension(Node array);
-    Node generatorComprehensionLambda(GeneratorKind comprehensionKind, unsigned begin,
-                                      Node innerStmt);
-    Node legacyGeneratorExpr(Node kid);
+    Node generatorComprehensionLambda(unsigned begin);
     Node comprehensionFor(GeneratorKind comprehensionKind);
     Node comprehensionIf(GeneratorKind comprehensionKind);
     Node comprehensionTail(GeneratorKind comprehensionKind);
