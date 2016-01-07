@@ -19,8 +19,11 @@
   function runTest() {
     navigator.serviceWorker
       .register("strict_mode_warning.js", {scope: "strict_mode_warning"})
-      .then(() => {
+      .then((reg) => {
         ok(true, "Registration should not fail for warnings");
+        return reg.unregister();
+      })
+      .then(() => {
         SimpleTest.finish();
       });
   }
