@@ -7,14 +7,19 @@ const TEST_URI = "http://mochi.test:8888/browser/devtools/client/" +
                  "responsivedesign/test/touch.html";
 
 add_task(function*() {
-  let tab = yield addTab(TEST_URI);
-  let {rdm} = yield openRDM(tab);
+  yield addTab(TEST_URI);
+  let mgr = ResponsiveUI.ResponsiveUIManager;
+  let mgrOn = once(mgr, "on");
+  mgr.toggle(window, gBrowser.selectedTab);
+  yield mgrOn;
   yield testWithNoTouch();
-  yield rdm.enableTouch();
+  yield mgr.getResponsiveUIForTab(gBrowser.selectedTab).enableTouch();
   yield testWithTouch();
-  yield rdm.disableTouch();
+  yield mgr.getResponsiveUIForTab(gBrowser.selectedTab).disableTouch();
   yield testWithNoTouch();
-  yield closeRDM(rdm);
+  let mgrOff = once(mgr, "off");
+  mgr.toggle(window, gBrowser.selectedTab);
+  yield mgrOff;
 });
 
 function* testWithNoTouch() {
@@ -25,7 +30,7 @@ function* testWithNoTouch() {
   x += 20; y += 10;
   yield BrowserTestUtils.synthesizeMouse("div", x, y,
         { type: "mousemove", isSynthesized: false }, gBrowser.selectedBrowser);
-  is(div.style.transform, "none", "touch shouldn't work");
+  is(div.style.transform, "none", "touch didn't work");
   yield BrowserTestUtils.synthesizeMouse("div", x, y,
         { type: "mouseup", isSynthesized: false }, gBrowser.selectedBrowser);
 }
@@ -38,8 +43,8 @@ function* testWithTouch() {
   x += 20; y += 10;
   yield BrowserTestUtils.synthesizeMouse("div", x, y,
         { type: "mousemove", isSynthesized: false }, gBrowser.selectedBrowser);
-  is(div.style.transform, "translate(20px, 10px)", "touch should work");
+  is(div.style.transform, "translate(20px, 10px)", "touch worked");
   yield BrowserTestUtils.synthesizeMouse("div", x, y,
         { type: "mouseup", isSynthesized: false }, gBrowser.selectedBrowser);
-  is(div.style.transform, "none", "end event should work");
+  is(div.style.transform, "none", "end event worked");
 }

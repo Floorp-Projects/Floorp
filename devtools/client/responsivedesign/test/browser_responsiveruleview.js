@@ -25,7 +25,7 @@ add_task(function*() {
   yield addTab(TEST_URI);
 
   info("Open the responsive design mode and set its size to 500x500 to start");
-  let {rdm} = yield openRDM();
+  let {rdm, manager} = yield openRDM();
   rdm.setSize(500, 500);
 
   info("Open the inspector, rule-view and select the test node");
@@ -41,12 +41,11 @@ add_task(function*() {
   info("Check that ESC still opens the split console");
   yield testEscapeOpensSplitConsole(inspector);
 
-  yield closeToolbox();
-
   info("Test the state of the RDM menu item");
-  yield testMenuItem(rdm);
+  yield testMenuItem(manager);
 
   Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
+  gBrowser.removeCurrentTab();
 });
 
 function* testShrink(ruleView, rdm) {
@@ -80,14 +79,19 @@ function* testEscapeOpensSplitConsole(inspector) {
   ok(inspector._toolbox._splitConsole, "Console is split after pressing ESC.");
 }
 
-function* testMenuItem(rdm) {
+function* testMenuItem(manager) {
   is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
-     "true", "The menu item is checked");
+     "true",
+     "The menu item is checked");
 
-  yield closeRDM(rdm);
+  info("Toggle off the RDM");
+  let onManagerOff = manager.once("off");
+  manager.toggle(window, gBrowser.selectedTab);
+  yield onManagerOff;
 
   is(document.getElementById("Tools:ResponsiveUI").getAttribute("checked"),
-     "false", "The menu item is unchecked");
+     "false",
+     "The menu item is unchecked");
 }
 
 function numberOfRules(ruleView) {
