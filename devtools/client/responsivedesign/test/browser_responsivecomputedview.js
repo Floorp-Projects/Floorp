@@ -35,7 +35,8 @@ add_task(function*() {
   info("Try growing the viewport and checking the applied styles");
   yield testGrow(view, inspector, rdm);
 
-  gBrowser.removeCurrentTab();
+  yield closeRDM(rdm);
+  yield closeToolbox();
 });
 
 function* testShrink(computedView, inspector, rdm) {
