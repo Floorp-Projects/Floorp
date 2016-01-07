@@ -56,7 +56,6 @@ final class GeckoEditable extends JNIObject
     private InputFilter[] mFilters;
 
     private final SpannableStringBuilder mText;
-    private final SpannableStringBuilder mChangedText;
     private final Editable mProxy;
     private final ActionQueue mActionQueue;
 
@@ -381,7 +380,6 @@ final class GeckoEditable extends JNIObject
         mActionQueue = new ActionQueue();
 
         mText = new SpannableStringBuilder();
-        mChangedText = new SpannableStringBuilder();
 
         final Class<?>[] PROXY_INTERFACES = { Editable.class };
         mProxy = (Editable)Proxy.newProxyInstance(
@@ -1026,18 +1024,31 @@ final class GeckoEditable extends JNIObject
                 oldEnd >= action.mEnd &&
                 newEnd >= action.mStart + action.mSequence.length()) {
 
-            // actionNewEnd is the new end of the original replacement action
-            final int actionNewEnd = action.mStart + action.mSequence.length();
+            // Try to preserve both old spans and new spans in action.mSequence.
+            // indexInText is where we can find waction.mSequence within the passed in text.
+            final int indexInText = TextUtils.indexOf(text, action.mSequence);
+            if (indexInText < 0) {
+                // Text was changed from under us. We are force to discard any new spans.
+                geckoReplaceText(start, oldEnd, text);
 
-            // Replace old spans with new spans
-            if (start == action.mStart && oldEnd == action.mEnd && newEnd == actionNewEnd) {
+            } else if (indexInText == 0 && text.length() == action.mSequence.length()) {
                 // The new text exactly matches our sequence, so do a direct replace.
                 geckoReplaceText(start, oldEnd, action.mSequence);
+
             } else {
-                mChangedText.clearSpans();
-                mChangedText.replace(0, mChangedText.length(), mText, start, oldEnd);
-                mChangedText.replace(action.mStart - start, action.mEnd - start, action.mSequence);
-                geckoReplaceText(start, oldEnd, mChangedText);
+                // The sequence is embedded within the changed text, so we have to perform
+                // replacement in parts. First replace part of text before the sequence.
+                geckoReplaceText(start, action.mStart, text.subSequence(0, indexInText));
+
+                // Then Replace the sequence itself to preserve new spans.
+                final int actionStart = indexInText + start;
+                geckoReplaceText(actionStart, actionStart + action.mEnd - action.mStart,
+                                 action.mSequence);
+
+                // Finally replace part of text after the sequence.
+                final int actionEnd = actionStart + action.mSequence.length();
+                geckoReplaceText(actionEnd, actionEnd + oldEnd - action.mEnd,
+                                 text.subSequence(actionEnd - start, text.length()));
             }
 
             // Ignore the next selection change because the selection change is a
