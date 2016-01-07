@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1237040 - Add configure.in support for NSIS 3.0b3 and remove support for NSIS 2.46u and NSIS 3.0a1
+Bug 1209344 - Remove debug button from about:addons. r=mossop
