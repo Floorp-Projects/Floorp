@@ -723,36 +723,36 @@ private:
   Maybe<size_t> mMaskLayerIndex;
 
   // Whether or not this is the root scroll frame for the root content document.
-  bool mIsRootContent;
+  bool mIsRootContent:1;
 
   // Whether or not this frame is for an element marked 'scrollgrab'.
-  bool mHasScrollgrab;
+  bool mHasScrollgrab:1;
 
   // Whether mScrollOffset was updated by something other than the APZ code, and
   // if the APZC receiving this metrics should update its local copy.
-  bool mUpdateScrollOffset;
+  bool mUpdateScrollOffset:1;
 
   // When mDoSmoothScroll, the scroll offset should be animated to
   // smoothly transition to mScrollOffset rather than be updated instantly.
-  bool mDoSmoothScroll;
+  bool mDoSmoothScroll:1;
 
   // If this is true then we use the display port margins on this metrics,
   // otherwise use the display port rect.
-  bool mUseDisplayPortMargins;
+  bool mUseDisplayPortMargins:1;
 
   // Whether or not the frame can be vertically scrolled with a mouse wheel.
-  bool mAllowVerticalScrollWithWheel;
+  bool mAllowVerticalScrollWithWheel:1;
 
   // Whether these framemetrics are for the root scroll frame (root element if
   // we don't have a root scroll frame) for its layers id.
-  bool mIsLayersIdRoot;
+  bool mIsLayersIdRoot:1;
 
   // True if scrolling using containers, false otherwise. This can be removed
   // when containerful scrolling is eliminated.
-  bool mUsesContainerScrolling;
+  bool mUsesContainerScrolling:1;
 
   // Whether or not this frame has a "scroll info layer" to capture events.
-  bool mIsScrollInfoLayer;
+  bool mIsScrollInfoLayer:1;
 
   // WARNING!!!!
   //
@@ -763,6 +763,15 @@ private:
   //    The ParamTraits specialization in GfxMessageUtils.h
   //
   // Please add new fields above this comment.
+
+
+  // Private helpers for IPC purposes
+  void SetUpdateScrollOffset(bool aValue) {
+    mUpdateScrollOffset = aValue;
+  }
+  void SetDoSmoothScroll(bool aValue) {
+    mDoSmoothScroll = aValue;
+  }
 };
 
 /**
