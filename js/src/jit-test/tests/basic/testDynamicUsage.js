@@ -72,10 +72,6 @@ assertEq((function() { try { throw 3 } catch (e) { (function(){assertEq(e,3)})()
 assertEq((function() { try { throw 3 } catch (e) { assertEq(e, 3); return (function() e)() } })(), 3);
 assertEq((function() { try { throw 3 } catch (e) { (function(){eval('assertEq(e,3)')})(); return e } })(), 3);
 
-assertEq((function() { return [(function() i)() for (i of [3])][0] })(), 3);
-assertEq((function() { return [((function() i++)(), i) for (i of [2])][0] })(), 3);
-assertEq((function() { return [(i++, (function() i)()) for (i of [2])][0] })(), 3);
-
 assertEq((function() { var x; function f() { return x } function f() { return 3 }; return f() })(), 3);
 assertEq((function() { var x = 3; function f() { return 3 } function f() { return x }; return f() })(), 3);
 
