@@ -795,10 +795,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
     /* comprehensions */
-    Node legacyComprehensionTail(Node kid, unsigned blockid, GeneratorKind comprehensionKind,
-                                 ParseContext<ParseHandler>* outerpc,
-                                 unsigned innerBlockScopeDepth);
-    Node legacyArrayComprehension(Node array);
     Node generatorComprehensionLambda(unsigned begin);
     Node comprehensionFor(GeneratorKind comprehensionKind);
     Node comprehensionIf(GeneratorKind comprehensionKind);
@@ -968,7 +964,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     bool warnOnceAboutExprClosure();
 
-    friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
 };
 
