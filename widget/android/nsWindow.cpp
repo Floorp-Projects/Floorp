@@ -546,6 +546,7 @@ public:
         // Gecko, and that's what we do here.
         const bool resetting = !!mLayerClient;
         mLayerClient = layerClient;
+        layerClient->OnGeckoReady();
 
         if (resetting) {
             // Since we are re-linking the new java objects to Gecko, we need
