@@ -1623,6 +1623,13 @@ private:
   {
     return aWorkerPrivate->ConnectMessagePort(aCx, mPortIdentifier);
   }
+
+  NS_IMETHOD
+  Cancel()
+  {
+    MessagePort::ForceClose(mPortIdentifier);
+    return WorkerRunnable::Cancel();
+  }
 };
 
 class DummyRunnable final
