@@ -2082,7 +2082,7 @@ protected:
     metrics.SetScrollableRect(aScrollableRect);
     metrics.SetScrollOffset(CSSPoint(0, 0));
     metrics.SetPageScrollAmount(LayoutDeviceIntSize(50, 100));
-    metrics.SetAllowVerticalScrollWithWheel();
+    metrics.SetAllowVerticalScrollWithWheel(true);
     aLayer->SetFrameMetrics(metrics);
     aLayer->SetClipRect(Some(ViewAs<ParentLayerPixel>(layerBound)));
     if (!aScrollableRect.IsEqualEdges(CSSRect(-1, -1, -1, -1))) {
