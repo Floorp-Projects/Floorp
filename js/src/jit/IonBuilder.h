@@ -853,10 +853,10 @@ class IonBuilder
     // SIMD intrinsics and natives.
     InliningStatus inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* target);
 
-    //  helpers
+    // SIMD helpers
     static MIRType SimdTypeDescrToMIRType(SimdTypeDescr::Type type);
-    bool checkInlineSimd(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
-                         unsigned numArgs, InlineTypedObject** templateObj);
+    bool canInlineSimd(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
+                       unsigned numArgs, InlineTypedObject** templateObj);
     IonBuilder::InliningStatus boxSimd(CallInfo& callInfo, MInstruction* ins,
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
@@ -866,11 +866,11 @@ class IonBuilder
     InliningStatus inlineSimdBool32x4(CallInfo& callInfo, JSNative native);
 
     template <typename T>
-    InliningStatus inlineBinarySimd(CallInfo& callInfo, JSNative native,
+    InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,
                                     typename T::Operation op, SimdTypeDescr::Type type);
-    InliningStatus inlineCompSimd(CallInfo& callInfo, JSNative native,
+    InliningStatus inlineSimdComp(CallInfo& callInfo, JSNative native,
                                   MSimdBinaryComp::Operation op, SimdTypeDescr::Type compType);
-    InliningStatus inlineUnarySimd(CallInfo& callInfo, JSNative native,
+    InliningStatus inlineSimdUnary(CallInfo& callInfo, JSNative native,
                                    MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
     InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
                                          SimdTypeDescr::Type type);
