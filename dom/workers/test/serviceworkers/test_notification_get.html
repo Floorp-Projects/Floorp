@@ -37,6 +37,12 @@
     });
   }
 
+  function unregisterSW() {
+    return testFrame('notification/unregister.html').then(function() {
+      ok(true, "Unregistered service worker.");
+    });
+  }
+
   // To check that the scope is respected when retrieving notifications.
   function registerAlternateSWAndAddNotification() {
     return testFrame('notification_alt/register.html').then(function() {
@@ -44,6 +50,12 @@
       return navigator.serviceWorker.getRegistration("./notification_alt/").then(function(reg) {
         return reg.showNotification("This is a notification_alt");
       });
+    });
+  }
+
+  function unregisterAlternateSWAndAddNotification() {
+    return testFrame('notification_alt/unregister.html').then(function() {
+      ok(true, "unregistered alternate service worker.");
     });
   }
 
@@ -86,7 +98,7 @@
         is(notifications.length, 0, "There should be no more stored notifications");
       }).catch(function(e) {
         ok(false, "Something went wrong " + e.message);
-      });
+      }).then(unregisterAlternateSWAndAddNotification);
   }
 
   function testGetWorker() {
@@ -155,6 +167,7 @@
       .then(testGetWorker)
       .then(testGetServiceWorker)
       .then(testAcrossThreads)
+      .then(unregisterSW)
       .then(function() {
         MockServices.unregister();
         SimpleTest.finish();
