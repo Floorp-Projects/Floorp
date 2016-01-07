@@ -635,11 +635,6 @@ class Shape : public gc::TenuredCell
             info->shapesMallocHeapTreeKids += kids.toHash()->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    bool isNative() const {
-        MOZ_ASSERT(!(flags & NON_NATIVE) == getObjectClass()->isNative());
-        return !(flags & NON_NATIVE);
-    }
-
     bool isAccessorShape() const {
         MOZ_ASSERT_IF(flags & ACCESSOR_SHAPE, getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
         return flags & ACCESSOR_SHAPE;
@@ -705,23 +700,20 @@ class Shape : public gc::TenuredCell
      * with these bits.
      */
     enum {
-        /* Property is placeholder for a non-native class. */
-        NON_NATIVE      = 0x01,
-
         /* Property stored in per-object dictionary, not shared property tree. */
-        IN_DICTIONARY   = 0x02,
+        IN_DICTIONARY   = 0x01,
 
         /*
          * Slotful property was stored to more than once. This is used as a
          * hint for type inference.
          */
-        OVERWRITTEN     = 0x04,
+        OVERWRITTEN     = 0x02,
 
         /*
          * This shape is an AccessorShape, a fat Shape that can store
          * getter/setter information.
          */
-        ACCESSOR_SHAPE  = 0x08,
+        ACCESSOR_SHAPE  = 0x04,
 
         UNUSED_BITS     = 0x3C
     };
@@ -1015,11 +1007,7 @@ struct EmptyShape : public js::Shape
 {
     EmptyShape(UnownedBaseShape* base, uint32_t nfixed)
       : js::Shape(base, nfixed)
-    {
-        // Only empty shapes can be NON_NATIVE.
-        if (!getObjectClass()->isNative())
-            flags |= NON_NATIVE;
-    }
+    { }
 
     static Shape* new_(ExclusiveContext* cx, Handle<UnownedBaseShape*> base, uint32_t nfixed);
 
