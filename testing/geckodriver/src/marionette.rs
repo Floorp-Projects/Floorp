@@ -858,7 +858,7 @@ impl MarionetteError {
                                            "Expected an error object"));
         }
         let status = try_opt!(
-            try_opt!(data.find("status"),
+            try_opt!(data.find("error"),
                      ErrorStatus::UnknownError,
                      "Error value has no status").as_string(),
             ErrorStatus::UnknownError,
@@ -872,10 +872,10 @@ impl MarionetteError {
             "Error messsage was not a string").into();
 
         let stacktrace = match data.find("stacktrace") {
+            None | Some(&Json::Null) => None,
             Some(x) => Some(try_opt!(x.as_string(),
                                      ErrorStatus::UnknownError,
                                      "Error messsage was not a string").into()),
-            None => None
         };
         Ok(MarionetteError::new(status, message, stacktrace))
     }
