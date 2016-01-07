@@ -49,6 +49,7 @@ if CONFIG['MOZ_FFMPEG']:
         'ffmpeg/libav53',
         'ffmpeg/libav54',
         'ffmpeg/libav55',
+        'ffmpeg/ffmpeg57',
     ]
     LOCAL_INCLUDES += [
         'ffmpeg',
