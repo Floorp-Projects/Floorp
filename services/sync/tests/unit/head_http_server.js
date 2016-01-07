@@ -586,7 +586,7 @@ SyncServer.prototype = {
     } catch (ex) {
       _("==========================================");
       _("Got exception starting Sync HTTP server.");
-      _("Error: " + Utils.exceptionStr(ex));
+      _("Error: " + Log.exceptionStr(ex));
       _("Is there a process already listening on port " + port + "?");
       _("==========================================");
       do_throw(ex);
