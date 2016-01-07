@@ -1735,7 +1735,8 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
               // Collect DOM-order containers to update their trees.
               child->SetRepositioned(false);
               Accessible* container = GetContainerAccessible(childEl);
-              if (!containers.Contains(container)) {
+              MOZ_ASSERT(container, "A node should always have a container");
+              if (container && !containers.Contains(container)) {
                 containers.AppendElement(container);
               }
             }
@@ -1757,7 +1758,9 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
         // Reinserted previously ARIA owned elements into the tree
         // (restore a DOM-like order).
         for (uint32_t idx = 0; idx < containers.Length(); idx++) {
-          if (containers[idx]->IsInDocument()) {
+          Accessible* container = containers[idx];
+          MOZ_ASSERT(container, "Cannot be a null");
+          if (container && containers[idx]->IsInDocument()) {
             UpdateTreeOnInsertion(containers[idx]);
           }
         }
