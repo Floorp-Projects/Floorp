@@ -188,7 +188,7 @@ var PendingErrors = {
           stack = error.location;
         } else {
           // Components.stack to the rescue!
-          stack  = Components.stack;
+          stack = Components_.stack;
           // Remove those top frames that refer to Promise.jsm.
           while (stack) {
             if (!stack.filename.endsWith("/Promise.jsm")) {
