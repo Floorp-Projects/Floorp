@@ -49,6 +49,7 @@ if CONFIG['MOZ_FFMPEG']:
         DIRS += [
             'ffmpeg/libav53',
             'ffmpeg/libav54',
+            'ffmpeg/ffmpeg57',
         ]
     else:
         LOCAL_INCLUDES += [
