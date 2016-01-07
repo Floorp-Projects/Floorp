@@ -8,7 +8,8 @@
 const { PerformanceFront } = require("devtools/server/actors/performance");
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "doc_allocations.html");
+  let browser = yield addTab(MAIN_DOMAIN + "doc_allocations.html");
+  let doc = browser.contentDocument;
 
   initDebuggerServer();
   let client = new DebuggerClient(DebuggerServer.connectPipe());

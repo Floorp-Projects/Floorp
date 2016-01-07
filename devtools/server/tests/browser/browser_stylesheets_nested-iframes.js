@@ -10,7 +10,8 @@
 const {StyleSheetsFront} = require("devtools/server/actors/stylesheets");
 
 add_task(function*() {
-  let doc = yield addTab(MAIN_DOMAIN + "stylesheets-nested-iframes.html");
+  let browser = yield addTab(MAIN_DOMAIN + "stylesheets-nested-iframes.html");
+  let doc = browser.contentDocument;
 
   info("Initialising the debugger server and client.");
   initDebuggerServer();
