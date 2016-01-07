@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when an item in the Tree component is expanded or collapsed the appropriate event handler fires.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tree component test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="stylesheet" href="chrome://devtools/skin/light-theme.css" type="text/css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    const ReactDOM = browserRequire("devtools/client/shared/vendor/react-dom");
+    const React = browserRequire("devtools/client/shared/vendor/react");
+    const { Simulate } = React.addons.TestUtils;
+    const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
+
+    let numberOfExpands = 0;
+    let lastExpandedItem = null;
+
+    let numberOfCollapses = 0;
+    let lastCollapsedItem = null;
+
+    const tree = ReactDOM.render(Tree(Object.assign({
+      onExpand: item => {
+        lastExpandedItem = item;
+        numberOfExpands++;
+      },
+      onCollapse: item => {
+        lastCollapsedItem = item;
+        numberOfCollapses++;
+      },
+    }, TEST_TREE_INTERFACE)), window.document.body);
+
+    yield setState(tree, {
+      focused: "A"
+    });
+
+    is(lastExpandedItem, null);
+    is(lastCollapsedItem, null);
+
+    // Expand "A" via the keyboard and then let the component re-render.
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
+    yield setState(tree, {});
+
+    is(lastExpandedItem, "A", "Our onExpand callback should have been fired.");
+    is(numberOfExpands, 1);
+
+    // Now collapse "A" via the keyboard and then let the component re-render.
+    Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
+    yield setState(tree, {});
+
+    is(lastCollapsedItem, "A", "Our onCollapsed callback should have been fired.");
+    is(numberOfCollapses, 1);
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

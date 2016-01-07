@@ -331,7 +331,7 @@ private:
         FLUSH_FLAG_NONE,
         FLUSH_FLAG_RETRY
     };
-    void PostFlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
+    void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
 
 public:
@@ -439,6 +439,11 @@ public:
             // object lifetimes for us.
             (Functor(aCall))();
             aCall.SetTarget(&GLControllerSupport::OnResumedCompositor);
+            nsAppShell::PostEvent(
+                    mozilla::MakeUnique<GLControllerEvent>(
+                    mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
+                    mozilla::Move(aCall))));
+            return;
 
         } else if (aCall.IsTarget(
                 &GLControllerSupport::SyncInvalidateAndScheduleComposite)) {
@@ -446,10 +451,12 @@ public:
             return aCall();
         }
 
+        // GLControllerEvent (i.e. prioritized event) applies to
+        // CreateCompositor, PauseCompositor, and OnResumedCompositor. For all
+        // other events, use regular WindowEvent.
         nsAppShell::PostEvent(
-                mozilla::MakeUnique<GLControllerEvent>(
                 mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
-                mozilla::Move(aCall))));
+                mozilla::Move(aCall)));
     }
 
     GLControllerSupport(nsWindow* aWindow,
@@ -463,11 +470,7 @@ public:
 
     ~GLControllerSupport()
     {
-        GLController::GlobalRef glController(mozilla::Move(mGLController));
-        nsAppShell::PostEvent([glController] {
-            GLControllerSupport::DisposeNative(GLController::LocalRef(
-                        jni::GetGeckoThreadEnv(), glController));
-        });
+        mGLController->Destroy();
     }
 
     void Reattach(const GLController::LocalRef& aInstance)
@@ -539,6 +542,7 @@ public:
         // Gecko, and that's what we do here.
         const bool resetting = !!mLayerClient;
         mLayerClient = layerClient;
+        layerClient->OnGeckoReady();
 
         if (resetting) {
             // Since we are re-linking the new java objects to Gecko, we need
@@ -608,7 +612,7 @@ nsWindow::GeckoViewSupport::~GeckoViewSupport()
     // OnDestroy will call disposeNative after any pending native calls have
     // been made.
     MOZ_ASSERT(mEditable);
-    mEditable->OnDestroy();
+    mEditable->OnViewChange(nullptr);
 }
 
 /* static */ void
@@ -2251,10 +2255,9 @@ nsWindow::GeckoViewSupport::AddIMETextChange(const IMETextChange& aChange)
 }
 
 void
-nsWindow::GeckoViewSupport::PostFlushIMEChanges(FlushChangesFlag aFlags)
+nsWindow::GeckoViewSupport::PostFlushIMEChanges()
 {
-    if (aFlags != FLUSH_FLAG_RETRY &&
-            (!mIMETextChanges.IsEmpty() || mIMESelectionChanged)) {
+    if (!mIMETextChanges.IsEmpty() || mIMESelectionChanged) {
         // Already posted
         return;
     }
@@ -2262,9 +2265,9 @@ nsWindow::GeckoViewSupport::PostFlushIMEChanges(FlushChangesFlag aFlags)
     // Keep a strong reference to the window to keep 'this' alive.
     RefPtr<nsWindow> window(&this->window);
 
-    nsAppShell::PostEvent([this, window, aFlags] {
+    nsAppShell::PostEvent([this, window] {
         if (!window->Destroyed()) {
-            FlushIMEChanges(aFlags);
+            FlushIMEChanges();
         }
     });
 }
@@ -2299,6 +2302,23 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
 
     mIMETextChangedDuringFlush = false;
 
+    auto shouldAbort = [=] () -> bool {
+        if (!mIMETextChangedDuringFlush) {
+            return false;
+        }
+        // A query event could have triggered more text changes to come in, as
+        // indicated by our flag. If that happens, try flushing IME changes
+        // again.
+        if (aFlags != FLUSH_FLAG_RETRY) {
+            FlushIMEChanges(FLUSH_FLAG_RETRY);
+        } else {
+            // Don't retry if already retrying, to avoid infinite loops.
+            __android_log_print(ANDROID_LOG_WARN, "GeckoViewSupport",
+                    "Already retrying IME flush");
+        }
+        return true;
+    };
+
     for (const IMETextChange &change : mIMETextChanges) {
         if (change.mStart == change.mOldEnd &&
                 change.mStart == change.mNewEnd) {
@@ -2316,14 +2336,7 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
             NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
         }
 
-        if (mIMETextChangedDuringFlush) {
-            // The query event above could have triggered more text changes to
-            // come in, as indicated by our flag. If that happens, try flushing
-            // IME changes again later.
-            if (!NS_WARN_IF(aFlags == FLUSH_FLAG_RETRY)) {
-                // Don't retry if already retrying, to avoid infinite loops.
-                PostFlushIMEChanges(FLUSH_FLAG_RETRY);
-            }
+        if (shouldAbort()) {
             return;
         }
 
@@ -2332,6 +2345,26 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
                            change.mOldEnd, change.mNewEnd});
     }
 
+    int32_t selStart;
+    int32_t selEnd;
+
+    if (mIMESelectionChanged) {
+        WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
+        window.InitEvent(event, nullptr);
+        window.DispatchEvent(&event);
+
+        NS_ENSURE_TRUE_VOID(event.mSucceeded);
+        NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
+
+        if (shouldAbort()) {
+            return;
+        }
+
+        selStart = int32_t(event.GetSelectionStart());
+        selEnd = int32_t(event.GetSelectionEnd());
+    }
+
+    // Commit the text change and selection change transaction.
     mIMETextChanges.Clear();
 
     for (const TextRecord& record : textTransaction) {
@@ -2341,16 +2374,7 @@ nsWindow::GeckoViewSupport::FlushIMEChanges(FlushChangesFlag aFlags)
 
     if (mIMESelectionChanged) {
         mIMESelectionChanged = false;
-
-        WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
-        window.InitEvent(event, nullptr);
-        window.DispatchEvent(&event);
-
-        NS_ENSURE_TRUE_VOID(event.mSucceeded);
-        NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
-
-        mEditable->OnSelectionChange(int32_t(event.GetSelectionStart()),
-                                     int32_t(event.GetSelectionEnd()));
+        mEditable->OnSelectionChange(selStart, selEnd);
     }
 }
 

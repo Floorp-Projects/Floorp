@@ -512,7 +512,10 @@ function pattern_matcher(pattern) {
   if (typeof pattern == "function") {
     return pattern;
   } else if (typeof pattern == "object" && pattern) {
-    var matchers = [[p, pattern_matcher(pattern[p])] for (p in pattern)];
+    var matchers = [];
+    for (let p in pattern) {
+      matchers.push([p, pattern_matcher(pattern[p])]);
+    }
     // Kludge: include 'length', if not enumerable. (If it is enumerable,
     // we picked it up in the array comprehension, above.
     ld = Object.getOwnPropertyDescriptor(pattern, 'length');

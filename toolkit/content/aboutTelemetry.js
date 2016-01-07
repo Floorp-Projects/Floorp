@@ -273,7 +273,8 @@ var Settings = {
 };
 
 var PingPicker = {
-  viewCurrentPingData: true,
+  viewCurrentPingData: null,
+  viewStructuredPingData: null,
   _archivedPings: null,
 
   attachObservers: function() {
@@ -316,26 +317,31 @@ var PingPicker = {
   },
 
   update: function() {
-    let el = document.getElementById("ping-source-current");
-    this.viewCurrentPingData = el.checked;
+    let viewCurrent = document.getElementById("ping-source-current").checked;
+    let viewStructured = document.getElementById("ping-source-structured").checked;
+    let currentChanged = viewCurrent !== this.viewCurrentPingData;
+    let structuredChanged = viewStructured !== this.viewStructuredPingData;
+    this.viewCurrentPingData = viewCurrent;
+    this.viewStructuredPingData = viewStructured;
 
-    if (this.viewCurrentPingData) {
-      document.getElementById("current-ping-picker").classList.remove("hidden");
-      document.getElementById("archived-ping-picker").classList.add("hidden");
-      this._updateCurrentPingData();
-    } else {
-      document.getElementById("current-ping-picker").classList.add("hidden");
-      this._updateArchivedPingList().then(() =>
-        document.getElementById("archived-ping-picker").classList.remove("hidden"));
+    if (currentChanged) {
+      if (this.viewCurrentPingData) {
+        document.getElementById("current-ping-picker").classList.remove("hidden");
+        document.getElementById("archived-ping-picker").classList.add("hidden");
+        this._updateCurrentPingData();
+      } else {
+        document.getElementById("current-ping-picker").classList.add("hidden");
+        this._updateArchivedPingList().then(() =>
+          document.getElementById("archived-ping-picker").classList.remove("hidden"));
+      }
     }
 
-    let element = document.getElementById("ping-source-structured");
-    this.viewCurrentPingData = element.checked;
-
-    if (this.viewCurrentPingData) {
-      this._hideRawPingData();
-    } else {
-      this._showRawPingData();
+    if (structuredChanged) {
+      if (this.viewStructuredPingData) {
+        this._showStructuredPingData();
+      } else {
+        this._showRawPingData();
+      }
     }
   },
 
@@ -470,13 +476,13 @@ var PingPicker = {
   },
 
   _showRawPingData: function() {
-    let pre = document.getElementById("raw-ping-data");
-    pre.textContent = JSON.stringify(gPingData, null, 2);
     document.getElementById("raw-ping-data-section").classList.remove("hidden");
+    document.getElementById("structured-ping-data-section").classList.add("hidden");
   },
 
-  _hideRawPingData: function() {
+  _showStructuredPingData: function() {
     document.getElementById("raw-ping-data-section").classList.add("hidden");
+    document.getElementById("structured-ping-data-section").classList.remove("hidden");
   },
 };
 
@@ -1601,9 +1607,6 @@ function onLoad() {
   // Render settings.
   Settings.render();
 
-  // Update ping data when async Telemetry init is finished.
-  Telemetry.asyncFetchTelemetryData(() => PingPicker.update());
-
   // Restore sections states
   let stateboxes = document.getElementsByClassName("statebox");
   for (let box of stateboxes) {
@@ -1611,6 +1614,9 @@ function onLoad() {
         box.parentElement.classList.add("expanded");
     }
   }
+
+  // Update ping data when async Telemetry init is finished.
+  Telemetry.asyncFetchTelemetryData(() => PingPicker.update());
 }
 
 var LateWritesSingleton = {
@@ -1711,6 +1717,11 @@ function renderPayloadList(ping) {
 function displayPingData(ping, updatePayloadList = false) {
   gPingData = ping;
 
+  // Render raw ping data.
+  let pre = document.getElementById("raw-ping-data");
+  pre.textContent = JSON.stringify(gPingData, null, 2);
+
+  // Update the structured data rendering.
   const keysHeader = bundle.GetStringFromName("keysHeader");
   const valuesHeader = bundle.GetStringFromName("valuesHeader");
 

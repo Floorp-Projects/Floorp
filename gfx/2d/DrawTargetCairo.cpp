@@ -1234,6 +1234,18 @@ DrawTargetCairo::Fill(const Path *aPath,
   DrawPattern(aPattern, StrokeOptions(), aOptions, DRAW_FILL);
 }
 
+bool
+DrawTargetCairo::IsCurrentGroupOpaque()
+{
+  cairo_surface_t* surf = cairo_get_group_target(mContext);
+
+  if (!surf) {
+    return false;
+  }
+
+  return cairo_surface_get_content(surf) == CAIRO_CONTENT_COLOR;
+}
+
 void
 DrawTargetCairo::SetPermitSubpixelAA(bool aPermitSubpixelAA)
 {
@@ -1455,6 +1467,87 @@ DrawTargetCairo::PopClip()
 
   cairo_set_matrix(mContext, &mat);
 }
+ 
+void
+DrawTargetCairo::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                          const Matrix& aMaskTransform, const IntRect& aBounds,
+                          bool aCopyBackground)
+{
+  cairo_content_t content = CAIRO_CONTENT_COLOR_ALPHA;
+
+  if (mFormat == SurfaceFormat::A8) {
+    content = CAIRO_CONTENT_ALPHA;
+  } else if (aOpaque) {
+    content = CAIRO_CONTENT_COLOR;
+  }
+
+  if (aCopyBackground) {
+    cairo_surface_t* source = cairo_get_group_target(mContext);
+    cairo_push_group_with_content(mContext, content);
+    cairo_surface_t* dest = cairo_get_group_target(mContext);
+    cairo_t* ctx = cairo_create(dest);
+    cairo_set_source_surface(ctx, source, 0, 0);
+    cairo_set_operator(ctx, CAIRO_OPERATOR_SOURCE);
+    cairo_paint(ctx);
+    cairo_destroy(ctx);
+  } else {
+    cairo_push_group_with_content(mContext, content);
+  }
+
+  PushedLayer layer(aOpacity, mPermitSubpixelAA);
+
+  if (aMask) {
+    cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aMask);
+    if (surf) {
+      layer.mMaskPattern = cairo_pattern_create_for_surface(surf);
+      cairo_matrix_t mat;
+      GfxMatrixToCairoMatrix(aMaskTransform, mat);
+      cairo_matrix_invert(&mat);
+      cairo_pattern_set_matrix(layer.mMaskPattern, &mat);
+      cairo_surface_destroy(surf);
+    } else {
+      gfxCriticalError() << "Failed to get cairo surface for mask surface!";
+    }
+  }
+
+  mPushedLayers.push_back(layer);
+
+  SetPermitSubpixelAA(aOpaque);
+}
+
+void
+DrawTargetCairo::PopLayer()
+{
+  MOZ_ASSERT(mPushedLayers.size());
+
+  cairo_set_operator(mContext, CAIRO_OPERATOR_OVER);
+
+  cairo_pop_group_to_source(mContext);
+
+  PushedLayer layer = mPushedLayers.back();
+  mPushedLayers.pop_back();
+
+  if (!layer.mMaskPattern) {
+    cairo_paint_with_alpha(mContext, layer.mOpacity);
+  } else {
+    if (layer.mOpacity != Float(1.0)) {
+      cairo_push_group_with_content(mContext, CAIRO_CONTENT_COLOR_ALPHA);
+
+      // Now draw the content using the desired operator
+      cairo_paint_with_alpha(mContext, layer.mOpacity);
+
+      cairo_pop_group_to_source(mContext);
+    }
+    cairo_mask(mContext, layer.mMaskPattern);
+  }
+
+  cairo_matrix_t mat;
+  GfxMatrixToCairoMatrix(mTransform, mat);
+  cairo_set_matrix(mContext, &mat);
+
+  cairo_pattern_destroy(layer.mMaskPattern);
+  SetPermitSubpixelAA(layer.mWasPermittingSubpixelAA);
+}
 
 already_AddRefed<PathBuilder>
 DrawTargetCairo::CreatePathBuilder(FillRule aFillRule /* = FillRule::FILL_WINDING */) const
@@ -1622,7 +1715,7 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetCairo::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-  if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
+  if (aSurface.mType == NativeSurfaceType::CAIRO_CONTEXT) {
     if (aSurface.mSize.width <= 0 ||
         aSurface.mSize.height <= 0) {
       gfxWarning() << "Can't create a SourceSurface without a valid size";
@@ -1771,9 +1864,6 @@ DrawTargetCairo::Init(unsigned char* aData, const IntSize &aSize, int32_t aStrid
 void *
 DrawTargetCairo::GetNativeSurface(NativeSurfaceType aType)
 {
-  if (aType == NativeSurfaceType::CAIRO_SURFACE) {
-    return cairo_get_target(mContext);
-  }
   if (aType == NativeSurfaceType::CAIRO_CONTEXT) {
     return mContext;
   }

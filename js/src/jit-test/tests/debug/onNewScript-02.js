@@ -52,9 +52,6 @@ test(function () { g.eval("function r(n) { for (var i=0;i<n;i++) yield i; }"); }
 // eval declaring a star generator
 test(function () { g.eval("function* sg(n) { for (var i=0;i<n;i++) yield i; }"); });
 
-// eval with a generator-expression
-test(function () { g.eval("var it = (obj[p] for (p in obj));"); });
-
 // eval creating several instances of a closure
 test(function () { g.eval("for (var i = 0; i < 7; i++)\n" +
                           "    obj = function () { return obj; };\n"); });

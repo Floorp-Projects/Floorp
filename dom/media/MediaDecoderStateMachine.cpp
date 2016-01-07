@@ -241,8 +241,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentFirstFrameLoadedEvent(false, "MediaDecoderStateMachine::mSentFirstFrameLoadedEvent"),
   mSentPlaybackEndedEvent(false),
   mOutputStreamManager(new OutputStreamManager()),
-  mStreamSink(new DecodedStream(
-    mTaskQueue, mAudioQueue, mVideoQueue, mOutputStreamManager)),
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
   mBuffered(mTaskQueue, TimeIntervals(),
@@ -339,6 +337,9 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  mStreamSink = new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
+                                  mOutputStreamManager, mSameOriginMedia.Ref());
+
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
   mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
@@ -368,12 +369,8 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
   mWatchManager.Watch(mObservedDuration, &MediaDecoderStateMachine::RecomputeDuration);
   mWatchManager.Watch(mPlayState, &MediaDecoderStateMachine::PlayStateChanged);
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoderStateMachine::LogicallySeekingChanged);
-  mWatchManager.Watch(mSameOriginMedia, &MediaDecoderStateMachine::SameOriginMediaChanged);
   mWatchManager.Watch(mSentFirstFrameLoadedEvent, &MediaDecoderStateMachine::AdjustAudioThresholds);
   mWatchManager.Watch(mAudioCaptured, &MediaDecoderStateMachine::AdjustAudioThresholds);
-
-  // Propagate mSameOriginMedia to mDecodedStream.
-  SameOriginMediaChanged();
 }
 
 media::MediaSink*
@@ -1457,12 +1454,6 @@ void MediaDecoderStateMachine::LogicallySeekingChanged()
   ScheduleStateMachine();
 }
 
-void MediaDecoderStateMachine::SameOriginMediaChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mStreamSink->SetSameOrigin(mSameOriginMedia);
-}
-
 void MediaDecoderStateMachine::BufferedRangeUpdated()
 {
   MOZ_ASSERT(OnTaskQueue());
@@ -2360,13 +2351,6 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
       // StopPlayback in order to reset the IsPlaying() state so audio
       // is restarted correctly.
       StopPlayback();
-
-      if (mState != DECODER_STATE_COMPLETED) {
-        // While we're presenting a frame we can change state. Whatever changed
-        // our state should have scheduled another state machine run.
-        NS_ASSERTION(IsStateMachineScheduled(), "Must have timer scheduled");
-        return NS_OK;
-      }
 
       if (mPlayState == MediaDecoder::PLAY_STATE_PLAYING &&
           !mSentPlaybackEndedEvent)

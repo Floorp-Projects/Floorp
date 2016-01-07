@@ -13,6 +13,7 @@
 
 #define FOR_EACH_COMMON_PROPERTYNAME(macro) \
     macro(add, add, "add") \
+    macro(allowContentSpread, allowContentSpread, "allowContentSpread") \
     macro(anonymous, anonymous, "anonymous") \
     macro(Any, Any, "Any") \
     macro(apply, apply, "apply") \
@@ -65,6 +66,8 @@
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
     macro(default_, default_, "default") \
+    macro(DefaultBaseClassConstructor, DefaultBaseClassConstructor, "DefaultBaseClassConstructor") \
+    macro(DefaultDerivedClassConstructor, DefaultDerivedClassConstructor, "DefaultDerivedClassConstructor") \
     macro(defineProperty, defineProperty, "defineProperty") \
     macro(defineGetter, defineGetter, "__defineGetter__") \
     macro(defineSetter, defineSetter, "__defineSetter__") \

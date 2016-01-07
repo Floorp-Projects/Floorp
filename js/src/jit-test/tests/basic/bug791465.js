@@ -51,7 +51,7 @@ var invalid_strict_funs = [
     ();
   },
   ...([]),
-  ...[Function("'use strict'\n " + op + " 'not'") for (op of binary_ops)],
+  ...(binary_ops.map(op => Function("'use strict'\n " + op + " 'not'"))),
 ];
 
 for (var f of invalid_strict_funs) {
@@ -66,9 +66,7 @@ var assignment_ops = [
   "*=", "/=", "%=",
 ];
 
-var invalid_strict_funs_referror = [
-  ...[("'use strict'\n " + op + " 'not'") for (op of assignment_ops)],
-];
+var invalid_strict_funs_referror = assignment_ops.map(op => ("'use strict'\n " + op + " 'not'"));
 
 // assignment with string literal as LHS is an early error, therefore we
 // can only test for ReferenceError

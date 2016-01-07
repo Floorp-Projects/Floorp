@@ -99,28 +99,7 @@ function sha1(str) {
   }
 
   // Convert the binary hash data to a hex string.
-  return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");function sha1(str) {
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
-                    .createInstance(Ci.nsIScriptableUnicodeConverter);
-  converter.charset = "UTF-8";
-  // `result` is an out parameter, `result.value` will contain the array length.
-  let result = {};
-  // `data` is an array of bytes.
-  let data = converter.convertToByteArray(str, result);
-  let ch = Cc["@mozilla.org/security/hash;1"]
-             .createInstance(Ci.nsICryptoHash);
-  ch.init(ch.SHA1);
-  ch.update(data, data.length);
-  let hash = ch.finish(false);
-
-  // Return the two-digit hexadecimal code for a byte.
-  function toHexString(charCode) {
-    return ("0" + charCode.toString(16)).slice(-2);
-  }
-
-  // Convert the binary hash data to a hex string.
-  return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
-}
+  return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
 }
 
 function getRequestBody(req) {

@@ -65,7 +65,7 @@ function install(next) {
 function getInstalledReturnsApp(next) {
   navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
     // Retrieve the app we just installed from the list of installed apps.
-    var a = [a for (a of this.result) if (a.manifestURL == url)][0];
+    var a = Array.from(this.result).filter((a) => a.manifestURL == url)[0];
 
     // Compare the values of the two app objects to make sure install()
     // and getInstalled() return identical objects.
@@ -89,7 +89,7 @@ function uninstall(next) {
     // Try to retrieve the app we just uninstalled, to make sure it no longer
     // exists in the registry.
     navigator.mozApps.getInstalled().onsuccess = function onGetInstalled() {
-      var a = [a for (a of this.result) if (a.manifestURL == url)][0];
+      var a = Array.from(this.result).filter((a) => a.manifestURL == url)[0];
       is(a, undefined, "getInstalled() returns nothing again after uninstall");
 
       next();

@@ -7,6 +7,7 @@ package org.mozilla.gecko.home;
 
 import java.util.EnumSet;
 
+import android.os.AsyncTask;
 import org.mozilla.gecko.EditBookmarkDialog;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.GeckoEvent;
@@ -218,7 +219,14 @@ public abstract class HomeFragment extends Fragment {
             }
 
             // Fetch an icon big enough for use as a home screen icon.
-            Favicons.getPreferredSizeFaviconForPage(context, info.url, new GeckoAppShell.CreateShortcutFaviconLoadedListener(info.url, info.getDisplayTitle()));
+            final String displayTitle = info.getDisplayTitle();
+            new AsyncTask<Void, Void, Void>() {
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    GeckoAppShell.createShortcut(displayTitle, info.url);
+                    return null;
+                }
+            }.execute();
             return true;
         }
 

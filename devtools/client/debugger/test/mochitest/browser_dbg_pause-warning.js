@@ -24,8 +24,8 @@ function test() {
 
 function testPause() {
   gDebugger.gThreadClient.addOneTimeListener("paused", () => {
-    ok(gTarget.isThreadPaused,
-      "target.isThreadPaused has been updated to true.");
+    ok(gDebugger.gThreadClient.paused,
+      "threadClient.paused has been updated to true.");
 
     gToolbox.once("inspector-selected").then(inspector => {
       inspector.once("inspector-updated").then(testNotificationIsUp1);
@@ -77,8 +77,8 @@ function testNotificationIsUp2() {
 
 function testResume() {
   gDebugger.gThreadClient.addOneTimeListener("resumed", () => {
-    ok(!gTarget.isThreadPaused,
-      "target.isThreadPaused has been updated to false.");
+    ok(!gDebugger.gThreadClient.paused,
+      "threadClient.paused has been updated to false.");
 
     let notificationBox = gToolbox.getNotificationBox();
     let notification = notificationBox.getNotificationWithValue("inspector-script-paused");

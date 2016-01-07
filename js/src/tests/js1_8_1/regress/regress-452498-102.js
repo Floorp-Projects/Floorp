@@ -55,24 +55,6 @@ function test()
   }
 // Assertion failure: regs.sp == StackBase(fp), at ../jsinterp.cpp:2984
 
-// =====
-  try
-  {
-    do {x} while([[] for (x in []) ]);
-  }
-  catch(ex)
-  {
-  }
-// Assertion failure: !(pnu->pn_dflags & PND_BOUND), at ../jsemit.cpp:1818
-// =====
-
-  try
-  {
-    {x} ((x=[] for (x in []))); x;
-  }
-  catch(ex)
-  {
-  }
 // Assertion failure: cg->staticLevel >= level, at ../jsemit.cpp:2014
 // Crash [@ BindNameToSlot] in opt without -j
 

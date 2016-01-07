@@ -35,12 +35,12 @@ function consoleOpened(HUD) {
 
   is(result + 1, container.gen1.next(), "gen1.next() did not execute");
 
-  result = container.gen2.next();
+  result = container.gen2.next().value;
 
   completion = JSPropertyProvider(dbgWindow, null, "_container.gen2.");
   isnot(completion.matches.length, 0, "Got matches for gen2");
 
-  is((result / 2 + 1) * 2, container.gen2.next(),
+  is((result / 2 + 1) * 2, container.gen2.next().value,
      "gen2.next() did not execute");
 
   result = container.iter1.next();

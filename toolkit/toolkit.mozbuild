@@ -173,13 +173,16 @@ if CONFIG['ENABLE_TESTS']:
         '/testing/mochitest',
         '/testing/xpcshell',
         '/testing/tools/screenshot',
-        '/testing/tools/fileid',
         '/testing/profiles',
         '/testing/mozbase',
         '/testing/modules',
         '/testing/runtimes',
         '/testing/web-platform',
     ]
+
+    # The file id utility requires breakpad libraries.
+    if CONFIG['MOZ_CRASHREPORTER']:
+        DIRS += ['/testing/tools/fileid']
 
     if CONFIG['MOZ_WEBRTC'] and CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk' and not CONFIG['MOZ_TASK_TRACER']:
             DIRS += [
