@@ -488,8 +488,7 @@ AddonsReconciler.prototype = {
       try {
         listener.changeListener.call(listener, date, change, state);
       } catch (ex) {
-        this._log.warn("Exception calling change listener: " +
-                       Utils.exceptionStr(ex));
+        this._log.warn("Exception calling change listener", ex);
       }
     }
   },
@@ -635,7 +634,7 @@ AddonsReconciler.prototype = {
       }
     }
     catch (ex) {
-      this._log.warn("Exception: " + Utils.exceptionStr(ex));
+      this._log.warn("Exception", ex);
     }
   },
 

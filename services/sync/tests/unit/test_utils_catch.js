@@ -8,7 +8,7 @@ function run_test() {
     catch: Utils.catch,
     _log: {
       debug: function(str) {
-        didThrow = str.search(/^Exception: /) == 0;
+        didThrow = str.search(/^Exception/) == 0;
       },
       info: function(str) {
         wasLocked = str.indexOf("Cannot start sync: already syncing?") == 0;

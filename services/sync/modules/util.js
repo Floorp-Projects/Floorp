@@ -35,7 +35,6 @@ this.Utils = {
   // In the ideal world, references to these would be removed.
   nextTick: CommonUtils.nextTick,
   namedTimer: CommonUtils.namedTimer,
-  exceptionStr: CommonUtils.exceptionStr,
   stackTrace: CommonUtils.stackTrace,
   makeURI: CommonUtils.makeURI,
   encodeUTF8: CommonUtils.encodeUTF8,
@@ -77,7 +76,7 @@ this.Utils = {
         return func.call(thisArg);
       }
       catch(ex) {
-        thisArg._log.debug("Exception: " + Utils.exceptionStr(ex));
+        thisArg._log.debug("Exception", ex);
         if (exceptionCallback) {
           return exceptionCallback.call(thisArg, ex);
         }
@@ -342,8 +341,7 @@ this.Utils = {
       // Ignore non-existent files.
     } catch (e) {
       if (that._log) {
-        that._log.debug("Failed to load json: " +
-                        CommonUtils.exceptionStr(e));
+        that._log.debug("Failed to load json", e);
       }
     }
 
