@@ -65,7 +65,14 @@ def _do_watch(qWatch, timeout):
             assert fin is TaskFinishedMarker, "invalid finish marker"
         except Empty:
             # Timed out, force-kill the test.
-            proc.terminate()
+            try:
+                proc.terminate()
+            except WindowsError as ex:
+                # If the process finishes after we time out but before we
+                # terminate, the terminate call will fail. We can safely
+                # ignore this.
+                if ex.winerror != 5:
+                    raise
             fin = qWatch.get(block=True, timeout=sys.maxint)
             assert fin is TaskFinishedMarker, "invalid finish marker"
 
