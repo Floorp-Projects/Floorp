@@ -95,18 +95,33 @@ FFmpegRuntimeLinker::Bind(const char* aLibName)
   if (!GetVersion(major, minor)) {
     return false;
   }
-  if (major > 55) {
-    // All major greater than 56 currently use the same ABI as 55.
-    major = 55;
+
+  int version;
+  switch (major) {
+    case 53:
+      version = AV_FUNC_53;
+      break;
+    case 54:
+      version = AV_FUNC_54;
+      break;
+    case 55:
+    case 56:
+      version = AV_FUNC_55;
+      break;
+    default:
+      // Not supported at this stage.
+      return false;
   }
 
 #define LIBAVCODEC_ALLVERSION
 #define AV_FUNC(func, ver)                                                     \
-  if (ver == 0 || ver == major) {                                              \
+  if ((ver) & version) {                                                       \
     if (!(func = (typeof(func))PR_FindSymbol(sLinkedLib, #func))) {            \
       FFMPEG_LOG("Couldn't load function " #func " from %s.", aLibName);       \
       return false;                                                            \
     }                                                                          \
+  } else {                                                                     \
+    func = (typeof(func))nullptr;                                              \
   }
 #include "FFmpegFunctionList.h"
 #undef AV_FUNC
