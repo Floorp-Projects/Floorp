@@ -13,24 +13,46 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777467
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=777467">Mozilla Bug 777467</a>
 <p id="display"></p>
 <script>
-  // Initialization.
-  SpecialPowers.addPermission("browser", true, document);
-  SpecialPowers.addPermission("embed-apps", true, document);
-
-  SpecialPowers.setBoolPref('dom.mozBrowserFramesEnabled', true);
-  SpecialPowers.setBoolPref("dom.ipc.browser_frames.oop_by_default", false);
-</script>
-<div id="content" style="display: none;">
-  <iframe src="error404"></iframe>
-  <iframe mozbrowser src="error404"></iframe>
-  <iframe mozapp="http://example.org/manifest.webapp" mozbrowser src="error404"></iframe>
-</div>
-<pre id="test">
-<script type="application/javascript">
 
 /** Test for app principal's equality **/
 
 SimpleTest.waitForExplicitFinish();
+
+var permissions = new Promise(resolve => {
+  SpecialPowers.pushPermissions(
+    [{ type: "browser", allow: true, context: document },
+     { type: "embed-apps", allow: true, context: document }],
+    resolve);
+});
+
+permissions.then(() => {
+  $('content').innerHTML =
+    '<iframe src="error404"></iframe>\n' +
+    '<iframe mozbrowser src="error404"></iframe>\n' +
+    '<iframe mozapp="http://example.org/manifest.webapp" mozbrowser src="error404"></iframe>';
+
+  var iframes = document.getElementsByTagName("iframe");
+  var promises = []
+  for (var i = 0; i < promises.length; ++i) {
+    promises.push(new Promise(resolve => {
+      iframes[i].addEventListener("load", resolve);
+    }));
+  }
+
+  return Promise.all(promises);
+});
+
+var prefs = new Promise(resolve => {
+  SpecialPowers.pushPrefEnv(
+    { set: [[ "dom.mozBrowserFramesEnabled", true ],
+            [ "dom.ipc.browser_frames.oop_by_default", false ]] },
+    resolve);
+});
+</script>
+<div id="content" style="display: none;">
+</div>
+<pre id="test">
+<script type="application/javascript">
 
 function canAccessDocument(win) {
   var result = true;
@@ -42,7 +64,11 @@ function canAccessDocument(win) {
   return result;
 }
 
-addLoadEvent(function() {
+var loaded = new Promise(resolve => addLoadEvent(resolve));
+
+Promise.all([ permissions, prefs, loaded ]).then(runTest);
+
+function runTest() {
   // Test the witness frame (we can access same-origin frame).
   is(canAccessDocument(frames[0]), true,
      "should be able to access the first frame");
@@ -53,14 +79,8 @@ addLoadEvent(function() {
        "should not be able to access the other frames");
   }
 
-  // Cleanup.
-  SpecialPowers.clearUserPref('dom.mozBrowserFramesEnabled');
-  SpecialPowers.clearUserPref('dom.ipc.browser_frames.oop_by_default');
-  SpecialPowers.removePermission("browser", window.document);
-  SpecialPowers.removePermission("embed-apps", window.document);
-
   SimpleTest.finish();
-});
+}
 
 </script>
 </pre>
