@@ -146,26 +146,20 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         if self.test_packages_url or self.test_url:
             test_install_dir = dirs.get('abs_test_install_dir',
                                         os.path.join(dirs['abs_work_dir'], 'tests'))
-            requirements_file = os.path.join(test_install_dir,
-                                             'config', 'firefox_ui_requirements.txt')
-            if os.path.isfile(requirements_file):
-                self.register_virtualenv_module(requirements=[requirements_file])
+            requirements = os.path.join(test_install_dir,
+                                        'config', 'firefox_ui_requirements.txt')
+            self.register_virtualenv_module(requirements=[requirements], two_pass=True)
 
         # We have a non-packaged version of Firefox UI tests. So install requirements
         # and the firefox-ui-tests package separately
+        # TODO - Can be removed when the github repository is no longer needed
         else:
             # Register all modules for firefox-ui-tests including all dependencies
             # as strict versions to ensure newer releases won't break something
-            requirements_file = os.path.join(dirs.get('abs_test_install_dir',
-                                                      os.path.join(dirs['abs_work_dir'], 'tests')),
-                                             'requirements.txt')
-            if os.path.isfile(requirements_file):
-                self.register_virtualenv_module(requirements=[requirements_file])
-
-            # Optional packages to be installed, e.g. for Jenkins
-            if self.config.get('virtualenv_modules'):
-                for module in self.config['virtualenv_modules']:
-                    self.register_virtualenv_module(module)
+            requirements = os.path.join(dirs.get('abs_test_install_dir',
+                                                 os.path.join(dirs['abs_work_dir'], 'tests')),
+                                        'requirements.txt')
+            self.register_virtualenv_module(requirements=[requirements])
 
     def checkout(self):
         """Clone the firefox-ui-tests repository."""
