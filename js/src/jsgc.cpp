@@ -1521,7 +1521,7 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
             return 0;
         } else {
             MOZ_RELEASE_ASSERT(defaultTimeBudget_ >= 0);
-            MOZ_RELEASE_ASSERT(defaultTimeBudget_ < UINT32_MAX);
+            MOZ_RELEASE_ASSERT(defaultTimeBudget_ <= UINT32_MAX);
             return uint32_t(defaultTimeBudget_);
         }
       case JSGC_MARK_STACK_LIMIT:
