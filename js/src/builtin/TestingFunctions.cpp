@@ -9,6 +9,8 @@
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
 
+#include <cmath>
+
 #include "jsapi.h"
 #include "jscntxt.h"
 #include "jsfriendapi.h"
@@ -411,10 +413,16 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    uint32_t value;
-    if (!ToUint32(cx, args[1], &value))
+    double d;
+    if (!ToNumber(cx, args[1], &d))
         return false;
 
+    if (d < 0 || d > UINT32_MAX) {
+        JS_ReportError(cx, "Parameter value out of range");
+        return false;
+    }
+
+    uint32_t value = floor(d);
     if (!info.allowZero && value == 0) {
         JS_ReportError(cx, "the second argument must be convertable to uint32_t "
                            "with non-zero value");
