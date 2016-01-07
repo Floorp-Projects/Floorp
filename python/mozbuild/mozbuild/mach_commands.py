@@ -325,6 +325,8 @@ class Build(MachCommandBase):
                 if directory.startswith('/'):
                     directory = directory[1:]
 
+            status = None
+            monitor.start_resource_recording()
             if what:
                 top_make = os.path.join(self.topobjdir, 'Makefile')
                 if not os.path.exists(top_make):
@@ -417,7 +419,6 @@ class Build(MachCommandBase):
                     self.log(logging.DEBUG, 'artifact',
                              {}, "Not running |mach artifact install| -- it will be run by client.mk.")
 
-                monitor.start_resource_recording()
                 status = self._run_make(srcdir=True, filename='client.mk',
                     line_handler=output.on_line, log=False, print_directory=False,
                     allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
