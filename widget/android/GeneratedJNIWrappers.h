@@ -3609,6 +3609,23 @@ public:
     auto IsContentDocumentDisplayed() const -> bool;
 
 public:
+    struct OnGeckoReady_t {
+        typedef GeckoLayerClient Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "onGeckoReady";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnGeckoReady() const -> void;
+
+public:
     struct ProgressiveUpdateCallback_t {
         typedef GeckoLayerClient Owner;
         typedef mozilla::jni::Object::LocalRef ReturnType;
