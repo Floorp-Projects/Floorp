@@ -1830,23 +1830,6 @@ public:
     auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
 
 public:
-    struct OnDestroy_t {
-        typedef GeckoEditable Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "onDestroy";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto OnDestroy() const -> void;
-
-public:
     struct OnImeAcknowledgeFocus_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
