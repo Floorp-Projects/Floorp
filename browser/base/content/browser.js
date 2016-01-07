@@ -6408,11 +6408,6 @@ function BrowserOpenAddonsMgr(aView) {
   }
 }
 
-function BrowserOpenApps() {
-  let appsURL = Services.urlFormatter.formatURLPref("browser.apps.URL");
-  switchToTabHavingURI(appsURL, true)
-}
-
 function AddKeywordForSearchField() {
   let mm = gBrowser.selectedBrowser.messageManager;
 
