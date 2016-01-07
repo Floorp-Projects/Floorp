@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
-
 ///////////////////
 //
 // Whitelisting this test.
@@ -16,15 +14,15 @@ function test() {
                    .hasAttribute("responsivemode");
   }
 
-  helpers.addTabWithToolbar("data:text/html;charset=utf-8,hi", (options) => {
+  helpers.addTabWithToolbar("data:text/html;charset=utf-8,hi", function(options) {
     return helpers.audit(options, [
       {
         setup: "resize toggle",
         check: {
-          input:  "resize toggle",
-          hints:               "",
-          markup: "VVVVVVVVVVVVV",
-          status: "VALID"
+          input:  'resize toggle',
+          hints:               '',
+          markup: 'VVVVVVVVVVVVV',
+          status: 'VALID'
         },
         exec: {
           output: ""
@@ -36,10 +34,10 @@ function test() {
       {
         setup: "resize toggle",
         check: {
-          input:  "resize toggle",
-          hints:               "",
-          markup: "VVVVVVVVVVVVV",
-          status: "VALID"
+          input:  'resize toggle',
+          hints:               '',
+          markup: 'VVVVVVVVVVVVV',
+          status: 'VALID'
         },
         exec: {
           output: ""
@@ -51,10 +49,10 @@ function test() {
       {
         setup: "resize on",
         check: {
-          input:  "resize on",
-          hints:           "",
-          markup: "VVVVVVVVV",
-          status: "VALID"
+          input:  'resize on',
+          hints:           '',
+          markup: 'VVVVVVVVV',
+          status: 'VALID'
         },
         exec: {
           output: ""
@@ -66,10 +64,10 @@ function test() {
       {
         setup: "resize off",
         check: {
-          input:  "resize off",
-          hints:            "",
-          markup: "VVVVVVVVVV",
-          status: "VALID"
+          input:  'resize off',
+          hints:            '',
+          markup: 'VVVVVVVVVV',
+          status: 'VALID'
         },
         exec: {
           output: ""
@@ -81,10 +79,10 @@ function test() {
       {
         setup: "resize to 400 400",
         check: {
-          input:  "resize to 400 400",
-          hints:                   "",
-          markup: "VVVVVVVVVVVVVVVVV",
-          status: "VALID",
+          input:  'resize to 400 400',
+          hints:                   '',
+          markup: 'VVVVVVVVVVVVVVVVV',
+          status: 'VALID',
           args: {
             width: { value: 400 },
             height: { value: 400 },
@@ -100,10 +98,10 @@ function test() {
       {
         setup: "resize off",
         check: {
-          input:  "resize off",
-          hints:            "",
-          markup: "VVVVVVVVVV",
-          status: "VALID"
+          input:  'resize off',
+          hints:            '',
+          markup: 'VVVVVVVVVV',
+          status: 'VALID'
         },
         exec: {
           output: ""
