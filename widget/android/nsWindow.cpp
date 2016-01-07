@@ -439,6 +439,11 @@ public:
             // object lifetimes for us.
             (Functor(aCall))();
             aCall.SetTarget(&GLControllerSupport::OnResumedCompositor);
+            nsAppShell::PostEvent(
+                    mozilla::MakeUnique<GLControllerEvent>(
+                    mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
+                    mozilla::Move(aCall))));
+            return;
 
         } else if (aCall.IsTarget(
                 &GLControllerSupport::SyncInvalidateAndScheduleComposite)) {
@@ -446,10 +451,12 @@ public:
             return aCall();
         }
 
+        // GLControllerEvent (i.e. prioritized event) applies to
+        // CreateCompositor, PauseCompositor, and OnResumedCompositor. For all
+        // other events, use regular WindowEvent.
         nsAppShell::PostEvent(
-                mozilla::MakeUnique<GLControllerEvent>(
                 mozilla::MakeUnique<GeckoViewSupport::WindowEvent<Functor>>(
-                mozilla::Move(aCall))));
+                mozilla::Move(aCall)));
     }
 
     GLControllerSupport(nsWindow* aWindow,
