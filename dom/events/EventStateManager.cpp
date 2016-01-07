@@ -3167,10 +3167,15 @@ EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
       if (pluginFrame) {
         MOZ_ASSERT(pluginFrame->WantsToHandleWheelEventAsDefaultAction());
         action = WheelPrefs::ACTION_SEND_TO_PLUGIN;
-      } else if (nsLayoutUtils::IsScrollFrameWithSnapping(frameToScroll)) {
+      } else if (!wheelEvent->mayHaveMomentum &&
+            nsLayoutUtils::IsScrollFrameWithSnapping(frameToScroll)) {
         // If the target has scroll-snapping points then we want to handle
         // the wheel event on the main thread even if we have APZ enabled. Do
-        // so and let the APZ know that it should ignore this event.
+        // so and let the APZ know that it should ignore this event. However,
+        // if the wheel event is synthesized from a Mac trackpad or other device
+        // that can generate additional momentum events, then we should allow
+        // APZ to handle it, because it will track the velocity and predicted
+        // destination from the momentum.
         if (wheelEvent->mFlags.mHandledByAPZ) {
           wheelEvent->mFlags.mDefaultPrevented = true;
         }
