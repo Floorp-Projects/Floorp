@@ -7,10 +7,12 @@
 #include "NetUtils.h"
 #include <dlfcn.h>
 #include <errno.h>
-#include <cutils/properties.h>
 #include "prinit.h"
 #include "mozilla/Assertions.h"
 #include "nsDebug.h"
+#include "SystemProperty.h"
+
+using mozilla::system::Property;
 
 static void* sNetUtilsLib;
 static PRCallOnceType sInitNetUtilsLib;
@@ -45,8 +47,8 @@ NetUtils::GetSharedLibrary()
 int32_t
 NetUtils::SdkVersion()
 {
-  char propVersion[PROPERTY_VALUE_MAX];
-  property_get("ro.build.version.sdk", propVersion, "0");
+  char propVersion[Property::VALUE_MAX_LENGTH];
+  Property::Get("ro.build.version.sdk", propVersion, "0");
   int32_t version = strtol(propVersion, nullptr, 10);
   return version;
 }
@@ -177,7 +179,7 @@ int32_t NetUtils::do_dhcp_do_request(const char *ifname,
     DEFINE_DLFUNC(dhcp_do_request, int32_t, const char*, char*, char*,  uint32_t*, char**, char*, uint32_t*, char*, char*)
     USE_DLFUNC(dhcp_do_request)
     char *dns[3] = {dns1, dns2, nullptr};
-    char domains[PROPERTY_VALUE_MAX];
+    char domains[Property::VALUE_MAX_LENGTH];
     ret = dhcp_do_request(ifname, ipaddr, gateway, prefixLength, dns,
                           server, lease, vendorinfo, domains);
   } else if (sdkVersion >= 19) {
@@ -188,8 +190,8 @@ int32_t NetUtils::do_dhcp_do_request(const char *ifname,
     DEFINE_DLFUNC(dhcp_do_request, int32_t, const char*, char*, char*,  uint32_t*, char**, char*, uint32_t*, char*, char*, char*)
     USE_DLFUNC(dhcp_do_request)
     char *dns[3] = {dns1, dns2, nullptr};
-    char domains[PROPERTY_VALUE_MAX];
-    char mtu[PROPERTY_VALUE_MAX];
+    char domains[Property::VALUE_MAX_LENGTH];
+    char mtu[Property::VALUE_MAX_LENGTH];
     ret = dhcp_do_request(ifname, ipaddr, gateway, prefixLength, dns, server, lease, vendorinfo, domains, mtu);
   } else {
     NS_WARNING("Unable to perform do_dhcp_request: unsupported sdk version!");
