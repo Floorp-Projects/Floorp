@@ -12,9 +12,6 @@ DIRS += [
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android' or CONFIG['MOZ_B2GDROID']:
     DIRS += ['fxaccounts']
 
-if CONFIG['MOZ_SERVICES_METRICS']:
-    DIRS += ['metrics']
-
 if CONFIG['MOZ_SERVICES_SYNC']:
     DIRS += ['sync']
 
@@ -23,5 +20,3 @@ if CONFIG['MOZ_B2G'] or CONFIG['MOZ_B2GDROID']:
 
 if CONFIG['MOZ_SERVICES_CLOUDSYNC']:
     DIRS += ['cloudsync']
-
-SPHINX_TREES['services'] = 'docs'
