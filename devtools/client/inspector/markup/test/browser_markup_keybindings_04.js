@@ -48,27 +48,24 @@ function selectPreviousNodeWithArrowUp(inspector) {
 }
 
 function* selectWithBrowserMenu(inspector) {
+  let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
+  let contextOpened = once(contentAreaContextMenu, "popupshown");
+
   yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
     type: "contextmenu",
     button: 2
   }, gBrowser.selectedBrowser);
 
-  // nsContextMenu also requires the popupNode to be set, but we can't set it to
-  // node under e10s as it's a CPOW, not a DOM node. But under e10s,
-  // nsContextMenu won't use the property anyway, so just try/catching is ok.
-  try {
-    document.popupNode = getNode("div");
-  } catch (e) {}
+  yield contextOpened;
 
-  let contentAreaContextMenu = document.querySelector("#contentAreaContextMenu");
-  let contextMenu = new nsContextMenu(contentAreaContextMenu);
-  yield contextMenu.inspectNode();
+  yield gContextMenu.inspectNode();
 
+  let contextClosed = once(contentAreaContextMenu, "popuphidden");
   contentAreaContextMenu.hidden = true;
   contentAreaContextMenu.hidePopup();
-  contextMenu.hiding();
 
   yield inspector.once("inspector-updated");
+  yield contextClosed;
 }
 
 function* selectWithElementPicker(inspector, testActor) {
