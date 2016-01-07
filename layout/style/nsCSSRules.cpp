@@ -1302,6 +1302,13 @@ nsCSSFontFaceStyleDecl::GetPropertyValue(nsCSSFontDesc aFontDescID,
                        nsCSSValue::eNormalized);
     return NS_OK;
 
+  case eCSSFontDesc_Display:
+    NS_ASSERTION(val.GetUnit() == eCSSUnit_Enumerated,
+                 "unknown unit for font-display descriptor");
+    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(val.GetIntValue(),
+                                       nsCSSProps::kFontDisplayKTable), aResult);
+    return NS_OK;
+
   case eCSSFontDesc_Src:
     nsStyleUtil::AppendSerializedFontSrc(val, aResult);
     return NS_OK;
