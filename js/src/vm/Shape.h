@@ -715,7 +715,9 @@ class Shape : public gc::TenuredCell
          */
         ACCESSOR_SHAPE  = 0x04,
 
-        UNUSED_BITS     = 0x3C
+        /* Flags used to speed up isBigEnoughForAShapeTable(). */
+        HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x08,
+        CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE = 0x10,
     };
 
     /* Get a shape identical to this one, without parent/kids information. */
@@ -899,16 +901,38 @@ class Shape : public gc::TenuredCell
         return count;
     }
 
-    bool isBigEnoughForAShapeTable() {
-        MOZ_ASSERT(!hasTable());
-        Shape* shape = this;
+  private:
+    bool isBigEnoughForAShapeTableSlow() {
         uint32_t count = 0;
-        for (Shape::Range<NoGC> r(shape); !r.empty(); r.popFront()) {
+        for (Shape::Range<NoGC> r(this); !r.empty(); r.popFront()) {
             ++count;
             if (count >= ShapeTable::MIN_ENTRIES)
                 return true;
         }
         return false;
+    }
+
+  public:
+    bool isBigEnoughForAShapeTable() {
+        MOZ_ASSERT(!inDictionary());
+        MOZ_ASSERT(!hasTable());
+
+        // isBigEnoughForAShapeTableSlow is pretty inefficient so we only call
+        // it once and cache the result.
+
+        if (flags & HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE) {
+            bool res = flags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+            MOZ_ASSERT(res == isBigEnoughForAShapeTableSlow());
+            return res;
+        }
+
+        MOZ_ASSERT(!(flags & CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE));
+
+        bool res = isBigEnoughForAShapeTableSlow();
+        if (res)
+            flags |= CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+        flags |= HAS_CACHED_BIG_ENOUGH_FOR_SHAPE_TABLE;
+        return res;
     }
 
 #ifdef DEBUG
