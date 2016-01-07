@@ -1625,7 +1625,7 @@ private:
   }
 
   NS_IMETHOD
-  Cancel()
+  Cancel() override
   {
     MessagePort::ForceClose(mPortIdentifier);
     return WorkerRunnable::Cancel();
