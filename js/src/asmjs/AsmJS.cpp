@@ -3042,17 +3042,17 @@ CheckModuleArguments(ModuleValidator& m, ParseNode* fn)
         return m.fail(fn, "asm.js modules takes at most 3 argument");
 
     PropertyName* arg1Name = nullptr;
-    if (numFormals >= 1 && !CheckModuleArgument(m, arg1, &arg1Name))
+    if (arg1 && !CheckModuleArgument(m, arg1, &arg1Name))
         return false;
     m.initGlobalArgumentName(arg1Name);
 
     PropertyName* arg2Name = nullptr;
-    if (numFormals >= 2 && !CheckModuleArgument(m, arg2, &arg2Name))
+    if (arg2 && !CheckModuleArgument(m, arg2, &arg2Name))
         return false;
     m.initImportArgumentName(arg2Name);
 
     PropertyName* arg3Name = nullptr;
-    if (numFormals >= 3 && !CheckModuleArgument(m, arg3, &arg3Name))
+    if (arg3 && !CheckModuleArgument(m, arg3, &arg3Name))
         return false;
     m.initBufferArgumentName(arg3Name);
 
