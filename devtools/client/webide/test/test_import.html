@@ -24,7 +24,7 @@
           let packagedAppLocation = getTestFilePath("app");
 
           yield win.AppProjects.load();
-          is(win.AppProjects.store.object.projects.length, 0, "IDB is empty");
+          is(win.AppProjects.projects.length, 0, "IDB is empty");
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           ok(!win.UI._busyPromise, "UI is not busy");
