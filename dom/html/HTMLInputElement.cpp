@@ -5589,7 +5589,6 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
       // If no file was selected, pretend we had an empty file with an
       // empty filename.
       aFormSubmission->AddNameFilePair(name, nullptr);
-
     }
 
     return NS_OK;
