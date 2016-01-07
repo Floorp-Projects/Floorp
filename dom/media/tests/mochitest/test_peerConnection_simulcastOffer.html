@@ -1,0 +1,154 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1231507",
+    title: "Basic video-only peer connection with Simulcast offer",
+    visible: true
+  });
+
+  var test;
+  var pushPrefs = (...p) => new Promise(r => SpecialPowers.pushPrefEnv({set: p}, r));
+
+  function alternateRedAndGreen(helper, canvas, stream) {
+    var i = 0;
+    setInterval(function() {
+      try {
+        helper.drawColor(canvas, i ? helper.green : helper.red);
+        i = 1 - i;
+        stream.requestFrame();
+      } catch (e) {
+        // ignore; stream might have shut down, and we don't bother clearing
+        // the setInterval.
+      }
+    }, 500);
+  }
+
+  function selectRecvSsrc(pc, index) {
+    var receivers = pc._pc.getReceivers();
+    is(receivers.length, 1, "We have exactly one RTP receiver");
+    var receiver = receivers[0];
+
+    SpecialPowers.wrap(pc._pc).mozSelectSsrc(receiver, index);
+  }
+
+  var waitForColorChange = (helper, canvas) =>
+    Promise.all([
+        helper.waitForPixelColor(canvas, helper.green, 128,
+                                 canvas.id + " should become green"),
+        helper.waitForPixelColor(canvas, helper.red, 128,
+                                 canvas.id + " should become red")
+    ]);
+
+  var ensureNoColorChange = (helper, canvas) => Promise.race([
+      waitForColorChange(helper, canvas).then(() => ok(false, "Color should not change")),
+      wait(2000).then(() => ok(true, "No color change"))
+  ]);
+
+  runNetworkTest(() =>
+    pushPrefs(['media.peerconnection.simulcast', true]).then(() => {
+      var stream;
+      var helper = new CaptureStreamTestHelper2D(50,50);
+      var canvas = helper.createAndAppendElement('canvas', 'source_canvas');
+      helper.drawColor(canvas, helper.green); // Make sure this is initted
+
+      test = new PeerConnectionTest({bundle: false});
+      test.setMediaConstraints([{video: true}], []);
+
+      test.chain.replace("PC_LOCAL_GUM", [
+        function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+          stream = canvas.captureStream(10);
+          test.pcLocal.attachMedia(stream, 'video', 'local');
+        },
+        function PC_LOCAL_CANVAS_ALTERNATE_COLOR(test) {
+          alternateRedAndGreen(helper, canvas, stream);
+        }
+      ]);
+
+      test.chain.insertBefore('PC_LOCAL_CREATE_OFFER', [
+        // addTrack will not finish until GMP is initted, but addTrack doesn't
+        // give us a promise to wait on or a callback. We cannot do
+        // setParameters until addTrack is finished. So, we create a dummy
+        // offer, which _does_ give us a promise to wait on, and once that is
+        // done we know that addTrack is done too.
+        // TODO(bug 1241153): Remove the need for this hack.
+        function PC_LOCAL_CREATE_OFFER(test) {
+          return test.createOffer(test.pcLocal);
+        },
+        function PC_LOCAL_SET_RIDS(test) {
+          var senders = test.pcLocal._pc.getSenders();
+          is(senders.length, 1, "We have exactly one RTP sender");
+          var sender = senders[0];
+          ok(sender.track, "Sender has a track");
+
+          sender.setParameters({
+            encodings: [
+            { rid: "foo", maxBitrate: 40000 },
+            { rid: "bar", maxBitrate: 40000 },
+            ]
+          });
+        }
+      ]);
+
+      test.chain.insertAfter('PC_LOCAL_GET_ANSWER', [
+        function PC_LOCAL_ADD_RIDS_TO_ANSWER(test) {
+          test._remote_answer.sdp = sdputils.transferSimulcastProperties(
+            test.originalOffer.sdp, test._remote_answer.sdp);
+          info("Answer with RIDs: " + JSON.stringify(test._remote_answer));
+          ok(test._remote_answer.sdp.match(/a=simulcast:/), "Modified answer has simulcast");
+          ok(test._remote_answer.sdp.match(/a=rid:/), "Modified answer has rid");
+        }
+      ]);
+
+      test.chain.insertAfter('PC_REMOTE_WAIT_FOR_MEDIA_FLOW',[
+        function PC_REMOTE_SET_RTP_FIRST_RID(test) {
+          // Cause pcRemote to filter out everything but the first SSRC. This
+          // lets only one of the simulcast streams through.
+          selectRecvSsrc(test.pcRemote, 0);
+        }
+      ]);
+
+      test.chain.append([
+        function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_1() {
+          var vremote = document.getElementById('pcRemote_remote1_video');
+          ok(vremote, "Should have remote video element for pcRemote");
+          return waitForColorChange(helper, vremote);
+        },
+        function PC_REMOTE_SET_RTP_SECOND_RID(test) {
+          // Now, cause pcRemote to filter out everything but the second SSRC.
+          // This lets only the other simulcast stream through.
+          selectRecvSsrc(test.pcRemote, 1);
+        },
+        function PC_REMOTE_WAIT_FOR_SECOND_MEDIA_FLOW(test) {
+          return test.pcRemote.waitForMediaFlow();
+        },
+        function PC_REMOTE_WAIT_FOR_COLOR_CHANGE_2() {
+          var vremote = document.getElementById('pcRemote_remote1_video');
+          ok(vremote, "Should have remote video element for pcRemote");
+          return waitForColorChange(helper, vremote);
+        },
+        function PC_REMOTE_SET_RTP_NONEXISTENT_RID(test) {
+          // Now, cause pcRemote to filter out everything, just to make sure
+          // selectRecvSsrc is working.
+          selectRecvSsrc(test.pcRemote, 2);
+        },
+        function PC_REMOTE_ENSURE_NO_COLOR_CHANGE() {
+          var vremote = document.getElementById('pcRemote_remote1_video');
+          ok(vremote, "Should have remote video element for pcRemote");
+          return ensureNoColorChange(helper, vremote);
+        },
+      ]);
+
+      return test.run();
+  })
+  .catch(e => ok(false, "unexpected failure: " + e)));
+</script>
+</pre>
+</body>
+</html>
