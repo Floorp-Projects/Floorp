@@ -91,19 +91,27 @@ function test_descriptor(descriptor)
 // To avoid triggering the slow script dialog, we have to test one
 // descriptor at a time.
 SimpleTest.waitForExplicitFinish();
-var descs = [];
-for (var desc in gCSSFontFaceDescriptors)
-  descs.push(desc);
-descs = descs.reverse();
-function do_one() {
-  if (descs.length == 0) {
-    SimpleTest.finish();
-    return;
+function runTest() {
+  var descs = [];
+  for (var desc in gCSSFontFaceDescriptors)
+    descs.push(desc);
+  descs = descs.reverse();
+  function do_one() {
+    if (descs.length == 0) {
+      SimpleTest.finish();
+      return;
+    }
+    test_descriptor(descs.pop());
+    SimpleTest.executeSoon(do_one);
   }
-  test_descriptor(descs.pop());
   SimpleTest.executeSoon(do_one);
 }
-SimpleTest.executeSoon(do_one);
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(5);
+
+SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
+                          runTest);
 
 </script>
 </pre>
