@@ -746,7 +746,11 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
 
     if (aContext->CurrentMatrix().HasNonIntegerTranslation()) {
         if ((extendMode != ExtendMode::CLAMP) || !aRegion.RestrictionContains(imageRect)) {
-            if (drawable->DrawWithSamplingRect(aContext, aRegion.Rect(), aRegion.Restriction(),
+            if (drawable->DrawWithSamplingRect(aContext->GetDrawTarget(),
+                                               aContext->CurrentOp(),
+                                               aContext->CurrentAntialiasMode(),
+                                               aRegion.Rect(),
+                                               aRegion.Restriction(),
                                                extendMode, aFilter, aOpacity)) {
               return;
             }
