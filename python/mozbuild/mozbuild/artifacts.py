@@ -408,12 +408,39 @@ class PushHeadCache(CacheManager):
 
     @cachedmethod(operator.attrgetter('_cache'))
     def pushheads(self, tree, parent):
-        pushheads = subprocess.check_output([self._hg, 'log',
+        try:
+            pushheads = subprocess.check_output([self._hg, 'log',
+                '--template', '{node}\n',
+                '-r', 'last(pushhead("{tree}") and ::"{parent}", {num})'.format(
+                    tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
+            # Filter blank lines.
+            pushheads = [ pushhead for pushhead in pushheads.strip().split('\n') if pushhead ]
+            if pushheads:
+                return pushheads
+        except subprocess.CalledProcessError as e:
+            # Probably don't have the mozext extension installed.
+            ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
+            if ret:
+                raise Exception('Could not find candidate pushheads.\n\n'
+                                'You need to enable the "mozext" hg extension: '
+                                'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
+            raise e
+
+        # Probably don't have the pushlog database present locally.  Check.
+        tree_pushheads = subprocess.check_output([self._hg, 'log',
             '--template', '{node}\n',
-            '-r', 'last(pushhead("{tree}") and ::"{parent}", {num})'.format(
-                tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
-        pushheads = pushheads.strip().split('\n')
-        return pushheads
+            '-r', 'last(pushhead("{tree}"))'.format(tree=tree)])
+        # Filter blank lines.
+        tree_pushheads = [ pushhead for pushhead in tree_pushheads.strip().split('\n') if pushhead ]
+        if tree_pushheads:
+            # Okay, we have some pushheads but no candidates.  This can happen
+            # for legitimate reasons: old revisions with no upstream builds
+            # remaining; or new revisions that don't have upstream builds yet.
+            return []
+
+        raise Exception('Could not find any pushheads for tree "{tree}".\n\n'
+                        'Try running |hg pushlogsync|; '
+                        'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(tree=tree))
 
 
 class TaskCache(CacheManager):
