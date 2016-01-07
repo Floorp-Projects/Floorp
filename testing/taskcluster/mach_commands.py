@@ -570,7 +570,7 @@ class Graph(object):
             graph.pop('scopes', None)
             graph.pop('metadata', None)
 
-        print(json.dumps(graph, indent=4))
+        print(json.dumps(graph, indent=4, sort_keys=True))
 
 @CommandProvider
 class CIBuild(object):
