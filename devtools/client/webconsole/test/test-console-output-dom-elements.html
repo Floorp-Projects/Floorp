@@ -10,6 +10,7 @@
 </head>
 <body class="body-class" id="body-id">
   <p some-attribute="some-value">hello world!</p>
+  <p id="lots-of-attributes" a b c d e f g h i j k l m n></p>
   <iframe src="data:text/html,<p>hello from iframe</p>"></iframe>
   <div class="some       classname      here      with       more classnames here"></div>
   <script type="text/javascript">
@@ -19,6 +20,10 @@ function testBodyNode() {
 
 function testDocumentElement() {
   return document.documentElement;
+}
+
+function testLotsOfAttributes() {
+  return document.querySelector("#lots-of-attributes");
 }
 
 function testDocument() {
