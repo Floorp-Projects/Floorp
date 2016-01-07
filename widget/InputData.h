@@ -585,6 +585,7 @@ public:
      mScrollSeriesNumber(0),
      mUserDeltaMultiplierX(1.0),
      mUserDeltaMultiplierY(1.0),
+     mMayHaveMomentum(false),
      mIsMomentum(false)
   {}
 
@@ -628,6 +629,7 @@ public:
   double mUserDeltaMultiplierX;
   double mUserDeltaMultiplierY;
 
+  bool mMayHaveMomentum;
   bool mIsMomentum;
 };
 
