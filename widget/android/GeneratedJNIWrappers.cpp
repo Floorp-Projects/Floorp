@@ -1253,6 +1253,14 @@ auto GLController::CreateEGLSurface() const -> mozilla::jni::Object::LocalRef
     return mozilla::jni::Method<CreateEGLSurface_t>::Call(this, nullptr);
 }
 
+constexpr char GLController::Destroy_t::name[];
+constexpr char GLController::Destroy_t::signature[];
+
+auto GLController::Destroy() const -> void
+{
+    return mozilla::jni::Method<Destroy_t>::Call(this, nullptr);
+}
+
 constexpr char GLController::DisposeNative_t::name[];
 constexpr char GLController::DisposeNative_t::signature[];
 

@@ -470,11 +470,7 @@ public:
 
     ~GLControllerSupport()
     {
-        GLController::GlobalRef glController(mozilla::Move(mGLController));
-        nsAppShell::PostEvent([glController] {
-            GLControllerSupport::DisposeNative(GLController::LocalRef(
-                        jni::GetGeckoThreadEnv(), glController));
-        });
+        mGLController->Destroy();
     }
 
     void Reattach(const GLController::LocalRef& aInstance)
