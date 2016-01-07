@@ -52,7 +52,7 @@ build() {
   # it is not suitable for deploying.  Default to using 'latest' as the tag and
   # warn the user at the end.
   if [ ! -f $folder_ver ]; then
-    echo "This image does not container a VERSION file.  Will use 'latest' as the image version"
+    echo "This image does not contain a VERSION file.  Will use 'latest' as the image version"
     local tag="$image_name:latest"
   else
     local version=$(cat $folder_ver)
