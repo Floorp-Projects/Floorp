@@ -1547,8 +1547,6 @@ pref("experiments.supported", true);
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
-pref("browser.apps.URL", "https://marketplace.firefox.com/discovery/");
-
 #ifdef NIGHTLY_BUILD
 pref("browser.polaris.enabled", false);
 pref("privacy.trackingprotection.ui.enabled", false);
