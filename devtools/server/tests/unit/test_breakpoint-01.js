@@ -65,9 +65,11 @@ function test_simple_breakpoint()
     });
   });
 
-  Components.utils.evalInSandbox("var line0 = Error().lineNumber;\n" +
-                                 "debugger;\n" +   // line0 + 1
-                                 "var a = 1;\n" +  // line0 + 2
-                                 "var b = 2;\n",   // line0 + 3
-                                 gDebuggee);
+  Cu.evalInSandbox(
+    "var line0 = Error().lineNumber;\n" +
+    "debugger;\n" +   // line0 + 1
+    "var a = 1;\n" +  // line0 + 2
+    "var b = 2;\n",   // line0 + 3
+    gDebuggee
+  );
 }

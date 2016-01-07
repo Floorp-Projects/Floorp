@@ -68,15 +68,18 @@ function test_second_child_skip_breakpoint()
     });
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function foo() {\n" + // line0 + 1
-                 "  bar();\n" +         // line0 + 2
-                 "}\n" +                // line0 + 3
-                 "function bar() {\n" + // line0 + 4
-                 "  this.a = 1;\n" +    // line0 + 5
-                 "  // A comment.\n" +  // line0 + 6
-                 "  this.b = 2;\n" +    // line0 + 7
-                 "}\n" +                // line0 + 8
-                 "debugger;\n" +        // line0 + 9
-                 "foo();\n");           // line0 + 10
+  Cu.evalInSandbox(
+    "var line0 = Error().lineNumber;\n" +
+    "function foo() {\n" + // line0 + 1
+    "  bar();\n" +         // line0 + 2
+    "}\n" +                // line0 + 3
+    "function bar() {\n" + // line0 + 4
+    "  this.a = 1;\n" +    // line0 + 5
+    "  // A comment.\n" +  // line0 + 6
+    "  this.b = 2;\n" +    // line0 + 7
+    "}\n" +                // line0 + 8
+    "debugger;\n" +        // line0 + 9
+    "foo();\n",           // line0 + 10
+    gDebuggee
+  )
 }

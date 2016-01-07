@@ -69,18 +69,21 @@ function test_nested_breakpoint()
 
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function foo() {\n" +     // line0 + 1
-                 "  function bar() {\n" +   // line0 + 2
-                 "    function baz() {\n" + // line0 + 3
-                 "      this.a = 1;\n" +    // line0 + 4
-                 "      // A comment.\n" +  // line0 + 5
-                 "      this.b = 2;\n" +    // line0 + 6
-                 "    }\n" +                // line0 + 7
-                 "    baz();\n" +           // line0 + 8
-                 "  }\n" +                  // line0 + 9
-                 "  bar();\n" +             // line0 + 10
-                 "}\n" +                    // line0 + 11
-                 "debugger;\n" +            // line0 + 12
-                 "foo();\n");               // line0 + 13
+  Cu.evalInSandbox(
+    "var line0 = Error().lineNumber;\n" +
+    "function foo() {\n" +     // line0 + 1
+    "  function bar() {\n" +   // line0 + 2
+    "    function baz() {\n" + // line0 + 3
+    "      this.a = 1;\n" +    // line0 + 4
+    "      // A comment.\n" +  // line0 + 5
+    "      this.b = 2;\n" +    // line0 + 6
+    "    }\n" +                // line0 + 7
+    "    baz();\n" +           // line0 + 8
+    "  }\n" +                  // line0 + 9
+    "  bar();\n" +             // line0 + 10
+    "}\n" +                    // line0 + 11
+    "debugger;\n" +            // line0 + 12
+    "foo();\n",               // line0 + 13
+    gDebuggee
+  )
 }

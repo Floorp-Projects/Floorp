@@ -48,8 +48,7 @@ function test_child_skip_breakpoint()
       let location = { line: gDebuggee.line0 + 3 };
 
       source.setBreakpoint(location, function (aResponse, bpClient) {
-        // Check that the breakpoint has properly skipped forward one
-        // line.
+        // Check that the breakpoint has properly skipped forward one line.
         do_check_eq(aResponse.actualLocation.source.actor, source.actor);
         do_check_eq(aResponse.actualLocation.line, location.line + 1);
 
@@ -78,13 +77,20 @@ function test_child_skip_breakpoint()
     }
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function foo() {\n" + // line0 + 1
-                 "  this.a = 1;\n" +    // line0 + 2
-                 "  // A comment.\n" +  // line0 + 3
-                 "  this.b = 2;\n" +    // line0 + 3
-                 "}\n");                // line0 + 4
-  gDebuggee.eval("var line1 = Error().lineNumber;\n" +
-                 "debugger;\n" +        // line1 + 1
-                 "foo();\n");           // line1 + 2
+  Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                   "function foo() {\n" + // line0 + 1
+                   "  this.a = 1;\n" +    // line0 + 2
+                   "  // A comment.\n" +  // line0 + 3
+                   "  this.b = 2;\n" +    // line0 + 4
+                   "}\n",                 // line0 + 5
+                   gDebuggee,
+                   "1.7",
+                   "script1.js");
+
+  Cu.evalInSandbox("var line1 = Error().lineNumber;\n" +
+                   "debugger;\n" +        // line1 + 1
+                   "foo();\n",           // line1 + 2
+                   gDebuggee,
+                   "1.7",
+                   "script2.js");
 }
