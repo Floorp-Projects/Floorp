@@ -185,7 +185,7 @@ var LOG = function (...args) {
       Services.console.logStringMessage(message + "\n");
     };
   }
-  logFunc.apply(null, [stringifyArg(arg) for (arg of args)]);
+  logFunc.apply(null, args.map(stringifyArg));
 };
 
 exports.LOG = LOG;

@@ -136,7 +136,7 @@ OSCrypto.prototype = {
     hash += String.fromCharCode(tail % 256);
 
     // convert the binary hash data to a hex string.
-    let hashStr = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    let hashStr = Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
     return hashStr.toUpperCase();
   },
 

@@ -86,7 +86,7 @@ add_task(function() {
 
 function checkAbstractAndRealPlacements(aNode, aExpectedPlacements) {
   assertAreaPlacements(kToolbarName, aExpectedPlacements);
-  let physicalWidgetIds = [node.id for (node of aNode.childNodes)];
+  let physicalWidgetIds = Array.from(aNode.childNodes, (node) => node.id);
   placementArraysEqual(aNode.id, physicalWidgetIds, aExpectedPlacements);
 }
 

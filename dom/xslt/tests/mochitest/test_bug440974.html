@@ -26,16 +26,13 @@ function isTxResult(node)
 }
 
 var xmldoc, xsltdoc;
-[ xmldoc, xsltdoc ] = [ new DOMParser().parseFromString(xml, "text/xml") for (xml of [ 
 
-    '<items><item><id>1</id></item><item><id>2</id></item><item><id>3</id></item></items>' ,
-
-    '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
+xmldoc = new DOMParser().parseFromString('<items><item><id>1</id></item><item><id>2</id></item><item><id>3</id></item></items>', "text/xml");
+xsltdoc = new DOMParser().parseFromString('<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n\
         <xsl:output method="xml" />\n\
         <xsl:template match="item"><foo id="{id}"/></xsl:template>\n\
-    </xsl:stylesheet>'
+    </xsl:stylesheet>', "text/xml");
 
-]) ];
 var processor = new XSLTProcessor;
 processor.importStylesheet(xsltdoc);
 var result = processor.transformToDocument(xmldoc);

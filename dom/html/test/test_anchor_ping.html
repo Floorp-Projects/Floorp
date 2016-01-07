@@ -244,9 +244,7 @@ function createToPathHandler(server, path) {
 // createPingPathHandler() defined below to ensure all headers are sent
 // and received as expected.
 function createPingPathHandlers(server, paths, lazyHeaders) {
-  return [
-    createPingPathHandler(server, path, lazyHeaders) for (path of paths)
-  ]
+  return Array.from(paths, (path) => createPingPathHandler(server, path, lazyHeaders));
 }
 
 // Registers a path handler for the given server that will receive pings as
