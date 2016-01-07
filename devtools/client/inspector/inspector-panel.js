@@ -15,7 +15,7 @@ var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
-loader.lazyGetter(this, "MarkupView", () => require("devtools/client/inspector/markup/markup").MarkupView);
+loader.lazyGetter(this, "MarkupView", () => require("devtools/client/markupview/markup-view").MarkupView);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
 loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspector/inspector-search").InspectorSearch);
@@ -924,7 +924,7 @@ InspectorPanel.prototype = {
 
     this._markupBox.setAttribute("collapsed", true);
     this._markupBox.appendChild(this._markupFrame);
-    this._markupFrame.setAttribute("src", "chrome://devtools/content/inspector/markup/markup.xhtml");
+    this._markupFrame.setAttribute("src", "chrome://devtools/content/markupview/markup-view.xhtml");
     this._markupFrame.setAttribute("aria-label", strings.GetStringFromName("inspector.panelLabel.markupView"));
   },
 

@@ -21,7 +21,7 @@ const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 
 const {UndoStack} = require("devtools/client/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/client/shared/inplace-editor");
-const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
+const {HTMLEditor} = require("devtools/client/markupview/html-editor");
 const promise = require("promise");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
