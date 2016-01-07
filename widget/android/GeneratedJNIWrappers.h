@@ -3385,6 +3385,23 @@ public:
     auto CreateEGLSurface() const -> mozilla::jni::Object::LocalRef;
 
 public:
+    struct Destroy_t {
+        typedef GLController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "destroy";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Destroy() const -> void;
+
+public:
     struct DisposeNative_t {
         typedef GLController Owner;
         typedef void ReturnType;
