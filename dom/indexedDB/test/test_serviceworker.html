@@ -15,13 +15,19 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
+  var regisration;
   function simpleRegister() {
     return navigator.serviceWorker.register("service_worker.js", {
       scope: 'service_worker_client.html'
     });
   }
 
+  function unregister() {
+    return registration.unregister();
+  }
+
   function testIndexedDBAvailable(sw) {
+    registration = sw;
     var p = new Promise(function(resolve, reject) {
       window.onmessage = function(e) {
         if (e.data === "READY") {
@@ -53,6 +59,7 @@
   function runTest() {
     simpleRegister()
       .then(testIndexedDBAvailable)
+      .then(unregister)
       .then(SimpleTest.finish)
       .catch(function(e) {
         ok(false, "Some test failed with error " + e);
