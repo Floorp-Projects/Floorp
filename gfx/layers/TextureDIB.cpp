@@ -53,8 +53,9 @@ TextureClientDIB::BorrowDrawTarget()
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mSurface, mSize);
   }
 
-  if (!mDrawTarget) {
+  if (!mDrawTarget || !mDrawTarget->IsValid()) {
     gfxCriticalNote << "DIB failed draw target surface " << mSize << ", " << (int)mIsLocked << ", " << IsAllocated();
+    mDrawTarget == nullptr;
   }
 
   return mDrawTarget;
@@ -117,7 +118,7 @@ bool
 TextureClientMemoryDIB::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
 {
   MOZ_ASSERT(IsValid());
-  if (!IsAllocated()) {
+  if (!IsAllocated() || !IsValid()) {
     return false;
   }
 
@@ -136,10 +137,9 @@ TextureClientMemoryDIB::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
   mSize = aSize;
 
   mSurface = new gfxWindowsSurface(aSize, SurfaceFormatToImageFormat(mFormat));
-  if (!mSurface || mSurface->CairoStatus())
-  {
-    NS_WARNING("Could not create surface");
+  if (mSurface->CairoStatus()) {
     mSurface = nullptr;
+    gfxWarning() << "Bad Cairo surface creation " << mSurface->CairoStatus();
     return false;
   }
 
@@ -336,6 +336,12 @@ DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
 
   if (!mTextureSource) {
     mTextureSource = mCompositor->CreateDataTextureSource(mFlags);
+  }
+
+  if (mSurface->CairoStatus()) {
+      gfxWarning() << "Bad Cairo surface internal update " << mSurface->CairoStatus();
+      mTextureSource = nullptr;
+      return;
   }
 
   RefPtr<gfxImageSurface> imgSurf = mSurface->GetAsImageSurface();
