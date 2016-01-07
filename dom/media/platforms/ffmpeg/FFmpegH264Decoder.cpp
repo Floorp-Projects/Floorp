@@ -16,6 +16,14 @@
 #include "FFmpegLog.h"
 #include "mozilla/PodOperations.h"
 
+#include "libavutil/pixfmt.h"
+#if LIBAVCODEC_VERSION_MAJOR < 54
+#define AVPixelFormat PixelFormat
+#define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
+#define AV_PIX_FMT_YUVJ420P PIX_FMT_YUVJ420P
+#define AV_PIX_FMT_NONE PIX_FMT_NONE
+#endif
+
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
@@ -28,19 +36,19 @@ namespace mozilla
  * For now, we just look for YUV420P as it is the only non-HW accelerated format
  * supported by FFmpeg's H264 decoder.
  */
-static PixelFormat
-ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
+static AVPixelFormat
+ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
 {
   FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
   for (; *aFormats > -1; aFormats++) {
-    if (*aFormats == PIX_FMT_YUV420P || *aFormats == PIX_FMT_YUVJ420P) {
+    if (*aFormats == AV_PIX_FMT_YUV420P || *aFormats == AV_PIX_FMT_YUVJ420P) {
       FFMPEG_LOG("Requesting pixel format YUV420P.");
-      return PIX_FMT_YUV420P;
+      return AV_PIX_FMT_YUV420P;
     }
   }
 
   NS_WARNING("FFmpeg does not share any supported pixel formats.");
-  return PIX_FMT_NONE;
+  return AV_PIX_FMT_NONE;
 }
 
 FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
