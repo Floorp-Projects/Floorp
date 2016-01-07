@@ -3101,6 +3101,9 @@
             // Map from tabs to STATE_* (below).
             tabState: new Map(),
 
+            // True if we're in the midst of switching tabs.
+            switchInProgress: false,
+
             // Keep an exact list of content processes (tabParent) in which
             // we're actively suppressing the display port. This gives a robust
             // way to make sure we don't forget to un-suppress.
@@ -3410,7 +3413,7 @@
               let tab = this.tabbrowser.getTabForBrowser(browser);
               this.setTabState(tab, this.STATE_LOADED);
 
-              this.finishTabSwitch();
+              this.maybeFinishTabSwitch();
 
               if (this.loadingTab === tab) {
                 clearTimeout(this.loadTimer);
@@ -3424,7 +3427,7 @@
             // around.
             onPaint: function() {
               this.maybeVisibleTabs.clear();
-              this.finishTabSwitch();
+              this.maybeFinishTabSwitch();
             },
 
             // Called when we're done clearing the layers for a tab.
@@ -3523,10 +3526,18 @@
               TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_E10S_MS", window);
               this.addMarker("AsyncTabSwitch:Start");
+              this.switchInProgress = true;
             },
 
-            finishTabSwitch: function () {
-              if (this.requestedTab && this.getTabState(this.requestedTab) == this.STATE_LOADED) {
+            /**
+             * Something has occurred that might mean that we've completed
+             * the tab switch (layers are ready, paints are done, spinners
+             * are hidden). This checks to make sure all conditions are
+             * satisfied, and then records the tab switch as finished.
+             */
+            maybeFinishTabSwitch: function () {
+              if (this.switchInProgress && this.requestedTab &&
+                  this.getTabState(this.requestedTab) == this.STATE_LOADED) {
                 // After this point the tab has switched from the content thread's point of view.
                 // The changes will be visible after the next refresh driver tick + composite.
                 let event = new CustomEvent("TabSwitched", {
@@ -3540,6 +3551,7 @@
                   this.log("DEBUG: tab switch time = " + time);
                   this.addMarker("AsyncTabSwitch:Finish");
                 }
+                this.switchInProgress = false;
               }
             },
 
@@ -3556,7 +3568,7 @@
               TelemetryStopwatch.finish("FX_TAB_SWITCH_SPINNER_VISIBLE_MS", window);
               this.addMarker("AsyncTabSwitch:SpinnerHidden");
               // we do not get a onPaint after displaying the spinner
-              this.finishTabSwitch();
+              this.maybeFinishTabSwitch();
             },
 
             addMarker: function(marker) {

@@ -217,4 +217,4 @@
 <!ENTITY simulator_pixelRatio "Pixel Ratio">
 <!ENTITY simulator_tv_data "TV Simulation">
 <!ENTITY simulator_tv_data_open "Config Data">
-<!ENTITY simulator_tv_data_open_button "Open Config Directory...">
+<!ENTITY simulator_tv_data_open_button "Open Config Directory…">

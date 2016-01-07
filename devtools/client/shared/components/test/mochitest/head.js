@@ -92,7 +92,7 @@ var TEST_TREE_INTERFACE = {
   renderItem: (x, depth, focused, arrow) => "-".repeat(depth) + x + ":" + focused + "\n",
   getRoots: () => ["A", "M"],
   getKey: x => "key-" + x,
-  itemHeight: 1
+  itemHeight: 1,
 };
 
 // All tests are asynchronous.

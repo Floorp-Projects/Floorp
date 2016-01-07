@@ -52,9 +52,6 @@
       <menuitem id="menuitem_uninstallItem" command="cmd_uninstallItem"
                 label="&cmd.uninstallAddon.label;"
                 accesskey="&cmd.uninstallAddon.accesskey;"/>
-      <menuitem id="menuitem_debugItem" command="cmd_debugItem"
-                label="&cmd.debugAddon.label;"
-                accesskey="&cmd.debugAddon.accesskey;"/>
       <menuseparator id="addonitem-menuseparator" />
       <menuitem id="menuitem_preferences" command="cmd_showItemPreferences"
 #ifdef XP_WIN
@@ -86,6 +83,7 @@
     <command id="cmd_goToRecentUpdates"/>
     <command id="cmd_goToAvailableUpdates"/>
     <command id="cmd_installFromFile"/>
+    <command id="cmd_debugAddons"/>
     <command id="cmd_back"/>
     <command id="cmd_forward"/>
     <command id="cmd_enableCheckCompatibility"/>
@@ -106,7 +104,6 @@
     <command id="cmd_findItemUpdates"/>
     <command id="cmd_showItemPreferences"/>
     <command id="cmd_showItemAbout"/>
-    <command id="cmd_debugItem"/>
     <command id="cmd_enableItem"/>
     <command id="cmd_disableItem"/>
     <command id="cmd_installItem"/>
@@ -206,6 +203,10 @@
                       label="&installAddonFromFile.label;"
                       accesskey="&installAddonFromFile.accesskey;"
                       command="cmd_installFromFile"/>
+            <menuitem id="utils-debugAddons"
+                      label="&debugAddons.label;"
+                      accesskey="&debugAddons.accesskey;"
+                      command="cmd_debugAddons"/>
             <menuseparator/>
             <menuitem id="utils-autoUpdateDefault"
                       label="&updates.updateAddonsAutomatically.label;"
@@ -659,10 +660,6 @@
 #endif
                               command="cmd_showItemPreferences"/>
                       <spacer flex="1"/>
-                      <button id="detail-debug-btn" class="addon-control debug"
-                              label="&cmd.debugAddon.label;"
-                              accesskey="&cmd.debugAddon.accesskey;"
-                              command="cmd_debugItem" />
                       <button id="detail-enable-btn" class="addon-control enable"
                               label="&cmd.enableAddon.label;"
                               accesskey="&cmd.enableAddon.accesskey;"

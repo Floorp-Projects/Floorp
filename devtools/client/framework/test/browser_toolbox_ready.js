@@ -2,40 +2,25 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function test()
-{
+function test() {
   gBrowser.selectedTab = gBrowser.addTab();
   let target = TargetFactory.forTab(gBrowser.selectedTab);
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    gDevTools.showToolbox(target).then(testReady);
-  }, true);
+  const onLoad = Task.async(function *(evt) {
+    gBrowser.selectedBrowser.removeEventListener("load", onLoad);
 
-  content.location = "data:text/html,test for dynamically registering and unregistering tools";
-}
+    const toolbox = yield gDevTools.showToolbox(target, "webconsole");
+    ok(toolbox.isReady, "toolbox isReady is set");
+    ok(toolbox.threadClient, "toolbox has a thread client");
 
-function testReady(toolbox)
-{
-  ok(toolbox.isReady, "toolbox isReady is set");
-  testDouble(toolbox);
-}
-
-function testDouble(toolbox)
-{
-  let target = toolbox.target;
-  let toolId = toolbox.currentToolId;
-
-  gDevTools.showToolbox(target, toolId).then(function(toolbox2) {
+    const toolbox2 = yield gDevTools.showToolbox(toolbox.target, toolbox.toolId);
     is(toolbox2, toolbox, "same toolbox");
-    cleanup(toolbox);
-  });
-}
 
-function cleanup(toolbox)
-{
-  toolbox.destroy().then(function() {
+    yield toolbox.destroy();
     gBrowser.removeCurrentTab();
     finish();
   });
+
+  gBrowser.selectedBrowser.addEventListener("load", onLoad, true);
+  content.location = "data:text/html,test for toolbox being ready";
 }

@@ -325,3 +325,53 @@ function assertLabelAndShallowSize(breakdown, givenDescription, expectedShallowS
   dumpn("Actual label: " + JSON.stringify(visitor.label(), null, 4));
   assertStructurallyEquivalent(visitor.label(), expectedLabel);
 }
+
+// Counter for mock DominatorTreeNode ids.
+let TEST_NODE_ID_COUNTER = 0;
+
+/**
+ * Create a mock DominatorTreeNode for testing, with sane defaults. Override any
+ * property by providing it on `opts`. Optionally pass child nodes as well.
+ *
+ * @param {Object} opts
+ * @param {Array<DominatorTreeNode>?} children
+ *
+ * @returns {DominatorTreeNode}
+ */
+function makeTestDominatorTreeNode(opts, children) {
+  const nodeId = TEST_NODE_ID_COUNTER++;
+
+  const node = Object.assign({
+    nodeId,
+    label: undefined,
+    shallowSize: 1,
+    retainedSize: (children || []).reduce((size, c) => size + c.retainedSize, 1),
+    parentId: undefined,
+    children,
+    moreChildrenAvailable: true,
+  }, opts);
+
+  if (children && children.length) {
+    children.map(c => c.parentId = node.nodeId);
+  }
+
+  return node;
+}
+
+/**
+ * Insert `newChildren` into the given dominator `tree` as specified by the
+ * `path` from the root to the node the `newChildren` should be inserted
+ * beneath. Assert that the resulting tree matches `expected`.
+ */
+function assertDominatorTreeNodeInsertion(tree, path, newChildren, moreChildrenAvailable, expected) {
+  dumpn("Inserting new children into a dominator tree:");
+  dumpn("Dominator tree: " + JSON.stringify(tree, null, 2));
+  dumpn("Path: " + JSON.stringify(path, null, 2));
+  dumpn("New children: " + JSON.stringify(newChildren, null, 2));
+  dumpn("Expected resulting tree: " + JSON.stringify(expected, null, 2));
+
+  const actual = DominatorTreeNode.insert(tree, path, newChildren, moreChildrenAvailable);
+  dumpn("Actual resulting tree: " + JSON.stringify(actual, null, 2));
+
+  assertStructurallyEquivalent(actual, expected);
+}
