@@ -19,11 +19,9 @@ window.onload = Task.async(function* () {
     let React = browserRequire("devtools/client/shared/vendor/react");
     let Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
 
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
-
-    yield setProps(tree, {
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
       autoExpandDepth: 1
-    });
+    })), window.document.body);
 
     isRenderedTree(document.body.textContent, [
       "A:false",

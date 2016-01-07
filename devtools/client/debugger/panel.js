@@ -22,9 +22,6 @@ function DebuggerPanel(iframeWindow, toolbox) {
   this._controller._toolbox = this._toolbox;
 
   this.handleHostChanged = this.handleHostChanged.bind(this);
-  this.highlightWhenPaused = this.highlightWhenPaused.bind(this);
-  this.unhighlightWhenResumed = this.unhighlightWhenResumed.bind(this);
-
   EventEmitter.decorate(this);
 }
 
@@ -55,8 +52,6 @@ DebuggerPanel.prototype = {
       .then(() => this._controller.connect())
       .then(() => {
         this._toolbox.on("host-changed", this.handleHostChanged);
-        this.target.on("thread-paused", this.highlightWhenPaused);
-        this.target.on("thread-resumed", this.unhighlightWhenResumed);
         // Add keys from this document's keyset to the toolbox, so they
         // can work when the split console is focused.
         let keysToClone = ["resumeKey", "resumeKey2", "stepOverKey",
@@ -86,9 +81,6 @@ DebuggerPanel.prototype = {
     if (this._destroyer) {
       return this._destroyer;
     }
-
-    this.target.off("thread-paused", this.highlightWhenPaused);
-    this.target.off("thread-resumed", this.unhighlightWhenResumed);
 
     if (!this.target.isRemote) {
       this.target.tab.removeEventListener('TabSelect', this);
@@ -123,18 +115,6 @@ DebuggerPanel.prototype = {
 
   handleHostChanged: function() {
     this._view.handleHostChanged(this._toolbox.hostType);
-  },
-
-  highlightWhenPaused: function() {
-    this._toolbox.highlightTool("jsdebugger");
-
-    // Also raise the toolbox window if it is undocked or select the
-    // corresponding tab when toolbox is docked.
-    this._toolbox.raise();
-  },
-
-  unhighlightWhenResumed: function() {
-    this._toolbox.unhighlightTool("jsdebugger");
   },
 
   // nsIDOMEventListener API
