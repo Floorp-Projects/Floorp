@@ -268,6 +268,7 @@ class SearchEngineRow extends AnimatedHeightLayout {
      */
     private void updateFromSavedSearches(List<String> savedSuggestions, boolean animate, int suggestionCounter, int recycledSuggestionCount) {
         if (savedSuggestions == null || savedSuggestions.isEmpty()) {
+            hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
             return;
         }
 
@@ -350,6 +351,11 @@ class SearchEngineRow extends AnimatedHeightLayout {
             updateFromSavedSearches(searchHistorySuggestions, animate, 0, recycledSuggestionCount);
         } else if (searchSuggestionsEnabled) {
             updateFromSearchEngine(animate, recycledSuggestionCount, 0);
+        } else {
+            // The current search term is treated separately from the suggestions list, hence we can
+            // recycle ALL suggestion items here. (We always show the current search term, i.e. 1 item,
+            // in front of the search engine suggestions and/or the search history.)
+            hideRecycledSuggestions(0, recycledSuggestionCount);
         }
     }
 
