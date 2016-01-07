@@ -204,6 +204,8 @@ private:
   DECL_GFX_PREF(Live, "dom.w3c_touch_events.enabled",          TouchEventsEnabled, int32_t, 0);
 
   DECL_GFX_PREF(Live, "general.smoothScroll",                  SmoothScrollEnabled, bool, true);
+  DECL_GFX_PREF(Live, "general.smoothScroll.currentVelocityWeighting",
+                SmoothScrollCurrentVelocityWeighting, float, 0.25);
   DECL_GFX_PREF(Live, "general.smoothScroll.durationToIntervalRatio",
                 SmoothScrollDurationToIntervalRatio, int32_t, 200);
   DECL_GFX_PREF(Live, "general.smoothScroll.mouseWheel",       WheelSmoothScrollEnabled, bool, true);
@@ -211,6 +213,8 @@ private:
                 WheelSmoothScrollMaxDurationMs, int32_t, 400);
   DECL_GFX_PREF(Live, "general.smoothScroll.mouseWheel.durationMinMS",
                 WheelSmoothScrollMinDurationMs, int32_t, 200);
+  DECL_GFX_PREF(Live, "general.smoothScroll.stopDecelerationWeighting",
+                SmoothScrollStopDecelerationWeighting, float, 0.4f);
 
   DECL_GFX_PREF(Once, "gfx.android.rgb16.force",               AndroidRGB16Force, bool, false);
 #if defined(ANDROID)

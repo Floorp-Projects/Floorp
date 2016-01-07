@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AsyncScrollBase.h"
+#include "gfxPrefs.h"
 
 using namespace mozilla;
 
@@ -77,26 +78,23 @@ AsyncScrollBase::InitializeHistory(TimeStamp aTime)
   mPrevEventTime[2] = mPrevEventTime[1]  - maxDelta;
 }
 
-const double kCurrentVelocityWeighting = 0.25;
-const double kStopDecelerationWeighting = 0.4;
-
 void
 AsyncScrollBase::InitTimingFunction(nsSMILKeySpline& aTimingFunction,
                                     nscoord aCurrentPos,
                                     nscoord aCurrentVelocity,
                                     nscoord aDestination)
 {
-  if (aDestination == aCurrentPos || kCurrentVelocityWeighting == 0) {
-    aTimingFunction.Init(0, 0, 1 - kStopDecelerationWeighting, 1);
+  if (aDestination == aCurrentPos || gfxPrefs::SmoothScrollCurrentVelocityWeighting() == 0) {
+    aTimingFunction.Init(0, 0, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
     return;
   }
 
   const TimeDuration oneSecond = TimeDuration::FromSeconds(1);
   double slope = aCurrentVelocity * (mDuration / oneSecond) / (aDestination - aCurrentPos);
   double normalization = sqrt(1.0 + slope * slope);
-  double dt = 1.0 / normalization * kCurrentVelocityWeighting;
-  double dxy = slope / normalization * kCurrentVelocityWeighting;
-  aTimingFunction.Init(dt, dxy, 1 - kStopDecelerationWeighting, 1);
+  double dt = 1.0 / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
+  double dxy = slope / normalization * gfxPrefs::SmoothScrollCurrentVelocityWeighting();
+  aTimingFunction.Init(dt, dxy, 1 - gfxPrefs::SmoothScrollStopDecelerationWeighting(), 1);
 }
 
 nsPoint
