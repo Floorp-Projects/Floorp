@@ -268,14 +268,6 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
 
     @Override
     protected void onAttachedToWindow() {
-        // Configure GeckoLayerClient once Gecko is ready, but after GeckoView has opened a window.
-        if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            mLayerClient.onGeckoReady();
-        } else {
-            GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    mLayerClient, "onGeckoReady");
-        }
-
         // We are adding descendants to this LayerView, but we don't want the
         // descendants to affect the way LayerView retains its focus.
         setDescendantFocusability(FOCUS_BLOCK_DESCENDANTS);

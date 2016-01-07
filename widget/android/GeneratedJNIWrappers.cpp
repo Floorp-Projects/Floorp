@@ -1326,6 +1326,14 @@ auto GeckoLayerClient::IsContentDocumentDisplayed() const -> bool
     return mozilla::jni::Method<IsContentDocumentDisplayed_t>::Call(this, nullptr);
 }
 
+constexpr char GeckoLayerClient::OnGeckoReady_t::name[];
+constexpr char GeckoLayerClient::OnGeckoReady_t::signature[];
+
+auto GeckoLayerClient::OnGeckoReady() const -> void
+{
+    return mozilla::jni::Method<OnGeckoReady_t>::Call(this, nullptr);
+}
+
 constexpr char GeckoLayerClient::ProgressiveUpdateCallback_t::name[];
 constexpr char GeckoLayerClient::ProgressiveUpdateCallback_t::signature[];
 
