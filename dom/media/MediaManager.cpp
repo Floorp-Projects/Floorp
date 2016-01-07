@@ -2395,7 +2395,8 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
                                   const MediaStreamConstraints& aConstraints,
                                   nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,
                                   nsIDOMGetUserMediaErrorCallback* aOnFailure,
-                                  uint64_t aWindowId)
+                                  uint64_t aWindowId,
+                                  const nsAString& aCallID)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIGetUserMediaDevicesSuccessCallback> onSuccess(aOnSuccess);
@@ -2413,10 +2414,12 @@ MediaManager::GetUserMediaDevices(nsPIDOMWindow* aWindow,
 
   for (auto& callID : *callIDs) {
     GetUserMediaTask* task;
-    if (mActiveCallbacks.Get(callID, &task)) {
-      nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*task->mSourceSet);
-      onSuccess->OnSuccess(array);
-      return NS_OK;
+    if (!aCallID.Length() || aCallID == callID) {
+      if (mActiveCallbacks.Get(callID, &task)) {
+        nsCOMPtr<nsIWritableVariant> array = MediaManager_ToJSArray(*task->mSourceSet);
+        onSuccess->OnSuccess(array);
+        return NS_OK;
+      }
     }
   }
   return NS_ERROR_UNEXPECTED;
