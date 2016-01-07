@@ -755,14 +755,6 @@ auto GeckoEditable::NotifyIMEContext(int32_t a0, mozilla::jni::String::Param a1,
     return mozilla::jni::Method<NotifyIMEContext_t>::Call(this, nullptr, a0, a1, a2, a3);
 }
 
-constexpr char GeckoEditable::OnDestroy_t::name[];
-constexpr char GeckoEditable::OnDestroy_t::signature[];
-
-auto GeckoEditable::OnDestroy() const -> void
-{
-    return mozilla::jni::Method<OnDestroy_t>::Call(this, nullptr);
-}
-
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::name[];
 constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
 
