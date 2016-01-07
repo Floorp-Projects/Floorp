@@ -1058,7 +1058,9 @@ public class GeckoAppShell
                                           String action,
                                           String title,
                                           final boolean showPromptInPrivateBrowsing) {
-        final Context context = getApplicationContext();
+        final GeckoInterface gi = getGeckoInterface();
+        final Context activityContext = gi != null ? gi.getActivity() : null;
+        final Context context = activityContext != null ? activityContext : getApplicationContext();
         final Intent intent = getOpenURIIntent(context, targetURI,
                                                mimeType, action, title);
 
@@ -1075,15 +1077,16 @@ public class GeckoAppShell
             }
         }
 
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        if (!showPromptInPrivateBrowsing) {
+        if (!showPromptInPrivateBrowsing || activityContext == null) {
+            if (activityContext == null) {
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
             return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
         } else {
             // Ideally we retrieve the Activity from the calling args, rather than
             // statically, but since this method is called from Gecko and I'm
             // unfamiliar with that code, this is a simpler solution.
-            final FragmentActivity fragmentActivity = (FragmentActivity) getGeckoInterface().getActivity();
+            final FragmentActivity fragmentActivity = (FragmentActivity) activityContext;
             return ExternalIntentDuringPrivateBrowsingPromptFragment.showDialogOrAndroidChooser(
                     context, fragmentActivity.getSupportFragmentManager(), intent);
         }
