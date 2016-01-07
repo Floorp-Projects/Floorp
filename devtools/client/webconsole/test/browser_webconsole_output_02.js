@@ -25,7 +25,7 @@ var inputTests = [
     input: "(function() { return 42; })",
     output: "function ()",
     printOutput: "function () { return 42; }",
-    inspectable: true,
+    suppressClick: true
   },
 
   // 2 - named function
@@ -33,8 +33,7 @@ var inputTests = [
     input: "window.testfn1",
     output: "function testfn1()",
     printOutput: "function testfn1() { return 42; }",
-    inspectable: true,
-    variablesViewLabel: "testfn1()",
+    suppressClick: true
   },
 
   // 3 - anonymous function, but spidermonkey gives us an inferred name.
@@ -42,8 +41,7 @@ var inputTests = [
     input: "testobj1.testfn2",
     output: "function testobj1.testfn2()",
     printOutput: "function () { return 42; }",
-    inspectable: true,
-    variablesViewLabel: "testobj1.testfn2()",
+    suppressClick: true
   },
 
   // 4 - named function with custom display name
@@ -51,8 +49,7 @@ var inputTests = [
     input: "window.testfn3",
     output: "function testfn3DisplayName()",
     printOutput: "function testfn3() { return 42; }",
-    inspectable: true,
-    variablesViewLabel: "testfn3DisplayName()",
+    suppressClick: true
   },
 
   // 5 - basic array

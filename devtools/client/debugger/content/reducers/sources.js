@@ -20,6 +20,23 @@ function update(state = initialState, action, emitChange) {
     emitChange('source', action.source);
     return mergeIn(state, ['sources', action.source.actor], action.source);
 
+  case constants.LOAD_SOURCES:
+    if (action.status === "done") {
+      const sources = action.value;
+      if (!sources) {
+        return state;
+      }
+      const sourcesByActor = {};
+      sources.forEach(source => {
+        if (!state.sources[source.actor]) {
+          emitChange('source', source);
+        }
+        sourcesByActor[source.actor] = source;
+      });
+      return mergeIn(state, ['sources'], state.sources.merge(sourcesByActor))
+    }
+    break;
+
   case constants.SELECT_SOURCE:
     emitChange('source-selected', action.source);
     return state.merge({
