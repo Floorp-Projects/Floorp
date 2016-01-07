@@ -256,6 +256,30 @@ nsFormData::GetValueAtIndex(uint32_t aIndex) const
   return mFormData[aIndex].value;
 }
 
+void
+nsFormData::SetNameValuePair(FormDataTuple* aData,
+                             const nsAString& aName,
+                             const nsAString& aValue)
+{
+  MOZ_ASSERT(aData);
+  aData->name = aName;
+  aData->value.SetAsUSVString() = aValue;
+}
+
+void
+nsFormData::SetNameFilePair(FormDataTuple* aData,
+                            const nsAString& aName,
+                            File* aFile)
+{
+  MOZ_ASSERT(aData);
+  aData->name = aName;
+  if (aFile) {
+    aData->value.SetAsFile() = aFile;
+  } else {
+    aData->value.SetAsUSVString() = EmptyString();
+  }
+}
+
 // -------------------------------------------------------------------------
 // nsIDOMFormData
 
