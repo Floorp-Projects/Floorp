@@ -20,7 +20,8 @@ const {
 const TEST_URL = "data:text/html;charset=utf-8,CanvasFrameAnonymousContentHelper test";
 
 add_task(function*() {
-  let doc = yield addTab(TEST_URL);
+  let browser = yield addTab(TEST_URL);
+  let doc = browser.contentDocument;
 
   let nodeBuilder = () => {
     let root = doc.createElement("div");
