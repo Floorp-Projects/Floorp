@@ -2127,6 +2127,9 @@ pref("general.smoothScroll.other", true);
 // intervals).
 // This defines how longer is the duration compared to events interval (percentage)
 pref("general.smoothScroll.durationToIntervalRatio", 200);
+// These two prefs determine the timing function.
+pref("general.smoothScroll.currentVelocityWeighting", "0.25");
+pref("general.smoothScroll.stopDecelerationWeighting", "0.4");
 
 pref("profile.confirm_automigration",true);
 // profile.migration_behavior determines how the profiles root is set
