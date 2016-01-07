@@ -403,7 +403,7 @@ public:
   // Index used to refer to this before we know the TrackID
   // Note: unlike MediaPipeline::trackid(), this is threadsafe
   // Not set until first media is received
-  virtual TrackID const trackid_locked() { return listener_->trackid(); }
+  virtual TrackID trackid_locked() const { return listener_->trackid(); }
   // written and used from MainThread
   virtual bool IsVideo() const override { return is_video_; }
 

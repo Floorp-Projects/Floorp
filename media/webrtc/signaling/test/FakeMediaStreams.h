@@ -313,7 +313,7 @@ public:
   {
     return mIsVideo? nullptr : this;
   }
-  const uint32_t typeSize () const
+  uint32_t typeSize () const
   {
     return sizeof(Fake_MediaStreamTrack);
   }
