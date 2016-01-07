@@ -5,14 +5,18 @@
 // First do searches with typed behavior forced to false, so later tests will
 // ensure autocomplete is able to dinamically switch behavior.
 
+const FAVICON_HREF = NetUtil.newURI(do_get_file("../favicons/favicon-normal16.png")).spec;
+
 add_task(function* test_domain() {
   do_print("Searching for domain should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   yield PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+  yield setFaviconForHref("http://mozilla.org/link/", FAVICON_HREF);
   yield check_autocomplete({
     search: "moz",
     autofilled: "mozilla.org/",
-    completed:  "mozilla.org/"
+    completed: "mozilla.org/",
+    icon: "moz-anno:favicon:" + FAVICON_HREF
   });
   yield cleanup();
 });
@@ -21,10 +25,12 @@ add_task(function* test_url() {
   do_print("Searching for url should autoFill it");
   Services.prefs.setBoolPref("browser.urlbar.autoFill.typed", false);
   yield PlacesTestUtils.addVisits(NetUtil.newURI("http://mozilla.org/link/"));
+  yield setFaviconForHref("http://mozilla.org/link/", FAVICON_HREF);
   yield check_autocomplete({
     search: "mozilla.org/li",
     autofilled: "mozilla.org/link/",
-    completed: "http://mozilla.org/link/"
+    completed: "http://mozilla.org/link/",
+    icon: "moz-anno:favicon:" + FAVICON_HREF
   });
   yield cleanup();
 });
