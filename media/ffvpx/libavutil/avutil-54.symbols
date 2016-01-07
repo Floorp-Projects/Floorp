@@ -351,5 +351,4 @@ avutil_version
 avpriv_emms_yasm
 avpriv_snprintf
 avpriv_strtod
-avpriv_vsnprintf
 #endif

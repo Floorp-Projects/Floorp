@@ -53,9 +53,12 @@ SOURCES += [
 
 if CONFIG['_MSC_VER']:
     SOURCES += [
-        '../compat/msvcrt/snprintf.c',
         '../compat/strtod.c'
     ]
+    if CONFIG['_MSC_VER'] < '1900':
+        SOURCES += [
+            '../compat/msvcrt/snprintf.c'
+        ]
 
 SYMBOLS_FILE =  'avutil-54.symbols'
 NO_VISIBILITY_FLAGS = True
