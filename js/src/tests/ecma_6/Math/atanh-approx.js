@@ -266,7 +266,7 @@ var tanh_data = [
     [1e-10, 1e-10],
 ];
 
-var sloppy_tolerance = 10;  // FIXME
+var sloppy_tolerance = 2;  // FIXME
 
 for (var [x, y] of tanh_data)
     assertNear(Math.atanh(x), y, sloppy_tolerance);
