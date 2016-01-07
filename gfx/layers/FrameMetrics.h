@@ -39,32 +39,35 @@ public:
   static const FrameMetrics sNullMetrics;   // We often need an empty metrics
 
   FrameMetrics()
-    : mPresShellResolution(1)
+    : mScrollId(NULL_SCROLL_ID)
+    , mScrollParentId(NULL_SCROLL_ID)
+    , mPresShellResolution(1)
     , mCompositionBounds(0, 0, 0, 0)
     , mDisplayPort(0, 0, 0, 0)
     , mCriticalDisplayPort(0, 0, 0, 0)
     , mScrollableRect(0, 0, 0, 0)
     , mCumulativeResolution()
     , mDevPixelsPerCSSPixel(1)
-    , mIsRootContent(false)
-    , mHasScrollgrab(false)
-    , mScrollId(NULL_SCROLL_ID)
-    , mScrollParentId(NULL_SCROLL_ID)
     , mScrollOffset(0, 0)
     , mZoom()
-    , mUpdateScrollOffset(false)
     , mScrollGeneration(0)
-    , mDoSmoothScroll(false)
     , mSmoothScrollOffset(0, 0)
     , mRootCompositionSize(0, 0)
     , mDisplayPortMargins(0, 0, 0, 0)
-    , mUseDisplayPortMargins(false)
     , mPresShellId(-1)
     , mViewport(0, 0, 0, 0)
     , mExtraResolution()
     , mBackgroundColor()
+    , mContentDescription()
     , mLineScrollAmount(0, 0)
     , mPageScrollAmount(0, 0)
+    , mClipRect()
+    , mMaskLayerIndex()
+    , mIsRootContent(false)
+    , mHasScrollgrab(false)
+    , mUpdateScrollOffset(false)
+    , mDoSmoothScroll(false)
+    , mUseDisplayPortMargins(false)
     , mAllowVerticalScrollWithWheel(false)
     , mIsLayersIdRoot(false)
     , mUsesContainerScrolling(false)
@@ -76,38 +79,42 @@ public:
 
   bool operator==(const FrameMetrics& aOther) const
   {
-    return mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
-           mRootCompositionSize == aOther.mRootCompositionSize &&
-           mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
-           mDisplayPortMargins == aOther.mDisplayPortMargins &&
-           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
-           mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
-           mViewport.IsEqualEdges(aOther.mViewport) &&
-           mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
+    // Put mScrollId at the top since it's the most likely one to fail.
+    return mScrollId == aOther.mScrollId &&
+           mScrollParentId == aOther.mScrollParentId &&
            mPresShellResolution == aOther.mPresShellResolution &&
+           mCompositionBounds.IsEqualEdges(aOther.mCompositionBounds) &&
+           mDisplayPort.IsEqualEdges(aOther.mDisplayPort) &&
+           mCriticalDisplayPort.IsEqualEdges(aOther.mCriticalDisplayPort) &&
+           mScrollableRect.IsEqualEdges(aOther.mScrollableRect) &&
            mCumulativeResolution == aOther.mCumulativeResolution &&
            mDevPixelsPerCSSPixel == aOther.mDevPixelsPerCSSPixel &&
-           mPresShellId == aOther.mPresShellId &&
-           mIsRootContent == aOther.mIsRootContent &&
-           mScrollId == aOther.mScrollId &&
-           mScrollParentId == aOther.mScrollParentId &&
            mScrollOffset == aOther.mScrollOffset &&
-           mSmoothScrollOffset == aOther.mSmoothScrollOffset &&
-           mHasScrollgrab == aOther.mHasScrollgrab &&
-           mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
+           // don't compare mZoom
            mScrollGeneration == aOther.mScrollGeneration &&
+           mSmoothScrollOffset == aOther.mSmoothScrollOffset &&
+           mRootCompositionSize == aOther.mRootCompositionSize &&
+           mDisplayPortMargins == aOther.mDisplayPortMargins &&
+           mPresShellId == aOther.mPresShellId &&
+           mViewport.IsEqualEdges(aOther.mViewport) &&
            mExtraResolution == aOther.mExtraResolution &&
            mBackgroundColor == aOther.mBackgroundColor &&
-           mDoSmoothScroll == aOther.mDoSmoothScroll &&
+           // don't compare mContentDescription
            mLineScrollAmount == aOther.mLineScrollAmount &&
            mPageScrollAmount == aOther.mPageScrollAmount &&
-           mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mClipRect == aOther.mClipRect &&
            mMaskLayerIndex == aOther.mMaskLayerIndex &&
+           mIsRootContent == aOther.mIsRootContent &&
+           mHasScrollgrab == aOther.mHasScrollgrab &&
+           mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
+           mDoSmoothScroll == aOther.mDoSmoothScroll &&
+           mUseDisplayPortMargins == aOther.mUseDisplayPortMargins &&
+           mAllowVerticalScrollWithWheel == aOther.mAllowVerticalScrollWithWheel &&
            mIsLayersIdRoot == aOther.mIsLayersIdRoot &&
            mUsesContainerScrolling == aOther.mUsesContainerScrolling &&
            mIsScrollInfoLayer == aOther.mIsScrollInfoLayer;
   }
+
   bool operator!=(const FrameMetrics& aOther) const
   {
     return !operator==(aOther);
@@ -555,6 +562,11 @@ public:
   }
 
 private:
+  // A unique ID assigned to each scrollable frame.
+  ViewID mScrollId;
+
+  // The ViewID of the scrollable frame to which overscroll should be handed off.
+  ViewID mScrollParentId;
 
   // The pres-shell resolution that has been induced on the document containing
   // this scroll frame as a result of zooming this scroll frame (whether via
@@ -634,18 +646,6 @@ private:
   // resolution.
   CSSToLayoutDeviceScale mDevPixelsPerCSSPixel;
 
-  // Whether or not this is the root scroll frame for the root content document.
-  bool mIsRootContent;
-
-  // Whether or not this frame is for an element marked 'scrollgrab'.
-  bool mHasScrollgrab;
-
-  // A unique ID assigned to each scrollable frame.
-  ViewID mScrollId;
-
-  // The ViewID of the scrollable frame to which overscroll should be handed off.
-  ViewID mScrollParentId;
-
   // The position of the top-left of the CSS viewport, relative to the document
   // (or the document relative to the viewport, if that helps understand it).
   //
@@ -669,15 +669,11 @@ private:
   // diverge. This information is initialized in Gecko but updated in the APZC.
   CSSToParentLayerScale2D mZoom;
 
-  // Whether mScrollOffset was updated by something other than the APZ code, and
-  // if the APZC receiving this metrics should update its local copy.
-  bool mUpdateScrollOffset;
   // The scroll generation counter used to acknowledge the scroll offset update.
   uint32_t mScrollGeneration;
 
-  // When mDoSmoothScroll, the scroll offset should be animated to
-  // smoothly transition to mScrollOffset rather than be updated instantly.
-  bool mDoSmoothScroll;
+  // If mDoSmoothScroll is true, the scroll offset will be animated smoothly
+  // to this value.
   CSSPoint mSmoothScrollOffset;
 
   // The size of the root scrollable's composition bounds, but in local CSS pixels.
@@ -686,10 +682,6 @@ private:
   // A display port expressed as layer margins that apply to the rect of what
   // is drawn of the scrollable element.
   ScreenMargin mDisplayPortMargins;
-
-  // If this is true then we use the display port margins on this metrics,
-  // otherwise use the display port rect.
-  bool mUseDisplayPortMargins;
 
   uint32_t mPresShellId;
 
@@ -722,9 +714,6 @@ private:
   // The value of GetPageScrollAmount(), for scroll frames.
   LayoutDeviceIntSize mPageScrollAmount;
 
-  // Whether or not the frame can be vertically scrolled with a mouse wheel.
-  bool mAllowVerticalScrollWithWheel;
-
   // The clip rect to use when compositing a layer with this FrameMetrics.
   Maybe<ParentLayerIntRect> mClipRect;
 
@@ -732,6 +721,27 @@ private:
   // FrameMetrics. This is an index into the MetricsMaskLayers array on
   // the Layer.
   Maybe<size_t> mMaskLayerIndex;
+
+  // Whether or not this is the root scroll frame for the root content document.
+  bool mIsRootContent;
+
+  // Whether or not this frame is for an element marked 'scrollgrab'.
+  bool mHasScrollgrab;
+
+  // Whether mScrollOffset was updated by something other than the APZ code, and
+  // if the APZC receiving this metrics should update its local copy.
+  bool mUpdateScrollOffset;
+
+  // When mDoSmoothScroll, the scroll offset should be animated to
+  // smoothly transition to mScrollOffset rather than be updated instantly.
+  bool mDoSmoothScroll;
+
+  // If this is true then we use the display port margins on this metrics,
+  // otherwise use the display port rect.
+  bool mUseDisplayPortMargins;
+
+  // Whether or not the frame can be vertically scrolled with a mouse wheel.
+  bool mAllowVerticalScrollWithWheel;
 
   // Whether these framemetrics are for the root scroll frame (root element if
   // we don't have a root scroll frame) for its layers id.
