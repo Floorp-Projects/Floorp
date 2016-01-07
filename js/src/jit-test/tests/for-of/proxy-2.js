@@ -26,4 +26,4 @@ var proxy = Proxy.create({
 });
 
 for (var i = 0; i < 2; i++)
-    assertEq([v for (v of proxy)].join(","), "a,b,c,d");
+    assertEq([...proxy].join(","), "a,b,c,d");

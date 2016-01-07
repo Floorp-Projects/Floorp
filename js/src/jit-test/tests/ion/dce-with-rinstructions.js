@@ -232,6 +232,16 @@ function rmul_number(i) {
     return i;
 }
 
+var uceFault_mul_overflow = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_overflow'));
+function rmul_overflow(i) {
+    var x = Math.pow(2, i * 16 / 99) | 0;
+    x = x * x;
+    if (uceFault_mul_overflow(i) || uceFault_mul_overflow(i))
+        assertEq(x, Math.pow(2, 32));
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
 var uceFault_mul_float = eval(uneval(uceFault).replace('uceFault', 'uceFault_mul_float'));
 function rmul_float(i) {
     var t = Math.fround(1/3);
@@ -250,6 +260,37 @@ function rmul_object(i) {
     var x = o * i; /* computed with t == i, not 1000 */
     t = 1000;
     if (uceFault_mul_object(i) || uceFault_mul_object(i))
+        assertEq(x, 9801);
+    assertRecoveredOnBailout(x, false);
+    return i;
+}
+
+var uceFault_imul_number = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_number'));
+function rimul_number(i) {
+    var x = Math.imul(2, i);
+    if (uceFault_imul_number(i) || uceFault_imul_number(i))
+        assertEq(x, 198  /* = 1 * 99 */);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_imul_overflow = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_overflow'));
+function rimul_overflow(i) {
+    var x = Math.pow(2, i * 16 / 99) | 0;
+    x = Math.imul(x, x);
+    if (uceFault_imul_overflow(i) || uceFault_imul_overflow(i))
+        assertEq(x, 0);
+    assertRecoveredOnBailout(x, true);
+    return i;
+}
+
+var uceFault_imul_object = eval(uneval(uceFault).replace('uceFault', 'uceFault_imul_object'));
+function rimul_object(i) {
+    var t = i;
+    var o = { valueOf: function () { return t; } };
+    var x = Math.imul(o, i); /* computed with t == i, not 1000 */
+    t = 1000;
+    if (uceFault_imul_object(i) || uceFault_imul_object(i))
         assertEq(x, 9801);
     assertRecoveredOnBailout(x, false);
     return i;
@@ -1264,8 +1305,12 @@ for (i = 0; i < 100; i++) {
     rsub_float(i);
     rsub_object(i);
     rmul_number(i);
+    rmul_overflow(i);
     rmul_float(i);
     rmul_object(i);
+    rimul_number(i);
+    rimul_overflow(i);
+    rimul_object(i);
     rdiv_number(i);
     rdiv_float(i);
     rdiv_object(i);

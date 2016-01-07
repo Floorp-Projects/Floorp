@@ -95,9 +95,9 @@ function range(start, stop) {
 }
 
 function DSSDsplit(s) {
-    return ("var mid = f1" + ["(" + i + ")" for (i in range(0, s))].join("") + ";\n" +
-            "mid" +          ["(" + i + ")" for (i in range(s, N))].join("") + ";\n" +
-            "mid" +          ["(" + i + ")" for (i in range(s, N))].join("") + ";\n");
+    return ("var mid = f1" + [...range(0, s)].map((i) => "(" + i + ")").join("") + ";\n" +
+            "mid" +          [...range(s, N)].map((i) => "(" + i + ")").join("") + ";\n" +
+            "mid" +          [...range(s, N)].map((i) => "(" + i + ")").join("") + ";\n");
 }
 
 test("a1", 2, DSSDsplit(1));

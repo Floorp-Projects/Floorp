@@ -39,8 +39,6 @@ assertGlobalExpr("(function() { })", 11, { functionExpression: () => 11 });
 assertGlobalExpr("[1,2,3]", 12, { arrayExpression: () => 12 });
 assertGlobalExpr("({ x: y })", 13, { objectExpression: () => 13 });
 assertGlobalExpr("this", 14, { thisExpression: () => 14 });
-assertGlobalExpr("[x for (x in y)]", 17, { comprehensionExpression: () => 17 });
-assertGlobalExpr("(x for (x in y))", 18, { generatorExpression: () => 18 });
 assertGlobalExpr("(function() { yield 42 })", genFunExpr("legacy", null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: () => 1 });
@@ -50,9 +48,6 @@ assertGlobalStmt("try { } catch (e) { }", tryStmt(blockStmt([]), [], 2, null), {
 assertGlobalStmt("try { } catch (e if e instanceof A) { } catch (e if e instanceof B) { }",
                  tryStmt(blockStmt([]), [2, 2], null, null),
                  { catchClause: () => 2 });
-assertGlobalExpr("[x for (y in z) for (x in y)]",
-                 compExpr(ident("x"), [3, 3], null, "legacy"),
-                 { comprehensionBlock: () => 3 });
 
 assertGlobalExpr("({ x: y } = z)", aExpr("=", 1, ident("z")), { objectPattern: () => 1 });
 assertGlobalExpr("({ x: y } = z)", aExpr("=", objPatt([2]), ident("z")), { propertyPattern: () => 2 });

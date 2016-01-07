@@ -539,7 +539,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
             const TenureCount& entry = tenureCounts.entries[i];
             if (entry.count >= 3000)
-                pretenureGroups->append(entry.group); // ignore alloc failure
+                (void)pretenureGroups->append(entry.group); // ignore alloc failure
         }
     }
     TIME_END(pretenure);

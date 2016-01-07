@@ -65,6 +65,8 @@ public:
   virtual already_AddRefed<SourceSurface> Snapshot() override;
   virtual IntSize GetSize() override;
 
+  virtual bool IsCurrentGroupOpaque() override;
+
   virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
 
   virtual bool LockBits(uint8_t** aData, IntSize* aSize,
@@ -134,6 +136,12 @@ public:
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect &aRect) override;
   virtual void PopClip() override;
+  virtual void PushLayer(bool aOpaque, Float aOpacity,
+                         SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
+                         bool aCopyBackground = false) override;
+  virtual void PopLayer() override;
 
   virtual already_AddRefed<PathBuilder> CreatePathBuilder(FillRule aFillRule = FillRule::FILL_WINDING) const override;
 
@@ -213,6 +221,19 @@ private: // data
   bool mTransformSingular;
 
   uint8_t* mLockedBits;
+
+  struct PushedLayer
+  {
+    PushedLayer(Float aOpacity, bool aWasPermittingSubpixelAA)
+      : mOpacity(aOpacity)
+      , mMaskPattern(nullptr)
+      , mWasPermittingSubpixelAA(aWasPermittingSubpixelAA)
+    {}
+    Float mOpacity;
+    cairo_pattern_t* mMaskPattern;
+    bool mWasPermittingSubpixelAA;
+  };
+  std::vector<PushedLayer> mPushedLayers;
 
   // The latest snapshot of this surface. This needs to be told when this
   // target is modified. We keep it alive as a cache.

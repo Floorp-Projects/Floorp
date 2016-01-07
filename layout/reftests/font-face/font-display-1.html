@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>font-display test</title>
+<meta charset="utf-8">
+<style>
+body { margin: 20px }
+
+@font-face {
+  font-family: test1-auto;
+  src: url(../fonts/markA.woff);
+  font-display: auto;
+}
+
+@font-face {
+  font-family: test1-block;
+  src: url(../fonts/markA.woff);
+  font-display: block;
+}
+
+@font-face {
+  font-family: test1-swap;
+  src: url(../fonts/markA.woff);
+  font-display: swap;
+}
+
+@font-face {
+  font-family: test1-fallback;
+  src: url(../fonts/markA.woff);
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: test1-optional;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=200&test=font-display-1-optional);
+  font-display: optional;
+}
+
+div.test {
+  font-size: 600%;
+  line-height: 1.3em;
+  width: 500px;
+}
+
+div.test p {
+  display: inline-block;
+  width: 150px;
+  margin: 0;
+}
+
+.auto { font-family: test1-auto; }
+.block { font-family: test1-block; }
+.swap { font-family: test1-swap; }
+.fallback { font-family: test1-fallback; }
+.optional { font-family: test1-optional; }
+
+</style>
+</head>
+
+<body>
+<div class="test">
+<p class="auto">A</p>
+<p class="block">A</p>
+</div>
+<div class="test">
+<p class="swap">A</p>
+<p class="fallback">A</p>
+<p class="optional">A</p>
+</div>
+</body>
+</html>

@@ -32,34 +32,6 @@ function test()
     }
   }
 
-// Assertion failure: fp2->fun && fp2->script, at ../jsinterp.cpp:5633
-// Opt crash [@ js_Interpret]
-// ===
-
-  try
-  {
-    (x for each (c in []))
-      x
-      }
-  catch(ex)
-  {
-  }
-
-// Assertion failure: ss->printer->pcstack, at ../jsopcode.cpp:909
-// ===
-    try
-    {
-      (function(){for(; (this); ((window for (x in [])) for (y in []))) 0});
-    }
-    catch(ex)
-    {
-    }
-// Assertion failure: level >= tc->staticLevel, at ../jsparse.cpp:5773
-// ===
-  eval(uneval( function(){
-        ((function()y)() for each (x in this))
-          } ))
-
 // Debug & opt crash [@ BindNameToSlot]
 
 // -j is required:

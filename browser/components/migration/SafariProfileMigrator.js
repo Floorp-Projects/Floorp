@@ -533,10 +533,10 @@ SearchStrings.prototype = {
         if (aDict.has("RecentSearchStrings")) {
           let recentSearchStrings = aDict.get("RecentSearchStrings");
           if (recentSearchStrings && recentSearchStrings.length > 0) {
-            let changes = [{op: "add",
+            let changes = recentSearchStrings.map((searchString) => (
+                           {op: "add",
                             fieldname: "searchbar-history",
-                            value: searchString}
-                           for (searchString of recentSearchStrings)];
+                            value: searchString}));
             FormHistory.update(changes);
           }
         }

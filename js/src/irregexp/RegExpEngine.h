@@ -128,8 +128,40 @@ InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* chars, size_t
 FOR_EACH_REG_EXP_TREE_TYPE(FORWARD_DECLARE)
 #undef FORWARD_DECLARE
 
+// InfallibleVector is like Vector, but all its methods are infallible (they
+// crash on OOM). We use this class instead of Vector to avoid a ton of
+// MOZ_WARN_UNUSED_RESULT warnings in irregexp code (imported from V8).
+template<typename T, size_t N>
+class InfallibleVector
+{
+    Vector<T, N, LifoAllocPolicy<Infallible>> vector_;
+
+    InfallibleVector(const InfallibleVector&) = delete;
+    void operator=(const InfallibleVector&) = delete;
+
+  public:
+    explicit InfallibleVector(const LifoAllocPolicy<Infallible>& alloc) : vector_(alloc) {}
+
+    void append(const T& t) { MOZ_ALWAYS_TRUE(vector_.append(t)); }
+    void append(const T* begin, size_t length) { MOZ_ALWAYS_TRUE(vector_.append(begin, length)); }
+
+    void clear() { vector_.clear(); }
+    void popBack() { vector_.popBack(); }
+    void reserve(size_t n) { MOZ_ALWAYS_TRUE(vector_.reserve(n)); }
+
+    size_t length() const { return vector_.length(); }
+    T popCopy() { return vector_.popCopy(); }
+
+    T* begin() { return vector_.begin(); }
+
+    T& operator[](size_t index) { return vector_[index]; }
+    const T& operator[](size_t index) const { return vector_[index]; }
+
+    InfallibleVector& operator=(InfallibleVector&& rhs) { vector_ = Move(rhs.vector_); return *this; }
+};
+
 class CharacterRange;
-typedef Vector<CharacterRange, 1, LifoAllocPolicy<Infallible> > CharacterRangeVector;
+typedef InfallibleVector<CharacterRange, 1> CharacterRangeVector;
 
 // Represents code units in the range from from_ to to_, both ends are
 // inclusive.
@@ -211,8 +243,8 @@ class OutSet
     static const unsigned kFirstLimit = 32;
 
   private:
-    typedef Vector<OutSet*, 1, LifoAllocPolicy<Infallible> > OutSetVector;
-    typedef Vector<unsigned, 1, LifoAllocPolicy<Infallible> > RemainingVector;
+    typedef InfallibleVector<OutSet*, 1> OutSetVector;
+    typedef InfallibleVector<unsigned, 1> RemainingVector;
 
     // Destructively set a value in this set.  In most cases you want
     // to use Extend instead to ensure that only one instance exists
@@ -317,7 +349,7 @@ class TextElement
     RegExpTree* tree_;
 };
 
-typedef Vector<TextElement, 1, LifoAllocPolicy<Infallible> > TextElementVector;
+typedef InfallibleVector<TextElement, 1> TextElementVector;
 
 class NodeVisitor;
 class RegExpCompiler;
@@ -956,7 +988,7 @@ class Guard
     int value_;
 };
 
-typedef Vector<Guard*, 1, LifoAllocPolicy<Infallible> > GuardVector;
+typedef InfallibleVector<Guard*, 1> GuardVector;
 
 class GuardedAlternative
 {
@@ -975,7 +1007,7 @@ class GuardedAlternative
     GuardVector* guards_;
 };
 
-typedef Vector<GuardedAlternative, 0, LifoAllocPolicy<Infallible> > GuardedAlternativeVector;
+typedef InfallibleVector<GuardedAlternative, 0> GuardedAlternativeVector;
 
 class AlternativeGeneration;
 
@@ -1189,7 +1221,7 @@ class BoyerMoorePositionInfo
     bool is_word() { return w_ == kLatticeIn; }
 
   private:
-    Vector<bool, 0, LifoAllocPolicy<Infallible> > map_;
+    InfallibleVector<bool, 0> map_;
     int map_count_;  // Number of set bits in the map.
     ContainedInLattice w_;  // The \w character class.
     ContainedInLattice s_;  // The \s character class.
@@ -1197,7 +1229,7 @@ class BoyerMoorePositionInfo
     ContainedInLattice surrogate_;  // Surrogate UTF-16 code units.
 };
 
-typedef Vector<BoyerMoorePositionInfo*, 1, LifoAllocPolicy<Infallible> > BoyerMoorePositionInfoVector;
+typedef InfallibleVector<BoyerMoorePositionInfo*, 1> BoyerMoorePositionInfoVector;
 
 class BoyerMooreLookahead
 {

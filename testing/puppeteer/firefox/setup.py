@@ -19,7 +19,7 @@ def get_version():
                       read('firefox_puppeteer', '__init__.py'), re.M)[0]
 
 
-setup(name='firefox_puppeteer',
+setup(name='firefox-puppeteer',
       version=get_version(),
       description="Firefox Puppeteer",
       long_description='See http://firefox-puppeteer.readthedocs.org/',

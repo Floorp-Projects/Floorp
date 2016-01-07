@@ -568,7 +568,7 @@ GMPStorageParent::GMPStorageParent(const nsCString& aNodeId,
                                    GMPParent* aPlugin)
   : mNodeId(aNodeId)
   , mPlugin(aPlugin)
-  , mShutdown(false)
+  , mShutdown(true)
 {
 }
 
@@ -602,6 +602,7 @@ GMPStorageParent::Init()
     mStorage = MakeUnique<GMPMemoryStorage>();
   }
 
+  mShutdown = false;
   return NS_OK;
 }
 

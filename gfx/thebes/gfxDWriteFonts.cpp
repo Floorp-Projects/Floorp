@@ -82,7 +82,7 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     , mAllowManualShowGlyphs(true)
 {
     gfxDWriteFontEntry *fe =
-        static_cast<gfxDWriteFontEntry*>(aFontEntry);
+	        static_cast<gfxDWriteFontEntry*>(aFontEntry);
     nsresult rv;
     DWRITE_FONT_SIMULATIONS sims = DWRITE_FONT_SIMULATIONS_NONE;
     if ((GetStyle()->style != NS_FONT_STYLE_NORMAL) &&
@@ -101,6 +101,21 @@ gfxDWriteFont::gfxDWriteFont(gfxFontEntry *aFontEntry,
     if (NS_FAILED(rv)) {
         mIsValid = false;
         return;
+    }
+
+    mFont = fe->GetFont();
+    if (!mFont) {
+        gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
+        gfxDWriteFontFamily* defaultFontFamily =
+            static_cast<gfxDWriteFontFamily*>(fontList->GetDefaultFont(aFontStyle));
+
+        mFont = defaultFontFamily->GetDefaultFont();
+        NS_WARNING("Using default font");
+    }
+
+    HRESULT hr = mFont->GetFontFamily(getter_AddRefs(mFontFamily));
+    if (FAILED(hr)) {
+        MOZ_ASSERT(false);
     }
 
     ComputeMetrics(anAAOption);
@@ -684,6 +699,10 @@ gfxDWriteFont::GetScaledFont(mozilla::gfx::DrawTarget *aTarget)
     mAzureScaledFont = Factory::CreateScaledFontWithCairo(nativeFont,
                                                         GetAdjustedSize(),
                                                         GetCairoScaledFont());
+  } else if (aTarget->GetBackendType() == BackendType::SKIA) {
+    mAzureScaledFont =
+            Factory::CreateScaledFontForDWriteFont(mFont, mFontFamily,
+                                                   mFontFace, GetAdjustedSize());
   } else {
     mAzureScaledFont = Factory::CreateScaledFontForNativeFont(nativeFont,
                                                             GetAdjustedSize());

@@ -507,9 +507,6 @@ protected:
   // Notification method invoked when mLogicallySeeking changes.
   void LogicallySeekingChanged();
 
-  // Notification method invoked when mSameOriginMedia changes.
-  void SameOriginMediaChanged();
-
   // Sets internal state which causes playback of media to pause.
   // The decoder monitor must be held.
   void StopPlayback();

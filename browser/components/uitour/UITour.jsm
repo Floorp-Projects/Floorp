@@ -1831,9 +1831,8 @@ this.UITour = {
             let engines = Services.search.getVisibleEngines();
             data = {
               searchEngineIdentifier: Services.search.defaultEngine.identifier,
-              engines: [TARGET_SEARCHENGINE_PREFIX + engine.identifier
-                        for (engine of engines)
-                          if (engine.identifier)]
+              engines: engines.filter((engine) => engine.identifier)
+                              .map((engine) => TARGET_SEARCHENGINE_PREFIX + engine.identifier)
             };
           } else {
             data = {engines: [], searchEngineIdentifier: ""};

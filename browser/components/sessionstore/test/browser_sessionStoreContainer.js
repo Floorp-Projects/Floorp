@@ -4,7 +4,8 @@
 
 function retrieveUserContextId(browser) {
   return ContentTask.spawn(browser, null, function* () {
-    return docShell.userContextId;
+    let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
+    return loadContext.originAttributes.userContextId;
   });
 }
 

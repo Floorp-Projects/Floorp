@@ -116,11 +116,22 @@
 
 #define PREF_WORKERS_ENABLED "dom.workers.enabled"
 
-#ifdef WORKER_LOGGING
-#define LOG(_args) do { printf _args ; fflush(stdout); } while (0)
-#else
-#define LOG(_args) do { } while (0)
-#endif
+static mozilla::LazyLogModule sWorkerPrivateLog("WorkerPrivate");
+static mozilla::LazyLogModule sWorkerTimeoutsLog("WorkerTimeouts");
+
+mozilla::LogModule*
+WorkerLog()
+{
+  return sWorkerPrivateLog;
+}
+
+mozilla::LogModule*
+TimeoutsLog()
+{
+  return sWorkerTimeoutsLog;
+}
+
+#define LOG(log, _args) MOZ_LOG(log, LogLevel::Debug, _args);
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1119,14 +1130,19 @@ private:
   }
 };
 
-class TimerRunnable final : public WorkerRunnable
+class TimerRunnable final : public WorkerRunnable,
+                            public nsITimerCallback
 {
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   explicit TimerRunnable(WorkerPrivate* aWorkerPrivate)
   : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
   { }
 
 private:
+  ~TimerRunnable() {}
+
   virtual bool
   PreDispatch(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
@@ -1146,7 +1162,15 @@ private:
   {
     return aWorkerPrivate->RunExpiredTimeouts(aCx);
   }
+
+  NS_IMETHOD
+  Notify(nsITimer* aTimer) override
+  {
+    return Run();
+  }
 };
+
+NS_IMPL_ISUPPORTS_INHERITED(TimerRunnable, WorkerRunnable, nsITimerCallback)
 
 class DebuggerImmediateRunnable : public WorkerRunnable
 {
@@ -4637,8 +4661,8 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
 
   mPeriodicGCTimerRunning = false;
   mIdleGCTimerRunning = false;
-
-  LOG(("Worker %p canceled GC timer because %s\n", this,
+  LOG(WorkerLog(),
+      ("Worker %p canceled GC timer because %s\n", this,
        aMode == PeriodicTimer ?
        "periodic" :
        aMode == IdleTimer ? "idle" : "none"));
@@ -4670,11 +4694,11 @@ WorkerPrivate::SetGCTimerMode(GCTimerMode aMode)
                                         "dom::workers::DummyCallback(2)")));
 
   if (aMode == PeriodicTimer) {
-    LOG(("Worker %p scheduled periodic GC timer\n", this));
+    LOG(WorkerLog(), ("Worker %p scheduled periodic GC timer\n", this));
     mPeriodicGCTimerRunning = true;
   }
   else {
-    LOG(("Worker %p scheduled idle GC timer\n", this));
+    LOG(WorkerLog(), ("Worker %p scheduled idle GC timer\n", this));
     mIdleGCTimerRunning = true;
   }
 }
@@ -4689,7 +4713,7 @@ WorkerPrivate::ShutdownGCTimers()
   // Always make sure the timer is canceled.
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mGCTimer->Cancel()));
 
-  LOG(("Worker %p killed the GC timer\n", this));
+  LOG(WorkerLog(), ("Worker %p killed the GC timer\n", this));
 
   mGCTimer = nullptr;
   mPeriodicGCTimerTarget = nullptr;
@@ -5204,8 +5228,10 @@ WorkerPrivate::CancelAllTimeouts(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
 
+  LOG(TimeoutsLog(), ("Worker %p CancelAllTimeouts.\n", this));
+
   if (mTimerRunning) {
-    NS_ASSERTION(mTimer, "Huh?!");
+    NS_ASSERTION(mTimer && mTimerRunnable, "Huh?!");
     NS_ASSERTION(!mTimeouts.IsEmpty(), "Huh?!");
 
     if (NS_FAILED(mTimer->Cancel())) {
@@ -5229,6 +5255,7 @@ WorkerPrivate::CancelAllTimeouts(JSContext* aCx)
 #endif
 
   mTimer = nullptr;
+  mTimerRunnable = nullptr;
 }
 
 already_AddRefed<nsIEventTarget>
@@ -5900,30 +5927,22 @@ WorkerPrivate::SetTimeout(JSContext* aCx,
   nsAutoPtr<TimeoutInfo>* insertedInfo =
     mTimeouts.InsertElementSorted(newInfo.forget(), GetAutoPtrComparator(mTimeouts));
 
+  LOG(TimeoutsLog(), ("Worker %p has new timeout: delay=%d interval=%s\n",
+                      this, aTimeout, aIsInterval ? "yes" : "no"));
+
   // If the timeout we just made is set to fire next then we need to update the
-  // timer.
-  if (insertedInfo == mTimeouts.Elements()) {
+  // timer, unless we're currently running timeouts.
+  if (insertedInfo == mTimeouts.Elements() && !mRunningExpiredTimeouts) {
     nsresult rv;
 
     if (!mTimer) {
-      nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
+      mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
         return 0;
       }
 
-      RefPtr<TimerRunnable> runnable = new TimerRunnable(this);
-
-      RefPtr<TimerThreadEventTarget> target =
-        new TimerThreadEventTarget(this, runnable);
-
-      rv = timer->SetTarget(target);
-      if (NS_FAILED(rv)) {
-        aRv.Throw(rv);
-        return 0;
-      }
-
-      timer.swap(mTimer);
+      mTimerRunnable = new TimerRunnable(this);
     }
 
     if (!mTimerRunning) {
@@ -5973,7 +5992,7 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     return true;
   }
 
-  NS_ASSERTION(mTimer, "Must have a timer!");
+  NS_ASSERTION(mTimer && mTimerRunnable, "Must have a timer!");
   NS_ASSERTION(!mTimeouts.IsEmpty(), "Should have some work to do!");
 
   bool retval = true;
@@ -5983,7 +6002,13 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
 
   // We want to make sure to run *something*, even if the timer fired a little
   // early. Fudge the value of now to at least include the first timeout.
-  const TimeStamp now = std::max(TimeStamp::Now(), mTimeouts[0]->mTargetTime);
+  const TimeStamp actual_now = TimeStamp::Now();
+  const TimeStamp now = std::max(actual_now, mTimeouts[0]->mTargetTime);
+
+  if (now != actual_now) {
+    LOG(TimeoutsLog(), ("Worker %p fudged timeout by %f ms.\n", this,
+                        (now - actual_now).ToMilliseconds()));
+  }
 
   nsAutoTArray<TimeoutInfo*, 10> expiredTimeouts;
   for (uint32_t index = 0; index < mTimeouts.Length(); index++) {
@@ -6004,6 +6029,9 @@ WorkerPrivate::RunExpiredTimeouts(JSContext* aCx)
     if (info->mCanceled) {
       continue;
     }
+
+    LOG(TimeoutsLog(), ("Worker %p executing timeout with original delay %f ms.\n",
+                        this, info->mInterval.ToMilliseconds()));
 
     // Always call JS_ReportPendingException if something fails, and if
     // JS_ReportPendingException returns false (i.e. uncatchable exception) then
@@ -6102,16 +6130,26 @@ bool
 WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx)
 {
   AssertIsOnWorkerThread();
+  MOZ_ASSERT(!mRunningExpiredTimeouts);
   NS_ASSERTION(!mTimeouts.IsEmpty(), "Should have some timeouts!");
-  NS_ASSERTION(mTimer, "Should have a timer!");
+  NS_ASSERTION(mTimer && mTimerRunnable, "Should have a timer!");
+
+  // NB: This is important! The timer may have already fired, e.g. if a timeout
+  // callback itself calls setTimeout for a short duration and then takes longer
+  // than that to finish executing. If that has happened, it's very important
+  // that we don't execute the event that is now pending in our event queue, or
+  // our code in RunExpiredTimeouts to "fudge" the timeout value will unleash an
+  // early timeout when we execute the event we're about to queue.
+  mTimer->Cancel();
 
   double delta =
     (mTimeouts[0]->mTargetTime - TimeStamp::Now()).ToMilliseconds();
   uint32_t delay = delta > 0 ? std::min(delta, double(UINT32_MAX)) : 0;
 
-  nsresult rv = mTimer->InitWithNamedFuncCallback(
-    DummyCallback, nullptr, delay, nsITimer::TYPE_ONE_SHOT,
-    "dom::workers::DummyCallback(3)");
+  LOG(TimeoutsLog(), ("Worker %p scheduled timer for %d ms, %d pending timeouts\n",
+                      this, delay, mTimeouts.Length()));
+
+  nsresult rv = mTimer->InitWithCallback(mTimerRunnable, delay, nsITimer::TYPE_ONE_SHOT);
   if (NS_FAILED(rv)) {
     JS_ReportError(aCx, "Failed to start timer!");
     return false;
@@ -6218,17 +6256,17 @@ WorkerPrivate::GarbageCollectInternal(JSContext* aCx, bool aShrinking,
       JS::GCForReason(rt, GC_SHRINK, JS::gcreason::DOM_WORKER);
 
       if (!aCollectChildren) {
-        LOG(("Worker %p collected idle garbage\n", this));
+        LOG(WorkerLog(), ("Worker %p collected idle garbage\n", this));
       }
     }
     else {
       JS::GCForReason(rt, GC_NORMAL, JS::gcreason::DOM_WORKER);
-      LOG(("Worker %p collected garbage\n", this));
+      LOG(WorkerLog(), ("Worker %p collected garbage\n", this));
     }
   }
   else {
     JS_MaybeGC(aCx);
-    LOG(("Worker %p collected periodic garbage\n", this));
+    LOG(WorkerLog(), ("Worker %p collected periodic garbage\n", this));
   }
 
   if (aCollectChildren) {

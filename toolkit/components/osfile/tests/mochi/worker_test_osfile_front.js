@@ -270,7 +270,10 @@ function test_iter_dir()
 
   // Testing nextBatch()
   iterator = new OS.File.DirectoryIterator(parent);
-  let allentries = [x for(x in iterator)];
+  let allentries = [];
+  for (let x in iterator) {
+    allentries.push(x);
+  }
   iterator.close();
 
   ok(allentries.length >= 14, "test_iter_dir: Meta-check: the test directory should contain at least 14 items");

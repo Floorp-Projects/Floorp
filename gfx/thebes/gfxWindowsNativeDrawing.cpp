@@ -53,9 +53,13 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
             cairo = static_cast<cairo_t*>
                 (drawTarget->GetNativeSurface(NativeSurfaceType::CAIRO_CONTEXT));
             if (cairo) {
-                cairo_surface_t* s = cairo_get_target(cairo);
+                cairo_surface_t* s = cairo_get_group_target(cairo);
                 if (s) {
                     mDeviceOffset = mContext->GetDeviceOffset();
+                    double sdx, sdy;
+                    cairo_surface_get_device_offset(s, &sdx, &sdy);
+                    mDeviceOffset.x -= sdx;
+                    mDeviceOffset.y -= sdy;
                     surf = gfxASurface::Wrap(s);
                 }
             }

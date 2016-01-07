@@ -14,6 +14,7 @@
 <pre id="display"></pre>
 <style type="text/css" id="testbox"></style>
 <script class="testbody" type="text/javascript">
+function runTest() {
   function _(b) { return "@font-face { " + b + " }"; };
   var testset = [
     // Complete nonsense - shouldn't make a font-face rule at all.
@@ -287,6 +288,24 @@
     { rule: _("font-language-override: #999;"), d: {} },
     { rule: _("font-language-override: 'TRK' 'SRB'"), d: {} },
     { rule: _("font-language-override: 'TRK', 'SRB'"), d: {} },
+
+    // font-display:
+    { rule: _("font-display: auto;"),
+      d: { "font-display" : "auto" } },
+    { rule: _("font-display: block;"),
+      d: { "font-display" : "block" } },
+    { rule: _("font-display: swap;"),
+      d: { "font-display" : "swap" } },
+    { rule: _("font-display: fallback;"),
+      d: { "font-display" : "fallback" } },
+    { rule: _("font-display: optional;"),
+      d: { "font-display" : "optional" } },
+
+    // incorrect font-display
+    { rule: _("font-display: hidden"), d: {} },
+    { rule: _("font-display: swap 3"), d: {} },
+    { rule: _("font-display: block 2 swap 0"), d: {} },
+    { rule: _("font-display: all"), d: {} },
   ];
 
   var display = document.getElementById("display");
@@ -352,6 +371,12 @@
       ok(false, testset[curTest].rule, "During test: " + e);
     }
   }
+  SimpleTest.finish();
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
+                          runTest);
 </script>
 </body>
 </html>
