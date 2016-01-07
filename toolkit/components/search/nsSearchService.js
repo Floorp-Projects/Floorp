@@ -4016,11 +4016,10 @@ SearchService.prototype = {
       // Remove the engine from the internal store
       delete this._engines[engineToRemove.name];
 
-      notifyAction(engineToRemove, SEARCH_ENGINE_REMOVED);
-
       // Since we removed an engine, we need to update the preferences.
       this._saveSortedEngineList();
     }
+    notifyAction(engineToRemove, SEARCH_ENGINE_REMOVED);
   },
 
   moveEngine: function SRCH_SVC_moveEngine(aEngine, aNewIndex) {

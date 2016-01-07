@@ -19,14 +19,12 @@ function test() {
     const {tab} = yield loadTab(TEST_URI);
     const hud = yield openConsole(tab);
 
-    let button = content.document.querySelector("button");
-
     // On e10s, the exception is triggered in child process
     // and is ignored by test harness
     if (!Services.appinfo.browserTabsRemoteAutostart) {
       expectUncaughtException();
     }
-    EventUtils.sendMouseEvent({ type: "click" }, button, content);
+    BrowserTestUtils.synthesizeMouseAtCenter("button", {}, gBrowser.selectedBrowser);
 
     yield waitForMessages({
       webconsole: hud,

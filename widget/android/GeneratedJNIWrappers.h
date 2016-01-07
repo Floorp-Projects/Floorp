@@ -360,18 +360,17 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
                 mozilla::jni::String::Param> Args;
         static constexpr char name[] = "createShortcut";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
+                "(Ljava/lang/String;Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
+    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct CreateThreadCursorWrapper_t {

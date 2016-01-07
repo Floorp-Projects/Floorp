@@ -5,7 +5,7 @@
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { ViewHelpers } = require("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 
-const AUTO_EXPAND_DEPTH = 3; // depth
+const AUTO_EXPAND_DEPTH = 0; // depth
 
 /**
  * An arrow that displays whether its node is expanded (▼) or collapsed
@@ -16,7 +16,7 @@ const ArrowExpander = createFactory(createClass({
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item !== nextProps.item
-      || this.props.visible != nextProps.visible
+      || this.props.visible !== nextProps.visible
       || this.props.expanded !== nextProps.expanded;
   },
 
@@ -151,19 +151,19 @@ const Tree = module.exports = createClass({
 
     // Optional props
 
-    // A predicate function to filter out unwanted items from the tree.
-    filter: PropTypes.func,
     // The depth to which we should automatically expand new items.
     autoExpandDepth: PropTypes.number,
     // A predicate that returns true if the last DFS traversal that was cached
     // can be reused, false otherwise. The predicate function is passed the
     // cached traversal as an array of nodes.
     reuseCachedTraversal: PropTypes.func,
+    // Optional event handlers for when items are expanded or collapsed.
+    onExpand: PropTypes.func,
+    onCollapse: PropTypes.func,
   },
 
   getDefaultProps() {
     return {
-      filter: item => true,
       expanded: new Set(),
       seen: new Set(),
       focused: undefined,
@@ -185,6 +185,7 @@ const Tree = module.exports = createClass({
 
   componentDidMount() {
     window.addEventListener("resize", this._updateHeight);
+    this._autoExpand();
     this._updateHeight();
   },
 
@@ -193,16 +194,33 @@ const Tree = module.exports = createClass({
   },
 
   componentWillReceiveProps(nextProps) {
+    this._autoExpand();
+  },
+
+  _autoExpand() {
     if (!this.props.autoExpandDepth) {
       return;
     }
 
-    // Automatically expand the first autoExpandDepth levels for new items.
-    for (let { item } of this._dfsFromRoots(this.props.autoExpandDepth)) {
-      if (!this.state.seen.has(item)) {
-        this.state.expanded.add(item);
-        this.state.seen.add(item);
+    // Automatically expand the first autoExpandDepth levels for new items. Do
+    // not use the usual DFS infrastructure because we don't want to ignore
+    // collapsed nodes.
+    const autoExpand = (item, currentDepth) => {
+      if (currentDepth >= this.props.autoExpandDepth ||
+          this.state.seen.has(item)) {
+        return;
       }
+
+      this.state.expanded.add(item);
+      this.state.seen.add(item);
+
+      for (let child of this.props.getChildren(item)) {
+        autoExpand(item, currentDepth + 1);
+      }
+    };
+
+    for (let root of this.props.getRoots()) {
+      autoExpand(root, 0);
     }
   },
 
@@ -280,10 +298,6 @@ const Tree = module.exports = createClass({
    * Perform a pre-order depth-first search from item.
    */
   _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
-    if (!this.props.filter(item)) {
-      return traversal;
-    }
-
     traversal.push({ item, depth: _depth });
 
     if (!this.state.expanded.has(item)) {
@@ -336,9 +350,17 @@ const Tree = module.exports = createClass({
   _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
     this.state.expanded.add(item);
 
+    if (this.props.onExpand) {
+      this.props.onExpand(item);
+    }
+
     if (expandAllChildren) {
       for (let { item: child } of this._dfs(item)) {
         this.state.expanded.add(child);
+
+        if (this.props.onExpand) {
+          this.props.onExpand(child);
+        }
       }
     }
 
@@ -355,6 +377,11 @@ const Tree = module.exports = createClass({
    */
   _onCollapse: oncePerAnimationFrame(function (item) {
     this.state.expanded.delete(item);
+
+    if (this.props.onCollapse) {
+      this.props.onCollapse(item);
+    }
+
     this.setState({
       expanded: this.state.expanded,
       cachedTraversal: null,

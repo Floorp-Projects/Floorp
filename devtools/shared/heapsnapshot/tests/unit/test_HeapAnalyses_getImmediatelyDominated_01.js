@@ -41,6 +41,8 @@ add_task(function* () {
   ok(Array.isArray(response.nodes));
   ok(response.nodes.every(node => node.parentId === partialTree.nodeId));
   ok(response.moreChildrenAvailable);
+  equal(response.path.length, 1);
+  equal(response.path[0], partialTree.nodeId);
 
   // Next, test getting a subset of children available.
   const secondResponse = yield client.getImmediatelyDominated({
@@ -54,6 +56,8 @@ add_task(function* () {
   ok(Array.isArray(secondResponse.nodes));
   ok(secondResponse.nodes.every(node => node.parentId === partialTree.nodeId));
   ok(!secondResponse.moreChildrenAvailable);
+  equal(secondResponse.path.length, 1);
+  equal(secondResponse.path[0], partialTree.nodeId);
 
   client.destroy();
 });
