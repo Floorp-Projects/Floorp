@@ -1400,6 +1400,8 @@ class ArtifactSubCommand(SubCommand):
         jobchoices = {
             'android-api-11',
             'android-x86',
+            'linux',
+            'linux64',
             'macosx64',
             'win32',
             'win64'
@@ -1472,9 +1474,11 @@ class PackageFrontend(MachCommandBase):
             if self.substs['ANDROID_CPU_ARCH'] == 'x86':
                 return tree, 'android-x86'
             return tree, 'android-api-11'
+        # TODO: check for 32/64 bit builds.  We'd like to use HAVE_64BIT_BUILD
+        # but that relies on the compile environment.
+        if self.defines.get('XP_LINUX', False):
+            return tree, 'linux64'
         if self.defines.get('XP_MACOSX', False):
-            # TODO: check for 64 bit builds.  We'd like to use HAVE_64BIT_BUILD
-            # but that relies on the compile environment.
             return tree, 'macosx64'
         if self.defines.get('XP_WIN', False):
             return tree, 'win32'
