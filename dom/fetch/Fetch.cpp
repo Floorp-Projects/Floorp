@@ -25,6 +25,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/FetchDriver.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
@@ -37,7 +38,6 @@
 #include "InternalRequest.h"
 #include "InternalResponse.h"
 
-#include "nsFormData.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
@@ -393,7 +393,7 @@ ExtractFromBlob(const Blob& aBlob, nsIInputStream** aStream,
 }
 
 nsresult
-ExtractFromFormData(nsFormData& aFormData, nsIInputStream** aStream,
+ExtractFromFormData(FormData& aFormData, nsIInputStream** aStream,
                     nsCString& aContentType)
 {
   uint64_t unusedContentLength;
@@ -468,7 +468,7 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDa
     const Blob& blob = aBodyInit.GetAsBlob();
     return ExtractFromBlob(blob, aStream, aContentType);
   } else if (aBodyInit.IsFormData()) {
-    nsFormData& form = aBodyInit.GetAsFormData();
+    FormData& form = aBodyInit.GetAsFormData();
     return ExtractFromFormData(form, aStream, aContentType);
   } else if (aBodyInit.IsUSVString()) {
     nsAutoString str;
@@ -500,7 +500,7 @@ ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUS
     const Blob& blob = aBodyInit.GetAsBlob();
     return ExtractFromBlob(blob, aStream, aContentType);
   } else if (aBodyInit.IsFormData()) {
-    nsFormData& form = aBodyInit.GetAsFormData();
+    FormData& form = aBodyInit.GetAsFormData();
     return ExtractFromFormData(form, aStream, aContentType);
   } else if (aBodyInit.IsUSVString()) {
     nsAutoString str;
@@ -1039,7 +1039,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
       data.Adopt(reinterpret_cast<char*>(aResult), aResultLength);
       autoFree.Reset();
 
-      RefPtr<nsFormData> fd = FetchUtil::ConsumeFormData(
+      RefPtr<dom::FormData> fd = FetchUtil::ConsumeFormData(
         DerivedClass()->GetParentObject(),
         mMimeType, data, error);
       if (!error.Failed()) {

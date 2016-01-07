@@ -4,40 +4,33 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsFormData_h__
-#define nsFormData_h__
+#ifndef mozilla_dom_FormData_h
+#define mozilla_dom_FormData_h
 
 #include "mozilla/Attributes.h"
-#include "nsIDOMFormData.h"
-#include "nsIXMLHttpRequest.h"
-#include "nsFormSubmission.h"
-#include "nsWrapperCache.h"
-#include "nsTArray.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
+#include "nsIDOMFormData.h"
+#include "nsIXMLHttpRequest.h"
+#include "nsFormSubmission.h"
+#include "nsTArray.h"
+#include "nsWrapperCache.h"
 
 namespace mozilla {
-class ErrorResult;
-
 namespace dom {
+
 class HTMLFormElement;
 class GlobalObject;
-} // namespace dom
-} // namespace mozilla
 
-class nsFormData final : public nsIDOMFormData,
-                         public nsIXHRSendable,
-                         public nsFormSubmission,
-                         public nsWrapperCache
+class FormData final : public nsIDOMFormData,
+                       public nsIXHRSendable,
+                       public nsFormSubmission,
+                       public nsWrapperCache
 {
 private:
-  ~nsFormData() {}
-
-  typedef mozilla::dom::Blob Blob;
-  typedef mozilla::dom::File File;
-  typedef mozilla::dom::OwningFileOrUSVString OwningFileOrUSVString;
+  ~FormData() {}
 
   struct FormDataTuple
   {
@@ -59,10 +52,10 @@ private:
                        File* aFile);
 
 public:
-  explicit nsFormData(nsISupports* aOwner = nullptr);
+  explicit FormData(nsISupports* aOwner = nullptr);
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(nsFormData,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(FormData,
                                                          nsIDOMFormData)
 
   NS_DECL_NSIDOMFORMDATA
@@ -77,32 +70,42 @@ public:
   {
     return mOwner;
   }
-  static already_AddRefed<nsFormData>
-  Constructor(const mozilla::dom::GlobalObject& aGlobal,
-              const mozilla::dom::Optional<mozilla::dom::NonNull<mozilla::dom::HTMLFormElement> >& aFormElement,
-              mozilla::ErrorResult& aRv);
+
+  static already_AddRefed<FormData>
+  Constructor(const GlobalObject& aGlobal,
+              const Optional<NonNull<HTMLFormElement> >& aFormElement,
+              ErrorResult& aRv);
+
   void Append(const nsAString& aName, const nsAString& aValue,
-              mozilla::ErrorResult& aRv);
+              ErrorResult& aRv);
   void Append(const nsAString& aName, Blob& aBlob,
-              const mozilla::dom::Optional<nsAString>& aFilename,
-              mozilla::ErrorResult& aRv);
+              const Optional<nsAString>& aFilename,
+              ErrorResult& aRv);
+
   void Delete(const nsAString& aName);
-  void Get(const nsAString& aName, mozilla::dom::Nullable<OwningFileOrUSVString>& aOutValue);
+
+  void Get(const nsAString& aName, Nullable<OwningFileOrUSVString>& aOutValue);
+
   void GetAll(const nsAString& aName, nsTArray<OwningFileOrUSVString>& aValues);
+
   bool Has(const nsAString& aName);
+
   void Set(const nsAString& aName, Blob& aBlob,
-           const mozilla::dom::Optional<nsAString>& aFilename,
-           mozilla::ErrorResult& aRv);
+           const Optional<nsAString>& aFilename,
+           ErrorResult& aRv);
   void Set(const nsAString& aName, const nsAString& aValue,
-           mozilla::ErrorResult& aRv);
+           ErrorResult& aRv);
 
   uint32_t GetIterableLength() const;
+
   const nsAString& GetKeyAtIndex(uint32_t aIndex) const;
+
   const OwningFileOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
 
   // nsFormSubmission
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) override;
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
+
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override
   {
@@ -110,6 +113,7 @@ public:
     SetNameValuePair(data, aName, aValue);
     return NS_OK;
   }
+
   virtual nsresult AddNameFilePair(const nsAString& aName,
                                    File* aFile) override;
 
@@ -144,4 +148,7 @@ private:
   nsTArray<FormDataTuple> mFormData;
 };
 
-#endif // nsFormData_h__
+} // dom namespace
+} // mozilla namepsace
+
+#endif // mozilla_dom_FormData_h
