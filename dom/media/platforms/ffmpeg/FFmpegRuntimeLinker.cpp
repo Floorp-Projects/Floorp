@@ -50,10 +50,10 @@ static unsigned (*avcodec_version)() = nullptr;
 
 #ifdef __GNUC__
 #define AV_FUNC(func, ver) void (*func)();
+#define LIBAVCODEC_ALLVERSION
 #else
 #define AV_FUNC(func, ver) decltype(func)* func;
 #endif
-#define LIBAVCODEC_ALLVERSION
 #include "FFmpegFunctionList.h"
 #undef LIBAVCODEC_ALLVERSION
 #undef AV_FUNC
@@ -130,22 +130,35 @@ FFmpegRuntimeLinker::Bind(const char* aLibName)
   if (!GetVersion(major, minor)) {
     return false;
   }
-  if (major > 55) {
-    // All major greater than 56 currently use the same ABI as 55.
-    major = 55;
+
+  int version;
+  switch (major) {
+    case 53:
+      version = AV_FUNC_53;
+      break;
+    case 54:
+      version = AV_FUNC_54;
+      break;
+    case 55:
+    case 56:
+      version = AV_FUNC_55;
+      break;
+    default:
+      // Not supported at this stage.
+      return false;
   }
 
-#define LIBAVCODEC_ALLVERSION
 #define AV_FUNC(func, ver)                                                     \
-  if (ver <= 0 || ver == major) {                                              \
-    if (!(func = (decltype(func))PR_FindSymbol(ver != 0 ? sLinkedUtilLib : sLinkedLib, #func))) { \
+  if ((ver) & version) {                                                       \
+    if (!(func = (decltype(func))PR_FindSymbol(((ver) & AV_FUNC_AVUTIL_MASK) ? sLinkedUtilLib : sLinkedLib, #func))) { \
       FFMPEG_LOG("Couldn't load function " #func " from %s.", aLibName);       \
       return false;                                                            \
     }                                                                          \
+  } else {                                                                     \
+    func = (decltype(func))nullptr;                                            \
   }
 #include "FFmpegFunctionList.h"
 #undef AV_FUNC
-#undef LIBAVCODEC_ALLVERSION
   return true;
 }
 
