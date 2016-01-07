@@ -28,7 +28,6 @@ var PLUGINS = [{
   get disabled() {
     return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
   },
-  filename: "",
   filename: "/usr/lib/plugins/dupplugin1.so"
 }, {
   name: "Duplicate Plugin 2",
@@ -49,7 +48,6 @@ var PLUGINS = [{
   get disabled() {
     return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
   },
-  filename: "",
   filename: "/usr/lib/plugins/dupplugin2.so"
 }, {
   name: "Non-duplicate Plugin", // 3
@@ -70,7 +68,6 @@ var PLUGINS = [{
   get disabled() {
     return this.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
   },
-  filename: "",
   filename: "/usr/lib/plugins/dupplugin4.so"
 }, {
   name: "Another Non-duplicate Plugin", // 5

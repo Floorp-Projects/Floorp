@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>font-display test</title>
+<meta charset="utf-8">
+<style>
+body { margin: 20px }
+
+@font-face {
+  font-family: test2-auto;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=4500&test=font-display-2-auto);
+  font-display: auto;
+}
+
+@font-face {
+  font-family: test2-block;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=4500&test=font-display-2-block);
+  font-display: block;
+}
+
+@font-face {
+  font-family: test2-swap;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=4500&test=font-display-2-swap);
+  font-display: swap;
+}
+
+@font-face {
+  font-family: test2-fallback;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=4500&test=font-display-2-fallback);
+  font-display: fallback;
+}
+
+@font-face {
+  font-family: test2-optional;
+  src: url(../fonts/markfonts-delay.sjs?font=markA&delay=4500&test=font-display-2-optional);
+  font-display: optional;
+}
+
+div.test {
+  font-size: 600%;
+  line-height: 1.3em;
+  width: 500px;
+}
+
+div.test p {
+  display: inline-block;
+  width: 150px;
+  margin: 0;
+}
+
+.auto { font-family: test2-auto; }
+.block { font-family: test2-block; }
+.swap { font-family: test2-swap; }
+.fallback { font-family: test2-fallback; }
+.optional { font-family: test2-optional; }
+
+</style>
+</head>
+
+<body>
+<div class="test">
+<p class="auto">A</p>
+<p class="block">A</p>
+</div>
+<div class="test">
+<p class="swap">A</p>
+<p class="fallback">A</p>
+<p class="optional">A</p>
+</div>
+</body>
+</html>

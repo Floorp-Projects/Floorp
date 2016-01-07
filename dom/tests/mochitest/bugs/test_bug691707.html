@@ -21,7 +21,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=691707
 /** Test for Bug 691707 **/
 
 var nodeList = document.body.childNodes;
-var properties = [i for (i in nodeList)];
+var properties = [];
+for (let i in nodeList) {
+  properties.push(i);
+}
 for (var j = 1; j < nodeList.length; ++j)
     ok(properties.indexOf("" + j) >= 0, "Enumerating hit all numeric properties");
 ok(properties.indexOf("item") >= 0, "Enumerating hit 'item' from the prototype");

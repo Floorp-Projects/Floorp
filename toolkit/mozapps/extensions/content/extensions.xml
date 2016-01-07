@@ -877,11 +877,6 @@
                         tooltiptext="&cmd.showPreferencesUnix.tooltip;"
 #endif
                         oncommand="document.getBindingParent(this).showPreferences();"/>
-                        <!-- label="&cmd.debugAddon.label;" -->
-            <xul:button anonid="debug-btn" class="addon-control debug"
-                        label="&cmd.debugAddon.label;"
-                        oncommand="document.getBindingParent(this).debug();"/>
-
             <xul:button anonid="enable-btn"  class="addon-control enable"
                         label="&cmd.enableAddon.label;"
                         oncommand="document.getBindingParent(this).userDisabled = false;"/>
@@ -1019,10 +1014,6 @@
       <field name="_enableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
                                                 "enable-btn");
-      </field>
-      <field name="_debugBtn">
-        document.getAnonymousElementByAttribute(this, "anonid",
-                                                "debug-btn");
       </field>
       <field name="_disableBtn">
         document.getAnonymousElementByAttribute(this, "anonid",
@@ -1370,12 +1361,6 @@
                              this.mAddon.install.state != AddonManager.STATE_INSTALLED);
           this._showStatus(showProgress ? "progress" : "none");
 
-          let debuggable = this.mAddon.isDebuggable &&
-                           Services.prefs.getBoolPref('devtools.chrome.enabled') &&
-                           Services.prefs.getBoolPref('devtools.debugger.remote-enabled');
-
-          this._debugBtn.disabled = this._debugBtn.hidden = !debuggable
-
           if (this.mAddon.type == "experiment") {
             this.removeAttribute("notification");
             let prefix = "experiment.";
@@ -1554,12 +1539,6 @@
           } else {
             this.mAddon.uninstall();
           }
-        ]]></body>
-      </method>
-
-      <method name="debug">
-        <body><![CDATA[
-          gViewController.doCommand("cmd_debugItem", this.mAddon);
         ]]></body>
       </method>
 

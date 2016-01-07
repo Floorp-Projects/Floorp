@@ -32,9 +32,9 @@ function toHexString(data) {
   }
   let hexString = "";
   if (typeof data === "string") {
-    hexString = [toHexChar(data.charCodeAt(i)) for (i in data)].join("");
+    hexString = Array.from(data, (c, i) => toHexChar(data.charCodeAt(i))).join("");
   } else if (typeof data === "array") {
-    hexString = [toHexChar(data[i]) for (i in data)].join("");
+    hexString = data.map(toHexChar).join("");
   }
   return hexString;
 }

@@ -342,6 +342,24 @@ gfxDWriteFontFamily::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
     AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
 }
 
+already_AddRefed<IDWriteFont>
+gfxDWriteFontFamily::GetDefaultFont()
+{
+  RefPtr<IDWriteFont> font;
+  for (UINT32 i = 0; i < mDWFamily->GetFontCount(); i++) {
+    HRESULT hr = mDWFamily->GetFont(i, getter_AddRefs(font));
+    if (FAILED(hr)) {
+      NS_WARNING("Failed to get default font from existing family");
+      continue;
+    }
+
+    return font.forget();
+  }
+
+  NS_WARNING("No available DWrite fonts. Returning null");
+  return nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // gfxDWriteFontEntry
 

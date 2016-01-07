@@ -3352,7 +3352,7 @@ this.CustomizableUI = {
    * being affected.
    */
   get areas() {
-    return [area for ([area, props] of gAreas)];
+    return [...gAreas.keys()];
   },
   /**
    * Check what kind of area (toolbar or menu panel) an area is. This is
@@ -3754,7 +3754,7 @@ function WidgetGroupWrapper(aWidget) {
     if (!buildAreas) {
       return [];
     }
-    return [this.forWindow(node.ownerDocument.defaultView) for (node of buildAreas)];
+    return Array.from(buildAreas, (node) => this.forWindow(node.ownerDocument.defaultView));
   });
 
   this.__defineGetter__("areaType", function() {
@@ -3865,7 +3865,7 @@ function XULWidgetGroupWrapper(aWidgetId) {
   });
 
   this.__defineGetter__("instances", function() {
-    return [this.forWindow(win) for ([win,] of gBuildWindows)];
+    return Array.from(gBuildWindows, ([win,]) => this.forWindow(win));
   });
 
   Object.freeze(this);

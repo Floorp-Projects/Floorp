@@ -540,6 +540,12 @@ public:
    */
   void shrinkBy(size_t aIncr);
 
+  /**
+   * Destroy elements in the range [aNewLength, end()). Does not deallocate
+   * or unreserve storage for those elements.
+   */
+  void shrinkTo(size_t aNewLength);
+
   /** Grow the vector by aIncr elements. */
   bool growBy(size_t aIncr);
 
@@ -946,6 +952,14 @@ Vector<T, N, AP>::shrinkBy(size_t aIncr)
   MOZ_ASSERT(aIncr <= mLength);
   Impl::destroy(endNoCheck() - aIncr, endNoCheck());
   mLength -= aIncr;
+}
+
+template<typename T, size_t N, class AP>
+MOZ_ALWAYS_INLINE void
+Vector<T, N, AP>::shrinkTo(size_t aNewLength)
+{
+  MOZ_ASSERT(aNewLength <= mLength);
+  shrinkBy(mLength - aNewLength);
 }
 
 template<typename T, size_t N, class AP>

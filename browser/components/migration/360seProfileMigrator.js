@@ -90,7 +90,7 @@ function getHash(aStr) {
 
   // convert the binary hash data to a hex string.
   let binary = hasher.finish(false);
-  return [toHexString(binary.charCodeAt(i)) for (i in binary)].join("").toLowerCase();
+  return Array.from(binary, (c, i) => toHexString(binary.charCodeAt(i))).join("").toLowerCase();
 }
 
 function Bookmarks(aProfileFolder) {

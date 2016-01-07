@@ -1627,23 +1627,6 @@ nsHttpChannel::ProcessResponse()
     Telemetry::Accumulate(Telemetry::HTTP_RESPONSE_VERSION,
                           mResponseHead->Version());
 
-#if defined(ANDROID) || defined(MOZ_B2G)
-    if (gHttpHandler->IsTelemetryEnabled()) {
-      // Gather telemetry on being sent a WAP content-type
-      // This check will catch (at least) the following content types:
-      // application/wml+xml, application/vnd.wap.xhtml+xml,
-      // text/vnd.wap.wml, application/vnd.wap.wmlc
-      bool isWap = false;
-      if (!mResponseHead->ContentType().IsEmpty() && (
-          mResponseHead->ContentType().Find(".wap") != -1 ||
-          mResponseHead->ContentType().Find("/wml") != -1)) {
-        isWap = true;
-      }
-
-      Telemetry::Accumulate(Telemetry::HTTP_WAP_CONTENT_TYPE_RECEIVED, isWap);
-    }
-#endif
-
     return rv;
 }
 

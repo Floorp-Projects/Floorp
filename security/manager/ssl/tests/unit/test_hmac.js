@@ -52,7 +52,7 @@ function testHMAC(alg) {
 }
 
 function hexdigest(data) {
-  return [("0" + data.charCodeAt(i).toString(16)).slice(-2) for (i in data)].join("");
+  return Array.from(data, (c, i) => ("0" + data.charCodeAt(i).toString(16)).slice(-2)).join("");
 }
 
 function testVectors() {

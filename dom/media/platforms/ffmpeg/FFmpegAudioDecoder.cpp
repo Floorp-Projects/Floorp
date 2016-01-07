@@ -35,6 +35,22 @@ FFmpegAudioDecoder<LIBAV_VER>::Init()
                      : InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
 }
 
+void
+FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext()
+{
+  MOZ_ASSERT(mCodecContext);
+  // We do not want to set this value to 0 as FFmpeg by default will
+  // use the number of cores, which with our mozlibavutil get_cpu_count
+  // isn't implemented.
+  mCodecContext->thread_count = 1;
+  // FFmpeg takes this as a suggestion for what format to use for audio samples.
+  uint32_t major, minor;
+  FFmpegRuntimeLinker::GetVersion(major, minor);
+  // LibAV 0.8 produces rubbish float interleaved samples, request 16 bits audio.
+  mCodecContext->request_sample_fmt =
+    (major == 53) ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;
+}
+
 static UniquePtr<AudioDataValue[]>
 CopyAndPackAudio(AVFrame* aFrame, uint32_t aNumChannels, uint32_t aNumAFrames)
 {

@@ -13,7 +13,7 @@ add_task(function*() {
   let hud = yield openConsole();
   hud.jsterm.clearOutput(true);
 
-  hud.jsterm.execute("myObj = {abba: 'omgBug676722'}");
+  yield hud.jsterm.execute("myObj = {abba: 'omgBug676722'}");
   hud.jsterm.execute("console.log('fooBug676722', myObj)");
 
   let [result] = yield waitForMessages({

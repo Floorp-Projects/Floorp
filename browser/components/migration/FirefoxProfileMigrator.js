@@ -61,7 +61,7 @@ function sorter(a, b) {
 
 Object.defineProperty(FirefoxProfileMigrator.prototype, "sourceProfiles", {
   get: function() {
-    return [{id: x, name: x} for (x of this._getAllProfiles().keys())].sort(sorter);
+    return this._getAllProfiles().keys().map(x => ({id: x, name: x})).sort(sorter);
   }
 });
 

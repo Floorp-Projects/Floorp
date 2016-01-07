@@ -47,10 +47,11 @@ public:
           uint8_t aStyle,
           const nsTArray<gfxFontFeature>& aFeatureSettings,
           uint32_t aLanguageOverride,
-          gfxSparseBitSet* aUnicodeRanges)
+          gfxSparseBitSet* aUnicodeRanges,
+          uint8_t aFontDisplay)
       : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
                          aStyle, aFeatureSettings, aLanguageOverride,
-                         aUnicodeRanges) {}
+                         aUnicodeRanges, aFontDisplay) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
     virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;
@@ -148,6 +149,8 @@ public:
   void SetVariant(const nsAString& aValue, mozilla::ErrorResult& aRv);
   void GetFeatureSettings(nsString& aResult);
   void SetFeatureSettings(const nsAString& aValue, mozilla::ErrorResult& aRv);
+  void GetDisplay(nsString& aResult);
+  void SetDisplay(const nsAString& aValue, mozilla::ErrorResult& aRv);
 
   mozilla::dom::FontFaceLoadStatus Status();
   mozilla::dom::Promise* Load(mozilla::ErrorResult& aRv);

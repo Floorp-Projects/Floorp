@@ -56,21 +56,25 @@ function addTabs(aWindow) {
 }
 
 function openConsoles() {
-  // open the Web Console for each of the four tabs and log a message.
-  let consolesOpen = 0;
-  for (let i = 0; i < openTabs.length; i++) {
+  function open(i) {
     let tab = openTabs[i];
-    openConsole(tab).then(function(index, hud) {
-      ok(hud, "HUD is open for tab " + index);
+    openConsole(tab).then(function(hud) {
+      ok(hud, "HUD is open for tab " + i);
       let window = hud.target.tab.linkedBrowser.contentWindow;
-      window.console.log("message for tab " + index);
-      consolesOpen++;
-      if (consolesOpen == 4) {
+      window.console.log("message for tab " + i);
+
+      if (i >= openTabs.length - 1) {
         // Use executeSoon() to allow the promise to resolve.
         executeSoon(closeConsoles);
       }
-    }.bind(null, i));
+      else {
+        executeSoon(() => open(i + 1));
+      }
+    });
   }
+
+  // open the Web Console for each of the four tabs and log a message.
+  open(0);
 }
 
 function closeConsoles() {

@@ -56,7 +56,6 @@ final class GeckoEditable extends JNIObject
     private InputFilter[] mFilters;
 
     private final SpannableStringBuilder mText;
-    private final SpannableStringBuilder mChangedText;
     private final Editable mProxy;
     private final ActionQueue mActionQueue;
 
@@ -66,7 +65,8 @@ final class GeckoEditable extends JNIObject
     private Handler mIcRunHandler;
     private Handler mIcPostHandler;
 
-    private GeckoEditableListener mListener;
+    /* package */ GeckoEditableListener mListener;
+    /* package */ GeckoView mView;
     /* package */ boolean mInBatchMode; // Used by IC thread
     /* package */ boolean mNeedCompositionUpdate; // Used by IC thread
     private boolean mFocused; // Used by IC thread
@@ -236,6 +236,11 @@ final class GeckoEditable extends JNIObject
                               getConstantName(Action.class, "TYPE_", action.mType) + ")");
             }
 
+            if (mListener == null) {
+                // We haven't initialized or we've been destroyed.
+                return;
+            }
+
             if (mActions.isEmpty()) {
                 mActionsActive.acquireUninterruptibly();
                 mActions.offer(action);
@@ -381,7 +386,6 @@ final class GeckoEditable extends JNIObject
         mActionQueue = new ActionQueue();
 
         mText = new SpannableStringBuilder();
-        mChangedText = new SpannableStringBuilder();
 
         final Class<?>[] PROXY_INTERFACES = { Editable.class };
         mProxy = (Editable)Proxy.newProxyInstance(
@@ -397,24 +401,6 @@ final class GeckoEditable extends JNIObject
     protected native void disposeNative();
 
     @WrapForJNI
-    private void onDestroy() {
-        if (DEBUG) {
-            // Called by nsWindow.
-            ThreadUtils.assertOnGeckoThread();
-            Log.d(LOGTAG, "onDestroy()");
-        }
-
-        // Make sure we clear all pending Runnables on the IC thread first,
-        // by calling disposeNative from the IC thread.
-        geckoPostToIc(new Runnable() {
-            @Override
-            public void run() {
-                GeckoEditable.this.disposeNative();
-            }
-        });
-    }
-
-    @WrapForJNI
     /* package */ void onViewChange(final GeckoView v) {
         if (DEBUG) {
             // Called by nsWindow.
@@ -422,26 +408,51 @@ final class GeckoEditable extends JNIObject
             Log.d(LOGTAG, "onViewChange(" + v + ")");
         }
 
-        final GeckoEditableListener newListener = GeckoInputConnection.create(v, this);
-        geckoPostToIc(new Runnable() {
+        final GeckoEditableListener newListener =
+            v != null ? GeckoInputConnection.create(v, this) : null;
+
+        final Runnable setListenerRunnable = new Runnable() {
             @Override
             public void run() {
                 if (DEBUG) {
                     Log.d(LOGTAG, "onViewChange (set listener)");
                 }
-                // Make sure there are no other things going on
-                mActionQueue.syncWithGecko();
-                mListener = newListener;
-            }
-        });
 
+                if (newListener != null) {
+                    // Make sure there are no other things going on.
+                    mActionQueue.syncWithGecko();
+                    mListener = newListener;
+                } else {
+                    // We're being destroyed. By this point, we should have cleared all
+                    // pending Runnables on the IC thread, so it's safe to call
+                    // disposeNative here.
+                    mListener = null;
+                    GeckoEditable.this.disposeNative();
+                }
+            }
+        };
+
+        // Post to UI thread first to make sure any code that is using the old input
+        // connection has finished running, before we switch to a new input connection or
+        // before we clear the input connection on destruction.
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
                 if (DEBUG) {
                     Log.d(LOGTAG, "onViewChange (set IC)");
                 }
-                v.setInputConnectionListener((InputConnectionListener) newListener);
+
+                if (mView != null) {
+                    // Detach the previous view.
+                    mView.setInputConnectionListener(null);
+                }
+                if (v != null) {
+                    // And attach the new view.
+                    v.setInputConnectionListener((InputConnectionListener) newListener);
+                }
+
+                mView = v;
+                mIcPostHandler.post(setListenerRunnable);
             }
         });
     }
@@ -660,6 +671,10 @@ final class GeckoEditable extends JNIObject
             if (DEBUG) {
                 Log.i(LOGTAG, "getEditable() called on non-IC thread");
             }
+            return null;
+        }
+        if (mListener == null) {
+            // We haven't initialized or we've been destroyed.
             return null;
         }
         return mProxy;
@@ -1026,18 +1041,31 @@ final class GeckoEditable extends JNIObject
                 oldEnd >= action.mEnd &&
                 newEnd >= action.mStart + action.mSequence.length()) {
 
-            // actionNewEnd is the new end of the original replacement action
-            final int actionNewEnd = action.mStart + action.mSequence.length();
+            // Try to preserve both old spans and new spans in action.mSequence.
+            // indexInText is where we can find waction.mSequence within the passed in text.
+            final int indexInText = TextUtils.indexOf(text, action.mSequence);
+            if (indexInText < 0) {
+                // Text was changed from under us. We are force to discard any new spans.
+                geckoReplaceText(start, oldEnd, text);
 
-            // Replace old spans with new spans
-            if (start == action.mStart && oldEnd == action.mEnd && newEnd == actionNewEnd) {
+            } else if (indexInText == 0 && text.length() == action.mSequence.length()) {
                 // The new text exactly matches our sequence, so do a direct replace.
                 geckoReplaceText(start, oldEnd, action.mSequence);
+
             } else {
-                mChangedText.clearSpans();
-                mChangedText.replace(0, mChangedText.length(), mText, start, oldEnd);
-                mChangedText.replace(action.mStart - start, action.mEnd - start, action.mSequence);
-                geckoReplaceText(start, oldEnd, mChangedText);
+                // The sequence is embedded within the changed text, so we have to perform
+                // replacement in parts. First replace part of text before the sequence.
+                geckoReplaceText(start, action.mStart, text.subSequence(0, indexInText));
+
+                // Then Replace the sequence itself to preserve new spans.
+                final int actionStart = indexInText + start;
+                geckoReplaceText(actionStart, actionStart + action.mEnd - action.mStart,
+                                 action.mSequence);
+
+                // Finally replace part of text after the sequence.
+                final int actionEnd = actionStart + action.mSequence.length();
+                geckoReplaceText(actionEnd, actionEnd + oldEnd - action.mEnd,
+                                 text.subSequence(actionEnd - start, text.length()));
             }
 
             // Ignore the next selection change because the selection change is a

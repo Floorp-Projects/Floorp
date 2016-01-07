@@ -305,5 +305,29 @@ DrawTargetTiled::Fill(const Path* aPath, const Pattern& aPattern, const DrawOpti
   }
 }
 
+void
+DrawTargetTiled::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                           const Matrix& aMaskTransform, const IntRect& aBounds,
+                           bool aCopyBackground)
+{
+  // XXX - not sure this is what we want or whether we want to continue drawing to a larger
+  // intermediate surface, that would require tweaking the code in here a little though.
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    IntRect bounds = aBounds;
+    bounds.MoveBy(-mTiles[i].mTileOrigin);
+    mTiles[i].mDrawTarget->PushLayer(aOpaque, aOpacity, aMask, aMaskTransform, aBounds);
+  }
+}
+
+void
+DrawTargetTiled::PopLayer()
+{
+  // XXX - not sure this is what we want or whether we want to continue drawing to a larger
+  // intermediate surface, that would require tweaking the code in here a little though.
+  for (size_t i = 0; i < mTiles.size(); i++) {
+    mTiles[i].mDrawTarget->PopLayer();
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla

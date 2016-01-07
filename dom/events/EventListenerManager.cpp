@@ -233,7 +233,7 @@ EventListenerManager::AddEventListenerInternal(
   MOZ_ASSERT(// Main thread
              (NS_IsMainThread() && aEventMessage && aTypeAtom) ||
              // non-main-thread
-             (!NS_IsMainThread() && aEventMessage && !aTypeString.IsEmpty()) ||
+             (!NS_IsMainThread() && aEventMessage) ||
              aAllEvents, "Missing type"); // all-events listener
 
   if (!aListenerHolder || mClearingListeners) {

@@ -17,8 +17,6 @@ var cases = [
     "for (let x of [VAL]) { @@ }",
     "for each (let x in [VAL]) { @@ }",
     "switch (0) { default: let x = VAL; @@ }",
-    "[function () { @@ }() for (x of [VAL])];",
-    // "((function () { @@ })() for (x of [VAL])).next();",  // bug 709367
 
     // arguments
     "function f(x) { @@ } f(VAL);",

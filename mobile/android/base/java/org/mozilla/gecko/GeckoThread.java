@@ -194,7 +194,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
             throw new UnsupportedOperationException("Cannot find method", e);
         }
 
-        if (QUEUED_CALLS.size() == 0 && isStateAtLeast(state)) {
+        if (isStateAtLeast(state)) {
             invokeMethod(method, obj, argValues.toArray());
             return;
         }

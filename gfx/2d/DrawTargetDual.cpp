@@ -15,6 +15,11 @@ class DualSurface
 public:
   inline explicit DualSurface(SourceSurface *aSurface)
   {
+    if (!aSurface) {
+      mA = mB = nullptr;
+      return;
+    }
+
     if (aSurface->GetType() != SurfaceType::DUAL_DT) {
       mA = mB = aSurface;
       return;
@@ -179,6 +184,16 @@ DrawTargetDual::Mask(const Pattern &aSource, const Pattern &aMask, const DrawOpt
   DualPattern mask(aMask);
   mA->Mask(*source.mA, *mask.mA, aOptions);
   mB->Mask(*source.mB, *mask.mB, aOptions);
+}
+
+void
+DrawTargetDual::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                          const Matrix& aMaskTransform, const IntRect& aBounds,
+                          bool aCopyBackground)
+{
+  DualSurface mask(aMask);
+  mA->PushLayer(aOpaque, aOpacity, mask.mA, aMaskTransform, aBounds, aCopyBackground);
+  mB->PushLayer(aOpaque, aOpacity, mask.mB, aMaskTransform, aBounds, aCopyBackground);
 }
 
 already_AddRefed<DrawTarget>

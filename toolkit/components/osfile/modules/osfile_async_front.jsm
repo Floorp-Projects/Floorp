@@ -131,7 +131,7 @@ function summarizeObject(obj) {
       if (obj.length > 32) {
         return {"Long array": obj.length};
       }
-      return [summarizeObject(k) for (k of obj)];
+      return obj.map(summarizeObject);
     }
     if ("byteLength" in obj) {
       // Assume TypedArray or ArrayBuffer

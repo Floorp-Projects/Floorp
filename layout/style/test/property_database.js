@@ -6784,6 +6784,13 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "animation-timing-function",
     subproperties: [ "animation-timing-function" ],
   };
+  gCSSProperties["-webkit-filter"] = {
+    domProp: "webkitFilter",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "filter",
+    subproperties: [ "filter" ],
+  };
   gCSSProperties["-webkit-text-size-adjust"] = {
     domProp: "webkitTextSizeAdjust",
     inherited: true,

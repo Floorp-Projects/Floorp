@@ -989,6 +989,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     bool isSelfHostingZone(const JS::Zone* zone) const;
     bool createLazySelfHostedFunctionClone(JSContext* cx, js::HandlePropertyName selfHostedName,
                                            js::HandleAtom name, unsigned nargs,
+                                           js::HandleObject proto,
+                                           js::NewObjectKind newKind,
                                            js::MutableHandleFunction fun);
     bool cloneSelfHostedFunctionScript(JSContext* cx, js::Handle<js::PropertyName*> name,
                                        js::Handle<JSFunction*> targetFun);

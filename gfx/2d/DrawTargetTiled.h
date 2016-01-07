@@ -103,6 +103,13 @@ public:
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect &aRect) override;
   virtual void PopClip() override;
+  virtual void PushLayer(bool aOpaque, Float aOpacity,
+                         SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
+                         bool aCopyBackground = false) override;
+  virtual void PopLayer() override;
+
 
   virtual void SetTransform(const Matrix &aTransform) override;
 

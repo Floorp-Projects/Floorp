@@ -2098,11 +2098,14 @@ bool
 DataViewObject::defineGetter(JSContext* cx, PropertyName* name, HandleNativeObject proto)
 {
     RootedId id(cx, NameToId(name));
+    RootedAtom atom(cx, IdToFunctionName(cx, id, "get"));
+    if (!atom)
+        return false;
     unsigned attrs = JSPROP_SHARED | JSPROP_GETTER;
 
     Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
     JSObject* getter =
-        NewNativeFunction(cx, DataViewObject::getter<ValueGetter>, 0, nullptr);
+        NewNativeFunction(cx, DataViewObject::getter<ValueGetter>, 0, atom);
     if (!getter)
         return false;
 

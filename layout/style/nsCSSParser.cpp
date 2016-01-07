@@ -3948,7 +3948,9 @@ CSSParserImpl::ParseFontDescriptor(nsCSSFontFaceRule* aRule)
   nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(descName);
   nsCSSValue value;
 
-  if (descID == eCSSFontDesc_UNKNOWN) {
+  if (descID == eCSSFontDesc_UNKNOWN ||
+      (descID == eCSSFontDesc_Display &&
+       !Preferences::GetBool("layout.css.font-display.enabled"))) {
     if (NonMozillaVendorIdentifier(descName)) {
       // silently skip other vendors' extensions
       SkipDeclaration(true);
@@ -11602,6 +11604,10 @@ CSSParserImpl::ParseFontDescriptorValue(nsCSSFontDesc aDescID,
     // property is VARIANT_HMK|VARIANT_SYSFONT
     return ParseSingleTokenVariant(aValue, VARIANT_KEYWORD | VARIANT_NORMAL,
                                    nsCSSProps::kFontStyleKTable);
+
+  case eCSSFontDesc_Display:
+    return ParseSingleTokenVariant(aValue, VARIANT_KEYWORD,
+                                   nsCSSProps::kFontDisplayKTable);
 
   case eCSSFontDesc_Weight:
     return (ParseFontWeight(aValue) &&

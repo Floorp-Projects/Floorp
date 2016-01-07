@@ -756,7 +756,7 @@ function testModeCors() {
       }
       req.url += "&headers=" + escape(test.headers.toSource());
       reqHeaders =
-        escape([name for (name in test.headers)]
+        escape(Object.keys(test.headers)
                .filter(isUnsafeHeader)
                .map(String.toLowerCase)
                .sort()

@@ -79,8 +79,9 @@
           }
 
           // pass the current set of children for comparison with placements:
-          let children = [node.id for (node of this.childNodes)
-                          if (node.getAttribute("skipintoolbarset") != "true" && node.id)];
+          let children = Array.from(this.childNodes)
+                              .filter(node => node.getAttribute("skipintoolbarset") != "true" && node.id)
+                              .map(node => node.id);
           CustomizableUI.registerToolbarNode(this, children);
         ]]></body>
       </method>
@@ -204,7 +205,7 @@
           let oldIds = CustomizableUI.getWidgetIdsInArea(this.id);
 
           // Get a list of items only in the new list
-          let newIds = [id for (id of newVal) if (oldIds.indexOf(id) == -1)];
+          let newIds = newVal.filter(id => oldIds.indexOf(id) == -1);
           CustomizableUI.beginBatchUpdate();
           try {
             for (let newId of newIds) {
@@ -225,7 +226,7 @@
             }
 
             let currentIds = this.currentSet.split(',');
-            let removedIds = [id for (id of currentIds) if (newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1)];
+            let removedIds = currentIds.filter(id => newIds.indexOf(id) == -1 && newVal.indexOf(id) == -1);
             for (let removedId of removedIds) {
               CustomizableUI.removeWidgetFromArea(removedId);
             }
@@ -585,7 +586,7 @@
       </property>
       <property name="currentSet">
         <getter><![CDATA[
-          return [node.id for (node of this.children)].join(',');
+          return Array.from(this.children, node => node.id).join(",");
         ]]></getter>
         <setter><![CDATA[
           let v = val.split(',');

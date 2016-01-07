@@ -576,7 +576,8 @@ pref("apz.fling_curve_function_y1", "0.0");
 pref("apz.fling_curve_function_x2", "0.80");
 pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
-pref("apz.fling_friction", "0.0019");
+pref("apz.fling_friction", "0.004");
+pref("apz.fling_stopped_threshold", "0.1");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 #endif
 
@@ -641,6 +642,7 @@ pref("browser.safebrowsing.provider.google.appRepURL", "https://sb-ssl.google.co
 pref("browser.safebrowsing.reportPhishMistakeURL", "https://%LOCALE%.phish-error.mozilla.com/?hl=%LOCALE%&url=");
 pref("browser.safebrowsing.reportPhishURL", "https://%LOCALE%.phish-report.mozilla.com/?hl=%LOCALE%&url=");
 pref("browser.safebrowsing.reportMalwareMistakeURL", "https://%LOCALE%.malware-error.mozilla.com/?hl=%LOCALE%&url=");
+pref("browser.safebrowsing.appRepURL", "https://sb-ssl.google.com/safebrowsing/clientreport/download?key=%GOOGLE_API_KEY%");
 
 pref("browser.safebrowsing.id", @MOZ_APP_UA_NAME@);
 

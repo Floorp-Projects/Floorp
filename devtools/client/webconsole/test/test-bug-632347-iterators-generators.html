@@ -46,7 +46,7 @@ Range.prototype.__iterator__ = function() {
 
 _container.iter2 = new Range(3, 15);
 
-_container.gen2 = (i * 2 for (i in _container.iter2));
+_container.gen2 = (function* () { for (let i in _container.iter2) yield i * 2; })();
 })();
 </script>
   </head>

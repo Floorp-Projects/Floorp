@@ -1520,7 +1520,7 @@ static cubeb_device_info *
 wasapi_create_device(IMMDeviceEnumerator * enumerator, IMMDevice * dev)
 {
   IMMEndpoint * endpoint = NULL;
-  IMMDevice * devnode;
+  IMMDevice * devnode = NULL;
   IAudioClient * client = NULL;
   cubeb_device_info * ret = NULL;
   EDataFlow flow;

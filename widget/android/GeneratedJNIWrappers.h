@@ -360,18 +360,17 @@ public:
         typedef void SetterType;
         typedef mozilla::jni::Args<
                 mozilla::jni::String::Param,
-                mozilla::jni::String::Param,
                 mozilla::jni::String::Param> Args;
         static constexpr char name[] = "createShortcut";
         static constexpr char signature[] =
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V";
+                "(Ljava/lang/String;Ljava/lang/String;)V";
         static const bool isStatic = true;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
                 mozilla::jni::ExceptionMode::ABORT;
     };
 
-    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
+    static auto CreateShortcut(mozilla::jni::String::Param, mozilla::jni::String::Param) -> void;
 
 public:
     struct CreateThreadCursorWrapper_t {
@@ -1828,23 +1827,6 @@ public:
     };
 
     auto NotifyIMEContext(int32_t, mozilla::jni::String::Param, mozilla::jni::String::Param, mozilla::jni::String::Param) const -> void;
-
-public:
-    struct OnDestroy_t {
-        typedef GeckoEditable Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "onDestroy";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-    auto OnDestroy() const -> void;
 
 public:
     struct OnImeAcknowledgeFocus_t {
@@ -3402,6 +3384,23 @@ public:
     auto CreateEGLSurface() const -> mozilla::jni::Object::LocalRef;
 
 public:
+    struct Destroy_t {
+        typedef GLController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "destroy";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Destroy() const -> void;
+
+public:
     struct DisposeNative_t {
         typedef GLController Owner;
         typedef void ReturnType;
@@ -3607,6 +3606,23 @@ public:
     };
 
     auto IsContentDocumentDisplayed() const -> bool;
+
+public:
+    struct OnGeckoReady_t {
+        typedef GeckoLayerClient Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "onGeckoReady";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto OnGeckoReady() const -> void;
 
 public:
     struct ProgressiveUpdateCallback_t {
