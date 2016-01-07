@@ -78,6 +78,9 @@
 #endif
 #if defined (XP_WIN)
 #include "mozilla/WindowsVersion.h"
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <tchar.h>
 #endif
 
 // GetCurrentTime is defined in winbase.h as zero argument macro forwarding to
@@ -1638,6 +1641,28 @@ MediaManager::GetNonE10sParent()
     mNonE10sParent = new media::Parent<media::NonE10s>(true);
   }
   return mNonE10sParent;
+}
+
+/* static */ void
+MediaManager::StartupInit()
+{
+#ifdef WIN32
+  if (IsVistaOrLater() && !IsWin8OrLater()) {
+    // Bug 1107702 - Older Windows fail in GetAdaptersInfo (and others) if the
+    // first(?) call occurs after the process size is over 2GB (kb/2588507).
+    // Attempt to 'prime' the pump by making a call at startup.
+    unsigned long out_buf_len = sizeof(IP_ADAPTER_INFO);
+    PIP_ADAPTER_INFO pAdapterInfo = (IP_ADAPTER_INFO *) moz_xmalloc(out_buf_len);
+    if (GetAdaptersInfo(pAdapterInfo, &out_buf_len) == ERROR_BUFFER_OVERFLOW) {
+      free(pAdapterInfo);
+      pAdapterInfo = (IP_ADAPTER_INFO *) moz_xmalloc(out_buf_len);
+      GetAdaptersInfo(pAdapterInfo, &out_buf_len);
+    }
+    if (pAdapterInfo) {
+      free(pAdapterInfo);
+    }
+  }
+#endif
 }
 
 /* static */
