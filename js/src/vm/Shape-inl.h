@@ -37,25 +37,26 @@ Shape::search(ExclusiveContext* cx, jsid id)
     return search(cx, this, id, &_);
 }
 
+template<MaybeAdding Adding>
 /* static */ inline Shape*
-Shape::search(ExclusiveContext* cx, Shape* start, jsid id, ShapeTable::Entry** pentry, bool adding)
+Shape::search(ExclusiveContext* cx, Shape* start, jsid id, ShapeTable::Entry** pentry)
 {
     if (start->inDictionary()) {
-        *pentry = &start->table().search(id, adding);
+        *pentry = &start->table().search<Adding>(id);
         return (*pentry)->shape();
     }
 
     *pentry = nullptr;
 
     if (start->hasTable()) {
-        ShapeTable::Entry& entry = start->table().search(id, adding);
+        ShapeTable::Entry& entry = start->table().search<Adding>(id);
         return entry.shape();
     }
 
     if (start->numLinearSearches() == LINEAR_SEARCHES_MAX) {
         if (start->isBigEnoughForAShapeTable()) {
             if (Shape::hashify(cx, start)) {
-                ShapeTable::Entry& entry = start->table().search(id, adding);
+                ShapeTable::Entry& entry = start->table().search<Adding>(id);
                 return entry.shape();
             } else {
                 cx->recoverFromOutOfMemory();
