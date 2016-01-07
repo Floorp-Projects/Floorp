@@ -121,6 +121,8 @@ typedef JSPropertyDescriptor PropertyDescriptor;
 static const uint32_t SHAPE_INVALID_SLOT = JS_BIT(24) - 1;
 static const uint32_t SHAPE_MAXIMUM_SLOT = JS_BIT(24) - 2;
 
+enum class MaybeAdding { Adding = true, NotAdding = false };
+
 /*
  * Shapes use multiplicative hashing, but specialized to
  * minimize footprint.
@@ -223,7 +225,9 @@ class ShapeTable {
      */
     bool init(ExclusiveContext* cx, Shape* lastProp);
     bool change(int log2Delta, ExclusiveContext* cx);
-    Entry& search(jsid id, bool adding);
+
+    template<MaybeAdding Adding>
+    Entry& search(jsid id);
 
   private:
     Entry& getEntry(uint32_t i) const {
@@ -580,8 +584,9 @@ class Shape : public gc::TenuredCell
                                    last, else to obj->shape_ */
     };
 
+    template<MaybeAdding Adding = MaybeAdding::NotAdding>
     static inline Shape* search(ExclusiveContext* cx, Shape* start, jsid id,
-                                ShapeTable::Entry** pentry, bool adding = false);
+                                ShapeTable::Entry** pentry);
     static inline Shape* searchNoHashify(Shape* start, jsid id);
 
     void removeFromDictionary(NativeObject* obj);
@@ -1381,7 +1386,7 @@ Shape::searchNoHashify(Shape* start, jsid id)
      * search. We never hashify into a table in parallel.
      */
     if (start->hasTable()) {
-        ShapeTable::Entry& entry = start->table().search(id, false);
+        ShapeTable::Entry& entry = start->table().search<MaybeAdding::NotAdding>(id);
         return entry.shape();
     }
 
