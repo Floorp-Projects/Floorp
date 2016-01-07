@@ -332,7 +332,7 @@ function reset_preferences(win) {
 var testRunner;
 function run_test_subset(subset) {
   Services.prefs.setBoolPref("browser.preferences.instantApply", true);
-  dump("subset: " + [x.name for (x of subset)].join(",") + "\n");
+  dump("subset: " + Array.from(subset, x => x.name).join(",") + "\n");
 
   waitForExplicitFinish();
   registerCleanupFunction(function() {
