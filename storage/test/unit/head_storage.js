@@ -41,6 +41,17 @@ function getFakeDB()
   return do_get_file("fakeDB.sqlite");
 }
 
+/**
+ * Delete the test database file.
+ */
+function deleteTestDB()
+{
+  print("*** Storage Tests: Trying to remove file!");
+  var dbFile = getTestDB();
+  if (dbFile.exists())
+    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+}
+
 function cleanup()
 {
   // close the connection
@@ -52,10 +63,7 @@ function cleanup()
   gDBConn = null;
 
   // removing test db
-  print("*** Storage Tests: Trying to remove file!");
-  var dbFile = getTestDB();
-  if (dbFile.exists())
-    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+  deleteTestDB();
 }
 
 /**
@@ -80,10 +88,7 @@ function asyncCleanup()
   gDBConn = null;
 
   // removing test db
-  print("*** Storage Tests: Trying to remove file!");
-  var dbFile = getTestDB();
-  if (dbFile.exists())
-    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+  deleteTestDB();
 }
 
 function getService()
@@ -312,6 +317,24 @@ function openAsyncDatabase(file, options) {
 function executeAsync(statement, onResult) {
   let deferred = Promise.defer();
   statement.executeAsync({
+    handleError: function (error) {
+      deferred.reject(error);
+    },
+    handleResult: function (result) {
+      if (onResult) {
+        onResult(result);
+      }
+    },
+    handleCompletion: function (result) {
+      deferred.resolve(result);
+    }
+  });
+  return deferred.promise;
+}
+
+function executeMultipleStatementsAsync(db, statements, onResult) {
+  let deferred = Promise.defer();
+  db.executeAsync(statements, statements.length, {
     handleError: function (error) {
       deferred.reject(error);
     },
