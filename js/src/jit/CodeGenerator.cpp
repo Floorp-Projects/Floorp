@@ -1097,8 +1097,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
                           Imm32(UnicodeFlag), &done);
 
         // If input is latin1, there should not be surrogate pair.
-        masm.branchTest32(Assembler::NonZero, Address(input, JSString::offsetOfFlags()),
-                          Imm32(JSString::LATIN1_CHARS_BIT), &done);
+        masm.branchLatin1String(input, &done);
 
         // Check if |lastIndex > 0 && lastIndex < input->length()|.
         // lastIndex should already have no sign here.
@@ -1151,8 +1150,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.branchTest32(Assembler::NonZero, sticky, sticky, &stickyCode);
         {
             Label isLatin1;
-            masm.branchTest32(Assembler::NonZero, Address(input, JSString::offsetOfFlags()),
-                              Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+            masm.branchLatin1String(input, &isLatin1);
             {
                 masm.lshiftPtr(Imm32(1), temp3);
                 masm.loadPtr(Address(temp1, RegExpShared::offsetOfNotStickyTwoByteJitCode(mode)),
@@ -1169,8 +1167,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         {
             masm.bind(&stickyCode);
             Label isLatin1;
-            masm.branchTest32(Assembler::NonZero, Address(input, JSString::offsetOfFlags()),
-                              Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+            masm.branchLatin1String(input, &isLatin1);
             {
                 masm.lshiftPtr(Imm32(1), temp3);
                 masm.loadPtr(Address(temp1, RegExpShared::offsetOfStickyTwoByteJitCode(mode)),
@@ -1492,8 +1489,7 @@ JitCompartment::generateRegExpMatcherStub(JSContext* cx)
     // depending on whether the input is latin1.
     {
         Label isLatin1, done;
-        masm.branchTest32(Assembler::NonZero, Address(input, JSString::offsetOfFlags()),
-                          Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+        masm.branchLatin1String(input, &isLatin1);
 
         Label* failure = &oolEntry;
         Register temp3 = (maybeTemp3 == InvalidReg) ? sticky : maybeTemp3;
@@ -6234,8 +6230,7 @@ CopyStringCharsMaybeInflate(MacroAssembler& masm, Register input, Register destC
 
     Label isLatin1, done;
     masm.loadStringLength(input, temp1);
-    masm.branchTest32(Assembler::NonZero, Address(input, JSString::offsetOfFlags()),
-                      Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    masm.branchLatin1String(input, &isLatin1);
     {
         masm.loadStringChars(input, input);
         CopyStringChars(masm, destChars, input, temp1, temp2, sizeof(char16_t), sizeof(char16_t));
@@ -6376,8 +6371,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     Address stringStorage(string, JSInlineString::offsetOfInlineStorage());
     Address outputStorage(output, JSInlineString::offsetOfInlineStorage());
 
-    masm.branchTest32(Assembler::NonZero, stringFlags, Imm32(JSString::LATIN1_CHARS_BIT),
-                      &isInlinedLatin1);
+    masm.branchLatin1String(string, &isInlinedLatin1);
     {
         masm.store32(Imm32(JSString::INIT_FAT_INLINE_FLAGS),
                      Address(output, JSString::offsetOfFlags()));
@@ -6418,7 +6412,7 @@ CodeGenerator::visitSubstr(LSubstr* lir)
     masm.store32(length, Address(output, JSString::offsetOfLength()));
     masm.storePtr(string, Address(output, JSDependentString::offsetOfBase()));
 
-    masm.branchTest32(Assembler::NonZero, stringFlags, Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    masm.branchLatin1String(string, &isLatin1);
     {
         masm.store32(Imm32(JSString::DEPENDENT_FLAGS), Address(output, JSString::offsetOfFlags()));
         masm.loadPtr(Address(string, JSString::offsetOfNonInlineChars()), temp);
