@@ -22,7 +22,7 @@
 #define JS_HAS_GENERATORS       1       /* (no longer used) */
 #define JS_HAS_BLOCK_SCOPE      1       /* (no longer used) */
 #define JS_HAS_DESTRUCTURING    2       /* (no longer used) */
-#define JS_HAS_GENERATOR_EXPRS  1       /* has (expr for (lhs in iterable)) */
+#define JS_HAS_GENERATOR_EXPRS  1       /* (no longer used) */
 #define JS_HAS_EXPR_CLOSURES    1       /* has function (formals) listexpr */
 
 /* (no longer used) */

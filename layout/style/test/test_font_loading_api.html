@@ -19,7 +19,8 @@ var descriptorNames = {
   stretch: "font-stretch",
   unicodeRange: "unicode-range",
   variant: "font-variant",
-  featureSettings: "font-feature-settings"
+  featureSettings: "font-feature-settings",
+  display: "font-display"
 };
 
 // Default values for the FontFace descriptor attributes other than family, as
@@ -30,7 +31,8 @@ var defaultValues = {
   stretch: "normal",
   unicodeRange: "U+0-10FFFF",
   variant: "normal",
-  featureSettings: "normal"
+  featureSettings: "normal",
+  display: "auto"
 };
 
 // Non-default values for the FontFace descriptor attributes other than family
@@ -42,7 +44,8 @@ var nonDefaultValues = {
   stretch: ["Ultra-Condensed", "ultra-condensed"],
   unicodeRange: ["U+3??", "U+300-3FF"],
   variant: ["Small-Caps", "small-caps"],
-  featureSettings: ["'dlig' on", "\"dlig\""]
+  featureSettings: ["'dlig' on", "\"dlig\""],
+  display: ["Block", "block"]
 };
 
 // Invalid values for the FontFace descriptor attributes other than family.
@@ -52,7 +55,8 @@ var invalidValues = {
   stretch: "wider",
   unicodeRange: "U+1????-2????",
   variant: "inherit",
-  featureSettings: "dlig"
+  featureSettings: "dlig",
+  display: "normal"
 };
 
 // Invalid font family names.
@@ -159,8 +163,6 @@ function awaitRefresh() {
 }
 
 function runTest() {
-  SimpleTest.waitForExplicitFinish();
-
   // Document and window from inside the display:none iframe.
   var nframe = document.getElementById("n");
   var ndocument = nframe.contentDocument;
@@ -1859,11 +1861,16 @@ function runTest() {
 
 function start() {
   if (SpecialPowers.getBoolPref("layout.css.font-loading-api.enabled")) {
-    runTest();
+    SpecialPowers.pushPrefEnv({ set: [["layout.css.font-display.enabled", true]] },
+                              runTest);
   } else {
     ok(true, "CSS Font Loading API is not enabled.");
   }
 }
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.requestLongerTimeout(5);
+
 </script>
 
 <style></style>

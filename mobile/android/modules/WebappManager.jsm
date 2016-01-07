@@ -56,7 +56,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls",
  */
 function getFormattedPluralForm(stringName, formatterArgs, pluralNum) {
   // Escape semicolons by replacing them with ESC characters.
-  let escapedArgs = [arg.replace(/;/g, String.fromCharCode(0x1B)) for (arg of formatterArgs)];
+  let escapedArgs = formatterArgs.map((arg) => arg.replace(/;/g, String.fromCharCode(0x1B)));
   let formattedString = Strings.formatStringFromName(stringName, escapedArgs, escapedArgs.length);
   let pluralForm = PluralForm.get(pluralNum, formattedString);
   let unescapedString = pluralForm.replace(String.fromCharCode(0x1B), ";", "g");
@@ -140,7 +140,7 @@ this.WebappManager = {
       manifestUrl: aManifestUrl,
     };
     generatorUrl.query =
-      [p + "=" + encodeURIComponent(params[p]) for (p in params)].join("&");
+      Object.keys(params).map((p) => p + "=" + encodeURIComponent(params[p])).join("&");
     debug("downloading APK from " + generatorUrl.spec);
 
     Downloads.getSystemDownloadsDirectory().then(function(downloadsDir) {
@@ -435,9 +435,9 @@ this.WebappManager = {
       };
 
       if (updateAllowed()) {
-        yield this._updateApks([manifestUrlToApp[url] for (url of outdatedApps)]);
+        yield this._updateApks(outdatedApps.map((url) => manifestUrlToApp[url]));
       } else {
-        let names = [manifestUrlToApp[url].name for (url of outdatedApps)].join(", ");
+        let names = outdatedApps.map((url) => manifestUrlToApp[url].name).join(", ");
         let accepted = yield this._notify({
           title: PluralForm.get(outdatedApps.length, Strings.GetStringFromName("retrieveUpdateTitle")).
                  replace("#1", outdatedApps.length),
@@ -446,7 +446,7 @@ this.WebappManager = {
         }).dismissed;
 
         if (accepted) {
-          yield this._updateApks([manifestUrlToApp[url] for (url of outdatedApps)]);
+          yield this._updateApks(outdatedApps.map((url) => manifestUrlToApp[url]));
         }
       }
     }
@@ -517,7 +517,7 @@ this.WebappManager = {
 
   _updateApks: function(aApps) { return Task.spawn((function*() {
     // Notify the user that we're in the progress of downloading updates.
-    let downloadingNames = [app.name for (app of aApps)].join(", ");
+    let downloadingNames = aApps.map((app) => app.name).join(", ");
     let notification = this._notify({
       title: PluralForm.get(aApps.length, Strings.GetStringFromName("retrievingUpdateTitle")).
              replace("#1", aApps.length),
@@ -549,7 +549,7 @@ this.WebappManager = {
     // when the user accepts/cancels the notification.
     // In the future, we might prompt the user to retry the download.
     if (downloadFailedApps.length > 0) {
-      let downloadFailedNames = [app.name for (app of downloadFailedApps)].join(", ");
+      let downloadFailedNames = downloadFailedApps.map((app) => app.name).join(", ");
       this._notify({
         title: PluralForm.get(downloadFailedApps.length, Strings.GetStringFromName("retrievalFailedTitle")).
                replace("#1", downloadFailedApps.length),
@@ -565,7 +565,7 @@ this.WebappManager = {
 
     // Prompt the user to update the apps for which we downloaded APKs, and wait
     // until they accept/cancel the notification.
-    let downloadedNames = [apk.app.name for (apk of downloadedApks)].join(", ");
+    let downloadedNames = downloadedApks.map((apk) => apk.app.name).join(", ");
     let accepted = yield this._notify({
       title: PluralForm.get(downloadedApks.length, Strings.GetStringFromName("installUpdateTitle")).
              replace("#1", downloadedApks.length),

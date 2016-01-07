@@ -22,6 +22,27 @@ typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 namespace mozilla
 {
 
+/**
+ * FFmpeg calls back to this function with a list of pixel formats it supports.
+ * We choose a pixel format that we support and return it.
+ * For now, we just look for YUV420P as it is the only non-HW accelerated format
+ * supported by FFmpeg's H264 decoder.
+ */
+static PixelFormat
+ChoosePixelFormat(AVCodecContext* aCodecContext, const PixelFormat* aFormats)
+{
+  FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
+  for (; *aFormats > -1; aFormats++) {
+    if (*aFormats == PIX_FMT_YUV420P || *aFormats == PIX_FMT_YUVJ420P) {
+      FFMPEG_LOG("Requesting pixel format YUV420P.");
+      return PIX_FMT_YUV420P;
+    }
+  }
+
+  NS_WARNING("FFmpeg does not share any supported pixel formats.");
+  return PIX_FMT_NONE;
+}
+
 FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
   : mNumFaultyPts(0)
   , mNumFaultyDts(0)
@@ -69,6 +90,7 @@ FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   , mImageContainer(aImageContainer)
   , mDisplay(aConfig.mDisplay)
   , mImage(aConfig.mImage)
+  , mCodecParser(nullptr)
 {
   MOZ_COUNT_CTOR(FFmpegH264Decoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
@@ -83,10 +105,37 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
+  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+}
+
+void
+FFmpegH264Decoder<LIBAV_VER>::InitCodecContext()
+{
   mCodecContext->width = mImage.width;
   mCodecContext->height = mImage.height;
 
-  return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
+  // We use the same logic as libvpx in determining the number of threads to use
+  // so that we end up behaving in the same fashion when using ffmpeg as
+  // we would otherwise cause various crashes (see bug 1236167)
+  int decode_threads = 2;
+  if (mCodecID != AV_CODEC_ID_VP8) {
+    if (mDisplay.width >= 2048) {
+      decode_threads = 8;
+    } else if (mDisplay.width >= 1024) {
+      decode_threads = 4;
+    }
+  }
+  decode_threads = std::min(decode_threads, PR_GetNumberOfProcessors());
+  mCodecContext->thread_count = decode_threads;
+  mCodecContext->thread_type = FF_THREAD_SLICE | FF_THREAD_FRAME;
+
+  // FFmpeg will call back to this to negotiate a video pixel format.
+  mCodecContext->get_format = ChoosePixelFormat;
+
+  mCodecParser = av_parser_init(mCodecID);
+  if (mCodecParser) {
+    mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
+  }
 }
 
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
@@ -288,6 +337,10 @@ FFmpegH264Decoder<LIBAV_VER>::ProcessFlush()
 FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 {
   MOZ_COUNT_DTOR(FFmpegH264Decoder);
+  if (mCodecParser) {
+    av_parser_close(mCodecParser);
+    mCodecParser = nullptr;
+  }
 }
 
 AVCodecID

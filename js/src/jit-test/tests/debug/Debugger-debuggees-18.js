@@ -7,7 +7,7 @@ var dbg = new Debugger;
 // The arguments are assumed to be Debugger.Object instances referring to
 // globals without wrappers --- which is the sort returned by addDebuggee.
 function assertDebuggees() {
-  print("assertDebuggees([" + [g.toSource() for each (g in arguments)] + "])");
+  print("assertDebuggees([" + Array.prototype.slice.call(arguments).map((g) => g.toSource()) + "])");
   var debuggees = dbg.getDebuggees();
   assertEq(arguments.length, debuggees.length);
   for each (g in arguments)

@@ -93,7 +93,7 @@ if (this.Components) {
     * ResourceTracker's _map.
     */
    listOpenedResources: function listOpenedResources() {
-     return [resource.info.path for ([id, resource] of this._map)];
+     return Array.from(this._map, ([id, resource]) => resource.info.path);
    }
   };
 

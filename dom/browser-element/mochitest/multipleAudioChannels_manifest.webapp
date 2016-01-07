@@ -1,0 +1,7 @@
+{
+  "name": "Multiple audio channels test",
+  "launch_path": "/index.html",
+  "permissions": {
+    "audio-channel-content": {}
+  }
+}

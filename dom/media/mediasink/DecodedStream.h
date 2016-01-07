@@ -35,7 +35,8 @@ public:
   DecodedStream(AbstractThread* aOwnerThread,
                 MediaQueue<MediaData>& aAudioQueue,
                 MediaQueue<MediaData>& aVideoQueue,
-                OutputStreamManager* aOutputStreamManager);
+                OutputStreamManager* aOutputStreamManager,
+                const bool& aSameOrigin);
 
   // MediaSink functions.
   const PlaybackParams& GetPlaybackParams() const override;
@@ -59,9 +60,6 @@ public:
   void Stop() override;
   bool IsStarted() const override;
   bool IsPlaying() const override;
-
-  // TODO: fix these functions that don't fit into the interface of MediaSink.
-  void SetSameOrigin(bool aSameOrigin);
 
 protected:
   virtual ~DecodedStream();
@@ -98,7 +96,7 @@ private:
   RefPtr<GenericPromise> mFinishPromise;
 
   bool mPlaying;
-  bool mSameOrigin;
+  const bool& mSameOrigin; // valid until Shutdown() is called.
   PlaybackParams mParams;
 
   Maybe<int64_t> mStartTime;

@@ -178,9 +178,13 @@ ServerCollection.prototype = {
    * @return an array of IDs.
    */
   keys: function keys(filter) {
-    return [id for ([id, wbo] in Iterator(this._wbos))
-               if (wbo.payload &&
-                   (!filter || filter(id, wbo)))];
+    let ids = [];
+    for (let [id, wbo] in Iterator(this._wbos)) {
+      if (wbo.payload && (!filter || filter(id, wbo))) {
+        ids.push(id);
+      }
+    }
+    return ids;
   },
 
   /**
@@ -194,8 +198,13 @@ ServerCollection.prototype = {
    * @return an array of ServerWBOs.
    */
   wbos: function wbos(filter) {
-    let os = [wbo for ([id, wbo] in Iterator(this._wbos))
-              if (wbo.payload)];
+    let os = [];
+    for (let [id, wbo] in Iterator(this._wbos)) {
+      if (wbo.payload) {
+        os.push(wbo);
+      }
+    }
+
     if (filter) {
       return os.filter(filter);
     }
@@ -278,10 +287,13 @@ ServerCollection.prototype = {
   get: function(options) {
     let result;
     if (options.full) {
-      let data = [wbo.get() for ([id, wbo] in Iterator(this._wbos))
-                            // Drop deleted.
-                            if (wbo.modified &&
-                                this._inResultSet(wbo, options))];
+      let data = [];
+      for (let [id, wbo] in Iterator(this._wbos)) {
+        // Drop deleted.
+        if (wbo.modified && this._inResultSet(wbo, options)) {
+          data.push(wbo.get());
+        }
+      }
       if (options.limit) {
         data = data.slice(0, options.limit);
       }
@@ -291,8 +303,12 @@ ServerCollection.prototype = {
       // Use options as a backchannel to report count.
       options.recordCount = data.length;
     } else {
-      let data = [id for ([id, wbo] in Iterator(this._wbos))
-                     if (this._inResultSet(wbo, options))];
+      let data = [];
+      for (let [id, wbo] in Iterator(this._wbos)) {
+        if (this._inResultSet(wbo, options)) {
+          data.push(id);
+        }
+      }
       if (options.limit) {
         data = data.slice(0, options.limit);
       }

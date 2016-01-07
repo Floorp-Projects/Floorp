@@ -13837,17 +13837,6 @@ nsDocShell::SetIsSignedPackage(const nsAString& aSignedPkg)
 }
 
 NS_IMETHODIMP
-nsDocShell::GetUserContextId(uint32_t* aUserContextId)
-{
-  if (!aUserContextId) {
-    return NS_ERROR_FAILURE;
-  }
-
-  *aUserContextId = mUserContextId;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsDocShell::SetUserContextId(uint32_t aUserContextId)
 {
   mUserContextId = aUserContextId;

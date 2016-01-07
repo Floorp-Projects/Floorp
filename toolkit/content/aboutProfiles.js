@@ -8,6 +8,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/AppConstants.jsm');
 
 XPCOMUtils.defineLazyServiceGetter(
   this,
@@ -176,15 +177,13 @@ function display(profileData) {
     if (dir) {
       td.appendChild(document.createTextNode(' '));
       let button = document.createElement('button');
-      let buttonText = document.createTextNode(bundle.GetStringFromName(
-#ifdef XP_WIN
-        'winOpenDir'
-#elif XP_MACOSX
-        'macOpenDir'
-#else
-        'openDir'
-#endif
-      ));
+      let string = 'openDir';
+      if (AppConstants.platform == "win") {
+        string = 'winOpenDir';
+      } else if (AppConstants.platform == "macosx") {
+        string = 'macOpenDir';
+      }
+      let buttonText = document.createTextNode(bundle.GetStringFromName(string));
       button.appendChild(buttonText);
       td.appendChild(button);
 

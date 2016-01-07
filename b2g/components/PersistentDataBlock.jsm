@@ -64,9 +64,9 @@ function toHexString(data) {
   }
   let hexString = "";
   if (typeof data === "string") {
-    hexString = [toHexChar(data.charCodeAt(i)) for (i in data)].join("");
+    hexString = Array.from(data, (c, i) => toHexChar(data.charCodeAt(i))).join("");
   } else if (typeof data === "array") {
-    hexString = [toHexChar(data[i]) for (i in data)].join("");
+    hexString = data.map(toHexChar).join("");
   }
   return hexString;
 }
@@ -387,7 +387,7 @@ this.PersistentDataBlock = {
       partition = _partition;
       return partition.setPosition(DIGEST_OFFSET, OS.File.POS_START);
     }).then(() => {
-      return partition.write(new Uint8Array([digest.calculated.charCodeAt(i) for (i in digest.calculated)]));
+      return partition.write(new Uint8Array(Array.from(digest.calculated, (c, i) => digest.calculated.charCodeAt(i))));
     }).then(bytesWrittenLength => {
       if (bytesWrittenLength != DIGEST_SIZE_BYTES) {
         log("_computeAndWriteDigest: Error writting digest to partition!. Expected: " + DIGEST_SIZE_BYTES + " Written: " + bytesWrittenLength);

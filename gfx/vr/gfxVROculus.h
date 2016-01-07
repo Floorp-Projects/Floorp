@@ -23,7 +23,7 @@ namespace impl {
 
 class HMDInfoOculus : public VRHMDInfo, public VRHMDRenderingSupport {
 public:
-  explicit HMDInfoOculus(ovrHmd aHMD, bool aDebug, int aDeviceID);
+  explicit HMDInfoOculus(ovrSession aSession);
 
   bool SetFOV(const VRFieldOfView& aFOVLeft, const VRFieldOfView& aFOVRight,
               double zNear, double zFar) override;
@@ -47,18 +47,13 @@ public:
   void DestroyRenderTargetSet(RenderTargetSet *aRTSet) override;
   void SubmitFrame(RenderTargetSet *aRTSet) override;
 
-  ovrHmd GetOculusHMD() const { return mHMD; }
-  bool GetIsDebug() const;
-  int GetDeviceID() const;
+  ovrSession GetOculusSession() const { return mSession; }
 
 protected:
   virtual ~HMDInfoOculus() {
       Destroy();
       MOZ_COUNT_DTOR_INHERITED(HMDInfoOculus, VRHMDInfo);
   }
-
-  bool StartSensorTracking();
-  void StopSensorTracking();
 
   // must match the size of VRDistortionVertex
   struct DistortionVertex {
@@ -69,15 +64,10 @@ protected:
     float genericAttribs[4];
   };
 
-  ovrHmd mHMD;
+  ovrSession mSession;
+  ovrHmdDesc mDesc;
   ovrFovPort mFOVPort[2];
-  bool mTracking;
   ovrTrackingState mLastTrackingState;
-
-  bool mDebug; // True if this is a debug HMD
-  int mDeviceID; // Index of device passed to ovrHmd_Create
-
-  uint32_t mSensorTrackingFramesRemaining;
 };
 
 } // namespace impl
@@ -94,7 +84,7 @@ protected:
     : mOculusInitialized(false)
   { }
 
-  nsTArray<RefPtr<impl::HMDInfoOculus>> mOculusHMDs;
+  RefPtr<impl::HMDInfoOculus> mHMDInfo;
   bool mOculusInitialized;
   RefPtr<nsIThread> mOculusThread;
 };

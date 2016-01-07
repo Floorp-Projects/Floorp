@@ -478,7 +478,8 @@ ADTSTrackDemuxer::FastSeek(const media::TimeUnit& aTime)
 {
   ADTSLOG("FastSeek(%" PRId64 ") avgFrameLen=%f mNumParsedFrames=%" PRIu64
          " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
-         aTime, AverageFrameLength(), mNumParsedFrames, mFrameIndex, mOffset);
+         aTime.ToMicroseconds(), AverageFrameLength(), mNumParsedFrames,
+         mFrameIndex, mOffset);
 
   const int64_t firstFrameOffset = mParser->FirstFrame().Offset();
   if (!aTime.ToMicroseconds()) {
@@ -510,7 +511,8 @@ ADTSTrackDemuxer::ScanUntil(const media::TimeUnit& aTime)
 {
   ADTSLOG("ScanUntil(%" PRId64 ") avgFrameLen=%f mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
-          aTime, AverageFrameLength(), mNumParsedFrames, mFrameIndex, mOffset);
+          aTime.ToMicroseconds(), AverageFrameLength(), mNumParsedFrames,
+          mFrameIndex, mOffset);
 
   if (!aTime.ToMicroseconds()) {
     return FastSeek(aTime);
@@ -523,13 +525,13 @@ ADTSTrackDemuxer::ScanUntil(const media::TimeUnit& aTime)
   while (SkipNextFrame(FindNextFrame()) && Duration(mFrameIndex + 1) < aTime) {
     ADTSLOGV("ScanUntil* avgFrameLen=%f mNumParsedFrames=%" PRIu64
              " mFrameIndex=%" PRId64 " mOffset=%" PRIu64 " Duration=%" PRId64,
-             aTime, AverageFrameLength(), mNumParsedFrames, mFrameIndex,
-             mOffset, Duration(mFrameIndex + 1));
+             AverageFrameLength(), mNumParsedFrames, mFrameIndex,
+             mOffset, Duration(mFrameIndex + 1).ToMicroseconds());
   }
 
   ADTSLOG("ScanUntil End avgFrameLen=%f mNumParsedFrames=%" PRIu64
           " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
-          aTime, AverageFrameLength(), mNumParsedFrames, mFrameIndex, mOffset);
+          AverageFrameLength(), mNumParsedFrames, mFrameIndex, mOffset);
 
   return Duration(mFrameIndex);
 }
