@@ -492,9 +492,10 @@ MediaPermissionManager::HandleRequest(RefPtr<dom::GetUserMediaRequest> &req)
 {
   nsString callID;
   req->GetCallID(callID);
+  uint64_t innerWindowID = req->InnerWindowID();
 
   nsCOMPtr<nsPIDOMWindow> innerWindow = static_cast<nsPIDOMWindow*>
-      (nsGlobalWindow::GetInnerWindowWithId(req->InnerWindowID()));
+      (nsGlobalWindow::GetInnerWindowWithId(innerWindowID));
   if (!innerWindow) {
     MOZ_ASSERT(false, "No inner window");
     return NS_ERROR_FAILURE;
@@ -509,7 +510,9 @@ MediaPermissionManager::HandleRequest(RefPtr<dom::GetUserMediaRequest> &req)
   req->GetConstraints(constraints);
 
   RefPtr<MediaManager> MediaMgr = MediaManager::GetInstance();
-  nsresult rv = MediaMgr->GetUserMediaDevices(innerWindow, constraints, onSuccess, onError);
+  nsresult rv = MediaMgr->GetUserMediaDevices(innerWindow, constraints,
+                                              onSuccess, onError,
+                                              innerWindowID, callID);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
