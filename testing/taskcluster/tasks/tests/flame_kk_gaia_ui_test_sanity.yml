@@ -9,28 +9,13 @@ task:
   retries: 0
 
   payload:
+    env:
+      MANIFEST_INCLUDE_EXCLUDE: b2g+sanity
+
     capabilities:
       devices:
         phone:
           sims: '1'
-
-    command:
-      - >
-        gaiatest
-        --testvars=/home/worker/data/gaia_testvars.json
-        --testvars=/home/worker/data/device.json
-        --adb-host=$PROXY_HOST
-        --adb-port=$ADB_PORT
-        --address=$PROXY_HOST:$MARIONETTE_PORT
-        --device $SERIAL_ID
-        --xml-output=/home/worker/upload/logs/xml_output.xml
-        --timeout=$TESTS_TIMEOUT_IN_MS
-        --log-html=/home/worker/upload/logs/index.html
-        --restart
-        --type=b2g+sanity-dsds
-        --log-mach=-
-        --log-raw=/home/worker/upload/logs/raw.log
-        gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
 
   extra:
     treeherder:
