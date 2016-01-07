@@ -123,7 +123,7 @@ if (os.getenv("JS_RECORD_RESULTS") !== undefined) {
     if (captured[i] instanceof Error) {
       print(s + captured[i].toSource() + ";");
     } else {
-      data = [ c.charCodeAt(0) for (c of captured[i].clonebuffer.split('')) ];
+      data = captured[i].clonebuffer.split('').map(c => c.charCodeAt(0));
       print(s + "serialize(0); captured[" + i + "].clonebuffer = String.fromCharCode(" + data.join(", ") + ");");
     }
   }
