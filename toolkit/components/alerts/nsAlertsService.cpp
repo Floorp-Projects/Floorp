@@ -22,9 +22,117 @@
 
 #endif // !MOZ_WIDGET_ANDROID
 
+#ifdef MOZ_PLACES
+#include "mozIAsyncFavicons.h"
+#include "nsIFaviconService.h"
+#endif // MOZ_PLACES
+
 using namespace mozilla;
 
 using mozilla::dom::ContentChild;
+
+namespace {
+
+#ifdef MOZ_PLACES
+
+class IconCallback final : public nsIFaviconDataCallback
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  IconCallback(nsIAlertsService* aBackend,
+               nsIAlertNotification* aAlert,
+               nsIObserver* aAlertListener)
+    : mBackend(aBackend)
+    , mAlert(aAlert)
+    , mAlertListener(aAlertListener)
+  {}
+
+  NS_IMETHOD
+  OnComplete(nsIURI *aIconURI, uint32_t aIconSize, const uint8_t *aIconData,
+             const nsACString &aMimeType) override
+  {
+    nsresult rv = NS_ERROR_FAILURE;
+    if (aIconSize > 0) {
+      nsCOMPtr<nsIAlertsIconData> alertsIconData(do_QueryInterface(mBackend));
+      if (alertsIconData) {
+        rv = alertsIconData->ShowAlertWithIconData(mAlert, mAlertListener,
+                                                   aIconSize, aIconData);
+      }
+    } else if (aIconURI) {
+      nsCOMPtr<nsIAlertsIconURI> alertsIconURI(do_QueryInterface(mBackend));
+      if (alertsIconURI) {
+        rv = alertsIconURI->ShowAlertWithIconURI(mAlert, mAlertListener,
+                                                 aIconURI);
+      }
+    }
+    if (NS_FAILED(rv)) {
+      rv = mBackend->ShowAlert(mAlert, mAlertListener);
+    }
+    return rv;
+  }
+
+private:
+  virtual ~IconCallback() {}
+
+  nsCOMPtr<nsIAlertsService> mBackend;
+  nsCOMPtr<nsIAlertNotification> mAlert;
+  nsCOMPtr<nsIObserver> mAlertListener;
+};
+
+NS_IMPL_ISUPPORTS(IconCallback, nsIFaviconDataCallback)
+
+#endif // MOZ_PLACES
+
+nsresult
+ShowWithIconBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
+                    nsIObserver* aAlertListener)
+{
+#ifdef MOZ_PLACES
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = aAlert->GetURI(getter_AddRefs(uri));
+  if (NS_FAILED(rv) || !uri) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Ensure the backend supports favicons.
+  nsCOMPtr<nsIAlertsIconData> alertsIconData(do_QueryInterface(aBackend));
+  nsCOMPtr<nsIAlertsIconURI> alertsIconURI;
+  if (!alertsIconData) {
+    alertsIconURI = do_QueryInterface(aBackend);
+  }
+  if (!alertsIconData && !alertsIconURI) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  nsCOMPtr<mozIAsyncFavicons> favicons(do_GetService(
+    "@mozilla.org/browser/favicon-service;1"));
+  NS_ENSURE_TRUE(favicons, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIFaviconDataCallback> callback =
+    new IconCallback(aBackend, aAlert, aAlertListener);
+  if (alertsIconData) {
+    return favicons->GetFaviconDataForPage(uri, callback);
+  }
+  return favicons->GetFaviconURLForPage(uri, callback);
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif // !MOZ_PLACES
+}
+
+nsresult
+ShowWithBackend(nsIAlertsService* aBackend, nsIAlertNotification* aAlert,
+                nsIObserver* aAlertListener)
+{
+  nsresult rv = ShowWithIconBackend(aBackend, aAlert, aAlertListener);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+  // If the backend doesn't support favicons, show the alert without one.
+  return aBackend->ShowAlert(aAlert, aAlertListener);
+}
+
+} // anonymous namespace
 
 NS_IMPL_ISUPPORTS(nsAlertsService, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsProgressListener)
 
@@ -66,7 +174,7 @@ bool nsAlertsService::ShouldShowAlert()
   return result;
 }
 
-NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle, 
+NS_IMETHODIMP nsAlertsService::ShowAlertNotification(const nsAString & aImageUrl, const nsAString & aAlertTitle,
                                                      const nsAString & aAlertText, bool aAlertTextClickable,
                                                      const nsAString & aAlertCookie,
                                                      nsIObserver * aAlertListener,
@@ -135,7 +243,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
 #else
   // Check if there is an optional service that handles system-level notifications
   if (mBackend) {
-    rv = mBackend->ShowAlert(aAlert, aAlertListener);
+    rv = ShowWithBackend(mBackend, aAlert, aAlertListener);
     if (NS_SUCCEEDED(rv)) {
       return rv;
     }
@@ -154,7 +262,7 @@ NS_IMETHODIMP nsAlertsService::ShowAlert(nsIAlertNotification * aAlert,
   // Use XUL notifications as a fallback if above methods have failed.
   nsCOMPtr<nsIAlertsService> xulBackend(nsXULAlerts::GetInstance());
   NS_ENSURE_TRUE(xulBackend, NS_ERROR_FAILURE);
-  return xulBackend->ShowAlert(aAlert, aAlertListener);
+  return ShowWithBackend(xulBackend, aAlert, aAlertListener);
 #endif // !MOZ_WIDGET_ANDROID
 }
 

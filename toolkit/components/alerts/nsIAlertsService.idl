@@ -7,12 +7,13 @@
 #include "nsIObserver.idl"
 
 interface nsIPrincipal;
+interface nsIURI;
 
 %{C++
 #define ALERT_NOTIFICATION_CONTRACTID "@mozilla.org/alert-notification;1"
 %}
 
-[scriptable, uuid(9e87fc34-8dbb-4b14-a724-b27be6822ec8)]
+[scriptable, uuid(1650a064-79d5-4eb6-8c9e-57dd6522b6ac)]
 interface nsIAlertNotification : nsISupports
 {
   /** Initializes an alert notification. */
@@ -84,6 +85,12 @@ interface nsIAlertNotification : nsISupports
    * checks, and to determine whether the alert is actionable.
    */
   readonly attribute nsIPrincipal principal;
+
+  /**
+   * The URI of the page that created the alert. |null| if the alert is not
+   * actionable.
+   */
+  readonly attribute nsIURI URI;
 
   /**
    * Controls the image loading behavior. If true, the image URL will be loaded
@@ -224,3 +231,30 @@ interface nsIAlertsProgressListener : nsISupports
   void onCancel(in AString name);
 };
 
+[scriptable, uuid(fc6d7f0a-0cf6-4268-8c71-ab640842b9b1)]
+interface nsIAlertsIconData : nsISupports
+{
+  /**
+   * Shows an alert with an icon. Web notifications use the favicon of the
+   * page that created the alert. If the favicon is not in the Places database,
+   * |iconSize| will be zero.
+  */
+  void showAlertWithIconData(in nsIAlertNotification alert,
+                             [optional] in nsIObserver alertListener,
+                             [optional] in uint32_t iconSize,
+                             [const, array, size_is(iconSize)] in uint8_t
+                                                               iconData);
+};
+
+[scriptable, uuid(f3c82915-bf60-41ea-91ce-6c46b22e381a)]
+interface nsIAlertsIconURI : nsISupports
+{
+  /**
+   * Shows an alert with an icon URI. Web notifications use |moz-anno:|
+   * URIs to reference favicons from Places. If the page doesn't have a
+   * favicon, |iconURI| will be |null|.
+   */
+  void showAlertWithIconURI(in nsIAlertNotification alert,
+                            [optional] in nsIObserver alertListener,
+                            [optional] in nsIURI iconURI);
+};
