@@ -83,21 +83,6 @@ function test()
   }
   expect("hello", s);
 
-/*
- * Generator expressions.
- */
-  String.prototype.__iterator__ = (function () {
-      /*
-       * NOTE:
-       * Without the "0 + ", the loop over <x/> does not terminate because
-       * the iterator gets run on a string with an empty length property.
-       */
-      for (let i = 0; i != 0 + this.length; i++)
-        yield this[i];
-    });
-  expect(["a1", "a2", "a3", "b1", "b2", "b3", "c1", "c2", "c3"] + "",
-         ([a + b for (a in 'abc') for (b in '123')]) + "");
-
   print("End of Tests");
 
 /*
