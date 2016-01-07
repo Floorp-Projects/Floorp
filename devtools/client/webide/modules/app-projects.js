@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const {Cc,Ci,Cu,Cr} = require("chrome");
+const ObservableObject = require("devtools/client/shared/observable-object");
 const promise = require("devtools/shared/deprecated-sync-thenables");
 
 const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js", {});
@@ -37,7 +38,7 @@ const IDB = {
     request.onsuccess = function() {
       let db = IDB._db = request.result;
       let objectStore = db.transaction("projects").objectStore("projects");
-      let projects = [];
+      let projects = []
       let toRemove = [];
       objectStore.openCursor().onsuccess = function(event) {
         let cursor = event.target.result;
@@ -87,6 +88,8 @@ const IDB = {
   add: function(project) {
     let deferred = promise.defer();
 
+    project = JSON.parse(JSON.stringify(project));
+
     if (!project.location) {
       // We need to make sure this object has a `.location` property.
       deferred.reject("Missing location property on project object.");
@@ -108,6 +111,12 @@ const IDB = {
 
   update: function(project) {
     let deferred = promise.defer();
+
+    // Clone object to make it storable by IndexedDB.
+    // Projects are proxified objects (for the template
+    // mechanismn in the first version of the App Manager).
+    // This will change in the future.
+    project = JSON.parse(JSON.stringify(project));
 
     var transaction = IDB._db.transaction(["projects"], "readwrite");
     var objectStore = transaction.objectStore("projects");
@@ -141,11 +150,13 @@ const IDB = {
   }
 };
 
+const store = new ObservableObject({ projects:[] });
+
 var loadDeferred = promise.defer();
 
 loadDeferred.resolve(IDB.open().then(function (projects) {
-  AppProjects.projects = projects;
-  AppProjects.emit("ready", projects);
+  store.object.projects = projects;
+  AppProjects.emit("ready", store.object.projects);
 }));
 
 const AppProjects = {
@@ -174,9 +185,10 @@ const AppProjects = {
       // we will override this random UUID on app install.
       packagedAppOrigin: generateUUID().toString().slice(1, -1)
     };
-    return IDB.add(project).then(() => {
-      this.projects.push(project);
-      return project;
+    return IDB.add(project).then(function () {
+      store.object.projects.push(project);
+      // return the added objects (proxified)
+      return store.object.projects[store.object.projects.length - 1];
     });
   },
 
@@ -189,9 +201,10 @@ const AppProjects = {
       type: "hosted",
       location: manifestURL
     };
-    return IDB.add(project).then(() => {
-      this.projects.push(project);
-      return project;
+    return IDB.add(project).then(function () {
+      store.object.projects.push(project);
+      // return the added objects (proxified)
+      return store.object.projects[store.object.projects.length - 1];
     });
   },
 
@@ -208,10 +221,11 @@ const AppProjects = {
   },
 
   remove: function(location) {
-    return IDB.remove(location).then(() => {
-      for (let i = 0; i < this.projects.length; i++) {
-        if (this.projects[i].location == location) {
-          this.projects.splice(i, 1);
+    return IDB.remove(location).then(function () {
+      let projects = store.object.projects;
+      for (let i = 0; i < projects.length; i++) {
+        if (projects[i].location == location) {
+          projects.splice(i, 1);
           return;
         }
       }
@@ -220,15 +234,16 @@ const AppProjects = {
   },
 
   get: function(location) {
-    for (let i = 0; i < this.projects.length; i++) {
-      if (this.projects[i].location == location) {
-        return this.projects[i];
+    let projects = store.object.projects;
+    for (let i = 0; i < projects.length; i++) {
+      if (projects[i].location == location) {
+        return projects[i];
       }
     }
     return null;
   },
 
-  projects: []
+  store: store
 };
 
 EventEmitter.decorate(AppProjects);
