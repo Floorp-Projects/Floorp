@@ -430,7 +430,7 @@ class Module
     void specializeToHeap(ArrayBufferObjectMaybeShared* heap);
     void despecializeFromHeap(ArrayBufferObjectMaybeShared* heap);
     void sendCodeRangesToProfiler(JSContext* cx);
-    void setProfilingEnabled(bool enabled, JSContext* cx);
+    MOZ_WARN_UNUSED_RESULT bool setProfilingEnabled(JSContext* cx, bool enabled);
     ImportExit& importToExit(const Import& import);
 
     enum CacheBool { NotLoadedFromCache = false, LoadedFromCache = true };

@@ -1,8 +1,6 @@
 // Parent config file for all xpcshell files.
 {
   rules: {
-    // Head files want to define globals so don't warn for unused globals
-    "no-unused-vars": [2, {"vars": "local", "args": "none"}],
     "mozilla/import-headjs-globals": 1,
   },
 

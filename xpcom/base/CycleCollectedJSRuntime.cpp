@@ -401,7 +401,7 @@ static const JSZoneParticipant sJSZoneCycleCollectorGlobal;
 static
 void JSObjectsTenuredCb(JSRuntime* aRuntime, void* aData)
 {
-  static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured(aRuntime);
+  static_cast<CycleCollectedJSRuntime*>(aData)->JSObjectsTenured();
 }
 
 CycleCollectedJSRuntime::CycleCollectedJSRuntime(JSRuntime* aParentRuntime,
@@ -1028,7 +1028,7 @@ CycleCollectedJSRuntime::GarbageCollect(uint32_t aReason) const
 }
 
 void
-CycleCollectedJSRuntime::JSObjectsTenured(JSRuntime* aRuntime)
+CycleCollectedJSRuntime::JSObjectsTenured()
 {
   for (auto iter = mNurseryObjects.Iter(); !iter.Done(); iter.Next()) {
     nsWrapperCache* cache = iter.Get();

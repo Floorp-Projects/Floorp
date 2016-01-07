@@ -136,15 +136,6 @@ assertAsmTypeFail(USE_ASM + 'return {m() {}};');
 assertTypeFailInEval('class f { constructor() {"use asm"; return {}} }');
 assertAsmTypeFail(USE_ASM + 'class c { constructor() {}}; return c;');
 
-assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0; (i for (x in [1,2,3])) } return f');
-assertAsmTypeFail(USE_ASM + 'function f(i) {i=i|0; [i for (x in [1,2,3])] } return f');
-assertAsmTypeFail(USE_ASM + 'function f() { (x for (x in [1,2,3])) } return f');
-assertAsmTypeFail(USE_ASM + 'function f() { [x for (x in [1,2,3])] } return f');
-assertTypeFailInEval('function f() { "use asm"; function g(i) {i=i|0; (i for (x in [1,2,3])) } return g }');
-assertTypeFailInEval('function f() { "use asm"; function g(i) {i=i|0; [i for (x in [1,2,3])] } return g }');
-assertTypeFailInEval('function f() { "use asm"; function g() { (x for (x in [1,2,3])) } return g }');
-assertTypeFailInEval('function f() { "use asm"; function g() { [x for (x in [1,2,3])] } return g }');
-
 assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var)') }, SyntaxError);
 assertThrowsInstanceOf(function() { new Function(USE_ASM + 'return)') }, SyntaxError);
 assertThrowsInstanceOf(function() { new Function(USE_ASM + 'var z=-2w') }, SyntaxError);

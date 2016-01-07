@@ -355,6 +355,20 @@ FontFace::SetFeatureSettings(const nsAString& aValue, ErrorResult& aRv)
   SetDescriptor(eCSSFontDesc_FontFeatureSettings, aValue, aRv);
 }
 
+void
+FontFace::GetDisplay(nsString& aResult)
+{
+  mFontFaceSet->FlushUserFontSet();
+  GetDesc(eCSSFontDesc_Display, eCSSProperty_UNKNOWN, aResult);
+}
+
+void
+FontFace::SetDisplay(const nsAString& aValue, ErrorResult& aRv)
+{
+  mFontFaceSet->FlushUserFontSet();
+  SetDescriptor(eCSSFontDesc_Display, aValue, aRv);
+}
+
 FontFaceLoadStatus
 FontFace::Status()
 {
@@ -548,7 +562,10 @@ FontFace::SetDescriptors(const nsAString& aFamily,
                        mDescriptors->mUnicodeRange) ||
       !ParseDescriptor(eCSSFontDesc_FontFeatureSettings,
                        aDescriptors.mFeatureSettings,
-                       mDescriptors->mFontFeatureSettings)) {
+                       mDescriptors->mFontFeatureSettings) ||
+      !ParseDescriptor(eCSSFontDesc_Display,
+                       aDescriptors.mDisplay,
+                       mDescriptors->mDisplay)) {
     // XXX Handle font-variant once we support it (bug 1055385).
 
     // If any of the descriptors failed to parse, none of them should be set
@@ -584,6 +601,7 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
                   nsString& aResult) const
 {
   MOZ_ASSERT(aDescID == eCSSFontDesc_UnicodeRange ||
+             aDescID == eCSSFontDesc_Display ||
              aPropID != eCSSProperty_UNKNOWN,
              "only pass eCSSProperty_UNKNOWN for eCSSFontDesc_UnicodeRange");
 
@@ -596,6 +614,8 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
   if (value.GetUnit() == eCSSUnit_Null) {
     if (aDescID == eCSSFontDesc_UnicodeRange) {
       aResult.AssignLiteral("U+0-10FFFF");
+    } else if (aDescID == eCSSFontDesc_Display) {
+      aResult.AssignLiteral("auto");
     } else if (aDescID != eCSSFontDesc_Family &&
                aDescID != eCSSFontDesc_Src) {
       aResult.AssignLiteral("normal");
@@ -607,6 +627,10 @@ FontFace::GetDesc(nsCSSFontDesc aDescID,
     // Since there's no unicode-range property, we can't use
     // nsCSSValue::AppendToString to serialize this descriptor.
     nsStyleUtil::AppendUnicodeRange(value, aResult);
+  } else if (aDescID == eCSSFontDesc_Display) {
+    AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(value.GetIntValue(),
+                                                  nsCSSProps::kFontDisplayKTable),
+                       aResult);
   } else {
     value.AppendToString(aPropID, aResult, nsCSSValue::eNormalized);
   }

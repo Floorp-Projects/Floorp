@@ -1274,6 +1274,7 @@ HttpChannelChild::SetupRedirect(nsIURI* uri,
   nsCOMPtr<nsIHttpChannelChild> httpChannelChild = do_QueryInterface(newChannel);
   if (httpChannelChild) {
     bool shouldUpgrade = false;
+    auto channelChild = static_cast<HttpChannelChild*>(httpChannelChild.get());
     if (mShouldInterceptSubsequentRedirect) {
       // In the case where there was a synthesized response that caused a redirection,
       // we must force the new channel to intercept the request in the parent before a
@@ -1282,7 +1283,7 @@ HttpChannelChild::SetupRedirect(nsIURI* uri,
     } else if (mRedirectMode == nsIHttpChannelInternal::REDIRECT_MODE_MANUAL &&
                ((redirectFlags & (nsIChannelEventSink::REDIRECT_TEMPORARY |
                                   nsIChannelEventSink::REDIRECT_PERMANENT)) != 0) &&
-               ShouldInterceptURI(newChannel, uri, shouldUpgrade)) {
+               channelChild->ShouldInterceptURI(uri, shouldUpgrade)) {
       // In the case where the redirect mode is manual, we need to check whether
       // the post-redirect channel needs to be intercepted.  If that is the
       // case, force the new channel to intercept the request in the parent
@@ -1832,7 +1833,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
                 mPostRedirectChannelShouldIntercept);
   bool shouldUpgrade = mPostRedirectChannelShouldUpgrade;
   if (mPostRedirectChannelShouldIntercept ||
-      ShouldInterceptURI(this, mURI, shouldUpgrade)) {
+      ShouldInterceptURI(mURI, shouldUpgrade)) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
@@ -2638,8 +2639,7 @@ HttpChannelChild::RecvIssueDeprecationWarning(const uint32_t& warning,
 }
 
 bool
-HttpChannelChild::ShouldInterceptURI(nsIChannel* aChannel,
-                                     nsIURI* aURI,
+HttpChannelChild::ShouldInterceptURI(nsIURI* aURI,
                                      bool& aShouldUpgrade)
 {
   bool isHttps = false;
@@ -2648,7 +2648,7 @@ HttpChannelChild::ShouldInterceptURI(nsIChannel* aChannel,
   nsCOMPtr<nsIPrincipal> resultPrincipal;
   if (!isHttps && mLoadInfo) {
       nsContentUtils::GetSecurityManager()->
-        GetChannelResultPrincipal(aChannel, getter_AddRefs(resultPrincipal));
+        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
   }
   rv = NS_ShouldSecureUpgrade(aURI,
                               mLoadInfo,

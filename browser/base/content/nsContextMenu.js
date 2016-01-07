@@ -336,14 +336,18 @@ nsContextMenu.prototype = {
     this.showItem("context-markpageMenu", enablePageMarks && markProviders.length > SocialMarks.MENU_LIMIT);
     let enablePageMarkItems = enablePageMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
     let linkmenus = document.getElementsByClassName("context-markpage");
-    [m.hidden = !enablePageMarkItems for (m of linkmenus)];
+    for (let m of linkmenus) {
+      m.hidden = !enablePageMarkItems;
+    }
 
     let enableLinkMarks = markProviders.length > 0 &&
                             ((this.onLink && !this.onMailtoLink) || this.onPlainTextLink);
     this.showItem("context-marklinkMenu", enableLinkMarks && markProviders.length > SocialMarks.MENU_LIMIT);
     let enableLinkMarkItems = enableLinkMarks && markProviders.length <= SocialMarks.MENU_LIMIT;
     linkmenus = document.getElementsByClassName("context-marklink");
-    [m.hidden = !enableLinkMarkItems for (m of linkmenus)];
+    for (let m of linkmenus) {
+      m.hidden = !enableLinkMarkItems;
+    }
 
     // SocialShare
     let shareButton = SocialShare.shareButton;

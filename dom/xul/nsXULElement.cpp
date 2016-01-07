@@ -35,6 +35,7 @@
 #include "nsIDocument.h"
 #include "nsLayoutStylesheetCache.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
@@ -2701,17 +2702,43 @@ nsXULPrototypeScript::DeserializeOutOfLine(nsIObjectInputStream* aInput,
 
 class NotifyOffThreadScriptCompletedRunnable : public nsRunnable
 {
-    RefPtr<nsIOffThreadScriptReceiver> mReceiver;
+    // An array of all outstanding script receivers. All reference counting of
+    // these objects happens on the main thread. When we return to the main
+    // thread from script compilation we make sure our receiver is still in
+    // this array (still alive) before proceeding. This array is cleared during
+    // shutdown, potentially before all outstanding script compilations have
+    // finished. We do not need to worry about pointer replay here, because
+    // a) we should not be starting script compilation after clearing this
+    // array and b) in all other cases the receiver will still be alive.
+    static StaticAutoPtr<nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>> sReceivers;
+    static bool sSetupClearOnShutdown;
+
+    nsIOffThreadScriptReceiver* mReceiver;
     void *mToken;
 
 public:
-    NotifyOffThreadScriptCompletedRunnable(already_AddRefed<nsIOffThreadScriptReceiver> aReceiver,
+    NotifyOffThreadScriptCompletedRunnable(nsIOffThreadScriptReceiver* aReceiver,
                                            void *aToken)
       : mReceiver(aReceiver), mToken(aToken)
     {}
 
+    static void NoteReceiver(nsIOffThreadScriptReceiver* aReceiver) {
+        if (!sSetupClearOnShutdown) {
+            ClearOnShutdown(&sReceivers);
+            sSetupClearOnShutdown = true;
+            sReceivers = new nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>();
+        }
+
+        // If we ever crash here, it's because we tried to lazy compile script
+        // too late in shutdown.
+        sReceivers->AppendElement(aReceiver);
+    }
+
     NS_DECL_NSIRUNNABLE
 };
+
+StaticAutoPtr<nsTArray<nsCOMPtr<nsIOffThreadScriptReceiver>>> NotifyOffThreadScriptCompletedRunnable::sReceivers;
+bool NotifyOffThreadScriptCompletedRunnable::sSetupClearOnShutdown = false;
 
 NS_IMETHODIMP
 NotifyOffThreadScriptCompletedRunnable::Run()
@@ -2728,7 +2755,17 @@ NotifyOffThreadScriptCompletedRunnable::Run()
         script = JS::FinishOffThreadScript(cx, JS_GetRuntime(cx), mToken);
     }
 
-    return mReceiver->OnScriptCompileComplete(script, script ? NS_OK : NS_ERROR_FAILURE);
+    if (!sReceivers) {
+        // We've already shut down.
+        return NS_OK;
+    }
+
+    auto index = sReceivers->IndexOf(mReceiver);
+    MOZ_RELEASE_ASSERT(index != sReceivers->NoIndex);
+    nsCOMPtr<nsIOffThreadScriptReceiver> receiver = (*sReceivers)[index].forget();
+    sReceivers->RemoveElementAt(index);
+
+    return receiver->OnScriptCompileComplete(script, script ? NS_OK : NS_ERROR_FAILURE);
 }
 
 static void
@@ -2738,8 +2775,7 @@ OffThreadScriptReceiverCallback(void *aToken, void *aCallbackData)
     // may be invoked off the main thread.
     nsIOffThreadScriptReceiver* aReceiver = static_cast<nsIOffThreadScriptReceiver*>(aCallbackData);
     RefPtr<NotifyOffThreadScriptCompletedRunnable> notify =
-        new NotifyOffThreadScriptCompletedRunnable(
-            already_AddRefed<nsIOffThreadScriptReceiver>(aReceiver), aToken);
+        new NotifyOffThreadScriptCompletedRunnable(aReceiver, aToken);
     NS_DispatchToMainThread(notify);
 }
 
@@ -2778,8 +2814,7 @@ nsXULPrototypeScript::Compile(JS::SourceBufferHolder& aSrcBuf,
                                   static_cast<void*>(aOffThreadReceiver))) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        // This reference will be consumed by the NotifyOffThreadScriptCompletedRunnable.
-        NS_ADDREF(aOffThreadReceiver);
+        NotifyOffThreadScriptCompletedRunnable::NoteReceiver(aOffThreadReceiver);
     } else {
         JS::Rooted<JSScript*> script(cx);
         if (!JS::Compile(cx, options, aSrcBuf, &script))

@@ -67,7 +67,7 @@ function loadSelector(selector) {
 }
 
 function loadSelectors(selectors) {
-  return promise.all([loadSelector(sel) for (sel of selectors)]);
+  return promise.all(Array.from(selectors, (sel) => loadSelector(sel)));
 }
 
 function doMoves(moves) {

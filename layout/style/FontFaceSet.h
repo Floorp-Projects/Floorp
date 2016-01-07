@@ -89,7 +89,8 @@ public:
                                    uint8_t aStyle,
                                    const nsTArray<gfxFontFeature>& aFeatureSettings,
                                    uint32_t aLanguageOverride,
-                                   gfxSparseBitSet* aUnicodeRanges) override;
+                                   gfxSparseBitSet* aUnicodeRanges,
+                                   uint8_t aFontDisplay) override;
 
   private:
     RefPtr<FontFaceSet> mFontFaceSet;

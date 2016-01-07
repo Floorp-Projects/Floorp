@@ -691,6 +691,7 @@ selfhosted.inputs = [
     'builtin/SelfHostingDefines.h',
     'builtin/Utilities.js',
     'builtin/Array.js',
+    'builtin/Classes.js',
     'builtin/Date.js',
     'builtin/Error.js',
     'builtin/Generator.js',

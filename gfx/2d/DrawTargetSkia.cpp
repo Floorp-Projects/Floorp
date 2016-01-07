@@ -583,7 +583,8 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 {
   if (aFont->GetType() != FontType::MAC &&
       aFont->GetType() != FontType::SKIA &&
-      aFont->GetType() != FontType::GDI) {
+      aFont->GetType() != FontType::GDI &&
+      aFont->GetType() != FontType::DWRITE) {
     return;
   }
 
@@ -762,7 +763,7 @@ DrawTargetSkia::OptimizeSourceSurface(SourceSurface *aSurface) const
 already_AddRefed<SourceSurface>
 DrawTargetSkia::CreateSourceSurfaceFromNativeSurface(const NativeSurface &aSurface) const
 {
-  if (aSurface.mType == NativeSurfaceType::CAIRO_SURFACE) {
+  if (aSurface.mType == NativeSurfaceType::CAIRO_CONTEXT) {
     if (aSurface.mSize.width <= 0 ||
         aSurface.mSize.height <= 0) {
       gfxWarning() << "Can't create a SourceSurface without a valid size";

@@ -1147,7 +1147,8 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         self.info("Cleanup .userconfig file.")
         dirs = self.query_abs_dirs()
         userconfig_path = os.path.join(dirs["work_dir"], ".userconfig")
-        os.remove(userconfig_path)
+        if os.path.exists(userconfig_path):
+            os.remove(userconfig_path)
 
 # main {{{1
 if __name__ == '__main__':

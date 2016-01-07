@@ -6250,6 +6250,7 @@ nsGlobalWindow::Dump(const nsAString& aStr)
 #endif
 
   if (cstr) {
+    MOZ_LOG(nsContentUtils::DOMDumpLog(), LogLevel::Debug, ("[Window.Dump] %s", cstr));
 #ifdef XP_WIN
     PrintToDebugger(cstr);
 #endif

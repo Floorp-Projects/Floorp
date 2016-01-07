@@ -613,7 +613,19 @@ nsCSSFontDesc
 nsCSSProps::LookupFontDesc(const nsACString& aFontDesc)
 {
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
-  return nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+  nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
+
+  if (which == eCSSFontDesc_Display &&
+      !Preferences::GetBool("layout.css.font-display.enabled")) {
+    which = eCSSFontDesc_UNKNOWN;
+  } else if (which == eCSSFontDesc_UNKNOWN) {
+    // check for unprefixed font-feature-settings/font-language-override
+    nsAutoCString prefixedProp;
+    prefixedProp.AppendLiteral("-moz-");
+    prefixedProp.Append(aFontDesc);
+    which = nsCSSFontDesc(gFontDescTable->Lookup(prefixedProp));
+  }
+  return which;
 }
 
 nsCSSFontDesc
@@ -622,8 +634,11 @@ nsCSSProps::LookupFontDesc(const nsAString& aFontDesc)
   MOZ_ASSERT(gFontDescTable, "no lookup table, needs addref");
   nsCSSFontDesc which = nsCSSFontDesc(gFontDescTable->Lookup(aFontDesc));
 
-  // check for unprefixed font-feature-settings/font-language-override
-  if (which == eCSSFontDesc_UNKNOWN) {
+  if (which == eCSSFontDesc_Display &&
+      !Preferences::GetBool("layout.css.font-display.enabled")) {
+    which = eCSSFontDesc_UNKNOWN;
+  } else if (which == eCSSFontDesc_UNKNOWN) {
+    // check for unprefixed font-feature-settings/font-language-override
     nsAutoString prefixedProp;
     prefixedProp.AppendLiteral("-moz-");
     prefixedProp.Append(aFontDesc);
@@ -1378,6 +1393,15 @@ KTableEntry nsCSSProps::kFloatKTable[] = {
 const KTableEntry nsCSSProps::kFloatEdgeKTable[] = {
   { eCSSKeyword_content_box, NS_STYLE_FLOAT_EDGE_CONTENT },
   { eCSSKeyword_margin_box, NS_STYLE_FLOAT_EDGE_MARGIN },
+  { eCSSKeyword_UNKNOWN, -1 }
+};
+
+const KTableEntry nsCSSProps::kFontDisplayKTable[] = {
+  { eCSSKeyword_auto, NS_FONT_DISPLAY_AUTO },
+  { eCSSKeyword_block, NS_FONT_DISPLAY_BLOCK },
+  { eCSSKeyword_swap, NS_FONT_DISPLAY_SWAP },
+  { eCSSKeyword_fallback, NS_FONT_DISPLAY_FALLBACK },
+  { eCSSKeyword_optional, NS_FONT_DISPLAY_OPTIONAL },
   { eCSSKeyword_UNKNOWN, -1 }
 };
 

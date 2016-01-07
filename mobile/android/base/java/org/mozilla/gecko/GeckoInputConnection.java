@@ -222,6 +222,7 @@ class GeckoInputConnection
 
     private String mCurrentInputMethod = "";
 
+    private final View mView;
     private final GeckoEditableClient mEditableClient;
     protected int mBatchEditCount;
     private ExtractedTextRequest mUpdateRequest;
@@ -241,6 +242,7 @@ class GeckoInputConnection
     protected GeckoInputConnection(View targetView,
                                    GeckoEditableClient editable) {
         super(targetView, true);
+        mView = targetView;
         mEditableClient = editable;
         mIMEState = IME_STATE_DISABLED;
         // InputConnection that sends keys for plugins, which don't have full editors
@@ -377,11 +379,11 @@ class GeckoInputConnection
         return extract;
     }
 
-    private static View getView() {
-        return GeckoAppShell.getLayerView();
+    private View getView() {
+        return mView;
     }
 
-    private static InputMethodManager getInputMethodManager() {
+    private InputMethodManager getInputMethodManager() {
         View view = getView();
         if (view == null) {
             return null;
@@ -390,7 +392,7 @@ class GeckoInputConnection
         return InputMethods.getInputMethodManager(context);
     }
 
-    private static void showSoftInput() {
+    private void showSoftInput() {
         final InputMethodManager imm = getInputMethodManager();
         if (imm != null) {
             final View v = getView();
@@ -416,7 +418,7 @@ class GeckoInputConnection
         });
     }
 
-    private static void hideSoftInput() {
+    private void hideSoftInput() {
         final InputMethodManager imm = getInputMethodManager();
         if (imm != null) {
             final View v = getView();
@@ -684,7 +686,7 @@ class GeckoInputConnection
             outAttrs.actionLabel = mIMEActionHint;
         }
 
-        Context context = GeckoAppShell.getContext();
+        Context context = getView().getContext();
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
             // prevent showing full-screen keyboard only when the screen is tall enough

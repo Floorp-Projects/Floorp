@@ -19,8 +19,7 @@ function testForOf(hud) {
   let deferred = promise.defer();
 
   let jsterm = hud.jsterm;
-  jsterm.execute("{ [x.tagName for (x of document.body.childNodes) " +
-    "if (x.nodeType === 1)].join(' '); }",
+  jsterm.execute("{ let _nodes = []; for (let x of document.body.childNodes) { if (x.nodeType === 1) { _nodes.push(x.tagName); } } _nodes.join(' '); }",
     (node) => {
       ok(/H1 DIV H2 P/.test(node.textContent),
         "for-of loop should find all top-level nodes");

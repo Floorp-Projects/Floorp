@@ -2728,7 +2728,7 @@ MediaStreamGraph::GetInstance(MediaStreamGraph::GraphDriverType aGraphDriverRequ
 
     STREAM_LOG(LogLevel::Debug,
         ("Starting up MediaStreamGraph %p for channel %s",
-         graph, AudioChannelValues::strings[channel]));
+         graph, AudioChannelValues::strings[channel].value));
   }
 
   return graph;

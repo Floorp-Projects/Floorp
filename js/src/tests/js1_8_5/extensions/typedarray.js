@@ -596,7 +596,7 @@ function test()
     var numbers = [ 0, 1, 2, 3, 4, 5, 6, 7, 8 ];
 
     function tastring(tarray) {
-        return [ x for (x of tarray) ].toString();
+        return [...tarray].toString();
     }
 
     function checkCopyWithin(offset, start, end, dest, want) {

@@ -59,6 +59,14 @@ sandbox.alienObject = {
 sandbox.chromeGet = function (obj, prop) { return obj[prop]; };
 
 function COWTests() {
+    function getNames(cow) {
+        let names = [];
+        for (let name in cow) {
+            names.push(name);
+        }
+        return names;
+    }
+
     // This function is actually decompiled and run inside a
     // sandbox with content privileges.
 
@@ -120,7 +128,7 @@ function COWTests() {
     PROPS_TO_TEST.forEach(function(name) {
         isPropHidden(strictCOW, name, "object with empty exposedProps");
     });
-    is([name for (name in strictCOW)].length, 0,
+    is(getNames(strictCOW).length, 0,
        "object with empty exposedProps shouldn't have any properties");
 
     // Test object with one exposed property
@@ -135,9 +143,9 @@ function COWTests() {
             isPropHidden(strictCOW, name, "object with exposed 'foo'");
         }
     });
-    is([name for (name in strictCOWr)].length, 1,
+    is(getNames(strictCOWr).length, 1,
        "object with exposedProps only enumerate exposed props");
-    is([name for (name in strictCOWr)][0], "foo",
+    is(getNames(strictCOWr)[0], "foo",
        "object with exposedProps only enumerate exposed props");
 
     // Test writable property
@@ -193,7 +201,7 @@ function COWTests() {
     }
 
     try {
-        var props = [name for (name in getCOW(readable))];
+        var props = getNames(getCOW(readable));
         is(props.length, 1, "COW w/ one exposed prop should enumerate once");
         is(props[0], 'foo', "COW w/ one exposed prop should enumerate it");
     } catch (e) {

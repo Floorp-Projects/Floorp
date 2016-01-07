@@ -85,7 +85,6 @@ struct cubeb_stream {
   snd_pcm_uframes_t write_position;
   snd_pcm_uframes_t last_position;
   snd_pcm_uframes_t buffer_size;
-  snd_pcm_uframes_t period_size;
   cubeb_stream_params params;
 
   /* Every member after this comment is protected by the owning context's
@@ -789,6 +788,7 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
   cubeb_stream * stm;
   int r;
   snd_pcm_format_t format;
+  snd_pcm_uframes_t period_size;
 
   assert(ctx && stream);
 
@@ -857,7 +857,7 @@ alsa_stream_init(cubeb * ctx, cubeb_stream ** stream, char const * stream_name,
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
-  r = snd_pcm_get_params(stm->pcm, &stm->buffer_size, &stm->period_size);
+  r = snd_pcm_get_params(stm->pcm, &stm->buffer_size, &period_size);
   assert(r == 0);
 
   stm->nfds = snd_pcm_poll_descriptors_count(stm->pcm);
