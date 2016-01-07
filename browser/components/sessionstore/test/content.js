@@ -216,12 +216,6 @@ addMessageListener("ss-test:click", function ({data}) {
   sendAsyncMessage("ss-test:click");
 });
 
-addMessageListener("ss-test:run", function({data, objects}) {
-  let f = eval('(' + data.code + ')');
-  let result = f(content, objects.arg);
-  sendAsyncMessage("ss-test:runFinished", result);
-});
-
 addEventListener("load", function(event) {
   let subframe = event.target != content.document;
   sendAsyncMessage("ss-test:loadEvent", {subframe: subframe, url: event.target.documentURI});
