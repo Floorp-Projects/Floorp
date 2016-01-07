@@ -4,6 +4,7 @@
 "use strict";
 
 const { Visitor, walk } = require("resource://devtools/shared/heapsnapshot/CensusUtils.js");
+const { immutableUpdate } = require("resource://devtools/shared/ThreadSafeDevToolsUtils.js");
 
 const DEFAULT_MAX_DEPTH = 4;
 const DEFAULT_MAX_SIBLINGS = 15;
@@ -212,4 +213,77 @@ DominatorTreeNode.partialTraversal = function (dominatorTree,
   }
 
   return dfs(dominatorTree.root, 0);
+};
+
+/**
+ * Insert more children into the given (partially complete) dominator tree.
+ *
+ * The tree is updated in an immutable and persistent manner: a new tree is
+ * returned, but all unmodified subtrees (which is most) are shared with the
+ * original tree. Only the modified nodes are re-allocated.
+ *
+ * @param {DominatorTreeNode} tree
+ * @param {Array<NodeId>} path
+ * @param {Array<DominatorTreeNode>} newChildren
+ * @param {Boolean} moreChildrenAvailable
+ *
+ * @returns {DominatorTreeNode}
+ */
+DominatorTreeNode.insert = function (tree, path, newChildren, moreChildrenAvailable) {
+  function insert(tree, i) {
+    if (tree.nodeId !== path[i]) {
+      return tree;
+    }
+
+    if (i == path.length - 1) {
+      return immutableUpdate(tree, {
+        children: (tree.children || []).concat(newChildren),
+        moreChildrenAvailable,
+      });
+    }
+
+    return tree.children
+      ? immutableUpdate(tree, {
+        children: tree.children.map(c => insert(c, i + 1))
+      })
+      : tree;
+  }
+
+  return insert(tree, 0);
+};
+
+/**
+ * Get the new canonical node with the given `id` in `tree` that exists along
+ * `path`. If there is no such node along `path`, return null.
+ *
+ * This is useful if we have a reference to a now-outdated DominatorTreeNode due
+ * to a recent call to DominatorTreeNode.insert and want to get the up-to-date
+ * version. We don't have to walk the whole tree: if there is an updated version
+ * of the node then it *must* be along the path.
+ *
+ * @param {NodeId} id
+ * @param {DominatorTreeNode} tree
+ * @param {Array<NodeId>} path
+ *
+ * @returns {DominatorTreeNode|null}
+ */
+DominatorTreeNode.getNodeByIdAlongPath = function (id, tree, path) {
+  function find(node, i) {
+    if (!node || node.nodeId !== path[i]) {
+      return null;
+    }
+
+    if (node.nodeId === id) {
+      return node;
+    }
+
+    if (i === path.length - 1 || !node.children) {
+      return null;
+    }
+
+    const nextId = path[i + 1];
+    return find(node.children.find(c => c.nodeId === nextId), i + 1);
+  }
+
+  return find(tree, 0);
 };
