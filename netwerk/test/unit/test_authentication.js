@@ -495,7 +495,7 @@ function H(str) {
  ch.init(Components.interfaces.nsICryptoHash.MD5);
  ch.update(data, data.length);
  var hash = ch.finish(false);
- return [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+ return Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
 }
 
 //

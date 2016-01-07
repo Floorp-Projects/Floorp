@@ -324,8 +324,13 @@ StorageServerCollection.prototype = {
    * @return an array of IDs.
    */
   keys: function keys(filter) {
-    return [id for ([id, bso] in Iterator(this._bsos))
-               if (!bso.deleted && (!filter || filter(id, bso)))];
+    let ids = [];
+    for (let [id, bso] in Iterator(this._bsos)) {
+      if (!bso.deleted && (!filter || filter(id, bso))) {
+        ids.push(id);
+      }
+    }
+    return ids;
   },
 
   /**
@@ -339,8 +344,12 @@ StorageServerCollection.prototype = {
    * @return an array of ServerBSOs.
    */
   bsos: function bsos(filter) {
-    let os = [bso for ([id, bso] in Iterator(this._bsos))
-              if (!bso.deleted)];
+    let os = [];
+    for (let [id, bso] in Iterator(this._bsos)) {
+      if (!bso.deleted) {
+        os.push(bso);
+      }
+    }
 
     if (!filter) {
       return os;

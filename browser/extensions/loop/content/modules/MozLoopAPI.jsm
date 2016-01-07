@@ -660,7 +660,7 @@ const kMessageHandlers = {
     hasher.updateFromStream(stringStream, -1);
     let hash = hasher.finish(false);
     // Convert the binary hash data to a hex string.
-    let md5Email = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+    let md5Email = Array.from(hash, (c, i) => toHexString(hash.charCodeAt(i))).join("");
 
     // Compose the Gravatar URL.
     reply("https://www.gravatar.com/avatar/" + md5Email +

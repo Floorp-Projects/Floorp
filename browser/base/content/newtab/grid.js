@@ -133,7 +133,7 @@ var gGrid = {
     }
 
     // Create cells.
-    let cells = [new Cell(this, cell) for (cell of fragment.childNodes)];
+    let cells = Array.from(fragment.childNodes, (cell) => new Cell(this, cell));
 
     // Fetch links.
     let links = gLinks.getLinks();

@@ -43,7 +43,12 @@ function checkDirectoryContains(dir, files) {
     }
     seen.add(file.leafName);
   }
-  let missing = [x for (x in files) if (!seen.has(x))];
+  let missing = [];
+  for (let x in files) {
+    if (!seen.has(x)) {
+      missing.push(x);
+    }
+  }
   Assert.deepEqual(missing, [], "no missing files in " + dir.path);
 }
 
