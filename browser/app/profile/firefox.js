@@ -1609,8 +1609,8 @@ pref("layers.async-pan-zoom.enabled", true);
 #ifdef E10S_TESTING_ONLY
 // Enable e10s add-on interposition by default.
 pref("extensions.interposition.enabled", true);
-pref("extensions.interposition.prefetching", true);
 #endif
+pref("extensions.interposition.prefetching", true);
 
 pref("browser.defaultbrowser.notificationbar", false);
 
