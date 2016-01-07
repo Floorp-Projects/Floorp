@@ -98,7 +98,7 @@ public:
   void NotifyPull(MediaStreamGraph* aGraph, SourceMediaStream* aSource,
                   TrackID aID, StreamTime aDesiredTime) override
   {}
-  const dom::MediaSourceEnum GetMediaSource() override
+  dom::MediaSourceEnum GetMediaSource() const override
   {
     return dom::MediaSourceEnum::AudioCapture;
   }
@@ -178,7 +178,7 @@ public:
     return false;
   }
 
-  virtual const dom::MediaSourceEnum GetMediaSource() override {
+  virtual dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Microphone;
   }
 

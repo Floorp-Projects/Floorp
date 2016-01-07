@@ -156,7 +156,7 @@ public:
     return mSessionVersion;
   }
 
-  const sdp::AddrType
+  sdp::AddrType
   GetAddrType() const
   {
     return mAddrType;
