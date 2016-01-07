@@ -838,7 +838,7 @@ AboutReader.prototype = {
       this._headerElement.style.display = "none";
       this._contentElement.style.display = "none";
 
-      this._messageElement.textContent = gStrings.GetStringFromName("aboutReader.loading");
+      this._messageElement.textContent = gStrings.GetStringFromName("aboutReader.loading2");
       this._messageElement.style.display = "block";
     }.bind(this), 300);
   },

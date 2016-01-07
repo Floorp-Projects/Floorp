@@ -117,9 +117,6 @@ exports.TargetFactory = {
 function TabTarget(tab) {
   EventEmitter.decorate(this);
   this.destroy = this.destroy.bind(this);
-  this._handleThreadState = this._handleThreadState.bind(this);
-  this.on("thread-resumed", this._handleThreadState);
-  this.on("thread-paused", this._handleThreadState);
   this.activeTab = this.activeConsole = null;
   // Only real tabs need initialization here. Placeholder objects for remote
   // targets will be initialized after a makeRemote method call.
@@ -362,10 +359,6 @@ TabTarget.prototype = {
     return !this.window;
   },
 
-  get isThreadPaused() {
-    return !!this._isThreadPaused;
-  },
-
   /**
    * Adds remote protocol capabilities to the target, so that it can be used
    * for tools that support the Remote Debugging Protocol even for local
@@ -534,20 +527,6 @@ TabTarget.prototype = {
   },
 
   /**
-   * Handle script status.
-   */
-  _handleThreadState: function(event) {
-    switch (event) {
-      case "thread-resumed":
-        this._isThreadPaused = false;
-        break;
-      case "thread-paused":
-        this._isThreadPaused = true;
-        break;
-    }
-  },
-
-  /**
    * Target is not alive anymore.
    */
   destroy: function() {
@@ -561,11 +540,6 @@ TabTarget.prototype = {
 
     // Before taking any action, notify listeners that destruction is imminent.
     this.emit("close");
-
-    // First of all, do cleanup tasks that pertain to both remoted and
-    // non-remoted targets.
-    this.off("thread-resumed", this._handleThreadState);
-    this.off("thread-paused", this._handleThreadState);
 
     if (this._tab) {
       this._teardownListeners();
@@ -612,6 +586,7 @@ TabTarget.prototype = {
     } else {
       promiseTargets.delete(this._form);
     }
+
     this.activeTab = null;
     this.activeConsole = null;
     this._client = null;
@@ -718,8 +693,6 @@ function WorkerTarget(workerClient) {
  * requiring only minimal changes to the rest of the frontend.
  */
 WorkerTarget.prototype = {
-  destroy: function () {},
-
   get isRemote() {
     return true;
   },

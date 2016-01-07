@@ -621,7 +621,7 @@ ThreadActor.prototype = {
     this._debuggerSourcesSeen = new Set();
 
     update(this._options, aRequest.options || {});
-    this.sources.reconfigure(this._options);
+    this.sources.setOptions(this._options);
     this.sources.on('newSource', (name, source) => {
       this.onNewSource(source);
     });
@@ -678,10 +678,16 @@ ThreadActor.prototype = {
     if (this.state == "exited") {
       return { error: "wrongState" };
     }
+    const options = aRequest.options || {};
 
-    update(this._options, aRequest.options || {});
+    if ('observeAsmJS' in options) {
+      this.dbg.allowUnobservedAsmJS = !options.observeAsmJS;
+    }
+
+    update(this._options, options);
+
     // Update the global source store
-    this.sources.reconfigure(this._options);
+    this.sources.setOptions(options);
 
     return {};
   },
@@ -1921,21 +1927,26 @@ ThreadActor.prototype = {
 
     let sourceActor = this.sources.createNonSourceMappedActor(aSource);
 
+    // Set any stored breakpoints.
+    let bpActors = this.breakpointActorMap.findActors();
+    let promises = [];
+
     // Go ahead and establish the source actors for this script, which
     // fetches sourcemaps if available and sends onNewSource
     // notifications.
-    //
-    // We need to use unsafeSynchronize here because if the page is being reloaded,
-    // this call will replace the previous set of source actors for this source
-    // with a new one. If the source actors have not been replaced by the time
-    // we try to reset the breakpoints below, their location objects will still
-    // point to the old set of source actors, which point to different scripts.
-    this.unsafeSynchronize(this.sources.createSourceActors(aSource));
+    let sourceActorsCreated = this.sources.createSourceActors(aSource);
 
-    // Set any stored breakpoints.
-    let promises = [];
+    if (bpActors.length) {
+      // We need to use unsafeSynchronize here because if the page is being reloaded,
+      // this call will replace the previous set of source actors for this source
+      // with a new one. If the source actors have not been replaced by the time
+      // we try to reset the breakpoints below, their location objects will still
+      // point to the old set of source actors, which point to different
+      // scripts.
+      this.unsafeSynchronize(sourceActorsCreated);
+    }
 
-    for (let _actor of this.breakpointActorMap.findActors()) {
+    for (let _actor of bpActors) {
       // XXX bug 1142115: We do async work in here, so we need to create a fresh
       // binding because for/of does not yet do that in SpiderMonkey.
       let actor = _actor;

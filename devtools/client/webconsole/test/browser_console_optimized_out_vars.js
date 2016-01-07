@@ -14,9 +14,6 @@ function test() {
     let hud = yield openConsole(tab);
     let { toolbox, panel, panelWin } = yield openDebugger();
 
-    yield waitForThreadEvents(panel, "resumed");
-    ok(true, "Debugger resumed");
-
     let sources = panelWin.DebuggerView.Sources;
     yield panel.addBreakpoint({ actor: sources.values[0], line: 18 });
     yield ensureThreadClientState(panel, "resumed");

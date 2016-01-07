@@ -14,21 +14,12 @@ add_task(function*() {
   yield loadTab(TEST_URI);
   let hud = yield openConsole();
 
-  yield testWithoutDebuggerOpen(hud);
-
   // Open the Debugger panel.
   let debuggerPanel = yield openDebugger();
   // And right after come back to the Console panel.
   yield openConsole();
   yield testWithDebuggerOpen(hud, debuggerPanel);
 });
-
-function* testWithoutDebuggerOpen(hud) {
-  let clickable = yield printFunction(hud);
-  let onVariablesViewOpen = hud.jsterm.once("variablesview-fetched");
-  synthesizeClick(clickable, hud);
-  return onVariablesViewOpen;
-}
 
 function* testWithDebuggerOpen(hud, debuggerPanel) {
   let clickable = yield printFunction(hud);
