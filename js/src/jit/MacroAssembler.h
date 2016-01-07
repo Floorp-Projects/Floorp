@@ -910,6 +910,15 @@ class MacroAssembler : public MacroAssemblerSpecific
         branchTest32(Assembler::Zero, flags, Imm32(JSString::TYPE_FLAGS_MASK), label);
     }
 
+    void branchLatin1String(Register string, Label* label) {
+        branchTest32(Assembler::NonZero, Address(string, JSString::offsetOfFlags()),
+                     Imm32(JSString::LATIN1_CHARS_BIT), label);
+    }
+    void branchTwoByteString(Register string, Label* label) {
+        branchTest32(Assembler::Zero, Address(string, JSString::offsetOfFlags()),
+                     Imm32(JSString::LATIN1_CHARS_BIT), label);
+    }
+
     void loadJSContext(Register dest) {
         loadPtr(AbsoluteAddress(GetJitContext()->runtime->addressOfJSContext()), dest);
     }
