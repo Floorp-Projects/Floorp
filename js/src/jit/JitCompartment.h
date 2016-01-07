@@ -234,7 +234,9 @@ class JitRuntime
         // This two-arg constructor is provided for JSRuntime::createJitRuntime,
         // where we have a JitRuntime but didn't set rt->jitRuntime_ yet.
         AutoPreventBackedgePatching(JSRuntime* rt, JitRuntime* jrt)
-          : rt_(rt), jrt_(jrt)
+          : rt_(rt),
+            jrt_(jrt),
+            prev_(false)  // silence GCC warning
         {
             MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
             if (jrt_) {
