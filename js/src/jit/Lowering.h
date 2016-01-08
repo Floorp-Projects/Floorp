@@ -161,8 +161,8 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitToString(MToString* convert);
     void visitToObjectOrNull(MToObjectOrNull* convert);
     void visitRegExp(MRegExp* ins);
-    void visitRegExpExec(MRegExpExec* ins);
-    void visitRegExpTest(MRegExpTest* ins);
+    void visitRegExpMatcher(MRegExpMatcher* ins);
+    void visitRegExpTester(MRegExpTester* ins);
     void visitRegExpReplace(MRegExpReplace* ins);
     void visitStringReplace(MStringReplace* ins);
     void visitBinarySharedStub(MBinarySharedStub* ins);
