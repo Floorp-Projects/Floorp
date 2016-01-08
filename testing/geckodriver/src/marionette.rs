@@ -19,7 +19,7 @@ use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
                          WebDriverExtensionCommand};
 use webdriver::command::WebDriverCommand::{
     NewSession, DeleteSession, Get, GetCurrentUrl,
-    GoBack, GoForward, Refresh, GetTitle, GetWindowHandle,
+    GoBack, GoForward, Refresh, GetTitle, GetPageSource, GetWindowHandle,
     GetWindowHandles, Close, SetWindowSize,
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
     SwitchToParentFrame, FindElement, FindElements,
@@ -423,8 +423,8 @@ impl MarionetteSession {
                 WebDriverResponse::Void
             },
             //Things that simply return the contents of the marionette "value" property
-            GetCurrentUrl | GetTitle | GetWindowHandle | IsDisplayed(_) | IsSelected(_) |
-            GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
+            GetCurrentUrl | GetTitle | GetPageSource | GetWindowHandle | IsDisplayed(_) |
+            IsSelected(_) | GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot => {
                 let value = try_opt!(resp.result.find("value"),
@@ -677,6 +677,7 @@ impl MarionetteCommand {
             GoForward => (Some("goForward"), None),
             Refresh => (Some("refresh"), None),
             GetTitle => (Some("getTitle"), None),
+            GetPageSource => (Some("getPageSource"), None),
             GetWindowHandle => (Some("getWindowHandle"), None),
             GetWindowHandles => (Some("getWindowHandles"), None),
             Close => (Some("close"), None),
