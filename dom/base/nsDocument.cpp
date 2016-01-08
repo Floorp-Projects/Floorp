@@ -3718,8 +3718,8 @@ nsIDocument::ShouldThrottleFrameRequests()
     return false;
   }
 
-  if (!mIsShowing) {
-    // We're not showing (probably in a background tab or the bf cache).
+  if (Hidden()) {
+    // We're not visible (probably in a background tab or the bf cache).
     return true;
   }
 
