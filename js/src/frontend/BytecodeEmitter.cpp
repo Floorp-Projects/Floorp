@@ -7194,12 +7194,15 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
         return false;
     }
 
-    if (pn->getOp() != JSOP_CALL) {
+    JSOp callOp = pn->getOp();
+    if (callOp != JSOP_CALL) {
         reportError(pn, JSMSG_NOT_CONSTRUCTOR, errorName);
         return false;
     }
 
     ParseNode* funNode = pn2->pn_next;
+    if (funNode->getKind() == PNK_NAME && funNode->name() == cx->names().std_Function_apply)
+        callOp = JSOP_FUNAPPLY;
     if (!emitTree(funNode))
         return false;
 
@@ -7223,10 +7226,10 @@ BytecodeEmitter::emitSelfHostedCallFunction(ParseNode* pn)
     emittingForInit = oldEmittingForInit;
 
     uint32_t argc = pn->pn_count - 3;
-    if (!emitCall(pn->getOp(), argc))
+    if (!emitCall(callOp, argc))
         return false;
 
-    checkTypeSet(pn->getOp());
+    checkTypeSet(callOp);
     return true;
 }
 
