@@ -395,7 +395,7 @@ ImageEncoder::ExtractDataInternal(const nsAString& aType,
     if (aImage->GetFormat() == ImageFormat::PLANAR_YCBCR) {
       nsTArray<uint8_t> data;
       layers::PlanarYCbCrImage* ycbcrImage = static_cast<layers::PlanarYCbCrImage*> (aImage);
-      gfxImageFormat format = gfxImageFormat::ARGB32;
+      gfxImageFormat format = SurfaceFormat::A8R8G8B8_UINT32;
       uint32_t stride = GetAlignedStride<16>(aSize.width * 4);
       size_t length = BufferSizeFromStrideAndHeight(stride, aSize.height);
       data.SetCapacity(length);
