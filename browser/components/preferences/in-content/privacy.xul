@@ -84,19 +84,33 @@
 
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&tracking.label;</label></caption>
   <vbox id="trackingprotectionbox" hidden="true">
-    <hbox align="center">
-      <checkbox id="trackingProtection"
-                preference="privacy.trackingprotection.enabled"
-                accesskey="&trackingProtection5.accesskey;"
-                label="&trackingProtection5.label;" />
-      <label id="trackingProtectionLearnMore"
-             class="text-link"
-             value="&trackingProtectionLearnMore.label;"/>
+    <hbox align="start">
+      <vbox>
+        <caption><label>&trackingProtectionHeader.label;
+          <label id="trackingProtectionLearnMore" class="text-link"
+                 value="&trackingProtectionLearnMore.label;"/>
+        </label></caption>
+        <radiogroup id="trackingProtectionRadioGroup">
+          <radio value="always"
+                 label="&trackingProtectionAlways.label;"
+                 accesskey="&trackingProtectionAlways.accesskey;"/>
+          <radio value="private"
+                 label="&trackingProtectionPrivate.label;"
+                 accesskey="&trackingProtectionPrivate.accesskey;"/>
+          <radio value="never"
+                 label="&trackingProtectionNever.label;"
+                 accesskey="&trackingProtectionNever.accesskey;"/>
+        </radiogroup>
+      </vbox>
+      <spacer flex="1" />
+      <button id="changeBlockList"
+              label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
+              preference="pref.privacy.disable_button.change_blocklist"/>
     </hbox>
   </vbox>
   <vbox id="trackingprotectionpbmbox">
+    <caption><label>&tracking.label;</label></caption>
     <hbox align="center">
       <checkbox id="trackingProtectionPBM"
                 preference="privacy.trackingprotection.pbmode.enabled"
@@ -106,7 +120,7 @@
              class="text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>
       <spacer flex="1" />
-      <button id="changeBlockList"
+      <button id="changeBlockListPBM"
               label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
               preference="pref.privacy.disable_button.change_blocklist"/>
     </hbox>

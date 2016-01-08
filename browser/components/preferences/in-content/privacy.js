@@ -30,7 +30,10 @@ var gPrivacyPane = {
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
 
+    this.trackingProtectionReadPrefs();
+
     document.getElementById("trackingprotectionbox").hidden = false;
+    document.getElementById("trackingprotectionpbmbox").hidden = true;
   },
 #endif
 
@@ -120,8 +123,52 @@ var gPrivacyPane = {
                      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
                      gPrivacyPane.showClearPrivateDataSettings);
+    setEventListener("trackingProtectionRadioGroup", "command",
+                     gPrivacyPane.trackingProtectionWritePrefs);
     setEventListener("changeBlockList", "command",
                      gPrivacyPane.showBlockLists);
+    setEventListener("changeBlockListPBM", "command",
+                     gPrivacyPane.showBlockLists);
+  },
+
+  // TRACKING PROTECTION MODE
+
+  /**
+   * Selects the right item of the Tracking Protection radiogroup.
+   */
+  trackingProtectionReadPrefs() {
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
+    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+
+    // Global enable takes precedence over enabled in Private Browsing.
+    radiogroup.value = enabledPref.value ? "always" :
+                       pbmPref.value ? "private" :
+                       "never";
+  },
+
+  /**
+   * Sets the pref values based on the selected item of the radiogroup.
+   */
+  trackingProtectionWritePrefs() {
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
+    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+
+    switch (radiogroup.value) {
+      case "always":
+        enabledPref.value = true;
+        pbmPref.value = true;
+        break;
+      case "private":
+        enabledPref.value = false;
+        pbmPref.value = true;
+        break;
+      case "never":
+        enabledPref.value = false;
+        pbmPref.value = false;
+        break;
+    }
   },
 
   // HISTORY MODE
