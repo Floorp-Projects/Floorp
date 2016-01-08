@@ -18,6 +18,19 @@ namespace layers {
 
 class TextureClientHolder;
 
+class ITextureClientRecycleAllocator
+{
+protected:
+  virtual ~ITextureClientRecycleAllocator() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ITextureClientRecycleAllocator)
+
+protected:
+  friend class TextureClient;
+  virtual void RecycleTextureClient(TextureClient* aClient) = 0;
+};
+
 class ITextureClientAllocationHelper
 {
 public:
@@ -52,14 +65,12 @@ public:
  * By default this uses TextureClient::CreateForDrawing to allocate new texture
  * clients.
  */
-class TextureClientRecycleAllocator
+class TextureClientRecycleAllocator : public ITextureClientRecycleAllocator
 {
 protected:
   virtual ~TextureClientRecycleAllocator();
 
 public:
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientRecycleAllocator)
-
   explicit TextureClientRecycleAllocator(CompositableForwarder* aAllocator);
 
   void SetMaxPoolSize(uint32_t aMax);
@@ -85,10 +96,8 @@ protected:
 
   RefPtr<CompositableForwarder> mSurfaceAllocator;
 
-private:
-  friend class TextureClient;
   friend class DefaultTextureClientAllocationHelper;
-  void RecycleTextureClient(TextureClient* aClient);
+  void RecycleTextureClient(TextureClient* aClient) override;
 
   static const uint32_t kMaxPooledSized = 2;
   uint32_t mMaxPooledSize;

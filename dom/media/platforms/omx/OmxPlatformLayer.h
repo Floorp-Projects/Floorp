@@ -16,6 +16,7 @@
 namespace mozilla {
 
 class TrackInfo;
+class VideoData;
 
 /*
  * This class the the abstract layer of the platform OpenMax IL implementation.
