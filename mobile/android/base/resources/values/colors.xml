@@ -98,7 +98,7 @@
   <color name="text_color_link">#22629E</color>
 
   <!-- Divider colors -->
-  <color name="divider_light">#FFD7D9DB</color>
+  <color name="toolbar_divider_grey">#D7D9DB</color>
 
   <color name="doorhanger_link">#FF2AA1FE</color>
 
