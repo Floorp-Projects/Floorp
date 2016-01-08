@@ -536,7 +536,7 @@ public:
     virtual gfxImageFormat OptimalFormatForContent(gfxContentType aContent);
 
     virtual gfxImageFormat GetOffscreenFormat()
-    { return gfxImageFormat::RGB24; }
+    { return mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32; }
 
     /**
      * Returns a logger if one is available and logging is enabled

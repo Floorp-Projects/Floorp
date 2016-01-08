@@ -354,7 +354,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
             targetSurfaceImage = new gfxImageSurface(sSharedSurfaceData.get(),
                                                      surfaceSize,
                                                      surfaceSize.width * 4,
-                                                     gfxImageFormat::RGB24);
+                                                     SurfaceFormat::X8R8G8B8_UINT32);
 
             if (targetSurfaceImage && !targetSurfaceImage->CairoStatus()) {
               targetSurfaceImage->SetDeviceOffset(gfxPoint(-ps.rcPaint.left, -ps.rcPaint.top));

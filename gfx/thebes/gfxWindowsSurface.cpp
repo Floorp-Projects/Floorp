@@ -6,6 +6,7 @@
 #include "gfxWindowsSurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
+#include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/Logging.h"
 
 #include "cairo.h"
@@ -59,7 +60,7 @@ gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize& realSize, gfxI
     if (!CheckSurfaceSize(size))
         MakeInvalid(size);
 
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(imageFormat);
+    cairo_format_t cformat = GfxFormatToCairoFormat(imageFormat);
     cairo_surface_t *surf =
         cairo_win32_surface_create_with_dib(cformat, size.width, size.height);
 
@@ -80,7 +81,7 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const mozilla::gfx::IntSize& realSi
     if (!CheckSurfaceSize(size))
         MakeInvalid(size);
 
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(imageFormat);
+    cairo_format_t cformat = GfxFormatToCairoFormat(imageFormat);
     cairo_surface_t *surf =
         cairo_win32_surface_create_with_ddb(dc, cformat,
                                             size.width, size.height);
@@ -89,7 +90,8 @@ gfxWindowsSurface::gfxWindowsSurface(HDC dc, const mozilla::gfx::IntSize& realSi
 
     if (mSurfaceValid) {
         // DDBs will generally only use 3 bytes per pixel when RGB24
-        int bytesPerPixel = ((imageFormat == gfxImageFormat::RGB24) ? 3 : 4);
+        int bytesPerPixel =
+            ((imageFormat == mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32) ? 3 : 4);
         RecordMemoryUsed(size.width * size.height * bytesPerPixel + sizeof(gfxWindowsSurface));
     }
 
@@ -143,7 +145,7 @@ gfxWindowsSurface::CreateSimilarSurface(gfxContentType aContent,
         // have a DIB.
         gfxImageFormat gformat =
             gfxPlatform::GetPlatform()->OptimalFormatForContent(aContent);
-        cairo_format_t cformat = gfxImageFormatToCairoFormat(gformat);
+        cairo_format_t cformat = GfxFormatToCairoFormat(gformat);
         surface = cairo_win32_surface_create_with_dib(cformat, aSize.width,
                                                       aSize.height);
     } else {

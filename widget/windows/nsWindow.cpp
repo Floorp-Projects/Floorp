@@ -6939,7 +6939,7 @@ void nsWindow::ResizeTranslucentWindow(int32_t aNewWidth, int32_t aNewHeight, bo
     return;
 
   RefPtr<gfxWindowsSurface> newSurface =
-    new gfxWindowsSurface(IntSize(aNewWidth, aNewHeight), gfxImageFormat::ARGB32);
+    new gfxWindowsSurface(IntSize(aNewWidth, aNewHeight), SurfaceFormat::A8R8G8B8_UINT32);
   mTransparentSurface = newSurface;
   mMemoryDC = newSurface->GetDC();
 }
