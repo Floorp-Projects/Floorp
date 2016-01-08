@@ -19,7 +19,7 @@
 #ifndef wasm_ion_compile_h
 #define wasm_ion_compile_h
 
-#include "asmjs/WasmIR.h"
+#include "asmjs/WasmBinary.h"
 #include "jit/MacroAssembler.h"
 
 namespace js {
@@ -63,7 +63,7 @@ class IonCompileTask
     JSRuntime* const runtime_;
     const CompileArgs args_;
     LifoAlloc lifo_;
-    const FuncIR* func_;
+    UniqueFuncBytecode func_;
     mozilla::Maybe<FuncCompileResults> results_;
 
     IonCompileTask(const IonCompileTask&) = delete;
@@ -85,19 +85,22 @@ class IonCompileTask
     CompileArgs args() const {
         return args_;
     }
-    void init(const FuncIR& func) {
-        func_ = &func;
+    void init(UniqueFuncBytecode func) {
+        MOZ_ASSERT(!func_);
+        func_ = mozilla::Move(func);
         results_.emplace(lifo_);
     }
-    const FuncIR& func() const {
+    const FuncBytecode& func() const {
         MOZ_ASSERT(func_);
         return *func_;
     }
     FuncCompileResults& results() {
         return *results_;
     }
-    void reset() {
-        func_ = nullptr;
+    void reset(UniqueBytecode* recycled) {
+        if (func_)
+            *recycled = func_->recycleBytecode();
+        func_.reset(nullptr);
         results_.reset();
         lifo_.releaseAll();
     }

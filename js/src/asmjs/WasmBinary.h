@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef wasm_ir_h
-#define wasm_ir_h
+#ifndef wasm_binary_h
+#define wasm_binary_h
 
 #include "asmjs/WasmTypes.h"
 
@@ -422,102 +422,49 @@ enum NeedsBoundsCheck : uint8_t
     NEEDS_BOUNDS_CHECK
 };
 
-// The FuncIR class contains the intermediate representation of a parsed/decoded
-// and validated asm.js/WebAssembly function. The FuncIR lives only until it
-// is fully compiled. Its contents are assumed to be well-formed; all validation
-// of untrusted content must happen before FuncIR generation. A FuncIR object is
-// associated with a LifoAlloc allocation which contains all the memory
-// referenced by the FuncIR.
-class FuncIR
+typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytecode;
+typedef UniquePtr<Bytecode, JS::DeletePolicy<Bytecode>> UniqueBytecode;
+
+// The Encoder class recycles (through its constructor) or creates a new Bytecode (through its
+// init() method). Its Bytecode is released when it's done building the wasm IR in finish().
+class Encoder
 {
-    typedef Vector<ValType, 4, LifoAllocPolicy<Fallible>> ValTypeVector;
+    UniqueBytecode bytecode_;
+    mozilla::DebugOnly<bool> done_;
 
-  public:
-    // Source coordinates for a call site. As they're read sequentially, we
-    // don't need to store the call's bytecode offset, unless we want to
-    // check its consistency in debug mode.
-    struct SourceCoords {
-        DebugOnly<uint32_t> offset; // after call opcode
-        uint32_t line;
-        uint32_t column;
-    };
-
-  private:
-    typedef Vector<uint8_t, 4096, LifoAllocPolicy<Fallible>> Bytecode;
-    typedef Vector<SourceCoords, 4, LifoAllocPolicy<Fallible>> SourceCoordsVector;
-
-    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
-    // asm.js compilation.
-    PropertyName* name_;
-    unsigned line_;
-    unsigned column_;
-    SourceCoordsVector callSourceCoords_;
-
-    uint32_t index_;
-    const LifoSig* sig_;
-    ValTypeVector localVars_;
-    Bytecode bytecode_;
-    unsigned generateTime_;
-
-  public:
-    FuncIR(LifoAlloc& alloc, PropertyName* name, unsigned line, unsigned column)
-      : name_(name),
-        line_(line),
-        column_(column),
-        callSourceCoords_(alloc),
-        index_(UINT_MAX),
-        sig_(nullptr),
-        localVars_(alloc),
-        bytecode_(alloc),
-        generateTime_(UINT_MAX)
-    {}
-
-    bool addVariable(ValType v) {
-        return localVars_.append(v);
-    }
-    bool addSourceCoords(uint32_t line, uint32_t column) {
-        SourceCoords sc = { bytecode_.length(), line, column };
-        return callSourceCoords_.append(sc);
-    }
-    void finish(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime) {
-        MOZ_ASSERT(index_ == UINT_MAX);
-        MOZ_ASSERT(!sig_);
-        MOZ_ASSERT(generateTime_ == UINT_MAX);
-        index_ = funcIndex;
-        sig_ = &sig;
-        generateTime_ = generateTime;
-    }
-
-  private:
     template<class T>
     MOZ_WARN_UNUSED_RESULT
     bool write(T v, size_t* offset) {
         if (offset)
-            *offset = bytecode_.length();
-        return bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
-    }
-
-    template<class T>
-    MOZ_WARN_UNUSED_RESULT
-    bool read(size_t* pc, T* out) const {
-        if (size_t(bytecode_.length() - *pc) >= sizeof(T))
-            return false;
-        memcpy((void*)out, &bytecode_[*pc], sizeof(T));
-        *pc += sizeof(T);
-        return true;
-    }
-
-    template<class T>
-    T uncheckedRead(size_t* pc) const {
-        MOZ_ASSERT(size_t(bytecode_.length() - *pc) >= sizeof(T));
-        T ret;
-        memcpy(&ret, &bytecode_[*pc], sizeof(T));
-        *pc += sizeof(T);
-        return ret;
+            *offset = bytecode_->length();
+        return bytecode_->append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
     }
 
   public:
-    // Packing interface
+    Encoder()
+      : bytecode_(nullptr),
+        done_(false)
+    {}
+
+    bool init(UniqueBytecode bytecode) {
+        if (bytecode) {
+            bytecode_ = mozilla::Move(bytecode);
+            bytecode_->clear();
+            return true;
+        }
+        bytecode_.reset(js_new<Bytecode>());
+        return !!bytecode_;
+    }
+
+    size_t bytecodeOffset() const { return bytecode_->length(); }
+    bool empty() const { return bytecodeOffset() == 0; }
+
+    UniqueBytecode finish() {
+        MOZ_ASSERT(!done_);
+        done_ = true;
+        return mozilla::Move(bytecode_);
+    }
+
     MOZ_WARN_UNUSED_RESULT bool
     writeU8(uint8_t i, size_t* offset = nullptr)   { return write<uint8_t>(i, offset); }
     MOZ_WARN_UNUSED_RESULT bool
@@ -554,14 +501,14 @@ class FuncIR
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Stmt(bytecode_[pc]) == Stmt::Bad;
+            patchable &= Stmt((*bytecode_)[pc]) == Stmt::Bad;
         return patchable;
     }
 #endif
 
     void patchU8(size_t pc, uint8_t i) {
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint8_t)));
-        bytecode_[pc] = i;
+        (*bytecode_)[pc] = i;
     }
 
     template<class T>
@@ -569,44 +516,72 @@ class FuncIR
         static_assert(sizeof(T) == sizeof(uint32_t),
                       "patch32 must be used with 32-bits wide types");
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
-        memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
+        memcpy(&(*bytecode_)[pc], &i, sizeof(uint32_t));
     }
 
     void patchSig(size_t pc, const LifoSig* ptr) {
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(LifoSig*)));
-        memcpy(&bytecode_[pc], &ptr, sizeof(LifoSig*));
+        memcpy(&(*bytecode_)[pc], &ptr, sizeof(LifoSig*));
+    }
+};
+
+class Decoder
+{
+    const Bytecode& bytecode_;
+    size_t cur_;
+
+    template<class T>
+    MOZ_WARN_UNUSED_RESULT
+    bool read(T* out) {
+        if (uintptr_t(bytecode_.length() - cur_) < sizeof(T))
+            return false;
+        memcpy((void*)out, &bytecode_[cur_], sizeof(T));
+        cur_ += sizeof(T);
+        return true;
+    }
+
+    template<class T>
+    T uncheckedRead() {
+        MOZ_ASSERT(uintptr_t(bytecode_.length() - cur_) >= sizeof(T));
+        T ret;
+        memcpy(&ret, &bytecode_[cur_], sizeof(T));
+        cur_ += sizeof(T);
+        return ret;
+    }
+
+  public:
+    explicit Decoder(const Bytecode& bytecode)
+      : bytecode_(bytecode),
+        cur_(0)
+    {}
+
+    bool done() const { return cur_ == bytecode_.length(); }
+    void assertCurrentIs(const DebugOnly<size_t> offset) const {
+        MOZ_ASSERT(offset == cur_);
     }
 
     // The fallible unpacking API should be used when we're not assuming
     // anything about the bytecode, in particular if it is well-formed.
-    MOZ_WARN_UNUSED_RESULT bool
-    readU8 (size_t* pc, uint8_t* i)         const { return read(pc, i); }
-    MOZ_WARN_UNUSED_RESULT bool
-    readI32(size_t* pc, int32_t* i)         const { return read(pc, i); }
-    MOZ_WARN_UNUSED_RESULT bool
-    readF32(size_t* pc, float* f)           const { return read(pc, f); }
-    MOZ_WARN_UNUSED_RESULT bool
-    readU32(size_t* pc, uint32_t* u)        const { return read(pc, u); }
-    MOZ_WARN_UNUSED_RESULT bool
-    readF64(size_t* pc, double* d)          const { return read(pc, d); }
-    MOZ_WARN_UNUSED_RESULT bool
-    readSig(size_t* pc, const LifoSig* sig) const { return read(pc, sig); }
+    MOZ_WARN_UNUSED_RESULT bool readU8 (uint8_t* i)         { return read(i); }
+    MOZ_WARN_UNUSED_RESULT bool readI32(int32_t* i)         { return read(i); }
+    MOZ_WARN_UNUSED_RESULT bool readF32(float* f)           { return read(f); }
+    MOZ_WARN_UNUSED_RESULT bool readU32(uint32_t* u)        { return read(u); }
+    MOZ_WARN_UNUSED_RESULT bool readF64(double* d)          { return read(d); }
+    MOZ_WARN_UNUSED_RESULT bool readSig(const LifoSig* sig) { return read(sig); }
 
-    MOZ_WARN_UNUSED_RESULT bool
-    readI32X4(size_t* pc, jit::SimdConstant* c) const {
+    MOZ_WARN_UNUSED_RESULT bool readI32X4(jit::SimdConstant* c) {
         int32_t v[4] = { 0, 0, 0, 0 };
         for (size_t i = 0; i < 4; i++) {
-            if (!readI32(pc, &v[i]))
+            if (!readI32(&v[i]))
                 return false;
         }
         *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
         return true;
     }
-    MOZ_WARN_UNUSED_RESULT bool
-    readF32X4(size_t* pc, jit::SimdConstant* c) const {
+    MOZ_WARN_UNUSED_RESULT bool readF32X4(jit::SimdConstant* c) {
         float v[4] = { 0., 0., 0., 0. };
         for (size_t i = 0; i < 4; i++) {
-            if (!readF32(pc, &v[i]))
+            if (!readF32(&v[i]))
                 return false;
         }
         *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
@@ -615,45 +590,100 @@ class FuncIR
 
     // The unfallible unpacking API should be used when we are sure that the
     // bytecode is well-formed.
-    uint8_t        uncheckedReadU8 (size_t* pc) const { return uncheckedRead<uint8_t>(pc); }
-    int32_t        uncheckedReadI32(size_t* pc) const { return uncheckedRead<int32_t>(pc); }
-    float          uncheckedReadF32(size_t* pc) const { return uncheckedRead<float>(pc); }
-    uint32_t       uncheckedReadU32(size_t* pc) const { return uncheckedRead<uint32_t>(pc); }
-    double         uncheckedReadF64(size_t* pc) const { return uncheckedRead<double>(pc); }
-    const LifoSig* uncheckedReadSig(size_t* pc) const { return uncheckedRead<const LifoSig*>(pc); }
+    uint8_t        uncheckedReadU8 () { return uncheckedRead<uint8_t>(); }
+    int32_t        uncheckedReadI32() { return uncheckedRead<int32_t>(); }
+    float          uncheckedReadF32() { return uncheckedRead<float>(); }
+    uint32_t       uncheckedReadU32() { return uncheckedRead<uint32_t>(); }
+    double         uncheckedReadF64() { return uncheckedRead<double>(); }
+    const LifoSig* uncheckedReadSig() { return uncheckedRead<const LifoSig*>(); }
 
-    jit::SimdConstant uncheckedReadI32X4(size_t* pc) const {
+    jit::SimdConstant uncheckedReadI32X4() {
         int32_t v[4] = { 0, 0, 0, 0 };
         for (size_t i = 0; i < 4; i++)
-            v[i] = uncheckedReadI32(pc);
+            v[i] = uncheckedReadI32();
         return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
     }
-    jit::SimdConstant uncheckedReadF32X4(size_t* pc) const {
+    jit::SimdConstant uncheckedReadF32X4() {
         float v[4] = { 0., 0., 0., 0. };
         for (size_t i = 0; i < 4; i++)
-            v[i] = uncheckedReadF32(pc);
+            v[i] = uncheckedReadF32();
         return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
     }
+};
 
-    // Read-only interface
+// Source coordinates for a call site. As they're read sequentially, we
+// don't need to store the call's bytecode offset, unless we want to
+// check its correctness in debug mode.
+struct SourceCoords {
+    DebugOnly<size_t> offset; // after call opcode
+    uint32_t line;
+    uint32_t column;
+};
+
+typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
+typedef Vector<ValType, 0, SystemAllocPolicy> ValTypeVector;
+
+// The FuncBytecode class contains the intermediate representation of a
+// parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
+// lives only until it is fully compiled.
+class FuncBytecode
+{
+    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
+    // asm.js compilation.
+    PropertyName* name_;
+    unsigned line_;
+    unsigned column_;
+
+    SourceCoordsVector callSourceCoords_;
+
+    uint32_t index_;
+    const LifoSig& sig_;
+    UniqueBytecode bytecode_;
+    ValTypeVector localVars_;
+    unsigned generateTime_;
+
+  public:
+    FuncBytecode(PropertyName* name,
+                 unsigned line,
+                 unsigned column,
+                 SourceCoordsVector&& sourceCoords,
+                 uint32_t index,
+                 const LifoSig& sig,
+                 UniqueBytecode bytecode,
+                 ValTypeVector&& localVars,
+                 unsigned generateTime)
+      : name_(name),
+        line_(line),
+        column_(column),
+        callSourceCoords_(mozilla::Move(sourceCoords)),
+        index_(index),
+        sig_(sig),
+        bytecode_(mozilla::Move(bytecode)),
+        localVars_(mozilla::Move(localVars)),
+        generateTime_(generateTime)
+    {}
+
+    UniqueBytecode recycleBytecode() { return mozilla::Move(bytecode_); }
+
     PropertyName* name() const { return name_; }
     unsigned line() const { return line_; }
     unsigned column() const { return column_; }
     const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
 
-    uint32_t index() const { MOZ_ASSERT(index_ != UINT32_MAX); return index_; }
-    const LifoSig& sig() const { MOZ_ASSERT(sig_); return *sig_; }
+    uint32_t index() const { return index_; }
+    const LifoSig& sig() const { return sig_; }
+    const Bytecode& bytecode() const { return *bytecode_; }
 
     size_t numLocalVars() const { return localVars_.length(); }
     ValType localVarType(size_t i) const { return localVars_[i]; }
-    size_t numLocals() const { return sig_->args().length() + numLocalVars(); }
+    size_t numLocals() const { return sig_.args().length() + numLocalVars(); }
 
-    unsigned generateTime() const { MOZ_ASSERT(generateTime_ != UINT_MAX); return generateTime_; }
-
-    size_t size() const { return bytecode_.length(); }
+    unsigned generateTime() const { return generateTime_; }
 };
+
+typedef mozilla::UniquePtr<FuncBytecode, JS::DeletePolicy<FuncBytecode>> UniqueFuncBytecode;
 
 } // namespace wasm
 } // namespace js
 
-#endif // wasm_ir_h
+#endif // wasm_binary_h

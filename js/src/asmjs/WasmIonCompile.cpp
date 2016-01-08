@@ -39,8 +39,9 @@ class FunctionCompiler
     typedef HashMap<size_t, BlockVector, DefaultHasher<uint32_t>, SystemAllocPolicy> UnlabeledBlockMap;
     typedef Vector<size_t, 4, SystemAllocPolicy> PositionStack;
 
-    const FuncIR&       func_;
-    size_t              pc_;
+    const FuncBytecode& func_;
+    Decoder             decoder_;
+    size_t              nextId_;
     size_t              lastReadCallSite_;
 
     TempAllocator&      alloc_;
@@ -60,9 +61,10 @@ class FunctionCompiler
     FuncCompileResults& compileResults_;
 
   public:
-    FunctionCompiler(const FuncIR& func, MIRGenerator& mirGen, FuncCompileResults& compileResults)
+    FunctionCompiler(const FuncBytecode& func, MIRGenerator& mirGen, FuncCompileResults& compileResults)
       : func_(func),
-        pc_(0),
+        decoder_(func.bytecode()),
+        nextId_(0),
         lastReadCallSite_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
@@ -91,6 +93,8 @@ class FunctionCompiler
         const LifoSig::ArgVector& args = func_.sig().args();
         unsigned firstVarSlot = args.length();
 
+        if (!mirGen_.ensureBallast())
+            return false;
         if (!newBlock(/* pred = */ nullptr, &curBlock_))
             return false;
 
@@ -145,7 +149,7 @@ class FunctionCompiler
         MOZ_ASSERT(labeledBreaks_.empty());
         MOZ_ASSERT(labeledContinues_.empty());
         MOZ_ASSERT(inDeadCode());
-        MOZ_ASSERT(pc_ == func_.size(), "all bytecode must be consumed");
+        MOZ_ASSERT(decoder_.done(), "all bytecode must be consumed");
     }
 
     /************************* Read-only interface (after local scope setup) */
@@ -889,9 +893,9 @@ class FunctionCompiler
         return curBlock_->pop();
     }
 
-    bool startPendingLoop(size_t pos, MBasicBlock** loopEntry)
+    bool startPendingLoop(size_t id, MBasicBlock** loopEntry)
     {
-        if (!loopStack_.append(pos) || !breakableStack_.append(pos))
+        if (!loopStack_.append(id) || !breakableStack_.append(id))
             return false;
         if (inDeadCode()) {
             *loopEntry = nullptr;
@@ -934,10 +938,10 @@ class FunctionCompiler
   private:
     size_t popLoop()
     {
-        size_t pos = loopStack_.popCopy();
-        MOZ_ASSERT(!unlabeledContinues_.has(pos));
+        size_t id = loopStack_.popCopy();
+        MOZ_ASSERT(!unlabeledContinues_.has(id));
         breakableStack_.popBack();
-        return pos;
+        return id;
     }
 
     void fixupRedundantPhis(MBasicBlock* b)
@@ -998,11 +1002,11 @@ class FunctionCompiler
   public:
     bool closeLoop(MBasicBlock* loopEntry, MBasicBlock* afterLoop)
     {
-        size_t pos = popLoop();
+        size_t id = popLoop();
         if (!loopEntry) {
             MOZ_ASSERT(!afterLoop);
             MOZ_ASSERT(inDeadCode());
-            MOZ_ASSERT(!unlabeledBreaks_.has(pos));
+            MOZ_ASSERT(!unlabeledBreaks_.has(id));
             return true;
         }
         MOZ_ASSERT(loopEntry->loopDepth() == loopStack_.length() + 1);
@@ -1016,15 +1020,15 @@ class FunctionCompiler
         curBlock_ = afterLoop;
         if (curBlock_)
             mirGraph().moveBlockToEnd(curBlock_);
-        return bindUnlabeledBreaks(pos);
+        return bindUnlabeledBreaks(id);
     }
 
     bool branchAndCloseDoWhileLoop(MDefinition* cond, MBasicBlock* loopEntry)
     {
-        size_t pos = popLoop();
+        size_t id = popLoop();
         if (!loopEntry) {
             MOZ_ASSERT(inDeadCode());
-            MOZ_ASSERT(!unlabeledBreaks_.has(pos));
+            MOZ_ASSERT(!unlabeledBreaks_.has(id));
             return true;
         }
         MOZ_ASSERT(loopEntry->loopDepth() == loopStack_.length() + 1);
@@ -1053,13 +1057,13 @@ class FunctionCompiler
                 curBlock_ = afterLoop;
             }
         }
-        return bindUnlabeledBreaks(pos);
+        return bindUnlabeledBreaks(id);
     }
 
-    bool bindContinues(size_t pos, const LabelVector* maybeLabels)
+    bool bindContinues(size_t id, const LabelVector* maybeLabels)
     {
         bool createdJoinBlock = false;
-        if (UnlabeledBlockMap::Ptr p = unlabeledContinues_.lookup(pos)) {
+        if (UnlabeledBlockMap::Ptr p = unlabeledContinues_.lookup(id)) {
             if (!bindBreaksOrContinues(&p->value(), &createdJoinBlock))
                 return false;
             unlabeledContinues_.remove(p);
@@ -1085,10 +1089,10 @@ class FunctionCompiler
         return addBreakOrContinue(loopStack_.back(), &unlabeledContinues_);
     }
 
-    bool startSwitch(size_t pos, MDefinition* expr, int32_t low, int32_t high,
+    bool startSwitch(size_t id, MDefinition* expr, int32_t low, int32_t high,
                      MBasicBlock** switchBlock)
     {
-        if (!breakableStack_.append(pos))
+        if (!breakableStack_.append(id))
             return false;
         if (inDeadCode()) {
             *switchBlock = nullptr;
@@ -1129,7 +1133,7 @@ class FunctionCompiler
 
     bool joinSwitch(MBasicBlock* switchBlock, const BlockVector& cases, MBasicBlock* defaultBlock)
     {
-        size_t pos = breakableStack_.popCopy();
+        size_t id = breakableStack_.popCopy();
         if (!switchBlock)
             return true;
         MTableSwitch* mir = switchBlock->lastIns()->toTableSwitch();
@@ -1155,25 +1159,29 @@ class FunctionCompiler
             curBlock_->end(MGoto::New(alloc(), next));
             curBlock_ = next;
         }
-        return bindUnlabeledBreaks(pos);
+        return bindUnlabeledBreaks(id);
     }
+
+    // Provides unique identifiers for internal uses in the control flow stacks;
+    // these ids have to grow monotonically.
+    unsigned nextId() { return nextId_++; }
 
     /************************************************************ DECODING ***/
 
-    uint8_t        readU8()     { return func_.uncheckedReadU8(&pc_); }
-    uint32_t       readU32()    { return func_.uncheckedReadU32(&pc_); }
-    int32_t        readI32()    { return func_.uncheckedReadI32(&pc_); }
-    float          readF32()    { return func_.uncheckedReadF32(&pc_); }
-    double         readF64()    { return func_.uncheckedReadF64(&pc_); }
-    const LifoSig* readSig()    { return func_.uncheckedReadSig(&pc_); }
-    SimdConstant   readI32X4()  { return func_.uncheckedReadI32X4(&pc_); }
-    SimdConstant   readF32X4()  { return func_.uncheckedReadF32X4(&pc_); }
+    uint8_t        readU8()     { return decoder_.uncheckedReadU8(); }
+    uint32_t       readU32()    { return decoder_.uncheckedReadU32(); }
+    int32_t        readI32()    { return decoder_.uncheckedReadI32(); }
+    float          readF32()    { return decoder_.uncheckedReadF32(); }
+    double         readF64()    { return decoder_.uncheckedReadF64(); }
+    const LifoSig* readSig()    { return decoder_.uncheckedReadSig(); }
+    SimdConstant   readI32X4()  { return decoder_.uncheckedReadI32X4(); }
+    SimdConstant   readF32X4()  { return decoder_.uncheckedReadF32X4(); }
 
     Stmt           readStmtOp() { return Stmt(readU8()); }
 
     void readCallLineCol(uint32_t* line, uint32_t* column) {
-        const FuncIR::SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
-        MOZ_ASSERT(pc_ == sc.offset);
+        const SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
+        decoder_.assertCurrentIs(sc.offset);
         *line = sc.line;
         *column = sc.column;
     }
@@ -1182,8 +1190,7 @@ class FunctionCompiler
         MOZ_ASSERT(Stmt(readU8()) == Stmt::DebugCheckPoint);
     }
 
-    bool done() const { return pc_ == func_.size(); }
-    size_t pc() const { return pc_; }
+    bool done() const { return decoder_.done(); }
 
     /*************************************************************************/
   private:
@@ -1266,10 +1273,10 @@ class FunctionCompiler
         return true;
     }
 
-    bool bindUnlabeledBreaks(size_t pos)
+    bool bindUnlabeledBreaks(size_t id)
     {
         bool createdJoinBlock = false;
-        if (UnlabeledBlockMap::Ptr p = unlabeledBreaks_.lookup(pos)) {
+        if (UnlabeledBlockMap::Ptr p = unlabeledBreaks_.lookup(id)) {
             if (!bindBreaksOrContinues(&p->value(), &createdJoinBlock))
                 return false;
             unlabeledBreaks_.remove(p);
@@ -2287,10 +2294,10 @@ EmitInterruptCheckLoop(FunctionCompiler& f)
 static bool
 EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
 {
-    size_t headPc = f.pc();
+    size_t headId = f.nextId();
 
     MBasicBlock* loopEntry;
-    if (!f.startPendingLoop(headPc, &loopEntry))
+    if (!f.startPendingLoop(headId, &loopEntry))
         return false;
 
     MDefinition* condDef;
@@ -2304,7 +2311,7 @@ EmitWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
     if (!EmitStatement(f))
         return false;
 
-    if (!f.bindContinues(headPc, maybeLabels))
+    if (!f.bindContinues(headId, maybeLabels))
         return false;
 
     return f.closeLoop(loopEntry, afterLoop);
@@ -2315,7 +2322,7 @@ EmitFor(FunctionCompiler& f, Stmt stmt, const LabelVector* maybeLabels)
 {
     MOZ_ASSERT(stmt == Stmt::ForInitInc || stmt == Stmt::ForInitNoInc ||
                stmt == Stmt::ForNoInitInc || stmt == Stmt::ForNoInitNoInc);
-    size_t headPc = f.pc();
+    size_t headId = f.nextId();
 
     if (stmt == Stmt::ForInitInc || stmt == Stmt::ForInitNoInc) {
         if (!EmitStatement(f))
@@ -2323,7 +2330,7 @@ EmitFor(FunctionCompiler& f, Stmt stmt, const LabelVector* maybeLabels)
     }
 
     MBasicBlock* loopEntry;
-    if (!f.startPendingLoop(headPc, &loopEntry))
+    if (!f.startPendingLoop(headId, &loopEntry))
         return false;
 
     MDefinition* condDef;
@@ -2337,7 +2344,7 @@ EmitFor(FunctionCompiler& f, Stmt stmt, const LabelVector* maybeLabels)
     if (!EmitStatement(f))
         return false;
 
-    if (!f.bindContinues(headPc, maybeLabels))
+    if (!f.bindContinues(headId, maybeLabels))
         return false;
 
     if (stmt == Stmt::ForInitInc || stmt == Stmt::ForNoInitInc) {
@@ -2353,16 +2360,16 @@ EmitFor(FunctionCompiler& f, Stmt stmt, const LabelVector* maybeLabels)
 static bool
 EmitDoWhile(FunctionCompiler& f, const LabelVector* maybeLabels)
 {
-    size_t headPc = f.pc();
+    size_t headId = f.nextId();
 
     MBasicBlock* loopEntry;
-    if (!f.startPendingLoop(headPc, &loopEntry))
+    if (!f.startPendingLoop(headId, &loopEntry))
         return false;
 
     if (!EmitStatement(f))
         return false;
 
-    if (!f.bindContinues(headPc, maybeLabels))
+    if (!f.bindContinues(headId, maybeLabels))
         return false;
 
     MDefinition* condDef;
@@ -2465,7 +2472,7 @@ EmitSwitch(FunctionCompiler& f)
         return false;
 
     MBasicBlock* switchBlock;
-    if (!f.startSwitch(f.pc(), exprDef, low, high, &switchBlock))
+    if (!f.startSwitch(f.nextId(), exprDef, low, high, &switchBlock))
         return false;
 
     while (numCases--) {
@@ -3040,7 +3047,7 @@ wasm::IonCompileFunction(IonCompileTask* task)
 {
     int64_t before = PRMJ_Now();
 
-    const FuncIR& func = task->func();
+    const FuncBytecode& func = task->func();
     FuncCompileResults& results = task->results();
 
     JitContext jitContext(CompileRuntime::get(task->runtime()), &results.alloc());
