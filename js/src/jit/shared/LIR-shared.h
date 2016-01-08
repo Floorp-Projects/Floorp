@@ -3940,15 +3940,18 @@ class LRegExp : public LCallInstructionHelper<1, 0, 0>
     }
 };
 
-class LRegExpExec : public LCallInstructionHelper<BOX_PIECES, 2, 0>
+class LRegExpMatcher : public LCallInstructionHelper<BOX_PIECES, 4, 0>
 {
   public:
-    LIR_HEADER(RegExpExec)
+    LIR_HEADER(RegExpMatcher)
 
-    LRegExpExec(const LAllocation& regexp, const LAllocation& string)
+    LRegExpMatcher(const LAllocation& regexp, const LAllocation& string,
+                   const LAllocation& lastIndex, const LAllocation& sticky)
     {
         setOperand(0, regexp);
         setOperand(1, string);
+        setOperand(2, lastIndex);
+        setOperand(3, sticky);
     }
 
     const LAllocation* regexp() {
@@ -3957,21 +3960,30 @@ class LRegExpExec : public LCallInstructionHelper<BOX_PIECES, 2, 0>
     const LAllocation* string() {
         return getOperand(1);
     }
+    const LAllocation* lastIndex() {
+        return getOperand(2);
+    }
+    const LAllocation* sticky() {
+        return getOperand(3);
+    }
 
-    const MRegExpExec* mir() const {
-        return mir_->toRegExpExec();
+    const MRegExpMatcher* mir() const {
+        return mir_->toRegExpMatcher();
     }
 };
 
-class LRegExpTest : public LCallInstructionHelper<1, 2, 0>
+class LRegExpTester : public LCallInstructionHelper<1, 4, 0>
 {
   public:
-    LIR_HEADER(RegExpTest)
+    LIR_HEADER(RegExpTester)
 
-    LRegExpTest(const LAllocation& regexp, const LAllocation& string)
+    LRegExpTester(const LAllocation& regexp, const LAllocation& string,
+                  const LAllocation& lastIndex, const LAllocation& sticky)
     {
         setOperand(0, regexp);
         setOperand(1, string);
+        setOperand(2, lastIndex);
+        setOperand(3, sticky);
     }
 
     const LAllocation* regexp() {
@@ -3980,9 +3992,15 @@ class LRegExpTest : public LCallInstructionHelper<1, 2, 0>
     const LAllocation* string() {
         return getOperand(1);
     }
+    const LAllocation* lastIndex() {
+        return getOperand(2);
+    }
+    const LAllocation* sticky() {
+        return getOperand(3);
+    }
 
-    const MRegExpTest* mir() const {
-        return mir_->toRegExpTest();
+    const MRegExpTester* mir() const {
+        return mir_->toRegExpTester();
     }
 };
 

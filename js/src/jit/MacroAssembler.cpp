@@ -1242,8 +1242,7 @@ MacroAssembler::loadStringChar(Register str, Register index, Register output)
     loadStringChars(str, output);
 
     Label isLatin1, done;
-    branchTest32(Assembler::NonZero, Address(str, JSString::offsetOfFlags()),
-                 Imm32(JSString::LATIN1_CHARS_BIT), &isLatin1);
+    branchLatin1String(str, &isLatin1);
     load16ZeroExtend(BaseIndex(output, index, TimesTwo), output);
     jump(&done);
 

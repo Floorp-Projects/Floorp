@@ -2,7 +2,9 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
- * Check that setting a breakpoint in a line without code will skip forward.
+ * Check that setting a breakpoint on a line without code will skip
+ * forward when we know the script isn't GCed (the debugger is connected,
+ * so it's kept alive).
  */
 
 var gDebuggee;
@@ -65,14 +67,18 @@ function test_skip_breakpoint()
         });
       });
 
-      // Continue until the breakpoint is hit.
       gThreadClient.resume();
     });
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "debugger;\n" +      // line0 + 1
-                 "var a = 1;\n" +     // line0 + 2
-                 "// A comment.\n" +  // line0 + 3
-                 "var b = 2;");     // line0 + 4
+  // Use `evalInSandbox` to make the debugger treat it as normal
+  // globally-scoped code, where breakpoint sliding rules apply.
+  Cu.evalInSandbox(
+    "var line0 = Error().lineNumber;\n" +
+    "debugger;\n" +      // line0 + 1
+    "var a = 1;\n" +     // line0 + 2
+    "// A comment.\n" +  // line0 + 3
+    "var b = 2;",        // line0 + 4
+    gDebuggee
+  );
 }

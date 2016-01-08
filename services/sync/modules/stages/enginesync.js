@@ -142,8 +142,7 @@ EngineSynchronizer.prototype = {
     try {
       this._updateEnabledEngines();
     } catch (ex) {
-      this._log.debug("Updating enabled engines failed: " +
-                      Utils.exceptionStr(ex));
+      this._log.debug("Updating enabled engines failed", ex);
       this.service.errorHandler.checkServerError(ex, "meta/global");
       this.onComplete(ex);
       return;

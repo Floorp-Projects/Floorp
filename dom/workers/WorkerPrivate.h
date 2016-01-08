@@ -62,6 +62,7 @@ class PrincipalInfo;
 struct PRThread;
 
 class ReportDebuggerErrorRunnable;
+class PostDebuggerMessageRunnable;
 
 BEGIN_WORKERS_NAMESPACE
 
@@ -803,35 +804,23 @@ public:
 
 class WorkerDebugger : public nsIWorkerDebugger {
   friend class ::ReportDebuggerErrorRunnable;
+  friend class ::PostDebuggerMessageRunnable;
 
-  mozilla::Mutex mMutex;
-  mozilla::CondVar mCondVar;
-
-  // Protected by mMutex
   WorkerPrivate* mWorkerPrivate;
-  bool mIsEnabled;
-
-  // Only touched on the main thread.
   bool mIsInitialized;
   nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> mListeners;
 
 public:
   explicit WorkerDebugger(WorkerPrivate* aWorkerPrivate);
 
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIWORKERDEBUGGER
 
   void
   AssertIsOnParentThread();
 
   void
-  WaitIsEnabled(bool aIsEnabled);
-
-  void
-  Enable();
-
-  void
-  Disable();
+  Close();
 
   void
   PostMessageToDebugger(const nsAString& aMessage);
@@ -843,9 +832,6 @@ public:
 private:
   virtual
   ~WorkerDebugger();
-
-  void
-  NotifyIsEnabled(bool aIsEnabled);
 
   void
   PostMessageToDebuggerOnMainThread(const nsAString& aMessage);
@@ -876,7 +862,8 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
     NoTimer
   };
 
-  RefPtr<WorkerDebugger> mDebugger;
+  bool mDebuggerRegistered;
+  WorkerDebugger* mDebugger;
 
   Queue<WorkerControlRunnable*, 4> mControlQueue;
   Queue<WorkerRunnable*, 4> mDebuggerQueue;
@@ -981,12 +968,58 @@ public:
   static void
   OverrideLoadInfoLoadGroup(WorkerLoadInfo& aLoadInfo);
 
+  bool
+  IsDebuggerRegistered()
+  {
+    AssertIsOnMainThread();
+
+    // No need to lock here since this is only ever modified by the same thread.
+    return mDebuggerRegistered;
+  }
+
+  void
+  SetIsDebuggerRegistered(bool aDebuggerRegistered)
+  {
+    AssertIsOnMainThread();
+
+    MutexAutoLock lock(mMutex);
+
+    MOZ_ASSERT(mDebuggerRegistered != aDebuggerRegistered);
+    mDebuggerRegistered = aDebuggerRegistered;
+
+    mCondVar.Notify();
+  }
+
+  void
+  WaitForIsDebuggerRegistered(bool aDebuggerRegistered)
+  {
+    AssertIsOnParentThread();
+
+    MOZ_ASSERT(!NS_IsMainThread());
+
+    MutexAutoLock lock(mMutex);
+
+    while (mDebuggerRegistered != aDebuggerRegistered) {
+      mCondVar.Wait();
+    }
+  }
+
   WorkerDebugger*
   Debugger() const
   {
     AssertIsOnMainThread();
+
     MOZ_ASSERT(mDebugger);
     return mDebugger;
+  }
+
+  void
+  SetDebugger(WorkerDebugger* aDebugger)
+  {
+    AssertIsOnMainThread();
+
+    MOZ_ASSERT(mDebugger != aDebugger);
+    mDebugger = aDebugger;
   }
 
   void

@@ -996,23 +996,26 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
     return true;
 }
 
-bool MRegExpExec::writeRecoverData(CompactBufferWriter& writer) const
+bool MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpExec));
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpMatcher));
     return true;
 }
 
-RRegExpExec::RRegExpExec(CompactBufferReader& reader)
+RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader)
 {}
 
-bool RRegExpExec::recover(JSContext* cx, SnapshotIterator& iter) const{
+bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const{
     RootedObject regexp(cx, &iter.read().toObject());
     RootedString input(cx, iter.read().toString());
+    int32_t lastIndex = iter.read().toInt32();
+    bool sticky = iter.read().toBoolean();
 
     RootedValue result(cx);
 
-    if (!regexp_exec_raw(cx, regexp, input, nullptr, &result))
+    fprintf(stderr, "Recover\n");
+    if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, sticky, nullptr, &result))
         return false;
 
     iter.storeInstructionResult(result);
@@ -1020,28 +1023,30 @@ bool RRegExpExec::recover(JSContext* cx, SnapshotIterator& iter) const{
 }
 
 bool
-MRegExpTest::writeRecoverData(CompactBufferWriter& writer) const
+MRegExpTester::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
-    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpTest));
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpTester));
     return true;
 }
 
-RRegExpTest::RRegExpTest(CompactBufferReader& reader)
+RRegExpTester::RRegExpTester(CompactBufferReader& reader)
 { }
 
 bool
-RRegExpTest::recover(JSContext* cx, SnapshotIterator& iter) const
+RRegExpTester::recover(JSContext* cx, SnapshotIterator& iter) const
 {
     RootedString string(cx, iter.read().toString());
     RootedObject regexp(cx, &iter.read().toObject());
-    bool resultBool;
+    int32_t lastIndex = iter.read().toInt32();
+    bool sticky = iter.read().toBoolean();
+    int32_t endIndex;
 
-    if (!js::regexp_test_raw(cx, regexp, string, &resultBool))
+    if (!js::RegExpTesterRaw(cx, regexp, string, lastIndex, sticky, &endIndex))
         return false;
 
     RootedValue result(cx);
-    result.setBoolean(resultBool);
+    result.setInt32(endIndex);
     iter.storeInstructionResult(result);
     return true;
 }
