@@ -346,15 +346,11 @@ BytecodeCompiler::prepareAndEmitTree(ParseNode** ppn)
 {
     if (!FoldConstants(cx, ppn, parser.ptr()) ||
         !NameFunctions(cx, *ppn) ||
-        !emitter->updateLocalsToFrameSlots())
+        !emitter->updateLocalsToFrameSlots() ||
+        !emitter->emitTree(*ppn))
     {
         return false;
     }
-
-    emitter->setFunctionBodyEndPos((*ppn)->pn_pos);
-
-    if (!emitter->emitTree(*ppn))
-        return false;
 
     return true;
 }
@@ -832,7 +828,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     MOZ_ASSERT(!options.forEval);
     BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->pn_funbox, script, lazy,
                         /* insideEval = */ false, /* evalCaller = */ nullptr,
-                        /* insideNonGlobalEval = */ false, pn->pn_pos,
+                        /* insideNonGlobalEval = */ false, options.lineno,
                         BytecodeEmitter::LazyFunction);
     if (!bce.init())
         return false;
