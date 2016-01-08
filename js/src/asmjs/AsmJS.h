@@ -19,11 +19,10 @@
 #ifndef asmjs_asmjs_h
 #define asmjs_asmjs_h
 
-#include "vm/NativeObject.h"
+#include "NamespaceImports.h"
 
 namespace js {
 
-class AsmJSModule;
 class ExclusiveContext;
 namespace frontend {
     template <typename ParseHandler> class Parser;
@@ -33,29 +32,6 @@ namespace frontend {
 }
 typedef frontend::Parser<frontend::FullParseHandler> AsmJSParser;
 typedef frontend::ParseContext<frontend::FullParseHandler> AsmJSParseContext;
-
-// An AsmJSModuleObject is an internal implementation object (i.e., not exposed
-// directly to user script) which traces and owns an AsmJSModule. The
-// AsmJSModuleObject is referenced by the extended slots of the content-visible
-// module and export JSFunctions.
-
-class AsmJSModuleObject : public NativeObject
-{
-    static const unsigned MODULE_SLOT = 0;
-
-  public:
-    static const unsigned RESERVED_SLOTS = 1;
-
-    bool hasModule() const;
-    void setModule(AsmJSModule* module);
-    AsmJSModule& module() const;
-
-    void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
-
-    static const Class class_;
-};
-
-typedef Handle<AsmJSModuleObject*> HandleAsmJSModule;
 
 // This function takes over parsing of a function starting with "use asm". The
 // return value indicates whether an error was reported which the caller should
