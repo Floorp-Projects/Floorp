@@ -166,9 +166,15 @@ public:
   static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
 
   /**
-   * Get display port for the given element.
+   * Get display port for the given element. The displayport is relative to the
+   * scrollport.
    */
   static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+
+  /**
+   * Get display port for the given element relative to the scroll frame.
+   */
+  static bool GetDisplayPortRelativeToScrollFrame(nsIContent* aContent, nsRect *aResult);
 
   /**
    * Check whether the given element has a displayport.
