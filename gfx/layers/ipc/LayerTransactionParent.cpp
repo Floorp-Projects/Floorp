@@ -187,6 +187,7 @@ LayerTransactionParent::Destroy()
 
 bool
 LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
+                                         InfallibleTArray<OpDestroy>&& aToDestroy,
                                          const uint64_t& aTransactionId,
                                          const TargetConfig& targetConfig,
                                          PluginsArray&& aPlugins,
@@ -197,7 +198,8 @@ LayerTransactionParent::RecvUpdateNoSwap(InfallibleTArray<Edit>&& cset,
                                          const mozilla::TimeStamp& aTransactionStart,
                                          const int32_t& aPaintSyncId)
 {
-  return RecvUpdate(Move(cset), aTransactionId, targetConfig, Move(aPlugins), isFirstPaint,
+  return RecvUpdate(Move(cset), Move(aToDestroy),
+      aTransactionId, targetConfig, Move(aPlugins), isFirstPaint,
       scheduleComposite, paintSequenceNumber, isRepeatTransaction,
       aTransactionStart, aPaintSyncId, nullptr);
 }
@@ -219,6 +221,7 @@ private:
 
 bool
 LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
+                                   InfallibleTArray<OpDestroy>&& aToDestroy,
                                    const uint64_t& aTransactionId,
                                    const TargetConfig& targetConfig,
                                    PluginsArray&& aPlugins,
@@ -241,6 +244,10 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
   MOZ_LAYERS_LOG(("[ParentSide] received txn with %d edits", cset.Length()));
 
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
+    for (const auto& op : aToDestroy) {
+      DestroyActor(op);
+    }
+
     return true;
   }
 
@@ -591,6 +598,10 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
     default:
       NS_RUNTIMEABORT("not reached");
     }
+  }
+
+  for (const auto& op : aToDestroy) {
+    DestroyActor(op);
   }
 
   mShadowLayersManager->ShadowLayersUpdated(this, aTransactionId, targetConfig,

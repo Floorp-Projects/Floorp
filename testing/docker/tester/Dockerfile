@@ -22,6 +22,7 @@ RUN npm install -g taskcluster-npm-cache@1.3.1
 RUN npm install -g node-gyp
 RUN rm -Rf .cache && mkdir -p .cache
 ENV PATH $PATH:/home/worker/bin
+ENV MINIDUMP_STACKWALK /usr/local/bin/linux64-minidump_stackwalk
 
 # Remove once running under 'worker' user.  This is necessary for pulseaudio to start
 # XXX: change this back to worker:worker once permissions issues are resolved

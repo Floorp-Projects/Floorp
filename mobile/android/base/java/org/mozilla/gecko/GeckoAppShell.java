@@ -584,77 +584,124 @@ public class GeckoAppShell
 
         Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
         PendingIntent pi = PendingIntent.getBroadcast(
-                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                getApplicationContext(), 0, intent,
+                PendingIntent.FLAG_UPDATE_CURRENT);
         am.cancel(pi);
     }
 
     @WrapForJNI
     public static void enableSensor(int aSensortype) {
         GeckoInterface gi = getGeckoInterface();
-        if (gi == null)
+        if (gi == null) {
             return;
+        }
         SensorManager sm = (SensorManager)
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch(aSensortype) {
+        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+            if (gGameRotationVectorSensor == null) {
+                gGameRotationVectorSensor = sm.getDefaultSensor(15);
+                    // sm.getDefaultSensor(
+                    //     Sensor.TYPE_GAME_ROTATION_VECTOR); // API >= 18
+            }
+            if (gGameRotationVectorSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gGameRotationVectorSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
+            if (gGameRotationVectorSensor != null) {
+              break;
+            }
+            // Fallthrough
+
+        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+            if (gRotationVectorSensor == null) {
+                gRotationVectorSensor = sm.getDefaultSensor(
+                    Sensor.TYPE_ROTATION_VECTOR);
+            }
+            if (gRotationVectorSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gRotationVectorSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
+            if (gRotationVectorSensor != null) {
+              break;
+            }
+            // Fallthrough
+
         case GeckoHalDefines.SENSOR_ORIENTATION:
-            if (gOrientationSensor == null)
-                gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
-            if (gOrientationSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            if (gOrientationSensor == null) {
+                gOrientationSensor = sm.getDefaultSensor(
+                    Sensor.TYPE_ORIENTATION);
+            }
+            if (gOrientationSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gOrientationSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
-            if (gAccelerometerSensor == null)
-                gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-            if (gAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            if (gAccelerometerSensor == null) {
+                gAccelerometerSensor = sm.getDefaultSensor(
+                    Sensor.TYPE_ACCELEROMETER);
+            }
+            if (gAccelerometerSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gAccelerometerSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
-            if (gProximitySensor == null)
+            if (gProximitySensor == null) {
                 gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-            if (gProximitySensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gProximitySensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            if (gProximitySensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gProximitySensor,
+                                    SensorManager.SENSOR_DELAY_NORMAL);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_LIGHT:
-            if (gLightSensor == null)
+            if (gLightSensor == null) {
                 gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
-            if (gLightSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gLightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            }
+            if (gLightSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gLightSensor,
+                                    SensorManager.SENSOR_DELAY_NORMAL);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            if (gLinearAccelerometerSensor == null)
-                gLinearAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-            if (gLinearAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            if (gLinearAccelerometerSensor == null) {
+                gLinearAccelerometerSensor = sm.getDefaultSensor(
+                    Sensor.TYPE_LINEAR_ACCELERATION);
+            }
+            if (gLinearAccelerometerSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gLinearAccelerometerSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
-            if (gGyroscopeSensor == null)
+            if (gGyroscopeSensor == null) {
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-            if (gGyroscopeSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
-            break;
-
-        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
-            if (gRotationVectorSensor == null)
-                gRotationVectorSensor = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
-            if (gRotationVectorSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gRotationVectorSensor, SensorManager.SENSOR_DELAY_FASTEST);
-            break;
-
-        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
-            if (gGameRotationVectorSensor == null)
-                gGameRotationVectorSensor = sm.getDefaultSensor(15 /* Sensor.TYPE_GAME_ROTATION_VECTOR */); // API >= 18
-            if (gGameRotationVectorSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGameRotationVectorSensor, SensorManager.SENSOR_DELAY_FASTEST);
+            }
+            if (gGyroscopeSensor != null) {
+                sm.registerListener(gi.getSensorEventListener(),
+                                    gGyroscopeSensor,
+                                    SensorManager.SENSOR_DELAY_FASTEST);
+            }
             break;
 
         default:
-            Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " + aSensortype);
+            Log.w(LOGTAG, "Error! Can't enable unknown SENSOR type " +
+                  aSensortype);
         }
     }
 
@@ -668,44 +715,54 @@ public class GeckoAppShell
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
+        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
+            if (gGameRotationVectorSensor != null) {
+                sm.unregisterListener(gi.getSensorEventListener(), gGameRotationVectorSensor);
+              break;
+            }
+            // Fallthrough
+
+        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
+            if (gRotationVectorSensor != null) {
+                sm.unregisterListener(gi.getSensorEventListener(), gRotationVectorSensor);
+              break;
+            }
+            // Fallthrough
+
         case GeckoHalDefines.SENSOR_ORIENTATION:
-            if (gOrientationSensor != null)
+            if (gOrientationSensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gOrientationSensor);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
-            if (gAccelerometerSensor != null)
+            if (gAccelerometerSensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gAccelerometerSensor);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
-            if (gProximitySensor != null)
+            if (gProximitySensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gProximitySensor);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_LIGHT:
-            if (gLightSensor != null)
+            if (gLightSensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gLightSensor);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
-            if (gLinearAccelerometerSensor != null)
+            if (gLinearAccelerometerSensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gLinearAccelerometerSensor);
-            break;
-
-        case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
-            if (gRotationVectorSensor != null)
-                sm.unregisterListener(gi.getSensorEventListener(), gRotationVectorSensor);
-            break;
-
-        case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
-            if (gGameRotationVectorSensor != null)
-                sm.unregisterListener(gi.getSensorEventListener(), gGameRotationVectorSensor);
+            }
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
-            if (gGyroscopeSensor != null)
+            if (gGyroscopeSensor != null) {
                 sm.unregisterListener(gi.getSensorEventListener(), gGyroscopeSensor);
+            }
             break;
         default:
             Log.w(LOGTAG, "Error! Can't disable unknown SENSOR type " + aSensortype);

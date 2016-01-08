@@ -23,6 +23,7 @@
 #include "plarena.h"
 #include "nsRegion.h"
 #include "nsDisplayListInvalidation.h"
+#include "nsRenderingContext.h"
 #include "DisplayListClipState.h"
 #include "LayerState.h"
 #include "FrameMetrics.h"
@@ -2358,14 +2359,34 @@ public:
  */
 class nsDisplayGeneric : public nsDisplayItem {
 public:
-  typedef void (* PaintCallback)(nsIFrame* aFrame, nsRenderingContext* aCtx,
+  typedef class mozilla::gfx::DrawTarget DrawTarget;
+
+  typedef void (* PaintCallback)(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                                  const nsRect& aDirtyRect, nsPoint aFramePt);
+
+  // XXX: should be removed eventually
+  typedef void (* OldPaintCallback)(nsIFrame* aFrame, nsRenderingContext* aCtx,
+                                    const nsRect& aDirtyRect, nsPoint aFramePt);
 
   nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                    PaintCallback aPaint, const char* aName, Type aType)
-    : nsDisplayItem(aBuilder, aFrame), mPaint(aPaint)
-      , mName(aName)
-      , mType(aType)
+    : nsDisplayItem(aBuilder, aFrame)
+    , mPaint(aPaint)
+    , mOldPaint(nullptr)
+    , mName(aName)
+    , mType(aType)
+  {
+    MOZ_COUNT_CTOR(nsDisplayGeneric);
+  }
+
+  // XXX: should be removed eventually
+  nsDisplayGeneric(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                   OldPaintCallback aOldPaint, const char* aName, Type aType)
+    : nsDisplayItem(aBuilder, aFrame)
+    , mPaint(nullptr)
+    , mOldPaint(aOldPaint)
+    , mName(aName)
+    , mType(aType)
   {
     MOZ_COUNT_CTOR(nsDisplayGeneric);
   }
@@ -2377,13 +2398,19 @@ public:
   
   virtual void Paint(nsDisplayListBuilder* aBuilder,
                      nsRenderingContext* aCtx) override {
-    mPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
+    MOZ_ASSERT(!!mPaint != !!mOldPaint);
+    if (mPaint) {
+      mPaint(mFrame, aCtx->GetDrawTarget(), mVisibleRect, ToReferenceFrame());
+    } else {
+      mOldPaint(mFrame, aCtx, mVisibleRect, ToReferenceFrame());
+    }
   }
   NS_DISPLAY_DECL_NAME(mName, mType)
 
 protected:
   PaintCallback mPaint;
-  const char*   mName;
+  OldPaintCallback mOldPaint;   // XXX: should be removed eventually
+  const char* mName;
   Type mType;
 };
 
@@ -2397,6 +2424,13 @@ class nsDisplayGenericOverflow : public nsDisplayGeneric {
     nsDisplayGenericOverflow(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              PaintCallback aPaint, const char* aName, Type aType)
       : nsDisplayGeneric(aBuilder, aFrame, aPaint, aName, aType)
+    {
+      MOZ_COUNT_CTOR(nsDisplayGenericOverflow);
+    }
+    // XXX: should be removed eventually
+    nsDisplayGenericOverflow(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                             OldPaintCallback aOldPaint, const char* aName, Type aType)
+      : nsDisplayGeneric(aBuilder, aFrame, aOldPaint, aName, aType)
     {
       MOZ_COUNT_CTOR(nsDisplayGenericOverflow);
     }

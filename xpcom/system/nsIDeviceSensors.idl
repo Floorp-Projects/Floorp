@@ -6,7 +6,7 @@
 
 interface nsIDOMWindow;
 
-[scriptable, uuid(1B406E32-CF42-471E-A470-6FD600BF4C7B)]
+[scriptable, uuid(72e64e64-2004-4601-a36a-9d3387d0c525)]
 interface nsIDeviceSensorData : nsISupports
 {
   // Keep in sync with hal/HalSensor.h
@@ -16,6 +16,8 @@ interface nsIDeviceSensorData : nsISupports
   const unsigned long TYPE_LINEAR_ACCELERATION = 3;
   const unsigned long TYPE_GYROSCOPE = 4;
   const unsigned long TYPE_LIGHT = 5;
+  const unsigned long TYPE_ROTATION_VECTOR = 6;
+  const unsigned long TYPE_GAME_ROTATION_VECTOR = 7;
 
   readonly attribute unsigned long type;
 

@@ -2314,12 +2314,9 @@ WorkerPrivateParent<Derived>::EnableDebugger()
 
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  MOZ_ASSERT(!self->mDebugger);
-  self->mDebugger = new WorkerDebugger(self);
-
-  if (NS_FAILED(RegisterWorkerDebugger(self->mDebugger))) {
+  if (NS_FAILED(RegisterWorkerDebugger(self))) {
     NS_WARNING("Failed to register worker debugger!");
-    self->mDebugger = nullptr;
+    return;
   }
 }
 
@@ -2331,15 +2328,9 @@ WorkerPrivateParent<Derived>::DisableDebugger()
 
   WorkerPrivate* self = ParentAsWorkerPrivate();
 
-  if (!self->mDebugger) {
-    return;
-  }
-
-  if (NS_FAILED(UnregisterWorkerDebugger(self->mDebugger))) {
+  if (NS_FAILED(UnregisterWorkerDebugger(self))) {
     NS_WARNING("Failed to unregister worker debugger!");
   }
-
-  self->mDebugger = nullptr;
 }
 
 template <class Derived>
@@ -3550,25 +3541,49 @@ WorkerPrivateParent<Derived>::AssertInnerWindowIsCorrect() const
 
 #endif
 
-class ReportDebuggerErrorRunnable final : public nsIRunnable
+class PostDebuggerMessageRunnable final : public nsRunnable
 {
-  RefPtr<WorkerDebugger> mDebugger;
+  WorkerDebugger *mDebugger;
+  nsString mMessage;
+
+public:
+  PostDebuggerMessageRunnable(WorkerDebugger* aDebugger,
+                              const nsAString& aMessage)
+  : mDebugger(aDebugger),
+    mMessage(aMessage)
+  {
+  }
+
+private:
+  ~PostDebuggerMessageRunnable()
+  { }
+
+  NS_IMETHOD
+  Run() override
+  {
+    mDebugger->PostMessageToDebuggerOnMainThread(mMessage);
+
+    return NS_OK;
+  }
+};
+
+class ReportDebuggerErrorRunnable final : public nsRunnable
+{
+  WorkerDebugger *mDebugger;
   nsString mFilename;
   uint32_t mLineno;
   nsString mMessage;
 
 public:
   ReportDebuggerErrorRunnable(WorkerDebugger* aDebugger,
-                                const nsAString& aFilename, uint32_t aLineno,
-                                const nsAString& aMessage)
+                              const nsAString& aFilename, uint32_t aLineno,
+                              const nsAString& aMessage)
   : mDebugger(aDebugger),
     mFilename(aFilename),
     mLineno(aLineno),
     mMessage(aMessage)
   {
   }
-
-  NS_DECL_THREADSAFE_ISUPPORTS
 
 private:
   ~ReportDebuggerErrorRunnable()
@@ -3583,22 +3598,16 @@ private:
   }
 };
 
-NS_IMPL_ISUPPORTS(ReportDebuggerErrorRunnable, nsIRunnable)
-
 WorkerDebugger::WorkerDebugger(WorkerPrivate* aWorkerPrivate)
-: mMutex("WorkerDebugger::mMutex"),
-  mCondVar(mMutex, "WorkerDebugger::mCondVar"),
-  mWorkerPrivate(aWorkerPrivate),
-  mIsEnabled(false),
+: mWorkerPrivate(aWorkerPrivate),
   mIsInitialized(false)
 {
-  mWorkerPrivate->AssertIsOnParentThread();
+  AssertIsOnMainThread();
 }
 
 WorkerDebugger::~WorkerDebugger()
 {
   MOZ_ASSERT(!mWorkerPrivate);
-  MOZ_ASSERT(!mIsEnabled);
 
   if (!NS_IsMainThread()) {
     nsCOMPtr<nsIThread> mainThread;
@@ -3623,8 +3632,6 @@ WorkerDebugger::GetIsClosed(bool* aResult)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mMutex);
-
   *aResult = !mWorkerPrivate;
   return NS_OK;
 }
@@ -3633,8 +3640,6 @@ NS_IMETHODIMP
 WorkerDebugger::GetIsChrome(bool* aResult)
 {
   AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
@@ -3649,8 +3654,6 @@ WorkerDebugger::GetIsInitialized(bool* aResult)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mMutex);
-
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -3663,8 +3666,6 @@ NS_IMETHODIMP
 WorkerDebugger::GetParent(nsIWorkerDebugger** aResult)
 {
   AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
@@ -3688,8 +3689,6 @@ WorkerDebugger::GetType(uint32_t* aResult)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mMutex);
-
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -3703,8 +3702,6 @@ WorkerDebugger::GetUrl(nsAString& aResult)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mMutex);
-
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -3717,8 +3714,6 @@ NS_IMETHODIMP
 WorkerDebugger::GetWindow(nsIDOMWindow** aResult)
 {
   AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
@@ -3769,8 +3764,6 @@ WorkerDebugger::Initialize(const nsAString& aURL, JSContext* aCx)
 {
   AssertIsOnMainThread();
 
-  MutexAutoLock lock(mMutex);
-
   if (!mWorkerPrivate) {
     return NS_ERROR_UNEXPECTED;
   }
@@ -3792,8 +3785,6 @@ NS_IMETHODIMP
 WorkerDebugger::PostMessageMoz(const nsAString& aMessage, JSContext* aCx)
 {
   AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
 
   if (!mWorkerPrivate || !mIsInitialized) {
     return NS_ERROR_UNEXPECTED;
@@ -3835,57 +3826,15 @@ WorkerDebugger::RemoveListener(nsIWorkerDebuggerListener* aListener)
 }
 
 void
-WorkerDebugger::WaitIsEnabled(bool aIsEnabled)
+WorkerDebugger::Close()
 {
-  MutexAutoLock lock(mMutex);
-
-  while (mIsEnabled != aIsEnabled) {
-    mCondVar.Wait();
-  }
-}
-
-void
-WorkerDebugger::NotifyIsEnabled(bool aIsEnabled)
-{
-  mMutex.AssertCurrentThreadOwns();
-
-  MOZ_ASSERT(mIsEnabled != aIsEnabled);
-  mIsEnabled = aIsEnabled;
-  mCondVar.Notify();
-}
-
-void
-WorkerDebugger::Enable()
-{
-  AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
-
-  MOZ_ASSERT(mWorkerPrivate);
-
-  NotifyIsEnabled(true);
-}
-
-void
-WorkerDebugger::Disable()
-{
-  AssertIsOnMainThread();
-
-  MutexAutoLock lock(mMutex);
-
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate = nullptr;
 
-  {
-    MutexAutoUnlock unlock(mMutex);
-
-    nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners);
-    for (size_t index = 0; index < listeners.Length(); ++index) {
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners);
+  for (size_t index = 0; index < listeners.Length(); ++index) {
       listeners[index]->OnClose();
-    }
   }
-
-  NotifyIsEnabled(false);
 }
 
 void
@@ -3893,10 +3842,11 @@ WorkerDebugger::PostMessageToDebugger(const nsAString& aMessage)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  nsCOMPtr<nsIRunnable> runnable =
-    NS_NewRunnableMethodWithArg<nsString>(this,
-      &WorkerDebugger::PostMessageToDebuggerOnMainThread, nsString(aMessage));
-  NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL);
+  RefPtr<PostDebuggerMessageRunnable> runnable =
+    new PostDebuggerMessageRunnable(this, aMessage);
+  if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
+    NS_WARNING("Failed to post message to debugger on main thread!");
+  }
 }
 
 void
@@ -3904,14 +3854,7 @@ WorkerDebugger::PostMessageToDebuggerOnMainThread(const nsAString& aMessage)
 {
   AssertIsOnMainThread();
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners;
-
-  {
-    MutexAutoLock lock(mMutex);
-
-    listeners.AppendElements(mListeners);
-  }
-
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners);
   for (size_t index = 0; index < listeners.Length(); ++index) {
     listeners[index]->OnMessage(aMessage);
   }
@@ -3924,7 +3867,7 @@ WorkerDebugger::ReportErrorToDebugger(const nsAString& aFilename,
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
-  nsCOMPtr<nsIRunnable> runnable =
+  RefPtr<ReportDebuggerErrorRunnable> runnable =
     new ReportDebuggerErrorRunnable(this, aFilename, aLineno, aMessage);
   if (NS_FAILED(NS_DispatchToMainThread(runnable, NS_DISPATCH_NORMAL))) {
     NS_WARNING("Failed to report error to debugger on main thread!");
@@ -3938,13 +3881,7 @@ WorkerDebugger::ReportErrorToDebuggerOnMainThread(const nsAString& aFilename,
 {
   AssertIsOnMainThread();
 
-  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners;
-  {
-    MutexAutoLock lock(mMutex);
-
-    listeners.AppendElements(mListeners);
-  }
-
+  nsTArray<nsCOMPtr<nsIWorkerDebuggerListener>> listeners(mListeners);
   for (size_t index = 0; index < listeners.Length(); ++index) {
     listeners[index]->OnError(aFilename, aLineno, aMessage);
   }
@@ -3961,6 +3898,8 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   : WorkerPrivateParent<WorkerPrivate>(aCx, aParent, aScriptURL,
                                        aIsChromeWorker, aWorkerType,
                                        aWorkerName, aLoadInfo)
+  , mDebuggerRegistered(false)
+  , mDebugger(nullptr)
   , mJSContext(nullptr)
   , mPRThread(nullptr)
   , mDebuggerEventLoopLevel(0)

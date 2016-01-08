@@ -42,8 +42,10 @@ child:
 parent:
   async ImageBridgeThreadId(PlatformThreadId aTreahdId);
 
-  sync Update(CompositableOperation[] ops) returns (EditReply[] reply);
-  async UpdateNoSwap(CompositableOperation[] ops);
+  sync Update(CompositableOperation[] ops, OpDestroy[] toDestroy)
+    returns (EditReply[] reply);
+
+  async UpdateNoSwap(CompositableOperation[] ops, OpDestroy[] toDestroy);
 
   // First step of the destruction sequence. This puts ImageBridge
   // in a state in which it can't send asynchronous messages

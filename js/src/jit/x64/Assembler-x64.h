@@ -162,6 +162,18 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = rax;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = rdi;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = rbx;
 
+// Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = CallTempReg4;
+
+// Registerd used in RegExpTester instruction (do not use ReturnReg).
+static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg1;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg2;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg3;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = CallTempReg4;
+
 class ABIArgGenerator
 {
 #if defined(XP_WIN)
