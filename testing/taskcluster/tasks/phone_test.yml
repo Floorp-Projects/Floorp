@@ -1,4 +1,3 @@
-# This task is the base for most tests in gecko.
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -29,6 +28,8 @@ task:
       GAIA_REF: '{{{gaia_ref}}}'
       GAIA_REV: '{{{gaia_rev}}}'
       TESTS_TIMEOUT_IN_MS: 30000
+      MANIFEST_PATH: gaia/source/tests/python/gaia-ui-tests/gaiatest/tests/functional/manifest.ini
+      MANIFEST_INCLUDE_EXCLUDE: b2g-dsds
 
     log: 'private/b2g/logs/live.log'
 
@@ -54,6 +55,35 @@ task:
           memory: '512'
           sims: '0'
           build: '{{{img_url}}}'
+
+    command:
+      - >
+        adb
+        -H $PROXY_HOST
+        -P $ADB_PORT
+        logcat
+        -v threadtime
+        &> /home/worker/upload/logs/logcat.log
+        &
+
+      - >
+        gaiatest
+        --total-chunks={{total_chunks}}
+        --this-chunk={{chunk}}
+        --testvars=/home/worker/data/gaia_testvars.json
+        --testvars=/home/worker/data/device.json
+        --adb-host=$PROXY_HOST
+        --adb-port=$ADB_PORT
+        --address=$PROXY_HOST:$MARIONETTE_PORT
+        --device $SERIAL_ID
+        --xml-output=/home/worker/upload/logs/xml_output.xml
+        --log-html=/home/worker/upload/logs/index.html
+        --log-mach=-
+        --log-raw=/home/worker/upload/logs/raw.log
+        --restart
+        --timeout=$TESTS_TIMEOUT_IN_MS
+        --type=$MANIFEST_INCLUDE_EXCLUDE
+        $MANIFEST_PATH
 
   extra:
     treeherder:
