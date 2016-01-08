@@ -27,7 +27,7 @@ function test(){
         yield doInterrupt(gPanel);
 
         let source = gThreadClient.source(getSourceForm(gSources, SECOND_SOURCE_VALUE));
-        yield source.setBreakpoint({
+        yield rdpInvoke(source, source.setBreakpoint, {
           line: 6
         });
         yield doResume(gPanel);

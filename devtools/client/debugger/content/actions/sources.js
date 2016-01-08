@@ -5,6 +5,7 @@
 
 const constants = require('../constants');
 const promise = require('promise');
+const { rdpInvoke } = require('../utils');
 const { dumpn } = require("devtools/shared/DevToolsUtils");
 const { PROMISE, HISTOGRAM_ID } = require('devtools/client/shared/redux/middleware/promise');
 const { getSource, getSourceText } = require('../queries');
@@ -61,7 +62,7 @@ function loadSources() {
   return {
     type: constants.LOAD_SOURCES,
     [PROMISE]: Task.spawn(function*() {
-      const response = yield gThreadClient.getSources();
+      const response = yield rdpInvoke(gThreadClient, gThreadClient.getSources);
 
       // Top-level breakpoints may pause the entire loading process
       // because scripts are executed as they are loaded, so the
@@ -103,7 +104,8 @@ function blackbox(source, shouldBlackBox) {
     type: constants.BLACKBOX,
     source: source,
     [PROMISE]: Task.spawn(function*() {
-      yield shouldBlackBox ? client.blackBox() : client.unblackBox();
+      yield rdpInvoke(client,
+                      shouldBlackBox ? client.blackBox : client.unblackBox);
       return {
         isBlackBoxed: shouldBlackBox
       }
@@ -141,10 +143,13 @@ function togglePrettyPrint(source) {
         }
 
         if (wantPretty) {
-          response = yield sourceClient.prettyPrint(Prefs.editorTabSize);
+          response = yield rdpInvoke(sourceClient,
+                                     sourceClient.prettyPrint,
+                                     Prefs.editorTabSize);
         }
         else {
-          response = yield sourceClient.disablePrettyPrint();
+          response = yield rdpInvoke(sourceClient,
+                                     sourceClient.disablePrettyPrint);
         }
 
         // Remove the cached source AST from the Parser, to avoid getting
@@ -181,7 +186,7 @@ function loadSourceText(source) {
         let histogram = Services.telemetry.getHistogramById(histogramId);
         let startTime = Date.now();
 
-        const response = yield sourceClient.source();
+        const response = yield rdpInvoke(sourceClient, sourceClient.source);
 
         histogram.add(Date.now() - startTime);
 

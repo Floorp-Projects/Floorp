@@ -90,7 +90,9 @@ function clientConnect() {
 var onConnectionReady = Task.async(function*(aType, aTraits) {
   clearTimeout(gConnectionTimeout);
 
-  let response = yield gClient.listAddons();
+  let deferred = promise.defer();
+  gClient.listAddons(deferred.resolve);
+  let response = yield deferred.promise;
 
   let parent = document.getElementById("addonActors")
   if (!response.error && response.addons.length > 0) {
@@ -108,7 +110,9 @@ var onConnectionReady = Task.async(function*(aType, aTraits) {
     parent.remove();
   }
 
-  response = yield gClient.listTabs();
+  deferred = promise.defer();
+  gClient.listTabs(deferred.resolve);
+  response = yield deferred.promise;
 
   parent = document.getElementById("tabActors");
 

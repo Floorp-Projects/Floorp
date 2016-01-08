@@ -447,14 +447,13 @@ DebuggerClient.prototype = {
       to: aTabActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
+    this.request(packet, (aResponse) => {
       let tabClient;
       if (!aResponse.error) {
         tabClient = new TabClient(this, aResponse);
         this.registerClient(tabClient);
       }
       aOnResponse(aResponse, tabClient);
-      return [aResponse, tabClient];
     });
   },
 
@@ -469,16 +468,15 @@ DebuggerClient.prototype = {
       return;
     }
 
-    return this.request({ to: aWorkerActor, type: "attach" }).then(aResponse => {
+    this.request({ to: aWorkerActor, type: "attach" }, (aResponse) => {
       if (aResponse.error) {
         aOnResponse(aResponse, null);
-        return [aResponse, null];
+        return;
       }
 
       let workerClient = new WorkerClient(this, aResponse);
       this.registerClient(workerClient);
       aOnResponse(aResponse, workerClient);
-      return [aResponse, workerClient];
     });
   },
 
@@ -496,7 +494,7 @@ DebuggerClient.prototype = {
       to: aAddonActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
+    this.request(packet, aResponse => {
       let addonClient;
       if (!aResponse.error) {
         addonClient = new AddonClient(this, aAddonActor);
@@ -504,7 +502,6 @@ DebuggerClient.prototype = {
         this.activeAddon = addonClient;
       }
       aOnResponse(aResponse, addonClient);
-      return [aResponse, addonClient];
     });
   },
 
@@ -527,7 +524,7 @@ DebuggerClient.prototype = {
       listeners: aListeners,
     };
 
-    return this.request(packet).then(aResponse => {
+    this.request(packet, (aResponse) => {
       let consoleClient;
       if (!aResponse.error) {
         if (this._clients.has(aConsoleActor)) {
@@ -538,7 +535,6 @@ DebuggerClient.prototype = {
         }
       }
       aOnResponse(aResponse, consoleClient);
-      return [aResponse, consoleClient];
     });
   },
 
@@ -560,18 +556,17 @@ DebuggerClient.prototype = {
       return;
     }
 
-    let packet = {
+   let packet = {
       to: aThreadActor,
       type: "attach",
       options: aOptions
     };
-    return this.request(packet).then(aResponse => {
+    this.request(packet, (aResponse) => {
       if (!aResponse.error) {
         var threadClient = new ThreadClient(this, aThreadActor);
         this.registerClient(threadClient);
       }
       aOnResponse(aResponse, threadClient);
-      return [aResponse, threadClient];
     });
   },
 
@@ -594,13 +589,12 @@ DebuggerClient.prototype = {
       to: aTraceActor,
       type: "attach"
     };
-    return this.request(packet).then(aResponse => {
+    this.request(packet, (aResponse) => {
       if (!aResponse.error) {
         var traceClient = new TraceClient(this, aTraceActor);
         this.registerClient(traceClient);
       }
       aOnResponse(aResponse, traceClient);
-      return [aResponse, traceClient];
     });
   },
 
@@ -1269,13 +1263,12 @@ TabClient.prototype = {
       type: "attach",
       options: aOptions
     };
-    return this.request(packet).then(aResponse => {
+    this.request(packet, (aResponse) => {
       if (!aResponse.error) {
         this.thread = new ThreadClient(this, this._threadActor);
         this.client.registerClient(this.thread);
       }
       aOnResponse(aResponse, this.thread);
-      return [aResponse, this.thread];
     });
   },
 
@@ -1404,30 +1397,29 @@ WorkerClient.prototype = {
 
   attachThread: function(aOptions = {}, aOnResponse = noop) {
     if (this.thread) {
-      let response = [{
+      DevToolsUtils.executeSoon(() => aOnResponse({
         type: "connected",
         threadActor: this.thread._actor,
         consoleActor: this.consoleActor,
-      }, this.thread];
-      DevToolsUtils.executeSoon(() => aOnResponse(response));
-      return response;
+      }, this.thread));
+      return;
     }
 
     // The connect call on server doesn't attach the thread as of version 44.
-    return this.request({
+    this.request({
       to: this._actor,
       type: "connect",
       options: aOptions,
-    }).then(connectReponse => {
+    }, (connectReponse) => {
       if (connectReponse.error) {
         aOnResponse(connectReponse, null);
-        return [connectResponse, null];
+        return;
       }
 
-      return this.request({
+      this.request({
         to: connectReponse.threadActor,
         type: "attach"
-      }).then(attachResponse => {
+      }, (attachResponse) => {
         if (attachResponse.error) {
           aOnResponse(attachResponse, null);
         }
@@ -1437,7 +1429,6 @@ WorkerClient.prototype = {
         this.client.registerClient(this.thread);
 
         aOnResponse(connectReponse, this.thread);
-        return [connectResponse, this.thread];
       });
     });
   },
@@ -1734,7 +1725,7 @@ ThreadClient.prototype = {
    * Resume a paused thread.
    */
   resume: function (aOnResponse) {
-    return this._doResume(null, aOnResponse);
+    this._doResume(null, aOnResponse);
   },
 
   /**
@@ -1744,7 +1735,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   resumeThenPause: function (aOnResponse) {
-    return this._doResume({ type: "break" }, aOnResponse);
+    this._doResume({ type: "break" }, aOnResponse);
   },
 
   /**
@@ -1754,7 +1745,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepOver: function (aOnResponse) {
-    return this._doResume({ type: "next" }, aOnResponse);
+    this._doResume({ type: "next" }, aOnResponse);
   },
 
   /**
@@ -1764,7 +1755,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepIn: function (aOnResponse) {
-    return this._doResume({ type: "step" }, aOnResponse);
+    this._doResume({ type: "step" }, aOnResponse);
   },
 
   /**
@@ -1774,7 +1765,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   stepOut: function (aOnResponse) {
-    return this._doResume({ type: "finish" }, aOnResponse);
+    this._doResume({ type: "finish" }, aOnResponse);
   },
 
   /**
@@ -1784,7 +1775,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   interrupt: function(aOnResponse) {
-    return this._doInterrupt(null, aOnResponse);
+    this._doInterrupt(null, aOnResponse);
   },
 
   /**
@@ -1794,7 +1785,7 @@ ThreadClient.prototype = {
    *        Called with the response packet.
    */
   breakOnNext: function(aOnResponse) {
-    return this._doInterrupt("onNext", aOnResponse);
+    this._doInterrupt("onNext", aOnResponse);
   },
 
   /**
@@ -1834,13 +1825,13 @@ ThreadClient.prototype = {
       return;
     }
     // Otherwise send the flag using a standard resume request.
-    return this.interrupt(aResponse => {
+    this.interrupt(aResponse => {
       if (aResponse.error) {
         // Can't continue if pausing failed.
         aOnResponse(aResponse);
-        return aResponse;
+        return;
       }
-      return this.resume(aOnResponse);
+      this.resume(aOnResponse);
     });
   },
 
@@ -1863,15 +1854,15 @@ ThreadClient.prototype = {
     // the array.
     if (this.paused) {
       DevToolsUtils.executeSoon(() => onResponse({}));
-      return {};
+      return;
     }
-    return this.interrupt(response => {
+    this.interrupt(response => {
       // Can't continue if pausing failed.
       if (response.error) {
         onResponse(response);
-        return response;
+        return;
       }
-      return this.resume(onResponse);
+      this.resume(onResponse);
     });
   },
 
@@ -2758,93 +2749,90 @@ SourceClient.prototype = {
    * @param aCallback Function
    *        The callback function called when we receive the response from the server.
    */
-  getExecutableLines: function(cb = noop){
+  getExecutableLines: function(cb){
     let packet = {
       to: this._form.actor,
       type: "getExecutableLines"
     };
 
-    return this._client.request(packet).then(res => {
+    this._client.request(packet, res => {
       cb(res.lines);
-      return res.lines;
     });
   },
 
   /**
    * Get a long string grip for this SourceClient's source.
    */
-  source: function (aCallback = noop) {
+  source: function (aCallback) {
     let packet = {
       to: this._form.actor,
       type: "source"
     };
-    return this._client.request(packet).then(aResponse => {
-      return this._onSourceResponse(aResponse, aCallback)
+    this._client.request(packet, aResponse => {
+      this._onSourceResponse(aResponse, aCallback)
     });
   },
 
   /**
    * Pretty print this source's text.
    */
-  prettyPrint: function (aIndent, aCallback = noop) {
+  prettyPrint: function (aIndent, aCallback) {
     const packet = {
       to: this._form.actor,
       type: "prettyPrint",
       indent: aIndent
     };
-    return this._client.request(packet).then(aResponse => {
+    this._client.request(packet, aResponse => {
       if (!aResponse.error) {
         this._isPrettyPrinted = true;
         this._activeThread._clearFrames();
         this._activeThread.emit("prettyprintchange", this);
       }
-      return this._onSourceResponse(aResponse, aCallback);
+      this._onSourceResponse(aResponse, aCallback);
     });
   },
 
   /**
    * Stop pretty printing this source's text.
    */
-  disablePrettyPrint: function (aCallback = noop) {
+  disablePrettyPrint: function (aCallback) {
     const packet = {
       to: this._form.actor,
       type: "disablePrettyPrint"
     };
-    return this._client.request(packet).then(aResponse => {
+    this._client.request(packet, aResponse => {
       if (!aResponse.error) {
         this._isPrettyPrinted = false;
         this._activeThread._clearFrames();
         this._activeThread.emit("prettyprintchange", this);
       }
-      return this._onSourceResponse(aResponse, aCallback);
+      this._onSourceResponse(aResponse, aCallback);
     });
   },
 
   _onSourceResponse: function (aResponse, aCallback) {
     if (aResponse.error) {
       aCallback(aResponse);
-      return aResponse;
+      return;
     }
 
     if (typeof aResponse.source === "string") {
       aCallback(aResponse);
-      return aResponse;
+      return;
     }
 
     let { contentType, source } = aResponse;
     let longString = this._activeThread.threadLongString(source);
-    return longString.substring(0, longString.length).then(function (aResponse) {
+    longString.substring(0, longString.length, function (aResponse) {
       if (aResponse.error) {
         aCallback(aResponse);
-        return aReponse;
+        return;
       }
 
-      let response = {
+      aCallback({
         source: aResponse.substring,
         contentType: contentType
-      };
-      aCallback(response);
-      return response;
+      });
     });
   },
 
@@ -2880,7 +2868,7 @@ SourceClient.prototype = {
         packet.location.url = this.url;
       }
 
-      return this._client.request(packet).then(aResponse => {
+      this._client.request(packet, aResponse => {
         // Ignoring errors, since the user may be setting a breakpoint in a
         // dead script that will reappear on a page reload.
         let bpClient;
@@ -2897,20 +2885,20 @@ SourceClient.prototype = {
         if (aCallback) {
           aCallback();
         }
-        return [aResponse, bpClient];
       });
     };
 
     // If the debuggee is paused, just set the breakpoint.
     if (this._activeThread.paused) {
-      return doSetBreakpoint();
+      doSetBreakpoint();
+      return;
     }
     // Otherwise, force a pause in order to set the breakpoint.
-    return this._activeThread.interrupt().then(aResponse => {
+    this._activeThread.interrupt(aResponse => {
       if (aResponse.error) {
         // Can't set the breakpoint if pausing failed.
         aOnResponse(aResponse);
-        return aResponse;
+        return;
       }
 
       const { type, why } = aResponse;
@@ -2918,8 +2906,8 @@ SourceClient.prototype = {
             ? () => this._activeThread.resume()
             : noop;
 
-      return doSetBreakpoint(cleanUp);
-    });
+      doSetBreakpoint(cleanUp);
+    })
   }
 };
 
