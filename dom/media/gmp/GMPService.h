@@ -105,7 +105,7 @@ protected:
                      nsIDocument* aDocument);
     void Run(const nsACString& aPluginName);
     bool IsStillValid();
-    const uint32_t GetPluginId() const { return mPluginId; }
+    uint32_t GetPluginId() const { return mPluginId; }
   private:
     virtual ~GMPCrashCallback() { MOZ_ASSERT(NS_IsMainThread()); }
 

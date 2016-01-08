@@ -133,7 +133,7 @@ public:
   virtual bool IsFake() = 0;
 
   /* Returns the type of media source (camera, microphone, screen, window, etc) */
-  virtual const dom::MediaSourceEnum GetMediaSource() = 0;
+  virtual dom::MediaSourceEnum GetMediaSource() const = 0;
 
   // Callback interface for TakePhoto(). Either PhotoComplete() or PhotoError()
   // should be called.

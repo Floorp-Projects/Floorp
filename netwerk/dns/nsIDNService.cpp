@@ -173,14 +173,18 @@ nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
                                         inLen, outputBuffer, outMaxLen,
                                         &info, &errorCode);
   if (info.errors != 0) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   if (U_SUCCESS(errorCode)) {
     ICUUtils::AssignUCharArrayToString(outputBuffer, outLen, output);
   }
 
-  return ICUUtils::UErrorToNsResult(errorCode);
+  nsresult rv = ICUUtils::UErrorToNsResult(errorCode);
+  if (rv == NS_ERROR_FAILURE) {
+    rv = NS_ERROR_MALFORMED_URI;
+  }
+  return rv;
 }
 
 nsresult
@@ -198,6 +202,9 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
     uidna_labelToUnicode(mIDNA, (const UChar*)PromiseFlatString(input).get(),
                          inLen, outputBuffer, outMaxLen, &info, &errorCode);
   nsresult rv = ICUUtils::UErrorToNsResult(errorCode);
+  if (rv == NS_ERROR_FAILURE) {
+    rv = NS_ERROR_MALFORMED_URI;
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Output the result of nameToUnicode even if there were errors
@@ -211,7 +218,7 @@ nsIDNService::IDNA2008StringPrep(const nsAString& input,
     if (flag == eStringPrepForDNS) {
       output.Truncate();
     }
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_MALFORMED_URI;
   }
 
   return rv;
@@ -472,7 +479,7 @@ static nsresult utf16ToUcs4(const nsAString& in,
 
     i++;
     if (i >= outBufLen)
-      return NS_ERROR_FAILURE;
+      return NS_ERROR_MALFORMED_URI;
   }
   out[i] = (uint32_t)'\0';
   *outLen = i;
@@ -515,7 +522,7 @@ static nsresult punycode(const nsAString& in, nsACString& out)
 
   if (punycode_success != status ||
       encodedLength >= kEncodedBufSize)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
 
   encodedBuf[encodedLength] = '\0';
   out.Assign(nsDependentCString(kACEPrefix) + nsDependentCString(encodedBuf));
@@ -564,18 +571,18 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
   uint32_t namePrepBuf[kMaxDNSNodeLen * 3];   // map up to three characters
   idn_err = idn_nameprep_map(mNamePrepHandle, (const uint32_t *) ucs4Buf,
 		                     (uint32_t *) namePrepBuf, kMaxDNSNodeLen * 3);
-  NS_ENSURE_TRUE(idn_err == idn_success, NS_ERROR_FAILURE);
+  NS_ENSURE_TRUE(idn_err == idn_success, NS_ERROR_MALFORMED_URI);
 
   nsAutoString namePrepStr;
   ucs4toUtf16(namePrepBuf, namePrepStr);
   if (namePrepStr.Length() >= kMaxDNSNodeLen)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
 
   // normalize
   nsAutoString normlizedStr;
   rv = mNormalizer->NormalizeUnicodeNFKC(namePrepStr, normlizedStr);
   if (normlizedStr.Length() >= kMaxDNSNodeLen)
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
 
   // set the result string
   out.Assign(normlizedStr);
@@ -589,19 +596,19 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
   idn_err = idn_nameprep_isprohibited(mNamePrepHandle,
                                       (const uint32_t *) ucs4Buf, &found);
   if (idn_err != idn_success || found) {
-    rv = NS_ERROR_FAILURE;
+    rv = NS_ERROR_MALFORMED_URI;
   } else {
     // check bidi
     idn_err = idn_nameprep_isvalidbidi(mNamePrepHandle,
                                        (const uint32_t *) ucs4Buf, &found);
     if (idn_err != idn_success || found) {
-      rv = NS_ERROR_FAILURE;
+      rv = NS_ERROR_MALFORMED_URI;
     } else  if (flag == eStringPrepForUI) {
       // check unassigned code points
       idn_err = idn_nameprep_isunassigned(mNamePrepHandle,
                                           (const uint32_t *) ucs4Buf, &found);
       if (idn_err != idn_success || found) {
-        rv = NS_ERROR_FAILURE;
+        rv = NS_ERROR_MALFORMED_URI;
       }
     }
   }
@@ -623,7 +630,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
 
   if (in.Length() > kMaxDNSNodeLen) {
     NS_WARNING("IDN node too large");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   if (IsASCII(in)) {
@@ -657,7 +664,7 @@ nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
   // longer than the limit).
   if (out.Length() > kMaxDNSNodeLen) {
     NS_WARNING("IDN node too large");
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   return rv;
@@ -719,7 +726,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
                                                 nullptr);
   if (status != punycode_success) {
     delete [] output;
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   // UCS4 -> UTF8
@@ -741,7 +748,7 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
 
   if (flag == eStringPrepForDNS &&
       !ace.Equals(in, nsCaseInsensitiveCStringComparator())) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_MALFORMED_URI;
   }
 
   return NS_OK;

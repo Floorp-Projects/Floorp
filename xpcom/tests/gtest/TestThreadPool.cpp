@@ -12,9 +12,12 @@
 #include "nsComponentManagerUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIRunnable.h"
+#include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Monitor.h"
 #include "gtest/gtest.h"
+
+using namespace mozilla;
 
 class Task final : public nsIRunnable
 {

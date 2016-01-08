@@ -84,7 +84,7 @@ struct ScopedArrayBufferContentsTraits {
     type result = {0, 0};
     return result;
   }
-  const static void release(type ptr) {
+  static void release(type ptr) {
     js_free(ptr.data);
     ptr.data = nullptr;
     ptr.nbytes = 0;

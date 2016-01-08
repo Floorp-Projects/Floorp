@@ -74,7 +74,6 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
   // MediaRecorders use an AudioNodeStream, but no AudioNode
   AudioNode* node = aEngine->NodeMainThread();
   MediaStreamGraph* graph = aGraph ? aGraph : aCtx->Graph();
-  MOZ_ASSERT(graph->GraphRate() == aCtx->SampleRate());
 
   RefPtr<AudioNodeStream> stream =
     new AudioNodeStream(aEngine, aFlags, graph->GraphRate());

@@ -903,6 +903,182 @@ function TypedArraySome(callbackfn, thisArg = undefined) {
     return false;
 }
 
+// For sorting small arrays
+function InsertionSort(array, from, to, comparefn) {
+    var item, swap;
+    for (var i = from + 1; i <= to; i++) {
+        item = array[i];
+        for (var j = i - 1; j >= from; j--) {
+            swap = array[j];
+            if (comparefn(swap, item) <= 0)
+                break
+            array[j + 1] = swap;
+        }
+        array[j + 1] = item;
+    }
+}
+
+function SwapArrayElements(array, i, j) {
+    var swap = array[i];
+    array[i] = array[j];
+    array[j] = swap;
+}
+
+// Rearranges the elements in array[from:to + 1] and returns an index j such that:
+// - from < j < to
+// - each element in array[from:j] is less than or equal to array[j]
+// - each element in array[j + 1:to + 1] greater than or equal to array[j].
+function Partition(array, from, to, comparefn) {
+    assert(to - from >= 3,
+           "Partition will not work with less than three elements");
+
+    var median_i = (from + to) >> 1;
+
+    var i = from + 1;
+    var j = to;
+
+    SwapArrayElements(array, median_i, i);
+
+    // Median of three pivot selection
+    if (comparefn(array[from], array[to]) > 0)
+        SwapArrayElements(array, from, to);
+
+    if (comparefn(array[i], array[to]) > 0)
+        SwapArrayElements(array, i, to);
+
+    if (comparefn(array[from], array[i]) > 0)
+        SwapArrayElements(array, from, i);
+
+    var pivot_i = i;
+
+    // Hoare partition method
+    for(;;) {
+        do i++; while (comparefn(array[i], array[pivot_i]) < 0);
+        do j--; while (comparefn(array[j], array[pivot_i]) > 0);
+        if (i > j)
+            break;
+        SwapArrayElements(array, i, j);
+    }
+
+    SwapArrayElements(array, pivot_i, j);
+    return j;
+}
+
+// In-place QuickSort
+function QuickSort(array, len, comparefn) {
+    // Managing the stack ourselves seems to provide a small performance boost
+    var stack = new List();
+    var top = 0;
+
+    var start = 0;
+    var end   = len - 1;
+
+    var pivot_i, i, j, l_len, r_len;
+
+    for (;;) {
+        // Insertion sort for the first N elements where N is some value
+        // determined by performance testing.
+        if (end - start <= 23) {
+            InsertionSort(array, start, end, comparefn);
+            if (top < 1)
+                break;
+            end   = stack[--top];
+            start = stack[--top];
+        } else {
+            pivot_i = Partition(array, start, end, comparefn);
+
+            // Calculate the left and right sub-array lengths and save
+            // stack space by directly modifying start/end so that
+            // we sort the longest of the two during the next iteration.
+            // This reduces the maximum stack size to log2(len)
+            l_len = (pivot_i - 1) - start;
+            r_len = end - (pivot_i + 1);
+
+            if (r_len > l_len) {
+                stack[top++] = start;
+                stack[top++] = pivot_i - 1;
+                start = pivot_i + 1;
+            } else {
+                stack[top++] = pivot_i + 1;
+                stack[top++] = end;
+                end = pivot_i - 1;
+            }
+
+        }
+    }
+    return array;
+}
+
+// ES6 draft 20151210 22.2.3.26
+// Cases are ordered according to likelihood of occurrence
+// as opposed to the ordering in the spec.
+function TypedArrayCompare(x, y) {
+    // Step 1.
+    assert(typeof x === "number" && typeof y === "number",
+           "x and y are not numbers.");
+
+    // Steps 6 - 7.
+    var diff = x - y;
+    if (diff)
+        return diff;
+
+    // Steps 8 - 10.
+    if (x === 0 && y === 0)
+        return (1/x > 0 ? 1 : 0) - (1/y > 0 ? 1 : 0);
+
+    // Step 2. Implemented in TypedArraySort
+
+    // Step 3.
+    if (Number_isNaN(x) && Number_isNaN(y))
+        return 0;
+
+    // Steps 4 - 5.
+    if (Number_isNaN(x) || Number_isNaN(y))
+        return Number_isNaN(x) ? 1 : -1;
+
+}
+
+// ES6 draft 20151210 22.2.3.26 %TypedArray%.prototype.sort ( comparefn ).
+function TypedArraySort(comparefn) {
+    // This function is not generic.
+    if (!IsObject(this) || !IsTypedArray(this)) {
+        return callFunction(CallTypedArrayMethodIfWrapped, this, comparefn,
+                            "TypedArraySort");
+    }
+
+    // Step 1.
+    var obj = this;
+
+    // Step 2.
+    var buffer = TypedArrayBuffer(obj);
+    if (IsDetachedBuffer(buffer))
+        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+    // Step 3.
+    var len = TypedArrayLength(obj);
+
+    if (comparefn === undefined) {
+        comparefn = TypedArrayCompare;
+    } else {
+        // To satisfy step 2 from TypedArray SortCompare described in 22.2.3.26
+        // the user supplied comparefn is wrapped.
+        var wrappedCompareFn = comparefn;
+        comparefn = function(x, y) {
+            // Step a.
+            var v = wrappedCompareFn(x, y);
+            // Step b.
+            if (IsDetachedBuffer(buffer))
+                ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+            // Step c. is redundant, see:
+            // https://bugzilla.mozilla.org/show_bug.cgi?id=1121937#c36
+            // Step d.
+            return v;
+        }
+    }
+
+    return QuickSort(obj, len, comparefn);
+}
+
 // ES6 draft 20150304 %TypedArray%.prototype.subarray
 function TypedArraySubarray(begin, end) {
     // Step 1.

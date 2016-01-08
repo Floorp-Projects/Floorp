@@ -12,6 +12,7 @@
 #include "mozilla/dom/DOMPoint.h"
 #include "mozilla/dom/DOMQuad.h"
 #include "mozilla/dom/DOMRect.h"
+#include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsGenericDOMDataNode.h"
 #include "nsCSSFrameConstructor.h"

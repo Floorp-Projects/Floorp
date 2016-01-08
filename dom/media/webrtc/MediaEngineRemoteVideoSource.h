@@ -84,7 +84,7 @@ public:
                           SourceMediaStream* aSource,
                           TrackID aId,
                           StreamTime aDesiredTime) override;
-  virtual const dom::MediaSourceEnum GetMediaSource() override {
+  virtual dom::MediaSourceEnum GetMediaSource() const override {
     return mMediaSource;
   }
 

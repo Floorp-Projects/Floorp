@@ -109,6 +109,13 @@ EOF
     while [ ! -f $semaphore ]; do
         sleep 1
     done
+
+    # Turn off the screen saver and screen locking
+    gsettings set org.gnome.desktop.screensaver idle-activation-enabled false
+    gsettings set org.gnome.desktop.screensaver lock-enabled false
+    gsettings set org.gnome.desktop.screensaver lock-delay 3600
+    # Disable the screen saver
+    xset s off s reset
 fi
 
 # support multiple, space delimited, config files
