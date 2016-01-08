@@ -27,7 +27,7 @@ class PropertyName;
 
 namespace wasm {
 
-enum class Stmt : uint8_t
+enum class Expr : uint8_t
 {
     Ret,
 
@@ -57,8 +57,6 @@ enum class Stmt : uint8_t
 
     AtomicsFence,
 
-    // asm.js specific
-    // Expression statements (to be removed in the future)
     I32Expr,
     F32Expr,
     F64Expr,
@@ -66,354 +64,334 @@ enum class Stmt : uint8_t
     F32X4Expr,
     B32X4Expr,
 
+    // asm.js specific
     Id,
     Noop,
     InterruptCheckHead,
     InterruptCheckLoop,
 
     DebugCheckPoint,
+    Bad,
 
-    Bad
-};
+    // I32 opcodes
+    I32GetLocal,
+    I32SetLocal,
+    I32GetGlobal,
+    I32SetGlobal,
 
-enum class I32 : uint8_t
-{
-    // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
+    I32CallInternal,
+    I32CallIndirect,
+    I32CallImport,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    I32Conditional,
+    I32Comma,
 
-    Conditional,
-    Comma,
-
-    Literal,
+    I32Literal,
 
     // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    SDiv,
-    SMod,
-    UDiv,
-    UMod,
-    Min,
-    Max,
+    I32Add,
+    I32Sub,
+    I32Mul,
+    I32SDiv,
+    I32SMod,
+    I32UDiv,
+    I32UMod,
+    I32Min,
+    I32Max,
 
     // Unary arith opcodes
-    Not,
-    Neg,
+    I32Not,
+    I32Neg,
 
     // Bitwise opcodes
-    BitOr,
-    BitAnd,
-    BitXor,
-    BitNot,
+    I32BitOr,
+    I32BitAnd,
+    I32BitXor,
+    I32BitNot,
 
-    Lsh,
-    ArithRsh,
-    LogicRsh,
+    I32Lsh,
+    I32ArithRsh,
+    I32LogicRsh,
 
     // Conversion opcodes
-    FromF32,
-    FromF64,
+    I32FromF32,
+    I32FromF64,
 
     // Math builtin opcodes
-    Clz,
-    Abs,
+    I32Clz,
+    I32Abs,
 
     // Comparison opcodes
     // Ordering matters (EmitComparison expects signed opcodes to be placed
     // before unsigned opcodes)
-    EqI32,
-    NeI32,
-    SLtI32,
-    SLeI32,
-    SGtI32,
-    SGeI32,
-    ULtI32,
-    ULeI32,
-    UGtI32,
-    UGeI32,
+    I32EqI32,
+    I32NeI32,
+    I32SLtI32,
+    I32SLeI32,
+    I32SGtI32,
+    I32SGeI32,
+    I32ULtI32,
+    I32ULeI32,
+    I32UGtI32,
+    I32UGeI32,
 
-    EqF32,
-    NeF32,
-    LtF32,
-    LeF32,
-    GtF32,
-    GeF32,
+    I32EqF32,
+    I32NeF32,
+    I32LtF32,
+    I32LeF32,
+    I32GtF32,
+    I32GeF32,
 
-    EqF64,
-    NeF64,
-    LtF64,
-    LeF64,
-    GtF64,
-    GeF64,
+    I32EqF64,
+    I32NeF64,
+    I32LtF64,
+    I32LeF64,
+    I32GtF64,
+    I32GeF64,
 
     // Heap accesses opcodes
-    SLoad8,
-    SLoad16,
-    SLoad32,
-    ULoad8,
-    ULoad16,
-    ULoad32,
-    Store8,
-    Store16,
-    Store32,
+    I32SLoad8,
+    I32SLoad16,
+    I32SLoad32,
+    I32ULoad8,
+    I32ULoad16,
+    I32ULoad32,
+    I32Store8,
+    I32Store16,
+    I32Store32,
 
     // Atomics opcodes
-    AtomicsCompareExchange,
-    AtomicsExchange,
-    AtomicsLoad,
-    AtomicsStore,
-    AtomicsBinOp,
+    I32AtomicsCompareExchange,
+    I32AtomicsExchange,
+    I32AtomicsLoad,
+    I32AtomicsStore,
+    I32AtomicsBinOp,
 
     // SIMD opcodes
-    I32X4ExtractLane,
-    B32X4ExtractLane,
-    B32X4AllTrue,
-    B32X4AnyTrue,
+    I32I32X4ExtractLane,
+    I32B32X4ExtractLane,
+    I32B32X4AllTrue,
+    I32B32X4AnyTrue,
 
     // Specific to AsmJS
-    Id,
+    I32Id,
 
-    Bad
-};
-
-enum class F32 : uint8_t
-{
+    // F32 opcdoes
     // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
+    F32GetLocal,
+    F32SetLocal,
+    F32GetGlobal,
+    F32SetGlobal,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    F32CallInternal,
+    F32CallIndirect,
+    F32CallImport,
 
-    Conditional,
-    Comma,
+    F32Conditional,
+    F32Comma,
 
-    Literal,
+    F32Literal,
 
     // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Min,
-    Max,
-    Neg,
+    F32Add,
+    F32Sub,
+    F32Mul,
+    F32Div,
+    F32Min,
+    F32Max,
+    F32Neg,
 
     // Math builtin opcodes
-    Abs,
-    Sqrt,
-    Ceil,
-    Floor,
+    F32Abs,
+    F32Sqrt,
+    F32Ceil,
+    F32Floor,
 
     // Conversion opcodes
-    FromF64,
-    FromS32,
-    FromU32,
+    F32FromF64,
+    F32FromS32,
+    F32FromU32,
 
     // Heap accesses opcodes
-    Load,
-    StoreF32,
-    StoreF64,
+    F32Load,
+    F32StoreF32,
+    F32StoreF64,
 
     // SIMD opcodes
-    F32X4ExtractLane,
+    F32F32X4ExtractLane,
 
     // asm.js specific
-    Id,
-    Bad
-};
+    F32Id,
 
-enum class F64 : uint8_t
-{
+    // F64 opcodes
     // Common opcodes
-    GetLocal,
-    SetLocal,
-    GetGlobal,
-    SetGlobal,
+    F64GetLocal,
+    F64SetLocal,
+    F64GetGlobal,
+    F64SetGlobal,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    F64CallInternal,
+    F64CallIndirect,
+    F64CallImport,
 
-    Conditional,
-    Comma,
+    F64Conditional,
+    F64Comma,
 
-    Literal,
+    F64Literal,
 
     // Binary arith opcodes
-    Add,
-    Sub,
-    Mul,
-    Div,
-    Min,
-    Max,
-    Mod,
-    Neg,
+    F64Add,
+    F64Sub,
+    F64Mul,
+    F64Div,
+    F64Min,
+    F64Max,
+    F64Mod,
+    F64Neg,
 
     // Math builtin opcodes
-    Abs,
-    Sqrt,
-    Ceil,
-    Floor,
-    Sin,
-    Cos,
-    Tan,
-    Asin,
-    Acos,
-    Atan,
-    Exp,
-    Log,
-    Pow,
-    Atan2,
+    F64Abs,
+    F64Sqrt,
+    F64Ceil,
+    F64Floor,
+    F64Sin,
+    F64Cos,
+    F64Tan,
+    F64Asin,
+    F64Acos,
+    F64Atan,
+    F64Exp,
+    F64Log,
+    F64Pow,
+    F64Atan2,
 
     // Conversions opcodes
-    FromF32,
-    FromS32,
-    FromU32,
+    F64FromF32,
+    F64FromS32,
+    F64FromU32,
 
     // Heap accesses opcodes
-    Load,
-    StoreF32,
-    StoreF64,
+    F64Load,
+    F64StoreF32,
+    F64StoreF64,
 
     // asm.js specific
-    Id,
-    Bad
-};
+    F64Id,
 
-enum class I32X4 : uint8_t
-{
+    // I32X4 opcodes
     // Common opcodes
-    GetLocal,
-    SetLocal,
+    I32X4GetLocal,
+    I32X4SetLocal,
 
-    GetGlobal,
-    SetGlobal,
+    I32X4GetGlobal,
+    I32X4SetGlobal,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    I32X4CallInternal,
+    I32X4CallIndirect,
+    I32X4CallImport,
 
-    Conditional,
-    Comma,
+    I32X4Conditional,
+    I32X4Comma,
 
-    Literal,
+    I32X4Literal,
 
     // Specific opcodes
-    Ctor,
+    I32X4Ctor,
 
-    Unary,
+    I32X4Unary,
 
-    Binary,
-    BinaryBitwise,
-    BinaryShift,
+    I32X4Binary,
+    I32X4BinaryBitwise,
+    I32X4BinaryShift,
 
-    ReplaceLane,
+    I32X4ReplaceLane,
 
-    FromF32X4,
-    FromF32X4Bits,
+    I32X4FromF32X4,
+    I32X4FromF32X4Bits,
 
-    Swizzle,
-    Shuffle,
-    Select,
-    Splat,
+    I32X4Swizzle,
+    I32X4Shuffle,
+    I32X4Select,
+    I32X4Splat,
 
-    Load,
-    Store,
+    I32X4Load,
+    I32X4Store,
 
     // asm.js specific
-    Id,
-    Bad
-};
+    I32X4Id,
 
-enum class F32X4 : uint8_t
-{
+    // F32X4 opcodes
     // Common opcodes
-    GetLocal,
-    SetLocal,
+    F32X4GetLocal,
+    F32X4SetLocal,
 
-    GetGlobal,
-    SetGlobal,
+    F32X4GetGlobal,
+    F32X4SetGlobal,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    F32X4CallInternal,
+    F32X4CallIndirect,
+    F32X4CallImport,
 
-    Conditional,
-    Comma,
+    F32X4Conditional,
+    F32X4Comma,
 
-    Literal,
+    F32X4Literal,
 
     // Specific opcodes
-    Ctor,
+    F32X4Ctor,
 
-    Unary,
+    F32X4Unary,
 
-    Binary,
+    F32X4Binary,
 
-    ReplaceLane,
+    F32X4ReplaceLane,
 
-    FromI32X4,
-    FromI32X4Bits,
-    Swizzle,
-    Shuffle,
-    Select,
-    Splat,
+    F32X4FromI32X4,
+    F32X4FromI32X4Bits,
+    F32X4Swizzle,
+    F32X4Shuffle,
+    F32X4Select,
+    F32X4Splat,
 
-    Load,
-    Store,
+    F32X4Load,
+    F32X4Store,
 
     // asm.js specific
-    Id,
-    Bad
-};
+    F32X4Id,
 
-enum class B32X4 : uint8_t
-{
+    // B32X4 opcodes
     // Common opcodes
-    GetLocal,
-    SetLocal,
+    B32X4GetLocal,
+    B32X4SetLocal,
 
-    GetGlobal,
-    SetGlobal,
+    B32X4GetGlobal,
+    B32X4SetGlobal,
 
-    CallInternal,
-    CallIndirect,
-    CallImport,
+    B32X4CallInternal,
+    B32X4CallIndirect,
+    B32X4CallImport,
 
-    Conditional,
-    Comma,
+    B32X4Conditional,
+    B32X4Comma,
 
-    Literal,
+    B32X4Literal,
 
     // Specific opcodes
-    Ctor,
+    B32X4Ctor,
 
-    Unary,
+    B32X4Unary,
 
-    Binary,
-    BinaryCompI32X4,
-    BinaryCompF32X4,
-    BinaryBitwise,
+    B32X4Binary,
+    B32X4BinaryCompI32X4,
+    B32X4BinaryCompF32X4,
+    B32X4BinaryBitwise,
 
-    ReplaceLane,
+    B32X4ReplaceLane,
 
-    Splat,
+    B32X4Splat,
 
     // asm.js specific
-    Id,
-    Bad
+    B32X4Id
 };
 
 enum NeedsBoundsCheck : uint8_t
@@ -501,7 +479,7 @@ class Encoder
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Stmt((*bytecode_)[pc]) == Stmt::Bad;
+            patchable &= Expr((*bytecode_)[pc]) == Expr::Bad;
         return patchable;
     }
 #endif
