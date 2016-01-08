@@ -7,12 +7,12 @@
  * TEST_DATA array.
  */
 function* runEventPopupTests() {
-  let {inspector, testActor} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
   yield inspector.markup.expandAll();
 
-  for (let test of TEST_DATA) {
-    yield checkEventsForNode(test, inspector, testActor);
+  for (let {selector, expected} of TEST_DATA) {
+    yield checkEventsForNode(selector, expected, inspector);
   }
 
   // Wait for promises to avoid leaks when running this as a single test.
@@ -25,36 +25,12 @@ function* runEventPopupTests() {
  * Generator function that takes a selector and expected results and returns
  * the event info.
  *
- * @param {Object} test
- *  A test object should contain the following properties:
- *        - selector {String} a css selector targeting the node to edit
- *        - expected {Array} array of expected event objects
- *          - type {String} event type
- *          - filename {String} filename:line where the evt handler is defined
- *          - attributes {Array} array of event attributes ({String})
- *          - handler {String} string representation of the handler
- *        - beforeTest {Function} (optional) a function to execute on the page
- *        before running the test
- * @param {InspectorPanel} inspector The instance of InspectorPanel currently
- * opened
- * @param {TestActorFront} testActor
+ * @param {String} selector
+ *        Selector pointing at the node to be inspected
  */
-function* checkEventsForNode(test, inspector, testActor) {
-  let {selector, expected, beforeTest} = test;
+function* checkEventsForNode(selector, expected, inspector) {
   let container = yield getContainerForSelector(selector, inspector);
-
-  if (typeof beforeTest === "function") {
-    yield beforeTest(inspector, testActor);
-  }
-
   let evHolder = container.elt.querySelector(".markupview-events");
-
-  if (expected.length === 0) {
-    // if no event is expected, simply check that the event bubble is hidden
-    is(evHolder.style.display, "none", "event bubble should be hidden");
-    return;
-  }
-
   let tooltip = inspector.markup.tooltip;
 
   yield selectNode(selector, inspector);
