@@ -326,7 +326,7 @@ IdentityManager.prototype = {
       try {
         this._syncKeyBundle = new SyncKeyBundle(this.username, this.syncKey);
       } catch (ex) {
-        this._log.warn(Utils.exceptionStr(ex));
+        this._log.warn("Failed to create sync bundle", ex);
         return null;
       }
     }

@@ -14,7 +14,6 @@ Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/Timer.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
-Cu.import("resource://services-common/utils.js", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm");
 Cu.import("resource://gre/modules/KeyValueParser.jsm");
 
@@ -272,8 +271,7 @@ this.CrashManager.prototype = Object.freeze({
             }
           } catch (ex) {
             if (ex instanceof OS.File.Error) {
-              this._log.warn("I/O error reading " + entry.path + ": " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("I/O error reading " + entry.path, ex);
             } else {
               // We should never encounter an exception. This likely represents
               // a coding error because all errors should be detected and
@@ -282,7 +280,7 @@ this.CrashManager.prototype = Object.freeze({
               // If we get here, report the error and delete the source file
               // so we don't see it again.
               Cu.reportError("Exception when processing crash event file: " +
-                             CommonUtils.exceptionStr(ex));
+                             Log.exceptionStr(ex));
               deletePaths.push(entry.path);
             }
           }
@@ -297,8 +295,7 @@ this.CrashManager.prototype = Object.freeze({
           try {
             yield OS.File.remove(path);
           } catch (ex) {
-            this._log.warn("Error removing event file (" + path + "): " +
-                           CommonUtils.exceptionStr(ex));
+            this._log.warn("Error removing event file (" + path + ")", ex);
           }
         }
 

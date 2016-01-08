@@ -28,7 +28,6 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/rest.js");
 Cu.import("resource://services-common/utils.js");
 
-
 /**
  * Represents the result of a Bagheera request.
  */
@@ -185,8 +184,7 @@ BagheeraClient.prototype = Object.freeze({
         let h = Services.telemetry.getHistogramById(options.telemetryCompressed);
         h.add(data.length);
       } catch (ex) {
-        this._log.warn("Unable to record telemetry for compressed payload size: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Unable to record telemetry for compressed payload size", ex);
       }
     }
 
@@ -251,8 +249,7 @@ BagheeraClient.prototype = Object.freeze({
     result.request = request;
 
     if (error) {
-      this._log.info("Transport failure on request: " +
-                     CommonUtils.exceptionStr(error));
+      this._log.info("Transport failure on request", error);
       result.transportSuccess = false;
       deferred.resolve(result);
       return;

@@ -102,12 +102,13 @@ function test_simple_breakpoint()
     });
   });
 
-  gDebuggee.eval("var line0 = Error().lineNumber;\n" +
-                 "function foo() {\n" + // line0 + 1
-                 "  this.a = 1;\n" +    // line0 + 2 <-- Breakpoint is set here.
-                 "}\n" +                // line0 + 3
-                 "debugger;\n" +        // line0 + 4
-                 "foo();\n" +           // line0 + 5
-                 "debugger;\n" +        // line0 + 6
-                 "var b = 2;\n");       // line0 + 7
+  Cu.evalInSandbox("var line0 = Error().lineNumber;\n" +
+                   "function foo() {\n" + // line0 + 1
+                   "  this.a = 1;\n" +    // line0 + 2 <-- Breakpoint is set here.
+                   "}\n" +                // line0 + 3
+                   "debugger;\n" +        // line0 + 4
+                   "foo();\n" +           // line0 + 5
+                   "debugger;\n" +        // line0 + 6
+                   "var b = 2;\n",        // line0 + 7
+                   gDebuggee);
 }

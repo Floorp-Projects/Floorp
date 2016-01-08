@@ -8,10 +8,8 @@
 
 "use strict";
 
-const {
-  AnimationsTimeline,
-  RateSelector
-} = require("devtools/client/animationinspector/components");
+const {AnimationsTimeline} = require("devtools/client/animationinspector/components/animation-timeline");
+const {RateSelector} = require("devtools/client/animationinspector/components/rate-selector");
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
 var $ = (selector, target = document) => target.querySelector(selector);
