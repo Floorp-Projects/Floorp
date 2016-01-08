@@ -149,7 +149,7 @@
     <div flex="1" id="deck-panels">
       <vbox id="project-listing-panel" class="project-listing panel-list" flex="1">
         <div id="project-listing-wrapper" class="panel-list-wrapper">
-          <iframe id="project-listing-panel-details" flex="1" src="project-listing.xhtml"/>
+          <iframe id="project-listing-panel-details" flex="1" src="project-listing.xhtml" tooltip="aHTMLTooltip"/>
         </div>
       </vbox>
       <splitter class="devtools-side-splitter" id="project-listing-splitter"/>
@@ -169,7 +169,7 @@
       <splitter class="devtools-side-splitter" id="runtime-listing-splitter"/>
       <vbox id="runtime-listing-panel" class="runtime-listing panel-list" flex="1">
         <div id="runtime-listing-wrapper" class="panel-list-wrapper">
-          <iframe id="runtime-listing-panel-details" flex="1" src="runtime-listing.xhtml"/>
+          <iframe id="runtime-listing-panel-details" flex="1" src="runtime-listing.xhtml" tooltip="aHTMLTooltip"/>
         </div>
       </vbox>
     </div>

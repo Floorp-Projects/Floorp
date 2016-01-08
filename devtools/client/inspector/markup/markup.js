@@ -21,7 +21,7 @@ const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 
 const {UndoStack} = require("devtools/client/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/client/shared/inplace-editor");
-const {HTMLEditor} = require("devtools/client/markupview/html-editor");
+const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
 const EventEmitter = require("devtools/shared/event-emitter");
@@ -62,7 +62,7 @@ loader.lazyGetter(this, "AutocompletePopup", () => {
  * @param Inspector aInspector
  *        The inspector we're watching.
  * @param iframe aFrame
- *        An iframe in which the caller has kindly loaded markup-view.xhtml.
+ *        An iframe in which the caller has kindly loaded markup.xhtml.
  */
 function MarkupView(aInspector, aFrame, aControllerWindow) {
   this._inspector = aInspector;
@@ -361,7 +361,7 @@ MarkupView.prototype = {
     return promise.all([onShown, this._briefBoxModelPromise.promise]);
   },
 
-  template: function(aName, aDest, aOptions={stack: "markup-view.xhtml"}) {
+  template: function(aName, aDest, aOptions={stack: "markup.xhtml"}) {
     let node = this.doc.getElementById("template-" + aName).cloneNode(true);
     node.removeAttribute("id");
     template(node, aDest, aOptions);

@@ -2,7 +2,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that network log messages bring up the network panel.
+// Tests that Web console messages can be filtered for NET events.
 
 "use strict";
 
