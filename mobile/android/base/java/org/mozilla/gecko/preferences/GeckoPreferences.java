@@ -35,10 +35,12 @@ import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
 import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FloatingHintEditText;
 
@@ -94,6 +96,7 @@ extends PreferenceActivity
 implements
 GeckoActivityStatus,
 GeckoEventListener,
+NativeEventListener,
 OnPreferenceChangeListener,
 OnSharedPreferenceChangeListener
 {
@@ -363,8 +366,11 @@ OnSharedPreferenceChangeListener
             addPreferencesFromResource(res);
         }
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Sanitize:Finished");
+
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
+            "Snackbar:Show");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -514,8 +520,12 @@ OnSharedPreferenceChangeListener
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Sanitize:Finished");
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
+            "Snackbar:Show");
+
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
         }
@@ -626,6 +636,13 @@ OnSharedPreferenceChangeListener
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
+    }
+
+    @Override
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
+        if ("Snackbar:Show".equals(event)) {
+            SnackbarHelper.showSnackbar(this, message, callback);
         }
     }
 
