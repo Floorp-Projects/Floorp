@@ -1815,12 +1815,12 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
 }
 
 bool
-nsLayoutUtils::ViewportHasDisplayPort(nsPresContext* aPresContext, nsRect* aDisplayPort)
+nsLayoutUtils::ViewportHasDisplayPort(nsPresContext* aPresContext)
 {
   nsIFrame* rootScrollFrame =
     aPresContext->PresShell()->GetRootScrollFrame();
   return rootScrollFrame &&
-    nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), aDisplayPort);
+    nsLayoutUtils::HasDisplayPort(rootScrollFrame->GetContent());
 }
 
 bool
