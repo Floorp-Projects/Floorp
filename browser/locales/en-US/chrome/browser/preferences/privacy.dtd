@@ -2,11 +2,16 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!ENTITY tracking.label                 "Tracking">
+<!ENTITY  trackingProtectionHeader.label       "Use Tracking Protection">
+<!ENTITY  trackingProtectionAlways.label       "Always">
+<!ENTITY  trackingProtectionAlways.accesskey   "y">
+<!ENTITY  trackingProtectionPrivate.label      "Only in private windows">
+<!ENTITY  trackingProtectionPrivate.accesskey  "l">
+<!ENTITY  trackingProtectionNever.label        "Never">
+<!ENTITY  trackingProtectionNever.accesskey    "n">
+<!ENTITY  trackingProtectionLearnMore.label    "Learn more">
 
-<!ENTITY trackingProtection5.label     "Use Tracking Protection">
-<!ENTITY trackingProtection5.accesskey "i">
-<!ENTITY trackingProtectionLearnMore.label "Learn more">
+<!ENTITY tracking.label                 "Tracking">
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
 <!ENTITY trackingProtectionPBM5.accesskey     "v">
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
