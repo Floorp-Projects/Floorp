@@ -6,7 +6,7 @@ task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
-    source: http://todo.com/soon
+    source: '{{source}}'
     owner: amiyaguchi@mozilla.com
     name: '[TC] Upload Symbols'
     description: 'Upload Symbols'

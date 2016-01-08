@@ -9,7 +9,7 @@ task:
   metadata:
     name: 'Docker Artifact Image Builder'
     description: 'Builder for docker images as artifacts'
-    source: http://todo.com/soon
+    source: '{{source}}'
     owner: mozilla-taskcluster-maintenance@mozilla.com
   tags:
     createdForUser: {{owner}}
