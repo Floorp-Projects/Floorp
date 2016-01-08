@@ -19,8 +19,8 @@
 #ifndef wasm_generator_h
 #define wasm_generator_h
 
+#include "asmjs/WasmBinary.h"
 #include "asmjs/WasmIonCompile.h"
-#include "asmjs/WasmIR.h"
 #include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
@@ -130,8 +130,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineExport(uint32_t index, Offsets offsets);
 
     // Functions:
-    bool startFunc(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
-    bool finishFunc(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime, FunctionGenerator* fg);
+    bool startFunc(PropertyName* name, unsigned line, unsigned column, UniqueBytecode* recycled,
+                   FunctionGenerator* fg);
+    bool finishFunc(uint32_t funcIndex, const LifoSig& sig, UniqueBytecode bytecode,
+                    unsigned generateTime, FunctionGenerator* fg);
     bool finishFuncs();
 
     // Function-pointer tables:
@@ -164,13 +166,36 @@ class MOZ_STACK_CLASS FunctionGenerator
 {
     friend class ModuleGenerator;
 
-    ModuleGenerator* m_;
-    IonCompileTask*  task_;
-    FuncIR*          func_;
+    ModuleGenerator*   m_;
+    IonCompileTask*    task_;
+
+    // Function metadata created during function generation, then handed over
+    // to the FuncBytecode in ModuleGenerator::finishFunc().
+    SourceCoordsVector callSourceCoords_;
+    ValTypeVector      localVars_;
+
+    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
+    // asm.js compilation.
+    PropertyName* name_;
+    unsigned line_;
+    unsigned column_;
 
   public:
-    FunctionGenerator() : m_(nullptr), task_(nullptr), func_(nullptr) {}
-    FuncIR& func() const { MOZ_ASSERT(func_); return *func_; }
+    FunctionGenerator()
+      : m_(nullptr),
+        task_(nullptr),
+        name_(nullptr),
+        line_(0),
+        column_(0)
+    {}
+
+    bool addSourceCoords(size_t byteOffset, uint32_t line, uint32_t column) {
+        SourceCoords sc = { byteOffset, line, column };
+        return callSourceCoords_.append(sc);
+    }
+    bool addVariable(ValType v) {
+        return localVars_.append(v);
+    }
 };
 
 } // namespace wasm

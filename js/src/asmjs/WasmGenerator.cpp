@@ -191,7 +191,7 @@ ModuleGenerator::finishOutstandingTask()
 bool
 ModuleGenerator::finishTask(IonCompileTask* task)
 {
-    const FuncIR& func = task->func();
+    const FuncBytecode& func = task->func();
     FuncCompileResults& results = task->results();
 
     // Offset the recorded FuncOffsets by the offset of the function in the
@@ -229,7 +229,6 @@ ModuleGenerator::finishTask(IonCompileTask* task)
             return false;
     }
 
-    task->reset();
     freeTasks_.infallibleAppend(task);
     return true;
 }
@@ -344,7 +343,7 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 
 bool
 ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
-                           FunctionGenerator* fg)
+                           UniqueBytecode* recycled, FunctionGenerator* fg)
 {
     MOZ_ASSERT(!activeFunc_);
     MOZ_ASSERT(!finishedFuncs_);
@@ -353,25 +352,38 @@ ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
         return false;
 
     IonCompileTask* task = freeTasks_.popCopy();
-    FuncIR* func = task->lifo().new_<FuncIR>(task->lifo(), name, line, column);
-    if (!func)
-        return false;
 
-    task->init(*func);
+    task->reset(recycled);
+
+    fg->name_= name;
+    fg->line_ = line;
+    fg->column_ = column;
     fg->m_ = this;
     fg->task_ = task;
-    fg->func_ = func;
     activeFunc_ = fg;
     return true;
 }
 
 bool
-ModuleGenerator::finishFunc(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime,
-                            FunctionGenerator* fg)
+ModuleGenerator::finishFunc(uint32_t funcIndex, const LifoSig& sig, UniqueBytecode bytecode,
+                            unsigned generateTime, FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFunc_ == fg);
 
-    fg->func_->finish(funcIndex, sig, generateTime);
+    UniqueFuncBytecode func = cx_->make_unique<FuncBytecode>(fg->name_,
+        fg->line_,
+        fg->column_,
+        Move(fg->callSourceCoords_),
+        funcIndex,
+        sig,
+        Move(bytecode),
+        Move(fg->localVars_),
+        generateTime
+    );
+    if (!func)
+        return false;
+
+    fg->task_->init(Move(func));
 
     if (parallel_) {
         if (!StartOffThreadWasmCompile(cx_, fg->task_))
@@ -386,7 +398,6 @@ ModuleGenerator::finishFunc(uint32_t funcIndex, const LifoSig& sig, unsigned gen
 
     fg->m_ = nullptr;
     fg->task_ = nullptr;
-    fg->func_ = nullptr;
     activeFunc_ = nullptr;
     return true;
 }
