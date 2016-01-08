@@ -3,6 +3,7 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://services-sync/addonutils.js");
 Cu.import("resource://services-sync/engines/addons.js");
@@ -61,7 +62,7 @@ function createAndStartHTTPServer(port) {
     return server;
   } catch (ex) {
     _("Got exception starting HTTP server on port " + port);
-    _("Error: " + Utils.exceptionStr(ex));
+    _("Error: " + Log.exceptionStr(ex));
     do_throw(ex);
   }
 }

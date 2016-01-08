@@ -15,7 +15,6 @@ var {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/observers.js");
-Cu.import("resource://services-common/utils.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/identity.js");
 Cu.import("resource://services-sync/record.js");
@@ -308,8 +307,7 @@ Store.prototype = {
         // ex.cause will carry its stack with it when rethrown.
         throw ex.cause;
       } catch (ex if !Async.isShutdownException(ex)) {
-        this._log.warn("Failed to apply incoming record " + record.id);
-        this._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        this._log.warn("Failed to apply incoming record " + record.id, ex);
         this.engine._noteApplyFailure();
         failed.push(record.id);
       }
@@ -578,16 +576,11 @@ EngineManager.prototype = {
         this._engines[name] = engine;
       }
     } catch (ex) {
-      this._log.error(CommonUtils.exceptionStr(ex));
-
-      let mesg = ex.message ? ex.message : ex;
       let name = engineObject || "";
       name = name.prototype || "";
       name = name.name || "";
 
-      let out = "Could not initialize engine '" + name + "': " + mesg;
-      this._log.error(out);
-
+      this._log.error(`Could not initialize engine ${name}`, ex);
       return engineObject;
     }
   },
@@ -817,7 +810,7 @@ SyncEngine.prototype = {
     return this._previousFailed;
   },
   set previousFailed(val) {
-    let cb = (error) => this._log.error(Utils.exceptionStr(error));
+    let cb = (error) => this._log.error("Failed to set previousFailed", error);
     // Coerce the array to a string for more efficient comparison.
     if (val + "" == this._previousFailed) {
       return;
@@ -1000,8 +993,7 @@ SyncEngine.prototype = {
       } catch (ex if !Async.isShutdownException(ex)) {
         // Catch any error that escapes from applyIncomingBatch. At present
         // those will all be abort events.
-        this._log.warn("Got exception " + Utils.exceptionStr(ex) +
-                       ", aborting processIncoming.");
+        this._log.warn("Got exception, aborting processIncoming", ex);
         aborting = ex;
       }
       this._tracker.ignoreAll = false;
@@ -1069,7 +1061,7 @@ SyncEngine.prototype = {
               self._log.debug("Ignoring second retry suggestion.");
               // Fall through to error case.
             case SyncEngine.kRecoveryStrategy.error:
-              self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+              self._log.warn("Error decrypting record", ex);
               self._noteApplyFailure();
               failed.push(item.id);
               return;
@@ -1080,7 +1072,7 @@ SyncEngine.prototype = {
           }
         }
       } catch (ex) {
-        self._log.warn("Error decrypting record: " + Utils.exceptionStr(ex));
+        self._log.warn("Error decrypting record", ex);
         self._noteApplyFailure();
         failed.push(item.id);
         return;
@@ -1095,8 +1087,7 @@ SyncEngine.prototype = {
         failed.push(item.id);
         aborting = ex.cause;
       } catch (ex if !Async.isShutdownException(ex)) {
-        self._log.warn("Failed to reconcile incoming record " + item.id);
-        self._log.warn("Encountered exception: " + Utils.exceptionStr(ex));
+        self._log.warn("Failed to reconcile incoming record " + item.id, ex);
         self._noteApplyFailure();
         failed.push(item.id);
         return;
@@ -1485,7 +1476,7 @@ SyncEngine.prototype = {
           out.encrypt(this.service.collectionKeys.keyForCollection(this.name));
           up.pushData(out);
         } catch (ex if !Async.isShutdownException(ex)) {
-          this._log.warn("Error creating record: " + Utils.exceptionStr(ex));
+          this._log.warn("Error creating record", ex);
         }
 
         // Partial upload
@@ -1576,7 +1567,7 @@ SyncEngine.prototype = {
       this._log.trace("Trying to decrypt a record from the server..");
       test.get();
     } catch (ex if !Async.isShutdownException(ex)) {
-      this._log.debug("Failed test decrypt: " + Utils.exceptionStr(ex));
+      this._log.debug("Failed test decrypt", ex);
     }
 
     return canDecrypt;
