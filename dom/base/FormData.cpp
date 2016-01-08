@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsFormData.h"
+#include "FormData.h"
 #include "nsIVariant.h"
 #include "nsIInputStream.h"
 #include "mozilla/dom/File.h"
@@ -15,7 +15,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsFormData::nsFormData(nsISupports* aOwner)
+FormData::FormData(nsISupports* aOwner)
   : nsFormSubmission(NS_LITERAL_CSTRING("UTF-8"), nullptr)
   , mOwner(aOwner)
 {
@@ -61,9 +61,9 @@ CreateNewFileInstance(Blob& aBlob, const Optional<nsAString>& aFilename,
 // -------------------------------------------------------------------------
 // nsISupports
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsFormData)
+NS_IMPL_CYCLE_COLLECTION_CLASS(FormData)
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormData)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(FormData)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwner)
 
   for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
@@ -73,7 +73,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFormData)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormData)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(FormData)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwner)
 
   for (uint32_t i = 0, len = tmp->mFormData.Length(); i < len; ++i) {
@@ -84,12 +84,12 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFormData)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(nsFormData)
+NS_IMPL_CYCLE_COLLECTION_TRACE_WRAPPERCACHE(FormData)
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFormData)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFormData)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(FormData)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(FormData)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormData)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(FormData)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormData)
   NS_INTERFACE_MAP_ENTRY(nsIXHRSendable)
@@ -99,23 +99,23 @@ NS_INTERFACE_MAP_END
 // -------------------------------------------------------------------------
 // nsFormSubmission
 nsresult
-nsFormData::GetEncodedSubmission(nsIURI* aURI,
-                                 nsIInputStream** aPostDataStream)
+FormData::GetEncodedSubmission(nsIURI* aURI,
+                               nsIInputStream** aPostDataStream)
 {
-  NS_NOTREACHED("Shouldn't call nsFormData::GetEncodedSubmission");
+  NS_NOTREACHED("Shouldn't call FormData::GetEncodedSubmission");
   return NS_OK;
 }
 
 void
-nsFormData::Append(const nsAString& aName, const nsAString& aValue,
-                   ErrorResult& aRv)
+FormData::Append(const nsAString& aName, const nsAString& aValue,
+                 ErrorResult& aRv)
 {
   AddNameValuePair(aName, aValue);
 }
 
 void
-nsFormData::Append(const nsAString& aName, Blob& aBlob,
-                   const Optional<nsAString>& aFilename,
+FormData::Append(const nsAString& aName, Blob& aBlob,
+                 const Optional<nsAString>& aFilename,
                    ErrorResult& aRv)
 {
   RefPtr<File> file = CreateNewFileInstance(aBlob, aFilename, aRv);
@@ -127,7 +127,7 @@ nsFormData::Append(const nsAString& aName, Blob& aBlob,
 }
 
 void
-nsFormData::Delete(const nsAString& aName)
+FormData::Delete(const nsAString& aName)
 {
   // We have to use this slightly awkward for loop since uint32_t >= 0 is an
   // error for being always true.
@@ -139,8 +139,8 @@ nsFormData::Delete(const nsAString& aName)
 }
 
 void
-nsFormData::Get(const nsAString& aName,
-                Nullable<OwningFileOrUSVString>& aOutValue)
+FormData::Get(const nsAString& aName,
+              Nullable<OwningFileOrUSVString>& aOutValue)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
@@ -153,8 +153,8 @@ nsFormData::Get(const nsAString& aName,
 }
 
 void
-nsFormData::GetAll(const nsAString& aName,
-                   nsTArray<OwningFileOrUSVString>& aValues)
+FormData::GetAll(const nsAString& aName,
+                 nsTArray<OwningFileOrUSVString>& aValues)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
@@ -165,7 +165,7 @@ nsFormData::GetAll(const nsAString& aName,
 }
 
 bool
-nsFormData::Has(const nsAString& aName)
+FormData::Has(const nsAString& aName)
 {
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (aName.Equals(mFormData[i].name)) {
@@ -177,15 +177,15 @@ nsFormData::Has(const nsAString& aName)
 }
 
 nsresult
-nsFormData::AddNameFilePair(const nsAString& aName, File* aFile)
+FormData::AddNameFilePair(const nsAString& aName, File* aFile)
 {
   FormDataTuple* data = mFormData.AppendElement();
   SetNameFilePair(data, aName, aFile);
   return NS_OK;
 }
 
-nsFormData::FormDataTuple*
-nsFormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
+FormData::FormDataTuple*
+FormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
 {
   FormDataTuple* lastFoundTuple = nullptr;
   uint32_t lastFoundIndex = mFormData.Length();
@@ -207,9 +207,9 @@ nsFormData::RemoveAllOthersAndGetFirstFormDataTuple(const nsAString& aName)
 }
 
 void
-nsFormData::Set(const nsAString& aName, Blob& aBlob,
-                const Optional<nsAString>& aFilename,
-                ErrorResult& aRv)
+FormData::Set(const nsAString& aName, Blob& aBlob,
+              const Optional<nsAString>& aFilename,
+              ErrorResult& aRv)
 {
   FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
   if (tuple) {
@@ -225,8 +225,8 @@ nsFormData::Set(const nsAString& aName, Blob& aBlob,
 }
 
 void
-nsFormData::Set(const nsAString& aName, const nsAString& aValue,
-                ErrorResult& aRv)
+FormData::Set(const nsAString& aName, const nsAString& aValue,
+              ErrorResult& aRv)
 {
   FormDataTuple* tuple = RemoveAllOthersAndGetFirstFormDataTuple(aName);
   if (tuple) {
@@ -237,29 +237,29 @@ nsFormData::Set(const nsAString& aName, const nsAString& aValue,
 }
 
 uint32_t
-nsFormData::GetIterableLength() const
+FormData::GetIterableLength() const
 {
   return mFormData.Length();
 }
 
 const nsAString&
-nsFormData::GetKeyAtIndex(uint32_t aIndex) const
+FormData::GetKeyAtIndex(uint32_t aIndex) const
 {
   MOZ_ASSERT(aIndex < mFormData.Length());
   return mFormData[aIndex].name;
 }
 
 const OwningFileOrUSVString&
-nsFormData::GetValueAtIndex(uint32_t aIndex) const
+FormData::GetValueAtIndex(uint32_t aIndex) const
 {
   MOZ_ASSERT(aIndex < mFormData.Length());
   return mFormData[aIndex].value;
 }
 
 void
-nsFormData::SetNameValuePair(FormDataTuple* aData,
-                             const nsAString& aName,
-                             const nsAString& aValue)
+FormData::SetNameValuePair(FormDataTuple* aData,
+                           const nsAString& aName,
+                           const nsAString& aValue)
 {
   MOZ_ASSERT(aData);
   aData->name = aName;
@@ -267,9 +267,9 @@ nsFormData::SetNameValuePair(FormDataTuple* aData,
 }
 
 void
-nsFormData::SetNameFilePair(FormDataTuple* aData,
-                            const nsAString& aName,
-                            File* aFile)
+FormData::SetNameFilePair(FormDataTuple* aData,
+                          const nsAString& aName,
+                          File* aFile)
 {
   MOZ_ASSERT(aData);
   aData->name = aName;
@@ -284,7 +284,7 @@ nsFormData::SetNameFilePair(FormDataTuple* aData,
 // nsIDOMFormData
 
 NS_IMETHODIMP
-nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
+FormData::Append(const nsAString& aName, nsIVariant* aValue)
 {
   uint16_t dataType;
   nsresult rv = aValue->GetDataType(&dataType);
@@ -331,17 +331,17 @@ nsFormData::Append(const nsAString& aName, nsIVariant* aValue)
 }
 
 /* virtual */ JSObject*
-nsFormData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+FormData::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return FormDataBinding::Wrap(aCx, this, aGivenProto);
 }
 
-/* static */ already_AddRefed<nsFormData>
-nsFormData::Constructor(const GlobalObject& aGlobal,
-                        const Optional<NonNull<HTMLFormElement> >& aFormElement,
-                        ErrorResult& aRv)
+/* static */ already_AddRefed<FormData>
+FormData::Constructor(const GlobalObject& aGlobal,
+                      const Optional<NonNull<HTMLFormElement> >& aFormElement,
+                      ErrorResult& aRv)
 {
-  RefPtr<nsFormData> formData = new nsFormData(aGlobal.GetAsSupports());
+  RefPtr<FormData> formData = new FormData(aGlobal.GetAsSupports());
   if (aFormElement.WasPassed()) {
     aRv = aFormElement.Value().WalkFormElements(formData);
   }
@@ -352,8 +352,8 @@ nsFormData::Constructor(const GlobalObject& aGlobal,
 // nsIXHRSendable
 
 NS_IMETHODIMP
-nsFormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
-                        nsACString& aContentType, nsACString& aCharset)
+FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
+                      nsACString& aContentType, nsACString& aCharset)
 {
   nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 

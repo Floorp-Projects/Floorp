@@ -134,7 +134,7 @@ protected:
 
   // Interface for SVGMatrix's use
   friend class dom::SVGMatrix;
-  const bool IsAnimVal() const {
+  bool IsAnimVal() const {
     return mIsAnimValItem;
   }
   const gfxMatrix& Matrixgfx() const {

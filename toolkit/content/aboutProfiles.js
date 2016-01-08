@@ -299,8 +299,15 @@ function removeProfile(profile) {
 
   // If we are deleting the selected or the default profile we must choose a
   // different one.
-  let isSelected = ProfileService.selectedProfile == profile;
-  let isDefault = ProfileService.defaultProfile == profile;
+  let isSelected = false;
+  try {
+    isSelected = ProfileService.selectedProfile == profile;
+  } catch(e) {}
+
+  let isDefault = false;
+  try {
+    isDefault = ProfileService.defaultProfile == profile;
+  } catch(e) {}
 
   if (isSelected || isDefault) {
     let itr = ProfileService.profiles;

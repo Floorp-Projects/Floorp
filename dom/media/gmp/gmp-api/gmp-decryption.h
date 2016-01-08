@@ -21,7 +21,7 @@
 
 class GMPStringList {
 public:
-  virtual const uint32_t Size() const = 0;
+  virtual uint32_t Size() const = 0;
 
   virtual void StringAt(uint32_t aIndex,
                         const char** aOutString, uint32_t* aOutLength) const = 0;

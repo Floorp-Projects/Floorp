@@ -365,7 +365,7 @@ class Graph(object):
         # Task graph we are generating for taskcluster...
         graph = {
             'tasks': [],
-            'scopes': []
+            'scopes': set(),
         }
 
         if params['revision_hash']:
@@ -373,7 +373,7 @@ class Graph(object):
                 route = 'queue:route:{}.{}'.format(
                             routes_transform.TREEHERDER_ROUTES[env],
                             treeherder_route)
-                graph['scopes'].append(route)
+                graph['scopes'].add(route)
 
         graph['metadata'] = {
             'source': 'http://todo.com/what/goes/here',
@@ -441,10 +441,10 @@ class Graph(object):
                     ))
                 all_routes[route] = build_task['task']['metadata']['name']
 
-            graph['scopes'].append(define_task)
-            graph['scopes'].extend(build_task['task'].get('scopes', []))
+            graph['scopes'].add(define_task)
+            graph['scopes'] |= set(build_task['task'].get('scopes', []))
             route_scopes = map(lambda route: 'queue:route:' + route, build_task['task'].get('routes', []))
-            graph['scopes'].extend(route_scopes)
+            graph['scopes'] |= set(route_scopes)
 
             # Treeherder symbol configuration for the graph required for each
             # build so tests know which platform they belong to.
@@ -539,10 +539,10 @@ class Graph(object):
                         test_task['task']['workerType']
                     )
 
-                    graph['scopes'].append(define_task)
-                    graph['scopes'].extend(test_task['task'].get('scopes', []))
+                    graph['scopes'].add(define_task)
+                    graph['scopes'] |= set(test_task['task'].get('scopes', []))
 
-        graph['scopes'] = list(set(graph['scopes']))
+        graph['scopes'] = sorted(graph['scopes'])
 
         if params['print_names_only']:
             tIDs = defaultdict(list)
@@ -570,7 +570,7 @@ class Graph(object):
             graph.pop('scopes', None)
             graph.pop('metadata', None)
 
-        print(json.dumps(graph, indent=4))
+        print(json.dumps(graph, indent=4, sort_keys=True))
 
 @CommandProvider
 class CIBuild(object):

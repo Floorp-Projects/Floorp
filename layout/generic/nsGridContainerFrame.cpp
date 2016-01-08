@@ -321,7 +321,7 @@ private:
   }
 
   // Return true if aName exists at aIndex.
-  const bool Contains(uint32_t aIndex, const nsString& aName) const
+  bool Contains(uint32_t aIndex, const nsString& aName) const
   {
     if (!mHasRepeatAuto) {
       return mLineNameLists[aIndex].Contains(aName);

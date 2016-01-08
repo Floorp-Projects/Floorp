@@ -389,8 +389,10 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
       childDoc->SetIPCDoc(ipcDoc);
       nsCOMPtr<nsITabChild> tabChild =
         do_GetInterface(mDocument->DocumentNode()->GetDocShell());
-      static_cast<TabChild*>(tabChild.get())->
-        SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
+      if (tabChild) {
+        static_cast<TabChild*>(tabChild.get())->
+          SendPDocAccessibleConstructor(ipcDoc, parentIPCDoc, id);
+      }
     }
   }
 
