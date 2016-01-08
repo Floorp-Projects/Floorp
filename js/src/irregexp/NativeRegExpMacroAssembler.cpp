@@ -204,6 +204,10 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
         masm.assumeUnreachable("Not enough output registers for RegExp");
         masm.bind(&enoughRegisters);
 #endif
+    } else {
+        Register endIndexRegister = input_end_pointer;
+        masm.loadPtr(Address(temp0, offsetof(InputOutputData, endIndex)), endIndexRegister);
+        masm.storePtr(endIndexRegister, Address(masm.getStackPointer(), offsetof(FrameData, endIndex)));
     }
 
     // Load string end pointer.
@@ -354,6 +358,30 @@ NativeRegExpMacroAssembler::GenerateCode(JSContext* cx, bool match_only)
 
             masm.jump(&load_char_start_regexp);
         } else {
+            if (match_only) {
+                // Store endIndex.
+
+                Register endIndexRegister = temp1;
+                Register inputByteLength = backtrack_stack_pointer;
+
+                masm.loadPtr(Address(masm.getStackPointer(), offsetof(FrameData, endIndex)), endIndexRegister);
+
+                masm.loadPtr(inputOutputAddress, temp0);
+                masm.loadPtr(Address(temp0, offsetof(InputOutputData, inputEnd)), inputByteLength);
+                masm.subPtr(Address(temp0, offsetof(InputOutputData, inputStart)), inputByteLength);
+
+                masm.loadPtr(register_location(1), temp0);
+
+                // Convert to index from start of string, not end.
+                masm.addPtr(inputByteLength, temp0);
+
+                // Convert byte index to character index.
+                if (mode_ == CHAR16)
+                    masm.rshiftPtrArithmetic(Imm32(1), temp0);
+
+                masm.store32(temp0, Address(endIndexRegister, 0));
+            }
+
             masm.movePtr(ImmWord(RegExpRunStatus_Success), temp0);
         }
     }

@@ -30,7 +30,9 @@ gfxSurfaceDrawable::gfxSurfaceDrawable(SourceSurface* aSurface,
 }
 
 bool
-gfxSurfaceDrawable::DrawWithSamplingRect(gfxContext* aContext,
+gfxSurfaceDrawable::DrawWithSamplingRect(DrawTarget* aDrawTarget,
+                                         CompositionOp aOp,
+                                         AntialiasMode aAntialiasMode,
                                          const gfxRect& aFillRect,
                                          const gfxRect& aSamplingRect,
                                          ExtendMode aExtendMode,
@@ -52,7 +54,8 @@ gfxSurfaceDrawable::DrawWithSamplingRect(gfxContext* aContext,
     return false;
   }
 
-  DrawInternal(aContext, aFillRect, intRect, ExtendMode::CLAMP, aFilter, aOpacity, gfxMatrix());
+  DrawInternal(aDrawTarget, aOp, aAntialiasMode, aFillRect, intRect,
+               ExtendMode::CLAMP, aFilter, aOpacity, gfxMatrix());
   return true;
 }
 
@@ -69,12 +72,16 @@ gfxSurfaceDrawable::Draw(gfxContext* aContext,
     return true;
   }
 
-  DrawInternal(aContext, aFillRect, IntRect(), aExtendMode, aFilter, aOpacity, aTransform);
+  DrawInternal(aContext->GetDrawTarget(), aContext->CurrentOp(),
+               aContext->CurrentAntialiasMode(), aFillRect, IntRect(),
+               aExtendMode, aFilter, aOpacity, aTransform);
   return true;
 }
 
 void
-gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
+gfxSurfaceDrawable::DrawInternal(DrawTarget* aDrawTarget,
+                                 CompositionOp aOp,
+                                 AntialiasMode aAntialiasMode,
                                  const gfxRect& aFillRect,
                                  const IntRect& aSamplingRect,
                                  ExtendMode aExtendMode,
@@ -89,17 +96,14 @@ gfxSurfaceDrawable::DrawInternal(gfxContext* aContext,
                            patternTransform, aFilter, aSamplingRect);
 
     Rect fillRect = ToRect(aFillRect);
-    DrawTarget* dt = aContext->GetDrawTarget();
 
-    if (aContext->CurrentOp() == CompositionOp::OP_SOURCE &&
-        aOpacity == 1.0) {
+    if (aOp == CompositionOp::OP_SOURCE && aOpacity == 1.0) {
         // Emulate cairo operator source which is bound by mask!
-        dt->ClearRect(fillRect);
-        dt->FillRect(fillRect, pattern);
+        aDrawTarget->ClearRect(fillRect);
+        aDrawTarget->FillRect(fillRect, pattern);
     } else {
-        dt->FillRect(fillRect, pattern,
-                     DrawOptions(aOpacity, aContext->CurrentOp(),
-                                 aContext->CurrentAntialiasMode()));
+        aDrawTarget->FillRect(fillRect, pattern,
+                              DrawOptions(aOpacity, aOp, aAntialiasMode));
     }
 }
 

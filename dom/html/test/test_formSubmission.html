@@ -258,7 +258,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
   <p>
     File input:
     <input type=file name="file_1" class="setfile">
-    <input type=file name="file_2">
+    <input type=file name="file_2" class="setfile empty">
     <input type=file name="" class="setfile">
     <input type=file name="">
     <input type=file class="setfile">
@@ -268,7 +268,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=523771
     Multifile input:
     <input multiple type=file name="file_3" class="setfile">
     <input multiple type=file name="file_4" class="setfile multi">
-    <input multiple type=file name="file_5">
+    <input multiple type=file name="file_5" class="setfile empty">
     <input multiple type=file name="" class="setfile">
     <input multiple type=file name="" class="setfile multi">
     <input multiple type=file name="">
@@ -426,6 +426,7 @@ function onFilesOpened(files) {
 
   let singleFile = textFile;
   let multiFile = [textFile, imageFile];
+  emptyFile = new File([], "", { type: "application/octet-stream" });
 
   var addList = document.getElementsByClassName("setfile");
   let i = 0;
@@ -433,8 +434,9 @@ function onFilesOpened(files) {
   while (input = addList[i++]) {
     if (input.classList.contains("multi")) {
       SpecialPowers.wrap(input).mozSetFileArray(multiFile);
-    }
-    else {
+    } else if (input.classList.contains("empty")) {
+      SpecialPowers.wrap(input).mozSetFileArray([emptyFile]);
+    } else {
       SpecialPowers.wrap(input).mozSetFileArray([singleFile]);
     }
   }
@@ -447,7 +449,6 @@ function onFilesOpened(files) {
   myFile2 = input.files[1];
   is(myFile1.size, 20, "File1 size");
   is(myFile2.size, 2711, "File2 size");
-  emptyFile = { name: "", type: "application/octet-stream" };
 
   // Now, actually run the tests; see below.
   onFilesSet();
