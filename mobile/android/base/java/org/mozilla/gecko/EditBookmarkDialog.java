@@ -217,8 +217,9 @@ public class EditBookmarkDialog {
 
                     @Override
                     public void onPostExecute(Void result) {
-                        View view = ((Activity)context).findViewById(android.R.id.content);
-                        Snackbar.make(view, R.string.bookmark_updated, Snackbar.LENGTH_SHORT).show();
+                        SnackbarHelper.showSnackbar((Activity) context,
+                                context.getString(R.string.bookmark_updated),
+                                Snackbar.LENGTH_SHORT);
                     }
                 }).execute();
             }
