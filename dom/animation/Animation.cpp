@@ -83,6 +83,15 @@ namespace {
 // Animation interface:
 //
 // ---------------------------------------------------------------------------
+void
+Animation::SetId(const nsAString& aId)
+{
+  if (mId == aId) {
+    return;
+  }
+  mId = aId;
+  nsNodeUtils::AnimationChanged(this);
+}
 
 void
 Animation::SetEffect(KeyframeEffectReadOnly* aEffect)
