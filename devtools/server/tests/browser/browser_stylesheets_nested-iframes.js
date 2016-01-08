@@ -18,9 +18,7 @@ add_task(function*() {
   let form = yield connectDebuggerClient(client);
 
   info("Attaching to the active tab.");
-  yield new Promise(resolve => {
-    client.attachTab(form.actor, resolve);
-  });
+  yield client.attachTab(form.actor);
 
   let front = StyleSheetsFront(client, form);
   ok(front, "The StyleSheetsFront was created.");
