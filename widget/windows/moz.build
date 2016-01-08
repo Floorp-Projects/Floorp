@@ -105,7 +105,3 @@ for var in ('MOZ_ENABLE_D3D10_LAYER'):
 RESFILE = 'widget.res'
 
 CXXFLAGS += CONFIG['MOZ_CAIRO_CFLAGS']
-
-OS_LIBS += [
-    'rpcrt4',
-]
