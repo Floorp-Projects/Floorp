@@ -10,6 +10,8 @@
 <!ENTITY  trackingProtectionNever.label        "Never">
 <!ENTITY  trackingProtectionNever.accesskey    "n">
 <!ENTITY  trackingProtectionLearnMore.label    "Learn more">
+<!ENTITY  trackingProtectionExceptions.label   "Exceptions…">
+<!ENTITY  trackingProtectionExceptions.accesskey "x">
 
 <!ENTITY tracking.label                 "Tracking">
 <!ENTITY trackingProtectionPBM5.label         "Use Tracking Protection in Private Windows">
