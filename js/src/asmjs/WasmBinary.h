@@ -51,6 +51,9 @@ enum class Expr : uint8_t
     Break,
     BreakLabel,
 
+    GetLocal,
+    SetLocal,
+
     CallInternal,
     CallIndirect,
     CallImport,
@@ -67,6 +70,10 @@ enum class Expr : uint8_t
     // asm.js specific
     Id,
     Noop,
+
+    LoadGlobal,
+    StoreGlobal,
+
     InterruptCheckHead,
     InterruptCheckLoop,
 
@@ -74,11 +81,6 @@ enum class Expr : uint8_t
     Bad,
 
     // I32 opcodes
-    I32GetLocal,
-    I32SetLocal,
-    I32GetGlobal,
-    I32SetGlobal,
-
     I32CallInternal,
     I32CallIndirect,
     I32CallImport,
@@ -178,11 +180,6 @@ enum class Expr : uint8_t
 
     // F32 opcdoes
     // Common opcodes
-    F32GetLocal,
-    F32SetLocal,
-    F32GetGlobal,
-    F32SetGlobal,
-
     F32CallInternal,
     F32CallIndirect,
     F32CallImport,
@@ -225,11 +222,6 @@ enum class Expr : uint8_t
 
     // F64 opcodes
     // Common opcodes
-    F64GetLocal,
-    F64SetLocal,
-    F64GetGlobal,
-    F64SetGlobal,
-
     F64CallInternal,
     F64CallIndirect,
     F64CallImport,
@@ -280,12 +272,6 @@ enum class Expr : uint8_t
 
     // I32X4 opcodes
     // Common opcodes
-    I32X4GetLocal,
-    I32X4SetLocal,
-
-    I32X4GetGlobal,
-    I32X4SetGlobal,
-
     I32X4CallInternal,
     I32X4CallIndirect,
     I32X4CallImport,
@@ -322,12 +308,6 @@ enum class Expr : uint8_t
 
     // F32X4 opcodes
     // Common opcodes
-    F32X4GetLocal,
-    F32X4SetLocal,
-
-    F32X4GetGlobal,
-    F32X4SetGlobal,
-
     F32X4CallInternal,
     F32X4CallIndirect,
     F32X4CallImport,
@@ -361,12 +341,6 @@ enum class Expr : uint8_t
 
     // B32X4 opcodes
     // Common opcodes
-    B32X4GetLocal,
-    B32X4SetLocal,
-
-    B32X4GetGlobal,
-    B32X4SetGlobal,
-
     B32X4CallInternal,
     B32X4CallIndirect,
     B32X4CallImport,

@@ -3408,10 +3408,10 @@ CheckFinalReturn(FunctionValidator& f, ParseNode* lastNonEmptyStmt)
 }
 
 static bool
-SetLocal(FunctionValidator& f, Expr exprStmt, Expr setLocal, NumLit lit)
+SetLocal(FunctionValidator& f, Expr exprStmt, NumLit lit)
 {
     return f.writeOp(exprStmt) &&
-           f.writeOp(setLocal) &&
+           f.writeOp(Expr::SetLocal) &&
            f.writeU32(f.numLocals()) &&
            f.writeLit(lit);
 }
@@ -3442,32 +3442,32 @@ CheckVariable(FunctionValidator& f, ParseNode* var)
       case NumLit::Fixnum:
       case NumLit::NegativeInt:
       case NumLit::BigUnsigned:
-        if (lit.toInt32() != 0 && !SetLocal(f, Expr::I32Expr, Expr::I32SetLocal, lit))
+        if (lit.toInt32() != 0 && !SetLocal(f, Expr::I32Expr, lit))
             return false;
         break;
       case NumLit::Double:
         if ((lit.toDouble() != 0.0 || IsNegativeZero(lit.toDouble())) &&
-            !SetLocal(f, Expr::F64Expr, Expr::F64SetLocal, lit))
+            !SetLocal(f, Expr::F64Expr, lit))
             return false;
         break;
       case NumLit::Float:
         if ((lit.toFloat() != 0.f || !IsNegativeZero(lit.toFloat())) &&
-            !SetLocal(f, Expr::F32Expr, Expr::F32SetLocal, lit))
+            !SetLocal(f, Expr::F32Expr, lit))
             return false;
         break;
       case NumLit::Int32x4:
         if (lit.simdValue() != SimdConstant::SplatX4(0) &&
-            !SetLocal(f, Expr::I32X4Expr, Expr::I32X4SetLocal, lit))
+            !SetLocal(f, Expr::I32X4Expr, lit))
             return false;
         break;
       case NumLit::Float32x4:
         if (lit.simdValue() != SimdConstant::SplatX4(0.f) &&
-            !SetLocal(f, Expr::F32X4Expr, Expr::F32X4SetLocal, lit))
+            !SetLocal(f, Expr::F32X4Expr, lit))
             return false;
         break;
       case NumLit::Bool32x4:
         if (lit.simdValue() != SimdConstant::SplatX4(0) &&
-            !SetLocal(f, Expr::B32X4Expr, Expr::B32X4SetLocal, lit))
+            !SetLocal(f, Expr::B32X4Expr, lit))
             return false;
         break;
       case NumLit::OutOfRangeInt:
@@ -3512,15 +3512,9 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
     PropertyName* name = varRef->name();
 
     if (const FunctionValidator::Local* local = f.lookupLocal(name)) {
-        switch (local->type) {
-          case ValType::I32:    if (!f.writeOp(Expr::I32GetLocal))   return false; break;
-          case ValType::I64:    MOZ_CRASH("no int64 in asm.js");
-          case ValType::F32:    if (!f.writeOp(Expr::F32GetLocal))   return false; break;
-          case ValType::F64:    if (!f.writeOp(Expr::F64GetLocal))   return false; break;
-          case ValType::I32x4:  if (!f.writeOp(Expr::I32X4GetLocal)) return false; break;
-          case ValType::F32x4:  if (!f.writeOp(Expr::F32X4GetLocal)) return false; break;
-          case ValType::B32x4:  if (!f.writeOp(Expr::B32X4GetLocal)) return false; break;
-        }
+        if (!f.writeOp(Expr::GetLocal))
+            return false;
+        MOZ_ASSERT(local->type != ValType::I64, "no int64 in asm.js");
         if (!f.writeU32(local->slot))
             return false;
         *type = Type::var(local->type);
@@ -3535,18 +3529,9 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::ConstantImport:
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
-            switch (type->which()) {
-              case Type::Int:       if (!f.writeOp(Expr::I32GetGlobal))   return false; break;
-              case Type::Double:    if (!f.writeOp(Expr::F64GetGlobal))   return false; break;
-              case Type::Float:     if (!f.writeOp(Expr::F32GetGlobal))   return false; break;
-              case Type::Int32x4:   if (!f.writeOp(Expr::I32X4GetGlobal)) return false; break;
-              case Type::Float32x4: if (!f.writeOp(Expr::F32X4GetGlobal)) return false; break;
-              case Type::Bool32x4:  if (!f.writeOp(Expr::B32X4GetGlobal)) return false; break;
-              default: MOZ_CRASH("unexpected global type");
-            }
-            if (!f.writeU32(global->varOrConstGlobalDataOffset()))
-                return false;
-            return f.writeU8(uint8_t(global->isConst()));
+            return f.writeOp(Expr::LoadGlobal) &&
+                   f.writeU32(global->varOrConstGlobalDataOffset()) &&
+                   f.writeU8(uint8_t(global->isConst()));
           }
           case ModuleValidator::Global::Function:
           case ModuleValidator::Global::FFI:
@@ -3851,16 +3836,9 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
                            rhsType.toChars(), Type::var(lhsVar->type).toChars());
         }
 
-        switch (lhsVar->type) {
-          case ValType::I32:    f.patchOp(opcodeAt, Expr::I32SetLocal);   break;
-          case ValType::I64:    MOZ_CRASH("no int64 in asm.js");
-          case ValType::F64:    f.patchOp(opcodeAt, Expr::F64SetLocal);   break;
-          case ValType::F32:    f.patchOp(opcodeAt, Expr::F32SetLocal);   break;
-          case ValType::I32x4:  f.patchOp(opcodeAt, Expr::I32X4SetLocal); break;
-          case ValType::F32x4:  f.patchOp(opcodeAt, Expr::F32X4SetLocal); break;
-          case ValType::B32x4:  f.patchOp(opcodeAt, Expr::B32X4SetLocal); break;
-        }
+        MOZ_ASSERT(lhsVar->type != ValType::I64, "no int64 in asm.js");
 
+        f.patchOp(opcodeAt, Expr::SetLocal);
         f.patch32(indexAt, lhsVar->slot);
         *type = rhsType;
         return true;
@@ -3875,16 +3853,7 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
                            rhsType.toChars(), global->varOrConstType().toChars());
         }
 
-        switch (global->varOrConstType().which()) {
-          case Type::Int:       f.patchOp(opcodeAt, Expr::I32SetGlobal);   break;
-          case Type::Float:     f.patchOp(opcodeAt, Expr::F32SetGlobal);   break;
-          case Type::Double:    f.patchOp(opcodeAt, Expr::F64SetGlobal);   break;
-          case Type::Int32x4:   f.patchOp(opcodeAt, Expr::I32X4SetGlobal); break;
-          case Type::Float32x4: f.patchOp(opcodeAt, Expr::F32X4SetGlobal); break;
-          case Type::Bool32x4:  f.patchOp(opcodeAt, Expr::B32X4SetGlobal); break;
-          default: MOZ_CRASH("unexpected global type");
-        }
-
+        f.patchOp(opcodeAt, Expr::StoreGlobal);
         f.patch32(indexAt, global->varOrConstGlobalDataOffset());
         *type = rhsType;
         return true;

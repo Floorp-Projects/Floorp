@@ -1328,7 +1328,7 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition**def)
 }
 
 static bool
-EmitGetLoc(FunctionCompiler& f, const DebugOnly<MIRType>& type, MDefinition** def)
+EmitGetLocal(FunctionCompiler& f, const DebugOnly<MIRType>& type, MDefinition** def)
 {
     uint32_t slot = f.readU32();
     *def = f.getLocalDef(slot);
@@ -1337,7 +1337,7 @@ EmitGetLoc(FunctionCompiler& f, const DebugOnly<MIRType>& type, MDefinition** de
 }
 
 static bool
-EmitGetGlo(FunctionCompiler& f, MIRType type, MDefinition** def)
+EmitLoadGlobal(FunctionCompiler& f, MIRType type, MDefinition** def)
 {
     uint32_t globalDataOffset = f.readU32();
     bool isConst = bool(f.readU8());
@@ -1427,7 +1427,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 }
 
 static bool
-EmitSetLoc(FunctionCompiler& f, ValType type, MDefinition** def)
+EmitSetLocal(FunctionCompiler& f, ValType type, MDefinition** def)
 {
     uint32_t slot = f.readU32();
     MDefinition* expr;
@@ -1439,7 +1439,7 @@ EmitSetLoc(FunctionCompiler& f, ValType type, MDefinition** def)
 }
 
 static bool
-EmitSetGlo(FunctionCompiler& f, ValType type, MDefinition**def)
+EmitStoreGlobal(FunctionCompiler& f, ValType type, MDefinition**def)
 {
     uint32_t globalDataOffset = f.readU32();
     MDefinition* expr;
@@ -2600,18 +2600,18 @@ EmitI32Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Int32), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::I32, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Int32, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::I32, def);
       case Expr::I32Id:
         return EmitI32Expr(f, def);
       case Expr::I32Literal:
         return EmitLiteral(f, ValType::I32, def);
-      case Expr::I32GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Int32), def);
-      case Expr::I32SetLocal:
-        return EmitSetLoc(f, ValType::I32, def);
-      case Expr::I32GetGlobal:
-        return EmitGetGlo(f, MIRType_Int32, def);
-      case Expr::I32SetGlobal:
-        return EmitSetGlo(f, ValType::I32, def);
       case Expr::I32CallInternal:
         return EmitInternalCall(f, ExprType::I32, def);
       case Expr::I32CallIndirect:
@@ -2734,18 +2734,18 @@ EmitF32Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Float32), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::F32, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Float32, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::F32, def);
       case Expr::F32Id:
         return EmitF32Expr(f, def);
       case Expr::F32Literal:
         return EmitLiteral(f, ValType::F32, def);
-      case Expr::F32GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Float32), def);
-      case Expr::F32SetLocal:
-        return EmitSetLoc(f, ValType::F32, def);
-      case Expr::F32GetGlobal:
-        return EmitGetGlo(f, MIRType_Float32, def);
-      case Expr::F32SetGlobal:
-        return EmitSetGlo(f, ValType::F32, def);
       case Expr::F32CallInternal:
         return EmitInternalCall(f, ExprType::F32, def);
       case Expr::F32CallIndirect:
@@ -2802,16 +2802,16 @@ EmitF64Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Double), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::F64, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Double, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::F64, def);
       case Expr::F64Id:
         return EmitF64Expr(f, def);
-      case Expr::F64GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Double), def);
-      case Expr::F64SetLocal:
-        return EmitSetLoc(f, ValType::F64, def);
-      case Expr::F64GetGlobal:
-        return EmitGetGlo(f, MIRType_Double, def);
-      case Expr::F64SetGlobal:
-        return EmitSetGlo(f, ValType::F64, def);
       case Expr::F64Literal:
         return EmitLiteral(f, ValType::F64, def);
       case Expr::F64Add:
@@ -2880,16 +2880,16 @@ EmitI32X4Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Int32x4), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::I32x4, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Int32x4, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::I32x4, def);
       case Expr::I32X4Id:
         return EmitI32X4Expr(f, def);
-      case Expr::I32X4GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Int32x4), def);
-      case Expr::I32X4SetLocal:
-        return EmitSetLoc(f, ValType::I32x4, def);
-      case Expr::I32X4GetGlobal:
-        return EmitGetGlo(f, MIRType_Int32x4, def);
-      case Expr::I32X4SetGlobal:
-        return EmitSetGlo(f, ValType::I32x4, def);
       case Expr::I32X4Comma:
         return EmitComma(f, ValType::I32x4, def);
       case Expr::I32X4Conditional:
@@ -2941,16 +2941,16 @@ EmitF32X4Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Float32x4), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::F32x4, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Float32x4, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::F32x4, def);
       case Expr::F32X4Id:
         return EmitF32X4Expr(f, def);
-      case Expr::F32X4GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Float32x4), def);
-      case Expr::F32X4SetLocal:
-        return EmitSetLoc(f, ValType::F32x4, def);
-      case Expr::F32X4GetGlobal:
-        return EmitGetGlo(f, MIRType_Float32x4, def);
-      case Expr::F32X4SetGlobal:
-        return EmitSetGlo(f, ValType::F32x4, def);
       case Expr::F32X4Comma:
         return EmitComma(f, ValType::F32x4, def);
       case Expr::F32X4Conditional:
@@ -2998,16 +2998,16 @@ EmitB32X4Expr(FunctionCompiler& f, MDefinition** def)
 {
     Expr op(f.readOpcode());
     switch (op) {
+      case Expr::GetLocal:
+        return EmitGetLocal(f, DebugOnly<MIRType>(MIRType_Bool32x4), def);
+      case Expr::SetLocal:
+        return EmitSetLocal(f, ValType::B32x4, def);
+      case Expr::LoadGlobal:
+        return EmitLoadGlobal(f, MIRType_Bool32x4, def);
+      case Expr::StoreGlobal:
+        return EmitStoreGlobal(f, ValType::B32x4, def);
       case Expr::B32X4Id:
         return EmitB32X4Expr(f, def);
-      case Expr::B32X4GetLocal:
-        return EmitGetLoc(f, DebugOnly<MIRType>(MIRType_Bool32x4), def);
-      case Expr::B32X4SetLocal:
-        return EmitSetLoc(f, ValType::B32x4, def);
-      case Expr::B32X4GetGlobal:
-        return EmitGetGlo(f, MIRType_Bool32x4, def);
-      case Expr::B32X4SetGlobal:
-        return EmitSetGlo(f, ValType::B32x4, def);
       case Expr::B32X4Comma:
         return EmitComma(f, ValType::B32x4, def);
       case Expr::B32X4Conditional:
