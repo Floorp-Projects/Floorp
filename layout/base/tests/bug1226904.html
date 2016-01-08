@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=684759
+-->
+<head>
+  <title>Test for Bug 684759</title>
+</head>
+<style>
+  #container {
+  transform-style: preserve-3d;
+  transform: translate3d(400px, 0px, 10px);
+  background-color: black;
+  }
+  #separator {
+  width: 400px;
+  height: 400px;
+  background-color: green;
+  }
+  #transformed {
+  width: 400px;
+  height: 400px;
+  background-color: blue;
+  transform: translate3d(-400px, 0px, 10px);
+  }
+</style>
+<body onload="run()">
+<div>
+  <div id="container">
+    <div id="separator"></div>
+    <div id="transformed"></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1890,11 +1890,9 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
   if (aState->mInPreserves3D) {
     // Collect leaves of the current 3D rendering context.
     for (item = GetBottom(); item; item = item->GetAbove()) {
-      MOZ_ASSERT(item->GetType() == nsDisplayTransform::TYPE_TRANSFORM ||
-                 item->GetType() == nsDisplayTransform::TYPE_PERSPECTIVE);
-      if (item->Frame()->Extend3DContext() &&
-          (item->GetType() == nsDisplayTransform::TYPE_PERSPECTIVE ||
-           !static_cast<nsDisplayTransform*>(item)->IsTransformSeparator())) {
+      auto itemType = item->GetType();
+      if (itemType != nsDisplayItem::TYPE_TRANSFORM ||
+          !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
         item->HitTest(aBuilder, aRect, aState, aOutFrames);
       } else {
         // One of leaves in the current 3D rendering context.
@@ -1918,33 +1916,33 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
 
     bool snap;
     nsRect r = item->GetBounds(aBuilder, &snap).Intersect(aRect);
+    auto itemType = item->GetType();
     bool alwaysIntersect =
-      item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
-      (item->Frame()->Combines3DTransformWithAncestors() ||
-       item->Frame()->Extend3DContext() ||
-       static_cast<nsDisplayTransform*>(item)->IsTransformSeparator());
+      (itemType == nsDisplayItem::TYPE_TRANSFORM &&
+       static_cast<nsDisplayTransform*>(item)->IsParticipating3DContext()) ||
+      (itemType == nsDisplayItem::TYPE_PERSPECTIVE &&
+       static_cast<nsDisplayPerspective*>(item)->Frame()->Extend3DContext());
+    if (alwaysIntersect &&
+        !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
+      nsAutoTArray<nsIFrame*, 1> neverUsed;
+      // Start gethering leaves of the 3D rendering context, and
+      // append leaves at the end of mItemBuffer.  Leaves are
+      // processed at following iterations.
+      aState->mInPreserves3D = true;
+      item->HitTest(aBuilder, aRect, aState, &neverUsed);
+      aState->mInPreserves3D = false;
+      i = aState->mItemBuffer.Length();
+      continue;
+    }
     if (alwaysIntersect || item->GetClip().MayIntersect(r)) {
       nsAutoTArray<nsIFrame*, 16> outFrames;
-      if (item->Frame()->Extend3DContext() &&
-          item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
-          !static_cast<nsDisplayTransform*>(item)->IsTransformSeparator()) {
-        // Start gethering leaves of the 3D rendering context, and
-        // append leaves at the end of mItemBuffer.  Leaves are
-        // processed at following iterations.
-        aState->mInPreserves3D = true;
-        item->HitTest(aBuilder, aRect, aState, &outFrames);
-        aState->mInPreserves3D = false;
-        i = aState->mItemBuffer.Length();
-        continue;
-      } else {
-        item->HitTest(aBuilder, aRect, aState, &outFrames);
-      }
+      item->HitTest(aBuilder, aRect, aState, &outFrames);
 
       // For 3d transforms with preserve-3d we add hit frames into the temp list
       // so we can sort them later, otherwise we add them directly to the output list.
       nsTArray<nsIFrame*> *writeFrames = aOutFrames;
       if (item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
-          item->Frame()->Combines3DTransformWithAncestors()) {
+          static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
         if (outFrames.Length()) {
           nsDisplayTransform *transform = static_cast<nsDisplayTransform*>(item);
           nsPoint point = aRect.TopLeft();
@@ -5538,14 +5536,14 @@ nsDisplayTransform::GetTransformForRendering()
 const Matrix4x4&
 nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBuilder)
 {
+  MOZ_ASSERT(!mFrame->Extend3DContext() || IsLeafOf3DContext());
   // XXX: should go back to fix mTransformGetter.
   if (!mTransformPreserves3DInited) {
     mTransformPreserves3DInited = true;
-    if (!mFrame->Combines3DTransformWithAncestors()) {
+    if (!IsLeafOf3DContext()) {
       mTransformPreserves3D = GetTransform();
       return mTransformPreserves3D;
     }
-    MOZ_ASSERT(!mFrame->Extend3DContext() || IsTransformSeparator());
 
     const nsIFrame* establisher; // Establisher of the 3D rendering context.
     for (establisher = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
@@ -5782,7 +5780,6 @@ nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsP
   inverse.Invert();
   Point4D point = inverse.ProjectPoint(Point(NSAppUnitsToFloatPixels(aPoint.x, factor),
                                              NSAppUnitsToFloatPixels(aPoint.y, factor)));
-  NS_ASSERTION(point.HasPositiveWCoord(), "Why are we trying to get the depth for a point we didn't hit?");
 
   Point point2d = point.As2DPoint();
 

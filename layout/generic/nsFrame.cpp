@@ -1922,6 +1922,9 @@ ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
   } else {
     return false;
   }
+  if (aAncestor == transformFrame) {
+    return true;
+  }
   return FrameParticipatesIn3DContext(aAncestor, transformFrame);
 }
 
