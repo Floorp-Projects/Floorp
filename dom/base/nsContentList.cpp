@@ -845,11 +845,11 @@ nsContentList::Match(Element *aElement)
     return false;
 
   NodeInfo *ni = aElement->NodeInfo();
-
-  bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard ||
-                  mMatchNameSpaceId == kNameSpaceID_Unknown;
+ 
+  bool unknown = mMatchNameSpaceId == kNameSpaceID_Unknown;
+  bool wildcard = mMatchNameSpaceId == kNameSpaceID_Wildcard;
   bool toReturn = mMatchAll;
-  if (!wildcard)
+  if (!unknown && !wildcard)
     toReturn &= ni->NamespaceEquals(mMatchNameSpaceId);
 
   if (toReturn)
@@ -857,6 +857,11 @@ nsContentList::Match(Element *aElement)
 
   bool matchHTML =
     mIsHTMLDocument && aElement->GetNameSpaceID() == kNameSpaceID_XHTML;
+
+  if (unknown) {
+    return matchHTML ? ni->QualifiedNameEquals(mHTMLMatchAtom) :
+                       ni->QualifiedNameEquals(mXMLMatchAtom);
+  }
 
   if (wildcard) {
     return matchHTML ? ni->Equals(mHTMLMatchAtom) :

@@ -1696,6 +1696,16 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_numberingSystem", intl_numberingSystem, 1,0),
     JS_FN("intl_patternForSkeleton", intl_patternForSkeleton, 2,0),
 
+    JS_INLINABLE_FN("IsRegExpObject",
+                    intrinsic_IsInstanceOfBuiltin<RegExpObject>, 1,0,
+                    IsRegExpObject),
+    JS_FN("CallRegExpMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2,0),
+    JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 5,0,
+                    RegExpMatcher),
+    JS_INLINABLE_FN("RegExpTester", RegExpTester, 5,0,
+                    RegExpTester),
+
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
     JS_FN("regexp_exec_no_statics", regexp_exec_no_statics, 2,0),
     JS_FN("regexp_test_no_statics", regexp_test_no_statics, 2,0),

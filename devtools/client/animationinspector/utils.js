@@ -7,11 +7,14 @@
 "use strict";
 
 const {Cu} = require("chrome");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
 loader.lazyRequireGetter(this, "EventEmitter",
                                "devtools/shared/event-emitter");
 
+const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
+const L10N = new ViewHelpers.L10N(STRINGS_URI);
 // How many times, maximum, can we loop before we find the optimal time
 // interval in the timeline graph.
 const OPTIMAL_TIME_INTERVAL_MAX_ITERS = 100;
@@ -26,6 +29,8 @@ const TIME_INTERVAL_COLOR = [128, 136, 144];
 const TIME_INTERVAL_OPACITY_MIN = 32;
 // byte
 const TIME_INTERVAL_OPACITY_ADD = 32;
+
+const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 
 /**
  * DOM node creation helper function.
@@ -208,3 +213,139 @@ function formatStopwatchTime(time) {
 }
 
 exports.formatStopwatchTime = formatStopwatchTime;
+
+/**
+ * The TimeScale helper object is used to know which size should something be
+ * displayed with in the animation panel, depending on the animations that are
+ * currently displayed.
+ * If there are 5 animations displayed, and the first one starts at 10000ms and
+ * the last one ends at 20000ms, then this helper can be used to convert any
+ * time in this range to a distance in pixels.
+ *
+ * For the helper to know how to convert, it needs to know all the animations.
+ * Whenever a new animation is added to the panel, addAnimation(state) should be
+ * called. reset() can be called to start over.
+ */
+var TimeScale = {
+  minStartTime: Infinity,
+  maxEndTime: 0,
+
+  /**
+   * Add a new animation to time scale.
+   * @param {Object} state A PlayerFront.state object.
+   */
+  addAnimation: function(state) {
+    let {previousStartTime, delay, duration,
+         iterationCount, playbackRate} = state;
+
+    // Negative-delayed animations have their startTimes set such that we would
+    // be displaying the delay outside the time window if we didn't take it into
+    // account here.
+    let relevantDelay = delay < 0 ? delay / playbackRate : 0;
+    previousStartTime = previousStartTime || 0;
+
+    this.minStartTime = Math.min(this.minStartTime,
+                                 previousStartTime + relevantDelay);
+    let length = (delay / playbackRate) +
+                 ((duration / playbackRate) *
+                  (!iterationCount ? 1 : iterationCount));
+    let endTime = previousStartTime + length;
+    this.maxEndTime = Math.max(this.maxEndTime, endTime);
+  },
+
+  /**
+   * Reset the current time scale.
+   */
+  reset: function() {
+    this.minStartTime = Infinity;
+    this.maxEndTime = 0;
+  },
+
+  /**
+   * Convert a startTime to a distance in %, in the current time scale.
+   * @param {Number} time
+   * @return {Number}
+   */
+  startTimeToDistance: function(time) {
+    time -= this.minStartTime;
+    return this.durationToDistance(time);
+  },
+
+  /**
+   * Convert a duration to a distance in %, in the current time scale.
+   * @param {Number} time
+   * @return {Number}
+   */
+  durationToDistance: function(duration) {
+    return duration * 100 / this.getDuration();
+  },
+
+  /**
+   * Convert a distance in % to a time, in the current time scale.
+   * @param {Number} distance
+   * @return {Number}
+   */
+  distanceToTime: function(distance) {
+    return this.minStartTime + (this.getDuration() * distance / 100);
+  },
+
+  /**
+   * Convert a distance in % to a time, in the current time scale.
+   * The time will be relative to the current minimum start time.
+   * @param {Number} distance
+   * @return {Number}
+   */
+  distanceToRelativeTime: function(distance) {
+    let time = this.distanceToTime(distance);
+    return time - this.minStartTime;
+  },
+
+  /**
+   * Depending on the time scale, format the given time as milliseconds or
+   * seconds.
+   * @param {Number} time
+   * @return {String} The formatted time string.
+   */
+  formatTime: function(time) {
+    // Format in milliseconds if the total duration is short enough.
+    if (this.getDuration() <= MILLIS_TIME_FORMAT_MAX_DURATION) {
+      return L10N.getFormatStr("timeline.timeGraduationLabel", time.toFixed(0));
+    }
+
+    // Otherwise format in seconds.
+    return L10N.getFormatStr("player.timeLabel", (time / 1000).toFixed(1));
+  },
+
+  getDuration: function() {
+    return this.maxEndTime - this.minStartTime;
+  },
+
+  /**
+   * Given an animation, get the various dimensions (in %) useful to draw the
+   * animation in the timeline.
+   */
+  getAnimationDimensions: function({state}) {
+    let start = state.previousStartTime || 0;
+    let duration = state.duration;
+    let rate = state.playbackRate;
+    let count = state.iterationCount;
+    let delay = state.delay || 0;
+
+    // The start position.
+    let x = this.startTimeToDistance(start + (delay / rate));
+    // The width for a single iteration.
+    let w = this.durationToDistance(duration / rate);
+    // The width for all iterations.
+    let iterationW = w * (count || 1);
+    // The start position of the delay.
+    let delayX = this.durationToDistance((delay < 0 ? 0 : delay) / rate);
+    // The width of the delay.
+    let delayW = this.durationToDistance(Math.abs(delay) / rate);
+    // The width of the delay if it is positive, 0 otherwise.
+    let negativeDelayW = delay < 0 ? delayW : 0;
+
+    return {x, w, iterationW, delayX, delayW, negativeDelayW};
+  }
+};
+
+exports.TimeScale = TimeScale;

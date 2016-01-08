@@ -632,8 +632,8 @@ TabSources.prototype = {
       originalColumn
     } = originalLocation;
 
-    let source = originalSourceActor.source ||
-                 originalSourceActor.generatedSource;
+    let source = (originalSourceActor.source ||
+                  originalSourceActor.generatedSource);
 
     return this.fetchSourceMap(source).then((map) => {
       if (map) {

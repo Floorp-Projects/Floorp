@@ -227,6 +227,12 @@ CompositableHost::DumpTextureHost(std::stringstream& aStream, TextureHost* aText
   aStream << gfxUtils::GetAsDataURI(dSurf).get();
 }
 
+void
+CompositableHost::ReceivedDestroy(PCompositableParent* aActor)
+{
+  static_cast<CompositableParent*>(aActor)->RecvDestroy();
+}
+
 namespace CompositableMap {
 
 typedef std::map<uint64_t, PCompositableParent*> CompositableMap_t;

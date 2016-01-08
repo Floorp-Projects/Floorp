@@ -147,7 +147,7 @@ AddonUtilsInternal.prototype = {
         install.install();
       }
       catch (ex) {
-        this._log.error("Error installing add-on: " + Utils.exceptionstr(ex));
+        this._log.error("Error installing add-on", ex);
         cb(ex, null);
       }
     }.bind(this));

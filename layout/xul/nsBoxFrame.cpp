@@ -1297,10 +1297,10 @@ nsDisplayXULDebug::Paint(nsDisplayListBuilder* aBuilder,
 }
 
 static void
-PaintXULDebugBackground(nsIFrame* aFrame, nsRenderingContext* aCtx,
+PaintXULDebugBackground(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                         const nsRect& aDirtyRect, nsPoint aPt)
 {
-  static_cast<nsBoxFrame*>(aFrame)->PaintXULDebugBackground(*aCtx, aPt);
+  static_cast<nsBoxFrame*>(aFrame)->PaintXULDebugBackground(aDrawTarget, aPt);
 }
 #endif
 
@@ -1395,8 +1395,7 @@ nsBoxFrame::BuildDisplayListForChildren(nsDisplayListBuilder*   aBuilder,
 // whereas it did used to respect OVERFLOW_CLIP, but too bad.
 #ifdef DEBUG_LAYOUT
 void
-nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
-                                    nsPoint aPt)
+nsBoxFrame::PaintXULDebugBackground(DrawTarget* aDrawTarget, nsPoint aPt)
 {
   nsMargin border;
   GetBorder(border);
@@ -1427,36 +1426,33 @@ nsBoxFrame::PaintXULDebugBackground(nsRenderingContext& aRenderingContext,
   ColorPattern color(ToDeviceColor(isHorizontal ? Color(0.f, 0.f, 1.f, 1.f) :
                                                   Color(1.f, 0.f, 0.f, 1.f)));
 
-  DrawTarget* drawTarget = aRenderingContext.GetDrawTarget();
-
   //left
   nsRect r(inner);
   r.width = debugBorder.left;
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
 
   // top
   r = inner;
   r.height = debugBorder.top;
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
 
   //right
   r = inner;
   r.x = r.x + r.width - debugBorder.right;
   r.width = debugBorder.right;
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
 
   //bottom
   r = inner;
   r.y = r.y + r.height - debugBorder.bottom;
   r.height = debugBorder.bottom;
-  drawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
-  
-  // if we have dirty children or we are dirty 
-  // place a green border around us.
+  aDrawTarget->FillRect(NSRectToRect(r, appUnitsPerDevPixel), color);
+
+  // If we have dirty children or we are dirty place a green border around us.
   if (NS_SUBTREE_DIRTY(this)) {
     nsRect dirty(inner);
     ColorPattern green(ToDeviceColor(Color(0.f, 1.f, 0.f, 1.f)));
-    drawTarget->StrokeRect(NSRectToRect(dirty, appUnitsPerDevPixel), green);
+    aDrawTarget->StrokeRect(NSRectToRect(dirty, appUnitsPerDevPixel), green);
   }
 }
 

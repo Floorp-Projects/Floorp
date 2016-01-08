@@ -44,8 +44,8 @@ class OutOfLineTypeOfV;
 class OutOfLineUpdateCache;
 class OutOfLineCallPostWriteBarrier;
 class OutOfLineIsCallable;
-class OutOfLineRegExpExec;
-class OutOfLineRegExpTest;
+class OutOfLineRegExpMatcher;
+class OutOfLineRegExpTester;
 class OutOfLineLambdaArrow;
 
 class CodeGenerator : public CodeGeneratorSpecific
@@ -106,10 +106,10 @@ class CodeGenerator : public CodeGeneratorSpecific
     void visitValueToObjectOrNull(LValueToObjectOrNull* lir);
     void visitInteger(LInteger* lir);
     void visitRegExp(LRegExp* lir);
-    void visitRegExpExec(LRegExpExec* lir);
-    void visitOutOfLineRegExpExec(OutOfLineRegExpExec* ool);
-    void visitRegExpTest(LRegExpTest* lir);
-    void visitOutOfLineRegExpTest(OutOfLineRegExpTest* ool);
+    void visitRegExpMatcher(LRegExpMatcher* lir);
+    void visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool);
+    void visitRegExpTester(LRegExpTester* lir);
+    void visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool);
     void visitRegExpReplace(LRegExpReplace* lir);
     void visitStringReplace(LStringReplace* lir);
     void emitSharedStub(ICStub::Kind kind, LInstruction* lir);
