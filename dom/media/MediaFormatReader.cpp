@@ -270,6 +270,8 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
 
   mDemuxerInitDone = true;
 
+  UniquePtr<MetadataTags> tags(MakeUnique<MetadataTags>());
+
   // To decode, we need valid video and a place to put it.
   bool videoActive = !!mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack) &&
     GetImageContainer();
@@ -282,6 +284,9 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       return;
     }
     mInfo.mVideo = *mVideo.mTrackDemuxer->GetInfo()->GetAsVideoInfo();
+    for (const MetadataTag& tag : mVideo.mTrackDemuxer->GetInfo()->mTags) {
+      tags->Put(tag.mKey, tag.mValue);
+    }
     mVideo.mCallback = new DecoderCallback(this, TrackInfo::kVideoTrack);
     mVideo.mTimeRanges = mVideo.mTrackDemuxer->GetBuffered();
     mTrackDemuxersMayBlock |= mVideo.mTrackDemuxer->GetSamplesMayBlock();
@@ -295,6 +300,9 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
       return;
     }
     mInfo.mAudio = *mAudio.mTrackDemuxer->GetInfo()->GetAsAudioInfo();
+    for (const MetadataTag& tag : mAudio.mTrackDemuxer->GetInfo()->mTags) {
+      tags->Put(tag.mKey, tag.mValue);
+    }
     mAudio.mCallback = new DecoderCallback(this, TrackInfo::kAudioTrack);
     mAudio.mTimeRanges = mAudio.mTrackDemuxer->GetBuffered();
     mTrackDemuxersMayBlock |= mAudio.mTrackDemuxer->GetSamplesMayBlock();
@@ -333,7 +341,7 @@ MediaFormatReader::OnDemuxerInitDone(nsresult)
   mInitDone = true;
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   metadata->mInfo = mInfo;
-  metadata->mTags = nullptr;
+  metadata->mTags = tags->Count() ? tags.release() : nullptr;
   mMetadataPromise.Resolve(metadata, __func__);
 }
 
