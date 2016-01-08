@@ -835,10 +835,7 @@ TabChild::NotifyTabContextUpdated()
         } else {
           docShell->SetIsApp(OwnAppId());
         }
-
-        OriginAttributes attrs = OriginAttributesRef();
-        docShell->SetIsSignedPackage(attrs.mSignedPkg);
-        docShell->SetUserContextId(attrs.mUserContextId);
+        docShell->SetIsSignedPackage(OriginAttributesRef().mSignedPkg);
     }
 }
 
