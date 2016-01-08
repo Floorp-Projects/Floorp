@@ -124,8 +124,12 @@ ScopedGfxFeatureReporter::WriteAppNote(char statusChar)
 void
 ScopedGfxFeatureReporter::AppNote(const nsACString& aMessage)
 {
-  nsCOMPtr<nsIRunnable> r = new AppendAppNotesRunnable(aMessage);
-  NS_DispatchToMainThread(r);
+  if (NS_IsMainThread()) {
+    CrashReporter::AppendAppNotesToCrashReport(aMessage);
+  } else {
+    nsCOMPtr<nsIRunnable> r = new AppendAppNotesRunnable(aMessage);
+    NS_DispatchToMainThread(r);
+  }
 }
   
 } // end namespace mozilla
