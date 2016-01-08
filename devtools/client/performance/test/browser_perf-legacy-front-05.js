@@ -25,7 +25,7 @@ function* spawnTest() {
     // Copy so we don't destructively change the request object, as we use
     // the startTime on this object for filtering in the callback
     let newData = merge({}, data, { startTime: void 0 });
-    return request.call(target.client, newData, res);
+    request.call(target.client, newData, res);
   };
 
   // Perform the first recording...

@@ -55,7 +55,7 @@ function test() {
   function testResumeButton() {
     info ("Pressing the resume button, expecting a thread-paused");
 
-    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled 1");
+    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
     ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
     ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
     let oncePaused = gTarget.once("thread-paused");
@@ -75,20 +75,17 @@ function test() {
       .then(() => {
         ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
-        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled 2");
+        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
       })
-      .then(() => {
-        let p = ensureThreadClientState(gPanel, "resumed");
-        gThreadClient.resume();
-        return p;
-      })
+      .then(() => gThreadClient.resume())
+      .then(() => ensureThreadClientState(gPanel, "resumed"))
   }
 
   function testResumeKeyboard() {
     let key = gResumeKey.getAttribute("keycode");
     info ("Triggering a pause with keyboard (" + key +  "), expecting a thread-paused");
 
-    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled 3");
+    ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
     ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
     ok (!gResumeButton.hasAttribute("checked"), "Resume button is not checked");
 
@@ -107,12 +104,9 @@ function test() {
       .then(() => {
         ok (!gResumeButton.hasAttribute("break-on-next"), "Resume button isn't waiting for next execution");
         is (gResumeButton.getAttribute("checked"), "true", "Resume button is checked");
-        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled 4");
+        ok (!gResumeButton.hasAttribute("disabled"), "Resume button is not disabled");
       })
-      .then(() => {
-        let p = ensureThreadClientState(gPanel, "resumed");
-        gThreadClient.resume();
-        return p;
-      })
+      .then(() => gThreadClient.resume())
+      .then(() => ensureThreadClientState(gPanel, "resumed"))
   }
 }

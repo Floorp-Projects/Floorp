@@ -25,7 +25,7 @@ function test() {
     }
 
     function testDebuggerLoadingError() {
-      ok(gEditor.getText().includes(gL10N.getFormatStr("errorLoadingText2", "No such actor for ID: fake.actor")),
+      ok(gEditor.getText().includes(gL10N.getFormatStr("errorLoadingText2", "noSuchActor")),
          "The valid error loading message is displayed.");
     }
 
