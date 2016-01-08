@@ -579,16 +579,27 @@ class GlobalObject : public NativeObject
 
     static NativeObject* getIntrinsicsHolder(JSContext* cx, Handle<GlobalObject*> global);
 
-    Value existingIntrinsicValue(PropertyName* name) {
+    Value maybeExistingIntrinsicValue(PropertyName* name) {
         Value slot = getReservedSlot(INTRINSICS);
-        MOZ_ASSERT(slot.isObject(), "intrinsics holder must already exist");
+        // If we're in the self-hosting compartment itself, the
+        // intrinsics-holder isn't initialized at this point.
+        if (slot.isUndefined())
+            return UndefinedValue();
 
         NativeObject* holder = &slot.toObject().as<NativeObject>();
 
         Shape* shape = holder->lookupPure(name);
-        MOZ_ASSERT(shape, "intrinsic must already have been added to holder");
+        if (!shape)
+            return UndefinedValue();
 
         return holder->getSlot(shape->slot());
+    }
+
+    Value existingIntrinsicValue(PropertyName* name) {
+        Value val = maybeExistingIntrinsicValue(name);
+        MOZ_ASSERT(!val.isUndefined(), "intrinsic must already have been added to holder");
+
+        return val;
     }
 
     static bool
