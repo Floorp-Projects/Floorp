@@ -222,7 +222,7 @@ public class Favicons {
         }
 
         // If there's no favicon URL given, try and hit the cache with the default one.
-        if (cacheURL == null)  {
+        if (cacheURL == null) {
             cacheURL = guessDefaultFaviconURL(pageURL);
         }
 
