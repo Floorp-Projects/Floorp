@@ -1187,13 +1187,6 @@ private:
   // Data about MediaStreams that are being fed by the decoder.
   const RefPtr<OutputStreamManager> mOutputStreamManager;
 
-  // The SourceMediaStream we are using to feed the mOutputStreams. This stream
-  // is never exposed outside the decoder.
-  // Only written on the main thread while holding the monitor. Therefore it
-  // can be read on any thread while holding the monitor, or on the main thread
-  // without holding the monitor.
-  RefPtr<DecodedStream> mStreamSink;
-
   // Media data resource from the decoder.
   RefPtr<MediaResource> mResource;
 
