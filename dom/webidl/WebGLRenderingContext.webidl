@@ -828,6 +828,21 @@ interface WEBGL_compressed_texture_atc
 };
 
 [NoInterfaceObject]
+interface WEBGL_compressed_texture_es3
+{
+    const GLenum COMPRESSED_R11_EAC                                 = 0x9270;
+    const GLenum COMPRESSED_SIGNED_R11_EAC                          = 0x9271;
+    const GLenum COMPRESSED_RG11_EAC                                = 0x9272;
+    const GLenum COMPRESSED_SIGNED_RG11_EAC                         = 0x9273;
+    const GLenum COMPRESSED_RGB8_ETC2                               = 0x9274;
+    const GLenum COMPRESSED_SRGB8_ETC2                              = 0x9275;
+    const GLenum COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2           = 0x9276;
+    const GLenum COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2          = 0x9277;
+    const GLenum COMPRESSED_RGBA8_ETC2_EAC                          = 0x9278;
+    const GLenum COMPRESSED_SRGB8_ALPHA8_ETC2_EAC                   = 0x9279;
+};
+
+[NoInterfaceObject]
 interface WEBGL_compressed_texture_etc1
 {
     const GLenum COMPRESSED_RGB_ETC1_WEBGL = 0x8D64;
