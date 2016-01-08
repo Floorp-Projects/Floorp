@@ -664,10 +664,9 @@ this.DOMApplicationRegistry = {
         if (id in data || this.webapps[id].removable)
           continue;
         // Remove the permissions, cookies and private data for this app.
+        // Both permission and cookie managers observe the "clear-origin-data"
+        // event.
         let localId = this.webapps[id].localId;
-        let attrs = { appId: localId };
-        permMgr.removePermissionsWithAttributes(JSON.stringify(attrs));
-        Services.cookies.removeCookiesForApp(localId, false);
         this._clearPrivateData(localId, false);
         delete this.webapps[id];
       }
