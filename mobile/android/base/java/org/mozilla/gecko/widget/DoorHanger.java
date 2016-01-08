@@ -92,7 +92,7 @@ public abstract class DoorHanger extends LinearLayout {
         mPositiveButton = (Button) findViewById(R.id.doorhanger_button_positive);
         mOnButtonClickListener = config.getButtonClickListener();
 
-        mDividerColor = ColorUtils.getColor(context, R.color.divider_light);
+        mDividerColor = ColorUtils.getColor(context, R.color.toolbar_divider_grey);
 
         final ViewStub contentStub = (ViewStub) findViewById(R.id.content);
         contentStub.setLayoutResource(getContentResource());
