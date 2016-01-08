@@ -12,7 +12,6 @@ const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {
 const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {})
 const promise = require("promise");
 const { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
-const { promiseInvoke } = require("devtools/shared/async-utils");
 
 const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw
@@ -149,7 +148,7 @@ function close(client) {
 
 function listTabs(client) {
   dump("Listing tabs.\n");
-  return rdpRequest(client, client.listTabs);
+  return client.listTabs();
 }
 
 function findTab(tabs, title) {
@@ -164,7 +163,7 @@ function findTab(tabs, title) {
 
 function attachTab(client, tab) {
   dump("Attaching to tab with title '" + tab.title + "'.\n");
-  return rdpRequest(client, client.attachTab, tab.actor);
+  return client.attachTab(tab.actor);
 }
 
 function waitForNewSource(threadClient, url) {
@@ -176,17 +175,17 @@ function waitForNewSource(threadClient, url) {
 
 function attachThread(tabClient, options = {}) {
   dump("Attaching to thread.\n");
-  return rdpRequest(tabClient, tabClient.attachThread, options);
+  return tabClient.attachThread(options);
 }
 
 function resume(threadClient) {
   dump("Resuming thread.\n");
-  return rdpRequest(threadClient, threadClient.resume);
+  return threadClient.resume();
 }
 
 function getSources(threadClient) {
   dump("Getting sources.\n");
-  return rdpRequest(threadClient, threadClient.getSources);
+  return threadClient.getSources();
 }
 
 function findSource(sources, url) {
@@ -206,7 +205,7 @@ function waitForPause(threadClient) {
 
 function setBreakpoint(sourceClient, location) {
   dump("Setting breakpoint.\n");
-  return rdpRequest(sourceClient, sourceClient.setBreakpoint, location);
+  return sourceClient.setBreakpoint(location);
 }
 
 function dumpn(msg) {
@@ -687,30 +686,6 @@ function executeOnNextTickAndWaitForPause(action, client) {
 }
 
 /**
- * Create a promise that is resolved with the server's response to the client's
- * Remote Debugger Protocol request. If a response with the `error` property is
- * received, the promise is rejected. Any extra arguments passed in are
- * forwarded to the method invocation.
- *
- * See `setBreakpoint` below, for example usage.
- *
- * @param DebuggerClient/ThreadClient/SourceClient/etc client
- * @param Function method
- * @param any args
- * @returns Promise
- */
-function rdpRequest(client, method, ...args) {
-  return promiseInvoke(client, method, ...args)
-    .then(response => {
-      const { error, message } = response;
-      if (error) {
-        throw new Error(error + ": " + message);
-      }
-      return response;
-    });
-}
-
-/**
  * Interrupt JS execution for the specified thread.
  *
  * @param ThreadClient threadClient
@@ -718,7 +693,7 @@ function rdpRequest(client, method, ...args) {
  */
 function interrupt(threadClient) {
   dumpn("Interrupting.");
-  return rdpRequest(threadClient, threadClient.interrupt);
+  return threadClient.interrupt();
 }
 
 /**
@@ -745,7 +720,7 @@ function resumeAndWaitForPause(client, threadClient) {
 function stepIn(client, threadClient) {
   dumpn("Stepping in.");
   const paused = waitForPause(client);
-  return rdpRequest(threadClient, threadClient.stepIn)
+  return threadClient.stepIn()
     .then(() => paused);
 }
 
@@ -760,7 +735,7 @@ function stepIn(client, threadClient) {
  */
 function getFrames(threadClient, first, count) {
   dumpn("Getting frames.");
-  return rdpRequest(threadClient, threadClient.getFrames, first, count);
+  return threadClient.getFrames(first, count);
 }
 
 /**
@@ -771,7 +746,7 @@ function getFrames(threadClient, first, count) {
  */
 function blackBox(sourceClient) {
   dumpn("Black boxing source: " + sourceClient.actor);
-  return rdpRequest(sourceClient, sourceClient.blackBox);
+  return sourceClient.blackBox();
 }
 
 /**
@@ -782,7 +757,7 @@ function blackBox(sourceClient) {
  */
 function unBlackBox(sourceClient) {
   dumpn("Un-black boxing source: " + sourceClient.actor);
-  return rdpRequest(sourceClient, sourceClient.unblackBox);
+  return sourceClient.unblackBox();
 }
 
 /**
@@ -794,7 +769,7 @@ function unBlackBox(sourceClient) {
  */
 function getSourceContent(sourceClient) {
   dumpn("Getting source content for " + sourceClient.actor);
-  return rdpRequest(sourceClient, sourceClient.source);
+  return sourceClient.source();
 }
 
 /**
