@@ -646,17 +646,7 @@ public abstract class GeckoApp
             Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "text");
 
         } else if ("Snackbar:Show".equals(event)) {
-            final String msg = message.getString("message");
-            final int duration = message.getInt("duration");
-
-            NativeJSObject action = message.optObject("action", null);
-
-            SnackbarHelper.showSnackbarWithAction(this,
-                    msg,
-                    duration,
-                    action != null ? action.optString("label", null) : null,
-                    new SnackbarHelper.SnackbarEventCallback(callback)
-            );
+            SnackbarHelper.showSnackbar(this, message, callback);
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
