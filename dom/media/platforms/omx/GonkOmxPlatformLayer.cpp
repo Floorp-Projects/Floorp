@@ -8,6 +8,11 @@
 #include "OmxPromiseLayer.h"
 #include "GonkOmxPlatformLayer.h"
 #include "MediaInfo.h"
+#include "ImageContainer.h"
+#include "mozilla/Monitor.h"
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/GrallocTextureClient.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include <binder/MemoryDealer.h>
 #include <media/IOMX.h>
 #include <utils/List.h>
@@ -20,6 +25,12 @@ extern mozilla::LogModule* GetPDMLog();
 #endif
 
 #define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("GonkOmxPlatformLayer:: " arg, ##__VA_ARGS__))
+
+#define CHECK_ERR(err)                    \
+  if (err != OK)                       {  \
+    LOG("error %d at %s", err, __func__); \
+    return NS_ERROR_FAILURE;              \
+  }                                       \
 
 using namespace android;
 
@@ -114,29 +125,211 @@ public:
 protected:
   RefPtr<TaskQueue> mTaskQueue;
   // TODO:
-  //   we should combination both event handlers into one. And we should provide
+  //   we should combine both event handlers into one. And we should provide
   //   an unified way for event handling in OmxPlatforLayer class.
   RefPtr<OmxPromiseLayer> mPromiseLayer;
   RefPtr<OmxDataDecoder> mClient;
 };
 
-GonkBufferData::GonkBufferData(android::IOMX::buffer_id aId, bool aLiveInLocal, android::IMemory* aMemory)
-  : BufferData((OMX_BUFFERHEADERTYPE*)aId)
-  , mId(aId)
+// This class allocates Gralloc buffer and manages TextureClient's recycle.
+class GonkTextureClientRecycleHandler : public layers::ITextureClientRecycleAllocator
+{
+  typedef MozPromise<layers::TextureClient*, nsresult, /* IsExclusive = */ true> TextureClientRecyclePromise;
+
+public:
+  GonkTextureClientRecycleHandler(OMX_VIDEO_PORTDEFINITIONTYPE& aDef)
+    : ITextureClientRecycleAllocator()
+    , mMonitor("GonkTextureClientRecycleHandler")
+  {
+    // Allocate Gralloc texture memory.
+    layers::GrallocTextureData* textureData =
+      layers::GrallocTextureData::Create(gfx::IntSize(aDef.nFrameWidth, aDef.nFrameHeight),
+                                         aDef.eColorFormat,
+                                         gfx::BackendType::NONE,
+                                         GraphicBuffer::USAGE_HW_TEXTURE | GraphicBuffer::USAGE_SW_READ_OFTEN,
+                                         layers::ImageBridgeChild::GetSingleton());
+
+    mGraphBuffer = textureData->GetGraphicBuffer();
+    MOZ_ASSERT(mGraphBuffer.get());
+
+    mTextureClient =
+      layers::TextureClient::CreateWithData(textureData,
+                                            layers::TextureFlags::DEALLOCATE_CLIENT | layers::TextureFlags::RECYCLE,
+                                            layers::ImageBridgeChild::GetSingleton());
+    MOZ_ASSERT(mTextureClient);
+
+    mPromise.SetMonitor(&mMonitor);
+  }
+
+  RefPtr<TextureClientRecyclePromise> WaitforRecycle()
+  {
+    MonitorAutoLock lock(mMonitor);
+    MOZ_ASSERT(!!mGraphBuffer.get());
+
+    mTextureClient->SetRecycleAllocator(this);
+    return mPromise.Ensure(__func__);
+  }
+
+  // DO NOT use smart pointer to receive TextureClient; otherwise it will
+  // distrupt the reference count.
+  layers::TextureClient* GetTextureClient()
+  {
+    return mTextureClient;
+  }
+
+  GraphicBuffer* GetGraphicBuffer()
+  {
+    MonitorAutoLock lock(mMonitor);
+    return mGraphBuffer.get();
+  }
+
+  // This function is called from layers thread.
+  void RecycleTextureClient(layers::TextureClient* aClient) override
+  {
+    MOZ_ASSERT(mTextureClient == aClient);
+
+    // Clearing the recycle allocator drops a reference, so make sure we stay alive
+    // for the duration of this function.
+    RefPtr<GonkTextureClientRecycleHandler> kungFuDeathGrip(this);
+    aClient->SetRecycleAllocator(nullptr);
+
+    {
+      MonitorAutoLock lock(mMonitor);
+      mPromise.ResolveIfExists(mTextureClient, __func__);
+    }
+  }
+
+  void Shutdown()
+  {
+    MonitorAutoLock lock(mMonitor);
+
+    mPromise.RejectIfExists(NS_ERROR_FAILURE, __func__);
+
+    // DO NOT clear TextureClient here.
+    // The ref count could be 1 and RecycleCallback will be called if we clear
+    // the ref count here. That breaks the whole mechanism. (RecycleCallback
+    // should be called from layers)
+    mGraphBuffer = nullptr;
+  }
+
+private:
+  // Because TextureClient calls RecycleCallbackl when ref count is 1, so we
+  // should hold only one reference here and use raw pointer when out of this
+  // class.
+  RefPtr<layers::TextureClient> mTextureClient;
+
+  // It is protected by mMonitor.
+  sp<android::GraphicBuffer> mGraphBuffer;
+
+  // It is protected by mMonitor.
+  MozPromiseHolder<TextureClientRecyclePromise> mPromise;
+
+  Monitor mMonitor;
+};
+
+GonkBufferData::GonkBufferData(bool aLiveInLocal,
+                               GonkOmxPlatformLayer* aGonkPlatformLayer)
+  : BufferData(nullptr)
+  , mId(0)
+  , mGonkPlatformLayer(aGonkPlatformLayer)
 {
   if (!aLiveInLocal) {
-    mLocalBuffer = new OMX_BUFFERHEADERTYPE;
-    PodZero(mLocalBuffer.get());
-    // aMemory is a IPC memory, it is safe to use it here.
-    mLocalBuffer->pBuffer = (OMX_U8*)aMemory->pointer();
-    mBuffer = mLocalBuffer.get();
+    mMirrorBuffer = new OMX_BUFFERHEADERTYPE;
+    PodZero(mMirrorBuffer.get());
+    mBuffer = mMirrorBuffer.get();
   }
+}
+
+void
+GonkBufferData::ReleaseBuffer()
+{
+  if (mTextureClientRecycleHandler) {
+    mTextureClientRecycleHandler->Shutdown();
+    mTextureClientRecycleHandler = nullptr;
+  }
+}
+
+nsresult
+GonkBufferData::InitSharedMemory(android::IMemory* aMemory)
+{
+  MOZ_RELEASE_ASSERT(mMirrorBuffer.get());
+
+  // aMemory is a IPC memory, it is safe to use it here.
+  mBuffer->pBuffer = (OMX_U8*)aMemory->pointer();
+  mBuffer->nAllocLen = aMemory->size();
+  return NS_OK;
+}
+
+nsresult
+GonkBufferData::InitLocalBuffer(IOMX::buffer_id aId)
+{
+  MOZ_RELEASE_ASSERT(!mMirrorBuffer.get());
+
+  mBuffer = (OMX_BUFFERHEADERTYPE*)aId;
+  return NS_OK;
+}
+
+nsresult
+GonkBufferData::InitGraphicBuffer(OMX_VIDEO_PORTDEFINITIONTYPE& aDef)
+{
+  mTextureClientRecycleHandler = new GonkTextureClientRecycleHandler(aDef);
+
+  if (!mTextureClientRecycleHandler->GetGraphicBuffer()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+already_AddRefed<MediaData>
+GonkBufferData::GetPlatformMediaData()
+{
+  if (mGonkPlatformLayer->GetTrackInfo()->GetAsAudioInfo()) {
+    // This is audio decoding.
+    return nullptr;
+  }
+
+  MOZ_RELEASE_ASSERT(mTextureClientRecycleHandler);
+
+  VideoInfo info;
+  info.mDisplay = mGonkPlatformLayer->GetTrackInfo()->GetAsVideoInfo()->mDisplay;
+  info.mImage = mGonkPlatformLayer->GetTrackInfo()->GetAsVideoInfo()->mImage;
+  RefPtr<VideoData> data = VideoData::Create(info,
+                                             mGonkPlatformLayer->GetImageContainer(),
+                                             0,
+                                             mBuffer->nTimeStamp,
+                                             1,
+                                             mTextureClientRecycleHandler->GetTextureClient(),
+                                             false,
+                                             0,
+                                             info.mImage);
+  LOG("GetMediaData: %p, disp width %d, height %d, pic width %d, height %d, time %ld",
+      this, info.mDisplay.width, info.mDisplay.height,
+      info.mImage.width, info.mImage.height, mBuffer->nTimeStamp);
+
+  // Get TextureClient Promise here to wait for resolved.
+  RefPtr<GonkBufferData> self(this);
+  mTextureClientRecycleHandler->WaitforRecycle()
+    ->Then(mGonkPlatformLayer->GetTaskQueue(), __func__,
+           [self] () {
+             // Waiting for texture to be freed.
+             self->mTextureClientRecycleHandler->GetTextureClient()->WaitForBufferOwnership();
+             self->mPromise.ResolveIfExists(self, __func__);
+           },
+           [self] () {
+             OmxBufferFailureHolder failure(OMX_ErrorUndefined, self);
+             self->mPromise.RejectIfExists(failure, __func__);
+           });
+
+  return data.forget();
 }
 
 GonkOmxPlatformLayer::GonkOmxPlatformLayer(OmxDataDecoder* aDataDecoder,
                                            OmxPromiseLayer* aPromiseLayer,
-                                           TaskQueue* aTaskQueue)
+                                           TaskQueue* aTaskQueue,
+                                           layers::ImageContainer* aImageContainer)
   : mTaskQueue(aTaskQueue)
+  , mImageContainer(aImageContainer)
   , mNode(0)
   , mQuirks(0)
   , mUsingHardwareCodec(false)
@@ -169,8 +362,27 @@ GonkOmxPlatformLayer::AllocateOmxBuffer(OMX_DIRTYPE aType,
     }
   }
 
-  size_t t = def.nBufferCountActual * def.nBufferSize;
-  LOG("Buffer count %d, buffer size %d", def.nBufferCountActual, def.nBufferSize);
+  size_t t = 0;
+
+  // Configure video output GraphicBuffer for video decoding acceleration.
+  bool useGralloc = false;
+  if ((aType == OMX_DirOutput) &&
+      (mQuirks & OMXCodec::kRequiresAllocateBufferOnOutputPorts) &&
+      (def.eDomain == OMX_PortDomainVideo)) {
+    if (NS_FAILED(EnableOmxGraphicBufferPort(def))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    LOG("Enable OMX GraphicBuffer port, number %d, width %d, height %d", def.nBufferCountActual,
+        def.format.video.nFrameWidth, def.format.video.nFrameHeight);
+
+    useGralloc = true;
+
+    t = 1024; // MemoryDealer doesn't like 0, it's just for MemoryDealer happy.
+  } else {
+    t = def.nBufferCountActual * def.nBufferSize;
+    LOG("Buffer count %d, buffer size %d", def.nBufferCountActual, def.nBufferSize);
+  }
 
   bool liveinlocal = mOmx->livesLocally(mNode, getpid());
 
@@ -178,24 +390,47 @@ GonkOmxPlatformLayer::AllocateOmxBuffer(OMX_DIRTYPE aType,
   // lives in mediaserver.
   mMemoryDealer[aType] = new MemoryDealer(t, "Gecko-OMX");
   for (OMX_U32 i = 0; i < def.nBufferCountActual; ++i) {
-    sp<IMemory> mem = mMemoryDealer[aType]->allocate(def.nBufferSize);
-    MOZ_ASSERT(mem.get());
-
+    RefPtr<GonkBufferData> buffer;
     IOMX::buffer_id bufferID;
     status_t st;
+    nsresult rv;
 
-    if ((mQuirks & OMXCodec::kRequiresAllocateBufferOnInputPorts && aType == OMX_DirInput) ||
-        (mQuirks & OMXCodec::kRequiresAllocateBufferOnOutputPorts && aType == OMX_DirOutput)) {
-      st = mOmx->allocateBufferWithBackup(mNode, aType, mem, &bufferID);
+    buffer = new GonkBufferData(liveinlocal, this);
+    if (useGralloc) {
+      // Buffer is lived remotely. Use GraphicBuffer for decoded video frame display.
+      rv = buffer->InitGraphicBuffer(def.format.video);
+      NS_ENSURE_SUCCESS(rv, rv);
+      st = mOmx->useGraphicBuffer(mNode,
+                                  def.nPortIndex,
+                                  buffer->mTextureClientRecycleHandler->GetGraphicBuffer(),
+                                  &bufferID);
+      CHECK_ERR(st);
     } else {
-      st = mOmx->useBuffer(mNode, aType, mem, &bufferID);
+      sp<IMemory> mem = mMemoryDealer[aType]->allocate(def.nBufferSize);
+      MOZ_ASSERT(mem.get());
+
+      if ((mQuirks & OMXCodec::kRequiresAllocateBufferOnInputPorts && aType == OMX_DirInput) ||
+          (mQuirks & OMXCodec::kRequiresAllocateBufferOnOutputPorts && aType == OMX_DirOutput)) {
+        // Buffer is lived remotely. We allocate a local OMX_BUFFERHEADERTYPE
+        // as the mirror of the remote OMX_BUFFERHEADERTYPE.
+        st = mOmx->allocateBufferWithBackup(mNode, aType, mem, &bufferID);
+        CHECK_ERR(st);
+        rv = buffer->InitSharedMemory(mem.get());
+        NS_ENSURE_SUCCESS(rv, rv);
+      } else {
+        // Buffer is lived locally, bufferID is the actually OMX_BUFFERHEADERTYPE
+        // pointer.
+        st = mOmx->useBuffer(mNode, aType, mem, &bufferID);
+        CHECK_ERR(st);
+        rv = buffer->InitLocalBuffer(bufferID);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
     }
 
-    if (st != OK) {
-      return NS_ERROR_FAILURE;
-    }
+    rv = buffer->SetBufferId(bufferID);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    aBufferList->AppendElement(new GonkBufferData(bufferID, liveinlocal, mem.get()));
+    aBufferList->AppendElement(buffer);
   }
 
   return NS_OK;
@@ -206,15 +441,29 @@ GonkOmxPlatformLayer::ReleaseOmxBuffer(OMX_DIRTYPE aType,
                                        BUFFERLIST* aBufferList)
 {
   status_t st;
-  for (uint32_t i = 0; i < aBufferList->Length(); i++) {
-    IOMX::buffer_id id = (OMX_BUFFERHEADERTYPE*) aBufferList->ElementAt(i)->ID();
+  uint32_t len = aBufferList->Length();
+  for (uint32_t i = 0; i < len; i++) {
+    GonkBufferData* buffer = static_cast<GonkBufferData*>(aBufferList->ElementAt(i).get());
+    IOMX::buffer_id id = (OMX_BUFFERHEADERTYPE*) buffer->ID();
     st = mOmx->freeBuffer(mNode, aType, id);
     if (st != OK) {
       return NS_ERROR_FAILURE;
     }
+    buffer->ReleaseBuffer();
   }
   aBufferList->Clear();
   mMemoryDealer[aType].clear();
+
+  return NS_OK;
+}
+
+nsresult
+GonkOmxPlatformLayer::EnableOmxGraphicBufferPort(OMX_PARAM_PORTDEFINITIONTYPE& aDef)
+{
+  status_t st;
+
+  st = mOmx->enableGraphicBuffers(mNode, aDef.nPortIndex, OMX_TRUE);
+  CHECK_ERR(st);
 
   return NS_OK;
 }
@@ -261,6 +510,7 @@ GonkOmxPlatformLayer::Shutdown()
 OMX_ERRORTYPE
 GonkOmxPlatformLayer::InitOmxToStateLoaded(const TrackInfo* aInfo)
 {
+  mInfo = aInfo;
   status_t err = mOmxClient.connect();
   if (err != OK) {
       return OMX_ErrorUndefined;
@@ -270,11 +520,11 @@ GonkOmxPlatformLayer::InitOmxToStateLoaded(const TrackInfo* aInfo)
     return OMX_ErrorUndefined;
   }
 
-  // In Gonk, the software compoment name has prefix "OMX.google". It needs to
+  // In Gonk, the software component name has prefix "OMX.google". It needs to
   // have a way to use hardware codec first.
   android::Vector<OMXCodec::CodecNameAndQuirks> matchingCodecs;
   const char* swcomponent = nullptr;
-  OMXCodec::findMatchingCodecs(aInfo->mMimeType.Data(),
+  OMXCodec::findMatchingCodecs(mInfo->mMimeType.Data(),
                                0,
                                nullptr,
                                0,
@@ -289,14 +539,15 @@ GonkOmxPlatformLayer::InitOmxToStateLoaded(const TrackInfo* aInfo)
         mUsingHardwareCodec = true;
         return OMX_ErrorNone;
       }
+      LOG("failed to load component %s", componentName);
     }
   }
 
   // TODO: in android ICS, the software codec is allocated in mediaserver by
-  //       default, it may be necessay to allocate it in local process.
+  //       default, it may be necessary to allocate it in local process.
   //
   // fallback to sw codec
-  if (LoadComponent(swcomponent)) {
+  if (swcomponent && LoadComponent(swcomponent)) {
     return OMX_ErrorNone;
   }
 
@@ -318,7 +569,7 @@ GonkOmxPlatformLayer::EmptyThisBuffer(BufferData* aData)
 OMX_ERRORTYPE
 GonkOmxPlatformLayer::FillThisBuffer(BufferData* aData)
 {
-  return (OMX_ERRORTYPE)mOmx->fillBuffer(mNode, (IOMX::buffer_id)aData->mBuffer);
+  return (OMX_ERRORTYPE)mOmx->fillBuffer(mNode, (IOMX::buffer_id)aData->ID());
 }
 
 OMX_ERRORTYPE
@@ -327,6 +578,14 @@ GonkOmxPlatformLayer::SendCommand(OMX_COMMANDTYPE aCmd,
                                   OMX_PTR aCmdData)
 {
   return  (OMX_ERRORTYPE)mOmx->sendCommand(mNode, aCmd, aParam1);
+}
+
+template<class T> void
+GonkOmxPlatformLayer::InitOmxParameter(T* aParam)
+{
+  PodZero(aParam);
+  aParam->nSize = sizeof(T);
+  aParam->nVersion.s.nVersionMajor = 1;
 }
 
 bool
@@ -342,12 +601,16 @@ GonkOmxPlatformLayer::LoadComponent(const char* aName)
   return false;
 }
 
-template<class T> void
-GonkOmxPlatformLayer::InitOmxParameter(T* aParam)
+layers::ImageContainer*
+GonkOmxPlatformLayer::GetImageContainer()
 {
-  PodZero(aParam);
-  aParam->nSize = sizeof(T);
-  aParam->nVersion.s.nVersionMajor = 1;
+  return mImageContainer;
+}
+
+const TrackInfo*
+GonkOmxPlatformLayer::GetTrackInfo()
+{
+  return mInfo;
 }
 
 } // mozilla

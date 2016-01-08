@@ -27,7 +27,7 @@ typedef OmxPromiseLayer::BUFFERLIST BUFFERLIST;
  *   2. Keeping the buffers between client and component.
  *   3. Manage the OMX state.
  *
- * From the definiton in OpenMax spec. "2.2.1", there are 3 major roles in
+ * From the definition in OpenMax spec. "2.2.1", there are 3 major roles in
  * OpenMax IL.
  *
  * IL client:
@@ -54,7 +54,8 @@ protected:
 
 public:
   OmxDataDecoder(const TrackInfo& aTrackInfo,
-                 MediaDataDecoderCallback* aCallback);
+                 MediaDataDecoderCallback* aCallback,
+                 layers::ImageContainer* aImageContainer);
 
   RefPtr<InitPromise> Init() override;
 
@@ -90,10 +91,11 @@ protected:
 
   void NotifyError(OMX_ERRORTYPE aError, const char* aLine);
 
-  // Config audio codec.
+  // Configure audio codec.
   // Some codec may just ignore this and rely on codec specific data in
   // FillCodecConfigDataToOmx().
   void ConfigAudioCodec();
+  void ConfigVideoCodec();
 
   // Sending codec specific data to OMX component. OMX component could send a
   // OMX_EventPortSettingsChanged back to client. And then client needs to
@@ -110,10 +112,7 @@ protected:
 
   void OutputAudio(BufferData* aBufferData);
 
-  // Notify InputExhausted when:
-  //   1. all input buffers are not held by component.
-  //   2. all output buffers are waiting for filling complete.
-  void CheckIfInputExhausted();
+  void OutputVideo(BufferData* aBufferData);
 
   // Buffer can be released if its status is not OMX_COMPONENT or
   // OMX_CLIENT_OUTPUT.
@@ -181,9 +180,6 @@ protected:
 
   // It is access in Omx TaskQueue.
   nsTArray<RefPtr<MediaRawData>> mMediaRawDatas;
-
-  // It is access in Omx TaskQueue. The latest input MediaRawData.
-  RefPtr<MediaRawData> mLatestInputRawData;
 
   BUFFERLIST mInPortBuffers;
 
