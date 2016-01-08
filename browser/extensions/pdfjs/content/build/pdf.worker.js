@@ -13,20 +13,31 @@
  * limitations under the License.
  */
 /* jshint globalstrict: false */
-/* globals PDFJS, global */
+/* umdutils ignore */
 
-// Initializing PDFJS global object (if still undefined)
-if (typeof PDFJS === 'undefined') {
-  (typeof window !== 'undefined' ? window :
-   typeof global !== 'undefined' ? global : this).PDFJS = {};
-}
-
-PDFJS.version = '1.3.142';
-PDFJS.build = 'e8db825';
-
-(function pdfjsWrapper() {
+(function (root, factory) {
+  'use strict';
+  if (typeof define === 'function' && define.amd) {
+define('pdfjs-dist/build/pdf.worker', ['exports'], factory);
+  } else if (typeof exports !== 'undefined') {
+    factory(exports);
+  } else {
+factory((root.pdfjsDistBuildPdfWorker = {}));
+  }
+}(this, function (exports) {
   // Use strict in our context only - users might not want it
   'use strict';
+
+var pdfjsVersion = '1.3.161';
+var pdfjsBuild = '4a215f0';
+
+  var pdfjsFilePath =
+    typeof document !== 'undefined' && document.currentScript ?
+      document.currentScript.src : null;
+
+  var pdfjsLibs = {};
+
+  (function pdfjsWrapper() {
 
 
 
@@ -8738,6 +8749,13 @@ exports.Metrics = Metrics;
     globalScope.PDFJS = {};
   }
 
+  if (typeof pdfjsVersion !== 'undefined') {
+    globalScope.PDFJS.version = pdfjsVersion;
+  }
+  if (typeof pdfjsVersion !== 'undefined') {
+    globalScope.PDFJS.build = pdfjsBuild;
+  }
+
   globalScope.PDFJS.pdfBug = false;
 
   exports.globalScope = globalScope;
@@ -9637,6 +9655,16 @@ var XRefParseException = (function XRefParseExceptionClosure() {
   return XRefParseException;
 })();
 
+var NullCharactersRegExp = /\x00/g;
+
+function removeNullCharacters(str) {
+  if (typeof str !== 'string') {
+    warn('The argument for removeNullCharacters must be a string.');
+    return str;
+  }
+  return str.replace(NullCharactersRegExp, '');
+}
+PDFJS.removeNullCharacters = removeNullCharacters;
 
 function bytesToString(bytes) {
   assert(bytes !== null && typeof bytes === 'object' &&
@@ -10501,6 +10529,7 @@ exports.log2 = log2;
 exports.readInt8 = readInt8;
 exports.readUint16 = readUint16;
 exports.readUint32 = readUint32;
+exports.removeNullCharacters = removeNullCharacters;
 exports.shadow = shadow;
 exports.string32 = string32;
 exports.stringToBytes = stringToBytes;
@@ -24015,6 +24044,9 @@ var HINTING_ENABLED = false;
 // to control analysis of seac charstrings.
 var SEAC_ANALYSIS_ENABLED = false;
 
+// Maximum subroutine call depth of type 2 chartrings. Matches OTS.
+var MAX_SUBR_NESTING = 10;
+
 var FontFlags = {
   FixedPitch: 1,
   Serif: 2,
@@ -30044,10 +30076,7 @@ var CFFParser = (function CFFParserClosure() {
       cff.isCIDFont = topDict.hasName('ROS');
 
       var charStringOffset = topDict.getByName('CharStrings');
-      var charStringsAndSeacs = this.parseCharStrings(charStringOffset);
-      cff.charStrings = charStringsAndSeacs.charStrings;
-      cff.seacs = charStringsAndSeacs.seacs;
-      cff.widths = charStringsAndSeacs.widths;
+      var charStringIndex = this.parseIndex(charStringOffset).obj;
 
       var fontMatrix = topDict.getByName('FontMatrix');
       if (fontMatrix) {
@@ -30075,18 +30104,29 @@ var CFFParser = (function CFFParserClosure() {
         // cid fonts don't have an encoding
         encoding = null;
         charset = this.parseCharsets(topDict.getByName('charset'),
-                                     cff.charStrings.count, cff.strings, true);
+                                     charStringIndex.count, cff.strings, true);
         cff.fdSelect = this.parseFDSelect(topDict.getByName('FDSelect'),
-                                             cff.charStrings.count);
+                                          charStringIndex.count);
       } else {
         charset = this.parseCharsets(topDict.getByName('charset'),
-                                     cff.charStrings.count, cff.strings, false);
+                                     charStringIndex.count, cff.strings, false);
         encoding = this.parseEncoding(topDict.getByName('Encoding'),
                                       properties,
                                       cff.strings, charset.charset);
       }
+
       cff.charset = charset;
       cff.encoding = encoding;
+
+      var charStringsAndSeacs = this.parseCharStrings(
+                                  charStringIndex,
+                                  topDict.privateDict.subrsIndex,
+                                  globalSubrIndex.obj,
+                                  cff.fdSelect,
+                                  cff.fdArray);
+      cff.charStrings = charStringsAndSeacs.charStrings;
+      cff.seacs = charStringsAndSeacs.seacs;
+      cff.widths = charStringsAndSeacs.widths;
 
       return cff;
     },
@@ -30262,118 +30302,201 @@ var CFFParser = (function CFFParserClosure() {
       }
       return cffDict;
     },
-    parseCharStrings: function CFFParser_parseCharStrings(charStringOffset) {
-      var charStrings = this.parseIndex(charStringOffset).obj;
+    parseCharString: function CFFParser_parseCharString(state, data,
+                                                        localSubrIndex,
+                                                        globalSubrIndex) {
+      if (state.callDepth > MAX_SUBR_NESTING) {
+        return false;
+      }
+      var stackSize = state.stackSize;
+      var stack = state.stack;
+
+      var length = data.length;
+
+      for (var j = 0; j < length;) {
+        var value = data[j++];
+        var validationCommand = null;
+        if (value === 12) {
+          var q = data[j++];
+          if (q === 0) {
+            // The CFF specification state that the 'dotsection' command
+            // (12, 0) is deprecated and treated as a no-op, but all Type2
+            // charstrings processors should support them. Unfortunately
+            // the font sanitizer don't. As a workaround the sequence (12, 0)
+            // is replaced by a useless (0, hmoveto).
+            data[j - 2] = 139;
+            data[j - 1] = 22;
+            stackSize = 0;
+          } else {
+            validationCommand = CharstringValidationData12[q];
+          }
+        } else if (value === 28) { // number (16 bit)
+          stack[stackSize] = ((data[j] << 24) | (data[j + 1] << 16)) >> 16;
+          j += 2;
+          stackSize++;
+        } else if (value === 14) {
+          if (stackSize >= 4) {
+            stackSize -= 4;
+            if (SEAC_ANALYSIS_ENABLED) {
+              state.seac = stack.slice(stackSize, stackSize + 4);
+              return false;
+            }
+          }
+          validationCommand = CharstringValidationData[value];
+        } else if (value >= 32 && value <= 246) {  // number
+          stack[stackSize] = value - 139;
+          stackSize++;
+        } else if (value >= 247 && value <= 254) {  // number (+1 bytes)
+          stack[stackSize] = (value < 251 ?
+                              ((value - 247) << 8) + data[j] + 108 :
+                              -((value - 251) << 8) - data[j] - 108);
+          j++;
+          stackSize++;
+        } else if (value === 255) {  // number (32 bit)
+          stack[stackSize] = ((data[j] << 24) | (data[j + 1] << 16) |
+                              (data[j + 2] << 8) | data[j + 3]) / 65536;
+          j += 4;
+          stackSize++;
+        } else if (value === 19 || value === 20) {
+          state.hints += stackSize >> 1;
+          // skipping right amount of hints flag data
+          j += (state.hints + 7) >> 3;
+          stackSize %= 2;
+          validationCommand = CharstringValidationData[value];
+        } else if (value === 10 || value === 29) {
+          var subrsIndex;
+          if (value === 10) {
+            subrsIndex = localSubrIndex;
+          } else {
+            subrsIndex = globalSubrIndex;
+          }
+          if (!subrsIndex) {
+            validationCommand = CharstringValidationData[value];
+            warn('Missing subrsIndex for ' + validationCommand.id);
+            return false;
+          }
+          var bias = 32768;
+          if (subrsIndex.count < 1240) {
+            bias = 107;
+          } else if (subrsIndex.count < 33900) {
+            bias = 1131;
+          }
+          var subrNumber = stack[--stackSize] + bias;
+          if (subrNumber < 0 || subrNumber >= subrsIndex.count) {
+            validationCommand = CharstringValidationData[value];
+            warn('Out of bounds subrIndex for ' + validationCommand.id);
+            return false;
+          }
+          state.stackSize = stackSize;
+          state.callDepth++;
+          var valid = this.parseCharString(state, subrsIndex.get(subrNumber),
+                                           localSubrIndex, globalSubrIndex);
+          if (!valid) {
+            return false;
+          }
+          state.callDepth--;
+          stackSize = state.stackSize;
+          continue;
+        } else if (value === 11) {
+          state.stackSize = stackSize;
+          return true;
+        } else {
+          validationCommand = CharstringValidationData[value];
+        }
+        if (validationCommand) {
+          if (validationCommand.stem) {
+            state.hints += stackSize >> 1;
+          }
+          if ('min' in validationCommand) {
+            if (!state.undefStack && stackSize < validationCommand.min) {
+              warn('Not enough parameters for ' + validationCommand.id +
+                   '; actual: ' + stackSize +
+                   ', expected: ' + validationCommand.min);
+              return false;
+            }
+          }
+          if (state.firstStackClearing && validationCommand.stackClearing) {
+            state.firstStackClearing = false;
+            // the optional character width can be found before the first
+            // stack-clearing command arguments
+            stackSize -= validationCommand.min;
+            if (stackSize >= 2 && validationCommand.stem) {
+              // there are even amount of arguments for stem commands
+              stackSize %= 2;
+            } else if (stackSize > 1) {
+              warn('Found too many parameters for stack-clearing command');
+            }
+            if (stackSize > 0 && stack[stackSize - 1] >= 0) {
+              state.width = stack[stackSize - 1];
+            }
+          }
+          if ('stackDelta' in validationCommand) {
+            if ('stackFn' in validationCommand) {
+              validationCommand.stackFn(stack, stackSize);
+            }
+            stackSize += validationCommand.stackDelta;
+          } else if (validationCommand.stackClearing) {
+            stackSize = 0;
+          } else if (validationCommand.resetStack) {
+            stackSize = 0;
+            state.undefStack = false;
+          } else if (validationCommand.undefStack) {
+            stackSize = 0;
+            state.undefStack = true;
+            state.firstStackClearing = false;
+          }
+        }
+      }
+      state.stackSize = stackSize;
+      return true;
+    },
+    parseCharStrings: function CFFParser_parseCharStrings(charStrings,
+                                                          localSubrIndex,
+                                                          globalSubrIndex,
+                                                          fdSelect,
+                                                          fdArray) {
       var seacs = [];
       var widths = [];
       var count = charStrings.count;
       for (var i = 0; i < count; i++) {
         var charstring = charStrings.get(i);
-
-        var stackSize = 0;
-        var stack = [];
-        var undefStack = true;
-        var hints = 0;
+        var state = {
+          callDepth: 0,
+          stackSize: 0,
+          stack: [],
+          undefStack: true,
+          hints: 0,
+          firstStackClearing: true,
+          seac: null,
+          width: null
+        };
         var valid = true;
-        var data = charstring;
-        var length = data.length;
-        var firstStackClearing = true;
-        for (var j = 0; j < length;) {
-          var value = data[j++];
-          var validationCommand = null;
-          if (value === 12) {
-            var q = data[j++];
-            if (q === 0) {
-              // The CFF specification state that the 'dotsection' command
-              // (12, 0) is deprecated and treated as a no-op, but all Type2
-              // charstrings processors should support them. Unfortunately
-              // the font sanitizer don't. As a workaround the sequence (12, 0)
-              // is replaced by a useless (0, hmoveto).
-              data[j - 2] = 139;
-              data[j - 1] = 22;
-              stackSize = 0;
-            } else {
-              validationCommand = CharstringValidationData12[q];
-            }
-          } else if (value === 28) { // number (16 bit)
-            stack[stackSize] = ((data[j] << 24) | (data[j + 1] << 16)) >> 16;
-            j += 2;
-            stackSize++;
-          } else if (value === 14) {
-            if (stackSize >= 4) {
-              stackSize -= 4;
-              if (SEAC_ANALYSIS_ENABLED) {
-                seacs[i] = stack.slice(stackSize, stackSize + 4);
-                valid = false;
-              }
-            }
-            validationCommand = CharstringValidationData[value];
-          } else if (value >= 32 && value <= 246) {  // number
-            stack[stackSize] = value - 139;
-            stackSize++;
-          } else if (value >= 247 && value <= 254) {  // number (+1 bytes)
-            stack[stackSize] = (value < 251 ?
-                                ((value - 247) << 8) + data[j] + 108 :
-                                -((value - 251) << 8) - data[j] - 108);
-            j++;
-            stackSize++;
-          } else if (value === 255) {  // number (32 bit)
-            stack[stackSize] = ((data[j] << 24) | (data[j + 1] << 16) |
-                                (data[j + 2] << 8) | data[j + 3]) / 65536;
-            j += 4;
-            stackSize++;
-          } else if (value === 19 || value === 20) {
-            hints += stackSize >> 1;
-            j += (hints + 7) >> 3; // skipping right amount of hints flag data
-            stackSize %= 2;
-            validationCommand = CharstringValidationData[value];
-          } else {
-            validationCommand = CharstringValidationData[value];
+        var localSubrToUse = null;
+        if (fdSelect && fdArray.length) {
+          var fdIndex = fdSelect.getFDIndex(i);
+          if (fdIndex === -1) {
+            warn('Glyph index is not in fd select.');
+            valid = false;
           }
-          if (validationCommand) {
-            if (validationCommand.stem) {
-              hints += stackSize >> 1;
-            }
-            if ('min' in validationCommand) {
-              if (!undefStack && stackSize < validationCommand.min) {
-                warn('Not enough parameters for ' + validationCommand.id +
-                     '; actual: ' + stackSize +
-                     ', expected: ' + validationCommand.min);
-                valid = false;
-                break;
-              }
-            }
-            if (firstStackClearing && validationCommand.stackClearing) {
-              firstStackClearing = false;
-              // the optional character width can be found before the first
-              // stack-clearing command arguments
-              stackSize -= validationCommand.min;
-              if (stackSize >= 2 && validationCommand.stem) {
-                // there are even amount of arguments for stem commands
-                stackSize %= 2;
-              } else if (stackSize > 1) {
-                warn('Found too many parameters for stack-clearing command');
-              }
-              if (stackSize > 0 && stack[stackSize - 1] >= 0) {
-                widths[i] = stack[stackSize - 1];
-              }
-            }
-            if ('stackDelta' in validationCommand) {
-              if ('stackFn' in validationCommand) {
-                validationCommand.stackFn(stack, stackSize);
-              }
-              stackSize += validationCommand.stackDelta;
-            } else if (validationCommand.stackClearing) {
-              stackSize = 0;
-            } else if (validationCommand.resetStack) {
-              stackSize = 0;
-              undefStack = false;
-            } else if (validationCommand.undefStack) {
-              stackSize = 0;
-              undefStack = true;
-              firstStackClearing = false;
-            }
+          if (fdIndex >= fdArray.length) {
+            warn('Invalid fd index for glyph index.');
+            valid = false;
           }
+          if (valid) {
+            localSubrToUse = fdArray[fdIndex].privateDict.subrsIndex;
+          }
+        } else if (localSubrIndex) {
+          localSubrToUse = localSubrIndex;
+        }
+        if (valid) {
+          valid = this.parseCharString(state, charstring, localSubrToUse,
+                                       globalSubrIndex);
+        }
+        if (state.width !== null) {
+          widths[i] = state.width;
+        }
+        if (state.seac !== null) {
+          seacs[i] = state.seac;
         }
         if (!valid) {
           // resetting invalid charstring to single 'endchar'
@@ -30868,6 +30991,14 @@ var CFFFDSelect = (function CFFFDSelectClosure() {
     this.fdSelect = fdSelect;
     this.raw = raw;
   }
+  CFFFDSelect.prototype = {
+    getFDIndex: function CFFFDSelect_get(glyphIndex) {
+      if (glyphIndex < 0 || glyphIndex >= this.fdSelect.length) {
+        return -1;
+      }
+      return this.fdSelect[glyphIndex];
+    }
+  };
   return CFFFDSelect;
 })();
 
@@ -34555,10 +34686,8 @@ var Pattern = (function PatternClosure() {
 var Shadings = {};
 
 // A small number to offset the first/last color stops so we can insert ones to
-// support extend.  Number.MIN_VALUE appears to be too small and breaks the
-// extend. 1e-7 works in FF but chrome seems to use an even smaller sized number
-// internally so we have to go bigger.
-Shadings.SMALL_NUMBER = 1e-2;
+// support extend. Number.MIN_VALUE is too small and breaks the extend.
+Shadings.SMALL_NUMBER = 1e-6;
 
 // Radial and axial shading have very similar implementations
 // If needed, the implementations can be broken into two classes
@@ -38295,8 +38424,17 @@ AnnotationFactory.prototype = /** @lends AnnotationFactory.prototype */ {
       case 'Popup':
         return new PopupAnnotation(parameters);
 
+      case 'Highlight':
+        return new HighlightAnnotation(parameters);
+
       case 'Underline':
         return new UnderlineAnnotation(parameters);
+
+      case 'Squiggly':
+        return new SquigglyAnnotation(parameters);
+
+      case 'StrikeOut':
+        return new StrikeOutAnnotation(parameters);
 
       default:
         warn('Unimplemented annotation type "' + subtype + '", ' +
@@ -38988,6 +39126,22 @@ var PopupAnnotation = (function PopupAnnotationClosure() {
   return PopupAnnotation;
 })();
 
+var HighlightAnnotation = (function HighlightAnnotationClosure() {
+  function HighlightAnnotation(parameters) {
+    Annotation.call(this, parameters);
+
+    this.data.annotationType = AnnotationType.HIGHLIGHT;
+    this.data.hasHtml = true;
+
+    // PDF viewers completely ignore any border styles.
+    this.data.borderStyle.setWidth(0);
+  }
+
+  Util.inherit(HighlightAnnotation, Annotation, {});
+
+  return HighlightAnnotation;
+})();
+
 var UnderlineAnnotation = (function UnderlineAnnotationClosure() {
   function UnderlineAnnotation(parameters) {
     Annotation.call(this, parameters);
@@ -39002,6 +39156,38 @@ var UnderlineAnnotation = (function UnderlineAnnotationClosure() {
   Util.inherit(UnderlineAnnotation, Annotation, {});
 
   return UnderlineAnnotation;
+})();
+
+var SquigglyAnnotation = (function SquigglyAnnotationClosure() {
+  function SquigglyAnnotation(parameters) {
+    Annotation.call(this, parameters);
+
+    this.data.annotationType = AnnotationType.SQUIGGLY;
+    this.data.hasHtml = true;
+
+    // PDF viewers completely ignore any border styles.
+    this.data.borderStyle.setWidth(0);
+  }
+
+  Util.inherit(SquigglyAnnotation, Annotation, {});
+
+  return SquigglyAnnotation;
+})();
+
+var StrikeOutAnnotation = (function StrikeOutAnnotationClosure() {
+  function StrikeOutAnnotation(parameters) {
+    Annotation.call(this, parameters);
+
+    this.data.annotationType = AnnotationType.STRIKEOUT;
+    this.data.hasHtml = true;
+
+    // PDF viewers completely ignore any border styles.
+    this.data.borderStyle.setWidth(0);
+  }
+
+  Util.inherit(StrikeOutAnnotation, Annotation, {});
+
+  return StrikeOutAnnotation;
 })();
 
 exports.Annotation = Annotation;
@@ -40418,7 +40604,10 @@ exports.WorkerMessageHandler = WorkerMessageHandler;
 }));
 
 
-}).call((typeof window === 'undefined') ? this : window);
+  }).call(pdfjsLibs);
 
+  exports.PDFJS = pdfjsLibs.pdfjsSharedGlobal.PDFJS;
+
+}));
 
 

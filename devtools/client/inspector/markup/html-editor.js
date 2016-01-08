@@ -26,7 +26,7 @@ function stopPropagation(e) {
  * way is that the editor is loaded in an iframe, and calling appendChild
  * causes it to reload.
  *
- * Meant to be embedded inside of an HTML page, as in markup-view.xhtml.
+ * Meant to be embedded inside of an HTML page, as in markup.xhtml.
  *
  * @param HTMLDocument htmlDocument
  *        The document to attach the editor to.  Will also use this

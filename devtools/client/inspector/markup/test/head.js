@@ -25,7 +25,7 @@ SimpleTest.requestCompleteLog();
 
 // Import helpers registering the test-actor in remote targets
 var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "../../../shared/test/test-actor-registry.js", this);
+Services.scriptloader.loadSubScript(testDir + "../../../../shared/test/test-actor-registry.js", this);
 
 // Set the testing flag on DevToolsUtils and reset it when the test ends
 DevToolsUtils.testing = true;
@@ -52,9 +52,12 @@ registerCleanupFunction(function*() {
   }
 });
 
-const TEST_URL_ROOT = "http://mochi.test:8888/browser/devtools/client/markupview/test/";
-const CHROME_BASE = "chrome://mochitests/content/browser/devtools/client/markupview/test/";
-const COMMON_FRAME_SCRIPT_URL = "chrome://devtools/content/shared/frame-script-utils.js";
+const TEST_URL_ROOT =
+  "http://example.com/browser/devtools/client/inspector/markup/test/";
+const CHROME_BASE =
+  "chrome://mochitests/content/browser/devtools/client/inspector/markup/test/";
+const COMMON_FRAME_SCRIPT_URL =
+  "chrome://devtools/content/shared/frame-script-utils.js";
 
 /**
  * Add a new test tab in the browser and load the given url.
