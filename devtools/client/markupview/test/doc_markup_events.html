@@ -102,6 +102,20 @@
           alert("boundHandleEvent clicked");
         }
       };
+
+      function noeventsClickHandler(event) {
+        alert("noevents has an event listener");
+      };
+
+      function addNoeventsClickHandler() {
+        let noevents = document.getElementById("noevents");
+        noevents.addEventListener("click", noeventsClickHandler);
+      };
+
+      function removeNoeventsClickHandler() {
+        let noevents = document.getElementById("noevents");
+        noevents.removeEventListener("click", noeventsClickHandler);
+      };
     </script>
   </head>
   <body onload="init();">

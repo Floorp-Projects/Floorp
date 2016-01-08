@@ -14,6 +14,7 @@ const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 var module = this;
 
 // Global modules
+Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://services-common/async.js");
@@ -138,7 +139,7 @@ var TPS = {
     this._errors++;
     let errInfo;
     if (exc) {
-      errInfo = Utils.exceptionStr(exc); // includes details and stack-trace.
+      errInfo = Log.exceptionStr(exc); // includes details and stack-trace.
     } else {
       // always write a stack even if no error passed.
       errInfo = Utils.stackTrace(new Error());

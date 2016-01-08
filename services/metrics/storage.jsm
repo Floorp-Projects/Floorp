@@ -26,7 +26,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
 
-
 // These do not account for leap seconds. Meh.
 function dateToDays(date) {
   return Math.floor(date.getTime() / MILLISECONDS_PER_DAY);
@@ -1428,8 +1427,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
       this._queuedInProgress = true;
       promise = func();
     } catch (ex) {
-      this._log.warn("Queued operation threw during execution: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Queued operation threw during execution", ex);
       this._queuedInProgress = false;
       deferred.reject(ex);
       this._popAndPerformQueuedOperation();
@@ -1454,8 +1452,7 @@ MetricsStorageSqliteBackend.prototype = Object.freeze({
         this._popAndPerformQueuedOperation();
       }.bind(this),
       function onError(error) {
-        this._log.warn("Failure when performing queued operation: " +
-                       CommonUtils.exceptionStr(error));
+        this._log.warn("Failure when performing queued operation", error);
         this._queuedInProgress = false;
         deferred.reject(error);
         this._popAndPerformQueuedOperation();
