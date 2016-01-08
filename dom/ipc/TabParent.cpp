@@ -996,14 +996,6 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
 }
 
 void
-TabParent::UpdateFrame(const FrameMetrics& aFrameMetrics)
-{
-  if (!mIsDestroyed) {
-    Unused << SendUpdateFrame(aFrameMetrics);
-  }
-}
-
-void
 TabParent::UIResolutionChanged()
 {
   if (!mIsDestroyed) {
@@ -1039,76 +1031,6 @@ TabParent::HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
 {
   if (!mIsDestroyed) {
     Unused << SendHandleAccessKey(aCharCodes, aIsTrusted, aModifierMask);
-  }
-}
-
-void
-TabParent::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                            const mozilla::CSSPoint& aDestination)
-{
-  if (!mIsDestroyed) {
-    Unused << SendRequestFlingSnap(aScrollId, aDestination);
-  }
-}
-
-void
-TabParent::AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration)
-{
-  if (!mIsDestroyed) {
-    Unused << SendAcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
-  }
-}
-
-void TabParent::HandleDoubleTap(const CSSPoint& aPoint,
-                                Modifiers aModifiers,
-                                const ScrollableLayerGuid &aGuid)
-{
-  if (!mIsDestroyed) {
-    Unused << SendHandleDoubleTap(aPoint, aModifiers, aGuid);
-  }
-}
-
-void TabParent::HandleSingleTap(const CSSPoint& aPoint,
-                                Modifiers aModifiers,
-                                const ScrollableLayerGuid &aGuid)
-{
-  if (!mIsDestroyed) {
-    Unused << SendHandleSingleTap(aPoint, aModifiers, aGuid);
-  }
-}
-
-void TabParent::HandleLongTap(const CSSPoint& aPoint,
-                              Modifiers aModifiers,
-                              const ScrollableLayerGuid &aGuid,
-                              uint64_t aInputBlockId)
-{
-  if (!mIsDestroyed) {
-    Unused << SendHandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
-  }
-}
-
-void TabParent::NotifyAPZStateChange(ViewID aViewId,
-                                     APZStateChange aChange,
-                                     int aArg)
-{
-  if (!mIsDestroyed) {
-    Unused << SendNotifyAPZStateChange(aViewId, aChange, aArg);
-  }
-}
-
-void
-TabParent::NotifyMouseScrollTestEvent(const ViewID& aScrollId, const nsString& aEvent)
-{
-  if (!mIsDestroyed) {
-    Unused << SendMouseScrollTestEvent(aScrollId, aEvent);
-  }
-}
-
-void
-TabParent::NotifyFlushComplete()
-{
-  if (!mIsDestroyed) {
-    Unused << SendNotifyFlushComplete();
   }
 }
 
@@ -1398,33 +1320,6 @@ TabParent::SendRealDragEvent(WidgetDragEvent& event, uint32_t aDragAction,
 CSSPoint TabParent::AdjustTapToChildWidget(const CSSPoint& aPoint)
 {
   return aPoint + (LayoutDevicePoint(GetChildProcessOffset()) * GetLayoutDeviceToCSSScale());
-}
-
-bool TabParent::SendHandleSingleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
-  if (mIsDestroyed) {
-    return false;
-  }
-
-  return PBrowserParent::SendHandleSingleTap(AdjustTapToChildWidget(aPoint), aModifiers, aGuid);
-}
-
-bool TabParent::SendHandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId)
-{
-  if (mIsDestroyed) {
-    return false;
-  }
-
-  return PBrowserParent::SendHandleLongTap(AdjustTapToChildWidget(aPoint), aModifiers, aGuid, aInputBlockId);
-}
-
-bool TabParent::SendHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
-  if (mIsDestroyed) {
-    return false;
-  }
-
-  return PBrowserParent::SendHandleDoubleTap(AdjustTapToChildWidget(aPoint), aModifiers, aGuid);
 }
 
 bool TabParent::SendMouseWheelEvent(WidgetWheelEvent& event)
@@ -2797,74 +2692,11 @@ TabParent::RecvBrowserFrameOpenWindow(PBrowserParent* aOpener,
 }
 
 bool
-TabParent::RecvZoomToRect(const uint32_t& aPresShellId,
-                          const ViewID& aViewId,
-                          const CSSRect& aRect,
-                          const uint32_t& aFlags)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ZoomToRect(aPresShellId, aViewId, aRect, aFlags);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvUpdateZoomConstraints(const uint32_t& aPresShellId,
-                                     const ViewID& aViewId,
-                                     const MaybeZoomConstraints& aConstraints)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->UpdateZoomConstraints(aPresShellId, aViewId, aConstraints);
-  }
-  return true;
-}
-
-bool
 TabParent::RecvRespondStartSwipeEvent(const uint64_t& aInputBlockId,
                                       const bool& aStartSwipe)
 {
   if (nsCOMPtr<nsIWidget> widget = GetWidget()) {
     widget->ReportSwipeStarted(aInputBlockId, aStartSwipe);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
-                                         const uint64_t& aInputBlockId,
-                                         const bool& aPreventDefault)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->ContentReceivedInputBlock(aGuid, aInputBlockId, aPreventDefault);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvSetTargetAPZC(const uint64_t& aInputBlockId,
-                             nsTArray<ScrollableLayerGuid>&& aTargets)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->SetTargetAPZC(aInputBlockId, aTargets);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvStartScrollbarDrag(const AsyncDragMetrics& aDragMetrics)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->StartScrollbarDrag(aDragMetrics);
-  }
-  return true;
-}
-
-bool
-TabParent::RecvSetAllowedTouchBehavior(const uint64_t& aInputBlockId,
-                                       nsTArray<TouchBehaviorFlags>&& aFlags)
-{
-  if (RenderFrameParent* rfp = GetRenderFrame()) {
-    rfp->SetAllowedTouchBehavior(aInputBlockId, aFlags);
   }
   return true;
 }

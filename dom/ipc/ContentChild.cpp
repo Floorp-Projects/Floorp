@@ -44,6 +44,7 @@
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 #include "mozilla/ipc/TestShellChild.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/CompositorChild.h"
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
@@ -1258,6 +1259,19 @@ ContentChild::AllocPGMPServiceChild(mozilla::ipc::Transport* aTransport,
                                     base::ProcessId aOtherProcess)
 {
   return GMPServiceChild::Create(aTransport, aOtherProcess);
+}
+
+PAPZChild*
+ContentChild::AllocPAPZChild(const TabId& aTabId)
+{
+  return APZChild::Create(aTabId);
+}
+
+bool
+ContentChild::DeallocPAPZChild(PAPZChild* aActor)
+{
+  delete aActor;
+  return true;
 }
 
 PCompositorChild*
