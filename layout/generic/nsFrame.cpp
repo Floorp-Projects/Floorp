@@ -1738,24 +1738,24 @@ ApplyOverflowClipping(nsDisplayListBuilder* aBuilder,
 }
 
 #ifdef DEBUG
-static void PaintDebugBorder(nsIFrame* aFrame, nsRenderingContext* aCtx,
-     const nsRect& aDirtyRect, nsPoint aPt) {
+static void PaintDebugBorder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+     const nsRect& aDirtyRect, nsPoint aPt)
+{
   nsRect r(aPt, aFrame->GetSize());
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   Color blueOrRed(aFrame->HasView() ? Color(0.f, 0.f, 1.f, 1.f) :
                                       Color(1.f, 0.f, 0.f, 1.f));
-  drawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel),
-                         ColorPattern(ToDeviceColor(blueOrRed)));
+  aDrawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel),
+                          ColorPattern(ToDeviceColor(blueOrRed)));
 }
 
-static void PaintEventTargetBorder(nsIFrame* aFrame, nsRenderingContext* aCtx,
-     const nsRect& aDirtyRect, nsPoint aPt) {
+static void PaintEventTargetBorder(nsIFrame* aFrame, DrawTarget* aDrawTarget,
+     const nsRect& aDirtyRect, nsPoint aPt)
+{
   nsRect r(aPt, aFrame->GetSize());
-  DrawTarget* drawTarget = aCtx->GetDrawTarget();
   int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   ColorPattern purple(ToDeviceColor(Color(.5f, 0.f, .5f, 1.f)));
-  drawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel), purple);
+  aDrawTarget->StrokeRect(NSRectToRect(r, appUnitsPerDevPixel), purple);
 }
 
 static void

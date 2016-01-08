@@ -71,7 +71,7 @@ add_test(function test_ID_caching() {
     _("New mobile ID: " + newMobileID);
   } catch (ex) {
     err = ex;
-    _("Error: " + Utils.exceptionStr(err));
+    _("Error: " + Log.exceptionStr(err));
   }
 
   do_check_true(!err);
@@ -220,7 +220,7 @@ add_task(function test_restorePromptsReupload() {
       engine.sync();
     } catch(ex) {
       error = ex;
-      _("Got error: " + Utils.exceptionStr(ex));
+      _("Got error: " + Log.exceptionStr(ex));
     }
     do_check_true(!error);
 
@@ -264,7 +264,7 @@ add_task(function test_restorePromptsReupload() {
       engine.sync();
     } catch(ex) {
       error = ex;
-      _("Got error: " + Utils.exceptionStr(ex));
+      _("Got error: " + Log.exceptionStr(ex));
     }
     do_check_true(!error);
 

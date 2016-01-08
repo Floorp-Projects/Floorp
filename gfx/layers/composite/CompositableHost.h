@@ -176,6 +176,9 @@ public:
   }
   bool IsAttached() { return mAttached; }
 
+  static void
+  ReceivedDestroy(PCompositableParent* aActor);
+
   virtual void Dump(std::stringstream& aStream,
                     const char* aPrefix="",
                     bool aDumpHtml=false) { }

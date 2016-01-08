@@ -195,10 +195,6 @@ public:
          const nsAString& aContentType, uint64_t aLength,
          int64_t aLastModifiedDate, BlobDirState aDirState);
 
-  static already_AddRefed<File>
-  Create(nsISupports* aParent, const nsAString& aName,
-         const nsAString& aContentType, uint64_t aLength);
-
   // The returned File takes ownership of aMemoryBuffer. aMemoryBuffer will be
   // freed by free so it must be allocated by malloc or something
   // compatible with it.

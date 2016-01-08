@@ -699,10 +699,8 @@ function EnvironmentCache() {
     p = [ this._addonBuilder.init() ];
   }
 
-  if (AppConstants.platform !== "android") {
-    this._currentEnvironment.profile = {};
-    p.push(this._updateProfile());
-  }
+  this._currentEnvironment.profile = {};
+  p.push(this._updateProfile());
 
   let setup = () => {
     this._initTask = null;
