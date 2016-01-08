@@ -4527,7 +4527,7 @@ nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
   nsRect displayport;
   nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
   MOZ_ASSERT(rootScrollFrame);
-  Unused << nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), &displayport);
+  Unused << nsLayoutUtils::GetDisplayPortRelativeToScrollFrame(rootScrollFrame->GetContent(), &displayport);
 
   nsRegion childVisibleRegion;
   // The visible region for the children may be much bigger than the hole we

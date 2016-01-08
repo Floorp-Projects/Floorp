@@ -2540,7 +2540,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
   }
 
   nsRect oldDisplayPort;
-  nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &oldDisplayPort);
+  nsLayoutUtils::GetDisplayPortRelativeToScrollPort(mOuter->GetContent(), &oldDisplayPort);
   oldDisplayPort.MoveBy(-mScrolledFrame->GetPosition());
 
   // Update frame position for scrolling
@@ -2557,7 +2557,7 @@ ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange, nsIAtom* aOri
     // any painting, so no need to schedule one.
     nsRect displayPort;
     DebugOnly<bool> usingDisplayPort =
-      nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+      nsLayoutUtils::GetDisplayPortRelativeToScrollPort(mOuter->GetContent(), &displayPort);
     NS_ASSERTION(usingDisplayPort, "Must have a displayport for apz scrolls!");
 
     displayPort.MoveBy(-mScrolledFrame->GetPosition());
@@ -3249,7 +3249,7 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
     // displayport base.
     MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
     nsRect displayPort;
-    usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayPort);
+    usingDisplayPort = nsLayoutUtils::GetDisplayPortRelativeToScrollFrame(content, &displayPort);
 
     // Override the dirty rectangle if the displayport has been set.
     if (usingDisplayPort) {
@@ -3346,7 +3346,7 @@ ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const
 {
   // Use the right rect depending on if a display port is set.
   nsRect displayPort;
-  bool usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+  bool usingDisplayport = nsLayoutUtils::GetDisplayPortRelativeToScrollFrame(mOuter->GetContent(), &displayPort);
   return aRect.Intersects(ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }
 
