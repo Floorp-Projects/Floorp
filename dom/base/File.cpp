@@ -958,6 +958,32 @@ BlobImplFile::LookupAndCacheIsDirectory()
 }
 
 ////////////////////////////////////////////////////////////////////////////
+// BlobImplEmptyFile implementation
+
+NS_IMPL_ISUPPORTS_INHERITED0(BlobImplEmptyFile, BlobImpl)
+
+already_AddRefed<BlobImpl>
+BlobImplEmptyFile::CreateSlice(uint64_t aStart, uint64_t aLength,
+                               const nsAString& aContentType,
+                               ErrorResult& aRv)
+{
+  MOZ_ASSERT(!aStart && !aLength);
+  RefPtr<BlobImpl> impl = new BlobImplEmptyFile(aContentType);
+  return impl.forget();
+}
+
+void
+BlobImplEmptyFile::GetInternalStream(nsIInputStream** aStream,
+                                     ErrorResult& aRv)
+{
+  nsresult rv = NS_NewCStringInputStream(aStream, EmptyCString());
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aRv.Throw(rv);
+    return;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////
 // BlobImplMemory implementation
 
 NS_IMPL_ISUPPORTS_INHERITED0(BlobImplMemory, BlobImpl)
