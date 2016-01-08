@@ -1572,7 +1572,7 @@ ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 mozilla::PRemoteSpellcheckEngineChild *
 ContentChild::AllocPRemoteSpellcheckEngineChild()
 {
-  NS_NOTREACHED("Default Constructor for PRemoteSpellcheckEngineChild should never be called");
+  MOZ_CRASH("Default Constructor for PRemoteSpellcheckEngineChild should never be called");
   return nullptr;
 }
 
@@ -1599,7 +1599,7 @@ ContentChild::SendPBlobConstructor(PBlobChild* aActor,
 PPresentationChild*
 ContentChild::AllocPPresentationChild()
 {
-  NS_NOTREACHED("We should never be manually allocating PPresentationChild actors");
+  MOZ_CRASH("We should never be manually allocating PPresentationChild actors");
   return nullptr;
 }
 
@@ -1704,7 +1704,7 @@ ContentChild::SendPIccConstructor(PIccChild* aActor,
 PIccChild*
 ContentChild::AllocPIccChild(const uint32_t& aServiceId)
 {
-  NS_NOTREACHED("No one should be allocating PIccChild actors");
+  MOZ_CRASH("No one should be allocating PIccChild actors");
   return nullptr;
 }
 
@@ -1760,7 +1760,7 @@ ContentChild::DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild* aDev
 PFileSystemRequestChild*
 ContentChild::AllocPFileSystemRequestChild(const FileSystemParams& aParams)
 {
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -1793,7 +1793,7 @@ PMobileConnectionChild*
 ContentChild::AllocPMobileConnectionChild(const uint32_t& aClientId)
 {
 #ifdef MOZ_B2G_RIL
-  NS_NOTREACHED("No one should be allocating PMobileConnectionChild actors");
+  MOZ_CRASH("No one should be allocating PMobileConnectionChild actors");
   return nullptr;
 #else
   MOZ_CRASH("No support for mobileconnection on this platform!");;
@@ -1832,7 +1832,7 @@ ContentChild::AllocPPrintingChild()
   // which implements PPrintingChild. Instead, the nsPrintingProxy service is
   // requested and instantiated via XPCOM, and the constructor of
   // nsPrintingProxy sets up the IPC connection.
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -1851,7 +1851,7 @@ ContentChild::AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
   // nsScreenManagerProxy. Instead, the nsScreenManagerProxy
   // service is requested and instantiated via XPCOM, and the
   // constructor of nsScreenManagerProxy sets up the IPC connection.
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -2007,7 +2007,7 @@ ContentChild::DeallocPMediaChild(media::PMediaChild *aActor)
 PStorageChild*
 ContentChild::AllocPStorageChild()
 {
-  NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
+  MOZ_CRASH("We should never be manually allocating PStorageChild actors");
   return nullptr;
 }
 
@@ -3023,7 +3023,7 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
   }
   return true;
 #else
-  NS_NOTREACHED("ContentChild::RecvUpdateWindow calls unexpected on this platform.");
+  MOZ_ASSERT(false, "ContentChild::RecvUpdateWindow calls unexpected on this platform.");
   return false;
 #endif
 }
