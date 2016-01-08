@@ -20,6 +20,5 @@ interface CSS {
 
 // http://dev.w3.org/csswg/cssom/#the-css.escape%28%29-method
 partial interface CSS {
-  [Throws]
   static DOMString escape(DOMString ident);
 };

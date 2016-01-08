@@ -214,6 +214,9 @@ public:
   virtual void UseTiledLayerBuffer(CompositableClient* aCompositable,
                                    const SurfaceDescriptorTiles& aTileLayerDescriptor) override;
 
+  virtual bool DestroyInTransaction(PTextureChild* aTexture, bool synchronously) override;
+  virtual bool DestroyInTransaction(PCompositableChild* aCompositable, bool synchronously) override;
+
   virtual void RemoveTextureFromCompositable(CompositableClient* aCompositable,
                                              TextureClient* aTexture) override;
 

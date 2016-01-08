@@ -96,12 +96,12 @@ CompilePattern(JSContext* cx, RegExpShared* shared, RegExpCompileData* data,
 template <typename CharT>
 RegExpRunStatus
 ExecuteCode(JSContext* cx, jit::JitCode* codeBlock, const CharT* chars, size_t start,
-            size_t length, MatchPairs* matches);
+            size_t length, MatchPairs* matches, size_t* endIndex);
 
 template <typename CharT>
 RegExpRunStatus
 InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* chars, size_t start,
-              size_t length, MatchPairs* matches);
+              size_t length, MatchPairs* matches, size_t* endIndex);
 
 #define FOR_EACH_NODE_TYPE(VISIT)                                    \
   VISIT(End)                                                         \

@@ -160,6 +160,17 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = r0;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = r1;
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = r4;
 
+// Registerd used in RegExpMatcher instruction (do not use JSReturnOperand).
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = CallTempReg0;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = CallTempReg1;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = CallTempReg2;
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = CallTempReg3;
+
+// Registerd used in RegExpTester instruction (do not use ReturnReg).
+static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = CallTempReg0;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = CallTempReg1;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = CallTempReg2;
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = CallTempReg3;
 
 static MOZ_CONSTEXPR_VAR FloatRegister d0  = {FloatRegisters::d0, VFPRegister::Double};
 static MOZ_CONSTEXPR_VAR FloatRegister d1  = {FloatRegisters::d1, VFPRegister::Double};

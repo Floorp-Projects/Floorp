@@ -117,7 +117,7 @@ Load16Aligned(const uint8_t* pc)
 template <typename CharT>
 RegExpRunStatus
 irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* chars, size_t current,
-                        size_t length, MatchPairs* matches)
+                        size_t length, MatchPairs* matches, size_t* endIndex)
 {
     const uint8_t* pc = byteCode;
 
@@ -199,6 +199,8 @@ irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* cha
           BYTECODE(SUCCEED)
             if (matches)
                 memcpy(matches->pairsRaw(), registers.begin(), matches->length() * 2 * sizeof(int32_t));
+            else if (endIndex)
+                *endIndex = registers[1];
             return RegExpRunStatus_Success;
           BYTECODE(ADVANCE_CP)
             current += insn >> BYTECODE_SHIFT;
@@ -492,8 +494,8 @@ irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const CharT* cha
 
 template RegExpRunStatus
 irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const Latin1Char* chars, size_t current,
-                        size_t length, MatchPairs* matches);
+                        size_t length, MatchPairs* matches, size_t* endIndex);
 
 template RegExpRunStatus
 irregexp::InterpretCode(JSContext* cx, const uint8_t* byteCode, const char16_t* chars, size_t current,
-                        size_t length, MatchPairs* matches);
+                        size_t length, MatchPairs* matches, size_t* endIndex);
