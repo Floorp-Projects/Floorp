@@ -73,9 +73,8 @@ ComputeYCbCrBufferSize(const gfx::IntSize& aYSize, int32_t aYStride,
   MOZ_ASSERT(aYSize.height >= 0 && aYSize.width >= 0);
 
   if (aYSize.height < 0 || aYSize.width < 0 || aCbCrSize.height < 0 || aCbCrSize.width < 0 ||
-      aYSize.width > aYStride || aCbCrSize.width > aCbCrStride ||
-      aCbCrStride > aYStride || aCbCrSize.height > aYSize.height ||
-      !gfx::Factory::AllowedSurfaceSize(IntSize(aYStride, aYSize.height))) {
+      !gfx::Factory::AllowedSurfaceSize(IntSize(aYStride, aYSize.height)) ||
+      !gfx::Factory::AllowedSurfaceSize(IntSize(aCbCrStride, aCbCrSize.height))) {
     return 0;
   }
   // Overflow checks are performed in AllowedSurfaceSize
