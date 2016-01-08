@@ -69,7 +69,7 @@ registerCleanupFunction(function* cleanup() {
  * @return a promise that resolves to the tab object when the url is loaded
  */
 var addTab = Task.async(function*(url) {
-  info("Adding a new tab with URL: '" + url + "'");
+  info("Adding a new tab with URL: " + url);
 
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
   yield once(gBrowser.selectedBrowser, "load", true);
@@ -183,15 +183,47 @@ function waitForTick() {
 }
 
 /**
+ * Open the toolbox in a given tab.
+ * @param {XULNode} tab The tab the toolbox should be opened in.
+ * @param {String} toolId Optional. The ID of the tool to be selected.
+ * @param {String} hostType Optional. The type of toolbox host to be used.
+ * @return {Promise} Resolves with the toolbox, when it has been opened.
+ */
+var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
+  info("Opening the toolbox");
+
+  let toolbox;
+  let target = TargetFactory.forTab(tab);
+
+  // Check if the toolbox is already loaded.
+  toolbox = gDevTools.getToolbox(target);
+  if (toolbox) {
+    info("Toolbox is already opened");
+    return toolbox;
+  }
+
+  // If not, load it now.
+  toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
+
+  // Make sure that the toolbox frame is focused.
+  yield new Promise(resolve => waitForFocus(resolve, toolbox.frame.contentWindow));
+
+  info("Toolbox opened and focused");
+
+  return toolbox;
+});
+
+/**
  * Add a new tab and open the toolbox in it.
  * @param {String} url The URL for the tab to be opened.
+ * @param {String} toolId Optional. The ID of the tool to be selected.
+ * @param {String} hostType Optional. The type of toolbox host to be used.
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
-var openNewTabAndToolbox = Task.async(function*(url) {
+var openNewTabAndToolbox = Task.async(function*(url, toolId, hostType) {
   let tab = yield addTab(url);
-  let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
-  return toolbox;
+  return openToolboxForTab(tab, toolId, hostType)
 });
 
 /**
