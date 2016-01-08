@@ -48,7 +48,7 @@ nsXULAlertObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return rv;
 }
 
-NS_IMPL_ISUPPORTS(nsXULAlerts, nsIAlertsService, nsIAlertsDoNotDisturb)
+NS_IMPL_ISUPPORTS(nsXULAlerts, nsIAlertsService, nsIAlertsDoNotDisturb, nsIAlertsIconURI)
 
 /* static */ already_AddRefed<nsXULAlerts>
 nsXULAlerts::GetInstance()
@@ -83,6 +83,14 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
 NS_IMETHODIMP
 nsXULAlerts::ShowAlert(nsIAlertNotification* aAlert,
                        nsIObserver* aAlertListener)
+{
+  return ShowAlertWithIconURI(aAlert, aAlertListener, nullptr);
+}
+
+NS_IMETHODIMP
+nsXULAlerts::ShowAlertWithIconURI(nsIAlertNotification* aAlert,
+                                  nsIObserver* aAlertListener,
+                                  nsIURI* aIconURI)
 {
   bool inPrivateBrowsing;
   nsresult rv = aAlert->GetInPrivateBrowsing(&inPrivateBrowsing);
@@ -238,6 +246,17 @@ nsXULAlerts::ShowAlert(nsIAlertNotification* aAlert,
   NS_ENSURE_TRUE(scriptableAlertSource, NS_ERROR_FAILURE);
   scriptableAlertSource->SetData(source);
   rv = argsArray->AppendElement(scriptableAlertSource);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsISupportsCString> scriptableIconURL (do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID));
+  NS_ENSURE_TRUE(scriptableIconURL, NS_ERROR_FAILURE);
+  if (aIconURI) {
+    nsAutoCString iconURL;
+    rv = aIconURI->GetSpec(iconURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+    scriptableIconURL->SetData(iconURL);
+  }
+  rv = argsArray->AppendElement(scriptableIconURL);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<mozIDOMWindowProxy> newWindow;
