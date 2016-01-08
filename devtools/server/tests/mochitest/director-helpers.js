@@ -32,7 +32,7 @@ function* newConnectedDebuggerClient(opts) {
 
   yield promiseInvoke(client, client.connect);
 
-  var root = yield promiseInvoke(client, client.listTabs);
+  var root = yield client.listTabs();
 
   return {
     client: client,

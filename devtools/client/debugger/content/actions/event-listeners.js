@@ -4,7 +4,7 @@
 "use strict";
 
 const constants = require("../constants");
-const { rdpInvoke, asPaused } = require("../utils");
+const { asPaused } = require("../utils");
 const { reportException } = require("devtools/shared/DevToolsUtils");
 
 const FETCH_EVENT_LISTENERS_DELAY = 200; // ms
@@ -50,7 +50,7 @@ function fetchEventListeners() {
 }
 
 const _getListeners = Task.async(function*() {
-  const response = yield rdpInvoke(gThreadClient, gThreadClient.eventListeners);
+  const response = yield gThreadClient.eventListeners();
 
   // Make sure all the listeners are sorted by the event type, since
   // they"re not guaranteed to be clustered together.
@@ -86,7 +86,7 @@ const _getDefinitionSite = Task.async(function*(aFunction) {
   let response;
 
   try {
-    response = yield rdpInvoke(grip, grip.getDefinitionSite);
+    response = yield grip.getDefinitionSite();
   }
   catch(e) {
     // Don't make this error fatal, because it would break the entire events pane.
