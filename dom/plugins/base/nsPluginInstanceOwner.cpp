@@ -1447,9 +1447,8 @@ GetOffsetRootContent(nsIFrame* aFrame)
   const nsIFrame* f = aFrame;
   int32_t currAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
   int32_t apd = currAPD;
-  nsRect displayPort;
   while (f) {
-    if (f->GetContent() && nsLayoutUtils::GetDisplayPort(f->GetContent(), &displayPort))
+    if (f->GetContent() && nsLayoutUtils::HasDisplayPort(f->GetContent()))
       break;
 
     docOffset += f->GetPosition();
