@@ -11,6 +11,7 @@ UNIFIED_SOURCES += [
     'TestCRT.cpp',
     'TestEncoding.cpp',
     'TestExpirationTracker.cpp',
+    'TestNSPRLogModulesParser.cpp',
     'TestPipes.cpp',
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
@@ -26,6 +27,10 @@ UNIFIED_SOURCES += [
     'TestTokenizer.cpp',
     'TestUTF.cpp',
     'TestXPIDLString.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '../../base',
 ]
 
 FINAL_LIBRARY = 'xul-gtest'

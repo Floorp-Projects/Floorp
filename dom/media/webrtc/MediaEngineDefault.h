@@ -69,7 +69,7 @@ public:
     return true;
   }
 
-  virtual const dom::MediaSourceEnum GetMediaSource() override {
+  virtual dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Camera;
   }
 
@@ -148,7 +148,7 @@ public:
     return true;
   }
 
-  virtual const dom::MediaSourceEnum GetMediaSource() override {
+  virtual dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Microphone;
   }
 

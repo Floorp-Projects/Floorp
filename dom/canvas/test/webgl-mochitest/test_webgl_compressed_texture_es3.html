@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<script src="webgl-util.js"></script>
+<script src="es3-data.js"></script>
+<title>WebGL test: test WEBGL_compressed_texture_es3 extension</title>
+<style>
+img {
+ border: 1px solid black;
+ margin-right: 1em;
+}
+.testimages {
+}
+
+.testimages br {
+  clear: both;
+}
+
+.testimages > div {
+  float: left;
+  margin: 1em;
+}
+</style>
+</head>
+<body>
+<div id="description"></div>
+<canvas id="canvas" width="8" height="8"></canvas>
+<div id="console"></div>
+<script id="vshader" type="x-shader/x-vertex">
+    attribute vec4 vPosition;
+    attribute vec2 texCoord0;
+    varying vec2 texCoord;
+    void main() {
+        gl_Position = vPosition;
+        texCoord = texCoord0;
+    }
+</script>
+<script id="fshader" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D tex;
+    varying vec2 texCoord;
+    void main() {
+        gl_FragData[0] = texture2D(tex, texCoord);
+    }
+</script>
+<script id="fshader-r" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D tex;
+    varying vec2 texCoord;
+    void main() {
+        vec4 pixel = (texture2D(tex, texCoord));
+        pixel.r = (pixel.r + 1.0) / 2.0;
+        gl_FragData[0] = pixel;
+    }
+</script>
+<script id="fshader-rg" type="x-shader/x-fragment">
+    precision mediump float;
+    uniform sampler2D tex;
+    varying vec2 texCoord;
+    void main() {
+        vec4 pixel = (texture2D(tex, texCoord));
+        pixel.rg = (pixel.rg + 1.0) / 2.0;
+        gl_FragData[0] = pixel;
+    }
+</script>
+<script>
+"use strict";
+var ext = null;
+var vao = null;
+var gl = null;
+var validFormats = {
+    COMPRESSED_R11_EAC                        : 0x9270,
+    COMPRESSED_SIGNED_R11_EAC                 : 0x9271,
+    COMPRESSED_RG11_EAC                       : 0x9272,
+    COMPRESSED_SIGNED_RG11_EAC                : 0x9273,
+    COMPRESSED_RGB8_ETC2                      : 0x9274,
+    COMPRESSED_SRGB8_ETC2                     : 0x9275,
+    COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2  : 0x9276,
+    COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2 : 0x9277,
+    COMPRESSED_RGBA8_ETC2_EAC                 : 0x9278,
+    COMPRESSED_SRGB8_ALPHA8_ETC2_EAC          : 0x9279,
+};
+var name;
+var supportedFormats;
+
+function setupUnitQuad() {
+    var vertexObject = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+         1.0,  1.0, 0.0,
+        -1.0,  1.0, 0.0,
+        -1.0, -1.0, 0.0,
+         1.0,  1.0, 0.0,
+        -1.0, -1.0, 0.0,
+         1.0, -1.0, 0.0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 0, 0);
+
+    var vertexObject = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        1.0, 1.0,
+        0.0, 1.0,
+        0.0, 0.0,
+        1.0, 1.0,
+        0.0, 0.0,
+        1.0, 0.0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 0, 0);
+}
+
+function runTest() {
+    gl = WebGLUtil.getWebGL("canvas", false, {antialias: false});
+    if (!gl) {
+        ok(false, "WebGL context does not exist");
+    } else {
+        ok(true, "WebGL context exists");
+        setupUnitQuad();
+
+        // Run tests with extension disabled
+        runTestDisabled();
+
+        // Query the extension and store globally so shouldBe can access it
+        ext = gl.getExtension("WEBGL_compressed_texture_es3");
+        if (!ext) {
+            ok(true, "No WEBGL_compressed_texture_es3 support -- this is legal");
+            runSupportedTest(false);
+        } else {
+            ok(true, "Successfully enabled WEBGL_compressed_texture_es3 extension");
+
+            runSupportedTest(true);
+            runTestExtension();
+        }
+    }
+    SimpleTest.finish();
+}
+
+function runSupportedTest(extensionEnabled) {
+    var supported = gl.getSupportedExtensions();
+    if (supported.indexOf("WEBGL_compressed_texture_es3") >= 0) {
+        if (extensionEnabled) {
+            ok(true, "WEBGL_compressed_texture_es3 listed as supported and getExtension succeeded");
+        } else {
+            ok(false, "WEBGL_compressed_texture_es3 listed as supported but getExtension failed");
+        }
+    } else {
+        if (extensionEnabled) {
+            ok(false, "WEBGL_compressed_texture_es3 not listed as supported but getExtension succeeded");
+        } else {
+            ok(true, "WEBGL_compressed_texture_es3 not listed as supported and getExtension failed -- this is legal");
+        }
+    }
+}
+
+function runTestDisabled() {
+    is(gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS).length, 0,
+       "Should be no compressed texture formats");
+}
+
+function formatExists(format, supportedFormats) {
+    for (var ii = 0; ii < supportedFormats.length; ++ii) {
+        if (format == supportedFormats[ii]) {
+            ok(true, "supported format " + formatToString(format) + " is exists");
+            return;
+        }
+    }
+    ok(false, "supported format " + formatToString(format) + " does not exist");
+}
+
+function formatToString(format) {
+    for (var p in ext) {
+        if (ext[p] == format) {
+            return p;
+        }
+    }
+    return "0x" + format.toString(16);
+}
+
+function runTestExtension() {
+    // check that all format enums exist.
+    for (name in validFormats) {
+        is(ext[name], validFormats[name], "format is match");
+    }
+
+    supportedFormats = gl.getParameter(gl.COMPRESSED_TEXTURE_FORMATS);
+    // There should be exactly 10 formats
+    is(supportedFormats.length, 10, "Should be exactly 10 formats");
+
+    // check that all 10 formats exist
+    for (var name in validFormats.length) {
+        formatExists(validFormats[name], supportedFormats);
+    }
+
+    // Test each format
+    testETC2_RGB();
+}
+
+function testETC2_RGB() {
+    var tests = [
+        {
+            width: 4,
+            height: 4,
+            channels: 1,
+            data: img_4x4_r11_eac,
+            format: ext.COMPRESSED_R11_EAC
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 1,
+            data: img_4x4_signed_r11_eac,
+            format: ext.COMPRESSED_SIGNED_R11_EAC
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 2,
+            data: img_4x4_rg11_eac,
+            format: ext.COMPRESSED_RG11_EAC
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 2,
+            data: img_4x4_signed_rg11_eac,
+            format: ext.COMPRESSED_SIGNED_RG11_EAC
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 3,
+            data: img_4x4_rgb_etc2,
+            format: ext.COMPRESSED_RGB8_ETC2
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 3,
+            data: img_4x4_rgb_etc2,
+            format: ext.COMPRESSED_SRGB8_ETC2
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 4,
+            data: img_4x4_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 4,
+            data: img_4x4_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 4,
+            data: img_4x4_rgba_etc2,
+            format: ext.COMPRESSED_RGBA8_ETC2_EAC
+        },
+        {
+            width: 4,
+            height: 4,
+            channels: 4,
+            data: img_4x4_rgba_etc2,
+            format: ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 1,
+            data: img_8x8_r11_eac,
+            format: ext.COMPRESSED_R11_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 1,
+            data: img_8x8_signed_r11_eac,
+            format: ext.COMPRESSED_SIGNED_R11_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 2,
+            data: img_8x8_rg11_eac,
+            format: ext.COMPRESSED_RG11_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 2,
+            data: img_8x8_signed_rg11_eac,
+            format: ext.COMPRESSED_SIGNED_RG11_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 3,
+            data: img_8x8_rgb_etc2,
+            format: ext.COMPRESSED_RGB8_ETC2
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 3,
+            data: img_8x8_rgb_etc2,
+            format: ext.COMPRESSED_SRGB8_ETC2
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 4,
+            data: img_8x8_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 4,
+            data: img_8x8_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 4,
+            data: img_8x8_rgba_etc2,
+            format: ext.COMPRESSED_RGBA8_ETC2_EAC
+        },
+        {
+            width: 8,
+            height: 8,
+            channels: 4,
+            data: img_8x8_rgba_etc2,
+            format: ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 1,
+            data: img_32x32_r11_eac,
+            format: ext.COMPRESSED_R11_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 1,
+            data: img_32x32_signed_r11_eac,
+            format: ext.COMPRESSED_SIGNED_R11_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 2,
+            data: img_32x32_rg11_eac,
+            format: ext.COMPRESSED_RG11_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 2,
+            data: img_32x32_signed_rg11_eac,
+            format: ext.COMPRESSED_SIGNED_RG11_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 3,
+            data: img_32x32_rgb_etc2,
+            format: ext.COMPRESSED_RGB8_ETC2
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 3,
+            data: img_32x32_rgb_etc2,
+            format: ext.COMPRESSED_SRGB8_ETC2
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 4,
+            data: img_32x32_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 4,
+            data: img_32x32_rgb_punchthrough_etc2,
+            format: ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 4,
+            data: img_32x32_rgba_etc2,
+            format: ext.COMPRESSED_RGBA8_ETC2_EAC
+        },
+        {
+            width: 32,
+            height: 32,
+            channels: 4,
+            data: img_32x32_rgba_etc2,
+            format: ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC
+        },
+    ];
+    testETCTextures(tests);
+}
+
+function testETCTextures(tests) {
+    for (var ii = 0; ii < tests.length; ++ii) {
+        testETCTexture(tests[ii]);
+    }
+}
+
+/* Return the size of block in bytes */
+function getBlockSize(format) {
+    switch (format) {
+    case ext.COMPRESSED_R11_EAC:
+    case ext.COMPRESSED_SIGNED_R11_EAC:
+    case ext.COMPRESSED_RGB8_ETC2:
+    case ext.COMPRESSED_SRGB8_ETC2:
+    case ext.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+    case ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        return 8;
+    case ext.COMPRESSED_RG11_EAC:
+    case ext.COMPRESSED_SIGNED_RG11_EAC:
+    case ext.COMPRESSED_RGBA8_ETC2_EAC:
+    case ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+        return 16
+    }
+}
+
+function copyRect(data, srcX, srcY, dstX, dstY, width, height, stride) {
+  var bytesPerLine = width * 4;
+  var srcOffset = srcX * 4 + srcY * stride;
+  var dstOffset = dstX * 4 + dstY * stride;
+  for (var jj = height; jj > 0; --jj) {
+    for (var ii = 0; ii < bytesPerLine; ++ii) {
+      data[dstOffset + ii] = data[srcOffset + ii];
+    }
+    srcOffset += stride;
+    dstOffset += stride;
+  }
+}
+
+function testETCTexture(test) {
+    var data = new Uint8Array(test.data.compressed);
+    var width = test.width;
+    var height = test.height;
+    var format = test.format;
+
+    var uncompressedData = new Uint8Array(test.data.decompressed);
+    var glErrorShouldBe = (gl, glError, msg) => {
+        msg = msg || "";
+        var err = gl.getError();
+        var getGLErrorAsString = err => {
+            if (err === gl.NO_ERROR) {
+                return "NO_ERROR";
+            }
+            for (var name in gl) {
+                if (gl[name] === err) {
+                    return name;
+                }
+            }
+            return err.toString();
+        }
+
+        if (err != glError) {
+            ok(false, "getError expected: " + getGLErrorAsString(glError) +
+                      ". Was " + getGLErrorAsString(err) + " : " + msg);
+        } else {
+            ok(true, "getError was expected value: " +
+                     getGLErrorAsString(glError) + " : " + msg);
+        }
+    };
+
+    canvas.width = width;
+    canvas.height = height;
+    gl.viewport(0, 0, width, height);
+
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture");
+    gl.generateMipmap(gl.TEXTURE_2D);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "trying to generate mipmaps from compressed texture");
+    if (format == ext.COMPRESSED_SIGNED_R11_EAC) {
+      var program = WebGLUtil.createProgramByIds(gl, 'vshader', 'fshader-r');
+    } else if (format == ext.COMPRESSED_SIGNED_RG11_EAC) {
+      var program = WebGLUtil.createProgramByIds(gl, 'vshader', 'fshader-rg');
+    } else {
+      var program = WebGLUtil.createProgramByIds(gl, 'vshader', 'fshader');
+    }
+    gl.bindAttribLocation(program, 0, 'vPosition');
+    gl.bindAttribLocation(program, 1, 'texCoord0');
+    gl.useProgram(program);
+
+    gl.clearColor(1.0, 1.0, 1.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    compareRect(width, height, test.channels, width, height, uncompressedData, data, format);
+
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 1, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "non 0 border");
+
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width + 4, height, 0, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height + 4, 0, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width - 4, height, 0, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height - 4, 0, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width - 1, height, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "non multiple-of-4 supported");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width - 2, height, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "non multiple-of-4 supported");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height - 1, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "non multiple-of-4 supported");
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height - 2, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "non multiple-of-4 supported");
+
+    if (width == 4) {
+        gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, 1, height, 0, data);
+        glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
+        gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, 2, height, 0, data);
+        glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
+    }
+    if (height == 4) {
+        gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, width, 1, 0, data);
+        glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
+        gl.compressedTexImage2D(gl.TEXTURE_2D, 1, format, width, 2, 0, data);
+        glErrorShouldBe(gl, gl.NO_ERROR, "valid dimensions for level > 0");
+    }
+
+    // pick a wrong format that uses the same amount of data.
+    var wrongFormat;
+    switch (format) {
+    case ext.COMPRESSED_R11_EAC:
+        wrongFormat = ext.COMPRESSED_SIGNED_R11_EAC;
+        break;
+    case ext.COMPRESSED_SIGNED_R11_EAC:
+        wrongFormat = ext.COMPRESSED_R11_EAC;
+        break;
+    case ext.COMPRESSED_RG11_EAC:
+        wrongFormat = ext.COMPRESSED_SIGNED_RG11_EAC;
+        break;
+    case ext.COMPRESSED_SIGNED_RG11_EAC:
+        wrongFormat = ext.COMPRESSED_RG11_EAC;
+        break;
+    case ext.COMPRESSED_RGB8_ETC2:
+        wrongFormat = ext.COMPRESSED_SRGB8_ETC2;
+        break;
+    case ext.COMPRESSED_SRGB8_ETC2:
+        wrongFormat = ext.COMPRESSED_RGB8_ETC2;
+        break;
+    case ext.COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        wrongFormat = ext.COMPRESSED_RGB8_ETC2;
+        break;
+    case ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+        wrongFormat = ext.COMPRESSED_RGB8_ETC2;
+        break;
+    case ext.COMPRESSED_RGBA8_ETC2_EAC:
+        wrongFormat = ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC;
+        break;
+    case ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+        wrongFormat = ext.COMPRESSED_RGBA8_ETC2_EAC;
+        break;
+    }
+
+    // Restore original texture.
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture");
+
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height, wrongFormat, data);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "format does not match");
+
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width + 4, height, format, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height + 4, format, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width - 4, height, format, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height - 4, format, data);
+    glErrorShouldBe(gl, gl.INVALID_VALUE, "data size does not match dimensions");
+
+    gl.compressedTexImage2D(gl.TEXTURE_2D, 0, format, width, height, 0, data);
+    glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width - 1, height, format, data);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width - 2, height, format, data);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height - 1, format, data);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions");
+    gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, height - 2, format, data);
+    glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid dimensions");
+
+    var subData = new Uint8Array(data.buffer, 0, getBlockSize(format));
+
+    if (width == 8 && height == 8) {
+        gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 1, 0, 4, 4, format, subData);
+        glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid offset");
+        gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, 0, 1, 4, 4, format, subData);
+        glErrorShouldBe(gl, gl.INVALID_OPERATION, "invalid offset");
+    }
+
+    if (width < 32 && height < 32) {
+        var stride = width * 4;
+        for (var yoff = 0; yoff < height; yoff += 4) {
+            for (var xoff = 0; xoff < width; xoff += 4) {
+                copyRect(uncompressedData, 0, 0, xoff, yoff, 4, 4, stride);
+                gl.compressedTexSubImage2D(gl.TEXTURE_2D, 0, xoff, yoff, 4, 4, format, subData);
+                glErrorShouldBe(gl, gl.NO_ERROR, "uploading compressed texture");
+                gl.clearColor(1.0, 1.0, 1.0, 1.0);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                gl.drawArrays(gl.TRIANGLES, 0, 6);
+                compareRect(width, height, test.channels, width, height, uncompressedData, data, format);
+            }
+        }
+    }
+}
+
+function insertImg(element, caption, img) {
+    var div = document.createElement("div");
+    div.appendChild(img);
+    var label = document.createElement("div");
+    label.appendChild(document.createTextNode(caption));
+    div.appendChild(label);
+    element.appendChild(div);
+}
+
+function convertToSRGB(val) {
+    var norm = val / 255.0;
+    var res = 0;
+    if (norm <= 0.04045) {
+        res = norm / 12.92;
+    } else {
+        res = Math.pow(((norm + 0.055)/1.055), 2.4);
+    }
+
+    return res * 255.0;
+}
+
+function makeImage(imageWidth, imageHeight, dataWidth, data, alpha) {
+    var scale = 8;
+    var c = document.createElement("canvas");
+    c.width = imageWidth * scale;
+    c.height = imageHeight * scale;
+    var ctx = c.getContext("2d");
+    for (var yy = 0; yy < imageHeight; ++yy) {
+        for (var xx = 0; xx < imageWidth; ++xx) {
+            var offset = (yy * dataWidth + xx) * 4;
+            ctx.fillStyle = "rgba(" +
+                    data[offset + 0] + "," +
+                    data[offset + 1] + "," +
+                    data[offset + 2] + "," +
+                    (alpha ? data[offset + 3] / 255 : 1) + ")";
+            ctx.fillRect(xx * scale, yy * scale, scale, scale);
+        }
+    }
+    var img = document.createElement("img");
+    img.src = c.toDataURL();
+    return img;
+}
+
+function compareRect(actualWidth, actualHeight, actualChannels,
+                     dataWidth, dataHeight, expectedData,
+                     testData, testFormat)
+{
+    var actual = new Uint8Array(actualWidth * actualHeight * 4);
+    gl.readPixels(
+            0, 0, actualWidth, actualHeight, gl.RGBA, gl.UNSIGNED_BYTE, actual);
+
+    var div = document.createElement("div");
+    div.className = "testimages";
+    var hasAlpha = actualChannels == 4;
+    var imgExpected = makeImage(actualWidth, actualHeight, dataWidth, expectedData, hasAlpha);
+    var imgActual = makeImage(actualWidth, actualHeight, actualWidth, actual, hasAlpha);
+    insertImg(div, "expected", imgExpected);
+    insertImg(div, "actual", imgActual);
+    div.appendChild(document.createElement('br'));
+    document.getElementById("console").appendChild(div);
+
+    var failed = false;
+    for (var yy = 0; yy < actualHeight; ++yy) {
+        for (var xx = 0; xx < actualWidth; ++xx) {
+            var actualOffset = (yy * actualWidth + xx) * 4;
+            var expectedOffset = (yy * dataWidth + xx) * 4;
+            var expected = expectedData.slice(expectedOffset, expectedOffset + 4);
+
+            var maxDiffPixel = 0;
+            switch (testFormat) {
+              case ext.COMPRESSED_SRGB8_ETC2:
+              case ext.COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2:
+              case ext.COMPRESSED_SRGB8_ALPHA8_ETC2_EAC:
+
+                  // Alpha shouldn't do conversion.
+                  for (var i = 0; i < 3; ++i) {
+                      expected[i] = convertToSRGB(expected[i]);
+                  }
+                  //fallthrough
+              case ext.COMPRESSED_R11_EAC:
+              case ext.COMPRESSED_RG11_EAC:
+              case ext.COMPRESSED_SIGNED_R11_EAC:
+              case ext.COMPRESSED_SIGNED_RG11_EAC:
+                  // Due to floating round error, we need fuzzy test here.
+                  var maxDiffPixel = 1;
+                  break;
+              default:
+                  var maxDiffPixel = 0;
+                  break;
+            }
+
+            for (var channel = 0; channel < actualChannels; ++channel) {
+                var diff = Math.abs(expected[channel] - actual[actualOffset + channel]);
+
+                if (diff > maxDiffPixel) {
+                    failed = true;
+                    var was = actual.slice(actualOffset, actualOffset + 4).join();
+                    ok(false, 'at (' + xx + ', ' + yy +
+                              ') expected: ' + expected.join() + ' was ' + was);
+                    break;
+                }
+            }
+        }
+    }
+    if (!failed) {
+        ok(true, "texture rendered correctly");
+    }
+}
+
+var prefArrArr = [
+  ['webgl.enable-draft-extensions', true],
+];
+var prefEnv = {'set': prefArrArr};
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(prefEnv, runTest);
+</script>
+</body>
+</html>

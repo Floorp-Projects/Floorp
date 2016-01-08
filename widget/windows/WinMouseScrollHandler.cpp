@@ -228,7 +228,7 @@ MouseScrollHandler::ProcessMessage(nsWindowBase* aWidget, UINT msg,
                     msg == WM_KEYUP ? "WM_KEYUP" : "Unknown", msg, wParam,
          ::GetMessageTime()));
       LOG_KEYSTATE();
-      if (Device::Elantech::HandleKeyMessage(aWidget, msg, wParam)) {
+      if (Device::Elantech::HandleKeyMessage(aWidget, msg, wParam, lParam)) {
         aResult.mResult = 0;
         aResult.mConsumed = true;
         return true;
@@ -1183,7 +1183,8 @@ MouseScrollHandler::Device::Elantech::IsHelperWindow(HWND aWnd)
 bool
 MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
                                                        UINT aMsg,
-                                                       WPARAM aWParam)
+                                                       WPARAM aWParam,
+                                                       LPARAM aLParam)
 {
   // The Elantech touchpad driver understands three-finger swipe left and
   // right gestures, and translates them into Page Up and Page Down key
@@ -1196,17 +1197,24 @@ MouseScrollHandler::Device::Elantech::HandleKeyMessage(nsWindowBase* aWidget,
   // The Elantech driver actually sends these messages for a three-finger
   // swipe right:
   //
-  //   WM_KEYDOWN virtual_key = 0xCC or 0xFF (depending on driver version)
-  //   WM_KEYDOWN virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = VK_NEXT
-  //   WM_KEYUP   virtual_key = 0xCC or 0xFF
+  //   WM_KEYDOWN virtual_key = 0xCC or 0xFF ScanCode = 00
+  //   WM_KEYDOWN virtual_key = VK_NEXT      ScanCode = 00
+  //   WM_KEYUP   virtual_key = VK_NEXT      ScanCode = 00
+  //   WM_KEYUP   virtual_key = 0xCC or 0xFF ScanCode = 00
   //
-  // so we use the 0xCC or 0xFF key modifier to detect whether the Page Down
-  // is due to the gesture rather than a regular Page Down keypress.  We then
-  // pretend that we should dispatch "Go Forward" command.  Similarly
+  // Whether 0xCC or 0xFF is sent is suspected to depend on the driver
+  // version.  7.0.4.12_14Jul09_WHQL, 7.0.5.10, and 7.0.6.0 generate 0xCC.
+  // 7.0.4.3 from Asus on EeePC generates 0xFF.
+  //
+  // On some hardware, IS_VK_DOWN(0xFF) returns true even when Elantech
+  // messages are not involved, meaning that alone is not enough to
+  // distinguish the gesture from a regular Page Up or Page Down key press.
+  // The ScanCode is therefore also tested to detect the gesture.
+  // We then pretend that we should dispatch "Go Forward" command.  Similarly
   // for VK_PRIOR and "Go Back" command.
   if (sUseSwipeHack &&
       (aWParam == VK_NEXT || aWParam == VK_PRIOR) &&
+      WinUtils::GetScanCode(aLParam) == 0 &&
       (IS_VK_DOWN(0xFF) || IS_VK_DOWN(0xCC))) {
     if (aMsg == WM_KEYDOWN) {
       MOZ_LOG(gMouseScrollLog, LogLevel::Info,

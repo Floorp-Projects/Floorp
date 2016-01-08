@@ -5,9 +5,15 @@
 
 #include "MobileViewportManager.h"
 
+#include "gfxPrefs.h"
 #include "LayersLogging.h"
+#include "nsIDOMEvent.h"
+#include "nsIFrame.h"
+#include "nsLayoutUtils.h"
+#include "nsPresShell.h"
 #include "nsViewManager.h"
 #include "nsViewportInfo.h"
+#include "UnitTransforms.h"
 
 #define MVM_LOG(...)
 // #define MVM_LOG(...) printf_stderr("MVM: " __VA_ARGS__)

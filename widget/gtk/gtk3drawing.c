@@ -1123,7 +1123,21 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
     } else {
         gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOP);
     }
-  
+
+    /* Scrollbar button has to be inset by trough_border because its DOM element
+     * is filling width of vertical scrollbar's track (or height in case
+     * of horizontal scrollbars). */
+
+    MozGtkScrollbarMetrics metrics;
+    moz_gtk_get_scrollbar_metrics(&metrics);
+    if (flags & MOZ_GTK_STEPPER_VERTICAL) {
+      rect->x += metrics.trough_border;
+      rect->width = metrics.slider_width;
+    } else {
+      rect->y += metrics.trough_border;
+      rect->height = metrics.slider_width;
+    }
+
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
 

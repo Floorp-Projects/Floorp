@@ -1188,13 +1188,21 @@ nsSliderFrame::IsEventOverThumb(WidgetGUIEvent* aEvent)
     return false;
   }
 
-  bool isHorizontal = IsHorizontal();
   nsRect thumbRect = thumbFrame->GetRect();
+#if defined(MOZ_WIDGET_GTK)
+  /* Scrollbar track can have padding, so it's better to check that eventPoint
+   * is inside of actual thumb, not just its one axis. The part of the scrollbar
+   * track adjacent to thumb can actually receive events in GTK3 */
+  return eventPoint.x >= thumbRect.x && eventPoint.x < thumbRect.XMost() &&
+         eventPoint.y >= thumbRect.y && eventPoint.y < thumbRect.YMost();
+#else
+  bool isHorizontal = IsHorizontal();
   nscoord eventPos = isHorizontal ? eventPoint.x : eventPoint.y;
   nscoord thumbStart = isHorizontal ? thumbRect.x : thumbRect.y;
   nscoord thumbEnd = isHorizontal ? thumbRect.XMost() : thumbRect.YMost();
 
   return eventPos >= thumbStart && eventPos < thumbEnd;
+#endif
 }
 
 NS_IMETHODIMP
