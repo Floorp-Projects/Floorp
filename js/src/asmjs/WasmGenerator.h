@@ -54,6 +54,7 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 class MOZ_STACK_CLASS ModuleGenerator
 {
     typedef Vector<uint32_t> FuncOffsetVector;
+    typedef Vector<uint32_t> FuncIndexVector;
 
     struct SigHashPolicy
     {
@@ -93,6 +94,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Function compilation
     uint32_t                      funcBytes_;
     FuncOffsetVector              funcEntryOffsets_;
+    FuncIndexVector               exportFuncIndices_;
     DebugOnly<FunctionGenerator*> activeFunc_;
     DebugOnly<bool>               finishedFuncs_;
 

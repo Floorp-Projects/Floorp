@@ -103,16 +103,14 @@ class Export
 {
     MallocSig sig_;
     struct CacheablePod {
-        uint32_t funcIndex_;
         uint32_t stubOffset_;
     } pod;
 
   public:
     Export() = default;
-    Export(MallocSig&& sig, uint32_t funcIndex)
+    explicit Export(MallocSig&& sig)
       : sig_(Move(sig))
     {
-        pod.funcIndex_ = funcIndex;
         pod.stubOffset_ = UINT32_MAX;
     }
     Export(Export&& rhs)
@@ -125,9 +123,6 @@ class Export
         pod.stubOffset_ = stubOffset;
     }
 
-    uint32_t funcIndex() const {
-        return pod.funcIndex_;
-    }
     uint32_t stubOffset() const {
         return pod.stubOffset_;
     }
