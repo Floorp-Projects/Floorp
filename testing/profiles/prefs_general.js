@@ -162,6 +162,9 @@ user_pref("layout.css.object-fit-and-position.enabled", true);
 // Enable webkit prefixed CSS features for testing
 user_pref("layout.css.prefixes.webkit", true);
 
+// Enable -webkit-{min|max}-device-pixel-ratio media queries for testing
+user_pref("layout.css.prefixes.device-pixel-ratio-webkit", true);
+
 // Disable spammy layout warnings because they pollute test logs
 user_pref("layout.spammy_warnings.enabled", false);
 
