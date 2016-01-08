@@ -109,6 +109,12 @@ struct DisplayPortMarginsPropertyData {
 
 } // namespace mozilla
 
+// For GetDisplayPort
+enum class RelativeTo {
+  ScrollPort,
+  ScrollFrame
+};
+
 /**
  * nsLayoutUtils is a namespace class used for various helper
  * functions that are useful in multiple places in layout.  The goal
@@ -166,15 +172,11 @@ public:
   static nsIScrollableFrame* FindScrollableFrameFor(ViewID aId);
 
   /**
-   * Get display port for the given element. The displayport is relative to the
-   * scrollport.
+   * Get display port for the given element, relative to the specified entity,
+   * defaulting to the scrollport.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
-
-  /**
-   * Get display port for the given element relative to the scroll frame.
-   */
-  static bool GetDisplayPortRelativeToScrollFrame(nsIContent* aContent, nsRect *aResult);
+  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult,
+    RelativeTo aRelativeTo = RelativeTo::ScrollPort);
 
   /**
    * Check whether the given element has a displayport.
@@ -185,13 +187,13 @@ public:
    * @return the display port for the given element which should be used for
    * visibility testing purposes.
    *
-   * If low-precision buffers are enabled, this is the critical display port
-   * relative to the scroll frame; otherwise, it's the same display port
-   * returned by GetDisplayPortRelativeToScrollFrame().
+   * If low-precision buffers are enabled, this is the critical display port;
+   * otherwise, it's the same display port returned by GetDisplayPort().
    */
-  static bool GetDisplayPortRelativeToScrollFrameForVisibilityTesting(
+  static bool GetDisplayPortForVisibilityTesting(
     nsIContent* aContent,
-    nsRect* aResult);
+    nsRect* aResult,
+    RelativeTo aRelativeTo = RelativeTo::ScrollPort);
 
   enum class RepaintMode : uint8_t {
     Repaint,
