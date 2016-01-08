@@ -2920,8 +2920,10 @@ ServiceWorkerManager::LoadRegistration(
     registration = CreateNewRegistration(aRegistration.scope(), principal);
   } else {
     RefPtr<ServiceWorkerInfo> newest = registration->Newest();
+    // If the script spec matches and our active worker state matches our
+    // expectations for a "current worker", then we are done.
     if (newest && newest->ScriptSpec() == aRegistration.scriptSpec() &&
-        !!registration->mActiveWorker == aRegistration.currentWorkerURL().IsEmpty()) {
+        !registration->mActiveWorker == aRegistration.currentWorkerURL().IsEmpty()) {
       // No needs for updates.
       return;
     }
