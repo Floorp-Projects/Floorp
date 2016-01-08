@@ -31,7 +31,6 @@
 #include <media/stagefright/MetaData.h>
 #include <utils/ByteOrder.h>
 
-#include "ClosingService.h"
 #include "NetworkActivityMonitor.h"
 
 using namespace mozilla::net;
@@ -65,7 +64,6 @@ ARTPWriter::ARTPWriter(int fd)
     }
 
     NetworkActivityMonitor::AttachIOLayer(mSocket);
-    ClosingService::AttachIOLayer(mSocket);
 
     mRTPAddr.inet.family = PR_AF_INET;
 

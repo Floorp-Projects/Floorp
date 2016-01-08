@@ -27,7 +27,6 @@
 #include "prnetdb.h"
 #include "prerr.h"
 #include "NetworkActivityMonitor.h"
-#include "ClosingService.h"
 
 using namespace mozilla::net;
 
@@ -45,7 +44,6 @@ UDPPusher::UDPPusher(const char *filename, unsigned port)
     }
 
     NetworkActivityMonitor::AttachIOLayer(mSocket);
-    ClosingService::AttachIOLayer(mSocket);
 
     PRNetAddr addr;
     addr.inet.family = PR_AF_INET;
