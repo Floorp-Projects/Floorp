@@ -743,8 +743,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
       this._recordDataPolicyNotification(this.now(), this.currentPolicyVersion);
       this._userNotifyPromise = null;
     }).bind(this), ((error) => {
-      this._log.warn("Data policy notification presentation failed: " +
-                     CommonUtils.exceptionStr(error));
+      this._log.warn("Data policy notification presentation failed", error);
       this._userNotifyPromise = null;
     }).bind(this));
 
@@ -753,8 +752,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
     try {
       this._listener.onNotifyDataPolicy(request);
     } catch (ex) {
-      this._log.warn("Exception when calling onNotifyDataPolicy: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Exception when calling onNotifyDataPolicy", ex);
     }
 
     this._userNotifyPromise = deferred.promise;
@@ -816,8 +814,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
     }.bind(this);
 
     let onError = function onError(error) {
-      this._log.error("Error when handling data submission result: " +
-                      CommonUtils.exceptionStr(error));
+      this._log.error("Error when handling data submission result", error);
       this._inProgressSubmissionRequest = null;
       this._handleSubmissionFailure();
     }.bind(this);
@@ -830,8 +827,7 @@ this.DataReportingPolicy.prototype = Object.freeze({
       let promise = this._listener[handler](this._inProgressSubmissionRequest);
       chained = chained.then(() => promise, null);
     } catch (ex) {
-      this._log.warn("Exception when calling " + handler + ": " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Exception when calling " + handler, ex);
       this._inProgressSubmissionRequest = null;
       this._handleSubmissionFailure();
       return;

@@ -581,7 +581,7 @@ ErrorHandler.prototype = {
         this.checkServerError(exception, "engines/" + engine_name);
 
         Status.engines = [engine_name, exception.failureCode || ENGINE_UNKNOWN_FAIL];
-        this._log.debug(engine_name + " failed: " + Utils.exceptionStr(exception));
+        this._log.debug(engine_name + " failed", exception);
 
         Services.telemetry.getKeyedHistogramById("WEAVE_ENGINE_SYNC_ERRORS")
                           .add(engine_name);
