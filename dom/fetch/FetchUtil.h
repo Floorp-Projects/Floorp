@@ -3,10 +3,10 @@
 
 #include "nsString.h"
 #include "nsError.h"
-#include "nsFormData.h"
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FormData.h"
 
 namespace mozilla {
 namespace dom {
@@ -47,7 +47,7 @@ public:
    * Creates a form data object from a UTF-8 encoded |aStr|. Returns |nullptr|
    * and sets |aRv| to MSG_BAD_FORMDATA if |aStr| contains invalid data.
    */
-  static already_AddRefed<nsFormData>
+  static already_AddRefed<FormData>
   ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
                   const nsCString& aStr, ErrorResult& aRv);
 

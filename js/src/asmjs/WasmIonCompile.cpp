@@ -38,10 +38,10 @@ class FunctionCompiler
     typedef HashMap<uint32_t, BlockVector, DefaultHasher<uint32_t>, SystemAllocPolicy> LabeledBlockMap;
     typedef HashMap<size_t, BlockVector, DefaultHasher<uint32_t>, SystemAllocPolicy> UnlabeledBlockMap;
     typedef Vector<size_t, 4, SystemAllocPolicy> PositionStack;
-    typedef Vector<ValType, 4, SystemAllocPolicy> LocalTypes;
 
     const FuncIR&       func_;
     size_t              pc_;
+    size_t              lastReadCallSite_;
 
     TempAllocator&      alloc_;
     MIRGraph&           graph_;
@@ -57,14 +57,13 @@ class FunctionCompiler
     LabeledBlockMap     labeledBreaks_;
     LabeledBlockMap     labeledContinues_;
 
-    LocalTypes          localTypes_;
-
     FuncCompileResults& compileResults_;
 
   public:
     FunctionCompiler(const FuncIR& func, MIRGenerator& mirGen, FuncCompileResults& compileResults)
       : func_(func),
         pc_(0),
+        lastReadCallSite_(0),
         alloc_(mirGen.alloc()),
         graph_(mirGen.graph()),
         info_(mirGen.info()),
@@ -101,42 +100,37 @@ class FunctionCompiler
             curBlock_->initSlot(info().localSlot(i.index()), ins);
             if (!mirGen_.ensureBallast())
                 return false;
-            if (!localTypes_.append(args[i.index()]))
-                return false;
         }
 
-        for (unsigned i = 0; i < func_.numVarInits(); i++) {
-            Val v = func_.varInit(i);
+        for (size_t i = 0; i < func_.numLocalVars(); i++) {
             MInstruction* ins = nullptr;
-            switch (v.type()) {
+            switch (func_.localVarType(i)) {
               case ValType::I32:
-                ins = MConstant::NewAsmJS(alloc(), Int32Value(v.i32()), MIRType_Int32);
+                ins = MConstant::NewAsmJS(alloc(), Int32Value(0), MIRType_Int32);
                 break;
               case ValType::I64:
                 MOZ_CRASH("int64");
               case ValType::F32:
-                ins = MConstant::NewAsmJS(alloc(), Float32Value(v.f32()), MIRType_Float32);
+                ins = MConstant::NewAsmJS(alloc(), Float32Value(0.f), MIRType_Float32);
                 break;
               case ValType::F64:
-                ins = MConstant::NewAsmJS(alloc(), DoubleValue(v.f64()), MIRType_Double);
+                ins = MConstant::NewAsmJS(alloc(), DoubleValue(0.0), MIRType_Double);
                 break;
               case ValType::I32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::CreateX4(v.i32x4()), MIRType_Int32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType_Int32x4);
                 break;
               case ValType::F32x4:
-                ins = MSimdConstant::New(alloc(), SimdConstant::CreateX4(v.f32x4()), MIRType_Float32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0.f), MIRType_Float32x4);
                 break;
               case ValType::B32x4:
                 // Bool32x4 uses the same data layout as Int32x4.
-                ins = MSimdConstant::New(alloc(), SimdConstant::CreateX4(v.i32x4()), MIRType_Bool32x4);
+                ins = MSimdConstant::New(alloc(), SimdConstant::SplatX4(0), MIRType_Bool32x4);
                 break;
             }
 
             curBlock_->add(ins);
             curBlock_->initSlot(info().localSlot(firstVarSlot + i), ins);
             if (!mirGen_.ensureBallast())
-                return false;
-            if (!localTypes_.append(v.type()))
                 return false;
         }
 
@@ -1166,20 +1160,26 @@ class FunctionCompiler
 
     /************************************************************ DECODING ***/
 
-    uint8_t        readU8()     { return func_.readU8(&pc_); }
-    uint32_t       readU32()    { return func_.readU32(&pc_); }
-    int32_t        readI32()    { return func_.readI32(&pc_); }
-    float          readF32()    { return func_.readF32(&pc_); }
-    double         readF64()    { return func_.readF64(&pc_); }
-    const LifoSig* readSig()    { return func_.readSig(&pc_); }
-    SimdConstant   readI32X4()  { return func_.readI32X4(&pc_); }
-    SimdConstant   readF32X4()  { return func_.readF32X4(&pc_); }
+    uint8_t        readU8()     { return func_.uncheckedReadU8(&pc_); }
+    uint32_t       readU32()    { return func_.uncheckedReadU32(&pc_); }
+    int32_t        readI32()    { return func_.uncheckedReadI32(&pc_); }
+    float          readF32()    { return func_.uncheckedReadF32(&pc_); }
+    double         readF64()    { return func_.uncheckedReadF64(&pc_); }
+    const LifoSig* readSig()    { return func_.uncheckedReadSig(&pc_); }
+    SimdConstant   readI32X4()  { return func_.uncheckedReadI32X4(&pc_); }
+    SimdConstant   readF32X4()  { return func_.uncheckedReadF32X4(&pc_); }
+
     Stmt           readStmtOp() { return Stmt(readU8()); }
 
+    void readCallLineCol(uint32_t* line, uint32_t* column) {
+        const FuncIR::SourceCoords& sc = func_.sourceCoords(lastReadCallSite_++);
+        MOZ_ASSERT(pc_ == sc.offset);
+        *line = sc.line;
+        *column = sc.column;
+    }
+
     void assertDebugCheckPoint() {
-#ifdef DEBUG
         MOZ_ASSERT(Stmt(readU8()) == Stmt::DebugCheckPoint);
-#endif
     }
 
     bool done() const { return pc_ == func_.size(); }
@@ -1563,13 +1563,6 @@ EmitCallArgs(FunctionCompiler& f, const LifoSig& sig, FunctionCompiler::Call* ca
     return true;
 }
 
-static void
-ReadCallLineCol(FunctionCompiler& f, uint32_t* line, uint32_t* column)
-{
-    *line = f.readU32();
-    *column = f.readU32();
-}
-
 static bool
 EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
 {
@@ -1578,7 +1571,7 @@ EmitInternalCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
@@ -1597,7 +1590,7 @@ EmitFuncPtrCall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     MDefinition *index;
     if (!EmitI32Expr(f, &index))
@@ -1619,7 +1612,7 @@ EmitFFICall(FunctionCompiler& f, ExprType ret, MDefinition** def)
     MOZ_ASSERT_IF(!IsVoid(sig.ret()), sig.ret() == ret);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     if (!EmitCallArgs(f, sig, &call))
@@ -1634,7 +1627,7 @@ EmitMathBuiltinCall(FunctionCompiler& f, F32 f32, MDefinition** def)
     MOZ_ASSERT(f32 == F32::Ceil || f32 == F32::Floor);
 
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);
@@ -1653,7 +1646,7 @@ static bool
 EmitMathBuiltinCall(FunctionCompiler& f, F64 f64, MDefinition** def)
 {
     uint32_t lineno, column;
-    ReadCallLineCol(f, &lineno, &column);
+    f.readCallLineCol(&lineno, &column);
 
     FunctionCompiler::Call call(f, lineno, column);
     f.startCallArgs(&call);

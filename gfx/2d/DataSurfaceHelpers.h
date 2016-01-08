@@ -91,7 +91,7 @@ CreateDataSourceSurfaceByCloning(DataSourceSurface* aSource);
  */
 uint8_t*
 DataAtOffset(DataSourceSurface* aSurface,
-             DataSourceSurface::MappedSurface* aMap,
+             const DataSourceSurface::MappedSurface* aMap,
              IntPoint aPoint);
 
 /**

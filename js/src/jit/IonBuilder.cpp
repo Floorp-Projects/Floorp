@@ -13009,6 +13009,9 @@ IonBuilder::jsop_functionthis()
         return true;
     }
 
+    if (IsNullOrUndefined(def->type()))
+        return pushConstant(GetThisValue(&script()->global()));
+
     MComputeThis* thisObj = MComputeThis::New(alloc(), def);
     current->add(thisObj);
     current->push(thisObj);

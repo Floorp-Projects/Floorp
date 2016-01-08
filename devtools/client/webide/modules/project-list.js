@@ -315,7 +315,7 @@ ProjectList.prototype = {
     }
 
     AppProjects.load().then(() => {
-      let projects = AppProjects.store.object.projects;
+      let projects = AppProjects.projects;
       for (let i = 0; i < projects.length; i++) {
         let project = projects[i];
         let panelItemNode = doc.createElement(this._panelNodeEl);

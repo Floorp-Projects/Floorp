@@ -108,6 +108,8 @@ struct CrossCompartmentKey
         MOZ_RELEASE_ASSERT(wrapped);
     }
 
+    bool needsSweep();
+
   private:
     CrossCompartmentKey() = delete;
 };
@@ -125,8 +127,8 @@ struct WrapperHasher : public DefaultHasher<CrossCompartmentKey>
     }
 };
 
-typedef HashMap<CrossCompartmentKey, ReadBarrieredValue,
-                WrapperHasher, SystemAllocPolicy> WrapperMap;
+using WrapperMap = GCRekeyableHashMap<CrossCompartmentKey, ReadBarrieredValue,
+                                      WrapperHasher, SystemAllocPolicy>;
 
 // We must ensure that all newly allocated JSObjects get their metadata
 // set. However, metadata callbacks may require the new object be in a sane

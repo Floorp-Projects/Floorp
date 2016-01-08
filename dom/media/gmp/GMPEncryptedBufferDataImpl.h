@@ -19,7 +19,7 @@ class GMPStringListImpl : public GMPStringList
 {
 public:
   explicit GMPStringListImpl(const nsTArray<nsCString>& aStrings);
-  virtual const uint32_t Size() const override;
+  virtual uint32_t Size() const override;
   virtual void StringAt(uint32_t aIndex,
                         const char** aOutString, uint32_t *aOutLength) const override;
   virtual ~GMPStringListImpl() override;

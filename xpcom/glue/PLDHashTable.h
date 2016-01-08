@@ -305,7 +305,7 @@ public:
   ~PLDHashTable();
 
   // This should be used rarely.
-  const PLDHashTableOps* const Ops() { return mOps; }
+  const PLDHashTableOps* Ops() const { return mOps; }
 
   // Size in entries (gross, not net of free and removed sentinels) for table.
   // This can be zero if no elements have been added yet, in which case the

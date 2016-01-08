@@ -76,7 +76,7 @@ function run_test()
       log_("after purge");
       // Prevent the I/O thread from evicting physically the data.  We first want to re-open the entries.
       // This deterministically emulates a slow hard drive.
-      testingInterface.suspendCacheIOThread(8);
+      testingInterface.suspendCacheIOThread(7);
 
       log_("clearing");
       // Now clear everything except pinned.  Stores the "ce_*" file and schedules background eviction.
