@@ -1077,18 +1077,10 @@ GetDisplayPortImpl(nsIContent* aContent, nsRect *aResult, float aMultiplier)
   return true;
 }
 
-bool
-nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
-{
-  if (gfxPrefs::UseLowPrecisionBuffer()) {
-    return GetDisplayPortImpl(aContent, aResult, 1.0f / gfxPrefs::LowPrecisionResolution());
-  }
-  return GetDisplayPortImpl(aContent, aResult, 1.0f);
-}
-
 void
 TranslateFromScrollPortToScrollFrame(nsIContent* aContent, nsRect* aRect)
 {
+  MOZ_ASSERT(aRect);
   nsIFrame* frame = GetScrollFrameFromContent(aContent);
   nsIScrollableFrame* scrollableFrame = frame ? frame->GetScrollTargetFrame() : nullptr;
   if (scrollableFrame) {
@@ -1097,11 +1089,13 @@ TranslateFromScrollPortToScrollFrame(nsIContent* aContent, nsRect* aRect)
 }
 
 bool
-nsLayoutUtils::GetDisplayPortRelativeToScrollFrame(nsIContent* aContent, nsRect *aResult)
+nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult,
+  RelativeTo aRelativeTo /* = RelativeTo::ScrollPort */)
 {
-  MOZ_ASSERT(aResult);
-  bool usingDisplayPort = GetDisplayPort(aContent, aResult);
-  if (usingDisplayPort) {
+  float multiplier =
+    gfxPrefs::UseLowPrecisionBuffer() ? 1.0f / gfxPrefs::LowPrecisionResolution() : 1.0f;
+  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, multiplier);
+  if (aResult && usingDisplayPort && aRelativeTo == RelativeTo::ScrollFrame) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
@@ -1113,13 +1107,14 @@ nsLayoutUtils::HasDisplayPort(nsIContent* aContent) {
 }
 
 /* static */ bool
-nsLayoutUtils::GetDisplayPortRelativeToScrollFrameForVisibilityTesting(
+nsLayoutUtils::GetDisplayPortForVisibilityTesting(
   nsIContent* aContent,
-  nsRect* aResult)
+  nsRect* aResult,
+  RelativeTo aRelativeTo /* = RelativeTo::ScrollPort */)
 {
   MOZ_ASSERT(aResult);
   bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, 1.0f);
-  if (usingDisplayPort) {
+  if (usingDisplayPort && aRelativeTo == RelativeTo::ScrollFrame) {
     TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
