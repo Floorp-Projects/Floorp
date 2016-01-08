@@ -2614,8 +2614,10 @@ public class GeckoAppShell
 
     // Don't fail silently, tell the user that we weren't able to share the image
     private static final void showImageShareFailureSnackbar() {
-        View rootView = ((Activity)getContext()).findViewById(android.R.id.content);
-        Snackbar.make(rootView, R.string.share_image_failed, Snackbar.LENGTH_SHORT).show();
+        SnackbarHelper.showSnackbar((Activity) getContext(),
+                getApplicationContext().getString(R.string.share_image_failed),
+                Snackbar.LENGTH_SHORT
+        );
     }
 
     @WrapForJNI(allowMultithread = true)
