@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PAPZ;
 include protocol PBackground;
 include protocol PBlob;
 include protocol PBluetooth;
@@ -465,6 +466,7 @@ prio(normal upto urgent) sync protocol PContent
     parent opens PVRManager;
     child opens PBackground;
 
+    manages PAPZ;
     manages PBlob;
     manages PBluetooth;
     manages PBrowser;
@@ -574,6 +576,8 @@ child:
                                 FileDescriptor ccLog);
 
     async PTestShell();
+
+    async PAPZ(TabId tabId);
 
     async RegisterChrome(ChromePackage[] packages, SubstitutionMapping[] substitutions,
                          OverrideMapping[] overrides, nsCString locale, bool reset);
@@ -993,7 +997,7 @@ parent:
     async CopyFavicon(URIParams oldURI, URIParams newURI, Principal aLoadingPrincipal, bool isPrivate);
 
     // Tell the compositor to allocate a layer tree id for nested remote mozbrowsers.
-    sync AllocateLayerTreeId()
+    sync AllocateLayerTreeId(ContentParentId cpId, TabId tabId)
         returns (uint64_t id);
     async DeallocateLayerTreeId(uint64_t id);
 

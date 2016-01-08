@@ -7,16 +7,18 @@
 
 include LayersSurfaces;
 include LayersMessages;
+include protocol PBrowser;
 include protocol PLayer;
 include protocol PLayerTransaction;
 include "mozilla/GfxMessageUtils.h";
-include "nsRegion.h";
 
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
 using struct mozilla::layers::FrameMetrics from "FrameMetrics.h";
 using mozilla::layers::FrameMetrics::ViewID from "FrameMetrics.h";
+using mozilla::layers::MaybeZoomConstraints from "FrameMetrics.h";
 using mozilla::layers::LayersBackend from "mozilla/layers/LayersTypes.h";
+using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using mozilla::CrossProcessMutexHandle from "mozilla/ipc/CrossProcessMutex.h";
 using mozilla::ipc::SharedMemoryBasic::Handle from "mozilla/ipc/SharedMemoryBasic.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
