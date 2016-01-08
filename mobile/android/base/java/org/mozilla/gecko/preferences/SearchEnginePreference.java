@@ -7,6 +7,7 @@ package org.mozilla.gecko.preferences;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.favicons.OnFaviconLoadedListener;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
@@ -89,13 +90,12 @@ public class SearchEnginePreference extends CustomListPreference {
         // If this is the last engine, then we are the default, and none of the options
         // on this menu can do anything.
         if (mParentCategory.getPreferenceCount() == 1) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Activity activity = (Activity)getContext();
-                    Snackbar.make(activity.findViewById(android.R.id.content), R.string.pref_search_last_toast, Snackbar.LENGTH_SHORT).show();
-                }
-            });
+            Activity activity = (Activity) getContext();
+
+            SnackbarHelper.showSnackbar(activity,
+                    activity.getString(R.string.pref_search_last_toast),
+                    Snackbar.LENGTH_SHORT);
+
             return;
         }
 

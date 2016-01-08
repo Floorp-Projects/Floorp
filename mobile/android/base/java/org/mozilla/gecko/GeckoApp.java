@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.AppConstants;
 import android.widget.AdapterView;
 import android.widget.Button;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -50,7 +49,6 @@ import org.mozilla.gecko.widget.ButtonToast;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -76,9 +74,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
-import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -196,7 +192,6 @@ public abstract class GeckoApp
     protected DoorHangerPopup mDoorHangerPopup;
     protected FormAssistPopup mFormAssistPopup;
     protected ButtonToast mToast;
-    protected Snackbar mSnackbar;
 
     protected LayerView mLayerView;
     private AbsoluteLayout mPluginContainer;
@@ -579,7 +574,7 @@ public abstract class GeckoApp
                     ThreadUtils.postToUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            showSnackbar(getString(resId), Snackbar.LENGTH_SHORT, null, null);
+                            SnackbarHelper.showSnackbar(GeckoApp.this, getString(resId), Snackbar.LENGTH_SHORT);
                         }
                     });
                 }
@@ -656,12 +651,12 @@ public abstract class GeckoApp
 
             NativeJSObject action = message.optObject("action", null);
 
-            final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
-
-            showSnackbar(msg,
+            SnackbarHelper.showSnackbarWithAction(this,
+                    msg,
                     duration,
                     action != null ? action.optString("label", null) : null,
-                    snackbarCallback);
+                    new SnackbarHelper.SnackbarEventCallback(callback)
+            );
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
@@ -844,58 +839,6 @@ public abstract class GeckoApp
         return mToast;
     }
 
-    void showSnackbar(final String message, final int duration, @Nullable final String action,
-                      final @Nullable SnackbarCallback callback) {
-        final Snackbar snackbar = Snackbar.make(mRootLayout, message, duration);
-
-        if (callback != null && !TextUtils.isEmpty(action)) {
-            snackbar.setAction(action, callback);
-            snackbar.setActionTextColor(ContextCompat.getColor(this, R.color.fennec_ui_orange));
-            snackbar.setCallback(callback);
-        }
-
-        snackbar.show();
-
-        this.mSnackbar = snackbar;
-    }
-
-    /**
-     * Combined interface for handling all callbacks from a snackbar because anonymous classes can only extend one
-     * interface or class.
-     */
-    public static abstract class SnackbarCallback extends Snackbar.Callback implements View.OnClickListener {};
-
-    /**
-     * SnackbarCallback implementation for delegating snackbar events to an EventCallback.
-     */
-    private static class SnackbarEventCallback extends SnackbarCallback {
-        private EventCallback callback;
-
-        public SnackbarEventCallback(EventCallback callback) {
-            this.callback = callback;
-        }
-
-        @Override
-        public synchronized void onClick(View view) {
-            if (callback == null) {
-                return;
-            }
-
-            callback.sendSuccess(null);
-            callback = null;
-        }
-
-        @Override
-        public synchronized void onDismissed(Snackbar snackbar, int event) {
-            if (callback == null || event == Snackbar.Callback.DISMISS_EVENT_ACTION) {
-                return;
-            }
-
-            callback.sendError(null);
-            callback = null;
-        }
-    }
-
     void showButtonToast(final String message, final String duration,
                          final String buttonText, final String buttonIcon,
                          final String buttonId) {
@@ -1061,12 +1004,12 @@ public abstract class GeckoApp
                 File dcimDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
 
                 if (!dcimDir.mkdirs() && !dcimDir.isDirectory()) {
-                    showSnackbar(getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT, null, null);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
                     return;
                 }
                 String path = Media.insertImage(getContentResolver(),image, null, null);
                 if (path == null) {
-                    showSnackbar(getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT, null, null);
+                    SnackbarHelper.showSnackbar(this, getString(R.string.set_image_path_fail), Snackbar.LENGTH_SHORT);
                     return;
                 }
                 final Intent intent = new Intent(Intent.ACTION_ATTACH_DATA);
@@ -1083,7 +1026,7 @@ public abstract class GeckoApp
                 };
                 ActivityHandlerHelper.startIntentForActivity(this, chooser, handler);
             } else {
-                showSnackbar(getString(R.string.set_image_fail), Snackbar.LENGTH_SHORT, null, null);
+                SnackbarHelper.showSnackbar(this, getString(R.string.set_image_fail), Snackbar.LENGTH_SHORT);
             }
         } catch(OutOfMemoryError ome) {
             Log.e(LOGTAG, "Out of Memory when converting to byte array", ome);
