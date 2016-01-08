@@ -1,33 +1,66 @@
+%if 0
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
-@import url("splitters.css");
+%endif
 
 :root {
   font: message-box;
-}
-
-:root[platform="mac"] {
+%ifdef XP_MACOSX
   --monospace-font-family: Menlo, monospace;
-}
-
-:root[platform="win"] {
+%elifdef XP_WIN
   --monospace-font-family: Consolas, monospace;
-}
-
-:root[platform="linux"] {
+%else
   --monospace-font-family: monospace;
+%endif
 }
 
 .devtools-monospace {
   font-family: var(--monospace-font-family);
-}
-
-:root[platform="linux"] .devtools-monospace {
+%if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
   font-size: 80%;
+%endif
 }
 
+/* Bottom-docked toolbox minimize transition */
+.devtools-toolbox-bottom-iframe {
+  transition: margin-bottom .1s;
+}
+
+/* Splitters */
+.devtools-horizontal-splitter {
+  -moz-appearance: none;
+  background-image: none;
+  background-color: transparent;
+  border: 0;
+  border-bottom: 1px solid rgba(118, 121, 125, .5);
+  min-height: 3px;
+  height: 3px;
+  margin-top: -3px;
+  position: relative;
+}
+
+.devtools-side-splitter {
+  -moz-appearance: none;
+  background-image: none;
+  background-color: transparent;
+  border: 0;
+  -moz-border-end: 1px solid rgba(118, 121, 125, .5);
+  min-width: 3px;
+  width: 3px;
+  -moz-margin-start: -3px;
+  position: relative;
+  cursor: e-resize;
+}
+
+.devtools-horizontal-splitter.disabled,
+.devtools-side-splitter.disabled {
+  pointer-events: none;
+}
+
+.devtools-toolbox-side-iframe {
+  min-width: 465px;
+}
 
 /* Autocomplete Popup */
 /* Dark and light theme */
@@ -38,11 +71,11 @@
   background-color: transparent;
   border-radius: 3px;
   overflow-x: hidden;
-  max-height: 40rem;
-}
-
-:root[platform="linux"] .devtools-autocomplete-popup {
+%if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
   max-height: 32rem;
+%else
+  max-height: 40rem;
+%endif
 }
 
 .devtools-autocomplete-listbox {
