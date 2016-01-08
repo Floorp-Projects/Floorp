@@ -27,6 +27,9 @@
   <preference id="pref.privacy.disable_button.change_blocklist"
               name="pref.privacy.disable_button.change_blocklist"
               type="bool"/>
+  <preference id="pref.privacy.disable_button.tracking_protection_exceptions"
+              name="pref.privacy.disable_button.tracking_protection_exceptions"
+              type="bool"/>
 
   <!-- Location Bar -->
   <preference id="browser.urlbar.autocomplete.enabled"
@@ -104,9 +107,16 @@
         </radiogroup>
       </vbox>
       <spacer flex="1" />
-      <button id="changeBlockList"
-              label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
-              preference="pref.privacy.disable_button.change_blocklist"/>
+      <vbox>
+        <button id="trackingProtectionExceptions"
+                label="&trackingProtectionExceptions.label;"
+                accesskey="&trackingProtectionExceptions.accesskey;"
+                preference="pref.privacy.disable_button.tracking_protection_exceptions"/>
+        <button id="changeBlockList"
+                label="&changeBlockList.label;"
+                accesskey="&changeBlockList.accesskey;"
+                preference="pref.privacy.disable_button.change_blocklist"/>
+      </vbox>
     </hbox>
   </vbox>
   <vbox id="trackingprotectionpbmbox">

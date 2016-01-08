@@ -125,6 +125,8 @@ var gPrivacyPane = {
                      gPrivacyPane.showClearPrivateDataSettings);
     setEventListener("trackingProtectionRadioGroup", "command",
                      gPrivacyPane.trackingProtectionWritePrefs);
+    setEventListener("trackingProtectionExceptions", "command",
+                     gPrivacyPane.showTrackingProtectionExceptions);
     setEventListener("changeBlockList", "command",
                      gPrivacyPane.showBlockLists);
     setEventListener("changeBlockListPBM", "command",
@@ -420,6 +422,21 @@ var gPrivacyPane = {
       mode.doCommand();
 
       this._shouldPromptForRestart = true;
+  },
+
+  /**
+   * Displays fine-grained, per-site preferences for tracking protection.
+   */
+  showTrackingProtectionExceptions() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = {
+      permissionType: "trackingprotection",
+      hideStatusColumn: true,
+      windowTitle: bundlePreferences.getString("trackingprotectionpermissionstitle"),
+      introText: bundlePreferences.getString("trackingprotectionpermissionstext"),
+    };
+    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+                    null, params);
   },
 
   /**
