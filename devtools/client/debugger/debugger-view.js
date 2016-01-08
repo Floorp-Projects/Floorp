@@ -482,7 +482,8 @@ var DebuggerView = {
       return;
     }
     else if (textInfo.error) {
-      let msg = L10N.getFormatStr("errorLoadingText2", textInfo.error);
+      let url = textInfo.error;
+      let msg = L10N.getFormatStr("errorLoadingText2", url);
       this._setEditorText(msg);
       Cu.reportError(msg);
       dumpn(msg);
