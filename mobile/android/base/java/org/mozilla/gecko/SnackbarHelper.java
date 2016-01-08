@@ -6,6 +6,7 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.util.EventCallback;
+import org.mozilla.gecko.util.NativeJSObject;
 
 import android.app.Activity;
 import android.support.design.widget.Snackbar;
@@ -29,7 +30,7 @@ public class SnackbarHelper {
     /**
      * SnackbarCallback implementation for delegating snackbar events to an EventCallback.
      */
-    public static class SnackbarEventCallback extends SnackbarCallback {
+    private static class SnackbarEventCallback extends SnackbarCallback {
         private EventCallback callback;
 
         public SnackbarEventCallback(EventCallback callback) {
@@ -69,6 +70,22 @@ public class SnackbarHelper {
      */
     public static void showSnackbar(Activity activity, String message, int duration) {
         showSnackbarWithAction(activity, message, duration, null, null);
+    }
+
+    /**
+     * Build and show a snackbar from a Gecko Snackbar:Show event.
+     */
+    public static void showSnackbar(Activity activity, final NativeJSObject object, final EventCallback callback) {
+        final String message = object.getString("message");
+        final int duration = object.getInt("duration");
+
+        NativeJSObject action = object.optObject("action", null);
+
+        showSnackbarWithAction(activity,
+                message,
+                duration,
+                action != null ? action.optString("label", null) : null,
+                new SnackbarHelper.SnackbarEventCallback(callback));
     }
 
     /**
