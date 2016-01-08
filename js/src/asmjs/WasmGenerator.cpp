@@ -49,6 +49,7 @@ ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
     freeTasks_(cx),
     funcBytes_(0),
     funcEntryOffsets_(cx),
+    exportFuncIndices_(cx),
     activeFunc_(nullptr),
     finishedFuncs_(false)
 {
@@ -313,13 +314,14 @@ ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, Profi
 bool
 ModuleGenerator::declareExport(MallocSig&& sig, uint32_t funcIndex)
 {
-    return exports_.emplaceBack(Move(sig), funcIndex);
+    return exports_.emplaceBack(Move(sig)) &&
+           exportFuncIndices_.append(funcIndex);
 }
 
 uint32_t
 ModuleGenerator::exportFuncIndex(uint32_t index) const
 {
-    return exports_[index].funcIndex();
+    return exportFuncIndices_[index];
 }
 
 const MallocSig&
