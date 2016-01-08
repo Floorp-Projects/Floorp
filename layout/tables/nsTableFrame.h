@@ -312,8 +312,7 @@ public:
   void AddBCDamageArea(const mozilla::TableArea& aValue);
   bool BCRecalcNeeded(nsStyleContext* aOldStyleContext,
                         nsStyleContext* aNewStyleContext);
-  void PaintBCBorders(nsRenderingContext& aRenderingContext,
-                      const nsRect&        aDirtyRect);
+  void PaintBCBorders(DrawTarget& aDrawTarget, const nsRect& aDirtyRect);
 
   virtual void MarkIntrinsicISizesDirty() override;
   // For border-collapse tables, the caller must not add padding and
