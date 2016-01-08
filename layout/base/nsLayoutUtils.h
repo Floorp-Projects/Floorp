@@ -527,10 +527,8 @@ public:
 
   /**
    * Return true if aPresContext's viewport has a displayport.
-   * Fills in aDisplayPort with the displayport rectangle if non-null.
    */
-  static bool ViewportHasDisplayPort(nsPresContext* aPresContext,
-                                     nsRect* aDisplayPort = nullptr);
+  static bool ViewportHasDisplayPort(nsPresContext* aPresContext);
 
   /**
    * Return true if aFrame is a fixed-pos frame and is a child of a viewport
