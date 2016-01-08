@@ -577,7 +577,7 @@ gfxPlatform::Init()
 
     gPlatform->mScreenReferenceSurface =
         gPlatform->CreateOffscreenSurface(IntSize(1, 1),
-                                          gfxImageFormat::ARGB32);
+                                          SurfaceFormat::A8R8G8B8_UINT32);
     if (!gPlatform->mScreenReferenceSurface) {
         NS_RUNTIMEABORT("Could not initialize mScreenReferenceSurface");
     }
@@ -1864,11 +1864,11 @@ gfxPlatform::Optimal2DFormatForContent(gfxContentType aContent)
   switch (aContent) {
   case gfxContentType::COLOR:
     switch (GetOffscreenFormat()) {
-    case gfxImageFormat::ARGB32:
+    case SurfaceFormat::A8R8G8B8_UINT32:
       return mozilla::gfx::SurfaceFormat::B8G8R8A8;
-    case gfxImageFormat::RGB24:
+    case SurfaceFormat::X8R8G8B8_UINT32:
       return mozilla::gfx::SurfaceFormat::B8G8R8X8;
-    case gfxImageFormat::RGB16_565:
+    case SurfaceFormat::R5G6B5_UINT16:
       return mozilla::gfx::SurfaceFormat::R5G6B5_UINT16;
     default:
       NS_NOTREACHED("unknown gfxImageFormat for gfxContentType::COLOR");
@@ -1891,12 +1891,12 @@ gfxPlatform::OptimalFormatForContent(gfxContentType aContent)
   case gfxContentType::COLOR:
     return GetOffscreenFormat();
   case gfxContentType::ALPHA:
-    return gfxImageFormat::A8;
+    return SurfaceFormat::A8;
   case gfxContentType::COLOR_ALPHA:
-    return gfxImageFormat::ARGB32;
+    return SurfaceFormat::A8R8G8B8_UINT32;
   default:
     NS_NOTREACHED("unknown gfxContentType");
-    return gfxImageFormat::ARGB32;
+    return SurfaceFormat::A8R8G8B8_UINT32;
   }
 }
 

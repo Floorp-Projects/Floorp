@@ -4,7 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageDataSerializer.h"
-#include <string.h>                     // for memcpy
 #include "gfx2DGlue.h"                  // for SurfaceFormatToImageFormat
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc

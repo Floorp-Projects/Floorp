@@ -21,7 +21,7 @@ gfxQPainterSurface::gfxQPainterSurface(QPainter *painter)
 
 gfxQPainterSurface::gfxQPainterSurface(const mozilla::gfx::IntSize& size, gfxImageFormat format)
 {
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    cairo_format_t cformat = GfxFormatToCairoFormat(format);
     cairo_surface_t *csurf =
         cairo_qt_surface_create_with_qimage(cformat, size.width, size.height);
     mPainter = cairo_qt_surface_get_qpainter (csurf);

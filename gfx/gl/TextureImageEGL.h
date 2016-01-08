@@ -22,7 +22,7 @@ public:
                     GLContext* aContext,
                     Flags aFlags = TextureImage::NoFlags,
                     TextureState aTextureState = Created,
-                    TextureImage::ImageFormat aImageFormat = gfxImageFormat::Unknown);
+                    TextureImage::ImageFormat aImageFormat = SurfaceFormat::UNKNOWN);
 
     virtual ~TextureImageEGL();
 
