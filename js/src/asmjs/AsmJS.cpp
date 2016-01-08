@@ -55,7 +55,6 @@ using mozilla::Compression::LZ4;
 using mozilla::HashGeneric;
 using mozilla::IsNaN;
 using mozilla::IsNegativeZero;
-using mozilla::MallocSizeOf;
 using mozilla::Move;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -66,6 +65,15 @@ using JS::GenericNaN;
 
 /*****************************************************************************/
 // asm.js module object
+
+typedef PropertyName* PropertyNamePtr;
+
+static void
+TraceNameField(JSTracer* trc, const PropertyNamePtr* name, const char* label)
+{
+    if (*name)
+        TraceManuallyBarrieredEdge(trc, const_cast<PropertyNamePtr*>(name), label);
+}
 
 // The asm.js spec recognizes this set of builtin Math functions.
 enum AsmJSMathBuiltinFunction
@@ -124,294 +132,317 @@ enum AsmJSSimdOperation
 #undef ASMJSSIMDOPERATION
 };
 
-// An AsmJSModule extends (via containment) a wasm::Module with the extra
-// persistent state necessary to represent a compiled asm.js module.
-class js::AsmJSModule
+// An AsmJSGlobal represents a JS global variable in the asm.js module function.
+class AsmJSGlobal
 {
   public:
-    class Global
-    {
-      public:
-        enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction,
-                     AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation };
-        enum VarInitKind { InitConstant, InitImport };
-        enum ConstantKind { GlobalConstant, MathConstant };
-
-      private:
-        struct CacheablePod {
-            Which which_;
-            union {
-                struct {
-                    uint32_t globalDataOffset_;
-                    VarInitKind initKind_;
-                    union {
-                        wasm::ValType importType_;
-                        wasm::Val val_;
-                    } u;
-                } var;
-                uint32_t ffiIndex_;
-                Scalar::Type viewType_;
-                AsmJSMathBuiltinFunction mathBuiltinFunc_;
-                AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
-                AsmJSSimdType simdCtorType_;
-                struct {
-                    AsmJSSimdType type_;
-                    AsmJSSimdOperation which_;
-                } simdOp;
-                struct {
-                    ConstantKind kind_;
-                    double value_;
-                } constant;
-            } u;
-        } pod;
-        PropertyName* name_;
-
-        friend class AsmJSModule;
-
-        Global(Which which, PropertyName* name) {
-            mozilla::PodZero(&pod);  // zero padding for Valgrind
-            pod.which_ = which;
-            name_ = name;
-            MOZ_ASSERT_IF(name_, name_->isTenured());
-        }
-
-        void trace(JSTracer* trc) {
-            if (name_)
-                TraceManuallyBarrieredEdge(trc, &name_, "asm.js global name");
-        }
-
-      public:
-        Global() {}
-        Which which() const {
-            return pod.which_;
-        }
-        uint32_t varGlobalDataOffset() const {
-            MOZ_ASSERT(pod.which_ == Variable);
-            return pod.u.var.globalDataOffset_;
-        }
-        VarInitKind varInitKind() const {
-            MOZ_ASSERT(pod.which_ == Variable);
-            return pod.u.var.initKind_;
-        }
-        wasm::Val varInitVal() const {
-            MOZ_ASSERT(pod.which_ == Variable);
-            MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
-            return pod.u.var.u.val_;
-        }
-        wasm::ValType varInitImportType() const {
-            MOZ_ASSERT(pod.which_ == Variable);
-            MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
-            return pod.u.var.u.importType_;
-        }
-        PropertyName* varImportField() const {
-            MOZ_ASSERT(pod.which_ == Variable);
-            MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
-            return name_;
-        }
-        PropertyName* ffiField() const {
-            MOZ_ASSERT(pod.which_ == FFI);
-            return name_;
-        }
-        uint32_t ffiIndex() const {
-            MOZ_ASSERT(pod.which_ == FFI);
-            return pod.u.ffiIndex_;
-        }
-        // When a view is created from an imported constructor:
-        //   var I32 = stdlib.Int32Array;
-        //   var i32 = new I32(buffer);
-        // the second import has nothing to validate and thus has a null field.
-        PropertyName* maybeViewName() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
-            return name_;
-        }
-        Scalar::Type viewType() const {
-            MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
-            return pod.u.viewType_;
-        }
-        PropertyName* mathName() const {
-            MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
-            return name_;
-        }
-        PropertyName* atomicsName() const {
-            MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
-            return name_;
-        }
-        AsmJSMathBuiltinFunction mathBuiltinFunction() const {
-            MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
-            return pod.u.mathBuiltinFunc_;
-        }
-        AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
-            MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
-            return pod.u.atomicsBuiltinFunc_;
-        }
-        AsmJSSimdType simdCtorType() const {
-            MOZ_ASSERT(pod.which_ == SimdCtor);
-            return pod.u.simdCtorType_;
-        }
-        PropertyName* simdCtorName() const {
-            MOZ_ASSERT(pod.which_ == SimdCtor);
-            return name_;
-        }
-        PropertyName* simdOperationName() const {
-            MOZ_ASSERT(pod.which_ == SimdOperation);
-            return name_;
-        }
-        AsmJSSimdOperation simdOperation() const {
-            MOZ_ASSERT(pod.which_ == SimdOperation);
-            return pod.u.simdOp.which_;
-        }
-        AsmJSSimdType simdOperationType() const {
-            MOZ_ASSERT(pod.which_ == SimdOperation);
-            return pod.u.simdOp.type_;
-        }
-        PropertyName* constantName() const {
-            MOZ_ASSERT(pod.which_ == Constant);
-            return name_;
-        }
-        ConstantKind constantKind() const {
-            MOZ_ASSERT(pod.which_ == Constant);
-            return pod.u.constant.kind_;
-        }
-        double constantValue() const {
-            MOZ_ASSERT(pod.which_ == Constant);
-            return pod.u.constant.value_;
-        }
-
-        WASM_DECLARE_SERIALIZABLE(Global);
-    };
-
-    typedef Vector<Global, 0, SystemAllocPolicy> GlobalVector;
-
-    // An import is slightly different than an asm.js FFI function: a single
-    // asm.js FFI function can be called with many different signatures. When
-    // compiled to wasm, each unique FFI function paired with signature
-    // generates a wasm import.
-    class Import
-    {
-        uint32_t ffiIndex_;
-      public:
-        Import() = default;
-        explicit Import(uint32_t ffiIndex) : ffiIndex_(ffiIndex) {}
-        uint32_t ffiIndex() const { return ffiIndex_; }
-    };
-
-    typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
-
-    class Export
-    {
-        PropertyName* name_;
-        PropertyName* maybeFieldName_;
-        struct CacheablePod {
-            uint32_t startOffsetInModule_;  // Store module-start-relative offsets
-            uint32_t endOffsetInModule_;    // so preserved by serialization.
-        } pod;
-
-      public:
-        Export() {}
-        Export(PropertyName* name, PropertyName* maybeFieldName,
-               uint32_t startOffsetInModule, uint32_t endOffsetInModule)
-          : name_(name),
-            maybeFieldName_(maybeFieldName)
-        {
-            MOZ_ASSERT(name_->isTenured());
-            MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
-            pod.startOffsetInModule_ = startOffsetInModule;
-            pod.endOffsetInModule_ = endOffsetInModule;
-        }
-
-        void trace(JSTracer* trc) {
-            TraceManuallyBarrieredEdge(trc, &name_, "asm.js export name");
-            if (maybeFieldName_)
-                TraceManuallyBarrieredEdge(trc, &maybeFieldName_, "asm.js export field");
-        }
-
-        PropertyName* name() const {
-            return name_;
-        }
-        PropertyName* maybeFieldName() const {
-            return maybeFieldName_;
-        }
-        uint32_t startOffsetInModule() const {
-            return pod.startOffsetInModule_;
-        }
-        uint32_t endOffsetInModule() const {
-            return pod.endOffsetInModule_;
-        }
-
-        WASM_DECLARE_SERIALIZABLE(Export)
-    };
-
-    typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
-
-    typedef JS::UniquePtr<wasm::Module, JS::DeletePolicy<wasm::Module>> UniqueWasmModule;
+    enum Which { Variable, FFI, ArrayView, ArrayViewCtor, MathBuiltinFunction,
+                 AtomicsBuiltinFunction, Constant, SimdCtor, SimdOperation };
+    enum VarInitKind { InitConstant, InitImport };
+    enum ConstantKind { GlobalConstant, MathConstant };
 
   private:
-    UniqueWasmModule            wasmModule_;
-    wasm::UniqueStaticLinkData  linkData_;
     struct CacheablePod {
-        uint32_t                minHeapLength_;
-        uint32_t                numFFIs_;
-        uint32_t                srcLength_;
-        uint32_t                srcLengthWithRightBrace_;
-        bool                    strict_;
-        bool                    hasArrayView_;
-        bool                    isSharedView_;
+        Which which_;
+        union {
+            struct {
+                uint32_t globalDataOffset_;
+                VarInitKind initKind_;
+                union {
+                    ValType importType_;
+                    Val val_;
+                } u;
+            } var;
+            uint32_t ffiIndex_;
+            Scalar::Type viewType_;
+            AsmJSMathBuiltinFunction mathBuiltinFunc_;
+            AsmJSAtomicsBuiltinFunction atomicsBuiltinFunc_;
+            AsmJSSimdType simdCtorType_;
+            struct {
+                AsmJSSimdType type_;
+                AsmJSSimdOperation which_;
+            } simdOp;
+            struct {
+                ConstantKind kind_;
+                double value_;
+            } constant;
+        } u;
     } pod;
-    const ScriptSourceHolder    scriptSource_;
-    const uint32_t              srcStart_;
-    const uint32_t              srcBodyStart_;
-    GlobalVector                globals_;
-    ImportVector                imports_;
-    ExportVector                exports_;
-    PropertyName*               globalArgumentName_;
-    PropertyName*               importArgumentName_;
-    PropertyName*               bufferArgumentName_;
+    PropertyName* name_;
+
+    friend class ModuleValidator;
 
   public:
-    explicit AsmJSModule(ScriptSource* scriptSource, uint32_t srcStart, uint32_t srcBodyStart,
-                         bool strict)
-      : scriptSource_(scriptSource),
-        srcStart_(srcStart),
-        srcBodyStart_(srcBodyStart),
-        globalArgumentName_(nullptr),
-        importArgumentName_(nullptr),
-        bufferArgumentName_(nullptr)
+    AsmJSGlobal() {}
+    AsmJSGlobal(Which which, PropertyName* name) {
+        mozilla::PodZero(&pod);  // zero padding for Valgrind
+        pod.which_ = which;
+        name_ = name;
+        MOZ_ASSERT_IF(name_, name_->isTenured());
+    }
+    void trace(JSTracer* trc) const {
+        TraceNameField(trc, &name_, "asm.js global name");
+    }
+    Which which() const {
+        return pod.which_;
+    }
+    uint32_t varGlobalDataOffset() const {
+        MOZ_ASSERT(pod.which_ == Variable);
+        return pod.u.var.globalDataOffset_;
+    }
+    VarInitKind varInitKind() const {
+        MOZ_ASSERT(pod.which_ == Variable);
+        return pod.u.var.initKind_;
+    }
+    Val varInitVal() const {
+        MOZ_ASSERT(pod.which_ == Variable);
+        MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
+        return pod.u.var.u.val_;
+    }
+    ValType varInitImportType() const {
+        MOZ_ASSERT(pod.which_ == Variable);
+        MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
+        return pod.u.var.u.importType_;
+    }
+    PropertyName* varImportField() const {
+        MOZ_ASSERT(pod.which_ == Variable);
+        MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
+        return name_;
+    }
+    PropertyName* ffiField() const {
+        MOZ_ASSERT(pod.which_ == FFI);
+        return name_;
+    }
+    uint32_t ffiIndex() const {
+        MOZ_ASSERT(pod.which_ == FFI);
+        return pod.u.ffiIndex_;
+    }
+    // When a view is created from an imported constructor:
+    //   var I32 = stdlib.Int32Array;
+    //   var i32 = new I32(buffer);
+    // the second import has nothing to validate and thus has a null field.
+    PropertyName* maybeViewName() const {
+        MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
+        return name_;
+    }
+    Scalar::Type viewType() const {
+        MOZ_ASSERT(pod.which_ == ArrayView || pod.which_ == ArrayViewCtor);
+        return pod.u.viewType_;
+    }
+    PropertyName* mathName() const {
+        MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
+        return name_;
+    }
+    PropertyName* atomicsName() const {
+        MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
+        return name_;
+    }
+    AsmJSMathBuiltinFunction mathBuiltinFunction() const {
+        MOZ_ASSERT(pod.which_ == MathBuiltinFunction);
+        return pod.u.mathBuiltinFunc_;
+    }
+    AsmJSAtomicsBuiltinFunction atomicsBuiltinFunction() const {
+        MOZ_ASSERT(pod.which_ == AtomicsBuiltinFunction);
+        return pod.u.atomicsBuiltinFunc_;
+    }
+    AsmJSSimdType simdCtorType() const {
+        MOZ_ASSERT(pod.which_ == SimdCtor);
+        return pod.u.simdCtorType_;
+    }
+    PropertyName* simdCtorName() const {
+        MOZ_ASSERT(pod.which_ == SimdCtor);
+        return name_;
+    }
+    PropertyName* simdOperationName() const {
+        MOZ_ASSERT(pod.which_ == SimdOperation);
+        return name_;
+    }
+    AsmJSSimdOperation simdOperation() const {
+        MOZ_ASSERT(pod.which_ == SimdOperation);
+        return pod.u.simdOp.which_;
+    }
+    AsmJSSimdType simdOperationType() const {
+        MOZ_ASSERT(pod.which_ == SimdOperation);
+        return pod.u.simdOp.type_;
+    }
+    PropertyName* constantName() const {
+        MOZ_ASSERT(pod.which_ == Constant);
+        return name_;
+    }
+    ConstantKind constantKind() const {
+        MOZ_ASSERT(pod.which_ == Constant);
+        return pod.u.constant.kind_;
+    }
+    double constantValue() const {
+        MOZ_ASSERT(pod.which_ == Constant);
+        return pod.u.constant.value_;
+    }
+
+    WASM_DECLARE_SERIALIZABLE(AsmJSGlobal);
+};
+
+typedef Vector<AsmJSGlobal, 0, SystemAllocPolicy> AsmJSGlobalVector;
+
+// An AsmJSImport is slightly different than an asm.js FFI function: a single
+// asm.js FFI function can be called with many different signatures. When
+// compiled to wasm, each unique FFI function paired with signature generates a
+// wasm import.
+class AsmJSImport
+{
+    uint32_t ffiIndex_;
+  public:
+    AsmJSImport() = default;
+    explicit AsmJSImport(uint32_t ffiIndex) : ffiIndex_(ffiIndex) {}
+    uint32_t ffiIndex() const { return ffiIndex_; }
+};
+
+typedef Vector<AsmJSImport, 0, SystemAllocPolicy> AsmJSImportVector;
+
+// An AsmJSExport represents a field in the export object.
+class AsmJSExport
+{
+    PropertyName* name_;
+    PropertyName* maybeFieldName_;
+    struct CacheablePod {
+        uint32_t startOffsetInModule_;  // Store module-start-relative offsets
+        uint32_t endOffsetInModule_;    // so preserved by serialization.
+    } pod;
+
+  public:
+    AsmJSExport() {}
+    AsmJSExport(PropertyName* name, PropertyName* maybeFieldName,
+                uint32_t startOffsetInModule, uint32_t endOffsetInModule)
+      : name_(name),
+        maybeFieldName_(maybeFieldName)
     {
-        mozilla::PodZero(&pod);
-        pod.minHeapLength_ = RoundUpToNextValidAsmJSHeapLength(0);
-        pod.strict_ = strict;
-
-        MOZ_ASSERT(srcStart_ <= srcBodyStart_);
-
-        // AsmJSCheckedImmediateRange should be defined to be at most the minimum
-        // heap length so that offsets can be folded into bounds checks.
-        MOZ_ASSERT(pod.minHeapLength_ - jit::AsmJSCheckedImmediateRange <= pod.minHeapLength_);
+        MOZ_ASSERT(name_->isTenured());
+        MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
+        pod.startOffsetInModule_ = startOffsetInModule;
+        pod.endOffsetInModule_ = endOffsetInModule;
+    }
+    void trace(JSTracer* trc) const {
+        TraceNameField(trc, &name_, "asm.js export name");
+        TraceNameField(trc, &maybeFieldName_, "asm.js export field");
+    }
+    PropertyName* name() const {
+        return name_;
+    }
+    PropertyName* maybeFieldName() const {
+        return maybeFieldName_;
+    }
+    uint32_t startOffsetInModule() const {
+        return pod.startOffsetInModule_;
+    }
+    uint32_t endOffsetInModule() const {
+        return pod.endOffsetInModule_;
     }
 
-    void trace(JSTracer* trc) {
-        if (wasmModule_)
-            wasmModule_->trace(trc);
-        for (Global& global : globals_)
+    WASM_DECLARE_SERIALIZABLE(AsmJSExport)
+};
+
+typedef Vector<AsmJSExport, 0, SystemAllocPolicy> AsmJSExportVector;
+
+// Holds the trivially-memcpy()able, serializable portion of AsmJSModuleData.
+struct AsmJSModuleCacheablePod
+{
+    uint32_t                minHeapLength;
+    uint32_t                numFFIs;
+    uint32_t                srcLength;
+    uint32_t                srcLengthWithRightBrace;
+};
+
+// Holds the immutable guts of an AsmJSModule. This struct is mutably built up
+// by ModuleValidator and then handed over to the AsmJSModule constructor in
+// finish().
+struct AsmJSModuleData : AsmJSModuleCacheablePod
+{
+    AsmJSGlobalVector       globals;
+    AsmJSImportVector       imports;
+    AsmJSExportVector       exports;
+    PropertyName*           globalArgumentName;
+    PropertyName*           importArgumentName;
+    PropertyName*           bufferArgumentName;
+
+    // These values are not serialized since they are relative to the
+    // containing script which can be different between serialization and
+    // deserialization contexts. Thus, they must be set explicitly using the
+    // ambient Parser/ScriptSource after deserialization. Cloning, however,
+    // preserves the same exact parsing context and can copy these values.
+    uint32_t                srcStart;
+    uint32_t                srcBodyStart;
+    bool                    strict;
+    ScriptSourceHolder      scriptSource;
+
+    AsmJSModuleData()
+      : globalArgumentName(nullptr),
+        importArgumentName(nullptr),
+        bufferArgumentName(nullptr),
+        srcStart(0),
+        srcBodyStart(0),
+        strict(false)
+    {
+        PodZero(&pod());
+    }
+
+    AsmJSModuleCacheablePod& pod() { return *this; }
+    const AsmJSModuleCacheablePod& pod() const { return *this; }
+
+    void trace(JSTracer* trc) const {
+        for (const AsmJSGlobal& global : globals)
             global.trace(trc);
-        for (Export& exp : exports_)
+        for (const AsmJSExport& exp : exports)
             exp.trace(trc);
-        if (globalArgumentName_)
-            TraceManuallyBarrieredEdge(trc, &globalArgumentName_, "asm.js global argument name");
-        if (importArgumentName_)
-            TraceManuallyBarrieredEdge(trc, &importArgumentName_, "asm.js import argument name");
-        if (bufferArgumentName_)
-            TraceManuallyBarrieredEdge(trc, &bufferArgumentName_, "asm.js buffer argument name");
+        TraceNameField(trc, &globalArgumentName, "asm.js global argument name");
+        TraceNameField(trc, &importArgumentName, "asm.js import argument name");
+        TraceNameField(trc, &bufferArgumentName, "asm.js buffer argument name");
     }
 
-    /*************************************************************************/
-    // These functions may be used as soon as the module is constructed:
+    WASM_DECLARE_SERIALIZABLE(AsmJSModuleData)
+};
 
-    ScriptSource* scriptSource() const {
-        return scriptSource_.get();
+typedef UniquePtr<AsmJSModuleData, JS::DeletePolicy<AsmJSModuleData>> UniqueAsmJSModuleData;
+
+// An AsmJSModule is-a Module with the extra persistent state necessary to
+// represent a compiled asm.js module.
+class js::AsmJSModule final : public Module
+{
+    typedef UniquePtr<const AsmJSModuleData,
+                      JS::DeletePolicy<const AsmJSModuleData>> UniqueConstAsmJSModuleData;
+    typedef UniquePtr<const StaticLinkData,
+                      JS::DeletePolicy<const StaticLinkData>> UniqueConstStaticLinkData;
+
+    const UniqueConstStaticLinkData link_;
+    const UniqueConstAsmJSModuleData module_;
+
+  public:
+    AsmJSModule(UniqueModuleData base,
+                UniqueStaticLinkData link,
+                UniqueAsmJSModuleData module)
+      : Module(Move(base), Module::IsAsmJS),
+        link_(Move(link)),
+        module_(Move(module))
+    {}
+
+    virtual void trace(JSTracer* trc) override {
+        Module::trace(trc);
+        module_->trace(trc);
     }
-    bool strict() const {
-        return pod.strict_;
+    virtual void addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data) override {
+        Module::addSizeOfMisc(mallocSizeOf, code, data);
+        *data += mallocSizeOf(link_.get()) + link_->sizeOfExcludingThis(mallocSizeOf);
+        *data += mallocSizeOf(module_.get()) + module_->sizeOfExcludingThis(mallocSizeOf);
     }
+
+    uint32_t minHeapLength() const { return module_->minHeapLength; }
+    uint32_t numFFIs() const { return module_->numFFIs; }
+    bool strict() const { return module_->strict; }
+    ScriptSource* scriptSource() const { return module_->scriptSource.get(); }
+    const AsmJSGlobalVector& asmJSGlobals() const { return module_->globals; }
+    const AsmJSImportVector& asmJSImports() const { return module_->imports; }
+    const AsmJSExportVector& asmJSExports() const { return module_->exports; }
+    PropertyName* globalArgumentName() const { return module_->globalArgumentName; }
+    PropertyName* importArgumentName() const { return module_->importArgumentName; }
+    PropertyName* bufferArgumentName() const { return module_->bufferArgumentName; }
 
     // srcStart() refers to the offset in the ScriptSource to the beginning of
     // the asm.js module function. If the function has been created with the
@@ -419,298 +450,38 @@ class js::AsmJSModule
     // source. Otherwise, it will be the opening parenthesis of the arguments
     // list.
     uint32_t srcStart() const {
-        return srcStart_;
+        return module_->srcStart;
+    }
+    uint32_t srcEndBeforeCurly() const {
+        return module_->srcStart + module_->srcLength;
+    }
+    uint32_t srcEndAfterCurly() const {
+        return module_->srcStart + module_->srcLengthWithRightBrace;
     }
 
     // srcBodyStart() refers to the offset in the ScriptSource to the end
     // of the 'use asm' string-literal token.
     uint32_t srcBodyStart() const {
-        return srcBodyStart_;
+        return module_->srcBodyStart;
     }
 
-    // While these functions may be accessed at any time, their values will
-    // change as the module is compiled.
-    uint32_t minHeapLength() const {
-        return pod.minHeapLength_;
-    }
-
-    void initGlobalArgumentName(PropertyName* n) {
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT_IF(n, n->isTenured());
-        globalArgumentName_ = n;
-    }
-    void initImportArgumentName(PropertyName* n) {
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT_IF(n, n->isTenured());
-        importArgumentName_ = n;
-    }
-    void initBufferArgumentName(PropertyName* n) {
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT_IF(n, n->isTenured());
-        bufferArgumentName_ = n;
-    }
-    PropertyName* globalArgumentName() const {
-        return globalArgumentName_;
-    }
-    PropertyName* importArgumentName() const {
-        return importArgumentName_;
-    }
-    PropertyName* bufferArgumentName() const {
-        return bufferArgumentName_;
-    }
-
-    bool addGlobalVarInit(const wasm::Val& v, uint32_t globalDataOffset) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::Variable, nullptr);
-        g.pod.u.var.initKind_ = Global::InitConstant;
-        g.pod.u.var.u.val_ = v;
-        g.pod.u.var.globalDataOffset_ = globalDataOffset;
-        return globals_.append(g);
-    }
-    bool addGlobalVarImport(PropertyName* name, wasm::ValType importType, uint32_t globalDataOffset) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::Variable, name);
-        g.pod.u.var.initKind_ = Global::InitImport;
-        g.pod.u.var.u.importType_ = importType;
-        g.pod.u.var.globalDataOffset_ = globalDataOffset;
-        return globals_.append(g);
-    }
-    // See Import comment above for FFI vs. Import.
-    bool addFFI(PropertyName* field, uint32_t* ffiIndex) {
-        MOZ_ASSERT(!isFinished());
-        if (pod.numFFIs_ == UINT32_MAX)
-            return false;
-        Global g(Global::FFI, field);
-        g.pod.u.ffiIndex_ = *ffiIndex = pod.numFFIs_++;
-        return globals_.append(g);
-    }
-    bool addArrayView(Scalar::Type vt, PropertyName* maybeField) {
-        MOZ_ASSERT(!isFinished());
-        pod.hasArrayView_ = true;
-        pod.isSharedView_ = false;
-        Global g(Global::ArrayView, maybeField);
-        g.pod.u.viewType_ = vt;
-        return globals_.append(g);
-    }
-    bool addArrayViewCtor(Scalar::Type vt, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT(field);
-        pod.isSharedView_ = false;
-        Global g(Global::ArrayViewCtor, field);
-        g.pod.u.viewType_ = vt;
-        return globals_.append(g);
-    }
-    bool addMathBuiltinFunction(AsmJSMathBuiltinFunction func, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::MathBuiltinFunction, field);
-        g.pod.u.mathBuiltinFunc_ = func;
-        return globals_.append(g);
-    }
-    bool addMathBuiltinConstant(double value, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::Constant, field);
-        g.pod.u.constant.value_ = value;
-        g.pod.u.constant.kind_ = Global::MathConstant;
-        return globals_.append(g);
-    }
-    bool addAtomicsBuiltinFunction(AsmJSAtomicsBuiltinFunction func, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::AtomicsBuiltinFunction, field);
-        g.pod.u.atomicsBuiltinFunc_ = func;
-        return globals_.append(g);
-    }
-    bool addSimdCtor(AsmJSSimdType type, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::SimdCtor, field);
-        g.pod.u.simdCtorType_ = type;
-        return globals_.append(g);
-    }
-    bool addSimdOperation(AsmJSSimdType type, AsmJSSimdOperation op, PropertyName* field) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::SimdOperation, field);
-        g.pod.u.simdOp.type_ = type;
-        g.pod.u.simdOp.which_ = op;
-        return globals_.append(g);
-    }
-    bool addGlobalConstant(double value, PropertyName* name) {
-        MOZ_ASSERT(!isFinished());
-        Global g(Global::Constant, name);
-        g.pod.u.constant.value_ = value;
-        g.pod.u.constant.kind_ = Global::GlobalConstant;
-        return globals_.append(g);
-    }
-    // See Import comment above for FFI vs. Import.
-    bool addImport(uint32_t ffiIndex, uint32_t importIndex) {
-        MOZ_ASSERT(imports_.length() == importIndex);
-        return imports_.emplaceBack(ffiIndex);
-    }
-    bool addExport(PropertyName* name, PropertyName* maybeFieldName, uint32_t begin, uint32_t end) {
-        // The begin/end offsets are given relative to the ScriptSource (the
-        // entire file) and ExportedFunctions store offsets relative to the
-        // beginning of the module (so that they are caching-invariant).
-        MOZ_ASSERT(!isFinished());
-        MOZ_ASSERT(srcStart_ < begin);
-        MOZ_ASSERT(begin < end);
-        uint32_t startOffsetInModule = begin - srcStart_;
-        uint32_t endOffsetInModule = end - srcStart_;
-        return exports_.emplaceBack(name, maybeFieldName, startOffsetInModule, endOffsetInModule);
-    }
-
-    const GlobalVector& globals() const {
-        return globals_;
-    }
-    const ImportVector& imports() const {
-        return imports_;
-    }
-    const ExportVector& exports() const {
-        return exports_;
-    }
-
-    void setViewsAreShared() {
-        if (pod.hasArrayView_)
-            pod.isSharedView_ = true;
-    }
-    bool hasArrayView() const {
-        return pod.hasArrayView_;
-    }
-    bool isSharedView() const {
-        return pod.isSharedView_;
-    }
-    void requireHeapLengthToBeAtLeast(uint32_t len) {
-        MOZ_ASSERT(!isFinished());
-        len = RoundUpToNextValidAsmJSHeapLength(len);
-        if (len > pod.minHeapLength_)
-            pod.minHeapLength_ = len;
-    }
-
-    /*************************************************************************/
-    // A module isFinished() when compilation completes. After being finished,
-    // a module must be statically and dynamically linked before execution.
-
-    bool isFinished() const {
-        return !!wasmModule_;
-    }
-    void finish(wasm::Module* wasmModule, wasm::UniqueStaticLinkData linkData,
-                uint32_t endBeforeCurly, uint32_t endAfterCurly)
-    {
-        MOZ_ASSERT(!isFinished());
-
-        wasmModule_.reset(wasmModule);
-        linkData_ = Move(linkData);
-
-        MOZ_ASSERT(endBeforeCurly >= srcBodyStart_);
-        MOZ_ASSERT(endAfterCurly >= srcBodyStart_);
-        pod.srcLength_ = endBeforeCurly - srcStart_;
-        pod.srcLengthWithRightBrace_ = endAfterCurly - srcStart_;
-
-        MOZ_ASSERT(isFinished());
-    }
-
-    /*************************************************************************/
-    // These accessor functions can only be used after finish():
-
-    wasm::Module& wasmModule() const {
-        MOZ_ASSERT(isFinished());
-        return *wasmModule_;
-    }
-    uint32_t numFFIs() const {
-        MOZ_ASSERT(isFinished());
-        return pod.numFFIs_;
-    }
-    uint32_t srcEndBeforeCurly() const {
-        MOZ_ASSERT(isFinished());
-        return srcStart_ + pod.srcLength_;
-    }
-    uint32_t srcEndAfterCurly() const {
-        MOZ_ASSERT(isFinished());
-        return srcStart_ + pod.srcLengthWithRightBrace_;
-    }
     bool staticallyLink(ExclusiveContext* cx) {
-        return wasmModule_->staticallyLink(cx, *linkData_);
+        return Module::staticallyLink(cx, *link_);
     }
 
-    // See WASM_DECLARE_SERIALIZABLE.
+    // Clone this AsmJSModule into a new AsmJSModule that isn't statically or
+    // dynamically linked for cases where a single asm.js module function is
+    // linked several times.
+    bool clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) const;
+
+    // These are the top-level serialization functions used by caching to
+    // cache an AsmJSModule.
     size_t serializedSize() const;
     uint8_t* serialize(uint8_t* cursor) const;
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);
-    bool clone(JSContext* cx, HandleAsmJSModule moduleObj) const;
-    void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data);
+    static const uint8_t*
+    deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParser& parser,
+                MutableHandle<WasmModuleObject*> moduleObj);
 };
-
-static void
-AsmJSModuleObject_finalize(FreeOp* fop, JSObject* obj)
-{
-    AsmJSModuleObject& moduleObj = obj->as<AsmJSModuleObject>();
-    if (moduleObj.hasModule())
-        fop->delete_(&moduleObj.module());
-}
-
-static void
-AsmJSModuleObject_trace(JSTracer* trc, JSObject* obj)
-{
-    AsmJSModuleObject& moduleObj = obj->as<AsmJSModuleObject>();
-    if (moduleObj.hasModule())
-        moduleObj.module().trace(trc);
-}
-
-const Class AsmJSModuleObject::class_ = {
-    "AsmJSModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_CALLBACK |
-    JSCLASS_HAS_RESERVED_SLOTS(AsmJSModuleObject::RESERVED_SLOTS),
-    nullptr, /* addProperty */
-    nullptr, /* delProperty */
-    nullptr, /* getProperty */
-    nullptr, /* setProperty */
-    nullptr, /* enumerate */
-    nullptr, /* resolve */
-    nullptr, /* mayResolve */
-    AsmJSModuleObject_finalize,
-    nullptr, /* call */
-    nullptr, /* hasInstance */
-    nullptr, /* construct */
-    AsmJSModuleObject_trace
-};
-
-static AsmJSModuleObject*
-NewAsmJSModuleObject(ExclusiveContext* cx)
-{
-    AutoSetNewObjectMetadata metadata(cx);
-    JSObject* obj = NewObjectWithGivenProto(cx, &AsmJSModuleObject::class_, nullptr);
-    if (!obj)
-        return nullptr;
-
-    return &obj->as<AsmJSModuleObject>();
-}
-
-bool
-AsmJSModuleObject::hasModule() const
-{
-    MOZ_ASSERT(is<AsmJSModuleObject>());
-    return !getReservedSlot(MODULE_SLOT).isUndefined();
-}
-
-void
-AsmJSModuleObject::setModule(AsmJSModule* newModule)
-{
-    MOZ_ASSERT(is<AsmJSModuleObject>());
-    if (hasModule())
-        js_delete(&module());
-    setReservedSlot(MODULE_SLOT, PrivateValue(newModule));
-}
-
-AsmJSModule&
-AsmJSModuleObject::module() const
-{
-    MOZ_ASSERT(is<AsmJSModuleObject>());
-    return *(AsmJSModule*)getReservedSlot(MODULE_SLOT).toPrivate();
-}
-
-void
-AsmJSModuleObject::addSizeOfMisc(MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
-{
-    if (hasModule())
-        module().addSizeOfMisc(mallocSizeOf, code, data);
-}
 
 /*****************************************************************************/
 // ParseNode utilities
@@ -1247,7 +1018,7 @@ class NumLit
         return which_ == Int32x4 || which_ == Float32x4 || which_ == Bool32x4;
     }
 
-    const jit::SimdConstant& simdValue() const {
+    const SimdConstant& simdValue() const {
         MOZ_ASSERT(isSimd());
         return u.simd_;
     }
@@ -1581,8 +1352,6 @@ class Type
 
 static const unsigned VALIDATION_LIFO_DEFAULT_CHUNK_SIZE = 4 * 1024;
 
-namespace {
-
 // The ModuleValidator encapsulates the entire validation of an asm.js module.
 // Its lifetime goes from the validation of the top components of an asm.js
 // module (all the globals), the emission of bytecode for all the functions in
@@ -1845,77 +1614,35 @@ class MOZ_STACK_CLASS ModuleValidator
     typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;
     typedef HashMap<PropertyName*, AsmJSSimdOperation> SimdOperationNameMap;
     typedef Vector<ArrayView> ArrayViewVector;
-
-  public:
     typedef HashMap<ImportDescriptor, unsigned, ImportDescriptor> ImportMap;
 
-  private:
-    ExclusiveContext*    cx_;
-    AsmJSParser&         parser_;
+    ExclusiveContext*     cx_;
+    AsmJSParser&          parser_;
+    ParseNode*            moduleFunctionNode_;
+    PropertyName*         moduleFunctionName_;
+    MathNameMap           standardLibraryMathNames_;
+    AtomicsNameMap        standardLibraryAtomicsNames_;
+    SimdOperationNameMap  standardLibrarySimdOpNames_;
 
-    ModuleGenerator      mg_;
-    AsmJSModule*         module_;
+    // Validation-internal state:
+    LifoAlloc             validationLifo_;
+    FuncVector            functions_;
+    FuncPtrTableVector    funcPtrTables_;
+    GlobalMap             globalMap_;
+    ImportMap             importMap_;
+    ArrayViewVector       arrayViews_;
+    bool                  atomicsPresent_;
 
-    LifoAlloc            validationLifo_;
-    FuncVector           functions_;
-    FuncPtrTableVector   funcPtrTables_;
-    GlobalMap            globals_;
-    ArrayViewVector      arrayViews_;
-    ImportMap            imports_;
+    // State used to build the AsmJSModule in finish():
+    ModuleGenerator       mg_;
+    UniqueAsmJSModuleData module_;
 
-    MathNameMap          standardLibraryMathNames_;
-    AtomicsNameMap       standardLibraryAtomicsNames_;
-    SimdOperationNameMap standardLibrarySimdOpNames_;
+    // Error reporting:
+    UniqueChars           errorString_;
+    uint32_t              errorOffset_;
+    bool                  errorOverRecursed_;
 
-    ParseNode*           moduleFunctionNode_;
-    PropertyName*        moduleFunctionName_;
-
-    UniqueChars          errorString_;
-    uint32_t             errorOffset_;
-    bool                 errorOverRecursed_;
-
-    bool                 supportsSimd_;
-    bool                 atomicsPresent_;
-
-  public:
-    ModuleValidator(ExclusiveContext* cx, AsmJSParser& parser)
-      : cx_(cx),
-        parser_(parser),
-        mg_(cx),
-        validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
-        functions_(cx),
-        funcPtrTables_(cx),
-        globals_(cx),
-        arrayViews_(cx),
-        imports_(cx),
-        standardLibraryMathNames_(cx),
-        standardLibraryAtomicsNames_(cx),
-        standardLibrarySimdOpNames_(cx),
-        moduleFunctionNode_(parser.pc->maybeFunction),
-        moduleFunctionName_(nullptr),
-        errorString_(nullptr),
-        errorOffset_(UINT32_MAX),
-        errorOverRecursed_(false),
-        supportsSimd_(cx->jitSupportsSimd()),
-        atomicsPresent_(false)
-    {
-        MOZ_ASSERT(moduleFunctionNode_->pn_funbox == parser.pc->sc->asFunctionBox());
-    }
-
-    ~ModuleValidator() {
-        if (errorString_) {
-            MOZ_ASSERT(errorOffset_ != UINT32_MAX);
-            tokenStream().reportAsmJSError(errorOffset_,
-                                           JSMSG_USE_ASM_TYPE_FAIL,
-                                           errorString_.get());
-        }
-        if (errorOverRecursed_)
-            ReportOverRecursed(cx_);
-    }
-
-  private:
-
-    // Helpers
+    // Helpers:
     bool addStandardLibraryMathName(const char* name, AsmJSMathBuiltinFunction func) {
         JSAtom* atom = Atomize(cx_, name, strlen(name));
         if (!atom)
@@ -1944,9 +1671,50 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
   public:
+    ModuleValidator(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* moduleFunctionNode)
+      : cx_(cx),
+        parser_(parser),
+        moduleFunctionNode_(moduleFunctionNode),
+        moduleFunctionName_(FunctionName(moduleFunctionNode)),
+        standardLibraryMathNames_(cx),
+        standardLibraryAtomicsNames_(cx),
+        standardLibrarySimdOpNames_(cx),
+        validationLifo_(VALIDATION_LIFO_DEFAULT_CHUNK_SIZE),
+        functions_(cx),
+        funcPtrTables_(cx),
+        globalMap_(cx),
+        importMap_(cx),
+        arrayViews_(cx),
+        atomicsPresent_(false),
+        mg_(cx),
+        errorString_(nullptr),
+        errorOffset_(UINT32_MAX),
+        errorOverRecursed_(false)
+    {}
 
-    bool init(HandleAsmJSModule moduleObj) {
-        if (!globals_.init() || !imports_.init())
+    ~ModuleValidator() {
+        if (errorString_) {
+            MOZ_ASSERT(errorOffset_ != UINT32_MAX);
+            tokenStream().reportAsmJSError(errorOffset_,
+                                           JSMSG_USE_ASM_TYPE_FAIL,
+                                           errorString_.get());
+        }
+        if (errorOverRecursed_)
+            ReportOverRecursed(cx_);
+    }
+
+    bool init() {
+        module_ = cx_->make_unique<AsmJSModuleData>();
+        if (!module_)
+            return false;
+
+        module_->minHeapLength = RoundUpToNextValidAsmJSHeapLength(0);
+        module_->srcStart = moduleFunctionNode_->pn_body->pn_pos.begin;
+        module_->srcBodyStart = parser_.tokenStream.currentToken().pos.end;
+        module_->strict = parser_.pc->sc->strict() && !parser_.pc->sc->hasExplicitUseStrict();
+        module_->scriptSource.reset(parser_.ss);
+
+        if (!globalMap_.init() || !importMap_.init())
             return false;
 
         if (!standardLibraryMathNames_.init() ||
@@ -2005,73 +1773,42 @@ class MOZ_STACK_CLASS ModuleValidator
         }
 #undef ADDSTDLIBSIMDOPNAME
 
-        uint32_t srcStart = parser_.pc->maybeFunction->pn_body->pn_pos.begin;
-        uint32_t srcBodyStart = tokenStream().currentToken().pos.end;
-
-        // "use strict" should be added to the source if we are in an implicit
-        // strict context, see also comment above addUseStrict in
-        // js::FunctionToString.
-        bool strict = parser_.pc->sc->strict() && !parser_.pc->sc->hasExplicitUseStrict();
-
-        module_ = cx_->new_<AsmJSModule>(parser_.ss, srcStart, srcBodyStart, strict);
-        if (!module_)
-            return false;
-
-        moduleObj->setModule(module_);
-
         return mg_.init();
     }
 
-    bool finish(SlowFunctionVector* slowFuncs) {
-        uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
-        TokenPos pos;
-        JS_ALWAYS_TRUE(tokenStream().peekTokenPos(&pos, TokenStream::Operand));
-        uint32_t endAfterCurly = pos.end;
+    ExclusiveContext* cx() const             { return cx_; }
+    PropertyName* moduleFunctionName() const { return moduleFunctionName_; }
+    PropertyName* globalArgumentName() const { return module_->globalArgumentName; }
+    PropertyName* importArgumentName() const { return module_->importArgumentName; }
+    PropertyName* bufferArgumentName() const { return module_->bufferArgumentName; }
+    ModuleGenerator& mg()                    { return mg_; }
+    AsmJSParser& parser() const              { return parser_; }
+    TokenStream& tokenStream() const         { return parser_.tokenStream; }
+    bool supportsSimd() const                { return cx_->jitSupportsSimd(); }
+    bool atomicsPresent() const              { return atomicsPresent_; }
+    uint32_t minHeapLength() const           { return module_->minHeapLength; }
 
-        HeapUsage heapUsage = module_->hasArrayView()
-                              ? module_->isSharedView()
-                                ? HeapUsage::Shared
-                                : HeapUsage::Unshared
-                              : HeapUsage::None;
-
-        auto mutedErrors = Module::MutedBool(parser_.ss->mutedErrors());
-
-        CacheableChars filename;
-        if (parser_.ss->filename()) {
-            filename = make_string_copy(parser_.ss->filename());
-            if (!filename)
-                return false;
-        }
-
-        CacheableTwoByteChars displayURL;
-        if (parser_.ss->hasDisplayURL()) {
-            uint32_t length = js_strlen(parser_.ss->displayURL());
-            displayURL.reset(js_pod_calloc<char16_t>(length + 1));
-            if (!displayURL)
-                return false;
-            PodCopy(displayURL.get(), parser_.ss->displayURL(), length);
-        }
-
-        UniqueStaticLinkData linkData;
-        Module* wasm = mg_.finish(heapUsage, mutedErrors, Move(filename), Move(displayURL),
-                                  &linkData, slowFuncs);
-        if (!wasm)
-            return false;
-
-        module_->finish(wasm, Move(linkData), endBeforeCurly, endAfterCurly);
-        return true;
+    void initModuleFunctionName(PropertyName* name) {
+        MOZ_ASSERT(!moduleFunctionName_);
+        moduleFunctionName_ = name;
     }
-
-    // Mutable interface.
-    void initModuleFunctionName(PropertyName* name) { moduleFunctionName_ = name; }
-    void initGlobalArgumentName(PropertyName* n)    { module().initGlobalArgumentName(n); }
-    void initImportArgumentName(PropertyName* n)    { module().initImportArgumentName(n); }
-    void initBufferArgumentName(PropertyName* n)    { module().initBufferArgumentName(n); }
-
+    void initGlobalArgumentName(PropertyName* n) {
+        MOZ_ASSERT(n->isTenured());
+        module_->globalArgumentName = n;
+    }
+    void initImportArgumentName(PropertyName* n) {
+        MOZ_ASSERT(n->isTenured());
+        module_->importArgumentName = n;
+    }
+    void initBufferArgumentName(PropertyName* n) {
+        MOZ_ASSERT(n->isTenured());
+        module_->bufferArgumentName = n;
+    }
     bool addGlobalVarInit(PropertyName* var, const NumLit& lit, bool isConst) {
         uint32_t globalDataOffset;
         if (!mg_.allocateGlobalVar(lit.type(), &globalDataOffset))
             return false;
+
         Global::Which which = isConst ? Global::ConstantLiteral : Global::Variable;
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
@@ -2080,31 +1817,49 @@ class MOZ_STACK_CLASS ModuleValidator
         global->u.varOrConst.type_ = (isConst ? Type::lit(lit) : Type::var(lit.type())).which();
         if (isConst)
             global->u.varOrConst.literalValue_ = lit;
-        return globals_.putNew(var, global) &&
-               module().addGlobalVarInit(lit.value(), globalDataOffset);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::Variable, nullptr);
+        g.pod.u.var.initKind_ = AsmJSGlobal::InitConstant;
+        g.pod.u.var.u.val_ = lit.value();
+        g.pod.u.var.globalDataOffset_ = globalDataOffset;
+        return module_->globals.append(g);
     }
     bool addGlobalVarImport(PropertyName* var, PropertyName* field, ValType type, bool isConst) {
         uint32_t globalDataOffset;
         if (!mg_.allocateGlobalVar(type, &globalDataOffset))
             return false;
+
         Global::Which which = isConst ? Global::ConstantImport : Global::Variable;
         Global* global = validationLifo_.new_<Global>(which);
         if (!global)
             return false;
         global->u.varOrConst.globalDataOffset_ = globalDataOffset;
         global->u.varOrConst.type_ = Type::var(type).which();
-        return globals_.putNew(var, global) &&
-               module().addGlobalVarImport(field, type, globalDataOffset);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::Variable, field);
+        g.pod.u.var.initKind_ = AsmJSGlobal::InitImport;
+        g.pod.u.var.u.importType_ = type;
+        g.pod.u.var.globalDataOffset_ = globalDataOffset;
+        return module_->globals.append(g);
     }
     bool addArrayView(PropertyName* var, Scalar::Type vt, PropertyName* maybeField) {
         if (!arrayViews_.append(ArrayView(var, vt)))
             return false;
+
         Global* global = validationLifo_.new_<Global>(Global::ArrayView);
         if (!global)
             return false;
         global->u.viewInfo.viewType_ = vt;
-        return globals_.putNew(var, global) &&
-               module().addArrayView(vt, maybeField);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::ArrayView, maybeField);
+        g.pod.u.viewType_ = vt;
+        return module_->globals.append(g);
     }
     bool addMathBuiltinFunction(PropertyName* var, AsmJSMathBuiltinFunction func,
                                 PropertyName* field)
@@ -2113,8 +1868,12 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.mathBuiltinFunc_ = func;
-        return globals_.putNew(var, global) &&
-               module().addMathBuiltinFunction(func, field);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::MathBuiltinFunction, field);
+        g.pod.u.mathBuiltinFunc_ = func;
+        return module_->globals.append(g);
     }
   private:
     bool addGlobalDoubleConstant(PropertyName* var, double constant) {
@@ -2123,35 +1882,54 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         global->u.varOrConst.type_ = Type::Double;
         global->u.varOrConst.literalValue_ = NumLit(NumLit::Double, DoubleValue(constant));
-        return globals_.putNew(var, global);
+        return globalMap_.putNew(var, global);
     }
   public:
     bool addMathBuiltinConstant(PropertyName* var, double constant, PropertyName* field) {
-        return addGlobalDoubleConstant(var, constant) &&
-               module().addMathBuiltinConstant(constant, field);
+        if (!addGlobalDoubleConstant(var, constant))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::Constant, field);
+        g.pod.u.constant.value_ = constant;
+        g.pod.u.constant.kind_ = AsmJSGlobal::MathConstant;
+        return module_->globals.append(g);
     }
     bool addGlobalConstant(PropertyName* var, double constant, PropertyName* field) {
-        return addGlobalDoubleConstant(var, constant) &&
-               module().addGlobalConstant(constant, field);
+        if (!addGlobalDoubleConstant(var, constant))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::Constant, field);
+        g.pod.u.constant.value_ = constant;
+        g.pod.u.constant.kind_ = AsmJSGlobal::GlobalConstant;
+        return module_->globals.append(g);
     }
     bool addAtomicsBuiltinFunction(PropertyName* var, AsmJSAtomicsBuiltinFunction func,
                                    PropertyName* field)
     {
+        atomicsPresent_ = true;
+
         Global* global = validationLifo_.new_<Global>(Global::AtomicsBuiltinFunction);
         if (!global)
             return false;
-        atomicsPresent_ = true;
         global->u.atomicsBuiltinFunc_ = func;
-        return globals_.putNew(var, global) &&
-               module().addAtomicsBuiltinFunction(func, field);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::AtomicsBuiltinFunction, field);
+        g.pod.u.atomicsBuiltinFunc_ = func;
+        return module_->globals.append(g);
     }
     bool addSimdCtor(PropertyName* var, AsmJSSimdType type, PropertyName* field) {
         Global* global = validationLifo_.new_<Global>(Global::SimdCtor);
         if (!global)
             return false;
         global->u.simdCtorType_ = type;
-        return globals_.putNew(var, global) &&
-               module().addSimdCtor(type, field);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::SimdCtor, field);
+        g.pod.u.simdCtorType_ = type;
+        return module_->globals.append(g);
     }
     bool addSimdOperation(PropertyName* var, AsmJSSimdType type, AsmJSSimdOperation op,
                           PropertyName* opName)
@@ -2161,26 +1939,41 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         global->u.simdOp.type_ = type;
         global->u.simdOp.which_ = op;
-        return globals_.putNew(var, global) &&
-               module().addSimdOperation(type, op, opName);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::SimdOperation, opName);
+        g.pod.u.simdOp.type_ = type;
+        g.pod.u.simdOp.which_ = op;
+        return module_->globals.append(g);
     }
     bool addArrayViewCtor(PropertyName* var, Scalar::Type vt, PropertyName* field) {
         Global* global = validationLifo_.new_<Global>(Global::ArrayViewCtor);
         if (!global)
             return false;
         global->u.viewInfo.viewType_ = vt;
-        return globals_.putNew(var, global) &&
-               module().addArrayViewCtor(vt, field);
+        if (!globalMap_.putNew(var, global))
+            return false;
+
+        AsmJSGlobal g(AsmJSGlobal::ArrayViewCtor, field);
+        g.pod.u.viewType_ = vt;
+        return module_->globals.append(g);
     }
     bool addFFI(PropertyName* var, PropertyName* field) {
+        if (module_->numFFIs == UINT32_MAX)
+            return false;
+        uint32_t ffiIndex = module_->numFFIs++;
+
         Global* global = validationLifo_.new_<Global>(Global::FFI);
         if (!global)
             return false;
-        uint32_t index;
-        if (!module().addFFI(field, &index))
+        global->u.ffiIndex_ = ffiIndex;
+        if (!globalMap_.putNew(var, global))
             return false;
-        global->u.ffiIndex_ = index;
-        return globals_.putNew(var, global);
+
+        AsmJSGlobal g(AsmJSGlobal::FFI, field);
+        g.pod.u.ffiIndex_ = ffiIndex;
+        return module_->globals.append(g);
     }
     bool addExport(ParseNode* pn, const Func& func, PropertyName* maybeFieldName) {
         MallocSig::ArgVector args;
@@ -2188,7 +1981,9 @@ class MOZ_STACK_CLASS ModuleValidator
             return false;
         MallocSig sig(Move(args), func.sig().ret());
         return mg_.declareExport(Move(sig), func.index()) &&
-               module().addExport(func.name(), maybeFieldName, func.srcBegin(), func.srcEnd());
+               module_->exports.emplaceBack(func.name(), maybeFieldName,
+                                                func.srcBegin() - module_->srcStart,
+                                                func.srcEnd() - module_->srcStart);
     }
   private:
     const LifoSig* getLifoSig(const LifoSig& sig) {
@@ -2204,7 +1999,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.funcIndex_ = funcIndex;
-        if (!globals_.putNew(name, global))
+        if (!globalMap_.putNew(name, global))
             return false;
         const LifoSig* lifoSig = getLifoSig(sig);
         if (!lifoSig)
@@ -2223,7 +2018,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!global)
             return false;
         global->u.funcPtrTableIndex_ = *index;
-        if (!globals_.putNew(name, global))
+        if (!globalMap_.putNew(name, global))
             return false;
         const LifoSig* lifoSig = getLifoSig(sig);
         if (!lifoSig)
@@ -2243,7 +2038,7 @@ class MOZ_STACK_CLASS ModuleValidator
                  const LifoSig** lifoSig)
     {
         ImportDescriptor::Lookup lookup(name, sig);
-        ImportMap::AddPtr p = imports_.lookupForAdd(lookup);
+        ImportMap::AddPtr p = importMap_.lookupForAdd(lookup);
         if (p) {
             *lifoSig = &p->key().sig();
             *importIndex = p->value();
@@ -2252,22 +2047,23 @@ class MOZ_STACK_CLASS ModuleValidator
         *lifoSig = getLifoSig(sig);
         if (!*lifoSig)
             return false;
-        return mg_.declareImport(Move(sig), importIndex) &&
-               imports_.add(p, ImportDescriptor(name, **lifoSig), *importIndex) &&
-               module().addImport(ffiIndex, *importIndex);
+        if (!mg_.declareImport(Move(sig), importIndex))
+            return false;
+        if (!importMap_.add(p, ImportDescriptor(name, **lifoSig), *importIndex))
+            return false;
+        MOZ_ASSERT(module_->imports.length() == *importIndex);
+        return module_->imports.emplaceBack(ffiIndex);
     }
 
     bool tryConstantAccess(uint64_t start, uint64_t width) {
         MOZ_ASSERT(UINT64_MAX - start > width);
-        uint64_t end = start + width;
-        if (end > uint64_t(INT32_MAX) + 1)
+        uint64_t len = start + width;
+        if (len > uint64_t(INT32_MAX) + 1)
             return false;
-        module().requireHeapLengthToBeAtLeast(end);
+        len = RoundUpToNextValidAsmJSHeapLength(len);
+        if (len > module_->minHeapLength)
+            module_->minHeapLength = len;
         return true;
-    }
-
-    bool usesSharedMemory() const {
-        return atomicsPresent_;
     }
 
     // Error handling.
@@ -2331,16 +2127,6 @@ class MOZ_STACK_CLASS ModuleValidator
         return false;
     }
 
-    // Read-only interface
-    ExclusiveContext* cx() const             { return cx_; }
-    ParseNode* moduleFunctionNode() const    { return moduleFunctionNode_; }
-    PropertyName* moduleFunctionName() const { return moduleFunctionName_; }
-    ModuleGenerator& mg()                    { return mg_; }
-    AsmJSModule& module() const              { return *module_; }
-    AsmJSParser& parser() const              { return parser_; }
-    TokenStream& tokenStream() const         { return parser_.tokenStream; }
-    bool supportsSimd() const                { return supportsSimd_; }
-
     unsigned numArrayViews() const {
         return arrayViews_.length();
     }
@@ -2361,13 +2147,13 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     const Global* lookupGlobal(PropertyName* name) const {
-        if (GlobalMap::Ptr p = globals_.lookup(name))
+        if (GlobalMap::Ptr p = globalMap_.lookup(name))
             return p->value();
         return nullptr;
     }
 
     Func* lookupFunction(PropertyName* name) {
-        if (GlobalMap::Ptr p = globals_.lookup(name)) {
+        if (GlobalMap::Ptr p = globalMap_.lookup(name)) {
             Global* value = p->value();
             if (value->which() == Global::Function)
                 return functions_[value->funcIndex()];
@@ -2399,9 +2185,7 @@ class MOZ_STACK_CLASS ModuleValidator
 
     bool startFunctionBodies() {
         if (atomicsPresent_) {
-#if defined(ENABLE_SHARED_ARRAY_BUFFER)
-            module().setViewsAreShared();
-#else
+#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
             return failOffset(parser_.tokenStream.currentToken().pos.begin,
                               "shared memory and atomics not supported by this build");
 #endif
@@ -2411,9 +2195,51 @@ class MOZ_STACK_CLASS ModuleValidator
     bool finishFunctionBodies() {
         return mg_.finishFuncs();
     }
-};
+    bool finish(MutableHandle<WasmModuleObject*> moduleObj, SlowFunctionVector* slowFuncs) {
+        HeapUsage heap = arrayViews_.empty()
+                              ? HeapUsage::None
+                              : atomicsPresent_
+                                ? HeapUsage::Shared
+                                : HeapUsage::Unshared;
 
-} // namespace
+        auto muted = MutedErrorsBool(parser_.ss->mutedErrors());
+
+        CacheableChars filename;
+        if (parser_.ss->filename()) {
+            filename = make_string_copy(parser_.ss->filename());
+            if (!filename)
+                return false;
+        }
+
+        CacheableTwoByteChars displayURL;
+        if (parser_.ss->hasDisplayURL()) {
+            uint32_t length = js_strlen(parser_.ss->displayURL());
+            displayURL.reset(js_pod_calloc<char16_t>(length + 1));
+            if (!displayURL)
+                return false;
+            PodCopy(displayURL.get(), parser_.ss->displayURL(), length);
+        }
+
+        uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
+        module_->srcLength = endBeforeCurly - module_->srcStart;
+
+        TokenPos pos;
+        JS_ALWAYS_TRUE(tokenStream().peekTokenPos(&pos, TokenStream::Operand));
+        uint32_t endAfterCurly = pos.end;
+        module_->srcLengthWithRightBrace = endAfterCurly - module_->srcStart;
+
+        UniqueModuleData base;
+        UniqueStaticLinkData link;
+        if (!mg_.finish(heap, muted, Move(filename), Move(displayURL), &base, &link, slowFuncs))
+            return false;
+
+        moduleObj.set(WasmModuleObject::create(cx_));
+        if (!moduleObj)
+            return false;
+
+        return moduleObj->init(cx_->new_<AsmJSModule>(Move(base), Move(link), Move(module_)));
+    }
+};
 
 /*****************************************************************************/
 // Numeric literal utilities
@@ -2750,7 +2576,6 @@ class MOZ_STACK_CLASS FunctionValidator
     {}
 
     ModuleValidator& m() const        { return m_; }
-    const AsmJSModule& module() const { return m_.module(); }
     ExclusiveContext* cx() const      { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
 
@@ -2979,9 +2804,9 @@ CheckModuleLevelName(ModuleValidator& m, ParseNode* usepn, PropertyName* name)
         return false;
 
     if (name == m.moduleFunctionName() ||
-        name == m.module().globalArgumentName() ||
-        name == m.module().importArgumentName() ||
-        name == m.module().bufferArgumentName() ||
+        name == m.globalArgumentName() ||
+        name == m.importArgumentName() ||
+        name == m.bufferArgumentName() ||
         m.lookupGlobal(name))
     {
         return m.failName(usepn, "duplicate name '%s' not allowed", name);
@@ -3127,7 +2952,7 @@ CheckGlobalVariableImportExpr(ModuleValidator& m, PropertyName* varName, ValType
     ParseNode* base = DotBase(coercedExpr);
     PropertyName* field = DotMember(coercedExpr);
 
-    PropertyName* importName = m.module().importArgumentName();
+    PropertyName* importName = m.importArgumentName();
     if (!importName)
         return m.fail(coercedExpr, "cannot import without an asm.js foreign parameter");
     if (!IsUseOfName(base, importName))
@@ -3189,11 +3014,11 @@ CheckNewArrayViewArgs(ModuleValidator& m, ParseNode* ctorExpr, PropertyName* buf
 static bool
 CheckNewArrayView(ModuleValidator& m, PropertyName* varName, ParseNode* newExpr)
 {
-    PropertyName* globalName = m.module().globalArgumentName();
+    PropertyName* globalName = m.globalArgumentName();
     if (!globalName)
         return m.fail(newExpr, "cannot create array view without an asm.js global parameter");
 
-    PropertyName* bufferName = m.module().bufferArgumentName();
+    PropertyName* bufferName = m.bufferArgumentName();
     if (!bufferName)
         return m.fail(newExpr, "cannot create array view without an asm.js heap parameter");
 
@@ -3347,7 +3172,7 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
         ParseNode* global = DotBase(base);
         PropertyName* mathOrAtomicsOrSimd = DotMember(base);
 
-        PropertyName* globalName = m.module().globalArgumentName();
+        PropertyName* globalName = m.globalArgumentName();
         if (!globalName)
             return m.fail(base, "import statement requires the module have a stdlib parameter");
 
@@ -3371,7 +3196,7 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
     if (!base->isKind(PNK_NAME))
         return m.fail(base, "expected name of variable or parameter");
 
-    if (base->name() == m.module().globalArgumentName()) {
+    if (base->name() == m.globalArgumentName()) {
         if (field == m.cx()->names().NaN)
             return m.addGlobalConstant(varName, GenericNaN(), field);
         if (field == m.cx()->names().Infinity)
@@ -3384,7 +3209,7 @@ CheckGlobalDotImport(ModuleValidator& m, PropertyName* varName, ParseNode* initN
         return m.failName(initNode, "'%s' is not a standard constant or typed array name", field);
     }
 
-    if (base->name() == m.module().importArgumentName())
+    if (base->name() == m.importArgumentName())
         return m.addFFI(varName, field);
 
     const ModuleValidator::Global* global = m.lookupGlobal(base->name());
@@ -3762,7 +3587,7 @@ FoldMaskedArrayIndex(FunctionValidator& f, ParseNode** indexExpr, int32_t* mask,
         // constraint. The unsigned maximum of a masked index is the mask
         // itself, so check that the mask is not negative and compare the mask
         // to the known minimum heap length.
-        if (int32_t(mask2) >= 0 && mask2 < f.m().module().minHeapLength())
+        if (int32_t(mask2) >= 0 && mask2 < f.m().minHeapLength())
             *needsBoundsCheck = NO_BOUNDS_CHECK;
         *mask &= mask2;
         *indexExpr = indexNode;
@@ -4256,12 +4081,12 @@ CheckSharedArrayAtomicAccess(FunctionValidator& f, ParseNode* viewName, ParseNod
     if (!CheckAndPrepareArrayAccess(f, viewName, indexExpr, viewType, needsBoundsCheck, mask))
         return false;
 
-    // Atomic accesses may be made on shared integer arrays only.
-
     // The global will be sane, CheckArrayAccess checks it.
     const ModuleValidator::Global* global = f.lookupGlobal(viewName->name());
-    if (global->which() != ModuleValidator::Global::ArrayView || !f.m().module().isSharedView())
-        return f.fail(viewName, "base of array access must be a shared typed array view name");
+    if (global->which() != ModuleValidator::Global::ArrayView)
+        return f.fail(viewName, "base of array access must be a typed array view");
+
+    MOZ_ASSERT(f.m().atomicsPresent());
 
     switch (*viewType) {
       case Scalar::Int8:
@@ -7365,25 +7190,23 @@ CheckModuleEnd(ModuleValidator &m)
 }
 
 static bool
-CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, HandleAsmJSModule obj,
-            unsigned* time, SlowFunctionVector* slowFuncs)
+CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
+            MutableHandle<WasmModuleObject*> moduleObj, unsigned* time,
+            SlowFunctionVector* slowFuncs)
 {
     int64_t before = PRMJ_Now();
 
-    ModuleValidator m(cx, parser);
-    if (!m.init(obj))
+    ParseNode* moduleFunctionNode = parser.pc->maybeFunction;
+    MOZ_ASSERT(moduleFunctionNode);
+
+    ModuleValidator m(cx, parser, moduleFunctionNode);
+    if (!m.init())
         return false;
 
-    if (PropertyName* moduleFunctionName = FunctionName(m.moduleFunctionNode())) {
-        if (!CheckModuleLevelName(m, m.moduleFunctionNode(), moduleFunctionName))
-            return false;
-        m.initModuleFunctionName(moduleFunctionName);
-    }
-
-    if (!CheckFunctionHead(m, m.moduleFunctionNode()))
+    if (!CheckFunctionHead(m, moduleFunctionNode))
         return false;
 
-    if (!CheckModuleArguments(m, m.moduleFunctionNode()))
+    if (!CheckModuleArguments(m, moduleFunctionNode))
         return false;
 
     if (!CheckPrecedingStatements(m, stmtList))
@@ -7413,7 +7236,7 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, Hand
     if (!CheckModuleEnd(m))
         return false;
 
-    if (!m.finish(slowFuncs))
+    if (!m.finish(moduleObj, slowFuncs))
         return false;
 
     *time = (PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC;
@@ -7423,12 +7246,12 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList, Hand
 /*****************************************************************************/
 // Link-time validation
 
-static AsmJSModuleObject&
+static WasmModuleObject&
 FunctionToModuleObject(JSFunction* fun)
 {
     MOZ_ASSERT(IsAsmJSFunction(fun) || IsAsmJSModule(fun));
     const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_MODULE_SLOT);
-    return v.toObject().as<AsmJSModuleObject>();
+    return v.toObject().as<WasmModuleObject>();
 }
 
 static unsigned
@@ -7445,10 +7268,10 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     RootedFunction callee(cx, &args.callee().as<JSFunction>());
 
-    AsmJSModule& module = FunctionToModuleObject(callee).module();
+    Module& module = FunctionToModuleObject(callee).module();
     uint32_t exportIndex = FunctionToExportIndex(callee);
 
-    return module.wasmModule().callExport(cx, exportIndex, args);
+    return module.callExport(cx, exportIndex, args);
 }
 
 static bool
@@ -7509,13 +7332,13 @@ HasPureCoercion(JSContext* cx, HandleValue v)
 }
 
 static bool
-ValidateGlobalVariable(JSContext* cx, const AsmJSModule::Global& global, uint8_t* globalData,
+ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* globalData,
                        HandleValue importVal)
 {
     void* datum = globalData + global.varGlobalDataOffset();
 
     switch (global.varInitKind()) {
-      case AsmJSModule::Global::InitConstant: {
+      case AsmJSGlobal::InitConstant: {
         Val v = global.varInitVal();
         switch (v.type()) {
           case ValType::I32:
@@ -7541,7 +7364,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule::Global& global, uint8_t
         break;
       }
 
-      case AsmJSModule::Global::InitImport: {
+      case AsmJSGlobal::InitImport: {
         RootedPropertyName field(cx, global.varImportField());
         RootedValue v(cx);
         if (!GetDataProperty(cx, importVal, field, &v))
@@ -7596,7 +7419,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule::Global& global, uint8_t
 }
 
 static bool
-ValidateFFI(JSContext* cx, const AsmJSModule::Global& global, HandleValue importVal,
+ValidateFFI(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal,
             AutoVectorRooter<JSFunction*>* ffis)
 {
     RootedPropertyName field(cx, global.ffiField());
@@ -7612,7 +7435,7 @@ ValidateFFI(JSContext* cx, const AsmJSModule::Global& global, HandleValue import
 }
 
 static bool
-ValidateArrayView(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateArrayView(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.maybeViewName());
     if (!field)
@@ -7630,7 +7453,7 @@ ValidateArrayView(JSContext* cx, const AsmJSModule::Global& global, HandleValue 
 }
 
 static bool
-ValidateMathBuiltinFunction(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateMathBuiltinFunction(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedValue v(cx);
     if (!GetDataProperty(cx, globalVal, cx->names().Math, &v))
@@ -7692,7 +7515,7 @@ AsmJSSimdTypeToTypeDescrType(AsmJSSimdType type)
 }
 
 static bool
-ValidateSimdType(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal,
+ValidateSimdType(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal,
                  MutableHandleValue out)
 {
     RootedValue v(cx);
@@ -7700,7 +7523,7 @@ ValidateSimdType(JSContext* cx, const AsmJSModule::Global& global, HandleValue g
         return false;
 
     AsmJSSimdType type;
-    if (global.which() == AsmJSModule::Global::SimdCtor)
+    if (global.which() == AsmJSGlobal::SimdCtor)
         type = global.simdCtorType();
     else
         type = global.simdOperationType();
@@ -7724,14 +7547,14 @@ ValidateSimdType(JSContext* cx, const AsmJSModule::Global& global, HandleValue g
 }
 
 static bool
-ValidateSimdType(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateSimdType(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedValue _(cx);
     return ValidateSimdType(cx, global, globalVal, &_);
 }
 
 static bool
-ValidateSimdOperation(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     // SIMD operations are loaded from the SIMD type, so the type must have been
     // validated before the operation.
@@ -7784,7 +7607,7 @@ ValidateSimdOperation(JSContext* cx, const AsmJSModule::Global& global, HandleVa
 }
 
 static bool
-ValidateAtomicsBuiltinFunction(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateAtomicsBuiltinFunction(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedValue v(cx);
     if (!GetDataProperty(cx, globalVal, cx->names().Atomics, &v))
@@ -7815,12 +7638,12 @@ ValidateAtomicsBuiltinFunction(JSContext* cx, const AsmJSModule::Global& global,
 }
 
 static bool
-ValidateConstant(JSContext* cx, const AsmJSModule::Global& global, HandleValue globalVal)
+ValidateConstant(JSContext* cx, const AsmJSGlobal& global, HandleValue globalVal)
 {
     RootedPropertyName field(cx, global.constantName());
     RootedValue v(cx, globalVal);
 
-    if (global.constantKind() == AsmJSModule::Global::MathConstant) {
+    if (global.constantKind() == AsmJSGlobal::MathConstant) {
         if (!GetDataProperty(cx, v, cx->names().Math, &v))
             return false;
     }
@@ -7847,10 +7670,10 @@ static bool
 CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
             MutableHandle<ArrayBufferObjectMaybeShared*> buffer)
 {
-    if (module.isSharedView() && !IsSharedArrayBuffer(bufferVal))
+    if (module.hasSharedHeap() && !IsSharedArrayBuffer(bufferVal))
         return LinkFail(cx, "shared views can only be constructed onto SharedArrayBuffer");
 
-    if (!module.isSharedView() && !IsArrayBuffer(bufferVal))
+    if (!module.hasSharedHeap() && !IsArrayBuffer(bufferVal))
         return LinkFail(cx, "unshared views can only be constructed onto ArrayBuffer");
 
     buffer.set(&AsAnyArrayBuffer(bufferVal));
@@ -7880,12 +7703,12 @@ CheckBuffer(JSContext* cx, AsmJSModule& module, HandleValue bufferVal,
     // Shell builtins may have disabled signal handlers since the module we're
     // cloning was compiled. LookupAsmJSModuleInCache checks for signal handlers
     // as well for the caching case.
-    if (module.wasmModule().compileArgs() != CompileArgs(cx))
+    if (module.compileArgs() != CompileArgs(cx))
         return LinkFail(cx, "Signals have been toggled since compilation");
 
     if (buffer->is<ArrayBufferObject>()) {
         Rooted<ArrayBufferObject*> abheap(cx, &buffer->as<ArrayBufferObject>());
-        bool useSignalHandlers = module.wasmModule().compileArgs().useSignalHandlersForOOB;
+        bool useSignalHandlers = module.compileArgs().useSignalHandlersForOOB;
         if (!ArrayBufferObject::prepareForAsmJS(cx, abheap, useSignalHandlers))
             return LinkFail(cx, "Unable to prepare ArrayBuffer for asm.js use");
     }
@@ -7901,45 +7724,45 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
     HandleValue bufferVal = args.get(2);
 
     Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-    if (module.hasArrayView() && !CheckBuffer(cx, module, bufferVal, &buffer))
+    if (module.usesHeap() && !CheckBuffer(cx, module, bufferVal, &buffer))
         return false;
 
     AutoVectorRooter<JSFunction*> ffis(cx);
     if (!ffis.resize(module.numFFIs()))
         return false;
 
-    for (const AsmJSModule::Global& global : module.globals()) {
+    for (const AsmJSGlobal& global : module.asmJSGlobals()) {
         switch (global.which()) {
-          case AsmJSModule::Global::Variable:
-            if (!ValidateGlobalVariable(cx, global, module.wasmModule().globalData(), importVal))
+          case AsmJSGlobal::Variable:
+            if (!ValidateGlobalVariable(cx, global, module.globalData(), importVal))
                 return false;
             break;
-          case AsmJSModule::Global::FFI:
+          case AsmJSGlobal::FFI:
             if (!ValidateFFI(cx, global, importVal, &ffis))
                 return false;
             break;
-          case AsmJSModule::Global::ArrayView:
-          case AsmJSModule::Global::ArrayViewCtor:
+          case AsmJSGlobal::ArrayView:
+          case AsmJSGlobal::ArrayViewCtor:
             if (!ValidateArrayView(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::MathBuiltinFunction:
+          case AsmJSGlobal::MathBuiltinFunction:
             if (!ValidateMathBuiltinFunction(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::AtomicsBuiltinFunction:
+          case AsmJSGlobal::AtomicsBuiltinFunction:
             if (!ValidateAtomicsBuiltinFunction(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::Constant:
+          case AsmJSGlobal::Constant:
             if (!ValidateConstant(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::SimdCtor:
+          case AsmJSGlobal::SimdCtor:
             if (!ValidateSimdType(cx, global, globalVal))
                 return false;
             break;
-          case AsmJSModule::Global::SimdOperation:
+          case AsmJSGlobal::SimdOperation:
             if (!ValidateSimdOperation(cx, global, globalVal))
                 return false;
             break;
@@ -7947,19 +7770,19 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
     }
 
     AutoVectorRooter<JSFunction*> imports(cx);
-    for (const AsmJSModule::Import& import : module.imports()) {
+    for (const AsmJSImport& import : module.asmJSImports()) {
         if (!imports.append(ffis[import.ffiIndex()]))
             return false;
     }
 
-    return module.wasmModule().dynamicallyLink(cx, buffer, imports);
+    return module.dynamicallyLink(cx, buffer, imports);
 }
 
 static JSFunction*
-NewExportedFunction(JSContext* cx, const AsmJSModule& module, const AsmJSModule::Export& func,
+NewExportedFunction(JSContext* cx, const Module& module, const AsmJSExport& func,
                     HandleObject moduleObj, unsigned exportIndex)
 {
-    unsigned numArgs = module.wasmModule().exports()[exportIndex].sig().args().length();
+    unsigned numArgs = module.exports()[exportIndex].sig().args().length();
 
     RootedPropertyName name(cx, func.name());
     JSFunction* fun =
@@ -8044,13 +7867,13 @@ HandleDynamicLinkFailure(JSContext* cx, const CallArgs& args, AsmJSModule& modul
 }
 
 static JSObject*
-CreateExportObject(JSContext* cx, HandleAsmJSModule moduleObj)
+CreateExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj)
 {
-    AsmJSModule& module = moduleObj->module();
-    const AsmJSModule::ExportVector& exports = module.exports();
+    AsmJSModule& module = moduleObj->module().asAsmJS();
+    const AsmJSExportVector& exports = module.asmJSExports();
 
     if (exports.length() == 1) {
-        const AsmJSModule::Export& func = exports[0];
+        const AsmJSExport& func = exports[0];
         if (!func.maybeFieldName())
             return NewExportedFunction(cx, module, func, moduleObj, 0);
     }
@@ -8061,7 +7884,7 @@ CreateExportObject(JSContext* cx, HandleAsmJSModule moduleObj)
         return nullptr;
 
     for (unsigned i = 0; i < exports.length(); i++) {
-        const AsmJSModule::Export& func = exports[i];
+        const AsmJSExport& func = exports[i];
 
         RootedFunction fun(cx, NewExportedFunction(cx, module, func, moduleObj, i));
         if (!fun)
@@ -8086,34 +7909,32 @@ LinkAsmJS(JSContext* cx, unsigned argc, JS::Value* vp)
     // The LinkAsmJS builtin (created by NewAsmJSModuleFunction) is an extended
     // function and stores its module in an extended slot.
     RootedFunction fun(cx, &args.callee().as<JSFunction>());
-    Rooted<AsmJSModuleObject*> moduleObj(cx, &FunctionToModuleObject(fun));
+    Rooted<WasmModuleObject*> moduleObj(cx, &FunctionToModuleObject(fun));
+    AsmJSModule* module = &moduleObj->module().asAsmJS();
 
     // When a module is linked, it is dynamically specialized to the given
     // arguments (buffer, ffis). Thus, if the module is linked again (it is just
     // a function so it can be called multiple times), we need to clone a new
     // module.
-    if (moduleObj->module().wasmModule().dynamicallyLinked()) {
-        Rooted<AsmJSModuleObject*> clone(cx, NewAsmJSModuleObject(cx));
-        if (!clone)
+    if (module->dynamicallyLinked()) {
+        if (!module->clone(cx, &moduleObj))
             return false;
 
-        if (!moduleObj->module().clone(cx, clone))
-            return false;
+        module = &moduleObj->module().asAsmJS();
 
-        moduleObj = clone;
+        if (!module->staticallyLink(cx))
+            return false;
     }
-
-    AsmJSModule& module = moduleObj->module();
 
     // Link the module by performing the link-time validation checks in the
     // asm.js spec and then patching the generated module to associate it with
     // the given heap (ArrayBuffer) and a new global data segment (the closure
     // state shared by the inner asm.js functions).
-    if (!DynamicallyLinkModule(cx, args, module)) {
+    if (!DynamicallyLinkModule(cx, args, *module)) {
         // Linking failed, so reparse the entire asm.js module from scratch to
         // get normal interpreted bytecode which we can simply Invoke. Very slow.
         RootedPropertyName name(cx, fun->name());
-        return HandleDynamicLinkFailure(cx, args, module, name);
+        return HandleDynamicLinkFailure(cx, args, *module, name);
     }
 
     // Link-time validation succeeded, so wrap all the exported functions with
@@ -8148,7 +7969,7 @@ NewModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject module
 // Caching and cloning
 
 uint8_t*
-AsmJSModule::Global::serialize(uint8_t* cursor) const
+AsmJSGlobal::serialize(uint8_t* cursor) const
 {
     cursor = WriteBytes(cursor, &pod, sizeof(pod));
     cursor = SerializeName(cursor, name_);
@@ -8156,14 +7977,14 @@ AsmJSModule::Global::serialize(uint8_t* cursor) const
 }
 
 size_t
-AsmJSModule::Global::serializedSize() const
+AsmJSGlobal::serializedSize() const
 {
     return sizeof(pod) +
            SerializedNameSize(name_);
 }
 
 const uint8_t*
-AsmJSModule::Global::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+AsmJSGlobal::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
     (cursor = ReadBytes(cursor, &pod, sizeof(pod))) &&
     (cursor = DeserializeName(cx, cursor, &name_));
@@ -8171,14 +7992,14 @@ AsmJSModule::Global::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 }
 
 bool
-AsmJSModule::Global::clone(JSContext* cx, Global* out) const
+AsmJSGlobal::clone(JSContext* cx, AsmJSGlobal* out) const
 {
     *out = *this;
     return true;
 }
 
 uint8_t*
-AsmJSModule::Export::serialize(uint8_t* cursor) const
+AsmJSExport::serialize(uint8_t* cursor) const
 {
     cursor = SerializeName(cursor, name_);
     cursor = SerializeName(cursor, maybeFieldName_);
@@ -8187,7 +8008,7 @@ AsmJSModule::Export::serialize(uint8_t* cursor) const
 }
 
 size_t
-AsmJSModule::Export::serializedSize() const
+AsmJSExport::serializedSize() const
 {
     return SerializedNameSize(name_) +
            SerializedNameSize(maybeFieldName_) +
@@ -8195,7 +8016,7 @@ AsmJSModule::Export::serializedSize() const
 }
 
 const uint8_t*
-AsmJSModule::Export::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+AsmJSExport::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
     (cursor = DeserializeName(cx, cursor, &name_)) &&
     (cursor = DeserializeName(cx, cursor, &maybeFieldName_)) &&
@@ -8204,7 +8025,7 @@ AsmJSModule::Export::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 }
 
 bool
-AsmJSModule::Export::clone(JSContext* cx, Export* out) const
+AsmJSExport::clone(JSContext* cx, AsmJSExport* out) const
 {
     out->name_ = name_;
     out->maybeFieldName_ = maybeFieldName_;
@@ -8213,105 +8034,158 @@ AsmJSModule::Export::clone(JSContext* cx, Export* out) const
 }
 
 size_t
+AsmJSModuleData::serializedSize() const
+{
+    return sizeof(pod()) +
+           SerializedVectorSize(globals) +
+           SerializedPodVectorSize(imports) +
+           SerializedVectorSize(exports) +
+           SerializedNameSize(globalArgumentName) +
+           SerializedNameSize(importArgumentName) +
+           SerializedNameSize(bufferArgumentName);
+}
+
+uint8_t*
+AsmJSModuleData::serialize(uint8_t* cursor) const
+{
+    cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
+    cursor = SerializeVector(cursor, globals);
+    cursor = SerializePodVector(cursor, imports);
+    cursor = SerializeVector(cursor, exports);
+    cursor = SerializeName(cursor, globalArgumentName);
+    cursor = SerializeName(cursor, importArgumentName);
+    cursor = SerializeName(cursor, bufferArgumentName);
+    return cursor;
+}
+
+const uint8_t*
+AsmJSModuleData::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+{
+    (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
+    (cursor = DeserializeVector(cx, cursor, &globals)) &&
+    (cursor = DeserializePodVector(cx, cursor, &imports)) &&
+    (cursor = DeserializeVector(cx, cursor, &exports)) &&
+    (cursor = DeserializeName(cx, cursor, &globalArgumentName)) &&
+    (cursor = DeserializeName(cx, cursor, &importArgumentName)) &&
+    (cursor = DeserializeName(cx, cursor, &bufferArgumentName));
+    return cursor;
+}
+
+bool
+AsmJSModuleData::clone(JSContext* cx, AsmJSModuleData* out) const
+{
+    out->pod() = pod();
+    out->globalArgumentName = globalArgumentName;
+    out->importArgumentName = importArgumentName;
+    out->bufferArgumentName = bufferArgumentName;
+    out->srcStart = srcStart;
+    out->srcBodyStart = srcBodyStart;
+    out->strict = strict;
+    out->scriptSource.reset(scriptSource.get());
+    return CloneVector(cx, globals, &out->globals) &&
+           ClonePodVector(cx, imports, &out->imports) &&
+           CloneVector(cx, exports, &out->exports);
+}
+
+size_t
+AsmJSModuleData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
+{
+    return globals.sizeOfExcludingThis(mallocSizeOf) +
+           imports.sizeOfExcludingThis(mallocSizeOf) +
+           exports.sizeOfExcludingThis(mallocSizeOf);
+}
+
+size_t
 AsmJSModule::serializedSize() const
 {
-    MOZ_ASSERT(isFinished());
-    return wasmModule_->serializedSize() +
-           linkData_->serializedSize() +
-           sizeof(pod) +
-           SerializedVectorSize(globals_) +
-           SerializedPodVectorSize(imports_) +
-           SerializedVectorSize(exports_) +
-           SerializedNameSize(globalArgumentName_) +
-           SerializedNameSize(importArgumentName_) +
-           SerializedNameSize(bufferArgumentName_);
+    return base().serializedSize() +
+           link_->serializedSize() +
+           module_->serializedSize();
 }
 
 uint8_t*
 AsmJSModule::serialize(uint8_t* cursor) const
 {
-    MOZ_ASSERT(isFinished());
-    cursor = wasmModule_->serialize(cursor);
-    cursor = linkData_->serialize(cursor);
-    cursor = WriteBytes(cursor, &pod, sizeof(pod));
-    cursor = SerializeVector(cursor, globals_);
-    cursor = SerializePodVector(cursor, imports_);
-    cursor = SerializeVector(cursor, exports_);
-    cursor = SerializeName(cursor, globalArgumentName_);
-    cursor = SerializeName(cursor, importArgumentName_);
-    cursor = SerializeName(cursor, bufferArgumentName_);
+    cursor = base().serialize(cursor);
+    cursor = link_->serialize(cursor);
+    cursor = module_->serialize(cursor);
     return cursor;
 }
 
-const uint8_t*
-AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
+/* static */ const uint8_t*
+AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParser& parser,
+                         MutableHandle<WasmModuleObject*> moduleObj)
 {
-    linkData_ = cx->make_unique<StaticLinkData>();
-    if (!linkData_)
-        return nullptr;
-
-    // To avoid GC-during-deserialization corner cases, prevent atoms from
-    // being collected.
+    // Deserialization GC-allocates a bunch of atoms and stores them in unrooted
+    // Vectors so, for simplicity, inhibit GC of the atoms zone.
     AutoKeepAtoms aka(cx->perThreadData);
 
-    (cursor = Module::deserialize(cx, cursor, &wasmModule_)) &&
-    (cursor = linkData_->deserialize(cx, cursor)) &&
-    (cursor = ReadBytes(cursor, &pod, sizeof(pod))) &&
-    (cursor = DeserializeVector(cx, cursor, &globals_)) &&
-    (cursor = DeserializePodVector(cx, cursor, &imports_)) &&
-    (cursor = DeserializeVector(cx, cursor, &exports_)) &&
-    (cursor = DeserializeName(cx, cursor, &globalArgumentName_)) &&
-    (cursor = DeserializeName(cx, cursor, &importArgumentName_)) &&
-    (cursor = DeserializeName(cx, cursor, &bufferArgumentName_));
+    UniqueModuleData base = cx->make_unique<ModuleData>();
+    if (!base)
+        return nullptr;
+    cursor = base->deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
+    MOZ_ASSERT(!base->loadedFromCache);
+    base->loadedFromCache = true;
+
+    UniqueStaticLinkData link = cx->make_unique<StaticLinkData>();
+    if (!link)
+        return nullptr;
+    cursor = link->deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
+    UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
+    if (!module)
+        return nullptr;
+    cursor = module->deserialize(cx, cursor);
+    if (!cursor)
+        return nullptr;
+
+    // See AsmJSModuleData comment as well as ModuleValidator::init().
+    module->srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
+    module->srcBodyStart = parser.tokenStream.currentToken().pos.end;
+    module->strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
+    module->scriptSource.reset(parser.ss);
+
+    moduleObj.set(WasmModuleObject::create(cx));
+    if (!moduleObj)
+        return nullptr;
+
+    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+        return nullptr;
 
     return cursor;
 }
 
 bool
-AsmJSModule::clone(JSContext* cx, HandleAsmJSModule obj) const
+AsmJSModule::clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) const
 {
-    auto out = cx->new_<AsmJSModule>(scriptSource(), srcStart_, srcBodyStart_, pod.strict_);
-    if (!out)
+    // Prevent any GC that may move the temporarily-unrooted atoms being cloned.
+    AutoKeepAtoms aka(cx->perThreadData);
+
+    UniqueModuleData base = cx->make_unique<ModuleData>();
+    if (!base || !this->base().clone(cx, base.get()))
         return false;
 
-    obj->setModule(out);
-
-    out->wasmModule_ = wasmModule_->clone(cx, *linkData_);
-    if (!out->wasmModule_)
+    UniqueStaticLinkData link = cx->make_unique<StaticLinkData>();
+    if (!link || !link_->clone(cx, link.get()))
         return false;
 
-    out->linkData_ = cx->make_unique<StaticLinkData>();
-    if (!out->linkData_ || !linkData_->clone(cx, out->linkData_.get()))
+    UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
+    if (!module || !module_->clone(cx, module.get()))
         return false;
 
-    out->pod = pod;
-
-    if (!CloneVector(cx, globals_, &out->globals_) ||
-        !ClonePodVector(cx, imports_, &out->imports_) ||
-        !CloneVector(cx, exports_, &out->exports_))
-    {
+    moduleObj.set(WasmModuleObject::create(cx));
+    if (!moduleObj)
         return false;
-    }
 
-    out->globalArgumentName_ = globalArgumentName_;
-    out->importArgumentName_ = importArgumentName_;
-    out->bufferArgumentName_ = bufferArgumentName_;
-    return true;
-}
+    if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
+        return false;
 
-void
-AsmJSModule::addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* code, size_t* data)
-{
-    if (wasmModule_)
-        wasmModule_->addSizeOfMisc(mallocSizeOf, code, data);
-
-    if (linkData_)
-        *data += linkData_->sizeOfExcludingThis(mallocSizeOf);
-
-    *data += mallocSizeOf(this) +
-             globals_.sizeOfExcludingThis(mallocSizeOf) +
-             imports_.sizeOfExcludingThis(mallocSizeOf) +
-             exports_.sizeOfExcludingThis(mallocSizeOf);
+    return Module::clone(cx, *link_, &moduleObj->module());
 }
 
 namespace {
@@ -8528,8 +8402,9 @@ StoreAsmJSModuleInCache(AsmJSParser& parser, const AsmJSModule& module, Exclusiv
 }
 
 static bool
-LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, HandleAsmJSModule moduleObj,
-                         bool* loadedFromCache, UniqueChars* compilationTimeReport)
+LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, bool* loadedFromCache,
+                         MutableHandle<WasmModuleObject*> moduleObj,
+                         UniqueChars* compilationTimeReport)
 {
     int64_t usecBefore = PRMJ_Now();
 
@@ -8564,17 +8439,7 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, HandleAsmJSM
     if (!moduleChars.match(parser))
         return true;
 
-    uint32_t srcStart = parser.pc->maybeFunction->pn_body->pn_pos.begin;
-    uint32_t srcBodyStart = parser.tokenStream.currentToken().pos.end;
-    bool strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
-
-    AsmJSModule* module = cx->new_<AsmJSModule>(parser.ss, srcStart, srcBodyStart, strict);
-    if (!module)
-        return false;
-
-    moduleObj->setModule(module);
-
-    cursor = module->deserialize(cx, cursor);
+    cursor = AsmJSModule::deserialize(cx, cursor, parser, moduleObj);
     if (!cursor)
         return false;
 
@@ -8583,12 +8448,15 @@ LookupAsmJSModuleInCache(ExclusiveContext* cx, AsmJSParser& parser, HandleAsmJSM
     if (!atEnd)
         return true;
 
-    if (module->wasmModule().compileArgs() != CompileArgs(cx))
+    AsmJSModule& module = moduleObj->module().asAsmJS();
+
+    if (module.compileArgs() != CompileArgs(cx))
         return true;
 
-    module->staticallyLink(cx);
+    if (!module.staticallyLink(cx))
+        return false;
 
-    if (!parser.tokenStream.advance(module->srcEndBeforeCurly()))
+    if (!parser.tokenStream.advance(module.srcEndBeforeCurly()))
         return false;
 
     *loadedFromCache = true;
@@ -8730,32 +8598,30 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!EstablishPreconditions(cx, parser))
         return NoExceptionPending(cx);
 
-    Rooted<AsmJSModuleObject*> moduleObj(cx, NewAsmJSModuleObject(cx));
-    if (!moduleObj)
-        return false;
 
     // Before spending any time parsing the module, try to look it up in the
     // embedding's cache using the chars about to be parsed as the key.
+    Rooted<WasmModuleObject*> moduleObj(cx);
     bool loadedFromCache;
     UniqueChars message;
-    if (!LookupAsmJSModuleInCache(cx, parser, moduleObj, &loadedFromCache, &message))
+    if (!LookupAsmJSModuleInCache(cx, parser, &loadedFromCache, &moduleObj, &message))
         return false;
 
     // If not present in the cache, parse, validate and generate code in a
     // single linear pass over the chars of the asm.js module.
     if (!loadedFromCache) {
         // "Checking" parses, validates and compiles, producing a fully compiled
-        // AsmJSModuleObject as result.
+        // WasmModuleObject as result.
         unsigned time;
         SlowFunctionVector slowFuncs(cx);
-        if (!CheckModule(cx, parser, stmtList, moduleObj, &time, &slowFuncs))
+        if (!CheckModule(cx, parser, stmtList, &moduleObj, &time, &slowFuncs))
             return NoExceptionPending(cx);
 
         // Try to store the AsmJSModule in the embedding's cache. The
         // AsmJSModule must be stored before static linking since static linking
         // specializes the AsmJSModule to the current process's address space
         // and therefore must be executed after a cache hit.
-        AsmJSModule& module = moduleObj->module();
+        AsmJSModule& module = moduleObj->module().asAsmJS();
         JS::AsmJSCacheResult cacheResult = StoreAsmJSModuleInCache(parser, module, cx);
         if (!module.staticallyLink(cx))
             return false;
@@ -8877,7 +8743,7 @@ js::IsAsmJSModuleLoadedFromCache(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    bool loadedFromCache = FunctionToModuleObject(fun).module().wasmModule().loadedFromCache();
+    bool loadedFromCache = FunctionToModuleObject(fun).module().loadedFromCache();
 
     args.rval().set(BooleanValue(loadedFromCache));
     return true;
@@ -8910,7 +8776,7 @@ AppendUseStrictSource(JSContext* cx, HandleFunction fun, Handle<JSFlatString*> s
 JSString*
 js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda)
 {
-    AsmJSModule& module = FunctionToModuleObject(fun).module();
+    AsmJSModule& module = FunctionToModuleObject(fun).module().asAsmJS();
 
     uint32_t begin = module.srcStart();
     uint32_t end = module.srcEndAfterCurly();
@@ -8983,8 +8849,8 @@ js::AsmJSModuleToString(JSContext* cx, HandleFunction fun, bool addParenToLambda
 JSString*
 js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 {
-    AsmJSModule& module = FunctionToModuleObject(fun).module();
-    const AsmJSModule::Export& f = module.exports()[FunctionToExportIndex(fun)];
+    AsmJSModule& module = FunctionToModuleObject(fun).module().asAsmJS();
+    const AsmJSExport& f = module.asmJSExports()[FunctionToExportIndex(fun)];
     uint32_t begin = module.srcStart() + f.startOffsetInModule();
     uint32_t end = module.srcStart() + f.endOffsetInModule();
 
@@ -9047,7 +8913,7 @@ static_assert(MinHeapLength % AsmJSPageSize == 0, "Invalid page size");
 // Targets define AsmJSImmediateRange to be the size of an address immediate,
 // and AsmJSCheckedImmediateRange, to be the size of an address immediate that
 // can be supported by signal-handler OOB handling.
-static_assert(jit::AsmJSCheckedImmediateRange <= jit::AsmJSImmediateRange,
+static_assert(AsmJSCheckedImmediateRange <= AsmJSImmediateRange,
               "AsmJSImmediateRange should be the size of an unconstrained "
               "address immediate");
 
@@ -9060,7 +8926,7 @@ static_assert(jit::AsmJSCheckedImmediateRange <= jit::AsmJSImmediateRange,
 // might also try to access a few bytes after this limit, so just inflate it by
 // AsmJSPageSize.
 const size_t js::AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
-                                   jit::AsmJSImmediateRange +
+                                   AsmJSImmediateRange +
                                    AsmJSPageSize;
 
 #endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
