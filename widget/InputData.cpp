@@ -307,6 +307,7 @@ PanGestureInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
   wheelEvent.deltaMode = nsIDOMWheelEvent::DOM_DELTA_PIXEL;
+  wheelEvent.mayHaveMomentum = true; // pan inputs may have momentum
   wheelEvent.isMomentum = IsMomentum();
   wheelEvent.lineOrPageDeltaX = mLineOrPageDeltaX;
   wheelEvent.lineOrPageDeltaY = mLineOrPageDeltaY;
@@ -380,6 +381,7 @@ ScrollWheelInput::ScrollWheelInput(const WidgetWheelEvent& aWheelEvent) :
   mLineOrPageDeltaY(aWheelEvent.lineOrPageDeltaY),
   mUserDeltaMultiplierX(1.0),
   mUserDeltaMultiplierY(1.0),
+  mMayHaveMomentum(aWheelEvent.mayHaveMomentum),
   mIsMomentum(aWheelEvent.isMomentum)
 {
   mOrigin =
@@ -399,6 +401,7 @@ ScrollWheelInput::ToWidgetWheelEvent(nsIWidget* aWidget) const
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
   wheelEvent.buttons = 0;
   wheelEvent.deltaMode = DeltaModeForDeltaType(mDeltaType);
+  wheelEvent.mayHaveMomentum = mMayHaveMomentum;
   wheelEvent.isMomentum = mIsMomentum;
   wheelEvent.deltaX = mDeltaX;
   wheelEvent.deltaY = mDeltaY;

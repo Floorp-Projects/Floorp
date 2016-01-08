@@ -1211,11 +1211,21 @@ nsNativeThemeGTK::GetWidgetBorder(nsDeviceContext* aContext, nsIFrame* aFrame,
   aResult->top = aResult->left = aResult->right = aResult->bottom = 0;
   switch (aWidgetType) {
   case NS_THEME_SCROLLBAR_VERTICAL:
-  case NS_THEME_SCROLLBAR_HORIZONTAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     {
       MozGtkScrollbarMetrics metrics;
       moz_gtk_get_scrollbar_metrics(&metrics);
-      aResult->top = aResult->left = aResult->right = aResult->bottom = metrics.trough_border;
+      /* Top and bottom border for whole vertical scrollbar, top and bottom
+       * border for horizontal track - to correctly position thumb element */
+      aResult->top = aResult->bottom = metrics.trough_border;
+    }
+    break;
+  case NS_THEME_SCROLLBAR_HORIZONTAL:
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
+    {
+      MozGtkScrollbarMetrics metrics;
+      moz_gtk_get_scrollbar_metrics(&metrics);
+      aResult->left = aResult->right = metrics.trough_border;
     }
     break;
   case NS_THEME_TOOLBOX:
@@ -1748,6 +1758,8 @@ nsNativeThemeGTK::ThemeSupportsWidget(nsPresContext* aPresContext,
   case NS_THEME_SCROLLBAR_BUTTON_RIGHT:
   case NS_THEME_SCROLLBAR_HORIZONTAL:
   case NS_THEME_SCROLLBAR_VERTICAL:
+  case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
+  case NS_THEME_SCROLLBAR_TRACK_VERTICAL:
   case NS_THEME_SCROLLBAR_THUMB_HORIZONTAL:
   case NS_THEME_SCROLLBAR_THUMB_VERTICAL:
   case NS_THEME_NUMBER_INPUT:

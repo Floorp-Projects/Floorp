@@ -79,6 +79,7 @@
 #include "mozilla/Omnijar.h"
 
 #include "mozilla/Logging.h"
+#include "LogModulePrefWatcher.h"
 
 using namespace mozilla;
 
@@ -448,6 +449,20 @@ nsComponentManagerImpl::Init()
   nsCategoryManager::GetSingleton()->SuppressNotifications(false);
 
   RegisterWeakMemoryReporter(this);
+
+  // NB: The logging preference watcher needs to be registered late enough in
+  // startup that it's okay to use the preference system, but also as soon as
+  // possible so that log modules enabled via preferences are turned on as
+  // early as possible.
+  //
+  // We can't initialize the preference watcher when the log module manager is
+  // initialized, as a number of things attempt to start logging before the
+  // preference system is initialized.
+  //
+  // The preference system is registered as a component so at this point during
+  // component manager initialization we know it is setup and we can register
+  // for notifications.
+  LogModulePrefWatcher::RegisterPrefWatcher();
 #endif
 
   // Unfortunately, we can't register the nsCategoryManager memory reporter

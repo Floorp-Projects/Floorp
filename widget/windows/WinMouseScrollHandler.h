@@ -428,7 +428,8 @@ public:
        */
       static bool HandleKeyMessage(nsWindowBase* aWidget,
                                    UINT aMsg,
-                                   WPARAM aWParam);
+                                   WPARAM aWParam,
+                                   LPARAM aLParam);
 
       static void UpdateZoomUntil();
       static bool IsZooming();

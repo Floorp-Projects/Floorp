@@ -92,11 +92,11 @@ void mozilla_dump_image(void* bytes, int width, int height, int bytepp,
 
 }
 
-static const uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
+static uint8_t PremultiplyValue(uint8_t a, uint8_t v) {
     return gfxUtils::sPremultiplyTable[a*256+v];
 }
 
-static const uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
+static uint8_t UnpremultiplyValue(uint8_t a, uint8_t v) {
     return gfxUtils::sUnpremultiplyTable[a*256+v];
 }
 

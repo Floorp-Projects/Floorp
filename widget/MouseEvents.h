@@ -449,6 +449,7 @@ public:
     , deltaZ(0.0)
     , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
     , customizedByUserPrefs(false)
+    , mayHaveMomentum(false)
     , isMomentum(false)
     , mIsNoLineOrPageDelta(false)
     , lineOrPageDeltaX(0)
@@ -499,6 +500,8 @@ public:
   // Otherwise, i.e., they are computed from native events, false.
   bool customizedByUserPrefs;
 
+  // true if the momentum events directly tied to this event may follow it.
+  bool mayHaveMomentum;
   // true if the event is caused by momentum.
   bool isMomentum;
 
@@ -579,6 +582,7 @@ public:
     deltaZ = aEvent.deltaZ;
     deltaMode = aEvent.deltaMode;
     customizedByUserPrefs = aEvent.customizedByUserPrefs;
+    mayHaveMomentum = aEvent.mayHaveMomentum;
     isMomentum = aEvent.isMomentum;
     mIsNoLineOrPageDelta = aEvent.mIsNoLineOrPageDelta;
     lineOrPageDeltaX = aEvent.lineOrPageDeltaX;

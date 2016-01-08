@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<script>
+
+function boom()
+{
+    var w;
+    for (var i = 0; i < 99; ++i) {
+        w = new SharedWorker("data:text/javascript;charset=UTF-8," + encodeURIComponent(i + ";"));
+    }
+    w.port.postMessage("");
+}
+
+</script>
+<body onload="boom();"></body>

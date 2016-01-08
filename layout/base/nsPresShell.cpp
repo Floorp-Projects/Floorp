@@ -34,12 +34,15 @@
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/unused.h"
 #include <algorithm>
 
 #ifdef XP_WIN
 #include "winuser.h"
 #endif
 
+#include "gfxPrefs.h"
+#include "gfxUserFontSet.h"
 #include "nsPresShell.h"
 #include "nsPresContext.h"
 #include "nsIContent.h"
@@ -5574,8 +5577,8 @@ PresShell::MarkImagesInSubtreeVisible(nsIFrame* aFrame, const nsRect& aRect)
   if (scrollFrame) {
     nsRect displayPort;
     bool usingDisplayport =
-      nsLayoutUtils::GetDisplayPortForVisibilityTesting(aFrame->GetContent(),
-                                                        &displayPort);
+      nsLayoutUtils::GetDisplayPortForVisibilityTesting(
+        aFrame->GetContent(), &displayPort, RelativeTo::ScrollFrame);
     if (usingDisplayport) {
       rect = displayPort;
     } else {
@@ -5678,7 +5681,8 @@ PresShell::UpdateImageVisibility()
   if (rootScroll) {
     nsIContent* content = rootScroll->GetContent();
     if (content) {
-      nsLayoutUtils::GetDisplayPort(content, &updateRect);
+      Unused << nsLayoutUtils::GetDisplayPortForVisibilityTesting(content, &updateRect,
+        RelativeTo::ScrollFrame);
     }
 
     if (IgnoringViewportScrolling()) {
