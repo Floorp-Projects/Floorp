@@ -29,6 +29,8 @@ add_task(function* test_notificationClose() {
     is(alertTitleLabel.value, "Test title", "Title text of notification should be present");
     let alertTextLabel = alertWindow.document.getElementById("alertTextLabel");
     is(alertTextLabel.textContent, "Test body", "Body text of notification should be present");
+    let alertIcon = alertWindow.document.getElementById("alertIcon");
+    ok(alertIcon.src, "Icon of notification should be present");
 
     let alertCloseButton = alertWindow.document.querySelector(".alertCloseButton");
     is(alertCloseButton.localName, "toolbarbutton", "close button found");
