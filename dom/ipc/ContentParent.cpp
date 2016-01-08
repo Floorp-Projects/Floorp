@@ -5433,10 +5433,14 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
 
   // The content process should never be in charge of computing whether or
   // not a window should be private or remote - the parent will do that.
-  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW));
-  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW));
-  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME));
-  MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
+  const uint32_t badFlags =
+        nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW
+      | nsIWebBrowserChrome::CHROME_NON_PRIVATE_WINDOW
+      | nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME
+      | nsIWebBrowserChrome::CHROME_REMOTE_WINDOW;
+  if (!!(aChromeFlags & badFlags)) {
+      return false;
+  }
 
   TabParent* thisTabParent = nullptr;
   if (aThisTab) {
