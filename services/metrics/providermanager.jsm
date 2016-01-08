@@ -277,8 +277,7 @@ this.ProviderManager.prototype = Object.freeze({
         try {
           yield inFlightPromise;
         } catch (ex) {
-          this._log.warn("Error when waiting for existing pull-only promise: " +
-                         CommonUtils.exceptionStr(ex));
+          this._log.warn("Error when waiting for existing pull-only promise", ex);
         }
       }
 
@@ -363,8 +362,7 @@ this.ProviderManager.prototype = Object.freeze({
         try {
           yield inFlightPromise;
         } catch (ex) {
-          this._log.warn("Error when waiting for existing pull-only promise: " +
-                         CommonUtils.exceptionStr(ex));
+          this._log.warn("Error when waiting for existing pull-only promise", ex);
         }
       }
 
@@ -497,8 +495,7 @@ this.ProviderManager.prototype = Object.freeze({
           try {
             onCollect(entry, result);
           } catch (ex) {
-            this._log.warn("onCollect callback threw: " +
-                           CommonUtils.exceptionStr(ex));
+            this._log.warn("onCollect callback threw", ex);
           }
         }
 
@@ -545,7 +542,7 @@ this.ProviderManager.prototype = Object.freeze({
   _recordProviderError: function (name, msg, ex) {
     msg = "Provider error: " + name + ": " + msg;
     if (ex) {
-      msg += ": " + CommonUtils.exceptionStr(ex);
+      msg += ": " + Log.exceptionStr(ex);
     }
     this._log.warn(msg);
 
@@ -553,8 +550,7 @@ this.ProviderManager.prototype = Object.freeze({
       try {
         this.onProviderError(msg);
       } catch (callError) {
-        this._log.warn("Exception when calling onProviderError callback: " +
-                       CommonUtils.exceptionStr(callError));
+        this._log.warn("Exception when calling onProviderError callback", callError);
       }
     }
   },

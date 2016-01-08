@@ -231,8 +231,7 @@ AppInfoProvider.prototype = Object.freeze({
     try {
       ai = Services.appinfo;
     } catch (ex) {
-      this._log.error("Could not obtain Services.appinfo: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.error("Could not obtain Services.appinfo", ex);
       yield recordEmptyAppInfo();
       return;
     }
@@ -314,8 +313,7 @@ AppInfoProvider.prototype = Object.freeze({
     try {
       ai = Services.appinfo;
     } catch (ex) {
-      this._log.warn("Could not obtain Services.appinfo: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain Services.appinfo", ex);
       throw ex;
     }
 
@@ -335,8 +333,7 @@ AppInfoProvider.prototype = Object.freeze({
     try {
       yield m.setLastText("updateChannel", UpdateUtils.UpdateChannel);
     } catch (ex) {
-      this._log.warn("Could not obtain update channel: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain update channel", ex);
     }
 
     yield m.setLastText("distributionID", this._prefs.get("distribution.id", ""));
@@ -349,8 +346,7 @@ AppInfoProvider.prototype = Object.freeze({
                      .getSelectedLocale("global");
       yield m.setLastText("locale", locale);
     } catch (ex) {
-      this._log.warn("Could not obtain application locale: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain application locale", ex);
     }
 
     // FUTURE this should be retrieved periodically or at upload time.
@@ -377,8 +373,7 @@ AppInfoProvider.prototype = Object.freeze({
       shellService = Cc["@mozilla.org/browser/shell-service;1"]
                        .getService(Ci.nsIShellService);
     } catch (ex) {
-      this._log.warn("Could not obtain shell service: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain shell service", ex);
     }
 
     let isDefault = -1;
@@ -388,8 +383,7 @@ AppInfoProvider.prototype = Object.freeze({
         // This uses the same set of flags used by the pref pane.
         isDefault = shellService.isDefaultBrowser(false, true) ? 1 : 0;
       } catch (ex) {
-        this._log.warn("Could not determine if default browser: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Could not determine if default browser", ex);
       }
     }
 
@@ -506,8 +500,7 @@ SysInfoProvider.prototype = Object.freeze({
 
         yield m[method](v, value);
       } catch (ex) {
-        this._log.warn("Error obtaining system info field: " + k + " " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Error obtaining system info field: " + k, ex);
       }
     }
   },
@@ -908,8 +901,7 @@ AddonsProvider.prototype = Object.freeze({
         pluginsField = JSON.stringify(data.plugins);
         gmPluginsField = JSON.stringify(data.gmPlugins);
       } catch (ex) {
-        this._log.warn("Exception when populating add-ons data structure: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Exception when populating add-ons data structure", ex);
         deferred.reject(ex);
         return;
       }
