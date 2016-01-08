@@ -3226,25 +3226,25 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsPaintingToWindow()) {
     wasUsingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
 
-    nsRect displayportBase = *aDirtyRect;
-    nsPresContext* pc = mOuter->PresContext();
-    if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
-      displayportBase =
-        nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    }
-
-    nsRect displayPort;
     if (aAllowCreateDisplayPort) {
+      nsRect displayportBase = *aDirtyRect;
+      nsPresContext* pc = mOuter->PresContext();
+      if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
+        displayportBase =
+          nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
+      }
+
       // Provide the value of the display port base rect, and possibly create a
       // display port if there isn't one already.
-      usingDisplayPort = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
-            *aBuilder, mOuter, displayportBase, &displayPort);
-    } else {
-      // We should have already been called with aAllowCreateDisplayPort == true
-      // which should have set a displayport base.
-      MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
-      usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayPort);
+      nsLayoutUtils::MaybeCreateDisplayPort(*aBuilder, mOuter, displayportBase);
     }
+
+    // If we don't have aAllowCreateDisplayPort == true then should have already
+    // been called with aAllowCreateDisplayPort == true which should have set a
+    // displayport base.
+    MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
+    nsRect displayPort;
+    usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayPort);
 
     // Override the dirty rectangle if the displayport has been set.
     if (usingDisplayPort) {

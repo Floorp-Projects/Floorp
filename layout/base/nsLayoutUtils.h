@@ -2706,24 +2706,18 @@ public:
                                                 RepaintMode aRepaintMode);
 
   /**
-   * Get the display port for |aScrollFrame|'s content. If |aScrollFrame|
-   * WantsAsyncScroll() and we don't have a scrollable displayport yet (as
-   * tracked by |aBuilder|), calculate and set a display port. Returns true if
-   * there is (now) a displayport, and if so the displayport is returned in
-   * |aOutDisplayport|.
+   * If |aScrollFrame| WantsAsyncScroll() and we don't have a scrollable
+   * displayport yet (as tracked by |aBuilder|), calculate and set a
+   * displayport.
    *
-   * Note that a displayport can either be stored as a rect, or as a base
-   * rect + margins. If it is stored as a base rect + margins, the base rect
-   * is updated to |aDisplayPortBase|, and the rect assembled from the
-   * base rect and margins is returned. If this function creates a displayport,
-   * it computes margins and stores |aDisplayPortBase| as the base rect.
+   * If this function creates a displayport, it computes margins and stores
+   * |aDisplayPortBase| as the base rect.
    *
    * This is intended to be called during display list building.
    */
-  static bool GetOrMaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
-                                          nsIFrame* aScrollFrame,
-                                          nsRect aDisplayPortBase,
-                                          nsRect* aOutDisplayport);
+  static void MaybeCreateDisplayPort(nsDisplayListBuilder& aBuilder,
+                                     nsIFrame* aScrollFrame,
+                                     nsRect aDisplayPortBase);
 
   static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
 
