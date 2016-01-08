@@ -45,7 +45,7 @@ public:
                           int64_t aRenderTimeMs = -1) override;
   virtual nsresult Reset() override;
   virtual nsresult Drain() override;
-  virtual const uint32_t GetPluginId() const override { return mPluginId; }
+  virtual uint32_t GetPluginId() const override { return mPluginId; }
   virtual const nsCString& GetDisplayName() const override;
 
   // GMPSharedMemManager

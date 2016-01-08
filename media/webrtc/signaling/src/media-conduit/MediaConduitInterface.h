@@ -238,7 +238,7 @@ class CodecPluginID
 public:
   virtual ~CodecPluginID() {}
 
-  virtual const uint64_t PluginID() = 0;
+  virtual uint64_t PluginID() const = 0;
 };
 
 class VideoEncoder : public CodecPluginID

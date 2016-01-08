@@ -29,7 +29,7 @@ public:
 
   // GMPDecryptorProxy
 
-  virtual const uint32_t GetPluginId() const override { return mPluginId; }
+  virtual uint32_t GetPluginId() const override { return mPluginId; }
 
   virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) override;
 

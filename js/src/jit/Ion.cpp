@@ -415,7 +415,7 @@ JitCompartment::~JitCompartment()
 bool
 JitCompartment::initialize(JSContext* cx)
 {
-    stubCodes_ = cx->new_<ICStubCodeMap>(cx);
+    stubCodes_ = cx->new_<ICStubCodeMap>(cx->runtime());
     if (!stubCodes_)
         return false;
 
@@ -730,7 +730,7 @@ JitCompartment::sweep(FreeOp* fop, JSCompartment* compartment)
     CancelOffThreadIonCompile(compartment, nullptr);
     FinishAllOffThreadCompilations(compartment);
 
-    stubCodes_->sweep(fop);
+    stubCodes_->sweep();
 
     // If the sweep removed the ICCall_Fallback stub, nullptr the baselineCallReturnAddr_ field.
     if (!stubCodes_->lookup(ICCall_Fallback::Compiler::BASELINE_CALL_KEY))

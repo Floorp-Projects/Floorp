@@ -13,6 +13,7 @@
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/FileListBinding.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/ImageData.h"
@@ -33,7 +34,6 @@
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "MultipartBlobImpl.h"
-#include "nsFormData.h"
 #include "nsIRemoteBlob.h"
 #include "nsQueryObject.h"
 
@@ -816,8 +816,8 @@ ReadFormData(JSContext* aCx,
   // See the serialization of the FormData for the format.
   JS::Rooted<JS::Value> val(aCx);
   {
-    RefPtr<nsFormData> formData =
-      new nsFormData(aHolder->ParentDuringRead());
+    RefPtr<FormData> formData =
+      new FormData(aHolder->ParentDuringRead());
 
     Optional<nsAString> thirdArg;
     for (uint32_t i = 0; i < aCount; ++i) {
@@ -887,7 +887,7 @@ ReadFormData(JSContext* aCx,
 //     - value string
 bool
 WriteFormData(JSStructuredCloneWriter* aWriter,
-              nsFormData* aFormData,
+              FormData* aFormData,
               StructuredCloneHolder* aHolder)
 {
   MOZ_ASSERT(aWriter);
@@ -1010,7 +1010,7 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
 
   // See if this is a FormData object.
   {
-    nsFormData* formData = nullptr;
+    FormData* formData = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(FormData, aObj, formData))) {
       return WriteFormData(aWriter, formData, this);
     }

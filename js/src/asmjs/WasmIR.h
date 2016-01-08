@@ -430,18 +430,32 @@ enum NeedsBoundsCheck : uint8_t
 // referenced by the FuncIR.
 class FuncIR
 {
-    typedef Vector<wasm::Val, 4, LifoAllocPolicy<Fallible>> VarInitVector;
+    typedef Vector<ValType, 4, LifoAllocPolicy<Fallible>> ValTypeVector;
+
+  public:
+    // Source coordinates for a call site. As they're read sequentially, we
+    // don't need to store the call's bytecode offset, unless we want to
+    // check its consistency in debug mode.
+    struct SourceCoords {
+        DebugOnly<uint32_t> offset; // after call opcode
+        uint32_t line;
+        uint32_t column;
+    };
+
+  private:
     typedef Vector<uint8_t, 4096, LifoAllocPolicy<Fallible>> Bytecode;
+    typedef Vector<SourceCoords, 4, LifoAllocPolicy<Fallible>> SourceCoordsVector;
 
     // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
     // asm.js compilation.
     PropertyName* name_;
     unsigned line_;
     unsigned column_;
+    SourceCoordsVector callSourceCoords_;
 
     uint32_t index_;
-    const wasm::LifoSig* sig_;
-    VarInitVector varInits_;
+    const LifoSig* sig_;
+    ValTypeVector localVars_;
     Bytecode bytecode_;
     unsigned generateTime_;
 
@@ -450,18 +464,22 @@ class FuncIR
       : name_(name),
         line_(line),
         column_(column),
+        callSourceCoords_(alloc),
         index_(UINT_MAX),
         sig_(nullptr),
-        varInits_(alloc),
+        localVars_(alloc),
         bytecode_(alloc),
         generateTime_(UINT_MAX)
     {}
 
-    bool addVariable(wasm::Val v) {
-        return varInits_.append(v);
+    bool addVariable(ValType v) {
+        return localVars_.append(v);
     }
-
-    void finish(uint32_t funcIndex, const wasm::LifoSig& sig, unsigned generateTime) {
+    bool addSourceCoords(uint32_t line, uint32_t column) {
+        SourceCoords sc = { bytecode_.length(), line, column };
+        return callSourceCoords_.append(sc);
+    }
+    void finish(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime) {
         MOZ_ASSERT(index_ == UINT_MAX);
         MOZ_ASSERT(!sig_);
         MOZ_ASSERT(generateTime_ == UINT_MAX);
@@ -471,15 +489,27 @@ class FuncIR
     }
 
   private:
-    template<class T> size_t writePrimitive(T v) {
-        size_t writeAt = bytecode_.length();
-        if (!bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T)))
-            return -1;
-        return writeAt;
+    template<class T>
+    MOZ_WARN_UNUSED_RESULT
+    bool write(T v, size_t* offset) {
+        if (offset)
+            *offset = bytecode_.length();
+        return bytecode_.append(reinterpret_cast<uint8_t*>(&v), sizeof(T));
     }
 
-    template<class T> T readPrimitive(size_t* pc) const {
-        MOZ_ASSERT(*pc + sizeof(T) <= bytecode_.length());
+    template<class T>
+    MOZ_WARN_UNUSED_RESULT
+    bool read(size_t* pc, T* out) const {
+        if (size_t(bytecode_.length() - *pc) >= sizeof(T))
+            return false;
+        memcpy((void*)out, &bytecode_[*pc], sizeof(T));
+        *pc += sizeof(T);
+        return true;
+    }
+
+    template<class T>
+    T uncheckedRead(size_t* pc) const {
+        MOZ_ASSERT(size_t(bytecode_.length() - *pc) >= sizeof(T));
         T ret;
         memcpy(&ret, &bytecode_[*pc], sizeof(T));
         *pc += sizeof(T);
@@ -487,52 +517,44 @@ class FuncIR
     }
 
   public:
-    size_t writeU8(uint8_t i)   { return writePrimitive<uint8_t>(i); }
-    size_t writeI32(int32_t i)  { return writePrimitive<int32_t>(i); }
-    size_t writeU32(uint32_t i) { return writePrimitive<uint32_t>(i); }
-    size_t writeF32(float f)    { return writePrimitive<float>(f); }
-    size_t writeF64(double d)   { return writePrimitive<double>(d); }
+    // Packing interface
+    MOZ_WARN_UNUSED_RESULT bool
+    writeU8(uint8_t i, size_t* offset = nullptr)   { return write<uint8_t>(i, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeI32(int32_t i, size_t* offset = nullptr)  { return write<int32_t>(i, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeU32(uint32_t i, size_t* offset = nullptr) { return write<uint32_t>(i, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeF32(float f, size_t* offset = nullptr)    { return write<float>(f, offset); }
+    MOZ_WARN_UNUSED_RESULT bool
+    writeF64(double d, size_t* offset = nullptr)   { return write<double>(d, offset); }
 
-    size_t writeI32X4(const int32_t* i4) {
-        size_t pos = bytecode_.length();
-        for (size_t i = 0; i < 4; i++)
-            writePrimitive<int32_t>(i4[i]);
-        return pos;
+    MOZ_WARN_UNUSED_RESULT bool
+    writeI32X4(const int32_t* i4, size_t* offset = nullptr) {
+        if (!writeI32(i4[0], offset))
+            return false;
+        for (size_t i = 1; i < 4; i++) {
+            if (!writeI32(i4[i]))
+                return false;
+        }
+        return true;
     }
-    size_t writeF32X4(const float* f4) {
-        size_t pos = bytecode_.length();
-        for (size_t i = 0; i < 4; i++)
-            writePrimitive<float>(f4[i]);
-        return pos;
-    }
-
-    uint8_t              readU8 (size_t* pc) const { return readPrimitive<uint8_t>(pc); }
-    int32_t              readI32(size_t* pc) const { return readPrimitive<int32_t>(pc); }
-    float                readF32(size_t* pc) const { return readPrimitive<float>(pc); }
-    uint32_t             readU32(size_t* pc) const { return readPrimitive<uint32_t>(pc); }
-    double               readF64(size_t* pc) const { return readPrimitive<double>(pc); }
-    const wasm::LifoSig* readSig(size_t* pc) const { return readPrimitive<wasm::LifoSig*>(pc); }
-
-    jit::SimdConstant readI32X4(size_t* pc) const {
-        int32_t x = readI32(pc);
-        int32_t y = readI32(pc);
-        int32_t z = readI32(pc);
-        int32_t w = readI32(pc);
-        return jit::SimdConstant::CreateX4(x, y, z, w);
-    }
-    jit::SimdConstant readF32X4(size_t* pc) const {
-        float x = readF32(pc);
-        float y = readF32(pc);
-        float z = readF32(pc);
-        float w = readF32(pc);
-        return jit::SimdConstant::CreateX4(x, y, z, w);
+    MOZ_WARN_UNUSED_RESULT bool
+    writeF32X4(const float* f4, size_t* offset = nullptr) {
+        if (!writeF32(f4[0], offset))
+            return false;
+        for (size_t i = 1; i < 4; i++) {
+            if (!writeF32(f4[i]))
+                return false;
+        }
+        return true;
     }
 
 #ifdef DEBUG
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= wasm::Stmt(bytecode_[pc]) == wasm::Stmt::Bad;
+            patchable &= Stmt(bytecode_[pc]) == Stmt::Bad;
         return patchable;
     }
 #endif
@@ -550,22 +572,85 @@ class FuncIR
         memcpy(&bytecode_[pc], &i, sizeof(uint32_t));
     }
 
-    void patchSig(size_t pc, const wasm::LifoSig* ptr) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(wasm::LifoSig*)));
-        memcpy(&bytecode_[pc], &ptr, sizeof(wasm::LifoSig*));
+    void patchSig(size_t pc, const LifoSig* ptr) {
+        MOZ_ASSERT(pcIsPatchable(pc, sizeof(LifoSig*)));
+        memcpy(&bytecode_[pc], &ptr, sizeof(LifoSig*));
+    }
+
+    // The fallible unpacking API should be used when we're not assuming
+    // anything about the bytecode, in particular if it is well-formed.
+    MOZ_WARN_UNUSED_RESULT bool
+    readU8 (size_t* pc, uint8_t* i)         const { return read(pc, i); }
+    MOZ_WARN_UNUSED_RESULT bool
+    readI32(size_t* pc, int32_t* i)         const { return read(pc, i); }
+    MOZ_WARN_UNUSED_RESULT bool
+    readF32(size_t* pc, float* f)           const { return read(pc, f); }
+    MOZ_WARN_UNUSED_RESULT bool
+    readU32(size_t* pc, uint32_t* u)        const { return read(pc, u); }
+    MOZ_WARN_UNUSED_RESULT bool
+    readF64(size_t* pc, double* d)          const { return read(pc, d); }
+    MOZ_WARN_UNUSED_RESULT bool
+    readSig(size_t* pc, const LifoSig* sig) const { return read(pc, sig); }
+
+    MOZ_WARN_UNUSED_RESULT bool
+    readI32X4(size_t* pc, jit::SimdConstant* c) const {
+        int32_t v[4] = { 0, 0, 0, 0 };
+        for (size_t i = 0; i < 4; i++) {
+            if (!readI32(pc, &v[i]))
+                return false;
+        }
+        *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+        return true;
+    }
+    MOZ_WARN_UNUSED_RESULT bool
+    readF32X4(size_t* pc, jit::SimdConstant* c) const {
+        float v[4] = { 0., 0., 0., 0. };
+        for (size_t i = 0; i < 4; i++) {
+            if (!readF32(pc, &v[i]))
+                return false;
+        }
+        *c = jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+        return true;
+    }
+
+    // The unfallible unpacking API should be used when we are sure that the
+    // bytecode is well-formed.
+    uint8_t        uncheckedReadU8 (size_t* pc) const { return uncheckedRead<uint8_t>(pc); }
+    int32_t        uncheckedReadI32(size_t* pc) const { return uncheckedRead<int32_t>(pc); }
+    float          uncheckedReadF32(size_t* pc) const { return uncheckedRead<float>(pc); }
+    uint32_t       uncheckedReadU32(size_t* pc) const { return uncheckedRead<uint32_t>(pc); }
+    double         uncheckedReadF64(size_t* pc) const { return uncheckedRead<double>(pc); }
+    const LifoSig* uncheckedReadSig(size_t* pc) const { return uncheckedRead<const LifoSig*>(pc); }
+
+    jit::SimdConstant uncheckedReadI32X4(size_t* pc) const {
+        int32_t v[4] = { 0, 0, 0, 0 };
+        for (size_t i = 0; i < 4; i++)
+            v[i] = uncheckedReadI32(pc);
+        return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+    }
+    jit::SimdConstant uncheckedReadF32X4(size_t* pc) const {
+        float v[4] = { 0., 0., 0., 0. };
+        for (size_t i = 0; i < 4; i++)
+            v[i] = uncheckedReadF32(pc);
+        return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
     }
 
     // Read-only interface
     PropertyName* name() const { return name_; }
     unsigned line() const { return line_; }
     unsigned column() const { return column_; }
+    const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
+
     uint32_t index() const { MOZ_ASSERT(index_ != UINT32_MAX); return index_; }
-    size_t size() const { return bytecode_.length(); }
-    const wasm::LifoSig& sig() const { MOZ_ASSERT(sig_); return *sig_; }
-    size_t numVarInits() const { return varInits_.length(); }
-    wasm::Val varInit(size_t i) const { return varInits_[i]; }
-    size_t numLocals() const { return sig_->args().length() + varInits_.length(); }
+    const LifoSig& sig() const { MOZ_ASSERT(sig_); return *sig_; }
+
+    size_t numLocalVars() const { return localVars_.length(); }
+    ValType localVarType(size_t i) const { return localVars_[i]; }
+    size_t numLocals() const { return sig_->args().length() + numLocalVars(); }
+
     unsigned generateTime() const { MOZ_ASSERT(generateTime_ != UINT_MAX); return generateTime_; }
+
+    size_t size() const { return bytecode_.length(); }
 };
 
 } // namespace wasm

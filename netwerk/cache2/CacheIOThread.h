@@ -36,7 +36,7 @@ public:
     READ,
     MANAGEMENT,
     WRITE,
-    CLOSE,
+    CLOSE = WRITE,
     INDEX,
     EVICT,
     LAST_LEVEL,

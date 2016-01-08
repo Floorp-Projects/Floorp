@@ -853,10 +853,10 @@ class IonBuilder
     // SIMD intrinsics and natives.
     InliningStatus inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* target);
 
-    //  helpers
+    // SIMD helpers
     static MIRType SimdTypeDescrToMIRType(SimdTypeDescr::Type type);
-    bool checkInlineSimd(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
-                         unsigned numArgs, InlineTypedObject** templateObj);
+    bool canInlineSimd(CallInfo& callInfo, JSNative native, unsigned numArgs,
+                       InlineTypedObject** templateObj);
     IonBuilder::InliningStatus boxSimd(CallInfo& callInfo, MInstruction* ins,
                                        InlineTypedObject* templateObj);
     MDefinition* convertToBooleanSimdLane(MDefinition* scalar);
@@ -866,23 +866,21 @@ class IonBuilder
     InliningStatus inlineSimdBool32x4(CallInfo& callInfo, JSNative native);
 
     template <typename T>
-    InliningStatus inlineBinarySimd(CallInfo& callInfo, JSNative native,
-                                    typename T::Operation op, SimdTypeDescr::Type type);
-    InliningStatus inlineCompSimd(CallInfo& callInfo, JSNative native,
-                                  MSimdBinaryComp::Operation op, SimdTypeDescr::Type compType);
-    InliningStatus inlineUnarySimd(CallInfo& callInfo, JSNative native,
-                                   MSimdUnaryArith::Operation op, SimdTypeDescr::Type type);
-    InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native,
-                                         SimdTypeDescr::Type type);
-    InliningStatus inlineSimdReplaceLane(CallInfo& callInfo, JSNative native,
-                                         SimdTypeDescr::Type type);
-    InliningStatus inlineSimdSplat(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type);
-    InliningStatus inlineSimdShuffle(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
+    InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,
+                                    typename T::Operation op, MIRType mirType);
+    InliningStatus inlineSimdComp(CallInfo& callInfo, JSNative native,
+                                  MSimdBinaryComp::Operation op, MIRType compType);
+    InliningStatus inlineSimdUnary(CallInfo& callInfo, JSNative native,
+                                   MSimdUnaryArith::Operation op, MIRType mirType);
+    InliningStatus inlineSimdExtractLane(CallInfo& callInfo, JSNative native, MIRType vecType);
+    InliningStatus inlineSimdReplaceLane(CallInfo& callInfo, JSNative native, MIRType mirType);
+    InliningStatus inlineSimdSplat(CallInfo& callInfo, JSNative native, MIRType mirType);
+    InliningStatus inlineSimdShuffle(CallInfo& callInfo, JSNative native, MIRType type,
                                      unsigned numVectors, unsigned numLanes);
-    InliningStatus inlineSimdCheck(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type);
+    InliningStatus inlineSimdCheck(CallInfo& callInfo, JSNative native, MIRType type);
     InliningStatus inlineSimdConvert(CallInfo& callInfo, JSNative native, bool isCast,
-                                     SimdTypeDescr::Type from, SimdTypeDescr::Type to);
-    InliningStatus inlineSimdSelect(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type);
+                                     MIRType from, MIRType to);
+    InliningStatus inlineSimdSelect(CallInfo& callInfo, JSNative native, MIRType type);
 
     bool prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, MInstruction** elements,
                                  MDefinition** index, Scalar::Type* arrayType);

@@ -11,14 +11,13 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "jsweakcache.h"
-
 #include "builtin/TypedObject.h"
 #include "jit/CompileInfo.h"
 #include "jit/ICStubSpace.h"
 #include "jit/IonCode.h"
 #include "jit/JitFrames.h"
 #include "jit/shared/Assembler-shared.h"
+#include "js/GCHashTable.h"
 #include "js/Value.h"
 #include "vm/Stack.h"
 
@@ -149,7 +148,7 @@ class JitRuntime
     void* baselineDebugModeOSRHandlerNoFrameRegPopAddr_;
 
     // Map VMFunction addresses to the JitCode of the wrapper.
-    typedef WeakCache<const VMFunction*, JitCode*> VMWrapperMap;
+    typedef GCRekeyableHashMap<const VMFunction*, JitCode*> VMWrapperMap;
     VMWrapperMap* functionWrappers_;
 
     // Buffer for OSR from baseline to Ion. To avoid holding on to this for
@@ -385,8 +384,18 @@ class JitCompartment
 {
     friend class JitActivation;
 
+    struct IcStubCodeMapGCPolicy {
+        static bool needsSweep(uint32_t* key, ReadBarrieredJitCode* value) {
+            return IsAboutToBeFinalized(value);
+        }
+    };
+
     // Map ICStub keys to ICStub shared code objects.
-    typedef WeakValueCache<uint32_t, ReadBarrieredJitCode> ICStubCodeMap;
+    using ICStubCodeMap = GCHashMap<uint32_t,
+                                    ReadBarrieredJitCode,
+                                    DefaultHasher<uint32_t>,
+                                    RuntimeAllocPolicy,
+                                    IcStubCodeMapGCPolicy>;
     ICStubCodeMap* stubCodes_;
 
     // Keep track of offset into various baseline stubs' code at return

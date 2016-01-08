@@ -61,6 +61,7 @@
 #include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/unused.h"
 #include "ActiveLayerTracker.h"
 #include "nsContentUtils.h"
 #include "nsPrintfCString.h"
@@ -2980,7 +2981,7 @@ nsDisplayBackgroundImage::GetBoundsInternal(nsDisplayListBuilder* aBuilder) {
     nsIFrame* rootFrame = presContext->PresShell()->GetRootFrame();
     nsRect rootRect = rootFrame->GetRectRelativeToSelf();
     if (nsLayoutUtils::TransformRect(rootFrame, mFrame, rootRect) == nsLayoutUtils::TRANSFORM_SUCCEEDED) {
-      clipRect = rootRect + aBuilder->ToReferenceFrame(mFrame);
+      clipRect = clipRect.Union(rootRect + aBuilder->ToReferenceFrame(mFrame));
     }
   }
   const nsStyleBackground::Layer& layer = mBackgroundStyle->mLayers[mLayer];
@@ -4494,11 +4495,10 @@ nsDisplaySubDocument::ComputeFrameMetrics(Layer* aLayer,
 }
 
 static bool
-UseDisplayPortForViewport(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                          nsRect* aDisplayPort = nullptr)
+UseDisplayPortForViewport(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 {
   return aBuilder->IsPaintingToWindow() &&
-      nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext(), aDisplayPort);
+      nsLayoutUtils::ViewportHasDisplayPort(aFrame->PresContext());
 }
 
 nsRect
@@ -4518,12 +4518,17 @@ bool
 nsDisplaySubDocument::ComputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion)
 {
-  nsRect displayport;
-  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame, &displayport);
+  bool usingDisplayPort = UseDisplayPortForViewport(aBuilder, mFrame);
 
   if (!(mFlags & GENERATE_SCROLLABLE_LAYER) || !usingDisplayPort) {
     return nsDisplayWrapList::ComputeVisibility(aBuilder, aVisibleRegion);
   }
+
+  nsRect displayport;
+  nsIFrame* rootScrollFrame = mFrame->PresContext()->PresShell()->GetRootScrollFrame();
+  MOZ_ASSERT(rootScrollFrame);
+  Unused << nsLayoutUtils::GetDisplayPort(rootScrollFrame->GetContent(), &displayport,
+    RelativeTo::ScrollFrame);
 
   nsRegion childVisibleRegion;
   // The visible region for the children may be much bigger than the hole we
