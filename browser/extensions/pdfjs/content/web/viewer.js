@@ -52,12 +52,6 @@ var MAX_AUTO_SCALE = 1.25;
 var SCROLLBAR_PADDING = 40;
 var VERTICAL_PADDING = 5;
 
-var NullCharactersRegExp = /\x00/g;
-
-function removeNullCharacters(str) {
-  return str.replace(NullCharactersRegExp, '');
-}
-
 function getFileName(url) {
   var anchor = url.indexOf('#');
   var query = url.indexOf('?');
@@ -5828,7 +5822,7 @@ var PDFOutlineView = (function PDFOutlineViewClosure() {
           div.className = 'outlineItem';
           var element = document.createElement('a');
           this._bindLink(element, item);
-          element.textContent = removeNullCharacters(item.title);
+          element.textContent = PDFJS.removeNullCharacters(item.title);
           div.appendChild(element);
 
           if (item.items.length > 0) {
@@ -5932,7 +5926,7 @@ var PDFAttachmentView = (function PDFAttachmentViewClosure() {
         div.className = 'attachmentsItem';
         var button = document.createElement('button');
         this._bindLink(button, item.content, filename);
-        button.textContent = removeNullCharacters(filename);
+        button.textContent = PDFJS.removeNullCharacters(filename);
         div.appendChild(button);
         this.container.appendChild(div);
       }
