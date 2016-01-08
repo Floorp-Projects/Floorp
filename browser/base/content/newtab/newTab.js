@@ -66,7 +66,6 @@ const TILES_PRIVACY_LINK = "https://www.mozilla.org/privacy/";
 #include undo.js
 #include search.js
 #include customize.js
-#include intro.js
 
 // Everything is loaded. Initialize the New Tab Page.
 gPage.init();
