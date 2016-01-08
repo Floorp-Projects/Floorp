@@ -70,6 +70,7 @@
     locale/browser/preferences/cookies.dtd            (%chrome/browser/preferences/cookies.dtd)
     locale/browser/preferences/content.dtd            (%chrome/browser/preferences/content.dtd)
     locale/browser/preferences/connection.dtd         (%chrome/browser/preferences/connection.dtd)
+    locale/browser/preferences/donottrack.dtd         (%chrome/browser/preferences/donottrack.dtd)
     locale/browser/preferences/applications.dtd       (%chrome/browser/preferences/applications.dtd)
     locale/browser/preferences/fonts.dtd              (%chrome/browser/preferences/fonts.dtd)
     locale/browser/preferences/main.dtd               (%chrome/browser/preferences/main.dtd)

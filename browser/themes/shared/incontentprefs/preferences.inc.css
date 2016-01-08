@@ -222,7 +222,7 @@ treecol {
 
 /* Privacy pane */
 
-#doNotTrackInfo,
+.doNotTrackLearnMore,
 #trackingProtectionPBMLearnMore,
 #trackingProtectionLearnMore {
   -moz-margin-start: 1.5em !important;

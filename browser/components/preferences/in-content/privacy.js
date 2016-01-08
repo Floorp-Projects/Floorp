@@ -108,6 +108,10 @@ var gPrivacyPane = {
       gPrivacyPane.clearPrivateDataNow(true);
       return false;
     });
+    setEventListener("doNotTrackSettings", "click", function () {
+      gPrivacyPane.showDoNotTrackSettings();
+      return false;
+    });
     setEventListener("privateBrowsingAutoStart", "command",
                      gPrivacyPane.updateAutostart);
     setEventListener("cookieExceptions", "command",
@@ -384,6 +388,14 @@ var gPrivacyPane = {
                    introText: bundlePreferences.getString("blockliststext") };
     gSubDialog.open("chrome://browser/content/preferences/blocklists.xul",
                     null, params);
+  },
+
+  /**
+   * Displays the Do Not Track settings dialog.
+   */
+  showDoNotTrackSettings() {
+    gSubDialog.open("chrome://browser/content/preferences/donottrack.xul",
+                    "resizable=no");
   },
 
   // HISTORY
