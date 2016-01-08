@@ -1086,15 +1086,23 @@ nsLayoutUtils::GetDisplayPort(nsIContent* aContent, nsRect *aResult)
   return GetDisplayPortImpl(aContent, aResult, 1.0f);
 }
 
+void
+TranslateFromScrollPortToScrollFrame(nsIContent* aContent, nsRect* aRect)
+{
+  nsIFrame* frame = GetScrollFrameFromContent(aContent);
+  nsIScrollableFrame* scrollableFrame = frame ? frame->GetScrollTargetFrame() : nullptr;
+  if (scrollableFrame) {
+    *aRect += scrollableFrame->GetScrollPortRect().TopLeft();
+  }
+}
+
 bool
 nsLayoutUtils::GetDisplayPortRelativeToScrollFrame(nsIContent* aContent, nsRect *aResult)
 {
   MOZ_ASSERT(aResult);
   bool usingDisplayPort = GetDisplayPort(aContent, aResult);
-  nsIFrame* frame = GetScrollFrameFromContent(aContent);
-  nsIScrollableFrame* scrollableFrame = frame ? frame->GetScrollTargetFrame() : nullptr;
-  if (usingDisplayPort && scrollableFrame) {
-    *aResult += scrollableFrame->GetScrollPortRect().TopLeft();
+  if (usingDisplayPort) {
+    TranslateFromScrollPortToScrollFrame(aContent, aResult);
   }
   return usingDisplayPort;
 }
@@ -1105,10 +1113,16 @@ nsLayoutUtils::HasDisplayPort(nsIContent* aContent) {
 }
 
 /* static */ bool
-nsLayoutUtils::GetDisplayPortForVisibilityTesting(nsIContent* aContent,
-                                                  nsRect* aResult)
+nsLayoutUtils::GetDisplayPortRelativeToScrollFrameForVisibilityTesting(
+  nsIContent* aContent,
+  nsRect* aResult)
 {
-  return GetDisplayPortImpl(aContent, aResult, 1.0f);
+  MOZ_ASSERT(aResult);
+  bool usingDisplayPort = GetDisplayPortImpl(aContent, aResult, 1.0f);
+  if (usingDisplayPort) {
+    TranslateFromScrollPortToScrollFrame(aContent, aResult);
+  }
+  return usingDisplayPort;
 }
 
 bool
