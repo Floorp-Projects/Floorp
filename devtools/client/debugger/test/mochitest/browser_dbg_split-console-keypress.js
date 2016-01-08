@@ -36,13 +36,13 @@ function test() {
     let stepTests = [
       {key: 'VK_F11', keyRepeat: 1, caretLine: 16},
       {key: 'VK_F11', keyRepeat: 2, caretLine: 18},
-      {key: 'VK_F11', keyRepeat: 2, caretLine: 27},
-      {key: 'VK_F10', keyRepeat: 1, caretLine: 27},
-      {key: 'VK_F11', keyRepeat: 1, caretLine: 18},
-      {key: 'VK_F11', keyRepeat: 5, caretLine: 32},
-      {key: 'VK_F11', modifier:'Shift', keyRepeat: 1, caretLine: 29},
-      {key: 'VK_F11', modifier:'Shift', keyRepeat: 2, caretLine: 34},
-      {key: 'VK_F11', modifier:'Shift', keyRepeat: 2, caretLine: 34}
+      {key: 'VK_F11', keyRepeat: 2, caretLine: 26},
+      {key: 'VK_F10', keyRepeat: 1, caretLine: 18},
+      {key: 'VK_F11', keyRepeat: 1, caretLine: 19},
+      {key: 'VK_F11', keyRepeat: 5, caretLine: 29},
+      {key: 'VK_F11', modifier:'Shift', keyRepeat: 1, caretLine: 32},
+      {key: 'VK_F11', modifier:'Shift', keyRepeat: 2, caretLine: 32},
+      {key: 'VK_F11', modifier:'Shift', keyRepeat: 2, caretLine: 20}
     ];
     // Trigger script that stops at debugger statement
     executeSoon(() => generateMouseClickInTab(gTab,
