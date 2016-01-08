@@ -8116,6 +8116,10 @@ AsmJSModule::serialize(uint8_t* cursor) const
 AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParser& parser,
                          MutableHandle<WasmModuleObject*> moduleObj)
 {
+    moduleObj.set(WasmModuleObject::create(cx));
+    if (!moduleObj)
+        return nullptr;
+
     // Deserialization GC-allocates a bunch of atoms and stores them in unrooted
     // Vectors so, for simplicity, inhibit GC of the atoms zone.
     AutoKeepAtoms aka(cx->perThreadData);
@@ -8150,10 +8154,6 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
     module->strict = parser.pc->sc->strict() && !parser.pc->sc->hasExplicitUseStrict();
     module->scriptSource.reset(parser.ss);
 
-    moduleObj.set(WasmModuleObject::create(cx));
-    if (!moduleObj)
-        return nullptr;
-
     if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
         return nullptr;
 
@@ -8163,6 +8163,10 @@ AsmJSModule::deserialize(ExclusiveContext* cx, const uint8_t* cursor, AsmJSParse
 bool
 AsmJSModule::clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) const
 {
+    moduleObj.set(WasmModuleObject::create(cx));
+    if (!moduleObj)
+        return false;
+
     // Prevent any GC that may move the temporarily-unrooted atoms being cloned.
     AutoKeepAtoms aka(cx->perThreadData);
 
@@ -8176,10 +8180,6 @@ AsmJSModule::clone(JSContext* cx, MutableHandle<WasmModuleObject*> moduleObj) co
 
     UniqueAsmJSModuleData module = cx->make_unique<AsmJSModuleData>();
     if (!module || !module_->clone(cx, module.get()))
-        return false;
-
-    moduleObj.set(WasmModuleObject::create(cx));
-    if (!moduleObj)
         return false;
 
     if (!moduleObj->init(cx->new_<AsmJSModule>(Move(base), Move(link), Move(module))))
