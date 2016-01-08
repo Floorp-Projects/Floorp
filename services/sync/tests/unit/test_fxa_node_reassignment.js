@@ -97,7 +97,7 @@ function getReassigned() {
     return false;
   } catch (ex) {
     do_throw("Got exception retrieving lastSyncReassigned: " +
-             Utils.exceptionStr(ex));
+             Log.exceptionStr(ex));
   }
 }
 

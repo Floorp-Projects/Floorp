@@ -163,8 +163,7 @@ HealthReporterState.prototype = Object.freeze({
         this._log.warn("Saved state file does not exist.");
         resetObjectState();
       } catch (ex) {
-        this._log.error("Exception when reading state from disk: " +
-                        CommonUtils.exceptionStr(ex));
+        this._log.error("Exception when reading state from disk", ex);
         resetObjectState();
 
         // Don't save in case it goes away on next run.
@@ -372,8 +371,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           // which specifically does not save the state to a file.
         }
       } catch (ex) {
-        this._log.error("Error deleting last payload: " +
-                        CommonUtils.exceptionStr(ex));
+        this._log.error("Error deleting last payload", ex);
       }
 
       // As soon as we have could have storage, we need to register cleanup or
@@ -470,8 +468,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           OS.File.remove(path);
         } catch (ex) {
           if (!ex.becauseNoSuchFile) {
-            this._log.error("Exception when removing outdated payload files: " +
-                            CommonUtils.exceptionStr(ex));
+            this._log.error("Exception when removing outdated payload files", ex);
           }
         }
       }
@@ -538,8 +535,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         tm.registerTimer(timerName, this.collectMeasurements.bind(this),
                          24 * 60 * 60);
       } catch (ex) {
-        this._log.error("Error registering collection timer: " +
-                        CommonUtils.exceptionStr(ex));
+        this._log.error("Error registering collection timer", ex);
       }
     }
 
@@ -615,8 +611,7 @@ AbstractHealthReporter.prototype = Object.freeze({
               this._currentProviderInShutdown = provider.name;
               yield provider.shutdown();
             } catch (ex) {
-              this._log.warn("Error when shutting down provider: " +
-                             CommonUtils.exceptionStr(ex));
+              this._log.warn("Error when shutting down provider", ex);
             }
           }
           this._log.info("Provider manager shut down.");
@@ -630,8 +625,7 @@ AbstractHealthReporter.prototype = Object.freeze({
             yield this._storage.close();
             yield this._onStorageClose();
           } catch (error) {
-            this._log.warn("Error when closing storage: " +
-                           CommonUtils.exceptionStr(error));
+            this._log.warn("Error when closing storage", error);
           }
           this._storage = null;
         }
@@ -732,8 +726,8 @@ AbstractHealthReporter.prototype = Object.freeze({
     let logMessage = message;
 
     if (ex) {
-      recordMessage += ": " + CommonUtils.exceptionStr(ex);
-      logMessage += ": " + CommonUtils.exceptionStr(ex);
+      recordMessage += ": " + Log.exceptionStr(ex);
+      logMessage += ": " + Log.exceptionStr(ex);
     }
 
     // Scrub out potentially identifying information from strings that could
@@ -793,8 +787,7 @@ AbstractHealthReporter.prototype = Object.freeze({
         TelemetryStopwatch.finish(TELEMETRY_COLLECT_CONSTANT, this);
       } catch (ex) {
         TelemetryStopwatch.cancel(TELEMETRY_COLLECT_CONSTANT, this);
-        this._log.warn("Error collecting constant data: " +
-                       CommonUtils.exceptionStr(ex));
+        this._log.warn("Error collecting constant data", ex);
       }
 
       // Daily data is collected if it hasn't yet been collected this
@@ -814,8 +807,7 @@ AbstractHealthReporter.prototype = Object.freeze({
           TelemetryStopwatch.finish(TELEMETRY_COLLECT_DAILY, this);
         } catch (ex) {
           TelemetryStopwatch.cancel(TELEMETRY_COLLECT_DAILY, this);
-          this._log.warn("Error collecting daily data from providers: " +
-                         CommonUtils.exceptionStr(ex));
+          this._log.warn("Error collecting daily data from providers", ex);
         }
       }
 
@@ -1098,15 +1090,13 @@ AbstractHealthReporter.prototype = Object.freeze({
         out[k] = ai[v];
       }
     } catch (ex) {
-      this._log.warn("Could not obtain Services.appinfo: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain Services.appinfo", ex);
     }
 
     try {
       out["updateChannel"] = UpdateUtils.UpdateChannel;
     } catch (ex) {
-      this._log.warn("Could not obtain update channel: " +
-                     CommonUtils.exceptionStr(ex));
+      this._log.warn("Could not obtain update channel", ex);
     }
 
     return out;
@@ -1322,8 +1312,7 @@ this.HealthReporter.prototype = Object.freeze({
     try {
       result = AbstractHealthReporter.prototype._onInitError.call(this, error);
     } catch (ex) {
-      this._log.error("Error when calling _onInitError: " +
-                      CommonUtils.exceptionStr(ex));
+      this._log.error("Error when calling _onInitError", ex);
     }
 
     // This bypasses a lot of the checks in policy, such as respect for
@@ -1362,8 +1351,7 @@ this.HealthReporter.prototype = Object.freeze({
           try {
             hrProvider.recordEvent("uploadTransportFailure", date);
           } catch (ex) {
-            this._log.error("Error recording upload transport failure: " +
-                            CommonUtils.exceptionStr(ex));
+            this._log.error("Error recording upload transport failure", ex);
           }
         }
 
@@ -1376,8 +1364,7 @@ this.HealthReporter.prototype = Object.freeze({
           try {
             hrProvider.recordEvent("uploadServerFailure", date);
           } catch (ex) {
-            this._log.error("Error recording server failure: " +
-                            CommonUtils.exceptionStr(ex));
+            this._log.error("Error recording server failure", ex);
           }
         }
 
@@ -1389,8 +1376,7 @@ this.HealthReporter.prototype = Object.freeze({
         try {
           hrProvider.recordEvent("uploadSuccess", date);
         } catch (ex) {
-          this._log.error("Error recording upload success: " +
-                          CommonUtils.exceptionStr(ex));
+          this._log.error("Error recording upload success", ex);
         }
       }
 
@@ -1409,8 +1395,7 @@ this.HealthReporter.prototype = Object.freeze({
   },
 
   _onSubmitDataRequestFailure: function (error) {
-    this._log.error("Error processing request to submit data: " +
-                    CommonUtils.exceptionStr(error));
+    this._log.error("Error processing request to submit data", error);
   },
 
   _formatDate: function (date) {
@@ -1459,8 +1444,7 @@ this.HealthReporter.prototype = Object.freeze({
           try {
             hrProvider.recordEvent(event, now);
           } catch (ex) {
-            this._log.error("Error when recording upload attempt: " +
-                            CommonUtils.exceptionStr(ex));
+            this._log.error("Error when recording upload attempt", ex);
           }
         }
 
@@ -1480,8 +1464,7 @@ this.HealthReporter.prototype = Object.freeze({
             try {
               hrProvider.recordEvent("uploadClientFailure", now);
             } catch (ex) {
-              this._log.error("Error when recording client failure: " +
-                              CommonUtils.exceptionStr(ex));
+              this._log.error("Error when recording client failure", ex);
             }
           }
           throw ex;
@@ -1516,8 +1499,7 @@ this.HealthReporter.prototype = Object.freeze({
                                                  this.lastSubmitID);
         yield this._onBagheeraResult(request, true, this._now(), result);
       } catch (ex) {
-        this._log.error("Error processing request to delete data: " +
-                        CommonUtils.exceptionStr(error));
+        this._log.error("Error processing request to delete data", ex);
       }
     }.bind(this));
   },

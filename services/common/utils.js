@@ -70,7 +70,6 @@ this.CommonUtils = {
   },
 
   // Import these from Log.jsm for backward compatibility
-  exceptionStr: Log.exceptionStr,
   stackTrace: Log.stackTrace,
 
   /**
@@ -102,7 +101,7 @@ this.CommonUtils = {
       return Services.io.newURI(URIString, null, null);
     } catch (e) {
       let log = Log.repository.getLogger("Common.Utils");
-      log.debug("Could not create URI: " + CommonUtils.exceptionStr(e));
+      log.debug("Could not create URI", e);
       return null;
     }
   },
