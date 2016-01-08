@@ -3746,7 +3746,7 @@ ContainerState::ComputeOpaqueRect(nsDisplayItem* aItem,
     if (sf) {
       nsRect displayport;
       bool usingDisplayport =
-        nsLayoutUtils::GetDisplayPort((*aAnimatedGeometryRoot)->GetContent(), &displayport);
+        nsLayoutUtils::GetDisplayPortRelativeToScrollFrame((*aAnimatedGeometryRoot)->GetContent(), &displayport);
       if (!usingDisplayport) {
         // No async scrolling, so all that matters is that the layer contents
         // cover the scrollport.

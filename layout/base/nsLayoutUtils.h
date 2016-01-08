@@ -169,7 +169,7 @@ public:
    * Get display port for the given element. The displayport is relative to the
    * scrollport.
    */
-  static bool GetDisplayPort(nsIContent* aContent, nsRect *aResult);
+  static bool GetDisplayPortRelativeToScrollPort(nsIContent* aContent, nsRect *aResult);
 
   /**
    * Get display port for the given element relative to the scroll frame.
