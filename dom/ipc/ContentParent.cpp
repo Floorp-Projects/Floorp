@@ -83,6 +83,7 @@
 #include "mozilla/ipc/TestShellParent.h"
 #include "mozilla/ipc/InputStreamUtils.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
+#include "mozilla/layers/PAPZParent.h"
 #include "mozilla/layers/CompositorParent.h"
 #include "mozilla/layers/ImageBridgeParent.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
@@ -2028,10 +2029,60 @@ NestedBrowserLayerIds()
 }
 } // namespace
 
+/* static */
 bool
-ContentParent::RecvAllocateLayerTreeId(uint64_t* aId)
+ContentParent::AllocateLayerTreeId(TabParent* aTabParent, uint64_t* aId)
+{
+  return AllocateLayerTreeId(aTabParent->Manager()->AsContentParent(),
+                             aTabParent, aTabParent->GetTabId(), aId);
+}
+
+/* static */
+bool
+ContentParent::AllocateLayerTreeId(ContentParent* aContent,
+                                   TabParent* aTopLevel, const TabId& aTabId,
+                                   uint64_t* aId)
 {
   *aId = CompositorParent::AllocateLayerTreeId();
+
+  if (!gfxPlatform::AsyncPanZoomEnabled()) {
+    return true;
+  }
+
+  if (!aContent || !aTopLevel) {
+    return false;
+  }
+
+  return CompositorParent::UpdateRemoteContentController(*aId, aContent,
+                                                         aTabId, aTopLevel);
+}
+
+bool
+ContentParent::RecvAllocateLayerTreeId(const ContentParentId& aCpId,
+                                       const TabId& aTabId, uint64_t* aId)
+{
+  // Protect against spoofing by a compromised child. aCpId must either
+  // correspond to the process that this ContentParent represents or be a
+  // child of it.
+  ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
+  if (ChildID() != aCpId) {
+    ContentParentId parent;
+    if (!cpm->GetParentProcessId(aCpId, &parent) ||
+        ChildID() != parent) {
+      return false;
+    }
+  }
+
+  // GetTopLevelTabParentByProcessAndTabId will make sure that aTabId
+  // lives in the process for aCpId.
+  RefPtr<ContentParent> contentParent = cpm->GetContentProcessById(aCpId);
+  RefPtr<TabParent> browserParent =
+    cpm->GetTopLevelTabParentByProcessAndTabId(aCpId, aTabId);
+  MOZ_ASSERT(contentParent && browserParent);
+
+  if (!AllocateLayerTreeId(contentParent, browserParent, aTabId, aId)) {
+    return false;
+  }
 
   auto iter = NestedBrowserLayerIds().find(this);
   if (iter == NestedBrowserLayerIds().end()) {
@@ -3396,6 +3447,21 @@ ContentParent::AllocPGMPServiceParent(mozilla::ipc::Transport* aTransport,
                                       base::ProcessId aOtherProcess)
 {
   return GMPServiceParent::Create(aTransport, aOtherProcess);
+}
+
+PAPZParent*
+ContentParent::AllocPAPZParent(const TabId& aTabId)
+{
+  // The PAPZParent should just be created in the main process and then an IPDL
+  // constructor message sent to hook it up.
+  MOZ_CRASH("This shouldn't be called");
+  return nullptr;
+}
+
+bool
+ContentParent::DeallocPAPZParent(PAPZParent* aActor)
+{
+  return true;
 }
 
 PCompositorParent*

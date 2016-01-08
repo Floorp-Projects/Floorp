@@ -16,6 +16,7 @@
 #include "ContentChild.h"
 #include "TabParent.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/BrowserElementParent.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/dom/workers/ServiceWorkerManager.h"
@@ -28,6 +29,7 @@
 #include "ipc/Nuwa.h"
 #endif
 #include "mozilla/ipc/FileDescriptorUtils.h"
+#include "mozilla/layers/APZChild.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
@@ -37,6 +39,7 @@
 #include "mozilla/layers/InputAPZContext.h"
 #include "mozilla/layers/ShadowLayers.h"
 #include "mozilla/layout/RenderFrameChild.h"
+#include "mozilla/layout/RenderFrameParent.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Move.h"
@@ -589,6 +592,7 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mIPCOpen(true)
   , mParentIsActive(false)
   , mDidSetRealShowInfo(false)
+  , mAPZChild(nullptr)
 {
   // In the general case having the TabParent tell us if APZ is enabled or not
   // doesn't really work because the TabParent itself may not have a reference
@@ -602,7 +606,7 @@ TabChild::TabChild(nsIContentChild* aManager,
                                                    const nsTArray<TouchBehaviorFlags>& aFlags)
   {
     if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(weakPtrThis)) {
-      static_cast<TabChild*>(tabChild.get())->SendSetAllowedTouchBehavior(aInputBlockId, aFlags);
+      static_cast<TabChild*>(tabChild.get())->SetAllowedTouchBehavior(aInputBlockId, aFlags);
     }
   };
 
@@ -710,6 +714,35 @@ TabChild::Observe(nsISupports *aSubject,
   return NS_OK;
 }
 
+void
+TabChild::ContentReceivedInputBlock(const ScrollableLayerGuid& aGuid,
+                                    uint64_t aInputBlockId,
+                                    bool aPreventDefault) const
+{
+  if (mAPZChild) {
+    mAPZChild->SendContentReceivedInputBlock(aGuid, aInputBlockId,
+                                             aPreventDefault);
+  }
+}
+
+void
+TabChild::SetTargetAPZC(uint64_t aInputBlockId,
+                        const nsTArray<ScrollableLayerGuid>& aTargets) const
+{
+  if (mAPZChild) {
+    mAPZChild->SendSetTargetAPZC(aInputBlockId, aTargets);
+  }
+}
+
+void
+TabChild::SetAllowedTouchBehavior(uint64_t aInputBlockId,
+                                  const nsTArray<TouchBehaviorFlags>& aTargets) const
+{
+  if (mAPZChild) {
+    mAPZChild->SendSetAllowedTouchBehavior(aInputBlockId, aTargets);
+  }
+}
+
 bool
 TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
                                   const ViewID& aViewId,
@@ -722,9 +755,12 @@ TabChild::DoUpdateZoomConstraints(const uint32_t& aPresShellId,
     return true;
   }
 
-  return SendUpdateZoomConstraints(aPresShellId,
-                                   aViewId,
-                                   aConstraints);
+  if (!mAPZChild) {
+    return false;
+  }
+
+  return mAPZChild->SendUpdateZoomConstraints(aPresShellId, aViewId,
+                                              aConstraints);
 }
 
 nsresult
@@ -811,7 +847,7 @@ TabChild::Init()
                     bool aPreventDefault)
       {
         if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(weakPtrThis)) {
-          static_cast<TabChild*>(tabChild.get())->SendContentReceivedInputBlock(aGuid, aInputBlockId, aPreventDefault);
+          static_cast<TabChild*>(tabChild.get())->ContentReceivedInputBlock(aGuid, aInputBlockId, aPreventDefault);
         }
       });
   mAPZEventState = new APZEventState(mPuppetWidget, Move(callback));
@@ -1633,7 +1669,7 @@ TabChild::RecvUpdateDimensions(const CSSRect& rect, const CSSSize& size,
 }
 
 bool
-TabChild::RecvUpdateFrame(const FrameMetrics& aFrameMetrics)
+TabChild::UpdateFrame(const FrameMetrics& aFrameMetrics)
 {
   return TabChildBase::UpdateFrameHandler(aFrameMetrics);
 }
@@ -1652,77 +1688,68 @@ TabChild::RecvSuppressDisplayport(const bool& aEnabled)
   return true;
 }
 
-bool
-TabChild::RecvRequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
-                               const mozilla::CSSPoint& aDestination)
+void
+TabChild::HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
+                          const ScrollableLayerGuid& aGuid)
 {
-  APZCCallbackHelper::RequestFlingSnap(aScrollId, aDestination);
-  return true;
+  TABC_LOG("Handling double tap at %s with %p %p\n",
+    Stringify(aPoint).c_str(), mGlobal.get(), mTabChildGlobal.get());
+
+  if (!mGlobal || !mTabChildGlobal) {
+    return;
+  }
+
+  // Note: there is nothing to do with the modifiers here, as we are not
+  // synthesizing any sort of mouse event.
+  CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
+  nsCOMPtr<nsIDocument> document = GetDocument();
+  CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
+  // The double-tap can be dispatched by any scroll frame (so |aGuid| could be
+  // the guid of any scroll frame), but the zoom-to-rect operation must be
+  // performed by the root content scroll frame, so query its identifiers
+  // for the SendZoomToRect() call rather than using the ones from |aGuid|.
+  uint32_t presShellId;
+  ViewID viewId;
+  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
+      document->GetDocumentElement(), &presShellId, &viewId) &&
+      mAPZChild) {
+    mAPZChild->SendZoomToRect(presShellId, viewId, zoomToRect,
+                              DEFAULT_BEHAVIOR);
+  }
 }
 
-bool
-TabChild::RecvAcknowledgeScrollUpdate(const ViewID& aScrollId,
-                                      const uint32_t& aScrollGeneration)
+void
+TabChild::HandleSingleTap(const CSSPoint& aPoint,
+                          const Modifiers& aModifiers,
+                          const ScrollableLayerGuid& aGuid,
+                          bool aCallTakeFocusForClickFromTap)
 {
-  APZCCallbackHelper::AcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
-  return true;
-}
-
-bool
-TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
-    TABC_LOG("Handling double tap at %s with %p %p\n",
-      Stringify(aPoint).c_str(), mGlobal.get(), mTabChildGlobal.get());
-
-    if (!mGlobal || !mTabChildGlobal) {
-        return true;
-    }
-
-    // Note: there is nothing to do with the modifiers here, as we are not
-    // synthesizing any sort of mouse event.
-    CSSPoint point = APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid);
-    nsCOMPtr<nsIDocument> document = GetDocument();
-    CSSRect zoomToRect = CalculateRectToZoomTo(document, point);
-    // The double-tap can be dispatched by any scroll frame (so |aGuid| could be
-    // the guid of any scroll frame), but the zoom-to-rect operation must be
-    // performed by the root content scroll frame, so query its identifiers
-    // for the SendZoomToRect() call rather than using the ones from |aGuid|.
-    uint32_t presShellId;
-    ViewID viewId;
-    if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
-        document->GetDocumentElement(), &presShellId, &viewId)) {
-      SendZoomToRect(presShellId, viewId, zoomToRect, DEFAULT_BEHAVIOR);
-    }
-
-    return true;
-}
-
-bool
-TabChild::RecvHandleSingleTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid)
-{
+  if (aCallTakeFocusForClickFromTap && mRemoteFrame) {
+    mRemoteFrame->SendTakeFocusForClickFromTap();
+  }
   if (mGlobal && mTabChildGlobal) {
     mAPZEventState->ProcessSingleTap(aPoint, aModifiers, aGuid);
   }
-  return true;
 }
 
-bool
-TabChild::RecvHandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers, const ScrollableLayerGuid& aGuid, const uint64_t& aInputBlockId)
+void
+TabChild::HandleLongTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
+                        const ScrollableLayerGuid& aGuid,
+                        const uint64_t& aInputBlockId)
 {
   if (mGlobal && mTabChildGlobal) {
     mAPZEventState->ProcessLongTap(GetPresShell(), aPoint, aModifiers, aGuid,
         aInputBlockId);
   }
-  return true;
 }
 
 bool
-TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
-                                   const APZStateChange& aChange,
-                                   const int& aArg)
+TabChild::NotifyAPZStateChange(const ViewID& aViewId,
+                               const layers::GeckoContentController::APZStateChange& aChange,
+                               const int& aArg)
 {
   mAPZEventState->ProcessAPZStateChange(GetDocument(), aViewId, aChange, aArg);
-  if (aChange == APZStateChange::TransformEnd) {
+  if (aChange == layers::GeckoContentController::APZStateChange::TransformEnd) {
     // This is used by tests to determine when the APZ is done doing whatever
     // it's doing. XXX generify this as needed when writing additional tests.
     DispatchMessageManagerMessage(
@@ -1732,11 +1759,23 @@ TabChild::RecvNotifyAPZStateChange(const ViewID& aViewId,
   return true;
 }
 
-bool
-TabChild::RecvNotifyFlushComplete()
+void
+TabChild::StartScrollbarDrag(const layers::AsyncDragMetrics& aDragMetrics)
 {
-  APZCCallbackHelper::NotifyFlushComplete();
-  return true;
+  if (mAPZChild) {
+    mAPZChild->SendStartScrollbarDrag(aDragMetrics);
+  }
+}
+
+void
+TabChild::ZoomToRect(const uint32_t& aPresShellId,
+                     const FrameMetrics::ViewID& aViewId,
+                     const CSSRect& aRect,
+                     const uint32_t& aFlags)
+{
+  if (mAPZChild) {
+    mAPZChild->SendZoomToRect(aPresShellId, aViewId, aRect, aFlags);
+  }
 }
 
 bool
@@ -1854,8 +1893,21 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
 }
 
 bool
-TabChild::RecvMouseScrollTestEvent(const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
+TabChild::RecvMouseScrollTestEvent(const uint64_t& aLayersId,
+                                   const FrameMetrics::ViewID& aScrollId, const nsString& aEvent)
 {
+  if (aLayersId != mLayersId) {
+    RefPtr<TabParent> browser = TabParent::GetTabParentFromLayersId(aLayersId);
+    if (!browser) {
+      return false;
+    }
+    NS_DispatchToMainThread(NS_NewRunnableFunction(
+      [aLayersId, browser, aScrollId, aEvent] () -> void {
+        Unused << browser->SendMouseScrollTestEvent(aLayersId, aScrollId, aEvent);
+      }));
+    return true;
+  }
+
   APZCCallbackHelper::NotifyMozMouseScrollEvent(aScrollId, aEvent);
   return true;
 }
@@ -2622,7 +2674,10 @@ TabChild::MakeHidden()
 void
 TabChild::UpdateHitRegion(const nsRegion& aRegion)
 {
-    mRemoteFrame->SendUpdateHitRegion(aRegion);
+  mRemoteFrame->SendUpdateHitRegion(aRegion);
+  if (mAPZChild) {
+    mAPZChild->SendUpdateHitRegion(aRegion);
+  }
 }
 
 NS_IMETHODIMP

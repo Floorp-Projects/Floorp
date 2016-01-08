@@ -56,13 +56,9 @@ using class mozilla::WidgetPluginEvent from "ipc/nsGUIEventIPC.h";
 using struct mozilla::dom::RemoteDOMEvent from "mozilla/dom/TabMessageUtils.h";
 using mozilla::dom::ScreenOrientationInternal from "mozilla/dom/ScreenOrientation.h";
 using struct mozilla::layers::TextureFactoryIdentifier from "mozilla/layers/CompositorTypes.h";
-using mozilla::CSSPoint from "Units.h";
 using mozilla::CSSToScreenScale from "Units.h";
 using mozilla::CommandInt from "mozilla/EventForwards.h";
-using mozilla::Modifiers from "mozilla/EventForwards.h";
-using mozilla::layers::GeckoContentController::APZStateChange from "mozilla/layers/GeckoContentController.h";
 using mozilla::WritingMode from "mozilla/WritingModes.h";
-using mozilla::layers::AsyncDragMetrics from "mozilla/layers/AsyncDragMetrics.h";
 using mozilla::layers::TouchBehaviorFlags from "mozilla/layers/APZUtils.h";
 using nsIWidget::TouchPointerState from "nsIWidget.h";
 using struct LookAndFeelInt from "mozilla/widget/WidgetMessageUtils.h";
@@ -418,43 +414,6 @@ parent:
       returns (bool windowOpened);
 
     /**
-     * Instructs the TabParent to forward a request to zoom to a rect given in
-     * CSS pixels. This rect is relative to the document.
-     */
-    async ZoomToRect(uint32_t aPresShellId, ViewID aViewId, CSSRect aRect, uint32_t aFlags);
-
-    /**
-     * We know for sure that content has either preventDefaulted or not
-     * preventDefaulted. This applies to an entire batch of touch events. It is
-     * expected that, if there are any DOM touch listeners, touch events will be
-     * batched and only processed for panning and zooming if content does not
-     * preventDefault.
-     */
-    async ContentReceivedInputBlock(ScrollableLayerGuid aGuid, uint64_t aInputBlockId, bool aPreventDefault);
-
-    /**
-     * Notifies the APZ code of the results of the gecko hit-test for a
-     * particular input block. Each target corresponds to one touch point in the
-     * touch event.
-     */
-    async SetTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
-
-    /**
-     * Notifies the APZ code of the allowed touch-behaviours for a particular
-     * input block. Each item in the aFlags array corresponds to one touch point
-     * in the touch event.
-     */
-    async SetAllowedTouchBehavior(uint64_t aInputBlockId, TouchBehaviorFlags[] aFlags);
-
-    /**
-     * Updates the zoom constraints for a scrollable frame in this tab.
-     * The zoom controller code lives on the parent side and so this allows it to
-     * have up-to-date zoom constraints.
-     */
-    async UpdateZoomConstraints(uint32_t aPresShellId, ViewID aViewId,
-                                MaybeZoomConstraints aConstraints);
-
-    /**
      * Tells the containing widget whether the given input block results in a
      * swipe. Should be called in response to a WidgetWheelEvent that has
      * mFlags.mCanTriggerSwipe set on it.
@@ -538,9 +497,6 @@ parent:
     prio(high) sync DispatchMouseEvent(WidgetMouseEvent event);
     prio(high) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
-    // Start an APZ drag on a scrollbar
-    async StartScrollbarDrag(AsyncDragMetrics aDragMetrics);
-
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
                             nsCString visualData, uint32_t width, uint32_t height,
                             uint32_t stride, uint8_t format,
@@ -575,20 +531,6 @@ child:
     async UpdateDimensions(CSSRect rect, CSSSize size, nsSizeMode sizeMode,
                            ScreenOrientationInternal orientation,
                            LayoutDeviceIntPoint chromeDisp) compressall;
-
-    async UpdateFrame(FrameMetrics frame);
-
-    // The following methods correspond to functions on the GeckoContentController
-    // interface in gfx/layers/apz/public/GeckoContentController.h. Refer to documentation
-    // in that file for these functions.
-    async RequestFlingSnap(ViewID aScrollID, CSSPoint aDestination);
-    async AcknowledgeScrollUpdate(ViewID aScrollId, uint32_t aScrollGeneration);
-    async HandleDoubleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
-    async HandleSingleTap(CSSPoint aPoint, Modifiers aModifiers, ScrollableLayerGuid aGuid);
-    async HandleLongTap(CSSPoint point, Modifiers aModifiers, ScrollableLayerGuid aGuid, uint64_t aInputBlockId);
-    async NotifyAPZStateChange(ViewID aViewId, APZStateChange aChange, int aArg);
-    async NotifyFlushComplete();
-
 
     /**
      * Sending an activate message moves focus to the child.
@@ -661,7 +603,7 @@ child:
     /**
      * APZ notification for mouse scroll testing events.
      */
-    async MouseScrollTestEvent(ViewID aScrollId, nsString aEvent);
+    async MouseScrollTestEvent(uint64_t aLayersId, ViewID aScrollId, nsString aEvent);
 
     async CompositionEvent(WidgetCompositionEvent event);
 
