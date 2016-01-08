@@ -65,17 +65,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef HashSet<const LifoSig*, SigHashPolicy> SigSet;
 
     ExclusiveContext*             cx_;
-    CompileArgs                   args_;
-
-    // Data handed over to the Module in finish()
-    uint32_t                      globalBytes_;
-    ImportVector                  imports_;
-    ExportVector                  exports_;
-    CodeRangeVector               codeRanges_;
-    CacheableCharsVector          funcNames_;
 
     // Data handed back to the caller in finish()
-    UniqueStaticLinkData          staticLinkData_;
+    UniqueModuleData              module_;
+    UniqueStaticLinkData          link_;
     SlowFunctionVector            slowFuncs_;
 
     // Data scoped to the ModuleGenerator's lifetime
@@ -84,6 +77,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator            alloc_;
     jit::MacroAssembler           masm_;
     SigSet                        sigs_;
+    FuncOffsetVector              funcEntryOffsets_;
+    FuncIndexVector               exportFuncIndices_;
 
     // Parallel compilation
     bool                          parallel_;
@@ -91,10 +86,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     Vector<IonCompileTask>        tasks_;
     Vector<IonCompileTask*>       freeTasks_;
 
-    // Function compilation
-    uint32_t                      funcBytes_;
-    FuncOffsetVector              funcEntryOffsets_;
-    FuncIndexVector               exportFuncIndices_;
+    // Assertions
     DebugOnly<FunctionGenerator*> activeFunc_;
     DebugOnly<bool>               finishedFuncs_;
 
@@ -108,7 +100,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool init();
 
-    CompileArgs args() const { return args_; }
+    CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
     const FuncOffsetVector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
@@ -149,14 +141,16 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineAsyncInterruptStub(Offsets offsets);
     bool defineOutOfBoundsStub(Offsets offsets);
 
-    // Null return indicates failure. The caller must immediately root a
-    // non-null return value.
-    Module* finish(HeapUsage heapUsage,
-                   Module::MutedBool mutedErrors,
-                   CacheableChars filename,
-                   CacheableTwoByteChars displayURL,
-                   UniqueStaticLinkData* staticLinkData,
-                   SlowFunctionVector* slowFuncs);
+    // Return a ModuleData object which may be used to construct a Module, the
+    // StaticLinkData required to call Module::staticallyLink, and the list of
+    // functions that took a long time to compile.
+    bool finish(HeapUsage heapUsage,
+                MutedErrorsBool mutedErrors,
+                CacheableChars filename,
+                CacheableTwoByteChars displayURL,
+                UniqueModuleData* module,
+                UniqueStaticLinkData* staticLinkData,
+                SlowFunctionVector* slowFuncs);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
