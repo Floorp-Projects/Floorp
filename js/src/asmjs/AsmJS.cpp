@@ -2732,6 +2732,7 @@ class MOZ_STACK_CLASS FunctionValidator
     ParseNode*        fn_;
 
     FunctionGenerator fg_;
+    Encoder           encoder_;
 
     LocalMap          locals_;
     LabelMap          labels_;
@@ -2750,18 +2751,19 @@ class MOZ_STACK_CLASS FunctionValidator
 
     ModuleValidator& m() const        { return m_; }
     const AsmJSModule& module() const { return m_.module(); }
-    FuncIR& funcIR() const            { return fg_.func(); }
     ExclusiveContext* cx() const      { return m_.cx(); }
     ParseNode* fn() const             { return fn_; }
 
     bool init(PropertyName* name, unsigned line, unsigned column) {
-        return locals_.init() &&
-               labels_.init() &&
-               m_.mg().startFunc(name, line, column, &fg_);
+        UniqueBytecode recycled;
+        return m_.mg().startFunc(name, line, column, &recycled, &fg_) &&
+               encoder_.init(Move(recycled)) &&
+               locals_.init() &&
+               labels_.init();
     }
 
     bool finish(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime) {
-        return m_.mg().finishFunc(funcIndex, sig, generateTime, &fg_);
+        return m_.mg().finishFunc(funcIndex, sig, encoder().finish(), generateTime, &fg_);
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -2791,7 +2793,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     bool addVariable(ParseNode* pn, PropertyName* name, ValType type) {
         return addFormal(pn, name, type) &&
-               funcIR().addVariable(type);
+               fg_.addVariable(type);
     }
 
     /****************************** For consistency of returns in a function */
@@ -2844,23 +2846,20 @@ class MOZ_STACK_CLASS FunctionValidator
 
     size_t numLocals() const { return locals_.count(); }
 
+    /************************************************* Packing interface */
+    Encoder& encoder() { return encoder_; }
+
     bool noteLineCol(ParseNode* pn) {
         uint32_t line, column;
         m().tokenStream().srcCoords.lineNumAndColumnIndex(pn->pn_pos.begin, &line, &column);
-        return funcIR().addSourceCoords(line, column);
-    }
-
-    /************************************************* Packing interface */
-
-    bool startedPacking() const {
-        return funcIR().size() != 0;
+        return fg_.addSourceCoords(encoder().bytecodeOffset(), line, column);
     }
 
     template<class T>
     MOZ_WARN_UNUSED_RESULT
     bool writeOp(T op) {
         static_assert(sizeof(T) == sizeof(uint8_t), "opcodes must be uint8");
-        return funcIR().writeU8(uint8_t(op));
+        return encoder().writeU8(uint8_t(op));
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -2873,19 +2872,19 @@ class MOZ_STACK_CLASS FunctionValidator
 
     MOZ_WARN_UNUSED_RESULT
     bool writeU8(uint8_t u) {
-        return funcIR().writeU8(u);
+        return encoder().writeU8(u);
     }
     MOZ_WARN_UNUSED_RESULT
     bool writeU32(uint32_t u) {
-        return funcIR().writeU32(u);
+        return encoder().writeU32(u);
     }
     MOZ_WARN_UNUSED_RESULT
     bool writeI32(int32_t u) {
-        return funcIR().writeI32(u);
+        return encoder().writeI32(u);
     }
     MOZ_WARN_UNUSED_RESULT
     bool writeInt32Lit(int32_t i) {
-        return writeOp(I32::Literal) && funcIR().writeI32(i);
+        return writeOp(I32::Literal) && encoder().writeI32(i);
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -2896,16 +2895,16 @@ class MOZ_STACK_CLASS FunctionValidator
           case NumLit::BigUnsigned:
             return writeInt32Lit(lit.toInt32());
           case NumLit::Float:
-            return writeOp(F32::Literal) && funcIR().writeF32(lit.toFloat());
+            return writeOp(F32::Literal) && encoder().writeF32(lit.toFloat());
           case NumLit::Double:
-            return writeOp(F64::Literal) && funcIR().writeF64(lit.toDouble());
+            return writeOp(F64::Literal) && encoder().writeF64(lit.toDouble());
           case NumLit::Int32x4:
-            return writeOp(I32X4::Literal) && funcIR().writeI32X4(lit.simdValue().asInt32x4());
+            return writeOp(I32X4::Literal) && encoder().writeI32X4(lit.simdValue().asInt32x4());
           case NumLit::Float32x4:
-            return writeOp(F32X4::Literal) && funcIR().writeF32X4(lit.simdValue().asFloat32x4());
+            return writeOp(F32X4::Literal) && encoder().writeF32X4(lit.simdValue().asFloat32x4());
           case NumLit::Bool32x4:
             // Boolean vectors use the Int32x4 memory representation.
-            return writeOp(B32X4::Literal) && funcIR().writeI32X4(lit.simdValue().asInt32x4());
+            return writeOp(B32X4::Literal) && encoder().writeI32X4(lit.simdValue().asInt32x4());
           case NumLit::OutOfRangeInt:
             break;
         }
@@ -2915,23 +2914,23 @@ class MOZ_STACK_CLASS FunctionValidator
     template<class T>
     void patchOp(size_t pos, T stmt) {
         static_assert(sizeof(T) == sizeof(uint8_t), "opcodes must be uint8");
-        funcIR().patchU8(pos, uint8_t(stmt));
+        encoder().patchU8(pos, uint8_t(stmt));
     }
     void patchU8(size_t pos, uint8_t u8) {
-        funcIR().patchU8(pos, u8);
+        encoder().patchU8(pos, u8);
     }
     template<class T>
     void patch32(size_t pos, T val) {
         static_assert(sizeof(T) == sizeof(uint32_t), "patch32 is used for 4-bytes long ops");
-        funcIR().patch32(pos, val);
+        encoder().patch32(pos, val);
     }
     void patchSig(size_t pos, const LifoSig* ptr) {
-        funcIR().patchSig(pos, ptr);
+        encoder().patchSig(pos, ptr);
     }
 
     MOZ_WARN_UNUSED_RESULT
     bool tempU8(size_t* offset) {
-        return funcIR().writeU8(uint8_t(Stmt::Bad), offset);
+        return encoder().writeU8(uint8_t(Stmt::Bad), offset);
     }
     MOZ_WARN_UNUSED_RESULT
     bool tempOp(size_t* offset) {
@@ -2939,20 +2938,20 @@ class MOZ_STACK_CLASS FunctionValidator
     }
     MOZ_WARN_UNUSED_RESULT
     bool temp32(size_t* offset) {
-        if (!funcIR().writeU8(uint8_t(Stmt::Bad), offset))
+        if (!encoder().writeU8(uint8_t(Stmt::Bad), offset))
             return false;
         for (size_t i = 1; i < 4; i++) {
-            if (!funcIR().writeU8(uint8_t(Stmt::Bad)))
+            if (!encoder().writeU8(uint8_t(Stmt::Bad)))
                 return false;
         }
         return true;
     }
     MOZ_WARN_UNUSED_RESULT
     bool tempPtr(size_t* offset) {
-        if (!funcIR().writeU8(uint8_t(Stmt::Bad), offset))
+        if (!encoder().writeU8(uint8_t(Stmt::Bad), offset))
             return false;
         for (size_t i = 1; i < sizeof(intptr_t); i++) {
-            if (!funcIR().writeU8(uint8_t(Stmt::Bad)))
+            if (!encoder().writeU8(uint8_t(Stmt::Bad)))
                 return false;
         }
         return true;
@@ -7129,7 +7128,6 @@ CheckFunction(ModuleValidator& m)
     if (!CheckArguments(f, &stmtIter, &args))
         return false;
 
-    MOZ_ASSERT(!f.startedPacking(), "No bytecode should be written at this point.");
     if (!MaybeAddInterruptCheck(f, InterruptCheckPosition::Head, fn))
         return false;
 
