@@ -34,7 +34,6 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsNetCID.h"
-#include "ClosingService.h"
 #include "nsIServiceManager.h"
 #include "nsICryptoHash.h"
 
@@ -284,7 +283,6 @@ void ARTSPConnection::onConnect(const sp<AMessage> &msg) {
     }
 
     NetworkActivityMonitor::AttachIOLayer(mSocket);
-    ClosingService::AttachIOLayer(mSocket);
 
     MakeSocketBlocking(mSocket, false);
 
