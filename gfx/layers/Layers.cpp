@@ -941,7 +941,7 @@ Layer::ApplyPendingUpdatesForThisTransaction()
   }
 }
 
-const float
+float
 Layer::GetLocalOpacity()
 {
   float opacity = mOpacity;

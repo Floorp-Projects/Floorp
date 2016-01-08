@@ -47,6 +47,7 @@ WebGLContext::GetExtensionString(WebGLExtensionID ext)
         WEBGL_EXTENSION_IDENTIFIER(OES_vertex_array_object)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_color_buffer_float)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_atc)
+        WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_es3)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_etc1)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_pvrtc)
         WEBGL_EXTENSION_IDENTIFIER(WEBGL_compressed_texture_s3tc)
@@ -199,6 +200,8 @@ WebGLContext::IsExtensionSupported(WebGLExtensionID ext) const
             switch (ext) {
             case WebGLExtensionID::EXT_disjoint_timer_query:
                 return WebGLExtensionDisjointTimerQuery::IsSupported(this);
+            case WebGLExtensionID::WEBGL_compressed_texture_es3:
+                return gl->IsExtensionSupported(gl::GLContext::ARB_ES3_compatibility);
 
             default:
                 // For warnings-as-errors.
@@ -376,6 +379,9 @@ WebGLContext::EnableExtension(WebGLExtensionID ext)
         break;
     case WebGLExtensionID::WEBGL_compressed_texture_atc:
         obj = new WebGLExtensionCompressedTextureATC(this);
+        break;
+    case WebGLExtensionID::WEBGL_compressed_texture_es3:
+        obj = new WebGLExtensionCompressedTextureES3(this);
         break;
     case WebGLExtensionID::WEBGL_compressed_texture_etc1:
         obj = new WebGLExtensionCompressedTextureETC1(this);

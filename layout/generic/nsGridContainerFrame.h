@@ -108,6 +108,7 @@ protected:
   static const uint32_t kTranslatedMaxLine;
   typedef mozilla::LogicalPoint LogicalPoint;
   typedef mozilla::LogicalRect LogicalRect;
+  typedef mozilla::LogicalSize LogicalSize;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::css::GridNamedArea GridNamedArea;
   typedef nsLayoutUtils::IntrinsicISizeType IntrinsicISizeType;

@@ -59,7 +59,7 @@ class GMPDecryptorProxy {
 public:
   ~GMPDecryptorProxy() {}
 
-  virtual const uint32_t GetPluginId() const = 0;
+  virtual uint32_t GetPluginId() const = 0;
 
   virtual nsresult Init(GMPDecryptorProxyCallback* aCallback) = 0;
 

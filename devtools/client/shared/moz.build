@@ -30,7 +30,6 @@ DevToolsModules(
     'inplace-editor.js',
     'Jsbeautify.jsm',
     'node-attribute-parser.js',
-    'observable-object.js',
     'options-view.js',
     'output-parser.js',
     'poller.js',

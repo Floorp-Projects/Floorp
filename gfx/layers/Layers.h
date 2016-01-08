@@ -1354,7 +1354,7 @@ public:
    * Returns the local opacity for this layer: either mOpacity or,
    * for shadow layers, GetShadowOpacity()
    */
-  const float GetLocalOpacity();
+  float GetLocalOpacity();
 
   /**
    * DRAWING PHASE ONLY
@@ -1637,7 +1637,7 @@ public:
    * marked as needed to be recomposited.
    */
   const nsIntRegion& GetInvalidRegion() { return mInvalidRegion; }
-  const void AddInvalidRegion(const nsIntRegion& aRegion) {
+  void AddInvalidRegion(const nsIntRegion& aRegion) {
     mInvalidRegion.Or(mInvalidRegion, aRegion);
   }
 

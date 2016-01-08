@@ -23,7 +23,7 @@ class GTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_gtest(self, prog, xre_path, symbols_path=None, cwd=None):
+    def run_gtest(self, prog, xre_path, cwd, symbols_path=None):
         """
         Run a single C++ unit test program.
 
@@ -53,7 +53,7 @@ class GTests(object):
         if proc.timedOut:
             log.testFail("gtest | timed out after %d seconds", GTests.TEST_PROC_TIMEOUT)
             return False
-        if mozcrash.check_for_crashes(os.getcwd(), symbols_path, test_name="gtest"):
+        if mozcrash.check_for_crashes(cwd, symbols_path, test_name="gtest"):
             # mozcrash will output the log failure line for us.
             return False
         result = proc.proc.returncode == 0
@@ -153,8 +153,8 @@ def main():
     tester = GTests()
     try:
         result = tester.run_gtest(prog, options.xre_path,
-                                  symbols_path=options.symbols_path,
-                                  cwd=options.cwd)
+                                  options.cwd,
+                                  symbols_path=options.symbols_path)
     except Exception, e:
         log.error(str(e))
         result = False
