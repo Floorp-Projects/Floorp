@@ -142,7 +142,7 @@ var TPS = {
       errInfo = Log.exceptionStr(exc); // includes details and stack-trace.
     } else {
       // always write a stack even if no error passed.
-      errInfo = Utils.stackTrace(new Error());
+      errInfo = Log.stackTrace(new Error());
     }
     Logger.logError(`[phase ${this._currentPhase}] ${msg} - ${errInfo}`);
     this.quit();
