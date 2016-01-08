@@ -85,7 +85,7 @@ using std::map;
 class UniqueString;
 
 // Get the contained C string (debugging only)
-const char* const FromUniqueString(const UniqueString*);
+const char* FromUniqueString(const UniqueString*);
 
 // Is the given string empty (that is, "") ?
 bool IsEmptyUniqueString(const UniqueString*);

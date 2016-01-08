@@ -194,7 +194,7 @@ class MOZ_STACK_CLASS FillFormIterator final
   : public URLSearchParams::ForEachIterator
 {
 public:
-  explicit FillFormIterator(nsFormData* aFormData)
+  explicit FillFormIterator(FormData* aFormData)
     : mFormData(aFormData)
   {
     MOZ_ASSERT(aFormData);
@@ -210,7 +210,7 @@ public:
   }
 
 private:
-  nsFormData* mFormData;
+  FormData* mFormData;
 };
 
 /**
@@ -224,7 +224,7 @@ private:
  * never return a partially filled FormData.
  * The content-disposition header is used to figure out the name and filename
  * entries. The inclusion of the filename parameter decides if the entry is
- * inserted into the nsFormData as a string or a File.
+ * inserted into the FormData as a string or a File.
  *
  * File blobs are copies of the underlying data string since we cannot adopt
  * char* chunks embedded within the larger body without significant effort.
@@ -235,7 +235,7 @@ private:
 class MOZ_STACK_CLASS FormDataParser
 {
 private:
-  RefPtr<nsFormData> mFormData;
+  RefPtr<FormData> mFormData;
   nsCString mMimeType;
   nsCString mData;
 
@@ -388,7 +388,7 @@ private:
     aStart.advance(2);
 
     if (!mFormData) {
-      mFormData = new nsFormData();
+      mFormData = new FormData();
     }
 
     NS_ConvertUTF8toUTF16 name(mName);
@@ -488,7 +488,7 @@ public:
           if (start != end && *start == '-') {
             // End of data.
             if (!mFormData) {
-              mFormData = new nsFormData();
+              mFormData = new FormData();
             }
             return true;
           }
@@ -535,7 +535,7 @@ public:
     return false;
   }
 
-  already_AddRefed<nsFormData> FormData()
+  already_AddRefed<FormData> GetFormData()
   {
     return mFormData.forget();
   }
@@ -543,7 +543,7 @@ public:
 }
 
 // static
-already_AddRefed<nsFormData>
+already_AddRefed<FormData>
 FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
                            const nsCString& aStr, ErrorResult& aRv)
 {
@@ -564,7 +564,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
       return nullptr;
     }
 
-    RefPtr<nsFormData> fd = parser.FormData();
+    RefPtr<FormData> fd = parser.GetFormData();
     MOZ_ASSERT(fd);
     return fd.forget();
   }
@@ -580,7 +580,7 @@ FetchUtil::ConsumeFormData(nsIGlobalObject* aParent, const nsCString& aMimeType,
     URLParams params;
     params.ParseInput(aStr);
 
-    RefPtr<nsFormData> fd = new nsFormData(aParent);
+    RefPtr<FormData> fd = new FormData(aParent);
     FillFormIterator iterator(fd);
     DebugOnly<bool> status = params.ForEach(iterator);
     MOZ_ASSERT(status);

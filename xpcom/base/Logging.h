@@ -45,6 +45,11 @@ enum class LogLevel {
   Verbose,
 };
 
+/**
+ * Safely converts an integer into a valid LogLevel.
+ */
+LogLevel ToLogLevel(int32_t aLevel);
+
 class LogModule
 {
 public:
@@ -73,6 +78,11 @@ public:
    * Retrieves the log module's current level.
    */
   LogLevel Level() const { return mLevel; }
+
+  /**
+   * Sets the log module's level.
+   */
+  void SetLevel(LogLevel level) { mLevel = level; }
 
 private:
   friend class LogModuleManager;

@@ -549,15 +549,17 @@ WebAudioDecodeJob::OnSuccess(ErrorCode aErrorCode)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aErrorCode == NoError);
 
-  // Ignore errors in calling the callback, since there is not much that we can
-  // do about it here.
-  ErrorResult rv;
   if (mSuccessCallback) {
+    ErrorResult rv;
     mSuccessCallback->Call(*mOutput, rv);
+    // Ignore errors in calling the callback, since there is not much that we can
+    // do about it here.
+    rv.SuppressException();
   }
   mPromise->MaybeResolve(mOutput);
 
   mContext->RemoveFromDecodeQueue(this);
+
 }
 
 void

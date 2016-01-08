@@ -77,7 +77,7 @@ class UniqueString {
   const char* str_;
 };
 
-const char* const FromUniqueString(const UniqueString* ustr)
+const char* FromUniqueString(const UniqueString* ustr)
 {
   return ustr->str_;
 }

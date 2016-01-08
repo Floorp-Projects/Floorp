@@ -3226,25 +3226,31 @@ ScrollFrameHelper::DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
   if (aBuilder->IsPaintingToWindow()) {
     wasUsingDisplayPort = nsLayoutUtils::HasDisplayPort(content);
 
-    nsRect displayportBase = *aDirtyRect;
-    nsPresContext* pc = mOuter->PresContext();
-    if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
-      displayportBase =
-        nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    }
-
-    nsRect displayPort;
     if (aAllowCreateDisplayPort) {
+      nsRect displayportBase = *aDirtyRect;
+      nsPresContext* pc = mOuter->PresContext();
+      if (mIsRoot && (pc->IsRootContentDocument() || !pc->GetParentPresContext())) {
+        displayportBase =
+          nsRect(nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
+      } else {
+        // Restrict the dirty rect to the scrollport, and make it relative to the
+        // scrollport for the displayport base.
+        displayportBase = aDirtyRect->Intersect(mScrollPort);
+        displayportBase -= mScrollPort.TopLeft();
+      }
+
       // Provide the value of the display port base rect, and possibly create a
       // display port if there isn't one already.
-      usingDisplayPort = nsLayoutUtils::GetOrMaybeCreateDisplayPort(
-            *aBuilder, mOuter, displayportBase, &displayPort);
-    } else {
-      // We should have already been called with aAllowCreateDisplayPort == true
-      // which should have set a displayport base.
-      MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
-      usingDisplayPort = nsLayoutUtils::GetDisplayPort(content, &displayPort);
+      nsLayoutUtils::MaybeCreateDisplayPort(*aBuilder, mOuter, displayportBase);
     }
+
+    // If we don't have aAllowCreateDisplayPort == true then should have already
+    // been called with aAllowCreateDisplayPort == true which should have set a
+    // displayport base.
+    MOZ_ASSERT(content->GetProperty(nsGkAtoms::DisplayPortBase));
+    nsRect displayPort;
+    usingDisplayPort =
+      nsLayoutUtils::GetDisplayPort(content, &displayPort, RelativeTo::ScrollFrame);
 
     // Override the dirty rectangle if the displayport has been set.
     if (usingDisplayPort) {
@@ -3341,7 +3347,8 @@ ScrollFrameHelper::IsRectNearlyVisible(const nsRect& aRect) const
 {
   // Use the right rect depending on if a display port is set.
   nsRect displayPort;
-  bool usingDisplayport = nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort);
+  bool usingDisplayport =
+    nsLayoutUtils::GetDisplayPort(mOuter->GetContent(), &displayPort, RelativeTo::ScrollFrame);
   return aRect.Intersects(ExpandRectToNearlyVisible(usingDisplayport ? displayPort : mScrollPort));
 }
 

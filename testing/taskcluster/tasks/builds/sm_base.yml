@@ -4,7 +4,6 @@ task:
   workerType: spidermonkey
 
   routes:
-    - 'index.ffledgling.test.spidermonkey'
     - 'index.buildbot.branches.{{project}}.sm-plain'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.sm-plain'
 

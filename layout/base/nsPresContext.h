@@ -403,18 +403,18 @@ public:
   /**
    * Get the default colors
    */
-  const nscolor DefaultColor() const { return mDefaultColor; }
-  const nscolor DefaultBackgroundColor() const { return mBackgroundColor; }
-  const nscolor DefaultLinkColor() const { return mLinkColor; }
-  const nscolor DefaultActiveLinkColor() const { return mActiveLinkColor; }
-  const nscolor DefaultVisitedLinkColor() const { return mVisitedLinkColor; }
-  const nscolor FocusBackgroundColor() const { return mFocusBackgroundColor; }
-  const nscolor FocusTextColor() const { return mFocusTextColor; }
+  nscolor DefaultColor() const { return mDefaultColor; }
+  nscolor DefaultBackgroundColor() const { return mBackgroundColor; }
+  nscolor DefaultLinkColor() const { return mLinkColor; }
+  nscolor DefaultActiveLinkColor() const { return mActiveLinkColor; }
+  nscolor DefaultVisitedLinkColor() const { return mVisitedLinkColor; }
+  nscolor FocusBackgroundColor() const { return mFocusBackgroundColor; }
+  nscolor FocusTextColor() const { return mFocusTextColor; }
 
   /**
    * Body text color, for use in quirks mode only.
    */
-  const nscolor BodyTextColor() const { return mBodyTextColor; }
+  nscolor BodyTextColor() const { return mBodyTextColor; }
   void SetBodyTextColor(nscolor aColor) { mBodyTextColor = aColor; }
 
   bool GetUseFocusColors() const { return mUseFocusColors; }

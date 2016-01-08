@@ -1203,13 +1203,13 @@ class DwarfCFIToModule: public CallFrameInfo::Handler {
   class RegisterNames {
    public:
     // Intel's "x86" or IA-32.
-    static const unsigned int I386();
+    static unsigned int I386();
 
     // AMD x86_64, AMD64, Intel EM64T, or Intel 64
-    static const unsigned int X86_64();
+    static unsigned int X86_64();
 
     // ARM.
-    static const unsigned int ARM();
+    static unsigned int ARM();
   };
 
   // Create a handler for the dwarf2reader::CallFrameInfo parser that

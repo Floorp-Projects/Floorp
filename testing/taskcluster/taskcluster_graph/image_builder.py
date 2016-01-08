@@ -217,9 +217,9 @@ def normalize_image_details(graph, task, seen_images, params, decision_task_id):
         image_task['task']['workerType']
     )
 
-    graph['scopes'].append(define_task)
-    graph['scopes'].extend(image_task['task'].get('scopes', []))
+    graph['scopes'].add(define_task)
+    graph['scopes'] |= set(image_task['task'].get('scopes', []))
     route_scopes = map(lambda route: 'queue:route:' + route, image_task['task'].get('routes', []))
-    graph['scopes'].extend(route_scopes)
+    graph['scopes'] |= set(route_scopes)
 
     details['required'] = True
