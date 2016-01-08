@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=642338
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=642338">Mozilla Bug 642338</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
@@ -42,7 +42,7 @@ function testWindow(w)
   function checkFeature(feature, prefname) {
     if (prefname === undefined)
       prefname = feature;
-    
+
     if (SpecialPowers.getBoolPref('dom.disable_window_open_feature.' + prefname)) {
       is(w[feature].visible, true, feature + ' should always be true.');
     }
@@ -81,7 +81,7 @@ var allBarsWindow =
               'personalbar=yes,status=yes,scrollbars=yes',
               true);
 
-var noBarsWindow = 
+var noBarsWindow =
   window.open('file_window_bar.html?false', 'no-bars',
               'menubar=no,toolbar=no,location=no,' +
               'personalbar=no,status=no,scrollbars=no',
