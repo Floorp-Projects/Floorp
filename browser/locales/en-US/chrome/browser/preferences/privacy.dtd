@@ -4,9 +4,6 @@
 
 <!ENTITY tracking.label                 "Tracking">
 
-<!ENTITY dntTrackingNotOkay4.label     "Request that sites not track you">
-<!ENTITY dntTrackingNotOkay4.accesskey "n">
-<!ENTITY doNotTrackInfo.label          "Learn More">
 <!ENTITY trackingProtection5.label     "Use Tracking Protection">
 <!ENTITY trackingProtection5.accesskey "i">
 <!ENTITY trackingProtectionLearnMore.label "Learn more">
@@ -15,6 +12,12 @@
 <!ENTITY trackingProtectionPBMLearnMore.label "Learn more">
 <!ENTITY changeBlockList.label          "Change Block List">
 <!ENTITY changeBlockList.accesskey      "C">
+
+<!-- LOCALIZATION NOTE (doNotTrack.pre.label): include a trailing space as needed -->
+<!-- LOCALIZATION NOTE (doNotTrack.post.label): include a starting space as needed -->
+<!ENTITY  doNotTrack.pre.label          "You can also ">
+<!ENTITY  doNotTrack.settings.label     "manage your Do Not Track settings">
+<!ENTITY  doNotTrack.post.label         ".">
 
 <!ENTITY  history.label                 "History">
 
