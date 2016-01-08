@@ -185,11 +185,13 @@ public:
    * @return the display port for the given element which should be used for
    * visibility testing purposes.
    *
-   * If low-precision buffers are enabled, this is the critical display port;
-   * otherwise, it's the same display port returned by GetDisplayPort().
+   * If low-precision buffers are enabled, this is the critical display port
+   * relative to the scroll frame; otherwise, it's the same display port
+   * returned by GetDisplayPortRelativeToScrollFrame().
    */
-  static bool GetDisplayPortForVisibilityTesting(nsIContent* aContent,
-                                                 nsRect* aResult = nullptr);
+  static bool GetDisplayPortRelativeToScrollFrameForVisibilityTesting(
+    nsIContent* aContent,
+    nsRect* aResult);
 
   enum class RepaintMode : uint8_t {
     Repaint,
