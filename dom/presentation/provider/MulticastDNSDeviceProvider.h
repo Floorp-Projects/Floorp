@@ -86,12 +86,12 @@ private:
       return mAddress;
     }
 
-    const uint16_t Port() const
+    uint16_t Port() const
     {
       return mPort;
     }
 
-    const DeviceState State() const
+    DeviceState State() const
     {
       return mState;
     }

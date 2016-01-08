@@ -174,7 +174,7 @@ public:
   Send(Blob& aBody, ErrorResult& aRv);
 
   void
-  Send(nsFormData& aBody, ErrorResult& aRv);
+  Send(FormData& aBody, ErrorResult& aRv);
 
   void
   Send(const ArrayBuffer& aBody, ErrorResult& aRv);

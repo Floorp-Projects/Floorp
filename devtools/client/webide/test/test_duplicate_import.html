@@ -25,7 +25,7 @@
           let hostedAppManifest = TEST_BASE + "hosted_app.manifest";
 
           yield win.AppProjects.load();
-          is(win.AppProjects.store.object.projects.length, 0, "IDB is empty");
+          is(win.AppProjects.projects.length, 0, "IDB is empty");
 
           info("to call importPackagedApp(" + packagedAppLocation + ")");
           yield winProject.projectList.importPackagedApp(packagedAppLocation);

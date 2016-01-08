@@ -16,11 +16,11 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
+#include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
-#include "nsFormData.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
 #include "nsVariant.h"
@@ -2203,7 +2203,7 @@ XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(nsFormData& aBody, ErrorResult& aRv)
+XMLHttpRequest::Send(FormData& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();

@@ -9,6 +9,7 @@
 #include "jshashutil.h"
 #include "jsobj.h"
 
+#include "gc/Marking.h"
 #include "gc/StoreBuffer.h"
 #include "gc/Zone.h"
 #include "vm/ArrayObject.h"
@@ -405,6 +406,11 @@ struct ObjectGroupCompartment::NewEntry
     }
 
     static void rekey(NewEntry& k, const NewEntry& newKey) { k = newKey; }
+
+    bool needsSweep() {
+        return (IsAboutToBeFinalized(&group) ||
+                (associated && IsAboutToBeFinalizedUnbarriered(&associated)));
+    }
 };
 
 // This class is used to add a post barrier on a NewTable entry, as the key is
@@ -757,6 +763,18 @@ struct ObjectGroupCompartment::ArrayObjectKey : public DefaultHasher<ArrayObject
 
     bool operator!=(const ArrayObjectKey& other) {
         return !(*this == other);
+    }
+
+    bool needsSweep() {
+        MOZ_ASSERT(type.isUnknown() || !type.isSingleton());
+        if (!type.isUnknown() && type.isGroup()) {
+            ObjectGroup* group = type.groupNoBarrier();
+            if (IsAboutToBeFinalizedUnbarriered(&group))
+                return true;
+            if (group != type.groupNoBarrier())
+                type = TypeSet::ObjectType(group);
+        }
+        return false;
     }
 };
 
@@ -1129,6 +1147,14 @@ struct ObjectGroupCompartment::PlainObjectKey
         }
         return true;
     }
+
+    bool needsSweep() {
+        for (unsigned i = 0; i < nproperties; i++) {
+            if (gc::IsAboutToBeFinalizedUnbarriered(&properties[i]))
+                return true;
+        }
+        return false;
+    }
 };
 
 struct ObjectGroupCompartment::PlainObjectEntry
@@ -1136,6 +1162,24 @@ struct ObjectGroupCompartment::PlainObjectEntry
     ReadBarrieredObjectGroup group;
     ReadBarrieredShape shape;
     TypeSet::Type* types;
+
+    bool needsSweep(unsigned nproperties) {
+        if (IsAboutToBeFinalized(&group))
+            return true;
+        if (IsAboutToBeFinalized(&shape))
+            return true;
+        for (unsigned i = 0; i < nproperties; i++) {
+            MOZ_ASSERT(!types[i].isSingleton());
+            if (types[i].isGroup()) {
+                ObjectGroup* group = types[i].groupNoBarrier();
+                if (IsAboutToBeFinalizedUnbarriered(&group))
+                    return true;
+                if (group != types[i].groupNoBarrier())
+                    types[i] = TypeSet::ObjectType(group);
+            }
+        }
+        return false;
+    }
 };
 
 static bool
@@ -1391,6 +1435,11 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
     static void trace(AllocationSiteKey* key, JSTracer* trc) {
         TraceRoot(trc, &key->script, "AllocationSiteKey script");
         TraceNullableRoot(trc, &key->proto, "AllocationSiteKey proto");
+    }
+
+    bool needsSweep() {
+        return IsAboutToBeFinalizedUnbarriered(script.unsafeGet()) ||
+            (proto && IsAboutToBeFinalizedUnbarriered(proto.unsafeGet()));
     }
 };
 
@@ -1722,6 +1771,17 @@ ObjectGroupCompartment::clearTables()
         lazyTable->clear();
 }
 
+/* static */ bool
+ObjectGroupCompartment::PlainObjectGCPolicy::needsSweep(PlainObjectKey* key,
+                                                        PlainObjectEntry* entry)
+{
+    if (!(KeyPolicy::needsSweep(key) || entry->needsSweep(key->nproperties)))
+        return false;
+    js_free(key->properties);
+    js_free(entry->types);
+    return true;
+}
+
 void
 ObjectGroupCompartment::sweep(FreeOp* fop)
 {
@@ -1730,92 +1790,16 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
      * referencing collected data. These tables only hold weak references.
      */
 
-    if (arrayObjectTable) {
-        for (ArrayObjectTable::Enum e(*arrayObjectTable); !e.empty(); e.popFront()) {
-            ArrayObjectKey key = e.front().key();
-            MOZ_ASSERT(key.type.isUnknown() || !key.type.isSingleton());
-
-            bool remove = false;
-            if (!key.type.isUnknown() && key.type.isGroup()) {
-                ObjectGroup* group = key.type.groupNoBarrier();
-                if (IsAboutToBeFinalizedUnbarriered(&group))
-                    remove = true;
-                else
-                    key.type = TypeSet::ObjectType(group);
-            }
-            if (IsAboutToBeFinalized(&e.front().value()))
-                remove = true;
-
-            if (remove)
-                e.removeFront();
-            else if (key != e.front().key())
-                e.rekeyFront(key);
-        }
-    }
-
-    if (plainObjectTable) {
-        for (PlainObjectTable::Enum e(*plainObjectTable); !e.empty(); e.popFront()) {
-            const PlainObjectKey& key = e.front().key();
-            PlainObjectEntry& entry = e.front().value();
-
-            bool remove = false;
-            if (IsAboutToBeFinalized(&entry.group))
-                remove = true;
-            if (IsAboutToBeFinalized(&entry.shape))
-                remove = true;
-            for (unsigned i = 0; !remove && i < key.nproperties; i++) {
-                if (gc::IsAboutToBeFinalizedUnbarriered(&key.properties[i]))
-                    remove = true;
-
-                MOZ_ASSERT(!entry.types[i].isSingleton());
-                if (entry.types[i].isGroup()) {
-                    ObjectGroup* group = entry.types[i].groupNoBarrier();
-                    if (IsAboutToBeFinalizedUnbarriered(&group))
-                        remove = true;
-                    else if (group != entry.types[i].groupNoBarrier())
-                        entry.types[i] = TypeSet::ObjectType(group);
-                }
-            }
-
-            if (remove) {
-                js_free(key.properties);
-                js_free(entry.types);
-                e.removeFront();
-            }
-        }
-    }
-
-    if (allocationSiteTable) {
-        for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
-            bool keyDying = IsAboutToBeFinalized(&e.front().mutableKey().script) ||
-                            (e.front().key().proto && IsAboutToBeFinalized(&e.front().mutableKey().proto));
-            bool valDying = IsAboutToBeFinalized(&e.front().value());
-            if (keyDying || valDying)
-                e.removeFront();
-        }
-    }
-
-    sweepNewTable(defaultNewTable);
-    sweepNewTable(lazyTable);
-}
-
-void
-ObjectGroupCompartment::sweepNewTable(NewTable* table)
-{
-    if (table && table->initialized()) {
-        for (NewTable::Enum e(*table); !e.empty(); e.popFront()) {
-            NewEntry entry = e.front();
-            if (IsAboutToBeFinalized(&entry.group) ||
-                (entry.associated && IsAboutToBeFinalizedUnbarriered(&entry.associated)))
-            {
-                e.removeFront();
-            } else {
-                /* Any rekeying necessary is handled by fixupNewObjectGroupTable() below. */
-                MOZ_ASSERT(entry.group.unbarrieredGet() == e.front().group.unbarrieredGet());
-                MOZ_ASSERT(entry.associated == e.front().associated);
-            }
-        }
-    }
+    if (arrayObjectTable)
+        arrayObjectTable->sweep();
+    if (plainObjectTable)
+        plainObjectTable->sweep();
+    if (allocationSiteTable)
+        allocationSiteTable->sweep();
+    if (defaultNewTable)
+        defaultNewTable->sweep();
+    if (lazyTable)
+        lazyTable->sweep();
 }
 
 void

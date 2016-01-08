@@ -9,6 +9,8 @@
  */
 
 #include "nsILayoutDebugger.h"
+
+#include "nsAttrValue.h"
 #include "nsFrame.h"
 #include "nsDisplayList.h"
 #include "FrameLayerBuilder.h"

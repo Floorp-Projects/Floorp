@@ -12,6 +12,10 @@
 #ifndef TouchManager_h_
 #define TouchManager_h_
 
+#include "mozilla/BasicEvents.h"
+#include "mozilla/dom/Touch.h"
+#include "nsRefPtrHashtable.h"
+
 class PresShell;
 class nsIDocument;
 

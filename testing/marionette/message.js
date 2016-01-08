@@ -257,7 +257,7 @@ this.Response = class {
     let wd = error.isWebDriverError(err);
     let we = wd ? err : new WebDriverError(err.message);
 
-    this.error = error.toJson(err);
+    this.error = error.toJson(we);
     this.body = null;
     this.send();
 

@@ -273,24 +273,13 @@ for (var constructor of constructors) {
 // behaviour of filter. See https://bugzilla.mozilla.org/show_bug.cgi?id=1121936#c18
 // for more details.
 
-// Object conforming to the "iterator" protocol
-var obj = {
-    v: 0,
-    next: function() {
-        if (this.v == 5) {
-	       return {done : true, value : this.v };
-        } else {
-	       this.v++;
-	       return { done : false, value : this.v };
-        }
-    }
-};
+var arr = new Uint16Array([1,2,3]);
 
 // save
 var old = Array.prototype[Symbol.iterator];
 
-Array.prototype[Symbol.iterator] = obj;
-assertDeepEq(new Uint16Array([1,2,3]).filter(v => true), new Uint16Array([1,2,3]));
+Array.prototype[Symbol.iterator] = () => { throw new Error("unreachable"); };
+assertDeepEq(arr.filter(v => true), arr);
 
 // restore
 Array.prototype[Symbol.iterator] = old;

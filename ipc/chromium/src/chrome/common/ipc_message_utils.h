@@ -53,7 +53,7 @@ class MessageIterator {
       NOTREACHED();
     return val;
   }
-  const void NextData(const char** data, int* length) const {
+  void NextData(const char** data, int* length) const {
     if (!msg_.ReadData(&iter_, data, length)) {
       NOTREACHED();
     }

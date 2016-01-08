@@ -11,6 +11,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "BorderConsts.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsCSSColorUtils.h"
@@ -1616,7 +1617,7 @@ nsCSSBorderRenderer::DrawBorders()
     Float dash = mBorderWidths[0];
     strokeOptions.mDashPattern = &dash;
     strokeOptions.mDashLength = 1;
-    strokeOptions.mDashOffset = 0.5f;
+    strokeOptions.mDashOffset = 0.5f * dash;
     DrawOptions drawOptions;
     drawOptions.mAntialiasMode = AntialiasMode::NONE;
     mDrawTarget->StrokeRect(rect, color, strokeOptions, drawOptions);
