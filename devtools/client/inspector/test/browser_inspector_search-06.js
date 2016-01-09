@@ -7,7 +7,7 @@
 // Check that searching again for nodes after they are removed or added from the
 // DOM works correctly.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
+const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 add_task(function* () {
   let { inspector, testActor } = yield openInspectorForURL(TEST_URL);

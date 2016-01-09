@@ -15,7 +15,7 @@ thisTestLeaksUncaughtRejectionsAndShouldBeFixed("false");
 // Test that hovering over the markup-view's containers doesn't always show the
 // highlighter, depending on the type of node hovered over.
 
-const TEST_PAGE = TEST_URL_ROOT +
+const TEST_PAGE = URL_ROOT +
   "doc_inspector_highlighter-comments.html";
 
 add_task(function* () {

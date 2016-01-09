@@ -9,7 +9,7 @@
 // and therefore the markup view, css rule view, computed view, font view,
 // box model view, and breadcrumbs, reset accordingly to show the right node
 
-const TEST_PAGE = TEST_URL_ROOT +
+const TEST_PAGE = URL_ROOT +
   "doc_inspector_delete-selected-node-02.html";
 
 add_task(function* () {
