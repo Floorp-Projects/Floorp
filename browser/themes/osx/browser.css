@@ -894,10 +894,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
     -moz-image-region: rect(18px, 702px, 36px, 684px);
   }
 
-  #web-apps-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(18px, 720px, 36px, 702px);
-  }
-
   /**
    * OSX has a unique set of icons when fullscreen is in the checked state.
    */
@@ -1067,10 +1063,6 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker > .dropmarker-ic
 
   #panic-button@toolbarButtonPressed@ {
     -moz-image-region: rect(36px, 1404px, 72px, 1368px);
-  }
-
-  #web-apps-button@toolbarButtonPressed@ {
-    -moz-image-region: rect(36px, 1440px, 72px, 1404px);
   }
 
   #add-share-provider {
