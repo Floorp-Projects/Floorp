@@ -1276,6 +1276,9 @@ public:
   virtual Layer* GetFirstChild() const { return nullptr; }
   virtual Layer* GetLastChild() const { return nullptr; }
   const gfx::Matrix4x4 GetTransform() const;
+  // Same as GetTransform(), but returns the transform as a strongly-typed
+  // matrix. Eventually this will replace GetTransform().
+  const CSSTransformMatrix GetTransformTyped() const;
   const gfx::Matrix4x4& GetBaseTransform() const { return mTransform; }
   // Note: these are virtual because ContainerLayerComposite overrides them.
   virtual float GetPostXScale() const { return mPostXScale; }
@@ -1346,9 +1349,16 @@ public:
 
   /**
    * Returns the local transform for this layer: either mTransform or,
-   * for shadow layers, GetShadowTransform()
+   * for shadow layers, GetShadowTransform(), in either case with the
+   * pre- and post-scales applied.
    */
   const gfx::Matrix4x4 GetLocalTransform();
+
+  /**
+   * Same as GetLocalTransform(), but returns a strongly-typed matrix.
+   * Eventually, this will replace GetLocalTransform().
+   */
+  const LayerToParentLayerMatrix4x4 GetLocalTransformTyped();
 
   /**
    * Returns the local opacity for this layer: either mOpacity or,

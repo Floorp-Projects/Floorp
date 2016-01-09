@@ -10,6 +10,7 @@
 #include "LayersLogging.h"                              // for Stringify
 #include "mozilla/gfx/Point.h"                          // for Point4D
 #include "mozilla/layers/APZThreadUtils.h"              // for AssertOnCompositorThread
+#include "mozilla/layers/APZUtils.h"                    // for CompleteAsyncTransform
 #include "mozilla/layers/AsyncCompositionManager.h"     // for ViewTransform::operator Matrix4x4()
 #include "nsPrintfCString.h"                            // for nsPrintfCString
 #include "UnitTransforms.h"                             // for ViewAs
@@ -206,7 +207,7 @@ HitTestingTreeNode::GetLayersId() const
 
 void
 HitTestingTreeNode::SetHitTestData(const EventRegions& aRegions,
-                                   const gfx::Matrix4x4& aTransform,
+                                   const CSSTransformMatrix& aTransform,
                                    const Maybe<ParentLayerIntRegion>& aClipRegion,
                                    const EventRegionsOverride& aOverride)
 {
@@ -227,12 +228,12 @@ Maybe<LayerPoint>
 HitTestingTreeNode::Untransform(const ParentLayerPoint& aPoint) const
 {
   // convert into Layer coordinate space
-  gfx::Matrix4x4 localTransform = mTransform;
-  if (mApzc) {
-    localTransform = localTransform * mApzc->GetCurrentAsyncTransformWithOverscroll();
-  }
-  return UntransformBy(
-      ViewAs<LayerToParentLayerMatrix4x4>(localTransform).Inverse(), aPoint);
+  LayerToParentLayerMatrix4x4 transform = mTransform *
+      CompleteAsyncTransform(
+        mApzc
+      ? mApzc->GetCurrentAsyncTransformWithOverscroll()
+      : AsyncTransformComponentMatrix());
+  return UntransformBy(transform.Inverse(), aPoint);
 }
 
 HitTestResult

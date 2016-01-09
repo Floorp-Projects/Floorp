@@ -4059,7 +4059,8 @@ CType::Finalize(JSFreeOp* fop, JSObject* obj)
     }
   }
 
-    // Fall through.
+    MOZ_FALLTHROUGH;
+
   case TYPE_array: {
     // Free the ffi_type info.
     slot = JS_GetReservedSlot(obj, SLOT_FFITYPE);
@@ -5508,7 +5509,7 @@ PostBarrierCallback(JSTracer* trc, JSString* key, void* data)
 
     UnbarrieredFieldInfoHash* table = reinterpret_cast<UnbarrieredFieldInfoHash*>(data);
     JSString* prior = key;
-    JS_CallUnbarrieredStringTracer(trc, &key, "CType fieldName");
+    js::UnsafeTraceManuallyBarrieredEdge(trc, &key, "CType fieldName");
     table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
 }
 

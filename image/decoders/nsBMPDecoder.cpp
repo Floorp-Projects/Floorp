@@ -710,6 +710,18 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
 LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::SkipGap()
 {
+  // If there are no pixels we can stop.
+  //
+  // XXX: normally, if there are no pixels we will have stopped decoding before
+  // now, outside of this decoder. However, if the BMP is within an ICO file,
+  // it's possible that the ICO claimed the image had a non-zero size while the
+  // BMP claims otherwise. This test is to catch that awkward case. If we ever
+  // come up with a more general solution to this ICO-and-BMP-disagree-on-size
+  // problem, this test can be removed.
+  if (mH.mWidth == 0 || mH.mHeight == 0) {
+    return Transition::TerminateSuccess();
+  }
+
   bool hasRLE = mH.mCompression == Compression::RLE8 ||
                 mH.mCompression == Compression::RLE4;
   return hasRLE
@@ -720,6 +732,7 @@ nsBMPDecoder::SkipGap()
 LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::ReadPixelRow(const char* aData)
 {
+  MOZ_ASSERT(mCurrentRow > 0);
   MOZ_ASSERT(mCurrentPos == 0);
 
   const uint8_t* src = reinterpret_cast<const uint8_t*>(aData);

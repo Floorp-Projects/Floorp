@@ -47,7 +47,11 @@ enum class PixelCastJustification : uint8_t {
   LayoutDeviceIsScreenForTabDims,
   // A combination of LayoutDeviceIsScreenForBounds and
   // ScreenIsParentLayerForRoot, which is how we're using it.
-  LayoutDeviceIsParentLayerForRCDRSF
+  LayoutDeviceIsParentLayerForRCDRSF,
+  // Used to treat the product of AsyncTransformComponentMatrix objects
+  // as an AsyncTransformMatrix. See the definitions of these matrices in
+  // LayersTypes.h for details.
+  MultipleAsyncTransforms
 };
 
 template <class TargetUnits, class SourceUnits>
@@ -91,6 +95,19 @@ gfx::ScaleFactor<SourceUnits, NewTargetUnits> ViewTargetAs(
     const gfx::ScaleFactor<SourceUnits, OldTargetUnits>& aScaleFactor,
     PixelCastJustification) {
   return gfx::ScaleFactor<SourceUnits, NewTargetUnits>(aScaleFactor.scale);
+}
+// Unlike the other functions in this category, this function takes the
+// target matrix type, rather than its source and target unit types, as
+// the explicit template argument, so an example invocation is:
+//    ViewAs<ScreenToLayerMatrix4x4>(otherTypedMatrix, justification)
+// The reason is that if it took the source and target unit types as two
+// template arguments, there may be some confusion as to which is the
+// source and which is the target.
+template <class TargetMatrix, class SourceMatrixSourceUnits, class SourceMatrixTargetUnits>
+TargetMatrix ViewAs(
+    const gfx::Matrix4x4Typed<SourceMatrixSourceUnits, SourceMatrixTargetUnits>& aMatrix,
+    PixelCastJustification) {
+  return TargetMatrix::FromUnknownMatrix(aMatrix.ToUnknownMatrix());
 }
 
 // Convenience functions for casting untyped entities to typed entities.

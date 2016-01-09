@@ -816,6 +816,9 @@ class ScriptSourceHolder
 {
     ScriptSource* ss;
   public:
+    ScriptSourceHolder()
+      : ss(nullptr)
+    {}
     explicit ScriptSourceHolder(ScriptSource* ss)
       : ss(ss)
     {
@@ -823,7 +826,14 @@ class ScriptSourceHolder
     }
     ~ScriptSourceHolder()
     {
-        ss->decref();
+        if (ss)
+            ss->decref();
+    }
+    void reset(ScriptSource* newss) {
+        if (ss)
+            ss->decref();
+        ss = newss;
+        ss->incref();
     }
     ScriptSource* get() const {
         return ss;
