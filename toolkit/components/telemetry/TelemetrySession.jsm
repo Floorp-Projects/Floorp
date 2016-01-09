@@ -1779,6 +1779,9 @@ var Impl = {
 
         reset();
       }.bind(this));
+
+      reset();
+      return Promise.resolve();
     };
 
     // We can be in one the following states here:

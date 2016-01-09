@@ -103,6 +103,7 @@ function* compareCounts(clickCallback) {
   // FHR -- first make sure the engine has an identifier so that FHR is happy.
   Object.defineProperty(engine.wrappedJSObject, "identifier",
                         { value: engineID });
+  let fhrCount = yield getNumberOfSearchesInFHR(engine.name, "urlbar");
 
   gURLBar.focus();
   yield clickCallback();
@@ -125,6 +126,10 @@ function* compareCounts(clickCallback) {
   Assert.ok(histogramKey in snapshot, "histogram with key should be recorded");
   Assert.equal(snapshot[histogramKey].sum, histogramCount + 1,
                "histogram sum should be incremented");
+
+  // FHR
+  let newFHRCount = yield getNumberOfSearchesInFHR(engine.name, "urlbar");
+  Assert.equal(newFHRCount, fhrCount + 1, "should be recorded in FHR");
 }
 
 /**
