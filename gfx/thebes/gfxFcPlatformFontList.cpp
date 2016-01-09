@@ -703,6 +703,7 @@ PrepareFontOptions(FcPattern* aPattern,
             // subpixel_order won't be used by the font as we won't use
             // CAIRO_ANTIALIAS_SUBPIXEL, but don't leave it at default for
             // caching reasons described above.  Fall through:
+            MOZ_FALLTHROUGH;
         case FC_RGBA_RGB:
             subpixel_order = CAIRO_SUBPIXEL_ORDER_RGB;
             break;

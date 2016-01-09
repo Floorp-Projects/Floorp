@@ -25,6 +25,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "Pocket",
 XPCOMUtils.defineLazyGetter(this, "gPocketBundle", function() {
   return Services.strings.createBundle("chrome://pocket/locale/pocket.properties");
 });
+XPCOMUtils.defineLazyGetter(this, "gPocketStyleURI", function() {
+  return Services.io.newURI("chrome://pocket/skin/pocket.css", null, null);
+});
 
 
 const PREF_BRANCH = "extensions.pocket.";
@@ -286,10 +289,12 @@ function pktUIGetter(prop, window) {
 
 var PocketOverlay = {
   startup: function(reason) {
+    let styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"]
+                              .getService(Ci.nsIStyleSheetService);
+    this._sheetType = styleSheetService.AUTHOR_SHEET;
+    this._cachedSheet = styleSheetService.preloadSheet(gPocketStyleURI,
+                                                       this._sheetType);
     CreatePocketWidget(reason);
-    Services.obs.addObserver(this,
-                             "browser-delayed-startup-finished",
-                             false);
     CustomizableUI.addListener(this);
     PocketContextMenu.init();
     PocketReader.startup();
@@ -322,9 +327,7 @@ var PocketOverlay = {
     PocketContextMenu.shutdown();
     PocketReader.shutdown();
   },
-  observe: function(aSubject, aTopic, aData) {
-    // new browser window, initialize the "overlay"
-    let window = aSubject;
+  onWindowOpened: function(window) {
     this.setWindowScripts(window);
     this.addStyles(window);
     this.updateWindow(window);
@@ -435,21 +438,13 @@ var PocketOverlay = {
   },
 
   addStyles: function(win) {
-    let xmlPI = win.document.createProcessingInstruction("xml-stylesheet",
-        "type=\"text/css\" href=\"chrome://pocket/skin/pocket.css\"");
-    win.document.insertBefore(xmlPI, win.document.documentElement);
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    utils.addSheet(this._cachedSheet, this._sheetType);
   },
 
   removeStyles: function(win) {
-    let el = win.document.documentElement.previousSibling;
-    while (el) {
-      if (el.nodeType == el.PROCESSING_INSTRUCTION_NODE &&
-          el.sheet && el.sheet.href == "chrome://pocket/skin/pocket.css") {
-        el.remove();
-        break;
-      }
-      el = el.previousSibling;
-    }
+    let utils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+    utils.removeSheet(gPocketStyleURI, this._sheetType);
   }
 
 }

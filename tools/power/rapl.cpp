@@ -52,6 +52,25 @@
 // Utilities
 //---------------------------------------------------------------------------
 
+// MOZ_FALLTHROUGH is an annotation to suppress compiler warnings about switch
+// cases that fall through without a break or return statement. MOZ_FALLTHROUGH
+// is only needed on cases that have code. This definition of MOZ_FALLTHROUGH
+// is identical to the one in mfbt/Attributes.h, which we don't use here because
+// this file avoids depending on Mozilla headers.
+#if defined(__clang__) && __cplusplus >= 201103L
+   /* clang's fallthrough annotations are only available starting in C++11. */
+#  define MOZ_FALLTHROUGH [[clang::fallthrough]]
+#elif defined(_MSC_VER)
+   /*
+    * MSVC's __fallthrough annotations are checked by /analyze (Code Analysis):
+    * https://msdn.microsoft.com/en-us/library/ms235402%28VS.80%29.aspx
+    */
+#  include <sal.h>
+#  define MOZ_FALLTHROUGH __fallthrough
+#else
+#  define MOZ_FALLTHROUGH /* FALLTHROUGH */
+#endif
+
 // The value of argv[0] passed to main(). Used in error messages.
 static const char* gArgv0;
 
@@ -327,7 +346,7 @@ public:
 
       case 63:  // 0x3f: Haswell-Server
         mHasRamUnitsQuirk = true;
-        // FALLTHROUGH
+        MOZ_FALLTHROUGH;
       case 45:  // 0x2d: Sandy Bridge-EP
       case 62:  // 0x3e: Ivy Bridge-E
         // Supports package, cores, RAM.

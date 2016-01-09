@@ -6,7 +6,7 @@ task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
   metadata:
-    source: https://hg.mozilla.org/mozilla-central/file/tip/b2g/simulator
+    source: '{{source}}'
     owner: apoirot@mozilla.com
     name: '[TC] FxOS Simulator'
     description: 'Firefox OS Simulator addon'

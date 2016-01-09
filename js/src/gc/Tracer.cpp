@@ -106,48 +106,6 @@ JS::CallbackTracer::getTracingEdgeName(char* buffer, size_t bufferSize)
 /*** Public Tracing API **************************************************************************/
 
 JS_PUBLIC_API(void)
-JS_CallUnbarrieredValueTracer(JSTracer* trc, Value* valuep, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, valuep, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallUnbarrieredIdTracer(JSTracer* trc, jsid* idp, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, idp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallUnbarrieredObjectTracer(JSTracer* trc, JSObject** objp, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, objp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, strp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* name)
-{
-    TraceManuallyBarrieredEdge(trc, scriptp, name);
-}
-
-JS_PUBLIC_API(void)
-JS_CallTenuredObjectTracer(JSTracer* trc, JS::TenuredHeap<JSObject*>* objp, const char* name)
-{
-    JSObject* obj = objp->getPtr();
-    if (!obj)
-        return;
-
-    TraceManuallyBarrieredEdge(trc, &obj, name);
-
-    objp->setPtr(obj);
-}
-
-JS_PUBLIC_API(void)
 JS::TraceChildren(JSTracer* trc, GCCellPtr thing)
 {
     js::TraceChildren(trc, thing.asCell(), thing.kind());

@@ -460,6 +460,14 @@ namespace JS {
 template<typename T>
 struct DeletePolicy
 {
+    MOZ_CONSTEXPR DeletePolicy() {}
+
+    template<typename U>
+    MOZ_IMPLICIT DeletePolicy(DeletePolicy<U> other,
+                              typename mozilla::EnableIf<mozilla::IsConvertible<U*, T*>::value,
+                                                         int>::Type dummy = 0)
+    {}
+
     void operator()(const T* ptr) {
         js_delete(const_cast<T*>(ptr));
     }

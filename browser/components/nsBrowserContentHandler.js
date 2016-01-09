@@ -38,7 +38,6 @@ const nsIWebNavigation       = Components.interfaces.nsIWebNavigation;
 const nsIWindowMediator      = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
 const nsIWebNavigationInfo   = Components.interfaces.nsIWebNavigationInfo;
-const nsIBrowserSearchService = Components.interfaces.nsIBrowserSearchService;
 const nsICommandLineValidator = Components.interfaces.nsICommandLineValidator;
 
 const NS_BINDING_ABORTED = Components.results.NS_BINDING_ABORTED;
@@ -262,10 +261,7 @@ function logSystemBasedSearch(engine) {
 }
 
 function doSearch(searchTerm, cmdLine) {
-  var ss = Components.classes["@mozilla.org/browser/search-service;1"]
-                     .getService(nsIBrowserSearchService);
-
-  var engine = ss.defaultEngine;
+  var engine = Services.search.defaultEngine;
   logSystemBasedSearch(engine);
 
   var submission = engine.getSubmission(searchTerm, null, "system");
@@ -796,9 +792,7 @@ nsDefaultCommandLineHandler.prototype = {
             }
             if (allowedParams.indexOf(formParam) != -1) {
               var term = params.get("q");
-              var ss = Components.classes["@mozilla.org/browser/search-service;1"]
-                                 .getService(nsIBrowserSearchService);
-              var engine = ss.defaultEngine;
+              var engine = Services.search.defaultEngine;
               logSystemBasedSearch(engine);
               var submission = engine.getSubmission(term, null, "system");
               uri = submission.uri;

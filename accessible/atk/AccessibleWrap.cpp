@@ -597,7 +597,8 @@ static void
 MaybeFireNameChange(AtkObject* aAtkObj, const nsString& aNewName)
 {
   NS_ConvertUTF16toUTF8 newNameUTF8(aNewName);
-  if (aAtkObj->name && newNameUTF8.Equals(aAtkObj->name))
+  if (aAtkObj->name &&
+      !strncmp(aAtkObj->name, newNameUTF8.get(), newNameUTF8.Length()))
     return;
 
   // Below we duplicate the functionality of atk_object_set_name(),

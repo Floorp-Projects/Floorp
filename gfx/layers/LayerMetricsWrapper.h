@@ -7,6 +7,7 @@
 #define GFX_LAYERMETRICSWRAPPER_H
 
 #include "Layers.h"
+#include "UnitTransforms.h"
 
 namespace mozilla {
 namespace layers {
@@ -297,6 +298,11 @@ public:
       return mLayer->GetTransform();
     }
     return gfx::Matrix4x4();
+  }
+
+  CSSTransformMatrix GetTransformTyped() const
+  {
+    return ViewAs<CSSTransformMatrix>(GetTransform());
   }
 
   bool TransformIsPerspective() const

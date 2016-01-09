@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim: set sw=4 ts=8 et tw=80 : */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -618,7 +618,26 @@ ContentChild::Init(MessageLoop* aIOLoop,
                    IPC::Channel* aChannel)
 {
 #ifdef MOZ_WIDGET_GTK
-  gtk_init(nullptr, nullptr);
+  // We need to pass a display down to gtk_init because it's not going to
+  // use the one from the environment on its own when deciding which backend
+  // to use, and when starting under XWayland, it may choose to start with
+  // the wayland backend instead of the x11 backend.
+  // The DISPLAY environment variable is normally set by the parent process.
+  char* display_name = PR_GetEnv("DISPLAY");
+  if (display_name) {
+    int argc = 3;
+    char option_name[] = "--display";
+    char* argv[] = {
+      nullptr,
+      option_name,
+      display_name,
+      nullptr
+    };
+    char** argvp = argv;
+    gtk_init(&argc, &argvp);
+  } else {
+    gtk_init(nullptr, nullptr);
+  }
 #endif
 
 #ifdef MOZ_WIDGET_QT
@@ -1572,7 +1591,7 @@ ContentChild::AllocPBlobChild(const BlobConstructorParams& aParams)
 mozilla::PRemoteSpellcheckEngineChild *
 ContentChild::AllocPRemoteSpellcheckEngineChild()
 {
-  NS_NOTREACHED("Default Constructor for PRemoteSpellcheckEngineChild should never be called");
+  MOZ_CRASH("Default Constructor for PRemoteSpellcheckEngineChild should never be called");
   return nullptr;
 }
 
@@ -1599,7 +1618,7 @@ ContentChild::SendPBlobConstructor(PBlobChild* aActor,
 PPresentationChild*
 ContentChild::AllocPPresentationChild()
 {
-  NS_NOTREACHED("We should never be manually allocating PPresentationChild actors");
+  MOZ_CRASH("We should never be manually allocating PPresentationChild actors");
   return nullptr;
 }
 
@@ -1704,7 +1723,7 @@ ContentChild::SendPIccConstructor(PIccChild* aActor,
 PIccChild*
 ContentChild::AllocPIccChild(const uint32_t& aServiceId)
 {
-  NS_NOTREACHED("No one should be allocating PIccChild actors");
+  MOZ_CRASH("No one should be allocating PIccChild actors");
   return nullptr;
 }
 
@@ -1760,7 +1779,7 @@ ContentChild::DeallocPDeviceStorageRequestChild(PDeviceStorageRequestChild* aDev
 PFileSystemRequestChild*
 ContentChild::AllocPFileSystemRequestChild(const FileSystemParams& aParams)
 {
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -1793,7 +1812,7 @@ PMobileConnectionChild*
 ContentChild::AllocPMobileConnectionChild(const uint32_t& aClientId)
 {
 #ifdef MOZ_B2G_RIL
-  NS_NOTREACHED("No one should be allocating PMobileConnectionChild actors");
+  MOZ_CRASH("No one should be allocating PMobileConnectionChild actors");
   return nullptr;
 #else
   MOZ_CRASH("No support for mobileconnection on this platform!");;
@@ -1832,7 +1851,7 @@ ContentChild::AllocPPrintingChild()
   // which implements PPrintingChild. Instead, the nsPrintingProxy service is
   // requested and instantiated via XPCOM, and the constructor of
   // nsPrintingProxy sets up the IPC connection.
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -1851,7 +1870,7 @@ ContentChild::AllocPScreenManagerChild(uint32_t* aNumberOfScreens,
   // nsScreenManagerProxy. Instead, the nsScreenManagerProxy
   // service is requested and instantiated via XPCOM, and the
   // constructor of nsScreenManagerProxy sets up the IPC connection.
-  NS_NOTREACHED("Should never get here!");
+  MOZ_CRASH("Should never get here!");
   return nullptr;
 }
 
@@ -2007,7 +2026,7 @@ ContentChild::DeallocPMediaChild(media::PMediaChild *aActor)
 PStorageChild*
 ContentChild::AllocPStorageChild()
 {
-  NS_NOTREACHED("We should never be manually allocating PStorageChild actors");
+  MOZ_CRASH("We should never be manually allocating PStorageChild actors");
   return nullptr;
 }
 
@@ -3023,7 +3042,7 @@ ContentChild::RecvUpdateWindow(const uintptr_t& aChildId)
   }
   return true;
 #else
-  NS_NOTREACHED("ContentChild::RecvUpdateWindow calls unexpected on this platform.");
+  MOZ_ASSERT(false, "ContentChild::RecvUpdateWindow calls unexpected on this platform.");
   return false;
 #endif
 }

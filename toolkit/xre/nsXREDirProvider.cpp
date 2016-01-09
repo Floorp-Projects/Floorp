@@ -298,11 +298,7 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
   rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIFile> file;
 
-  if (!strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_50_DIR) ||
-           !strcmp(aProperty, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR)) {
-    return GetProfileDefaultsDir(aFile);
-  }
-  else if (!strcmp(aProperty, NS_APP_PREF_DEFAULTS_50_DIR))
+  if (!strcmp(aProperty, NS_APP_PREF_DEFAULTS_50_DIR))
   {
     // return the GRE default prefs directory here, and the app default prefs
     // directory (if applicable) in NS_APP_PREFS_DEFAULTS_DIR_LIST.
@@ -433,13 +429,11 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
       }
       else {
         rv = file->AppendNative(NS_LITERAL_CSTRING("localstore.rdf"));
-        EnsureProfileFileExists(file);
         ensureFilePermissions = true;
       }
     }
     else if (!strcmp(aProperty, NS_APP_USER_MIMETYPES_50_FILE)) {
       rv = file->AppendNative(NS_LITERAL_CSTRING("mimeTypes.rdf"));
-      EnsureProfileFileExists(file);
       ensureFilePermissions = true;
     }
     else if (!strcmp(aProperty, NS_APP_DOWNLOADS_50_FILE)) {
@@ -1444,51 +1438,6 @@ nsXREDirProvider::EnsureDirectoryExists(nsIFile* aDirectory)
 #endif
 
   return rv;
-}
-
-void
-nsXREDirProvider::EnsureProfileFileExists(nsIFile *aFile)
-{
-  nsresult rv;
-  bool exists;
-
-  rv = aFile->Exists(&exists);
-  if (NS_FAILED(rv) || exists) return;
-
-  nsAutoCString leafName;
-  rv = aFile->GetNativeLeafName(leafName);
-  if (NS_FAILED(rv)) return;
-
-  nsCOMPtr<nsIFile> defaultsFile;
-  rv = GetProfileDefaultsDir(getter_AddRefs(defaultsFile));
-  if (NS_FAILED(rv)) return;
-
-  rv = defaultsFile->AppendNative(leafName);
-  if (NS_FAILED(rv)) return;
-
-  defaultsFile->CopyToNative(mProfileDir, EmptyCString());
-}
-
-nsresult
-nsXREDirProvider::GetProfileDefaultsDir(nsIFile* *aResult)
-{
-  NS_ASSERTION(mGREDir, "nsXREDirProvider not initialized.");
-  NS_PRECONDITION(aResult, "Null out-param");
-
-  nsresult rv;
-  nsCOMPtr<nsIFile> defaultsDir;
-
-  rv = GetAppDir()->Clone(getter_AddRefs(defaultsDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = defaultsDir->AppendNative(NS_LITERAL_CSTRING("defaults"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  rv = defaultsDir->AppendNative(NS_LITERAL_CSTRING("profile"));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  defaultsDir.forget(aResult);
-  return NS_OK;
 }
 
 nsresult

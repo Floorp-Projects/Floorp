@@ -13,7 +13,7 @@ function handleReferrer(event) {
 
 function handleClientId(event) {
   var body;
-  if (event.clientId !== '') {
+  if (event.clientId !== null) {
     body = 'Client ID Found: ' + event.clientId;
   } else {
     body = 'Client ID Not Found';

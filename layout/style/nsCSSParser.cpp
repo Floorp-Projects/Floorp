@@ -62,6 +62,7 @@ typedef nsCSSProps::KTableEntry KTableEntry;
 // pref-backed bool values (hooked up in nsCSSParser::Startup)
 static bool sOpentypeSVGEnabled;
 static bool sWebkitPrefixedAliasesEnabled;
+static bool sWebkitDevicePixelRatioEnabled;
 static bool sUnprefixingServiceEnabled;
 #ifdef NIGHTLY_BUILD
 static bool sUnprefixingServiceGloballyWhitelisted;
@@ -3480,6 +3481,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 
   // Strip off "-webkit-" prefix from featureString:
   if (sWebkitPrefixedAliasesEnabled &&
+      sWebkitDevicePixelRatioEnabled &&
       StringBeginsWith(featureString, NS_LITERAL_STRING("-webkit-"))) {
     satisfiedReqFlags |= nsMediaFeature::eHasWebkitPrefix;
     featureString.Rebind(featureString, 8);
@@ -3499,6 +3501,12 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   nsCOMPtr<nsIAtom> mediaFeatureAtom = do_GetAtom(featureString);
   const nsMediaFeature *feature = nsMediaFeatures::features;
   for (; feature->mName; ++feature) {
+    MOZ_ASSERT(!(feature->mReqFlags & nsMediaFeature::eHasWebkitPrefix) ||
+               *(feature->mName) == nsGkAtoms::devicePixelRatio,
+               "If we add support for a webkit-prefixed media-query feature "
+               "*other than* device-pixel-ratio, we need to adjust logic "
+               "above around sWebkitDevicePixelRatioEnabled.");
+
     // See if name matches & all requirement flags are satisfied:
     // (We check requirements by turning off all of the flags that have been
     // satisfied, and then see if the result is 0.)
@@ -17002,6 +17010,8 @@ nsCSSParser::Startup()
                                "gfx.font_rendering.opentype_svg.enabled");
   Preferences::AddBoolVarCache(&sWebkitPrefixedAliasesEnabled,
                                "layout.css.prefixes.webkit");
+  Preferences::AddBoolVarCache(&sWebkitDevicePixelRatioEnabled,
+                               "layout.css.prefixes.device-pixel-ratio-webkit");
   Preferences::AddBoolVarCache(&sUnprefixingServiceEnabled,
                                "layout.css.unprefixing-service.enabled");
 #ifdef NIGHTLY_BUILD

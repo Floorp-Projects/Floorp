@@ -420,7 +420,7 @@ private:
         }
 
         mPass = ITERATE_METADATA;
-        // no break
+        MOZ_FALLTHROUGH;
 
       case ITERATE_METADATA:
         // Now grab the context iterator.
