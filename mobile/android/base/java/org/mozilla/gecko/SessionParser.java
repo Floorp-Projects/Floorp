@@ -67,7 +67,14 @@ public abstract class SessionParser {
         int selectedIndex = -1;
         try {
             for (String sessionString : sessionStrings) {
-                final JSONObject window = new JSONObject(sessionString).getJSONArray("windows").getJSONObject(0);
+                final JSONArray windowsArray = new JSONObject(sessionString).getJSONArray("windows");
+                if (windowsArray.length() == 0) {
+                    // Session json can be empty if the user has opted out of session restore.
+                    Log.d(LOGTAG, "Session restore file is empty, no session entries found.");
+                    continue;
+                }
+
+                final JSONObject window = windowsArray.getJSONObject(0);
                 final JSONArray tabs = window.getJSONArray("tabs");
                 final int optSelected = window.optInt("selected", -1);
                 final JSONArray closedTabs = window.optJSONArray("closedTabs");
