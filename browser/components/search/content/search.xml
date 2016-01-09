@@ -420,7 +420,7 @@
           if (telemetrySearchDetails && telemetrySearchDetails.index == -1) {
             telemetrySearchDetails = null;
           }
-          BrowserSearch.recordSearchInTelemetry(engine, "searchbar", telemetrySearchDetails);
+          BrowserSearch.recordSearchInHealthReport(engine, "searchbar", telemetrySearchDetails);
           // null parameter below specifies HTML response for search
           let params = {
             postData: submission.postData,

@@ -431,7 +431,7 @@ BrowserGlue.prototype = {
           Cu.reportError(ex);
         }
         let win = RecentWindow.getMostRecentBrowserWindow();
-        win.BrowserSearch.recordSearchInTelemetry(engine, "urlbar");
+        win.BrowserSearch.recordSearchInHealthReport(engine, "urlbar");
         break;
       case "browser-search-engine-modified":
         // Ensure we cleanup the hiddenOneOffs pref when removing
