@@ -27,7 +27,12 @@ registerCleanupFunction(function() {
   try {
     Services.prefs.setCharPref("datareporting.healthreport.about.reportUrl", originalReportUrl);
     Services.prefs.setCharPref("datareporting.healthreport.about.reportUrlUnified", originalReportUrlUnified);
-    Services.prefs.setBoolPref("datareporting.healthreport.uploadEnabled", true);
+    let policy = Cc["@mozilla.org/datareporting/service;1"]
+                 .getService(Ci.nsISupports)
+                 .wrappedJSObject
+                 .policy;
+    policy.recordHealthReportUploadEnabled(true,
+                                           "Resetting after tests.");
   } catch (ex) {}
 });
 
@@ -75,6 +80,12 @@ var gTests = [
   run: function (iframe)
   {
     let deferred = Promise.defer();
+
+    let policy = Cc["@mozilla.org/datareporting/service;1"]
+                 .getService(Ci.nsISupports)
+                 .wrappedJSObject
+                 .policy;
+
     let results = 0;
     try {
       iframe.contentWindow.addEventListener("FirefoxHealthReportTestResponse", function evtHandler(event) {
