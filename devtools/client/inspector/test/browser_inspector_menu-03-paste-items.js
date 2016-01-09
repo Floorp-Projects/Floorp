@@ -6,7 +6,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 // Test that different paste items work in the context menu
 
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
+const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 const PASTE_ADJACENT_HTML_DATA = [
   {
     desc: "As First Child",

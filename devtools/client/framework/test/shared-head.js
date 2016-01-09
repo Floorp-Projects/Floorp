@@ -8,7 +8,7 @@
 // devtools.
 // It contains various common helper functions.
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC} = Components;
 
 function scopedCuImport(path) {
   const scope = {};
@@ -198,8 +198,10 @@ var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
   // Check if the toolbox is already loaded.
   toolbox = gDevTools.getToolbox(target);
   if (toolbox) {
-    info("Toolbox is already opened");
-    return toolbox;
+    if (!toolId || (toolId && toolbox.getPanel(toolId))) {
+      info("Toolbox is already opened");
+      return toolbox;
+    }
   }
 
   // If not, load it now.
