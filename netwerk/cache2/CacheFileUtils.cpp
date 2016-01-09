@@ -2,10 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "CacheIndex.h"
 #include "CacheLog.h"
 #include "CacheFileUtils.h"
 #include "LoadContextInfo.h"
 #include "mozilla/Tokenizer.h"
+#include "mozilla/Telemetry.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
 #include "nsString.h"

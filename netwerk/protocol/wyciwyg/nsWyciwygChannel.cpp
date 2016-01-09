@@ -29,6 +29,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "nsProxyRelease.h"
 #include "nsContentSecurityManager.h"
+#include "nsContentUtils.h"
 
 typedef mozilla::net::LoadContextInfo LoadContextInfo;
 

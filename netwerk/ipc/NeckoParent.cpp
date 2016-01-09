@@ -42,6 +42,7 @@
 #include "nsPrincipal.h"
 #include "nsIOService.h"
 #include "nsINetworkPredictor.h"
+#include "nsINetworkPredictorVerifier.h"
 #include "mozilla/net/OfflineObserver.h"
 #include "nsISpeculativeConnect.h"
 
