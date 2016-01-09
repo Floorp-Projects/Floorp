@@ -6,6 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/net/FTPChannelParent.h"
+#include "nsStringStream.h"
+#include "mozilla/net/ChannelEventQueue.h"
 #include "mozilla/dom/TabParent.h"
 #include "nsFTPChannel.h"
 #include "nsNetCID.h"

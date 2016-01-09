@@ -8,6 +8,7 @@
 #include <errno.h>
 #include "nsHttpChunkedDecoder.h"
 #include <algorithm>
+#include "plstr.h"
 
 namespace mozilla {
 namespace net {

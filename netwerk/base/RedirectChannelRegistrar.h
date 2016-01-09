@@ -11,6 +11,7 @@
 #include "nsIParentChannel.h"
 #include "nsInterfaceHashtable.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Mutex.h"
 
 namespace mozilla {
 namespace net {

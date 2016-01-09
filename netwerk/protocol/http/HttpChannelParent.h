@@ -40,6 +40,7 @@ class PBrowserOrId;
 namespace net {
 
 class HttpChannelParentListener;
+class ChannelEventQueue;
 
 // Note: nsIInterfaceRequestor must be the first base so that do_QueryObject()
 // works correctly on this object, as it's needed to compute a void* pointing to

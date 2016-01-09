@@ -6,6 +6,8 @@
 #include "nsContentSecurityManager.h"
 #include "nsSecCheckWrapChannel.h"
 #include "nsIForcePendingChannel.h"
+#include "nsIStreamListener.h"
+#include "mozilla/Logging.h"
 #include "nsCOMPtr.h"
 
 static mozilla::LazyLogModule gChannelWrapperLog("ChannelWrapper");

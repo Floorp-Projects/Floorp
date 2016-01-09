@@ -6,6 +6,7 @@
 #include "mozilla/Services.h"
 #include "mozilla/Preferences.h"
 #include "nsIObserverService.h"
+#include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
 
 #define kInterfaceName "captive-portal-inteface"

@@ -14,7 +14,9 @@
 #include "nsComponentManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Logging.h"
 #include "nsIForcePendingChannel.h"
+#include "nsIRequest.h"
 
 // brotli headers
 #include "state.h"

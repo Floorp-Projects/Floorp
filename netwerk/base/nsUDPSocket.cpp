@@ -21,6 +21,7 @@
 #include "nsNetAddr.h"
 #include "nsNetSegmentUtils.h"
 #include "NetworkActivityMonitor.h"
+#include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsIPipe.h"
 #include "prerror.h"
@@ -38,6 +39,7 @@ using namespace mozilla::net;
 using namespace mozilla;
 
 static const uint32_t UDP_PACKET_CHUNK_SIZE = 1400;
+static NS_DEFINE_CID(kSocketTransportServiceCID2, NS_SOCKETTRANSPORTSERVICE_CID);
 
 //-----------------------------------------------------------------------------
 
@@ -262,7 +264,7 @@ nsUDPSocket::nsUDPSocket()
   {
     // This call can fail if we're offline, for example.
     nsCOMPtr<nsISocketTransportService> sts =
-        do_GetService(kSocketTransportServiceCID);
+        do_GetService(kSocketTransportServiceCID2);
   }
 
   mSts = gSocketTransportService;

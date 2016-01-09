@@ -7,9 +7,11 @@
 #include "EventTokenBucket.h"
 
 #include "nsICancelable.h"
+#include "nsIIOService.h"
 #include "nsNetCID.h"
+#include "nsNetUtil.h"
+#include "nsServiceManagerUtils.h"
 #include "nsSocketTransportService2.h"
-
 #ifdef DEBUG
 #include "MainThreadUtils.h"
 #endif

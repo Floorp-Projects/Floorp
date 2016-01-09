@@ -20,6 +20,8 @@
 #include "nsIHttpChannel.h"
 #include "nsIForcePendingChannel.h"
 #include "nsIEncodedChannel.h"
+#include "nsIURI.h"
+#include "nsStringStream.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 

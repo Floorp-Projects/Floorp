@@ -10,7 +10,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
-#include "nsIHttpChannelChild.h"
+#include "HttpChannelChild.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsError.h"
 #include "nsContentUtils.h"
