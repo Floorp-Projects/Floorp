@@ -249,6 +249,10 @@ var gPermissionManager = {
     var urlLabel = document.getElementById("urlLabel");
     urlLabel.hidden = !urlFieldVisible;
 
+    if (aParams.hideStatusColumn) {
+      document.getElementById("statusCol").hidden = true;
+    }
+
     let treecols = document.getElementsByTagName("treecols")[0];
     treecols.addEventListener("click", event => {
       if (event.target.nodeName != "treecol" || event.button != 0) {
