@@ -19,8 +19,8 @@
 #ifndef wasm_generator_h
 #define wasm_generator_h
 
+#include "asmjs/WasmBinary.h"
 #include "asmjs/WasmIonCompile.h"
-#include "asmjs/WasmIR.h"
 #include "asmjs/WasmModule.h"
 #include "jit/MacroAssembler.h"
 
@@ -54,6 +54,7 @@ typedef Vector<SlowFunction> SlowFunctionVector;
 class MOZ_STACK_CLASS ModuleGenerator
 {
     typedef Vector<uint32_t> FuncOffsetVector;
+    typedef Vector<uint32_t> FuncIndexVector;
 
     struct SigHashPolicy
     {
@@ -64,17 +65,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     typedef HashSet<const LifoSig*, SigHashPolicy> SigSet;
 
     ExclusiveContext*             cx_;
-    CompileArgs                   args_;
-
-    // Data handed over to the Module in finish()
-    uint32_t                      globalBytes_;
-    ImportVector                  imports_;
-    ExportVector                  exports_;
-    CodeRangeVector               codeRanges_;
-    CacheableCharsVector          funcNames_;
 
     // Data handed back to the caller in finish()
-    UniqueStaticLinkData          staticLinkData_;
+    UniqueModuleData              module_;
+    UniqueStaticLinkData          link_;
     SlowFunctionVector            slowFuncs_;
 
     // Data scoped to the ModuleGenerator's lifetime
@@ -83,6 +77,8 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::TempAllocator            alloc_;
     jit::MacroAssembler           masm_;
     SigSet                        sigs_;
+    FuncOffsetVector              funcEntryOffsets_;
+    FuncIndexVector               exportFuncIndices_;
 
     // Parallel compilation
     bool                          parallel_;
@@ -90,9 +86,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     Vector<IonCompileTask>        tasks_;
     Vector<IonCompileTask*>       freeTasks_;
 
-    // Function compilation
-    uint32_t                      funcBytes_;
-    FuncOffsetVector              funcEntryOffsets_;
+    // Assertions
     DebugOnly<FunctionGenerator*> activeFunc_;
     DebugOnly<bool>               finishedFuncs_;
 
@@ -106,7 +100,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     bool init();
 
-    CompileArgs args() const { return args_; }
+    CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
     const FuncOffsetVector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
@@ -130,8 +124,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineExport(uint32_t index, Offsets offsets);
 
     // Functions:
-    bool startFunc(PropertyName* name, unsigned line, unsigned column, FunctionGenerator* fg);
-    bool finishFunc(uint32_t funcIndex, const LifoSig& sig, unsigned generateTime, FunctionGenerator* fg);
+    bool startFunc(PropertyName* name, unsigned line, unsigned column, UniqueBytecode* recycled,
+                   FunctionGenerator* fg);
+    bool finishFunc(uint32_t funcIndex, const LifoSig& sig, UniqueBytecode bytecode,
+                    unsigned generateTime, FunctionGenerator* fg);
     bool finishFuncs();
 
     // Function-pointer tables:
@@ -145,14 +141,16 @@ class MOZ_STACK_CLASS ModuleGenerator
     bool defineAsyncInterruptStub(Offsets offsets);
     bool defineOutOfBoundsStub(Offsets offsets);
 
-    // Null return indicates failure. The caller must immediately root a
-    // non-null return value.
-    Module* finish(HeapUsage heapUsage,
-                   Module::MutedBool mutedErrors,
-                   CacheableChars filename,
-                   CacheableTwoByteChars displayURL,
-                   UniqueStaticLinkData* staticLinkData,
-                   SlowFunctionVector* slowFuncs);
+    // Return a ModuleData object which may be used to construct a Module, the
+    // StaticLinkData required to call Module::staticallyLink, and the list of
+    // functions that took a long time to compile.
+    bool finish(HeapUsage heapUsage,
+                MutedErrorsBool mutedErrors,
+                CacheableChars filename,
+                CacheableTwoByteChars displayURL,
+                UniqueModuleData* module,
+                UniqueStaticLinkData* staticLinkData,
+                SlowFunctionVector* slowFuncs);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
@@ -164,13 +162,36 @@ class MOZ_STACK_CLASS FunctionGenerator
 {
     friend class ModuleGenerator;
 
-    ModuleGenerator* m_;
-    IonCompileTask*  task_;
-    FuncIR*          func_;
+    ModuleGenerator*   m_;
+    IonCompileTask*    task_;
+
+    // Function metadata created during function generation, then handed over
+    // to the FuncBytecode in ModuleGenerator::finishFunc().
+    SourceCoordsVector callSourceCoords_;
+    ValTypeVector      localVars_;
+
+    // Note: this unrooted field assumes AutoKeepAtoms via TokenStream via
+    // asm.js compilation.
+    PropertyName* name_;
+    unsigned line_;
+    unsigned column_;
 
   public:
-    FunctionGenerator() : m_(nullptr), task_(nullptr), func_(nullptr) {}
-    FuncIR& func() const { MOZ_ASSERT(func_); return *func_; }
+    FunctionGenerator()
+      : m_(nullptr),
+        task_(nullptr),
+        name_(nullptr),
+        line_(0),
+        column_(0)
+    {}
+
+    bool addSourceCoords(size_t byteOffset, uint32_t line, uint32_t column) {
+        SourceCoords sc = { byteOffset, line, column };
+        return callSourceCoords_.append(sc);
+    }
+    bool addVariable(ValType v) {
+        return localVars_.append(v);
+    }
 };
 
 } // namespace wasm

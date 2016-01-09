@@ -1384,8 +1384,11 @@ int parseConfigFile(const char* filePath)
         return 1;
       }
       b = buffer;
+      continue;
+
     case '\r':
       continue;
+
     default:
       *b++ = c;
     }

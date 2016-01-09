@@ -146,7 +146,7 @@ FuzzyEquals(float a, float b) {
   return (fabsf(a - b) < 1e-6);
 }
 
-static ViewTransform
+static AsyncTransform
 ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aCompositorMetrics)
 {
   // This is basically the same code as AsyncPanZoomController::GetCurrentAsyncTransform
@@ -155,7 +155,7 @@ ComputeViewTransform(const FrameMetrics& aContentMetrics, const FrameMetrics& aC
 
   ParentLayerPoint translation = (aCompositorMetrics.GetScrollOffset() - aContentMetrics.GetScrollOffset())
                                * aCompositorMetrics.GetZoom();
-  return ViewTransform(aCompositorMetrics.GetAsyncZoom(), -translation);
+  return AsyncTransform(aCompositorMetrics.GetAsyncZoom(), -translation);
 }
 
 bool
@@ -163,7 +163,7 @@ SharedFrameMetricsHelper::UpdateFromCompositorFrameMetrics(
     const LayerMetricsWrapper& aLayer,
     bool aHasPendingNewThebesContent,
     bool aLowPrecision,
-    ViewTransform& aViewTransform)
+    AsyncTransform& aViewTransform)
 {
   MOZ_ASSERT(aLayer);
 
@@ -1399,11 +1399,11 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 static Maybe<LayerRect>
 GetCompositorSideCompositionBounds(const LayerMetricsWrapper& aScrollAncestor,
                                    const LayerToParentLayerMatrix4x4& aTransformToCompBounds,
-                                   const ViewTransform& aAPZTransform,
+                                   const AsyncTransform& aAPZTransform,
                                    const LayerRect& aClip)
 {
   LayerToParentLayerMatrix4x4 transform = aTransformToCompBounds *
-      ViewAs<ParentLayerToParentLayerMatrix4x4>(aAPZTransform);
+      AsyncTransformComponentMatrix(aAPZTransform);
 
   return UntransformBy(transform.Inverse(),
     aScrollAncestor.Metrics().GetCompositionBounds(), aClip);
@@ -1443,7 +1443,7 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   // Find out the current view transform to determine which tiles to draw
   // first, and see if we should just abort this paint. Aborting is usually
   // caused by there being an incoming, more relevant paint.
-  ViewTransform viewTransform;
+  AsyncTransform viewTransform;
 #if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
   FrameMetrics contentMetrics = scrollAncestor.Metrics();
   bool abortPaint = false;

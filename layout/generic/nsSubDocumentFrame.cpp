@@ -418,9 +418,10 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     if (nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame()) {
       nsIScrollableFrame* rootScrollableFrame = presShell->GetRootScrollFrameAsScrollable();
       MOZ_ASSERT(rootScrollableFrame);
+      // Use a copy, so the dirty rect doesn't get modified to the display port.
+      nsRect copy = dirty;
       haveDisplayPort = rootScrollableFrame->DecideScrollableLayer(aBuilder,
-                          &dirty, /* aAllowCreateDisplayPort = */ true);
-
+                          &copy, /* aAllowCreateDisplayPort = */ true);
       if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
         haveDisplayPort = false;
       }
@@ -429,23 +430,11 @@ nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       if (ignoreViewportScrolling) {
         savedIgnoreScrollFrame = aBuilder->GetIgnoreScrollFrame();
         aBuilder->SetIgnoreScrollFrame(rootScrollFrame);
-
-        if (aBuilder->IsForImageVisibility()) {
-          // The ExpandRectToNearlyVisible that the root scroll frame would do gets short
-          // circuited due to us ignoring the root scroll frame, so we do it here.
-          nsIScrollableFrame* rootScrollableFrame = do_QueryFrame(rootScrollFrame);
-          dirty = rootScrollableFrame->ExpandRectToNearlyVisible(dirty);
-        }
       }
     }
 
     aBuilder->EnterPresShell(subdocRootFrame,
                              pointerEventsNone && !passPointerEventsToChildren);
-
-    if (!haveDisplayPort) {
-      // Remove nsPresShell resolution
-      dirty = dirty.RemoveResolution(presShell->ScaleToResolution() ? presShell->GetResolution () : 1.0f);
-    }
   } else {
     dirty = aDirtyRect;
   }

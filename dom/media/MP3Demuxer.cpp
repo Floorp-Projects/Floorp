@@ -205,7 +205,7 @@ MP3TrackDemuxer::FastSeek(const TimeUnit& aTime) {
   if (!aTime.ToMicroseconds()) {
     // Quick seek to the beginning of the stream.
     mFrameIndex = 0;
-  } else if (vbr.IsTOCPresent()) {
+  } else if (vbr.IsTOCPresent() && Duration().ToMicroseconds() > 0) {
     // Use TOC for more precise seeking.
     const float durationFrac = static_cast<float>(aTime.ToMicroseconds()) /
                                                   Duration().ToMicroseconds();
@@ -358,7 +358,9 @@ MP3TrackDemuxer::Duration() const {
       // Unknown length, we can't estimate duration.
       return TimeUnit::FromMicroseconds(-1);
     }
-    numFrames = (streamLen - mFirstFrameOffset) / AverageFrameLength();
+    if (AverageFrameLength() > 0) {
+      numFrames = (streamLen - mFirstFrameOffset) / AverageFrameLength();
+    }
   }
   return Duration(numFrames);
 }
@@ -534,7 +536,7 @@ MP3TrackDemuxer::OffsetFromFrameIndex(int64_t aFrameIndex) const {
   int64_t offset = 0;
   const auto& vbr = mParser.VBRInfo();
 
-  if (vbr.NumBytes() && vbr.NumAudioFrames()) {
+  if (vbr.IsValid()) {
     offset = mFirstFrameOffset + aFrameIndex * vbr.NumBytes().value() /
              vbr.NumAudioFrames().value();
   } else if (AverageFrameLength() > 0) {
@@ -550,7 +552,7 @@ MP3TrackDemuxer::FrameIndexFromOffset(int64_t aOffset) const {
   int64_t frameIndex = 0;
   const auto& vbr = mParser.VBRInfo();
 
-  if (vbr.NumBytes() && vbr.NumAudioFrames()) {
+  if (vbr.IsValid()) {
     frameIndex = static_cast<float>(aOffset - mFirstFrameOffset) /
                  vbr.NumBytes().value() * vbr.NumAudioFrames().value();
     frameIndex = std::min<int64_t>(vbr.NumAudioFrames().value(), frameIndex);
@@ -626,7 +628,7 @@ MP3TrackDemuxer::AverageFrameLength() const {
     return static_cast<double>(mTotalFrameLen) / mNumParsedFrames;
   }
   const auto& vbr = mParser.VBRInfo();
-  if (vbr.NumBytes() && vbr.NumAudioFrames()) {
+  if (vbr.IsValid() && vbr.NumAudioFrames().value() + 1) {
     return static_cast<double>(vbr.NumBytes().value()) /
            (vbr.NumAudioFrames().value() + 1);
   }
@@ -960,6 +962,16 @@ FrameParser::VBRHeader::Scale() const {
 bool
 FrameParser::VBRHeader::IsTOCPresent() const {
   return mTOC.size() == vbr_header::TOC_SIZE;
+}
+
+bool
+FrameParser::VBRHeader::IsValid() const {
+  return mType != NONE &&
+         mNumAudioFrames.valueOr(0) > 0 &&
+         mNumBytes.valueOr(0) > 0 &&
+         // We don't care about the scale for any computations here.
+         // mScale < 101 &&
+         true;
 }
 
 int64_t

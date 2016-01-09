@@ -54,8 +54,6 @@ public:
 
   void DoShutdown();
 
-  nsresult GetProfileDefaultsDir(nsIFile* *aResult);
-
   static nsresult GetUserAppDataDirectory(nsIFile* *aFile) {
     return GetUserDataDirectory(aFile, false, nullptr, nullptr, nullptr);
   }
@@ -108,7 +106,6 @@ protected:
   static nsresult GetSystemExtensionsDirectory(nsIFile** aFile);
 #endif
   static nsresult EnsureDirectoryExists(nsIFile* aDirectory);
-  void EnsureProfileFileExists(nsIFile* aFile);
 
   // Determine the profile path within the UAppData directory. This is different
   // on every major platform.
