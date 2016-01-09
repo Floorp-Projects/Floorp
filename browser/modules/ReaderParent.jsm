@@ -189,7 +189,7 @@ var ReaderParent = {
       } else {
         icon += "reader-tour.png";
       }
-      UITour.showInfo(win, browser.messageManager, target,
+      UITour.showInfo(win, target,
                       browserBundle.GetStringFromName("readingList.promo.firstUse.readerView.title"),
                       browserBundle.GetStringFromName("readingList.promo.firstUse.readerView.body"),
                       icon);

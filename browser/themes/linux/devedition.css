@@ -4,6 +4,10 @@
 
 %include ../shared/devedition.inc.css
 
+:root {
+  --forwardbutton-width: 29px;
+}
+
 :root[devtoolstheme="dark"] .findbar-closebutton:not(:hover),
 :root[devtoolstheme="dark"] #sidebar-header > .close-icon:not(:hover),
 .tab-close-button[visuallyselected]:not(:hover) {
