@@ -126,7 +126,10 @@ interface MozFrameLoaderOwner {
   void setIsPrerendered();
 
   [ChromeOnly, Throws]
-  void swapFrameLoaders(XULElement aOtherOwner);
+  void swapFrameLoaders(XULElement aOtherLoaderOwner);
+
+  [ChromeOnly, Throws]
+  void swapFrameLoaders(HTMLIFrameElement aOtherLoaderOwner);
 };
 
 XULElement implements GlobalEventHandlers;
