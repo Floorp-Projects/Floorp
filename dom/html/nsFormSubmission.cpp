@@ -167,15 +167,15 @@ nsresult
 nsFSURLEncoded::AddNameFilePair(const nsAString& aName,
                                 File* aFile)
 {
+  MOZ_ASSERT(aFile);
+
   if (!mWarnedFileControl) {
     SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nullptr, 0);
     mWarnedFileControl = true;
   }
 
   nsAutoString filename;
-  if (aFile) {
-    aFile->GetName(filename);
-  }
+  aFile->GetName(filename);
 
   return AddNameValuePair(aName, filename);
 }
@@ -441,61 +441,60 @@ nsresult
 nsFSMultipartFormData::AddNameFilePair(const nsAString& aName,
                                        File* aFile)
 {
+  MOZ_ASSERT(aFile);
+
   // Encode the control name
   nsAutoCString nameStr;
   nsresult rv = EncodeVal(aName, nameStr, true);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCString filename, contentType;
+  nsAutoString filename16;
+  aFile->GetName(filename16);
+
+  ErrorResult error;
+  nsAutoString filepath16;
+  aFile->GetPath(filepath16, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  if (!filepath16.IsEmpty()) {
+    // File.path includes trailing "/"
+    filename16 = filepath16 + filename16;
+  }
+
+  nsAutoCString filename;
+  rv = EncodeVal(filename16, filename, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get content type
+  nsAutoString contentType16;
+  aFile->GetType(contentType16);
+  if (contentType16.IsEmpty()) {
+    contentType16.AssignLiteral("application/octet-stream");
+  }
+
+  nsAutoCString contentType;
+  contentType.Adopt(nsLinebreakConverter::
+                    ConvertLineBreaks(NS_ConvertUTF16toUTF8(contentType16).get(),
+                                      nsLinebreakConverter::eLinebreakAny,
+                                      nsLinebreakConverter::eLinebreakSpace));
+
+  // Get input stream
   nsCOMPtr<nsIInputStream> fileStream;
-  if (aFile) {
-    nsAutoString filename16;
-    aFile->GetName(filename16);
+  aFile->GetInternalStream(getter_AddRefs(fileStream), error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
 
-    ErrorResult error;
-    nsAutoString filepath16;
-    aFile->GetPath(filepath16, error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    if (!filepath16.IsEmpty()) {
-      // File.path includes trailing "/"
-      filename16 = filepath16 + filename16;
-    }
-
-    rv = EncodeVal(filename16, filename, true);
+  if (fileStream) {
+    // Create buffered stream (for efficiency)
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                   fileStream, 8192);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get content type
-    nsAutoString contentType16;
-    aFile->GetType(contentType16);
-    if (contentType16.IsEmpty()) {
-      contentType16.AssignLiteral("application/octet-stream");
-    }
-    contentType.Adopt(nsLinebreakConverter::
-                      ConvertLineBreaks(NS_ConvertUTF16toUTF8(contentType16).get(),
-                                        nsLinebreakConverter::eLinebreakAny,
-                                        nsLinebreakConverter::eLinebreakSpace));
-
-    // Get input stream
-    aFile->GetInternalStream(getter_AddRefs(fileStream), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    if (fileStream) {
-      // Create buffered stream (for efficiency)
-      nsCOMPtr<nsIInputStream> bufferedStream;
-      rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                     fileStream, 8192);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      fileStream = bufferedStream;
-    }
-  }
-  else {
-    contentType.AssignLiteral("application/octet-stream");
+    fileStream = bufferedStream;
   }
 
   //
@@ -619,9 +618,7 @@ nsFSTextPlain::AddNameFilePair(const nsAString& aName,
                                File* aFile)
 {
   nsAutoString filename;
-  if (aFile) {
-    aFile->GetName(filename);
-  }
+  aFile->GetName(filename);
 
   AddNameValuePair(aName, filename);
   return NS_OK;

@@ -48,13 +48,12 @@ function ontimeupdate(e) {
         delta_wallclock = (t.timestamp - t.startTimestamp - t.bufferingTime) / 1000;
 
     t.mozPreservesPitch = false;
-    is(t.mozPreservesPitch, false, "If we disable the pitch preservation, it should appear as such.");
+    is(t.mozPreservesPitch, false, t.name + ": If we disable the pitch preservation, it should appear as such.");
 
     t.bufferingTime = 0;
 
-    is(t.playbackRate, SLOW_RATE,
-        "The playback rate shoud be "+SLOW_RATE+"." + t.token);
-    ok(checkPlaybackRate(delta_wallclock, delta, SLOW_RATE, 0.25), "We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ") for " + t.token);
+    is(t.playbackRate, SLOW_RATE, t.name + ": The playback rate shoud be "+SLOW_RATE+".");
+    ok(checkPlaybackRate(delta_wallclock, delta, SLOW_RATE, 0.25), t.name + ": We are effectively slowing down playback. (" + delta_wallclock + ", " + delta + ")");
     t.removeEventListener("timeupdate", ontimeupdate);
     t.addEventListener("pause", onpaused);
     t.playbackRate = NULL_RATE;
@@ -80,14 +79,14 @@ function afterNullPlaybackRate(e) {
 
   t.testedForNull = true;
 
-  ok(t.currentTime == t.oldCurrentTime, "Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
-  ok(!t.paused, "The element should not be in paused state.");
+  ok(t.currentTime == t.oldCurrentTime, t.name + ": Current time should not change when playbackRate is null (" + t.currentTime + " " + t.oldCurrentTime + ").");
+  ok(!t.paused, t.name + ": The element should not be in paused state.");
   t.removeEventListener("paused", onpaused);
-  is(t.pausedReceived, undefined, "Paused event should not have been received.");
+  is(t.pausedReceived, undefined, t.name + ": Paused event should not have been received.");
   t.timestamp = Date.now();
   t.oldCurrentTime = t.currentTime;
   t.playbackRate = VERY_FAST_RATE;
-  is(t.playbackRate, FAST_RATE, "Playback rate should be clamped to " + FAST_RATE + ".");
+  is(t.playbackRate, FAST_RATE, t.name + ": Playback rate should be clamped to " + FAST_RATE + ".");
 }
 
 function onended(e) {
@@ -97,9 +96,9 @@ function onended(e) {
   t.bufferingTime = 0;
   // If we got "ended" too early, skip these tests.
   if (t.testedForSlowdown && t.testedForNull) {
-    is(t.playbackRate, FAST_RATE, "The playback rate should still be "+FAST_RATE+".");
-    ok(!t.muted, "The audio should be muted when playing at high speed, but should not appear as such.");
-    is(t.currentTime, t.duration, "Current time should be equal to the duration (not change by playback rate).");
+    is(t.playbackRate, FAST_RATE, t.name + ": The playback rate should still be "+FAST_RATE+".");
+    ok(!t.muted, t.name + ": The audio should be muted when playing at high speed, but should not appear as such.");
+    is(t.currentTime, t.duration, t.name + ": Current time should be equal to the duration (not change by playback rate).");
   }
   finish_test(t);
 }
@@ -134,13 +133,14 @@ function onwaiting(e) {
 }
 
 function onvolumechange(e) {
-  ok(false, "We should not receive a volumechange event when changing the playback rate.");
+  ok(false, e.target.name + ": We should not receive a volumechange event when changing the playback rate.");
 }
 
 function startTest(test, token) {
   let elemType = /^audio/.test(test.type) ? "audio" : "video";
   let element = document.createElement(elemType);
   element.src = test.name;
+  element.name = test.name;
   element.preload = "metadata";
   element.token = token;
   element.controls = true;
@@ -154,12 +154,12 @@ function startTest(test, token) {
   element.addEventListener("volumechange", onvolumechange);
   manager.started(token);
   element.startTimestamp = Date.now();
-  is(element.mozPreservesPitch, true, "Pitch preservation should be enabled by default.");
+  is(element.mozPreservesPitch, true, test.name + ": Pitch preservation should be enabled by default.");
   element.addEventListener("loadedmetadata", function() {
-    is(element.playbackRate, 1.0, "playbackRate should be initially 1.0");
-    is(element.defaultPlaybackRate, 1.0, "defaultPlaybackRate should be initially 1.0");
+    is(element.playbackRate, 1.0, test.name + ": playbackRate should be initially 1.0");
+    is(element.defaultPlaybackRate, 1.0, test.name + ": defaultPlaybackRate should be initially 1.0");
     element.playbackRate = VERY_SLOW_RATE;
-    is(element.playbackRate, SLOW_RATE, "PlaybackRate should be clamped to " + SLOW_RATE + ".");
+    is(element.playbackRate, SLOW_RATE, test.name + ": PlaybackRate should be clamped to " + SLOW_RATE + ".");
     element.play();
     element.playbackRate = SLOW_RATE;
   });

@@ -16,6 +16,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/unused.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsCharTraits.h"
 #include "nsFontMetrics.h"
@@ -807,6 +808,15 @@ nsLayoutUtils::AsyncPanZoomEnabled(nsIFrame* aFrame)
     return false;
   }
   return widget->AsyncPanZoomEnabled();
+}
+
+float
+nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
+#if !defined(MOZ_WIDGET_ANDROID) || defined(MOZ_ANDROID_APZ)
+  return aShell ? aShell->GetCumulativeNonRootScaleResolution() : 1.0;
+#else
+  return 1.0f;
+#endif
 }
 
 // Return the maximum displayport size, based on the LayerManager's maximum
@@ -2063,7 +2073,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
       nsPoint pt(presContext->DevPixelsToAppUnits(aPoint.x),
                  presContext->DevPixelsToAppUnits(aPoint.y));
       pt = pt - view->ViewToWidgetOffset();
-      pt = pt.RemoveResolution(presContext->PresShell()->GetCumulativeNonRootScaleResolution());
+      pt = pt.RemoveResolution(GetCurrentAPZResolutionScale(presContext->PresShell()));
       return pt;
     }
   }
@@ -2102,7 +2112,7 @@ nsLayoutUtils::GetEventCoordinatesRelativeTo(nsIWidget* aWidget,
   nsIPresShell* shell = aFrame->PresContext()->PresShell();
 
   // XXX Bug 1224748 - Update nsLayoutUtils functions to correctly handle nsPresShell resolution
-  widgetToView = widgetToView.RemoveResolution(shell->GetCumulativeNonRootScaleResolution());
+  widgetToView = widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(shell));
 
   /* If we encountered a transform, we can't do simple arithmetic to figure
    * out how to convert back to aFrame's coordinates and must use the CTM.
@@ -2851,7 +2861,7 @@ nsLayoutUtils::TranslateViewToWidget(nsPresContext* aPresContext,
   }
 
   nsPoint pt = (aPt +
-  viewOffset).ApplyResolution(aPresContext->PresShell()->GetCumulativeNonRootScaleResolution());
+  viewOffset).ApplyResolution(GetCurrentAPZResolutionScale(aPresContext->PresShell()));
   LayoutDeviceIntPoint relativeToViewWidget(aPresContext->AppUnitsToDevPixels(pt.x),
                                             aPresContext->AppUnitsToDevPixels(pt.y));
   return relativeToViewWidget + WidgetToWidgetOffset(viewWidget, aWidget);
@@ -3174,18 +3184,12 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
   }
 
   nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
-  bool usingDisplayPort = false;
-  nsRect displayport;
   if (rootScrollFrame && !aFrame->GetParent()) {
     nsIScrollableFrame* rootScrollableFrame = presShell->GetRootScrollFrameAsScrollable();
     MOZ_ASSERT(rootScrollableFrame);
-    displayport = aFrame->GetVisualOverflowRectRelativeToSelf();
-    usingDisplayPort = rootScrollableFrame->DecideScrollableLayer(&builder,
-                         &displayport, /* aAllowCreateDisplayPort = */ true);
-
-    if (!gfxPrefs::LayoutUseContainersForRootFrames()) {
-      usingDisplayPort = false;
-    }
+    nsRect displayPortBase = aFrame->GetVisualOverflowRectRelativeToSelf();
+    Unused << rootScrollableFrame->DecideScrollableLayer(&builder, &displayPortBase,
+                /* aAllowCreateDisplayPort = */ true);
   }
 
   nsDisplayList hoistedScrollItemStorage;
@@ -3201,11 +3205,7 @@ nsLayoutUtils::PaintFrame(nsRenderingContext* aRenderingContext, nsIFrame* aFram
     // |ignoreViewportScrolling| and |usingDisplayPort| are persistent
     // document-rendering state.  We rely on PresShell to flush
     // retained layers as needed when that persistent state changes.
-    if (!usingDisplayPort) {
-      visibleRegion = aFrame->GetVisualOverflowRectRelativeToSelf();
-    } else {
-      visibleRegion = displayport;
-    }
+    visibleRegion = aFrame->GetVisualOverflowRectRelativeToSelf();
   } else {
     visibleRegion = aDirtyRegion;
   }

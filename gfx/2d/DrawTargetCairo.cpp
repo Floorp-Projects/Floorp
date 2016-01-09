@@ -644,8 +644,7 @@ DrawTargetCairo::GetType() const
 
     case CAIRO_SURFACE_TYPE_SKIA:
     case CAIRO_SURFACE_TYPE_QT:
-      MOZ_ASSERT(false, "Can't determine actual DrawTargetType for DrawTargetCairo - assuming SOFTWARE_RASTER");
-      // fallthrough
+      MOZ_FALLTHROUGH_ASSERT("Can't determine actual DrawTargetType for DrawTargetCairo - assuming SOFTWARE_RASTER");
     case CAIRO_SURFACE_TYPE_IMAGE:
     case CAIRO_SURFACE_TYPE_XLIB:
     case CAIRO_SURFACE_TYPE_XCB:

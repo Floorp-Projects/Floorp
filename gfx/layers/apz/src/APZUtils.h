@@ -8,6 +8,8 @@
 #define mozilla_layers_APZUtils_h
 
 #include <stdint.h>                     // for uint32_t
+#include "LayersTypes.h"
+#include "UnitTransforms.h"
 #include "mozilla/gfx/Point.h"
 #include "mozilla/FloatingPoint.h"
 
@@ -59,6 +61,16 @@ static bool IsZero(const gfx::PointTyped<Units>& aPoint)
 {
   return FuzzyEqualsAdditive(aPoint.x, 0.0f, COORDINATE_EPSILON)
       && FuzzyEqualsAdditive(aPoint.y, 0.0f, COORDINATE_EPSILON);
+}
+
+// Deem an AsyncTransformComponentMatrix (obtained by multiplying together
+// one or more AsyncTransformComponentMatrix objects) as constituting a
+// complete async transform.
+inline AsyncTransformMatrix
+CompleteAsyncTransform(const AsyncTransformComponentMatrix& aMatrix)
+{
+  return ViewAs<AsyncTransformMatrix>(aMatrix,
+      PixelCastJustification::MultipleAsyncTransforms);
 }
 
 } // namespace layers

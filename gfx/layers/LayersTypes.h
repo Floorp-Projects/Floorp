@@ -13,6 +13,7 @@
 #include "mozilla/layers/GonkNativeHandle.h"
 #endif
 
+#include "Units.h"
 #include "mozilla/gfx/Point.h"          // for IntPoint
 #include "mozilla/TypedEnumBits.h"
 #include "nsRegion.h"
@@ -283,6 +284,22 @@ enum TextureDumpMode {
   Compress,      // dump texture with LZ4 compression
   DoNotCompress  // dump texture uncompressed
 };
+
+// Some specialized typedefs of Matrix4x4Typed.
+typedef gfx::Matrix4x4Typed<LayerPixel, CSSTransformedLayerPixel> CSSTransformMatrix;
+// Several different async transforms can contribute to a layer's transform
+// (specifically, an async animation can contribute a transform, and each APZC
+// that scrolls a layer can contribute async scroll/zoom and overscroll
+// transforms).
+// To try to model this with typed units, we represent individual async
+// transforms as ParentLayer -> ParentLayer transforms (aliased as
+// AsyncTransformComponentMatrix), and we represent the product of all of them
+// as a CSSTransformLayer -> ParentLayer transform (aliased as
+// AsyncTransformMatrix). To create an AsyncTransformMatrix from component
+// matrices, a ViewAs operation is needed. A MultipleAsyncTransforms
+// PixelCastJustification is provided for this purpose.
+typedef gfx::Matrix4x4Typed<ParentLayerPixel, ParentLayerPixel> AsyncTransformComponentMatrix;
+typedef gfx::Matrix4x4Typed<CSSTransformedLayerPixel, ParentLayerPixel> AsyncTransformMatrix;
 
 } // namespace layers
 } // namespace mozilla

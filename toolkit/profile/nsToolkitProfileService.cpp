@@ -135,7 +135,6 @@ private:
                                    const nsACString* aProfileName,
                                    const nsACString* aAppName,
                                    const nsACString* aVendorName,
-                                   /*in*/ nsIFile** aProfileDefaultsDir,
                                    bool aForExternalApp,
                                    nsIToolkitProfile** aResult);
 
@@ -709,7 +708,6 @@ NS_IMETHODIMP
 nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileName,
                                                     const nsACString& aAppName,
                                                     const nsACString& aVendorName,
-                                                    nsIFile* aProfileDefaultsDir,
                                                     nsIToolkitProfile** aResult)
 {
     NS_ENSURE_STATE(!aProfileName.IsEmpty() || !aAppName.IsEmpty());
@@ -731,11 +729,10 @@ nsToolkitProfileService::CreateDefaultProfileForApp(const nsACString& aProfileNa
     profilesini->Exists(&exists);
     NS_ENSURE_FALSE(exists, NS_ERROR_ALREADY_INITIALIZED);
 
-    nsIFile* profileDefaultsDir = aProfileDefaultsDir;
     rv = CreateProfileInternal(nullptr,
                                NS_LITERAL_CSTRING("default"),
                                &aProfileName, &aAppName, &aVendorName,
-                               &profileDefaultsDir, true, aResult);
+                               true, aResult);
     NS_ENSURE_SUCCESS(rv, rv);
     NS_ENSURE_STATE(*aResult);
 
@@ -778,7 +775,7 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
                                        nsIToolkitProfile** aResult)
 {
     return CreateProfileInternal(aRootDir, aName,
-                                 nullptr, nullptr, nullptr, nullptr, false, aResult);
+                                 nullptr, nullptr, nullptr, false, aResult);
 }
 
 nsresult
@@ -787,7 +784,6 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
                                                const nsACString* aProfileName,
                                                const nsACString* aAppName,
                                                const nsACString* aVendorName,
-                                               nsIFile** aProfileDefaultsDir,
                                                bool aForExternalApp,
                                                nsIToolkitProfile** aResult)
 {
@@ -849,7 +845,6 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
             return NS_ERROR_FILE_NOT_DIRECTORY;
     }
     else {
-        nsCOMPtr<nsIFile> profileDefaultsDir;
         nsCOMPtr<nsIFile> profileDirParent;
         nsAutoString profileDirName;
 
@@ -859,22 +854,9 @@ nsToolkitProfileService::CreateProfileInternal(nsIFile* aRootDir,
         rv = rootDir->GetLeafName(profileDirName);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        if (aProfileDefaultsDir) {
-            profileDefaultsDir = *aProfileDefaultsDir;
-        } else {
-            bool dummy;
-            rv = gDirServiceProvider->GetFile(NS_APP_PROFILE_DEFAULTS_50_DIR, &dummy,
-                                              getter_AddRefs(profileDefaultsDir));
-        }
-
-        if (NS_SUCCEEDED(rv) && profileDefaultsDir)
-            rv = profileDefaultsDir->CopyTo(profileDirParent,
-                                            profileDirName);
-        if (NS_FAILED(rv) || !profileDefaultsDir) {
-            // if copying failed, lets just ensure that the profile directory exists.
-            rv = rootDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
-            NS_ENSURE_SUCCESS(rv, rv);
-        }
+        // let's ensure that the profile directory exists.
+        rv = rootDir->Create(nsIFile::DIRECTORY_TYPE, 0700);
+        NS_ENSURE_SUCCESS(rv, rv);
         rv = rootDir->SetPermissions(0700);
 #ifndef ANDROID
         // If the profile is on the sdcard, this will fail but its non-fatal
