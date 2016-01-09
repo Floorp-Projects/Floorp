@@ -189,10 +189,6 @@ toolbar[brighttext] #PanelUI-menu-button.thumburger {
   transform: scaleX(-1);
 }
 
-#web-apps-button[cui-areatype="toolbar"] {
-  -moz-image-region: rect(0, 720px, 18px, 702px);
-}
-
 #loop-button {
   list-style-image: url(chrome://browser/skin/loop/toolbar.png);
   -moz-image-region: rect(0, 18px, 18px, 0);
@@ -417,10 +413,6 @@ toolbar[brighttext] #loop-button {
 %else
     -moz-image-region: rect(36px, 1404px, 72px, 1368px);
 %endif
-  }
-
-  #web-apps-button[cui-areatype="toolbar"] {
-    -moz-image-region: rect(0, 1440px, 36px, 1404px);
   }
 
   #webide-button[cui-areatype="toolbar"] {
