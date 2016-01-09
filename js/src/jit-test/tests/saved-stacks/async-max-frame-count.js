@@ -4,7 +4,7 @@ const defaultAsyncStackLimit = 60;
 
 function recur(n, limit) {
   if (n > 0) {
-    return callFunctionWithAsyncStack(recur.bind(undefined, n - 1, limit),
+    return callFunctionWithAsyncStack(function recur() {return recur(n - 1, limit)},
                                       saveStack(limit), "Recurse");
   }
   return saveStack(limit);
