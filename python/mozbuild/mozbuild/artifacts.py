@@ -50,6 +50,7 @@ import re
 import shutil
 import stat
 import subprocess
+import tarfile
 import tempfile
 import urlparse
 import zipfile
@@ -129,6 +130,41 @@ class AndroidArtifactJob(ArtifactJob):
                     'Adding {basename} to processed archive')
 
                 writer.add(basename.encode('utf-8'), f)
+
+
+class LinuxArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            prefix = 'firefox/'
+            whitelist = {
+                'application.ini',
+                'crashreporter',
+                'dependentlibs.list',
+                'firefox',
+                'firefox-bin',
+                'platform.ini',
+                'plugin-container',
+                'updater',
+                'webapprt-stub',
+            }
+            with tarfile.open(filename) as reader:
+                for f in reader:
+                    if not f.isfile():
+                        continue
+
+                    if not f.name.startswith(prefix):
+                        raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.name))
+                    basename = f.name[len(prefix):]
+
+                    if not basename.endswith('.so') and \
+                       basename not in whitelist:
+                        continue
+
+                    self.log(logging.INFO, 'artifact',
+                        {'basename': basename},
+                        'Adding {basename} to processed archive')
+
+                    writer.add(basename.encode('utf-8'), reader.extractfile(f), mode=f.mode)
 
 
 class MacArtifactJob(ArtifactJob):
@@ -223,14 +259,44 @@ class MacArtifactJob(ArtifactJob):
                 pass
 
 
-# Keep the keys of this map in sync with the |mach artifact| --job options.
+class WinArtifactJob(ArtifactJob):
+    def process_artifact(self, filename, processed_filename):
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            prefix = 'firefox/'
+            whitelist = {
+                'dependentlibs.list',
+                'platform.ini',
+                'application.ini',
+            }
+            for f in JarReader(filename):
+                if not f.filename.startswith(prefix):
+                    raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.filename))
+                basename = f.filename[len(prefix):]
+
+                if not basename.endswith('.dll') and \
+                   not basename.endswith('.exe') and \
+                   basename not in whitelist:
+                    continue
+
+                self.log(logging.INFO, 'artifact',
+                    {'basename': basename},
+                    'Adding {basename} to processed archive')
+
+                writer.add(basename.encode('utf-8'), f)
+
+
+# Keep the keys of this map in sync with the |mach artifact| --job
+# options.  The keys of this map correspond to entries at
+# https://tools.taskcluster.net/index/artifacts/#buildbot.branches.mozilla-central/buildbot.branches.mozilla-central.
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
     'android-api-11': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
     'android-x86': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
-    # 'linux': (ArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
-    # 'linux64': (ArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
+    'linux': (LinuxArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
+    'linux64': (LinuxArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
     'macosx64': (MacArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
+    'win32': (WinArtifactJob, 'public/build/firefox-(.*)\.win32.zip'),
+    'win64': (WinArtifactJob, 'public/build/firefox-(.*)\.win64.zip'),
 }
 
 def get_job_details(job, log=None):
@@ -342,12 +408,39 @@ class PushHeadCache(CacheManager):
 
     @cachedmethod(operator.attrgetter('_cache'))
     def pushheads(self, tree, parent):
-        pushheads = subprocess.check_output([self._hg, 'log',
+        try:
+            pushheads = subprocess.check_output([self._hg, 'log',
+                '--template', '{node}\n',
+                '-r', 'last(pushhead("{tree}") and ::"{parent}", {num})'.format(
+                    tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
+            # Filter blank lines.
+            pushheads = [ pushhead for pushhead in pushheads.strip().split('\n') if pushhead ]
+            if pushheads:
+                return pushheads
+        except subprocess.CalledProcessError as e:
+            # Probably don't have the mozext extension installed.
+            ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
+            if ret:
+                raise Exception('Could not find candidate pushheads.\n\n'
+                                'You need to enable the "mozext" hg extension: '
+                                'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
+            raise e
+
+        # Probably don't have the pushlog database present locally.  Check.
+        tree_pushheads = subprocess.check_output([self._hg, 'log',
             '--template', '{node}\n',
-            '-r', 'last(pushhead("{tree}") & ::"{parent}", {num})'.format(
-                tree=tree, parent=parent, num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT)])
-        pushheads = pushheads.strip().split('\n')
-        return pushheads
+            '-r', 'last(pushhead("{tree}"))'.format(tree=tree)])
+        # Filter blank lines.
+        tree_pushheads = [ pushhead for pushhead in tree_pushheads.strip().split('\n') if pushhead ]
+        if tree_pushheads:
+            # Okay, we have some pushheads but no candidates.  This can happen
+            # for legitimate reasons: old revisions with no upstream builds
+            # remaining; or new revisions that don't have upstream builds yet.
+            return []
+
+        raise Exception('Could not find any pushheads for tree "{tree}".\n\n'
+                        'Try running |hg pushlogsync|; '
+                        'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(tree=tree))
 
 
 class TaskCache(CacheManager):
@@ -516,7 +609,7 @@ class Artifacts(object):
                 if info.filename.endswith('.ini'):
                     continue
                 n = mozpath.join(bindir, info.filename)
-                fh = FileAvoidWrite(n, mode='r')
+                fh = FileAvoidWrite(n, mode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',

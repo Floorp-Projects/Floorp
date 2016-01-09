@@ -794,7 +794,7 @@ EnvironmentCache.prototype = {
       if (!Preferences.isSet(pref)) {
         continue;
       }
-      
+
       // Check the policy for the preference and decide if we need to store its value
       // or whether it changed from the default value.
       let prefValue = undefined;
@@ -863,7 +863,7 @@ EnvironmentCache.prototype = {
     this._log.trace("observe - aTopic: " + aTopic + ", aData: " + aData);
     switch (aTopic) {
       case SEARCH_ENGINE_MODIFIED_TOPIC:
-        if (aData != "engine-default" && aData != "engine-current") {
+        if (aData != "engine-current") {
           return;
         }
         // Record the new default search choice and send the change notification.

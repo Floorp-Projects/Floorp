@@ -48,11 +48,8 @@ add_task(function* test_persistAcrossRestarts() {
   do_check_eq(Services.search.currentEngine.name, kTestEngineName);
 
   // Cleanup (set the engine back to default).
-  Services.search.currentEngine = Services.search.defaultEngine;
-  // This check is no longer valid with bug 1102416's patch - defaultEngine
-  // is not based on the same value as _originalDefaultEngine in non-Firefox
-  // users of the search service.
-  //do_check_eq(Services.search.currentEngine.name, getDefaultEngineName());
+  Services.search.resetToOriginalDefaultEngine();
+  do_check_eq(Services.search.currentEngine.name, getDefaultEngineName());
 });
 
 // An engine set without a valid hash should be ignored.
