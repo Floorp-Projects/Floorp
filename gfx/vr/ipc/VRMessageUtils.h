@@ -127,6 +127,7 @@ struct ParamTraits<mozilla::gfx::VRHMDSensorState>
   static void Write(Message* aMsg, const paramType& aParam)
   {
     WriteParam(aMsg, aParam.timestamp);
+    WriteParam(aMsg, aParam.inputFrameID);
     WriteParam(aMsg, aParam.flags);
     WriteParam(aMsg, aParam.orientation[0]);
     WriteParam(aMsg, aParam.orientation[1]);
@@ -152,6 +153,7 @@ struct ParamTraits<mozilla::gfx::VRHMDSensorState>
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
     if (!ReadParam(aMsg, aIter, &(aResult->timestamp)) ||
+        !ReadParam(aMsg, aIter, &(aResult->inputFrameID)) ||
         !ReadParam(aMsg, aIter, &(aResult->flags)) ||
         !ReadParam(aMsg, aIter, &(aResult->orientation[0])) ||
         !ReadParam(aMsg, aIter, &(aResult->orientation[1])) ||

@@ -2143,9 +2143,17 @@ public:
    */
   void SetVRDeviceID(uint32_t aVRDeviceID) {
     mVRDeviceID = aVRDeviceID;
+    Mutated();
   }
   uint32_t GetVRDeviceID() {
     return mVRDeviceID;
+  }
+  void SetInputFrameID(int32_t aInputFrameID) {
+    mInputFrameID = aInputFrameID;
+    Mutated();
+  }
+  int32_t GetInputFrameID() {
+    return mInputFrameID;
   }
 
   /**
@@ -2223,6 +2231,7 @@ protected:
   bool mChildrenChanged;
   EventRegionsOverride mEventRegionsOverride;
   uint32_t mVRDeviceID;
+  int32_t mInputFrameID;
 };
 
 /**
