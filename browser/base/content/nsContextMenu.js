@@ -1759,17 +1759,8 @@ nsContextMenu.prototype = {
       selectedText = selectedText.substr(0,truncLength) + this.ellipsis;
     }
 
-    // Use the current engine if the search bar is visible, the default
-    // engine otherwise.
-    var engineName = "";
-    var ss = Cc["@mozilla.org/browser/search-service;1"].
-             getService(Ci.nsIBrowserSearchService);
-    if (isElementVisible(BrowserSearch.searchBar))
-      engineName = ss.currentEngine.name;
-    else
-      engineName = ss.defaultEngine.name;
-
     // format "Search <engine> for <selection>" string to show in menu
+    let engineName = Services.search.currentEngine.name;
     var menuLabel = gNavigatorBundle.getFormattedString("contextMenuSearch",
                                                         [engineName,
                                                          selectedText]);

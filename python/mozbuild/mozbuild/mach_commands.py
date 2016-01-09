@@ -633,7 +633,7 @@ class Build(MachCommandBase):
         self.log(logging.INFO, 'artifact',
                  {}, "Running |mach artifact install|.")
         args = [os.path.join(self.topsrcdir, 'mach'), 'artifact', 'install']
-        self._run_command_in_srcdir(args=args,
+        self._run_command_in_srcdir(args=args, require_unix_environment=True,
             pass_thru=True, ensure_exit_code=True)
 
 @CommandProvider
@@ -1397,10 +1397,19 @@ class MachDebug(MachCommandBase):
 class ArtifactSubCommand(SubCommand):
     def __call__(self, func):
         after = SubCommand.__call__(self, func)
+        jobchoices = {
+            'android-api-11',
+            'android-x86',
+            'linux',
+            'linux64',
+            'macosx64',
+            'win32',
+            'win64'
+        }
         args = [
             CommandArgument('--tree', metavar='TREE', type=str,
                 help='Firefox tree.'),
-            CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86', 'macosx64'],
+            CommandArgument('--job', metavar='JOB', choices=jobchoices,
                 help='Build job.'),
             CommandArgument('--verbose', '-v', action='store_true',
                 help='Print verbose output.'),
@@ -1446,7 +1455,10 @@ class PackageFrontend(MachCommandBase):
         cache_dir = os.path.join(state_dir, 'package-frontend')
 
         import which
-        hg = which.which('hg')
+        if self._is_windows():
+          hg = which.which('hg.exe')
+        else:
+          hg = which.which('hg')
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
@@ -1460,12 +1472,16 @@ class PackageFrontend(MachCommandBase):
             return (tree, job)
         if self.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
             if self.substs['ANDROID_CPU_ARCH'] == 'x86':
-                return (tree, 'android-x86')
-            return (tree, 'android-api-11')
+                return tree, 'android-x86'
+            return tree, 'android-api-11'
+        # TODO: check for 32/64 bit builds.  We'd like to use HAVE_64BIT_BUILD
+        # but that relies on the compile environment.
+        if self.defines.get('XP_LINUX', False):
+            return tree, 'linux64'
         if self.defines.get('XP_MACOSX', False):
-            # TODO: check for 64 bit builds.  We'd like to use HAVE_64BIT_BUILD
-            # but that relies on the compile environment.
-            return (tree, 'macosx64')
+            return tree, 'macosx64'
+        if self.defines.get('XP_WIN', False):
+            return tree, 'win32'
         raise Exception('Cannot determine default tree and job for |mach artifact|!')
 
     @ArtifactSubCommand('artifact', 'install',
