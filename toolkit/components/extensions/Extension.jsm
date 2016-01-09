@@ -426,6 +426,8 @@ this.ExtensionData = function(rootURI) {
 };
 
 ExtensionData.prototype = {
+  builtinMessages: null,
+
   get logger() {
     let id = this.id || "<unknown>";
     return Log.repository.getLogger(LOGGER_ID_BASE + id);
@@ -609,6 +611,12 @@ ExtensionData.prototype = {
           }
         }
 
+        this.localeData = new LocaleData({
+          defaultLocale: this.defaultLocale,
+          locales,
+          builtinMessages: this.builtinMessages,
+        });
+
         return locales;
       }.bind(this));
     }
@@ -622,7 +630,6 @@ ExtensionData.prototype = {
   // as returned by |readLocaleFile|.
   initAllLocales: Task.async(function* () {
     let locales = yield this.promiseLocales();
-    this.localeData = new LocaleData({ defaultLocale: this.defaultLocale, locales });
 
     yield Promise.all(Array.from(locales.keys(),
                                  locale => this.readLocaleFile(locale)));
@@ -651,8 +658,6 @@ ExtensionData.prototype = {
   //
   // If no locales are unavailable, resolves to |null|.
   initLocale: Task.async(function* (locale = this.defaultLocale) {
-    this.localeData = new LocaleData({ defaultLocale: this.defaultLocale });
-
     if (locale == null) {
       return null;
     }
@@ -968,6 +973,12 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
   forgetOnClose(obj) {
     this.onShutdown.delete(obj);
+  },
+
+  get builtinMessages() {
+    return new Map([
+      ["@@extension_id", this.uuid],
+    ]);
   },
 
   // Reads the locale file for the given Gecko-compatible locale code, or if
