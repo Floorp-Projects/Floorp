@@ -114,7 +114,9 @@
         <item name="android:textSize">@dimen/menu_item_textsize</item>
     </style>
 
-    <style name="Widget.TwoLinePageRow" />
+    <style name="Widget.TwoLinePageRow" >
+        <item name="android:background">@color/pressed_about_page_header_grey</item>
+    </style>
 
     <style name="Widget.TwoLinePageRow.Title">
         <item name="android:textAppearance">@style/TextAppearance.Widget.Home.ItemTitle</item>
@@ -557,7 +559,6 @@
 
     <style name="Widget.RemoteTabsListView" parent="Widget.HomeListView">
         <item name="android:childDivider">@color/toolbar_divider_grey</item>
-        <item name="android:drawSelectorOnTop">true</item>
     </style>
 
     <style name="Widget.HistoryListView" parent="Widget.HomeListView">
