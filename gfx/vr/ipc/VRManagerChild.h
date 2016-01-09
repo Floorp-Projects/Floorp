@@ -25,6 +25,7 @@ class VRManagerChild : public PVRManagerChild
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(VRManagerChild)
 
+  int GetInputFrameID();
   bool GetVRDevices(nsTArray<RefPtr<VRDeviceProxy> >& aDevices);
   bool RefreshVRDevicesWithCallback(dom::Navigator* aNavigator);
   static VRManagerChild* StartUpInChildProcess(Transport* aTransport,
@@ -52,6 +53,7 @@ private:
   nsTArray<RefPtr<VRDeviceProxy> > mDevices;
   nsTArray<dom::Navigator*> mNavigatorCallbacks;
 
+  int32_t mInputFrameID;
 };
 
 } // namespace mozilla

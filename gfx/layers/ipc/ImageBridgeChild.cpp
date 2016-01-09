@@ -191,7 +191,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
     textures.AppendElement(TimedTexture(nullptr, t.mTextureClient->GetIPDLActor(),
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
-                                        t.mFrameID, t.mProducerID));
+                                        t.mFrameID, t.mProducerID, t.mInputFrameID));
   }
   mTxn->AddNoSwapEdit(OpUseTexture(nullptr, aCompositable->GetIPDLActor(),
                                    textures));
