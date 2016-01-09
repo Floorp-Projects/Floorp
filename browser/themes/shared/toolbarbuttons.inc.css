@@ -167,10 +167,6 @@ toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarke
   transform: scaleX(-1);
 }
 
-#web-apps-button[cui-areatype="toolbar"] {
-  -moz-image-region: rect(0, 720px, 18px, 702px);
-}
-
 #webide-button[cui-areatype="toolbar"] {
   -moz-image-region: rect(0, 738px, 18px, 720px);
 }
@@ -348,10 +344,6 @@ toolbar[brighttext] #bookmarks-menu-button > .toolbarbutton-menubutton-dropmarke
 %else
     -moz-image-region: rect(36px, 1404px, 72px, 1368px);
 %endif
-  }
-
-  #web-apps-button[cui-areatype="toolbar"] {
-    -moz-image-region: rect(0, 1440px, 36px, 1404px);
   }
 
   #webide-button[cui-areatype="toolbar"] {

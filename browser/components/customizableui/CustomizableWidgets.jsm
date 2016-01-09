@@ -1147,18 +1147,6 @@ const CustomizableWidgets = [
       let win = aEvent.view;
       win.MailIntegration.sendLinkForBrowser(win.gBrowser.selectedBrowser)
     }
-  }, {
-    id: "web-apps-button",
-    label: "web-apps-button.label",
-    tooltiptext: "web-apps-button.tooltiptext",
-    onCommand: function(aEvent) {
-      let win = aEvent.target &&
-                aEvent.target.ownerDocument &&
-                aEvent.target.ownerDocument.defaultView;
-      if (win && typeof win.BrowserOpenApps == "function") {
-        win.BrowserOpenApps();
-      }
-    }
   }];
 
 if (Services.prefs.getBoolPref("privacy.panicButton.enabled")) {

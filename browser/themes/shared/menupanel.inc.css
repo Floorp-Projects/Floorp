@@ -158,11 +158,6 @@
     -moz-image-region: rect(32px, 896px, 64px, 864px);
   }
 
-  #web-apps-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #web-apps-button {
-    -moz-image-region: rect(0, 928px, 32px, 896px);
-  }
-
   #webide-button[cui-areatype="menu-panel"],
   toolbarpaletteitem[place="palette"] > #webide-button {
     -moz-image-region: rect(0px, 960px, 32px, 928px);
@@ -384,11 +379,6 @@
 
   #panic-button[cui-areatype="menu-panel"][panel-multiview-anchor=true] {
     -moz-image-region: rect(64px, 1792px, 128px, 1728px);
-  }
-
-  #web-apps-button[cui-areatype="menu-panel"],
-  toolbarpaletteitem[place="palette"] > #web-apps-button {
-    -moz-image-region: rect(0, 1856px, 64px, 1792px);
   }
 
   toolbaritem[sdkstylewidget="true"] > toolbarbutton {
