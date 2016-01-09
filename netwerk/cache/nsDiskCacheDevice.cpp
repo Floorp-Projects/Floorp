@@ -304,17 +304,17 @@ nsDiskCache::Hash(const char * key, PLDHashNumber initval)
   /*------------------------------------- handle the last 11 bytes */
   c += length;
   switch(len) {              /* all the case statements fall through */
-    case 11: c += (uint32_t(k[10])<<24);
-    case 10: c += (uint32_t(k[9])<<16);
-    case 9 : c += (uint32_t(k[8])<<8);
+    case 11: c += (uint32_t(k[10])<<24);  MOZ_FALLTHROUGH;
+    case 10: c += (uint32_t(k[9])<<16);   MOZ_FALLTHROUGH;
+    case 9 : c += (uint32_t(k[8])<<8);    MOZ_FALLTHROUGH;
     /* the low-order byte of c is reserved for the length */
-    case 8 : b += (uint32_t(k[7])<<24);
-    case 7 : b += (uint32_t(k[6])<<16);
-    case 6 : b += (uint32_t(k[5])<<8);
-    case 5 : b += k[4];
-    case 4 : a += (uint32_t(k[3])<<24);
-    case 3 : a += (uint32_t(k[2])<<16);
-    case 2 : a += (uint32_t(k[1])<<8);
+    case 8 : b += (uint32_t(k[7])<<24);   MOZ_FALLTHROUGH;
+    case 7 : b += (uint32_t(k[6])<<16);   MOZ_FALLTHROUGH;
+    case 6 : b += (uint32_t(k[5])<<8);    MOZ_FALLTHROUGH;
+    case 5 : b += k[4];                   MOZ_FALLTHROUGH;
+    case 4 : a += (uint32_t(k[3])<<24);   MOZ_FALLTHROUGH;
+    case 3 : a += (uint32_t(k[2])<<16);   MOZ_FALLTHROUGH;
+    case 2 : a += (uint32_t(k[1])<<8);    MOZ_FALLTHROUGH;
     case 1 : a += k[0];
     /* case 0: nothing left to add */
   }
@@ -1152,4 +1152,3 @@ nsDiskCacheDevice::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf)
 
     return usage;
 }
-

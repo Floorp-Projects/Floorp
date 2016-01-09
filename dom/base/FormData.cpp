@@ -179,6 +179,8 @@ FormData::Has(const nsAString& aName)
 nsresult
 FormData::AddNameFilePair(const nsAString& aName, File* aFile)
 {
+  MOZ_ASSERT(aFile);
+
   FormDataTuple* data = mFormData.AppendElement();
   SetNameFilePair(data, aName, aFile);
   return NS_OK;
@@ -272,12 +274,10 @@ FormData::SetNameFilePair(FormDataTuple* aData,
                           File* aFile)
 {
   MOZ_ASSERT(aData);
+  MOZ_ASSERT(aFile);
+
   aData->name = aName;
-  if (aFile) {
-    aData->value.SetAsFile() = aFile;
-  } else {
-    aData->value.SetAsUSVString() = EmptyString();
-  }
+  aData->value.SetAsFile() = aFile;
 }
 
 // -------------------------------------------------------------------------
@@ -364,7 +364,7 @@ FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
       fs.AddNameValuePair(mFormData[i].name,
                           mFormData[i].value.GetAsUSVString());
     } else {
-      fs.AddNameFilePair(mFormData[i].name, nullptr);
+      MOZ_CRASH("This should no be possible.");
     }
   }
 

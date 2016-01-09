@@ -492,7 +492,7 @@ XPCConvert::JSData2Native(void* d, HandleValue s,
             (**((nsAString**)d)).SetIsVoid(true);
             return true;
         }
-        // Fall through to T_DOMSTRING case.
+        MOZ_FALLTHROUGH;
     }
     case nsXPTType::T_DOMSTRING:
     {

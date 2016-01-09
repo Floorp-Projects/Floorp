@@ -130,8 +130,7 @@
 
       <property name="currentEngine">
         <setter><![CDATA[
-          let ss = Services.search;
-          ss.defaultEngine = ss.currentEngine = val;
+          Services.search.currentEngine = val;
           return val;
         ]]></setter>
         <getter><![CDATA[

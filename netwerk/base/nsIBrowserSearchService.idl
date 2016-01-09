@@ -420,14 +420,17 @@ interface nsIBrowserSearchService : nsISupports
   void removeEngine(in nsISearchEngine engine);
 
   /**
-   * The default search engine. Returns the first visible engine if the default
-   * engine is hidden. May be null if there are no visible search engines.
+   * Alias for the currentEngine attribute, kept for add-on compatibility.
    */
   attribute nsISearchEngine defaultEngine;
 
   /**
-   * The currently active search engine. May be null if there are no visible
-   * search engines.
+   * The currently active search engine.
+   * Unless the application doesn't ship any search plugin, this should never
+   * be null. If the currently active engine is removed, this attribute will
+   * fallback first to the original default engine if it's not hidden, then to
+   * the first visible engine, and as a last resort it will unhide the original
+   * default engine.
    */
   attribute nsISearchEngine currentEngine;
 

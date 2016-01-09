@@ -230,6 +230,7 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
         // Take ownership of the data avoiding a further copy.
         return new AdoptedBlobVariant(v);
       }
+      MOZ_FALLTHROUGH;
     }
     case nsIDataType::VTYPE_EMPTY:
     case nsIDataType::VTYPE_EMPTY_ARRAY:
@@ -244,7 +245,6 @@ convertVariantToStorageVariant(nsIVariant* aVariant)
   }
 
   return nullptr;
-
 }
 
 namespace {
@@ -272,8 +272,6 @@ newCompletionEvent(mozIStorageCompletionCallback *aCallback)
   nsCOMPtr<nsIRunnable> event = new CallbackEvent(aCallback);
   return event.forget();
 }
-
-
 
 } // namespace storage
 } // namespace mozilla

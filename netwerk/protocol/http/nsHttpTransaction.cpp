@@ -1583,7 +1583,8 @@ nsHttpTransaction::HandleContentStart()
         // check if this is a no-content response
         switch (mResponseHead->Status()) {
         case 101:
-            mPreserveStream = true;    // fall through to other no content
+            mPreserveStream = true;
+            MOZ_FALLTHROUGH; // to other no content cases:
         case 204:
         case 205:
         case 304:

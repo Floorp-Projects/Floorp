@@ -10,7 +10,7 @@ interface nsIFile;
 interface nsIToolkitProfile;
 interface nsIProfileLock;
 
-[scriptable, uuid(b81c33a6-1ce8-4695-856b-02b7f15cc114)]
+[scriptable, uuid(1947899b-f369-48fa-89da-f7c37bb1e6bc)]
 interface nsIToolkitProfileService : nsISupports
 {
     attribute boolean startWithLastProfile;
@@ -79,23 +79,17 @@ interface nsIToolkitProfileService : nsISupports
      *
      * @note Either aProfileName or aAppName must be non-empty
      *
-     * The contents of aProfileDefaultsDir will be copied to the
-     * new profile directory.
-     * 
      * @param  aProfileName
      *         The name of the profile
      * @param  aAppName
      *         The name of the application
      * @param  aVendorName
      *         The name of the vendor
-     * @param  aProfileDefaultsDir
-     *         The location where the profile defaults are.
      * @return The created profile.
      */                                    
     nsIToolkitProfile createDefaultProfileForApp(in AUTF8String aProfileName,
                                                  in AUTF8String aAppName,
-                                                 in AUTF8String aVendorName,
-                                                 [optional] in nsIFile aProfileDefaultsDir);
+                                                 in AUTF8String aVendorName);
 
     /**
      * Returns the number of profiles.

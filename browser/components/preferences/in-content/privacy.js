@@ -30,7 +30,10 @@ var gPrivacyPane = {
     let url = Services.urlFormatter.formatURLPref("app.support.baseURL") + "tracking-protection";
     link.setAttribute("href", url);
 
+    this.trackingProtectionReadPrefs();
+
     document.getElementById("trackingprotectionbox").hidden = false;
+    document.getElementById("trackingprotectionpbmbox").hidden = true;
   },
 #endif
 
@@ -108,6 +111,10 @@ var gPrivacyPane = {
       gPrivacyPane.clearPrivateDataNow(true);
       return false;
     });
+    setEventListener("doNotTrackSettings", "click", function () {
+      gPrivacyPane.showDoNotTrackSettings();
+      return false;
+    });
     setEventListener("privateBrowsingAutoStart", "command",
                      gPrivacyPane.updateAutostart);
     setEventListener("cookieExceptions", "command",
@@ -116,8 +123,54 @@ var gPrivacyPane = {
                      gPrivacyPane.showCookies);
     setEventListener("clearDataSettings", "command",
                      gPrivacyPane.showClearPrivateDataSettings);
+    setEventListener("trackingProtectionRadioGroup", "command",
+                     gPrivacyPane.trackingProtectionWritePrefs);
+    setEventListener("trackingProtectionExceptions", "command",
+                     gPrivacyPane.showTrackingProtectionExceptions);
     setEventListener("changeBlockList", "command",
                      gPrivacyPane.showBlockLists);
+    setEventListener("changeBlockListPBM", "command",
+                     gPrivacyPane.showBlockLists);
+  },
+
+  // TRACKING PROTECTION MODE
+
+  /**
+   * Selects the right item of the Tracking Protection radiogroup.
+   */
+  trackingProtectionReadPrefs() {
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
+    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+
+    // Global enable takes precedence over enabled in Private Browsing.
+    radiogroup.value = enabledPref.value ? "always" :
+                       pbmPref.value ? "private" :
+                       "never";
+  },
+
+  /**
+   * Sets the pref values based on the selected item of the radiogroup.
+   */
+  trackingProtectionWritePrefs() {
+    let enabledPref = document.getElementById("privacy.trackingprotection.enabled");
+    let pbmPref = document.getElementById("privacy.trackingprotection.pbmode.enabled");
+    let radiogroup = document.getElementById("trackingProtectionRadioGroup");
+
+    switch (radiogroup.value) {
+      case "always":
+        enabledPref.value = true;
+        pbmPref.value = true;
+        break;
+      case "private":
+        enabledPref.value = false;
+        pbmPref.value = true;
+        break;
+      case "never":
+        enabledPref.value = false;
+        pbmPref.value = false;
+        break;
+    }
   },
 
   // HISTORY MODE
@@ -372,6 +425,21 @@ var gPrivacyPane = {
   },
 
   /**
+   * Displays fine-grained, per-site preferences for tracking protection.
+   */
+  showTrackingProtectionExceptions() {
+    let bundlePreferences = document.getElementById("bundlePreferences");
+    let params = {
+      permissionType: "trackingprotection",
+      hideStatusColumn: true,
+      windowTitle: bundlePreferences.getString("trackingprotectionpermissionstitle"),
+      introText: bundlePreferences.getString("trackingprotectionpermissionstext"),
+    };
+    gSubDialog.open("chrome://browser/content/preferences/permissions.xul",
+                    null, params);
+  },
+
+  /**
    * Displays the available block lists for tracking protection.
    */
   showBlockLists: function ()
@@ -384,6 +452,14 @@ var gPrivacyPane = {
                    introText: bundlePreferences.getString("blockliststext") };
     gSubDialog.open("chrome://browser/content/preferences/blocklists.xul",
                     null, params);
+  },
+
+  /**
+   * Displays the Do Not Track settings dialog.
+   */
+  showDoNotTrackSettings() {
+    gSubDialog.open("chrome://browser/content/preferences/donottrack.xul",
+                    "resizable=no");
   },
 
   // HISTORY

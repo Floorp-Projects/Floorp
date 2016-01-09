@@ -14,7 +14,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=789315
 <form id="a"><input name="b" type="file"/></form>
 
 <script type="text/javascript">
-  is(new FormData(document.getElementById('a')).get('b'), "", "This should return an empty string.");
+  var obj = new FormData(document.getElementById('a')).get('b');
+
+  ok(obj instanceof File, "This should return an empty File");
+  is(obj.size, 0, "Size should be 0");
+  is(obj.name, "", "Name should be an empty string");
+  is(obj.type, "application/octet-stream", "Type should be application/octet-stream");
+
+  var o = obj.slice(10, 100, "foo/bar");
+  is(o.size, 0, "The new blob has size 0");
+  is(o.type, "foo/bar", "The new blob has type foo/bar");
 </script>
 
 </body>
