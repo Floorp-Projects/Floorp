@@ -194,6 +194,7 @@ public:
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
     int32_t mProducerID;
+    int32_t mInputFrameID;
   };
   virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures);
   virtual void UseComponentAlphaTextures(TextureHost* aTextureOnBlack,
@@ -234,6 +235,8 @@ public:
   virtual already_AddRefed<TexturedEffect> GenEffect(const gfx::Filter& aFilter) {
     return nullptr;
   }
+
+  virtual int32_t GetLastInputFrameID() const { return -1; }
 
 protected:
   TextureInfo mTextureInfo;

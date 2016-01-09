@@ -161,6 +161,7 @@ struct VRDeviceInfo
 
 struct VRHMDSensorState {
   double timestamp;
+  int32_t inputFrameID;
   VRStateValidFlags flags;
   float orientation[4];
   float position[3];
@@ -244,7 +245,7 @@ public:
 
   virtual already_AddRefed<RenderTargetSet> CreateRenderTargetSet(layers::Compositor *aCompositor, const IntSize& aSize) = 0;
   virtual void DestroyRenderTargetSet(RenderTargetSet *aRTSet) = 0;
-  virtual void SubmitFrame(RenderTargetSet *aRTSet) = 0;
+  virtual void SubmitFrame(RenderTargetSet *aRTSet, int32_t aInputFrameID) = 0;
 protected:
   VRHMDRenderingSupport() { }
 };
