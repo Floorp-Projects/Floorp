@@ -5593,9 +5593,10 @@ HTMLInputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
     }
 
     if (files.IsEmpty()) {
-      // If no file was selected, pretend we had an empty file with an
-      // empty filename.
-      aFormSubmission->AddNameFilePair(name, nullptr);
+      RefPtr<BlobImpl> blobImpl =
+        new BlobImplEmptyFile(NS_LITERAL_STRING("application/octet-stream"));
+      RefPtr<File> file = File::Create(OwnerDoc()->GetInnerWindow(), blobImpl);
+      aFormSubmission->AddNameFilePair(name, file);
     }
 
     return NS_OK;

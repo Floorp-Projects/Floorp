@@ -279,6 +279,41 @@ var items = [
 
       return l10n.lookupFormat("addonAlreadyDisabled", [ name ]);
     }
+  },
+  {
+    item: "command",
+    runAt: "client",
+    name: "addon ctp",
+    description: l10n.lookup("addonCtpDesc"),
+    params: [
+      {
+        name: "addon",
+        type: "addon",
+        description: l10n.lookup("addonNameDesc")
+      }
+    ],
+    exec: function(args, context) {
+      let name = (args.addon.name + " " + args.addon.version).trim();
+      if (args.addon.type !== "plugin") {
+        return l10n.lookupFormat("addonCantCtp", [ name ]);
+      }
+
+      if (!args.addon.userDisabled ||
+          args.addon.userDisabled === true) {
+        args.addon.userDisabled = AddonManager.STATE_ASK_TO_ACTIVATE;
+
+        if (args.addon.userDisabled !== AddonManager.STATE_ASK_TO_ACTIVATE) {
+          // Some plugins (e.g. OpenH264 shipped with Firefox) cannot be set to
+          // click-to-play. Handle this.
+
+          return l10n.lookupFormat("addonNoCtp", [ name ]);
+        }
+
+        return l10n.lookupFormat("addonCtp", [ name ]);
+      }
+
+      return l10n.lookupFormat("addonAlreadyCtp", [ name ]);
+    }
   }
 ];
 

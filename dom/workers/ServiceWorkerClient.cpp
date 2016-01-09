@@ -46,7 +46,12 @@ ServiceWorkerClientInfo::ServiceWorkerClientInfo(nsIDocument* aDoc)
     mWindowId = innerWindow->WindowID();
   }
 
-  aDoc->GetURL(mUrl);
+  nsCOMPtr<nsIURI> originalURI = aDoc->GetOriginalURI();
+  if (originalURI) {
+    nsAutoCString spec;
+    originalURI->GetSpec(spec);
+    CopyUTF8toUTF16(spec, mUrl);
+  }
   mVisibilityState = aDoc->VisibilityState();
 
   ErrorResult result;

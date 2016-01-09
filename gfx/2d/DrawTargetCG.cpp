@@ -808,7 +808,7 @@ CreateCGPattern(const Pattern &aPattern, CGAffineTransform aUserSpace)
       yStep = static_cast<CGFloat>(1 << 22);
       break;
     case ExtendMode::REFLECT:
-      assert(0);
+      MOZ_FALLTHROUGH_ASSERT("ExtendMode::REFLECT");
     case ExtendMode::REPEAT:
       xStep = static_cast<CGFloat>(CGImageGetWidth(image));
       yStep = static_cast<CGFloat>(CGImageGetHeight(image));
