@@ -2411,6 +2411,8 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     return false;
   }
  
+  bool needBlendContainer = false;
+
   // Passing bg == nullptr in this macro will result in one iteration with
   // i = 0.
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, bg) {
@@ -2419,7 +2421,7 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     }
 
     if (bg->mLayers[i].mBlendMode != NS_STYLE_BLEND_NORMAL) {
-      aBuilder->SetContainsBlendMode(bg->mLayers[i].mBlendMode);
+      needBlendContainer = true;
     }
 
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
@@ -2432,6 +2434,11 @@ nsDisplayBackgroundImage::AppendBackgroundItemsToTop(nsDisplayListBuilder* aBuil
     nsDisplayBackgroundImage* bgItem =
       new (aBuilder) nsDisplayBackgroundImage(aBuilder, aFrame, i, bg);
     bgItemList.AppendNewToTop(bgItem);
+  }
+
+  if (needBlendContainer) {
+    bgItemList.AppendNewToTop(
+      new (aBuilder) nsDisplayBlendContainer(aBuilder, aFrame, &bgItemList));
   }
 
   aList->AppendToTop(&bgItemList);
