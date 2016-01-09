@@ -14,10 +14,10 @@ interface Clients {
   [NewObject]
   Promise<any> get(DOMString id);
   [NewObject]
-  Promise<sequence<Client>?> matchAll(optional ClientQueryOptions options);
+  Promise<sequence<Client>> matchAll(optional ClientQueryOptions options);
   [NewObject,
    Func="mozilla::dom::workers::ServiceWorkerGlobalScope::OpenWindowEnabled"]
-  Promise<WindowClient> openWindow(USVString url);
+  Promise<WindowClient?> openWindow(USVString url);
   [NewObject]
   Promise<void> claim();
 };
