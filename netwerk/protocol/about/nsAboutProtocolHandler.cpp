@@ -17,6 +17,7 @@
 #include "nsIObjectOutputStream.h"
 #include "nsAutoPtr.h"
 #include "nsIWritablePropertyBag2.h"
+#include "nsIChannel.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);

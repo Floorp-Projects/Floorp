@@ -17,6 +17,7 @@
 #include "nsProxyRelease.h"
 #include "SerializedLoadContext.h"
 #include "nsNetUtil.h"
+#include "nsIFileURL.h"
 
 // needed to alloc/free NSPR file descriptors
 #include "private/pprio.h"

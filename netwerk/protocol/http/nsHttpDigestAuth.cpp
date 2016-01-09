@@ -18,6 +18,7 @@
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsICryptoHash.h"
+#include "nsComponentManagerUtils.h"
 
 namespace mozilla {
 namespace net {

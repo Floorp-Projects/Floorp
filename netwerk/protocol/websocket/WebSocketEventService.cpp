@@ -11,8 +11,11 @@
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/StaticPtr.h"
 #include "nsISupportsPrimitives.h"
+#include "nsIObserverService.h"
 #include "nsXULAppAPI.h"
 #include "nsSocketTransportService2.h"
+#include "nsThreadUtils.h"
+#include "mozilla/Services.h"
 
 namespace mozilla {
 namespace net {

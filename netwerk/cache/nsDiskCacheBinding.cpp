@@ -12,7 +12,7 @@
 #include "nsDiskCacheBinding.h"
 #include "nsCacheService.h"
 
-
+using namespace mozilla;
 
 /******************************************************************************
  *  static hash table callback functions

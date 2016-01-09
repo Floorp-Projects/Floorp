@@ -14,6 +14,8 @@
 
 #define TOKEN_DELIMITERS MOZ_UTF16("\t\r\n ")
 
+using namespace mozilla;
+
 // nsISupports methods
 NS_IMPL_ISUPPORTS(nsTXTToHTMLConv,
                   nsIStreamConverter,

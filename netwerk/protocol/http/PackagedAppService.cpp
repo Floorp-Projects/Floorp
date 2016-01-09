@@ -4,7 +4,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
 #include "PackagedAppService.h"
 #include "nsICacheStorage.h"
 #include "LoadContextInfo.h"
@@ -13,11 +12,22 @@
 #include "nsIMultiPartChannel.h"
 #include "../../cache2/CacheFileUtils.h"
 #include "nsStreamUtils.h"
-#include "mozilla/Logging.h"
 #include "mozilla/DebugOnly.h"
 #include "nsIHttpHeaderVisitor.h"
 #include "mozilla/LoadContext.h"
 #include "nsIInstallPackagedWebapp.h"
+#include "mozilla/Logging.h"
+#include "nsHttpResponseHead.h"
+#include "nsICachingChannel.h"
+#include "nsStringStream.h"
+#include "nsIOutputStream.h"
+#include "nsIInputStream.h"
+#include "nsNetUtil.h"
+#include "nsICacheEntryOpenCallback.h"
+#include "nsIURL.h"
+#include "nsContentUtils.h"
+#include "nsIStreamConverterService.h"
+#include "nsMimeTypes.h"
 
 namespace mozilla {
 namespace net {

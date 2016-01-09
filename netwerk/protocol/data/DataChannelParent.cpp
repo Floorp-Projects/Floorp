@@ -7,6 +7,7 @@
 #include "DataChannelParent.h"
 #include "mozilla/Assertions.h"
 #include "nsNetUtil.h"
+#include "nsIChannel.h"
 
 namespace mozilla {
 namespace net {

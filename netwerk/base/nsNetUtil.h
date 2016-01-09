@@ -17,6 +17,7 @@
 #include "nsIIOService.h"
 #include "mozilla/Services.h"
 #include "nsNetCID.h"
+#include "nsServiceManagerUtils.h"
 
 class nsIURI;
 class nsIPrincipal;

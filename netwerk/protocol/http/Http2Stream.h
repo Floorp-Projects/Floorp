@@ -15,6 +15,8 @@
 #include "nsISupportsPriority.h"
 
 class nsStandardURL;
+class nsIInputStream;
+class nsIOutputStream;
 
 namespace mozilla {
 namespace net {

@@ -9,6 +9,7 @@
 #include "nsCRT.h"
 #include "nsIExternalProtocolHandler.h"
 #include "nsIIOService.h"
+#include "nsIURI.h"
 
 #include <algorithm>
 
