@@ -195,10 +195,6 @@ var AboutHomeListener = {
         sendAsyncMessage("AboutHome:History");
         break;
 
-      case "apps":
-        sendAsyncMessage("AboutHome:Apps");
-        break;
-
       case "addons":
         sendAsyncMessage("AboutHome:Addons");
         break;
