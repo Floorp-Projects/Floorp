@@ -10,9 +10,6 @@
 <preferences id="privacyPreferences" hidden="true" data-category="panePrivacy">
 
   <!-- Tracking -->
-  <preference id="privacy.donottrackheader.enabled"
-              name="privacy.donottrackheader.enabled"
-              type="bool"/>
   <preference id="privacy.trackingprotection.enabled"
               name="privacy.trackingprotection.enabled"
               type="bool"/>
@@ -29,6 +26,9 @@
               type="bool"/>
   <preference id="pref.privacy.disable_button.change_blocklist"
               name="pref.privacy.disable_button.change_blocklist"
+              type="bool"/>
+  <preference id="pref.privacy.disable_button.tracking_protection_exceptions"
+              name="pref.privacy.disable_button.tracking_protection_exceptions"
               type="bool"/>
 
   <!-- Location Bar -->
@@ -87,32 +87,40 @@
 
 <!-- Tracking -->
 <groupbox id="trackingGroup" data-category="panePrivacy" hidden="true">
-  <caption><label>&tracking.label;</label></caption>
-  <vbox>
-    <hbox align="center">
-      <checkbox id="privacyDoNotTrackCheckbox"
-                label="&dntTrackingNotOkay4.label;"
-                accesskey="&dntTrackingNotOkay4.accesskey;"
-                preference="privacy.donottrackheader.enabled"/>
-      <label id="doNotTrackInfo"
-             class="text-link"
-             href="https://www.mozilla.org/dnt">
-        &doNotTrackInfo.label;
-      </label>
-    </hbox>
-  </vbox>
   <vbox id="trackingprotectionbox" hidden="true">
-    <hbox align="center">
-      <checkbox id="trackingProtection"
-                preference="privacy.trackingprotection.enabled"
-                accesskey="&trackingProtection5.accesskey;"
-                label="&trackingProtection5.label;" />
-      <label id="trackingProtectionLearnMore"
-             class="text-link"
-             value="&trackingProtectionLearnMore.label;"/>
+    <hbox align="start">
+      <vbox>
+        <caption><label>&trackingProtectionHeader.label;
+          <label id="trackingProtectionLearnMore" class="text-link"
+                 value="&trackingProtectionLearnMore.label;"/>
+        </label></caption>
+        <radiogroup id="trackingProtectionRadioGroup">
+          <radio value="always"
+                 label="&trackingProtectionAlways.label;"
+                 accesskey="&trackingProtectionAlways.accesskey;"/>
+          <radio value="private"
+                 label="&trackingProtectionPrivate.label;"
+                 accesskey="&trackingProtectionPrivate.accesskey;"/>
+          <radio value="never"
+                 label="&trackingProtectionNever.label;"
+                 accesskey="&trackingProtectionNever.accesskey;"/>
+        </radiogroup>
+      </vbox>
+      <spacer flex="1" />
+      <vbox>
+        <button id="trackingProtectionExceptions"
+                label="&trackingProtectionExceptions.label;"
+                accesskey="&trackingProtectionExceptions.accesskey;"
+                preference="pref.privacy.disable_button.tracking_protection_exceptions"/>
+        <button id="changeBlockList"
+                label="&changeBlockList.label;"
+                accesskey="&changeBlockList.accesskey;"
+                preference="pref.privacy.disable_button.change_blocklist"/>
+      </vbox>
     </hbox>
   </vbox>
   <vbox id="trackingprotectionpbmbox">
+    <caption><label>&tracking.label;</label></caption>
     <hbox align="center">
       <checkbox id="trackingProtectionPBM"
                 preference="privacy.trackingprotection.pbmode.enabled"
@@ -122,10 +130,15 @@
              class="text-link"
              value="&trackingProtectionPBMLearnMore.label;"/>
       <spacer flex="1" />
-      <button id="changeBlockList"
+      <button id="changeBlockListPBM"
               label="&changeBlockList.label;" accesskey="&changeBlockList.accesskey;"
               preference="pref.privacy.disable_button.change_blocklist"/>
     </hbox>
+  </vbox>
+  <vbox>
+    <description>&doNotTrack.pre.label;<html:a
+    class="inline-link" id="doNotTrackSettings" href="#"
+    >&doNotTrack.settings.label;</html:a>&doNotTrack.post.label;</description>
   </vbox>
 </groupbox>
 

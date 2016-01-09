@@ -4,6 +4,10 @@
 
 %include ../shared/devedition.inc.css
 
+:root {
+  --forwardbutton-width: 29px;
+}
+
 :root[devtoolstheme="dark"],
 :root[devtoolstheme="light"] {
    /* Matches the #browser-border-start, #browser-border-end color */
