@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test copy outer HTML from the keyboard/copy event
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_outerhtml.html";
+const TEST_URL = URL_ROOT + "doc_inspector_outerhtml.html";
 
 add_task(function *() {
   let { inspector } = yield openInspectorForURL(TEST_URL);

@@ -7,7 +7,7 @@
 // Test that the custom rect highlighter positions the rectangle relative to the
 // viewport of the context node we pass to it.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_rect.html";
+const TEST_URL = URL_ROOT + "doc_inspector_highlighter_rect.html";
 
 add_task(function*() {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);

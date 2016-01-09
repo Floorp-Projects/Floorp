@@ -5,7 +5,7 @@
 
 // Test that the picker works correctly with XBL anonymous nodes
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_xbl.xul";
+const TEST_URL = URL_ROOT + "doc_inspector_highlighter_xbl.xul";
 
 add_task(function*() {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
