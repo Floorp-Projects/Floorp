@@ -311,10 +311,6 @@ body[narrow] #restorePreviousSession {
   content: url("chrome://browser/content/abouthome/history.png");
 }
 
-#apps::before {
-  content: url("chrome://browser/content/abouthome/apps.png");
-}
-
 #addons::before {
   content: url("chrome://browser/content/abouthome/addons.png");
 }
@@ -413,10 +409,6 @@ body[narrow] #restorePreviousSession::before {
 
   #history::before {
     content: url("chrome://browser/content/abouthome/history@2x.png");
-  }
-
-  #apps::before {
-    content: url("chrome://browser/content/abouthome/apps@2x.png");
   }
 
   #addons::before {
