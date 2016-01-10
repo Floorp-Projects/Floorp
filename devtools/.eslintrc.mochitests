@@ -5,6 +5,11 @@
   ],
   // All globals made available in the test environment.
   "globals": {
+    "DevToolsUtils": true,
     "gDevTools": true,
+    "once": true,
+    "synthesizeKeyFromKeyTag": true,
+    "TargetFactory": true,
+    "waitForTick": true,
   }
 }

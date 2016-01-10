@@ -35,7 +35,6 @@ this.Utils = {
   // In the ideal world, references to these would be removed.
   nextTick: CommonUtils.nextTick,
   namedTimer: CommonUtils.namedTimer,
-  stackTrace: CommonUtils.stackTrace,
   makeURI: CommonUtils.makeURI,
   encodeUTF8: CommonUtils.encodeUTF8,
   decodeUTF8: CommonUtils.decodeUTF8,
