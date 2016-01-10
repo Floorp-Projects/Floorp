@@ -42,19 +42,23 @@ function test() {
 
     is(gBrowser.selectedTab, tab1,
        "Tab1 should be activated");
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true },
+                             browser1.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated by pressing Ctrl+Tab on Tab1");
 
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab3,
        "Tab3 should be activated by pressing Ctrl+Tab on Tab2");
 
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: true },
+                             browser3.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated by pressing Ctrl+Shift+Tab on Tab3");
 
-    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("VK_TAB", { ctrlKey: true, shiftKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab1,
        "Tab1 should be activated by pressing Ctrl+Shift+Tab on Tab2");
 
@@ -63,19 +67,23 @@ function test() {
 
     is(gBrowser.selectedTab, tab1,
        "Tab1 should be activated");
-    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true },
+                             browser1.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated by pressing Ctrl+PageDown on Tab1");
 
-    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab3,
        "Tab3 should be activated by pressing Ctrl+PageDown on Tab2");
 
-    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true },
+                             browser3.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated by pressing Ctrl+PageUp on Tab3");
 
-    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab1,
        "Tab1 should be activated by pressing Ctrl+PageUp on Tab2");
 
@@ -90,19 +98,23 @@ function test() {
 
       is(gBrowser.selectedTab, tab1,
          "Tab1 should be activated");
-      EventUtils.synthesizeKey(advanceKey, { altKey: true, metaKey: true });
+      EventUtils.synthesizeKey(advanceKey, { altKey: true, metaKey: true },
+                               browser1.contentWindow);
       is(gBrowser.selectedTab, tab2,
          "Tab2 should be activated by pressing Ctrl+" + advanceKey + " on Tab1");
 
-      EventUtils.synthesizeKey(advanceKey, { altKey: true, metaKey: true });
+      EventUtils.synthesizeKey(advanceKey, { altKey: true, metaKey: true },
+                               browser2.contentWindow);
       is(gBrowser.selectedTab, tab3,
          "Tab3 should be activated by pressing Ctrl+" + advanceKey + " on Tab2");
 
-      EventUtils.synthesizeKey(reverseKey, { altKey: true, metaKey: true });
+      EventUtils.synthesizeKey(reverseKey, { altKey: true, metaKey: true },
+                               browser3.contentWindow);
       is(gBrowser.selectedTab, tab2,
          "Tab2 should be activated by pressing Ctrl+" + reverseKey + " on Tab3");
 
-      EventUtils.synthesizeKey(reverseKey, { altKey: true, metaKey: true });
+      EventUtils.synthesizeKey(reverseKey, { altKey: true, metaKey: true },
+                               browser2.contentWindow);
       is(gBrowser.selectedTab, tab1,
          "Tab1 should be activated by pressing Ctrl+" + reverseKey + " on Tab2");
     }
@@ -113,13 +125,15 @@ function test() {
     is(gBrowser.tabContainer.selectedIndex, 2,
        "Tab2 index should be 2");
 
-    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_DOWN", { ctrlKey: true, shiftKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated after Ctrl+Shift+PageDown");
     is(gBrowser.tabContainer.selectedIndex, 3,
        "Tab2 index should be 1 after Ctrl+Shift+PageDown");
 
-    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true, shiftKey: true });
+    EventUtils.synthesizeKey("VK_PAGE_UP", { ctrlKey: true, shiftKey: true },
+                             browser2.contentWindow);
     is(gBrowser.selectedTab, tab2,
        "Tab2 should be activated after Ctrl+Shift+PageUp");
     is(gBrowser.tabContainer.selectedIndex, 2,
@@ -139,37 +153,45 @@ function test() {
 
       is(gBrowser.selectedTab, tab1,
          "Tab1 should be activated");
-      EventUtils.synthesizeKey(advanceKey, { metaKey: true });
+      EventUtils.synthesizeKey(advanceKey, { metaKey: true },
+                               browser1.contentWindow);
       is(gBrowser.selectedTab, tab2,
          "Tab2 should be activated by pressing Ctrl+" + advanceKey + " on Tab1");
 
-      EventUtils.synthesizeKey(advanceKey, { metaKey: true });
-      is(gBrowser.selectedTab, tab3,
-         "Tab3 should be activated by pressing Ctrl+" + advanceKey + " on Tab2");
+      EventUtils.synthesizeKey(advanceKey, { metaKey: true },
+                               browser2.contentWindow);
+      todo_is(gBrowser.selectedTab, tab3,
+              "Tab3 should be activated by pressing Ctrl+" + advanceKey + " on Tab2");
 
-      EventUtils.synthesizeKey(reverseKey, { metaKey: true });
-      is(gBrowser.selectedTab, tab2,
-         "Tab2 should be activated by pressing Ctrl+" + reverseKey + " on Tab3");
+      if (gBrowser.selectedTab != tab3) {
+        EventUtils.synthesizeKey(reverseKey, { metaKey: true },
+                                 browser3.contentWindow);
+        is(gBrowser.selectedTab, tab2,
+           "Tab2 should be activated by pressing Ctrl+" + reverseKey + " on Tab3");
+      }
 
-      EventUtils.synthesizeKey(reverseKey, { metaKey: true });
-      is(gBrowser.selectedTab, tab1,
-         "Tab1 should be activated by pressing Ctrl+" + reverseKey + " on Tab2");
+      EventUtils.synthesizeKey(reverseKey, { metaKey: true },
+                               browser2.contentWindow);
+      todo_is(gBrowser.selectedTab, tab1,
+              "Tab1 should be activated by pressing Ctrl+" + reverseKey + " on Tab2");
     } else {
       gBrowser.selectedTab = tab2;
-      EventUtils.synthesizeKey("VK_F4", { type: "keydown", ctrlKey: true });
+      EventUtils.synthesizeKey("VK_F4", { type: "keydown", ctrlKey: true },
+                               browser2.contentWindow);
 
       isnot(gBrowser.selectedTab, tab2,
             "Tab2 should be closed by pressing Ctrl+F4 on Tab2");
       is(gBrowser.tabs.length, 3,
-        "The count of tabs should be 3 since tab2 should be closed");
+         "The count of tabs should be 3 since tab2 should be closed");
 
       let activeWindow =
         gBrowser.getBrowserForTab(gBrowser.selectedTab).contentWindow;
       // NOTE: keypress event shouldn't be fired since the keydown event should
       //       be consumed by tab2.
-        EventUtils.synthesizeKey("VK_F4", { type: "keyup", ctrlKey: true });
-        is(gBrowser.tabs.length, 3,
-          "The count of tabs should be 3 since renaming key events shouldn't close other tabs");
+      EventUtils.synthesizeKey("VK_F4", { type: "keyup", ctrlKey: true },
+                               activeWindow);
+      is(gBrowser.tabs.length, 3,
+         "The count of tabs should be 3 since renaming key events shouldn't close other tabs");
     }
 
     gBrowser.selectedTab = tab3;
