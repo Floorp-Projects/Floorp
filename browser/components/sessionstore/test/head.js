@@ -449,16 +449,6 @@ function promiseNewWindowLoaded(aOptions) {
   return new Promise(resolve => whenNewWindowLoaded(aOptions, resolve));
 }
 
-function runInContent(browser, func, arg, callback = null) {
-  let deferred = Promise.defer();
-
-  let mm = browser.messageManager;
-  mm.sendAsyncMessage("ss-test:run", {code: func.toSource()}, {arg: arg});
-  mm.addMessageListener("ss-test:runFinished", ({data}) => deferred.resolve(data));
-
-  return deferred.promise;
-}
-
 /**
  * This waits for the browser-delayed-startup-finished notification of a given
  * window. It indicates that the windows has loaded completely and is ready to
