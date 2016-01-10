@@ -17,6 +17,7 @@
 #include "Http2HuffmanIncoming.h"
 #include "Http2HuffmanOutgoing.h"
 #include "mozilla/StaticPtr.h"
+#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {

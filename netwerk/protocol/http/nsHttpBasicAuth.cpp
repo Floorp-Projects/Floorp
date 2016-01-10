@@ -8,6 +8,7 @@
 
 #include "nsHttpBasicAuth.h"
 #include "plbase64.h"
+#include "plstr.h"
 #include "nsString.h"
 
 namespace mozilla {

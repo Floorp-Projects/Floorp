@@ -42,6 +42,7 @@
 #include "nsIURI.h"
 #include "nsILoadInfo.h"
 #include "nsNullPrincipal.h"
+#include "nsIAuthPrompt2.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "NetStatistics.h"

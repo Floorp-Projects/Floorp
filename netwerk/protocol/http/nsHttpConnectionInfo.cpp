@@ -17,6 +17,8 @@
 #include "mozilla/net/DNS.h"
 #include "prnetdb.h"
 #include "nsICryptoHash.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIProtocolProxyService.h"
 
 static nsresult
 SHA256(const char* aPlainText, nsAutoCString& aResult)

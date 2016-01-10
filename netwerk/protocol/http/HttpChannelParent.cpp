@@ -38,6 +38,7 @@
 #include "nsIPrompt.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDocument.h"
+#include "nsStringStream.h"
 
 using mozilla::BasePrincipal;
 using namespace mozilla::dom;

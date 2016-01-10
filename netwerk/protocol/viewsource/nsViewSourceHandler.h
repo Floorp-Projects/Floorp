@@ -7,7 +7,11 @@
 #define nsViewSourceHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsNetUtil.h"
 #include "mozilla/Attributes.h"
+
+class nsINode;
+class nsIPrincipal;
 
 class nsViewSourceHandler final : public nsIProtocolHandler
 {

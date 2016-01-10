@@ -10,6 +10,7 @@
 #include "nsIStreamConverter.h"
 #include "nsICompressConvStats.h"
 #include "nsCOMPtr.h"
+#include "nsAutoPtr.h"
 
 #include "zlib.h"
 

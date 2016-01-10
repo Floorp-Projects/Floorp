@@ -763,6 +763,27 @@ function assert_records(expected, desc) {
     });
   });
 
+  addAsyncAnimTest("change_id", aOptions, function*() {
+    e.style.animation = "anim 100s";
+
+    var animation = div.getAnimations()[0];
+    yield await_frame();
+    assert_records([{ added: [animation], changed: [], removed: []}],
+                   "records after creation");
+    animation.id = "new id";
+    yield await_frame();
+    assert_records([{ added: [], changed: [animation], removed: []}],
+                   "records after id is changed");
+
+    animation.id = "new id";
+    yield await_frame();
+    assert_records([],
+                   "records after assigning same value with id");
+
+    e.style.animation = "";
+    yield await_frame();
+  });
+
   // Test that making a redundant change to currentTime while an Animation
   // is pause-pending still generates a change MutationRecord since setting
   // the currentTime to any value in this state aborts the pending pause.

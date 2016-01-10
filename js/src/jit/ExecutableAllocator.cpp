@@ -27,6 +27,7 @@
 
 #include "jit/ExecutableAllocator.h"
 
+#include "jit/JitCompartment.h"
 #include "js/MemoryMetrics.h"
 
 #ifdef __APPLE__

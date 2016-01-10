@@ -32,6 +32,7 @@
 // the file nspr.log
 //
 static mozilla::LazyLogModule gFTPDirListConvLog("nsFTPDirListingConv");
+using namespace mozilla;
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsFTPDirListingConv,

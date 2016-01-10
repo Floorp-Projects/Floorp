@@ -6,6 +6,7 @@
 #include "nsContentUtils.h"
 #include "nsContentSecurityManager.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIStreamListener.h"
 
 namespace mozilla {
 namespace net {

@@ -122,6 +122,11 @@ ClosingService::StartInternal()
 nsresult
 ClosingService::AttachIOLayer(PRFileDesc *aFd)
 {
+  // We are going to remove ClosingService soon.
+  // This change is going to turn it off, so ClosingService is not used.
+  // Bug 1238010.
+  return NS_OK;
+
   if (!sTcpUdpPRCloseLayerMethodsPtr) {
     return NS_OK;
   }

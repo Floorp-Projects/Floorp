@@ -14,10 +14,13 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIFrameLoader.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsISupportsImpl.h"
 #include "nsISupportsUtils.h"
 #include "nsContentUtils.h"
 #include "nsGlobalWindow.h"
+
+using namespace mozilla::dom;
 
 namespace mozilla {
 
