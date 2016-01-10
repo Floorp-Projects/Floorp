@@ -107,13 +107,19 @@ add_task(function* testInvalidUUID() {
   let uri = NetUtil.newURI("moz-extension://eb4f3be8-41c9-4970-aa6d-b84d1ecc02b2/file.css");
   let stream = StringStream("Foo __MSG_xxx__ bar __MSG_yyy__ baz");
 
+  // Assert.throws raise a TypeError exception when the expected param
+  // is an arrow function. (See Bug 1237961 for rationale)
+  let expectInvalidContextException = function(e) {
+    return e.result === Cr.NS_ERROR_INVALID_ARG && /Invalid context/.test(e);
+  };
+
   Assert.throws(() => {
     convService.convert(stream, FROM_TYPE, TO_TYPE, uri);
-  });
+  }, expectInvalidContextException);
 
   Assert.throws(() => {
     let listener = { QueryInterface: XPCOMUtils.generateQI([Ci.nsIStreamListener]) };
 
     convService.asyncConvertData(FROM_TYPE, TO_TYPE, listener, uri);
-  });
+  }, expectInvalidContextException);
 });

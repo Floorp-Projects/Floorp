@@ -3,12 +3,14 @@
 
 "use strict";
 
+let testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 // shared-head.js handles imports, constants, and utility functions
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
+let sharedHeadURI = testDir + "../../../framework/test/shared-head.js";
+Services.scriptloader.loadSubScript(sharedHeadURI, this);
 
 // Import the GCLI test helper
-var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
-Services.scriptloader.loadSubScript(testDir + "../../../commandline/test/helpers.js", this);
+let gcliHelpersURI = testDir + "../../../commandline/test/helpers.js";
+Services.scriptloader.loadSubScript(gcliHelpersURI, this);
 
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
@@ -21,22 +23,41 @@ registerCleanupFunction(() => {
 /**
  * Open the Responsive Design Mode
  * @param {Tab} The browser tab to open it into (defaults to the selected tab).
- * @return {Promise} Resolves to the instance of the responsive design mode.
+ * @param {method} The method to use to open the RDM (values: menu, keyboard)
+ * @return {rdm, manager} Returns the RUI instance and the manager
  */
-function openRDM(tab = gBrowser.selectedTab) {
-  return new Promise(resolve => {
-    let manager = ResponsiveUI.ResponsiveUIManager;
+var openRDM = Task.async(function*(tab = gBrowser.selectedTab,
+                                   method = "menu") {
+  let manager = ResponsiveUI.ResponsiveUIManager;
+  let mgrOn = once(manager, "on");
+  if (method == "menu") {
     document.getElementById("Tools:ResponsiveUI").doCommand();
-    executeSoon(() => {
-      let rdm = manager.getResponsiveUIForTab(tab);
-      rdm.stack.setAttribute("notransition", "true");
-      registerCleanupFunction(function() {
-        rdm.stack.removeAttribute("notransition");
-      });
-      resolve({rdm, manager});
-    });
+  } else {
+    synthesizeKeyFromKeyTag(document.getElementById("key_responsiveUI"));
+  }
+  yield mgrOn;
+
+  let rdm = manager.getResponsiveUIForTab(tab);
+  rdm.transitionsEnabled = false;
+  registerCleanupFunction(() => {
+    rdm.transitionsEnabled = true;
   });
-}
+  return {rdm, manager};
+});
+
+/**
+ * Close a responsive mode instance
+ * @param {rdm} ResponsiveUI instance for the tab
+ */
+var closeRDM = Task.async(function*(rdm) {
+  let mgr = ResponsiveUI.ResponsiveUIManager;
+  if (!rdm) {
+    rdm = mgr.getResponsiveUIForTab(gBrowser.selectedTab);
+  }
+  let mgrOff = mgr.once("off");
+  rdm.close();
+  yield mgrOff;
+});
 
 /**
  * Open the toolbox, with the inspector tool visible.
@@ -75,6 +96,11 @@ var openInspector = Task.async(function*() {
     toolbox: toolbox,
     inspector: inspector
   };
+});
+
+var closeToolbox = Task.async(function*() {
+  let target = TargetFactory.forTab(gBrowser.selectedTab);
+  yield gDevTools.closeToolbox(target);
 });
 
 /**
@@ -164,46 +190,9 @@ var addTab = Task.async(function* (url) {
   return tab;
 });
 
-/**
- * Wait for eventName on target.
- * @param {Object} target An observable object that either supports on/off or
- * addEventListener/removeEventListener
- * @param {String} eventName
- * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
- * @return A promise that resolves when the event has been handled
- */
-function once(target, eventName, useCapture=false) {
-  info("Waiting for event: '" + eventName + "' on " + target + ".");
-
-  let deferred = promise.defer();
-
-  for (let [add, remove] of [
-    ["addEventListener", "removeEventListener"],
-    ["addListener", "removeListener"],
-    ["on", "off"]
-  ]) {
-    if ((add in target) && (remove in target)) {
-      target[add](eventName, function onEvent(...aArgs) {
-        info("Got event: '" + eventName + "' on " + target + ".");
-        target[remove](eventName, onEvent, useCapture);
-        deferred.resolve.apply(deferred, aArgs);
-      }, useCapture);
-      break;
-    }
-  }
-
-  return deferred.promise;
-}
-
 function wait(ms) {
   let def = promise.defer();
   setTimeout(def.resolve, ms);
-  return def.promise;
-}
-
-function nextTick() {
-  let def = promise.defer();
-  executeSoon(() => def.resolve())
   return def.promise;
 }
 
@@ -212,19 +201,19 @@ function nextTick() {
  *
  * @return promise
  */
-function waitForDocLoadComplete(aBrowser=gBrowser) {
+function waitForDocLoadComplete(aBrowser = gBrowser) {
   let deferred = promise.defer();
   let progressListener = {
-    onStateChange: function (webProgress, req, flags, status) {
+    onStateChange: function(webProgress, req, flags, status) {
       let docStop = Ci.nsIWebProgressListener.STATE_IS_NETWORK |
                     Ci.nsIWebProgressListener.STATE_STOP;
-      info("Saw state " + flags.toString(16) + " and status " + status.toString(16));
+      info(`Saw state ${flags.toString(16)} and status ${status.toString(16)}`);
 
       // When a load needs to be retargetted to a new process it is cancelled
       // with NS_BINDING_ABORTED so ignore that case
       if ((flags & docStop) == docStop && status != Cr.NS_BINDING_ABORTED) {
         aBrowser.removeProgressListener(progressListener);
-        info("Browser loaded " + aBrowser.contentWindow.location);
+        info("Browser loaded");
         deferred.resolve();
       }
     },

@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 const TV_SIMULATOR_DUMMY_DIRECTORY   = "dummy";
 const TV_SIMULATOR_DUMMY_FILE        = "settings.json";
-const TV_SIMULATOR_MOCK_DATA         = Services.prefs.getCharPref("dom.testing.tv_mock_data");
 
 // See http://seanyhlin.github.io/TV-Manager-API/#idl-def-TVSourceType
 const TV_SOURCE_TYPES = ["dvb-t","dvb-t2","dvb-c","dvb-c2","dvb-s",
@@ -51,16 +50,19 @@ TVSimulatorService.prototype = {
       return;
     }
 
+    // I try to load the testing mock data if related preference are already set.
+    // Otherwise, use to the simulation data from prefences.
+    // See /dom/tv/test/mochitest/head.js for more details.
     let settingStr = "";
     try {
-      if (TV_SIMULATOR_MOCK_DATA) {
-        settingStr = TV_SIMULATOR_MOCK_DATA;
-      } else {
-        settingStr = this._getDummyData();
-      }
+      settingStr = Services.prefs.getCharPref("dom.testing.tv_mock_data");
     } catch(e) {
-      debug("Error occurred : " + e );
-      return;
+      try {
+        settingStr = this._getDummyData();
+      } catch(e) {
+        debug("TV Simulator service failed to load simulation data: " + e);
+        return;
+      }
     }
 
     let settingsObj;
@@ -178,7 +180,7 @@ TVSimulatorService.prototype = {
           }
 
           // Sort the program according to the startTime
-	  wrapChannelData.programs.sort(function(a, b) {
+          wrapChannelData.programs.sort(function(a, b) {
             return a.startTime - b.startTime;
           });
           wrapTunerData.channels.set(channel.number, wrapChannelData);
@@ -252,8 +254,8 @@ TVSimulatorService.prototype = {
 
     this._scanCompleteTimer = Cc["@mozilla.org/timer;1"]
                                 .createInstance(Ci.nsITimer);
-    rv = this._scanCompleteTimer.initWithCallback(this, 10,
-                                                  Ci.nsITimer.TYPE_ONE_SHOT);
+    let rv = this._scanCompleteTimer.initWithCallback(this, 10,
+                                                      Ci.nsITimer.TYPE_ONE_SHOT);
     return Cr.NS_OK;
   },
 
