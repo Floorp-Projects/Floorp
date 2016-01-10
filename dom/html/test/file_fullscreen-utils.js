@@ -3,16 +3,16 @@
 // Note this only returns true once the transition from normal to
 // fullscreen mode is complete.
 function inFullscreenMode(win) {
-  return win.outerWidth == win.screen.width &&
-         win.outerHeight == win.screen.height;
+  return win.innerWidth == win.screen.width &&
+         win.innerHeight == win.screen.height;
 }
 
 // Returns true if the window is in normal mode, i.e. non fullscreen mode.
 // Note this only returns true once the transition from fullscreen back to
 // normal mode is complete.
 function inNormalMode(win) {
-  return win.outerWidth == win.normalSize.w &&
-         win.outerHeight == win.normalSize.h;
+  return win.innerWidth == win.normalSize.w &&
+         win.innerHeight == win.normalSize.h;
 }
 
 // Adds a listener that will be called once a fullscreen transition
@@ -30,8 +30,8 @@ function addFullscreenChangeContinuation(type, callback, inDoc) {
   // Remember the window size in non-fullscreen mode.
   if (!topWin.normalSize) {
     topWin.normalSize = {
-      w: window.outerWidth,
-      h: window.outerHeight
+      w: window.innerWidth,
+      h: window.innerHeight
     };
   }
   function checkCondition() {
