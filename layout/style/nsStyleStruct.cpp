@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -820,44 +821,43 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 // --------------------
 // nsStyleSVG
 //
-nsStyleSVG::nsStyleSVG() 
+nsStyleSVG::nsStyleSVG()
 {
-    MOZ_COUNT_CTOR(nsStyleSVG);
-    mFill.mType              = eStyleSVGPaintType_Color;
-    mFill.mPaint.mColor      = NS_RGB(0,0,0);
-    mFill.mFallbackColor     = NS_RGB(0,0,0);
-    mStroke.mType            = eStyleSVGPaintType_None;
-    mStroke.mPaint.mColor    = NS_RGB(0,0,0);
-    mStroke.mFallbackColor   = NS_RGB(0,0,0);
-    mStrokeDasharray         = nullptr;
+  MOZ_COUNT_CTOR(nsStyleSVG);
+  mFill.mType              = eStyleSVGPaintType_Color;
+  mFill.mPaint.mColor      = NS_RGB(0,0,0);
+  mFill.mFallbackColor     = NS_RGB(0,0,0);
+  mStroke.mType            = eStyleSVGPaintType_None;
+  mStroke.mPaint.mColor    = NS_RGB(0,0,0);
+  mStroke.mFallbackColor   = NS_RGB(0,0,0);
+  mStrokeDasharray         = nullptr;
 
-    mStrokeDashoffset.SetCoordValue(0);
-    mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
+  mStrokeDashoffset.SetCoordValue(0);
+  mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
 
-    mFillOpacity             = 1.0f;
-    mStrokeMiterlimit        = 4.0f;
-    mStrokeOpacity           = 1.0f;
+  mFillOpacity             = 1.0f;
+  mStrokeMiterlimit        = 4.0f;
+  mStrokeOpacity           = 1.0f;
 
-    mStrokeDasharrayLength   = 0;
-    mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
-    mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
-    mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
-    mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
-    mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
-    mPaintOrder              = NS_STYLE_PAINT_ORDER_NORMAL;
-    mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
-    mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
-    mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
-    mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
-    mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
-    mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
-    mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
-    mStrokeDasharrayFromObject = false;
-    mStrokeDashoffsetFromObject = false;
-    mStrokeWidthFromObject   = false;
-}
-
-nsStyleSVG::~nsStyleSVG() 
+  mStrokeDasharrayLength   = 0;
+  mClipRule                = NS_STYLE_FILL_RULE_NONZERO;
+  mColorInterpolation      = NS_STYLE_COLOR_INTERPOLATION_SRGB;
+  mColorInterpolationFilters = NS_STYLE_COLOR_INTERPOLATION_LINEARRGB;
+  mFillRule                = NS_STYLE_FILL_RULE_NONZERO;
+  mImageRendering          = NS_STYLE_IMAGE_RENDERING_AUTO;
+  mPaintOrder              = NS_STYLE_PAINT_ORDER_NORMAL;
+  mShapeRendering          = NS_STYLE_SHAPE_RENDERING_AUTO;
+  mStrokeLinecap           = NS_STYLE_STROKE_LINECAP_BUTT;
+  mStrokeLinejoin          = NS_STYLE_STROKE_LINEJOIN_MITER;
+  mTextAnchor              = NS_STYLE_TEXT_ANCHOR_START;
+  mTextRendering           = NS_STYLE_TEXT_RENDERING_AUTO;
+  mFillOpacitySource       = eStyleSVGOpacitySource_Normal;
+  mStrokeOpacitySource     = eStyleSVGOpacitySource_Normal;
+  mStrokeDasharrayFromObject = false;
+  mStrokeDashoffsetFromObject = false;
+  mStrokeWidthFromObject   = false;
+} 
+nsStyleSVG::~nsStyleSVG()
 {
   MOZ_COUNT_DTOR(nsStyleSVG);
   delete [] mStrokeDasharray;
@@ -1240,21 +1240,21 @@ nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow)
 // --------------------
 // nsStyleSVGReset
 //
-nsStyleSVGReset::nsStyleSVGReset() 
+nsStyleSVGReset::nsStyleSVGReset()
 {
-    MOZ_COUNT_CTOR(nsStyleSVGReset);
-    mStopColor               = NS_RGB(0,0,0);
-    mFloodColor              = NS_RGB(0,0,0);
-    mLightingColor           = NS_RGB(255,255,255);
-    mMask                    = nullptr;
-    mStopOpacity             = 1.0f;
-    mFloodOpacity            = 1.0f;
-    mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
-    mVectorEffect            = NS_STYLE_VECTOR_EFFECT_NONE;
-    mMaskType                = NS_STYLE_MASK_TYPE_LUMINANCE;
+  MOZ_COUNT_CTOR(nsStyleSVGReset);
+  mStopColor               = NS_RGB(0,0,0);
+  mFloodColor              = NS_RGB(0,0,0);
+  mLightingColor           = NS_RGB(255,255,255);
+  mMask                    = nullptr;
+  mStopOpacity             = 1.0f;
+  mFloodOpacity            = 1.0f;
+  mDominantBaseline        = NS_STYLE_DOMINANT_BASELINE_AUTO;
+  mVectorEffect            = NS_STYLE_VECTOR_EFFECT_NONE;
+  mMaskType                = NS_STYLE_MASK_TYPE_LUMINANCE;
 }
 
-nsStyleSVGReset::~nsStyleSVGReset() 
+nsStyleSVGReset::~nsStyleSVGReset()
 {
   MOZ_COUNT_DTOR(nsStyleSVGReset);
 }

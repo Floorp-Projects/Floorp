@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -97,7 +98,8 @@ static_assert(int(mozilla::SheetType::Count) - 1 <=
 
 // The lifetime of these objects is managed by the presshell's arena.
 
-struct nsStyleFont {
+struct nsStyleFont
+{
   nsStyleFont(const nsFont& aFont, nsPresContext *aPresContext);
   nsStyleFont(const nsStyleFont& aStyleFont);
   explicit nsStyleFont(nsPresContext *aPresContext);
@@ -174,7 +176,8 @@ struct nsStyleFont {
   nsCOMPtr<nsIAtom> mLanguage;   // [inherited]
 };
 
-struct nsStyleGradientStop {
+struct nsStyleGradientStop
+{
   nsStyleCoord mLocation; // percent, coord, calc, none
   nscolor mColor;
   bool mIsInterpolationHint;
@@ -184,7 +187,8 @@ struct nsStyleGradientStop {
   bool operator!=(const nsStyleGradientStop&) const = delete;
 };
 
-class nsStyleGradient final {
+class nsStyleGradient final
+{
 public:
   nsStyleGradient();
   uint8_t mShape;  // NS_STYLE_GRADIENT_SHAPE_*
@@ -239,7 +243,8 @@ enum nsStyleImageType {
  * region of an image. (Currently, this feature is only supported with an
  * image of type (1)).
  */
-struct nsStyleImage {
+struct nsStyleImage
+{
   nsStyleImage();
   ~nsStyleImage();
   nsStyleImage(const nsStyleImage& aOther);
@@ -360,7 +365,8 @@ private:
 #endif
 };
 
-struct nsStyleColor {
+struct nsStyleColor
+{
   explicit nsStyleColor(nsPresContext* aPresContext);
   nsStyleColor(const nsStyleColor& aOther);
   ~nsStyleColor(void) {
@@ -392,7 +398,8 @@ struct nsStyleColor {
   nscolor mColor;                 // [inherited]
 };
 
-struct nsStyleBackground {
+struct nsStyleBackground
+{
   nsStyleBackground();
   nsStyleBackground(const nsStyleBackground& aOther);
   ~nsStyleBackground();
@@ -629,7 +636,8 @@ struct nsStyleBackground {
 #define NS_SPACING_BORDER   2
 
 
-struct nsStyleMargin {
+struct nsStyleMargin
+{
   nsStyleMargin(void);
   nsStyleMargin(const nsStyleMargin& aMargin);
   ~nsStyleMargin(void) {
@@ -673,7 +681,8 @@ protected:
 };
 
 
-struct nsStylePadding {
+struct nsStylePadding
+{
   nsStylePadding(void);
   nsStylePadding(const nsStylePadding& aPadding);
   ~nsStylePadding(void) {
@@ -721,7 +730,8 @@ protected:
   nsMargin      mCachedPadding;
 };
 
-struct nsBorderColors {
+struct nsBorderColors
+{
   nsBorderColors* mNext;
   nscolor mColor;
 
@@ -750,7 +760,8 @@ private:
   nsBorderColors* Clone(bool aDeep) const;
 };
 
-struct nsCSSShadowItem {
+struct nsCSSShadowItem
+{
   nscoord mXOffset;
   nscoord mYOffset;
   nscoord mRadius;
@@ -781,74 +792,75 @@ struct nsCSSShadowItem {
   }
 };
 
-class nsCSSShadowArray final {
-  public:
-    void* operator new(size_t aBaseSize, uint32_t aArrayLen) {
-      // We can allocate both this nsCSSShadowArray and the
-      // actual array in one allocation. The amount of memory to
-      // allocate is equal to the class's size + the number of bytes for all
-      // but the first array item (because aBaseSize includes one
-      // item, see the private declarations)
-      return ::operator new(aBaseSize +
-                            (aArrayLen - 1) * sizeof(nsCSSShadowItem));
-    }
+class nsCSSShadowArray final
+{
+public:
+  void* operator new(size_t aBaseSize, uint32_t aArrayLen) {
+    // We can allocate both this nsCSSShadowArray and the
+    // actual array in one allocation. The amount of memory to
+    // allocate is equal to the class's size + the number of bytes for all
+    // but the first array item (because aBaseSize includes one
+    // item, see the private declarations)
+    return ::operator new(aBaseSize +
+                          (aArrayLen - 1) * sizeof(nsCSSShadowItem));
+  }
 
-    explicit nsCSSShadowArray(uint32_t aArrayLen) :
-      mLength(aArrayLen)
-    {
-      MOZ_COUNT_CTOR(nsCSSShadowArray);
-      for (uint32_t i = 1; i < mLength; ++i) {
-        // Make sure we call the constructors of each nsCSSShadowItem
-        // (the first one is called for us because we declared it under private)
-        new (&mArray[i]) nsCSSShadowItem();
-      }
+  explicit nsCSSShadowArray(uint32_t aArrayLen) :
+    mLength(aArrayLen)
+  {
+    MOZ_COUNT_CTOR(nsCSSShadowArray);
+    for (uint32_t i = 1; i < mLength; ++i) {
+      // Make sure we call the constructors of each nsCSSShadowItem
+      // (the first one is called for us because we declared it under private)
+      new (&mArray[i]) nsCSSShadowItem();
     }
+  }
 
 private:
-    // Private destructor, to discourage deletion outside of Release():
-    ~nsCSSShadowArray() {
-      MOZ_COUNT_DTOR(nsCSSShadowArray);
-      for (uint32_t i = 1; i < mLength; ++i) {
-        mArray[i].~nsCSSShadowItem();
-      }
+  // Private destructor, to discourage deletion outside of Release():
+  ~nsCSSShadowArray() {
+    MOZ_COUNT_DTOR(nsCSSShadowArray);
+    for (uint32_t i = 1; i < mLength; ++i) {
+      mArray[i].~nsCSSShadowItem();
     }
+  }
 
 public:
-    uint32_t Length() const { return mLength; }
-    nsCSSShadowItem* ShadowAt(uint32_t i) {
-      MOZ_ASSERT(i < mLength, "Accessing too high an index in the text shadow array!");
-      return &mArray[i];
-    }
-    const nsCSSShadowItem* ShadowAt(uint32_t i) const {
-      MOZ_ASSERT(i < mLength, "Accessing too high an index in the text shadow array!");
-      return &mArray[i];
-    }
+  uint32_t Length() const { return mLength; }
+  nsCSSShadowItem* ShadowAt(uint32_t i) {
+    MOZ_ASSERT(i < mLength, "Accessing too high an index in the text shadow array!");
+    return &mArray[i];
+  }
+  const nsCSSShadowItem* ShadowAt(uint32_t i) const {
+    MOZ_ASSERT(i < mLength, "Accessing too high an index in the text shadow array!");
+    return &mArray[i];
+  }
 
-    bool HasShadowWithInset(bool aInset) {
-      for (uint32_t i = 0; i < mLength; ++i) {
-        if (mArray[i].mInset == aInset)
-          return true;
-      }
+  bool HasShadowWithInset(bool aInset) {
+    for (uint32_t i = 0; i < mLength; ++i) {
+      if (mArray[i].mInset == aInset)
+        return true;
+    }
+    return false;
+  }
+
+  bool operator==(const nsCSSShadowArray& aOther) const {
+    if (mLength != aOther.Length())
       return false;
-    }
 
-    bool operator==(const nsCSSShadowArray& aOther) const {
-      if (mLength != aOther.Length())
+    for (uint32_t i = 0; i < mLength; ++i) {
+      if (ShadowAt(i) != aOther.ShadowAt(i))
         return false;
-
-      for (uint32_t i = 0; i < mLength; ++i) {
-        if (ShadowAt(i) != aOther.ShadowAt(i))
-          return false;
-      }
-
-      return true;
     }
 
-    NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
+    return true;
+  }
 
-  private:
-    uint32_t mLength;
-    nsCSSShadowItem mArray[1]; // This MUST be the last item
+  NS_INLINE_DECL_REFCOUNTING(nsCSSShadowArray)
+
+private:
+  uint32_t mLength;
+  nsCSSShadowItem mArray[1]; // This MUST be the last item
 };
 
 // Border widths are rounded to the nearest-below integer number of pixels,
@@ -871,7 +883,8 @@ static bool IsVisibleBorderStyle(uint8_t aStyle)
           aStyle != NS_STYLE_BORDER_STYLE_HIDDEN);
 }
 
-struct nsStyleBorder {
+struct nsStyleBorder
+{
   explicit nsStyleBorder(nsPresContext* aContext);
   nsStyleBorder(const nsStyleBorder& aBorder);
   ~nsStyleBorder();
@@ -1097,7 +1110,8 @@ private:
 };
 
 
-struct nsStyleOutline {
+struct nsStyleOutline
+{
   explicit nsStyleOutline(nsPresContext* aPresContext);
   nsStyleOutline(const nsStyleOutline& aOutline);
   ~nsStyleOutline(void) {
@@ -1195,7 +1209,8 @@ protected:
 };
 
 
-struct nsStyleList {
+struct nsStyleList
+{
   explicit nsStyleList(nsPresContext* aPresContext);
   nsStyleList(const nsStyleList& aStyleList);
   ~nsStyleList(void);
@@ -1261,7 +1276,8 @@ public:
   nsRect        mImageRegion;           // [inherited] the rect to use within an image
 };
 
-struct nsStyleGridLine {
+struct nsStyleGridLine
+{
   // http://dev.w3.org/csswg/css-grid/#typedef-grid-line
   // XXXmats we could optimize memory size here
   bool mHasSpan;
@@ -1360,7 +1376,8 @@ struct nsStyleGridLine {
 // when there is no <auto-repeat> track, i.e. when mRepeatAutoIndex == -1).
 // When mIsSubgrid is true, mRepeatAutoLineNameListBefore contains the line
 // names and mRepeatAutoLineNameListAfter is empty.
-struct nsStyleGridTemplate {
+struct nsStyleGridTemplate
+{
   nsTArray<nsTArray<nsString>> mLineNameLists;
   nsTArray<nsStyleCoord> mMinTrackSizingFunctions;
   nsTArray<nsStyleCoord> mMaxTrackSizingFunctions;
@@ -1399,7 +1416,8 @@ struct nsStyleGridTemplate {
   }
 };
 
-struct nsStylePosition {
+struct nsStylePosition
+{
   nsStylePosition(void);
   nsStylePosition(const nsStylePosition& aOther);
   ~nsStylePosition(void);
@@ -1590,7 +1608,8 @@ private:
     { return aCoord.HasPercent(); }
 };
 
-struct nsStyleTextOverflowSide {
+struct nsStyleTextOverflowSide
+{
   nsStyleTextOverflowSide() : mType(NS_STYLE_TEXT_OVERFLOW_CLIP) {}
 
   bool operator==(const nsStyleTextOverflowSide& aOther) const {
@@ -1606,7 +1625,8 @@ struct nsStyleTextOverflowSide {
   uint8_t  mType;
 };
 
-struct nsStyleTextOverflow {
+struct nsStyleTextOverflow
+{
   nsStyleTextOverflow() : mLogicalDirections(true) {}
   bool operator==(const nsStyleTextOverflow& aOther) const {
     return mLeft == aOther.mLeft && mRight == aOther.mRight;
@@ -1646,7 +1666,8 @@ struct nsStyleTextOverflow {
   bool mLogicalDirections;  // true when only one value was specified
 };
 
-struct nsStyleTextReset {
+struct nsStyleTextReset
+{
   nsStyleTextReset(void);
   nsStyleTextReset(const nsStyleTextReset& aOther);
   ~nsStyleTextReset(void);
@@ -1723,7 +1744,8 @@ protected:
   nscolor mTextDecorationColor;         // [reset] the colors to use for a decoration lines, not used at currentColor
 };
 
-struct nsStyleText {
+struct nsStyleText
+{
   explicit nsStyleText(nsPresContext* aPresContext);
   nsStyleText(const nsStyleText& aOther);
   ~nsStyleText(void);
@@ -1835,7 +1857,8 @@ struct nsStyleText {
   mozilla::LogicalSide TextEmphasisSide(mozilla::WritingMode aWM) const;
 };
 
-struct nsStyleImageOrientation {
+struct nsStyleImageOrientation
+{
   static nsStyleImageOrientation CreateAsAngleAndFlip(double aRadians,
                                                       bool aFlip) {
     uint8_t orientation(0);
@@ -1927,7 +1950,8 @@ protected:
   uint8_t mOrientation;
 };
 
-struct nsStyleVisibility {
+struct nsStyleVisibility
+{
   explicit nsStyleVisibility(nsPresContext* aPresContext);
   nsStyleVisibility(const nsStyleVisibility& aVisibility);
   ~nsStyleVisibility() {
@@ -1975,7 +1999,8 @@ struct nsStyleVisibility {
   inline uint8_t GetEffectivePointerEvents(nsIFrame* aFrame) const;
 };
 
-struct nsTimingFunction {
+struct nsTimingFunction
+{
 
   enum class Type {
     Ease,         // ease
@@ -2102,7 +2127,8 @@ private:
 
 namespace mozilla {
 
-struct StyleTransition {
+struct StyleTransition
+{
   StyleTransition() { /* leaves uninitialized; see also SetInitialValues */ }
   explicit StyleTransition(const StyleTransition& aCopy);
 
@@ -2156,7 +2182,8 @@ private:
                                       // eCSSPropertyExtra_variable
 };
 
-struct StyleAnimation {
+struct StyleAnimation
+{
   StyleAnimation() { /* leaves uninitialized; see also SetInitialValues */ }
   explicit StyleAnimation(const StyleAnimation& aCopy);
 
@@ -2203,7 +2230,8 @@ private:
 
 } // namespace mozilla
 
-struct nsStyleDisplay {
+struct nsStyleDisplay
+{
   nsStyleDisplay();
   nsStyleDisplay(const nsStyleDisplay& aOther);
   ~nsStyleDisplay() {
@@ -2482,7 +2510,8 @@ struct nsStyleDisplay {
   inline uint8_t PhysicalBreakType(mozilla::WritingMode aWM) const;
 };
 
-struct nsStyleTable {
+struct nsStyleTable
+{
   nsStyleTable(void);
   nsStyleTable(const nsStyleTable& aOther);
   ~nsStyleTable(void);
@@ -2513,7 +2542,8 @@ struct nsStyleTable {
   int32_t       mSpan;          // [reset] the number of columns spanned by a colgroup or col
 };
 
-struct nsStyleTableBorder {
+struct nsStyleTableBorder
+{
   nsStyleTableBorder();
   nsStyleTableBorder(const nsStyleTableBorder& aOther);
   ~nsStyleTableBorder(void);
@@ -2561,7 +2591,8 @@ enum nsStyleContentType {
   eStyleContentType_Uninitialized
 };
 
-struct nsStyleContentData {
+struct nsStyleContentData
+{
   nsStyleContentType  mType;
   union {
     char16_t *mString;
@@ -2601,7 +2632,8 @@ private:
   nsStyleContentData(const nsStyleContentData&); // not to be implemented
 };
 
-struct nsStyleCounterData {
+struct nsStyleCounterData
+{
   nsString  mCounter;
   int32_t   mValue;
 };
@@ -2609,7 +2641,8 @@ struct nsStyleCounterData {
 
 #define DELETE_ARRAY_IF(array)  if (array) { delete[] array; array = nullptr; }
 
-struct nsStyleQuotes {
+struct nsStyleQuotes
+{
   nsStyleQuotes();
   nsStyleQuotes(const nsStyleQuotes& aQuotes);
   ~nsStyleQuotes();
@@ -2691,7 +2724,8 @@ protected:
   nsString*           mQuotes;
 };
 
-struct nsStyleContent {
+struct nsStyleContent
+{
   nsStyleContent(void);
   nsStyleContent(const nsStyleContent& aContent);
   ~nsStyleContent(void);
@@ -2800,7 +2834,8 @@ protected:
   uint32_t            mResetCount;
 };
 
-struct nsStyleUIReset {
+struct nsStyleUIReset
+{
   nsStyleUIReset(void);
   nsStyleUIReset(const nsStyleUIReset& aOther);
   ~nsStyleUIReset(void);
@@ -2833,7 +2868,8 @@ struct nsStyleUIReset {
   uint8_t   mWindowShadow;    // [reset]
 };
 
-struct nsCursorImage {
+struct nsCursorImage
+{
   bool mHaveHotspot;
   float mHotspotX, mHotspotY;
 
@@ -2862,7 +2898,8 @@ private:
   nsCOMPtr<imgIRequest> mImage;
 };
 
-struct nsStyleUserInterface {
+struct nsStyleUserInterface
+{
   nsStyleUserInterface(void);
   nsStyleUserInterface(const nsStyleUserInterface& aOther);
   ~nsStyleUserInterface(void);
@@ -2909,7 +2946,8 @@ struct nsStyleUserInterface {
   void CopyCursorArrayFrom(const nsStyleUserInterface& aSource);
 };
 
-struct nsStyleXUL {
+struct nsStyleXUL
+{
   nsStyleXUL();
   nsStyleXUL(const nsStyleXUL& aSource);
   ~nsStyleXUL();
@@ -2945,7 +2983,8 @@ struct nsStyleXUL {
   bool          mStretchStack;          // [reset] see nsStyleConsts.h
 };
 
-struct nsStyleColumn {
+struct nsStyleColumn
+{
   explicit nsStyleColumn(nsPresContext* aPresContext);
   nsStyleColumn(const nsStyleColumn& aSource);
   ~nsStyleColumn();
@@ -3038,7 +3077,8 @@ struct nsStyleSVGPaint
   }
 };
 
-struct nsStyleSVG {
+struct nsStyleSVG
+{
   nsStyleSVG();
   nsStyleSVG(const nsStyleSVG& aSource);
   ~nsStyleSVG();
@@ -3125,7 +3165,8 @@ struct nsStyleSVG {
   }
 };
 
-class nsStyleBasicShape final {
+class nsStyleBasicShape final
+{
 public:
   enum Type {
     eInset,
@@ -3267,7 +3308,8 @@ private:
   uint8_t mSizingBox; // see NS_STYLE_CLIP_SHAPE_SIZING_* constants in nsStyleConsts.h
 };
 
-struct nsStyleFilter {
+struct nsStyleFilter
+{
   nsStyleFilter();
   nsStyleFilter(const nsStyleFilter& aSource);
   ~nsStyleFilter();
@@ -3316,11 +3358,13 @@ private:
 };
 
 template<>
-struct nsTArray_CopyChooser<nsStyleFilter> {
+struct nsTArray_CopyChooser<nsStyleFilter>
+{
   typedef nsTArray_CopyWithConstructors<nsStyleFilter> Type;
 };
 
-struct nsStyleSVGReset {
+struct nsStyleSVGReset
+{
   nsStyleSVGReset();
   nsStyleSVGReset(const nsStyleSVGReset& aSource);
   ~nsStyleSVGReset();
@@ -3371,7 +3415,8 @@ struct nsStyleSVGReset {
   uint8_t          mMaskType;         // [reset] see nsStyleConsts.h
 };
 
-struct nsStyleVariables {
+struct nsStyleVariables
+{
   nsStyleVariables();
   nsStyleVariables(const nsStyleVariables& aSource);
   ~nsStyleVariables();

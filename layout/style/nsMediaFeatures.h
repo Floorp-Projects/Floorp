@@ -1,4 +1,5 @@
-/* vim: set shiftwidth=4 tabstop=8 autoindent cindent expandtab: */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -20,64 +21,66 @@ typedef nsresult
                               const nsMediaFeature* aFeature,
                               nsCSSValue& aResult);
 
-struct nsMediaFeature {
-    nsIAtom **mName; // extra indirection to point to nsGkAtoms members
+struct nsMediaFeature
+{
+  nsIAtom **mName; // extra indirection to point to nsGkAtoms members
 
-    enum RangeType { eMinMaxAllowed, eMinMaxNotAllowed };
-    RangeType mRangeType;
+  enum RangeType { eMinMaxAllowed, eMinMaxNotAllowed };
+  RangeType mRangeType;
 
-    enum ValueType {
-        // All value types allow eCSSUnit_Null to indicate that no value
-        // was given (in addition to the types listed below).
-        eLength,     // values are such that nsCSSValue::IsLengthUnit() is true
-        eInteger,    // values are eCSSUnit_Integer
-        eFloat,      // values are eCSSUnit_Number
-        eBoolInteger,// values are eCSSUnit_Integer (0, -0, or 1 only)
-        eIntRatio,   // values are eCSSUnit_Array of two eCSSUnit_Integer
-        eResolution, // values are in eCSSUnit_Inch (for dpi),
-                     //   eCSSUnit_Pixel (for dppx), or
-                     //   eCSSUnit_Centimeter (for dpcm)
-        eEnumerated, // values are eCSSUnit_Enumerated (uses keyword table)
-        eIdent       // values are eCSSUnit_Ident
-        // Note that a number of pieces of code (both for parsing and
-        // for matching of valueless expressions) assume that all numeric
-        // value types cannot be negative.  The parsing code also does
-        // not allow zeros in eIntRatio types.
-    };
-    ValueType mValueType;
+  enum ValueType {
+    // All value types allow eCSSUnit_Null to indicate that no value
+    // was given (in addition to the types listed below).
+    eLength,     // values are such that nsCSSValue::IsLengthUnit() is true
+    eInteger,    // values are eCSSUnit_Integer
+    eFloat,      // values are eCSSUnit_Number
+    eBoolInteger,// values are eCSSUnit_Integer (0, -0, or 1 only)
+    eIntRatio,   // values are eCSSUnit_Array of two eCSSUnit_Integer
+    eResolution, // values are in eCSSUnit_Inch (for dpi),
+                 //   eCSSUnit_Pixel (for dppx), or
+                 //   eCSSUnit_Centimeter (for dpcm)
+    eEnumerated, // values are eCSSUnit_Enumerated (uses keyword table)
+    eIdent       // values are eCSSUnit_Ident
+    // Note that a number of pieces of code (both for parsing and
+    // for matching of valueless expressions) assume that all numeric
+    // value types cannot be negative.  The parsing code also does
+    // not allow zeros in eIntRatio types.
+  };
+  ValueType mValueType;
 
-    enum RequirementFlags : uint8_t {
-      // Bitfield of requirements that must be satisfied in order for this
-      // media feature to be active.
-      eNoRequirements = 0,
-      eHasWebkitPrefix = 1 // Feature name must start w/ "-webkit-", even
-                           // before any "min-"/"max-" qualifier.
-    };
-    uint8_t mReqFlags;
+  enum RequirementFlags : uint8_t {
+    // Bitfield of requirements that must be satisfied in order for this
+    // media feature to be active.
+    eNoRequirements = 0,
+    eHasWebkitPrefix = 1 // Feature name must start w/ "-webkit-", even
+                         // before any "min-"/"max-" qualifier.
+  };
+  uint8_t mReqFlags;
 
-    union {
-      // In static arrays, it's the first member that's initialized.  We
-      // need that to be void* so we can initialize both other types.
-      // This member should never be accessed by name.
-      const void* mInitializer_;
-      // If mValueType == eEnumerated:  const int32_t*: keyword table in
-      //   the same format as the keyword tables in nsCSSProps.
-      const nsCSSProps::KTableEntry* mKeywordTable;
-      // If mGetter == GetSystemMetric (which implies mValueType ==
-      //   eBoolInteger): nsIAtom * const *, for the system metric.
-      nsIAtom * const * mMetric;
-    } mData;
+  union {
+    // In static arrays, it's the first member that's initialized.  We
+    // need that to be void* so we can initialize both other types.
+    // This member should never be accessed by name.
+    const void* mInitializer_;
+    // If mValueType == eEnumerated:  const int32_t*: keyword table in
+    //   the same format as the keyword tables in nsCSSProps.
+    const nsCSSProps::KTableEntry* mKeywordTable;
+    // If mGetter == GetSystemMetric (which implies mValueType ==
+    //   eBoolInteger): nsIAtom * const *, for the system metric.
+    nsIAtom * const * mMetric;
+  } mData;
 
-    // A function that returns the current value for this feature for a
-    // given presentation.  If it returns eCSSUnit_Null, the feature is
-    // not present.
-    nsMediaFeatureValueGetter mGetter;
+  // A function that returns the current value for this feature for a
+  // given presentation.  If it returns eCSSUnit_Null, the feature is
+  // not present.
+  nsMediaFeatureValueGetter mGetter;
 };
 
-class nsMediaFeatures {
+class nsMediaFeatures
+{
 public:
-    // Terminated with an entry whose mName is null.
-    static const nsMediaFeature features[];
+  // Terminated with an entry whose mName is null.
+  static const nsMediaFeature features[];
 };
 
 #endif /* !defined(nsMediaFeatures_h_) */
