@@ -57,7 +57,7 @@ class TextureData;
 struct RawTextureBuffer;
 class RawYCbCrTextureBuffer;
 class TextureClient;
-class TextureClientRecycleAllocator;
+class ITextureClientRecycleAllocator;
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
 class TextureClientPool;
 #endif
@@ -569,8 +569,8 @@ public:
 
   ISurfaceAllocator* GetAllocator() { return mAllocator; }
 
-  TextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
-  void SetRecycleAllocator(TextureClientRecycleAllocator* aAllocator);
+  ITextureClientRecycleAllocator* GetRecycleAllocator() { return mRecycleAllocator; }
+  void SetRecycleAllocator(ITextureClientRecycleAllocator* aAllocator);
 
   /// If you add new code that uses this method, you are probably doing something wrong.
   TextureData* GetInternalData() { return mData; }
@@ -604,7 +604,7 @@ protected:
 
   RefPtr<ISurfaceAllocator> mAllocator;
   RefPtr<TextureChild> mActor;
-  RefPtr<TextureClientRecycleAllocator> mRecycleAllocator;
+  RefPtr<ITextureClientRecycleAllocator> mRecycleAllocator;
   RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
 
   TextureData* mData;

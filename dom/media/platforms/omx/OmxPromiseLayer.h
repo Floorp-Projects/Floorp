@@ -14,9 +14,10 @@
 
 namespace mozilla {
 
-class TrackInfo;
 class OmxPlatformLayer;
 class OmxDataDecoder;
+class TrackInfo;
+class MediaData;
 
 /* This class acts as a middle layer between OmxDataDecoder and the underlying
  * OmxPlatformLayer.
@@ -38,7 +39,9 @@ protected:
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(OmxPromiseLayer)
 
-  OmxPromiseLayer(TaskQueue* aTaskQueue, OmxDataDecoder* aDataDecoder);
+  OmxPromiseLayer(TaskQueue* aTaskQueue,
+                  OmxDataDecoder* aDataDecoder,
+                  layers::ImageContainer* aImageContainer);
 
   class BufferData;
 
@@ -125,6 +128,15 @@ public:
       return mBuffer;
     }
 
+    // Return the platform dependent MediaData().
+    // For example, it returns the MediaData with Gralloc texture.
+    // If it returns nullptr, then caller uses the normal way to
+    // create MediaData().
+    virtual already_AddRefed<MediaData> GetPlatformMediaData()
+    {
+      return nullptr;
+    }
+
     // The buffer could be used by several objects. And only one object owns the
     // buffer the same time.
     //   FREE:
@@ -162,7 +174,7 @@ public:
     // records of the original data from demuxer, like duration, stream offset...etc.
     RefPtr<MediaRawData> mRawData;
 
-    // Because OMX buffer works acorssing threads, so it uses a promise
+    // Because OMX buffer works across threads, so it uses a promise
     // for each buffer when the buffer is used by Omx component.
     MozPromiseHolder<OmxBufferPromise> mPromise;
     BufferStatus mStatus;
@@ -179,7 +191,7 @@ public:
   already_AddRefed<BufferData>
   FindAndRemoveBufferHolder(OMX_DIRTYPE aType, BufferData::BufferID aId);
 
-  // Return truen if event is handled.
+  // Return true if event is handled.
   bool Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2);
 
 protected:
@@ -208,9 +220,9 @@ protected:
 
 private:
   // Elements are added to holders when FillBuffer() or FillBuffer(). And
-  // removing elelments when the promise is resolved. Buffers in these lists
+  // removing element when the promise is resolved. Buffers in these lists
   // should NOT be used by other component; for example, output it to audio
-  // output. These list should be empty when engine is about to shutdown.
+  // output. These lists should be empty when engine is about to shutdown.
   //
   // Note:
   //      There bufferlist should not be used by other class directly.

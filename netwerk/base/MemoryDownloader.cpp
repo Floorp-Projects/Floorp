@@ -6,6 +6,7 @@
 #include "MemoryDownloader.h"
 
 #include "mozilla/Assertions.h"
+#include "nsIInputStream.h"
 
 namespace mozilla {
 namespace net {

@@ -8,7 +8,7 @@
 #include "OmxPlatformLayer.h"
 #include "OmxDataDecoder.h"
 
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 21
+#if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 20 || ANDROID_VERSION == 19)
 #include "GonkOmxPlatformLayer.h"
 #endif
 
@@ -24,11 +24,13 @@ namespace mozilla {
 
 extern void GetPortIndex(nsTArray<uint32_t>& aPortIndex);
 
-OmxPromiseLayer::OmxPromiseLayer(TaskQueue* aTaskQueue, OmxDataDecoder* aDataDecoder)
+OmxPromiseLayer::OmxPromiseLayer(TaskQueue* aTaskQueue,
+                                 OmxDataDecoder* aDataDecoder,
+                                 layers::ImageContainer* aImageContainer)
   : mTaskQueue(aTaskQueue)
 {
-#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION < 21
-  mPlatformLayer = new GonkOmxPlatformLayer(aDataDecoder, this, aTaskQueue);
+#if defined(MOZ_WIDGET_GONK) && (ANDROID_VERSION == 20 || ANDROID_VERSION == 19)
+  mPlatformLayer = new GonkOmxPlatformLayer(aDataDecoder, this, aTaskQueue, aImageContainer);
 #endif
   MOZ_ASSERT(!!mPlatformLayer);
 }
@@ -182,16 +184,7 @@ void
 OmxPromiseLayer::EmptyFillBufferDone(OMX_DIRTYPE aType, BufferData::BufferID aID)
 {
   RefPtr<BufferData> holder = FindAndRemoveBufferHolder(aType, aID);
-  MOZ_ASSERT(!!holder);
-  LOG("EmptyFillBufferDone: type %d, buffer %p", aType, holder->mBuffer);
-  if (holder) {
-    if (aType == OMX_DirOutput) {
-      holder->mRawData = nullptr;
-      holder->mRawData = FindAndRemoveRawData(holder->mBuffer->nTimeStamp);
-    }
-    holder->mStatus = BufferData::BufferStatus::OMX_CLIENT;
-    holder->mPromise.Resolve(holder, __func__);
-  }
+  EmptyFillBufferDone(aType, holder);
 }
 
 RefPtr<OmxPromiseLayer::OmxCommandPromise>
@@ -203,7 +196,7 @@ OmxPromiseLayer::SendCommand(OMX_COMMANDTYPE aCmd, OMX_U32 aParam1, OMX_PTR aCmd
 
     // Some coomponents don't send event with OMX_ALL, they send flush complete
     // event with input port and another event for output port.
-    // In prupose of better compatibility, we inteprete the OMX_ALL to OMX_DirInput
+    // In prupose of better compatibility, we interpret the OMX_ALL to OMX_DirInput
     // and OMX_DirOutput flush separately.
     OMX_DIRTYPE types[] = {OMX_DIRTYPE::OMX_DirInput, OMX_DIRTYPE::OMX_DirOutput};
     for(const auto type : types) {
@@ -217,7 +210,7 @@ OmxPromiseLayer::SendCommand(OMX_COMMANDTYPE aCmd, OMX_U32 aParam1, OMX_PTR aCmd
       }
     }
 
-    // Don't overlay more than one fush command, some components can't overlay flush commands.
+    // Don't overlay more than one flush command, some components can't overlay flush commands.
     // So here we send another flush after receiving the previous flush completed event.
     if (mFlushCommands.Length()) {
       OMX_ERRORTYPE err =
@@ -306,6 +299,8 @@ OmxPromiseLayer::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
       } else if (cmd == OMX_CommandPortEnable) {
         OmxCommandFailureHolder failure(OMX_ErrorUndefined, OMX_CommandPortEnable);
         mPortEnablePromise.Reject(failure, __func__);
+      } else {
+        return false;
       }
       break;
     }

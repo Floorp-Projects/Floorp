@@ -203,6 +203,14 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
     scriptSpace = nsPresContext::CSSPointsToAppUnits(0.5f);
   }
 
+  // Try and read sub and sup drops from the MATH table.
+  if (mathFont) {
+    subDrop = mathFont->
+      GetMathConstant(gfxFontEntry::SubscriptBaselineDropMin, oneDevPixel);
+    supDrop = mathFont->
+      GetMathConstant(gfxFontEntry::SuperscriptBaselineDropMax, oneDevPixel);
+  }
+
   // force the scriptSpace to be at least 1 pixel
   nscoord onePixel = nsPresContext::CSSPixelsToAppUnits(1);
   scriptSpace = std::max(onePixel, scriptSpace);
@@ -390,8 +398,11 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
         // subscript
         subScriptFrame = childFrame;
         GetReflowAndBoundingMetricsFor(subScriptFrame, subScriptSize, bmSubScript);
-        // get the subdrop from the subscript font
-        GetSubDropFromChild (subScriptFrame, subDrop, aFontSizeInflation);
+        if (!mathFont) {
+          // get the subdrop from the subscript font
+          GetSubDropFromChild (subScriptFrame, subDrop, aFontSizeInflation);
+        }
+
         // parameter v, Rule 18a, App. G, TeXbook
         minSubScriptShift = bmBase.descent + subDrop;
         trySubScriptShift = std::max(minSubScriptShift,subScriptShift);
@@ -431,8 +442,10 @@ nsMathMLmmultiscriptsFrame::PlaceMultiScript(nsPresContext*  aPresContext,
         // supscript
         supScriptFrame = childFrame;
         GetReflowAndBoundingMetricsFor(supScriptFrame, supScriptSize, bmSupScript);
-        // get the supdrop from the supscript font
-        GetSupDropFromChild (supScriptFrame, supDrop, aFontSizeInflation);
+        if (!mathFont) {
+          // get the supdrop from the supscript font
+          GetSupDropFromChild (supScriptFrame, supDrop, aFontSizeInflation);
+        }
         // parameter u, Rule 18a, App. G, TeXbook
         minSupScriptShift = bmBase.ascent - supDrop;
         nscoord superscriptBottomMin;

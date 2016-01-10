@@ -8,6 +8,8 @@
 
 #include "WebSocketChannel.h"
 #include "nsSocketTransportService2.h"
+#include "nsThreadUtils.h" // for NS_IsMainThread
+#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 namespace net {

@@ -92,7 +92,8 @@ public:
   };
 
   // Animation interface methods
-
+  void GetId(nsAString& aResult) const { aResult = mId; }
+  void SetId(const nsAString& aId);
   KeyframeEffectReadOnly* GetEffect() const { return mEffect; }
   void SetEffect(KeyframeEffectReadOnly* aEffect);
   AnimationTimeline* GetTimeline() const { return mTimeline; }
@@ -431,6 +432,8 @@ protected:
   // in that case mFinished is immediately reset to represent a new current
   // finished promise.
   bool mFinishedIsResolved;
+
+  nsString mId;
 };
 
 } // namespace dom

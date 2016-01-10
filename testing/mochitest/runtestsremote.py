@@ -169,6 +169,7 @@ class MochiRemote(MochitestDesktop):
         if options.testingModulesDir:
             try:
                 self._dm.pushDir(options.testingModulesDir, self.remoteModulesDir)
+                self._dm.chmodDir(self.remoteModulesDir)
             except devicemanager.DMError:
                 self.log.error(
                     "Automation Error: Unable to copy test modules to device.")
@@ -185,6 +186,7 @@ class MochiRemote(MochitestDesktop):
 
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
+            self._dm.chmodDir(self.remoteProfile)
         except devicemanager.DMError:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")
@@ -205,6 +207,7 @@ class MochiRemote(MochitestDesktop):
         # we really need testConfig.js (for browser chrome)
         try:
             self._dm.pushDir(options.profilePath, self.remoteProfile)
+            self._dm.chmodDir(self.remoteProfile)
         except devicemanager.DMError:
             self.log.error(
                 "Automation Error: Unable to copy profile to device.")

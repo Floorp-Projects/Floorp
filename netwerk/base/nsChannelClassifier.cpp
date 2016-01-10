@@ -27,6 +27,7 @@
 #include "nsISecurityEventSink.h"
 #include "nsIURL.h"
 #include "nsIWebProgressListener.h"
+#include "nsNetUtil.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULAppAPI.h"
 

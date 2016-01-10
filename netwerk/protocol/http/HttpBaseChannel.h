@@ -42,6 +42,7 @@
 #include "nsIHttpChannel.h"
 #include "nsISecurityConsoleMessage.h"
 #include "nsCOMArray.h"
+#include "mozilla/net/ChannelEventQueue.h"
 
 class nsPerformance;
 class nsISecurityConsoleMessage;

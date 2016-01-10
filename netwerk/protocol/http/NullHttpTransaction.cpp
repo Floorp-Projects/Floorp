@@ -14,6 +14,7 @@
 #include "nsIHttpActivityObserver.h"
 #include "NullHttpChannel.h"
 #include "nsQueryObject.h"
+#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {

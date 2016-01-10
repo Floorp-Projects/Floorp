@@ -7,6 +7,8 @@
 #ifndef mozilla_net_ARefBase_h
 #define mozilla_net_ARefBase_h
 
+#include "nscore.h"
+
 namespace mozilla { namespace net {
 
 // This is an abstract class that can be pointed to by either

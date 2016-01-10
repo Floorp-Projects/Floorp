@@ -14,6 +14,7 @@
 #include "nsIHttpEventSink.h"
 #include "nsIPackagedAppChannelListener.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsQueryObject.h"
 
 using mozilla::Unused;
 

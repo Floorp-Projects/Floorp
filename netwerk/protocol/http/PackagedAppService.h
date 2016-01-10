@@ -14,6 +14,8 @@
 #include "nsIMultiPartChannel.h"
 #include "PackagedAppVerifier.h"
 #include "nsIPackagedAppChannelListener.h"
+#include "nsCOMArray.h"
+#include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace net {

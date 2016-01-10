@@ -15,6 +15,7 @@
 #include "nsHttpResponseHead.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "mozilla/dom/ChannelInfo.h"
+#include "nsIChannelEventSink.h"
 
 namespace mozilla {
 namespace net {

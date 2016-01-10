@@ -22,6 +22,7 @@
 #include "asmjs/WasmTypes.h"
 #include "gc/Barrier.h"
 #include "vm/MallocProvider.h"
+#include "vm/NativeObject.h"
 
 namespace js {
 

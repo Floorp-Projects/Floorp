@@ -82,6 +82,7 @@ private:
 
 extern nsFtpProtocolHandler *gFtpHandler;
 
+#include "mozilla/Logging.h"
 extern mozilla::LazyLogModule gFTPLog;
 
 #endif // !nsFtpProtocolHandler_h__

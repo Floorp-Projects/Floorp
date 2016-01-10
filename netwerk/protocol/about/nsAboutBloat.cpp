@@ -17,6 +17,7 @@
 #include "prtime.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIFile.h"
+#include "nsNetUtil.h"
 
 static void GC_gcollect() {}
 

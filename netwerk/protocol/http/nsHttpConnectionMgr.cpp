@@ -34,6 +34,7 @@
 #include <algorithm>
 #include "mozilla/ChaosMode.h"
 #include "mozilla/unused.h"
+#include "nsIURI.h"
 
 #include "mozilla/Telemetry.h"
 

@@ -11,6 +11,7 @@
 #include "nsWeakReference.h"
 #include "nsITimer.h"
 #include "nsCOMArray.h"
+#include "mozilla/TimeStamp.h"
 
 namespace mozilla {
 namespace net {
