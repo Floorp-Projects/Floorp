@@ -32,6 +32,8 @@
 #include "nsILoadContextInfo.h"
 #include "nsThreadUtils.h"
 #include "nsISerializable.h"
+#include "nsIInputStream.h"
+#include "nsIOutputStream.h"
 #include "nsSerializationHelper.h"
 
 #include "mozIStorageService.h"

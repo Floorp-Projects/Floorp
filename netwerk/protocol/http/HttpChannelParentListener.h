@@ -13,6 +13,7 @@
 #include "nsIRedirectResultListener.h"
 #include "nsIPackagedAppChannelListener.h"
 #include "nsINetworkInterceptController.h"
+#include "nsIStreamListener.h"
 
 namespace mozilla {
 namespace net {

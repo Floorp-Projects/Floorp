@@ -19,6 +19,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIURL.h"
 #include "mozilla/BasePrincipal.h"
+#include "HttpLog.h"
 
 static const short kResourceHashType = nsICryptoHash::SHA256;
 

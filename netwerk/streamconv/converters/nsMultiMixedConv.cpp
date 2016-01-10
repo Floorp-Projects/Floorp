@@ -17,6 +17,8 @@
 #include <algorithm>
 #include "nsContentSecurityManager.h"
 #include "nsHttp.h"
+#include "nsNetUtil.h"
+#include "nsIURI.h"
 
 //
 // Helper function for determining the length of data bytes up to

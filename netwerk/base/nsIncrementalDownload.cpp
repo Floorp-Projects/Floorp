@@ -27,6 +27,7 @@
 #include <algorithm>
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
+#include "mozilla/UniquePtr.h"
 
 // Default values used to initialize a nsIncrementalDownload object.
 #define DEFAULT_CHUNK_SIZE (4096 * 16)  // bytes
@@ -36,6 +37,8 @@
 
 // Number of times to retry a failed byte-range request.
 #define MAX_RETRY_COUNT 20
+
+using namespace mozilla;
 
 //-----------------------------------------------------------------------------
 

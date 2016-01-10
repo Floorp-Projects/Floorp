@@ -40,6 +40,7 @@
 #include "nsPIDNSService.h"
 #include "nsIProtocolProxyService2.h"
 #include "MainThreadUtils.h"
+#include "nsINode.h"
 #include "nsIWidget.h"
 #include "nsThreadUtils.h"
 #include "mozilla/LoadInfo.h"

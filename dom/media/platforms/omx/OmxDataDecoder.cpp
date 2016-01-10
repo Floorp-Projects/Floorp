@@ -61,7 +61,8 @@ void GetPortIndex(nsTArray<uint32_t>& aPortIndex) {
 }
 
 OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
-                               MediaDataDecoderCallback* aCallback)
+                               MediaDataDecoderCallback* aCallback,
+                               layers::ImageContainer* aImageContainer)
   : mMonitor("OmxDataDecoder")
   , mOmxTaskQueue(CreateMediaDecodeTaskQueue())
   , mWatchManager(this, mOmxTaskQueue)
@@ -75,7 +76,7 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
   , mCallback(aCallback)
 {
   LOG("(%p)", this);
-  mOmxLayer = new OmxPromiseLayer(mOmxTaskQueue, this);
+  mOmxLayer = new OmxPromiseLayer(mOmxTaskQueue, this, aImageContainer);
 
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &OmxDataDecoder::InitializationTask);
@@ -85,7 +86,6 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
 OmxDataDecoder::~OmxDataDecoder()
 {
   LOG("(%p)", this);
-  mWatchManager.Shutdown();
 }
 
 void
@@ -123,15 +123,11 @@ OmxDataDecoder::Init()
   //       Omx component.
   InvokeAsync(mOmxTaskQueue, mOmxLayer.get(), __func__, &OmxPromiseLayer::Init,
               mOmxTaskQueue, mTrackInfo.get())
-    ->Then(mReaderTaskQueue, __func__,
+    ->Then(mOmxTaskQueue, __func__,
       [self] () {
         // Omx state should be OMX_StateIdle.
-        nsCOMPtr<nsIRunnable> r =
-          NS_NewRunnableFunction([self] () {
-            self->mOmxState = self->mOmxLayer->GetState();
-            MOZ_ASSERT(self->mOmxState != OMX_StateIdle);
-          });
-        self->mOmxTaskQueue->Dispatch(r.forget());
+        self->mOmxState = self->mOmxLayer->GetState();
+        MOZ_ASSERT(self->mOmxState != OMX_StateIdle);
       },
       [self] () {
         self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
@@ -191,9 +187,6 @@ OmxDataDecoder::Drain()
 {
   LOG("(%p)", this);
 
-  // TODO: For video decoding, it needs to copy the latest video frame to yuv
-  //       and output to layer again, because all video buffers will be released
-  //       later.
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &OmxDataDecoder::SendEosBuffer);
   mOmxTaskQueue->Dispatch(r.forget());
@@ -233,7 +226,7 @@ OmxDataDecoder::DoAsyncShutdown()
 {
   LOG("(%p)", this);
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
-  MOZ_ASSERT(mFlushing);
+  MOZ_ASSERT(!mFlushing);
 
   mWatchManager.Unwatch(mOmxState, &OmxDataDecoder::OmxStateRunner);
   mWatchManager.Unwatch(mPortSettingsChanged, &OmxDataDecoder::PortSettingsChanged);
@@ -255,25 +248,17 @@ OmxDataDecoder::DoAsyncShutdown()
              RefPtr<OmxCommandPromise> p =
                self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateLoaded, nullptr);
 
-             LOG("DoAsyncShutdown: collecting buffers...");
-             self->CollectBufferPromises(OMX_DirMax)
-               ->Then(self->mOmxTaskQueue, __func__,
-                   [self] () {
-                   // According to spec 3.1.1.2.2.1:
-                   // OMX_StateLoaded needs to be sent before releasing buffers.
-                   // And state transition from OMX_StateIdle to OMX_StateLoaded
-                   // is completed when all of the buffers have been removed
-                   // from the component.
-                   // Here the buffer promises are not resolved due to displaying
-                   // in layer, it needs to wait before the layer returns the
-                   // buffers.
-                   LOG("DoAsyncShutdown: all buffers collected, releasing buffers...");
-                   self->ReleaseBuffers(OMX_DirInput);
-                   self->ReleaseBuffers(OMX_DirOutput);
-                   },
-                   [self] () {
-                     self->mOmxLayer->Shutdown();
-                   });
+             // According to spec 3.1.1.2.2.1:
+             // OMX_StateLoaded needs to be sent before releasing buffers.
+             // And state transition from OMX_StateIdle to OMX_StateLoaded
+             // is completed when all of the buffers have been removed
+             // from the component.
+             // Here the buffer promises are not resolved due to displaying
+             // in layer, it needs to wait before the layer returns the
+             // buffers.
+             LOG("DoAsyncShutdown: releasing buffers...");
+             self->ReleaseBuffers(OMX_DirInput);
+             self->ReleaseBuffers(OMX_DirOutput);
 
              return p;
            },
@@ -285,6 +270,8 @@ OmxDataDecoder::DoAsyncShutdown()
            [self] () {
              LOG("DoAsyncShutdown: OMX_StateLoaded, it is safe to shutdown omx");
              self->mOmxLayer->Shutdown();
+             self->mWatchManager.Shutdown();
+             self->mOmxLayer = nullptr;
 
              MonitorAutoLock lock(self->mMonitor);
              self->mShuttingDown = false;
@@ -292,6 +279,8 @@ OmxDataDecoder::DoAsyncShutdown()
            },
            [self] () {
              self->mOmxLayer->Shutdown();
+             self->mWatchManager.Shutdown();
+             self->mOmxLayer = nullptr;
 
              MonitorAutoLock lock(self->mMonitor);
              self->mShuttingDown = false;
@@ -300,39 +289,10 @@ OmxDataDecoder::DoAsyncShutdown()
 }
 
 void
-OmxDataDecoder::CheckIfInputExhausted()
-{
-  MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
-  MOZ_ASSERT(!mCheckingInputExhausted);
-
-  mCheckingInputExhausted = false;
-
-  if (mMediaRawDatas.Length()) {
-    return;
-  }
-
-  // When all input buffers are not in omx component, it means all samples have
-  // been fed into OMX component.
-  for (auto buf : mInPortBuffers) {
-    if (buf->mStatus == BufferData::BufferStatus::OMX_COMPONENT) {
-      return;
-    }
-  }
-
-  // When all output buffers are held by component, it means client is waiting for output.
-  for (auto buf : mOutPortBuffers) {
-    if (buf->mStatus != BufferData::BufferStatus::OMX_COMPONENT) {
-      return;
-    }
-  }
-
-  LOG("Call InputExhausted()");
-  mCallback->InputExhausted();
-}
-
-void
 OmxDataDecoder::OutputAudio(BufferData* aBufferData)
 {
+  // TODO: it'd be better to move these code to BufferData::GetPlatformMediaData() or
+  //       some kind of abstract layer.
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
   OMX_BUFFERHEADERTYPE* buf = aBufferData->mBuffer;
   AudioInfo* info = mTrackInfo->GetAsAudioInfo();
@@ -358,30 +318,79 @@ OmxDataDecoder::OutputAudio(BufferData* aBufferData)
 }
 
 void
+OmxDataDecoder::OutputVideo(BufferData* aBufferData)
+{
+  MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
+
+  RefPtr<MediaData> data = aBufferData->GetPlatformMediaData();
+  MOZ_RELEASE_ASSERT(data);
+
+  VideoData* video(data->As<VideoData>());
+  if (aBufferData->mRawData) {
+    video->mTime = aBufferData->mRawData->mTime;
+    video->mTimecode = aBufferData->mRawData->mTimecode;
+    video->mOffset = aBufferData->mRawData->mOffset;
+    video->mDuration = aBufferData->mRawData->mDuration;
+    video->mKeyframe = aBufferData->mRawData->mKeyframe;
+  }
+
+  aBufferData->mStatus = BufferData::BufferStatus::OMX_CLIENT_OUTPUT;
+
+  // TextureClient's recycle callback is called when reference count of
+  // TextureClient becomes 1. In most cases, the last reference count is held
+  // by ITextureClientRecycleAllocator.
+  // And then promise will be resolved in the callback.
+  // TODO:
+  //   Because it is gonk specific behaviour, it needs to find a way to
+  //   proper abstracting it.
+  MOZ_RELEASE_ASSERT(aBufferData->mPromise.IsEmpty());
+  RefPtr<OmxBufferPromise> p = aBufferData->mPromise.Ensure(__func__);
+
+  RefPtr<OmxDataDecoder> self = this;
+  RefPtr<BufferData> buffer = aBufferData;
+  p->Then(mOmxTaskQueue, __func__,
+          [self, buffer] () {
+            MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+            buffer->mStatus = BufferData::BufferStatus::FREE;
+            self->FillAndEmptyBuffers();
+          },
+          [buffer] () {
+            MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+            buffer->mStatus = BufferData::BufferStatus::FREE;
+          });
+
+  mCallback->Output(video);
+}
+
+void
 OmxDataDecoder::FillBufferDone(BufferData* aData)
 {
   MOZ_ASSERT(!aData || aData->mStatus == BufferData::BufferStatus::OMX_CLIENT);
 
-  if (mTrackInfo->IsAudio()) {
-    OutputAudio(aData);
-  } else {
-    MOZ_ASSERT(0);
+  // Don't output sample when flush or shutting down, especially for video
+  // decoded frame. Because video decoded frame has a promise in BufferData
+  // waiting for layer to resolve it via recycle callback on Gonk, if other
+  // module doesn't send it to layer, it will cause a unresolved promise and
+  // waiting for resolve infinitely.
+  if (mFlushing || mShuttingDown) {
+    LOG("mFlush or mShuttingDown, drop data");
+    aData->mStatus = BufferData::BufferStatus::FREE;
+    return;
   }
 
   if (aData->mBuffer->nFlags & OMX_BUFFERFLAG_EOS) {
+    // Reach eos, it's an empty data so it doesn't need to output.
     EndOfStream();
+    aData->mStatus = BufferData::BufferStatus::FREE;
   } else {
-    FillAndEmptyBuffers();
-
-    // If the latest decoded sample's MediaRawData is also the latest input
-    // sample, it means there is no input data in queue and component, calling
-    // CheckIfInputExhausted().
-    if (aData->mRawData == mLatestInputRawData && !mCheckingInputExhausted) {
-      mCheckingInputExhausted = true;
-      nsCOMPtr<nsIRunnable> r =
-        NS_NewRunnableMethod(this, &OmxDataDecoder::CheckIfInputExhausted);
-      mOmxTaskQueue->Dispatch(r.forget());
+    if (mTrackInfo->IsAudio()) {
+      OutputAudio(aData);
+    } else if (mTrackInfo->IsVideo()) {
+      OutputVideo(aData);
+    } else {
+      MOZ_ASSERT(0);
     }
+    FillAndEmptyBuffers();
   }
 }
 
@@ -399,6 +408,30 @@ OmxDataDecoder::EmptyBufferDone(BufferData* aData)
   // Nothing to do when status of input buffer is OMX_CLIENT.
   aData->mStatus = BufferData::BufferStatus::FREE;
   FillAndEmptyBuffers();
+
+  // There is no way to know if component gets enough raw samples to generate
+  // output, especially for video decoding. So here it needs to request raw
+  // samples aggressively.
+  if (!mCheckingInputExhausted && !mMediaRawDatas.Length()) {
+    mCheckingInputExhausted = true;
+
+    RefPtr<OmxDataDecoder> self = this;
+    nsCOMPtr<nsIRunnable> r =
+      NS_NewRunnableFunction([self] () {
+        MOZ_ASSERT(self->mOmxTaskQueue->IsCurrentThreadIn());
+
+        self->mCheckingInputExhausted = false;
+
+        if (self->mMediaRawDatas.Length()) {
+          return;
+        }
+
+        LOG("Call InputExhausted()");
+        self->mCallback->InputExhausted();
+      });
+
+    mOmxTaskQueue->Dispatch(r.forget());
+  }
 }
 
 void
@@ -427,7 +460,7 @@ OmxDataDecoder::FillAndEmptyBuffers()
 
   // Trigger input port.
   while (!!mMediaRawDatas.Length()) {
-    // input buffer must be usedi by component if there is data available.
+    // input buffer must be used by component if there is data available.
     RefPtr<BufferData> inbuf = FindAvailableBuffer(OMX_DirInput);
     if (!inbuf) {
       LOG("no input buffer!");
@@ -435,10 +468,12 @@ OmxDataDecoder::FillAndEmptyBuffers()
     }
 
     RefPtr<MediaRawData> data = mMediaRawDatas[0];
+    // Buffer size should large enough for raw data.
+    MOZ_RELEASE_ASSERT(inbuf->mBuffer->nAllocLen >= data->Size());
+
     memcpy(inbuf->mBuffer->pBuffer, data->Data(), data->Size());
     inbuf->mBuffer->nFilledLen = data->Size();
     inbuf->mBuffer->nOffset = 0;
-    // TODO: the frame size could larger than buffer size in video case.
     inbuf->mBuffer->nFlags = inbuf->mBuffer->nAllocLen > data->Size() ?
                              OMX_BUFFERFLAG_ENDOFFRAME : 0;
     inbuf->mBuffer->nTimeStamp = data->mTime;
@@ -454,7 +489,6 @@ OmxDataDecoder::FillAndEmptyBuffers()
     mOmxLayer->EmptyBuffer(inbuf)->Then(mOmxTaskQueue, __func__, this,
                                         &OmxDataDecoder::EmptyBufferDone,
                                         &OmxDataDecoder::EmptyBufferFailure);
-    mLatestInputRawData.swap(mMediaRawDatas[0]);
     mMediaRawDatas.RemoveElementAt(0);
   }
 
@@ -551,9 +585,11 @@ OmxDataDecoder::OmxStateRunner()
     // Config codec parameters by minetype.
     if (mTrackInfo->IsAudio()) {
       ConfigAudioCodec();
+    } else if (mTrackInfo->IsVideo()) {
+      ConfigVideoCodec();
     }
 
-    // Send OpenMax state commane to OMX_StateIdle.
+    // Send OpenMax state command to OMX_StateIdle.
     RefPtr<OmxDataDecoder> self = this;
     mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr)
       ->Then(mOmxTaskQueue, __func__,
@@ -589,7 +625,7 @@ OmxDataDecoder::OmxStateRunner()
                self->RejectInitPromise(DecoderFailureReason::INIT_ERROR, __func__);
              });
   } else if (mOmxState == OMX_StateExecuting) {
-    // Config codec once it gets OMX_StateExecuting state.
+    // Configure codec once it gets OMX_StateExecuting state.
     FillCodecConfigDataToOmx();
   } else {
     MOZ_ASSERT(0);
@@ -619,31 +655,86 @@ OmxDataDecoder::ConfigAudioCodec()
 }
 
 void
+OmxDataDecoder::ConfigVideoCodec()
+{
+  OMX_ERRORTYPE err;
+  const VideoInfo* videoInfo = mTrackInfo->GetAsVideoInfo();
+
+  OMX_PARAM_PORTDEFINITIONTYPE def;
+
+  // Set up in/out port definition.
+  nsTArray<uint32_t> ports;
+  GetPortIndex(ports);
+  for (auto idx : ports) {
+    InitOmxParameter(&def);
+    def.nPortIndex = idx;
+    err = mOmxLayer->GetParameter(OMX_IndexParamPortDefinition,
+                                  &def,
+                                  sizeof(def));
+    if (err != OMX_ErrorNone) {
+      return;
+    }
+
+    def.format.video.nFrameWidth =  videoInfo->mDisplay.width;
+    def.format.video.nFrameHeight = videoInfo->mDisplay.height;
+    def.format.video.nStride = videoInfo->mImage.width;
+    def.format.video.nSliceHeight = videoInfo->mImage.height;
+
+    // TODO: it needs to add other formats like webm, mp4, h263... etc.
+    OMX_VIDEO_CODINGTYPE codetype;
+    if (videoInfo->mMimeType.EqualsLiteral("video/avc")) {
+      codetype = OMX_VIDEO_CodingAVC;
+    }
+
+    if (def.eDir == OMX_DirInput) {
+      def.format.video.eCompressionFormat = codetype;
+      def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
+    } else {
+      def.format.video.eCompressionFormat = OMX_VIDEO_CodingUnused;
+    }
+
+    err = mOmxLayer->SetParameter(OMX_IndexParamPortDefinition,
+                                  &def,
+                                  sizeof(def));
+    if (err != OMX_ErrorNone) {
+      return;
+    }
+  }
+}
+
+void
 OmxDataDecoder::FillCodecConfigDataToOmx()
 {
-  // Codec config data should be the first sample running on Omx TaskQueue.
+  // Codec configure data should be the first sample running on Omx TaskQueue.
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
   MOZ_ASSERT(!mMediaRawDatas.Length());
   MOZ_ASSERT(mOmxState == OMX_StateIdle || mOmxState == OMX_StateExecuting);
 
 
   RefPtr<BufferData> inbuf = FindAvailableBuffer(OMX_DirInput);
+  RefPtr<MediaByteBuffer> csc;
   if (mTrackInfo->IsAudio()) {
-    AudioInfo* audio_info = mTrackInfo->GetAsAudioInfo();
-    memcpy(inbuf->mBuffer->pBuffer,
-           audio_info->mCodecSpecificConfig->Elements(),
-           audio_info->mCodecSpecificConfig->Length());
-    inbuf->mBuffer->nFilledLen = audio_info->mCodecSpecificConfig->Length();
-    inbuf->mBuffer->nOffset = 0;
-    inbuf->mBuffer->nFlags = (OMX_BUFFERFLAG_ENDOFFRAME | OMX_BUFFERFLAG_CODECCONFIG);
-  } else {
-    MOZ_ASSERT(0);
+    csc = mTrackInfo->GetAsAudioInfo()->mCodecSpecificConfig;
+  } else if (mTrackInfo->IsVideo()) {
+    csc = mTrackInfo->GetAsVideoInfo()->mCodecSpecificConfig;
   }
 
-  LOG("Feed codec configure data to OMX component");
-  mOmxLayer->EmptyBuffer(inbuf)->Then(mOmxTaskQueue, __func__, this,
-                                      &OmxDataDecoder::EmptyBufferDone,
-                                      &OmxDataDecoder::EmptyBufferFailure);
+  MOZ_RELEASE_ASSERT(csc);
+
+  // Some codecs like h264, its codec specific data is at the first packet, not in container.
+  if (csc->Length()) {
+    memcpy(inbuf->mBuffer->pBuffer,
+           csc->Elements(),
+           csc->Length());
+    inbuf->mBuffer->nFilledLen = csc->Length();
+    inbuf->mBuffer->nOffset = 0;
+    inbuf->mBuffer->nFlags = (OMX_BUFFERFLAG_ENDOFFRAME | OMX_BUFFERFLAG_CODECCONFIG);
+
+    LOG("Feed codec configure data to OMX component");
+    mOmxLayer->EmptyBuffer(inbuf)->Then(mOmxTaskQueue, __func__, this,
+                                        &OmxDataDecoder::EmptyBufferDone,
+                                        &OmxDataDecoder::EmptyBufferFailure);
+  }
 }
 
 bool

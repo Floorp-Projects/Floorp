@@ -22,6 +22,7 @@
 #include "nsXULAppAPI.h"
 #include "nsContentSecurityManager.h"
 #include "LoadInfo.h"
+#include "nsServiceManagerUtils.h"
 
 // This class is used to suspend a request across a function scope.
 class ScopedRequestSuspender {

@@ -47,6 +47,10 @@
 #include "nsILoadGroupChild.h"
 #include "mozilla/ConsoleReportCollector.h"
 #include "LoadInfo.h"
+#include "nsISSLSocketControl.h"
+#include "mozilla/Telemetry.h"
+#include "nsIURL.h"
+#include "nsIConsoleService.h"
 
 #include <algorithm>
 
