@@ -48,7 +48,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   // AnimationEffectTimingProperties
   aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
   aRetVal.mFill = aTiming.mFillMode;
-  aRetVal.mIterations = aTiming.mIterationCount;
+  aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mDuration.SetAsUnrestrictedDouble() = aTiming.mIterationDuration.ToMilliseconds();
   aRetVal.mDirection = aTiming.mDirection;
 
@@ -229,7 +229,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
-  result.mActiveDuration = ActiveDuration(aTiming);
+  result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
+                       1.0f :
+                       aTiming.mIterations;
+  result.mActiveDuration = ActiveDuration(aTiming, result.mIterations);
 
   // The default constructor for ComputedTiming sets all other members to
   // values consistent with an animation that has not been sampled.
@@ -255,9 +258,8 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     activeTime = result.mActiveDuration;
     // Note that infinity == floor(infinity) so this will also be true when we
     // have finished an infinitely repeating animation of zero duration.
-    isEndOfFinalIteration =
-      aTiming.mIterationCount != 0.0 &&
-      aTiming.mIterationCount == floor(aTiming.mIterationCount);
+    isEndOfFinalIteration = result.mIterations != 0.0 &&
+                            result.mIterations == floor(result.mIterations);
   } else if (localTime < aTiming.mDelay) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
     if (!aTiming.FillsBackwards()) {
@@ -284,10 +286,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   // Determine the 0-based index of the current iteration.
   if (isEndOfFinalIteration) {
     result.mCurrentIteration =
-      aTiming.mIterationCount == NS_IEEEPositiveInfinity()
+      IsInfinite(result.mIterations) // Positive Infinity?
       ? UINT64_MAX // In GetComputedTimingDictionary(), we will convert this
                    // into Infinity.
-      : static_cast<uint64_t>(aTiming.mIterationCount) - 1;
+      : static_cast<uint64_t>(result.mIterations) - 1;
   } else if (activeTime == zeroDuration) {
     // If the active time is zero we're either in the first iteration
     // (including filling backwards) or we have finished an animation with an
@@ -295,7 +297,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     // the exact end of an iteration since we deal with that above).
     result.mCurrentIteration =
       result.mPhase == ComputedTiming::AnimationPhase::After
-      ? static_cast<uint64_t>(aTiming.mIterationCount) // floor
+      ? static_cast<uint64_t>(result.mIterations) // floor
       : 0;
   } else {
     result.mCurrentIteration =
@@ -308,7 +310,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   } else if (result.mPhase == ComputedTiming::AnimationPhase::After) {
     double progress = isEndOfFinalIteration
                       ? 1.0
-                      : fmod(aTiming.mIterationCount, 1.0f);
+                      : fmod(result.mIterations, 1.0);
     result.mProgress.SetValue(progress);
   } else {
     // We are in the active phase so the iteration duration can't be zero.
@@ -345,9 +347,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 }
 
 StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
+KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming,
+                                       double aComputedIterations)
 {
-  if (aTiming.mIterationCount == mozilla::PositiveInfinity<float>()) {
+  if (IsInfinite(aComputedIterations)) {
     // An animation that repeats forever has an infinite active duration
     // unless its iteration duration is zero, in which case it has a zero
     // active duration.
@@ -357,7 +360,7 @@ KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming)
            : StickyTimeDuration::Forever();
   }
   return StickyTimeDuration(
-    aTiming.mIterationDuration.MultDouble(aTiming.mIterationCount));
+    aTiming.mIterationDuration.MultDouble(aComputedIterations));
 }
 
 // https://w3c.github.io/web-animations/#in-play
@@ -668,13 +671,7 @@ KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
 
     animationTiming.mIterationDuration = GetIterationDuration(opt.mDuration);
     animationTiming.mDelay = TimeDuration::FromMilliseconds(opt.mDelay);
-    // FIXME: Covert mIterationCount to a valid value.
-    // Bug 1214536 should revise this and keep the original value, so
-    // AnimationTimingEffectReadOnly can get the original iterations.
-    animationTiming.mIterationCount = (IsNaN(opt.mIterations) ||
-                                      opt.mIterations < 0.0f) ?
-                                        1.0f :
-                                        opt.mIterations;
+    animationTiming.mIterations = opt.mIterations;
     animationTiming.mDirection = opt.mDirection;
     // FIXME: We should store original value.
     animationTiming.mFillMode = (opt.mFill == FillMode::Auto) ?
@@ -683,7 +680,7 @@ KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
   } else {
     animationTiming.mIterationDuration = GetIterationDuration(aOptions);
     animationTiming.mDelay = TimeDuration(0);
-    animationTiming.mIterationCount = 1.0f;
+    animationTiming.mIterations = 1.0f;
     animationTiming.mDirection = PlaybackDirection::Normal;
     animationTiming.mFillMode = FillMode::None;
   }
