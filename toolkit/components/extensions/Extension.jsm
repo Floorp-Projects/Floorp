@@ -21,6 +21,8 @@ const Cc = Components.classes;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+Cu.importGlobalProperties(["TextEncoder"]);
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -81,6 +83,7 @@ var {
   MessageBroker,
   Messenger,
   injectAPI,
+  instanceOf,
   extend,
   flushJarCache,
 } = ExtensionUtils;
@@ -522,7 +525,8 @@ ExtensionData.prototype = {
           return;
         }
         try {
-          let text = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+          let text = NetUtil.readInputStreamToString(inputStream, inputStream.available(),
+                                                     { charset: "utf-8" });
           resolve(JSON.parse(text));
         } catch (e) {
           reject(e);
@@ -832,12 +836,16 @@ this.Extension.generateXPI = function(id, data) {
     let script = files[filename];
     if (typeof(script) == "function") {
       script = "(" + script.toString() + ")()";
-    } else if (typeof(script) == "object") {
+    } else if (instanceOf(script, "Object")) {
       script = JSON.stringify(script);
     }
 
-    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-    stream.data = script;
+    if (!instanceOf(script, "ArrayBuffer")) {
+      script = new TextEncoder("utf-8").encode(script).buffer;
+    }
+
+    let stream = Cc["@mozilla.org/io/arraybuffer-input-stream;1"].createInstance(Ci.nsIArrayBufferInputStream);
+    stream.setData(script, 0, script.byteLength);
 
     generateFile(filename);
     zipW.addEntryStream(filename, time, 0, stream, false);
