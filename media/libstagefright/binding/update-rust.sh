@@ -23,7 +23,7 @@ cp _upstream/mp4parse/include/mp4parse.h include/
 
 git clone https://github.com/BurntSushi/byteorder _upstream/byteorder
 pushd _upstream/byteorder
-git checkout 0.3.13
+git checkout 0.4.2
 popd
 cp _upstream/byteorder/src/lib.rs byteorder/mod.rs
 cp _upstream/byteorder/src/new.rs byteorder/new.rs
