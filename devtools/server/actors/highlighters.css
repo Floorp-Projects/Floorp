@@ -97,6 +97,8 @@
 
   color: hsl(216,33%,97%);
   text-shadow: none;
+
+  border: 1px solid rgba(255,255,255,0.2);
 }
 
 :-moz-native-anonymous .box-model-nodeinfobar-container[hide-arrow] > .box-model-nodeinfobar {
@@ -106,26 +108,35 @@
 /* Arrows */
 
 :-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before {
+  left: calc(50% - 8px);
+  border: 8px solid rgba(255,255,255,0.2);
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
+  left: calc(50% - 7px);
+  border: 7px solid hsl(214,13%,24%);
+}
+
+:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:before,
+:-moz-native-anonymous .box-model-nodeinfobar-container > .box-model-nodeinfobar:after {
   content: "";
   display: none;
-
   position: absolute;
-  left: calc(50% - 8px);
-
   height: 0;
   width: 0;
-  border: 8px solid hsl(214,13%,24%);
   border-left-color: transparent;
   border-right-color: transparent;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:before {
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="top"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
   border-bottom: 0;
   top: 100%;
   display: block;
 }
 
-:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:before {
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:before,
+:-moz-native-anonymous .box-model-nodeinfobar-container[position="bottom"]:not([hide-arrow]) > .box-model-nodeinfobar:after {
   border-top: 0;
   bottom: 100%;
   display: block;

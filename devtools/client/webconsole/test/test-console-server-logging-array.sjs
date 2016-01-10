@@ -13,11 +13,11 @@ function handleRequest(request, response)
   var data = {
     "version": "4.1.0",
     "columns": ["log", "backtrace", "type"],
-    "rows": [[
-      ["values: %s %o %i %f %s","string",{"a":10,"___class_name":"Object"},123,1.12, "\u2713"],
+    "rows":[[
+      [{ "best": "Firefox", "reckless": "Chrome", "new_ie": "Safari", "new_new_ie": "Edge"}],
       "C:\\src\\www\\serverlogging\\test7.php:4:1",
       ""
-    ]]
+    ]],
   };
 
   // Put log into headers.

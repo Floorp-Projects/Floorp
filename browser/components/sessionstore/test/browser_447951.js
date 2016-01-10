@@ -32,9 +32,9 @@ function test() {
       is(tabState.entries[0].url, baseURL + 0, "... but not more");
 
       // visit yet another anchor (appending it to session history)
-      runInContent(tab.linkedBrowser, function(win) {
-        win.document.querySelector("a").click();
-      }, null).then(flushAndCheck);
+      ContentTask.spawn(tab.linkedBrowser, null, function() {
+        content.window.document.querySelector("a").click();
+      }).then(flushAndCheck);
 
       function flushAndCheck() {
         TabStateFlusher.flush(tab.linkedBrowser).then(check);

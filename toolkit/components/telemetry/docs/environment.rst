@@ -59,7 +59,7 @@ Structure::
             // only the fact that the value has been changed is recorded
         },
       },
-      profile: { // This section is not available on Android.
+      profile: {
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
       },
