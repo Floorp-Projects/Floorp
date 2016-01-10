@@ -655,7 +655,7 @@ nsTransitionManager::ConsiderStartingTransition(
   AnimationTiming timing;
   timing.mIterationDuration = TimeDuration::FromMilliseconds(duration);
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
-  timing.mIterationCount = 1;
+  timing.mIterations = 1.0;
   timing.mDirection = dom::PlaybackDirection::Normal;
   timing.mFillMode = dom::FillMode::Backwards;
 
