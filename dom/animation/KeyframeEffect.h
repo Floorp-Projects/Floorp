@@ -53,7 +53,7 @@ struct AnimationTiming
 {
   TimeDuration mIterationDuration;
   TimeDuration mDelay;
-  float mIterationCount; // mozilla::PositiveInfinity<float>() means infinite
+  double mIterations; // Can be NaN, negative, +/-Infinity
   dom::PlaybackDirection mDirection;
   dom::FillMode mFillMode;
 
@@ -62,7 +62,7 @@ struct AnimationTiming
   bool operator==(const AnimationTiming& aOther) const {
     return mIterationDuration == aOther.mIterationDuration &&
            mDelay == aOther.mDelay &&
-           mIterationCount == aOther.mIterationCount &&
+           mIterations == aOther.mIterations &&
            mDirection == aOther.mDirection &&
            mFillMode == aOther.mFillMode;
   }
@@ -88,6 +88,9 @@ struct ComputedTiming
   Nullable<double>    mProgress;
   // Zero-based iteration index (meaningless if mProgress is null).
   uint64_t            mCurrentIteration = 0;
+  // Unlike AnimationTiming::mIterations, this value is guaranteed to be in the
+  // range [0, Infinity].
+  double              mIterations = 1.0;
 
   enum class AnimationPhase {
     Null,   // Not sampled (null sample time)
@@ -261,7 +264,8 @@ public:
 
   // Return the duration of the active interval for the given timing parameters.
   static StickyTimeDuration
-  ActiveDuration(const AnimationTiming& aTiming);
+  ActiveDuration(const AnimationTiming& aTiming,
+                 double aComputedIterations);
 
   bool IsInPlay() const;
   bool IsCurrent() const;

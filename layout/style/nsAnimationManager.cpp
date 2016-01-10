@@ -629,7 +629,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mIterationDuration =
       TimeDuration::FromMilliseconds(src.GetDuration());
     timing.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
-    timing.mIterationCount = src.GetIterationCount();
+    timing.mIterations = src.GetIterationCount();
     timing.mDirection = src.GetDirection();
     timing.mFillMode = src.GetFillMode();
 
