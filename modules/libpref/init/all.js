@@ -1298,6 +1298,9 @@ pref("network.http.max-persistent-connections-per-proxy", 32);
 // max-connections or max-connections-per-server has also been reached.
 pref("network.http.request.max-start-delay", 10);
 
+// If a connection is reset, we will retry it max-attempts times.
+pref("network.http.request.max-attempts", 3);
+
 // Headers
 pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
 

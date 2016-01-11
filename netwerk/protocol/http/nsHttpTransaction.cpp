@@ -923,11 +923,6 @@ nsHttpTransaction::Close(nsresult reason)
             PR_Now(), 0, EmptyCString());
     }
 
-    // we must no longer reference the connection!  find out if the
-    // connection was being reused before letting it go.
-    bool connReused = false;
-    if (mConnection)
-        connReused = mConnection->IsReused();
     mConnected = false;
     mTunnelProvider = nullptr;
 
@@ -937,6 +932,9 @@ nsHttpTransaction::Close(nsresult reason)
     // response and the connection was being reused, then we can (and really
     // should) assume that we wrote to a stale connection and we must therefore
     // repeat the request over a new connection.
+    //
+    // We have decided to retry not only in case of the reused connections, but
+    // all safe methods(bug 1236277).
     //
     // NOTE: the conditions under which we will automatically retry the HTTP
     // request have to be carefully selected to avoid duplication of the
@@ -977,7 +975,8 @@ nsHttpTransaction::Close(nsresult reason)
             mSentData && (!mConnection || mConnection->BytesWritten());
 
         if (!mReceivedData &&
-            (!reallySentData || connReused || mPipelinePosition)) {
+            ((mRequestHead && mRequestHead->IsSafeMethod()) ||
+             !reallySentData)) {
             // if restarting fails, then we must proceed to close the pipe,
             // which will notify the channel that the transaction failed.
 
