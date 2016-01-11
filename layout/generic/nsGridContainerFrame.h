@@ -192,47 +192,34 @@ protected:
     /**
      * Translate the lines to account for (empty) removed tracks.  This method
      * is only for grid items and should only be called after placement.
+     * aNumRemovedTracks contains a count for each line in the grid how many
+     * tracks were removed between the start of the grid and that line.
      */
-    void AdjustForRemovedTracks(uint32_t aFirstRemovedTrack,
-                                uint32_t aNumRemovedTracks)
+    void AdjustForRemovedTracks(const nsTArray<uint32_t>& aNumRemovedTracks)
     {
       MOZ_ASSERT(mStart != kAutoLine, "invalid resolved line for a grid item");
       MOZ_ASSERT(mEnd != kAutoLine, "invalid resolved line for a grid item");
-      if (mStart >= aFirstRemovedTrack) {
-        MOZ_ASSERT(mStart >= aFirstRemovedTrack + aNumRemovedTracks,
-                   "can't start in a removed range of tracks - those tracks "
-                   "are supposed to be empty");
-        mStart -= aNumRemovedTracks;
-        mEnd -= aNumRemovedTracks;
-      } else {
-        MOZ_ASSERT(mEnd <= aFirstRemovedTrack, "can't span into a removed "
-                   "range of tracks - those tracks are supposed to be empty");
-      }
+      uint32_t numRemovedTracks = aNumRemovedTracks[mStart];
+      MOZ_ASSERT(numRemovedTracks == aNumRemovedTracks[mEnd],
+                 "tracks that a grid item spans can't be removed");
+      mStart -= numRemovedTracks;
+      mEnd -= numRemovedTracks;
     }
     /**
      * Translate the lines to account for (empty) removed tracks.  This method
      * is only for abs.pos. children and should only be called after placement.
      * Same as for in-flow items, but we don't touch 'auto' lines here and we
-     * also need to adjust areas that span into the removed range.
+     * also need to adjust areas that span into the removed tracks.
      */
-    void AdjustAbsPosForRemovedTracks(uint32_t aFirstRemovedTrack,
-                                      uint32_t aNumRemovedTracks)
+    void AdjustAbsPosForRemovedTracks(const nsTArray<uint32_t>& aNumRemovedTracks)
     {
-      if (mStart != nsGridContainerFrame::kAutoLine &&
-          mStart > aFirstRemovedTrack) {
-        if (mStart < aFirstRemovedTrack + aNumRemovedTracks) {
-          mStart = aFirstRemovedTrack;
-        } else {
-          mStart -= aNumRemovedTracks;
-        }
+      if (mStart != nsGridContainerFrame::kAutoLine) {
+        mStart -= aNumRemovedTracks[mStart];
       }
-      if (mEnd != nsGridContainerFrame::kAutoLine &&
-          mEnd > aFirstRemovedTrack) {
-        if (mEnd < aFirstRemovedTrack + aNumRemovedTracks) {
-          mEnd = aFirstRemovedTrack;
-        } else {
-          mEnd -= aNumRemovedTracks;
-        }
+      if (mEnd != nsGridContainerFrame::kAutoLine) {
+        MOZ_ASSERT(mStart == nsGridContainerFrame::kAutoLine ||
+                   mEnd > mStart, "invalid line range");
+        mEnd -= aNumRemovedTracks[mEnd];
       }
       if (mStart == mEnd) {
         mEnd = nsGridContainerFrame::kAutoLine;
