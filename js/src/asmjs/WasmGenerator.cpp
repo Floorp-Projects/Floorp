@@ -43,6 +43,7 @@ ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
     sigs_(cx),
     funcEntryOffsets_(cx),
     exportFuncIndices_(cx),
+    funcIndexToExport_(cx),
     parallel_(false),
     outstanding_(0),
     tasks_(cx),
@@ -117,7 +118,7 @@ ModuleGenerator::init()
     if (!link_)
         return false;
 
-    if (!sigs_.init())
+    if (!sigs_.init() || !funcIndexToExport_.init())
         return false;
 
     uint32_t numTasks;
@@ -292,7 +293,7 @@ ModuleGenerator::declareImport(MallocSig&& sig, unsigned* index)
 }
 
 uint32_t
-ModuleGenerator::numDeclaredImports() const
+ModuleGenerator::numImports() const
 {
     return module_->imports.length();
 }
@@ -320,9 +321,17 @@ ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, Profi
 }
 
 bool
-ModuleGenerator::declareExport(MallocSig&& sig, uint32_t funcIndex)
+ModuleGenerator::declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* exportIndex)
 {
-    return module_->exports.emplaceBack(Move(sig)) &&
+    FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
+    if (p) {
+        *exportIndex = p->value();
+        return true;
+    }
+
+    *exportIndex = module_->exports.length();
+    return funcIndexToExport_.add(p, funcIndex, *exportIndex) &&
+           module_->exports.append(Move(sig)) &&
            exportFuncIndices_.append(funcIndex);
 }
 
@@ -339,7 +348,7 @@ ModuleGenerator::exportSig(uint32_t index) const
 }
 
 uint32_t
-ModuleGenerator::numDeclaredExports() const
+ModuleGenerator::numExports() const
 {
     return module_->exports.length();
 }

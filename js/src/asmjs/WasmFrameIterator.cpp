@@ -18,8 +18,6 @@
 
 #include "asmjs/WasmFrameIterator.h"
 
-#include "jsatom.h"
-
 #include "asmjs/WasmModule.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -109,16 +107,7 @@ FrameIterator::functionDisplayAtom() const
     MOZ_ASSERT(!done());
 
     const char* chars = module_->functionName(codeRange_->funcNameIndex());
-    UTF8Chars utf8(chars, strlen(chars));
-
-    size_t twoByteLength;
-    UniquePtr<char16_t> twoByte(JS::UTF8CharsToNewTwoByteCharsZ(cx_, utf8, &twoByteLength).get());
-    if (!twoByte) {
-        cx_->clearPendingException();
-        return cx_->names().empty;
-    }
-
-    JSAtom* atom = AtomizeChars(cx_, twoByte.get(), twoByteLength);
+    JSAtom* atom = AtomizeUTF8Chars(cx_, chars, strlen(chars));
     if (!atom) {
         cx_->clearPendingException();
         return cx_->names().empty;

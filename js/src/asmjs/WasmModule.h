@@ -28,6 +28,7 @@ namespace js {
 
 class AsmJSModule;
 class WasmActivation;
+class WasmModuleObject;
 namespace jit { struct BaselineScript; }
 
 namespace wasm {
@@ -97,8 +98,8 @@ struct StaticLinkData
 
 typedef UniquePtr<StaticLinkData, JS::DeletePolicy<StaticLinkData>> UniqueStaticLinkData;
 
-// An Export describes an export from a wasm module. Currently only functions
-// can be exported.
+// An Export represents a single function inside a wasm Module that has been
+// exported one or more times.
 
 class Export
 {
@@ -195,6 +196,7 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 class CodeRange
 {
+    // All fields are treated as cacheable POD:
     uint32_t nameIndex_;
     uint32_t lineNumber_;
     uint32_t begin_;
@@ -305,6 +307,20 @@ struct CacheableUniquePtr : public UniquePtr<CharT, JS::FreePolicy>
 typedef CacheableUniquePtr<char> CacheableChars;
 typedef CacheableUniquePtr<char16_t> CacheableTwoByteChars;
 typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
+
+// The ExportMap describes how Exports are mapped to the fields of the export
+// object. This allows a single Export to be used in multiple fields.
+
+struct ExportMap
+{
+    typedef Vector<uint32_t, 0, SystemAllocPolicy> FieldToExportVector;
+
+    CacheableCharsVector exportNames;
+    CacheableCharsVector fieldNames;
+    FieldToExportVector fieldsToExports;
+
+    WASM_DECLARE_SERIALIZABLE(ExportMap)
+};
 
 // A UniqueCodePtr owns allocated executable code. Code passed to the Module
 // constructor must be allocated via AllocateCode.
@@ -530,6 +546,12 @@ class Module
     bool dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
                          Handle<FunctionVector> imports);
 
+    // This function creates and returns a new export object for this module.
+    // The lengths of exports() and map.exportNames must be the same.
+
+    bool createExportObject(JSContext* cx, Handle<WasmModuleObject*> moduleObj,
+                            const ExportMap& map, MutableHandleObject exportObj);
+
     // The wasm heap, established by dynamicallyLink.
 
     SharedMem<uint8_t*> heap() const;
@@ -568,6 +590,18 @@ class Module
 };
 
 typedef UniquePtr<Module, JS::DeletePolicy<Module>> UniqueModule;
+
+// Tests to query and access the exported JS functions produced by
+// Module::createExportObject.
+
+extern bool
+IsExportedFunction(JSFunction* fun);
+
+extern WasmModuleObject*
+ExportedFunctionToModuleObject(JSFunction* fun);
+
+extern uint32_t
+ExportedFunctionToIndex(JSFunction* fun);
 
 } // namespace wasm
 
