@@ -812,13 +812,6 @@ PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
   }
 }
 
-static void
-ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  PathFromRegionInternal(aContext, aRegion);
-  aContext->Clip();
-}
-
 static already_AddRefed<Path>
 PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
 {
@@ -836,8 +829,15 @@ PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
   return pb->Finish();
 }
 
-static void
-ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
+/*static*/ void
+gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
+{
+  PathFromRegionInternal(aContext, aRegion);
+  aContext->Clip();
+}
+
+/*static*/ void
+gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
 {
   if (!aRegion.IsComplex()) {
     IntRect rect = aRegion.GetBounds();
@@ -847,18 +847,6 @@ ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
 
   RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion);
   aTarget->PushClip(path);
-}
-
-/*static*/ void
-gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  ClipToRegionInternal(aContext, aRegion);
-}
-
-/*static*/ void
-gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
-{
-  ClipToRegionInternal(aTarget, aRegion);
 }
 
 /*static*/ gfxFloat
