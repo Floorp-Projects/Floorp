@@ -5264,6 +5264,8 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
 {
   const nsIFrame *frame = aProperties.mFrame;
   NS_ASSERTION(frame || !(aFlags & INCLUDE_PERSPECTIVE), "Must have a frame to compute perspective!");
+  MOZ_ASSERT((aFlags & (OFFSET_BY_ORIGIN|BASIS_AT_ORIGIN)) != (OFFSET_BY_ORIGIN|BASIS_AT_ORIGIN),
+             "Can't specify offset by origin as well as basis at origin!");
 
   if (aOutAncestor) {
     *aOutAncestor = nsLayoutUtils::GetCrossDocParentFrame(frame);
@@ -5380,6 +5382,10 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     }
   }
 
+  if (aFlags & BASIS_AT_ORIGIN) {
+    result.ChangeBasis(roundedOrigin);
+  }
+
   if ((aFlags & INCLUDE_PRESERVE3D_ANCESTORS) &&
       frame && frame->Combines3DTransformWithAncestors()) {
     // Include the transform set on our parent
@@ -5398,6 +5404,8 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     uint32_t flags = aFlags & (INCLUDE_PRESERVE3D_ANCESTORS|INCLUDE_PERSPECTIVE);
     if (!frame->IsTransformed()) {
       flags |= OFFSET_BY_ORIGIN;
+    } else {
+      flags |= BASIS_AT_ORIGIN;
     }
     Matrix4x4 parent =
       GetResultingTransformMatrixInternal(props,
@@ -5542,15 +5550,13 @@ nsDisplayTransform::GetTransform()
       mTransform = mTransformGetter(mFrame, scale);
       mTransform.ChangeBasis(newOrigin.x, newOrigin.y, newOrigin.z);
     } else if (!mIsTransformSeparator) {
-      bool isReference =
+      DebugOnly<bool> isReference =
         mFrame->IsTransformed() ||
         mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
-      uint32_t flags = INCLUDE_PERSPECTIVE;
-      if (isReference) {
-        flags |= OFFSET_BY_ORIGIN;
-      }
-      mTransform = GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
-                                               scale, flags);
+      MOZ_ASSERT(isReference);
+      mTransform =
+        GetResultingTransformMatrix(mFrame, ToReferenceFrame(),
+                                    scale, INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN);
     }
   }
   return mTransform;
@@ -6022,7 +6028,7 @@ nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  uint32_t flags = INCLUDE_PERSPECTIVE;
+  uint32_t flags = INCLUDE_PERSPECTIVE|BASIS_AT_ORIGIN;
   if (aPreserves3D) {
     flags |= INCLUDE_PRESERVE3D_ANCESTORS;
   }
@@ -6043,7 +6049,7 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  uint32_t flags = INCLUDE_PERSPECTIVE;
+  uint32_t flags = INCLUDE_PERSPECTIVE|BASIS_AT_ORIGIN;
   if (aPreserves3D) {
     flags |= INCLUDE_PRESERVE3D_ANCESTORS;
   }
@@ -6101,6 +6107,18 @@ void
 nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream)
 {
   AppendToString(aStream, GetTransform());
+  if (IsTransformSeparator()) {
+    aStream << " transform-separator";
+  }
+  if (IsLeafOf3DContext()) {
+    aStream << " 3d-context-leaf";
+  }
+  if (mFrame->Extend3DContext()) {
+    aStream << " extends-3d-context";
+  }
+  if (mFrame->Combines3DTransformWithAncestors()) {
+    aStream << " combines-3d-with-ancestors";
+  }
 }
 
 nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
@@ -6111,7 +6129,10 @@ nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
   , mList(aBuilder, aPerspectiveFrame, aList)
   , mTransformFrame(aTransformFrame)
   , mIndex(aBuilder->AllocatePerspectiveItemIndex())
-{}
+{
+  MOZ_ASSERT(mList.GetChildren()->Count() == 1);
+  MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() == TYPE_TRANSFORM);
+}
 
 already_AddRefed<Layer>
 nsDisplayPerspective::BuildLayer(nsDisplayListBuilder *aBuilder,

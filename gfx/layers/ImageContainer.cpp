@@ -378,7 +378,7 @@ ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotif
 
 PlanarYCbCrImage::PlanarYCbCrImage()
   : Image(nullptr, ImageFormat::PLANAR_YCBCR)
-  , mOffscreenFormat(gfxImageFormat::Unknown)
+  , mOffscreenFormat(SurfaceFormat::UNKNOWN)
   , mBufferSize(0)
 {
 }
@@ -480,7 +480,7 @@ RecyclingPlanarYCbCrImage::SetData(const Data &aData)
 gfxImageFormat
 PlanarYCbCrImage::GetOffscreenFormat()
 {
-  return mOffscreenFormat == gfxImageFormat::Unknown ?
+  return mOffscreenFormat == SurfaceFormat::UNKNOWN ?
     gfxPlatform::GetPlatform()->GetOffscreenFormat() :
     mOffscreenFormat;
 }

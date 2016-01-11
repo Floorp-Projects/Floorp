@@ -212,8 +212,7 @@ public:
 } // namespace mozilla
 
 /**
- * Frame class for SVG <text> elements, used when the
- * layout.svg.css-text.enabled is true.
+ * Frame class for SVG <text> elements.
  *
  * An SVGTextFrame manages SVG text layout, painting and interaction for
  * all descendent text content elements.  The frame tree will look like this:
