@@ -10,7 +10,7 @@ var toolbox;
 add_task(function* themeRegistration() {
   let tab = yield addTab("data:text/html,test");
   let target = TargetFactory.forTab(tab);
-  toolbox = yield gDevTools.showToolbox(target);
+  toolbox = yield gDevTools.showToolbox(target, "options");
 
   let themeId = yield new Promise(resolve => {
     gDevTools.once("theme-registered", (e, themeId) => {
@@ -31,9 +31,6 @@ add_task(function* themeRegistration() {
 });
 
 add_task(function* themeInOptionsPanel() {
-
-  yield toolbox.selectTool("options");
-
   let panel = toolbox.getCurrentPanel();
   let panelWin = toolbox.getCurrentPanel().panelWin;
   let doc = panelWin.frameElement.contentDocument;
