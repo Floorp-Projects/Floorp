@@ -52,10 +52,7 @@ config = {
 
     "firefox_media_repo": 'https://github.com/mjzffr/firefox-media-tests.git',
     "firefox_media_branch": 'master',
-    "firefox_media_rev": '49b500b30b80372a6c678ec7d0a2b074844f5e84',
-    "firefox_ui_repo": 'https://github.com/mozilla/firefox-ui-tests.git',
-    "firefox_ui_branch": 'mozilla-central',
-    "firefox_ui_rev": '32be49d74e1d10c6bf087235b1d6753c1b840bc4',
+    "firefox_media_rev": '0830e972e4b95fef3507207fc6bce028da27f2d3',
 
     "suite_definitions": {
         "media-tests": {

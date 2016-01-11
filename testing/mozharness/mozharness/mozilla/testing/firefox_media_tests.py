@@ -4,13 +4,12 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 # ***** BEGIN LICENSE BLOCK *****
-"""firefox_media_tests.py
 
-Author: Maja Frydrychowicz
-"""
 import copy
+import glob
 import os
 import re
+import urlparse
 
 from mozharness.base.log import ERROR, WARNING
 from mozharness.base.script import PreScriptAction
@@ -72,22 +71,13 @@ media_test_config_options = [
         'dest': 'firefox_media_rev',
         'help': 'which firefox_media_tests revision to use',
     }],
-    [['--firefox-ui-repo'], {
-        'dest': 'firefox_ui_repo',
-        'default': 'https://github.com/mozilla/firefox-ui-tests.git',
-        'help': 'which firefox_ui_tests repo to use',
-    }],
-    [['--firefox-ui-branch'], {
-        'dest': 'firefox_ui_branch',
-        'default': 'master',
-        'help': 'which branch to use for firefox_ui_tests',
-    }],
-    [['--firefox-ui-rev'], {
-        'dest': 'firefox_ui_rev',
-        'help': 'which firefox_ui_tests revision to use',
-    }],
+    [["--suite"],
+     {"action": "store",
+      "dest": "test_suite",
+      "default": "media-tests",
+      "help": "suite name",
+      }],
 ] + (copy.deepcopy(testing_config_options))
-
 
 class JobResultParser(TestSummaryOutputParserHelper):
     """ Parses test output to determine overall result."""
@@ -138,7 +128,9 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         actions = [
             'clobber',
             'checkout',
+            'download-and-extract',
             'create-virtualenv',
+            'install',
             'run-media-tests',
         ]
         super(FirefoxMediaTestsBase, self).__init__(
@@ -148,23 +140,45 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             **kwargs
         )
         c = self.config
+
         self.media_urls = c.get('media_urls')
         self.profile = c.get('profile')
         self.test_timeout = int(c.get('test_timeout'))
         self.tests = c.get('tests')
         self.e10s = c.get('e10s')
+        self.installer_url = c.get('installer_url')
+        self.installer_path = c.get('installer_path')
+        self.binary_path = c.get('binary_path')
+        self.test_packages_url = c.get('test_packages_url')
+        self.test_url = c.get('test_url')
 
     @PreScriptAction('create-virtualenv')
     def _pre_create_virtualenv(self, action):
         dirs = self.query_abs_dirs()
-        requirements_file = os.path.join(dirs['firefox_media_dir'],
+        marionette_requirements = os.path.join(dirs['abs_test_install_dir'],
+                                    'config',
+                                    'marionette_requirements.txt')
+        if os.access(marionette_requirements, os.F_OK):
+            self.register_virtualenv_module(requirements=[marionette_requirements],
+                                            two_pass=True)
+
+        media_tests_requirements = os.path.join(dirs['firefox_media_dir'],
                                          'requirements.txt')
-        if os.path.isfile(requirements_file):
-            self.register_virtualenv_module(requirements=[requirements_file])
-        self.register_virtualenv_module(name='firefox-ui-tests',
-                                        url=dirs['firefox_ui_dir'])
-        self.register_virtualenv_module(name='firefox-media-tests',
-                                        url=dirs['firefox_media_dir'])
+
+        if os.access(media_tests_requirements, os.F_OK):
+            self.register_virtualenv_module(requirements=[media_tests_requirements],
+                                            two_pass=True)
+
+    def download_and_extract(self):
+        """Overriding method from TestingMixin until firefox-media-tests are in tree.
+
+        Right now we only care about the installer and symbolds.
+
+        """
+        self._download_installer()
+
+        if self.config.get('download_symbols'):
+            self._download_and_extract_symbols()
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -174,8 +188,8 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
             'firefox_media_dir': os.path.join(abs_dirs['abs_work_dir'],
                                               'firefox-media-tests')
         }
-        dirs['firefox_ui_dir'] = os.path.join(dirs['firefox_media_dir'],
-                                              'firefox-ui-tests')
+        dirs['abs_test_install_dir'] = os.path.join(abs_dirs['abs_work_dir'],
+                                                    'tests')
         abs_dirs.update(dirs)
         self.abs_dirs = abs_dirs
         return self.abs_dirs
@@ -188,20 +202,13 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         self.firefox_media_vc = {
             'branch': c['firefox_media_branch'],
             'repo': c['firefox_media_repo'],
-            'revision': c['firefox_media_rev'],
             'dest': dirs['firefox_media_dir'],
         }
-        self.firefox_ui_vc = {
-            'branch': c['firefox_ui_branch'],
-            'repo': c['firefox_ui_repo'],
-            'revision': c['firefox_ui_rev'],
-            'dest': dirs['firefox_ui_dir']
-        }
+        if 'firefox-media-rev' in c:
+            self.firefox_media_vc['revision'] = c['firefox_media_rev']
 
     def checkout(self):
-        revision = self.vcs_checkout(vcs='gittool', **self.firefox_media_vc)
-        if revision:
-            self.vcs_checkout(vcs='gittool', **self.firefox_ui_vc)
+        self.vcs_checkout(vcs='gittool', **self.firefox_media_vc)
 
     def _query_cmd(self):
         """ Determine how to call firefox-media-tests """
@@ -226,7 +233,47 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         if self.e10s:
             cmd.append('--e10s')
 
+        test_suite = self.config.get('test_suite')
+        if test_suite not in self.config["suite_definitions"]:
+            self.fatal("%s is not defined in the config!" % test_suite)
+
+        test_manifest = None if test_suite != 'media-youtube-tests' else \
+            os.path.join(dirs['firefox_media_dir'],
+                         'firefox_media_tests',
+                         'playback', 'youtube', 'manifest.ini')
+        config_fmt_args = {
+            'test_manifest': test_manifest,
+        }
+
+        for s in self.config["suite_definitions"][test_suite]["options"]:
+            cmd.append(s % config_fmt_args)
+
         return cmd
+
+    def query_minidump_stackwalk(self):
+        """We don't have an extracted test package available to get the manifest file.
+
+        So we have to explicitely download the latest version of the manifest from the
+        mozilla-central repository and feed it into the query_minidump_stackwalk() method.
+
+        We can remove this whole method once our tests are part of the tree.
+
+        """
+        manifest_path = None
+
+        if os.environ.get('MINIDUMP_STACKWALK') or self.config.get('download_minidump_stackwalk'):
+            tooltool_manifest = self.query_minidump_tooltool_manifest()
+            url_base = 'https://hg.mozilla.org/mozilla-central/raw-file/default/testing/'
+
+            dirs = self.query_abs_dirs()
+            manifest_path = os.path.join(dirs['abs_work_dir'], 'releng.manifest')
+            try:
+                self.download_file(urlparse.urljoin(url_base, tooltool_manifest),
+                                   manifest_path)
+            except Exception as e:
+                self.fatal('Download of tooltool manifest file failed: %s' % e.message)
+
+        return super(FirefoxMediaTestsBase, self).query_minidump_stackwalk(manifest=manifest_path)
 
     def run_media_tests(self):
         cmd = self._query_cmd()
@@ -237,8 +284,7 @@ class FirefoxMediaTestsBase(TestingMixin, VCSToolsScript):
         )
 
         env = self.query_env()
-        if (not os.environ.get('MINIDUMP_STACKWALK') and
-                self.query_minidump_stackwalk()):
+        if self.query_minidump_stackwalk():
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
 
         return_code = self.run_command(
