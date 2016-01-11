@@ -48,6 +48,7 @@ import org.mozilla.gecko.gfx.LayerView;
 import org.mozilla.gecko.gfx.PanZoomController;
 import org.mozilla.gecko.mozglue.ContextUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
+import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.prompts.PromptService;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoRequest;
@@ -61,6 +62,7 @@ import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ExternalIntentDuringPrivateBrowsingPromptFragment;
 
+import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.ActivityManager;
@@ -502,45 +504,49 @@ public class GeckoAppShell
 
     @WrapForJNI
     public static void enableLocation(final boolean enable) {
-        ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    LocationManager lm = getLocationManager(getApplicationContext());
-                    if (lm == null) {
-                        return;
-                    }
-
-                    if (enable) {
-                        Location lastKnownLocation = getLastKnownLocation(lm);
-                        if (lastKnownLocation != null) {
-                            getGeckoInterface().getLocationListener().onLocationChanged(lastKnownLocation);
-                        }
-
-                        Criteria criteria = new Criteria();
-                        criteria.setSpeedRequired(false);
-                        criteria.setBearingRequired(false);
-                        criteria.setAltitudeRequired(false);
-                        if (locationHighAccuracyEnabled) {
-                            criteria.setAccuracy(Criteria.ACCURACY_FINE);
-                            criteria.setCostAllowed(true);
-                            criteria.setPowerRequirement(Criteria.POWER_HIGH);
-                        } else {
-                            criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-                            criteria.setCostAllowed(false);
-                            criteria.setPowerRequirement(Criteria.POWER_LOW);
-                        }
-
-                        String provider = lm.getBestProvider(criteria, true);
-                        if (provider == null)
+        Permissions
+                .from((Activity) getContext())
+                .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION)
+                .onUIThread()
+                .run(new Runnable() {
+                    @Override
+                    public void run() {
+                        LocationManager lm = getLocationManager(getApplicationContext());
+                        if (lm == null) {
                             return;
+                        }
 
-                        Looper l = Looper.getMainLooper();
-                        lm.requestLocationUpdates(provider, 100, (float).5, getGeckoInterface().getLocationListener(), l);
-                    } else {
-                        lm.removeUpdates(getGeckoInterface().getLocationListener());
+                        if (enable) {
+                            Location lastKnownLocation = getLastKnownLocation(lm);
+                            if (lastKnownLocation != null) {
+                                getGeckoInterface().getLocationListener().onLocationChanged(lastKnownLocation);
+                            }
+
+                            Criteria criteria = new Criteria();
+                            criteria.setSpeedRequired(false);
+                            criteria.setBearingRequired(false);
+                            criteria.setAltitudeRequired(false);
+                            if (locationHighAccuracyEnabled) {
+                                criteria.setAccuracy(Criteria.ACCURACY_FINE);
+                                criteria.setCostAllowed(true);
+                                criteria.setPowerRequirement(Criteria.POWER_HIGH);
+                            } else {
+                                criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+                                criteria.setCostAllowed(false);
+                                criteria.setPowerRequirement(Criteria.POWER_LOW);
+                            }
+
+                            String provider = lm.getBestProvider(criteria, true);
+                            if (provider == null)
+                                return;
+
+                            Looper l = Looper.getMainLooper();
+                            lm.requestLocationUpdates(provider, 100, (float) .5, getGeckoInterface().getLocationListener(), l);
+                        } else {
+                            lm.removeUpdates(getGeckoInterface().getLocationListener());
+                        }
                     }
-                }
-            });
+                });
     }
 
     private static LocationManager getLocationManager(Context context) {
