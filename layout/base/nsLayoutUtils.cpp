@@ -866,11 +866,15 @@ nsIFrame*
 GetScrollFrameFromContent(nsIContent* aContent)
 {
   nsIFrame* frame = aContent->GetPrimaryFrame();
-  if (frame && aContent->OwnerDoc()->GetRootElement() == aContent) {
+  if (aContent->OwnerDoc()->GetRootElement() == aContent) {
+    nsIPresShell* presShell = frame ? frame->PresContext()->PresShell() : nullptr;
+    if (!presShell) {
+      presShell = aContent->OwnerDoc()->GetShell();
+    }
     // We want the scroll frame, the root scroll frame differs from all
     // others in that the primary frame is not the scroll frame.
-    if (nsIFrame* rootScrollFrame =
-          frame->PresContext()->PresShell()->GetRootScrollFrame()) {
+    nsIFrame* rootScrollFrame = presShell ? presShell->GetRootScrollFrame() : nullptr;
+    if (rootScrollFrame) {
       frame = rootScrollFrame;
     }
   }
