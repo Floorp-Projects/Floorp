@@ -159,7 +159,7 @@ nsDOMAttributeMap::GetAttribute(mozilla::dom::NodeInfo* aNodeInfo, bool aNsAware
   if (!node) {
     RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
     RefPtr<Attr> newAttr =
-      new Attr(this, ni.forget(), EmptyString(), aNsAware);
+      new Attr(this, ni.forget(), EmptyString());
     mAttributeCache.Put(attr, newAttr);
     node = newAttr;
   }
