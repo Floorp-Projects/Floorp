@@ -1288,7 +1288,7 @@ BluetoothServiceBluedroid::PinReplyInternal(
 
   ENSURE_BLUETOOTH_IS_ENABLED_VOID(aRunnable);
 
-  if (aAccept) {
+  if (aAccept && aPinCode.mLength) {
     sBtCoreInterface->PinReply(aDeviceAddress, aAccept, aPinCode,
                                new PinReplyResultHandler(aRunnable));
   } else {
