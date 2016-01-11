@@ -672,11 +672,6 @@ CheckForInterrupt(JSContext* cx)
 
 /************************************************************************/
 
-typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
-
-using ShapeVector = js::TraceableVector<Shape*>;
-using StringVector = js::TraceableVector<JSString*>;
-
 /* AutoArrayRooter roots an external array of Values. */
 class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter
 {

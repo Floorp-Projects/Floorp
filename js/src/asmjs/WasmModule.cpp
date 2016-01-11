@@ -1006,7 +1006,7 @@ Module::staticallyLink(ExclusiveContext* cx, const StaticLinkData& linkData)
 
 bool
 Module::dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
-                        const AutoVectorRooter<JSFunction*>& importArgs)
+                        Handle<FunctionVector> importArgs)
 {
     MOZ_ASSERT(staticallyLinked_);
     MOZ_ASSERT(!dynamicallyLinked_);

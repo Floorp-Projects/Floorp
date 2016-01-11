@@ -55,6 +55,11 @@ typedef JS::Rooted<PlainObject*>       RootedPlainObject;
 typedef JS::Rooted<SavedFrame*>        RootedSavedFrame;
 typedef JS::Rooted<ScriptSourceObject*> RootedScriptSource;
 
+typedef TraceableVector<JSFunction*>   FunctionVector;
+typedef TraceableVector<PropertyName*> PropertyNameVector;
+typedef TraceableVector<Shape*>        ShapeVector;
+typedef TraceableVector<JSString*>     StringVector;
+
 } /* namespace js */
 
 #endif /* gc_Rooting_h */
