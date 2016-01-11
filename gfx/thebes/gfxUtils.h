@@ -336,8 +336,8 @@ IsPowerOfTwo(int aNumber)
 }
 
 /**
- * Returns the first integer greater than |aNumber| which is a power of two
- * Undefined for |aNumber| < 0
+ * Returns the first integer greater than or equal to |aNumber| which is a
+ * power of two. Undefined for |aNumber| < 0.
  */
 static inline int
 NextPowerOfTwo(int aNumber)
