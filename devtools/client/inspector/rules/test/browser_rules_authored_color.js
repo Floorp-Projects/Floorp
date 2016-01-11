@@ -41,7 +41,7 @@ add_task(function* () {
     swatch.click();
     yield onShown;
 
-    let testNode = yield getNode("#testid");
+    let testNode = getNode("#testid");
 
     yield simulateColorPickerChange(view, cPicker, [0, 255, 0, 1], {
       element: testNode,
