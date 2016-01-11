@@ -101,7 +101,8 @@ function getAttributeNodeNS01() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      elementList = doc.getElementsByTagName("emp:address");
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("address");
       testAddr = elementList.item(0);
       assertNotNull("empAddrNotNull",testAddr);
 attribute = testAddr.getAttributeNodeNS(namespaceURI,localName);
