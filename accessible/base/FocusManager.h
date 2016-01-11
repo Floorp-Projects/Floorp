@@ -16,6 +16,7 @@ namespace a11y {
 
 class AccEvent;
 class Accessible;
+class ProxyAccessible;
 class DocAccessible;
 
 /**
@@ -29,13 +30,18 @@ public:
   /**
    * Return a focused accessible.
    */
-  Accessible* FocusedAccessible() const;
+  Accessible* FocusedAccessible() const { return mFocusedAcc; }
+
+  /**
+   * Return remote focused accessible.
+   */
+  ProxyAccessible* FocusedRemoteAccessible() const { return mFocusedProxy; }
 
   /**
    * Return true if given accessible is focused.
    */
-  bool IsFocused(const Accessible* aAccessible) const;
-
+  bool IsFocused(const Accessible* aAccessible) const
+    { return aAccessible == mFocusedAcc; }
   /**
    * Return true if the given accessible is an active item, i.e. an item that
    * is current within the active widget.
@@ -86,6 +92,11 @@ public:
   void ActiveItemChanged(Accessible* aItem, bool aCheckIfActive = true);
 
   /**
+   * Called when focused item in child process is changed.
+   */
+  void RemoteFocusChanged(ProxyAccessible* aProxy) { mFocusedProxy = aProxy; }
+
+  /**
    * Dispatch delayed focus event for the current focus accessible.
    */
   void ForceFocusEvent();
@@ -124,6 +135,8 @@ private:
   nsIDocument* FocusedDOMDocument() const;
 
 private:
+  RefPtr<Accessible> mFocusedAcc;
+  ProxyAccessible* mFocusedProxy;
   RefPtr<Accessible> mActiveItem;
   RefPtr<Accessible> mActiveARIAMenubar;
 };
