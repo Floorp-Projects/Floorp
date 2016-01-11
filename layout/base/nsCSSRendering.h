@@ -644,8 +644,8 @@ struct nsCSSRendering {
 
   // Draw a border segment in the table collapsing border model without
   // beveling corners
-  static void DrawTableBorderSegment(nsRenderingContext& aContext,
-                                     uint8_t              aBorderStyle,  
+  static void DrawTableBorderSegment(DrawTarget&          aDrawTarget,
+                                     uint8_t              aBorderStyle,
                                      nscolor              aBorderColor,
                                      const nsStyleBackground* aBGColor,
                                      const nsRect&        aBorderRect,

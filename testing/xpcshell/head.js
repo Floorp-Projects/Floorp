@@ -521,6 +521,12 @@ function _execute_test() {
     this[func] = Assert[func].bind(Assert);
   }
 
+  if (_gTestHasOnly) {
+    _gTests = _gTests.filter(([props,]) => {
+      return ("_only" in props) && props._only;
+    });
+  }
+
   try {
     do_test_pending("MAIN run_test");
     // Check if run_test() is defined. If defined, run it.
@@ -1343,6 +1349,52 @@ function do_send_remote_message(name) {
 }
 
 /**
+ * Helper function to add the _only property to add_task/add_test function when
+ * running it as add_task.only(...).
+ *
+ * @param addFunc
+ *        The parent function to call, e.g. add_task or add_test.
+ * @param funcOrProperties
+ *        A function to be run or an object represents test properties.
+ * @param func
+ *        A function to be run only if the funcOrProperies is not a function.
+ */
+function _add_only(addFunc, funcOrProperties, func) {
+  _gTestHasOnly = true;
+  if (typeof funcOrProperties == "function") {
+    func = funcOrProperties;
+    funcOrProperties = {};
+  }
+
+  if (typeof funcOrProperties == "object") {
+    funcOrProperties._only = true;
+  }
+  return addFunc(funcOrProperties, func);
+}
+
+/**
+ * Helper function to skip the test using e.g. add_task.skip(...)
+ *
+ * @param addFunc
+ *        The parent function to call, e.g. add_task or add_test.
+ * @param funcOrProperties
+ *        A function to be run or an object represents test properties.
+ * @param func
+ *        A function to be run only if the funcOrProperies is not a function.
+ */
+function _add_skip(addFunc, funcOrProperties, func) {
+  if (typeof funcOrProperties == "function") {
+    func = funcOrProperties;
+    funcOrProperties = {};
+  }
+
+  if (typeof funcOrProperties == "object") {
+    funcOrProperties.skip_if = () => true;
+  }
+  return addFunc(funcOrProperties, func);
+}
+
+/**
  * Add a test function to the list of tests that are to be run asynchronously.
  *
  * @param funcOrProperties
@@ -1371,6 +1423,8 @@ function add_test(funcOrProperties, func) {
   }
   return func;
 }
+add_test.only = _add_only.bind(undefined, add_test);
+add_test.skip = _add_skip.bind(undefined, add_test);
 
 /**
  * Add a test function which is a Task function.
@@ -1437,6 +1491,9 @@ function add_task(funcOrProperties, func) {
     do_throw("add_task() should take a function or an object and a function");
   }
 }
+add_task.only = _add_only.bind(undefined, add_task);
+add_task.skip = _add_skip.bind(undefined, add_task);
+
 var _Task = Components.utils.import("resource://gre/modules/Task.jsm", {}).Task;
 _Task.Debugging.maintainStack = true;
 
@@ -1447,6 +1504,7 @@ _Task.Debugging.maintainStack = true;
 var _gRunningTest = null;
 var _gTestIndex = 0; // The index of the currently running test.
 var _gTaskRunning = false;
+var _gTestHasOnly = false;
 function run_next_test()
 {
   if (_gTaskRunning) {

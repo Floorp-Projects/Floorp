@@ -86,7 +86,7 @@ nsDeviceContextSpecProxy::GetSurfaceForPrinter(gfxASurface** aSurface)
 
   RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(mozilla::gfx::IntSize(width, height),
-                           gfxImageFormat::ARGB32);
+                           SurfaceFormat::A8R8G8B8_UINT32);
 
   surface.forget(aSurface);
   return NS_OK;

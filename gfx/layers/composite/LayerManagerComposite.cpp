@@ -422,17 +422,15 @@ LayerManagerComposite::UpdateAndRender()
     mInvalidRegion.SetEmpty();
   }
 
-  // Update cached layer tree information.
-  mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
-
   if (invalid.IsEmpty() && !mWindowOverlayChanged) {
     // Composition requested, but nothing has changed. Don't do any work.
+    mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
     return;
   }
 
   // We don't want our debug overlay to cause more frames to happen
   // so we will invalidate after we've decided if something changed.
-  InvalidateDebugOverlay(mRenderBounds);
+  InvalidateDebugOverlay(invalid, mRenderBounds);
 
   if (!didEffectiveTransforms) {
     // The results of our drawing always go directly into a pixel buffer,
@@ -450,6 +448,9 @@ LayerManagerComposite::UpdateAndRender()
 #endif
   mGeometryChanged = false;
   mWindowOverlayChanged = false;
+
+  // Update cached layer tree information.
+  mClonedLayerTreeProperties = LayerProperties::CloneFrom(GetRoot());
 }
 
 already_AddRefed<DrawTarget>
@@ -520,23 +521,18 @@ LayerManagerComposite::RootLayer() const
 #endif
 
 void
-LayerManagerComposite::InvalidateDebugOverlay(const IntRect& aBounds)
+LayerManagerComposite::InvalidateDebugOverlay(nsIntRegion& aInvalidRegion, const IntRect& aBounds)
 {
   bool drawFps = gfxPrefs::LayersDrawFPS();
   bool drawFrameCounter = gfxPrefs::DrawFrameCounter();
   bool drawFrameColorBars = gfxPrefs::CompositorDrawColorBars();
 
   if (drawFps || drawFrameCounter) {
-    AddInvalidRegion(nsIntRect(0, 0, 256, 256));
+    aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 256, 256));
   }
   if (drawFrameColorBars) {
-    AddInvalidRegion(nsIntRect(0, 0, 10, aBounds.height));
+    aInvalidRegion.Or(aInvalidRegion, nsIntRect(0, 0, 10, aBounds.height));
   }
-
-  if (drawFrameColorBars) {
-    AddInvalidRegion(nsIntRect(0, 0, 10, aBounds.height));
-  }
-
 }
 
 static uint16_t sFrameCount = 0;

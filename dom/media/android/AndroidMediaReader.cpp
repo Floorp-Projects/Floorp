@@ -367,7 +367,7 @@ AndroidMediaReader::ImageBufferCallback::operator()(size_t aWidth, size_t aHeigh
     case MPAPI::RGB565:
       image = mozilla::layers::CreateSharedRGBImage(mImageContainer,
                                                     nsIntSize(aWidth, aHeight),
-                                                    gfxImageFormat::RGB16_565);
+                                                    SurfaceFormat::R5G6B5_UINT16);
       if (!image) {
         NS_WARNING("Could not create rgb image");
         return nullptr;
