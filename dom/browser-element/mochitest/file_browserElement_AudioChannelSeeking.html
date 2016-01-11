@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<html>
+<body>
+<script type="application/javascript;version=1.7">
+var audio = new Audio();
+audio.src = "audio.ogg";
+audio.loop = true;
+
+function assert(aVal, aMessage) {
+  return (!aVal) ? ok(false, aMessage) : 0;
+}
+
+function ok(aVal, aMsg) {
+  alert((!!aVal ? "OK" : "KO") + ", " + aMsg);
+}
+
+function info(aMsg) {
+  alert("INFO" + ", " + aMsg);
+}
+
+function randomSeeking() {
+  var seekingPosition = Math.random() * audio.duration;
+  assert(seekingPosition < audio.duration, "Seeking position out of range!")
+  audio.currentTime = seekingPosition;
+  audio.onseeked = () => {
+    audio.onseeked = null;
+    location.hash = '#idle';
+    ok(true, "Seeking complete, position = " + seekingPosition);
+  };
+}
+
+function runCommands()
+{
+  switch(location.hash) {
+    case '#play':
+      audio.play();
+      audio.onplay = () => {
+        audio.onplay = null;
+        info("Start playing, duration = " + audio.duration);
+      };
+      break;
+    case '#seeking':
+      randomSeeking();
+      break;
+    case '#pause':
+      audio.pause();
+      audio.onpause = () => {
+        audio.onpause = null;
+        ok(true, "Stop playing.");
+      };
+      break;
+    case '#idle':
+      break;
+    default :
+      ok(false, "Undefined command!");
+  }
+}
+
+window.addEventListener('hashchange', runCommands);
+</script>
+</body>
+</html>
