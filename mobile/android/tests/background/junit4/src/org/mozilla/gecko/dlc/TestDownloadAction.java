@@ -389,7 +389,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns false
      */
     @Test
-    public void testWithNotEnoughSpaceForTemporaryFile() {
+    public void testWithNotEnoughSpaceForTemporaryFile() throws Exception{
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFile();
         File temporaryFile = mockNotExistingFileWithUsableSpace(1024);
@@ -405,7 +405,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns false
      */
     @Test
-    public void testWithNotEnoughSpaceForDestinationFile() {
+    public void testWithNotEnoughSpaceForDestinationFile() throws Exception {
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFileWithUsableSpace(1024);
         File temporaryFile = mockNotExistingFile();
@@ -421,7 +421,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns true
      */
     @Test
-    public void testWithEnoughSpaceForEverything() {
+    public void testWithEnoughSpaceForEverything() throws Exception {
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFileWithUsableSpace(4096);
         File temporaryFile = mockNotExistingFileWithUsableSpace(4096);
