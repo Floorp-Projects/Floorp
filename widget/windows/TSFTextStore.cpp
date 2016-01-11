@@ -3544,44 +3544,44 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     // no developers who want to disable this hack for tests.
     const bool kIsMSOfficeJapaneseIME2010 =
       kSink->IsMSOfficeJapaneseIME2010Active();
+    // MS IME for Japanese doesn't support asynchronous handling at deciding
+    // its suggest list window position.  The feature was implemented
+    // starting from Windows 8.  And also we may meet same trouble in e10s
+    // mode on Win7.  So, we should never return TS_E_NOLAYOUT to MS IME for
+    // Japanese.
     if (kIsMSOfficeJapaneseIME2010 ||
         ((sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar ||
           sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
          kSink->IsMSJapaneseIMEActive())) {
-      // MS IME for Japanese doesn't support asynchronous handling at deciding
-      // its suggest list window position.  The feature was implemented
-      // starting from Windows 8.
-      if (IsWin8OrLater() || kIsMSOfficeJapaneseIME2010) {
-        // Basically, MS-IME tries to retrieve whole composition string rect
-        // at deciding suggest window immediately after unlocking the document.
-        // However, in e10s mode, the content hasn't updated yet in most cases.
-        // Therefore, if the first character at the retrieving range rect is
-        // available, we should use it as the result.
-        if ((kIsMSOfficeJapaneseIME2010 ||
-             sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
-            !mLockedContent.IsLayoutChangedAfter(acpStart) &&
-            acpStart < acpEnd) {
-          acpEnd = acpStart;
-          MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-                 ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets "
-                  "of the first character of changing range of the composition "
-                  "string for TIP acpStart=%d, acpEnd=%d",
-                  this, acpStart, acpEnd));
-        }
-        // Although, the condition is not clear, MS-IME sometimes retrieves the
-        // caret rect immediately after modifying the composition string but
-        // before unlocking the document.  In such case, we should return the
-        // nearest character rect.
-        else if ((kIsMSOfficeJapaneseIME2010 ||
-                  sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
-                 acpStart == acpEnd &&
-                 currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
-          acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
-          MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-                 ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets "
-                  "of the caret of the composition string for TIP acpStart=%d, "
-                  "acpEnd=%d", this, acpStart, acpEnd));
-        }
+      // Basically, MS-IME tries to retrieve whole composition string rect
+      // at deciding suggest window immediately after unlocking the document.
+      // However, in e10s mode, the content hasn't updated yet in most cases.
+      // Therefore, if the first character at the retrieving range rect is
+      // available, we should use it as the result.
+      if ((kIsMSOfficeJapaneseIME2010 ||
+           sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
+          !mLockedContent.IsLayoutChangedAfter(acpStart) &&
+          acpStart < acpEnd) {
+        acpEnd = acpStart;
+        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+               ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets "
+                "of the first character of changing range of the composition "
+                "string for TIP acpStart=%d, acpEnd=%d",
+                this, acpStart, acpEnd));
+      }
+      // Although, the condition is not clear, MS-IME sometimes retrieves the
+      // caret rect immediately after modifying the composition string but
+      // before unlocking the document.  In such case, we should return the
+      // nearest character rect.
+      else if ((kIsMSOfficeJapaneseIME2010 ||
+                sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
+               acpStart == acpEnd &&
+               currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
+        acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
+        MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+               ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets "
+                "of the caret of the composition string for TIP acpStart=%d, "
+                "acpEnd=%d", this, acpStart, acpEnd));
       }
     }
     // Free ChangJie 2010 and Easy Changjei 1.0.12.0 doesn't handle
