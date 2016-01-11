@@ -44,7 +44,7 @@ TestNewSurface () {
     int failures = 0;
     int destroyed = 0;
 
-    RefPtr<gfxASurface> s = new gfxImageSurface (mozilla::gfx::IntSize(10, 10), gfxImageFormat::ARGB32);
+    RefPtr<gfxASurface> s = new gfxImageSurface (mozilla::gfx::IntSize(10, 10), SurfaceFormat::A8R8G8B8_UINT32);
     cairo_surface_t *cs = s->CairoSurface();
 
     cairo_surface_set_user_data (cs, &destruction_key, &destroyed, SurfaceDestroyNotifier);

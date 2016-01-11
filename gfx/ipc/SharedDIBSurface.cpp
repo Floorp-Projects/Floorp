@@ -43,7 +43,7 @@ SharedDIBSurface::InitSurface(uint32_t aWidth, uint32_t aHeight,
   long stride = long(aWidth * SharedDIB::kBytesPerPixel);
   unsigned char* data = reinterpret_cast<unsigned char*>(mSharedDIB.GetBits());
 
-  gfxImageFormat format = aTransparent ? gfxImageFormat::ARGB32 : gfxImageFormat::RGB24;
+  gfxImageFormat format = aTransparent ? SurfaceFormat::A8R8G8B8_UINT32 : SurfaceFormat::X8R8G8B8_UINT32;
 
   gfxImageSurface::InitWithData(data, IntSize(aWidth, aHeight),
                                 stride, format);
