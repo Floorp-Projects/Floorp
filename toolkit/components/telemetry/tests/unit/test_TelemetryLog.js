@@ -24,8 +24,9 @@ function check_event(event, id, data)
   }
 }
 
-function* run_test()
+add_task(function* ()
 {
+  do_get_profile();
   yield TelemetrySession.setup();
 
   TelemetryLog.log(TEST_PREFIX + "1", ["val", 123, undefined]);
@@ -45,4 +46,4 @@ function* run_test()
   do_check_true(log[1][1] <= log[2][1]);
 
   yield TelemetrySession.shutdown();
-}
+});

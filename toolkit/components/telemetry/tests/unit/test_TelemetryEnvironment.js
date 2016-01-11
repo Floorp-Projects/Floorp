@@ -653,6 +653,7 @@ function isRejected(promise) {
 
 add_task(function* asyncSetup() {
   yield spoofProfileReset();
+  TelemetryEnvironment.delayedInit();
 });
 
 add_task(function* test_checkEnvironment() {
