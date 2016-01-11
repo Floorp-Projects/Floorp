@@ -181,131 +181,79 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
             break;
         }
 
-        switch(nlh->nlmsg_type) {
-        case RTM_DELROUTE:
-            LOG(("nsNotifyAddrListener::OnNetlinkMessage deleted route"));
-        case RTM_NEWROUTE:
-            LOG(("nsNotifyAddrListener::OnNetlinkMessage new/deleted route"));
-            // Get the route data
-            route_entry = static_cast<struct rtmsg *>(NLMSG_DATA(nlh));
+        LOG(("nsNotifyAddrListener::OnNetlinkMessage: new/deleted address\n"));
+        newifam = reinterpret_cast<struct ifaddrmsg*>(NLMSG_DATA(nlh));
 
-            // We are just intrested in main routing table
-            if (route_entry->rtm_table != RT_TABLE_MAIN)
-                continue;
-
-            if ((route_entry->rtm_family != AF_INET) &&
-                (route_entry->rtm_family != AF_INET6)) {
-                continue;
-            }
-
-            attr = (struct rtattr *) RTM_RTA(route_entry);
-            attr_len =  RTM_PAYLOAD(nlh);
-            link_local = false;
-
-            /* Loop through all attributes */
-            for ( ; RTA_OK(attr, attr_len); attr = RTA_NEXT(attr, attr_len)) {
-                if (attr->rta_type == RTA_GATEWAY) {
-                    if (route_entry->rtm_family == AF_INET6) {
-                        unsigned char *g = (unsigned char *)
-                            RTA_DATA(attr);
-                        if ((g[0] == 0xFE) && ((g[1] & 0xc0) == 0x80)) {
-                            link_local = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!link_local) {
-                LOG(("OnNetlinkMessage: route update\n"));
-                networkChange = true;
-            } else {
-                LOG(("OnNetlinkMessage: ignored link-local route update\n"));
-            }
-            break;
-
-        case RTM_DELADDR:
-            LOG(("nsNotifyAddrListener::OnNetlinkMessage deleted address"));
-        case RTM_NEWADDR:
-            LOG(("nsNotifyAddrListener::OnNetlinkMessage: new/deleted address"
-                 "\n"));
-            newifam = reinterpret_cast<struct ifaddrmsg*>(NLMSG_DATA(nlh));
-
-            if ((newifam->ifa_family != AF_INET) &&
-                (newifam->ifa_family != AF_INET6)) {
-                continue;
-            }
-
-            attr = IFA_RTA (newifam);
-            attr_len = IFA_PAYLOAD (nlh);
-            for (;attr_len && RTA_OK (attr, attr_len);
-                 attr = RTA_NEXT (attr, attr_len)) {
-                if (attr->rta_type == IFA_ADDRESS) {
-                    if (newifam->ifa_family == AF_INET) {
-                        struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                        addr = (char*)malloc(INET_ADDRSTRLEN);
-                        inet_ntop(AF_INET, in, addr.get(), INET_ADDRSTRLEN);
-                    } else {
-                        struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                        addr = (char*)malloc(INET6_ADDRSTRLEN);
-                        inet_ntop(AF_INET6, in, addr.get(), INET6_ADDRSTRLEN);
-                    }
-                } else if (attr->rta_type == IFA_LOCAL) {
-                    if (newifam->ifa_family == AF_INET) {
-                        struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
-                        localaddr = (char*)malloc(INET_ADDRSTRLEN);
-                        inet_ntop(AF_INET, in, localaddr.get(), INET_ADDRSTRLEN);
-                    } else {
-                        struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
-                        localaddr = (char*)malloc(INET6_ADDRSTRLEN);
-                        inet_ntop(AF_INET6, in, localaddr.get(), INET6_ADDRSTRLEN);
-                    }
-                }
-            }
-            if (localaddr) {
-                addr = localaddr;
-            }
-            if (!addr) {
-                continue;
-            }
-            if (nlh->nlmsg_type == RTM_NEWADDR) {
-                LOG(("nsNotifyAddrListener::OnNetlinkMessage: a new address "
-                     "- %s.", addr.get()));
-                struct ifaddrmsg* ifam;
-                nsCString addrStr;
-                addrStr.Assign(addr);
-                if (mAddressInfo.Get(addrStr, &ifam)) {
-                    LOG(("nsNotifyAddrListener::OnNetlinkMessage: the address "
-                         "already known."));
-                    if (memcmp(ifam, newifam, sizeof(struct ifaddrmsg))) {
-                        LOG(("nsNotifyAddrListener::OnNetlinkMessage: but "
-                             "the address info has been changed."));
-                        networkChange = true;
-                        memcpy(ifam, newifam, sizeof(struct ifaddrmsg));
-                    }
-                } else {
-                    networkChange = true;
-                    ifam = (struct ifaddrmsg*)malloc(sizeof(struct ifaddrmsg));
-                    memcpy(ifam, newifam, sizeof(struct ifaddrmsg));
-                    mAddressInfo.Put(addrStr,ifam);
-                }
-            } else {
-                LOG(("nsNotifyAddrListener::OnNetlinkMessage: an address "
-                     "has been deleted - %s.", addr.get()));
-                networkChange = true;
-                nsCString addrStr;
-                addrStr.Assign(addr);
-                mAddressInfo.Remove(addrStr);
-            }
-
-            // clean it up.
-            localaddr = nullptr;
-            addr = nullptr;
-            break;
-
-        default:
+        if ((newifam->ifa_family != AF_INET) &&
+            (newifam->ifa_family != AF_INET6)) {
             continue;
         }
+
+        attr = IFA_RTA (newifam);
+        attr_len = IFA_PAYLOAD (nlh);
+        for (;attr_len && RTA_OK (attr, attr_len);
+             attr = RTA_NEXT (attr, attr_len)) {
+            if (attr->rta_type == IFA_ADDRESS) {
+                if (newifam->ifa_family == AF_INET) {
+                    struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
+                    addr = (char*)malloc(INET_ADDRSTRLEN);
+                    inet_ntop(AF_INET, in, addr.get(), INET_ADDRSTRLEN);
+                } else {
+                    struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
+                    addr = (char*)malloc(INET6_ADDRSTRLEN);
+                    inet_ntop(AF_INET6, in, addr.get(), INET6_ADDRSTRLEN);
+                }
+            } else if (attr->rta_type == IFA_LOCAL) {
+                if (newifam->ifa_family == AF_INET) {
+                    struct in_addr* in = (struct in_addr*)RTA_DATA(attr);
+                    localaddr = (char*)malloc(INET_ADDRSTRLEN);
+                    inet_ntop(AF_INET, in, localaddr.get(), INET_ADDRSTRLEN);
+                } else {
+                    struct in6_addr* in = (struct in6_addr*)RTA_DATA(attr);
+                    localaddr = (char*)malloc(INET6_ADDRSTRLEN);
+                    inet_ntop(AF_INET6, in, localaddr.get(), INET6_ADDRSTRLEN);
+                }
+            }
+        }
+        if (localaddr) {
+            addr = localaddr;
+        }
+        if (!addr) {
+            continue;
+        }
+        if (nlh->nlmsg_type == RTM_NEWADDR) {
+            LOG(("nsNotifyAddrListener::OnNetlinkMessage: a new address "
+                 "- %s.", addr.get()));
+            struct ifaddrmsg* ifam;
+            nsCString addrStr;
+            addrStr.Assign(addr);
+            if (mAddressInfo.Get(addrStr, &ifam)) {
+                LOG(("nsNotifyAddrListener::OnNetlinkMessage: the address "
+                     "already known."));
+                if (memcmp(ifam, newifam, sizeof(struct ifaddrmsg))) {
+                    LOG(("nsNotifyAddrListener::OnNetlinkMessage: but "
+                         "the address info has been changed."));
+                    networkChange = true;
+                    memcpy(ifam, newifam, sizeof(struct ifaddrmsg));
+                }
+            } else {
+                networkChange = true;
+                ifam = (struct ifaddrmsg*)malloc(sizeof(struct ifaddrmsg));
+                memcpy(ifam, newifam, sizeof(struct ifaddrmsg));
+                mAddressInfo.Put(addrStr,ifam);
+            }
+        } else {
+            LOG(("nsNotifyAddrListener::OnNetlinkMessage: an address "
+                 "has been deleted - %s.", addr.get()));
+            networkChange = true;
+            nsCString addrStr;
+            addrStr.Assign(addr);
+            mAddressInfo.Remove(addrStr);
+        }
+
+        // clean it up.
+        localaddr = nullptr;
+        addr = nullptr;
     }
 
     if (networkChange && mAllowChangedEvent) {
@@ -329,8 +277,7 @@ nsNotifyAddrListener::Run()
     memset(&addr, 0, sizeof(addr));   // clear addr
 
     addr.nl_family = AF_NETLINK;
-    addr.nl_groups = RTMGRP_IPV4_ROUTE | RTMGRP_IPV4_IFADDR |
-        RTMGRP_IPV6_IFADDR | RTMGRP_IPV6_ROUTE;
+    addr.nl_groups = RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
 
     if (bind(netlinkSocket, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         // failure!
