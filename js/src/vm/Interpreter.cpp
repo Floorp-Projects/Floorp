@@ -653,8 +653,8 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg,
                   Value* result)
 {
     MOZ_ASSERT_IF(evalInFrame, type == EXECUTE_DEBUG);
-    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, IsGlobalLexicalScope(&scopeChainArg) ||
-                                          !IsSyntacticScope(&scopeChainArg));
+    MOZ_ASSERT_IF(type == EXECUTE_GLOBAL_OR_MODULE && !script->module(),
+                  IsGlobalLexicalScope(&scopeChainArg) || !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
     RootedObject terminatingScope(cx, &scopeChainArg);
     while (IsSyntacticScope(terminatingScope))
@@ -712,9 +712,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     } while ((s = s->enclosingScope()));
 #endif
 
-    ExecuteType type = script->module() ? EXECUTE_MODULE : EXECUTE_GLOBAL;
-
-    return ExecuteKernel(cx, script, *scopeChain, NullValue(), type,
+    return ExecuteKernel(cx, script, *scopeChain, NullValue(), EXECUTE_GLOBAL_OR_MODULE,
                          NullFramePtr() /* evalInFrame */, rval);
 }
 
