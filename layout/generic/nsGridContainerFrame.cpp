@@ -2139,45 +2139,73 @@ nsGridContainerFrame::PlaceGridItems(GridReflowState& aState,
     }
   }
 
-  // Count empty 'auto-fit' tracks at the end of the repeat() range.
+  // Count empty 'auto-fit' tracks in the repeat() range.
+  // |colAdjust| will have a count for each line in the grid of how many
+  // tracks were empty between the start of the grid and that line.
+  Maybe<nsTArray<uint32_t>> colAdjust;
   uint32_t numEmptyCols = 0;
   if (aState.mColFunctions.mHasRepeatAuto &&
       !gridStyle->mGridTemplateColumns.mIsAutoFill &&
       aState.mColFunctions.NumRepeatTracks() > 0) {
-    for (int32_t start = aState.mColFunctions.mRepeatAutoStart,
-                   col = aState.mColFunctions.mRepeatAutoEnd - 1;
-         col >= start && mCellMap.IsEmptyCol(col);
-         --col) {
-      ++numEmptyCols;
+    for (uint32_t col = aState.mColFunctions.mRepeatAutoStart,
+                  endRepeat = aState.mColFunctions.mRepeatAutoEnd,
+                  numColLines = mGridColEnd + 1;
+         col < numColLines; ++col) {
+      if (numEmptyCols) {
+        (*colAdjust)[col] = numEmptyCols;
+      }
+      if (col < endRepeat && mCellMap.IsEmptyCol(col)) {
+        ++numEmptyCols;
+        if (colAdjust.isNothing()) {
+          colAdjust.emplace(numColLines);
+          colAdjust->SetLength(numColLines);
+          PodZero(colAdjust->Elements(), colAdjust->Length());
+        }
+      }
     }
   }
+  Maybe<nsTArray<uint32_t>> rowAdjust;
   uint32_t numEmptyRows = 0;
   if (aState.mRowFunctions.mHasRepeatAuto &&
       !gridStyle->mGridTemplateRows.mIsAutoFill &&
       aState.mRowFunctions.NumRepeatTracks() > 0) {
-    for (int32_t start = aState.mRowFunctions.mRepeatAutoStart,
-                   row = aState.mRowFunctions.mRepeatAutoEnd - 1;
-         row >= start && mCellMap.IsEmptyRow(row);
-         --row) {
-      ++numEmptyRows;
+    for (uint32_t row = aState.mRowFunctions.mRepeatAutoStart,
+                  endRepeat = aState.mRowFunctions.mRepeatAutoEnd,
+                  numRowLines = mGridRowEnd + 1;
+         row < numRowLines; ++row) {
+      if (numEmptyRows) {
+        (*rowAdjust)[row] = numEmptyRows;
+      }
+      if (row < endRepeat && mCellMap.IsEmptyRow(row)) {
+        ++numEmptyRows;
+        if (rowAdjust.isNothing()) {
+          rowAdjust.emplace(numRowLines);
+          rowAdjust->SetLength(numRowLines);
+          PodZero(rowAdjust->Elements(), rowAdjust->Length());
+        }
+      }
     }
   }
   // Remove the empty 'auto-fit' tracks we found above, if any.
   if (numEmptyCols || numEmptyRows) {
     // Adjust the line numbers in the grid areas.
-    const uint32_t firstRemovedCol =
-      aState.mColFunctions.mRepeatAutoEnd - numEmptyCols;
-    const uint32_t firstRemovedRow =
-      aState.mRowFunctions.mRepeatAutoEnd - numEmptyRows;
     for (auto& item : mGridItems) {
       GridArea& area = item.mArea;
-      area.mCols.AdjustForRemovedTracks(firstRemovedCol, numEmptyCols);
-      area.mRows.AdjustForRemovedTracks(firstRemovedRow, numEmptyRows);
+      if (numEmptyCols) {
+        area.mCols.AdjustForRemovedTracks(*colAdjust);
+      }
+      if (numEmptyRows) {
+        area.mRows.AdjustForRemovedTracks(*rowAdjust);
+      }
     }
     for (auto& item : mAbsPosItems) {
       GridArea& area = item.mArea;
-      area.mCols.AdjustAbsPosForRemovedTracks(firstRemovedCol, numEmptyCols);
-      area.mRows.AdjustAbsPosForRemovedTracks(firstRemovedRow, numEmptyRows);
+      if (numEmptyCols) {
+        area.mCols.AdjustAbsPosForRemovedTracks(*colAdjust);
+      }
+      if (numEmptyRows) {
+        area.mRows.AdjustAbsPosForRemovedTracks(*rowAdjust);
+      }
     }
     // Adjust the grid size.
     mGridColEnd -= numEmptyCols;
