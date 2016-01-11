@@ -354,7 +354,7 @@ public class DateTimePicker extends FrameLayout {
         mDaySpinnerInput = (EditText) mDaySpinner.getChildAt(1);
 
         mMonthSpinner = setupSpinner(R.id.month, 1,
-                                     mTempDate.get(Calendar.MONTH));
+                                     mTempDate.get(Calendar.MONTH) + 1); // Month is 0-based
         mMonthSpinner.setFormatter(TWO_DIGIT_FORMATTER);
         mMonthSpinner.setDisplayedValues(mShortMonths);
         mMonthSpinnerInput = (EditText) mMonthSpinner.getChildAt(1);
