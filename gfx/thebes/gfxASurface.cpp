@@ -344,7 +344,7 @@ already_AddRefed<gfxImageSurface>
 gfxASurface::GetAsReadableARGB32ImageSurface()
 {
     RefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
-    if (!imgSurface || imgSurface->Format() != gfxImageFormat::ARGB32) {
+    if (!imgSurface || imgSurface->Format() != SurfaceFormat::A8R8G8B8_UINT32) {
       imgSurface = CopyToARGB32ImageSurface();
     }
     return imgSurface.forget();
@@ -359,7 +359,7 @@ gfxASurface::CopyToARGB32ImageSurface()
 
     const IntSize size = GetSize();
     RefPtr<gfxImageSurface> imgSurface =
-        new gfxImageSurface(size, gfxImageFormat::ARGB32);
+        new gfxImageSurface(size, SurfaceFormat::A8R8G8B8_UINT32);
 
     RefPtr<DrawTarget> dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(imgSurface, IntSize(size.width, size.height));
     RefPtr<SourceSurface> source = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(dt, this);
@@ -425,7 +425,7 @@ gfxASurface::CheckSurfaceSize(const IntSize& sz, int32_t limit)
 int32_t
 gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
 {
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    cairo_format_t cformat = GfxFormatToCairoFormat(format);
     return cairo_format_stride_for_width(cformat, (int)width);
 }
 
@@ -463,15 +463,15 @@ gfxContentType
 gfxASurface::ContentFromFormat(gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormat::ARGB32:
+        case SurfaceFormat::A8R8G8B8_UINT32:
             return gfxContentType::COLOR_ALPHA;
-        case gfxImageFormat::RGB24:
-        case gfxImageFormat::RGB16_565:
+        case SurfaceFormat::X8R8G8B8_UINT32:
+        case SurfaceFormat::R5G6B5_UINT16:
             return gfxContentType::COLOR;
-        case gfxImageFormat::A8:
+        case SurfaceFormat::A8:
             return gfxContentType::ALPHA;
 
-        case gfxImageFormat::Unknown:
+        case SurfaceFormat::UNKNOWN:
         default:
             return gfxContentType::COLOR;
     }
@@ -504,12 +504,12 @@ int32_t
 gfxASurface::BytePerPixelFromFormat(gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormat::ARGB32:
-        case gfxImageFormat::RGB24:
+        case SurfaceFormat::A8R8G8B8_UINT32:
+        case SurfaceFormat::X8R8G8B8_UINT32:
             return 4;
-        case gfxImageFormat::RGB16_565:
+        case SurfaceFormat::R5G6B5_UINT16:
             return 2;
-        case gfxImageFormat::A8:
+        case SurfaceFormat::A8:
             return 1;
         default:
             NS_WARNING("Unknown byte per pixel value for Image format");
@@ -667,15 +667,15 @@ gfxASurface::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 gfxASurface::BytesPerPixel(gfxImageFormat aImageFormat)
 {
   switch (aImageFormat) {
-    case gfxImageFormat::ARGB32:
+    case SurfaceFormat::A8R8G8B8_UINT32:
       return 4;
-    case gfxImageFormat::RGB24:
+    case SurfaceFormat::X8R8G8B8_UINT32:
       return 4;
-    case gfxImageFormat::RGB16_565:
+    case SurfaceFormat::R5G6B5_UINT16:
       return 2;
-    case gfxImageFormat::A8:
+    case SurfaceFormat::A8:
       return 1;
-    case gfxImageFormat::Unknown:
+    case SurfaceFormat::UNKNOWN:
     default:
       NS_NOTREACHED("Not really sure what you want me to say here");
       return 0;

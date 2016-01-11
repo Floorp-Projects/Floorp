@@ -101,11 +101,11 @@ gfxAndroidPlatform::gfxAndroidPlatform()
     RegisterStrongMemoryReporter(new FreetypeReporter());
 
     mOffscreenFormat = GetScreenDepth() == 16
-                       ? gfxImageFormat::RGB16_565
-                       : gfxImageFormat::RGB24;
+                       ? SurfaceFormat::R5G6B5_UINT16
+                       : SurfaceFormat::X8R8G8B8_UINT32;
 
     if (gfxPrefs::AndroidRGB16Force()) {
-        mOffscreenFormat = gfxImageFormat::RGB16_565;
+        mOffscreenFormat = SurfaceFormat::R5G6B5_UINT16;
     }
 
 #ifdef MOZ_WIDGET_GONK
