@@ -161,10 +161,12 @@ class MutableTraceableVectorOperations
     T* begin() { return vec().begin(); }
     const T* end() const { return vec().end(); }
     T* end() { return vec().end(); }
-    const T& operator[](size_t aIndex) const { return vec().operator[](aIndex); }
     const T& back() const { return vec().back(); }
     T& back() { return vec().back(); }
 
+    JS::Handle<T> operator[](size_t aIndex) const {
+        return JS::Handle<T>::fromMarkedLocation(&vec().operator[](aIndex));
+    }
     JS::MutableHandle<T> operator[](size_t aIndex) {
         return JS::MutableHandle<T>::fromMarkedLocation(&vec().operator[](aIndex));
     }

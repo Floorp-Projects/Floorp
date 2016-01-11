@@ -528,7 +528,7 @@ class Module
     // ImportVector.
 
     bool dynamicallyLink(JSContext* cx, Handle<ArrayBufferObjectMaybeShared*> heap,
-                         const AutoVectorRooter<JSFunction*>& imports);
+                         Handle<FunctionVector> imports);
 
     // The wasm heap, established by dynamicallyLink.
 

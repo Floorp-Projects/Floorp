@@ -7420,7 +7420,7 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global, uint8_t* global
 
 static bool
 ValidateFFI(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal,
-            AutoVectorRooter<JSFunction*>* ffis)
+            MutableHandle<FunctionVector> ffis)
 {
     RootedPropertyName field(cx, global.ffiField());
     RootedValue v(cx);
@@ -7430,7 +7430,7 @@ ValidateFFI(JSContext* cx, const AsmJSGlobal& global, HandleValue importVal,
     if (!v.isObject() || !v.toObject().is<JSFunction>())
         return LinkFail(cx, "FFI imports must be functions");
 
-    (*ffis)[global.ffiIndex()].set(&v.toObject().as<JSFunction>());
+    ffis[global.ffiIndex()].set(&v.toObject().as<JSFunction>());
     return true;
 }
 
@@ -7727,7 +7727,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
     if (module.usesHeap() && !CheckBuffer(cx, module, bufferVal, &buffer))
         return false;
 
-    AutoVectorRooter<JSFunction*> ffis(cx);
+    Rooted<FunctionVector> ffis(cx, FunctionVector(cx));
     if (!ffis.resize(module.numFFIs()))
         return false;
 
@@ -7769,7 +7769,7 @@ DynamicallyLinkModule(JSContext* cx, const CallArgs& args, AsmJSModule& module)
         }
     }
 
-    AutoVectorRooter<JSFunction*> imports(cx);
+    Rooted<FunctionVector> imports(cx, FunctionVector(cx));
     for (const AsmJSImport& import : module.asmJSImports()) {
         if (!imports.append(ffis[import.ffiIndex()]))
             return false;
