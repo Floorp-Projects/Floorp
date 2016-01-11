@@ -4674,16 +4674,13 @@ Tab.prototype = {
           }
           this.contentDocumentIsDisplayed = true;
 
+          if (contentDocument instanceof Ci.nsIImageDocument) {
+            contentDocument.shrinkToFit();
+          }
+
           let zoom = this.restoredSessionZoom();
           if (zoom) {
             this.setResolution(zoom, true);
-          }
-
-          if (!this.restoredSessionZoom() && contentDocument.mozSyntheticDocument) {
-            let fitZoom = Math.min(gScreenWidth / contentDocument.body.scrollWidth,
-                                   gScreenHeight / contentDocument.body.scrollHeight);
-            this.setResolution(fitZoom, false);
-            this.sendViewportUpdate();  // recompute displayport
           }
         }
         break;
