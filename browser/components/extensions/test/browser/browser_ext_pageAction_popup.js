@@ -2,20 +2,6 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function promisePopupShown(popup) {
-  return new Promise(resolve => {
-    if (popup.popupOpen) {
-      resolve();
-    } else {
-      let onPopupShown = event => {
-        popup.removeEventListener("popupshown", onPopupShown);
-        resolve();
-      };
-      popup.addEventListener("popupshown", onPopupShown);
-    }
-  });
-}
-
 add_task(function* testPageActionPopup() {
   let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head></html>`;
 
