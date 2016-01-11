@@ -267,7 +267,7 @@ int nr_socket_proxy_tunnel_connect(void *obj, nr_transport_addr *addr)
   int has_addr;
   nr_socket_proxy_tunnel *sock = (nr_socket_proxy_tunnel*)obj;
   nr_proxy_tunnel_config *config = sock->config;
-  nr_transport_addr proxy_addr;
+  nr_transport_addr proxy_addr, local_addr;
   nr_resolver_resource resource;
 
   if ((r=nr_transport_addr_copy(&sock->remote_addr, addr))) {
@@ -292,6 +292,22 @@ int nr_socket_proxy_tunnel_connect(void *obj, nr_transport_addr *addr)
     resource.port=config->proxy_port;
     resource.stun_turn=NR_RESOLVE_PROTOCOL_TURN;
     resource.transport_protocol=IPPROTO_TCP;
+
+    if ((r=nr_socket_getaddr(sock->inner, &local_addr))) {
+      r_log(LOG_GENERIC,LOG_ERR,"nr_socket_proxy_tunnel_connect failed to get local address");
+      ABORT(r);
+    }
+
+    switch(local_addr.ip_version) {
+      case NR_IPV4:
+        resource.address_family=AF_INET;
+        break;
+      case NR_IPV6:
+        resource.address_family=AF_INET6;
+        break;
+      default:
+        ABORT(R_BAD_ARGS);
+    }
 
     r_log(LOG_GENERIC,LOG_DEBUG,"nr_socket_proxy_tunnel_connect: nr_resolver_resolve");
     if ((r=nr_resolver_resolve(config->resolver, &resource,
