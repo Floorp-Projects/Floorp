@@ -5,7 +5,7 @@
  */
 
 [Constructor(DOMString type,
-             optional PresentationConnectionAvailableEventInit eventInitDict),
+             PresentationConnectionAvailableEventInit eventInitDict),
  Pref="dom.presentation.enabled",
  Func="Navigator::HasPresentationSupport"]
 interface PresentationConnectionAvailableEvent : Event
