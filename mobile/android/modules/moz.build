@@ -25,6 +25,7 @@ EXTRA_JS_MODULES += [
     'OrderedBroadcast.jsm',
     'PageActions.jsm',
     'Prompt.jsm',
+    'RuntimePermissions.jsm',
     'Sanitizer.jsm',
     'SharedPreferences.jsm',
     'Snackbars.jsm',
