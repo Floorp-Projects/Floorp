@@ -48,6 +48,7 @@ namespace mozilla {
 class gfxAlphaBoxBlur
 {
     typedef mozilla::gfx::Color Color;
+    typedef mozilla::gfx::DrawTarget DrawTarget;
     typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
 
 public:
@@ -89,7 +90,8 @@ public:
         return mContext;
     }
 
-    already_AddRefed<mozilla::gfx::SourceSurface> DoBlur(mozilla::gfx::DrawTarget* aDT, mozilla::gfx::IntPoint* aTopLeft);
+    already_AddRefed<mozilla::gfx::SourceSurface>
+    DoBlur(DrawTarget* aDT, mozilla::gfx::IntPoint* aTopLeft);
 
     /**
      * Does the actual blurring/spreading and mask applying. Users of this
@@ -176,7 +178,7 @@ protected:
                  const bool& aHasBorderRadius,
                  const mozilla::gfx::Point aShadowOffset,
                  bool& aMovedOffset,
-                 gfxContext* aDestinationCtx);
+                 DrawTarget* aDestDrawTarget);
 
     /**
      * The context of the temporary alpha surface.

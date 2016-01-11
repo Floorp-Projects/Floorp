@@ -337,9 +337,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  mStreamSink = new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
-                                  mOutputStreamManager, mSameOriginMedia.Ref());
-
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
   mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
@@ -389,11 +386,10 @@ MediaDecoderStateMachine::CreateAudioSink()
 already_AddRefed<media::MediaSink>
 MediaDecoderStateMachine::CreateMediaSink(bool aAudioCaptured)
 {
-  // TODO: We can't really create a new DecodedStream until OutputStreamManager
-  //       is extracted. It is tricky that the implementation of DecodedStream
-  //       happens to allow reuse after shutdown without creating a new one.
-  RefPtr<media::MediaSink> audioSink = aAudioCaptured ?
-    mStreamSink : CreateAudioSink();
+  RefPtr<media::MediaSink> audioSink = aAudioCaptured
+    ? new DecodedStream(mTaskQueue, mAudioQueue, mVideoQueue,
+                        mOutputStreamManager, mSameOriginMedia.Ref())
+    : CreateAudioSink();
 
   RefPtr<media::MediaSink> mediaSink =
     new VideoSink(mTaskQueue, audioSink, mVideoQueue,

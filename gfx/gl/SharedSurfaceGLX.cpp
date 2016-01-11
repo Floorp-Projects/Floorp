@@ -29,7 +29,7 @@ SharedSurface_GLXDrawable::Create(GLContext* prodGL,
     UniquePtr<SharedSurface_GLXDrawable> ret;
     Display* display = DefaultXDisplay();
     Screen* screen = XDefaultScreenOfDisplay(display);
-    Visual* visual = gfxXlibSurface::FindVisual(screen, gfxImageFormat::ARGB32);
+    Visual* visual = gfxXlibSurface::FindVisual(screen, gfx::SurfaceFormat::A8R8G8B8_UINT32);
 
     RefPtr<gfxXlibSurface> surf = gfxXlibSurface::Create(screen, visual, size);
     if (!deallocateClient)
