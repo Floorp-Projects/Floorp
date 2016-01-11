@@ -542,48 +542,48 @@ void nsCSSValue::SetPairValue(const nsCSSValue& xValue,
 
 void nsCSSValue::SetTripletValue(const nsCSSValueTriplet* aValue)
 {
-    // triplet should not be used for null/inherit/initial values
-    MOZ_ASSERT(aValue &&
-               aValue->mXValue.GetUnit() != eCSSUnit_Null &&
-               aValue->mYValue.GetUnit() != eCSSUnit_Null &&
-               aValue->mZValue.GetUnit() != eCSSUnit_Null &&
-               aValue->mXValue.GetUnit() != eCSSUnit_Inherit &&
-               aValue->mYValue.GetUnit() != eCSSUnit_Inherit &&
-               aValue->mZValue.GetUnit() != eCSSUnit_Inherit &&
-               aValue->mXValue.GetUnit() != eCSSUnit_Initial &&
-               aValue->mYValue.GetUnit() != eCSSUnit_Initial &&
-               aValue->mZValue.GetUnit() != eCSSUnit_Initial &&
-               aValue->mXValue.GetUnit() != eCSSUnit_Unset &&
-               aValue->mYValue.GetUnit() != eCSSUnit_Unset &&
-               aValue->mZValue.GetUnit() != eCSSUnit_Unset,
-               "missing or inappropriate triplet value");
-    Reset();
-    mUnit = eCSSUnit_Triplet;
-    mValue.mTriplet = new nsCSSValueTriplet_heap(aValue->mXValue, aValue->mYValue, aValue->mZValue);
-    mValue.mTriplet->AddRef();
+  // triplet should not be used for null/inherit/initial values
+  MOZ_ASSERT(aValue &&
+             aValue->mXValue.GetUnit() != eCSSUnit_Null &&
+             aValue->mYValue.GetUnit() != eCSSUnit_Null &&
+             aValue->mZValue.GetUnit() != eCSSUnit_Null &&
+             aValue->mXValue.GetUnit() != eCSSUnit_Inherit &&
+             aValue->mYValue.GetUnit() != eCSSUnit_Inherit &&
+             aValue->mZValue.GetUnit() != eCSSUnit_Inherit &&
+             aValue->mXValue.GetUnit() != eCSSUnit_Initial &&
+             aValue->mYValue.GetUnit() != eCSSUnit_Initial &&
+             aValue->mZValue.GetUnit() != eCSSUnit_Initial &&
+             aValue->mXValue.GetUnit() != eCSSUnit_Unset &&
+             aValue->mYValue.GetUnit() != eCSSUnit_Unset &&
+             aValue->mZValue.GetUnit() != eCSSUnit_Unset,
+             "missing or inappropriate triplet value");
+  Reset();
+  mUnit = eCSSUnit_Triplet;
+  mValue.mTriplet = new nsCSSValueTriplet_heap(aValue->mXValue, aValue->mYValue, aValue->mZValue);
+  mValue.mTriplet->AddRef();
 }
 
 void nsCSSValue::SetTripletValue(const nsCSSValue& xValue,
                                  const nsCSSValue& yValue,
                                  const nsCSSValue& zValue)
 {
-    // Only allow Null for the z component
-    MOZ_ASSERT(xValue.GetUnit() != eCSSUnit_Null &&
-               yValue.GetUnit() != eCSSUnit_Null &&
-               xValue.GetUnit() != eCSSUnit_Inherit &&
-               yValue.GetUnit() != eCSSUnit_Inherit &&
-               zValue.GetUnit() != eCSSUnit_Inherit &&
-               xValue.GetUnit() != eCSSUnit_Initial &&
-               yValue.GetUnit() != eCSSUnit_Initial &&
-               zValue.GetUnit() != eCSSUnit_Initial &&
-               xValue.GetUnit() != eCSSUnit_Unset &&
-               yValue.GetUnit() != eCSSUnit_Unset &&
-               zValue.GetUnit() != eCSSUnit_Unset,
-               "inappropriate triplet value");
-    Reset();
-    mUnit = eCSSUnit_Triplet;
-    mValue.mTriplet = new nsCSSValueTriplet_heap(xValue, yValue, zValue);
-    mValue.mTriplet->AddRef();
+  // Only allow Null for the z component
+  MOZ_ASSERT(xValue.GetUnit() != eCSSUnit_Null &&
+             yValue.GetUnit() != eCSSUnit_Null &&
+             xValue.GetUnit() != eCSSUnit_Inherit &&
+             yValue.GetUnit() != eCSSUnit_Inherit &&
+             zValue.GetUnit() != eCSSUnit_Inherit &&
+             xValue.GetUnit() != eCSSUnit_Initial &&
+             yValue.GetUnit() != eCSSUnit_Initial &&
+             zValue.GetUnit() != eCSSUnit_Initial &&
+             xValue.GetUnit() != eCSSUnit_Unset &&
+             yValue.GetUnit() != eCSSUnit_Unset &&
+             zValue.GetUnit() != eCSSUnit_Unset,
+             "inappropriate triplet value");
+  Reset();
+  mUnit = eCSSUnit_Triplet;
+  mValue.mTriplet = new nsCSSValueTriplet_heap(xValue, yValue, zValue);
+  mValue.mTriplet->AddRef();
 }
 
 nsCSSRect& nsCSSValue::SetRectValue()
@@ -1975,9 +1975,9 @@ nsCSSValueList::Clone() const
 void
 nsCSSValueList::CloneInto(nsCSSValueList* aList) const
 {
-    NS_ASSERTION(!aList->mNext, "Must be an empty list!");
-    aList->mValue = mValue;
-    aList->mNext = mNext ? mNext->Clone() : nullptr;
+  NS_ASSERTION(!aList->mNext, "Must be an empty list!");
+  aList->mValue = mValue;
+  aList->mNext = mNext ? mNext->Clone() : nullptr;
 }
 
 static void
@@ -2304,15 +2304,15 @@ nsCSSValueTriplet::AppendToString(nsCSSProperty aProperty,
                                   nsAString& aResult,
                                   nsCSSValue::Serialization aSerialization) const
 {
-    mXValue.AppendToString(aProperty, aResult, aSerialization);
-    if (mYValue.GetUnit() != eCSSUnit_Null) {
-        aResult.Append(char16_t(' '));
-        mYValue.AppendToString(aProperty, aResult, aSerialization);
-        if (mZValue.GetUnit() != eCSSUnit_Null) {
-            aResult.Append(char16_t(' '));
-            mZValue.AppendToString(aProperty, aResult, aSerialization);
-        }
+  mXValue.AppendToString(aProperty, aResult, aSerialization);
+  if (mYValue.GetUnit() != eCSSUnit_Null) {
+    aResult.Append(char16_t(' '));
+    mYValue.AppendToString(aProperty, aResult, aSerialization);
+    if (mZValue.GetUnit() != eCSSUnit_Null) {
+      aResult.Append(char16_t(' '));
+      mZValue.AppendToString(aProperty, aResult, aSerialization);
     }
+  }
 }
 
 size_t
