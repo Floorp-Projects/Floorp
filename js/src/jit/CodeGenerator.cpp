@@ -8336,14 +8336,14 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     AutoDiscardIonCode discardIonCode(cx, &recompileInfo);
 
     IonScript* ionScript =
-      IonScript::New(cx, recompileInfo,
-                     graph.totalSlotCount(), argumentSlots, scriptFrameSize,
-                     snapshots_.listSize(), snapshots_.RVATableSize(),
-                     recovers_.size(), bailouts_.length(), graph.numConstants(),
-                     safepointIndices_.length(), osiIndices_.length(),
-                     cacheList_.length(), runtimeData_.length(),
-                     safepoints_.size(), patchableBackedges_.length(),
-                     sharedStubs_.length(), optimizationLevel);
+        IonScript::New(cx, recompileInfo,
+                       graph.totalSlotCount(), argumentSlots, scriptFrameSize,
+                       snapshots_.listSize(), snapshots_.RVATableSize(),
+                       recovers_.size(), bailouts_.length(), graph.numConstants(),
+                       safepointIndices_.length(), osiIndices_.length(),
+                       cacheList_.length(), runtimeData_.length(),
+                       safepoints_.size(), patchableBackedges_.length(),
+                       sharedStubs_.length(), optimizationLevel);
     if (!ionScript)
         return false;
     discardIonCode.ionScript = ionScript;
