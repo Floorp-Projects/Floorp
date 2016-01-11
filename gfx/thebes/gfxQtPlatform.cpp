@@ -46,7 +46,7 @@ using namespace mozilla::gfx;
 
 gfxFontconfigUtils *gfxQtPlatform::sFontconfigUtils = nullptr;
 
-static gfxImageFormat sOffscreenFormat = gfxImageFormat::RGB24;
+static gfxImageFormat sOffscreenFormat = SurfaceFormat::X8R8G8B8_UINT32;
 
 gfxQtPlatform::gfxQtPlatform()
 {
@@ -55,7 +55,7 @@ gfxQtPlatform::gfxQtPlatform()
 
     int32_t depth = GetScreenDepth();
     if (depth == 16) {
-        sOffscreenFormat = gfxImageFormat::RGB16_565;
+        sOffscreenFormat = SurfaceFormat::R5G6B5_UINT16;
     }
     uint32_t canvasMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
     uint32_t contentMask = BackendTypeBit(BackendType::CAIRO) | BackendTypeBit(BackendType::SKIA);
