@@ -7,7 +7,7 @@
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  */
 
-[Constructor(DOMString type, optional FetchEventInit eventInitDict),
+[Constructor(DOMString type, FetchEventInit eventInitDict),
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
