@@ -367,41 +367,12 @@ WebConsoleFrame.prototype = {
 
   _destroyer: null,
 
-  // Used in tests.
-  _saveRequestAndResponseBodies: false,
+  _saveRequestAndResponseBodies: true,
 
   // Chevron width at the starting of Web Console's input box.
   _chevronWidth: 0,
   // Width of the monospace characters in Web Console's input box.
   _inputCharWidth: 0,
-
-  /**
-   * Tells whether to save the bodies of network requests and responses.
-   * Disabled by default to save memory.
-   *
-   * @return boolean
-   *         The saveRequestAndResponseBodies pref value.
-   */
-  getSaveRequestAndResponseBodies:
-  function WCF_getSaveRequestAndResponseBodies() {
-    let deferred = promise.defer();
-    let toGet = [
-      "NetworkMonitor.saveRequestAndResponseBodies"
-    ];
-
-    // Make sure the web console client connection is established first.
-    this.webConsoleClient.getPreferences(toGet, response => {
-      if (!response.error) {
-        this._saveRequestAndResponseBodies = response.preferences[toGet[0]];
-        deferred.resolve(this._saveRequestAndResponseBodies);
-      }
-      else {
-        deferred.reject(response.error);
-      }
-    });
-
-    return deferred.promise;
-  },
 
   /**
    * Setter for saving of network request and response bodies.
@@ -559,47 +530,6 @@ WebConsoleFrame.prototype = {
     // Update the character width and height needed for the popup offset
     // calculations.
     this._updateCharSize();
-
-    let updateSaveBodiesPrefUI = (element) => {
-      this.getSaveRequestAndResponseBodies().then(value => {
-        element.setAttribute("checked", value);
-        this.emit("save-bodies-ui-toggled");
-      });
-    }
-
-    let reverseSaveBodiesPref = ({ target: element }) => {
-      this.getSaveRequestAndResponseBodies().then(value => {
-        this.setSaveRequestAndResponseBodies(!value);
-        element.setAttribute("checked", value);
-        this.emit("save-bodies-pref-reversed");
-      });
-    }
-
-    let saveBodiesDisabled = !this.getFilterState("networkinfo") &&
-                             !this.getFilterState("netxhr") &&
-                             !this.getFilterState("network");
-
-    let saveBodies = doc.getElementById("saveBodies");
-    saveBodies.addEventListener("command", reverseSaveBodiesPref);
-    saveBodies.disabled = saveBodiesDisabled;
-
-    let saveBodiesContextMenu = doc.getElementById("saveBodiesContextMenu");
-    saveBodiesContextMenu.addEventListener("command", reverseSaveBodiesPref);
-    saveBodiesContextMenu.disabled = saveBodiesDisabled;
-
-    saveBodies.parentNode.addEventListener("popupshowing", () => {
-      updateSaveBodiesPrefUI(saveBodies);
-      saveBodies.disabled = !this.getFilterState("networkinfo") &&
-                            !this.getFilterState("netxhr") &&
-                            !this.getFilterState("network");
-    });
-
-    saveBodiesContextMenu.parentNode.addEventListener("popupshowing", () => {
-      updateSaveBodiesPrefUI(saveBodiesContextMenu);
-      saveBodiesContextMenu.disabled = !this.getFilterState("networkinfo") &&
-                                       !this.getFilterState("netxhr") &&
-                                       !this.getFilterState("network");
-    });
 
     let clearButton = doc.getElementsByClassName("webconsole-clear-console-button")[0];
     clearButton.addEventListener("command", () => {
@@ -950,15 +880,6 @@ WebConsoleFrame.prototype = {
 
         let prefKey = target.getAttribute("prefKey");
         this.setFilterState(prefKey, state);
-
-        // Disable the log response and request body if network logging is off.
-        if (prefKey == "networkinfo" || prefKey == "netxhr" || prefKey == "network") {
-          let checkState = !this.getFilterState("networkinfo") &&
-                           !this.getFilterState("netxhr") &&
-                           !this.getFilterState("network");
-          this.document.getElementById("saveBodies").disabled = checkState;
-          this.document.getElementById("saveBodiesContextMenu").disabled = checkState;
-        }
 
         // Adjust the state of the button appropriately.
         let menuPopup = target.parentNode;
@@ -5089,8 +5010,13 @@ WebConsoleConnectionProxy.prototype = {
     }
 
     this.webConsoleClient = webConsoleClient;
-
     this._hasNativeConsoleAPI = response.nativeConsoleAPI;
+
+    // There is no way to view response bodies from the Browser Console, so do
+    // not waste the memory.
+    let saveBodies = !this.webConsoleFrame.owner._browserConsole;
+    this.webConsoleFrame.setSaveRequestAndResponseBodies(saveBodies);
+
     this.webConsoleClient.on("networkEvent", this._onNetworkEvent);
     this.webConsoleClient.on("networkEventUpdate", this._onNetworkEventUpdate);
 
