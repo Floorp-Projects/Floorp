@@ -35,6 +35,7 @@ using namespace js::gc;
 using mozilla::ArrayEnd;
 using mozilla::ArrayLength;
 using mozilla::RangedPtr;
+using mozilla::UniquePtr;
 
 const char*
 js::AtomToPrintableString(ExclusiveContext* cx, JSAtom* atom, JSAutoByteString* bytes)
@@ -426,6 +427,23 @@ js::AtomizeChars(ExclusiveContext* cx, const Latin1Char* chars, size_t length, P
 
 template JSAtom*
 js::AtomizeChars(ExclusiveContext* cx, const char16_t* chars, size_t length, PinningBehavior pin);
+
+JSAtom*
+js::AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength)
+{
+    // This could be optimized to hand the char16_t's directly to the JSAtom
+    // instead of making a copy. UTF8CharsToNewTwoByteCharsZ should be
+    // refactored to take an ExclusiveContext so that this function could also.
+
+    UTF8Chars utf8(utf8Chars, utf8ByteLength);
+
+    size_t length;
+    UniquePtr<char16_t> chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
+    if (!chars)
+        return nullptr;
+
+    return AtomizeChars(cx, chars.get(), length);
+}
 
 bool
 js::IndexToIdSlow(ExclusiveContext* cx, uint32_t index, MutableHandleId idp)

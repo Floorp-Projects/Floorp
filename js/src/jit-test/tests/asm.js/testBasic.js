@@ -97,6 +97,12 @@ var exp = asmLink(asmCompile(USE_ASM + "function f() { return 3 } return {f:f,f:
 assertEq(exp.f(), 3);
 assertEq(Object.keys(exp).join(), 'f');
 
+var exp = asmLink(asmCompile(USE_ASM + "function f() { return 4 } return {f1:f,f2:f}"));
+assertEq(exp.f1(), 4);
+assertEq(exp.f2(), 4);
+assertEq(Object.keys(exp).sort().join(), 'f1,f2');
+assertEq(exp.f1, exp.f2);
+
 assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {1:f}");
 assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {__proto__:f}");
 assertAsmTypeFail(USE_ASM + "function f() { return 3 } return {get x() {} }");
