@@ -464,10 +464,6 @@ public:
   virtual bool RecvEmbeddedChildAt(const uint64_t& aID, const uint32_t& aIdx,
                                    uint64_t* aChildID) override final;
 
-  virtual bool RecvFocusedChild(const uint64_t& aID,
-                                uint64_t* aChild,
-                                bool* aOk) override;
-
   virtual bool RecvLanguage(const uint64_t& aID, nsString* aLocale) override;
   virtual bool RecvDocType(const uint64_t& aID, nsString* aType) override;
   virtual bool RecvTitle(const uint64_t& aID, nsString* aTitle) override;

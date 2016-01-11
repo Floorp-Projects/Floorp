@@ -27,46 +27,6 @@ FocusManager::~FocusManager()
 {
 }
 
-Accessible*
-FocusManager::FocusedAccessible() const
-{
-  if (mActiveItem)
-    return mActiveItem;
-
-  nsINode* focusedNode = FocusedDOMNode();
-  if (focusedNode) {
-    DocAccessible* doc = 
-      GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
-    return doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode) : nullptr;
-  }
-
-  return nullptr;
-}
-
-bool
-FocusManager::IsFocused(const Accessible* aAccessible) const
-{
-  if (mActiveItem)
-    return mActiveItem == aAccessible;
-
-  nsINode* focusedNode = FocusedDOMNode();
-  if (focusedNode) {
-    // XXX: Before getting an accessible for node having a DOM focus make sure
-    // they belong to the same document because it can trigger unwanted document
-    // accessible creation for temporary about:blank document. Without this
-    // peculiarity we would end up with plain implementation based on
-    // FocusedAccessible() method call. Make sure this issue is fixed in
-    // bug 638465.
-    if (focusedNode->OwnerDoc() == aAccessible->GetNode()->OwnerDoc()) {
-      DocAccessible* doc = 
-        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
-      return aAccessible ==
-        (doc ? doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode) : nullptr);
-    }
-  }
-  return false;
-}
-
 bool
 FocusManager::IsFocusWithin(const Accessible* aContainer) const
 {
@@ -193,9 +153,23 @@ FocusManager::ActiveItemChanged(Accessible* aItem, bool aCheckIfActive)
   // If active item is changed then fire accessible focus event on it, otherwise
   // if there's no an active item then fire focus event to accessible having
   // DOM focus.
-  Accessible* target = FocusedAccessible();
-  if (target)
+  Accessible* target = nullptr;
+  if (aItem) {
+    target = aItem;
+  } else {
+    nsINode* focusedNode = FocusedDOMNode();
+    if (focusedNode) {
+      DocAccessible* doc =
+        GetAccService()->GetDocAccessible(focusedNode->OwnerDoc());
+      if (doc) {
+        target = doc->GetAccessibleEvenIfNotInMapOrContainer(focusedNode);
+      }
+    }
+  }
+
+  if (target) {
     DispatchFocusEvent(target->Document(), target);
+  }
 }
 
 void
@@ -295,6 +269,9 @@ FocusManager::ProcessFocusEvent(AccEvent* aEvent)
       target = activeItem;
     }
   }
+
+  mFocusedAcc = target;
+  mFocusedProxy = nullptr;
 
   // Fire menu start/end events for ARIA menus.
   if (target->IsARIARole(nsGkAtoms::menuitem)) {
