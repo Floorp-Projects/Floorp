@@ -230,7 +230,7 @@ loop.panel = (function(_, mozL10n) {
      */
     handleSubmitFeedback: function(event) {
       event.preventDefault();
-      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.formURL");
+      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.manualFormURL");
       this.props.mozLoop.openURL(helloFeedbackUrl);
       this.closeWindow();
     },
