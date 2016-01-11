@@ -231,6 +231,9 @@ AtomizeChars(ExclusiveContext* cx, const CharT* chars, size_t length,
              js::PinningBehavior pin = js::DoNotPinAtom);
 
 extern JSAtom*
+AtomizeUTF8Chars(JSContext* cx, const char* utf8Chars, size_t utf8ByteLength);
+
+extern JSAtom*
 AtomizeString(ExclusiveContext* cx, JSString* str, js::PinningBehavior pin = js::DoNotPinAtom);
 
 template <AllowGC allowGC>

@@ -55,6 +55,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 {
     typedef Vector<uint32_t> FuncOffsetVector;
     typedef Vector<uint32_t> FuncIndexVector;
+    typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
 
     struct SigHashPolicy
     {
@@ -79,6 +80,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     SigSet                        sigs_;
     FuncOffsetVector              funcEntryOffsets_;
     FuncIndexVector               exportFuncIndices_;
+    FuncIndexMap                  funcIndexToExport_;
 
     // Parallel compilation
     bool                          parallel_;
@@ -111,14 +113,14 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     // Imports:
     bool declareImport(MallocSig&& sig, uint32_t* index);
-    uint32_t numDeclaredImports() const;
+    uint32_t numImports() const;
     uint32_t importExitGlobalDataOffset(uint32_t index) const;
     const MallocSig& importSig(uint32_t index) const;
     bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
 
     // Exports:
-    bool declareExport(MallocSig&& sig, uint32_t funcIndex);
-    uint32_t numDeclaredExports() const;
+    bool declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* exportIndex);
+    uint32_t numExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
     const MallocSig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
