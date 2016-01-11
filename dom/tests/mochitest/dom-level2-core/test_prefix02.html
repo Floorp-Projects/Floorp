@@ -100,7 +100,8 @@ function prefix02() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      elementList = doc.getElementsByTagName("emp:employeeId");
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("employeeId");
       testEmployee = elementList.item(0);
       assertNotNull("empEmployeeNotNull",testEmployee);
 textNode = testEmployee.firstChild;

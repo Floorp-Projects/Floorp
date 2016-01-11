@@ -44,8 +44,9 @@ typedef void* (*nsFuncStringContentListDataAllocator)(nsINode* aRootNode,
 // If aMatchNameSpaceId is kNameSpaceID_Unknown, this will return a
 // content list which matches ASCIIToLower(aTagname) against HTML
 // elements in HTML documents and aTagname against everything else.
-// For any other value of aMatchNameSpaceId, the list will match
-// aTagname against all elements.
+// The comparison is done to the element's localName.  For any
+// other value of aMatchNameSpaceId, the list will match aTagname
+// against all elements, again comparing to the localName.
 already_AddRefed<nsContentList>
 NS_GetContentList(nsINode* aRootNode,
                   int32_t aMatchNameSpaceId,
