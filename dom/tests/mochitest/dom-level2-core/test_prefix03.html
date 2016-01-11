@@ -97,8 +97,9 @@ function prefix03() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      elementList = doc.getElementsByTagName("emp:employee");
-      testEmployee = elementList.item(0);
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("employee");
+      testEmployee = elementList.item(3);
       assertNotNull("empEmployeeNotNull",testEmployee);
 prefix = testEmployee.prefix;
 

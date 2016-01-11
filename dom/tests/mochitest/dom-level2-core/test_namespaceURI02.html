@@ -99,8 +99,9 @@ function namespaceURI02() {
         docRef = this.doc;
       }
       doc = load(docRef, "doc", "staffNS");
-      elementList = doc.getElementsByTagName("emp:address");
-      testAddr = elementList.item(0);
+      // Changed for bug 492933.
+      elementList = doc.getElementsByTagName("address");
+      testAddr = elementList.item(3);
       assertNotNull("empAddressNotNull",testAddr);
 addrAttr = testAddr.getAttributeNodeNS("http://www.nist.gov","domestic");
       attrNamespaceURI = addrAttr.namespaceURI;
