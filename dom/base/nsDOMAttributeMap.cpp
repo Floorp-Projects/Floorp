@@ -302,38 +302,22 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
     }
   }
 
-  RefPtr<Attr> attr;
+  RefPtr<Attr> oldAttr;
 
   if (oldNi) {
-    RefPtr<Attr> oldAttr = GetAttribute(oldNi);
+    oldAttr = GetAttribute(oldNi);
 
     if (oldAttr == &aAttr) {
       return oldAttr.forget();
     }
 
     if (oldAttr) {
-      attr = RemoveNamedItem(oldNi, aError);
-      NS_ASSERTION(attr->NodeInfo()->NameAndNamespaceEquals(oldNi),
-        "RemoveNamedItem() called, attr->NodeInfo() should be equal to oldNi!");
-
-      // That might have run mutation event listeners, so re-verify
-      // our assumptions.
-      nsDOMAttributeMap* newOwner = aAttr.GetMap();
-      if (newOwner) {
-        if (newOwner == this) {
-          // OK, we're just done here.
-          return attr.forget();
-        }
-
-        // The attr we're trying to set got stuck on some other
-        // element.  Just throw, for lack of anything better to do.
-        aError.Throw(NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR);
-        return nullptr;
-      } else if (mContent->OwnerDoc() != aAttr.OwnerDoc()) {
-        // Got moved into a different document, boo.
-        aError.Throw(NS_ERROR_DOM_HIERARCHY_REQUEST_ERR);
-        return nullptr;
-      }
+      // Just remove it from our hashtable.  This has no side-effects, so we
+      // don't have to recheck anything after we do it.  Then we'll add our new
+      // Attr to the hashtable and do the actual attr set on the element.  This
+      // will make the whole thing look like a single attribute mutation (with
+      // the new attr node in place) as opposed to a removal and addition.
+      DropAttribute(oldNi->NamespaceID(), oldNi->NameAtom());
     }
   }
 
@@ -355,7 +339,7 @@ nsDOMAttributeMap::SetNamedItemNS(Attr& aAttr, ErrorResult& aError)
     DropAttribute(ni->NamespaceID(), ni->NameAtom());
   }
 
-  return attr.forget();
+  return oldAttr.forget();
 }
 
 already_AddRefed<Attr>
