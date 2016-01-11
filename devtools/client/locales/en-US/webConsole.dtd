@@ -11,11 +11,6 @@
 <!ENTITY window.title "Web Console">
 <!ENTITY browserConsole.title "Browser Console">
 
-<!-- LOCALIZATION NOTE (saveBodies.label): You can see this string in the Web
-   - Console context menu. -->
-<!ENTITY saveBodies.label     "Log Request and Response Bodies">
-<!ENTITY saveBodies.accesskey "L">
-
 <!-- LOCALIZATION NOTE (openURL.label): You can see this string in the Web
    - Console context menu. -->
 <!ENTITY openURL.label     "Open URL in New Tab">
