@@ -3391,9 +3391,16 @@ public:
     virtual bool ShouldFlattenAway(nsDisplayListBuilder* aBuilder) override {
       return false;
     }
+    virtual uint32_t GetPerFrameKey() override {
+      return (mIndex << nsDisplayItem::TYPE_BITS) |
+        nsDisplayItem::GetPerFrameKey();
+    }
     NS_DISPLAY_DECL_NAME("BlendContainer", TYPE_BLEND_CONTAINER)
 
 private:
+    // Used to distinguish containers created at building stacking
+    // context or appending background.
+    uint32_t mIndex;
     // The set of all blend modes used by nsDisplayMixBlendMode descendents of this container.
     BlendModeSet mContainedBlendModes;
     // If this is true, then we should make the layer active if all contained blend
