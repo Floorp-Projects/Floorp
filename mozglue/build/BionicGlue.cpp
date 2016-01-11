@@ -139,47 +139,6 @@ raise(int sig)
   return syscall(__NR_tgkill, getpid(), gettid(), sig);
 }
 
-/*
- * The following wrappers for PR_Xxx are needed until we can get
- * PR_DuplicateEnvironment landed in NSPR.
- * See see bug 772734 and bug 773414.
- *
- * We can't #include the pr headers here, and we can't call any of the
- * PR/PL functions either, so we just reimplemnt using native code.
- */
-
-static pthread_mutex_t  _pr_envLock = PTHREAD_MUTEX_INITIALIZER;
-
-extern "C" NS_EXPORT char*
-__wrap_PR_GetEnv(const char *var)
-{
-    char *ev;
-
-    pthread_mutex_lock(&_pr_envLock);
-    ev = getenv(var);
-    pthread_mutex_unlock(&_pr_envLock);
-    return ev;
-}
-
-extern "C" NS_EXPORT int
-__wrap_PR_SetEnv(const char *string)
-{
-    int result;
-
-    if ( !strchr(string, '=')) return(-1);
-
-    pthread_mutex_lock(&_pr_envLock);
-    result = putenv(const_cast<char*>(string));
-    pthread_mutex_unlock(&_pr_envLock);
-    return (result)? -1 : 0;
-}
-
-extern "C" NS_EXPORT pthread_mutex_t *
-PR_GetEnvLock(void)
-{
-  return &_pr_envLock;
-}
-
 /* Flash plugin uses symbols that are not present in Android >= 4.4 */
 #ifndef MOZ_WIDGET_GONK
 namespace android {
