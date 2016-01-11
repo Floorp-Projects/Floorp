@@ -390,6 +390,14 @@ struct DefaultGCPolicy<jsid>
     }
 };
 
+template <>
+struct DefaultGCPolicy<JS::Value>
+{
+    static void trace(JSTracer* trc, JS::Value* v, const char* name) {
+        js::UnsafeTraceManuallyBarrieredEdge(trc, v, name);
+    }
+};
+
 template <> struct DefaultGCPolicy<uint32_t> : public IgnoreGCPolicy<uint32_t> {};
 template <> struct DefaultGCPolicy<uint64_t> : public IgnoreGCPolicy<uint64_t> {};
 
