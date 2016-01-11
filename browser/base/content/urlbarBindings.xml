@@ -948,15 +948,12 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
       <method name="handleDelete">
         <body><![CDATA[
-          // When UnifiedComplete is enabled, we arrange for the popup to
-          // always have a "special" first item that's always selected. The
-          // autocomplete controller's handleDelete() implementation will
-          // remove the selected entry from the popup in that case.
-          // So when our first special item is selected, we call handleText
-          // instead so it acts as a delete on the text value instead of
-          // removing that item.
-          if (Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete") &&
-              this.popup.selectedIndex == 0) {
+          // If the heuristic result is selected, then the autocomplete
+          // controller's handleDelete implementation will remove it, which is
+          // not what we want.  So in that case, call handleText so it acts as
+          // a backspace on the text value instead of removing the result.
+          if (this.popup.selectedIndex == 0 &&
+              this.popup._isFirstResultHeuristic) {
             return this.mController.handleText();
           }
           return this.mController.handleDelete();
@@ -1264,13 +1261,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           // ie, hitting page-down will only cause is to wrap if we're already
           // at one end of the list.
 
-          // Do not allow the selection to be removed if UnifiedComplete is
-          // enabled and the popup's first result is a heuristic result.
-          if (!Services.prefs.getBoolPref("browser.urlbar.unifiedcomplete") ||
-              (this.input.mController.matchCount > 0 &&
-               this.input.mController
-                         .getStyleAt(0)
-                         .split(/\s+/).indexOf("heuristic") == -1)) {
+          // Allow the selection to be removed if the first result is not a
+          // heuristic result.
+          if (!this._isFirstResultHeuristic) {
             if (reverse && index == -1 || newIndex > maxRow && index != maxRow)
               newIndex = maxRow;
             else if (!reverse && index == -1 || newIndex < 0 && index != 0)
@@ -1282,15 +1275,29 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
             return newIndex;
           }
 
+          // Otherwise do not allow the selection to be removed.
           if (newIndex < 0) {
             newIndex = index > 0 ? 0 : maxRow;
           } else if (newIndex > maxRow) {
             newIndex = index < maxRow ? maxRow : 0;
           }
-
           return newIndex;
         ]]></body>
       </method>
+
+      <property name="_isFirstResultHeuristic" readonly="true">
+        <getter>
+          <![CDATA[
+            // The popup usually has a special "heuristic" first result (added
+            // by UnifiedComplete.js) that is automatically selected when the
+            // popup opens.
+            return this.input.mController.matchCount > 0 &&
+                   this.input.mController
+                             .getStyleAt(0)
+                             .split(/\s+/).indexOf("heuristic") > 0;
+          ]]>
+        </getter>
+      </property>
 
       <property name="maxResults" readonly="true">
         <getter>
@@ -1526,20 +1533,17 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
             // If nothing is selected yet, select the first result if it is a
             // pre-selected "heuristic" result.  (See UnifiedComplete.js.)
-            if (this._matchCount > 0 && this.selectedIndex == -1) {
-              let styles = this.input.mController.getStyleAt(0).split(/\s+/);
-              if (styles.indexOf("heuristic") >= 0) {
-                // Don't handle this as a user-initiated action.
-                this._ignoreNextSelect = true;
+            if (this.selectedIndex == -1 && this._isFirstResultHeuristic) {
+              // Don't handle this as a user-initiated action.
+              this._ignoreNextSelect = true;
 
-                // Don't fire DOMMenuItemActive so that screen readers still see
-                // the input as being focused.
-                this.richlistbox.suppressMenuItemEvent = true;
+              // Don't fire DOMMenuItemActive so that screen readers still see
+              // the input as being focused.
+              this.richlistbox.suppressMenuItemEvent = true;
 
-                this.selectedIndex = 0;
-                this.richlistbox.suppressMenuItemEvent = false;
-                this._ignoreNextSelect = false;
-              }
+              this.selectedIndex = 0;
+              this.richlistbox.suppressMenuItemEvent = false;
+              this._ignoreNextSelect = false;
             }
 
             this.input.gotResultForCurrentQuery = true;
