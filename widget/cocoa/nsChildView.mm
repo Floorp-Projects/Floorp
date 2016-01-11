@@ -2943,7 +2943,7 @@ RectTextureImage::BeginUpdate(const LayoutDeviceIntSize& aNewSize,
     int32_t stride = size.width * gfx::BytesPerPixel(format);
     mUpdateDrawTargetData = MakeUnique<unsigned char[]>(stride * size.height);
     mUpdateDrawTarget =
-      gfx::Factory::CreateDrawTargetForData(gfx::BackendType::COREGRAPHICS,
+      gfx::Factory::CreateDrawTargetForData(gfx::BackendType::SKIA,
                                             mUpdateDrawTargetData.get(), size,
                                             stride, format);
     mBufferSize = neededBufferSize;
