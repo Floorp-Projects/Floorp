@@ -3882,6 +3882,29 @@ this.XPIProvider = {
   }),
 
   /**
+   * Returns an Addon corresponding to an instance ID.
+   * @param aInstanceID
+   *        An Addon Instance ID
+   * @return {Promise}
+   * @resolves The found Addon or null if no such add-on exists.
+   * @rejects  Never
+   * @throws if the aInstanceID argument is not specified
+   */
+   getAddonByInstanceID: function(aInstanceID) {
+     if (!aInstanceID || typeof aInstanceID != "symbol")
+       throw Components.Exception("aInstanceID must be a Symbol()",
+                                  Cr.NS_ERROR_INVALID_ARG);
+
+     for (let [id, val] of this.activeAddons) {
+       if (aInstanceID == val.instanceID) {
+         return new Promise(resolve => this.getAddonByID(id, resolve));
+       }
+     }
+
+     return Promise.resolve(null);
+   },
+
+  /**
    * Removes an AddonInstall from the list of active installs.
    *
    * @param  install
@@ -4451,6 +4474,8 @@ this.XPIProvider = {
 
     this.activeAddons.set(aId, {
       bootstrapScope: null,
+      // a Symbol passed to this add-on, which it can use to identify itself
+      instanceID: Symbol(aId),
     });
     let activeAddon = this.activeAddons.get(aId);
 
@@ -4596,6 +4621,15 @@ this.XPIProvider = {
                                 aAddon.multiprocessCompatible || false,
                                 runInSafeMode);
         activeAddon = this.activeAddons.get(aAddon.id);
+      }
+
+      if (aAddon.bootstrap) {
+        if (aMethod == "startup" || aMethod == "shutdown") {
+          if (!aExtraParams) {
+            aExtraParams = {};
+          }
+          aExtraParams["instanceID"] = this.activeAddons.get(aAddon.id).instanceID;
+        }
       }
 
       // Nothing to call for locales
