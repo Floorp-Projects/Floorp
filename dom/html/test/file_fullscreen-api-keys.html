@@ -1,129 +1,32 @@
- <!DOCTYPE HTML>
-<html>
-<!--
-https://bugzilla.mozilla.org/show_bug.cgi?id=545812
-
-Test that restricted key pressed drop documents out of DOM full-screen mode.
-
--->
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Test for Bug 545812</title>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
-  <script type="application/javascript" src="file_fullscreen-utils.js"></script>
-  <style>
-  body {
-    background-color: black;
-  }
-  </style>
+  <meta charset="UTF-8">
 </head>
 <body>
+<script>
+window.addEventListener("Test:DispatchKeyEvents", aEvent => {
+  var keyCode = KeyEvent["DOM_" + aEvent.detail.code];
 
-<script type="application/javascript">
-
-/** Test for Bug 545812 **/
-
-// List of key codes which should exit full-screen mode.
-var keyList = [
-  { code: "VK_ESCAPE", suppressed: true},
-  { code: "VK_F11",    suppressed: false},
-];
-
-function ok(condition, msg) {
-  opener.ok(condition, "[keys] " + msg);
-}
-
-function is(a, b, msg) {
-  opener.is(a, b, "[keys] " + msg);
-}
-
-var gKeyTestIndex = 0;
-var gKeyName;
-var gKeyCode;
-var gKeySuppressed;
-var gKeyReceived = false;
-
-function keyHandler(event) {
-  gKeyReceived = true;
-}
-
-function checkKeyEffect() {
-  is(gKeySuppressed, !gKeyReceived, "Should not receive key events for " + gKeyName);
-  is(document.mozFullScreen, false, "Should exit full-screen mode for " + gKeyName + " press");
-  if (gKeyTestIndex < keyList.length) {
-    setTimeout(testNextKey, 0);
-  } else {
-    opener.nextTest();
-  }
-}
-
-function testTrustedKeyEvents() {
   document.body.focus();
-  gKeyReceived = false;
-  addFullscreenChangeContinuation("exit", checkKeyEffect);
-  synthesizeKey(gKeyName, {});
-}
-
-function testScriptInitiatedKeyEvents() {
-  // Script initiated untrusted key events should not cause full-screen exit.
-  document.body.focus();
-  gKeyReceived = false;
   var evt = document.createEvent("KeyEvents");
   evt.initKeyEvent("keydown", true, true, window,
                    false, false, false, false,
-                   gKeyCode, 0);
+                   keyCode, 0);
   document.body.dispatchEvent(evt);
 
   evt = document.createEvent("KeyEvents");
   evt.initKeyEvent("keypress", true, true, window,
                    false, false, false, false,
-                   gKeyCode, 0);
+                   keyCode, 0);
   document.body.dispatchEvent(evt);
 
   evt = document.createEvent("KeyEvents");
   evt.initKeyEvent("keyup", true, true, window,
                    false, false, false, false,
-                   gKeyCode, 0);
+                   keyCode, 0);
   document.body.dispatchEvent(evt);
-  
-  ok(gKeyReceived, "dispatchEvent should dispatch events synchronously");
-  ok(document.mozFullScreen,
-     "Should remain in full-screen mode for script initiated key events for " + gKeyName);
-}
-
-function testNextKey() {
-  if (!document.mozFullScreen) {
-    // Async request fullscreen to avoid the request be accidentally
-    // cancelled due to unfinished clean-up of exiting fullscreen.
-    setTimeout(() => {
-      addFullscreenChangeContinuation("enter", reallyTestNextKey);
-      document.body.mozRequestFullScreen();
-    }, 0);
-  }
-  else {
-    reallyTestNextKey();
-  }
-}
-
-function reallyTestNextKey() {
-  ok(document.mozFullScreen, "Must be in full-screen mode");
-
-  gKeyName = keyList[gKeyTestIndex].code;
-  gKeyCode = KeyEvent["DOM_" + gKeyName];
-  gKeySuppressed = keyList[gKeyTestIndex].suppressed;
-  gKeyTestIndex++;
-
-  testScriptInitiatedKeyEvents();
-  testTrustedKeyEvents();
-}
-
-window.addEventListener("keydown", keyHandler, true);
-window.addEventListener("keyup", keyHandler, true);
-window.addEventListener("keypress", keyHandler, true);
-
-function begin() {
-  testNextKey();
-}
+});
 </script>
-</pre>
 </body>
 </html>

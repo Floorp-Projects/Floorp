@@ -61,6 +61,10 @@ function e(id) {
   return document.getElementById(id);
 }
 
+function removeElement(e) {
+  e.parentNode.removeChild(e);
+}
+
 const isMacOs = navigator.appVersion.indexOf("Macintosh") != -1;
 
 var windowedPlugin = null;
@@ -111,6 +115,10 @@ function nonMacTest2() {
 
 function nonMacTest3() {
   ok(!document.mozFullScreen, "Full-screen should have been revoked when windowed-plugin was focused.");
+  // Remove windowed plugins before closing the window
+  // to work around bug 1237853.
+  removeElement(e("windowed-plugin"));
+  removeElement(e("subdoc-plugin").contentDocument.getElementById("windowed-plugin"));
   opener.nextTest();
 }
 
