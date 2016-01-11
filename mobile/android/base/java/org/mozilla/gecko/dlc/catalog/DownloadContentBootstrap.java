@@ -21,7 +21,7 @@ import java.util.List;
 
         return Arrays.asList(
                 new DownloadContent.Builder()
-                        .setId("bff50e08-7bbc-4d77-a907-bb0a54434bee")
+                        .setId("c40929cf-7f4c-fa72-3dc9-12cadf56905d")
                         .setLocation("fonts/CharisSILCompact-B.ttf.gz")
                         .setFilename("CharisSILCompact-B.ttf")
                         .setChecksum("699d958b492eda0cc2823535f8567d0393090e3842f6df3c36dbe7239cb80b6d")
@@ -32,7 +32,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("68c6472d-94a6-4fb2-8525-78e427b022fe")
+                        .setId("6d265876-85ed-0917-fdc8-baf583ca2cba")
                         .setLocation("fonts/CharisSILCompact-BI.ttf.gz")
                         .setFilename("CharisSILCompact-BI.ttf")
                         .setChecksum("82465e747b4f41471dbfd942842b2ee810749217d44b55dbc43623b89f9c7d9b")
@@ -43,7 +43,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("33d0ce0d-9c48-4a37-8b74-81cce872061b")
+                        .setId("8460dc6d-d129-fd1a-24b6-343dbf6531dd")
                         .setLocation("fonts/CharisSILCompact-I.ttf.gz")
                         .setFilename("CharisSILCompact-I.ttf")
                         .setChecksum("ab3ed6f2a4d4c2095b78227bd33155d7ccd05a879c107a291912640d4d64f767")
@@ -54,7 +54,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("7e274cdc-4216-4dc0-b7a5-8ec333f0c287")
+                        .setId("c906275c-3747-fe27-426f-6187526a6f06")
                         .setLocation("fonts/CharisSILCompact-R.ttf.gz")
                         .setFilename("CharisSILCompact-R.ttf")
                         .setChecksum("4ed509317f1bb441b185ea13bf1c9d19d1a0b396962efa3b5dc3190ad88f2067")
@@ -65,7 +65,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("b144002f-d5de-448c-8952-da1e405e022f")
+                        .setId("ff5deecc-6ecc-d816-bb51-65face460119")
                         .setLocation("fonts/ClearSans-Bold.ttf.gz")
                         .setFilename("ClearSans-Bold.ttf")
                         .setChecksum("385d0a293c1714770e198f7c762ab32f7905a0ed9d2993f69d640bd7232b4b70")
@@ -76,7 +76,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("f07502f5-e4c5-41a8-8788-89717397a98d")
+                        .setId("a173d1db-373b-ce42-1335-6b3285cfdebd")
                         .setLocation("fonts/ClearSans-BoldItalic.ttf.gz")
                         .setFilename("ClearSans-BoldItalic.ttf")
                         .setChecksum("7bce66864e38eecd7c94b6657b9b38c35ebfacf8046bfb1247e08f07fe933198")
@@ -87,7 +87,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("afafc7ef-f516-42da-88d4-d8435f65541b")
+                        .setId("e65c66df-0088-940d-ca5c-207c22118c0e")
                         .setLocation("fonts/ClearSans-Italic.ttf.gz")
                         .setFilename("ClearSans-Italic.ttf")
                         .setChecksum("87c13c5fbae832e4f85c3bd46fcbc175978234f39be5fe51c4937be4cbff3b68")
@@ -98,7 +98,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("28521d9b-ac2e-45d0-89b6-a4c9076dbf6d")
+                        .setId("25610abb-5dc8-fd75-40e7-990507f010c4")
                         .setLocation("fonts/ClearSans-Light.ttf.gz")
                         .setFilename("ClearSans-Light.ttf")
                         .setChecksum("e4885f6188e7a8587f5621c077c6c1f5e8d3739dffc8f4d055c2ba87568c750a")
@@ -109,7 +109,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("13f01bf4-da71-4673-9c60-ec0e9a45c38c")
+                        .setId("ffe40339-a096-2262-c3f8-54af75c81fe6")
                         .setLocation("fonts/ClearSans-Medium.ttf.gz")
                         .setFilename("ClearSans-Medium.ttf")
                         .setChecksum("5d0e0115f3a3ed4be3eda6d7eabb899bb9a361292802e763d53c72e00f629da1")
@@ -120,7 +120,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("73104370-c7ee-4b5b-bb37-392a4e66f65a")
+                        .setId("139a94be-ac69-0264-c9cc-8f2d071fd29d")
                         .setLocation("fonts/ClearSans-MediumItalic.ttf.gz")
                         .setFilename("ClearSans-MediumItalic.ttf")
                         .setChecksum("937dda88b26469306258527d38e42c95e27e7ebb9f05bd1d7c5d706a3c9541d7")
@@ -131,7 +131,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("274f3718-f6e0-40b4-b52a-44812ec3ea9e")
+                        .setId("b887012a-01e1-7c94-fdcb-ca44d5b974a2")
                         .setLocation("fonts/ClearSans-Regular.ttf.gz")
                         .setFilename("ClearSans-Regular.ttf")
                         .setChecksum("9b91bbdb95ffa6663da24fdaa8ee06060cd0a4d2dceaf1ffbdda00e04915ee5b")
@@ -142,7 +142,7 @@ import java.util.List;
                         .build(),
 
                 new DownloadContent.Builder()
-                        .setId("77803858-3cfb-4a0d-a1d3-fa1bf8a6c604")
+                        .setId("c8703652-d317-0356-0bf8-95441a5b2c9b")
                         .setLocation("fonts/ClearSans-Thin.ttf.gz")
                         .setFilename("ClearSans-Thin.ttf")
                         .setChecksum("07b0db85a3ad99afeb803f0f35631436a7b4c67ac66d0c7f77d26a47357c592a")
