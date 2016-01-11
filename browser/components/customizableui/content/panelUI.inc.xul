@@ -88,7 +88,7 @@
                        class="syncTabsMenuItem subviewbutton"
                        label="&syncTabsMenu3.label;"
                        oncommand="BrowserOpenSyncTabs();"
-                       disabled="true"/>
+                       hidden="true"/>
         <toolbarbutton id="appMenuRestoreLastSession"
                        label="&appMenuHistory.restoreSession.label;"
                        class="subviewbutton"
