@@ -1068,10 +1068,16 @@ ProxyAccessible::EmbeddedChildAt(size_t aChildIdx)
 ProxyAccessible*
 ProxyAccessible::FocusedChild()
 {
-  uint64_t childID = 0;
-  bool ok = false;
-  Unused << mDoc->SendFocusedChild(mID, &childID, &ok);
-  return ok ? mDoc->GetAccessible(childID) : nullptr;
+  ProxyAccessible* focus = FocusMgr()->FocusedRemoteAccessible();
+  if (IsDoc()) {
+      return focus;
+  }
+
+  if (focus && (focus == this || focus->Parent() == this)) {
+    return focus;
+  }
+
+  return nullptr;
 }
 
 ProxyAccessible*
