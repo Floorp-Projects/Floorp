@@ -40,6 +40,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Promise", "resource://gre/modules/Promise.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants", "resource://gre/modules/AppConstants.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
   Cu.import("resource://gre/modules/systemlibs.js");
@@ -146,7 +147,11 @@ this.PersistentDataBlock = {
     }
 
     if (this._libc.handler === null) {
-#ifdef MOZ_WIDGET_GONK
+      if (AppConstants.widget != "gonk") {
+        log("This component requires Gonk!");
+        throw Cr.NS_ERROR_ABORT;
+      }
+
       try {
         this._libc.handler = this.ctypes.open(this.ctypes.libraryName("c"));
         this._libc.close = this._libc.handler.declare("close",
@@ -171,10 +176,6 @@ this.PersistentDataBlock = {
         log("Unable to open libc.so: ex = " + ex);
         throw Cr.NS_ERROR_FAILURE;
       }
-#else
-      log("This component requires Gonk!");
-      throw Cr.NS_ERROR_ABORT;
-#endif
     }
 
     this._dataBlockFile = this._libcutils.property_get(PERSISTENT_DATA_BLOCK_PROPERTY);
@@ -292,7 +293,11 @@ this.PersistentDataBlock = {
       return 1024;
     }
 
-#ifdef MOZ_WIDGET_GONK
+    if (AppConstants.widget != "gonk") {
+      log("_getBlockDeviceSize: ERROR: This feature is only supported in Gonk!");
+      return -1;
+    }
+
     const O_READONLY = 0;
     const O_NONBLOCK = 1 << 11;
     /* Getting the correct values for ioctl() operations by reading the headers is not a trivial task, so
@@ -332,10 +337,6 @@ this.PersistentDataBlock = {
     this._libc.close(fd);
     debug("_getBlockDeviceSize: size =" + size.value);
     return size.value;
-#else
-    log("_getBlockDeviceSize: ERROR: This feature is only supported in Gonk!");
-    return -1;
-#endif
   },
 
   /**
@@ -604,7 +605,11 @@ this.PersistentDataBlock = {
       return Promise.resolve();
     }
 
-#ifdef MOZ_WIDGET_GONK
+    if (AppConstants.widget != "gonk") {
+      log("wipe: ERROR: This feature is only supported in Gonk!");
+      return Promise.reject();
+    }
+
     const O_READONLY = 0;
     const O_RDWR = 2;
     const O_NONBLOCK = 1 << 11;
@@ -646,10 +651,6 @@ this.PersistentDataBlock = {
       log("wipe: secure discard succeed");
       return resolve();
     });
-#else
-    log("wipe: ERROR: This feature is only supported in Gonk!");
-    return Promise.reject();
-#endif
   },
 
   /**

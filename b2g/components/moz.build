@@ -70,16 +70,13 @@ EXTRA_JS_MODULES += [
     'LogShake.jsm',
     'MultiscreenHandler.jsm',
     'OrientationChangeHandler.jsm',
+    'PersistentDataBlock.jsm',
     'SafeMode.jsm',
     'Screenshot.jsm',
     'SignInToWebsite.jsm',
     'SystemAppProxy.jsm',
     'TelURIParser.jsm',
     'WebappsUpdater.jsm',
-]
-
-EXTRA_PP_JS_MODULES += [
-    'PersistentDataBlock.jsm'
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'gonk':
