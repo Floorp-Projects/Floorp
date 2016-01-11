@@ -39,5 +39,11 @@ builds:
         additional-parameters:
           b2g_update_channel: 'nightly-b2g44'
 
+post-build:
+  simulator:
+    allowed_build_tasks:
+      - tasks/builds/mulet_linux.yml
+    task: tasks/post-builds/mulet_simulator.yml
+
 # Just needed for parser sake
 tests: []
