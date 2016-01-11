@@ -801,8 +801,8 @@ gfxUtils::ImageFormatToDepth(gfxImageFormat aFormat)
     return 0;
 }
 
-static void
-PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
+/*static*/ void
+gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 {
   aContext->NewPath();
   nsIntRegionRectIterator iter(aRegion);
@@ -810,29 +810,6 @@ PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
   while ((r = iter.Next()) != nullptr) {
     aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
   }
-}
-
-static already_AddRefed<Path>
-PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
-{
-  RefPtr<PathBuilder> pb = aTarget->CreatePathBuilder();
-  nsIntRegionRectIterator iter(aRegion);
-
-  const IntRect* r;
-  while ((r = iter.Next()) != nullptr) {
-    pb->MoveTo(Point(r->x, r->y));
-    pb->LineTo(Point(r->XMost(), r->y));
-    pb->LineTo(Point(r->XMost(), r->YMost()));
-    pb->LineTo(Point(r->x, r->YMost()));
-    pb->Close();
-  }
-  return pb->Finish();
-}
-
-/*static*/ void
-gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  PathFromRegionInternal(aContext, aRegion);
   aContext->Clip();
 }
 
@@ -845,7 +822,19 @@ gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
     return;
   }
 
-  RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion);
+  RefPtr<PathBuilder> pb = aTarget->CreatePathBuilder();
+  nsIntRegionRectIterator iter(aRegion);
+
+  const IntRect* r;
+  while ((r = iter.Next()) != nullptr) {
+    pb->MoveTo(Point(r->x, r->y));
+    pb->LineTo(Point(r->XMost(), r->y));
+    pb->LineTo(Point(r->XMost(), r->YMost()));
+    pb->LineTo(Point(r->x, r->YMost()));
+    pb->Close();
+  }
+  RefPtr<Path> path = pb->Finish();
+
   aTarget->PushClip(path);
 }
 
