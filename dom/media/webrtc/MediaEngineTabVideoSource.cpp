@@ -244,7 +244,7 @@ MediaEngineTabVideoSource::Draw() {
     }
   }
 
-  gfxImageFormat format = gfxImageFormat::RGB24;
+  gfxImageFormat format = SurfaceFormat::X8R8G8B8_UINT32;
   uint32_t stride = gfxASurface::FormatStrideForWidth(format, size.width);
 
   if (mDataSize < static_cast<size_t>(stride * size.height)) {

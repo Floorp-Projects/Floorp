@@ -504,25 +504,25 @@ gfxXlibSurface::FindVisual(Screen *screen, gfxImageFormat format)
     int depth;
     unsigned long red_mask, green_mask, blue_mask;
     switch (format) {
-        case gfxImageFormat::ARGB32:
+        case gfx::SurfaceFormat::A8R8G8B8_UINT32:
             depth = 32;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormat::RGB24:
+        case gfx::SurfaceFormat::X8R8G8B8_UINT32:
             depth = 24;
             red_mask = 0xff0000;
             green_mask = 0xff00;
             blue_mask = 0xff;
             break;
-        case gfxImageFormat::RGB16_565:
+        case gfx::SurfaceFormat::R5G6B5_UINT16:
             depth = 16;
             red_mask = 0xf800;
             green_mask = 0x7e0;
             blue_mask = 0x1f;
             break;
-        case gfxImageFormat::A8:
+        case gfx::SurfaceFormat::A8:
         default:
             return nullptr;
     }
@@ -551,11 +551,11 @@ XRenderPictFormat*
 gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
 {
     switch (format) {
-        case gfxImageFormat::ARGB32:
+        case gfx::SurfaceFormat::A8R8G8B8_UINT32:
             return XRenderFindStandardFormat (dpy, PictStandardARGB32);
-        case gfxImageFormat::RGB24:
+        case gfx::SurfaceFormat::X8R8G8B8_UINT32:
             return XRenderFindStandardFormat (dpy, PictStandardRGB24);
-        case gfxImageFormat::RGB16_565: {
+        case gfx::SurfaceFormat::R5G6B5_UINT16: {
             // PictStandardRGB16_565 is not standard Xrender format
             // we should try to find related visual
             // and find xrender format by visual
@@ -564,7 +564,7 @@ gfxXlibSurface::FindRenderFormat(Display *dpy, gfxImageFormat format)
                 return nullptr;
             return XRenderFindVisualFormat(dpy, visual);
         }
-        case gfxImageFormat::A8:
+        case gfx::SurfaceFormat::A8:
             return XRenderFindStandardFormat (dpy, PictStandardA8);
         default:
             break;

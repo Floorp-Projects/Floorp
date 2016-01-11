@@ -6,6 +6,7 @@
 #include "gfxQuartzSurface.h"
 #include "gfxContext.h"
 #include "gfxImageSurface.h"
+#include "mozilla/gfx/HelpersCairo.h"
 
 #include "cairo-quartz.h"
 
@@ -26,7 +27,7 @@ gfxQuartzSurface::gfxQuartzSurface(const gfxSize& desiredSize, gfxImageFormat fo
     unsigned int width = static_cast<unsigned int>(mSize.width);
     unsigned int height = static_cast<unsigned int>(mSize.height);
 
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    cairo_format_t cformat = GfxFormatToCairoFormat(format);
     cairo_surface_t *surf = cairo_quartz_surface_create(cformat, width, height);
 
     mCGContext = cairo_quartz_surface_get_cg_context (surf);
@@ -109,7 +110,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
     unsigned int width = static_cast<unsigned int>(mSize.width);
     unsigned int height = static_cast<unsigned int>(mSize.height);
 
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    cairo_format_t cformat = GfxFormatToCairoFormat(format);
     cairo_surface_t *surf = cairo_quartz_surface_create_for_data
         (data, cformat, width, height, stride);
 
@@ -132,7 +133,7 @@ gfxQuartzSurface::gfxQuartzSurface(unsigned char *data,
     if (!CheckSurfaceSize(aSize))
         MakeInvalid();
 
-    cairo_format_t cformat = gfxImageFormatToCairoFormat(format);
+    cairo_format_t cformat = GfxFormatToCairoFormat(format);
     cairo_surface_t *surf = cairo_quartz_surface_create_for_data
         (data, cformat, aSize.width, aSize.height, stride);
 

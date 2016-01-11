@@ -44,34 +44,6 @@ enum class gfxBreakPriority {
   eNormalBreak
 };
 
-/**
-  * The format for an image surface. For all formats with alpha data, 0
-  * means transparent, 1 or 255 means fully opaque.
-  *
-  * XXX: it's vital that the values here match the values in cairo_format_t,
-  * otherwise gfxCairoFormatToImageFormat() and gfxImageFormatToCairoFormat()
-  * won't work.
-  */
-enum class gfxImageFormat {
-  ARGB32    = 0, ///< ARGB data in native endianness, using premultiplied alpha
-  RGB24     = 1, ///< xRGB data in native endianness
-  A8        = 2, ///< Only an alpha channel
-  RGB16_565 = 4, ///< RGB_565 data in native endianness
-  Unknown
-};
-
-// XXX: temporary
-// This works because the gfxImageFormat enum is defined so as to match the
-// cairo_format_t enum.
-#define gfxCairoFormatToImageFormat(aFormat) \
-    ((gfxImageFormat)aFormat)
-
-// XXX: temporary
-// This works because the gfxImageFormat enum is defined so as to match the
-// cairo_format_t enum.
-#define gfxImageFormatToCairoFormat(aFormat) \
-    ((cairo_format_t)aFormat)
-
 enum class gfxSurfaceType {
   Image,
   PDF,
