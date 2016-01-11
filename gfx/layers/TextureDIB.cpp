@@ -138,8 +138,8 @@ TextureClientMemoryDIB::AllocateForSurface(gfx::IntSize aSize, TextureAllocation
 
   mSurface = new gfxWindowsSurface(aSize, SurfaceFormatToImageFormat(mFormat));
   if (mSurface->CairoStatus()) {
-    mSurface = nullptr;
     gfxWarning() << "Bad Cairo surface creation " << mSurface->CairoStatus();
+    mSurface = nullptr;
     return false;
   }
 
