@@ -687,7 +687,6 @@ nsOfflineManifestItem::nsOfflineManifestItem(nsIURI *aURI,
                                nsIApplicationCache::ITEM_MANIFEST)
     , mParserState(PARSE_INIT)
     , mNeedsUpdate(true)
-    , mStrictFileOriginPolicy(false)
     , mManifestHashInitialized(false)
 {
     ReadStrictFileOriginPolicyPref();
@@ -1169,7 +1168,6 @@ nsOfflineCacheUpdate::nsOfflineCacheUpdate()
     , mRescheduleCount(0)
     , mPinnedEntryRetriesCount(0)
     , mPinned(false)
-    , mByteProgress(0)
 {
 }
 

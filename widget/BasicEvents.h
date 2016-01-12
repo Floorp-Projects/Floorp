@@ -190,7 +190,6 @@ protected:
   }
 
   WidgetEvent()
-    : time(0)
   {
     MOZ_COUNT_CTOR(WidgetEvent);
   }
@@ -571,7 +570,6 @@ protected:
   }
 
   WidgetInputEvent()
-    : modifiers(0)
   {
   }
 
