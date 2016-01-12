@@ -3259,7 +3259,7 @@ pref("ui.osk.detect_physical_keyboard", true);
 pref("ui.osk.on_screen_keyboard_path", "");
 // Only try to show the on-screen keyboard on Windows 10 and later. Setting
 // this pref to false will allow the OSK to show on Windows 8 and 8.1.
-pref("ui.osk.require_win10", false);
+pref("ui.osk.require_win10", true);
 // This pref stores the "reason" that the on-screen keyboard was either
 // shown or not shown when focus is moved to an editable text field. It is
 // used to help debug why the keyboard is either not appearing when expected
