@@ -3495,9 +3495,21 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
     if (!IsTransformingState(aOldState) && IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformBegin);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      // Let the compositor know about scroll state changes so it can manage
+      // windowed plugins.
+      if (mCompositorParent) {
+        mCompositorParent->ScheduleHideAllPluginWindowsAPZ();
+      }
+#endif
     } else if (IsTransformingState(aOldState) && !IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformEnd);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      if (mCompositorParent) {
+        mCompositorParent->ScheduleShowAllPluginWindowsAPZ();
+      }
+#endif
     }
   }
 }
