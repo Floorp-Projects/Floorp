@@ -233,7 +233,6 @@ nsSHistory::nsSHistory()
   : mIndex(-1)
   , mLength(0)
   , mRequestedIndex(-1)
-  , mRootDocShell(nullptr)
 {
   // Add this new SHistory object to the list
   PR_APPEND_LINK(this, &gSHistoryList);
@@ -1005,7 +1004,6 @@ class TransactionAndDistance
 public:
   TransactionAndDistance(nsISHTransaction* aTrans, uint32_t aDist)
     : mTransaction(aTrans)
-    , mLastTouched(0)
     , mDistance(aDist)
   {
     mViewer = GetContentViewerForTransaction(aTrans);
@@ -1019,6 +1017,7 @@ public:
       shentryInternal->GetLastTouched(&mLastTouched);
     } else {
       NS_WARNING("Can't cast to nsISHEntryInternal?");
+      mLastTouched = 0;
     }
   }
 
