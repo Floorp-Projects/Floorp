@@ -1620,7 +1620,7 @@ GetPropertyIC::tryAttachTypedArrayLength(JSContext* cx, HandleScript outerScript
     MOZ_ASSERT(canAttachStub());
     MOZ_ASSERT(!*emitted);
 
-    if (!IsAnyTypedArray(obj))
+    if (!obj->is<TypedArrayObject>())
         return true;
 
     if (!JSID_IS_ATOM(id, cx->names().length))
@@ -3978,7 +3978,7 @@ GetPropertyIC::tryAttachDenseElementHole(JSContext* cx, HandleScript outerScript
 GetPropertyIC::canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& idval,
                                                    TypedOrValueRegister output)
 {
-    if (!IsAnyTypedArray(obj) && !obj->is<UnboxedArrayObject>())
+    if (!obj->is<TypedArrayObject>() && !obj->is<UnboxedArrayObject>())
         return false;
 
     MOZ_ASSERT(idval.isInt32() || idval.isString());
@@ -3996,13 +3996,13 @@ GetPropertyIC::canAttachTypedOrUnboxedArrayElement(JSObject* obj, const Value& i
             return false;
     }
 
-    if (IsAnyTypedArray(obj)) {
-        if (index >= AnyTypedArrayLength(obj))
+    if (obj->is<TypedArrayObject>()) {
+        if (index >= obj->as<TypedArrayObject>().length())
             return false;
 
         // The output register is not yet specialized as a float register, the only
         // way to accept float typed arrays for now is to return a Value type.
-        uint32_t arrayType = AnyTypedArrayType(obj);
+        uint32_t arrayType = obj->as<TypedArrayObject>().type();
         if (arrayType == Scalar::Float32 || arrayType == Scalar::Float64)
             return output.hasValue();
 
@@ -4092,7 +4092,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
 
     Label popObjectAndFail;
 
-    if (IsAnyTypedArray(array)) {
+    if (array->is<TypedArrayObject>()) {
         // Guard on the initialized length.
         Address length(object, TypedArrayObject::lengthOffset());
         masm.branch32(Assembler::BelowOrEqual, length, indexReg, &failures);
@@ -4106,7 +4106,7 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
 
         // Load the value. We use an invalid register because the destination
         // register is necessary a non double register.
-        Scalar::Type arrayType = AnyTypedArrayType(array);
+        Scalar::Type arrayType = array->as<TypedArrayObject>().type();
         int width = Scalar::byteSize(arrayType);
         BaseIndex source(elementReg, indexReg, ScaleFromElemWidth(width));
         if (output.hasValue()) {
@@ -4321,7 +4321,7 @@ static bool
 IsTypedArrayElementSetInlineable(JSObject* obj, const Value& idval, const Value& value)
 {
     // Don't bother attaching stubs for assigning strings, objects or symbols.
-    return IsAnyTypedArray(obj) && idval.isInt32() &&
+    return obj->is<TypedArrayObject>() && idval.isInt32() &&
            !value.isString() && !value.isObject() && !value.isSymbol();
 }
 
@@ -4525,7 +4525,7 @@ GenerateSetTypedArrayElement(JSContext* cx, MacroAssembler& masm, IonCache::Stub
     Label failures, done, popObjectAndFail;
 
     // Guard on the shape.
-    Shape* shape = AnyTypedArrayShape(tarr);
+    Shape* shape = tarr->as<TypedArrayObject>().lastProperty();
     if (!shape)
         return false;
     masm.branchTestObjShape(Assembler::NotEqual, object, shape, &failures);
@@ -4552,7 +4552,7 @@ GenerateSetTypedArrayElement(JSContext* cx, MacroAssembler& masm, IonCache::Stub
     masm.loadPtr(Address(object, TypedArrayObject::dataOffset()), elements);
 
     // Set the value.
-    Scalar::Type arrayType = AnyTypedArrayType(tarr);
+    Scalar::Type arrayType = tarr->as<TypedArrayObject>().type();
     int width = Scalar::byteSize(arrayType);
     BaseIndex target(elements, indexReg, ScaleFromElemWidth(width));
 

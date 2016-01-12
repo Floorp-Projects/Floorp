@@ -1105,7 +1105,7 @@ CopyToDisjointArray(TypedArrayObject* target, uint32_t targetOffset, SharedMem<v
       }
 
       default:
-        MOZ_CRASH("setFromAnyTypedArray with a typed array with bogus type");
+        MOZ_CRASH("setFromTypedArray with a typed array with bogus type");
     }
 }
 
@@ -1316,7 +1316,7 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(IsAnyTypedArray(&args[0].toObject()));
+    MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
     RootedObject object(cx, &args[0].toObject());
     JSProtoKey protoKey = StandardProtoKeyOrNull(object);
