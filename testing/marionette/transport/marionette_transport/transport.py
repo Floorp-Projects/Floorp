@@ -237,16 +237,21 @@ class TcpTransport(object):
             data = json.dumps(obj)
         payload = "%s:%s" % (len(data), data)
 
-        for packet in [payload[i:i + self.max_packet_length] for i in
-                       range(0, len(payload), self.max_packet_length)]:
+        totalsent = 0
+        while totalsent < len(payload):
             try:
-                self.sock.send(packet)
+                sent = self.sock.send(payload[totalsent:])
+                if sent == 0:
+                    raise IOError("socket error after sending %d of %d bytes" % \
+                            (totalsent, len(payload)))
+                else:
+                    totalsent += sent
+
             except IOError as e:
                 if e.errno == errno.EPIPE:
                     raise IOError("%s: %s" % (str(e), self.connection_lost_msg))
                 else:
                     raise e
-
     def respond(self, obj):
         """Send a response to a command.  This can be an arbitrary JSON
         serialisable object or an ``Exception``.

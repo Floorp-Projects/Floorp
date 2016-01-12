@@ -78,24 +78,11 @@ var gTests = [
   }
 },
 
-// Disabled on Linux for intermittent issues with FHR, see Bug 945667.
 {
   desc: "Check that performing a search fires a search event and records to " +
-        "Firefox Health Report.",
+        "Telemetry.",
   setup: function () { },
   run: function* () {
-    // Skip this test on Linux.
-    if (navigator.platform.indexOf("Linux") == 0) {
-      return Promise.resolve();
-    }
-
-    try {
-      let cm = Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
-      cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
-    } catch (ex) {
-      // Health Report disabled, or no SearchesProvider.
-      return Promise.resolve();
-    }
 
     let engine = yield promiseNewEngine("searchSuggestionEngine.xml");
     // Make this actually work in healthreport by giving it an ID:
@@ -113,23 +100,32 @@ var gTests = [
     is(engine.name, engineName, "Engine name in DOM should match engine we just added");
 
     // Get the current number of recorded searches.
-    let searchStr = "a search";
-    getNumberOfSearchesInFHR(engineName, "abouthome").then(num => {
-      numSearchesBefore = num;
+    let histogramKey = engine.identifier + ".abouthome";
+    try {
+      let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+      if (histogramKey in hs) {
+        numSearchesBefore = hs[histogramKey].sum;
+      }
+    } catch (ex) {
+      // No searches performed yet, not a problem, |numSearchesBefore| is 0.
+    }
 
-      info("Perform a search.");
-      doc.getElementById("searchText").value = searchStr;
-      doc.getElementById("searchSubmit").click();
-    });
+    // Perform a search to increase the SEARCH_COUNT histogram.
+    let searchStr = "a search";
+    info("Perform a search.");
+    doc.getElementById("searchText").value = searchStr;
+    doc.getElementById("searchSubmit").click();
 
     let expectedURL = Services.search.currentEngine.
                       getSubmission(searchStr, null, "homepage").
                       uri.spec;
     let loadPromise = waitForDocLoadAndStopIt(expectedURL).then(() => {
-      getNumberOfSearchesInFHR(engineName, "abouthome").then(num => {
-        is(num, numSearchesBefore + 1, "One more search recorded.");
-        searchEventDeferred.resolve();
-      });
+      // Make sure the SEARCH_COUNTS histogram has the right key and count.
+      let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+      Assert.ok(histogramKey in hs, "histogram with key should be recorded");
+      Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
+                   "histogram sum should be incremented");
+      searchEventDeferred.resolve();
     });
 
     try {

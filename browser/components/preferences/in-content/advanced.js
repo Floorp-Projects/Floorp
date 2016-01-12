@@ -7,6 +7,8 @@ Components.utils.import("resource://gre/modules/DownloadUtils.jsm");
 Components.utils.import("resource://gre/modules/LoadContextInfo.jsm");
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
+const PREF_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
+
 var gAdvancedPane = {
   _inited: false,
 
@@ -289,38 +291,23 @@ var gAdvancedPane = {
   initSubmitHealthReport: function () {
     this._setupLearnMoreLink("datareporting.healthreport.infoURL", "FHRLearnMore");
 
-    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
-                                   .getService(Components.interfaces.nsISupports)
-                                   .wrappedJSObject
-                                   .policy;
-
     let checkbox = document.getElementById("submitHealthReportBox");
 
-    if (!policy || policy.healthReportUploadLocked) {
+    if (Services.prefs.prefIsLocked(PREF_UPLOAD_ENABLED)) {
       checkbox.setAttribute("disabled", "true");
       return;
     }
 
-    checkbox.checked = policy.healthReportUploadEnabled;
+    checkbox.checked = Services.prefs.getBoolPref(PREF_UPLOAD_ENABLED);
     this.setTelemetrySectionEnabled(checkbox.checked);
   },
 
   /**
-   * Update the health report policy acceptance with state from checkbox.
+   * Update the health report preference with state from checkbox.
    */
   updateSubmitHealthReport: function () {
-    let policy = Components.classes["@mozilla.org/datareporting/service;1"]
-                                   .getService(Components.interfaces.nsISupports)
-                                   .wrappedJSObject
-                                   .policy;
-
-    if (!policy) {
-      return;
-    }
-
     let checkbox = document.getElementById("submitHealthReportBox");
-    policy.recordHealthReportUploadEnabled(checkbox.checked,
-                                           "Checkbox from preferences pane");
+    Services.prefs.setBoolPref(PREF_UPLOAD_ENABLED, checkbox.checked);
     this.setTelemetrySectionEnabled(checkbox.checked);
   },
 #endif

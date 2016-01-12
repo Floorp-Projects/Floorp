@@ -996,7 +996,8 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
     return true;
 }
 
-bool MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const
+bool
+MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());
     writer.writeUnsigned(uint32_t(RInstruction::Recover_RegExpMatcher));
@@ -1006,15 +1007,15 @@ bool MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const
 RRegExpMatcher::RRegExpMatcher(CompactBufferReader& reader)
 {}
 
-bool RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const{
+bool
+RRegExpMatcher::recover(JSContext* cx, SnapshotIterator& iter) const
+{
     RootedObject regexp(cx, &iter.read().toObject());
     RootedString input(cx, iter.read().toString());
     int32_t lastIndex = iter.read().toInt32();
     bool sticky = iter.read().toBoolean();
 
     RootedValue result(cx);
-
-    fprintf(stderr, "Recover\n");
     if (!RegExpMatcherRaw(cx, regexp, input, lastIndex, sticky, nullptr, &result))
         return false;
 

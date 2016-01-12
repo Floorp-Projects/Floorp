@@ -8038,7 +8038,8 @@
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",
     "kind": "boolean",
-    "description": "If any version of Firefox Sync is configured for this device"
+    "description": "If any version of Firefox Sync is configured for this device",
+    "releaseChannelCollection": "opt-out"
   },
   "WEAVE_CONFIGURED_MASTER_PASSWORD": {
     "expires_in_version": "never",
@@ -8058,21 +8059,6 @@
     "high": 1000,
     "n_buckets": 10,
     "description": "The number of times a sync successfully completed in this session"
-  },
-  "WEAVE_CUSTOM_LEGACY_SERVER_CONFIGURATION": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Whether legacy Sync is configured to use a custom server"
-  },
-  "WEAVE_CUSTOM_FXA_SERVER_CONFIGURATION": {
-    "expires_in_version": "default",
-    "kind": "boolean",
-    "description": "Whether FxA Sync is configured to use a custom authentication server"
-  },
-  "WEAVE_CUSTOM_TOKEN_SERVER_CONFIGURATION": {
-    "expires_in_version": "50",
-    "kind": "boolean",
-    "description": "Whether FxA Sync is configured to use a custom token server"
   },
   "WEBCRYPTO_EXTRACTABLE_IMPORT": {
     "expires_in_version": "never",
@@ -9639,46 +9625,51 @@
   },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "never",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
-    "description": "If the user is signed in to a Firefox Account on this device"
+    "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
-  "FXA_UNVERIFIED_ACCOUNT_ERRORS": {
+  "FXA_SECURE_CREDENTIALS_SAVE_WITH_MP_LOCKED": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
-    "keyed": true,
     "releaseChannelCollection": "opt-out",
-    "description": "FxA key fetch and certificate signing errors caused by an unverified account. Keyed on the FxA auth server endpoint."
+    "description": "The number of times FxA had credentials to save in the login manager but the master-password was locked, implying they may lose those credentials after a restart."
   },
   "FXA_HAWK_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "FxA error responses caused by invalid Hawk credentials. Keyed on the FxA auth server endpoint."
   },
-  "FXA_SERVER_ERRORS": {
+  "WEAVE_DEVICE_COUNT_DESKTOP": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
-    "kind": "count",
-    "keyed": true,
+    "bug_numbers": [1232050],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
     "releaseChannelCollection": "opt-out",
-    "description": "400 and 500-class server errors returned by the FxA auth server. Keyed on the endpoint."
+    "description": "Number of desktop devices (including this device) associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
-  "TOKENSERVER_AUTH_ERRORS": {
+  "WEAVE_DEVICE_COUNT_MOBILE": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
-    "kind": "count",
-    "keyed": true,
+    "bug_numbers": [1232050],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
     "releaseChannelCollection": "opt-out",
-    "description": "Token server errors caused by invalid BrowserID assertions. Keyed on the token server error cause."
+    "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_ENGINE_APPLY_NEW_FAILURES": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9686,7 +9677,8 @@
   },
   "WEAVE_ENGINE_APPLY_FAILURES": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9694,40 +9686,28 @@
   },
   "WEAVE_ENGINE_SYNC_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Exceptions thrown by a Sync engine. Keyed on the engine name."
   },
-  "WEAVE_CAN_FETCH_KEYS": {
+  "WEAVE_HAS_NO_KEYS_WHEN_UNLOCKED": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
-    "kind": "flag",
-    "releaseChannelCollection": "opt-out",
-    "description": "Whether Sync keys are present in account storage."
-  },
-  "WEAVE_FXA_KEY_FETCH_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
-    "description": "Errors encountered fetching Sync keys, including network errors."
+    "description": "Records how often Sync doesn't have the necessary keys when the master-password is unlocked."
   },
-  "WEAVE_STORAGE_AUTH_ERRORS": {
+  "WEAVE_FXA_KEY_FETCH_AUTH_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
-    "kind": "count",
-    "keyed": true,
-    "releaseChannelCollection": "opt-out",
-    "description": "Sync storage server authentication errors. Keyed on the Sync record name."
-  },
-  "WEAVE_HMAC_ERRORS": {
-    "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "47",
+    "bug_numbers": [1236383],
+    "expires_in_version": "49",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
-    "description": "Sync cryptoKeys collection HMAC mismatches."
+    "description": "Authentication errors encountered fetching Sync keys."
   },
   "CONTENT_DOCUMENTS_DESTROYED": {
     "expires_in_version": "never",

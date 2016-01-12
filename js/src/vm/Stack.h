@@ -203,8 +203,9 @@ class AbstractFramePtr
 
     inline bool hasCallObj() const;
     inline bool isFunctionFrame() const;
-    inline bool isModuleFrame() const;
+    inline bool isGlobalOrModuleFrame() const;
     inline bool isGlobalFrame() const;
+    inline bool isModuleFrame() const;
     inline bool isEvalFrame() const;
     inline bool isDebuggerEvalFrame() const;
     inline bool hasCachedSavedFrame() const;
@@ -280,8 +281,7 @@ enum InitialFrameFlags {
 };
 
 enum ExecuteType {
-    EXECUTE_GLOBAL         =        0x1, /* == InterpreterFrame::GLOBAL */
-    EXECUTE_MODULE         =        0x4, /* == InterpreterFrame::GLOBAL */
+    EXECUTE_GLOBAL_OR_MODULE =      0x1, /* == InterpreterFrame::GLOBAL_OR_MODULE */
     EXECUTE_DIRECT_EVAL    =        0x8, /* == InterpreterFrame::EVAL */
     EXECUTE_INDIRECT_EVAL  =        0x9, /* == InterpreterFrame::GLOBAL | EVAL */
     EXECUTE_DEBUG          =       0x18, /* == InterpreterFrame::EVAL | DEBUGGER_EVAL */
@@ -294,9 +294,8 @@ class InterpreterFrame
   public:
     enum Flags : uint32_t {
         /* Primary frame type */
-        GLOBAL                 =        0x1,  /* frame pushed for a global script */
+        GLOBAL_OR_MODULE       =        0x1,  /* frame pushed for a global script */
         FUNCTION               =        0x2,  /* frame pushed for a scripted call */
-        MODULE                 =        0x4,  /* frame pushed for a module */
 
         /* Frame subtypes */
         EVAL                   =        0x8,  /* frame pushed for eval() or debugger eval */
@@ -477,12 +476,16 @@ class InterpreterFrame
         return !!(flags_ & FUNCTION);
     }
 
+    bool isGlobalOrModuleFrame() const {
+        return !!(flags_ & GLOBAL_OR_MODULE);
+    }
+
     bool isGlobalFrame() const {
-        return !!(flags_ & GLOBAL);
+        return isGlobalOrModuleFrame() && !script()->module();
     }
 
     bool isModuleFrame() const {
-        return !!(flags_ & MODULE);
+        return isGlobalOrModuleFrame() && script()->module();
     }
 
     /*
@@ -663,7 +666,7 @@ class InterpreterFrame
     JSScript* script() const {
         if (isFunctionFrame())
             return isEvalFrame() ? u.evalScript : fun()->nonLazyScript();
-        MOZ_ASSERT(isGlobalFrame() || isModuleFrame());
+        MOZ_ASSERT(isGlobalOrModuleFrame());
         return exec.script;
     }
 
@@ -739,7 +742,7 @@ class InterpreterFrame
     }
 
     const Value& maybeCalleev() const {
-        Value& calleev = flags_ & (EVAL | GLOBAL)
+        Value& calleev = flags_ & (EVAL | GLOBAL_OR_MODULE)
                          ? ((Value*)this)[-1]
                          : argv()[-2];
         MOZ_ASSERT(calleev.isObjectOrNull());
@@ -1921,7 +1924,7 @@ class FrameIter
     inline bool isPhysicalIonFrame() const;
 
     bool isFunctionFrame() const;
-    bool isGlobalFrame() const;
+    bool isGlobalOrModuleFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
     bool hasArgs() const { return isNonEvalFunctionFrame(); }

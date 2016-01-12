@@ -14,7 +14,7 @@
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const beBOM="%FE%FF";
 const leBOM="%FF%FE";
@@ -40,23 +40,13 @@ function testCase(withBOM, charset, charsetDec, decoder, bufferLength)
   var dataURI = "data:text/plain;charset=" + charsetDec + "," +
                  makeText(withBOM, charset);
 
-  var IOService = Components.Constructor("@mozilla.org/network/io-service;1",
-					 "nsIIOService");
   var ConverterInputStream =
       Components.Constructor("@mozilla.org/intl/converter-input-stream;1",
 			     "nsIConverterInputStream",
 			     "init");
 
-  var ios = new IOService();
-  var channel = ios.newChannel2(dataURI,
-                                "",
-                                null,
-                                null,      // aLoadingNode
-                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_NORMAL,
-                                Ci.nsIContentPolicy.TYPE_OTHER);
-  var testInputStream = channel.open();
+  var channel = NetUtil.newChannel({uri: dataURI, loadUsingSystemPrincipal: true});
+  var testInputStream = channel.open2();
   var testConverter = new ConverterInputStream(testInputStream,
 					       decoder,
 					       bufferLength,

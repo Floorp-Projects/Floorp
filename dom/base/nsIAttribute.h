@@ -41,13 +41,11 @@ public:
 protected:
 #ifdef MOZILLA_INTERNAL_API
   nsIAttribute(nsDOMAttributeMap *aAttrMap,
-               already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-               bool aNsAware);
+               already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo);
 #endif //MOZILLA_INTERNAL_API
   virtual ~nsIAttribute();
 
   RefPtr<nsDOMAttributeMap> mAttrMap;
-  bool mNsAware;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIAttribute, NS_IATTRIBUTE_IID)
