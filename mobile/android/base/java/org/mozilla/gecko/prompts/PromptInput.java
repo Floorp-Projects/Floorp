@@ -13,10 +13,10 @@ import org.json.JSONObject;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.widget.AllCapsTextView;
 import org.mozilla.gecko.widget.DateTimePicker;
-import org.mozilla.gecko.widget.FloatingHintEditText;
 
 import android.content.Context;
 import android.content.res.Configuration;
+import android.support.design.widget.TextInputLayout;
 import android.support.v7.widget.AppCompatCheckBox;
 import android.text.Html;
 import android.text.InputType;
@@ -67,7 +67,7 @@ public class PromptInput {
 
         @Override
         public View getView(final Context context) throws UnsupportedOperationException {
-            EditText input = new FloatingHintEditText(context);
+            EditText input = new EditText(context);
             input.setInputType(InputType.TYPE_CLASS_TEXT);
             input.setText(mValue);
 
@@ -87,7 +87,10 @@ public class PromptInput {
                 input.requestFocus();
             }
 
-            mView = (View)input;
+            TextInputLayout inputLayout = new TextInputLayout(context);
+            inputLayout.addView(input);
+
+            mView = (View) inputLayout;
             return mView;
         }
 
