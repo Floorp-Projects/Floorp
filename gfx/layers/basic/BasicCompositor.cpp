@@ -537,10 +537,6 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     *aRenderBoundsOut = Rect();
   }
 
-  if (mInvalidRect.width <= 0 || mInvalidRect.height <= 0) {
-    return;
-  }
-
   if (mTarget) {
     // If we have a copy target, then we don't have a widget-provided mDrawTarget (currently). Use a dummy
     // placeholder so that CreateRenderTarget() works.
@@ -549,8 +545,13 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     // StartRemoteDrawingInRegion can mutate mInvalidRegion.
     mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion);
     mInvalidRect = mInvalidRegion.GetBounds();
+    if (mInvalidRect.IsEmpty()) {
+      mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
+      return;
+    }
   }
-  if (!mDrawTarget) {
+
+  if (!mDrawTarget || mInvalidRect.IsEmpty()) {
     return;
   }
 
