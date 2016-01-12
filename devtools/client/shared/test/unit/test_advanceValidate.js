@@ -10,7 +10,7 @@
 var Cu = Components.utils;
 var Ci = Components.interfaces;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {advanceValidate} = require("devtools/client/styleinspector/utils");
+var {advanceValidate} = require("devtools/client/inspector/shared/utils");
 
 //                            1         2         3
 //                  0123456789012345678901234567890

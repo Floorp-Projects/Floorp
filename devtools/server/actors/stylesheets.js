@@ -21,7 +21,7 @@ const {fetch} = require("devtools/shared/DevToolsUtils");
 const {listenOnce} = require("devtools/shared/async-utils");
 const {SourceMapConsumer} = require("source-map");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/styleinspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
 
 const {
   getIndentationFromPrefs,

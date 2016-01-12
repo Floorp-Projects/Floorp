@@ -19,7 +19,7 @@ const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} =
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
 loader.lazyGetter(this, "CssLogic", () => {
-  return require("devtools/shared/styleinspector/css-logic").CssLogic;
+  return require("devtools/shared/inspector/css-logic").CssLogic;
 });
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);

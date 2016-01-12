@@ -8,11 +8,11 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
-const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {TextProperty} =
       require("devtools/client/inspector/rules/models/text-property");
-const {promiseWarn} = require("devtools/client/styleinspector/utils");
+const {promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {parseDeclarations} = require("devtools/client/shared/css-parsing-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
