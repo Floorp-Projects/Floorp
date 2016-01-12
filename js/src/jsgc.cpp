@@ -6475,6 +6475,16 @@ GCRuntime::defaultBudget(JS::gcreason::Reason reason, int64_t millis)
 void
 GCRuntime::gc(JSGCInvocationKind gckind, JS::gcreason::Reason reason)
 {
+    // This fully-blocking API is frequently used by test code that wants to
+    // clean up some specific data at a known time. If there is an ongoing GC,
+    // we need to finish it and do another complete GC to ensure that
+    // previous roots, caches, and barriers do not keep the thing live.
+    //
+    // Note that we cannot use resetIncrementalGC to do this as the invocation
+    // kind may have changed.
+    if (isIncrementalGCInProgress())
+        finishGC(reason);
+
     invocationKind = gckind;
     collect(true, SliceBudget::unlimited(), reason);
 }
