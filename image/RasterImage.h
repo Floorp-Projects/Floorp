@@ -36,6 +36,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/WeakPtr.h"
 #include "mozilla/UniquePtr.h"
+#include "ImageContainer.h"
 #ifdef DEBUG
   #include "imgIContainerDebug.h"
 #endif
@@ -366,6 +367,9 @@ private: // data
   // A weak pointer to our ImageContainer, which stays alive only as long as
   // the layer system needs it.
   WeakPtr<layers::ImageContainer> mImageContainer;
+
+  layers::ImageContainer::ProducerID mImageProducerID;
+  layers::ImageContainer::FrameID mLastFrameID;
 
   // If mImageContainer is non-null, this contains the DrawResult we obtained
   // the last time we updated it.
