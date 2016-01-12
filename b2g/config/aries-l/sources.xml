@@ -183,11 +183,11 @@
   <project groups="device" name="device-sony-scorpion" path="device/sony/scorpion" remote="b2g" revision="b0cd32cb805637d2afda61b67d0421e2c39b2ffa"/>
   <project groups="device" name="device-sony-sirius" path="device/sony/sirius" remote="b2g" revision="5e5c19c6cd7c042bcac41a2b30b3ad3eeb66e7ab"/>
   <!-- Rhine platform specific things -->
-  <project groups="device" name="device-sony-rhine" path="device/sony/rhine" remote="b2g" revision="f3f0d7ec62e47dff3d37c99be0917d10fdf2a96e"/>
+  <project groups="device" name="device-sony-rhine" path="device/sony/rhine" remote="b2g" revision="fd11de9d08b6210092e523eb1f4fc1c79e483e36"/>
   <project groups="device" name="device-sony-honami" path="device/sony/honami" remote="b2g" revision="f8a9d6d3a2ce73d336453b71db591a82f72a2120"/>
   <project groups="device" name="device-sony-amami" path="device/sony/amami" remote="b2g" revision="9f05cdc34e60df19fcd9189ff8a14f752dcf07b9"/>
   <!-- Yukon platform specific things -->
-  <project name="device-sony-yukon" path="device/sony/yukon" remote="b2g" revision="7547a0f1285c392eb20a29fb4e259a8e8dc0000b"/>
+  <project name="device-sony-yukon" path="device/sony/yukon" remote="b2g" revision="ec062300acf2a127c3479faf5a9e3dafa99521d7"/>
   <project name="device-sony-tianchi" path="device/sony/tianchi" remote="b2g" revision="571afbafe2abf52e031c2484f38ca5f6f81a114a"/>
   <project name="device-sony-eagle" path="device/sony/eagle" remote="b2g" revision="b253fa75f0eeea10a1fa747fd98deb80ec71a654"/>
   <project name="device-sony-flamingo" path="device/sony/flamingo" remote="b2g" revision="44fb20f16a9b1a44af6109dbfad2a975ca29fece"/>
