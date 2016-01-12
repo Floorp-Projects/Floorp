@@ -127,6 +127,10 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     private final SiteIdentityPopup mSiteIdentityPopup;
     private int mSecurityImageLevel;
 
+    // Security level constants, which map to the icons / levels defined in:
+    // http://mxr.mozilla.org/mozilla-central/source/mobile/android/base/java/org/mozilla/gecko/resources/drawable/site_security_level.xml
+    // Default level (unverified pages) - globe icon:
+    private final int LEVEL_DEFAULT_GLOBE = 0;
     // Levels for displaying Mixed Content state icons.
     private final int LEVEL_WARNING_MINOR = 3;
     private final int LEVEL_LOCK_DISABLED = 4;
@@ -439,6 +443,14 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         // This is a bit tricky, but we have one icon and three potential indicators.
         // Default to the identity level
         int imageLevel = securityMode.ordinal();
+
+        // about: pages should default to having no icon too (the same as SecurityMode.UNKNOWN), however
+        // SecurityMode.CHROMEUI has a different ordinal - hence we need to manually reset it here.
+        // (We then continue and process the tracking / mixed content icons as usual, even for about: pages, as they
+        //  can still load external sites.)
+        if (securityMode == SecurityMode.CHROMEUI) {
+            imageLevel = LEVEL_DEFAULT_GLOBE; // == SecurityMode.UNKNOWN.ordinal()
+        }
 
         // Check to see if any protection was overridden first
         if (loginInsecure) {
