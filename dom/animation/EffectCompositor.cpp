@@ -29,6 +29,11 @@ using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
 
+NS_IMPL_CYCLE_COLLECTION_0(EffectCompositor)
+
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
+
 // Helper function to factor out the common logic from
 // GetAnimationsForCompositor and HasAnimationsForCompositor.
 //
