@@ -5,10 +5,16 @@ do {
 } while (!inIon());
 
 // JS_UNINITIALIZED_LEXICAL
-class B {};
-class D extends B {
-  constructor() { super(); }
-};
+function dontAbortWholeCompilation() {
+    class B {};
+    class D extends B {
+        constructor() { super(); }
+    };
+
+    return D;
+}
+var classImpl = dontAbortWholeCompilation();
+
 do {
-  new D(); // jit::CreateThis passes JS_UNINITIALIZED_LEXICAL
+  new classImpl(); // jit::CreateThis passes JS_UNINITIALIZED_LEXICAL
 } while (!inIon());
