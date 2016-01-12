@@ -15,8 +15,6 @@ if not CONFIG['RELEASE_BUILD']:
         'NewTabPrefsProvider.jsm',
         'NewTabURL.jsm',
         'PlacesProvider.jsm',
-        'RemoteAboutNewTab.jsm',
-        'RemoteNewTabUtils.jsm',
     ]
 
 XPIDL_SOURCES += [
