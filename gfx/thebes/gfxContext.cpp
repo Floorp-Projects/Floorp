@@ -109,7 +109,7 @@ gfxContext::~gfxContext()
 }
 
 already_AddRefed<gfxASurface>
-gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
+gfxContext::CurrentSurface()
 {
   if (mDT->GetBackendType() == BackendType::CAIRO) {
     cairo_t* ctx = static_cast<cairo_t*>
@@ -117,20 +117,11 @@ gfxContext::CurrentSurface(gfxFloat *dx, gfxFloat *dy)
     if (ctx) {
       cairo_surface_t* s = cairo_get_group_target(ctx);
       if (s) {
-        if (dx && dy) {
-          double sdx, sdy;
-          cairo_surface_get_device_offset(s, &sdx, &sdy);
-          *dx = -CurrentState().deviceOffset.x + sdx;
-          *dy = -CurrentState().deviceOffset.y + sdy;
-        }
         return gfxASurface::Wrap(s);
       }
     }
   }
 
-  if (dx && dy) {
-    *dx = *dy = 0;
-  }
   // An Azure context doesn't have a surface backing it.
   return nullptr;
 }
