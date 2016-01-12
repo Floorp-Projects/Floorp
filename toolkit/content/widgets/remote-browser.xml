@@ -341,9 +341,10 @@
            * the <browser> element may not be initialized yet.
            */
 
-          let jsm = "resource://gre/modules/RemoteWebNavigation.jsm";
-          let RemoteWebNavigation = Cu.import(jsm, {}).RemoteWebNavigation;
-          this._remoteWebNavigation = new RemoteWebNavigation(this);
+          this._remoteWebNavigation =
+            Cc["@mozilla.org/remote-web-navigation;1"].createInstance(Ci.nsIWebNavigation);
+          this._remoteWebNavigationImpl = this._remoteWebNavigation.wrappedJSObject;
+          this._remoteWebNavigationImpl.swapBrowser(this);
 
           this.messageManager.addMessageListener("Browser:Init", this);
           this.messageManager.addMessageListener("DOMTitleChanged", this);
@@ -366,7 +367,7 @@
             Services.obs.addObserver(this, "browser:purge-session-history", false)
           }
 
-          jsm = "resource://gre/modules/RemoteController.jsm";
+          let jsm = "resource://gre/modules/RemoteController.jsm";
           let RemoteController = Components.utils.import(jsm, {}).RemoteController;
           this._controller = new RemoteController(this);
           this.controllers.appendController(this._controller);
@@ -512,8 +513,8 @@
             } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
               // This can throw if the browser has started to go away.
             }
-            this.webNavigation.canGoBack = false;
-            this.webNavigation.canGoForward = false;
+            this._remoteWebNavigationImpl.canGoBack = false;
+            this._remoteWebNavigationImpl.canGoForward = false;
           ]]>
         </body>
       </method>

@@ -550,6 +550,9 @@
 @RESPATH@/components/PushClient.js
 @RESPATH@/components/PushNotificationService.js
 
+@RESPATH@/components/remotebrowserutils.manifest
+@RESPATH@/components/RemoteWebNavigation.js
+
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
