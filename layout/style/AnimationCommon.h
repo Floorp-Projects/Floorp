@@ -234,15 +234,6 @@ public:
 
   dom::Element* GetElementToRestyle() const;
 
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    dom::Element* element = GetElementToRestyle();
-    if (element) {
-      nsRestyleHint hint = IsForTransitions() ? eRestyle_CSSTransitions
-                                              : eRestyle_CSSAnimations;
-      aPresContext->PresShell()->RestyleForAnimation(element, hint);
-    }
-  }
-
   dom::Element *mElement;
 
   // the atom we use in mElement's prop table (must be a static atom,
