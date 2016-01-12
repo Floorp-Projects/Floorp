@@ -872,11 +872,16 @@ MediaDecoder::MetadataLoaded(nsAutoPtr<MediaInfo> aInfo,
 
   // Make sure the element and the frame (if any) are told about
   // our new size.
-  Invalidate();
   if (aEventVisibility != MediaDecoderEventVisibility::Suppressed) {
     mFiredMetadataLoaded = true;
     mOwner->MetadataLoaded(mInfo, nsAutoPtr<const MetadataTags>(aTags.forget()));
   }
+  // Invalidate() will end up calling mOwner->UpdateMediaSize with the last
+  // dimensions retrieved from the video frame container. The video frame
+  // container contains more up to date dimensions than aInfo.
+  // So we call Invalidate() after calling mOwner->MetadataLoaded to ensure
+  // the media element has the latest dimensions.
+  Invalidate();
 
   EnsureTelemetryReported();
 }
