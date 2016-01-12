@@ -189,6 +189,27 @@ EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
 }
 
 void
+EffectCompositor::PostRestyleForThrottledAnimations()
+{
+  for (size_t i = 0; i < kCascadeLevelCount; i++) {
+    CascadeLevel cascadeLevel = CascadeLevel(i);
+    auto& elementSet = mElementsToRestyle[cascadeLevel];
+
+    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
+      bool& postedRestyle = iter.Data();
+      if (postedRestyle) {
+        continue;
+      }
+
+      PostRestyleForAnimation(iter.Key().mElement,
+                              iter.Key().mPseudoType,
+                              cascadeLevel);
+      postedRestyle = true;
+    }
+  }
+}
+
+void
 EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                            nsCSSPseudoElements::Type
                                              aPseudoType,
@@ -248,19 +269,6 @@ EffectCompositor::GetElementToRestyle(dom::Element* aElement,
     return nullptr;
   }
   return pseudoFrame->GetContent()->AsElement();
-}
-
-bool
-EffectCompositor::HasThrottledAnimations(Element* aElement,
-                                         nsCSSPseudoElements::Type aPseudoType,
-                                         CascadeLevel aCascadeLevel) const
-{
-  auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
-  PseudoElementHashKey key = { aElement, aPseudoType };
-
-  bool hasPendingRestyle = false;
-  return elementsToRestyle.Get(key, &hasPendingRestyle) &&
-         !hasPendingRestyle;
 }
 
 /* static */ bool

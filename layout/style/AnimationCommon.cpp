@@ -278,38 +278,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   return result;
 }
 
-void
-CommonAnimationManager::FlushAnimations()
-{
-  for (AnimationCollection* collection = mElementCollections.getFirst();
-       collection; collection = collection->getNext()) {
-
-    EffectCompositor::CascadeLevel cascadeLevel =
-      collection->IsForAnimations() ?
-      EffectCompositor::CascadeLevel::Animations :
-      EffectCompositor::CascadeLevel::Transitions;
-    bool hasThrottledAnimations =
-      mPresContext->EffectCompositor()->HasThrottledAnimations(
-        collection->mElement,
-        collection->PseudoElementType(),
-        cascadeLevel);
-    if (!hasThrottledAnimations) {
-      continue;
-    }
-
-    MOZ_ASSERT(collection->mElement->GetComposedDoc() ==
-                 mPresContext->Document(),
-               "Should not have a transition/animation collection for an "
-               "element that is not part of the document tree");
-
-    mPresContext->EffectCompositor()->RequestRestyle(
-      collection->mElement,
-      collection->PseudoElementType(),
-      EffectCompositor::RestyleType::Standard,
-      cascadeLevel);
-  }
-}
-
 nsIStyleRule*
 CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
                                          nsCSSPseudoElements::Type aPseudoType)
