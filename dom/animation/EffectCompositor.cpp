@@ -378,6 +378,20 @@ EffectCompositor::GetAnimationsForCompositor(const nsIFrame* aFrame,
 }
 
 /* static */ void
+EffectCompositor::ClearIsRunningOnCompositor(const nsIFrame *aFrame,
+                                             nsCSSProperty aProperty)
+{
+  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
+  if (!effects) {
+    return;
+  }
+
+  for (KeyframeEffectReadOnly* effect : *effects) {
+    effect->SetIsRunningOnCompositor(aProperty, false);
+  }
+}
+
+/* static */ void
 EffectCompositor::MaybeUpdateCascadeResults(Element* aElement,
                                             nsCSSPseudoElements::Type
                                               aPseudoType,

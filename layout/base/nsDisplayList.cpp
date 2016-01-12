@@ -47,8 +47,6 @@
 #include "nsSVGElement.h"
 #include "nsSVGClipPathFrame.h"
 #include "GeckoProfiler.h"
-#include "nsAnimationManager.h"
-#include "nsTransitionManager.h"
 #include "nsViewManager.h"
 #include "ImageLayers.h"
 #include "ImageContainer.h"
@@ -526,11 +524,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     RestyleManager::GetAnimationGenerationForFrame(aFrame);
   aLayer->SetAnimationGeneration(animationGeneration);
 
-  nsPresContext* presContext = aFrame->PresContext();
-  presContext->TransitionManager()->ClearIsRunningOnCompositor(aFrame,
-                                                               aProperty);
-  presContext->AnimationManager()->ClearIsRunningOnCompositor(aFrame,
-                                                              aProperty);
+  EffectCompositor::ClearIsRunningOnCompositor(aFrame, aProperty);
   nsTArray<RefPtr<dom::Animation>> compositorAnimations =
     EffectCompositor::GetAnimationsForCompositor(aFrame, aProperty);
   if (compositorAnimations.IsEmpty()) {
@@ -541,14 +535,14 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
   // Do this check only during layer construction; during updating the
   // caller is required to check it appropriately.
   if (aItem && !aItem->CanUseAsyncAnimations(aBuilder)) {
-    // AnimationManager or TransitionManager need to know that we refused to
-    // run this animation asynchronously so that they will not throttle the
-    // main thread animation.
+    // EffectCompositor needs to know that we refused to run this animation
+    // asynchronously so that it will not throttle the main thread
+    // animation.
     aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(),
                             reinterpret_cast<void*>(intptr_t(true)));
 
-    // We need to schedule another refresh driver run so that AnimationManager
-    // or TransitionManager get a chance to unthrottle the animation.
+    // We need to schedule another refresh driver run so that EffectCompositor
+    // gets a chance to unthrottle the animation.
     aFrame->SchedulePaint();
     return;
   }

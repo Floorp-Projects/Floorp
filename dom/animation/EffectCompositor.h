@@ -130,6 +130,8 @@ public:
   GetAnimationsForCompositor(const nsIFrame* aFrame,
                              nsCSSProperty aProperty);
 
+  static void ClearIsRunningOnCompositor(const nsIFrame* aFrame,
+                                         nsCSSProperty aProperty);
 
   // Update animation cascade results for the specified (pseudo-)element
   // but only if we have marked the cascade as needing an update due a
