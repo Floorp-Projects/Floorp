@@ -708,13 +708,6 @@ public:
   }
 
   /**
-   * Getter and setters for OMTA time counters
-   */
-  bool StyleUpdateForAllAnimationsIsUpToDate() const;
-  void TickLastStyleUpdateForAllAnimations();
-  void ClearLastStyleUpdateForAllAnimations();
-
-  /**
    *  Check if bidi enabled (set depending on the presence of RTL
    *  characters or when default directionality is RTL).
    *  If enabled, we should apply the Unicode Bidi Algorithm

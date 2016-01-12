@@ -158,7 +158,6 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
 
   if (aRestyleType == RestyleType::Layer) {
     // Prompt layers to re-sync their animations.
-    mPresContext->ClearLastStyleUpdateForAllAnimations();
     mPresContext->RestyleManager()->IncrementAnimationGeneration();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aPseudoType);
