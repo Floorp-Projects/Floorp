@@ -54,8 +54,8 @@ function test() {
         yield actions.togglePrettyPrint(source);
         ok(false, "The promise for a prettified source should be rejected!");
       } catch(error) {
-        ok(error.rdpError, "Error came from a RDP request");
-        ok(error.rdpError.includes("prettyPrintError"),
+        ok(error.error, "Error came from a RDP request");
+        ok(error.error.includes("prettyPrintError"),
           "The promise was correctly rejected with a meaningful message.");
       }
 

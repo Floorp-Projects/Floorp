@@ -10,7 +10,6 @@ var promise = require("promise");
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("sdk/clipboard");
 var {setTimeout, clearTimeout} = require("sdk/timers");
-var {promiseInvoke} = require("devtools/shared/async-utils");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // All test are asynchronous
@@ -763,10 +762,7 @@ function contextMenuClick(element) {
 function registerTabActor(client, options) {
   let moduleUrl = options.moduleUrl;
 
-  // Since client.listTabs doesn't use promises we need to
-  // 'promisify' it using 'promiseInvoke' helper method.
-  // This helps us to chain all promises and catch errors.
-  return promiseInvoke(client, client.listTabs).then(response => {
+  return client.listTabs().then(response => {
     let config = {
       prefix: options.prefix,
       constructor: options.actorClass,
