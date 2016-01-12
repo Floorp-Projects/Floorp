@@ -179,6 +179,13 @@ GlobalObject::resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JS
         if (!proto)
             return false;
 
+        // Make sure that creating the prototype didn't recursively resolve our
+        // own constructor. We can't just assert that there's no prototype; OOMs
+        // can result in incomplete resolutions in which the prototype is saved
+        // but not the constructor. So use the same criteria that protects entry
+        // into this function.
+        MOZ_ASSERT(!global->isStandardClassResolved(key));
+
         global->setPrototype(key, ObjectValue(*proto));
     }
 
