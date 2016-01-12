@@ -168,8 +168,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
 
   void Tick();
 
-  void EnsureStyleRuleFor();
-
 public:
   // True if this animation can be performed on the compositor thread.
   //
