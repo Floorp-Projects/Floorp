@@ -17,9 +17,17 @@ add_task(function* test_i18n() {
   function runTests(assertEq) {
     let _ = browser.i18n.getMessage.bind(browser.i18n);
 
+    let url = browser.runtime.getURL("/");
+    assertEq(url, `moz-extension://${_("@@extension_id")}/`, "@@extension_id builtin message");
+
     assertEq("Foo.", _("Foo"), "Simple message in selected locale.");
 
     assertEq("(bar)", _("bar"), "Simple message fallback in default locale.");
+
+    assertEq("??", _("some-unknown-locale-string"), "Unknown locale string.");
+
+    assertEq("??", _("@@unknown_builtin_string"), "Unknown built-in string.");
+    assertEq("??", _("@@bidi_unknown_builtin_string"), "Unknown built-in bidi string.");
 
     let substitutions = [];
     substitutions[4] = "5";
