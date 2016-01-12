@@ -102,21 +102,21 @@ nsFilePickerProxy::SetFilterIndex(int32_t aFilterIndex)
 NS_IMETHODIMP
 nsFilePickerProxy::GetFile(nsIFile** aFile)
 {
-  MOZ_ASSERT(false, "GetFile is unimplemented; use GetDomFileOrDirectory");
+  MOZ_ASSERT(false, "GetFile is unimplemented; use GetDomfile");
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetFileURL(nsIURI** aFileURL)
 {
-  MOZ_ASSERT(false, "GetFileURL is unimplemented; use GetDomFileOrDirectory");
+  MOZ_ASSERT(false, "GetFileURL is unimplemented; use GetDomfile");
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
 nsFilePickerProxy::GetFiles(nsISimpleEnumerator** aFiles)
 {
-  MOZ_ASSERT(false, "GetFiles is unimplemented; use GetDomFileOrDirectoryEnumerator");
+  MOZ_ASSERT(false, "GetFiles is unimplemented; use GetDomfiles");
   return NS_ERROR_FAILURE;
 }
 
@@ -161,7 +161,7 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
       RefPtr<File> file = File::Create(mParent, blobImpl);
       MOZ_ASSERT(file);
 
-      mFilesOrDirectories.AppendElement(file);
+      mDomfiles.AppendElement(file);
     }
   }
 
@@ -174,16 +174,16 @@ nsFilePickerProxy::Recv__delete__(const MaybeInputFiles& aFiles,
 }
 
 NS_IMETHODIMP
-nsFilePickerProxy::GetDomFileOrDirectory(nsISupports** aValue)
+nsFilePickerProxy::GetDomfile(nsISupports** aDomfile)
 {
-  *aValue = nullptr;
-  if (mFilesOrDirectories.IsEmpty()) {
+  *aDomfile = nullptr;
+  if (mDomfiles.IsEmpty()) {
     return NS_OK;
   }
 
-  MOZ_ASSERT(mFilesOrDirectories.Length() == 1);
-  nsCOMPtr<nsIDOMBlob> blob = mFilesOrDirectories[0].get();
-  blob.forget(aValue);
+  MOZ_ASSERT(mDomfiles.Length() == 1);
+  nsCOMPtr<nsIDOMBlob> blob = mDomfiles[0].get();
+  blob.forget(aDomfile);
   return NS_OK;
 }
 
@@ -230,9 +230,9 @@ NS_IMPL_ISUPPORTS(SimpleEnumerator, nsISimpleEnumerator)
 } // namespace
 
 NS_IMETHODIMP
-nsFilePickerProxy::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aDomfiles)
+nsFilePickerProxy::GetDomfiles(nsISimpleEnumerator** aDomfiles)
 {
-  RefPtr<SimpleEnumerator> enumerator = new SimpleEnumerator(mFilesOrDirectories);
+  RefPtr<SimpleEnumerator> enumerator = new SimpleEnumerator(mDomfiles);
   enumerator.forget(aDomfiles);
   return NS_OK;
 }

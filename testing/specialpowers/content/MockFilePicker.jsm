@@ -146,9 +146,7 @@ MockFilePickerInstance.prototype = {
 
     return null;
   },
-
-  // We don't support directories here.
-  get domFileOrDirectory()  {
+  get domfile()  {
     if (MockFilePicker.returnFiles.length >= 1) {
       // window.File does not implement nsIFile
       if (!MockFilePicker.isNsIFile(MockFilePicker.returnFiles[0])) {
@@ -186,7 +184,7 @@ MockFilePickerInstance.prototype = {
       }
     };
   },
-  get domFileOrDirectoryEnumerator()  {
+  get domfiles()  {
     let utils = this.parent.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
     return {
