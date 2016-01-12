@@ -175,9 +175,6 @@ enum class Expr : uint8_t
     I32B32X4AllTrue,
     I32B32X4AnyTrue,
 
-    // Specific to AsmJS
-    I32Id,
-
     // F32 opcdoes
     // Common opcodes
     F32CallInternal,
@@ -216,9 +213,6 @@ enum class Expr : uint8_t
 
     // SIMD opcodes
     F32F32X4ExtractLane,
-
-    // asm.js specific
-    F32Id,
 
     // F64 opcodes
     // Common opcodes
@@ -267,9 +261,6 @@ enum class Expr : uint8_t
     F64StoreF32,
     F64StoreF64,
 
-    // asm.js specific
-    F64Id,
-
     // I32X4 opcodes
     // Common opcodes
     I32X4CallInternal,
@@ -303,9 +294,6 @@ enum class Expr : uint8_t
     I32X4Load,
     I32X4Store,
 
-    // asm.js specific
-    I32X4Id,
-
     // F32X4 opcodes
     // Common opcodes
     F32X4CallInternal,
@@ -336,9 +324,6 @@ enum class Expr : uint8_t
     F32X4Load,
     F32X4Store,
 
-    // asm.js specific
-    F32X4Id,
-
     // B32X4 opcodes
     // Common opcodes
     B32X4CallInternal,
@@ -362,10 +347,7 @@ enum class Expr : uint8_t
 
     B32X4ReplaceLane,
 
-    B32X4Splat,
-
-    // asm.js specific
-    B32X4Id
+    B32X4Splat
 };
 
 enum NeedsBoundsCheck : uint8_t
