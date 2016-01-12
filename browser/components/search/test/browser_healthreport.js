@@ -3,75 +3,50 @@
 
 "use strict";
 
+var Preferences = Cu.import("resource://gre/modules/Preferences.jsm", {}).Preferences;
+
 function test() {
-  requestLongerTimeout(2);
   waitForExplicitFinish();
   resetPreferences();
 
-  try {
-    let cm = Components.classes["@mozilla.org/categorymanager;1"]
-                       .getService(Components.interfaces.nsICategoryManager);
-    cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
-  } catch (ex) {
-    // Health Report disabled, or no SearchesProvider.
-    // We need a test or else we'll be marked as failure.
-    ok(true, "Firefox Health Report is not enabled.");
-    finish();
-    return;
-  }
+  function testTelemetry() {
+    // Find the right bucket for the "Foo" engine.
+    let engine = Services.search.getEngineByName("Foo");
+    let histogramKey = (engine.identifier || "other-Foo") + ".searchbar";
+    let numSearchesBefore = 0;
+    try {
+      let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+      if (histogramKey in hs) {
+        numSearchesBefore = hs[histogramKey].sum;
+      }
+    } catch (ex) {
+      // No searches performed yet, not a problem, |numSearchesBefore| is 0.
+    }
 
-  function testFHR() {
-    let reporter = Components.classes["@mozilla.org/datareporting/service;1"]
-                                     .getService()
-                                     .wrappedJSObject
-                                     .healthReporter;
-    ok(reporter, "Health Reporter available.");
-    reporter.onInit().then(function onInit() {
-      let provider = reporter.getProvider("org.mozilla.searches");
-      let m = provider.getMeasurement("counts", 3);
+    // Now perform a search and ensure the count is incremented.
+    let tab = gBrowser.addTab();
+    gBrowser.selectedTab = tab;
+    let searchBar = BrowserSearch.searchBar;
 
-      m.getValues().then(function onData(data) {
-        let now = new Date();
-        let oldCount = 0;
+    searchBar.value = "firefox health report";
+    searchBar.focus();
 
-        // Find the right bucket for the "Foo" engine.
+     function afterSearch() {
+        searchBar.value = "";
+        gBrowser.removeTab(tab);
+
+        // Make sure that the context searches are correctly recorded.
+        let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+        Assert.ok(histogramKey in hs, "The histogram must contain the correct key");
+        Assert.equal(hs[histogramKey].sum, numSearchesBefore + 1,
+                     "Performing a search increments the related SEARCH_COUNTS key by 1.");
+
         let engine = Services.search.getEngineByName("Foo");
-        let field = (engine.identifier || "other-Foo") + ".searchbar";
+        Services.search.removeEngine(engine);
+      }
 
-        if (data.days.hasDay(now)) {
-          let day = data.days.getDay(now);
-          if (day.has(field)) {
-            oldCount = day.get(field);
-          }
-        }
-
-        // Now perform a search and ensure the count is incremented.
-        let tab = gBrowser.addTab();
-        gBrowser.selectedTab = tab;
-        let searchBar = BrowserSearch.searchBar;
-
-        searchBar.value = "firefox health report";
-        searchBar.focus();
-
-        function afterSearch() {
-          searchBar.value = "";
-          gBrowser.removeTab(tab);
-
-          m.getValues().then(function onData(data) {
-            ok(data.days.hasDay(now), "Have data for today.");
-            let day = data.days.getDay(now);
-
-            is(day.get(field), oldCount + 1, "Performing a search increments FHR count by 1.");
-
-            let engine = Services.search.getEngineByName("Foo");
-            Services.search.removeEngine(engine);
-          });
-        }
-
-        EventUtils.synthesizeKey("VK_RETURN", {});
-        executeSoon(() => executeSoon(afterSearch));
-      });
-    });
+      EventUtils.synthesizeKey("VK_RETURN", {});
+      executeSoon(() => executeSoon(afterSearch));
   }
 
   function observer(subject, topic, data) {
@@ -84,7 +59,7 @@ function test() {
 
       case "engine-current":
         is(Services.search.currentEngine.name, "Foo", "Current engine is Foo");
-        testFHR();
+        testTelemetry();
         break;
 
       case "engine-removed":
@@ -101,9 +76,6 @@ function test() {
 }
 
 function resetPreferences() {
-  let service = Components.classes["@mozilla.org/datareporting/service;1"]
-                                  .getService(Components.interfaces.nsISupports)
-                                  .wrappedJSObject;
-  service.policy._prefs.resetBranch("datareporting.policy.");
-  service.policy.dataSubmissionPolicyBypassNotification = true;
+  Preferences.resetBranch("datareporting.policy.");
+  Preferences.set("datareporting.policy.dataSubmissionPolicyBypassNotification", true);
 }

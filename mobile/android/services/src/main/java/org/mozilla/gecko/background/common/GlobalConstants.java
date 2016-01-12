@@ -23,15 +23,6 @@ public class GlobalConstants {
 
   public static final int SHARED_PREFERENCES_MODE = 0;
 
-  // These are used to ask Fennec (via reflection) to send
-  // us a pref notification. This avoids us having to guess
-  // Fennec's prefs branch and pref name.
-  // Eventually Fennec might listen to startup notifications and
-  // do this automatically, but this will do for now. See Bug 800244.
-  public static String GECKO_PREFERENCES_CLASS = "org.mozilla.gecko.preferences.GeckoPreferences";
-  public static String GECKO_BROADCAST_HEALTHREPORT_UPLOAD_PREF_METHOD  = "broadcastHealthReportUploadPref";
-  public static String GECKO_BROADCAST_HEALTHREPORT_PRUNE_METHOD = "broadcastHealthReportPrune";
-
   // Common time values.
   public static final long MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
   public static final long MILLISECONDS_PER_SIX_MONTHS = 180 * MILLISECONDS_PER_DAY;

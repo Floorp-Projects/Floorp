@@ -20,11 +20,6 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
-  () => Cc["@mozilla.org/datareporting/service;1"]
-          .getService(Ci.nsISupports)
-          .wrappedJSObject);
-
 // Force the Telemetry enabled preference so that TelemetrySession.reset() doesn't exit early.
 Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
 
@@ -70,13 +65,6 @@ add_task(function* test_newBuild() {
 function run_test() {
   // Make sure we have a profile directory.
   do_get_profile();
-
-  // Send the needed startup notifications to the datareporting service
-  // to ensure that it has been initialized.
-  if ("@mozilla.org/datareporting/service;1" in Cc) {
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
-  }
 
   run_next_test();
 }

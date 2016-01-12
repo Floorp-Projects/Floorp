@@ -181,9 +181,6 @@ add_identity_test(this, function test_401_logout() {
       _("Got weave:service:login:error in second sync.");
       Svc.Obs.remove("weave:service:login:error", onLoginError);
 
-      let errorCount = sumHistogram("WEAVE_STORAGE_AUTH_ERRORS", { key: "info/collections" });
-      do_check_eq(errorCount, 2);
-
       let expected = isConfiguredWithLegacyIdentity() ?
                      LOGIN_FAILED_LOGIN_REJECTED : LOGIN_FAILED_NETWORK_ERROR;
 
