@@ -10,6 +10,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h"
 
+#include "MediaSink.h"
+
 namespace mozilla {
 
 class MediaData;
@@ -28,9 +30,11 @@ public:
     : mAudioQueue(aAudioQueue)
   {}
 
+  typedef MediaSink::PlaybackParams PlaybackParams;
+
   // Return a promise which will be resolved when AudioSink finishes playing,
   // or rejected if any error.
-  virtual RefPtr<GenericPromise> Init() = 0;
+  virtual RefPtr<GenericPromise> Init(const PlaybackParams& aParams) = 0;
 
   virtual int64_t GetEndTime() const = 0;
   virtual int64_t GetPosition() = 0;
