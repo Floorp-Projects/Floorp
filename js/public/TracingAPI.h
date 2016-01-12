@@ -314,12 +314,6 @@ template <typename T>
 extern JS_PUBLIC_API(void)
 UnsafeTraceRoot(JSTracer* trc, T* edgep, const char* name);
 
-} // namespace JS
-
-extern JS_PUBLIC_API(void)
-JS_TraceRuntime(JSTracer* trc);
-
-namespace JS {
 extern JS_PUBLIC_API(void)
 TraceChildren(JSTracer* trc, GCCellPtr thing);
 
