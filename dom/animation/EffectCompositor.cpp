@@ -411,7 +411,7 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
                                                               false);
                                                              /* don't create */
     if (animations) {
-      animations->RequestRestyle(AnimationCollection::RestyleType::Layer);
+      animations->RequestRestyle(RestyleType::Layer);
     }
 
     AnimationCollection* transitions =
@@ -420,7 +420,7 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
                                                                false);
                                                              /* don't create */
     if (transitions) {
-      transitions->RequestRestyle(AnimationCollection::RestyleType::Layer);
+      transitions->RequestRestyle(RestyleType::Layer);
     }
   }
 }

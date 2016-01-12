@@ -10,6 +10,7 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
@@ -178,8 +179,8 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
       // also detect if the current iteration has changed.
       computedTiming.mProgress != mProgressOnLastCompose) {
     collection->RequestRestyle(CanThrottle() ?
-                               AnimationCollection::RestyleType::Throttled :
-                               AnimationCollection::RestyleType::Standard);
+                               EffectCompositor::RestyleType::Throttled :
+                               EffectCompositor::RestyleType::Standard);
   }
 }
 
