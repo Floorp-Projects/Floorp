@@ -1048,7 +1048,7 @@ Animation::PostUpdate()
 {
   AnimationCollection* collection = GetCollection();
   if (collection) {
-    collection->RequestRestyle(AnimationCollection::RestyleType::Layer);
+    collection->RequestRestyle(EffectCompositor::RestyleType::Layer);
   }
 }
 
