@@ -11,10 +11,18 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.animation.TransitionsTracker;
 
+import android.annotation.TargetApi;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.provider.Settings;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
+
 import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.nineoldandroids.animation.AnimatorSet;
@@ -23,6 +31,8 @@ import com.nineoldandroids.view.ViewHelper;
 
 public class TabQueuePrompt extends Locales.LocaleAwareActivity {
     public static final String LOGTAG = "Gecko" + TabQueuePrompt.class.getSimpleName();
+
+    private static final int SETTINGS_REQUEST_CODE = 1;
 
     // Flag set during animation to prevent animation multiple-start.
     private boolean isAnimating;
@@ -43,7 +53,8 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
 
         final int numberOfTimesTabQueuePromptSeen = GeckoSharedPrefs.forApp(this).getInt(TabQueueHelper.PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
 
-        findViewById(R.id.ok_button).setOnClickListener(new View.OnClickListener() {
+        final View okButton = findViewById(R.id.ok_button);
+        okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 onConfirmButtonPressed();
@@ -58,6 +69,28 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
                 finish();
             }
         });
+        final View settingsButton = findViewById(R.id.settings_button);
+        settingsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onSettingsButtonPressed();
+            }
+        });
+
+        final View tipView = findViewById(R.id.tip_text);
+        final View settingsPermitView = findViewById(R.id.settings_permit_text);
+
+        if (TabQueueHelper.canDrawOverlays(this)) {
+            okButton.setVisibility(View.VISIBLE);
+            settingsButton.setVisibility(View.GONE);
+            tipView.setVisibility(View.VISIBLE);
+            settingsPermitView.setVisibility(View.GONE);
+        } else {
+            okButton.setVisibility(View.GONE);
+            settingsButton.setVisibility(View.VISIBLE);
+            tipView.setVisibility(View.GONE);
+            settingsPermitView.setVisibility(View.VISIBLE);
+        }
 
         containerView = findViewById(R.id.tab_queue_container);
         buttonContainer = findViewById(R.id.button_container);
@@ -120,6 +153,31 @@ public class TabQueuePrompt extends Locales.LocaleAwareActivity {
         });
 
         set.start();
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void onSettingsButtonPressed() {
+        Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION);
+        intent.setData(Uri.parse("package:" + getPackageName()));
+        startActivityForResult(intent, SETTINGS_REQUEST_CODE);
+
+        Toast.makeText(this, R.string.tab_queue_prompt_permit_drawing_over_apps, Toast.LENGTH_LONG).show();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode != SETTINGS_REQUEST_CODE) {
+            return;
+        }
+
+        if (TabQueueHelper.canDrawOverlays(this)) {
+            // User granted the permission in Android's settings.
+            final int numberOfTimesTabQueuePromptSeen = GeckoSharedPrefs.forApp(this).getInt(TabQueueHelper.PREF_TAB_QUEUE_TIMES_PROMPT_SHOWN, 0);
+            Telemetry.addToHistogram("FENNEC_TABQUEUE_PROMPT_ENABLE_YES", numberOfTimesTabQueuePromptSeen);
+
+            setResult(TabQueueHelper.TAB_QUEUE_YES);
+            finish();
+        }
     }
 
     /**

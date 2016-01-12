@@ -45,7 +45,6 @@
             android:text="@string/tab_queue_prompt_text"
             android:textColor="@color/placeholder_grey"
             android:textSize="16sp"
-
             tools:text="Save them until the next time you open Firefox." />
 
         <TextView
@@ -60,8 +59,21 @@
             android:textColor="@color/action_orange"
             android:textSize="14sp"
             android:textStyle="italic"
-
             tools:text="you can change this later in Settings" />
+
+        <TextView
+            android:id="@+id/settings_permit_text"
+            android:layout_width="@dimen/overlay_prompt_content_width"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:paddingBottom="30dp"
+            android:paddingTop="20dp"
+            android:text="@string/tab_queue_prompt_permit_drawing_over_apps"
+            android:textColor="@color/action_orange"
+            android:textSize="14sp"
+            android:textStyle="italic"
+            tools:text="Turn on Permit drawing over other apps" />
 
         <FrameLayout
             android:id="@+id/bottom_container"
@@ -108,8 +120,19 @@
                     android:text="@string/tab_queue_prompt_positive_action_button"
                     android:textColor="@android:color/white"
                     android:textSize="16sp"
-
                     tools:text="Enable" />
+
+                <Button
+                    android:id="@+id/settings_button"
+                    style="@style/Widget.BaseButton"
+                    android:layout_width="@dimen/overlay_prompt_button_width"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:background="@drawable/button_background_action_orange_round"
+                    android:text="@string/tab_queue_prompt_settings_button"
+                    android:textColor="@android:color/white"
+                    android:textSize="16sp"
+                    tools:text="Go to settings" />
 
             </LinearLayout>
 
