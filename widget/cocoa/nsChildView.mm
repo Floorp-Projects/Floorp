@@ -318,6 +318,7 @@ public:
 protected:
 
   RefPtr<gfx::DrawTarget> mUpdateDrawTarget;
+  UniquePtr<unsigned char[]> mUpdateDrawTargetData;
   GLContext* mGLContext;
   LayoutDeviceIntRegion mUpdateRegion;
   LayoutDeviceIntSize mUsedSize;
@@ -2936,9 +2937,15 @@ RectTextureImage::BeginUpdate(const LayoutDeviceIntSize& aNewSize,
   LayoutDeviceIntSize neededBufferSize = TextureSizeForSize(mUsedSize);
   if (!mUpdateDrawTarget || mBufferSize != neededBufferSize) {
     gfx::IntSize size(neededBufferSize.width, neededBufferSize.height);
+    mUpdateDrawTarget = nullptr;
+    mUpdateDrawTargetData = nullptr;
+    gfx::SurfaceFormat format = gfx::SurfaceFormat::B8G8R8A8;
+    int32_t stride = size.width * gfx::BytesPerPixel(format);
+    mUpdateDrawTargetData = MakeUnique<unsigned char[]>(stride * size.height);
     mUpdateDrawTarget =
-      gfx::Factory::CreateDrawTarget(gfx::BackendType::COREGRAPHICS, size,
-                                     gfx::SurfaceFormat::B8G8R8A8);
+      gfx::Factory::CreateDrawTargetForData(gfx::BackendType::COREGRAPHICS,
+                                            mUpdateDrawTargetData.get(), size,
+                                            stride, format);
     mBufferSize = neededBufferSize;
   }
 
@@ -2973,21 +2980,22 @@ RectTextureImage::EndUpdate(bool aKeepSurface)
       LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), mTextureSize);
   }
 
-  RefPtr<gfx::SourceSurface> snapshot = mUpdateDrawTarget->Snapshot();
-  RefPtr<gfx::DataSourceSurface> dataSnapshot = snapshot->GetDataSurface();
+  gfx::IntPoint srcPoint = updateRegion.GetBounds().TopLeft().ToUnknownPoint();
+  gfx::SurfaceFormat format = mUpdateDrawTarget->GetFormat();
+  int bpp = gfx::BytesPerPixel(format);
+  int32_t stride = mBufferSize.width * bpp;
+  unsigned char* data = mUpdateDrawTargetData.get();
+  data += srcPoint.y * stride + srcPoint.x * bpp;
 
-  UploadSurfaceToTexture(mGLContext,
-                         dataSnapshot,
-                         updateRegion.ToUnknownRegion(),
-                         mTexture,
-                         overwriteTexture,
-                         updateRegion.GetBounds().TopLeft().ToUnknownPoint(),
-                         false,
-                         LOCAL_GL_TEXTURE0,
-                         LOCAL_GL_TEXTURE_RECTANGLE_ARB);
+  UploadImageDataToTexture(mGLContext, data, stride, format,
+                           updateRegion.ToUnknownRegion(), mTexture,
+                           overwriteTexture, /* aPixelBuffer = */ false,
+                           LOCAL_GL_TEXTURE0,
+                           LOCAL_GL_TEXTURE_RECTANGLE_ARB);
 
   if (!aKeepSurface) {
     mUpdateDrawTarget = nullptr;
+    mUpdateDrawTargetData = nullptr;
   }
 
   mInUpdate = false;
