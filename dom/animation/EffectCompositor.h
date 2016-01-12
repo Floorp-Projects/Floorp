@@ -7,12 +7,15 @@
 #ifndef mozilla_EffectCompositor_h
 #define mozilla_EffectCompositor_h
 
+#include "mozilla/EnumeratedArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Pair.h"
+#include "mozilla/PseudoElementHashEntry.h"
 #include "mozilla/RefPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsDataHashtable.h"
 #include "nsTArray.h"
 
 class nsCSSPropertySet;
@@ -129,6 +132,15 @@ private:
   static nsPresContext* GetPresContext(dom::Element* aElement);
 
   nsPresContext* mPresContext;
+
+  // Elements with a pending animation restyle. The associated bool value is
+  // true if a pending animation restyle has also been dispatched. For
+  // animations that can be throttled, we will add an entry to the hashtable to
+  // indicate that the style rule on the element is out of date but without
+  // posting a restyle to update it.
+  EnumeratedArray<CascadeLevel, CascadeLevel(kCascadeLevelCount),
+                  nsDataHashtable<PseudoElementHashEntry, bool>>
+                    mElementsToRestyle;
 };
 
 } // namespace mozilla
