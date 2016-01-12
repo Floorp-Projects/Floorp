@@ -1645,6 +1645,8 @@ CodeGenerator::visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool)
     pushArg(input);
     pushArg(regexp);
 
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
     callVM(RegExpMatcherRawInfo, lir);
 
     masm.jump(ool->rejoin());
@@ -1796,6 +1798,8 @@ CodeGenerator::visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool)
     pushArg(input);
     pushArg(regexp);
 
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
     callVM(RegExpTesterRawInfo, lir);
 
     masm.jump(ool->rejoin());
