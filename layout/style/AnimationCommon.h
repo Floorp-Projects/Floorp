@@ -144,7 +144,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     , mElementProperty(aElementProperty)
     , mManager(aManager)
     , mCheckGeneration(0)
-    , mHasPendingAnimationRestyle(false)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -253,11 +252,6 @@ public:
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
 private:
-  // Whether or not we have already posted for animation restyle.
-  // This is used to avoid making redundant requests and is reset each time
-  // the animation restyle is performed.
-  bool mHasPendingAnimationRestyle;
-
 #ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif
