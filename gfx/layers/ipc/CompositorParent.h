@@ -388,10 +388,8 @@ public:
    * Plugin visibility helpers for the apz (main thread) and compositor
    * thread.
    */
-  void ScheduleShowAllPluginWindowsAPZ();
-  void ScheduleHideAllPluginWindowsAPZ();
-  void ShowAllPluginWindowsAPZ();
-  void HideAllPluginWindowsAPZ();
+  void ScheduleShowAllPluginWindows();
+  void ScheduleHideAllPluginWindows();
   void ShowAllPluginWindows();
   void HideAllPluginWindows();
 #endif
