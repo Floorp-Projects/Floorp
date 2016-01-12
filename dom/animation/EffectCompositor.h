@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSPseudoElements.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 
 class nsCSSPropertySet;
@@ -31,6 +32,17 @@ class Element;
 class EffectCompositor
 {
 public:
+  explicit EffectCompositor(nsPresContext* aPresContext)
+    : mPresContext(aPresContext)
+  { }
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(EffectCompositor)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(EffectCompositor)
+
+  void Disconnect() {
+    mPresContext = nullptr;
+  }
+
   // Animations can be applied at two different levels in the CSS cascade:
   enum class CascadeLevel {
     // The animations sheet (CSS animations, script-generated animations,
@@ -43,6 +55,9 @@ public:
   // explicit checks for the Count enum value everywhere CascadeLevel is used.
   static const size_t kCascadeLevelCount =
     static_cast<size_t>(CascadeLevel::Transitions) + 1;
+
+  // NOTE: This can return null after Disconnect().
+  nsPresContext* PresContext() const { return mPresContext; }
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
@@ -95,6 +110,8 @@ public:
                                    bool& aStyleChanging);
 
 private:
+  ~EffectCompositor() = default;
+
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade
   // than the animations level in |aStyleContext|.
@@ -110,6 +127,8 @@ private:
                        nsStyleContext* aStyleContext);
 
   static nsPresContext* GetPresContext(dom::Element* aElement);
+
+  nsPresContext* mPresContext;
 };
 
 } // namespace mozilla
