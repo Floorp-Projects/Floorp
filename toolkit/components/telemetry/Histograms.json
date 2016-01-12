@@ -8266,7 +8266,8 @@
   "WEAVE_CONFIGURED": {
     "expires_in_version": "default",
     "kind": "boolean",
-    "description": "If any version of Firefox Sync is configured for this device"
+    "description": "If any version of Firefox Sync is configured for this device",
+    "releaseChannelCollection": "opt-out"
   },
   "WEAVE_CONFIGURED_MASTER_PASSWORD": {
     "expires_in_version": "never",
@@ -9885,7 +9886,7 @@
     "expires_in_version": "46",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
-    "description": "If the user is signed in to a Firefox Account on this device"
+    "description": "If the user is signed in to a Firefox Account on this device. Recorded once per session just after startup as Sync is initialized."
   },
   "FXA_UNVERIFIED_ACCOUNT_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
@@ -9918,6 +9919,24 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Token server errors caused by invalid BrowserID assertions. Keyed on the token server error cause."
+  },
+  "WEAVE_DEVICE_COUNT_DESKTOP": {
+    "alert_emails": ["fx-team@mozilla.com"],
+    "bug_numbers": [1232050],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of desktop devices (including this device) associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
+  },
+  "WEAVE_DEVICE_COUNT_MOBILE": {
+    "alert_emails": ["fx-team@mozilla.com"],
+    "bug_numbers": [1232050],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": "10",
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of mobile devices associated with this Sync account. Recorded each time Sync successfully completes the 'clients' engine."
   },
   "WEAVE_ENGINE_APPLY_NEW_FAILURES": {
     "alert_emails": ["fx-team@mozilla.com"],
