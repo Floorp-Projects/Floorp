@@ -12,7 +12,7 @@
 // - in-content highlighters that appear when hovering over property values
 // - etc.
 
-const {Cu} = require("chrome");
+const {Cc, Ci, Cu} = require("chrome");
 const {
   Tooltip,
   SwatchColorPickerTooltip,
