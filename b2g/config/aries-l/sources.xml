@@ -168,7 +168,7 @@
   <project name="platform/hardware/qcom/camera" path="hardware/qcom/camera" revision="l_LNX.LA.3.6"/>
   -->
   <!-- Sony platform specific things -->
-  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="831789c04366336dd35ce0678f02656c1476d6d7"/>
+  <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="f4f1a6f3260d88f11671d57b4b759c0831a5c764"/>
   <project name="device-qcom-sepolicy" path="device/qcom/sepolicy" remote="b2g" revision="e0a1cce6a8559ccc88e15da148531d36e18ae5f7"/>
   <project name="android_external_busybox" path="external/busybox" remote="b2g" revision="757a15c84e7bf9897b908058f2e529fcffea73b8"/>
   <project groups="device" name="init_sh" path="hardware/sony/init_sh" remote="b2g" revision="58d94ebe3a2e9a1af4bc8c003cd6837e53cc4867"/>
@@ -177,7 +177,7 @@
   <project groups="device" name="thermanager" path="hardware/sony/thermanager" remote="b2g" revision="ec9a2b6a7fe8254ecc3c2c4781e7304f3822e390"/>
   <project groups="device" name="timekeep" path="hardware/sony/timekeep" remote="b2g" revision="4cbb0abc00681f116f043584661307b5c4855a31"/>
   <!-- Shinano platform specific things -->
-  <project groups="device" name="device-sony-shinano" path="device/sony/shinano" remote="b2g" revision="49161f5310ad5e84f48ee118af6e48a3cc2f0fa3"/>
+  <project groups="device" name="device-sony-shinano" path="device/sony/shinano" remote="b2g" revision="5d3d1df7d74fa631e1287bee834e464ea9456c81"/>
   <project groups="device" name="device-sony-aries" path="device/sony/aries" remote="b2g" revision="56f665a19e35623d923949014bc15013d292fa37"/>
   <project groups="device" name="device-sony-leo" path="device/sony/leo" remote="b2g" revision="3fdec3f02117be6b57d2f9c5946119f179119a51"/>
   <project groups="device" name="device-sony-scorpion" path="device/sony/scorpion" remote="b2g" revision="b0cd32cb805637d2afda61b67d0421e2c39b2ffa"/>
