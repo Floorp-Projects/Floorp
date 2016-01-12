@@ -29,7 +29,23 @@ using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
 
-NS_IMPL_CYCLE_COLLECTION_0(EffectCompositor)
+NS_IMPL_CYCLE_COLLECTION_CLASS(EffectCompositor)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EffectCompositor)
+  for (auto& elementSet : tmp->mElementsToRestyle) {
+    elementSet.Clear();
+  }
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EffectCompositor)
+  for (auto& elementSet : tmp->mElementsToRestyle) {
+    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
+      CycleCollectionNoteChild(cb, iter.Key().mElement,
+                               "EffectCompositor::mElementsToRestyle[]",
+                               cb.Flags());
+    }
+  }
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EffectCompositor, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EffectCompositor, Release)
