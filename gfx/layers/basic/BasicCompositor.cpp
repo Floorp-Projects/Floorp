@@ -11,6 +11,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Tools.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
 #include <algorithm>
@@ -406,8 +407,17 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       EffectSolidColor* effectSolidColor =
         static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
 
+      bool unboundedOp = !IsOperatorBoundByMask(blendMode);
+      if (unboundedOp) {
+        dest->PushClipRect(aRect);
+      }
+
       FillRectWithMask(dest, aRect, effectSolidColor->mColor,
                        DrawOptions(aOpacity, blendMode), sourceMask, &maskTransform);
+
+      if (unboundedOp) {
+        dest->PopClip();
+      }
       break;
     }
     case EffectTypes::RGB: {
