@@ -20,11 +20,7 @@ using namespace mozilla::dom;
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 ScreenProxy::ScreenProxy(nsScreenManagerProxy* aScreenManager, ScreenDetails aDetails)
-  : mContentsScaleFactor(0)
-  , mScreenManager(aScreenManager)
-  , mId(0)
-  , mPixelDepth(0)
-  , mColorDepth(0)
+  : mScreenManager(aScreenManager)
   , mCacheValid(false)
   , mCacheWillInvalidate(false)
 {

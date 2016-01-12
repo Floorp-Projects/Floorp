@@ -82,20 +82,6 @@ private:
 
 protected:
   WidgetKeyboardEvent()
-    : keyCode(0)
-    , charCode(0)
-    , location(nsIDOMKeyEvent::DOM_KEY_LOCATION_STANDARD)
-    , isChar(false)
-    , mIsRepeat(false)
-    , mIsComposing(false)
-    , mKeyNameIndex(mozilla::KEY_NAME_INDEX_Unidentified)
-    , mCodeNameIndex(CODE_NAME_INDEX_UNKNOWN)
-    , mNativeKeyEvent(nullptr)
-    , mUniqueId(0)
-#ifdef XP_MACOSX
-    , mNativeKeyCode(0)
-    , mNativeModifierFlags(0)
-#endif
   {
   }
 
@@ -484,9 +470,6 @@ private:
   friend class dom::PBrowserChild;
 
   WidgetQueryContentEvent()
-    : mSucceeded(false)
-    , mUseNativeLineBreak(true)
-    , mWithFontRanges(false)
   {
     MOZ_CRASH("WidgetQueryContentEvent is created without proper arguments");
   }
@@ -667,7 +650,6 @@ private:
     , mReversed(false)
     , mExpandToClusterBoundary(true)
     , mSucceeded(false)
-    , mUseNativeLineBreak(true)
   {
   }
 

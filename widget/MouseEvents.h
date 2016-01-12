@@ -74,11 +74,6 @@ private:
 
 protected:
   WidgetMouseEventBase()
-    : button(0)
-    , buttons(0)
-    , pressure(0)
-    , hitCluster(false)
-    , inputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
   {
   }
 
@@ -200,9 +195,6 @@ public:
 
 protected:
   WidgetMouseEvent()
-    : acceptActivation(false)
-    , ignoreRootScrollFrame(false)
-    , clickCount(0)
   {
   }
 
@@ -324,8 +316,6 @@ private:
   friend class mozilla::dom::PBrowserChild;
 protected:
   WidgetDragEvent()
-    : userCancelled(false)
-    , mDefaultPreventedOnContent(false)
   {
   }
 public:
@@ -383,8 +373,6 @@ class WidgetMouseScrollEvent : public WidgetMouseEventBase
 {
 private:
   WidgetMouseScrollEvent()
-    : delta(0)
-    , isHorizontal(false)
   {
   }
 
@@ -448,20 +436,6 @@ private:
   friend class mozilla::dom::PBrowserChild;
 
   WidgetWheelEvent()
-    : deltaX(0.0)
-    , deltaY(0.0)
-    , deltaZ(0.0)
-    , deltaMode(nsIDOMWheelEvent::DOM_DELTA_PIXEL)
-    , customizedByUserPrefs(false)
-    , isMomentum(false)
-    , mIsNoLineOrPageDelta(false)
-    , lineOrPageDeltaX(0)
-    , lineOrPageDeltaY(0)
-    , scrollType(SCROLL_DEFAULT)
-    , overflowDeltaX(0.0)
-    , overflowDeltaY(0.0)
-    , mViewPortIsOverscrolled(false)
-    , mCanTriggerSwipe(false)
   {
   }
 
@@ -631,9 +605,6 @@ class WidgetPointerEvent : public WidgetMouseEvent
   friend class mozilla::dom::PBrowserChild;
 
   WidgetPointerEvent()
-    : width(0)
-    , height(0)
-    , isPrimary(true)
   {
   }
 

@@ -44,7 +44,6 @@ public:
     NS_PRECONDITION(mStatementOwner, "Must have a statement owner!");
   }
   StatementData()
-  : mStatement(nullptr)
   {
   }
   ~StatementData()
