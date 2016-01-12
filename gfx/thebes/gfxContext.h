@@ -536,7 +536,6 @@ private:
   const AzureState &CurrentState() const { return mStateStack[mStateStack.Length() - 1]; }
 
   RefPtr<DrawTarget> mDT;
-  RefPtr<DrawTarget> mOriginalDT;
 };
 
 /**
