@@ -27,7 +27,6 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIFrame;
-class nsIStyleRule;
 class nsPresContext;
 
 namespace mozilla {
@@ -83,9 +82,6 @@ public:
 
     return false;
   }
-
-  nsIStyleRule* GetAnimationRule(dom::Element* aElement,
-                                 nsCSSPseudoElements::Type aPseudoType);
 
   static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
