@@ -5,7 +5,7 @@
 
 // Test that adding a new rule is synced to the style editor.
 
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/styleinspector/test/head.js", this);
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
 
 const TESTCASE_URI = TEST_BASE_HTTP + "sync.html";
 
