@@ -53,7 +53,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
                                   "resource://gre/modules/LightweightThemeManager.jsm");
-
+XPCOMUtils.defineLazyServiceGetter(this, "gAboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
 XPCOMUtils.defineLazyGetter(this, "gBrowserBundle", function() {
   return Services.strings.createBundle('chrome://browser/locale/browser.properties');
 });
@@ -2312,8 +2314,11 @@ function URLBarSetURI(aURI) {
     } catch (e) {}
 
     // Replace initial page URIs with an empty string
-    // only if there's no opener (bug 370555).
-    if (gInitialPages.indexOf(uri.spec) != -1)
+    // 1. only if there's no opener (bug 370555).
+    // 2. if remote newtab is enabled and it's the default remote newtab page
+    let defaultRemoteURL = gAboutNewTabService.remoteEnabled &&
+                           uri.spec === gAboutNewTabService.newTabURL;
+    if (gInitialPages.includes(uri.spec) || defaultRemoteURL)
       value = gBrowser.selectedBrowser.hasContentOpener ? uri.spec : "";
     else
       value = losslessDecodeURI(uri);

@@ -1,0 +1,58 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Allows to override about:newtab to point to a different location
+ * than the one specified within AboutRedirector.cpp
+ */
+
+[scriptable, uuid(cef25b06-0ef6-4c50-a243-e69f943ef23d)]
+interface nsIAboutNewTabService : nsISupports
+{
+  /**
+   * Returns the url of the resource for the newtab page if not overridden,
+   * otherwise a string represenation of the new URL.
+   */
+  attribute ACString newTabURL;
+
+  /**
+   * Returns true if the default resource got overridden.
+   */
+  readonly attribute bool overridden;
+
+  /**
+   * Returns true if the default resource is remotely hosted and isn't
+   * overridden
+   */
+  readonly attribute bool remoteEnabled;
+
+
+  /**
+  * Returns the version of the remote newtab page expected
+  */
+  readonly attribute ACString remoteVersion;
+
+  /**
+   * Returns the expected channel for the remote the newtab page
+   */
+  readonly attribute ACString remoteReleaseName;
+
+  /**
+   * Generates and returns the remote newtab page url
+   */
+  ACString generateRemoteURL();
+
+  /**
+   * Returns a remote new tab release name given an update channel name
+   */
+  ACString releaseFromUpdateChannel(in ACString channelName);
+
+  /**
+   * Resets to the default resource and also resets the
+   * overridden attribute to false.
+   */
+  void resetNewTabURL();
+};
