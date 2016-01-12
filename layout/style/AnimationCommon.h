@@ -84,10 +84,6 @@ public:
     return false;
   }
 
-  // Requests a standard restyle on each managed AnimationCollection that has
-  // an out-of-date animation rule.
-  void FlushAnimations();
-
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
                                  nsCSSPseudoElements::Type aPseudoType);
 

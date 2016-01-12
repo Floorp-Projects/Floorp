@@ -3968,11 +3968,8 @@ PresShell::FlushPendingNotifications(mozilla::ChangesToFlush aFlush)
 
       if (aFlush.mFlushAnimations &&
           !mPresContext->StyleUpdateForAllAnimationsIsUpToDate()) {
-        if (mPresContext->AnimationManager()) {
-          mPresContext->AnimationManager()->FlushAnimations();
-        }
-        if (mPresContext->TransitionManager()) {
-          mPresContext->TransitionManager()->FlushAnimations();
+        if (mPresContext->EffectCompositor()) {
+          mPresContext->EffectCompositor()->PostRestyleForThrottledAnimations();
         }
         mPresContext->TickLastStyleUpdateForAllAnimations();
       }
