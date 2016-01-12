@@ -513,7 +513,12 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey)
   if (isAlreadyShutDown()) {
     return NS_ERROR_NOT_AVAILABLE;
   }
+  return GetDbKey(mCert, aDbKey);
+}
 
+nsresult
+nsNSSCertificate::GetDbKey(CERTCertificate* cert, nsACString& aDbKey)
+{
   static_assert(sizeof(uint64_t) == 8, "type size sanity check");
   static_assert(sizeof(uint32_t) == 4, "type size sanity check");
   // The format of the key is the base64 encoding of the following:
@@ -528,14 +533,14 @@ nsNSSCertificate::GetDbKey(nsACString& aDbKey)
   nsAutoCString buf;
   const char leadingZeroes[] = {0, 0, 0, 0, 0, 0, 0, 0};
   buf.Append(leadingZeroes, sizeof(leadingZeroes));
-  uint32_t serialNumberLen = htonl(mCert->serialNumber.len);
+  uint32_t serialNumberLen = htonl(cert->serialNumber.len);
   buf.Append(reinterpret_cast<const char*>(&serialNumberLen), sizeof(uint32_t));
-  uint32_t issuerLen = htonl(mCert->derIssuer.len);
+  uint32_t issuerLen = htonl(cert->derIssuer.len);
   buf.Append(reinterpret_cast<const char*>(&issuerLen), sizeof(uint32_t));
-  buf.Append(reinterpret_cast<const char*>(mCert->serialNumber.data),
-             mCert->serialNumber.len);
-  buf.Append(reinterpret_cast<const char*>(mCert->derIssuer.data),
-             mCert->derIssuer.len);
+  buf.Append(reinterpret_cast<const char*>(cert->serialNumber.data),
+             cert->serialNumber.len);
+  buf.Append(reinterpret_cast<const char*>(cert->derIssuer.data),
+             cert->derIssuer.len);
 
   return Base64Encode(buf, aDbKey);
 }
