@@ -20,7 +20,6 @@ NS_IMPL_ISUPPORTS(TVTunerData, nsITVTunerData)
 TVTunerData::TVTunerData()
   : mSupportedSourceTypes(nullptr)
   , mCount(0)
-  , mStreamType(0)
 {
 }
 
@@ -276,9 +275,7 @@ TVChannelData::SetIsFree(bool aIsFree)
 NS_IMPL_ISUPPORTS(TVProgramData, nsITVProgramData)
 
 TVProgramData::TVProgramData()
-  : mStartTime(0)
-  , mDuration(0)
-  , mAudioLanguages(nullptr)
+  : mAudioLanguages(nullptr)
   , mAudioLanguageCount(0)
   , mSubtitleLanguages(nullptr)
   , mSubtitleLanguageCount(0)
