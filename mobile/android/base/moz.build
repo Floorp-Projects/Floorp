@@ -349,8 +349,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'gfx/VirtualLayer.java',
     'GlobalHistory.java',
     'GuestSession.java',
-    'health/BrowserHealthRecorder.java',
-    'health/BrowserHealthReporter.java',
     'health/HealthRecorder.java',
     'health/SessionInformation.java',
     'health/StubbedHealthRecorder.java',

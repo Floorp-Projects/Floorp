@@ -2136,7 +2136,7 @@ public abstract class GeckoApp
         final HealthRecorder rec = mHealthRecorder;
         mHealthRecorder = null;
         if (rec != null && rec.isEnabled()) {
-            // Closing a BrowserHealthRecorder could incur a write.
+            // Closing a HealthRecorder could incur a write.
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
                 public void run() {
@@ -2729,7 +2729,7 @@ public abstract class GeckoApp
 
     /**
      * Use BrowserLocaleManager to change our persisted and current locales,
-     * and poke HealthRecorder to tell it of our changed state.
+     * and poke the system to tell it of our changed state.
      */
     protected void setLocale(final String locale) {
         if (locale == null) {
