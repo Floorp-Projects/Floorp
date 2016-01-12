@@ -3667,7 +3667,7 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
     MDefinition* array = callInfo.getArg(0);
     *index = callInfo.getArg(1);
 
-    if (!ElementAccessIsTypedArray(constraints(), array, *index, arrayType))
+    if (!ElementAccessIsAnyTypedArray(constraints(), array, *index, arrayType))
         return false;
 
     MInstruction* indexAsInt32 = MToInt32::New(alloc(), *index);

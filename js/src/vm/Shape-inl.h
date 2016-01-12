@@ -166,7 +166,7 @@ GetShapeAttributes(JSObject* obj, Shape* shape)
     MOZ_ASSERT(obj->isNative());
 
     if (IsImplicitDenseOrTypedArrayElement(shape)) {
-        if (obj->is<TypedArrayObject>())
+        if (IsAnyTypedArray(obj))
             return JSPROP_ENUMERATE | JSPROP_PERMANENT;
         return JSPROP_ENUMERATE;
     }

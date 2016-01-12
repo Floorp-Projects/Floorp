@@ -488,9 +488,7 @@ js::SetIntegrityLevel(JSContext* cx, HandleObject obj, IntegrityLevel level)
     MOZ_ASSERT_IF(obj->isNative(), obj->as<NativeObject>().getDenseCapacity() == 0);
 
     // Steps 8-9, loosely interpreted.
-    if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() &&
-        !obj->is<TypedArrayObject>())
-    {
+    if (obj->isNative() && !obj->as<NativeObject>().inDictionaryMode() && !IsAnyTypedArray(obj)) {
         HandleNativeObject nobj = obj.as<NativeObject>();
 
         // Seal/freeze non-dictionary objects by constructing a new shape
@@ -2284,10 +2282,10 @@ js::LookupPropertyPure(ExclusiveContext* cx, JSObject* obj, jsid id, JSObject** 
                 return true;
             }
 
-            if (obj->is<TypedArrayObject>()) {
+            if (IsAnyTypedArray(obj)) {
                 uint64_t index;
                 if (IsTypedArrayIndex(id, &index)) {
-                    if (index < obj->as<TypedArrayObject>().length()) {
+                    if (index < AnyTypedArrayLength(obj)) {
                         *objp = obj;
                         MarkDenseOrTypedArrayElementFound<NoGC>(propp);
                     } else {
@@ -2811,7 +2809,7 @@ js::WatchProperty(JSContext* cx, HandleObject obj, HandleId id, HandleObject cal
     if (WatchOp op = obj->getOps()->watch)
         return op(cx, obj, id, callable);
 
-    if (!obj->isNative() || obj->is<TypedArrayObject>()) {
+    if (!obj->isNative() || IsAnyTypedArray(obj)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_WATCH,
                              obj->getClass()->name);
         return false;

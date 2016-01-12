@@ -402,7 +402,7 @@ CallResolveOp(JSContext* cx, HandleNativeObject obj, HandleId id, MutableHandleS
         return true;
     }
 
-    MOZ_ASSERT(!obj->is<TypedArrayObject>());
+    MOZ_ASSERT(!IsAnyTypedArray(obj));
 
     propp.set(obj->lookup(cx, id));
     return true;
@@ -448,10 +448,10 @@ LookupOwnPropertyInline(ExclusiveContext* cx,
     // Check for a typed array element. Integer lookups always finish here
     // so that integer properties on the prototype are ignored even for out
     // of bounds accesses.
-    if (obj->template is<TypedArrayObject>()) {
+    if (IsAnyTypedArray(obj)) {
         uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
-            if (index < obj->template as<TypedArrayObject>().length()) {
+            if (index < AnyTypedArrayLength(obj)) {
                 MarkDenseOrTypedArrayElementFound<allowGC>(propp);
             } else {
                 propp.set(nullptr);
@@ -516,10 +516,10 @@ NativeLookupOwnPropertyNoResolve(ExclusiveContext* cx, HandleNativeObject obj, H
     }
 
     // Check for a typed array element.
-    if (obj->is<TypedArrayObject>()) {
+    if (IsAnyTypedArray(obj)) {
         uint64_t index;
         if (IsTypedArrayIndex(id, &index)) {
-            if (index < obj->as<TypedArrayObject>().length())
+            if (index < AnyTypedArrayLength(obj))
                 MarkDenseOrTypedArrayElementFound<CanGC>(result);
             else
                 result.set(nullptr);
