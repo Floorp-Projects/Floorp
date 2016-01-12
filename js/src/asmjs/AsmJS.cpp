@@ -3686,7 +3686,7 @@ CheckAndPrepareArrayAccess(FunctionValidator& f, ParseNode* viewName, ParseNode*
         return f.writeInt32Lit(*mask);
     }
 
-    f.patchOp(prepareAt, Expr::I32Id);
+    f.patchOp(prepareAt, Expr::Id);
     return true;
 }
 
@@ -4609,7 +4609,7 @@ CheckFloatCoercionArg(FunctionValidator& f, ParseNode* inputNode, Type inputType
         return true;
     }
     if (inputType.isFloatish()) {
-        f.patchOp(opcodeAt, Expr::F32Id);
+        f.patchOp(opcodeAt, Expr::Id);
         return true;
     }
 
@@ -4643,19 +4643,11 @@ CheckCoercionArg(FunctionValidator& f, ParseNode* arg, ValType expected, Type* t
       case ValType::I64:
         MOZ_CRASH("no int64 in asm.js");
       case ValType::I32x4:
-        if (!argType.isInt32x4())
-            return f.fail(arg, "argument to SIMD int32x4 coercion isn't int32x4");
-        f.patchOp(opcodeAt, Expr::I32X4Id);
-        break;
       case ValType::F32x4:
-        if (!argType.isFloat32x4())
-            return f.fail(arg, "argument to SIMD float32x4 coercion isn't float32x4");
-        f.patchOp(opcodeAt, Expr::F32X4Id);
-        break;
       case ValType::B32x4:
-        if (!argType.isBool32x4())
-            return f.fail(arg, "argument to SIMD bool32x4 coercion isn't bool32x4");
-        f.patchOp(opcodeAt, Expr::B32X4Id);
+        if (!(argType <= expected))
+            return f.fail(arg, "argument to SIMD coercion isn't from the correct SIMD type");
+        f.patchOp(opcodeAt, Expr::Id);
         break;
       case ValType::I32:
       case ValType::F64:
@@ -4868,13 +4860,8 @@ class CheckSimdScalarArgs
         if (patchAt == size_t(-1))
             return true;
 
-        switch (simdType_) {
-          case AsmJSSimdType_bool32x4:
-          case AsmJSSimdType_int32x4:   f.patchOp(patchAt, Expr::I32Id); return true;
-          case AsmJSSimdType_float32x4: f.patchOp(patchAt, Expr::F32Id); return true;
-        }
-
-        MOZ_CRASH("unexpected simd type");
+        f.patchOp(patchAt, Expr::Id);
+        return true;
     }
 };
 
@@ -4923,13 +4910,8 @@ class CheckSimdVectorScalarArgs
             if (patchAt == size_t(-1))
                 return true;
 
-            switch (formalSimdType_) {
-              case AsmJSSimdType_int32x4:   f.patchOp(patchAt, Expr::I32X4Id); return true;
-              case AsmJSSimdType_float32x4: f.patchOp(patchAt, Expr::F32X4Id); return true;
-              case AsmJSSimdType_bool32x4:  f.patchOp(patchAt, Expr::B32X4Id); return true;
-            }
-
-            MOZ_CRASH("unexpected simd type");
+            f.patchOp(patchAt, Expr::Id);
+            return true;
         }
 
         // Second argument is the scalar
@@ -4985,11 +4967,7 @@ class CheckSimdReplaceLaneArgs
                 return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
                                Type(formalSimdType_).toChars());
             }
-            switch (formalSimdType_) {
-              case AsmJSSimdType_int32x4:   f.patchOp(patchAt, Expr::I32X4Id); break;
-              case AsmJSSimdType_float32x4: f.patchOp(patchAt, Expr::F32X4Id); break;
-              case AsmJSSimdType_bool32x4:  f.patchOp(patchAt, Expr::B32X4Id); break;
-            }
+            f.patchOp(patchAt, Expr::Id);
             return true;
           case 1:
             // Second argument is the lane (< vector length).
@@ -4997,7 +4975,7 @@ class CheckSimdReplaceLaneArgs
                 return f.failf(arg, "lane selector should be a constant integer literal");
             if (u32 >= SimdTypeToLength(formalSimdType_))
                 return f.failf(arg, "lane selector should be in bounds");
-            f.patchOp(patchAt, Expr::I32Id);
+            f.patchOp(patchAt, Expr::Id);
             return true;
           case 2:
             // Third argument is the scalar
@@ -5593,7 +5571,7 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
       case ExprType::I32:
         if (!actual.isIntish())
             return f.failf(expr, "%s is not a subtype of intish", actual.toChars());
-        f.patchOp(patchAt, Expr::I32Id);
+        f.patchOp(patchAt, Expr::Id);
         break;
       case ExprType::I64:
         MOZ_CRASH("no int64 in asm.js");
@@ -5603,7 +5581,7 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
         break;
       case ExprType::F64:
         if (actual.isMaybeDouble())
-            f.patchOp(patchAt, Expr::F64Id);
+            f.patchOp(patchAt, Expr::Id);
         else if (actual.isMaybeFloat())
             f.patchOp(patchAt, Expr::F64FromF32);
         else if (actual.isSigned())
@@ -5616,17 +5594,17 @@ CoerceResult(FunctionValidator& f, ParseNode* expr, ExprType expected, Type actu
       case ExprType::I32x4:
         if (!actual.isInt32x4())
             return f.failf(expr, "%s is not a subtype of int32x4", actual.toChars());
-        f.patchOp(patchAt, Expr::I32X4Id);
+        f.patchOp(patchAt, Expr::Id);
         break;
       case ExprType::F32x4:
         if (!actual.isFloat32x4())
             return f.failf(expr, "%s is not a subtype of float32x4", actual.toChars());
-        f.patchOp(patchAt, Expr::F32X4Id);
+        f.patchOp(patchAt, Expr::Id);
         break;
       case ExprType::B32x4:
         if (!actual.isBool32x4())
             return f.failf(expr, "%s is not a subtype of bool32x4", actual.toChars());
-        f.patchOp(patchAt, Expr::B32X4Id);
+        f.patchOp(patchAt, Expr::Id);
         break;
     }
 
@@ -5831,7 +5809,7 @@ CheckCoerceToInt(FunctionValidator& f, ParseNode* expr, Type* type)
     if (!operandType.isIntish())
         return f.failf(operand, "%s is not a subtype of double?, float? or intish", operandType.toChars());
 
-    f.patchOp(opcodeAt, Expr::I32Id);
+    f.patchOp(opcodeAt, Expr::Id);
     *type = Type::Signed;
     return true;
 }
