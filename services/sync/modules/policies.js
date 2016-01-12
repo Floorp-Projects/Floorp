@@ -861,9 +861,6 @@ ErrorHandler.prototype = {
         break;
 
       case 401:
-        Services.telemetry.getKeyedHistogramById(
-          "WEAVE_STORAGE_AUTH_ERRORS").add(cause);
-
         this.service.logout();
         this._log.info("Got 401 response; resetting clusterURL.");
         Svc.Prefs.reset("clusterURL");
