@@ -3,31 +3,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-this.EXPORTED_SYMBOLS = ["RemoteWebNavigation"];
-
 const { interfaces: Ci, classes: Cc, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
+
 function makeURI(url)
 {
-  return Cc["@mozilla.org/network/io-service;1"].
-         getService(Ci.nsIIOService).
-         newURI(url, null, null);
+  return Services.io.newURI(url, null, null);
 }
 
 function readInputStreamToString(aStream)
 {
-  Cu.import("resource://gre/modules/NetUtil.jsm");
   return NetUtil.readInputStreamToString(aStream, aStream.available());
 }
 
-function RemoteWebNavigation(browser)
+function RemoteWebNavigation()
 {
-  this.swapBrowser(browser);
+  this.wrappedJSObject = this;
 }
 
 RemoteWebNavigation.prototype = {
+  classDescription: "nsIWebNavigation for remote browsers",
+  classID: Components.ID("{4b56964e-cdf3-4bb8-830c-0e2dad3f4ebd}"),
+  contractID: "@mozilla.org/remote-web-navigation;1",
+
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebNavigation, Ci.nsISupports]),
 
   swapBrowser: function(aBrowser) {
@@ -135,3 +139,5 @@ RemoteWebNavigation.prototype = {
     }
   }
 };
+
+this.NSGetFactory = XPCOMUtils.generateNSGetFactory([RemoteWebNavigation]);
