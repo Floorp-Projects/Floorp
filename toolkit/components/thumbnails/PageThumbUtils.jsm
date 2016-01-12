@@ -139,50 +139,55 @@ this.PageThumbUtils = {
    * jagged pixels to represent text.
    *
    * @params aWindow - the window to create a snapshot of.
-   * @params aDestCanvas (optional) a destination canvas to draw the final snapshot to.
+   * @params aDestCanvas destination canvas to draw the final
+   *   snapshot to. Can be null.
+   * @param aArgs (optional) Additional named parameters:
+   *   fullScale - request that a non-downscaled image be returned.
    * @return Canvas with a scaled thumbnail of the window.
    */
-  createSnapshotThumbnail: function(aWindow, aDestCanvas = null) {
+  createSnapshotThumbnail: function(aWindow, aDestCanvas, aArgs) {
     if (Cu.isCrossProcessWrapper(aWindow)) {
       throw new Error('Do not pass cpows here.');
     }
-
+    let fullScale = aArgs ? aArgs.fullScale : false;
     let [contentWidth, contentHeight] = this.getContentSize(aWindow);
     let [thumbnailWidth, thumbnailHeight] = aDestCanvas ?
                                             [aDestCanvas.width, aDestCanvas.height] :
                                             this.getThumbnailSize(aWindow);
+
+    // If the caller wants a fullscale image, set the desired thumbnail dims
+    // to the dims of content and (if provided) size the incoming canvas to
+    // support our results.
+    if (fullScale) {
+      thumbnailWidth = contentWidth;
+      thumbnailHeight = contentHeight;
+      if (aDestCanvas) {
+        aDestCanvas.width = contentWidth;
+        aDestCanvas.height = contentHeight;
+      }
+    }
+
     let intermediateWidth = thumbnailWidth * 2;
     let intermediateHeight = thumbnailHeight * 2;
     let skipDownscale = false;
-    let snapshotCanvas = undefined;
 
-    // Our intermediate thumbnail is bigger than content,
-    // which can happen on hiDPI devices like a retina macbook pro.
-    // In those cases, just render at the final size.
-    if ((intermediateWidth >= contentWidth) ||
-        (intermediateHeight >= contentHeight)) {
+    // If the intermediate thumbnail is larger than content dims (hiDPI
+    // devices can experience this) or a full preview is requested render
+    // at the final thumbnail size.
+    if ((intermediateWidth >= contentWidth ||
+         intermediateHeight >= contentHeight) || fullScale) {
       intermediateWidth = thumbnailWidth;
       intermediateHeight = thumbnailHeight;
       skipDownscale = true;
-      snapshotCanvas = aDestCanvas;
     }
 
-    // If we've been given a large preallocated canvas, so
-    // just render once into the destination canvas.
-    if (aDestCanvas &&
-        ((aDestCanvas.width >= intermediateWidth) ||
-        (aDestCanvas.height >= intermediateHeight))) {
-      intermediateWidth = aDestCanvas.width;
-      intermediateHeight = aDestCanvas.height;
-      skipDownscale = true;
-      snapshotCanvas = aDestCanvas;
-    }
+    // Create an intermediate surface
+    let snapshotCanvas = this.createCanvas(aWindow, intermediateWidth,
+                                           intermediateHeight);
 
-    if (!snapshotCanvas) {
-      snapshotCanvas = this.createCanvas(aWindow, intermediateWidth, intermediateHeight);
-    }
-
-    // This is step 1.
+    // Step 1: capture the image at the intermediate dims. For thumbnails
+    // this is twice the thumbnail size, for fullScale images this is at
+    // content dims.
     // Also by default, canvas does not draw the scrollbars, so no need to
     // remove the scrollbar sizes.
     let scale = Math.min(Math.max(intermediateWidth / contentWidth,
@@ -195,18 +200,21 @@ this.PageThumbUtils = {
                            PageThumbUtils.THUMBNAIL_BG_COLOR,
                            snapshotCtx.DRAWWINDOW_DO_NOT_FLUSH);
     snapshotCtx.restore();
-    if (skipDownscale) {
-      return snapshotCanvas;
-    }
 
-    // Part 2: Assumes that the snapshot is 2x the thumbnail size
-    let finalCanvas = aDestCanvas || this.createCanvas(aWindow, thumbnailWidth, thumbnailHeight);
+    // Part 2: Downscale from our intermediate dims to the final thumbnail
+    // dims and copy the result to aDestCanvas. If the caller didn't
+    // provide a target canvas, create a new canvas and return it.
+    let finalCanvas = aDestCanvas ||
+      this.createCanvas(aWindow, thumbnailWidth, thumbnailHeight);
 
     let finalCtx = finalCanvas.getContext("2d");
     finalCtx.save();
-    finalCtx.scale(0.5, 0.5);
+    if (!skipDownscale) {
+      finalCtx.scale(0.5, 0.5);
+    }
     finalCtx.drawImage(snapshotCanvas, 0, 0);
     finalCtx.restore();
+
     return finalCanvas;
   },
 
