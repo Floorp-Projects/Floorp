@@ -3925,6 +3925,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   , mPeriodicGCTimerRunning(false)
   , mIdleGCTimerRunning(false)
   , mWorkerScriptExecutedSuccessfully(false)
+  , mOnLine(false)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), !aWorkerName.IsVoid());
   MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
