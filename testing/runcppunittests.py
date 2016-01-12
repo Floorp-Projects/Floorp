@@ -14,6 +14,7 @@ import mozcrash
 import mozfile
 import mozlog
 from contextlib import contextmanager
+from mozrunner.utils import get_stack_fixer_function
 from subprocess import PIPE
 
 SCRIPT_DIR = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
@@ -60,7 +61,11 @@ class CPPUnitTests(object):
                      outputTimeout=CPPUnitTests.TEST_PROC_NO_OUTPUT_TIMEOUT)
             proc.wait()
             if proc.output:
-                output = "\n%s" % "\n".join(proc.output)
+                if self.fix_stack:
+                    procOutput = [self.fix_stack(l) for l in proc.output]
+                else:
+                    procOutput = proc.output
+                output = "\n%s" % "\n".join(procOutput)
                 self.log.process_output(proc.pid, output, command=[prog])
             if proc.timedOut:
                 message = "timed out after %d seconds" % CPPUnitTests.TEST_PROC_TIMEOUT
@@ -137,7 +142,7 @@ class CPPUnitTests(object):
 
         return env
 
-    def run_tests(self, programs, xre_path, symbols_path=None, interactive=False):
+    def run_tests(self, programs, xre_path, symbols_path=None, utility_path=None, interactive=False):
         """
         Run a set of C++ unit test programs.
 
@@ -146,12 +151,15 @@ class CPPUnitTests(object):
         * xre_path: A path to a directory containing a XUL Runtime Environment.
         * symbols_path: A path to a directory containing Breakpad-formatted
                         symbol files for producing stack traces on crash.
+        * utility_path: A path to a directory containing utility programs
+                        (xpcshell et al)
 
         Returns True if all test programs exited with a zero status, False
         otherwise.
         """
         self.xre_path = xre_path
         self.log = mozlog.get_default_logger()
+        self.fix_stack = get_stack_fixer_function(utility_path, symbols_path)
         self.log.suite_start(programs)
         env = self.build_environment()
         pass_count = 0
@@ -188,6 +196,10 @@ class CPPUnittestOptions(OptionParser):
                         action = "store", type = "string", dest = "manifest_path",
                         default = None,
                         help = "path to test manifest, if different from the path to test binaries")
+        self.add_option("--utility-path",
+                        action = "store", type = "string", dest = "utility_path",
+                        default = None,
+                        help = "path to directory containing utility programs")
 
 def extract_unittests_from_args(args, environ, manifest_path):
     """Extract unittests from args, expanding directories as needed"""
@@ -237,8 +249,10 @@ def run_test_harness(options, args):
     update_mozinfo()
     progs = extract_unittests_from_args(args, mozinfo.info, options.manifest_path)
     options.xre_path = os.path.abspath(options.xre_path)
+    options.utility_path = os.path.abspath(options.utility_path)
     tester = CPPUnitTests()
-    result = tester.run_tests(progs, options.xre_path, options.symbols_path)
+    result = tester.run_tests(progs, options.xre_path, options.symbols_path,
+                              options.utility_path)
 
     return result
 
