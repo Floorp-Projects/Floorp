@@ -5,30 +5,50 @@
 
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
               android:layout_width="match_parent"
               android:orientation="vertical"
               android:layout_height="match_parent">
 
-    <org.mozilla.gecko.widget.FloatingHintEditText
-              android:id="@+id/edit_bookmark_name"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:singleLine="true"
-              android:hint="@string/bookmark_edit_name"/>
+    <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintAnimationEnabled="true">
 
-    <org.mozilla.gecko.widget.FloatingHintEditText
-              android:id="@+id/edit_bookmark_location"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:singleLine="true"
-              android:hint="@string/bookmark_edit_location"
-              android:inputType="textNoSuggestions"/>
+        <EditText
+                android:id="@+id/edit_bookmark_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:hint="@string/bookmark_edit_name"
+                />
+    </android.support.design.widget.TextInputLayout>
 
-    <org.mozilla.gecko.widget.FloatingHintEditText
-              android:id="@+id/edit_bookmark_keyword"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:singleLine="true"
-              android:hint="@string/bookmark_edit_keyword"/>
+    <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintAnimationEnabled="true">
+
+        <EditText
+                android:id="@+id/edit_bookmark_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:hint="@string/bookmark_edit_location"
+                android:inputType="textNoSuggestions"/>
+    </android.support.design.widget.TextInputLayout>
+
+    <android.support.design.widget.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:hintAnimationEnabled="true">
+
+        <EditText
+                android:id="@+id/edit_bookmark_keyword"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:singleLine="true"
+                android:hint="@string/bookmark_edit_keyword"/>
+    </android.support.design.widget.TextInputLayout>
 
 </LinearLayout>
