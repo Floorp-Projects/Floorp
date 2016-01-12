@@ -304,8 +304,7 @@ void mozPersonalDictionary::SyncLoadInternal()
   NS_NewLocalFileInputStream(getter_AddRefs(inStream), mFile);
 
   nsCOMPtr<nsIUnicharInputStream> convStream;
-  rv = nsSimpleUnicharStreamFactory::GetInstance()->
-    CreateInstanceFromUTF8Stream(inStream, getter_AddRefs(convStream));
+  rv = NS_NewUnicharInputStream(inStream, getter_AddRefs(convStream));
   if (NS_FAILED(rv)) {
     return;
   }
