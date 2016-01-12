@@ -73,13 +73,6 @@ InterpreterFrame::extensibleLexicalScope() const
     return NearestEnclosingExtensibleLexicalScope(scopeChain());
 }
 
-inline JSCompartment*
-InterpreterFrame::compartment() const
-{
-    MOZ_ASSERT(scopeChain()->compartment() == script()->compartment());
-    return scopeChain()->compartment();
-}
-
 inline void
 InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecode* prevpc,
                                 Value* prevsp, JSFunction& callee, JSScript* script, Value* argv,
@@ -91,7 +84,6 @@ InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecod
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
     argv_ = argv;
-    exec.fun = &callee;
     u.nactual = nactual;
     scopeChain_ = callee.environment();
     prev_ = prev;
@@ -225,14 +217,14 @@ InterpreterFrame::replaceInnermostScope(ScopeObject& scope)
 bool
 InterpreterFrame::hasCallObj() const
 {
-    MOZ_ASSERT(isStrictEvalFrame() || fun()->needsCallObject());
+    MOZ_ASSERT(isStrictEvalFrame() || callee().needsCallObject());
     return flags_ & HAS_CALL_OBJ;
 }
 
 inline CallObject&
 InterpreterFrame::callObj() const
 {
-    MOZ_ASSERT(fun()->needsCallObject());
+    MOZ_ASSERT(callee().needsCallObject());
 
     JSObject* pobj = scopeChain();
     while (MOZ_UNLIKELY(!pobj->is<CallObject>()))
@@ -690,26 +682,6 @@ AbstractFramePtr::script() const
     if (isBaselineFrame())
         return asBaselineFrame()->script();
     return asRematerializedFrame()->script();
-}
-
-inline JSFunction*
-AbstractFramePtr::fun() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->fun();
-    if (isBaselineFrame())
-        return asBaselineFrame()->fun();
-    return asRematerializedFrame()->fun();
-}
-
-inline JSFunction*
-AbstractFramePtr::maybeFun() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->maybeFun();
-    if (isBaselineFrame())
-        return asBaselineFrame()->maybeFun();
-    return asRematerializedFrame()->maybeFun();
 }
 
 inline JSFunction*

@@ -78,7 +78,6 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 
     if (isFunctionFrame()) {
         dstvp[1] = ObjectValue(*callee);
-        exec.fun = &callee->as<JSFunction>();
         u.evalScript = script;
     } else {
         MOZ_ASSERT(isGlobalOrModuleFrame());
@@ -126,8 +125,8 @@ InterpreterFrame::copyRawFrameSlots(AutoValueVector* vec)
 JSObject*
 InterpreterFrame::createRestParameter(JSContext* cx)
 {
-    MOZ_ASSERT(fun()->hasRest());
-    unsigned nformal = fun()->nargs() - 1, nactual = numActualArgs();
+    MOZ_ASSERT(callee().hasRest());
+    unsigned nformal = callee().nargs() - 1, nactual = numActualArgs();
     unsigned nrest = (nactual > nformal) ? nactual - nformal : 0;
     Value* restvp = argv() + nformal;
     return ObjectGroup::newArrayObject(cx, restvp, nrest, GenericObject,
@@ -248,11 +247,11 @@ InterpreterFrame::prologue(JSContext* cx)
         return probes::EnterScript(cx, script, nullptr, this);
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
-    if (fun()->needsCallObject() && !initFunctionScopeObjects(cx))
+    if (callee().needsCallObject() && !initFunctionScopeObjects(cx))
         return false;
 
     if (isConstructing()) {
-        if (fun()->isBoundFunction()) {
+        if (callee().isBoundFunction()) {
             thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
         } else if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(callee().isClassConstructor());
@@ -303,8 +302,8 @@ InterpreterFrame::epilogue(JSContext* cx)
 
     MOZ_ASSERT(isNonEvalFunctionFrame());
 
-    if (fun()->needsCallObject()) {
-        MOZ_ASSERT_IF(hasCallObj() && !fun()->isGenerator(),
+    if (callee().needsCallObject()) {
+        MOZ_ASSERT_IF(hasCallObj() && !callee().isGenerator(),
                       scopeChain()->as<CallObject>().callee().nonLazyScript() == script);
     } else {
         AssertDynamicScopeMatchesStaticScope(cx, script, scopeChain());
@@ -313,7 +312,7 @@ InterpreterFrame::epilogue(JSContext* cx)
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
         DebugScopes::onPopCall(this, cx);
 
-    if (!fun()->isGenerator() &&
+    if (!callee().isGenerator() &&
         isConstructing() &&
         thisArgument().isObject() &&
         returnValue().isPrimitive())
@@ -403,7 +402,6 @@ InterpreterFrame::mark(JSTracer* trc)
     if (flags_ & HAS_ARGS_OBJ)
         TraceManuallyBarrieredEdge(trc, &argsObj_, "arguments");
     if (isFunctionFrame()) {
-        TraceManuallyBarrieredEdge(trc, &exec.fun, "fun");
         if (isEvalFrame())
             TraceManuallyBarrieredEdge(trc, &u.evalScript, "eval script");
     } else {
@@ -427,6 +425,20 @@ InterpreterFrame::markValues(JSTracer* trc, Value* sp, jsbytecode* pc)
 {
     MOZ_ASSERT(sp >= slots());
 
+    if (hasArgs()) {
+        // Trace the callee and |this|. When we're doing a moving GC, we
+        // need to fix up the callee pointer before we use it below, under
+        // numFormalArgs() and script().
+        TraceRootRange(trc, 2, argv_ - 2, "fp callee and this");
+
+        // Trace arguments.
+        unsigned argc = Max(numActualArgs(), numFormalArgs());
+        TraceRootRange(trc, argc + isConstructing(), argv_, "fp argv");
+    } else {
+        // Mark callee and newTarget
+        TraceRootRange(trc, 2, ((Value*)this) - 2, "stack callee and newTarget");
+    }
+
     JSScript* script = this->script();
     size_t nfixed = script->nfixed();
     size_t nlivefixed = script->calculateLiveFixed(pc);
@@ -444,15 +456,6 @@ InterpreterFrame::markValues(JSTracer* trc, Value* sp, jsbytecode* pc)
 
         // Mark live locals.
         markValues(trc, 0, nlivefixed);
-    }
-
-    if (hasArgs()) {
-        // Mark callee, |this| and arguments.
-        unsigned argc = Max(numActualArgs(), numFormalArgs());
-        TraceRootRange(trc, argc + 2 + isConstructing(), argv_ - 2, "fp argv");
-    } else {
-        // Mark callee and newTarget
-        TraceRootRange(trc, 2, ((Value*)this) - 2, "stack callee and newTarget");
     }
 }
 
@@ -1462,8 +1465,8 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, InterpreterFrame* 
     if (entryMonitor_) {
         RootedValue stack(cx, asyncStack(cx));
         RootedString asyncCause(cx, cx->runtime()->asyncCauseForNewActivations);
-        if (entryFrame->isFunctionFrame())
-            entryMonitor_->Entry(cx, entryFrame->fun(), stack, asyncCause);
+        if (entryFrame->isNonEvalFunctionFrame())
+            entryMonitor_->Entry(cx, &entryFrame->callee(), stack, asyncCause);
         else
             entryMonitor_->Entry(cx, entryFrame->script(), stack, asyncCause);
     }

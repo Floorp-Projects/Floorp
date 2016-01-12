@@ -139,11 +139,11 @@ bool
 js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res)
 {
     MOZ_ASSERT(frame.isNonEvalFunctionFrame());
-    MOZ_ASSERT(!frame.fun()->isArrow());
+    MOZ_ASSERT(!frame.callee()->isArrow());
 
     if (frame.thisArgument().isObject() ||
-        frame.fun()->strict() ||
-        frame.fun()->isSelfHostedBuiltin())
+        frame.callee()->strict() ||
+        frame.callee()->isSelfHostedBuiltin())
     {
         res.set(frame.thisArgument());
         return true;
