@@ -44,8 +44,8 @@ FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext()
   // isn't implemented.
   mCodecContext->thread_count = 1;
   // FFmpeg takes this as a suggestion for what format to use for audio samples.
-  uint32_t major, minor;
-  FFmpegRuntimeLinker::GetVersion(major, minor);
+  uint32_t major, minor, micro;
+  FFmpegRuntimeLinker::GetVersion(major, minor, micro);
   // LibAV 0.8 produces rubbish float interleaved samples, request 16 bits audio.
   mCodecContext->request_sample_fmt =
     (major == 53) ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;

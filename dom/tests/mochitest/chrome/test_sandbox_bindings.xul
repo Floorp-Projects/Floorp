@@ -31,6 +31,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
 
     function doTest() {
       var win = $("t").contentWindow;
+      ok(isXrayWrapper(win),
+         "We want to be testing things with an Xray as sandboxPrototype here");
+
       var sandbox = Components.utils.Sandbox(win, { sandboxPrototype: win });
 
       is(sandbox._content, undefined, "_content does nothing over Xray");
@@ -283,6 +286,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=741267
         is(doc.expando, 7, "Should be able to set expandos on Xrays for DOM bindings with named properties");
       } catch (e) {
         ok(false, "Setting expandos on Xrays shouldn't throw " + e);
+      }
+
+      // Test that binding a bareword window method produces something
+      // which has a .call
+      try {
+        var binary = Components.utils.evalInSandbox(
+          'btoa.bind(window).call(null, "foo")', sandbox);
+        is(binary, "Zm9v", "Should get the right result from .call on bound btoa");
+      } catch (e) {
+        ok(false, ".call on bound btoa shouldn't throw " + e);
+      }
+
+      // Test that binding a bareword window method produces something
+      // which has a .apply
+      try {
+        var binary = Components.utils.evalInSandbox(
+          'btoa.bind(window).apply(null, ["foo"])', sandbox);
+        is(binary, "Zm9v", "Should get the right result from .apply on bound btoa");
+      } catch (e) {
+        ok(false, ".apply on bound btoa shouldn't throw " + e);
       }
 
       SimpleTest.finish();

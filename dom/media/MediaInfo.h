@@ -23,6 +23,17 @@ class AudioInfo;
 class VideoInfo;
 class TextInfo;
 
+class MetadataTag {
+public:
+  MetadataTag(const nsACString& aKey,
+              const nsACString& aValue)
+    : mKey(aKey)
+    , mValue(aValue)
+  {}
+  nsCString mKey;
+  nsCString mValue;
+};
+
 class TrackInfo {
 public:
   enum TrackType {
@@ -79,6 +90,8 @@ public:
   int64_t mDuration;
   int64_t mMediaTime;
   CryptoTrack mCrypto;
+
+  nsTArray<MetadataTag> mTags;
 
   // True if the track is gonna be (decrypted)/decoded and
   // rendered directly by non-gecko components.
@@ -150,6 +163,7 @@ protected:
     mCrypto = aOther.mCrypto;
     mIsRenderedExternally = aOther.mIsRenderedExternally;
     mType = aOther.mType;
+    mTags = aOther.mTags;
     MOZ_COUNT_CTOR(TrackInfo);
   }
 

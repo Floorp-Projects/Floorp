@@ -1369,7 +1369,7 @@ BytecodeEmitter::atBodyLevel(StmtInfoBCE* stmt) const
                               .enclosingStaticScope() == sc->staticScope());
         return bl;
     }
-    return !stmt || sc->isModuleBox();
+    return !stmt;
 }
 
 uint32_t

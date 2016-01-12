@@ -6,7 +6,6 @@
 
 #include "avcodec.h"
 
-typedef struct AVDictionary AVDictionary;
 typedef struct H264PredContext H264PredContext;
 typedef struct VideoDSPContext VideoDSPContext;
 typedef struct VP8DSPContext VP8DSPContext;
@@ -51,6 +50,11 @@ AVHWAccel ff_wmv3_d3d11va_hwaccel;
 AVHWAccel ff_wmv3_dxva2_hwaccel;
 AVHWAccel ff_wmv3_vaapi_hwaccel;
 AVHWAccel ff_wmv3_vdpau_hwaccel;
+AVHWAccel ff_mpeg2_mmal_hwaccel;
+AVHWAccel ff_vc1_mmal_hwaccel;
+AVHWAccel ff_vp9_d3d11va_hwaccel;
+AVHWAccel ff_vp9_dxva2_hwaccel;
+AVHWAccel ff_vp9_vaapi_hwaccel;
 AVCodec ff_a64multi_encoder;
 AVCodec ff_a64multi5_encoder;
 AVCodec ff_aasc_decoder;
@@ -644,6 +648,19 @@ AVCodec ff_nvenc_hevc_encoder;
 AVCodec ff_hevc_qsv_encoder;
 AVCodec ff_libkvazaar_encoder;
 AVCodec ff_mpeg2_qsv_encoder;
+AVCodec ff_dxv_decoder;
+AVCodec ff_mpeg2_mmal_decoder;
+AVCodec ff_rscc_decoder;
+AVCodec ff_screenpresso_decoder;
+AVCodec ff_sdx2_dpcm_decoder;
+AVCodec ff_vc1_mmal_decoder;
+AVCodec ff_wrapped_avframe_encoder;
+AVCodec ff_interplay_acm_decoder;
+AVCodec ff_xma1_decoder;
+AVCodec ff_xma2_decoder;
+AVCodec ff_adpcm_aica_decoder;
+AVCodec ff_adpcm_psx_decoder;
+AVCodec ff_text_encoder;
 AVCodecParser ff_aac_parser;
 AVCodecParser ff_aac_latm_parser;
 AVCodecParser ff_ac3_parser;
@@ -714,13 +731,3 @@ void ff_vp78dsp_init_ppc(VP8DSPContext *c) {}
 void ff_vp8dsp_init_arm(VP8DSPContext *c) {}
 void ff_vp8dsp_init_mips(VP8DSPContext *c) {}
 void ff_vp9dsp_init_mips(VP9DSPContext *dsp, int bpp) {}
-
-#if !HAVE_AVX2
-void ff_vp9_avg32_avx2(uint8_t *a, ptrdiff_t b, const uint8_t *c, ptrdiff_t d, int e, int f, int g) {}
-void ff_vp9_avg64_avx2(uint8_t *a, ptrdiff_t b, const uint8_t *c, ptrdiff_t d, int e, int f, int g) {}
-void ff_vp9_ipred_dc_32x32_avx2(uint8_t* a, ptrdiff_t b, const uint8_t* c, const uint8_t* d) {}
-void ff_vp9_ipred_dc_left_32x32_avx2(uint8_t* a, ptrdiff_t b, const uint8_t* c, const uint8_t* d) {}
-void ff_vp9_ipred_dc_top_32x32_avx2(uint8_t* a, ptrdiff_t b, const uint8_t* c, const uint8_t* d) {}
-void ff_vp9_ipred_h_32x32_avx2(uint8_t* a, ptrdiff_t b, const uint8_t* c, const uint8_t* d) {}
-void ff_vp9_ipred_tm_32x32_avx2(uint8_t* a, ptrdiff_t b, const uint8_t* c, const uint8_t* d) {}
-#endif

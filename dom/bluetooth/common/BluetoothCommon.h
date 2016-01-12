@@ -11,6 +11,7 @@
 #include "mozilla/Compiler.h"
 #include "mozilla/Endian.h"
 #include "mozilla/Observer.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
 #include "nsPrintfCString.h"
 #include "nsString.h"
@@ -517,7 +518,7 @@ struct BluetoothAddress {
 struct BluetoothConfigurationParameter {
   uint8_t mType;
   uint16_t mLength;
-  nsAutoArrayPtr<uint8_t> mValue;
+  mozilla::UniquePtr<uint8_t[]> mValue;
 };
 
 /*

@@ -32,6 +32,7 @@ ID2D1Factory1 *D2DFactory1()
 
 DrawTargetD2D1::DrawTargetD2D1()
   : mPushedLayers(1)
+  , mPushedLayersSincePurge(0)
 {
 }
 
@@ -87,10 +88,28 @@ DrawTargetD2D1::Snapshot()
   return snapshot.forget();
 }
 
+// Command lists are kept around by device contexts until EndDraw is called,
+// this can cause issues with memory usage (see bug 1238328). EndDraw/BeginDraw
+// are expensive though, especially relatively when little work is done, so
+// we try to reduce the amount of times we execute these purges.
+static const uint32_t kPushedLayersBeforePurge = 25;
+
 void
 DrawTargetD2D1::Flush()
 {
-  mDC->Flush();
+  if ((mPushedLayersSincePurge >= kPushedLayersBeforePurge) &&
+      mPushedLayers.size() == 1) {
+    // It's important to pop all clips as otherwise layers can forget about
+    // their clip when doing an EndDraw. When we have layers pushed we cannot
+    // easily pop all underlying clips to delay the purge until we have no
+    // layers pushed.
+    PopAllClips();
+    mPushedLayersSincePurge = 0;
+    mDC->EndDraw();
+    mDC->BeginDraw();
+  } else {
+    mDC->Flush();
+  }
 
   // We no longer depend on any target.
   for (TargetSet::iterator iter = mDependingOnTargets.begin();
@@ -783,6 +802,8 @@ DrawTargetD2D1::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
   mPushedLayers.push_back(pushedLayer);
 
   mDC->SetTarget(CurrentTarget());
+
+  mPushedLayersSincePurge++;
 }
 
 void

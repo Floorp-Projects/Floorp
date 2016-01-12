@@ -13,15 +13,10 @@
 
 native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>&&);
 
-[scriptable, uuid(f9d60700-e6dc-4a72-9537-689058655472)]
+[scriptable, uuid(88145945-3278-424e-9f37-d874cbdd9f6f)]
 interface nsIEventTarget : nsISupports
 {
   /* until we can get rid of all uses, keep the non-alreadyAddRefed<> version */
-  /**
-   * This must be non-virtual due to issues with MSVC 2013's ordering of
-   * vtbls for overloads.  With other platforms we can leave this virtual
-   * and avoid adding lots of Dispatch() methods to classes inheriting this.
-   */
 %{C++
     nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
       return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
