@@ -156,11 +156,13 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashKey key = { aElement, aPseudoType };
 
-  if (!elementsToRestyle.Contains(key)) {
+  if (!mPresContext || !elementsToRestyle.Contains(key)) {
     return;
   }
 
-  ComposeAnimationRule(aElement, aPseudoType, aCascadeLevel, aStyleChanging);
+  ComposeAnimationRule(aElement, aPseudoType, aCascadeLevel,
+                       mPresContext->RefreshDriver()->MostRecentRefresh(),
+                       aStyleChanging);
 
   elementsToRestyle.Remove(key);
 }
@@ -285,6 +287,7 @@ EffectCompositor::GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame)
 EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
                                        nsCSSPseudoElements::Type aPseudoType,
                                        CascadeLevel aCascadeLevel,
+                                       TimeStamp aRefreshTime,
                                        bool& aStyleChanging)
 {
   EffectSet* effects = EffectSet::GetEffectSet(aElement, aPseudoType);
@@ -323,6 +326,8 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     effect->GetAnimation()->ComposeStyle(animationRule, properties,
                                          aStyleChanging);
   }
+
+  effects->UpdateAnimationRuleRefreshTime(aCascadeLevel, aRefreshTime);
 }
 
 /* static */ void
