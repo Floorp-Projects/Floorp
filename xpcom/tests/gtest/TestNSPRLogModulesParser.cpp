@@ -61,10 +61,29 @@ TEST(NSPRLogModulesParser, LevelSpecified)
   }
 }
 
+TEST(NSPRLogModulesParser, Reserved)
+{
+  const char* reservedNames[] = {
+    "all",
+    "append",
+    "bufsize",
+    "sync",
+    "timestamp",
+  };
+
+  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(reservedNames); i++) {
+    bool callbackInvoked = false;
+    mozilla::NSPRLogModulesParser(reservedNames[i],
+        [&](const char*, mozilla::LogLevel) mutable {
+          callbackInvoked = true;
+        });
+    EXPECT_FALSE(callbackInvoked);
+  }
+}
+
 TEST(NSPRLogModulesParser, Multiple)
 {
   std::pair<const char*, mozilla::LogLevel> expected[] = {
-    { "timestamp", mozilla::LogLevel::Error },
     { "Foo", mozilla::LogLevel::Info },
     { "Bar", mozilla::LogLevel::Error },
     { "Baz", mozilla::LogLevel::Warning },

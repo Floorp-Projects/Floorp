@@ -15,7 +15,7 @@
 #include "nsIInputStream.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIOutputStream.h"
-#include "NetwerkTestLogging.h"
+#include "mozilla/Logging.h"
 #include "prenv.h"
 #include "prthread.h"
 #include <stdlib.h>

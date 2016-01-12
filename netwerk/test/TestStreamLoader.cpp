@@ -3,7 +3,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
-#include "NetwerkTestLogging.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Attributes.h"
 #include "nsIScriptSecurityManager.h"
 

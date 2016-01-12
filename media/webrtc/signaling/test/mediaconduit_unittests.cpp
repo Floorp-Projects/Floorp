@@ -17,7 +17,6 @@ using namespace std;
 #include "GmpVideoCodec.h"
 #include "nsIEventTarget.h"
 #include "FakeMediaStreamsImpl.h"
-#include "FakeLogging.h"
 #include "nsThreadUtils.h"
 #include "runnable_utils.h"
 #include "signaling/src/common/EncodingConstraints.h"
