@@ -537,7 +537,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                          aStyleContext->GetPseudoType(),
                                          aStyleContext);
 
-  collection->EnsureStyleRuleFor();
+  EffectCompositor::CascadeLevel cascadeLevel =
+    EffectCompositor::CascadeLevel::Animations;
+  mPresContext->EffectCompositor()
+              ->MaybeUpdateAnimationRule(aElement,
+                                         aStyleContext->GetPseudoType(),
+                                         cascadeLevel);
+
   // We don't actually dispatch the pending events now.  We'll either
   // dispatch them the next time we get a refresh driver notification
   // or the next time somebody calls

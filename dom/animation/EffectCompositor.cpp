@@ -194,6 +194,21 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                                              aPseudoType,
                                            CascadeLevel aCascadeLevel)
 {
+  // First update cascade results since that may cause some elements to
+  // be marked as needing a restyle.
+
+  nsStyleContext* styleContext = nullptr;
+  {
+    dom::Element* elementToRestyle = GetElementToRestyle(aElement, aPseudoType);
+    if (elementToRestyle) {
+      nsIFrame* frame = elementToRestyle->GetPrimaryFrame();
+      if (frame) {
+        styleContext = frame->StyleContext();
+      }
+    }
+  }
+  MaybeUpdateCascadeResults(aElement, aPseudoType, styleContext);
+
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashKey key = { aElement, aPseudoType };
 
