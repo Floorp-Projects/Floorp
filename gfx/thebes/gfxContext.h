@@ -75,15 +75,10 @@ public:
     static already_AddRefed<gfxContext> ContextForDrawTarget(mozilla::gfx::DrawTarget* aTarget);
 
     /**
-     * Return the current transparency group target, if any, along
-     * with its device offsets from the top.  If no group is
-     * active, returns the surface the gfxContext was created with,
-     * and 0,0 in dx,dy.
+     * Return the current transparency group target, if any. If no group is
+     * active, returns the surface the gfxContext was created with.
      */
-    already_AddRefed<gfxASurface> CurrentSurface(gfxFloat *dx, gfxFloat *dy);
-    already_AddRefed<gfxASurface> CurrentSurface() {
-        return CurrentSurface(nullptr, nullptr);
-    }
+    already_AddRefed<gfxASurface> CurrentSurface();
 
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 
