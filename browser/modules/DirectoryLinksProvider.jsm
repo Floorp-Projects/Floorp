@@ -32,13 +32,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "eTLD",
   "@mozilla.org/network/effective-tld-service;1",
   "nsIEffectiveTLDService");
-
-// ensure remote new tab doesn't go beyond aurora
-if (!AppConstants.RELEASE_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
-    "resource:///modules/RemoteNewTabUtils.jsm");
-}
-
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();
 });
