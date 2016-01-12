@@ -14,6 +14,7 @@ Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/engines.js");
 Cu.import("resource://services-sync/record.js");
 Cu.import("resource://services-sync/util.js");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const CLIENTS_TTL = 1814400; // 21 days
 const CLIENTS_TTL_REFRESH = 604800; // 7 days
@@ -146,6 +147,26 @@ ClientEngine.prototype = {
       this.lastRecordUpload = Date.now() / 1000;
     }
     SyncEngine.prototype._syncStartup.call(this);
+  },
+
+  _syncFinish() {
+    // Record telemetry for our device types.
+    for (let [deviceType, count] of this.deviceTypes) {
+      let hid;
+      switch (deviceType) {
+        case "desktop":
+          hid = "WEAVE_DEVICE_COUNT_DESKTOP";
+          break;
+        case "mobile":
+          hid = "WEAVE_DEVICE_COUNT_MOBILE";
+          break;
+        default:
+          this._log.warn(`Unexpected deviceType "${deviceType}" recording device telemetry.`);
+          continue;
+      }
+      Services.telemetry.getHistogramById(hid).add(count);
+    }
+    SyncEngine.prototype._syncFinish.call(this);
   },
 
   // Always process incoming items because they might have commands
