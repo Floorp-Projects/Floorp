@@ -546,6 +546,9 @@
 @RESPATH@/components/Push.manifest
 @RESPATH@/components/PushComponents.js
 
+@RESPATH@/components/remotebrowserutils.manifest
+@RESPATH@/components/RemoteWebNavigation.js
+
 @RESPATH@/components/SlowScriptDebug.manifest
 @RESPATH@/components/SlowScriptDebug.js
 
