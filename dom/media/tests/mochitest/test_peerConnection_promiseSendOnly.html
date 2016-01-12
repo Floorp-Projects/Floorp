@@ -15,19 +15,33 @@
   var pc1 = new RTCPeerConnection();
   var pc2 = new RTCPeerConnection();
 
-  var pc2_haveRemoteOffer = new Promise(resolve => pc2.onsignalingstatechange =
-    e => (e.target.signalingState == "have-remote-offer") && resolve());
-  var pc1_stable = new Promise(resolve => pc1.onsignalingstatechange =
-    e => (e.target.signalingState == "stable") && resolve());
+  var add = (pc, can, failed) => can && pc.addIceCandidate(can).catch(failed);
+  pc1.onicecandidate = e => add(pc2, e.candidate, generateErrorCallback());
+  pc2.onicecandidate = e => add(pc1, e.candidate, generateErrorCallback());
 
-  pc1.onicecandidate = e => pc2_haveRemoteOffer.then(() => !e.candidate ||
-    pc2.addIceCandidate(e.candidate)).catch(generateErrorCallback());
-  pc2.onicecandidate = e => pc1_stable.then(() => !e.candidate ||
-    pc1.addIceCandidate(e.candidate)).catch(generateErrorCallback());
+  function mustThrowWith(msg, reason, f) {
+    try {
+      f();
+      ok(false, msg + " must throw");
+    } catch (e) {
+      is(e.name, reason, msg + " must throw: " + e.message);
+    }
+  };
 
   var v1, v2;
-  var delivered = new Promise(resolve =>
-    pc2.onaddstream = e => resolve(v2.srcObject = e.stream));
+  var delivered = new Promise(resolve => pc2.ontrack = e => {
+    // Test RTCTrackEvent here.
+    ok(e.streams.length > 0, "has streams");
+    ok(e.streams[0].getTracks().some(track => track == e.track), "has track");
+    ok(pc2.getReceivers().some(receiver => receiver == e.receiver), "has receiver");
+    if (e.streams[0].getTracks().length == 2) {
+      // Test RTCTrackEvent required args here.
+      mustThrowWith("RTCTrackEvent wo/required args",
+                    "TypeError", () => new RTCTrackEvent("track", {}));
+      v2.srcObject = e.streams[0];
+      resolve();
+    }
+  });
 
   runNetworkTest(function() {
     v1 = createMediaElement('video', 'v1');
@@ -37,7 +51,7 @@
     is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-    .then(stream => pc1.addStream(v1.srcObject = stream))
+    .then(stream => (v1.srcObject = stream).getTracks().forEach(t => pc1.addTrack(t, stream)))
     .then(() => pc1.createOffer({})) // check that createOffer accepts arg.
     .then(offer => pc1.setLocalDescription(offer))
     .then(() => pc2.setRemoteDescription(pc1.localDescription))
