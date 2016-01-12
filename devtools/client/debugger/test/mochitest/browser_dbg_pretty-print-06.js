@@ -30,7 +30,7 @@ function test() {
       return function (aPacket, aCallback) {
         if (aPacket.type == "prettyPrint") {
           gPrettyPrinted = true;
-          return executeSoon(() => aCallback({ error: "prettyPrintError" }));
+          return promise.reject({ error: "prettyPrintError" });
         }
         return aOriginalRequestMethod(aPacket, aCallback);
       };
