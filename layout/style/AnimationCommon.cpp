@@ -501,13 +501,16 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
 
   // Steps for RestyleType::Standard and above:
 
+  // FIXME: The following arrangement now makes absolutely no sense, but
+  // is also harmless and in the interests of making incremental changes
+  // we leave mHasPendingAnimationRestyle here for now and remove it in a
+  // subsequent patch in this series.
   if (mHasPendingAnimationRestyle) {
     return;
   }
 
   if (aRestyleType >= EffectCompositor::RestyleType::Standard) {
     mHasPendingAnimationRestyle = true;
-    PostRestyleForAnimation(presContext);
   }
 }
 

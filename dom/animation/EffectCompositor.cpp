@@ -148,8 +148,34 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
     elementsToRestyle.Put(key, false);
     mPresContext->Document()->SetNeedStyleFlush();
   } else {
+    // Get() returns 0 if the element is not found. It will also return
+    // false if the element is found but does not have a pending restyle.
+    bool hasPendingRestyle = elementsToRestyle.Get(key);
+    if (!hasPendingRestyle) {
+      PostRestyleForAnimation(aElement, aPseudoType, aCascadeLevel);
+    }
     elementsToRestyle.Put(key, true);
   }
+}
+
+void
+EffectCompositor::PostRestyleForAnimation(dom::Element* aElement,
+                                          nsCSSPseudoElements::Type aPseudoType,
+                                          CascadeLevel aCascadeLevel)
+{
+  if (!mPresContext) {
+    return;
+  }
+
+  dom::Element* element = GetElementToRestyle(aElement, aPseudoType);
+  if (!element) {
+    return;
+  }
+
+  nsRestyleHint hint = aCascadeLevel == CascadeLevel::Transitions ?
+                                        eRestyle_CSSTransitions :
+                                        eRestyle_CSSAnimations;
+  mPresContext->PresShell()->RestyleForAnimation(element, hint);
 }
 
 void
@@ -171,6 +197,34 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
                        aStyleChanging);
 
   elementsToRestyle.Remove(key);
+}
+
+/* static */ dom::Element*
+EffectCompositor::GetElementToRestyle(dom::Element* aElement,
+                                      nsCSSPseudoElements::Type aPseudoType)
+{
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
+    return aElement;
+  }
+
+  nsIFrame* primaryFrame = aElement->GetPrimaryFrame();
+  if (!primaryFrame) {
+    return nullptr;
+  }
+  nsIFrame* pseudoFrame;
+  if (aPseudoType == nsCSSPseudoElements::ePseudo_before) {
+    pseudoFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame);
+  } else if (aPseudoType == nsCSSPseudoElements::ePseudo_after) {
+    pseudoFrame = nsLayoutUtils::GetAfterFrame(primaryFrame);
+  } else {
+    NS_NOTREACHED("Should not try to get the element to restyle for a pseudo "
+                  "other that :before or :after");
+    return nullptr;
+  }
+  if (!pseudoFrame) {
+    return nullptr;
+  }
+  return pseudoFrame->GetContent()->AsElement();
 }
 
 /* static */ bool
