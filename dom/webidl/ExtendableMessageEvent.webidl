@@ -31,7 +31,7 @@ interface ExtendableMessageEvent : ExtendableEvent {
    */
   readonly attribute (Client or ServiceWorker or MessagePort)? source;
 
-  readonly attribute MessagePortList? ports;
+  [SameObject] readonly attribute MessagePortList? ports;
 };
 
 dictionary ExtendableMessageEventInit : ExtendableEventInit {

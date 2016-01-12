@@ -96,11 +96,6 @@ public:
      */
     static void ClipToRegion(mozilla::gfx::DrawTarget* aTarget, const nsIntRegion& aRegion);
 
-    /**
-     * Create a path consisting of rectangles in |aRegion|.
-     */
-    static void PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion);
-
     /*
      * Convert image format to depth value
      */

@@ -203,8 +203,7 @@ function updateBanner(messages) {
       icon: message.icon,
       weight: message.weight,
       onclick: function() {
-        let parentId = gChromeWin.BrowserApp.selectedTab.id;
-        gChromeWin.BrowserApp.addTab(message.url, { parentId: parentId });
+        gChromeWin.BrowserApp.loadURI(message.url);
         UITelemetry.addEvent("action.1", "banner", null, message.id);
       },
       ondismiss: function() {

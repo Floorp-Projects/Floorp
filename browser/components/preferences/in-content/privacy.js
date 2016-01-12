@@ -16,7 +16,6 @@ var gPrivacyPane = {
    */
   _shouldPromptForRestart: true,
 
-#ifdef NIGHTLY_BUILD
   /**
    * Show the Tracking Protection UI depending on the
    * privacy.trackingprotection.ui.enabled pref, and linkify its Learn More link
@@ -35,7 +34,6 @@ var gPrivacyPane = {
     document.getElementById("trackingprotectionbox").hidden = false;
     document.getElementById("trackingprotectionpbmbox").hidden = true;
   },
-#endif
 
   /**
    * Linkify the Learn More link of the Private Browsing Mode Tracking
@@ -83,9 +81,7 @@ var gPrivacyPane = {
     this.updateHistoryModePane();
     this.updatePrivacyMicroControls();
     this.initAutoStartPrivateBrowsingReverter();
-#ifdef NIGHTLY_BUILD
     this._initTrackingProtection();
-#endif
     this._initTrackingProtectionPBM();
     this._initAutocomplete();
 
@@ -510,7 +506,7 @@ var gPrivacyPane = {
 
     acceptThirdPartyLabel.disabled = acceptThirdPartyMenu.disabled = !acceptCookies;
     keepUntil.disabled = menu.disabled = this._autoStartPrivateBrowsing || !acceptCookies;
-    
+
     return acceptCookies;
   },
 
@@ -529,7 +525,7 @@ var gPrivacyPane = {
 
     return accept.checked ? 0 : 2;
   },
-  
+
   /**
    * Converts between network.cookie.cookieBehavior and the third-party cookie UI
    */
@@ -550,7 +546,7 @@ var gPrivacyPane = {
         return undefined;
     }
   },
-  
+
   writeAcceptThirdPartyCookies: function ()
   {
     var accept = document.getElementById("acceptThirdPartyMenu").selectedItem;

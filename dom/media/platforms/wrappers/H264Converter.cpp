@@ -139,6 +139,11 @@ H264Converter::CreateDecoder()
     return NS_ERROR_NOT_INITIALIZED;
   }
   UpdateConfigFromExtraData(mCurrentConfig.mExtraData);
+  if (!mNeedAVCC) {
+    // When using a decoder handling AnnexB, we get here only once from the
+    // constructor. We do want to get the dimensions extracted from the SPS.
+    mOriginalConfig = mCurrentConfig;
+  }
 
   mDecoder = mPDM->CreateVideoDecoder(mNeedAVCC ? mCurrentConfig : mOriginalConfig,
                                       mLayersBackend,

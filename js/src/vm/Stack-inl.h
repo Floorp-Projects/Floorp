@@ -581,23 +581,25 @@ AbstractFramePtr::isFunctionFrame() const
 }
 
 inline bool
-AbstractFramePtr::isModuleFrame() const
+AbstractFramePtr::isGlobalOrModuleFrame() const
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->isModuleFrame();
+        return asInterpreterFrame()->isGlobalOrModuleFrame();
     if (isBaselineFrame())
-        return asBaselineFrame()->isModuleFrame();
-    return asRematerializedFrame()->isModuleFrame();
+        return asBaselineFrame()->isGlobalOrModuleFrame();
+    return asRematerializedFrame()->isGlobalOrModuleFrame();
 }
 
 inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->isGlobalFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->isGlobalFrame();
-    return asRematerializedFrame()->isGlobalFrame();
+    return isGlobalOrModuleFrame() && !script()->module();
+}
+
+inline bool
+AbstractFramePtr::isModuleFrame() const
+{
+    return isGlobalOrModuleFrame() && script()->module();
 }
 
 inline bool

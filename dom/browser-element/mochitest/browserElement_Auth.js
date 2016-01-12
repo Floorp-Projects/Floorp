@@ -49,6 +49,9 @@ function testHttpAuthCancel(e) {
 
   is(e.detail.realm, 'http_realm', 'expected realm matches');
   is(e.detail.host, 'http://test', 'expected host matches');
+  is(e.detail.path,
+     '/tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+     'expected path matches');
   e.preventDefault();
 
   SimpleTest.executeSoon(function() {
@@ -71,6 +74,9 @@ function testHttpAuth(e) {
 
   is(e.detail.realm, 'http_realm', 'expected realm matches');
   is(e.detail.host, 'http://test', 'expected host matches');
+  is(e.detail.path,
+     '/tests/dom/browser-element/mochitest/file_http_401_response.sjs',
+     'expected path matches');
   is(e.detail.isProxy, false, 'expected isProxy is false');
   e.preventDefault();
 
@@ -98,6 +104,9 @@ function testProxyAuth(e) {
 
     is(e.detail.realm, 'http_realm', 'expected realm matches');
     is(e.detail.host, mozproxy, 'expected host matches');
+    is(e.detail.path,
+       '/tests/dom/browser-element/mochitest/file_http_407_response.sjs',
+       'expected path matches');
     is(e.detail.isProxy, true, 'expected isProxy is true');
     e.preventDefault();
 

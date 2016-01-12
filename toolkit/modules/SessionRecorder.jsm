@@ -22,6 +22,9 @@ const STARTUP_RETRY_INTERVAL_MS = 5000;
 // Wait up to 5 minutes for startup measurements before giving up.
 const MAX_STARTUP_TRIES = 300000 / STARTUP_RETRY_INTERVAL_MS;
 
+const LOGGER_NAME = "Toolkit.Telemetry";
+const LOGGER_PREFIX = "SessionRecorder::";
+
 /**
  * Records information about browser sessions.
  *
@@ -64,7 +67,7 @@ this.SessionRecorder = function (branch) {
     throw new Error("branch argument must end with '.': " + branch);
   }
 
-  this._log = Log.repository.getLogger("Services.DataReporting.SessionRecorder");
+  this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
 
   this._prefs = new Preferences(branch);
   this._lastActivityWasInactive = false;

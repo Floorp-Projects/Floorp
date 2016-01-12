@@ -12,6 +12,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Move.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 #include "GCHeapProfilerImpl.h"
 #include "GeckoProfiler.h"
@@ -42,10 +43,10 @@ nsTArray<nsCString>
 ProfilerImpl::GetStacktrace()
 {
   nsTArray<nsCString> trace;
-  nsAutoArrayPtr<char> output(new char[BACKTRACE_BUFFER_SIZE]);
+  auto output = MakeUnique<char[]>(BACKTRACE_BUFFER_SIZE);
 
-  profiler_get_backtrace_noalloc(output, BACKTRACE_BUFFER_SIZE);
-  for (const char* p = output; *p; p += strlen(p) + 1) {
+  profiler_get_backtrace_noalloc(output.get(), BACKTRACE_BUFFER_SIZE);
+  for (const char* p = output.get(); *p; p += strlen(p) + 1) {
     trace.AppendElement()->Assign(p);
   }
 
