@@ -129,6 +129,42 @@ FindAnimationsForCompositor(const nsIFrame* aFrame,
   return foundSome;
 }
 
+void
+EffectCompositor::RequestRestyle(dom::Element* aElement,
+                                 nsCSSPseudoElements::Type aPseudoType,
+                                 RestyleType aRestyleType,
+                                 CascadeLevel aCascadeLevel)
+{
+  auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
+  PseudoElementHashKey key = { aElement, aPseudoType };
+
+  if (aRestyleType == RestyleType::Throttled &&
+      !elementsToRestyle.Contains(key)) {
+    elementsToRestyle.Put(key, false);
+  } else {
+    elementsToRestyle.Put(key, true);
+  }
+}
+
+void
+EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
+                                           nsCSSPseudoElements::Type
+                                             aPseudoType,
+                                           CascadeLevel aCascadeLevel,
+                                           bool& aStyleChanging)
+{
+  auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
+  PseudoElementHashKey key = { aElement, aPseudoType };
+
+  if (!elementsToRestyle.Contains(key)) {
+    return;
+  }
+
+  ComposeAnimationRule(aElement, aPseudoType, aCascadeLevel, aStyleChanging);
+
+  elementsToRestyle.Remove(key);
+}
+
 /* static */ bool
 EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
                                              nsCSSProperty aProperty)

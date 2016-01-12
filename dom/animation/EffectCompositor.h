@@ -72,12 +72,30 @@ public:
     // Animation style has changed and needs to be updated on the main thread
     // as well as forcing animations on layers to be updated.
     // This is needed in cases such as when an animation becomes paused or has
-    // its playback rate changed. In such a case, although the computed style
+    // its playback rate changed. In such cases, although the computed style
     // and refresh driver time might not change, we still need to ensure the
     // corresponding animations on layers are updated to reflect the new
     // configuration of the animation.
     Layer
   };
+
+  // Notifies the compositor that the animation rule for the specified
+  // (pseudo-)element at the specified cascade level needs to be updated.
+  // The specified steps taken to update the animation rule depend on
+  // |aRestyleType| whose values are described above.
+  void RequestRestyle(dom::Element* aElement,
+                      nsCSSPseudoElements::Type aPseudoType,
+                      RestyleType aRestyleType,
+                      CascadeLevel aCascadeLevel);
+
+  // Updates the animation rule stored on the EffectSet for the
+  // specified (pseudo-)element for cascade level |aLevel|.
+  // If the animation rule is not marked as needing an update,
+  // no work is done.
+  void MaybeUpdateAnimationRule(dom::Element* aElement,
+                                nsCSSPseudoElements::Type aPseudoType,
+                                CascadeLevel aCascadeLevel,
+                                bool& aStyleChanging);
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
@@ -122,15 +140,15 @@ public:
   static Maybe<Pair<dom::Element*, nsCSSPseudoElements::Type>>
   GetAnimationElementAndPseudoForFrame(const nsIFrame* aFrame);
 
+private:
+  ~EffectCompositor() = default;
+
   // Rebuilds the animation rule corresponding to |aCascadeLevel| on the
   // EffectSet associated with the specified (pseudo-)element.
   static void ComposeAnimationRule(dom::Element* aElement,
                                    nsCSSPseudoElements::Type aPseudoType,
                                    CascadeLevel aCascadeLevel,
                                    bool& aStyleChanging);
-
-private:
-  ~EffectCompositor() = default;
 
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade
