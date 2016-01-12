@@ -20,8 +20,7 @@ namespace mozilla {
 namespace net {
 
 DNSRequestParent::DNSRequestParent()
-  : mFlags(0)
-  , mIPCClosed(false)
+  : mIPCClosed(false)
 {
 
 }

@@ -21,8 +21,7 @@ namespace storage {
 //// StatementParams
 
 StatementParams::StatementParams(mozIStorageStatement *aStatement) :
-    mStatement(aStatement),
-    mParamCount(0)
+    mStatement(aStatement)
 {
   NS_ASSERTION(mStatement != nullptr, "mStatement is null");
   (void)mStatement->GetParameterCount(&mParamCount);

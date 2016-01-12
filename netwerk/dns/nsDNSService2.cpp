@@ -480,12 +480,8 @@ private:
 
 nsDNSService::nsDNSService()
     : mLock("nsDNSServer.mLock")
-    , mDisableIPv6(false)
-    , mDisablePrefetch(false)
     , mFirstTime(true)
     , mOffline(false)
-    , mNotifyResolution(false)
-    , mOfflineLocalhost(false)
 {
 }
 
