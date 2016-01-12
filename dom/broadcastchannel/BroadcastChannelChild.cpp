@@ -27,8 +27,7 @@ namespace dom {
 using namespace workers;
 
 BroadcastChannelChild::BroadcastChannelChild(const nsACString& aOrigin)
-  : mBC(nullptr)
-  , mActorDestroyed(false)
+  : mActorDestroyed(false)
 {
   CopyUTF8toUTF16(aOrigin, mOrigin);
 }

@@ -27,13 +27,7 @@ public:
 
 private:
   // Don't try to use the default constructor.
-  MobileCallForwardingOptions()
-    : mActive(false)
-    , mAction(0)
-    , mReason(0)
-    , mTimeSeconds(0)
-    , mServiceClass(0)
-  {}
+  MobileCallForwardingOptions() {}
 
   ~MobileCallForwardingOptions() {}
 

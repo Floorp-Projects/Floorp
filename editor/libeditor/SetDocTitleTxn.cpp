@@ -25,8 +25,7 @@ using namespace mozilla;
 // note that aEditor is not refcounted
 SetDocTitleTxn::SetDocTitleTxn()
   : EditTxn()
-  , mEditor(nullptr)
-  , mIsTransient(false)
+, mIsTransient(false)
 {
 }
 
