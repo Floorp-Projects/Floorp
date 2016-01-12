@@ -239,10 +239,6 @@ XPCOMUtils.defineLazyGetter(this, "Win7Features", function () {
   if (AppConstants.platform != "win")
     return null;
 
-  // Bug 666808 - AeroPeek support for e10s
-  if (gMultiProcessBrowser)
-    return null;
-
   const WINTASKBAR_CONTRACTID = "@mozilla.org/windows-taskbar;1";
   if (WINTASKBAR_CONTRACTID in Cc &&
       Cc[WINTASKBAR_CONTRACTID].getService(Ci.nsIWinTaskbar).available) {
