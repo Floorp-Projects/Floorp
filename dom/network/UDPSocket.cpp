@@ -118,6 +118,8 @@ UDPSocket::UDPSocket(nsPIDOMWindow* aOwner,
   : DOMEventTargetHelper(aOwner)
   , mRemoteAddress(aRemoteAddress)
   , mRemotePort(aRemotePort)
+  , mAddressReuse(false)
+  , mLoopback(false)
   , mReadyState(SocketReadyState::Opening)
 {
   MOZ_ASSERT(aOwner);

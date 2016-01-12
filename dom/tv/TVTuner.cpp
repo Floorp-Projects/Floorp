@@ -32,6 +32,7 @@ NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 TVTuner::TVTuner(nsPIDOMWindow* aWindow)
   : DOMEventTargetHelper(aWindow)
+  , mStreamType(0)
 {
 }
 
