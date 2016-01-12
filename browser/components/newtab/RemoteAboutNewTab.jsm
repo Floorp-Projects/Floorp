@@ -1,7 +1,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals Services, XPCOMUtils, RemotePages, RemoteNewTabLocation, RemoteNewTabUtils, Task  */
+/* globals Services, XPCOMUtils, RemotePages, RemoteNewTabUtils, Task, aboutNewTabService  */
 /* globals BackgroundPageThumbs, PageThumbs, DirectoryLinksProvider, PlacesProvider, NewTabPrefsProvider */
 /* exported RemoteAboutNewTab */
 
@@ -28,23 +28,25 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "DirectoryLinksProvider",
   "resource:///modules/DirectoryLinksProvider.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabLocation",
-  "resource:///modules/RemoteNewTabLocation.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesProvider",
   "resource:///modules/PlacesProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
   "resource:///modules/NewTabPrefsProvider.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+  "@mozilla.org/browser/aboutnewtab-service;1",
+  "nsIAboutNewTabService");
 
 let RemoteAboutNewTab = {
 
   pageListener: null,
+  remoteURL: null,
 
   /**
    * Initialize the RemotePageManager and add all message listeners for this page
    */
   init: function() {
-    RemoteNewTabLocation.init();
-    this.pageListener = new RemotePages("about:remote-newtab");
+    this.remoteURL = new URL(aboutNewTabService.generateRemoteURL());
+    this.pageListener = new RemotePages(this.remoteURL.href);
     this.pageListener.addMessageListener("NewTab:InitializeGrid", this.initializeGrid.bind(this));
     this.pageListener.addMessageListener("NewTab:UpdateGrid", this.updateGrid.bind(this));
     this.pageListener.addMessageListener("NewTab:Customize", this.customize.bind(this));
@@ -115,8 +117,8 @@ let RemoteAboutNewTab = {
    */
   initContentFrame: function(message) {
     message.target.sendAsyncMessage("NewTabFrame:Init", {
-      href: RemoteNewTabLocation.href,
-      origin: RemoteNewTabLocation.origin
+      href: this.remoteURL.href,
+      origin: this.remoteURL.origin
     });
   },
 
@@ -293,7 +295,6 @@ let RemoteAboutNewTab = {
                                          Ci.nsISupportsWeakReference]),
 
   uninit: function() {
-    RemoteNewTabLocation.uninit();
     this._removeObservers();
     this.pageListener.destroy();
     this.pageListener = null;
