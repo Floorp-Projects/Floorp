@@ -1142,6 +1142,10 @@ class nsIWidget : public nsISupports {
      * if possible.  (If not, it behaves as if aTargetScreen is null.)
      * If !aFullScreen, aTargetScreen is ignored.
      * aTargetScreen support is currently only implemented on Windows.
+     *
+     * @return NS_OK if the widget is setup properly for fullscreen and
+     * FullscreenChanged callback has been or will be called. If other
+     * value is returned, the caller should continue the change itself.
      */
     NS_IMETHOD MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen = nullptr) = 0;
 
