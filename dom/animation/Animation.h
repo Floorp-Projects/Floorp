@@ -39,9 +39,7 @@ class nsPresContext;
 
 namespace mozilla {
 
-struct AnimationCollection;
 class AnimValuesStyleRule;
-class CommonAnimationManager;
 
 namespace dom {
 
@@ -313,8 +311,6 @@ public:
 
   void NotifyEffectTimingUpdated();
 
-  AnimationCollection* GetCollection() const;
-
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);
@@ -373,7 +369,6 @@ protected:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
-  virtual CommonAnimationManager* GetAnimationManager() const = 0;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<KeyframeEffectReadOnly> mEffect;
