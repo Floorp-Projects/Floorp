@@ -299,8 +299,7 @@ class PandaTalosTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixi
         self.rmtree(dirs['abs_talosdata_dir'])
         self.mkdir_p(dirs['abs_talosdata_dir'])
         self.mkdir_p(dirs['abs_symbols_dir'])
-        self.mkdir_p(dirs['abs_fennec_dir'])
-        self._download_unzip(self.installer_url,
+        self.download_unzip(self.installer_url,
                              dirs['abs_fennec_dir'])
         #this is ugly but you can't specify a file in download_unzip to extract the file to, by default it's the abs_work_dir
         #should think of a better way
@@ -318,10 +317,10 @@ class PandaTalosTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixi
                            error_level=FATAL)
         self.symbols_url = self.query_symbols_url()
 
-        self._download_unzip(self.symbols_url,
+        self.download_unzip(self.symbols_url,
                              dirs['abs_symbols_dir'])
 
-        self._download_unzip(self.config['retry_url'],
+        self.download_unzip(self.config['retry_url'],
                              dirs['abs_talosdata_dir'])
 
         taloscode = self.config.get("talos_from_code_url")
