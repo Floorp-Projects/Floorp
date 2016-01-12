@@ -453,7 +453,7 @@ class JSFunction : public js::NativeObject
         return u.i.s.script_;
     }
 
-    inline bool getLength(JSContext* cx, uint16_t* length);
+    bool getLength(JSContext* cx, uint16_t* length);
 
     js::LazyScript* lazyScript() const {
         MOZ_ASSERT(isInterpretedLazy() && u.i.s.lazy_);
