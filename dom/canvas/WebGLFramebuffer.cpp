@@ -20,8 +20,6 @@ WebGLFBAttachPoint::WebGLFBAttachPoint(WebGLFramebuffer* fb, GLenum attachmentPo
     : mFB(fb)
     , mAttachmentPoint(attachmentPoint)
     , mTexImageTarget(LOCAL_GL_NONE)
-    , mTexImageLayer(0)
-    , mTexImageLevel(0)
 { }
 
 WebGLFBAttachPoint::~WebGLFBAttachPoint()

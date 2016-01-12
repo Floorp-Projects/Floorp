@@ -210,14 +210,6 @@ protected:
  */
 class MediaEnginePrefs {
 public:
-  MediaEnginePrefs()
-    : mWidth(0)
-    , mHeight(0)
-    , mFPS(0)
-    , mMinFPS(0)
-    , mFreq(0)
-  {}
-
   int32_t mWidth;
   int32_t mHeight;
   int32_t mFPS;

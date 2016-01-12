@@ -62,12 +62,7 @@ class MediaChannelStatistics;
  */
 class MediaChannelStatistics {
 public:
-  MediaChannelStatistics()
-    : mAccumulatedBytes(0)
-    , mIsStarted(false)
-  {
-    Reset();
-  }
+  MediaChannelStatistics() { Reset(); }
 
   explicit MediaChannelStatistics(MediaChannelStatistics * aCopyFrom)
   {

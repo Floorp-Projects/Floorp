@@ -907,7 +907,6 @@ protected:
   public:
     ContextState() : textAlign(TextAlign::START),
                      textBaseline(TextBaseline::ALPHABETIC),
-                     shadowColor(0),
                      lineWidth(1.0f),
                      miterLimit(10.0f),
                      globalAlpha(1.0f),
