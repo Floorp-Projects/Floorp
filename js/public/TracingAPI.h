@@ -294,22 +294,22 @@ namespace JS {
 // is dependent on the object's address. For example, if the object's address
 // is used as a key in a hashtable, then the object must be removed and
 // re-inserted with the correct hash.
+//
+// Note that while |edgep| must never be null, it is fine for |*edgep| to be
+// nullptr.
 template <typename T>
 extern JS_PUBLIC_API(void)
 TraceEdge(JSTracer* trc, JS::Heap<T>* edgep, const char* name);
 
-// As with JS::TraceEdge, but checks if *edgep is a nullptr before proceeding.
-// Note that edgep itself must always be non-null.
-template <typename T>
 extern JS_PUBLIC_API(void)
-TraceNullableEdge(JSTracer* trc, JS::Heap<T>* edgep, const char* name);
-
-extern JS_PUBLIC_API(void)
-TraceNullableEdge(JSTracer* trc, JS::TenuredHeap<JSObject*>* edgep, const char* name);
+TraceEdge(JSTracer* trc, JS::TenuredHeap<JSObject*>* edgep, const char* name);
 
 // Edges that are always traced as part of root marking do not require
 // incremental barriers. This function allows for marking non-barriered
 // pointers, but asserts that this happens during root marking.
+//
+// Note that while |edgep| must never be null, it is fine for |*edgep| to be
+// nullptr.
 template <typename T>
 extern JS_PUBLIC_API(void)
 UnsafeTraceRoot(JSTracer* trc, T* edgep, const char* name);
@@ -332,6 +332,12 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc,
                      void* thing, JS::TraceKind kind, bool includeDetails);
 
 namespace js {
+
+// Trace an edge that is not a GC root and is not wrapped in a barriered
+// wrapper for some reason.
+//
+// This method does not check if |*edgep| is non-null before tracing through
+// it, so callers must check any nullable pointer before calling this method.
 template <typename T>
 extern JS_PUBLIC_API(void)
 UnsafeTraceManuallyBarrieredEdge(JSTracer* trc, T* edgep, const char* name);
