@@ -71,7 +71,6 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
   : mPathIsRect(false)
   , mTransformChanged(false)
   , mDT(aTarget)
-  , mOriginalDT(aTarget)
 {
   MOZ_ASSERT(aTarget, "Don't create a gfxContext without a DrawTarget");
 
