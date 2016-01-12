@@ -91,7 +91,6 @@ public:
   explicit InternalRequest()
     : mMethod("GET")
     , mHeaders(new InternalHeaders(HeadersGuardEnum::None))
-    , mContentPolicyType(nsIContentPolicy::TYPE_FETCH)
     , mReferrer(NS_LITERAL_STRING(kFETCH_CLIENT_REFERRER_STR))
     , mMode(RequestMode::No_cors)
     , mCredentialsMode(RequestCredentials::Omit)
@@ -414,6 +413,7 @@ private:
   bool mForceOriginHeader;
   bool mPreserveContentCodings;
   bool mSameOriginDataURL;
+  bool mSandboxedStorageAreaURLs;
   bool mSkipServiceWorker;
   bool mSynchronous;
   bool mUnsafeRequest;

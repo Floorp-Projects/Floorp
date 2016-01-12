@@ -31,10 +31,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPOWERMANAGERSERVICE
 
-  PowerManagerService()
-    : mWatchdogTimeoutSecs(0)
-  {}
-
   static already_AddRefed<PowerManagerService> GetInstance();
 
   void Init();
