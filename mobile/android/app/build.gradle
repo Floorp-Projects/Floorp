@@ -12,6 +12,11 @@ android {
         applicationId mozconfig.substs.ANDROID_PACKAGE_NAME
         testApplicationId 'org.mozilla.roboexample.test'
         testInstrumentationRunner 'org.mozilla.gecko.FennecInstrumentationTestRunner'
+        manifestPlaceholders = [
+            ANDROID_PACKAGE_NAME: mozconfig.substs.ANDROID_PACKAGE_NAME,
+            MOZ_ANDROID_MIN_SDK_VERSION: mozconfig.substs.MOZ_ANDROID_MIN_SDK_VERSION,
+            MOZ_ANDROID_SHARED_ID: "${mozconfig.substs.ANDROID_PACKAGE_NAME}.sharedID",
+        ]
     }
 
     compileOptions {
@@ -63,7 +68,6 @@ android {
         }
 
         androidTest {
-            manifest.srcFile "${topobjdir}/mobile/android/tests/browser/robocop/AndroidManifest.xml"
             java {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
                 srcDir "${topsrcdir}/mobile/android/tests/background/junit3/src"

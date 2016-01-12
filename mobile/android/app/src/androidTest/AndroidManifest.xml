@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.mozilla.roboexample.test"
+    android:sharedUserId="${MOZ_ANDROID_SHARED_ID}"
+    android:versionCode="1"
+    android:versionName="1.0" >
+
+    <uses-sdk android:minSdkVersion="${MOZ_ANDROID_MIN_SDK_VERSION}"
+              android:targetSdkVersion="22"/>
+    <!-- TODO: re-instate maxSdkVersion. -->
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <instrumentation
+        android:name="org.mozilla.gecko.FennecInstrumentationTestRunner"
+        android:targetPackage="${ANDROID_PACKAGE_NAME}" />
+
+    <application
+        android:label="@string/app_name">
+
+        <uses-library android:name="android.test.runner" />
+
+        <!-- Fake handlers to ensure that we have some share intents to show in our share handler list -->
+        <activity android:name="org.mozilla.gecko.RobocopShare1"
+                  android:label="Robocop fake activity">
+
+            <intent-filter android:label="Fake robocop share handler 1">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+        </activity>
+
+        <activity android:name="org.mozilla.gecko.RobocopShare2"
+                  android:label="Robocop fake activity 2">
+
+            <intent-filter android:label="Fake robocop share handler 2">
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
+
+        </activity>
+
+        <activity android:name="org.mozilla.gecko.LaunchFennecWithConfigurationActivity"
+                  android:label="Robocop Fennec">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>
