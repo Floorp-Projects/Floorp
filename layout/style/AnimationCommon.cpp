@@ -235,11 +235,9 @@ CommonAnimationManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 void
 CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-
   for (AnimationCollection* collection = mElementCollections.getFirst();
        collection; collection = collection->getNext()) {
-    collection->EnsureStyleRuleFor(now);
+    collection->EnsureStyleRuleFor();
 
     dom::Element* elementToRestyle = collection->GetElementToRestyle();
     if (elementToRestyle) {
@@ -272,10 +270,19 @@ CommonAnimationManager::ExtractComputedValueForTransition(
 void
 CommonAnimationManager::FlushAnimations()
 {
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
   for (AnimationCollection* collection = mElementCollections.getFirst();
        collection; collection = collection->getNext()) {
-    if (collection->mStyleRuleRefreshTime == now) {
+
+    EffectCompositor::CascadeLevel cascadeLevel =
+      collection->IsForAnimations() ?
+      EffectCompositor::CascadeLevel::Animations :
+      EffectCompositor::CascadeLevel::Transitions;
+    bool hasThrottledAnimations =
+      mPresContext->EffectCompositor()->HasThrottledAnimations(
+        collection->mElement,
+        collection->PseudoElementType(),
+        cascadeLevel);
+    if (!hasThrottledAnimations) {
       continue;
     }
 
@@ -314,8 +321,7 @@ CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
     return nullptr;
   }
 
-  collection->EnsureStyleRuleFor(
-    mPresContext->RefreshDriver()->MostRecentRefresh());
+  collection->EnsureStyleRuleFor();
 
   EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
   if (!effectSet) {
@@ -412,7 +418,7 @@ AnimationCollection::Tick()
 }
 
 void
-AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
+AnimationCollection::EnsureStyleRuleFor()
 {
   mHasPendingAnimationRestyle = false;
 
@@ -423,14 +429,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
   }
 
   if (!mStyleChanging) {
-    mStyleRuleRefreshTime = aRefreshTime;
-    return;
-  }
-
-  if (!mStyleRuleRefreshTime.IsNull() &&
-      mStyleRuleRefreshTime == aRefreshTime) {
-    // The style rule on the EffectSet may be null and valid, if we have no
-    // style to apply.
     return;
   }
 
@@ -449,8 +447,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
   EffectCompositor::MaybeUpdateCascadeResults(mElement,
                                               PseudoElementType(),
                                               styleContext);
-
-  mStyleRuleRefreshTime = aRefreshTime;
 
   EffectCompositor::CascadeLevel cascadeLevel =
     IsForAnimations() ?
@@ -486,7 +482,6 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
   // Steps for RestyleType::Layer:
 
   if (aRestyleType == EffectCompositor::RestyleType::Layer) {
-    mStyleRuleRefreshTime = TimeStamp();
     mStyleChanging = true;
 
     // Prompt layers to re-sync their animations.
