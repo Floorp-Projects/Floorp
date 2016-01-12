@@ -17,6 +17,7 @@ DevToolsModules(
     'canvas.js',
     'child-process.js',
     'childtab.js',
+    'chrome-debugger.js',
     'chrome.js',
     'common.js',
     'csscoverage.js',
