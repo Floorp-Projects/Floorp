@@ -388,6 +388,7 @@ class OSXBootstrapper(BaseBootstrapper):
     def ensure_macports_system_packages(self):
         packages = [
             'python27',
+            'py27-readline',
             'mercurial',
             'autoconf213',
             'gnutar',
