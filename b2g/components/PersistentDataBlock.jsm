@@ -147,7 +147,7 @@ this.PersistentDataBlock = {
     }
 
     if (this._libc.handler === null) {
-      if (AppConstants.widget != "gonk") {
+      if (AppConstants.platform != "gonk") {
         log("This component requires Gonk!");
         throw Cr.NS_ERROR_ABORT;
       }
@@ -293,7 +293,7 @@ this.PersistentDataBlock = {
       return 1024;
     }
 
-    if (AppConstants.widget != "gonk") {
+    if (AppConstants.platform != "gonk") {
       log("_getBlockDeviceSize: ERROR: This feature is only supported in Gonk!");
       return -1;
     }
@@ -605,7 +605,7 @@ this.PersistentDataBlock = {
       return Promise.resolve();
     }
 
-    if (AppConstants.widget != "gonk") {
+    if (AppConstants.platform != "gonk") {
       log("wipe: ERROR: This feature is only supported in Gonk!");
       return Promise.reject();
     }
