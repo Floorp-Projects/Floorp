@@ -269,20 +269,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
   return result;
 }
 
-void
-CommonAnimationManager::ClearIsRunningOnCompositor(const nsIFrame* aFrame,
-                                                   nsCSSProperty aProperty)
-{
-  EffectSet* effects = EffectSet::GetEffectSet(aFrame);
-  if (!effects) {
-    return;
-  }
-
-  for (KeyframeEffectReadOnly* effect : *effects) {
-    effect->SetIsRunningOnCompositor(aProperty, false);
-  }
-}
-
 /*static*/ nsString
 AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
 {
