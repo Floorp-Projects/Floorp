@@ -256,20 +256,7 @@ private:
   bool mAllowControlCharacters;
 
   // Hide the default constructor and copy constructor.
-  TextComposition()
-    : mPresContext(nullptr)
-    , mNativeContext(nullptr)
-    , mCompositionStartOffset(0)
-    , mCompositionTargetOffset(0)
-    , mIsSynthesizedForTests(false)
-    , mIsComposing(false)
-    , mIsEditorHandlingEvent(false)
-    , mIsRequestingCommit(false)
-    , mIsRequestingCancel(false)
-    , mRequestedToCommitOrCancel(false)
-    , mWasNativeCompositionEndEventDiscarded(false)
-    , mAllowControlCharacters(false)
-  {}
+  TextComposition() {}
   TextComposition(const TextComposition& aOther);
 
   /**
@@ -397,7 +384,7 @@ private:
     EventMessage mEventMessage;
     bool mIsSynthesizedEvent;
 
-    CompositionEventDispatcher() : mIsSynthesizedEvent(false) {};
+    CompositionEventDispatcher() {};
   };
 
   /**
