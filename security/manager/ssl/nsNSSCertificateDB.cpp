@@ -128,10 +128,10 @@ nsNSSCertificateDB::FindCertByNickname(const nsAString& nickname,
 }
 
 NS_IMETHODIMP
-nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
+nsNSSCertificateDB::FindCertByDBKey(const char* aDBKey,nsIX509Cert** _cert)
 {
-  NS_ENSURE_ARG_POINTER(aDBkey);
-  NS_ENSURE_ARG(aDBkey[0]);
+  NS_ENSURE_ARG_POINTER(aDBKey);
+  NS_ENSURE_ARG(aDBKey[0]);
   NS_ENSURE_ARG_POINTER(_cert);
   *_cert = nullptr;
 
@@ -140,6 +140,27 @@ nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  UniqueCERTCertificate cert;
+  nsresult rv = FindCertByDBKey(aDBKey, cert);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  // If we can't find the certificate, that's not an error. Just return null.
+  if (!cert) {
+    return NS_OK;
+  }
+  nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
+  if (!nssCert) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  nssCert.forget(_cert);
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertificateDB::FindCertByDBKey(const char* aDBKey,
+                                    UniqueCERTCertificate& cert)
+{
   static_assert(sizeof(uint64_t) == 8, "type size sanity check");
   static_assert(sizeof(uint32_t) == 4, "type size sanity check");
   // (From nsNSSCertificate::GetDbKey)
@@ -153,7 +174,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
   // n bytes: <bytes of serial number>
   // m bytes: <DER-encoded issuer distinguished name>
   nsAutoCString decoded;
-  nsAutoCString tmpDBKey(aDBkey);
+  nsAutoCString tmpDBKey(aDBKey);
   // Filter out any whitespace for backwards compatibility.
   tmpDBKey.StripWhitespace();
   nsresult rv = Base64Decode(tmpDBKey, decoded);
@@ -185,15 +206,7 @@ nsNSSCertificateDB::FindCertByDBKey(const char* aDBkey,nsIX509Cert** _cert)
   reader += issuerLen;
   MOZ_ASSERT(reader == decoded.EndReading());
 
-  ScopedCERTCertificate cert(
-    CERT_FindCertByIssuerAndSN(CERT_GetDefaultCertDB(), &issuerSN));
-  if (cert) {
-    nsCOMPtr<nsIX509Cert> nssCert = nsNSSCertificate::Create(cert.get());
-    if (!nssCert) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nssCert.forget(_cert);
-  }
+  cert.reset(CERT_FindCertByIssuerAndSN(CERT_GetDefaultCertDB(), &issuerSN));
   return NS_OK;
 }
 
