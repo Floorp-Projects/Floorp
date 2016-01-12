@@ -487,6 +487,7 @@
   <string name="identity_connection_secure">&identity_connection_secure;</string>
   <string name="identity_connection_insecure">&identity_connection_insecure;</string>
   <string name="identity_login_insecure">&identity_login_insecure;</string>
+  <string name="identity_connection_chromeui">&identity_connection_chromeui;</string>
 
   <string name="mixed_content_blocked_all">&mixed_content_blocked_all1;</string>
   <string name="mixed_content_blocked_some">&mixed_content_blocked_some1;</string>
