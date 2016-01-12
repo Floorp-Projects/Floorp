@@ -356,10 +356,8 @@ const LegacyPerformanceFront = Class({
     }
 
     let systemDeferred = promise.defer();
-    this._client.listTabs(form => {
-      systemDeferred.resolve(getDeviceFront(this._client, form).getDescription());
-    });
-    let systemHost = yield systemDeferred.promise;
+    let form = yield this._client.listTabs();
+    let systemHost = yield getDeviceFront(this._client, form).getDescription();
     let systemClient = yield getSystemInfo();
 
     // Set the results on the LegacyPerformanceRecording itself.
