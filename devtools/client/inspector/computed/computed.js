@@ -11,25 +11,35 @@
 const {Cc, Ci, Cu} = require("chrome");
 
 const ToolDefinitions = require("devtools/client/main").Tools;
-const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const promise = require("promise");
 const {setTimeout, clearTimeout} = Cu.import("resource://gre/modules/Timer.jsm", {});
 const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
-const {createChild} = require("devtools/client/styleinspector/utils");
+const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/client/styleinspector/style-inspector-overlays");
+  "devtools/client/inspector/shared/style-inspector-overlays");
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
-  "devtools/client/styleinspector/style-inspector-menu");
+  "devtools/client/inspector/shared/style-inspector-menu");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
                                   "resource://gre/modules/PluralForm.jsm");
+
+XPCOMUtils.defineLazyGetter(CssComputedView, "_strings", function() {
+  return Services.strings.createBundle(
+    "chrome://devtools-shared/locale/styleinspector.properties");
+});
+
+XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
+  return Cc["@mozilla.org/widget/clipboardhelper;1"]
+         .getService(Ci.nsIClipboardHelper);
+});
 
 const FILTER_CHANGED_TIMEOUT = 150;
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -222,16 +232,6 @@ CssComputedView.l10n = function(name) {
     throw new Error("l10n error with " + name);
   }
 };
-
-XPCOMUtils.defineLazyGetter(CssComputedView, "_strings", function() {
-  return Services.strings.createBundle(
-    "chrome://devtools-shared/locale/styleinspector.properties");
-});
-
-XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"]
-         .getService(Ci.nsIClipboardHelper);
-});
 
 CssComputedView.prototype = {
   // Cache the list of properties that match the selected element.
@@ -1406,5 +1406,125 @@ SelectorView.prototype = {
   }
 };
 
+function ComputedViewTool(inspector, window) {
+  this.inspector = inspector;
+  this.document = window.document;
+
+  this.view = new CssComputedView(this.inspector, this.document,
+    this.inspector.pageStyle);
+
+  this.onSelected = this.onSelected.bind(this);
+  this.refresh = this.refresh.bind(this);
+  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onMutations = this.onMutations.bind(this);
+  this.onResized = this.onResized.bind(this);
+
+  this.inspector.selection.on("detached", this.onSelected);
+  this.inspector.selection.on("new-node-front", this.onSelected);
+  this.inspector.selection.on("pseudoclass", this.refresh);
+  this.inspector.sidebar.on("computedview-selected", this.onPanelSelected);
+  this.inspector.pageStyle.on("stylesheet-updated", this.refresh);
+  this.inspector.walker.on("mutations", this.onMutations);
+  this.inspector.walker.on("resize", this.onResized);
+
+  this.view.selectElement(null);
+
+  this.onSelected();
+}
+
+ComputedViewTool.prototype = {
+  isSidebarActive: function() {
+    if (!this.view) {
+      return false;
+    }
+    return this.inspector.sidebar.getCurrentTabID() == "computedview";
+  },
+
+  onSelected: function(event) {
+    // Ignore the event if the view has been destroyed, or if it's inactive.
+    // But only if the current selection isn't null. If it's been set to null,
+    // let the update go through as this is needed to empty the view on
+    // navigation.
+    if (!this.view) {
+      return;
+    }
+
+    let isInactive = !this.isSidebarActive() &&
+                     this.inspector.selection.nodeFront;
+    if (isInactive) {
+      return;
+    }
+
+    this.view.setPageStyle(this.inspector.pageStyle);
+
+    if (!this.inspector.selection.isConnected() ||
+        !this.inspector.selection.isElementNode()) {
+      this.view.selectElement(null);
+      return;
+    }
+
+    if (!event || event == "new-node-front") {
+      let done = this.inspector.updating("computed-view");
+      this.view.selectElement(this.inspector.selection.nodeFront).then(() => {
+        done();
+      });
+    }
+  },
+
+  refresh: function() {
+    if (this.isSidebarActive()) {
+      this.view.refreshPanel();
+    }
+  },
+
+  onPanelSelected: function() {
+    if (this.inspector.selection.nodeFront === this.view.viewedElement) {
+      this.refresh();
+    } else {
+      this.onSelected();
+    }
+  },
+
+  /**
+   * When markup mutations occur, if an attribute of the selected node changes,
+   * we need to refresh the view as that might change the node's styles.
+   */
+  onMutations: function(mutations) {
+    for (let {type, target} of mutations) {
+      if (target === this.inspector.selection.nodeFront &&
+          type === "attributes") {
+        this.refresh();
+        break;
+      }
+    }
+  },
+
+  /**
+   * When the window gets resized, this may cause media-queries to match, and
+   * therefore, different styles may apply.
+   */
+  onResized: function() {
+    this.refresh();
+  },
+
+  destroy: function() {
+    this.inspector.walker.off("mutations", this.onMutations);
+    this.inspector.walker.off("resize", this.onResized);
+    this.inspector.sidebar.off("computedview-selected", this.refresh);
+    this.inspector.selection.off("pseudoclass", this.refresh);
+    this.inspector.selection.off("new-node-front", this.onSelected);
+    this.inspector.selection.off("detached", this.onSelected);
+    this.inspector.sidebar.off("computedview-selected", this.onPanelSelected);
+    if (this.inspector.pageStyle) {
+      this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
+    }
+
+    this.view.destroy();
+
+    this.view = this.document = this.inspector = null;
+  }
+};
+
 exports.CssComputedView = CssComputedView;
+exports.ComputedViewTool = ComputedViewTool;
 exports.PropertyView = PropertyView;
