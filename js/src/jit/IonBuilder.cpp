@@ -8376,11 +8376,10 @@ IonBuilder::jsop_intrinsic(PropertyName* name)
 {
     TemporaryTypeSet* types = bytecodeTypes(pc);
 
-    Value vp = script()->global().maybeExistingIntrinsicValue(name);
-
+    Value vp = UndefinedValue();
     // If the intrinsic value doesn't yet exist, we haven't executed this
     // opcode yet, so we need to get it and monitor the result.
-    if (vp.isUndefined()) {
+    if (!script()->global().maybeExistingIntrinsicValue(name, &vp)) {
         MCallGetIntrinsicValue* ins = MCallGetIntrinsicValue::New(alloc(), name);
 
         current->add(ins);
