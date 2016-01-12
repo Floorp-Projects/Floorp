@@ -9,7 +9,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
-const {promiseWarn} = require("devtools/client/inspector/shared/utils");
+const {promiseWarn} = require("devtools/client/styleinspector/utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
