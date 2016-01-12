@@ -306,7 +306,6 @@ TaskbarPreview::DrawBitmap(uint32_t width, uint32_t height, bool isPreview) {
   nsresult rv;
   nsCOMPtr<nsITaskbarPreviewCallback> callback =
     do_CreateInstance("@mozilla.org/widget/taskbar-preview-callback;1", &rv);
-  MOZ_ASSERT(SUCCEEDED(hr));
   if (NS_FAILED(rv)) {
     return;
   }
