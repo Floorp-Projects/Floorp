@@ -1392,8 +1392,8 @@ void MediaDecoderStateMachine::StartDecoding()
   }
 
   // Reset other state to pristine values before starting decode.
-  mIsAudioPrerolling = !DonePrerollingAudio();
-  mIsVideoPrerolling = !DonePrerollingVideo();
+  mIsAudioPrerolling = !DonePrerollingAudio() && !mAudioWaitRequest.Exists();
+  mIsVideoPrerolling = !DonePrerollingVideo() && !mVideoWaitRequest.Exists();
 
   // Ensure that we've got tasks enqueued to decode data if we need to.
   DispatchDecodeTasksIfNeeded();
