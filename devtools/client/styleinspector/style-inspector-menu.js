@@ -3,14 +3,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* global _strings */
 
 "use strict";
 
+const {Cc, Ci, Cu} = require("chrome");
 const {PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/client/inspector/shared/style-inspector-overlays");
+  "devtools/client/styleinspector/style-inspector-overlays");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
@@ -71,7 +71,7 @@ StyleInspectorMenu.prototype = {
       this.styleDocument.popupNode = event.explicitOriginalTarget;
       this.styleWindow.focus();
       this._menupopup.openPopupAtScreen(event.screenX, event.screenY, true);
-    } catch (e) {
+    } catch(e) {
       console.error(e);
     }
   },

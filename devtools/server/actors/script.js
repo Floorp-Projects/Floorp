@@ -30,7 +30,7 @@ loader.lazyGetter(this, "Debugger", () => {
 });
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
-loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/styleinspector/css-logic", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "mapURIToAddonID", "devtools/server/actors/utils/map-uri-to-addon-id");
 loader.lazyRequireGetter(this, "setTimeout", "sdk/timers", true);
