@@ -89,8 +89,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mRebuildAllRestyleHint(nsRestyleHint(0))
-  , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
-                                        MostRecentRefresh())
   , mAnimationGeneration(0)
   , mReframingStyleContexts(nullptr)
   , mAnimationsWithDestroyedFrame(nullptr)
@@ -1841,9 +1839,7 @@ RestyleManager::EndProcessingRestyles()
 void
 RestyleManager::UpdateOnlyAnimationStyles()
 {
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  bool doCSS = mLastUpdateForThrottledAnimations != now;
-  mLastUpdateForThrottledAnimations = now;
+  bool doCSS = mPresContext->EffectCompositor()->HasPendingStyleUpdates();
 
   nsIDocument* document = mPresContext->Document();
   nsSMILAnimationController* animationController =

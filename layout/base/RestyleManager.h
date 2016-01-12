@@ -377,11 +377,6 @@ public:
   // other than primary frames.
   void UpdateOnlyAnimationStyles();
 
-  bool ThrottledAnimationStyleIsUpToDate() const {
-    return mLastUpdateForThrottledAnimations ==
-             mPresContext->RefreshDriver()->MostRecentRefresh();
-  }
-
   // Rebuilds all style data by throwing out the old rule tree and
   // building a new one, and additionally applying aExtraHint (which
   // must not contain nsChangeHint_ReconstructFrame) to the root frame.
@@ -552,8 +547,6 @@ private:
   uint32_t mHoverGeneration;
   nsChangeHint mRebuildAllExtraHint;
   nsRestyleHint mRebuildAllRestyleHint;
-
-  mozilla::TimeStamp mLastUpdateForThrottledAnimations;
 
   OverflowChangedTracker mOverflowChangedTracker;
 
