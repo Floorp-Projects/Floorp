@@ -196,20 +196,14 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mBegin.x), SkFloatToScalar(pat.mBegin.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mEnd.x), SkFloatToScalar(pat.mEnd.y));
 
+        SkMatrix mat;
+        GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
         SkShader* shader = SkGradientShader::CreateLinear(points,
                                                           &stops->mColors.front(),
                                                           &stops->mPositions.front(),
                                                           stops->mCount,
-                                                          mode);
-
-        if (shader) {
-            SkMatrix mat;
-            GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
-            SkShader* matrixShader = SkShader::CreateLocalMatrixShader(shader, mat);
-            SkSafeUnref(shader);
-            SkSafeUnref(aPaint.setShader(matrixShader));
-        }
-
+                                                          mode, 0, &mat);
+        SkSafeUnref(aPaint.setShader(shader));
       } else {
         aPaint.setColor(SkColorSetARGB(0, 0, 0, 0));
       }
@@ -225,6 +219,8 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
         points[0] = SkPoint::Make(SkFloatToScalar(pat.mCenter1.x), SkFloatToScalar(pat.mCenter1.y));
         points[1] = SkPoint::Make(SkFloatToScalar(pat.mCenter2.x), SkFloatToScalar(pat.mCenter2.y));
 
+        SkMatrix mat;
+        GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
         SkShader* shader = SkGradientShader::CreateTwoPointConical(points[0],
                                                                    SkFloatToScalar(pat.mRadius1),
                                                                    points[1],
@@ -232,15 +228,8 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
                                                                    &stops->mColors.front(),
                                                                    &stops->mPositions.front(),
                                                                    stops->mCount,
-                                                                   mode);
-        if (shader) {
-            SkMatrix mat;
-            GfxMatrixToSkiaMatrix(pat.mMatrix, mat);
-            SkShader* matrixShader = SkShader::CreateLocalMatrixShader(shader, mat);
-            SkSafeUnref(shader);
-            SkSafeUnref(aPaint.setShader(matrixShader));
-        }
-
+                                                                   mode, 0, &mat);
+        SkSafeUnref(aPaint.setShader(shader));
       } else {
         aPaint.setColor(SkColorSetARGB(0, 0, 0, 0));
       }
@@ -262,10 +251,8 @@ SetPaintPattern(SkPaint& aPaint, const Pattern& aPattern, Float aAlpha = 1.0)
       SkShader::TileMode xTileMode = ExtendModeToTileMode(pat.mExtendMode, Axis::X_AXIS);
       SkShader::TileMode yTileMode = ExtendModeToTileMode(pat.mExtendMode, Axis::Y_AXIS);
 
-      SkShader* shader = SkShader::CreateBitmapShader(bitmap, xTileMode, yTileMode);
-      SkShader* matrixShader = SkShader::CreateLocalMatrixShader(shader, mat);
-      SkSafeUnref(shader);
-      SkSafeUnref(aPaint.setShader(matrixShader));
+      SkShader* shader = SkShader::CreateBitmapShader(bitmap, xTileMode, yTileMode, &mat);
+      SkSafeUnref(aPaint.setShader(shader));
       if (pat.mFilter == Filter::POINT) {
         aPaint.setFilterQuality(kNone_SkFilterQuality);
       }
@@ -652,7 +639,7 @@ DrawTargetSkia::Mask(const Pattern &aSource,
   SkAutoTUnref<SkRasterizer> raster(builder.detachRasterizer());
   paint.mPaint.setRasterizer(raster.get());
 
-  mCanvas->drawRect(SkRectCoveringWholeSurface(), paint.mPaint);
+  mCanvas->drawPaint(paint.mPaint);
 }
 
 void
@@ -665,29 +652,20 @@ DrawTargetSkia::MaskSurface(const Pattern &aSource,
   AutoPaintSetup paint(mCanvas.get(), aOptions, aSource);
 
   SkBitmap bitmap = GetBitmapForSurface(aMask);
-  if (bitmap.colorType() == kAlpha_8_SkColorType) {
-    if (aOffset != Point(0, 0)) {
-      SkMatrix transform;
-      transform.setTranslate(SkFloatToScalar(-aOffset.x), SkFloatToScalar(-aOffset.y));
-      SkShader* matrixShader = SkShader::CreateLocalMatrixShader(paint.mPaint.getShader(), transform);
-      SkSafeUnref(paint.mPaint.setShader(matrixShader));
-    }
-
-    mCanvas->drawBitmap(bitmap, aOffset.x, aOffset.y, &paint.mPaint);
-  } else {
-    SkPaint maskPaint;
-    SetPaintPattern(maskPaint,
-                    SurfacePattern(aMask, ExtendMode::CLAMP, Matrix::Translation(aOffset)));
-
-    SkLayerRasterizer::Builder builder;
-    builder.addLayer(maskPaint);
-    SkAutoTUnref<SkRasterizer> raster(builder.detachRasterizer());
-    paint.mPaint.setRasterizer(raster.get());
-
-    IntSize size = aMask->GetSize();
-    Rect rect = Rect(aOffset.x, aOffset.y, size.width, size.height);
-    mCanvas->drawRect(RectToSkRect(rect), paint.mPaint);
+  if (bitmap.colorType() != kAlpha_8_SkColorType &&
+      !bitmap.extractAlpha(&bitmap)) {
+    gfxDebug() << *this << ": MaskSurface() failed to extract alpha for mask";
+    return;
   }
+
+  if (aOffset != Point(0, 0)) {
+    SkMatrix transform;
+    transform.setTranslate(SkFloatToScalar(-aOffset.x), SkFloatToScalar(-aOffset.y));
+    SkShader* matrixShader = SkShader::CreateLocalMatrixShader(paint.mPaint.getShader(), transform);
+    SkSafeUnref(paint.mPaint.setShader(matrixShader));
+  }
+
+  mCanvas->drawBitmap(bitmap, aOffset.x, aOffset.y, &paint.mPaint);
 }
 
 already_AddRefed<SourceSurface>
@@ -1032,14 +1010,6 @@ DrawTargetSkia::MarkChanged()
     mSnapshot->DrawTargetWillChange();
     mSnapshot = nullptr;
   }
-}
-
-// Return a rect (in user space) that covers the entire surface by applying
-// the inverse of GetTransform() to (0, 0, mSize.width, mSize.height).
-SkRect
-DrawTargetSkia::SkRectCoveringWholeSurface() const
-{
-  return RectToSkRect(mTransform.TransformBounds(Rect(0, 0, mSize.width, mSize.height)));
 }
 
 void
