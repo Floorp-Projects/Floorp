@@ -475,7 +475,6 @@ this.BrowserIDManager.prototype = {
   unlockAndVerifyAuthState: function() {
     if (this._canFetchKeys()) {
       log.debug("unlockAndVerifyAuthState already has (or can fetch) sync keys");
-      Services.telemetry.getHistogramById("WEAVE_CAN_FETCH_KEYS").add(1);
       return Promise.resolve(STATUS_OK);
     }
     // so no keys - ensure MP unlocked.
@@ -494,13 +493,10 @@ this.BrowserIDManager.prototype = {
         // lost them - the user will need to reauth before continuing.
         let result;
         if (this._canFetchKeys()) {
-          // A ternary would be more compact, but adding 0 to a flag histogram
-          // crashes the process with a C++ assertion error. See
-          // FlagHistogram::Accumulate in ipc/chromium/src/base/histogram.cc.
-          Services.telemetry.getHistogramById("WEAVE_CAN_FETCH_KEYS").add(1);
           result = STATUS_OK;
         } else {
           result = LOGIN_FAILED_LOGIN_REJECTED;
+          Services.telemetry.getHistogramById("WEAVE_HAS_NO_KEYS_WHEN_UNLOCKED").add(1);
         }
         log.debug("unlockAndVerifyAuthState re-fetched credentials and is returning", result);
         return result;
@@ -632,7 +628,6 @@ this.BrowserIDManager.prototype = {
         } else if (err.code && err.code === 401) {
           err = new AuthenticationError(err);
         }
-        Services.telemetry.getHistogramById("WEAVE_FXA_KEY_FETCH_ERRORS").add();
 
         // TODO: write tests to make sure that different auth error cases are handled here
         // properly: auth error getting assertion, auth error getting token (invalid generation
@@ -641,6 +636,7 @@ this.BrowserIDManager.prototype = {
           this._log.error("Authentication error in _fetchTokenForUser", err);
           // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
           this._authFailureReason = LOGIN_FAILED_LOGIN_REJECTED;
+          Services.telemetry.getHistogramById("WEAVE_FXA_KEY_FETCH_AUTH_ERRORS").add(1);
         } else {
           this._log.error("Non-authentication error in _fetchTokenForUser", err);
           // for now assume it is just a transient network related problem

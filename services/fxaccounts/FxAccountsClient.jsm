@@ -18,17 +18,6 @@ Cu.import("resource://gre/modules/Credentials.jsm");
 
 const HOST = Services.prefs.getCharPref("identity.fxaccounts.auth.uri");
 
-const STATUS_CODE_TO_OTHER_ERRORS_LABEL = {
-  400: 0,
-  401: 1,
-  403: 2,
-  410: 3,
-  411: 4,
-  413: 5,
-  429: 6,
-  500: 7,
-};
-
 const SIGNIN = "/account/login";
 const SIGNUP = "/account/create";
 
@@ -420,17 +409,9 @@ this.FxAccountsClient.prototype = {
             "fxaBackoffTimer"
            );
         }
-        if (error.errno == ERRNO_UNVERIFIED_ACCOUNT) {
-          Services.telemetry.getKeyedHistogramById(
-            "FXA_UNVERIFIED_ACCOUNT_ERRORS").add(path);
-        } else if (isInvalidTokenError(error)) {
+        if (isInvalidTokenError(error)) {
           Services.telemetry.getKeyedHistogramById(
             "FXA_HAWK_ERRORS").add(path);
-        } else if (error.code >= 500 || error.code in STATUS_CODE_TO_OTHER_ERRORS_LABEL) {
-          let label = STATUS_CODE_TO_OTHER_ERRORS_LABEL[
-            error.code >= 500 ? 500 : error.code];
-          Services.telemetry.getKeyedHistogramById(
-            "FXA_SERVER_ERRORS").add(path, label);
         }
         deferred.reject(error);
       }
