@@ -2188,19 +2188,12 @@ CompositorParent::UpdatePluginWindowState(uint64_t aId)
 }
 
 void
-CompositorParent::ScheduleShowAllPluginWindowsAPZ()
+CompositorParent::ScheduleShowAllPluginWindows()
 {
   CancelableTask *pluginTask =
-    NewRunnableMethod(this, &CompositorParent::ShowAllPluginWindowsAPZ);
+    NewRunnableMethod(this, &CompositorParent::ShowAllPluginWindows);
   MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, pluginTask);
-}
-
-void
-CompositorParent::ShowAllPluginWindowsAPZ()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  ShowAllPluginWindows();
 }
 
 void
@@ -2212,19 +2205,12 @@ CompositorParent::ShowAllPluginWindows()
 }
 
 void
-CompositorParent::ScheduleHideAllPluginWindowsAPZ()
+CompositorParent::ScheduleHideAllPluginWindows()
 {
   CancelableTask *pluginTask =
-    NewRunnableMethod(this, &CompositorParent::HideAllPluginWindowsAPZ);
+    NewRunnableMethod(this, &CompositorParent::HideAllPluginWindows);
   MOZ_ASSERT(CompositorLoop());
   CompositorLoop()->PostTask(FROM_HERE, pluginTask);
-}
-
-void
-CompositorParent::HideAllPluginWindowsAPZ()
-{
-  MOZ_ASSERT(!NS_IsMainThread());
-  HideAllPluginWindows();
 }
 
 void
