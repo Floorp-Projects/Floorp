@@ -7561,10 +7561,7 @@ class MRegExpMatcher
     bool writeRecoverData(CompactBufferWriter& writer) const override;
 
     bool canRecoverOnBailout() const override {
-        // XXX: always return false for now, to work around bug 1132128.
-        if (false && regexp()->isRegExp())
-            return !regexp()->toRegExp()->source()->needUpdateLastIndex();
-        return false;
+        return true;
     }
 
     bool possiblyCalls() const override {
@@ -7621,13 +7618,7 @@ class MRegExpTester
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
-        // RegExpTester has a side-effect on the regexp object's lastIndex
-        // when sticky or global flags are set.
-        // Return false unless we are sure it's not the case.
-        // XXX: always return false for now, to work around bug 1132128.
-        if (false && regexp()->isRegExp())
-            return !regexp()->toRegExp()->source()->needUpdateLastIndex();
-        return false;
+        return true;
     }
 };
 
