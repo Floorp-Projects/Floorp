@@ -33,10 +33,7 @@ public:
   NS_DECL_NSITHREAD
   NS_DECL_NSITHREADINTERNAL
   NS_DECL_NSISUPPORTSPRIORITY
-  // missing from NS_DECL_NSIEVENTTARGET because MSVC
-  nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
-    return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
-  }
+  using nsIEventTarget::Dispatch;
 
   enum MainThreadFlag
   {
