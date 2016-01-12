@@ -12,8 +12,6 @@ task:
   schedulerId: task-graph-scheduler
 
   scopes:
-    - 'queue:define-task:aws-provisioner-v1/test-c4-2xlarge'
-    - 'queue:create-task:aws-provisioner-v1/test-c4-2xlarge'
     - 'docker-worker:feature:allowPtrace'
 
   payload:

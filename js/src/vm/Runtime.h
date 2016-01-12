@@ -33,11 +33,11 @@
 #include "gc/Tracer.h"
 #include "irregexp/RegExpStack.h"
 #include "js/Debug.h"
+#include "js/GCVector.h"
 #include "js/HashTable.h"
 #ifdef DEBUG
 # include "js/Proxy.h" // For AutoEnterPolicy
 #endif
-#include "js/TraceableVector.h"
 #include "js/Vector.h"
 #include "vm/CodeCoverage.h"
 #include "vm/CommonPropertyNames.h"
@@ -146,7 +146,7 @@ struct ScopeCoordinateNameCache {
     void purge();
 };
 
-using ScriptAndCountsVector = TraceableVector<ScriptAndCounts, 0, SystemAllocPolicy>;
+using ScriptAndCountsVector = GCVector<ScriptAndCounts, 0, SystemAllocPolicy>;
 
 struct EvalCacheEntry
 {

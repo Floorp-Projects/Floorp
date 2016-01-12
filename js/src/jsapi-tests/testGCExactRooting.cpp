@@ -7,8 +7,8 @@
 
 #include "ds/TraceableFifo.h"
 #include "js/GCHashTable.h"
+#include "js/GCVector.h"
 #include "js/RootingAPI.h"
-#include "js/TraceableVector.h"
 
 #include "jsapi-tests/tests.h"
 
@@ -203,7 +203,7 @@ BEGIN_TEST(testGCHandleHashMap)
 }
 END_TEST(testGCHandleHashMap)
 
-using ShapeVec = TraceableVector<Shape*>;
+using ShapeVec = GCVector<Shape*>;
 
 BEGIN_TEST(testGCRootedVector)
 {
@@ -249,7 +249,7 @@ BEGIN_TEST(testGCRootedVector)
 }
 
 bool
-receiveConstRefToShapeVector(const JS::Rooted<TraceableVector<Shape*>>& rooted)
+receiveConstRefToShapeVector(const JS::Rooted<GCVector<Shape*>>& rooted)
 {
     // Ensure range enumeration works through the reference.
     for (auto shape : rooted) {
@@ -259,7 +259,7 @@ receiveConstRefToShapeVector(const JS::Rooted<TraceableVector<Shape*>>& rooted)
 }
 
 bool
-receiveHandleToShapeVector(JS::Handle<TraceableVector<Shape*>> handle)
+receiveHandleToShapeVector(JS::Handle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
     for (auto shape : handle) {
@@ -269,7 +269,7 @@ receiveHandleToShapeVector(JS::Handle<TraceableVector<Shape*>> handle)
 }
 
 bool
-receiveMutableHandleToShapeVector(JS::MutableHandle<TraceableVector<Shape*>> handle)
+receiveMutableHandleToShapeVector(JS::MutableHandle<GCVector<Shape*>> handle)
 {
     // Ensure range enumeration works through the handle.
     for (auto shape : handle) {
@@ -318,7 +318,7 @@ BEGIN_TEST(testTraceableFifo)
 }
 END_TEST(testTraceableFifo)
 
-using ShapeVec = TraceableVector<Shape*>;
+using ShapeVec = GCVector<Shape*>;
 
 static bool
 FillVector(JSContext* cx, MutableHandle<ShapeVec> shapes)

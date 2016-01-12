@@ -28,6 +28,7 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::DebugOnly;
+using mozilla::UniquePtr;
 
 namespace js {
 
@@ -203,7 +204,7 @@ ParseTask::ParseTask(ExclusiveContext* cx, JSObject* exclusiveContextGlobal, JSC
     exclusiveContextGlobal(initCx->runtime(), exclusiveContextGlobal),
     callback(callback), callbackData(callbackData),
     script(initCx->runtime()), sourceObject(initCx->runtime()),
-    errors(cx), overRecursed(false)
+    errors(cx), overRecursed(false), outOfMemory(false)
 {
 }
 
@@ -1058,6 +1059,12 @@ GlobalHelperThreadState::finishParseTask(JSContext* maybecx, JSRuntime* rt, void
     RootedScript script(rt, parseTask->script);
     assertSameCompartment(cx, script);
 
+    // Report out of memory errors eagerly, or errors could be malformed.
+    if (parseTask->outOfMemory) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
     // Report any error or warnings generated during the parse, and inform the
     // debugger about the compiled scripts.
     for (size_t i = 0; i < parseTask->errors.length(); i++)
@@ -1341,14 +1348,16 @@ ExclusiveContext::setHelperThread(HelperThread* thread)
     perThreadData = thread->threadData.ptr();
 }
 
-frontend::CompileError&
-ExclusiveContext::addPendingCompileError()
+bool
+ExclusiveContext::addPendingCompileError(frontend::CompileError** error)
 {
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    frontend::CompileError* error = js_new<frontend::CompileError>();
-    if (!error || !helperThread()->parseTask()->errors.append(error))
-        oomUnsafe.crash("ExclusiveContext::addPendingCompileError");
-    return *error;
+    UniquePtr<frontend::CompileError> errorPtr(new_<frontend::CompileError>());
+    if (!errorPtr)
+        return false;
+    if (!helperThread()->parseTask()->errors.append(errorPtr.get()))
+        return false;
+    *error = errorPtr.release();
+    return true;
 }
 
 void
@@ -1356,6 +1365,14 @@ ExclusiveContext::addPendingOverRecursed()
 {
     if (helperThread()->parseTask())
         helperThread()->parseTask()->overRecursed = true;
+}
+
+void
+ExclusiveContext::addPendingOutOfMemory()
+{
+    // Keep in sync with recoverFromOutOfMemory.
+    if (helperThread()->parseTask())
+        helperThread()->parseTask()->outOfMemory = true;
 }
 
 void

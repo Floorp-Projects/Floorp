@@ -24,10 +24,10 @@
     macro(ArrayValues, ArrayValues, "ArrayValues") \
     macro(ArrayValuesAt, ArrayValuesAt, "ArrayValuesAt") \
     macro(Async, Async, "Async") \
-    macro(bool8x16, bool8x16, "Bool8x16") \
-    macro(bool16x8, bool16x8, "Bool16x8") \
-    macro(bool32x4, bool32x4, "Bool32x4") \
-    macro(bool64x2, bool64x2, "Bool64x2") \
+    macro(Bool8x16, Bool8x16, "Bool8x16") \
+    macro(Bool16x8, Bool16x8, "Bool16x8") \
+    macro(Bool32x4, Bool32x4, "Bool32x4") \
+    macro(Bool64x2, Bool64x2, "Bool64x2") \
     macro(breakdown, breakdown, "breakdown") \
     macro(buffer, buffer, "buffer") \
     macro(builder, builder, "builder") \
@@ -96,9 +96,9 @@
     macro(fix, fix, "fix") \
     macro(flags, flags, "flags") \
     macro(float32, float32, "float32") \
-    macro(float32x4, float32x4, "Float32x4") \
+    macro(Float32x4, Float32x4, "Float32x4") \
     macro(float64, float64, "float64") \
-    macro(float64x2, float64x2, "Float64x2") \
+    macro(Float64x2, Float64x2, "Float64x2") \
     macro(forceInterpreter, forceInterpreter, "forceInterpreter") \
     macro(forEach, forEach, "forEach") \
     macro(format, format, "format") \
@@ -127,9 +127,9 @@
     macro(inNursery, inNursery, "inNursery") \
     macro(innermost, innermost, "innermost") \
     macro(input, input, "input") \
-    macro(int8x16, int8x16, "Int8x16") \
-    macro(int16x8, int16x8, "Int16x8") \
-    macro(int32x4, int32x4, "Int32x4") \
+    macro(Int8x16, Int8x16, "Int8x16") \
+    macro(Int16x8, Int16x8, "Int16x8") \
+    macro(Int32x4, Int32x4, "Int32x4") \
     macro(isFinite, isFinite, "isFinite") \
     macro(isNaN, isNaN, "isNaN") \
     macro(isPrototypeOf, isPrototypeOf, "isPrototypeOf") \
@@ -252,9 +252,9 @@
     macro(uint8Clamped, uint8Clamped, "uint8Clamped") \
     macro(uint16, uint16, "uint16") \
     macro(uint32, uint32, "uint32") \
-    macro(uint8x16, uint8x16, "Uint8x16") \
-    macro(uint16x8, uint16x8, "Uint16x8") \
-    macro(uint32x4, uint32x4, "Uint32x4") \
+    macro(Uint8x16, Uint8x16, "Uint8x16") \
+    macro(Uint16x8, Uint16x8, "Uint16x8") \
+    macro(Uint32x4, Uint32x4, "Uint32x4") \
     macro(unsized, unsized, "unsized") \
     macro(unwatch, unwatch, "unwatch") \
     macro(url, url, "url") \

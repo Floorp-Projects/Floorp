@@ -48,20 +48,19 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
     // newTarget = NullValue is an initial sentinel for "please fill me in from the stack".
     // It should never be passed from Ion code.
     RootedValue newTarget(cx, newTargetValue);
-    if (!(flags_ & (GLOBAL | MODULE))) {
+    if (!(flags_ & GLOBAL_OR_MODULE)) {
         if (evalInFramePrev) {
-            MOZ_ASSERT(evalInFramePrev.isFunctionFrame() || evalInFramePrev.isGlobalFrame());
             if (evalInFramePrev.isFunctionFrame()) {
                 callee = evalInFramePrev.callee();
                 if (newTarget.isNull())
                     newTarget = evalInFramePrev.newTarget();
                 flags_ |= FUNCTION;
             } else {
-                flags_ |= GLOBAL;
+                MOZ_ASSERT(evalInFramePrev.isGlobalOrModuleFrame());
+                flags_ |= GLOBAL_OR_MODULE;
             }
         } else {
             FrameIter iter(cx);
-            MOZ_ASSERT(iter.isFunctionFrame() || iter.isGlobalFrame());
             MOZ_ASSERT(!iter.isWasm());
             if (iter.isFunctionFrame()) {
                 if (newTarget.isNull())
@@ -69,7 +68,8 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
                 callee = iter.callee(cx);
                 flags_ |= FUNCTION;
             } else {
-                flags_ |= GLOBAL;
+                MOZ_ASSERT(iter.isGlobalOrModuleFrame());
+                flags_ |= GLOBAL_OR_MODULE;
             }
         }
     }
@@ -81,7 +81,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
         exec.fun = &callee->as<JSFunction>();
         u.evalScript = script;
     } else {
-        MOZ_ASSERT(isGlobalFrame() || isModuleFrame());
+        MOZ_ASSERT(isGlobalOrModuleFrame());
         dstvp[1] = NullValue();
         exec.script = script;
 #ifdef DEBUG
@@ -208,7 +208,6 @@ InterpreterFrame::prologue(JSContext* cx)
 {
     RootedScript script(cx, this->script());
 
-    MOZ_ASSERT(isModuleFrame() == !!script->module());
     MOZ_ASSERT(cx->interpreterRegs().pc == script->code());
 
     if (isEvalFrame()) {
@@ -887,18 +886,18 @@ FrameIter::isFunctionFrame() const
 }
 
 bool
-FrameIter::isGlobalFrame() const
+FrameIter::isGlobalOrModuleFrame() const
 {
     switch (data_.state_) {
       case DONE:
         break;
       case INTERP:
-        return interpFrame()->isGlobalFrame();
+        return interpFrame()->isGlobalOrModuleFrame();
       case JIT:
         if (data_.jitFrames_.isBaselineJS())
-            return data_.jitFrames_.baselineFrame()->isGlobalFrame();
+            return data_.jitFrames_.baselineFrame()->isGlobalOrModuleFrame();
         MOZ_ASSERT(!script()->isForEval());
-        return !script()->functionNonDelazifying();
+        return script()->isGlobalCode();
       case WASM:
         return false;
     }

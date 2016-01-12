@@ -22,7 +22,45 @@
 #define AVUTIL_X86_INTMATH_H
 
 #include <stdint.h>
+#if HAVE_FAST_CLZ
+#if defined(_MSC_VER)
+#include <intrin.h>
+#elif defined(__INTEL_COMPILER)
+#include <immintrin.h>
+#endif
+#endif
 #include "config.h"
+
+#if HAVE_FAST_CLZ
+#if (defined(__INTEL_COMPILER) && (__INTEL_COMPILER>=1216)) || defined(_MSC_VER)
+#   if defined(__INTEL_COMPILER)
+#       define ff_log2(x) (_bit_scan_reverse((x)|1))
+#   else
+#       define ff_log2 ff_log2_x86
+static av_always_inline av_const int ff_log2_x86(unsigned int v)
+{
+    unsigned long n;
+    _BitScanReverse(&n, v|1);
+    return n;
+}
+#   endif
+#   define ff_log2_16bit av_log2
+
+#   define ff_ctz(v) _tzcnt_u32(v)
+
+#   if ARCH_X86_64
+#       define ff_ctzll(v) _tzcnt_u64(v)
+#   else
+#       define ff_ctzll ff_ctzll_x86
+static av_always_inline av_const int ff_ctzll_x86(long long v)
+{
+    return ((uint32_t)v == 0) ? _tzcnt_u32((uint32_t)(v >> 32)) + 32 : _tzcnt_u32((uint32_t)v);
+}
+#   endif
+
+#endif /* __INTEL_COMPILER */
+
+#endif /* HAVE_FAST_CLZ */
 
 #if defined(__GNUC__)
 
