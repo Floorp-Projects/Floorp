@@ -3633,8 +3633,17 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
                                                        imageDestSize));
     } else {
       // GetWidth/GetHeight failed, so we can't easily map a subregion of the
-      // source image onto the destination area. So, just draw the whole image.
-      wholeImageDest = destRect;
+      // source image onto the destination area.
+      // * If this happens with a RasterImage, it probably means the image is
+      // in an error state, and we shouldn't draw anything. Hence, we leave
+      // wholeImageDest as an empty rect (its initial state).
+      // * If this happens with a VectorImage, it probably means the image has
+      // no explicit width or height attribute -- but we can still proceed and
+      // just treat the destination area as our whole SVG image area. Hence, we
+      // set wholeImageDest to the full destRect.
+      if (image->GetType() == imgIContainer::TYPE_VECTOR) {
+        wholeImageDest = destRect;
+      }
     }
 
     gfxContext* ctx = aRenderingContext.ThebesContext();
