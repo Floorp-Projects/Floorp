@@ -136,8 +136,6 @@ private:
 
   bool ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode);
 
-  SkRect SkRectCoveringWholeSurface() const;
-
   bool UsingSkiaGPU() const;
 
 #ifdef USE_SKIA_GPU
