@@ -405,8 +405,9 @@ RTCPeerConnection.prototype = {
           "InvalidStateError");
     }
 
-    this.makeGetterSetterEH("onaddstream");
-    this.makeGetterSetterEH("onaddtrack");
+    this.makeGetterSetterEH("ontrack");
+    this.makeLegacyGetterSetterEH("onaddstream", "Use peerConnection.ontrack instead.");
+    this.makeLegacyGetterSetterEH("onaddtrack", "Use peerConnection.ontrack instead.");
     this.makeGetterSetterEH("onicecandidate");
     this.makeGetterSetterEH("onnegotiationneeded");
     this.makeGetterSetterEH("onsignalingstatechange");
@@ -660,6 +661,18 @@ RTCPeerConnection.prototype = {
                           {
                             get:function()  { return this.getEH(name); },
                             set:function(h) { return this.setEH(name, h); }
+                          });
+  },
+
+  makeLegacyGetterSetterEH: function(name, msg) {
+    Object.defineProperty(this, name,
+                          {
+                            get:function()  { return this.getEH(name); },
+                            set:function(h) {
+                              this.logWarning(name + " is deprecated! " + msg,
+                                              null, 0);
+                              return this.setEH(name, h);
+                            }
                           });
   },
 
@@ -1452,14 +1465,20 @@ PeerConnectionObserver.prototype = {
                                                              { stream: stream }));
   },
 
-  onAddTrack: function(track) {
+  onAddTrack: function(track, streams) {
     let pc = this._dompc;
     let receiver = pc._win.RTCRtpReceiver._create(pc._win,
                                                   new RTCRtpReceiver(this,
                                                                      track));
     pc._receivers.push(receiver);
-    let ev = new this._dompc._win.MediaStreamTrackEvent("addtrack",
-                                                        { track: track });
+    let ev = new this._dompc._win.RTCTrackEvent("track",
+                                                { receiver: receiver,
+                                                  track: track,
+                                                  streams: streams });
+    this.dispatchEvent(ev);
+
+    // Fire legacy event as well for a little bit.
+    ev = new this._dompc._win.MediaStreamTrackEvent("addtrack", { track: track });
     this.dispatchEvent(ev);
   },
 
