@@ -132,7 +132,10 @@ public class SnackbarHelper {
      */
     private static View findBestParentView(Activity activity) {
         if (activity instanceof GeckoApp) {
-            return activity.findViewById(R.id.root_layout);
+            final View view = activity.findViewById(R.id.root_layout);
+            if (view != null) {
+                return view;
+            }
         }
 
         return activity.findViewById(android.R.id.content);
