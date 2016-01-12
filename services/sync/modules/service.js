@@ -50,20 +50,6 @@ const STORAGE_INFO_TYPES = [INFO_COLLECTIONS,
                             INFO_COLLECTION_COUNTS,
                             INFO_QUOTA];
 
-// A structure mapping a (boolean) telemetry probe name to a preference name.
-// The probe will record true if the pref is modified, false otherwise.
-const TELEMETRY_CUSTOM_SERVER_PREFS = {
-  WEAVE_CUSTOM_LEGACY_SERVER_CONFIGURATION: "services.sync.serverURL",
-  WEAVE_CUSTOM_FXA_SERVER_CONFIGURATION: "identity.fxaccounts.auth.uri",
-  WEAVE_CUSTOM_TOKEN_SERVER_CONFIGURATION: [
-    // The new prefname we use for the tokenserver URI.
-    "identity.sync.tokenserver.uri",
-    // The old deprecated prefname we previously used for the tokenserver URI.
-    "services.sync.tokenServerURI",
-  ],
-};
-
-
 function Sync11Service() {
   this._notify = Utils.notify("weave:service:");
 }
@@ -385,13 +371,6 @@ Sync11Service.prototype = {
       Svc.Obs.notify("weave:engine:start-tracking");
     }
 
-    // Telemetry probes to indicate if the user is using custom servers.
-    for (let [probeName, prefName] of Iterator(TELEMETRY_CUSTOM_SERVER_PREFS)) {
-      let prefNames = Array.isArray(prefName) ? prefName : [prefName];
-      let isCustomized = prefNames.some(pref => Services.prefs.prefHasUserValue(pref));
-      Services.telemetry.getHistogramById(probeName).add(isCustomized);
-    }
-
     // Send an event now that Weave service is ready.  We don't do this
     // synchronously so that observers can import this module before
     // registering an observer.
@@ -560,12 +539,12 @@ Sync11Service.prototype = {
     try {
       info = this.resource(infoURL).get();
     } catch (ex) {
-      this.errorHandler.checkServerError(ex, "info/collections");
+      this.errorHandler.checkServerError(ex);
       throw ex;
     }
 
     // Always check for errors; this is also where we look for X-Weave-Alert.
-    this.errorHandler.checkServerError(info, "info/collections");
+    this.errorHandler.checkServerError(info);
     if (!info.success) {
       throw "Aborting sync: failed to get collections.";
     }
@@ -603,7 +582,7 @@ Sync11Service.prototype = {
       if (infoResponse.status != 200) {
         this._log.warn("info/collections returned non-200 response. Failing key fetch.");
         this.status.login = LOGIN_FAILED_SERVER_ERROR;
-        this.errorHandler.checkServerError(infoResponse, "info/collections");
+        this.errorHandler.checkServerError(infoResponse);
         return false;
       }
 
@@ -637,7 +616,7 @@ Sync11Service.prototype = {
             else {
               // Some other problem.
               this.status.login = LOGIN_FAILED_SERVER_ERROR;
-              this.errorHandler.checkServerError(cryptoResp, "crypto/keys");
+              this.errorHandler.checkServerError(cryptoResp);
               this._log.warn("Got status " + cryptoResp.status + " fetching crypto keys.");
               return false;
             }
@@ -648,8 +627,6 @@ Sync11Service.prototype = {
 
             // One kind of exception: HMAC failure.
             if (Utils.isHMACMismatch(ex)) {
-              Services.telemetry.getHistogramById(
-                "WEAVE_HMAC_ERRORS").add();
               this.status.login = LOGIN_FAILED_INVALID_PASSPHRASE;
               this.status.sync = CREDENTIALS_CHANGED;
             }
@@ -687,7 +664,7 @@ Sync11Service.prototype = {
     } catch (ex) {
       // This means no keys are present, or there's a network error.
       this._log.debug("Failed to fetch and verify keys", ex);
-      this.errorHandler.checkServerError(ex, "crypto/keys");
+      this.errorHandler.checkServerError(ex);
       return false;
     }
   },
@@ -756,8 +733,6 @@ Sync11Service.prototype = {
 
         case 401:
           this._log.warn("401: login failed.");
-          Services.telemetry.getKeyedHistogramById(
-            "WEAVE_STORAGE_AUTH_ERRORS").add("info/collections");
           // Fall through to the 404 case.
 
         case 404:
@@ -777,14 +752,14 @@ Sync11Service.prototype = {
         default:
           // Server didn't respond with something that we expected
           this.status.login = LOGIN_FAILED_SERVER_ERROR;
-          this.errorHandler.checkServerError(test, "info/collections");
+          this.errorHandler.checkServerError(test);
           return false;
       }
     } catch (ex) {
       // Must have failed on some network issue
       this._log.debug("verifyLogin failed", ex);
       this.status.login = LOGIN_FAILED_NETWORK_ERROR;
-      this.errorHandler.checkServerError(ex, "info/collections");
+      this.errorHandler.checkServerError(ex);
       return false;
     }
   },
@@ -799,7 +774,7 @@ Sync11Service.prototype = {
     let uploadRes = wbo.upload(this.resource(this.cryptoKeysURL));
     if (uploadRes.status != 200) {
       this._log.warn("Got status " + uploadRes.status + " uploading new keys. What to do? Throw!");
-      this.errorHandler.checkServerError(uploadRes, "crypto/keys");
+      this.errorHandler.checkServerError(uploadRes);
       throw new Error("Unable to upload symmetric keys.");
     }
     this._log.info("Got status " + uploadRes.status + " uploading keys.");
@@ -1103,7 +1078,7 @@ Sync11Service.prototype = {
       // should be able to get the existing meta after we get a new node.
       if (this.recordManager.response.status == 401) {
         this._log.debug("Fetching meta/global record on the server returned 401.");
-        this.errorHandler.checkServerError(this.recordManager.response, "meta/global");
+        this.errorHandler.checkServerError(this.recordManager.response);
         return false;
       }
 
@@ -1120,7 +1095,7 @@ Sync11Service.prototype = {
         let uploadRes = newMeta.upload(this.resource(this.metaURL));
         if (!uploadRes.success) {
           this._log.warn("Unable to upload new meta/global. Failing remote setup.");
-          this.errorHandler.checkServerError(uploadRes, "meta/global");
+          this.errorHandler.checkServerError(uploadRes);
           return false;
         }
       } else {
@@ -1151,7 +1126,7 @@ Sync11Service.prototype = {
       let status = this.recordManager.response.status;
       if (status != 200 && status != 404) {
         this.status.sync = METARECORD_DOWNLOAD_FAIL;
-        this.errorHandler.checkServerError(this.recordManager.response, "meta/global");
+        this.errorHandler.checkServerError(this.recordManager.response);
         this._log.warn("Unknown error while downloading metadata record. " +
                        "Aborting sync.");
         return false;
@@ -1626,7 +1601,7 @@ Sync11Service.prototype = {
       // Make sure the changed clients get updated.
       this.clientsEngine.sync();
     } catch (ex) {
-      this.errorHandler.checkServerError(ex, "clients");
+      this.errorHandler.checkServerError(ex);
       throw ex;
     }
   },

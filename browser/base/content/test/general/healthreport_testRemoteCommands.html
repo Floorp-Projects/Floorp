@@ -7,33 +7,12 @@
 <script type="application/javascript;version=1.7">
 
 function init() {
-  window.addEventListener("message", function process(e) {
-    // The init function of abouthealth.js schedules an initial payload event,
-    // which will be sent after the payload data has been collected. This extra
-    // event can cause unexpected successes/failures in this test, so we wait
-    // for the extra event to arrive here before progressing with the actual
-    // test.
-    if (e.data.type == "payload") {
-      window.removeEventListener("message", process, false);
-
-      window.addEventListener("message", doTest, false);
-      doTest();
-    }
-  }, false);
+  window.addEventListener("message", doTest, false);
+  doTest();
 }
 
 function checkSubmissionValue(payload, expectedValue) {
   return payload.enabled == expectedValue;
-}
-
-function validatePayload(payload) {
-  payload = JSON.parse(payload);
-
-  // xxxmpc - this is some pretty low-bar validation, but we have plenty of tests of that API elsewhere
-  if (!payload.thisPingDate)
-    return false;
-
-  return true;
 }
 
 function isArray(arg) {
@@ -141,11 +120,11 @@ var tests = [
   },
 },
 {
-  info: "Verifying we can get a payload while submission is disabled",
-  event: "RequestCurrentPayload",
-  payloadType: "payload",
+  info: "Verifying that we can get the current ping data while submission is disabled",
+  event: "RequestCurrentPingData",
+  payloadType: "telemetry-current-ping-data",
   validateResponse: function(payload) {
-    return validatePayload(payload);
+    return validateCurrentTelemetryPingData(payload);
   },
 },
 {
@@ -162,14 +141,6 @@ var tests = [
   payloadType: "prefs",
   validateResponse: function(payload) {
     return checkSubmissionValue(payload, true);
-  },
-},
-{
-  info: "Verifying we can get a payload after re-enabling",
-  event: "RequestCurrentPayload",
-  payloadType: "payload",
-  validateResponse: function(payload) {
-    return validatePayload(payload);
   },
 },
 {

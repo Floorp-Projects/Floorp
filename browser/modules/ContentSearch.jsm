@@ -303,8 +303,8 @@ this.ContentSearch = {
       };
       win.openUILinkIn(submission.uri.spec, where, params);
     }
-    win.BrowserSearch.recordSearchInHealthReport(engine, data.healthReportKey,
-                                                 data.selection || null);
+    win.BrowserSearch.recordSearchInTelemetry(engine, data.healthReportKey,
+                                              data.selection || null);
     return Promise.resolve();
   },
 
