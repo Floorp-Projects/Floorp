@@ -171,6 +171,8 @@ class BuildMonitor(MozbuildObject):
         self._warnings_collector = WarningsCollector(
             database=self.warnings_database, objdir=self.topobjdir)
 
+        self.build_objects = []
+
     def start(self):
         """Record the start of the build."""
         self.start_time = time.time()
@@ -215,6 +217,9 @@ class BuildMonitor(MozbuildObject):
             elif action == 'TIER_FINISH':
                 tier, = args
                 self.tiers.finish_tier(tier)
+            elif action == 'OBJECT_FILE':
+                self.build_objects.append(args[0])
+                update_needed = False
             else:
                 raise Exception('Unknown build status: %s' % action)
 
@@ -381,6 +386,7 @@ class BuildMonitor(MozbuildObject):
             cpu_percent=cpu_percent,
             cpu_times=cpu_times,
             io=io,
+            objects=self.build_objects
         )
 
         o['tiers'] = self.tiers.tiered_resource_usage()
