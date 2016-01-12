@@ -2708,6 +2708,22 @@
       ReadRegStr $R5 SHCTX "$R6\$R7" "InstallLocation"
       IfErrors loop
       ${${_MOZFUNC_UN}RemoveQuotesFromPath} "$R5" $R9
+
+      ; Detect when the path is just a drive letter without a trailing
+      ; backslash (e.g., "C:"), and add a backslash. If we don't, the Win32
+      ; calls in GetLongPath will interpret that syntax as a shorthand
+      ; for the working directory, because that's the DOS 2.0 convention,
+      ; and will return the path to that directory instead of just the drive.
+      ; Back here, we would then successfully match that with our $INSTDIR,
+      ; and end up deleting a registry key that isn't really ours.
+      StrLen $R5 "$R9"
+      ${If} $R5 == 2
+        StrCpy $R5 "$R9" 1 1
+        ${If} "$R5" == ":"
+          StrCpy $R9 "$R9\"
+        ${EndIf}
+      ${EndIf}
+
       ${${_MOZFUNC_UN}GetLongPath} "$R9" $R9
       StrCmp "$R9" "$R4" +1 loop
       ClearErrors
