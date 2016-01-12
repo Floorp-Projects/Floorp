@@ -248,21 +248,6 @@ public:
     }
   }
 
-  void GetAuthChallenge(nsAutoArrayPtr<uint8_t>& aRetData,
-                        int* aRetDataLength) const
-  {
-    *aRetDataLength = 0;
-
-    for (uint8_t i = 0; i < mHeaders.Length(); ++i) {
-      if (mHeaders[i]->mId == ObexHeaderId::AuthChallenge) {
-        aRetData = new uint8_t[mHeaders[i]->mDataLength];
-        memcpy(aRetData, mHeaders[i]->mData, mHeaders[i]->mDataLength);
-        *aRetDataLength = mHeaders[i]->mDataLength;
-        return;
-      }
-    }
-  }
-
   uint32_t GetConnectionId() const
   {
     int length = mHeaders.Length();

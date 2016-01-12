@@ -55,16 +55,14 @@ public:
   // Forward behaviour to wrapped thread pool implementation.
   NS_FORWARD_SAFE_NSITHREADPOOL(mPool);
 
-  // See bug 1155059 - MSVC forces us to not declare Dispatch normally in idl
-  //  NS_FORWARD_SAFE_NSIEVENTTARGET(mEventTarget);
-  nsresult Dispatch(nsIRunnable *event, uint32_t flags) { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->Dispatch(event, flags); }
- 
   NS_IMETHOD DispatchFromScript(nsIRunnable *event, uint32_t flags) override {
       return Dispatch(event, flags);
   }
 
   NS_IMETHOD Dispatch(already_AddRefed<nsIRunnable>&& event, uint32_t flags) override
     { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->Dispatch(Move(event), flags); }
+
+  using nsIEventTarget::Dispatch;
 
   NS_IMETHOD IsOnCurrentThread(bool *_retval) override { return !mEventTarget ? NS_ERROR_NULL_POINTER : mEventTarget->IsOnCurrentThread(_retval); }
 

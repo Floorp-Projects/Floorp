@@ -9,6 +9,7 @@
 
 #include "PlatformDecoderModule.h"
 #include "FFmpegLibs.h"
+#include "FFmpegRuntimeLinker.h"
 #include "mozilla/StaticMutex.h"
 
 namespace mozilla

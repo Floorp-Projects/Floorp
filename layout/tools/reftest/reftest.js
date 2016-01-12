@@ -39,6 +39,7 @@ const NS_OBSERVER_SERVICE_CONTRACTID =
 CU.import("resource://gre/modules/FileUtils.jsm");
 CU.import("chrome://reftest/content/httpd.jsm", this);
 CU.import("resource://gre/modules/Services.jsm");
+CU.import("resource://gre/modules/NetUtil.jsm");
 
 var gLoadTimeout = 0;
 var gTimeoutHook = null;
@@ -801,13 +802,8 @@ function ReadManifest(aURL, inherited_status, aFilter)
                      .getService(CI.nsIScriptSecurityManager);
 
     var listURL = aURL;
-    var channel = gIOService.newChannelFromURI2(aURL,
-                                                null,      // aLoadingNode
-                                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                                null,      // aTriggeringPrincipal
-                                                CI.nsILoadInfo.SEC_NORMAL,
-                                                CI.nsIContentPolicy.TYPE_OTHER);
-    var inputStream = channel.open();
+    var channel = NetUtil.newChannel({uri: aURL, loadUsingSystemPrincipal: true});
+    var inputStream = channel.open2();
     if (channel instanceof Components.interfaces.nsIHttpChannel
         && channel.responseStatus != 200) {
       gDumpLog("REFTEST TEST-UNEXPECTED-FAIL | | HTTP ERROR : " +

@@ -14,8 +14,8 @@ extern "C" {
 #pragma GCC visibility push(default)
 #endif
 #include "libavcodec/avcodec.h"
-#include "libavformat/avformat.h"
-#include "libavutil/imgutils.h"
+#include "libavutil/avutil.h"
+#include "libavutil/mem.h"
 #ifdef __GNUC__
 #pragma GCC visibility pop
 #endif
@@ -31,7 +31,7 @@ extern "C" {
 typedef CodecID AVCodecID;
 #endif
 
-enum { LIBAV_VER = LIBAVFORMAT_VERSION_MAJOR };
+enum { LIBAV_VER = LIBAVCODEC_VERSION_MAJOR };
 
 namespace mozilla {
 

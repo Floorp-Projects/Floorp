@@ -13,10 +13,12 @@ if CONFIG['FFVPX_AS']:
        # Fix inline symbols and math defines for windows.
         DEFINES['_USE_MATH_DEFINES'] = True
         DEFINES['inline'] = "__inline"
-        ASFLAGS += ['-Pconfig_win.asm']
         # 32-bit windows need to prefix symbols with an underscore.
         if CONFIG['CPU_ARCH'] == 'x86':
             ASFLAGS += ['-DPREFIX']
+            ASFLAGS += ['-Pconfig_win32.asm']
+        else:
+            ASFLAGS += ['-Pconfig_win64.asm']
     elif CONFIG['OS_ARCH'] == 'Darwin':
         # 32/64-bit macosx assemblers need to prefix symbols with an underscore.
         ASFLAGS += [
@@ -39,6 +41,8 @@ if CONFIG['GNU_CC']:
         '-Wno-sign-compare',
         '-Wno-switch',
         '-Wno-type-limits',
+        '-Wno-unused-function',
+        '-Wno-deprecated-declarations',
     ]
     if CONFIG['CLANG_CXX']:
         CFLAGS += [

@@ -784,6 +784,7 @@ class SIMDObject : public JSObject
   public:
     static const Class class_;
     static bool toString(JSContext* cx, unsigned int argc, Value* vp);
+    static bool resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId, bool* resolved);
 };
 
 // These classes implement the concept containing the following constraints:

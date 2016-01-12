@@ -617,7 +617,10 @@ TokenStream::reportCompileErrorNumberVA(uint32_t offset, unsigned flags, unsigne
     // On the main thread, report the error immediately. When compiling off
     // thread, save the error so that the main thread can report it later.
     CompileError tempErr;
-    CompileError& err = cx->isJSContext() ? tempErr : cx->addPendingCompileError();
+    CompileError* tempErrPtr = &tempErr;
+    if (!cx->isJSContext() && !cx->addPendingCompileError(&tempErrPtr))
+        return false;
+    CompileError& err = *tempErrPtr;
 
     err.report.flags = flags;
     err.report.errorNumber = errorNumber;

@@ -15,18 +15,33 @@ struct PRLibrary;
 namespace mozilla
 {
 
+enum {
+  AV_FUNC_AVUTIL_MASK = 1 << 8,
+  AV_FUNC_53 = 1 << 0,
+  AV_FUNC_54 = 1 << 1,
+  AV_FUNC_55 = 1 << 2,
+  AV_FUNC_56 = 1 << 3,
+  AV_FUNC_57 = 1 << 4,
+  AV_FUNC_AVUTIL_53 = AV_FUNC_53 | AV_FUNC_AVUTIL_MASK,
+  AV_FUNC_AVUTIL_54 = AV_FUNC_54 | AV_FUNC_AVUTIL_MASK,
+  AV_FUNC_AVUTIL_55 = AV_FUNC_55 | AV_FUNC_AVUTIL_MASK,
+  AV_FUNC_AVUTIL_56 = AV_FUNC_56 | AV_FUNC_AVUTIL_MASK,
+  AV_FUNC_AVUTIL_57 = AV_FUNC_57 | AV_FUNC_AVUTIL_MASK,
+  AV_FUNC_AVCODEC_ALL = AV_FUNC_53 | AV_FUNC_54 | AV_FUNC_55 | AV_FUNC_56 | AV_FUNC_57,
+  AV_FUNC_AVUTIL_ALL = AV_FUNC_AVCODEC_ALL | AV_FUNC_AVUTIL_MASK
+};
+
 class FFmpegRuntimeLinker
 {
 public:
   static bool Link();
   static void Unlink();
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
-  static bool GetVersion(uint32_t& aMajor, uint32_t& aMinor);
+  static bool GetVersion(uint32_t& aMajor, uint32_t& aMinor, uint32_t& aMicro);
 
 private:
   static PRLibrary* sLinkedLib;
   static PRLibrary* sLinkedUtilLib;
-  static const char* sLib;
 
   static bool Bind(const char* aLibName);
 
