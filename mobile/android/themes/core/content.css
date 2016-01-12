@@ -71,7 +71,7 @@ xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
   display: none;
 }
 
-xul|thumb {
+xul|scrollbar xul|thumb {
   background-color: rgba(0, 0, 0, 0.4) !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
