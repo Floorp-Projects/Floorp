@@ -201,6 +201,7 @@ class RegExpShared
     }
 
     void trace(JSTracer* trc);
+    bool needsSweep(JSRuntime* rt);
 
     bool marked() const { return marked_; }
     void clearMarked() { marked_ = false; }

@@ -787,6 +787,34 @@ RegExpCompartment::init(JSContext* cx)
     return true;
 }
 
+bool
+RegExpShared::needsSweep(JSRuntime* rt)
+{
+    // Sometimes RegExpShared instances are marked without the compartment
+    // being subsequently cleared. This can happen if a GC is restarted while
+    // in progress (i.e. performing a full GC in the middle of an incremental
+    // GC) or if a RegExpShared referenced via the stack is traced but is not
+    // in a zone being collected.
+    //
+    // Because of this we only treat the marked_ bit as a hint, and destroy the
+    // RegExpShared if it was accidentally marked earlier but wasn't marked by
+    // the current trace.
+    bool keep = marked() && IsMarked(&source);
+    for (size_t i = 0; i < ArrayLength(compilationArray); i++) {
+        RegExpShared::RegExpCompilation& compilation = compilationArray[i];
+        if (compilation.jitCode && gc::IsAboutToBeFinalized(&compilation.jitCode))
+            keep = false;
+    }
+
+    MOZ_ASSERT(rt->isHeapMajorCollecting());
+    if (keep || rt->gc.isHeapCompacting()) {
+        clearMarked();
+        return false;
+    }
+
+    return true;
+}
+
 void
 RegExpCompartment::sweep(JSRuntime* rt)
 {
@@ -795,30 +823,7 @@ RegExpCompartment::sweep(JSRuntime* rt)
 
     for (Set::Enum e(set_); !e.empty(); e.popFront()) {
         RegExpShared* shared = e.front();
-
-        // Sometimes RegExpShared instances are marked without the
-        // compartment being subsequently cleared. This can happen if a GC is
-        // restarted while in progress (i.e. performing a full GC in the
-        // middle of an incremental GC) or if a RegExpShared referenced via the
-        // stack is traced but is not in a zone being collected.
-        //
-        // Because of this we only treat the marked_ bit as a hint, and destroy
-        // the RegExpShared if it was accidentally marked earlier but wasn't
-        // marked by the current trace.
-        bool keep = shared->marked() &&
-                    IsMarked(&shared->source);
-        for (size_t i = 0; i < ArrayLength(shared->compilationArray); i++) {
-            RegExpShared::RegExpCompilation& compilation = shared->compilationArray[i];
-            if (compilation.jitCode &&
-                IsAboutToBeFinalized(&compilation.jitCode))
-            {
-                keep = false;
-            }
-        }
-        MOZ_ASSERT(rt->isHeapMajorCollecting());
-        if (keep || rt->gc.isHeapCompacting()) {
-            shared->clearMarked();
-        } else {
+        if (shared->needsSweep(rt)) {
             js_delete(shared);
             e.removeFront();
         }
