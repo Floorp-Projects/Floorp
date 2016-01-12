@@ -501,10 +501,8 @@ public:
   // media element when it is restored from the bfcache, or when we need
   // to stop throttling the download. Call on the main thread only.
   // The download will only actually resume once as many Resume calls
-  // have been made as Suspend calls. When aForceBuffering is true,
-  // we force the decoder to go into buffering state before resuming
-  // playback.
-  virtual void Resume(bool aForceBuffering);
+  // have been made as Suspend calls.
+  virtual void Resume();
 
   // Moves any existing channel loads into or out of background. Background
   // loads don't block the load event. This is called when we stop or restart
