@@ -7532,6 +7532,7 @@ class MRegExpMatcher
         initOperand(2, lastIndex);
         initOperand(3, sticky);
 
+        setMovable();
         // May be object or null.
         setResultType(MIRType_Value);
     }
@@ -7587,6 +7588,7 @@ class MRegExpTester
         initOperand(2, lastIndex);
         initOperand(3, sticky);
 
+        setMovable();
         setResultType(MIRType_Int32);
     }
 
