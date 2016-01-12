@@ -9,11 +9,6 @@ Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetrySession.jsm", this);
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
-XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
-  () => Cc["@mozilla.org/datareporting/service;1"]
-          .getService(Ci.nsISupports)
-          .wrappedJSObject);
-
 // The @mozilla/xre/app-info;1 XPCOM object provided by the xpcshell test harness doesn't
 // implement the nsIAppInfo interface, which is needed by Services.jsm and
 // TelemetrySession.jsm. updateAppInfo() creates and registers a minimal mock app-info.
@@ -37,13 +32,6 @@ function getSimpleMeasurementsFromTelemetryController() {
 }
 
 function initialiseTelemetry() {
-  // Send the needed startup notifications to the datareporting service
-  // to ensure that it has been initialized.
-  if ("@mozilla.org/datareporting/service;1" in Cc) {
-    gDatareportingService.observe(null, "app-startup", null);
-    gDatareportingService.observe(null, "profile-after-change", null);
-  }
-
   return TelemetryController.setup().then(TelemetrySession.setup);
 }
 

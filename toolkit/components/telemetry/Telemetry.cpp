@@ -3544,7 +3544,6 @@ static MOZ_CONSTEXPR_VAR TrackedDBEntry kTrackedDBs[] = {
   TRACKEDDB_ENTRY("downloads.sqlite"),
   TRACKEDDB_ENTRY("extensions.sqlite"),
   TRACKEDDB_ENTRY("formhistory.sqlite"),
-  TRACKEDDB_ENTRY("healthreport.sqlite"),
   TRACKEDDB_ENTRY("index.sqlite"),
   TRACKEDDB_ENTRY("netpredictions.sqlite"),
   TRACKEDDB_ENTRY("permissions.sqlite"),

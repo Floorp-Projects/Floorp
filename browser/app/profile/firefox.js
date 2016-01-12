@@ -1548,7 +1548,8 @@ pref("experiments.supported", true);
 pref("media.gmp-provider.enabled", true);
 
 #ifdef NIGHTLY_BUILD
-pref("browser.polaris.enabled", false);
+pref("privacy.trackingprotection.ui.enabled", true);
+#else
 pref("privacy.trackingprotection.ui.enabled", false);
 #endif
 pref("privacy.trackingprotection.introCount", 0);
