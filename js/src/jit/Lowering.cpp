@@ -2111,7 +2111,14 @@ MustCloneRegExp(MRegExp* regexp)
             return true;
 
         MDefinition* def = node->toDefinition();
-        if (def->isRegExpTester()) {
+        if (def->isRegExpMatcher()) {
+            MRegExpMatcher* test = def->toRegExpMatcher();
+            if (test->indexOf(*iter) == 1) {
+                // Optimized RegExp.prototype.exec.
+                MOZ_ASSERT(test->regexp() == regexp);
+                continue;
+            }
+        } else if (def->isRegExpTester()) {
             MRegExpTester* test = def->toRegExpTester();
             if (test->indexOf(*iter) == 1) {
                 // Optimized RegExp.prototype.test.
