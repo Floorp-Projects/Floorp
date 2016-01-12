@@ -1184,6 +1184,7 @@
           if (this.isRemoteBrowser) {
             fieldsToSwap.push(...[
               "_remoteWebNavigation",
+              "_remoteWebNavigationImpl",
               "_remoteWebProgressManager",
               "_remoteWebProgress",
               "_remoteFinder",
@@ -1238,8 +1239,8 @@
           }
           else {
             // Rewire the remote listeners
-            this._remoteWebNavigation.swapBrowser(this);
-            aOtherBrowser._remoteWebNavigation.swapBrowser(aOtherBrowser);
+            this._remoteWebNavigationImpl.swapBrowser(this);
+            aOtherBrowser._remoteWebNavigationImpl.swapBrowser(aOtherBrowser);
 
             this._remoteWebProgressManager.swapBrowser(this);
             aOtherBrowser._remoteWebProgressManager.swapBrowser(aOtherBrowser);
