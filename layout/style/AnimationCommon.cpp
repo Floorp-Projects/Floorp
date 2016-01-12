@@ -420,8 +420,6 @@ AnimationCollection::Tick()
 void
 AnimationCollection::EnsureStyleRuleFor()
 {
-  mHasPendingAnimationRestyle = false;
-
   nsPresContext* presContext = mManager->PresContext();
   if (!presContext) {
     // Pres context will be null after the manager is disconnected.
@@ -486,20 +484,6 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
     if (effectSet) {
       effectSet->UpdateAnimationGeneration(presContext);
     }
-  }
-
-  // Steps for RestyleType::Standard and above:
-
-  // FIXME: The following arrangement now makes absolutely no sense, but
-  // is also harmless and in the interests of making incremental changes
-  // we leave mHasPendingAnimationRestyle here for now and remove it in a
-  // subsequent patch in this series.
-  if (mHasPendingAnimationRestyle) {
-    return;
-  }
-
-  if (aRestyleType >= EffectCompositor::RestyleType::Standard) {
-    mHasPendingAnimationRestyle = true;
   }
 }
 
