@@ -337,25 +337,25 @@ nsBaseFilePicker::GetMode(int16_t* aMode)
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetDomFileOrDirectory(nsISupports** aValue)
+nsBaseFilePicker::GetDomfile(nsISupports** aDomfile)
 {
   nsCOMPtr<nsIFile> localFile;
   nsresult rv = GetFile(getter_AddRefs(localFile));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!localFile) {
-    *aValue = nullptr;
+    *aDomfile = nullptr;
     return NS_OK;
   }
 
   RefPtr<File> domFile = File::CreateFromFile(mParent, localFile);
   domFile->Impl()->SetIsDirectory(mMode == nsIFilePicker::modeGetFolder);
-  nsCOMPtr<nsIDOMBlob>(domFile).forget(aValue);
+  nsCOMPtr<nsIDOMBlob>(domFile).forget(aDomfile);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue)
+nsBaseFilePicker::GetDomfiles(nsISimpleEnumerator** aDomfiles)
 {
   nsCOMPtr<nsISimpleEnumerator> iter;
   nsresult rv = GetFiles(getter_AddRefs(iter));
@@ -364,7 +364,7 @@ nsBaseFilePicker::GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue)
   RefPtr<nsBaseFilePickerEnumerator> retIter =
     new nsBaseFilePickerEnumerator(mParent, iter, mMode);
 
-  retIter.forget(aValue);
+  retIter.forget(aDomfiles);
   return NS_OK;
 }
 
