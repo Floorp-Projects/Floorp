@@ -74,6 +74,62 @@ function createElementWithAttrs(document, type, attrs) {
   return element;
 }
 
+XPCOMUtils.defineLazyGetter(this, "AboutSaved", function() {
+  return new PocketAboutPage("chrome://pocket/content/panels/saved.html",
+                             "pocket-saved",
+                             "{3e759f54-37af-7843-9824-f71b5993ceed}",
+                             "About Pocket Saved");
+});
+
+XPCOMUtils.defineLazyGetter(this, "AboutSignup", function() {
+  return new PocketAboutPage("chrome://pocket/content/panels/signup.html",
+                             "pocket-signup",
+                             "{8548329d-00c4-234e-8f17-75026db3b56e}",
+                             "About Pocket Signup");
+});
+
+
+function PocketAboutPage(chromeURL, aboutHost, classID, description) {
+  this.chromeURL = chromeURL;
+  this.aboutHost = aboutHost;
+  this.classID = Components.ID(classID);
+  this.description = description;
+}
+PocketAboutPage.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  getURIFlags: function(aURI) {
+    return Ci.nsIAboutModule.ALLOW_SCRIPT |
+           Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
+           Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT |
+           Ci.nsIAboutModule.MAKE_UNLINKABLE;
+  },
+
+  newChannel: function(aURI) {
+    let channel = Services.io.newChannel(this.chromeURL, null, null);
+    channel.originalURI = aURI;
+    return channel;
+  },
+
+  createInstance: function(outer, iid) {
+    if (outer != null) {
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    }
+    return this.QueryInterface(iid);
+  },
+
+  register: function() {
+    Cm.QueryInterface(Ci.nsIComponentRegistrar).registerFactory(
+      this.classID, this.description,
+      "@mozilla.org/network/protocol/about;1?what=" + this.aboutHost, this);
+  },
+
+  unregister: function() {
+    Cm.QueryInterface(Ci.nsIComponentRegistrar).unregisterFactory(
+      this.classID, this);
+  }
+};
+
+
 function CreatePocketWidget(reason) {
   let id = "pocket-button"
   let widget = CustomizableUI.getWidget(id);
@@ -294,6 +350,8 @@ var PocketOverlay = {
     this._sheetType = styleSheetService.AUTHOR_SHEET;
     this._cachedSheet = styleSheetService.preloadSheet(gPocketStyleURI,
                                                        this._sheetType);
+    AboutSaved.register();
+    AboutSignup.register();
     CreatePocketWidget(reason);
     CustomizableUI.addListener(this);
     PocketContextMenu.init();
@@ -308,6 +366,8 @@ var PocketOverlay = {
     }
   },
   shutdown: function(reason) {
+    AboutSaved.unregister();
+    AboutSignup.unregister();
     CustomizableUI.removeListener(this);
     for (let window of allBrowserWindows()) {
       for (let id of ["panelMenu_pocket", "menu_pocket", "BMB_pocket",
