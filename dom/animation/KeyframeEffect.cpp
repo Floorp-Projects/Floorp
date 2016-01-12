@@ -1927,13 +1927,16 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
   TimeStamp now =
     presContext->RefreshDriver()->MostRecentRefresh();
 
-  AnimationCollection* collection = GetCollection();
-  MOZ_ASSERT(collection,
-    "CanThrottleTransformChanges should be involved with animation collection");
-  TimeStamp styleRuleRefreshTime = collection->mStyleRuleRefreshTime;
+  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+  MOZ_ASSERT(effectSet, "CanThrottleTransformChanges is expected to be called"
+                        " on an effect in an effect set");
+  MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
+                         " on an effect with a parent animation");
+  TimeStamp animationRuleRefreshTime =
+    effectSet->AnimationRuleRefreshTime(mAnimation->CascadeLevel());
   // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!styleRuleRefreshTime.IsNull() &&
-      (now - styleRuleRefreshTime) < OverflowRegionRefreshInterval()) {
+  if (!animationRuleRefreshTime.IsNull() &&
+      (now - animationRuleRefreshTime) < OverflowRegionRefreshInterval()) {
     return true;
   }
 
