@@ -45,6 +45,7 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMEvent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsRange.h"
 #include "mozilla/dom/Selection.h"
