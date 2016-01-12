@@ -10,6 +10,13 @@
 
 const char kDelimiters[] = ", ";
 const char kAdditionalWordChars[] = "_-";
+const char* kReservedNames[] = {
+  "all",
+  "append",
+  "bufsize",
+  "sync",
+  "timestamp",
+};
 
 namespace mozilla {
 
@@ -44,7 +51,19 @@ NSPRLogModulesParser(const char* aLogModules,
       }
     }
 
-    aCallback(moduleName.get(), logLevel);
+    // NSPR reserves a few modules names for logging options. We just skip
+    // those entries here.
+    bool isReserved = false;
+    for (size_t i = 0; i < PR_ARRAY_SIZE(kReservedNames); i++) {
+      if (moduleName.EqualsASCII(kReservedNames[i])) {
+        isReserved = true;
+        break;
+      }
+    }
+
+    if (!isReserved) {
+      aCallback(moduleName.get(), logLevel);
+    }
 
     // Skip ahead to the next token.
     parser.SkipWhites();

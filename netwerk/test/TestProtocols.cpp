@@ -56,7 +56,7 @@
 #include "nsStringAPI.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
-#include "NetwerkTestLogging.h"
+#include "mozilla/Logging.h"
 
 using namespace mozilla;
 
