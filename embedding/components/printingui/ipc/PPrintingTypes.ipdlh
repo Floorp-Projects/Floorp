@@ -51,7 +51,6 @@ struct PrintData {
   bool showPrintProgress;
 
   nsString paperName;
-  short paperSizeType;
   short paperData;
   double paperWidth;
   double paperHeight;
