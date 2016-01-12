@@ -284,7 +284,7 @@ CommonAnimationManager::FlushAnimations()
                "Should not have a transition/animation collection for an "
                "element that is not part of the document tree");
 
-    collection->RequestRestyle(AnimationCollection::RestyleType::Standard);
+    collection->RequestRestyle(EffectCompositor::RestyleType::Standard);
   }
 }
 
@@ -457,7 +457,7 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 }
 
 void
-AnimationCollection::RequestRestyle(RestyleType aRestyleType)
+AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
 {
   MOZ_ASSERT(IsForElement() || IsForBeforePseudo() || IsForAfterPseudo(),
              "Unexpected mElementProperty; might restyle too much");
@@ -468,9 +468,9 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     return;
   }
 
-  // Steps for Restyle::Layer:
+  // Steps for RestyleType::Layer:
 
-  if (aRestyleType == RestyleType::Layer) {
+  if (aRestyleType == EffectCompositor::RestyleType::Layer) {
     mStyleRuleRefreshTime = TimeStamp();
     mStyleChanging = true;
 
@@ -490,7 +490,7 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
     return;
   }
 
-  if (aRestyleType >= RestyleType::Standard) {
+  if (aRestyleType >= EffectCompositor::RestyleType::Standard) {
     mHasPendingAnimationRestyle = true;
     PostRestyleForAnimation(presContext);
     return;
@@ -498,7 +498,7 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
 
   // Steps for RestyleType::Throttled:
 
-  MOZ_ASSERT(aRestyleType == RestyleType::Throttled,
+  MOZ_ASSERT(aRestyleType == EffectCompositor::RestyleType::Throttled,
              "Should have already handled all non-throttled restyles");
   presContext->Document()->SetNeedStyleFlush();
 }
