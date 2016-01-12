@@ -52,27 +52,6 @@ js::WeakMap_has(JSContext* cx, unsigned argc, Value* vp)
 }
 
 MOZ_ALWAYS_INLINE bool
-WeakMap_clear_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(IsWeakMap(args.thisv()));
-
-    // We can't js_delete the weakmap because the data gathered during GC is
-    // used by the Cycle Collector.
-    if (ObjectValueMap* map = args.thisv().toObject().as<WeakMapObject>().getMap())
-        map->clear();
-
-    args.rval().setUndefined();
-    return true;
-}
-
-bool
-js::WeakMap_clear(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsWeakMap, WeakMap_clear_impl>(cx, args);
-}
-
-MOZ_ALWAYS_INLINE bool
 WeakMap_get_impl(JSContext* cx, const CallArgs& args)
 {
     MOZ_ASSERT(IsWeakMap(args.thisv()));
@@ -430,7 +409,6 @@ static const JSFunctionSpec weak_map_methods[] = {
     JS_FN("get",    WeakMap_get, 1, 0),
     JS_FN("delete", WeakMap_delete, 1, 0),
     JS_FN("set",    WeakMap_set, 2, 0),
-    JS_FN("clear",  WeakMap_clear, 0, 0),
     JS_FS_END
 };
 

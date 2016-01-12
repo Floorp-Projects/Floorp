@@ -25,26 +25,7 @@ function WeakSet_add(value) {
     return S;
 }
 
-// 23.4.3.2
-function WeakSet_clear() {
-    // Step 1-3.
-    var S = this;
-    if (!IsObject(S) || !IsWeakSet(S))
-        return callFunction(CallWeakSetMethodIfWrapped, this, "WeakSet_clear");
-
-    // Step 4.
-    let entries = UnsafeGetReservedSlot(this, WEAKSET_MAP_SLOT);
-    if (!entries)
-        ThrowTypeError(JSMSG_INCOMPATIBLE_PROTO, "WeakSet", "clear", typeof S);
-
-    // Step 5.
-    callFunction(std_WeakMap_clear, entries);
-
-    // Step 6.
-    return undefined;
-}
-
-// 23.4.3.4
+// 23.4.3.3
 function WeakSet_delete(value) {
     // Steps 1-3.
     var S = this;
@@ -64,7 +45,7 @@ function WeakSet_delete(value) {
     return callFunction(std_WeakMap_delete, entries, value);
 }
 
-// 23.4.3.5
+// 23.4.3.4
 function WeakSet_has(value) {
     // Steps 1-3.
     var S = this;
