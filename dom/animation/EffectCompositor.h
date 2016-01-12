@@ -88,6 +88,14 @@ public:
                       RestyleType aRestyleType,
                       CascadeLevel aCascadeLevel);
 
+  // Schedule an animation restyle. This is called automatically by
+  // RequestRestyle when necessary. However, it is exposed here since we also
+  // need to perform this step when triggering transitions *without* also
+  // invalidating the animation style rule (which RequestRestyle would do).
+  void PostRestyleForAnimation(dom::Element* aElement,
+                               nsCSSPseudoElements::Type aPseudoType,
+                               CascadeLevel aCascadeLevel);
+
   // Updates the animation rule stored on the EffectSet for the
   // specified (pseudo-)element for cascade level |aLevel|.
   // If the animation rule is not marked as needing an update,
@@ -150,6 +158,10 @@ private:
                                    CascadeLevel aCascadeLevel,
                                    TimeStamp aRefreshTime,
                                    bool& aStyleChanging);
+
+  static dom::Element* GetElementToRestyle(dom::Element* aElement,
+                                           nsCSSPseudoElements::Type
+                                             aPseudoType);
 
   // Get the properties in |aEffectSet| that we are able to animate on the
   // compositor but which are also specified at a higher level in the cascade

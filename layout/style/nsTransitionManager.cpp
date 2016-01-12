@@ -504,7 +504,11 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // The check of collection->mCheckGeneration against the restyle
     // manager's GetAnimationGeneration() will ensure that we don't go
     // through the rest of this function again when we do.
-    collection->PostRestyleForAnimation(mPresContext);
+    EffectCompositor::CascadeLevel cascadeLevel =
+      EffectCompositor::CascadeLevel::Transitions;
+    mPresContext->EffectCompositor()->PostRestyleForAnimation(aElement,
+                                                              pseudoType,
+                                                              cascadeLevel);
   }
 }
 
