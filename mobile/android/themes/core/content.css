@@ -31,27 +31,27 @@ xul|scrollbar {
 /* Scrollbar code will reset the margin to the correct side depending on
    where layout actually puts the scrollbar */
 xul|scrollbar[orient="vertical"] {
-  margin-left: -6px;
-  min-width: 2px;
-  max-width: 2px;
+  margin-left: -8px;
+  min-width: 8px;
+  max-width: 8px;
 }
 
 xul|scrollbar[orient="vertical"] xul|thumb {
   -moz-appearance: scrollbarthumb-vertical !important;
-  max-width: 2px !important;
-  min-width: 2px !important;
+  max-width: 6px !important;
+  min-width: 6px !important;
 }
 
 xul|scrollbar[orient="horizontal"] {
-  margin-top: -6px;
-  min-height: 2px;
-  max-height: 2px;
+  margin-top: -8px;
+  min-height: 8px;
+  max-height: 8px;
 }
 
 xul|scrollbar[orient="horizontal"] xul|thumb {
   -moz-appearance: scrollbarthumb-horizontal !important;
-  max-height: 2px !important;
-  min-height: 2px !important;
+  max-height: 6px !important;
+  min-height: 6px !important;
 }
 
 xul|scrollbar:not([active="true"]),
@@ -60,8 +60,8 @@ xul|scrollbar[disabled] {
 }
 
 xul|scrollbarbutton {
-  min-height: 2px !important;
-  min-width: 2px !important;
+  min-height: 8px !important;
+  min-width: 8px !important;
   -moz-appearance: none !important;
   visibility: hidden;
 }
@@ -72,13 +72,13 @@ xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
 }
 
 xul|scrollbar xul|thumb {
-  background-color: rgba(119, 119, 119, 0.4) !important;
+  background-color: rgba(0, 0, 0, 0.4) !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
-  border: none;
-  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  border-radius: 3px;
 }
 
 xul|scrollbarbutton {
