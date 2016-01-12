@@ -140,7 +140,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             init();
         }
 
-        final boolean isIdentityKnown = (siteIdentity.getSecurityMode() != SecurityMode.UNKNOWN);
+        final boolean isIdentityKnown = (siteIdentity.getSecurityMode() == SecurityMode.IDENTIFIED ||
+                                         siteIdentity.getSecurityMode() == SecurityMode.VERIFIED);
         updateConnectionState(siteIdentity);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
 
