@@ -117,23 +117,15 @@ ImageBridgeParent::RecvImageBridgeThreadId(const PlatformThreadId& aThreadId)
 class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender
 {
 public:
-  explicit AutoImageBridgeParentAsyncMessageSender(ImageBridgeParent* aImageBridge,
-                                                   InfallibleTArray<OpDestroy>* aToDestroy = nullptr)
-    : mImageBridge(aImageBridge)
-    , mToDestroy(aToDestroy) {}
+  explicit AutoImageBridgeParentAsyncMessageSender(ImageBridgeParent* aImageBridge)
+    : mImageBridge(aImageBridge) {}
 
   ~AutoImageBridgeParentAsyncMessageSender()
   {
     mImageBridge->SendPendingAsyncMessages();
-    if (mToDestroy) {
-      for (const auto& op : *mToDestroy) {
-        mImageBridge->DestroyActor(op);
-      }
-    }
   }
 private:
   ImageBridgeParent* mImageBridge;
-  InfallibleTArray<OpDestroy>* mToDestroy;
 };
 
 bool
@@ -147,6 +139,10 @@ ImageBridgeParent::RecvUpdate(EditArray&& aEdits, OpDestroyArray&& aToDestroy,
     if (!ReceiveCompositableUpdate(aEdits[i], replyv)) {
       return false;
     }
+  }
+
+  for (const auto& op : aToDestroy) {
+    DestroyActor(op);
   }
 
   aReply->SetCapacity(replyv.size());
