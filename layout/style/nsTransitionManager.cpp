@@ -488,13 +488,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     EffectCompositor::UpdateCascadeResults(aElement, pseudoType,
                                            newStyleContext);
 
-    // Set the style rule refresh time to null so that EnsureStyleRuleFor
-    // creates a new style rule if we started *or* stopped transitions.
-    collection->mStyleRuleRefreshTime = TimeStamp();
     collection->UpdateCheckGeneration(mPresContext);
     collection->mStyleChanging = true;
-    TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-    collection->EnsureStyleRuleFor(now);
+    collection->EnsureStyleRuleFor();
   }
 
   // We want to replace the new style context with the after-change style.

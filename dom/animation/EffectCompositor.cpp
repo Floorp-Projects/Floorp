@@ -227,6 +227,19 @@ EffectCompositor::GetElementToRestyle(dom::Element* aElement,
   return pseudoFrame->GetContent()->AsElement();
 }
 
+bool
+EffectCompositor::HasThrottledAnimations(Element* aElement,
+                                         nsCSSPseudoElements::Type aPseudoType,
+                                         CascadeLevel aCascadeLevel) const
+{
+  auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
+  PseudoElementHashKey key = { aElement, aPseudoType };
+
+  bool hasPendingRestyle = false;
+  return elementsToRestyle.Get(key, &hasPendingRestyle) &&
+         !hasPendingRestyle;
+}
+
 /* static */ bool
 EffectCompositor::HasAnimationsForCompositor(const nsIFrame* aFrame,
                                              nsCSSProperty aProperty)

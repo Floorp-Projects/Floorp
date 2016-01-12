@@ -86,7 +86,7 @@ public:
   }
 
   // Requests a standard restyle on each managed AnimationCollection that has
-  // an out-of-date mStyleRuleRefreshTime.
+  // an out-of-date animation rule.
   void FlushAnimations();
 
   nsIStyleRule* GetAnimationRule(dom::Element* aElement,
@@ -171,7 +171,7 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
 
   void Tick();
 
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
+  void EnsureStyleRuleFor();
 
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
 
@@ -252,9 +252,6 @@ public:
   uint64_t mCheckGeneration;
   // Update mCheckGeneration to RestyleManager's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
-
-  // The refresh time associated with the animation rule on the EffectSet.
-  TimeStamp mStyleRuleRefreshTime;
 
   // False when we know that our current animation rule is valid
   // indefinitely into the future (because all of our animations are
