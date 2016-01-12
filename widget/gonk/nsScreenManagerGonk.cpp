@@ -621,6 +621,10 @@ nsScreenManagerGonk::Initialize()
 void
 nsScreenManagerGonk::DisplayEnabled(bool aEnabled)
 {
+    if (mCompositorVsyncScheduler) {
+        mCompositorVsyncScheduler->SetDisplay(aEnabled);
+    }
+
     VsyncControl(aEnabled);
     NS_DispatchToMainThread(aEnabled ? mScreenOnEvent : mScreenOffEvent);
 }
@@ -852,4 +856,14 @@ nsScreenManagerGonk::RemoveScreen(GonkDisplay::DisplayType aDisplayType)
       NotifyDisplayChange(screenId, false);
     }
     return NS_OK;
+}
+
+void
+nsScreenManagerGonk::SetCompositorVsyncScheduler(mozilla::layers::CompositorVsyncScheduler *aObserver)
+{
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // We assume on b2g that there is only 1 CompositorParent
+    MOZ_ASSERT(mCompositorVsyncScheduler == nullptr);
+    mCompositorVsyncScheduler = aObserver;
 }
