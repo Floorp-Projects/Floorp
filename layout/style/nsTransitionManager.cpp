@@ -489,7 +489,6 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
                                            newStyleContext);
 
     collection->UpdateCheckGeneration(mPresContext);
-    collection->mStyleChanging = true;
     collection->EnsureStyleRuleFor();
   }
 
