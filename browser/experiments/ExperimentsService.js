@@ -19,7 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
 
 const PREF_EXPERIMENTS_ENABLED  = "experiments.enabled";
 const PREF_ACTIVE_EXPERIMENT    = "experiments.activeExperiment"; // whether we have an active experiment
-const PREF_HEALTHREPORT_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_TELEMETRY_ENABLED    = "toolkit.telemetry.enabled";
 const PREF_TELEMETRY_UNIFIED    = "toolkit.telemetry.unified";
 const DELAY_INIT_MS             = 30 * 1000;
@@ -38,8 +37,7 @@ XPCOMUtils.defineLazyGetter(
     // We can enable experiments if either unified Telemetry or FHR is on, and the user
     // has opted into Telemetry.
     return gPrefs.get(PREF_EXPERIMENTS_ENABLED, false) &&
-           (gPrefs.get(PREF_HEALTHREPORT_ENABLED, false) || IS_UNIFIED_TELEMETRY) &&
-           gPrefs.get(PREF_TELEMETRY_ENABLED, false);
+           IS_UNIFIED_TELEMETRY && gPrefs.get(PREF_TELEMETRY_ENABLED, false);
   });
 
 XPCOMUtils.defineLazyGetter(

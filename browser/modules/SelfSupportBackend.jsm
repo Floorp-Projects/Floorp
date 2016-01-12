@@ -23,8 +23,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "HiddenFrame",
 const PREF_ENABLED = "browser.selfsupport.enabled";
 // Url to open in the Self Support browser, in the urlFormatter service format.
 const PREF_URL = "browser.selfsupport.url";
-// FHR status.
-const PREF_FHR_ENABLED = "datareporting.healthreport.service.enabled";
 // Unified Telemetry status.
 const PREF_TELEMETRY_UNIFIED = "toolkit.telemetry.unified";
 // UITour status.
@@ -84,8 +82,8 @@ var SelfSupportBackendInternal = {
 
     Preferences.observe(PREF_BRANCH_LOG, this._configureLogging, this);
 
-    // Only allow to use SelfSupport if either FHR or Unified Telemetry is enabled.
-    let reportingEnabled = Preferences.get(PREF_FHR_ENABLED, false) || IS_UNIFIED_TELEMETRY;
+    // Only allow to use SelfSupport if Unified Telemetry is enabled.
+    let reportingEnabled = IS_UNIFIED_TELEMETRY;
     if (!reportingEnabled) {
       this._log.config("init - Disabling SelfSupport because FHR and Unified Telemetry are disabled.");
       return;

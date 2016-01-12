@@ -21,26 +21,6 @@ interface MozSelfSupport
   attribute boolean healthReportDataSubmissionEnabled;
 
   /**
-   * Retrieves the FHR payload object, which is of the form:
-   *
-   * {
-   *   version: Number,
-   *   clientID: String,
-   *   clientIDVersion: Number,
-   *   thisPingDate: String,
-   *   geckoAppInfo: Object,
-   *   data: Object
-   * }
-   *
-   * Refer to the getJSONPayload function in healthreporter.jsm for more
-   * information.
-   *
-   * @return Promise<Object>
-   *         Resolved when the FHR payload data has been collected.
-   */
-  Promise<object> getHealthReportPayload();
-
-  /**
    * Retrieve a list of the archived Telemetry pings.
    * This contains objects with ping info, which are of the form:
    * {

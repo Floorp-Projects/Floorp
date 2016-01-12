@@ -1,11 +1,11 @@
 .. _healthreport:
 
-=====================
-Firefox Health Report
-=====================
+================================
+Firefox Health Report (Obsolete)
+================================
 
-``/services/healthreport`` contains the implementation of the
-``Firefox Health Report`` (FHR).
+**Firefox Health Report (FHR) is obsolete and no longer ships with Firefox.
+This documentation will live here for a few more cycles.**
 
 Firefox Health Report is a background service that collects application
 metrics and periodically submits them to a central server. The core

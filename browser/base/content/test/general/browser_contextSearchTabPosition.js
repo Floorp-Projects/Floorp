@@ -2,15 +2,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-function test() {
-  waitForExplicitFinish();
+add_task(function* test() {
+
+  // Will need to be changed if Google isn't the default search engine.
+  // Note: geoSpecificDefaults are disabled for mochitests, so this is the
+  // non-US en-US default.
+  let histogramKey = "google.contextmenu";
+  let numSearchesBefore = 0;
+  try {
+    let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+    if (histogramKey in hs) {
+      numSearchesBefore = hs[histogramKey].sum;
+    }
+  } catch (ex) {
+    // No searches performed yet, not a problem, |numSearchesBefore| is 0.
+  }
+
+  let tabs = [];
+  let tabsLoadedDeferred = Promise.defer();
 
   function tabAdded(event) {
     let tab = event.target;
     tabs.push(tab);
-  }
 
-  let tabs = [];
+    // We wait for the blank tab and the two context searches tabs to open.
+    if (tabs.length == 3) {
+      tabsLoadedDeferred.resolve();
+    }
+  }
 
   let container = gBrowser.tabContainer;
   container.addEventListener("TabOpen", tabAdded, false);
@@ -19,6 +38,9 @@ function test() {
   BrowserSearch.loadSearchFromContext("mozilla");
   BrowserSearch.loadSearchFromContext("firefox");
 
+  // Wait for all the tabs to open.
+  yield tabsLoadedDeferred.promise;
+
   is(tabs[0], gBrowser.tabs[3], "blank tab has been pushed to the end");
   is(tabs[1], gBrowser.tabs[1], "first search tab opens next to the current tab");
   is(tabs[2], gBrowser.tabs[2], "second search tab opens next to the first search tab");
@@ -26,45 +48,9 @@ function test() {
   container.removeEventListener("TabOpen", tabAdded, false);
   tabs.forEach(gBrowser.removeTab, gBrowser);
 
-  try {
-    let cm = Components.classes["@mozilla.org/categorymanager;1"]
-                       .getService(Components.interfaces.nsICategoryManager);
-    cm.getCategoryEntry("healthreport-js-provider-default", "SearchesProvider");
-  } catch (ex) {
-    // Health Report disabled, or no SearchesProvider.
-    finish();
-    return;
-  }
-
-  let reporter = Components.classes["@mozilla.org/datareporting/service;1"]
-                                   .getService()
-                                   .wrappedJSObject
-                                   .healthReporter;
-
-  // reporter should always be available in automation.
-  ok(reporter, "Health Reporter available.");
-  reporter.onInit().then(function onInit() {
-    let provider = reporter.getProvider("org.mozilla.searches");
-    ok(provider, "Searches provider is available.");
-
-    let m = provider.getMeasurement("counts", 3);
-    m.getValues().then(function onValues(data) {
-      let now = new Date();
-      ok(data.days.hasDay(now), "Have data for today.");
-      let day = data.days.getDay(now);
-
-      // Will need to be changed if Google isn't the default search engine.
-      // Note: geoSpecificDefaults are disabled for mochitests, so this is the
-      // non-US en-US default.
-      let defaultProviderID = "google";
-      let field = defaultProviderID + ".contextmenu";
-      ok(day.has(field), "Have search recorded for context menu.");
-
-      // If any other mochitests perform a context menu search, this will fail.
-      // The solution will be to look up count at test start and ensure it is
-      // incremented by two.
-      is(day.get(field), 2, "2 searches recorded in FHR.");
-      finish();
-    });
-  });
-}
+  // Make sure that the context searches are correctly recorded.
+  let hs = Services.telemetry.getKeyedHistogramById("SEARCH_COUNTS").snapshot();
+  Assert.ok(histogramKey in hs, "The histogram must contain the correct key");
+  Assert.equal(hs[histogramKey].sum, numSearchesBefore + 2,
+               "The histogram must contain the correct search count");
+});

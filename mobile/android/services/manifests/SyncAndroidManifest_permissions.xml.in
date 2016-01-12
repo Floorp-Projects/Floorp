@@ -29,3 +29,5 @@
     <permission
         android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE"
         android:protectionLevel="signature"/>
+
+    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />
