@@ -135,12 +135,18 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
                                  RestyleType aRestyleType,
                                  CascadeLevel aCascadeLevel)
 {
+  if (!mPresContext) {
+    // Pres context will be null after the effect compositor is disconnected.
+    return;
+  }
+
   auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
   PseudoElementHashKey key = { aElement, aPseudoType };
 
   if (aRestyleType == RestyleType::Throttled &&
       !elementsToRestyle.Contains(key)) {
     elementsToRestyle.Put(key, false);
+    mPresContext->Document()->SetNeedStyleFlush();
   } else {
     elementsToRestyle.Put(key, true);
   }

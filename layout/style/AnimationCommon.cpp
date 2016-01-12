@@ -508,14 +508,7 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
   if (aRestyleType >= EffectCompositor::RestyleType::Standard) {
     mHasPendingAnimationRestyle = true;
     PostRestyleForAnimation(presContext);
-    return;
   }
-
-  // Steps for RestyleType::Throttled:
-
-  MOZ_ASSERT(aRestyleType == EffectCompositor::RestyleType::Throttled,
-             "Should have already handled all non-throttled restyles");
-  presContext->Document()->SetNeedStyleFlush();
 }
 
 void
