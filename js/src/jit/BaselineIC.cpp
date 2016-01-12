@@ -26,7 +26,7 @@
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
 #include "js/Conversions.h"
-#include "js/TraceableVector.h"
+#include "js/GCVector.h"
 #include "vm/Opcodes.h"
 #include "vm/TypedArrayCommon.h"
 
@@ -5700,6 +5700,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
     }
 
     if (JitSupportsSimd()) {
+        RootedGlobalObject global(cx, cx->global());
 #define ADD_INT32X4_SIMD_OP_NAME_(OP) || native == js::simd_int32x4_##OP
 #define ADD_BOOL32X4_SIMD_OP_NAME_(OP) || native == js::simd_bool32x4_##OP
 #define ADD_FLOAT32X4_SIMD_OP_NAME_(OP) || native == js::simd_float32x4_##OP
@@ -5712,7 +5713,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
             ADD_INT32X4_SIMD_OP_NAME_(fromFloat32x4)
             ADD_INT32X4_SIMD_OP_NAME_(fromFloat32x4Bits))
         {
-            Rooted<SimdTypeDescr*> descr(cx, cx->global()->getOrCreateSimdTypeDescr<Int32x4>(cx));
+            Rooted<SimdTypeDescr*> descr(cx, GlobalObject::getOrCreateSimdTypeDescr<Int32x4>(cx, global));
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
             return !!res;
         }
@@ -5723,7 +5724,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
             FOREACH_COMP_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
             FOREACH_COMP_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_))
         {
-            Rooted<SimdTypeDescr*> descr(cx, cx->global()->getOrCreateSimdTypeDescr<Bool32x4>(cx));
+            Rooted<SimdTypeDescr*> descr(cx, GlobalObject::getOrCreateSimdTypeDescr<Bool32x4>(cx, global));
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
             return !!res;
         }
@@ -5735,7 +5736,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
             ADD_FLOAT32X4_SIMD_OP_NAME_(fromInt32x4Bits)
             ION_COMMONX4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_))
         {
-            Rooted<SimdTypeDescr*> descr(cx, cx->global()->getOrCreateSimdTypeDescr<Float32x4>(cx));
+            Rooted<SimdTypeDescr*> descr(cx, GlobalObject::getOrCreateSimdTypeDescr<Float32x4>(cx, global));
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
             return !!res;
         }

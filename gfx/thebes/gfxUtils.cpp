@@ -391,12 +391,6 @@ gfxUtils::ConvertBGRAtoRGBA(uint8_t* aData, uint32_t aLength)
     }
 }
 
-static bool
-IsSafeImageTransformComponent(gfxFloat aValue)
-{
-  return aValue >= -32768 && aValue <= 32767;
-}
-
 #if !defined(MOZ_GFX_OPTIMIZE_MOBILE)
 /**
  * This returns the fastest operator to use for solid surfaces which have no
@@ -467,83 +461,6 @@ CreateSamplingRestrictedDrawable(gfxDrawable* aDrawable,
     return drawable.forget();
 }
 #endif // !MOZ_GFX_OPTIMIZE_MOBILE
-
-// working around cairo/pixman bug (bug 364968)
-// Our device-space-to-image-space transform may not be acceptable to pixman.
-struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
-{
-    AutoCairoPixmanBugWorkaround(gfxContext*      aContext,
-                                 const gfxMatrix& aDeviceSpaceToImageSpace,
-                                 const gfxRect&   aFill,
-                                 const gfxASurface* aSurface)
-     : mContext(aContext), mSucceeded(true), mPushedGroup(false)
-    {
-        // Quartz's limits for matrix are much larger than pixman
-        if (!aSurface || aSurface->GetType() == gfxSurfaceType::Quartz)
-            return;
-
-        if (!IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._11) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._21) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._12) ||
-            !IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._22)) {
-            NS_WARNING("Scaling up too much, bailing out");
-            mSucceeded = false;
-            return;
-        }
-
-        if (IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._31) &&
-            IsSafeImageTransformComponent(aDeviceSpaceToImageSpace._32))
-            return;
-
-        // We'll push a group, which will hopefully reduce our transform's
-        // translation so it's in bounds.
-        gfxMatrix currentMatrix = mContext->CurrentMatrix();
-        mContext->Save();
-
-        // Clip the rounded-out-to-device-pixels bounds of the
-        // transformed fill area. This is the area for the group we
-        // want to push.
-        mContext->SetMatrix(gfxMatrix());
-        gfxRect bounds = currentMatrix.TransformBounds(aFill);
-        bounds.RoundOut();
-        mContext->Clip(bounds);
-        mContext->SetMatrix(currentMatrix);
-        mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA);
-        mContext->SetOp(CompositionOp::OP_OVER);
-
-        mPushedGroup = true;
-    }
-
-    ~AutoCairoPixmanBugWorkaround()
-    {
-        if (mPushedGroup) {
-            mContext->PopGroupAndBlend();
-            mContext->Restore();
-        }
-    }
-
-    bool PushedGroup() { return mPushedGroup; }
-    bool Succeeded() { return mSucceeded; }
-
-private:
-    gfxContext* mContext;
-    bool mSucceeded;
-    bool mPushedGroup;
-};
-
-static gfxMatrix
-DeviceToImageTransform(gfxContext* aContext)
-{
-    gfxFloat deviceX, deviceY;
-    RefPtr<gfxASurface> currentTarget =
-        aContext->CurrentSurface(&deviceX, &deviceY);
-    gfxMatrix deviceToUser = aContext->CurrentMatrix();
-    if (!deviceToUser.Invert()) {
-        return gfxMatrix(0, 0, 0, 0, 0, 0); // singular
-    }
-    deviceToUser.Translate(-gfxPoint(-deviceX, -deviceY));
-    return deviceToUser;
-}
 
 /* These heuristics are based on Source/WebCore/platform/graphics/skia/ImageSkia.cpp:computeResamplingMode() */
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
@@ -724,14 +641,6 @@ gfxUtils::DrawPixelSnapped(gfxContext*         aContext,
     gfxRect region(aRegion.Rect());
     ExtendMode extendMode = aRegion.GetExtendMode();
 
-    RefPtr<gfxASurface> currentTarget = aContext->CurrentSurface();
-    gfxMatrix deviceSpaceToImageSpace = DeviceToImageTransform(aContext);
-
-    AutoCairoPixmanBugWorkaround workaround(aContext, deviceSpaceToImageSpace,
-                                            region, currentTarget);
-    if (!workaround.Succeeded())
-        return;
-
     RefPtr<gfxDrawable> drawable = aDrawable;
 
     aFilter = ReduceResamplingFilter(aFilter,
@@ -801,8 +710,8 @@ gfxUtils::ImageFormatToDepth(gfxImageFormat aFormat)
     return 0;
 }
 
-static void
-PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
+/*static*/ void
+gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
 {
   aContext->NewPath();
   nsIntRegionRectIterator iter(aRegion);
@@ -810,18 +719,18 @@ PathFromRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
   while ((r = iter.Next()) != nullptr) {
     aContext->Rectangle(gfxRect(r->x, r->y, r->width, r->height));
   }
-}
-
-static void
-ClipToRegionInternal(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  PathFromRegionInternal(aContext, aRegion);
   aContext->Clip();
 }
 
-static already_AddRefed<Path>
-PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
+/*static*/ void
+gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
 {
+  if (!aRegion.IsComplex()) {
+    IntRect rect = aRegion.GetBounds();
+    aTarget->PushClipRect(Rect(rect.x, rect.y, rect.width, rect.height));
+    return;
+  }
+
   RefPtr<PathBuilder> pb = aTarget->CreatePathBuilder();
   nsIntRegionRectIterator iter(aRegion);
 
@@ -833,32 +742,9 @@ PathFromRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
     pb->LineTo(Point(r->x, r->YMost()));
     pb->Close();
   }
-  return pb->Finish();
-}
+  RefPtr<Path> path = pb->Finish();
 
-static void
-ClipToRegionInternal(DrawTarget* aTarget, const nsIntRegion& aRegion)
-{
-  if (!aRegion.IsComplex()) {
-    IntRect rect = aRegion.GetBounds();
-    aTarget->PushClipRect(Rect(rect.x, rect.y, rect.width, rect.height));
-    return;
-  }
-
-  RefPtr<Path> path = PathFromRegionInternal(aTarget, aRegion);
   aTarget->PushClip(path);
-}
-
-/*static*/ void
-gfxUtils::ClipToRegion(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  ClipToRegionInternal(aContext, aRegion);
-}
-
-/*static*/ void
-gfxUtils::ClipToRegion(DrawTarget* aTarget, const nsIntRegion& aRegion)
-{
-  ClipToRegionInternal(aTarget, aRegion);
 }
 
 /*static*/ gfxFloat
@@ -901,13 +787,6 @@ gfxUtils::ClampToScaleFactor(gfxFloat aVal)
   }
 
   return scale;
-}
-
-
-/*static*/ void
-gfxUtils::PathFromRegion(gfxContext* aContext, const nsIntRegion& aRegion)
-{
-  PathFromRegionInternal(aContext, aRegion);
 }
 
 gfxMatrix

@@ -7,6 +7,7 @@
 
 #include "gc/GCInternals.h"
 #include "gc/Zone.h"
+#include "js/GCVector.h"
 
 #include "jsapi-tests/tests.h"
 
@@ -81,7 +82,7 @@ BEGIN_TEST(testGCUID)
 
     // Allocate a few arenas worth of objects to ensure we get some compaction.
     const static size_t N = 2049;
-    using ObjectVector = js::TraceableVector<JSObject*>;
+    using ObjectVector = js::GCVector<JSObject*>;
     JS::Rooted<ObjectVector> vec(cx, ObjectVector(cx));
     for (size_t i = 0; i < N; ++i) {
         obj = JS_NewPlainObject(cx);

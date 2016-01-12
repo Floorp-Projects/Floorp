@@ -6,7 +6,6 @@
 
 SOURCES += [
     'constants.c',
-    'deinterlace.asm',
     'h264_intrapred.asm',
     'h264_intrapred_10bit.asm',
     'h264_intrapred_init.c',
@@ -16,11 +15,17 @@ SOURCES += [
     'vp8dsp_init.c',
     'vp8dsp_loopfilter.asm',
     'vp9dsp_init.c',
+    'vp9dsp_init_10bpp.c',
+    'vp9dsp_init_12bpp.c',
+    'vp9dsp_init_16bpp.c',
     'vp9intrapred.asm',
+    'vp9intrapred_16bpp.asm',
     'vp9itxfm.asm',
+    'vp9itxfm_16bpp.asm',
     'vp9lpf.asm',
-    'vp9mc.asm'
-
+    'vp9lpf_16bpp.asm',
+    'vp9mc.asm',
+    'vp9mc_16bpp.asm',
 ]
 
 FINAL_LIBRARY = 'mozavcodec'

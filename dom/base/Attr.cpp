@@ -28,9 +28,8 @@
 #include "nsWrapperCacheInlines.h"
 
 nsIAttribute::nsIAttribute(nsDOMAttributeMap* aAttrMap,
-                           already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo,
-                           bool aNsAware)
-: nsINode(aNodeInfo), mAttrMap(aAttrMap), mNsAware(aNsAware)
+                           already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
+: nsINode(aNodeInfo), mAttrMap(aAttrMap)
 {
 }
 
@@ -46,8 +45,8 @@ bool Attr::sInitialized;
 
 Attr::Attr(nsDOMAttributeMap *aAttrMap,
            already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-           const nsAString  &aValue, bool aNsAware)
-  : nsIAttribute(aAttrMap, aNodeInfo, aNsAware), mValue(aValue)
+           const nsAString  &aValue)
+  : nsIAttribute(aAttrMap, aNodeInfo), mValue(aValue)
 {
   MOZ_ASSERT(mNodeInfo, "We must get a nodeinfo here!");
   MOZ_ASSERT(mNodeInfo->NodeType() == nsIDOMNode::ATTRIBUTE_NODE,
@@ -262,7 +261,7 @@ Attr::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
   const_cast<Attr*>(this)->GetValue(value);
 
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
-  *aResult = new Attr(nullptr, ni.forget(), value, mNsAware);
+  *aResult = new Attr(nullptr, ni.forget(), value);
   if (!*aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

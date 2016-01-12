@@ -1668,7 +1668,7 @@ class JSScript : public js::gc::TenuredCell
   public:
 
     /* Return whether this script was compiled for 'eval' */
-    bool isForEval() { return isCachedEval() || isActiveEval(); }
+    bool isForEval() const { return isCachedEval() || isActiveEval(); }
 
     /*
      * Return whether this script is a top-level script.

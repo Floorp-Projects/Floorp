@@ -7,7 +7,11 @@
 #ifndef MOZ_FFVPX_CONFIG_H
 #define MOZ_FFVPX_CONFIG_H
 #if defined(XP_WIN)
-#include "config_win.h"
+#if defined(HAVE_64BIT_BUILD)
+#include "config_win64.h"
+#else
+#include "config_win32.h"
+#endif
 #elif defined(XP_DARWIN)
 #if defined(HAVE_64BIT_BUILD)
 #include "config_darwin64.h"

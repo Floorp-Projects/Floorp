@@ -46,12 +46,23 @@
  * all.
  */
 #define FF_CODEC_CAP_INIT_CLEANUP           (1 << 1)
-
+/**
+ * Decoders marked with FF_CODEC_CAP_SETS_PKT_DTS want to set
+ * AVFrame.pkt_dts manually. If the flag is set, utils.c won't overwrite
+ * this field. If it's unset, utils.c tries to guess the pkt_dts field
+ * from the input AVPacket.
+ */
+#define FF_CODEC_CAP_SETS_PKT_DTS           (1 << 2)
+/**
+ * The decoder extracts and fills its parameters even if the frame is
+ * skipped due to the skip_frame setting.
+ */
+#define FF_CODEC_CAP_SKIP_FRAME_FILL_PARAM  (1 << 3)
 
 #ifdef TRACE
 #   define ff_tlog(ctx, ...) av_log(ctx, AV_LOG_TRACE, __VA_ARGS__)
 #else
-#   define ff_tlog(ctx, ...) while(0)
+#   define ff_tlog(ctx, ...) do { } while(0)
 #endif
 
 
@@ -114,14 +125,6 @@ typedef struct AVCodecInternal {
      */
     int allocate_progress;
 
-#if FF_API_OLD_ENCODE_AUDIO
-    /**
-     * Internal sample count used by avcodec_encode_audio() to fabricate pts.
-     * Can be removed along with avcodec_encode_audio().
-     */
-    int64_t sample_count;
-#endif
-
     /**
      * An audio frame with less than required samples has been submitted and
      * padded with silence. Reject all subsequent frames.
@@ -180,11 +183,11 @@ unsigned int avpriv_toupper4(unsigned int x);
 int ff_init_buffer_info(AVCodecContext *s, AVFrame *frame);
 
 
-void avpriv_color_frame(AVFrame *frame, const int color[4]);
+void ff_color_frame(AVFrame *frame, const int color[4]);
 
 extern volatile int ff_avcodec_locked;
 int ff_lock_avcodec(AVCodecContext *log_ctx, const AVCodec *codec);
-int ff_unlock_avcodec(void);
+int ff_unlock_avcodec(const AVCodec *codec);
 
 int avpriv_lock_avformat(void);
 int avpriv_unlock_avformat(void);
@@ -236,6 +239,25 @@ static av_always_inline int64_t ff_samples_to_time_base(AVCodecContext *avctx,
         return AV_NOPTS_VALUE;
     return av_rescale_q(samples, (AVRational){ 1, avctx->sample_rate },
                         avctx->time_base);
+}
+
+/**
+ * 2^(x) for integer x
+ * @return correctly rounded float
+ */
+static av_always_inline float ff_exp2fi(int x) {
+    /* Normal range */
+    if (-126 <= x && x <= 128)
+        return av_int2float(x+127 << 23);
+    /* Too large */
+    else if (x > 128)
+        return INFINITY;
+    /* Subnormal numbers */
+    else if (x > -150)
+        return av_int2float(1 << (x+149));
+    /* Negligibly small */
+    else
+        return 0;
 }
 
 /**
@@ -300,6 +322,11 @@ int ff_get_format(AVCodecContext *avctx, const enum AVPixelFormat *fmt);
  * Set various frame properties from the codec context / packet data.
  */
 int ff_decode_frame_props(AVCodecContext *avctx, AVFrame *frame);
+
+/**
+ * Add a CPB properties side data to an encoding context.
+ */
+AVCPBProperties *ff_add_cpb_side_data(AVCodecContext *avctx);
 
 int ff_side_data_set_encoder_stats(AVPacket *pkt, int quality, int64_t *error, int error_count, int pict_type);
 

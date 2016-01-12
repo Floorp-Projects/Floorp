@@ -11,7 +11,7 @@
 
 #include "mozilla/MemoryReporting.h"
 
-#include "js/TraceableVector.h"
+#include "js/GCVector.h"
 #include "js/Vector.h"
 #include "vm/Runtime.h"
 
@@ -165,8 +165,10 @@ class ExclusiveContext : public ContextFriendFields,
     }
 
     void* onOutOfMemory(js::AllocFunction allocFunc, size_t nbytes, void* reallocPtr = nullptr) {
-        if (!isJSContext())
+        if (!isJSContext()) {
+            addPendingOutOfMemory();
             return nullptr;
+        }
         return runtime_->onOutOfMemory(allocFunc, nbytes, reallocPtr, asJSContext());
     }
 
@@ -280,8 +282,9 @@ class ExclusiveContext : public ContextFriendFields,
     }
 
     // Methods specific to any HelperThread for the context.
-    frontend::CompileError& addPendingCompileError();
+    bool addPendingCompileError(frontend::CompileError** err);
     void addPendingOverRecursed();
+    void addPendingOutOfMemory();
 };
 
 } /* namespace js */
@@ -668,11 +671,6 @@ CheckForInterrupt(JSContext* cx)
 }
 
 /************************************************************************/
-
-typedef JS::AutoVectorRooter<PropertyName*> AutoPropertyNameVector;
-
-using ShapeVector = js::TraceableVector<Shape*>;
-using StringVector = js::TraceableVector<JSString*>;
 
 /* AutoArrayRooter roots an external array of Values. */
 class MOZ_RAII AutoArrayRooter : private JS::AutoGCRooter

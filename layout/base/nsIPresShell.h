@@ -137,10 +137,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// 268f336d-efb4-41b7-b61b-ac7f3926cf68
+// 6654f67f-c5aa-4934-b611-6d8d01e6193f
 #define NS_IPRESSHELL_IID \
-{ 0x268f336d, 0xefb4, 0x41b7, \
-  { 0xb6, 0x1b, 0xac, 0x7f, 0x39, 0x26, 0xcf, 0x68 } }
+{ 0x6654f67f, 0xc5aa, 0x4934, \
+  { 0xb6, 0x11, 0x6d, 0x8d, 0x01, 0xe6, 0x19, 0x3f } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1659,6 +1659,10 @@ public:
     { return mReflowScheduled || mReflowContinueTimer; }
 
   void SyncWindowProperties(nsView* aView);
+
+#ifdef ANDROID
+  virtual nsIDocument* GetTouchEventTargetDocument() = 0;
+#endif
 
 protected:
   friend class nsRefreshDriver;

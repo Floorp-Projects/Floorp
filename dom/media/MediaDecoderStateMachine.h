@@ -170,13 +170,6 @@ public:
 
   RefPtr<ShutdownPromise> BeginShutdown();
 
-  void DispatchStartBuffering()
-  {
-    nsCOMPtr<nsIRunnable> runnable =
-      NS_NewRunnableMethod(this, &MediaDecoderStateMachine::StartBuffering);
-    OwnerThread()->Dispatch(runnable.forget());
-  }
-
   // Notifies the state machine that should minimize the number of samples
   // decoded we preroll, until playback starts. The first time playback starts
   // the state machine is free to return to prerolling normally. Note
