@@ -26,14 +26,6 @@
 
 #include <stdint.h>
 
-#if HAVE_PTHREADS
-#include <pthread.h>
-#elif HAVE_W32THREADS
-#include "compat/w32pthreads.h"
-#elif HAVE_OS2THREADS
-#include "compat/os2threads.h"
-#endif
-
 #include "avcodec.h"
 #include "internal.h"
 #include "pthread_internal.h"
@@ -49,6 +41,7 @@
 #include "libavutil/log.h"
 #include "libavutil/mem.h"
 #include "libavutil/opt.h"
+#include "libavutil/thread.h"
 
 /**
  * Context used by codec threads and stored in their AVCodecInternal thread_ctx.
@@ -122,13 +115,8 @@ typedef struct FrameThreadContext {
     int die;                       ///< Set when threads should exit.
 } FrameThreadContext;
 
-#if FF_API_GET_BUFFER
-#define THREAD_SAFE_CALLBACKS(avctx) \
-((avctx)->thread_safe_callbacks || (!(avctx)->get_buffer && (avctx)->get_buffer2 == avcodec_default_get_buffer2))
-#else
 #define THREAD_SAFE_CALLBACKS(avctx) \
 ((avctx)->thread_safe_callbacks || (avctx)->get_buffer2 == avcodec_default_get_buffer2)
-#endif
 
 /**
  * Codec worker thread.
@@ -151,10 +139,8 @@ static attribute_align_arg void *frame_worker_thread(void *arg)
 
         if (fctx->die) break;
 
-FF_DISABLE_DEPRECATION_WARNINGS
         if (!codec->update_thread_context && THREAD_SAFE_CALLBACKS(avctx))
             ff_thread_finish_setup(avctx);
-FF_ENABLE_DEPRECATION_WARNINGS
 
         av_frame_unref(p->frame);
         p->got_frame = 0;
@@ -194,6 +180,7 @@ FF_ENABLE_DEPRECATION_WARNINGS
  * @param dst The destination context.
  * @param src The source context.
  * @param for_user 0 if the destination is a codec thread, 1 if the destination is the user's thread
+ * @return 0 on success, negative error code on failure
  */
 static int update_context_from_thread(AVCodecContext *dst, AVCodecContext *src, int for_user)
 {
@@ -271,12 +258,6 @@ static int update_context_from_user(AVCodecContext *dst, AVCodecContext *src)
 
     dst->draw_horiz_band= src->draw_horiz_band;
     dst->get_buffer2    = src->get_buffer2;
-#if FF_API_GET_BUFFER
-FF_DISABLE_DEPRECATION_WARNINGS
-    dst->get_buffer     = src->get_buffer;
-    dst->release_buffer = src->release_buffer;
-FF_ENABLE_DEPRECATION_WARNINGS
-#endif
 
     dst->opaque   = src->opaque;
     dst->debug    = src->debug;
@@ -369,14 +350,9 @@ static int submit_packet(PerThreadContext *p, AVPacket *avpkt)
      * and it calls back to the client here.
      */
 
-FF_DISABLE_DEPRECATION_WARNINGS
     if (!p->avctx->thread_safe_callbacks && (
          p->avctx->get_format != avcodec_default_get_format ||
-#if FF_API_GET_BUFFER
-         p->avctx->get_buffer ||
-#endif
          p->avctx->get_buffer2 != avcodec_default_get_buffer2)) {
-FF_ENABLE_DEPRECATION_WARNINGS
         while (p->state != STATE_SETUP_FINISHED && p->state != STATE_INPUT_READY) {
             int call_done = 1;
             pthread_mutex_lock(&p->progress_mutex);
@@ -773,10 +749,8 @@ void ff_thread_flush(AVCodecContext *avctx)
 int ff_thread_can_start_frame(AVCodecContext *avctx)
 {
     PerThreadContext *p = avctx->internal->thread_ctx;
-FF_DISABLE_DEPRECATION_WARNINGS
     if ((avctx->active_thread_type&FF_THREAD_FRAME) && p->state != STATE_SETTING_UP &&
         (avctx->codec->update_thread_context || !THREAD_SAFE_CALLBACKS(avctx))) {
-FF_ENABLE_DEPRECATION_WARNINGS
         return 0;
     }
     return 1;
@@ -794,10 +768,8 @@ static int thread_get_buffer_internal(AVCodecContext *avctx, ThreadFrame *f, int
     if (!(avctx->active_thread_type & FF_THREAD_FRAME))
         return ff_get_buffer(avctx, f->f, flags);
 
-FF_DISABLE_DEPRECATION_WARNINGS
     if (p->state != STATE_SETTING_UP &&
         (avctx->codec->update_thread_context || !THREAD_SAFE_CALLBACKS(avctx))) {
-FF_ENABLE_DEPRECATION_WARNINGS
         av_log(avctx, AV_LOG_ERROR, "get_buffer() cannot be called after ff_thread_finish_setup()\n");
         return -1;
     }
@@ -814,13 +786,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
     }
 
     pthread_mutex_lock(&p->parent->buffer_mutex);
-FF_DISABLE_DEPRECATION_WARNINGS
-    if (avctx->thread_safe_callbacks || (
-#if FF_API_GET_BUFFER
-        !avctx->get_buffer &&
-#endif
-        avctx->get_buffer2 == avcodec_default_get_buffer2)) {
-FF_ENABLE_DEPRECATION_WARNINGS
+    if (avctx->thread_safe_callbacks ||
+        avctx->get_buffer2 == avcodec_default_get_buffer2) {
         err = ff_get_buffer(avctx, f->f, flags);
     } else {
         pthread_mutex_lock(&p->progress_mutex);
@@ -837,10 +804,8 @@ FF_ENABLE_DEPRECATION_WARNINGS
         pthread_mutex_unlock(&p->progress_mutex);
 
     }
-FF_DISABLE_DEPRECATION_WARNINGS
     if (!THREAD_SAFE_CALLBACKS(avctx) && !avctx->codec->update_thread_context)
         ff_thread_finish_setup(avctx);
-FF_ENABLE_DEPRECATION_WARNINGS
     if (err)
         av_buffer_unref(&f->progress);
 
@@ -888,15 +853,9 @@ void ff_thread_release_buffer(AVCodecContext *avctx, ThreadFrame *f)
     PerThreadContext *p = avctx->internal->thread_ctx;
     FrameThreadContext *fctx;
     AVFrame *dst, *tmp;
-FF_DISABLE_DEPRECATION_WARNINGS
     int can_direct_free = !(avctx->active_thread_type & FF_THREAD_FRAME) ||
                           avctx->thread_safe_callbacks                   ||
-                          (
-#if FF_API_GET_BUFFER
-                           !avctx->get_buffer &&
-#endif
-                           avctx->get_buffer2 == avcodec_default_get_buffer2);
-FF_ENABLE_DEPRECATION_WARNINGS
+                          avctx->get_buffer2 == avcodec_default_get_buffer2;
 
     if (!f->f || !f->f->buf[0])
         return;

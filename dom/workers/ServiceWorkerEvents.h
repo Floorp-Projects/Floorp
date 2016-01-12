@@ -145,8 +145,9 @@ public:
   }
 
   Request*
-  GetRequest_() const
+  Request_() const
   {
+    MOZ_ASSERT(mRequest);
     return mRequest;
   }
 

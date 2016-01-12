@@ -24,7 +24,7 @@ enum SpeechSynthesisErrorCode {
   "invalid-argument",
 };
 
-[Constructor(DOMString type, optional SpeechSynthesisErrorEventInit eventInitDict),
+[Constructor(DOMString type, SpeechSynthesisErrorEventInit eventInitDict),
  Pref="media.webspeech.synth.enabled"]
 interface SpeechSynthesisErrorEvent : SpeechSynthesisEvent {
   readonly attribute SpeechSynthesisErrorCode error;

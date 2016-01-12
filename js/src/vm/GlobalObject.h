@@ -443,11 +443,18 @@ class GlobalObject : public NativeObject
     }
 
     template<class /* SimdTypeDescriptor (cf SIMD.h) */ T>
-    SimdTypeDescr* getOrCreateSimdTypeDescr(JSContext* cx) {
-        RootedObject globalSimdObject(cx, cx->global()->getOrCreateSimdGlobalObject(cx));
+    static SimdTypeDescr*
+    getOrCreateSimdTypeDescr(JSContext* cx, Handle<GlobalObject*> global) {
+        RootedObject globalSimdObject(cx, global->getOrCreateSimdGlobalObject(cx));
         if (!globalSimdObject)
             return nullptr;
-        const Value& slot = globalSimdObject->as<NativeObject>().getReservedSlot(uint32_t(T::type));
+        uint32_t typeSlotIndex(T::type);
+        if (globalSimdObject->as<NativeObject>().getReservedSlot(typeSlotIndex).isUndefined() &&
+            !GlobalObject::initSimdType(cx, global, typeSlotIndex))
+        {
+            return nullptr;
+        }
+        const Value& slot = globalSimdObject->as<NativeObject>().getReservedSlot(typeSlotIndex);
         MOZ_ASSERT(slot.isObject());
         return &slot.toObject().as<SimdTypeDescr>();
     }
@@ -703,6 +710,7 @@ class GlobalObject : public NativeObject
 
     // Implemented in builtim/SIMD.cpp
     static bool initSimdObject(JSContext* cx, Handle<GlobalObject*> global);
+    static bool initSimdType(JSContext* cx, Handle<GlobalObject*> global, uint32_t simdTypeDescrType);
 
     static bool initStandardClasses(JSContext* cx, Handle<GlobalObject*> global);
     static bool initSelfHostingBuiltins(JSContext* cx, Handle<GlobalObject*> global,

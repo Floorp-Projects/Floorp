@@ -1074,14 +1074,14 @@ GenerateThrowStub(ModuleGenerator& mg, Label* throwLabel)
 bool
 wasm::GenerateStubs(ModuleGenerator& mg, bool usesHeap)
 {
-    for (unsigned i = 0; i < mg.numDeclaredExports(); i++) {
+    for (unsigned i = 0; i < mg.numExports(); i++) {
         if (!GenerateEntry(mg, i, usesHeap))
             return false;
     }
 
     Label onThrow;
 
-    for (size_t i = 0; i < mg.numDeclaredImports(); i++) {
+    for (size_t i = 0; i < mg.numImports(); i++) {
         ProfilingOffsets interp;
         if (!GenerateInterpExitStub(mg, i, &onThrow, &interp))
             return false;
