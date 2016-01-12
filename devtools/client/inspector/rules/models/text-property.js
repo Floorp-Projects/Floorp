@@ -77,7 +77,7 @@ TextProperty.prototype = {
     // This is a bit funky.  To get the list of computed properties
     // for this text property, we'll set the property on a dummy element
     // and see what the computed style looks like.
-    let dummyElement = this.rule.elementStyle.dummyElement;
+    let dummyElement = this.rule.elementStyle.ruleView.dummyElement;
     let dummyStyle = dummyElement.style;
     dummyStyle.cssText = "";
     dummyStyle.setProperty(this.name, this.value, this.priority);
