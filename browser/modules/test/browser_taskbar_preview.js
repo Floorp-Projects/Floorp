@@ -104,3 +104,4 @@ function test() {
   function isTabSelected(idx) {
     return gBrowser.tabs[idx].selected;
   }
+}
