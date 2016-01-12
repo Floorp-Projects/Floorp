@@ -3,14 +3,16 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals gDevTools */
 
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
+const {Tools} = require("devtools/client/main");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
-const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
@@ -27,7 +29,7 @@ const {
   blurOnMultipleProperties,
   promiseWarn,
   throttle
-} = require("devtools/client/styleinspector/utils");
+} = require("devtools/client/inspector/shared/utils");
 const {
   parseDeclarations,
   parseSingleValue,
@@ -38,6 +40,16 @@ const {
 } = require("devtools/client/shared/css-parsing-utils");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+loader.lazyGetter(this, "gDevTools", () =>
+  Cu.import("resource://devtools/client/framework/gDevTools.jsm", {}).gDevTools);
+loader.lazyRequireGetter(this, "overlays",
+  "devtools/client/inspector/shared/style-inspector-overlays");
+loader.lazyRequireGetter(this, "EventEmitter",
+  "devtools/shared/event-emitter");
+loader.lazyRequireGetter(this, "StyleInspectorMenu",
+  "devtools/client/inspector/shared/style-inspector-menu");
+loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
   return Cc["@mozilla.org/widget/clipboardhelper;1"]
@@ -52,14 +64,6 @@ XPCOMUtils.defineLazyGetter(this, "_strings", function() {
 loader.lazyGetter(this, "AutocompletePopup", function() {
   return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
 });
-
-loader.lazyRequireGetter(this, "overlays",
-  "devtools/client/styleinspector/style-inspector-overlays");
-loader.lazyRequireGetter(this, "EventEmitter",
-  "devtools/shared/event-emitter");
-loader.lazyRequireGetter(this, "StyleInspectorMenu",
-  "devtools/client/styleinspector/style-inspector-menu");
-loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -247,8 +251,6 @@ function CssRuleView(inspector, document, store, pageStyle) {
 
   EventEmitter.decorate(this);
 }
-
-exports.CssRuleView = CssRuleView;
 
 CssRuleView.prototype = {
   // The element that we're inspecting.
@@ -2837,3 +2839,176 @@ function getPropertyNameAndValue(node) {
     node = node.parentNode;
   }
 }
+
+function RuleViewTool(inspector, window) {
+  this.inspector = inspector;
+  this.document = window.document;
+
+  this.view = new CssRuleView(this.inspector, this.document);
+
+  this.onLinkClicked = this.onLinkClicked.bind(this);
+  this.onSelected = this.onSelected.bind(this);
+  this.refresh = this.refresh.bind(this);
+  this.clearUserProperties = this.clearUserProperties.bind(this);
+  this.onPropertyChanged = this.onPropertyChanged.bind(this);
+  this.onViewRefreshed = this.onViewRefreshed.bind(this);
+  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onMutations = this.onMutations.bind(this);
+  this.onResized = this.onResized.bind(this);
+
+  this.view.on("ruleview-changed", this.onPropertyChanged);
+  this.view.on("ruleview-refreshed", this.onViewRefreshed);
+  this.view.on("ruleview-linked-clicked", this.onLinkClicked);
+
+  this.inspector.selection.on("detached", this.onSelected);
+  this.inspector.selection.on("new-node-front", this.onSelected);
+  this.inspector.selection.on("pseudoclass", this.refresh);
+  this.inspector.target.on("navigate", this.clearUserProperties);
+  this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
+  this.inspector.pageStyle.on("stylesheet-updated", this.refresh);
+  this.inspector.walker.on("mutations", this.onMutations);
+  this.inspector.walker.on("resize", this.onResized);
+
+  this.onSelected();
+}
+
+RuleViewTool.prototype = {
+  isSidebarActive: function() {
+    if (!this.view) {
+      return false;
+    }
+    return this.inspector.sidebar.getCurrentTabID() == "ruleview";
+  },
+
+  onSelected: function(event) {
+    // Ignore the event if the view has been destroyed, or if it's inactive.
+    // But only if the current selection isn't null. If it's been set to null,
+    // let the update go through as this is needed to empty the view on
+    // navigation.
+    if (!this.view) {
+      return;
+    }
+
+    let isInactive = !this.isSidebarActive() &&
+                     this.inspector.selection.nodeFront;
+    if (isInactive) {
+      return;
+    }
+
+    this.view.setPageStyle(this.inspector.pageStyle);
+
+    if (!this.inspector.selection.isConnected() ||
+        !this.inspector.selection.isElementNode()) {
+      this.view.selectElement(null);
+      return;
+    }
+
+    if (!event || event == "new-node-front") {
+      let done = this.inspector.updating("rule-view");
+      this.view.selectElement(this.inspector.selection.nodeFront)
+        .then(done, done);
+    }
+  },
+
+  refresh: function() {
+    if (this.isSidebarActive()) {
+      this.view.refreshPanel();
+    }
+  },
+
+  clearUserProperties: function() {
+    if (this.view && this.view.store && this.view.store.userProperties) {
+      this.view.store.userProperties.clear();
+    }
+  },
+
+  onPanelSelected: function() {
+    if (this.inspector.selection.nodeFront === this.view.viewedElement) {
+      this.refresh();
+    } else {
+      this.onSelected();
+    }
+  },
+
+  onLinkClicked: function(e, rule) {
+    let sheet = rule.parentStyleSheet;
+
+    // Chrome stylesheets are not listed in the style editor, so show
+    // these sheets in the view source window instead.
+    if (!sheet || sheet.isSystem) {
+      let href = rule.nodeHref || rule.href;
+      let toolbox = gDevTools.getToolbox(this.inspector.target);
+      toolbox.viewSource(href, rule.line);
+      return;
+    }
+
+    let location = promise.resolve(rule.location);
+    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+      location = rule.getOriginalLocation();
+    }
+    location.then(({ source, href, line, column }) => {
+      let target = this.inspector.target;
+      if (Tools.styleEditor.isTargetSupported(target)) {
+        gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+          let sheet = source || href;
+          toolbox.getCurrentPanel().selectStyleSheet(sheet, line, column);
+        });
+      }
+      return;
+    });
+  },
+
+  onPropertyChanged: function() {
+    this.inspector.markDirty();
+  },
+
+  onViewRefreshed: function() {
+    this.inspector.emit("rule-view-refreshed");
+  },
+
+  /**
+   * When markup mutations occur, if an attribute of the selected node changes,
+   * we need to refresh the view as that might change the node's styles.
+   */
+  onMutations: function(mutations) {
+    for (let {type, target} of mutations) {
+      if (target === this.inspector.selection.nodeFront &&
+          type === "attributes") {
+        this.refresh();
+        break;
+      }
+    }
+  },
+
+  /**
+   * When the window gets resized, this may cause media-queries to match, and
+   * therefore, different styles may apply.
+   */
+  onResized: function() {
+    this.refresh();
+  },
+
+  destroy: function() {
+    this.inspector.walker.off("mutations", this.onMutations);
+    this.inspector.walker.off("resize", this.onResized);
+    this.inspector.selection.off("detached", this.onSelected);
+    this.inspector.selection.off("pseudoclass", this.refresh);
+    this.inspector.selection.off("new-node-front", this.onSelected);
+    this.inspector.target.off("navigate", this.clearUserProperties);
+    this.inspector.sidebar.off("ruleview-selected", this.onPanelSelected);
+    if (this.inspector.pageStyle) {
+      this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
+    }
+
+    this.view.off("ruleview-linked-clicked", this.onLinkClicked);
+    this.view.off("ruleview-changed", this.onPropertyChanged);
+    this.view.off("ruleview-refreshed", this.onViewRefreshed);
+
+    this.view.destroy();
+
+    this.view = this.document = this.inspector = null;
+  }
+};
+
+exports.CssRuleView = CssRuleView;
+exports.RuleViewTool = RuleViewTool;
