@@ -291,7 +291,11 @@ CommonAnimationManager::FlushAnimations()
                "Should not have a transition/animation collection for an "
                "element that is not part of the document tree");
 
-    collection->RequestRestyle(EffectCompositor::RestyleType::Standard);
+    mPresContext->EffectCompositor()->RequestRestyle(
+      collection->mElement,
+      collection->PseudoElementType(),
+      EffectCompositor::RestyleType::Standard,
+      cascadeLevel);
   }
 }
 
@@ -449,42 +453,6 @@ AnimationCollection::EnsureStyleRuleFor()
   presContext->EffectCompositor()->MaybeUpdateAnimationRule(mElement,
                                                             PseudoElementType(),
                                                             cascadeLevel);
-}
-
-void
-AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
-{
-  MOZ_ASSERT(IsForElement() || IsForBeforePseudo() || IsForAfterPseudo(),
-             "Unexpected mElementProperty; might restyle too much");
-
-  nsPresContext* presContext = mManager->PresContext();
-  if (!presContext) {
-    // Pres context will be null after the manager is disconnected.
-    return;
-  }
-
-  EffectCompositor::CascadeLevel cascadeLevel =
-    IsForAnimations() ?
-    EffectCompositor::CascadeLevel::Animations :
-    EffectCompositor::CascadeLevel::Transitions;
-  presContext->EffectCompositor()->RequestRestyle(mElement,
-                                                  PseudoElementType(),
-                                                  aRestyleType,
-                                                  cascadeLevel);
-
-  // Steps for RestyleType::Layer:
-
-  if (aRestyleType == EffectCompositor::RestyleType::Layer) {
-
-    // Prompt layers to re-sync their animations.
-    presContext->ClearLastStyleUpdateForAllAnimations();
-    presContext->RestyleManager()->IncrementAnimationGeneration();
-    EffectSet* effectSet =
-      EffectSet::GetEffectSet(mElement, PseudoElementType());
-    if (effectSet) {
-      effectSet->UpdateAnimationGeneration(presContext);
-    }
-  }
 }
 
 void

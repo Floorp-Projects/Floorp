@@ -14,7 +14,6 @@
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
-#include "AnimationCommon.h"
 #include "Layers.h" // For Layer
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
@@ -164,7 +163,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // Request restyle if necessary.
-  ComputedTiming computedTiming = GetComputedTiming();
+  //
   // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
   // However, currently we don't properly encapsulate mProperties so we can't
   // detect when it changes. As a result, if we skip requesting restyles when
@@ -176,29 +175,16 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   //
   // Bug 1216843: When we implement iteration composite modes, we need to
   // also detect if the current iteration has changed.
-  if (computedTiming.mProgress != mProgressOnLastCompose) {
+  if (mAnimation && GetComputedTiming().mProgress != mProgressOnLastCompose) {
     EffectCompositor::RestyleType restyleType =
       CanThrottle() ?
       EffectCompositor::RestyleType::Throttled :
       EffectCompositor::RestyleType::Standard;
-    // FIXME: This arrangement of calling RequestRestyle on *either* the
-    // collection or the compositor is temporary while we move this method
-    // to the compositor.
-    //
-    // In the case where we don't have a collection (as is often the case
-    // when we create animations but haven't yet added them to a collection
-    // yet) we still need to make sure that the effect ends up in the
-    // "needs restyle" map in the compositor.
-    AnimationCollection* collection = GetCollection();
-    if (collection) {
-      collection->RequestRestyle(restyleType);
-    } else if (mAnimation) {
-      nsPresContext* presContext = GetPresContext();
-      if (presContext) {
-        presContext->EffectCompositor()->
-          RequestRestyle(mTarget, mPseudoType, restyleType,
-                         mAnimation->CascadeLevel());
-      }
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType, restyleType,
+                       mAnimation->CascadeLevel());
     }
   }
 }
@@ -470,7 +456,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                "incorrect last to key");
 
     if (aSetProperties.HasProperty(prop.mProperty)) {
-      // Animations are composed by AnimationCollection by iterating
+      // Animations are composed by EffectCompositor by iterating
       // from the last animation to first. For animations targetting the
       // same property, the later one wins. So if this property is already set,
       // we should not override it.
@@ -2006,12 +1992,6 @@ KeyframeEffectReadOnly::GetPresContext() const
     return nullptr;
   }
   return shell->GetPresContext();
-}
-
-AnimationCollection *
-KeyframeEffectReadOnly::GetCollection() const
-{
-  return mAnimation ? mAnimation->GetCollection() : nullptr;
 }
 
 /* static */ bool

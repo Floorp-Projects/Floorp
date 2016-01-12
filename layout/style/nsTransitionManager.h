@@ -172,7 +172,6 @@ protected:
   }
 
   // Animation overrides
-  CommonAnimationManager* GetAnimationManager() const override;
   void UpdateTiming(SeekFlag aSeekFlag,
                     SyncNotifyFlag aSyncNotifyFlag) override;
 
