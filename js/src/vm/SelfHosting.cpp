@@ -1801,9 +1801,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IsRegExpObject),
     JS_FN("CallRegExpMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2,0),
-    JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 5,0,
+    JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 4,0,
                     RegExpMatcher),
-    JS_INLINABLE_FN("RegExpTester", RegExpTester, 5,0,
+    JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
