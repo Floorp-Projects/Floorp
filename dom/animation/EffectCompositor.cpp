@@ -283,6 +283,32 @@ EffectCompositor::GetElementToRestyle(dom::Element* aElement,
   return pseudoFrame->GetContent()->AsElement();
 }
 
+bool
+EffectCompositor::HasPendingStyleUpdates() const
+{
+  for (auto& elementSet : mElementsToRestyle) {
+    if (elementSet.Count()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+bool
+EffectCompositor::HasThrottledStyleUpdates() const
+{
+  for (auto& elementSet : mElementsToRestyle) {
+    for (auto iter = elementSet.ConstIter(); !iter.Done(); iter.Next()) {
+      if (!iter.Data()) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
 void
 EffectCompositor::AddStyleUpdatesTo(RestyleTracker& aTracker)
 {

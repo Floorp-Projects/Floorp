@@ -115,6 +115,9 @@ public:
                                  nsCSSPseudoElements::Type aPseudoType,
                                  CascadeLevel aCascadeLevel);
 
+  bool HasPendingStyleUpdates() const;
+  bool HasThrottledStyleUpdates() const;
+
   // Tell the restyle tracker about all the animated styles that have
   // pending updates so that it can update the animation rule for these
   // elements.
