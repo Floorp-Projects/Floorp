@@ -1858,7 +1858,6 @@ RestyleManager::UpdateOnlyAnimationStyles()
   }
 
   nsTransitionManager* transitionManager = mPresContext->TransitionManager();
-  nsAnimationManager* animationManager = mPresContext->AnimationManager();
 
   transitionManager->SetInAnimationOnlyStyleUpdate(true);
 
@@ -1871,8 +1870,7 @@ RestyleManager::UpdateOnlyAnimationStyles()
     // add only the elements for which animations are currently throttled
     // (i.e., animating on the compositor with main-thread style updates
     // suppressed).
-    transitionManager->AddStyleUpdatesTo(tracker);
-    animationManager->AddStyleUpdatesTo(tracker);
+    mPresContext->EffectCompositor()->AddStyleUpdatesTo(tracker);
   }
 
   if (doSMIL) {

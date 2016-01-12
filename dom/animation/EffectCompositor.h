@@ -27,6 +27,7 @@ class nsStyleContext;
 namespace mozilla {
 
 class EffectSet;
+class RestyleTracker;
 
 namespace dom {
 class Animation;
@@ -114,6 +115,11 @@ public:
                                  nsCSSPseudoElements::Type aPseudoType,
                                  CascadeLevel aCascadeLevel);
 
+  // Tell the restyle tracker about all the animated styles that have
+  // pending updates so that it can update the animation rule for these
+  // elements.
+  void AddStyleUpdatesTo(RestyleTracker& aTracker);
+
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
 
@@ -133,6 +139,12 @@ public:
   MaybeUpdateCascadeResults(dom::Element* aElement,
                             nsCSSPseudoElements::Type aPseudoType,
                             nsStyleContext* aStyleContext);
+
+  // An overload of MaybeUpdateCascadeResults that uses the style context
+  // of the primary frame of the specified (pseudo-)element, when available.
+  static void
+  MaybeUpdateCascadeResults(dom::Element* aElement,
+                            nsCSSPseudoElements::Type aPseudoType);
 
   // Update the mWinsInCascade member for each property in effects targetting
   // the specified (pseudo-)element.
