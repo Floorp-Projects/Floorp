@@ -11,7 +11,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.distribution.Distribution;
-import org.mozilla.gecko.health.BrowserHealthRecorder;
 import org.mozilla.search.autocomplete.SearchBar;
 import org.mozilla.search.autocomplete.SuggestionsFragment;
 import org.mozilla.search.providers.SearchEngine;
@@ -255,7 +254,7 @@ public class SearchActivity extends Locales.LocaleAwareFragmentActivity
         storeQuery(query);
 
         try {
-            BrowserHealthRecorder.recordSearchDelayed("activity", engine.getIdentifier());
+            //BrowserHealthRecorder.recordSearchDelayed("activity", engine.getIdentifier());
         } catch (Exception e) {
             // This should never happen: it'll only throw if the
             // search location is wrong. But let's not tempt fate.
