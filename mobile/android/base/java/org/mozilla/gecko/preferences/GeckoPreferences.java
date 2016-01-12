@@ -30,7 +30,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
 import org.mozilla.gecko.background.common.GlobalConstants;
-import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
@@ -993,10 +992,10 @@ OnSharedPreferenceChangeListener
      * <code>PREFS_HEALTHREPORT_UPLOAD_ENABLED</code> pref.
      */
     public static void broadcastHealthReportUploadPref(final Context context, final boolean value) {
-        broadcastPrefAction(context,
-                            HealthReportConstants.ACTION_HEALTHREPORT_UPLOAD_PREF,
-                            PREFS_HEALTHREPORT_UPLOAD_ENABLED,
-                            value);
+        //broadcastPrefAction(context,
+        //                    HealthReportConstants.ACTION_HEALTHREPORT_UPLOAD_PREF,
+        //                    PREFS_HEALTHREPORT_UPLOAD_ENABLED,
+        //                    value);
     }
 
     /**
@@ -1004,13 +1003,13 @@ OnSharedPreferenceChangeListener
      * <code>PREFS_HEALTHREPORT_UPLOAD_ENABLED</code> pref.
      */
     public static void broadcastHealthReportUploadPref(final Context context) {
-        final boolean value = getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
-        broadcastHealthReportUploadPref(context, value);
+        //final boolean value = getBooleanPref(context, PREFS_HEALTHREPORT_UPLOAD_ENABLED, true);
+        //broadcastHealthReportUploadPref(context, value);
     }
 
     public static void broadcastHealthReportPrune(final Context context) {
-        final Intent intent = new Intent(HealthReportConstants.ACTION_HEALTHREPORT_PRUNE);
-        broadcastAction(context, intent);
+        //final Intent intent = new Intent(HealthReportConstants.ACTION_HEALTHREPORT_PRUNE);
+        //broadcastAction(context, intent);
     }
 
     /**
