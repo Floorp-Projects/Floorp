@@ -2208,7 +2208,8 @@ WorkerPrivateParent<Derived>::WorkerPrivateParent(
   mParentSuspended(false), mIsChromeWorker(aIsChromeWorker),
   mMainThreadObjectsForgotten(false), mWorkerType(aWorkerType),
   mCreationTimeStamp(TimeStamp::Now()),
-  mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC)
+  mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
+  mNowBaseTimeHighRes(0)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(),
                 !aWorkerName.IsVoid() && NS_IsMainThread());
@@ -3925,6 +3926,7 @@ WorkerPrivate::WorkerPrivate(JSContext* aCx,
   , mPeriodicGCTimerRunning(false)
   , mIdleGCTimerRunning(false)
   , mWorkerScriptExecutedSuccessfully(false)
+  , mOnLine(false)
 {
   MOZ_ASSERT_IF(!IsDedicatedWorker(), !aWorkerName.IsVoid());
   MOZ_ASSERT_IF(IsDedicatedWorker(), aWorkerName.IsEmpty());
