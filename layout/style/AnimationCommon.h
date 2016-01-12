@@ -12,7 +12,6 @@
 #include "nsCSSProperty.h"
 #include "nsDisplayList.h" // For nsDisplayItem::Type
 #include "mozilla/AnimationComparator.h"
-#include "mozilla/EffectCompositor.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/MemoryReporting.h"
@@ -170,8 +169,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   void Tick();
 
   void EnsureStyleRuleFor();
-
-  void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
 
 public:
   // True if this animation can be performed on the compositor thread.

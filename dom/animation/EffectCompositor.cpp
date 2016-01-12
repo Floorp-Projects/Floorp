@@ -11,9 +11,8 @@
 #include "mozilla/dom/KeyframeEffect.h" // For KeyframeEffectReadOnly
 #include "mozilla/AnimationUtils.h"
 #include "mozilla/EffectSet.h"
+#include "mozilla/InitializerList.h"
 #include "mozilla/LayerAnimationInfo.h"
-#include "AnimationCommon.h" // For AnimationCollection
-#include "nsAnimationManager.h"
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetPresShellForContent
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h"
@@ -21,7 +20,7 @@
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
 #include "nsTArray.h"
-#include "nsTransitionManager.h"
+#include "RestyleManager.h"
 
 using mozilla::dom::Animation;
 using mozilla::dom::Element;
@@ -155,6 +154,17 @@ EffectCompositor::RequestRestyle(dom::Element* aElement,
       PostRestyleForAnimation(aElement, aPseudoType, aCascadeLevel);
     }
     elementsToRestyle.Put(key, true);
+  }
+
+  if (aRestyleType == RestyleType::Layer) {
+    // Prompt layers to re-sync their animations.
+    mPresContext->ClearLastStyleUpdateForAllAnimations();
+    mPresContext->RestyleManager()->IncrementAnimationGeneration();
+    EffectSet* effectSet =
+      EffectSet::GetEffectSet(aElement, aPseudoType);
+    if (effectSet) {
+      effectSet->UpdateAnimationGeneration(mPresContext);
+    }
   }
 }
 
@@ -508,26 +518,14 @@ EffectCompositor::UpdateCascadeResults(EffectSet& aEffectSet,
   // layers with the winning animations.
   nsPresContext* presContext = GetPresContext(aElement);
   if (changed && presContext) {
-    // We currently unconditionally update both animations and transitions
-    // even if we could, for example, get away with only updating animations.
-    // This is a temporary measure until we unify all animation style updating
-    // under EffectCompositor.
-    AnimationCollection* animations =
-      presContext->AnimationManager()->GetAnimationCollection(aElement,
-                                                              aPseudoType,
-                                                              false);
-                                                             /* don't create */
-    if (animations) {
-      animations->RequestRestyle(RestyleType::Layer);
-    }
-
-    AnimationCollection* transitions =
-      presContext->TransitionManager()->GetAnimationCollection(aElement,
-                                                               aPseudoType,
-                                                               false);
-                                                             /* don't create */
-    if (transitions) {
-      transitions->RequestRestyle(RestyleType::Layer);
+    // Update both transitions and animations. We could detect *which* levels
+    // actually changed and only update them, but that's probably unnecessary.
+    for (auto level : { CascadeLevel::Animations,
+                        CascadeLevel::Transitions }) {
+      presContext->EffectCompositor()->RequestRestyle(aElement,
+                                                      aPseudoType,
+                                                      RestyleType::Layer,
+                                                      level);
     }
   }
 }

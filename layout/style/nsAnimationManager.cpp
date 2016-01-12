@@ -277,17 +277,6 @@ CSSAnimation::QueueEvents()
                                          this));
 }
 
-CommonAnimationManager*
-CSSAnimation::GetAnimationManager() const
-{
-  nsPresContext* context = GetPresContext();
-  if (!context) {
-    return nullptr;
-  }
-
-  return context->AnimationManager();
-}
-
 void
 CSSAnimation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 {

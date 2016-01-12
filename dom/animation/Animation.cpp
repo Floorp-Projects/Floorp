@@ -11,8 +11,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
-#include "AnimationCommon.h" // For AnimationCollection,
-                             // CommonAnimationManager
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
@@ -1040,10 +1038,23 @@ Animation::FlushStyle() const
 void
 Animation::PostUpdate()
 {
-  AnimationCollection* collection = GetCollection();
-  if (collection) {
-    collection->RequestRestyle(EffectCompositor::RestyleType::Layer);
+  nsPresContext* presContext = GetPresContext();
+  if (!presContext) {
+    return;
   }
+
+  Element* targetElement;
+  nsCSSPseudoElements::Type targetPseudoType;
+  mEffect->GetTarget(targetElement, targetPseudoType);
+  if (!targetElement) {
+    return;
+  }
+
+  presContext->EffectCompositor()
+             ->RequestRestyle(targetElement,
+                              targetPseudoType,
+                              EffectCompositor::RestyleType::Layer,
+                              CascadeLevel());
 }
 
 void
@@ -1152,27 +1163,6 @@ Animation::GetPresContext() const
   }
 
   return mEffect->GetPresContext();
-}
-
-AnimationCollection*
-Animation::GetCollection() const
-{
-  CommonAnimationManager* manager = GetAnimationManager();
-  if (!manager) {
-    return nullptr;
-  }
-  MOZ_ASSERT(mEffect,
-             "An animation with an animation manager must have an effect");
-
-  Element* targetElement;
-  nsCSSPseudoElements::Type targetPseudoType;
-  mEffect->GetTarget(targetElement, targetPseudoType);
-  MOZ_ASSERT(targetElement,
-             "An animation with an animation manager must have a target");
-
-  return manager->GetAnimationCollection(targetElement,
-                                         targetPseudoType,
-                                         false /* aCreateIfNeeded */);
 }
 
 void
