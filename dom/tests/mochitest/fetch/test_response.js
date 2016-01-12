@@ -67,6 +67,30 @@ function testClone() {
   });
 }
 
+function testCloneUnfiltered() {
+  var url = 'http://example.com/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?status=200';
+  return fetch(url, { mode: 'no-cors' }).then(function(response) {
+    // By default the chrome-only function should not be available.
+    is(response.type, 'opaque', 'response should be opaque');
+    is(response.cloneUnfiltered, undefined,
+       'response.cloneUnfiltered should be undefined');
+
+    // When the test is run in a worker context we can't actually try to use
+    // the chrome-only function.  SpecialPowers is not defined.
+    if (typeof SpecialPowers !== 'object') {
+      return;
+    }
+
+    // With a chrome code, however, should be able to get an unfiltered response.
+    var chromeResponse = SpecialPowers.wrap(response);
+    is(typeof chromeResponse.cloneUnfiltered, 'function',
+       'chromeResponse.cloneFiltered should be a function');
+    var unfiltered = chromeResponse.cloneUnfiltered();
+    is(unfiltered.type, 'default', 'unfiltered response should be default');
+    is(unfiltered.status, 200, 'unfiltered response should have 200 status');
+  });
+}
+
 function testError() {
   var res = Response.error();
   is(res.status, 0, "Error response status should be 0");
@@ -234,5 +258,10 @@ function runTest() {
     .then(testBodyUsed)
     .then(testBodyExtraction)
     .then(testClone)
+    .then(testCloneUnfiltered)
     // Put more promise based tests here.
+    .catch(function(e) {
+      dump('### ### ' + e + '\n');
+      ok(false, 'got unexpected error!');
+    });
 }
