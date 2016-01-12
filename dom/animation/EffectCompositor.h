@@ -96,6 +96,11 @@ public:
                                nsCSSPseudoElements::Type aPseudoType,
                                CascadeLevel aCascadeLevel);
 
+  // Posts an animation restyle for any elements whose animation style rule
+  // is out of date but for which an animation restyle has not yet been
+  // posted because updates on the main thread are throttled.
+  void PostRestyleForThrottledAnimations();
+
   // Updates the animation rule stored on the EffectSet for the
   // specified (pseudo-)element for cascade level |aLevel|.
   // If the animation rule is not marked as needing an update,
@@ -103,11 +108,6 @@ public:
   void MaybeUpdateAnimationRule(dom::Element* aElement,
                                 nsCSSPseudoElements::Type aPseudoType,
                                 CascadeLevel aCascadeLevel);
-
-  // FIXME: Temporary method until we move FlushAnimations here.
-  bool HasThrottledAnimations(dom::Element* aElement,
-                              nsCSSPseudoElements::Type aPseudoType,
-                              CascadeLevel aCascadeLevel) const;
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
