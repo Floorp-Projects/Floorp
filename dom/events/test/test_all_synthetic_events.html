@@ -449,6 +449,9 @@ const kEventConstructors = {
                                                          return new RTCPeerConnectionIceEvent(aName, aProps);
                                                        },
                                              },
+  RTCTrackEvent:                             {
+                                               // Difficult to test required arguments.
+                                             },
   ScrollAreaEvent:                           { create: function (aName, aProps) {
                                                          var e = document.createEvent("scrollareaevent");
                                                          e.initScrollAreaEvent(aName, aProps.bubbles, aProps.cancelable,
