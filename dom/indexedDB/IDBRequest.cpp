@@ -51,6 +51,13 @@ NS_DEFINE_IID(kIDBRequestIID, PRIVATE_IDBREQUEST_IID);
 
 IDBRequest::IDBRequest(IDBDatabase* aDatabase)
   : IDBWrapperCache(aDatabase)
+#ifdef DEBUG
+  , mOwningThread(nullptr)
+#endif
+  , mLoggingSerialNumber(0)
+  , mLineNo(0)
+  , mColumn(0)
+  , mHaveResultOrErrorCode(false)
 {
   MOZ_ASSERT(aDatabase);
   aDatabase->AssertIsOnOwningThread();
@@ -60,6 +67,13 @@ IDBRequest::IDBRequest(IDBDatabase* aDatabase)
 
 IDBRequest::IDBRequest(nsPIDOMWindow* aOwner)
   : IDBWrapperCache(aOwner)
+#ifdef DEBUG
+  , mOwningThread(nullptr)
+#endif
+  , mLoggingSerialNumber(0)
+  , mLineNo(0)
+  , mColumn(0)
+  , mHaveResultOrErrorCode(false)
 {
   InitMembers();
 }
