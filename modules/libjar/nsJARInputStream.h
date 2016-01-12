@@ -21,8 +21,8 @@ class nsJARInputStream final : public nsIInputStream
 {
   public:
     nsJARInputStream() : 
-        mOutSize(0), mInCrc(0), mOutCrc(0), mCurPos(0),
-        mMode(MODE_NOTINITED)
+        mOutSize(0), mInCrc(0), mOutCrc(0), mNameLen(0),
+        mCurPos(0), mArrPos(0), mMode(MODE_NOTINITED)
     { 
       memset(&mZs, 0, sizeof(z_stream));
     }
@@ -47,7 +47,7 @@ class nsJARInputStream final : public nsIInputStream
     z_stream               mZs;         // zip data structure
 
     /* For directory reading */
-    RefPtr<nsJAR>        mJar;        // string reference to zipreader
+    RefPtr<nsJAR>          mJar;        // string reference to zipreader
     uint32_t               mNameLen;    // length of dirname
     nsCString              mBuffer;     // storage for generated text of stream
     uint32_t               mCurPos;     // Current position in buffer

@@ -195,6 +195,7 @@ nsJARInputThunk::IsNonBlocking(bool *nonBlocking)
 
 nsJARChannel::nsJARChannel()
     : mOpened(false)
+    , mContentDisposition(0)
     , mAppURI(nullptr)
     , mContentLength(-1)
     , mLoadFlags(LOAD_NORMAL)
