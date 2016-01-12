@@ -9828,7 +9828,7 @@ class MLoadTypedArrayElementStatic
     }
 
     Scalar::Type accessType() const {
-        return someTypedArray_->as<TypedArrayObject>().type();
+        return AnyTypedArrayType(someTypedArray_);
     }
     SharedMem<void*> base() const;
     size_t length() const;
@@ -10065,7 +10065,7 @@ class MStoreTypedArrayElementStatic :
     MStoreTypedArrayElementStatic(JSObject* someTypedArray, MDefinition* ptr, MDefinition* v,
                                   int32_t offset, bool needsBoundsCheck)
         : MBinaryInstruction(ptr, v),
-          StoreUnboxedScalarBase(someTypedArray->as<TypedArrayObject>().type()),
+          StoreUnboxedScalarBase(AnyTypedArrayType(someTypedArray)),
           someTypedArray_(someTypedArray),
           offset_(offset), needsBoundsCheck_(needsBoundsCheck)
     {}
@@ -14141,9 +14141,9 @@ bool ElementAccessIsDenseNative(CompilerConstraintList* constraints,
                                 MDefinition* obj, MDefinition* id);
 JSValueType UnboxedArrayElementType(CompilerConstraintList* constraints, MDefinition* obj,
                                     MDefinition* id);
-bool ElementAccessIsTypedArray(CompilerConstraintList* constraints,
-                               MDefinition* obj, MDefinition* id,
-                               Scalar::Type* arrayType);
+bool ElementAccessIsAnyTypedArray(CompilerConstraintList* constraints,
+                                  MDefinition* obj, MDefinition* id,
+                                  Scalar::Type* arrayType);
 bool ElementAccessIsPacked(CompilerConstraintList* constraints, MDefinition* obj);
 bool ElementAccessMightBeCopyOnWrite(CompilerConstraintList* constraints, MDefinition* obj);
 bool ElementAccessHasExtraIndexedProperty(IonBuilder* builder, MDefinition* obj);
