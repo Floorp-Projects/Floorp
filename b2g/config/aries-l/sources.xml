@@ -177,7 +177,7 @@
   <project groups="device" name="thermanager" path="hardware/sony/thermanager" remote="b2g" revision="ec9a2b6a7fe8254ecc3c2c4781e7304f3822e390"/>
   <project groups="device" name="timekeep" path="hardware/sony/timekeep" remote="b2g" revision="4cbb0abc00681f116f043584661307b5c4855a31"/>
   <!-- Shinano platform specific things -->
-  <project groups="device" name="device-sony-shinano" path="device/sony/shinano" remote="b2g" revision="fdc22f74b2271dfcfba1e7191b83257b5a2b1343"/>
+  <project groups="device" name="device-sony-shinano" path="device/sony/shinano" remote="b2g" revision="49161f5310ad5e84f48ee118af6e48a3cc2f0fa3"/>
   <project groups="device" name="device-sony-aries" path="device/sony/aries" remote="b2g" revision="56f665a19e35623d923949014bc15013d292fa37"/>
   <project groups="device" name="device-sony-leo" path="device/sony/leo" remote="b2g" revision="3fdec3f02117be6b57d2f9c5946119f179119a51"/>
   <project groups="device" name="device-sony-scorpion" path="device/sony/scorpion" remote="b2g" revision="b0cd32cb805637d2afda61b67d0421e2c39b2ffa"/>
