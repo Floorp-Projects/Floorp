@@ -383,6 +383,17 @@ public:
    * and visibility via ipc.
    */
   bool UpdatePluginWindowState(uint64_t aId);
+
+  /**
+   * Plugin visibility helpers for the apz (main thread) and compositor
+   * thread.
+   */
+  void ScheduleShowAllPluginWindowsAPZ();
+  void ScheduleHideAllPluginWindowsAPZ();
+  void ShowAllPluginWindowsAPZ();
+  void HideAllPluginWindowsAPZ();
+  void ShowAllPluginWindows();
+  void HideAllPluginWindows();
 #endif
 
   /**
@@ -486,11 +497,12 @@ protected:
   nsIntPoint mPluginsLayerOffset;
   nsIntRegion mPluginsLayerVisibleRegion;
   nsTArray<PluginWindowData> mCachedPluginData;
-#endif
-#if defined(XP_WIN)
   // indicates if we are currently waiting on a plugin update confirmation.
   // When this is true, composition is currently on hold.
   bool mPluginUpdateResponsePending;
+  // indicates if plugin window visibility and metric updates are currently
+  // being defered due to a scroll operation.
+  bool mDeferPluginWindows;
 #endif
 
   DISALLOW_EVIL_CONSTRUCTORS(CompositorParent);
