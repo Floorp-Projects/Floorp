@@ -81,7 +81,6 @@ protected:
 
   nsString      mPaperName;
   int16_t       mPaperData;
-  int16_t       mPaperSizeType;
   double        mPaperWidth;
   double        mPaperHeight;
   int16_t       mPaperSizeUnit;

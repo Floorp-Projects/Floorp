@@ -160,9 +160,50 @@ nsPrintSettingsWin::GetEffectivePageSize(double *aWidth, double *aHeight)
 }
 
 void
-nsPrintSettingsWin::CopyFromNative(HDC aHdc)
+nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode)
 {
   MOZ_ASSERT(aHdc);
+  MOZ_ASSERT(aDevMode);
+
+  mIsInitedFromPrinter = true;
+  if (aDevMode->dmFields & DM_ORIENTATION) {
+    mOrientation = int32_t(aDevMode->dmOrientation == DMORIENT_PORTRAIT
+                           ? kPortraitOrientation : kLandscapeOrientation);
+  }
+
+  if (aDevMode->dmFields & DM_COPIES) {
+    mNumCopies = aDevMode->dmCopies;
+  }
+
+  // Since we do the scaling, grab their value and reset back to 100.
+  if (aDevMode->dmFields & DM_SCALE) {
+    double scale = double(aDevMode->dmScale) / 100.0f;
+    if (mScaling == 1.0 || scale != 1.0) {
+      mScaling = scale;
+    }
+    aDevMode->dmScale = 100;
+  }
+
+  if (aDevMode->dmFields & DM_PAPERSIZE) {
+    mPaperData = aDevMode->dmPaperSize;
+  } else {
+    mPaperData = -1;
+  }
+
+  // The length and width in DEVMODE are always in tenths of a millimeter, so
+  // storing them in millimeters is easiest.
+  mPaperSizeUnit = kPaperSizeMillimeters;
+  if (aDevMode->dmFields & DM_PAPERLENGTH) {
+    mPaperHeight = aDevMode->dmPaperLength / 10l;
+  } else {
+    mPaperHeight = -1l;
+  }
+
+  if (aDevMode->dmFields & DM_PAPERWIDTH) {
+    mPaperWidth = aDevMode->dmPaperWidth / 10l;
+  } else {
+    mPaperWidth = -1l;
+  }
 
   // On Windows we currently create a surface using the printable area of the
   // page and don't set the unwriteable [sic] margins. Using the unwriteable
@@ -185,6 +226,57 @@ nsPrintSettingsWin::CopyFromNative(HDC aHdc)
 
   // Using Y to match existing code, X DPI should be the same for printing.
   mResolution = heightDPI;
+}
+
+void
+nsPrintSettingsWin::CopyToNative(DEVMODEW* aDevMode)
+{
+  MOZ_ASSERT(aDevMode);
+
+  if (mPaperData >= 0) {
+    aDevMode->dmPaperSize = mPaperData;
+    aDevMode->dmFields |= DM_PAPERSIZE;
+  } else {
+    aDevMode->dmPaperSize = 0;
+    aDevMode->dmFields &= ~DM_PAPERSIZE;
+  }
+
+  double paperHeight;
+  double paperWidth;
+  if (mPaperSizeUnit == kPaperSizeMillimeters) {
+    paperHeight = mPaperHeight;
+    paperWidth = mPaperWidth;
+  } else {
+    paperHeight = mPaperHeight * MM_PER_INCH_FLOAT;
+    paperWidth = mPaperWidth * MM_PER_INCH_FLOAT;
+  }
+
+  // Set a sensible limit on the minimum height and width.
+  if (paperHeight >= MM_PER_INCH_FLOAT) {
+    // In DEVMODEs, physical lengths are stored in tenths of millimeters.
+    aDevMode->dmPaperLength = paperHeight * 10l;
+    aDevMode->dmFields |= DM_PAPERLENGTH;
+  } else {
+    aDevMode->dmPaperLength = 0;
+    aDevMode->dmFields &= ~DM_PAPERLENGTH;
+  }
+
+  if (paperWidth >= MM_PER_INCH_FLOAT) {
+    aDevMode->dmPaperWidth = paperWidth * 10l;
+    aDevMode->dmFields |= DM_PAPERWIDTH;
+  } else {
+    aDevMode->dmPaperWidth = 0;
+    aDevMode->dmFields &= ~DM_PAPERWIDTH;
+  }
+
+  // Setup Orientation
+  aDevMode->dmOrientation = mOrientation == kPortraitOrientation
+                            ? DMORIENT_PORTRAIT : DMORIENT_LANDSCAPE;
+  aDevMode->dmFields |= DM_ORIENTATION;
+
+  // Setup Number of Copies
+  aDevMode->dmCopies = mNumCopies;
+  aDevMode->dmFields |= DM_COPIES;
 }
 
 //-------------------------------------------
@@ -277,7 +369,6 @@ Tester::Tester()
     ps->SetFooterStrCenter(NS_ConvertUTF8toUTF16("Center").get());
     ps->SetFooterStrRight(NS_ConvertUTF8toUTF16("Right").get());
     ps->SetPaperName(NS_ConvertUTF8toUTF16("Paper Name").get());
-    ps->SetPaperSizeType(10);
     ps->SetPaperData(1);
     ps->SetPaperWidth(100.0);
     ps->SetPaperHeight(50.0);
@@ -307,4 +398,3 @@ Tester::Tester()
 }
 Tester gTester;
 #endif
-

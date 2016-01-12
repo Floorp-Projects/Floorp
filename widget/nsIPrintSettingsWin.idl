@@ -18,7 +18,7 @@
 /**
  * Simplified PrintSettings for Windows interface 
  */
-[scriptable, uuid(57c22cc1-311f-44c3-bb49-4d1cf411a3b5)]
+[scriptable, uuid(c63eed41-6ac5-459e-8a64-033eb9ad770a)]
 
 interface nsIPrintSettingsWin : nsISupports
 {
@@ -56,6 +56,14 @@ interface nsIPrintSettingsWin : nsISupports
    * Copy relevant print settings from native Windows device.
    *
    * @param hdc HDC to copy from
+   * @param devMode DEVMODE to copy from
    */
-  [notxpcom] void copyFromNative(in nsHdc hdc);
+  [notxpcom] void copyFromNative(in nsHdc hdc, in nsDevMode devMode);
+
+  /**
+   * Copy relevant print settings to native windows structures.
+   *
+   * @param devMode DEVMODE to be populated.
+   */
+  [notxpcom] void copyToNative(in nsDevMode devMode);
 };
