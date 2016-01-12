@@ -1567,7 +1567,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_WeakMap_get",                     WeakMap_get,                  2,0),
     JS_FN("std_WeakMap_set",                     WeakMap_set,                  2,0),
     JS_FN("std_WeakMap_delete",                  WeakMap_delete,               1,0),
-    JS_FN("std_WeakMap_clear",                   WeakMap_clear,                0,0),
 
     JS_FN("std_SIMD_Int8x16_extractLane",        simd_int8x16_extractLane,     2,0),
     JS_FN("std_SIMD_Int16x8_extractLane",        simd_int16x8_extractLane,     2,0),
