@@ -74,224 +74,6 @@ static bool gDialogWasExtended     = false;
 
 static HWND gParentWnd = nullptr;
 
-//******************************************************
-// Define native paper sizes
-//******************************************************
-typedef struct {
-  short  mPaperSize; // native enum
-  double mWidth;
-  double mHeight;
-  bool mIsInches;
-} NativePaperSizes;
-
-// There are around 40 default print sizes defined by Windows
-const NativePaperSizes kPaperSizes[] = {
-  {DMPAPER_LETTER,    8.5,   11.0,  true},
-  {DMPAPER_LEGAL,     8.5,   14.0,  true},
-  {DMPAPER_A4,        210.0, 297.0, false},
-  {DMPAPER_TABLOID,   11.0,  17.0,  true},
-  {DMPAPER_LEDGER,    17.0,  11.0,  true},
-  {DMPAPER_STATEMENT, 5.5,   8.5,   true},
-  {DMPAPER_EXECUTIVE, 7.25,  10.5,  true},
-  {DMPAPER_A3,        297.0, 420.0, false},
-  {DMPAPER_A5,        148.0, 210.0, false},
-  {DMPAPER_CSHEET,    17.0,  22.0,  true},  
-  {DMPAPER_DSHEET,    22.0,  34.0,  true},  
-  {DMPAPER_ESHEET,    34.0,  44.0,  true},  
-  {DMPAPER_LETTERSMALL, 8.5, 11.0,  true},  
-  {DMPAPER_A4SMALL,   210.0, 297.0, false}, 
-  {DMPAPER_B4,        250.0, 354.0, false}, 
-  {DMPAPER_B5,        182.0, 257.0, false},
-  {DMPAPER_FOLIO,     8.5,   13.0,  true},
-  {DMPAPER_QUARTO,    215.0, 275.0, false},
-  {DMPAPER_10X14,     10.0,  14.0,  true},
-  {DMPAPER_11X17,     11.0,  17.0,  true},
-  {DMPAPER_NOTE,      8.5,   11.0,  true},  
-  {DMPAPER_ENV_9,     3.875, 8.875, true},  
-  {DMPAPER_ENV_10,    40.125, 9.5,  true},  
-  {DMPAPER_ENV_11,    4.5,   10.375, true},  
-  {DMPAPER_ENV_12,    4.75,  11.0,  true},  
-  {DMPAPER_ENV_14,    5.0,   11.5,  true},  
-  {DMPAPER_ENV_DL,    110.0, 220.0, false}, 
-  {DMPAPER_ENV_C5,    162.0, 229.0, false}, 
-  {DMPAPER_ENV_C3,    324.0, 458.0, false}, 
-  {DMPAPER_ENV_C4,    229.0, 324.0, false}, 
-  {DMPAPER_ENV_C6,    114.0, 162.0, false}, 
-  {DMPAPER_ENV_C65,   114.0, 229.0, false}, 
-  {DMPAPER_ENV_B4,    250.0, 353.0, false}, 
-  {DMPAPER_ENV_B5,    176.0, 250.0, false}, 
-  {DMPAPER_ENV_B6,    176.0, 125.0, false}, 
-  {DMPAPER_ENV_ITALY, 110.0, 230.0, false}, 
-  {DMPAPER_ENV_MONARCH,  3.875,  7.5, true},  
-  {DMPAPER_ENV_PERSONAL, 3.625,  6.5, true},  
-  {DMPAPER_FANFOLD_US,   14.875, 11.0, true},  
-  {DMPAPER_FANFOLD_STD_GERMAN, 8.5, 12.0, true},  
-  {DMPAPER_FANFOLD_LGL_GERMAN, 8.5, 13.0, true},  
-};
-const int32_t kNumPaperSizes = 41;
-
-//----------------------------------------------------------------------------------
-// Map an incoming size to a Windows Native enum in the DevMode
-static void 
-MapPaperSizeToNativeEnum(LPDEVMODEW aDevMode,
-                         int16_t   aType, 
-                         double    aW, 
-                         double    aH)
-{
-
-#ifdef DEBUG_rods
-  BOOL doingOrientation = aDevMode->dmFields & DM_ORIENTATION;
-  BOOL doingPaperSize   = aDevMode->dmFields & DM_PAPERSIZE;
-  BOOL doingPaperLength = aDevMode->dmFields & DM_PAPERLENGTH;
-  BOOL doingPaperWidth  = aDevMode->dmFields & DM_PAPERWIDTH;
-#endif
-
-  const double kThreshold = 0.05;
-  for (int32_t i=0;i<kNumPaperSizes;i++) {
-    double width  = kPaperSizes[i].mWidth;
-    double height = kPaperSizes[i].mHeight;
-    if (aW < width+kThreshold && aW > width-kThreshold && 
-        aH < height+kThreshold && aH > height-kThreshold) {
-      aDevMode->dmPaperSize = kPaperSizes[i].mPaperSize;
-      aDevMode->dmFields &= ~DM_PAPERLENGTH;
-      aDevMode->dmFields &= ~DM_PAPERWIDTH;
-      aDevMode->dmFields |= DM_PAPERSIZE;
-      return;
-    }
-  }
-
-  short width  = 0;
-  short height = 0;
-  if (aType == nsIPrintSettings::kPaperSizeInches) {
-    width  = short(NS_TWIPS_TO_MILLIMETERS(NS_INCHES_TO_TWIPS(float(aW))) / 10);
-    height = short(NS_TWIPS_TO_MILLIMETERS(NS_INCHES_TO_TWIPS(float(aH))) / 10);
-
-  } else if (aType == nsIPrintSettings::kPaperSizeMillimeters) {
-    width  = short(aW / 10.0);
-    height = short(aH / 10.0);
-  } else {
-    return; // don't set anything
-  }
-
-  // width and height is in 
-  aDevMode->dmPaperSize   = 0;
-  aDevMode->dmPaperWidth  = width;
-  aDevMode->dmPaperLength = height;
-
-  aDevMode->dmFields |= DM_PAPERSIZE;
-  aDevMode->dmFields |= DM_PAPERLENGTH;
-  aDevMode->dmFields |= DM_PAPERWIDTH;
-}
-
-//----------------------------------------------------------------------------------
-// Setup Paper Size & Orientation options into the DevMode
-// 
-static void 
-SetupDevModeFromSettings(LPDEVMODEW aDevMode, nsIPrintSettings* aPrintSettings)
-{
-  // Setup paper size
-  if (aPrintSettings) {
-    int16_t type;
-    aPrintSettings->GetPaperSizeType(&type);
-    if (type == nsIPrintSettings::kPaperSizeNativeData) {
-      int16_t paperEnum;
-      aPrintSettings->GetPaperData(&paperEnum);
-      aDevMode->dmPaperSize = paperEnum;
-      aDevMode->dmFields &= ~DM_PAPERLENGTH;
-      aDevMode->dmFields &= ~DM_PAPERWIDTH;
-      aDevMode->dmFields |= DM_PAPERSIZE;
-    } else {
-      int16_t unit;
-      double width, height;
-      aPrintSettings->GetPaperSizeUnit(&unit);
-      aPrintSettings->GetPaperWidth(&width);
-      aPrintSettings->GetPaperHeight(&height);
-      MapPaperSizeToNativeEnum(aDevMode, unit, width, height);
-    }
-
-    // Setup Orientation
-    int32_t orientation;
-    aPrintSettings->GetOrientation(&orientation);
-    aDevMode->dmOrientation = orientation == nsIPrintSettings::kPortraitOrientation?DMORIENT_PORTRAIT:DMORIENT_LANDSCAPE;
-    aDevMode->dmFields |= DM_ORIENTATION;
-
-    // Setup Number of Copies
-    int32_t copies;
-    aPrintSettings->GetNumCopies(&copies);
-    aDevMode->dmCopies = copies;
-    aDevMode->dmFields |= DM_COPIES;
-
-  }
-
-}
-
-//----------------------------------------------------------------------------------
-// Helper Function - Free and reallocate the string
-static nsresult 
-SetPrintSettingsFromDevMode(nsIPrintSettings* aPrintSettings, 
-                            LPDEVMODEW         aDevMode)
-{
-  if (aPrintSettings == nullptr) {
-    return NS_ERROR_FAILURE;
-  }
-
-  aPrintSettings->SetIsInitializedFromPrinter(true);
-  if (aDevMode->dmFields & DM_ORIENTATION) {
-    int32_t orientation  = aDevMode->dmOrientation == DMORIENT_PORTRAIT?
-                           nsIPrintSettings::kPortraitOrientation:nsIPrintSettings::kLandscapeOrientation;
-    aPrintSettings->SetOrientation(orientation);
-  }
-
-  // Setup Number of Copies
-  if (aDevMode->dmFields & DM_COPIES) {
-    aPrintSettings->SetNumCopies(int32_t(aDevMode->dmCopies));
-  }
-
-  // Scaling
-  // Since we do the scaling, grab their value and reset back to 100
-  if (aDevMode->dmFields & DM_SCALE) {
-    double origScale = 1.0;
-    aPrintSettings->GetScaling(&origScale);
-    double scale = double(aDevMode->dmScale) / 100.0f;
-    if (origScale == 1.0 || scale != 1.0) {
-      aPrintSettings->SetScaling(scale);
-    }
-    aDevMode->dmScale = 100;
-    // To turn this on you must change where the mPrt->mShrinkToFit is being set in the DocumentViewer
-    //aPrintSettings->SetShrinkToFit(false);
-  }
-
-  if (aDevMode->dmFields & DM_PAPERSIZE) {
-    aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeNativeData);
-    aPrintSettings->SetPaperData(aDevMode->dmPaperSize);
-    for (int32_t i=0;i<kNumPaperSizes;i++) {
-      if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
-        break;
-      }
-    }
-
-  } else if (aDevMode->dmFields & DM_PAPERLENGTH && aDevMode->dmFields & DM_PAPERWIDTH) {
-    bool found = false;
-    for (int32_t i=0;i<kNumPaperSizes;i++) {
-      if (kPaperSizes[i].mPaperSize == aDevMode->dmPaperSize) {
-        aPrintSettings->SetPaperSizeType(nsIPrintSettings::kPaperSizeDefined);
-        aPrintSettings->SetPaperWidth(kPaperSizes[i].mWidth);
-        aPrintSettings->SetPaperHeight(kPaperSizes[i].mHeight);
-        aPrintSettings->SetPaperSizeUnit(kPaperSizes[i].mIsInches?nsIPrintSettings::kPaperSizeInches:nsIPrintSettings::kPaperSizeMillimeters);
-        found = true;
-        break;
-      }
-    }
-    if (!found) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
-
 //----------------------------------------------------------------------------------
 // Return localized bundle for resource strings
 static nsresult
@@ -724,7 +506,9 @@ HGLOBAL CreateGlobalDevModeAndInit(const nsXPIDLString& aPrintName, nsIPrintSett
     if (devMode) {
       memcpy(devMode, pNewDevMode, dwNeeded);
       // Initialize values from the PrintSettings
-      SetupDevModeFromSettings(devMode, aPS);
+      nsCOMPtr<nsIPrintSettingsWin> psWin = do_QueryInterface(aPS);
+      MOZ_ASSERT(psWin);
+      psWin->CopyToNative(devMode);
 
       // Sets back the changes we made to the DevMode into the Printer Driver
       dwRet = ::DocumentPropertiesW(gParentWnd, hPrinter, printName, devMode, devMode, DM_IN_BUFFER | DM_OUT_BUFFER);
@@ -992,9 +776,8 @@ ShowNativePrintDialog(HWND              aHWnd,
       return NS_ERROR_FAILURE;
     }
     psWin->SetDevMode(devMode); // copies DevMode
-    SetPrintSettingsFromDevMode(aPrintSettings, devMode);
+    psWin->CopyFromNative(prntdlg.hDC, devMode);
     ::GlobalUnlock(prntdlg.hDevMode);
-    psWin->CopyFromNative(prntdlg.hDC);
     ::DeleteDC(prntdlg.hDC);
 
 #if defined(DEBUG_rods) || defined(DEBUG_dcone)
