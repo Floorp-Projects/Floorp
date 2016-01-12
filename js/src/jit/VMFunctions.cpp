@@ -77,9 +77,14 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
 
         RootedValue newTarget(cx, argvWithoutThis[argc]);
 
-        // If |this| hasn't been created, we can use normal construction code.
-        if (thisv.isMagic(JS_IS_CONSTRUCTING))
+        // If |this| hasn't been created, or is JS_UNINITIALIED_LEXICAL,
+        // we can use normal construction code without creating an extraneous
+        // object.
+        if (thisv.isMagic()) {
+            MOZ_ASSERT(thisv.whyMagic() == JS_IS_CONSTRUCTING ||
+                       thisv.whyMagic() == JS_UNINITIALIZED_LEXICAL);
             return Construct(cx, fval, cargs, newTarget, rval);
+        }
 
         // Otherwise the default |this| has already been created.  We could
         // almost perform a *call* at this point, but we'd break |new.target|
