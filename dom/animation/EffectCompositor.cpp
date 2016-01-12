@@ -242,6 +242,30 @@ EffectCompositor::MaybeUpdateAnimationRule(dom::Element* aElement,
   elementsToRestyle.Remove(key);
 }
 
+nsIStyleRule*
+EffectCompositor::GetAnimationRule(dom::Element* aElement,
+                                   nsCSSPseudoElements::Type aPseudoType,
+                                   CascadeLevel aCascadeLevel)
+{
+  if (!mPresContext || !mPresContext->IsDynamic()) {
+    // For print or print preview, ignore animations.
+    return nullptr;
+  }
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return nullptr;
+  }
+
+  if (mPresContext->RestyleManager()->SkipAnimationRules()) {
+    return nullptr;
+  }
+
+  MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel);
+
+  return effectSet->AnimationRule(aCascadeLevel);
+}
+
 /* static */ dom::Element*
 EffectCompositor::GetElementToRestyle(dom::Element* aElement,
                                       nsCSSPseudoElements::Type aPseudoType)

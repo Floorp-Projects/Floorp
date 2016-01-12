@@ -20,6 +20,7 @@
 
 class nsCSSPropertySet;
 class nsIFrame;
+class nsIStyleRule;
 class nsPresContext;
 class nsStyleContext;
 
@@ -108,6 +109,10 @@ public:
   void MaybeUpdateAnimationRule(dom::Element* aElement,
                                 nsCSSPseudoElements::Type aPseudoType,
                                 CascadeLevel aCascadeLevel);
+
+  nsIStyleRule* GetAnimationRule(dom::Element* aElement,
+                                 nsCSSPseudoElements::Type aPseudoType,
+                                 CascadeLevel aCascadeLevel);
 
   static bool HasAnimationsForCompositor(const nsIFrame* aFrame,
                                          nsCSSProperty aProperty);
