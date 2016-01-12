@@ -250,33 +250,6 @@ CommonAnimationManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void
-CommonAnimationManager::AddStyleUpdatesTo(RestyleTracker& aTracker)
-{
-  // FIXME: This is not quite right but is only temporary until we move
-  // this method into EffectCompositor.
-  EffectCompositor::CascadeLevel cascadeLevel =
-    IsAnimationManager() ?
-    EffectCompositor::CascadeLevel::Animations :
-    EffectCompositor::CascadeLevel::Transitions;
-
-  for (AnimationCollection* collection = mElementCollections.getFirst();
-       collection; collection = collection->getNext()) {
-
-    mPresContext->EffectCompositor()
-                ->MaybeUpdateAnimationRule(collection->mElement,
-                                           collection->PseudoElementType(),
-                                           cascadeLevel);
-
-    dom::Element* elementToRestyle = collection->GetElementToRestyle();
-    if (elementToRestyle) {
-      nsRestyleHint rshint = collection->IsForTransitions()
-        ? eRestyle_CSSTransitions : eRestyle_CSSAnimations;
-      aTracker.AddPendingRestyle(elementToRestyle, rshint, nsChangeHint(0));
-    }
-  }
-}
-
 /* static */ bool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
@@ -323,32 +296,6 @@ AnimationCollection::PseudoTypeAsString(nsCSSPseudoElements::Type aPseudoType)
                  "Unexpected pseudo type");
       return EmptyString();
   }
-}
-
-mozilla::dom::Element*
-AnimationCollection::GetElementToRestyle() const
-{
-  if (IsForElement()) {
-    return mElement;
-  }
-
-  nsIFrame* primaryFrame = mElement->GetPrimaryFrame();
-  if (!primaryFrame) {
-    return nullptr;
-  }
-  nsIFrame* pseudoFrame;
-  if (IsForBeforePseudo()) {
-    pseudoFrame = nsLayoutUtils::GetBeforeFrame(primaryFrame);
-  } else if (IsForAfterPseudo()) {
-    pseudoFrame = nsLayoutUtils::GetAfterFrame(primaryFrame);
-  } else {
-    MOZ_ASSERT(false, "unknown mElementProperty");
-    return nullptr;
-  }
-  if (!pseudoFrame) {
-    return nullptr;
-  }
-  return pseudoFrame->GetContent()->AsElement();
 }
 
 /*static*/ void

@@ -31,7 +31,6 @@ class nsPresContext;
 
 namespace mozilla {
 
-class RestyleTracker;
 struct AnimationCollection;
 
 class CommonAnimationManager : public nsIStyleRuleProcessor {
@@ -64,11 +63,6 @@ public:
    * Notify the manager that the pres context is going away.
    */
   void Disconnect();
-
-  // Tell the restyle tracker about all the styles that we're currently
-  // animating, so that it can update the animation rule for these
-  // elements.
-  void AddStyleUpdatesTo(RestyleTracker& aTracker);
 
   // Returns true if aContent or any of its ancestors has an animation
   // or transition.
