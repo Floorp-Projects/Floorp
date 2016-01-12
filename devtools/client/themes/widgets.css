@@ -3,20 +3,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%define smw_marginDark #000
-%define smw_marginLight #aaa
-%define smw_itemDarkTopBorder rgba(0,0,0,0.2)
-%define smw_itemDarkBottomBorder rgba(128,128,128,0.15)
-%define smw_itemLightTopBorder rgba(128,128,128,0.15)
-%define smw_itemLightBottomBorder transparent
 .theme-dark {
   --table-splitter-color: rgba(255,255,255,0.15);
   --table-zebra-background: rgba(255,255,255,0.05);
+  --smw-margin: #000;
+  --smw-item-top-border: rgba(0,0,0,0.2);
+  --smw-item-bottom-border: rgba(128,128,128,0.15);
 }
 .theme-light {
   --table-splitter-color: rgba(0,0,0,0.15);
   --table-zebra-background: rgba(0,0,0,0.05);
+  --smw-margin: #aaa;
+  --smw-item-top-border: rgba(128,128,128,0.15);
+  --smw-item-bottom-border: transparent;
 }
 
 /* Generic pane helpers */
@@ -220,11 +219,9 @@
   padding-bottom: 0;
 }
 
-%ifdef XP_WIN
-.breadcrumbs-widget-item:-moz-focusring > .button-box {
+:root[platform="win"] .breadcrumbs-widget-item:-moz-focusring > .button-box {
   border-width: 0;
 }
-%endif
 
 .breadcrumbs-widget-item:not([checked]) {
   background: -moz-element(#breadcrumb-separator-normal) no-repeat center left;
@@ -358,24 +355,14 @@
 
 /* SideMenuWidget container */
 
-.theme-dark .side-menu-widget-container:-moz-locale-dir(ltr),
-.theme-dark .side-menu-widget-empty-text:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 @smw_marginDark@;
-}
-
-.theme-dark .side-menu-widget-container:-moz-locale-dir(rtl),
-.theme-dark .side-menu-widget-empty-text:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 @smw_marginDark@;
-}
-
 .side-menu-widget-container:-moz-locale-dir(ltr),
 .side-menu-widget-empty-text:-moz-locale-dir(ltr) {
-  box-shadow: inset -1px 0 0 @smw_marginLight@;
+  box-shadow: inset -1px 0 0 var(--smw-margin);
 }
 
 .side-menu-widget-container:-moz-locale-dir(rtl),
 .side-menu-widget-empty-text:-moz-locale-dir(rtl) {
-  box-shadow: inset 1px 0 0 @smw_marginLight@;
+  box-shadow: inset 1px 0 0 var(--smw-margin);
 }
 
 .side-menu-widget-group {
@@ -412,24 +399,21 @@
   background-clip: padding-box;
 }
 
+.side-menu-widget-item {
+  border-top: 1px solid var(--smw-item-top-border);
+  border-bottom: 1px solid var(--smw-item-bottom-border);
+}
+
+.side-menu-widget-item:last-of-type {
+  box-shadow: inset 0 -1px 0 var(--smw-item-top-border);
+}
+
 .theme-dark .side-menu-widget-item {
-  border-top: 1px solid @smw_itemDarkTopBorder@;
-  border-bottom: 1px solid @smw_itemDarkBottomBorder@;
   color: var(--theme-selection-color);
 }
 
-.theme-dark .side-menu-widget-item:last-of-type {
-  box-shadow: inset 0 -1px 0 @smw_itemDarkTopBorder@;
-}
-
 .theme-light .side-menu-widget-item {
-  border-top: 1px solid @smw_itemLightTopBorder@;
-  border-bottom: 1px solid @smw_itemLightBottomBorder@;
   color: var(--theme-body-color);
-}
-
-.theme-light .side-menu-widget-item:last-of-type {
-  box-shadow: inset 0 -1px 0 @smw_itemLightTopBorder@;
 }
 
 .side-menu-widget-item.selected {
@@ -459,19 +443,19 @@
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(images/itemArrow-dark-ltr.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(images/itemArrow-dark-ltr.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
 }
 
 .theme-dark .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(images/itemArrow-dark-rtl.svg), linear-gradient(to right, @smw_marginDark@, @smw_marginDark@);
+  background-image: url(images/itemArrow-dark-rtl.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(ltr) {
-  background-image: url(images/itemArrow-ltr.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
+  background-image: url(images/itemArrow-ltr.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
 }
 
 .theme-light .side-menu-widget-item.selected > .side-menu-widget-item-arrow:-moz-locale-dir(rtl) {
-  background-image: url(images/itemArrow-rtl.svg), linear-gradient(to right, @smw_marginLight@, @smw_marginLight@);
+  background-image: url(images/itemArrow-rtl.svg), linear-gradient(to right, var(--smw-margin), var(--smw-margin));
 }
 
 /* SideMenuWidget items contents */
