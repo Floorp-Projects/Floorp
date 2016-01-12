@@ -28,11 +28,6 @@ class SerializedLoadContext
 {
 public:
   SerializedLoadContext()
-    : mIsNotNull(false)
-    , mIsPrivateBitValid(false)
-    , mIsContent(false)
-    , mUsePrivateBrowsing(false)
-    , mUseRemoteTabs(false)
   {
     Init(nullptr);
   }
