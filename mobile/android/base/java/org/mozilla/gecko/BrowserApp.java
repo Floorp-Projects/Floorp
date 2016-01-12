@@ -29,8 +29,6 @@ import org.mozilla.gecko.firstrun.FirstrunPane;
 import org.mozilla.gecko.gfx.DynamicToolbarAnimator;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
-import org.mozilla.gecko.health.BrowserHealthRecorder;
-import org.mozilla.gecko.health.BrowserHealthReporter;
 import org.mozilla.gecko.health.HealthRecorder;
 import org.mozilla.gecko.health.SessionInformation;
 import org.mozilla.gecko.home.BrowserSearch;
@@ -253,8 +251,6 @@ public class BrowserApp extends GeckoApp
     private SharedPreferencesHelper mSharedPreferencesHelper;
 
     private OrderedBroadcastHelper mOrderedBroadcastHelper;
-
-    private BrowserHealthReporter mBrowserHealthReporter;
 
     private ReadingListHelper mReadingListHelper;
 
@@ -705,7 +701,6 @@ public class BrowserApp extends GeckoApp
         JavaAddonManager.getInstance().init(appContext);
         mSharedPreferencesHelper = new SharedPreferencesHelper(appContext);
         mOrderedBroadcastHelper = new OrderedBroadcastHelper(appContext);
-        mBrowserHealthReporter = new BrowserHealthReporter();
         mReadingListHelper = new ReadingListHelper(appContext, getProfile(), this);
         mAccountsHelper = new AccountsHelper(appContext, getProfile());
 
@@ -1309,11 +1304,6 @@ public class BrowserApp extends GeckoApp
         if (mOrderedBroadcastHelper != null) {
             mOrderedBroadcastHelper.uninit();
             mOrderedBroadcastHelper = null;
-        }
-
-        if (mBrowserHealthReporter != null) {
-            mBrowserHealthReporter.uninit();
-            mBrowserHealthReporter = null;
         }
 
         if (mReadingListHelper != null) {
@@ -2330,16 +2320,16 @@ public class BrowserApp extends GeckoApp
      *        {@link BrowserHealthRecorder#SEARCH_LOCATIONS}.
      */
     private static void recordSearch(SearchEngine engine, String where) {
-        try {
-            String identifier = (engine == null) ? "other" : engine.getEngineIdentifier();
-            JSONObject message = new JSONObject();
-            message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
-            message.put("location", where);
-            message.put("identifier", identifier);
-            EventDispatcher.getInstance().dispatchEvent(message, null);
-        } catch (Exception e) {
-            Log.e(LOGTAG, "Error recording search.", e);
-        }
+        //try {
+        //    String identifier = (engine == null) ? "other" : engine.getEngineIdentifier();
+        //    JSONObject message = new JSONObject();
+        //    message.put("type", BrowserHealthRecorder.EVENT_SEARCH);
+        //    message.put("location", where);
+        //    message.put("identifier", identifier);
+        //    EventDispatcher.getInstance().dispatchEvent(message, null);
+        //} catch (Exception e) {
+        //    Log.e(LOGTAG, "Error recording search.", e);
+        //}
     }
 
     /**
@@ -3832,22 +3822,6 @@ public class BrowserApp extends GeckoApp
         // Only slide the urlbar out if it was hidden when the action mode started
         // Don't animate hiding it so that there's no flash as we switch back to url mode
         mDynamicToolbar.setTemporarilyVisible(false, VisibilityTransition.IMMEDIATE);
-    }
-
-    @Override
-    protected HealthRecorder createHealthRecorder(final Context context,
-                                                  final String profilePath,
-                                                  final EventDispatcher dispatcher,
-                                                  final String osLocale,
-                                                  final String appLocale,
-                                                  final SessionInformation previousSession) {
-        return new BrowserHealthRecorder(context,
-                                         GeckoSharedPrefs.forApp(context),
-                                         profilePath,
-                                         dispatcher,
-                                         osLocale,
-                                         appLocale,
-                                         previousSession);
     }
 
     public static interface Refreshable {
