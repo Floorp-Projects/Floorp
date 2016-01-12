@@ -386,7 +386,8 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
   nsTArray<RefPtr<File>> newFiles;
   if (mode == static_cast<int16_t>(nsIFilePicker::modeOpenMultiple)) {
     nsCOMPtr<nsISimpleEnumerator> iter;
-    nsresult rv = mFilePicker->GetDomfiles(getter_AddRefs(iter));
+    nsresult rv =
+      mFilePicker->GetDomFileOrDirectoryEnumerator(getter_AddRefs(iter));
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (!iter) {
@@ -409,7 +410,7 @@ HTMLInputElement::nsFilePickerShownCallback::Done(int16_t aResult)
     MOZ_ASSERT(mode == static_cast<int16_t>(nsIFilePicker::modeOpen) ||
                mode == static_cast<int16_t>(nsIFilePicker::modeGetFolder));
     nsCOMPtr<nsISupports> tmp;
-    nsresult rv = mFilePicker->GetDomfile(getter_AddRefs(tmp));
+    nsresult rv = mFilePicker->GetDomFileOrDirectory(getter_AddRefs(tmp));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIDOMBlob> blob = do_QueryInterface(tmp);

@@ -71,11 +71,12 @@ FilePicker.prototype = {
   /* readonly attribute nsISimpleEnumerator files - not implemented; */
   /* readonly attribute nsIURI fileURL - not implemented; */
 
-  get domfiles() {
+  get domFileOrDirectoryEnumerator() {
     return this.mFilesEnumerator;
   },
 
-  get domfile() {
+  // We don't support directory selection yet.
+  get domFileOrDirectory() {
     return this.mFilesEnumerator ? this.mFilesEnumerator.mFiles[0] : null;
   },
 
