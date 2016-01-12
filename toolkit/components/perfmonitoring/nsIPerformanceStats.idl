@@ -126,7 +126,7 @@ interface nsIPerformanceSnapshot: nsISupports {
 /**
  * A performance alert.
  */
-[scriptable, function, uuid(463c92d9-2e55-4f57-9b22-7badbbdfb2b7)]
+[scriptable, builtinclass, uuid(d5379791-3f90-4edc-bcbb-5d4edea03e57)]
 interface nsIPerformanceAlert: nsISupports {
   // Alert was caused by jank exceeding the threshold.
   const unsigned long REASON_JANK = 0;
@@ -147,6 +147,17 @@ interface nsIPerformanceAlert: nsISupports {
    * since the latest alert, in microseconds.
    */
   readonly attribute unsigned long long highestCPOW;
+
+  /**
+   * `true` if the jank is expected to be noticeable by the user,
+   * `false` otherwise.
+   *
+   * In the current implementation, we consider that jank is noticeable
+   * if it arrives during an animation, shortly after a user input, or
+   * if a user input is triggered during the same iteration of the event
+   * loop.
+   */
+  readonly attribute bool isJankVisible;
 };
 
 
