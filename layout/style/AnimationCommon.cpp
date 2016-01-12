@@ -172,9 +172,19 @@ CommonAnimationManager::RulesMatching(ElementRuleProcessorData* aData)
 {
   MOZ_ASSERT(aData->mPresContext == mPresContext,
              "pres context mismatch");
+
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsAnimationManager() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+
   nsIStyleRule *rule =
-    GetAnimationRule(aData->mElement,
-                     nsCSSPseudoElements::ePseudo_NotPseudoElement);
+    mPresContext->EffectCompositor()->GetAnimationRule(aData->mElement,
+                                                       pseudoType,
+                                                       cascadeLevel);
+
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
@@ -194,7 +204,15 @@ CommonAnimationManager::RulesMatching(PseudoElementRuleProcessorData* aData)
   // FIXME: Do we really want to be the only thing keeping a
   // pseudo-element alive?  I *think* the non-animation restyle should
   // handle that, but should add a test.
-  nsIStyleRule *rule = GetAnimationRule(aData->mElement, aData->mPseudoType);
+
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsAnimationManager() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  nsIStyleRule *rule =
+    mPresContext->EffectCompositor()->GetAnimationRule(aData->mElement,
+                                                       aData->mPseudoType,
+                                                       cascadeLevel);
   if (rule) {
     aData->mRuleWalker->Forward(rule);
     aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
@@ -276,50 +294,6 @@ CommonAnimationManager::ExtractComputedValueForTransition(
                                StyleAnimationValue::eUnit_Visibility);
   }
   return result;
-}
-
-nsIStyleRule*
-CommonAnimationManager::GetAnimationRule(mozilla::dom::Element* aElement,
-                                         nsCSSPseudoElements::Type aPseudoType)
-{
-  MOZ_ASSERT(
-    aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
-    aPseudoType == nsCSSPseudoElements::ePseudo_before ||
-    aPseudoType == nsCSSPseudoElements::ePseudo_after,
-    "forbidden pseudo type");
-
-  if (!mPresContext->IsDynamic()) {
-    // For print or print preview, ignore animations.
-    return nullptr;
-  }
-
-  AnimationCollection* collection =
-    GetAnimationCollection(aElement, aPseudoType, false /* aCreateIfNeeded */);
-  if (!collection) {
-    return nullptr;
-  }
-
-  RestyleManager* restyleManager = mPresContext->RestyleManager();
-  if (restyleManager->SkipAnimationRules()) {
-    return nullptr;
-  }
-
-  // FIXME: This is not quite right but is only temporary until we move
-  // this method into EffectCompositor.
-  EffectCompositor::CascadeLevel cascadeLevel =
-    IsAnimationManager() ?
-    EffectCompositor::CascadeLevel::Animations :
-    EffectCompositor::CascadeLevel::Transitions;
-  mPresContext->EffectCompositor()->MaybeUpdateAnimationRule(aElement,
-                                                             aPseudoType,
-                                                             cascadeLevel);
-
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
-  if (!effectSet) {
-    return nullptr;
-  }
-
-  return effectSet->AnimationRule(cascadeLevel);
 }
 
 void

@@ -552,7 +552,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     mPresContext->Document()->SetNeedStyleFlush();
   }
 
-  return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
+  return mPresContext->EffectCompositor()
+                     ->GetAnimationRule(aElement,
+                                        aStyleContext->GetPseudoType(),
+                                        cascadeLevel);
 }
 
 void
