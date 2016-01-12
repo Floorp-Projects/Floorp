@@ -165,7 +165,6 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
 
   // Request restyle if necessary.
   ComputedTiming computedTiming = GetComputedTiming();
-  AnimationCollection* collection = GetCollection();
   // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
   // However, currently we don't properly encapsulate mProperties so we can't
   // detect when it changes. As a result, if we skip requesting restyles when
@@ -174,13 +173,33 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   // request a restyle at all. Since animations without properties are rare, we
   // currently just request the restyle regardless of whether mProperties is
   // empty or not.
-  if (collection &&
-      // Bug 1216843: When we implement iteration composite modes, we need to
-      // also detect if the current iteration has changed.
-      computedTiming.mProgress != mProgressOnLastCompose) {
-    collection->RequestRestyle(CanThrottle() ?
-                               EffectCompositor::RestyleType::Throttled :
-                               EffectCompositor::RestyleType::Standard);
+  //
+  // Bug 1216843: When we implement iteration composite modes, we need to
+  // also detect if the current iteration has changed.
+  if (computedTiming.mProgress != mProgressOnLastCompose) {
+    EffectCompositor::RestyleType restyleType =
+      CanThrottle() ?
+      EffectCompositor::RestyleType::Throttled :
+      EffectCompositor::RestyleType::Standard;
+    // FIXME: This arrangement of calling RequestRestyle on *either* the
+    // collection or the compositor is temporary while we move this method
+    // to the compositor.
+    //
+    // In the case where we don't have a collection (as is often the case
+    // when we create animations but haven't yet added them to a collection
+    // yet) we still need to make sure that the effect ends up in the
+    // "needs restyle" map in the compositor.
+    AnimationCollection* collection = GetCollection();
+    if (collection) {
+      collection->RequestRestyle(restyleType);
+    } else if (mAnimation) {
+      nsPresContext* presContext = GetPresContext();
+      if (presContext) {
+        presContext->EffectCompositor()->
+          RequestRestyle(mTarget, mPseudoType, restyleType,
+                         mAnimation->CascadeLevel());
+      }
+    }
   }
 }
 

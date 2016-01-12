@@ -416,6 +416,12 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
 {
   mHasPendingAnimationRestyle = false;
 
+  nsPresContext* presContext = mManager->PresContext();
+  if (!presContext) {
+    // Pres context will be null after the manager is disconnected.
+    return;
+  }
+
   if (!mStyleChanging) {
     mStyleRuleRefreshTime = aRefreshTime;
     return;
@@ -450,10 +456,10 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
     IsForAnimations() ?
     EffectCompositor::CascadeLevel::Animations :
     EffectCompositor::CascadeLevel::Transitions;
-  EffectCompositor::ComposeAnimationRule(mElement,
-                                         PseudoElementType(),
-                                         cascadeLevel,
-                                         mStyleChanging);
+  presContext->EffectCompositor()->MaybeUpdateAnimationRule(mElement,
+                                                            PseudoElementType(),
+                                                            cascadeLevel,
+                                                            mStyleChanging);
 }
 
 void
@@ -467,6 +473,15 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
     // Pres context will be null after the manager is disconnected.
     return;
   }
+
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsForAnimations() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  presContext->EffectCompositor()->RequestRestyle(mElement,
+                                                  PseudoElementType(),
+                                                  aRestyleType,
+                                                  cascadeLevel);
 
   // Steps for RestyleType::Layer:
 
