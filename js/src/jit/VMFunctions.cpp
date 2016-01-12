@@ -77,7 +77,7 @@ InvokeFunction(JSContext* cx, HandleObject obj, bool constructing, uint32_t argc
 
         RootedValue newTarget(cx, argvWithoutThis[argc]);
 
-        // If |this| hasn't been created, or is JS_UNINITIALIED_LEXICAL,
+        // If |this| hasn't been created, or is JS_UNINITIALIZED_LEXICAL,
         // we can use normal construction code without creating an extraneous
         // object.
         if (thisv.isMagic()) {
