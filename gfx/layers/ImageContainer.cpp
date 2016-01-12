@@ -290,12 +290,18 @@ ImageContainer::ClearAllImages()
 void
 ImageContainer::SetCurrentImageInTransaction(Image *aImage)
 {
+  nsAutoTArray<NonOwningImage,1> images;
+  images.AppendElement(NonOwningImage(aImage));
+  SetCurrentImagesInTransaction(images);
+}
+
+void
+ImageContainer::SetCurrentImagesInTransaction(const nsTArray<NonOwningImage>& aImages)
+{
   NS_ASSERTION(NS_IsMainThread(), "Should be on main thread.");
   NS_ASSERTION(!mImageClient, "Should use async image transfer with ImageBridge.");
 
-  AutoTArray<NonOwningImage,1> images;
-  images.AppendElement(NonOwningImage(aImage));
-  SetCurrentImageInternal(images);
+  SetCurrentImageInternal(aImages);
 }
 
 bool ImageContainer::IsAsync() const
