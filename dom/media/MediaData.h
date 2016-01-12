@@ -318,7 +318,7 @@ protected:
 class CryptoTrack
 {
 public:
-  CryptoTrack() : mValid(false), mMode(0), mIVSize(0) {}
+  CryptoTrack() : mValid(false) {}
   bool mValid;
   int32_t mMode;
   int32_t mIVSize;

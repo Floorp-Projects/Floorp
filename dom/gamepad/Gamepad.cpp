@@ -46,8 +46,7 @@ Gamepad::Gamepad(nsISupports* aParent,
     mMapping(aMapping),
     mConnected(true),
     mButtons(aNumButtons),
-    mAxes(aNumAxes),
-    mTimestamp(0)
+    mAxes(aNumAxes)
 {
   for (unsigned i = 0; i < aNumButtons; i++) {
     mButtons.InsertElementAt(i, new GamepadButton(mParent));
