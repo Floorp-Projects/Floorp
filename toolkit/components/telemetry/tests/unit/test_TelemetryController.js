@@ -31,7 +31,6 @@ const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_ARCHIVE_ENABLED = PREF_BRANCH + "archive.enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
-const PREF_FHR_SERVICE_ENABLED = "datareporting.healthreport.service.enabled";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
 const PREF_OPTOUT_SAMPLE = PREF_BRANCH + "optoutSample";
 
@@ -100,7 +99,6 @@ function run_test() {
 
   Services.prefs.setBoolPref(PREF_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
-  Services.prefs.setBoolPref(PREF_FHR_SERVICE_ENABLED, true);
 
   Telemetry.asyncFetchTelemetryData(wrapWithExceptionHandler(run_next_test));
 }
@@ -208,11 +206,7 @@ add_task(function* test_pingHasClientId() {
   let ping = yield PingServer.promiseNextPing();
   checkPingFormat(ping, TEST_PING_TYPE, true, false);
 
-  if (HAS_DATAREPORTINGSERVICE &&
-      Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED)) {
-    Assert.equal(ping.clientId, gClientID,
-                 "The correct clientId must be reported.");
-  }
+  Assert.equal(ping.clientId, gClientID, "The correct clientId must be reported.");
 });
 
 add_task(function* test_pingHasEnvironment() {
@@ -234,11 +228,7 @@ add_task(function* test_pingHasEnvironmentAndClientId() {
   // Test a field in the environment build section.
   Assert.equal(ping.application.buildId, ping.environment.build.buildId);
   // Test that we have the correct clientId.
-  if (HAS_DATAREPORTINGSERVICE &&
-      Services.prefs.getBoolPref(PREF_FHR_UPLOAD_ENABLED)) {
-    Assert.equal(ping.clientId, gClientID,
-                 "The correct clientId must be reported.");
-  }
+  Assert.equal(ping.clientId, gClientID, "The correct clientId must be reported.");
 });
 
 add_task(function* test_archivePings() {

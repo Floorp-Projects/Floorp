@@ -1166,7 +1166,7 @@ MakeElementValue(JSObject *object)
 }
 
 template <typename T>
-ArrayObject* ModuleBuilder::createArray(const TraceableVector<T>& vector)
+ArrayObject* ModuleBuilder::createArray(const GCVector<T>& vector)
 {
     uint32_t length = vector.length();
     RootedArrayObject array(cx_, NewDenseFullyAllocatedArray(cx_, length));

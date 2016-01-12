@@ -41,8 +41,8 @@ void av_image_fill_max_pixsteps(int max_pixsteps[4], int max_pixstep_comps[4],
 
     for (i = 0; i < 4; i++) {
         const AVComponentDescriptor *comp = &(pixdesc->comp[i]);
-        if ((comp->step_minus1+1) > max_pixsteps[comp->plane]) {
-            max_pixsteps[comp->plane] = comp->step_minus1+1;
+        if (comp->step > max_pixsteps[comp->plane]) {
+            max_pixsteps[comp->plane] = comp->step;
             if (max_pixstep_comps)
                 max_pixstep_comps[comp->plane] = i;
         }
@@ -236,11 +236,21 @@ typedef struct ImgUtils {
     void *log_ctx;
 } ImgUtils;
 
-static const AVClass imgutils_class = { "IMGUTILS", av_default_item_name, NULL, LIBAVUTIL_VERSION_INT, offsetof(ImgUtils, log_offset), offsetof(ImgUtils, log_ctx) };
+static const AVClass imgutils_class = {
+    .class_name = "IMGUTILS",
+    .item_name  = av_default_item_name,
+    .version    = LIBAVUTIL_VERSION_INT,
+    .log_level_offset_offset   = offsetof(ImgUtils, log_offset),
+    .parent_log_context_offset = offsetof(ImgUtils, log_ctx),
+};
 
 int av_image_check_size(unsigned int w, unsigned int h, int log_offset, void *log_ctx)
 {
-    ImgUtils imgutils = { &imgutils_class, log_offset, log_ctx };
+    ImgUtils imgutils = {
+        .class      = &imgutils_class,
+        .log_offset = log_offset,
+        .log_ctx    = log_ctx,
+    };
 
     if ((int)w>0 && (int)h>0 && (w+128)*(uint64_t)(h+128) < INT_MAX/8)
         return 0;

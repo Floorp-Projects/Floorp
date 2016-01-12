@@ -19,7 +19,7 @@
 #include "jit/BaselineJIT.h"
 #include "jit/SharedIC.h"
 #include "jit/SharedICRegisters.h"
-#include "js/TraceableVector.h"
+#include "js/GCVector.h"
 #include "vm/ArrayObject.h"
 #include "vm/UnboxedObject.h"
 

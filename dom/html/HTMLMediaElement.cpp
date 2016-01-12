@@ -2184,7 +2184,7 @@ void HTMLMediaElement::StopSuspendingAfterFirstFrame()
     return;
   mSuspendedAfterFirstFrame = false;
   if (mDecoder) {
-    mDecoder->Resume(true);
+    mDecoder->Resume();
   }
 }
 
@@ -4191,7 +4191,7 @@ void HTMLMediaElement::SuspendOrResumeElement(bool aPauseElement, bool aSuspendE
       MOZ_ASSERT(!mMediaKeys);
 #endif
       if (mDecoder) {
-        mDecoder->Resume(false);
+        mDecoder->Resume();
         if (!mPaused && !mDecoder->IsEndedOrShutdown()) {
           mDecoder->Play();
         }
@@ -4891,7 +4891,7 @@ HTMLMediaElement::SetMediaKeys(mozilla::dom::MediaKeys* aMediaKeys,
     if (mDecoder) {
       // We don't support swapping out the MediaKeys once we've started to
       // setup the playback pipeline. Note this also means we don't need to worry
-      // about handling disassociating the MediaKeys from the MediaDecoder. 
+      // about handling disassociating the MediaKeys from the MediaDecoder.
       promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
         NS_LITERAL_CSTRING("Can't change MediaKeys on HTMLMediaElement after load has started"));
       return promise.forget();

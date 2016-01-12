@@ -222,6 +222,7 @@ MeasuringToolHighlighter.prototype = {
     pageListenerTarget.removeEventListener("mouseup", this);
     pageListenerTarget.removeEventListener("scroll", this);
     pageListenerTarget.removeEventListener("pagehide", this);
+    pageListenerTarget.removeEventListener("mouseleave", this);
 
     this.markup.destroy();
 

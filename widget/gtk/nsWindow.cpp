@@ -4977,11 +4977,28 @@ nsWindow::PerformFullscreenTransition(FullscreenTransitionStage aStage,
                        transitionData, nullptr);
 }
 
+static bool
+IsFullscreenSupported(GtkWidget* aShell)
+{
+#ifdef MOZ_X11
+    GdkScreen* screen = gtk_widget_get_screen(aShell);
+    GdkAtom atom = gdk_atom_intern("_NET_WM_STATE_FULLSCREEN", FALSE);
+    if (!gdk_x11_screen_supports_net_wm_hint(screen, atom)) {
+        return false;
+    }
+#endif
+    return true;
+}
+
 NS_IMETHODIMP
 nsWindow::MakeFullScreen(bool aFullScreen, nsIScreen* aTargetScreen)
 {
     LOG(("nsWindow::MakeFullScreen [%p] aFullScreen %d\n",
          (void *)this, aFullScreen));
+
+    if (!IsFullscreenSupported(mShell)) {
+        return NS_ERROR_NOT_AVAILABLE;
+    }
 
     if (aFullScreen) {
         if (mSizeMode != nsSizeMode_Fullscreen)

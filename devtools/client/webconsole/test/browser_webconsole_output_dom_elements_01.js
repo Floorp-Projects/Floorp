@@ -74,6 +74,15 @@ var inputTests = [
   },
 
   {
+    input: "testLotsOfAttributes()",
+    output: '<p n="" m="" l="" k="" j="" i="" h="" g="" f="" e="" d="" c="" b="" a="" id="lots-of-attributes">',
+    printOutput: "[object HTMLParagraphElement]",
+    inspectable: true,
+    noClick: true,
+    inspectorIcon: true
+  },
+
+  {
     input: "testDocumentFragment()",
     output: "DocumentFragment [ <span.foo>, <div#fragdiv> ]",
     printOutput: "[object DocumentFragment]",
@@ -99,15 +108,6 @@ var inputTests = [
     noClick: true,
     inspectorIcon: false
   },
-
-  {
-    input: "testLotsOfAttributes()",
-    output: '<p n="" m="" l="" k="" j="" i="" h="" g="" f="" e="" d="" c="" b="" a="" id="lots-of-attributes">',
-    printOutput: "[object HTMLParagraphElement]",
-    inspectable: true,
-    noClick: true,
-    inspectorIcon: true
-  }
 ];
 
 function test() {

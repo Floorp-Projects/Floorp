@@ -17,7 +17,7 @@
  *
  * See nsIThreadManager for the API used to create and locate threads.
  */
-[scriptable, uuid(594feb13-6164-4054-b5a1-ad62e10ea15d)]
+[scriptable, uuid(5801d193-29d1-4964-a6b7-70eb697ddf2b)]
 interface nsIThread : nsIEventTarget
 {
   /**

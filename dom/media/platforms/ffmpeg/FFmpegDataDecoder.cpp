@@ -11,11 +11,9 @@
 #include <unistd.h>
 #endif
 
-#include "FFmpegLibs.h"
 #include "FFmpegLog.h"
 #include "FFmpegDataDecoder.h"
 #include "prsystem.h"
-#include "FFmpegRuntimeLinker.h"
 
 namespace mozilla
 {
