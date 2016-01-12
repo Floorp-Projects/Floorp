@@ -37,7 +37,8 @@
 
 #if (defined(OPUS_X86_MAY_HAVE_SSE) && !defined(OPUS_X86_PRESUME_SSE)) || \
   (defined(OPUS_X86_MAY_HAVE_SSE2) && !defined(OPUS_X86_PRESUME_SSE2)) || \
-  (defined(OPUS_X86_MAY_HAVE_SSE4_1) && !defined(OPUS_X86_PRESUME_SSE4_1))
+  (defined(OPUS_X86_MAY_HAVE_SSE4_1) && !defined(OPUS_X86_PRESUME_SSE4_1)) || \
+  (defined(OPUS_X86_MAY_HAVE_AVX) && !defined(OPUS_X86_PRESUME_AVX))
 
 
 #if defined(_MSC_VER)
@@ -91,6 +92,8 @@ typedef struct CPU_Feature{
     int HW_SSE;
     int HW_SSE2;
     int HW_SSE41;
+    /*  SIMD: 256-bit */
+    int HW_AVX;
 } CPU_Feature;
 
 static void opus_cpu_feature_check(CPU_Feature *cpu_feature)
@@ -106,11 +109,13 @@ static void opus_cpu_feature_check(CPU_Feature *cpu_feature)
         cpu_feature->HW_SSE = (info[3] & (1 << 25)) != 0;
         cpu_feature->HW_SSE2 = (info[3] & (1 << 26)) != 0;
         cpu_feature->HW_SSE41 = (info[2] & (1 << 19)) != 0;
+        cpu_feature->HW_AVX = (info[2] & (1 << 28)) != 0;
     }
     else {
         cpu_feature->HW_SSE = 0;
         cpu_feature->HW_SSE2 = 0;
         cpu_feature->HW_SSE41 = 0;
+        cpu_feature->HW_AVX = 0;
     }
 }
 
@@ -135,6 +140,12 @@ int opus_select_arch(void)
     arch++;
 
     if (!cpu_feature.HW_SSE41)
+    {
+        return arch;
+    }
+    arch++;
+
+    if (!cpu_feature.HW_AVX)
     {
         return arch;
     }
