@@ -482,7 +482,7 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
     /* Called any time we're closing the dialog to cleanup and notify listeners that the dialog
      * is closing.
      */
-    private void notifyClosing(JSONObject aReturn) {
+    private void notifyClosing(final JSONObject aReturn) {
         try {
             aReturn.put("guid", mGuid);
         } catch(JSONException ex) { }
@@ -495,7 +495,12 @@ public class Prompt implements OnClickListener, OnCancelListener, OnItemClickLis
         GeckoAppShell.sendEventToGecko(GeckoEvent.createNoOpEvent());
 
         if (mCallback != null) {
-            mCallback.onPromptFinished(aReturn.toString());
+            ThreadUtils.postToBackgroundThread(new Runnable() {
+                @Override
+                public void run() {
+                    mCallback.onPromptFinished(aReturn.toString());
+                }
+            });
         }
     }
 
