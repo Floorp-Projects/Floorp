@@ -93,14 +93,14 @@ nsFilePicker.prototype = {
   /* readonly attribute nsISimpleEnumerator files; */
   get files()  { return this.mFilesEnumerator; },
 
-  /* we don't support directories, yet */
-  get domFileOrDirectory()  {
-    let enumerator = this.domFileOrDirectoryEnumerator;
+  /* readonly attribute DOM File domfile; */
+  get domfile()  {
+    let enumerator = this.domfiles;
     return enumerator ? enumerator.mFiles[0] : null;
   },
 
-  /* readonly attribute nsISimpleEnumerator domFileOrDirectoryEnumerator; */
-  get domFileOrDirectoryEnumerator()  {
+  /* readonly attribute nsISimpleEnumerator domfiles; */
+  get domfiles()  {
     if (!this.mFilesEnumerator) {
       return null;
     }
