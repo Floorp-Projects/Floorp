@@ -3,10 +3,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
+#include "nsIDOMNode.idl"
 
-[builtinclass, uuid(df7e4cd9-e41f-4c8e-a764-2e3191d2f463)]
-interface nsIDOMMutationEvent : nsIDOMEvent
+[builtinclass, uuid(30c9997f-bc4c-4890-b890-febb6ae3051b)]
+interface nsIDOMMutationEvent : nsISupports
 {
   const unsigned short      MODIFICATION       = 1;
   const unsigned short      ADDITION           = 2;
