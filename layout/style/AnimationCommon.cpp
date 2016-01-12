@@ -428,10 +428,6 @@ AnimationCollection::EnsureStyleRuleFor()
     return;
   }
 
-  if (!mStyleChanging) {
-    return;
-  }
-
   // Update cascade results before updating the style rule, since the
   // cascade results can influence the style rule.
   nsStyleContext* styleContext = nullptr;
@@ -454,8 +450,7 @@ AnimationCollection::EnsureStyleRuleFor()
     EffectCompositor::CascadeLevel::Transitions;
   presContext->EffectCompositor()->MaybeUpdateAnimationRule(mElement,
                                                             PseudoElementType(),
-                                                            cascadeLevel,
-                                                            mStyleChanging);
+                                                            cascadeLevel);
 }
 
 void
@@ -482,7 +477,6 @@ AnimationCollection::RequestRestyle(EffectCompositor::RestyleType aRestyleType)
   // Steps for RestyleType::Layer:
 
   if (aRestyleType == EffectCompositor::RestyleType::Layer) {
-    mStyleChanging = true;
 
     // Prompt layers to re-sync their animations.
     presContext->ClearLastStyleUpdateForAllAnimations();

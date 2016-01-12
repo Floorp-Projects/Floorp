@@ -144,7 +144,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     , mElementProperty(aElementProperty)
     , mManager(aManager)
     , mCheckGeneration(0)
-    , mStyleChanging(true)
     , mHasPendingAnimationRestyle(false)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
@@ -252,11 +251,6 @@ public:
   uint64_t mCheckGeneration;
   // Update mCheckGeneration to RestyleManager's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
-
-  // False when we know that our current animation rule is valid
-  // indefinitely into the future (because all of our animations are
-  // either completed or paused).  May be invalidated by a style change.
-  bool mStyleChanging;
 
 private:
   // Whether or not we have already posted for animation restyle.
