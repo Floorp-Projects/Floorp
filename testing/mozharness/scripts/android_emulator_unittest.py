@@ -594,7 +594,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
 
     def verify_emulator(self):
         '''
-        Check to see if the emulator can be contacted via adb, telnet, and sut, if configured. 
+        Check to see if the emulator can be contacted via adb, telnet, and sut, if configured.
         If any communication attempt fails, kill the emulator, re-launch, and re-check.
         '''
         self.mkdir_p(self.query_abs_dirs()['abs_blob_upload_dir'])
@@ -627,8 +627,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
             self.info("Downloading robocop...")
             self.download_file(robocop_url, 'robocop.apk', dirs['abs_work_dir'], error_level=FATAL)
-        self.mkdir_p(dirs['abs_xre_dir'])
-        self._download_unzip(self.host_utils_url, dirs['abs_xre_dir'])
+        self.download_unzip(self.host_utils_url, dirs['abs_xre_dir'])
 
     def install(self):
         """
