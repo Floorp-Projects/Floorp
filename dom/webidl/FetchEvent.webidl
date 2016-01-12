@@ -7,11 +7,11 @@
  * http://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html
  */
 
-[Constructor(DOMString type, optional FetchEventInit eventInitDict),
+[Constructor(DOMString type, FetchEventInit eventInitDict),
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
-  [SameObject] readonly attribute Request? request;
+  [SameObject] readonly attribute Request request;
   readonly attribute DOMString? clientId;
   readonly attribute boolean isReload;
 
@@ -20,7 +20,7 @@ interface FetchEvent : ExtendableEvent {
 };
 
 dictionary FetchEventInit : EventInit {
-  Request request;
+  required Request request;
   DOMString? clientId = null;
   boolean isReload = false;
 };

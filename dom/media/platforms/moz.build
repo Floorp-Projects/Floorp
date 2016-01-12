@@ -49,14 +49,15 @@ if CONFIG['MOZ_FFMPEG']:
         DIRS += [
             'ffmpeg/libav53',
             'ffmpeg/libav54',
+            'ffmpeg/libav55',
         ]
     else:
         LOCAL_INCLUDES += [
-            'ffmpeg/libav55/include',
+            'ffmpeg/ffmpeg57/include',
         ]
 
     DIRS += [
-        'ffmpeg/libav55',
+        'ffmpeg/ffmpeg57',
     ]
 
 if CONFIG['MOZ_APPLEMEDIA']:

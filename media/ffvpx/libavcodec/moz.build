@@ -26,6 +26,7 @@ SOURCES += [
     'mathtables.c',
     'options.c',
     'parser.c',
+    'profiles.c',
     'pthread.c',
     'pthread_frame.c',
     'pthread_slice.c',
@@ -50,7 +51,7 @@ SOURCES += [
     'xiph.c'
 ]
 
-SYMBOLS_FILE = 'avcodec-56.symbols'
+SYMBOLS_FILE = 'avcodec.symbols'
 NO_VISIBILITY_FLAGS = True
 
 USE_LIBS += [

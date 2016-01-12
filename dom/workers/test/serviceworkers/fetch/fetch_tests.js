@@ -393,7 +393,7 @@ fetch('fetchevent-request')
 .then(function(res) {
   return res.text();
 }).then(function(body) {
-  my_ok(body == "nullable", "FetchEvent.request must be nullable");
+  my_ok(body == "non-nullable", "FetchEvent.request must be non-nullable");
   finish();
 }, function(err) {
   my_ok(false, "A promise was rejected with " + err);

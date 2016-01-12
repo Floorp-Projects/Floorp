@@ -471,13 +471,14 @@ struct DefaultGCPolicy<T*>
     static void trace(JSTracer* trc, T** thingp, const char* name) {
         // If linking is failing here, it likely means that you need to define
         // or use a non-default GC policy for your non-gc-pointer type.
-        TraceManuallyBarrieredEdge(trc, thingp, name);
+        if (*thingp)
+            TraceManuallyBarrieredEdge(trc, thingp, name);
     }
 
     static bool needsSweep(T** thingp) {
         // If linking is failing here, it likely means that you need to define
         // or use a non-default GC policy for your non-gc-pointer type.
-        return gc::IsAboutToBeFinalizedUnbarriered(thingp);
+        return *thingp && gc::IsAboutToBeFinalizedUnbarriered(thingp);
     }
 };
 

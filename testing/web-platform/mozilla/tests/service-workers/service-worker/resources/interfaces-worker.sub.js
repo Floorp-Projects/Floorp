@@ -71,36 +71,36 @@ promise_test(function(t) {
   }, 'Cache');
 
 test(function() {
+    var req = new Request('http://{{host}}/',
+                          {method: 'POST',
+                           headers: [['Content-Type', 'Text/Html']]});
     assert_equals(
       new ExtendableEvent('ExtendableEvent').type,
       'ExtendableEvent', 'Type of ExtendableEvent should be ExtendableEvent');
     assert_equals(
-      new FetchEvent('FetchEvent').type,
+      new FetchEvent('FetchEvent', {request: req}).type,
       'FetchEvent', 'Type of FetchEvent should be FetchEvent');
     assert_equals(
-      new FetchEvent('FetchEvent').cancelable,
+      new FetchEvent('FetchEvent', {request: req}).cancelable,
       false, 'Default FetchEvent.cancelable should be false');
     assert_equals(
-      new FetchEvent('FetchEvent').bubbles,
+      new FetchEvent('FetchEvent', {request: req}).bubbles,
       false, 'Default FetchEvent.bubbles should be false');
     assert_equals(
-      new FetchEvent('FetchEvent').clientId,
+      new FetchEvent('FetchEvent', {request: req}).clientId,
       null, 'Default FetchEvent.clientId should be null');
     assert_equals(
-      new FetchEvent('FetchEvent').isReload,
+      new FetchEvent('FetchEvent', {request: req}).isReload,
       false, 'Default FetchEvent.isReload should be false');
     assert_equals(
-      new FetchEvent('FetchEvent', {cancelable: false}).cancelable,
+      new FetchEvent('FetchEvent', {request: req, cancelable: false}).cancelable,
       false, 'FetchEvent.cancelable should be false');
     assert_equals(
-      new FetchEvent('FetchEvent', {clientId : 'test-client-id'}).clientId, 'test-client-id',
+      new FetchEvent('FetchEvent', {request: req, clientId : 'test-client-id'}).clientId, 'test-client-id',
       'FetchEvent.clientId with option {clientId : "test-client-id"} should be "test-client-id"');
     assert_equals(
-      new FetchEvent('FetchEvent', {isReload : true}).isReload, true,
+      new FetchEvent('FetchEvent', {request: req, isReload : true}).isReload, true,
       'FetchEvent.isReload with option {isReload : true} should be true');
-    var req = new Request('http://{{host}}/',
-                          {method: 'POST',
-                           headers: [['Content-Type', 'Text/Html']]});
     assert_equals(
       new FetchEvent('FetchEvent', {request : req, isReload : true}).request.url,
       'http://{{host}}/',

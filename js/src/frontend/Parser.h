@@ -236,7 +236,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
     OwnedAtomDefnMapPtr lexdeps;    /* unresolved lexical name dependencies */
 
     // All inner functions in this context. Only filled in when parsing syntax.
-    Rooted<TraceableVector<JSFunction*>> innerFunctions;
+    Rooted<GCVector<JSFunction*>> innerFunctions;
 
     // In a function context, points to a Directive struct that can be updated
     // to reflect new directives encountered in the Directive Prologue that
@@ -272,7 +272,7 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         parserPC(&prs->pc),
         oldpc(prs->pc),
         lexdeps(prs->context),
-        innerFunctions(prs->context, TraceableVector<JSFunction*>(prs->context)),
+        innerFunctions(prs->context, GCVector<JSFunction*>(prs->context)),
         newDirectives(newDirectives),
         inDeclDestructuring(false)
     {

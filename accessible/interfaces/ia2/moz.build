@@ -17,3 +17,11 @@ OS_LIBS += [
     'ole32',
     'oleaut32',
 ]
+
+# The Windows MIDL code generator creates things like:
+#
+#   #endif !_MIDL_USE_GUIDDEF_
+#
+# which clang-cl complains about.  MSVC doesn't, so turn this warning off.
+if CONFIG['CLANG_CL']:
+    CXXFLAGS += ['-Wno-extra-tokens']

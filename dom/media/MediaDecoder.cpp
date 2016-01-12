@@ -1411,16 +1411,11 @@ MediaDecoder::Suspend()
 }
 
 void
-MediaDecoder::Resume(bool aForceBuffering)
+MediaDecoder::Resume()
 {
   MOZ_ASSERT(NS_IsMainThread());
   if (mResource) {
     mResource->Resume();
-  }
-  if (aForceBuffering) {
-    if (mDecoderStateMachine) {
-      mDecoderStateMachine->DispatchStartBuffering();
-    }
   }
 }
 

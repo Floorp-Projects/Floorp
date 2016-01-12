@@ -28,10 +28,7 @@ public:
   NS_DECL_NSIEVENTTARGET
   NS_DECL_NSITHREADPOOL
   NS_DECL_NSIRUNNABLE
-  // missing from NS_DECL_NSIEVENTTARGET because MSVC
-  nsresult Dispatch(nsIRunnable* aEvent, uint32_t aFlags) {
-    return Dispatch(nsCOMPtr<nsIRunnable>(aEvent).forget(), aFlags);
-  }
+  using nsIEventTarget::Dispatch;
 
   nsThreadPool();
 
