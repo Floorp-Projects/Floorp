@@ -59,8 +59,8 @@
 #define MATCHES(tagName, str) tagName.EqualsIgnoreCase(str)
 
 nsHTMLURIRefObject::nsHTMLURIRefObject()
+  : mCurAttrIndex(0), mAttributeCnt(0)
 {
-  mCurAttrIndex = mAttributeCnt = 0;
 }
 
 nsHTMLURIRefObject::~nsHTMLURIRefObject()

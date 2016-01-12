@@ -18,6 +18,8 @@ NS_IMPL_ISUPPORTS(MobileConnectionChild, nsIMobileConnection)
 MobileConnectionChild::MobileConnectionChild(uint32_t aServiceId)
   : mServiceId(aServiceId)
   , mLive(true)
+  , mRadioState(0)
+  , mNetworkSelectionMode(0)
 {
   MOZ_COUNT_CTOR(MobileConnectionChild);
 }
