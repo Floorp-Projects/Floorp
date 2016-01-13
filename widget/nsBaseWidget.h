@@ -356,7 +356,6 @@ protected:
                                   nsIFile **aResult);
   virtual void    OnDestroy();
   void            BaseCreate(nsIWidget *aParent,
-                             const LayoutDeviceIntRect& aRect,
                              nsWidgetInitData* aInitData);
 
   virtual void ConfigureAPZCTreeManager();

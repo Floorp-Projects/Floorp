@@ -3531,7 +3531,7 @@ nsWindow::Create(nsIWidget* aParent,
     nsGTKToolkit::GetToolkit();
 
     // initialize all the common bits of this class
-    BaseCreate(baseParent, aRect, aInitData);
+    BaseCreate(baseParent, aInitData);
 
     // Do we need to listen for resizes?
     bool listenForResizes = false;;

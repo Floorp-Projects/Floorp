@@ -333,7 +333,6 @@ nsBaseWidget::~nsBaseWidget()
 //
 //-------------------------------------------------------------------------
 void nsBaseWidget::BaseCreate(nsIWidget* aParent,
-                              const LayoutDeviceIntRect& aRect,
                               nsWidgetInitData* aInitData)
 {
   static bool gDisableNativeThemeCached = false;
