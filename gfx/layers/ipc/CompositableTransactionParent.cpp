@@ -255,11 +255,6 @@ CompositableParentManager::DestroyActor(const OpDestroy& aOp)
 void
 CompositableParentManager::SendPendingAsyncMessages()
 {
-  for (auto& actor : mDestroyedTextures) {
-    TextureHost::SendDeleteIPDLActor(actor);
-  }
-  mDestroyedTextures.clear();
-
   if (mPendingAsyncMessage.empty()) {
     return;
   }
