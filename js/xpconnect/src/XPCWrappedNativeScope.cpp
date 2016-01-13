@@ -147,7 +147,7 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
         if (!mInterposition && addonId && isSystem) {
           bool interpositionEnabled = mozilla::Preferences::GetBool(
             "extensions.interposition.enabled", false);
-          if (interpositionEnabled || BrowserTabsRemoteAutostart()) {
+          if (interpositionEnabled) {
             mInterposition = do_GetService("@mozilla.org/addons/default-addon-shims;1");
             MOZ_ASSERT(mInterposition);
             UpdateInterpositionWhitelist(cx, mInterposition);
