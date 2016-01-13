@@ -103,6 +103,8 @@ static_assert(nsIHttpChannelInternal::CORS_MODE_NO_CORS == static_cast<uint32_t>
               "RequestMode enumeration value should match Necko CORS mode value.");
 static_assert(nsIHttpChannelInternal::CORS_MODE_CORS == static_cast<uint32_t>(RequestMode::Cors),
               "RequestMode enumeration value should match Necko CORS mode value.");
+static_assert(nsIHttpChannelInternal::CORS_MODE_NAVIGATE == static_cast<uint32_t>(RequestMode::Navigate),
+              "RequestMode enumeration value should match Necko CORS mode value.");
 
 static_assert(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW == static_cast<uint32_t>(RequestRedirect::Follow),
               "RequestRedirect enumeration value should make Necko Redirect mode value.");

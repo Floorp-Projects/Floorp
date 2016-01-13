@@ -170,7 +170,8 @@ FetchDriver::HttpFetch()
   nsSecurityFlags secFlags = nsILoadInfo::SEC_ABOUT_BLANK_INHERITS;
   if (mRequest->Mode() == RequestMode::Cors) {
     secFlags |= nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS;
-  } else if (mRequest->Mode() == RequestMode::Same_origin) {
+  } else if (mRequest->Mode() == RequestMode::Same_origin ||
+             mRequest->Mode() == RequestMode::Navigate) {
     secFlags |= nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_INHERITS;
   } else if (mRequest->Mode() == RequestMode::No_cors) {
     secFlags |= nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS;

@@ -192,7 +192,8 @@ static_assert(int(HeadersGuardEnum::None) == 0 &&
 static_assert(int(RequestMode::Same_origin) == 0 &&
               int(RequestMode::No_cors) == 1 &&
               int(RequestMode::Cors) == 2 &&
-              int(RequestMode::EndGuard_) == 3,
+              int(RequestMode::Navigate) == 3 &&
+              int(RequestMode::EndGuard_) == 4,
               "RequestMode values are as expected");
 static_assert(int(RequestCredentials::Omit) == 0 &&
               int(RequestCredentials::Same_origin) == 1 &&

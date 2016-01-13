@@ -284,6 +284,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     aInit.mCredentials.WasPassed() ? aInit.mCredentials.Value()
                                    : fallbackCredentials;
 
+  if (mode == RequestMode::Navigate) {
+    aRv.ThrowTypeError<MSG_INVALID_REQUEST_MODE>(NS_LITERAL_STRING("navigate"));
+    return nullptr;
+  }
+
   if (mode != RequestMode::EndGuard_) {
     request->ClearCreatedByFetchEvent();
     request->SetMode(mode);
