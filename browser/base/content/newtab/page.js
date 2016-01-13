@@ -36,9 +36,6 @@ var gPage = {
 
     // Initialize customize controls.
     gCustomize.init();
-
-    // Initialize intro panel.
-    gIntro.init();
   },
 
   /**
@@ -54,7 +51,6 @@ var gPage = {
       // Update thumbnails to the new enhanced setting
       if (aData == "browser.newtabpage.enhanced") {
         this.update();
-        gIntro.showIfNecessary();
       }
 
       // Initialize the whole page if we haven't done that, yet.
@@ -255,9 +251,6 @@ var gPage = {
   onPageVisibleAndLoaded() {
     // Send the index of the last visible tile.
     this.reportLastVisibleTileIndex();
-
-    // Show the panel now that anchors are sized
-    gIntro.showIfNecessary();
   },
 
   reportLastVisibleTileIndex() {

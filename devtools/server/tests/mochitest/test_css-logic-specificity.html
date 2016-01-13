@@ -15,7 +15,7 @@ Test that css-logic calculates CSS specificity properly
     var {utils: Cu, classes: Cc, interfaces: Ci} = Components;
 
     const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-    const {CssLogic, CssSelector} = require("devtools/shared/styleinspector/css-logic");
+    const {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");
     const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"]
                        .getService(Ci.inIDOMUtils);
 
