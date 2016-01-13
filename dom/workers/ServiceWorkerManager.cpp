@@ -5020,8 +5020,7 @@ ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
   PrincipalOriginAttributes attrs =
     BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
 
-  // Then trigger an update to fire asynchronously now.
-  PropagateSoftUpdate(attrs, NS_ConvertUTF8toUTF16(aScope));
+  SoftUpdate(attrs, aScope);
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerInfo, nsIServiceWorkerInfo)
