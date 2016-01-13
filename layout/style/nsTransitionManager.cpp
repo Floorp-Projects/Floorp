@@ -150,7 +150,8 @@ CSSTransition::QueueEvents()
   nsTransitionManager* manager = presContext->TransitionManager();
   manager->QueueEvent(TransitionEventInfo(owningElement, owningPseudoType,
                                           property,
-                                          mEffect->Timing().mIterationDuration,
+                                          mEffect->GetComputedTiming()
+                                            .mDuration,
                                           AnimationTimeToTimeStamp(EffectEnd()),
                                           this));
 }
@@ -653,7 +654,7 @@ nsTransitionManager::ConsiderStartingTransition(
   }
 
   AnimationTiming timing;
-  timing.mIterationDuration = TimeDuration::FromMilliseconds(duration);
+  timing.mDuration.SetAsUnrestrictedDouble() = duration;
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
   timing.mIterations = 1.0;
   timing.mDirection = dom::PlaybackDirection::Normal;

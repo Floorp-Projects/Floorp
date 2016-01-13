@@ -391,7 +391,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                               StickyTimeDuration(timing.mDelay));
   animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
                                     - timing.mDelay;
-  animation->duration() = timing.mIterationDuration;
+  animation->duration() = computedTiming.mDuration;
   animation->iterations() = computedTiming.mIterations;
   animation->direction() = static_cast<uint32_t>(timing.mDirection);
   animation->property() = aProperty.mProperty;

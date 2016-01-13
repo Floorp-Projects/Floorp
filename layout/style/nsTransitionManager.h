@@ -214,7 +214,7 @@ struct TransitionEventInfo {
   TransitionEventInfo(dom::Element* aElement,
                       nsCSSPseudoElements::Type aPseudoType,
                       nsCSSProperty aProperty,
-                      TimeDuration aDuration,
+                      StickyTimeDuration aDuration,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
     : mElement(aElement)
