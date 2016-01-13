@@ -9,26 +9,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=827160
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
   <script type="application/javascript" src="utils.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
-<a target="_blank" href=https://bugzilla.mozilla.org/show_bug.cgi?id=827160">Mozilla Bug 827160</a>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827160">Mozilla Bug 827160</a>
 
 <script type="application/javascript">
 
 // Make sure the test plugin is not click-to-play
-var pluginHost = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                              .getService(SpecialPowers.Ci.nsIPluginHost);
-var pluginTags = pluginHost.getPluginTags();
-for (var tag of pluginTags) {
-  if (tag.name == "Test Plug-in" || tag.name == "Second Test Plug-in") {
-    var oldEnabledState = tag.enabledState;
-    tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;
-    SimpleTest.registerCleanupFunction(function() {
-      tag.enabledState = oldEnabledState;
-    });
-  }
-}
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
 
 </script>
 
