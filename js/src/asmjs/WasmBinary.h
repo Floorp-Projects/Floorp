@@ -309,7 +309,7 @@ typedef UniquePtr<Bytecode> UniqueBytecode;
 class Encoder
 {
     UniqueBytecode bytecode_;
-    mozilla::DebugOnly<bool> done_;
+    DebugOnly<bool> done_;
 
     template<class T>
     MOZ_WARN_UNUSED_RESULT
@@ -327,7 +327,7 @@ class Encoder
 
     bool init(UniqueBytecode bytecode = UniqueBytecode()) {
         if (bytecode) {
-            bytecode_ = mozilla::Move(bytecode);
+            bytecode_ = Move(bytecode);
             bytecode_->clear();
             return true;
         }
@@ -341,7 +341,7 @@ class Encoder
     UniqueBytecode finish() {
         MOZ_ASSERT(!done_);
         done_ = true;
-        return mozilla::Move(bytecode_);
+        return Move(bytecode_);
     }
 
     MOZ_WARN_UNUSED_RESULT bool
@@ -410,11 +410,6 @@ class Encoder
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
         memcpy(&(*bytecode_)[pc], &i, sizeof(uint32_t));
     }
-
-    void patchSig(size_t pc, const LifoSig* ptr) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(LifoSig*)));
-        memcpy(&(*bytecode_)[pc], &ptr, sizeof(LifoSig*));
-    }
 };
 
 class Decoder
@@ -465,7 +460,6 @@ class Decoder
     MOZ_WARN_UNUSED_RESULT bool readF32(float* f)           { return read(f); }
     MOZ_WARN_UNUSED_RESULT bool readU32(uint32_t* u)        { return read(u); }
     MOZ_WARN_UNUSED_RESULT bool readF64(double* d)          { return read(d); }
-    MOZ_WARN_UNUSED_RESULT bool readSig(const LifoSig* sig) { return read(sig); }
 
     MOZ_WARN_UNUSED_RESULT bool readI32X4(jit::SimdConstant* c) {
         int32_t v[4] = { 0, 0, 0, 0 };
@@ -513,7 +507,6 @@ class Decoder
     float          uncheckedReadF32() { return uncheckedRead<float>(); }
     uint32_t       uncheckedReadU32() { return uncheckedRead<uint32_t>(); }
     double         uncheckedReadF64() { return uncheckedRead<double>(); }
-    const LifoSig* uncheckedReadSig() { return uncheckedRead<const LifoSig*>(); }
 
     jit::SimdConstant uncheckedReadI32X4() {
         int32_t v[4] = { 0, 0, 0, 0 };
@@ -558,7 +551,6 @@ struct SourceCoords {
 };
 
 typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
-typedef Vector<ValType, 0, SystemAllocPolicy> ValTypeVector;
 
 // The FuncBytecode class contains the intermediate representation of a
 // parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
@@ -574,7 +566,7 @@ class FuncBytecode
     SourceCoordsVector callSourceCoords_;
 
     uint32_t index_;
-    const LifoSig& sig_;
+    const DeclaredSig& sig_;
     UniqueBytecode bytecode_;
     ValTypeVector localVars_;
     unsigned generateTime_;
@@ -585,22 +577,22 @@ class FuncBytecode
                  unsigned column,
                  SourceCoordsVector&& sourceCoords,
                  uint32_t index,
-                 const LifoSig& sig,
+                 const DeclaredSig& sig,
                  UniqueBytecode bytecode,
                  ValTypeVector&& localVars,
                  unsigned generateTime)
       : name_(name),
         line_(line),
         column_(column),
-        callSourceCoords_(mozilla::Move(sourceCoords)),
+        callSourceCoords_(Move(sourceCoords)),
         index_(index),
         sig_(sig),
-        bytecode_(mozilla::Move(bytecode)),
-        localVars_(mozilla::Move(localVars)),
+        bytecode_(Move(bytecode)),
+        localVars_(Move(localVars)),
         generateTime_(generateTime)
     {}
 
-    UniqueBytecode recycleBytecode() { return mozilla::Move(bytecode_); }
+    UniqueBytecode recycleBytecode() { return Move(bytecode_); }
 
     PropertyName* name() const { return name_; }
     unsigned line() const { return line_; }
@@ -608,7 +600,7 @@ class FuncBytecode
     const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
 
     uint32_t index() const { return index_; }
-    const LifoSig& sig() const { return sig_; }
+    const DeclaredSig& sig() const { return sig_; }
     const Bytecode& bytecode() const { return *bytecode_; }
 
     size_t numLocalVars() const { return localVars_.length(); }
