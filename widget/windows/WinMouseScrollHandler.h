@@ -296,6 +296,13 @@ private:
 
   private:
     bool mInitialized;
+    // The result of SystemParametersInfo() may not be reliable since it may
+    // be hooked.  So, if the values are initialized with prefs, we can trust
+    // the value.  Following mIsReliableScroll* are set true when mScroll* are
+    // initialized with prefs.
+    bool mIsReliableScrollLines;
+    bool mIsReliableScrollChars;
+
     int32_t mScrollLines;
     int32_t mScrollChars;
 

@@ -900,10 +900,12 @@ bool
 MouseScrollHandler::SystemSettings::InitScrollLines()
 {
   int32_t oldValue = mInitialized ? mScrollLines : 0;
+  mIsReliableScrollLines = false;
   mScrollLines = MouseScrollHandler::sInstance->
                    mUserPrefs.GetOverriddenVerticalScrollAmout();
   if (mScrollLines >= 0) {
     // overridden by the pref.
+    mIsReliableScrollLines = true;
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::SystemSettings::InitScrollLines(): mScrollLines is "
        "overridden by the pref: %d",
@@ -937,10 +939,12 @@ bool
 MouseScrollHandler::SystemSettings::InitScrollChars()
 {
   int32_t oldValue = mInitialized ? mScrollChars : 0;
+  mIsReliableScrollChars = false;
   mScrollChars = MouseScrollHandler::sInstance->
                    mUserPrefs.GetOverriddenHorizontalScrollAmout();
   if (mScrollChars >= 0) {
     // overridden by the pref.
+    mIsReliableScrollChars = true;
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::SystemSettings::InitScrollChars(): mScrollChars is "
        "overridden by the pref: %d",
@@ -999,6 +1003,12 @@ MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
                                       bool aIsVertical)
 {
   if (!mInitialized) {
+    return;
+  }
+
+  // if the cache is initialized with prefs, we don't need to refresh it.
+  if ((aIsVertical && mIsReliableScrollLines) ||
+      (!aIsVertical && mIsReliableScrollChars)) {
     return;
   }
 
