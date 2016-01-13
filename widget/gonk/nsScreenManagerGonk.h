@@ -42,9 +42,6 @@ namespace mozilla {
 namespace gl {
     class GLContext;
 }
-namespace layers {
-class CompositorVsyncScheduler;
-}
 }
 
 enum class NotifyDisplayChangedEvent : int8_t {
@@ -173,8 +170,6 @@ public:
 
     nsresult RemoveScreen(GonkDisplay::DisplayType aDisplayType);
 
-    void SetCompositorVsyncScheduler(mozilla::layers::CompositorVsyncScheduler* aObserver);
-
 protected:
     ~nsScreenManagerGonk();
     void VsyncControl(bool aEnabled);
@@ -185,7 +180,6 @@ protected:
     nsTArray<RefPtr<nsScreenGonk>> mScreens;
     RefPtr<nsRunnable> mScreenOnEvent;
     RefPtr<nsRunnable> mScreenOffEvent;
-    RefPtr<mozilla::layers::CompositorVsyncScheduler> mCompositorVsyncScheduler;
 };
 
 #endif /* nsScreenManagerGonk_h___ */
