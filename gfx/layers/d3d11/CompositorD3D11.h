@@ -171,8 +171,6 @@ private:
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
   void PaintToTarget();
 
-  virtual LayoutDeviceIntSize GetWidgetSize() const override { return mSize; }
-
   RefPtr<ID3D11DeviceContext> mContext;
   RefPtr<ID3D11Device> mDevice;
   RefPtr<IDXGISwapChain> mSwapChain;
