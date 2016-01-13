@@ -10,6 +10,10 @@ exports.ALLOCATION_RECORDING_OPTIONS = {
   maxLogLength: 1
 };
 
+// If TREE_ROW_HEIGHT changes, be sure to change `var(--heap-tree-row-height)`
+// in `devtools/client/themes/memory.css`
+exports.TREE_ROW_HEIGHT = 14;
+
 /*** Actions ******************************************************************/
 
 const actions = exports.actions = {};
@@ -49,9 +53,6 @@ actions.SELECT_SNAPSHOT = "select-snapshot";
 // Fired to toggle tree inversion on or off.
 actions.TOGGLE_INVERTED = "toggle-inverted";
 
-// Fired to toggle diffing mode on or off.
-actions.TOGGLE_DIFFING = "toggle-diffing";
-
 // Fired when a snapshot is selected for diffing.
 actions.SELECT_SNAPSHOT_FOR_DIFFING = "select-snapshot-for-diffing";
 
@@ -63,11 +64,38 @@ actions.DIFFING_ERROR = "diffing-error";
 // Fired to set a new breakdown.
 actions.SET_BREAKDOWN = "set-breakdown";
 
+// Fired to change the breakdown that controls the dominator tree labels.
+actions.SET_DOMINATOR_TREE_BREAKDOWN = "set-dominator-tree-breakdown";
+
+// Fired when changing between census or dominators view.
+actions.CHANGE_VIEW = "change-view";
+
 // Fired when there is an error processing a snapshot or taking a census.
 actions.SNAPSHOT_ERROR = "snapshot-error";
 
 // Fired when there is a new filter string set.
 actions.SET_FILTER_STRING = "set-filter-string";
+
+// Fired to expand or collapse nodes in census reports.
+actions.EXPAND_CENSUS_NODE = "expand-census-node";
+actions.EXPAND_DIFFING_CENSUS_NODE = "expand-diffing-census-node";
+actions.COLLAPSE_CENSUS_NODE = "collapse-census-node";
+actions.COLLAPSE_DIFFING_CENSUS_NODE = "collapse-diffing-census-node";
+
+// Fired when nodes in various trees are focused.
+actions.FOCUS_CENSUS_NODE = "focus-census-node";
+actions.FOCUS_DIFFING_CENSUS_NODE = "focus-diffing-census-node";
+actions.FOCUS_DOMINATOR_TREE_NODE = "focus-dominator-tree-node";
+
+actions.COMPUTE_DOMINATOR_TREE_START = "compute-dominator-tree-start";
+actions.COMPUTE_DOMINATOR_TREE_END = "compute-dominator-tree-end";
+actions.FETCH_DOMINATOR_TREE_START = "fetch-dominator-tree-start";
+actions.FETCH_DOMINATOR_TREE_END = "fetch-dominator-tree-end";
+actions.DOMINATOR_TREE_ERROR = "dominator-tree-error";
+actions.FETCH_IMMEDIATELY_DOMINATED_START = "fetch-immediately-dominated-start";
+actions.FETCH_IMMEDIATELY_DOMINATED_END = "fetch-immediately-dominated-end";
+actions.EXPAND_DOMINATOR_TREE_NODE = "expand-dominator-tree-node";
+actions.COLLAPSE_DOMINATOR_TREE_NODE = "collapse-dominator-tree-node";
 
 /*** Breakdowns ***************************************************************/
 
@@ -108,17 +136,63 @@ const breakdowns = exports.breakdowns = {
   },
 };
 
+const DOMINATOR_TREE_LABEL_COARSE_TYPE = {
+  by: "coarseType",
+  objects: OBJECT_CLASS,
+  scripts: {
+    by: "internalType",
+    then: {
+      by: "filename",
+      then: COUNT,
+      noFilename: COUNT,
+    },
+  },
+  strings: INTERNAL_TYPE,
+  other: INTERNAL_TYPE,
+};
+
+const dominatorTreeBreakdowns = exports.dominatorTreeBreakdowns = {
+  coarseType: {
+    displayName: "Coarse Type",
+    breakdown: DOMINATOR_TREE_LABEL_COARSE_TYPE
+  },
+
+  allocationStack: {
+    displayName: "Allocation Stack",
+    breakdown: {
+      by: "allocationStack",
+      then: DOMINATOR_TREE_LABEL_COARSE_TYPE,
+      noStack: DOMINATOR_TREE_LABEL_COARSE_TYPE,
+    },
+  },
+
+  internalType: {
+    displayName: "Internal Type",
+    breakdown: INTERNAL_TYPE,
+  },
+};
+
+/*** View States **************************************************************/
+
+/**
+ * The various main views that the tool can be in.
+ */
+const viewState = exports.viewState = Object.create(null);
+viewState.CENSUS = "view-state-census";
+viewState.DIFFING = "view-state-diffing";
+viewState.DOMINATOR_TREE = "view-state-dominator-tree";
+
 /*** Snapshot States **********************************************************/
 
-const snapshotState = exports.snapshotState = {};
+const snapshotState = exports.snapshotState = Object.create(null);
 
 /**
  * Various states a snapshot can be in.
  * An FSM describing snapshot states:
  *
- *     SAVING -> SAVED    -> READING -> READ     SAVED_CENSUS
- *               IMPORTING ↗                ↘     ↑  ↓
- *                                            SAVING_CENSUS
+ *     SAVING -> SAVED -> READING -> READ     SAVED_CENSUS
+ *                       ↗                ↘     ↑  ↓
+ *              IMPORTING                   SAVING_CENSUS
  *
  * Any of these states may go to the ERROR state, from which they can never
  * leave (mwah ha ha ha!)
@@ -155,3 +229,20 @@ diffingState.TOOK_DIFF = "diffing-state-took-diff";
 
 // An error occurred while computing the diff.
 diffingState.ERROR = "diffing-state-error";
+
+/*** Dominator Tree States ****************************************************/
+
+/*
+ * Various states the dominator tree model can be in.
+ *
+ *     COMPUTING -> COMPUTED -> FETCHING -> LOADED <--> INCREMENTAL_FETCHING
+ *
+ * Any state may lead to the ERROR state, from which it can never leave.
+ */
+const dominatorTreeState = exports.dominatorTreeState = Object.create(null);
+dominatorTreeState.COMPUTING = "dominator-tree-state-computing";
+dominatorTreeState.COMPUTED = "dominator-tree-state-computed";
+dominatorTreeState.FETCHING = "dominator-tree-state-fetching";
+dominatorTreeState.LOADED = "dominator-tree-state-loaded";
+dominatorTreeState.INCREMENTAL_FETCHING = "dominator-tree-state-incremental-fetching";
+dominatorTreeState.ERROR = "dominator-tree-state-error";
