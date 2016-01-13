@@ -742,6 +742,12 @@ WebGLTexture::GenerateMipmap(TexTarget texTarget)
         return;
     }
 
+    if (!baseImageInfo.mFormat->isRenderable || !baseImageInfo.mFormat->isFilterable) {
+        mContext->ErrorInvalidOperation("generateMipmap: Texture at base level is not"
+                                        " color-renderable or texture-filterable.");
+        return;
+    }
+
     // Done with validation. Do the operation.
 
     mContext->MakeContextCurrent();
