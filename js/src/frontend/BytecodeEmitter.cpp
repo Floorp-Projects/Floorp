@@ -7346,7 +7346,7 @@ BytecodeEmitter::isRestParameter(ParseNode* pn, bool* result)
         return true;
     }
 
-    JSFunction* fun = sc->asFunctionBox()->function();
+    RootedFunction fun(cx, sc->asFunctionBox()->function());
     if (!fun->hasRest()) {
         *result = false;
         return true;
