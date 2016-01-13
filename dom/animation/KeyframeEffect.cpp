@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/KeyframeEffect.h"
 
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
@@ -24,20 +23,6 @@
 
 namespace mozilla {
 
-bool
-AnimationTiming::FillsForwards() const
-{
-  return mFillMode == dom::FillMode::Both ||
-         mFillMode == dom::FillMode::Forwards;
-}
-
-bool
-AnimationTiming::FillsBackwards() const
-{
-  return mFillMode == dom::FillMode::Both ||
-         mFillMode == dom::FillMode::Backwards;
-}
-
 // Helper functions for generating a ComputedTimingProperties dictionary
 static void
 GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
@@ -47,7 +32,7 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
 {
   // AnimationEffectTimingProperties
   aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
-  aRetVal.mFill = aTiming.mFillMode;
+  aRetVal.mFill = aComputedTiming.mFill;
   aRetVal.mIterations = aComputedTiming.mIterations;
   aRetVal.mDuration.SetAsUnrestrictedDouble() = aTiming.mIterationDuration.ToMilliseconds();
   aRetVal.mDirection = aTiming.mDirection;
@@ -233,6 +218,9 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
                        1.0f :
                        aTiming.mIterations;
   result.mActiveDuration = ActiveDuration(aTiming, result.mIterations);
+  result.mFill = aTiming.mFill == dom::FillMode::Auto ?
+                 dom::FillMode::None :
+                 aTiming.mFill;
 
   // The default constructor for ComputedTiming sets all other members to
   // values consistent with an animation that has not been sampled.
@@ -250,7 +238,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
   StickyTimeDuration activeTime;
   if (localTime >= aTiming.mDelay + result.mActiveDuration) {
     result.mPhase = ComputedTiming::AnimationPhase::After;
-    if (!aTiming.FillsForwards()) {
+    if (!result.FillsForwards()) {
       // The animation isn't active or filling at this time.
       result.mProgress.SetNull();
       return result;
@@ -262,7 +250,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
                             result.mIterations == floor(result.mIterations);
   } else if (localTime < aTiming.mDelay) {
     result.mPhase = ComputedTiming::AnimationPhase::Before;
-    if (!aTiming.FillsBackwards()) {
+    if (!result.FillsBackwards()) {
       // The animation isn't active or filling at this time.
       result.mProgress.SetNull();
       return result;
@@ -673,16 +661,13 @@ KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
     animationTiming.mDelay = TimeDuration::FromMilliseconds(opt.mDelay);
     animationTiming.mIterations = opt.mIterations;
     animationTiming.mDirection = opt.mDirection;
-    // FIXME: We should store original value.
-    animationTiming.mFillMode = (opt.mFill == FillMode::Auto) ?
-                                  FillMode::None :
-                                  opt.mFill;
+    animationTiming.mFill = opt.mFill;
   } else {
     animationTiming.mIterationDuration = GetIterationDuration(aOptions);
     animationTiming.mDelay = TimeDuration(0);
     animationTiming.mIterations = 1.0f;
     animationTiming.mDirection = PlaybackDirection::Normal;
-    animationTiming.mFillMode = FillMode::None;
+    animationTiming.mFill = FillMode::None;
   }
   return animationTiming;
 }
