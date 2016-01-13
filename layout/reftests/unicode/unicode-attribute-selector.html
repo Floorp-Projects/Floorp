@@ -6,7 +6,9 @@
     div[dİr] {color: red;}
     div[dİr="ltr"] {text-indent: 30px;}
     input[dİsabled] {display: none;}
-    //input[dİsabled="disabled"] {display: inline;}
+    /* input[dİsabled="disabled"] {display: inline;} */
+    /* work around unreliable form-control rendering on Gtk+3 (see bug 1223198): */
+    input { -moz-appearance: none; }
   </style>
 </head>
 

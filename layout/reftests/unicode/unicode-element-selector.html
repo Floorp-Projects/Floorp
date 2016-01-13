@@ -4,6 +4,8 @@
   <title>Unicode tests - element selectors</title>
   <style>
     dİv {color: red}
+    /* work around unreliable form-control rendering on Gtk+3 (see bug 1223198): */
+    input { -moz-appearance: none; }
   </style>
 </head>
 
