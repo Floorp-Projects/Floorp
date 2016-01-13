@@ -140,7 +140,8 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             init();
         }
 
-        final boolean isIdentityKnown = (siteIdentity.getSecurityMode() != SecurityMode.UNKNOWN);
+        final boolean isIdentityKnown = (siteIdentity.getSecurityMode() == SecurityMode.IDENTIFIED ||
+                                         siteIdentity.getSecurityMode() == SecurityMode.VERIFIED);
         updateConnectionState(siteIdentity);
         toggleIdentityKnownContainerVisibility(isIdentityKnown);
 
@@ -310,7 +311,16 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
      * @param siteIdentity SiteIdentity information about the connection.
      */
     private void updateConnectionState(final SiteIdentity siteIdentity) {
-        if (!siteIdentity.isSecure()) {
+        if (siteIdentity.getSecurityMode() == SecurityMode.CHROMEUI) {
+            mSecurityState.setText(R.string.identity_connection_chromeui);
+            mSecurityState.setTextColor(ColorUtils.getColor(mContext, R.color.placeholder_active_grey));
+
+            mIcon.setImageResource(R.drawable.icon);
+            clearSecurityStateIcon();
+
+            mMixedContentActivity.setVisibility(View.GONE);
+            mLink.setVisibility(View.GONE);
+        } else if (!siteIdentity.isSecure()) {
             if (siteIdentity.loginInsecure()) {
                 // Login detected on an insecure page.
                 mIcon.setImageResource(R.drawable.lock_disabled);
@@ -463,11 +473,14 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             return;
         }
 
-        // about: has an unknown SiteIdentity in code, but showing "This
-        // site's identity is unknown" is misleading! So don't show a popup.
+        // Verified about: pages have the CHROMEUI SiteIdentity, however there can also
+        // be unverified about: pages for which  "This site's identity is unknown" or
+        // "This is a secure Firefox page" are both misleading, so don't show a popup.
         final Tab selectedTab = Tabs.getInstance().getSelectedTab();
-        if (selectedTab != null && AboutPages.isAboutPage(selectedTab.getURL())) {
-            Log.d(LOGTAG, "We don't show site identity popups for about: pages");
+        if (selectedTab != null &&
+                AboutPages.isAboutPage(selectedTab.getURL()) &&
+                mSiteIdentity.getSecurityMode() != SecurityMode.CHROMEUI) {
+            Log.d(LOGTAG, "We don't show site identity popups for unverified about: pages");
             return;
         }
 
@@ -484,15 +497,23 @@ public class SiteIdentityPopup extends AnchoredPopup implements GeckoEventListen
             Log.e(LOGTAG, "Error adding selectLogin doorhanger", e);
         }
 
-        mTitle.setText(selectedTab.getBaseDomain());
-        final Bitmap favicon = selectedTab.getFavicon();
-        if (favicon != null) {
-            final Drawable faviconDrawable = new BitmapDrawable(mResources, favicon);
-            final int dimen = (int) mResources.getDimension(R.dimen.browser_toolbar_favicon_size);
-            faviconDrawable.setBounds(0, 0, dimen, dimen);
+        if (mSiteIdentity.getSecurityMode() == SecurityMode.CHROMEUI) {
+            // For about: pages we display the product icon in place of the verified/globe
+            // image, hence we don't also set the favicon (for most about pages the
+            // favicon is the product icon, hence we'd be showing the same icon twice).
+            mTitle.setText(R.string.moz_app_displayname);
+        } else {
+            mTitle.setText(selectedTab.getBaseDomain());
 
-            mTitle.setCompoundDrawables(faviconDrawable, null, null, null);
-            mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+            final Bitmap favicon = selectedTab.getFavicon();
+            if (favicon != null) {
+                final Drawable faviconDrawable = new BitmapDrawable(mResources, favicon);
+                final int dimen = (int) mResources.getDimension(R.dimen.browser_toolbar_favicon_size);
+                faviconDrawable.setBounds(0, 0, dimen, dimen);
+
+                mTitle.setCompoundDrawables(faviconDrawable, null, null, null);
+                mTitle.setCompoundDrawablePadding((int) mContext.getResources().getDimension(R.dimen.doorhanger_drawable_padding));
+            }
         }
 
         showDividers();

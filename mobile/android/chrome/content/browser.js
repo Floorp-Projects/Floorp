@@ -6319,6 +6319,9 @@ var IdentityHandler = {
   // Extended-Validation SSL CA-signed identity information (EV). A more rigorous validation process.
   IDENTITY_MODE_VERIFIED: "verified",
 
+  // Part of the product's UI (built in about: pages)
+  IDENTITY_MODE_CHROMEUI: "chromeUI",
+
   // The following mixed content modes are only used if "security.mixed_content.block_active_content"
   // is enabled. Our Java frontend coalesces them into one indicator.
 
@@ -6383,13 +6386,19 @@ var IdentityHandler = {
   /**
    * Determines the identity mode corresponding to the icon we show in the urlbar.
    */
-  getIdentityMode: function getIdentityMode(aState) {
+  getIdentityMode: function getIdentityMode(aState, uri) {
     if (aState & Ci.nsIWebProgressListener.STATE_IDENTITY_EV_TOPLEVEL) {
       return this.IDENTITY_MODE_VERIFIED;
     }
 
     if (aState & Ci.nsIWebProgressListener.STATE_IS_SECURE) {
       return this.IDENTITY_MODE_IDENTIFIED;
+    }
+
+    // We also allow "about:" by allowing the selector to be empty (i.e. '(|.....|...|...)'
+    let whitelist = /^about:($|about|accounts|addons|buildconfig|cache|config|crashes|devices|downloads|fennec|firefox|feedback|healthreport|license|logins|logo|memory|mozilla|networking|plugins|privatebrowsing|rights|serviceworkers|support|telemetry|webrtc)($|\?)/i;
+    if (uri.schemeIs("about") && whitelist.test(uri.spec)) {
+        return this.IDENTITY_MODE_CHROMEUI;
     }
 
     return this.IDENTITY_MODE_UNKNOWN;
@@ -6486,7 +6495,12 @@ var IdentityHandler = {
     }
     this._lastLocation = locationObj;
 
-    let identityMode = this.getIdentityMode(aState);
+    let uri = aBrowser.currentURI;
+    try {
+      uri = Services.uriFixup.createExposableURI(uri);
+    } catch (e) {}
+
+    let identityMode = this.getIdentityMode(aState, uri);
     let mixedDisplay = this.getMixedDisplayMode(aState);
     let mixedActive = this.getMixedActiveMode(aState);
     let trackingMode = this.getTrackingMode(aState, aBrowser);
@@ -6502,7 +6516,12 @@ var IdentityHandler = {
 
     // Don't show identity data for pages with an unknown identity or if any
     // mixed content is loaded (mixed display content is loaded by default).
-    if (identityMode == this.IDENTITY_MODE_UNKNOWN || aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
+    // We also return for CHROMEUI pages since they don't have any certificate
+    // information to load either. result.secure specifically refers to connection
+    // security, which is irrelevant for about: pages, as they're loaded locally.
+    if (identityMode == this.IDENTITY_MODE_UNKNOWN ||
+        identityMode == this.IDENTITY_MODE_CHROMEUI ||
+        aState & Ci.nsIWebProgressListener.STATE_IS_BROKEN) {
       result.secure = false;
       return result;
     }

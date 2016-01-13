@@ -6,7 +6,7 @@
 // Test that changes in the style editor are synchronized into the
 // style inspector.
 
-Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/styleinspector/test/head.js", this);
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/inspector/shared/test/head.js", this);
 
 const TEST_URI = `
   <style type='text/css'>
