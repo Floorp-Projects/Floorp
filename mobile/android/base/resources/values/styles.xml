@@ -367,6 +367,7 @@
 
     <style name="TextAppearance.EmptyHint" parent="TextAppearance.Medium">
         <item name="android:textColor">#FFA62F</item>
+        <item name="android:textStyle">italic</item>
     </style>
 
     <style name="TextAppearance.Micro">

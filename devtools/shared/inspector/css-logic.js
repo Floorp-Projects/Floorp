@@ -815,17 +815,7 @@ DevToolsUtils.defineLazyGetter(CssLogic, "_strings", function() {
  * false otherwise.
  */
 CssLogic.isContentStylesheet = function(sheet) {
-  // All sheets with owner nodes have been included by content.
-  if (sheet.ownerNode) {
-    return true;
-  }
-
-  // If the sheet has a CSSImportRule we need to check the parent stylesheet.
-  if (sheet.ownerRule instanceof Ci.nsIDOMCSSImportRule) {
-    return CssLogic.isContentStylesheet(sheet.parentStyleSheet);
-  }
-
-  return false;
+  return sheet.parsingMode !== "agent";
 };
 
 /**

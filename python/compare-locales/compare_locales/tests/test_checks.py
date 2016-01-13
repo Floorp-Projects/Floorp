@@ -19,13 +19,19 @@ class BaseHelper(unittest.TestCase):
         p.readContents(self.refContent)
         self.refList, self.refMap = p.parse()
 
-    def _test(self, content, refWarnOrErrors):
+    def _test(self, content, refWarnOrErrors, with_ref_file=False):
         p = getParser(self.file.file)
         p.readContents(content)
         l10n = [e for e in p]
         assert len(l10n) == 1
         l10n = l10n[0]
-        checker = getChecker(self.file)
+        if with_ref_file:
+            kwargs = {
+                'reference': self.refList
+            }
+        else:
+            kwargs = {}
+        checker = getChecker(self.file, **kwargs)
         ref = self.refList[self.refMap[l10n.key]]
         found = tuple(checker.check(ref, l10n))
         self.assertEqual(found, refWarnOrErrors)
@@ -167,6 +173,58 @@ stuff">
         self._test('''<!ENTITY width "12em">''', tuple())
         self._test('''<!ENTITY style "width:12ch;height:200px;">''', tuple())
         self._test('''<!ENTITY ftd "0">''', tuple())
+
+
+class TestEntitiesInDTDs(BaseHelper):
+    file = File('foo.dtd', 'foo.dtd')
+    refContent = '''<!ENTITY short "This is &brandShortName;">
+<!ENTITY shorter "This is &brandShorterName;">
+<!ENTITY ent.start "Using &brandShorterName; start to">
+<!ENTITY ent.end " end">
+'''
+
+    def testOK(self):
+        self._test('''<!ENTITY ent.start "Mit &brandShorterName;">''', tuple(),
+                   with_ref_file=True)
+
+    def testMismatch(self):
+        self._test('''<!ENTITY ent.start "Mit &brandShortName;">''',
+                   (('warning', (0, 0),
+                     'Entity brandShortName referenced, '
+                     'but brandShorterName used in context',
+                     'xmlparse'),),
+                   with_ref_file=True)
+
+    def testAcross(self):
+        self._test('''<!ENTITY ent.end "Mit &brandShorterName;">''',
+                   tuple(),
+                   with_ref_file=True)
+
+    def testAcrossWithMismatch(self):
+        '''If we could tell that ent.start and ent.end are one string,
+        we should warn. Sadly, we can't, so this goes without warning.'''
+        self._test('''<!ENTITY ent.end "Mit &brandShortName;">''',
+                   tuple(),
+                   with_ref_file=True)
+
+    def testUnknownWithRef(self):
+        self._test('''<!ENTITY ent.start "Mit &foopy;">''',
+                   (('warning',
+                     (0, 0),
+                     'Referencing unknown entity `foopy` '
+                     '(brandShorterName used in context, '
+                     'brandShortName known)',
+                     'xmlparse'),),
+                   with_ref_file=True)
+
+    def testUnknown(self):
+        self._test('''<!ENTITY ent.end "Mit &foopy;">''',
+                   (('warning',
+                     (0, 0),
+                     'Referencing unknown entity `foopy`'
+                     ' (brandShortName, brandShorterName known)',
+                     'xmlparse'),),
+                   with_ref_file=True)
 
 
 class TestAndroid(unittest.TestCase):

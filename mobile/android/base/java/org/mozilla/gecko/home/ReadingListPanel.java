@@ -14,7 +14,6 @@ import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
 import org.mozilla.gecko.db.BrowserContract.URLColumns;
-import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.ReadingListAccessor;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
@@ -33,6 +32,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.AdapterView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 /**
@@ -63,7 +63,7 @@ public class ReadingListPanel extends HomeFragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.home_reading_list_panel, container, false);
+        return inflater.inflate(R.layout.home_list_panel, container, false);
     }
 
     @Override
@@ -159,11 +159,20 @@ public class ReadingListPanel extends HomeFragment {
             final ViewStub emptyViewStub = (ViewStub) mTopView.findViewById(R.id.home_empty_view_stub);
             mEmptyView = emptyViewStub.inflate();
 
+            final TextView emptyText = (TextView) mEmptyView.findViewById(R.id.home_empty_text);
+            emptyText.setText(R.string.home_reading_list_empty);
+
+            final ImageView emptyImage = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
+            emptyImage.setImageResource(R.drawable.icon_reading_list_empty);
+
             final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
             if (HardwareUtils.isLowMemoryPlatform()) {
                 emptyHint.setVisibility(View.GONE);
             } else {
-                String readingListHint = emptyHint.getText().toString();
+                String readingListHint = getString(R.string.home_reading_list_hint);
+                String readingListDesc = getString(R.string.home_reading_list_hint_accessible);
+                emptyHint.setText(readingListHint);
+                emptyHint.setContentDescription(readingListDesc);
 
                 // Use an ImageSpan to include the reader icon in the "Tip".
                 int imageSpanIndex = readingListHint.indexOf(MATCH_STRING);
@@ -180,6 +189,7 @@ public class ReadingListPanel extends HomeFragment {
 
                     emptyHint.setText(hintBuilder, TextView.BufferType.SPANNABLE);
                 }
+                emptyHint.setVisibility(View.VISIBLE);
             }
 
             mList.setEmptyView(mEmptyView);

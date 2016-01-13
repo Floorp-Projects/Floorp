@@ -5,7 +5,7 @@
 
 const constants = require('../constants');
 const promise = require('promise');
-const { asPaused, rdpInvoke } = require('../utils');
+const { asPaused } = require('../utils');
 const { PROMISE } = require('devtools/client/shared/redux/middleware/promise');
 const {
   getSource, getBreakpoint, getBreakpoints, makeLocationId
@@ -55,7 +55,7 @@ function addBreakpoint(location, condition) {
         const sourceClient = gThreadClient.source(
           getSource(getState(), bp.location.actor)
         );
-        const [response, bpClient] = yield rdpInvoke(sourceClient, sourceClient.setBreakpoint, {
+        const [response, bpClient] = yield sourceClient.setBreakpoint({
           line: bp.location.line,
           column: bp.location.column,
           condition: bp.condition
@@ -105,7 +105,7 @@ function _removeOrDisableBreakpoint(location, isDisabled) {
       type: constants.REMOVE_BREAKPOINT,
       breakpoint: bp,
       disabled: isDisabled,
-      [PROMISE]: rdpInvoke(bpClient, bpClient.remove)
+      [PROMISE]: bpClient.remove()
     });
   }
 }

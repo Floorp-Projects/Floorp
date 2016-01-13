@@ -87,11 +87,6 @@ public class DownloadAction extends BaseAction {
 
                 temporaryFile = createTemporaryFile(context, content);
 
-                if (!canWrite(temporaryFile, destinationFile)) {
-                    throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO,
-                                                                  "Temporary or destination file not writeable");
-                }
-
                 if (!hasEnoughDiskSpace(content, destinationFile, temporaryFile)) {
                     Log.d(LOGTAG, "Not enough disk space to save content. Skipping download.");
                     continue;
@@ -337,16 +332,6 @@ public class DownloadAction extends BaseAction {
         // We need some more space to extract the file (getSize() returns the uncompressed size)
         if (destinationDirectory.getUsableSpace() < content.getSize() * 2) {
             return false;
-        }
-
-        return true;
-    }
-
-    protected boolean canWrite(File... files) {
-        for (File file : files) {
-            if (!file.canWrite()) {
-                return false;
-            }
         }
 
         return true;
