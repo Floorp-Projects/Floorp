@@ -59,9 +59,12 @@ function run_test() {
   // Expected outcomes (accept / reject):
   //
   //                     a   b   c   d   e
-  // allowed=0          Acc Acc Acc Acc Acc
-  // forbidden=1        Rej Rej Rej Rej Rej
-  // onlyBefore2016=2   Acc Acc Rej Rej Rej
+  // Allowed=0          Acc Acc Acc Acc Acc
+  // Forbidden=1        Rej Rej Rej Rej Rej
+  // Before2016=2       Acc Acc Rej Rej Rej
+  //
+  // The pref setting of ImportedRoot (3) accepts everything because the
+  // testing root is an imported one. This will be addressed in bug 1240118.
 
   // SHA-1 allowed
   Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 0);
@@ -86,4 +89,13 @@ function run_test() {
   checkEndEntity(certFromFile("ee-post_int-pre"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
   checkIntermediate(certFromFile("int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
   checkEndEntity(certFromFile("ee-post_int-post"), SEC_ERROR_CERT_SIGNATURE_ALGORITHM_DISABLED);
+
+  // SHA-1 allowed only before 2016 or when issued by an imported root (which
+  // happens to be all of our test certificates).
+  Services.prefs.setIntPref("security.pki.sha1_enforcement_level", 3);
+  checkIntermediate(certFromFile("int-pre"), PRErrorCodeSuccess);
+  checkEndEntity(certFromFile("ee-pre_int-pre"), PRErrorCodeSuccess);
+  checkEndEntity(certFromFile("ee-post_int-pre"), PRErrorCodeSuccess);
+  checkIntermediate(certFromFile("int-post"), PRErrorCodeSuccess);
+  checkEndEntity(certFromFile("ee-post_int-post"), PRErrorCodeSuccess);
 }
