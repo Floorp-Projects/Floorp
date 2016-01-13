@@ -405,9 +405,8 @@ RTCPeerConnection.prototype = {
           "InvalidStateError");
     }
 
-    this.makeGetterSetterEH("ontrack");
-    this.makeLegacyGetterSetterEH("onaddstream", "Use peerConnection.ontrack instead.");
-    this.makeLegacyGetterSetterEH("onaddtrack", "Use peerConnection.ontrack instead.");
+    this.makeGetterSetterEH("onaddstream");
+    this.makeGetterSetterEH("onaddtrack");
     this.makeGetterSetterEH("onicecandidate");
     this.makeGetterSetterEH("onnegotiationneeded");
     this.makeGetterSetterEH("onsignalingstatechange");
@@ -661,18 +660,6 @@ RTCPeerConnection.prototype = {
                           {
                             get:function()  { return this.getEH(name); },
                             set:function(h) { return this.setEH(name, h); }
-                          });
-  },
-
-  makeLegacyGetterSetterEH: function(name, msg) {
-    Object.defineProperty(this, name,
-                          {
-                            get:function()  { return this.getEH(name); },
-                            set:function(h) {
-                              this.logWarning(name + " is deprecated! " + msg,
-                                              null, 0);
-                              return this.setEH(name, h);
-                            }
                           });
   },
 
@@ -1366,16 +1353,15 @@ PeerConnectionObserver.prototype = {
   //                 STUN requests.
 
   handleIceConnectionStateChange: function(iceConnectionState) {
-    let pc = this._dompc;
-    if (pc.iceConnectionState === 'new') {
+    if (this._dompc.iceConnectionState === 'new') {
       var checking_histogram = Services.telemetry.getHistogramById("WEBRTC_ICE_CHECKING_RATE");
       if (iceConnectionState === 'checking') {
         checking_histogram.add(true);
       } else if (iceConnectionState === 'failed') {
         checking_histogram.add(false);
       }
-    } else if (pc.iceConnectionState === 'checking') {
-      var success_histogram = Services.telemetry.getHistogramById(pc._isLoop ?
+    } else if (this._dompc.iceConnectionState === 'checking') {
+      var success_histogram = Services.telemetry.getHistogramById(this._dompc._isLoop ?
         "LOOP_ICE_SUCCESS_RATE" : "WEBRTC_ICE_SUCCESS_RATE");
       if (iceConnectionState === 'completed' ||
           iceConnectionState === 'connected') {
@@ -1386,10 +1372,10 @@ PeerConnectionObserver.prototype = {
     }
 
     if (iceConnectionState === 'failed') {
-      pc.logError("ICE failed, see about:webrtc for more details", null, 0);
+      this._dompc.logError("ICE failed, see about:webrtc for more details", null, 0);
     }
 
-    pc.changeIceConnectionState(iceConnectionState);
+    this._dompc.changeIceConnectionState(iceConnectionState);
   },
 
   // This method is responsible for updating iceGatheringState. This
@@ -1444,11 +1430,11 @@ PeerConnectionObserver.prototype = {
   },
 
   onGetStatsSuccess: function(dict) {
-    let pc = this._dompc;
-    let chromeobj = new RTCStatsReport(pc._win, dict);
-    let webidlobj = pc._win.RTCStatsReport._create(pc._win, chromeobj);
+    let chromeobj = new RTCStatsReport(this._dompc._win, dict);
+    let webidlobj = this._dompc._win.RTCStatsReport._create(this._dompc._win,
+                                                            chromeobj);
     chromeobj.makeStatsPublic();
-    pc._onGetStatsSuccess(webidlobj);
+    this._dompc._onGetStatsSuccess(webidlobj);
   },
 
   onGetStatsError: function(code, message) {
@@ -1461,34 +1447,20 @@ PeerConnectionObserver.prototype = {
     this.dispatchEvent(ev);
   },
 
-  onRemoveStream: function(stream) {
+  onRemoveStream: function(stream, type) {
     this.dispatchEvent(new this._dompc._win.MediaStreamEvent("removestream",
                                                              { stream: stream }));
   },
 
-  onAddTrack: function(track, streams) {
-    let pc = this._dompc;
-    let receiver = pc._win.RTCRtpReceiver._create(pc._win,
-                                                  new RTCRtpReceiver(this,
-                                                                     track));
-    pc._receivers.push(receiver);
-    let ev = new pc._win.RTCTrackEvent("track",
-                                       { receiver: receiver,
-                                         track: track,
-                                         streams: streams });
-    this.dispatchEvent(ev);
-
-    // Fire legacy event as well for a little bit.
-    ev = new pc._win.MediaStreamTrackEvent("addtrack", { track: track });
+  onAddTrack: function(track) {
+    let ev = new this._dompc._win.MediaStreamTrackEvent("addtrack",
+                                                        { track: track });
     this.dispatchEvent(ev);
   },
 
-  onRemoveTrack: function(track) {
-    let pc = this._dompc;
-    let i = pc._receivers.findIndex(receiver => receiver.track == track);
-    if (i >= 0) {
-      pc._receivers.splice(i, 1);
-    }
+  onRemoveTrack: function(track, type) {
+    this.dispatchEvent(new this._dompc._win.MediaStreamTrackEvent("removetrack",
+                                                                  { track: track }));
   },
 
   onReplaceTrackSuccess: function() {
@@ -1562,7 +1534,7 @@ RTCRtpSender.prototype = {
 };
 
 function RTCRtpReceiver(pc, track) {
-  this._pc = pc;
+  this.pc = pc;
   this.track = track;
 }
 RTCRtpReceiver.prototype = {

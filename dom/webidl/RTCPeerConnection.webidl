@@ -141,9 +141,8 @@ interface RTCPeerConnection : EventTarget  {
   attribute EventHandler onnegotiationneeded;
   attribute EventHandler onicecandidate;
   attribute EventHandler onsignalingstatechange;
-  attribute EventHandler onaddstream; // obsolete
-  attribute EventHandler onaddtrack;  // obsolete
-  attribute EventHandler ontrack;     // replaces onaddtrack and onaddstream.
+  attribute EventHandler onaddstream;
+  attribute EventHandler onaddtrack;  // replaces onaddstream; see AddTrackEvent
   attribute EventHandler onremovestream;
   attribute EventHandler oniceconnectionstatechange;
 
