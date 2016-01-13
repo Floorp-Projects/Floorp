@@ -50,4 +50,4 @@ private:
 
 } // namespace mozilla
 
-#endif // mozilla_dom_AnimationEffectReadOnly_h
+#endif // mozilla_ComputedTimingFunction_h

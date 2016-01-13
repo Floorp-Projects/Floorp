@@ -78,11 +78,12 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   const AnimationTiming& aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
-  , mTiming(aTiming)
   , mPseudoType(aPseudoType)
   , mInEffectOnLastAnimationTimingUpdate(false)
 {
   MOZ_ASSERT(aTarget, "null animation target is not yet supported");
+
+  mTiming = new AnimationEffectTimingReadOnly(aTiming);
 }
 
 JSObject*
@@ -104,13 +105,20 @@ KeyframeEffectReadOnly::Composite() const
   return CompositeOperation::Replace;
 }
 
+already_AddRefed<AnimationEffectTimingReadOnly>
+KeyframeEffectReadOnly::TimingAsObject() const
+{
+  RefPtr<AnimationEffectTimingReadOnly> temp(mTiming);
+  return temp.forget();
+}
+
 void
 KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming)
 {
-  if (mTiming == aTiming) {
+  if (mTiming->Timing() == aTiming) {
     return;
   }
-  mTiming = aTiming;
+  mTiming->SetTiming(aTiming);
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
   }
@@ -191,9 +199,9 @@ void
 KeyframeEffectReadOnly::GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
 {
   const Nullable<TimeDuration> currentTime = GetLocalTime();
-  GetComputedTimingDictionary(GetComputedTimingAt(currentTime, mTiming),
+  GetComputedTimingDictionary(GetComputedTimingAt(currentTime, Timing()),
                               currentTime,
-                              mTiming,
+                              Timing(),
                               aRetVal);
 }
 
