@@ -6,16 +6,16 @@ task:
     name: '[TC] Mulet Mochitests ( {{chunk}} )'
     description: Mulet Mochitest run {{chunk}}
   scopes:
-    - 'docker-worker:cache:tc-vcs'
-    - 'docker-worker:cache:linux-cache'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-dotcache'
     - 'docker-worker:capability:device:loopbackVideo'
     - 'docker-worker:capability:device:loopbackAudio'
   payload:
     image: '{{#docker_image}}desktop-test{{/docker_image}}'
     cache:
       # So pip installs are cached...
-      linux-cache: /home/worker/.cache
-      tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-dotcache: /home/worker/.cache
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
     capabilities:
       devices:
         loopbackVideo: true

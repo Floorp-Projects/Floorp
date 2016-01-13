@@ -6,15 +6,15 @@ $inherits:
 task:
   workerType: flame-kk
   scopes:
-    - 'docker-worker:cache:build-flame-kk-debug'
-    - 'docker-worker:cache:build-flame-kk-debug-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-debug'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-debug-objdir-gecko'
   metadata:
     name: '[TC] B2G Flame KK Debug'
 
   payload:
     cache:
-      build-flame-kk-debug: /home/worker/workspace
-      build-flame-kk-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-flame-kk-debug: /home/worker/workspace
+      level-{{level}}-{{project}}-build-flame-kk-debug-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
       DEBUG: 0
