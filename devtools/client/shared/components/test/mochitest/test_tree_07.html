@@ -34,24 +34,21 @@ window.onload = Task.async(function* () {
       }
     });
 
-    yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
-    });
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+    yield forceRender(tree);
 
     let arrows = document.querySelectorAll(".arrow");
     for (let a of arrows) {
       ok(a.classList.contains("open"), "Every arrow should be open.");
     }
 
-    yield setState(tree, {
-      expanded: new Set()
-    });
+    TEST_TREE.expanded = new Set();
+    yield forceRender(tree);
 
     arrows = document.querySelectorAll(".arrow");
     for (let a of arrows) {
       ok(!a.classList.contains("open"), "Every arrow should be closed.");
     }
-
   } catch(e) {
     ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
   } finally {

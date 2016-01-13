@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the currently selected view is rendered.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             ok(React, "Should get React");
+             ok(Heap, "Should get Heap");
+
+             const errorMessage = "Something went wrong!";
+             const container = document.getElementById("container");
+
+             // Dominator tree view.
+
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               view: viewState.DOMINATOR_TREE,
+             })), container);
+
+             ok(container.querySelector(`[data-state=${dominatorTreeState.LOADED}]`),
+                "Should render the dominator tree.");
+
+             // Census view.
+
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               view: viewState.CENSUS,
+             })), container);
+
+             ok(container.querySelector(`[data-state=${snapshotState.SAVED_CENSUS}]`),
+                "Should render the census.");
+
+             // Diffing view.
+
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               view: viewState.DIFFING,
+               snapshot: null,
+               diffing: {
+                 firstSnapshotId: null,
+                 secondSnapshotId: null,
+                 census: null,
+                 error: null,
+                 state: diffingState.SELECTING,
+               },
+             })), container);
+
+             ok(container.querySelector(`[data-state=${diffingState.SELECTING}]`),
+                "Should render the diffing.");
+
+             // Initial view.
+
+             yield renderComponent(Heap(immutableUpdate(TEST_HEAP_PROPS, {
+               snapshot: null,
+               diffing: null,
+             })), container);
+
+             ok(container.querySelector("[data-state=initial]"),
+                "With no snapshot, nor a diffing, should render initial prompt.");
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>

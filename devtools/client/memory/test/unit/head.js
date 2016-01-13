@@ -11,6 +11,8 @@ var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 DevToolsUtils.testing = true;
+DevToolsUtils.dumpn.wantLogging = true;
+DevToolsUtils.dumpv.wantLogging = true;
 
 var { OS } = require("resource://gre/modules/osfile.jsm");
 var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
