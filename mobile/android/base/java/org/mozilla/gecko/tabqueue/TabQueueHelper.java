@@ -257,7 +257,7 @@ public class TabQueueHelper {
         notificationManager.cancel(TAB_QUEUE_NOTIFICATION_ID);
     }
 
-    public static void processTabQueuePromptResponse(int resultCode, Context context) {
+    public static boolean processTabQueuePromptResponse(int resultCode, Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
         final SharedPreferences.Editor editor = prefs.edit();
 
@@ -288,6 +288,8 @@ public class TabQueueHelper {
         }
 
         editor.apply();
+
+        return resultCode == TAB_QUEUE_YES;
     }
 
     public static boolean isTabQueueEnabled(Context context) {
