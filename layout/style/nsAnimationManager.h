@@ -173,7 +173,7 @@ protected:
   // This is used for setting the elapsedTime member of CSS AnimationEvents.
   TimeDuration InitialAdvance() const {
     return mEffect ?
-           std::max(TimeDuration(), mEffect->Timing().mDelay * -1) :
+           std::max(TimeDuration(), mEffect->SpecifiedTiming().mDelay * -1) :
            TimeDuration();
   }
   // Converts an AnimationEvent's elapsedTime value to an equivalent TimeStamp

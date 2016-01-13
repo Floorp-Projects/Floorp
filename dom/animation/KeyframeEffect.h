@@ -20,7 +20,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
-#include "mozilla/dom/AnimationEffectTimingReadOnly.h" // AnimationTiming
+#include "mozilla/dom/AnimationEffectTimingReadOnly.h" // TimingParams
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
@@ -61,8 +61,8 @@ struct ComputedTiming
   Nullable<double>    mProgress;
   // Zero-based iteration index (meaningless if mProgress is null).
   uint64_t            mCurrentIteration = 0;
-  // Unlike AnimationTiming::mIterations, this value is guaranteed to be in the
-  // range [0, Infinity].
+  // Unlike TimingParams::mIterations, this value is
+  // guaranteed to be in the range [0, Infinity].
   double              mIterations = 1.0;
   StickyTimeDuration  mDuration;
 
@@ -170,7 +170,7 @@ public:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          Element* aTarget,
                          nsCSSPseudoElements::Type aPseudoType,
-                         const AnimationTiming& aTiming);
+                         const TimingParams& aTiming);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadOnly,
@@ -219,9 +219,13 @@ public:
     aRetVal.AssignLiteral("distribute");
   }
 
-  const AnimationTiming& Timing() const { return mTiming->Timing(); }
-  void SetTiming(const AnimationTiming& aTiming);
-  already_AddRefed<AnimationEffectTimingReadOnly> TimingAsObject() const override;
+  already_AddRefed<AnimationEffectTimingReadOnly> Timing() const override;
+
+  const TimingParams& SpecifiedTiming() const
+  {
+    return mTiming->AsTimingParams();
+  }
+  void SetSpecifiedTiming(const TimingParams& aTiming);
   void NotifyAnimationTimingUpdated();
 
   Nullable<TimeDuration> GetLocalTime() const;
@@ -238,14 +242,15 @@ public:
   // (because it is not currently active and is not filling at this time).
   static ComputedTiming
   GetComputedTimingAt(const Nullable<TimeDuration>& aLocalTime,
-                      const AnimationTiming& aTiming);
+                      const TimingParams& aTiming);
 
   // Shortcut for that gets the computed timing using the current local time as
   // calculated from the timeline time.
   ComputedTiming
-  GetComputedTiming(const AnimationTiming* aTiming = nullptr) const
+  GetComputedTiming(const TimingParams* aTiming = nullptr) const
   {
-    return GetComputedTimingAt(GetLocalTime(), aTiming ? *aTiming : Timing());
+    return GetComputedTimingAt(GetLocalTime(),
+                               aTiming ? *aTiming : SpecifiedTiming());
   }
 
   void
@@ -328,7 +333,7 @@ protected:
   // owning Animation's timing.
   void UpdateTargetRegistration();
 
-  static AnimationTiming ConvertKeyframeEffectOptions(
+  static TimingParams ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions);
 
   static void BuildAnimationPropertyList(

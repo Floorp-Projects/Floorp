@@ -31,11 +31,9 @@ public:
 
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual already_AddRefed<AnimationEffectTimingReadOnly> TimingAsObject() const = 0;
+  virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
 
-  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
-  {
-  }
+  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const = 0;
 
 protected:
   virtual ~AnimationEffectReadOnly() = default;

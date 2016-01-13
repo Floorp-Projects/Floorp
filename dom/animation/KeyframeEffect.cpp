@@ -27,7 +27,7 @@ namespace mozilla {
 static void
 GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
                             const Nullable<TimeDuration>& aLocalTime,
-                            const AnimationTiming& aTiming,
+                            const TimingParams& aTiming,
                             dom::ComputedTimingProperties& aRetVal)
 {
   // AnimationEffectTimingProperties
@@ -75,7 +75,7 @@ KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   Element* aTarget,
   nsCSSPseudoElements::Type aPseudoType,
-  const AnimationTiming& aTiming)
+  const TimingParams& aTiming)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
   , mPseudoType(aPseudoType)
@@ -106,19 +106,19 @@ KeyframeEffectReadOnly::Composite() const
 }
 
 already_AddRefed<AnimationEffectTimingReadOnly>
-KeyframeEffectReadOnly::TimingAsObject() const
+KeyframeEffectReadOnly::Timing() const
 {
   RefPtr<AnimationEffectTimingReadOnly> temp(mTiming);
   return temp.forget();
 }
 
 void
-KeyframeEffectReadOnly::SetTiming(const AnimationTiming& aTiming)
+KeyframeEffectReadOnly::SetSpecifiedTiming(const TimingParams& aTiming)
 {
-  if (mTiming->Timing() == aTiming) {
+  if (mTiming->AsTimingParams() == aTiming) {
     return;
   }
-  mTiming->SetTiming(aTiming);
+  mTiming->SetTimingParams(aTiming);
   if (mAnimation) {
     mAnimation->NotifyEffectTimingUpdated();
   }
@@ -199,16 +199,17 @@ void
 KeyframeEffectReadOnly::GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
 {
   const Nullable<TimeDuration> currentTime = GetLocalTime();
-  GetComputedTimingDictionary(GetComputedTimingAt(currentTime, Timing()),
+  GetComputedTimingDictionary(GetComputedTimingAt(currentTime,
+                                                  SpecifiedTiming()),
                               currentTime,
-                              Timing(),
+                              SpecifiedTiming(),
                               aRetVal);
 }
 
 ComputedTiming
 KeyframeEffectReadOnly::GetComputedTimingAt(
                           const Nullable<TimeDuration>& aLocalTime,
-                          const AnimationTiming& aTiming)
+                          const TimingParams& aTiming)
 {
   const StickyTimeDuration zeroDuration;
 
@@ -638,11 +639,11 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
 }
 #endif
 
-/* static */ AnimationTiming
+/* static */ TimingParams
 KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
 {
-  AnimationTiming animationTiming;
+  TimingParams animationTiming;
 
   if (aOptions.IsKeyframeEffectOptions()) {
     const KeyframeEffectOptions& opt = aOptions.GetAsKeyframeEffectOptions();
@@ -1698,7 +1699,7 @@ KeyframeEffectReadOnly::Constructor(
     return nullptr;
   }
 
-  AnimationTiming timing = ConvertKeyframeEffectOptions(aOptions);
+  TimingParams timing = ConvertKeyframeEffectOptions(aOptions);
 
   InfallibleTArray<AnimationProperty> animationProperties;
   BuildAnimationPropertyList(aGlobal.Context(), aTarget, aFrames,
