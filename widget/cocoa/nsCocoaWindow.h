@@ -257,6 +257,11 @@ public:
 
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
+                                   const DesktopIntRect& aRect,
+                                   nsWidgetInitData* aInitData = nullptr) override;
+
+    NS_IMETHOD              Create(nsIWidget* aParent,
+                                   nsNativeWidget aNativeParent,
                                    const LayoutDeviceIntRect& aRect,
                                    nsWidgetInitData* aInitData = nullptr) override;
 
