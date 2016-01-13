@@ -34,8 +34,8 @@ namespace mozilla
 /**
  * FFmpeg calls back to this function with a list of pixel formats it supports.
  * We choose a pixel format that we support and return it.
- * For now, we just look for YUV420P as it is the only non-HW accelerated format
- * supported by FFmpeg's H264 decoder.
+ * For now, we just look for YUV420P, YUVJ420P and YUV444 as those are the only
+ * only non-HW accelerated format supported by FFmpeg's H264 and VP9 decoder.
  */
 static AVPixelFormat
 ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
