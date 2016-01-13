@@ -429,6 +429,31 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
 }
 
 void
+KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
+{
+  nsCSSPropertySet winningInCascadeProperties;
+  nsCSSPropertySet runningOnCompositorProperties;
+
+  for (const AnimationProperty& property : mProperties) {
+    if (property.mWinsInCascade) {
+      winningInCascadeProperties.AddProperty(property.mProperty);
+    }
+    if (property.mIsRunningOnCompositor) {
+      runningOnCompositorProperties.AddProperty(property.mProperty);
+    }
+  }
+
+  mProperties = aOther.mProperties;
+
+  for (AnimationProperty& property : mProperties) {
+    property.mWinsInCascade =
+      winningInCascadeProperties.HasProperty(property.mProperty);
+    property.mIsRunningOnCompositor =
+      runningOnCompositorProperties.HasProperty(property.mProperty);
+  }
+}
+
+void
 KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                      nsCSSPropertySet& aSetProperties)
 {

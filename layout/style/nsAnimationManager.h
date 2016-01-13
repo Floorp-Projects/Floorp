@@ -360,10 +360,6 @@ private:
                     float aFromKey, nsStyleContext* aFromContext,
                     mozilla::css::Declaration* aFromDeclaration,
                     float aToKey, nsStyleContext* aToContext);
-
-  static void CopyIsRunningOnCompositor(
-    mozilla::dom::KeyframeEffectReadOnly& aSourceEffect,
-    mozilla::dom::KeyframeEffectReadOnly& aDestEffect);
 };
 
 #endif /* !defined(nsAnimationManager_h_) */
