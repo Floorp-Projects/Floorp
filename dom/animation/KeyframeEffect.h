@@ -131,9 +131,10 @@ struct AnimationProperty
   // For CSS Animations, which are overridden by !important rules in the
   // cascade, we actually determine this from the CSS cascade
   // computations, and then use it for OMTA.
+  //
   // **NOTE**: This member is not included when comparing AnimationProperty
   // objects for equality.
-  bool mWinsInCascade = true;
+  bool mWinsInCascade = false;
 
   // If true, the propery is currently being animated on the compositor.
   //
@@ -141,6 +142,9 @@ struct AnimationProperty
   // between calling RequestRestyle on its AnimationCollection and when the
   // restyle is performed, this member may temporarily become false even if
   // the animation remains on the layer after the restyle.
+  //
+  // **NOTE**: This member is not included when comparing AnimationProperty
+  // objects for equality.
   bool mIsRunningOnCompositor = false;
 
   InfallibleTArray<AnimationPropertySegment> mSegments;
