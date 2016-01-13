@@ -56,7 +56,7 @@ ElementPropertyTransition::CurrentValuePortion() const
   // case, we override the fill mode to 'both' to ensure the progress
   // is never null.
   AnimationTiming timingToUse = mTiming;
-  timingToUse.mFillMode = dom::FillMode::Both;
+  timingToUse.mFill = dom::FillMode::Both;
   ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
 
   MOZ_ASSERT(!computedTiming.mProgress.IsNull(),
@@ -657,7 +657,7 @@ nsTransitionManager::ConsiderStartingTransition(
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
   timing.mIterations = 1.0;
   timing.mDirection = dom::PlaybackDirection::Normal;
-  timing.mFillMode = dom::FillMode::Backwards;
+  timing.mFill = dom::FillMode::Backwards;
 
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), aElement,

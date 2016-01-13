@@ -23,6 +23,12 @@
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
 
+// Fix X11 header brain damage that conflicts with dom::FillMode::None
+#ifdef None
+#undef None
+#endif
+#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
+
 struct JSContext;
 class nsCSSPropertySet;
 class nsIContent;
@@ -36,7 +42,6 @@ struct AnimationCollection;
 class AnimValuesStyleRule;
 
 namespace dom {
-struct ComputedTimingProperties;
 class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
@@ -55,16 +60,14 @@ struct AnimationTiming
   TimeDuration mDelay;
   double mIterations; // Can be NaN, negative, +/-Infinity
   dom::PlaybackDirection mDirection;
-  dom::FillMode mFillMode;
+  dom::FillMode mFill;
 
-  bool FillsForwards() const;
-  bool FillsBackwards() const;
   bool operator==(const AnimationTiming& aOther) const {
     return mIterationDuration == aOther.mIterationDuration &&
            mDelay == aOther.mDelay &&
            mIterations == aOther.mIterations &&
            mDirection == aOther.mDirection &&
-           mFillMode == aOther.mFillMode;
+           mFill == aOther.mFill;
   }
   bool operator!=(const AnimationTiming& aOther) const {
     return !(*this == aOther);
@@ -91,6 +94,21 @@ struct ComputedTiming
   // Unlike AnimationTiming::mIterations, this value is guaranteed to be in the
   // range [0, Infinity].
   double              mIterations = 1.0;
+
+  // This is the computed fill mode so it is never auto
+  dom::FillMode       mFill = dom::FillMode::None;
+  bool FillsForwards() const {
+    MOZ_ASSERT(mFill != dom::FillMode::Auto,
+               "mFill should not be Auto in ComputedTiming.");
+    return mFill == dom::FillMode::Both ||
+           mFill == dom::FillMode::Forwards;
+  }
+  bool FillsBackwards() const {
+    MOZ_ASSERT(mFill != dom::FillMode::Auto,
+               "mFill should not be Auto in ComputedTiming.");
+    return mFill == dom::FillMode::Both ||
+           mFill == dom::FillMode::Backwards;
+  }
 
   enum class AnimationPhase {
     Null,   // Not sampled (null sample time)
