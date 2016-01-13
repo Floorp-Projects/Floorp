@@ -2487,7 +2487,8 @@ HTMLInputElement::GetFiles()
     return nullptr;
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) {
+  if (Preferences::GetBool("dom.input.dirpicker", false) &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) {
     return nullptr;
   }
 
