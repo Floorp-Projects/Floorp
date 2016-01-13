@@ -22,6 +22,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
+#include "mozilla/dom/UnionTypes.h"
 
 // Fix X11 header brain damage that conflicts with dom::FillMode::None
 #ifdef None
@@ -56,14 +57,28 @@ enum class CompositeOperation : uint32_t;
  */
 struct AnimationTiming
 {
-  TimeDuration mIterationDuration;
+  dom::OwningUnrestrictedDoubleOrString mDuration;
   TimeDuration mDelay;
   double mIterations; // Can be NaN, negative, +/-Infinity
   dom::PlaybackDirection mDirection;
   dom::FillMode mFill;
 
   bool operator==(const AnimationTiming& aOther) const {
-    return mIterationDuration == aOther.mIterationDuration &&
+    bool durationEqual;
+    if (mDuration.IsUnrestrictedDouble()) {
+      durationEqual = aOther.mDuration.IsUnrestrictedDouble() &&
+                      (mDuration.GetAsUnrestrictedDouble() ==
+                       aOther.mDuration.GetAsUnrestrictedDouble());
+    } else if (mDuration.IsString()) {
+      durationEqual = aOther.mDuration.IsString() &&
+                      (mDuration.GetAsString() ==
+                       aOther.mDuration.GetAsString());
+    } else {
+      // Check if both are uninitialized
+      durationEqual = !aOther.mDuration.IsUnrestrictedDouble() &&
+                      !aOther.mDuration.IsString();
+    }
+    return durationEqual &&
            mDelay == aOther.mDelay &&
            mIterations == aOther.mIterations &&
            mDirection == aOther.mDirection &&
@@ -94,6 +109,7 @@ struct ComputedTiming
   // Unlike AnimationTiming::mIterations, this value is guaranteed to be in the
   // range [0, Infinity].
   double              mIterations = 1.0;
+  StickyTimeDuration  mDuration;
 
   // This is the computed fill mode so it is never auto
   dom::FillMode       mFill = dom::FillMode::None;
@@ -280,10 +296,11 @@ public:
   void
   GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const override;
 
-  // Return the duration of the active interval for the given timing parameters.
+  // Return the duration of the active interval for the given duration and
+  // iteration count.
   static StickyTimeDuration
-  ActiveDuration(const AnimationTiming& aTiming,
-                 double aComputedIterations);
+  ActiveDuration(const StickyTimeDuration& aIterationDuration,
+                 double aIterationCount);
 
   bool IsInPlay() const;
   bool IsCurrent() const;

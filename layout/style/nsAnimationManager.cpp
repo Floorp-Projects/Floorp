@@ -243,10 +243,9 @@ CSSAnimation::QueueEvents()
   StickyTimeDuration elapsedTime;
 
   if (message == eAnimationStart || message == eAnimationIteration) {
-    TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
-                                    computedTiming.mCurrentIteration;
-    elapsedTime = StickyTimeDuration(std::max(iterationStart,
-                                              InitialAdvance()));
+    StickyTimeDuration iterationStart = computedTiming.mDuration *
+                                          computedTiming.mCurrentIteration;
+    elapsedTime = std::max(iterationStart, StickyTimeDuration(InitialAdvance()));
   } else {
     MOZ_ASSERT(message == eAnimationEnd);
     elapsedTime = computedTiming.mActiveDuration;
@@ -626,8 +625,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     aAnimations.AppendElement(dest);
 
     AnimationTiming timing;
-    timing.mIterationDuration =
-      TimeDuration::FromMilliseconds(src.GetDuration());
+    timing.mDuration.SetAsUnrestrictedDouble() = src.GetDuration();
     timing.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
     timing.mIterations = src.GetIterationCount();
     timing.mDirection = src.GetDirection();

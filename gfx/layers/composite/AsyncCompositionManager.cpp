@@ -582,7 +582,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     }
 
     AnimationTiming timing;
-    timing.mIterationDuration = animation.duration();
+    timing.mDuration.SetAsUnrestrictedDouble() = animation.duration().ToMilliseconds();
     // Currently animations run on the compositor have their delay factored
     // into their start time, hence the delay is effectively zero.
     timing.mDelay = TimeDuration(0);
