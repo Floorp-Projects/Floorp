@@ -9,7 +9,17 @@
 <!ENTITY firstrun_panel_title_welcome "Welcome">
 <!ENTITY  onboard_start_message3 "Browse with &brandShortName;">
 <!ENTITY  onboard_start_subtext3 "Make your mobile Web browsing experience truly your own.">
-<!ENTITY  onboard_start_button_account "Sign in to &brandShortName;">
+
+<!ENTITY firstrun_urlbar_message "Welcome to &brandShortName;">
+<!ENTITY firstrun_urlbar_subtext "Find things faster with helpful search suggestion shortcuts.">
+<!ENTITY firstrun_bookmarks_title "History">
+<!ENTITY firstrun_bookmarks_message "Your faves, front and center">
+<!ENTITY firstrun_bookmarks_subtext "Get results from your bookmarks and history when you search.">
+<!ENTITY firstrun_sync_title "Sync">
+<!ENTITY firstrun_sync_message "&brandShortName;, always by your side">
+<!ENTITY firstrun_sync_subtext "Sync your tabs, passwords, and more everywhere you use it.">
+<!ENTITY firstrun_signin_message "Get connected, get started">
+<!ENTITY firstrun_signin_button "Sign in to Sync">
 <!ENTITY  onboard_start_button_browser "Start Browsing">
 <!ENTITY firstrun_button_next "Next">
 
