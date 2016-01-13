@@ -833,27 +833,6 @@ DataTransfer::SetDragImage(nsIDOMElement* aImage, int32_t aX, int32_t aY)
   return rv.StealNSResult();
 }
 
-static already_AddRefed<OSFileSystem>
-MakeOrReuseFileSystem(const nsAString& aNewLocalRootPath,
-                      OSFileSystem* aFS,
-                      nsPIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<OSFileSystem> fs;
-  if (aFS) {
-    const nsAString& prevLocalRootPath = aFS->GetLocalRootPath();
-    if (aNewLocalRootPath == prevLocalRootPath) {
-      fs = aFS;
-    }
-  }
-  if (!fs) {
-    fs = new OSFileSystem(aNewLocalRootPath);
-    fs->Init(aWindow);
-  }
-  return fs.forget();
-}
-
 already_AddRefed<Promise>
 DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
 {
@@ -890,9 +869,6 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
       return p.forget();
     }
 
-    nsPIDOMWindow* window = parentNode->OwnerDoc()->GetInnerWindow();
-
-    RefPtr<OSFileSystem> fs;
     for (uint32_t i = 0; i < mFiles->Length(); ++i) {
       if (mFiles->Item(i)->Impl()->IsDirectory()) {
 #if defined(ANDROID) || defined(MOZ_B2G)
@@ -909,7 +885,10 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
         int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
         nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
         nsDependentSubstring basename = Substring(path, leafSeparatorIndex);
-        fs = MakeOrReuseFileSystem(dirname, fs, window);
+
+        RefPtr<OSFileSystem> fs = new OSFileSystem(dirname);
+        fs->Init(parentNode->OwnerDoc()->GetInnerWindow());
+
         RefPtr<Directory> directory = new Directory(fs, basename);
         directory->SetContentFilters(NS_LITERAL_STRING("filter-out-sensitive"));
         filesAndDirsSeq[i].SetAsDirectory() = directory;
