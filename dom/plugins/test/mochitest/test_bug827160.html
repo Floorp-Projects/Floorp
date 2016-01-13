@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=827160
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 827160</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+  <script type="application/javascript" src="utils.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=827160">Mozilla Bug 827160</a>
+
+<script type="application/javascript">
+
+// Make sure the test plugin is not click-to-play
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
+setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Second Test Plug-in");
+
+</script>
+
+<!-- Should load test plugin application/x-test -->
+<object id="shouldLoad" data="data:application/x-test,foo"></object>
+<!-- Should load test plugin application/x-test2, ignoring type="" -->
+<object id="shouldIgnoreType" type="application/x-test" data="data:application/x-test2,foo"></object>
+<!-- Should load nothing, channel type does not match type and typeMustMatch is present -->
+<object id="shouldNotLoad" type="application/x-test" data="data:application/x-test2,foo" typemustmatch></object>
+<!-- Should not load test plugin application/x-test2, no type field is present  -->
+<object id="shouldNotLoadMissingType" data="data:application/x-test2,foo" typemustmatch></object>
+<!-- Should load, no data field is present  -->
+<object id="shouldLoadMissingData" type="application/x-test" typemustmatch></object>
+<pre id="test">
+
+<script type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+window.addEventListener("load", function () {
+  const OBJLC = SpecialPowers.Ci.nsIObjectLoadingContent;
+  is(SpecialPowers.wrap(document.getElementById("shouldLoad")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load without type, failed expected load");
+  is(SpecialPowers.wrap(document.getElementById("shouldIgnoreType")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load with type, failed expected load");
+  is(SpecialPowers.wrap(document.getElementById("shouldNotLoad")).displayedType, OBJLC.TYPE_NULL, "Testing object load with typemustmatch, load success even though failure expected");
+  is(SpecialPowers.wrap(document.getElementById("shouldNotLoadMissingType")).displayedType, OBJLC.TYPE_NULL, "Testing object load with typemustmatch and with type, load success even though failure expected");
+  is(SpecialPowers.wrap(document.getElementById("shouldLoadMissingData")).displayedType, OBJLC.TYPE_PLUGIN, "Testing object load with typemustmatch and without data, failed expected load");
+  SimpleTest.finish();
+}, false);
+
+</script>
+</pre>
+</body>
+</html>

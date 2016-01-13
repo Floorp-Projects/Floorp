@@ -50,19 +50,6 @@ function test() {
     ok(checkSelectedTab(), "Current tab is correctly selected");
   });
 
-  let currentSelectedTab = gBrowser.selectedTab;
-  for (let idx of [1,2,3,4]) {
-    let preview = getPreviewForTab(gBrowser.tabs[0]);
-    let canvas = createThumbnailSurface(preview);
-    let ctx = canvas.getContext("2d");
-    preview.controller.drawThumbnail(ctx, canvas.width, canvas.height);
-    ok(currentSelectedTab.selected, "Drawing thumbnail does not change selection");
-    canvas = getCanvas(preview.controller.width, preview.controller.height);
-    ctx = canvas.getContext("2d");
-    preview.controller.drawPreview(ctx);
-    ok(currentSelectedTab.selected, "Drawing preview does not change selection");
-  }
-
   // Close #4
   getPreviewForTab(gBrowser.selectedTab).controller.onClose();
   checkPreviews(3, "Expected number of previews after closing selected tab via controller");
@@ -116,27 +103,5 @@ function test() {
 
   function isTabSelected(idx) {
     return gBrowser.tabs[idx].selected;
-  }
-
-  function createThumbnailSurface(p) {
-    let thumbnailWidth = 200,
-        thumbnailHeight = 120;
-    let ratio = p.controller.thumbnailAspectRatio;
-
-    if (thumbnailWidth/thumbnailHeight > ratio)
-      thumbnailWidth = thumbnailHeight * ratio;
-    else
-      thumbnailHeight = thumbnailWidth / ratio;
-
-    return getCanvas(thumbnailWidth, thumbnailHeight);
-  }
-
-  function getCanvas(width, height) {
-    let win = window.QueryInterface(Ci.nsIDOMWindow);
-    let doc = win.document;
-    let canvas = doc.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    canvas.width = width;
-    canvas.height = height;
-    return canvas;
   }
 }

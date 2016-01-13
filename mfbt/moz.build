@@ -122,6 +122,10 @@ DISABLE_STL_WRAPPING = True
 if CONFIG['GNU_CXX']:
     SOURCES['/mfbt/Compression.cpp'].flags += ['-Wno-unused-function']
 
+if CONFIG['CLANG_CXX']:
+    # Suppress warnings from third-party V8 Decimal code.
+    SOURCES['/mfbt/decimal/Decimal.cpp'].flags += ['-Wno-implicit-fallthrough']
+
 if CONFIG['_MSC_VER']:
     # Error 4804 is "'>' : unsafe use of type 'bool' in operation"
     SOURCES['/mfbt/Compression.cpp'].flags += ['-wd4804']

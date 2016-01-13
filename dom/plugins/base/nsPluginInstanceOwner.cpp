@@ -372,6 +372,7 @@ nsPluginInstanceOwner::nsPluginInstanceOwner()
 #ifdef XP_WIN
   mGotCompositionData = false;
   mSentStartComposition = false;
+  mPluginDidNotHandleIMEComposition = false;
 #endif
 }
 
@@ -1827,6 +1828,47 @@ nsPluginInstanceOwner::GetTextComposition()
 
   return composition.forget();
 }
+
+void
+nsPluginInstanceOwner::HandleNoConsumedCompositionMessage(
+  WidgetCompositionEvent* aCompositionEvent,
+  const NPEvent* aPluginEvent)
+{
+  nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
+  if (!widget) {
+    widget = GetRootWidgetForPluginFrame(mPluginFrame);
+    if (NS_WARN_IF(!widget)) {
+      return;
+    }
+  }
+
+  NPEvent npevent;
+  if (aPluginEvent->lParam & GCS_RESULTSTR) {
+    // GCS_RESULTSTR's default proc will generate WM_CHAR. So emulate it.
+    for (size_t i = 0; i < aCompositionEvent->mData.Length(); i++) {
+      WidgetPluginEvent charEvent(true, ePluginInputEvent, widget);
+      npevent.event = WM_CHAR;
+      npevent.wParam = aCompositionEvent->mData[i];
+      npevent.lParam = 0;
+      charEvent.mPluginEvent.Copy(npevent);
+      ProcessEvent(charEvent);
+    }
+    return;
+  }
+  if (!mSentStartComposition) {
+    // We post WM_IME_COMPOSITION to default proc, but
+    // WM_IME_STARTCOMPOSITION isn't post yet.  We should post it at first.
+    WidgetPluginEvent startEvent(true, ePluginInputEvent, widget);
+    npevent.event = WM_IME_STARTCOMPOSITION;
+    npevent.wParam = 0;
+    npevent.lParam = 0;
+    startEvent.mPluginEvent.Copy(npevent);
+    CallDefaultProc(&startEvent);
+    mSentStartComposition = true;
+  }
+
+  CallDefaultProc(aCompositionEvent);
+}
 #endif
 
 nsresult
@@ -1853,6 +1895,24 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
       compositionChangeEventHandlingMarker(composition, compositionEvent);
   }
 
+  const NPEvent* pPluginEvent =
+    static_cast<const NPEvent*>(compositionEvent->mPluginEvent);
+  if (pPluginEvent && pPluginEvent->event == WM_IME_COMPOSITION &&
+      mPluginDidNotHandleIMEComposition) {
+    // This is a workaround when running windowed and windowless Flash on
+    // same process.
+    // Flash with protected mode calls IMM APIs on own render process.  This
+    // is a bug of Flash's protected mode.
+    // ImmGetCompositionString with GCS_RESULTSTR returns *LAST* committed
+    // string.  So when windowed mode Flash handles IME composition,
+    // windowless plugin can get windowed mode's commited string by that API.
+    // So we never post WM_IME_COMPOSITION when plugin doesn't call
+    // ImmGetCompositionString() during WM_IME_COMPOSITION correctly.
+    HandleNoConsumedCompositionMessage(compositionEvent, pPluginEvent);
+    aEvent->StopImmediatePropagation();
+    return NS_OK;
+  }
+
   // Protected mode Flash returns noDefault by NPP_HandleEvent, but
   // composition information into plugin is invalid because plugin's bug.
   // So if plugin doesn't get composition data by WM_IME_COMPOSITION, we
@@ -1864,8 +1924,7 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
   aEvent->StopImmediatePropagation();
 
   // Composition event isn't handled by plugin, so we have to call default proc.
-  const NPEvent* pPluginEvent =
-    static_cast<const NPEvent*>(compositionEvent->mPluginEvent);
+
   if (NS_WARN_IF(!pPluginEvent)) {
     return NS_OK;
   }
@@ -1880,6 +1939,7 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
     } else {
       mSentStartComposition = false;
     }
+    mPluginDidNotHandleIMEComposition = false;
     return NS_OK;
   }
 
@@ -1892,38 +1952,11 @@ nsPluginInstanceOwner::DispatchCompositionToPlugin(nsIDOMEvent* aEvent)
   }
 
   if (pPluginEvent->event == WM_IME_COMPOSITION && !mGotCompositionData) {
-    nsCOMPtr<nsIWidget> widget = GetContainingWidgetIfOffset();
-    if (!widget) {
-      widget = GetRootWidgetForPluginFrame(mPluginFrame);
-    }
+    // If plugin doesn't handle WM_IME_COMPOSITION correctly, we don't send
+    // composition event until end composition.
+    mPluginDidNotHandleIMEComposition = true;
 
-    if (pPluginEvent->lParam & GCS_RESULTSTR) {
-      // GCS_RESULTSTR's default proc will generate WM_CHAR. So emulate it.
-      for (size_t i = 0; i < compositionEvent->mData.Length(); i++) {
-        WidgetPluginEvent charEvent(true, ePluginInputEvent, widget);
-        NPEvent event;
-        event.event = WM_CHAR;
-        event.wParam = compositionEvent->mData[i];
-        event.lParam = 0;
-        charEvent.mPluginEvent.Copy(event);
-        ProcessEvent(charEvent);
-      }
-      return NS_OK;
-    }
-    if (!mSentStartComposition) {
-      // We post WM_IME_COMPOSITION to default proc, but
-      // WM_IME_STARTCOMPOSITION isn't post yet.  We should post it at first.
-      WidgetPluginEvent event(true, ePluginInputEvent, widget);
-      NPEvent npevent;
-      npevent.event = WM_IME_STARTCOMPOSITION;
-      npevent.wParam = 0;
-      npevent.lParam = 0;
-      event.mPluginEvent.Copy(npevent);
-      CallDefaultProc(&event);
-      mSentStartComposition = true;
-    }
-
-    CallDefaultProc(compositionEvent);
+    HandleNoConsumedCompositionMessage(compositionEvent, pPluginEvent);
   }
 #endif // #ifdef XP_WIN
   return NS_OK;

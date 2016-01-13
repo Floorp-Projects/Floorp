@@ -459,7 +459,8 @@ public:
                                const dom::MediaStreamConstraints& aConstraints,
                                nsIGetUserMediaDevicesSuccessCallback* onSuccess,
                                nsIDOMGetUserMediaErrorCallback* onError,
-                               uint64_t aInnerWindowID = 0);
+                               uint64_t aInnerWindowID = 0,
+                               const nsAString& aCallID = nsString());
 
   nsresult EnumerateDevices(nsPIDOMWindow* aWindow,
                             nsIGetUserMediaDevicesSuccessCallback* aOnSuccess,

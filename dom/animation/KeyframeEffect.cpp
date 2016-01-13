@@ -10,10 +10,10 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/AnimationUtils.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
-#include "AnimationCommon.h"
 #include "Layers.h" // For Layer
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
@@ -163,8 +163,7 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   }
 
   // Request restyle if necessary.
-  ComputedTiming computedTiming = GetComputedTiming();
-  AnimationCollection* collection = GetCollection();
+  //
   // Bug 1235002: We should skip requesting a restyle when mProperties is empty.
   // However, currently we don't properly encapsulate mProperties so we can't
   // detect when it changes. As a result, if we skip requesting restyles when
@@ -173,13 +172,20 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
   // request a restyle at all. Since animations without properties are rare, we
   // currently just request the restyle regardless of whether mProperties is
   // empty or not.
-  if (collection &&
-      // Bug 1216843: When we implement iteration composite modes, we need to
-      // also detect if the current iteration has changed.
-      computedTiming.mProgress != mProgressOnLastCompose) {
-    collection->RequestRestyle(CanThrottle() ?
-                               AnimationCollection::RestyleType::Throttled :
-                               AnimationCollection::RestyleType::Standard);
+  //
+  // Bug 1216843: When we implement iteration composite modes, we need to
+  // also detect if the current iteration has changed.
+  if (mAnimation && GetComputedTiming().mProgress != mProgressOnLastCompose) {
+    EffectCompositor::RestyleType restyleType =
+      CanThrottle() ?
+      EffectCompositor::RestyleType::Throttled :
+      EffectCompositor::RestyleType::Standard;
+    nsPresContext* presContext = GetPresContext();
+    if (presContext) {
+      presContext->EffectCompositor()->
+        RequestRestyle(mTarget, mPseudoType, restyleType,
+                       mAnimation->CascadeLevel());
+    }
   }
 }
 
@@ -423,6 +429,31 @@ KeyframeEffectReadOnly::HasAnimationOfProperties(
 }
 
 void
+KeyframeEffectReadOnly::CopyPropertiesFrom(const KeyframeEffectReadOnly& aOther)
+{
+  nsCSSPropertySet winningInCascadeProperties;
+  nsCSSPropertySet runningOnCompositorProperties;
+
+  for (const AnimationProperty& property : mProperties) {
+    if (property.mWinsInCascade) {
+      winningInCascadeProperties.AddProperty(property.mProperty);
+    }
+    if (property.mIsRunningOnCompositor) {
+      runningOnCompositorProperties.AddProperty(property.mProperty);
+    }
+  }
+
+  mProperties = aOther.mProperties;
+
+  for (AnimationProperty& property : mProperties) {
+    property.mWinsInCascade =
+      winningInCascadeProperties.HasProperty(property.mProperty);
+    property.mIsRunningOnCompositor =
+      runningOnCompositorProperties.HasProperty(property.mProperty);
+  }
+}
+
+void
 KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                      nsCSSPropertySet& aSetProperties)
 {
@@ -450,7 +481,7 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                "incorrect last to key");
 
     if (aSetProperties.HasProperty(prop.mProperty)) {
-      // Animations are composed by AnimationCollection by iterating
+      // Animations are composed by EffectCompositor by iterating
       // from the last animation to first. For animations targetting the
       // same property, the later one wins. So if this property is already set,
       // we should not override it.
@@ -1375,7 +1406,6 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
       MOZ_ASSERT(aEntries[i].mOffset == 0.0f);
       animationProperty = aResult.AppendElement();
       animationProperty->mProperty = aEntries[i].mProperty;
-      animationProperty->mWinsInCascade = true;
       lastProperty = aEntries[i].mProperty;
     }
 
@@ -1577,7 +1607,6 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
         animationPropertyIndexes[i] = aResult.Length();
         AnimationProperty* animationProperty = aResult.AppendElement();
         animationProperty->mProperty = p;
-        animationProperty->mWinsInCascade = true;
         properties.AddProperty(p);
       }
     }
@@ -1907,13 +1936,16 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
   TimeStamp now =
     presContext->RefreshDriver()->MostRecentRefresh();
 
-  AnimationCollection* collection = GetCollection();
-  MOZ_ASSERT(collection,
-    "CanThrottleTransformChanges should be involved with animation collection");
-  TimeStamp styleRuleRefreshTime = collection->mStyleRuleRefreshTime;
+  EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
+  MOZ_ASSERT(effectSet, "CanThrottleTransformChanges is expected to be called"
+                        " on an effect in an effect set");
+  MOZ_ASSERT(mAnimation, "CanThrottleTransformChanges is expected to be called"
+                         " on an effect with a parent animation");
+  TimeStamp animationRuleRefreshTime =
+    effectSet->AnimationRuleRefreshTime(mAnimation->CascadeLevel());
   // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!styleRuleRefreshTime.IsNull() &&
-      (now - styleRuleRefreshTime) < OverflowRegionRefreshInterval()) {
+  if (!animationRuleRefreshTime.IsNull() &&
+      (now - animationRuleRefreshTime) < OverflowRegionRefreshInterval()) {
     return true;
   }
 
@@ -1983,12 +2015,6 @@ KeyframeEffectReadOnly::GetPresContext() const
     return nullptr;
   }
   return shell->GetPresContext();
-}
-
-AnimationCollection *
-KeyframeEffectReadOnly::GetCollection() const
-{
-  return mAnimation ? mAnimation->GetCollection() : nullptr;
 }
 
 /* static */ bool

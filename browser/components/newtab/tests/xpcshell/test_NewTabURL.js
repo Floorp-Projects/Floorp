@@ -1,13 +1,25 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
+
+/* globals Services, NewTabURL, XPCOMUtils, aboutNewTabService */
 "use strict";
 
-Components.utils.import("resource:///modules/NewTabURL.jsm");
-Components.utils.import("resource://gre/modules/Services.jsm");
+const {utils: Cu} = Components;
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource:///modules/NewTabURL.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
+                                  "resource:///modules/NewTabPrefsProvider.jsm");
+XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
+                                   "@mozilla.org/browser/aboutnewtab-service;1",
+                                   "nsIAboutNewTabService");
 
 add_task(function* () {
-  Assert.equal(NewTabURL.get(), "about:newtab", "Default newtab URL should be about:newtab");
+  let defaultURL = aboutNewTabService.newTabURL;
+  Services.prefs.setBoolPref("browser.newtabpage.remote", false);
+
+  Assert.equal(NewTabURL.get(), defaultURL, `Default newtab URL should be ${defaultURL}`);
   let url = "http://example.com/";
   let notificationPromise = promiseNewtabURLNotification(url);
   NewTabURL.override(url);
@@ -15,21 +27,24 @@ add_task(function* () {
   Assert.ok(NewTabURL.overridden, "Newtab URL should be overridden");
   Assert.equal(NewTabURL.get(), url, "Newtab URL should be the custom URL");
 
-  notificationPromise = promiseNewtabURLNotification("about:newtab");
+  notificationPromise = promiseNewtabURLNotification(defaultURL);
   NewTabURL.reset();
   yield notificationPromise;
   Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
-  Assert.equal(NewTabURL.get(), "about:newtab", "Newtab URL should be the about:newtab");
+  Assert.equal(NewTabURL.get(), defaultURL, "Newtab URL should be the default");
 
   // change newtab page to remote
+  NewTabPrefsProvider.prefs.init();
   Services.prefs.setBoolPref("browser.newtabpage.remote", true);
-  Assert.equal(NewTabURL.get(), "about:remote-newtab", "Newtab URL should be the about:remote-newtab");
+  let remoteURL = aboutNewTabService.generateRemoteURL();
+  Assert.equal(NewTabURL.get(), remoteURL, `Newtab URL should be ${remoteURL}`);
   Assert.ok(!NewTabURL.overridden, "Newtab URL should not be overridden");
+  NewTabPrefsProvider.prefs.uninit();
 });
 
 function promiseNewtabURLNotification(aNewURL) {
   return new Promise(resolve => {
-    Services.obs.addObserver(function observer(aSubject, aTopic, aData) {
+    Services.obs.addObserver(function observer(aSubject, aTopic, aData) { // jshint ignore:line
       Services.obs.removeObserver(observer, aTopic);
       Assert.equal(aData, aNewURL, "Data for newtab-url-changed notification should be new URL.");
       resolve();

@@ -88,7 +88,11 @@ private:
 
 class VolatileBufferPtr_base {
 public:
-  explicit VolatileBufferPtr_base(VolatileBuffer* vbuf) : mVBuf(vbuf) {
+  explicit VolatileBufferPtr_base(VolatileBuffer* vbuf)
+    : mVBuf(vbuf)
+    , mMapping(nullptr)
+    , mPurged(false)
+  {
     Lock();
   }
 

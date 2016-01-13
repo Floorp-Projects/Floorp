@@ -1719,9 +1719,9 @@ MLoadTypedArrayElementStatic::computeRange(TempAllocator& alloc)
 {
     // We don't currently use MLoadTypedArrayElementStatic for uint32, so we
     // don't have to worry about it returning a value outside our type.
-    MOZ_ASSERT(AnyTypedArrayType(someTypedArray_) != Scalar::Uint32);
+    MOZ_ASSERT(someTypedArray_->as<TypedArrayObject>().type() != Scalar::Uint32);
 
-    setRange(GetTypedArrayRange(alloc, AnyTypedArrayType(someTypedArray_)));
+    setRange(GetTypedArrayRange(alloc, someTypedArray_->as<TypedArrayObject>().type()));
 }
 
 void

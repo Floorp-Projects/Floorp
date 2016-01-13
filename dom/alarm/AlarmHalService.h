@@ -33,6 +33,10 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALARMHALSERVICE
 
+  AlarmHalService()
+    : mAlarmEnabled(false)
+  {}
+
   void Init();
 
   static already_AddRefed<AlarmHalService> GetInstance();

@@ -13,7 +13,6 @@ import re
 import urllib2
 import json
 
-from mozharness.base.config import ReadOnlyDict, parse_config_file
 from mozharness.base.errors import BaseErrorList
 from mozharness.base.log import FATAL, WARNING
 from mozharness.base.python import (
@@ -36,6 +35,16 @@ INSTALLER_SUFFIXES = ('.apk',  # Android
                       '.dmg',  # Mac
                       '.installer-stub.exe', '.installer.exe', '.exe', '.zip',  # Windows
                       )
+
+# https://dxr.mozilla.org/mozilla-central/source/testing/config/tooltool-manifests
+TOOLTOOL_PLATFORM_DIR = {
+    'linux':   'linux32',
+    'linux64': 'linux64',
+    'win32':   'win32',
+    'win64':   'win32',
+    'macosx':  'macosx64',
+}
+
 
 testing_config_options = [
     [["--installer-url"],
@@ -187,7 +196,7 @@ class TestingMixin(VirtualenvMixin, BuildbotMixin, ResourceMonitoringMixin,
         """
         c = self.config
         orig_config = copy.deepcopy(c)
-        self.warning("When you use developer_config.py, we drop " \
+        self.warning("When you use developer_config.py, we drop "
                 "'read-buildbot-config' from the list of actions.")
         if "read-buildbot-config" in rw_config.actions:
             rw_config.actions.remove("read-buildbot-config")
@@ -363,12 +372,12 @@ You can set this by:
         if self.config.get("developer_mode") and self._is_darwin():
             # Bug 1066700 only affects Mac users that try to run mozharness locally
             version = self._query_binary_version(
-                    regex=re.compile("UnZip\ (\d+\.\d+)\ .*",re.MULTILINE),
+                    regex=re.compile("UnZip\ (\d+\.\d+)\ .*", re.MULTILINE),
                     cmd=[self.query_exe('unzip'), '-v']
             )
             if not version >= 6:
-                self.fatal("We require a more recent version of unzip to unpack our tests.zip files.\n" \
-                        "You are currently using version %s. Please update to at least 6.0.\n" \
+                self.fatal("We require a more recent version of unzip to unpack our tests.zip files.\n"
+                        "You are currently using version %s. Please update to at least 6.0.\n"
                         "You can visit http://www.info-zip.org/UnZip.html" % version)
 
     def _download_test_zip(self):
@@ -637,51 +646,45 @@ Did you run with --create-virtualenv? Is mozinstall in virtualenv_modules?""")
         if self.config.get('minidump_tooltool_manifest_path'):
             return self.config['minidump_tooltool_manifest_path']
 
-        self.info('minidump tooltool manifest unknown. determining based upon platform and arch')
-        tooltool_path = "config/tooltool-manifests/%s/releng.manifest"
-        if self._is_windows():
-            # we use the same minidump binary for 32 and 64 bit windows
-            return tooltool_path % 'win32'
-        elif self._is_darwin():
-            # we only use the 64 bit binary for osx
-            return tooltool_path % 'macosx64'
-        elif self._is_linux():
-            if self._is_64_bit():
-                return tooltool_path % 'linux64'
-            else:
-                return tooltool_path % 'linux32'
+        self.info('Minidump tooltool manifest unknown. Determining based upon '
+                  'platform and architecture.')
+        platform_name = self.platform_name()
+
+        if platform_name:
+            tooltool_path = "config/tooltool-manifests/%s/releng.manifest" % \
+                TOOLTOOL_PLATFORM_DIR[platform_name]
+            return tooltool_path
         else:
-            self.fatal('could not determine minidump tooltool manifest')
+            self.fatal('We could not determine the minidump\'s filename.')
 
     def query_minidump_filename(self):
         if self.config.get('minidump_stackwalk_path'):
             return self.config['minidump_stackwalk_path']
 
-        self.info('minidump filename unknown. determining based upon platform and arch')
-        minidump_filename = '%s-minidump_stackwalk'
-        if self._is_windows():
-            # we use the same minidump binary for 32 and 64 bit windows
-            return minidump_filename % ('win32',) + '.exe'
-        elif self._is_darwin():
-            # we only use the 64 bit binary for osx
-            return minidump_filename % ('macosx64',)
-        elif self._is_linux():
-            if self._is_64_bit():
-                return minidump_filename % ('linux64',)
-            else:
-                return minidump_filename % ('linux32',)
+        self.info('Minidump filename unknown. Determining based upon platform '
+                  'and architecture.')
+        platform_name = self.platform_name()
+        if platform_name:
+            minidump_filename = '%s-minidump_stackwalk' % TOOLTOOL_PLATFORM_DIR[platform_name]
+            if platform_name in ('win32', 'win64'):
+                minidump_filename += '.exe'
+            return minidump_filename
         else:
-            self.fatal('could not determine minidump filename')
+            self.fatal('We could not determine the minidump\'s filename.')
 
     def query_minidump_stackwalk(self, manifest=None):
         if self.minidump_stackwalk_path:
             return self.minidump_stackwalk_path
+
         c = self.config
         dirs = self.query_abs_dirs()
 
-        if c.get('download_minidump_stackwalk'):
-            minidump_stackwalk_path = self.query_minidump_filename()
+        # This is the path where we either download to or is already on the host
+        minidump_stackwalk_path = self.query_minidump_filename()
 
+        if not c.get('download_minidump_stackwalk'):
+            self.minidump_stackwalk_path = minidump_stackwalk_path
+        else:
             if not manifest:
                 tooltool_manifest_path = self.query_minidump_tooltool_manifest()
                 manifest = os.path.join(dirs.get('abs_test_install_dir',

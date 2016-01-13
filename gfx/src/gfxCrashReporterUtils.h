@@ -6,6 +6,7 @@
 #ifndef gfxCrashReporterUtils_h__
 #define gfxCrashReporterUtils_h__
 
+#include "nsString.h"
 
 namespace mozilla {
 
@@ -23,15 +24,17 @@ namespace mozilla {
 class ScopedGfxFeatureReporter
 {
 public:
-  explicit ScopedGfxFeatureReporter(const char *aFeature, bool force = false)
+  explicit ScopedGfxFeatureReporter(const char *aFeature, bool aForce = false)
     : mFeature(aFeature), mStatusChar('-')
   {
-    WriteAppNote(force ? '!' : '?');
+    WriteAppNote(aForce ? '!' : '?');
   }
   ~ScopedGfxFeatureReporter() {
     WriteAppNote(mStatusChar);
   }
   void SetSuccessful() { mStatusChar = '+'; }
+
+  static void AppNote(const nsACString& aMessage);
 
   class AppNoteWritingRunnable;
 

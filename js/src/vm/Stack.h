@@ -212,8 +212,6 @@ class AbstractFramePtr
     inline void setHasCachedSavedFrame();
 
     inline JSScript* script() const;
-    inline JSFunction* fun() const;
-    inline JSFunction* maybeFun() const;
     inline JSFunction* callee() const;
     inline Value calleev() const;
     inline Value& thisArgument() const;
@@ -363,7 +361,6 @@ class InterpreterFrame
     mutable uint32_t    flags_;         /* bits described by Flags */
     union {                             /* describes what code is executing in a */
         JSScript*       script;        /*   global frame */
-        JSFunction*     fun;           /*   function frame, pre GetScopeChain */
         ModuleObject*   module;        /*   module frame */
     } exec;
     union {                             /* describes the arguments of a function */
@@ -575,7 +572,7 @@ class InterpreterFrame
 
     bool copyRawFrameSlots(AutoValueVector* v);
 
-    unsigned numFormalArgs() const { MOZ_ASSERT(hasArgs()); return fun()->nargs(); }
+    unsigned numFormalArgs() const { MOZ_ASSERT(hasArgs()); return callee().nargs(); }
     unsigned numActualArgs() const { MOZ_ASSERT(hasArgs()); return u.nactual; }
 
     /* Watch out, this exposes a pointer to the unaliased formal arg array. */
@@ -652,20 +649,12 @@ class InterpreterFrame
      * Script
      *
      * All function and global frames have an associated JSScript which holds
-     * the bytecode being executed for the frame. This script/bytecode does
-     * not reflect any inlining that has been performed by the method JIT.
-     * If other frames were inlined into this one, the script/pc reflect the
-     * point of the outermost call. Inlined frame invariants:
-     *
-     * - Inlined frames have the same scope chain as the outer frame.
-     * - Inlined frames have the same strictness as the outer frame.
-     * - Inlined frames can only make calls to other JIT frames associated with
-     *   the same VMFrame. Other calls force expansion of the inlined frames.
+     * the bytecode being executed for the frame.
      */
 
     JSScript* script() const {
         if (isFunctionFrame())
-            return isEvalFrame() ? u.evalScript : fun()->nonLazyScript();
+            return isEvalFrame() ? u.evalScript : callee().nonLazyScript();
         MOZ_ASSERT(isGlobalOrModuleFrame());
         return exec.script;
     }
@@ -680,24 +669,6 @@ class InterpreterFrame
     Value* prevsp() {
         MOZ_ASSERT(prev_);
         return prevsp_;
-    }
-
-    /*
-     * Function
-     *
-     * All function frames have an associated interpreted JSFunction. The
-     * function returned by fun() and maybeFun() is not necessarily the
-     * original canonical function which the frame's script was compiled
-     * against.
-     */
-
-    JSFunction* fun() const {
-        MOZ_ASSERT(isFunctionFrame());
-        return exec.fun;
-    }
-
-    JSFunction* maybeFun() const {
-        return isFunctionFrame() ? fun() : nullptr;
     }
 
     /* Module */
@@ -726,9 +697,7 @@ class InterpreterFrame
      * Callee
      *
      * Only function frames have a callee. An eval frame in a function has the
-     * same callee as its containing function frame. maybeCalleev can be used
-     * to return a value that is either the callee object (for function frames) or
-     * null (for global frames).
+     * same callee as its containing function frame.
      */
 
     JSFunction& callee() const {
@@ -738,21 +707,8 @@ class InterpreterFrame
 
     const Value& calleev() const {
         MOZ_ASSERT(isFunctionFrame());
-        return mutableCalleev();
-    }
-
-    const Value& maybeCalleev() const {
-        Value& calleev = flags_ & (EVAL | GLOBAL_OR_MODULE)
-                         ? ((Value*)this)[-1]
-                         : argv()[-2];
-        MOZ_ASSERT(calleev.isObjectOrNull());
-        return calleev;
-    }
-
-    Value& mutableCalleev() const {
-        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
-            return ((Value*)this)[-1];
+            return ((const Value*)this)[-1];
         return argv()[-2];
     }
 
@@ -777,15 +733,6 @@ class InterpreterFrame
         }
         return UndefinedValue();
     }
-
-    /*
-     * Frame compartment
-     *
-     * A stack frame's compartment is the frame's containing context's
-     * compartment when the frame was pushed.
-     */
-
-    inline JSCompartment* compartment() const;
 
     /* Profiler flags */
 

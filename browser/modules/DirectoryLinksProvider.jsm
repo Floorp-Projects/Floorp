@@ -17,7 +17,6 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
-Cu.import("resource://gre/modules/AppConstants.jsm")
 
 XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
@@ -32,13 +31,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "eTLD",
   "@mozilla.org/network/effective-tld-service;1",
   "nsIEffectiveTLDService");
-
-// ensure remote new tab doesn't go beyond aurora
-if (!AppConstants.RELEASE_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
-    "resource:///modules/RemoteNewTabUtils.jsm");
-}
-
 XPCOMUtils.defineLazyGetter(this, "gTextDecoder", () => {
   return new TextDecoder();
 });
@@ -766,12 +758,6 @@ var DirectoryLinksProvider = {
 
     NewTabUtils.placesProvider.addObserver(this);
     NewTabUtils.links.addObserver(this);
-
-    // ensure remote new tab doesn't go beyond aurora
-    if (!AppConstants.RELEASE_BUILD) {
-      RemoteNewTabUtils.placesProvider.addObserver(this);
-      RemoteNewTabUtils.links.addObserver(this);
-    }
 
     return Task.spawn(function*() {
       // get the last modified time of the links file if it exists

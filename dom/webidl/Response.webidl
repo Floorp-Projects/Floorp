@@ -24,6 +24,8 @@ interface Response {
 
   [Throws,
    NewObject] Response clone();
+
+  [ChromeOnly, NewObject, Throws] Response cloneUnfiltered();
 };
 Response implements Body;
 

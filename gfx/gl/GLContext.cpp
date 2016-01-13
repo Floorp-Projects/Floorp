@@ -228,9 +228,20 @@ ParseGLSLVersion(GLContext* gl, uint32_t* out_version)
         return true;
     }
 
+    const auto fnSkipPrefix = [&versionString](const char* prefix) {
+        const auto len = strlen(prefix);
+        if (strncmp(versionString, prefix, len) == 0)
+            versionString += len;
+    };
+
     const char kGLESVersionPrefix[] = "OpenGL ES GLSL ES";
-    if (strncmp(versionString, kGLESVersionPrefix, strlen(kGLESVersionPrefix)) == 0)
-        versionString += strlen(kGLESVersionPrefix);
+    fnSkipPrefix(kGLESVersionPrefix);
+
+    if (gl->WorkAroundDriverBugs()) {
+        // Nexus 7 2013 (bug 1234441)
+        const char kBadGLESVersionPrefix[] = "OpenGL ES GLSL";
+        fnSkipPrefix(kBadGLESVersionPrefix);
+    }
 
     const char* itr = versionString;
     char* end = nullptr;

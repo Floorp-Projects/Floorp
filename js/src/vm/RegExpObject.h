@@ -428,10 +428,6 @@ class RegExpObject : public NativeObject
         return RegExpFlag(flags);
     }
 
-    bool needUpdateLastIndex() const {
-        return sticky() || global();
-    }
-
     /* Flags. */
 
     void setIgnoreCase(bool enabled) {

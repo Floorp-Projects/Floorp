@@ -62,9 +62,12 @@ XRemoteClient::XRemoteClient()
   mInitialized = false;
   mMozVersionAtom = 0;
   mMozLockAtom = 0;
+  mMozCommandLineAtom = 0;
   mMozResponseAtom = 0;
   mMozWMStateAtom = 0;
   mMozUserAtom = 0;
+  mMozProfileAtom = 0;
+  mMozProgramAtom = 0;
   mLockData = 0;
   if (!sRemoteLm)
     sRemoteLm = PR_NewLogModule("XRemoteClient");

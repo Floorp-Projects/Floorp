@@ -212,11 +212,14 @@ ifdef WRAP_LDFLAGS
 NSS_EXTRA_LDFLAGS += $(WRAP_LDFLAGS)
 endif
 
-ifdef MOZ_GLUE_WRAP_LDFLAGS
+# The SHARED_LIBS part is needed unconditionally on Android.  It's not
+# clear why this is the case, but see bug 1133073 (starting around
+# comment #8) for context.
+ifneq (,$(or $(MOZ_GLUE_WRAP_LDFLAGS), $(filter Android, $(OS_TARGET))))
 NSS_EXTRA_LDFLAGS += $(SHARED_LIBS:$(DEPTH)%=$(MOZ_BUILD_ROOT)%) $(MOZ_GLUE_WRAP_LDFLAGS)
 endif
 
-ifneq (,$(WRAP_LDFLAGS)$(MOZ_GLUE_WRAP_LDFLAGS))
+ifneq (,$(NSS_EXTRA_LDFLAGS))
 DEFAULT_GMAKE_FLAGS += \
 	LDFLAGS='$(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \
 	DSO_LDOPTS='$(DSO_LDOPTS) $(LDFLAGS) $(NSS_EXTRA_LDFLAGS)' \

@@ -1,0 +1,22 @@
+browsermob-proxy==0.6.0
+manifestparser==1.1
+mozcrash==0.16
+mozdevice==0.46
+mozfile==1.2
+mozhttpd==0.7
+mozinfo==0.8
+# optional - mozharness install step
+mozInstall==1.12
+mozlog==3.0
+moznetwork==0.27
+mozprocess==0.22
+mozprofile==0.27
+mozrunner==6.9
+moztest==0.7
+mozversion==1.4
+marionette-client == 2.0.0
+marionette-driver == 1.1.1
+firefox-puppeteer==3.1.0
+
+# Install the firefox media tests package
+./

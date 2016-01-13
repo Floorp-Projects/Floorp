@@ -919,7 +919,7 @@ var START_TIME = performance.now();
       "undefined" !== typeof ShumwayCom && ShumwayCom.getWeakMapKeys ? (this._map = new WeakMap, this._id = 0, this._newAdditions = []) : this._list = [];
     }
     e.prototype.clear = function() {
-      this._map ? this._map.clear() : this._list.length = 0;
+      this._map ? this._map = new WeakMap() : this._list.length = 0;
     };
     e.prototype.push = function(g) {
       this._map ? (this._map.set(g, this._id++), this._newAdditions.forEach(function(d) {

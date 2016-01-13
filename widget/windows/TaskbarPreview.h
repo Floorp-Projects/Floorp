@@ -13,6 +13,7 @@
 #undef LogSeverity // SetupAPI.h #defines this as DWORD
 
 #include <nsITaskbarPreview.h>
+#include <nsITaskbarPreviewController.h>
 #include <nsAutoPtr.h>
 #include <nsString.h>
 #include <nsWeakPtr.h>
@@ -22,10 +23,14 @@
 namespace mozilla {
 namespace widget {
 
+class TaskbarPreviewCallback;
+
 class TaskbarPreview : public nsITaskbarPreview
 {
 public:
   TaskbarPreview(ITaskbarList4 *aTaskbar, nsITaskbarPreviewController *aController, HWND aHWND, nsIDocShell *aShell);
+
+  friend class TaskbarPreviewCallback;
 
   NS_DECL_NSITASKBARPREVIEW
 
@@ -95,6 +100,37 @@ private:
   // The preview currently marked as active in the taskbar. nullptr if no
   // preview is active (some other window is).
   static TaskbarPreview  *sActivePreview;
+};
+
+/*
+ * Callback object TaskbarPreview hands to preview controllers when we
+ * request async thumbnail or live preview images. Controllers invoke
+ * this interface once they have aquired the requested image.
+ */
+class TaskbarPreviewCallback : public nsITaskbarPreviewCallback
+{
+public:
+  TaskbarPreviewCallback() :
+    mIsThumbnail(true) {
+  }
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSITASKBARPREVIEWCALLBACK
+
+  void SetPreview(TaskbarPreview* aPreview) {
+    mPreview = aPreview;
+  }
+
+  void SetIsPreview() {
+    mIsThumbnail = false;
+  }
+
+protected:
+  virtual ~TaskbarPreviewCallback() {}
+
+private:
+  RefPtr<TaskbarPreview> mPreview;
+  bool mIsThumbnail;
 };
 
 } // namespace widget

@@ -7244,7 +7244,7 @@ DebuggerObject_getBoundArguments(JSContext* cx, unsigned argc, Value* vp)
     if (!boundArgs.resize(length))
         return false;
     for (size_t i = 0; i < length; i++) {
-        boundArgs[i].set(fun->getBoundFunctionArgument(i));
+        boundArgs[i].set(fun->getBoundFunctionArgument(cx, i));
         if (!dbg->wrapDebuggeeValue(cx, boundArgs[i]))
             return false;
     }

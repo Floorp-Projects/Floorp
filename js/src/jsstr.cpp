@@ -4352,7 +4352,7 @@ static const JSFunctionSpec string_static_methods[] = {
     JS_INLINABLE_FN("fromCharCode", js::str_fromCharCode, 1, 0, StringFromCharCode),
 
     JS_SELF_HOSTED_FN("fromCodePoint",   "String_static_fromCodePoint", 1,0),
-    JS_SELF_HOSTED_FN("raw",             "String_static_raw",           2,0),
+    JS_SELF_HOSTED_FN("raw",             "String_static_raw",           1,0),
     JS_SELF_HOSTED_FN("substring",       "String_static_substring",     3,0),
     JS_SELF_HOSTED_FN("substr",          "String_static_substr",        3,0),
     JS_SELF_HOSTED_FN("slice",           "String_static_slice",         3,0),

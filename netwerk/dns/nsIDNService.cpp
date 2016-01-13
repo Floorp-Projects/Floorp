@@ -132,6 +132,8 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 }
 
 nsIDNService::nsIDNService()
+  : mShowPunycode(false)
+  , mIDNUseWhitelist(false)
 {
 #ifdef IDNA2008
   uint32_t IDNAOptions = UIDNA_CHECK_BIDI | UIDNA_CHECK_CONTEXTJ;
