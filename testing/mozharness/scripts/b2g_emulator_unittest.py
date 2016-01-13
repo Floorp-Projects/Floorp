@@ -226,26 +226,6 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
         if os.path.isfile(requirements):
             self.register_virtualenv_module(requirements=[requirements],
                                             two_pass=True)
-            return
-
-        # XXX Bug 879765: Dependent modules need to be listed before parent
-        # modules, otherwise they will get installed from the pypi server.
-        # XXX Bug 908356: This block can be removed as soon as the
-        # in-tree requirements files propagate to all active trees.
-        mozbase_dir = os.path.join('tests', 'mozbase')
-        self.register_virtualenv_module(
-            'manifestparser',
-            url=os.path.join(mozbase_dir, 'manifestdestiny')
-        )
-
-        for m in ('mozfile', 'mozlog', 'mozinfo', 'moznetwork', 'mozhttpd',
-                  'mozcrash', 'mozinstall', 'mozdevice', 'mozprofile', 'mozprocess',
-                  'mozrunner'):
-            self.register_virtualenv_module(
-                m, url=os.path.join(mozbase_dir, m))
-
-        self.register_virtualenv_module(
-            'marionette', url=os.path.join('tests', 'marionette'))
 
     def _query_abs_base_cmd(self, suite):
         dirs = self.query_abs_dirs()
