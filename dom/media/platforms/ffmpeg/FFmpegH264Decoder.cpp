@@ -21,6 +21,7 @@
 #define AVPixelFormat PixelFormat
 #define AV_PIX_FMT_YUV420P PIX_FMT_YUV420P
 #define AV_PIX_FMT_YUVJ420P PIX_FMT_YUVJ420P
+#define AV_PIX_FMT_YUV444P PIX_FMT_YUV444P
 #define AV_PIX_FMT_NONE PIX_FMT_NONE
 #endif
 
@@ -41,9 +42,16 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
 {
   FFMPEG_LOG("Choosing FFmpeg pixel format for video decoding.");
   for (; *aFormats > -1; aFormats++) {
-    if (*aFormats == AV_PIX_FMT_YUV420P || *aFormats == AV_PIX_FMT_YUVJ420P) {
-      FFMPEG_LOG("Requesting pixel format YUV420P.");
-      return AV_PIX_FMT_YUV420P;
+    switch (*aFormats) {
+      case AV_PIX_FMT_YUV444P:
+        FFMPEG_LOG("Requesting pixel format YUV444P.");
+        return AV_PIX_FMT_YUV444P;
+      case AV_PIX_FMT_YUV420P:
+      case AV_PIX_FMT_YUVJ420P:
+        FFMPEG_LOG("Requesting pixel format YUV420P.");
+        return AV_PIX_FMT_YUV420P;
+      default:
+        break;
     }
   }
 
@@ -267,22 +275,26 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
     VideoData::YCbCrBuffer b;
     b.mPlanes[0].mData = mFrame->data[0];
-    b.mPlanes[0].mStride = mFrame->linesize[0];
-    b.mPlanes[0].mHeight = mFrame->height;
-    b.mPlanes[0].mWidth = mFrame->width;
-    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
-
     b.mPlanes[1].mData = mFrame->data[1];
-    b.mPlanes[1].mStride = mFrame->linesize[1];
-    b.mPlanes[1].mHeight = (mFrame->height + 1) >> 1;
-    b.mPlanes[1].mWidth = (mFrame->width + 1) >> 1;
-    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
-
     b.mPlanes[2].mData = mFrame->data[2];
+
+    b.mPlanes[0].mStride = mFrame->linesize[0];
+    b.mPlanes[1].mStride = mFrame->linesize[1];
     b.mPlanes[2].mStride = mFrame->linesize[2];
-    b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
-    b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
+
+    b.mPlanes[0].mOffset = b.mPlanes[0].mSkip = 0;
+    b.mPlanes[1].mOffset = b.mPlanes[1].mSkip = 0;
     b.mPlanes[2].mOffset = b.mPlanes[2].mSkip = 0;
+
+    b.mPlanes[0].mWidth = mFrame->width;
+    b.mPlanes[0].mHeight = mFrame->height;
+    if (mCodecContext->pix_fmt == AV_PIX_FMT_YUV444P) {
+      b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = mFrame->width;
+      b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = mFrame->height;
+    } else {
+      b.mPlanes[1].mWidth = b.mPlanes[2].mWidth = (mFrame->width + 1) >> 1;
+      b.mPlanes[1].mHeight = b.mPlanes[2].mHeight = (mFrame->height + 1) >> 1;
+    }
 
     RefPtr<VideoData> v = VideoData::Create(info,
                                               mImageContainer,
