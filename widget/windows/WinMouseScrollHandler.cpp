@@ -72,6 +72,10 @@ bool MouseScrollHandler::Device::Elantech::sUseSwipeHack = false;
 bool MouseScrollHandler::Device::Elantech::sUsePinchHack = false;
 DWORD MouseScrollHandler::Device::Elantech::sZoomUntil = 0;
 
+bool MouseScrollHandler::Device::Apoint::sInitialized = false;
+int32_t MouseScrollHandler::Device::Apoint::sMajorVersion = 0;
+int32_t MouseScrollHandler::Device::Apoint::sMinorVersion = -1;
+
 bool MouseScrollHandler::Device::SetPoint::sMightBeUsing = false;
 
 // The duration until timeout of events transaction.  The value is 1.5 sec,
@@ -1031,12 +1035,15 @@ MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
     return;
   }
 
-  // If SynTP of Synaptics is installed, it may hook ::SystemParametersInfo()
-  // and returns different value from system settings.
-  if (Device::SynTP::IsDriverInstalled()) {
+  // If SynTP of Synaptics or Apoint of Alps is installed, it may hook
+  // ::SystemParametersInfo() and returns different value from system settings.
+  if (Device::SynTP::IsDriverInstalled() ||
+      Device::Apoint::IsDriverInstalled()) {
     RefreshCache(aIsVertical);
     return;
   }
+
+  // XXX We're not sure about other touchpad drivers...
 }
 
 /******************************************************************************
@@ -1168,6 +1175,7 @@ MouseScrollHandler::Device::Init()
   //      before calling methods of TrackPoint and UltraNav.
   SynTP::Init();
   Elantech::Init();
+  Apoint::Init();
 
   sFakeScrollableWindowNeeded =
     GetWorkaroundPref("ui.trackpoint_hack.enabled",
@@ -1435,6 +1443,49 @@ MouseScrollHandler::Device::Elantech::IsZooming()
   // mis-ordered WM_KEYDOWN/WM_MOUSEWHEEL messages.  (See the comment in
   // OnKeyUp.)
   return (sZoomUntil && static_cast<DWORD>(::GetMessageTime()) < sZoomUntil);
+}
+
+/******************************************************************************
+ *
+ * Device::Apoint
+ *
+ ******************************************************************************/
+
+/* static */
+void
+MouseScrollHandler::Device::Apoint::Init()
+{
+  if (sInitialized) {
+    return;
+  }
+
+  sInitialized = true;
+  sMajorVersion = 0;
+  sMinorVersion = -1;
+
+  wchar_t buf[40];
+  bool foundKey =
+    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                             L"Software\\Alps\\Apoint",
+                             L"ProductVer",
+                             buf, sizeof buf);
+  if (!foundKey) {
+    MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+      ("MouseScroll::Device::Apoint::Init(): "
+       "Apoint driver is not found"));
+    return;
+  }
+
+  sMajorVersion = wcstol(buf, nullptr, 10);
+  sMinorVersion = 0;
+  wchar_t* p = wcschr(buf, L'.');
+  if (p) {
+    sMinorVersion = wcstol(p + 1, nullptr, 10);
+  }
+  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+    ("MouseScroll::Device::Apoint::Init(): "
+     "found driver version = %d.%d",
+     sMajorVersion, sMinorVersion));
 }
 
 /******************************************************************************
