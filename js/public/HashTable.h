@@ -1657,7 +1657,7 @@ class HashTable : private AllocPolicy
             RebuildStatus status = checkOverloaded();
             if (status == RehashFailed)
                 return false;
-            if (status == NotOverloaded && !this->checkSimulatedOOM())
+            if (!this->checkSimulatedOOM())
                 return false;
             if (status == Rehashed)
                 p.entry_ = &findFreeEntry(p.keyHash);
