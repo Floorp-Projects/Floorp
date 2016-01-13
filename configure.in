@@ -3507,7 +3507,7 @@ if test -n "$YASM"; then
   _YASM_MINOR_VERSION=`echo ${YASM_VERSION} | $AWK -F\. '{ print $2 }'`
   _YASM_RELEASE=`      echo ${YASM_VERSION} | $AWK -F\. '{ print $3 }'`
   _YASM_BUILD=`        echo ${YASM_VERSION} | $AWK -F\. '{ print $4 }'`
-  AC_MSG_RESULT([$YASM_VERSION (v$_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE)])
+  AC_MSG_RESULT([$_YASM_MAJOR_VERSION.$_YASM_MINOR_VERSION.$_YASM_RELEASE ($YASM_VERSION)])
 fi
 
 if test -z "$SKIP_LIBRARY_CHECKS"; then
