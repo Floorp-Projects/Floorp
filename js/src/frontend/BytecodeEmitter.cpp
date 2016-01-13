@@ -7353,6 +7353,11 @@ BytecodeEmitter::isRestParameter(ParseNode* pn, bool* result)
     }
 
     if (!pn->isKind(PNK_NAME)) {
+        if (emitterMode == BytecodeEmitter::SelfHosting && pn->isKind(PNK_CALL)) {
+            ParseNode* pn2 = pn->pn_head;
+            if (pn2->getKind() == PNK_NAME && pn2->name() == cx->names().allowContentSpread)
+                return isRestParameter(pn2->pn_next, result);
+        }
         *result = false;
         return true;
     }
@@ -7387,7 +7392,7 @@ BytecodeEmitter::emitOptimizeSpread(ParseNode* arg0, ptrdiff_t* jmp, bool* emitt
         return true;
     }
 
-    if (!emitNameOp(arg0, false))
+    if (!emitTree(arg0))
         return false;
 
     if (!emit1(JSOP_OPTIMIZE_SPREADCALL))
