@@ -23,6 +23,8 @@ extern mozilla::LogModule* GetPDMLog();
     return;                    \
   }                            \
 
+// There should be a better way to calculate it.
+#define MIN_VIDEO_INPUT_BUFFER_SIZE 64 * 1024
 
 namespace mozilla {
 
@@ -60,11 +62,52 @@ void GetPortIndex(nsTArray<uint32_t>& aPortIndex) {
   aPortIndex.AppendElement(1);
 }
 
+template<class T> void
+InitOmxParameter(T* aParam)
+{
+  PodZero(aParam);
+  aParam->nSize = sizeof(T);
+  aParam->nVersion.s.nVersionMajor = 1;
+}
+
+// A helper class to retrieve AudioData or VideoData.
+class MediaDataHelper {
+protected:
+  virtual ~MediaDataHelper() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaDataHelper)
+
+  MediaDataHelper(const TrackInfo* aTrackInfo,
+                  layers::ImageContainer* aImageContainer,
+                  OmxPromiseLayer* aOmxLayer);
+
+  already_AddRefed<MediaData> GetMediaData(BufferData* aBufferData, bool& aPlatformDepenentData);
+
+protected:
+  already_AddRefed<AudioData> CreateAudioData(BufferData* aBufferData);
+
+  already_AddRefed<VideoData> CreateYUV420VideoData(BufferData* aBufferData);
+
+  const TrackInfo* mTrackInfo;
+
+  OMX_PARAM_PORTDEFINITIONTYPE mOutputPortDef;
+
+  // audio output
+  MediaQueue<AudioData> mAudioQueue;
+
+  AudioCompactor mAudioCompactor;
+
+  // video output
+  RefPtr<layers::ImageContainer> mImageContainer;
+};
+
 OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
                                MediaDataDecoderCallback* aCallback,
                                layers::ImageContainer* aImageContainer)
   : mMonitor("OmxDataDecoder")
   , mOmxTaskQueue(CreateMediaDecodeTaskQueue())
+  , mImageContainer(aImageContainer)
   , mWatchManager(this, mOmxTaskQueue)
   , mOmxState(OMX_STATETYPE::OMX_StateInvalid, "OmxDataDecoder::mOmxState")
   , mTrackInfo(aTrackInfo.Clone())
@@ -72,7 +115,6 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
   , mShuttingDown(false)
   , mCheckingInputExhausted(false)
   , mPortSettingsChanged(-1, "OmxDataDecoder::mPortSettingsChanged")
-  , mAudioCompactor(mAudioQueue)
   , mCallback(aCallback)
 {
   LOG("(%p)", this);
@@ -272,6 +314,7 @@ OmxDataDecoder::DoAsyncShutdown()
              self->mOmxLayer->Shutdown();
              self->mWatchManager.Shutdown();
              self->mOmxLayer = nullptr;
+             self->mMediaDataHelper = nullptr;
 
              MonitorAutoLock lock(self->mMonitor);
              self->mShuttingDown = false;
@@ -281,85 +324,12 @@ OmxDataDecoder::DoAsyncShutdown()
              self->mOmxLayer->Shutdown();
              self->mWatchManager.Shutdown();
              self->mOmxLayer = nullptr;
+             self->mMediaDataHelper = nullptr;
 
              MonitorAutoLock lock(self->mMonitor);
              self->mShuttingDown = false;
              self->mMonitor.Notify();
            });
-}
-
-void
-OmxDataDecoder::OutputAudio(BufferData* aBufferData)
-{
-  // TODO: it'd be better to move these code to BufferData::GetPlatformMediaData() or
-  //       some kind of abstract layer.
-  MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
-  OMX_BUFFERHEADERTYPE* buf = aBufferData->mBuffer;
-  AudioInfo* info = mTrackInfo->GetAsAudioInfo();
-  if (buf->nFilledLen) {
-    uint64_t offset = 0;
-    uint32_t frames = buf->nFilledLen / (2 * info->mChannels);
-    if (aBufferData->mRawData) {
-      offset = aBufferData->mRawData->mOffset;
-    }
-    typedef AudioCompactor::NativeCopy OmxCopy;
-    mAudioCompactor.Push(offset,
-                         buf->nTimeStamp,
-                         info->mRate,
-                         frames,
-                         info->mChannels,
-                         OmxCopy(buf->pBuffer + buf->nOffset,
-                                 buf->nFilledLen,
-                                 info->mChannels));
-    RefPtr<AudioData> audio = mAudioQueue.PopFront();
-    mCallback->Output(audio);
-  }
-  aBufferData->mStatus = BufferData::BufferStatus::FREE;
-}
-
-void
-OmxDataDecoder::OutputVideo(BufferData* aBufferData)
-{
-  MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
-
-  RefPtr<MediaData> data = aBufferData->GetPlatformMediaData();
-  MOZ_RELEASE_ASSERT(data);
-
-  VideoData* video(data->As<VideoData>());
-  if (aBufferData->mRawData) {
-    video->mTime = aBufferData->mRawData->mTime;
-    video->mTimecode = aBufferData->mRawData->mTimecode;
-    video->mOffset = aBufferData->mRawData->mOffset;
-    video->mDuration = aBufferData->mRawData->mDuration;
-    video->mKeyframe = aBufferData->mRawData->mKeyframe;
-  }
-
-  aBufferData->mStatus = BufferData::BufferStatus::OMX_CLIENT_OUTPUT;
-
-  // TextureClient's recycle callback is called when reference count of
-  // TextureClient becomes 1. In most cases, the last reference count is held
-  // by ITextureClientRecycleAllocator.
-  // And then promise will be resolved in the callback.
-  // TODO:
-  //   Because it is gonk specific behaviour, it needs to find a way to
-  //   proper abstracting it.
-  MOZ_RELEASE_ASSERT(aBufferData->mPromise.IsEmpty());
-  RefPtr<OmxBufferPromise> p = aBufferData->mPromise.Ensure(__func__);
-
-  RefPtr<OmxDataDecoder> self = this;
-  RefPtr<BufferData> buffer = aBufferData;
-  p->Then(mOmxTaskQueue, __func__,
-          [self, buffer] () {
-            MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
-            buffer->mStatus = BufferData::BufferStatus::FREE;
-            self->FillAndEmptyBuffers();
-          },
-          [buffer] () {
-            MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
-            buffer->mStatus = BufferData::BufferStatus::FREE;
-          });
-
-  mCallback->Output(video);
 }
 
 void
@@ -383,15 +353,51 @@ OmxDataDecoder::FillBufferDone(BufferData* aData)
     EndOfStream();
     aData->mStatus = BufferData::BufferStatus::FREE;
   } else {
-    if (mTrackInfo->IsAudio()) {
-      OutputAudio(aData);
-    } else if (mTrackInfo->IsVideo()) {
-      OutputVideo(aData);
-    } else {
-      MOZ_ASSERT(0);
-    }
+    Output(aData);
     FillAndEmptyBuffers();
   }
+}
+
+void
+OmxDataDecoder::Output(BufferData* aData)
+{
+  if (!mMediaDataHelper) {
+    mMediaDataHelper = new MediaDataHelper(mTrackInfo.get(), mImageContainer, mOmxLayer);
+  }
+
+  bool isPlatformData = false;
+  RefPtr<MediaData> data = mMediaDataHelper->GetMediaData(aData, isPlatformData);
+  if (!data) {
+    aData->mStatus = BufferData::BufferStatus::FREE;
+    return;
+  }
+
+  if (isPlatformData) {
+    // If the MediaData is platform dependnet data, it's mostly a kind of
+    // limited resource, for example, GraphicBuffer on Gonk. So we use promise
+    // to notify when the resource is free.
+    aData->mStatus = BufferData::BufferStatus::OMX_CLIENT_OUTPUT;
+
+    MOZ_RELEASE_ASSERT(aData->mPromise.IsEmpty());
+    RefPtr<OmxBufferPromise> p = aData->mPromise.Ensure(__func__);
+
+    RefPtr<OmxDataDecoder> self = this;
+    RefPtr<BufferData> buffer = aData;
+    p->Then(mOmxTaskQueue, __func__,
+        [self, buffer] () {
+          MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+          buffer->mStatus = BufferData::BufferStatus::FREE;
+          self->FillAndEmptyBuffers();
+        },
+        [buffer] () {
+          MOZ_RELEASE_ASSERT(buffer->mStatus == BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+          buffer->mStatus = BufferData::BufferStatus::FREE;
+        });
+  } else {
+    aData->mStatus = BufferData::BufferStatus::FREE;
+  }
+
+  mCallback->Output(data);
 }
 
 void
@@ -515,6 +521,7 @@ OmxDataDecoder::FindAvailableBuffer(OMX_DIRTYPE aType)
     if (buf->mStatus == BufferData::BufferStatus::FREE) {
       return buf;
     }
+    LOG("buffer is owned by %d, type %d", buf->mStatus, aType);
   }
 
   return nullptr;
@@ -689,6 +696,10 @@ OmxDataDecoder::ConfigVideoCodec()
     if (def.eDir == OMX_DirInput) {
       def.format.video.eCompressionFormat = codetype;
       def.format.video.eColorFormat = OMX_COLOR_FormatUnused;
+      if (def.nBufferSize < MIN_VIDEO_INPUT_BUFFER_SIZE) {
+        def.nBufferSize = videoInfo->mImage.width * videoInfo->mImage.height;
+        LOG("Change input buffer size to %d", def.nBufferSize);
+      }
     } else {
       def.format.video.eCompressionFormat = OMX_VIDEO_CodingUnused;
     }
@@ -770,14 +781,6 @@ OmxDataDecoder::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
   }
 
   return true;
-}
-
-template<class T> void
-OmxDataDecoder::InitOmxParameter(T* aParam)
-{
-  PodZero(aParam);
-  aParam->nSize = sizeof(T);
-  aParam->nVersion.s.nVersionMajor = 1;
 }
 
 bool
@@ -973,6 +976,152 @@ void OmxDataDecoder::FlushFailure(OmxCommandFailureHolder aFailureHolder)
 
   MonitorAutoLock lock(mMonitor);
   mMonitor.Notify();
+}
+
+MediaDataHelper::MediaDataHelper(const TrackInfo* aTrackInfo,
+                                 layers::ImageContainer* aImageContainer,
+                                 OmxPromiseLayer* aOmxLayer)
+  : mTrackInfo(aTrackInfo)
+  , mAudioCompactor(mAudioQueue)
+  , mImageContainer(aImageContainer)
+{
+  // Get latest port definition.
+  nsTArray<uint32_t> ports;
+  GetPortIndex(ports);
+  for (auto idx : ports) {
+    InitOmxParameter(&mOutputPortDef);
+    mOutputPortDef.nPortIndex = idx;
+    aOmxLayer->GetParameter(OMX_IndexParamPortDefinition, &mOutputPortDef, sizeof(mOutputPortDef));
+    if (mOutputPortDef.eDir == OMX_DirOutput) {
+      break;
+    }
+  }
+}
+
+already_AddRefed<MediaData>
+MediaDataHelper::GetMediaData(BufferData* aBufferData, bool& aPlatformDepenentData)
+{
+  aPlatformDepenentData = false;
+  RefPtr<MediaData> data;
+
+  if (mTrackInfo->IsAudio()) {
+    if (!aBufferData->mBuffer->nFilledLen) {
+      return nullptr;
+    }
+    data = CreateAudioData(aBufferData);
+  } else if (mTrackInfo->IsVideo()) {
+    data = aBufferData->GetPlatformMediaData();
+    if (data) {
+      aPlatformDepenentData = true;
+    } else {
+      if (!aBufferData->mBuffer->nFilledLen) {
+        return nullptr;
+      }
+      // Get YUV VideoData, it uses more CPU, in most cases, on software codec.
+      data = CreateYUV420VideoData(aBufferData);
+    }
+
+    // Update video time code, duration... from the raw data.
+    VideoData* video(data->As<VideoData>());
+    if (aBufferData->mRawData) {
+      video->mTime = aBufferData->mRawData->mTime;
+      video->mTimecode = aBufferData->mRawData->mTimecode;
+      video->mOffset = aBufferData->mRawData->mOffset;
+      video->mDuration = aBufferData->mRawData->mDuration;
+      video->mKeyframe = aBufferData->mRawData->mKeyframe;
+    }
+  }
+
+  return data.forget();
+}
+
+already_AddRefed<AudioData>
+MediaDataHelper::CreateAudioData(BufferData* aBufferData)
+{
+  RefPtr<AudioData> audio;
+  OMX_BUFFERHEADERTYPE* buf = aBufferData->mBuffer;
+  const AudioInfo* info = mTrackInfo->GetAsAudioInfo();
+  if (buf->nFilledLen) {
+    uint64_t offset = 0;
+    uint32_t frames = buf->nFilledLen / (2 * info->mChannels);
+    if (aBufferData->mRawData) {
+      offset = aBufferData->mRawData->mOffset;
+    }
+    typedef AudioCompactor::NativeCopy OmxCopy;
+    mAudioCompactor.Push(offset,
+                         buf->nTimeStamp,
+                         info->mRate,
+                         frames,
+                         info->mChannels,
+                         OmxCopy(buf->pBuffer + buf->nOffset,
+                                 buf->nFilledLen,
+                                 info->mChannels));
+    audio = mAudioQueue.PopFront();
+  }
+
+  return audio.forget();
+}
+
+already_AddRefed<VideoData>
+MediaDataHelper::CreateYUV420VideoData(BufferData* aBufferData)
+{
+  uint8_t *yuv420p_buffer = (uint8_t *)aBufferData->mBuffer->pBuffer;
+  int32_t stride = mOutputPortDef.format.video.nStride;
+  int32_t slice_height = mOutputPortDef.format.video.nSliceHeight;
+  int32_t width = mTrackInfo->GetAsVideoInfo()->mImage.width;
+  int32_t height = mTrackInfo->GetAsVideoInfo()->mImage.height;
+
+  // TODO: convert other formats to YUV420.
+  if (mOutputPortDef.format.video.eColorFormat != OMX_COLOR_FormatYUV420Planar) {
+    return nullptr;
+  }
+
+  size_t yuv420p_y_size = stride * slice_height;
+  size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
+  uint8_t *yuv420p_y = yuv420p_buffer;
+  uint8_t *yuv420p_u = yuv420p_y + yuv420p_y_size;
+  uint8_t *yuv420p_v = yuv420p_u + yuv420p_u_size;
+
+  VideoData::YCbCrBuffer b;
+  b.mPlanes[0].mData = yuv420p_y;
+  b.mPlanes[0].mWidth = width;
+  b.mPlanes[0].mHeight = height;
+  b.mPlanes[0].mStride = stride;
+  b.mPlanes[0].mOffset = 0;
+  b.mPlanes[0].mSkip = 0;
+
+  b.mPlanes[1].mData = yuv420p_u;
+  b.mPlanes[1].mWidth = (width + 1) / 2;
+  b.mPlanes[1].mHeight = (height + 1) / 2;
+  b.mPlanes[1].mStride = (stride + 1) / 2;
+  b.mPlanes[1].mOffset = 0;
+  b.mPlanes[1].mSkip = 0;
+
+  b.mPlanes[2].mData = yuv420p_v;
+  b.mPlanes[2].mWidth =(width + 1) / 2;
+  b.mPlanes[2].mHeight = (height + 1) / 2;
+  b.mPlanes[2].mStride = (stride + 1) / 2;
+  b.mPlanes[2].mOffset = 0;
+  b.mPlanes[2].mSkip = 0;
+
+  VideoInfo info;
+  info.mDisplay = mTrackInfo->GetAsVideoInfo()->mDisplay;
+  info.mImage = mTrackInfo->GetAsVideoInfo()->mImage;
+  RefPtr<VideoData> data = VideoData::Create(info,
+                                             mImageContainer,
+                                             0, // Filled later by caller.
+                                             0, // Filled later by caller.
+                                             1, // We don't know the duration.
+                                             b,
+                                             0, // Filled later by caller.
+                                             -1,
+                                             info.mImage);
+
+  LOG("YUV420 VideoData: disp width %d, height %d, pic width %d, height %d, time %ld",
+      info.mDisplay.width, info.mDisplay.height, info.mImage.width,
+      info.mImage.height, aBufferData->mBuffer->nTimeStamp);
+
+  return data.forget();
 }
 
 }

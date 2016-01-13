@@ -12,8 +12,12 @@
 #include "OmxPromiseLayer.h"
 #include "MediaInfo.h"
 #include "AudioCompactor.h"
+#include "OMX_Component.h"
+#include "ImageContainer.h"
 
 namespace mozilla {
+
+class MediaDataHelper;
 
 typedef OmxPromiseLayer::OmxCommandPromise OmxCommandPromise;
 typedef OmxPromiseLayer::OmxBufferPromise OmxBufferPromise;
@@ -110,9 +114,7 @@ protected:
   // the port format is changed due to different codec specific.
   void PortSettingsChanged();
 
-  void OutputAudio(BufferData* aBufferData);
-
-  void OutputVideo(BufferData* aBufferData);
+  void Output(BufferData* aData);
 
   // Buffer can be released if its status is not OMX_COMPONENT or
   // OMX_CLIENT_OUTPUT.
@@ -136,8 +138,6 @@ protected:
 
   BufferData* FindAvailableBuffer(OMX_DIRTYPE aType);
 
-  template<class T> void InitOmxParameter(T* aParam);
-
   // aType could be OMX_DirMax for all types.
   RefPtr<OmxPromiseLayer::OmxBufferPromise::AllPromiseType>
   CollectBufferPromises(OMX_DIRTYPE aType);
@@ -148,6 +148,8 @@ protected:
   RefPtr<TaskQueue> mOmxTaskQueue;
 
   RefPtr<TaskQueue> mReaderTaskQueue;
+
+  RefPtr<layers::ImageContainer> mImageContainer;
 
   WatchManager<OmxDataDecoder> mWatchManager;
 
@@ -185,12 +187,7 @@ protected:
 
   BUFFERLIST mOutPortBuffers;
 
-  // For audio output.
-  // TODO: because this class is for both video and audio decoding, so there
-  // should be some kind of abstract things to these members.
-  MediaQueue<AudioData> mAudioQueue;
-
-  AudioCompactor mAudioCompactor;
+  RefPtr<MediaDataHelper> mMediaDataHelper;
 
   MediaDataDecoderCallback* mCallback;
 };
