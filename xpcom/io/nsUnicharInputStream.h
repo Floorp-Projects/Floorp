@@ -7,7 +7,6 @@
 #ifndef nsUnicharInputStream_h__
 #define nsUnicharInputStream_h__
 
-#include "nsISimpleUnicharStreamFactory.h"
 #include "nsIUnicharInputStream.h"
 
 nsresult NS_NewUnicharInputStream(nsIInputStream* aStreamToWrap,
