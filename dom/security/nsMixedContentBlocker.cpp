@@ -310,7 +310,7 @@ nsMixedContentBlocker::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   }
 
   int16_t decision = REJECT_REQUEST;
-  rv = ShouldLoad(nsContentUtils::InternalContentPolicyTypeToExternalOrScript(contentPolicyType),
+  rv = ShouldLoad(nsContentUtils::InternalContentPolicyTypeToExternalOrMCBInternal(contentPolicyType),
                   newUri,
                   requestingLocation,
                   loadInfo->LoadingNode(),
@@ -378,8 +378,10 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   // to them.
   MOZ_ASSERT(NS_IsMainThread());
 
-  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternalOrScript(aContentType),
+  MOZ_ASSERT(aContentType == nsContentUtils::InternalContentPolicyTypeToExternalOrMCBInternal(aContentType),
              "We should only see external content policy types here.");
+
+   bool isPreload = nsContentUtils::IsPreloadType(aContentType);
 
   // The content policy type that we receive may be an internal type for
   // scripts.  Let's remember if we have seen a worker type, and reset it to the
@@ -668,7 +670,7 @@ nsMixedContentBlocker::ShouldLoad(bool aHadInsecureImageRedirect,
   bool isHttpScheme = false;
   rv = aContentLocation->SchemeIs("http", &isHttpScheme);
   NS_ENSURE_SUCCESS(rv, rv);
-  if (isHttpScheme && docShell->GetDocument()->GetUpgradeInsecureRequests()) {
+  if (isHttpScheme && docShell->GetDocument()->GetUpgradeInsecureRequests(isPreload)) {
     *aDecision = ACCEPT;
     return NS_OK;
   }
