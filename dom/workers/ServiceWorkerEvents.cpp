@@ -568,7 +568,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
     return;
   }
 
-  MOZ_ASSERT_IF(mIsClientRequest, mRequestMode == RequestMode::Same_origin);
+  MOZ_ASSERT_IF(mIsClientRequest, mRequestMode == RequestMode::Same_origin ||
+                                  mRequestMode == RequestMode::Navigate);
 
   if (response->Type() == ResponseType::Opaque && mRequestMode != RequestMode::No_cors) {
     uint32_t mode = static_cast<uint32_t>(mRequestMode);

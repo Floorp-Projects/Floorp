@@ -55,7 +55,7 @@ enum RequestContext {
   "xslt"
 };
 
-enum RequestMode { "same-origin", "no-cors", "cors" };
+enum RequestMode { "same-origin", "no-cors", "cors", "navigate" };
 enum RequestCredentials { "omit", "same-origin", "include" };
 enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache" };
 enum RequestRedirect { "follow", "error", "manual" };
