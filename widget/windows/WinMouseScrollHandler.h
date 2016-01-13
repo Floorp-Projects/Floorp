@@ -443,6 +443,39 @@ public:
 
   class Device {
   public:
+    // SynTP is a touchpad driver of Synaptics.
+    class SynTP
+    {
+    public:
+      static bool IsDriverInstalled()
+      {
+        return sMajorVersion != 0;
+      }
+      /**
+       * GetDriverMajorVersion() returns the installed driver's major version.
+       * If SynTP driver isn't installed, this returns 0.
+       */
+      static int32_t GetDriverMajorVersion()
+      {
+        return sMajorVersion;
+      }
+      /**
+       * GetDriverMinorVersion() returns the installed driver's minor version.
+       * If SynTP driver isn't installed, this returns -1.
+       */
+      static int32_t GetDriverMinorVersion()
+      {
+        return sMinorVersion;
+      }
+
+      static void Init();
+
+    private:
+      static bool sInitialized;
+      static int32_t sMajorVersion;
+      static int32_t sMinorVersion;
+    };
+
     class Elantech {
     public:
       /**
