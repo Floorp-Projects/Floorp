@@ -13,7 +13,6 @@
 #include "nsParserMsgUtils.h"
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
-#include "nsISimpleUnicharStreamFactory.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"
 #include "prprf.h"
