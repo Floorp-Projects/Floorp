@@ -236,17 +236,36 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
                                    nsCSSPseudoElements::Type aPseudoType,
                                    CascadeLevel aCascadeLevel)
 {
+  // NOTE: We need to be careful about early returns in this method where
+  // we *don't* update mElementsToRestyle. When we get a call to
+  // RequestRestyle that results in a call to PostRestyleForAnimation, we
+  // will set a bool flag in mElementsToRestyle indicating that we've
+  // called PostRestyleForAnimation so we don't need to call it again
+  // until that restyle happens. During that restyle, if we arrive here
+  // and *don't* update mElementsToRestyle we'll continue to skip calling
+  // PostRestyleForAnimation from RequestRestyle.
+
   if (!mPresContext || !mPresContext->IsDynamic()) {
     // For print or print preview, ignore animations.
     return nullptr;
   }
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
-  if (!effectSet) {
+  if (mPresContext->RestyleManager()->SkipAnimationRules()) {
+    // We don't need to worry about updating mElementsToRestyle in this case
+    // since this is not the animation restyle we requested when we called
+    // PostRestyleForAnimation (see comment at start of this method).
     return nullptr;
   }
 
-  if (mPresContext->RestyleManager()->SkipAnimationRules()) {
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    // If the EffectSet has been removed but the element has been marked as
+    // needing an animation restyle, we should act as if that animation
+    // restyle has now been completed.
+    auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
+    PseudoElementHashKey key = { aElement, aPseudoType };
+    elementsToRestyle.Remove(key);
+
     return nullptr;
   }
 
