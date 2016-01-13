@@ -319,6 +319,7 @@ pref("media.use-blank-decoder", false);
 pref("media.wmf.enabled", true);
 pref("media.wmf.decoder.thread-count", -1);
 pref("media.wmf.low-latency.enabled", false);
+pref("media.wmf.skip-blacklist", false);
 #endif
 #if defined(MOZ_FFMPEG)
 pref("media.ffmpeg.enabled", true);
