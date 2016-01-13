@@ -152,11 +152,6 @@ private:
 
   void ReportFailure(const nsACString &aMsg, HRESULT aCode);
 
-  virtual LayoutDeviceIntSize GetWidgetSize() const override
-  {
-    return mSize;
-  }
-
   /* Device manager instance for this compositor */
   RefPtr<DeviceManagerD3D9> mDeviceManager;
 

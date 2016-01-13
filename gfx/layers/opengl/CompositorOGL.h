@@ -305,11 +305,6 @@ public:
   }
 
 private:
-  virtual LayoutDeviceIntSize GetWidgetSize() const override
-  {
-    return mWidgetSize;
-  }
-
   bool InitializeVR();
   void DestroyVR(GLContext *gl);
 

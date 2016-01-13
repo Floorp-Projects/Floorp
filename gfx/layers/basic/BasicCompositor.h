@@ -116,11 +116,8 @@ public:
 
 private:
 
-  virtual LayoutDeviceIntSize GetWidgetSize() const override { return mWidgetSize; }
-
   // Widget associated with this compositor
   nsIWidget *mWidget;
-  LayoutDeviceIntSize mWidgetSize;
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
