@@ -1,0 +1,15 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@import url("splitters.css");
+
+/* Bottom-docked toolbox minimize transition */
+.devtools-toolbox-bottom-iframe {
+  transition: margin-bottom .1s;
+}
+
+.devtools-toolbox-side-iframe {
+  min-width: 465px;
+}
+
