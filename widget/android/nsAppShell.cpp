@@ -76,7 +76,7 @@ nsIGeolocationUpdate *gLocationCallback = nullptr;
 nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
 
 nsAppShell* nsAppShell::sAppShell;
-StaticMutex nsAppShell::sAppShellLock;
+StaticAutoPtr<Mutex> nsAppShell::sAppShellLock;
 
 NS_IMPL_ISUPPORTS_INHERITED(nsAppShell, nsBaseAppShell, nsIObserver)
 
@@ -185,11 +185,12 @@ public:
 };
 
 nsAppShell::nsAppShell()
-    : mSyncRunMonitor("nsAppShell.SyncRun")
+    : mSyncRunFinished(*(sAppShellLock = new Mutex("nsAppShell")),
+                       "nsAppShell.SyncRun")
     , mSyncRunQuit(false)
 {
     {
-        StaticMutexAutoLock lock(sAppShellLock);
+        MutexAutoLock lock(*sAppShellLock);
         sAppShell = this;
     }
 
@@ -220,7 +221,7 @@ nsAppShell::nsAppShell()
 nsAppShell::~nsAppShell()
 {
     {
-        StaticMutexAutoLock lock(sAppShellLock);
+        MutexAutoLock lock(*sAppShellLock);
         sAppShell = nullptr;
     }
 
@@ -286,9 +287,9 @@ nsAppShell::Observe(nsISupports* aSubject,
     if (!strcmp(aTopic, "xpcom-shutdown")) {
         {
             // Release any thread waiting for a sync call to finish.
-            MonitorAutoLock runLock(mSyncRunMonitor);
+            mozilla::MutexAutoLock shellLock(*sAppShellLock);
             mSyncRunQuit = true;
-            runLock.NotifyAll();
+            mSyncRunFinished.NotifyAll();
         }
         // We need to ensure no observers stick around after XPCOM shuts down
         // or we'll see crashes, as the app shell outlives XPConnect.
@@ -401,8 +402,9 @@ nsAppShell::SyncRunEvent(Event&& event,
     // on the monitor on the current thread.
     MOZ_ASSERT(!NS_IsMainThread());
 
-    // This is the lock to check that app shell is still alive.
-    mozilla::StaticMutexAutoLock shellLock(sAppShellLock);
+    // This is the lock to check that app shell is still alive,
+    // and to wait on for the sync call to complete.
+    mozilla::MutexAutoLock shellLock(*sAppShellLock);
     nsAppShell* const appShell = sAppShell;
 
     if (MOZ_UNLIKELY(!appShell)) {
@@ -410,19 +412,16 @@ nsAppShell::SyncRunEvent(Event&& event,
         return;
     }
 
-    // This is the monitor that we will wait on for the call to complete.
-    mozilla::MonitorAutoLock runLock(appShell->mSyncRunMonitor);
-
     bool finished = false;
     auto runAndNotify = [&event, &finished] {
+        mozilla::MutexAutoLock shellLock(*sAppShellLock);
         nsAppShell* const appShell = sAppShell;
         if (MOZ_UNLIKELY(!appShell || appShell->mSyncRunQuit)) {
             return;
         }
         event.Run();
-        mozilla::MonitorAutoLock runLock(appShell->mSyncRunMonitor);
         finished = true;
-        runLock.NotifyAll();
+        appShell->mSyncRunFinished.NotifyAll();
     };
 
     UniquePtr<Event> runAndNotifyEvent = mozilla::MakeUnique<
@@ -434,8 +433,8 @@ nsAppShell::SyncRunEvent(Event&& event,
 
     appShell->mEventQueue.Post(mozilla::Move(runAndNotifyEvent));
 
-    while (!finished && MOZ_LIKELY(!appShell->mSyncRunQuit)) {
-        runLock.Wait();
+    while (!finished && MOZ_LIKELY(sAppShell && !sAppShell->mSyncRunQuit)) {
+        appShell->mSyncRunFinished.Wait();
     }
 }
 
@@ -459,7 +458,7 @@ public:
 void
 nsAppShell::PostEvent(AndroidGeckoEvent* event)
 {
-    mozilla::StaticMutexAutoLock lock(sAppShellLock);
+    mozilla::MutexAutoLock lock(*sAppShellLock);
     if (!sAppShell) {
         return;
     }
