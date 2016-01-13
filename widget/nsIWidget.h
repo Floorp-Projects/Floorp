@@ -349,6 +349,7 @@ class nsIWidget : public nsISupports {
     typedef mozilla::LayoutDeviceIntRegion LayoutDeviceIntRegion;
     typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
     typedef mozilla::ScreenIntPoint ScreenIntPoint;
+    typedef mozilla::DesktopIntRect DesktopIntRect;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -399,8 +400,10 @@ class nsIWidget : public nsISupports {
      * independent top level windows).
      *
      * The dimensions given in aRect are specified in the parent's
-     * coordinate system, or for parentless widgets such as top-level
-     * windows, in global CSS pixels.
+     * device coordinate system.
+     * This must not be called for parentless widgets such as top-level
+     * windows, which use the desktop pixel coordinate system; a separate
+     * method is provided for these.
      *
      * @param     aParent       parent nsIWidget
      * @param     aNativeParent native parent widget
@@ -412,6 +415,26 @@ class nsIWidget : public nsISupports {
                       nsNativeWidget aNativeParent,
                       const LayoutDeviceIntRect& aRect,
                       nsWidgetInitData* aInitData = nullptr) = 0;
+
+    /*
+     * As above, but with aRect specified in DesktopPixel units (for top-level
+     * widgets).
+     * Default implementation just converts aRect to device pixels and calls
+     * through to device-pixel Create, but platforms may override this if the
+     * mapping is not straightforward or the native platform needs to use the
+     * desktop pixel values directly.
+     */
+    NS_IMETHOD Create(nsIWidget* aParent,
+                      nsNativeWidget aNativeParent,
+                      const DesktopIntRect& aRect,
+                      nsWidgetInitData* aInitData = nullptr)
+    {
+        // GetDefaultScaleInternal() here is a placeholder, to be replaced by
+        // GetDesktopToDeviceScale in a later patch
+        mozilla::DesktopToLayoutDeviceScale scale(GetDefaultScaleInternal());
+        LayoutDeviceIntRect devPixRect = RoundedToInt(aRect * scale);
+        return Create(aParent, aNativeParent, devPixRect, aInitData);
+    }
 
     /**
      * Allocate, initialize, and return a widget that is a child of

@@ -95,6 +95,7 @@ public:
   using nsWindowBase::DispatchPluginEvent;
 
   // nsIWidget interface
+  using nsWindowBase::Create; // for Create signature not overridden here
   NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
                                  const LayoutDeviceIntRect& aRect,
