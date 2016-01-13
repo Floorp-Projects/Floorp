@@ -77,7 +77,8 @@ template <class T, size_t N, size_t M, class AP>
 void
 AppendString(mozilla::Vector<T, N, AP>& v, mozilla::Vector<T, M, AP>& w)
 {
-  v.append(w.begin(), w.length());
+  if (!v.append(w.begin(), w.length()))
+    return;
 }
 
 template <size_t N, class AP>
@@ -89,10 +90,13 @@ AppendString(mozilla::Vector<char16_t, N, AP>& v, JSString* str)
   if (!linear)
     return;
   JS::AutoCheckCannotGC nogc;
-  if (linear->hasLatin1Chars())
-    v.append(linear->latin1Chars(nogc), linear->length());
-  else
-    v.append(linear->twoByteChars(nogc), linear->length());
+  if (linear->hasLatin1Chars()) {
+    if (!v.append(linear->latin1Chars(nogc), linear->length()))
+      return;
+  } else {
+    if (!v.append(linear->twoByteChars(nogc), linear->length()))
+      return;
+  }
 }
 
 template <size_t N, class AP>
