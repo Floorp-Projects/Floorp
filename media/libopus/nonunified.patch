@@ -1,5 +1,7 @@
---- sources.mozbuild-	2015-12-31 01:09:35.663118019 -0800
-+++ sources.mozbuild	2015-12-31 01:12:04.970093876 -0800
+diff --git a/media/libopus/sources.mozbuild b/media/libopus/sources.mozbuild
+index 8a39b9f..dfc2c62 100644
+--- a/media/libopus/sources.mozbuild
++++ b/media/libopus/sources.mozbuild
 @@ -2,8 +2,6 @@
  celt_sources = [
      'celt/bands.c',
@@ -9,13 +11,15 @@
      'celt/celt_lpc.c',
      'celt/cwrs.c',
      'celt/entcode.c',
-@@ -20,6 +18,13 @@
+@@ -20,6 +18,15 @@ celt_sources = [
      'celt/vq.c',
  ]
  
 +opus_nonunified_sources = [
++    # Disabled because of name clash of opus_custom_encoder_get_size.
 +    'celt/celt_decoder.c',
 +    'celt/celt_encoder.c',
++    # Disabled for (safe) warning about QA redefinition.
 +    'silk/LPC_inv_pred_gain.c',
 +    'silk/NLSF2A.c',
 +]
@@ -23,7 +27,7 @@
  celt_sources_sse = [
      'celt/x86/pitch_sse.c',
      'celt/x86/x86_celt_map.c',
-@@ -105,8 +110,6 @@
+@@ -105,8 +112,6 @@ silk_sources = [
      'silk/log2lin.c',
      'silk/LP_variable_cutoff.c',
      'silk/LPC_analysis_filter.c',

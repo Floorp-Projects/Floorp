@@ -410,7 +410,7 @@ var DragPositionManager = {
   },
 
   stop: function() {
-    gManagers.clear();
+    gManagers = new WeakMap();
   },
 
   getManagerForArea: function(aArea) {

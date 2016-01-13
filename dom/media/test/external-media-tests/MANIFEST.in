@@ -1,0 +1,7 @@
+exclude MANIFEST.in
+include requirements.txt
+include setup.py
+recursive-include firefox_media_tests *
+recursive-include media_utils *
+
+

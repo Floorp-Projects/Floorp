@@ -103,17 +103,6 @@ CSSTransition::PlayFromJS(ErrorResult& aRv)
   Animation::PlayFromJS(aRv);
 }
 
-CommonAnimationManager*
-CSSTransition::GetAnimationManager() const
-{
-  nsPresContext* context = GetPresContext();
-  if (!context) {
-    return nullptr;
-  }
-
-  return context->TransitionManager();
-}
-
 void
 CSSTransition::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 {
@@ -334,8 +323,8 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   }
 
   NS_WARN_IF_FALSE(!nsLayoutUtils::AreAsyncAnimationsEnabled() ||
-                     mPresContext->RestyleManager()->
-                       ThrottledAnimationStyleIsUpToDate(),
+                   !mPresContext->EffectCompositor()->
+                     HasThrottledStyleUpdates(),
                    "throttled animations not up to date");
 
   // Compute what the css-transitions spec calls the "after-change
@@ -484,17 +473,17 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
   MOZ_ASSERT(!startedAny || collection,
              "must have element transitions if we started any transitions");
 
+  EffectCompositor::CascadeLevel cascadeLevel =
+    EffectCompositor::CascadeLevel::Transitions;
+
   if (collection) {
     EffectCompositor::UpdateCascadeResults(aElement, pseudoType,
                                            newStyleContext);
 
-    // Set the style rule refresh time to null so that EnsureStyleRuleFor
-    // creates a new style rule if we started *or* stopped transitions.
-    collection->mStyleRuleRefreshTime = TimeStamp();
     collection->UpdateCheckGeneration(mPresContext);
-    collection->mStyleChanging = true;
-    TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-    collection->EnsureStyleRuleFor(now);
+    mPresContext->EffectCompositor()->MaybeUpdateAnimationRule(aElement,
+                                                               pseudoType,
+                                                               cascadeLevel);
   }
 
   // We want to replace the new style context with the after-change style.
@@ -504,7 +493,9 @@ nsTransitionManager::StyleContextChanged(dom::Element *aElement,
     // The check of collection->mCheckGeneration against the restyle
     // manager's GetAnimationGeneration() will ensure that we don't go
     // through the rest of this function again when we do.
-    collection->PostRestyleForAnimation(mPresContext);
+    mPresContext->EffectCompositor()->PostRestyleForAnimation(aElement,
+                                                              pseudoType,
+                                                              cascadeLevel);
   }
 }
 

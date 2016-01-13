@@ -380,48 +380,9 @@ UTF8InputStream::CountValidUTF8Bytes(const char* aBuffer, uint32_t aMaxBytes,
   aValidUTF16CodeUnits = utf16length;
 }
 
-NS_IMPL_QUERY_INTERFACE(nsSimpleUnicharStreamFactory,
-                        nsIFactory,
-                        nsISimpleUnicharStreamFactory)
-
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsSimpleUnicharStreamFactory::AddRef()
-{
-  return 2;
-}
-NS_IMETHODIMP_(MozExternalRefCountType)
-nsSimpleUnicharStreamFactory::Release()
-{
-  return 1;
-}
-
-NS_IMETHODIMP
-nsSimpleUnicharStreamFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-                                             void** aResult)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsSimpleUnicharStreamFactory::LockFactory(bool aLock)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimpleUnicharStreamFactory::CreateInstanceFromString(const nsAString& aString,
-                                                       nsIUnicharInputStream** aResult)
-{
-  RefPtr<StringUnicharInputStream> it = new StringUnicharInputStream(aString);
-
-  it.forget(aResult);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSimpleUnicharStreamFactory::CreateInstanceFromUTF8Stream(
-    nsIInputStream* aStreamToWrap,
-    nsIUnicharInputStream** aResult)
+nsresult
+NS_NewUnicharInputStream(nsIInputStream* aStreamToWrap,
+                         nsIUnicharInputStream** aResult)
 {
   *aResult = nullptr;
 
@@ -434,11 +395,4 @@ nsSimpleUnicharStreamFactory::CreateInstanceFromUTF8Stream(
 
   it.forget(aResult);
   return NS_OK;
-}
-
-nsSimpleUnicharStreamFactory*
-nsSimpleUnicharStreamFactory::GetInstance()
-{
-  static const nsSimpleUnicharStreamFactory kInstance;
-  return const_cast<nsSimpleUnicharStreamFactory*>(&kInstance);
 }

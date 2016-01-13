@@ -201,10 +201,6 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       case InlinableNative::ObjectCreate:
         return inlineObjectCreate(callInfo);
 
-      // Bound function.
-      case InlinableNative::CallBoundFunction:
-        return inlineBoundFunction(callInfo, target);
-
       // SIMD natives.
       case InlinableNative::SimdInt32x4:
         return inlineSimdInt32x4(callInfo, target->native());
@@ -2682,73 +2678,6 @@ IonBuilder::inlineAssertRecoveredOnBailout(CallInfo& callInfo)
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineBoundFunction(CallInfo& nativeCallInfo, JSFunction* target)
-{
-    trackOptimizationOutcome(TrackedOutcome::CantInlineBound);
-
-    if (!target->getBoundFunctionTarget()->is<JSFunction>())
-        return InliningStatus_NotInlined;
-
-    JSFunction* scriptedTarget = &(target->getBoundFunctionTarget()->as<JSFunction>());
-
-    // Don't optimize if we're constructing and the callee is not a
-    // constructor, so that CallKnown does not have to handle this case
-    // (it should always throw).
-    if (nativeCallInfo.constructing() && !scriptedTarget->isConstructor())
-        return InliningStatus_NotInlined;
-
-    if (nativeCallInfo.constructing() && nativeCallInfo.getNewTarget() != nativeCallInfo.fun())
-        return InliningStatus_NotInlined;
-
-    if (gc::IsInsideNursery(scriptedTarget))
-        return InliningStatus_NotInlined;
-
-    for (size_t i = 0; i < target->getBoundFunctionArgumentCount(); i++) {
-        const Value val = target->getBoundFunctionArgument(i);
-        if (val.isObject() && gc::IsInsideNursery(&val.toObject()))
-            return InliningStatus_NotInlined;
-        if (val.isString() && !val.toString()->isAtom())
-            return InliningStatus_NotInlined;
-    }
-
-    const Value thisVal = target->getBoundFunctionThis();
-    if (thisVal.isObject() && gc::IsInsideNursery(&thisVal.toObject()))
-        return InliningStatus_NotInlined;
-    if (thisVal.isString() && !thisVal.toString()->isAtom())
-        return InliningStatus_NotInlined;
-
-    size_t argc = target->getBoundFunctionArgumentCount() + nativeCallInfo.argc();
-    if (argc > ARGS_LENGTH_MAX)
-        return InliningStatus_NotInlined;
-
-    nativeCallInfo.thisArg()->setImplicitlyUsedUnchecked();
-
-    CallInfo callInfo(alloc(), nativeCallInfo.constructing());
-    callInfo.setFun(constant(ObjectValue(*scriptedTarget)));
-    callInfo.setThis(constant(thisVal));
-
-    if (!callInfo.argv().reserve(argc))
-        return InliningStatus_Error;
-
-    for (size_t i = 0; i < target->getBoundFunctionArgumentCount(); i++) {
-        MConstant* argConst = constant(target->getBoundFunctionArgument(i));
-        callInfo.argv().infallibleAppend(argConst);
-    }
-    for (size_t i = 0; i < nativeCallInfo.argc(); i++)
-        callInfo.argv().infallibleAppend(nativeCallInfo.getArg(i));
-
-    // We only inline when it was not a super-call, so just set the newTarget
-    // to be the target function, per spec.
-    if (nativeCallInfo.constructing())
-        callInfo.setNewTarget(callInfo.fun());
-
-    if (!makeCall(scriptedTarget, callInfo))
-        return InliningStatus_Error;
-
-    return InliningStatus_Inlined;
-}
-
-IonBuilder::InliningStatus
 IonBuilder::inlineAtomicsCompareExchange(CallInfo& callInfo)
 {
     if (callInfo.argc() != 4 || callInfo.constructing()) {
@@ -3667,7 +3596,7 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
     MDefinition* array = callInfo.getArg(0);
     *index = callInfo.getArg(1);
 
-    if (!ElementAccessIsAnyTypedArray(constraints(), array, *index, arrayType))
+    if (!ElementAccessIsTypedArray(constraints(), array, *index, arrayType))
         return false;
 
     MInstruction* indexAsInt32 = MToInt32::New(alloc(), *index);

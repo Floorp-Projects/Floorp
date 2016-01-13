@@ -4684,13 +4684,13 @@ InlinePropertyTable::buildTypeSetForFunction(JSFunction* func) const
 SharedMem<void*>
 MLoadTypedArrayElementStatic::base() const
 {
-    return AnyTypedArrayViewData(someTypedArray_);
+    return someTypedArray_->as<TypedArrayObject>().viewDataEither();
 }
 
 size_t
 MLoadTypedArrayElementStatic::length() const
 {
-    return AnyTypedArrayByteLength(someTypedArray_);
+    return someTypedArray_->as<TypedArrayObject>().byteLength();
 }
 
 bool
@@ -4713,7 +4713,7 @@ MLoadTypedArrayElementStatic::congruentTo(const MDefinition* ins) const
 SharedMem<void*>
 MStoreTypedArrayElementStatic::base() const
 {
-    return AnyTypedArrayViewData(someTypedArray_);
+    return someTypedArray_->as<TypedArrayObject>().viewDataEither();
 }
 
 bool
@@ -4728,7 +4728,7 @@ MGetPropertyCache::allowDoubleResult() const
 size_t
 MStoreTypedArrayElementStatic::length() const
 {
-    return AnyTypedArrayByteLength(someTypedArray_);
+    return someTypedArray_->as<TypedArrayObject>().byteLength();
 }
 
 bool
@@ -4963,7 +4963,7 @@ jit::ElementAccessIsDenseNative(CompilerConstraintList* constraints,
 
     // Typed arrays are native classes but do not have dense elements.
     const Class* clasp = types->getKnownClass(constraints);
-    return clasp && clasp->isNative() && !IsAnyTypedArrayClass(clasp);
+    return clasp && clasp->isNative() && !IsTypedArrayClass(clasp);
 }
 
 JSValueType
@@ -5009,9 +5009,9 @@ jit::UnboxedArrayElementType(CompilerConstraintList* constraints, MDefinition* o
 }
 
 bool
-jit::ElementAccessIsAnyTypedArray(CompilerConstraintList* constraints,
-                                  MDefinition* obj, MDefinition* id,
-                                  Scalar::Type* arrayType)
+jit::ElementAccessIsTypedArray(CompilerConstraintList* constraints,
+                               MDefinition* obj, MDefinition* id,
+                               Scalar::Type* arrayType)
 {
     if (obj->mightBeType(MIRType_String))
         return false;
@@ -5412,7 +5412,7 @@ jit::TypeCanHaveExtraIndexedProperties(IonBuilder* builder, TemporaryTypeSet* ty
     // Note: typed arrays have indexed properties not accounted for by type
     // information, though these are all in bounds and will be accounted for
     // by JIT paths.
-    if (!clasp || (ClassCanHaveExtraProperties(clasp) && !IsAnyTypedArrayClass(clasp)))
+    if (!clasp || (ClassCanHaveExtraProperties(clasp) && !IsTypedArrayClass(clasp)))
         return true;
 
     if (types->hasObjectFlags(builder->constraints(), OBJECT_FLAG_SPARSE_INDEXES))
@@ -5597,7 +5597,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
 
         // TI doesn't track TypedArray indexes and should never insert a type
         // barrier for them.
-        if (!name && IsAnyTypedArrayClass(key->clasp()))
+        if (!name && IsTypedArrayClass(key->clasp()))
             continue;
 
         jsid id = name ? NameToId(name) : JSID_VOID;
@@ -5647,7 +5647,7 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
         TypeSet::ObjectKey* key = types->getObject(i);
         if (!key || key->unknownProperties())
             continue;
-        if (!name && IsAnyTypedArrayClass(key->clasp()))
+        if (!name && IsTypedArrayClass(key->clasp()))
             continue;
 
         jsid id = name ? NameToId(name) : JSID_VOID;

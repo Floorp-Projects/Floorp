@@ -188,8 +188,7 @@ AudioSinkWrapper::Start(int64_t aStartTime, const MediaInfo& aInfo)
 
   if (aInfo.HasAudio()) {
     mAudioSink = mCreator->Create();
-    mEndPromise = mAudioSink->Init();
-    SetPlaybackParams(mParams);
+    mEndPromise = mAudioSink->Init(mParams);
 
     mAudioSinkPromise.Begin(mEndPromise->Then(
       mOwnerThread.get(), __func__, this,

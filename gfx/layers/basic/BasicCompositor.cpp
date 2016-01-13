@@ -11,6 +11,7 @@
 #include "gfx2DGlue.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/gfx/Tools.h"
 #include "gfxUtils.h"
 #include "YCbCrUtils.h"
 #include <algorithm>
@@ -406,8 +407,17 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       EffectSolidColor* effectSolidColor =
         static_cast<EffectSolidColor*>(aEffectChain.mPrimaryEffect.get());
 
+      bool unboundedOp = !IsOperatorBoundByMask(blendMode);
+      if (unboundedOp) {
+        dest->PushClipRect(aRect);
+      }
+
       FillRectWithMask(dest, aRect, effectSolidColor->mColor,
                        DrawOptions(aOpacity, blendMode), sourceMask, &maskTransform);
+
+      if (unboundedOp) {
+        dest->PopClip();
+      }
       break;
     }
     case EffectTypes::RGB: {
@@ -520,16 +530,11 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     invalidRegionSafe.And(aInvalidRegion, intRect);
   }
 
-  IntRect invalidRect = invalidRegionSafe.GetBounds();
-  mInvalidRect = IntRect(invalidRect.x, invalidRect.y, invalidRect.width, invalidRect.height);
   mInvalidRegion = invalidRegionSafe;
+  mInvalidRect = mInvalidRegion.GetBounds();
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = Rect();
-  }
-
-  if (mInvalidRect.width <= 0 || mInvalidRect.height <= 0) {
-    return;
   }
 
   if (mTarget) {
@@ -537,9 +542,16 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
     // placeholder so that CreateRenderTarget() works.
     mDrawTarget = gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget();
   } else {
+    // StartRemoteDrawingInRegion can mutate mInvalidRegion.
     mDrawTarget = mWidget->StartRemoteDrawingInRegion(mInvalidRegion);
+    mInvalidRect = mInvalidRegion.GetBounds();
+    if (mInvalidRect.IsEmpty()) {
+      mWidget->EndRemoteDrawingInRegion(mDrawTarget, mInvalidRegion);
+      return;
+    }
   }
-  if (!mDrawTarget) {
+
+  if (!mDrawTarget || mInvalidRect.IsEmpty()) {
     return;
   }
 
@@ -556,10 +568,10 @@ BasicCompositor::BeginFrame(const nsIntRegion& aInvalidRegion,
 
   // We only allocate a surface sized to the invalidated region, so we need to
   // translate future coordinates.
-  mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-invalidRect.x,
-                                                               -invalidRect.y));
+  mRenderTarget->mDrawTarget->SetTransform(Matrix::Translation(-mInvalidRect.x,
+                                                               -mInvalidRect.y));
 
-  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, invalidRegionSafe);
+  gfxUtils::ClipToRegion(mRenderTarget->mDrawTarget, mInvalidRegion);
 
   if (aRenderBoundsOut) {
     *aRenderBoundsOut = rect;

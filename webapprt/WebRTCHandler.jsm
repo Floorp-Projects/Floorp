@@ -22,7 +22,7 @@ function handlePCRequest(aSubject, aTopic, aData) {
 }
 
 function handleGumRequest(aSubject, aTopic, aData) {
-  let { windowID, callID } = aSubject;
+  let { windowID, innerWindowID, callID } = aSubject;
   let constraints = aSubject.getConstraints();
   let contentWindow = Services.wm.getOuterWindowWithId(windowID);
 
@@ -35,7 +35,9 @@ function handleGumRequest(aSubject, aTopic, aData) {
     },
     function (error) {
       denyRequest(callID, error);
-    });
+    },
+    innerWindowID,
+    callID);
 }
 
 function prompt(aWindow, aCallID, aAudioRequested, aVideoRequested, aDevices) {

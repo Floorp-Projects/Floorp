@@ -155,7 +155,7 @@ VariablesView.prototype = {
     }
 
     this._store.length = 0;
-    this._itemsByElement.clear();
+    this._itemsByElement = new WeakMap();
     this._prevHierarchy = this._currHierarchy;
     this._currHierarchy = new Map(); // Don't clear, this is just simple swapping.
 

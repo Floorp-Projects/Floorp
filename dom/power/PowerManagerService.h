@@ -10,6 +10,7 @@
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
+#include "nsIDOMWakeLockListener.h"
 #include "nsIPowerManagerService.h"
 #include "mozilla/Observer.h"
 #include "Types.h"
@@ -30,6 +31,10 @@ class PowerManagerService
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPOWERMANAGERSERVICE
+
+  PowerManagerService()
+    : mWatchdogTimeoutSecs(0)
+  {}
 
   static already_AddRefed<PowerManagerService> GetInstance();
 
@@ -69,7 +74,7 @@ private:
 
   static StaticRefPtr<PowerManagerService> sSingleton;
 
-  nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener> > mWakeLockListeners;
+  nsTArray<nsCOMPtr<nsIDOMMozWakeLockListener>> mWakeLockListeners;
   
   int32_t mWatchdogTimeoutSecs;
 };

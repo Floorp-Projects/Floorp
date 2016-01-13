@@ -30,4 +30,3 @@ checkMethod("get", 1);
 checkMethod("has", 1);
 checkMethod("set", 2);
 checkMethod("delete", 1);
-checkMethod("clear", 0);

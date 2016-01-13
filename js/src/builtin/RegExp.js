@@ -54,6 +54,7 @@ function RegExpToString()
     // Step 7.
     return '/' + pattern + '/' + flags;
 }
+_SetCanonicalName(RegExpToString, "toString");
 
 // ES6 21.2.5.2.
 // NOTE: This is not RegExpExec (21.2.5.2.1).
@@ -171,4 +172,3 @@ function RegExpTest(string) {
     // Steps 5-6.
     return RegExpExec(R, S, true);
 }
-_SetCanonicalName(RegExpToString, "toString");

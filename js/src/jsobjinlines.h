@@ -428,7 +428,7 @@ JSObject::nonProxyIsExtensible() const
 inline bool
 JSObject::isBoundFunction() const
 {
-    return hasAllFlags(js::BaseShape::BOUND_FUNCTION);
+    return is<JSFunction>() && as<JSFunction>().isBoundFunction();
 }
 
 inline bool

@@ -168,7 +168,6 @@ public class TestDownloadAction {
         doReturn(file).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
         doReturn(file).when(action).getDestinationFile(RuntimeEnvironment.application, content);
 
-        doReturn(true).when(action).canWrite(any(File.class), any(File.class));
         doReturn(false).when(action).verify(eq(file), anyString());
         doNothing().when(action).download(any(HttpClient.class), anyString(), eq(file));
         doReturn(true).when(action).verify(eq(file), anyString());
@@ -203,7 +202,6 @@ public class TestDownloadAction {
 
         DownloadAction action = spy(new DownloadAction(null));
         doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
-        doReturn(true).when(action).canWrite(any(File.class), any(File.class));
 
         File temporaryFile = mockFileWithSize(1337L);
         doReturn(temporaryFile).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
@@ -303,7 +301,6 @@ public class TestDownloadAction {
         File destinationFile = mockNotExistingFile();
         doReturn(destinationFile).when(action).getDestinationFile(RuntimeEnvironment.application, content);
 
-        doReturn(true).when(action).canWrite(any(File.class), any(File.class));
         doReturn(true).when(action).verify(eq(temporaryFile), anyString());
         doNothing().when(action).extract(eq(temporaryFile), eq(destinationFile), anyString());
 
@@ -336,7 +333,6 @@ public class TestDownloadAction {
 
         DownloadAction action = spy(new DownloadAction(null));
         doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
-        doReturn(true).when(action).canWrite(any(File.class), any(File.class));
         doNothing().when(action).download(any(HttpClient.class), anyString(), any(File.class));
         doReturn(false).when(action).verify(any(File.class), anyString());
 
@@ -389,7 +385,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns false
      */
     @Test
-    public void testWithNotEnoughSpaceForTemporaryFile() {
+    public void testWithNotEnoughSpaceForTemporaryFile() throws Exception{
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFile();
         File temporaryFile = mockNotExistingFileWithUsableSpace(1024);
@@ -405,7 +401,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns false
      */
     @Test
-    public void testWithNotEnoughSpaceForDestinationFile() {
+    public void testWithNotEnoughSpaceForDestinationFile() throws Exception {
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFileWithUsableSpace(1024);
         File temporaryFile = mockNotExistingFile();
@@ -421,7 +417,7 @@ public class TestDownloadAction {
      *  * hasEnoughDiskSpace() returns true
      */
     @Test
-    public void testWithEnoughSpaceForEverything() {
+    public void testWithEnoughSpaceForEverything() throws Exception {
         DownloadContent content = createFontWithSize(2048);
         File destinationFile = mockNotExistingFileWithUsableSpace(4096);
         File temporaryFile = mockNotExistingFileWithUsableSpace(4096);
@@ -447,7 +443,6 @@ public class TestDownloadAction {
         doReturn(mockNotExistingFile()).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
         doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
         doReturn(true).when(action).hasEnoughDiskSpace(eq(content), any(File.class), any(File.class));
-        doReturn(true).when(action).canWrite(any(File.class), any(File.class));
 
         HttpClient client = mock(HttpClient.class);
         doThrow(IOException.class).when(client).execute(any(HttpUriRequest.class));
@@ -502,32 +497,6 @@ public class TestDownloadAction {
 
         Assert.assertEquals(DownloadContent.STATE_FAILED, content.getState());
         verify(catalog, times(11)).rememberFailure(eq(content), anyInt());
-    }
-
-    /**
-     * Scenario: Temporary or destination file is not writable.
-     *
-     * Verify that:
-     *  * No download is performed
-     *  * Error is counted as failure
-     */
-    @Test
-    public void testNoDownIsPerformedIfFilesAreNotWritable() throws Exception{
-        DownloadContent content = createFont();
-        DownloadContentCatalog catalog = mockCatalogWithScheduledDownloads(content);
-
-        DownloadAction action = spy(new DownloadAction(null));
-        doReturn(true).when(action).isConnectedToNetwork(RuntimeEnvironment.application);
-        doReturn(false).when(action).isActiveNetworkMetered(RuntimeEnvironment.application);
-        doReturn(mockNotExistingFile()).when(action).createTemporaryFile(RuntimeEnvironment.application, content);
-        doReturn(mockNotExistingFile()).when(action).getDestinationFile(RuntimeEnvironment.application, content);
-        doReturn(false).when(action).canWrite(any(File.class), any(File.class));
-
-        action.perform(RuntimeEnvironment.application, catalog);
-
-        verify(action).canWrite(any(File.class), any(File.class));
-        verify(action, never()).download(any(HttpClient.class), anyString(), any(File.class));
-        verify(catalog).rememberFailure(eq(content), anyInt());
     }
 
     private DownloadContent createFont() {

@@ -40,7 +40,9 @@ class initializer_list
     size_t   mSize;
 
     /* This constructor is called directly by the compiler */
-    initializer_list(const T* begin, size_t size) : mBegin(begin), mSize(size) {}
+    initializer_list(const T* aBegin, size_t aSize)
+      : mBegin(aBegin)
+      , mSize(aSize) { }
 public:
 
     MOZ_CONSTEXPR initializer_list() : mBegin(nullptr), mSize(0) {}

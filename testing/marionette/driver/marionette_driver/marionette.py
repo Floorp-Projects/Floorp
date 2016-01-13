@@ -542,7 +542,7 @@ class Marionette(object):
                  busybox=None, symbols_path=None, timeout=None, socket_timeout=360,
                  device_serial=None, adb_path=None, process_args=None,
                  adb_host=None, adb_port=None, prefs=None, startup_timeout=None,
-                 workspace=None):
+                 workspace=None, verbose=0):
         self.host = host
         self.port = self.local_port = port
         self.bin = bin
@@ -596,7 +596,8 @@ class Marionette(object):
                                            symbols_path=symbols_path,
                                            gecko_log=gecko_log, prefs=prefs,
                                            addons=self.addons,
-                                           workspace=workspace)
+                                           workspace=workspace,
+                                           verbose=verbose)
             self.instance.start()
             self.raise_for_port(self.wait_for_port(timeout=startup_timeout))
 

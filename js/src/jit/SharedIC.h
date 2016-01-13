@@ -2118,7 +2118,7 @@ enum TypedThingLayout {
 static inline TypedThingLayout
 GetTypedThingLayout(const Class* clasp)
 {
-    if (IsAnyTypedArrayClass(clasp))
+    if (IsTypedArrayClass(clasp))
         return Layout_TypedArray;
     if (IsOutlineTypedObjectClass(clasp))
         return Layout_OutlineTypedObject;

@@ -230,7 +230,7 @@ FrameTreeInternal.prototype = {
 
     if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
       // Clear the list of frames until we can recollect it.
-      this._frames.clear();
+      this._frames = new WeakMap();
 
       // Notify observers that the frame tree has been reset.
       this.notifyObservers("onFrameTreeReset");

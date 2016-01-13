@@ -20,7 +20,7 @@ const {
   VIEW_NODE_PROPERTY_TYPE,
   VIEW_NODE_VALUE_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE
-} = require("devtools/client/styleinspector/style-inspector-overlays");
+} = require("devtools/client/inspector/shared/style-inspector-overlays");
 
 const TEST_URI = `
   <style type="text/css">

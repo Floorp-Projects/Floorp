@@ -110,8 +110,7 @@ function waitScrollFinish(aTarget) {
  */
 function setTestPluginEnabledState(aState, aPluginName) {
   let name = aPluginName || "Test Plug-in";
-  let plugin = getTestPlugin(name);
-  plugin.enabledState = aState;
+  SpecialPowers.setTestPluginEnabledState(aState, name);
 }
 
 /**

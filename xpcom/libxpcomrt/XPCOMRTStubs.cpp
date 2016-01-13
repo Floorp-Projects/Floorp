@@ -56,4 +56,10 @@ base::Histogram* GetKeyedHistogramById(ID id, const nsAString&)
 }
 
 } // namespace Telemetry
+
+namespace detail {
+
+void log_print(const PRLogModuleInfo* aModule, LogLevel aLevel, const char* aFmt, ...) {}
+
+} // namespace detail
 } // namespace mozilla

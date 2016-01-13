@@ -1,0 +1,40 @@
+# This is the "base" task which contains the common values all linting tests must
+# provide.
+---
+taskId: {{build_slugid}}
+
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    source: http://todo.com/soon
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: b2gtest
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+  routes:
+    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}.{{build_type}}'
+    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}.{{build_type}}'
+  scopes:
+    # Nearly all of our build tasks use tc-vcs so just include the scope across
+    # the board.
+    - 'docker-worker:cache:tc-vcs'
+
+  payload:
+    # Thirty minutes should be enough for lint checks
+    maxRunTime: 1800
+
+    cache:
+      tc-vcs: '/home/worker/.tc-vcs'
+
+  extra:
+    build_product: '{{build_product}}'
+    build_name: '{{build_name}}'
+    build_type: '{{build_type}}'
+    index:
+      rank: {{pushlog_id}}
