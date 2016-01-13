@@ -168,7 +168,7 @@ add_test(function fetchAndCacheProfile_ok() {
 
 // Check that a second profile request when one is already in-flight reuses
 // the in-flight one.
-add_task(function fetchAndCacheProfileOnce() {
+add_task(function* fetchAndCacheProfileOnce() {
   // A promise that remains unresolved while we fire off 2 requests for
   // a profile.
   let resolveProfile;
@@ -205,7 +205,7 @@ add_task(function fetchAndCacheProfileOnce() {
 
 // Check that sharing a single fetch promise works correctly when the promise
 // is rejected.
-add_task(function fetchAndCacheProfileOnce() {
+add_task(function* fetchAndCacheProfileOnce() {
   // A promise that remains unresolved while we fire off 2 requests for
   // a profile.
   let rejectProfile;
@@ -251,7 +251,7 @@ add_task(function fetchAndCacheProfileOnce() {
 
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one doesn't kick off a new request to check the cached copy is fresh.
-add_task(function fetchAndCacheProfileAfterThreshold() {
+add_task(function* fetchAndCacheProfileAfterThreshold() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
   client.fetchProfile = function () {
@@ -278,7 +278,7 @@ add_task(function fetchAndCacheProfileAfterThreshold() {
 // Check that a new profile request within PROFILE_FRESHNESS_THRESHOLD of the
 // last one *does* kick off a new request if ON_PROFILE_CHANGE_NOTIFICATION
 // is sent.
-add_task(function fetchAndCacheProfileBeforeThresholdOnNotification() {
+add_task(function* fetchAndCacheProfileBeforeThresholdOnNotification() {
   let numFetches = 0;
   let client = mockClient(mockFxa());
   client.fetchProfile = function () {
