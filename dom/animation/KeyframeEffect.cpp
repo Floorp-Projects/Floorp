@@ -623,6 +623,9 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
     if (effectSet) {
       effectSet->RemoveEffect(*this);
+      if (effectSet->IsEmpty()) {
+        EffectSet::DestroyEffectSet(mTarget, mPseudoType);
+      }
     }
   }
 }
