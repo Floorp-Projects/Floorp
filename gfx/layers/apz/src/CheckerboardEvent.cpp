@@ -58,13 +58,14 @@ CheckerboardEvent::GetLog()
 
 void
 CheckerboardEvent::UpdateRendertraceProperty(RendertraceProperty aProperty,
-                                             const CSSRect& aRect)
+                                             const CSSRect& aRect,
+                                             const std::string& aExtraInfo)
 {
   MonitorAutoLock lock(mRendertraceLock);
   if (!mCheckerboardingActive) {
-    mBufferedProperties[aProperty].Update(aProperty, aRect, lock);
+    mBufferedProperties[aProperty].Update(aProperty, aRect, aExtraInfo, lock);
   } else {
-    LogInfo(aProperty, TimeStamp::Now(), aRect, lock);
+    LogInfo(aProperty, TimeStamp::Now(), aRect, aExtraInfo, lock);
   }
 }
 
@@ -72,6 +73,7 @@ void
 CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
                            const TimeStamp& aTimestamp,
                            const CSSRect& aRect,
+                           const std::string& aExtraInfo,
                            const MonitorAutoLock& aProofOfLock)
 {
   if (mRendertraceInfo.tellp() >= LOG_LENGTH_LIMIT) {
@@ -90,7 +92,8 @@ CheckerboardEvent::LogInfo(RendertraceProperty aProperty,
       << aRect.y << " "
       << aRect.width << " "
       << aRect.height << " "
-      << "// " << sDescriptions[aProperty] << std::endl;
+      << "// " << sDescriptions[aProperty]
+      << aExtraInfo << std::endl;
 }
 
 bool
@@ -134,7 +137,7 @@ CheckerboardEvent::StartEvent()
   }
   std::sort(history.begin(), history.end());
   for (const PropertyValue& p : history) {
-    LogInfo(p.mProperty, p.mTimeStamp, p.mRect, lock);
+    LogInfo(p.mProperty, p.mTimeStamp, p.mRect, p.mExtraInfo, lock);
   }
   mRendertraceInfo << " -- checkerboarding starts below --" << std::endl;
 }
@@ -173,9 +176,10 @@ CheckerboardEvent::PropertyBuffer::PropertyBuffer()
 void
 CheckerboardEvent::PropertyBuffer::Update(RendertraceProperty aProperty,
                                           const CSSRect& aRect,
+                                          const std::string& aExtraInfo,
                                           const MonitorAutoLock& aProofOfLock)
 {
-  mValues[mIndex] = { aProperty, TimeStamp::Now(), aRect };
+  mValues[mIndex] = { aProperty, TimeStamp::Now(), aRect, aExtraInfo };
   mIndex = (mIndex + 1) % BUFFER_SIZE;
 }
 
