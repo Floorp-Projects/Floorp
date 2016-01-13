@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<head>
+  <meta charset="utf-8">
+  <title>Test startWithDevice for B2G Presentation API at sender side</title>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1239242">Test startWithDevice for B2G Presentation API at sender side</a>
+<script type="application/javascript;version=1.8">
+
+'use strict';
+
+var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var request;
+var connection;
+
+function testSetup() {
+  return new Promise(function(aResolve, aReject) {
+    request = new PresentationRequest("http://example.com");
+
+    request.getAvailability().then(
+      function(aAvailability) {
+        aAvailability.onchange = function() {
+          aAvailability.onchange = null;
+          ok(aAvailability.value, "Device should be available.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting availability: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+
+    gScript.sendAsyncMessage('trigger-device-add');
+  });
+}
+
+function testStartConnectionWithDevice() {
+  return new Promise(function(aResolve, aReject) {
+    gScript.addMessageListener('device-prompt', function devicePromptHandler() {
+      gScript.removeMessageListener('device-prompt', devicePromptHandler);
+      ok(false, "Device prompt should not be triggered.");
+      teardown();
+      aReject();
+    });
+
+    gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
+      gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+      info("A control channel is established.");
+      gScript.sendAsyncMessage('trigger-control-channel-open');
+    });
+
+    gScript.addMessageListener('control-channel-opened', function controlChannelOpenedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-opened', controlChannelOpenedHandler);
+      info("The control channel is opened.");
+    });
+
+    gScript.addMessageListener('control-channel-closed', function controlChannelClosedHandler(aReason) {
+      gScript.removeMessageListener('control-channel-closed', controlChannelClosedHandler);
+      info("The control channel is closed. " + aReason);
+    });
+
+    gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
+      gScript.removeMessageListener('offer-sent', offerSentHandler);
+      ok(aIsValid, "A valid offer is sent out.");
+      gScript.sendAsyncMessage('trigger-incoming-transport');
+    });
+
+    gScript.addMessageListener('answer-received', function answerReceivedHandler() {
+      gScript.removeMessageListener('answer-received', answerReceivedHandler);
+      info("An answer is received.");
+    });
+
+    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+      info("Data transport channel is initialized.");
+      gScript.sendAsyncMessage('trigger-incoming-answer');
+    });
+
+    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
+      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+      info("Data notification is enabled for data transport channel.");
+    });
+
+    var connectionFromEvent;
+    request.onconnectionavailable = function(aEvent) {
+      request.onconnectionavailable = null;
+      connectionFromEvent = aEvent.connection;
+      ok(connectionFromEvent, "|connectionavailable| event is fired with a connection.");
+
+      if (connection) {
+        is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
+        aResolve();
+      }
+    };
+
+    request.startWithDevice('id').then(
+      function(aConnection) {
+        connection = aConnection;
+        ok(connection, "Connection should be available.");
+        ok(connection.id, "Connection ID should be set.");
+        is(connection.state, "connected", "Connection state at sender side should be connected by default.");
+
+        if (connectionFromEvent) {
+          is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
+          aResolve();
+        }
+      },
+      function(aError) {
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
+      }
+    );
+  });
+}
+
+function testStartConnectionWithDeviceNotFoundError() {
+  return new Promise(function(aResolve, aReject) {
+    request.startWithDevice('').then(
+      function(aConnection) {
+        ok(false, "Should not establish connection to an unknown device");
+        teardown();
+        aReject();
+      },
+      function(aError) {
+        is(aError.name, 'NotFoundError', "Expect NotFoundError occurred when establishing a connection");
+        aResolve();
+      }
+    );
+  });
+}
+
+function teardown() {
+  gScript.addMessageListener('teardown-complete', function teardownCompleteHandler() {
+    gScript.removeMessageListener('teardown-complete', teardownCompleteHandler);
+    gScript.destroy();
+    SimpleTest.finish();
+  });
+
+  gScript.sendAsyncMessage('teardown');
+}
+
+function runTests() {
+  ok(window.PresentationRequest, "PresentationRequest should be available.");
+
+  testSetup().
+  then(testStartConnectionWithDevice).
+  then(testStartConnectionWithDeviceNotFoundError).
+  then(teardown);
+}
+
+//SimpleTest.expectAssertions(0, 5);
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPermissions([
+  {type: 'presentation-device-manage', allow: true, context: document},
+  {type: 'presentation', allow: true, context: document},
+], function() {
+  SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.presentation.test.enabled", true],
+                                      ["dom.presentation.test.stage", 0]]},
+                            runTests);
+});
+
+</script>
+</body>
+</html>
