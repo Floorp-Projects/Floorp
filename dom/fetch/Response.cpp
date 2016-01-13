@@ -238,6 +238,20 @@ Response::Clone(ErrorResult& aRv) const
   return response.forget();
 }
 
+already_AddRefed<Response>
+Response::CloneUnfiltered(ErrorResult& aRv) const
+{
+  if (BodyUsed()) {
+    aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+    return nullptr;
+  }
+
+  RefPtr<InternalResponse> clone = mInternalResponse->Clone();
+  RefPtr<InternalResponse> ir = clone->Unfiltered();
+  RefPtr<Response> ref = new Response(mOwner, ir);
+  return ref.forget();
+}
+
 void
 Response::SetBody(nsIInputStream* aBody)
 {

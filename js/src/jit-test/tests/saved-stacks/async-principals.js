@@ -141,13 +141,15 @@ function v() {
     { name: "u", asyncCause: "UtoV" },
   ]);
 
-  let xToCall = x.bind(undefined, saveStack(0, low));
+  let stack = saveStack(0, low);
+  function xToCall() { return x(stack);};
 
   let stackX = callFunctionWithAsyncStack(xToCall, saveStack(), "VtoX");
 
   print("high.checkVisibleStack(stackX)");
   checkVisibleStack(stackX, [
     { name: "x", asyncCause: null   },
+    { name: "xToCall", asyncCause: null },
     { name: "v", asyncCause: "VtoX" },
     { name: "u", asyncCause: "UtoV" },
   ]);
@@ -187,6 +189,7 @@ function x(stackV) {
 
   return saveStack(0, high);
 }
+
 function y() {
   let stackY = saveStack();
 

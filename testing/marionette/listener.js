@@ -85,7 +85,7 @@ var cookies = new Cookies(() => curContainer.frame.document, chrome);
 
 Cu.import("resource://gre/modules/Log.jsm");
 var logger = Log.repository.getLogger("Marionette");
-logger.info("loaded listener.js");
+logger.debug("loaded listener.js");
 var modalHandler = function() {
   // This gets called on the system app only since it receives the mozbrowserprompt event
   sendSyncMessage("Marionette:switchedToFrame", { frameValue: null, storePrevious: true });
@@ -1907,7 +1907,6 @@ var _emu_cb_id = 0;
 var _emu_cbs = {};
 
 function runEmulatorCmd(cmd, callback) {
-  logger.info("listener runEmulatorCmd cmd=" + cmd);
   if (callback) {
     _emu_cbs[_emu_cb_id] = callback;
   }

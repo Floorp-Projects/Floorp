@@ -45,16 +45,18 @@
 
 #elif (defined(OPUS_X86_MAY_HAVE_SSE) && !defined(OPUS_X86_PRESUME_SSE)) || \
   (defined(OPUS_X86_MAY_HAVE_SSE2) && !defined(OPUS_X86_PRESUME_SSE2)) || \
-  (defined(OPUS_X86_MAY_HAVE_SSE4_1) && !defined(OPUS_X86_PRESUME_SSE4_1))
+  (defined(OPUS_X86_MAY_HAVE_SSE4_1) && !defined(OPUS_X86_PRESUME_SSE4_1)) || \
+  (defined(OPUS_X86_MAY_HAVE_AVX) && !defined(OPUS_X86_PRESUME_AVX))
 
 #include "x86/x86cpu.h"
-/* We currently support 4 x86 variants:
+/* We currently support 5 x86 variants:
  * arch[0] -> non-sse
  * arch[1] -> sse
  * arch[2] -> sse2
  * arch[3] -> sse4.1
+ * arch[4] -> avx
  */
-#define OPUS_ARCHMASK 3
+#define OPUS_ARCHMASK 7
 int opus_select_arch(void);
 
 #else

@@ -85,9 +85,17 @@ public abstract class BaseAction {
 
     public abstract void perform(Context context, DownloadContentCatalog catalog);
 
-    protected File getDestinationFile(Context context, DownloadContent content) throws UnrecoverableDownloadContentException {
+    protected File getDestinationFile(Context context, DownloadContent content)
+            throws UnrecoverableDownloadContentException, RecoverableDownloadContentException {
         if (content.isFont()) {
-            return new File(new File(context.getApplicationInfo().dataDir, "fonts"), content.getFilename());
+            File destinationDirectory = new File(context.getApplicationInfo().dataDir, "fonts");
+
+            if (!destinationDirectory.exists() && !destinationDirectory.mkdirs()) {
+                throw new RecoverableDownloadContentException(RecoverableDownloadContentException.DISK_IO,
+                        "Destination directory does not exist and cannot be created");
+            }
+
+            return new File(destinationDirectory, content.getFilename());
         }
 
         // Unrecoverable: We downloaded a file and we don't know what to do with it (Should not happen)

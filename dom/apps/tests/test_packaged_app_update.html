@@ -151,7 +151,11 @@ var steps = [
       function() {
         SpecialPowers.pushPrefEnv(
            {"set": [["dom.mozPermissionSettings.enabled", true],
-                    ["dom.webapps.useCurrentProfile", true]]},
+                    ["dom.webapps.useCurrentProfile", true],
+                    // This test resets a conection to simulate network error,
+                    // so we need to set the following pref to 0 that we do not
+                    // retry it in necko.
+                    ["network.http.request.max-attempts", 0]]},
            PackagedTestHelper.next);
       }
     );

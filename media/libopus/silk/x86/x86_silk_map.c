@@ -50,6 +50,7 @@ opus_int64 (*const SILK_INNER_PROD16_ALIGNED_64_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_inner_prod16_aligned_64_c,
   silk_inner_prod16_aligned_64_c,
   MAY_HAVE_SSE4_1( silk_inner_prod16_aligned_64 ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_inner_prod16_aligned_64 )  /* avx */
 };
 
 #endif
@@ -62,6 +63,7 @@ opus_int (*const SILK_VAD_GETSA_Q8_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_VAD_GetSA_Q8_c,
   silk_VAD_GetSA_Q8_c,
   MAY_HAVE_SSE4_1( silk_VAD_GetSA_Q8 ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_VAD_GetSA_Q8 )  /* avx */
 };
 
 void (*const SILK_NSQ_IMPL[ OPUS_ARCHMASK + 1 ] )(
@@ -85,6 +87,7 @@ void (*const SILK_NSQ_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_NSQ_c,
   silk_NSQ_c,
   MAY_HAVE_SSE4_1( silk_NSQ ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_NSQ )  /* avx */
 };
 
 void (*const SILK_VQ_WMAT_EC_IMPL[ OPUS_ARCHMASK + 1 ] )(
@@ -104,6 +107,7 @@ void (*const SILK_VQ_WMAT_EC_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_VQ_WMat_EC_c,
   silk_VQ_WMat_EC_c,
   MAY_HAVE_SSE4_1( silk_VQ_WMat_EC ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_VQ_WMat_EC )  /* avx */
 };
 
 void (*const SILK_NSQ_DEL_DEC_IMPL[ OPUS_ARCHMASK + 1 ] )(
@@ -127,6 +131,7 @@ void (*const SILK_NSQ_DEL_DEC_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_NSQ_del_dec_c,
   silk_NSQ_del_dec_c,
   MAY_HAVE_SSE4_1( silk_NSQ_del_dec ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_NSQ_del_dec )  /* avx */
 };
 
 #if defined(FIXED_POINT)
@@ -144,6 +149,7 @@ void (*const SILK_WARPED_LPC_ANALYSIS_FILTER_FIX_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_warped_LPC_analysis_filter_FIX_c,
   silk_warped_LPC_analysis_filter_FIX_c,
   MAY_HAVE_SSE4_1( silk_warped_LPC_analysis_filter_FIX ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_warped_LPC_analysis_filter_FIX )  /* avx */
 };
 
 void (*const SILK_BURG_MODIFIED_IMPL[ OPUS_ARCHMASK + 1 ] )(
@@ -161,6 +167,7 @@ void (*const SILK_BURG_MODIFIED_IMPL[ OPUS_ARCHMASK + 1 ] )(
   silk_burg_modified_c,
   silk_burg_modified_c,
   MAY_HAVE_SSE4_1( silk_burg_modified ), /* sse4.1 */
+  MAY_HAVE_SSE4_1( silk_burg_modified )  /* avx */
 };
 
 #endif

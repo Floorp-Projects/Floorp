@@ -29,4 +29,3 @@ function checkMethod(name, arity) {
 checkMethod("has", 1);
 checkMethod("add", 1);
 checkMethod("delete", 1);
-checkMethod("clear", 0);

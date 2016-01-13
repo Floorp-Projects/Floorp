@@ -418,7 +418,7 @@ class PushHeadCache(CacheManager):
             if pushheads:
                 return pushheads
         except subprocess.CalledProcessError as e:
-            # Probably don't have the mozext extension installed.
+            # We probably don't have the mozext extension installed.
             ret = subprocess.call([self._hg, 'showconfig', 'extensions.mozext'])
             if ret:
                 raise Exception('Could not find candidate pushheads.\n\n'
@@ -426,7 +426,7 @@ class PushHeadCache(CacheManager):
                                 'see https://developer.mozilla.org/en-US/docs/Artifact_builds')
             raise e
 
-        # Probably don't have the pushlog database present locally.  Check.
+        # We probably don't have the pushlog database present locally.  Check.
         tree_pushheads = subprocess.check_output([self._hg, 'log',
             '--template', '{node}\n',
             '-r', 'last(pushhead("{tree}"))'.format(tree=tree)])

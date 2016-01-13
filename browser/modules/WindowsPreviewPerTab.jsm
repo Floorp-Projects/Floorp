@@ -50,6 +50,8 @@ const Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PageThumbs.jsm");
 
 // Pref to enable/disable preview-per-tab
 const TOGGLE_PREF_NAME = "browser.taskbar.previews.enable";
@@ -75,9 +77,9 @@ XPCOMUtils.defineLazyServiceGetter(this, "faviconSvc",
 // nsIURI -> imgIContainer
 function _imageFromURI(doc, uri, privateMode, callback) {
   let channel = ioSvc.newChannelFromURI2(uri,
-                                         doc,
-                                         null,  // aLoadingPrincipal
-                                         null,  // aTriggeringPrincipal
+                                         null,
+                                         Services.scriptSecurityManager.getSystemPrincipal(),
+                                         null,
                                          Ci.nsILoadInfo.SEC_NORMAL,
                                          Ci.nsIContentPolicy.TYPE_INTERNAL_IMAGE);
   try {
@@ -128,12 +130,14 @@ function snapRectAtScale(r, scale) {
 //// PreviewController
 
 /*
- * This class manages the behavior of the preview.
- *
- * To give greater performance when drawing, the dirty areas of the content
- * window are tracked and drawn on demand into a canvas of the same size.
- * This provides a great increase in responsiveness when drawing a preview
- * for unchanged (or even only slightly changed) tabs.
+ * This class manages the behavior of thumbnails and previews. It has the following
+ * responsibilities:
+ * 1) responding to requests from Windows taskbar for a thumbnail or window
+ *    preview.
+ * 2) listens for dom events that result in a thumbnail or window preview needing
+ *    to be refresh, and communicates this to the taskbar.
+ * 3) Handles querying and returning to the taskbar new thumbnail or window
+ *    preview images through PageThumbs.
  *
  * @param win
  *        The TabWindow (see below) that owns the preview that this controls
@@ -146,146 +150,90 @@ function PreviewController(win, tab) {
   this.linkedBrowser = tab.linkedBrowser;
   this.preview = this.win.createTabPreview(this);
 
-  this.linkedBrowser.addEventListener("MozAfterPaint", this, false);
-  this.linkedBrowser.addEventListener("resize", this, false);
   this.tab.addEventListener("TabAttrModified", this, false);
 
   XPCOMUtils.defineLazyGetter(this, "canvasPreview", function () {
-    let canvas = this.win.win.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    let canvas = PageThumbs.createCanvas();
     canvas.mozOpaque = true;
     return canvas;
-  });
-
-  XPCOMUtils.defineLazyGetter(this, "dirtyRegion",
-    function () {
-      let dirtyRegion = Cc["@mozilla.org/gfx/region;1"]
-                       .createInstance(Ci.nsIScriptableRegion);
-      dirtyRegion.init();
-      return dirtyRegion;
-    });
-
-  XPCOMUtils.defineLazyGetter(this, "winutils",
-    function () {
-      let win = tab.linkedBrowser.contentWindow;
-      return win.QueryInterface(Ci.nsIInterfaceRequestor)
-                .getInterface(Ci.nsIDOMWindowUtils);
   });
 }
 
 PreviewController.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsITaskbarPreviewController,
                                          Ci.nsIDOMEventListener]),
+
   destroy: function () {
     this.tab.removeEventListener("TabAttrModified", this, false);
-    this.linkedBrowser.removeEventListener("resize", this, false);
-    this.linkedBrowser.removeEventListener("MozAfterPaint", this, false);
 
     // Break cycles, otherwise we end up leaking the window with everything
     // attached to it.
     delete this.win;
     delete this.preview;
-    delete this.dirtyRegion;
   },
+
   get wrappedJSObject() {
     return this;
   },
 
-  get dirtyRects() {
-    let rectstream = this.dirtyRegion.getRects();
-    if (!rectstream)
-      return [];
-    let rects = [];
-    for (let i = 0; i < rectstream.length; i+= 4) {
-      let r = {x:      rectstream[i],
-               y:      rectstream[i+1],
-               width:  rectstream[i+2],
-               height: rectstream[i+3]};
-      rects.push(r);
-    }
-    return rects;
-  },
-
   // Resizes the canvasPreview to 0x0, essentially freeing its memory.
-  // updateCanvasPreview() will detect the size mismatch as a resize event
-  // the next time it is called.
   resetCanvasPreview: function () {
-    this.resizeCanvasPreview(0, 0);
+    this.canvasPreview.width = 0;
+    this.canvasPreview.height = 0;
   },
 
-  resizeCanvasPreview: function (width, height) {
-    this.canvasPreview.width = width;
-    this.canvasPreview.height = height;
+  /**
+   * Set the canvas dimensions.
+   */
+  resizeCanvasPreview: function (aRequestedWidth, aRequestedHeight) {
+    this.canvasPreview.width = aRequestedWidth;
+    this.canvasPreview.height = aRequestedHeight;
   },
 
-  get wasResizedSinceLastPreview () {
-    let bx = this.linkedBrowser.boxObject;
-    return bx.width != this.canvasPreview.width ||
-           bx.height != this.canvasPreview.height;
-  },
 
   get zoom() {
     // Note that winutils.fullZoom accounts for "quantization" of the zoom factor
     // from nsIContentViewer due to conversion through appUnits.
     // We do -not- want screenPixelsPerCSSPixel here, because that would -also-
     // incorporate any scaling that is applied due to hi-dpi resolution options.
-    return this.winutils.fullZoom;
+    return this.tab.linkedBrowser.fullZoom;
   },
 
-  // Updates the controller's canvas with the parts of the <browser> that need
-  // to be redrawn.
-  updateCanvasPreview: function () {
-    let win = this.linkedBrowser.contentWindow;
-    let bx = this.linkedBrowser.boxObject;
-    // If we resized then we need to flush layout so that the previews are up
-    // to date. Layout flushing for resizes is deferred for background tabs so
-    // we may need to force it. (bug 526620)
-    let flushLayout = this.wasResizedSinceLastPreview;
-    // Check for resize
-    if (flushLayout) {
-      // Invalidate the entire area and repaint
-      this.onTabPaint({left:0, top:0, right:win.innerWidth, bottom:win.innerHeight});
-      this.resizeCanvasPreview(bx.width, bx.height);
-    }
+  get screenPixelsPerCSSPixel() {
+    let chromeWin = this.tab.ownerGlobal;
+    let windowUtils = chromeWin.getInterface(Ci.nsIDOMWindowUtils);
+    return windowUtils.screenPixelsPerCSSPixel;
+  },
 
-    // Draw dirty regions
-    let ctx = this.canvasPreview.getContext("2d");
-    let scale = this.zoom;
+  get browserDims() {
+    return this.tab.linkedBrowser.getBoundingClientRect();
+  },
 
-    let flags = this.canvasPreviewFlags;
-    if (flushLayout)
-      flags &= ~Ci.nsIDOMCanvasRenderingContext2D.DRAWWINDOW_DO_NOT_FLUSH;
+  cacheBrowserDims: function () {
+    let dims = this.browserDims;
+    this._cachedWidth = dims.width;
+    this._cachedHeight = dims.height;
+  },
 
-    // The dirty region may include parts that are offscreen so we clip to the
-    // canvas area.
-    this.dirtyRegion.intersectRect(0, 0, win.innerWidth, win.innerHeight);
-    this.dirtyRects.forEach(function (r) {
-      // We need to snap the rectangle to be pixel aligned in the destination
-      // coordinate space. Otherwise natively themed widgets might not draw.
-      snapRectAtScale(r, scale);
-      let x = r.x;
-      let y = r.y;
-      let width = r.width;
-      let height = r.height;
+  testCacheBrowserDims: function () {
+    let dims = this.browserDims;
+    return this._cachedWidth == dims.width &&
+      this._cachedHeight == dims.height;
+  },
 
-      ctx.save();
-      ctx.scale(scale, scale);
-      ctx.translate(x, y);
-      ctx.drawWindow(win, x, y, width, height, "white", flags);
-      ctx.restore();
-    });
-    this.dirtyRegion.setToRect(0,0,0,0);
-
+  /**
+   * Capture a new thumbnail image for this preview. Called by the controller
+   * in response to a request for a new thumbnail image.
+   */
+  updateCanvasPreview: function (aFullScale, aCallback) {
+    // Update our cached browser dims so that delayed resize
+    // events don't trigger another invalidation if this tab becomes active.
+    this.cacheBrowserDims();
+    PageThumbs.captureToCanvas(this.linkedBrowser, this.canvasPreview,
+                               aCallback, { fullScale: aFullScale });
     // If we're updating the canvas, then we're in the middle of a peek so
     // don't discard the cache of previews.
     AeroPeek.resetCacheTimer();
-  },
-
-  onTabPaint: function (rect) {
-    let x = Math.floor(rect.left),
-        y = Math.floor(rect.top),
-        width = Math.ceil(rect.right) - x,
-        height = Math.ceil(rect.bottom) - y;
-    this.dirtyRegion.unionRect(x, y, width, height);
   },
 
   updateTitleAndTooltip: function () {
@@ -295,72 +243,90 @@ PreviewController.prototype = {
   },
 
   //////////////////////////////////////////////////////////////////////////////
-  //// nsITaskbarPreviewController 
+  //// nsITaskbarPreviewController
 
+  // window width and height, not browser
   get width() {
     return this.win.width;
   },
 
+  // window width and height, not browser
   get height() {
     return this.win.height;
   },
 
   get thumbnailAspectRatio() {
-    let boxObject = this.tab.linkedBrowser.boxObject;
+    let browserDims = this.browserDims;
     // Avoid returning 0
-    let tabWidth = boxObject.width || 1;
+    let tabWidth = browserDims.width || 1;
     // Avoid divide by 0
-    let tabHeight = boxObject.height || 1;
+    let tabHeight = browserDims.height || 1;
     return tabWidth / tabHeight;
   },
 
-  drawPreview: function (ctx) {
-    this.win.tabbrowser.previewTab(this.tab, () => this.previewTabCallback(ctx));
+  /**
+   * Responds to taskbar requests for window previews. Returns the results asynchronously
+   * through updateCanvasPreview.
+   *
+   * @param aTaskbarCallback nsITaskbarPreviewCallback results callback
+   */
+  requestPreview: function (aTaskbarCallback) {
+    // Grab a high res content preview
+    this.resetCanvasPreview();
+    this.updateCanvasPreview(true, (aPreviewCanvas) => {
+      let winWidth = this.win.width;
+      let winHeight = this.win.height;
 
-    // We must avoid having the frame drawn around the window. See bug 520807
-    return false;
+      let composite = PageThumbs.createCanvas();
+
+      // Use transparency, Aero glass is drawn black without it.
+      composite.mozOpaque = false;
+
+      let ctx = composite.getContext('2d');
+      let scale = this.screenPixelsPerCSSPixel / this.zoom;
+
+      composite.width = winWidth * scale;
+      composite.height = winHeight * scale;
+
+      ctx.save();
+      ctx.scale(scale, scale);
+
+      // Draw chrome. Note we currently do not get scrollbars for remote frames
+      // in the image above.
+      ctx.drawWindow(this.win.win, 0, 0, winWidth, winHeight, "rgba(0,0,0,0)");
+
+      // Draw the content are into the composite canvas at the right location.
+      ctx.drawImage(aPreviewCanvas, this.browserDims.x, this.browserDims.y,
+                    aPreviewCanvas.width, aPreviewCanvas.height);
+      ctx.restore();
+
+      // Deliver the resulting composite canvas to Windows
+      this.win.tabbrowser.previewTab(this.tab, function () {
+        aTaskbarCallback.done(composite, false);
+      });
+    });
   },
 
-  previewTabCallback: function (ctx) {
-    // This will extract the resolution-scale component of the scaling we need,
-    // which should be applied to both chrome and content;
-    // the page zoom component is applied (to content only) within updateCanvasPreview.
-    let scale = this.winutils.screenPixelsPerCSSPixel / this.winutils.fullZoom;
-    ctx.save();
-    ctx.scale(scale, scale);
-    let width = this.win.width;
-    let height = this.win.height;
-    // Draw our toplevel window
-    ctx.drawWindow(this.win.win, 0, 0, width, height, "transparent");
-
-    // XXX (jfkthame): Pending tabs don't seem to draw with the proper scaling
-    // unless we use this block of code; but doing this for "normal" (loaded) tabs
-    // results in blurry rendering on hidpi systems, so we avoid it if possible.
-    // I don't understand why pending and loaded tabs behave differently here...
-    // (see bug 857061).
-    if (this.tab.hasAttribute("pending")) {
-      // Compositor, where art thou?
-      // Draw the tab content on top of the toplevel window
-      this.updateCanvasPreview();
-
-      let boxObject = this.linkedBrowser.boxObject;
-      ctx.translate(boxObject.x, boxObject.y);
-      ctx.drawImage(this.canvasPreview, 0, 0);
-    }
-
-    ctx.restore();
+  /**
+   * Responds to taskbar requests for tab thumbnails. Returns the results asynchronously
+   * through updateCanvasPreview.
+   *
+   * Note Windows requests a specific width and height here, if the resulting thumbnail
+   * does not match these dimensions thumbnail display will fail.
+   *
+   * @param aTaskbarCallback nsITaskbarPreviewCallback results callback
+   * @param aRequestedWidth width of the requested thumbnail
+   * @param aRequestedHeight height of the requested thumbnail
+   */
+  requestThumbnail: function (aTaskbarCallback, aRequestedWidth, aRequestedHeight) {
+    this.resizeCanvasPreview(aRequestedWidth, aRequestedHeight);
+    this.updateCanvasPreview(false, (aThumbnailCanvas) => {
+      aTaskbarCallback.done(aThumbnailCanvas, false);
+    });
   },
 
-  drawThumbnail: function (ctx, width, height) {
-    this.updateCanvasPreview();
-
-    let scale = width/this.linkedBrowser.boxObject.width;
-    ctx.scale(scale, scale);
-    ctx.drawImage(this.canvasPreview, 0, 0);
-
-    // Don't draw a frame around the thumbnail
-    return false;
-  },
+  //////////////////////////////////////////////////////////////////////////////
+  //// Event handling
 
   onClose: function () {
     this.win.tabbrowser.removeTab(this.tab);
@@ -377,32 +343,8 @@ PreviewController.prototype = {
   //// nsIDOMEventListener
   handleEvent: function (evt) {
     switch (evt.type) {
-      case "MozAfterPaint":
-        if (evt.originalTarget === this.linkedBrowser.contentWindow) {
-          let clientRects = evt.clientRects;
-          let length = clientRects.length;
-          for (let i = 0; i < length; i++) {
-            let r = clientRects.item(i);
-            this.onTabPaint(r);
-          }
-        }
-        this.preview.invalidate();
-        break;
       case "TabAttrModified":
         this.updateTitleAndTooltip();
-        break;
-      case "resize":
-        // We need to invalidate our window's other tabs' previews since layout
-        // due to resizing is delayed for background tabs. Note that this
-        // resize may not be the first after the main window has been resized -
-        // the user may be switching to our tab which forces the resize.
-        this.win.previews.forEach(function (p) {
-          let controller = p.controller.wrappedJSObject;
-          if (controller.wasResizedSinceLastPreview) {
-            controller.resetCanvasPreview();
-            p.invalidate();
-          }
-        });
         break;
     }
   }
@@ -423,16 +365,22 @@ XPCOMUtils.defineLazyGetter(PreviewController.prototype, "canvasPreviewFlags",
  * This class monitors a browser window for changes to its tabs
  *
  * @param win
- *        The nsIDOMWindow browser window 
+ *        The nsIDOMWindow browser window
  */
 function TabWindow(win) {
   this.win = win;
   this.tabbrowser = win.gBrowser;
 
+  this.cacheDims();
+
   this.previews = new Map();
 
   for (let i = 0; i < this.tabEvents.length; i++)
     this.tabbrowser.tabContainer.addEventListener(this.tabEvents[i], this, false);
+
+  for (let i = 0; i < this.winEvents.length; i++)
+    this.win.addEventListener(this.winEvents[i], this, false);
+
   this.tabbrowser.addTabsProgressListener(this);
 
   AeroPeek.windows.push(this);
@@ -447,6 +395,7 @@ function TabWindow(win) {
 TabWindow.prototype = {
   _enabled: false,
   tabEvents: ["TabOpen", "TabClose", "TabSelect", "TabMove"],
+  winEvents: ["resize"],
 
   destroy: function () {
     this._destroying = true;
@@ -454,6 +403,10 @@ TabWindow.prototype = {
     let tabs = this.tabbrowser.tabs;
 
     this.tabbrowser.removeTabsProgressListener(this);
+
+  for (let i = 0; i < this.winEvents.length; i++)
+    this.win.removeEventListener(this.winEvents[i], this, false);
+
     for (let i = 0; i < this.tabEvents.length; i++)
       this.tabbrowser.tabContainer.removeEventListener(this.tabEvents[i], this, false);
 
@@ -470,6 +423,15 @@ TabWindow.prototype = {
   },
   get height () {
     return this.win.innerHeight;
+  },
+
+  cacheDims: function () {
+    this._cachedWidth = this.width;
+    this._cachedHeight = this.height;
+  },
+
+  testCacheDims: function () {
+    return this._cachedWidth == this.width && this._cachedHeight == this.height;
   },
 
   // Invoked when the given tab is added to this window
@@ -493,7 +455,7 @@ TabWindow.prototype = {
     preview.active = this.tabbrowser.selectedTab == controller.tab;
     // Grab the default favicon
     getFaviconAsImage(
-      controller.linkedBrowser.contentWindow.document,
+      null,
       null,
       PrivateBrowsingUtils.isWindowPrivate(this.win),
       function (img) {
@@ -577,15 +539,83 @@ TabWindow.prototype = {
       case "TabMove":
         this.updateTabOrdering();
         break;
+      case "resize":
+        if (!AeroPeek._prefenabled)
+          return;
+        this.onResize();
+        break;
+    }
+  },
+
+  // Set or reset a timer that will invalidate visible thumbnails soon.
+  setInvalidationTimer: function () {
+    if (!this.invalidateTimer) {
+      this.invalidateTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+    }
+    this.invalidateTimer.cancel();
+
+    // delay 1 second before invalidating
+    this.invalidateTimer.initWithCallback(() => {
+      // invalidate every preview. note the internal implementation of
+      // invalidate ignores thumbnails that aren't visible.
+      this.previews.forEach(function (aPreview) {
+        let controller = aPreview.controller.wrappedJSObject;
+        if (!controller.testCacheBrowserDims()) {
+          controller.cacheBrowserDims();
+          aPreview.invalidate();
+        }
+      });
+    }, 1000, Ci.nsITimer.TYPE_ONE_SHOT);
+  },
+
+  onResize: function () {
+    // Specific to a window.
+
+    // Call invalidate on each tab thumbnail so that Windows will request an
+    // updated image. However don't do this repeatedly across multiple resize
+    // events triggered during window border drags.
+
+    if (this.testCacheDims()) {
+      return;
+    }
+
+    // update the window dims on our TabWindow object.
+    this.cacheDims();
+
+    // invalidate soon
+    this.setInvalidationTimer();
+  },
+
+  invalidateTabPreview: function(aBrowser) {
+    for (let [tab, preview] of this.previews) {
+      if (aBrowser == tab.linkedBrowser) {
+        preview.invalidate();
+        break;
+      }
     }
   },
 
   //// Browser progress listener
+
+  onLocationChange: function (aBrowser) {
+    // I'm not sure we need this, onStateChange does a really good job
+    // of picking up page changes.
+    //this.invalidateTabPreview(aBrowser);
+  },
+
+  onStateChange: function (aBrowser, aWebProgress, aRequest, aStateFlags, aStatus) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
+        aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) {
+      this.invalidateTabPreview(aBrowser);
+    }
+  },
+
   onLinkIconAvailable: function (aBrowser, aIconURL) {
     let self = this;
     getFaviconAsImage(
-      aBrowser.contentWindow.document,
-      aIconURL,PrivateBrowsingUtils.isWindowPrivate(this.win),
+      null,
+      aIconURL,
+      PrivateBrowsingUtils.isWindowPrivate(this.win),
       function (img) {
         let index = self.tabbrowser.browsers.indexOf(aBrowser);
         // Only add it if we've found the index.  The tab could have closed!

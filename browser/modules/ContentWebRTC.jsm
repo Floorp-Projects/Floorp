@@ -138,7 +138,8 @@ function handleGUMRequest(aSubject, aTopic, aData) {
       // and allow the user to plug in a device, instead of immediately failing.
       denyGUMRequest({callID: aSubject.callID}, error);
     },
-    aSubject.innerWindowID);
+    aSubject.innerWindowID,
+    aSubject.callID);
 }
 
 function prompt(aContentWindow, aWindowID, aCallID, aConstraints, aDevices, aSecure) {

@@ -160,7 +160,8 @@ public:
   };
 
   StreamBuffer()
-    : mTracksKnownTime(0)
+    : mGraphRate(0)
+    , mTracksKnownTime(0)
     , mForgottenTime(0)
     , mTracksDirty(false)
 #ifdef DEBUG

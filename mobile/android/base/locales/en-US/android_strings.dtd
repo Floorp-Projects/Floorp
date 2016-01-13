@@ -530,10 +530,10 @@ size. -->
      as an advisory message on how to add content to the reading list when the reading list empty.
      The placeholder &formatI; will be replaced by a small image of the icon described, and can be moved to wherever
      it is applicable. -->
-<!ENTITY home_reading_list_hint3 "TIP: Save articles to your reading list by long pressing the &formatI; icon when it appears in the URL bar.">
+<!ENTITY home_reading_list_hint3 "Tip: Save articles to your reading list by long pressing the &formatI; icon when it appears in the URL bar.">
 <!-- Localization note (home_reading_list_hint_accessible2): This string is used
      as alternate text for accessibility. It is not visible in the UI. -->
-<!ENTITY home_reading_list_hint_accessible2 "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the URL bar.">
+<!ENTITY home_reading_list_hint_accessible2 "Tip: Save articles to your reading list by long pressing the reader mode button when it appears in the URL bar.">
 
 <!-- Localization note (home_default_empty): This string is used as the default text when there
      is no data to show in an about:home panel that was created by an add-on. -->
@@ -592,6 +592,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY identity_connection_secure "Secure Connection">
 <!ENTITY identity_connection_insecure "Insecure connection">
 <!ENTITY identity_login_insecure "This page is not secure and your login could be vulnerable.">
+<!ENTITY identity_connection_chromeui "This is a secure &brandShortName; page">
 
 <!-- Mixed content notifications in site identity popup -->
 <!ENTITY mixed_content_blocked_all1 "&brandShortName; has blocked insecure content on this page.">

@@ -170,6 +170,13 @@ class nsEditableTextFunctor : public nsBoolDomIterFunctor
  ********************************************************/
 
 nsHTMLEditRules::nsHTMLEditRules()
+  : mHTMLEditor(nullptr)
+  , mListenerEnabled(false)
+  , mReturnInEmptyLIKillsList(false)
+  , mDidDeleteSelection(false)
+  , mDidRangedDelete(false)
+  , mRestoreContentEditableCount(false)
+  , mJoinOffset(0)
 {
   InitFields();
 }

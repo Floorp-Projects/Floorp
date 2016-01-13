@@ -79,6 +79,8 @@ public:
                 const nsAString& aManifestURL,
                 bool aReadOnly,
                 bool aEnabled)
+    : mReadOnly(true)
+    , mEnabled(false)
   {
     Init(aName, aOriginURL, aManifestURL, aReadOnly, aEnabled);
   }

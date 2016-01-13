@@ -10,7 +10,7 @@ var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {TargetFactory} = require("devtools/client/framework/target");
 var {CssRuleView, _ElementStyle} =
     require("devtools/client/inspector/rules/rules");
-var {CssLogic, CssSelector} = require("devtools/shared/styleinspector/css-logic");
+var {CssLogic, CssSelector} = require("devtools/shared/inspector/css-logic");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 var {editableField, getInplaceEditorForSpan: inplaceEditor} =

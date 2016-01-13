@@ -825,43 +825,40 @@
 }
 
 /* Platform overrides (copied in from the old platform specific files) */
-%ifdef XP_WIN
-.requests-menu-header-button > .button-box {
+:root[platform="win"] .requests-menu-header-button > .button-box {
   padding: 0;
 }
 
-.requests-menu-timings-division {
+:root[platform="win"] .requests-menu-timings-division {
   padding-top: 1px;
   font-size: 90%;
 }
 
-.requests-menu-footer-button,
-.requests-menu-footer-label {
+:root[platform="win"] .requests-menu-footer-button,
+:root[platform="win"] .requests-menu-footer-label {
   padding-top: 0px;
   padding-bottom: 0px;
 }
 
 /* Responsive sidebar */
 @media (max-width: 700px) {
-  .requests-menu-footer-button,
-  .requests-menu-footer-label {
+  :root[platform="win"] .requests-menu-footer-button,
+  :root[platform="win"] .requests-menu-footer-label {
     padding-top: 0px;
     padding-bottom: 0px;
   }
 }
-%elifdef XP_LINUX
-#headers-summary-resend {
+:root[platform="linux"] #headers-summary-resend {
   padding: 4px;
 }
 
-#toggle-raw-headers {
+:root[platform="linux"] #toggle-raw-headers {
   padding: 4px;
 }
 
 /* Responsive sidebar */
 @media (max-width: 700px) {
-  .requests-menu-header-button {
+  :root[platform="linux"] .requests-menu-header-button {
     font-size: 85%;
   }
 }
-%endif

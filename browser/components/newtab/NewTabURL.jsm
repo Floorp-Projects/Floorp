@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* globals XPCOMUtils, Deprecated, aboutNewTabService*/
+/* exported NewTabURL */
+
 "use strict";
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
-var Cu = Components.utils;
+const {utils: Cu} = Components;
 
-this.EXPORTED_SYMBOLS = [ "NewTabURL" ];
+this.EXPORTED_SYMBOLS = ["NewTabURL"];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",

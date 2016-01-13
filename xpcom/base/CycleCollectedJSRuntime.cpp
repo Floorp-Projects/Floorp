@@ -801,7 +801,7 @@ struct JsGcTracer : public TraceCallbacks
   virtual void Trace(JS::TenuredHeap<JSObject*>* aPtr, const char* aName,
                      void* aClosure) const override
   {
-    JS::TraceNullableEdge(static_cast<JSTracer*>(aClosure), aPtr, aName);
+    JS::TraceEdge(static_cast<JSTracer*>(aClosure), aPtr, aName);
   }
   virtual void Trace(JS::Heap<JSString*>* aPtr, const char* aName,
                      void* aClosure) const override

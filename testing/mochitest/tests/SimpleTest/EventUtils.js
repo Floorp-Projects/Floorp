@@ -550,6 +550,28 @@ function sendWheelAndPaint(aTarget, aOffsetX, aOffsetY, aEvent, aCallback, aWind
   synthesizeWheel(aTarget, aOffsetX, aOffsetY, aEvent, aWindow);
 }
 
+function synthesizeNativeMouseMove(aTarget, aOffsetX, aOffsetY, aCallback, aWindow) {
+  aWindow = aWindow || window;
+
+  var utils = _getDOMWindowUtils(aWindow);
+  if (!utils)
+    return;
+
+  var rect = aTarget.getBoundingClientRect();
+  var x = aOffsetX + window.mozInnerScreenX + rect.left;
+  var y = aOffsetY + window.mozInnerScreenY + rect.top;
+  var scale = utils.screenPixelsPerCSSPixel;
+
+  var observer = {
+    observe: (subject, topic, data) => {
+      if (aCallback && topic == "mouseevent") {
+        aCallback(data);
+      }
+    }
+  };
+  utils.sendNativeMouseMove(x * scale, y * scale, null, observer);
+}
+
 function _computeKeyCodeFromChar(aChar)
 {
   if (aChar.length != 1) {

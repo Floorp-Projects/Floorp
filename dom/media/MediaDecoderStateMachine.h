@@ -648,8 +648,6 @@ private:
   // play time.
   bool NeedToSkipToNextKeyframe();
 
-  void AdjustAudioThresholds();
-
   void* const mDecoderID;
   const RefPtr<FrameStatistics> mFrameStats;
   const RefPtr<VideoFrameContainer> mVideoFrameContainer;
@@ -970,13 +968,7 @@ private:
   uint32_t AudioPrerollUsecs() const
   {
     MOZ_ASSERT(OnTaskQueue());
-    if (IsRealTime()) {
-      return 0;
-    }
-
-    uint32_t result = mLowAudioThresholdUsecs * 2;
-    MOZ_ASSERT(result <= mAmpleAudioThresholdUsecs, "Prerolling will never finish");
-    return result;
+    return IsRealTime() ? 0 : mAmpleAudioThresholdUsecs;
   }
 
   uint32_t VideoPrerollFrames() const
@@ -1075,7 +1067,7 @@ private:
   // True if we shouldn't play our audio (but still write it to any capturing
   // streams). When this is true, the audio thread will never start again after
   // it has stopped.
-  Watchable<bool> mAudioCaptured;
+  bool mAudioCaptured;
 
   // True if the audio playback thread has finished. It is finished
   // when either all the audio frames have completed playing, or we've moved
@@ -1173,7 +1165,7 @@ private:
   // SetStartTime because the mStartTime already set before. Also we don't need
   // to decode any audio/video since the MediaDecoder will trigger a seek
   // operation soon.
-  Watchable<bool> mSentFirstFrameLoadedEvent;
+  bool mSentFirstFrameLoadedEvent;
 
   bool mSentPlaybackEndedEvent;
 

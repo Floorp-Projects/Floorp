@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>CSSStyleSheet parsingMode test - bug 1230491</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function run() {
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    const sss = Cc["@mozilla.org/content/style-sheet-service;1"]
+      .getService(Ci.nsIStyleSheetService);
+    const domutils = Cc["@mozilla.org/inspector/dom-utils;1"]
+      .getService(Ci.inIDOMUtils);
+    const utils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+
+    const userUrl = encodeURI("data:text/css,body { color: seagreen; }");
+    utils.loadSheetUsingURIString(userUrl, sss.USER_SHEET);
+
+    const agentUrl = encodeURI("data:text/css,body { color: tomato; }");
+    utils.loadSheetUsingURIString(agentUrl, sss.AGENT_SHEET);
+
+    const authorUrl = "chrome://mochikit/content/tests/SimpleTest/test.css";
+
+    let results = [];
+    for (let sheet of domutils.getAllStyleSheets(document)) {
+      if (sheet.href === agentUrl) {
+	is(sheet.parsingMode, "agent", "agent sheet has expected mode");
+	results[sss.AGENT_SHEET] = 1;
+      } else if (sheet.href === userUrl) {
+	is(sheet.parsingMode, "user", "user sheet has expected mode");
+	results[sss.USER_SHEET] = 1;
+      } else if (sheet.href === authorUrl) {
+	is(sheet.parsingMode, "author",
+	  "author sheet has expected mode");
+	results[sss.AUTHOR_SHEET] = 1;
+      }
+    }
+
+    ok(results[sss.AGENT_SHEET] && results[sss.USER_SHEET] &&
+      results[sss.AUTHOR_SHEET],
+      "all sheets seen");
+
+    SimpleTest.finish();
+  }
+</script>
+</head>
+<body onload="run()">
+  <div> What? </div>
+</body>
+</html>

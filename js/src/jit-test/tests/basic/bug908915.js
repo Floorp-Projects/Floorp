@@ -1,12 +1,23 @@
 // |jit-test| error: 42
 load(libdir + "immutable-prototype.js");
 
+// Suppress the large quantity of output on stdout (eg from calling
+// dumpHeap()).
+os.file.redirect(null);
+
+var blacklist = {
+    'quit': true,
+    'crash': true,
+    'readline': true,
+    'terminate': true,
+    'nestedShell': true,
+};
+
 function f(y) {}
 for each(let e in newGlobal()) {
-    if (e.name === "quit" || e.name == "readline" || e.name == "terminate" ||
-	e.name == "nestedShell")
+    if (e.name in blacklist)
 	continue;
-        print(e.name);
+    print(e.name);
     try {
         e();
     } catch (r) {}
@@ -21,13 +32,12 @@ for each(let e in newGlobal()) {
     var arr = [];
     arr.__proto__ = newGlobal();
     for each (b in arr) {
-        if (b.name === "quit" || b.name == "readline" || b.name == "terminate" ||
-            b.name == "nestedShell")
+        if (b.name in blacklist)
             continue;
-       try {
-           f(b)
-       } catch (e) {}
-   }
+        try {
+            f(b)
+        } catch (e) {}
+    }
 })();
 
 throw 42;

@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_bluetoothpbaprequesthandle_h
 
 #include "nsCOMPtr.h"
+#include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/dom/DOMRequest.h"
 #include "mozilla/dom/BlobSet.h"
 

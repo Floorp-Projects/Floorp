@@ -46,9 +46,11 @@
   padding: 1px 4px;
   -moz-user-select: none;
   word-wrap: break-word;
-%ifndef XP_MACOSX
+}
+
+:root[platform="win"] .ruleview-header,
+:root[platform="linux"] .ruleview-header {
   margin-top: 4px;
-%endif
 }
 
 .ruleview-rule-pseudo-element {

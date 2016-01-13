@@ -39,7 +39,7 @@ ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame, ArgumentsObjec
                                           ArgumentsData* data)
 {
     JSScript* script = frame.script();
-    if (frame.fun()->needsCallObject() && script->argumentsAliasesFormals()) {
+    if (frame.callee()->needsCallObject() && script->argumentsAliasesFormals()) {
         obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
         for (AliasedFormalIter fi(script); fi; fi++)
             data->args[fi.frameIndex()] = MagicScopeSlotValue(fi.scopeSlot());

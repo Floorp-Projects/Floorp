@@ -13,6 +13,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CSSStyleSheet.h"
+#include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MemoryReporting.h"
@@ -1553,8 +1554,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
               aPseudoType == nsCSSPseudoElements::ePseudo_before ||
               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-            nsIStyleRule* rule = PresContext()->AnimationManager()->
-              GetAnimationRule(aElement, aPseudoType);
+            nsIStyleRule* rule = PresContext()->EffectCompositor()->
+              GetAnimationRule(aElement, aPseudoType,
+                               EffectCompositor::CascadeLevel::Animations);
             if (rule) {
               ruleWalker.ForwardOnPossiblyCSSRule(rule);
               ruleWalker.CurrentNode()->SetIsAnimationRule();
@@ -1566,8 +1568,9 @@ nsStyleSet::RuleNodeWithReplacement(Element* aElement,
           if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement ||
               aPseudoType == nsCSSPseudoElements::ePseudo_before ||
               aPseudoType == nsCSSPseudoElements::ePseudo_after) {
-            nsIStyleRule* rule = PresContext()->TransitionManager()->
-              GetAnimationRule(aElement, aPseudoType);
+            nsIStyleRule* rule = PresContext()->EffectCompositor()->
+              GetAnimationRule(aElement, aPseudoType,
+                               EffectCompositor::CascadeLevel::Transitions);
             if (rule) {
               ruleWalker.ForwardOnPossiblyCSSRule(rule);
               ruleWalker.CurrentNode()->SetIsAnimationRule();

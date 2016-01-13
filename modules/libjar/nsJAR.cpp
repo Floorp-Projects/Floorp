@@ -84,6 +84,7 @@ nsJAR::nsJAR(): mZip(new nsZipArchive()),
                 mReleaseTime(PR_INTERVAL_NO_TIMEOUT),
                 mCache(nullptr),
                 mLock("nsJAR::mLock"),
+                mMtime(0),
                 mTotalItemsInManifest(0),
                 mOpened(false)
 {
@@ -1055,6 +1056,7 @@ NS_IMPL_ISUPPORTS(nsZipReaderCache, nsIZipReaderCache, nsIObserver, nsISupportsW
 
 nsZipReaderCache::nsZipReaderCache()
   : mLock("nsZipReaderCache.mLock")
+  , mCacheSize(0)
   , mZips()
 #ifdef ZIP_CACHE_HIT_RATE
     ,

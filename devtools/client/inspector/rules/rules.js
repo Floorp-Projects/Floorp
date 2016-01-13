@@ -3,20 +3,24 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/* globals gDevTools */
 
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
 const promise = require("promise");
+const {Tools} = require("devtools/client/main");
 const {setTimeout, clearTimeout} =
       Cu.import("resource://gre/modules/Timer.jsm", {});
-const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
+const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} =
       require("devtools/client/styleeditor/utils");
+const {ElementStyle} =
+      require("devtools/client/inspector/rules/models/element-style");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
 const {
   createChild,
@@ -25,7 +29,7 @@ const {
   blurOnMultipleProperties,
   promiseWarn,
   throttle
-} = require("devtools/client/styleinspector/utils");
+} = require("devtools/client/inspector/shared/utils");
 const {
   parseDeclarations,
   parseSingleValue,
@@ -35,15 +39,31 @@ const {
   SELECTOR_PSEUDO_CLASS
 } = require("devtools/client/shared/css-parsing-utils");
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+loader.lazyGetter(this, "gDevTools", () =>
+  Cu.import("resource://devtools/client/framework/gDevTools.jsm", {}).gDevTools);
 loader.lazyRequireGetter(this, "overlays",
-  "devtools/client/styleinspector/style-inspector-overlays");
+  "devtools/client/inspector/shared/style-inspector-overlays");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
-  "devtools/client/styleinspector/style-inspector-menu");
+  "devtools/client/inspector/shared/style-inspector-menu");
 loader.lazyImporter(this, "Services", "resource://gre/modules/Services.jsm");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
+  return Cc["@mozilla.org/widget/clipboardhelper;1"]
+    .getService(Ci.nsIClipboardHelper);
+});
+
+XPCOMUtils.defineLazyGetter(this, "_strings", function() {
+  return Services.strings.createBundle(
+    "chrome://devtools-shared/locale/styleinspector.properties");
+});
+
+loader.lazyGetter(this, "AutocompletePopup", function() {
+  return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
+});
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -61,6 +81,40 @@ const FILTER_PROP_RE = /\s*([^:\s]*)\s*:\s*(.*?)\s*;?$/;
 const FILTER_STRICT_RE = /\s*`(.*?)`\s*$/;
 const IOService = Cc["@mozilla.org/network/io-service;1"]
                   .getService(Ci.nsIIOService);
+
+/**
+ * Our model looks like this:
+ *
+ * ElementStyle:
+ *   Responsible for keeping track of which properties are overridden.
+ *   Maintains a list of Rule objects that apply to the element.
+ * Rule:
+ *   Manages a single style declaration or rule.
+ *   Responsible for applying changes to the properties in a rule.
+ *   Maintains a list of TextProperty objects.
+ * TextProperty:
+ *   Manages a single property from the authoredText attribute of the
+ *     relevant declaration.
+ *   Maintains a list of computed properties that come from this
+ *     property declaration.
+ *   Changes to the TextProperty are sent to its related Rule for
+ *     application.
+ *
+ * View hierarchy mostly follows the model hierarchy.
+ *
+ * CssRuleView:
+ *   Owns an ElementStyle and creates a list of RuleEditors for its
+ *    Rules.
+ * RuleEditor:
+ *   Owns a Rule object and creates a list of TextPropertyEditors
+ *     for its TextProperties.
+ *   Manages creation of new text properties.
+ * TextPropertyEditor:
+ *   Owns a TextProperty object.
+ *   Manages changes to the TextProperty.
+ *   Can be expanded to display computed properties.
+ *   Can mark a property disabled or enabled.
+ */
 
 /**
  * To figure out how shorthand properties are interpreted by the
@@ -98,382 +152,6 @@ function createDummyDocument() {
   gDummyPromise = deferred.promise;
   return gDummyPromise;
 }
-
-/**
- * Our model looks like this:
- *
- * ElementStyle:
- *   Responsible for keeping track of which properties are overridden.
- *   Maintains a list of Rule objects that apply to the element.
- * Rule:
- *   Manages a single style declaration or rule.
- *   Responsible for applying changes to the properties in a rule.
- *   Maintains a list of TextProperty objects.
- * TextProperty:
- *   Manages a single property from the authoredText attribute of the
- *     relevant declaration.
- *   Maintains a list of computed properties that come from this
- *     property declaration.
- *   Changes to the TextProperty are sent to its related Rule for
- *     application.
- */
-
-/**
- * ElementStyle maintains a list of Rule objects for a given element.
- *
- * @param {Element} element
- *        The element whose style we are viewing.
- * @param {Object} store
- *        The ElementStyle can use this object to store metadata
- *        that might outlast the rule view, particularly the current
- *        set of disabled properties.
- * @param {PageStyleFront} pageStyle
- *        Front for the page style actor that will be providing
- *        the style information.
- * @param {Boolean} showUserAgentStyles
- *        Should user agent styles be inspected?
- */
-function ElementStyle(element, store, pageStyle, showUserAgentStyles) {
-  this.element = element;
-  this.store = store || {};
-  this.pageStyle = pageStyle;
-  this.showUserAgentStyles = showUserAgentStyles;
-  this.rules = [];
-
-  // We don't want to overwrite this.store.userProperties so we only create it
-  // if it doesn't already exist.
-  if (!("userProperties" in this.store)) {
-    this.store.userProperties = new UserProperties();
-  }
-
-  if (!("disabled" in this.store)) {
-    this.store.disabled = new WeakMap();
-  }
-}
-
-// We're exporting _ElementStyle for unit tests.
-exports._ElementStyle = ElementStyle;
-
-ElementStyle.prototype = {
-  // The element we're looking at.
-  element: null,
-
-  // Empty, unconnected element of the same type as this node, used
-  // to figure out how shorthand properties will be parsed.
-  dummyElement: null,
-
-  init: function() {
-    // To figure out how shorthand properties are interpreted by the
-    // engine, we will set properties on a dummy element and observe
-    // how their .style attribute reflects them as computed values.
-    this.dummyElementPromise = createDummyDocument().then(document => {
-      // ::before and ::after do not have a namespaceURI
-      let namespaceURI = this.element.namespaceURI ||
-          document.documentElement.namespaceURI;
-      this.dummyElement = document.createElementNS(namespaceURI,
-                                                   this.element.tagName);
-      document.documentElement.appendChild(this.dummyElement);
-      return this.dummyElement;
-    }).then(null, promiseWarn);
-    return this.dummyElementPromise;
-  },
-
-  destroy: function() {
-    if (this.destroyed) {
-      return;
-    }
-    this.destroyed = true;
-
-    for (let rule of this.rules) {
-      if (rule.editor) {
-        rule.editor.destroy();
-      }
-    }
-
-    this.dummyElement = null;
-    this.dummyElementPromise.then(dummyElement => {
-      dummyElement.remove();
-      this.dummyElementPromise = null;
-    }, console.error);
-  },
-
-  /**
-   * Called by the Rule object when it has been changed through the
-   * setProperty* methods.
-   */
-  _changed: function() {
-    if (this.onChanged) {
-      this.onChanged();
-    }
-  },
-
-  /**
-   * Refresh the list of rules to be displayed for the active element.
-   * Upon completion, this.rules[] will hold a list of Rule objects.
-   *
-   * Returns a promise that will be resolved when the elementStyle is
-   * ready.
-   */
-  populate: function() {
-    let populated = this.pageStyle.getApplied(this.element, {
-      inherited: true,
-      matchedSelectors: true,
-      filter: this.showUserAgentStyles ? "ua" : undefined,
-    }).then(entries => {
-      if (this.destroyed) {
-        return promise.resolve(undefined);
-      }
-
-      // Make sure the dummy element has been created before continuing...
-      return this.dummyElementPromise.then(() => {
-        if (this.populated !== populated) {
-          // Don't care anymore.
-          return;
-        }
-
-        // Store the current list of rules (if any) during the population
-        // process.  They will be reused if possible.
-        let existingRules = this.rules;
-
-        this.rules = [];
-
-        for (let entry of entries) {
-          this._maybeAddRule(entry, existingRules);
-        }
-
-        // Mark overridden computed styles.
-        this.markOverriddenAll();
-
-        this._sortRulesForPseudoElement();
-
-        // We're done with the previous list of rules.
-        for (let r of existingRules) {
-          if (r && r.editor) {
-            r.editor.destroy();
-          }
-        }
-      });
-    }).then(null, e => {
-      // populate is often called after a setTimeout,
-      // the connection may already be closed.
-      if (this.destroyed) {
-        return promise.resolve(undefined);
-      }
-      return promiseWarn(e);
-    });
-    this.populated = populated;
-    return this.populated;
-  },
-
-  /**
-   * Put pseudo elements in front of others.
-   */
-  _sortRulesForPseudoElement: function() {
-    this.rules = this.rules.sort((a, b) => {
-      return (a.pseudoElement || "z") > (b.pseudoElement || "z");
-    });
-  },
-
-  /**
-   * Add a rule if it's one we care about.  Filters out duplicates and
-   * inherited styles with no inherited properties.
-   *
-   * @param {Object} options
-   *        Options for creating the Rule, see the Rule constructor.
-   * @param {Array} existingRules
-   *        Rules to reuse if possible.  If a rule is reused, then it
-   *        it will be deleted from this array.
-   * @return {Boolean} true if we added the rule.
-   */
-  _maybeAddRule: function(options, existingRules) {
-    // If we've already included this domRule (for example, when a
-    // common selector is inherited), ignore it.
-    if (options.rule &&
-        this.rules.some(rule => rule.domRule === options.rule)) {
-      return false;
-    }
-
-    if (options.system) {
-      return false;
-    }
-
-    let rule = null;
-
-    // If we're refreshing and the rule previously existed, reuse the
-    // Rule object.
-    if (existingRules) {
-      let ruleIndex = existingRules.findIndex((r) => r.matches(options));
-      if (ruleIndex >= 0) {
-        rule = existingRules[ruleIndex];
-        rule.refresh(options);
-        existingRules.splice(ruleIndex, 1);
-      }
-    }
-
-    // If this is a new rule, create its Rule object.
-    if (!rule) {
-      rule = new Rule(this, options);
-    }
-
-    // Ignore inherited rules with no visible properties.
-    if (options.inherited && !rule.hasAnyVisibleProperties()) {
-      return false;
-    }
-
-    this.rules.push(rule);
-    return true;
-  },
-
-  /**
-   * Calls markOverridden with all supported pseudo elements
-   */
-  markOverriddenAll: function() {
-    this.markOverridden();
-    for (let pseudo of PSEUDO_ELEMENTS) {
-      this.markOverridden(pseudo);
-    }
-  },
-
-  /**
-   * Mark the properties listed in this.rules for a given pseudo element
-   * with an overridden flag if an earlier property overrides it.
-   *
-   * @param {String} pseudo
-   *        Which pseudo element to flag as overridden.
-   *        Empty string or undefined will default to no pseudo element.
-   */
-  markOverridden: function(pseudo = "") {
-    // Gather all the text properties applied by these rules, ordered
-    // from more- to less-specific. Text properties from keyframes rule are
-    // excluded from being marked as overridden since a number of criteria such
-    // as time, and animation overlay are required to be check in order to
-    // determine if the property is overridden.
-    let textProps = [];
-    for (let rule of this.rules) {
-      if (rule.pseudoElement === pseudo && !rule.keyframes) {
-        for (let textProp of rule.textProps.slice(0).reverse()) {
-          if (textProp.enabled) {
-            textProps.push(textProp);
-          }
-        }
-      }
-    }
-
-    // Gather all the computed properties applied by those text
-    // properties.
-    let computedProps = [];
-    for (let textProp of textProps) {
-      computedProps = computedProps.concat(textProp.computed);
-    }
-
-    // Walk over the computed properties.  As we see a property name
-    // for the first time, mark that property's name as taken by this
-    // property.
-    //
-    // If we come across a property whose name is already taken, check
-    // its priority against the property that was found first:
-    //
-    //   If the new property is a higher priority, mark the old
-    //   property overridden and mark the property name as taken by
-    //   the new property.
-    //
-    //   If the new property is a lower or equal priority, mark it as
-    //   overridden.
-    //
-    // _overriddenDirty will be set on each prop, indicating whether its
-    // dirty status changed during this pass.
-    let taken = {};
-    for (let computedProp of computedProps) {
-      let earlier = taken[computedProp.name];
-
-      // Prevent -webkit-gradient from being selected after unchecking
-      // linear-gradient in this case:
-      //  -moz-linear-gradient: ...;
-      //  -webkit-linear-gradient: ...;
-      //  linear-gradient: ...;
-      if (!computedProp.textProp.isValid()) {
-        computedProp.overridden = true;
-        continue;
-      }
-      let overridden;
-      if (earlier &&
-          computedProp.priority === "important" &&
-          earlier.priority !== "important" &&
-          (earlier.textProp.rule.inherited ||
-           !computedProp.textProp.rule.inherited)) {
-        // New property is higher priority.  Mark the earlier property
-        // overridden (which will reverse its dirty state).
-        earlier._overriddenDirty = !earlier._overriddenDirty;
-        earlier.overridden = true;
-        overridden = false;
-      } else {
-        overridden = !!earlier;
-      }
-
-      computedProp._overriddenDirty =
-        (!!computedProp.overridden !== overridden);
-      computedProp.overridden = overridden;
-      if (!computedProp.overridden && computedProp.textProp.enabled) {
-        taken[computedProp.name] = computedProp;
-      }
-    }
-
-    // For each TextProperty, mark it overridden if all of its
-    // computed properties are marked overridden.  Update the text
-    // property's associated editor, if any.  This will clear the
-    // _overriddenDirty state on all computed properties.
-    for (let textProp of textProps) {
-      // _updatePropertyOverridden will return true if the
-      // overridden state has changed for the text property.
-      if (this._updatePropertyOverridden(textProp)) {
-        textProp.updateEditor();
-      }
-    }
-  },
-
-  /**
-   * Mark a given TextProperty as overridden or not depending on the
-   * state of its computed properties.  Clears the _overriddenDirty state
-   * on all computed properties.
-   *
-   * @param {TextProperty} prop
-   *        The text property to update.
-   * @return {Boolean} true if the TextProperty's overridden state (or any of
-   *         its computed properties overridden state) changed.
-   */
-  _updatePropertyOverridden: function(prop) {
-    let overridden = true;
-    let dirty = false;
-    for (let computedProp of prop.computed) {
-      if (!computedProp.overridden) {
-        overridden = false;
-      }
-      dirty = computedProp._overriddenDirty || dirty;
-      delete computedProp._overriddenDirty;
-    }
-
-    dirty = (!!prop.overridden !== overridden) || dirty;
-    prop.overridden = overridden;
-    return dirty;
-  }
-};
-
-/**
- * View hierarchy mostly follows the model hierarchy.
- *
- * CssRuleView:
- *   Owns an ElementStyle and creates a list of RuleEditors for its
- *    Rules.
- * RuleEditor:
- *   Owns a Rule object and creates a list of TextPropertyEditors
- *     for its TextProperties.
- *   Manages creation of new text properties.
- * TextPropertyEditor:
- *   Owns a TextProperty object.
- *   Manages changes to the TextProperty.
- *   Can be expanded to display computed properties.
- *   Can mark a property disabled or enabled.
- */
 
 /**
  * CssRuleView is a view of the style rules and declarations that
@@ -574,14 +252,21 @@ function CssRuleView(inspector, document, store, pageStyle) {
   EventEmitter.decorate(this);
 }
 
-exports.CssRuleView = CssRuleView;
-
 CssRuleView.prototype = {
   // The element that we're inspecting.
   _viewedElement: null,
 
   // Used for cancelling timeouts in the style filter.
   _filterChangedTimeout: null,
+
+  // Empty, unconnected element of the same type as this node, used
+  // to figure out how shorthand properties will be parsed.
+  _dummyElement: null,
+
+  // Get the dummy elemenet.
+  get dummyElement() {
+    return this._dummyElement;
+  },
 
   // Get the filter search value.
   get searchValue() {
@@ -1076,6 +761,8 @@ CssRuleView.prototype = {
     this.isDestroyed = true;
     this.clear();
 
+    this._dummyElement = null;
+    this.dummyElementPromise = null;
     gDummyPromise = null;
 
     this._prefObserver.off(PREF_ORIG_SOURCES, this._onSourcePrefChanged);
@@ -1182,13 +869,26 @@ CssRuleView.prototype = {
       return promise.resolve(undefined);
     }
 
-    let elementStyle = new ElementStyle(element, this.store,
+    // To figure out how shorthand properties are interpreted by the
+    // engine, we will set properties on a dummy element and observe
+    // how their .style attribute reflects them as computed values.
+    this.dummyElementPromise = createDummyDocument().then(document => {
+      // ::before and ::after do not have a namespaceURI
+      let namespaceURI = this.element.namespaceURI ||
+          document.documentElement.namespaceURI;
+      this._dummyElement = document.createElementNS(namespaceURI,
+                                                   this.element.tagName);
+      document.documentElement.appendChild(this._dummyElement);
+      return this._dummyElement;
+    }).then(null, promiseWarn);
+
+    let elementStyle = new ElementStyle(element, this, this.store,
       this.pageStyle, this.showUserAgentStyles);
     this._elementStyle = elementStyle;
 
     this._startSelectingElement();
 
-    return this._elementStyle.init().then(() => {
+    return this.dummyElementPromise.then(() => {
       if (this._elementStyle === elementStyle) {
         return this._populate();
       }
@@ -3069,84 +2769,6 @@ TextPropertyEditor.prototype = {
 };
 
 /**
- * Store of CSSStyleDeclarations mapped to properties that have been changed by
- * the user.
- */
-function UserProperties() {
-  this.map = new Map();
-}
-
-UserProperties.prototype = {
-  /**
-   * Get a named property for a given CSSStyleDeclaration.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property is mapped.
-   * @param {String} name
-   *        The name of the property to get.
-   * @param {String} value
-   *        Default value.
-   * @return {String}
-   *        The property value if it has previously been set by the user, null
-   *        otherwise.
-   */
-  getProperty: function(style, name, value) {
-    let key = this.getKey(style);
-    let entry = this.map.get(key, null);
-
-    if (entry && name in entry) {
-      return entry[name];
-    }
-    return value;
-  },
-
-  /**
-   * Set a named property for a given CSSStyleDeclaration.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property is to be mapped.
-   * @param {String} bame
-   *        The name of the property to set.
-   * @param {String} userValue
-   *        The value of the property to set.
-   */
-  setProperty: function(style, bame, userValue) {
-    let key = this.getKey(style, bame);
-    let entry = this.map.get(key, null);
-
-    if (entry) {
-      entry[bame] = userValue;
-    } else {
-      let props = {};
-      props[bame] = userValue;
-      this.map.set(key, props);
-    }
-  },
-
-  /**
-   * Check whether a named property for a given CSSStyleDeclaration is stored.
-   *
-   * @param {CSSStyleDeclaration} style
-   *        The CSSStyleDeclaration against which the property would be mapped.
-   * @param {String} name
-   *        The name of the property to check.
-   */
-  contains: function(style, name) {
-    let key = this.getKey(style, name);
-    let entry = this.map.get(key, null);
-    return !!entry && name in entry;
-  },
-
-  getKey: function(style, name) {
-    return style.actorID + ":" + name;
-  },
-
-  clear: function() {
-    this.map.clear();
-  }
-};
-
-/**
  * Helper functions
  */
 
@@ -3218,24 +2840,175 @@ function getPropertyNameAndValue(node) {
   }
 }
 
-XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {
-  return Cc["@mozilla.org/widget/clipboardhelper;1"]
-    .getService(Ci.nsIClipboardHelper);
-});
+function RuleViewTool(inspector, window) {
+  this.inspector = inspector;
+  this.document = window.document;
 
-XPCOMUtils.defineLazyGetter(this, "_strings", function() {
-  return Services.strings.createBundle(
-    "chrome://devtools-shared/locale/styleinspector.properties");
-});
+  this.view = new CssRuleView(this.inspector, this.document);
 
-XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
+  this.onLinkClicked = this.onLinkClicked.bind(this);
+  this.onSelected = this.onSelected.bind(this);
+  this.refresh = this.refresh.bind(this);
+  this.clearUserProperties = this.clearUserProperties.bind(this);
+  this.onPropertyChanged = this.onPropertyChanged.bind(this);
+  this.onViewRefreshed = this.onViewRefreshed.bind(this);
+  this.onPanelSelected = this.onPanelSelected.bind(this);
+  this.onMutations = this.onMutations.bind(this);
+  this.onResized = this.onResized.bind(this);
 
-loader.lazyGetter(this, "AutocompletePopup", function() {
-  return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
-});
+  this.view.on("ruleview-changed", this.onPropertyChanged);
+  this.view.on("ruleview-refreshed", this.onViewRefreshed);
+  this.view.on("ruleview-linked-clicked", this.onLinkClicked);
 
-loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
-  return domUtils.getCSSPseudoElementNames();
-});
+  this.inspector.selection.on("detached", this.onSelected);
+  this.inspector.selection.on("new-node-front", this.onSelected);
+  this.inspector.selection.on("pseudoclass", this.refresh);
+  this.inspector.target.on("navigate", this.clearUserProperties);
+  this.inspector.sidebar.on("ruleview-selected", this.onPanelSelected);
+  this.inspector.pageStyle.on("stylesheet-updated", this.refresh);
+  this.inspector.walker.on("mutations", this.onMutations);
+  this.inspector.walker.on("resize", this.onResized);
+
+  this.onSelected();
+}
+
+RuleViewTool.prototype = {
+  isSidebarActive: function() {
+    if (!this.view) {
+      return false;
+    }
+    return this.inspector.sidebar.getCurrentTabID() == "ruleview";
+  },
+
+  onSelected: function(event) {
+    // Ignore the event if the view has been destroyed, or if it's inactive.
+    // But only if the current selection isn't null. If it's been set to null,
+    // let the update go through as this is needed to empty the view on
+    // navigation.
+    if (!this.view) {
+      return;
+    }
+
+    let isInactive = !this.isSidebarActive() &&
+                     this.inspector.selection.nodeFront;
+    if (isInactive) {
+      return;
+    }
+
+    this.view.setPageStyle(this.inspector.pageStyle);
+
+    if (!this.inspector.selection.isConnected() ||
+        !this.inspector.selection.isElementNode()) {
+      this.view.selectElement(null);
+      return;
+    }
+
+    if (!event || event == "new-node-front") {
+      let done = this.inspector.updating("rule-view");
+      this.view.selectElement(this.inspector.selection.nodeFront)
+        .then(done, done);
+    }
+  },
+
+  refresh: function() {
+    if (this.isSidebarActive()) {
+      this.view.refreshPanel();
+    }
+  },
+
+  clearUserProperties: function() {
+    if (this.view && this.view.store && this.view.store.userProperties) {
+      this.view.store.userProperties.clear();
+    }
+  },
+
+  onPanelSelected: function() {
+    if (this.inspector.selection.nodeFront === this.view.viewedElement) {
+      this.refresh();
+    } else {
+      this.onSelected();
+    }
+  },
+
+  onLinkClicked: function(e, rule) {
+    let sheet = rule.parentStyleSheet;
+
+    // Chrome stylesheets are not listed in the style editor, so show
+    // these sheets in the view source window instead.
+    if (!sheet || sheet.isSystem) {
+      let href = rule.nodeHref || rule.href;
+      let toolbox = gDevTools.getToolbox(this.inspector.target);
+      toolbox.viewSource(href, rule.line);
+      return;
+    }
+
+    let location = promise.resolve(rule.location);
+    if (Services.prefs.getBoolPref(PREF_ORIG_SOURCES)) {
+      location = rule.getOriginalLocation();
+    }
+    location.then(({ source, href, line, column }) => {
+      let target = this.inspector.target;
+      if (Tools.styleEditor.isTargetSupported(target)) {
+        gDevTools.showToolbox(target, "styleeditor").then(function(toolbox) {
+          let sheet = source || href;
+          toolbox.getCurrentPanel().selectStyleSheet(sheet, line, column);
+        });
+      }
+      return;
+    });
+  },
+
+  onPropertyChanged: function() {
+    this.inspector.markDirty();
+  },
+
+  onViewRefreshed: function() {
+    this.inspector.emit("rule-view-refreshed");
+  },
+
+  /**
+   * When markup mutations occur, if an attribute of the selected node changes,
+   * we need to refresh the view as that might change the node's styles.
+   */
+  onMutations: function(mutations) {
+    for (let {type, target} of mutations) {
+      if (target === this.inspector.selection.nodeFront &&
+          type === "attributes") {
+        this.refresh();
+        break;
+      }
+    }
+  },
+
+  /**
+   * When the window gets resized, this may cause media-queries to match, and
+   * therefore, different styles may apply.
+   */
+  onResized: function() {
+    this.refresh();
+  },
+
+  destroy: function() {
+    this.inspector.walker.off("mutations", this.onMutations);
+    this.inspector.walker.off("resize", this.onResized);
+    this.inspector.selection.off("detached", this.onSelected);
+    this.inspector.selection.off("pseudoclass", this.refresh);
+    this.inspector.selection.off("new-node-front", this.onSelected);
+    this.inspector.target.off("navigate", this.clearUserProperties);
+    this.inspector.sidebar.off("ruleview-selected", this.onPanelSelected);
+    if (this.inspector.pageStyle) {
+      this.inspector.pageStyle.off("stylesheet-updated", this.refresh);
+    }
+
+    this.view.off("ruleview-linked-clicked", this.onLinkClicked);
+    this.view.off("ruleview-changed", this.onPropertyChanged);
+    this.view.off("ruleview-refreshed", this.onViewRefreshed);
+
+    this.view.destroy();
+
+    this.view = this.document = this.inspector = null;
+  }
+};
+
+exports.CssRuleView = CssRuleView;
+exports.RuleViewTool = RuleViewTool;

@@ -11,7 +11,7 @@ const { getCurrentZoom,
 const lazyContainer = {};
 
 loader.lazyRequireGetter(lazyContainer, "CssLogic",
-  "devtools/shared/styleinspector/css-logic", true);
+  "devtools/shared/inspector/css-logic", true);
 exports.getComputedStyle = (node) =>
   lazyContainer.CssLogic.getComputedStyle(node);
 

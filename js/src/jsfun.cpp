@@ -29,6 +29,7 @@
 
 #include "builtin/Eval.h"
 #include "builtin/Object.h"
+#include "builtin/SelfHostingDefines.h"
 #include "frontend/BytecodeCompiler.h"
 #include "frontend/TokenStream.h"
 #include "gc/Marking.h"
@@ -93,7 +94,6 @@ static bool
 AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, HandleFunction fun)
 {
     MOZ_ASSERT(!fun->isBuiltin());
-    MOZ_ASSERT(!fun->isBoundFunction(), "all bound functions are currently native (ergo builtin)");
 
     for (; !iter.done(); ++iter) {
         if (!iter.isFunctionFrame() || iter.isEvalFrame())
@@ -362,7 +362,6 @@ static bool
 ResolveInterpretedFunctionPrototype(JSContext* cx, HandleFunction fun, HandleId id)
 {
     MOZ_ASSERT(fun->isInterpreted() || fun->isAsmJSNative());
-    MOZ_ASSERT(!fun->isFunctionPrototype());
     MOZ_ASSERT(id == NameToId(cx->names().prototype));
 
     // Assert that fun is not a compiler-created function object, which
@@ -478,11 +477,18 @@ fun_resolve(JSContext* cx, HandleObject obj, HandleId id, bool* resolvedp)
             if (fun->hasResolvedLength())
                 return true;
 
-            uint16_t length;
-            if (!fun->getLength(cx, &length))
-                return false;
+            // Bound functions' length can have values up to MAX_SAFE_INTEGER,
+            // so they're handled differently from other functions.
+            if (fun->isBoundFunction()) {
+                MOZ_ASSERT(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT).isNumber());
+                v.set(fun->getExtendedSlot(BOUND_FUN_LENGTH_SLOT));
+            } else {
+                uint16_t length;
+                if (!fun->getLength(cx, &length))
+                    return false;
 
-            v.setInt32(length);
+                v.setInt32(length);
+            }
         } else {
             if (fun->hasResolvedName())
                 return true;
@@ -752,7 +758,6 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
         return nullptr;
 
     RootedFunction functionProto(cx, &functionProto_->as<JSFunction>());
-    functionProto->setIsFunctionPrototype();
 
     const char* rawSource = "() {\n}";
     size_t sourceLen = strlen(rawSource);
@@ -1289,74 +1294,63 @@ JSFunction::infallibleIsDefaultClassConstructor(JSContext* cx) const
     return isDefault;
 }
 
-static const uint32_t JSSLOT_BOUND_FUNCTION_TARGET     = 0;
-static const uint32_t JSSLOT_BOUND_FUNCTION_THIS       = 1;
-static const uint32_t JSSLOT_BOUND_FUNCTION_ARGS_COUNT = 2;
-
-static const uint32_t BOUND_FUNCTION_RESERVED_SLOTS = 3;
-
-inline bool
-JSFunction::initBoundFunction(JSContext* cx, HandleObject target, HandleValue thisArg,
-                              const Value* args, unsigned argslen)
+bool
+JSFunction::getLength(JSContext* cx, uint16_t* length)
 {
-    RootedFunction self(cx, this);
-
-    /*
-     * Convert to a dictionary to set the BOUND_FUNCTION flag and increase
-     * the slot span to cover the arguments and additional slots for the 'this'
-     * value and arguments count.
-     */
-    if (!self->toDictionaryMode(cx))
+    JS::RootedFunction self(cx, this);
+    MOZ_ASSERT(!self->isBoundFunction());
+    if (self->isInterpretedLazy() && !self->getOrCreateScript(cx))
         return false;
 
-    if (!self->JSObject::setFlags(cx, BaseShape::BOUND_FUNCTION))
-        return false;
-
-    if (!self->setSlotSpan(cx, BOUND_FUNCTION_RESERVED_SLOTS + argslen))
-        return false;
-
-    self->setSlot(JSSLOT_BOUND_FUNCTION_TARGET, ObjectValue(*target));
-    self->setSlot(JSSLOT_BOUND_FUNCTION_THIS, thisArg);
-    self->setSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT, PrivateUint32Value(argslen));
-
-    self->initSlotRange(BOUND_FUNCTION_RESERVED_SLOTS, args, argslen);
-
-    self->setJitInfo(&jit::JitInfo_CallBoundFunction);
-
+    *length = self->hasScript() ? self->nonLazyScript()->funLength()
+                                : (self->nargs() - self->hasRest());
     return true;
+}
+
+static const js::Value&
+BoundFunctionEnvironmentSlotValue(const JSFunction* fun, uint32_t slotIndex)
+{
+    MOZ_ASSERT(fun->isBoundFunction());
+    MOZ_ASSERT(fun->environment()->is<CallObject>());
+    CallObject* callObject = &fun->environment()->as<CallObject>();
+    return callObject->getSlot(slotIndex);
 }
 
 JSObject*
 JSFunction::getBoundFunctionTarget() const
 {
-    MOZ_ASSERT(isBoundFunction());
-
-    return &getSlot(JSSLOT_BOUND_FUNCTION_TARGET).toObject();
+    js::Value targetVal = BoundFunctionEnvironmentSlotValue(this, JSSLOT_BOUND_FUNCTION_TARGET);
+    MOZ_ASSERT(IsCallable(targetVal));
+    return &targetVal.toObject();
 }
 
 const js::Value&
 JSFunction::getBoundFunctionThis() const
 {
-    MOZ_ASSERT(isBoundFunction());
+    return BoundFunctionEnvironmentSlotValue(this, JSSLOT_BOUND_FUNCTION_THIS);
+}
 
-    return getSlot(JSSLOT_BOUND_FUNCTION_THIS);
+static ArrayObject*
+GetBoundFunctionArguments(const JSFunction* boundFun)
+{
+    js::Value argsVal = BoundFunctionEnvironmentSlotValue(boundFun, JSSLOT_BOUND_FUNCTION_ARGS);
+    return &argsVal.toObject().as<ArrayObject>();
 }
 
 const js::Value&
-JSFunction::getBoundFunctionArgument(unsigned which) const
+JSFunction::getBoundFunctionArgument(JSContext* cx, unsigned which) const
 {
-    MOZ_ASSERT(isBoundFunction());
     MOZ_ASSERT(which < getBoundFunctionArgumentCount());
 
-    return getSlot(BOUND_FUNCTION_RESERVED_SLOTS + which);
+    RootedArrayObject boundArgs(cx, GetBoundFunctionArguments(this));
+    RootedValue res(cx);
+    return boundArgs->getDenseElement(which);
 }
 
 size_t
 JSFunction::getBoundFunctionArgumentCount() const
 {
-    MOZ_ASSERT(isBoundFunction());
-
-    return getSlot(JSSLOT_BOUND_FUNCTION_ARGS_COUNT).toPrivateUint32();
+    return GetBoundFunctionArguments(this)->length();
 }
 
 /* static */ bool
@@ -1513,9 +1507,14 @@ JSFunction::maybeRelazify(JSRuntime* rt)
         return;
 
     // To delazify self-hosted builtins we need the name of the function
-    // to clone. This name is stored in the first extended slot.
-    if (isSelfHostedBuiltin() && !isExtended())
+    // to clone. This name is stored in the first extended slot. Since
+    // that slot is sometimes also used for other purposes, make sure it
+    // contains a string.
+    if (isSelfHostedBuiltin() &&
+        (!isExtended() || !getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).isString()))
+    {
         return;
+    }
 
     JSScript* script = nonLazyScript();
 
@@ -1532,73 +1531,6 @@ JSFunction::maybeRelazify(JSRuntime* rt)
     }
 }
 
-/* ES5 15.3.4.5.1 and 15.3.4.5.2. */
-bool
-js::CallOrConstructBoundFunction(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    RootedFunction fun(cx, &args.callee().as<JSFunction>());
-    MOZ_ASSERT(fun->isBoundFunction());
-
-    /* 15.3.4.5.1 step 1, 15.3.4.5.2 step 3. */
-    unsigned boundArgsLen = fun->getBoundFunctionArgumentCount();
-
-    uint32_t argsLen = args.length();
-    if (argsLen + boundArgsLen > ARGS_LENGTH_MAX) {
-        ReportAllocationOverflow(cx);
-        return false;
-    }
-
-    /* 15.3.4.5.1 step 3, 15.3.4.5.2 step 1. */
-    RootedObject target(cx, fun->getBoundFunctionTarget());
-
-    /* 15.3.4.5.1 step 2. */
-    const Value& boundThis = fun->getBoundFunctionThis();
-
-    if (args.isConstructing()) {
-        ConstructArgs cargs(cx);
-        if (!cargs.init(argsLen + boundArgsLen))
-            return false;
-
-        /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
-        for (uint32_t i = 0; i < boundArgsLen; i++)
-            cargs[i].set(fun->getBoundFunctionArgument(i));
-        for (uint32_t i = 0; i < argsLen; i++)
-            cargs[boundArgsLen + i].set(args[i]);
-
-        RootedValue targetv(cx, ObjectValue(*target));
-
-        /* ES6 9.4.1.2 step 5 */
-        RootedValue newTarget(cx);
-        if (&args.newTarget().toObject() == fun)
-            newTarget.set(targetv);
-        else
-            newTarget.set(args.newTarget());
-
-        return Construct(cx, targetv, cargs, newTarget, args.rval());
-    }
-
-    InvokeArgs invokeArgs(cx);
-    if (!invokeArgs.init(argsLen + boundArgsLen))
-        return false;
-
-    /* 15.3.4.5.1, 15.3.4.5.2 step 4. */
-    for (uint32_t i = 0; i < boundArgsLen; i++)
-        invokeArgs[i].set(fun->getBoundFunctionArgument(i));
-    for (uint32_t i = 0; i < argsLen; i++)
-        invokeArgs[boundArgsLen + i].set(args[i]);
-
-    /* 15.3.4.5.1, 15.3.4.5.2 step 5. */
-    invokeArgs.setCallee(ObjectValue(*target));
-    invokeArgs.setThis(boundThis);
-
-    if (!Invoke(cx, invokeArgs))
-        return false;
-
-    args.rval().set(invokeArgs.rval());
-    return true;
-}
-
 static bool
 fun_isGenerator(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1610,132 +1542,6 @@ fun_isGenerator(JSContext* cx, unsigned argc, Value* vp)
     }
 
     args.rval().setBoolean(fun->isGenerator());
-    return true;
-}
-
-static JSFunction*
-NewNativeFunctionWithGivenProto(JSContext* cx, Native native, unsigned nargs,
-                                HandleAtom atom, HandleObject proto)
-{
-    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN, nullptr, atom, proto,
-                                AllocKind::FUNCTION, GenericObject, NewFunctionGivenProto);
-}
-
-static JSFunction*
-NewNativeConstructorWithGivenProto(JSContext* cx, Native native, unsigned nargs,
-                                   HandleAtom atom, HandleObject proto)
-{
-    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_CTOR, nullptr, atom, proto,
-                                AllocKind::FUNCTION, GenericObject, NewFunctionGivenProto);
-}
-
-// ES6 draft rev32 19.2.3.2
-bool
-js::fun_bind(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    // Step 1.
-    RootedValue thisv(cx, args.thisv());
-
-    // Step 2.
-    if (!IsCallable(thisv)) {
-        ReportIncompatibleMethod(cx, args, &JSFunction::class_);
-        return false;
-    }
-
-    // Step 3.
-    Value* boundArgs = nullptr;
-    unsigned argslen = 0;
-    if (args.length() > 1) {
-        boundArgs = args.array() + 1;
-        argslen = args.length() - 1;
-    }
-
-    RootedValue thisArg(cx, args.length() >= 1 ? args[0] : UndefinedValue());
-    RootedObject target(cx, &thisv.toObject());
-
-    // This is part of step 4, but we're delaying allocating the function object.
-    RootedObject proto(cx);
-    if (!GetPrototype(cx, target, &proto))
-        return false;
-
-    double length = 0.0;
-    // Try to avoid invoking the resolve hook.
-    if (target->is<JSFunction>() && !target->as<JSFunction>().hasResolvedLength()) {
-        uint16_t len;
-        if (!target->as<JSFunction>().getLength(cx, &len))
-            return false;
-        length = Max(0.0, double(len) - argslen);
-    } else {
-        // Steps 5-6.
-        RootedId id(cx, NameToId(cx->names().length));
-        bool hasLength;
-        if (!HasOwnProperty(cx, target, id, &hasLength))
-            return false;
-
-        // Step 7-8.
-        if (hasLength) {
-            // a-b.
-            RootedValue targetLen(cx);
-            if (!GetProperty(cx, target, target, id, &targetLen))
-                return false;
-            // d.
-            if (targetLen.isNumber())
-                length = Max(0.0, JS::ToInteger(targetLen.toNumber()) - argslen);
-        }
-    }
-
-    RootedString name(cx, cx->names().empty);
-    if (target->is<JSFunction>() && !target->as<JSFunction>().hasResolvedName()) {
-        if (target->as<JSFunction>().atom())
-            name = target->as<JSFunction>().atom();
-    } else {
-        // Steps 11-12.
-        RootedValue targetName(cx);
-        if (!GetProperty(cx, target, target, cx->names().name, &targetName))
-            return false;
-
-        // Step 13.
-        if (targetName.isString())
-            name = targetName.toString();
-    }
-
-    // Step 14. Relevant bits from SetFunctionName.
-    StringBuffer sb(cx);
-    // Disabled for B2G failures.
-    // if (!sb.append("bound ") || !sb.append(name))
-    //   return false;
-    if (!sb.append(name))
-        return false;
-
-    RootedAtom nameAtom(cx, sb.finishAtom());
-    if (!nameAtom)
-        return false;
-
-    // Step 4.
-    RootedFunction fun(cx, target->isConstructor() ?
-      NewNativeConstructorWithGivenProto(cx, CallOrConstructBoundFunction, length, nameAtom, proto) :
-      NewNativeFunctionWithGivenProto(cx, CallOrConstructBoundFunction, length, nameAtom, proto));
-    if (!fun)
-        return false;
-
-    if (!fun->initBoundFunction(cx, target, thisArg, boundArgs, argslen))
-        return false;
-
-    // Steps 9-10. Set length again, because NewNativeFunction/NewNativeConstructor
-    // sometimes truncates.
-    if (length != fun->nargs()) {
-        RootedValue lengthVal(cx, NumberValue(length));
-        if (!DefineProperty(cx, fun, cx->names().length, lengthVal, nullptr, nullptr,
-                            JSPROP_READONLY))
-        {
-            return false;
-        }
-    }
-
-    // Step 15.
-    args.rval().setObject(*fun);
     return true;
 }
 
@@ -1757,8 +1563,8 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FN(js_toString_str,   fun_toString,   0,0),
     JS_FN(js_apply_str,      fun_apply,      2,0),
     JS_FN(js_call_str,       fun_call,       1,0),
-    JS_FN("bind",            fun_bind,       1,0),
     JS_FN("isGenerator",     fun_isGenerator,0,0),
+    JS_SELF_HOSTED_FN("bind", "FunctionBind", 1,JSPROP_DEFINE_LATE),
     JS_FS_END
 };
 

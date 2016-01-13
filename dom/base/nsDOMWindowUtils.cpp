@@ -1031,6 +1031,24 @@ nsDOMWindowUtils::SendNativeMouseEvent(int32_t aScreenX,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeMouseMove(int32_t aScreenX,
+                                      int32_t aScreenY,
+                                      nsIDOMElement* aElement,
+                                      nsIObserver* aObserver)
+{
+  // get the widget to send the event to
+  nsCOMPtr<nsIWidget> widget = GetWidgetForElement(aElement);
+  if (!widget)
+    return NS_ERROR_FAILURE;
+
+  NS_DispatchToMainThread(NS_NewRunnableMethodWithArgs
+    <LayoutDeviceIntPoint, nsIObserver*>
+    (widget, &nsIWidget::SynthesizeNativeMouseMove,
+    LayoutDeviceIntPoint(aScreenX, aScreenY), aObserver));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SendNativeMouseScrollEvent(int32_t aScreenX,
                                              int32_t aScreenY,
                                              uint32_t aNativeMessage,

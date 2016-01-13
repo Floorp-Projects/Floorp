@@ -196,8 +196,8 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
         }
 
         /* Collect any typed array or shared typed array elements from this object. */
-        if (IsAnyTypedArray(pobj)) {
-            size_t len = AnyTypedArrayLength(pobj);
+        if (pobj->is<TypedArrayObject>()) {
+            size_t len = pobj->as<TypedArrayObject>().length();
             for (size_t i = 0; i < len; i++) {
                 if (!Enumerate(cx, pobj, INT_TO_JSID(i), /* enumerable = */ true, flags, ht, props))
                     return false;
@@ -782,7 +782,7 @@ CanCacheIterableObject(JSContext* cx, JSObject* obj)
     if (!CanCompareIterableObjectToCache(obj))
         return false;
     if (obj->isNative()) {
-        if (IsAnyTypedArray(obj) ||
+        if (obj->is<TypedArrayObject>() ||
             obj->hasUncacheableProto() ||
             obj->getOps()->enumerate ||
             obj->getClass()->enumerate ||

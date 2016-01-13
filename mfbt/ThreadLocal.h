@@ -95,6 +95,10 @@ class ThreadLocal
   };
 
 public:
+  ThreadLocal()
+    : mKey(0), mInited(false)
+  {}
+
   MOZ_WARN_UNUSED_RESULT inline bool init();
 
   inline T get() const;
