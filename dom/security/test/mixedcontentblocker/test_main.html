@@ -11,15 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=62178
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script>
-  var ph = SpecialPowers.Cc["@mozilla.org/plugin/host;1"]
-                        .getService(SpecialPowers.Ci.nsIPluginHost);
-  var tags = ph.getPluginTags();
-  for (var tag of tags) {
-    if (tag.name == "Test Plug-in") {
-      tag.enabledState = SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED;;
-    }
-  }
-
+  SpecialPowers.setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED, "Test Plug-in");
 
   var origBlockDisplay = SpecialPowers.getBoolPref("security.mixed_content.block_display_content");
   var origBlockActive = SpecialPowers.getBoolPref("security.mixed_content.block_active_content");
