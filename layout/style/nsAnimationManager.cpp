@@ -277,17 +277,6 @@ CSSAnimation::QueueEvents()
                                          this));
 }
 
-CommonAnimationManager*
-CSSAnimation::GetAnimationManager() const
-{
-  nsPresContext* context = GetPresContext();
-  if (!context) {
-    return nullptr;
-  }
-
-  return context->AnimationManager();
-}
-
 void
 CSSAnimation::UpdateTiming(SeekFlag aSeekFlag, SyncNotifyFlag aSyncNotifyFlag)
 {
@@ -352,26 +341,6 @@ nsAnimationManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
   return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
-void
-nsAnimationManager::CopyIsRunningOnCompositor(
-  KeyframeEffectReadOnly& aSourceEffect,
-  KeyframeEffectReadOnly& aDestEffect)
-{
-  nsCSSPropertySet sourceProperties;
-
-  for (AnimationProperty& property : aSourceEffect.Properties()) {
-    if (property.mIsRunningOnCompositor) {
-      sourceProperties.AddProperty(property.mProperty);
-    }
-  }
-
-  for (AnimationProperty& property : aDestEffect.Properties()) {
-    if (sourceProperties.HasProperty(property.mProperty)) {
-      property.mIsRunningOnCompositor = true;
-    }
-  }
-}
-
 nsIStyleRule*
 nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                        mozilla::dom::Element* aElement)
@@ -415,7 +384,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
   }
 
   if (collection) {
-    collection->mStyleRuleRefreshTime = TimeStamp();
     EffectSet* effectSet =
       EffectSet::GetEffectSet(aElement, aStyleContext->GetPseudoType());
     if (effectSet) {
@@ -477,13 +445,7 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
             oldEffect->Timing() != newEffect->Timing() ||
             oldEffect->Properties() != newEffect->Properties();
           oldEffect->SetTiming(newEffect->Timing());
-
-          // To preserve the mIsRunningOnCompositor value on each property,
-          // we copy it from the old effect to the new effect since, in the
-          // following step, we will completely clobber the properties on the
-          // old effect with the values on the new effect.
-          CopyIsRunningOnCompositor(*oldEffect, *newEffect);
-          oldEffect->Properties() = newEffect->Properties();
+          oldEffect->CopyPropertiesFrom(*newEffect);
         }
 
         // Handle changes in play state. If the animation is idle, however,
@@ -539,7 +501,6 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     }
   }
   collection->mAnimations.SwapElements(newAnimations);
-  collection->mStyleChanging = true;
 
   // Cancel removed animations
   for (size_t newAnimIdx = newAnimations.Length(); newAnimIdx-- != 0; ) {
@@ -550,8 +511,13 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
                                          aStyleContext->GetPseudoType(),
                                          aStyleContext);
 
-  TimeStamp refreshTime = mPresContext->RefreshDriver()->MostRecentRefresh();
-  collection->EnsureStyleRuleFor(refreshTime);
+  EffectCompositor::CascadeLevel cascadeLevel =
+    EffectCompositor::CascadeLevel::Animations;
+  mPresContext->EffectCompositor()
+              ->MaybeUpdateAnimationRule(aElement,
+                                         aStyleContext->GetPseudoType(),
+                                         cascadeLevel);
+
   // We don't actually dispatch the pending events now.  We'll either
   // dispatch them the next time we get a refresh driver notification
   // or the next time somebody calls
@@ -560,7 +526,10 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
     mPresContext->Document()->SetNeedStyleFlush();
   }
 
-  return GetAnimationRule(aElement, aStyleContext->GetPseudoType());
+  return mPresContext->EffectCompositor()
+                     ->GetAnimationRule(aElement,
+                                        aStyleContext->GetPseudoType(),
+                                        cascadeLevel);
 }
 
 void

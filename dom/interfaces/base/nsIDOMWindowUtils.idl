@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(3f3f2bf4-d411-44b2-b2f7-dee5948c4763)]
+[scriptable, uuid(7846c43d-e131-40a6-8417-3be2c7e11df1)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -590,6 +590,13 @@ interface nsIDOMWindowUtils : nsISupports {
                             in long aModifierFlags,
                             in nsIDOMElement aElement,
                             [optional] in nsIObserver aObserver);
+  /**
+   * See nsIWidget::SynthesizeNativeMouseMove and sendNativeMouseEvent
+   */
+  void sendNativeMouseMove(in long aScreenX,
+                           in long aScreenY,
+                           in nsIDOMElement aElement,
+                           [optional] in nsIObserver aObserver);
 
   /**
    * The values for sendNativeMouseScrollEvent's aAdditionalFlags.

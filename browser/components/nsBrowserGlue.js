@@ -13,9 +13,6 @@ const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
-                                  "resource://gre/modules/AppConstants.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "AboutHome",
                                   "resource:///modules/AboutHome.jsm");
 
@@ -28,16 +25,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "DirectoryLinksProvider",
 XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
                                   "resource://gre/modules/NewTabUtils.jsm");
 
-if(!AppConstants.RELEASE_BUILD) {
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
-                                    "resource:///modules/RemoteAboutNewTab.jsm");
-
-  XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
-                                    "resource:///modules/RemoteNewTabUtils.jsm");
-
-  XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
-                                    "resource:///modules/NewTabPrefsProvider.jsm");
-}
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
+                                  "resource:///modules/NewTabPrefsProvider.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                   "resource:///modules/UITour.jsm");
@@ -188,13 +177,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "LightweightThemeManager",
 XPCOMUtils.defineLazyModuleGetter(this, "ExtensionManagement",
                                   "resource://gre/modules/ExtensionManagement.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 
 XPCOMUtils.defineLazyServiceGetter(this, "AlertsService",
                                    "@mozilla.org/alerts-service;1", "nsIAlertsService");
-
-const ABOUT_NEWTAB = "about:newtab";
 
 const PREF_PLUGINS_NOTIFYUSER = "plugins.update.notifyUser";
 const PREF_PLUGINS_UPDATEURL  = "plugins.update.url";
@@ -778,12 +768,7 @@ BrowserGlue.prototype = {
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
     AboutNewTab.init();
 
-    if(!AppConstants.RELEASE_BUILD) {
-      RemoteNewTabUtils.init();
-      RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
-      RemoteAboutNewTab.init();
-      NewTabPrefsProvider.prefs.init();
-    }
+    NewTabPrefsProvider.prefs.init();
 
     SessionStore.init();
     BrowserUITelemetry.init();
@@ -1100,10 +1085,7 @@ BrowserGlue.prototype = {
     CustomizationTabPreloader.uninit();
     WebappManager.uninit();
 
-    if (!AppConstants.RELEASE_BUILD) {
-      RemoteAboutNewTab.uninit();
-      NewTabPrefsProvider.prefs.uninit();
-    }
+    NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
@@ -2480,50 +2462,6 @@ BrowserGlue.prototype = {
   _xpcom_factory: BrowserGlueServiceFactory,
 }
 
-// ------------------------------------
-// nsIAboutNewTabService implementation
-//-------------------------------------
-
-function AboutNewTabService()
-{
-  this._newTabURL = ABOUT_NEWTAB;
-  this._overridden = false;
-}
-
-AboutNewTabService.prototype = {
-  classID: Components.ID("{97eea4bb-db50-4ae0-9147-1e5ed55b4ed5}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutNewTabService]),
-
-  get newTabURL() {
-
-    if (!AppConstants.RELEASE_BUILD && Services.prefs.getBoolPref("browser.newtabpage.remote")) {
-      return "about:remote-newtab";
-    }
-
-    return this._newTabURL;
-  },
-
-  set newTabURL(aNewTabURL) {
-    if (aNewTabURL === ABOUT_NEWTAB) {
-      this.resetNewTabURL();
-      return;
-    }
-    this._newTabURL = aNewTabURL;
-    this._overridden = true;
-    Services.obs.notifyObservers(null, "newtab-url-changed", this._newTabURL);
-  },
-
-  get overridden() {
-    return this._overridden;
-  },
-
-  resetNewTabURL: function() {
-    this._newTabURL = ABOUT_NEWTAB;
-    this._overridden = false;
-    Services.obs.notifyObservers(null, "newtab-url-changed", this._newTabURL);
-   }
-};
-
 function ContentPermissionPrompt() {}
 
 ContentPermissionPrompt.prototype = {
@@ -3338,7 +3276,7 @@ var E10SAccessibilityCheck = {
   },
 };
 
-var components = [BrowserGlue, ContentPermissionPrompt, AboutNewTabService];
+var components = [BrowserGlue, ContentPermissionPrompt];
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory(components);
 
 

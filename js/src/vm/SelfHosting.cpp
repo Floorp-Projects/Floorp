@@ -275,7 +275,7 @@ intrinsic_MakeConstructible(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args[0].isObject());
     MOZ_ASSERT(args[0].toObject().is<JSFunction>());
     MOZ_ASSERT(args[0].toObject().as<JSFunction>().isSelfHostedBuiltin());
-    MOZ_ASSERT(args[1].isObject());
+    MOZ_ASSERT(args[1].isObjectOrNull());
 
     // Normal .prototype properties aren't enumerable.  But for this to clone
     // correctly, it must be enumerable.
@@ -302,6 +302,64 @@ intrinsic_MakeDefaultConstructor(JSContext* cx, unsigned argc, Value* vp)
     RootedFunction ctor(cx, &args[0].toObject().as<JSFunction>());
 
     ctor->nonLazyScript()->setIsDefaultClassConstructor();
+
+    args.rval().setUndefined();
+    return true;
+}
+
+/*
+ * Used to mark bound functions as such and make them constructible if the
+ * target is.
+ * Also sets the name and correct length, both of which are more costly to
+ * do in JS.
+ */
+static bool
+intrinsic_FinishBoundFunctionInit(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 4);
+    MOZ_ASSERT(IsCallable(args[1]));
+    MOZ_ASSERT(args[2].isNumber());
+    MOZ_ASSERT(args[3].isString());
+
+    RootedFunction bound(cx, &args[0].toObject().as<JSFunction>());
+    bound->setIsBoundFunction();
+    RootedObject targetObj(cx, &args[1].toObject());
+    MOZ_ASSERT(bound->getBoundFunctionTarget() == targetObj);
+    if (targetObj->isConstructor())
+        bound->setIsConstructor();
+
+    // 9.4.1.3 BoundFunctionCreate, steps 2-3,8.
+    RootedObject proto(cx);
+    GetPrototype(cx, targetObj, &proto);
+    if (bound->getProto() != proto) {
+        if (!SetPrototype(cx, bound, proto))
+            return false;
+    }
+
+    bound->setExtendedSlot(BOUND_FUN_LENGTH_SLOT, args[2]);
+    MOZ_ASSERT(!bound->hasGuessedAtom());
+    RootedAtom name(cx, AtomizeString(cx, args[3].toString()));
+    if (!name)
+        return false;
+    bound->setAtom(name);
+
+    args.rval().setUndefined();
+    return true;
+}
+
+static bool
+intrinsic_SetPrototype(JSContext *cx, unsigned argc, Value *vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[1].isObjectOrNull());
+
+    RootedObject obj(cx, &args[0].toObject());
+    RootedObject proto(cx, args[1].toObjectOrNull());
+    if (!SetPrototype(cx, obj, proto))
+        return false;
 
     args.rval().setUndefined();
     return true;
@@ -734,6 +792,26 @@ intrinsic_TypedArrayLength(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_PossiblyWrappedTypedArrayLength(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+
+    JSObject* obj = CheckedUnwrap(&args[0].toObject());
+
+    if (!obj) {
+        JS_ReportError(cx, "Permission denied to access object");
+        return false;
+    }
+
+    MOZ_ASSERT(obj->is<TypedArrayObject>());
+    uint32_t typedArrayLength = obj->as<TypedArrayObject>().length();
+    args.rval().setInt32(mozilla::AssertedCast<int32_t>(typedArrayLength));
+    return true;
+}
+
+static bool
 intrinsic_MoveTypedArrayElements(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1047,7 +1125,7 @@ CopyToDisjointArray(TypedArrayObject* target, uint32_t targetOffset, SharedMem<v
       }
 
       default:
-        MOZ_CRASH("setFromAnyTypedArray with a typed array with bogus type");
+        MOZ_CRASH("setFromTypedArray with a typed array with bogus type");
     }
 }
 
@@ -1221,6 +1299,26 @@ intrinsic_LocalTZA(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_ConstructFunction(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 2);
+    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
+    MOZ_ASSERT(args[1].toObject().is<ArrayObject>());
+
+    RootedArrayObject argsList(cx, &args[1].toObject().as<ArrayObject>());
+    uint32_t len = argsList->length();
+    ConstructArgs constructArgs(cx);
+    if (!constructArgs.init(len))
+        return false;
+    for (uint32_t index = 0; index < len; index++)
+        constructArgs[index].set(argsList->getDenseElement(index));
+
+    return Construct(cx, args[0], constructArgs, args.rval());
+}
+
+
+static bool
 intrinsic_IsConstructing(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -1238,7 +1336,7 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(IsAnyTypedArray(&args[0].toObject()));
+    MOZ_ASSERT(args[0].toObject().is<TypedArrayObject>());
 
     RootedObject object(cx, &args[0].toObject());
     JSProtoKey protoKey = StandardProtoKeyOrNull(object);
@@ -1445,7 +1543,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Date_now",                        date_now,                     0,0),
     JS_FN("std_Date_valueOf",                    date_valueOf,                 0,0),
 
-    JS_FN("std_Function_bind",                   fun_bind,                     1,0),
     JS_FN("std_Function_apply",                  fun_apply,                    2,0),
 
     JS_INLINABLE_FN("std_Math_floor",            math_floor,                   1,0, MathFloor),
@@ -1466,6 +1563,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_Object_getOwnPropertyNames",      obj_getOwnPropertyNames,      1,0),
     JS_FN("std_Object_getOwnPropertyDescriptor", obj_getOwnPropertyDescriptor, 2,0),
     JS_FN("std_Object_hasOwnProperty",           obj_hasOwnProperty,           1,0),
+    JS_FN("std_Object_setPrototypeOf",           intrinsic_SetPrototype,       2,0),
     JS_FN("std_Object_toString",                 obj_toString,                 0,0),
 
     JS_FN("std_Reflect_getPrototypeOf",          Reflect_getPrototypeOf,       1,0),
@@ -1489,7 +1587,6 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("std_WeakMap_get",                     WeakMap_get,                  2,0),
     JS_FN("std_WeakMap_set",                     WeakMap_set,                  2,0),
     JS_FN("std_WeakMap_delete",                  WeakMap_delete,               1,0),
-    JS_FN("std_WeakMap_clear",                   WeakMap_clear,                0,0),
 
     JS_FN("std_SIMD_Int8x16_extractLane",        simd_int8x16_extractLane,     2,0),
     JS_FN("std_SIMD_Int16x8_extractLane",        simd_int16x8_extractLane,     2,0),
@@ -1512,15 +1609,17 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToPropertyKey",           intrinsic_ToPropertyKey,           1,0),
     JS_INLINABLE_FN("IsCallable",    intrinsic_IsCallable,              1,0, IntrinsicIsCallable),
     JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
-    JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
+    JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
+    JS_FN("_ConstructFunction",      intrinsic_ConstructFunction,       2,0),
     JS_FN("ThrowRangeError",         intrinsic_ThrowRangeError,         4,0),
     JS_FN("ThrowTypeError",          intrinsic_ThrowTypeError,          4,0),
     JS_FN("ThrowSyntaxError",        intrinsic_ThrowSyntaxError,        4,0),
     JS_FN("AssertionFailed",         intrinsic_AssertionFailed,         1,0),
-    JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
+    JS_FN("OwnPropertyKeys",         intrinsic_OwnPropertyKeys,         1,0),
     JS_FN("MakeDefaultConstructor",  intrinsic_MakeDefaultConstructor,  2,0),
     JS_FN("_ConstructorForTypedArray", intrinsic_ConstructorForTypedArray, 1,0),
     JS_FN("DecompileArg",            intrinsic_DecompileArg,            2,0),
+    JS_FN("_FinishBoundFunctionInit", intrinsic_FinishBoundFunctionInit, 4,0),
     JS_FN("RuntimeDefaultLocale",    intrinsic_RuntimeDefaultLocale,    0,0),
     JS_FN("LocalTZA",                intrinsic_LocalTZA,                0,0),
 
@@ -1611,6 +1710,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength,     1,0,
                     IntrinsicTypedArrayLength),
+    JS_FN("PossiblyWrappedTypedArrayLength", intrinsic_PossiblyWrappedTypedArrayLength, 1, 0),
 
     JS_FN("MoveTypedArrayElements",  intrinsic_MoveTypedArrayElements,  4,0),
     JS_FN("SetFromTypedArrayApproach",intrinsic_SetFromTypedArrayApproach, 4, 0),
@@ -1701,9 +1801,9 @@ static const JSFunctionSpec intrinsic_functions[] = {
                     IsRegExpObject),
     JS_FN("CallRegExpMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<RegExpObject>>, 2,0),
-    JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 5,0,
+    JS_INLINABLE_FN("RegExpMatcher", RegExpMatcher, 4,0,
                     RegExpMatcher),
-    JS_INLINABLE_FN("RegExpTester", RegExpTester, 5,0,
+    JS_INLINABLE_FN("RegExpTester", RegExpTester, 4,0,
                     RegExpTester),
 
     // See builtin/RegExp.h for descriptions of the regexp_* functions.
@@ -2143,7 +2243,6 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     // JSFunction::generatorKind can't handle lazy self-hosted functions, so we make sure there
     // aren't any.
     MOZ_ASSERT(!sourceFun->isGenerator());
-    MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
     MOZ_ASSERT(targetFun->isExtended());
     MOZ_ASSERT(targetFun->isInterpretedLazy());
     MOZ_ASSERT(targetFun->isSelfHostedBuiltin());
@@ -2162,6 +2261,20 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
     if (!CloneScriptIntoFunction(cx, enclosingScope, targetFun, sourceScript))
         return false;
     MOZ_ASSERT(!targetFun->isInterpretedLazy());
+
+    // ...rest args don't count as formal args, but are included in nargs. We don't,
+    // however, want to introduce a flag "has rest args" in the declaration of
+    // self-hosted functions, so we fix up the flag and the nargs value here.
+    // Since the target function might have been cloned and relazified before,
+    // this only happens if the target function isn't marked as having rest
+    // args.
+    MOZ_ASSERT(sourceFun->nargs() - sourceFun->hasRest() ==
+               targetFun->nargs() - targetFun->hasRest());
+    MOZ_ASSERT_IF(targetFun->hasRest(), sourceFun->hasRest());
+    if (sourceFun->hasRest() && !targetFun->hasRest()) {
+        targetFun->setHasRest();
+        targetFun->setArgCount(sourceFun->nargs());
+    }
 
     // The target function might have been relazified after its flags changed.
     targetFun->setFlags(targetFun->flags() | sourceFun->flags());

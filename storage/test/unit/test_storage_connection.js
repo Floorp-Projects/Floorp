@@ -7,68 +7,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Test Functions
 
-function asyncClone(db, readOnly) {
-  let deferred = Promise.defer();
-  db.asyncClone(readOnly, function (status, db2) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve(db2);
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function asyncClose(db) {
-  let deferred = Promise.defer();
-  db.asyncClose(function (status) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve();
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function openAsyncDatabase(file, options) {
-  let deferred = Promise.defer();
-  let properties;
-  if (options) {
-    properties = Cc["@mozilla.org/hash-property-bag;1"].
-        createInstance(Ci.nsIWritablePropertyBag);
-    for (let k in options) {
-      properties.setProperty(k, options[k]);
-    }
-  }
-  getService().openAsyncDatabase(file, properties, function (status, db) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function executeAsync(statement, onResult) {
-  let deferred = Promise.defer();
-  statement.executeAsync({
-    handleError: function (error) {
-      deferred.reject(error);
-    },
-    handleResult: function (result) {
-      if (onResult) {
-        onResult(result);
-      }
-    },
-    handleCompletion: function (result) {
-      deferred.resolve(result);
-    }
-  });
-  return deferred.promise;
-}
-
 add_task(function* test_connectionReady_open() {
   // there doesn't seem to be a way for the connection to not be ready (unless
   // we close it with mozIStorageConnection::Close(), but we don't for this).

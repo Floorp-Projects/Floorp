@@ -7,6 +7,8 @@
 #ifndef mozilla_logging_h
 #define mozilla_logging_h
 
+#include <string.h>
+
 #include "prlog.h"
 
 #include "mozilla/Assertions.h"
@@ -53,6 +55,8 @@ LogLevel ToLogLevel(int32_t aLevel);
 class LogModule
 {
 public:
+  ~LogModule() { ::free(mName); }
+
   /**
    * Retrieves the module with the given name. If it does not already exist
    * it will be created.
@@ -84,14 +88,28 @@ public:
    */
   void SetLevel(LogLevel level) { mLevel = level; }
 
+  /**
+   * Print a log message for this module.
+   */
+  void Printv(LogLevel aLevel, const char* aFmt, va_list aArgs) const;
+
+  /**
+   * Retrieves the module name.
+   */
+  const char* Name() const { return mName; }
+
 private:
   friend class LogModuleManager;
 
-  explicit LogModule(LogLevel aLevel) : mLevel(aLevel) {}
+  explicit LogModule(const char* aName, LogLevel aLevel)
+    : mName(strdup(aName)), mLevel(aLevel)
+  {
+  }
 
   LogModule(LogModule&) = delete;
   LogModule& operator=(const LogModule&) = delete;
 
+  char* mName;
   Atomic<LogLevel, Relaxed> mLevel;
 };
 
@@ -143,21 +161,43 @@ inline bool log_test(const PRLogModuleInfo* module, LogLevel level) {
   return module && module->level >= static_cast<int>(level);
 }
 
+/**
+ * A rather inefficient wrapper for PR_LogPrint that always allocates.
+ * PR_LogModuleInfo is deprecated so it's not worth the effort to do
+ * any better.
+ */
+void log_print(const PRLogModuleInfo* aModule,
+                      LogLevel aLevel,
+                      const char* aFmt, ...);
+
 inline bool log_test(const LogModule* module, LogLevel level) {
   MOZ_ASSERT(level != LogLevel::Disabled);
   return module && module->ShouldLog(level);
 }
 
+#if !defined(MOZILLA_XPCOMRT_API)
+void log_print(const LogModule* aModule,
+               LogLevel aLevel,
+               const char* aFmt, ...);
+#else
+inline void log_print(const LogModule* aModule, LogLevel aLevel, const char* aFmt, ...) {}
+#endif
 } // namespace detail
 
 } // namespace mozilla
 
+
 #define MOZ_LOG_TEST(_module,_level) mozilla::detail::log_test(_module, _level)
+
+// Helper macro used convert MOZ_LOG's third parameter, |_args|, from a
+// parenthesized form to a varargs form. For example:
+//   ("%s", "a message") => "%s", "a message"
+#define MOZ_LOG_EXPAND_ARGS(...) __VA_ARGS__
 
 #define MOZ_LOG(_module,_level,_args)     \
   PR_BEGIN_MACRO             \
     if (MOZ_LOG_TEST(_module,_level)) { \
-      PR_LogPrint _args;         \
+      mozilla::detail::log_print(_module, _level, MOZ_LOG_EXPAND_ARGS _args);         \
     }                     \
   PR_END_MACRO
 

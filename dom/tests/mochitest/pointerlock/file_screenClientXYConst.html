@@ -88,9 +88,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
           div.removeEventListener("mousemove", moveUnlocked, false);
           div.addEventListener("mousemove", moveLocked, false);
           divRect = div.getBoundingClientRect();
-          synthesizeMouse(div, (divRect.width / 4) * 3, (divRect.height / 4) * 3, {
-            type: "mousemove"
-          }, window);
+          synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
+                                    (divRect.height / 4) * 3);
         }
       }, false);
 
@@ -105,11 +104,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             setTimeout(fullscreenchange, 250);
             return;
           }
-          // Synthesize mouse event asynchronously
-          SimpleTest.executeSoon(function () {
+          synthesizeNativeMouseMove(div, 0, 0, () => {
             div.addEventListener("mousemove", moveUnlocked, false);
-            synthesizeMouseAtCenter(div, { type: "mousemove" }, window);
-          }, 0);
+            divRect = div.getBoundingClientRect();
+            synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
+          });
         } else {
           runTests();
           SimpleTest.finish();

@@ -158,12 +158,6 @@ class BaselineFrame
             return evalScript();
         return ScriptFromCalleeToken(calleeToken());
     }
-    JSFunction* fun() const {
-        return CalleeTokenToFunction(calleeToken());
-    }
-    JSFunction* maybeFun() const {
-        return isFunctionFrame() ? fun() : nullptr;
-    }
     JSFunction* callee() const {
         return CalleeTokenToFunction(calleeToken());
     }
@@ -237,8 +231,8 @@ class BaselineFrame
         MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return *evalNewTargetAddress();
-        if (fun()->isArrow())
-            return fun()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
+        if (callee()->isArrow())
+            return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
         if (isConstructing())
             return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                              BaselineFrame::Size() +

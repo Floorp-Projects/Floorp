@@ -273,6 +273,14 @@ private:
     void MarkDirty();
     void NotifyUserPrefsMayOverrideSystemSettings();
 
+    // On some environments, SystemParametersInfo() may be hooked by touchpad
+    // utility or something.  In such case, when user changes active pointing
+    // device to another one, the result of SystemParametersInfo() may be
+    // changed without WM_SETTINGCHANGE message.  For avoiding this trouble,
+    // we need to modify cache of system settings at every wheel message
+    // handling if we meet known device whose utility may hook the API.
+    void TrustedScrollSettingsDriver(bool aIsVertical);
+
     int32_t GetScrollAmount(bool aForVertical) const
     {
       MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
@@ -288,8 +296,21 @@ private:
 
   private:
     bool mInitialized;
+    // The result of SystemParametersInfo() may not be reliable since it may
+    // be hooked.  So, if the values are initialized with prefs, we can trust
+    // the value.  Following mIsReliableScroll* are set true when mScroll* are
+    // initialized with prefs.
+    bool mIsReliableScrollLines;
+    bool mIsReliableScrollChars;
+
     int32_t mScrollLines;
     int32_t mScrollChars;
+
+    // Returns true if cached value is changed.
+    bool InitScrollLines();
+    bool InitScrollChars();
+
+    void RefreshCache(bool aForVertical);
   };
 
   SystemSettings mSystemSettings;
@@ -305,6 +326,18 @@ private:
     {
       Init();
       return mScrollMessageHandledAsWheelMessage;
+    }
+
+    bool IsSystemSettingCacheEnabled()
+    {
+      Init();
+      return mEnableSystemSettingCache;
+    }
+
+    bool IsSystemSettingCacheForciblyEnabled()
+    {
+      Init();
+      return mForceEnableSystemSettingCache;
     }
 
     int32_t GetOverriddenVerticalScrollAmout()
@@ -335,6 +368,8 @@ private:
 
     bool mInitialized;
     bool mScrollMessageHandledAsWheelMessage;
+    bool mEnableSystemSettingCache;
+    bool mForceEnableSystemSettingCache;
     int32_t mOverriddenVerticalScrollAmount;
     int32_t mOverriddenHorizontalScrollAmount;
     int32_t mMouseScrollTransactionTimeout;
@@ -408,6 +443,39 @@ public:
 
   class Device {
   public:
+    // SynTP is a touchpad driver of Synaptics.
+    class SynTP
+    {
+    public:
+      static bool IsDriverInstalled()
+      {
+        return sMajorVersion != 0;
+      }
+      /**
+       * GetDriverMajorVersion() returns the installed driver's major version.
+       * If SynTP driver isn't installed, this returns 0.
+       */
+      static int32_t GetDriverMajorVersion()
+      {
+        return sMajorVersion;
+      }
+      /**
+       * GetDriverMinorVersion() returns the installed driver's minor version.
+       * If SynTP driver isn't installed, this returns -1.
+       */
+      static int32_t GetDriverMinorVersion()
+      {
+        return sMinorVersion;
+      }
+
+      static void Init();
+
+    private:
+      static bool sInitialized;
+      static int32_t sMajorVersion;
+      static int32_t sMinorVersion;
+    };
+
     class Elantech {
     public:
       /**
@@ -446,6 +514,39 @@ public:
       static bool sUsePinchHack;
       static DWORD sZoomUntil;
     }; // class Elantech
+
+    // Apoint is a touchpad driver of Alps.
+    class Apoint
+    {
+    public:
+      static bool IsDriverInstalled()
+      {
+        return sMajorVersion != 0;
+      }
+      /**
+       * GetDriverMajorVersion() returns the installed driver's major version.
+       * If Apoint driver isn't installed, this returns 0.
+       */
+      static int32_t GetDriverMajorVersion()
+      {
+        return sMajorVersion;
+      }
+      /**
+       * GetDriverMinorVersion() returns the installed driver's minor version.
+       * If Apoint driver isn't installed, this returns -1.
+       */
+      static int32_t GetDriverMinorVersion()
+      {
+        return sMinorVersion;
+      }
+
+      static void Init();
+
+    private:
+      static bool sInitialized;
+      static int32_t sMajorVersion;
+      static int32_t sMinorVersion;
+    };
 
     class TrackPoint {
     public:

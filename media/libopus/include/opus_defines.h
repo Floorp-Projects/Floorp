@@ -523,10 +523,19 @@ extern "C" {
   * @hideinitializer */
 #define OPUS_GET_DTX(x) OPUS_GET_DTX_REQUEST, __opus_check_int_ptr(x)
 /** Configures the depth of signal being encoded.
+  *
   * This is a hint which helps the encoder identify silence and near-silence.
+  * It represents the number of significant bits of linear intensity below
+  * which the signal contains ignorable quantization or other noise.
+  *
+  * For example, OPUS_SET_LSB_DEPTH(14) would be an appropriate setting
+  * for G.711 u-law input. OPUS_SET_LSB_DEPTH(16) would be appropriate
+  * for 16-bit linear pcm input with opus_encode_float().
+  *
   * When using opus_encode() instead of opus_encode_float(), or when libopus
   * is compiled for fixed-point, the encoder uses the minimum of the value
   * set here and the value 16.
+  *
   * @see OPUS_GET_LSB_DEPTH
   * @param[in] x <tt>opus_int32</tt>: Input precision in bits, between 8 and 24
   *                                   (default: 24).

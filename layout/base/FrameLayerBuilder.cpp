@@ -265,10 +265,7 @@ FrameLayerBuilder::DisplayItemData::ClearAnimationCompositorState()
   for (nsIFrame* frame : mFrameList) {
     nsCSSProperty prop = mDisplayItemKey == nsDisplayItem::TYPE_TRANSFORM ?
       eCSSProperty_transform : eCSSProperty_opacity;
-    frame->PresContext()->AnimationManager()->
-      ClearIsRunningOnCompositor(frame, prop);
-    frame->PresContext()->TransitionManager()->
-      ClearIsRunningOnCompositor(frame, prop);
+    EffectCompositor::ClearIsRunningOnCompositor(frame, prop);
   }
 }
 
