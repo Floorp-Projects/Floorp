@@ -3131,7 +3131,10 @@ bool AsyncPanZoomController::IsCurrentlyCheckerboarding() const {
   return true;
 }
 
-void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint) {
+void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetrics,
+                                                 bool aIsFirstPaint,
+                                                 bool aThisLayerTreeUpdated)
+{
   APZThreadUtils::AssertOnCompositorThread();
 
   ReentrantMonitorAutoEnter lock(mMonitor);
@@ -3140,15 +3143,28 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   mLastContentPaintMetrics = aLayerMetrics;
 
   mFrameMetrics.SetScrollParentId(aLayerMetrics.GetScrollParentId());
-  APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
+  APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d, aThisLayerTreeUpdated=%d",
+    this, aIsFirstPaint, aThisLayerTreeUpdated);
 
   if (mCheckerboardEvent) {
     std::string str;
-    if (!aLayerMetrics.GetPaintRequestTime().IsNull()) {
-      TimeDuration paintTime = TimeStamp::Now() - aLayerMetrics.GetPaintRequestTime();
-      std::stringstream info;
-      info << " painttime " << paintTime.ToMilliseconds();
-      str = info.str();
+    if (aThisLayerTreeUpdated) {
+      if (!aLayerMetrics.GetPaintRequestTime().IsNull()) {
+        // Note that we might get the paint request time as non-null, but with
+        // aThisLayerTreeUpdated false. That can happen if we get a layer transaction
+        // from a different process right after we get the layer transaction with
+        // aThisLayerTreeUpdated == true. In this case we want to ignore the
+        // paint request time because it was already dumped in the previous layer
+        // transaction.
+        TimeDuration paintTime = TimeStamp::Now() - aLayerMetrics.GetPaintRequestTime();
+        std::stringstream info;
+        info << " painttime " << paintTime.ToMilliseconds();
+        str = info.str();
+      } else {
+        // This might be indicative of a wasted paint particularly if it happens
+        // during a checkerboard event.
+        str = " (this layertree updated)";
+      }
     }
     mCheckerboardEvent->UpdateRendertraceProperty(
         CheckerboardEvent::Page, aLayerMetrics.GetScrollableRect());
@@ -3190,7 +3206,7 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   // TODO if we're in a drag and scrollOffsetUpdated is set then we want to
   // ignore it
 
-  if (aIsFirstPaint || isDefault) {
+  if ((aIsFirstPaint && aThisLayerTreeUpdated) || isDefault) {
     // Initialize our internal state to something sane when the content
     // that was just painted is something we knew nothing about previously
     CancelAnimation();
