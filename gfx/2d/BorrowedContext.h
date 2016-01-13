@@ -124,6 +124,8 @@ public:
   Drawable GetDrawable() const { return mDrawable; }
   Screen *GetScreen() const { return mScreen; }
   Visual *GetVisual() const { return mVisual; }
+  IntSize GetSize() const { return mSize; }
+  Point GetOffset() const { return mOffset; }
 
   XRenderPictFormat* GetXRenderFormat() const { return mXRenderFormat; }
 
@@ -134,6 +136,8 @@ private:
   Screen *mScreen;
   Visual *mVisual;
   XRenderPictFormat *mXRenderFormat;
+  IntSize mSize;
+  Point mOffset;
 };
 #endif
 
