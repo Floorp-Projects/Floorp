@@ -101,6 +101,10 @@ WebGLContextOptions::WebGLContextOptions()
 
 WebGLContext::WebGLContext()
     : WebGLContextUnchecked(nullptr)
+    , mBufferFetchingIsVerified(false)
+    , mBufferFetchingHasPerVertex(false)
+    , mMaxFetchedVertices(0)
+    , mMaxFetchedInstances(0)
     , mBypassShaderValidation(false)
     , mGLMaxSamples(1)
     , mNeedsFakeNoAlpha(false)
@@ -113,6 +117,12 @@ WebGLContext::WebGLContext()
     mShouldPresent = true;
     mResetLayer = true;
     mOptionsFrozen = false;
+    mMinCapability = false;
+    mDisableExtensions = false;
+    mIsMesa = false;
+    mEmitContextLostErrorOnce = false;
+    mWebGLError = 0;
+    mUnderlyingGLError = 0;
 
     mActiveTexture = 0;
 
@@ -127,6 +137,17 @@ WebGLContext::WebGLContext()
     mFakeVertexAttrib0BufferObjectSize = 0;
     mFakeVertexAttrib0BufferObject = 0;
     mFakeVertexAttrib0BufferStatus = WebGLVertexAttrib0Status::Default;
+
+    mStencilRefFront = 0;
+    mStencilRefBack = 0;
+    mStencilValueMaskFront = 0;
+    mStencilValueMaskBack = 0;
+    mStencilWriteMaskFront = 0;
+    mStencilWriteMaskBack = 0;
+    mDepthWriteMask = 0;
+    mStencilClearValue = 0;
+    mDepthClearValue = 0;
+    mContextLostErrorSet = false;
 
     mViewportX = 0;
     mViewportY = 0;

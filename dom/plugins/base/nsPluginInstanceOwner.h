@@ -295,9 +295,12 @@ private:
 #if defined(XP_WIN)
   nsIWidget* GetContainingWidgetIfOffset();
   already_AddRefed<mozilla::TextComposition> GetTextComposition();
-
+  void HandleNoConsumedCompositionMessage(
+    mozilla::WidgetCompositionEvent* aCompositionEvent,
+    const NPEvent* aPluginEvent);
   bool mGotCompositionData;
   bool mSentStartComposition;
+  bool mPluginDidNotHandleIMEComposition;
 #endif
  
   nsPluginNativeWindow       *mPluginWindow;

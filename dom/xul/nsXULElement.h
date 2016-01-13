@@ -249,7 +249,7 @@ public:
 
     void TraceScriptObject(JSTracer* aTrc)
     {
-        JS::TraceNullableEdge(aTrc, &mScriptObject, "active window XUL prototype script");
+        JS::TraceEdge(aTrc, &mScriptObject, "active window XUL prototype script");
     }
 
     void Trace(const TraceCallbacks& aCallbacks, void* aClosure)

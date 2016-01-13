@@ -19,30 +19,16 @@ const ServerSocket = CC("@mozilla.org/network/server-socket;1",
     "nsIServerSocket",
     "initSpecialConnection");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 function MarionetteComponent() {
   this.loaded_ = false;
   this.observerService = Services.obs;
-
-  this.logger = Log.repository.getLogger("Marionette");
-  this.logger.level = Log.Level.Trace;
-  let dumper = false;
-#ifdef DEBUG
-  dumper = true;
-#endif
-#ifdef MOZ_B2G
-  dumper = true;
-#endif
-  try {
-    if (dumper || Services.prefs.getBoolPref(LOG_PREF)) {
-      let formatter = new Log.BasicFormatter();
-      this.logger.addAppender(new Log.DumpAppender(formatter));
-    }
-  } catch(e) {}
+  this.logger = this.setupLogger_(this.determineLoggingLevel_());
 }
 
 MarionetteComponent.prototype = {
@@ -56,7 +42,32 @@ MarionetteComponent.prototype = {
   ],
   enabled: false,
   finalUiStartup: false,
-  server: null
+  server: null,
+};
+
+MarionetteComponent.prototype.setupLogger_ = function(level) {
+  let log = Log.repository.getLogger("Marionette");
+  log.level = level;
+  log.addAppender(new Log.DumpAppender());
+  return log;
+};
+
+MarionetteComponent.prototype.determineLoggingLevel_ = function() {
+  let level = Log.Level.Info;
+#ifdef DEBUG
+  level = Log.Level.Trace;
+#endif
+
+  // marionette.logging pref can override default
+  // with an entry from the Log.Level enum
+  if (Preferences.has(LOG_PREF)) {
+    let s = Preferences.get(LOG_PREF);
+    s = s.toLowerCase();
+    s = s.charAt(0).toUpperCase() + s.slice(1);
+    level = Log.Level[s];
+  }
+
+  return level;
 };
 
 MarionetteComponent.prototype.onSocketAccepted = function(
@@ -74,7 +85,7 @@ MarionetteComponent.prototype.handle = function(cmdLine) {
   // if the CLI is there then lets do work otherwise nothing to see
   if (cmdLine.handleFlag("marionette", false)) {
     this.enabled = true;
-    this.logger.info("Marionette enabled via command-line flag");
+    this.logger.debug("Marionette enabled via command-line flag");
     this.init();
   }
 };
@@ -90,7 +101,7 @@ MarionetteComponent.prototype.observe = function(subj, topic, data) {
         this.enabled = Services.prefs.getBoolPref(ENABLED_PREF);
       } catch(e) {}
       if (this.enabled) {
-        this.logger.info("Marionette enabled via build flag and pref");
+        this.logger.debug("Marionette enabled via build flag and pref");
 
         // We want to suppress the modal dialog that's shown
         // when starting up in safe-mode to enable testing.

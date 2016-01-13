@@ -2020,13 +2020,9 @@ ScrollFrameHelper::NotifyPluginFrames(AsyncScrollEventType aEvent)
     return;
   }
   if (XRE_IsContentProcess()) {
-    // Ignore 'inner' dom events triggered by apz transformations
-    if (mAsyncScrollEvent == BEGIN_APZ && aEvent != END_APZ) {
-      return;
-    }
     if (aEvent != mAsyncScrollEvent) {
       nsPresContext* presContext = mOuter->PresContext();
-      bool begin = (aEvent == BEGIN_APZ || aEvent == BEGIN_DOM);
+      bool begin = (aEvent == BEGIN_DOM);
       presContext->Document()->EnumerateActivityObservers(NotifyPluginFramesCallback,
                                                           (void*)begin);
       presContext->Document()->EnumerateSubDocuments(NotifyPluginSubframesCallback,

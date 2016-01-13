@@ -1044,7 +1044,7 @@ class ProcessedMediaStream : public MediaStream
 {
 public:
   explicit ProcessedMediaStream(DOMMediaStream* aWrapper)
-    : MediaStream(aWrapper), mAutofinish(false)
+    : MediaStream(aWrapper), mAutofinish(false), mCycleMarker(0)
   {}
 
   // Control API.

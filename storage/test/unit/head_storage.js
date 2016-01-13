@@ -41,6 +41,17 @@ function getFakeDB()
   return do_get_file("fakeDB.sqlite");
 }
 
+/**
+ * Delete the test database file.
+ */
+function deleteTestDB()
+{
+  print("*** Storage Tests: Trying to remove file!");
+  var dbFile = getTestDB();
+  if (dbFile.exists())
+    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+}
+
 function cleanup()
 {
   // close the connection
@@ -52,10 +63,7 @@ function cleanup()
   gDBConn = null;
 
   // removing test db
-  print("*** Storage Tests: Trying to remove file!");
-  var dbFile = getTestDB();
-  if (dbFile.exists())
-    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+  deleteTestDB();
 }
 
 /**
@@ -80,10 +88,7 @@ function asyncCleanup()
   gDBConn = null;
 
   // removing test db
-  print("*** Storage Tests: Trying to remove file!");
-  var dbFile = getTestDB();
-  if (dbFile.exists())
-    try { dbFile.remove(false); } catch (e) { /* stupid windows box */ }
+  deleteTestDB();
 }
 
 function getService()
@@ -262,5 +267,107 @@ function getTableRowCount(aTableName)
   return currentRows;
 }
 
-cleanup();
+////////////////////////////////////////////////////////////////////////////////
+//// Promise-Returning Functions
 
+function asyncClone(db, readOnly) {
+  let deferred = Promise.defer();
+  db.asyncClone(readOnly, function (status, db2) {
+    if (Components.isSuccessCode(status)) {
+      deferred.resolve(db2);
+    } else {
+      deferred.reject(status);
+    }
+  });
+  return deferred.promise;
+}
+
+function asyncClose(db) {
+  let deferred = Promise.defer();
+  db.asyncClose(function (status) {
+    if (Components.isSuccessCode(status)) {
+      deferred.resolve();
+    } else {
+      deferred.reject(status);
+    }
+  });
+  return deferred.promise;
+}
+
+function openAsyncDatabase(file, options) {
+  let deferred = Promise.defer();
+  let properties;
+  if (options) {
+    properties = Cc["@mozilla.org/hash-property-bag;1"].
+        createInstance(Ci.nsIWritablePropertyBag);
+    for (let k in options) {
+      properties.setProperty(k, options[k]);
+    }
+  }
+  getService().openAsyncDatabase(file, properties, function (status, db) {
+    if (Components.isSuccessCode(status)) {
+      deferred.resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
+    } else {
+      deferred.reject(status);
+    }
+  });
+  return deferred.promise;
+}
+
+function executeAsync(statement, onResult) {
+  let deferred = Promise.defer();
+  statement.executeAsync({
+    handleError: function (error) {
+      deferred.reject(error);
+    },
+    handleResult: function (result) {
+      if (onResult) {
+        onResult(result);
+      }
+    },
+    handleCompletion: function (result) {
+      deferred.resolve(result);
+    }
+  });
+  return deferred.promise;
+}
+
+function executeMultipleStatementsAsync(db, statements, onResult) {
+  let deferred = Promise.defer();
+  db.executeAsync(statements, statements.length, {
+    handleError: function (error) {
+      deferred.reject(error);
+    },
+    handleResult: function (result) {
+      if (onResult) {
+        onResult(result);
+      }
+    },
+    handleCompletion: function (result) {
+      deferred.resolve(result);
+    }
+  });
+  return deferred.promise;
+}
+
+function executeSimpleSQLAsync(db, query, onResult) {
+  let deferred = Promise.defer();
+  db.executeSimpleSQLAsync(query, {
+    handleError(error) {
+      deferred.reject(error);
+    },
+    handleResult(result) {
+      if (onResult) {
+        onResult(result);
+      } else {
+        do_throw("No results were expected");
+      }
+    },
+    handleCompletion(result) {
+      deferred.resolve(result);
+    }
+  });
+  return deferred.promise;
+}
+
+cleanup();

@@ -1693,7 +1693,7 @@ CustomizeMode.prototype = {
     let draggedWrapper = document.getElementById("wrapper-" + draggedItemId);
     let originArea = this._getCustomizableParent(draggedWrapper);
     if (this._dragSizeMap) {
-      this._dragSizeMap.clear();
+      this._dragSizeMap = new WeakMap();
     }
     // Do nothing if the target area or origin area are not customizable.
     if (!targetArea || !originArea) {
