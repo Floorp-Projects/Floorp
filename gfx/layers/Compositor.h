@@ -532,8 +532,6 @@ protected:
 
   ScreenRotation mScreenRotation;
 
-  virtual LayoutDeviceIntSize GetWidgetSize() const = 0;
-
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
 
