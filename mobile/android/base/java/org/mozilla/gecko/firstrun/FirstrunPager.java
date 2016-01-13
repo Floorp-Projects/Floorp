@@ -109,6 +109,9 @@ public class FirstrunPager extends ViewPager {
         });
 
         animateLoad();
+
+        // Record telemetry for first onboarding panel, for baseline.
+        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.PANEL, "onboarding.0");
     }
 
     public void cleanup() {
@@ -155,7 +158,8 @@ public class FirstrunPager extends ViewPager {
         public Fragment getItem(int i) {
             Fragment fragment = this.fragments[i];
             if (fragment == null) {
-                fragment = Fragment.instantiate(context, panels.get(i).getClassname());
+                FirstrunPagerConfig.FirstrunPanelConfig panelConfig = panels.get(i);
+                fragment = Fragment.instantiate(context, panelConfig.getClassname(), panelConfig.getArgs());
                 ((FirstrunPanel) fragment).setPagerNavigation(pagerNavigation);
                 fragments[i] = fragment;
             }
