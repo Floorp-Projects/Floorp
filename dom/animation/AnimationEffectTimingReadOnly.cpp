@@ -9,6 +9,18 @@
 
 namespace mozilla {
 
+TimingParams&
+TimingParams::operator=(const dom::AnimationEffectTimingProperties& aRhs)
+{
+  mDuration = aRhs.mDuration;
+  mDelay = TimeDuration::FromMilliseconds(aRhs.mDelay);
+  mIterations = aRhs.mIterations;
+  mDirection = aRhs.mDirection;
+  mFill = aRhs.mFill;
+
+  return *this;
+}
+
 bool
 TimingParams::operator==(const TimingParams& aOther) const
 {

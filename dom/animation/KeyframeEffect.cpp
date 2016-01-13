@@ -643,27 +643,15 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
 KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
 {
-  TimingParams animationTiming;
+  TimingParams timing;
 
   if (aOptions.IsKeyframeEffectOptions()) {
-    const KeyframeEffectOptions& opt = aOptions.GetAsKeyframeEffectOptions();
-
-    animationTiming.mDuration = opt.mDuration;
-    animationTiming.mDelay = TimeDuration::FromMilliseconds(opt.mDelay);
-    animationTiming.mIterations = opt.mIterations;
-    animationTiming.mDirection = opt.mDirection;
-    animationTiming.mFill = opt.mFill;
+    timing = aOptions.GetAsKeyframeEffectOptions();
   } else {
-    double dur = aOptions.IsUnrestrictedDouble() ?
-                 aOptions.GetAsUnrestrictedDouble() :
-                 0.0f;
-    animationTiming.mDuration.SetAsUnrestrictedDouble() = dur;
-    animationTiming.mDelay = TimeDuration(0);
-    animationTiming.mIterations = 1.0f;
-    animationTiming.mDirection = PlaybackDirection::Normal;
-    animationTiming.mFill = FillMode::None;
+    timing.mDuration.SetAsUnrestrictedDouble() =
+      aOptions.GetAsUnrestrictedDouble();
   }
-  return animationTiming;
+  return timing;
 }
 
 /**
