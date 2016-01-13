@@ -592,7 +592,7 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
     // interval but if we end up sampling them outside that range (for
     // example, while they are waiting to be removed) we currently just
     // assume that we should fill.
-    timing.mFillMode = dom::FillMode::Both;
+    timing.mFill = dom::FillMode::Both;
 
     ComputedTiming computedTiming =
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(

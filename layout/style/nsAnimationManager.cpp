@@ -631,7 +631,7 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     timing.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
     timing.mIterations = src.GetIterationCount();
     timing.mDirection = src.GetDirection();
-    timing.mFillMode = src.GetFillMode();
+    timing.mFill = src.GetFillMode();
 
     RefPtr<KeyframeEffectReadOnly> destEffect =
       new KeyframeEffectReadOnly(mPresContext->Document(), aTarget,
