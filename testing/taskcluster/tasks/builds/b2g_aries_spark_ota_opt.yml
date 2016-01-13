@@ -7,12 +7,12 @@ task:
   metadata:
     name: '[TC] B2G Aries OTA (user)'
   scopes:
-    - 'docker-worker:cache:build-aries-spark-ota-user'
-    - 'docker-worker:cache:build-aries-spark-ota-user-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-spark-ota-user'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-spark-ota-user-objdir-gecko'
   payload:
     cache:
-      build-aries-spark-ota-user: /home/worker/workspace
-      build-aries-spark-ota-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-aries-spark-ota-user: /home/worker/workspace
+      level-{{level}}-{{project}}-build-aries-spark-ota-user-objdir-gecko: /home/worker/objdir-gecko
     env:
       VARIANT: user
   extra:

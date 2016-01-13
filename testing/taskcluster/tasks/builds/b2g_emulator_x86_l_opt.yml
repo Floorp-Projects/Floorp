@@ -6,8 +6,8 @@ $inherits:
 task:
   workerType: emulator-l
   scopes:
-    - 'docker-worker:cache:workspace-emulator-l-x86-opt'
-    - 'docker-worker:cache:workspace-emulator-l-x86-opt-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-l-x86-opt'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-l-x86-opt-objdir-gecko'
   metadata:
     name: '[TC] B2G X86 L Emulator (Opt)'
 
@@ -30,8 +30,8 @@ task:
         buildbot_step 'Build' ./build-emulator-x86.sh $HOME/workspace
 
     cache:
-      workspace-emulator-l-x86-opt: /home/worker/workspace
-      workspace-emulator-l-x86-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-emulator-l-x86-opt: /home/worker/workspace
+      level-{{level}}-{{project}}-emulator-l-x86-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-x86-l'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-x86-l/releng-emulator-l.tt'
