@@ -526,7 +526,7 @@ Tart.prototype = {
       ],
 
       newtabNoPreload: [
-        function(){aboutNewTabService.newTabURL = "about:newtab";
+        function(){aboutNewTabService.resetNewTabURL();
                    Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
                    Services.prefs.setBoolPref("browser.newtab.preload", false);
                    next();
@@ -538,7 +538,7 @@ Tart.prototype = {
       ],
 
       newtabYesPreload: [
-        function(){aboutNewTabService.newTabURL = "about:newtab";
+        function(){aboutNewTabService.resetNewTabURL();
                    Services.prefs.setCharPref("layout.css.devPixelsPerPx", "-1");
                    Services.prefs.setBoolPref("browser.newtab.preload", true);
                    next();

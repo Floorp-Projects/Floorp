@@ -221,6 +221,9 @@ public:
   LoadTainting
   GetTainting() const;
 
+  already_AddRefed<InternalResponse>
+  Unfiltered();
+
 private:
   ~InternalResponse();
 

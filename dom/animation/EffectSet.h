@@ -10,6 +10,7 @@
 #include "mozilla/AnimValuesStyleRule.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/TimeStamp.h"
 #include "nsCSSPseudoElements.h" // For nsCSSPseudoElements::Type
 #include "nsHashKeys.h" // For nsPtrHashKey
 #include "nsTHashtable.h" // For nsTHashtable
@@ -133,6 +134,18 @@ public:
     return mAnimationRule[aCascadeLevel];
   }
 
+  const TimeStamp& AnimationRuleRefreshTime(EffectCompositor::CascadeLevel
+                                              aCascadeLevel) const
+  {
+    return mAnimationRuleRefreshTime[aCascadeLevel];
+  }
+  void UpdateAnimationRuleRefreshTime(EffectCompositor::CascadeLevel
+                                        aCascadeLevel,
+                                      const TimeStamp& aRefreshTime)
+  {
+    mAnimationRuleRefreshTime[aCascadeLevel] = aRefreshTime;
+  }
+
   bool CascadeNeedsUpdate() const { return mCascadeNeedsUpdate; }
   void MarkCascadeNeedsUpdate() { mCascadeNeedsUpdate = true; }
   void MarkCascadeUpdated() { mCascadeNeedsUpdate = false; }
@@ -157,6 +170,15 @@ private:
                   EffectCompositor::CascadeLevel(
                     EffectCompositor::kCascadeLevelCount),
                   RefPtr<AnimValuesStyleRule>> mAnimationRule;
+
+  // A parallel array to mAnimationRule that records the refresh driver
+  // timestamp when the rule was last updated. This is used for certain
+  // animations which are updated only periodically (e.g. transform animations
+  // running on the compositor that affect the scrollable overflow region).
+  EnumeratedArray<EffectCompositor::CascadeLevel,
+                  EffectCompositor::CascadeLevel(
+                    EffectCompositor::kCascadeLevelCount),
+                  TimeStamp> mAnimationRuleRefreshTime;
 
   // Dirty flag to represent when the mWinsInCascade flag on effects in
   // this set might need to be updated.

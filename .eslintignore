@@ -18,6 +18,7 @@ caps/**
 chrome/**
 config/**
 db/**
+devtools/**
 docshell/**
 dom/**
 editor/**

@@ -94,6 +94,14 @@ IsAbsolutePath(const JSAutoByteString& filename)
 JSString*
 ResolvePath(JSContext* cx, HandleString filenameStr, PathResolutionMode resolveMode)
 {
+    if (!filenameStr) {
+#ifdef XP_WIN
+        return JS_NewStringCopyZ(cx, "nul");
+#else
+        return JS_NewStringCopyZ(cx, "/dev/null");
+#endif
+    }
+
     JSAutoByteString filename(cx, filenameStr);
     if (!filename)
         return nullptr;
@@ -326,18 +334,24 @@ osfile_redirect(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    if (args[0].isString()) {
-        RootedString stdoutPath(cx, args[0].toString());
-        if (!stdoutPath)
-            return false;
+    if (args[0].isString() || args[0].isNull()) {
+        RootedString stdoutPath(cx);
+        if (!args[0].isNull()) {
+            stdoutPath = args[0].toString();
+            if (!stdoutPath)
+                return false;
+        }
         if (!Redirect(cx, stdout, stdoutPath))
             return false;
     }
 
-    if (args.length() > 1 && args[1].isString()) {
-        RootedString stderrPath(cx, args[1].toString());
-        if (!stderrPath)
-            return false;
+    if (args.length() > 1 && (args[1].isString() || args[1].isNull())) {
+        RootedString stderrPath(cx);
+        if (!args[1].isNull()) {
+            stderrPath = args[1].toString();
+            if (!stderrPath)
+                return false;
+        }
         if (!Redirect(cx, stderr, stderrPath))
             return false;
     }
@@ -368,7 +382,8 @@ static const JSFunctionSpecWithHelp osfile_unsafe_functions[] = {
     JS_FN_HELP("redirect", osfile_redirect, 2, 0,
 "redirect(stdoutFilename[, stderrFilename])",
 "  Redirect stdout and/or stderr to the named file. Pass undefined to avoid\n"
-"   redirecting. Filenames are relative to the current working directory."),
+"   redirecting, or null to discard the output. Filenames are relative to the\n"
+"   current working directory."),
 
     JS_FS_HELP_END
 };

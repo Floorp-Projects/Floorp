@@ -24,6 +24,20 @@ ifndef TEST_PACKAGE_NAME
 TEST_PACKAGE_NAME := $(ANDROID_PACKAGE_NAME)
 endif
 
+# Linking xul-gtest.dll takes too long, so we disable GTest on
+# Windows PGO builds (bug 1028035).
+ifneq (1_WINNT,$(MOZ_PGO)_$(OS_ARCH))
+BUILD_GTEST=1
+endif
+
+ifdef MOZ_B2G
+BUILD_GTEST=
+endif
+
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+BUILD_GTEST=
+endif
+
 RUN_MOCHITEST_B2G_DESKTOP = \
   rm -f ./$@.log && \
   $(PYTHON) _tests/testing/mochitest/runtestsb2g.py \
@@ -399,6 +413,11 @@ TEST_PKGS := \
   xpcshell \
   $(NULL)
 
+ifdef BUILD_GTEST
+stage-all: stage-gtest
+TEST_PKGS += gtest
+endif
+
 PKG_ARG = --$(1) '$(PKG_BASENAME).$(1).tests.zip'
 
 test-packages-manifest-tc:
@@ -481,6 +500,15 @@ stage-xpcshell: make-stage-dir
 
 stage-jstests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/js/src/tests stage-package
+
+stage-gtest: make-stage-dir
+# FIXME: (bug 1200311) We should be generating the gtest xul as part of the build.
+	$(MAKE) -C $(DEPTH)/testing/gtest gtest
+	$(NSINSTALL) -D $(PKG_STAGE)/gtest/gtest_bin
+	cp -RL $(DIST)/bin/gtest $(PKG_STAGE)/gtest/gtest_bin
+	cp -RL $(DEPTH)/_tests/gtest $(PKG_STAGE)
+	cp $(topsrcdir)/testing/gtest/rungtests.py $(PKG_STAGE)/gtest
+	cp $(DIST)/bin/dependentlibs.list.gtest $(PKG_STAGE)/gtest
 
 stage-android: make-stage-dir
 ifdef MOZ_ENABLE_SZIP

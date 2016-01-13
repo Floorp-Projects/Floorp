@@ -89,8 +89,6 @@ RestyleManager::RestyleManager(nsPresContext* aPresContext)
   , mHoverGeneration(0)
   , mRebuildAllExtraHint(nsChangeHint(0))
   , mRebuildAllRestyleHint(nsRestyleHint(0))
-  , mLastUpdateForThrottledAnimations(aPresContext->RefreshDriver()->
-                                        MostRecentRefresh())
   , mAnimationGeneration(0)
   , mReframingStyleContexts(nullptr)
   , mAnimationsWithDestroyedFrame(nullptr)
@@ -1841,9 +1839,7 @@ RestyleManager::EndProcessingRestyles()
 void
 RestyleManager::UpdateOnlyAnimationStyles()
 {
-  TimeStamp now = mPresContext->RefreshDriver()->MostRecentRefresh();
-  bool doCSS = mLastUpdateForThrottledAnimations != now;
-  mLastUpdateForThrottledAnimations = now;
+  bool doCSS = mPresContext->EffectCompositor()->HasPendingStyleUpdates();
 
   nsIDocument* document = mPresContext->Document();
   nsSMILAnimationController* animationController =
@@ -1858,7 +1854,6 @@ RestyleManager::UpdateOnlyAnimationStyles()
   }
 
   nsTransitionManager* transitionManager = mPresContext->TransitionManager();
-  nsAnimationManager* animationManager = mPresContext->AnimationManager();
 
   transitionManager->SetInAnimationOnlyStyleUpdate(true);
 
@@ -1871,8 +1866,7 @@ RestyleManager::UpdateOnlyAnimationStyles()
     // add only the elements for which animations are currently throttled
     // (i.e., animating on the compositor with main-thread style updates
     // suppressed).
-    transitionManager->AddStyleUpdatesTo(tracker);
-    animationManager->AddStyleUpdatesTo(tracker);
+    mPresContext->EffectCompositor()->AddStyleUpdatesTo(tracker);
   }
 
   if (doSMIL) {

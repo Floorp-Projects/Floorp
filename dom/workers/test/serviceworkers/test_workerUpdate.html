@@ -17,7 +17,9 @@
     return navigator.serviceWorker.register("worker_update.js", { scope: "workerUpdate/" });
   }
 
+  var registration;
   function waitForMessages(sw) {
+    registration = sw;
     var p = new Promise(function(resolve, reject) {
       window.onmessage = function(e) {
         if (e.data === "FINISH") {
@@ -40,6 +42,8 @@
   function runTest() {
     simpleRegister().then(waitForMessages).catch(function(e) {
       ok(false, "Something went wrong.");
+    }).then(function() {
+      return registration.unregister();
     }).then(function() {
       SimpleTest.finish();
     });

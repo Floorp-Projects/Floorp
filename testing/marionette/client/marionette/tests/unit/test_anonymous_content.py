@@ -33,6 +33,16 @@ class TestAnonymousContent(MarionetteTestCase):
         self.marionette.find_element("id", "testXulBox")
         self.assertRaises(NoSuchElementException, self.marionette.find_element, "id", "testAnonymousContentBox")
 
+    def test_switch_to_anonymous_iframe(self):
+        self.marionette.find_element("id", "testAnonymousContentBox")
+        el = self.marionette.find_element("id", "container2")
+        anon_iframe_el = el.find_element("anon attribute", {"anonid": "iframe"})
+        self.marionette.switch_to_frame(anon_iframe_el)
+        self.assertTrue("test.xul" in self.marionette.get_url())
+        self.marionette.find_element("id", "testXulBox")
+        self.assertRaises(NoSuchElementException, self.marionette.find_element, "id",
+                          "testAnonymousContentBox")
+
     def test_find_anonymous_element_by_attribute(self):
         el = Wait(self.marionette).until(element_present("id", "dia"))
         self.assertEquals(HTMLElement, type(el.find_element("anon attribute", {"anonid": "buttons"})))

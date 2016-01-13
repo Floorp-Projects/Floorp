@@ -696,6 +696,7 @@ selfhosted.inputs = [
     'builtin/Classes.js',
     'builtin/Date.js',
     'builtin/Error.js',
+    'builtin/Function.js',
     'builtin/Generator.js',
     'builtin/Intl.js',
     'builtin/IntlData.js',
