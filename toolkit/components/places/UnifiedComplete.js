@@ -1329,7 +1329,9 @@ Search.prototype = {
   },
 
   _onResultRow: function (row) {
-    TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
+    if (this._localMatchesCount == 0) {
+      TelemetryStopwatch.finish(TELEMETRY_1ST_RESULT, this);
+    }
     let queryType = row.getResultByIndex(QUERYINDEX_QUERYTYPE);
     let match;
     switch (queryType) {
