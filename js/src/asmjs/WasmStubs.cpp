@@ -30,10 +30,6 @@ using namespace js::wasm;
 using mozilla::ArrayLength;
 using mozilla::MakeEnumeratedRange;
 
-typedef Vector<MIRType, 8, SystemAllocPolicy> MIRTypeVector;
-typedef ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
-typedef ABIArgIter<MallocSig::ArgVector> ABIArgValTypeIter;
-
 static void
 AssertStackAlignment(MacroAssembler& masm, uint32_t alignment, uint32_t addBeforeAssert = 0)
 {
@@ -102,7 +98,7 @@ static bool
 GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
 {
     MacroAssembler& masm = mg.masm();
-    const MallocSig& sig = mg.exportSig(exportIndex);
+    const Sig& sig = mg.exportSig(exportIndex);
 
     masm.haltingAlign(CodeAlignment);
 
@@ -293,7 +289,7 @@ GenerateEntry(ModuleGenerator& mg, unsigned exportIndex, bool usesHeap)
 }
 
 static void
-FillArgumentArray(MacroAssembler& masm, const MallocSig::ArgVector& args, unsigned argOffset,
+FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argOffset,
                   unsigned offsetToCallerStackArgs, Register scratch)
 {
     for (ABIArgValTypeIter i(args); !i.done(); i++) {
@@ -340,7 +336,7 @@ GenerateInterpExitStub(ModuleGenerator& mg, unsigned importIndex, Label* throwLa
                        ProfilingOffsets* offsets)
 {
     MacroAssembler& masm = mg.masm();
-    const MallocSig& sig = mg.importSig(importIndex);
+    const Sig& sig = *mg.import(importIndex).sig;
 
     masm.setFramePushed(0);
 
@@ -445,7 +441,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
                     Label* throwLabel, ProfilingOffsets* offsets)
 {
     MacroAssembler& masm = mg.masm();
-    const MallocSig& sig = mg.importSig(importIndex);
+    const Sig& sig = *mg.import(importIndex).sig;
 
     masm.setFramePushed(0);
 
@@ -475,7 +471,7 @@ GenerateJitExitStub(ModuleGenerator& mg, unsigned importIndex, bool usesHeap,
     Register scratch = ABIArgGenerator::NonArgReturnReg1;  // repeatedly clobbered
 
     // 2.1. Get ExitDatum
-    unsigned globalDataOffset = mg.importExitGlobalDataOffset(importIndex);
+    unsigned globalDataOffset = mg.import(importIndex).globalDataOffset;
 #if defined(JS_CODEGEN_X64)
     masm.append(AsmJSGlobalAccess(masm.leaRipRelative(callee), globalDataOffset));
 #elif defined(JS_CODEGEN_X86)

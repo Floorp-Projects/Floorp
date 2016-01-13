@@ -25,6 +25,12 @@
 namespace js {
 namespace wasm {
 
+class ModuleGeneratorThreadView;
+
+typedef Vector<jit::MIRType, 8, SystemAllocPolicy> MIRTypeVector;
+typedef jit::ABIArgIter<MIRTypeVector> ABIArgMIRTypeIter;
+typedef jit::ABIArgIter<ValTypeVector> ABIArgValTypeIter;
+
 // The FuncCompileResults contains the results of compiling a single function
 // body, ready to be merged into the whole-module MacroAssembler.
 class FuncCompileResults
@@ -62,6 +68,7 @@ class IonCompileTask
 {
     JSRuntime* const runtime_;
     const CompileArgs args_;
+    ModuleGeneratorThreadView& mg_;
     LifoAlloc lifo_;
     UniqueFuncBytecode func_;
     mozilla::Maybe<FuncCompileResults> results_;
@@ -70,9 +77,10 @@ class IonCompileTask
     IonCompileTask& operator=(const IonCompileTask&) = delete;
 
   public:
-    IonCompileTask(JSRuntime* runtime, CompileArgs args, size_t defaultChunkSize)
-      : runtime_(runtime),
+    IonCompileTask(JSRuntime* rt, CompileArgs args, ModuleGeneratorThreadView& mg, size_t defaultChunkSize)
+      : runtime_(rt),
         args_(args),
+        mg_(mg),
         lifo_(defaultChunkSize),
         func_(nullptr)
     {}
@@ -84,6 +92,9 @@ class IonCompileTask
     }
     CompileArgs args() const {
         return args_;
+    }
+    ModuleGeneratorThreadView& mg() const {
+        return mg_;
     }
     void init(UniqueFuncBytecode func) {
         MOZ_ASSERT(!func_);

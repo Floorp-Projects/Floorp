@@ -243,14 +243,14 @@ StaticLinkData::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 }
 
 static size_t
-SerializedSigSize(const MallocSig& sig)
+SerializedSigSize(const Sig& sig)
 {
     return sizeof(ExprType) +
            SerializedPodVectorSize(sig.args());
 }
 
 static uint8_t*
-SerializeSig(uint8_t* cursor, const MallocSig& sig)
+SerializeSig(uint8_t* cursor, const Sig& sig)
 {
     cursor = WriteScalar<ExprType>(cursor, sig.ret());
     cursor = SerializePodVector(cursor, sig.args());
@@ -258,33 +258,22 @@ SerializeSig(uint8_t* cursor, const MallocSig& sig)
 }
 
 static const uint8_t*
-DeserializeSig(ExclusiveContext* cx, const uint8_t* cursor, MallocSig* sig)
+DeserializeSig(ExclusiveContext* cx, const uint8_t* cursor, Sig* sig)
 {
     ExprType ret;
     cursor = ReadScalar<ExprType>(cursor, &ret);
 
-    MallocSig::ArgVector args;
+    ValTypeVector args;
     cursor = DeserializePodVector(cx, cursor, &args);
     if (!cursor)
         return nullptr;
 
-    sig->init(Move(args), ret);
+    *sig = Sig(Move(args), ret);
     return cursor;
 }
 
-static bool
-CloneSig(JSContext* cx, const MallocSig& sig, MallocSig* out)
-{
-    MallocSig::ArgVector args;
-    if (!ClonePodVector(cx, sig.args(), &args))
-        return false;
-
-    out->init(Move(args), sig.ret());
-    return true;
-}
-
 static size_t
-SizeOfSigExcludingThis(const MallocSig& sig, MallocSizeOf mallocSizeOf)
+SizeOfSigExcludingThis(const Sig& sig, MallocSizeOf mallocSizeOf)
 {
     return sig.args().sizeOfExcludingThis(mallocSizeOf);
 }
@@ -316,7 +305,7 @@ bool
 Export::clone(JSContext* cx, Export* out) const
 {
     out->pod = pod;
-    return CloneSig(cx, sig_, &out->sig_);
+    return out->sig_.clone(sig_);
 }
 
 size_t
@@ -352,7 +341,7 @@ bool
 Import::clone(JSContext* cx, Import* out) const
 {
     out->pod = pod;
-    return CloneSig(cx, sig_, &out->sig_);
+    return out->sig_.clone(sig_);
 }
 
 size_t
