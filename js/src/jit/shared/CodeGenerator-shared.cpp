@@ -1530,13 +1530,13 @@ CodeGeneratorShared::emitAsmJSCall(LAsmJSCall* ins)
 }
 
 void
-CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index)
+CodeGeneratorShared::emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment)
 {
     if (index->isConstant()) {
-        Address address(base, ToInt32(index) * sizeof(Value));
+        Address address(base, ToInt32(index) * sizeof(Value) + offsetAdjustment);
         masm.patchableCallPreBarrier(address, MIRType_Value);
     } else {
-        BaseIndex address(base, ToRegister(index), TimesEight);
+        BaseIndex address(base, ToRegister(index), TimesEight, offsetAdjustment);
         masm.patchableCallPreBarrier(address, MIRType_Value);
     }
 }
