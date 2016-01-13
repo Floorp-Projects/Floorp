@@ -4293,9 +4293,7 @@ this.XPIProvider = {
 
     let principal = Cc["@mozilla.org/systemprincipal;1"].
                     createInstance(Ci.nsIPrincipal);
-    let useInterposition = Preferences.get(PREF_INTERPOSITION_ENABLED, false) ||
-                           Services.appinfo.browserTabsRemoteAutostart;
-    if (!aMultiprocessCompatible && useInterposition) {
+    if (!aMultiprocessCompatible && Preferences.get(PREF_INTERPOSITION_ENABLED, false)) {
       let interposition = Cc["@mozilla.org/addons/multiprocess-shims;1"].
         getService(Ci.nsIAddonInterposition);
       Cu.setAddonInterposition(aId, interposition);

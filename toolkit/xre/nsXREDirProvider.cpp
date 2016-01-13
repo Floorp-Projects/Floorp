@@ -558,8 +558,7 @@ nsXREDirProvider::GetFiles(const char* aProperty, nsISimpleEnumerator** aResult)
 static void
 RegisterExtensionInterpositions(nsINIParser &parser)
 {
-  if (!mozilla::Preferences::GetBool("extensions.interposition.enabled", false) &&
-      !BrowserTabsRemoteAutostart())
+  if (!mozilla::Preferences::GetBool("extensions.interposition.enabled", false))
     return;
 
   nsCOMPtr<nsIAddonInterposition> interposition =
