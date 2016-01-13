@@ -13,3 +13,15 @@
   min-width: 465px;
 }
 
+/* Eyedropper Widget */
+/* <panel> added to mainPopupSet */
+
+.devtools-eyedropper-panel {
+  pointer-events: none;
+  -moz-appearance: none;
+  width: 156px;
+  height: 120px;
+  background-color: transparent;
+  border: none;
+}
+
