@@ -144,7 +144,7 @@
   <project name="platform/system/security" path="system/security" revision="94e1617f6f2bc2286d005e79cffa6bf0721b06b3"/>
   <project name="platform/system/vold" path="system/vold" revision="c065e301e38ea0c241164e2a373e1ecefbeaf2ec"/>
   <project name="platform_frameworks_av" path="frameworks/av" remote="b2g" revision="479a404164986b3e95212eecdae7e67da4fba9ed"/>
-  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="10592803994aa01fa3dc0d0bd36d0d29f006d779"/>
+  <project name="platform_frameworks_base" path="frameworks/base" remote="b2g" revision="396b731dbccc62f272f1fdb8228109c3fbd83c25"/>
   <project name="platform_frameworks_wilhelm" path="frameworks/wilhelm" remote="b2g" revision="174bb44bb9af7583e6337e1e1b6cc18d0217ae82"/>
   <project name="platform_system_core" path="system/core" remote="b2g" revision="1b8322b228f717ff2a4d48fa8b44240d8e3f62bc"/>
   <project name="platform_external_sepolicy" path="external/sepolicy" remote="b2g" revision="246c603d9fe181fa8893af7293dbc63e870fe5e0"/>
