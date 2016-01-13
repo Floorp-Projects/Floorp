@@ -64,6 +64,10 @@ MouseScrollHandler* MouseScrollHandler::sInstance = nullptr;
 
 bool MouseScrollHandler::Device::sFakeScrollableWindowNeeded = false;
 
+bool MouseScrollHandler::Device::SynTP::sInitialized = false;
+int32_t MouseScrollHandler::Device::SynTP::sMajorVersion = 0;
+int32_t MouseScrollHandler::Device::SynTP::sMinorVersion = -1;
+
 bool MouseScrollHandler::Device::Elantech::sUseSwipeHack = false;
 bool MouseScrollHandler::Device::Elantech::sUsePinchHack = false;
 DWORD MouseScrollHandler::Device::Elantech::sZoomUntil = 0;
@@ -1027,7 +1031,12 @@ MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
     return;
   }
 
-  // TODO: Implement to check if we can trust the cache in the environment.
+  // If SynTP of Synaptics is installed, it may hook ::SystemParametersInfo()
+  // and returns different value from system settings.
+  if (Device::SynTP::IsDriverInstalled()) {
+    RefreshCache(aIsVertical);
+    return;
+  }
 }
 
 /******************************************************************************
@@ -1154,6 +1163,12 @@ MouseScrollHandler::Device::GetWorkaroundPref(const char* aPrefName,
 void
 MouseScrollHandler::Device::Init()
 {
+  // FYI: Thinkpad's TrackPoint is Apoint of Alps and UltraNav is SynTP of
+  //      Synaptics.  So, those drivers' information should be initialized
+  //      before calling methods of TrackPoint and UltraNav.
+  SynTP::Init();
+  Elantech::Init();
+
   sFakeScrollableWindowNeeded =
     GetWorkaroundPref("ui.trackpoint_hack.enabled",
                       (TrackPoint::IsDriverInstalled() ||
@@ -1162,8 +1177,49 @@ MouseScrollHandler::Device::Init()
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
     ("MouseScroll::Device::Init(): sFakeScrollableWindowNeeded=%s",
      GetBoolName(sFakeScrollableWindowNeeded)));
+}
 
-  Elantech::Init();
+/******************************************************************************
+ *
+ * Device::SynTP
+ *
+ ******************************************************************************/
+
+/* static */
+void
+MouseScrollHandler::Device::SynTP::Init()
+{
+  if (sInitialized) {
+    return;
+  }
+
+  sInitialized = true;
+  sMajorVersion = 0;
+  sMinorVersion = -1;
+
+  wchar_t buf[40];
+  bool foundKey =
+    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                             L"Software\\Synaptics\\SynTP\\Install",
+                             L"DriverVersion",
+                             buf, sizeof buf);
+  if (!foundKey) {
+    MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+      ("MouseScroll::Device::SynTP::Init(): "
+       "SynTP driver is not found"));
+    return;
+  }
+
+  sMajorVersion = wcstol(buf, nullptr, 10);
+  sMinorVersion = 0;
+  wchar_t* p = wcschr(buf, L'.');
+  if (p) {
+    sMinorVersion = wcstol(p + 1, nullptr, 10);
+  }
+  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+    ("MouseScroll::Device::SynTP::Init(): "
+     "found driver version = %d.%d",
+     sMajorVersion, sMinorVersion));
 }
 
 /******************************************************************************
@@ -1446,29 +1502,14 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
     return false;
   }
 
-  wchar_t buf[40];
-  bool foundKey =
-    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
-                             L"Software\\Synaptics\\SynTP\\Install",
-                             L"DriverVersion",
-                             buf, sizeof buf);
-  if (!foundKey) {
+  int32_t majorVersion = Device::SynTP::GetDriverMajorVersion();
+  if (!majorVersion) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
        "Failed to get UltraNav driver version"));
     return false;
   }
-
-  int majorVersion = wcstol(buf, nullptr, 10);
-  int minorVersion = 0;
-  wchar_t* p = wcschr(buf, L'.');
-  if (p) {
-    minorVersion = wcstol(p + 1, nullptr, 10);
-  }
-  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-    ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
-     "found driver version = %d.%d",
-     majorVersion, minorVersion));
+  int32_t minorVersion = Device::SynTP::GetDriverMinorVersion();
   return majorVersion < 15 || (majorVersion == 15 && minorVersion == 0);
 }
 
