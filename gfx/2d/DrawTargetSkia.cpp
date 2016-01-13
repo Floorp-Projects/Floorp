@@ -984,6 +984,121 @@ DrawTargetSkia::PopClip()
   mCanvas->restore();
 }
 
+void
+DrawTargetSkia::PushLayer(bool aOpaque, Float aOpacity, SourceSurface* aMask,
+                          const Matrix& aMaskTransform, const IntRect& aBounds,
+                          bool aCopyBackground)
+{
+  PushedLayer layer(GetPermitSubpixelAA(), aOpaque, aOpacity, aMask, aMaskTransform);
+  mPushedLayers.push_back(layer);
+
+  SkPaint paint;
+
+  // If we have a mask, set the opacity to 0 so that SkCanvas::restore skips
+  // implicitly drawing the layer so that we can properly mask it in PopLayer.
+  paint.setAlpha(aMask ? 0 : ColorFloatToByte(aOpacity));
+
+  SkRect bounds = IntRectToSkRect(aBounds);
+  SkRect* boundsPtr = aBounds.IsEmpty() ? nullptr : &bounds;
+
+  // TODO: Replace this with SaveLayerFlags when available in Skia update (m49+)
+  SkCanvas::SaveFlags saveFlags =
+    aOpaque ?
+      SkCanvas::SaveFlags(SkCanvas::kARGB_ClipLayer_SaveFlag & ~SkCanvas::kHasAlphaLayer_SaveFlag) :
+      SkCanvas::kARGB_ClipLayer_SaveFlag;
+
+  if (aCopyBackground) {
+    // Get a reference to the background before we save the layer.
+    SkAutoTUnref<SkBaseDevice> bgDevice(SkSafeRef(mCanvas->getTopDevice()));
+    SkIPoint bgOrigin = bgDevice->getOrigin();
+    SkBitmap bgBitmap = bgDevice->accessBitmap(false);
+
+    mCanvas->saveLayer(boundsPtr, &paint, saveFlags);
+
+    // Draw the background into the layer.
+    SkPaint bgPaint;
+    if (!bgBitmap.isOpaque()) {
+      bgPaint.setXfermodeMode(SkXfermode::kSrc_Mode);
+    }
+
+    mCanvas->save();
+    mCanvas->resetMatrix();
+    mCanvas->drawBitmap(bgBitmap, bgOrigin.x(), bgOrigin.y(), &bgPaint);
+    mCanvas->restore();
+  } else {
+    mCanvas->saveLayer(boundsPtr, &paint, saveFlags);
+  }
+
+  SetPermitSubpixelAA(aOpaque);
+}
+
+void
+DrawTargetSkia::PopLayer()
+{
+  MarkChanged();
+
+  MOZ_ASSERT(mPushedLayers.size());
+  const PushedLayer& layer = mPushedLayers.back();
+
+  if (layer.mMask) {
+    // If we have a mask, take a reference to the layer's bitmap device so that
+    // we can mask it ourselves. This assumes we forced SkCanvas::restore to
+    // skip implicitly drawing the layer.
+    SkAutoTUnref<SkBaseDevice> layerDevice(SkSafeRef(mCanvas->getTopDevice()));
+    SkIRect layerBounds = layerDevice->getGlobalBounds();
+    SkBitmap layerBitmap = layerDevice->accessBitmap(false);
+
+    // Restore the background with the layer's device left alive.
+    mCanvas->restore();
+
+    SkPaint paint;
+    paint.setAlpha(ColorFloatToByte(layer.mOpacity));
+
+    SkMatrix maskMat, layerMat;
+    // Get the total transform affecting the mask, considering its pattern
+    // transform and the current canvas transform.
+    GfxMatrixToSkiaMatrix(layer.mMaskTransform, maskMat);
+    maskMat.postConcat(mCanvas->getTotalMatrix());
+    if (!maskMat.invert(&layerMat)) {
+      gfxDebug() << *this << ": PopLayer() failed to invert mask transform";
+    } else {
+      // The layer should not be affected by the current canvas transform,
+      // even though the mask is. So first we use the inverse of the transform
+      // affecting the mask, then add back on the layer's origin.
+      layerMat.preTranslate(layerBounds.x(), layerBounds.y());
+      SkShader* shader = SkShader::CreateBitmapShader(layerBitmap,
+                                                      SkShader::kClamp_TileMode,
+                                                      SkShader::kClamp_TileMode,
+                                                      &layerMat);
+      SkSafeUnref(paint.setShader(shader));
+
+      SkBitmap mask = GetBitmapForSurface(layer.mMask);
+      if (mask.colorType() != kAlpha_8_SkColorType &&
+          !mask.extractAlpha(&mask)) {
+        gfxDebug() << *this << ": PopLayer() failed to extract alpha for mask";
+      } else {
+        mCanvas->save();
+
+        // The layer may be smaller than the canvas size, so make sure drawing is
+        // clipped to within the bounds of the layer.
+        mCanvas->resetMatrix();
+        mCanvas->clipRect(SkRect::Make(layerBounds));
+
+        mCanvas->setMatrix(maskMat);
+        mCanvas->drawBitmap(mask, 0, 0, &paint);
+
+        mCanvas->restore();
+      }
+    }
+  } else {
+    mCanvas->restore();
+  }
+
+  SetPermitSubpixelAA(layer.mOldPermitSubpixelAA);
+
+  mPushedLayers.pop_back();
+}
+
 already_AddRefed<GradientStops>
 DrawTargetSkia::CreateGradientStops(GradientStop *aStops, uint32_t aNumStops, ExtendMode aExtendMode) const
 {

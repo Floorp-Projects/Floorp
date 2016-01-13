@@ -93,6 +93,12 @@ public:
   virtual void PushClip(const Path *aPath) override;
   virtual void PushClipRect(const Rect& aRect) override;
   virtual void PopClip() override;
+  virtual void PushLayer(bool aOpaque, Float aOpacity,
+                         SourceSurface* aMask,
+                         const Matrix& aMaskTransform,
+                         const IntRect& aBounds = IntRect(),
+                         bool aCopyBackground = false) override;
+  virtual void PopLayer() override;
   virtual already_AddRefed<SourceSurface> CreateSourceSurfaceFromData(unsigned char *aData,
                                                             const IntSize &aSize,
                                                             int32_t aStride,
@@ -137,6 +143,27 @@ private:
   bool ShouldLCDRenderText(FontType aFontType, AntialiasMode aAntialiasMode);
 
   bool UsingSkiaGPU() const;
+
+  struct PushedLayer
+  {
+    PushedLayer(bool aOldPermitSubpixelAA,
+                bool aOpaque,
+                Float aOpacity,
+                SourceSurface* aMask,
+                const Matrix& aMaskTransform)
+      : mOldPermitSubpixelAA(aOldPermitSubpixelAA),
+        mOpaque(aOpaque),
+        mOpacity(aOpacity),
+        mMask(aMask),
+        mMaskTransform(aMaskTransform)
+    {}
+    bool mOldPermitSubpixelAA;
+    bool mOpaque;
+    Float mOpacity;
+    RefPtr<SourceSurface> mMask;
+    Matrix mMaskTransform;
+  };
+  std::vector<PushedLayer> mPushedLayers;
 
 #ifdef USE_SKIA_GPU
   RefPtrSkia<GrContext> mGrContext;
