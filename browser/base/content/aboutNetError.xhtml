@@ -260,15 +260,12 @@
                   var event = new CustomEvent("AboutNetErrorSetAutomatic",
                     {bubbles:true, detail:evt.target.checked});
                   document.dispatchEvent(event);
-                  if (evt.target.checked && reportBtn.style.display != "none") {
+                  if (evt.target.checked) {
                     sendErrorReport();
                   }
                 }, false);
 
-              var reportBtn = document.getElementById('reportCertificateError');
               var retryBtn = document.getElementById('reportCertificateErrorRetry');
-
-              reportBtn.addEventListener('click', sendErrorReport, false);
               retryBtn.addEventListener('click', sendErrorReport, false);
             }
           }
@@ -532,7 +529,6 @@
           <label for="automaticallyReportInFuture" id="automaticallyReportInFuture">&errorReporting.automatic2;</label>
 
           <span id="reportingState">
-            <button id="reportCertificateError">&errorReporting.report;</button>
             <button id="reportCertificateErrorRetry">&errorReporting.tryAgain;</button>
             <span id="reportSendingMessage">&errorReporting.sending;</span>
             <span id="reportSentMessage">&errorReporting.sent;</span>
