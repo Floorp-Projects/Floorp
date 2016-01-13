@@ -52,6 +52,7 @@ class TouchBlockState;
 class PanGestureBlockState;
 class OverscrollHandoffChain;
 class StateChangeNotificationBlocker;
+class CheckerboardEvent;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -1099,6 +1100,17 @@ private:
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
   bool mAsyncTransformAppliedToContent;
+
+
+  /* ===================================================================
+   * The functions and members in this section are used for checkerboard
+   * recording.
+   */
+private:
+  // This is created when this APZC instance is first included as part of a
+  // composite. If a checkerboard event takes place, this is destroyed at the
+  // end of the event, and a new one is created on the next composite.
+  UniquePtr<CheckerboardEvent> mCheckerboardEvent;
 };
 
 } // namespace layers
