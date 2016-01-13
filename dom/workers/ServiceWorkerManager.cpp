@@ -330,11 +330,7 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
 
   if (aRegistration->mActiveWorker) {
     aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
-    aData.activeCacheName() = aRegistration->mActiveWorker->CacheName();
-  }
-
-  if (aRegistration->mWaitingWorker) {
-    aData.waitingCacheName() = aRegistration->mWaitingWorker->CacheName();
+    aData.cacheName() = aRegistration->mActiveWorker->CacheName();
   }
 
   return NS_OK;
@@ -2930,7 +2926,7 @@ ServiceWorkerManager::LoadRegistration(
   if (!currentWorkerURL.IsEmpty()) {
     registration->mActiveWorker =
       new ServiceWorkerInfo(registration, currentWorkerURL,
-                            aRegistration.activeCacheName());
+                            aRegistration.cacheName());
     registration->mActiveWorker->SetActivateStateUncheckedWithoutEvent(ServiceWorkerState::Activated);
   }
 }
