@@ -734,6 +734,40 @@ DeterministicGC(JSContext* cx, unsigned argc, Value* vp)
 #endif /* JS_GC_ZEAL */
 
 static bool
+ValidateGC(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+
+    if (args.length() != 1) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Wrong number of arguments");
+        return false;
+    }
+
+#ifndef JS_GC_ZEAL
+    RootedObject callee(cx, &args.callee());
+    ReportUsageError(cx, callee, "Called ValidateGC in a build without GC Zeal.");
+    return false;
+#else
+    uint8_t zeal;
+    uint32_t freq;
+    uint32_t scheduled;
+    cx->runtime()->gc.getZeal(&zeal, &freq, &scheduled);
+    if (zeal != 0 && zeal != js::gc::ZealIncrementalMarkingValidator) {
+        RootedObject callee(cx, &args.callee());
+        ReportUsageError(cx, callee, "Attempting to enter Marking Validation while another Zeal "
+                                     "mode is set.");
+        return false;
+    }
+
+    int zealMode = ToBoolean(args[0]) ? 11 : 0;
+    JS_SetGCZeal(cx, zealMode, 0);
+    args.rval().setUndefined();
+    return true;
+#endif // JS_GC_ZEAL
+}
+
+static bool
 StartGC(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -816,22 +850,6 @@ AbortGC(JSContext* cx, unsigned argc, Value* vp)
     }
 
     cx->runtime()->gc.abortGC();
-    args.rval().setUndefined();
-    return true;
-}
-
-static bool
-ValidateGC(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (args.length() != 1) {
-        RootedObject callee(cx, &args.callee());
-        ReportUsageError(cx, callee, "Wrong number of arguments");
-        return false;
-    }
-
-    cx->runtime()->gc.setValidate(ToBoolean(args[0]));
     args.rval().setUndefined();
     return true;
 }
