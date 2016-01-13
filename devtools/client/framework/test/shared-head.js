@@ -188,7 +188,7 @@ function waitForTick() {
  * @return {Promise} Resolves when the tab has been added, loaded and the
  * toolbox has been opened. Resolves to the toolbox.
  */
-var loadToolbox = Task.async(function*(url) {
+var openNewTabAndToolbox = Task.async(function*(url) {
   let tab = yield addTab(url);
   let toolbox = yield gDevTools.showToolbox(TargetFactory.forTab(tab));
   return toolbox;
@@ -200,7 +200,7 @@ var loadToolbox = Task.async(function*(url) {
  * @return {Promise} Resolves when the toolbox and tab have been destroyed and
  * closed.
  */
-function unloadToolbox(toolbox) {
+function closeToolboxAndTab(toolbox) {
   return toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
   });
