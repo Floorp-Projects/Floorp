@@ -55,7 +55,7 @@ ElementPropertyTransition::CurrentValuePortion() const
   // causing us to get called *after* the animation interval. So, just in
   // case, we override the fill mode to 'both' to ensure the progress
   // is never null.
-  AnimationTiming timingToUse = Timing();
+  TimingParams timingToUse = SpecifiedTiming();
   timingToUse.mFill = dom::FillMode::Both;
   ComputedTiming computedTiming = GetComputedTiming(&timingToUse);
 
@@ -653,7 +653,7 @@ nsTransitionManager::ConsiderStartingTransition(
     reversePortion = valuePortion;
   }
 
-  AnimationTiming timing;
+  TimingParams timing;
   timing.mDuration.SetAsUnrestrictedDouble() = duration;
   timing.mDelay = TimeDuration::FromMilliseconds(delay);
   timing.mIterations = 1.0;
