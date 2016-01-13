@@ -61,6 +61,8 @@ public:
   static EffectSet* GetEffectSet(const nsIFrame* aFrame);
   static EffectSet* GetOrCreateEffectSet(dom::Element* aElement,
                                          nsCSSPseudoElements::Type aPseudoType);
+  static void DestroyEffectSet(dom::Element* aElement,
+                               nsCSSPseudoElements::Type aPseudoType);
 
   void AddEffect(dom::KeyframeEffectReadOnly& aEffect);
   void RemoveEffect(dom::KeyframeEffectReadOnly& aEffect);
