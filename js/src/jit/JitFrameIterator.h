@@ -174,6 +174,9 @@ class JitFrameIterator
     bool isIonStubMaybeUnwound() const {
         return type_ == JitFrame_IonStub || type_ == JitFrame_Unwound_IonStub;
     }
+    bool isIonAccessorICMaybeUnwound() const {
+        return type_ == JitFrame_IonAccessorIC || type_ == JitFrame_Unwound_IonAccessorIC;
+    }
     bool isBailoutJS() const {
         return type_ == JitFrame_Bailout;
     }
