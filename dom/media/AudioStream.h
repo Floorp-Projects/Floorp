@@ -158,7 +158,32 @@ class AudioStream final
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AudioStream)
-  AudioStream();
+
+  class Chunk {
+  public:
+    // Return a pointer to the audio data.
+    virtual const AudioDataValue* Data() const = 0;
+    // Return the number of frames in this chunk.
+    virtual uint32_t Frames() const = 0;
+    // Return a writable pointer for downmixing.
+    virtual AudioDataValue* GetWritable() const = 0;
+    virtual ~Chunk() {}
+  };
+
+  class DataSource {
+  public:
+    // Return a chunk which contains at most aFrames frames or zero if no
+    // frames in the source at all.
+    virtual UniquePtr<Chunk> PopFrames(uint32_t aFrames) = 0;
+    // Return true if no more data will be added to the source.
+    virtual bool Ended() const = 0;
+    // Notify that all data is drained by the AudioStream.
+    virtual void Drained() = 0;
+  protected:
+    virtual ~DataSource() {}
+  };
+
+  explicit AudioStream(DataSource& aSource);
 
   // Initialize the audio stream. aNumChannels is the number of audio
   // channels (1 for mono, 2 for stereo, etc) and aRate is the sample rate
@@ -171,31 +196,12 @@ public:
 
   void Reset();
 
-  // Write audio data to the audio hardware.  aBuf is an array of AudioDataValues
-  // AudioDataValue of length aFrames*mChannels.  If aFrames is larger
-  // than the result of Available(), the write will block until sufficient
-  // buffer space is available.
-  nsresult Write(const AudioDataValue* aBuf, uint32_t aFrames);
-
-  // Return the number of audio frames that can be written without blocking.
-  uint32_t Available();
-
   // Set the current volume of the audio playback. This is a value from
   // 0 (meaning muted) to 1 (meaning full volume).  Thread-safe.
   void SetVolume(double aVolume);
 
-  // Block until buffered audio data has been consumed.
-  void Drain();
-
-  // Break any blocking operation and set the stream to shutdown.
-  void Cancel();
-
   // Start the stream.
   void Start();
-
-  // Return the number of frames written so far in the stream. This allow the
-  // caller to check if it is safe to start the stream, if needed.
-  int64_t GetWritten();
 
   // Pause audio playback.
   void Pause();
@@ -254,15 +260,15 @@ private:
 
   nsresult EnsureTimeStretcherInitializedUnlocked();
 
+  // Return true if downmixing succeeds otherwise false.
+  bool Downmix(AudioDataValue* aBuffer, uint32_t aFrames);
+
   long GetUnprocessed(void* aBuffer, long aFrames);
   long GetTimeStretched(void* aBuffer, long aFrames);
 
   void StartUnlocked();
 
-  // The monitor is held to protect all access to member variables.  Write()
-  // waits while mBuffer is full; DataCallback() notifies as it consumes
-  // data from mBuffer.  Drain() waits while mState is DRAINING;
-  // StateCallback() notifies when mState is DRAINED.
+  // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
   // Input rate in Hz (characteristic of the media being played)
@@ -274,8 +280,6 @@ private:
 #if defined(__ANDROID__)
   dom::AudioChannel mAudioChannel;
 #endif
-  // Number of frames written to the buffers.
-  int64_t mWritten;
   AudioClock mAudioClock;
   soundtouch::SoundTouch* mTimeStretcher;
 
@@ -284,12 +288,6 @@ private:
 
   // Output file for dumping audio
   FILE* mDumpFile;
-
-  // Temporary audio buffer.  Filled by Write() and consumed by
-  // DataCallback().  Once mBuffer is full, Write() blocks until sufficient
-  // space becomes available in mBuffer.  mBuffer is sized in bytes, not
-  // frames.
-  CircularByteBuffer mBuffer;
 
   // Owning reference to a cubeb_stream.
   UniquePtr<cubeb_stream, CubebDestroyPolicy> mCubebStream;
@@ -311,10 +309,6 @@ private:
     STARTED,     // cubeb started, but callbacks haven't started
     RUNNING,     // DataCallbacks have started after STARTED, or after Resume().
     STOPPED,     // Stopped by a call to Pause().
-    DRAINING,    // Drain requested.  DataCallback will indicate end of stream
-                 // once the remaining contents of mBuffer are requested by
-                 // cubeb, after which StateCallback will indicate drain
-                 // completion.
     DRAINED,     // StateCallback has indicated that the drain is complete.
     ERRORED,     // Stream disabled due to an internal error.
     SHUTDOWN     // Shutdown has been called
@@ -324,6 +318,8 @@ private:
   bool mIsFirst;
   // Get this value from the preferece, if true, we would downmix the stereo.
   bool mIsMonoAudioEnabled;
+
+  DataSource& mDataSource;
 };
 
 } // namespace mozilla

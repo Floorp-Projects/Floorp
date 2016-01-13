@@ -124,6 +124,9 @@ public:
   already_AddRefed<Response>
   Clone(ErrorResult& aRv) const;
 
+  already_AddRefed<Response>
+  CloneUnfiltered(ErrorResult& aRv) const;
+
   void
   SetBody(nsIInputStream* aBody);
 

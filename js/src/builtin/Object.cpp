@@ -1091,13 +1091,18 @@ FinishObjectClassInit(JSContext* cx, JS::HandleObject ctor, JS::HandleObject pro
         return false;
 
     /*
-     * Define self-hosted functions after setting the intrinsics holder
-     * (which is needed to define self-hosted functions)
+     * Define self-hosted functions on Object and Function after setting the
+     * intrinsics holder (which is needed to define self-hosted functions).
      */
     if (!cx->runtime()->isSelfHostingGlobal(global)) {
         if (!JS_DefineFunctions(cx, ctor, object_static_methods, OnlyDefineLateProperties))
             return false;
         if (!JS_DefineFunctions(cx, proto, object_methods, OnlyDefineLateProperties))
+            return false;
+        RootedObject funProto(cx, global->getOrCreateFunctionPrototype(cx));
+        if (!funProto)
+            return false;
+        if (!JS_DefineFunctions(cx, funProto, function_methods, OnlyDefineLateProperties))
             return false;
     }
 

@@ -37,16 +37,19 @@ public:
   }
 
   explicit TypedEventHandler(dom::EventHandlerNonNull* aHandler)
+    : mBits(0)
   {
     Assign(aHandler, eNormal);
   }
 
   explicit TypedEventHandler(dom::OnErrorEventHandlerNonNull* aHandler)
+    : mBits(0)
   {
     Assign(aHandler, eOnError);
   }
 
   explicit TypedEventHandler(dom::OnBeforeUnloadEventHandlerNonNull* aHandler)
+    : mBits(0)
   {
     Assign(aHandler, eOnBeforeUnload);
   }

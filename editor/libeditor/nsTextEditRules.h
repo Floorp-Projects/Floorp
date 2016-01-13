@@ -333,14 +333,25 @@ class nsAutoLockRulesSniffing
  */
 class nsAutoLockListener
 {
-  public:
+public:
 
-  explicit nsAutoLockListener(bool *enabled) : mEnabled(enabled)
-                 {if (mEnabled) { mOldState=*mEnabled; *mEnabled = false;}}
+  explicit nsAutoLockListener(bool *enabled)
+    : mEnabled(enabled), mOldState(false)
+  {
+    if (mEnabled) {
+      mOldState = *mEnabled;
+      *mEnabled = false;
+    }
+  }
+
   ~nsAutoLockListener()
-                 {if (mEnabled) *mEnabled = mOldState;}
+  {
+    if (mEnabled) {
+      *mEnabled = mOldState;
+    }
+  }
 
-  protected:
+protected:
   bool *mEnabled;
   bool mOldState;
 };

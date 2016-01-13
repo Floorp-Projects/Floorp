@@ -2196,7 +2196,7 @@ public:
         // This is the only time we should be tracing our mFlatJSObject,
         // normally somebody else is doing that. Be careful not to trace the
         // bogus INVALID_OBJECT value we can have during init, though.
-        JS::TraceNullableEdge(trc, &mFlatJSObject, "XPCWrappedNative::mFlatJSObject");
+        JS::TraceEdge(trc, &mFlatJSObject, "XPCWrappedNative::mFlatJSObject");
     }
 
     static void Trace(JSTracer* trc, JSObject* obj);

@@ -133,7 +133,7 @@ const backgroundPageThumbsContent = {
 
     let canvasDrawDate = new Date();
 
-    let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content);
+    let finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
     finalCanvas.toBlob(blob => {

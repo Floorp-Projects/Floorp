@@ -43,6 +43,7 @@ NS_IMPL_ISUPPORTS(ChildDNSService,
 ChildDNSService::ChildDNSService()
   : mFirstTime(true)
   , mOffline(false)
+  , mDisablePrefetch(false)
   , mPendingRequestsLock("DNSPendingRequestsLock")
 {
   MOZ_ASSERT(IsNeckoChild());

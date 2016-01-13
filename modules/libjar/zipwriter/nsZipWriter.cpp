@@ -52,9 +52,10 @@ NS_IMPL_ISUPPORTS(nsZipWriter, nsIZipWriter,
                   nsIRequestObserver)
 
 nsZipWriter::nsZipWriter()
-{
-    mInQueue = false;
-}
+  : mCDSOffset(0)
+  , mCDSDirty(false)
+  , mInQueue(false)
+{}
 
 nsZipWriter::~nsZipWriter()
 {

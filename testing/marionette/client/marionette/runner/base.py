@@ -262,6 +262,10 @@ class BaseMarionetteArguments(ArgumentParser):
                           nargs='*',
                           default=[],
                           help='Tests to run.')
+        self.add_argument('-v', '--verbose',
+                        action='count',
+                        help='Increase verbosity to include debug messages with -v, '
+                            'and trace messages with -vv.')
         self.add_argument('--emulator',
                         choices=['x86', 'arm'],
                         help='if no --address is given, then the harness will launch a B2G emulator on which to run '
@@ -521,7 +525,8 @@ class BaseMarionetteTestRunner(object):
                  server_root=None, gecko_log=None, result_callbacks=None,
                  adb_host=None, adb_port=None, prefs=None, test_tags=None,
                  socket_timeout=BaseMarionetteArguments.socket_timeout_default,
-                 startup_timeout=None, addons=None, workspace=None, **kwargs):
+                 startup_timeout=None, addons=None, workspace=None,
+                 verbose=0, **kwargs):
         self.address = address
         self.emulator = emulator
         self.emulator_binary = emulator_binary
@@ -571,6 +576,7 @@ class BaseMarionetteTestRunner(object):
         # If no workspace is set, default location for logcat and gecko.log is .
         # and default location for profile is TMP
         self.workspace_path = workspace or os.getcwd()
+        self.verbose = verbose
 
         def gather_debug(test, status):
             rv = {}
@@ -701,6 +707,7 @@ class BaseMarionetteTestRunner(object):
             'adb_port': self._adb_port,
             'prefs': self.prefs,
             'startup_timeout': self.startup_timeout,
+            'verbose': self.verbose,
         }
         if self.bin:
             kwargs.update({

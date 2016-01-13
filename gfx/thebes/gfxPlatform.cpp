@@ -549,6 +549,10 @@ gfxPlatform::Init()
     #error "No gfxPlatform implementation available"
 #endif
 
+#ifdef USE_SKIA
+    SkGraphics::Init();
+#endif
+
 #ifdef MOZ_GL_DEBUG
     GLContext::StaticInit();
 #endif

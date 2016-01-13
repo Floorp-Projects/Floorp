@@ -486,8 +486,7 @@ NS_IMPL_ISUPPORTS(nsPersistentProperties, nsIPersistentProperties, nsIProperties
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream* aIn)
 {
-  nsresult rv = nsSimpleUnicharStreamFactory::GetInstance()->
-    CreateInstanceFromUTF8Stream(aIn, getter_AddRefs(mIn));
+  nsresult rv = NS_NewUnicharInputStream(aIn, getter_AddRefs(mIn));
 
   if (rv != NS_OK) {
     NS_WARNING("Error creating UnicharInputStream");

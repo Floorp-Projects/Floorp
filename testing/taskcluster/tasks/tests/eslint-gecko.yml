@@ -1,0 +1,35 @@
+---
+$inherits:
+    from: 'tasks/lint.yml'
+
+task:
+  metadata:
+    name: '[TC] - ESLint'
+    description: 'ESLint test'
+
+  payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId: '{{#task_id_for_image}}lint{{/task_id_for_image}}'
+
+    command:
+      - bash
+      - -cx
+      - >
+          tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
+          cd gecko &&
+          npm link testing/eslint-plugin-mozilla &&
+          eslint --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+  extra:
+    locations:
+        build: null
+        tests: null
+    treeherder:
+        machine:
+            platform: lint
+        groupSymbol: tc
+        symbol: ES
+    treeherderEnv:
+        - production
+        - staging

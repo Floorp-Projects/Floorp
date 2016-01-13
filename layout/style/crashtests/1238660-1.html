@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Bug 1238660</title>
+  </head>
+  <body>
+    <span>
+      <div>
+        <span></span>
+      </div>
+    </span>
+    <style>
+    span {
+      animation: anim 0.1s 0.1s;
+    }
+    @keyframes anim { to { opacity:1 } }
+    </style>
+  </body>
+</html>

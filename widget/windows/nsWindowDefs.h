@@ -39,6 +39,9 @@
 // If TSFTextStore needs to notify TSF/TIP of layout change later, this
 // message is posted.
 #define MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE (WM_APP+0x0315)
+// Internal message used in correcting backwards clock skew
+#define MOZ_WM_SKEWFIX                    (WM_APP+0x0316)
+
 // Internal message for ensuring the file picker is visible on multi monitor
 // systems, and when the screen resolution changes.
 #define MOZ_WM_ENSUREVISIBLE              (WM_APP+0x374F)
