@@ -15,20 +15,16 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
 #include "mozilla/LayerAnimationInfo.h"     // LayerAnimations::kRecords
+#include "mozilla/OwningNonNull.h"          // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/AnimationEffectReadOnly.h"
+#include "mozilla/dom/AnimationEffectTimingReadOnly.h" // AnimationTiming
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "mozilla/dom/UnionTypes.h"
 
-// Fix X11 header brain damage that conflicts with dom::FillMode::None
-#ifdef None
-#undef None
-#endif
-#include "mozilla/dom/AnimationEffectReadOnlyBinding.h"
 
 struct JSContext;
 class nsCSSPropertySet;
@@ -47,47 +43,6 @@ class UnrestrictedDoubleOrKeyframeEffectOptions;
 enum class IterationCompositeOperation : uint32_t;
 enum class CompositeOperation : uint32_t;
 }
-
-/**
- * Input timing parameters.
- *
- * Eventually this will represent all the input timing parameters specified
- * by content but for now it encapsulates just the subset of those
- * parameters passed to GetPositionInIteration.
- */
-struct AnimationTiming
-{
-  dom::OwningUnrestrictedDoubleOrString mDuration;
-  TimeDuration mDelay;
-  double mIterations; // Can be NaN, negative, +/-Infinity
-  dom::PlaybackDirection mDirection;
-  dom::FillMode mFill;
-
-  bool operator==(const AnimationTiming& aOther) const {
-    bool durationEqual;
-    if (mDuration.IsUnrestrictedDouble()) {
-      durationEqual = aOther.mDuration.IsUnrestrictedDouble() &&
-                      (mDuration.GetAsUnrestrictedDouble() ==
-                       aOther.mDuration.GetAsUnrestrictedDouble());
-    } else if (mDuration.IsString()) {
-      durationEqual = aOther.mDuration.IsString() &&
-                      (mDuration.GetAsString() ==
-                       aOther.mDuration.GetAsString());
-    } else {
-      // Check if both are uninitialized
-      durationEqual = !aOther.mDuration.IsUnrestrictedDouble() &&
-                      !aOther.mDuration.IsString();
-    }
-    return durationEqual &&
-           mDelay == aOther.mDelay &&
-           mIterations == aOther.mIterations &&
-           mDirection == aOther.mDirection &&
-           mFill == aOther.mFill;
-  }
-  bool operator!=(const AnimationTiming& aOther) const {
-    return !(*this == aOther);
-  }
-};
 
 /**
  * Stores the results of calculating the timing properties of an animation
@@ -264,9 +219,9 @@ public:
     aRetVal.AssignLiteral("distribute");
   }
 
-  const AnimationTiming& Timing() const { return mTiming; }
-  AnimationTiming& Timing() { return mTiming; }
+  const AnimationTiming& Timing() const { return mTiming->Timing(); }
   void SetTiming(const AnimationTiming& aTiming);
+  already_AddRefed<AnimationEffectTimingReadOnly> TimingAsObject() const override;
   void NotifyAnimationTimingUpdated();
 
   Nullable<TimeDuration> GetLocalTime() const;
@@ -290,7 +245,7 @@ public:
   ComputedTiming
   GetComputedTiming(const AnimationTiming* aTiming = nullptr) const
   {
-    return GetComputedTimingAt(GetLocalTime(), aTiming ? *aTiming : mTiming);
+    return GetComputedTimingAt(GetLocalTime(), aTiming ? *aTiming : Timing());
   }
 
   void
@@ -386,7 +341,7 @@ protected:
   nsCOMPtr<Element> mTarget;
   RefPtr<Animation> mAnimation;
 
-  AnimationTiming mTiming;
+  OwningNonNull<AnimationEffectTimingReadOnly> mTiming;
   nsCSSPseudoElements::Type mPseudoType;
 
   InfallibleTArray<AnimationProperty> mProperties;
