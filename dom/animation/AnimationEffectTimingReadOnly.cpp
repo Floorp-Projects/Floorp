@@ -17,14 +17,11 @@ AnimationTiming::operator==(const AnimationTiming& aOther) const
     durationEqual = aOther.mDuration.IsUnrestrictedDouble() &&
                     (mDuration.GetAsUnrestrictedDouble() ==
                      aOther.mDuration.GetAsUnrestrictedDouble());
-  } else if (mDuration.IsString()) {
-    durationEqual = aOther.mDuration.IsString() &&
-                    (mDuration.GetAsString() ==
-                     aOther.mDuration.GetAsString());
   } else {
-    // Check if both are uninitialized
-    durationEqual = !aOther.mDuration.IsUnrestrictedDouble() &&
-                    !aOther.mDuration.IsString();
+    // We consider all string values and uninitialized values as meaning "auto".
+    // Since mDuration is either a string or uninitialized, we consider it equal
+    // if aOther.mDuration is also either a string or uninitialized.
+    durationEqual = !aOther.mDuration.IsUnrestrictedDouble();
   }
   return durationEqual &&
          mDelay == aOther.mDelay &&
