@@ -345,11 +345,6 @@ HTMLSharedObjectElement::GetCapabilities() const
   if (mNodeInfo->Equals(nsGkAtoms::embed)) {
     capabilities |= eSupportSVG | eSupportImages;
   }
-  // If this is a rewritten youtube flash embed, add documents to capabilities
-  // so that we can render HTML5 if possible.
-  if (mRewrittenYoutubeEmbed) {
-    capabilities |= eSupportDocuments;
-  }
 
   return capabilities;
 }
