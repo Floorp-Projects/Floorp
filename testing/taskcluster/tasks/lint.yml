@@ -23,14 +23,14 @@ task:
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
-    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
 
   payload:
     # Thirty minutes should be enough for lint checks
     maxRunTime: 1800
 
     cache:
-      tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
 
   extra:
     build_product: '{{build_product}}'

@@ -5,15 +5,15 @@ $inherits:
     build_type: 'opt'
 task:
   scopes:
-    - 'docker-worker:cache:build-flame-kk-eng'
-    - 'docker-worker:cache:build-flame-kk-eng-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-eng'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-eng-objdir-gecko'
   metadata:
     name: '[TC] B2G Flame KK Eng'
 
   payload:
     cache:
-      build-flame-kk-eng: /home/worker/workspace
-      build-flame-kk-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-flame-kk-eng: /home/worker/workspace
+      level-{{level}}-{{project}}-build-flame-kk-eng-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
   extra:
