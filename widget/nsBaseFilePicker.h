@@ -37,8 +37,8 @@ public:
   NS_IMETHOD SetAddToRecentDocs(bool aFlag);
   NS_IMETHOD GetMode(int16_t *aMode);
 
-  NS_IMETHOD GetDomfile(nsISupports** aDomfile);
-  NS_IMETHOD GetDomfiles(nsISimpleEnumerator** aDomfiles);
+  NS_IMETHOD GetDomFileOrDirectory(nsISupports** aValue);
+  NS_IMETHOD GetDomFileOrDirectoryEnumerator(nsISimpleEnumerator** aValue);
 
 protected:
 

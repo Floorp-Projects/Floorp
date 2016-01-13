@@ -207,13 +207,20 @@ this.PageThumbs = {
    * canvas asynchronously. Pass aCallback to receive an async callback after
    * canvas painting has completed.
    * @param aBrowser The browser to capture a thumbnail from.
-   * @param aCanvas The canvas to draw to.
+   * @param aCanvas The canvas to draw to. The thumbnail will be scaled to match
+   *   the dimensions of this canvas. If callers pass a 0x0 canvas, the canvas
+   *   will be resized to default thumbnail dimensions just prior to painting.
    * @param aCallback (optional) A callback invoked once the thumbnail has been
-   * rendered to aCanvas.
+   *   rendered to aCanvas.
+   * @param aArgs (optional) Additional named parameters:
+   *   fullScale - request that a non-downscaled image be returned.
    */
-  captureToCanvas: function PageThumbs_captureToCanvas(aBrowser, aCanvas, aCallback) {
+  captureToCanvas: function (aBrowser, aCanvas, aCallback, aArgs) {
     let telemetryCaptureTime = new Date();
-    this._captureToCanvas(aBrowser, aCanvas, function () {
+    let args = {
+      fullScale: aArgs ? aArgs.fullScale : false
+    };
+    this._captureToCanvas(aBrowser, aCanvas, args, (aCanvas) => {
       Services.telemetry
               .getHistogramById("FX_THUMBNAILS_CAPTURE_TIME_MS")
               .add(new Date() - telemetryCaptureTime);
@@ -257,14 +264,17 @@ this.PageThumbs = {
 
   // The background thumbnail service captures to canvas but doesn't want to
   // participate in this service's telemetry, which is why this method exists.
-  _captureToCanvas: function (aBrowser, aCanvas, aCallback) {
+  _captureToCanvas: function (aBrowser, aCanvas, aArgs, aCallback) {
     if (aBrowser.isRemoteBrowser) {
       Task.spawn(function* () {
         let data =
-          yield this._captureRemoteThumbnail(aBrowser, aCanvas);
+          yield this._captureRemoteThumbnail(aBrowser, aCanvas.width,
+                                             aCanvas.height, aArgs);
         let canvas = data.thumbnail;
         let ctx = canvas.getContext("2d");
         let imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        aCanvas.width = canvas.width;
+        aCanvas.height = canvas.height;
         aCanvas.getContext("2d").putImageData(imgData, 0, 0);
         if (aCallback) {
           aCallback(aCanvas);
@@ -272,8 +282,10 @@ this.PageThumbs = {
       }.bind(this));
       return;
     }
-
-    aCanvas = PageThumbUtils.createSnapshotThumbnail(aBrowser.contentWindow, aCanvas);
+    // The content is a local page, grab a thumbnail sync.
+    PageThumbUtils.createSnapshotThumbnail(aBrowser.contentWindow,
+                                           aCanvas,
+                                           aArgs);
 
     if (aCallback) {
       aCallback(aCanvas);
@@ -284,10 +296,13 @@ this.PageThumbs = {
    * Asynchrnously render an appropriately scaled thumbnail to canvas.
    *
    * @param aBrowser The browser to capture a thumbnail from.
-   * @param aCanvas The canvas to draw to.
+   * @param aWidth The desired canvas width.
+   * @param aHeight The desired canvas height.
+   * @param aArgs (optional) Additional named parameters:
+   *   fullScale - request that a non-downscaled image be returned.
    * @return a promise
    */
-  _captureRemoteThumbnail: function (aBrowser, aCanvas) {
+  _captureRemoteThumbnail: function (aBrowser, aWidth, aHeight, aArgs) {
     let deferred = Promise.defer();
 
     // The index we send with the request so we can identify the
@@ -329,10 +344,11 @@ this.PageThumbs = {
     // Send a thumbnail request
     mm.addMessageListener("Browser:Thumbnail:Response", thumbFunc);
     mm.sendAsyncMessage("Browser:Thumbnail:Request", {
-      canvasWidth: aCanvas.width,
-      canvasHeight: aCanvas.height,
+      canvasWidth: aWidth,
+      canvasHeight: aHeight,
       background: PageThumbUtils.THUMBNAIL_BG_COLOR,
-      id: index
+      id: index,
+      additionalArgs: aArgs
     });
 
     return deferred.promise;

@@ -105,6 +105,7 @@ flags:
     - linux64-st-an
     - macosx64
     - macosx64-st-an
+    - eslint-gecko
 
   tests:
     - cppunit

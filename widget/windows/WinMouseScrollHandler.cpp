@@ -64,9 +64,17 @@ MouseScrollHandler* MouseScrollHandler::sInstance = nullptr;
 
 bool MouseScrollHandler::Device::sFakeScrollableWindowNeeded = false;
 
+bool MouseScrollHandler::Device::SynTP::sInitialized = false;
+int32_t MouseScrollHandler::Device::SynTP::sMajorVersion = 0;
+int32_t MouseScrollHandler::Device::SynTP::sMinorVersion = -1;
+
 bool MouseScrollHandler::Device::Elantech::sUseSwipeHack = false;
 bool MouseScrollHandler::Device::Elantech::sUsePinchHack = false;
 DWORD MouseScrollHandler::Device::Elantech::sZoomUntil = 0;
+
+bool MouseScrollHandler::Device::Apoint::sInitialized = false;
+int32_t MouseScrollHandler::Device::Apoint::sMajorVersion = 0;
+int32_t MouseScrollHandler::Device::Apoint::sMinorVersion = -1;
 
 bool MouseScrollHandler::Device::SetPoint::sMightBeUsing = false;
 
@@ -603,6 +611,10 @@ MouseScrollHandler::HandleMouseWheelMessage(nsWindowBase* aWidget,
 
   mIsWaitingInternalMessage = false;
 
+  // If it's not allowed to cache system settings, we need to reset the cache
+  // before handling the mouse wheel message.
+  mSystemSettings.TrustedScrollSettingsDriver(aMessage == MOZ_WM_MOUSEVWHEEL);
+
   EventInfo eventInfo(aWidget, WinUtils::GetNativeMessage(aMessage),
                       aWParam, aLParam);
   if (!eventInfo.CanDispatchWheelEvent()) {
@@ -881,30 +893,43 @@ MouseScrollHandler::SystemSettings::Init()
     return;
   }
 
+  InitScrollLines();
+  InitScrollChars();
+
   mInitialized = true;
 
-  MouseScrollHandler::UserPrefs& userPrefs =
-    MouseScrollHandler::sInstance->mUserPrefs;
+  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+    ("MouseScroll::SystemSettings::Init(): initialized, "
+       "mScrollLines=%d, mScrollChars=%d",
+     mScrollLines, mScrollChars));
+}
 
-  mScrollLines = userPrefs.GetOverriddenVerticalScrollAmout();
+bool
+MouseScrollHandler::SystemSettings::InitScrollLines()
+{
+  int32_t oldValue = mInitialized ? mScrollLines : 0;
+  mIsReliableScrollLines = false;
+  mScrollLines = MouseScrollHandler::sInstance->
+                   mUserPrefs.GetOverriddenVerticalScrollAmout();
   if (mScrollLines >= 0) {
     // overridden by the pref.
+    mIsReliableScrollLines = true;
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): mScrollLines is overridden by "
-       "the pref: %d",
+      ("MouseScroll::SystemSettings::InitScrollLines(): mScrollLines is "
+       "overridden by the pref: %d",
        mScrollLines));
   } else if (!::SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0,
                                      &mScrollLines, 0)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): ::SystemParametersInfo("
-         "SPI_GETWHEELSCROLLLINES) failed"));
+      ("MouseScroll::SystemSettings::InitScrollLines(): ::SystemParametersInfo("
+       "SPI_GETWHEELSCROLLLINES) failed"));
     mScrollLines = 3;
   }
 
   if (mScrollLines > WHEEL_DELTA) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): the result of "
-         "::SystemParametersInfo(SPI_GETWHEELSCROLLLINES) is too large: %d",
+      ("MouseScroll::SystemSettings::InitScrollLines(): the result of "
+       "::SystemParametersInfo(SPI_GETWHEELSCROLLLINES) is too large: %d",
        mScrollLines));
     // sScrollLines usually equals 3 or 0 (for no scrolling)
     // However, if sScrollLines > WHEEL_DELTA, we assume that
@@ -915,18 +940,28 @@ MouseScrollHandler::SystemSettings::Init()
     mScrollLines = WHEEL_PAGESCROLL;
   }
 
-  mScrollChars = userPrefs.GetOverriddenHorizontalScrollAmout();
+  return oldValue != mScrollLines;
+}
+
+bool
+MouseScrollHandler::SystemSettings::InitScrollChars()
+{
+  int32_t oldValue = mInitialized ? mScrollChars : 0;
+  mIsReliableScrollChars = false;
+  mScrollChars = MouseScrollHandler::sInstance->
+                   mUserPrefs.GetOverriddenHorizontalScrollAmout();
   if (mScrollChars >= 0) {
     // overridden by the pref.
+    mIsReliableScrollChars = true;
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): mScrollChars is overridden by "
-       "the pref: %d",
+      ("MouseScroll::SystemSettings::InitScrollChars(): mScrollChars is "
+       "overridden by the pref: %d",
        mScrollChars));
   } else if (!::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS, 0,
                                      &mScrollChars, 0)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): ::SystemParametersInfo("
-         "SPI_GETWHEELSCROLLCHARS) failed, %s",
+      ("MouseScroll::SystemSettings::InitScrollChars(): ::SystemParametersInfo("
+       "SPI_GETWHEELSCROLLCHARS) failed, %s",
        IsVistaOrLater() ?
          "this is unexpected on Vista or later" :
          "but on XP or earlier, this is not a problem"));
@@ -935,17 +970,14 @@ MouseScrollHandler::SystemSettings::Init()
 
   if (mScrollChars > WHEEL_DELTA) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-      ("MouseScroll::SystemSettings::Init(): the result of "
-         "::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS) is too large: %d",
+      ("MouseScroll::SystemSettings::InitScrollChars(): the result of "
+       "::SystemParametersInfo(SPI_GETWHEELSCROLLCHARS) is too large: %d",
        mScrollChars));
     // See the comments for the case mScrollLines > WHEEL_DELTA.
     mScrollChars = WHEEL_PAGESCROLL;
   }
 
-  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-    ("MouseScroll::SystemSettings::Init(): initialized, "
-       "mScrollLines=%d, mScrollChars=%d",
-     mScrollLines, mScrollChars));
+  return oldValue != mScrollChars;
 }
 
 void
@@ -959,6 +991,59 @@ MouseScrollHandler::SystemSettings::MarkDirty()
   MOZ_ASSERT(sInstance,
     "Must not be called at initializing MouseScrollHandler");
   MouseScrollHandler::sInstance->mLastEventInfo.ResetTransaction();
+}
+
+void
+MouseScrollHandler::SystemSettings::RefreshCache(bool aForVertical)
+{
+  bool isChanged = aForVertical ? InitScrollLines() : InitScrollChars();
+  if (!isChanged) {
+    return;
+  }
+  // If the scroll amount is changed, we should reset current transaction.
+  MOZ_ASSERT(sInstance,
+    "Must not be called at initializing MouseScrollHandler");
+  MouseScrollHandler::sInstance->mLastEventInfo.ResetTransaction();
+}
+
+void
+MouseScrollHandler::SystemSettings::TrustedScrollSettingsDriver(
+                                      bool aIsVertical)
+{
+  if (!mInitialized) {
+    return;
+  }
+
+  // if the cache is initialized with prefs, we don't need to refresh it.
+  if ((aIsVertical && mIsReliableScrollLines) ||
+      (!aIsVertical && mIsReliableScrollChars)) {
+    return;
+  }
+
+  MouseScrollHandler::UserPrefs& userPrefs =
+    MouseScrollHandler::sInstance->mUserPrefs;
+
+  // If system settings cache is disabled, we should always refresh them.
+  if (!userPrefs.IsSystemSettingCacheEnabled()) {
+    RefreshCache(aIsVertical);
+    return;
+  }
+
+  // If pref is set to as "always trust the cache", we shouldn't refresh them
+  // in any environments.
+  if (userPrefs.IsSystemSettingCacheForciblyEnabled()) {
+    return;
+  }
+
+  // If SynTP of Synaptics or Apoint of Alps is installed, it may hook
+  // ::SystemParametersInfo() and returns different value from system settings.
+  if (Device::SynTP::IsDriverInstalled() ||
+      Device::Apoint::IsDriverInstalled()) {
+    RefreshCache(aIsVertical);
+    return;
+  }
+
+  // XXX We're not sure about other touchpad drivers...
 }
 
 /******************************************************************************
@@ -997,6 +1082,11 @@ MouseScrollHandler::UserPrefs::Init()
 
   mScrollMessageHandledAsWheelMessage =
     Preferences::GetBool("mousewheel.emulate_at_wm_scroll", false);
+  mEnableSystemSettingCache =
+    Preferences::GetBool("mousewheel.system_settings_cache.enabled", true);
+  mForceEnableSystemSettingCache =
+    Preferences::GetBool("mousewheel.system_settings_cache.force_enabled",
+                         false);
   mOverriddenVerticalScrollAmount =
     Preferences::GetInt("mousewheel.windows.vertical_amount_override", -1);
   mOverriddenHorizontalScrollAmount =
@@ -1008,10 +1098,14 @@ MouseScrollHandler::UserPrefs::Init()
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
     ("MouseScroll::UserPrefs::Init(): initialized, "
        "mScrollMessageHandledAsWheelMessage=%s, "
+       "mEnableSystemSettingCache=%s, "
+       "mForceEnableSystemSettingCache=%s, "
        "mOverriddenVerticalScrollAmount=%d, "
        "mOverriddenHorizontalScrollAmount=%d, "
        "mMouseScrollTransactionTimeout=%d",
      GetBoolName(mScrollMessageHandledAsWheelMessage),
+     GetBoolName(mEnableSystemSettingCache),
+     GetBoolName(mForceEnableSystemSettingCache),
      mOverriddenVerticalScrollAmount, mOverriddenHorizontalScrollAmount,
      mMouseScrollTransactionTimeout));
 }
@@ -1076,6 +1170,13 @@ MouseScrollHandler::Device::GetWorkaroundPref(const char* aPrefName,
 void
 MouseScrollHandler::Device::Init()
 {
+  // FYI: Thinkpad's TrackPoint is Apoint of Alps and UltraNav is SynTP of
+  //      Synaptics.  So, those drivers' information should be initialized
+  //      before calling methods of TrackPoint and UltraNav.
+  SynTP::Init();
+  Elantech::Init();
+  Apoint::Init();
+
   sFakeScrollableWindowNeeded =
     GetWorkaroundPref("ui.trackpoint_hack.enabled",
                       (TrackPoint::IsDriverInstalled() ||
@@ -1084,8 +1185,49 @@ MouseScrollHandler::Device::Init()
   MOZ_LOG(gMouseScrollLog, LogLevel::Info,
     ("MouseScroll::Device::Init(): sFakeScrollableWindowNeeded=%s",
      GetBoolName(sFakeScrollableWindowNeeded)));
+}
 
-  Elantech::Init();
+/******************************************************************************
+ *
+ * Device::SynTP
+ *
+ ******************************************************************************/
+
+/* static */
+void
+MouseScrollHandler::Device::SynTP::Init()
+{
+  if (sInitialized) {
+    return;
+  }
+
+  sInitialized = true;
+  sMajorVersion = 0;
+  sMinorVersion = -1;
+
+  wchar_t buf[40];
+  bool foundKey =
+    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                             L"Software\\Synaptics\\SynTP\\Install",
+                             L"DriverVersion",
+                             buf, sizeof buf);
+  if (!foundKey) {
+    MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+      ("MouseScroll::Device::SynTP::Init(): "
+       "SynTP driver is not found"));
+    return;
+  }
+
+  sMajorVersion = wcstol(buf, nullptr, 10);
+  sMinorVersion = 0;
+  wchar_t* p = wcschr(buf, L'.');
+  if (p) {
+    sMinorVersion = wcstol(p + 1, nullptr, 10);
+  }
+  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+    ("MouseScroll::Device::SynTP::Init(): "
+     "found driver version = %d.%d",
+     sMajorVersion, sMinorVersion));
 }
 
 /******************************************************************************
@@ -1305,6 +1447,49 @@ MouseScrollHandler::Device::Elantech::IsZooming()
 
 /******************************************************************************
  *
+ * Device::Apoint
+ *
+ ******************************************************************************/
+
+/* static */
+void
+MouseScrollHandler::Device::Apoint::Init()
+{
+  if (sInitialized) {
+    return;
+  }
+
+  sInitialized = true;
+  sMajorVersion = 0;
+  sMinorVersion = -1;
+
+  wchar_t buf[40];
+  bool foundKey =
+    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
+                             L"Software\\Alps\\Apoint",
+                             L"ProductVer",
+                             buf, sizeof buf);
+  if (!foundKey) {
+    MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+      ("MouseScroll::Device::Apoint::Init(): "
+       "Apoint driver is not found"));
+    return;
+  }
+
+  sMajorVersion = wcstol(buf, nullptr, 10);
+  sMinorVersion = 0;
+  wchar_t* p = wcschr(buf, L'.');
+  if (p) {
+    sMinorVersion = wcstol(p + 1, nullptr, 10);
+  }
+  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
+    ("MouseScroll::Device::Apoint::Init(): "
+     "found driver version = %d.%d",
+     sMajorVersion, sMinorVersion));
+}
+
+/******************************************************************************
+ *
  * Device::TrackPoint
  *
  ******************************************************************************/
@@ -1368,29 +1553,14 @@ MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled()
     return false;
   }
 
-  wchar_t buf[40];
-  bool foundKey =
-    WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE,
-                             L"Software\\Synaptics\\SynTP\\Install",
-                             L"DriverVersion",
-                             buf, sizeof buf);
-  if (!foundKey) {
+  int32_t majorVersion = Device::SynTP::GetDriverMajorVersion();
+  if (!majorVersion) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
       ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
        "Failed to get UltraNav driver version"));
     return false;
   }
-
-  int majorVersion = wcstol(buf, nullptr, 10);
-  int minorVersion = 0;
-  wchar_t* p = wcschr(buf, L'.');
-  if (p) {
-    minorVersion = wcstol(p + 1, nullptr, 10);
-  }
-  MOZ_LOG(gMouseScrollLog, LogLevel::Info,
-    ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
-     "found driver version = %d.%d",
-     majorVersion, minorVersion));
+  int32_t minorVersion = Device::SynTP::GetDriverMinorVersion();
   return majorVersion < 15 || (majorVersion == 15 && minorVersion == 0);
 }
 

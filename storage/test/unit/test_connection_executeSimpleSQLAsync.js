@@ -11,50 +11,6 @@ const INTEGER = 1;
 const TEXT = "this is test text";
 const REAL = 3.23;
 
-function asyncClose(db) {
-  let deferred = Promise.defer();
-  db.asyncClose(function (status) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve();
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function openAsyncDatabase(file) {
-  let deferred = Promise.defer();
-  getService().openAsyncDatabase(file, null, function (status, db) {
-    if (Components.isSuccessCode(status)) {
-      deferred.resolve(db.QueryInterface(Ci.mozIStorageAsyncConnection));
-    } else {
-      deferred.reject(status);
-    }
-  });
-  return deferred.promise;
-}
-
-function executeSimpleSQLAsync(db, query, onResult) {
-  let deferred = Promise.defer();
-  db.executeSimpleSQLAsync(query, {
-    handleError(error) {
-      deferred.reject(error);
-    },
-    handleResult(result) {
-      if (onResult) {
-        onResult(result);
-      } else {
-        do_throw("No results were expected");
-      }
-    },
-    handleCompletion(result) {
-      deferred.resolve(result);
-    }
-  });
-  return deferred.promise;
-}
-
 add_task(function* test_create_and_add() {
   let adb = yield openAsyncDatabase(getTestDB());
 

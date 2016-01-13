@@ -93,6 +93,9 @@ this.UITour = {
   urlbarCapture: new WeakMap(),
   appMenuOpenForAnnotation: new Set(),
   availableTargetsCache: new WeakMap(),
+  clearAvailableTargetsCache() {
+    this.availableTargetsCache = new WeakMap();
+  },
 
   _annotationPanelMutationObservers: new WeakMap(),
 
@@ -285,7 +288,7 @@ this.UITour = {
       "onAreaReset",
     ];
     CustomizableUI.addListener(listenerMethods.reduce((listener, method) => {
-      listener[method] = () => this.availableTargetsCache.clear();
+      listener[method] = () => this.clearAvailableTargetsCache();
       return listener;
     }, {}));
   },
@@ -1582,7 +1585,7 @@ this.UITour = {
       popup.addEventListener("popuphidden", this.onPanelHidden);
 
       popup.setAttribute("noautohide", true);
-      this.availableTargetsCache.clear();
+      this.clearAvailableTargetsCache();
 
       if (popup.state == "open") {
         if (aOpenCallback) {
@@ -1611,7 +1614,7 @@ this.UITour = {
       panel.setAttribute("noautohide", true);
       if (panel.state != "open") {
         this.recreatePopup(panel);
-        this.availableTargetsCache.clear();
+        this.clearAvailableTargetsCache();
       }
 
       // An event object is expected but we don't want to toggle the panel with a click if the panel
@@ -1731,7 +1734,7 @@ this.UITour = {
   onPanelHidden: function(aEvent) {
     aEvent.target.removeAttribute("noautohide");
     UITour.recreatePopup(aEvent.target);
-    UITour.availableTargetsCache.clear();
+    UITour.clearAvailableTargetsCache();
   },
 
   recreatePopup: function(aPanel) {

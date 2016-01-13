@@ -139,11 +139,11 @@ bool
 js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res)
 {
     MOZ_ASSERT(frame.isNonEvalFunctionFrame());
-    MOZ_ASSERT(!frame.fun()->isArrow());
+    MOZ_ASSERT(!frame.callee()->isArrow());
 
     if (frame.thisArgument().isObject() ||
-        frame.fun()->strict() ||
-        frame.fun()->isSelfHostedBuiltin())
+        frame.callee()->strict() ||
+        frame.callee()->isSelfHostedBuiltin())
     {
         res.set(frame.thisArgument());
         return true;
@@ -304,7 +304,7 @@ MakeDefaultConstructor(JSContext* cx, JSOp op, JSAtom* atom, HandleObject proto)
 
     RootedFunction ctor(cx);
     if (!cx->runtime()->createLazySelfHostedFunctionClone(cx, selfHostedName, name,
-                                                          /* nargs = */ !!derived,
+                                                          /* nargs = */ 0,
                                                           proto, TenuredObject, &ctor))
     {
         return nullptr;
@@ -346,7 +346,9 @@ RunState::maybeCreateThisForConstructor(JSContext* cx)
         InvokeState& invoke = *asInvoke();
         if (invoke.constructing() && invoke.args().thisv().isPrimitive()) {
             RootedObject callee(cx, &invoke.args().callee());
-            if (script()->isDerivedClassConstructor()) {
+            if (callee->isBoundFunction()) {
+                invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
+            } else if (script()->isDerivedClassConstructor()) {
                 MOZ_ASSERT(callee->as<JSFunction>().isClassConstructor());
                 invoke.args().setThis(MagicValue(JS_UNINITIALIZED_LEXICAL));
             } else {

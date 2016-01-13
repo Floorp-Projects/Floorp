@@ -27,12 +27,10 @@
 #include "nsCycleCollectionParticipant.h"
 
 class nsIFrame;
-class nsIStyleRule;
 class nsPresContext;
 
 namespace mozilla {
 
-class RestyleTracker;
 struct AnimationCollection;
 
 class CommonAnimationManager : public nsIStyleRuleProcessor {
@@ -66,11 +64,6 @@ public:
    */
   void Disconnect();
 
-  // Tell the restyle tracker about all the styles that we're currently
-  // animating, so that it can update the animation rule for these
-  // elements.
-  void AddStyleUpdatesTo(RestyleTracker& aTracker);
-
   // Returns true if aContent or any of its ancestors has an animation
   // or transition.
   static bool ContentOrAncestorHasAnimation(nsIContent* aContent) {
@@ -83,13 +76,6 @@ public:
 
     return false;
   }
-
-  // Requests a standard restyle on each managed AnimationCollection that has
-  // an out-of-date mStyleRuleRefreshTime.
-  void FlushAnimations();
-
-  nsIStyleRule* GetAnimationRule(dom::Element* aElement,
-                                 nsCSSPseudoElements::Type aPseudoType);
 
   static bool ExtractComputedValueForTransition(
                   nsCSSProperty aProperty,
@@ -126,8 +112,6 @@ public:
   AnimationCollection*
   GetAnimationCollection(const nsIFrame* aFrame);
 
-  void ClearIsRunningOnCompositor(const nsIFrame *aFrame,
-                                  nsCSSProperty aProperty);
 protected:
   LinkedList<AnimationCollection> mElementCollections;
   nsPresContext *mPresContext; // weak (non-null from ctor to Disconnect)
@@ -143,8 +127,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
     , mElementProperty(aElementProperty)
     , mManager(aManager)
     , mCheckGeneration(0)
-    , mStyleChanging(true)
-    , mHasPendingAnimationRestyle(false)
 #ifdef DEBUG
     , mCalledPropertyDtor(false)
 #endif
@@ -169,26 +151,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
                            void *aPropertyValue, void *aData);
 
   void Tick();
-
-  void EnsureStyleRuleFor(TimeStamp aRefreshTime);
-
-  enum class RestyleType {
-    // Animation style has changed but the compositor is applying the same
-    // change so we might be able to defer updating the main thread until it
-    // becomes necessary.
-    Throttled,
-    // Animation style has changed and needs to be updated on the main thread.
-    Standard,
-    // Animation style has changed and needs to be updated on the main thread
-    // as well as forcing animations on layers to be updated.
-    // This is needed in cases such as when an animation becomes paused or has
-    // its playback rate changed. In such a case, although the computed style
-    // and refresh driver time might not change, we still need to ensure the
-    // corresponding animations on layers are updated to reflect the new
-    // configuration of the animation.
-    Layer
-  };
-  void RequestRestyle(RestyleType aRestyleType);
 
 public:
   // True if this animation can be performed on the compositor thread.
@@ -249,15 +211,6 @@ public:
 
   dom::Element* GetElementToRestyle() const;
 
-  void PostRestyleForAnimation(nsPresContext *aPresContext) {
-    dom::Element* element = GetElementToRestyle();
-    if (element) {
-      nsRestyleHint hint = IsForTransitions() ? eRestyle_CSSTransitions
-                                              : eRestyle_CSSAnimations;
-      aPresContext->PresShell()->RestyleForAnimation(element, hint);
-    }
-  }
-
   dom::Element *mElement;
 
   // the atom we use in mElement's prop table (must be a static atom,
@@ -277,20 +230,7 @@ public:
   // Update mCheckGeneration to RestyleManager's count
   void UpdateCheckGeneration(nsPresContext* aPresContext);
 
-  // The refresh time associated with the animation rule on the EffectSet.
-  TimeStamp mStyleRuleRefreshTime;
-
-  // False when we know that our current animation rule is valid
-  // indefinitely into the future (because all of our animations are
-  // either completed or paused).  May be invalidated by a style change.
-  bool mStyleChanging;
-
 private:
-  // Whether or not we have already posted for animation restyle.
-  // This is used to avoid making redundant requests and is reset each time
-  // the animation restyle is performed.
-  bool mHasPendingAnimationRestyle;
-
 #ifdef DEBUG
   bool mCalledPropertyDtor;
 #endif

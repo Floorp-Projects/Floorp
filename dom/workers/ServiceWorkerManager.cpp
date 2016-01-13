@@ -2961,6 +2961,11 @@ ServiceWorkerManager::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActor);
 
+  if (mShuttingDown) {
+    mPendingOperations.Clear();
+    return;
+  }
+
   PServiceWorkerManagerChild* actor =
     aActor->SendPServiceWorkerManagerConstructor();
 
@@ -3802,6 +3807,10 @@ ServiceWorkerManager::SoftUpdate(const PrincipalOriginAttributes& aOriginAttribu
                                  const nsACString& aScope)
 {
   AssertIsOnMainThread();
+
+  if (mShuttingDown) {
+    return;
+  }
 
   nsCOMPtr<nsIURI> scopeURI;
   nsresult rv = NS_NewURI(getter_AddRefs(scopeURI), aScope);
@@ -4681,6 +4690,12 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
         timer->Cancel();
       }
       it1.UserData()->mUpdateTimers.Clear();
+
+      for (auto it2 = it1.UserData()->mJobQueues.Iter(); !it2.Done(); it2.Next()) {
+        ServiceWorkerJobQueue* queue = it2.UserData();
+        queue->CancelJobs();
+      }
+      it1.UserData()->mJobQueues.Clear();
     }
 
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -4701,6 +4716,8 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
       nsresult rv = NS_DispatchToMainThread(runnable);
       Unused << NS_WARN_IF(NS_FAILED(rv));
       mActor = nullptr;
+    } else {
+      mPendingOperations.Clear();
     }
     return NS_OK;
   }
@@ -5020,8 +5037,7 @@ ServiceWorkerManager::UpdateTimerFired(nsIPrincipal* aPrincipal,
   PrincipalOriginAttributes attrs =
     BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
 
-  // Then trigger an update to fire asynchronously now.
-  PropagateSoftUpdate(attrs, NS_ConvertUTF8toUTF16(aScope));
+  SoftUpdate(attrs, aScope);
 }
 
 NS_IMPL_ISUPPORTS(ServiceWorkerInfo, nsIServiceWorkerInfo)

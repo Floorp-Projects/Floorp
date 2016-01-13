@@ -260,7 +260,10 @@ public:
   // version of that method for different loggers, this is OK. Once we do,
   // change BasicLogger::ShouldOutputMessage to Logger::ShouldOutputMessage.
   explicit Log(int aOptions = Log::DefaultOptions(L == LOG_CRITICAL),
-               LogReason aReason = LogReason::MustBeMoreThanThis) {
+               LogReason aReason = LogReason::MustBeMoreThanThis)
+  : mOptions(0)
+  , mLogIt(false)
+  {
     Init(aOptions, BasicLogger::ShouldOutputMessage(L), aReason);
   }
 

@@ -331,7 +331,7 @@ public class HistoryPanel extends HomeFragment {
     }
 
     /**
-     * Make Span that is clickable, italicized, and underlined
+     * Make Span that is clickable, and underlined
      * between the string markers <code>FORMAT_S1</code> and
      * <code>FORMAT_S2</code>.
      *
@@ -350,9 +350,6 @@ public class HistoryPanel extends HomeFragment {
         }
 
         final SpannableStringBuilder ssb = new SpannableStringBuilder(text);
-
-        // Set italicization.
-        ssb.setSpan(new StyleSpan(Typeface.ITALIC), 0, ssb.length(), 0);
 
         // Set clickable text.
         final ClickableSpan clickableSpan = new ClickableSpan() {

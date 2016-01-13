@@ -482,6 +482,7 @@ protected:
   static DWORD sIMEUIProperty;
   static bool sAssumeVerticalWritingModeNotSupported;
   static bool sHasFocus;
+  static bool sNativeCaretIsCreatedForPlugin;
 };
 
 } // namespace widget

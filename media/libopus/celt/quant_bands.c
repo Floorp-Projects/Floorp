@@ -292,7 +292,7 @@ void quant_coarse_energy(const CELTMode *m, int start, int end, int effEnd,
 #endif
    }
    if (lfe)
-      max_decay=3;
+      max_decay = QCONST16(3.f,DB_SHIFT);
    enc_start_state = *enc;
 
    ALLOC(oldEBands_intra, C*m->nbEBands, opus_val16);

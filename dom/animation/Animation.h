@@ -39,9 +39,7 @@ class nsPresContext;
 
 namespace mozilla {
 
-struct AnimationCollection;
 class AnimValuesStyleRule;
-class CommonAnimationManager;
 
 namespace dom {
 
@@ -307,17 +305,11 @@ public:
    * if any.
    * Any properties already contained in |aSetProperties| are not changed. Any
    * properties that are changed are added to |aSetProperties|.
-   * |aStyleChanging| will be set to true if this animation expects to update
-   * the style rule on the next refresh driver tick as well (because it
-   * is running and has an effect to sample).
    */
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
-                    nsCSSPropertySet& aSetProperties,
-                    bool& aStyleChanging);
+                    nsCSSPropertySet& aSetProperties);
 
   void NotifyEffectTimingUpdated();
-
-  AnimationCollection* GetCollection() const;
 
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
@@ -377,7 +369,6 @@ protected:
 
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
-  virtual CommonAnimationManager* GetAnimationManager() const = 0;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<KeyframeEffectReadOnly> mEffect;

@@ -924,7 +924,8 @@ js::RegExpMatcher(JSContext* cx, unsigned argc, Value* vp)
                              UpdateRegExpStatics, args.rval());
 }
 
-/* Separate interface for use by IonMonkey. */
+/* Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code. */
 bool
 js::RegExpMatcherRaw(JSContext* cx, HandleObject regexp, HandleString input,
                      int32_t lastIndex, bool sticky,
@@ -993,7 +994,8 @@ js::RegExpTester(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-/* Separate interface for use by IonMonkey. */
+/* Separate interface for use by IonMonkey.
+ * This code cannot re-enter Ion code. */
 bool
 js::RegExpTesterRaw(JSContext* cx, HandleObject regexp, HandleString input,
                     int32_t lastIndex, bool sticky, int32_t* endIndex)

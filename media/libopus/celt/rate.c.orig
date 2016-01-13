@@ -131,7 +131,7 @@ void compute_pulse_cache(CELTMode *m, int LM)
    for (i=0;i<nbEntries;i++)
    {
       unsigned char *ptr = bits+entryI[i];
-      opus_int16 tmp[MAX_PULSES+1];
+      opus_int16 tmp[CELT_MAX_PULSES+1];
       get_required_bits(tmp, entryN[i], get_pulses(entryK[i]), BITRES);
       for (j=1;j<=entryK[i];j++)
          ptr[j] = tmp[get_pulses(j)]-1;

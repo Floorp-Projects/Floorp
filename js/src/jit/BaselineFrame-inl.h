@@ -89,7 +89,7 @@ inline CallObject&
 BaselineFrame::callObj() const
 {
     MOZ_ASSERT(hasCallObj());
-    MOZ_ASSERT(fun()->needsCallObject());
+    MOZ_ASSERT(callee()->needsCallObject());
 
     JSObject* obj = scopeChain();
     while (!obj->is<CallObject>())

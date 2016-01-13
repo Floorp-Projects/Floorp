@@ -710,8 +710,7 @@ nsExpatDriver::HandleExternalEntityRef(const char16_t *openEntityNames,
   }
 
   nsCOMPtr<nsIUnicharInputStream> uniIn;
-  rv = nsSimpleUnicharStreamFactory::GetInstance()->
-    CreateInstanceFromUTF8Stream(in, getter_AddRefs(uniIn));
+  rv = NS_NewUnicharInputStream(in, getter_AddRefs(uniIn));
   NS_ENSURE_SUCCESS(rv, 1);
 
   int result = 1;

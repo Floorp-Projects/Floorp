@@ -71,10 +71,11 @@ include('/ipc/chromium/chromium-config.mozbuild')
 #  - about attributes on forward declarations for types that are already
 #    defined, which complains about an important MOZ_EXPORT for android::AString
 #  - about multi-character constants which are used in codec-related code
+#    and are part of Android's libstagefright API style.
 if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
   CXXFLAGS += [
     '-Wno-error=attributes',
-    '-Wno-error=multichar'
+    '-Wno-multichar'
   ]
 
 FINAL_LIBRARY = 'xul'

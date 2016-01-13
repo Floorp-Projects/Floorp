@@ -1645,6 +1645,8 @@ CodeGenerator::visitOutOfLineRegExpMatcher(OutOfLineRegExpMatcher* ool)
     pushArg(input);
     pushArg(regexp);
 
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
     callVM(RegExpMatcherRawInfo, lir);
 
     masm.jump(ool->rejoin());
@@ -1796,6 +1798,8 @@ CodeGenerator::visitOutOfLineRegExpTester(OutOfLineRegExpTester* ool)
     pushArg(input);
     pushArg(regexp);
 
+    // We are not using oolCallVM because we are in a Call, and that live
+    // registers are already saved by the the register allocator.
     callVM(RegExpTesterRawInfo, lir);
 
     masm.jump(ool->rejoin());
@@ -1985,7 +1989,7 @@ CodeGenerator::visitLambda(LLambda* lir)
     emitLambdaInit(output, scopeChain, info);
 
     if (info.flags & JSFunction::EXTENDED) {
-        MOZ_ASSERT(info.fun->allowSuperProperty());
+        MOZ_ASSERT(info.fun->allowSuperProperty() || info.fun->isSelfHostedBuiltin());
         static_assert(FunctionExtended::NUM_EXTENDED_SLOTS == 2, "All slots must be initialized");
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(0)));
         masm.storeValue(UndefinedValue(), Address(output, FunctionExtended::offsetOfExtendedSlot(1)));

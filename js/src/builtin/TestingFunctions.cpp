@@ -2497,7 +2497,11 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
         if (!obj)
             return false;
 
-        if (!JS_DefineProperty(cx, obj, "node", nodes[i],
+        RootedValue wrapped(cx, nodes[i]);
+        if (!cx->compartment()->wrap(cx, &wrapped))
+            return false;
+
+        if (!JS_DefineProperty(cx, obj, "node", wrapped,
                                JSPROP_ENUMERATE, nullptr, nullptr))
             return false;
 

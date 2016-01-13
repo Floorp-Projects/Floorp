@@ -2,46 +2,48 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
-from copy import deepcopy
 import os
 import sys
 import tempfile
 import time
+
+from copy import deepcopy
 
 from mozprofile import Profile
 from mozrunner import Runner
 
 
 class GeckoInstance(object):
-
     required_prefs = {
-        "marionette.defaultPrefs.enabled": True,
-        "marionette.logging": True,
-        "browser.displayedE10SPrompt": 5,
         "browser.displayedE10SPrompt.1": 5,
         "browser.displayedE10SPrompt.2": 5,
         "browser.displayedE10SPrompt.3": 5,
         "browser.displayedE10SPrompt.4": 5,
+        "browser.displayedE10SPrompt": 5,
         "browser.sessionstore.resume_from_crash": False,
         "browser.shell.checkDefaultBrowser": False,
         "browser.startup.page": 0,
-        "browser.tabs.remote.autostart": False,
         "browser.tabs.remote.autostart.1": False,
         "browser.tabs.remote.autostart.2": False,
+        "browser.tabs.remote.autostart": False,
         "browser.urlbar.userMadeSearchSuggestionsChoice": True,
         "browser.warnOnQuit": False,
-        "dom.ipc.reportProcessHangs": False,
+        "datareporting.healthreport.logging.consoleEnabled": False,
+        "datareporting.healthreport.service.enabled": False,
+        "datareporting.healthreport.service.firstRun": False,
         "datareporting.healthreport.uploadEnabled": False,
         "datareporting.policy.dataSubmissionEnabled": False,
         "datareporting.policy.dataSubmissionPolicyAccepted": False,
+        "dom.ipc.reportProcessHangs": False,
         "focusmanager.testmode": True,
+        "marionette.defaultPrefs.enabled": True,
         "startup.homepage_welcome_url": "about:blank",
         "toolkit.telemetry.enabled": False,
     }
 
     def __init__(self, host, port, bin, profile=None, addons=None,
                  app_args=None, symbols_path=None, gecko_log=None, prefs=None,
-                 workspace=None):
+                 workspace=None, verbose=0):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
@@ -74,12 +76,16 @@ class GeckoInstance(object):
                 os.remove(gecko_log)
 
         self.gecko_log = gecko_log
+        self.verbose = verbose
 
     def start(self):
         profile_args = {"preferences": deepcopy(self.required_prefs)}
         profile_args["preferences"]["marionette.defaultPrefs.port"] = self.marionette_port
         if self.prefs:
             profile_args["preferences"].update(self.prefs)
+        if self.verbose:
+            level = "TRACE" if self.verbose >= 2 else "DEBUG"
+            profile_args["preferences"]["marionette.logging"] = level
         if '-jsdebugger' in self.app_args:
             profile_args["preferences"].update({
                 "devtools.browsertoolbox.panel": "jsdebugger",
@@ -205,9 +211,6 @@ class DesktopInstance(GeckoInstance):
         'extensions.update.notifyUser': False,
         'geo.provider.testing': True,
         'javascript.options.showInConsole': True,
-        # See Bug 1221187 - marionette logging is too verbose, especially for
-        # long-running tests.
-        'marionette.logging': False,
         'security.notification_enable_delay': 0,
         'signon.rememberSignons': False,
         'toolkit.startup.max_resumed_crashes': -1,
@@ -216,6 +219,7 @@ class DesktopInstance(GeckoInstance):
     def __init__(self, *args, **kwargs):
         super(DesktopInstance, self).__init__(*args, **kwargs)
         self.required_prefs.update(DesktopInstance.desktop_prefs)
+
 
 class NullOutput(object):
     def __call__(self, line):

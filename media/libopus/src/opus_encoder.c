@@ -81,6 +81,7 @@ struct OpusEncoder {
     int          lsb_depth;
     int          encoder_buffer;
     int          lfe;
+    int          arch;
 #ifndef DISABLE_FLOAT_API
     TonalityAnalysisState analysis;
 #endif
@@ -104,10 +105,8 @@ struct OpusEncoder {
     opus_val16   delay_buffer[MAX_ENCODER_BUFFER*2];
 #ifndef DISABLE_FLOAT_API
     int          detected_bandwidth;
-    int          analysis_offset;
 #endif
     opus_uint32  rangeFinal;
-    int          arch;
 };
 
 /* Transition tables for the voice and music. First column is the
@@ -2455,12 +2454,13 @@ int opus_encoder_ctl(OpusEncoder *st, int request, ...)
         {
            void *silk_enc;
            silk_EncControlStruct dummy;
+           char *start;
            silk_enc = (char*)st+st->silk_enc_offset;
 #ifndef DISABLE_FLOAT_API
            tonality_analysis_reset(&st->analysis);
 #endif
 
-           char *start = (char*)&st->OPUS_ENCODER_RESET_START;
+           start = (char*)&st->OPUS_ENCODER_RESET_START;
            OPUS_CLEAR(start, sizeof(OpusEncoder) - (start - (char*)st));
 
            celt_encoder_ctl(celt_enc, OPUS_RESET_STATE);
