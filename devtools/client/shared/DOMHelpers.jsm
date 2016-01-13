@@ -137,7 +137,7 @@ DOMHelpers.prototype = {
    * chrome iframes are loaded in content docshells (in Firefox
    * tabs for example).
    */
-  onceDOMReady: function Helpers_onLocationChange(callback) {
+  onceDOMReady: function Helpers_onLocationChange(callback, targetURL) {
     let window = this.window;
     let docShell = window.QueryInterface(Ci.nsIInterfaceRequestor)
                          .getInterface(Ci.nsIWebNavigation)
@@ -151,6 +151,12 @@ DOMHelpers.prototype = {
         Services.tm.mainThread.dispatch(callback, 0);
       }
     }
-    docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady, false);
+    if ((window.document.readyState == "complete" ||
+         window.document.readyState == "interactive") &&
+         window.location.href == targetURL) {
+      Services.tm.mainThread.dispatch(callback, 0);
+    } else {
+      docShell.chromeEventHandler.addEventListener("DOMContentLoaded", onReady, false);
+    }
   }
 };
