@@ -24,7 +24,7 @@
 
 namespace mozilla {
 
-struct AnimationTiming
+struct TimingParams
 {
   // The unitialized state of mDuration represents "auto".
   // Bug 1237173: We will replace this with Maybe<TimeDuration>.
@@ -34,8 +34,8 @@ struct AnimationTiming
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
 
-  bool operator==(const AnimationTiming& aOther) const;
-  bool operator!=(const AnimationTiming& aOther) const
+  bool operator==(const TimingParams& aOther) const;
+  bool operator!=(const TimingParams& aOther) const
   {
     return !(*this == aOther);
   }
@@ -48,7 +48,7 @@ class AnimationEffectTimingReadOnly : public nsWrapperCache
 {
 public:
   AnimationEffectTimingReadOnly() = default;
-  explicit AnimationEffectTimingReadOnly(const AnimationTiming& aTiming)
+  explicit AnimationEffectTimingReadOnly(const TimingParams& aTiming)
     : mTiming(aTiming) { }
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(AnimationEffectTimingReadOnly)
@@ -73,12 +73,12 @@ public:
   PlaybackDirection Direction() const { return mTiming.mDirection; }
   void GetEasing(nsString& aRetVal) const { aRetVal.AssignLiteral("linear"); }
 
-  const AnimationTiming& Timing() const { return mTiming; }
-  void SetTiming(const AnimationTiming& aTiming) { mTiming = aTiming; }
+  const TimingParams& AsTimingParams() const { return mTiming; }
+  void SetTimingParams(const TimingParams& aTiming) { mTiming = aTiming; }
 
 protected:
   nsCOMPtr<nsISupports> mParent;
-  AnimationTiming mTiming;
+  TimingParams mTiming;
 };
 
 } // namespace dom

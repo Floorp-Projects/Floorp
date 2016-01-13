@@ -1187,7 +1187,7 @@ Animation::EffectEnd() const
     return StickyTimeDuration(0);
   }
 
-  return mEffect->Timing().mDelay
+  return mEffect->SpecifiedTiming().mDelay
          + mEffect->GetComputedTiming().mActiveDuration;
 }
 

@@ -381,7 +381,7 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  const AnimationTiming& timing = aAnimation->GetEffect()->Timing();
+  const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
   const ComputedTiming computedTiming =
     aAnimation->GetEffect()->GetComputedTiming();
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();

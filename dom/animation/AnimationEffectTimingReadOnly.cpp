@@ -10,7 +10,7 @@
 namespace mozilla {
 
 bool
-AnimationTiming::operator==(const AnimationTiming& aOther) const
+TimingParams::operator==(const TimingParams& aOther) const
 {
   bool durationEqual;
   if (mDuration.IsUnrestrictedDouble()) {
