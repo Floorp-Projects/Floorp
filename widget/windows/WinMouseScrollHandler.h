@@ -515,6 +515,39 @@ public:
       static DWORD sZoomUntil;
     }; // class Elantech
 
+    // Apoint is a touchpad driver of Alps.
+    class Apoint
+    {
+    public:
+      static bool IsDriverInstalled()
+      {
+        return sMajorVersion != 0;
+      }
+      /**
+       * GetDriverMajorVersion() returns the installed driver's major version.
+       * If Apoint driver isn't installed, this returns 0.
+       */
+      static int32_t GetDriverMajorVersion()
+      {
+        return sMajorVersion;
+      }
+      /**
+       * GetDriverMinorVersion() returns the installed driver's minor version.
+       * If Apoint driver isn't installed, this returns -1.
+       */
+      static int32_t GetDriverMinorVersion()
+      {
+        return sMinorVersion;
+      }
+
+      static void Init();
+
+    private:
+      static bool sInitialized;
+      static int32_t sMajorVersion;
+      static int32_t sMinorVersion;
+    };
+
     class TrackPoint {
     public:
       /**
