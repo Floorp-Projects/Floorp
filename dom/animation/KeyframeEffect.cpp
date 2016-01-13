@@ -34,7 +34,8 @@ GetComputedTimingDictionary(const ComputedTiming& aComputedTiming,
   aRetVal.mDelay = aTiming.mDelay.ToMilliseconds();
   aRetVal.mFill = aComputedTiming.mFill;
   aRetVal.mIterations = aComputedTiming.mIterations;
-  aRetVal.mDuration.SetAsUnrestrictedDouble() = aTiming.mIterationDuration.ToMilliseconds();
+  aRetVal.mDuration.SetAsUnrestrictedDouble() =
+    aComputedTiming.mDuration.ToMilliseconds();
   aRetVal.mDirection = aTiming.mDirection;
 
   // ComputedTimingProperties
@@ -201,23 +202,21 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
                           const Nullable<TimeDuration>& aLocalTime,
                           const AnimationTiming& aTiming)
 {
-  const TimeDuration zeroDuration;
-
-  // Currently we expect negative durations to be picked up during CSS
-  // parsing but when we start receiving timing parameters from other sources
-  // we will need to clamp negative durations here.
-  // For now, if we're hitting this it probably means we're overflowing
-  // integer arithmetic in mozilla::TimeStamp.
-  MOZ_ASSERT(aTiming.mIterationDuration >= zeroDuration,
-             "Expecting iteration duration >= 0");
+  const StickyTimeDuration zeroDuration;
 
   // Always return the same object to benefit from return-value optimization.
   ComputedTiming result;
 
+  if (aTiming.mDuration.IsUnrestrictedDouble()) {
+    double durationMs = aTiming.mDuration.GetAsUnrestrictedDouble();
+    if (!IsNaN(durationMs) && durationMs >= 0.0f) {
+      result.mDuration = StickyTimeDuration::FromMilliseconds(durationMs);
+    }
+  }
   result.mIterations = IsNaN(aTiming.mIterations) || aTiming.mIterations < 0.0f ?
                        1.0f :
                        aTiming.mIterations;
-  result.mActiveDuration = ActiveDuration(aTiming, result.mIterations);
+  result.mActiveDuration = ActiveDuration(result.mDuration, result.mIterations);
   result.mFill = aTiming.mFill == dom::FillMode::Auto ?
                  dom::FillMode::None :
                  aTiming.mFill;
@@ -265,10 +264,10 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 
   // Get the position within the current iteration.
   StickyTimeDuration iterationTime;
-  if (aTiming.mIterationDuration != zeroDuration) {
+  if (result.mDuration != zeroDuration) {
     iterationTime = isEndOfFinalIteration
-                    ? StickyTimeDuration(aTiming.mIterationDuration)
-                    : activeTime % aTiming.mIterationDuration;
+                    ? result.mDuration
+                    : activeTime % result.mDuration;
   } /* else, iterationTime is zero */
 
   // Determine the 0-based index of the current iteration.
@@ -289,7 +288,7 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
       : 0;
   } else {
     result.mCurrentIteration =
-      static_cast<uint64_t>(activeTime / aTiming.mIterationDuration); // floor
+      static_cast<uint64_t>(activeTime / result.mDuration); // floor
   }
 
   // Normalize the iteration time into a fraction of the iteration duration.
@@ -302,11 +301,11 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
     result.mProgress.SetValue(progress);
   } else {
     // We are in the active phase so the iteration duration can't be zero.
-    MOZ_ASSERT(aTiming.mIterationDuration != zeroDuration,
+    MOZ_ASSERT(result.mDuration != zeroDuration,
                "In the active phase of a zero-duration animation?");
-    double progress = aTiming.mIterationDuration == TimeDuration::Forever()
+    double progress = result.mDuration == StickyTimeDuration::Forever()
                       ? 0.0
-                      : iterationTime / aTiming.mIterationDuration;
+                      : iterationTime / result.mDuration;
     result.mProgress.SetValue(progress);
   }
 
@@ -335,20 +334,19 @@ KeyframeEffectReadOnly::GetComputedTimingAt(
 }
 
 StickyTimeDuration
-KeyframeEffectReadOnly::ActiveDuration(const AnimationTiming& aTiming,
-                                       double aComputedIterations)
+KeyframeEffectReadOnly::ActiveDuration(const StickyTimeDuration& aIterationDuration,
+                                       double aIterationCount)
 {
-  if (IsInfinite(aComputedIterations)) {
+  if (IsInfinite(aIterationCount)) {
     // An animation that repeats forever has an infinite active duration
     // unless its iteration duration is zero, in which case it has a zero
     // active duration.
     const StickyTimeDuration zeroDuration;
-    return aTiming.mIterationDuration == zeroDuration
-           ? zeroDuration
-           : StickyTimeDuration::Forever();
+    return aIterationDuration == zeroDuration ?
+           zeroDuration :
+           StickyTimeDuration::Forever();
   }
-  return StickyTimeDuration(
-    aTiming.mIterationDuration.MultDouble(aComputedIterations));
+  return aIterationDuration.MultDouble(aIterationCount);
 }
 
 // https://w3c.github.io/web-animations/#in-play
@@ -632,22 +630,6 @@ DumpAnimationProperties(nsTArray<AnimationProperty>& aAnimationProperties)
 }
 #endif
 
-// Extract an iteration duration from an UnrestrictedDoubleOrXXX object.
-template <typename T>
-static TimeDuration
-GetIterationDuration(const T& aDuration) {
-  // Always return the same object to benefit from return-value optimization.
-  TimeDuration result;
-  if (aDuration.IsUnrestrictedDouble()) {
-    double durationMs = aDuration.GetAsUnrestrictedDouble();
-    if (!IsNaN(durationMs) && durationMs >= 0.0f) {
-      result = TimeDuration::FromMilliseconds(durationMs);
-    }
-  }
-  // else, aDuration should be zero
-  return result;
-}
-
 /* static */ AnimationTiming
 KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
     const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
@@ -657,13 +639,16 @@ KeyframeEffectReadOnly::ConvertKeyframeEffectOptions(
   if (aOptions.IsKeyframeEffectOptions()) {
     const KeyframeEffectOptions& opt = aOptions.GetAsKeyframeEffectOptions();
 
-    animationTiming.mIterationDuration = GetIterationDuration(opt.mDuration);
+    animationTiming.mDuration = opt.mDuration;
     animationTiming.mDelay = TimeDuration::FromMilliseconds(opt.mDelay);
     animationTiming.mIterations = opt.mIterations;
     animationTiming.mDirection = opt.mDirection;
     animationTiming.mFill = opt.mFill;
   } else {
-    animationTiming.mIterationDuration = GetIterationDuration(aOptions);
+    double dur = aOptions.IsUnrestrictedDouble() ?
+                 aOptions.GetAsUnrestrictedDouble() :
+                 0.0f;
+    animationTiming.mDuration.SetAsUnrestrictedDouble() = dur;
     animationTiming.mDelay = TimeDuration(0);
     animationTiming.mIterations = 1.0f;
     animationTiming.mDirection = PlaybackDirection::Normal;
