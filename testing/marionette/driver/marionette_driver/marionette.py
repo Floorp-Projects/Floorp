@@ -564,7 +564,6 @@ class Marionette(object):
         self.device_serial = device_serial
         self.adb_host = adb_host
         self.adb_port = adb_port
-        self.restart_handlers = []
 
         startup_timeout = startup_timeout or self.DEFAULT_STARTUP_TIMEOUT
 
@@ -1144,11 +1143,6 @@ class Marionette(object):
         self.raise_for_port(self.wait_for_port())
         self.start_session(session_id=self.session_id)
         self._reset_timeouts()
-
-        # Give consumers who depended on the old session a
-        # chance to re-initialize and/or restore state.
-        for handler in self.restart_handlers:
-            handler()
 
     def absolute_url(self, relative_url):
         '''
