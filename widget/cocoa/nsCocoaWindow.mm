@@ -271,11 +271,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent,
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();
 
-  // newBounds is still display (global screen) pixels at this point;
-  // fortunately, BaseCreate doesn't actually use it so we don't
-  // need to worry about trying to convert it to device pixels
-  // when we don't have a window (or dev context, perhaps) yet
-  Inherited::BaseCreate(aParent, newBounds, aInitData);
+  Inherited::BaseCreate(aParent, aInitData);
 
   mParent = aParent;
   mAncestorLink = aParent;
