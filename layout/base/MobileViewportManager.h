@@ -39,6 +39,10 @@ public:
 private:
   ~MobileViewportManager();
 
+  /* Called to compute the initial viewport on page load or before-first-paint,
+   * whichever happens first. */
+  void SetInitialViewport();
+
   /* Main helper method to update the CSS viewport and any other properties that
    * need updating. */
   void RefreshViewportSize(bool aForceAdjustResolution);

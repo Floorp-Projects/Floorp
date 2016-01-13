@@ -821,7 +821,7 @@ ObjectMayHaveExtraIndexedOwnProperties(JSObject* obj)
 {
     return (!obj->isNative() && !obj->is<UnboxedArrayObject>()) ||
            obj->isIndexed() ||
-           IsAnyTypedArray(obj) ||
+           obj->is<TypedArrayObject>() ||
            ClassMayResolveId(*obj->runtimeFromAnyThread()->commonNames,
                              obj->getClass(), INT_TO_JSID(0), obj);
 }
@@ -2779,8 +2779,8 @@ GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj, uint32_t begin, uin
         }
 
         // Append typed array elements.
-        if (IsAnyTypedArray(pobj)) {
-            uint32_t len = AnyTypedArrayLength(pobj);
+        if (pobj->is<TypedArrayObject>()) {
+            uint32_t len = pobj->as<TypedArrayObject>().length();
             for (uint32_t i = begin; i < len && i < end; i++) {
                 if (!indexes.append(i))
                     return false;

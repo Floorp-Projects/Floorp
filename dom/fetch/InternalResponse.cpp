@@ -132,6 +132,16 @@ InternalResponse::GetTainting() const
 }
 
 already_AddRefed<InternalResponse>
+InternalResponse::Unfiltered()
+{
+  RefPtr<InternalResponse> ref = mWrappedResponse;
+  if (!ref) {
+    ref = this;
+  }
+  return ref.forget();
+}
+
+already_AddRefed<InternalResponse>
 InternalResponse::OpaqueResponse()
 {
   MOZ_ASSERT(!mWrappedResponse, "Can't OpaqueResponse a already wrapped response");

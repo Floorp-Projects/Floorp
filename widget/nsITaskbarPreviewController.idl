@@ -12,6 +12,18 @@ interface nsITaskbarPreview;
 interface nsITaskbarPreviewButton;
 
 /**
+ * nsITaskbarPreviewCallback
+ *
+ * Provides an interface for async image result callbacks. See
+ * nsITaskbarPreviewController request apis below.
+ */
+[scriptable, function, uuid(f3744696-320d-4804-9c27-6a84c29acaa6)]
+interface nsITaskbarPreviewCallback : nsISupports
+{
+  void done(in nsISupports aCanvas, in boolean aDrawBorder);
+};
+
+/**
  * nsITaskbarPreviewController
  *
  * nsITaskbarPreviewController provides the behavior for the taskbar previews.
@@ -20,7 +32,7 @@ interface nsITaskbarPreviewButton;
  * the interface the controller is attached to, only certain methods/attributes
  * are required to be implemented.
  */
-[scriptable, uuid(4FC0AFBB-3E22-4FBA-AC21-953350AF0411)]
+[scriptable, uuid(8b427646-e446-4941-ae0b-c1122a173a68)]
 interface nsITaskbarPreviewController : nsISupports
 {
   /**
@@ -42,31 +54,40 @@ interface nsITaskbarPreviewController : nsISupports
    */
   readonly attribute float thumbnailAspectRatio;
 
-  /**
-   * Invoked by nsITaskbarPreview when it needs to render the preview. The
-   * context is attached to a surface with the controller's width and height
-   * which are obtained immediately before the call.
-   *
-   * Note that the context is not attached to a canvas element.
-   *
-   * @param ctx Canvas drawing context
-   */
+  [deprecated]
   boolean drawPreview(in nsISupports ctx);
 
+  [deprecated]
+  boolean drawThumbnail(in nsISupports ctx, in unsigned long width, in unsigned long height);
+
   /**
-   * Invoked by the taskbar preview when it needs to draw the thumbnail in the
-   * taskbar's application preview window.
+   * Invoked by nsITaskbarPreview when it needs to render the preview.
+   *
+   * @param aCallback Async callback the controller should invoke once
+   * the thumbnail is rendered. aCallback receives as its only parameter
+   * a canvas containing the preview image.
+   */
+  void requestPreview(in nsITaskbarPreviewCallback aCallback);
+
+  /**
+   * An asynchronous version of drawPreview and drawThumbnail apis
+   * implemented in nsITaskbarPreviewController.
    *
    * Note: it is guaranteed that width/height == thumbnailAspectRatio
    * (modulo rounding errors)
    *
    * Also note that the context is not attached to a canvas element.
    *
-   * @param ctx Canvas drawing context
-   * @param width The width of the surface backing the drawing context
-   * @param height The height of the surface backing the drawing context
+   * @param aCallback Async callback the controller should invoke once
+   * the thumbnail is rendered. aCallback receives as its only parameter
+   * a canvas containing the thumbnail image. Canvas dimensions should
+   * match the requested width or height otherwise setting the thumbnail
+   * will fail.
+   * @param width The width of the requested thumbnail
+   * @param height The height of the requested thumbnail
    */
-  boolean drawThumbnail(in nsISupports ctx, in unsigned long width, in unsigned long height);
+  void requestThumbnail(in nsITaskbarPreviewCallback aCallback,
+                        in unsigned long width, in unsigned long height);
 
   /**
    * Invoked when the user presses the close button on the tab preview.
@@ -89,4 +110,3 @@ interface nsITaskbarPreviewController : nsISupports
    */
   void onClick(in nsITaskbarPreviewButton button);
 };
-

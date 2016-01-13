@@ -36,7 +36,12 @@ interface mozIStorageAsyncConnection : nsISupports {
    *        - value: |null|
    *
    * @throws NS_ERROR_NOT_SAME_THREAD
-   *         If is called on a thread other than the one that opened it.
+   *         If called on a thread other than the one that opened it.  The
+   *         callback will not be dispatched.
+   * @throws NS_ERROR_NOT_INITIALIZED
+   *         If called on a connection that has already been closed or was
+   *         never properly opened.  The callback will still be dispatched
+   *         to the main thread despite the returned error.
    */
   void asyncClose([optional] in mozIStorageCompletionCallback aCallback);
 

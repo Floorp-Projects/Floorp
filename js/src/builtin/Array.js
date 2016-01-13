@@ -691,15 +691,17 @@ function ArrayIteratorNext() {
         return callFunction(CallArrayIteratorMethodIfWrapped, this,
                             "ArrayIteratorNext");
     }
-
     var a = UnsafeGetObjectFromReservedSlot(this, ITERATOR_SLOT_TARGET);
     // The index might not be an integer, so we have to do a generic get here.
     var index = UnsafeGetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
     var itemKind = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_ITEM_KIND);
     var result = { value: undefined, done: false };
+    var len = IsPossiblyWrappedTypedArray(a)
+              ? PossiblyWrappedTypedArrayLength(a)
+              : TO_UINT32(a.length);
 
     // FIXME: This should be ToLength, which clamps at 2**53.  Bug 924058.
-    if (index >= TO_UINT32(a.length)) {
+    if (index >= len) {
         // When the above is changed to ToLength, use +1/0 here instead
         // of MAX_UINT32.
         UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, 0xffffffff);

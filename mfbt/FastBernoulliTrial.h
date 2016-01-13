@@ -177,7 +177,10 @@ class FastBernoulliTrial {
    * random number generator; both may not be zero.
    */
   FastBernoulliTrial(double aProbability, uint64_t aState0, uint64_t aState1)
-   : mGenerator(aState0, aState1)
+   : mProbability(0)
+   , mInvLogNotProbability(0)
+   , mGenerator(aState0, aState1)
+   , mSkipCount(0)
   {
     setProbability(aProbability);
   }

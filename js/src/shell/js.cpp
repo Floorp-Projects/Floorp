@@ -2172,8 +2172,6 @@ DisassembleScript(JSContext* cx, HandleScript script, HandleFunction fun,
             Sprint(sp, " CONSTRUCTOR");
         if (fun->isExprBody())
             Sprint(sp, " EXPRESSION_CLOSURE");
-        if (fun->isFunctionPrototype())
-            Sprint(sp, " Function.prototype");
         if (fun->isSelfHostedBuiltin())
             Sprint(sp, " SELF_HOSTED");
         if (fun->isArrow())
@@ -2531,6 +2529,23 @@ Clone(JSContext* cx, unsigned argc, Value* vp)
         return false;
     args.rval().setObject(*clone);
     return true;
+}
+
+static bool
+Crash(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    if (args.length() == 0)
+        MOZ_CRASH("forced crash");
+    RootedString message(cx, JS::ToString(cx, args[0]));
+    if (!message)
+        return false;
+    char* utf8chars = JS_EncodeStringToUTF8(cx, message);
+    if (!utf8chars)
+        return false;
+    MOZ_ReportCrash(utf8chars, __FILE__, __LINE__);
+    MOZ_CRASH_ANNOTATE("MOZ_CRASH(dynamic)");
+    MOZ_REALLY_CRASH();
 }
 
 static bool
@@ -5256,6 +5271,10 @@ TestAssertRecoveredOnBailout,
 "dumpStaticScopeChain(obj)",
 "  Prints the static scope chain of an interpreted function or a module."),
 #endif
+
+    JS_FN_HELP("crash", Crash, 0, 0,
+"crash([message])",
+"  Crashes the process with a MOZ_CRASH."),
 
     JS_FN_HELP("setARMHwCapFlags", SetARMHwCapFlags, 1, 0,
 "setARMHwCapFlags(\"flag1,flag2 flag3\")",

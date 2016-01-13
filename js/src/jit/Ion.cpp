@@ -2630,9 +2630,9 @@ MethodStatus
 jit::CompileFunctionForBaseline(JSContext* cx, HandleScript script, BaselineFrame* frame)
 {
     MOZ_ASSERT(jit::IsIonEnabled(cx));
-    MOZ_ASSERT(frame->fun()->nonLazyScript()->canIonCompile());
-    MOZ_ASSERT(!frame->fun()->nonLazyScript()->isIonCompilingOffThread());
-    MOZ_ASSERT(!frame->fun()->nonLazyScript()->hasIonScript());
+    MOZ_ASSERT(frame->callee()->nonLazyScript()->canIonCompile());
+    MOZ_ASSERT(!frame->callee()->nonLazyScript()->isIonCompilingOffThread());
+    MOZ_ASSERT(!frame->callee()->nonLazyScript()->hasIonScript());
     MOZ_ASSERT(frame->isFunctionFrame());
 
     // Mark as forbidden if frame can't be handled.

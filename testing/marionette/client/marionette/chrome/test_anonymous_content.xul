@@ -19,8 +19,17 @@
                    type="content"/>
       </content>
     </binding>
+
+    <binding id="iframebox">
+      <content>
+        <xul:box>
+          <xul:iframe anonid="iframe" src="chrome://marionette/content/test.xul"></xul:iframe>
+        </xul:box>
+      </content>
+    </binding>
   </bindings>
   <hbox id="testAnonymousContentBox"/>
   <hbox id="container" style="-moz-binding: url('#testBindings');"/>
+  <hbox id="container2" style="-moz-binding: url('#iframebox');"/>
   </dialog>
 </window>

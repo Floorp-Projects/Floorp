@@ -29,15 +29,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=916893
       iframe = null;
       ok(result, "Got notificationclick event with correct data.");
       MockServices.unregister();
-      SimpleTest.finish();
+      registration.unregister().then(function() {
+        SimpleTest.finish();
+      });
     };
     document.body.appendChild(iframe);
   }
+
+  var registration;
 
   function runTest() {
     MockServices.register();
     testFrame('notificationclick.html');
     navigator.serviceWorker.register("notificationclick.js", { scope: "notificationclick.html" }).then(function(reg) {
+      registration = reg;
     }, function(e) {
       ok(false, "registration should have passed!");
     });

@@ -65,6 +65,7 @@ class nsDeviceContext;
 class gfxMissingFontRecorder;
 
 namespace mozilla {
+class EffectCompositor;
 class EventStateManager;
 class RestyleManager;
 class CounterStyleManager;
@@ -227,6 +228,7 @@ public:
   nsCSSFrameConstructor* FrameConstructor()
     { return PresShell()->FrameConstructor(); }
 
+  mozilla::EffectCompositor* EffectCompositor() { return mEffectCompositor; }
   nsTransitionManager* TransitionManager() { return mTransitionManager; }
   nsAnimationManager* AnimationManager() { return mAnimationManager; }
 
@@ -704,13 +706,6 @@ public:
   {
     mDrawColorBackground = aCanDraw;
   }
-
-  /**
-   * Getter and setters for OMTA time counters
-   */
-  bool StyleUpdateForAllAnimationsIsUpToDate() const;
-  void TickLastStyleUpdateForAllAnimations();
-  void ClearLastStyleUpdateForAllAnimations();
 
   /**
    *  Check if bidi enabled (set depending on the presence of RTL
@@ -1221,6 +1216,7 @@ protected:
                                             // from gfx back to layout.
   RefPtr<mozilla::EventStateManager> mEventManager;
   RefPtr<nsRefreshDriver> mRefreshDriver;
+  RefPtr<mozilla::EffectCompositor> mEffectCompositor;
   RefPtr<nsTransitionManager> mTransitionManager;
   RefPtr<nsAnimationManager> mAnimationManager;
   RefPtr<mozilla::RestyleManager> mRestyleManager;

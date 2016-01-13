@@ -261,6 +261,9 @@ NetAddrElement::~NetAddrElement()
 
 AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
                    bool disableIPv4, bool filterNameCollision, const char *cname)
+  : mHostName(nullptr)
+  , mCanonicalName(nullptr)
+  , ttl(NO_TTL_DATA)
 {
   MOZ_ASSERT(prAddrInfo, "Cannot construct AddrInfo with a null prAddrInfo pointer!");
   const uint32_t nameCollisionAddr = htonl(0x7f003535); // 127.0.53.53
@@ -281,6 +284,9 @@ AddrInfo::AddrInfo(const char *host, const PRAddrInfo *prAddrInfo,
 }
 
 AddrInfo::AddrInfo(const char *host, const char *cname)
+  : mHostName(nullptr)
+  , mCanonicalName(nullptr)
+  , ttl(NO_TTL_DATA)
 {
   Init(host, cname);
 }

@@ -23,7 +23,7 @@ interface nsIFilePickerShownCallback : nsISupports
   void done(in short aResult);
 };
 
-[scriptable, uuid(9840d564-42c8-4d78-9a4d-71002343c918)]
+[scriptable, uuid(2a74ba0d-ffdd-4dad-b78a-98635e525a38)]
 interface nsIFilePicker : nsISupports
 {
   const short modeOpen        = 0;              // Load a file or directory
@@ -142,19 +142,19 @@ interface nsIFilePicker : nsISupports
   readonly attribute nsISimpleEnumerator files;
 
  /**
-  * Get the DOM File for the file.
+  * Get the DOM File or the DOM Directory
   *
-  * @return Returns the file currently selected as File
+  * @return Returns the file or directory currently selected DOM object.
   */
-  readonly attribute nsISupports domfile;
+  readonly attribute nsISupports domFileOrDirectory;
 
  /**
-  * Get the enumerator for the selected files
+  * Get the enumerator for the selected files or directories
   * only works in the modeOpenMultiple mode
   *
-  * @return Returns the files currently selected as Files
+  * @return Returns the files/directories currently selected as DOM object.
   */
-  readonly attribute nsISimpleEnumerator domfiles;
+  readonly attribute nsISimpleEnumerator domFileOrDirectoryEnumerator;
 
  /**
   * Controls whether the chosen file(s) should be added to the system's recent

@@ -278,8 +278,6 @@ char16_t* gGREBinPath = nullptr;
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kINIParserFactoryCID, NS_INIPARSERFACTORY_CID);
-static NS_DEFINE_CID(kSimpleUnicharStreamFactoryCID,
-                     NS_SIMPLE_UNICHAR_STREAM_FACTORY_CID);
 
 NS_DEFINE_NAMED_CID(NS_CHROMEREGISTRY_CID);
 NS_DEFINE_NAMED_CID(NS_CHROMEPROTOCOLHANDLER_CID);
@@ -300,14 +298,6 @@ CreateINIParserFactory(const mozilla::Module& aModule,
   return f.forget();
 }
 
-static already_AddRefed<nsIFactory>
-CreateUnicharStreamFactory(const mozilla::Module& aModule,
-                           const mozilla::Module::CIDEntry& aEntry)
-{
-  return already_AddRefed<nsIFactory>(
-           nsSimpleUnicharStreamFactory::GetInstance());
-}
-
 #define COMPONENT(NAME, Ctor) static NS_DEFINE_CID(kNS_##NAME##_CID, NS_##NAME##_CID);
 #include "XPCOMModule.inc"
 #undef COMPONENT
@@ -316,7 +306,6 @@ CreateUnicharStreamFactory(const mozilla::Module& aModule,
 const mozilla::Module::CIDEntry kXPCOMCIDEntries[] = {
   { &kComponentManagerCID, true, nullptr, nsComponentManagerImpl::Create },
   { &kINIParserFactoryCID, false, CreateINIParserFactory },
-  { &kSimpleUnicharStreamFactoryCID, false, CreateUnicharStreamFactory },
 #include "XPCOMModule.inc"
   { &kNS_CHROMEREGISTRY_CID, false, nullptr, nsChromeRegistryConstructor },
   { &kNS_CHROMEPROTOCOLHANDLER_CID, false, nullptr, nsChromeProtocolHandlerConstructor },

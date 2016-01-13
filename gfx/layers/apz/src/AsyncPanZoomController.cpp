@@ -1738,12 +1738,10 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
   ParentLayerPoint delta = GetScrollWheelDelta(aEvent);
   APZC_LOG("%p got a scroll-wheel with delta %s\n", this, Stringify(delta).c_str());
 
-  if ((delta.x || delta.y) &&
-      !CanScrollWithWheel(delta) &&
-      mInputQueue->GetCurrentWheelTransaction())
-  {
+  if ((delta.x || delta.y) && !CanScrollWithWheel(delta)) {
     // We can't scroll this apz anymore, so we simply drop the event.
-    if (gfxPrefs::MouseScrollTestingEnabled()) {
+    if (mInputQueue->GetCurrentWheelTransaction() &&
+        gfxPrefs::MouseScrollTestingEnabled()) {
       if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
         controller->NotifyMozMouseScrollEvent(
           mFrameMetrics.GetScrollId(),
@@ -1753,13 +1751,17 @@ nsEventStatus AsyncPanZoomController::OnScrollWheel(const ScrollWheelInput& aEve
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  if (delta.x == 0 && delta.y == 0) {
+    // Avoid spurious state changes and unnecessary work
+    return nsEventStatus_eIgnore;
+  }
+
   switch (aEvent.mScrollMode) {
     case ScrollWheelInput::SCROLLMODE_INSTANT: {
       ScreenPoint distance = ToScreenCoordinates(
         ParentLayerPoint(fabs(delta.x), fabs(delta.y)), aEvent.mLocalOrigin);
 
       CancelAnimation();
-      SetState(WHEEL_SCROLL);
 
       OverscrollHandoffState handoffState(
           *mInputQueue->CurrentWheelBlock()->GetOverscrollHandoffChain(),
@@ -3493,9 +3495,21 @@ void AsyncPanZoomController::DispatchStateChangeNotification(PanZoomState aOldSt
     if (!IsTransformingState(aOldState) && IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformBegin);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      // Let the compositor know about scroll state changes so it can manage
+      // windowed plugins.
+      if (mCompositorParent) {
+        mCompositorParent->ScheduleHideAllPluginWindows();
+      }
+#endif
     } else if (IsTransformingState(aOldState) && !IsTransformingState(aNewState)) {
       controller->NotifyAPZStateChange(
           GetGuid(), APZStateChange::TransformEnd);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
+      if (mCompositorParent) {
+        mCompositorParent->ScheduleShowAllPluginWindows();
+      }
+#endif
     }
   }
 }

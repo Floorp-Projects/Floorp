@@ -10,13 +10,6 @@ assertEq(ws.has(value), true);
 assertEq(ws.delete(value), true);
 assertEq(ws.has(value), false);
 
-// Delete after clear
-ws.add(value);
-assertEq(ws.has(value), true);
-ws.clear();
-assertEq(ws.delete(value), false);
-assertEq(ws.has(value), false);
-
 // Delete non-empty
 for (var i = 0; i < 10; i++)
     ws.add({});

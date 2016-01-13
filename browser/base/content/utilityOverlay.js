@@ -20,7 +20,7 @@ this.__defineGetter__("BROWSER_NEW_TAB_URL", () => {
       !aboutNewTabService.overridden) {
     return "about:privatebrowsing";
   }
-  return aboutNewTabService.newTabURL;
+  return "about:newtab";
 });
 
 var TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";

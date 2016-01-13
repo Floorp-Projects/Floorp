@@ -23,6 +23,7 @@ EXPORTS.mozilla += [
     'EffectCompositor.h',
     'EffectSet.h',
     'PendingAnimationTracker.h',
+    'PseudoElementHashEntry.h',
 ]
 
 UNIFIED_SOURCES += [

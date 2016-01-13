@@ -19,8 +19,10 @@ celt_sources = [
 ]
 
 opus_nonunified_sources = [
+    # Disabled because of name clash of opus_custom_encoder_get_size.
     'celt/celt_decoder.c',
     'celt/celt_encoder.c',
+    # Disabled for (safe) warning about QA redefinition.
     'silk/LPC_inv_pred_gain.c',
     'silk/NLSF2A.c',
 ]

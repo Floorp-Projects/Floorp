@@ -1709,10 +1709,6 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
         if (tracingStyleFlush) {
           profiler_tracing("Paint", "Styles", TRACING_INTERVAL_END);
         }
-
-        if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-          mPresContext->TickLastStyleUpdateForAllAnimations();
-        }
       }
     } else if  (i == 1) {
       // This is the Flush_Layout case.

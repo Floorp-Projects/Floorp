@@ -356,8 +356,6 @@ public:
       // because we have special behaviour for it when APZ scrolling is active.
       mOuter->SchedulePaint();
     }
-    // Update windowed plugin visibility in response to apz scrolling events.
-    NotifyPluginFrames(aTransforming ? BEGIN_APZ : END_APZ);
   }
   bool IsTransformingByAPZ() const {
     return mTransformingByAPZ;
@@ -549,7 +547,7 @@ protected:
    * Helper that notifies plugins about async smooth scroll operations managed
    * by nsGfxScrollFrame.
    */
-  enum AsyncScrollEventType { BEGIN_DOM, BEGIN_APZ, END_DOM, END_APZ };
+  enum AsyncScrollEventType { BEGIN_DOM, END_DOM };
   void NotifyPluginFrames(AsyncScrollEventType aEvent);
   AsyncScrollEventType mAsyncScrollEvent;
 

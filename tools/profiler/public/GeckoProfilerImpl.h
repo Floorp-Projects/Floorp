@@ -432,6 +432,7 @@ public:
   // we only copy the strings at save time, so to take multiple parameters we'd need to copy them then.
   SamplerStackFramePrintfRAII(const char *aInfo,
     js::ProfileEntry::Category aCategory, uint32_t line, const char *aFormat, ...)
+    : mHandle(nullptr)
   {
     if (profiler_is_active() && !profiler_in_privacy_mode()) {
       va_list args;

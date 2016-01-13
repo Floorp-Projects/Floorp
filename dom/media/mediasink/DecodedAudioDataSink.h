@@ -7,6 +7,7 @@
 #define DecodedAudioDataSink_h__
 
 #include "AudioSink.h"
+#include "AudioStream.h"
 #include "MediaEventSource.h"
 #include "MediaInfo.h"
 #include "mozilla/RefPtr.h"
@@ -20,13 +21,11 @@
 
 namespace mozilla {
 
-class AudioStream;
-
 namespace media {
 
-class DecodedAudioDataSink : public AudioSink {
+class DecodedAudioDataSink : public AudioSink,
+                             private AudioStream::DataSource {
 public:
-
   DecodedAudioDataSink(MediaQueue<MediaData>& aAudioQueue,
                        int64_t aStartTime,
                        const AudioInfo& aInfo,
@@ -34,10 +33,11 @@ public:
 
   // Return a promise which will be resolved when DecodedAudioDataSink
   // finishes playing, or rejected if any error.
-  RefPtr<GenericPromise> Init() override;
+  RefPtr<GenericPromise> Init(const PlaybackParams& aParams) override;
 
   /*
-   * All public functions below are thread-safe.
+   * All public functions are not thread-safe.
+   * Called on the task queue of MDSM only.
    */
   int64_t GetPosition() override;
   int64_t GetEndTime() const override;
@@ -55,103 +55,23 @@ public:
   void SetPlaying(bool aPlaying) override;
 
 private:
-  enum State {
-    AUDIOSINK_STATE_INIT,
-    AUDIOSINK_STATE_PLAYING,
-    AUDIOSINK_STATE_COMPLETE,
-    AUDIOSINK_STATE_SHUTDOWN,
-    AUDIOSINK_STATE_ERROR
-  };
-
   virtual ~DecodedAudioDataSink();
 
-  void DispatchTask(already_AddRefed<nsIRunnable>&& event);
-  void SetState(State aState);
-  void ScheduleNextLoop();
-  void ScheduleNextLoopCrossThread();
+  // Allocate and initialize mAudioStream. Returns NS_OK on success.
+  nsresult InitializeAudioStream(const PlaybackParams& aParams);
 
-  void OnAudioQueueEvent();
-  void ConnectListener();
-  void DisconnectListener();
+  // Interface of AudioStream::DataSource.
+  // Called on the callback thread of cubeb.
+  UniquePtr<AudioStream::Chunk> PopFrames(uint32_t aFrames) override;
+  bool Ended() const override;
+  void Drained() override;
 
-  // The main loop for the audio thread. Sent to the thread as
-  // an nsRunnableMethod. This continually does blocking writes to
-  // to audio stream to play audio data.
-  void AudioLoop();
-
-  // Allocate and initialize mAudioStream.  Returns NS_OK on success.
-  nsresult InitializeAudioStream();
-
-  void Drain();
-
-  void Cleanup();
-
-  bool ExpectMoreAudioData();
-
-  // Return true if playback is not ready and the sink is not told to shut down.
-  bool WaitingForAudioToPlay();
-
-  // Check if the sink has been told to shut down, resuming mAudioStream if
-  // not.  Returns true if processing should continue, false if AudioLoop
-  // should shutdown.
-  bool IsPlaybackContinuing();
-
-  // Write audio samples or silence to the audio hardware.
-  // Return false if any error. Called on the audio thread.
-  bool PlayAudio();
-
-  void FinishAudioLoop();
-
-  // Write aFrames of audio frames of silence to the audio hardware. Returns
-  // the number of frames actually written. The write size is capped at
-  // SILENCE_BYTES_CHUNK (32kB), so must be called in a loop to write the
-  // desired number of frames. This ensures that the playback position
-  // advances smoothly, and guarantees that we don't try to allocate an
-  // impossibly large chunk of memory in order to play back silence. Called
-  // on the audio thread.
-  uint32_t PlaySilence(uint32_t aFrames);
-
-  // Pops an audio chunk from the front of the audio queue, and pushes its
-  // audio data to the audio hardware.  Called on the audio thread.
-  uint32_t PlayFromAudioQueue();
-
-  // If we have already written enough frames to the AudioStream, start the
-  // playback.
-  void StartAudioStreamPlaybackIfNeeded();
-  void WriteSilence(uint32_t aFrames);
-
-  ReentrantMonitor& GetReentrantMonitor() const {
-    return mMonitor;
-  }
-
-  void AssertCurrentThreadInMonitor() const {
-    GetReentrantMonitor().AssertCurrentThreadIn();
-  }
-
-  void AssertOnAudioThread();
-  void AssertNotOnAudioThread();
-
-  mutable ReentrantMonitor mMonitor;
-
-  // There members are accessed on the audio thread only.
-  State mState;
-  Maybe<State> mPendingState;
-  bool mAudioLoopScheduled;
-
-  // Thread for pushing audio onto the audio hardware.
-  // The "audio push thread".
-  nsCOMPtr<nsIThread> mThread;
-
-  // The audio stream resource. Used on the state machine, and audio threads.
-  // This is created and destroyed on the audio thread, while holding the
-  // decoder monitor, so if this is used off the audio thread, you must
-  // first acquire the decoder monitor and check that it is non-null.
+  // The audio stream resource. Used on the task queue of MDSM only.
   RefPtr<AudioStream> mAudioStream;
 
   // The presentation time of the first audio frame that was played in
   // microseconds. We can add this to the audio stream position to determine
-  // the current audio time. Accessed on audio and state machine thread.
-  // Synchronized by decoder monitor.
+  // the current audio time.
   const int64_t mStartTime;
 
   // PCM frames written to the stream so far.
@@ -159,21 +79,28 @@ private:
 
   // Keep the last good position returned from the audio stream. Used to ensure
   // position returned by GetPosition() is mono-increasing in spite of audio
-  // stream error.
+  // stream error. Used on the task queue of MDSM only.
   int64_t mLastGoodPosition;
 
   const AudioInfo mInfo;
 
   const dom::AudioChannel mChannel;
 
-  bool mStopAudioThread;
-
+  // Used on the task queue of MDSM only.
   bool mPlaying;
 
   MozPromiseHolder<GenericPromise> mEndPromise;
 
-  MediaEventListener mPushListener;
-  MediaEventListener mFinishListener;
+  /*
+   * Members to implement AudioStream::DataSource.
+   * Used on the callback thread of cubeb.
+   */
+  // The AudioData at which AudioStream::DataSource is reading.
+  RefPtr<AudioData> mCurrentData;
+  // The number of frames that have been popped from mCurrentData.
+  uint32_t mFramesPopped = 0;
+  // True if there is any error in processing audio data like overflow.
+  bool mErrored = false;
 };
 
 } // namespace media

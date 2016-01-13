@@ -55,6 +55,7 @@ public:
   AsyncEventDispatcher(dom::EventTarget* aTarget, nsIDOMEvent* aEvent)
     : mTarget(aTarget)
     , mEvent(aEvent)
+    , mBubbles(false)
     , mOnlyChromeDispatch(false)
   {
   }
