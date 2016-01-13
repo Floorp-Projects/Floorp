@@ -129,22 +129,11 @@ input[type=button] {
  * toolkit.pageThumbs.minHeight
  */
 /* CELLS */
-.newtab-cell,
-.newtab-intro-cell,
-.newtab-intro-cell-hover {
+.newtab-cell {
   display: -moz-box;
   height: 210px;
   margin: 20px 10px 35px;
   width: 290px;
-}
-
-.newtab-intro-cell-wrapper {
-  margin-top: -12px;
-}
-
-.newtab-intro-cell,
-.newtab-intro-cell-hover {
-  margin: 0;
 }
 
 /* SITES */
@@ -304,8 +293,7 @@ input[type=button] {
 }
 
 .newtab-control:-moz-focusring,
-.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control,
-.newtab-intro-cell-hover .newtab-control {
+.newtab-cell:not([ignorehover]) > .newtab-site:hover > .newtab-control {
   opacity: 1;
 }
 
@@ -586,11 +574,6 @@ input[type=button] {
   background-position: right 15px center;
 }
 
-.newtab-intro-image-customize .newtab-customize-panel-item,
-.newtab-intro-image-customize .newtab-customize-complex-option {
-  max-width: 100%;
-}
-
 .newtab-customize-panel-item:not([selected]),
 .newtab-customize-panel-subitem:not([selected]){
   color: #7A7A7A;
@@ -661,176 +644,4 @@ input[type=button] {
 .contentSearchSuggestionTable {
   font: message-box;
   font-size: 16px;
-}
-
-/**
- * Onboarding styling
- */
-
- #newtab-intro-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: #424F5A;
-  z-index:102;
-  background-color: rgba(66,79,90,0.95);
-  transition: opacity .5s linear;
-  overflow: auto;
-  display: none;
-  text-align: center;
-}
-
-#newtab-intro-modal {
-  font-family: "Helvetica";
-  max-height: 800px;
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  margin: auto;
-  background: linear-gradient(#FFFFFF, #F9F9F9);
-  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.7);
-  border-radius: 8px 8px 0px 0px;
-  position: relative;
-  display: inline-block;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-#newtab-intro-header {
-  font-size: 28px;
-  color: #737980;
-  text-align: center;
-  top: 30px;
-  position: relative;
-  border-bottom: 2px solid #E0DFE0;
-  padding-bottom: 10px;
-  display: block;
-  margin: 0px 50px;
-  font-weight: 100;
-  padding: 0px 15px 10px;
-}
-
-#newtab-intro-header .bold {
-  font-weight: 500;
-  color: #343F48;
-}
-
-#newtab-intro-footer {
-  width: 100%;
-  height: 55px;
-  margin: 0px auto;
-  display: block;
-  position: absolute;
-  background-color: white;
-  box-shadow: 0 -1px 4px -1px #EBEBEB;
-  text-align: center;
-  vertical-align: middle;
-  line-height: 55px;
-}
-
-#newtab-intro-footer > ul {
-  list-style-type: none;
-  margin: 0px;
-  padding: 0px;
-}
-
-#newtab-intro-footer > ul > li {
-  display: inline;
-  padding-left: 10px;
-  padding-right: 10px;
-}
-
-#newtab-intro-footer > ul > li > a {
-  text-decoration: none;
-  color: #4A90E2;
-}
-
-#newtab-intro-footer > ul > li > a:hover {
-  color: #000000;
-}
-
-#newtab-intro-body {
-  position: relative;
-  display: block;
-  margin: 55px 50px 38px;
-}
-
-#newtab-intro-content > * {
-  display: inline-block;
-}
-
-#newtab-intro-content {
-  position: relative;
-}
-
-#newtab-intro-buttons {
-  text-align: center;
-  vertical-align: middle;
-  display: block;
-  bottom: 0px;
-  width: 100%;
-}
-
-#newtab-intro-tile {
-  width: 290px;
-  height: 100%;
-}
-
-#newtab-intro-text {
-  text-align: left;
-  right: 0px;
-  height: 100%;
-  font-size: 14px;
-  line-height: 20px;
-  width: 460px;
-}
-
-#newtab-intro-text > p {
-  margin: 0 0 30px;
-}
-
-#newtab-intro-text > p > a {
-  text-decoration: none;
-  color: #4A90E2;
-}
-
-#newtab-intro-text > p > a:hover {
-  color: #000000;
-}
-
-#newtab-intro-text .newtab-control {
-  background-size: 18px auto;
-  height: 18px;
-  width: 18px;
-  vertical-align: middle;
-  opacity: 1;
-  position: inherit;
-  pointer-events: none;
-}
-
-#newtab-intro-buttons > input {
-  min-width: 120px;
-  height: 50px;
-  margin: 0px 5px;
-  vertical-align: bottom;
-  border-radius: 2px;
-  border: solid 1px #2C72E2;
-  background-color: #FFFFFF;
-  color: #4A90E2;
-  -moz-user-focus: normal;
-  padding: 0px 10px;
-}
-
-#newtab-intro-buttons > input[default] {
-  background-color: #4A90E2;
-  color: #FFFFFF;
-}
-
-#newtab-intro-buttons > input:hover {
-  background-color: #2C72E2;
-  color: #FFFFFF;
 }

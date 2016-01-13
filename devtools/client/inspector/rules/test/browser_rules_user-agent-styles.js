@@ -10,23 +10,7 @@
 var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const { PrefObserver } = require("devtools/client/styleeditor/utils");
 
-const TEST_URI = `
-  <style type='text/css'>
-  pre a {
-    color: orange;
-  }
-  </style>
-  <input type=text placeholder=test></input>
-  <input type=color></input>
-  <input type=range></input>
-  <input type=number></input>
-  <progress></progress>
-  <blockquote type=cite>
-    <pre _moz_quote=true>
-      inspect <a href="foo">user agent</a> styles
-    </pre>
-  </blockquote>
-`;
+const TEST_URI = TEST_URL_ROOT + "doc_author-sheet.html";
 
 const TEST_DATA = [
   {
@@ -66,7 +50,7 @@ const TEST_DATA = [
   },
   {
     selector: "a",
-    numUserRules: 2,
+    numUserRules: 3,
     numUARules: 0
   }
 ];
@@ -77,7 +61,7 @@ add_task(function*() {
   info("Starting the test with the pref set to true before toolbox is opened");
   yield setUserAgentStylesPref(true);
 
-  yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
+  yield addTab(TEST_URI);
   let {inspector, view} = yield openRuleView();
 
   info("Making sure that UA styles are visible on initial load");

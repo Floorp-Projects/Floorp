@@ -18,7 +18,6 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsIContentPolicy.h"
-#include "nsAlertsUtils.h"
 #include "imgRequestProxy.h"
 
 using namespace mozilla;
@@ -269,11 +268,9 @@ OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
   NS_ENSURE_SUCCESS(rv, rv);
   notification.title = nsCocoaUtils::ToNSString(title);
 
-  nsCOMPtr<nsIPrincipal> principal;
-  rv = aAlert->GetPrincipal(getter_AddRefs(principal));
-  NS_ENSURE_SUCCESS(rv, rv);
   nsAutoString hostPort;
-  nsAlertsUtils::GetSourceHostPort(principal, hostPort);
+  rv = aAlert->GetSource(hostPort);
+  NS_ENSURE_SUCCESS(rv, rv);
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
   sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
@@ -297,7 +294,12 @@ OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
   notification.hasActionButton = NO;
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
-  if (nsAlertsUtils::IsActionablePrincipal(principal)) {
+  bool isActionable;
+  if (NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) && isActionable) {
+    nsCOMPtr<nsIStringBundle> bundle;
+    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
+
     if (bundle) {
       nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
       bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
@@ -378,22 +380,26 @@ OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
       nsCOMPtr<nsIURI> imageUri;
       NS_NewURI(getter_AddRefs(imageUri), imageUrl);
       if (imageUri) {
-        rv = il->LoadImage(imageUri, nullptr, nullptr,
-                           mozilla::net::RP_Default,
-                           principal, nullptr,
-                           this, nullptr,
-                           inPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
-                                               nsIRequest::LOAD_NORMAL,
-                           nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
-                           EmptyString(),
-                           getter_AddRefs(osxni->mIconRequest));
+        nsCOMPtr<nsIPrincipal> principal;
+        rv = aAlert->GetPrincipal(getter_AddRefs(principal));
         if (NS_SUCCEEDED(rv)) {
-          // Set a timer for six seconds. If we don't have an icon by the time this
-          // goes off then we go ahead without an icon.
-          nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
-          osxni->mIconTimeoutTimer = timer;
-          timer->InitWithCallback(this, 6000, nsITimer::TYPE_ONE_SHOT);
-          return NS_OK;
+          rv = il->LoadImage(imageUri, nullptr, nullptr,
+                             mozilla::net::RP_Default,
+                             principal, nullptr,
+                             this, nullptr,
+                             inPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
+                                                 nsIRequest::LOAD_NORMAL,
+                             nullptr, nsIContentPolicy::TYPE_INTERNAL_IMAGE,
+                             EmptyString(),
+                             getter_AddRefs(osxni->mIconRequest));
+          if (NS_SUCCEEDED(rv)) {
+            // Set a timer for six seconds. If we don't have an icon by the time this
+            // goes off then we go ahead without an icon.
+            nsCOMPtr<nsITimer> timer = do_CreateInstance(NS_TIMER_CONTRACTID);
+            osxni->mIconTimeoutTimer = timer;
+            timer->InitWithCallback(this, 6000, nsITimer::TYPE_ONE_SHOT);
+            return NS_OK;
+          }
         }
       }
     }

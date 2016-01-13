@@ -23,7 +23,7 @@ loader.lazyGetter(this, "stylesheets", () => {
   return require("devtools/server/actors/stylesheets");
 });
 loader.lazyGetter(this, "CssLogic", () => {
-  return require("devtools/shared/styleinspector/css-logic").CssLogic;
+  return require("devtools/shared/inspector/css-logic").CssLogic;
 });
 
 const CSSRule = Ci.nsIDOMCSSRule;

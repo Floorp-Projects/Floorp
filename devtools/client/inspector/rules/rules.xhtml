@@ -23,8 +23,8 @@
     <script type="application/javascript;version=1.8">
       window.setPanel = function(panel, iframe) {
         let {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-        let inspector = require("devtools/client/styleinspector/style-inspector");
-        this.ruleview = new inspector.RuleViewTool(panel, window);
+        let {RuleViewTool} = require("devtools/client/inspector/rules/rules");
+        this.ruleview = new RuleViewTool(panel, window);
       }
       window.onunload = function() {
         if (this.ruleview) {
