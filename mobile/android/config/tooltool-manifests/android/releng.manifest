@@ -24,14 +24,6 @@
 "unpack": true
 },
 {
-"size": 7920445,
-"visibility": "public",
-"digest": "e28b7a12fbbef02ad742958df8dd356ea2adb8ef79e95cd8eb8dbc953eb4cc11888969dac7d636187fd3ace9c63d9a6bc3d7795021c1d811a843e413fe5e52c9",
-"algorithm": "sha512",
-"filename": "apache-ant.tar.bz2",
-"unpack": true
-},
-{
 "size": 4906080,
 "visibility": "public",
 "unpack": true,
