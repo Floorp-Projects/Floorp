@@ -35,6 +35,7 @@ import org.mozilla.gecko.db.BrowserContract.SuggestedSites;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
+import org.mozilla.gecko.tabqueue.TabQueuePrompt;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.EventCallback;
@@ -169,6 +170,10 @@ OnSharedPreferenceChangeListener
     // Callers can recognize this code to refresh themselves to
     // accommodate a locale change.
     public static final int RESULT_CODE_LOCALE_DID_CHANGE = 7;
+
+    private static final int REQUEST_CODE_TAB_QUEUE = 8;
+
+    private CheckBoxPreference tabQueuePreference;
 
     /**
      * Track the last locale so we know whether to redisplay.
@@ -622,6 +627,11 @@ OnSharedPreferenceChangeListener
                   break;
               }
               break;
+            case REQUEST_CODE_TAB_QUEUE:
+                if (TabQueueHelper.processTabQueuePromptResponse(resultCode, this)) {
+                    tabQueuePreference.setChecked(true);
+                }
+                break;
         }
     }
 
@@ -815,6 +825,7 @@ OnSharedPreferenceChangeListener
                         }
                     });
                 } else if (PREFS_TAB_QUEUE.equals(key)) {
+                    tabQueuePreference = (CheckBoxPreference) pref;
                     // Only show tab queue pref on nightly builds with the tab queue build flag.
                     if (!TabQueueHelper.TAB_QUEUE_ENABLED) {
                         preferences.removePreference(pref);
@@ -1225,6 +1236,12 @@ OnSharedPreferenceChangeListener
             } else {
                 broadcastStumblerPref(GeckoPreferences.this, false);
                 return true;
+            }
+        } else if (PREFS_TAB_QUEUE.equals(prefName)) {
+            if ((Boolean) newValue && !TabQueueHelper.canDrawOverlays(this)) {
+                Intent promptIntent = new Intent(this, TabQueuePrompt.class);
+                startActivityForResult(promptIntent, REQUEST_CODE_TAB_QUEUE);
+                return false;
             }
         } else if (handlers.containsKey(prefName)) {
             PrefHandler handler = handlers.get(prefName);
