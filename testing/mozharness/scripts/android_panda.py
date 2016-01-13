@@ -383,7 +383,7 @@ class PandaTest(TestingMixin, MercurialScript, BlobUploadMixin, MozpoolMixin, Bu
         dirs = self.query_abs_dirs()
         self.host_utils_url = c['hostutils_url']
         # get the zip and extract it
-        self.download_unzip(self.host_utils_url, dirs['abs_hostutils_dir'])
+        self.download_unpack(self.host_utils_url, dirs['abs_hostutils_dir'])
 
     def _install_app(self):
         c = self.config
