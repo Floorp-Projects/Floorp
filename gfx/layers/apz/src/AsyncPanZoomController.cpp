@@ -1455,12 +1455,12 @@ nsEventStatus AsyncPanZoomController::OnScale(const PinchGestureInput& aEvent) {
     ParentLayerPoint focusPoint = aEvent.mLocalFocusPoint - mFrameMetrics.GetCompositionBounds().TopLeft();
     CSSPoint cssFocusPoint = focusPoint / mFrameMetrics.GetZoom();
 
-    CSSPoint focusChange = (mLastZoomFocus - focusPoint) / userZoom;
+    ParentLayerPoint focusChange = mLastZoomFocus - focusPoint;
     // If displacing by the change in focus point will take us off page bounds,
     // then reduce the displacement such that it doesn't.
     focusChange.x -= mX.DisplacementWillOverscrollAmount(focusChange.x);
     focusChange.y -= mY.DisplacementWillOverscrollAmount(focusChange.y);
-    ScrollBy(focusChange);
+    ScrollBy(focusChange / userZoom);
 
     // When we zoom in with focus, we can zoom too much towards the boundaries
     // that we actually go over them. These are the needed displacements along
