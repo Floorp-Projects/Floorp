@@ -53,62 +53,38 @@
     </div>
   </div>
 
-  <div id="newtab-intro-mask">
-    <div id="newtab-intro-modal">
-      <div id="newtab-intro-header"/>
-      <div id="newtab-intro-body">
-        <div id="newtab-intro-content">
-          <div id="newtab-intro-text">
-            <p/><p/>
-          </div>
-        </div>
-        <div id="newtab-intro-buttons">
-          <input id="newtab-intro-button" type="button" default="true" onclick="gIntro._exitIntro()"/>
-        </div>
-      </div>
-      <div id="newtab-intro-footer">
-        <ul>
-          <li id="newtab-intro-link"/>
-        </ul>
+  <div id="newtab-vertical-margin">
+    <div id="newtab-margin-top"/>
+    <div id="newtab-margin-undo-container">
+      <div id="newtab-undo-container" undo-disabled="true">
+        <label id="newtab-undo-label">&newtab.undo.removedLabel;</label>
+        <button id="newtab-undo-button" tabindex="-1"
+                class="newtab-undo-button">&newtab.undo.undoButton;</button>
+        <button id="newtab-undo-restore-button" tabindex="-1"
+                class="newtab-undo-button">&newtab.undo.restoreButton;</button>
+        <button id="newtab-undo-close-button" tabindex="-1" title="&newtab.undo.closeTooltip;"/>
       </div>
     </div>
-  </div>
 
-    <div id="newtab-vertical-margin">
-      <div id="newtab-margin-top"/>
-        <div id="newtab-margin-undo-container">
-          <div id="newtab-undo-container" undo-disabled="true">
-            <label id="newtab-undo-label">&newtab.undo.removedLabel;</label>
-            <button id="newtab-undo-button" tabindex="-1"
-                    class="newtab-undo-button">&newtab.undo.undoButton;</button>
-            <button id="newtab-undo-restore-button" tabindex="-1"
-                    class="newtab-undo-button">&newtab.undo.restoreButton;</button>
-            <button id="newtab-undo-close-button" tabindex="-1" title="&newtab.undo.closeTooltip;"/>
-          </div>
-        </div>
-
-      <div id="newtab-search-container">
-        <div id="newtab-search-form">
-          <div id="newtab-search-icon"/>
-          <input type="text" name="q" value="" id="newtab-search-text"
-                 aria-label="&contentSearchInput.label;" maxlength="256" dir="auto"/>
-          <input id="newtab-search-submit" type="button" value=""
-                 aria-label="&contentSearchSubmit.label;"/>
-        </div>
+    <div id="newtab-search-container">
+      <div id="newtab-search-form">
+        <div id="newtab-search-icon"/>
+        <input type="text" name="q" value="" id="newtab-search-text"
+             aria-label="&contentSearchInput.label;" maxlength="256" dir="auto"/>
+        <input id="newtab-search-submit" type="button" value=""
+             aria-label="&contentSearchSubmit.label;"/>
       </div>
+    </div>
 
-      <div id="newtab-horizontal-margin">
-        <div class="newtab-side-margin"/>
-
-        <div id="newtab-grid">
-        </div>
-
-        <div class="newtab-side-margin"/>
+    <div id="newtab-horizontal-margin">
+      <div class="newtab-side-margin"/>
+      <div id="newtab-grid">
       </div>
-
-      <div id="newtab-margin-bottom"/>
+      <div class="newtab-side-margin"/>
+    </div>
+    <div id="newtab-margin-bottom"/>
   </div>
-      <input id="newtab-customize-button" type="button" dir="&locale.dir;" title="&newtab.customize.title;"/>
+  <input id="newtab-customize-button" type="button" dir="&locale.dir;" title="&newtab.customize.title;"/>
 </body>
 <script type="text/javascript;version=1.8" src="chrome://browser/content/contentSearchUI.js"/>
 <script type="text/javascript;version=1.8" src="chrome://browser/content/newtab/newTab.js"/>

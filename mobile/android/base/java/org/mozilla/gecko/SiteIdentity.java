@@ -28,7 +28,8 @@ public class SiteIdentity {
     public enum SecurityMode {
         UNKNOWN("unknown"),
         IDENTIFIED("identified"),
-        VERIFIED("verified");
+        VERIFIED("verified"),
+        CHROMEUI("chromeUI");
 
         private final String mId;
 
@@ -42,7 +43,7 @@ public class SiteIdentity {
             }
 
             for (SecurityMode mode : SecurityMode.values()) {
-                if (TextUtils.equals(mode.mId, id.toLowerCase())) {
+                if (TextUtils.equals(mode.mId, id)) {
                     return mode;
                 }
             }
@@ -180,10 +181,10 @@ public class SiteIdentity {
 
             try {
                 mOrigin = identityData.getString("origin");
-                mHost = identityData.getString("host");
+                mHost = identityData.optString("host", null);
                 mOwner = identityData.optString("owner", null);
                 mSupplemental = identityData.optString("supplemental", null);
-                mVerifier = identityData.getString("verifier");
+                mVerifier = identityData.optString("verifier", null);
                 mSecure = identityData.optBoolean("secure", false);
             } catch (Exception e) {
                 resetIdentity();

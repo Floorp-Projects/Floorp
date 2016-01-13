@@ -1694,6 +1694,8 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   mIsChrome = false;
   mReusableSheets = nullptr;
 
+  mSheet->SetParsingMode(aParsingMode);
+
   return NS_OK;
 }
 
