@@ -815,6 +815,7 @@ nsLayoutStylesheetCache::BuildPreferenceSheet(RefPtr<CSSStyleSheet>& aSheet,
                                               nsPresContext* aPresContext)
 {
   aSheet = new CSSStyleSheet(CORS_NONE, mozilla::net::RP_Default);
+  aSheet->SetParsingMode(eAgentSheetFeatures);
 
   nsCOMPtr<nsIURI> uri;
   NS_NewURI(getter_AddRefs(uri), "about:PreferenceStyleSheet", nullptr);

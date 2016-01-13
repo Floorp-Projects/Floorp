@@ -37,7 +37,20 @@
 	is(sheet.parsingMode, "author",
 	  "author sheet has expected mode");
 	results[sss.AUTHOR_SHEET] = 1;
+      } else if (sheet.href === "about:PreferenceStyleSheet") {
+        is(sheet.parsingMode, "agent",
+           "about:PreferenceStyleSheet has agent mode");
+        continue;
+      } else {
+        // Ignore sheets we don't care about.
+        continue;
       }
+
+      // Check that re-parsing preserves the mode.
+      let mode = sheet.parsingMode;
+      domutils.parseStyleSheet(sheet, "body { color: chartreuse; }");
+      is(sheet.parsingMode, mode,
+         "check that re-parsing preserved mode " + mode);
     }
 
     ok(results[sss.AGENT_SHEET] && results[sss.USER_SHEET] &&
