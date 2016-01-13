@@ -760,15 +760,19 @@ OmxDataDecoder::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1, OMX_U32 aData2)
   switch (aEvent) {
     case OMX_EventPortSettingsChanged:
     {
-      // According to spec: "To prevent the loss of any input data, the
-      // component issuing the OMX_EventPortSettingsChanged event on its input
-      // port should buffer all input port data that arrives between the
-      // emission of the OMX_EventPortSettingsChanged event and the arrival of
-      // the command to disable the input port."
-      //
-      // So client needs to disable port and reallocate buffers.
-      MOZ_ASSERT(mPortSettingsChanged == -1);
-      mPortSettingsChanged = aData1;
+      // Don't always disable port. See bug 1235340.
+      if (aData2 == 0 ||
+          aData2 == OMX_IndexParamPortDefinition) {
+        // According to spec: "To prevent the loss of any input data, the
+        // component issuing the OMX_EventPortSettingsChanged event on its input
+        // port should buffer all input port data that arrives between the
+        // emission of the OMX_EventPortSettingsChanged event and the arrival of
+        // the command to disable the input port."
+        //
+        // So client needs to disable port and reallocate buffers.
+        MOZ_ASSERT(mPortSettingsChanged == -1);
+        mPortSettingsChanged = aData1;
+      }
       LOG("Got OMX_EventPortSettingsChanged event");
       break;
     }
