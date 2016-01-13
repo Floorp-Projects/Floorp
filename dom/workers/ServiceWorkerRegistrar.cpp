@@ -340,10 +340,8 @@ ServiceWorkerRegistrar::ReadData()
 
     nsAutoCString cacheName;
     GET_LINE(cacheName);
-    CopyUTF8toUTF16(cacheName, entry->activeCacheName());
+    CopyUTF8toUTF16(cacheName, entry->cacheName());
 
-    GET_LINE(cacheName);
-    CopyUTF8toUTF16(cacheName, entry->waitingCacheName());
 
 #undef GET_LINE
 
@@ -563,10 +561,7 @@ ServiceWorkerRegistrar::WriteData()
     buffer.Append(data[i].currentWorkerURL());
     buffer.Append('\n');
 
-    buffer.Append(NS_ConvertUTF16toUTF8(data[i].activeCacheName()));
-    buffer.Append('\n');
-
-    buffer.Append(NS_ConvertUTF16toUTF8(data[i].waitingCacheName()));
+    buffer.Append(NS_ConvertUTF16toUTF8(data[i].cacheName()));
     buffer.Append('\n');
 
     buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR);

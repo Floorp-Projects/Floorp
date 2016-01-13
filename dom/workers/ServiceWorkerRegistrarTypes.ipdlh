@@ -14,8 +14,7 @@ struct ServiceWorkerRegistrationData
   nsCString scope;
   nsCString currentWorkerURL;
 
-  nsString activeCacheName;
-  nsString waitingCacheName;
+  nsString cacheName;
 
   PrincipalInfo principal;
 };
