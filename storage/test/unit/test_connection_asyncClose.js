@@ -53,7 +53,7 @@ add_task(function* test_asyncClose_does_not_complete_before_statements() {
  * async thread is not available and fall back to invoking Close() which will
  * notice the mDBConn is already gone.
  */
-add_task(function test_double_asyncClose_throws() {
+add_task(function* test_double_asyncClose_throws() {
   let db = yield openAsyncDatabase(getTestDB());
 
   // (Don't yield control flow yet, save the promise for after we make the
@@ -115,7 +115,7 @@ add_task(function* test_asyncClose_failed_open() {
  * callback the shutdown is not actually observable, so we run this test last
  * in order to avoid weird overlaps.
  */
-add_task(function test_asyncClose_does_not_throw_without_callback() {
+add_task(function* test_asyncClose_does_not_throw_without_callback() {
   let db = yield openAsyncDatabase(getTestDB());
   // Branch coverage: (asyncThread && mDBConn)
   db.asyncClose();
