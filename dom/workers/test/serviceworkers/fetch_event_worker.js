@@ -98,6 +98,10 @@ onfetch = function(ev) {
     ));
   }
 
+  else if (ev.request.url.includes('user-pass')) {
+    ev.respondWith(new Response(ev.request.url));
+  }
+
   else if (ev.request.url.includes("nonexistent_image.gif")) {
     var imageAsBinaryString = atob("R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs");
     var imageLength = imageAsBinaryString.length;
