@@ -24,6 +24,7 @@ const ORIGINAL_SENDCUSTOM = SystemAppProxy._sendCustomEvent;
 do_register_cleanup(function() {
   Services.prefs.setCharPref("identity.fxaccounts.auth.uri", ORIGINAL_AUTH_URI);
   SystemAppProxy._sendCustomEvent = ORIGINAL_SENDCUSTOM;
+  Services.prefs.clearUserPref("identity.fxaccounts.skipDeviceRegistration");
 });
 
 // Make profile available so that fxaccounts can store user data
@@ -39,6 +40,9 @@ function run_test() {
 }
 
 add_task(function test_overall() {
+  // FxA device registration throws from this context
+  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
+
   do_check_neq(FxAccountsMgmtService, null);
 });
 
@@ -105,6 +109,9 @@ add_test(function test_invalidEmailCase_signIn() {
   // Point the FxAccountsClient's hawk rest request client to the mock server
   Services.prefs.setCharPref("identity.fxaccounts.auth.uri", server.baseURI);
 
+  // FxA device registration throws from this context
+  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
+
   // Receive a mozFxAccountsChromeEvent message
   function onMessage(subject, topic, data) {
     let message = subject.wrappedJSObject;
@@ -163,6 +170,9 @@ add_test(function test_invalidEmailCase_signIn() {
 
 add_test(function testHandleGetAssertionError_defaultCase() {
   do_test_pending();
+
+  // FxA device registration throws from this context
+  Services.prefs.setBoolPref("identity.fxaccounts.skipDeviceRegistration", true);
 
   FxAccountsManager.getAssertion(null).then(
     success => {

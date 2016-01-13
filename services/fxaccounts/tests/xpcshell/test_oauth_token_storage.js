@@ -70,6 +70,10 @@ function MockFxAccountsClient() {
   };
 
   this.signOut = function() { return Promise.resolve(); };
+  this.registerDevice = function() { return Promise.resolve(); };
+  this.updateDevice = function() { return Promise.resolve(); };
+  this.signOutAndDestroyDevice = function() { return Promise.resolve(); };
+  this.getDeviceList = function() { return Promise.resolve(); };
 
   FxAccountsClient.apply(this);
 }
@@ -78,7 +82,7 @@ MockFxAccountsClient.prototype = {
   __proto__: FxAccountsClient.prototype
 }
 
-function MockFxAccounts() {
+function MockFxAccounts(device={}) {
   return new FxAccounts({
     fxAccountsClient: new MockFxAccountsClient(),
     newAccountState(credentials) {
@@ -87,6 +91,9 @@ function MockFxAccounts() {
       storage.initialize(credentials);
       return new AccountState(storage);
     },
+    _getDeviceName() {
+      return "mock device name";
+    }
   });
 }
 
@@ -110,7 +117,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function testCacheStorage() {
+add_task(function* testCacheStorage() {
   let fxa = yield createMockFxA();
 
   // Hook what the impl calls to save to disk.
