@@ -2829,6 +2829,7 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
     return;
   }
 
+  aFrameMetrics.SetPaintRequestTime(TimeStamp::Now());
   DispatchRepaintRequest(aFrameMetrics, velocity);
   aFrameMetrics.SetPresShellId(mLastContentPaintMetrics.GetPresShellId());
 }
@@ -3142,11 +3143,19 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
   APZC_LOG_FM(aLayerMetrics, "%p got a NotifyLayersUpdated with aIsFirstPaint=%d", this, aIsFirstPaint);
 
   if (mCheckerboardEvent) {
+    std::string str;
+    if (!aLayerMetrics.GetPaintRequestTime().IsNull()) {
+      TimeDuration paintTime = TimeStamp::Now() - aLayerMetrics.GetPaintRequestTime();
+      std::stringstream info;
+      info << " painttime " << paintTime.ToMilliseconds();
+      str = info.str();
+    }
     mCheckerboardEvent->UpdateRendertraceProperty(
         CheckerboardEvent::Page, aLayerMetrics.GetScrollableRect());
     mCheckerboardEvent->UpdateRendertraceProperty(
         CheckerboardEvent::PaintedDisplayPort,
-        aLayerMetrics.GetDisplayPort() + aLayerMetrics.GetScrollOffset());
+        aLayerMetrics.GetDisplayPort() + aLayerMetrics.GetScrollOffset(),
+        str);
     if (!aLayerMetrics.GetCriticalDisplayPort().IsEmpty()) {
       mCheckerboardEvent->UpdateRendertraceProperty(
           CheckerboardEvent::PaintedCriticalDisplayPort,
