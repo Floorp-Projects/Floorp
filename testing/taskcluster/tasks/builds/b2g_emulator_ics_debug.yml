@@ -6,8 +6,8 @@ $inherits:
 task:
   workerType: emulator-ics-debug
   scopes:
-    - 'docker-worker:cache:workspace-emulator-ics-debug'
-    - 'docker-worker:cache:workspace-emulator-ics-debug-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-ics-debug'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-ics-debug-objdir-gecko'
   metadata:
     name: '[TC] B2G Emulator ICS (Debug)'
   extra:
@@ -24,8 +24,8 @@ task:
 
   payload:
     cache:
-      workspace-emulator-ics-debug: /home/worker/workspace
-      workspace-emulator-ics-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-emulator-ics-debug: /home/worker/workspace
+      level-{{level}}-{{project}}-emulator-ics-debug-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator'
       B2G_DEBUG: 1

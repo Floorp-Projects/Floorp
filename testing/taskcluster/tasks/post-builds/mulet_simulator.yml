@@ -21,7 +21,7 @@ task:
     - 'index.gecko.v1.{{project}}.latest.simulator.{{build_type}}'
 
   scopes:
-    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
 
   payload:
     image:
