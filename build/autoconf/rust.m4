@@ -12,7 +12,7 @@ AC_DEFUN([MOZ_RUST_SUPPORT], [
     _RUSTC_MINOR_VERSION=`echo ${RUSTC_VERSION} | cut -d . -f 2`
     _RUSTC_EXTRA_VERSION=`echo ${RUSTC_VERSION} | cut -d . -f 3 | cut -d + -f 1`
     _RUSTC_PATCH_VERSION=`echo ${_RUSTC_EXTRA_VERSION} | cut -d '-' -f 1`
-    AC_MSG_RESULT([$RUSTC_VERSION (v${_RUSTC_MAJOR_VERSION}.${_RUSTC_MINOR_VERSION}.${_RUSTC_PATCH_VERSION})])
+    AC_MSG_RESULT([${_RUSTC_MAJOR_VERSION}.${_RUSTC_MINOR_VERSION}.${_RUSTC_PATCH_VERSION} ($RUSTC_VERSION)])
   fi
   MOZ_ARG_ENABLE_BOOL([rust],
                       [  --enable-rust           Include Rust language sources],
