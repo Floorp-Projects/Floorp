@@ -273,6 +273,14 @@ private:
     void MarkDirty();
     void NotifyUserPrefsMayOverrideSystemSettings();
 
+    // On some environments, SystemParametersInfo() may be hooked by touchpad
+    // utility or something.  In such case, when user changes active pointing
+    // device to another one, the result of SystemParametersInfo() may be
+    // changed without WM_SETTINGCHANGE message.  For avoiding this trouble,
+    // we need to modify cache of system settings at every wheel message
+    // handling if we meet known device whose utility may hook the API.
+    void TrustedScrollSettingsDriver(bool aIsVertical);
+
     int32_t GetScrollAmount(bool aForVertical) const
     {
       MOZ_ASSERT(mInitialized, "SystemSettings must be initialized");
@@ -290,6 +298,12 @@ private:
     bool mInitialized;
     int32_t mScrollLines;
     int32_t mScrollChars;
+
+    // Returns true if cached value is changed.
+    bool InitScrollLines();
+    bool InitScrollChars();
+
+    void RefreshCache(bool aForVertical);
   };
 
   SystemSettings mSystemSettings;
@@ -305,6 +319,18 @@ private:
     {
       Init();
       return mScrollMessageHandledAsWheelMessage;
+    }
+
+    bool IsSystemSettingCacheEnabled()
+    {
+      Init();
+      return mEnableSystemSettingCache;
+    }
+
+    bool IsSystemSettingCacheForciblyEnabled()
+    {
+      Init();
+      return mForceEnableSystemSettingCache;
     }
 
     int32_t GetOverriddenVerticalScrollAmout()
@@ -335,6 +361,8 @@ private:
 
     bool mInitialized;
     bool mScrollMessageHandledAsWheelMessage;
+    bool mEnableSystemSettingCache;
+    bool mForceEnableSystemSettingCache;
     int32_t mOverriddenVerticalScrollAmount;
     int32_t mOverriddenHorizontalScrollAmount;
     int32_t mMouseScrollTransactionTimeout;
