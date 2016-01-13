@@ -1381,7 +1381,6 @@ BuildSegmentsFromValueEntries(nsTArray<KeyframeValueEntry>& aEntries,
       MOZ_ASSERT(aEntries[i].mOffset == 0.0f);
       animationProperty = aResult.AppendElement();
       animationProperty->mProperty = aEntries[i].mProperty;
-      animationProperty->mWinsInCascade = true;
       lastProperty = aEntries[i].mProperty;
     }
 
@@ -1583,7 +1582,6 @@ BuildAnimationPropertyListFromPropertyIndexedKeyframes(
         animationPropertyIndexes[i] = aResult.Length();
         AnimationProperty* animationProperty = aResult.AppendElement();
         animationProperty->mProperty = p;
-        animationProperty->mWinsInCascade = true;
         properties.AddProperty(p);
       }
     }
