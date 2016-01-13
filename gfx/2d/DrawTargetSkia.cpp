@@ -147,8 +147,15 @@ DrawTargetSkia::Snapshot()
 
 bool
 DrawTargetSkia::LockBits(uint8_t** aData, IntSize* aSize,
-                          int32_t* aStride, SurfaceFormat* aFormat)
+                         int32_t* aStride, SurfaceFormat* aFormat,
+                         IntPoint* aOrigin)
 {
+  // Ensure the layer is at the origin if required.
+  SkIPoint origin = mCanvas->getTopDevice()->getOrigin();
+  if (!aOrigin && !origin.isZero()) {
+    return false;
+  }
+
   /* Test if the canvas' device has accessible pixels first, as actually
    * accessing the pixels may trigger side-effects, even if it fails.
    */
@@ -169,6 +176,9 @@ DrawTargetSkia::LockBits(uint8_t** aData, IntSize* aSize,
   *aSize = IntSize(info.width(), info.height());
   *aStride = int32_t(rowBytes);
   *aFormat = SkiaColorTypeToGfxFormat(info.colorType());
+  if (aOrigin) {
+    *aOrigin = IntPoint(origin.x(), origin.y());
+  }
   return true;
 }
 
