@@ -34,6 +34,8 @@ struct TimingParams
   dom::PlaybackDirection mDirection = dom::PlaybackDirection::Normal;
   dom::FillMode mFill = dom::FillMode::Auto;
 
+  TimingParams& operator=(const dom::AnimationEffectTimingProperties& aRhs);
+
   bool operator==(const TimingParams& aOther) const;
   bool operator!=(const TimingParams& aOther) const
   {
