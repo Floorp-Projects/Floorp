@@ -2115,7 +2115,9 @@ NS_IMETHODIMP
 CacheStorageService::IOThreadSuspender::Run()
 {
   MonitorAutoLock mon(mMon);
-  mon.Wait();
+  while (!mSignaled) {
+    mon.Wait();
+  }
   return NS_OK;
 }
 
@@ -2123,6 +2125,7 @@ void
 CacheStorageService::IOThreadSuspender::Notify()
 {
   MonitorAutoLock mon(mMon);
+  mSignaled = true;
   mon.Notify();
 }
 
