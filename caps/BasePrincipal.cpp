@@ -364,25 +364,13 @@ BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 }
 
 NS_IMETHODIMP
-BasePrincipal::EnsureCSP(nsIDOMDocument* aDocument,
-                         nsIContentSecurityPolicy** aCSP)
+BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 {
   if (mCSP) {
-    // if there is a CSP already associated with this principal
-    // then just return that - do not overwrite it!!!
-    NS_IF_ADDREF(*aCSP = mCSP);
-    return NS_OK;
+    return NS_ERROR_ALREADY_INITIALIZED;
   }
 
-  nsresult rv = NS_OK;
-  mCSP = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Store the request context for violation reports
-  rv = aDocument ? mCSP->SetRequestContext(aDocument, nullptr)
-                 : mCSP->SetRequestContext(nullptr, this);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_IF_ADDREF(*aCSP = mCSP);
+  mCSP = aCsp;
   return NS_OK;
 }
 
@@ -394,25 +382,12 @@ BasePrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP)
 }
 
 NS_IMETHODIMP
-BasePrincipal::EnsurePreloadCSP(nsIDOMDocument* aDocument,
-                                nsIContentSecurityPolicy** aPreloadCSP)
+BasePrincipal::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP)
 {
   if (mPreloadCSP) {
-    // if there is a speculative CSP already associated with this principal
-    // then just return that - do not overwrite it!!!
-    NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
-    return NS_OK;
+    return NS_ERROR_ALREADY_INITIALIZED;
   }
-
-  nsresult rv = NS_OK;
-  mPreloadCSP = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // Store the request context for violation reports
-  rv = aDocument ? mPreloadCSP->SetRequestContext(aDocument, nullptr)
-                 : mPreloadCSP->SetRequestContext(nullptr, this);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
+  mPreloadCSP = aPreloadCSP;
   return NS_OK;
 }
 

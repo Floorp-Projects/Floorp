@@ -15,13 +15,12 @@ struct JSPrincipals;
 
 interface nsIURI;
 interface nsIContentSecurityPolicy;
-interface nsIDOMDocument;
 
 [ptr] native JSContext(JSContext);
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(d0391e86-1ad7-4ab0-bb7c-14d6d9967369)]
+[scriptable, builtinclass, uuid(188fc4a2-3157-4956-a7a2-d674991770da)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -134,19 +133,12 @@ interface nsIPrincipal : nsISerializable
     /**
      * A Content Security Policy associated with this principal.
      *
-     * Use this function to query the associated CSP with this principal.
+     * Please note that if a csp was already set on the
+     * principal, then it should not be destroyed! Instead, the
+     * current csp should be quried and extended by
+     * calling AppendPolicy() on it.
      */
-    [noscript] readonly attribute nsIContentSecurityPolicy csp;
-
-    /*
-     * Use this function to query a CSP associated with this principal.
-     * If no CSP is associated with this principal then one is created
-     * internally and setRequestContext is called on the CSP using aDocument.
-     *
-     * Please note if aDocument is null, then setRequestContext on the
-     * CSP object is called using the current principal.
-     */
-    [noscript] nsIContentSecurityPolicy ensureCSP(in nsIDOMDocument aDocument);
+    [noscript] attribute nsIContentSecurityPolicy csp;
 
     /**
      * A speculative Content Security Policy associated with this
@@ -155,19 +147,13 @@ interface nsIPrincipal : nsISerializable
      *
      * If you want to query the CSP associated with that principal,
      * then this is *not* what you want. Instead query 'csp'.
+     * 
+     * Please note that if a preloadCSP was already set on the
+     * principal, then it should not be destroyed! Instead, the
+     * current preloadCSP should be quried and extended by
+     * calling AppendPolicy() on it.
      */
-    [noscript] readonly attribute nsIContentSecurityPolicy preloadCsp;
-
-    /*
-     * Use this function to query a speculative CSP associated with this
-     * principal. If no speculative CSP is associated with this principal
-     * then one is created internally and setRequestContext is called on
-     * the CSP using aDocument.
-     *
-     * Please note if aDocument is null, then setRequestContext on the
-     * speculative CSP object is called using the current principal.
-     */
-    [noscript] nsIContentSecurityPolicy ensurePreloadCSP(in nsIDOMDocument aDocument);
+    [noscript] attribute nsIContentSecurityPolicy preloadCsp;
 
     /**
      * The CSP of the principal in JSON notation.
