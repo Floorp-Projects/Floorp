@@ -18,9 +18,6 @@
 
 #include "signaling/src/sdp/SipccSdpParser.h"
 
-#include "FakeIPC.h"
-#include "FakeIPC.cpp"
-
 namespace mozilla {
 
 const std::string kDefaultFilename((char *)"/tmp/sdp.bin");
