@@ -1886,7 +1886,9 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
         // Update poll timeout in case it was changed
         mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     }
-    else if (mState == STATE_CONNECTING) {
+    else if ((mState == STATE_CONNECTING) && !gIOService->IsNetTearingDown()) {
+        // We do not need to do PR_ConnectContinue when we are already
+        // shutting down.
 
         // We use PRIntervalTime here because we need
         // nsIOService::LastOfflineStateChange time and
@@ -1958,6 +1960,13 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
                 SOCKET_LOG(("  connection failed! [reason=%x]\n", mCondition));
             }
         }
+    }
+    else if ((mState == STATE_CONNECTING) && gIOService->IsNetTearingDown()) {
+        // We do not need to do PR_ConnectContinue when we are already
+        // shutting down.
+        SOCKET_LOG(("We are in shutdown so skip PR_ConnectContinue and set "
+                    "and error.\n"));
+        mCondition = NS_ERROR_ABORT;
     }
     else {
         NS_ERROR("unexpected socket state");
