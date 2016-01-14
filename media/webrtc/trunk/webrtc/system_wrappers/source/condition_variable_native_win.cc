@@ -52,7 +52,12 @@ bool ConditionVariableNativeWin::Init() {
     if (library) {
       // TODO(henrike): not thread safe as reading and writing to library is not
       // serialized. Fix.
-      WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Kernel.dll");
+
+      // Don't log here, since we may be creating a FileWrapper for
+      // the TraceImpl, from within GetStaticInstance.  With singleton.h, you
+      // can't safely call GetStaticInstance on the same object from within
+      // creating that object.
+      //WEBRTC_TRACE(kTraceStateInfo, kTraceUtility, -1, "Loaded Kernel.dll");
 
       PInitializeConditionVariable_ =
           (PInitializeConditionVariable) GetProcAddress(
@@ -66,9 +71,9 @@ bool ConditionVariableNativeWin::Init() {
 
       if (PInitializeConditionVariable_ && PSleepConditionVariableCS_
           && PWakeConditionVariable_ && PWakeAllConditionVariable_) {
-        WEBRTC_TRACE(
-            kTraceStateInfo, kTraceUtility, -1,
-            "Loaded native condition variables");
+        //WEBRTC_TRACE(
+        //    kTraceStateInfo, kTraceUtility, -1,
+        //    "Loaded native condition variables");
         win_support_condition_variables_primitive = true;
       }
     }
