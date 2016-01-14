@@ -902,6 +902,11 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mForm_action.Value() = mozilla::Move(srcs);
       return;
 
+    case nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT:
+      outCSP.mBlock_all_mixed_content.Construct();
+      // does not have any srcs
+      return;
+
     case nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE:
       outCSP.mUpgrade_insecure_requests.Construct();
       // does not have any srcs
@@ -985,6 +990,24 @@ bool nsCSPChildSrcDirective::equals(CSPDirective aDirective) const
   }
 
   return (aDirective == nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE);
+}
+
+/* =============== nsBlockAllMixedContentDirective ============= */
+
+nsBlockAllMixedContentDirective::nsBlockAllMixedContentDirective(CSPDirective aDirective)
+: nsCSPDirective(aDirective)
+{
+}
+
+nsBlockAllMixedContentDirective::~nsBlockAllMixedContentDirective()
+{
+}
+
+void
+nsBlockAllMixedContentDirective::toString(nsAString& outStr) const
+{
+  outStr.AppendASCII(CSP_CSPDirectiveToString(
+    nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT));
 }
 
 /* =============== nsUpgradeInsecureDirective ============= */
