@@ -417,6 +417,7 @@ public class GeckoAppShell
         }
         CRASH_HANDLER.uncaughtException(null, e);
         return null;
+    }
 
     private static final Object sEventAckLock = new Object();
     private static boolean sWaitingForEventAck;
