@@ -498,11 +498,16 @@ class HashSet
         return false;
     }
 
-    // Infallibly rekey one entry with a new key that is equivalent.
-    void rekeyInPlace(Ptr p, const T& new_value)
-    {
+    // Infallibly replace the current key at |p| with an equivalent key.
+    // Specifically, both HashPolicy::hash and HashPolicy::match must return
+    // identical results for the new and old key when applied against all
+    // possible matching values.
+    void replaceKey(Ptr p, const T& new_value) {
+        MOZ_ASSERT(p.found());
+        MOZ_ASSERT(*p != new_value);
+        MOZ_ASSERT(HashPolicy::hash(*p) == HashPolicy::hash(new_value));
         MOZ_ASSERT(HashPolicy::match(*p, new_value));
-        impl.rekeyInPlace(p, new_value);
+        const_cast<T&>(*p) = new_value;
     }
 
     // HashSet is movable
@@ -1753,14 +1758,6 @@ class HashTable : private AllocPolicy
     {
         rekeyWithoutRehash(p, l, k);
         checkOverRemoved();
-    }
-
-    void rekeyInPlace(Ptr p, const Key& k)
-    {
-        MOZ_ASSERT(table);
-        mozilla::ReentrancyGuard g(*this);
-        MOZ_ASSERT(p.found());
-        HashPolicy::rekey(const_cast<Key&>(*p), const_cast<Key&>(k));
     }
 
 #undef METER
