@@ -20,6 +20,7 @@ Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/TelemetryUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
+Cu.import("resource://gre/modules/Preferences.jsm", this);
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryStorage::";
@@ -412,6 +413,15 @@ this.TelemetryStorage = {
   loadPingFile: Task.async(function* (aFilePath) {
     return TelemetryStorageImpl.loadPingFile(aFilePath);
   }),
+
+  /**
+   * Remove FHR database files. This is temporary and will be dropped in
+   * the future.
+   * @return {Promise} Resolved when the database files are deleted.
+   */
+  removeFHRDatabase: function() {
+    return TelemetryStorageImpl.removeFHRDatabase();
+  },
 
   /**
    * Only used in tests, builds an archived ping path from the ping metadata.
@@ -1718,6 +1728,42 @@ var TelemetryStorageImpl = {
 
     return true;
   },
+
+  /**
+   * Remove FHR database files. This is temporary and will be dropped in
+   * the future.
+   * @return {Promise} Resolved when the database files are deleted.
+   */
+  removeFHRDatabase: Task.async(function*() {
+    this._log.trace("removeFHRDatabase");
+
+    // Let's try to remove the FHR DB with the default filename first.
+    const FHR_DB_DEFAULT_FILENAME = "healthreport.sqlite";
+
+    // Even if it's uncommon, there may be 2 additional files: - a "write ahead log"
+    // (-wal) file and a "shared memory file" (-shm). We need to remove them as well.
+    let FILES_TO_REMOVE = [
+      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME),
+      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME + "-wal"),
+      OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_DEFAULT_FILENAME + "-shm"),
+    ];
+
+    // FHR could have used either the default DB file name or a custom one
+    // through this preference.
+    const FHR_DB_CUSTOM_FILENAME =
+      Preferences.get("datareporting.healthreport.dbName", undefined);
+    if (FHR_DB_CUSTOM_FILENAME) {
+      FILES_TO_REMOVE.push(
+        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME),
+        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME + "-wal"),
+        OS.Path.join(OS.Constants.Path.profileDir, FHR_DB_CUSTOM_FILENAME + "-shm"));
+    }
+
+    for (let f of FILES_TO_REMOVE) {
+      yield OS.File.remove(f, {ignoreAbsent: true})
+                   .catch(e => this._log.error("removeFHRDatabase - failed to remove " + f, e));
+    }
+  }),
 };
 
 ///// Utility functions

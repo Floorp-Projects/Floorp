@@ -33,20 +33,15 @@ function consoleOpened(hud) {
   let deferred = promise.defer();
 
   webConsoleClient = hud.ui.webConsoleClient;
-  hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
-    ok(hud.ui._saveRequestAndResponseBodies,
-      "The saveRequestAndResponseBodies property was successfully set.");
-
-    HUDService.lastFinishedRequest.callback = (aHttpRequest) => {
-      let status = aHttpRequest.response.status;
-      lastFinishedRequests[status] = aHttpRequest;
-      if ("301" in lastFinishedRequests &&
-          "404" in lastFinishedRequests) {
-        deferred.resolve();
-      }
-    };
-    content.location = TEST_URI2;
-  });
+  HUDService.lastFinishedRequest.callback = (aHttpRequest) => {
+    let status = aHttpRequest.response.status;
+    lastFinishedRequests[status] = aHttpRequest;
+    if ("301" in lastFinishedRequests &&
+        "404" in lastFinishedRequests) {
+      deferred.resolve();
+    }
+  };
+  content.location = TEST_URI2;
 
   return deferred.promise;
 }

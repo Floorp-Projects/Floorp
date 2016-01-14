@@ -72,8 +72,6 @@ function goUpdateConsoleCommands() {
 
   <popupset id="mainPopupSet">
     <menupopup id="output-contextmenu" onpopupshowing="goUpdateGlobalEditMenuItems()">
-      <menuitem id="saveBodiesContextMenu" type="checkbox" label="&saveBodies.label;"
-                accesskey="&saveBodies.accesskey;"/>
       <menuitem id="menu_openURL" label="&openURL.label;"
                 accesskey="&openURL.accesskey;" command="consoleCmd_openURL"
                 selection="network" selectionType="single"/>
@@ -110,9 +108,6 @@ function goUpdateConsoleCommands() {
                         prefKey="netxhr"/>
               <menuitem label="&btnConsoleLog;" type="checkbox" autocheck="false"
                         prefKey="networkinfo"/>
-              <menuseparator id="saveBodiesSeparator" />
-              <menuitem id="saveBodies" type="checkbox" label="&saveBodies.label;"
-                        accesskey="&saveBodies.accesskey;"/>
             </menupopup>
           </toolbarbutton>
           <toolbarbutton label="&btnPageCSS.label;" type="menu-button"

@@ -403,7 +403,7 @@ public class BrowserApp extends GeckoApp
         // This flow is from the option menu which has check to see if a bookmark was already added.
         // So, it is safe here to show the snackbar that bookmark_added without any checks.
 
-        final SnackbarCallback callback = new SnackbarCallback() {
+        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "bookmark_options");
@@ -411,18 +411,19 @@ public class BrowserApp extends GeckoApp
             }
         };
 
-        showSnackbar(getResources().getString(R.string.bookmark_added),
-                     Snackbar.LENGTH_LONG,
-                     getResources().getString(R.string.bookmark_options),
-                     callback);
+        SnackbarHelper.showSnackbarWithAction(this,
+                getResources().getString(R.string.bookmark_added),
+                Snackbar.LENGTH_LONG,
+                getResources().getString(R.string.bookmark_options),
+                callback);
     }
 
     private void showBookmarkRemovedSnackbar() {
-        showSnackbar(getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_SHORT, null, null);
+        SnackbarHelper.showSnackbar(this, getResources().getString(R.string.bookmark_removed), Snackbar.LENGTH_SHORT);
     }
 
     private void showSwitchToReadingListSnackbar(String message) {
-        final SnackbarCallback callback = new SnackbarCallback() {
+        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
@@ -432,7 +433,11 @@ public class BrowserApp extends GeckoApp
             }
         };
 
-        showSnackbar(message, Snackbar.LENGTH_LONG, getResources().getString(R.string.switch_button_message), callback);
+        SnackbarHelper.showSnackbarWithAction(this,
+                message,
+                Snackbar.LENGTH_LONG,
+                getResources().getString(R.string.switch_button_message),
+                callback);
     }
 
     public void onAddedToReadingList(String url) {
@@ -444,7 +449,9 @@ public class BrowserApp extends GeckoApp
     }
 
     public void onRemovedFromReadingList(String url) {
-        showSnackbar(getResources().getString(R.string.reading_list_removed), Snackbar.LENGTH_SHORT, null, null);
+        SnackbarHelper.showSnackbar(this,
+                getResources().getString(R.string.reading_list_removed),
+                Snackbar.LENGTH_SHORT);
     }
 
     @Override
@@ -2726,10 +2733,8 @@ public class BrowserApp extends GeckoApp
 
         @Override
         public boolean onInterceptTouchEvent(View view, MotionEvent event) {
-            if (event.getActionMasked() == MotionEvent.ACTION_DOWN
-                    && mSnackbar != null
-                    && mSnackbar.isShown()) {
-                mSnackbar.dismiss();
+            if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+                SnackbarHelper.dismissCurrentSnackbar();
             }
 
             // Only try to hide the button toast if it's already inflated and if we are starting a tap action.
@@ -3731,7 +3736,7 @@ public class BrowserApp extends GeckoApp
         // hold a reference to the Tab itself in the anonymous listener class.
         final int newTabId = newTab.getId();
 
-        final SnackbarCallback callback = new SnackbarCallback() {
+        final SnackbarHelper.SnackbarCallback callback = new SnackbarHelper.SnackbarCallback() {
             @Override
             public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "switchtab");
@@ -3745,7 +3750,7 @@ public class BrowserApp extends GeckoApp
                 getResources().getString(R.string.new_tab_opened);
         final String buttonMessage = getResources().getString(R.string.switch_button_message);
 
-        showSnackbar(message, Snackbar.LENGTH_LONG, buttonMessage, callback);
+        SnackbarHelper.showSnackbarWithAction(this, message, Snackbar.LENGTH_LONG, buttonMessage, callback);
     }
 
     // BrowserSearch.OnSearchListener

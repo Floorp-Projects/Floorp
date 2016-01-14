@@ -73,11 +73,8 @@ var HarAutomation = Class({
     this.tabClient = this.toolbox.target.activeTab;
     this.webConsoleClient = this.toolbox.target.activeConsole;
 
-    let netPrefs = { "NetworkMonitor.saveRequestAndResponseBodies": true };
-    this.webConsoleClient.setPreferences(netPrefs, () => {
-      this.tabWatcher = new TabWatcher(this.toolbox, this);
-      this.tabWatcher.connect();
-    });
+    this.tabWatcher = new TabWatcher(this.toolbox, this);
+    this.tabWatcher.connect();
   },
 
   pageLoadBegin: function(aResponse) {
