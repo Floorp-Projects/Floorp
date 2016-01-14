@@ -7,7 +7,6 @@
 TEST_DIRS += ['tests']
 
 XPIDL_SOURCES += [
-    'nsICurrentCharsetListener.idl',
     'nsIScriptableUConv.idl',
     'nsITextToSubURI.idl',
     'nsIUTF8ConverterService.idl',

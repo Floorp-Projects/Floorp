@@ -233,14 +233,16 @@ class nsXMLContentSerializer : public nsIContentSerializer {
                                    nsresult& aResult);
 
   /**
-   * this method is responsible to finish the start tag,
-   * in particulary to append the "greater than" sign
+   * This method is responsible for appending the '>' at the end of the start
+   * tag, possibly preceded by '/' and maybe a ' ' before that too.
+   *
+   * aElement and aOriginalElement are the same as the corresponding arguments
+   * to AppendElementStart.
    */
   MOZ_WARN_UNUSED_RESULT
-  virtual bool AppendEndOfElementStart(nsIContent *aOriginalElement,
-                                       nsIAtom * aName,
-                                       int32_t aNamespaceID,
-                                       nsAString& aStr);
+  bool AppendEndOfElementStart(mozilla::dom::Element* aEleemnt,
+                               mozilla::dom::Element* aOriginalElement,
+                               nsAString& aStr);
 
   /**
    * This method can be redefine to serialize additional things just after
@@ -260,9 +262,9 @@ class nsXMLContentSerializer : public nsIContentSerializer {
    * by setting aForceFormat to true.
    * @return boolean  true if the element can be output
    */
-  virtual bool CheckElementEnd(nsIContent * aContent,
-                                 bool & aForceFormat,
-                                 nsAString& aStr);
+  virtual bool CheckElementEnd(mozilla::dom::Element* aElement,
+                               bool& aForceFormat,
+                               nsAString& aStr);
 
   /**
    * This method can be redefine to serialize additional things just after

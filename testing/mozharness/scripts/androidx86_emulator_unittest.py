@@ -681,8 +681,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
                 self._download_robocop_apk()
                 break
 
-        self.mkdir_p(dirs['abs_xre_dir'])
-        self._download_unzip(self.host_utils_url, dirs['abs_xre_dir'])
+        self.download_unzip(self.host_utils_url, dirs['abs_xre_dir'])
 
     def install(self):
         assert self.installer_path is not None, \

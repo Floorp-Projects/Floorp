@@ -479,37 +479,43 @@ class Encoder
 
 class Decoder
 {
-    const Bytecode& bytecode_;
-    size_t cur_;
+    const uint8_t* const beg_;
+    const uint8_t* const end_;
+    const uint8_t* cur_;
 
     template<class T>
-    MOZ_WARN_UNUSED_RESULT
-    bool read(T* out) {
-        if (uintptr_t(bytecode_.length() - cur_) < sizeof(T))
+    MOZ_WARN_UNUSED_RESULT bool
+    read(T* out) {
+        if (uintptr_t(end_ - cur_) < sizeof(T))
             return false;
-        memcpy((void*)out, &bytecode_[cur_], sizeof(T));
+        memcpy((void*)out, cur_, sizeof(T));
         cur_ += sizeof(T);
         return true;
     }
 
     template<class T>
     T uncheckedRead() {
-        MOZ_ASSERT(uintptr_t(bytecode_.length() - cur_) >= sizeof(T));
+        MOZ_ASSERT(uintptr_t(end_ - cur_) >= sizeof(T));
         T ret;
-        memcpy(&ret, &bytecode_[cur_], sizeof(T));
+        memcpy(&ret, cur_, sizeof(T));
         cur_ += sizeof(T);
         return ret;
     }
 
   public:
     explicit Decoder(const Bytecode& bytecode)
-      : bytecode_(bytecode),
-        cur_(0)
+      : beg_(bytecode.begin()),
+        end_(bytecode.end()),
+        cur_(bytecode.begin())
     {}
 
-    bool done() const { return cur_ == bytecode_.length(); }
+    bool done() const {
+        MOZ_ASSERT(cur_ <= end_);
+        return cur_ == end_;
+    }
+
     void assertCurrentIs(const DebugOnly<size_t> offset) const {
-        MOZ_ASSERT(offset == cur_);
+        MOZ_ASSERT(size_t(cur_ - beg_) == offset);
     }
 
     // The fallible unpacking API should be used when we're not assuming
@@ -540,7 +546,7 @@ class Decoder
         return true;
     }
 
-    // The unfallible unpacking API should be used when we are sure that the
+    // The infallible unpacking API should be used when we are sure that the
     // bytecode is well-formed.
     uint8_t        uncheckedReadU8 () { return uncheckedRead<uint8_t>(); }
     int32_t        uncheckedReadI32() { return uncheckedRead<int32_t>(); }
