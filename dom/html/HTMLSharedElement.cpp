@@ -164,14 +164,15 @@ SetBaseURIUsingFirstBaseWithHref(nsIDocument* aDocument, nsIContent* aMustMatch)
         return;
       }
 
-      // Resolve the <base> element's href relative to our document URI
+      // Resolve the <base> element's href relative to our document's
+      // fallback base URI.
       nsAutoString href;
       child->GetAttr(kNameSpaceID_None, nsGkAtoms::href, href);
 
       nsCOMPtr<nsIURI> newBaseURI;
       nsContentUtils::NewURIWithDocumentCharset(
         getter_AddRefs(newBaseURI), href, aDocument,
-        aDocument->GetDocumentURI());
+        aDocument->GetFallbackBaseURI());
 
       // Try to set our base URI.  If that fails, try to set base URI to null
       nsresult rv = aDocument->SetBaseURI(newBaseURI);
