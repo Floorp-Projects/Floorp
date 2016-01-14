@@ -582,7 +582,9 @@ class NativeJSContainerImpl final
                 new NativeJSContainerImpl(instance.Env(), mJSContext, object));
 
         ObjectBase::AttachNative(instance, mozilla::Move(impl));
-        mChildren.append(NativeJSObject::GlobalRef(instance));
+        if (!mChildren.append(NativeJSObject::GlobalRef(instance))) {
+            MOZ_CRASH();
+        }
         return instance;
     }
 

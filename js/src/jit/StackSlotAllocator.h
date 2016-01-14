@@ -7,6 +7,8 @@
 #ifndef jit_StackSlotAllocator_h
 #define jit_StackSlotAllocator_h
 
+#include "mozilla/unused.h"
+
 #include "jit/Registers.h"
 
 namespace js {
@@ -21,10 +23,10 @@ class StackSlotAllocator
     void addAvailableSlot(uint32_t index) {
         // Ignoring OOM here (and below) is fine; it just means the stack slot
         // will be unused.
-        (void)normalSlots.append(index);
+        mozilla::Unused << normalSlots.append(index);
     }
     void addAvailableDoubleSlot(uint32_t index) {
-        (void)doubleSlots.append(index);
+        mozilla::Unused << doubleSlots.append(index);
     }
 
     uint32_t allocateQuadSlot() {
