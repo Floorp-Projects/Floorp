@@ -704,7 +704,7 @@ nsSystemInfo::Init()
 
   if (gtkver_len > 0) {
     rv = SetPropertyAsACString(NS_LITERAL_STRING("secondaryLibrary"),
-                               nsDependentCString(gtkver, gtkver_len));
+                               nsDependentCSubstring(gtkver, gtkver_len));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
