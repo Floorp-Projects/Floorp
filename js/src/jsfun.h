@@ -538,15 +538,7 @@ class JSFunction : public js::NativeObject
         u.n.jitinfo = data;
     }
 
-    bool isDerivedClassConstructor() {
-        bool derived;
-        if (isInterpretedLazy())
-            derived = lazyScript()->isDerivedClassConstructor();
-        else
-            derived = nonLazyScript()->isDerivedClassConstructor();
-        MOZ_ASSERT_IF(derived, isClassConstructor());
-        return derived;
-    }
+    bool isDerivedClassConstructor();
 
     static unsigned offsetOfNativeOrScript() {
         static_assert(offsetof(U, n.native) == offsetof(U, i.s.script_),

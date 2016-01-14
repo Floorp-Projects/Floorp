@@ -1295,6 +1295,30 @@ JSFunction::infallibleIsDefaultClassConstructor(JSContext* cx) const
 }
 
 bool
+JSFunction::isDerivedClassConstructor()
+{
+    bool derived;
+    if (isInterpretedLazy()) {
+        // There is only one plausible lazy self-hosted derived
+        // constructor.
+        if (isSelfHostedBuiltin()) {
+            JSAtom* name = &getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->asAtom();
+
+            // This function is called from places without access to a
+            // JSContext. Trace some plumbing to get what we want.
+            derived = name == compartment()->runtimeFromAnyThread()->
+                              commonNames->DefaultDerivedClassConstructor;
+        } else {
+            derived = lazyScript()->isDerivedClassConstructor();
+        }
+    } else {
+        derived = nonLazyScript()->isDerivedClassConstructor();
+    }
+    MOZ_ASSERT_IF(derived, isClassConstructor());
+    return derived;
+}
+
+bool
 JSFunction::getLength(JSContext* cx, uint16_t* length)
 {
     JS::RootedFunction self(cx, this);

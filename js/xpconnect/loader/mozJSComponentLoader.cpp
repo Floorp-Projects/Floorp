@@ -550,6 +550,9 @@ mozJSComponentLoader::PrepareObjectForLocation(JSContext* aCx,
 
         options.behaviors().setVersion(JSVERSION_LATEST);
 
+        if (xpc::SharedMemoryEnabled())
+            options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
+
         // Defer firing OnNewGlobalObject until after the __URI__ property has
         // been defined so the JS debugger can tell what module the global is
         // for

@@ -101,7 +101,7 @@ if $NEED_WINDOW_MANAGER; then
     # DISPLAY has already been set above
     # XXX: it would be ideal to add a semaphore logic to make sure that the
     # window manager is ready
-    /etc/X11/Xsession > ~/artifacts/public/xsession.log 2>&1 &
+    /etc/X11/Xsession 2>&1 &
 
     # Turn off the screen saver and screen locking
     gsettings set org.gnome.desktop.screensaver idle-activation-enabled false

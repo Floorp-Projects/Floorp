@@ -2143,11 +2143,7 @@ static bool
 SharedMemoryEnabled(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
-    args.rval().setBoolean(true);
-#else
-    args.rval().setBoolean(false);
-#endif
+    args.rval().setBoolean(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
     return true;
 }
 

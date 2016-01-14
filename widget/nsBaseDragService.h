@@ -88,7 +88,7 @@ protected:
    * that are relative to the upper-left corner of the window.
    *
    * aScreenX and aScreenY should be the screen coordinates of the mouse click
-   * for the drag. These are in global display pixels.
+   * for the drag. These are in desktop pixels.
    *
    * On return, aScreenDragRect will contain the screen coordinates of the
    * area being dragged. This is used by the platform-specific part of the
