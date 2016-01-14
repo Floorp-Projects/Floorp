@@ -495,23 +495,6 @@ PeerConnectionImpl::MakeMediaStream()
 
   RefPtr<DOMMediaStream> stream =
     DOMMediaStream::CreateSourceStream(GetWindow(), graph);
-#if !defined(MOZILLA_EXTERNAL_LINKAGE)
-  // Make the stream data (audio/video samples) accessible to the receiving page.
-  // We're only certain that privacy hasn't been requested if we're connected.
-  if (mDtlsConnected && !PrivacyRequested()) {
-    nsIDocument* doc = GetWindow()->GetExtantDoc();
-    if (!doc) {
-      return nullptr;
-    }
-    stream->CombineWithPrincipal(doc->NodePrincipal());
-  } else {
-    // we're either certain that we need isolation for the streams, OR
-    // we're not sure and we can fix the stream in SetDtlsConnected
-    nsCOMPtr<nsIPrincipal> principal =
-      do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
-    stream->CombineWithPrincipal(principal);
-  }
-#endif
 
   CSFLogDebug(logTag, "Created media stream %p, inner: %p", stream.get(), stream->GetInputStream());
 
@@ -1795,6 +1778,24 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
     size_t numNewVideoTracks = 0;
     size_t numPreexistingTrackIds = 0;
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+      // Set the principal used for creating the tracks. This makes the stream
+      // data (audio/video samples) accessible to the receiving page. We're
+      // only certain that privacy hasn't been requested if we're connected.
+      nsCOMPtr<nsIPrincipal> principal;
+      if (mDtlsConnected && !PrivacyRequested()) {
+        nsIDocument* doc = GetWindow()->GetExtantDoc();
+        MOZ_ASSERT(doc);
+        if (doc) {
+          principal = doc->NodePrincipal();
+        }
+      } else {
+        // we're either certain that we need isolation for the streams, OR
+        // we're not sure and we can fix the stream in SetDtlsConnected
+        principal = do_CreateInstance(NS_NULLPRINCIPAL_CONTRACTID);
+      }
+#endif
+
     for (auto j = tracks.begin(); j != tracks.end(); ++j) {
       RefPtr<JsepTrack> track = *j;
       if (!info->HasTrack(track->GetTrackId())) {
@@ -1808,16 +1809,22 @@ PeerConnectionImpl::CreateNewRemoteTracks(RefPtr<PeerConnectionObserver>& aPco)
         }
         info->AddTrack(track->GetTrackId());
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
-        RefPtr<MediaStreamTrackSource> source =
-          new BasicUnstoppableTrackSource(MediaSourceEnum::Other);
+        RefPtr<RemoteTrackSource> source = new RemoteTrackSource(principal);
+        DebugOnly<bool> sourceSet =
+          info->SetTrackSource(track->GetTrackId(), source);
+        NS_ASSERTION(sourceSet, "TrackSource was added in the wrong order. "
+                                "Did someone add a track from elsewhere?");
+        TrackID trackID = info->GetNumericTrackId(track->GetTrackId());
         if (track->GetMediaType() == SdpMediaSection::kAudio) {
-          info->GetMediaStream()->CreateOwnDOMTrack(
-            info->GetNumericTrackId(track->GetTrackId()),
-            MediaSegment::AUDIO, nsString(), source);
+          info->GetMediaStream()->CreateOwnDOMTrack(trackID,
+                                                    MediaSegment::AUDIO,
+                                                    nsString(),
+                                                    source);
         } else {
-          info->GetMediaStream()->CreateOwnDOMTrack(
-            info->GetNumericTrackId(track->GetTrackId()),
-            MediaSegment::VIDEO, nsString(), source);
+          info->GetMediaStream()->CreateOwnDOMTrack(trackID,
+                                                    MediaSegment::VIDEO,
+                                                    nsString(),
+                                                    source);
         }
 #endif
         CSFLogDebug(logTag, "Added remote track %s/%s",
