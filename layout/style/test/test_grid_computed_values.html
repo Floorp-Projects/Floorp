@@ -26,6 +26,13 @@
       grid-auto-columns: 3fr;
       grid-auto-rows: 2fr;
     }
+    #grid2 {
+      display: grid;
+      width: 500px;
+      height: 400px;
+      grid-auto-columns: 10px;
+      grid-auto-rows: 2fr;
+    }
   
   </style>
 </head>
@@ -35,6 +42,10 @@
   <div id="grid">
     <div style="grid-column-start:1; width:50px"></div>
     <div style="grid-column-start:9; width:50px"></div>
+  </div>
+  <div id="grid2">
+    <div style="grid-column: span X / 1"></div>
+    <div style="grid-column: 1 / span X 2"></div>
   </div>
 <div>
 
@@ -73,9 +84,21 @@
   test_grid_template(assert_not_equals, 420, 340,
                      "test computed grid-template-{columns,rows} values, display: none on parent");
 
+  gridElement.parentNode.style.display = '';
+  function test_grid2() {
+    gridElement = document.getElementById("grid2");
+    test(function() {
+      assert_equals(getComputedStyle(gridElement).gridTemplateColumns,
+                    "10px 10px 10px");
+      assert_equals(getComputedStyle(gridElement, "").gridTemplateRows,
+                    "400px");
+    }, "test #grid2 computed grid-template-{columns,rows} values");
+  }
+
   test(function() {
     assert_equals(getComputedStyle(gridElement).gridAutoColumns, "3fr");
     assert_equals(getComputedStyle(gridElement).gridAutoRows, "2fr");
+    test_grid2();
   }, "test computed grid-auto-{columns,rows} values");
 
 </script>
