@@ -1630,11 +1630,11 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
             MOZ_ASSERT(it.isBaselineStub() || it.isBaselineJS() || it.isIonJS());
         }
 
-        // Skip Baseline or Ion stub frames.
+        // Skip Baseline/Ion stub and accessor IC frames.
         if (it.isBaselineStubMaybeUnwound()) {
             ++it;
             MOZ_ASSERT(it.isBaselineJS());
-        } else if (it.isIonStubMaybeUnwound()) {
+        } else if (it.isIonStubMaybeUnwound() || it.isIonAccessorICMaybeUnwound()) {
             ++it;
             MOZ_ASSERT(it.isIonJS());
         }

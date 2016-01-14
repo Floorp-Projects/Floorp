@@ -82,8 +82,8 @@ public:
     ScreenConfiguration GetConfiguration();
     bool IsPrimaryScreen();
 
-    ANativeWindowBuffer* DequeueBuffer();
-    bool QueueBuffer(ANativeWindowBuffer* buf);
+    already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing();
+    void EndRemoteDrawing();
 
 #if ANDROID_VERSION >= 17
     android::DisplaySurface* GetDisplaySurface();
@@ -122,6 +122,9 @@ public:
     nsWindow* GetMirroringWidget(); // Primary screen only
 
 protected:
+    ANativeWindowBuffer* DequeueBuffer();
+    bool QueueBuffer(ANativeWindowBuffer* buf);
+
     uint32_t mId;
     NotifyDisplayChangedEvent mEventVisibility;
     int32_t mColorDepth;
@@ -145,6 +148,26 @@ protected:
     hwc_surface_t mEGLSurface;
     RefPtr<mozilla::gl::GLContext> mGLContext;
     RefPtr<nsWindow> mMirroringWidget; // Primary screen only
+
+    // If we're using a BasicCompositor, these fields are temporarily
+    // set during frame composition.  They wrap the hardware
+    // framebuffer.
+    RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
+    ANativeWindowBuffer* mFramebuffer;
+    /**
+     * Points to a mapped gralloc buffer between calls to lock and unlock.
+     * Should be null outside of the lock-unlock pair.
+     */
+    uint8_t* mMappedBuffer;
+    // If we're using a BasicCompositor, this is our window back
+    // buffer.  The gralloc framebuffer driver expects us to draw the
+    // entire framebuffer on every frame, but gecko expects the
+    // windowing system to be tracking buffer updates for invalidated
+    // regions.  We get stuck holding that bag.
+    //
+    // Only accessed on the compositor thread, except during
+    // destruction.
+    RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
 };
 
 class nsScreenManagerGonk final : public nsIScreenManager
