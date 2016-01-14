@@ -21,6 +21,9 @@ using namespace std;
 #include "runnable_utils.h"
 #include "signaling/src/common/EncodingConstraints.h"
 
+#include "FakeIPC.h"
+#include "FakeIPC.cpp"
+
 #define GTEST_HAS_RTTI 0
 #include "gtest/gtest.h"
 #include "gtest_utils.h"
