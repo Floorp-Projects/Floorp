@@ -328,7 +328,9 @@ PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer, void *closure
   for (auto p = ctx->mPeerConnections.begin();
         p != ctx->mPeerConnections.end(); ++p) {
     if (p->second->HasMedia()) {
-      queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
+      if (!queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)))) {
+	return;
+      }
       if (NS_WARN_IF(NS_FAILED(p->second->BuildStatsQuery_m(nullptr, // all tracks
                                                             queries->back())))) {
         queries->popBack();
