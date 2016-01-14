@@ -123,9 +123,9 @@ class ArtifactJob(object):
         tests_artifact = None
         for artifact in artifacts:
             name = artifact['name']
-            if self._package_re.match(name):
+            if self._package_re and self._package_re.match(name):
                 yield name
-            elif self._tests_re.match(name):
+            elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
                 yield name
             else:
