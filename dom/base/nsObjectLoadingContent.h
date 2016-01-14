@@ -287,15 +287,14 @@ class nsObjectLoadingContent : public nsImageLoadingContent
       eSupportDocuments    = 1u << 2, // Documents are supported
                                         // (nsIDocumentLoaderFactory)
                                         // This flag always includes SVG
-      eSupportSVG          = 1u << 3, // SVG is supported (image/svg+xml)
-      eSupportClassID      = 1u << 4, // The classid attribute is supported
+      eSupportClassID      = 1u << 3, // The classid attribute is supported
 
       // If possible to get a *plugin* type from the type attribute *or* file
       // extension, we can use that type and begin loading the plugin before
       // opening a channel.
       // A side effect of this is if the channel fails, the plugin is still
       // running.
-      eAllowPluginSkipChannel  = 1u << 5
+      eAllowPluginSkipChannel  = 1u << 4
     };
 
     /**
