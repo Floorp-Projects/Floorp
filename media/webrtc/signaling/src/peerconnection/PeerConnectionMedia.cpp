@@ -1215,10 +1215,13 @@ LocalSourceStreamInfo::UpdateSinkIdentity_m(nsIPrincipal* aPrincipal,
 
 void RemoteSourceStreamInfo::UpdatePrincipal_m(nsIPrincipal* aPrincipal)
 {
-  // this blasts away the existing principal
-  // we only do this when we become certain that the stream is safe to make
-  // accessible to the script principal
-  mMediaStream->SetPrincipal(aPrincipal);
+  // This blasts away the existing principal.
+  // We only do this when we become certain that the all tracks are safe to make
+  // accessible to the script principal.
+  for (RefPtr<RemoteTrackSource>& source : mTrackSources) {
+    MOZ_RELEASE_ASSERT(source);
+    source->SetPrincipal(aPrincipal);
+  }
 }
 #endif // MOZILLA_INTERNAL_API
 
