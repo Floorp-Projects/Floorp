@@ -12,12 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID: userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.com/page/1',
-    'https://example.com/page/2',
-    'https://example.com/page/3',
-    'https://example.com/page/4'
-  );
   run_next_test();
 }
 
@@ -57,9 +51,12 @@ add_task(function* test_notification_incomplete() {
     yield db.put(record);
   }
 
-  Services.obs.addObserver(function observe(subject, topic, data) {
+  function observeMessage(subject, topic, data) {
     ok(false, 'Should not deliver malformed updates');
-  }, 'push-notification', false);
+  }
+  do_register_cleanup(() =>
+    Services.obs.removeObserver(observeMessage, 'push-message'));
+  Services.obs.addObserver(observeMessage, 'push-message', false);
 
   let notificationDone;
   let notificationPromise = new Promise(resolve => notificationDone = after(2, resolve));

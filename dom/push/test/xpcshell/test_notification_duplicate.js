@@ -12,10 +12,6 @@ function run_test() {
   setPrefs({
     userAgentID: userAgentID,
   });
-  disableServiceWorkerEvents(
-    'https://example.com/1',
-    'https://example.com/2'
-  );
   run_next_test();
 }
 
@@ -44,7 +40,7 @@ add_task(function* test_notification_duplicate() {
     yield db.put(record);
   }
 
-  let notifyPromise = promiseObserverNotification('push-notification');
+  let notifyPromise = promiseObserverNotification('push-message');
 
   let acks = 0;
   let ackDone;
