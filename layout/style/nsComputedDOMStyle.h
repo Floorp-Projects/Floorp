@@ -190,6 +190,8 @@ private:
                                               const nsStyleCoord& aMaxSize);
   already_AddRefed<CSSValue> GetGridTemplateColumnsRows(
     const nsStyleGridTemplate& aTrackList,
+    const uint32_t aNumLeadingImplicitTracks,
+    const uint32_t aNumExplicitTracks,
     const nsTArray<nscoord>* aTrackSizes);
   already_AddRefed<CSSValue> GetGridLine(const nsStyleGridLine& aGridLine);
 
