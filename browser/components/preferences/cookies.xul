@@ -24,9 +24,6 @@
   <stringbundle id="bundlePreferences"
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
-  <stringbundle id="bundleBrowser"
-                src="chrome://browser/locale/browser.properties"/>
-
   <keyset>
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
     <key key="&focusSearch1.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
