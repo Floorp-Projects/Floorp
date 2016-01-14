@@ -96,7 +96,7 @@ AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, Handle
     MOZ_ASSERT(!fun->isBuiltin());
 
     for (; !iter.done(); ++iter) {
-        if (!iter.isFunctionFrame() || iter.isEvalFrame())
+        if (!iter.isNonEvalFunctionFrame())
             continue;
         if (iter.matchCallee(cx, fun))
             return true;
@@ -252,7 +252,10 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
     }
 
     ++iter;
-    if (iter.done() || !iter.isFunctionFrame()) {
+    while (!iter.done() && iter.isEvalFrame())
+        ++iter;
+
+    if (iter.done() || !iter.isNonEvalFunctionFrame()) {
         args.rval().setNull();
         return true;
     }
@@ -318,7 +321,10 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
         return true;
 
     ++iter;
-    if (iter.done() || !iter.isFunctionFrame())
+    while (!iter.done() && iter.isEvalFrame())
+        ++iter;
+
+    if (iter.done() || !iter.isNonEvalFunctionFrame())
         return true;
 
     RootedObject caller(cx, iter.callee(cx));
