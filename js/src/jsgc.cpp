@@ -1293,7 +1293,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
      * for default backward API compatibility.
      */
     AutoLockGC lock(rt);
-    tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock);
+    MOZ_ALWAYS_TRUE(tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock));
     setMaxMallocBytes(maxbytes);
 
     const char* size = getenv("JSGC_MARK_STACK_LIMIT");
@@ -1401,7 +1401,7 @@ GCRuntime::finishRoots()
     FinishPersistentRootedChains(rt->mainThread.roots);
 }
 
-void
+bool
 GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
 {
     switch (key) {
@@ -1420,24 +1420,30 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
         decommitThreshold = (uint64_t)value * 1024 * 1024;
         break;
       case JSGC_MODE:
+        if (mode != JSGC_MODE_GLOBAL &&
+            mode != JSGC_MODE_COMPARTMENT &&
+            mode != JSGC_MODE_INCREMENTAL)
+        {
+            return false;
+        }
         mode = JSGCMode(value);
-        MOZ_ASSERT(mode == JSGC_MODE_GLOBAL ||
-                   mode == JSGC_MODE_COMPARTMENT ||
-                   mode == JSGC_MODE_INCREMENTAL);
         break;
       case JSGC_COMPACTING_ENABLED:
         compactingEnabled = value != 0;
         break;
       default:
-        tunables.setParameter(key, value, lock);
+        if (!tunables.setParameter(key, value, lock))
+            return false;
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
             zone->threshold.updateAfterGC(zone->usage.gcBytes(), GC_NORMAL, tunables,
                                           schedulingState, lock);
         }
     }
+
+    return true;
 }
 
-void
+bool
 GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock)
 {
     switch(key) {
@@ -1447,31 +1453,50 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
       case JSGC_HIGH_FREQUENCY_TIME_LIMIT:
         highFrequencyThresholdUsec_ = value * PRMJ_USEC_PER_MSEC;
         break;
-      case JSGC_HIGH_FREQUENCY_LOW_LIMIT:
-        highFrequencyLowLimitBytes_ = (uint64_t)value * 1024 * 1024;
+      case JSGC_HIGH_FREQUENCY_LOW_LIMIT: {
+        uint64_t newLimit = (uint64_t)value * 1024 * 1024;
+        if (newLimit == UINT64_MAX)
+            return false;
+        highFrequencyLowLimitBytes_ = newLimit;
         if (highFrequencyLowLimitBytes_ >= highFrequencyHighLimitBytes_)
             highFrequencyHighLimitBytes_ = highFrequencyLowLimitBytes_ + 1;
         MOZ_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
         break;
-      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT:
-        MOZ_ASSERT(value > 0);
-        highFrequencyHighLimitBytes_ = (uint64_t)value * 1024 * 1024;
+      }
+      case JSGC_HIGH_FREQUENCY_HIGH_LIMIT: {
+        uint64_t newLimit = (uint64_t)value * 1024 * 1024;
+        if (newLimit == 0)
+            return false;
+        highFrequencyHighLimitBytes_ = newLimit;
         if (highFrequencyHighLimitBytes_ <= highFrequencyLowLimitBytes_)
             highFrequencyLowLimitBytes_ = highFrequencyHighLimitBytes_ - 1;
         MOZ_ASSERT(highFrequencyHighLimitBytes_ > highFrequencyLowLimitBytes_);
         break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX:
-        highFrequencyHeapGrowthMax_ = value / 100.0;
+      }
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX: {
+        double newGrowth = value / 100.0;
+        if (newGrowth <= 0.85)
+            return false;
+        highFrequencyHeapGrowthMax_ = newGrowth;
         MOZ_ASSERT(highFrequencyHeapGrowthMax_ / 0.85 > 1.0);
         break;
-      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN:
-        highFrequencyHeapGrowthMin_ = value / 100.0;
+      }
+      case JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN: {
+        double newGrowth = value / 100.0;
+        if (newGrowth <= 0.85)
+            return false;
+        highFrequencyHeapGrowthMin_ = newGrowth;
         MOZ_ASSERT(highFrequencyHeapGrowthMin_ / 0.85 > 1.0);
         break;
-      case JSGC_LOW_FREQUENCY_HEAP_GROWTH:
-        lowFrequencyHeapGrowth_ = value / 100.0;
+      }
+      case JSGC_LOW_FREQUENCY_HEAP_GROWTH: {
+        double newGrowth = value / 100.0;
+        if (newGrowth <= 0.9)
+            return false;
+        lowFrequencyHeapGrowth_ = newGrowth;
         MOZ_ASSERT(lowFrequencyHeapGrowth_ / 0.9 > 1.0);
         break;
+      }
       case JSGC_DYNAMIC_HEAP_GROWTH:
         dynamicHeapGrowthEnabled_ = value != 0;
         break;
@@ -1496,6 +1521,8 @@ GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoL
       default:
         MOZ_CRASH("Unknown GC parameter.");
     }
+
+    return true;
 }
 
 uint32_t

@@ -1476,7 +1476,7 @@ JS_PUBLIC_API(void)
 JS_SetGCParameter(JSRuntime* rt, JSGCParamKey key, uint32_t value)
 {
     AutoLockGC lock(rt);
-    rt->gc.setParameter(key, value, lock);
+    MOZ_ALWAYS_TRUE(rt->gc.setParameter(key, value, lock));
 }
 
 JS_PUBLIC_API(uint32_t)
