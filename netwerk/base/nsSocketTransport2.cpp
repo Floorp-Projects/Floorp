@@ -1221,7 +1221,7 @@ nsSocketTransport::InitiateSocket()
     bool isLocal;
     IsLocal(&isLocal);
 
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
         return NS_ERROR_ABORT;
     }
     if (gIOService->IsOffline()) {
@@ -1989,7 +1989,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     }
 
     // If we are not shutting down try again.
-    if (!gIOService->IsShutdown() && RecoverFromError())
+    if (!gIOService->IsNetTearingDown() && RecoverFromError())
         mCondition = NS_OK;
     else {
         mState = STATE_CLOSED;
@@ -3050,7 +3050,7 @@ nsSocketTransport::SendPRBlockingTelemetry(PRIntervalTime aStart,
                                            Telemetry::ID aIDOffline)
 {
     PRIntervalTime now = PR_IntervalNow();
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
         Telemetry::Accumulate(aIDShutdown,
                               PR_IntervalToMilliseconds(now - aStart));
 
