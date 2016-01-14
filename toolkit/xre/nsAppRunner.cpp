@@ -4682,7 +4682,7 @@ mozilla::BrowserTabsRemoteAutostart()
   // When running tests with 'layers.offmainthreadcomposition.testing.enabled', e10s must be
   // allowed because these tests must be allowed to run remotely.
   // We are also allowing e10s to be enabled on Beta (which doesn't have E10S_TESTING_ONLY defined.
-  bool e10sAllowed = Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("beta") ||
+  bool e10sAllowed = !Preferences::GetDefaultCString("app.update.channel").EqualsLiteral("release") ||
                      gfxPrefs::GetSingleton().LayersOffMainThreadCompositionTestingEnabled();
 #endif
 
