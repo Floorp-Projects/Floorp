@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 var loop = loop || {};
-loop.roomViews = (function(mozL10n) {
+loop.roomViews = function (mozL10n) {
   "use strict";
 
   var ROOM_STATES = loop.store.ROOM_STATES;
@@ -24,20 +24,17 @@ loop.roomViews = (function(mozL10n) {
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
-    componentWillMount: function() {
-      this.listenTo(this.props.roomStore, "change:activeRoom",
-                    this._onActiveRoomStateChanged);
-      this.listenTo(this.props.roomStore, "change:error",
-                    this._onRoomError);
-      this.listenTo(this.props.roomStore, "change:savingContext",
-                    this._onRoomSavingContext);
+    componentWillMount: function () {
+      this.listenTo(this.props.roomStore, "change:activeRoom", this._onActiveRoomStateChanged);
+      this.listenTo(this.props.roomStore, "change:error", this._onRoomError);
+      this.listenTo(this.props.roomStore, "change:savingContext", this._onRoomSavingContext);
     },
 
-    componentWillUnmount: function() {
+    componentWillUnmount: function () {
       this.stopListening(this.props.roomStore);
     },
 
-    _onActiveRoomStateChanged: function() {
+    _onActiveRoomStateChanged: function () {
       // Only update the state if we're mounted, to avoid the problem where
       // stopListening doesn't nuke the active listeners during a event
       // processing.
@@ -46,7 +43,7 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
-    _onRoomError: function() {
+    _onRoomError: function () {
       // Only update the state if we're mounted, to avoid the problem where
       // stopListening doesn't nuke the active listeners during a event
       // processing.
@@ -55,7 +52,7 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
-    _onRoomSavingContext: function() {
+    _onRoomSavingContext: function () {
       // Only update the state if we're mounted, to avoid the problem where
       // stopListening doesn't nuke the active listeners during a event
       // processing.
@@ -64,7 +61,7 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       var storeState = this.props.roomStore.getStoreState("activeRoom");
       return _.extend({
         // Used by the UI showcase.
@@ -77,7 +74,9 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Used to display errors in direct calls and rooms to the user.
    */
-  var FailureInfoView = React.createClass({displayName: "FailureInfoView",
+  var FailureInfoView = React.createClass({
+    displayName: "FailureInfoView",
+
     propTypes: {
       failureReason: React.PropTypes.string.isRequired
     },
@@ -87,14 +86,13 @@ loop.roomViews = (function(mozL10n) {
      *
      * @return {String} The translated message for the failure reason.
      */
-    _getMessage: function() {
+    _getMessage: function () {
       switch (this.props.failureReason) {
         case FAILURE_DETAILS.NO_MEDIA:
         case FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA:
           return mozL10n.get("no_media_failure_message");
         case FAILURE_DETAILS.TOS_FAILURE:
-          return mozL10n.get("tos_failure_message",
-            { clientShortname: mozL10n.get("clientShortname2") });
+          return mozL10n.get("tos_failure_message", { clientShortname: mozL10n.get("clientShortname2") });
         case FAILURE_DETAILS.ICE_FAILED:
           return mozL10n.get("ice_failure_message");
         default:
@@ -102,11 +100,15 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
-    render: function() {
-      return (
-        React.createElement("div", {className: "failure-info"}, 
-          React.createElement("div", {className: "failure-info-logo"}), 
-          React.createElement("h2", {className: "failure-info-message"}, this._getMessage())
+    render: function () {
+      return React.createElement(
+        "div",
+        { className: "failure-info" },
+        React.createElement("div", { className: "failure-info-logo" }),
+        React.createElement(
+          "h2",
+          { className: "failure-info-message" },
+          this._getMessage()
         )
       );
     }
@@ -115,7 +117,9 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Something went wrong view. Displayed when there's a big problem.
    */
-  var RoomFailureView = React.createClass({displayName: "RoomFailureView",
+  var RoomFailureView = React.createClass({
+    displayName: "RoomFailureView",
+
     mixins: [sharedMixins.AudioMixin],
 
     propTypes: {
@@ -123,19 +127,15 @@ loop.roomViews = (function(mozL10n) {
       failureReason: React.PropTypes.string
     },
 
-    componentDidMount: function() {
+    componentDidMount: function () {
       this.play("failure");
     },
 
-    handleRejoinCall: function() {
+    handleRejoinCall: function () {
       this.props.dispatcher.dispatch(new sharedActions.JoinRoom());
     },
 
-    render: function() {
-      var settingsMenuItems = [
-        { id: "help" }
-      ];
-
+    render: function () {
       var btnTitle;
       if (this.props.failureReason === FAILURE_DETAILS.ICE_FAILED) {
         btnTitle = mozL10n.get("retry_call_button");
@@ -143,24 +143,27 @@ loop.roomViews = (function(mozL10n) {
         btnTitle = mozL10n.get("rejoin_button");
       }
 
-      return (
-        React.createElement("div", {className: "room-failure"}, 
-          React.createElement(FailureInfoView, {failureReason: this.props.failureReason}), 
-          React.createElement("div", {className: "btn-group call-action-group"}, 
-            React.createElement("button", {className: "btn btn-info btn-rejoin", 
-                    onClick: this.handleRejoinCall}, 
-              btnTitle
-            )
-          ), 
-          React.createElement(loop.shared.views.SettingsControlButton, {
-            menuBelow: true, 
-            menuItems: settingsMenuItems})
+      return React.createElement(
+        "div",
+        { className: "room-failure" },
+        React.createElement(FailureInfoView, { failureReason: this.props.failureReason }),
+        React.createElement(
+          "div",
+          { className: "btn-group call-action-group" },
+          React.createElement(
+            "button",
+            { className: "btn btn-info btn-rejoin",
+              onClick: this.handleRejoinCall },
+            btnTitle
+          )
         )
       );
     }
   });
 
-  var SocialShareDropdown = React.createClass({displayName: "SocialShareDropdown",
+  var SocialShareDropdown = React.createClass({
+    displayName: "SocialShareDropdown",
+
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       roomUrl: React.PropTypes.string,
@@ -168,20 +171,19 @@ loop.roomViews = (function(mozL10n) {
       socialShareProviders: React.PropTypes.array
     },
 
-    handleAddServiceClick: function(event) {
+    handleAddServiceClick: function (event) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(new sharedActions.AddSocialShareProvider());
     },
 
-    handleProviderClick: function(event) {
+    handleProviderClick: function (event) {
       event.preventDefault();
 
       var origin = event.currentTarget.dataset.provider;
-      var provider = this.props.socialShareProviders
-                         .filter(function(socialProvider) {
-                           return socialProvider.origin === origin;
-                         })[0];
+      var provider = this.props.socialShareProviders.filter(function (socialProvider) {
+        return socialProvider.origin === origin;
+      })[0];
 
       this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({
         provider: provider,
@@ -190,7 +192,7 @@ loop.roomViews = (function(mozL10n) {
       }));
     },
 
-    render: function() {
+    render: function () {
       // Don't render a thing when no data has been fetched yet.
       if (!this.props.socialShareProviders) {
         return null;
@@ -204,27 +206,35 @@ loop.roomViews = (function(mozL10n) {
         "hide": !this.props.show
       });
 
-      return (
-        React.createElement("ul", {className: shareDropdown}, 
-          React.createElement("li", {className: "dropdown-menu-item", onClick: this.handleAddServiceClick}, 
-            React.createElement("i", {className: "icon icon-add-share-service"}), 
-            React.createElement("span", null, mozL10n.get("share_add_service_button"))
-          ), 
-          this.props.socialShareProviders.length ? React.createElement("li", {className: "dropdown-menu-separator"}) : null, 
-          
-            this.props.socialShareProviders.map(function(provider, idx) {
-              return (
-                React.createElement("li", {className: "dropdown-menu-item", 
-                    "data-provider": provider.origin, 
-                    key: "provider-" + idx, 
-                    onClick: this.handleProviderClick}, 
-                  React.createElement("img", {className: "icon", src: provider.iconURL}), 
-                  React.createElement("span", null, provider.name)
-                )
-              );
-            }.bind(this))
-          
-        )
+      return React.createElement(
+        "ul",
+        { className: shareDropdown },
+        React.createElement(
+          "li",
+          { className: "dropdown-menu-item", onClick: this.handleAddServiceClick },
+          React.createElement("i", { className: "icon icon-add-share-service" }),
+          React.createElement(
+            "span",
+            null,
+            mozL10n.get("share_add_service_button")
+          )
+        ),
+        this.props.socialShareProviders.length ? React.createElement("li", { className: "dropdown-menu-separator" }) : null,
+        this.props.socialShareProviders.map(function (provider, idx) {
+          return React.createElement(
+            "li",
+            { className: "dropdown-menu-item",
+              "data-provider": provider.origin,
+              key: "provider-" + idx,
+              onClick: this.handleProviderClick },
+            React.createElement("img", { className: "icon", src: provider.iconURL }),
+            React.createElement(
+              "span",
+              null,
+              provider.name
+            )
+          );
+        }.bind(this))
       );
     }
   });
@@ -232,7 +242,9 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Desktop room invitation view (overlay).
    */
-  var DesktopRoomInvitationView = React.createClass({displayName: "DesktopRoomInvitationView",
+  var DesktopRoomInvitationView = React.createClass({
+    displayName: "DesktopRoomInvitationView",
+
     statics: {
       TRIGGERED_RESET_DELAY: 2000
     },
@@ -242,24 +254,20 @@ loop.roomViews = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       error: React.PropTypes.object,
-      onAddContextClick: React.PropTypes.func,
-      onEditContextClose: React.PropTypes.func,
       // This data is supplied by the activeRoomStore.
       roomData: React.PropTypes.object.isRequired,
-      savingContext: React.PropTypes.bool,
       show: React.PropTypes.bool.isRequired,
-      showEditContext: React.PropTypes.bool.isRequired,
       socialShareProviders: React.PropTypes.array
     },
 
-    getInitialState: function() {
+    getInitialState: function () {
       return {
         copiedUrl: false,
         newRoomName: ""
       };
     },
 
-    handleEmailButtonClick: function(event) {
+    handleEmailButtonClick: function (event) {
       event.preventDefault();
 
       var roomData = this.props.roomData;
@@ -272,15 +280,14 @@ loop.roomViews = (function(mozL10n) {
         }
       }
 
-      this.props.dispatcher.dispatch(
-        new sharedActions.EmailRoomUrl({
-          roomUrl: roomData.roomUrl,
-          roomDescription: contextURL,
-          from: "conversation"
-        }));
+      this.props.dispatcher.dispatch(new sharedActions.EmailRoomUrl({
+        roomUrl: roomData.roomUrl,
+        roomDescription: contextURL,
+        from: "conversation"
+      }));
     },
 
-    handleFacebookButtonClick: function(event) {
+    handleFacebookButtonClick: function (event) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(new sharedActions.FacebookShareRoomUrl({
@@ -289,7 +296,7 @@ loop.roomViews = (function(mozL10n) {
       }));
     },
 
-    handleCopyButtonClick: function(event) {
+    handleCopyButtonClick: function (event) {
       event.preventDefault();
 
       this.props.dispatcher.dispatch(new sharedActions.CopyRoomUrl({
@@ -304,280 +311,92 @@ loop.roomViews = (function(mozL10n) {
     /**
      * Reset state of triggered buttons if necessary
      */
-    resetTriggeredButtons: function() {
+    resetTriggeredButtons: function () {
       if (this.state.copiedUrl) {
         this.setState({ copiedUrl: false });
       }
     },
 
-    handleEditContextClose: function() {
-      if (this.props.onEditContextClose) {
-        this.props.onEditContextClose();
-      }
-    },
-
-    render: function() {
+    render: function () {
       if (!this.props.show || !this.props.roomData.roomUrl) {
         return null;
       }
 
       var cx = classNames;
-      return (
-        React.createElement("div", {className: "room-invitation-overlay"}, 
-          React.createElement("div", {className: "room-invitation-content"}, 
-            React.createElement("p", {className: cx({ hide: this.props.showEditContext })}, 
-              mozL10n.get("invite_header_text2")
+      return React.createElement(
+        "div",
+        { className: "room-invitation-overlay" },
+        React.createElement(
+          "div",
+          { className: "room-invitation-content" },
+          React.createElement(
+            "p",
+            null,
+            React.createElement(
+              "span",
+              { className: "room-context-header" },
+              mozL10n.get("invite_header_text_bold")
+            ),
+            " ",
+            React.createElement(
+              "span",
+              null,
+              mozL10n.get("invite_header_text3")
             )
-          ), 
-          React.createElement("div", {className: cx({
-            "btn-group": true,
-            "call-action-group": true,
-            hide: this.props.showEditContext
-          })}, 
-            React.createElement("div", {className: cx({
+          )
+        ),
+        React.createElement(
+          "div",
+          { className: cx({
+              "btn-group": true,
+              "call-action-group": true
+            }) },
+          React.createElement(
+            "div",
+            { className: cx({
                 "btn-copy": true,
                 "invite-button": true,
                 "triggered": this.state.copiedUrl
-              }), 
-              onClick: this.handleCopyButtonClick}, 
-              React.createElement("img", {src: "shared/img/glyph-link-16x16.svg"}), 
-              React.createElement("p", null, mozL10n.get(this.state.copiedUrl ?
-                "invite_copied_link_button" : "invite_copy_link_button"))
-            ), 
-            React.createElement("div", {className: "btn-email invite-button", 
-              onClick: this.handleEmailButtonClick, 
-              onMouseOver: this.resetTriggeredButtons}, 
-              React.createElement("img", {src: "shared/img/glyph-email-16x16.svg"}), 
-              React.createElement("p", null, mozL10n.get("invite_email_link_button"))
-            ), 
-            React.createElement("div", {className: "btn-facebook invite-button", 
-              onClick: this.handleFacebookButtonClick, 
-              onMouseOver: this.resetTriggeredButtons}, 
-              React.createElement("img", {src: "shared/img/glyph-facebook-16x16.svg"}), 
-              React.createElement("p", null, mozL10n.get("invite_facebook_button3"))
+              }),
+              onClick: this.handleCopyButtonClick },
+            React.createElement("img", { src: "shared/img/glyph-link-16x16.svg" }),
+            React.createElement(
+              "p",
+              null,
+              mozL10n.get(this.state.copiedUrl ? "invite_copied_link_button" : "invite_copy_link_button")
             )
-          ), 
-          React.createElement(SocialShareDropdown, {
-            dispatcher: this.props.dispatcher, 
-            ref: "menu", 
-            roomUrl: this.props.roomData.roomUrl, 
-            show: this.state.showMenu, 
-            socialShareProviders: this.props.socialShareProviders}), 
-          React.createElement(DesktopRoomEditContextView, {
-            dispatcher: this.props.dispatcher, 
-            error: this.props.error, 
-            onClose: this.handleEditContextClose, 
-            roomData: this.props.roomData, 
-            savingContext: this.props.savingContext, 
-            show: this.props.showEditContext})
-        )
-      );
-    }
-  });
-
-  var DesktopRoomEditContextView = React.createClass({displayName: "DesktopRoomEditContextView",
-    mixins: [React.addons.LinkedStateMixin],
-    maxRoomNameLength: 124,
-
-    propTypes: {
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      error: React.PropTypes.object,
-      onClose: React.PropTypes.func,
-      // This data is supplied by the activeRoomStore.
-      roomData: React.PropTypes.object.isRequired,
-      savingContext: React.PropTypes.bool.isRequired,
-      show: React.PropTypes.bool.isRequired
-    },
-
-    componentWillMount: function() {
-      this._fetchMetadata();
-    },
-
-    componentWillReceiveProps: function(nextProps) {
-      var newState = {};
-      // When the 'show' prop is changed from outside this component, we do need
-      // to update the state.
-      if (("show" in nextProps) && nextProps.show !== this.props.show) {
-        newState.show = nextProps.show;
-        if (nextProps.show) {
-          this._fetchMetadata();
-        }
-      }
-      // When we receive an update for the `roomData` property, make sure that
-      // the current form fields reflect reality. This is necessary, because the
-      // form state is maintained in the components' state.
-      if (nextProps.roomData) {
-        // Right now it's only necessary to update the form input states when
-        // they contain no text yet.
-        if (!this.state.newRoomName && nextProps.roomData.roomName) {
-          newState.newRoomName = nextProps.roomData.roomName;
-        }
-        var url = this._getURL(nextProps.roomData);
-        if (url) {
-          if (!this.state.newRoomURL && url.location) {
-            newState.newRoomURL = url.location;
-          }
-          if (!this.state.newRoomDescription && url.description) {
-            newState.newRoomDescription = url.description;
-          }
-          if (!this.state.newRoomThumbnail && url.thumbnail) {
-            newState.newRoomThumbnail = url.thumbnail;
-          }
-        }
-      }
-
-      // Feature support: when a context save completed without error, we can
-      // close the context edit form.
-      if (("savingContext" in nextProps) && this.props.savingContext &&
-          this.props.savingContext !== nextProps.savingContext && this.state.show
-          && !this.props.error && !nextProps.error) {
-        newState.show = false;
-        if (this.props.onClose) {
-          this.props.onClose();
-        }
-      }
-
-      if (Object.getOwnPropertyNames(newState).length) {
-        this.setState(newState);
-      }
-    },
-
-    getInitialState: function() {
-      var url = this._getURL();
-      return {
-        // `availableContext` prop only used in tests.
-        availableContext: null,
-        show: this.props.show,
-        newRoomName: this.props.roomData.roomName || "",
-        newRoomURL: url && url.location || "",
-        newRoomDescription: url && url.description || "",
-        newRoomThumbnail: url && url.thumbnail || ""
-      };
-    },
-
-    _fetchMetadata: function() {
-      loop.request("GetSelectedTabMetadata").then(function(metadata) {
-        var previewImage = metadata.favicon || "";
-        var description = metadata.title || metadata.description;
-        var metaUrl = metadata.url;
-        this.setState({
-          availableContext: {
-            previewImage: previewImage,
-            description: description,
-            url: metaUrl
-          }
-       });
-      }.bind(this));
-    },
-
-    handleCloseClick: function(event) {
-      event.stopPropagation();
-      event.preventDefault();
-
-      this.setState({ show: false });
-      if (this.props.onClose) {
-        this.props.onClose();
-      }
-    },
-
-    handleContextClick: function(event) {
-      event.stopPropagation();
-      event.preventDefault();
-
-      var url = this._getURL();
-      if (!url || !url.location) {
-        return;
-      }
-
-      loop.requestMulti(
-        ["OpenURL", url.location],
-        ["TelemetryAddValue", "LOOP_ROOM_CONTEXT_CLICK", 1]);
-    },
-
-    handleFormSubmit: function(event) {
-      event && event.preventDefault();
-
-      this.props.dispatcher.dispatch(new sharedActions.UpdateRoomContext({
-        roomToken: this.props.roomData.roomToken,
-        newRoomName: this.state.newRoomName,
-        newRoomURL: this.state.newRoomURL,
-        newRoomDescription: this.state.newRoomDescription,
-        newRoomThumbnail: this.state.newRoomThumbnail
-      }));
-    },
-
-    handleTextareaKeyDown: function(event) {
-      // Submit the form as soon as the user press Enter in that field
-      // Note: We're using a textarea instead of a simple text input to display
-      // placeholder and entered text on two lines, to circumvent l10n
-      // rendering/UX issues for some locales.
-      if (event.which === 13) {
-        this.handleFormSubmit(event);
-      }
-    },
-
-    /**
-     * Utility function to extract URL context data from the `roomData` property
-     * that can also be supplied as an argument.
-     *
-     * @param  {Object} roomData Optional room data object to use, equivalent to
-     *                           the activeRoomStore state.
-     * @return {Object} The first context URL found on the `roomData` object.
-     */
-    _getURL: function(roomData) {
-      roomData = roomData || this.props.roomData;
-      return this.props.roomData.roomContextUrls &&
-        this.props.roomData.roomContextUrls[0];
-    },
-
-    render: function() {
-      if (!this.state.show) {
-        return null;
-      }
-
-      var url = this._getURL();
-      var thumbnail = url && url.thumbnail || "shared/img/icons-16x16.svg#globe";
-      var urlDescription = url && url.description || "";
-      var location = url && url.location || "";
-
-      var cx = classNames;
-      var availableContext = this.state.availableContext;
-      return (
-        React.createElement("div", {className: "room-context"}, 
-          React.createElement("p", {className: cx({ "error": !!this.props.error,
-                            "error-display-area": true })}, 
-            mozL10n.get("rooms_change_failed_label")
-          ), 
-          React.createElement("h2", {className: "room-context-header"}, mozL10n.get("context_inroom_header")), 
-          React.createElement("form", {onSubmit: this.handleFormSubmit}, 
-            React.createElement("input", {className: "room-context-name", 
-              maxLength: this.maxRoomNameLength, 
-              onKeyDown: this.handleTextareaKeyDown, 
-              placeholder: mozL10n.get("context_edit_name_placeholder"), 
-              type: "text", 
-              valueLink: this.linkState("newRoomName")}), 
-            React.createElement("input", {className: "room-context-url", 
-              disabled: availableContext && availableContext.url === this.state.newRoomURL, 
-              onKeyDown: this.handleTextareaKeyDown, 
-              placeholder: "https://", 
-              type: "text", 
-              valueLink: this.linkState("newRoomURL")}), 
-            React.createElement("textarea", {className: "room-context-comments", 
-              onKeyDown: this.handleTextareaKeyDown, 
-              placeholder: mozL10n.get("context_edit_comments_placeholder"), 
-              rows: "2", type: "text", 
-              valueLink: this.linkState("newRoomDescription")}), 
-            React.createElement(sharedViews.ButtonGroup, null, 
-              React.createElement(sharedViews.Button, {additionalClass: "button-cancel", 
-                caption: mozL10n.get("context_cancel_label"), 
-                onClick: this.handleCloseClick}), 
-              React.createElement(sharedViews.Button, {additionalClass: "button-accept", 
-                caption: mozL10n.get("context_done_label"), 
-                disabled: this.props.savingContext, 
-                onClick: this.handleFormSubmit})
+          ),
+          React.createElement(
+            "div",
+            { className: "btn-email invite-button",
+              onClick: this.handleEmailButtonClick,
+              onMouseOver: this.resetTriggeredButtons },
+            React.createElement("img", { src: "shared/img/glyph-email-16x16.svg" }),
+            React.createElement(
+              "p",
+              null,
+              mozL10n.get("invite_email_link_button")
+            )
+          ),
+          React.createElement(
+            "div",
+            { className: "btn-facebook invite-button",
+              onClick: this.handleFacebookButtonClick,
+              onMouseOver: this.resetTriggeredButtons },
+            React.createElement("img", { src: "shared/img/glyph-facebook-16x16.svg" }),
+            React.createElement(
+              "p",
+              null,
+              mozL10n.get("invite_facebook_button3")
             )
           )
-        )
+        ),
+        React.createElement(SocialShareDropdown, {
+          dispatcher: this.props.dispatcher,
+          ref: "menu",
+          roomUrl: this.props.roomData.roomUrl,
+          show: this.state.showMenu,
+          socialShareProviders: this.props.socialShareProviders })
       );
     }
   });
@@ -585,14 +404,10 @@ loop.roomViews = (function(mozL10n) {
   /**
    * Desktop room conversation view.
    */
-  var DesktopRoomConversationView = React.createClass({displayName: "DesktopRoomConversationView",
-    mixins: [
-      ActiveRoomStoreMixin,
-      sharedMixins.DocumentTitleMixin,
-      sharedMixins.MediaSetupMixin,
-      sharedMixins.RoomsAudioMixin,
-      sharedMixins.WindowCloseMixin
-    ],
+  var DesktopRoomConversationView = React.createClass({
+    displayName: "DesktopRoomConversationView",
+
+    mixins: [ActiveRoomStoreMixin, sharedMixins.DocumentTitleMixin, sharedMixins.MediaSetupMixin, sharedMixins.RoomsAudioMixin, sharedMixins.WindowCloseMixin],
 
     propTypes: {
       chatWindowDetached: React.PropTypes.bool.isRequired,
@@ -604,18 +419,11 @@ loop.roomViews = (function(mozL10n) {
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
-    getInitialState: function() {
-      return {
-        showEditContext: false
-      };
-    },
-
-    componentWillUpdate: function(nextProps, nextState) {
+    componentWillUpdate: function (nextProps, nextState) {
       // The SDK needs to know about the configuration and the elements to use
       // for display. So the best way seems to pass the information here - ideally
       // the sdk wouldn't need to know this, but we can't change that.
-      if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT &&
-          nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
+      if (this.state.roomState !== ROOM_STATES.MEDIA_WAIT && nextState.roomState === ROOM_STATES.MEDIA_WAIT) {
         this.props.dispatcher.dispatch(new sharedActions.SetupStreamElements({
           publisherConfig: this.getDefaultPublisherConfig({
             publishVideo: !this.state.videoMuted
@@ -624,8 +432,7 @@ loop.roomViews = (function(mozL10n) {
       }
 
       // Automatically start sharing a tab now we're ready to share.
-      if (this.state.roomState !== ROOM_STATES.SESSION_CONNECTED &&
-          nextState.roomState === ROOM_STATES.SESSION_CONNECTED) {
+      if (this.state.roomState !== ROOM_STATES.SESSION_CONNECTED && nextState.roomState === ROOM_STATES.SESSION_CONNECTED) {
         this.props.dispatcher.dispatch(new sharedActions.StartBrowserShare());
       }
     },
@@ -633,7 +440,7 @@ loop.roomViews = (function(mozL10n) {
     /**
      * User clicked on the "Leave" button.
      */
-    leaveRoom: function() {
+    leaveRoom: function () {
       if (this.state.used) {
         this.props.dispatcher.dispatch(new sharedActions.LeaveRoom());
       } else {
@@ -647,12 +454,11 @@ loop.roomViews = (function(mozL10n) {
      * @param {String} type The type of stream, e.g. "audio" or "video".
      * @param {Boolean} enabled True to enable the stream, false otherwise.
      */
-    publishStream: function(type, enabled) {
-      this.props.dispatcher.dispatch(
-        new sharedActions.SetMute({
-          type: type,
-          enabled: enabled
-        }));
+    publishStream: function (type, enabled) {
+      this.props.dispatcher.dispatch(new sharedActions.SetMute({
+        type: type,
+        enabled: enabled
+      }));
     },
 
     /**
@@ -660,11 +466,10 @@ loop.roomViews = (function(mozL10n) {
      *
      * @return {Boolean} True if there's no guests.
      */
-    _shouldRenderInvitationOverlay: function() {
-      var hasGuests = typeof this.state.participants === "object" &&
-        this.state.participants.filter(function(participant) {
-          return !participant.owner;
-        }).length > 0;
+    _shouldRenderInvitationOverlay: function () {
+      var hasGuests = typeof this.state.participants === "object" && this.state.participants.filter(function (participant) {
+        return !participant.owner;
+      }).length > 0;
 
       // Don't show if the room has participants whether from the room state or
       // there being non-owner guests in the participants array.
@@ -680,7 +485,7 @@ loop.roomViews = (function(mozL10n) {
      * XXX Refactor shouldRenderRemoteVideo & shouldRenderLoading into one fn
      *     that returns an enum
      */
-    shouldRenderRemoteVideo: function() {
+    shouldRenderRemoteVideo: function () {
       switch (this.state.roomState) {
         case ROOM_STATES.HAS_PARTICIPANTS:
           if (this.state.remoteVideoEnabled) {
@@ -710,8 +515,7 @@ loop.roomViews = (function(mozL10n) {
           return true;
 
         default:
-          console.warn("DesktopRoomConversationView.shouldRenderRemoteVideo:" +
-            " unexpected roomState: ", this.state.roomState);
+          console.warn("DesktopRoomConversationView.shouldRenderRemoteVideo:" + " unexpected roomState: ", this.state.roomState);
           return true;
       }
     },
@@ -723,9 +527,8 @@ loop.roomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _isLocalLoading: function() {
-      return this.state.roomState === ROOM_STATES.MEDIA_WAIT &&
-             !this.state.localSrcMediaElement;
+    _isLocalLoading: function () {
+      return this.state.roomState === ROOM_STATES.MEDIA_WAIT && !this.state.localSrcMediaElement;
     },
 
     /**
@@ -735,124 +538,87 @@ loop.roomViews = (function(mozL10n) {
      * @returns {boolean}
      * @private
      */
-    _isRemoteLoading: function() {
-      return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS &&
-                !this.state.remoteSrcMediaElement &&
-                !this.state.mediaConnected);
+    _isRemoteLoading: function () {
+      return !!(this.state.roomState === ROOM_STATES.HAS_PARTICIPANTS && !this.state.remoteSrcMediaElement && !this.state.mediaConnected);
     },
 
-    handleAddContextClick: function() {
-      this.setState({ showEditContext: true });
-    },
-
-    handleEditContextClick: function() {
-      this.setState({ showEditContext: !this.state.showEditContext });
-    },
-
-    handleEditContextClose: function() {
-      this.setState({ showEditContext: false });
-    },
-
-    componentDidUpdate: function(prevProps, prevState) {
+    componentDidUpdate: function (prevProps, prevState) {
       // Handle timestamp and window closing only when the call has terminated.
-      if (prevState.roomState === ROOM_STATES.ENDED &&
-          this.state.roomState === ROOM_STATES.ENDED) {
+      if (prevState.roomState === ROOM_STATES.ENDED && this.state.roomState === ROOM_STATES.ENDED) {
         this.props.onCallTerminated();
       }
     },
 
-    handleContextMenu: function(e) {
+    handleContextMenu: function (e) {
       e.preventDefault();
     },
 
-    render: function() {
+    render: function () {
       if (this.state.roomName || this.state.roomContextUrls) {
-        var roomTitle = this.state.roomName ||
-                        this.state.roomContextUrls[0].description ||
-                        this.state.roomContextUrls[0].location;
+        var roomTitle = this.state.roomName || this.state.roomContextUrls[0].description || this.state.roomContextUrls[0].location;
         this.setTitle(roomTitle);
       }
 
       var shouldRenderInvitationOverlay = this._shouldRenderInvitationOverlay();
-      var shouldRenderEditContextView = this.state.showEditContext;
       var roomData = this.props.roomStore.getStoreState("activeRoom");
 
       switch (this.state.roomState) {
         case ROOM_STATES.FAILED:
-        case ROOM_STATES.FULL: {
-          // Note: While rooms are set to hold a maximum of 2 participants, the
-          //       FULL case should never happen on desktop.
-          return (
-            React.createElement(RoomFailureView, {
-              dispatcher: this.props.dispatcher, 
-              failureReason: this.state.failureReason})
-          );
-        }
-        case ROOM_STATES.ENDED: {
-          // When conversation ended we either display a feedback form or
-          // close the window. This is decided in the AppControllerView.
-          return null;
-        }
-        default: {
-          var settingsMenuItems = [
-            {
-              id: "edit",
-              enabled: !this.state.showEditContext,
-              visible: true,
-              onClick: this.handleEditContextClick
-            },
-            { id: "help" }
-          ];
-          return (
-            React.createElement("div", {className: "room-conversation-wrapper desktop-room-wrapper", 
-              onContextMenu: this.handleContextMenu}, 
-              React.createElement(sharedViews.MediaLayoutView, {
-                dispatcher: this.props.dispatcher, 
-                displayScreenShare: false, 
-                isLocalLoading: this._isLocalLoading(), 
-                isRemoteLoading: this._isRemoteLoading(), 
-                isScreenShareLoading: false, 
-                localPosterUrl: this.props.localPosterUrl, 
-                localSrcMediaElement: this.state.localSrcMediaElement, 
-                localVideoMuted: this.state.videoMuted, 
-                matchMedia: this.state.matchMedia || window.matchMedia.bind(window), 
-                remotePosterUrl: this.props.remotePosterUrl, 
-                remoteSrcMediaElement: this.state.remoteSrcMediaElement, 
-                renderRemoteVideo: this.shouldRenderRemoteVideo(), 
-                screenShareMediaElement: this.state.screenShareMediaElement, 
-                screenSharePosterUrl: null, 
-                showInitialContext: false, 
-                useDesktopPaths: true}, 
+        case ROOM_STATES.FULL:
+          {
+            // Note: While rooms are set to hold a maximum of 2 participants, the
+            //       FULL case should never happen on desktop.
+            return React.createElement(RoomFailureView, {
+              dispatcher: this.props.dispatcher,
+              failureReason: this.state.failureReason });
+          }
+        case ROOM_STATES.ENDED:
+          {
+            // When conversation ended we either display a feedback form or
+            // close the window. This is decided in the AppControllerView.
+            return null;
+          }
+        default:
+          {
+            return React.createElement(
+              "div",
+              { className: "room-conversation-wrapper desktop-room-wrapper",
+                onContextMenu: this.handleContextMenu },
+              React.createElement(
+                sharedViews.MediaLayoutView,
+                {
+                  dispatcher: this.props.dispatcher,
+                  displayScreenShare: false,
+                  isLocalLoading: this._isLocalLoading(),
+                  isRemoteLoading: this._isRemoteLoading(),
+                  isScreenShareLoading: false,
+                  localPosterUrl: this.props.localPosterUrl,
+                  localSrcMediaElement: this.state.localSrcMediaElement,
+                  localVideoMuted: this.state.videoMuted,
+                  matchMedia: this.state.matchMedia || window.matchMedia.bind(window),
+                  remotePosterUrl: this.props.remotePosterUrl,
+                  remoteSrcMediaElement: this.state.remoteSrcMediaElement,
+                  renderRemoteVideo: this.shouldRenderRemoteVideo(),
+                  screenShareMediaElement: this.state.screenShareMediaElement,
+                  screenSharePosterUrl: null,
+                  showInitialContext: false,
+                  useDesktopPaths: true },
                 React.createElement(sharedViews.ConversationToolbar, {
-                  audio: { enabled: !this.state.audioMuted, visible: true}, 
-                  dispatcher: this.props.dispatcher, 
-                  hangup: this.leaveRoom, 
-                  publishStream: this.publishStream, 
-                  settingsMenuItems: settingsMenuItems, 
-                  show: !shouldRenderEditContextView, 
-                  showHangup: this.props.chatWindowDetached, 
-                  video: { enabled: !this.state.videoMuted, visible: true}}), 
+                  audio: { enabled: !this.state.audioMuted, visible: true },
+                  dispatcher: this.props.dispatcher,
+                  hangup: this.leaveRoom,
+                  publishStream: this.publishStream,
+                  showHangup: this.props.chatWindowDetached,
+                  video: { enabled: !this.state.videoMuted, visible: true } }),
                 React.createElement(DesktopRoomInvitationView, {
-                  dispatcher: this.props.dispatcher, 
-                  error: this.state.error, 
-                  onAddContextClick: this.handleAddContextClick, 
-                  onEditContextClose: this.handleEditContextClose, 
-                  roomData: roomData, 
-                  savingContext: this.state.savingContext, 
-                  show: shouldRenderInvitationOverlay, 
-                  showEditContext: shouldRenderInvitationOverlay && shouldRenderEditContextView, 
-                  socialShareProviders: this.state.socialShareProviders}), 
-                React.createElement(DesktopRoomEditContextView, {
-                  dispatcher: this.props.dispatcher, 
-                  error: this.state.error, 
-                  onClose: this.handleEditContextClose, 
-                  roomData: roomData, 
-                  savingContext: this.state.savingContext, 
-                  show: !shouldRenderInvitationOverlay && shouldRenderEditContextView})
+                  dispatcher: this.props.dispatcher,
+                  error: this.state.error,
+                  roomData: roomData,
+                  show: shouldRenderInvitationOverlay,
+                  socialShareProviders: this.state.socialShareProviders })
               )
-            )
-          );
-        }
+            );
+          }
       }
     }
   });
@@ -862,9 +628,7 @@ loop.roomViews = (function(mozL10n) {
     FailureInfoView: FailureInfoView,
     RoomFailureView: RoomFailureView,
     SocialShareDropdown: SocialShareDropdown,
-    DesktopRoomEditContextView: DesktopRoomEditContextView,
     DesktopRoomConversationView: DesktopRoomConversationView,
     DesktopRoomInvitationView: DesktopRoomInvitationView
   };
-
-})(document.mozL10n || navigator.mozL10n);
+}(document.mozL10n || navigator.mozL10n);

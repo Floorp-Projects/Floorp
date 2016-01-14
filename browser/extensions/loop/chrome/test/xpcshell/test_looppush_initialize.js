@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 var dummyCallback = () => {};
 var mockWebSocket = new MockWebSocketChannel();
 var pushServerRequestCount = 0;

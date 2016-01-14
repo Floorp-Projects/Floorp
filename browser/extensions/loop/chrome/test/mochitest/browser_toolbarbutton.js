@@ -8,7 +8,6 @@
 "use strict";
 
 Components.utils.import("resource://gre/modules/Promise.jsm", this);
-const { LoopRoomsInternal } = Components.utils.import("chrome://loop/content/modules/LoopRooms.jsm", {});
 Services.prefs.setIntPref("loop.gettingStarted.latestFTUVersion", 1);
 
 const fxASampleToken = {
