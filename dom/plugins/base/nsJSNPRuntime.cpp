@@ -1165,8 +1165,7 @@ nsJSObjWrapper::GetNewOrUsed(NPP npp, JSContext *cx, JS::Handle<JSObject*> obj)
 
   // Insert the new wrapper into the hashtable, rooting the JSObject. Its
   // lifetime is now tied to that of the NPObject.
-  nsJSObjWrapperKey key(obj, npp);
-  if (!sJSObjWrappers.putNew(key, wrapper)) {
+  if (!sJSObjWrappers.putNew(nsJSObjWrapperKey(obj, npp), wrapper)) {
     // Out of memory, free the wrapper we created.
     _releaseobject(wrapper);
     return nullptr;
