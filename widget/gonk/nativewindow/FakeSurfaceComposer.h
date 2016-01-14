@@ -88,6 +88,12 @@ private:
     virtual ~FakeSurfaceComposer();
 
     /* ------------------------------------------------------------------------
+     * IBinder interface
+     */
+    virtual status_t onTransact(uint32_t code, const Parcel& data,
+        Parcel* reply, uint32_t flags);
+
+    /* ------------------------------------------------------------------------
      * ISurfaceComposer interface
      */
     virtual sp<ISurfaceComposerClient> createConnection();
