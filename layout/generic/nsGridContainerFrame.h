@@ -254,12 +254,12 @@ protected:
      */
     nscoord ToLength(const nsTArray<TrackSize>& aTrackSizes) const;
     /**
-     * Given an array of track sizes and a grid origin coordinate, adjust the
+     * Given a set of tracks and a grid origin coordinate, adjust the
      * abs.pos. containing block along an axis given by aPos and aLength.
      * aPos and aLength should already be initialized to the grid container
      * containing block for this axis before calling this method.
      */
-    void ToPositionAndLengthForAbsPos(const nsTArray<TrackSize>& aTrackSizes,
+    void ToPositionAndLengthForAbsPos(const Tracks& aTracks,
                                       nscoord aGridOrigin,
                                       nscoord* aPos, nscoord* aLength) const;
 
