@@ -1008,6 +1008,11 @@ nsCSPParser::directiveName()
     return nullptr;
   }
 
+  // special case handling for block-all-mixed-content
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+    return new nsBlockAllMixedContentDirective(CSP_StringToCSPDirective(mCurToken));
+  }
+
   // special case handling for upgrade-insecure-requests
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
     return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
@@ -1056,6 +1061,20 @@ nsCSPParser::directive()
   nsCSPDirective* cspDir = directiveName();
   if (!cspDir) {
     // if we can not create a CSPDirective, we can skip parsing the srcs for that array
+    return;
+  }
+
+  // special case handling for block-all-mixed-content, which is only specified
+  // by a directive name but does not include any srcs.
+  if (cspDir->equals(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+    if (mCurDir.Length() > 1) {
+      const char16_t* params[] = { MOZ_UTF16("block-all-mixed-content") };
+      logWarningErrorToConsole(nsIScriptError::warningFlag,
+                               "ignoreSrcForDirective",
+                               params, ArrayLength(params));
+    }
+    // add the directive and return
+    mPolicy->addDirective(cspDir);
     return;
   }
 
