@@ -18,8 +18,8 @@
 @BINPATH@/chrome/@AB_CD@@JAREXT@
 @BINPATH@/chrome/@AB_CD@.manifest
 @BINPATH@/@PREF_DIR@/mobile-l10n.js
-#ifdef MOZ_UPDATER
 @BINPATH@/update.locale
+#ifdef MOZ_UPDATER
 @BINPATH@/updater.ini
 #endif
 @BINPATH@/dictionaries/*
