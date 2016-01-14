@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <limits>
 
 // NOTE(ajm): Path provided by gyp.
 #include "libyuv.h"  // NOLINT
@@ -69,6 +70,16 @@ void Calc16ByteAlignedStride(int width, int* stride_y, int* stride_uv) {
 size_t CalcBufferSize(VideoType type, int width, int height) {
   assert(width >= 0);
   assert(height >= 0);
+  // Verify we won't overflow; max is width*height*4
+  // 0x7FFF * 0x7FFF * 4 = < 0x100000000
+  assert(width <= 0x7FFF); // guarantees no overflow and cheaper than multiply
+  assert(height <= 0x7FFF);
+  static_assert(std::numeric_limits<std::size_t>::max() >= 0xFFFFFFFF, "size_t max too small!");
+  // assert() is debug only
+  if (width > 0x7FFF || height > 0x7FFF) {
+    return SIZE_MAX; // very likely forces OOM
+  }
+
   size_t buffer_size = 0;
   switch (type) {
     case kI420:
@@ -97,6 +108,7 @@ size_t CalcBufferSize(VideoType type, int width, int height) {
       break;
     default:
       assert(false);
+      buffer_size = SIZE_MAX;
       break;
   }
   return buffer_size;
