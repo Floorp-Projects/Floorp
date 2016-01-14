@@ -1806,7 +1806,7 @@ nsScriptLoadHandler::TryDecodeRawData(const uint8_t* aData,
 
   haveRead += dstLen;
   MOZ_ASSERT(haveRead <= capacity, "mDecoder produced more data than expected");
-  mBuffer.resizeUninitialized(haveRead);
+  MOZ_ALWAYS_TRUE(mBuffer.resizeUninitialized(haveRead));
 
   return NS_OK;
 }
