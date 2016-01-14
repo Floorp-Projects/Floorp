@@ -315,30 +315,43 @@ class MacArtifactJob(ArtifactJob):
 
 
 class WinArtifactJob(ArtifactJob):
-    def process_package_artifact(self, filename, processed_filename):
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-            prefix = 'firefox/'
-            whitelist = {
-                'dependentlibs.list',
-                'platform.ini',
-                'application.ini',
-            }
-            for f in JarReader(filename):
-                if not f.filename.startswith(prefix):
-                    raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.filename))
-                basename = f.filename[len(prefix):]
+    package_artifact_patterns = {
+        'firefox/dependentlibs.list',
+        'firefox/platform.ini',
+        'firefox/application.ini',
+        'firefox/*.dll',
+        'firefox/*.exe',
+    }
+    # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+    test_artifact_patterns = {
+        'bin/BadCertServer.exe',
+        'bin/GenerateOCSPResponse.exe',
+        'bin/OCSPStaplingServer.exe',
+        'bin/certutil.exe',
+        'bin/fileid.exe',
+        'bin/pk12util.exe',
+        'bin/ssltunnel.exe',
+        'bin/xpcshell.exe',
+    }
 
-                if not basename.endswith('.dll') and \
-                   not basename.endswith('.exe') and \
-                   basename not in whitelist:
+    def process_package_artifact(self, filename, processed_filename):
+        added_entry = False
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            for f in JarReader(filename):
+                if not any(mozpath.match(f.filename, p) for p in self.package_artifact_patterns):
                     continue
 
+                basename = mozpath.basename(f.filename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                     'Adding {basename} to processed archive')
-
                 writer.add(basename.encode('utf-8'), f)
+                added_entry = True
 
+        if not added_entry:
+            raise ValueError('Archive format changed! No pattern from "{patterns}"'
+                             'matched an archive path.'.format(
+                                 patterns=self.artifact_patterns))
 
 # Keep the keys of this map in sync with the |mach artifact| --job
 # options.  The keys of this map correspond to entries at
@@ -356,8 +369,10 @@ JOB_DETAILS = {
                                    'public/build/firefox-(.*)\.common\.tests\.zip')),
     'macosx64': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
-    'win32': (WinArtifactJob, 'public/build/firefox-(.*)\.win32.zip', None),
-    'win64': (WinArtifactJob, 'public/build/firefox-(.*)\.win64.zip', None),
+    'win32': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
+                               'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win64': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
+                               'public/build/firefox-(.*)\.common\.tests\.zip')),
 }
 
 
