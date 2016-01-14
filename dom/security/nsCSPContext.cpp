@@ -591,6 +591,7 @@ nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDocument);
     mLoadingContext = do_GetWeakReference(doc);
     mSelfURI = doc->GetDocumentURI();
+    mLoadingPrincipal = doc->NodePrincipal();
     doc->GetReferrer(mReferrer);
     mInnerWindowID = doc->InnerWindowID();
     // the innerWindowID is not available for CSPs delivered through the
@@ -669,6 +670,51 @@ nsCSPContext::logToConsole(const char16_t* aName,
 }
 
 /**
+ * Strip URI for reporting according to:
+ * http://www.w3.org/TR/CSP/#violation-reports
+ *
+ * @param aURI
+ *        The uri to be stripped for reporting
+ * @param aProtectedResourcePrincipal
+ *        The loadingPrincipal of the protected resource
+ *        which is needed to enforce the SOP.
+ * @return ASCII serialization of the uri to be reported.
+ */
+void
+StripURIForReporting(nsIURI* aURI,
+                     nsIPrincipal* aProtectedResourcePrincipal,
+                     nsACString& outStrippedURI)
+{
+  // 1) If the origin of uri is a globally unique identifier (for example,
+  // aURI has a scheme of data, blob, or filesystem), then return the
+  // ASCII serialization of uri’s scheme.
+  bool isHttp =
+    (NS_SUCCEEDED(aURI->SchemeIs("http", &isHttp)) && isHttp) ||
+    (NS_SUCCEEDED(aURI->SchemeIs("https", &isHttp)) && isHttp);
+  if (!isHttp) {
+    // not strictly spec compliant, but what we really care about is
+    // http/https. If it's not http/https, then treat aURI as if
+    // it's a globally unique identifier and just return the scheme.
+    aURI->GetScheme(outStrippedURI);
+    return;
+  }
+
+  // 2) If the origin of uri is not the same as the origin of the protected
+  // resource, then return the ASCII serialization of uri’s origin.
+  bool sameOrigin =
+    NS_SUCCEEDED(aProtectedResourcePrincipal->CheckMayLoad(aURI, false, false));
+  if (!sameOrigin) {
+    // cross origin redirects also fall into this category, see:
+    // http://www.w3.org/TR/CSP/#violation-reports
+    aURI->GetPrePath(outStrippedURI);
+    return;
+  }
+
+  // 3) Return uri, with any fragment component removed.
+  aURI->GetSpecIgnoringRef(outStrippedURI);
+}
+
+/**
  * Sends CSP violation reports to all sources listed under report-uri.
  *
  * @param aBlockedContentSource
@@ -714,15 +760,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     nsCOMPtr<nsIURI> uri = do_QueryInterface(aBlockedContentSource);
     // could be a string or URI
     if (uri) {
-      // aOriginalURI will only be *not* null in case of a redirect in which
-      // case aOriginalURI is the uri before the redirect.
-      if (aOriginalURI) {
-        // do not report anything else than the origin in case of a redirect, see:
-        // http://www.w3.org/TR/CSP/#violation-reports
-        uri->GetPrePath(reportBlockedURI);
-      } else {
-        uri->GetSpecIgnoringRef(reportBlockedURI);
-      }
+      StripURIForReporting(uri, mLoadingPrincipal, reportBlockedURI);
     } else {
       nsCOMPtr<nsISupportsCString> cstr = do_QueryInterface(aBlockedContentSource);
       if (cstr) {
@@ -739,7 +777,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
   // document-uri
   nsAutoCString reportDocumentURI;
-  mSelfURI->GetSpecIgnoringRef(reportDocumentURI);
+  StripURIForReporting(mSelfURI, mLoadingPrincipal, reportDocumentURI);
   report.mCsp_report.mDocument_uri = NS_ConvertUTF8toUTF16(reportDocumentURI);
 
   // original-policy
