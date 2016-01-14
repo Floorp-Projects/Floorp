@@ -524,11 +524,68 @@ WinUtils::Log(const char *fmt, ...)
   delete[] buffer;
 }
 
+#ifndef WM_DPICHANGED
+typedef enum {
+  MDT_EFFECTIVE_DPI = 0,
+  MDT_ANGULAR_DPI = 1,
+  MDT_RAW_DPI = 2,
+  MDT_DEFAULT = MDT_EFFECTIVE_DPI
+} MONITOR_DPI_TYPE;
+
+typedef enum {
+  PROCESS_DPI_UNAWARE = 0,
+  PROCESS_SYSTEM_DPI_AWARE = 1,
+  PROCESS_PER_MONITOR_DPI_AWARE = 2
+} PROCESS_DPI_AWARENESS;
+#endif
+
+typedef HRESULT
+(WINAPI *GETDPIFORMONITORPROC)(HMONITOR, MONITOR_DPI_TYPE, UINT*, UINT*);
+
+typedef HRESULT
+(WINAPI *GETPROCESSDPIAWARENESSPROC)(HANDLE, PROCESS_DPI_AWARENESS*);
+
+GETDPIFORMONITORPROC sGetDpiForMonitor;
+GETPROCESSDPIAWARENESSPROC sGetProcessDpiAwareness;
+
+static bool
+SlowIsPerMonitorDPIAware()
+{
+  if (IsVistaOrLater()) {
+    // Intentionally leak the handle.
+    HMODULE shcore =
+      LoadLibraryEx(L"shcore", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (shcore) {
+      sGetDpiForMonitor =
+        (GETDPIFORMONITORPROC) GetProcAddress(shcore, "GetDpiForMonitor");
+      sGetProcessDpiAwareness =
+        (GETPROCESSDPIAWARENESSPROC) GetProcAddress(shcore, "GetProcessDpiAwareness");
+    }
+  }
+  PROCESS_DPI_AWARENESS dpiAwareness;
+  return sGetDpiForMonitor && sGetProcessDpiAwareness &&
+      SUCCEEDED(sGetProcessDpiAwareness(GetCurrentProcess(), &dpiAwareness)) &&
+      dpiAwareness == PROCESS_PER_MONITOR_DPI_AWARE;
+}
+
+/* static */ bool
+WinUtils::IsPerMonitorDPIAware()
+{
+  static bool perMonitorDPIAware = SlowIsPerMonitorDPIAware();
+  return perMonitorDPIAware;
+}
+
 /* static */
 double
-WinUtils::LogToPhysFactor()
+WinUtils::LogToPhysFactor(HMONITOR aMonitor)
 {
-  // dpi / 96.0
+  if (IsPerMonitorDPIAware()) {
+    UINT dpiX, dpiY = 96;
+    sGetDpiForMonitor(aMonitor, MDT_EFFECTIVE_DPI, &dpiX, &dpiY);
+    return dpiY / 96.0;
+  }
+
+  // The system DPI will never change during the session.
   HDC hdc = ::GetDC(nullptr);
   double result = ::GetDeviceCaps(hdc, LOGPIXELSY) / 96.0;
   ::ReleaseDC(nullptr, hdc);
@@ -544,25 +601,42 @@ WinUtils::LogToPhysFactor()
 }
 
 /* static */
-double
-WinUtils::PhysToLogFactor()
-{
-  // 1.0 / (dpi / 96.0)
-  return 1.0 / LogToPhysFactor();
-}
-
-/* static */
-double
-WinUtils::PhysToLog(int32_t aValue)
-{
-  return double(aValue) * PhysToLogFactor();
-}
-
-/* static */
 int32_t
-WinUtils::LogToPhys(double aValue)
+WinUtils::LogToPhys(HMONITOR aMonitor, double aValue)
 {
-  return int32_t(NS_round(aValue * LogToPhysFactor()));
+  return int32_t(NS_round(aValue * LogToPhysFactor(aMonitor)));
+}
+
+/* static */
+HMONITOR
+WinUtils::GetPrimaryMonitor()
+{
+  const POINT pt = { 0, 0 };
+  return ::MonitorFromPoint(pt, MONITOR_DEFAULTTOPRIMARY);
+}
+
+/* static */
+HMONITOR
+WinUtils::MonitorFromRect(const gfx::Rect& rect)
+{
+  // convert coordinates from logical to device pixels for MonitorFromRect
+  double dpiScale = nsIWidget::DefaultScaleOverride();
+  if (dpiScale <= 0.0) {
+    if (IsPerMonitorDPIAware()) {
+      dpiScale = 1.0;
+    } else {
+      dpiScale = LogToPhysFactor(GetPrimaryMonitor());
+    }
+  }
+
+  RECT globalWindowBounds = {
+    NSToIntRound(dpiScale * rect.x),
+    NSToIntRound(dpiScale * rect.y),
+    NSToIntRound(dpiScale * (rect.x + rect.width)),
+    NSToIntRound(dpiScale * (rect.y + rect.height))
+  };
+
+  return ::MonitorFromRect(&globalWindowBounds, MONITOR_DEFAULTTONEAREST);
 }
 
 /* static */

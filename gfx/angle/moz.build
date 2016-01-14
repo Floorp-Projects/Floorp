@@ -108,8 +108,7 @@ SOURCES += [
     'src/compiler/translator/glslang_tab.cpp',
 ]
 
-
-if CONFIG['GNU_CXX']:
+if CONFIG['GNU_CXX'] or CONFIG['CLANG_CL']:
     CXXFLAGS += [
         '-Wno-attributes',
         '-Wno-shadow',
@@ -117,16 +116,16 @@ if CONFIG['GNU_CXX']:
         '-Wno-unknown-pragmas',
         '-Wno-unreachable-code',
     ]
-    if CONFIG['CLANG_CXX']:
-        CXXFLAGS += [
-            '-Wno-inconsistent-missing-override',
-            '-Wno-unused-private-field',
-        ]
-    else:
-        CXXFLAGS += [
-            '-Wno-shadow-compatible-local',
-            '-Wno-shadow-local',
-        ]
+if CONFIG['GNU_CXX'] and not CONFIG['CLANG_CXX'] and not CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-Wno-shadow-compatible-local',
+        '-Wno-shadow-local',
+    ]
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CXXFLAGS += [
+        '-Wno-inconsistent-missing-override',
+        '-Wno-unused-private-field',
+    ]
 
 if CONFIG['MOZ_DIRECTX_SDK_PATH'] and not CONFIG['MOZ_HAS_WINSDK_WITH_D3D']:
     LOCAL_INCLUDES += ['%' + '%s/include/' % CONFIG['MOZ_DIRECTX_SDK_PATH']]

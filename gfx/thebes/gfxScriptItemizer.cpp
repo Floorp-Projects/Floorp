@@ -158,19 +158,11 @@ gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
             }
         }
 
-        // Get the nsCharProps2 record for the current character,
-        // so we can read the script and (if needed) the gen category
-        // without needing to do two multi-level lookups.
-        // NOTE that this means we're relying on an implementation detail
-        // of the nsUnicodeProperties tables, and might have to revise this
-        // if the nsCharProps records used there are modified in future.
-        const nsCharProps2& charProps = GetCharProps2(ch);
-
         // Initialize gc to UNASSIGNED; we'll only set it to the true GC
         // if the character has script=COMMON, otherwise we don't care.
         uint8_t gc = HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED;
 
-        sc = charProps.mScriptCode;
+        sc = GetScriptCode(ch);
         if (sc == MOZ_SCRIPT_COMMON) {
             /*
              * Paired character handling:
@@ -183,7 +175,7 @@ gfxScriptItemizer::Next(uint32_t& aRunStart, uint32_t& aRunLimit,
              * We only do this if the script is COMMON; for chars with
              * specific script assignments, we just use them as-is.
              */
-            gc = charProps.mCategory;
+            GetGeneralCategory(ch);
             if (gc == HB_UNICODE_GENERAL_CATEGORY_OPEN_PUNCTUATION) {
                 uint32_t endPairChar = mozilla::unicode::GetMirroredChar(ch);
                 if (endPairChar != ch) {

@@ -8,6 +8,7 @@ import getpass
 import json
 import logging
 import os
+import platform
 import subprocess
 import sys
 import time
@@ -170,6 +171,8 @@ class BuildMonitor(MozbuildObject):
         self._warnings_collector = WarningsCollector(
             database=self.warnings_database, objdir=self.topobjdir)
 
+        self.build_objects = []
+
     def start(self):
         """Record the start of the build."""
         self.start_time = time.time()
@@ -214,6 +217,9 @@ class BuildMonitor(MozbuildObject):
             elif action == 'TIER_FINISH':
                 tier, = args
                 self.tiers.finish_tier(tier)
+            elif action == 'OBJECT_FILE':
+                self.build_objects.append(args[0])
+                update_needed = False
             else:
                 raise Exception('Unknown build status: %s' % action)
 
@@ -371,7 +377,8 @@ class BuildMonitor(MozbuildObject):
                 'Swap in/out (MB): {sin}/{sout}')
 
         o = dict(
-            version=1,
+            version=2,
+            argv=sys.argv,
             start=self.start_time,
             end=self.end_time,
             duration=self.end_time - self.start_time,
@@ -379,6 +386,7 @@ class BuildMonitor(MozbuildObject):
             cpu_percent=cpu_percent,
             cpu_times=cpu_times,
             io=io,
+            objects=self.build_objects
         )
 
         o['tiers'] = self.tiers.tiered_resource_usage()
@@ -402,6 +410,31 @@ class BuildMonitor(MozbuildObject):
                     end=usage.end)
 
             o['resources'].append(entry)
+
+        # TODO: it would be nice to collect data on the storage device as well
+        o['system'] = dict(
+            architecture=list(platform.architecture()),
+            logical_cpu_count=psutil.cpu_count(),
+            machine=platform.machine(),
+            physical_cpu_count=psutil.cpu_count(logical=False),
+            python_version=platform.python_version(),
+            release=platform.release(),
+            system=platform.system(),
+            swap_total=psutil.swap_memory()[0],
+            version=platform.version(),
+            vmem_total=psutil.virtual_memory()[0],
+        )
+
+        if platform.system() == 'Linux':
+            dist = list(platform.linux_distribution())
+            o['system']['linux_distribution'] = dist
+        elif platform.system() == 'Windows':
+            win32_ver=list((platform.win32_ver())),
+            o['system']['win32_ver'] = win32_ver
+        elif platform.system() == 'Darwin':
+            # mac version is a special Cupertino snowflake
+            r, v, m = platform.mac_ver()
+            o['system']['mac_ver'] = [r, list(v), m]
 
         return o
 

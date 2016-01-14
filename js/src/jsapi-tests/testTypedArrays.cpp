@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "jscompartment.h"
 #include "jsfriendapi.h"
 
 #include "jsapi-tests/tests.h"
@@ -53,7 +54,6 @@ BEGIN_TEST(testTypedArrays)
         TestArrayFromBuffer<JS_NewFloat32ArrayWithBuffer, JS_NewFloat32ArrayFromArray, float, false, JS_GetFloat32ArrayData>(cx) &&
         TestArrayFromBuffer<JS_NewFloat64ArrayWithBuffer, JS_NewFloat64ArrayFromArray, double, false, JS_GetFloat64ArrayData>(cx);
 
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
     ok = ok &&
         TestArrayFromBuffer<JS_NewInt8ArrayWithBuffer, JS_NewInt8ArrayFromArray, int8_t, true, JS_GetInt8ArrayData>(cx) &&
         TestArrayFromBuffer<JS_NewUint8ArrayWithBuffer, JS_NewUint8ArrayFromArray, uint8_t, true, JS_GetUint8ArrayData>(cx) &&
@@ -64,7 +64,6 @@ BEGIN_TEST(testTypedArrays)
         TestArrayFromBuffer<JS_NewUint32ArrayWithBuffer, JS_NewUint32ArrayFromArray, uint32_t, true, JS_GetUint32ArrayData>(cx) &&
         TestArrayFromBuffer<JS_NewFloat32ArrayWithBuffer, JS_NewFloat32ArrayFromArray, float, true, JS_GetFloat32ArrayData>(cx) &&
         TestArrayFromBuffer<JS_NewFloat64ArrayWithBuffer, JS_NewFloat64ArrayFromArray, double, true, JS_GetFloat64ArrayData>(cx);
-#endif // ENABLE_SHARED_ARRAY_BUFFER
 
     return ok;
 }
@@ -116,6 +115,9 @@ template<JSObject* CreateWithBuffer(JSContext*, JS::HandleObject, uint32_t, int3
 bool
 TestArrayFromBuffer(JSContext* cx)
 {
+    if (Shared && !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled())
+        return true;
+
     size_t elts = 8;
     size_t nbytes = elts * sizeof(Element);
     RootedObject buffer(cx, Shared ? JS_NewSharedArrayBuffer(cx, nbytes)

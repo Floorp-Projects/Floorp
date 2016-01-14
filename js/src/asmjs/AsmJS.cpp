@@ -2191,12 +2191,6 @@ class MOZ_STACK_CLASS ModuleValidator
     }
 
     bool startFunctionBodies() {
-        if (atomicsPresent_) {
-#if !defined(ENABLE_SHARED_ARRAY_BUFFER)
-            return failOffset(parser_.tokenStream.currentToken().pos.begin,
-                              "shared memory and atomics not supported by this build");
-#endif
-        }
         return true;
     }
     bool finishFunctionBodies() {

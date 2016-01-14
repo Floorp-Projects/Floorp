@@ -29,7 +29,7 @@ else:
 LOCAL_INCLUDES += ['/media/libav']
 
 # Suppress warnings in third-party code.
-if CONFIG['GNU_CC']:
+if CONFIG['GNU_CC'] or CONFIG['CLANG_CL']:
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',
@@ -37,12 +37,12 @@ if CONFIG['GNU_CC']:
         '-Wno-switch',
         '-Wno-type-limits',
     ]
-    if CONFIG['CLANG_CXX']:
-        CFLAGS += [
-            '-Wno-incompatible-pointer-types-discards-qualifiers',
-            '-Wno-logical-op-parentheses',
-        ]
-elif CONFIG['_MSC_VER']:
+if CONFIG['CLANG_CXX'] or CONFIG['CLANG_CL']:
+    CFLAGS += [
+        '-Wno-incompatible-pointer-types-discards-qualifiers',
+        '-Wno-logical-op-parentheses',
+    ]
+if CONFIG['_MSC_VER'] and not CONFIG['CLANG_CL']:
     CFLAGS += [
         '-wd4090', # 'return' : different 'const' qualifiers
         '-wd4018', # '>' : signed/unsigned mismatch

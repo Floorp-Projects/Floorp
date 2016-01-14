@@ -18,7 +18,7 @@ task:
         loopbackAudio: true
   extra:
     chunks:
-      total: 5
+      total: 8
     suite:
       name: mochitest
       flavor: plain-chunked

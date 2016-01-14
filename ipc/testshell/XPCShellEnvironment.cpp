@@ -516,6 +516,8 @@ XPCShellEnvironment::Init()
     JS::CompartmentOptions options;
     options.creationOptions().setZone(JS::SystemZone);
     options.behaviors().setVersion(JSVERSION_LATEST);
+    if (xpc::SharedMemoryEnabled())
+        options.creationOptions().setSharedMemoryAndAtomicsEnabled(true);
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx,

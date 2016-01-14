@@ -1168,6 +1168,12 @@ pref("javascript.options.mem.gc_max_empty_chunk_count", 30);
 
 pref("javascript.options.showInConsole", false);
 
+#ifdef NIGHTLY_BUILD
+pref("javascript.options.shared_memory", true);
+#else
+pref("javascript.options.shared_memory", false);
+#endif
+
 // advanced prefs
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");

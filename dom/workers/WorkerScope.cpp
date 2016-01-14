@@ -437,6 +437,9 @@ DedicatedWorkerGlobalScope::WrapGlobalObject(JSContext* aCx,
   behaviors.setDiscardSource(discardSource)
            .extraWarningsOverride().set(extraWarnings);
 
+  JS::CompartmentCreationOptions& creationOptions = options.creationOptions();
+  creationOptions.setSharedMemoryAndAtomicsEnabled(xpc::SharedMemoryEnabled());
+
   return DedicatedWorkerGlobalScopeBinding_workers::Wrap(aCx, this, this,
                                                          options,
                                                          GetWorkerPrincipal(),

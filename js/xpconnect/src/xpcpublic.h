@@ -493,6 +493,9 @@ bool
 ShouldDiscardSystemSource();
 
 bool
+SharedMemoryEnabled();
+
+bool
 SetAddonInterposition(const nsACString& addonId, nsIAddonInterposition* interposition);
 
 bool

@@ -1818,7 +1818,16 @@
      *   Stack: checkVal => checkVal
      */ \
     macro(JSOP_DEBUGCHECKSELFHOSTED, 177,"debug-checkselfhosted",  NULL, 1,  1,  1,  JOF_BYTE) \
-    macro(JSOP_UNUSED178,     178,"unused178",  NULL,     1,  0,  0,  JOF_BYTE) \
+    /*
+     * Pops the top stack value, pushes the value and a boolean value that
+     * indicates whether the spread operation for the value can be optimized
+     * in spread call.
+     *   Category: Statements
+     *   Type: Function
+     *   Operands:
+     *   Stack: arr => arr optimized
+     */ \
+    macro(JSOP_OPTIMIZE_SPREADCALL,178,"optimize-spreadcall", NULL, 1,  1,  2,  JOF_BYTE) \
     macro(JSOP_UNUSED179,     179,"unused179",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED180,     180,"unused180",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED181,     181,"unused181",  NULL,     1,  0,  0,  JOF_BYTE) \
