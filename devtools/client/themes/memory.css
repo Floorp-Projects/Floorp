@@ -353,10 +353,7 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-item-count,
-.heap-tree-item-total-count {
-  width: 8%;
-}
-
+.heap-tree-item-total-count,
 .heap-tree-item-bytes,
 .heap-tree-item-total-bytes {
   width: 10%;
@@ -385,12 +382,20 @@ html, body, #app, #memory-tool {
 .heap-tree-item-name {
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.heap-tree-number {
+  padding-inline-start: 3px;
+}
+
+.heap-tree-percent {
+  padding-inline-start: 3px;
+  padding-inline-end: 3px;
 }
 
 .heap-tree-number,
 .heap-tree-percent {
-  padding-inline-end: 5px;
+  font-family: var(--monospace-font-family);
 }
 
 .heap-tree-number {
@@ -399,7 +404,7 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-percent {
-  flex: 0 0 3.5em;
+  width: 2.5em;
 }
 
 .heap-tree-item.focused .heap-tree-number,
