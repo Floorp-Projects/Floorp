@@ -277,9 +277,9 @@ AnimationsTimeline.prototype = {
         parent: this.animationsEl,
         nodeType: "li",
         attributes: {
-          "class": "animation" + (animation.state.isRunningOnCompositor
-                                  ? " fast-track"
-                                  : "")
+          "class": "animation " +
+                   animation.state.type +
+                   (animation.state.isRunningOnCompositor ? " fast-track" : "")
         }
       });
 
