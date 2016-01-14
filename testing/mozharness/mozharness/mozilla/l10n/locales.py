@@ -195,6 +195,8 @@ class LocalesMixin(ChunkingMixin):
                                                  'merged')
             dirs['abs_locales_dir'] = os.path.join(dirs['abs_objdir'],
                                                    c['locales_dir'])
+        dirs['abs_compare_locales_dir'] = os.path.join(dirs['abs_work_dir'],
+                                                       'compare-locales')
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]
