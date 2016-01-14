@@ -19,12 +19,6 @@ function run_test() {
   do_get_profile();
   prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  disableServiceWorkerEvents(
-    'https://example.net/a',
-    'https://example.net/b',
-    'https://example.net/c'
-  );
-
   run_next_test();
 }
 
