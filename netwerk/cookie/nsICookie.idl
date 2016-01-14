@@ -14,8 +14,7 @@
 typedef long nsCookieStatus;
 typedef long nsCookiePolicy;
 
-[scriptable, uuid(8684966b-1877-4f0f-8155-be4490b96bf7)]
-
+[scriptable, uuid(adf0db5e-211e-45a3-be14-4486ac430a58)]
 interface nsICookie : nsISupports {
 
     /**
@@ -78,4 +77,9 @@ interface nsICookie : nsISupports {
     const nsCookiePolicy POLICY_NO_II=5;
     readonly attribute nsCookiePolicy policy;
 
+    /**
+     * The origin attributes for this cookie
+     */
+    [implicit_jscontext]
+    readonly attribute jsval originAttributes;
 };

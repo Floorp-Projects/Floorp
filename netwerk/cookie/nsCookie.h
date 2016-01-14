@@ -11,6 +11,9 @@
 #include "nsString.h"
 
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/BasePrincipal.h"
+
+using mozilla::OriginAttributes;
 
 /** 
  * The nsCookie class is the main cookie storage medium for use within cookie
@@ -43,7 +46,8 @@ class nsCookie : public nsICookie2
              int64_t         aCreationTime,
              bool            aIsSession,
              bool            aIsSecure,
-             bool            aIsHttpOnly)
+             bool            aIsHttpOnly,
+             const OriginAttributes& aOriginAttributes)
      : mName(aName)
      , mValue(aValue)
      , mHost(aHost)
@@ -55,6 +59,7 @@ class nsCookie : public nsICookie2
      , mIsSession(aIsSession != false)
      , mIsSecure(aIsSecure != false)
      , mIsHttpOnly(aIsHttpOnly != false)
+     , mOriginAttributes(aOriginAttributes)
     {
     }
 
@@ -74,7 +79,8 @@ class nsCookie : public nsICookie2
                              int64_t           aCreationTime,
                              bool              aIsSession,
                              bool              aIsSecure,
-                             bool              aIsHttpOnly);
+                             bool              aIsHttpOnly,
+                             const OriginAttributes& aOriginAttributes);
 
     size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -123,6 +129,7 @@ class nsCookie : public nsICookie2
     bool mIsSession;
     bool mIsSecure;
     bool mIsHttpOnly;
+    mozilla::OriginAttributes mOriginAttributes;
 };
 
 #endif // nsCookie_h__
