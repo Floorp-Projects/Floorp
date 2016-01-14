@@ -25,7 +25,7 @@ window.onload = Task.async(function* () {
       autoExpandDepth: 1
     }, TEST_TREE_INTERFACE)), window.document.body);
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "A"
     });
 

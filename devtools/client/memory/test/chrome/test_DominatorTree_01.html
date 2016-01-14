@@ -1,0 +1,50 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that we show a place holder for a subtree we are lazily fetching.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <!-- Give the container height so that the whole tree is rendered. -->
+    <div id="container" style="height: 900px;"></div>
+
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             const container = document.getElementById("container");
+
+             const root = makeTestDominatorTreeNode({ moreChildrenAvailable: true});
+             ok(!root.children);
+
+             const expanded = new Set();
+             expanded.add(root.nodeId);
+
+             yield renderComponent(DominatorTreeComponent(immutableUpdate(TEST_DOMINATOR_TREE_PROPS, {
+               dominatorTree: immutableUpdate(TEST_DOMINATOR_TREE_PROPS.dominatorTree, {
+                 expanded,
+                 root,
+                 state: dominatorTreeState.INCREMENTAL_FETCHING,
+                 activeFetchRequestCount: 1,
+               }),
+             })), container);
+
+             ok(container.querySelector(".subtree-fetching"),
+                "Expanded nodes with more children available, but no children " +
+                "loaded, should get a placeholder");
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>
