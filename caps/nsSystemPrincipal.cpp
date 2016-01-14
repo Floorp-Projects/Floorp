@@ -70,7 +70,8 @@ nsSystemPrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
+nsSystemPrincipal::EnsureCSP(nsIDOMDocument* aDocument,
+                             nsIContentSecurityPolicy** aCSP)
 {
   // CSP on a system principal makes no sense
   return NS_OK;
@@ -84,7 +85,8 @@ nsSystemPrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP)
 }
 
 NS_IMETHODIMP
-nsSystemPrincipal::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP)
+nsSystemPrincipal::EnsurePreloadCSP(nsIDOMDocument* aDocument,
+                                    nsIContentSecurityPolicy** aPreloadCSP)
 {
   // CSP on a system principal makes no sense
   return NS_OK;

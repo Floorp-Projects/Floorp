@@ -202,9 +202,9 @@ public:
   NS_IMETHOD SubsumesConsideringDomain(nsIPrincipal* other, bool* _retval) final;
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
-  NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
+  NS_IMETHOD EnsureCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
-  NS_IMETHOD SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP) override;
+  NS_IMETHOD EnsurePreloadCSP(nsIDOMDocument* aDocument, nsIContentSecurityPolicy** aCSP) override;
   NS_IMETHOD GetCspJSON(nsAString& outCSPinJSON) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsCodebasePrincipal(bool* aResult) override;
