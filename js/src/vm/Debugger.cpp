@@ -254,7 +254,7 @@ class AutoRestoreCompartmentDebugMode
     unsigned bits_;
 
   public:
-    AutoRestoreCompartmentDebugMode(JSCompartment* comp)
+    explicit AutoRestoreCompartmentDebugMode(JSCompartment* comp)
       : comp_(comp), bits_(comp->debugModeBits)
     {
         MOZ_ASSERT(comp_);
