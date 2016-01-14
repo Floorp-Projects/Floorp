@@ -33,6 +33,7 @@
 #include "mozilla/MemoryReporting.h"
 
 using mozilla::NeckoOriginAttributes;
+using mozilla::OriginAttributes;
 
 class nsICookiePermission;
 class nsIEffectiveTLDService;
@@ -283,7 +284,7 @@ class nsCookieService final : public nsICookieService
     void                          HandleCorruptDB(DBState* aDBState);
     void                          RebuildCorruptDB(DBState* aDBState);
     OpenDBResult                  Read();
-    template<class T> nsCookie*   GetCookieFromRow(T &aRow);
+    template<class T> nsCookie*   GetCookieFromRow(T &aRow, const OriginAttributes& aOriginAttributes);
     void                          AsyncReadComplete();
     void                          CancelAsyncRead(bool aPurgeReadSet);
     void                          EnsureReadDomain(const nsCookieKey &aKey);
