@@ -114,7 +114,8 @@ var WebrtcUI = {
       function (error) {
         Cu.reportError(error);
       },
-      aSubject.innerWindowID);
+      aSubject.innerWindowID,
+      aSubject.callID);
   },
 
   getDeviceButtons: function(audioDevices, videoDevices, aCallID) {
