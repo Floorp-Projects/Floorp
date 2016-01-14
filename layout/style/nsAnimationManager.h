@@ -280,8 +280,14 @@ public:
   {
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsAnimationManager)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsAnimationManager)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsAnimationManager)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+
+  // nsIStyleRuleProcessor (parts)
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const MOZ_MUST_OVERRIDE override;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+    const MOZ_MUST_OVERRIDE override;
 
   /**
    * Return the style rule that RulesMatching should add for

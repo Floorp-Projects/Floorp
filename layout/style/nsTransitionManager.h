@@ -253,8 +253,8 @@ public:
   {
   }
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsTransitionManager)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsTransitionManager)
+  NS_DECL_CYCLE_COLLECTION_CLASS(nsTransitionManager)
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
   typedef mozilla::AnimationCollection AnimationCollection;
 
@@ -295,6 +295,11 @@ public:
   bool InAnimationOnlyStyleUpdate() const {
     return mInAnimationOnlyStyleUpdate;
   }
+
+  virtual size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    MOZ_MUST_OVERRIDE override;
+  virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+    MOZ_MUST_OVERRIDE override;
 
   void QueueEvent(mozilla::TransitionEventInfo&& aEventInfo)
   {

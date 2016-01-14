@@ -135,6 +135,121 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
                                 false /* aCreateIfNeeded */);
 }
 
+nsRestyleHint
+CommonAnimationManager::HasStateDependentStyle(StateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
+nsRestyleHint
+CommonAnimationManager::HasStateDependentStyle(PseudoElementStateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
+bool
+CommonAnimationManager::HasDocumentStateDependentStyle(StateRuleProcessorData* aData)
+{
+  return false;
+}
+
+nsRestyleHint
+CommonAnimationManager::HasAttributeDependentStyle(
+    AttributeRuleProcessorData* aData,
+    RestyleHintData& aRestyleHintDataResult)
+{
+  return nsRestyleHint(0);
+}
+
+/* virtual */ bool
+CommonAnimationManager::MediumFeaturesChanged(nsPresContext* aPresContext)
+{
+  return false;
+}
+
+/* virtual */ void
+CommonAnimationManager::RulesMatching(ElementRuleProcessorData* aData)
+{
+  MOZ_ASSERT(aData->mPresContext == mPresContext,
+             "pres context mismatch");
+
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsAnimationManager() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  nsCSSPseudoElements::Type pseudoType =
+    nsCSSPseudoElements::ePseudo_NotPseudoElement;
+
+  nsIStyleRule *rule =
+    mPresContext->EffectCompositor()->GetAnimationRule(aData->mElement,
+                                                       pseudoType,
+                                                       cascadeLevel);
+
+  if (rule) {
+    aData->mRuleWalker->Forward(rule);
+    aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
+  }
+}
+
+/* virtual */ void
+CommonAnimationManager::RulesMatching(PseudoElementRuleProcessorData* aData)
+{
+  MOZ_ASSERT(aData->mPresContext == mPresContext,
+             "pres context mismatch");
+  if (aData->mPseudoType != nsCSSPseudoElements::ePseudo_before &&
+      aData->mPseudoType != nsCSSPseudoElements::ePseudo_after) {
+    return;
+  }
+
+  // FIXME: Do we really want to be the only thing keeping a
+  // pseudo-element alive?  I *think* the non-animation restyle should
+  // handle that, but should add a test.
+
+  EffectCompositor::CascadeLevel cascadeLevel =
+    IsAnimationManager() ?
+    EffectCompositor::CascadeLevel::Animations :
+    EffectCompositor::CascadeLevel::Transitions;
+  nsIStyleRule *rule =
+    mPresContext->EffectCompositor()->GetAnimationRule(aData->mElement,
+                                                       aData->mPseudoType,
+                                                       cascadeLevel);
+  if (rule) {
+    aData->mRuleWalker->Forward(rule);
+    aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
+  }
+}
+
+/* virtual */ void
+CommonAnimationManager::RulesMatching(AnonBoxRuleProcessorData* aData)
+{
+}
+
+#ifdef MOZ_XUL
+/* virtual */ void
+CommonAnimationManager::RulesMatching(XULTreeRuleProcessorData* aData)
+{
+}
+#endif
+
+/* virtual */ size_t
+CommonAnimationManager::SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mElementCollections
+  //
+  // The following members are not measured
+  // - mPresContext, because it's non-owning
+
+  return 0;
+}
+
+/* virtual */ size_t
+CommonAnimationManager::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
+}
+
 /* static */ bool
 CommonAnimationManager::ExtractComputedValueForTransition(
                           nsCSSProperty aProperty,
