@@ -1241,14 +1241,16 @@ WebrtcVideoConduit::SelectSendFrameRate(unsigned int framerate) const
     mb_height = (mSendingHeight + 15) >> 4;
 
     cur_fs = mb_width * mb_height;
-    max_fps = mCurSendCodecConfig->mEncodingConstraints.maxMbps/cur_fs;
-    if (max_fps < mSendingFramerate) {
-      new_framerate = max_fps;
-    }
+    if (cur_fs > 0) { // in case no frames have been sent
+      max_fps = mCurSendCodecConfig->mEncodingConstraints.maxMbps/cur_fs;
+      if (max_fps < mSendingFramerate) {
+        new_framerate = max_fps;
+      }
 
-    if (mCurSendCodecConfig->mEncodingConstraints.maxFps != 0 &&
-      mCurSendCodecConfig->mEncodingConstraints.maxFps < mSendingFramerate) {
-      new_framerate = mCurSendCodecConfig->mEncodingConstraints.maxFps;
+      if (mCurSendCodecConfig->mEncodingConstraints.maxFps != 0 &&
+          mCurSendCodecConfig->mEncodingConstraints.maxFps < mSendingFramerate) {
+        new_framerate = mCurSendCodecConfig->mEncodingConstraints.maxFps;
+      }
     }
   }
   return new_framerate;
