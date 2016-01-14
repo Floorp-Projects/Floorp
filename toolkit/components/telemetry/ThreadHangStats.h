@@ -187,7 +187,9 @@ public:
   void Add(PRIntervalTime aTime, HangMonitor::HangAnnotationsPtr aAnnotations) {
     TimeHistogram::Add(aTime);
     if (aAnnotations) {
-      mAnnotations.append(Move(aAnnotations));
+      if (!mAnnotations.append(Move(aAnnotations))) {
+        MOZ_CRASH();
+      }
     }
   }
 };
