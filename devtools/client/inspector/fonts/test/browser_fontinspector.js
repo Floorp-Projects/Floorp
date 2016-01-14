@@ -5,23 +5,23 @@
 
 requestLongerTimeout(2);
 
-const TEST_URI = BASE_URI + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 const FONTS = [
-  {name: "Ostrich Sans Medium", remote: true, url: BASE_URI + "ostrich-regular.ttf",
+  {name: "Ostrich Sans Medium", remote: true, url: URL_ROOT + "ostrich-regular.ttf",
    format: "truetype", cssName: "bar"},
-  {name: "Ostrich Sans Black", remote: true, url: BASE_URI + "ostrich-black.ttf",
+  {name: "Ostrich Sans Black", remote: true, url: URL_ROOT + "ostrich-black.ttf",
    format: "", cssName: "bar"},
-  {name: "Ostrich Sans Black", remote: true, url: BASE_URI + "ostrich-black.ttf",
+  {name: "Ostrich Sans Black", remote: true, url: URL_ROOT + "ostrich-black.ttf",
    format: "", cssName: "bar"},
-  {name: "Ostrich Sans Medium", remote: true, url: BASE_URI + "ostrich-regular.ttf",
+  {name: "Ostrich Sans Medium", remote: true, url: URL_ROOT + "ostrich-regular.ttf",
    format: "", cssName: "barnormal"},
 ];
 
 add_task(function*() {
-  let { inspector, fontInspector } = yield openFontInspectorForURL(TEST_URI);
-  ok(!!fontInspector, "Font inspector document is alive.");
+  let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
+  ok(!!view, "Font inspector document is alive.");
 
-  let viewDoc = fontInspector.chromeDoc;
+  let viewDoc = view.chromeDoc;
 
   yield testBodyFonts(inspector, viewDoc);
   yield testDivFonts(inspector, viewDoc);
