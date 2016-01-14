@@ -430,6 +430,9 @@ GMPExtractor.prototype = {
         }
         zipReader.extract(entry, outFile);
         extractedPaths.push(outFile.path);
+        // Ensure files are writable and executable. Otherwise we may be unable to
+        // execute or uninstall them.
+        outFile.permissions |= parseInt("0700", 8);
         log.info(entry + " was successfully extracted to: " +
             outFile.path);
       });
