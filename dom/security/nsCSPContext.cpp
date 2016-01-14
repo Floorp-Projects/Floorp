@@ -309,6 +309,19 @@ nsCSPContext::GetUpgradeInsecureRequests(bool *outUpgradeRequest)
 }
 
 NS_IMETHODIMP
+nsCSPContext::GetBlockAllMixedContent(bool *outBlockAllMixedContent)
+{
+  *outBlockAllMixedContent = false;
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    if (mPolicies[i]->hasDirective(nsIContentSecurityPolicy::BLOCK_ALL_MIXED_CONTENT)) {
+      *outBlockAllMixedContent = true;
+      return NS_OK;
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 {
   *outIsSet = false;
