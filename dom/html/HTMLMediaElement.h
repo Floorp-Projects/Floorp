@@ -265,7 +265,30 @@ public:
   already_AddRefed<nsIPrincipal> GetCurrentPrincipal();
 
   // called to notify that the principal of the decoder's media resource has changed.
-  virtual void NotifyDecoderPrincipalChanged() final override;
+  void NotifyDecoderPrincipalChanged() final override;
+
+  // An interface for observing principal changes on the media elements
+  // MediaDecoder.
+  class DecoderPrincipalChangeObserver
+  {
+  public:
+    virtual void NotifyDecoderPrincipalChanged() = 0;
+  };
+
+  /**
+   * Add a DecoderPrincipalChangeObserver to this media element.
+   *
+   * Ownership of the DecoderPrincipalChangeObserver remains with the caller,
+   * and it's the caller's responsibility to remove the observer before it dies.
+   */
+  void AddDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
+
+  /**
+   * Remove an added DecoderPrincipalChangeObserver from this media element.
+   *
+   * Returns true if it was successfully removed.
+   */
+  bool RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver);
 
   // Update the visual size of the media. Called from the decoder on the
   // main thread when/if the size changes.
@@ -1110,6 +1133,10 @@ protected:
   // The current decoder. Load() has been called on this decoder.
   // At most one of mDecoder and mSrcStream can be non-null.
   RefPtr<MediaDecoder> mDecoder;
+
+  // Observers listening to changes to the mDecoder principal.
+  // Used by streams captured from this element.
+  nsTArray<DecoderPrincipalChangeObserver*> mDecoderPrincipalChangeObservers;
 
   // State-watching manager.
   WatchManager<HTMLMediaElement> mWatchManager;
