@@ -540,7 +540,7 @@ describe("loop.store.ActiveRoomStore", function() {
         // easier.
         sandbox.stub(loop.crypto, "decryptBytes", function() {
           return {
-            then: function(resolve, reject) {
+            then: function(resolve) {
               resolve(JSON.stringify(roomContext));
             }
           };
@@ -1552,10 +1552,15 @@ describe("loop.store.ActiveRoomStore", function() {
       store.setStoreState({
         roomState: ROOM_STATES.JOINED,
         roomToken: "fakeToken",
-        sessionToken: "1627384950"
+        sessionToken: "1627384950",
+        participants: [{
+          displayName: "Owner",
+          owner: true
+        }, {
+          displayName: "Guest",
+          owner: false
+        }]
       });
-
-      store.startBrowserShare(new sharedActions.StartBrowserShare());
     });
 
     afterEach(function() {
@@ -1563,6 +1568,7 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should set the state to 'pending'", function() {
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
       sinon.assert.calledOnce(dispatcher.dispatch);
       sinon.assert.calledWith(dispatcher.dispatch,
         new sharedActions.ScreenSharingState({
@@ -1571,10 +1577,12 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should add a browser sharing listener for tab sharing", function() {
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
       sinon.assert.calledOnce(requestStubs.AddBrowserSharingListener);
     });
 
     it("should invoke the SDK driver with the correct options for tab sharing", function() {
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
       sinon.assert.calledOnce(fakeSdkDriver.startScreenShare);
       sinon.assert.calledWith(fakeSdkDriver.startScreenShare, {
         videoSource: "browser",
@@ -1586,6 +1594,7 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should request the new metadata when the browser being shared change", function() {
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
       clock.tick(500);
       sinon.assert.calledOnce(getSelectedTabMetadataStub);
       sinon.assert.calledTwice(dispatcher.dispatch);
@@ -1599,6 +1608,7 @@ describe("loop.store.ActiveRoomStore", function() {
     });
 
     it("should process only one request", function() {
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
       // Simulates multiple requests.
       LoopMochaUtils.publish("BrowserSwitch", 72);
       LoopMochaUtils.publish("BrowserSwitch", 72);
@@ -1613,6 +1623,39 @@ describe("loop.store.ActiveRoomStore", function() {
           newRoomURL: "http://www.fakeurl.com",
           roomToken: store.getStoreState().roomToken
       }));
+    });
+
+    it("should not process a request without url", function() {
+      clock.tick(500);
+      getSelectedTabMetadataStub.returns({
+        title: "fakeTitle",
+        favicon: "fakeFavicon"
+      });
+
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
+      sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      sinon.assert.calledOnce(dispatcher.dispatch);
+    });
+
+    it("should not process a request if no-one is in the room", function() {
+      store.setStoreState({
+        roomState: ROOM_STATES.JOINED,
+        roomToken: "fakeToken",
+        sessionToken: "1627384950",
+        participants: [{
+          displayName: "Owner",
+          owner: true
+        }]
+      });
+      clock.tick(500);
+      getSelectedTabMetadataStub.returns({
+        title: "fakeTitle",
+        favicon: "fakeFavicon"
+      });
+
+      store.startBrowserShare(new sharedActions.StartBrowserShare());
+      sinon.assert.calledOnce(getSelectedTabMetadataStub);
+      sinon.assert.calledOnce(dispatcher.dispatch);
     });
   });
 

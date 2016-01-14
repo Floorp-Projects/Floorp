@@ -385,7 +385,7 @@ loop.store.ActiveRoomStore = (function() {
      *                                and decryption is complete.
      */
     _getRoomDataForStandalone: function(roomCryptoKey) {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function(resolve) {
         loop.request("Rooms:Get", this._storeState.roomToken).then(function(result) {
           if (result.isError) {
             resolve(new sharedActions.RoomFailure({
@@ -438,7 +438,7 @@ loop.store.ActiveRoomStore = (function() {
             roomInfoData.roomName = realResult.roomName;
 
             resolve(roomInfoData);
-          }, function(error) {
+          }, function() {
             roomInfoData.roomInfoFailure = ROOM_INFO_FAILURES.DECRYPT_FAILED;
             resolve(roomInfoData);
           });
@@ -454,7 +454,7 @@ loop.store.ActiveRoomStore = (function() {
      *                   if Firefox can handle the room.
      */
     _promiseDetectUserAgentHandles: function() {
-      return new Promise(function(resolve, reject) {
+      return new Promise(function(resolve) {
         function resolveWithNotHandlingResponse() {
           resolve(new sharedActions.UserAgentHandlesRoom({
             handlesRoom: false
@@ -568,9 +568,8 @@ loop.store.ActiveRoomStore = (function() {
     /**
      * Handles the deletion of a room, notified by the Loop rooms API.
      *
-     * @param {Object} roomData  The roomData of the deleted room
      */
-    _handleRoomDelete: function(roomData) {
+    _handleRoomDelete: function() {
       this._sdkDriver.forceDisconnectAll(function() {
         window.close();
       });
@@ -926,7 +925,8 @@ loop.store.ActiveRoomStore = (function() {
 
       // The browser being shared changed, so update to the new context
       loop.request("GetSelectedTabMetadata").then(function(meta) {
-        if (!meta) {
+        // Avoid sending the event if there is no data nor participants nor url
+        if (!meta || !meta.url || !this._hasParticipants()) {
           return;
         }
 
@@ -951,7 +951,7 @@ loop.store.ActiveRoomStore = (function() {
      *
      * @param {sharedActions.StartBrowserShare} actionData
      */
-    startBrowserShare: function(actionData) {
+    startBrowserShare: function() {
       // For the unit test we already set the state here, instead of indirectly
       // via an action, because actions are queued thus depending on the
       // asynchronous nature of `loop.request`.
@@ -960,9 +960,6 @@ loop.store.ActiveRoomStore = (function() {
         state: SCREEN_SHARE_STATES.PENDING
       }));
 
-      var options = {
-        videoSource: "browser"
-      };
       this._browserSharingListener = this._handleSwitchBrowserShare.bind(this);
 
       // Set up a listener for watching screen shares. This will get notified
@@ -1224,6 +1221,24 @@ loop.store.ActiveRoomStore = (function() {
      */
     sendTextChatMessage: function(actionData) {
       this._handleTextChatMessage(actionData);
+    },
+
+    /**
+     * Checks if the room is empty or has participants.
+     *
+     */
+    _hasParticipants: function() {
+      // Update the participants to just the owner.
+      var participants = this.getStoreState("participants");
+      if (participants) {
+        participants = participants.filter(function(participant) {
+          return !participant.owner;
+        });
+
+        return participants.length > 0;
+      }
+
+      return false;
     }
   });
 

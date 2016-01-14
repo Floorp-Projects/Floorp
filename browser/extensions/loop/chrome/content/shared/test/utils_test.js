@@ -6,6 +6,7 @@ describe("loop.shared.utils", function() {
   "use strict";
 
   var expect = chai.expect;
+  var mozL10n = navigator.mozL10n || document.mozL10n;
   var sandbox;
   var sharedUtils = loop.shared.utils;
 
@@ -333,7 +334,7 @@ describe("loop.shared.utils", function() {
 
     beforeEach(function() {
       // fake mozL10n
-      sandbox.stub(navigator.mozL10n, "get", function(id) {
+      sandbox.stub(mozL10n, "get", function(id) {
         switch (id) {
           case "share_email_subject7":
             return "subject";
@@ -633,47 +634,6 @@ describe("loop.shared.utils", function() {
 
       sharedUtils.stripFalsyValues(obj);
       expect(obj).to.eql({ prop1: "null", prop3: true });
-    });
-  });
-
-  describe("#truncate", function() {
-    describe("ltr support", function() {
-      it("should default to 72 chars", function() {
-        var output = sharedUtils.truncate(new Array(75).join());
-
-        expect(output.length).to.eql(73); // 72 + …
-      });
-
-      it("should take a max size argument", function() {
-        var output = sharedUtils.truncate(new Array(73).join(), 20);
-
-        expect(output.length).to.eql(21); // 20 + …
-      });
-    });
-
-    describe("rtl support", function() {
-      var directionStub;
-
-      beforeEach(function() {
-        // XXX should use sandbox
-        // https://github.com/cjohansen/Sinon.JS/issues/781
-        directionStub = sinon.stub(navigator.mozL10n.language, "direction", {
-          get: function() {
-            return "rtl";
-          }
-        });
-      });
-
-      afterEach(function() {
-        directionStub.restore();
-      });
-
-      it("should support RTL", function() {
-        var output = sharedUtils.truncate(new Array(73).join(), 20);
-
-        expect(output.length).to.eql(21); // 20 + …
-        expect(output.substr(0, 1)).to.eql("…");
-      });
     });
   });
 });

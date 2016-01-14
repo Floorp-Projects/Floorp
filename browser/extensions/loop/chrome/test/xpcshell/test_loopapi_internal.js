@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 const { LoopAPI } = Cu.import("chrome://loop/content/modules/MozLoopAPI.jsm", {});
 const [LoopAPIInternal] = LoopAPI.inspect();
 
