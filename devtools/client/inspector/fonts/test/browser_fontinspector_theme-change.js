@@ -9,7 +9,7 @@ requestLongerTimeout(2);
 
 const { getTheme, setTheme } = require("devtools/client/shared/theme");
 
-const TEST_URI = BASE_URI + "browser_fontinspector.html";
+const TEST_URI = URL_ROOT + "browser_fontinspector.html";
 const originalTheme = getTheme();
 
 registerCleanupFunction(() => {
@@ -18,8 +18,8 @@ registerCleanupFunction(() => {
 });
 
 add_task(function* () {
-  let { inspector, fontInspector } = yield openFontInspectorForURL(TEST_URI);
-  let { chromeDoc: doc } = fontInspector;
+  let { inspector, view } = yield openFontInspectorForURL(TEST_URI);
+  let { chromeDoc: doc } = view;
 
   yield selectNode(".normal-text", inspector);
 
