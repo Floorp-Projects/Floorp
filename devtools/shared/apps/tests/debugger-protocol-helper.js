@@ -10,6 +10,7 @@ const { DebuggerClient } = require("devtools/shared/client/main");
 const { DebuggerServer } = require("devtools/server/main");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
+const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
 
 var gClient, gActor;
 
@@ -83,15 +84,11 @@ function webappActorRequest(request, onResponse) {
 
 
 function downloadURL(url, file) {
-  let channel = Services.io.newChannel2(url,
-                                        null,
-                                        null,
-                                        null,      // aLoadingNode
-                                        Services.scriptSecurityManager.getSystemPrincipal(),
-                                        null,      // aTriggeringPrincipal
-                                        Ci.nsILoadInfo.SEC_NORMAL,
-                                        Ci.nsIContentPolicy.TYPE_OTHER);
-  let istream = channel.open();
+  let channel = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true
+  });
+  let istream = channel.open2();
   let bstream = Cc["@mozilla.org/binaryinputstream;1"]
                   .createInstance(Ci.nsIBinaryInputStream);
   bstream.setInputStream(istream);
