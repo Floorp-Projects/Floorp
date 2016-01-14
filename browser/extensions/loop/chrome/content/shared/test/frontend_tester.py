@@ -4,12 +4,12 @@ import threading
 import SimpleHTTPServer
 import SocketServer
 import BaseHTTPServer
-import socket
 import urllib
 import urlparse
 import os
 
 DEBUG = False
+
 
 # XXX Once we're on a branch with bug 993478 landed, we may want to get
 # rid of this HTTP server and just use the built-in one from Marionette,
@@ -17,14 +17,59 @@ DEBUG = False
 # need to consider whether this code wants to be shared with WebDriver tests
 # for other browsers, though.
 #
+
+gCommonDir = None
+
+# These redirects map the paths expected by the index.html files to the paths
+# in mozilla-central. In the github repo, the unit tests are run entirely within
+# karma, where the files are loaded directly. For mozilla-central we must map
+# the files to the appropriate place.
+REDIRECTIONS = {
+    "/test/vendor": "/chrome/content/shared/test/vendor",
+    "/shared/js": "/chrome/content/shared/js",
+    "/shared/test": "/chrome/content/shared/test",
+    "/shared/vendor": "/chrome/content/shared/vendor",
+    "/add-on/panels/vendor": "/chrome/content/panels/vendor",
+    "/add-on/panels/js": "/chrome/content/panels/js",
+    "/add-on/shared/js": "/chrome/content/shared/js",
+    "/add-on/shared/vendor": "/chrome/content/shared/vendor",
+}
+
+
 class ThreadingSimpleServer(SocketServer.ThreadingMixIn,
                             BaseHTTPServer.HTTPServer):
     pass
 
 
-class QuietHttpRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+class HttpRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
+    def do_HEAD(s):
+        lastSlash = s.path.rfind("/")
+        path = s.path[:lastSlash]
+
+        if (path in REDIRECTIONS):
+            filename = s.path[lastSlash:]
+
+            s.send_response(301)
+            # Prefix the redirections with the common directory segment.
+            s.send_header("Location", "/" + gCommonDir + REDIRECTIONS.get(path, "/") + filename)
+            s.end_headers()
+        else:
+            SimpleHTTPServer.SimpleHTTPRequestHandler.do_HEAD(s)
+
+    def do_GET(s):
+        lastSlash = s.path.rfind("/")
+        path = s.path[:lastSlash]
+
+        if (path in REDIRECTIONS):
+            s.do_HEAD()
+        else:
+            SimpleHTTPServer.SimpleHTTPRequestHandler.do_GET(s)
+
     def log_message(self, format, *args, **kwargs):
-        pass
+        if DEBUG:
+            BaseHTTPServer.BaseHTTPRequestHandler.log_message(self, format, *args, **kwargs)
+        else:
+            pass
 
 
 class BaseTestFrontendUnits(MarionetteTestCase):
@@ -33,13 +78,8 @@ class BaseTestFrontendUnits(MarionetteTestCase):
     def setUpClass(cls):
         super(BaseTestFrontendUnits, cls).setUpClass()
 
-        if DEBUG:
-            handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-        else:
-            handler = QuietHttpRequestHandler
-
         # Port 0 means to select an arbitrary unused port
-        cls.server = ThreadingSimpleServer(('', 0), handler)
+        cls.server = ThreadingSimpleServer(('', 0), HttpRequestHandler)
         cls.ip, cls.port = cls.server.server_address
 
         cls.server_thread = threading.Thread(target=cls.server.serve_forever)
@@ -78,6 +118,8 @@ class BaseTestFrontendUnits(MarionetteTestCase):
 
     # srcdir_path should be the directory relative to this file.
     def set_server_prefix(self, srcdir_path):
+        global gCommonDir
+
         # We may be run from a different path than topsrcdir, e.g. in the case
         # of packaged tests. If so, then we have to work out the right directory
         # for the local server.
@@ -89,6 +131,13 @@ class BaseTestFrontendUnits(MarionetteTestCase):
         self.relPath = os.path.relpath(os.path.dirname(__file__), commonPath)
 
         self.relPath = urllib.pathname2url(os.path.join(self.relPath, srcdir_path))
+
+        # This is the common directory segment, what you need to get from the
+        # common path to the relative path location. Used to get the redirects
+        # correct both locally and on the build systems.
+        # The .replace is to change windows path slashes to unix like ones for
+        # the url.
+        gCommonDir = os.path.normpath(self.relPath).replace("\\", "//")
 
         # Finally join the relative path with the given src path
         self.server_prefix = urlparse.urljoin("http://localhost:" + str(self.port),
@@ -122,8 +171,9 @@ class BaseTestFrontendUnits(MarionetteTestCase):
         # but not from marionette, uncomment the two lines below to break
         # on failing tests, so that the browsers won't be torn down, and you
         # can use the browser debugging facilities to see what's going on.
-        #from ipdb import set_trace
-        #set_trace()
+        #
+        # from ipdb import set_trace
+        # set_trace()
 
         raise AssertionError(self.get_failure_details(page))
 

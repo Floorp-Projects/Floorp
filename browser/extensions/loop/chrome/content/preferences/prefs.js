@@ -2,7 +2,7 @@ pref("loop.enabled", true);
 pref("loop.textChat.enabled", true);
 pref("loop.server", "https://loop.services.mozilla.com/v0");
 pref("loop.linkClicker.url", "https://hello.firefox.com/");
-pref("loop.gettingStarted.latestFTUVersion", 0);
+pref("loop.gettingStarted.latestFTUVersion", 1);
 pref("loop.facebook.shareUrl", "https://www.facebook.com/sharer/sharer.php?u=%ROOM_URL%");
 pref("loop.gettingStarted.url", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/hello/start/");
 pref("loop.gettingStarted.resumeOnFirstJoin", false);
@@ -10,7 +10,6 @@ pref("loop.learnMoreUrl", "https://www.firefox.com/hello/");
 pref("loop.legal.ToS_url", "https://www.mozilla.org/about/legal/terms/firefox-hello/");
 pref("loop.legal.privacy_url", "https://www.mozilla.org/privacy/firefox-hello/");
 pref("loop.do_not_disturb", false);
-pref("loop.ringtone", "chrome://browser/content/loop/shared/sounds/ringtone.ogg");
 pref("loop.retry_delay.start", 60000);
 pref("loop.retry_delay.limit", 300000);
 pref("loop.ping.interval", 1800000);
@@ -30,5 +29,5 @@ pref("loop.CSP", "default-src 'self' about: file: chrome:; img-src * data:; font
 #endif
 pref("loop.fxa_oauth.tokendata", "");
 pref("loop.fxa_oauth.profile", "");
-pref("loop.support_url", "https://support.mozilla.org/kb/group-conversations-firefox-hello-webrtc");
+pref("loop.support_url", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/cobrowsing");
 pref("loop.browserSharing.showInfoBar", true);

@@ -4,6 +4,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 Cu.import("resource://services-common/utils.js");
 Cu.import("chrome://loop/content/modules/LoopRooms.jsm");
 Cu.import("resource:///modules/Chat.jsm");
@@ -169,12 +171,6 @@ const kCreateRoomProps = {
   maxSize: 2
 };
 
-const kCreateRoomUnencryptedProps = {
-  roomName: "UX Discussion",
-  roomOwner: "Alexis",
-  maxSize: 2
-};
-
 const kCreateRoomData = {
   roomToken: "_nxD4V4FflQ",
   roomUrl: "http://localhost:3000/rooms/_nxD4V4FflQ",
@@ -261,7 +257,7 @@ const onRoomLeft = function(e, room, participant) {
   }
 };
 
-const onRefresh = function(e) {
+const onRefresh = function() {
   Assert.ok(gExpectedRefresh, "A refresh event should've been expected");
   gExpectedRefresh = false;
 };

@@ -52,7 +52,7 @@ add_task(function* setup() {
     }
   });
   registerCleanupFunction(function* () {
-    info("cleanup time");
+    info("cleanup specific to setup test");
     yield promiseDeletedOAuthParams(BASE_URL);
     Services.prefs.clearUserPref("loop.gettingStarted.latestFTUVersion");
     MozLoopServiceInternal.mocks.pushHandler = undefined;
@@ -218,7 +218,7 @@ add_task(function* registrationWithInvalidState() {
   Services.prefs.setCharPref(fxASessionPref, "X".repeat(HAWK_TOKEN_LENGTH));
 
   let tokenPromise = MozLoopServiceInternal.promiseFxAOAuthToken("code1", "state");
-  yield tokenPromise.then(body => {
+  yield tokenPromise.then(() => {
     ok(false, "Promise should have rejected");
   },
   error => {
@@ -241,7 +241,7 @@ add_task(function* registrationWith401() {
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
   let tokenPromise = MozLoopServiceInternal.promiseFxAOAuthToken("code1", "state");
-  yield tokenPromise.then(body => {
+  yield tokenPromise.then(() => {
     ok(false, "Promise should have rejected");
   },
   error => {
@@ -357,7 +357,7 @@ add_task(function* loginWithParams401() {
   yield MozLoopService.promiseRegisteredWithServers();
 
   let loginPromise = MozLoopService.logInToFxA();
-  yield loginPromise.then(tokenData => {
+  yield loginPromise.then(() => {
     ok(false, "Promise should have rejected");
   },
   error => {
@@ -379,7 +379,7 @@ add_task(function* logoutWithIncorrectPushURL() {
   is(registrationResponse.response.simplePushURLs.rooms, pushURL, "Check registered push URL");
   MozLoopServiceInternal.pushURLs.get(LOOP_SESSION_TYPE.FXA).rooms = "http://www.example.com/invalid";
   let caught = false;
-  yield MozLoopService.logOutFromFxA().catch((error) => {
+  yield MozLoopService.logOutFromFxA().catch(() => {
     caught = true;
   });
   ok(caught, "Should have caught an error logging out with a mismatched push URL");
@@ -418,7 +418,7 @@ add_task(function* loginWithRegistration401() {
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
   let loginPromise = MozLoopService.logInToFxA();
-  yield loginPromise.then(tokenData => {
+  yield loginPromise.then(() => {
     ok(false, "Promise should have rejected");
   },
   error => {
@@ -437,6 +437,17 @@ add_task(function* openFxASettings() {
   // blank tab.
   gBrowser.selectedTab = gBrowser.addTab(BASE_URL);
 
+  let fxASampleToken = {
+    token_type: "bearer",
+    access_token: "1bad3e44b12f77a88fe09f016f6a37c42e40f974bc7a8b432bb0d2f0e37e1752",
+    scope: "profile"
+  };
+
+  let fxASampleProfile = {
+    email: "test@example.com",
+    uid: "abcd1234"
+  };
+
   let params = {
     client_id: "client_id",
     content_uri: BASE_URL + "/content",
@@ -445,9 +456,20 @@ add_task(function* openFxASettings() {
     state: "state",
     test_error: "token_401"
   };
+
+  Services.prefs.setCharPref("loop.fxa_oauth.profile", JSON.stringify(fxASampleProfile));
+  Services.prefs.setCharPref("loop.fxa_oauth.tokendata", JSON.stringify(fxASampleToken));
+
   yield promiseOAuthParamsSetup(BASE_URL, params);
 
-  yield new Promise((resolve, reject) => {
+  registerCleanupFunction(function* () {
+    info("cleanup specific to openFxASettings test");
+    yield promiseDeletedOAuthParams(BASE_URL);
+    Services.prefs.clearUserPref("loop.fxa_oauth.profile");
+    Services.prefs.clearUserPref("loop.fxa_oauth.tokendata");
+  });
+
+  yield new Promise((resolve) => {
     let progressListener = {
       onLocationChange: function onLocationChange(aBrowser) {
         if (aBrowser.currentURI.spec == BASE_URL) {
@@ -456,7 +478,7 @@ add_task(function* openFxASettings() {
         }
         gBrowser.removeTabsProgressListener(progressListener);
         let contentURI = Services.io.newURI(params.content_uri, null, null);
-        is(aBrowser.currentURI.spec, Services.io.newURI("/settings", null, contentURI).spec,
+        is(aBrowser.currentURI.spec, Services.io.newURI("/settings?uid=abcd1234", null, contentURI).spec,
            "Check settings tab URL");
         resolve();
       }

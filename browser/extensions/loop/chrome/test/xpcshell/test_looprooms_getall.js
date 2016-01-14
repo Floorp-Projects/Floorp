@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 Cu.import("resource://services-common/utils.js");
 Cu.import("resource:///modules/Chat.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");

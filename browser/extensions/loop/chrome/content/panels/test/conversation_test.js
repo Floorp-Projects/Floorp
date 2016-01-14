@@ -5,13 +5,10 @@
 describe("loop.conversation", function() {
   "use strict";
 
-  var expect = chai.expect;
   var FeedbackView = loop.feedbackViews.FeedbackView;
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
-  var sharedModels = loop.shared.models;
-  var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
-  var fakeWindow, sandbox, getLoopPrefStub, setLoopPrefStub, mozL10nGet;
+  var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet;
 
   beforeEach(function() {
     sandbox = LoopMochaUtils.createSandbox();
@@ -43,8 +40,6 @@ describe("loop.conversation", function() {
           }
         };
       },
-      StartAlerting: sinon.stub(),
-      StopAlerting: sinon.stub(),
       EnsureRegistered: sinon.stub(),
       GetAppVersionInfo: function() {
         return {
@@ -53,7 +48,7 @@ describe("loop.conversation", function() {
           platform: "test"
         };
       },
-      GetAudioBlob: sinon.spy(function(name) {
+      GetAudioBlob: sinon.spy(function() {
         return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });
       }),
       GetSelectedTabMetadata: function() {
