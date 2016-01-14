@@ -20,11 +20,13 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+      onFocus: x => setProps(tree, { focused: x }),
+    })), window.document.body);
 
-    yield setState(tree, {
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+    yield setProps(tree, {
       focused: "G",
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
     });
 
     isRenderedTree(document.body.textContent, [
@@ -47,9 +49,7 @@ window.onload = Task.async(function* () {
 
     // Click the first tree node
     Simulate.click(document.querySelector(".tree-node"));
-
-    // Let the next render happen.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:true",

@@ -3,6 +3,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+with Files('**'):
+    BUG_COMPONENT = ('Firefox', 'Developer Tools: Memory')
+
 DIRS += [
     'actions',
     'components',
@@ -12,6 +15,7 @@ DIRS += [
 DevToolsModules(
     'app.js',
     'constants.js',
+    'dominator-tree-lazy-children.js',
     'initializer.js',
     'models.js',
     'panel.js',
@@ -22,3 +26,4 @@ DevToolsModules(
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
+MOCHITEST_CHROME_MANIFESTS += ['test/chrome/chrome.ini']

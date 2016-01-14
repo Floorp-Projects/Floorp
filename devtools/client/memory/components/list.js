@@ -10,7 +10,7 @@ const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/ven
  * as that component with a click handler.
  */
 const List = module.exports = createClass({
-  displayName: "list",
+  displayName: "List",
 
   propTypes: {
     itemComponent: PropTypes.any.isRequired,
