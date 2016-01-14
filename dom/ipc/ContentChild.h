@@ -526,6 +526,19 @@ public:
   virtual bool RecvEndDragSession(const bool& aDoneDrag,
                                   const bool& aUserCancelled) override;
 
+  virtual bool
+  RecvPush(const nsCString& aScope,
+           const IPC::Principal& aPrincipal) override;
+
+  virtual bool
+  RecvPushWithData(const nsCString& aScope,
+                   const IPC::Principal& aPrincipal,
+                   InfallibleTArray<uint8_t>&& aData) override;
+
+  virtual bool
+  RecvPushSubscriptionChange(const nsCString& aScope,
+                             const IPC::Principal& aPrincipal) override;
+
 #ifdef ANDROID
   gfx::IntSize GetScreenSize() { return mScreenSize; }
 #endif
