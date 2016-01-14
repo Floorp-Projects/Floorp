@@ -42,6 +42,7 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
      * by the context.
      */
     flags_ = type | HAS_SCOPECHAIN;
+    script_ = script;
 
     JSObject* callee = nullptr;
 
@@ -78,14 +79,9 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
 
     if (isFunctionFrame()) {
         dstvp[1] = ObjectValue(*callee);
-        u.evalScript = script;
     } else {
         MOZ_ASSERT(isGlobalOrModuleFrame());
         dstvp[1] = NullValue();
-        exec.script = script;
-#ifdef DEBUG
-        u.evalScript = (JSScript*)0xbad;
-#endif
     }
     dstvp[0] = newTarget;
 
@@ -401,12 +397,7 @@ InterpreterFrame::mark(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &scopeChain_, "scope chain");
     if (flags_ & HAS_ARGS_OBJ)
         TraceManuallyBarrieredEdge(trc, &argsObj_, "arguments");
-    if (isFunctionFrame()) {
-        if (isEvalFrame())
-            TraceManuallyBarrieredEdge(trc, &u.evalScript, "eval script");
-    } else {
-        TraceManuallyBarrieredEdge(trc, &exec.script, "script");
-    }
+    TraceManuallyBarrieredEdge(trc, &script_, "script");
     if (trc->isMarkingTracer())
         script()->compartment()->zone()->active = true;
     if (hasReturnValue())

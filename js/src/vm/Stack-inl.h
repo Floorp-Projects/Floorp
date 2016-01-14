@@ -84,7 +84,8 @@ InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecod
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
     argv_ = argv;
-    u.nactual = nactual;
+    script_ = script;
+    nactual_ = nactual;
     scopeChain_ = callee.environment();
     prev_ = prev;
     prevpc_ = prevpc;
