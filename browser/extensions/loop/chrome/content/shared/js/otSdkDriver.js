@@ -133,11 +133,12 @@ loop.OTSdkDriver = (function() {
       // the initial connect of the session. This saves time when setting up
       // the media.
       this.publisher = this.sdk.initPublisher(this._mockPublisherEl,
-        _.extend(this._getDataChannelSettings, this._getCopyPublisherConfig));
+        _.extend(this._getDataChannelSettings, this._getCopyPublisherConfig),
+        this._onPublishComplete.bind(this));
 
       this.publisher.on("streamCreated", this._onLocalStreamCreated.bind(this));
       this.publisher.on("streamDestroyed", this._onLocalStreamDestroyed.bind(this));
-      this.publisher.on("accessAllowed", this._onPublishComplete.bind(this));
+      this.publisher.on("accessAllowed", this._onPublishAllowed.bind(this));
       this.publisher.on("accessDenied", this._onPublishDenied.bind(this));
       this.publisher.on("accessDialogOpened",
         this._onAccessDialogOpened.bind(this));
@@ -185,9 +186,9 @@ loop.OTSdkDriver = (function() {
       this._mockScreenSharePreviewEl = document.createElement("div");
 
       this.screenshare = this.sdk.initPublisher(this._mockScreenSharePreviewEl,
-        config);
+        config, this._onScreenSharePublishComplete.bind(this));
       this.screenshare.on("accessAllowed", this._onScreenShareGranted.bind(this));
-      this.screenshare.on("accessDenied", this._onScreenShareDenied.bind(this));
+      this.screenshare.on("accessDenied", this._onScreenSharePublishError.bind(this));
       this.screenshare.on("streamCreated", this._onScreenShareStreamCreated.bind(this));
 
       this._noteSharingState(options.videoSource, true);
@@ -902,13 +903,40 @@ loop.OTSdkDriver = (function() {
      *
      * @param {OT.Event} event
      */
-    _onPublishComplete: function(event) {
+    _onPublishAllowed: function(event) {
       event.preventDefault();
       this._publisherReady = true;
 
       this.dispatcher.dispatch(new sharedActions.GotMediaPermission());
 
       this._maybePublishLocalStream();
+    },
+
+    /**
+     *
+     * Handles publisher Complete.
+     *
+     * @param {Error} error An OT error object, null if there was no error.
+     */
+    _onPublishComplete: function(error) {
+      if (!error) {
+        // Nothing to do for the success case.
+        return;
+      }
+      if (!(error.message && error.message === "DENIED")) {
+        // We free up the publisher here in case the store wants to try
+        // grabbing the media again.
+        if (this.publisher) {
+          this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
+          this.publisher.destroy();
+          delete this.publisher;
+          delete this._mockPublisherEl;
+        }
+        this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
+          reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
+        }));
+        this._notifyMetricsEvent("sdk.exception." + error.code + "." + error.message);
+      }
     },
 
     /**
@@ -935,26 +963,6 @@ loop.OTSdkDriver = (function() {
             reason: FAILURE_DETAILS.ICE_FAILED
           }));
           this._notifyMetricsEvent("sdk.exception." + event.code);
-          break;
-        case OT.ExceptionCodes.UNABLE_TO_PUBLISH:
-          if (event.message === "GetUserMedia") {
-            // We free up the publisher here in case the store wants to try
-            // grabbing the media again.
-            if (this.publisher) {
-              this.publisher.off("accessAllowed accessDenied accessDialogOpened streamCreated");
-              this.publisher.destroy();
-              delete this.publisher;
-              delete this._mockPublisherEl;
-            }
-            this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
-              reason: FAILURE_DETAILS.UNABLE_TO_PUBLISH_MEDIA
-            }));
-            // No exception logging as this is a handled event.
-          } else {
-            // We need to log the message so that we can understand where the exception
-            // is coming from. Potentially a temporary addition.
-            this._notifyMetricsEvent("sdk.exception." + event.code + "." + event.message);
-          }
           break;
         case OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE:
           this.dispatcher.dispatch(new sharedActions.ConnectionFailure({
@@ -1054,12 +1062,37 @@ loop.OTSdkDriver = (function() {
     },
 
     /**
-     * Called when a screenshare is denied. Notifies the other stores.
+     * Called when a screenshare is complete.
+     *
+     * @param {Error} error An OT error object, null if there was no error.
      */
-    _onScreenShareDenied: function() {
+    _onScreenSharePublishComplete: function(error) {
+      if (!error) {
+        // Nothing to do for the success case.
+        return;
+      }
+
+      // Free up publisher
+      this.screenshare.off("accessAllowed accessDenied streamCreated");
+      this.screenshare.destroy();
+      delete this.screenshare;
+      delete this._mockScreenSharePreviewEl;
       this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.INACTIVE
       }));
+      this._notifyMetricsEvent("sdk.exception.screen." + error.code + "." + error.message);
+    },
+
+    /**
+     * Called when a screenshare is denied. Notifies the other stores.
+     */
+    _onScreenSharePublishError: function() {
+      this.dispatcher.dispatch(new sharedActions.ScreenSharingState({
+        state: SCREEN_SHARE_STATES.INACTIVE
+      }));
+      this.screenshare.off("accessAllowed accessDenied streamCreated");
+      this.screenshare.destroy();
+      delete this.screenshare;
       delete this._mockScreenSharePreviewEl;
     },
 
