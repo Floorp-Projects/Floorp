@@ -5,6 +5,8 @@ task:
   metadata:
     name: '[TC] Linux64 jittests {{chunk}}'
     description: Jittests run {{chunk}}
+  payload:
+    maxRunTime: 7200
   extra:
     chunks:
       total: 2
