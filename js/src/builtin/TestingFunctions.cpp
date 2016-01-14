@@ -330,43 +330,42 @@ MinorGC(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#define FOR_EACH_GC_PARAM(_)                                                            \
-    _("maxBytes",                   JSGC_MAX_BYTES,                      true,  false)  \
-    _("maxMallocBytes",             JSGC_MAX_MALLOC_BYTES,               true,  false)  \
-    _("gcBytes",                    JSGC_BYTES,                          false, false)  \
-    _("gcNumber",                   JSGC_NUMBER,                         false, false)  \
-    _("mode",                       JSGC_MODE,                           true,  true)   \
-    _("unusedChunks",               JSGC_UNUSED_CHUNKS,                  false, false)  \
-    _("totalChunks",                JSGC_TOTAL_CHUNKS,                   false, false)  \
-    _("sliceTimeBudget",            JSGC_SLICE_TIME_BUDGET,              true,  false)  \
-    _("markStackLimit",             JSGC_MARK_STACK_LIMIT,               true,  false)  \
-    _("highFrequencyTimeLimit",     JSGC_HIGH_FREQUENCY_TIME_LIMIT,      true,  false)  \
-    _("highFrequencyLowLimit",      JSGC_HIGH_FREQUENCY_LOW_LIMIT,       true,  false)  \
-    _("highFrequencyHighLimit",     JSGC_HIGH_FREQUENCY_HIGH_LIMIT,      true,  false)  \
-    _("highFrequencyHeapGrowthMax", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, true,  false)  \
-    _("highFrequencyHeapGrowthMin", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, true,  false)  \
-    _("lowFrequencyHeapGrowth",     JSGC_LOW_FREQUENCY_HEAP_GROWTH,      true,  false)  \
-    _("dynamicHeapGrowth",          JSGC_DYNAMIC_HEAP_GROWTH,            true,  true)   \
-    _("dynamicMarkSlice",           JSGC_DYNAMIC_MARK_SLICE,             true,  true)   \
-    _("allocationThreshold",        JSGC_ALLOCATION_THRESHOLD,           true,  false)  \
-    _("decommitThreshold",          JSGC_DECOMMIT_THRESHOLD,             true,  false)  \
-    _("minEmptyChunkCount",         JSGC_MIN_EMPTY_CHUNK_COUNT,          true,  true)   \
-    _("maxEmptyChunkCount",         JSGC_MAX_EMPTY_CHUNK_COUNT,          true,  true)   \
-    _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true,  true)
+#define FOR_EACH_GC_PARAM(_)                                                    \
+    _("maxBytes",                   JSGC_MAX_BYTES,                      true)  \
+    _("maxMallocBytes",             JSGC_MAX_MALLOC_BYTES,               true)  \
+    _("gcBytes",                    JSGC_BYTES,                          false) \
+    _("gcNumber",                   JSGC_NUMBER,                         false) \
+    _("mode",                       JSGC_MODE,                           true)  \
+    _("unusedChunks",               JSGC_UNUSED_CHUNKS,                  false) \
+    _("totalChunks",                JSGC_TOTAL_CHUNKS,                   false) \
+    _("sliceTimeBudget",            JSGC_SLICE_TIME_BUDGET,              true)  \
+    _("markStackLimit",             JSGC_MARK_STACK_LIMIT,               true)  \
+    _("highFrequencyTimeLimit",     JSGC_HIGH_FREQUENCY_TIME_LIMIT,      true)  \
+    _("highFrequencyLowLimit",      JSGC_HIGH_FREQUENCY_LOW_LIMIT,       true)  \
+    _("highFrequencyHighLimit",     JSGC_HIGH_FREQUENCY_HIGH_LIMIT,      true)  \
+    _("highFrequencyHeapGrowthMax", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MAX, true)  \
+    _("highFrequencyHeapGrowthMin", JSGC_HIGH_FREQUENCY_HEAP_GROWTH_MIN, true)  \
+    _("lowFrequencyHeapGrowth",     JSGC_LOW_FREQUENCY_HEAP_GROWTH,      true)  \
+    _("dynamicHeapGrowth",          JSGC_DYNAMIC_HEAP_GROWTH,            true)  \
+    _("dynamicMarkSlice",           JSGC_DYNAMIC_MARK_SLICE,             true)  \
+    _("allocationThreshold",        JSGC_ALLOCATION_THRESHOLD,           true)  \
+    _("decommitThreshold",          JSGC_DECOMMIT_THRESHOLD,             true)  \
+    _("minEmptyChunkCount",         JSGC_MIN_EMPTY_CHUNK_COUNT,          true)  \
+    _("maxEmptyChunkCount",         JSGC_MAX_EMPTY_CHUNK_COUNT,          true)  \
+    _("compactingEnabled",          JSGC_COMPACTING_ENABLED,             true)
 
 static const struct ParamInfo {
     const char*     name;
     JSGCParamKey    param;
     bool            writable;
-    bool            allowZero;
 } paramMap[] = {
-#define DEFINE_PARAM_INFO(name, key, writable, allowZero)                     \
-    {name, key, writable, allowZero},
+#define DEFINE_PARAM_INFO(name, key, writable)                                  \
+    {name, key, writable},
 FOR_EACH_GC_PARAM(DEFINE_PARAM_INFO)
 #undef DEFINE_PARAM_INFO
 };
 
-#define PARAM_NAME_LIST_ENTRY(name, key, writable, allowZero)                 \
+#define PARAM_NAME_LIST_ENTRY(name, key, writable)                              \
     " " name
 #define GC_PARAMETER_ARGS_LIST FOR_EACH_GC_PARAM(PARAM_NAME_LIST_ENTRY)
 
@@ -423,12 +422,6 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
     }
 
     uint32_t value = floor(d);
-    if (!info.allowZero && value == 0) {
-        JS_ReportError(cx, "the second argument must be convertable to uint32_t "
-                           "with non-zero value");
-        return false;
-    }
-
     if (param == JSGC_MARK_STACK_LIMIT && JS::IsIncrementalGCInProgress(cx->runtime())) {
         JS_ReportError(cx, "attempt to set markStackLimit while a GC is in progress");
         return false;
@@ -445,7 +438,18 @@ GCParameter(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JS_SetGCParameter(cx->runtime(), param, value);
+    bool ok;
+    {
+        JSRuntime* rt = cx->runtime();
+        AutoLockGC lock(rt);
+        ok = rt->gc.setParameter(param, value, lock);
+    }
+
+    if (!ok) {
+        JS_ReportError(cx, "Parameter value out of range");
+        return false;
+    }
+
     args.rval().setUndefined();
     return true;
 }
