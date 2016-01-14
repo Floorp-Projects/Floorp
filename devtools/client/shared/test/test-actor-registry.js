@@ -82,6 +82,9 @@ exports.getTestActorWithoutToolbox = Task.async(function* (tab) {
   client.connect(deferred.resolve);
   yield deferred.promise;
 
+  // We also need to make sure the test actor is registered on the server.
+  yield registerTestActor(client);
+
   return getTestActor(client, tab);
 });
 

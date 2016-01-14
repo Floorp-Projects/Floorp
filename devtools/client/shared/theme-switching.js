@@ -5,6 +5,25 @@
 (function() {
   const SCROLLBARS_URL = "chrome://devtools/skin/floating-scrollbars-light.css";
   let documentElement = document.documentElement;
+
+  let os;
+  let platform = navigator.platform;
+  if (platform.startsWith("Win")) {
+    os = "win";
+  } else if (platform.startsWith("Mac")) {
+    os = "mac";
+  } else {
+    os = "linux";
+  }
+
+  documentElement.setAttribute("platform", os);
+
+  // no-theme attributes allows to just est the platform attribute
+  // to have per-platform CSS working correctly.
+  if (documentElement.getAttribute("no-theme") === "true") {
+    return;
+  }
+
   let devtoolsStyleSheets = new WeakMap();
 
   function forceStyle() {
@@ -143,17 +162,6 @@
   Cu.import("resource://devtools/client/framework/gDevTools.jsm");
   const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   const StylesheetUtils = require("sdk/stylesheet/utils");
-
-  let os;
-  let platform = navigator.platform;
-  if (platform.startsWith("Win")) {
-    os = "win";
-  } else if (platform.startsWith("Mac")) {
-    os = "mac";
-  } else {
-    os = "linux";
-  }
-  documentElement.setAttribute("platform", os);
 
   if (documentElement.hasAttribute("force-theme")) {
     switchTheme(documentElement.getAttribute("force-theme"));

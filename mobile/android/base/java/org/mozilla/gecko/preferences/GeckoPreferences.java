@@ -25,6 +25,7 @@ import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Restrictions;
+import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.TelemetryContract.Method;
@@ -34,9 +35,12 @@ import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateService;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
+import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputOptionsUtils;
+import org.mozilla.gecko.util.NativeEventListener;
+import org.mozilla.gecko.util.NativeJSObject;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.FloatingHintEditText;
 
@@ -92,6 +96,7 @@ extends PreferenceActivity
 implements
 GeckoActivityStatus,
 GeckoEventListener,
+NativeEventListener,
 OnPreferenceChangeListener,
 OnSharedPreferenceChangeListener
 {
@@ -361,8 +366,11 @@ OnSharedPreferenceChangeListener
             addPreferencesFromResource(res);
         }
 
-        EventDispatcher.getInstance().registerGeckoThreadListener(this,
+        EventDispatcher.getInstance().registerGeckoThreadListener((GeckoEventListener) this,
             "Sanitize:Finished");
+
+        EventDispatcher.getInstance().registerGeckoThreadListener((NativeEventListener) this,
+            "Snackbar:Show");
 
         // Add handling for long-press click.
         // This is only for Android 3.0 and below (which use the long-press-context-menu paradigm).
@@ -512,8 +520,12 @@ OnSharedPreferenceChangeListener
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
             "Sanitize:Finished");
+
+        EventDispatcher.getInstance().unregisterGeckoThreadListener((NativeEventListener) this,
+            "Snackbar:Show");
+
         if (mPrefsRequestId > 0) {
             PrefsHelper.removeObserver(mPrefsRequestId);
         }
@@ -617,16 +629,20 @@ OnSharedPreferenceChangeListener
             if (event.equals("Sanitize:Finished")) {
                 boolean success = message.getBoolean("success");
                 final int stringRes = success ? R.string.private_data_success : R.string.private_data_fail;
-                final Context context = this;
-                ThreadUtils.postToUiThread(new Runnable () {
-                    @Override
-                    public void run() {
-                        Snackbar.make(findViewById(android.R.id.content), stringRes, Snackbar.LENGTH_SHORT).show();
-                    }
-                });
+
+                SnackbarHelper.showSnackbar(GeckoPreferences.this,
+                        getString(stringRes),
+                        Snackbar.LENGTH_SHORT);
             }
         } catch (Exception e) {
             Log.e(LOGTAG, "Exception handling message \"" + event + "\":", e);
+        }
+    }
+
+    @Override
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
+        if ("Snackbar:Show".equals(event)) {
+            SnackbarHelper.showSnackbar(this, message, callback);
         }
     }
 
