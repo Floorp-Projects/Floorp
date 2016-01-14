@@ -74,14 +74,14 @@ nsresult nsDataObj::CStream::Init(nsIURI *pSourceURI,
   rv = NS_NewChannel(getter_AddRefs(mChannel),
                      pSourceURI,
                      aRequestingNode,
-                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_INHERITS,
+                     nsILoadInfo::SEC_NORMAL,
                      nsIContentPolicy::TYPE_OTHER,
                      nullptr,   // loadGroup
                      nullptr,   // aCallbacks
                      nsIRequest::LOAD_FROM_CACHE);
 
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mChannel->AsyncOpen2(this);
+  rv = mChannel->AsyncOpen(this, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
