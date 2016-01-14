@@ -503,9 +503,7 @@ nsWindow::Create(nsIWidget* aParent,
     mWindowType = eWindowType_toplevel;
     mBorderStyle = eBorderStyle_default;
 
-    Inherited::BaseCreate(aParent,
-                          LayoutDeviceIntRect::FromUnknownRect(mBounds),
-                          aInitData);
+    Inherited::BaseCreate(aParent, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level window doesn't have a parent!");
 

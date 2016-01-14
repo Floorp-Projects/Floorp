@@ -1096,6 +1096,15 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     if (!stdnm)
         stdnm = LookupStdName(cx->names(), idAtom, builtin_property_names);
 
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
+    if (stdnm && !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled() &&
+        (stdnm->atomOffset == NAME_OFFSET(Atomics) ||
+         stdnm->atomOffset == NAME_OFFSET(SharedArrayBuffer)))
+    {
+        stdnm = nullptr;
+    }
+#endif
+
     // If this class is anonymous, then it doesn't exist as a global
     // property, so we won't resolve anything.
     JSProtoKey key = stdnm ? stdnm->key : JSProto_Null;
@@ -1829,6 +1838,25 @@ const JS::CompartmentCreationOptions&
 JS::CompartmentCreationOptionsRef(JSContext* cx)
 {
     return cx->compartment()->creationOptions();
+}
+
+bool
+JS::CompartmentCreationOptions::getSharedMemoryAndAtomicsEnabled() const
+{
+#if defined(ENABLE_SHARED_ARRAY_BUFFER)
+    return sharedMemoryAndAtomics_;
+#else
+    return false;
+#endif
+}
+
+JS::CompartmentCreationOptions&
+JS::CompartmentCreationOptions::setSharedMemoryAndAtomicsEnabled(bool flag)
+{
+#if defined(ENABLE_SHARED_ARRAY_BUFFER)
+    sharedMemoryAndAtomics_ = flag;
+#endif
+    return *this;
 }
 
 JS::CompartmentBehaviors&

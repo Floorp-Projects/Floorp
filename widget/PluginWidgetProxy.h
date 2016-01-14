@@ -34,6 +34,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIWidget
+  using PuppetWidget::Create; // for Create signature not overridden here
   NS_IMETHOD Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                     const LayoutDeviceIntRect& aRect,
                     nsWidgetInitData* aInitData = nullptr) override;

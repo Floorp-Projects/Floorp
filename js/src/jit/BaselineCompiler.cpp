@@ -21,6 +21,7 @@
 #endif
 #include "jit/SharedICHelpers.h"
 #include "jit/VMFunctions.h"
+#include "vm/Interpreter.h"
 #include "vm/ScopeObject.h"
 #include "vm/TraceLogging.h"
 
@@ -3188,6 +3189,27 @@ bool
 BaselineCompiler::emit_JSOP_STRICTSPREADEVAL()
 {
     return emitSpreadCall();
+}
+
+typedef bool (*OptimizeSpreadCallFn)(JSContext*, HandleValue, bool*);
+static const VMFunction OptimizeSpreadCallInfo =
+    FunctionInfo<OptimizeSpreadCallFn>(OptimizeSpreadCall);
+
+bool
+BaselineCompiler::emit_JSOP_OPTIMIZE_SPREADCALL()
+{
+    frame.syncStack(0);
+    masm.loadValue(frame.addressOfStackValue(frame.peek(-1)), R0);
+
+    prepareVMCall();
+    pushArg(R0);
+
+    if (!callVM(OptimizeSpreadCallInfo))
+        return false;
+
+    masm.boxNonDouble(JSVAL_TYPE_BOOLEAN, ReturnReg, R0);
+    frame.push(R0);
+    return true;
 }
 
 typedef bool (*ImplicitThisFn)(JSContext*, HandleObject, HandlePropertyName,

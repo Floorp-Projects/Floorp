@@ -149,6 +149,13 @@ public:
     if (charsWritten == kBuffSize - 1) {
       // We may have maxed out, allocate a buffer instead.
       buffToWrite = PR_vsmprintf(aFmt, aArgs);
+      charsWritten = strlen(buffToWrite);
+    }
+
+    // Determine if a newline needs to be appended to the message.
+    const char* newline = "";
+    if (charsWritten == 0 || buffToWrite[charsWritten - 1] != '\n') {
+      newline = "\n";
     }
 
     FILE* out = mOutFile ? mOutFile : stderr;
@@ -162,19 +169,19 @@ public:
     // and the module name.
     if (!mAddTimestamp) {
       fprintf_stderr(out,
-                     "[%p]: %s/%s %s",
+                     "[%p]: %s/%s %s%s",
                      PR_GetCurrentThread(), ToLogStr(aLevel),
-                     aName, buffToWrite);
+                     aName, buffToWrite, newline);
     } else {
       PRExplodedTime now;
       PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
       fprintf_stderr(
           out,
-          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%p]: %s/%s %s",
+          "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%p]: %s/%s %s%s",
           now.tm_year, now.tm_month + 1, now.tm_mday,
           now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
           PR_GetCurrentThread(), ToLogStr(aLevel),
-          aName, buffToWrite);
+          aName, buffToWrite, newline);
     }
 
     if (buffToWrite != buff) {

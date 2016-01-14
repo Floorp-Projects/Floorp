@@ -150,6 +150,19 @@ function GetIterator(obj, method) {
     return iterator;
 }
 
+var _builtinCtorsCache = {__proto__: null};
+
+function GetBuiltinConstructor(builtinName) {
+    var ctor = _builtinCtorsCache[builtinName] ||
+               (_builtinCtorsCache[builtinName] = GetBuiltinConstructorImpl(builtinName));
+    assert(ctor, `No builtin with name "${builtinName}" found`);
+    return ctor;
+}
+
+function GetBuiltinPrototype(builtinName) {
+    return (_builtinCtorsCache[builtinName] || GetBuiltinConstructor(builtinName)).prototype;
+}
+
 // ES6 draft 20150317 7.3.20.
 function SpeciesConstructor(obj, defaultConstructor) {
     // Step 1.

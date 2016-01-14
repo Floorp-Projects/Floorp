@@ -445,6 +445,9 @@ bool
 SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, HandleValue thisv,
                     HandleValue callee, HandleValue arr, HandleValue newTarget, MutableHandleValue res);
 
+bool
+OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized);
+
 JSObject*
 NewObjectOperation(JSContext* cx, HandleScript script, jsbytecode* pc,
                    NewObjectKind newKind = GenericObject);

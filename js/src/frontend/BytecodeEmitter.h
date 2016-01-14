@@ -609,6 +609,9 @@ struct BytecodeEmitter
 
     bool emitConditionalExpression(ConditionalExpression& conditional);
 
+    bool isRestParameter(ParseNode* pn, bool* result);
+    bool emitOptimizeSpread(ParseNode* arg0, ptrdiff_t* jmp, bool* emitted);
+
     bool emitCallOrNew(ParseNode* pn);
     bool emitDebugOnlyCheckSelfHosted();
     bool emitSelfHostedCallFunction(ParseNode* pn);
