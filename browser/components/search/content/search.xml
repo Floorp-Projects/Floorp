@@ -31,6 +31,7 @@
       <xul:textbox class="searchbar-textbox"
                    anonid="searchbar-textbox"
                    type="autocomplete"
+                   inputtype="search"
                    flex="1"
                    autocompletepopup="PopupSearchAutoComplete"
                    autocompletesearch="search-autocomplete"
