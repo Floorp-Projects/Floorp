@@ -11,11 +11,13 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
 #include "mozilla/Maybe.h" // For Maybe
+#include "nsAnimationManager.h" // For CSSAnimation
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIDocument.h" // For nsIDocument
 #include "nsIPresShell.h" // For nsIPresShell
 #include "nsLayoutUtils.h" // For PostRestyleEvent (remove after bug 1073336)
 #include "nsThreadUtils.h" // For nsRunnableMethod and nsRevocableEventPtr
+#include "nsTransitionManager.h" // For CSSTransition
 #include "PendingAnimationTracker.h" // For PendingAnimationTracker
 
 namespace mozilla {
@@ -667,14 +669,58 @@ Animation::UpdateRelevance()
 bool
 Animation::HasLowerCompositeOrderThan(const Animation& aOther) const
 {
-  // Due to the way subclasses of this repurpose the mAnimationIndex to
-  // implement their own brand of composite ordering it is possible for
-  // two animations to have an identical mAnimationIndex member.
-  // However, these subclasses override this method so we shouldn't see
-  // identical animation indices here.
-  MOZ_ASSERT(mAnimationIndex != aOther.mAnimationIndex || &aOther == this,
+  // 0. Object-equality case
+  if (&aOther == this) {
+    return false;
+  }
+
+  // 1. CSS Transitions sort lowest
+  {
+    auto asCSSTransitionForSorting =
+      [] (const Animation& anim) -> const CSSTransition*
+      {
+        const CSSTransition* transition = anim.AsCSSTransition();
+        return transition && transition->IsTiedToMarkup() ?
+               transition :
+               nullptr;
+      };
+    auto thisTransition  = asCSSTransitionForSorting(*this);
+    auto otherTransition = asCSSTransitionForSorting(aOther);
+    if (thisTransition && otherTransition) {
+      return thisTransition->HasLowerCompositeOrderThan(*otherTransition);
+    }
+    if (thisTransition || otherTransition) {
+      return thisTransition;
+    }
+  }
+
+  // 2. CSS Animations sort next
+  {
+    auto asCSSAnimationForSorting =
+      [] (const Animation& anim) -> const CSSAnimation*
+      {
+        const CSSAnimation* animation = anim.AsCSSAnimation();
+        return animation && animation->IsTiedToMarkup() ? animation : nullptr;
+      };
+    auto thisAnimation  = asCSSAnimationForSorting(*this);
+    auto otherAnimation = asCSSAnimationForSorting(aOther);
+    if (thisAnimation && otherAnimation) {
+      return thisAnimation->HasLowerCompositeOrderThan(*otherAnimation);
+    }
+    if (thisAnimation || otherAnimation) {
+      return thisAnimation;
+    }
+  }
+
+  // Subclasses of Animation repurpose mAnimationIndex to implement their
+  // own brand of composite ordering. However, by this point we should have
+  // handled any such custom composite ordering so we should now have unique
+  // animation indices.
+  MOZ_ASSERT(mAnimationIndex != aOther.mAnimationIndex,
              "Animation indices should be unique");
 
+  // 3. Finally, generic animations sort by their position in the global
+  // animation array.
   return mAnimationIndex < aOther.mAnimationIndex;
 }
 

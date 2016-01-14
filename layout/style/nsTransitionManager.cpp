@@ -175,43 +175,30 @@ CSSTransition::TransitionProperty() const
 }
 
 bool
-CSSTransition::HasLowerCompositeOrderThan(const Animation& aOther) const
+CSSTransition::HasLowerCompositeOrderThan(const CSSTransition& aOther) const
 {
+  MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup(),
+             "Should only be called for CSS transitions that are sorted "
+             "as CSS transitions (i.e. tied to CSS markup)");
+
   // 0. Object-equality case
   if (&aOther == this) {
     return false;
   }
 
-  // 1. Transitions sort lowest
-  const CSSTransition* otherTransition = aOther.AsCSSTransition();
-  if (!otherTransition) {
-    return true;
+  // 1. Sort by document order
+  if (!mOwningElement.Equals(aOther.mOwningElement)) {
+    return mOwningElement.LessThan(aOther.mOwningElement);
   }
 
-  // 2. CSS transitions that correspond to a transition-property property sort
-  // lower than CSS transitions owned by script.
-  if (!IsTiedToMarkup()) {
-    return !otherTransition->IsTiedToMarkup() ?
-           Animation::HasLowerCompositeOrderThan(aOther) :
-           false;
-  }
-  if (!otherTransition->IsTiedToMarkup()) {
-    return true;
+  // 2. (Same element and pseudo): Sort by transition generation
+  if (mAnimationIndex != aOther.mAnimationIndex) {
+    return mAnimationIndex < aOther.mAnimationIndex;
   }
 
-  // 3. Sort by document order
-  if (!mOwningElement.Equals(otherTransition->mOwningElement)) {
-    return mOwningElement.LessThan(otherTransition->mOwningElement);
-  }
-
-  // 4. (Same element and pseudo): Sort by transition generation
-  if (mAnimationIndex != otherTransition->mAnimationIndex) {
-    return mAnimationIndex < otherTransition->mAnimationIndex;
-  }
-
-  // 5. (Same transition generation): Sort by transition property
+  // 3. (Same transition generation): Sort by transition property
   return nsCSSProps::GetStringValue(TransitionProperty()) <
-         nsCSSProps::GetStringValue(otherTransition->TransitionProperty());
+         nsCSSProps::GetStringValue(aOther.TransitionProperty());
 }
 
 ////////////////////////// nsTransitionManager ////////////////////////////

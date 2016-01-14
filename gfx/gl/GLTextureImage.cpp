@@ -39,7 +39,7 @@ CreateTextureImage(GLContext* gl,
         case GLContextType::EGL:
             return CreateTextureImageEGL(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
         default:
-            return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
+            return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags);
     }
 }
 
@@ -54,7 +54,7 @@ TileGenFunc(GLContext* gl,
     switch (gl->GetContextType()) {
 #ifdef XP_MACOSX
         case GLContextType::CGL:
-            return TileGenFuncCGL(gl, aSize, aContentType, aFlags, aImageFormat);
+            return TileGenFuncCGL(gl, aSize, aContentType, aFlags);
 #endif
         case GLContextType::EGL:
             return TileGenFuncEGL(gl, aSize, aContentType, aFlags, aImageFormat);
@@ -266,7 +266,7 @@ gfx::IntSize TextureImage::GetSize() const {
 
 TextureImage::TextureImage(const gfx::IntSize& aSize,
              GLenum aWrapMode, ContentType aContentType,
-             Flags aFlags, ImageFormat aImageFormat)
+             Flags aFlags)
     : mSize(aSize)
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
@@ -279,9 +279,8 @@ BasicTextureImage::BasicTextureImage(GLuint aTexture,
                   GLenum aWrapMode,
                   ContentType aContentType,
                   GLContext* aContext,
-                  TextureImage::Flags aFlags,
-                  TextureImage::ImageFormat aImageFormat)
-  : TextureImage(aSize, aWrapMode, aContentType, aFlags, aImageFormat)
+                  TextureImage::Flags aFlags)
+  : TextureImage(aSize, aWrapMode, aContentType, aFlags)
   , mTexture(aTexture)
   , mTextureState(Created)
   , mGLContext(aContext)
@@ -704,8 +703,7 @@ CreateBasicTextureImage(GLContext* aGL,
                         const gfx::IntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
-                        TextureImage::Flags aFlags,
-                        TextureImage::ImageFormat aImageFormat)
+                        TextureImage::Flags aFlags)
 {
     bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
     if (!aGL->MakeCurrent()) {
@@ -725,7 +723,7 @@ CreateBasicTextureImage(GLContext* aGL,
 
     RefPtr<BasicTextureImage> texImage =
         new BasicTextureImage(texture, aSize, aWrapMode, aContentType,
-                              aGL, aFlags, aImageFormat);
+                              aGL, aFlags);
     return texImage.forget();
 }
 

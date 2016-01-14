@@ -211,8 +211,7 @@ protected:
      */
     TextureImage(const gfx::IntSize& aSize,
                  GLenum aWrapMode, ContentType aContentType,
-                 Flags aFlags = NoFlags,
-                 ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
+                 Flags aFlags = NoFlags);
 
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~TextureImage() {}
@@ -247,8 +246,7 @@ public:
                       GLenum aWrapMode,
                       ContentType aContentType,
                       GLContext* aContext,
-                      TextureImage::Flags aFlags = TextureImage::NoFlags,
-                      TextureImage::ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
+                      TextureImage::Flags aFlags = TextureImage::NoFlags);
 
     virtual void BindTexture(GLenum aTextureUnit);
 
@@ -347,8 +345,7 @@ CreateBasicTextureImage(GLContext* aGL,
                         const gfx::IntSize& aSize,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
-                        TextureImage::Flags aFlags,
-                        TextureImage::ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
+                        TextureImage::Flags aFlags);
 
 /**
   * Return a valid, allocated TextureImage of |aSize| with

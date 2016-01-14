@@ -1127,6 +1127,13 @@ operator!=(const nsTSubstring_CharT::base_string_type& aLhs,
 }
 
 inline bool
+operator!=(const nsTSubstring_CharT::base_string_type& aLhs,
+           const nsTSubstring_CharT::char_type* aRhs)
+{
+  return !aLhs.Equals(aRhs);
+}
+
+inline bool
 operator<(const nsTSubstring_CharT::base_string_type& aLhs,
           const nsTSubstring_CharT::base_string_type& aRhs)
 {
