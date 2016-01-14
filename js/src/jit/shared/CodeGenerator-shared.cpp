@@ -1628,6 +1628,8 @@ CodeGeneratorShared::addCacheLocations(const CacheLocationList& locs, size_t* nu
         // allocateData() ensures that sizeof(CacheLocation) is word-aligned.
         // If this changes, we will need to pad to ensure alignment.
         size_t curIndex = allocateData(sizeof(CacheLocation));
+        if (masm.oom())
+            return SIZE_MAX;
         new (&runtimeData_[curIndex]) CacheLocation(iter->pc, iter->script);
         numLocations++;
     }
