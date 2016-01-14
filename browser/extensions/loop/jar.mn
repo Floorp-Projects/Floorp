@@ -26,20 +26,139 @@
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-aero@2x.png          os=WINNT osversion=6.1
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win10@2x.png         os=WINNT osversion=6.2
 % override chrome://loop/skin/toolbar@2x.png      chrome://loop/skin/toolbar-win10@2x.png         os=WINNT osversion=6.3
-  skin/                          (chrome/skin/*)
-  content/modules/               (chrome/content/modules/*)
-# We don't package the test/ directory for panels, so do these separately.
-  content/panels/                (chrome/content/panels/*.html)
-  content/panels/css/            (chrome/content/panels/css/*)
-  content/panels/js/             (chrome/content/panels/js/*)
-  content/panels/vendor/         (chrome/content/panels/vendor/*)
-* content/preferences/prefs.js   (chrome/content/preferences/prefs.js)
-# We don't package the test/ directory for shared, so do these separately.
-  content/shared/css/            (chrome/content/shared/css/*)
-  content/shared/img/            (chrome/content/shared/img/*)
-  content/shared/js/             (chrome/content/shared/js/*)
-  content/shared/sounds/         (chrome/content/shared/sounds/*)
-  content/shared/vendor/         (chrome/content/shared/vendor/*)
-#ifndef DEBUG
-+ content/shared/vendor/react.js (chrome/content/shared/vendor/react-prod.js)
+  skin/  (skin/*)
+  content/modules/ (content/modules/*)
+* content/preferences/prefs.js (content/preferences/prefs.js)
+
+  # Desktop html files
+  content/panels/conversation.html                 (content/panels/conversation.html)
+  content/panels/panel.html                        (content/panels/panel.html)
+
+  # Desktop vendor (see bottom of this file for TokBox sdk assets)
+  content/panels/vendor/l10n.js                    (content/panels/vendor/l10n.js)
+
+  # Desktop script
+  content/panels/js/conversation.js                (content/panels/js/conversation.js)
+  content/panels/js/conversationAppStore.js        (content/panels/js/conversationAppStore.js)
+  content/panels/js/otconfig.js                    (content/panels/js/otconfig.js)
+  content/panels/js/panel.js                       (content/panels/js/panel.js)
+  content/panels/js/roomStore.js                   (content/panels/js/roomStore.js)
+  content/panels/js/roomViews.js                   (content/panels/js/roomViews.js)
+  content/panels/js/feedbackViews.js               (content/panels/js/feedbackViews.js)
+
+  # Desktop styles
+  content/panels/css/panel.css                     (content/panels/css/panel.css)
+
+  # Shared styles
+  content/shared/css/reset.css                     (content/shared/css/reset.css)
+  content/shared/css/common.css                    (content/shared/css/common.css)
+  content/shared/css/conversation.css              (content/shared/css/conversation.css)
+
+  # Shared images
+  content/shared/img/helloicon.svg                 (content/shared/img/helloicon.svg)
+  content/shared/img/icon_32.png                   (content/shared/img/icon_32.png)
+  content/shared/img/icon_64.png                   (content/shared/img/icon_64.png)
+  content/shared/img/spinner.svg                   (content/shared/img/spinner.svg)
+  # XXX could get rid of the png spinner usages and replace them with the svg
+  # one?
+  content/shared/img/spinner.png                   (content/shared/img/spinner.png)
+  content/shared/img/spinner@2x.png                (content/shared/img/spinner@2x.png)
+  content/shared/img/sad_hello_icon_64x64.svg      (content/shared/img/sad_hello_icon_64x64.svg)
+  content/shared/img/chatbubble-arrow-left.svg     (content/shared/img/chatbubble-arrow-left.svg)
+  content/shared/img/chatbubble-arrow-right.svg    (content/shared/img/chatbubble-arrow-right.svg)
+  content/shared/img/facemute-14x14.png            (content/shared/img/facemute-14x14.png)
+  content/shared/img/facemute-14x14@2x.png         (content/shared/img/facemute-14x14@2x.png)
+  content/shared/img/hangup-inverse-14x14.png      (content/shared/img/hangup-inverse-14x14.png)
+  content/shared/img/hangup-inverse-14x14@2x.png   (content/shared/img/hangup-inverse-14x14@2x.png)
+  content/shared/img/mute-inverse-14x14.png        (content/shared/img/mute-inverse-14x14.png)
+  content/shared/img/mute-inverse-14x14@2x.png     (content/shared/img/mute-inverse-14x14@2x.png)
+  content/shared/img/glyph-email-16x16.svg         (content/shared/img/glyph-email-16x16.svg)
+  content/shared/img/glyph-facebook-16x16.svg      (content/shared/img/glyph-facebook-16x16.svg)
+  content/shared/img/glyph-help-16x16.svg          (content/shared/img/glyph-help-16x16.svg)
+  content/shared/img/glyph-link-16x16.svg          (content/shared/img/glyph-link-16x16.svg)
+  content/shared/img/glyph-user-16x16.svg          (content/shared/img/glyph-user-16x16.svg)
+  content/shared/img/exit.svg                      (content/shared/img/exit.svg)
+  content/shared/img/audio.svg                     (content/shared/img/audio.svg)
+  content/shared/img/audio-hover.svg               (content/shared/img/audio-hover.svg)
+  content/shared/img/audio-mute.svg                (content/shared/img/audio-mute.svg)
+  content/shared/img/audio-mute-hover.svg          (content/shared/img/audio-mute-hover.svg)
+  content/shared/img/video.svg                     (content/shared/img/video.svg)
+  content/shared/img/video-hover.svg               (content/shared/img/video-hover.svg)
+  content/shared/img/video-mute.svg                (content/shared/img/video-mute.svg)
+  content/shared/img/video-mute-hover.svg          (content/shared/img/video-mute-hover.svg)
+  content/shared/img/settings.svg                  (content/shared/img/settings.svg)
+  content/shared/img/settings-hover.svg            (content/shared/img/settings-hover.svg)
+  content/shared/img/sharing.svg                   (content/shared/img/sharing.svg)
+  content/shared/img/sharing-active.svg            (content/shared/img/sharing-active.svg)
+  content/shared/img/sharing-pending.svg           (content/shared/img/sharing-pending.svg)
+  content/shared/img/sharing-hover.svg             (content/shared/img/sharing-hover.svg)
+  content/shared/img/media-group.svg               (content/shared/img/media-group.svg)
+  content/shared/img/media-group-left-hover.svg    (content/shared/img/media-group-left-hover.svg)
+  content/shared/img/media-group-right-hover.svg   (content/shared/img/media-group-right-hover.svg)
+  content/shared/img/audio-call-avatar.svg         (content/shared/img/audio-call-avatar.svg)
+  content/shared/img/beta-ribbon.svg               (content/shared/img/beta-ribbon.svg)
+  content/shared/img/check.svg                     (content/shared/img/check.svg)
+  content/shared/img/icons-10x10.svg               (content/shared/img/icons-10x10.svg)
+  content/shared/img/icons-14x14.svg               (content/shared/img/icons-14x14.svg)
+  content/shared/img/icons-16x16.svg               (content/shared/img/icons-16x16.svg)
+  content/shared/img/movistar.png                  (content/shared/img/movistar.png)
+  content/shared/img/movistar@2x.png               (content/shared/img/movistar@2x.png)
+  content/shared/img/vivo.png                      (content/shared/img/vivo.png)
+  content/shared/img/vivo@2x.png                   (content/shared/img/vivo@2x.png)
+  content/shared/img/02.png                        (content/shared/img/02.png)
+  content/shared/img/02@2x.png                     (content/shared/img/02@2x.png)
+  content/shared/img/telefonica-logo.svg           (content/shared/img/telefonica-logo.svg)
+  content/shared/img/hello_logo.svg                (content/shared/img/hello_logo.svg)
+  content/shared/img/hello-web-share.svg           (content/shared/img/hello-web-share.svg)
+  content/shared/img/ellipsis-v.svg                (content/shared/img/ellipsis-v.svg)
+  content/shared/img/empty_conversations.svg       (content/shared/img/empty_conversations.svg)
+  content/shared/img/empty_search.svg              (content/shared/img/empty_search.svg)
+  content/shared/img/animated-spinner.svg          (content/shared/img/animated-spinner.svg)
+  content/shared/img/avatars.svg                   (content/shared/img/avatars.svg)
+  content/shared/img/firefox-avatar.svg            (content/shared/img/firefox-avatar.svg)
+  content/shared/img/pause-12x12.svg               (content/shared/img/pause-12x12.svg)
+  content/shared/img/play-12x12.svg                (content/shared/img/play-12x12.svg)
+  content/shared/img/stop-12x12.svg                (content/shared/img/stop-12x12.svg)
+
+  # Shared scripts
+  content/shared/js/actions.js                     (content/shared/js/actions.js)
+  content/shared/js/crypto.js                      (content/shared/js/crypto.js)
+  content/shared/js/store.js                       (content/shared/js/store.js)
+  content/shared/js/activeRoomStore.js             (content/shared/js/activeRoomStore.js)
+  content/shared/js/dispatcher.js                  (content/shared/js/dispatcher.js)
+  content/shared/js/linkifiedTextView.js           (content/shared/js/linkifiedTextView.js)
+  content/shared/js/loopapi-client.js              (content/shared/js/loopapi-client.js)
+  content/shared/js/models.js                      (content/shared/js/models.js)
+  content/shared/js/mixins.js                      (content/shared/js/mixins.js)
+  content/shared/js/otSdkDriver.js                 (content/shared/js/otSdkDriver.js)
+  content/shared/js/views.js                       (content/shared/js/views.js)
+  content/shared/js/textChatStore.js               (content/shared/js/textChatStore.js)
+  content/shared/js/textChatView.js                (content/shared/js/textChatView.js)
+  content/shared/js/urlRegExps.js                  (content/shared/js/urlRegExps.js)
+  content/shared/js/utils.js                       (content/shared/js/utils.js)
+  content/shared/js/validate.js                    (content/shared/js/validate.js)
+
+  # Shared libs
+#ifdef DEBUG
+  content/shared/vendor/react-0.13.3.js            (content/shared/vendor/react-0.13.3.js)
+#else
+  content/shared/vendor/react-0.13.3.js            (content/shared/vendor/react-0.13.3-prod.js)
 #endif
+  content/shared/vendor/lodash-3.9.3.js            (content/shared/vendor/lodash-3.9.3.js)
+  content/shared/vendor/backbone-1.2.1.js          (content/shared/vendor/backbone-1.2.1.js)
+  content/shared/vendor/classnames-2.2.0.js        (content/shared/vendor/classnames-2.2.0.js)
+
+  # Shared sounds
+  content/shared/sounds/ringtone.ogg               (content/shared/sounds/ringtone.ogg)
+  content/shared/sounds/connecting.ogg             (content/shared/sounds/connecting.ogg)
+  content/shared/sounds/connected.ogg              (content/shared/sounds/connected.ogg)
+  content/shared/sounds/terminated.ogg             (content/shared/sounds/terminated.ogg)
+  content/shared/sounds/room-joined.ogg            (content/shared/sounds/room-joined.ogg)
+  content/shared/sounds/room-joined-in.ogg         (content/shared/sounds/room-joined-in.ogg)
+  content/shared/sounds/room-left.ogg              (content/shared/sounds/room-left.ogg)
+  content/shared/sounds/failure.ogg                (content/shared/sounds/failure.ogg)
+  content/shared/sounds/message.ogg                (content/shared/sounds/message.ogg)
+
+  # Partner SDK assets
+  content/shared/vendor/sdk.js                     (content/shared/vendor/sdk.js)
+  content/sdk-content/js/dynamic_config.min.js     (content/shared/vendor/sdk-content/js/dynamic_config.min.js)
