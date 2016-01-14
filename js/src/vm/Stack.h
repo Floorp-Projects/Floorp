@@ -202,7 +202,6 @@ class AbstractFramePtr
     inline JSCompartment* compartment() const;
 
     inline bool hasCallObj() const;
-    inline bool isFunctionFrame() const;
     inline bool isGlobalOrModuleFrame() const;
     inline bool isGlobalFrame() const;
     inline bool isModuleFrame() const;
@@ -463,11 +462,8 @@ class InterpreterFrame
      *  module frame: execution of a module
      */
 
-    bool isFunctionFrame() const {
-        return !!(flags_ & FUNCTION);
-    }
-
     bool isGlobalOrModuleFrame() const {
+        MOZ_ASSERT(!isEvalFrame());
         return !!(flags_ & GLOBAL_OR_MODULE);
     }
 
@@ -677,14 +673,12 @@ class InterpreterFrame
      */
 
     JSFunction& callee() const {
-        MOZ_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return calleev().toObject().as<JSFunction>();
     }
 
     const Value& calleev() const {
-        MOZ_ASSERT(isFunctionFrame());
-        if (isEvalFrame())
-            return ((const Value*)this)[-1];
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return argv()[-2];
     }
 
@@ -696,9 +690,10 @@ class InterpreterFrame
      * frame.
      */
     Value newTarget() const {
-        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return ((Value*)this)[-2];
+
+        MOZ_ASSERT(isNonEvalFunctionFrame());
 
         if (callee().isArrow())
             return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
@@ -1846,7 +1841,6 @@ class FrameIter
     inline bool isBaseline() const;
     inline bool isPhysicalIonFrame() const;
 
-    bool isFunctionFrame() const;
     bool isGlobalOrModuleFrame() const;
     bool isEvalFrame() const;
     bool isNonEvalFunctionFrame() const;
@@ -1884,7 +1878,7 @@ class FrameIter
     JSFunction* callee(JSContext* cx) const;
 
     JSFunction* maybeCallee(JSContext* cx) const {
-        return isFunctionFrame() ? callee(cx) : nullptr;
+        return isNonEvalFunctionFrame() ? callee(cx) : nullptr;
     }
 
     bool        matchCallee(JSContext* cx, HandleFunction fun) const;
