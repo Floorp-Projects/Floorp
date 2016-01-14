@@ -146,6 +146,31 @@ private:
       const std::string& trackId);
 };
 
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+class RemoteTrackSource : public dom::MediaStreamTrackSource
+{
+public:
+  explicit RemoteTrackSource(nsIPrincipal* aPrincipal)
+    : dom::MediaStreamTrackSource(aPrincipal, true) {}
+
+  dom::MediaSourceEnum GetMediaSource() const override
+  {
+    return dom::MediaSourceEnum::Other;
+  }
+
+  void Stop() override { NS_ERROR("Can't stop a remote source!"); }
+
+  void SetPrincipal(nsIPrincipal* aPrincipal)
+  {
+    mPrincipal = aPrincipal;
+    PrincipalChanged();
+  }
+
+protected:
+  virtual ~RemoteTrackSource() {}
+};
+#endif
+
 class RemoteSourceStreamInfo : public SourceStreamInfo {
   ~RemoteSourceStreamInfo() {}
  public:
@@ -161,6 +186,18 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   void UpdatePrincipal_m(nsIPrincipal* aPrincipal);
+
+  // Track sources may only be set in the same order as tracks were added.
+  // Returns true if the source was added, false otherwise.
+  bool SetTrackSource(const std::string& track, RemoteTrackSource* source)
+  {
+    size_t nextIndex = mTrackSources.size();
+    if (mTrackIdMap.size() < nextIndex || mTrackIdMap[nextIndex] != track) {
+      return false;
+    }
+    mTrackSources.push_back(source);
+    return true;
+  }
 #endif
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(RemoteSourceStreamInfo)
@@ -212,6 +249,12 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   // and have the numeric track id selected for us, in which case this variable
   // and its dependencies can go away.
   std::vector<std::string> mTrackIdMap;
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  // MediaStreamTrackSources associated with this remote stream.
+  // We use them for updating their principal if that's needed.
+  std::vector<RefPtr<RemoteTrackSource>> mTrackSources;
+#endif
 
   // True iff SetPullEnabled(true) has been called on the DOMMediaStream. This
   // happens when offer/answer concludes.
