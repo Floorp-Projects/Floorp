@@ -29,10 +29,10 @@ public:
     int32_t RegisterSSRC(const uint32_t ssrc);
     int32_t ReturnSSRC(const uint32_t ssrc);
 
+protected:
     SSRCDatabase();
     virtual ~SSRCDatabase();
 
-protected:
     static SSRCDatabase* CreateInstance() { return new SSRCDatabase(); }
 
 private:
