@@ -331,12 +331,6 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     virtual nsContentPolicyType GetContentPolicyType() const = 0;
 
-    // True if object represents an object/embed tag pointing to a flash embed
-    // for a youtube video. When possible (see IsRewritableYoutubeEmbed function
-    // comments for details), we change these to try to load HTML5 versions of
-    // videos.
-    bool                        mRewrittenYoutubeEmbed : 1;
-
   private:
 
     // Object parameter changes returned by UpdateObjectParameters
