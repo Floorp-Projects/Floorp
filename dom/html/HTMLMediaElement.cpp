@@ -4191,6 +4191,21 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged()
     ms->mStream->SetCORSMode(mCORSMode);
     ms->mStream->CombineWithPrincipal(principal);
   }
+
+  for (DecoderPrincipalChangeObserver* observer :
+         mDecoderPrincipalChangeObservers) {
+    observer->NotifyDecoderPrincipalChanged();
+  }
+}
+
+void HTMLMediaElement::AddDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver)
+{
+  mDecoderPrincipalChangeObservers.AppendElement(aObserver);
+}
+
+bool HTMLMediaElement::RemoveDecoderPrincipalChangeObserver(DecoderPrincipalChangeObserver* aObserver)
+{
+  return mDecoderPrincipalChangeObservers.RemoveElement(aObserver);
 }
 
 void HTMLMediaElement::UpdateMediaSize(const nsIntSize& aSize)
