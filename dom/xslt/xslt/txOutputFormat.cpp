@@ -81,7 +81,7 @@ void txOutputFormat::setFromDefaults()
         case eMethodNotSet:
         {
             mMethod = eXMLOutput;
-            // Fall through
+            MOZ_FALLTHROUGH;
         }
         case eXMLOutput:
         {

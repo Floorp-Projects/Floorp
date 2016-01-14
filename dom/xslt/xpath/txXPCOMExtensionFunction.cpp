@@ -285,8 +285,8 @@ txXPCOMExtensionFunctionCall::GetParamType(const nsXPTParamInfo &aParam,
             if (iid.Equals(NS_GET_IID(txIXPathObject))) {
                 return eOBJECT;
             }
+            return eUNKNOWN;
         }
-        // FALLTHROUGH
         default:
         {
             // XXX Error!
