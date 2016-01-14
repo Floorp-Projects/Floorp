@@ -13,6 +13,25 @@ set -e
 # Main tests
 
 LOOPDIR=browser/extensions/loop
+ESLINT=standalone/node_modules/.bin/eslint
+if [ -x "${LOOPDIR}/${ESLINT}" ]; then
+  echo 'running eslint; see http://eslint.org/docs/rules/ for error info'
+  (./${LOOPDIR}/${ESLINT} --ext .js --ext .jsm --ext .jsx ${LOOPDIR})
+  if [ $? != 0 ]; then
+    exit 1;
+  fi
+  echo 'eslint run finished.'
+fi
+
+# Build tests coverage.
+MISSINGDEPSMSG="\nMake sure all dependencies are up to date by running
+'npm install' inside the 'browser/extensions/loop/test/' directory.\n"
+(
+cd ${LOOPDIR}/test
+if ! npm run-script build-coverage ; then
+  echo $MISSINGDEPSMSG && exit 1
+fi
+)
 
 ./mach xpcshell-test ${LOOPDIR}/
 ./mach marionette-test ${LOOPDIR}/manifest.ini
@@ -24,7 +43,7 @@ LOOPDIR=browser/extensions/loop
 # to mess this up with CSP handling, and probably other changes, too.
 
 TESTS="
-  ${LOOPDIR}/chrome/test/mochitest
+  ${LOOPDIR}/test/mochitest
   browser/components/uitour/test/browser_UITour_loop.js
   browser/base/content/test/general/browser_devices_get_user_media_about_urls.js
   browser/base/content/test/general/browser_parsable_css.js
