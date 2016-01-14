@@ -8539,9 +8539,7 @@ CodeGenerator::visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetProperty
     if (ic->idempotent()) {
         size_t numLocs;
         CacheLocationList& cacheLocs = lir->mirRaw()->toGetPropertyCache()->location();
-        size_t locationBase;
-        if (!addCacheLocations(cacheLocs, &numLocs, &locationBase))
-            return;
+        size_t locationBase = addCacheLocations(cacheLocs, &numLocs);
         ic->setLocationInfo(locationBase, numLocs);
     }
 

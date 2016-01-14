@@ -1619,24 +1619,21 @@ CodeGeneratorShared::jumpToBlock(MBasicBlock* mir, Assembler::Condition cond)
 }
 #endif
 
-MOZ_WARN_UNUSED_RESULT bool
-CodeGeneratorShared::addCacheLocations(const CacheLocationList& locs, size_t* numLocs,
-                                       size_t* curIndex)
+size_t
+CodeGeneratorShared::addCacheLocations(const CacheLocationList& locs, size_t* numLocs)
 {
     size_t firstIndex = runtimeData_.length();
     size_t numLocations = 0;
     for (CacheLocationList::iterator iter = locs.begin(); iter != locs.end(); iter++) {
         // allocateData() ensures that sizeof(CacheLocation) is word-aligned.
         // If this changes, we will need to pad to ensure alignment.
-        if (!allocateData(sizeof(CacheLocation), curIndex))
-            return false;
-        new (&runtimeData_[*curIndex]) CacheLocation(iter->pc, iter->script);
+        size_t curIndex = allocateData(sizeof(CacheLocation));
+        new (&runtimeData_[curIndex]) CacheLocation(iter->pc, iter->script);
         numLocations++;
     }
     MOZ_ASSERT(numLocations != 0);
     *numLocs = numLocations;
-    *curIndex = firstIndex;
-    return true;
+    return firstIndex;
 }
 
 ReciprocalMulConstants
