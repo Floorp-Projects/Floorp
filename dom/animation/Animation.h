@@ -283,7 +283,7 @@ public:
   /**
    * Returns true if this Animation has a lower composite order than aOther.
    */
-  virtual bool HasLowerCompositeOrderThan(const Animation& aOther) const;
+  bool HasLowerCompositeOrderThan(const Animation& aOther) const;
 
    /**
    * Returns the level at which the effect(s) associated with this Animation

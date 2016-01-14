@@ -124,43 +124,24 @@ CSSAnimation::Tick()
 }
 
 bool
-CSSAnimation::HasLowerCompositeOrderThan(const Animation& aOther) const
+CSSAnimation::HasLowerCompositeOrderThan(const CSSAnimation& aOther) const
 {
+  MOZ_ASSERT(IsTiedToMarkup() && aOther.IsTiedToMarkup(),
+             "Should only be called for CSS animations that are sorted "
+             "as CSS animations (i.e. tied to CSS markup)");
+
   // 0. Object-equality case
   if (&aOther == this) {
     return false;
   }
 
-  // 1. Transitions sort lower
-  //
-  // FIXME: We need to differentiate between transitions and generic Animations.
-  // Generic animations don't exist yet (that's bug 1096773) so for now we're
-  // ok.
-  const CSSAnimation* otherAnimation = aOther.AsCSSAnimation();
-  if (!otherAnimation) {
-    MOZ_ASSERT(aOther.AsCSSTransition(),
-               "Animation being compared is a CSS transition");
-    return false;
+  // 1. Sort by document order
+  if (!mOwningElement.Equals(aOther.mOwningElement)) {
+    return mOwningElement.LessThan(aOther.mOwningElement);
   }
 
-  // 2. CSS animations that correspond to an animation-name property sort lower
-  //    than other CSS animations (e.g. those created or kept-alive by script).
-  if (!IsTiedToMarkup()) {
-    return !otherAnimation->IsTiedToMarkup() ?
-           Animation::HasLowerCompositeOrderThan(aOther) :
-           false;
-  }
-  if (!otherAnimation->IsTiedToMarkup()) {
-    return true;
-  }
-
-  // 3. Sort by document order
-  if (!mOwningElement.Equals(otherAnimation->mOwningElement)) {
-    return mOwningElement.LessThan(otherAnimation->mOwningElement);
-  }
-
-  // 4. (Same element and pseudo): Sort by position in animation-name
-  return mAnimationIndex < otherAnimation->mAnimationIndex;
+  // 2. (Same element and pseudo): Sort by position in animation-name
+  return mAnimationIndex < aOther.mAnimationIndex;
 }
 
 void

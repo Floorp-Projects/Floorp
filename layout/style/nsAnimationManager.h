@@ -130,7 +130,7 @@ public:
 
   bool IsStylePaused() const { return mIsStylePaused; }
 
-  bool HasLowerCompositeOrderThan(const Animation& aOther) const override;
+  bool HasLowerCompositeOrderThan(const CSSAnimation& aOther) const;
 
   void SetAnimationIndex(uint64_t aIndex)
   {
