@@ -1028,9 +1028,21 @@ nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP)
 
   nsIPrincipal* principal = mDocument->NodePrincipal();
   nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
-  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
-  nsresult rv = principal->EnsurePreloadCSP(domDoc, getter_AddRefs(preloadCsp));
+  nsresult rv = principal->GetPreloadCsp(getter_AddRefs(preloadCsp));
   NS_ENSURE_SUCCESS_VOID(rv);
+  if (!preloadCsp) {
+    preloadCsp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    // Store the request context for violation reports
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+    rv = preloadCsp->SetRequestContext(domDoc, nullptr);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    // set the new csp
+    rv = principal->SetPreloadCsp(preloadCsp);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
 
   // please note that meta CSPs and CSPs delivered through a header need
   // to be joined together.
