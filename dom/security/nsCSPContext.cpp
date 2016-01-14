@@ -410,7 +410,9 @@ nsCSPContext::reportInlineViolation(nsContentPolicyType aContentType,
 
   // use selfURI as the sourceFile
   nsAutoCString sourceFile;
-  mSelfURI->GetSpec(sourceFile);
+  if (mSelfURI) {
+    mSelfURI->GetSpec(sourceFile);
+  }
 
   nsAutoString codeSample(aContent);
   // cap the length of the script sample at 40 chars
