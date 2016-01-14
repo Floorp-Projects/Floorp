@@ -205,8 +205,13 @@ CSSTransition::HasLowerCompositeOrderThan(const CSSTransition& aOther) const
 
 NS_IMPL_CYCLE_COLLECTION(nsTransitionManager, mEventDispatcher)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsTransitionManager, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsTransitionManager, Release)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(nsTransitionManager)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(nsTransitionManager)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsTransitionManager)
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRuleProcessor)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
 void
 nsTransitionManager::StyleContextChanged(dom::Element *aElement,
@@ -780,4 +785,24 @@ nsTransitionManager::PruneCompletedTransitions(mozilla::dom::Element* aElement,
     // |collection| is now a dangling pointer!
     collection = nullptr;
   }
+}
+
+/*
+ * nsIStyleRuleProcessor implementation
+ */
+
+/* virtual */ size_t
+nsTransitionManager::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return CommonAnimationManager::SizeOfExcludingThis(aMallocSizeOf);
+
+  // Measurement of the following members may be added later if DMD finds it is
+  // worthwhile:
+  // - mEventDispatcher
+}
+
+/* virtual */ size_t
+nsTransitionManager::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
