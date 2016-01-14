@@ -21,7 +21,6 @@
 #include "nsAppShell.h"
 #include "TaskbarPreviewButton.h"
 #include "WinUtils.h"
-#include "gfxWindowsPlatform.h"
 
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/gfx/2D.h"
@@ -239,9 +238,9 @@ TaskbarPreview::WndProc(UINT nMsg, WPARAM wParam, LPARAM lParam) {
           break;
 
         double scale = nsIWidget::DefaultScaleOverride();
-        if (scale <= 0.0)
-          scale = gfxWindowsPlatform::GetPlatform()->GetDPIScale();
-
+        if (scale <= 0.0) {
+          scale = WinUtils::LogToPhysFactor(PreviewWindow());
+        }
         DrawBitmap(NSToIntRound(scale * width), NSToIntRound(scale * height), true);
       }
       break;

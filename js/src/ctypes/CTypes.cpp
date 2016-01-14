@@ -2685,7 +2685,8 @@ IntegerToString(IntegerType i, int radix, mozilla::Vector<CharType, N, AP>& resu
     *--cp = '-';
 
   MOZ_ASSERT(cp >= buffer);
-  result.append(cp, end);
+  if (!result.append(cp, end))
+    return;
 }
 
 template<class CharType>
@@ -3731,12 +3732,10 @@ BuildDataSource(JSContext* cx,
     double fp = *static_cast<type*>(data);                                     \
     ToCStringBuf cbuf;                                                         \
     char* str = NumberToCString(cx, &cbuf, fp);                                \
-    if (!str) {                                                                \
+    if (!str || !result.append(str, strlen(str))) {                            \
       JS_ReportOutOfMemory(cx);                                                \
       return false;                                                            \
     }                                                                          \
-                                                                               \
-    result.append(str, strlen(str));                                           \
     break;                                                                     \
   }
   CTYPES_FOR_EACH_FLOAT_TYPE(FLOAT_CASE)

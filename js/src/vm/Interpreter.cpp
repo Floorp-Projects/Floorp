@@ -1773,7 +1773,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_UNUSED65)
 CASE(JSOP_BACKPATCH)
-CASE(JSOP_UNUSED178)
 CASE(JSOP_UNUSED179)
 CASE(JSOP_UNUSED180)
 CASE(JSOP_UNUSED181)
@@ -2891,6 +2890,18 @@ CASE(JSOP_FUNCALL)
     /* Load first op and dispatch it (safe since JSOP_RETRVAL). */
     ADVANCE_AND_DISPATCH(0);
 }
+
+CASE(JSOP_OPTIMIZE_SPREADCALL)
+{
+    ReservedRooted<Value> val(&rootValue0, REGS.sp[-1]);
+
+    bool optimized = false;
+    if (!OptimizeSpreadCall(cx, val, &optimized))
+        goto error;
+
+    PUSH_BOOLEAN(optimized);
+}
+END_CASE(JSOP_OPTIMIZE_SPREADCALL)
 
 CASE(JSOP_THROWMSG)
 {
@@ -4545,14 +4556,9 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
                                    constructing ? CONSTRUCT : NO_CONSTRUCT);
     }
 
-#ifdef DEBUG
     // The object must be an array with dense elements and no holes. Baseline's
     // optimized spread call stubs rely on this.
-    MOZ_ASSERT(aobj->getDenseInitializedLength() == length);
-    MOZ_ASSERT(!aobj->isIndexed());
-    for (uint32_t i = 0; i < length; i++)
-        MOZ_ASSERT(!aobj->getDenseElement(i).isMagic());
-#endif
+    MOZ_ASSERT(IsPackedArray(aobj));
 
     if (constructing) {
         if (!StackCheckIsConstructorCalleeNewTarget(cx, callee, newTarget))
@@ -4603,6 +4609,35 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
 
     TypeScript::Monitor(cx, script, pc, res);
     return true;
+}
+
+bool
+js::OptimizeSpreadCall(JSContext* cx, HandleValue arg, bool* optimized)
+{
+    // Optimize spread call by skipping spread operation when following
+    // conditions are met:
+    //   * the argument is an array
+    //   * the array has no hole
+    //   * array[@@iterator] is not modified
+    //   * the array's prototype is Array.prototype
+    //   * Array.prototype[@@iterator] is not modified
+    //   * %ArrayIteratorPrototype%.next is not modified
+    if (!arg.isObject()) {
+        *optimized = false;
+        return true;
+    }
+
+    RootedObject obj(cx, &arg.toObject());
+    if (!IsPackedArray(obj)) {
+        *optimized = false;
+        return true;
+    }
+
+    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
+    if (!stubChain)
+        return false;
+
+    return stubChain->tryOptimizeArray(cx, obj.as<ArrayObject>(), optimized);
 }
 
 JSObject*

@@ -76,7 +76,7 @@ nsScreenCocoa::GetRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *outWidth
 {
   NSRect frame = [mScreen frame];
 
-  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+  DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
 
   *outX = r.x;
   *outY = r.y;
@@ -91,7 +91,7 @@ nsScreenCocoa::GetAvailRectDisplayPix(int32_t *outX, int32_t *outY, int32_t *out
 {
   NSRect frame = [mScreen visibleFrame];
 
-  nsIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
+  DesktopIntRect r = nsCocoaUtils::CocoaRectToGeckoRect(frame);
 
   *outX = r.x;
   *outY = r.y;

@@ -62,9 +62,13 @@ MarionetteComponent.prototype.determineLoggingLevel_ = function() {
   // with an entry from the Log.Level enum
   if (Preferences.has(LOG_PREF)) {
     let s = Preferences.get(LOG_PREF);
-    s = s.toLowerCase();
-    s = s.charAt(0).toUpperCase() + s.slice(1);
-    level = Log.Level[s];
+    if (typeof s == "string") {
+      s = s.toLowerCase();
+      s = s.charAt(0).toUpperCase() + s.slice(1);
+      level = Log.Level[s];
+    } else {
+      level = Log.Level.Trace;
+    }
   }
 
   return level;

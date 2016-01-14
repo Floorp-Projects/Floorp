@@ -4,10 +4,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsScreenManagerWin.h"
+#include "mozilla/gfx/2D.h"
 #include "nsScreenWin.h"
 #include "gfxWindowsPlatform.h"
 #include "nsIWidget.h"
+#include "WinUtils.h"
 
+using namespace mozilla;
 
 BOOL CALLBACK CountMonitors(HMONITOR, HDC, LPRECT, LPARAM ioCount);
 
@@ -86,7 +89,8 @@ nsScreenManagerWin::ScreenForId(uint32_t aId, nsIScreen **outScreen)
 // The coordinates are in pixels (not twips) and in logical screen coordinates.
 //
 NS_IMETHODIMP
-nsScreenManagerWin::ScreenForRect(int32_t inLeft, int32_t inTop, int32_t inWidth, int32_t inHeight,
+nsScreenManagerWin::ScreenForRect(int32_t inLeft, int32_t inTop,
+                                  int32_t inWidth, int32_t inHeight,
                                   nsIScreen **outScreen)
 {
   if (!(inWidth || inHeight)) {
@@ -95,19 +99,8 @@ nsScreenManagerWin::ScreenForRect(int32_t inLeft, int32_t inTop, int32_t inWidth
     return NS_OK;
   }
 
-  // convert coordinates from logical to device pixels for MonitorFromRect
-  double dpiScale = nsIWidget::DefaultScaleOverride();
-  if (dpiScale <= 0.0) {
-    dpiScale = gfxWindowsPlatform::GetPlatform()->GetDPIScale(); 
-  }
-  RECT globalWindowBounds = {
-    NSToIntRound(dpiScale * inLeft),
-    NSToIntRound(dpiScale * inTop),
-    NSToIntRound(dpiScale * (inLeft + inWidth)),
-    NSToIntRound(dpiScale * (inTop + inHeight))
-  };
-
-  HMONITOR genScreen = ::MonitorFromRect(&globalWindowBounds, MONITOR_DEFAULTTOPRIMARY);
+  gfx::Rect logicalBounds(inLeft, inTop, inWidth, inHeight);
+  HMONITOR genScreen = widget::WinUtils::MonitorFromRect(logicalBounds);
  
   *outScreen = CreateNewScreenObject(genScreen);    // addrefs
  
@@ -174,7 +167,8 @@ nsScreenManagerWin::GetNumberOfScreens(uint32_t *aNumberOfScreens)
 NS_IMETHODIMP
 nsScreenManagerWin::GetSystemDefaultScale(float *aDefaultScale)
 {
-  *aDefaultScale = float(gfxWindowsPlatform::GetPlatform()->GetDPIScale());
+  HMONITOR primary = widget::WinUtils::GetPrimaryMonitor();
+  *aDefaultScale = float(widget::WinUtils::LogToPhysFactor(primary));
   return NS_OK;
 }
 

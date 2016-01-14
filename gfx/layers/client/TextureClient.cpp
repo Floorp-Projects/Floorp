@@ -183,7 +183,6 @@ private:
 static void DestroyTextureData(TextureData* aTextureData, ISurfaceAllocator* aAllocator,
                                bool aDeallocate, bool aMainThreadOnly)
 {
-  MOZ_ASSERT(aTextureData);
   if (!aTextureData) {
     return;
   }
@@ -231,6 +230,11 @@ void DeallocateTextureClientSyncProxy(TextureDeallocParams params,
 void
 DeallocateTextureClient(TextureDeallocParams params)
 {
+  if (!params.actor && !params.data) {
+    // Nothing to do
+    return;
+  }
+
   TextureChild* actor = params.actor;
   MessageLoop* ipdlMsgLoop = nullptr;
 

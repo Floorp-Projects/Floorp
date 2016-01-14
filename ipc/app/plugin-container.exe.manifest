@@ -28,7 +28,7 @@
   </ms_asmv3:trustInfo>
   <ms_asmv3:application xmlns:ms_asmv3="urn:schemas-microsoft-com:asm.v3">
     <ms_asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">
-      <dpiAware>true</dpiAware>
+      <dpiAware>True/PM</dpiAware>
     </ms_asmv3:windowsSettings>
   </ms_asmv3:application>
   <compatibility xmlns="urn:schemas-microsoft-com:compatibility.v1">

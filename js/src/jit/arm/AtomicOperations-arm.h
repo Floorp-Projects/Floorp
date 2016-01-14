@@ -240,7 +240,7 @@ js::jit::RegionLock::release(void* addr)
 
 #elif defined(ENABLE_SHARED_ARRAY_BUFFER)
 
-# error "Either disable JS shared memory, use GCC or Clang, or add code here"
+# error "Either disable JS shared memory at compile time, use GCC or Clang, or add code here"
 
 #endif
 
