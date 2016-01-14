@@ -2258,11 +2258,6 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
     // the promise to CSP and mixed content blocking to upgrade the channel
     // from http to https.
     if (aLoadInfo) {
-      bool isPreload = nsContentUtils::IsPreloadType(aLoadInfo->InternalContentPolicyType());
-      bool upgradeRequests =
-        ((isPreload && aLoadInfo->GetUpgradeInsecurePreloads()) ||
-         (aLoadInfo->GetUpgradeInsecureRequests()));
-
       // Please note that cross origin top level navigations are not subject
       // to upgrade-insecure-requests, see:
       // http://www.w3.org/TR/upgrade-insecure-requests/#examples
@@ -2270,7 +2265,7 @@ NS_ShouldSecureUpgrade(nsIURI* aURI,
         (aLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
         (!aChannelResultPrincipal->Equals(aLoadInfo->LoadingPrincipal()));
 
-      if (upgradeRequests && !crossOriginNavigation) {
+      if (aLoadInfo->GetUpgradeInsecureRequests() && !crossOriginNavigation) {
         // let's log a message to the console that we are upgrading a request
         nsAutoCString spec, scheme;
         aURI->GetSpec(spec);
