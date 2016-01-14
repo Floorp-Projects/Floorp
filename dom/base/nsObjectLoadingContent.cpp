@@ -705,8 +705,7 @@ nsObjectLoadingContent::UnbindFromTree(bool aDeep, bool aNullParent)
 }
 
 nsObjectLoadingContent::nsObjectLoadingContent()
-  : mRewrittenYoutubeEmbed(false)
-  , mType(eType_Loading)
+  : mType(eType_Loading)
   , mFallbackType(eFallbackAlternate)
   , mRunID(0)
   , mHasRunID(false)
@@ -1787,7 +1786,6 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
     NS_NOTREACHED("Unrecognized plugin-loading tag");
   }
 
-  mRewrittenYoutubeEmbed = false;
   // Note that the baseURI changing could affect the newURI, even if uriStr did
   // not change.
   if (!uriStr.IsEmpty()) {
@@ -1804,7 +1802,6 @@ nsObjectLoadingContent::UpdateObjectParameters(bool aJavaURI)
                                                      uriStr,
                                                      thisContent->OwnerDoc(),
                                                      newBaseURI);
-      mRewrittenYoutubeEmbed = true;
       newMime = NS_LITERAL_CSTRING("text/html");
     }
 
