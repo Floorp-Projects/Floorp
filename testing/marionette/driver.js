@@ -48,7 +48,6 @@ const CLICK_TO_START_PREF = "marionette.debugging.clicktostart";
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
 
 const logger = Log.repository.getLogger("Marionette");
-const uuidGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
 const globalMessageManager = Cc["@mozilla.org/globalmessagemanager;1"]
     .getService(Ci.nsIMessageBroadcaster);
 
@@ -510,10 +509,9 @@ GeckoDriver.prototype.listeningPromise = function() {
 
 /** Create a new session. */
 GeckoDriver.prototype.newSession = function(cmd, resp) {
-  let uuid = uuidGen.generateUUID().toString();
   this.sessionId = cmd.parameters.sessionId ||
       cmd.parameters.session_id ||
-      uuid.substring(1, uuid.length - 1);
+      elements.generateUUID();
 
   this.newSessionCommandId = cmd.id;
   this.setSessionCapabilities(cmd.parameters.capabilities);
