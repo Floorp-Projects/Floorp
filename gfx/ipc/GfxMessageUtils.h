@@ -700,7 +700,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
     WriteParam(aMsg, aParam.mPageScrollAmount);
     WriteParam(aMsg, aParam.mClipRect);
     WriteParam(aMsg, aParam.mMaskLayerIndex);
-    WriteParam(aMsg, aParam.mPaintRequestTime);
     WriteParam(aMsg, aParam.mIsRootContent);
     WriteParam(aMsg, aParam.mHasScrollgrab);
     WriteParam(aMsg, aParam.mUpdateScrollOffset);
@@ -762,7 +761,6 @@ struct ParamTraits<mozilla::layers::FrameMetrics>
             ReadParam(aMsg, aIter, &aResult->mPageScrollAmount) &&
             ReadParam(aMsg, aIter, &aResult->mClipRect) &&
             ReadParam(aMsg, aIter, &aResult->mMaskLayerIndex) &&
-            ReadParam(aMsg, aIter, &aResult->mPaintRequestTime) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetIsRootContent) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetHasScrollgrab) &&
             ReadBoolForBitfield(aMsg, aIter, aResult, &paramType::SetUpdateScrollOffset) &&

@@ -1181,13 +1181,13 @@ TEST_F(APZCBasicTester, ComplexTransform) {
 
   // initial transform
   apzc->SetFrameMetrics(metrics);
-  apzc->NotifyLayersUpdated(metrics, true, true);
+  apzc->NotifyLayersUpdated(metrics, true);
   apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(AsyncTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);
 
   childApzc->SetFrameMetrics(childMetrics);
-  childApzc->NotifyLayersUpdated(childMetrics, true, true);
+  childApzc->NotifyLayersUpdated(childMetrics, true);
   childApzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   EXPECT_EQ(AsyncTransform(LayerToParentLayerScale(1), ParentLayerPoint()), viewTransformOut);
   EXPECT_EQ(ParentLayerPoint(60, 60), pointOut);

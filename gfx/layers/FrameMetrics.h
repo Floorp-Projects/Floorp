@@ -13,7 +13,6 @@
 #include "mozilla/gfx/Rect.h"           // for RoundedIn
 #include "mozilla/gfx/ScaleFactor.h"    // for ScaleFactor
 #include "mozilla/gfx/Logging.h"        // for Log
-#include "mozilla/TimeStamp.h"          // for TimeStamp
 #include "nsString.h"
 
 namespace IPC {
@@ -64,7 +63,6 @@ public:
     , mPageScrollAmount(0, 0)
     , mClipRect()
     , mMaskLayerIndex()
-    , mPaintRequestTime()
     , mIsRootContent(false)
     , mHasScrollgrab(false)
     , mUpdateScrollOffset(false)
@@ -106,7 +104,6 @@ public:
            mPageScrollAmount == aOther.mPageScrollAmount &&
            mClipRect == aOther.mClipRect &&
            mMaskLayerIndex == aOther.mMaskLayerIndex &&
-           mPaintRequestTime == aOther.mPaintRequestTime &&
            mIsRootContent == aOther.mIsRootContent &&
            mHasScrollgrab == aOther.mHasScrollgrab &&
            mUpdateScrollOffset == aOther.mUpdateScrollOffset &&
@@ -543,13 +540,6 @@ public:
     return mMaskLayerIndex;
   }
 
-  void SetPaintRequestTime(const TimeStamp& aTime) {
-    mPaintRequestTime = aTime;
-  }
-  const TimeStamp& GetPaintRequestTime() const {
-    return mPaintRequestTime;
-  }
-
   void SetIsLayersIdRoot(bool aValue) {
     mIsLayersIdRoot = aValue;
   }
@@ -731,9 +721,6 @@ private:
   // FrameMetrics. This is an index into the MetricsMaskLayers array on
   // the Layer.
   Maybe<size_t> mMaskLayerIndex;
-
-  // The time at which the APZC last requested a repaint for this scrollframe.
-  TimeStamp mPaintRequestTime;
 
   // Whether or not this is the root scroll frame for the root content document.
   bool mIsRootContent:1;

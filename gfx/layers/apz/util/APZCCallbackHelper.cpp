@@ -200,14 +200,6 @@ GetPresShell(const nsIContent* aContent)
   return result.forget();
 }
 
-static void
-SetPaintRequestTime(nsIContent* aContent, const TimeStamp& aPaintRequestTime)
-{
-  aContent->SetProperty(nsGkAtoms::paintRequestTime,
-                        new TimeStamp(aPaintRequestTime),
-                        nsINode::DeleteProperty<TimeStamp>);
-}
-
 void
 APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
 {
@@ -255,7 +247,6 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
 
   MOZ_ASSERT(nsLayoutUtils::HasDisplayPort(content));
   SetDisplayPortMargins(shell, content, aMetrics);
-  SetPaintRequestTime(content, aMetrics.GetPaintRequestTime());
 }
 
 void
@@ -277,7 +268,6 @@ APZCCallbackHelper::UpdateSubFrame(FrameMetrics& aMetrics)
   if (nsCOMPtr<nsIPresShell> shell = GetPresShell(content)) {
     SetDisplayPortMargins(shell, content, aMetrics);
   }
-  SetPaintRequestTime(content, aMetrics.GetPaintRequestTime());
 }
 
 bool
@@ -919,6 +909,7 @@ APZCCallbackHelper::IsDisplayportSuppressed()
 {
   return sActiveSuppressDisplayport > 0;
 }
+
 
 } // namespace layers
 } // namespace mozilla
