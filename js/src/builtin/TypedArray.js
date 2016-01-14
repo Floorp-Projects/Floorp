@@ -1380,3 +1380,79 @@ function TypedArrayStaticOf(/*...items*/) {
     // Step 8.
     return newObj;
 }
+
+// ES 2016 draft Dec 10, 2015 24.1.4.3.
+function ArrayBufferSlice(start, end) {
+    // Step 1.
+    var O = this;
+
+    // Steps 2-3,
+    // This function is not generic.
+    if (!IsObject(O) || !IsArrayBuffer(O)) {
+        return callFunction(CallArrayBufferMethodIfWrapped, O, start, end,
+                            "ArrayBufferSlice");
+    }
+
+    // Step 4.
+    if (IsDetachedBuffer(O))
+        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+    // Step 5.
+    var len = ArrayBufferByteLength(O);
+
+    // Step 6.
+    var relativeStart = ToInteger(start);
+
+    // Step 7.
+    var first = relativeStart < 0 ? std_Math_max(len + relativeStart, 0)
+                                  : std_Math_min(relativeStart, len);
+
+    // Step 8.
+    var relativeEnd = end === undefined ? len
+                                        : ToInteger(end);
+
+    // Step 9.
+    var final = relativeEnd < 0 ? std_Math_max(len + relativeEnd, 0)
+                                : std_Math_min(relativeEnd, len);
+
+    // Step 10.
+    var newLen = std_Math_max(final - first, 0);
+
+    // Step 11
+    var ctor = SpeciesConstructor(O, GetBuiltinConstructor("ArrayBuffer"));
+
+    // Step 12.
+    var new_ = new ctor(newLen);
+
+    // Step 13.
+    if (!IsArrayBuffer(new_))
+        ThrowTypeError(JSMSG_NON_ARRAY_BUFFER_RETURNED);
+
+    // Step 14.
+    if (IsDetachedBuffer(new_))
+        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+    // Step 15.
+    if (new_ == O)
+        ThrowTypeError(JSMSG_SAME_ARRAY_BUFFER_RETURNED);
+
+    // Step 16.
+    if (ArrayBufferByteLength(new_) < newLen)
+        ThrowTypeError(JSMSG_SHORT_ARRAY_BUFFER_RETURNED, newLen, ArrayBufferByteLength(new_));
+
+    // Step 18.
+    if (IsDetachedBuffer(O))
+        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+
+    // Steps 19-21.
+    ArrayBufferCopyData(new_, O, first | 0, newLen | 0);
+
+    // Step 22.
+    return new_;
+}
+
+function ArrayBufferStaticSlice(buf, start, end) {
+    if (arguments.length < 1)
+        ThrowTypeError(JSMSG_MISSING_FUN_ARG, 0, 'ArrayBuffer.slice');
+    return callFunction(ArrayBufferSlice, buf, start, end);
+}

@@ -138,25 +138,6 @@ protected:
     bool mVisible;
     InputContext mInputContext;
     nsCOMPtr<nsIIdleServiceInternal> mIdleService;
-    // If we're using a BasicCompositor, these fields are temporarily
-    // set during frame composition.  They wrap the hardware
-    // framebuffer.
-    RefPtr<mozilla::gfx::DrawTarget> mFramebufferTarget;
-    ANativeWindowBuffer* mFramebuffer;
-    /**
-     * Points to a mapped gralloc buffer between calls to lock and unlock.
-     * Should be null outside of the lock-unlock pair.
-     */
-    uint8_t* mMappedBuffer;
-    // If we're using a BasicCompositor, this is our window back
-    // buffer.  The gralloc framebuffer driver expects us to draw the
-    // entire framebuffer on every frame, but gecko expects the
-    // windowing system to be tracking buffer updates for invalidated
-    // regions.  We get stuck holding that bag.
-    //
-    // Only accessed on the compositor thread, except during
-    // destruction.
-    RefPtr<mozilla::gfx::DrawTarget> mBackBuffer;
 
     virtual ~nsWindow();
 

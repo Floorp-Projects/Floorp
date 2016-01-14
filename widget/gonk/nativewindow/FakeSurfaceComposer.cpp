@@ -23,6 +23,7 @@
 #include <errno.h>
 #include <cutils/log.h>
 #include <cutils/properties.h>
+#include <private/android_filesystem_config.h>
 
 #include <gui/IDisplayEventConnection.h>
 #include <gui/GraphicBufferAlloc.h>
@@ -57,6 +58,32 @@ FakeSurfaceComposer::FakeSurfaceComposer()
 
 FakeSurfaceComposer::~FakeSurfaceComposer()
 {
+}
+
+status_t FakeSurfaceComposer::onTransact(uint32_t code, const Parcel& data,
+                                         Parcel* reply, uint32_t flags)
+{
+    switch (code) {
+        case CREATE_CONNECTION:
+        case CREATE_DISPLAY:
+        case SET_TRANSACTION_STATE:
+        case CAPTURE_SCREEN:
+        {
+            // codes that require permission check
+            IPCThreadState* ipc = IPCThreadState::self();
+            const int pid = ipc->getCallingPid();
+            const int uid = ipc->getCallingUid();
+            // Accept request only when uid is root.
+            if (uid != AID_ROOT) {
+                ALOGE("Permission Denial: "
+                        "can't access SurfaceFlinger pid=%d, uid=%d", pid, uid);
+                return PERMISSION_DENIED;
+            }
+            break;
+        }
+    }
+
+    return BnSurfaceComposer::onTransact(code, data, reply, flags);
 }
 
 sp<ISurfaceComposerClient> FakeSurfaceComposer::createConnection()
@@ -108,11 +135,6 @@ sp<IBinder> FakeSurfaceComposer::createDisplay(const String8& displayName,
             : composer(composer) {
         }
     };
-
-    if (!gfxPrefs::ScreenRecordingEnabled()) {
-        ALOGE("screen recording is not permitted");
-        return nullptr;
-    }
 
     sp<BBinder> token = new DisplayToken(this);
 

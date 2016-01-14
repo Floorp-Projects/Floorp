@@ -10,7 +10,7 @@
 #include "mozilla/LinkedList.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
-#include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "mozilla/jni/Natives.h"
@@ -112,7 +112,7 @@ public:
     template<typename T, typename D>
     static void PostEvent(mozilla::UniquePtr<T, D>&& event)
     {
-        mozilla::StaticMutexAutoLock lock(sAppShellLock);
+        mozilla::MutexAutoLock lock(*sAppShellLock);
         if (!sAppShell) {
             return;
         }
@@ -124,7 +124,7 @@ public:
     template<typename T>
     static void PostEvent(T&& lambda)
     {
-        mozilla::StaticMutexAutoLock lock(sAppShellLock);
+        mozilla::MutexAutoLock lock(*sAppShellLock);
         if (!sAppShell) {
             return;
         }
@@ -151,7 +151,7 @@ public:
 
 protected:
     static nsAppShell* sAppShell;
-    static mozilla::StaticMutex sAppShellLock;
+    static mozilla::StaticAutoPtr<mozilla::Mutex> sAppShellLock;
 
     virtual ~nsAppShell();
 
@@ -215,7 +215,7 @@ protected:
 
     } mEventQueue;
 
-    mozilla::Monitor mSyncRunMonitor;
+    mozilla::CondVar mSyncRunFinished;
     bool mSyncRunQuit;
 
     bool mAllowCoalescingTouches;

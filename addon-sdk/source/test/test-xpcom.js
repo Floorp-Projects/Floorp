@@ -7,7 +7,7 @@ const { Cc, Ci, Cm, Cr } = require("chrome");
 const { isCIDRegistered } = Cm.QueryInterface(Ci.nsIComponentRegistrar);
 const { Class } = require("sdk/core/heritage");
 const { Loader } = require("sdk/test/loader");
-const { Services } = require("resource://gre/modules/Services.jsm");
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
 exports['test Unknown implements nsISupports'] = function(assert) {
   let actual = xpcom.Unknown();
@@ -168,14 +168,11 @@ function testRegister(assert, text) {
     Ci.nsIAboutModule.ALLOW_SCRIPT
   );
 
-  var aboutURI = ios.newURI("about:boop", null, null);
-  var channel = ios.newChannelFromURI2(aboutURI,
-                                       null,      // aLoadingNode
-                                       Services.scriptSecurityManager.getSystemPrincipal(),
-                                       null,      // aTriggeringPrincipal
-                                       Ci.nsILoadInfo.SEC_NORMAL,
-                                       Ci.nsIContentPolicy.TYPE_OTHER);
-  var iStream = channel.open();
+  var channel = NetUtil.newChannel({
+    uri: "about:boop",
+    loadUsingSystemPrincipal: true
+  });
+  var iStream = channel.open2();
   var siStream = Cc['@mozilla.org/scriptableinputstream;1']
                  .createInstance(Ci.nsIScriptableInputStream);
   siStream.init(iStream);

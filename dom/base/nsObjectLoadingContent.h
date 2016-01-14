@@ -331,6 +331,12 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     virtual nsContentPolicyType GetContentPolicyType() const = 0;
 
+    // True if object represents an object/embed tag pointing to a flash embed
+    // for a youtube video. When possible (see IsRewritableYoutubeEmbed function
+    // comments for details), we change these to try to load HTML5 versions of
+    // videos.
+    bool                        mRewrittenYoutubeEmbed : 1;
+
   private:
 
     // Object parameter changes returned by UpdateObjectParameters
@@ -519,7 +525,27 @@ class nsObjectLoadingContent : public nsImageLoadingContent
      */
     nsPluginFrame* GetExistingFrame();
 
-    bool IsYoutubeEmbed();
+    /**
+     * Used for identifying whether we can rewrite a youtube flash embed to
+     * possibly use HTML5 instead.
+     *
+     * Returns true if plugin.rewrite_youtube_embeds pref is true and the
+     * element this nsObjectLoadingContent instance represents:
+     *
+     * - is an embed or object node
+     * - has a URL pointing at the youtube.com domain, using "/v/" style video
+     *   path reference, and without enablejsapi=1 in the path
+     *
+     * Having the enablejsapi flag means the document that contains the element
+     * could possibly be manipulating the youtube video elsewhere on the page
+     * via javascript. We can't rewrite these kinds of elements without possibly
+     * breaking content, which we want to avoid.
+     *
+     * If we can rewrite the URL, we change the "/v/" to "/embed/", and change
+     * our type to eType_Document so that we render similarly to an iframe
+     * embed.
+     */
+    bool ShouldRewriteYoutubeEmbed(nsIURI* uri);
 
     // Helper class for SetupProtoChain
     class SetupProtoChainRunner final : public nsIRunnable

@@ -199,33 +199,34 @@ Downscaler::CommitRow()
 {
   MOZ_ASSERT(mOutputBuffer, "Should have a current frame");
   MOZ_ASSERT(mCurrentInLine < mOriginalSize.height, "Past end of input");
-  MOZ_ASSERT(mCurrentOutLine < mTargetSize.height, "Past end of output");
 
-  int32_t filterOffset = 0;
-  int32_t filterLength = 0;
-  GetFilterOffsetAndLength(mYFilter, mCurrentOutLine,
-                           &filterOffset, &filterLength);
-
-  int32_t inLineToRead = filterOffset + mLinesInBuffer;
-  MOZ_ASSERT(mCurrentInLine <= inLineToRead, "Reading past end of input");
-  if (mCurrentInLine == inLineToRead) {
-    skia::ConvolveHorizontally(mRowBuffer.get(), *mXFilter,
-                               mWindow[mLinesInBuffer++], mHasAlpha,
-                               supports_sse2());
-  }
-
-  MOZ_ASSERT(mCurrentOutLine < mTargetSize.height,
-             "Writing past end of output");
-
-  while (mLinesInBuffer == filterLength) {
-    DownscaleInputLine();
-
-    if (mCurrentOutLine == mTargetSize.height) {
-      break;  // We're done.
-    }
-
+  if (mCurrentOutLine < mTargetSize.height) {
+    int32_t filterOffset = 0;
+    int32_t filterLength = 0;
     GetFilterOffsetAndLength(mYFilter, mCurrentOutLine,
                              &filterOffset, &filterLength);
+
+    int32_t inLineToRead = filterOffset + mLinesInBuffer;
+    MOZ_ASSERT(mCurrentInLine <= inLineToRead, "Reading past end of input");
+    if (mCurrentInLine == inLineToRead) {
+      skia::ConvolveHorizontally(mRowBuffer.get(), *mXFilter,
+                                 mWindow[mLinesInBuffer++], mHasAlpha,
+                                 supports_sse2());
+    }
+
+    MOZ_ASSERT(mCurrentOutLine < mTargetSize.height,
+               "Writing past end of output");
+
+    while (mLinesInBuffer == filterLength) {
+      DownscaleInputLine();
+
+      if (mCurrentOutLine == mTargetSize.height) {
+        break;  // We're done.
+      }
+
+      GetFilterOffsetAndLength(mYFilter, mCurrentOutLine,
+                               &filterOffset, &filterLength);
+    }
   }
 
   mCurrentInLine += 1;

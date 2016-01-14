@@ -319,6 +319,7 @@ pref("media.use-blank-decoder", false);
 pref("media.wmf.enabled", true);
 pref("media.wmf.decoder.thread-count", -1);
 pref("media.wmf.low-latency.enabled", false);
+pref("media.wmf.skip-blacklist", false);
 #endif
 #if defined(MOZ_FFMPEG)
 pref("media.ffmpeg.enabled", true);
@@ -5142,3 +5143,7 @@ pref("webextensions.tests", false);
 
 // Allow customization of the fallback directory for file uploads
 pref("dom.input.fallbackUploadDir", "");
+
+// Turn rewriting of youtube embeds on/off
+pref("plugins.rewrite_youtube_embeds", true);
+

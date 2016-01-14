@@ -30174,6 +30174,12 @@
     "deleted": [],
     "items": {
       "testharness": {
+        "html/syntax/serializing-xml-fragments/outerHTML.html": [
+          {
+            "path": "html/syntax/serializing-xml-fragments/outerHTML.html",
+            "url": "/html/syntax/serializing-xml-fragments/outerHTML.html"
+          }
+        ],
         "streams/byte-length-queuing-strategy.https.html": [
           {
             "path": "streams/byte-length-queuing-strategy.https.html",

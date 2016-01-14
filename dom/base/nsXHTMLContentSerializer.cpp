@@ -412,47 +412,6 @@ nsXHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
   return true;
 }
 
-
-bool
-nsXHTMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
-                                                  nsIAtom * aName,
-                                                  int32_t aNamespaceID,
-                                                  nsAString& aStr)
-{
-  // this method is not called by nsHTMLContentSerializer
-  // so we don't have to check HTML element, just XHTML
-  NS_ASSERTION(!mIsHTMLSerializer, "nsHTMLContentSerializer shouldn't call this method !");
-
-  if (kNameSpaceID_XHTML != aNamespaceID) {
-    return nsXMLContentSerializer::AppendEndOfElementStart(aOriginalElement, aName,
-                                                           aNamespaceID, aStr);
-  }
-
-  nsIContent* content = aOriginalElement;
-
-  // for non empty elements, even if they are not a container, we always
-  // serialize their content, because the XHTML element could contain non XHTML
-  // nodes useful in some context, like in an XSLT stylesheet
-  if (HasNoChildren(content)) {
-
-    nsIParserService* parserService = nsContentUtils::GetParserService();
-  
-    if (parserService) {
-      bool isContainer;
-      parserService->
-        IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(aName),
-                    isContainer);
-      if (!isContainer) {
-        // for backward compatibility with HTML 4 user agents
-        // only non-container HTML elements can be closed immediatly,
-        // and a space is added before />
-        return AppendToString(NS_LITERAL_STRING(" />"), aStr);
-      }
-    }
-  }
-  return AppendToString(kGreaterThan, aStr);
-}
-
 bool
 nsXHTMLContentSerializer::AfterElementStart(nsIContent* aContent,
                                             nsIContent* aOriginalElement,
@@ -552,52 +511,26 @@ nsXHTMLContentSerializer::CheckElementStart(nsIContent * aContent,
 }
 
 bool
-nsXHTMLContentSerializer::CheckElementEnd(nsIContent * aContent,
-                                          bool & aForceFormat,
+nsXHTMLContentSerializer::CheckElementEnd(Element* aElement,
+                                          bool& aForceFormat,
                                           nsAString& aStr)
 {
   NS_ASSERTION(!mIsHTMLSerializer, "nsHTMLContentSerializer shouldn't call this method !");
 
   aForceFormat = !(mFlags & nsIDocumentEncoder::OutputIgnoreMozDirty) &&
-                 aContent->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
+                 aElement->HasAttr(kNameSpaceID_None, nsGkAtoms::mozdirty);
 
-  // this method is not called by nsHTMLContentSerializer
-  // so we don't have to check HTML element, just XHTML
-  if (aContent->IsHTMLElement()) {
-    if (mIsCopying && aContent->IsHTMLElement(nsGkAtoms::ol)) {
-      NS_ASSERTION((!mOLStateStack.IsEmpty()), "Cannot have an empty OL Stack");
-      /* Though at this point we must always have an state to be deleted as all 
-      the OL opening tags are supposed to push an olState object to the stack*/
-      if (!mOLStateStack.IsEmpty()) {
+  if (mIsCopying && aElement->IsHTMLElement(nsGkAtoms::ol)) {
+    NS_ASSERTION((!mOLStateStack.IsEmpty()), "Cannot have an empty OL Stack");
+    /* Though at this point we must always have an state to be deleted as all
+       the OL opening tags are supposed to push an olState object to the stack*/
+    if (!mOLStateStack.IsEmpty()) {
         mOLStateStack.RemoveElementAt(mOLStateStack.Length() -1);
-      }
     }
-
-    if (HasNoChildren(aContent)) {
-      nsIParserService* parserService = nsContentUtils::GetParserService();
-
-      if (parserService) {
-        bool isContainer;
-
-        parserService->
-          IsContainer(parserService->HTMLCaseSensitiveAtomTagToId(
-                        aContent->NodeInfo()->NameAtom()),
-                      isContainer);
-        if (!isContainer) {
-          // non-container HTML elements are already closed,
-          // see AppendEndOfElementStart
-          return false;
-        }
-      }
-    }
-    // for backward compatibility with old HTML user agents,
-    // empty elements should have an ending tag, so we mustn't call
-    // nsXMLContentSerializer::CheckElementEnd
-    return true;
   }
 
   bool dummyFormat;
-  return nsXMLContentSerializer::CheckElementEnd(aContent, dummyFormat, aStr);
+  return nsXMLContentSerializer::CheckElementEnd(aElement, dummyFormat, aStr);
 }
 
 bool
