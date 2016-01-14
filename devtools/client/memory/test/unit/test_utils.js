@@ -33,8 +33,8 @@ add_task(function *() {
     noStack: { by: "count", count: true, bytes: true },
   }), "utils.breakdownEquals() fails when deep properties are missing.");
 
-  let s1 = utils.createSnapshot();
-  let s2 = utils.createSnapshot();
+  let s1 = utils.createSnapshot({});
+  let s2 = utils.createSnapshot({});
   equal(s1.state, states.SAVING, "utils.createSnapshot() creates snapshot in saving state");
   ok(s1.id !== s2.id, "utils.createSnapshot() creates snapshot with unique ids");
 

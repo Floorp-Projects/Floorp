@@ -6,7 +6,7 @@ const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/ven
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 
 const Frame = module.exports = createClass({
-  displayName: "frame-view",
+  displayName: "Frame",
 
   propTypes: {
     // SavedFrame
