@@ -326,7 +326,7 @@ private:
         FLUSH_FLAG_NONE,
         FLUSH_FLAG_RETRY
     };
-    void PostFlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
+    void PostFlushIMEChanges();
     void FlushIMEChanges(FlushChangesFlag aFlags = FLUSH_FLAG_NONE);
 
 public:
@@ -2050,10 +2050,9 @@ nsWindow::Natives::AddIMETextChange(const IMETextChange& aChange)
 }
 
 void
-nsWindow::Natives::PostFlushIMEChanges(FlushChangesFlag aFlags)
+nsWindow::Natives::PostFlushIMEChanges()
 {
-    if (aFlags != FLUSH_FLAG_RETRY &&
-            (!mIMETextChanges.IsEmpty() || mIMESelectionChanged)) {
+    if (!mIMETextChanges.IsEmpty() || mIMESelectionChanged) {
         // Already posted
         return;
     }
@@ -2061,9 +2060,9 @@ nsWindow::Natives::PostFlushIMEChanges(FlushChangesFlag aFlags)
     // Keep a strong reference to the window to keep 'this' alive.
     RefPtr<nsWindow> window(&this->window);
 
-    nsAppShell::gAppShell->PostEvent([this, window, aFlags] {
+    nsAppShell::gAppShell->PostEvent([this, window] {
         if (!window->Destroyed()) {
-            FlushIMEChanges(aFlags);
+            FlushIMEChanges();
         }
     });
 }
@@ -2098,6 +2097,23 @@ nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
 
     mIMETextChangedDuringFlush = false;
 
+    auto shouldAbort = [=] () -> bool {
+        if (!mIMETextChangedDuringFlush) {
+            return false;
+        }
+        // A query event could have triggered more text changes to come in, as
+        // indicated by our flag. If that happens, try flushing IME changes
+        // again.
+        if (aFlags != FLUSH_FLAG_RETRY) {
+            FlushIMEChanges(FLUSH_FLAG_RETRY);
+        } else {
+            // Don't retry if already retrying, to avoid infinite loops.
+            __android_log_print(ANDROID_LOG_WARN, "GeckoViewSupport",
+                    "Already retrying IME flush");
+        }
+        return true;
+    };
+
     for (const IMETextChange &change : mIMETextChanges) {
         if (change.mStart == change.mOldEnd &&
                 change.mStart == change.mNewEnd) {
@@ -2115,14 +2131,7 @@ nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
             NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
         }
 
-        if (mIMETextChangedDuringFlush) {
-            // The query event above could have triggered more text changes to
-            // come in, as indicated by our flag. If that happens, try flushing
-            // IME changes again later.
-            if (!NS_WARN_IF(aFlags == FLUSH_FLAG_RETRY)) {
-                // Don't retry if already retrying, to avoid infinite loops.
-                PostFlushIMEChanges(FLUSH_FLAG_RETRY);
-            }
+        if (shouldAbort()) {
             return;
         }
 
@@ -2131,6 +2140,26 @@ nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
                            change.mOldEnd, change.mNewEnd});
     }
 
+    int32_t selStart;
+    int32_t selEnd;
+
+    if (mIMESelectionChanged) {
+        WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
+        window.InitEvent(event, nullptr);
+        window.DispatchEvent(&event);
+
+        NS_ENSURE_TRUE_VOID(event.mSucceeded);
+        NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
+
+        if (shouldAbort()) {
+            return;
+        }
+
+        selStart = int32_t(event.GetSelectionStart());
+        selEnd = int32_t(event.GetSelectionEnd());
+    }
+
+    // Commit the text change and selection change transaction.
     mIMETextChanges.Clear();
 
     for (const TextRecord& record : textTransaction) {
@@ -2140,16 +2169,7 @@ nsWindow::Natives::FlushIMEChanges(FlushChangesFlag aFlags)
 
     if (mIMESelectionChanged) {
         mIMESelectionChanged = false;
-
-        WidgetQueryContentEvent event(true, eQuerySelectedText, &window);
-        window.InitEvent(event, nullptr);
-        window.DispatchEvent(&event);
-
-        NS_ENSURE_TRUE_VOID(event.mSucceeded);
-        NS_ENSURE_TRUE_VOID(event.mReply.mContentsRoot == imeRoot.get());
-
-        mEditable->OnSelectionChange(int32_t(event.GetSelectionStart()),
-                                     int32_t(event.GetSelectionEnd()));
+        mEditable->OnSelectionChange(selStart, selEnd);
     }
 }
 
