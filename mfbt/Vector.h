@@ -281,8 +281,8 @@ class Vector final : private AllocPolicy
 
   friend struct detail::VectorTesting;
 
-  bool growStorageBy(size_t aIncr);
-  bool convertToHeapStorage(size_t aNewCap);
+  MOZ_WARN_UNUSED_RESULT bool growStorageBy(size_t aIncr);
+  MOZ_WARN_UNUSED_RESULT bool convertToHeapStorage(size_t aNewCap);
 
   /* magic constants */
 
@@ -522,7 +522,7 @@ public:
    * Given that the vector is empty and has no inline storage, grow to
    * |capacity|.
    */
-  bool initCapacity(size_t aRequest);
+  MOZ_WARN_UNUSED_RESULT bool initCapacity(size_t aRequest);
 
   /**
    * If reserve(aRequest) succeeds and |aRequest >= length()|, then appending
@@ -532,7 +532,7 @@ public:
    * A request to reserve an amount less than the current length does not affect
    * reserved space.
    */
-  bool reserve(size_t aRequest);
+  MOZ_WARN_UNUSED_RESULT bool reserve(size_t aRequest);
 
   /**
    * Destroy elements in the range [end() - aIncr, end()). Does not deallocate
@@ -547,18 +547,18 @@ public:
   void shrinkTo(size_t aNewLength);
 
   /** Grow the vector by aIncr elements. */
-  bool growBy(size_t aIncr);
+  MOZ_WARN_UNUSED_RESULT bool growBy(size_t aIncr);
 
   /** Call shrinkBy or growBy based on whether newSize > length(). */
-  bool resize(size_t aNewLength);
+  MOZ_WARN_UNUSED_RESULT bool resize(size_t aNewLength);
 
   /**
    * Increase the length of the vector, but don't initialize the new elements
    * -- leave them as uninitialized memory.
    */
-  bool growByUninitialized(size_t aIncr);
+  MOZ_WARN_UNUSED_RESULT bool growByUninitialized(size_t aIncr);
   void infallibleGrowByUninitialized(size_t aIncr);
-  bool resizeUninitialized(size_t aNewLength);
+  MOZ_WARN_UNUSED_RESULT bool resizeUninitialized(size_t aNewLength);
 
   /** Shorthand for shrinkBy(length()). */
   void clear();
@@ -581,13 +581,13 @@ public:
    * vector, instead of copying it. If it fails, |aU| is left unmoved. ("We are
    * not amused.")
    */
-  template<typename U> bool append(U&& aU);
+  template<typename U> MOZ_WARN_UNUSED_RESULT bool append(U&& aU);
 
   /**
    * Construct a T in-place as a new entry at the end of this vector.
    */
   template<typename... Args>
-  bool emplaceBack(Args&&... aArgs)
+  MOZ_WARN_UNUSED_RESULT bool emplaceBack(Args&&... aArgs)
   {
     if (!growByUninitialized(1))
       return false;
@@ -596,10 +596,10 @@ public:
   }
 
   template<typename U, size_t O, class BP>
-  bool appendAll(const Vector<U, O, BP>& aU);
-  bool appendN(const T& aT, size_t aN);
-  template<typename U> bool append(const U* aBegin, const U* aEnd);
-  template<typename U> bool append(const U* aBegin, size_t aLength);
+  MOZ_WARN_UNUSED_RESULT bool appendAll(const Vector<U, O, BP>& aU);
+  MOZ_WARN_UNUSED_RESULT bool appendN(const T& aT, size_t aN);
+  template<typename U> MOZ_WARN_UNUSED_RESULT bool append(const U* aBegin, const U* aEnd);
+  template<typename U> MOZ_WARN_UNUSED_RESULT bool append(const U* aBegin, size_t aLength);
 
   /*
    * Guaranteed-infallible append operations for use upon vectors whose
@@ -643,7 +643,7 @@ public:
    *
    * N.B. Although a T*, only the range [0, length()) is constructed.
    */
-  T* extractRawBuffer();
+  MOZ_WARN_UNUSED_RESULT T* extractRawBuffer();
 
   /**
    * Transfer ownership of an array of objects into the vector.  The caller
@@ -671,7 +671,7 @@ public:
    * This is inherently a linear-time operation.  Be careful!
    */
   template<typename U>
-  T* insert(T* aP, U&& aVal);
+  MOZ_WARN_UNUSED_RESULT T* insert(T* aP, U&& aVal);
 
   /**
    * Removes the element |aT|, which must fall in the bounds [begin, end),
