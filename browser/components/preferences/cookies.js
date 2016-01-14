@@ -6,6 +6,7 @@
 const nsICookie = Components.interfaces.nsICookie;
 
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
+Components.utils.import("resource://gre/modules/Services.jsm")
 
 var gCookiesWindow = {
   _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
@@ -16,6 +17,7 @@ var gCookiesWindow = {
   _hostOrder        : [],
   _tree             : null,
   _bundle           : null,
+  _bundleBrowser    : null,
 
   init: function () {
     var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -24,11 +26,16 @@ var gCookiesWindow = {
     os.addObserver(this, "perm-changed", false);
 
     this._bundle = document.getElementById("bundlePreferences");
+    this._bundleBrowser = document.getElementById("bundleBrowser");
     this._tree = document.getElementById("cookiesList");
 
     this._populateList(true);
 
     document.getElementById("filter").focus();
+
+    if (!Services.prefs.getBoolPref("privacy.userContext.enabled")) {
+      document.getElementById("userContextRow").hidden = true;
+    }
   },
 
   uninit: function () {
@@ -453,16 +460,17 @@ var gCookiesWindow = {
   _makeCookieObject: function (aStrippedHost, aCookie) {
     var host = aCookie.host;
     var formattedHost = host.charAt(0) == "." ? host.substring(1, host.length) : host;
-    var c = { name        : aCookie.name,
-              value       : aCookie.value,
-              isDomain    : aCookie.isDomain,
-              host        : aCookie.host,
-              rawHost     : aStrippedHost,
-              path        : aCookie.path,
-              isSecure    : aCookie.isSecure,
-              expires     : aCookie.expires,
-              level       : 1,
-              container   : false };
+    var c = { name            : aCookie.name,
+              value           : aCookie.value,
+              isDomain        : aCookie.isDomain,
+              host            : aCookie.host,
+              rawHost         : aStrippedHost,
+              path            : aCookie.path,
+              isSecure        : aCookie.isSecure,
+              expires         : aCookie.expires,
+              level           : 1,
+              container       : false,
+              originAttributes: aCookie.originAttributes };
     return c;
   },
 
@@ -500,7 +508,7 @@ var gCookiesWindow = {
 
   _updateCookieData: function (aItem) {
     var seln = this._view.selection;
-    var ids = ["name", "value", "host", "path", "isSecure", "expires"];
+    var ids = ["name", "value", "host", "path", "isSecure", "expires", "userContext"];
     var properties;
 
     if (aItem && !aItem.container && seln.count > 0) {
@@ -509,20 +517,39 @@ var gCookiesWindow = {
                      isDomain: aItem.isDomain ? this._bundle.getString("domainColon")
                                               : this._bundle.getString("hostColon"),
                      isSecure: aItem.isSecure ? this._bundle.getString("forSecureOnly")
-                                              : this._bundle.getString("forAnyConnection") };
-      for (var i = 0; i < ids.length; ++i)
+                                              : this._bundle.getString("forAnyConnection"),
+                     userContext: this._convertUserContextIdToContainerName(aItem.originAttributes.userContextId) };
+      for (var i = 0; i < ids.length; ++i) {
         document.getElementById(ids[i]).disabled = false;
+      }
     }
     else {
       var noneSelected = this._bundle.getString("noCookieSelected");
       properties = { name: noneSelected, value: noneSelected, host: noneSelected,
                      path: noneSelected, expires: noneSelected,
-                     isSecure: noneSelected };
-      for (i = 0; i < ids.length; ++i)
+                     isSecure: noneSelected, userContext: noneSelected };
+      for (i = 0; i < ids.length; ++i) {
         document.getElementById(ids[i]).disabled = true;
+      }
     }
     for (var property in properties)
       document.getElementById(property).value = properties[property];
+  },
+
+  _convertUserContextIdToContainerName: function(aUserContextId) {
+    // TODO: this code should be moved in a separate module - bug 1239606
+    switch (aUserContextId) {
+      // No UserContext:
+      case 0: return "";
+
+      case 1: return this._bundleBrowser.getString("usercontext.personal.label");
+      case 2: return this._bundleBrowser.getString("usercontext.work.label");
+      case 3: return this._bundleBrowser.getString("usercontext.shopping.label");
+      case 4: return this._bundleBrowser.getString("usercontext.banking.label");
+
+      // This should not happen.
+      default: return "Context " + aUserContextId;
+    }
   },
 
   onCookieSelected: function () {
