@@ -4,22 +4,23 @@
 "use strict";
 
 const { immutableUpdate, assert } = require("devtools/shared/DevToolsUtils");
-const { actions, diffingState } = require("../constants");
+const { actions, diffingState, viewState } = require("../constants");
 const { snapshotIsDiffable } = require("../utils");
 
 const handlers = Object.create(null);
 
-handlers[actions.TOGGLE_DIFFING] = function (diffing, action) {
-  if (diffing) {
-    return null;
+handlers[actions.CHANGE_VIEW] = function (diffing, { view }) {
+  if (view === viewState.DIFFING) {
+    assert(!diffing, "Should not switch to diffing view when already diffing");
+    return Object.freeze({
+      firstSnapshotId: null,
+      secondSnapshotId: null,
+      census: null,
+      state: diffingState.SELECTING,
+    });
   }
 
-  return Object.freeze({
-    firstSnapshotId: null,
-    secondSnapshotId: null,
-    census: null,
-    state: diffingState.SELECTING,
-  });
+  return null;
 };
 
 handlers[actions.SELECT_SNAPSHOT_FOR_DIFFING] = function (diffing, { snapshot }) {
@@ -80,6 +81,7 @@ handlers[actions.TAKE_CENSUS_DIFF_END] = function (diffing, action) {
     state: diffingState.TOOK_DIFF,
     census: {
       report: action.report,
+      expanded: new Set(),
       inverted: action.inverted,
       filter: action.filter,
       breakdown: action.breakdown,
@@ -87,11 +89,51 @@ handlers[actions.TAKE_CENSUS_DIFF_END] = function (diffing, action) {
   });
 };
 
-handlers[actions.DIFFFING_ERROR] = function (diffing, action) {
+handlers[actions.DIFFING_ERROR] = function (diffing, action) {
   return {
     state: diffingState.ERROR,
     error: action.error
   };
+};
+
+handlers[actions.EXPAND_DIFFING_CENSUS_NODE] = function (diffing, { node }) {
+  assert(diffing, "Should be diffing if expanding diffing's census nodes");
+  assert(diffing.state === diffingState.TOOK_DIFF,
+         "Should have taken the census diff if expanding nodes");
+  assert(diffing.census, "Should have a census");
+  assert(diffing.census.report, "Should have a census report");
+  assert(diffing.census.expanded, "Should have a census's expanded set");
+
+  // Warning: mutable operations couched in an immutable update ahead :'( This
+  // at least lets us use referential equality on the census model itself,
+  // even though the expanded set is mutated in place.
+  const expanded = diffing.census.expanded;
+  expanded.add(node.id);
+  const census = immutableUpdate(diffing.census, { expanded });
+  return immutableUpdate(diffing, { census });
+};
+
+handlers[actions.COLLAPSE_DIFFING_CENSUS_NODE] = function (diffing, { node }) {
+  assert(diffing, "Should be diffing if expanding diffing's census nodes");
+  assert(diffing.state === diffingState.TOOK_DIFF,
+         "Should have taken the census diff if expanding nodes");
+  assert(diffing.census, "Should have a census");
+  assert(diffing.census.report, "Should have a census report");
+  assert(diffing.census.expanded, "Should have a census's expanded set");
+
+  // Warning: mutable operations couched in an immutable update ahead :'( See
+  // above comment in the EXPAND_DIFFING_CENSUS_NODE handler.
+  const expanded = diffing.census.expanded;
+  expanded.delete(node.id);
+  const census = immutableUpdate(diffing.census, { expanded });
+  return immutableUpdate(diffing, { census });
+};
+
+handlers[actions.FOCUS_DIFFING_CENSUS_NODE] = function (diffing, { node }) {
+  assert(diffing, "Should be diffing.");
+  assert(diffing.census, "Should have a census");
+  const census = immutableUpdate(diffing.census, { focused: node });
+  return immutableUpdate(diffing, { census });
 };
 
 module.exports = function (diffing = null, action) {
