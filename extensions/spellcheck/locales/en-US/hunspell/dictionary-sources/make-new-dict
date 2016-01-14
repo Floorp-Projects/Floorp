@@ -30,21 +30,32 @@ expand() {
 }
 
 cd $SPELLER
-./make-hunspell-dict -all > ./make-hunspell-dict.log
+MK_LIST="../mk-list -v1 --accents=both en_US 60"
+cat <<EOF > params.txt
+With Input Command: $MK_LIST
+EOF
+# note: output of make-hunspell-dict is utf-8
+$MK_LIST | ./make-hunspell-dict -one en_US-custom params.txt > ./make-hunspell-dict.log
 cd $WKDIR
 
-expand $SPELLER/en.aff < $SPELLER/en.dic.supp > 0-special
+# Note: Input and output of "expand" is always iso-8859-1.
+#       All expanded word list files are thus in iso-8859-1.
 
-expand $ORIG/en_US.aff < $ORIG/en_US.dic > 1-base.txt
+expand $SPELLER/en.aff < $SPELLER/en.dic.supp > 0-special # input: ASCII
 
-expand ../en-US.aff < ../en-US.dic > 2-mozilla.txt
+# input in utf-8, expand expects iso-8859-1 so use iconv
+iconv -f utf-8 -t iso-8859-1 $ORIG/en_US-custom.dic | expand $ORIG/en_US-custom.aff > 1-base.txt
 
-expand $SPELLER/en.aff < $SPELLER/en_US.dic   > 3-upstream.txt
+expand ../en-US.aff < ../en-US.dic > 2-mozilla.txt # input: iso-8850-1
+
+# input in utf-8, expand expects iso-8859-1 so use iconv
+iconv -f utf-8 -t iso-8859-1 $SPELLER/en_US-custom.dic | expand $SPELLER/en_US-custom.aff > 3-upstream.txt 
 
 comm -23 1-base.txt 2-mozilla.txt > 2-mozilla-rem
 comm -13 1-base.txt 2-mozilla.txt > 2-mozilla-add
 comm -23 3-upstream.txt 2-mozilla-rem | cat - 2-mozilla-add | sort -u > 4-patched.txt
 
+# note: output of make-hunspell-dict is utf-8
 cat 4-patched.txt | comm -23 - 0-special | $SPELLER/make-hunspell-dict -one en_US-mozilla /dev/null
 
 # sanity check should yield identical results
