@@ -102,6 +102,18 @@ public:
     return static_cast<nsTArray<nscoord>*>(Properties().Get(GridRowTrackSizes()));
   }
 
+  /**
+   * Return the number of implicit tracks that comes before the explicit grid.
+   */
+  uint32_t NumImplicitLeadingCols() const { return mExplicitGridOffsetCol; }
+  uint32_t NumImplicitLeadingRows() const { return mExplicitGridOffsetRow; }
+
+  /**
+   * Return the number of explicit tracks.
+   */
+  uint32_t NumExplicitCols() const { return mExplicitGridColEnd - 1; }
+  uint32_t NumExplicitRows() const { return mExplicitGridRowEnd - 1; }
+
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
