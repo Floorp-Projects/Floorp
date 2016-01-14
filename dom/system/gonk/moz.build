@@ -37,6 +37,7 @@ EXPORTS += [
     'GonkGPSGeolocationProvider.h',
     'nsVolume.h',
     'nsVolumeService.h',
+    'SystemProperty.h',
 ]
 UNIFIED_SOURCES += [
     'AudioChannelManager.cpp',
@@ -56,6 +57,7 @@ UNIFIED_SOURCES += [
     'nsVolumeService.cpp',
     'nsVolumeStat.cpp',
     'OpenFileFinder.cpp',
+    'SystemProperty.cpp',
     'SystemWorkerManager.cpp',
     'TimeZoneSettingObserver.cpp',
     'Volume.cpp',

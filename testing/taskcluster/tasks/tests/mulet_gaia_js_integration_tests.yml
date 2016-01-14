@@ -1,6 +1,7 @@
 ---
 $inherits:
   from: 'tasks/tests/b2g_unittest_base.yml'
+reruns: 3
 task:
   metadata:
     name: '[TC] Mulet Gaia JS Integration Test'
