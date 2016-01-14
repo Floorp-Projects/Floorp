@@ -295,47 +295,41 @@ OSXNotificationCenter::ShowAlert(nsIAlertNotification* aAlert,
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
   bool isActionable;
-  if (NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) && isActionable) {
-    nsCOMPtr<nsIStringBundle> bundle;
-    nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
+  if (bundle && NS_SUCCEEDED(aAlert->GetActionable(&isActionable)) && isActionable) {
+    nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
+    bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
+                              getter_Copies(closeButtonTitle));
+    bundle->GetStringFromName(MOZ_UTF16("actionButton.label"),
+                              getter_Copies(actionButtonTitle));
+    if (!hostPort.IsEmpty()) {
+      const char16_t* formatStrings[] = { hostPort.get() };
+      bundle->FormatStringFromName(MOZ_UTF16("webActions.disableForOrigin.label"),
+                                   formatStrings,
+                                   ArrayLength(formatStrings),
+                                   getter_Copies(disableButtonTitle));
+    }
+    bundle->GetStringFromName(MOZ_UTF16("webActions.settings.label"),
+                              getter_Copies(settingsButtonTitle));
 
-    if (bundle) {
-      nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
-      bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
-                                getter_Copies(closeButtonTitle));
-      bundle->GetStringFromName(MOZ_UTF16("actionButton.label"),
-                                getter_Copies(actionButtonTitle));
-      if (!hostPort.IsEmpty()) {
-        const char16_t* formatStrings[] = { hostPort.get() };
-        bundle->FormatStringFromName(MOZ_UTF16("webActions.disableForOrigin.label"),
-                                     formatStrings,
-                                     ArrayLength(formatStrings),
-                                     getter_Copies(disableButtonTitle));
-      }
-      bundle->GetStringFromName(MOZ_UTF16("webActions.settings.label"),
-                                getter_Copies(settingsButtonTitle));
+    notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
 
-      notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
+    // OS X 10.8 only shows action buttons if the "Alerts" style is set in
+    // Notification Center preferences, and doesn't support the alternate
+    // action menu.
+    if ([notification respondsToSelector:@selector(set_showsButtons:)] &&
+        [notification respondsToSelector:@selector(set_alwaysShowAlternateActionMenu:)] &&
+        [notification respondsToSelector:@selector(set_alternateActionButtonTitles:)]) {
 
-      // OS X 10.8 only shows action buttons if the "Alerts" style is set in
-      // Notification Center preferences, and doesn't support the alternate
-      // action menu.
-      if ([notification respondsToSelector:@selector(set_showsButtons:)] &&
-          [notification respondsToSelector:@selector(set_alwaysShowAlternateActionMenu:)] &&
-          [notification respondsToSelector:@selector(set_alternateActionButtonTitles:)]) {
+      notification.hasActionButton = YES;
+      notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
 
-        notification.hasActionButton = YES;
-        notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
-
-        [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
-        [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
-        [(NSObject*)notification setValue:@[
-                                            nsCocoaUtils::ToNSString(disableButtonTitle),
-                                            nsCocoaUtils::ToNSString(settingsButtonTitle)
-                                            ]
-                                 forKey:@"_alternateActionButtonTitles"];
-      }
+      [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
+      [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
+      [(NSObject*)notification setValue:@[
+                                          nsCocoaUtils::ToNSString(disableButtonTitle),
+                                          nsCocoaUtils::ToNSString(settingsButtonTitle)
+                                          ]
+                               forKey:@"_alternateActionButtonTitles"];
     }
   }
   nsAutoString name;
