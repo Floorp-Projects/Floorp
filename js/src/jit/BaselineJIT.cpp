@@ -216,11 +216,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
         data.maxArgv = thisv.address();
         data.scopeChain = fp->scopeChain();
 
-        // For eval function frames, set the callee token to the enclosing function.
-        if (fp->isFunctionFrame())
-            data.calleeToken = CalleeToToken(&fp->callee(), /* constructing = */ false);
-        else
-            data.calleeToken = CalleeToToken(fp->script());
+        data.calleeToken = CalleeToToken(fp->script());
 
         if (fp->isEvalFrame()) {
             if (!vals.reserve(2))
@@ -228,7 +224,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
 
             vals.infallibleAppend(thisv);
 
-            if (fp->isFunctionFrame())
+            if (fp->script()->isDirectEvalInFunction())
                 vals.infallibleAppend(fp->newTarget());
             else
                 vals.infallibleAppend(NullValue());
