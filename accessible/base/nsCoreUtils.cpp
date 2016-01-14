@@ -34,12 +34,23 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeColumns.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLLabelElement.h"
 
 using namespace mozilla;
 
 ////////////////////////////////////////////////////////////////////////////////
 // nsCoreUtils
 ////////////////////////////////////////////////////////////////////////////////
+
+bool
+nsCoreUtils::IsLabelWithControl(nsIContent* aContent)
+{
+  dom::HTMLLabelElement* label = dom::HTMLLabelElement::FromContent(aContent);
+  if (label && label->GetControl())
+    return true;
+
+  return false;
+}
 
 bool
 nsCoreUtils::HasClickListener(nsIContent *aContent)
