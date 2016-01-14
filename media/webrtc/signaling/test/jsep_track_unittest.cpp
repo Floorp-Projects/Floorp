@@ -18,6 +18,9 @@
 
 #include "mtransport_test_utils.h"
 
+#include "FakeIPC.h"
+#include "FakeIPC.cpp"
+
 namespace mozilla {
 
 class JsepTrackTest : public ::testing::Test
