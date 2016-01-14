@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<title>Test for Bug 1239128</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1239128">Mozilla Bug 1239128</a>
+<p id="display"</p>
+
+<svg>
+  <style>svg { fill: blue; }</style>
+</svg>
+
+<pre id="test">
+<script class="testbody" type="application/javascript">
+var style = document.querySelector("style");
+
+var exceptionThrown = false;
+try {
+  is(style.sheet.cssRules[0].cssText, "svg { fill: blue; }",
+     "Should get the fill: blue rule back");
+} catch (e) {
+  exceptionThrown = true;
+}
+
+ok(!exceptionThrown, "Should be able to access data: <style> stylesheet");
+</script>
+</pre>
