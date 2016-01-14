@@ -1,5 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 * {
   box-sizing: border-box;
+}
+
+:root {
+  height: 100%;
 }
 
 body {
@@ -8,6 +16,10 @@ body {
   height: 100%;
   margin: 0;
   padding-bottom: 20px;
+}
+
+#root {
+  overflow: auto;
 }
 
 #all-fonts {
@@ -23,6 +35,46 @@ body {
   position: fixed;
   bottom: 0;
   right: 0;
+}
+
+.dim > #root,
+.font:not(.has-code) .font-css-code,
+.font-is-local,
+.font-is-remote,
+.font.is-local .font-format-url,
+#template {
+  display: none;
+}
+
+.font.is-remote .font-is-remote,
+.font.is-local .font-is-local {
+  display: inline;
+}
+
+.font-format::before {
+  content: "(";
+}
+
+.font-format::after {
+  content: ")";
+}
+
+.preview-input-toolbar {
+  display: flex;
+  width: 100%;
+}
+
+.font-preview-container {
+  overflow-x: auto;
+}
+
+#preview-text-input {
+  font: inherit;
+  margin-top: 1px;
+  margin-bottom: 1px;
+  padding-top: 0;
+  padding-bottom: 0;
+  flex: 1;
 }
 
 .font {

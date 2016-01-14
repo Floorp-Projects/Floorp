@@ -746,6 +746,11 @@ var Impl = {
         // task to complete, but TelemetryStorage blocks on it during shutdown.
         TelemetryStorage.runCleanPingArchiveTask();
 
+        // Now that FHR/healthreporter is gone, make sure to remove FHR's DB from
+        // the profile directory. This is a temporary measure that we should drop
+        // in the future.
+        TelemetryStorage.removeFHRDatabase();
+
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
         this._delayedInitTaskDeferred.reject(e);
