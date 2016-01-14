@@ -6,6 +6,3 @@ contract @mozilla.org/push/PushManager;1 {cde1d019-fad8-4044-b141-65fb4fb7a245}
 component {daaa8d73-677e-4233-8acd-2c404bd01658} PushComponents.js
 contract @mozilla.org/push/Service;1 {daaa8d73-677e-4233-8acd-2c404bd01658}
 category app-startup PushServiceParent @mozilla.org/push/Service;1
-
-component {e68997fd-8b92-49ee-af12-800830b023e8} PushComponents.js
-contract @mozilla.org/push/ObserverNotification;1 {e68997fd-8b92-49ee-af12-800830b023e8}
