@@ -41,6 +41,7 @@
 #include "vm/Interpreter.h"
 #include "vm/String.h"
 #include "vm/TypedArrayCommon.h"
+#include "vm/WrapperObject.h"
 
 #include "jsfuninlines.h"
 #include "jsobjinlines.h"
@@ -869,6 +870,33 @@ intrinsic_GeneratorSetClosed(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+intrinsic_IsWrappedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    if (!args[0].isObject()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    JSObject* obj = &args[0].toObject();
+    if (!obj->is<WrapperObject>()) {
+        args.rval().setBoolean(false);
+        return true;
+    }
+
+    JSObject* unwrapped = CheckedUnwrap(obj);
+    if (!unwrapped) {
+        JS_ReportError(cx, "Permission denied to access object");
+        return false;
+    }
+
+    args.rval().setBoolean(unwrapped->is<ArrayBufferObject>());
+    return true;
+}
+
+static bool
 intrinsic_ArrayBufferByteLength(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
@@ -902,15 +930,22 @@ static bool
 intrinsic_ArrayBufferCopyData(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    MOZ_ASSERT(args.length() == 4);
-    MOZ_ASSERT(args[0].isObject());
-    MOZ_ASSERT(args[0].toObject().is<ArrayBufferObject>());
-    MOZ_ASSERT(args[1].isObject());
-    MOZ_ASSERT(args[1].toObject().is<ArrayBufferObject>());
-    MOZ_ASSERT(args[2].isInt32());
-    MOZ_ASSERT(args[3].isInt32());
+    MOZ_ASSERT(args.length() == 5);
 
-    Rooted<ArrayBufferObject*> toBuffer(cx, &args[0].toObject().as<ArrayBufferObject>());
+    bool isWrapped = args[4].toBoolean();
+    Rooted<ArrayBufferObject*> toBuffer(cx);
+    if (!isWrapped) {
+        toBuffer = &args[0].toObject().as<ArrayBufferObject>();
+    } else {
+        JSObject* wrapped = &args[0].toObject();
+        MOZ_ASSERT(wrapped->is<WrapperObject>());
+        RootedObject toBufferObj(cx, CheckedUnwrap(wrapped));
+        if (!toBufferObj) {
+            JS_ReportError(cx, "Permission denied to access object");
+            return false;
+        }
+        toBuffer = toBufferObj.as<ArrayBufferObject>();
+    }
     Rooted<ArrayBufferObject*> fromBuffer(cx, &args[1].toObject().as<ArrayBufferObject>());
     uint32_t fromIndex = uint32_t(args[2].toInt32());
     uint32_t count = uint32_t(args[3].toInt32());
@@ -2167,12 +2202,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
           intrinsic_IsInstanceOfBuiltin<ArrayBufferObject>,             1,0),
     JS_FN("IsSharedArrayBuffer",
           intrinsic_IsInstanceOfBuiltin<SharedArrayBufferObject>,       1,0),
+    JS_FN("IsWrappedArrayBuffer",    intrinsic_IsWrappedArrayBuffer,    1,0),
 
     JS_INLINABLE_FN("ArrayBufferByteLength",   intrinsic_ArrayBufferByteLength, 1,0,
                     IntrinsicArrayBufferByteLength),
     JS_INLINABLE_FN("PossiblyWrappedArrayBufferByteLength", intrinsic_PossiblyWrappedArrayBufferByteLength, 1,0,
                     IntrinsicPossiblyWrappedArrayBufferByteLength),
-    JS_FN("ArrayBufferCopyData",     intrinsic_ArrayBufferCopyData,     4,0),
+    JS_FN("ArrayBufferCopyData",     intrinsic_ArrayBufferCopyData,     5,0),
 
     JS_FN("IsUint8TypedArray",        intrinsic_IsUint8TypedArray,      1,0),
     JS_FN("IsInt8TypedArray",         intrinsic_IsInt8TypedArray,       1,0),
