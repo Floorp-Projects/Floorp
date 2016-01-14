@@ -15,7 +15,7 @@ const { snapshotState: states, diffingState } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 
 const SnapshotListItem = module.exports = createClass({
-  displayName: "snapshot-list-item",
+  displayName: "SnapshotListItem",
 
   propTypes: {
     onClick: PropTypes.func.isRequired,

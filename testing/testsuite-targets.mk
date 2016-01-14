@@ -34,7 +34,7 @@ ifdef MOZ_B2G
 BUILD_GTEST=
 endif
 
-ifeq ($(MOZ_BUILD_APP),mobile/android)
+ifneq (browser,$(MOZ_BUILD_APP))
 BUILD_GTEST=
 endif
 

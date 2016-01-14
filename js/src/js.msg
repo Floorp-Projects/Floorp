@@ -483,6 +483,9 @@ MSG_DEF(JSMSG_SIMD_FAILED_CONVERSION,  0, JSEXN_RANGEERR, "SIMD conversion loses
 
 // Typed array
 MSG_DEF(JSMSG_BAD_INDEX,               0, JSEXN_RANGEERR, "invalid or out-of-range index")
+MSG_DEF(JSMSG_NON_ARRAY_BUFFER_RETURNED, 0, JSEXN_TYPEERR, "expected ArrayBuffer, but species constructor returned non-ArrayBuffer")
+MSG_DEF(JSMSG_SAME_ARRAY_BUFFER_RETURNED, 0, JSEXN_TYPEERR, "expected different ArrayBuffer, but species constructor returned same ArrayBuffer")
+MSG_DEF(JSMSG_SHORT_ARRAY_BUFFER_RETURNED, 2, JSEXN_TYPEERR, "expected ArrayBuffer with at least {0} bytes, but species constructor returns ArrayBuffer with {1} bytes")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_ARGS,    0, JSEXN_TYPEERR, "invalid arguments")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_OBJECT,  0, JSEXN_TYPEERR, "invalid object argument")
 MSG_DEF(JSMSG_TYPED_ARRAY_BAD_INDEX,   0, JSEXN_RANGEERR, "invalid or out-of-range index")

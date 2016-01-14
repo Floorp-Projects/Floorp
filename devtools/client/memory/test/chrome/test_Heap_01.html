@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that rendering a dominator tree error is handled correctly.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             ok(React, "Should get React");
+             ok(Heap, "Should get Heap");
+
+             const errorMessage = "Something went wrong!";
+             const container = document.getElementById("container");
+
+             const props = immutableUpdate(TEST_HEAP_PROPS, {
+               view: viewState.DOMINATOR_TREE,
+               snapshot: immutableUpdate(TEST_HEAP_PROPS.snapshot, {
+                 dominatorTree: {
+                   error: new Error(errorMessage),
+                   state: dominatorTreeState.ERROR,
+                 }
+               })
+             });
+
+             yield renderComponent(Heap(props), container);
+
+             ok(container.querySelector(".error"), "Should render an error view");
+             ok(container.textContent.indexOf(errorMessage) !== -1,
+                "Should see our error message");
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>

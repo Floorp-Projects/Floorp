@@ -6,6 +6,7 @@ const {devtools} =
 const { getActiveTab } = devtools.require("sdk/tabs/utils");
 const { getMostRecentBrowserWindow } = devtools.require("sdk/window/utils");
 const ThreadSafeChromeUtils = devtools.require("ThreadSafeChromeUtils");
+const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 
 const webserver = Services.prefs.getCharPref("addon.test.damp.webserver");
 
@@ -143,99 +144,95 @@ Damp.prototype = {
     return Promise.resolve();
   },
 
-  _startTest: function() {
+  _getToolLoadingTests: function(url, label) {
+    let subtests = {
+      webconsoleOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".webconsole", "webconsole");
+        yield this.reloadPage(label + ".webconsole");
+        yield this.closeToolbox(label + ".webconsole");
+        yield this.testTeardown();
+      }),
 
-    var self = this;
-    var openToolbox = this.openToolbox.bind(this);
-    var closeToolbox = this.closeToolbox.bind(this);
-    var reloadPage = this.reloadPage.bind(this);
-    var next = this._nextCommand.bind(this);
-    var saveHeapSnapshot = this.saveHeapSnapshot.bind(this);
-    var readHeapSnapshot = this.readHeapSnapshot.bind(this);
-    var takeCensus = this.takeCensus.bind(this);
-    var config = this._config;
-    var rest = config.rest; // How long to wait in between opening the tab and starting the test.
+      inspectorOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".inspector", "inspector");
+        yield this.reloadPage(label + ".inspector");
+        yield this.closeToolbox(label + ".inspector");
+        yield this.testTeardown();
+      }),
 
-    let tests = getTestsForURL(SIMPLE_URL, "simple");
-    tests = tests.concat(getTestsForURL(COMPLICATED_URL, "complicated"));
+      debuggerOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".jsdebugger", "jsdebugger");
+        yield this.reloadPage(label + ".jsdebugger");
+        yield this.closeToolbox(label + ".jsdebugger");
+        yield this.testTeardown();
+      }),
 
-    this._doSequence(tests, this._doneInternal);
+      styleEditorOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".styleeditor", "styleeditor");
+        yield this.reloadPage(label + ".styleeditor");
+        yield this.closeToolbox(label + ".styleeditor");
+        yield this.testTeardown();
+      }),
 
-    function getTestsForURL(url, label) {
+      performanceOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".performance", "performance");
+        yield this.reloadPage(label + ".performance");
+        yield this.closeToolbox(label + ".performance");
+        yield this.testTeardown();
+      }),
 
-      // This is called before each subtest
-      let init = [
-        () => { self.addTab(url).then(next); },
-        () => { setTimeout(next, rest); },
-      ];
+      netmonitorOpen: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".netmonitor", "netmonitor");
+        yield this.reloadPage(label + ".netmonitor");
+        yield this.closeToolbox(label + ".netmonitor");
+        yield this.testTeardown();
+      }),
 
-      // This is called after each subtest
-      let restore = [
-        () => { self.closeCurrentTab(); next(); }
-      ];
+      saveAndReadHeapSnapshot: Task.async(function*() {
+        yield this.testSetup(url);
+        yield this.openToolbox(label + ".memory", "memory");
+        yield this.reloadPage(label + ".memory");
+        yield this.saveHeapSnapshot(label);
+        yield this.readHeapSnapshot(label);
+        yield this.takeCensus(label);
+        yield this.closeToolbox(label + ".memory");
+        yield this.testTeardown();
+      }),
+    };
 
-      var subtests = {
-
-        webconsoleOpen: [
-          () => { openToolbox(label + ".webconsole", "webconsole").then(next); },
-          () => { reloadPage(label + ".webconsole").then(next); },
-          () => { closeToolbox(label + ".webconsole").then(next); },
-        ],
-
-        inspectorOpen: [
-          () => { openToolbox(label + ".inspector", "inspector").then(next); },
-          () => { reloadPage(label + ".inspector").then(next); },
-          () => { closeToolbox(label + ".inspector").then(next); },
-        ],
-
-        debuggerOpen: [
-          () => { openToolbox(label + ".jsdebugger", "jsdebugger").then(next); },
-          () => { reloadPage(label + ".jsdebugger").then(next); },
-          () => { closeToolbox(label + ".jsdebugger").then(next); },
-        ],
-
-        styleEditorOpen: [
-          () => { openToolbox(label + ".styleeditor", "styleeditor").then(next); },
-          () => { reloadPage(label + ".styleeditor").then(next); },
-          () => { closeToolbox(label + ".styleeditor").then(next); },
-        ],
-
-        performanceOpen: [
-          () => { openToolbox(label + ".performance", "performance").then(next); },
-          () => { reloadPage(label + ".performance").then(next); },
-          () => { closeToolbox(label + ".performance").then(next); },
-        ],
-
-        netmonitorOpen: [
-          () => { openToolbox(label + ".netmonitor", "netmonitor").then(next); },
-          () => { reloadPage(label + ".netmonitor").then(next); },
-          () => { closeToolbox(label + ".netmonitor").then(next); },
-        ],
-
-        saveAndReadHeapSnapshot: [
-          () => { openToolbox(label + ".memory", "memory").then(next); },
-          () => { reloadPage(label + ".memory").then(next); },
-          () => { saveHeapSnapshot(label).then(next); },
-          () => { readHeapSnapshot(label).then(next); },
-          () => { takeCensus(label).then(next); },
-          () => { closeToolbox(label + ".memory").then(next); },
-        ]
-      };
-
-      // Construct the sequence array: config.repeat times config.subtests,
-      // where each subtest implicitly starts with init.
-      sequenceArray = [];
-      for (var i in config.subtests) {
-        for (var r = 0; r < config.repeat; r++) {
-          sequenceArray = sequenceArray.concat(init);
-          sequenceArray = sequenceArray.concat(subtests[config.subtests[i]]);
-          sequenceArray = sequenceArray.concat(restore);
+    // Construct the sequence array: config.repeat times config.subtests
+    let config = this._config;
+    let sequenceArray = [];
+    for (var i in config.subtests) {
+      for (var r = 0; r < config.repeat; r++) {
+        if (!config.subtests[i] || !subtests[config.subtests[i]]) {
+          continue;
         }
-      }
 
-      return sequenceArray;
+        sequenceArray.push(subtests[config.subtests[i]]);
+      }
     }
+
+    return sequenceArray;
   },
+
+  testSetup: Task.async(function*(url) {
+    yield this.addTab(url);
+    yield new Promise(resolve => {
+      setTimeout(resolve, this._config.rest);
+    });
+  }),
+
+  testTeardown: Task.async(function*(url) {
+    this.closeCurrentTab();
+    this._nextCommand();
+  }),
 
   // Everything below here are common pieces needed for the test runner to function,
   // just copy and pasted from Tart with /s/TART/DAMP
@@ -252,7 +249,7 @@ Damp.prototype = {
       this._onSequenceComplete();
       return;
     }
-    this._commands[this._nextCommandIx++]();
+    this._commands[this._nextCommandIx++].call(this);
   },
   // Each command at the array a function which must call nextCommand once it's done
   _doSequence: function(commands, onComplete) {
@@ -326,6 +323,9 @@ Damp.prototype = {
 
     Profiler.mark("DAMP - start", true);
 
-    return this._startTest();
+    let tests = [];
+    tests = tests.concat(this._getToolLoadingTests(SIMPLE_URL, "simple"));
+    tests = tests.concat(this._getToolLoadingTests(COMPLICATED_URL, "complicated"));
+    this._doSequence(tests, this._doneInternal);
   }
 }

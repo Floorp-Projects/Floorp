@@ -20,8 +20,8 @@ window.onload = Task.async(function* () {
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
     yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split("")),
       height: 3,
       scroll: 1
     });

@@ -19,22 +19,21 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+      onFocus: x => setProps(tree, { focused: x }),
+    })), window.document.body);
 
-    yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
-    });
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
 
     // UP ----------------------------------------------------------------------
 
     info("Up to the previous sibling.");
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "L"
     });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -57,8 +56,7 @@ window.onload = Task.async(function* () {
     info("Up to the parent.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -80,12 +78,11 @@ window.onload = Task.async(function* () {
 
     info("Try and navigate up, past the first item.");
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "A"
     });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowUp" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:true",
@@ -107,15 +104,14 @@ window.onload = Task.async(function* () {
 
     // DOWN --------------------------------------------------------------------
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "K"
     });
 
     info("Down to next sibling.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -138,8 +134,7 @@ window.onload = Task.async(function* () {
     info("Down to parent's next sibling.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -161,12 +156,11 @@ window.onload = Task.async(function* () {
 
     info("Try and go down past the last item.");
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "O"
     });
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowDown" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -190,12 +184,11 @@ window.onload = Task.async(function* () {
 
     info("Left to go to parent.");
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "L"
     })
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -218,8 +211,7 @@ window.onload = Task.async(function* () {
     info("Left to collapse children.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -242,8 +234,7 @@ window.onload = Task.async(function* () {
     info("Right to expand children.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",
@@ -266,8 +257,7 @@ window.onload = Task.async(function* () {
     info("Right to go to next item.");
 
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    // Let the component re-render.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",

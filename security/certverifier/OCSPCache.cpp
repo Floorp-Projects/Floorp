@@ -149,7 +149,9 @@ OCSPCache::MakeMostRecentlyUsed(size_t aIndex,
   // Since mEntries is sorted with the most-recently-used entry at the end,
   // aIndex is likely to be near the end, so this is likely to be fast.
   mEntries.erase(mEntries.begin() + aIndex);
-  mEntries.append(entry);
+  // erase() does not shrink or realloc memory, so the append below should
+  // always succeed.
+  MOZ_RELEASE_ASSERT(mEntries.append(entry));
 }
 
 bool
@@ -252,7 +254,10 @@ OCSPCache::Put(const CertID& aCertID, Result aResult,
     delete newEntry;
     return rv;
   }
-  mEntries.append(newEntry);
+  if (!mEntries.append(newEntry)) {
+    delete newEntry;
+    return Result::FATAL_ERROR_NO_MEMORY;
+  }
   LogWithCertID("OCSPCache::Put(%p) added to cache", aCertID);
   return Success;
 }

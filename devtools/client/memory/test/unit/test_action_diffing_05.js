@@ -50,7 +50,7 @@ add_task(function *() {
                                        snapshotState.READ,
                                        snapshotState.READ]);
 
-  dispatch(toggleDiffing());
+  yield dispatch(toggleDiffing());
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,
                                               getState().snapshots[0]));
   dispatch(selectSnapshotForDiffingAndRefresh(heapWorker,

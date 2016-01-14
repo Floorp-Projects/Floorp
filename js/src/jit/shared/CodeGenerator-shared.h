@@ -337,7 +337,7 @@ class CodeGeneratorShared : public LElementVisitor
 
     void emitAsmJSCall(LAsmJSCall* ins);
 
-    void emitPreBarrier(Register base, const LAllocation* index);
+    void emitPreBarrier(Register base, const LAllocation* index, int32_t offsetAdjustment);
     void emitPreBarrier(Address address);
 
     // We don't emit code for trivial blocks, so if we want to branch to the
