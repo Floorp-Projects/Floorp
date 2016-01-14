@@ -2332,19 +2332,8 @@ JSRuntime::cloneSelfHostedFunctionScript(JSContext* cx, HandlePropertyName name,
         return false;
     MOZ_ASSERT(!targetFun->isInterpretedLazy());
 
-    // ...rest args don't count as formal args, but are included in nargs. We don't,
-    // however, want to introduce a flag "has rest args" in the declaration of
-    // self-hosted functions, so we fix up the flag and the nargs value here.
-    // Since the target function might have been cloned and relazified before,
-    // this only happens if the target function isn't marked as having rest
-    // args.
-    MOZ_ASSERT(sourceFun->nargs() - sourceFun->hasRest() ==
-               targetFun->nargs() - targetFun->hasRest());
-    MOZ_ASSERT_IF(targetFun->hasRest(), sourceFun->hasRest());
-    if (sourceFun->hasRest() && !targetFun->hasRest()) {
-        targetFun->setHasRest();
-        targetFun->setArgCount(sourceFun->nargs());
-    }
+    MOZ_ASSERT(sourceFun->nargs() == targetFun->nargs());
+    MOZ_ASSERT(sourceFun->hasRest() == targetFun->hasRest());
 
     // The target function might have been relazified after its flags changed.
     targetFun->setFlags(targetFun->flags() | sourceFun->flags());
