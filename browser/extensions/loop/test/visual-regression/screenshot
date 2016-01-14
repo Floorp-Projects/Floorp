@@ -1,0 +1,97 @@
+#!/usr/bin/env python
+
+from selenium import webdriver
+from PIL import Image
+from os import listdir
+from os.path import isfile, join
+import subprocess
+import argparse
+import re
+from os import path
+
+refs_location = path.join(path.dirname(__file__), "refs")
+newscreenshots_location = path.join(path.dirname(__file__), "new")
+diff_location = path.join(path.dirname(__file__), "diff")
+ui_showcase_url = "http://localhost:3000/ui/"
+
+def take_screenshots(dir_name):
+    fox = webdriver.Firefox()
+    # Open the UI Showcase
+    fox.get(ui_showcase_url)
+    # Find all component containers
+    elements = fox.find_elements_by_css_selector(".example")
+    regex = re.compile(r"[/\\(),':\-]")
+
+    for element in elements:
+        header = element.find_element_by_css_selector("h3")
+        component = element.find_element_by_css_selector(".comp iframe")
+        location = component.location
+        size = component.size
+        element_id = re.escape(re.sub(regex, '', header.get_attribute("id")))
+        title = path.join(dir_name, element_id + ".png")
+        print title
+
+        fox.save_screenshot(title) # saves screenshot of entire page
+
+        im = Image.open(title) # uses PIL library to open image in memory
+
+        left = location["x"]
+        top = location["y"]
+        right = location["x"] + size["width"]
+        bottom = location["y"] + size["height"]
+
+        im = im.crop((left, top, right, bottom)) # defines crop points
+        im.save(title) # saves new cropped image
+
+    fox.quit()
+
+def diff_screenshots():
+    onlyfiles = [ f for f in listdir(refs_location)
+                  if isfile(join(refs_location,f)) and f[-3:] == "png" ]
+
+    for f in onlyfiles:
+        print f
+        ref_file = path.join(refs_location, f)
+        new_file = path.join(newscreenshots_location, f)
+        diff_file = path.join(diff_location, f)
+        compare_cmd = "compare '" + ref_file + "' '" + new_file + \
+              "' '" + diff_file + "'"
+        join_cmd = "convert +append '" + ref_file + "' '" + diff_file + \
+              "' '" + new_file + "'" + " '" + diff_file + "_joined.png'"
+        remove_cmd = "rm " + diff_file
+
+        cmd = compare_cmd + " ; " + join_cmd + " ; " + remove_cmd
+        print cmd
+        subprocess.Popen(cmd, shell=True)
+
+def cleanup(clean_location):
+    files = [ f for f in listdir(clean_location)
+              if isfile(join(clean_location,f)) and f[-3:] == "png" ]
+
+    for f in files:
+        remove_cmd = "rm " + re.escape(path.join(clean_location, f))
+        subprocess.Popen(remove_cmd, shell=True)
+
+description = "Firefox Hello test for visual regressions. Run once before " + \
+              "making any changes with --refs to build the reference files " + \
+              "and once more with your patch applied using --diffs. If any " + \
+              "screenshots have changed they will show up in /test/diff."
+
+parser = argparse.ArgumentParser(description=description)
+parser.add_argument("-r", "--refs", action="store_true", help="Build the " +
+                    "reference screenshots.")
+parser.add_argument("-d", "--diffs", action="store_true", help="Compare " +
+                    "your changes against the reference screenshots.")
+parser.add_argument("-c", "--cleanup", action="store_true", help="Remove " +
+                    "all files from /diff and /new folders but not the " +
+                    "reference files")
+args = parser.parse_args()
+
+if args.refs:
+    take_screenshots(refs_location)
+if args.diffs:
+    take_screenshots(newscreenshots_location)
+    diff_screenshots()
+if args.cleanup:
+    cleanup(newscreenshots_location)
+    cleanup(diff_location)
