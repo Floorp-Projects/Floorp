@@ -3,21 +3,14 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
-const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM: dom, createClass, createFactory } = require("devtools/client/shared/vendor/react");
 const { L10N } = require("../utils");
-const FrameView = createFactory(require("devtools/client/shared/components/frame"));
+const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const unknownSourceString = L10N.getStr("unknownSource");
+const { TREE_ROW_HEIGHT } = require("../constants");
 
-const INDENT = 10;
-const MAX_SOURCE_LENGTH = 200;
-
-
-/**
- * An arrow that displays whether its node is expanded (▼) or collapsed
- * (▶). When its node has no children, it is hidden.
- */
-const TreeItem = module.exports = createClass({
-  displayName: "tree-item",
+const CensusTreeItem = module.exports = createClass({
+  displayName: "CensusTreeItem",
 
   formatPercent(showSign, percent) {
     return L10N.getFormatStr("tree-item.percent",
@@ -84,7 +77,8 @@ const TreeItem = module.exports = createClass({
       dom.span({ className: "heap-tree-item-field heap-tree-item-total-count" },
                dom.span({ className: "heap-tree-number" }, totalCount),
                dom.span({ className: "heap-tree-percent" }, percentTotalCount)),
-      dom.span({ className: "heap-tree-item-field heap-tree-item-name", style: { marginLeft: depth * INDENT }},
+               dom.span({ className: "heap-tree-item-field heap-tree-item-name",
+                          style: { marginLeft: depth * TREE_ROW_HEIGHT }},
         arrow,
         this.toLabel(item.name, onViewSourceInDebugger)
       )
@@ -95,7 +89,7 @@ const TreeItem = module.exports = createClass({
     if (isSavedFrame(name)) {
       let onClickTooltipString =
         L10N.getFormatStr("viewsourceindebugger",`${name.source}:${name.line}:${name.column}`);
-      return FrameView({
+      return Frame({
         frame: name,
         onClick: () => linkToDebugger(name),
         onClickTooltipString,
