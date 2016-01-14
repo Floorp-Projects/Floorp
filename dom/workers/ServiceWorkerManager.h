@@ -41,6 +41,7 @@ class PrincipalOriginAttributes;
 namespace dom {
 
 class ServiceWorkerRegistrationListener;
+class PushNotifier;
 
 namespace workers {
 
@@ -333,6 +334,7 @@ class ServiceWorkerManager final
   friend class ServiceWorkerRegistrationInfo;
   friend class ServiceWorkerUnregisterJob;
   friend class UpdateTimerCallback;
+  friend class mozilla::dom::PushNotifier;
 
 public:
   NS_DECL_ISUPPORTS
@@ -677,6 +679,11 @@ private:
 
   void
   UpdateTimerFired(nsIPrincipal* aPrincipal, const nsACString& aScope);
+
+  nsresult
+  SendPushEvent(const nsACString& aOriginAttributes,
+                const nsACString& aScope,
+                Maybe<nsTArray<uint8_t>> aData);
 };
 
 } // namespace workers
