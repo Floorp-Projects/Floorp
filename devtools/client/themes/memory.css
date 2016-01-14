@@ -227,6 +227,12 @@ html, body, #app, #memory-tool {
    */
   flex: 1;
   background-color: var(--theme-toolbar-background);
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
 }
 
 #heap-view > .heap-view-panel {
@@ -242,6 +248,12 @@ html, body, #app, #memory-tool {
    * Flexing to fill out remaining horizontal space. @see #heap-view.
    */
   flex: 1;
+
+  /**
+   * By default, flex items have min-width: auto;
+   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
+   */
+  min-width: 0;
 }
 
 #heap-view > .heap-view-panel > .snapshot-status,
