@@ -1,8 +1,8 @@
 [{
-"size": 560988557,
+"size": 560426161,
 "visibility": "public",
-"digest": "9c09e2084e1640dbf95d37ca198803064afea9d7ce5455e2860aa3a8a738976a9e56464a6d829ba05fa13978305a9ddd2eaec6e482de8974af8523e523556631",
+"digest": "e658bfdc2eaa103261d8ba90f409b5a1c776874de0f7096ff43c15a672509d56c0cd124d99421b25d2ed1c88ea87453a821fd0f926bc125f2755f177e49454c8",
 "algorithm": "sha512",
-"filename": "AVDs-x86-android-4.2_r1-build-2015-12-29-ubuntu.tar.gz",
+"filename": "AVDs-x86-android-4.2_r1-build-2016-01-07-ubuntu.tar.gz",
 "unpack": true
 }]
