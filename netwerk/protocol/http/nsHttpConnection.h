@@ -7,6 +7,7 @@
 #define nsHttpConnection_h__
 
 #include "nsHttpConnectionInfo.h"
+#include "nsHttpResponseHead.h"
 #include "nsAHttpTransaction.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
