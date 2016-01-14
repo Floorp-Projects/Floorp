@@ -72,10 +72,10 @@ protected:
     static void EndAccess(JNIEnv* env, nsresult* rv)
     {
         if (Traits::exceptionMode == ExceptionMode::ABORT) {
-            return HandleUncaughtException(env);
+            MOZ_CATCH_JNI_EXCEPTION(env);
 
         } else if (Traits::exceptionMode == ExceptionMode::NSRESULT) {
-            return GetNsresult(env, rv);
+            GetNsresult(env, rv);
         }
     }
 };
