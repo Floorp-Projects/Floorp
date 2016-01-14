@@ -128,6 +128,12 @@ CSSStyleSheet*
 nsLayoutStylesheetCache::UASheet()
 {
   EnsureGlobal();
+
+  if (!gStyleCache->mUASheet) {
+    LoadSheetURL("resource://gre-resources/ua.css",
+                 gStyleCache->mUASheet, eAgentSheetFeatures);
+  }
+
   return gStyleCache->mUASheet;
 }
 
@@ -359,8 +365,6 @@ nsLayoutStylesheetCache::nsLayoutStylesheetCache()
                mQuirkSheet, eAgentSheetFeatures);
   LoadSheetURL("resource://gre/res/svg.css",
                mSVGSheet, eAgentSheetFeatures);
-  LoadSheetURL("resource://gre-resources/ua.css",
-               mUASheet, eAgentSheetFeatures);
   LoadSheetURL("chrome://global/content/xul.css",
                mXULSheet, eAgentSheetFeatures);
 
@@ -401,6 +405,8 @@ nsLayoutStylesheetCache::EnsureGlobal()
   // style sheets will be re-parsed.
   // Preferences::RegisterCallback(&DependentPrefChanged,
   //                               "layout.css.example-pref.enabled");
+  Preferences::RegisterCallback(&DependentPrefChanged,
+                                "layout.css.grid.enabled");
 }
 
 void
@@ -803,7 +809,7 @@ nsLayoutStylesheetCache::DependentPrefChanged(const char* aPref, void* aData)
   // to be re-parsed by dropping the sheet from gCSSLoader's cache then
   // setting our cached sheet pointer to null.  This will only work for sheets
   // that are loaded lazily.
-  // InvalidateSheet(gStyleCache->mSomeLazilyLoadedSheet);
+  InvalidateSheet(gStyleCache->mUASheet); // for layout.css.grid.enabled
 }
 
 /* static */ void
