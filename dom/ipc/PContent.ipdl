@@ -728,6 +728,21 @@ child:
      */
     async NotifyGMPsChanged();
 
+    /**
+     * Send a `push` event without data to a service worker in the child.
+     */
+    Push(nsCString scope, Principal principal);
+
+    /**
+     * Send a `push` event with data to a service worker in the child.
+     */
+    PushWithData(nsCString scope, Principal principal, uint8_t[] data);
+
+    /**
+     * Send a `pushsubscriptionchange` event to a service worker in the child.
+     */
+    PushSubscriptionChange(nsCString scope, Principal principal);
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
