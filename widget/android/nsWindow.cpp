@@ -369,7 +369,7 @@ nsWindow::Natives::~Natives()
     // OnDestroy will call disposeNative after any pending native calls have
     // been made.
     MOZ_ASSERT(mEditable);
-    mEditable->OnDestroy();
+    mEditable->OnViewChange(nullptr);
 }
 
 void
