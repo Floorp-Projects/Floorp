@@ -280,10 +280,8 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
   }
 };
 
-using FieldInfoHash = GCHashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy>;
-
-void
-TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields);
+using FieldInfoHash = GCHashMap<js::RelocatablePtr<JSFlatString*>,
+                                FieldInfo, FieldHashPolicy, SystemAllocPolicy>;
 
 // Descriptor of ABI, return type, argument types, and variadicity for a
 // FunctionType.
