@@ -219,9 +219,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
                                      HandleObject proto = nullptr,
                                      NewObjectKind newKind = GenericObject);
 
-    static JSObject* createSlice(JSContext* cx, Handle<ArrayBufferObject*> arrayBuffer,
-                                 uint32_t begin, uint32_t end);
-
     static bool createDataViewForThisImpl(JSContext* cx, const CallArgs& args);
     static bool createDataViewForThis(JSContext* cx, unsigned argc, Value* vp);
 
@@ -230,6 +227,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
 
     template<typename T>
     static bool createTypedArrayFromBuffer(JSContext* cx, unsigned argc, Value* vp);
+
+    static void copyData(Handle<ArrayBufferObject*> toBuffer,
+                         Handle<ArrayBufferObject*> fromBuffer,
+                         uint32_t fromIndex, uint32_t count);
 
     static void trace(JSTracer* trc, JSObject* obj);
     static void objectMoved(JSObject* obj, const JSObject* old);

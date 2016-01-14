@@ -3,8 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { assert } = require("devtools/shared/DevToolsUtils");
+const { viewState } = require("../constants");
 const { refreshDiffing } = require("./diffing");
-const { refreshSelectedCensus } = require("./snapshot");
+const snapshot = require("./snapshot");
 
 /**
  * Refresh the main thread's data from the heap analyses worker, if needed.
@@ -13,10 +15,22 @@ const { refreshSelectedCensus } = require("./snapshot");
  */
 exports.refresh = function (heapWorker) {
   return function* (dispatch, getState) {
-    if (getState().diffing) {
-      yield dispatch(refreshDiffing(heapWorker));
-    } else {
-      yield dispatch(refreshSelectedCensus(heapWorker));
+    switch (getState().view) {
+      case viewState.DIFFING:
+        assert(getState().diffing, "Should have diffing state if in diffing view");
+        yield dispatch(refreshDiffing(heapWorker));
+        return;
+
+      case viewState.CENSUS:
+        yield dispatch(snapshot.refreshSelectedCensus(heapWorker));
+        return;
+
+      case viewState.DOMINATOR_TREE:
+        yield dispatch(snapshot.refreshSelectedDominatorTree(heapWorker));
+        return;
+
+      default:
+        assert(false, `Unexpected view state: ${getState().view}`);
     }
   };
 };

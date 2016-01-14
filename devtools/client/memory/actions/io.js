@@ -64,7 +64,7 @@ const pickFileAndImportSnapshotAndCensus = exports.pickFileAndImportSnapshotAndC
 
 const importSnapshotAndCensus = exports.importSnapshotAndCensus = function (heapWorker, path) {
   return function* (dispatch, getState) {
-    const snapshot = immutableUpdate(createSnapshot(), {
+    const snapshot = immutableUpdate(createSnapshot(getState()), {
       path,
       state: states.IMPORTING,
       imported: true,

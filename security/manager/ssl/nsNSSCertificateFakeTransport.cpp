@@ -480,7 +480,9 @@ nsNSSCertListFakeTransport::Read(nsIObjectInputStream* aStream)
     }
 
     nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(certSupports);
-    mFakeCertList.append(cert);
+    if (!mFakeCertList.append(cert)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   return rv;

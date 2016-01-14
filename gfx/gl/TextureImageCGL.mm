@@ -21,10 +21,9 @@ TextureImageCGL::TextureImageCGL(GLuint aTexture,
                 GLenum aWrapMode,
                 ContentType aContentType,
                 GLContext* aContext,
-                TextureImage::Flags aFlags,
-                TextureImage::ImageFormat aImageFormat)
+                TextureImage::Flags aFlags)
     : BasicTextureImage(aTexture, aSize, aWrapMode, aContentType,
-                        aContext, aFlags, aImageFormat)
+                        aContext, aFlags)
     , mPixelBuffer(0)
     , mBoundPixelBuffer(false)
 {}
@@ -76,15 +75,14 @@ CreateTextureImageCGL(GLContext* gl,
     }
 
     return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode,
-                                   aFlags, aImageFormat);
+                                   aFlags);
 }
 
 already_AddRefed<TextureImage>
 TileGenFuncCGL(GLContext *gl,
                const IntSize& aSize,
                TextureImage::ContentType aContentType,
-               TextureImage::Flags aFlags,
-               TextureImage::ImageFormat aImageFormat)
+               TextureImage::Flags aFlags)
 {
     bool useNearestFilter = aFlags & TextureImage::UseNearestFilter;
     gl->MakeCurrent();
@@ -103,7 +101,7 @@ TileGenFuncCGL(GLContext *gl,
 
     RefPtr<TextureImageCGL> teximage
         (new TextureImageCGL(texture, aSize, LOCAL_GL_CLAMP_TO_EDGE, aContentType,
-                             gl, aFlags, aImageFormat));
+                             gl, aFlags));
     return teximage.forget();
 }
 

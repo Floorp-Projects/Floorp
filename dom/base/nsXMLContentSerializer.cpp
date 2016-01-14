@@ -960,8 +960,7 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
                                      name, aStr, skipAttr, addNSAttr),
                  NS_ERROR_OUT_OF_MEMORY);
 
-  NS_ENSURE_TRUE(AppendEndOfElementStart(aOriginalElement, name,
-                                         content->GetNameSpaceID(), aStr),
+  NS_ENSURE_TRUE(AppendEndOfElementStart(aElement, aOriginalElement, aStr),
                  NS_ERROR_OUT_OF_MEMORY);
 
   if ((mDoFormat || forceFormat) && !mDoRaw && !PreLevel()
@@ -974,19 +973,56 @@ nsXMLContentSerializer::AppendElementStart(Element* aElement,
   return NS_OK;
 }
 
+// aElement is the actual element we're outputting.  aOriginalElement is the one
+// in the original DOM, which is the one we have to test for kids.
+static bool
+ElementNeedsSeparateEndTag(Element* aElement, Element* aOriginalElement)
+{
+  if (aOriginalElement->GetChildCount()) {
+    // We have kids, so we need a separate end tag.  This needs to be checked on
+    // aOriginalElement because that's the one that's actually in the DOM and
+    // might have kids.
+    return true;
+  }
+
+  if (!aElement->IsHTMLElement()) {
+    // Empty non-HTML elements can just skip a separate end tag.
+    return false;
+  }
+
+  // HTML container tags should have a separate end tag even if empty, per spec.
+  // See
+  // https://w3c.github.io/DOM-Parsing/#dfn-concept-xml-serialization-algorithm
+  bool isHTMLContainer = true; // Default in case we get no parser service.
+  nsIParserService* parserService = nsContentUtils::GetParserService();
+  if (parserService) {
+    nsIAtom* localName = aElement->NodeInfo()->NameAtom();
+    parserService->IsContainer(
+      parserService->HTMLCaseSensitiveAtomTagToId(localName),
+      isHTMLContainer);
+  }
+  return isHTMLContainer;
+}
+
 bool
-nsXMLContentSerializer::AppendEndOfElementStart(nsIContent *aOriginalElement,
-                                                nsIAtom * aName,
-                                                int32_t aNamespaceID,
+nsXMLContentSerializer::AppendEndOfElementStart(Element* aElement,
+                                                Element* aOriginalElement,
                                                 nsAString& aStr)
 {
-  // We don't output a separate end tag for empty elements
-  if (!aOriginalElement->GetChildCount()) {
-    return AppendToString(NS_LITERAL_STRING("/>"), aStr);
-  }
-  else {
+  if (ElementNeedsSeparateEndTag(aElement, aOriginalElement)) {
     return AppendToString(kGreaterThan, aStr);
   }
+
+  // We don't need a separate end tag.  For HTML elements (which at this point
+  // must be non-containers), append a space before the '/', per spec.  See
+  // https://w3c.github.io/DOM-Parsing/#dfn-concept-xml-serialization-algorithm
+  if (aOriginalElement->IsHTMLElement()) {
+    if (!AppendToString(kSpace, aStr)) {
+      return false;
+    }
+  }
+
+  return AppendToString(NS_LITERAL_STRING("/>"), aStr);
 }
 
 NS_IMETHODIMP 
@@ -998,7 +1034,7 @@ nsXMLContentSerializer::AppendElementEnd(Element* aElement,
   nsIContent* content = aElement;
 
   bool forceFormat = false, outputElementEnd;
-  outputElementEnd = CheckElementEnd(content, forceFormat, aStr);
+  outputElementEnd = CheckElementEnd(aElement, forceFormat, aStr);
 
   nsIAtom *name = content->NodeInfo()->NameAtom();
 
@@ -1119,13 +1155,17 @@ nsXMLContentSerializer::CheckElementStart(nsIContent * aContent,
 }
 
 bool
-nsXMLContentSerializer::CheckElementEnd(nsIContent * aContent,
-                                        bool & aForceFormat,
+nsXMLContentSerializer::CheckElementEnd(Element* aElement,
+                                        bool& aForceFormat,
                                         nsAString& aStr)
 {
   // We don't output a separate end tag for empty element
   aForceFormat = false;
-  return aContent->GetChildCount() > 0;
+
+  // XXXbz this is a bit messed up, but by now we don't have our fixed-up
+  // version of aElement anymore.  Let's hope fixup never changes the localName
+  // or namespace...
+  return ElementNeedsSeparateEndTag(aElement, aElement);
 }
 
 bool

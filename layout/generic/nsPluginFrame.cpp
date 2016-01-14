@@ -1403,7 +1403,7 @@ nsPluginFrame::GetLayerState(nsDisplayListBuilder* aBuilder,
     return LAYER_NONE;
   }
 
-  return LAYER_ACTIVE;
+  return LAYER_ACTIVE_FORCE;
 }
 
 class PluginFrameDidCompositeObserver final : public ClientLayerManager::

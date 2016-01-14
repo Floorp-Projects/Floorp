@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that the Toolbar component shows the tree inversion checkbox only at the appropriate times.
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Tree component test</title>
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+    <div id="container"></div>
+    <pre id="test">
+        <script src="head.js" type="application/javascript;version=1.8"></script>
+        <script type="application/javascript;version=1.8">
+         window.onload = Task.async(function* () {
+           try {
+             const container = document.getElementById("container");
+
+             // Census and dominator tree views.
+
+             for (let view of [viewState.CENSUS, viewState.DIFFING]) {
+               yield renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+                 view,
+               })), container);
+
+               ok(container.querySelector("#invert-tree-checkbox"),
+                  `The invert checkbox is shown in view = ${view}`);
+             }
+
+             yield renderComponent(Toolbar(immutableUpdate(TEST_TOOLBAR_PROPS, {
+               view: viewState.DOMINATOR_TREE,
+             })), container);
+
+             ok(!container.querySelector("#invert-tree-checkbox"),
+                "The invert checkbox is NOT shown in the DOMINATOR_TREE view");
+           } catch(e) {
+             ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+           } finally {
+             SimpleTest.finish();
+           }
+         });
+        </script>
+    </pre>
+</body>
+</html>

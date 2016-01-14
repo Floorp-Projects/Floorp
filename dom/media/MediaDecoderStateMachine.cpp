@@ -2868,6 +2868,12 @@ MediaDecoderStateMachine::SetAudioCaptured(bool aCaptured)
     return;
   }
 
+  // Rest these flags so they are consistent with the status of the sink.
+  // TODO: Move these flags into MediaSink to improve cohesion so we don't need
+  // to reset these flags when switching MediaSinks.
+  mAudioCompleted = false;
+  mVideoCompleted = false;
+
   // Backup current playback parameters.
   MediaSink::PlaybackParams params = mMediaSink->GetPlaybackParams();
 
