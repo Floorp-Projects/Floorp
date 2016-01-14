@@ -130,7 +130,6 @@ add_task(function* test_multipleListener() {
 });
 
 add_task(function* test_infoBar() {
-  const kNSXUL = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   const kBrowserSharingNotificationId = "loop-sharing-notification";
   const kPrefBrowserSharingInfoBar = "loop.browserSharing.showInfoBar";
 

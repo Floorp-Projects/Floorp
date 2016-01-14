@@ -260,9 +260,11 @@ loop.store = loop.store || {};
       this._notifications.remove("create-room-error");
       loop.request("Rooms:Create", roomCreationData).then(function(result) {
         var buckets = this._constants.ROOM_CREATE;
-        if (result && result.isError) {
+        if (!result || result.isError) {
           loop.request("TelemetryAddValue", "LOOP_ROOM_CREATE", buckets.CREATE_FAIL);
-          this.dispatchAction(new sharedActions.CreateRoomError({ error: result }));
+          this.dispatchAction(new sharedActions.CreateRoomError({
+            error: result ? result : new Error("no result")
+          }));
           return;
         }
 

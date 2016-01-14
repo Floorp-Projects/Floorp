@@ -6,8 +6,6 @@ describe("loopapi-client", function() {
 
   var expect = chai.expect;
   var sandbox, clock, replyTimeoutMs;
-  var sharedMixins = loop.shared.mixins;
-  var TestUtils = React.addons.TestUtils;
 
   beforeEach(function() {
     sandbox = sinon.sandbox.create();

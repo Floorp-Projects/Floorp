@@ -1,7 +1,7 @@
 # need to get this dir in the path so that we make the import work
 import os
 import sys
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'shared'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'shared', 'test'))
 
 from frontend_tester import BaseTestFrontendUnits
 
@@ -10,7 +10,7 @@ class TestDesktopUnits(BaseTestFrontendUnits):
 
     def setUp(self):
         super(TestDesktopUnits, self).setUp()
-        self.set_server_prefix("../desktop-local/")
+        self.set_server_prefix("../../../../")
 
     def test_units(self):
-        self.check_page("index.html")
+        self.check_page("chrome/content/panels/test/index.html")
