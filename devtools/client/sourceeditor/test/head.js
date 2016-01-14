@@ -4,6 +4,8 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/NetUtil.jsm");
+
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
@@ -139,16 +141,11 @@ function read(url) {
   let scriptableStream = Cc["@mozilla.org/scriptableinputstream;1"]
     .getService(Ci.nsIScriptableInputStream);
 
-  let channel = Services.io.newChannel2(
-    url,
-    null,
-    null,
-    null,      // aLoadingNode
-    Services.scriptSecurityManager.getSystemPrincipal(),
-    null,      // aTriggeringPrincipal
-    Ci.nsILoadInfo.SEC_NORMAL,
-    Ci.nsIContentPolicy.TYPE_OTHER);
-  let input = channel.open();
+  let channel = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true
+  });
+  let input = channel.open2();
   scriptableStream.init(input);
 
   let data = "";
