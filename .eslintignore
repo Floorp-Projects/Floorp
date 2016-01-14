@@ -87,38 +87,8 @@ browser/modules/**
 
 # Loop specific exclusions
 
-# This file currently uses a non-standard (and not on a standards track)
-# if statement within catch.
-browser/extensions/loop/content/modules/MozLoopWorker.js
-# This file currently uses es7 features eslint issue:
-# https://github.com/eslint/espree/issues/125
-browser/extensions/loop/content/modules/MozLoopAPI.jsm
-# Need to fix the configuration for this.
-browser/extensions/loop/bootstrap.js
-# Need to drop the preprocessing (bug 1212428)
-browser/extensions/loop/content/preferences/prefs.js
-# Libs we don't need to check
-browser/extensions/loop/content/panels/vendor
-browser/extensions/loop/content/shared/vendor
-browser/extensions/loop/standalone/content/vendor
-# Libs we don't need to check
-browser/extensions/loop/test/shared/vendor
-# Coverage files
-browser/extensions/loop/test/coverage
-# These are generated react files that we don't need to check
-browser/extensions/loop/content/panels/js/conversation.js
-browser/extensions/loop/content/panels/js/conversationViews.js
-browser/extensions/loop/content/panels/js/panel.js
-browser/extensions/loop/content/panels/js/roomViews.js
-browser/extensions/loop/content/panels/js/feedbackViews.js
-browser/extensions/loop/content/shared/js/textChatView.js
-browser/extensions/loop/content/shared/js/linkifiedTextView.js
-browser/extensions/loop/content/shared/js/views.js
-browser/extensions/loop/standalone/content/js/standaloneRoomViews.js
-browser/extensions/loop/standalone/content/js/webapp.js
-browser/extensions/loop/ui/ui-showcase.js
-# Don't need to check the built tree
-browser/extensions/loop/standalone/dist
+# Ignore all of loop since it is imported from github and checked at source.
+browser/extensions/loop/**
 
 # devtools/ exclusions
 # Ignore d3
