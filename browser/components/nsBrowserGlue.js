@@ -1893,13 +1893,19 @@ BrowserGlue.prototype = {
     const UI_VERSION = 34;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
+
+    let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
+
+    // Unconditionally remove this for Fx44 so we don't interfere with the UI version
+    xulStore.removeValue("chrome://passwordmgr/content/passwordManager.xul",
+                         "passwordCol",
+                         "hidden");
+
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
     } catch(ex) {}
     if (currentUIVersion >= UI_VERSION)
       return;
-
-    let xulStore = Cc["@mozilla.org/xul/xulstore;1"].getService(Ci.nsIXULStore);
 
     if (currentUIVersion < 2) {
       // This code adds the customizable bookmarks button.
