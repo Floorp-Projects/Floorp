@@ -1,5 +1,4 @@
 {
-  "extends": "../../.eslintrc-gecko",
   "globals": {
     // General test items.
     "add_task": false,

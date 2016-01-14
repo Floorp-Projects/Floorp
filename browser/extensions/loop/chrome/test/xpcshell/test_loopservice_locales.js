@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* exported run_test */
+
 function test_locale() {
   // Set the pref to something controlled.
   Services.prefs.setCharPref("general.useragent.locale", "ab-CD");
