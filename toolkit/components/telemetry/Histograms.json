@@ -8271,11 +8271,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "Number of sessions where at least one chat message was exchanged"
   },
-  "E10S_AUTOSTART": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "Whether a session is set to autostart e10s windows"
-  },
   "E10S_AUTOSTART_STATUS": {
     "expires_in_version": "never",
     "kind": "enumerated",

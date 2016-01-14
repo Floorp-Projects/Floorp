@@ -54,11 +54,6 @@ add_task(function* () {
 
   let hud = yield openConsole();
 
-  yield hud.ui.setSaveRequestAndResponseBodies(true);
-
-  ok(hud.ui._saveRequestAndResponseBodies,
-    "The saveRequestAndResponseBodies property was successfully set.");
-
   let gotLastRequest = waitForRequest();
 
   let loaded = loadBrowser(browser);

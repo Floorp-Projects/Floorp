@@ -87,7 +87,7 @@ function onNetworkEventUpdate(aState, aType, aPacket)
           status: "200",
           statusText: "OK",
           headersSize: /^\d+$/,
-          discardResponseBody: true,
+          discardResponseBody: false,
         },
       };
       break;
@@ -104,8 +104,8 @@ function onNetworkEventUpdate(aState, aType, aPacket)
     case "responseContent":
       expectedPacket = {
         mimeType: "application/json",
-        contentSize: 0,
-        discardResponseBody: true,
+        contentSize: 1070,
+        discardResponseBody: false,
       };
       break;
     case "eventTimings":
@@ -180,7 +180,7 @@ function onRequestPostData(aState, aResponse)
   info("checking request POST data");
 
   ok(!aResponse.postData.text, "no request POST data");
-  ok(aResponse.postDataDiscarded, "request POST data was discarded");
+  ok(!aResponse.postDataDiscarded, "request POST data was not discarded");
 
   onResponseHeaders = onResponseHeaders.bind(null, aState);
   aState.client.getResponseHeaders(aState.netActor,
@@ -225,8 +225,8 @@ function onResponseContent(aState, aResponse)
 {
   info("checking response content");
 
-  ok(!aResponse.content.text, "no response content");
-  ok(aResponse.contentDiscarded, "response content was discarded");
+  ok(aResponse.content.text, "response content text");
+  ok(!aResponse.contentDiscarded, "response content was not discarded");
 
   onEventTimings = onEventTimings.bind(null, aState);
   aState.client.getEventTimings(aState.netActor,
