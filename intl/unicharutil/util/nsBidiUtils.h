@@ -14,7 +14,8 @@
     *  for the detailed definition of the following categories
     *
     *  The values here must match the equivalents in %bidicategorycode in
-    *  mozilla/intl/unicharutil/tools/genUnicodePropertyData.pl
+    *  mozilla/intl/unicharutil/tools/genUnicodePropertyData.pl,
+    *  and must also match the values used by ICU's UCharDirection.
     */
 
 enum nsCharType   { 
@@ -37,9 +38,9 @@ enum nsCharType   {
   eCharType_PopDirectionalFormat     = 16,
   eCharType_DirNonSpacingMark        = 17,
   eCharType_BoundaryNeutral          = 18,
-  eCharType_LeftToRightIsolate       = 19,
-  eCharType_RightToLeftIsolate       = 20,
-  eCharType_FirstStrongIsolate       = 21,
+  eCharType_FirstStrongIsolate       = 19,
+  eCharType_LeftToRightIsolate       = 20,
+  eCharType_RightToLeftIsolate       = 21,
   eCharType_PopDirectionalIsolate    = 22,
   eCharType_CharTypeCount
 };

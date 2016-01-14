@@ -21,7 +21,7 @@ typedef voidPtr nativeWindow;
  * but rather a common set that nearly all windowed objects support.    
  */
 
-[scriptable, uuid(9DA319F3-EEE6-4504-81A5-6A19CF6215BF)]
+[scriptable, uuid(ca635529-a977-4552-9b8a-66187e54d882)]
 interface nsIBaseWindow : nsISupports
 {
 	/*
@@ -191,6 +191,20 @@ interface nsIBaseWindow : nsISupports
 	differing resolutions.
 	*/
 	readonly attribute double unscaledDevicePixelsPerCSSPixel;
+
+	/*
+	The number of device pixels per display pixel on this window's current
+	screen. (The meaning of "display pixel" varies across OS environments;
+	it is the pixel units used by the desktop environment to manage screen
+	real estate and window positioning, which may correspond to (per-screen)
+	device pixels, or may be a virtual coordinate space that covers a multi-
+	monitor, mixed-dpi desktop space.)
+	This is the value returned by DevicePixelsPerDesktopPixel() of the underlying
+	widget.
+	Note that this may change if the window is moved between screens with
+	differing resolutions.
+	*/
+	readonly attribute double devicePixelsPerDesktopPixel;
 
 	/**
 	* Give the window focus.

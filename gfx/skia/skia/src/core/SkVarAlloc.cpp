@@ -11,7 +11,7 @@
 #if defined(SK_BUILD_FOR_MAC)
     #include <malloc/malloc.h>
 #elif defined(SK_BUILD_FOR_UNIX) || defined(SK_BUILD_FOR_WIN32)
-    #include <malloc.h>
+//    #include <malloc.h>
 #endif
 
 struct SkVarAlloc::Block {

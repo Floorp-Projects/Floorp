@@ -7339,6 +7339,76 @@ BytecodeEmitter::emitSelfHostedAllowContentSpread(ParseNode* pn)
 }
 
 bool
+BytecodeEmitter::isRestParameter(ParseNode* pn, bool* result)
+{
+    if (!sc->isFunctionBox()) {
+        *result = false;
+        return true;
+    }
+
+    RootedFunction fun(cx, sc->asFunctionBox()->function());
+    if (!fun->hasRest()) {
+        *result = false;
+        return true;
+    }
+
+    if (!pn->isKind(PNK_NAME)) {
+        if (emitterMode == BytecodeEmitter::SelfHosting && pn->isKind(PNK_CALL)) {
+            ParseNode* pn2 = pn->pn_head;
+            if (pn2->getKind() == PNK_NAME && pn2->name() == cx->names().allowContentSpread)
+                return isRestParameter(pn2->pn_next, result);
+        }
+        *result = false;
+        return true;
+    }
+
+    if (!bindNameToSlot(pn))
+        return false;
+
+    *result = pn->getOp() == JSOP_GETARG && pn->pn_scopecoord.slot() == fun->nargs() - 1;
+    return true;
+}
+
+bool
+BytecodeEmitter::emitOptimizeSpread(ParseNode* arg0, ptrdiff_t* jmp, bool* emitted)
+{
+    // Emit a pereparation code to optimize the spread call with a rest
+    // parameter:
+    //
+    //   function f(...args) {
+    //     g(...args);
+    //   }
+    //
+    // If the spread operand is a rest parameter and it's optimizable array,
+    // skip spread operation and pass it directly to spread call operation.
+    // See the comment in OptimizeSpreadCall in Interpreter.cpp for the
+    // optimizable conditons.
+    bool result = false;
+    if (!isRestParameter(arg0, &result))
+        return false;
+
+    if (!result) {
+        *emitted = false;
+        return true;
+    }
+
+    if (!emitTree(arg0))
+        return false;
+
+    if (!emit1(JSOP_OPTIMIZE_SPREADCALL))
+        return false;
+
+    if (!emitJump(JSOP_IFNE, 0, jmp))
+        return false;
+
+    if (!emit1(JSOP_POP))
+        return false;
+
+    *emitted = true;
+    return true;
+}
+
+bool
 BytecodeEmitter::emitCallOrNew(ParseNode* pn)
 {
     bool callop = pn->isKind(PNK_CALL) || pn->isKind(PNK_TAGGED_TEMPLATE);
@@ -7490,8 +7560,19 @@ BytecodeEmitter::emitCallOrNew(ParseNode* pn)
             }
         }
     } else {
-        if (!emitArray(pn2->pn_next, argc, JSOP_SPREADCALLARRAY))
+        ParseNode* args = pn2->pn_next;
+        ptrdiff_t jmp;
+        bool optCodeEmitted = false;
+        if (argc == 1) {
+            if (!emitOptimizeSpread(args->pn_kid, &jmp, &optCodeEmitted))
+                return false;
+        }
+
+        if (!emitArray(args, argc, JSOP_SPREADCALLARRAY))
             return false;
+
+        if (optCodeEmitted)
+            setJumpOffsetAt(jmp);
 
         if (isNewOp) {
             if (pn->isKind(PNK_SUPERCALL)) {

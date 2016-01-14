@@ -132,6 +132,12 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  */
 static const double MAX_TIMEOUT_INTERVAL = 1800.0;
 
+#ifdef NIGHTLY_BUILD
+# define SHARED_MEMORY_DEFAULT 1
+#else
+# define SHARED_MEMORY_DEFAULT 0
+#endif
+
 // Per-runtime shell state.
 struct ShellRuntime
 {
@@ -169,6 +175,7 @@ static bool enableIon = false;
 static bool enableAsmJS = false;
 static bool enableNativeRegExp = false;
 static bool enableUnboxedArrays = false;
+static bool enableSharedMemory = SHARED_MEMORY_DEFAULT;
 #ifdef JS_GC_ZEAL
 static char gZealStr[128];
 #endif
@@ -2614,6 +2621,13 @@ static const JSClass sandbox_class = {
     JS_GlobalObjectTraceHook
 };
 
+static void
+SetStandardCompartmentOptions(JS::CompartmentOptions& options)
+{
+    options.behaviors().setVersion(JSVERSION_DEFAULT);
+    options.creationOptions().setSharedMemoryAndAtomicsEnabled(enableSharedMemory);
+}
+
 static JSObject*
 NewSandbox(JSContext* cx, bool lazy)
 {
@@ -2776,7 +2790,7 @@ WorkerMain(void* arg)
         JSAutoRequest ar(cx);
 
         JS::CompartmentOptions compartmentOptions;
-        compartmentOptions.behaviors().setVersion(JSVERSION_DEFAULT);
+        SetStandardCompartmentOptions(compartmentOptions);
         RootedObject global(cx, NewGlobalObject(cx, compartmentOptions, nullptr));
         if (!global)
             break;
@@ -3972,11 +3986,10 @@ NewGlobal(JSContext* cx, unsigned argc, Value* vp)
     JSPrincipals* principals = nullptr;
 
     JS::CompartmentOptions options;
-
     JS::CompartmentCreationOptions& creationOptions = options.creationOptions();
     JS::CompartmentBehaviors& behaviors = options.behaviors();
 
-    behaviors.setVersion(JSVERSION_DEFAULT);
+    SetStandardCompartmentOptions(options);
 
     CallArgs args = CallArgsFromVp(argc, vp);
     if (args.length() == 1 && args[0].isObject()) {
@@ -4334,6 +4347,9 @@ GetSharedArrayBuffer(JSContext* cx, unsigned argc, Value* vp)
     SharedArrayRawBuffer* buf = sharedArrayBufferMailbox;
     if (buf) {
         buf->addReference();
+        // Shared memory is enabled globally in the shell: there can't be a worker
+        // that does not enable it if the main thread has it.
+        MOZ_ASSERT(cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled());
         newObj = SharedArrayBufferObject::New(cx, buf);
         if (!newObj) {
             buf->dropReference();
@@ -6465,6 +6481,17 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
         return false;
     }
 
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
+    if (const char* str = op.getStringOption("shared-memory")) {
+        if (strcmp(str, "off") == 0)
+            enableSharedMemory = false;
+        else if (strcmp(str, "on") == 0)
+            enableSharedMemory = true;
+        else
+            return OptionFailure("shared-memory", str);
+    }
+#endif
+
 #if defined(JS_CODEGEN_ARM)
     if (const char* str = op.getStringOption("arm-hwcap"))
         jit::ParseARMHwCapFlags(str);
@@ -6570,7 +6597,7 @@ Shell(JSContext* cx, OptionParser* op, char** envp)
         disableOOMFunctions = true;
 
     JS::CompartmentOptions options;
-    options.behaviors().setVersion(JSVERSION_DEFAULT);
+    SetStandardCompartmentOptions(options);
     RootedObject glob(cx, NewGlobalObject(cx, options, nullptr));
     if (!glob)
         return 1;
@@ -6694,6 +6721,16 @@ main(int argc, char** argv, char** envp)
         || !op.addBoolOption('\0', "no-native-regexp", "Disable native regexp compilation")
         || !op.addBoolOption('\0', "no-unboxed-objects", "Disable creating unboxed plain objects")
         || !op.addBoolOption('\0', "unboxed-arrays", "Allow creating unboxed arrays")
+#ifdef ENABLE_SHARED_ARRAY_BUFFER
+        || !op.addStringOption('\0', "shared-memory", "on/off",
+                               "SharedArrayBuffer and Atomics "
+#  if SHARED_MEMORY_DEFAULT
+                               "(default: on, off to disable)"
+#  else
+                               "(default: off, on to enable)"
+#  endif
+            )
+#endif
         || !op.addStringOption('\0', "ion-shared-stubs", "on/off",
                                "Use shared stubs (default: off, on to enable)")
         || !op.addStringOption('\0', "ion-scalar-replacement", "on/off",

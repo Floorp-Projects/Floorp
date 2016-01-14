@@ -2487,7 +2487,8 @@ HTMLInputElement::GetFiles()
     return nullptr;
   }
 
-  if (HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) {
+  if (Preferences::GetBool("dom.input.dirpicker", false) &&
+      HasAttr(kNameSpaceID_None, nsGkAtoms::directory)) {
     return nullptr;
   }
 
@@ -4872,27 +4873,6 @@ HTMLInputElement::ChooseDirectory(ErrorResult& aRv)
                  );
 }
 
-static already_AddRefed<OSFileSystem>
-MakeOrReuseFileSystem(const nsAString& aNewLocalRootPath,
-                      OSFileSystem* aFS,
-                      nsPIDOMWindow* aWindow)
-{
-  MOZ_ASSERT(aWindow);
-
-  RefPtr<OSFileSystem> fs;
-  if (aFS) {
-    const nsAString& prevLocalRootPath = aFS->GetLocalRootPath();
-    if (aNewLocalRootPath == prevLocalRootPath) {
-      fs = aFS;
-    }
-  }
-  if (!fs) {
-    fs = new OSFileSystem(aNewLocalRootPath);
-    fs->Init(aWindow);
-  }
-  return fs.forget();
-}
-
 already_AddRefed<Promise>
 HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
 {
@@ -4925,8 +4905,6 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
     return p.forget();
   }
 
-  nsPIDOMWindow* window = OwnerDoc()->GetInnerWindow();
-  RefPtr<OSFileSystem> fs;
   for (uint32_t i = 0; i < filesAndDirs.Length(); ++i) {
     if (filesAndDirs[i]->IsDirectory()) {
 #if defined(ANDROID) || defined(MOZ_B2G)
@@ -4942,7 +4920,10 @@ HTMLInputElement::GetFilesAndDirectories(ErrorResult& aRv)
       }
       int32_t leafSeparatorIndex = path.RFind(FILE_PATH_SEPARATOR);
       nsDependentSubstring dirname = Substring(path, 0, leafSeparatorIndex);
-      fs = MakeOrReuseFileSystem(dirname, fs, window);
+
+      RefPtr<OSFileSystem> fs = new OSFileSystem(dirname);
+      fs->Init(OwnerDoc()->GetInnerWindow());
+
       nsAutoString dompath(NS_LITERAL_STRING(FILESYSTEM_DOM_PATH_SEPARATOR));
       dompath.Append(Substring(path, leafSeparatorIndex + 1));
       RefPtr<Directory> directory = new Directory(fs, dompath);

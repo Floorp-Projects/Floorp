@@ -149,6 +149,41 @@ intrinsic_IsInstanceOfBuiltin(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
+/**
+ * Self-hosting intrinsic returning the original constructor for a builtin
+ * the name of which is the first and only argument.
+ *
+ * The return value is guaranteed to be the original constructor even if
+ * content code changed the named binding on the global object.
+ *
+ * This intrinsic shouldn't be called directly. Instead, the
+ * `GetBuiltinConstructor` and `GetBuiltinPrototype` helper functions in
+ * Utilities.js should be used, as they cache results, improving performance.
+ */
+static bool
+intrinsic_GetBuiltinConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    RootedString str(cx, args[0].toString());
+    JSAtom* atom;
+    if (str->isAtom()) {
+        atom = &str->asAtom();
+    } else {
+        atom = AtomizeString(cx, str);
+        if (!atom)
+            return false;
+    }
+    RootedId id(cx, AtomToId(atom));
+    JSProtoKey key = JS_IdToProtoKey(cx, id);
+    MOZ_ASSERT(key != JSProto_Null);
+    RootedObject ctor(cx);
+    if (!GetBuiltinConstructor(cx, key, &ctor))
+        return false;
+    args.rval().setObject(*ctor);
+    return true;
+}
+
 static bool
 intrinsic_SubstringKernel(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -505,14 +540,7 @@ intrinsic_IsPackedArray(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 1);
     MOZ_ASSERT(args[0].isObject());
-
-    JSObject* obj = &args[0].toObject();
-    bool isPacked = obj->is<ArrayObject>() && !obj->hasLazyGroup() &&
-                    !obj->group()->hasAllFlags(OBJECT_FLAG_NON_PACKED) &&
-                    obj->as<ArrayObject>().getDenseInitializedLength() ==
-                        obj->as<ArrayObject>().length();
-
-    args.rval().setBoolean(isPacked);
+    args.rval().setBoolean(IsPackedArray(&args[0].toObject()));
     return true;
 }
 
@@ -1609,6 +1637,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("ToPropertyKey",           intrinsic_ToPropertyKey,           1,0),
     JS_INLINABLE_FN("IsCallable",    intrinsic_IsCallable,              1,0, IntrinsicIsCallable),
     JS_FN("IsConstructor",           intrinsic_IsConstructor,           1,0),
+    JS_FN("GetBuiltinConstructorImpl", intrinsic_GetBuiltinConstructor, 1,0),
     JS_FN("MakeConstructible",       intrinsic_MakeConstructible,       2,0),
     JS_FN("_ConstructFunction",      intrinsic_ConstructFunction,       2,0),
     JS_FN("ThrowRangeError",         intrinsic_ThrowRangeError,         4,0),

@@ -1653,7 +1653,10 @@ JS_NewFloat64ArrayWithBuffer(JSContext* cx, JS::HandleObject arrayBuffer,
                              uint32_t byteOffset, int32_t length);
 
 /**
- * Create a new SharedArrayBuffer with the given byte length.
+ * Create a new SharedArrayBuffer with the given byte length.  This
+ * may only be called if
+ * JS::CompartmentCreationOptionsRef(cx).getSharedMemoryAndAtomicsEnabled() is
+ * true.
  */
 extern JS_FRIEND_API(JSObject*)
 JS_NewSharedArrayBuffer(JSContext* cx, uint32_t nbytes);

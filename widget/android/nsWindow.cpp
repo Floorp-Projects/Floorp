@@ -797,8 +797,7 @@ nsWindow::Create(nsIWidget* aParent,
         mBounds.height = gAndroidBounds.height;
     }
 
-    BaseCreate(nullptr, LayoutDeviceIntRect::FromUnknownRect(mBounds),
-               aInitData);
+    BaseCreate(nullptr, aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level windowdoesn't have a parent!");
 
