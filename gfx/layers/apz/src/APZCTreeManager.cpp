@@ -455,8 +455,8 @@ APZCTreeManager::PrepareNodeForLayer(const LayerMetricsWrapper& aLayer,
 
     APZCTM_LOG("Using APZC %p for layer %p with identifiers %" PRId64 " %" PRId64 "\n", apzc, aLayer.GetLayer(), aLayersId, aMetrics.GetScrollId());
 
-    apzc->NotifyLayersUpdated(aMetrics, aState.mIsFirstPaint,
-        aLayersId == aState.mOriginatingLayersId);
+    apzc->NotifyLayersUpdated(aMetrics,
+        aState.mIsFirstPaint && (aLayersId == aState.mOriginatingLayersId));
 
     // Since this is the first time we are encountering an APZC with this guid,
     // the node holding it must be the primary holder. It may be newly-created
