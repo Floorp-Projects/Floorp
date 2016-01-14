@@ -163,6 +163,7 @@ class GlobalObject : public NativeObject
         MOZ_ASSERT(key <= JSProto_LIMIT);
         return getSlot(APPLICATION_SLOTS + key);
     }
+    static bool skipDeselectedConstructor(JSContext* cx, JSProtoKey key);
     static bool ensureConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
     static bool resolveConstructor(JSContext* cx, Handle<GlobalObject*> global, JSProtoKey key);
     static bool initBuiltinConstructor(JSContext* cx, Handle<GlobalObject*> global,
