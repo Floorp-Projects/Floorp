@@ -793,10 +793,10 @@ FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules)
   mUserFontSet->mLocalRulesUsed = false;
 
   if (LOG_ENABLED() && !mRuleFaces.IsEmpty()) {
-    LOG(("userfonts (%p) userfont rules update (%s) rule count: %" PRIuSIZE,
+    LOG(("userfonts (%p) userfont rules update (%s) rule count: %d",
          mUserFontSet.get(),
          (modified ? "modified" : "not modified"),
-         mRuleFaces.Length()));
+         (int)(mRuleFaces.Length())));
   }
 
   return modified;
