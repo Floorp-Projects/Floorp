@@ -35,6 +35,7 @@
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/SelfHosting.h"
 #include "vm/TypedArrayCommon.h"
 #include "vm/WrapperObject.h"
 
@@ -757,12 +758,44 @@ TypedArrayObjectTemplate<T>::AllocateArrayBuffer(JSContext* cx, HandleValue ctor
 }
 
 static bool
+IsArrayBufferConstructor(const Value& v)
+{
+    return v.isObject() &&
+           v.toObject().is<JSFunction>() &&
+           v.toObject().as<JSFunction>().isNative() &&
+           v.toObject().as<JSFunction>().native() == ArrayBufferObject::class_constructor;
+}
+
+static bool
+IsArrayBufferSpecies(JSContext* cx, HandleObject origBuffer)
+{
+    RootedValue ctor(cx);
+    if (!GetPropertyPure(cx, origBuffer, NameToId(cx->names().constructor), ctor.address()))
+        return false;
+
+    if (!IsArrayBufferConstructor(ctor))
+        return false;
+
+    RootedObject ctorObj(cx, &ctor.toObject());
+    RootedId speciesId(cx, SYMBOL_TO_JSID(cx->wellKnownSymbols().species));
+    JSFunction* getter;
+    if (!GetGetterPure(cx, ctorObj, speciesId, &getter))
+        return false;
+
+    return IsSelfHostedFunctionWithName(getter, cx->names().ArrayBufferSpecies);
+}
+
+static bool
 GetSpeciesConstructor(JSContext* cx, HandleObject obj, bool isWrapped, MutableHandleValue ctor)
 {
     if (!isWrapped) {
         if (!GlobalObject::ensureConstructor(cx, cx->global(), JSProto_ArrayBuffer))
             return false;
         RootedValue defaultCtor(cx, cx->global()->getConstructor(JSProto_ArrayBuffer));
+        if (IsArrayBufferSpecies(cx, obj)) {
+            ctor.set(defaultCtor);
+            return true;
+        }
         if (!SpeciesConstructor(cx, obj, defaultCtor, ctor))
             return false;
 
