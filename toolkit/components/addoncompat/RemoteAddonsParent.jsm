@@ -798,6 +798,14 @@ RemoteBrowserElementInterposition.getters.docShell = function(addon, target) {
   return remoteChromeGlobal.docShell;
 };
 
+RemoteBrowserElementInterposition.getters.sessionHistory = function(addon, target) {
+  CompatWarning.warn("Direct access to browser.sessionHistory will no longer " +
+                     "work in the chrome process.",
+                     addon, CompatWarning.warnings.content);
+
+  return getSessionHistory(target);
+}
+
 // We use this in place of the real browser.contentWindow if we
 // haven't yet received a CPOW for the child process's window. This
 // happens if the tab has just started loading.
@@ -846,6 +854,16 @@ function getContentDocument(addon, browser)
   return browser.contentDocumentAsCPOW;
 }
 
+function getSessionHistory(browser) {
+  let remoteChromeGlobal = RemoteAddonsParent.browserToGlobal.get(browser);
+  if (!remoteChromeGlobal) {
+    CompatWarning.warn("CPOW for the remote browser docShell hasn't been received yet.");
+    // We may not have any messages from this tab yet.
+    return null;
+  }
+  return remoteChromeGlobal.docShell.sessionHistory;
+}
+
 RemoteBrowserElementInterposition.getters.contentDocument = function(addon, target) {
   CompatWarning.warn("Direct access to browser.contentDocument will no longer work in the chrome process.",
                      addon, CompatWarning.warnings.content);
@@ -872,6 +890,17 @@ TabBrowserElementInterposition.getters.contentDocument = function(addon, target)
 
   let browser = target.selectedBrowser;
   return getContentDocument(addon, browser);
+};
+
+TabBrowserElementInterposition.getters.sessionHistory = function(addon, target) {
+  CompatWarning.warn("Direct access to gBrowser.sessionHistory will no " +
+                     "longer work in the chrome process.",
+                     addon, CompatWarning.warnings.content);
+  let browser = target.selectedBrowser;
+  if (!browser.isRemoteBrowser) {
+    return browser.sessionHistory;
+  }
+  return getSessionHistory(browser);
 };
 
 // This function returns a wrapper around an
@@ -958,7 +987,8 @@ ChromeWindowInterposition.getters._content = function(addon, target) {
 var RemoteWebNavigationInterposition = new Interposition("RemoteWebNavigation");
 
 RemoteWebNavigationInterposition.getters.sessionHistory = function(addon, target) {
-  CompatWarning.warn("Direct access to browser.sessionHistory will no longer work in the chrome process.",
+  CompatWarning.warn("Direct access to webNavigation.sessionHistory will no longer " +
+                     "work in the chrome process.",
                      addon, CompatWarning.warnings.content);
 
   if (target instanceof Ci.nsIDocShell) {
@@ -974,13 +1004,7 @@ RemoteWebNavigationInterposition.getters.sessionHistory = function(addon, target
 
   let browser = impl._browser;
 
-  let remoteChromeGlobal = RemoteAddonsParent.browserToGlobal.get(browser);
-  if (!remoteChromeGlobal) {
-    CompatWarning.warn("CPOW for the remote browser docShell hasn't been received yet.");
-    // We may not have any messages from this tab yet.
-    return null;
-  }
-  return remoteChromeGlobal.docShell.sessionHistory;
+  return getSessionHistory(browser);
 }
 
 var RemoteAddonsParent = {
