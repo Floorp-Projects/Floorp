@@ -53,7 +53,7 @@ TcpUdpPRCloseLayerClose(PRFileDesc *aFd)
   if (aFd) {
     // If this is called during shutdown do not call ..method->close(fd) and
     // let it leak.
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
       // If the ClosingService layer is the first layer above PR_NSPR_IO_LAYER
       // we are not going to leak anything, but the PR_Close will not be called.
       PR_Free(aFd);
@@ -281,7 +281,7 @@ ClosingService::SendPRCloseTelemetry(PRIntervalTime aStart,
                                      mozilla::Telemetry::ID aIDOffline)
 {
     PRIntervalTime now = PR_IntervalNow();
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
         Telemetry::Accumulate(aIDShutdown,
                               PR_IntervalToMilliseconds(now - aStart));
 
