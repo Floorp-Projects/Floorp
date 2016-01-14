@@ -262,6 +262,7 @@ function createAppInfo(id, name, version, platformVersion) {
     platformBuildID: "2007010101",
 
     // nsIXULRuntime
+    browserTabsRemoteAutostart: false,
     inSafeMode: false,
     logConsoleErrors: true,
     OS: "XPCShell",
