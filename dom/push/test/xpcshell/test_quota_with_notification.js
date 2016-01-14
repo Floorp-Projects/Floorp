@@ -55,7 +55,7 @@ add_task(function* test_expiration_origin_threshold() {
   let numMessages = 10;
 
   let updates = 0;
-  let notifyPromise = promiseObserverNotification('push-notification', (subject, data) => {
+  let notifyPromise = promiseObserverNotification('push-message', (subject, data) => {
     updates++;
     return updates == numMessages;
   });

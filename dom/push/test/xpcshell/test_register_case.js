@@ -10,9 +10,6 @@ const userAgentID = '1760b1f5-c3ba-40e3-9344-adef7c18ab12';
 function run_test() {
   do_get_profile();
   setPrefs();
-  disableServiceWorkerEvents(
-    'https://example.net/case'
-  );
   run_next_test();
 }
 
