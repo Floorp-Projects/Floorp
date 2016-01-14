@@ -1084,6 +1084,13 @@ GeckoMediaPluginServiceParent::RemoveOnGMPThread(const nsAString& aDirectory,
   }
 
   if (aDeleteFromDisk && !inUse) {
+    // Ensure the GMP dir and all files in it are writable, so we have
+    // permission to delete them.
+    directory->SetPermissions(0700);
+    DirectoryEnumerator iter(directory, DirectoryEnumerator::FilesAndDirs);
+    for (nsCOMPtr<nsIFile> dirEntry; (dirEntry = iter.Next()) != nullptr;) {
+      dirEntry->SetPermissions(0700);
+    }
     if (NS_SUCCEEDED(directory->Remove(true))) {
       mPluginsWaitingForDeletion.RemoveElement(aDirectory);
       NS_DispatchToMainThread(new NotifyObserversTask("gmp-directory-deleted",
