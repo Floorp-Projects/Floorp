@@ -359,16 +359,11 @@ class InterpreterFrame
 
   private:
     mutable uint32_t    flags_;         /* bits described by Flags */
-    union {                             /* describes what code is executing in a */
-        JSScript*       script;        /*   global frame */
-    } exec;
-    union {                             /* describes the arguments of a function */
-        unsigned        nactual;        /*   for non-eval frames */
-        JSScript*       evalScript;    /*   the script of an eval-in-function */
-    } u;
-    mutable JSObject*   scopeChain_;   /* if HAS_SCOPECHAIN, current scope chain */
+    JSScript*           script_;        /* the script we're executing */
+    unsigned            nactual_;       /* number of actual arguments, for function frames */
+    mutable JSObject*   scopeChain_;    /* if HAS_SCOPECHAIN, current scope chain */
     Value               rval_;          /* if HAS_RVAL, return value of the frame */
-    ArgumentsObject*    argsObj_;      /* if HAS_ARGS_OBJ, the call's arguments object */
+    ArgumentsObject*    argsObj_;       /* if HAS_ARGS_OBJ, the call's arguments object */
 
     /*
      * Previous frame and its pc and sp. Always nullptr for
@@ -500,10 +495,6 @@ class InterpreterFrame
         return flags_ & EVAL;
     }
 
-    bool isEvalInFunction() const {
-        return (flags_ & (EVAL | FUNCTION)) == (EVAL | FUNCTION);
-    }
-
     bool isNonEvalFunctionFrame() const {
         return (flags_ & (FUNCTION | EVAL)) == FUNCTION;
     }
@@ -572,7 +563,7 @@ class InterpreterFrame
     bool copyRawFrameSlots(AutoValueVector* v);
 
     unsigned numFormalArgs() const { MOZ_ASSERT(hasArgs()); return callee().nargs(); }
-    unsigned numActualArgs() const { MOZ_ASSERT(hasArgs()); return u.nactual; }
+    unsigned numActualArgs() const { MOZ_ASSERT(hasArgs()); return nactual_; }
 
     /* Watch out, this exposes a pointer to the unaliased formal arg array. */
     Value* argv() const { MOZ_ASSERT(hasArgs()); return argv_; }
@@ -647,15 +638,12 @@ class InterpreterFrame
     /*
      * Script
      *
-     * All function and global frames have an associated JSScript which holds
-     * the bytecode being executed for the frame.
+     * All frames have an associated JSScript which holds the bytecode being
+     * executed for the frame.
      */
 
     JSScript* script() const {
-        if (isFunctionFrame())
-            return isEvalFrame() ? u.evalScript : callee().nonLazyScript();
-        MOZ_ASSERT(isGlobalOrModuleFrame());
-        return exec.script;
+        return script_;
     }
 
     /* Return the previous frame's pc. */
