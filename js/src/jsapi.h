@@ -848,7 +848,9 @@ class MOZ_STACK_CLASS SourceBufferHolder final
  */
 #define JSFUN_GENERIC_NATIVE   0x800
 
-#define JSFUN_FLAGS_MASK       0xe00    /* | of all the JSFUN_* flags */
+#define JSFUN_HAS_REST        0x1000    /* function has ...rest parameter. */
+
+#define JSFUN_FLAGS_MASK      0x1e00    /* | of all the JSFUN_* flags */
 
 /*
  * If set, will allow redefining a non-configurable property, but only on a
