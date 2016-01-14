@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu } = require("chrome");
 
-const { ChromeDebuggerActor } = require("devtools/server/actors/chrome-debugger");
+const { ChromeDebuggerActor } = require("devtools/server/actors/script");
 const { WebConsoleActor } = require("devtools/server/actors/webconsole");
 const makeDebugger = require("devtools/server/actors/utils/make-debugger");
 const { ActorPool } = require("devtools/server/main");
@@ -75,7 +75,7 @@ ChildProcessActor.prototype = {
     }
 
     if (!this.threadActor) {
-      this.threadActor = new ChromeDebuggerActor(this);
+      this.threadActor = new ChromeDebuggerActor(this.conn, this);
       this._contextPool.addActor(this.threadActor);
     }
 
