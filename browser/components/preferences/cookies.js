@@ -7,6 +7,7 @@ const nsICookie = Components.interfaces.nsICookie;
 
 Components.utils.import("resource://gre/modules/PluralForm.jsm");
 Components.utils.import("resource://gre/modules/Services.jsm")
+Components.utils.import("resource:///modules/UserContextUI.jsm");
 
 var gCookiesWindow = {
   _cm               : Components.classes["@mozilla.org/cookiemanager;1"]
@@ -17,7 +18,6 @@ var gCookiesWindow = {
   _hostOrder        : [],
   _tree             : null,
   _bundle           : null,
-  _bundleBrowser    : null,
 
   init: function () {
     var os = Components.classes["@mozilla.org/observer-service;1"]
@@ -26,7 +26,6 @@ var gCookiesWindow = {
     os.addObserver(this, "perm-changed", false);
 
     this._bundle = document.getElementById("bundlePreferences");
-    this._bundleBrowser = document.getElementById("bundleBrowser");
     this._tree = document.getElementById("cookiesList");
 
     this._populateList(true);
@@ -518,7 +517,7 @@ var gCookiesWindow = {
                                               : this._bundle.getString("hostColon"),
                      isSecure: aItem.isSecure ? this._bundle.getString("forSecureOnly")
                                               : this._bundle.getString("forAnyConnection"),
-                     userContext: this._convertUserContextIdToContainerName(aItem.originAttributes.userContextId) };
+                     userContext: UserContextUI.getUserContextLabel(aItem.originAttributes.userContextId) };
       for (var i = 0; i < ids.length; ++i) {
         document.getElementById(ids[i]).disabled = false;
       }
@@ -534,22 +533,6 @@ var gCookiesWindow = {
     }
     for (var property in properties)
       document.getElementById(property).value = properties[property];
-  },
-
-  _convertUserContextIdToContainerName: function(aUserContextId) {
-    // TODO: this code should be moved in a separate module - bug 1239606
-    switch (aUserContextId) {
-      // No UserContext:
-      case 0: return "";
-
-      case 1: return this._bundleBrowser.getString("usercontext.personal.label");
-      case 2: return this._bundleBrowser.getString("usercontext.work.label");
-      case 3: return this._bundleBrowser.getString("usercontext.shopping.label");
-      case 4: return this._bundleBrowser.getString("usercontext.banking.label");
-
-      // This should not happen.
-      default: return "Context " + aUserContextId;
-    }
   },
 
   onCookieSelected: function () {
