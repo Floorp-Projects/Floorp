@@ -24,6 +24,9 @@
   <stringbundle id="bundlePreferences"
                 src="chrome://browser/locale/preferences/preferences.properties"/>
 
+  <stringbundle id="bundleBrowser"
+                src="chrome://browser/locale/browser.properties"/>
+
   <keyset>
     <key key="&windowClose.key;" modifiers="accel" oncommand="window.close();"/>
     <key key="&focusSearch1.key;" modifiers="accel" oncommand="gCookiesWindow.focusFilterBox();"/>
@@ -84,6 +87,10 @@
           <row align="center">
             <hbox pack="end"><label id="expiresLabel" control="expires" value="&props.expires.label;"/></hbox>
             <textbox id="expires" readonly="true" class="plain"/>
+          </row>
+          <row align="center" id="userContextRow">
+            <hbox pack="end"><label id="userContextLabel" control="userContext" value="&props.container.label;"/></hbox>
+            <textbox id="userContext" readonly="true" class="plain"/>
           </row>
         </rows>
       </grid>
