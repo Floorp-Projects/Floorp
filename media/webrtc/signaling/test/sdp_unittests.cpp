@@ -44,6 +44,9 @@ extern "C" {
 #endif
 #define CRLF "\r\n"
 
+#include "FakeIPC.h"
+#include "FakeIPC.cpp"
+
 using namespace mozilla;
 
 namespace test {
