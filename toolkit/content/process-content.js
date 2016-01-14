@@ -10,6 +10,3 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 // and for those that match URLs provided by the parent process will set up
 // a dedicated message port and notify the parent process.
 Cu.import("resource://gre/modules/RemotePageManager.jsm");
-
-// Hooks to listen for push messages
-Cu.import("resource://gre/modules/PushServiceChildPreload.jsm");

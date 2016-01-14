@@ -31,6 +31,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gPushNotifier",
+                                   "@mozilla.org/push/Notifier;1",
+                                   "nsIPushNotifier");
+
 this.EXPORTED_SYMBOLS = ["PushService"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
@@ -98,8 +102,6 @@ this.PushService = {
   // Callback that is called after attempting to
   // reduce the quota for a record. Used for testing purposes.
   _updateQuotaTestCallback: null,
-
-  _childListeners: new Set(),
 
   // When serverURI changes (this is used for testing), db is cleaned up and a
   // a new db is started. This events must be sequential.
@@ -592,8 +594,6 @@ this.PushService = {
   uninit: function() {
     console.debug("uninit()");
 
-    this._childListeners.clear();
-
     if (this._state == PUSH_SERVICE_UNINIT) {
       return;
     }
@@ -688,38 +688,8 @@ this.PushService = {
       return;
     }
 
-    // Notify XPCOM observers.
-    Services.obs.notifyObservers(
-      null,
-      "push-subscription-change",
-      record.scope
-    );
-
-    let data = {
-      originAttributes: record.originAttributes,
-      scope: record.scope
-    };
-
     Services.telemetry.getHistogramById("PUSH_API_NOTIFY_REGISTRATION_LOST").add();
-    this._notifyListeners('pushsubscriptionchange', data);
-  },
-
-  _notifyListeners: function(name, data) {
-    if (this._childListeners.size > 0) {
-      // Try to send messages to all listeners, but remove any that fail since
-      // the receiver is likely gone away.
-      for (let listener of this._childListeners) {
-        try {
-          listener.sendAsyncMessage(name, data);
-        } catch(e) {
-          this._childListeners.delete(listener);
-        }
-      }
-    } else {
-      let ppmm = Cc['@mozilla.org/parentprocessmessagemanager;1']
-                   .getService(Ci.nsIMessageListenerManager);
-      ppmm.broadcastAsyncMessage(name, data);
-    }
+    gPushNotifier.notifySubscriptionChange(record.scope, record.principal);
   },
 
   /**
@@ -959,29 +929,6 @@ this.PushService = {
     }
 
     console.debug("notifyApp()", aPushRecord.scope);
-    // Notify XPCOM observers.
-    let notification = Cc["@mozilla.org/push/ObserverNotification;1"]
-                         .createInstance(Ci.nsIPushObserverNotification);
-    notification.pushEndpoint = aPushRecord.pushEndpoint;
-    notification.version = aPushRecord.version;
-
-    let payload = ArrayBuffer.isView(message) ?
-                  new Uint8Array(message.buffer) : message;
-    if (payload) {
-      notification.data = "";
-      for (let i = 0; i < payload.length; i++) {
-        notification.data += String.fromCharCode(payload[i]);
-      }
-    }
-
-    notification.lastPush = aPushRecord.lastPush;
-    notification.pushCount = aPushRecord.pushCount;
-
-    Services.obs.notifyObservers(
-      notification,
-      "push-notification",
-      aPushRecord.scope
-    );
 
     // If permission has been revoked, trash the message.
     if (!aPushRecord.hasPermission()) {
@@ -989,14 +936,22 @@ this.PushService = {
       return false;
     }
 
-    let data = {
-      payload: payload,
-      originAttributes: aPushRecord.originAttributes,
-      scope: aPushRecord.scope
-    };
+    let payload = ArrayBuffer.isView(message) ?
+                  new Uint8Array(message.buffer) : message;
 
-    Services.telemetry.getHistogramById("PUSH_API_NOTIFY").add();
-    this._notifyListeners('push', data);
+    if (aPushRecord.quotaApplies()) {
+      // Don't record telemetry for chrome push messages.
+      Services.telemetry.getHistogramById("PUSH_API_NOTIFY").add();
+    }
+
+    if (payload) {
+      gPushNotifier.notifyPushWithData(aPushRecord.scope,
+                                       aPushRecord.principal,
+                                       payload.length, payload);
+    } else {
+      gPushNotifier.notifyPush(aPushRecord.scope, aPushRecord.principal);
+    }
+
     return true;
   },
 
@@ -1086,14 +1041,7 @@ this.PushService = {
     throw reply.error;
   },
 
-  registerListener(listener) {
-    console.debug("registerListener: Adding child listener");
-    this._childListeners.add(listener);
-  },
-
-  unregisterListener(listener) {
-    console.debug("unregisterListener: Possibly removing child listener");
-    this._childListeners.delete(listener);
+  notificationsCleared() {
     this._visibleNotifications.clear();
   },
 
