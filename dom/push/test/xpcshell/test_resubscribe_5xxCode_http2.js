@@ -56,9 +56,6 @@ function run_test() {
     'http2.retryInterval': 1000,
     'http2.maxRetries': 2
   });
-  disableServiceWorkerEvents(
-    'https://example.com/page'
-  );
 
   run_next_test();
 }
