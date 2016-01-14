@@ -931,14 +931,13 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
     MOZ_ASSERT(aLine <= mSizes.Length(), "mSizes is too small");
     if (aSide == GridLineSide::eBeforeGridGap) {
       if (aLine == 0) {
-        return mSizes[0].mPosition;
+        return nscoord(0);
       }
       const TrackSize& sz = mSizes[aLine - 1];
       return sz.mPosition + sz.mBase;
     }
     if (aLine == mSizes.Length()) {
-      const TrackSize& sz = mSizes[aLine - 1];
-      return sz.mPosition + sz.mBase;
+      return mContentBoxSize;
     }
     return mSizes[aLine].mPosition;
   }
@@ -960,6 +959,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 #endif
 
   nsAutoTArray<TrackSize, 32> mSizes;
+  nscoord mContentBoxSize;
   nscoord mGridGap;
   LogicalAxis mAxis;
 };
@@ -2283,6 +2283,7 @@ nsGridContainerFrame::Tracks::Initialize(
                          aFunctions.MaxSizingFor(i));
   }
   mGridGap = aGridGap;
+  mContentBoxSize = aContentBoxSize;
   MOZ_ASSERT(mGridGap >= nscoord(0), "negative grid gap");
 }
 
