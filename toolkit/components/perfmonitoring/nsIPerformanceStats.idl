@@ -126,38 +126,71 @@ interface nsIPerformanceSnapshot: nsISupports {
 /**
  * A performance alert.
  */
-[scriptable, builtinclass, uuid(d5379791-3f90-4edc-bcbb-5d4edea03e57)]
+[scriptable, builtinclass, uuid(a85706ab-d703-4687-8865-78cd771eab93)]
 interface nsIPerformanceAlert: nsISupports {
-  // Alert was caused by jank exceeding the threshold.
-  const unsigned long REASON_JANK = 0;
+ /**
+  * A slowdown was detected.
+  *
+  * See REASON_JANK_* for details on whether this slowdown was user-noticeable.
+  */
+  const unsigned long REASON_SLOWDOWN = 1;
 
   /**
-   * The reason for the alert.
+   * This alert was triggered during a jank in animation.
+   *
+   * In the current implementation, we consider that there is a jank
+   * in animation if delivery of the vsync message to the main thread
+   * has been delayed too much (see
+   * nsIPerformanceStatsService.animationJankLevelThreshold).
+   *
+   * Note that this is a heuristic which may provide false positives,
+   * so clients of this API are expected to perform post-processing to
+   * filter out such false positives.
+   */
+  const unsigned long REASON_JANK_IN_ANIMATION = 2;
+
+  /**
+   * This alert was triggered during a jank in user input.
+   *
+   * In the current implementation, we consider that there is a jank
+   * in animation if a user input was received either immediately
+   * before executing the offending code (see
+   * nsIPerformanceStatsService.userInputDelayThreshold) or while
+   * executing the offending code.
+   *
+   * Note that this is a heuristic which may provide false positives,
+   * so clients of this API are expected to perform post-processing to
+   * filter out such false positives.
+   */
+  const unsigned long REASON_JANK_IN_INPUT = 4;
+
+  /**
+   * The reason for the alert, as a bitwise or of the various REASON_*
+   * constants.
    */
   readonly attribute unsigned long reason;
 
   /**
    * Longest interval spent executing code in this group
    * since the latest alert, in microseconds.
+   *
+   * Note that the underlying algorithm is probabilistic and may
+   * provide false positives, so clients of this API are expected to
+   * perform post-processing to filter out such false positives. In
+   * particular, a high system load will increase the noise level on
+   * this measure.
    */
   readonly attribute unsigned long long highestJank;
 
   /**
    * Longest interval spent executing CPOW in this group
    * since the latest alert, in microseconds.
+   *
+   * This measure is reliable and involves no heuristics. However,
+   * note that the duration of CPOWs is increased by high system
+   * loads.
    */
   readonly attribute unsigned long long highestCPOW;
-
-  /**
-   * `true` if the jank is expected to be noticeable by the user,
-   * `false` otherwise.
-   *
-   * In the current implementation, we consider that jank is noticeable
-   * if it arrives during an animation, shortly after a user input, or
-   * if a user input is triggered during the same iteration of the event
-   * loop.
-   */
-  readonly attribute bool isJankVisible;
 };
 
 
@@ -204,7 +237,7 @@ interface nsIPerformanceObservable: nsISupports {
 };
 
 
-[scriptable, uuid(5675d1d9-638e-4af0-9392-b04aacfad79a)]
+[scriptable, uuid(505bc42e-be38-4a53-baba-92cb33690cde)]
 interface nsIPerformanceStatsService : nsISupports {
   /**
    * `true` if we should monitor CPOW, `false` otherwise.
@@ -233,6 +266,26 @@ interface nsIPerformanceStatsService : nsISupports {
    * considered "slow" and should raise performance alerts.
    */
   attribute unsigned long long jankAlertThreshold;
+
+  /**
+   * If a user is seeing an animation and we spend too long executing
+   * JS code while blocking refresh, this will be visible to the user.
+   *
+   * We assume that any jank during an animation and lasting more than
+   * 2^animationJankLevelThreshold ms will be visible.
+   */
+  attribute short animationJankLevelThreshold;
+
+  /**
+   * If a user performs an input (e.g. clicking, pressing a key, but
+   * *NOT* moving the mouse), and we spend too long executing JS code
+   * before displaying feedback, this will be visible to the user even
+   * if there is no ongoing animation.
+   *
+   * We assume that any jank during `userInputDelayThreshold` us after
+   * the user input will be visible.
+   */
+  attribute unsigned long long userInputDelayThreshold;
 
   /**
    * A buffering delay, in milliseconds, used by the service to

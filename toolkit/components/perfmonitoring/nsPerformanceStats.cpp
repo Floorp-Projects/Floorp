@@ -522,9 +522,6 @@ private:
   // in microseconds.
   const uint64_t mHighestJank;
   const uint64_t mHighestCPOW;
-
-  // `true` if jank may be noticed by the user.
-  const bool mIsJankVisible;
 };
 
 NS_IMPL_ISUPPORTS(PerformanceAlert, nsIPerformanceAlert);
@@ -533,7 +530,6 @@ PerformanceAlert::PerformanceAlert(const uint32_t reason, nsPerformanceGroup* so
   : mReason(reason)
   , mHighestJank(source->HighestRecentJank())
   , mHighestCPOW(source->HighestRecentCPOW())
-  , mIsJankVisible(source->RecentJankVisibility())
 { }
 
 NS_IMETHODIMP
@@ -551,12 +547,6 @@ PerformanceAlert::GetHighestCPOW(uint64_t* result) {
 NS_IMETHODIMP
 PerformanceAlert::GetReason(uint32_t* result) {
   *result = mReason;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-PerformanceAlert::GetIsJankVisible(bool* result) {
-  *result = mIsJankVisible;
   return NS_OK;
 }
 /* ------------------------------------------------------
@@ -581,6 +571,7 @@ public:
 
   nsresult Start(uint32_t timerDelayMS);
   nsresult Dispose();
+
 private:
   ~PendingAlertsCollector() {}
 
@@ -588,6 +579,8 @@ private:
   bool mPending;
 
   nsCOMPtr<nsITimer> mTimer;
+
+  mozilla::Vector<uint64_t> mJankLevels;
 };
 
 NS_IMPL_ISUPPORTS(PendingAlertsCollector, nsITimerCallback);
@@ -595,7 +588,7 @@ NS_IMPL_ISUPPORTS(PendingAlertsCollector, nsITimerCallback);
 NS_IMETHODIMP
 PendingAlertsCollector::Notify(nsITimer*) {
   mPending = false;
-  mService->NotifyJankObservers();
+  mService->NotifyJankObservers(mJankLevels);
   return NS_OK;
 }
 
@@ -616,6 +609,11 @@ PendingAlertsCollector::Start(uint32_t timerDelayMS) {
   }
 
   mPending = true;
+  {
+    mozilla::DebugOnly<bool> result = nsRefreshDriver::GetJankLevels(mJankLevels);
+    MOZ_ASSERT(result);
+  }
+
   return NS_OK;
 }
 
@@ -657,13 +655,15 @@ nsPerformanceStatsService::nsPerformanceStatsService()
                                        true, // isSystem
                                        nsPerformanceGroup::GroupScope::RUNTIME // scope
                                      ))
-  , mIsJankCritical(false)
+  , mIsHandlingUserInput(false)
   , mProcessStayed(0)
   , mProcessMoved(0)
   , mProcessUpdateCounter(0)
   , mIsMonitoringPerCompartment(false)
   , mJankAlertThreshold(mozilla::MaxValue<uint64_t>::value) // By default, no alerts
   , mJankAlertBufferingDelay(1000 /* ms */)
+  , mJankLevelVisibilityThreshold(/* 2 ^ */ 8 /* ms */)
+  , mMaxExpectedDurationOfInteractionUS(150 * 1000)
 {
   mPendingAlertsCollector = new PendingAlertsCollector(mRuntime, this);
 
@@ -821,29 +821,14 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-/*static*/
-bool
+/*static*/ bool
 nsPerformanceStatsService::IsHandlingUserInput() {
   if (mozilla::EventStateManager::LatestUserInputStart().IsNull()) {
     return false;
   }
-  bool result = mozilla::TimeStamp::Now() - mozilla::EventStateManager::LatestUserInputStart() <= mozilla::TimeDuration::FromMilliseconds(MAX_DURATION_OF_INTERACTION_MS);
+  bool result = mozilla::TimeStamp::Now() - mozilla::EventStateManager::LatestUserInputStart() <= mozilla::TimeDuration::FromMicroseconds(mMaxExpectedDurationOfInteractionUS);
   return result;
 }
-
-/*static*/ bool
-nsPerformanceStatsService::IsJankCritical() {
-  bool result = IsAnimating() || IsHandlingUserInput();
-  return result;
-}
-
-/*static*/ bool
-nsPerformanceStatsService::IsAnimating() {
-  bool result = nsRefreshDriver::IsJankCritical();
-  return result;
-}
-
-
 
 /* [implicit_jscontext] attribute bool isMonitoringCPOW; */
 NS_IMETHODIMP
@@ -1132,7 +1117,7 @@ bool
 nsPerformanceStatsService::StopwatchStart(uint64_t iteration) {
   mIteration = iteration;
 
-  mIsJankCritical = IsJankCritical();
+  mIsHandlingUserInput = IsHandlingUserInput();
   mUserInputCount = mozilla::EventStateManager::UserInputCount();
 
   nsresult rv = GetResources(&mUserTimeStart, &mSystemTimeStart);
@@ -1174,13 +1159,13 @@ nsPerformanceStatsService::StopwatchCommit(uint64_t iteration, JSGroupVector& re
   MOZ_ASSERT(mTopGroup->isUsedInThisIteration());
   const uint64_t totalRecentCycles = mTopGroup->recentCycles(iteration);
 
-  const bool isJankVisible = mIsJankCritical || mozilla::EventStateManager::UserInputCount() > mUserInputCount;
+  const bool isHandlingUserInput = mIsHandlingUserInput || mozilla::EventStateManager::UserInputCount() > mUserInputCount;
 
   // We should only reach this stage if `group` has had some activity.
   MOZ_ASSERT(mTopGroup->recentTicks(iteration) > 0);
   for (auto iter = recentGroups.begin(), end = recentGroups.end(); iter != end; ++iter) {
     RefPtr<nsPerformanceGroup> group = nsPerformanceGroup::Get(*iter);
-    CommitGroup(iteration, userTimeDelta, systemTimeDelta, totalRecentCycles, isJankVisible, group);
+    CommitGroup(iteration, userTimeDelta, systemTimeDelta, totalRecentCycles, isHandlingUserInput, group);
   }
 
   // Make sure that `group` was treated along with the other items of `recentGroups`.
@@ -1198,7 +1183,7 @@ void
 nsPerformanceStatsService::CommitGroup(uint64_t iteration,
                                        uint64_t totalUserTimeDelta, uint64_t totalSystemTimeDelta,
                                        uint64_t totalCyclesDelta,
-                                       bool isJankVisible,
+                                       bool isHandlingUserInput,
                                        nsPerformanceGroup* group) {
 
   MOZ_ASSERT(group->isUsedInThisIteration());
@@ -1247,7 +1232,9 @@ nsPerformanceStatsService::CommitGroup(uint64_t iteration,
 
   group->RecordJank(totalTimeDelta);
   group->RecordCPOW(cpowTimeDelta);
-  group->RecordJankVisibility();
+  if (isHandlingUserInput) {
+    group->RecordUserInput();
+  }
 
   if (totalTimeDelta >= mJankAlertThreshold) {
     if (!group->HasPendingAlert()) {
@@ -1340,7 +1327,7 @@ nsPerformanceStatsService::GetResources(uint64_t* userTime,
 }
 
 void
-nsPerformanceStatsService::NotifyJankObservers() {
+nsPerformanceStatsService::NotifyJankObservers(const mozilla::Vector<uint64_t>& aPreviousJankLevels) {
   GroupVector alerts;
   mPendingAlerts.swap(alerts);
   if (!mPendingAlertsCollector) {
@@ -1348,10 +1335,32 @@ nsPerformanceStatsService::NotifyJankObservers() {
     return;
   }
 
+  // Find out if we have noticed any user-noticeable delay in an
+  // animation recently (i.e. since the start of the execution of JS
+  // code that caused this collector to start). If so, we'll mark any
+  // alert as part of a user-noticeable jank. Note that this doesn't
+  // mean with any certainty that the alert is the only cause of jank,
+  // or even the main cause of jank.
+  mozilla::Vector<uint64_t> latestJankLevels;
+  {
+    mozilla::DebugOnly<bool> result = nsRefreshDriver::GetJankLevels(latestJankLevels);
+    MOZ_ASSERT(result);
+  }
+  MOZ_ASSERT(latestJankLevels.length() == aPreviousJankLevels.length());
+
+  bool isJankInAnimation = false;
+  for (size_t i = mJankLevelVisibilityThreshold; i < latestJankLevels.length(); ++i) {
+    if (latestJankLevels[i] > aPreviousJankLevels[i]) {
+      isJankInAnimation = true;
+      break;
+    }
+  }
+
   MOZ_ASSERT(!alerts.empty());
   const bool hasUniversalAddonObservers = mUniversalTargets.mAddons->HasObservers();
   const bool hasUniversalWindowObservers = mUniversalTargets.mWindows->HasObservers();
   for (auto iter = alerts.begin(); iter < alerts.end(); ++iter) {
+    MOZ_ASSERT(iter);
     RefPtr<nsPerformanceGroup> group = *iter;
     group->SetHasPendingAlert(false);
 
@@ -1362,19 +1371,24 @@ nsPerformanceStatsService::NotifyJankObservers() {
       group->ObservationTarget()
     };
 
+    bool isJankInInput = group->HasRecentUserInput();
+
     RefPtr<PerformanceAlert> alert;
     for (nsPerformanceObservationTarget* target : targets) {
       if (!target) {
         continue;
       }
       if (!alert) {
+        const uint32_t reason = nsIPerformanceAlert::REASON_SLOWDOWN
+          | (isJankInAnimation ? nsIPerformanceAlert::REASON_JANK_IN_ANIMATION : 0)
+          | (isJankInInput ? nsIPerformanceAlert::REASON_JANK_IN_INPUT : 0);
         // Wait until we are sure we need to allocate before we allocate.
-        alert = new PerformanceAlert(nsIPerformanceAlert::REASON_JANK, group);
+        alert = new PerformanceAlert(reason, group);
       }
       target->NotifyJankObservers(details, alert);
     }
 
-    group->ResetHighest();
+    group->ResetRecent();
   }
 
 }
@@ -1402,6 +1416,32 @@ nsPerformanceStatsService::GetObservableWindow(uint64_t windowId,
   }
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsPerformanceStatsService::GetAnimationJankLevelThreshold(short* result) {
+  *result = mJankLevelVisibilityThreshold;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPerformanceStatsService::SetAnimationJankLevelThreshold(short value) {
+  mJankLevelVisibilityThreshold = value;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPerformanceStatsService::GetUserInputDelayThreshold(uint64_t* result) {
+  *result = mMaxExpectedDurationOfInteractionUS;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPerformanceStatsService::SetUserInputDelayThreshold(uint64_t value) {
+  mMaxExpectedDurationOfInteractionUS = value;
+  return NS_OK;
+}
+
+
 
 nsPerformanceStatsService::UniversalTargets::UniversalTargets()
   : mAddons(new nsPerformanceObservationTarget())
@@ -1442,7 +1482,7 @@ nsPerformanceGroup::nsPerformanceGroup(nsPerformanceStatsService* service,
   , mScope(scope)
   , mHighestJank(0)
   , mHighestCPOW(0)
-  , mIsJankVisible(false)
+  , mHasRecentUserInput(false)
   , mHasPendingAlert(false)
 {
   mozilla::Unused << mService->mGroups.PutEntry(this);
@@ -1538,11 +1578,6 @@ nsPerformanceGroup::RecordCPOW(uint64_t cpow) {
   }
 }
 
-void
-nsPerformanceGroup::RecordJankVisibility() {
-  mIsJankVisible = true;
-}
-
 uint64_t
 nsPerformanceGroup::HighestRecentJank() {
   return mHighestJank;
@@ -1554,14 +1589,18 @@ nsPerformanceGroup::HighestRecentCPOW() {
 }
 
 bool
-nsPerformanceGroup::RecentJankVisibility() {
-  return mIsJankVisible;
+nsPerformanceGroup::HasRecentUserInput() {
+  return mHasRecentUserInput;
 }
 
 void
-nsPerformanceGroup::ResetHighest() {
-  mHighestJank = 0;
-  mHighestCPOW = 0;
-  mIsJankVisible = false;
+nsPerformanceGroup::RecordUserInput() {
+  mHasRecentUserInput = true;
 }
 
+void
+nsPerformanceGroup::ResetRecent() {
+  mHighestJank = 0;
+  mHighestCPOW = 0;
+  mHasRecentUserInput = false;
+}
