@@ -81,9 +81,8 @@ interface nsIPushService : nsISupports
    * The |endpoint| property of the subscription record is a URL string
    * that can be used to send push messages to subscribers.
    *
-   * Each incoming message fires a `push-notification` observer
-   * notification, with an `nsIPushObserverNotification` as the subject and
-   * the |scope| as the data.
+   * Each incoming message fires a `push-message` observer notification, with
+   * an `nsIPushMessage` as the subject and the |scope| as the data.
    *
    * If the server drops a subscription, a `push-subscription-change` observer
    * will be fired, with the subject set to `null` and the data set to |scope|.
