@@ -210,6 +210,7 @@ class DOMMediaStream : public DOMEventTargetHelper,
                        public dom::PrincipalChangeObserver<dom::MediaStreamTrack>
 {
   friend class DOMLocalMediaStream;
+  friend class dom::MediaStreamTrack;
   typedef dom::MediaStreamTrack MediaStreamTrack;
   typedef dom::AudioStreamTrack AudioStreamTrack;
   typedef dom::VideoStreamTrack VideoStreamTrack;
