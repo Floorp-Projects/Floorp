@@ -1144,6 +1144,8 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
   bool changed = false;
   if (mSendingWidth != width || mSendingHeight != height)
   {
+    CSFLogDebug(logTag, "%s: resolution changing to %ux%u (from %ux%u)",
+                __FUNCTION__, width, height, mSendingWidth, mSendingHeight);
     // This will avoid us continually retrying this operation if it fails.
     // If the resolution changes, we'll try again.  In the meantime, we'll
     // keep using the old size in the encoder.
@@ -1155,6 +1157,8 @@ WebrtcVideoConduit::SelectSendResolution(unsigned short width,
   // uses mSendingWidth/Height
   unsigned int framerate = SelectSendFrameRate(mSendingFramerate);
   if (mSendingFramerate != framerate) {
+    CSFLogDebug(logTag, "%s: framerate changing to %u (from %u)",
+                __FUNCTION__, framerate, mSendingFramerate);
     mSendingFramerate = framerate;
     changed = true;
   }
@@ -1221,6 +1225,10 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
     CSFLogError(logTag, "%s: GetSendCodec failed, err %d", __FUNCTION__, err);
     return NS_ERROR_FAILURE;
   }
+
+  CSFLogDebug(logTag,
+              "%s: Requesting resolution change to %ux%u (from %ux%u)",
+              __FUNCTION__, width, height, vie_codec.width, vie_codec.height);
   // Likely spurious unless there was some error, but rarely checked
   if (vie_codec.width != width || vie_codec.height != height ||
       vie_codec.maxFramerate != mSendingFramerate)
@@ -1399,6 +1407,8 @@ WebrtcVideoConduit::SendVideoFrame(webrtc::I420VideoFrame& frame)
       return kMediaConduitNoError;
     }
     if (frame.width() != mLastWidth || frame.height() != mLastHeight) {
+      CSFLogDebug(logTag, "%s: call SelectSendResolution with %ux%u",
+                  __FUNCTION__, frame.width(), frame.height());
       if (SelectSendResolution(frame.width(), frame.height(), &frame)) {
         // SelectSendResolution took ownership of the data in i420_frame.
         // Submit the frame after reconfig is done
