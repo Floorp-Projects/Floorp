@@ -503,6 +503,12 @@ public:
 
         // Called on the compositor thread.
         auto eglSurface = mGLController->CreateEGLSurface();
+        if (!eglSurface) {
+            // We failed to create a surface, but because the compositor is
+            // able to handle this failure gracefully, we pass back null
+            // instead of crashing.
+            return nullptr;
+        }
         return reinterpret_cast<EGLSurface>(
                 AndroidBridge::Bridge()->GetAPIVersion() >= 20 ?
                 env->GetLongField(eglSurface.Get(), eglSurfacePointerField) :

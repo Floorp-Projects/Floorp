@@ -960,7 +960,9 @@ void GeckoSampler::doNativeBacktrace(ThreadProfile &aProfile, TickSample* aSampl
   StackWalkCallback(/* frameNumber */ 0, aSample->pc, aSample->sp, &nativeStack);
 
   uint32_t maxFrames = uint32_t(nativeStack.size - nativeStack.count);
-#if defined(XP_MACOSX) || defined(XP_WIN)
+  // win X64 doesn't support disabling frame pointers emission so we need
+  // to fallback to using StackWalk64 which is slower.
+#if defined(XP_MACOSX) || (defined(XP_WIN) && !defined(V8_HOST_ARCH_X64))
   void *stackEnd = aSample->threadProfile->GetStackTop();
   bool rv = true;
   if (aSample->fp >= aSample->sp && aSample->fp <= stackEnd)

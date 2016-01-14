@@ -33,6 +33,11 @@ namespace non_crypto {
  *     Intel(R) Core(TM) i7-4770 CPU @3.40GHz (Haswell). It is the fastest
  *     generator we are aware of with such empirical statistical properties.
  *
+ * The stream of numbers produced by this method repeats every 2**128 - 1 calls
+ * (i.e. never, for all practical purposes). Zero appears 2**64 - 1 times in
+ * this period; all other numbers appear 2**64 times. Additionally, each *bit*
+ * in the produced numbers repeats every 2**128 - 1 calls.
+ *
  * This generator is not suitable as a cryptographically secure random number
  * generator.
  */
@@ -42,14 +47,20 @@ class XorShift128PlusRNG {
  public:
   /*
    * Construct a xorshift128+ pseudo-random number stream using |aInitial0| and
-   * |aInitial1| as the initial state. These may not both be zero; ideally, they
-   * should have an almost even mix of zero and one bits.
+   * |aInitial1| as the initial state.  These MUST NOT both be zero.
+   *
+   * If the initial states contain many zeros, for a few iterations you'll see
+   * many zeroes in the generated numbers.  It's suggested to seed a SplitMix64
+   * generator <http://xorshift.di.unimi.it/splitmix64.c> and use its first two
+   * outputs to seed xorshift128+.
    */
   XorShift128PlusRNG(uint64_t aInitial0, uint64_t aInitial1) {
     setState(aInitial0, aInitial1);
   }
 
-  /* Return a pseudo-random 64-bit number. */
+  /**
+   * Return a pseudo-random 64-bit number.
+   */
   uint64_t next() {
     /*
      * The offsetOfState*() methods below are provided so that exceedingly-rare
@@ -66,9 +77,10 @@ class XorShift128PlusRNG {
   }
 
   /*
-   * Return a pseudo-random floating-point value in the range [0, 1).
-   * More precisely, choose an integer in the range [0, 2**53) and
-   * divide it by 2**53.
+   * Return a pseudo-random floating-point value in the range [0, 1). More
+   * precisely, choose an integer in the range [0, 2**53) and divide it by
+   * 2**53. Given the 2**128 - 1 period noted above, the produced doubles are
+   * all but uniformly distributed in this range.
    */
   double nextDouble() {
     /*

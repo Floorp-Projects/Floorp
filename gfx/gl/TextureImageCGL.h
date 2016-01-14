@@ -23,8 +23,7 @@ public:
                     GLenum aWrapMode,
                     ContentType aContentType,
                     GLContext* aContext,
-                    TextureImage::Flags aFlags = TextureImage::NoFlags,
-                    TextureImage::ImageFormat aImageFormat = gfx::SurfaceFormat::UNKNOWN);
+                    TextureImage::Flags aFlags = TextureImage::NoFlags);
 
     ~TextureImageCGL();
 
@@ -51,8 +50,7 @@ already_AddRefed<TextureImage>
 TileGenFuncCGL(GLContext *gl,
                const gfx::IntSize& aSize,
                TextureImage::ContentType aContentType,
-               TextureImage::Flags aFlags,
-               TextureImage::ImageFormat aImageFormat);
+               TextureImage::Flags aFlags);
 
 } // namespace gl
 } // namespace mozilla

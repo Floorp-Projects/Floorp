@@ -124,12 +124,13 @@ const Class ArrayBufferObject::class_ = {
 };
 
 const JSFunctionSpec ArrayBufferObject::jsfuncs[] = {
-    JS_FN("slice", ArrayBufferObject::fun_slice, 2, JSFUN_GENERIC_NATIVE),
+    JS_SELF_HOSTED_FN("slice", "ArrayBufferSlice", 2,0),
     JS_FS_END
 };
 
 const JSFunctionSpec ArrayBufferObject::jsstaticfuncs[] = {
     JS_FN("isView", ArrayBufferObject::fun_isView, 1, 0),
+    JS_SELF_HOSTED_FN("slice", "ArrayBufferStaticSlice", 3,0),
     JS_FS_END
 };
 
@@ -178,44 +179,6 @@ ArrayBufferObject::byteLengthGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     return CallNonGenericMethod<IsArrayBuffer, byteLengthGetterImpl>(cx, args);
-}
-
-bool
-ArrayBufferObject::fun_slice_impl(JSContext* cx, const CallArgs& args)
-{
-    MOZ_ASSERT(IsArrayBuffer(args.thisv()));
-
-    Rooted<ArrayBufferObject*> thisObj(cx, &args.thisv().toObject().as<ArrayBufferObject>());
-
-    // these are the default values
-    uint32_t length = thisObj->byteLength();
-    uint32_t begin = 0, end = length;
-
-    if (args.length() > 0) {
-        if (!ToClampedIndex(cx, args[0], length, &begin))
-            return false;
-
-        if (args.length() > 1) {
-            if (!ToClampedIndex(cx, args[1], length, &end))
-                return false;
-        }
-    }
-
-    if (begin > end)
-        begin = end;
-
-    JSObject* nobj = createSlice(cx, thisObj, begin, end);
-    if (!nobj)
-        return false;
-    args.rval().setObject(*nobj);
-    return true;
-}
-
-bool
-ArrayBufferObject::fun_slice(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    return CallNonGenericMethod<IsArrayBuffer, fun_slice_impl>(cx, args);
 }
 
 /*
@@ -678,28 +641,6 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes,
                   OwnsState::OwnsData, proto);
 }
 
-JSObject*
-ArrayBufferObject::createSlice(JSContext* cx, Handle<ArrayBufferObject*> arrayBuffer,
-                               uint32_t begin, uint32_t end)
-{
-    uint32_t bufLength = arrayBuffer->byteLength();
-    if (begin > bufLength || end > bufLength || begin > end) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPE_ERR_BAD_ARGS);
-        return nullptr;
-    }
-
-    uint32_t length = end - begin;
-
-    if (!arrayBuffer->hasData())
-        return create(cx, 0);
-
-    ArrayBufferObject* slice = create(cx, length);
-    if (!slice)
-        return nullptr;
-    memcpy(slice->dataPointer(), arrayBuffer->dataPointer() + begin, length);
-    return slice;
-}
-
 bool
 ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args)
 {
@@ -800,6 +741,18 @@ ArrayBufferObject::finalize(FreeOp* fop, JSObject* obj)
 
     if (buffer.ownsData())
         buffer.releaseData(fop);
+}
+
+/* static */ void
+ArrayBufferObject::copyData(Handle<ArrayBufferObject*> toBuffer,
+                            Handle<ArrayBufferObject*> fromBuffer,
+                            uint32_t fromIndex, uint32_t count)
+{
+    MOZ_ASSERT(toBuffer->byteLength() >= count);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex);
+    MOZ_ASSERT(fromBuffer->byteLength() >= fromIndex + count);
+
+    memcpy(toBuffer->dataPointer(), fromBuffer->dataPointer() + fromIndex, count);
 }
 
 /* static */ void

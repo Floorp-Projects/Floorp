@@ -92,8 +92,26 @@ MAX_CACHED_ARTIFACTS = 6
 PROCESSED_SUFFIX = '.processed.jar'
 
 class ArtifactJob(object):
-    def __init__(self, regexp, log=None):
-        self._regexp = re.compile(regexp)
+    # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+    test_artifact_patterns = {
+        'bin/BadCertServer',
+        'bin/GenerateOCSPResponse',
+        'bin/OCSPStaplingServer',
+        'bin/certutil',
+        'bin/fileid',
+        'bin/pk12util',
+        'bin/ssltunnel',
+        'bin/xpcshell',
+    }
+    # We can tell our input is a test archive by this suffix, which happens to
+    # be the same across platforms.
+    _test_archive_suffix = '.common.tests.zip'
+
+    def __init__(self, package_re, tests_re, log=None):
+        self._package_re = re.compile(package_re)
+        self._tests_re = None
+        if tests_re:
+            self._tests_re = re.compile(tests_re)
         self._log = log
 
     def log(self, *args, **kwargs):
@@ -102,18 +120,49 @@ class ArtifactJob(object):
 
     def find_candidate_artifacts(self, artifacts):
         # TODO: Handle multiple artifacts, taking the latest one.
+        tests_artifact = None
         for artifact in artifacts:
             name = artifact['name']
-            if self._regexp.match(name):
-                yield artifact
+            if self._package_re.match(name):
+                yield name
+            elif self._tests_re.match(name):
+                tests_artifact = name
+                yield name
             else:
                 self.log(logging.DEBUG, 'artifact',
-                    {'name': name},
-                    'Not yielding artifact named {name} as a candidate artifact')
+                         {'name': name},
+                         'Not yielding artifact named {name} as a candidate artifact')
+        if self._tests_re and not tests_artifact:
+            raise ValueError('Expected tests archive matching "{re}", but '
+                             'found none!'.format(re=self._tests_re))
 
     def process_artifact(self, filename, processed_filename):
-        raise NotImplementedError("Subclasses must specialize process_artifact!")
+        if filename.endswith(ArtifactJob._test_archive_suffix) and self._tests_re:
+            return self.process_tests_artifact(filename, processed_filename)
+        return self.process_package_artifact(filename, processed_filename)
 
+    def process_package_artifact(self, filename, processed_filename):
+        raise NotImplementedError("Subclasses must specialize process_package_artifact!")
+
+    def process_tests_artifact(self, filename, processed_filename):
+        added_entry = False
+
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            reader = JarReader(filename)
+            for filename, entry in reader.entries.iteritems():
+                if filename in self.test_artifact_patterns:
+                    basename = mozpath.basename(filename)
+                    self.log(logging.INFO, 'artifact',
+                             {'basename': basename},
+                             'Adding {basename} to processed archive')
+                    mode = entry['external_attr'] >> 16
+                    writer.add(basename.encode('utf-8'), reader[filename], mode=mode)
+                    added_entry = True
+
+        if not added_entry:
+            raise ValueError('Archive format changed! No pattern from "{patterns}"'
+                             'matched an archive path.'.format(
+                                 patterns=LinuxArtifactJob.test_artifact_patterns))
 
 class AndroidArtifactJob(ArtifactJob):
     def process_artifact(self, filename, processed_filename):
@@ -127,48 +176,53 @@ class AndroidArtifactJob(ArtifactJob):
                 basename = os.path.basename(f.filename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
-                    'Adding {basename} to processed archive')
+                   'Adding {basename} to processed archive')
 
                 writer.add(basename.encode('utf-8'), f)
 
 
 class LinuxArtifactJob(ArtifactJob):
-    def process_artifact(self, filename, processed_filename):
+
+    package_artifact_patterns = {
+        'firefox/application.ini',
+        'firefox/crashreporter',
+        'firefox/dependentlibs.list',
+        'firefox/firefox',
+        'firefox/firefox-bin',
+        'firefox/platform.ini',
+        'firefox/plugin-container',
+        'firefox/updater',
+        'firefox/webapprt-stub',
+        'firefox/*.so',
+    }
+
+    def process_package_artifact(self, filename, processed_filename):
+        added_entry = False
+
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-            prefix = 'firefox/'
-            whitelist = {
-                'application.ini',
-                'crashreporter',
-                'dependentlibs.list',
-                'firefox',
-                'firefox-bin',
-                'platform.ini',
-                'plugin-container',
-                'updater',
-                'webapprt-stub',
-            }
             with tarfile.open(filename) as reader:
                 for f in reader:
                     if not f.isfile():
                         continue
 
-                    if not f.name.startswith(prefix):
-                        raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.name))
-                    basename = f.name[len(prefix):]
-
-                    if not basename.endswith('.so') and \
-                       basename not in whitelist:
+                    if not any(mozpath.match(f.name, p) for p in self.package_artifact_patterns):
                         continue
 
+                    basename = mozpath.basename(f.name)
                     self.log(logging.INFO, 'artifact',
-                        {'basename': basename},
-                        'Adding {basename} to processed archive')
-
+                             {'basename': basename},
+                             'Adding {basename} to processed archive')
                     writer.add(basename.encode('utf-8'), reader.extractfile(f), mode=f.mode)
+                    added_entry = True
+
+        if not added_entry:
+            raise ValueError('Archive format changed! No pattern from "{patterns}" '
+                             'matched an archive path.'.format(
+                                 patterns=LinuxArtifactJob.package_artifact_patterns))
 
 
 class MacArtifactJob(ArtifactJob):
-    def process_artifact(self, filename, processed_filename):
+    def process_package_artifact(self, filename, processed_filename):
         tempdir = tempfile.mkdtemp()
         try:
             self.log(logging.INFO, 'artifact',
@@ -193,7 +247,8 @@ class MacArtifactJob(ArtifactJob):
             #   File "/Users/nalexander/Mozilla/gecko/objdir-dce/_virtualenv/lib/python2.7/site-packages/mozinstall/mozinstall.py", line 261, in _install_dmg
             #     subprocess.call('hdiutil detach %s -quiet' % appDir,
 
-            # TODO: Extract 'MOZ_MACBUNDLE_NAME' from buildconfig.
+            # TODO: Extract the bundle name from the archive (it may differ
+            # from MOZ_MACBUNDLE_NAME).
             bundle_name = 'Nightly.app'
             source = mozpath.join(tempdir, bundle_name)
 
@@ -260,49 +315,71 @@ class MacArtifactJob(ArtifactJob):
 
 
 class WinArtifactJob(ArtifactJob):
-    def process_artifact(self, filename, processed_filename):
-        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
-            prefix = 'firefox/'
-            whitelist = {
-                'dependentlibs.list',
-                'platform.ini',
-                'application.ini',
-            }
-            for f in JarReader(filename):
-                if not f.filename.startswith(prefix):
-                    raise ValueError('Archive format changed! Filename should start with "firefox/"; was "{filename}"'.format(filename=f.filename))
-                basename = f.filename[len(prefix):]
+    package_artifact_patterns = {
+        'firefox/dependentlibs.list',
+        'firefox/platform.ini',
+        'firefox/application.ini',
+        'firefox/*.dll',
+        'firefox/*.exe',
+    }
+    # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+    test_artifact_patterns = {
+        'bin/BadCertServer.exe',
+        'bin/GenerateOCSPResponse.exe',
+        'bin/OCSPStaplingServer.exe',
+        'bin/certutil.exe',
+        'bin/fileid.exe',
+        'bin/pk12util.exe',
+        'bin/ssltunnel.exe',
+        'bin/xpcshell.exe',
+    }
 
-                if not basename.endswith('.dll') and \
-                   not basename.endswith('.exe') and \
-                   basename not in whitelist:
+    def process_package_artifact(self, filename, processed_filename):
+        added_entry = False
+        with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
+            for f in JarReader(filename):
+                if not any(mozpath.match(f.filename, p) for p in self.package_artifact_patterns):
                     continue
 
+                basename = mozpath.basename(f.filename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                     'Adding {basename} to processed archive')
-
                 writer.add(basename.encode('utf-8'), f)
+                added_entry = True
 
+        if not added_entry:
+            raise ValueError('Archive format changed! No pattern from "{patterns}"'
+                             'matched an archive path.'.format(
+                                 patterns=self.artifact_patterns))
 
 # Keep the keys of this map in sync with the |mach artifact| --job
 # options.  The keys of this map correspond to entries at
 # https://tools.taskcluster.net/index/artifacts/#buildbot.branches.mozilla-central/buildbot.branches.mozilla-central.
+# The values correpsond to a pair of (<package regex>, <test archive regex>).
 JOB_DETAILS = {
     # 'android-api-9': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-api-11': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-arm\.apk'),
-    'android-x86': (AndroidArtifactJob, 'public/build/fennec-(.*)\.android-i386\.apk'),
-    'linux': (LinuxArtifactJob, 'public/build/firefox-(.*)\.linux-i686\.tar\.bz2'),
-    'linux64': (LinuxArtifactJob, 'public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2'),
-    'macosx64': (MacArtifactJob, 'public/build/firefox-(.*)\.mac\.dmg'),
-    'win32': (WinArtifactJob, 'public/build/firefox-(.*)\.win32.zip'),
-    'win64': (WinArtifactJob, 'public/build/firefox-(.*)\.win64.zip'),
+    'android-api-11': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-arm\.apk',
+                                            None)),
+    'android-x86': (AndroidArtifactJob, ('public/build/fennec-(.*)\.android-i386\.apk',
+                                         None)),
+    'linux': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-i686\.tar\.bz2',
+                                 'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'linux64': (LinuxArtifactJob, ('public/build/firefox-(.*)\.linux-x86_64\.tar\.bz2',
+                                   'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'macosx64': (MacArtifactJob, ('public/build/firefox-(.*)\.mac\.dmg',
+                                  'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win32': (WinArtifactJob, ('public/build/firefox-(.*)\.win32.zip',
+                               'public/build/firefox-(.*)\.common\.tests\.zip')),
+    'win64': (WinArtifactJob, ('public/build/firefox-(.*)\.win64.zip',
+                               'public/build/firefox-(.*)\.common\.tests\.zip')),
 }
 
-def get_job_details(job, log=None):
-    cls, re = JOB_DETAILS[job]
-    return cls(re, log=log)
 
+
+def get_job_details(job, log=None):
+    cls, (package_re, tests_re) = JOB_DETAILS[job]
+    return cls(package_re, tests_re, log=log)
 
 def cachedmethod(cachefunc):
     '''Decorator to wrap a class or instance method with a memoizing callable that
@@ -452,7 +529,7 @@ class TaskCache(CacheManager):
         self._queue = taskcluster.Queue()
 
     @cachedmethod(operator.attrgetter('_cache'))
-    def artifact_url(self, tree, job, rev):
+    def artifact_urls(self, tree, job, rev):
         try:
             artifact_job = get_job_details(job, log=self._log)
         except KeyError:
@@ -473,14 +550,17 @@ class TaskCache(CacheManager):
 
         artifacts = self._queue.listLatestArtifacts(taskId)['artifacts']
 
-        for artifact in artifact_job.find_candidate_artifacts(artifacts):
+        urls = []
+        for artifact_name in artifact_job.find_candidate_artifacts(artifacts):
             # We can easily extract the task ID from the URL.  We can't easily
             # extract the build ID; we use the .ini files embedded in the
             # downloaded artifact for this.  We could also use the uploaded
             # public/build/buildprops.json for this purpose.
-            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact['name'])
-            return url
-        raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
+            url = self._queue.buildUrl('getLatestArtifact', taskId, artifact_name)
+            urls.append(url)
+        if not urls:
+            raise ValueError('Task for {key} existed, but no artifacts found!'.format(key=key))
+        return urls
 
     def print_last_item(self, args, sorted_kwargs, result):
         tree, job, rev = args
@@ -645,7 +725,7 @@ class Artifacts(object):
             {'revset': revset},
             'Installing from local revision {revset}')
 
-        url = None
+        urls = None
         with self._task_cache as task_cache, self._pushhead_cache as pushhead_cache:
             # with blocks handle handle persistence.
             for pushhead in pushhead_cache.pushheads(self._tree, revset):
@@ -653,15 +733,18 @@ class Artifacts(object):
                     {'pushhead': pushhead},
                     'Trying to find artifacts for pushhead {pushhead}.')
                 try:
-                    url = task_cache.artifact_url(self._tree, self._job, pushhead)
+                    urls = task_cache.artifact_urls(self._tree, self._job, pushhead)
                     self.log(logging.INFO, 'artifact',
                         {'pushhead': pushhead},
                         'Installing from remote pushhead {pushhead}')
                     break
                 except ValueError:
                     pass
-        if url:
-            return self.install_from_url(url, bindir, install_callback=install_callback)
+        if urls:
+            for url in urls:
+                if self.install_from_url(url, bindir, install_callback=install_callback):
+                    return 1
+            return 0
         self.log(logging.ERROR, 'artifact',
                  {'revset': revset},
                  'No built artifacts for {revset} found.')
