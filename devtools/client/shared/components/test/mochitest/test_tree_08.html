@@ -21,7 +21,9 @@ window.onload = Task.async(function* () {
     const React = browserRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(browserRequire("devtools/client/shared/components/tree"));
-    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+      onFocus: x => setProps(tree, { focused: x }),
+    })), window.document.body);
 
     const input = document.createElement("input");
     document.body.appendChild(input);
@@ -30,8 +32,7 @@ window.onload = Task.async(function* () {
     is(document.activeElement, input, "The text input should be focused.");
 
     Simulate.click(document.querySelector(".tree-node"));
-    // Let the tree re-render, because focus is dealt with on componentDidUpdate.
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     isnot(document.activeElement, input,
           "The input should have had it's focus stolen by clicking on a tree item.");

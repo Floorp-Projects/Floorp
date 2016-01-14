@@ -29,9 +29,8 @@ window.onload = Task.async(function* () {
     const tree = ReactDOM.render(t, window.document.body);
     ok(tree, "Should be able to mount Tree instances");
 
-    yield setState(tree, {
-      expanded: new Set("ABCDEFGHIJKLMNO".split(""))
-    });
+    TEST_TREE.expanded = new Set("ABCDEFGHIJKLMNO".split(""));
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",

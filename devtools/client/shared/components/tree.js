@@ -43,6 +43,12 @@ const ArrowExpander = createFactory(createClass({
 }));
 
 const TreeNode = createFactory(createClass({
+  componentDidMount() {
+    if (this.props.focused) {
+      this.refs.button.focus();
+    }
+  },
+
   componentDidUpdate() {
     if (this.props.focused) {
       this.refs.button.focus();
@@ -145,12 +151,19 @@ const Tree = module.exports = createClass({
     getRoots: PropTypes.func.isRequired,
     // A function to get a unique key for the given item.
     getKey: PropTypes.func.isRequired,
+    // A function to get whether an item is expanded or not. If an item is not
+    // expanded, then it must be collapsed.
+    isExpanded: PropTypes.func.isRequired,
     // The height of an item in the tree including margin and padding, in
     // pixels.
     itemHeight: PropTypes.number.isRequired,
 
     // Optional props
 
+    // The currently focused item, if any such item exists.
+    focused: PropTypes.any,
+    // Handle when a new item is focused.
+    onFocus: PropTypes.func,
     // The depth to which we should automatically expand new items.
     autoExpandDepth: PropTypes.number,
     // A predicate that returns true if the last DFS traversal that was cached
@@ -164,9 +177,6 @@ const Tree = module.exports = createClass({
 
   getDefaultProps() {
     return {
-      expanded: new Set(),
-      seen: new Set(),
-      focused: undefined,
       autoExpandDepth: AUTO_EXPAND_DEPTH,
       reuseCachedTraversal: null,
     };
@@ -176,9 +186,7 @@ const Tree = module.exports = createClass({
     return {
       scroll: 0,
       height: window.innerHeight,
-      expanded: new Set(),
       seen: new Set(),
-      focused: undefined,
       cachedTraversal: undefined,
     };
   },
@@ -211,7 +219,7 @@ const Tree = module.exports = createClass({
         return;
       }
 
-      this.state.expanded.add(item);
+      this.props.onExpand(item);
       this.state.seen.add(item);
 
       for (let child of this.props.getChildren(item)) {
@@ -252,12 +260,12 @@ const Tree = module.exports = createClass({
         item: item,
         depth: depth,
         renderItem: this.props.renderItem,
-        focused: this.state.focused === item,
-        expanded: this.state.expanded.has(item),
+        focused: this.props.focused === item,
+        expanded: this.props.isExpanded(item),
         hasChildren: !!this.props.getChildren(item).length,
         onExpand: this._onExpand,
         onCollapse: this._onCollapse,
-        onFocus: () => this._onFocus(item)
+        onFocus: () => this._focus(item)
       }));
     }
 
@@ -300,7 +308,7 @@ const Tree = module.exports = createClass({
   _dfs(item, maxDepth = Infinity, traversal = [], _depth = 0) {
     traversal.push({ item, depth: _depth });
 
-    if (!this.state.expanded.has(item)) {
+    if (!this.props.isExpanded(item)) {
       return traversal;
     }
 
@@ -348,24 +356,17 @@ const Tree = module.exports = createClass({
    * @param {Boolean} expandAllChildren
    */
   _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
-    this.state.expanded.add(item);
-
     if (this.props.onExpand) {
       this.props.onExpand(item);
-    }
 
-    if (expandAllChildren) {
-      for (let { item: child } of this._dfs(item)) {
-        this.state.expanded.add(child);
-
-        if (this.props.onExpand) {
+      if (expandAllChildren) {
+        for (let { item: child } of this._dfs(item)) {
           this.props.onExpand(child);
         }
       }
     }
 
     this.setState({
-      expanded: this.state.expanded,
       cachedTraversal: null,
     });
   }),
@@ -376,14 +377,11 @@ const Tree = module.exports = createClass({
    * @param {Object} item
    */
   _onCollapse: oncePerAnimationFrame(function (item) {
-    this.state.expanded.delete(item);
-
     if (this.props.onCollapse) {
       this.props.onCollapse(item);
     }
 
     this.setState({
-      expanded: this.state.expanded,
       cachedTraversal: null,
     });
   }),
@@ -393,20 +391,18 @@ const Tree = module.exports = createClass({
    *
    * @param {Object} item
    */
-  _onFocus: oncePerAnimationFrame(function (item) {
-    this.setState({
-      focused: item
-    });
-  }),
+  _focus: function (item) {
+    if (this.props.onFocus) {
+      this.props.onFocus(item);
+    }
+  },
 
   /**
    * Sets the state to have no focused item.
    */
-  _onBlur: oncePerAnimationFrame(function () {
-    this.setState({
-      focused: undefined
-    });
-  }),
+  _onBlur: function () {
+    this._focus(undefined);
+  },
 
   /**
    * Fired on a scroll within the tree's container, updates
@@ -427,7 +423,7 @@ const Tree = module.exports = createClass({
    * @param {Event} e
    */
   _onKeyDown(e) {
-    if (this.state.focused == null) {
+    if (this.props.focused == null) {
       return;
     }
 
@@ -447,17 +443,17 @@ const Tree = module.exports = createClass({
         return false;
 
       case "ArrowLeft":
-        if (this.state.expanded.has(this.state.focused)
-            && this.props.getChildren(this.state.focused).length) {
-          this._onCollapse(this.state.focused);
+        if (this.props.isExpanded(this.props.focused)
+            && this.props.getChildren(this.props.focused).length) {
+          this._onCollapse(this.props.focused);
         } else {
           this._focusParentNode();
         }
         return false;
 
       case "ArrowRight":
-        if (!this.state.expanded.has(this.state.focused)) {
-          this._onExpand(this.state.focused);
+        if (!this.props.isExpanded(this.props.focused)) {
+          this._onExpand(this.props.focused);
         } else {
           this._focusNextNode();
         }
@@ -475,7 +471,7 @@ const Tree = module.exports = createClass({
 
     let prev;
     for (let { item } of this._dfsFromRoots()) {
-      if (item === this.state.focused) {
+      if (item === this.props.focused) {
         break;
       }
       prev = item;
@@ -485,9 +481,7 @@ const Tree = module.exports = createClass({
       return;
     }
 
-    this.setState({
-      focused: prev
-    });
+    this._focus(prev);
   }),
 
   /**
@@ -503,16 +497,14 @@ const Tree = module.exports = createClass({
 
     let i = 0;
     for (let { item } of traversal) {
-      if (item === this.state.focused) {
+      if (item === this.props.focused) {
         break;
       }
       i++;
     }
 
     if (i + 1 < traversal.length) {
-      this.setState({
-        focused: traversal[i + 1].item
-      });
+      this._focus(traversal[i + 1].item);
     }
   }),
 
@@ -521,11 +513,9 @@ const Tree = module.exports = createClass({
    * parent row.
    */
   _focusParentNode: oncePerAnimationFrame(function () {
-    const parent = this.props.getParent(this.state.focused);
+    const parent = this.props.getParent(this.props.focused);
     if (parent) {
-      this.setState({
-        focused: parent
-      });
+      this._focus(parent);
     }
   }),
 });

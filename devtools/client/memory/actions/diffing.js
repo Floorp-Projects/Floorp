@@ -4,7 +4,7 @@
 "use strict";
 
 const { assert, reportException } = require("devtools/shared/DevToolsUtils");
-const { actions, diffingState } = require("../constants");
+const { actions, diffingState, viewState } = require("../constants");
 const {
   breakdownEquals,
   getSnapshot,
@@ -16,7 +16,12 @@ const {
  * Toggle diffing mode on or off.
  */
 const toggleDiffing = exports.toggleDiffing = function () {
-  return { type: actions.TOGGLE_DIFFING };
+  return function(dispatch, getState) {
+    dispatch({
+      type: actions.CHANGE_VIEW,
+      view: getState().diffing ? viewState.CENSUS : viewState.DIFFING,
+    });
+  };
 };
 
 /**
@@ -150,5 +155,41 @@ const selectSnapshotForDiffingAndRefresh = exports.selectSnapshotForDiffingAndRe
            "If we are selecting for diffing, we must be in diffing mode");
     dispatch(selectSnapshotForDiffing(snapshot));
     yield dispatch(refreshDiffing(heapWorker));
+  };
+};
+
+/**
+ * Expand the given node in the diffing's census's delta-report.
+ *
+ * @param {CensusTreeNode} node
+ */
+const expandDiffingCensusNode = exports.expandDiffingCensusNode = function (node) {
+  return {
+    type: actions.EXPAND_DIFFING_CENSUS_NODE,
+    node,
+  };
+};
+
+/**
+ * Collapse the given node in the diffing's census's delta-report.
+ *
+ * @param {CensusTreeNode} node
+ */
+const collapseDiffingCensusNode = exports.collapseDiffingCensusNode = function (node) {
+  return {
+    type: actions.COLLAPSE_DIFFING_CENSUS_NODE,
+    node,
+  };
+};
+
+/**
+ * Focus the given node in the snapshot's census's report.
+ *
+ * @param {DominatorTreeNode} node
+ */
+const focusDiffingCensusNode = exports.focusDiffingCensusNode = function (node) {
+  return {
+    type: actions.FOCUS_DIFFING_CENSUS_NODE,
+    node,
   };
 };

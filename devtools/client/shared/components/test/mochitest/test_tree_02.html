@@ -21,9 +21,8 @@ window.onload = Task.async(function* () {
 
     const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
-    yield setState(tree, {
-      expanded: new Set("MNO".split(""))
-    });
+    TEST_TREE.expanded = new Set("MNO".split(""));
+    yield forceRender(tree);
 
     isRenderedTree(document.body.textContent, [
       "A:false",

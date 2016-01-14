@@ -27,18 +27,22 @@ window.onload = Task.async(function* () {
     let numberOfCollapses = 0;
     let lastCollapsedItem = null;
 
-    const tree = ReactDOM.render(Tree(Object.assign({
+    const tree = ReactDOM.render(Tree(Object.assign({}, TEST_TREE_INTERFACE, {
+      autoExpandDepth: 0,
       onExpand: item => {
         lastExpandedItem = item;
         numberOfExpands++;
+        TEST_TREE.expanded.add(item);
       },
       onCollapse: item => {
         lastCollapsedItem = item;
         numberOfCollapses++;
+        TEST_TREE.expanded.delete(item);
       },
-    }, TEST_TREE_INTERFACE)), window.document.body);
+      onFocus: item => setProps(tree, { focused: item }),
+    })), window.document.body);
 
-    yield setState(tree, {
+    yield setProps(tree, {
       focused: "A"
     });
 
@@ -47,14 +51,14 @@ window.onload = Task.async(function* () {
 
     // Expand "A" via the keyboard and then let the component re-render.
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowRight" });
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     is(lastExpandedItem, "A", "Our onExpand callback should have been fired.");
     is(numberOfExpands, 1);
 
     // Now collapse "A" via the keyboard and then let the component re-render.
     Simulate.keyDown(document.querySelector(".tree"), { key: "ArrowLeft" });
-    yield setState(tree, {});
+    yield forceRender(tree);
 
     is(lastCollapsedItem, "A", "Our onCollapsed callback should have been fired.");
     is(numberOfCollapses, 1);
