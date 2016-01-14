@@ -163,6 +163,10 @@
 #include "mozilla/dom/GamepadService.h"
 #endif
 
+#ifndef MOZ_SIMPLEPUSH
+#include "mozilla/dom/PushNotifier.h"
+#endif
+
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/cellbroadcast/CellBroadcastIPCService.h"
 #include "mozilla/dom/icc/IccChild.h"
@@ -3213,6 +3217,63 @@ ContentChild::RecvTestGraphicsDeviceReset(const uint32_t& aResetReason)
 {
 #if defined(XP_WIN)
   gfxPlatform::GetPlatform()->TestDeviceReset(DeviceResetReason(aResetReason));
+#endif
+  return true;
+}
+
+bool
+ContentChild::RecvPush(const nsCString& aScope,
+                       const IPC::Principal& aPrincipal)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal, Nothing());
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
+bool
+ContentChild::RecvPushWithData(const nsCString& aScope,
+                               const IPC::Principal& aPrincipal,
+                               InfallibleTArray<uint8_t>&& aData)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+  nsresult rv = pushNotifier->NotifyPushWorkers(aScope, aPrincipal,
+                                                Some(aData));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
+#endif
+  return true;
+}
+
+bool
+ContentChild::RecvPushSubscriptionChange(const nsCString& aScope,
+                                         const IPC::Principal& aPrincipal)
+{
+#ifndef MOZ_SIMPLEPUSH
+  nsCOMPtr<nsIPushNotifier> pushNotifierIface =
+      do_GetService("@mozilla.org/push/Notifier;1");
+  if (NS_WARN_IF(!pushNotifierIface)) {
+      return true;
+  }
+  PushNotifier* pushNotifier =
+    static_cast<PushNotifier*>(pushNotifierIface.get());
+  nsresult rv = pushNotifier->NotifySubscriptionChangeWorkers(aScope,
+                                                              aPrincipal);
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 #endif
   return true;
 }
