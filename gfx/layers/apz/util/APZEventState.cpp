@@ -181,7 +181,7 @@ APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
 
   LayoutDevicePoint currentPoint =
       APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid)
-    * widget->GetDefaultScale();;
+    * widget->GetDefaultScale();
   if (!mActiveElementManager->ActiveElementUsesStyle()) {
     // If the active element isn't visually affected by the :active style, we
     // have no need to wait the extra sActiveDurationMs to make the activation

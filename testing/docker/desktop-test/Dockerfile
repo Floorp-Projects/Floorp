@@ -53,5 +53,8 @@ EXPOSE 5900
 # tests outside of test.sh
 ENV DISPLAY :0
 
+# Disable apport (Ubuntu app crash reporter) to avoid stealing focus from test runs
+ADD apport /etc/default/apport
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]

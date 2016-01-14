@@ -8,6 +8,8 @@
 #include "nsCOMPtr.h"
 #include "nsCocoaUtils.h"
 
+using namespace mozilla;
+
 NS_IMPL_ISUPPORTS(nsScreenManagerCocoa, nsIScreenManager)
 
 nsScreenManagerCocoa::nsScreenManagerCocoa()
@@ -60,13 +62,16 @@ nsScreenManagerCocoa::ScreenForId (uint32_t aId, nsIScreen **outScreen)
 }
 
 NS_IMETHODIMP
-nsScreenManagerCocoa::ScreenForRect (int32_t aX, int32_t aY, int32_t aWidth, int32_t aHeight,
+nsScreenManagerCocoa::ScreenForRect (int32_t aX, int32_t aY,
+                                     int32_t aWidth, int32_t aHeight,
                                      nsIScreen **outScreen)
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
     NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
-    NSRect inRect = nsCocoaUtils::GeckoRectToCocoaRect(nsIntRect(aX, aY, aWidth, aHeight));
+    NSRect inRect =
+      nsCocoaUtils::GeckoRectToCocoaRect(DesktopIntRect(aX, aY,
+                                                        aWidth, aHeight));
     NSScreen *screenWindowIsOn = [NSScreen mainScreen];
     float greatestArea = 0;
 

@@ -1606,8 +1606,8 @@ protected:
   // Outer windows only.
   void PreloadLocalStorage();
 
-  // Returns device pixels.  Outer windows only.
-  nsIntPoint GetScreenXY(mozilla::ErrorResult& aError);
+  // Returns desktop pixels.  Outer windows only.
+  mozilla::DesktopIntPoint GetScreenXY(mozilla::ErrorResult& aError);
 
   nsGlobalWindow* InnerForSetTimeoutOrInterval(mozilla::ErrorResult& aError);
 

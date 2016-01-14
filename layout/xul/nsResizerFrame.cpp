@@ -228,12 +228,15 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         nsRect rootScreenRect = rootFrame->GetScreenRectInAppUnits();
 
         nsPopupLevel popupLevel = menuPopupFrame->PopupLevel();
-        nsRect screenRect = menuPopupFrame->GetConstraintRect(frameRect, rootScreenRect, popupLevel);
-        // round using ToInsidePixels as it's better to be a pixel too small
-        // than be too large. If the popup is too large it could get flipped
-        // to the opposite side of the anchor point while resizing.
-        nsIntRect screenRectPixels = screenRect.ToInsidePixels(aPresContext->AppUnitsPerDevPixel());
-        rect.IntersectRect(rect, LayoutDeviceIntRect::FromUnknownRect(screenRectPixels));
+        int32_t appPerDev = aPresContext->AppUnitsPerDevPixel();
+        LayoutDeviceIntRect screenRect = menuPopupFrame->GetConstraintRect
+          (LayoutDeviceIntRect::FromAppUnitsToNearest(frameRect, appPerDev),
+           // round using ...ToInside as it's better to be a pixel too small
+           // than be too large. If the popup is too large it could get flipped
+           // to the opposite side of the anchor point while resizing.
+           LayoutDeviceIntRect::FromAppUnitsToInside(rootScreenRect, appPerDev),
+           popupLevel);
+        rect.IntersectRect(rect, screenRect);
       }
 
       if (contentToResize) {

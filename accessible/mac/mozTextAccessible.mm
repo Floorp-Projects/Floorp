@@ -218,11 +218,13 @@ ToNSString(id aValue)
 
     int32_t start = range.location;
     int32_t end = start + range.length;
-    nsIntRect bounds;
+    DesktopIntRect bounds;
     if (textAcc) {
-      bounds = textAcc->TextBounds(start, end);
+      bounds =
+        DesktopIntRect::FromUnknownRect(textAcc->TextBounds(start, end));
     } else if (proxy) {
-      bounds = proxy->TextBounds(start, end);
+      bounds =
+        DesktopIntRect::FromUnknownRect(proxy->TextBounds(start, end));
     }
 
     return [NSValue valueWithRect:nsCocoaUtils::GeckoRectToCocoaRect(bounds)];

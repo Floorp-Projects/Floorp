@@ -167,6 +167,7 @@ namespace jit {
     _(JSOP_SPREADNEW)          \
     _(JSOP_SPREADEVAL)         \
     _(JSOP_STRICTSPREADEVAL)   \
+    _(JSOP_OPTIMIZE_SPREADCALL)\
     _(JSOP_IMPLICITTHIS)       \
     _(JSOP_GIMPLICITTHIS)      \
     _(JSOP_INSTANCEOF)         \

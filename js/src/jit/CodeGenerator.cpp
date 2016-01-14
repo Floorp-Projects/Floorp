@@ -1124,7 +1124,7 @@ PrepareAndExecuteRegExp(JSContext* cx, MacroAssembler& masm, Register regexp, Re
         masm.branch32(Assembler::Above, temp3, Imm32(unicode::LeadSurrogateMax), &done);
 
         // Move lastIndex to lead surrogate.
-        masm.subPtr(Imm32(2), lastIndex);
+        masm.subPtr(Imm32(1), lastIndex);
 
         masm.bind(&done);
     }

@@ -42,7 +42,7 @@ interface nsIScreen : nsISupports
   void GetAvailRect(out long left, out long top, out long width, out long height);
 
   /**
-   * And these report in global display pixels
+   * And these report in desktop pixels
    */
   void GetRectDisplayPix(out long left, out long top, out long width, out long height);
   void GetAvailRectDisplayPix(out long left, out long top, out long width, out long height);
