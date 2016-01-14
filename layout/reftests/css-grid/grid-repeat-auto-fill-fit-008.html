@@ -1,0 +1,204 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html class="reftest-wait"><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: repeat(auto-fit) with grid-aligned abs.pos. with removed start/middle tracks and implicit tracks on either/both sides</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1239036">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#valdef-repeat-auto-fill">
+  <link rel="match" href="grid-repeat-auto-fill-fit-008-ref.html">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  position: relative;
+  border: 1px solid;
+  grid-auto-rows: 30px;
+  grid-auto-columns: 3px;
+  grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d] 20px;
+  height: 30px;
+}
+
+.c1 { width: 165px; }
+.c2 { width: 155px; }
+.c3 { width: 150px; }
+.p1 { padding-left:5px; }
+
+.t2 { grid-template-columns: [a] repeat(auto-fit, [b] 20px [c]) [d]; }
+
+x {
+  width: 18px;
+  border:1px solid;
+  background: grey;
+}
+a {
+  position: absolute;
+  left:0; top:0; height:3px; right:0;
+  background: cyan;
+  grid-column: 7 / auto;
+}
+b {
+  position: absolute;
+  left:0; bottom:0; height:3px; right:0;
+  background: brown;
+  grid-column: auto / 7;
+}
+c {
+  position: absolute;
+  left:0; bottom:5px; height:3px; right:0;
+  background: pink;
+  grid-column: 6 / 7;
+}
+d {
+  position: absolute;
+  left:0; bottom:10px; height:3px; right:0;
+  background: silver;
+  grid-column: 3 / 6;
+}
+e {
+  position: absolute;
+  left:0; bottom:15px; height:3px; right:0;
+  background: magenta;
+  grid-column: 3 / 7;
+}
+f {
+  position: absolute;
+  left:0; bottom:20px; height:3px; right:0;
+  background: orange;
+  grid-column: auto / 6;
+}
+
+x:first-of-type {
+  background: lime;
+}
+x:nth-of-type(1) { grid-area:1/1; }
+x:nth-of-type(2) { grid-area:1/2; }
+x:nth-of-type(3) { grid-area:1/3; }
+x:nth-of-type(4) { grid-area:1/4; }
+x:nth-of-type(5) { grid-area:1/5; }
+
+x:last-of-type {
+  background: blue;
+}
+
+.t1 x:last-of-type {
+  grid-column-end:-1;
+}
+
+float { float:left; margin-right:20px; }
+
+.m x:first-of-type , .n x:first-of-type {
+  background: cyan;
+  grid-area:1/2;
+}
+
+.n x:nth-of-type(2) , .o x:nth-of-type(2) {
+  background: purple;
+  grid-area:1/4;
+}
+
+.c1 y, .c3 y:first-of-type { grid-column: span X / 1; background:black; }
+.c2 y, .c3 y:last-of-type { grid-column: -1 / span X; background:black; }
+
+</style>
+</head>
+<body>
+
+<float>
+<div class="grid c1 t1 n"><x></x><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t1 n"><x></x><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t1 n"><x></x><x></x><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t2 m"><x></x><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t2 m"><x></x><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t2 m"><x></x><x></x><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t1 o"><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t1 o"><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t1 o"><x></x><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t2 o"><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t2 o"><x></x><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t2 o"><x></x><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t1 n"><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t1 n"><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t1 n"><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t2 n"><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t2 n"><x></x><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t2 n"><x></x><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+</float>
+
+<float>
+<div class="grid c1 t1 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t1 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t1 n"><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+
+<div class="grid c1 t2 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c2 t2 n"><x></x><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+<div class="grid c3 t2 n"><x></x><y></y><y></y><a></a><b></b><c></c><d></d><e></e><f></f><x></x></div>
+</float>
+
+<script>
+function testGridTemplateColumns(elem, expected) {
+  var actual = window.getComputedStyle(elem).gridTemplateColumns;
+  if (actual != expected) {
+    var err = "FAIL: gridTemplateColumns " + elem.className +
+              ", GOT=" + actual +
+              ", EXPECTED=" + expected;
+    document.body.appendChild(document.createTextNode(err));
+  }
+}
+var a1 = [
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
+"[a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
+"[a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px",
+"[a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c d] 20px",
+"[a b] 20px [c b] 20px [c d] 20px 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c d] 20px 3px"
+];
+var a2 = [
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d]",
+"[a b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c d]",
+"[a b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c d]",
+"[a b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c d]",
+"[a b] 20px [c b] 20px [c d] 3px",
+"3px [a b] 20px [c b] 20px [c b] 20px [c d] 3px"
+];
+function runTest() {
+ var t1 = document.querySelectorAll('.t1');
+ for (var i = 0; i < t1.length; ++i) {
+   testGridTemplateColumns(t1[i], a1[i]);
+ }
+ var t2 = document.querySelectorAll('.t2');
+ for (var i = 0; i < t2.length; ++i) {
+   testGridTemplateColumns(t2[i], a2[i]);
+ }
+
+ document.documentElement.className='';
+}
+document.addEventListener('MozReftestInvalidate', runTest, false);
+runTest()
+
+</script>
+
+</body>
+</html>
