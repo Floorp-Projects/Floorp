@@ -160,7 +160,7 @@
   <project name="platform/hardware/qcom/wlan" path="hardware/qcom/wlan" revision="82d8c482d59926ff27c53f1fcc8a0ce3554e5491"/>
   <project name="platform/hardware/ril" path="hardware/ril" revision="4782b037af55a8d61078305df6a4c31c1424623c"/>
   <project name="platform_external_libnfc-nci" path="external/libnfc-nci" remote="b2g" revision="cac2be832f7bf748d8f0de7eac93009ef7c2eea9"/>
-  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="288427e047fcdadba1b907fc886bf1142e1f646e"/>
+  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="9312b15e14ee19686ec7eac7b4cf2035199e92a6"/>
   <project name="platform_hardware_broadcom_libbt" path="hardware/broadcom/libbt" remote="b2g" revision="c927f10590b39bfe35976e01aed0969afeed3ba8"/>
   <project name="platform_hardware_libhardware" path="hardware/libhardware" remote="b2g" revision="c4bdd7888f2ab3069f6f8853915a806ebd390320"/>
   <project name="platform_system_nfcd" path="system/nfcd" remote="b2g" revision="5f4b68c799927b6e078f987b12722c3a6ccd4a45"/>
