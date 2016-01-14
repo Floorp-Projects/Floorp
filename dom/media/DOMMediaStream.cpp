@@ -767,23 +767,7 @@ DOMMediaStream::ApplyConstraintsToTrack(TrackID aTrackID,
   return promise.forget();
 }
 
-bool
-DOMMediaStream::CombineWithPrincipal(nsIPrincipal* aPrincipal)
-{
-  bool changed =
-    nsContentUtils::CombineResourcePrincipals(&mPrincipal, aPrincipal);
-  if (changed) {
-    NotifyPrincipalChanged();
-  }
-  return changed;
-}
 
-void
-DOMMediaStream::SetPrincipal(nsIPrincipal* aPrincipal)
-{
-  mPrincipal = aPrincipal;
-  NotifyPrincipalChanged();
-}
 
 void
 DOMMediaStream::PrincipalChanged(MediaStreamTrack* aTrack)

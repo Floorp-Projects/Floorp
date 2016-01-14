@@ -443,20 +443,7 @@ public:
     mPeerIdentity = aPeerIdentity;
   }
 
-  /**
-   * Indicate that data will be contributed to this stream from origin aPrincipal.
-   * If aPrincipal is null, this is ignored. Otherwise, from now on the contents
-   * of this stream can only be accessed by principals that subsume aPrincipal.
-   * Returns true if the stream's principal changed.
-   */
-  bool CombineWithPrincipal(nsIPrincipal* aPrincipal);
 
-  /**
-   * This is used in WebRTC to move from a protected state (nsNullPrincipal) to
-   * one where the stream is accessible to script.  Don't call this.
-   * CombineWithPrincipal is almost certainly more appropriate.
-   */
-  void SetPrincipal(nsIPrincipal* aPrincipal);
 
   // From PrincipalChangeObserver<MediaStreamTrack>.
   void PrincipalChanged(MediaStreamTrack* aTrack) override;
