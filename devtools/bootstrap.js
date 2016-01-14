@@ -80,6 +80,10 @@ function reload(event) {
   // Ask the loader to update itself and reopen the toolbox if needed
   const {devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   devtools.reload(reloadToolbox);
+
+  // Also tells gDevTools to reload its dependencies
+  const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+  gDevTools.reload();
 }
 
 let listener;

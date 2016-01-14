@@ -70,7 +70,7 @@ class CompareLocales(MachCommandBase):
                 merge_dir = mozpath.join(
                     self.topobjdir,
                     self.substs['MOZ_BUILD_APP'],
-                    'locales', 'merge-{ab_CD}'
+                    'locales', 'merge-dir-{ab_CD}'
                 )
             except Exception:
                 pass

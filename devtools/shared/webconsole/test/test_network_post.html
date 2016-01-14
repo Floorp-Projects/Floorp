@@ -25,20 +25,6 @@ function startTest()
 
 function onAttach(aState, aResponse)
 {
-  info("enable network request and response body logging");
-
-  onSetPreferences = onSetPreferences.bind(null, aState);
-  aState.client.setPreferences({
-    "NetworkMonitor.saveRequestAndResponseBodies": true,
-  }, onSetPreferences);
-}
-
-function onSetPreferences(aState, aResponse)
-{
-  is(aResponse.updated.length, 1, "updated prefs length");
-  is(aResponse.updated[0], "NetworkMonitor.saveRequestAndResponseBodies",
-     "updated prefs length");
-
   info("test network POST request");
 
   onNetworkEvent = onNetworkEvent.bind(null, aState);

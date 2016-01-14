@@ -74,58 +74,16 @@ function testPageLoad() {
       "Logged network entry is page load");
     is(lastRequest.request.method, "GET", "Method is correct");
     ok(!lastRequest.request.postData.text, "No request body was stored");
-    ok(lastRequest.discardRequestBody, "Request body was discarded");
-    ok(!lastRequest.response.content.text, "No response body was stored");
-    ok(lastRequest.discardResponseBody || lastRequest.fromCache,
-       "Response body was discarded or response came from the cache");
-
-    lastRequest = null;
-    requestCallback = null;
-    executeSoon(testPageLoadBody);
-  };
-
-  content.location = TEST_NETWORK_REQUEST_URI;
-}
-
-function testPageLoadBody() {
-  // Turn on logging of request bodies and check again.
-  hud.ui.setSaveRequestAndResponseBodies(true).then(() => {
-    ok(hud.ui._saveRequestAndResponseBodies,
-      "The saveRequestAndResponseBodies property was successfully set.");
-
-    testPageLoadBodyAfterSettingUpdate();
-  });
-}
-
-function testPageLoadBodyAfterSettingUpdate() {
-  let loaded = false;
-  let requestCallbackInvoked = false;
-
-  requestCallback = function() {
-    ok(lastRequest, "Page load was logged again");
-    ok(!lastRequest.discardResponseBody, "Response body was not discarded");
+    ok(!lastRequest.discardRequestBody, "Request body was not discarded");
     is(lastRequest.response.content.text.indexOf("<!DOCTYPE HTML>"), 0,
       "Response body's beginning is okay");
 
     lastRequest = null;
     requestCallback = null;
-    requestCallbackInvoked = true;
-
-    if (loaded) {
-      executeSoon(testXhrGet);
-    }
+    executeSoon(testXhrGet);
   };
 
-  browser.addEventListener("load", function onLoad() {
-    browser.removeEventListener("load", onLoad, true);
-    loaded = true;
-
-    if (requestCallbackInvoked) {
-      executeSoon(testXhrGet);
-    }
-  }, true);
-
-  content.location.reload();
+  content.location = TEST_NETWORK_REQUEST_URI;
 }
 
 function testXhrGet() {
