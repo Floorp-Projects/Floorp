@@ -16,6 +16,7 @@ pushd $(dirname $0)
 test $TAG
 test -f "$GAIA_TESTVARS"
 
+mkdir -p data
 cp $GAIA_TESTVARS data/gaia_testvars.json
 
 docker build -t $TAG .

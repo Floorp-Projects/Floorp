@@ -46,7 +46,7 @@ Parser.prototype = {
     // all the scripts. Fastest/easiest way is with a regular expression.
     // Don't worry, the rules of using a <script> tag are really strict,
     // this will work.
-    let regexp = /<script[^>]*>([^]*?)<\/script\s*>/gim;
+    let regexp = /<script[^>]*?(?:>([^]*?)<\/script\s*>|\/>)/gim;
     let syntaxTrees = [];
     let scriptMatches = [];
     let scriptMatch;
@@ -54,7 +54,9 @@ Parser.prototype = {
     if (aSource.match(/^\s*</)) {
       // First non whitespace character is &lt, so most definitely HTML.
       while (scriptMatch = regexp.exec(aSource)) {
-        scriptMatches.push(scriptMatch[1]); // Contents are captured at index 1.
+        // Contents are captured at index 1 or nothing: Self-closing scripts
+        // won't capture code content
+        scriptMatches.push(scriptMatch[1] || "");
       }
     }
 
