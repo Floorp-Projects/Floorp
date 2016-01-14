@@ -569,7 +569,7 @@ public:
                                        aPrevious->mCurve, aPrevious->mCurveLength,
                                        aPrevious->mDuration, aTime);
         case AudioTimelineEvent::SetTarget:
-          MOZ_ASSERT(false, "unreached");
+          MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
         case AudioTimelineEvent::SetValue:
         case AudioTimelineEvent::Cancel:
         case AudioTimelineEvent::Stream:
@@ -617,7 +617,7 @@ public:
                                    aPrevious->mCurve, aPrevious->mCurveLength,
                                    aPrevious->mDuration, aTime);
     case AudioTimelineEvent::SetTarget:
-      MOZ_ASSERT(false, "unreached");
+      MOZ_FALLTHROUGH_ASSERT("AudioTimelineEvent::SetTarget");
     case AudioTimelineEvent::SetValue:
     case AudioTimelineEvent::Cancel:
     case AudioTimelineEvent::Stream:
