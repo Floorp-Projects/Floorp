@@ -37,11 +37,6 @@ function run_test() {
 
   serverURL = "https://localhost:" + serverPort;
 
-  disableServiceWorkerEvents(
-    'https://example.org/1',
-    'https://example.org/no_receiptEndpoint'
-  );
-
   run_next_test();
 }
 

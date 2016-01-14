@@ -11,9 +11,6 @@ const channelID = 'c0660af8-b532-4931-81f0-9fd27a12d6ab';
 function run_test() {
   do_get_profile();
   setPrefs();
-  disableServiceWorkerEvents(
-    'https://example.net/page/invalid-endpoint'
-  );
   run_next_test();
 }
 

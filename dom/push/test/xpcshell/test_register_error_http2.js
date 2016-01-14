@@ -23,10 +23,6 @@ function run_test() {
 
   tlsProfile = prefs.getBoolPref("network.http.spdy.enforce-tls-profile");
 
-  disableServiceWorkerEvents(
-    'https://example.net/page/invalid-response'
-  );
-
   serverURL = "https://localhost:" + serverPort;
 
   run_next_test();
