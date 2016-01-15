@@ -9,12 +9,18 @@ import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 
+import org.mozilla.gecko.util.ThreadUtils;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.FutureTask;
 
 /**
  * Convenience class for checking and prompting for runtime permissions.
@@ -43,6 +49,43 @@ public class Permissions {
      */
     public static PermissionBlock from(@NonNull Activity activity) {
         return new PermissionBlock(activity, permissionHelper);
+    }
+
+    /**
+     * This method will block until the specified permissions have been granted or denied by the user.
+     * If needed the user will be prompted.
+     *
+     * @return true if all of the permissions have been granted. False if any of the permissions have been denied.
+     */
+    public static boolean waitFor(@NonNull Activity activity, String... permissions) {
+        ThreadUtils.assertNotOnUiThread(); // We do not want to block the UI thread.
+
+        // This task will block until all of the permissions have been granted
+        final FutureTask<Boolean> blockingTask = new FutureTask<>(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return true;
+            }
+        });
+
+        // This runnable will cancel the task if any of the permissions have been denied
+        Runnable cancelBlockingTask = new Runnable() {
+            @Override
+            public void run() {
+                blockingTask.cancel(true);
+            }
+        };
+
+        Permissions.from(activity)
+                .withPermissions(permissions)
+                .andFallback(cancelBlockingTask)
+                .run(blockingTask);
+
+        try {
+            return blockingTask.get();
+        } catch (InterruptedException | ExecutionException | CancellationException e) {
+            return false;
+        }
     }
 
     /* package-private */ static void setPermissionHelper(PermissionsHelper permissionHelper) {
