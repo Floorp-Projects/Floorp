@@ -2,9 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// This shared-head.js file is used for multiple directories in devtools.
+"use strict";
 
-var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+// This shared-head.js file is used for multiple mochitest test directories in
+// devtools.
+// It contains various common helper functions.
+
+var {classes: Cc, interfaces: Ci, utils: Cu, results: Cr, Constructor: CC} = Components;
 
 function scopedCuImport(path) {
   const scope = {};
@@ -64,39 +68,36 @@ registerCleanupFunction(function* cleanup() {
  * @param {String} url The url to be loaded in the new tab
  * @return a promise that resolves to the tab object when the url is loaded
  */
-function addTab(url) {
-  info("Adding a new tab with URL: '" + url + "'");
-  let def = promise.defer();
+var addTab = Task.async(function*(url) {
+  info("Adding a new tab with URL: " + url);
 
   let tab = gBrowser.selectedTab = gBrowser.addTab(url);
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
-    info("URL '" + url + "' loading complete");
-    def.resolve(tab);
-  }, true);
+  yield once(gBrowser.selectedBrowser, "load", true);
 
-  return def.promise;
-}
+  info("Tab added and finished loading");
+
+  return tab;
+});
 
 /**
  * Remove the given tab.
  * @param {Object} tab The tab to be removed.
  * @return Promise<undefined> resolved when the tab is successfully removed.
  */
-function removeTab(tab) {
+var removeTab = Task.async(function*(tab) {
   info("Removing tab.");
-  return new Promise(resolve => {
-    let tabContainer = gBrowser.tabContainer;
-    tabContainer.addEventListener("TabClose", function onClose(aEvent) {
-      tabContainer.removeEventListener("TabClose", onClose, false);
-      info("Tab removed and finished closing.");
-      resolve();
-    }, false);
 
-    gBrowser.removeTab(tab);
-  });
-}
+  let onClose = once(gBrowser.tabContainer, "TabClose");
+  gBrowser.removeTab(tab);
+  yield onClose;
 
+  info("Tab removed and finished closing");
+});
+
+/**
+ * Simulate a key event from a <key> element.
+ * @param {DOMNode} key
+ */
 function synthesizeKeyFromKeyTag(key) {
   is(key && key.tagName, "key", "Successfully retrieved the <key> node");
 
@@ -104,10 +105,11 @@ function synthesizeKeyFromKeyTag(key) {
 
   let name = null;
 
-  if (key.getAttribute("keycode"))
+  if (key.getAttribute("keycode")) {
     name = key.getAttribute("keycode");
-  else if (key.getAttribute("key"))
+  } else if (key.getAttribute("key")) {
     name = key.getAttribute("key");
+  }
 
   isnot(name, null, "Successfully retrieved keycode/key");
 
@@ -131,7 +133,7 @@ function synthesizeKeyFromKeyTag(key) {
  * @param {Boolean} useCapture Optional, for addEventListener/removeEventListener
  * @return A promise that resolves when the event has been handled
  */
-function once(target, eventName, useCapture=false) {
+function once(target, eventName, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
   let deferred = promise.defer();
@@ -170,27 +172,69 @@ function loadHelperScript(filePath) {
   Services.scriptloader.loadSubScript(testDir + "/" + filePath, this);
 }
 
+/**
+ * Wait for a tick.
+ * @return {Promise}
+ */
 function waitForTick() {
   let deferred = promise.defer();
   executeSoon(deferred.resolve);
   return deferred.promise;
 }
 
-function loadToolbox (url) {
-  let { promise: p, resolve } = promise.defer();
-  gBrowser.selectedTab = gBrowser.addTab();
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
+/**
+ * Open the toolbox in a given tab.
+ * @param {XULNode} tab The tab the toolbox should be opened in.
+ * @param {String} toolId Optional. The ID of the tool to be selected.
+ * @param {String} hostType Optional. The type of toolbox host to be used.
+ * @return {Promise} Resolves with the toolbox, when it has been opened.
+ */
+var openToolboxForTab = Task.async(function*(tab, toolId, hostType) {
+  info("Opening the toolbox");
 
-  gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
-    gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-    gDevTools.showToolbox(target).then(resolve);
-  }, true);
+  let toolbox;
+  let target = TargetFactory.forTab(tab);
 
-  content.location = url;
-  return p;
-}
+  // Check if the toolbox is already loaded.
+  toolbox = gDevTools.getToolbox(target);
+  if (toolbox) {
+    if (!toolId || (toolId && toolbox.getPanel(toolId))) {
+      info("Toolbox is already opened");
+      return toolbox;
+    }
+  }
 
-function unloadToolbox (toolbox) {
+  // If not, load it now.
+  toolbox = yield gDevTools.showToolbox(target, toolId, hostType);
+
+  // Make sure that the toolbox frame is focused.
+  yield new Promise(resolve => waitForFocus(resolve, toolbox.frame.contentWindow));
+
+  info("Toolbox opened and focused");
+
+  return toolbox;
+});
+
+/**
+ * Add a new tab and open the toolbox in it.
+ * @param {String} url The URL for the tab to be opened.
+ * @param {String} toolId Optional. The ID of the tool to be selected.
+ * @param {String} hostType Optional. The type of toolbox host to be used.
+ * @return {Promise} Resolves when the tab has been added, loaded and the
+ * toolbox has been opened. Resolves to the toolbox.
+ */
+var openNewTabAndToolbox = Task.async(function*(url, toolId, hostType) {
+  let tab = yield addTab(url);
+  return openToolboxForTab(tab, toolId, hostType)
+});
+
+/**
+ * Close a toolbox and the current tab.
+ * @param {Toolbox} toolbox The toolbox to close.
+ * @return {Promise} Resolves when the toolbox and tab have been destroyed and
+ * closed.
+ */
+function closeToolboxAndTab(toolbox) {
   return toolbox.destroy().then(function() {
     gBrowser.removeCurrentTab();
   });

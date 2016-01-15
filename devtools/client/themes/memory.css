@@ -58,10 +58,9 @@ html, body, #app, #memory-tool {
    * We want this to be exactly at a `--sidebar-width` distance from the
    * toolbar's start boundary. A `.devtools-toolbar` has a 3px start padding.
    */
-  flex: 0 0 calc(var(--sidebar-width) - 4px);
+  flex: 0 0 calc(var(--sidebar-width) - 3px);
   border-inline-end: 1px solid var(--theme-splitter-color);
   margin-inline-end: 5px;
-  padding-right: 1px;
 }
 
 .devtools-toolbar > .toolbar-group {
@@ -112,13 +111,8 @@ html, body, #app, #memory-tool {
  * Due to toolbar styles of `.devtools-toolbarbutton:not([label])` which overrides
  * .devtools-toolbarbutton's min-width of 78px, reset the min-width.
  */
-#import-snapshot,
-#clear-snapshots {
-  -moz-box-align: center;
-  flex-grow: 1;
-  padding: 1px;
-  margin: 2px 1px;
-  min-width: unset;
+#import-snapshot {
+  min-width: 78px;
 }
 
 .spacer {
@@ -227,12 +221,6 @@ html, body, #app, #memory-tool {
    */
   flex: 1;
   background-color: var(--theme-toolbar-background);
-
-  /**
-   * By default, flex items have min-width: auto;
-   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
-   */
-  min-width: 0;
 }
 
 #heap-view > .heap-view-panel {
@@ -248,12 +236,6 @@ html, body, #app, #memory-tool {
    * Flexing to fill out remaining horizontal space. @see #heap-view.
    */
   flex: 1;
-
-  /**
-   * By default, flex items have min-width: auto;
-   * (https://drafts.csswg.org/css-flexbox/#min-size-auto)
-   */
-  min-width: 0;
 }
 
 #heap-view > .heap-view-panel > .snapshot-status,
