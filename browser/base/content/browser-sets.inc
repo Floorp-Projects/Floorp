@@ -127,7 +127,7 @@
 
   <commandset id="placesCommands">
     <command id="Browser:ShowAllBookmarks"
-             oncommand="PlacesCommandHook.showPlacesOrganizer('AllBookmarks');"/>
+             oncommand="PlacesCommandHook.showPlacesOrganizer('UnfiledBookmarks');"/>
     <command id="Browser:ShowAllHistory"
              oncommand="PlacesCommandHook.showPlacesOrganizer('History');"/>
   </commandset>

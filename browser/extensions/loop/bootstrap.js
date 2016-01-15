@@ -859,7 +859,7 @@ function startup() {
  * Called when the add-on is shutting down, could be for re-installation
  * or just uninstall.
  */
-function shutdown() {
+function shutdown(data, reason) {
   // Close any open chat windows
   Cu.import("resource:///modules/Chat.jsm");
   let isLoopURL = ({ src }) => /^about:loopconversation#/.test(src);
@@ -882,6 +882,12 @@ function shutdown() {
 
   // Stop waiting for browser windows to open.
   wm.removeListener(WindowListener);
+
+  // If the app is shutting down, don't worry about cleaning up, just let
+  // it fade away...
+  if (reason == APP_SHUTDOWN) {
+    return;
+  }
 
   CustomizableUI.destroyWidget("loop-button");
 

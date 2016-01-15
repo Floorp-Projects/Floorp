@@ -6,7 +6,7 @@
 // Testing that searching for elements using the inspector search field
 // produces correct suggestions.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
+const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 // An array of (key, suggestions) pairs where key is a key to press and
 // suggestions is an array of suggestions that should be shown in the popup.
