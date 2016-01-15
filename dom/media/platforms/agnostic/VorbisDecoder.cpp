@@ -154,6 +154,12 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
 
   MOZ_ASSERT(mPacketCount >= 3);
 
+  if (!mLastFrameTime || mLastFrameTime.ref() != aSample->mTime) {
+    // We are starting a new block.
+    mFrames = 0;
+    mLastFrameTime = Some(aSample->mTime);
+  }
+
   ogg_packet pkt = InitVorbisPacket(aData, aLength, false, false, -1, mPacketCount++);
   bool first_packet = mPacketCount == 4;
 
@@ -197,7 +203,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
       NS_WARNING("Int overflow converting WebM audio duration");
       return -1;
     }
-    CheckedInt64 total_duration = FramesToUsecs(aTotalFrames,
+    CheckedInt64 total_duration = FramesToUsecs(mFrames,
                                                 mVorbisDsp.vi->rate);
     if (!total_duration.isValid()) {
       NS_WARNING("Int overflow converting WebM audio total_duration");
@@ -218,7 +224,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     Move(buffer),
                                     mVorbisDsp.vi->channels,
                                     mVorbisDsp.vi->rate));
-    mFrames += aTotalFrames;
+    mFrames += frames;
     if (vorbis_synthesis_read(&mVorbisDsp, frames) != 0) {
       return -1;
     }
@@ -252,7 +258,7 @@ VorbisDataDecoder::Flush()
   // aren't fatal and it fails when ResetDecode is called at a
   // time when no vorbis data has been read.
   vorbis_synthesis_restart(&mVorbisDsp);
-  mFrames = 0;
+  mLastFrameTime.reset();
   return NS_OK;
 }
 
