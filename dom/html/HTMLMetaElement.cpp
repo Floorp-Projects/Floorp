@@ -129,26 +129,13 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
 
       nsIPrincipal* principal = aDocument->NodePrincipal();
       nsCOMPtr<nsIContentSecurityPolicy> csp;
-      rv = principal->GetCsp(getter_AddRefs(csp));
+      nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
+      rv = principal->EnsureCSP(domDoc, getter_AddRefs(csp));
       NS_ENSURE_SUCCESS(rv, rv);
 
       // Multiple CSPs (delivered through either header of meta tag) need to be
       // joined together, see:
       // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element
-      if (!csp) {
-        csp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // Store the request context so CSP can resolve 'self'
-        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
-        rv = csp->SetRequestContext(domDoc, nullptr);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        // set the new CSP
-        rv = principal->SetCsp(csp);
-        NS_ENSURE_SUCCESS(rv, rv);
-      }
-
       rv = csp->AppendPolicy(content,
                              false, // csp via meta tag can not be report only
                              true); // delivered through the meta tag

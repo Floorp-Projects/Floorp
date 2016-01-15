@@ -226,7 +226,8 @@ public:
         if (mThat.mCxxStackFrames.empty())
             mThat.EnteredCxxStack();
 
-        mThat.mCxxStackFrames.append(InterruptFrame(direction, msg));
+        if (!mThat.mCxxStackFrames.append(InterruptFrame(direction, msg)))
+            MOZ_CRASH();
 
         const InterruptFrame& frame = mThat.mCxxStackFrames.back();
 
@@ -778,7 +779,8 @@ MessageChannel::ProcessPendingRequests()
         for (MessageQueue::iterator it = mPending.begin(); it != mPending.end(); ) {
             Message &msg = *it;
             if (!ShouldDeferMessage(msg)) {
-                toProcess.append(Move(msg));
+                if (!toProcess.append(Move(msg)))
+                    MOZ_CRASH();
                 it = mPending.erase(it);
                 continue;
             }

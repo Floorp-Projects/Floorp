@@ -248,6 +248,28 @@ class Debugger::FrameRange
     }
 };
 
+class AutoRestoreCompartmentDebugMode
+{
+    JSCompartment* comp_;
+    unsigned bits_;
+
+  public:
+    explicit AutoRestoreCompartmentDebugMode(JSCompartment* comp)
+      : comp_(comp), bits_(comp->debugModeBits)
+    {
+        MOZ_ASSERT(comp_);
+    }
+
+    ~AutoRestoreCompartmentDebugMode() {
+        if (comp_)
+            comp_->debugModeBits = bits_;
+    }
+
+    void release() {
+        comp_ = nullptr;
+    }
+};
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -3474,6 +3496,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     });
 
     // (6)
+    AutoRestoreCompartmentDebugMode debugModeGuard(debuggeeCompartment);
     debuggeeCompartment->setIsDebuggee();
     debuggeeCompartment->updateDebuggerObservesAsmJS();
     debuggeeCompartment->updateDebuggerObservesCoverage();
@@ -3485,6 +3508,7 @@ Debugger::addDebuggeeGlobal(JSContext* cx, Handle<GlobalObject*> global)
     zoneDebuggersGuard.release();
     debuggeeZonesGuard.release();
     allocationsTrackingGuard.release();
+    debugModeGuard.release();
     return true;
 }
 
@@ -6268,7 +6292,7 @@ DebuggerFrame_getType(JSContext* cx, unsigned argc, Value* vp)
         type = cx->names().eval;
     else if (frame.isGlobalFrame())
         type = cx->names().global;
-    else if (frame.isFunctionFrame())
+    else if (frame.isNonEvalFunctionFrame())
         type = cx->names().call;
     else if (frame.isModuleFrame())
         type = cx->names().module;
@@ -6339,7 +6363,7 @@ static bool
 DebuggerFrame_getConstructing(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_FRAME_ITER(cx, argc, vp, "get constructing", args, thisobj, _, iter);
-    args.rval().setBoolean(iter.isFunctionFrame() && iter.isConstructing());
+    args.rval().setBoolean(iter.isNonEvalFunctionFrame() && iter.isConstructing());
     return true;
 }
 
@@ -6509,7 +6533,7 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
     RootedObject scriptObject(cx);
-    if (frame.isFunctionFrame() && !frame.isEvalFrame()) {
+    if (frame.isNonEvalFunctionFrame()) {
         RootedFunction callee(cx, frame.callee());
         if (callee->isInterpreted()) {
             RootedScript script(cx, callee->nonLazyScript());

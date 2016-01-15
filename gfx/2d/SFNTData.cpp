@@ -194,7 +194,9 @@ SFNTData::GetU16FullNames(Vector<mozilla::u16string>& aU16FullNames)
     if (mFonts[i]->GetU16FullName(name)) {
       fontFound = true;
     }
-    aU16FullNames.append(Move(name));
+    if (!aU16FullNames.append(Move(name))) {
+      return false;
+    }
   }
 
   return fontFound;

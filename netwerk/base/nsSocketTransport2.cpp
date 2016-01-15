@@ -1221,7 +1221,7 @@ nsSocketTransport::InitiateSocket()
     bool isLocal;
     IsLocal(&isLocal);
 
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
         return NS_ERROR_ABORT;
     }
     if (gIOService->IsOffline()) {
@@ -1886,7 +1886,9 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
         // Update poll timeout in case it was changed
         mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     }
-    else if (mState == STATE_CONNECTING) {
+    else if ((mState == STATE_CONNECTING) && !gIOService->IsNetTearingDown()) {
+        // We do not need to do PR_ConnectContinue when we are already
+        // shutting down.
 
         // We use PRIntervalTime here because we need
         // nsIOService::LastOfflineStateChange time and
@@ -1959,6 +1961,13 @@ nsSocketTransport::OnSocketReady(PRFileDesc *fd, int16_t outFlags)
             }
         }
     }
+    else if ((mState == STATE_CONNECTING) && gIOService->IsNetTearingDown()) {
+        // We do not need to do PR_ConnectContinue when we are already
+        // shutting down.
+        SOCKET_LOG(("We are in shutdown so skip PR_ConnectContinue and set "
+                    "and error.\n"));
+        mCondition = NS_ERROR_ABORT;
+    }
     else {
         NS_ERROR("unexpected socket state");
         mCondition = NS_ERROR_UNEXPECTED;
@@ -1989,7 +1998,7 @@ nsSocketTransport::OnSocketDetached(PRFileDesc *fd)
     }
 
     // If we are not shutting down try again.
-    if (!gIOService->IsShutdown() && RecoverFromError())
+    if (!gIOService->IsNetTearingDown() && RecoverFromError())
         mCondition = NS_OK;
     else {
         mState = STATE_CLOSED;
@@ -3050,7 +3059,7 @@ nsSocketTransport::SendPRBlockingTelemetry(PRIntervalTime aStart,
                                            Telemetry::ID aIDOffline)
 {
     PRIntervalTime now = PR_IntervalNow();
-    if (gIOService->IsShutdown()) {
+    if (gIOService->IsNetTearingDown()) {
         Telemetry::Accumulate(aIDShutdown,
                               PR_IntervalToMilliseconds(now - aStart));
 

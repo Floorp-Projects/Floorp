@@ -24,7 +24,7 @@ if CONFIG['OS_ARCH'] == 'GNU':
             'xptcstubs_gcc_x86_unix.cpp'
         ]
 
-if CONFIG['OS_ARCH'] in ('Linux', 'FreeBSD', 'NetBSD', 'OpenBSD') or \
+if CONFIG['OS_ARCH'] in ('Linux', 'Bitrig', 'DragonFly', 'FreeBSD', 'NetBSD', 'OpenBSD') or \
    CONFIG['OS_ARCH'].startswith('GNU_'):
     if CONFIG['OS_TEST'] == 'x86_64':
         SOURCES += [
@@ -102,7 +102,7 @@ if CONFIG['CPU_ARCH'] == 'arm' or CONFIG['OS_TEST'] == 'sa110':
             'xptcstubs_arm_netbsd.cpp',
         ]
 
-if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['OS_ARCH'] == 'OpenBSD':
+if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['OS_ARCH'] in ('Bitrig', 'OpenBSD'):
     SOURCES += [
         'xptcinvoke_arm_openbsd.cpp',
         'xptcstubs_arm_openbsd.cpp',
