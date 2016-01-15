@@ -4,7 +4,7 @@
 
 function promisePopupShown(popup) {
   return new Promise(resolve => {
-    if (popup.popupOpen) {
+    if (popup.state == "open") {
       resolve();
     } else {
       let onPopupShown = event => {
@@ -116,19 +116,19 @@ add_task(function* testPageActionPopup() {
     },
   });
 
-  let panelId = makeWidgetId(extension.id) + "-panel";
+  let viewId = `PanelUI-webext-${makeWidgetId(extension.id)}-browser-action-view`;
 
   extension.onMessage("send-click", () => {
     clickBrowserAction(extension);
   });
 
   extension.onMessage("next-test", Task.async(function* () {
-    let panel = document.getElementById(panelId);
+    let panel = getBrowserActionPopup(extension);
     if (panel) {
       yield promisePopupShown(panel);
       panel.hidePopup();
 
-      panel = document.getElementById(panelId);
+      panel = getBrowserActionPopup(extension);
       is(panel, null, "panel successfully removed from document after hiding");
     }
 
@@ -140,6 +140,6 @@ add_task(function* testPageActionPopup() {
 
   yield extension.unload();
 
-  let panel = document.getElementById(panelId);
-  is(panel, null, "browserAction panel removed from document");
+  let view = document.getElementById(viewId);
+  is(view, null, "browserAction view removed from document");
 });
