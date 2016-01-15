@@ -606,11 +606,24 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.copyfile(src, dst)
         self.read_from_file(dst, verbose=True)
 
+    def _mach(self, target, env, halt_on_failure=True, output_parser=None):
+        dirs = self.query_abs_dirs()
+        mach = self._get_mach_executable()
+        return self.run_command(mach + target,
+                                halt_on_failure=True,
+                                env=env,
+                                cwd=dirs['abs_mozilla_dir'],
+                                output_parser=None)
+
     def _mach_configure(self):
         """calls mach configure"""
         env = self.query_bootstrap_env()
         target = ["configure"]
         return self._mach(target=target, env=env)
+
+    def _get_mach_executable(self):
+        python = self.query_exe('python2.7')
+        return [python, 'mach']
 
     def _get_make_executable(self):
         config = self.config

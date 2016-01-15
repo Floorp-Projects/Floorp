@@ -209,6 +209,9 @@ const DominatorTree = module.exports = createClass({
       getKey: node =>
         node instanceof DominatorTreeLazyChildren ? node.key() : node.nodeId,
       itemHeight: TREE_ROW_HEIGHT,
+      // We can't cache traversals because incremental fetching of children
+      // means the traversal might not be valid.
+      reuseCachedTraversal: _ => false,
     });
   }
 });
