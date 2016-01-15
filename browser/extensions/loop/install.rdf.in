@@ -32,7 +32,7 @@
     </em:targetApplication>
 
     <!-- Front End MetaData -->
-    <em:name>Firefox Hello</em:name>
+    <em:name>Firefox Hello Beta</em:name>
     <em:description>Web sharing for Firefox</em:description>
     <em:creator>Mozilla</em:creator>
   </Description>

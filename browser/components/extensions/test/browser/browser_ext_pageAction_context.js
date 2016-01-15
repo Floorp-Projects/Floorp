@@ -8,7 +8,7 @@ add_task(function* testTabSwitchContext() {
       "page_action": {
         "default_icon": "default.png",
         "default_popup": "default.html",
-        "default_title": "Default Title",
+        "default_title": "Default Title \u263a",
       },
       "permissions": ["tabs"],
     },
@@ -17,10 +17,10 @@ add_task(function* testTabSwitchContext() {
       let details = [
         { "icon": browser.runtime.getURL("default.png"),
           "popup": browser.runtime.getURL("default.html"),
-          "title": "Default Title" },
+          "title": "Default Title \u263a" },
         { "icon": browser.runtime.getURL("1.png"),
           "popup": browser.runtime.getURL("default.html"),
-          "title": "Default Title" },
+          "title": "Default Title \u263a" },
         { "icon": browser.runtime.getURL("2.png"),
           "popup": browser.runtime.getURL("2.html"),
           "title": "Title 2" },

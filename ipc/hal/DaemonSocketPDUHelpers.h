@@ -325,6 +325,42 @@ PackPDU(const PackReversed<PackArray<U>>& aIn, DaemonSocketPDU& aPDU)
   return NS_OK;
 }
 
+/* |PackArray<PackReversed<U>>| is a helper for packing data of each element in
+ * the reversed order. Pass an instance of this structure as the first argument
+ * to |PackPDU| to pack data of each array element in the reversed order.
+ *
+ * Unlike |PackReversed<PackArray<U>>| which packed array elements in the
+ * reversed order, here we use |PackReversed<U>| to pack data of each element
+ * of |PackArray| in the reversed order.
+ */
+template<typename U>
+struct PackArray<PackReversed<U>>
+{
+  PackArray(const U* aData, size_t aLength)
+    : mData(aData)
+    , mLength(aLength)
+  { }
+
+  const U* mData;
+  size_t mLength;
+};
+
+/* This implementation of |PackPDU| packs data of each element in |PackArray|
+ * in the reversed order. (ex. reversed GATT UUID, see bug 1171866)
+ */
+template<typename U>
+inline nsresult
+PackPDU(const PackArray<PackReversed<U>>& aIn, DaemonSocketPDU& aPDU)
+{
+  for (size_t i = 0; i < aIn.mLength; ++i) {
+    nsresult rv = PackPDU(PackReversed<U>(aIn.mData[i]), aPDU);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  return NS_OK;
+}
+
 template <typename T1, typename T2>
 inline nsresult
 PackPDU(const T1& aIn1, const T2& aIn2, DaemonSocketPDU& aPDU)

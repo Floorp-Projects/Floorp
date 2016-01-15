@@ -55,8 +55,7 @@ AnimationTimeBlock.prototype = {
     let iterations = createNode({
       parent: this.containerEl,
       attributes: {
-        "class": state.type + " iterations" +
-                 (state.iterationCount ? "" : " infinite"),
+        "class": "iterations" + (state.iterationCount ? "" : " infinite"),
         // Individual iterations are represented by setting the size of the
         // repeating linear-gradient.
         "style": `left:${x}%;
@@ -66,16 +65,20 @@ AnimationTimeBlock.prototype = {
     });
 
     // The animation name is displayed over the iterations.
-    // Note that in case of negative delay, we push the name towards the right
-    // so the delay can be shown.
+    // Note that in case of negative delay, it is pushed towards the right so
+    // the delay element does not overlap.
     createNode({
-      parent: iterations,
-      attributes: {
-        "class": "name",
-        "title": this.getTooltipText(state),
-        // Make space for the negative delay with a margin-left.
-        "style": `margin-left:${negativeDelayW}%`
-      },
+      parent: createNode({
+        parent: this.containerEl,
+        attributes: {
+          "class": "name",
+          "title": this.getTooltipText(state),
+          // Place the name at the same position as the iterations, but make
+          // space for the negative delay if any.
+          "style": `left:${x + negativeDelayW}%;
+                    width:${iterationW - negativeDelayW}%;`
+        },
+      }),
       textContent: state.name
     });
 
@@ -83,10 +86,10 @@ AnimationTimeBlock.prototype = {
     if (state.delay) {
       // Negative delays need to start at 0.
       createNode({
-        parent: iterations,
+        parent: this.containerEl,
         attributes: {
           "class": "delay" + (state.delay < 0 ? " negative" : ""),
-          "style": `left:-${delayX}%;
+          "style": `left:${delayX}%;
                     width:${delayW}%;`
         }
       });

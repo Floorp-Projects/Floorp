@@ -177,6 +177,23 @@ BluetoothServiceChildProcess::StartLeScanInternal(
   SendRequest(aRunnable, StartLeScanRequest(aServiceUuids));
 }
 
+void
+BluetoothServiceChildProcess::StartAdvertisingInternal(
+  const BluetoothUuid& aAppUuid,
+  const BluetoothGattAdvertisingData& aAdvData,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, StartAdvertisingRequest(aAppUuid, aAdvData));
+}
+
+void
+BluetoothServiceChildProcess::StopAdvertisingInternal(
+  const BluetoothUuid& aAppUuid,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, StopAdvertisingRequest(aAppUuid));
+}
+
 nsresult
 BluetoothServiceChildProcess::SetProperty(BluetoothObjectType aType,
                                           const BluetoothNamedValue& aValue,
@@ -666,6 +683,14 @@ BluetoothServiceChildProcess::GattClientWriteDescriptorValueInternal(
                                           aCharacteristicId,
                                           aDescriptorId,
                                           aValue));
+}
+
+void
+BluetoothServiceChildProcess::GattServerRegisterInternal(
+  const BluetoothUuid& aAppUuid,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable,GattServerRegisterRequest(aAppUuid));
 }
 
 void

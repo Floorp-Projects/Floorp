@@ -863,6 +863,8 @@ var NodeFront = protocol.FrontClass(NodeActor, {
       this._form.incompleteValue = change.incompleteValue;
     } else if (change.type === "pseudoClassLock") {
       this._form.pseudoClassLocks = change.pseudoClassLocks;
+    } else if (change.type === "events") {
+      this._form.hasEventListeners = change.hasEventListeners;
     }
   },
 
@@ -1348,6 +1350,32 @@ var WalkerActor = protocol.ActorClass({
     this.layoutChangeObserver.on("reflows", this._onReflows);
     this._onResize = this._onResize.bind(this);
     this.layoutChangeObserver.on("resize", this._onResize);
+
+    this._onEventListenerChange = this._onEventListenerChange.bind(this);
+    eventListenerService.addListenerChangeListener(this._onEventListenerChange);
+  },
+
+  /**
+   * Callback for eventListenerService.addListenerChangeListener
+   * @param nsISimpleEnumerator changesEnum
+   *    enumerator of nsIEventListenerChange
+   */
+  _onEventListenerChange: function(changesEnum) {
+    let changes = changesEnum.enumerate();
+    while (changes.hasMoreElements()) {
+      let current = changes.getNext().QueryInterface(Ci.nsIEventListenerChange);
+      let target = current.target;
+
+      if (this._refMap.has(target)) {
+        let actor = this._refMap.get(target);
+        let mutation = {
+          type: "events",
+          target: actor.actorID,
+          hasEventListeners: actor._hasEventListeners
+        };
+        this.queueMutation(mutation);
+      }
+    }
   },
 
   // Returns the JSON representation of this object over the wire.
@@ -1413,6 +1441,9 @@ var WalkerActor = protocol.ActorClass({
       this.layoutChangeObserver.off("resize", this._onResize);
       this.layoutChangeObserver = null;
       releaseLayoutChangesObserver(this.tabActor);
+
+      eventListenerService.removeListenerChangeListener(
+        this._onEventListenerChange);
 
       this.onMutations = null;
 

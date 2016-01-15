@@ -61,6 +61,7 @@ task:
         adb
         -H $PROXY_HOST
         -P $ADB_PORT
+        -s $SERIAL_ID
         logcat
         -v threadtime
         &> /home/worker/upload/logs/logcat.log
