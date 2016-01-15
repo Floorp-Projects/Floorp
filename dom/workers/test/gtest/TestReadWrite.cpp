@@ -142,11 +142,11 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.Append("^appId=123&inBrowser=1\n");
-  buffer.Append("spec 0\nscope 0\nscriptSpec 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
+  buffer.Append("spec 0\nscope 0\ncurrentWorkerURL 0\nactiveCache 0\nwaitingCache 0\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   buffer.Append("\n");
-  buffer.Append("spec 1\nscope 1\nscriptSpec 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
+  buffer.Append("spec 1\nscope 1\ncurrentWorkerURL 1\nactiveCache 1\nwaitingCache 1\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
   ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
@@ -169,7 +169,6 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("^appId=123&inBrowser=1", suffix0.get());
   ASSERT_STREQ("spec 0", cInfo0.spec().get());
   ASSERT_STREQ("scope 0", data[0].scope().get());
-  ASSERT_STREQ("scriptSpec 0", data[0].scriptSpec().get());
   ASSERT_STREQ("currentWorkerURL 0", data[0].currentWorkerURL().get());
   ASSERT_STREQ("activeCache 0", NS_ConvertUTF16toUTF8(data[0].activeCacheName()).get());
   ASSERT_STREQ("waitingCache 0", NS_ConvertUTF16toUTF8(data[0].waitingCacheName()).get());
@@ -184,7 +183,6 @@ TEST(ServiceWorkerRegistrar, TestReadData)
   ASSERT_STREQ("", suffix1.get());
   ASSERT_STREQ("spec 1", cInfo1.spec().get());
   ASSERT_STREQ("scope 1", data[1].scope().get());
-  ASSERT_STREQ("scriptSpec 1", data[1].scriptSpec().get());
   ASSERT_STREQ("currentWorkerURL 1", data[1].currentWorkerURL().get());
   ASSERT_STREQ("activeCache 1", NS_ConvertUTF16toUTF8(data[1].activeCacheName()).get());
   ASSERT_STREQ("waitingCache 1", NS_ConvertUTF16toUTF8(data[1].waitingCacheName()).get());
@@ -221,7 +219,6 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
       spec.AppendPrintf("spec write %d", i);
       d->principal() = mozilla::ipc::ContentPrincipalInfo(mozilla::PrincipalOriginAttributes(i, i % 2), spec);
       d->scope().AppendPrintf("scope write %d", i);
-      d->scriptSpec().AppendPrintf("scriptSpec write %d", i);
       d->currentWorkerURL().AppendPrintf("currentWorkerURL write %d", i);
       d->activeCacheName().AppendPrintf("activeCacheName write %d", i);
       d->waitingCacheName().AppendPrintf("waitingCacheName write %d", i);
@@ -258,10 +255,6 @@ TEST(ServiceWorkerRegistrar, TestWriteData)
     test.Truncate();
     test.AppendPrintf("scope write %d", i);
     ASSERT_STREQ(test.get(), data[i].scope().get());
-
-    test.Truncate();
-    test.AppendPrintf("scriptSpec write %d", i);
-    ASSERT_STREQ(test.get(), data[i].scriptSpec().get());
 
     test.Truncate();
     test.AppendPrintf("currentWorkerURL write %d", i);

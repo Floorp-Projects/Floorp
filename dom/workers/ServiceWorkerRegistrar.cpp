@@ -336,7 +336,6 @@ ServiceWorkerRegistrar::ReadData()
       mozilla::ipc::ContentPrincipalInfo(attrs, line);
 
     GET_LINE(entry->scope());
-    GET_LINE(entry->scriptSpec());
     GET_LINE(entry->currentWorkerURL());
 
     nsAutoCString cacheName;
@@ -559,9 +558,6 @@ ServiceWorkerRegistrar::WriteData()
     buffer.Append('\n');
 
     buffer.Append(data[i].scope());
-    buffer.Append('\n');
-
-    buffer.Append(data[i].scriptSpec());
     buffer.Append('\n');
 
     buffer.Append(data[i].currentWorkerURL());
