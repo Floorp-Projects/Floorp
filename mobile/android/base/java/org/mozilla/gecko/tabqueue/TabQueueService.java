@@ -262,7 +262,6 @@ public class TabQueueService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        tabQueueHandler = null;
         handlerThread.quit();
     }
 
