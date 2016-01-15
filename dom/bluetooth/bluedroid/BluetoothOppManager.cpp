@@ -1640,6 +1640,8 @@ BluetoothOppManager::OnGetServiceChannel(
       OnSocketConnectError(mSocket);
       return;
     }
+
+    return; // We update the service records before we connect.
   }
 
   mSocket->Connect(aDeviceAddress, aServiceUuid,

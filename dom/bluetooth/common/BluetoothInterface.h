@@ -1028,12 +1028,9 @@ public:
                           int aMinInterval,
                           int aMaxInterval,
                           int aApperance,
-                          uint16_t aManufacturerLen,
-                          char* aManufacturerData,
-                          uint16_t aServiceDataLen,
-                          char* aServiceData,
-                          uint16_t aServiceUUIDLen,
-                          char* aServiceUUID,
+                          const nsTArray<uint8_t>& aManufacturerData,
+                          const nsTArray<uint8_t>& aServiceData,
+                          const nsTArray<BluetoothUuid>& aServiceUuids,
                           BluetoothGattResultHandler* aRes) = 0;
 
   virtual void TestCommand(int aCommand,
