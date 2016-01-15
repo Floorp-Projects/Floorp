@@ -855,6 +855,19 @@ PeerConnectionMedia::GetLocalStreamById(const std::string& id)
   return nullptr;
 }
 
+LocalSourceStreamInfo*
+PeerConnectionMedia::GetLocalStreamByTrackId(const std::string& id)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (RefPtr<LocalSourceStreamInfo>& info : mLocalSourceStreams) {
+    if (info->HasTrack(id)) {
+      return info;
+    }
+  }
+
+  return nullptr;
+}
+
 RemoteSourceStreamInfo*
 PeerConnectionMedia::GetRemoteStreamByIndex(size_t aIndex)
 {
@@ -875,6 +888,20 @@ PeerConnectionMedia::GetRemoteStreamById(const std::string& id)
 
   return nullptr;
 }
+
+RemoteSourceStreamInfo*
+PeerConnectionMedia::GetRemoteStreamByTrackId(const std::string& id)
+{
+  ASSERT_ON_THREAD(mMainThread);
+  for (RefPtr<RemoteSourceStreamInfo>& info : mRemoteSourceStreams) {
+    if (info->HasTrack(id)) {
+      return info;
+    }
+  }
+
+  return nullptr;
+}
+
 
 nsresult
 PeerConnectionMedia::AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo)

@@ -31,6 +31,7 @@ class nsPIDOMWindowInner;
 namespace mozilla {
    class MediaStreamGraphImpl;
    class MediaSegment;
+   class PeerConnectionImpl;
 };
 
 
@@ -296,12 +297,13 @@ protected:
 
 class Fake_MediaStreamTrack
 {
+  friend class mozilla::PeerConnectionImpl;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(Fake_MediaStreamTrack)
 
-  Fake_MediaStreamTrack(bool aIsVideo, Fake_DOMMediaStream* aStream) :
+  Fake_MediaStreamTrack(bool aIsVideo, Fake_DOMMediaStream* aOwningStream) :
     mIsVideo (aIsVideo),
-    mStream (aStream)
+    mOwningStream (aOwningStream)
   {
     static size_t counter = 0;
     std::ostringstream os;
@@ -312,7 +314,6 @@ public:
   mozilla::TrackID GetTrackID() { return mIsVideo ? 1 : 0; }
   std::string GetId() const { return mID; }
   void AssignId(const std::string& id) { mID = id; }
-  Fake_DOMMediaStream *GetStream() { return mStream; }
   const Fake_MediaStreamTrack* AsVideoStreamTrack() const
   {
     return mIsVideo? this : nullptr;
@@ -333,7 +334,9 @@ private:
   ~Fake_MediaStreamTrack() {}
 
   const bool mIsVideo;
-  Fake_DOMMediaStream* mStream;
+protected:
+  Fake_DOMMediaStream* mOwningStream;
+private:
   std::string mID;
 };
 

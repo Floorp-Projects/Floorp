@@ -20,6 +20,7 @@ class MediaEnginePhotoCallback;
 class MediaStream;
 class MediaStreamGraph;
 class MediaStreamTrackListener;
+class PeerConnectionImpl;
 class ProcessedMediaStream;
 
 namespace dom {
@@ -168,6 +169,9 @@ class MediaStreamTrack : public DOMEventTargetHelper,
   // DOMMediaStream owns MediaStreamTrack instances, and requires access to
   // some internal state, e.g., GetInputStream(), GetOwnedStream().
   friend class mozilla::DOMMediaStream;
+
+  // PeerConnectionImpl.cpp needs to know our owning DOMStream and bound track id.
+  friend class mozilla::PeerConnectionImpl;
 
 public:
   /**

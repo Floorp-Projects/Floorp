@@ -2319,22 +2319,13 @@ NS_IMETHODIMP
 PeerConnectionImpl::RemoveTrack(MediaStreamTrack& aTrack) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  DOMMediaStream* stream = aTrack.GetStream();
-
-  if (!stream) {
-    CSFLogError(logTag, "%s: Track has no stream", __FUNCTION__);
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  std::string streamId = PeerConnectionImpl::GetStreamId(*stream);
-  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamById(streamId);
+  std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
 
   if (!info) {
     CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
     return NS_ERROR_INVALID_ARG;
   }
-
-  std::string trackId(PeerConnectionImpl::GetTrackId(aTrack));
 
   nsresult rv =
     mJsepSession->RemoveTrack(info->GetId(), trackId);
@@ -2394,10 +2385,16 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   std::string origTrackId = PeerConnectionImpl::GetTrackId(aThisTrack);
   std::string newTrackId = PeerConnectionImpl::GetTrackId(aWithTrack);
 
-  std::string origStreamId =
-    PeerConnectionImpl::GetStreamId(*aThisTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info =
+    media()->GetLocalStreamByTrackId(origTrackId);
+  if (!info) {
+    CSFLogError(logTag, "Could not find stream from trackId");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  std::string origStreamId = info->GetId();
   std::string newStreamId =
-    PeerConnectionImpl::GetStreamId(*aWithTrack.GetStream());
+    PeerConnectionImpl::GetStreamId(*aWithTrack.mOwningStream);
 
   nsresult rv = mJsepSession->ReplaceTrack(origStreamId,
                                            origTrackId,
@@ -2416,7 +2413,7 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
 
   rv = media()->ReplaceTrack(origStreamId,
                              origTrackId,
-                             aWithTrack.GetStream(),
+                             aWithTrack.mOwningStream,
                              newStreamId,
                              newTrackId);
 
@@ -2471,7 +2468,12 @@ PeerConnectionImpl::SetParameters(
     const std::vector<JsepTrack::JsConstraints>& aConstraints)
 {
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
+  if (!info) {
+    CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
+    return NS_ERROR_INVALID_ARG;
+  }
+  std::string streamId = info->GetId();
 
   return mJsepSession->SetParameters(streamId, trackId, aConstraints);
 }
@@ -2505,7 +2507,12 @@ PeerConnectionImpl::GetParameters(
     std::vector<JsepTrack::JsConstraints>* aOutConstraints)
 {
   std::string trackId = PeerConnectionImpl::GetTrackId(aTrack);
-  std::string streamId = PeerConnectionImpl::GetStreamId(*aTrack.GetStream());
+  RefPtr<LocalSourceStreamInfo> info = media()->GetLocalStreamByTrackId(trackId);
+  if (!info) {
+    CSFLogError(logTag, "%s: Unknown stream", __FUNCTION__);
+    return NS_ERROR_INVALID_ARG;
+  }
+  std::string streamId = info->GetId();
 
   return mJsepSession->GetParameters(streamId, trackId, aOutConstraints);
 }
