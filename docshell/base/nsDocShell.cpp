@@ -3999,7 +3999,6 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild)
     }
   }
   childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Length() - 1);
-  childDocShell->SetUserContextId(mUserContextId);
 
   /* Set the child's global history if the parent has one */
   if (mUseGlobalHistory) {
@@ -13858,16 +13857,6 @@ NS_IMETHODIMP
 nsDocShell::SetUserContextId(uint32_t aUserContextId)
 {
   mUserContextId = aUserContextId;
-
-  nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
-  while (iter.HasMore()) {
-    nsCOMPtr<nsIDocShell> docshell = do_QueryObject(iter.GetNext());
-    if (!docshell) {
-      continue;
-    }
-    docshell->SetUserContextId(aUserContextId);
-  }
-
   return NS_OK;
 }
 
