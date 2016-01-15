@@ -5,7 +5,7 @@
 
 // Test that searching for classes on SVG elements does work (see bug 1219920).
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_search-svg.html";
+const TEST_URL = URL_ROOT + "doc_inspector_search-svg.html";
 
 // An array of (key, suggestions) pairs where key is a key to press and
 // suggestions is an array of suggestions that should be shown in the popup.

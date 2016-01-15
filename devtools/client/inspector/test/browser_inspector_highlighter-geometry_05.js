@@ -7,7 +7,7 @@
 // Test that the arrows and offsetparent and currentnode elements of the
 // geometry highlighter only appear when needed.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter-geometry_02.html";
+const TEST_URL = URL_ROOT + "doc_inspector_highlighter-geometry_02.html";
 const ID = "geometry-editor-";
 
 const TEST_DATA = [{

@@ -66,7 +66,7 @@ function test()
 
   function setupTest()
   {
-    openInspector(startTest);
+    openInspector().then(startTest);
   }
 
   function startTest(aInspector)
