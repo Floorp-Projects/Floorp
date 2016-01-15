@@ -116,19 +116,16 @@ public:
 
 private:
 
-  virtual gfx::IntSize GetWidgetSize() const override { return mWidgetSize; }
-
   // Widget associated with this compositor
   nsIWidget *mWidget;
-  gfx::IntSize mWidgetSize;
 
   // The final destination surface
   RefPtr<gfx::DrawTarget> mDrawTarget;
   // The current render target for drawing
   RefPtr<BasicCompositingRenderTarget> mRenderTarget;
 
-  gfx::IntRect mInvalidRect;
-  nsIntRegion mInvalidRegion;
+  LayoutDeviceIntRect mInvalidRect;
+  LayoutDeviceIntRegion mInvalidRegion;
   bool mDidExternalComposition;
 
   uint32_t mMaxTextureSize;

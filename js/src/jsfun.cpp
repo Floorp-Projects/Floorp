@@ -96,7 +96,7 @@ AdvanceToActiveCallLinear(JSContext* cx, NonBuiltinScriptFrameIter& iter, Handle
     MOZ_ASSERT(!fun->isBuiltin());
 
     for (; !iter.done(); ++iter) {
-        if (!iter.isFunctionFrame() || iter.isEvalFrame())
+        if (!iter.isNonEvalFunctionFrame())
             continue;
         if (iter.matchCallee(cx, fun))
             return true;
@@ -252,7 +252,10 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
     }
 
     ++iter;
-    if (iter.done() || !iter.isFunctionFrame()) {
+    while (!iter.done() && iter.isEvalFrame())
+        ++iter;
+
+    if (iter.done() || !iter.isNonEvalFunctionFrame()) {
         args.rval().setNull();
         return true;
     }
@@ -318,7 +321,10 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
         return true;
 
     ++iter;
-    if (iter.done() || !iter.isFunctionFrame())
+    while (!iter.done() && iter.isEvalFrame())
+        ++iter;
+
+    if (iter.done() || !iter.isNonEvalFunctionFrame())
         return true;
 
     RootedObject caller(cx, iter.callee(cx));
@@ -1588,7 +1594,7 @@ const JSFunctionSpec js::function_methods[] = {
     JS_FN(js_apply_str,      fun_apply,      2,0),
     JS_FN(js_call_str,       fun_call,       1,0),
     JS_FN("isGenerator",     fun_isGenerator,0,0),
-    JS_SELF_HOSTED_FN("bind", "FunctionBind", 1,JSPROP_DEFINE_LATE),
+    JS_SELF_HOSTED_FN("bind", "FunctionBind", 2,JSPROP_DEFINE_LATE|JSFUN_HAS_REST),
     JS_FS_END
 };
 

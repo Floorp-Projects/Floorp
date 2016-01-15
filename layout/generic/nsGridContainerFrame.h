@@ -102,6 +102,18 @@ public:
     return static_cast<nsTArray<nscoord>*>(Properties().Get(GridRowTrackSizes()));
   }
 
+  /**
+   * Return the number of implicit tracks that comes before the explicit grid.
+   */
+  uint32_t NumImplicitLeadingCols() const { return mExplicitGridOffsetCol; }
+  uint32_t NumImplicitLeadingRows() const { return mExplicitGridOffsetRow; }
+
+  /**
+   * Return the number of explicit tracks.
+   */
+  uint32_t NumExplicitCols() const { return mExplicitGridColEnd - 1; }
+  uint32_t NumExplicitRows() const { return mExplicitGridRowEnd - 1; }
+
 protected:
   static const uint32_t kAutoLine;
   // The maximum line number, in the zero-based translated grid.
@@ -242,12 +254,12 @@ protected:
      */
     nscoord ToLength(const nsTArray<TrackSize>& aTrackSizes) const;
     /**
-     * Given an array of track sizes and a grid origin coordinate, adjust the
+     * Given a set of tracks and a grid origin coordinate, adjust the
      * abs.pos. containing block along an axis given by aPos and aLength.
      * aPos and aLength should already be initialized to the grid container
      * containing block for this axis before calling this method.
      */
-    void ToPositionAndLengthForAbsPos(const nsTArray<TrackSize>& aTrackSizes,
+    void ToPositionAndLengthForAbsPos(const Tracks& aTracks,
                                       nscoord aGridOrigin,
                                       nscoord* aPos, nscoord* aLength) const;
 

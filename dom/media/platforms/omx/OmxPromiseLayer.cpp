@@ -119,7 +119,7 @@ already_AddRefed<MediaRawData>
 OmxPromiseLayer::FindAndRemoveRawData(OMX_TICKS aTimecode)
 {
   for (auto raw : mRawDatas) {
-    if (raw->mTimecode == aTimecode) {
+    if (raw->mTime == aTimecode) {
       mRawDatas.RemoveElement(raw);
       return raw.forget();
     }

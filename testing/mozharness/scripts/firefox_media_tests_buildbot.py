@@ -15,8 +15,8 @@ import sys
 
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
-from mozharness.base.log import ERROR, DEBUG, INFO
-from mozharness.base.script import PreScriptAction, PostScriptAction
+from mozharness.base.log import DEBUG, ERROR, INFO
+from mozharness.base.script import PostScriptAction
 from mozharness.mozilla.blob_upload import (
     BlobUploadMixin,
     blobupload_config_options
@@ -25,17 +25,8 @@ from mozharness.mozilla.buildbot import (
     TBPL_SUCCESS, TBPL_WARNING, TBPL_FAILURE
 )
 from mozharness.mozilla.testing.firefox_media_tests import (
-    FirefoxMediaTestsBase, BUSTED, TESTFAILED, UNKNOWN, EXCEPTION, SUCCESS
+    FirefoxMediaTestsBase, TESTFAILED, SUCCESS
 )
-
-buildbot_media_test_options = [
-    [["--suite"],
-     {"action": "store",
-      "dest": "test_suite",
-      "default": "media-tests",
-      "help": "suite name",
-      }],
-]
 
 
 class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
@@ -43,7 +34,7 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
     def __init__(self):
         config_options = copy.deepcopy(blobupload_config_options)
         super(FirefoxMediaTestsBuildbot, self).__init__(
-            config_options=config_options + buildbot_media_test_options,
+            config_options=config_options,
             all_actions=['clobber',
                          'read-buildbot-config',
                          'checkout',
@@ -53,62 +44,6 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
                          'run-media-tests',
                          ],
         )
-        c = self.config
-        self.installer_url = c.get('installer_url')
-        self.installer_path = c.get('installer_path')
-        self.binary_path = c.get('binary_path')
-        self.test_packages_url = c.get('test_packages_url')
-
-    @PreScriptAction('create-virtualenv')
-    def _pre_create_virtualenv(self, action):
-        dirs = self.query_abs_dirs()
-        requirements = os.path.join(dirs['abs_test_install_dir'],
-                                    'config',
-                                    'marionette_requirements.txt')
-        if os.access(requirements, os.F_OK):
-            self.register_virtualenv_module(requirements=[requirements],
-                                            two_pass=True)
-        super(FirefoxMediaTestsBuildbot, self)._pre_create_virtualenv(action)
-
-    def query_abs_dirs(self):
-        if self.abs_dirs:
-            return self.abs_dirs
-        dirs = super(FirefoxMediaTestsBuildbot, self).query_abs_dirs()
-        dirs['abs_blob_upload_dir'] = os.path.join(dirs['abs_work_dir'],
-                                                   'blobber_upload_dir')
-        dirs['abs_test_install_dir'] = os.path.join(dirs['abs_work_dir'],
-                                                    'tests')
-        self.abs_dirs = dirs
-        return self.abs_dirs
-
-    def _query_cmd(self):
-        """ Determine how to call firefox-media-tests """
-        cmd = super(FirefoxMediaTestsBuildbot, self)._query_cmd()
-        # configure logging
-        dirs = self.query_abs_dirs()
-        blob_upload_dir = dirs.get('abs_blob_upload_dir')
-        cmd += ['--gecko-log', os.path.join(blob_upload_dir,
-                                            'gecko.log')]
-        cmd += ['--log-html', os.path.join(blob_upload_dir,
-                                           'media_tests.html')]
-        cmd += ['--log-mach', os.path.join(blob_upload_dir,
-                                           'media_tests_mach.log')]
-
-        test_suite = self.config.get('test_suite')
-        test_manifest = None if test_suite != 'media-youtube-tests' else \
-            os.path.join(dirs['firefox_media_dir'],
-                         'firefox_media_tests',
-                         'playback', 'youtube', 'manifest.ini')
-        config_fmt_args = {
-            'test_manifest': test_manifest,
-        }
-
-        if test_suite not in self.config["suite_definitions"]:
-            self.fatal("%s is not defined in the config!" % test_suite)
-        for s in self.config["suite_definitions"][test_suite]["options"]:
-            cmd.append(s % config_fmt_args)
-
-        return cmd
 
     def run_media_tests(self):
         status = super(FirefoxMediaTestsBuildbot, self).run_media_tests()
@@ -119,6 +54,28 @@ class FirefoxMediaTestsBuildbot(FirefoxMediaTestsBase, BlobUploadMixin):
         if status == TESTFAILED:
             tbpl_status = TBPL_WARNING
         self.buildbot_status(tbpl_status)
+
+    def query_abs_dirs(self):
+        if self.abs_dirs:
+            return self.abs_dirs
+        abs_dirs = super(FirefoxMediaTestsBuildbot, self).query_abs_dirs()
+        dirs = {
+            'abs_blob_upload_dir': os.path.join(abs_dirs['abs_work_dir'],
+                                                   'blobber_upload_dir')
+        }
+        abs_dirs.update(dirs)
+        self.abs_dirs = abs_dirs
+        return self.abs_dirs
+
+    def _query_cmd(self):
+        cmd = super(FirefoxMediaTestsBuildbot, self)._query_cmd()
+        dirs = self.query_abs_dirs()
+        # configure logging
+        blob_upload_dir = dirs.get('abs_blob_upload_dir')
+        cmd += ['--gecko-log', os.path.join(blob_upload_dir, 'gecko.log')]
+        cmd += ['--log-html', os.path.join(blob_upload_dir, 'media_tests.html')]
+        cmd += ['--log-mach', os.path.join(blob_upload_dir, 'media_tests_mach.log')]
+        return cmd
 
     @PostScriptAction('run-media-tests')
     def _collect_uploads(self, action, success=None):

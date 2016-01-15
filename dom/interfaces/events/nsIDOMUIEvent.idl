@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
+#include "nsIDOMWindow.idl"
 
 /**
  * The nsIDOMUIEvent interface is the datatype for all UI events in the
@@ -13,8 +14,18 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[builtinclass, uuid(db058d10-1db9-4cf9-bb4c-483c304a137f)]
-interface nsIDOMUIEvent : nsIDOMEvent
+%{C++
+namespace mozilla {
+namespace dom {
+class Event;
+}
+}
+%}
+
+[ptr] native EventPtr(mozilla::dom::Event);
+
+[builtinclass, uuid(75996b57-51f0-4c9c-aaaa-e35eaf347b66)]
+interface nsIDOMUIEvent : nsISupports
 {
   readonly attribute nsIDOMWindow       view;
   readonly attribute long               detail;
@@ -38,4 +49,6 @@ interface nsIDOMUIEvent : nsIDOMEvent
            attribute boolean            cancelBubble;
 
   readonly attribute boolean            isChar;
+
+  [notxpcom, nostdcall] EventPtr AsEvent();
 };

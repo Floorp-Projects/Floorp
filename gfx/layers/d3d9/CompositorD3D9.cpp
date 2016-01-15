@@ -663,7 +663,7 @@ CompositorD3D9::EndFrame()
   if (mDeviceManager) {
     device()->EndScene();
 
-    IntSize oldSize = mSize;
+    LayoutDeviceIntSize oldSize = mSize;
     EnsureSize();
     if (oldSize == mSize) {
       if (mTarget) {
@@ -705,7 +705,7 @@ CompositorD3D9::EnsureSize()
   LayoutDeviceIntRect rect;
   mWidget->GetClientBounds(rect);
 
-  mSize = rect.Size().ToUnknownSize();
+  mSize = rect.Size();
 }
 
 void

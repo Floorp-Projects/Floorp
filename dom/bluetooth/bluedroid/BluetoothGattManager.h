@@ -35,6 +35,13 @@ public:
   void StopLeScan(const BluetoothUuid& aScanUuid,
                   BluetoothReplyRunnable* aRunnable);
 
+  void StartAdvertising(const BluetoothUuid& aAppUuid,
+                        const BluetoothGattAdvertisingData& aData,
+                        BluetoothReplyRunnable* aRunnable);
+
+  void StopAdvertising(const BluetoothUuid& aAppUuid,
+                       BluetoothReplyRunnable* aRunnable);
+
   void Connect(const BluetoothUuid& aAppUuid,
                const BluetoothAddress& aDeviceAddr,
                BluetoothReplyRunnable* aRunnable);
@@ -91,6 +98,9 @@ public:
     const BluetoothGattId& aDescriptorId,
     const nsTArray<uint8_t>& aValue,
     BluetoothReplyRunnable* aRunnable);
+
+  void RegisterServer(const BluetoothUuid& aAppUuid,
+                      BluetoothReplyRunnable* aRunnable);
 
   void ConnectPeripheral(
     const BluetoothUuid& aAppUuid,
@@ -176,6 +186,9 @@ private:
   class UnregisterClientResultHandler;
   class StartLeScanResultHandler;
   class StopLeScanResultHandler;
+  class StartAdvertisingResultHandler;
+  class SetAdvDataResultHandler;
+  class StopAdvertisingResultHandler;
   class ConnectResultHandler;
   class DisconnectResultHandler;
   class DiscoverResultHandler;

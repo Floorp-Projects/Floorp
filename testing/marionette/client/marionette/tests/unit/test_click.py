@@ -32,3 +32,9 @@ class TestClick(MarionetteTestCase):
 
         with self.assertRaises(ElementNotVisibleException):
             self.marionette.find_element(By.ID, 'child').click()
+
+    def test_clicking_on_a_multiline_link(self):
+        test_html = self.marionette.absolute_url("clicks.html")
+        self.marionette.navigate(test_html)
+        self.marionette.find_element(By.ID, "overflowLink").click()
+        self.wait_for_condition(lambda mn: self.marionette.title == "XHTML Test Page")

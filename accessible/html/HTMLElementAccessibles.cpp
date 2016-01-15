@@ -75,6 +75,32 @@ HTMLLabelAccessible::RelationByType(RelationType aType)
   return rel;
 }
 
+uint8_t
+HTMLLabelAccessible::ActionCount()
+{
+  return nsCoreUtils::IsLabelWithControl(mContent) ? 1 : 0;
+}
+
+void
+HTMLLabelAccessible::ActionNameAt(uint8_t aIndex, nsAString& aName)
+{
+  if (aIndex == 0) {
+    if (nsCoreUtils::IsLabelWithControl(mContent))
+      aName.AssignLiteral("click");
+  }
+}
+
+bool
+HTMLLabelAccessible::DoAction(uint8_t aIndex)
+{
+  if (aIndex != 0)
+    return false;
+
+  DoCommand();
+  return true;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTMLOuputAccessible
 ////////////////////////////////////////////////////////////////////////////////

@@ -6,9 +6,6 @@
 
 DIRS += ['components', 'browser']
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    DIRS += ['android/geckoview_example']
-
 TEST_DIRS += ['test']
 
 if CONFIG['ENABLE_TESTS']:

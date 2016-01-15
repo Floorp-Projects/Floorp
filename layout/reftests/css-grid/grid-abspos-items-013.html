@@ -10,6 +10,7 @@
   <link rel="help" href="https://drafts.csswg.org/css-grid/#abspos">
   <link rel="match" href="grid-abspos-items-013-ref.html">
   <style type="text/css">
+body { width:800px; }
 
 .grid {
   display: grid;
@@ -30,6 +31,10 @@
   float: left;
   min-width: 70px;
   margin-right: 2px;
+}
+.c.s {
+  justify-content: space-evenly;
+  grid-gap: 0;
 }
 
 x {
@@ -66,17 +71,32 @@ c {
 </head>
 <body>
 
-<div class="grid">
+<div class="grid c">
 <x></x><x></x><x></x><x></x>
 <a style="grid-column:2/4"></a><b style="grid-column:auto/4"></b><c style="grid-column:4/auto"></c>
 </div>
 
-<div class="grid">
+<div class="grid c">
 <x></x><x></x><x></x><x></x>
 <a style="grid-column:1/4"></a><b style="grid-column:auto/1"></b><c style="grid-column:1/auto"></c>
 </div>
 
-<div class="grid">
+<div class="grid c">
+<x></x><x></x><x></x><x></x>
+<a style="grid-column:6/6"></a><b style="grid-column:auto/6"></b><c style="grid-column:6/auto"></c>
+</div>
+
+<div class="grid c s">
+<x></x><x></x><x></x><x></x>
+<a style="grid-column:2/4"></a><b style="grid-column:auto/4"></b><c style="grid-column:4/auto"></c>
+</div>
+
+<div class="grid c s">
+<x></x><x></x><x></x><x></x>
+<a style="grid-column:1/4"></a><b style="grid-column:auto/1"></b><c style="grid-column:1/auto"></c>
+</div>
+
+<div class="grid c s">
 <x></x><x></x><x></x><x></x>
 <a style="grid-column:6/6"></a><b style="grid-column:auto/6"></b><c style="grid-column:6/auto"></c>
 </div>
@@ -95,7 +115,6 @@ c {
 <x></x><x></x><x></x><x></x>
 <a style="grid-row:6/6"></a><b style="grid-row:auto/6"></b><c style="grid-row:6/auto"></c>
 </div>
-
 
 </body>
 </html>

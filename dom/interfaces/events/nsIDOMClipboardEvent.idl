@@ -4,12 +4,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "domstubs.idl"
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 
 interface nsIDOMDataTransfer;
 
-[builtinclass, uuid(4ef84980-52c2-425c-b41a-2ee75ec5d497)]
-interface nsIDOMClipboardEvent : nsIDOMEvent
+[builtinclass, uuid(b54d6144-3980-4895-83c7-82f158bc1cf5)]
+interface nsIDOMClipboardEvent : nsISupports
 {
   readonly attribute nsIDOMDataTransfer clipboardData;
 
