@@ -326,6 +326,12 @@
         ]]></body>
       </method>
 
+      <method name="_shouldSetPosition">
+        <body><![CDATA[
+          return this.getAttribute("nosubviews") == "true";
+        ]]></body>
+      </method>
+
       <method name="_shouldSetHeight">
         <body><![CDATA[
           return this.getAttribute("nosubviews") != "true";
@@ -345,6 +351,19 @@
           this.ignoreMutations = false;
         ]]></body>
       </method>
+      <method name="_adjustContainerHeight">
+        <body><![CDATA[
+          if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
+            let height;
+            if (this.showingSubViewAsMainView) {
+              height = this._heightOfSubview(this._mainView);
+            } else {
+              height = this._mainView.scrollHeight;
+            }
+            this._viewContainer.style.height = height + "px";
+          }
+        ]]></body>
+      </method>
       <method name="_syncContainerWithSubView">
         <body><![CDATA[
           // Check that this panel is still alive:
@@ -361,18 +380,16 @@
       <method name="_syncContainerWithMainView">
         <body><![CDATA[
           // Check that this panel is still alive:
-          if (!this._panel || !this._panel.parentNode || !this._shouldSetHeight()) {
+          if (!this._panel || !this._panel.parentNode) {
             return;
           }
 
-          if (!this.ignoreMutations && !this.showingSubView && !this._transitioning) {
-            let height;
-            if (this.showingSubViewAsMainView) {
-              height = this._heightOfSubview(this._mainView);
-            } else {
-              height = this._mainView.scrollHeight;
-            }
-            this._viewContainer.style.height = height + "px";
+          if (this._shouldSetPosition()) {
+            this._panel.adjustArrowPosition();
+          }
+
+          if (this._shouldSetHeight()) {
+            this._adjustContainerHeight();
           }
         ]]></body>
       </method>
