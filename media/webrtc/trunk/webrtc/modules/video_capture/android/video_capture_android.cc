@@ -63,7 +63,7 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
 
     g_context = jsjni_GetGlobalContextRef();
 
-    videocapturemodule::DeviceInfoAndroid::Initialize(ats.env());
+    videocapturemodule::DeviceInfoAndroid::Initialize(g_jvm);
 
     g_java_capturer_class =
       jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
