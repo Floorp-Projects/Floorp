@@ -324,17 +324,12 @@ public:
    * of the document's ancestors up to the toplevel document makes use
    * of the CSP directive 'upgrade-insecure-requests'.
    */
-  bool GetUpgradeInsecureRequests() const
+  bool GetUpgradeInsecureRequests(bool aPreload) const
   {
+    if (aPreload) {
+      return mUpgradeInsecurePreloads;
+    }
     return mUpgradeInsecureRequests;
-  }
-
-  /**
-   * Same as GetUpgradeInsecureRequests() but *only* for preloads.
-   */
-  bool GetUpgradeInsecurePreloads() const
-  {
-    return mUpgradeInsecurePreloads;
   }
 
   /**

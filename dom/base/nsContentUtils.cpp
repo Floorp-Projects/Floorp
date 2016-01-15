@@ -8020,7 +8020,7 @@ nsContentUtils::InternalContentPolicyTypeToExternal(nsContentPolicyType aType)
 
 /* static */
 nsContentPolicyType
-nsContentUtils::InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType aType)
+nsContentUtils::InternalContentPolicyTypeToExternalOrMCBInternal(nsContentPolicyType aType)
 {
   switch (aType) {
   case nsIContentPolicy::TYPE_INTERNAL_SCRIPT:
@@ -8030,7 +8030,7 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType 
     return aType;
 
   default:
-    return InternalContentPolicyTypeToExternal(aType);
+    return InternalContentPolicyTypeToExternalOrPreload(aType);
   }
 }
 
