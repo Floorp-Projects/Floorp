@@ -111,6 +111,7 @@ function addWindowTab(window, tabElement) {
   if (window)
     addListItem(window.tabs, tab);
   addListItem(allTabs, tab);
+  emit(allTabs, "open", tab);
 }
 
 // Find tabs in already open windows
