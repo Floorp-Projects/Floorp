@@ -56,5 +56,8 @@ ENV DISPLAY :0
 # Disable apport (Ubuntu app crash reporter) to avoid stealing focus from test runs
 ADD apport /etc/default/apport
 
+# Disable font antialiasing for now to match releng's setup
+ADD fonts.conf /home/worker/.fonts.conf
+
 # Set a default command useful for debugging
 CMD ["/bin/bash", "--login"]
