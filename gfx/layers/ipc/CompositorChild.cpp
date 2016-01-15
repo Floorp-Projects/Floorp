@@ -234,7 +234,7 @@ static void CalculatePluginClip(const LayoutDeviceIntRect& aBounds,
   }
   // shift to plugin widget origin
   contentVisibleRegion.MoveBy(-aBounds.x, -aBounds.y);
-  LayoutDeviceIntRegion::RectIterator iter(contentVisibleRegion);
+  LayoutDeviceIntRegion::OldRectIterator iter(contentVisibleRegion);
   for (const LayoutDeviceIntRect* rgnRect = iter.Next(); rgnRect; rgnRect = iter.Next()) {
     aResult.AppendElement(*rgnRect);
     aVisibleBounds.UnionRect(aVisibleBounds, *rgnRect);

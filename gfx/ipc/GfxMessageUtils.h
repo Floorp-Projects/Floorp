@@ -393,7 +393,7 @@ template<class Units>
 struct ParamTraits<mozilla::gfx::IntRegionTyped<Units>>
   : RegionParamTraits<mozilla::gfx::IntRegionTyped<Units>,
                       mozilla::gfx::IntRectTyped<Units>,
-                      typename mozilla::gfx::IntRegionTyped<Units>::RectIterator>
+                      typename mozilla::gfx::IntRegionTyped<Units>::OldRectIterator>
 {};
 
 template<>
