@@ -32,12 +32,17 @@ add_task(function* () {
   yield client.readHeapSnapshot(snapshotFilePath);
   ok(true, "Should have read the heap snapshot");
 
-  let time = yield client.getCreationTime("/not/a/real/path", {
-    breakdown: BREAKDOWN
-  });
-  equal(time, null, "getCreationTime returns `null` when snapshot does not exist");
+  let threw = false;
+  try {
+    yield client.getCreationTime("/not/a/real/path", {
+      breakdown: BREAKDOWN
+    });
+  } catch (_) {
+    threw = true;
+  }
+  ok(threw, "getCreationTime should throw when snapshot does not exist");
 
-  time = yield client.getCreationTime(snapshotFilePath, {
+  let time = yield client.getCreationTime(snapshotFilePath, {
     breakdown: BREAKDOWN
   });
   ok(time >= start, "creation time occurred after start");

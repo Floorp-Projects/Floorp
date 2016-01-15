@@ -52,6 +52,17 @@ HeapAnalysesClient.prototype.readHeapSnapshot = function (snapshotFilePath) {
 };
 
 /**
+ * Tell the worker to delete all references to the snapshot and dominator trees
+ * linked to the provided snapshot file path.
+ *
+ * @param {String} snapshotFilePath
+ * @return Promise<undefined>
+ */
+HeapAnalysesClient.prototype.deleteHeapSnapshot = function (snapshotFilePath) {
+  return this._worker.performTask("deleteHeapSnapshot", { snapshotFilePath });
+};
+
+/**
  * Request the creation time given a snapshot file path. Returns `null`
  * if snapshot does not exist.
  *

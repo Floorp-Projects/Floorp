@@ -105,7 +105,8 @@ WebConsoleClient.prototype = {
         timings: {},
         updates: [], // track the list of network event updates
         private: actor.private,
-        fromCache: actor.fromCache
+        fromCache: actor.fromCache,
+        fromServiceWorker: actor.fromServiceWorker
       };
       this._networkRequests.set(actor.actor, networkInfo);
 

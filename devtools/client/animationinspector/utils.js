@@ -338,10 +338,10 @@ var TimeScale = {
     // The width for all iterations.
     let iterationW = w * (count || 1);
     // The start position of the delay.
-    let delayX = this.durationToDistance((delay < 0 ? 0 : delay) / rate);
+    let delayX = delay < 0 ? x : this.startTimeToDistance(start);
     // The width of the delay.
     let delayW = this.durationToDistance(Math.abs(delay) / rate);
-    // The width of the delay if it is positive, 0 otherwise.
+    // The width of the delay if it is negative, 0 otherwise.
     let negativeDelayW = delay < 0 ? delayW : 0;
 
     return {x, w, iterationW, delayX, delayW, negativeDelayW};
