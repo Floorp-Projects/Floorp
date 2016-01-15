@@ -226,7 +226,7 @@ this.AppsUtils = {
         deferred.resolve(file);
       }
     });
-    aRequestChannel.asyncOpen2(listener);
+    aRequestChannel.asyncOpen(listener, null);
 
     return deferred.promise;
   },
