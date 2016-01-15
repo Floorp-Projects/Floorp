@@ -1124,18 +1124,22 @@ public class BrowserSearch extends HomeFragment
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor c) {
-            mAdapter.swapCursor(c);
+            if (mAdapter != null) {
+                mAdapter.swapCursor(c);
 
-            // We should handle autocompletion based on the search term
-            // associated with the loader that has just provided
-            // the results.
-            SearchCursorLoader searchLoader = (SearchCursorLoader) loader;
-            handleAutocomplete(searchLoader.getSearchTerm(), c);
+                // We should handle autocompletion based on the search term
+                // associated with the loader that has just provided
+                // the results.
+                SearchCursorLoader searchLoader = (SearchCursorLoader) loader;
+                handleAutocomplete(searchLoader.getSearchTerm(), c);
+            }
         }
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            mAdapter.swapCursor(null);
+            if (mAdapter != null) {
+                mAdapter.swapCursor(null);
+            }
         }
     }
 
