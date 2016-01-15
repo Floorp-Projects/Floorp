@@ -57,6 +57,7 @@ const ChildPage = Class({
   dispose: function() {
     pages.delete(this.id);
     this.webProgress.removeProgressListener(this);
+    this.webNav.close();
     this.webNav = null;
   },
 
