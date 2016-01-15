@@ -448,8 +448,8 @@ WebGLContext::ValidateAttribArraySetter(const char* name, uint32_t setterElemSiz
         return false;
 
     if (arrayLength < setterElemSize) {
-        ErrorInvalidOperation("%s: Array must have >= %d elements.", name,
-                              setterElemSize);
+        ErrorInvalidValue("%s: Array must have >= %d elements.", name,
+                          setterElemSize);
         return false;
     }
 

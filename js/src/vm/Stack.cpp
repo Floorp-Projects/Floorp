@@ -42,52 +42,26 @@ InterpreterFrame::initExecuteFrame(JSContext* cx, HandleScript script, AbstractF
      * by the context.
      */
     flags_ = type | HAS_SCOPECHAIN;
-
-    JSObject* callee = nullptr;
+    script_ = script;
 
     // newTarget = NullValue is an initial sentinel for "please fill me in from the stack".
     // It should never be passed from Ion code.
     RootedValue newTarget(cx, newTargetValue);
     if (!(flags_ & GLOBAL_OR_MODULE)) {
         if (evalInFramePrev) {
-            if (evalInFramePrev.isFunctionFrame()) {
-                callee = evalInFramePrev.callee();
-                if (newTarget.isNull())
-                    newTarget = evalInFramePrev.newTarget();
-                flags_ |= FUNCTION;
-            } else {
-                MOZ_ASSERT(evalInFramePrev.isGlobalOrModuleFrame());
-                flags_ |= GLOBAL_OR_MODULE;
-            }
+            if (newTarget.isNull() && evalInFramePrev.script()->functionOrCallerFunction())
+                newTarget = evalInFramePrev.newTarget();
         } else {
             FrameIter iter(cx);
             MOZ_ASSERT(!iter.isWasm());
-            if (iter.isFunctionFrame()) {
-                if (newTarget.isNull())
-                    newTarget = iter.newTarget();
-                callee = iter.callee(cx);
-                flags_ |= FUNCTION;
-            } else {
-                MOZ_ASSERT(iter.isGlobalOrModuleFrame());
-                flags_ |= GLOBAL_OR_MODULE;
-            }
+            if (newTarget.isNull() && iter.script()->functionOrCallerFunction())
+                newTarget = iter.newTarget();
         }
     }
 
     Value* dstvp = (Value*)this - 2;
-
-    if (isFunctionFrame()) {
-        dstvp[1] = ObjectValue(*callee);
-        u.evalScript = script;
-    } else {
-        MOZ_ASSERT(isGlobalOrModuleFrame());
-        dstvp[1] = NullValue();
-        exec.script = script;
-#ifdef DEBUG
-        u.evalScript = (JSScript*)0xbad;
-#endif
-    }
     dstvp[0] = newTarget;
+    dstvp[1] = NullValue(); //XXX remove, unused callee.
 
     scopeChain_ = scopeChain.get();
     prev_ = nullptr;
@@ -325,7 +299,7 @@ bool
 InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv)
 {
     MOZ_ASSERT(script()->isDerivedClassConstructor());
-    MOZ_ASSERT(isFunctionFrame());
+    MOZ_ASSERT(isNonEvalFunctionFrame());
     MOZ_ASSERT(callee().isClassConstructor());
 
     HandleValue retVal = returnValue();
@@ -401,12 +375,7 @@ InterpreterFrame::mark(JSTracer* trc)
         TraceManuallyBarrieredEdge(trc, &scopeChain_, "scope chain");
     if (flags_ & HAS_ARGS_OBJ)
         TraceManuallyBarrieredEdge(trc, &argsObj_, "arguments");
-    if (isFunctionFrame()) {
-        if (isEvalFrame())
-            TraceManuallyBarrieredEdge(trc, &u.evalScript, "eval script");
-    } else {
-        TraceManuallyBarrieredEdge(trc, &exec.script, "script");
-    }
+    TraceManuallyBarrieredEdge(trc, &script_, "script");
     if (trc->isMarkingTracer())
         script()->compartment()->zone()->active = true;
     if (hasReturnValue())
@@ -872,25 +841,6 @@ FrameIter::compartment() const
 }
 
 bool
-FrameIter::isFunctionFrame() const
-{
-    switch (data_.state_) {
-      case DONE:
-        break;
-      case INTERP:
-        return interpFrame()->isFunctionFrame();
-      case JIT:
-        MOZ_ASSERT(data_.jitFrames_.isScripted());
-        if (data_.jitFrames_.isBaselineJS())
-            return data_.jitFrames_.isFunctionFrame();
-        return ionInlineFrames_.isFunctionFrame();
-      case WASM:
-        return true;
-    }
-    MOZ_CRASH("Unexpected state");
-}
-
-bool
 FrameIter::isGlobalOrModuleFrame() const
 {
     switch (data_.state_) {
@@ -938,7 +888,9 @@ FrameIter::isNonEvalFunctionFrame() const
       case INTERP:
         return interpFrame()->isNonEvalFunctionFrame();
       case JIT:
-        return !isEvalFrame() && isFunctionFrame();
+        if (data_.jitFrames_.isBaselineJS())
+            return data_.jitFrames_.baselineFrame()->isNonEvalFunctionFrame();
+        return script()->functionNonDelazifying();
       case WASM:
         return true;
     }
@@ -1154,7 +1106,7 @@ FrameIter::calleeTemplate() const
       case WASM:
         break;
       case INTERP:
-        MOZ_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return &interpFrame()->callee();
       case JIT:
         if (data_.jitFrames_.isBaselineJS())
@@ -1224,7 +1176,7 @@ FrameIter::numActualArgs() const
       case WASM:
         break;
       case INTERP:
-        MOZ_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         return interpFrame()->numActualArgs();
       case JIT:
         if (data_.jitFrames_.isIonScripted())

@@ -221,8 +221,10 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     }
     for (auto group = groups->begin(); group < groups->end(); group++) {
       auto acquired = acquireGroup(*group);
-      if (acquired)
-        groups_.append(acquired);
+      if (acquired) {
+          if (!groups_.append(acquired))
+              MOZ_CRASH();
+      }
     }
     if (groups_.length() == 0) {
       // We are not in charge of monitoring anything.

@@ -44,7 +44,12 @@ OmxDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 bool
 OmxDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
+  // TODO: it could be better to query the support mine types from OMX instead
+  // of hard coding.
   return aMimeType.EqualsLiteral("audio/mp4a-latm") ||
+         aMimeType.EqualsLiteral("video/mp4v-es") ||
+         aMimeType.EqualsLiteral("video/mp4") ||
+         aMimeType.EqualsLiteral("video/3gp") ||
          aMimeType.EqualsLiteral("video/avc");
 }
 

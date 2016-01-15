@@ -398,19 +398,14 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   rv = NS_ReadOptionalObject(aStream, true, getter_AddRefs(supports));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // This may be null.
-  nsCOMPtr<nsIContentSecurityPolicy> csp = do_QueryInterface(supports, &rv);
-
   rv = Init(codebase, attrs);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = SetCsp(csp);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  // need to link in the CSP context here (link in the URI of the protected
-  // resource).
-  if (csp) {
-    csp->SetRequestContext(nullptr, this);
+  mCSP = do_QueryInterface(supports, &rv);
+  // make sure setRequestContext is called after Init(),
+  // to make sure  the principals URI been initalized.
+  if (mCSP) {
+    mCSP->SetRequestContext(nullptr, this);
   }
 
   SetDomain(domain);
