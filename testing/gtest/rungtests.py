@@ -14,6 +14,7 @@ import mozcrash
 import mozinfo
 import mozlog
 import mozprocess
+from mozrunner.utils import get_stack_fixer_function
 
 log = mozlog.unstructured.getLogger('gtest')
 
@@ -23,15 +24,21 @@ class GTests(object):
     # Time (seconds) in which process will be killed if it produces no output.
     TEST_PROC_NO_OUTPUT_TIMEOUT = 300
 
-    def run_gtest(self, prog, xre_path, cwd, symbols_path=None):
+    def run_gtest(self, prog, xre_path, cwd, symbols_path=None,
+                  utility_path=None):
         """
         Run a single C++ unit test program.
 
         Arguments:
         * prog: The path to the test program to run.
         * env: The environment to use for running the program.
+        * cwd: The directory to run tests from (support files will be found
+               in this direcotry).
         * symbols_path: A path to a directory containing Breakpad-formatted
                         symbol files for producing stack traces on crash.
+        * utility_path: A path to a directory containing utility programs.
+                        currently used to locate a stack fixer to provide
+                        symbols symbols for assertion stacks.
 
         Return True if the program exits with a zero status, False otherwise.
         """
@@ -42,9 +49,18 @@ class GTests(object):
         if cwd and not os.path.isdir(cwd):
             os.makedirs(cwd)
 
+        stream_output = mozprocess.StreamOutput(sys.stdout)
+        process_output = stream_output
+        if utility_path:
+            stack_fixer = get_stack_fixer_function(utility_path, symbols_path)
+            if stack_fixer:
+                process_output = lambda line: stream_output(stack_fixer(line))
+
+
         proc = mozprocess.ProcessHandler([prog, "-unittest"],
                                          cwd=cwd,
-                                         env=env)
+                                         env=env,
+                                         processOutputLine=process_output)
         #TODO: After bug 811320 is fixed, don't let .run() kill the process,
         # instead use a timeout in .wait() and then kill to get a stack.
         proc.run(timeout=GTests.TEST_PROC_TIMEOUT,
@@ -110,8 +126,7 @@ class GTests(object):
                 env[pathvar] = self.xre_path
 
         # ASan specific environment stuff
-        # mozinfo is not set up properly to detect if ASan is enabled, so just always set these.
-        if mozinfo.isLinux or mozinfo.isMac:
+        if mozinfo.info["asan"]:
             # Symbolizer support
             llvmsym = os.path.join(self.xre_path, "llvm-symbolizer")
             if os.path.isfile(llvmsym):
@@ -138,6 +153,21 @@ class gtestOptions(OptionParser):
                         dest="symbols_path",
                         default=None,
                         help="absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+        self.add_option("--utility-path",
+                        dest="utility_path",
+                        default=None,
+                        help="path to a directory containing utility program binaries")
+
+def update_mozinfo():
+    """walk up directories to find mozinfo.json update the info"""
+    path = os.path.abspath(os.path.realpath(os.path.dirname(__file__)))
+    dirs = set()
+    while path != os.path.expanduser('~'):
+        if path in dirs:
+            break
+        dirs.add(path)
+        path = os.path.split(path)[0]
+    mozinfo.find_and_update_from_json(*dirs)
 
 def main():
     parser = gtestOptions()
@@ -148,13 +178,18 @@ def main():
     if not options.xre_path:
         print >>sys.stderr, """Error: --xre-path is required"""
         sys.exit(1)
+    if not options.utility_path:
+        print >>sys.stderr, """Warning: --utility-path is required to process assertion stacks"""
+
+    update_mozinfo()
     prog = os.path.abspath(args[0])
     options.xre_path = os.path.abspath(options.xre_path)
     tester = GTests()
     try:
         result = tester.run_gtest(prog, options.xre_path,
                                   options.cwd,
-                                  symbols_path=options.symbols_path)
+                                  symbols_path=options.symbols_path,
+                                  utility_path=options.utility_path)
     except Exception, e:
         log.error(str(e))
         result = False
