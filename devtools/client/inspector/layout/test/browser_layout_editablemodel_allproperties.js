@@ -32,7 +32,7 @@ function*(inspector, view) {
   node.style.padding = "5px";
   yield waitForUpdate(inspector);
 
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".padding.bottom > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -61,7 +61,7 @@ function*(inspector, view) {
   node.style.padding = "5px";
   yield waitForUpdate(inspector);
 
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".padding.left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -90,7 +90,7 @@ function*(inspector, view) {
 
   node.style.padding = "5px";
 
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".padding.left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -119,7 +119,7 @@ function*(inspector, view) {
   node.style.padding = "5px";
   yield waitForUpdate(inspector);
 
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".padding.left > span");
   is(span.textContent, 5, "Should have the right value in the box model.");

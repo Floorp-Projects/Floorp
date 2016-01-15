@@ -6,7 +6,7 @@
 // Testing that the inspector doesn't go blank when navigating to a page that
 // deletes an iframe while loading.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
+const TEST_URL = URL_ROOT + "doc_inspector_remove-iframe-during-load.html";
 
 add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL("about:blank");

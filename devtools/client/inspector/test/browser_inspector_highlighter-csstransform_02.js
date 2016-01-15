@@ -18,7 +18,7 @@ so the present test doesn't care about that, it just verifies that the css
 transform highlighter applies those values correctly to the SVG elements
 */
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_highlighter_csstransform.html";
+const TEST_URL = URL_ROOT + "doc_inspector_highlighter_csstransform.html";
 
 add_task(function*() {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
