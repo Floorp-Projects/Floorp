@@ -6,8 +6,7 @@
 
 // Load the shared-head file first.
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
-  this);
+  "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
 
 // Services.prefs.setBoolPref("devtools.debugger.log", true);
 // SimpleTest.registerCleanupFunction(() => {
@@ -20,14 +19,13 @@ Services.scriptloader.loadSubScript(
 var ROOT_TEST_DIR = getRootDirectory(gTestPath);
 
 // Import the GCLI test helper
+var testDir = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/commandline/test/helpers.js",
-  this);
+  testDir + "../../../commandline/test/helpers.js", this);
 
 // Import helpers registering the test-actor in remote targets
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/shared/test/test-actor-registry.js",
-  this);
+  testDir + "../../../shared/test/test-actor-registry.js", this);
 
 DevToolsUtils.testing = true;
 registerCleanupFunction(() => {
