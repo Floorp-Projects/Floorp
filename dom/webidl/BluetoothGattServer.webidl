@@ -4,6 +4,68 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+dictionary BluetoothAdvertisingData
+{
+  /**
+   * Uuid value of Appearance characteristic of the GAP service which can be
+   * mapped to an icon or string that describes the physical representation of
+   * the device during the device discovery procedure.
+   */
+  unsigned short appearance = 0;
+
+  /**
+   * Whether to broadcast with device name or not.
+   */
+  boolean includeDevName = false;
+
+  /**
+   * Whether to broadcast with TX power or not.
+   */
+  boolean includeTxPower = false;
+
+  /**
+   * Company Identifier Code for manufacturer data.
+   *
+   * This ID will be combined with |manufacturerData| byte array specified
+   * below as the broadcasting manufacturer data. Please see Core Specification
+   * Supplement (CSS) v6 1.4 for more details.
+   */
+  unsigned short manufacturerId = 0;
+
+  /**
+   * Byte array of custom manufacturer specific data.
+   *
+   * These bytes will be appended to |manufacturerId| specified above as the
+   * broadcasting manufacturer data. Please see Core Specification Supplement
+   * (CSS) v6 1.4 for more details.
+   */
+  ArrayBuffer? manufacturerData = null;
+
+  /**
+   * 128-bit Service UUID for service data.
+   *
+   * This UUID will be combinded with |serviceData| specified below as the
+   * broadcasting service data. Please see Core Specification Supplement (CSS)
+   * v6 1.11 for more details.
+   */
+  DOMString serviceUuid = "";
+
+  /**
+   * Data associated with |serviceUuid|.
+   *
+   * These bytes will be appended to |serviceUuid| specified above as the
+   * broadcasting manufacturer data. Please see Core Specification Supplement
+   * (CSS) v6 1.11 for more details.
+   */
+  ArrayBuffer? serviceData = null;
+
+  /**
+   * A list of Service or Service Class UUIDs.
+   * Please see Core Specification Supplement (CSS) v6 1.1 for more details.
+   */
+  sequence<DOMString> serviceUuids = [];
+};
+
 [CheckAnyPermissions="bluetooth"]
 interface BluetoothGattServer : EventTarget
 {
@@ -27,6 +89,20 @@ interface BluetoothGattServer : EventTarget
   Promise<void> connect(DOMString address);
   [NewObject]
   Promise<void> disconnect(DOMString address);
+
+  /**
+   * Start or stop advertising data to nearby devices.
+   *
+   * Application may customize the advertising data by passing advData to
+   * |startAdvertising|. By performing |startAdvertising|, remote central
+   * devices can then discover and initiate a connection with our local device.
+   * A 'connectionstatechanged' event will be fired when a remote central
+   * device connects to the local device.
+   */
+  [NewObject]
+  Promise<void> startAdvertising(optional BluetoothAdvertisingData advData);
+  [NewObject]
+  Promise<void> stopAdvertising();
 
   /**
    * Add a BLE service to the local GATT server.
