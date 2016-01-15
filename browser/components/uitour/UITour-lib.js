@@ -305,6 +305,19 @@ if (typeof Mozilla == 'undefined') {
 			pane: pane
 		});
 	};
+
+	/**
+	 * Closes the tab where this code is running. As usual, if the tab is in the
+	 * foreground, the tab that was displayed before is selected.
+	 *
+	 * The last tab in the current window will never be closed, in which case
+	 * this call will have no effect. The calling code is expected to take an
+	 * action after a small timeout in order to handle this case, for example by
+	 * displaying a goodbye message or a button to restart the tour.
+	 */
+	Mozilla.UITour.closeTab = function() {
+		_sendEvent('closeTab');
+	};
 })();
 
 // Make this library Require-able.

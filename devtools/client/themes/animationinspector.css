@@ -27,6 +27,21 @@
   --time-graduation-border-color: rgba(128, 136, 144, .5);
 }
 
+.animation {
+  --timeline-border-color: var(--theme-body-color);
+  --timeline-background-color: var(--theme-splitter-color);
+}
+
+.animation.cssanimation {
+  --timeline-border-color: var(--theme-highlight-lightorange);
+  --timeline-background-color: var(--theme-contrast-background);
+}
+
+.animation.csstransition {
+  --timeline-border-color: var(--theme-highlight-bluegrey);
+  --timeline-background-color: var(--theme-highlight-blue);
+}
+
 html {
   height: 100%;
 }
@@ -285,12 +300,9 @@ body {
 /* Animation iterations */
 
 .animation-timeline .animation .iterations {
-  position: relative;
+  position: absolute;
   height: 100%;
   box-sizing: border-box;
-
-  --timeline-border-color: var(--theme-body-color);
-  --timeline-background-color: var(--theme-splitter-color);
 
   /* Iterations of the animation are displayed with a repeating linear-gradient
      which size is dynamically changed from JS. The gradient only draws 1px
@@ -305,19 +317,11 @@ body {
   background-repeat: repeat-x;
   background-position: -1px 0;
   border: 1px solid var(--timeline-border-color);
+  /* Border-right is already handled by the gradient */
+  border-width: 1px 0 1px 1px;
 
   /* The background color is set independently */
   background-color: var(--timeline-background-color);
-}
-
-.animation-timeline .animation .cssanimation {
-  --timeline-border-color: var(--theme-highlight-lightorange);
-  --timeline-background-color: var(--theme-contrast-background);
-}
-
-.animation-timeline .animation .csstransition {
-  --timeline-border-color: var(--theme-highlight-bluegrey);
-  --timeline-background-color: var(--theme-highlight-blue);
 }
 
 .animation-timeline .animation .iterations.infinite {
@@ -343,33 +347,50 @@ body {
 }
 
 .animation-timeline .animation .name {
+  position: absolute;
   color: var(--theme-selection-color);
   height: 100%;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 150%;
+  display: flex;
+  align-items: center;
   padding: 0 2px;
+  box-sizing: border-box;
+  --fast-track-icon-width: 12px;
 }
 
-.animation-timeline .fast-track .name {
+.animation-timeline .animation .name div {
+  /* Flex items don't support text-overflow, so a child div is used */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.animation-timeline .fast-track .name div {
+  width: calc(100% - var(--fast-track-icon-width));
+}
+
+.animation-timeline .fast-track .name::after {
   /* Animations running on the compositor have the fast-track background image*/
+  content: "";
+  display: block;
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  width: var(--fast-track-icon-width);
+
   background-image: url("images/animation-fast-track.svg");
   background-repeat: no-repeat;
-  background-position: calc(100% - 5px) center;
+  background-position: center;
 }
 
 .animation-timeline .animation .delay {
   position: absolute;
-  top: 0;
-  /* Make sure the delay covers up the animation border */
-  transform: translate(-1px, -1px);
-  box-sizing: border-box;
-  height: calc(100% + 2px);
+  height: 100%;
 
   border: 1px solid var(--timeline-border-color);
+  box-sizing: border-box;
   border-width: 1px 0 1px 1px;
+
   background-image: repeating-linear-gradient(45deg,
                                               transparent,
                                               transparent 1px,

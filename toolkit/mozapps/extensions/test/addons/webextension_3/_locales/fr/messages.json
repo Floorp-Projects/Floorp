@@ -1,10 +1,10 @@
 {
   "name": {
-    "message": "le foo",
+    "message": "le foo ☺",
     "description": "foo"
   },
   "desc": {
-    "message": "le bar",
+    "message": "le bar ☺",
     "description": "bar"
   }
 }

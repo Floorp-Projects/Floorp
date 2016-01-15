@@ -108,11 +108,11 @@
       <field name="mTabsProgressListeners">
         []
       </field>
-      <field name="mTabListeners">
-        []
+      <field name="_tabListeners">
+        new Map()
       </field>
-      <field name="mTabFilters">
-        []
+      <field name="_tabFilters">
+        new Map()
       </field>
       <field name="mIsBusy">
         false
@@ -1097,7 +1097,7 @@
                                           true, false);
             }
 
-            var listener = this.mTabListeners[this.tabContainer.selectedIndex] || null;
+            var listener = this._tabListeners.get(this.mCurrentTab);
             if (listener && listener.mStateFlags) {
               this._callProgressListeners(null, "onUpdateCurrentBrowser",
                                           [listener.mStateFlags, listener.mStatus,
@@ -1506,8 +1506,7 @@
 
             // Unhook our progress listener.
             let tab = this.getTabForBrowser(aBrowser);
-            let index = tab._tPos;
-            let filter = this.mTabFilters[index];
+            let filter = this._tabFilters.get(tab);
             aBrowser.webProgress.removeProgressListener(filter);
             // Make sure the browser is destroyed so it unregisters from observer notifications
             aBrowser.destroy();
@@ -1881,8 +1880,8 @@
                                      .createInstance(Components.interfaces.nsIWebProgress);
             filter.addProgressListener(tabListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
             b.webProgress.addProgressListener(filter, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
-            this.mTabListeners[position] = tabListener;
-            this.mTabFilters[position] = filter;
+            this._tabListeners.set(t, tabListener);
+            this._tabFilters.set(t, filter);
 
             b.droppedLinkHandler = handleDroppedLink;
 
@@ -2254,12 +2253,13 @@
             }
 
             // Remove the tab's filter and progress listener.
-            const filter = this.mTabFilters[aTab._tPos];
+            const filter = this._tabFilters.get(aTab);
 
             browser.webProgress.removeProgressListener(filter);
 
-            filter.removeProgressListener(this.mTabListeners[aTab._tPos]);
-            this.mTabListeners[aTab._tPos].destroy();
+            const listener = this._tabListeners.get(aTab);
+            filter.removeProgressListener(listener);
+            listener.destroy();
 
             if (browser.registeredOpenURI && !aTabWillBeMoved) {
               this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
@@ -2320,11 +2320,8 @@
             }
 
             // We're going to remove the tab and the browser now.
-            // Clean up mTabFilters and mTabListeners now rather than in
-            // _beginRemoveTab, so that their size is always in sync with the
-            // number of tabs and browsers (the xbl destructor depends on this).
-            this.mTabFilters.splice(aTab._tPos, 1);
-            this.mTabListeners.splice(aTab._tPos, 1);
+            this._tabFilters.delete(aTab);
+            this._tabListeners.delete(aTab);
 
             var browser = this.getBrowserForTab(aTab);
             this._outerWindowIDBrowserMap.delete(browser.outerWindowID);
@@ -2576,9 +2573,8 @@
         <body>
           <![CDATA[
             // Unhook our progress listener
-            let index = aOurTab._tPos;
-            const filter = this.mTabFilters[index];
-            let tabListener = this.mTabListeners[index];
+            const filter = this._tabFilters.get(aOurTab);
+            let tabListener = this._tabListeners.get(aOurTab);
             let ourBrowser = this.getBrowserForTab(aOurTab);
             ourBrowser.webProgress.removeProgressListener(filter);
             filter.removeProgressListener(tabListener);
@@ -2618,8 +2614,8 @@
             aOtherBrowser.permanentKey = ourPermanentKey;
 
             // Restore the progress listener
-            this.mTabListeners[index] = tabListener =
-              this.mTabProgressListener(aOurTab, ourBrowser, false, false);
+            tabListener = this.mTabProgressListener(aOurTab, ourBrowser, false, false);
+            this._tabListeners.set(aOurTab, tabListener);
 
             const notifyAll = Ci.nsIWebProgress.NOTIFY_ALL;
             filter.addProgressListener(tabListener, notifyAll);
@@ -2884,9 +2880,6 @@
             return;
 
           this._lastRelatedTab = null;
-
-          this.mTabFilters.splice(aIndex, 0, this.mTabFilters.splice(aTab._tPos, 1)[0]);
-          this.mTabListeners.splice(aIndex, 0, this.mTabListeners.splice(aTab._tPos, 1)[0]);
 
           let wasFocused = (document.activeElement == this.mCurrentTab);
 
@@ -4198,8 +4191,8 @@
           const filter = Components.classes["@mozilla.org/appshell/component/browser-status-filter;1"]
                                    .createInstance(nsIWebProgress);
           filter.addProgressListener(tabListener, nsIWebProgress.NOTIFY_ALL);
-          this.mTabListeners[0] = tabListener;
-          this.mTabFilters[0] = filter;
+          this._tabListeners.set(this.mCurrentTab, tabListener);
+          this._tabFilters.set(this.mCurrentTab, filter);
           this.webProgress.addProgressListener(filter, nsIWebProgress.NOTIFY_ALL);
 
           this.style.backgroundColor =
@@ -4252,18 +4245,22 @@
           Services.obs.removeObserver(this, "live-resize-start", false);
           Services.obs.removeObserver(this, "live-resize-end", false);
 
-          for (var i = 0; i < this.mTabListeners.length; ++i) {
-            let browser = this.getBrowserAtIndex(i);
+          for (let tab of this.tabs) {
+            let browser = tab.linkedBrowser;
             if (browser.registeredOpenURI) {
               this._placesAutocomplete.unregisterOpenPage(browser.registeredOpenURI);
               this._unifiedComplete.unregisterOpenPage(browser.registeredOpenURI);
               delete browser.registeredOpenURI;
             }
-            browser.webProgress.removeProgressListener(this.mTabFilters[i]);
-            this.mTabFilters[i].removeProgressListener(this.mTabListeners[i]);
-            this.mTabFilters[i] = null;
-            this.mTabListeners[i].destroy();
-            this.mTabListeners[i] = null;
+            let filter = this._tabFilters.get(tab);
+            let listener = this._tabListeners.get(tab);
+
+            browser.webProgress.removeProgressListener(filter);
+            filter.removeProgressListener(listener);
+            listener.destroy();
+
+            this._tabFilters.delete(tab);
+            this._tabListeners.delete(tab);
           }
           const nsIEventListenerService =
             Components.interfaces.nsIEventListenerService;

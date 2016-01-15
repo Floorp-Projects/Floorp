@@ -264,7 +264,7 @@ function getGfxField(aPropertyName, aDefault) {
  * @return {String} The substring or null if the input string is null.
  */
 function limitStringToLength(aString, aMaxLength) {
-  if (aString === null || aString === undefined) {
+  if (typeof(aString) !== "string") {
     return null;
   }
   return aString.substring(0, aMaxLength);
@@ -515,28 +515,36 @@ EnvironmentAddonBuilder.prototype = {
         continue;
       }
 
-      // Make sure to have valid dates.
-      let installDate = new Date(Math.max(0, addon.installDate));
-      let updateDate = new Date(Math.max(0, addon.updateDate));
+      // Weird addon data in the wild can lead to exceptions while collecting
+      // the data.
+      try {
+        // Make sure to have valid dates.
+        let installDate = new Date(Math.max(0, addon.installDate));
+        let updateDate = new Date(Math.max(0, addon.updateDate));
 
-      activeAddons[addon.id] = {
-        blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
-        description: limitStringToLength(addon.description, MAX_ADDON_STRING_LENGTH),
-        name: limitStringToLength(addon.name, MAX_ADDON_STRING_LENGTH),
-        userDisabled: addon.userDisabled,
-        appDisabled: addon.appDisabled,
-        version: limitStringToLength(addon.version, MAX_ADDON_STRING_LENGTH),
-        scope: addon.scope,
-        type: addon.type,
-        foreignInstall: addon.foreignInstall,
-        hasBinaryComponents: addon.hasBinaryComponents,
-        installDay: Utils.millisecondsToDays(installDate.getTime()),
-        updateDay: Utils.millisecondsToDays(updateDate.getTime()),
-        signedState: addon.signedState,
-      };
+        activeAddons[addon.id] = {
+          blocklisted: (addon.blocklistState !== Ci.nsIBlocklistService.STATE_NOT_BLOCKED),
+          description: limitStringToLength(addon.description, MAX_ADDON_STRING_LENGTH),
+          name: limitStringToLength(addon.name, MAX_ADDON_STRING_LENGTH),
+          userDisabled: addon.userDisabled,
+          appDisabled: addon.appDisabled,
+          version: limitStringToLength(addon.version, MAX_ADDON_STRING_LENGTH),
+          scope: addon.scope,
+          type: addon.type,
+          foreignInstall: addon.foreignInstall,
+          hasBinaryComponents: addon.hasBinaryComponents,
+          installDay: Utils.millisecondsToDays(installDate.getTime()),
+          updateDay: Utils.millisecondsToDays(updateDate.getTime()),
+          signedState: addon.signedState,
+        };
 
-      if (addon.signedState !== undefined)
-        activeAddons[addon.id].signedState = addon.signedState;
+        if (addon.signedState !== undefined)
+          activeAddons[addon.id].signedState = addon.signedState;
+
+      } catch (ex) {
+        this._environment._log.error("_getActiveAddons - An addon was discarded due to an error", ex);
+        continue;
+      }
     }
 
     return activeAddons;
@@ -592,19 +600,24 @@ EnvironmentAddonBuilder.prototype = {
         continue;
       }
 
-      // Make sure to have a valid date.
-      let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
+      try {
+        // Make sure to have a valid date.
+        let updateDate = new Date(Math.max(0, tag.lastModifiedTime));
 
-      activePlugins.push({
-        name: limitStringToLength(tag.name, MAX_ADDON_STRING_LENGTH),
-        version: limitStringToLength(tag.version, MAX_ADDON_STRING_LENGTH),
-        description: limitStringToLength(tag.description, MAX_ADDON_STRING_LENGTH),
-        blocklisted: tag.blocklisted,
-        disabled: tag.disabled,
-        clicktoplay: tag.clicktoplay,
-        mimeTypes: tag.getMimeTypes({}),
-        updateDay: Utils.millisecondsToDays(updateDate.getTime()),
-      });
+        activePlugins.push({
+          name: limitStringToLength(tag.name, MAX_ADDON_STRING_LENGTH),
+          version: limitStringToLength(tag.version, MAX_ADDON_STRING_LENGTH),
+          description: limitStringToLength(tag.description, MAX_ADDON_STRING_LENGTH),
+          blocklisted: tag.blocklisted,
+          disabled: tag.disabled,
+          clicktoplay: tag.clicktoplay,
+          mimeTypes: tag.getMimeTypes({}),
+          updateDay: Utils.millisecondsToDays(updateDate.getTime()),
+        });
+      } catch (ex) {
+        this._environment._log.error("_getActivePlugins - A plugin was discarded due to an error", ex);
+        continue;
+      }
     }
 
     return activePlugins;
@@ -628,11 +641,16 @@ EnvironmentAddonBuilder.prototype = {
         continue;
       }
 
-      activeGMPlugins[plugin.id] = {
-        version: plugin.version,
-        userDisabled: plugin.userDisabled,
-        applyBackgroundUpdates: plugin.applyBackgroundUpdates,
-      };
+      try {
+        activeGMPlugins[plugin.id] = {
+          version: plugin.version,
+          userDisabled: plugin.userDisabled,
+          applyBackgroundUpdates: plugin.applyBackgroundUpdates,
+        };
+      } catch (ex) {
+        this._environment._log.error("_getActiveGMPlugins - A GMPlugin was discarded due to an error", ex);
+        continue;
+      }
     }
 
     return activeGMPlugins;
