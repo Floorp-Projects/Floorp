@@ -985,16 +985,18 @@ public:
   static nsContentPolicyType InternalContentPolicyTypeToExternal(nsContentPolicyType aType);
 
   /**
-   * Map internal content policy types to external ones or script types:
+   * Map internal content policy types to external ones or script types or preload types:
    *   * TYPE_INTERNAL_SCRIPT
    *   * TYPE_INTERNAL_WORKER
    *   * TYPE_INTERNAL_SHARED_WORKER
    *   * TYPE_INTERNAL_SERVICE_WORKER
-   *
+   *   * TYPE_INTERNAL_SCRIPT_PRELOAD
+   *   * TYPE_INTERNAL_IMAGE_PRELOAD
+   *   * TYPE_INTERNAL_STYLESHEET_PRELOAD
    *
    * Note: DO NOT call this function unless you know what you're doing!
    */
-  static nsContentPolicyType InternalContentPolicyTypeToExternalOrScript(nsContentPolicyType aType);
+  static nsContentPolicyType InternalContentPolicyTypeToExternalOrMCBInternal(nsContentPolicyType aType);
 
   /**
    * Map internal content policy types to external ones or preload types:
