@@ -30,7 +30,7 @@ addTest("Test that editing margin dynamically updates the document, pressing esc
 function*(inspector, view) {
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-top"), "", "Should be no margin-top on the element.")
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".margin.top > span");
   is(span.textContent, 5, "Should have the right value in the box model.");
@@ -56,7 +56,7 @@ addTest("Test that arrow keys work correctly and pressing enter commits the chan
 function*(inspector, view) {
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-left"), "", "Should be no margin-top on the element.")
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".margin.left > span");
   is(span.textContent, 10, "Should have the right value in the box model.");
@@ -93,7 +93,7 @@ addTest("Test that deleting the value removes the property but escape undoes tha
 function*(inspector, view) {
   let node = content.document.getElementById("div1");
   is(getStyle(node, "margin-left"), "20px", "Should be the right margin-top on the element.")
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".margin.left > span");
   is(span.textContent, 20, "Should have the right value in the box model.");
@@ -123,7 +123,7 @@ function*(inspector, view) {
   node.style.marginRight = "15px";
   yield waitForUpdate(inspector);
 
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".margin.right > span");
   is(span.textContent, 15, "Should have the right value in the box model.");

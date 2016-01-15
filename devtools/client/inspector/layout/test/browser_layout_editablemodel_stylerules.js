@@ -30,7 +30,7 @@ addTest("Test that entering units works",
 function*(inspector, view) {
   let node = content.document.getElementById("div1");
   is(getStyle(node, "padding-top"), "", "Should have the right padding");
-  yield selectNode(node, inspector);
+  yield selectNode("#div1", inspector);
 
   let span = view.doc.querySelector(".padding.top > span");
   is(span.textContent, 3, "Should have the right value in the box model.");
@@ -63,7 +63,7 @@ addTest("Test that we pick up the value from a higher style rule",
 function*(inspector, view) {
   let node = content.document.getElementById("div2");
   is(getStyle(node, "border-bottom-width"), "", "Should have the right border-bottom-width");
-  yield selectNode(node, inspector);
+  yield selectNode("#div2", inspector);
 
   let span = view.doc.querySelector(".border.bottom > span");
   is(span.textContent, 16, "Should have the right value in the box model.");
@@ -89,7 +89,7 @@ addTest("Test that shorthand properties are parsed correctly",
 function*(inspector, view) {
   let node = content.document.getElementById("div3");
   is(getStyle(node, "padding-right"), "", "Should have the right padding");
-  yield selectNode(node, inspector);
+  yield selectNode("#div3", inspector);
 
   let span = view.doc.querySelector(".padding.right > span");
   is(span.textContent, 32, "Should have the right value in the box model.");
