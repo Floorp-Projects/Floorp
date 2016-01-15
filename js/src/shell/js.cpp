@@ -2838,19 +2838,32 @@ EvalInWorker(JSContext* cx, unsigned argc, Value* vp)
     JSLinearString* str = &args[0].toString()->asLinear();
 
     char16_t* chars = (char16_t*) js_malloc(str->length() * sizeof(char16_t));
-    if (!chars)
+    if (!chars) {
+        ReportOutOfMemory(cx);
         return false;
+    }
+
     CopyChars(chars, *str);
 
     WorkerInput* input = js_new<WorkerInput>(cx->runtime(), chars, str->length());
-    if (!input)
+    if (!input) {
+        ReportOutOfMemory(cx);
         return false;
+    }
 
     PRThread* thread = PR_CreateThread(PR_USER_THREAD, WorkerMain, input,
                                        PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_JOINABLE_THREAD,
                                        gMaxStackSize + 128 * 1024);
-    if (!thread || !workerThreads.append(thread))
+    if (!thread) {
+        ReportOutOfMemory(cx);
         return false;
+    }
+
+    if (!workerThreads.append(thread)) {
+        ReportOutOfMemory(cx);
+        PR_JoinThread(thread);
+        return false;
+    }
 
     return true;
 }

@@ -17,6 +17,7 @@ struct StartSessionRequest
   nsString url;
   nsString sessionId;
   nsString origin;
+  nsString deviceId;
 };
 
 struct SendSessionMessageRequest

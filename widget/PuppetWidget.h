@@ -112,12 +112,6 @@ public:
 
   NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
 
-  // This API is going away, steer clear.
-  virtual void Scroll(const nsIntPoint& aDelta,
-                      const nsTArray<nsIntRect>& aDestRects,
-                      const nsTArray<Configuration>& aReconfigureChildren)
-  { /* dead man walking */ }
-
   // PuppetWidgets don't have native data, as they're purely nonnative.
   virtual void* GetNativeData(uint32_t aDataType) override;
 #if defined(XP_WIN)

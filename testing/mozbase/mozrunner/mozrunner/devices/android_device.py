@@ -77,8 +77,8 @@ AVD_DICT = {
                     'init,console,gles,memcheck,adbserver,adbclient,adb,avd_config,socket',
                     '-qemu', '-m', '1024', '-enable-kvm'],
                    5554,
-                   True,
-                   20701, 20700)
+                   False,
+                   0, 0)
 }
 
 def verify_android_device(build_obj, install=False, xre=False, debugger=False):

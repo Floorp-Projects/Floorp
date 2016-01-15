@@ -34,7 +34,15 @@ config = {
         "mozbase": "test.py",
         "mozmill": "runtestlist.py",
     },
-    "minimum_tests_zip_dirs": ["bin/*", "certs/*", "modules/*", "mozbase/*", "config/*"],
+    "minimum_tests_zip_dirs": [
+        "bin/*",
+        "certs/*",
+        "config/*",
+        "marionette/*",
+        "modules/*",
+        "mozbase/*",
+        "tools/*",
+    ],
     "specific_tests_zip_dirs": {
         "mochitest": ["mochitest/*"],
         "webapprt": ["mochitest/*"],

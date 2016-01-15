@@ -122,10 +122,10 @@ WebGL2Context::VertexAttribI4i(GLuint index, GLint x, GLint y, GLint z, GLint w)
 void
 WebGL2Context::VertexAttribI4iv(GLuint index, size_t length, const GLint* v)
 {
-  if (!ValidateAttribIndex(index, "vertexAttribI4iv"))
+  if (!ValidateAttribArraySetter("vertexAttribI4iv", 4, length))
     return;
 
-  if (!ValidateAttribArraySetter("vertexAttribI4iv", 4, length))
+  if (!ValidateAttribIndex(index, "vertexAttribI4iv"))
     return;
 
   mVertexAttribType[index] = LOCAL_GL_INT;
@@ -183,7 +183,7 @@ WebGL2Context::VertexAttribI4uiv(GLuint index, size_t length, const GLuint* v)
   if (IsContextLost())
     return;
 
-  if (!ValidateAttribIndex(index, "vertexAttribI4uiv"))
+  if (!ValidateAttribArraySetter("vertexAttribI4uiv", 4, length))
     return;
 
   if (!ValidateAttribIndex(index, "vertexAttribI4uiv"))

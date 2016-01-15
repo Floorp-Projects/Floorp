@@ -9896,10 +9896,16 @@ CSSParserImpl::ParseLinearGradient(nsCSSValue& aValue,
   if (haveGradientLine) {
     // Parse a <legacy-gradient-line>
     cssGradient->mIsLegacySyntax = true;
-    bool haveAngle =
-      ParseSingleTokenVariant(cssGradient->mAngle, VARIANT_ANGLE, nullptr);
+    // In -webkit-linear-gradient expressions (handled below), we need to accept
+    // unitless 0 for angles, to match WebKit/Blink.
+    int32_t angleFlags = (aFlags & eGradient_WebkitLegacy) ?
+      VARIANT_ANGLE | VARIANT_ZERO_ANGLE :
+      VARIANT_ANGLE;
 
-    // if we got an angle, we might now have a comma, ending the gradient-line
+    bool haveAngle =
+      ParseSingleTokenVariant(cssGradient->mAngle, angleFlags, nullptr);
+
+    // If we got an angle, we might now have a comma, ending the gradient-line.
     bool haveAngleComma = haveAngle && ExpectSymbol(',', true);
 
     // If we're webkit-prefixed & didn't get an angle,

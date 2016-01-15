@@ -29,6 +29,11 @@ class nsCoreUtils
 {
 public:
   /**
+   * Return true if the given node is a label of a control.
+   */
+  static bool IsLabelWithControl(nsIContent *aContent);
+
+  /**
    * Return true if the given node has registered click, mousedown or mouseup
    * event listeners.
    */

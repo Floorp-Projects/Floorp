@@ -29,7 +29,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(41e311d0-5894-4aaa-80b5-5b7099dfc404)]
+[scriptable, builtinclass, uuid(ddc65bf9-2f60-41ab-b22a-4f1ae9efcd36)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -335,11 +335,6 @@ interface nsILoadInfo : nsISupports
    * upgradeInsecureRequests is false.
    */
   [infallible] readonly attribute boolean upgradeInsecureRequests;
-
-  /**
-   * Same as upgradeInsecureRequests but for preloads.
-   */
-  [infallible] readonly attribute boolean upgradeInsecurePreloads;
 
   /**
    * Typically these are the window IDs of the window in which the element being

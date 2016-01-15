@@ -38,7 +38,7 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   ElementPropertyTransition(nsIDocument* aDocument,
                             dom::Element* aTarget,
                             nsCSSPseudoElements::Type aPseudoType,
-                            const AnimationTiming &aTiming)
+                            const TimingParams &aTiming)
     : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
   { }
 
@@ -214,7 +214,7 @@ struct TransitionEventInfo {
   TransitionEventInfo(dom::Element* aElement,
                       nsCSSPseudoElements::Type aPseudoType,
                       nsCSSProperty aProperty,
-                      TimeDuration aDuration,
+                      StickyTimeDuration aDuration,
                       const TimeStamp& aTimeStamp,
                       dom::Animation* aAnimation)
     : mElement(aElement)

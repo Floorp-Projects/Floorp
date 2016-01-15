@@ -231,8 +231,8 @@ const Class js::ScalarTypeDescr::class_ = {
 
 const JSFunctionSpec js::ScalarTypeDescr::typeObjectMethods[] = {
     JS_SELF_HOSTED_FN("toSource", "DescrToSource", 0, 0),
-    {"array", {nullptr, nullptr}, 0, 0, "ArrayShorthand"},
-    {"equivalent", {nullptr, nullptr}, 1, 0, "TypeDescrEquivalent"},
+    JS_SELF_HOSTED_FN("array", "ArrayShorthand", 1, JSFUN_HAS_REST),
+    JS_SELF_HOSTED_FN("equivalent", "TypeDescrEquivalent", 1, 0),
     JS_FS_END
 };
 

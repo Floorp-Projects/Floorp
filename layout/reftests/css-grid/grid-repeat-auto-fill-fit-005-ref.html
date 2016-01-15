@@ -28,7 +28,8 @@ html,body {
 
 .r0 { grid-template-rows: [a] repeat(1, [b] 0 [c]) [d]; }
 .r10,.r1 { grid-template-rows: [a] repeat(1, [b] 20px [c]) [d]; }
-.r01 { grid-template-rows: [a] repeat(1, [b] 0 [c]) [d]; }
+.r01 { grid-template-rows: [a] repeat(1, [b] 0 [c]) 20px [d]; grid-gap:0;}
+.r01 a {grid-row-end:auto; }
 .r2 { grid-template-rows: [a] repeat(1, [b] 20px [c]) [d] 30px [e]; }
 .r20 { width:22px; grid-template-rows: [a] repeat(1, [b] 20px [c]) [d] 30px [e];  }
 .r02 { grid-template-rows: [a] repeat(1, [b] 0 [c]) [d] 30px [e]; }
@@ -274,11 +275,11 @@ fill,fit {
 <div class="grid r0"><x></x><x></x><a></a><b></b><x></x></div>
 <div class="grid ra"><x></x><x></x><a></a><b></b><x></x></div>
 
-<div class="grid w r01" style="min-height:0"><a></a><b></b></div>
+<div class="grid w r01" style="max-height:0"><a></a><b></b></div>
 <div class="grid w r01" style="height:0"><a></a><b></b></div>
 <div class="grid w r01" style="min-height:0; height:0"><a></a><b></b></div>
 <div class="grid w r01" style="max-height:0"><a></a><b></b></div>
-<div class="grid w r0"><a></a><b></b></div>
+<div class="grid w r01" style="max-height:0"><a></a><b></b></div>
 <div class="grid w r0a"><a></a><b></b></div>
 
 <br clear="all">

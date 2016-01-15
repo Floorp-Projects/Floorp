@@ -252,7 +252,9 @@ ReserveFileDescriptors(FdArray& aReservedFds)
       MOZ_CRASH("ProcLoader error: failed to reserve a magic file descriptor.");
     }
 
-    aReservedFds.append(target);
+    if (!aReservedFds.append(target)) {
+      MOZ_CRASH("Failed to append to aReservedFds");
+    }
 
     if (fd == target) {
       // No need to call dup2(). We already occupy the desired file descriptor.

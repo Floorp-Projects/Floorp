@@ -44,7 +44,7 @@ IsCacheableNonGlobalScope(JSObject* obj)
 inline HandleObject
 InterpreterFrame::scopeChain() const
 {
-    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
+    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isNonEvalFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
         scopeChain_ = callee().environment();
         flags_ |= HAS_SCOPECHAIN;
@@ -84,7 +84,8 @@ InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecod
     /* Initialize stack frame members. */
     flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
     argv_ = argv;
-    u.nactual = nactual;
+    script_ = script;
+    nactual_ = nactual;
     scopeChain_ = callee.environment();
     prev_ = prev;
     prevpc_ = prevpc;
@@ -560,16 +561,6 @@ AbstractFramePtr::createSingleton() const
     if (isInterpreterFrame())
         return asInterpreterFrame()->createSingleton();
     return false;
-}
-
-inline bool
-AbstractFramePtr::isFunctionFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->isFunctionFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->isFunctionFrame();
-    return asRematerializedFrame()->isFunctionFrame();
 }
 
 inline bool

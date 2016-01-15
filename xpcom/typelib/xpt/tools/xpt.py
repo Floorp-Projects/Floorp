@@ -155,6 +155,14 @@ class Type(object):
         if reference and not pointer:
             raise Exception("If reference is True pointer must be True too")
 
+    def __cmp__(self, other):
+        return (
+                # First make sure we have two Types of the same type (no pun intended!)
+                cmp(type(self), type(other)) or
+                cmp(self.pointer, other.pointer) or
+                cmp(self.reference, other.reference)
+        )
+
     @staticmethod
     def decodeflags(byte):
         """
@@ -235,6 +243,12 @@ class SimpleType(Type):
         Type.__init__(self, **kwargs)
         self.tag = tag
 
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                cmp(self.tag, other.tag)
+        )
+
     @staticmethod
     def get(data, tag, flags):
         """
@@ -280,6 +294,14 @@ class InterfaceType(Type):
         Type.__init__(self, pointer=pointer, **kwargs)
         self.iface = iface
         self.tag = Type.Tags.Interface
+
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                # When comparing interface types, only look at the name.
+                cmp(self.iface.name, other.iface.name) or
+                cmp(self.tag, other.tag)
+        )
 
     @staticmethod
     def read(typelib, map, data_pool, offset, flags):
@@ -335,6 +357,13 @@ class InterfaceIsType(Type):
         self.param_index = param_index
         self.tag = Type.Tags.InterfaceIs
 
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                cmp(self.param_index, other.param_index) or
+                cmp(self.tag, other.tag)
+        )
+
     @staticmethod
     def read(typelib, map, data_pool, offset, flags):
         """
@@ -387,6 +416,15 @@ class ArrayType(Type):
         self.length_is_arg_num = length_is_arg_num
         self.tag = Type.Tags.Array
 
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                cmp(self.element_type, other.element_type) or
+                cmp(self.size_is_arg_num, other.size_is_arg_num) or
+                cmp(self.length_is_arg_num, other.length_is_arg_num) or
+                cmp(self.tag, other.tag)
+        )
+
     @staticmethod
     def read(typelib, map, data_pool, offset, flags):
         """
@@ -437,6 +475,14 @@ class StringWithSizeType(Type):
         self.length_is_arg_num = length_is_arg_num
         self.tag = Type.Tags.StringWithSize
 
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                cmp(self.size_is_arg_num, other.size_is_arg_num) or
+                cmp(self.length_is_arg_num, other.length_is_arg_num) or
+                cmp(self.tag, other.tag)
+        )
+
     @staticmethod
     def read(typelib, map, data_pool, offset, flags):
         """
@@ -484,6 +530,14 @@ class WideStringWithSizeType(Type):
         self.size_is_arg_num = size_is_arg_num
         self.length_is_arg_num = length_is_arg_num
         self.tag = Type.Tags.WideStringWithSize
+
+    def __cmp__(self, other):
+        return (
+                Type.__cmp__(self, other) or
+                cmp(self.size_is_arg_num, other.size_is_arg_num) or
+                cmp(self.length_is_arg_num, other.length_is_arg_num) or
+                cmp(self.tag, other.tag)
+        )
 
     @staticmethod
     def read(typelib, map, data_pool, offset, flags):
@@ -538,6 +592,17 @@ class Param(object):
         self.shared = shared
         self.dipper = dipper
         self.optional = optional
+
+    def __cmp__(self, other):
+        return (
+                cmp(self.type, other.type) or
+                cmp(self.in_, other.in_) or
+                cmp(self.out, other.out) or
+                cmp(self.retval, other.retval) or
+                cmp(self.shared, other.shared) or
+                cmp(self.dipper, other.dipper) or
+                cmp(self.optional, other.optional)
+        )
 
     @staticmethod
     def decodeflags(byte):
@@ -660,6 +725,20 @@ class Method(object):
         if result and not isinstance(result, Param):
             raise Exception("result must be a Param!")
         self.result = result
+
+    def __cmp__(self, other):
+        return (
+                cmp(self.name, other.name) or
+                cmp(self.getter, other.getter) or
+                cmp(self.setter, other.setter) or
+                cmp(self.notxpcom, other.notxpcom) or
+                cmp(self.constructor, other.constructor) or
+                cmp(self.hidden, other.hidden) or
+                cmp(self.optargc, other.optargc) or
+                cmp(self.implicit_jscontext, other.implicit_jscontext) or
+                cmp(sorted(self.params), sorted(other.params)) or
+                cmp(self.result, other.result)
+        )
 
     def read_params(self, typelib, map, data_pool, offset, num_args):
         """
@@ -798,6 +877,13 @@ class Constant(object):
         self.type = type
         self.value = value
 
+    def __cmp__(self, other):
+        return (
+                cmp(self.name, other.name) or
+                cmp(self.type, other.type) or
+                cmp(self.value, other.value)
+        )
+
     @staticmethod
     def read(typelib, map, data_pool, offset):
         """
@@ -918,10 +1004,27 @@ class Interface(object):
             else:
                 return 1
         else:
-            # both unresolved, but names and IIDs are the same, so equal
-            return 0
-        # TODO: actually compare methods etc
-        return 0
+            if not self.resolved:
+                # both unresolved, but names and IIDs are the same, so equal
+                return 0
+        # When comparing parents, only look at the name.
+        if (self.parent is None) != (other.parent is None):
+            if self.parent is None:
+                return -1
+            else:
+                return 1
+        elif self.parent is not None:
+            c = cmp(self.parent.name, other.parent.name)
+            if c != 0:
+                return c
+        return (
+                cmp(sorted(self.methods), sorted(other.methods)) or
+                cmp(sorted(self.constants), sorted(other.constants)) or
+                cmp(self.scriptable, other.scriptable) or
+                cmp(self.function, other.function) or
+                cmp(self.builtinclass, other.builtinclass) or
+                cmp(self.main_process_scriptable_only, other.main_process_scriptable_only)
+        )
 
     def read_descriptor(self, typelib, map, data_pool):
         offset = self._descriptor_offset

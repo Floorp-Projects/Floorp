@@ -4,6 +4,8 @@
   <title>Unicode tests - pseudo element selectors</title>
   <style>
     p:fİrst-letter {color: red}
+    /* work around unreliable form-control rendering on Gtk+3 (see bug 1223198): */
+    input { -moz-appearance: none; }
   </style>
 </head>
 

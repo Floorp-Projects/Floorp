@@ -2882,6 +2882,9 @@ void
 nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
                              LayoutDeviceIntRect aRect)
 {
+    if (Destroyed()) {
+        return;
+    }
     MOZ_ASSERT(mGLControllerSupport);
     GeckoLayerClient::LocalRef client = mGLControllerSupport->GetLayerClient();
 
@@ -2916,7 +2919,7 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay",
         js::ProfileEntry::Category::GRAPHICS);
 
-    if (NS_WARN_IF(!mLayerRendererFrame)) {
+    if (Destroyed() || NS_WARN_IF(!mLayerRendererFrame)) {
         return;
     }
 

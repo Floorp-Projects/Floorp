@@ -84,7 +84,7 @@ public:
     PRIntervalTime LastOfflineStateChange() { return mLastOfflineStateChange; }
     PRIntervalTime LastConnectivityChange() { return mLastConnectivityChange; }
     PRIntervalTime LastNetworkLinkChange() { return mLastNetworkLinkChange; }
-    bool IsShutdown() { return mShutdown; }
+    bool IsNetTearingDown() { return mShutdown || mOfflineForProfileChange; }
     bool IsLinkUp();
 
     // Should only be called from NeckoChild. Use SetAppOffline instead.
