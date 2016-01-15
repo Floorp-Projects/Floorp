@@ -33,6 +33,24 @@ workerHelper.createTask(self, "readHeapSnapshot", ({ snapshotFilePath }) => {
 });
 
 /**
+ * @see HeapAnalysesClient.prototype.deleteHeapSnapshot
+ */
+workerHelper.createTask(self, "deleteHeapSnapshot", ({ snapshotFilePath }) => {
+  let snapshot = snapshots[snapshotFilePath];
+  if (!snapshot) {
+    throw new Error(`No known heap snapshot for '${snapshotFilePath}'`);
+  }
+
+  snapshots[snapshotFilePath] = undefined;
+
+  let dominatorTreeId = dominatorTreeSnapshots.indexOf(snapshot);
+  if (dominatorTreeId != -1) {
+    dominatorTreeSnapshots[dominatorTreeId] = undefined;
+    dominatorTrees[dominatorTreeId] = undefined;
+  }
+});
+
+/**
  * @see HeapAnalysesClient.prototype.takeCensus
  */
 workerHelper.createTask(self, "takeCensus", ({ snapshotFilePath, censusOptions, requestOptions }) => {
@@ -91,8 +109,10 @@ workerHelper.createTask(self, "takeCensusDiff", request => {
  * @see HeapAnalysesClient.prototype.getCreationTime
  */
 workerHelper.createTask(self, "getCreationTime", snapshotFilePath => {
-  let snapshot = snapshots[snapshotFilePath];
-  return snapshot ? snapshot.creationTime : null;
+  if (!snapshots[snapshotFilePath]) {
+    throw new Error(`No known heap snapshot for '${snapshotFilePath}'`);
+  }
+  return snapshots[snapshotFilePath].creationTime;
 });
 
 /**

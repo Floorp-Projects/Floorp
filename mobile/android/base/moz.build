@@ -406,6 +406,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'home/SearchEngineBar.java',
     'home/SearchEngineRow.java',
     'home/SearchLoader.java',
+    'home/SimpleCancellableCursorLoader.java',
     'home/SimpleCursorLoader.java',
     'home/SpacingDecoration.java',
     'home/TabMenuStrip.java',

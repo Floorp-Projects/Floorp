@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdf = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.3.161';
-var pdfjsBuild = '4a215f0';
+var pdfjsVersion = '1.3.196';
+var pdfjsBuild = '5336a53';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -413,29 +413,7 @@ function combineUrl(baseUrl, url) {
   if (!url) {
     return baseUrl;
   }
-  if (/^[a-z][a-z0-9+\-.]*:/i.test(url)) {
-    return url;
-  }
-  var i;
-  if (url.charAt(0) === '/') {
-    // absolute path
-    i = baseUrl.indexOf('://');
-    if (url.charAt(1) === '/') {
-      ++i;
-    } else {
-      i = baseUrl.indexOf('/', i + 3);
-    }
-    return baseUrl.substring(0, i) + url;
-  } else {
-    // relative path
-    var pathLength = baseUrl.length;
-    i = baseUrl.lastIndexOf('#');
-    pathLength = i >= 0 ? i : pathLength;
-    i = baseUrl.lastIndexOf('?', pathLength);
-    pathLength = i >= 0 ? i : pathLength;
-    var prefixLength = baseUrl.lastIndexOf('/', pathLength);
-    return baseUrl.substring(0, prefixLength + 1) + url;
-  }
+  return new URL(url, baseUrl).href;
 }
 
 // Validates if URL is safe and allowed, e.g. to avoid XSS.
@@ -1443,6 +1421,7 @@ function loadJpegStream(id, imageUrl, objs) {
   });
   img.src = imageUrl;
 }
+
 
 exports.FONT_IDENTITY_MATRIX = FONT_IDENTITY_MATRIX;
 exports.IDENTITY_MATRIX = IDENTITY_MATRIX;
@@ -5010,6 +4989,12 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       ctx.save();
       ctx.transform.apply(ctx, current.textMatrix);
       ctx.translate(current.x, current.y + current.textRise);
+
+      if (current.patternFill) {
+        // TODO: Some shading patterns are not applied correctly to text,
+        //       e.g. issues 3988 and 5432, and ShowText-ShadingPattern.pdf.
+        ctx.fillStyle = current.fillColor.getPattern(ctx, this);
+      }
 
       if (fontDirection > 0) {
         ctx.scale(textHScale, -1);
