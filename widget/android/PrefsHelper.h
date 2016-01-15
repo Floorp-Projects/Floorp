@@ -44,9 +44,8 @@ struct PrefsHelper
                 namesPtrArray.AppendElement(nullptr);
                 continue;
             }
-            namesPtrArray.AppendElement(namesStrArray.AppendElement(
-                    nsString(jni::String::LocalRef(
-                    mozilla::Move(namesRefArray[i]))))->Data());
+            namesPtrArray.AppendElement(namesStrArray.AppendElement(nsString(
+                    jni::String::Ref::From(namesRefArray[i])))->Data());
         }
 
         nsIAndroidBrowserApp* browserApp = nullptr;
