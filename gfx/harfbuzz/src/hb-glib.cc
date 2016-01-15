@@ -383,6 +383,8 @@ hb_glib_get_unicode_funcs (void)
 }
 
 /**
+ * hb_glib_blob_create:
+ *
  * Since: 0.9.38
  **/
 hb_blob_t *

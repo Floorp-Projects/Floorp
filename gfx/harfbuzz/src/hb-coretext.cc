@@ -176,6 +176,43 @@ _hb_coretext_shaper_font_data_create (hb_font_t *font)
     return NULL;
   }
 
+  /* Create font copy with cascade list that has LastResort first; this speeds up CoreText
+   * font fallback which we don't need anyway. */
+  {
+    // TODO Handle allocation failures?
+    CTFontDescriptorRef last_resort = CTFontDescriptorCreateWithNameAndSize(CFSTR("LastResort"), 0);
+    CFArrayRef cascade_list = CFArrayCreate (kCFAllocatorDefault,
+					     (const void **) &last_resort,
+					     1,
+					     &kCFTypeArrayCallBacks);
+    CFRelease (last_resort);
+    CFDictionaryRef attributes = CFDictionaryCreate (kCFAllocatorDefault,
+						     (const void **) &kCTFontCascadeListAttribute,
+						     (const void **) &cascade_list,
+						     1,
+						     &kCFTypeDictionaryKeyCallBacks,
+						     &kCFTypeDictionaryValueCallBacks);
+    CFRelease (cascade_list);
+
+    CTFontDescriptorRef new_font_desc = CTFontDescriptorCreateWithAttributes (attributes);
+    CFRelease (attributes);
+
+    CTFontRef new_ct_font = CTFontCreateCopyWithAttributes (data->ct_font, 0.0, NULL, new_font_desc);
+    if (new_ct_font)
+    {
+      CFRelease (data->ct_font);
+      data->ct_font = new_ct_font;
+    }
+    else
+      DEBUG_MSG (CORETEXT, font, "Font copy with empty cascade list failed");
+  }
+
+  if (unlikely (!data->ct_font)) {
+    DEBUG_MSG (CORETEXT, font, "Font CTFontCreateWithGraphicsFont() failed");
+    free (data);
+    return NULL;
+  }
+
   return data;
 }
 
@@ -693,7 +730,6 @@ resize_and_retry:
     scratch += old_scratch_used;
     scratch_size -= old_scratch_used;
   }
-retry:
   {
     string_ref = CFStringCreateWithCharactersNoCopy (NULL,
 						     pchars, chars_len,
@@ -848,11 +884,9 @@ retry:
 	 * However, even that wouldn't work if we were passed in the CGFont to
 	 * begin with.
 	 *
-	 * Webkit uses a slightly different approach: it installs LastResort
-	 * as fallback chain, and then checks PS name of used font against
-	 * LastResort.  That one is safe for any font except for LastResort,
-	 * as opposed to ours, which can fail if we are using any uninstalled
-	 * font that has the same name as an installed font.
+	 * We might switch to checking PS name against "LastResort".  That would
+	 * be safe for all fonts except for those named "Last Resort".  Might be
+	 * better than what we have right now.
 	 *
 	 * See: http://github.com/behdad/harfbuzz/pull/36
 	 */
@@ -1128,10 +1162,6 @@ fail:
 /*
  * AAT shaper
  */
-
-HB_SHAPER_DATA_ENSURE_DECLARE(coretext_aat, face)
-HB_SHAPER_DATA_ENSURE_DECLARE(coretext_aat, font)
-
 
 /*
  * shaper face data

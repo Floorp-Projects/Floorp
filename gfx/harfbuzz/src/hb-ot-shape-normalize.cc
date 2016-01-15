@@ -76,7 +76,7 @@ decompose_unicode (const hb_ot_shape_normalize_context_t *c,
 		   hb_codepoint_t *a,
 		   hb_codepoint_t *b)
 {
-  return c->unicode->decompose (ab, a, b);
+  return (bool) c->unicode->decompose (ab, a, b);
 }
 
 static bool
@@ -85,7 +85,7 @@ compose_unicode (const hb_ot_shape_normalize_context_t *c,
 		 hb_codepoint_t  b,
 		 hb_codepoint_t *ab)
 {
-  return c->unicode->compose (a, b, ab);
+  return (bool) c->unicode->compose (a, b, ab);
 }
 
 static inline void
@@ -127,7 +127,7 @@ decompose (const hb_ot_shape_normalize_context_t *c, bool shortest, hb_codepoint
       (b && !font->get_glyph (b, 0, &b_glyph)))
     return 0;
 
-  bool has_a = font->get_glyph (a, 0, &a_glyph);
+  bool has_a = (bool) font->get_glyph (a, 0, &a_glyph);
   if (shortest && has_a) {
     /* Output a and b */
     output_char (buffer, a, a_glyph);

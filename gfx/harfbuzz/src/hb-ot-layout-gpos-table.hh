@@ -742,7 +742,7 @@ struct PairPosFormat2
   inline void collect_glyphs (hb_collect_glyphs_context_t *c) const
   {
     TRACE_COLLECT_GLYPHS (this);
-    /* (this+coverage).add_coverage (c->input); // Don't need this. */
+    (this+coverage).add_coverage (c->input);
 
     unsigned int count1 = class1Count;
     const ClassDef &klass1 = this+classDef1;
