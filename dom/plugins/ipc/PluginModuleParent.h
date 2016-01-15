@@ -325,6 +325,7 @@ protected:
     TimeDuration mTimeBlocked;
     nsCString mPluginName;
     nsCString mPluginVersion;
+    int32_t mSandboxLevel;
     bool mIsFlashPlugin;
 
 #ifdef MOZ_X11
@@ -548,7 +549,6 @@ private:
     PluginHangUIParent *mHangUIParent;
     bool mHangUIEnabled;
     bool mIsTimerReset;
-    int32_t mSandboxLevel;
 #ifdef MOZ_CRASHREPORTER
     /**
      * This mutex protects the crash reporter when the Plugin Hang UI event
