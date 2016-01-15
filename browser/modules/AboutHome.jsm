@@ -126,7 +126,7 @@ var AboutHome = {
         break;
 
       case "AboutHome:Bookmarks":
-        window.PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
+        window.PlacesCommandHook.showPlacesOrganizer("UnfiledBookmarks");
         break;
 
       case "AboutHome:History":
