@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010,2012  Google, Inc.
+ * Copyright © 2015  Ebrahim Byagowi
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,43 +20,15 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-private.hh"
+#ifndef HB_DIRECTWRITE_H
+#define HB_DIRECTWRITE_H
 
+#include "hb.h"
 
-static const hb_tag_t tibetan_features[] =
-{
-  HB_TAG('a','b','v','s'),
-  HB_TAG('b','l','w','s'),
-  HB_TAG('a','b','v','m'),
-  HB_TAG('b','l','w','m'),
-  HB_TAG_NONE
-};
+HB_BEGIN_DECLS
 
-static void
-collect_features_tibetan (hb_ot_shape_planner_t *plan)
-{
-  for (const hb_tag_t *script_features = tibetan_features; script_features && *script_features; script_features++)
-    plan->map.add_global_bool_feature (*script_features);
-}
+HB_END_DECLS
 
-
-const hb_ot_complex_shaper_t _hb_ot_complex_shaper_tibetan =
-{
-  "default",
-  collect_features_tibetan,
-  NULL, /* override_features */
-  NULL, /* data_create */
-  NULL, /* data_destroy */
-  NULL, /* preprocess_text */
-  NULL, /* postprocess_glyphs */
-  HB_OT_SHAPE_NORMALIZATION_MODE_DEFAULT,
-  NULL, /* decompose */
-  NULL, /* compose */
-  NULL, /* setup_masks */
-  HB_OT_SHAPE_ZERO_WIDTH_MARKS_BY_UNICODE_LATE,
-  true, /* fallback_position */
-};
+#endif /* HB_UNISCRIBE_H */

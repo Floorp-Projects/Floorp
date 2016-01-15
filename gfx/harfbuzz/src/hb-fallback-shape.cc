@@ -106,7 +106,7 @@ _hb_fallback_shape (hb_shape_plan_t    *shape_plan HB_UNUSED,
    */
 
   hb_codepoint_t space;
-  bool has_space = font->get_glyph (' ', 0, &space);
+  bool has_space = (bool) font->get_glyph (' ', 0, &space);
 
   buffer->clear_positions ();
 

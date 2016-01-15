@@ -35,6 +35,7 @@
 #include "hb-ot-head-table.hh"
 #include "hb-ot-hhea-table.hh"
 #include "hb-ot-hmtx-table.hh"
+#include "hb-ot-os2-table.hh"
 
 
 struct hb_ot_face_metrics_accelerator_t
@@ -42,17 +43,45 @@ struct hb_ot_face_metrics_accelerator_t
   unsigned int num_metrics;
   unsigned int num_advances;
   unsigned int default_advance;
+  unsigned short ascender;
+  unsigned short descender;
+  unsigned short line_gap;
+
   const OT::_mtx *table;
   hb_blob_t *blob;
 
   inline void init (hb_face_t *face,
-		    hb_tag_t _hea_tag, hb_tag_t _mtx_tag)
+		    hb_tag_t _hea_tag,
+		    hb_tag_t _mtx_tag,
+		    hb_tag_t os2_tag)
   {
     this->default_advance = face->get_upem ();
+
+    bool got_font_extents = false;
+    if (os2_tag)
+    {
+      hb_blob_t *os2_blob = OT::Sanitizer<OT::os2>::sanitize (face->reference_table (os2_tag));
+      const OT::os2 *os2 = OT::Sanitizer<OT::os2>::lock_instance (os2_blob);
+#define USE_TYPO_METRICS (1u<<7)
+      if (0 != (os2->fsSelection & USE_TYPO_METRICS))
+      {
+	this->ascender = os2->sTypoAscender;
+	this->descender = os2->sTypoDescender;
+	this->line_gap = os2->sTypoLineGap;
+	got_font_extents = (this->ascender | this->descender) != 0;
+      }
+      hb_blob_destroy (os2_blob);
+    }
 
     hb_blob_t *_hea_blob = OT::Sanitizer<OT::_hea>::sanitize (face->reference_table (_hea_tag));
     const OT::_hea *_hea = OT::Sanitizer<OT::_hea>::lock_instance (_hea_blob);
     this->num_advances = _hea->numberOfLongMetrics;
+    if (!got_font_extents)
+    {
+      this->ascender = _hea->ascender;
+      this->descender = _hea->descender;
+      this->line_gap = _hea->lineGap;
+    }
     hb_blob_destroy (_hea_blob);
 
     this->blob = OT::Sanitizer<OT::_mtx>::sanitize (face->reference_table (_mtx_tag));
@@ -252,8 +281,8 @@ _hb_ot_font_create (hb_face_t *face)
     return NULL;
 
   ot_font->cmap.init (face);
-  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx);
-  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx); /* TODO Can we do this lazily? */
+  ot_font->h_metrics.init (face, HB_OT_TAG_hhea, HB_OT_TAG_hmtx, HB_OT_TAG_os2);
+  ot_font->v_metrics.init (face, HB_OT_TAG_vhea, HB_OT_TAG_vmtx, HB_TAG_NONE); /* TODO Can we do this lazily? */
   ot_font->glyf.init (face);
 
   return ot_font;
@@ -320,6 +349,31 @@ hb_ot_get_glyph_extents (hb_font_t *font HB_UNUSED,
   return ret;
 }
 
+static hb_bool_t
+hb_ot_get_font_h_extents (hb_font_t *font HB_UNUSED,
+			  void *font_data,
+			  hb_font_extents_t *metrics,
+			  void *user_data HB_UNUSED)
+{
+  const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
+  metrics->ascender = font->em_scale_y (ot_font->h_metrics.ascender);
+  metrics->descender = font->em_scale_y (ot_font->h_metrics.descender);
+  metrics->line_gap = font->em_scale_y (ot_font->h_metrics.line_gap);
+  return true;
+}
+
+static hb_bool_t
+hb_ot_get_font_v_extents (hb_font_t *font HB_UNUSED,
+			  void *font_data,
+			  hb_font_extents_t *metrics,
+			  void *user_data HB_UNUSED)
+{
+  const hb_ot_font_t *ot_font = (const hb_ot_font_t *) font_data;
+  metrics->ascender = font->em_scale_x (ot_font->v_metrics.ascender);
+  metrics->descender = font->em_scale_x (ot_font->v_metrics.descender);
+  metrics->line_gap = font->em_scale_x (ot_font->v_metrics.line_gap);
+  return true;
+}
 
 static hb_font_funcs_t *static_ot_funcs = NULL;
 
@@ -341,6 +395,8 @@ retry:
   {
     funcs = hb_font_funcs_create ();
 
+    hb_font_funcs_set_font_h_extents_func (funcs, hb_ot_get_font_h_extents, NULL, NULL);
+    hb_font_funcs_set_font_v_extents_func (funcs, hb_ot_get_font_v_extents, NULL, NULL);
     hb_font_funcs_set_glyph_func (funcs, hb_ot_get_glyph, NULL, NULL);
     hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ot_get_glyph_h_advance, NULL, NULL);
     hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ot_get_glyph_v_advance, NULL, NULL);
@@ -370,6 +426,8 @@ retry:
 
 
 /**
+ * hb_ot_font_set_funcs:
+ *
  * Since: 0.9.28
  **/
 void
