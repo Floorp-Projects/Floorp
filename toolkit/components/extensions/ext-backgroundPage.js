@@ -57,8 +57,6 @@ BackgroundPage.prototype = {
     this.context = new ExtensionPage(this.extension, {type: "background", docShell, uri});
     GlobalManager.injectInDocShell(docShell, this.extension, this.context);
 
-    docShell.createAboutBlankContentViewer(principal);
-
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     this.webNav = webNav;
 
