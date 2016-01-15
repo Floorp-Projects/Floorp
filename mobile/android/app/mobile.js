@@ -574,6 +574,7 @@ pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 // APZ prefs that are different from B2G
 pref("apz.allow_immediate_handoff", false);
+pref("apz.touch_start_tolerance", "0.06");
 // APZ physics settings, copied from B2G
 pref("apz.axis_lock.mode", 2); // Use "sticky" axis locking
 // APZ physics settings reviewed by UX
