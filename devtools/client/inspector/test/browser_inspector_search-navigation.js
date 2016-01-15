@@ -54,7 +54,7 @@ const KEY_STATES = [
   ["VK_BACK_SPACE", ""],
 ];
 
-const TEST_URL = TEST_URL_ROOT +
+const TEST_URL = URL_ROOT +
   "doc_inspector_search-suggestions.html";
 
 add_task(function* () {
