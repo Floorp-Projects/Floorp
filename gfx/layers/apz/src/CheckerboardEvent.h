@@ -60,7 +60,8 @@ public:
    * checkerboard events.
    */
   void UpdateRendertraceProperty(RendertraceProperty aProperty,
-                                 const CSSRect& aRect);
+                                 const CSSRect& aRect,
+                                 const std::string& aExtraInfo = std::string());
 
   /**
    * Provide the number of CSS pixels that are checkerboarded in a composite
@@ -87,6 +88,7 @@ private:
   void LogInfo(RendertraceProperty aProperty,
                const TimeStamp& aTimestamp,
                const CSSRect& aRect,
+               const std::string& aExtraInfo,
                const MonitorAutoLock& aProofOfLock);
 
   /**
@@ -97,6 +99,7 @@ private:
     RendertraceProperty mProperty;
     TimeStamp mTimeStamp;
     CSSRect mRect;
+    std::string mExtraInfo;
 
     bool operator<(const PropertyValue& aOther) const;
   };
@@ -113,6 +116,7 @@ private:
      * Add a new value to the buffer, overwriting the oldest one if needed.
      */
     void Update(RendertraceProperty aProperty, const CSSRect& aRect,
+                const std::string& aExtraInfo,
                 const MonitorAutoLock& aProofOfLock);
     /**
      * Dump the recorded values, oldest to newest, to the given vector, and

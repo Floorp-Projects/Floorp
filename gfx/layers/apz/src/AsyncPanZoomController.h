@@ -595,7 +595,8 @@ protected:
   /**
    * Actually send the next pending paint request to gecko.
    */
-  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics);
+  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics,
+                              const ParentLayerPoint& aVelocity);
 
   /**
    * Gets the current frame metrics. This is *not* the Gecko copy stored in the

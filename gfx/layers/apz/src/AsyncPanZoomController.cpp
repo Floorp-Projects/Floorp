@@ -2808,8 +2808,10 @@ void AsyncPanZoomController::RequestContentRepaint() {
   RequestContentRepaint(mFrameMetrics);
 }
 
-void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) {
-  aFrameMetrics.SetDisplayPortMargins(CalculatePendingDisplayPort(aFrameMetrics, GetVelocityVector()));
+void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
+{
+  ParentLayerPoint velocity = GetVelocityVector();
+  aFrameMetrics.SetDisplayPortMargins(CalculatePendingDisplayPort(aFrameMetrics, velocity));
   aFrameMetrics.SetUseDisplayPortMargins(true);
 
   // If we're trying to paint what we already think is painted, discard this
@@ -2833,7 +2835,7 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics) 
     return;
   }
 
-  DispatchRepaintRequest(aFrameMetrics);
+  DispatchRepaintRequest(aFrameMetrics, velocity);
   aFrameMetrics.SetPresShellId(mLastContentPaintMetrics.GetPresShellId());
 }
 
@@ -2849,7 +2851,9 @@ GetDisplayPortRect(const FrameMetrics& aFrameMetrics)
 }
 
 void
-AsyncPanZoomController::DispatchRepaintRequest(const FrameMetrics& aFrameMetrics) {
+AsyncPanZoomController::DispatchRepaintRequest(const FrameMetrics& aFrameMetrics,
+                                               const ParentLayerPoint& aVelocity)
+{
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (!controller) {
     return;
@@ -2857,8 +2861,12 @@ AsyncPanZoomController::DispatchRepaintRequest(const FrameMetrics& aFrameMetrics
 
   APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
   if (mCheckerboardEvent) {
+    std::stringstream info;
+    info << " velocity " << aVelocity;
+    std::string str = info.str();
     mCheckerboardEvent->UpdateRendertraceProperty(
-        CheckerboardEvent::RequestedDisplayPort, GetDisplayPortRect(aFrameMetrics));
+        CheckerboardEvent::RequestedDisplayPort, GetDisplayPortRect(aFrameMetrics),
+        str);
   }
 
   if (NS_IsMainThread()) {
