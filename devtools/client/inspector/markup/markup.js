@@ -841,14 +841,13 @@ MarkupView.prototype = {
         // we're not viewing.
         continue;
       }
-      if (type === "attributes" || type === "characterData") {
+      if (type === "attributes" || type === "characterData"
+        || type === "events" || type === "pseudoClassLock") {
         container.update();
       } else if (type === "childList" || type === "nativeAnonymousChildList") {
         container.childrenDirty = true;
         // Update the children to take care of changes in the markup view DOM.
         this._updateChildren(container, {flash: true});
-      } else if (type === "pseudoClassLock") {
-        container.update();
       }
     }
 
@@ -2547,7 +2546,6 @@ function ElementEditor(aContainer, aNode) {
   let tagName = this.node.nodeName.toLowerCase();
   this.tag.textContent = tagName;
   this.closeTag.textContent = tagName;
-  this.eventNode.style.display = this.node.hasEventListeners ? "inline-block" : "none";
 
   this.update();
   this.initialized = true;
@@ -2642,6 +2640,10 @@ ElementEditor.prototype = {
         }
       }
     }
+
+    // Update the event bubble display
+    this.eventNode.style.display = this.node.hasEventListeners ?
+      "inline-block" : "none";
 
     this.updateTextEditor();
   },

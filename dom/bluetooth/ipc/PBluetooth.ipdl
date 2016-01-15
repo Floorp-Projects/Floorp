@@ -14,6 +14,8 @@ include "mozilla/dom/bluetooth/ipc/BluetoothMessageUtils.h";
 
 using mozilla::dom::bluetooth::BluetoothAddress
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothGattAdvertisingData
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothObjectType
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothPinCode
@@ -68,6 +70,17 @@ struct StartLeScanRequest
 struct StopLeScanRequest
 {
   BluetoothUuid scanUuid;
+};
+
+struct StartAdvertisingRequest
+{
+  BluetoothUuid appUuid;
+  BluetoothGattAdvertisingData data;
+};
+
+struct StopAdvertisingRequest
+{
+  BluetoothUuid appUuid;
 };
 
 struct PairRequest
@@ -348,6 +361,11 @@ struct GattClientWriteDescriptorValueRequest
   uint8_t[] value;
 };
 
+struct GattServerRegisterRequest
+{
+  BluetoothUuid appUuid;
+};
+
 struct GattServerConnectPeripheralRequest
 {
   BluetoothUuid appUuid;
@@ -444,6 +462,8 @@ union Request
   StopDiscoveryRequest;
   StartLeScanRequest;
   StopLeScanRequest;
+  StartAdvertisingRequest;
+  StopAdvertisingRequest;
   PairRequest;
   UnpairRequest;
   PinReplyRequest;
@@ -491,6 +511,7 @@ union Request
   GattClientWriteCharacteristicValueRequest;
   GattClientReadDescriptorValueRequest;
   GattClientWriteDescriptorValueRequest;
+  GattServerRegisterRequest;
   GattServerConnectPeripheralRequest;
   GattServerDisconnectPeripheralRequest;
   UnregisterGattServerRequest;

@@ -1307,6 +1307,62 @@ enum BluetoothGapDataType {
   GAP_COMPLETE_NAME      = 0X09, // Complete Local Name
 };
 
+struct BluetoothGattAdvertisingData {
+  /**
+   * Uuid value of Appearance characteristic of the GAP service which can be
+   * mapped to an icon or string that describes the physical representation of
+   * the device during the device discovery procedure.
+   */
+  uint16_t mAppearance;
+
+  /**
+   * Whether to broadcast with device name or not.
+   */
+  bool mIncludeDevName;
+
+  /**
+   * Whether to broadcast with TX power or not.
+   */
+  bool mIncludeTxPower;
+
+  /**
+   * Byte array of custom manufacturer specific data.
+   *
+   * The first 2 octets contain the Company Identifier Code followed by
+   * additional manufacturer specific data. See Core Specification Supplement
+   * (CSS) v6 1.4 for more details.
+   */
+  nsTArray<uint8_t> mManufacturerData;
+
+  /**
+   * Consists of a service UUID with the data associated with that service.
+   * Please see Core Specification Supplement (CSS) v6 1.11 for more details.
+   */
+  nsTArray<uint8_t> mServiceData;
+
+  /**
+   * A list of Service or Service Class UUIDs.
+   * Please see Core Specification Supplement (CSS) v6 1.1 for more details.
+   */
+  nsTArray<BluetoothUuid> mServiceUuids;
+
+  BluetoothGattAdvertisingData()
+    : mAppearance(0)
+    , mIncludeDevName(false)
+    , mIncludeTxPower(false)
+  { }
+
+  bool operator==(const BluetoothGattAdvertisingData& aOther) const
+  {
+    return mIncludeDevName == aOther.mIncludeDevName &&
+           mIncludeTxPower == aOther.mIncludeTxPower &&
+           mAppearance == aOther.mAppearance &&
+           mManufacturerData == aOther.mManufacturerData &&
+           mServiceData == aOther.mServiceData &&
+           mServiceUuids == aOther.mServiceUuids;
+  }
+};
+
 END_BLUETOOTH_NAMESPACE
 
 #endif // mozilla_dom_bluetooth_BluetoothCommon_h

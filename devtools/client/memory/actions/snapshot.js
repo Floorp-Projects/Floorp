@@ -407,6 +407,32 @@ const selectSnapshot = exports.selectSnapshot = function (id) {
 };
 
 /**
+ * Delete all snapshots that are in the SAVED_CENSUS or ERROR state
+ *
+ * @param {HeapAnalysesClient} heapWorker
+ */
+const clearSnapshots = exports.clearSnapshots = function (heapWorker) {
+  return function*(dispatch, getState) {
+    let snapshots = getState().snapshots.filter(
+      s => s.state === states.SAVED_CENSUS || s.state === states.ERROR);
+
+    let ids = snapshots.map(s => s.id);
+
+    dispatch({ type: actions.DELETE_SNAPSHOTS_START, ids });
+
+    Promise.all(snapshots.map(s => {
+      heapWorker.deleteHeapSnapshot(s.path)
+      .catch(error => {
+        reportException("clearSnapshots", error);
+        dispatch({ type: actions.SNAPSHOT_ERROR, id: s.id, error });
+      });
+    }));
+
+    dispatch({ type: actions.DELETE_SNAPSHOTS_END, ids });
+  };
+};
+
+/**
  * Expand the given node in the snapshot's census report.
  *
  * @param {CensusTreeNode} node
