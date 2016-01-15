@@ -22,7 +22,7 @@
     B2G repositories for all targets
     -->
   <project name="gaia" path="gaia" remote="mozillaorg" revision="be3b4cd7c8c4d38c3fa7ebc845bdb408b7bfcdbb"/>
-  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
+  <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="b2faf0026571bb3cf9b8b3cb5a252911af951db6"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- B2G specific things. -->
@@ -132,7 +132,7 @@
   <project name="platform/system/media" path="system/media" revision="c1332c21c608f4932a6d7e83450411cde53315ef"/>
   <default remote="caf" revision="LNX.LA.3.5.2.1.1" sync-j="4"/>
   <!-- Platform common things -->
-  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="03f7deda712e213aabf79eb657bd902497e3b201"/>
+  <project name="device-shinano-common" path="device/sony/shinano-common" remote="b2g" revision="68157e0302df53490e7d721eb4e8b0c7c7e49fdf"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="1bb28abbc215f45220620af5cd60a8ac1be93722"/>
   <project name="device/qcom/common" path="device/qcom/common" revision="2501e5940ba69ece7654ff85611c76ae5bda299c"/>
   <project name="codeaurora_kernel_msm" path="kernel" remote="b2g" revision="da1273d39b3b940b3b2a5bc5fdb81c521d74caa3"/>
