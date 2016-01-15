@@ -169,12 +169,10 @@ toolkit/content/contentAreaUtils.js
 toolkit/content/widgets/videocontrols.xml
 toolkit/components/jsdownloads/src/DownloadIntegration.jsm
 toolkit/components/search/nsSearchService.js
-toolkit/components/telemetry/healthreport-prefs.js
 toolkit/components/url-classifier/**
 toolkit/components/urlformatter/nsURLFormatter.js
 toolkit/identity/FirefoxAccounts.jsm
 toolkit/modules/AppConstants.jsm
-toolkit/modules/SessionRecorder.jsm
 toolkit/mozapps/downloads/nsHelperAppDlg.js
 toolkit/mozapps/extensions/internal/AddonConstants.jsm
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
