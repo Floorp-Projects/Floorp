@@ -12,9 +12,8 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
 {
   // XXX this could be made faster by iterating over
   // both regions at the same time some how
-  nsRegionRectIterator iter(aRgn);
-  while (const nsRect* r = iter.Next()) {
-    if (!Contains (*r)) {
+  for (auto iter = aRgn.RectIter(); !iter.Done(); iter.Next()) {
+    if (!Contains(iter.Get())) {
       return false;
     }
   }
@@ -24,9 +23,8 @@ bool nsRegion::Contains(const nsRegion& aRgn) const
 bool nsRegion::Intersects(const nsRect& aRect) const
 {
   // XXX this could be made faster by using pixman_region32_contains_rect
-  nsRegionRectIterator iter(*this);
-  while (const nsRect* r = iter.Next()) {
-    if (r->Intersects(aRect)) {
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    if (iter.Get().Intersects(aRect)) {
       return true;
     }
   }
@@ -555,10 +553,9 @@ void nsRegion::SimplifyInward (uint32_t aMaxRects)
 uint64_t nsRegion::Area () const
 {
   uint64_t area = 0;
-  nsRegionRectIterator iter(*this);
-  const nsRect* r;
-  while ((r = iter.Next()) != nullptr) {
-    area += uint64_t(r->width)*r->height;
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& rect = iter.Get();
+    area += uint64_t(rect.width) * rect.height;
   }
   return area;
 }
@@ -730,11 +727,9 @@ nsIntRegion nsRegion::ScaleToNearestPixels (float aScaleX, float aScaleY,
                                             nscoord aAppUnitsPerPixel) const
 {
   nsIntRegion result;
-  nsRegionRectIterator rgnIter(*this);
-  const nsRect* currentRect;
-  while ((currentRect = rgnIter.Next())) {
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     mozilla::gfx::IntRect deviceRect =
-      currentRect->ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+      iter.Get().ScaleToNearestPixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
   return result;
@@ -744,11 +739,9 @@ nsIntRegion nsRegion::ScaleToOutsidePixels (float aScaleX, float aScaleY,
                                             nscoord aAppUnitsPerPixel) const
 {
   nsIntRegion result;
-  nsRegionRectIterator rgnIter(*this);
-  const nsRect* currentRect;
-  while ((currentRect = rgnIter.Next())) {
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
     mozilla::gfx::IntRect deviceRect =
-      currentRect->ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
+      iter.Get().ScaleToOutsidePixels(aScaleX, aScaleY, aAppUnitsPerPixel);
     result.Or(result, deviceRect);
   }
   return result;
@@ -1027,13 +1020,12 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
   AxisPartition xaxis, yaxis;
 
   // Step 1: Calculate the grid lines
-  nsRegionRectIterator iter(*this);
-  const nsRect *currentRect;
-  while ((currentRect = iter.Next())) {
-    xaxis.InsertCoord(currentRect->x);
-    xaxis.InsertCoord(currentRect->XMost());
-    yaxis.InsertCoord(currentRect->y);
-    yaxis.InsertCoord(currentRect->YMost());
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& rect = iter.Get();
+    xaxis.InsertCoord(rect.x);
+    xaxis.InsertCoord(rect.XMost());
+    yaxis.InsertCoord(rect.y);
+    yaxis.InsertCoord(rect.YMost());
   }
   if (!aContainingRect.IsEmpty()) {
     xaxis.InsertCoord(aContainingRect.x);
@@ -1051,19 +1043,19 @@ nsRect nsRegion::GetLargestRectangle (const nsRect& aContainingRect) const {
   nsTArray<SizePair> areas(matrixSize);
   areas.SetLength(matrixSize);
 
-  iter.Reset();
-  while ((currentRect = iter.Next())) {
-    int32_t xstart = xaxis.IndexOf(currentRect->x);
-    int32_t xend = xaxis.IndexOf(currentRect->XMost());
-    int32_t y = yaxis.IndexOf(currentRect->y);
-    int32_t yend = yaxis.IndexOf(currentRect->YMost());
+  for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& rect = iter.Get();
+    int32_t xstart = xaxis.IndexOf(rect.x);
+    int32_t xend = xaxis.IndexOf(rect.XMost());
+    int32_t y = yaxis.IndexOf(rect.y);
+    int32_t yend = yaxis.IndexOf(rect.YMost());
 
     for (; y < yend; y++) {
       nscoord height = yaxis.StopSize(y);
       for (int32_t x = xstart; x < xend; x++) {
         nscoord width = xaxis.StopSize(x);
         int64_t size = width*int64_t(height);
-        if (currentRect->Intersects(aContainingRect)) {
+        if (rect.Intersects(aContainingRect)) {
           areas[y*matrixWidth+x].mSizeContainingRect = size;
         }
         areas[y*matrixWidth+x].mSize = size;
