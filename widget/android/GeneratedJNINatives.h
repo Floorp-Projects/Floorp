@@ -269,6 +269,33 @@ template<class Impl>
 constexpr JNINativeMethod GLController::Natives<Impl>::methods[];
 
 template<class Impl>
+class NativePanZoomController::Natives : public mozilla::jni::NativeImpl<NativePanZoomController, Impl>
+{
+public:
+    static constexpr JNINativeMethod methods[] = {
+
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::DisposeNative_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::DisposeNative_t, Impl>
+                ::template Wrap<&Impl::DisposeNative>),
+
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::HandleMotionEvent_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::HandleMotionEvent_t, Impl>
+                ::template Wrap<&Impl::HandleMotionEvent>),
+
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::AbortAnimation_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::AbortAnimation_t, Impl>
+                ::template Wrap<&Impl::AbortAnimation>),
+
+        mozilla::jni::MakeNativeMethod<NativePanZoomController::SetIsLongpressEnabled_t>(
+                mozilla::jni::NativeStub<NativePanZoomController::SetIsLongpressEnabled_t, Impl>
+                ::template Wrap<&Impl::SetIsLongpressEnabled>)
+    };
+};
+
+template<class Impl>
+constexpr JNINativeMethod NativePanZoomController::Natives<Impl>::methods[];
+
+template<class Impl>
 class NativeJSContainer::Natives : public mozilla::jni::NativeImpl<NativeJSContainer, Impl>
 {
 public:

@@ -3948,6 +3948,95 @@ protected:
     NativePanZoomController(jobject instance) : Class(instance) {}
 
 public:
+    struct Destroy_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "destroy";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = true;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    auto Destroy() const -> void;
+
+public:
+    struct DisposeNative_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "disposeNative";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct HandleMotionEvent_t {
+        typedef NativePanZoomController Owner;
+        typedef bool ReturnType;
+        typedef bool SetterType;
+        typedef mozilla::jni::Args<
+                int32_t,
+                int32_t,
+                int64_t,
+                int32_t,
+                mozilla::jni::IntArray::Param,
+                mozilla::jni::FloatArray::Param,
+                mozilla::jni::FloatArray::Param,
+                mozilla::jni::FloatArray::Param,
+                mozilla::jni::FloatArray::Param,
+                mozilla::jni::FloatArray::Param,
+                mozilla::jni::FloatArray::Param> Args;
+        static constexpr char name[] = "handleMotionEvent";
+        static constexpr char signature[] =
+                "(IIJI[I[F[F[F[F[F[F)Z";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct AbortAnimation_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "nativeAbortAnimation";
+        static constexpr char signature[] =
+                "()V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
+    struct SetIsLongpressEnabled_t {
+        typedef NativePanZoomController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                bool> Args;
+        static constexpr char name[] = "nativeSetIsLongpressEnabled";
+        static constexpr char signature[] =
+                "(Z)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct RequestContentRepaintWrapper_t {
         typedef NativePanZoomController Owner;
         typedef void ReturnType;
@@ -3969,6 +4058,8 @@ public:
 
     auto RequestContentRepaintWrapper(float, float, float, float, float) const -> void;
 
+public:
+    template<class Impl> class Natives;
 };
 
 class ProgressiveUpdateData : public mozilla::jni::Class<ProgressiveUpdateData>
