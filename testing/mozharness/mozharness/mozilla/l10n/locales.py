@@ -31,19 +31,6 @@ class LocalesMixin(ChunkingMixin):
         self.gecko_locale_revisions = None
         self.l10n_revisions = {}
 
-    def _get_mach_executable(self):
-        python = self.query_exe('python2.7')
-        return [python, 'mach']
-
-    def _mach(self, target, env, halt_on_failure=True, output_parser=None):
-        dirs = self.query_abs_dirs()
-        mach = self._get_mach_executable()
-        return self.run_command(mach + target,
-                                halt_on_failure=True,
-                                env=env,
-                                cwd=dirs['abs_mozilla_dir'],
-                                output_parser=None)
-
     def query_locales(self):
         if self.locales is not None:
             return self.locales
