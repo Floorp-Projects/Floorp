@@ -132,17 +132,6 @@ private:
    void operator=(const nsNSSCertListEnumerator&) = delete;
 };
 
-
-#define NS_NSS_LONG 4
-#define NS_NSS_GET_LONG(x) ((((unsigned long)((x)[0])) << 24) | \
-                            (((unsigned long)((x)[1])) << 16) | \
-                            (((unsigned long)((x)[2])) <<  8) | \
-                             ((unsigned long)((x)[3])) )
-#define NS_NSS_PUT_LONG(src,dest) (dest)[0] = (((src) >> 24) & 0xff); \
-                                  (dest)[1] = (((src) >> 16) & 0xff); \
-                                  (dest)[2] = (((src) >>  8) & 0xff); \
-                                  (dest)[3] = ((src) & 0xff);
-
 #define NS_X509CERT_CID { /* 660a3226-915c-4ffb-bb20-8985a632df05 */   \
     0x660a3226,                                                        \
     0x915c,                                                            \
