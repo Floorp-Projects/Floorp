@@ -410,15 +410,20 @@ AnimationsTimeline.prototype = {
 
   drawHeaderAndBackground: function() {
     let width = this.timeHeaderEl.offsetWidth;
-    let scale = width / (TimeScale.maxEndTime - TimeScale.minStartTime);
+    let animationDuration = TimeScale.maxEndTime - TimeScale.minStartTime;
+    let minTimeInterval = TIME_GRADUATION_MIN_SPACING * animationDuration / width;
+    let intervalLength = findOptimalTimeInterval(minTimeInterval);
+    let intervalWidth = intervalLength * width / animationDuration;
+
     drawGraphElementBackground(this.win.document, "time-graduations",
-                               width, scale);
+                               width, intervalWidth);
 
     // And the time graduation header.
     this.timeHeaderEl.innerHTML = "";
-    let interval = findOptimalTimeInterval(scale, TIME_GRADUATION_MIN_SPACING);
-    for (let i = 0; i < width; i += interval) {
-      let pos = 100 * i / width;
+
+    for (let i = 0; i <= width / intervalWidth; i++) {
+      let pos = 100 * i * intervalWidth / width;
+
       createNode({
         parent: this.timeHeaderEl,
         nodeType: "span",
