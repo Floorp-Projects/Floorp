@@ -145,7 +145,11 @@ public:
 
     // For backwards compat we need to use the NSPR format string versions
     // of sprintf and friends and then hand off to printf.
-    size_t charsWritten = PR_vsnprintf(buff, kBuffSize, aFmt, aArgs);
+    va_list argsCopy;
+    va_copy(argsCopy, aArgs);
+    size_t charsWritten = PR_vsnprintf(buff, kBuffSize, aFmt, argsCopy);
+    va_end(argsCopy);
+
     if (charsWritten == kBuffSize - 1) {
       // We may have maxed out, allocate a buffer instead.
       buffToWrite = PR_vsmprintf(aFmt, aArgs);
