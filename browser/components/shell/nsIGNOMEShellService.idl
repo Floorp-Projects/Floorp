@@ -1,0 +1,19 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIShellService.idl"
+
+[scriptable, uuid(2ce5c803-edcd-443d-98eb-ceba86d02d13)]
+interface nsIGNOMEShellService : nsIShellService
+{
+  /**
+   * Used to determine whether or not to offer "Set as desktop background"
+   * functionality. Even if shell service is available it is not
+   * guaranteed that it is able to set the background for every desktop
+   * which is especially true for Linux with its many different desktop
+   * environments.
+   */
+  readonly attribute boolean canSetDesktopBackground;
+};
+
