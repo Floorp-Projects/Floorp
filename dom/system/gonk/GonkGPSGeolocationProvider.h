@@ -64,6 +64,7 @@ private:
   static void ReleaseWakelockCallback();
   static pthread_t CreateThreadCallback(const char* name, void (*start)(void*), void* arg);
   static void RequestUtcTimeCallback();
+  static void GPSNiNotifyCallback(GpsNiNotification *notification);
 #ifdef MOZ_B2G_RIL
   static void AGPSStatusCallback(AGpsStatus* status);
   static void AGPSRILSetIDCallback(uint32_t flags);
@@ -71,6 +72,7 @@ private:
 #endif
 
   static GpsCallbacks mCallbacks;
+  static GpsNiCallbacks mGPSNiCallbacks;
 #ifdef MOZ_B2G_RIL
   static AGpsCallbacks mAGPSCallbacks;
   static AGpsRilCallbacks mAGPSRILCallbacks;
@@ -81,6 +83,8 @@ private:
   void ShutdownGPS();
   void InjectLocation(double latitude, double longitude, float accuracy);
   void RequestSettingValue(const char* aKey);
+  void SetNiResponse(int id, int response);
+  bool SendChromeEvent(int id, GpsNiNotifyFlags flags);
 #ifdef MOZ_B2G_RIL
   void UpdateRadioInterface();
   bool IsValidRilServiceId(uint32_t aServiceId);
@@ -115,6 +119,7 @@ private:
   bool mSupportsTimeInjection;
 
   const GpsInterface* mGpsInterface;
+  const GpsNiInterface* mGpsNiInterface;
 #ifdef MOZ_B2G_RIL
   const AGpsInterface* mAGpsInterface;
   const AGpsRilInterface* mAGpsRilInterface;
