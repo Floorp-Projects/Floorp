@@ -29,7 +29,6 @@
 #include "nsIContent.h"
 #include "nsRuleData.h"
 #include "nsRuleProcessorData.h"
-#include "nsTransitionManager.h"
 #include "nsAnimationManager.h"
 #include "nsStyleSheetService.h"
 #include "mozilla/dom/Element.h"
@@ -451,11 +450,13 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
     // levels that do not contain CSS style sheets
     case SheetType::Animation:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
-      mRuleProcessors[aType] = PresContext()->AnimationManager();
+      mRuleProcessors[aType] = PresContext()->EffectCompositor()->
+        RuleProcessor(EffectCompositor::CascadeLevel::Animations);
       return NS_OK;
     case SheetType::Transition:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
-      mRuleProcessors[aType] = PresContext()->TransitionManager();
+      mRuleProcessors[aType] = PresContext()->EffectCompositor()->
+        RuleProcessor(EffectCompositor::CascadeLevel::Transitions);
       return NS_OK;
     case SheetType::StyleAttr:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
