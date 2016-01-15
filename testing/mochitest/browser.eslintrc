@@ -26,7 +26,6 @@
     "is": false,
     "isnot": false,
     "ok": false,
-    "promise": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,
     "SimpleTest": false,
