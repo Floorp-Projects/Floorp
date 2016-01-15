@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 
 /**
  * Transition events are defined in:
@@ -11,8 +11,8 @@
  * http://dev.w3.org/csswg/css3-transitions/#transition-events-
  */
 
-[builtinclass, uuid(acb69403-0dcb-4db0-9ffc-8a22cc56c4eb)]
-interface nsIDOMTransitionEvent : nsIDOMEvent {
+[builtinclass, uuid(ee3499bf-0f14-4bb6-829c-19ad24fd4a85)]
+interface nsIDOMTransitionEvent : nsISupports {
   readonly attribute DOMString           propertyName;
   readonly attribute float               elapsedTime;
   readonly attribute DOMString           pseudoElement;

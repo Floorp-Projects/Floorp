@@ -381,7 +381,9 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
     aLayer->AddAnimationForNextTransaction() :
     aLayer->AddAnimation();
 
-  const AnimationTiming& timing = aAnimation->GetEffect()->Timing();
+  const TimingParams& timing = aAnimation->GetEffect()->SpecifiedTiming();
+  const ComputedTiming computedTiming =
+    aAnimation->GetEffect()->GetComputedTiming();
   Nullable<TimeDuration> startTime = aAnimation->GetCurrentOrPendingStartTime();
   animation->startTime() = startTime.IsNull()
                            ? TimeStamp()
@@ -389,8 +391,8 @@ AddAnimationForProperty(nsIFrame* aFrame, const AnimationProperty& aProperty,
                               StickyTimeDuration(timing.mDelay));
   animation->initialCurrentTime() = aAnimation->GetCurrentTime().Value()
                                     - timing.mDelay;
-  animation->duration() = timing.mIterationDuration;
-  animation->iterationCount() = timing.mIterationCount;
+  animation->duration() = computedTiming.mDuration;
+  animation->iterations() = computedTiming.mIterations;
   animation->direction() = static_cast<uint32_t>(timing.mDirection);
   animation->property() = aProperty.mProperty;
   animation->playbackRate() = aAnimation->PlaybackRate();

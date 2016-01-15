@@ -17,6 +17,7 @@
 #include <media/IOMX.h>
 #include <utils/List.h>
 #include <media/stagefright/OMXCodec.h>
+#include <cutils/properties.h>
 
 extern mozilla::LogModule* GetPDMLog();
 
@@ -41,6 +42,13 @@ extern void GetPortIndex(nsTArray<uint32_t>& aPortIndex);
 bool IsSoftwareCodec(const char* aComponentName) {
   nsAutoCString str(aComponentName);
   return (str.Find(NS_LITERAL_CSTRING("OMX.google.")) == -1 ? false : true);
+}
+
+bool IsInEmulator()
+{
+  char propQemu[PROPERTY_VALUE_MAX];
+  property_get("ro.kernel.qemu", propQemu, "");
+  return !strncmp(propQemu, "1", 1);
 }
 
 class GonkOmxObserver : public BnOMXObserver {
@@ -289,7 +297,10 @@ GonkBufferData::GetPlatformMediaData()
     return nullptr;
   }
 
-  MOZ_RELEASE_ASSERT(mTextureClientRecycleHandler);
+  if (!mTextureClientRecycleHandler) {
+    // There is no GraphicBuffer, it should fallback to normal YUV420 VideoData.
+    return nullptr;
+  }
 
   VideoInfo info;
   info.mDisplay = mGonkPlatformLayer->GetTrackInfo()->GetAsVideoInfo()->mDisplay;
@@ -520,35 +531,39 @@ GonkOmxPlatformLayer::InitOmxToStateLoaded(const TrackInfo* aInfo)
     return OMX_ErrorUndefined;
   }
 
+  bool useHardwareCodecOnly = false;
+
+  // H264 and H263 has different profiles, software codec doesn't support high profile.
+  // So we use hardware codec only.
+  if (!IsInEmulator() &&
+      (mInfo->mMimeType.EqualsLiteral("video/avc") ||
+       mInfo->mMimeType.EqualsLiteral("video/mp4") ||
+       mInfo->mMimeType.EqualsLiteral("video/mp4v-es") ||
+       mInfo->mMimeType.EqualsLiteral("video/3gp"))) {
+    useHardwareCodecOnly = true;
+  }
+
+  LOG("find componenet for mime type %s", mInfo->mMimeType.Data());
   // In Gonk, the software component name has prefix "OMX.google". It needs to
   // have a way to use hardware codec first.
   android::Vector<OMXCodec::CodecNameAndQuirks> matchingCodecs;
-  const char* swcomponent = nullptr;
+  nsTArray<const char*> components;
   OMXCodec::findMatchingCodecs(mInfo->mMimeType.Data(),
                                0,
                                nullptr,
                                0,
                                &matchingCodecs);
   for (uint32_t i = 0; i < matchingCodecs.size(); i++) {
-    const char* componentName = matchingCodecs.itemAt(i).mName.string();
-    if (IsSoftwareCodec(componentName)) {
-      swcomponent = componentName;
-    } else {
-      // Try to use hardware codec first.
-      if (LoadComponent(componentName)) {
-        mUsingHardwareCodec = true;
-        return OMX_ErrorNone;
-      }
-      LOG("failed to load component %s", componentName);
-    }
+    components.AppendElement(matchingCodecs.itemAt(i).mName.string());
   }
 
-  // TODO: in android ICS, the software codec is allocated in mediaserver by
-  //       default, it may be necessary to allocate it in local process.
-  //
-  // fallback to sw codec
-  if (swcomponent && LoadComponent(swcomponent)) {
-    return OMX_ErrorNone;
+  for (auto name : components) {
+    if (IsSoftwareCodec(name) && useHardwareCodecOnly) {
+      continue;
+    }
+    if (LoadComponent(name)) {
+      return OMX_ErrorNone;
+    }
   }
 
   LOG("no component is loaded");

@@ -384,6 +384,7 @@ NS_IMETHODIMP
 PresentationService::StartSession(const nsAString& aUrl,
                                   const nsAString& aSessionId,
                                   const nsAString& aOrigin,
+                                  const nsAString& aDeviceId,
                                   nsIPresentationServiceCallback* aCallback)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -396,20 +397,62 @@ PresentationService::StartSession(const nsAString& aUrl,
     new PresentationControllingInfo(aUrl, aSessionId, aCallback);
   mSessionInfo.Put(aSessionId, info);
 
-  // Pop up a prompt and ask user to select a device.
-  nsCOMPtr<nsIPresentationDevicePrompt> prompt =
-    do_GetService(PRESENTATION_DEVICE_PROMPT_CONTRACTID);
-  if (NS_WARN_IF(!prompt)) {
-    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
-  }
   nsCOMPtr<nsIPresentationDeviceRequest> request =
     new PresentationDeviceRequest(aUrl, aSessionId, aOrigin);
-  nsresult rv = prompt->PromptDeviceSelection(request);
+
+  if (aDeviceId.IsVoid()) {
+    // Pop up a prompt and ask user to select a device.
+    nsCOMPtr<nsIPresentationDevicePrompt> prompt =
+      do_GetService(PRESENTATION_DEVICE_PROMPT_CONTRACTID);
+    if (NS_WARN_IF(!prompt)) {
+      return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+    }
+
+    nsresult rv = prompt->PromptDeviceSelection(request);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+    }
+
+    return NS_OK;
+  }
+
+  // Find the designated device from available device list.
+  nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
+    do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
+  if (NS_WARN_IF(!deviceManager)) {
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  nsCOMPtr<nsIArray> devices;
+  nsresult rv = deviceManager->GetAvailableDevices(getter_AddRefs(devices));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
 
-  return NS_OK;
+  nsCOMPtr<nsISimpleEnumerator> enumerator;
+  rv = devices->Enumerate(getter_AddRefs(enumerator));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return info->ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  NS_ConvertUTF16toUTF8 utf8DeviceId(aDeviceId);
+  bool hasMore;
+  while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore){
+    nsCOMPtr<nsISupports> isupports;
+    rv = enumerator->GetNext(getter_AddRefs(isupports));
+
+    nsCOMPtr<nsIPresentationDevice> device(do_QueryInterface(isupports));
+    MOZ_ASSERT(device);
+
+    nsAutoCString id;
+    if (NS_SUCCEEDED(device->GetId(id)) && id.Equals(utf8DeviceId)) {
+      request->Select(device);
+      return NS_OK;
+    }
+  }
+
+  // Reject if designated device is not available.
+  return info->ReplyError(NS_ERROR_DOM_NOT_FOUND_ERR);
 }
 
 NS_IMETHODIMP

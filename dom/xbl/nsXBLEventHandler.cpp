@@ -90,8 +90,8 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
                         uint32_t aCharCode,
                         const IgnoreModifierState& aIgnoreModifierState)
 {
-  WidgetEvent* event = aKeyEvent->GetInternalNSEvent();
-  nsCOMPtr<EventTarget> target = aKeyEvent->InternalDOMEvent()->GetCurrentTarget();
+  WidgetEvent* event = aKeyEvent->AsEvent()->GetInternalNSEvent();
+  nsCOMPtr<EventTarget> target = aKeyEvent->AsEvent()->InternalDOMEvent()->GetCurrentTarget();
 
   bool executed = false;
   for (uint32_t i = 0; i < mProtoHandlers.Length(); ++i) {
@@ -101,7 +101,7 @@ nsXBLKeyEventHandler::ExecuteMatchedHandlers(
         (hasAllowUntrustedAttr && handler->AllowUntrustedEvents()) ||
         (!hasAllowUntrustedAttr && !mIsBoundToChrome && !mUsingContentXBLScope)) &&
         handler->KeyEventMatched(aKeyEvent, aCharCode, aIgnoreModifierState)) {
-      handler->ExecuteHandler(target, aKeyEvent);
+      handler->ExecuteHandler(target, aKeyEvent->AsEvent());
       executed = true;
     }
   }

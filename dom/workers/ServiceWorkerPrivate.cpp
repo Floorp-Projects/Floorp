@@ -1185,13 +1185,6 @@ private:
     MOZ_ASSERT(aWorkerPrivate->IsServiceWorker());
     GlobalObject globalObj(aCx, aWorkerPrivate->GlobalScope()->GetWrapper());
 
-    NS_ConvertUTF8toUTF16 local(mSpec);
-    RequestOrUSVString requestInfo;
-    requestInfo.SetAsUSVString().Rebind(local.Data(), local.Length());
-
-    RootedDictionary<RequestInit> reqInit(aCx);
-    reqInit.mMethod.Construct(mMethod);
-
     RefPtr<InternalHeaders> internalHeaders = new InternalHeaders(HeadersGuardEnum::Request);
     MOZ_ASSERT(mHeaderNames.Length() == mHeaderValues.Length());
     for (uint32_t i = 0; i < mHeaderNames.Length(); i++) {
@@ -1203,35 +1196,30 @@ private:
       }
     }
 
-    RefPtr<Headers> headers = new Headers(globalObj.GetAsSupports(), internalHeaders);
-    reqInit.mHeaders.Construct();
-    reqInit.mHeaders.Value().SetAsHeaders() = headers;
-
-    reqInit.mMode.Construct(mRequestMode);
-    reqInit.mRedirect.Construct(mRequestRedirect);
-    reqInit.mCredentials.Construct(mRequestCredentials);
-
     ErrorResult result;
-    RefPtr<Request> request = Request::Constructor(globalObj, requestInfo, reqInit, result);
+    internalHeaders->SetGuard(HeadersGuardEnum::Immutable, result);
     if (NS_WARN_IF(result.Failed())) {
       result.SuppressException();
       return false;
     }
+
+    RefPtr<InternalRequest> internalReq = new InternalRequest(mSpec,
+                                                              mMethod,
+                                                              internalHeaders.forget(),
+                                                              mRequestMode,
+                                                              mRequestRedirect,
+                                                              mRequestCredentials,
+                                                              NS_ConvertUTF8toUTF16(mReferrer),
+                                                              mContentPolicyType);
+    internalReq->SetBody(mUploadStream);
     // For Telemetry, note that this Request object was created by a Fetch event.
-    RefPtr<InternalRequest> internalReq = request->GetInternalRequest();
-    MOZ_ASSERT(internalReq);
     internalReq->SetCreatedByFetchEvent();
 
-    internalReq->SetBody(mUploadStream);
-    internalReq->SetReferrer(NS_ConvertUTF8toUTF16(mReferrer));
-
-    request->SetContentPolicyType(mContentPolicyType);
-
-    request->GetInternalHeaders()->SetGuard(HeadersGuardEnum::Immutable, result);
-    if (NS_WARN_IF(result.Failed())) {
-      result.SuppressException();
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(globalObj.GetAsSupports());
+    if (NS_WARN_IF(!global)) {
       return false;
     }
+    RefPtr<Request> request = new Request(global, internalReq);
 
     // TODO: remove conditional on http here once app protocol support is
     //       removed from service worker interception

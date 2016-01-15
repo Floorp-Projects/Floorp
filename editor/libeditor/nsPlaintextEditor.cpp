@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
@@ -361,7 +362,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
   }
 
   WidgetKeyboardEvent* nativeKeyEvent =
-    aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    aKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
   NS_ENSURE_TRUE(nativeKeyEvent, NS_ERROR_UNEXPECTED);
   NS_ASSERTION(nativeKeyEvent->mMessage == eKeyPress,
                "HandleKeyPressEvent gets non-keypress event");
@@ -388,7 +389,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
       }
 
       // else we insert the tab straight through
-      aKeyEvent->PreventDefault();
+      aKeyEvent->AsEvent()->PreventDefault();
       return TypedText(NS_LITERAL_STRING("\t"), eTypedText);
     }
     case nsIDOMKeyEvent::DOM_VK_RETURN:
@@ -397,7 +398,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
           nativeKeyEvent->IsOS()) {
         return NS_OK;
       }
-      aKeyEvent->PreventDefault();
+      aKeyEvent->AsEvent()->PreventDefault();
       return TypedText(EmptyString(), eTypedBreak);
   }
 
@@ -409,7 +410,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
     // we don't PreventDefault() here or keybindings like control-x won't work
     return NS_OK;
   }
-  aKeyEvent->PreventDefault();
+  aKeyEvent->AsEvent()->PreventDefault();
   nsAutoString str(nativeKeyEvent->charCode);
   return TypedText(str, eTypedText);
 }

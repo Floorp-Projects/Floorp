@@ -501,6 +501,10 @@ class IDLExposureMixins():
     def isExposedInWindow(self):
         return 'Window' in self.exposureSet
 
+    def isExposedOnMainThread(self):
+        return (self.isExposedInWindow() or
+                self.isExposedInSystemGlobals())
+
     def isExposedInAnyWorker(self):
         return len(self.getWorkerExposureSet()) > 0
 

@@ -49,10 +49,13 @@ NS_IMETHODIMP
 PresentationIPCService::StartSession(const nsAString& aUrl,
                                      const nsAString& aSessionId,
                                      const nsAString& aOrigin,
+                                     const nsAString& aDeviceId,
                                      nsIPresentationServiceCallback* aCallback)
 {
-  return SendRequest(aCallback,
-                     StartSessionRequest(nsAutoString(aUrl), nsAutoString(aSessionId), nsAutoString(aOrigin)));
+  return SendRequest(aCallback, StartSessionRequest(nsAutoString(aUrl),
+                                                    nsAutoString(aSessionId),
+                                                    nsAutoString(aOrigin),
+                                                    nsAutoString(aDeviceId)));
 }
 
 NS_IMETHODIMP

@@ -128,37 +128,45 @@ CreateCanonicalU16Matchers(const BigEndianUint16& aNameID)
   NameRecordMatchers *matchers = new NameRecordMatchers();
 
   // First, look for the English name (this will normally succeed).
-  matchers->append(
+  if (!matchers->append(
     [=](const NameRecord *aNameRecord) {
         return aNameRecord->nameID == aNameID &&
                aNameRecord->languageID == CANONICAL_LANG_ID &&
                aNameRecord->platformID == PLATFORM_ID &&
                IsUTF16Encoding(aNameRecord);
-    });
+    })) {
+    MOZ_CRASH();
+  }
 
   // Second, look for all languages.
-  matchers->append(
+  if (!matchers->append(
     [=](const NameRecord *aNameRecord) {
         return aNameRecord->nameID == aNameID &&
                aNameRecord->platformID == PLATFORM_ID &&
                IsUTF16Encoding(aNameRecord);
-    });
+    })) {
+    MOZ_CRASH();
+  }
 
 #if defined(XP_MACOSX)
   // On Mac may be dealing with font that only has Microsoft name entries.
-  matchers->append(
+  if (!matchers->append(
     [=](const NameRecord *aNameRecord) {
         return aNameRecord->nameID == aNameID &&
                aNameRecord->languageID == LANG_ID_MICROSOFT_EN_US &&
                aNameRecord->platformID == PLATFORM_ID_MICROSOFT &&
                IsUTF16Encoding(aNameRecord);
-    });
-  matchers->append(
+    })) {
+    MOZ_CRASH();
+  }
+  if (!matchers->append(
     [=](const NameRecord *aNameRecord) {
         return aNameRecord->nameID == aNameID &&
                aNameRecord->platformID == PLATFORM_ID_MICROSOFT &&
                IsUTF16Encoding(aNameRecord);
-    });
+    })) {
+    MOZ_CRASH();
+  }
 #endif
 
   return matchers;
