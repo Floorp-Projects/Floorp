@@ -28,7 +28,7 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType,
   vr.effectViews.SwapElements(viewsToRecycle);
   // vr.effectViews is now empty.
 
-  LayoutDeviceIntRegion::RectIterator iter(aRegion);
+  LayoutDeviceIntRegion::OldRectIterator iter(aRegion);
   const LayoutDeviceIntRect* iterRect = nullptr;
   for (size_t i = 0; (iterRect = iter.Next()) || i < viewsToRecycle.Length(); ++i) {
     if (iterRect) {
@@ -71,7 +71,7 @@ VibrancyManager::ClearVibrantRegion(const VibrantRegion& aVibrantRegion) const
 {
   [[NSColor clearColor] set];
 
-  LayoutDeviceIntRegion::RectIterator iter(aVibrantRegion.region);
+  LayoutDeviceIntRegion::OldRectIterator iter(aVibrantRegion.region);
   while (const LayoutDeviceIntRect* rect = iter.Next()) {
     NSRectFill(mCoordinateConverter.DevPixelsToCocoaPoints(*rect));
   }

@@ -626,7 +626,7 @@ BasicCompositor::EndFrame()
   // The source DrawTarget is clipped to the invalidation region, so we have
   // to copy the individual rectangles in the region or else we'll draw blank
   // pixels.
-  LayoutDeviceIntRegion::RectIterator iter(mInvalidRegion);
+  LayoutDeviceIntRegion::OldRectIterator iter(mInvalidRegion);
   for (const LayoutDeviceIntRect *r = iter.Next(); r; r = iter.Next()) {
     dest->CopySurface(source,
                       IntRect(r->x - mInvalidRect.x, r->y - mInvalidRect.y, r->width, r->height),

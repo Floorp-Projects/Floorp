@@ -102,7 +102,7 @@ AppendToString(std::stringstream& aStream, const mozilla::gfx::IntRegionTyped<un
 
   aStream << pfx;
 
-  typename RegionType::RectIterator it(r);
+  typename RegionType::OldRectIterator it(r);
   aStream << "< ";
   while (const typename RegionType::RectType* sr = it.Next()) {
     AppendToString(aStream, *sr);
