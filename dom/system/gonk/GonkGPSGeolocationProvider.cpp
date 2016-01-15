@@ -352,7 +352,7 @@ GonkGPSGeolocationProvider::SetNiResponse(int id, int response)
 }
 
 bool
-GonkGPSGeolocationProvider::SendChromeEvent(int id, GpsNiNotifyFlags flags)
+GonkGPSGeolocationProvider::SendChromeEvent(int id, GpsNiNotifyFlags flags, nsString& message)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -361,16 +361,38 @@ GonkGPSGeolocationProvider::SendChromeEvent(int id, GpsNiNotifyFlags flags)
       RefPtr<GonkGPSGeolocationProvider> provider = GonkGPSGeolocationProvider::GetSingleton();
       provider->SetNiResponse(id, GPS_NI_RESPONSE_NORESP);
     }
+    nsContentUtils::LogMessageToConsole(
+      "geo: SendChromeEvent Failed(id:%d, flags:%x)", id, flags);
     return false;
   }
 
-  nsCString str = nsPrintfCString("%d", id);
-  if (flags == GPS_NI_NEED_NOTIFY) {
-    obs->NotifyObservers(nullptr, SUPL_NI_NOTIFY, NS_ConvertUTF8toUTF16(str).get());
-  } else if (flags == GPS_NI_NEED_VERIFY) {
-    obs->NotifyObservers(nullptr, SUPL_NI_VERIFY, NS_ConvertUTF8toUTF16(str).get());
-  } else if (flags == GPS_NI_NEED_TIMEOUT) {
-    obs->NotifyObservers(nullptr, SUPL_NI_VERIFY_TIMEOUT, NS_ConvertUTF8toUTF16(str).get());
+  if (flags == GPS_NI_NEED_TIMEOUT) {
+    obs->NotifyObservers(nullptr, SUPL_NI_VERIFY_TIMEOUT, message.get());
+    return true;
+  }
+
+  bool needNotify = (flags & GPS_NI_NEED_NOTIFY) != 0;
+  bool needVerify = (flags & GPS_NI_NEED_VERIFY) != 0;
+  bool privacyOverride = (flags & GPS_NI_PRIVACY_OVERRIDE) != 0;
+
+
+  // Verify behavior in gaia include notify and dialog in current
+  // implementation.
+  // So the logic here is different from Android
+  if (needNotify && needVerify) {
+    obs->NotifyObservers(nullptr, SUPL_NI_VERIFY, message.get());
+  } else if (needNotify) {
+    obs->NotifyObservers(nullptr, SUPL_NI_NOTIFY, message.get());
+  } else {
+    RefPtr<GonkGPSGeolocationProvider> provider =
+      GonkGPSGeolocationProvider::GetSingleton();
+    provider->SetNiResponse(id, GPS_NI_RESPONSE_ACCEPT);
+  }
+
+  if (privacyOverride) {
+    RefPtr<GonkGPSGeolocationProvider> provider =
+      GonkGPSGeolocationProvider::GetSingleton();
+    provider->SetNiResponse(id, GPS_NI_RESPONSE_ACCEPT);
   }
   return true;
 }
@@ -390,23 +412,46 @@ GonkGPSGeolocationProvider::GPSNiNotifyCallback(GpsNiNotification *notification)
 
       if (gDebug_isLoggingEnabled) {
         nsContentUtils::LogMessageToConsole(
-          "GPSNiNotifyCallback id:%d, flag:%x, timeout:%d, default response:%d\n",
+          "geo: GPSNiNotifyCallback id:%d, flag:%x, timeout:%d, default response:%d\n",
            id, flags, mNotification->timeout, mNotification->default_response);
       }
 
       RefPtr<GonkGPSGeolocationProvider> provider =
         GonkGPSGeolocationProvider::GetSingleton();
 
-      if(!provider->SendChromeEvent(id, flags)) {
-        nsContentUtils::LogMessageToConsole(
-          "SendChromeEvent Failed(id:%d, flags:%x)", id, flags);
-        return NS_OK;
+      // The message is composed by "notification_id, notification_text,
+      // notification_requestor_id"
+      // If the encoding of text and requestor_id is not supported, the message
+      // would be "id, ,".
+      nsString message;
+      message.AppendInt(id);
+      message.AppendLiteral(",");
+      GpsNiEncodingType encodingType = mNotification->text_encoding;
+      if (encodingType == GPS_ENC_SUPL_UTF8 ||
+          encodingType == GPS_ENC_SUPL_UCS2 ||
+          encodingType == GPS_ENC_SUPL_GSM_DEFAULT) {
+        message.Append(DecodeNIString(mNotification->text, encodingType));
+      } else {
+         nsContentUtils::LogMessageToConsole(
+          "geo: GPSNiNotifyCallback text in unsupport decodeing format(%d)\n", encodingType);
       }
+      message.AppendLiteral(",");
+      encodingType = mNotification->requestor_id_encoding;
+      if (encodingType == GPS_ENC_SUPL_UTF8 ||
+          encodingType == GPS_ENC_SUPL_UCS2 ||
+          encodingType == GPS_ENC_SUPL_GSM_DEFAULT) {
+        message.Append(DecodeNIString(mNotification->requestor_id, encodingType));
+      } else {
+         nsContentUtils::LogMessageToConsole(
+          "geo: GPSNiNotifyCallback requestor_id in unsupport decodeing format(%d)\n", encodingType);
+      }
+      provider->SendChromeEvent(id, flags, message);
+
 
       class TimeoutResponseEvent : public Task {
         public:
-          TimeoutResponseEvent(int id, int defaultResp)
-            : mId(id), mDefaultResp(defaultResp)
+          TimeoutResponseEvent(int id, int defaultResp, nsString msg)
+            : mId(id), mDefaultResp(defaultResp), mMsg(msg)
           {}
           void Run() {
             for (uint32_t idx = 0; idx < repliedSuplNiReqIds.Length() ; idx++) {
@@ -417,9 +462,9 @@ GonkGPSGeolocationProvider::GPSNiNotifyCallback(GpsNiNotification *notification)
             }
             RefPtr<GonkGPSGeolocationProvider> provider =
               GonkGPSGeolocationProvider::GetSingleton();
-            if (!provider->SendChromeEvent(mId, GPS_NI_NEED_TIMEOUT)) {
+            if (!provider->SendChromeEvent(mId, GPS_NI_NEED_TIMEOUT, mMsg)) {
               nsContentUtils::LogMessageToConsole(
-                "SendChromeEvent Failed(id:%d, flags:%x", mId, GPS_NI_NEED_TIMEOUT);
+                "geo: SendChromeEvent Failed(id:%d, flags:%x", mId, GPS_NI_NEED_TIMEOUT);
             }
             provider->SetNiResponse(mId, mDefaultResp);
             return;
@@ -427,14 +472,16 @@ GonkGPSGeolocationProvider::GPSNiNotifyCallback(GpsNiNotification *notification)
         private:
           int mId;
           int mDefaultResp;
+          nsString mMsg;
       };
 
-    if (flags == GPS_NI_NEED_VERIFY) {
-      MessageLoop::current()->PostDelayedTask(FROM_HERE,
-        new TimeoutResponseEvent(id, mNotification->default_response),
-        mNotification->timeout*1000);
-    }
-    return NS_OK;
+      bool needVerify = (flags & GPS_NI_NEED_VERIFY) != 0;
+      if (needVerify) {
+        MessageLoop::current()->PostDelayedTask(FROM_HERE,
+          new TimeoutResponseEvent(id, mNotification->default_response, message),
+          mNotification->timeout*1000);
+      }
+      return NS_OK;
     }
   private:
     GpsNiNotification *mNotification;
