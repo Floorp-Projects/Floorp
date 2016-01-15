@@ -112,7 +112,6 @@ devtools/client/shadereditor/**
 devtools/client/shared/**
 devtools/client/sourceeditor/**
 devtools/client/storage/**
-devtools/client/styleeditor/**
 devtools/client/tilt/**
 devtools/client/webaudioeditor/**
 devtools/client/webconsole/**

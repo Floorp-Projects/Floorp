@@ -5,14 +5,16 @@
 <head>
   <meta charset="utf-8">
   <title>Resources</title>
-  <script type="text/javascript" id="script1">
-    window.addEventListener('load', function() {
-      var pid = document.getElementById('pid');
-      var div = document.createElement('div');
-      div.id = 'divid';
-      div.classList.add('divclass');
-      div.appendChild(document.createTextNode('div'));
-      div.setAttribute('data-a1', 'div');
+  <script type="text/javascript;version=1.8" id="script1">
+    "use strict";
+
+    window.addEventListener("load", function() {
+      let pid = document.getElementById("pid");
+      let div = document.createElement("div");
+      div.id = "divid";
+      div.classList.add("divclass");
+      div.appendChild(document.createTextNode("div"));
+      div.setAttribute("data-a1", "div");
       pid.parentNode.appendChild(div);
     });
   </script>
@@ -37,12 +39,13 @@
   <p class="pclass" id="pid" data-a1="p">paragraph</p>
 
   <script>
-    var pid = document.getElementById('pid');
-    var h4 = document.createElement('h4');
-    h4.id = 'h4id';
-    h4.classList.add('h4class');
-    h4.appendChild(document.createTextNode('h4'));
-    h4.setAttribute('data-a1', 'h4');
+    "use strict";
+    let pid = document.getElementById("pid");
+    let h4 = document.createElement("h4");
+    h4.id = "h4id";
+    h4.classList.add("h4class");
+    h4.appendChild(document.createTextNode("h4"));
+    h4.setAttribute("data-a1", "h4");
     pid.parentNode.appendChild(h4);
   </script>
 
