@@ -1594,7 +1594,7 @@ WrapNativeParent(JSContext* cx, T* p, nsWrapperCache* cache,
   }
 
   JSObject* parent = WrapNativeParentHelper<T>::Wrap(cx, p, cache);
-  if (!useXBLScope) {
+  if (!parent || !useXBLScope) {
     return parent;
   }
 

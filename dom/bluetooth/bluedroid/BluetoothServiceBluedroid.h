@@ -284,6 +284,15 @@ public:
   virtual void StopLeScanInternal(const BluetoothUuid& aScanUuid,
                                   BluetoothReplyRunnable* aRunnable);
 
+  virtual void StartAdvertisingInternal(
+    const BluetoothUuid& aAppUuid,
+    const BluetoothGattAdvertisingData& aAdvData,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void StopAdvertisingInternal(
+    const BluetoothUuid& aAppUuid,
+    BluetoothReplyRunnable* aRunnable) override;
+
   virtual void
   ConnectGattClientInternal(const BluetoothUuid& aAppUuid,
                             const BluetoothAddress& aDeviceAddress,
@@ -352,6 +361,11 @@ public:
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattId& aDescriptorId,
     const nsTArray<uint8_t>& aValue,
+    BluetoothReplyRunnable* aRunnable) override;
+
+  virtual void
+  GattServerRegisterInternal(
+    const BluetoothUuid& aAppUuid,
     BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
