@@ -156,7 +156,7 @@ class LocalesMixin(ChunkingMixin):
 
     def run_compare_locales(self, locale, halt_on_failure=False):
         dirs = self.query_abs_dirs()
-        env = self.query_env()
+        env = self.query_bootstrap_env()
         compare_locales_error_list = list(PythonErrorList)
         command = ['compare-locales',
                   '--merge-dir', dirs['abs_merge_dir'], locale]
