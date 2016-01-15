@@ -26,7 +26,7 @@ namespace videocapturemodule
 
 class DeviceInfoAndroid : public DeviceInfoImpl {
  public:
-  static void Initialize(JNIEnv* env);
+  static void Initialize(JavaVM* javaVM);
   static void DeInitialize();
 
   DeviceInfoAndroid(int32_t id);
@@ -38,6 +38,7 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
 
   virtual int32_t Init();
   virtual uint32_t NumberOfDevices();
+  virtual int32_t Refresh();
   virtual int32_t GetDeviceName(
       uint32_t deviceNumber,
       char* deviceNameUTF8,
@@ -66,6 +67,7 @@ class DeviceInfoAndroid : public DeviceInfoImpl {
 
  private:
   enum { kExpectedCaptureDelay = 190};
+  static void BuildDeviceList();  
 };
 
 }  // namespace videocapturemodule
