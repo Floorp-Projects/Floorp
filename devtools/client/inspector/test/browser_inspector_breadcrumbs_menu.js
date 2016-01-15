@@ -7,7 +7,7 @@
 // Test that the inspector node context menu appears when right-clicking on the
 // breadcrumbs nodes.
 
-const TEST_URI = TEST_URL_ROOT + "doc_inspector_breadcrumbs.html";
+const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 
 add_task(function*() {
   let {inspector} = yield openInspectorForURL(TEST_URI);

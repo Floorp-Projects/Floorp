@@ -9,12 +9,12 @@
 const IFRAME_SRC = "doc_inspector_search.html";
 const TEST_URL = "data:text/html;charset=utf-8," +
                  "<iframe id=\"iframe-1\" src=\"" +
-                 TEST_URL_ROOT + IFRAME_SRC + "\"></iframe>" +
+                 URL_ROOT + IFRAME_SRC + "\"></iframe>" +
                  "<iframe id=\"iframe-2\" src=\"" +
-                 TEST_URL_ROOT + IFRAME_SRC + "\"></iframe>" +
+                 URL_ROOT + IFRAME_SRC + "\"></iframe>" +
                  "<iframe id='iframe-3' src='data:text/html," +
                    "<button id=\"b1\">Nested button</button>" +
-                   "<iframe id=\"iframe-4\" src=" + TEST_URL_ROOT + IFRAME_SRC + "></iframe>'>" +
+                   "<iframe id=\"iframe-4\" src=" + URL_ROOT + IFRAME_SRC + "></iframe>'>" +
                  "</iframe>";
 
 add_task(function* () {

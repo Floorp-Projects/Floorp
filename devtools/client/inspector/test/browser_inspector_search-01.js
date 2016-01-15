@@ -6,7 +6,7 @@
 // Test that searching for nodes in the search field actually selects those
 // nodes.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
+const TEST_URL = URL_ROOT + "doc_inspector_search.html";
 
 // The various states of the inspector: [key, id, isValid]
 // [

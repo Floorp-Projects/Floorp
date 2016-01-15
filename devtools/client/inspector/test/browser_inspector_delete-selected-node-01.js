@@ -5,7 +5,7 @@
 
 // Test to ensure inspector handles deletion of selected node correctly.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_delete-selected-node-01.html";
+const TEST_URL = URL_ROOT + "doc_inspector_delete-selected-node-01.html";
 
 add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URL);

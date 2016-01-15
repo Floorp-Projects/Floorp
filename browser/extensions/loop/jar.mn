@@ -39,7 +39,13 @@
   content/shared/img/            (chrome/content/shared/img/*)
   content/shared/js/             (chrome/content/shared/js/*)
   content/shared/sounds/         (chrome/content/shared/sounds/*)
-  content/shared/vendor/         (chrome/content/shared/vendor/*)
-#ifndef DEBUG
-+ content/shared/vendor/react.js (chrome/content/shared/vendor/react-prod.js)
+  content/shared/vendor/sdk-content/  (chrome/content/shared/vendor/sdk-content/*)
+  content/shared/vendor/backbone.js   (chrome/content/shared/vendor/backbone.js)
+  content/shared/vendor/classnames.js (chrome/content/shared/vendor/classnames.js)
+  content/shared/vendor/lodash.js     (chrome/content/shared/vendor/lodash.js)
+#ifdef DEBUG
+  content/shared/vendor/react.js      (chrome/content/shared/vendor/react.js)
+#else
+  content/shared/vendor/react.js      (chrome/content/shared/vendor/react-prod.js)
 #endif
+  content/shared/vendor/sdk.js        (chrome/content/shared/vendor/sdk.js)

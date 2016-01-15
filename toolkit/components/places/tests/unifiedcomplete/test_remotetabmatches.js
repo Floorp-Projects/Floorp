@@ -115,7 +115,7 @@ add_task(function* test_maximal() {
     matches: [ makeSearchMatch("ex", { heuristic: true }),
                makeRemoteTabMatch("http://example.com/", "My Phone",
                                   { title: "An Example",
-                                    icon: "http://favicon"
+                                    icon: "moz-anno:favicon:http://favicon"
                                   }),
              ],
   });

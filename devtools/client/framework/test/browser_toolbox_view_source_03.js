@@ -10,7 +10,7 @@ var URL = `${URL_ROOT}doc_viewsource.html`;
 var CSS_URL = `${URL_ROOT}doc_theme.css`;
 
 function *viewSource() {
-  let toolbox = yield loadToolbox(URL);
+  let toolbox = yield openNewTabAndToolbox(URL);
 
   let fileFound = yield toolbox.viewSourceInStyleEditor(CSS_URL, 2);
   ok(fileFound, "viewSourceInStyleEditor should resolve to true if source found.");
@@ -26,7 +26,7 @@ function *viewSource() {
   is(UI.selectedEditor.sourceEditor.getCursor().line + 1, 2,
     "The correct line is highlighted in the style editor's source editor.");
 
-  yield unloadToolbox(toolbox);
+  yield closeToolboxAndTab(toolbox);
   finish();
 }
 

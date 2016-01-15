@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that the various copy items in the context menu works correctly.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
+const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 const COPY_ITEMS_TEST_DATA = [
   {
     desc: "copy inner html",

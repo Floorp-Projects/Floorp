@@ -31,21 +31,6 @@ class LocalesMixin(ChunkingMixin):
         self.gecko_locale_revisions = None
         self.l10n_revisions = {}
 
-    def _get_mach_executable(self):
-        python = self.query_exe('python2.7')
-        return [python, 'mach']
-
-    def _mach(self, target, env, error_list=None, halt_on_failure=True,
-              output_parser=None):
-        dirs = self.query_abs_dirs()
-        mach = self._get_mach_executable()
-        return self.run_command(mach + target,
-                                error_list=error_list,
-                                halt_on_failure=True,
-                                env=env,
-                                cwd=dirs['abs_mozilla_dir'],
-                                output_parser=None)
-
     def query_locales(self):
         if self.locales is not None:
             return self.locales
@@ -156,13 +141,20 @@ class LocalesMixin(ChunkingMixin):
 
     def run_compare_locales(self, locale, halt_on_failure=False):
         dirs = self.query_abs_dirs()
-        env = self.query_env()
+        compare_locales_script = os.path.join(dirs['abs_compare_locales_dir'],
+                                              'scripts', 'compare-locales')
+        env = self.query_env(partial_env={'PYTHONPATH':
+                             os.path.join(dirs['abs_compare_locales_dir'],
+                                          'lib')})
         compare_locales_error_list = list(PythonErrorList)
-        command = ['compare-locales',
-                  '--merge-dir', dirs['abs_merge_dir'], locale]
+        self.rmtree(dirs['abs_merge_dir'])
+        self.mkdir_p(dirs['abs_merge_dir'])
+        command = "python %s -m %s l10n.ini %s %s" % (compare_locales_script,
+                  dirs['abs_merge_dir'], dirs['abs_l10n_dir'], locale)
         self.info("*** BEGIN compare-locales %s" % locale)
-        status = self._mach(command, env, error_list=compare_locales_error_list,
-                            halt_on_failure=halt_on_failure)
+        status = self.run_command(command, error_list=compare_locales_error_list,
+                                  cwd=dirs['abs_locales_src_dir'], env=env,
+                                  halt_on_failure=halt_on_failure)
         self.info("*** END compare-locales %s" % locale)
         return status
 

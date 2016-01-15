@@ -7,7 +7,7 @@
 // mutations (and that it doesn't refresh when those mutations don't change its
 // output).
 
-const TEST_URI = TEST_URL_ROOT + "doc_inspector_breadcrumbs.html";
+const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 
 // Each item in the TEST_DATA array is a test case that should contain the
 // following properties:

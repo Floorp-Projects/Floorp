@@ -8,7 +8,7 @@
 // change
 
 add_task(function*() {
-  yield addTab(TEST_URL_ROOT + "doc_layout_iframe1.html");
+  yield addTab(URL_ROOT + "doc_layout_iframe1.html");
   let iframe2 = getNode("iframe").contentDocument.querySelector("iframe");
 
   let {toolbox, inspector, view} = yield openLayoutView();
@@ -19,11 +19,11 @@ addTest("Test that resizing an element in an iframe updates its box model",
 function*(inspector, view, iframe2) {
   info("Selecting the nested test node");
   let node = iframe2.contentDocument.querySelector("div");
-  yield selectNode(node, inspector);
+  yield selectNodeInIframe2("div", inspector);
 
   info("Checking that the layout-view shows the right value");
   let sizeElt = view.doc.querySelector(".size > span");
-  is(sizeElt.textContent, "400x200");
+  is(sizeElt.textContent, "400\u00D7200");
 
   info("Listening for layout-view changes and modifying its size");
   let onUpdated = waitForUpdate(inspector);
@@ -32,7 +32,7 @@ function*(inspector, view, iframe2) {
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
-  is(sizeElt.textContent, "200x200");
+  is(sizeElt.textContent, "200\u00D7200");
 });
 
 addTest("Test reflows are still sent to the layout-view after deleting an iframe",
@@ -43,11 +43,11 @@ function*(inspector, view, iframe2) {
 
   info("Selecting the test node in iframe1");
   let node = getNode("iframe").contentDocument.querySelector("p");
-  yield selectNode(node, inspector);
+  yield selectNodeInIframe1("p", inspector);
 
   info("Checking that the layout-view shows the right value");
   let sizeElt = view.doc.querySelector(".size > span");
-  is(sizeElt.textContent, "100x100");
+  is(sizeElt.textContent, "100\u00D7100");
 
   info("Listening for layout-view changes and modifying its size");
   let onUpdated = waitForUpdate(inspector);
@@ -56,5 +56,18 @@ function*(inspector, view, iframe2) {
   ok(true, "Layout-view got updated");
 
   info("Checking that the layout-view shows the right value after update");
-  is(sizeElt.textContent, "200x100");
+  is(sizeElt.textContent, "200\u00D7100");
 });
+
+function* selectNodeInIframe1(selector, inspector) {
+  let iframe1 = yield getNodeFront("iframe", inspector);
+  let node = yield getNodeFrontInFrame(selector, iframe1, inspector);
+  yield selectNode(node, inspector);
+}
+
+function* selectNodeInIframe2(selector, inspector) {
+  let iframe1 = yield getNodeFront("iframe", inspector);
+  let iframe2 = yield getNodeFrontInFrame("iframe", iframe1, inspector);
+  let node = yield getNodeFrontInFrame(selector, iframe2, inspector);
+  yield selectNode(node, inspector);
+}
