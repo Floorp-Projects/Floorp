@@ -328,8 +328,6 @@ PopulateRegistrationData(nsIPrincipal* aPrincipal,
     return NS_ERROR_FAILURE;
   }
 
-  aData.scriptSpec() = newest->ScriptSpec();
-
   if (aRegistration->mActiveWorker) {
     aData.currentWorkerURL() = aRegistration->mActiveWorker->ScriptSpec();
     aData.activeCacheName() = aRegistration->mActiveWorker->CacheName();
@@ -2919,11 +2917,10 @@ ServiceWorkerManager::LoadRegistration(
   if (!registration) {
     registration = CreateNewRegistration(aRegistration.scope(), principal);
   } else {
-    RefPtr<ServiceWorkerInfo> newest = registration->Newest();
-    // If the script spec matches and our active worker state matches our
-    // expectations for a "current worker", then we are done.
-    if (newest && newest->ScriptSpec() == aRegistration.scriptSpec() &&
-        !registration->mActiveWorker == aRegistration.currentWorkerURL().IsEmpty()) {
+    // If active worker script matches our expectations for a "current worker",
+    // then we are done.
+    if (registration->mActiveWorker &&
+        registration->mActiveWorker->ScriptSpec() == aRegistration.currentWorkerURL()) {
       // No needs for updates.
       return;
     }
