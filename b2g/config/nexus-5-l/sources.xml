@@ -21,7 +21,7 @@
   <!--
     B2G repositories for all targets
     -->
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="2d6c11a1e82bd9f9b7491863c8d1ea4a14aea69f"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="44cc5dfeda9251188c6547f2d5903ee980a5361e"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="4a962bdab532e18f53e9d2d114c349983262c6b7"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="99c333dab00ed79baff9e1cf76b320aee8e1c123"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
@@ -159,7 +159,7 @@
   <project name="platform/hardware/broadcom/libbt" path="hardware/broadcom/libbt" revision="399fe3d3c8f38c599a56becddc456133e62a5d70"/>
   <project name="platform/hardware/broadcom/wlan" path="hardware/broadcom/wlan" revision="3f3134d5cb19d5ace48d36d0100467a545d430eb"/>
   <project name="platform/hardware/qcom/audio" path="hardware/qcom/audio" revision="810c3dd29d009822a71eba9910e429a9ad114533"/>
-  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="d8a56d7215bd26a61e43dcde20e64826a5fec265"/>
+  <project name="hardware_qcom_display" path="hardware/qcom/display" remote="b2g" revision="7b5967bbd90cb193b489d8f8668bc945384bd9b1"/>
   <project name="platform/hardware/qcom/keymaster" path="hardware/qcom/keymaster" revision="eaede9f8bc206736a889bc57817047c31e205589"/>
   <project name="platform/hardware/qcom/media" path="hardware/qcom/media" revision="12364db20d6710f0003a4f00962c9790ad3c13e3"/>
   <project name="platform/hardware/qcom/msm8x74" path="hardware/qcom/msm8x74" revision="f09920b2b488cf68bcbe9f7bbbde84a509a1d7a5"/>

@@ -343,12 +343,7 @@ HTMLSharedObjectElement::GetCapabilities() const
 {
   uint32_t capabilities = eSupportPlugins | eAllowPluginSkipChannel;
   if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    capabilities |= eSupportSVG | eSupportImages;
-  }
-  // If this is a rewritten youtube flash embed, add documents to capabilities
-  // so that we can render HTML5 if possible.
-  if (mRewrittenYoutubeEmbed) {
-    capabilities |= eSupportDocuments;
+    capabilities |= eSupportSVG | eSupportImages | eSupportDocuments;
   }
 
   return capabilities;

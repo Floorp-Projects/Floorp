@@ -9,6 +9,7 @@
 #include "BluetoothService.h"
 #include "jsapi.h"
 #include "mozilla/dom/BluetoothGattCharacteristicBinding.h"
+#include "mozilla/dom/BluetoothGattServerBinding.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/bluetooth/BluetoothTypes.h"
 #include "nsContentUtils.h"
@@ -413,7 +414,55 @@ GattPropertiesToBits(const GattCharacteristicProperties& aProperties,
   }
 }
 
+nsresult
+AdvertisingDataToGattAdvertisingData(
+  const BluetoothAdvertisingData& aAdvData,
+  BluetoothGattAdvertisingData& aGattAdvData)
+{
+  aGattAdvData.mAppearance = aAdvData.mAppearance;
+  aGattAdvData.mIncludeDevName = aAdvData.mIncludeDevName;
+  aGattAdvData.mIncludeTxPower = aAdvData.mIncludeTxPower;
 
+  for (size_t i = 0; i < aAdvData.mServiceUuids.Length(); i++) {
+    BluetoothUuid uuid;
+    if (NS_WARN_IF(NS_FAILED(StringToUuid(aAdvData.mServiceUuids[i], uuid)))) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+    aGattAdvData.mServiceUuids.AppendElement(uuid);
+  }
+
+  if (!aAdvData.mManufacturerData.IsNull()) {
+    // First two bytes are manufacturer ID in little-endian.
+    LittleEndian::writeUint16(aGattAdvData.mManufacturerData.Elements(),
+                              aAdvData.mManufacturerId);
+
+    // Concatenate custom manufacturer data.
+    const ArrayBuffer& manufacturerData = aAdvData.mManufacturerData.Value();
+    manufacturerData.ComputeLengthAndData();
+    aGattAdvData.mManufacturerData.AppendElements(manufacturerData.Data(),
+                                                  manufacturerData.Length());
+  }
+
+  if (!aAdvData.mServiceData.IsNull()) {
+    BluetoothUuid uuid;
+    if (NS_WARN_IF(NS_FAILED(StringToUuid(aAdvData.mServiceUuid, uuid)))) {
+      return NS_ERROR_ILLEGAL_VALUE;
+    }
+
+    // First 16 bytes are service UUID in little-endian.
+    for (size_t i = 0; i < sizeof(uuid.mUuid); i++) {
+      aGattAdvData.mServiceData[i] = uuid.mUuid[sizeof(uuid.mUuid) - i - 1];
+    }
+
+    // Concatenate custom service data.
+    const ArrayBuffer& serviceData = aAdvData.mServiceData.Value();
+    serviceData.ComputeLengthAndData();
+    aGattAdvData.mServiceData.AppendElements(serviceData.Data(),
+                                             serviceData.Length());
+  }
+
+  return NS_OK;
+}
 
 void
 GeneratePathFromGattId(const BluetoothGattId& aId,

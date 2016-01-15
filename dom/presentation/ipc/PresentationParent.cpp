@@ -252,7 +252,7 @@ PresentationRequestParent::DoRequest(const StartSessionRequest& aRequest)
 {
   MOZ_ASSERT(mService);
   return mService->StartSession(aRequest.url(), aRequest.sessionId(),
-                                aRequest.origin(), this);
+                                aRequest.origin(), aRequest.deviceId(), this);
 }
 
 nsresult

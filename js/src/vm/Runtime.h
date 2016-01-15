@@ -796,6 +796,31 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSRuntime* parentRuntime;
 
   private:
+#ifdef DEBUG
+    /* The number of child runtimes that have this runtime as their parent. */
+    mozilla::Atomic<size_t> childRuntimeCount;
+
+    class AutoUpdateChildRuntimeCount
+    {
+        JSRuntime* parent_;
+
+      public:
+        explicit AutoUpdateChildRuntimeCount(JSRuntime* parent)
+          : parent_(parent)
+        {
+            if (parent_)
+                parent_->childRuntimeCount++;
+        }
+
+        ~AutoUpdateChildRuntimeCount() {
+            if (parent_)
+                parent_->childRuntimeCount--;
+        }
+    };
+
+    AutoUpdateChildRuntimeCount updateChildRuntimeCount;
+#endif
+
     mozilla::Atomic<uint32_t, mozilla::Relaxed> interrupt_;
 
     /* Call this to accumulate telemetry data. */

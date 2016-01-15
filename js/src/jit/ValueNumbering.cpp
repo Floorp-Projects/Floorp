@@ -108,7 +108,7 @@ ValueNumberer::VisibleValues::add(AddPtr p, MDefinition* def)
 void
 ValueNumberer::VisibleValues::overwrite(AddPtr p, MDefinition* def)
 {
-    set_.rekeyInPlace(p, def);
+    set_.replaceKey(p, def);
 }
 
 // |def| will be discarded, so remove it from any sets.

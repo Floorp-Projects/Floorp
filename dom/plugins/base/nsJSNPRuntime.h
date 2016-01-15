@@ -10,6 +10,7 @@
 #include "npapi.h"
 #include "npruntime.h"
 #include "PLDHashTable.h"
+#include "js/RootingAPI.h"
 
 class nsJSNPRuntime
 {
@@ -33,7 +34,11 @@ public:
     return !(*this == other);
   }
 
-  JSObject * mJSObj;
+  void trace(JSTracer* trc) {
+      JS::TraceEdge(trc, &mJSObj, "nsJSObjWrapperKey");
+  }
+
+  JS::Heap<JSObject*> mJSObj;
   const NPP mNpp;
 };
 
@@ -47,6 +52,10 @@ public:
   static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
                                 JS::Handle<JSObject*> obj);
   static bool HasOwnProperty(NPObject* npobj, NPIdentifier npid);
+
+  void trace(JSTracer* trc) {
+      JS::TraceEdge(trc, &mJSObj, "nsJSObjWrapper");
+  }
 
 protected:
   explicit nsJSObjWrapper(NPP npp);

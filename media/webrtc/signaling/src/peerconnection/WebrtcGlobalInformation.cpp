@@ -386,7 +386,9 @@ BuildStatsQueryList(
     if (aPcIdFilter.IsEmpty() ||
         aPcIdFilter.EqualsASCII(pc.second->GetIdAsAscii().c_str())) {
       if (pc.second->HasMedia()) {
-        queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)));
+        if (!queries->append(nsAutoPtr<RTCStatsQuery>(new RTCStatsQuery(true)))) {
+	  return NS_ERROR_OUT_OF_MEMORY;
+	}
         rv = pc.second->BuildStatsQuery_m(nullptr, queries->back()); // all tracks
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;

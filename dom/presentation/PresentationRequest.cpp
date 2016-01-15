@@ -81,6 +81,13 @@ PresentationRequest::WrapObject(JSContext* aCx,
 already_AddRefed<Promise>
 PresentationRequest::Start(ErrorResult& aRv)
 {
+  return StartWithDevice(NullString(), aRv);
+}
+
+already_AddRefed<Promise>
+PresentationRequest::StartWithDevice(const nsAString& aDeviceId,
+                                     ErrorResult& aRv)
+{
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetOwner());
   if (NS_WARN_IF(!global)) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
@@ -124,7 +131,7 @@ PresentationRequest::Start(ErrorResult& aRv)
 
   nsCOMPtr<nsIPresentationServiceCallback> callback =
     new PresentationRequesterCallback(this, mUrl, id, promise);
-  rv = service->StartSession(mUrl, id, origin, callback);
+  rv = service->StartSession(mUrl, id, origin, aDeviceId, callback);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
   }

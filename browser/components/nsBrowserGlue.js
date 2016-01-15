@@ -2974,9 +2974,6 @@ var DefaultBrowserCheck = {
 
 #ifdef E10S_TESTING_ONLY
 var E10SUINotification = {
-  // Increase this number each time we want to roll out an
-  // e10s testing period to Nightly users.
-  CURRENT_NOTICE_COUNT: 4,
   CURRENT_PROMPT_PREF: "browser.displayedE10SPrompt.1",
   PREVIOUS_PROMPT_PREF: "browser.displayedE10SPrompt",
 
@@ -3007,20 +3004,7 @@ var E10SUINotification = {
       return;
     }
 
-    if (Services.appinfo.browserTabsRemoteAutostart) {
-      if (this.forcedOn) {
-        return;
-      }
-      let notice = 0;
-      try {
-        notice = Services.prefs.getIntPref("browser.displayedE10SNotice");
-      } catch(e) {}
-      let activationNoticeShown = notice >= this.CURRENT_NOTICE_COUNT;
-
-      if (!activationNoticeShown) {
-        this._showE10sActivatedNotice();
-      }
-    } else {
+    if (!Services.appinfo.browserTabsRemoteAutostart) {
       let displayFeedbackRequest = false;
       try {
         displayFeedbackRequest = Services.prefs.getBoolPref("browser.requestE10sFeedback");
@@ -3032,10 +3016,6 @@ var E10SUINotification = {
           return;
         }
 
-        // The user has just voluntarily disabled e10s. Subtract one from displayedE10SNotice
-        // so that the next time e10s is activated (either by the user or forced by us), they
-        // can see the notice again.
-        Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT - 1);
         Services.prefs.clearUserPref("browser.requestE10sFeedback");
 
         let url = Services.urlFormatter.formatURLPref("app.feedback.baseURL");
@@ -3083,32 +3063,6 @@ var E10SUINotification = {
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver, Ci.nsISupportsWeakReference]),
-
-  _showE10sActivatedNotice: function() {
-    let win = RecentWindow.getMostRecentBrowserWindow();
-    if (!win)
-      return;
-
-    Services.prefs.setIntPref("browser.displayedE10SNotice", this.CURRENT_NOTICE_COUNT);
-
-    let nb = win.document.getElementById("high-priority-global-notificationbox");
-    let message = win.gNavigatorBundle.getFormattedString(
-                    "e10s.postActivationInfobar.message",
-                    [gBrandBundle.GetStringFromName("brandShortName")]
-                  );
-    let buttons = [
-      {
-        label: win.gNavigatorBundle.getString("e10s.postActivationInfobar.learnMore.label"),
-        accessKey: win.gNavigatorBundle.getString("e10s.postActivationInfobar.learnMore.accesskey"),
-        callback: function () {
-          win.openUILinkIn("https://wiki.mozilla.org/Electrolysis", "tab");
-        }
-      }
-    ];
-    nb.appendNotification(message, "e10s-activated-noticed",
-                          null, nb.PRIORITY_WARNING_MEDIUM, buttons);
-
-  },
 
   _showE10SPrompt: function BG__showE10SPrompt() {
     let win = RecentWindow.getMostRecentBrowserWindow();

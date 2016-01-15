@@ -220,7 +220,7 @@ class BaselineFrame
   private:
     Value* evalNewTargetAddress() const {
         MOZ_ASSERT(isEvalFrame());
-        MOZ_ASSERT(isFunctionFrame());
+        MOZ_ASSERT(script()->isDirectEvalInFunction());
         return (Value*)(reinterpret_cast<const uint8_t*>(this) +
                         BaselineFrame::Size() +
                         offsetOfEvalNewTarget());
@@ -228,15 +228,16 @@ class BaselineFrame
 
   public:
     Value newTarget() const {
-        MOZ_ASSERT(isFunctionFrame());
         if (isEvalFrame())
             return *evalNewTargetAddress();
+        MOZ_ASSERT(isNonEvalFunctionFrame());
         if (callee()->isArrow())
             return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
-        if (isConstructing())
+        if (isConstructing()) {
             return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                              BaselineFrame::Size() +
                              offsetOfArg(Max(numFormalArgs(), numActualArgs())));
+        }
         return UndefinedValue();
     }
 
@@ -388,11 +389,9 @@ class BaselineFrame
 
     void trace(JSTracer* trc, JitFrameIterator& frame);
 
-    bool isFunctionFrame() const {
-        return CalleeTokenIsFunction(calleeToken());
-    }
     bool isGlobalOrModuleFrame() const {
-        return !isFunctionFrame();
+        MOZ_ASSERT(!isEvalFrame());
+        return !CalleeTokenIsFunction(calleeToken());
     }
     bool isEvalFrame() const {
         return flags_ & EVAL;
@@ -408,7 +407,7 @@ class BaselineFrame
         return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
     }
     bool isNonEvalFunctionFrame() const {
-        return isFunctionFrame() && !isEvalFrame();
+        return CalleeTokenIsFunction(calleeToken()) && !isEvalFrame();
     }
     bool isDebuggerEvalFrame() const {
         return false;

@@ -10,6 +10,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
+#include "mozilla/unused.h"
 
 #include "jscompartment.h"
 #include "jsfriendapi.h"
@@ -539,7 +540,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         for (size_t i = 0; i < ArrayLength(tenureCounts.entries); i++) {
             const TenureCount& entry = tenureCounts.entries[i];
             if (entry.count >= 3000)
-                (void)pretenureGroups->append(entry.group); // ignore alloc failure
+                mozilla::Unused << pretenureGroups->append(entry.group); // ignore alloc failure
         }
     }
     TIME_END(pretenure);

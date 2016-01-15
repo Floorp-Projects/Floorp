@@ -374,6 +374,195 @@ BluetoothGattServer::Disconnect(const nsAString& aAddress, ErrorResult& aRv)
   return promise.forget();
 }
 
+class BluetoothGattServer::StartAdvertisingTask final
+  : public BluetoothVoidReplyRunnable
+{
+public:
+  StartAdvertisingTask(BluetoothGattServer* aServer, Promise* aPromise)
+    : BluetoothVoidReplyRunnable(nullptr, aPromise)
+    , mServer(aServer)
+  {
+    MOZ_ASSERT(aServer);
+    MOZ_ASSERT(aPromise);
+  }
+
+  virtual void
+  ReleaseMembers() override
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mServer = nullptr;
+  }
+
+protected:
+  virtual void OnErrorFired() override
+  {
+    mServer->mAdvertisingAppUuid.Clear();
+  }
+
+private:
+  RefPtr<BluetoothGattServer> mServer;
+};
+
+class BluetoothGattServer::RegisterServerAndStartAdvertisingTask final
+  : public BluetoothVoidReplyRunnable
+{
+public:
+  RegisterServerAndStartAdvertisingTask(
+    BluetoothGattServer* aServer,
+    const BluetoothGattAdvertisingData& aAdvData,
+    Promise* aPromise)
+    : BluetoothVoidReplyRunnable(nullptr, nullptr)
+      /**
+       * aPromise is not managed by BluetoothVoidReplyRunnable. It would be
+       * passed to |StartAdvertisingTask| after this one executes successfully.
+       */
+    , mServer(aServer)
+    , mAdvData(aAdvData)
+    , mPromise(aPromise)
+  {
+    MOZ_ASSERT(mServer);
+    MOZ_ASSERT(mPromise);
+  }
+
+  void ReleaseMembers() override
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mServer = nullptr;
+    mPromise = nullptr;
+  }
+
+private:
+  virtual void OnSuccessFired() override
+  {
+    BluetoothService* bs = BluetoothService::Get();
+    if (NS_WARN_IF(!bs)) {
+      mPromise->MaybeReject(NS_ERROR_NOT_AVAILABLE);
+    }
+
+    if (NS_WARN_IF(mServer->mAdvertisingAppUuid.IsCleared())) {
+      mPromise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
+    }
+
+    bs->StartAdvertisingInternal(
+      mServer->mAdvertisingAppUuid, mAdvData,
+      new StartAdvertisingTask(mServer, mPromise));
+  }
+
+  virtual void OnErrorFired() override
+  {
+    mServer->mAdvertisingAppUuid.Clear();
+    mPromise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
+  RefPtr<BluetoothGattServer> mServer;
+  BluetoothGattAdvertisingData mAdvData;
+  RefPtr<Promise> mPromise;
+};
+
+already_AddRefed<Promise>
+BluetoothGattServer::StartAdvertising(const BluetoothAdvertisingData& aAdvData,
+                                      ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
+
+  BT_ENSURE_TRUE_REJECT(mAdvertisingAppUuid.IsCleared(),
+                        promise,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
+
+  nsresult rv = GenerateUuid(mAdvertisingAppUuid);
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv) && !mAdvertisingAppUuid.IsCleared(),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+
+  BluetoothGattAdvertisingData data;
+  rv = AdvertisingDataToGattAdvertisingData(aAdvData, data);
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, rv);
+
+  BluetoothUuid appUuid;
+  rv = StringToUuid(mAppUuid, appUuid);
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, rv);
+
+  bs->GattServerRegisterInternal(
+    appUuid,
+    new RegisterServerAndStartAdvertisingTask(this, data, promise));
+
+  return promise.forget();
+}
+
+class BluetoothGattServer::StopAdvertisingTask final
+  : public BluetoothVoidReplyRunnable
+{
+public:
+  StopAdvertisingTask(BluetoothGattServer* aServer, Promise* aPromise)
+    : BluetoothVoidReplyRunnable(nullptr, aPromise)
+    , mServer(aServer)
+  {
+    MOZ_ASSERT(aPromise);
+    MOZ_ASSERT(aServer);
+  }
+
+  virtual void
+  ReleaseMembers() override
+  {
+    BluetoothReplyRunnable::ReleaseMembers();
+    mServer = nullptr;
+  }
+
+protected:
+  virtual void OnSuccessFired() override
+  {
+    mServer->mAdvertisingAppUuid.Clear();
+  }
+
+  virtual void OnErrorFired() override
+  {
+    mServer->mAdvertisingAppUuid.Clear();
+  }
+
+private:
+  RefPtr<BluetoothGattServer> mServer;
+};
+
+already_AddRefed<Promise>
+BluetoothGattServer::StopAdvertising(ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+  if (!global) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
+
+  if (mAdvertisingAppUuid.IsCleared()) {
+    promise->MaybeResolve(JS::UndefinedHandleValue);
+    return promise.forget();
+  }
+
+  BluetoothService* bs = BluetoothService::Get();
+  BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
+
+  bs->StopAdvertisingInternal(mAdvertisingAppUuid,
+                              new StopAdvertisingTask(this, promise));
+
+  return promise.forget();
+}
+
 class BluetoothGattServer::AddIncludedServiceTask final
   : public BluetoothReplyTaskQueue::SubTask
 {
