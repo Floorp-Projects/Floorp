@@ -73,6 +73,27 @@ var inputTests = [
     output: "foo://example.com",
   },
 
+  // 9: Shortened URL in an array
+  {
+    input: "['http://example.com/abcdefghijabcdefghij some other text']",
+    output: "Array [ \"http://example.com/abcdefghijabcdef\u2026\" ]",
+    printOutput: "http://example.com/abcdefghijabcdefghij some other text",
+    expectedTab: "http://example.com/abcdefghijabcdefghij",
+    getClickableNode: (msg) => msg.querySelectorAll("a")[1],
+  },
+
+  // 10: Shortened URL in an object
+  {
+    input: "{test: 'http://example.com/abcdefghijabcdefghij some other text'}",
+    output: "Object { test: \"http://example.com/abcdefghijabcdef\u2026\" }",
+    printOutput: "[object Object]",
+    evalOutput: "http://example.com/abcdefghijabcdefghij some other text",
+    noClick: true,
+    consoleLogClick: true,
+    expectedTab: "http://example.com/abcdefghijabcdefghij",
+    getClickableNode: (msg) => msg.querySelectorAll("a")[1],
+  },
+
 ];
 
 function test() {
