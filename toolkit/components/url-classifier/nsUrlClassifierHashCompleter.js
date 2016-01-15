@@ -27,8 +27,6 @@ const BACKOFF_MAX = 8 * 60 * 60 * 1000;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 
 // Log only if browser.safebrowsing.debug is true
 function log(...stuff) {
@@ -238,10 +236,13 @@ HashCompleterRequest.prototype = {
     let loadFlags = Ci.nsIChannel.INHIBIT_CACHING |
                     Ci.nsIChannel.LOAD_BYPASS_CACHE;
 
-    let channel = NetUtil.newChannel({
-      uri: this.gethashUrl,
-      loadUsingSystemPrincipal: true
-    });
+    let uri = Services.io.newURI(this.gethashUrl, null, null);
+    let channel = Services.io.newChannelFromURI2(uri,
+                                                 null,      // aLoadingNode
+                                                 Services.scriptSecurityManager.getSystemPrincipal(),
+                                                 null,      // aTriggeringPrincipal
+                                                 Ci.nsILoadInfo.SEC_NORMAL,
+                                                 Ci.nsIContentPolicy.TYPE_OTHER);
     channel.loadFlags = loadFlags;
 
     // Disable keepalive.
@@ -260,7 +261,7 @@ HashCompleterRequest.prototype = {
     let timeout = Services.prefs.getIntPref(
       "urlclassifier.gethash.timeout_ms");
     this.timer_.initWithCallback(this, timeout, this.timer_.TYPE_ONE_SHOT);
-    channel.asyncOpen2(this);
+    channel.asyncOpen(this, null);
   },
 
   // Returns a string for the request body based on the contents of

@@ -1963,7 +1963,7 @@ this.DownloadCopySaver.prototype = {
 
           // Open the channel, directing output to the background file saver.
           backgroundFileSaver.QueryInterface(Ci.nsIStreamListener);
-          channel.asyncOpen2({
+          channel.asyncOpen({
             onStartRequest: function (aRequest, aContext) {
               backgroundFileSaver.onStartRequest(aRequest, aContext);
 
@@ -2065,7 +2065,7 @@ this.DownloadCopySaver.prototype = {
                                                   aInputStream, aOffset,
                                                   aCount);
             }.bind(copySaver),
-          });
+          }, null);
 
           // We should check if we have been canceled in the meantime, after
           // all the previous asynchronous operations have been executed and
