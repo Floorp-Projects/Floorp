@@ -19,6 +19,7 @@ class TestStarInAutocomplete(FirefoxTestCase):
     def setUp(self):
         FirefoxTestCase.setUp(self)
 
+        self.bookmark_panel = None
         self.test_urls = [self.marionette.absolute_url('layout/mozilla_grants.html')]
 
         # Disable search suggestions to only get results for history and bookmarks
@@ -32,6 +33,11 @@ class TestStarInAutocomplete(FirefoxTestCase):
     def tearDown(self):
         # Close the autocomplete results
         try:
+            if self.bookmark_panel:
+                self.marionette.execute_script("""
+                  arguments[0].hidePopup();
+                """, script_args=[self.bookmark_panel])
+
             self.browser.navbar.locationbar.autocomplete_results.close()
             self.places.restore_default_bookmarks()
         finally:
@@ -55,8 +61,11 @@ class TestStarInAutocomplete(FirefoxTestCase):
                                           'menu_bookmarkThisPage')
 
         # TODO: Replace hard-coded selector with library method when one is available
+        self.bookmark_panel = self.marionette.find_element(By.ID, 'editBookmarkPanel')
         done_button = self.marionette.find_element(By.ID, 'editBookmarkPanelDoneButton')
-        Wait(self.marionette).until(lambda mn: done_button.is_displayed)
+
+        Wait(self.marionette).until(
+            lambda mn: self.bookmark_panel.get_attribute('panelopen') == 'true')
         done_button.click()
 
         # We must open the blank page so the autocomplete result isn't "Switch to tab"
