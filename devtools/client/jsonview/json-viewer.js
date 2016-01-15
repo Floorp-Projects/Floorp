@@ -7,9 +7,7 @@
 define(function(require, exports, module) {
 
 // ReactJS
-const ReactDOM = require("react-dom");
-
-// RDP Inspector
+const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { createFactories } = require("./components/reps/rep-utils");
 const { MainTabbedArea } = createFactories(require("./components/main-tabbed-area"));
 

@@ -6,7 +6,7 @@
 
 define(function(require, exports, module) {
 
-const React = require("react");
+const React = require("devtools/client/shared/vendor/react");
 
 // Constants
 const DOM = React.DOM;
