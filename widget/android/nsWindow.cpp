@@ -3230,8 +3230,6 @@ nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
 
 // off-main-thread compositor fields and functions
 
-StaticRefPtr<mozilla::layers::APZCTreeManager> nsWindow::sApzcTreeManager;
-
 void
 nsWindow::InvalidateAndScheduleComposite()
 {
@@ -3309,21 +3307,6 @@ nsWindow::NewCompositorParent(int aSurfaceWidth, int aSurfaceHeight)
     return new CompositorParent(this, true, aSurfaceWidth, aSurfaceHeight);
 }
 
-mozilla::layers::APZCTreeManager*
-nsWindow::GetAPZCTreeManager()
-{
-    return sApzcTreeManager;
-}
-
-void
-nsWindow::ConfigureAPZCTreeManager()
-{
-    nsBaseWidget::ConfigureAPZCTreeManager();
-    if (!sApzcTreeManager) {
-        sApzcTreeManager = mAPZC;
-    }
-}
-
 void
 nsWindow::ConfigureAPZControllerThread()
 {
@@ -3335,13 +3318,6 @@ nsWindow::CreateRootContentController()
 {
     RefPtr<GeckoContentController> controller = new AndroidContentController(this, mAPZEventState, mAPZC);
     return controller.forget();
-}
-
-uint64_t
-nsWindow::RootLayerTreeId()
-{
-    MOZ_ASSERT(gGeckoViewWindow && gGeckoViewWindow->mCompositorParent);
-    return gGeckoViewWindow->mCompositorParent->RootLayerTreeId();
 }
 
 uint32_t
