@@ -4,7 +4,7 @@
 "use strict";
 
 // Testing searching for ids and classes that contain reserved characters.
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_search-reserved.html";
+const TEST_URL = URL_ROOT + "doc_inspector_search-reserved.html";
 
 // An array of (key, suggestions) pairs where key is a key to press and
 // suggestions is an array of suggestions that should be shown in the popup.
@@ -35,8 +35,8 @@ const TEST_DATA = [
     key: "c",
     suggestions: [{label: ".c1\\.c2"}]
   },
-  { 
-    key: "VK_BACK_SPACE", 
+  {
+    key: "VK_BACK_SPACE",
     suggestions: [{label: ".c1\\.c2"}]
   },
   {
@@ -44,7 +44,7 @@ const TEST_DATA = [
     suggestions: []
   },
   {
-    key: "d", 
+    key: "d",
     suggestions: [{label: "div"},
                   {label: "#d1\\.d2"}]
   },
@@ -63,7 +63,7 @@ const TEST_DATA = [
   {
     key: "b",
     suggestions: [{label: "body"}]
-  }, 
+  },
   {
     key: "o",
     suggestions: [{label: "body"}]
@@ -72,10 +72,10 @@ const TEST_DATA = [
     key: "d",
     suggestions: [{label: "body"}]
   },
-  { 
+  {
     key: "y",
     suggestions: []
-  }, 
+  },
   {
     key: " ",
     suggestions: [{label: "body div"}]

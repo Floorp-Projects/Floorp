@@ -12,8 +12,6 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-const PREF_EM_UPDATE_INTERVAL = "extensions.update.interval";
-
 // The old XPInstall error codes
 const EXECUTION_ERROR   = -203;
 const CANT_READ_ARCHIVE = -207;
