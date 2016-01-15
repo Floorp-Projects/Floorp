@@ -4,6 +4,44 @@
 
 #include "TypedObjectConstants.h"
 
+function ViewedArrayBufferIfReified(tarray) {
+    assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
+
+    var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
+    assert(buf === null || (IsObject(buf) && (IsArrayBuffer(buf) || IsSharedArrayBuffer(buf))),
+           "unexpected value in buffer slot");
+    return buf;
+}
+
+function IsDetachedBuffer(buffer) {
+    // Typed arrays whose buffers are null use inline storage and can't have
+    // been neutered.
+    if (buffer === null)
+        return false;
+
+    assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
+           "non-ArrayBuffer passed to IsDetachedBuffer");
+
+    // Typed arrays whose buffers map shared memory can't have been neutered.
+    //
+    // This check is more expensive than desirable, but IsDetachedBuffer is
+    // only hot for non-shared memory in SetFromNonTypedArray, so there is an
+    // optimization in place there to avoid incurring the cost here.  An
+    // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
+    if (IsSharedArrayBuffer(buffer))
+	return false;
+
+    var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
+    return (flags & JS_ARRAYBUFFER_NEUTERED_FLAG) !== 0;
+}
+
+function GetAttachedArrayBuffer(tarray) {
+    var buffer = ViewedArrayBufferIfReified(tarray);
+    if (IsDetachedBuffer(buffer))
+        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
+    return buffer;
+}
+
 // ES6 draft 20150304 %TypedArray%.prototype.copyWithin
 function TypedArrayCopyWithin(target, start, end = undefined) {
     // This function is not generic.
@@ -676,44 +714,6 @@ function TypedArrayReverse() {
 
     // Step 9.
     return O;
-}
-
-function ViewedArrayBufferIfReified(tarray) {
-    assert(IsTypedArray(tarray), "non-typed array asked for its buffer");
-
-    var buf = UnsafeGetReservedSlot(tarray, JS_TYPEDARRAYLAYOUT_BUFFER_SLOT);
-    assert(buf === null || (IsObject(buf) && (IsArrayBuffer(buf) || IsSharedArrayBuffer(buf))),
-           "unexpected value in buffer slot");
-    return buf;
-}
-
-function IsDetachedBuffer(buffer) {
-    // Typed arrays whose buffers are null use inline storage and can't have
-    // been neutered.
-    if (buffer === null)
-        return false;
-
-    assert(IsArrayBuffer(buffer) || IsSharedArrayBuffer(buffer),
-           "non-ArrayBuffer passed to IsDetachedBuffer");
-
-    // Typed arrays whose buffers map shared memory can't have been neutered.
-    //
-    // This check is more expensive than desirable, but IsDetachedBuffer is
-    // only hot for non-shared memory in SetFromNonTypedArray, so there is an
-    // optimization in place there to avoid incurring the cost here.  An
-    // alternative is to give SharedArrayBuffer the same layout as ArrayBuffer.
-    if (IsSharedArrayBuffer(buffer))
-	return false;
-
-    var flags = UnsafeGetInt32FromReservedSlot(buffer, JS_ARRAYBUFFER_FLAGS_SLOT);
-    return (flags & JS_ARRAYBUFFER_NEUTERED_FLAG) !== 0;
-}
-
-function GetAttachedArrayBuffer(tarray) {
-    var buffer = ViewedArrayBufferIfReified(tarray);
-    if (IsDetachedBuffer(buffer))
-        ThrowTypeError(JSMSG_TYPED_ARRAY_DETACHED);
-    return buffer;
 }
 
 // ES6 draft 20150220 22.2.3.22.1 %TypedArray%.prototype.set(array [, offset])
