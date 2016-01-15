@@ -433,11 +433,14 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         mGLController = glController;
         glController.mView = this;
 
+        final NativePanZoomController npzc = AppConstants.MOZ_ANDROID_APZ ?
+                (NativePanZoomController) mPanZoomController : null;
+
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
-            glController.setLayerClient(mLayerClient);
+            glController.attachToJava(mLayerClient, npzc);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    glController, "setLayerClient", mLayerClient);
+                    glController, "attachToJava", mLayerClient, npzc);
         }
     }
 

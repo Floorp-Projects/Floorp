@@ -742,6 +742,9 @@ public:
 
     ~GLControllerSupport()
     {
+        if (window.mNPZCSupport) {
+            window.mNPZCSupport->DetachFromWindow();
+        }
         mGLController->Destroy();
     }
 
@@ -803,7 +806,7 @@ private:
 public:
     using Base::DisposeNative;
 
-    void SetLayerClient(jni::Object::Param aClient)
+    void AttachToJava(jni::Object::Param aClient, jni::Object::Param aNPZC)
     {
         const auto& layerClient = GeckoLayerClient::Ref::From(aClient);
 
@@ -825,6 +828,15 @@ public:
                 window.mCompositorParent->ForceIsFirstPaint();
             }
         }
+
+#ifdef MOZ_ANDROID_APZ
+        MOZ_ASSERT(aNPZC);
+        auto npzc = NativePanZoomController::LocalRef(
+                jni::GetGeckoThreadEnv(),
+                NativePanZoomController::Ref::From(aNPZC));
+        NPZCSupport::AttachNative(
+                npzc, mozilla::MakeUnique<NPZCSupport>(&window, npzc));
+#endif
     }
 
     void CreateCompositor(int32_t aWidth, int32_t aHeight)

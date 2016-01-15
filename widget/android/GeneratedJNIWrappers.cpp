@@ -1242,6 +1242,9 @@ auto DisplayPortMetrics::Resolution() const -> float
 
 constexpr char GLController::name[];
 
+constexpr char GLController::AttachToJava_t::name[];
+constexpr char GLController::AttachToJava_t::signature[];
+
 constexpr char GLController::CreateCompositor_t::name[];
 constexpr char GLController::CreateCompositor_t::signature[];
 
@@ -1266,9 +1269,6 @@ constexpr char GLController::DisposeNative_t::signature[];
 
 constexpr char GLController::PauseCompositor_t::name[];
 constexpr char GLController::PauseCompositor_t::signature[];
-
-constexpr char GLController::SetLayerClient_t::name[];
-constexpr char GLController::SetLayerClient_t::signature[];
 
 constexpr char GLController::SyncInvalidateAndScheduleComposite_t::name[];
 constexpr char GLController::SyncInvalidateAndScheduleComposite_t::signature[];

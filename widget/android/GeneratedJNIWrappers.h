@@ -3350,6 +3350,23 @@ protected:
     GLController(jobject instance) : Class(instance) {}
 
 public:
+    struct AttachToJava_t {
+        typedef GLController Owner;
+        typedef void ReturnType;
+        typedef void SetterType;
+        typedef mozilla::jni::Args<
+                mozilla::jni::Object::Param,
+                mozilla::jni::Object::Param> Args;
+        static constexpr char name[] = "attachToJava";
+        static constexpr char signature[] =
+                "(Lorg/mozilla/gecko/gfx/GeckoLayerClient;Lorg/mozilla/gecko/gfx/NativePanZoomController;)V";
+        static const bool isStatic = false;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+public:
     struct CreateCompositor_t {
         typedef GLController Owner;
         typedef void ReturnType;
@@ -3424,22 +3441,6 @@ public:
         static constexpr char name[] = "pauseCompositor";
         static constexpr char signature[] =
                 "()V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-public:
-    struct SetLayerClient_t {
-        typedef GLController Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                mozilla::jni::Object::Param> Args;
-        static constexpr char name[] = "setLayerClient";
-        static constexpr char signature[] =
-                "(Lorg/mozilla/gecko/gfx/GeckoLayerClient;)V";
         static const bool isStatic = false;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
