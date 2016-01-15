@@ -116,8 +116,8 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     nsContentPolicyType externalType =
         nsContentUtils::InternalContentPolicyTypeToExternal(contentType);
 
-    nsContentPolicyType externalTypeOrScript =
-        nsContentUtils::InternalContentPolicyTypeToExternalOrScript(contentType);
+    nsContentPolicyType externalTypeOrMCBInternal =
+        nsContentUtils::InternalContentPolicyTypeToExternalOrMCBInternal(contentType);
 
     nsContentPolicyType externalTypeOrCSPInternal =
        nsContentUtils::InternalContentPolicyTypeToExternalOrCSPInternal(contentType);
@@ -140,11 +140,13 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
         /* check the appropriate policy */
         // Send the internal content policy type to the mixed content blocker
         // which needs to know about TYPE_INTERNAL_WORKER,
-        // TYPE_INTERNAL_SHARED_WORKER and TYPE_INTERNAL_SERVICE_WORKER.
+        // TYPE_INTERNAL_SHARED_WORKER and TYPE_INTERNAL_SERVICE_WORKER
+        // and also preloads: TYPE_INTERNAL_SCRIPT_PRELOAD,
+        // TYPE_INTERNAL_IMAGE_PRELOAD, TYPE_INTERNAL_STYLESHEET_PRELOAD
         bool isMixedContentBlocker = mixedContentBlocker == entries[i];
         nsContentPolicyType type = externalType;
         if (isMixedContentBlocker) {
-            type = externalTypeOrScript;
+            type = externalTypeOrMCBInternal;
         }
         // Send the internal content policy type for CSP which needs to
         // know about preloads and workers, in particular:

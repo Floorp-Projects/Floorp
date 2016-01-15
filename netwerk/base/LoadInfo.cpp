@@ -35,7 +35,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(LoadTainting::Basic)
   , mUpgradeInsecureRequests(false)
-  , mUpgradeInsecurePreloads(false)
   , mInnerWindowID(0)
   , mOuterWindowID(0)
   , mParentOuterWindowID(0)
@@ -86,8 +85,13 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       ComputeIsThirdPartyContext(outerWindow);
     }
 
-    mUpgradeInsecureRequests = aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests();
-    mUpgradeInsecurePreloads = aLoadingContext->OwnerDoc()->GetUpgradeInsecurePreloads();
+    // if the document forces all requests to be upgraded from http to https, then
+    // we should do that for all requests. If it only forces preloads to be upgraded
+    // then we should enforce upgrade insecure requests only for preloads.
+    mUpgradeInsecureRequests =
+      aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(false) ||
+      (nsContentUtils::IsPreloadType(mInternalContentPolicyType) &&
+       aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests(true));
   }
 
   const PrincipalOriginAttributes attrs = BasePrincipal::Cast(mLoadingPrincipal)->OriginAttributesRef();
@@ -102,7 +106,6 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
   , mTainting(rhs.mTainting)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
-  , mUpgradeInsecurePreloads(rhs.mUpgradeInsecurePreloads)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
   , mParentOuterWindowID(rhs.mParentOuterWindowID)
@@ -125,7 +128,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    nsContentPolicyType aContentPolicyType,
                    LoadTainting aTainting,
                    bool aUpgradeInsecureRequests,
-                   bool aUpgradeInsecurePreloads,
                    uint64_t aInnerWindowID,
                    uint64_t aOuterWindowID,
                    uint64_t aParentOuterWindowID,
@@ -144,7 +146,6 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   , mInternalContentPolicyType(aContentPolicyType)
   , mTainting(aTainting)
   , mUpgradeInsecureRequests(aUpgradeInsecureRequests)
-  , mUpgradeInsecurePreloads(aUpgradeInsecurePreloads)
   , mInnerWindowID(aInnerWindowID)
   , mOuterWindowID(aOuterWindowID)
   , mParentOuterWindowID(aParentOuterWindowID)
@@ -374,13 +375,6 @@ NS_IMETHODIMP
 LoadInfo::GetUpgradeInsecureRequests(bool* aResult)
 {
   *aResult = mUpgradeInsecureRequests;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetUpgradeInsecurePreloads(bool* aResult)
-{
-  *aResult = mUpgradeInsecurePreloads;
   return NS_OK;
 }
 
