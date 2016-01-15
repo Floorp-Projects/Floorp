@@ -211,6 +211,8 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                      nsIScriptableRegion* aDragRgn,
                                      uint32_t aActionType)
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
