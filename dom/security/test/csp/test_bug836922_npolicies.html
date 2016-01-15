@@ -20,21 +20,15 @@ var path = "/tests/dom/security/test/csp/";
 // true/false is the pass/fail result.
 window.loads = {
   css_self: {expected: true, verified: false},
-  css_examplecom: {expected: false, verified: false},
   img_self: {expected: false, verified: false},
-  img_examplecom: {expected: false, verified: false},
   script_self: {expected: true, verified: false},
 };
 
 window.violation_reports = {
   css_self:
   {expected: 0, expected_ro: 0},  /* totally fine */
-  css_examplecom:
-  {expected: 1, expected_ro: 0},  /* violates enforced CSP */
   img_self:
   {expected: 1, expected_ro: 0},  /* violates enforced CSP */
-  img_examplecom:
-  {expected: 1, expected_ro: 1},  /* violates both CSPs */
   script_self:
   {expected: 0, expected_ro: 1},  /* violates report-only */
 };

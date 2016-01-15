@@ -2251,9 +2251,9 @@ LiveBundle::toString() const
     char *buf = JS_smprintf("");
 
     for (LiveRange::BundleLinkIterator iter = rangesBegin(); buf && iter; iter++) {
-        buf = JS_smprintf(buf, "%s %s",
-                          (iter == rangesBegin()) ? "" : " ##",
-                          LiveRange::get(*iter)->toString().get());
+        buf = JS_sprintf_append(buf, "%s %s",
+                                (iter == rangesBegin()) ? "" : " ##",
+                                LiveRange::get(*iter)->toString().get());
     }
 
     if (!buf)

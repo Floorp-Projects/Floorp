@@ -56,9 +56,21 @@ window.addEventListener("pagehide", function() {
 });
 
 window.addEventListener("keypress", ev => {
-  // focus the search-box on keypress
-  if (document.activeElement.id == "searchText") // unless already focussed
+  if (ev.defaultPrevented) {
     return;
+  }
+
+  // don't focus the search-box on keypress if something other than the
+  // body or document element has focus - don't want to steal input from other elements
+  // Make an exception for <a> and <button> elements (and input[type=button|submit])
+  // which don't usefully take keypresses anyway.
+  // (except space, which is handled below)
+  if (document.activeElement && document.activeElement != document.body &&
+      document.activeElement != document.documentElement &&
+      !["a", "button"].includes(document.activeElement.localName) &&
+      !document.activeElement.matches("input:-moz-any([type=button],[type=submit])")) {
+    return;
+  }
 
   let modifiers = ev.ctrlKey + ev.altKey + ev.metaKey;
   // ignore Ctrl/Cmd/Alt, but not Shift

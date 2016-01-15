@@ -8,10 +8,17 @@
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+const SHARED_STRINGS_URI = "chrome://devtools/locale/shared.properties";
+
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 Cu.import("resource://devtools/shared/event-emitter.js");
 
 this.EXPORTED_SYMBOLS = ["SideMenuWidget"];
+
+/**
+ * Localization convenience methods.
+ */
+var L10N = new ViewHelpers.L10N(SHARED_STRINGS_URI);
 
 /**
  * A simple side menu, with the ability of grouping menu items.
@@ -471,7 +478,10 @@ function SideMenuGroup(aWidget, aName, aOptions={}) {
 
     // Show a checkbox before the content.
     if (aOptions.showCheckbox) {
-      let checkbox = this._checkbox = makeCheckbox(title, { description: aName });
+      let checkbox = this._checkbox = makeCheckbox(title, {
+        description: aName,
+        checkboxTooltip: L10N.getStr("sideMenu.groupCheckbox.tooltip")
+      });
       checkbox.className = "side-menu-widget-group-checkbox";
     }
 
@@ -685,7 +695,8 @@ SideMenuItem.prototype = {
  */
 function makeCheckbox(aParentNode, aOptions) {
   let checkbox = aParentNode.ownerDocument.createElement("checkbox");
-  checkbox.setAttribute("tooltiptext", aOptions.checkboxTooltip);
+
+  checkbox.setAttribute("tooltiptext", aOptions.checkboxTooltip || "");
 
   if (aOptions.checkboxState) {
     checkbox.setAttribute("checked", true);

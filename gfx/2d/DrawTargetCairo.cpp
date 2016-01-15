@@ -713,17 +713,32 @@ DrawTargetCairo::Snapshot()
 
 bool
 DrawTargetCairo::LockBits(uint8_t** aData, IntSize* aSize,
-                          int32_t* aStride, SurfaceFormat* aFormat)
+                          int32_t* aStride, SurfaceFormat* aFormat,
+                          IntPoint* aOrigin)
 {
-  if (cairo_surface_get_type(mSurface) == CAIRO_SURFACE_TYPE_IMAGE) {
+  cairo_surface_t* surf = cairo_get_group_target(mContext);
+  if (cairo_surface_get_type(surf) == CAIRO_SURFACE_TYPE_IMAGE) {
+    PointDouble offset;
+    cairo_surface_get_device_offset(surf, &offset.x, &offset.y);
+    // verify the device offset can be converted to integers suitable for a bounds rect
+    IntPoint origin(int32_t(-offset.x), int32_t(-offset.y));
+    if (-PointDouble(origin) != offset ||
+        (!aOrigin && origin != IntPoint())) {
+      return false;
+    }
+
     WillChange();
     Flush();
 
-    mLockedBits = cairo_image_surface_get_data(mSurface);
+    mLockedBits = cairo_image_surface_get_data(surf);
     *aData = mLockedBits;
-    *aSize = GetSize();
-    *aStride = cairo_image_surface_get_stride(mSurface);
-    *aFormat = GetFormat();
+    *aSize = IntSize(cairo_image_surface_get_width(surf),
+                     cairo_image_surface_get_height(surf));
+    *aStride = cairo_image_surface_get_stride(surf);
+    *aFormat = CairoFormatToGfxFormat(cairo_image_surface_get_format(surf));
+    if (aOrigin) {
+      *aOrigin = origin;
+    }
     return true;
   }
 
@@ -735,13 +750,14 @@ DrawTargetCairo::ReleaseBits(uint8_t* aData)
 {
   MOZ_ASSERT(mLockedBits == aData);
   mLockedBits = nullptr;
-  cairo_surface_mark_dirty(mSurface);
+  cairo_surface_t* surf = cairo_get_group_target(mContext);
+  cairo_surface_mark_dirty(surf);
 }
 
 void
 DrawTargetCairo::Flush()
 {
-  cairo_surface_t* surf = cairo_get_target(mContext);
+  cairo_surface_t* surf = cairo_get_group_target(mContext);
   cairo_surface_flush(surf);
 }
 
@@ -1964,7 +1980,7 @@ BorrowedXlibDrawable::Init(DrawTarget* aDT)
   }
 
   DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(aDT);
-  cairo_surface_t* surf = cairoDT->mSurface;
+  cairo_surface_t* surf = cairo_get_group_target(cairoDT->mContext);
   if (cairo_surface_get_type(surf) != CAIRO_SURFACE_TYPE_XLIB) {
     return false;
   }
@@ -1977,6 +1993,12 @@ BorrowedXlibDrawable::Init(DrawTarget* aDT)
   mScreen = cairo_xlib_surface_get_screen(surf);
   mVisual = cairo_xlib_surface_get_visual(surf);
   mXRenderFormat = cairo_xlib_surface_get_xrender_format(surf);
+  mSize.width = cairo_xlib_surface_get_width(surf);
+  mSize.height = cairo_xlib_surface_get_height(surf);
+
+  double x = 0, y = 0;
+  cairo_surface_get_device_offset(surf, &x, &y);
+  mOffset = Point(x, y);
 
   return true;
 #else
@@ -1988,7 +2010,7 @@ void
 BorrowedXlibDrawable::Finish()
 {
   DrawTargetCairo* cairoDT = static_cast<DrawTargetCairo*>(mDT);
-  cairo_surface_t* surf = cairoDT->mSurface;
+  cairo_surface_t* surf = cairo_get_group_target(cairoDT->mContext);
   cairo_surface_mark_dirty(surf);
   if (mDrawable) {
     mDrawable = None;

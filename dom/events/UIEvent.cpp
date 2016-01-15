@@ -346,6 +346,12 @@ UIEvent::IsChar() const
   return keyEvent ? keyEvent->isChar : false;
 }
 
+mozilla::dom::Event*
+UIEvent::AsEvent(void)
+{
+  return this;
+}
+
 NS_IMETHODIMP
 UIEvent::DuplicatePrivateData()
 {

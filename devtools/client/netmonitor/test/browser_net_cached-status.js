@@ -61,7 +61,7 @@ var test = Task.async(function*() {
       details: {
         status: 200,
         statusText: "OK (cached)",
-        fromCache: true,
+        displayedStatus : "cached",
         type: "plain",
         fullMimeType: "text/plain; charset=utf-8"
       }
@@ -72,7 +72,7 @@ var test = Task.async(function*() {
       details: {
         status: 301,
         statusText: "Moved Permanently (cached)",
-        fromCache: true,
+        displayedStatus: "cached",
         type: "html",
         fullMimeType: "text/html; charset=utf-8"
       }

@@ -48,6 +48,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.os.CancellationSignal;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
 import android.util.Log;
@@ -486,7 +487,7 @@ public class TopSitesPanel extends HomeFragment {
         ThreadUtils.resetGeckoPriority();
     }
 
-    private static class TopSitesLoader extends SimpleCursorLoader {
+    private static class TopSitesLoader extends SimpleCancellableCursorLoader {
         // Max number of search results.
         private static final int SEARCH_LIMIT = 30;
         private static final String TELEMETRY_HISTOGRAM_LOAD_CURSOR = "FENNEC_TOPSITES_LOADER_TIME_MS";
@@ -500,9 +501,10 @@ public class TopSitesPanel extends HomeFragment {
         }
 
         @Override
-        public Cursor loadCursor() {
+        public Cursor loadCursor(final CancellationSignal cancellationSignal) {
             final long start = SystemClock.uptimeMillis();
-            final Cursor cursor = mDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT);
+            final Cursor cursor = mDB.getTopSites(getContext().getContentResolver(), mMaxGridEntries, SEARCH_LIMIT,
+                    cancellationSignal);
             final long end = SystemClock.uptimeMillis();
             final long took = end - start;
             Telemetry.addToHistogram(TELEMETRY_HISTOGRAM_LOAD_CURSOR, (int) Math.min(took, Integer.MAX_VALUE));

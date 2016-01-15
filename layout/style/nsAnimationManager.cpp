@@ -243,10 +243,9 @@ CSSAnimation::QueueEvents()
   StickyTimeDuration elapsedTime;
 
   if (message == eAnimationStart || message == eAnimationIteration) {
-    TimeDuration iterationStart = mEffect->Timing().mIterationDuration *
-                                    computedTiming.mCurrentIteration;
-    elapsedTime = StickyTimeDuration(std::max(iterationStart,
-                                              InitialAdvance()));
+    StickyTimeDuration iterationStart = computedTiming.mDuration *
+                                          computedTiming.mCurrentIteration;
+    elapsedTime = std::max(iterationStart, StickyTimeDuration(InitialAdvance()));
   } else {
     MOZ_ASSERT(message == eAnimationEnd);
     elapsedTime = computedTiming.mActiveDuration;
@@ -290,7 +289,8 @@ CSSAnimation::ElapsedTimeToTimeStamp(const StickyTimeDuration&
     return result;
   }
 
-  result = AnimationTimeToTimeStamp(aElapsedTime + mEffect->Timing().mDelay);
+  result = AnimationTimeToTimeStamp(aElapsedTime +
+                                    mEffect->SpecifiedTiming().mDelay);
   return result;
 }
 
@@ -423,9 +423,9 @@ nsAnimationManager::CheckAnimationRule(nsStyleContext* aStyleContext,
           KeyframeEffectReadOnly* oldEffect = oldAnim->GetEffect();
           KeyframeEffectReadOnly* newEffect = newAnim->GetEffect();
           animationChanged =
-            oldEffect->Timing() != newEffect->Timing() ||
+            oldEffect->SpecifiedTiming() != newEffect->SpecifiedTiming() ||
             oldEffect->Properties() != newEffect->Properties();
-          oldEffect->SetTiming(newEffect->Timing());
+          oldEffect->SetSpecifiedTiming(newEffect->SpecifiedTiming());
           oldEffect->CopyPropertiesFrom(*newEffect);
         }
 
@@ -625,13 +625,12 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
     dest->SetAnimationIndex(static_cast<uint64_t>(animIdx));
     aAnimations.AppendElement(dest);
 
-    AnimationTiming timing;
-    timing.mIterationDuration =
-      TimeDuration::FromMilliseconds(src.GetDuration());
+    TimingParams timing;
+    timing.mDuration.SetAsUnrestrictedDouble() = src.GetDuration();
     timing.mDelay = TimeDuration::FromMilliseconds(src.GetDelay());
-    timing.mIterationCount = src.GetIterationCount();
+    timing.mIterations = src.GetIterationCount();
     timing.mDirection = src.GetDirection();
-    timing.mFillMode = src.GetFillMode();
+    timing.mFill = src.GetFillMode();
 
     RefPtr<KeyframeEffectReadOnly> destEffect =
       new KeyframeEffectReadOnly(mPresContext->Document(), aTarget,

@@ -260,7 +260,10 @@ jit::ExceptionHandlerBailout(JSContext* cx, const InlineFrameIterator& frame,
 bool
 jit::EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp)
 {
-    if (fp.isFunctionFrame() &&
+    // Ion does not compile eval scripts.
+    MOZ_ASSERT(!fp.isEvalFrame());
+
+    if (fp.isNonEvalFunctionFrame() &&
         fp.callee()->needsCallObject() &&
         !fp.hasCallObj())
     {

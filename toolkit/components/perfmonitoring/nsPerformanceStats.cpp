@@ -164,7 +164,9 @@ nsPerformanceObservationTarget::SetTarget(nsPerformanceGroupDetails* details) {
 
 NS_IMETHODIMP
 nsPerformanceObservationTarget::AddJankObserver(nsIPerformanceObserver* observer) {
-  mObservers.append(observer);
+  if (!mObservers.append(observer)) {
+    MOZ_CRASH();
+  }
   return NS_OK;
 };
 
@@ -188,7 +190,9 @@ void
 nsPerformanceObservationTarget::NotifyJankObservers(nsIPerformanceGroupDetails* source, nsIPerformanceAlert* gravity) {
   // Copy the vector to make sure that it won't change under our feet.
   mozilla::Vector<nsCOMPtr<nsIPerformanceObserver>> observers;
-  observers.appendAll(mObservers);
+  if (!observers.appendAll(mObservers)) {
+    MOZ_CRASH();
+  }
 
   // Now actually notify.
   for (auto iter = observers.begin(), end = observers.end(); iter < end; ++iter) {
@@ -733,7 +737,9 @@ nsPerformanceStatsService::Dispose()
   // not modify the hashtable while iterating it.
   GroupVector groups;
   for (auto iter = mGroups.Iter(); !iter.Done(); iter.Next()) {
-    groups.append(iter.Get()->GetKey());
+    if (!groups.append(iter.Get()->GetKey())) {
+      MOZ_CRASH();
+    }
   }
   for (auto iter = groups.begin(), end = groups.end(); iter < end; ++iter) {
     RefPtr<nsPerformanceGroup> group = *iter;
@@ -1007,7 +1013,10 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& ou
   }
 
   // All compartments belong to the top group.
-  out.append(mTopGroup);
+  if (!out.append(mTopGroup)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
 
   nsAutoString name;
   CompartmentName(cx, global, name);
@@ -1032,7 +1041,10 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& ou
                                           nsPerformanceGroup::GroupScope::ADDON)
                  );
     }
-    out.append(entry->GetGroup());
+    if (!out.append(entry->GetGroup())) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
   }
 
   // Find out if the compartment is executed by a window. If so, its
@@ -1054,7 +1066,10 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& ou
                                           nsPerformanceGroup::GroupScope::WINDOW)
                  );
     }
-    out.append(entry->GetGroup());
+    if (!out.append(entry->GetGroup())) {
+      JS_ReportOutOfMemory(cx);
+      return false;
+    }
   }
 
   // All compartments have their own group.
@@ -1063,7 +1078,10 @@ nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& ou
                              name, addonId, windowId,
                              mProcessId, isSystem,
                              nsPerformanceGroup::GroupScope::COMPARTMENT);
-  out.append(group);
+  if (!out.append(group)) {
+    JS_ReportOutOfMemory(cx);
+    return false;
+  }
 
   return true;
 }
@@ -1190,8 +1208,9 @@ nsPerformanceStatsService::CommitGroup(uint64_t iteration,
 
   if (totalTimeDelta >= mJankAlertThreshold) {
     if (!group->HasPendingAlert()) {
-      group->SetHasPendingAlert(true);
-      mPendingAlerts.append(group);
+      if (mPendingAlerts.append(group)) {
+        group->SetHasPendingAlert(true);
+      }
       return;
     }
   }

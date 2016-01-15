@@ -42,6 +42,7 @@
 #endif
 
 #ifdef XP_WIN
+#include "mozilla/widget/AudioSession.h"
 #include <windows.h>
 #endif
 
@@ -1497,6 +1498,11 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
         gfxPrefs::GetSingleton();
         // Initialize e10s check on the main thread, if not already done
         BrowserTabsRemoteAutostart();
+#ifdef XP_WIN
+        // Plugin may require audio session if installed plugin can initialize
+        // asynchronized.
+        widget::StartAudioSession();
+#endif
 
         {
             JS::Rooted<JSObject*> glob(cx, holder->GetJSObject());
@@ -1565,6 +1571,9 @@ XRE_XPCShellMain(int argc, char** argv, char** envp)
             JS_GC(rt);
         }
         JS_GC(rt);
+#ifdef XP_WIN
+        widget::StopAudioSession();
+#endif
     } // this scopes the nsCOMPtrs
 
     if (!XRE_ShutdownTestShell())

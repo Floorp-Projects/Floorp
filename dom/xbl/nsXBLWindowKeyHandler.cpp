@@ -262,13 +262,13 @@ nsresult
 nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType)
 {
   bool prevent;
-  aKeyEvent->GetDefaultPrevented(&prevent);
+  aKeyEvent->AsEvent()->GetDefaultPrevented(&prevent);
   if (prevent)
     return NS_OK;
 
   bool trustedEvent = false;
   // Don't process the event if it was not dispatched from a trusted source
-  aKeyEvent->GetIsTrusted(&trustedEvent);
+  aKeyEvent->AsEvent()->GetIsTrusted(&trustedEvent);
 
   if (!trustedEvent)
     return NS_OK;
@@ -281,7 +281,7 @@ nsXBLWindowKeyHandler::WalkHandlers(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventTy
   if (!el) {
     if (mUserHandler) {
       WalkHandlersInternal(aKeyEvent, aEventType, mUserHandler, true);
-      aKeyEvent->GetDefaultPrevented(&prevent);
+      aKeyEvent->AsEvent()->GetDefaultPrevented(&prevent);
       if (prevent)
         return NS_OK; // Handled by the user bindings. Our work here is done.
     }
@@ -322,14 +322,14 @@ void
 nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
 {
   WidgetKeyboardEvent* widgetEvent =
-    aEvent->GetInternalNSEvent()->AsKeyboardEvent();
+    aEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
 
   if (widgetEvent->mFlags.mNoCrossProcessBoundaryForwarding) {
     return;
   }
 
   nsCOMPtr<mozilla::dom::Element> originalTarget =
-    do_QueryInterface(aEvent->GetInternalNSEvent()->originalTarget);
+    do_QueryInterface(aEvent->AsEvent()->GetInternalNSEvent()->originalTarget);
   if (!EventStateManager::IsRemoteTarget(originalTarget)) {
     return;
   }
@@ -353,7 +353,7 @@ nsXBLWindowKeyHandler::HandleEventOnCapture(nsIDOMKeyEvent* aEvent)
     // yet, it means it wasn't processed by content. We'll not call any
     // of the handlers at this moment, and will wait for the event to be
     // redispatched with mNoCrossProcessBoundaryForwarding = 1 to process it.
-    aEvent->StopPropagation();
+    aEvent->AsEvent()->StopPropagation();
   }
 }
 
@@ -478,7 +478,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
   // Try all of the handlers until we find one that matches the event.
   for (nsXBLPrototypeHandler *currHandler = aHandler; currHandler;
        currHandler = currHandler->GetNextHandler()) {
-    bool stopped = aKeyEvent->IsDispatchStopped();
+    bool stopped = aKeyEvent->AsEvent()->IsDispatchStopped();
     if (stopped) {
       // The event is finished, don't execute any more handlers
       return false;
@@ -552,7 +552,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
       return true;
     }
 
-    rv = currHandler->ExecuteHandler(piTarget, aKeyEvent);
+    rv = currHandler->ExecuteHandler(piTarget, aKeyEvent->AsEvent());
     if (NS_SUCCEEDED(rv)) {
       return true;
     }
@@ -565,7 +565,7 @@ nsXBLWindowKeyHandler::WalkHandlersAndExecute(
   // retry to look for a shortcut key without the Windows-Logo key press.
   if (!aIgnoreModifierState.mOS) {
     WidgetKeyboardEvent* keyEvent =
-      aKeyEvent->GetInternalNSEvent()->AsKeyboardEvent();
+      aKeyEvent->AsEvent()->GetInternalNSEvent()->AsKeyboardEvent();
     if (keyEvent && keyEvent->IsOS()) {
       IgnoreModifierState ignoreModifierState(aIgnoreModifierState);
       ignoreModifierState.mOS = true;
@@ -582,7 +582,7 @@ bool
 nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
                                           bool* aOutReservedForChrome)
 {
-  if (!aEvent->InternalDOMEvent()->IsTrusted()) {
+  if (!aEvent->AsEvent()->InternalDOMEvent()->IsTrusted()) {
     return false;
   }
 
@@ -596,7 +596,7 @@ nsXBLWindowKeyHandler::HasHandlerForEvent(nsIDOMKeyEvent* aEvent,
   }
 
   nsAutoString eventType;
-  aEvent->GetType(eventType);
+  aEvent->AsEvent()->GetType(eventType);
   nsCOMPtr<nsIAtom> eventTypeAtom = do_GetAtom(eventType);
   NS_ENSURE_TRUE(eventTypeAtom, false);
 

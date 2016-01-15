@@ -741,6 +741,18 @@ this.UITour = {
         });
         break;
       }
+
+      case "closeTab": {
+        // Find the <tabbrowser> element of the <browser> for which the event
+        // was generated originally. If the browser where the UI tour is loaded
+        // is windowless, just ignore the request to close the tab. The request
+        // is also ignored if this is the only tab in the window.
+        let tabBrowser = browser.ownerDocument.defaultView.gBrowser;
+        if (tabBrowser && tabBrowser.browsers.length > 1) {
+          tabBrowser.removeTab(tabBrowser.getTabForBrowser(browser));
+        }
+        break;
+      }
     }
 
     this.initForBrowser(browser, window);
