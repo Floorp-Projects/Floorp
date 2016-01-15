@@ -325,6 +325,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
   }
   LocalSourceStreamInfo* GetLocalStreamByIndex(int index);
   LocalSourceStreamInfo* GetLocalStreamById(const std::string& id);
+  LocalSourceStreamInfo* GetLocalStreamByTrackId(const std::string& id);
 
   // Get a specific remote stream
   uint32_t RemoteStreamsLength()
@@ -334,6 +335,7 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
 
   RemoteSourceStreamInfo* GetRemoteStreamByIndex(size_t index);
   RemoteSourceStreamInfo* GetRemoteStreamById(const std::string& id);
+  RemoteSourceStreamInfo* GetRemoteStreamByTrackId(const std::string& id);
 
   // Add a remote stream.
   nsresult AddRemoteStream(RefPtr<RemoteSourceStreamInfo> aInfo);
