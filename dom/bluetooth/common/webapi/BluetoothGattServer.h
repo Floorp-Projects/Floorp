@@ -19,6 +19,7 @@
 namespace mozilla {
 namespace dom {
 class Promise;
+struct BluetoothAdvertisingData;
 }
 }
 
@@ -57,10 +58,16 @@ public:
     const nsAString& aAddress, ErrorResult& aRv);
   already_AddRefed<Promise> Disconnect(
     const nsAString& aAddress, ErrorResult& aRv);
+
+  already_AddRefed<Promise> StartAdvertising(
+    const BluetoothAdvertisingData& aAdvData, ErrorResult& aRv);
+  already_AddRefed<Promise> StopAdvertising(ErrorResult& aRv);
+
   already_AddRefed<Promise> AddService(BluetoothGattService& aService,
                                        ErrorResult& aRv);
   already_AddRefed<Promise> RemoveService(BluetoothGattService& aService,
                                           ErrorResult& aRv);
+
   already_AddRefed<Promise> NotifyCharacteristicChanged(
     const nsAString& aAddress,
     BluetoothGattCharacteristic& aCharacteristic,
@@ -97,6 +104,9 @@ public:
 private:
   ~BluetoothGattServer();
 
+  class StartAdvertisingTask;
+  class RegisterServerAndStartAdvertisingTask;
+  class StopAdvertisingTask;
   class AddIncludedServiceTask;
   class AddCharacteristicTask;
   class AddDescriptorTask;
@@ -106,6 +116,9 @@ private:
   class AddServiceTask;
   class RemoveServiceTask;
 
+  friend class StartAdvertisingTask;
+  friend class RegisterServerAndStartAdvertisingTask;
+  friend class StopAdvertisingTask;
   friend class AddIncludedServiceTask;
   friend class AddCharacteristicTask;
   friend class AddDescriptorTask;
@@ -171,6 +184,11 @@ private:
    * Map request information from the request ID.
    */
   nsClassHashtable<nsUint32HashKey, RequestData> mRequestMap;
+
+  /**
+   * AppUuid of the GATT client interface which is used to advertise.
+   */
+  BluetoothUuid mAdvertisingAppUuid;
 };
 
 END_BLUETOOTH_NAMESPACE

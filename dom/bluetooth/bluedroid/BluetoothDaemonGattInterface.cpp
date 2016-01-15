@@ -588,15 +588,26 @@ nsresult
 BluetoothDaemonGattModule::ClientSetAdvDataCmd(
   int aServerIf, bool aIsScanRsp, bool aIsNameIncluded,
   bool aIsTxPowerIncluded, int aMinInterval, int aMaxInterval, int aApperance,
-  uint16_t aManufacturerLen, char* aManufacturerData,
-  uint16_t aServiceDataLen, char* aServiceData,
-  uint16_t aServiceUuidLen, char* aServiceUuid,
+  const nsTArray<uint8_t>& aManufacturerData,
+  const nsTArray<uint8_t>& aServiceData,
+  const nsTArray<BluetoothUuid>& aServiceUuids,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   nsAutoPtr<DaemonSocketPDU> pdu(
     new DaemonSocketPDU(SERVICE_ID, OPCODE_CLIENT_SET_ADV_DATA, 0));
+
+  uint16_t manufacturerDataByteLen =
+    aManufacturerData.Length() * sizeof(uint8_t);
+  uint16_t serviceDataByteLen = aServiceData.Length() * sizeof(uint8_t);
+  uint16_t serviceUuidsByteLen =
+    aServiceUuids.Length() * sizeof(BluetoothUuid::mUuid);
+  uint8_t* manufacturerData =
+    const_cast<uint8_t*>(aManufacturerData.Elements());
+  uint8_t* serviceData = const_cast<uint8_t*>(aServiceData.Elements());
+  BluetoothUuid* serviceUuids =
+    const_cast<BluetoothUuid*>(aServiceUuids.Elements());
 
   nsresult rv = PackPDU(
     PackConversion<int, int32_t>(aServerIf),
@@ -606,10 +617,12 @@ BluetoothDaemonGattModule::ClientSetAdvDataCmd(
     PackConversion<int, int32_t>(aMinInterval),
     PackConversion<int, int32_t>(aMaxInterval),
     PackConversion<int, int32_t>(aApperance),
-    aManufacturerLen, aServiceDataLen, aServiceUuidLen,
-    PackArray<char>(aManufacturerData, aManufacturerLen),
-    PackArray<char>(aServiceData, aServiceDataLen),
-    PackArray<char>(aServiceUuid, aServiceUuidLen), *pdu);
+    manufacturerDataByteLen, serviceDataByteLen, serviceUuidsByteLen,
+    PackArray<uint8_t>(manufacturerData, aManufacturerData.Length()),
+    PackArray<uint8_t>(serviceData, aServiceData.Length()),
+    PackArray<PackReversed<BluetoothUuid>>(
+      serviceUuids, aServiceUuids.Length()),
+    *pdu);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2415,17 +2428,17 @@ void
 BluetoothDaemonGattInterface::SetAdvData(
   int aServerIf, bool aIsScanRsp, bool aIsNameIncluded,
   bool aIsTxPowerIncluded, int aMinInterval, int aMaxInterval, int aApperance,
-  uint16_t aManufacturerLen, char* aManufacturerData,
-  uint16_t aServiceDataLen, char* aServiceData,
-  uint16_t aServiceUUIDLen, char* aServiceUUID,
+  const nsTArray<uint8_t>& aManufacturerData,
+  const nsTArray<uint8_t>& aServiceData,
+  const nsTArray<BluetoothUuid>& aServiceUuids,
   BluetoothGattResultHandler* aRes)
 {
   MOZ_ASSERT(mModule);
 
   nsresult rv = mModule->ClientSetAdvDataCmd(
     aServerIf, aIsScanRsp, aIsNameIncluded, aIsTxPowerIncluded, aMinInterval,
-    aMaxInterval, aApperance, aManufacturerLen, aManufacturerData,
-    aServiceDataLen, aServiceData, aServiceUUIDLen, aServiceUUID, aRes);
+    aMaxInterval, aApperance, aManufacturerData, aServiceData, aServiceUuids,
+    aRes);
 
   if (NS_FAILED(rv)) {
     DispatchError(aRes, rv);
