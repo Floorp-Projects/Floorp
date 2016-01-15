@@ -55,6 +55,7 @@ using mozilla::DefaultXDisplay;
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/dom/Event.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "nsFrameSelection.h"

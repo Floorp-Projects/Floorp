@@ -50,6 +50,10 @@ actions.IMPORT_SNAPSHOT_ERROR = "import-snapshot-error";
 // Fired by UI to select a snapshot to view.
 actions.SELECT_SNAPSHOT = "select-snapshot";
 
+// Fired to delete a provided list of snapshots
+actions.DELETE_SNAPSHOTS_START = "delete-snapshots-start";
+actions.DELETE_SNAPSHOTS_END = "delete-snapshots-end";
+
 // Fired to toggle tree inversion on or off.
 actions.TOGGLE_INVERTED = "toggle-inverted";
 

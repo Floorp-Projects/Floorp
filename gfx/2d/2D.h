@@ -746,7 +746,8 @@ public:
    * Release takes the original data pointer for safety.
    */
   virtual bool LockBits(uint8_t** aData, IntSize* aSize,
-                        int32_t* aStride, SurfaceFormat* aFormat) { return false; }
+                        int32_t* aStride, SurfaceFormat* aFormat,
+                        IntPoint* aOrigin = nullptr) { return false; }
   virtual void ReleaseBits(uint8_t* aData) {}
 
   /** Ensure that the DrawTarget backend has flushed all drawing operations to

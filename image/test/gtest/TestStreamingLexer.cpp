@@ -55,7 +55,7 @@ DoLexWithUnbuffered(TestState aState, const char* aData, size_t aLength,
       return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
     case TestState::UNBUFFERED:
       EXPECT_TRUE(aLength <= 3);
-      aUnbufferedVector.append(aData, aLength);
+      EXPECT_TRUE(aUnbufferedVector.append(aData, aLength));
       return Transition::ContinueUnbuffered(TestState::UNBUFFERED);
     case TestState::TWO:
       CheckData(aUnbufferedVector.begin(), aUnbufferedVector.length());

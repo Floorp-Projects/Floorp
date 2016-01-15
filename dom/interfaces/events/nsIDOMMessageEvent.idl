@@ -3,7 +3,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
+#include "nsIDOMWindow.idl"
 
 /**
  * The nsIDOMMessageEvent interface is used for server-sent events and for
@@ -12,8 +13,8 @@
  * For more information on this interface, please see
  * http://www.whatwg.org/specs/web-apps/current-work/#messageevent
  */
-[builtinclass, uuid(4408a2f5-614f-40a3-8786-e16bd3f74e32)]
-interface nsIDOMMessageEvent : nsIDOMEvent
+[builtinclass, uuid(5d57bc56-30cf-4839-9e98-17f940120ec0)]
+interface nsIDOMMessageEvent : nsISupports
 {
   /**
    * Custom string data associated with this event.

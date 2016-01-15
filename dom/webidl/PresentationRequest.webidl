@@ -43,4 +43,24 @@ interface PresentationRequest : EventTarget {
    * The event is fired for all connections that are created for the controller.
    */
   attribute EventHandler onconnectionavailable;
+
+  /*
+   * A chrome page, or page which has presentation-device-manage permissiongs,
+   * uses startWithDevice() to start a new connection with specified device,
+   * and it will be returned with the promise. UA may show a prompt box with a
+   * list of available devices and ask the user to grant permission, choose a
+   * device, or cancel the operation.
+   *
+   * The promise is resolved when the presenting page is successfully loaded and
+   * the communication channel is established, i.e., the connection state is
+   * "connected".
+   *
+   * The promise may be rejected duo to one of the following reasons:
+   * - "OperationError": Unexpected error occurs.
+   * - "NotFoundError":  No available device.
+   * - "NetworkError":   Failed to establish the control channel or data channel.
+   * - "TimeoutError":   Presenting page takes too long to load.
+   */
+  [CheckAnyPermissions="presentation-device-manage", Throws]
+  Promise<PresentationConnection> startWithDevice(DOMString deviceId);
 };

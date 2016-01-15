@@ -581,18 +581,20 @@ SampleAnimations(Layer* aLayer, TimeStamp aPoint)
       continue;
     }
 
-    AnimationTiming timing;
-    timing.mIterationDuration = animation.duration();
+    TimingParams timing;
+    timing.mDuration.SetAsUnrestrictedDouble() =
+      animation.duration().ToMilliseconds();
     // Currently animations run on the compositor have their delay factored
     // into their start time, hence the delay is effectively zero.
     timing.mDelay = TimeDuration(0);
-    timing.mIterationCount = animation.iterationCount();
-    timing.mDirection = static_cast<dom::PlaybackDirection>(animation.direction());
+    timing.mIterations = animation.iterations();
+    timing.mDirection =
+      static_cast<dom::PlaybackDirection>(animation.direction());
     // Animations typically only run on the compositor during their active
     // interval but if we end up sampling them outside that range (for
     // example, while they are waiting to be removed) we currently just
     // assume that we should fill.
-    timing.mFillMode = dom::FillMode::Both;
+    timing.mFill = dom::FillMode::Both;
 
     ComputedTiming computedTiming =
       dom::KeyframeEffectReadOnly::GetComputedTimingAt(

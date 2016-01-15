@@ -113,11 +113,15 @@ function LocaleData(data) {
   this.selectedLocale = data.selectedLocale;
   this.locales = data.locales || new Map();
 
-  // Map(locale-name -> Map(message-key -> localized-strings))
+  // Map(locale-name -> Map(message-key -> localized-string))
   //
   // Contains a key for each loaded locale, each of which is a
   // Map of message keys to their localized strings.
   this.messages = data.messages || new Map();
+
+  if (data.builtinMessages) {
+    this.messages.set(this.BUILTIN, data.builtinMessages);
+  }
 }
 
 LocaleData.prototype = {
@@ -132,13 +136,15 @@ LocaleData.prototype = {
     };
   },
 
+  BUILTIN: "@@BUILTIN_MESSAGES",
+
   has(locale) {
     return this.messages.has(locale);
   },
 
   // https://developer.chrome.com/extensions/i18n
   localizeMessage(message, substitutions = [], locale = this.selectedLocale, defaultValue = "??") {
-    let locales = new Set([locale, this.defaultLocale]
+    let locales = new Set([this.BUILTIN, locale, this.defaultLocale]
                           .filter(locale => this.messages.has(locale)));
 
     // Message names are case-insensitive, so normalize them to lower-case.
@@ -170,15 +176,7 @@ LocaleData.prototype = {
     }
 
     // Check for certain pre-defined messages.
-    if (message == "@@extension_id") {
-      if ("uuid" in this) {
-        // Per Chrome, this isn't available before an ID is guaranteed
-        // to have been assigned, namely, in manifest files.
-        // This should only be present in instances of the |Extension|
-        // subclass.
-        return this.uuid;
-      }
-    } else if (message == "@@ui_locale") {
+    if (message == "@@ui_locale") {
       // Return the browser locale, but convert it to a Chrome-style
       // locale code.
       return Locale.getLocale().replace(/-/g, "_");

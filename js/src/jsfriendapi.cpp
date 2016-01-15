@@ -394,10 +394,15 @@ JS_FRIEND_API(JSFunction*)
 js::GetOutermostEnclosingFunctionOfScriptedCaller(JSContext* cx)
 {
     ScriptFrameIter iter(cx);
+
+    // Skip eval frames.
+    while (!iter.done() && iter.isEvalFrame())
+        ++iter;
+
     if (iter.done())
         return nullptr;
 
-    if (!iter.isFunctionFrame())
+    if (!iter.isNonEvalFunctionFrame())
         return nullptr;
 
     RootedFunction curr(cx, iter.callee(cx));

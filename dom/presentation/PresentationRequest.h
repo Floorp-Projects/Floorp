@@ -33,6 +33,9 @@ public:
   // WebIDL (public APIs)
   already_AddRefed<Promise> Start(ErrorResult& aRv);
 
+  already_AddRefed<Promise> StartWithDevice(const nsAString& aDeviceId,
+                                            ErrorResult& aRv);
+
   already_AddRefed<Promise> GetAvailability(ErrorResult& aRv);
 
   IMPL_EVENT_HANDLER(connectionavailable);

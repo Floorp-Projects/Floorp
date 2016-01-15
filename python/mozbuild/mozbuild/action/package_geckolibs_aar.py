@@ -161,6 +161,8 @@ def main(args):
                         help='Distribution directory (usually $OBJDIR/dist).')
     parser.add_argument('--appname',
                         help='Application name (usually $MOZ_APP_NAME, like "fennec").')
+    parser.add_argument('--purge-old', default=False, action='store_true',
+                        help='Delete any existing output files in the output directory.')
     args = parser.parse_args(args)
 
     # An Ivy 'publication' date must be given in the form yyyyMMddHHmmss, and Mozilla buildids are in this format.
@@ -175,6 +177,15 @@ def main(args):
     paths_to_hash.append(gecklibs_aar)
     geckoview_aar = os.path.join(args.dir, 'geckoview-{revision}.aar').format(revision=args.revision)
     paths_to_hash.append(geckoview_aar)
+
+    if args.purge_old:
+        old_output_finder = FileFinder(args.dir, find_executables=False)
+        for p, f in old_output_finder.find('geckoview-*.*'):
+            os.remove(f.path)
+        for p, f in old_output_finder.find('geckolibs-*.*'):
+            os.remove(f.path)
+        for p, f in old_output_finder.find('ivy-*.*'):
+            os.remove(f.path)
 
     package_geckolibs_aar(args.topsrcdir, args.distdir, args.appname, gecklibs_aar)
     package_geckoview_aar(args.topsrcdir, args.distdir, args.appname, geckoview_aar)

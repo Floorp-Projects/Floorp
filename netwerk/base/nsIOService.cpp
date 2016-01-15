@@ -52,6 +52,7 @@
 #include "ClosingService.h"
 #include "ReferrerPolicy.h"
 #include "nsContentSecurityManager.h"
+#include "nsHttpHandler.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "nsINetworkManager.h"
@@ -66,6 +67,7 @@ using namespace mozilla;
 using mozilla::net::IsNeckoChild;
 using mozilla::net::ClosingService;
 using mozilla::net::CaptivePortalService;
+using mozilla::net::gHttpHandler;
 
 #define PORT_PREF_PREFIX           "network.security.ports."
 #define PORT_PREF(x)               PORT_PREF_PREFIX x
@@ -1426,6 +1428,9 @@ nsIOService::Observe(nsISupports *subject,
     } else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
             mOfflineForProfileChange = true;
+            if (gHttpHandler) {
+                gHttpHandler->ShutdownConnectionManager();
+            }
             SetOffline(true);
         }
     } else if (!strcmp(topic, kProfileChangeNetRestoreTopic)) {
@@ -1452,6 +1457,9 @@ nsIOService::Observe(nsISupports *subject,
         // online after this point.
         mShutdown = true;
 
+        if (gHttpHandler) {
+            gHttpHandler->ShutdownConnectionManager();
+        }
         SetOffline(true);
 
         if (mCaptivePortalService) {

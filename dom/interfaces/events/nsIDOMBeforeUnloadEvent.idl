@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 
 /**
  * The nsIDOMBeforeUnloadEvent interface is the interface for events
@@ -15,8 +15,8 @@
  *
  */
 
-[builtinclass, uuid(96abf41b-32a8-4ff6-a0d6-4ade4ddebf89)]
-interface nsIDOMBeforeUnloadEvent : nsIDOMEvent
+[builtinclass, uuid(26c83933-a5a4-455e-8c46-69fa24dfa991)]
+interface nsIDOMBeforeUnloadEvent : nsISupports
 {
   /**
    * Attribute used to pass back a return value from a beforeunload

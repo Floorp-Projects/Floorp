@@ -3,7 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
+#include "nsIDOMClientRectList.idl"
+#include "nsIDOMClientRect.idl"
 
 interface nsIDOMPaintRequestList;
 
@@ -12,8 +14,8 @@ interface nsIDOMPaintRequestList;
  * event, which fires at a window when painting has happened in
  * that window.
  */
-[builtinclass, uuid(550f660c-65a5-4e17-b828-3dbec7c44304)]
-interface nsIDOMNotifyPaintEvent : nsIDOMEvent
+[builtinclass, uuid(63f573a0-3e4e-474b-a0c2-bb4ca93febaa)]
+interface nsIDOMNotifyPaintEvent : nsISupports
 {
   /**
    * Get a list of rectangles which are affected. The rectangles are in CSS pixels

@@ -3,10 +3,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 
-[builtinclass, uuid(7efbe68a-811a-4159-801c-226948cfd08f)]
-interface nsIDOMCommandEvent : nsIDOMEvent
+[builtinclass, uuid(73a50e55-3eaa-4a38-a588-9b68a6d65032)]
+interface nsIDOMCommandEvent : nsISupports
 {
   readonly attribute DOMString command;
 

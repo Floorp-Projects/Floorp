@@ -513,7 +513,8 @@ bool js_StartPerf()
                                      "--pid", mainPidStr, "--output", outfile};
 
         Vector<const char*, 0, SystemAllocPolicy> args;
-        args.append(defaultArgs, ArrayLength(defaultArgs));
+        if (!args.append(defaultArgs, ArrayLength(defaultArgs)))
+            return false;
 
         const char* flags = getenv("MOZ_PROFILE_PERF_FLAGS");
         if (!flags) {
@@ -530,11 +531,13 @@ bool js_StartPerf()
         char* toksave;
         char* tok = strtok_r(flags2, " ", &toksave);
         while (tok) {
-            args.append(tok);
+            if (!args.append(tok))
+                return false;
             tok = strtok_r(nullptr, " ", &toksave);
         }
 
-        args.append((char*) nullptr);
+        if (!args.append((char*) nullptr))
+            return false;
 
         execvp("perf", const_cast<char**>(args.begin()));
 

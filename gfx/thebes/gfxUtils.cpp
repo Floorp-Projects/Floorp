@@ -1197,7 +1197,9 @@ EncodeSourceSurfaceInternal(SourceSurface* aSurface,
                                &numReadThisTime)) == NS_OK && numReadThisTime > 0)
   {
     // Update the length of the vector without overwriting the new data.
-    imgData.growByUninitialized(numReadThisTime);
+    if (!imgData.growByUninitialized(numReadThisTime)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     imgSize += numReadThisTime;
     if (imgSize == bufSize) {

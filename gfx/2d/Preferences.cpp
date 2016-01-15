@@ -31,7 +31,9 @@ int32_t
 PreferenceAccess::RegisterLivePref(const char* aName, int32_t* aVar,
                                    int32_t aDefault)
 {
-  Int32Prefs().append(Int32Pref{ aName, aVar });
+  if (!Int32Prefs().append(Int32Pref{ aName, aVar })) {
+    MOZ_CRASH();
+  }
   return aDefault;
 }
 

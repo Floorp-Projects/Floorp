@@ -123,9 +123,9 @@ class ArtifactJob(object):
         tests_artifact = None
         for artifact in artifacts:
             name = artifact['name']
-            if self._package_re.match(name):
+            if self._package_re and self._package_re.match(name):
                 yield name
-            elif self._tests_re.match(name):
+            elif self._tests_re and self._tests_re.match(name):
                 tests_artifact = name
                 yield name
             else:
@@ -319,7 +319,7 @@ class WinArtifactJob(ArtifactJob):
         'firefox/dependentlibs.list',
         'firefox/platform.ini',
         'firefox/application.ini',
-        'firefox/*.dll',
+        'firefox/**/*.dll',
         'firefox/*.exe',
     }
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
@@ -341,7 +341,8 @@ class WinArtifactJob(ArtifactJob):
                 if not any(mozpath.match(f.filename, p) for p in self.package_artifact_patterns):
                     continue
 
-                basename = mozpath.basename(f.filename)
+                # strip off the relative "firefox/" bit from the path:
+                basename = mozpath.relpath(f.filename, "firefox")
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                     'Adding {basename} to processed archive')
