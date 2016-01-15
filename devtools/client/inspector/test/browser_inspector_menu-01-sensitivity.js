@@ -5,7 +5,7 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Test that context menu items are enabled / disabled correctly.
 
-const TEST_URL = TEST_URL_ROOT + "doc_inspector_menu.html";
+const TEST_URL = URL_ROOT + "doc_inspector_menu.html";
 
 const PASTE_MENU_ITEMS = [
   "node-menu-pasteinnerhtml",

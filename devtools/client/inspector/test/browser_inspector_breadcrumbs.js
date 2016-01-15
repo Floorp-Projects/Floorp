@@ -5,7 +5,7 @@
 
 // Test that the breadcrumbs widget content is correct.
 
-const TEST_URI = TEST_URL_ROOT + "doc_inspector_breadcrumbs.html";
+const TEST_URI = URL_ROOT + "doc_inspector_breadcrumbs.html";
 const NODES = [
   {selector: "#i1111", result: "i1 i11 i111 i1111"},
   {selector: "#i22", result: "i2 i22 i221"},
