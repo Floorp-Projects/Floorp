@@ -77,7 +77,7 @@ class MarionetteHarness(object):
 
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
-        harness_class=MarionetteHarness):
+        harness_class=MarionetteHarness, args=None):
     """
     Call the harness to parse args and run tests.
 
@@ -88,7 +88,7 @@ def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
     """
     logger = mozlog.commandline.setup_logging('Marionette test runner', {})
     try:
-        failed = harness_class(runner_class, parser_class).run()
+        failed = harness_class(runner_class, parser_class, args=args).run()
         if failed > 0:
             sys.exit(10)
     except Exception:
