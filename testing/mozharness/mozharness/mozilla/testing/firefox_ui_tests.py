@@ -14,7 +14,7 @@ import os
 import sys
 import urlparse
 
-from mozharness.base.log import FATAL
+from mozharness.base.log import FATAL, WARNING
 from mozharness.base.python import PostScriptRun, PreScriptAction
 from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
@@ -182,17 +182,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         dirs = self.query_abs_dirs()
         self.rmtree(dirs['abs_reports_dir'], error_level=FATAL)
 
-    def copy_reports_to_upload_dir(self):
-        self.info("Copying reports to upload dir...")
-
-        dirs = self.query_abs_dirs()
-        for report in self.reports:
-            self.copy_to_upload_dir(os.path.join(dirs['abs_reports_dir'], self.reports[report]),
-                                    dest=os.path.join('reports', self.reports[report]),
-                                    short_desc='%s log' % self.reports[report],
-                                    long_desc='%s log' % self.reports[report],
-                                    max_backups=self.config.get("log_max_rotate", 0))
-
     def download_and_extract(self):
         """Overriding method from TestingMixin until firefox-ui-tests are in tree and
         supported across all branches.
@@ -277,9 +266,21 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         return super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
 
     @PostScriptRun
-    def _upload_reports_post_run(self):
-        if self.config.get("copy_reports_post_run", True):
-            self.copy_reports_to_upload_dir()
+    def copy_logs_to_upload_dir(self):
+        """Overwrite this method so we also upload the other (e.g. report) files"""
+        # Copy logs and report files to the upload folder
+        super(FirefoxUITests, self).copy_logs_to_upload_dir()
+
+        dirs = self.query_abs_dirs()
+        self.info("Copying reports to upload dir...")
+        for report in self.reports:
+            self.copy_to_upload_dir(os.path.join(dirs['abs_reports_dir'], self.reports[report]),
+                                    dest=os.path.join('reports', self.reports[report]),
+                                    short_desc='%s log' % self.reports[report],
+                                    long_desc='%s log' % self.reports[report],
+                                    max_backups=self.config.get("log_max_rotate", 0),
+                                    error_level=WARNING,
+                                    )
 
     def run_test(self, binary_path, env=None, marionette_port=2828):
         """All required steps for running the tests against an installer."""

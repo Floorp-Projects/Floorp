@@ -70,7 +70,8 @@ public:
   virtual void SetPermitSubpixelAA(bool aPermitSubpixelAA) override;
 
   virtual bool LockBits(uint8_t** aData, IntSize* aSize,
-                        int32_t* aStride, SurfaceFormat* aFormat) override;
+                        int32_t* aStride, SurfaceFormat* aFormat,
+                        IntPoint* aOrigin = nullptr) override;
   virtual void ReleaseBits(uint8_t* aData) override;
 
   virtual void Flush() override;

@@ -14,6 +14,7 @@
 namespace mozilla {
 namespace dom {
 
+class AnimationEffectTimingReadOnly;
 struct ComputedTimingProperties;
 
 class AnimationEffectReadOnly : public nsISupports,
@@ -30,9 +31,9 @@ public:
 
   nsISupports* GetParentObject() const { return mParent; }
 
-  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const
-  {
-  }
+  virtual already_AddRefed<AnimationEffectTimingReadOnly> Timing() const = 0;
+
+  virtual void GetComputedTimingAsDict(ComputedTimingProperties& aRetVal) const = 0;
 
 protected:
   virtual ~AnimationEffectReadOnly() = default;

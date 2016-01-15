@@ -331,7 +331,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         const int numButtons = gamepad.numButtons();
         for (unsigned b = 0; b < ArrayLength(newState); b++) {
           if (newState[b] != oldState[b]) {
-            NewButtonEvent(i, numButtons - 4 + b, newState[b]);
+            NewButtonEvent(gamepad.mSuperIndex, numButtons - 4 + b, newState[b]);
           }
         }
         gamepad.setDpadState(newState);
@@ -339,7 +339,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         double d = IOHIDValueGetIntegerValue(value);
         double v = 2.0f * (d - axis->min) /
           (double)(axis->max - axis->min) - 1.0f;
-        NewAxisMoveEvent(i, axis->id, v);
+        NewAxisMoveEvent(gamepad.mSuperIndex, axis->id, v);
       } else if (const Button* button = gamepad.lookupButton(element)) {
         int iv = IOHIDValueGetIntegerValue(value);
         bool pressed = iv != 0;
@@ -350,7 +350,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
         } else {
           v = pressed ? 1.0 : 0.0;
         }
-        NewButtonEvent(i, button->id, pressed, v);
+        NewButtonEvent(gamepad.mSuperIndex, button->id, pressed, v);
       }
       return;
     }

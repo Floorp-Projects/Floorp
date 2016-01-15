@@ -35,6 +35,12 @@ const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(TrackSize::StateBits)
 
+enum class GridLineSide
+{
+  eBeforeGridGap,
+  eAfterGridGap,
+};
+
 class nsGridContainerFrame::GridItemCSSOrderIterator
 {
 public:
@@ -914,6 +920,27 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
   void AlignJustifyContent(const nsHTMLReflowState& aReflowState,
                            const LogicalSize& aContainerSize);
 
+  nscoord GridLineEdge(uint32_t aLine, GridLineSide aSide) const
+  {
+    if (MOZ_UNLIKELY(mSizes.IsEmpty())) {
+      // https://drafts.csswg.org/css-grid/#grid-definition
+      // "... the explicit grid still contains one grid line in each axis."
+      MOZ_ASSERT(aLine == 0, "We should only resolve line 1 in an empty grid");
+      return nscoord(0);
+    }
+    MOZ_ASSERT(aLine <= mSizes.Length(), "mSizes is too small");
+    if (aSide == GridLineSide::eBeforeGridGap) {
+      if (aLine == 0) {
+        return nscoord(0);
+      }
+      const TrackSize& sz = mSizes[aLine - 1];
+      return sz.mPosition + sz.mBase;
+    }
+    if (aLine == mSizes.Length()) {
+      return mContentBoxSize;
+    }
+    return mSizes[aLine].mPosition;
+  }
 
   nscoord SumOfGridGaps() const {
     auto len = mSizes.Length();
@@ -932,6 +959,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
 #endif
 
   nsAutoTArray<TrackSize, 32> mSizes;
+  nscoord mContentBoxSize;
   nscoord mGridGap;
   LogicalAxis mAxis;
 };
@@ -1039,36 +1067,6 @@ static bool
 IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
 {
   return IsNameWithSuffix(aString, NS_LITERAL_STRING("-start"), aIndex);
-}
-
-enum class GridLineSide {
-  eBeforeGridGap,
-  eAfterGridGap,
-};
-
-static nscoord
-GridLineEdge(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes,
-             GridLineSide aSide)
-{
-  if (MOZ_UNLIKELY(aTrackSizes.IsEmpty())) {
-    // https://drafts.csswg.org/css-grid/#grid-definition
-    // "... the explicit grid still contains one grid line in each axis."
-    MOZ_ASSERT(aLine == 0, "We should only resolve line 1 in an empty grid");
-    return nscoord(0);
-  }
-  MOZ_ASSERT(aLine <= aTrackSizes.Length(), "aTrackSizes is too small");
-  if (aSide == GridLineSide::eBeforeGridGap) {
-    if (aLine == 0) {
-      return aTrackSizes[0].mPosition;
-    }
-    const TrackSize& sz = aTrackSizes[aLine - 1];
-    return sz.mPosition + sz.mBase;
-  }
-  if (aLine == aTrackSizes.Length()) {
-    const TrackSize& sz = aTrackSizes[aLine - 1];
-    return sz.mPosition + sz.mBase;
-  }
-  return aTrackSizes[aLine].mPosition;
 }
 
 /**
@@ -2285,6 +2283,7 @@ nsGridContainerFrame::Tracks::Initialize(
                          aFunctions.MaxSizingFor(i));
   }
   mGridGap = aGridGap;
+  mContentBoxSize = aContentBoxSize;
   MOZ_ASSERT(mGridGap >= nscoord(0), "negative grid gap");
 }
 
@@ -3090,7 +3089,7 @@ nsGridContainerFrame::LineRange::ToLength(
 
 void
 nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
-  const nsTArray<TrackSize>& aTrackSizes, nscoord aGridOrigin,
+  const Tracks& aTracks, nscoord aGridOrigin,
   nscoord* aPos, nscoord* aLength) const
 {
   // kAutoLine for abspos children contributes the corresponding edge
@@ -3101,18 +3100,17 @@ nsGridContainerFrame::LineRange::ToPositionAndLengthForAbsPos(
     } else {
       const nscoord endPos = *aPos + *aLength;
       nscoord startPos =
-        ::GridLineEdge(mStart, aTrackSizes, GridLineSide::eAfterGridGap);
+        aTracks.GridLineEdge(mStart, GridLineSide::eAfterGridGap);
       *aPos = aGridOrigin + startPos;
       *aLength = std::max(endPos - *aPos, 0);
     }
   } else {
     if (mStart == kAutoLine) {
-      nscoord endPos =
-        ::GridLineEdge(mEnd, aTrackSizes, GridLineSide::eBeforeGridGap);
+      nscoord endPos = aTracks.GridLineEdge(mEnd, GridLineSide::eBeforeGridGap);
       *aLength = std::max(aGridOrigin + endPos, 0);
     } else {
       nscoord pos;
-      ToPositionAndLength(aTrackSizes, &pos, aLength);
+      ToPositionAndLength(aTracks.mSizes, &pos, aLength);
       *aPos = aGridOrigin + pos;
     }
   }
@@ -3141,11 +3139,9 @@ nsGridContainerFrame::ContainingBlockForAbsPos(const GridReflowState& aState,
   nscoord b = aGridCB.BStart(wm);
   nscoord iSize = aGridCB.ISize(wm);
   nscoord bSize = aGridCB.BSize(wm);
-  aArea.mCols.ToPositionAndLengthForAbsPos(aState.mCols.mSizes,
-                                           aGridOrigin.I(wm),
+  aArea.mCols.ToPositionAndLengthForAbsPos(aState.mCols, aGridOrigin.I(wm),
                                            &i, &iSize);
-  aArea.mRows.ToPositionAndLengthForAbsPos(aState.mRows.mSizes,
-                                           aGridOrigin.B(wm),
+  aArea.mRows.ToPositionAndLengthForAbsPos(aState.mRows, aGridOrigin.B(wm),
                                            &b, &bSize);
   return LogicalRect(wm, i, b, iSize, bSize);
 }

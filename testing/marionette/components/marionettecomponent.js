@@ -61,13 +61,22 @@ MarionetteComponent.prototype.determineLoggingLevel_ = function() {
   // marionette.logging pref can override default
   // with an entry from the Log.Level enum
   if (Preferences.has(LOG_PREF)) {
-    let s = Preferences.get(LOG_PREF);
-    if (typeof s == "string") {
-      s = s.toLowerCase();
-      s = s.charAt(0).toUpperCase() + s.slice(1);
-      level = Log.Level[s];
-    } else {
-      level = Log.Level.Trace;
+    let p = Preferences.get(LOG_PREF);
+
+    switch (typeof p) {
+      // Gecko >= 46
+      case "string":
+        let s = p.toLowerCase();
+        s = s.charAt(0).toUpperCase() + s.slice(1);
+        level = Log.Level[s];
+        break;
+
+      // Gecko <= 45
+      case "boolean":
+        if (p) {
+          level = Log.Level.Trace;
+        }
+        break;
     }
   }
 

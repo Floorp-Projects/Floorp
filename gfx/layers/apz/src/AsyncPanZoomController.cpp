@@ -516,9 +516,11 @@ public:
       //   while holding mMonitor, because otherwise, if the overscrolled APZC
       //   is this one, then the SetState(NOTHING) in UpdateAnimation will
       //   stomp on the SetState(SNAP_BACK) it does.
-      mDeferredTasks.append(NewRunnableMethod(mOverscrollHandoffChain.get(),
-                                              &OverscrollHandoffChain::SnapBackOverscrolledApzc,
-                                              &mApzc));
+      if (!mDeferredTasks.append(NewRunnableMethod(mOverscrollHandoffChain.get(),
+                                                   &OverscrollHandoffChain::SnapBackOverscrolledApzc,
+                                                   &mApzc))) {
+        MOZ_CRASH();
+      }
       return false;
     }
 
@@ -567,11 +569,13 @@ public:
       // the lock ordering. Instead we schedule HandleFlingOverscroll() to be
       // called after mMonitor is released.
       APZC_LOG("%p fling went into overscroll, handing off with velocity %s\n", &mApzc, Stringify(velocity).c_str());
-      mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                              &AsyncPanZoomController::HandleFlingOverscroll,
-                                              velocity,
-                                              mOverscrollHandoffChain,
-                                              mScrolledApzc));
+      if (!mDeferredTasks.append(NewRunnableMethod(&mApzc,
+                                                   &AsyncPanZoomController::HandleFlingOverscroll,
+                                                   velocity,
+                                                   mOverscrollHandoffChain,
+                                                   mScrolledApzc))) {
+        MOZ_CRASH();
+      }
 
       // If there is a remaining velocity on this APZC, continue this fling
       // as well. (This fling and the handed-off fling will run concurrently.)
@@ -796,9 +800,11 @@ public:
       // HandleSmoothScrollOverscroll() (which acquires the tree lock) would violate
       // the lock ordering. Instead we schedule HandleSmoothScrollOverscroll() to be
       // called after mMonitor is released.
-      mDeferredTasks.append(NewRunnableMethod(&mApzc,
-                                              &AsyncPanZoomController::HandleSmoothScrollOverscroll,
-                                              velocity));
+      if (!mDeferredTasks.append(NewRunnableMethod(&mApzc,
+                                                   &AsyncPanZoomController::HandleSmoothScrollOverscroll,
+                                                   velocity))) {
+        MOZ_CRASH();
+      }
 
       return false;
     }

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIDOMEvent.idl"
+#include "nsISupports.idl"
 
 /**
  * Animation events are defined in:
@@ -11,8 +11,9 @@
  * http://dev.w3.org/csswg/css3-animations/#animation-events-
  */
 
-[builtinclass, uuid(772c7069-3f7d-42cf-97ab-b32f1c0b83da)]
-interface nsIDOMAnimationEvent : nsIDOMEvent {
+[builtinclass, uuid(ce6d1db3-53b8-4ade-9baa-70f4947200a2)]
+interface nsIDOMAnimationEvent : nsISupports
+{
   readonly attribute DOMString          animationName;
   readonly attribute float              elapsedTime;
   readonly attribute DOMString          pseudoElement;

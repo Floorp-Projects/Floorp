@@ -1470,7 +1470,10 @@ function clickElement(id) {
     if (utils.isElementEnabled(el)) {
       checkEnabledAccessibility(acc, el, true);
       checkActionableAccessibility(acc, el);
-      utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView);
+      let rects = el.getClientRects();
+      utils.synthesizeMouseAtPoint(rects[0].left + rects[0].width/2,
+                                   rects[0].top + rects[0].height/2,
+                                   {}, el.ownerDocument.defaultView);
     } else {
       throw new InvalidElementStateError("Element is not Enabled");
     }

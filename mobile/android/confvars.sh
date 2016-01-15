@@ -113,6 +113,3 @@ MOZ_ADDON_SIGNING=1
 # Note: The framework is always included in the app. This flag controls
 # usage of the framework.
 MOZ_SWITCHBOARD=1
-
-# Disable GeckoView by default.
-export MOZ_DISABLE_GECKOVIEW=1

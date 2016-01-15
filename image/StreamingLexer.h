@@ -316,7 +316,9 @@ public:
 
       size_t toRead = std::min(aLength, mTransition.Size() - mBuffer.length());
 
-      mBuffer.append(aInput, toRead);
+      if (!mBuffer.append(aInput, toRead)) {
+        return Some(TerminalState::FAILURE);
+      }
       aInput += toRead;
       aLength -= toRead;
       if (mBuffer.length() != mTransition.Size()) {
@@ -394,7 +396,9 @@ public:
     if (!mBuffer.reserve(mTransition.Size())) {
       return Some(TerminalState::FAILURE);  // Done due to allocation failure.
     }
-    mBuffer.append(aInput, aLength);
+    if (!mBuffer.append(aInput, aLength)) {
+      return Some(TerminalState::FAILURE);
+    }
     return Nothing();  // Need more input.
   }
 

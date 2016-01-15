@@ -305,11 +305,6 @@ public:
   }
 
 private:
-  virtual gfx::IntSize GetWidgetSize() const override
-  {
-    return mWidgetSize;
-  }
-
   bool InitializeVR();
   void DestroyVR(GLContext *gl);
 
@@ -323,7 +318,7 @@ private:
 
   /** Widget associated with this compositor */
   nsIWidget *mWidget;
-  gfx::IntSize mWidgetSize;
+  LayoutDeviceIntSize mWidgetSize;
   RefPtr<GLContext> mGLContext;
   UniquePtr<GLBlitTextureImageHelper> mBlitTextureImageHelper;
   gfx::Matrix4x4 mProjMatrix;

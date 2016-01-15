@@ -860,7 +860,7 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   // If using a Cairo xlib surface, then try to reuse it.
   BorrowedXlibDrawable borrow(aDrawTarget);
   if (borrow.GetDrawable()) {
-    nsIntSize size = aDrawTarget->GetSize();
+    nsIntSize size = borrow.GetSize();
     cairo_surface_t* surf = nullptr;
     // Check if the surface is using XRender.
 #ifdef CAIRO_HAS_XLIB_XRENDER_SURFACE
@@ -877,6 +877,10 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
             size.width, size.height);
       }
       if (!NS_WARN_IF(!surf)) {
+        Point offset = borrow.GetOffset();
+        if (offset != Point()) {
+          cairo_surface_set_device_offset(surf, offset.x, offset.y);
+        }
         cairo_t* cr = cairo_create(surf);
         if (!NS_WARN_IF(!cr)) {
           RefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);
@@ -901,12 +905,16 @@ DrawThemeWithCairo(gfxContext* aContext, DrawTarget* aDrawTarget,
   nsIntSize size;
   int32_t stride;
   SurfaceFormat format;
-  if (aDrawTarget->LockBits(&data, &size, &stride, &format)) {
+  IntPoint origin;
+  if (aDrawTarget->LockBits(&data, &size, &stride, &format, &origin)) {
     // Create a Cairo image surface context the device rectangle.
     cairo_surface_t* surf =
       cairo_image_surface_create_for_data(
         data, GfxFormatToCairoFormat(format), size.width, size.height, stride);
     if (!NS_WARN_IF(!surf)) {
+      if (origin != IntPoint()) {
+        cairo_surface_set_device_offset(surf, -origin.x, -origin.y);
+      }
       cairo_t* cr = cairo_create(surf);
       if (!NS_WARN_IF(!cr)) {
         RefPtr<SystemCairoClipper> clipper = new SystemCairoClipper(cr);

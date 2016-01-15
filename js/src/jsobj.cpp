@@ -3601,14 +3601,14 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
         else
             fprintf(stderr, "InterpreterFrame at %p\n", (void*) i.interpFrame());
 
-        if (i.isFunctionFrame()) {
+        if (i.isNonEvalFunctionFrame()) {
             fprintf(stderr, "callee fun: ");
             RootedValue v(cx);
             JSObject* fun = i.callee(cx);
             v.setObject(*fun);
             dumpValue(v);
         } else {
-            fprintf(stderr, "global frame, no callee");
+            fprintf(stderr, "global or eval frame, no callee");
         }
         fputc('\n', stderr);
 
