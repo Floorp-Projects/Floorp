@@ -713,6 +713,7 @@ if CONFIG['MOZ_B2G_BT']:
         'BluetoothPairingListener.webidl',
         'BluetoothPbapParameters.webidl',
         'BluetoothPbapRequestHandle.webidl',
+        'BluetoothUUID.webidl',
     ]
 
 if CONFIG['MOZ_SIMPLEPUSH']:
