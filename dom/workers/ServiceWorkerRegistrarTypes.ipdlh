@@ -12,7 +12,6 @@ namespace dom {
 struct ServiceWorkerRegistrationData
 {
   nsCString scope;
-  nsCString scriptSpec;
   nsCString currentWorkerURL;
 
   nsString activeCacheName;
