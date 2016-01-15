@@ -111,3 +111,14 @@ skip-if(!cocoaWidget) HTTP(..) != apple-symbols-1.html apple-symbols-1-notref.ht
 == italic-oblique-8.html italic-oblique-ref.html
 == italic-oblique-9.html italic-oblique-ref.html
 != italic-oblique-kinnari.html italic-oblique-kinnari-ref.html
+
+# system font generic per-language tests, only works under OSX currently
+random-if(!OSX) == system-generic-fallback-1.html system-generic-fallback-1-ref.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-2.html system-generic-fallback-2-ref.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-3.html system-generic-fallback-3-ref.html
+random-if(!OSX||OSX<1008) == system-generic-fallback-4.html system-generic-fallback-4-ref.html
+random-if(!OSX) != system-generic-fallback-ko.html system-generic-fallback-ja.html
+random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-ja.html
+random-if(!OSX) != system-generic-fallback-zh-cn.html system-generic-fallback-ja.html
+random-if(!OSX) != system-generic-fallback-zh-tw.html system-generic-fallback-zh-cn.html
+

@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>system generic linked families</title>
+<meta charset="utf-8">
+
+<style>
+body {
+  margin: 50px;
+}
+
+p {
+  margin: 0;
+  display: inline-block;
+  width: 200px;
+  font-size: 32px;
+  line-height: 1.3em;
+}
+
+p + p { margin-top: 5px; }
+
+#test p:before { content: "123abc 途外"; }
+#test p { font-family: -apple-system; }
+#test { width: 500px }
+</style>
+
+</head>
+<body>
+
+<div id=test>
+<p lang="zh-hk"></p>
+<p lang="zh-HK"></p>
+<p lang="zh_hk"></p>
+<p lang="zh_HK"></p>
+</div>
+
+</body>
+</html>
