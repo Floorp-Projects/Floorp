@@ -88,8 +88,9 @@ task:
 
   extra:
     treeherder:
-      groupSymbol: tc
-      groupName: Submitted by taskcluster
+      groupName: B2G end-to-end tests (Python)
+      groupSymbol: e2e-py
+      productName: b2g
     chunks:
       total: 1
       current: {{chunk}}
