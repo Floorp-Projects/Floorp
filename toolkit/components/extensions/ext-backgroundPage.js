@@ -104,6 +104,7 @@ BackgroundPage.prototype = {
     this.webNav = null;
 
     this.chromeWebNav.loadURI("about:blank", 0, null, null, null);
+    this.chromeWebNav.close();
     this.chromeWebNav = null;
   },
 };
