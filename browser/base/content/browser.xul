@@ -651,7 +651,6 @@
             <textbox id="urlbar" flex="1"
                      placeholder="&urlbar.placeholder2;"
                      type="autocomplete"
-                     inputtype="url"
                      autocompletesearch="urlinline history"
                      autocompletesearchparam="enable-actions"
                      autocompletepopup="PopupAutoCompleteRichResult"
