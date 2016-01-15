@@ -1205,6 +1205,8 @@ InvalidateWindowForDeviceReset(HWND aWnd, LPARAM aMsg)
 bool
 gfxWindowsPlatform::UpdateForDeviceReset()
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
+
   if (!DidRenderingDeviceReset()) {
     return false;
   }

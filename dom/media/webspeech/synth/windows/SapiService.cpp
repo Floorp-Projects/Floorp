@@ -196,6 +196,8 @@ SapiService::~SapiService()
 bool
 SapiService::Init()
 {
+  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
   MOZ_ASSERT(!mInitialized);
 
   if (Preferences::GetBool("media.webspeech.synth.test") ||
