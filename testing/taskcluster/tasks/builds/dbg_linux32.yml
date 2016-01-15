@@ -3,7 +3,7 @@ $inherits:
 task:
   # same as clobber, but with a cached workspace
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}}-build-linux32-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux32-workspace'
 
   payload:
     cache:
