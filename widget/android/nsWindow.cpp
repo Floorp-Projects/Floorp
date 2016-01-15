@@ -73,6 +73,7 @@ using mozilla::Unused;
 #include "android_npapi.h"
 #include "GeneratedJNINatives.h"
 #include "KeyEvent.h"
+#include "MotionEvent.h"
 
 #include "imgIEncoder.h"
 
@@ -526,23 +527,23 @@ public:
         size_t endIndex = pointerId.Length();
 
         switch (aAction) {
-            case AndroidMotionEvent::ACTION_DOWN:
-            case AndroidMotionEvent::ACTION_POINTER_DOWN:
+            case sdk::MotionEvent::ACTION_DOWN:
+            case sdk::MotionEvent::ACTION_POINTER_DOWN:
                 type = MultiTouchInput::MULTITOUCH_START;
                 break;
-            case AndroidMotionEvent::ACTION_MOVE:
+            case sdk::MotionEvent::ACTION_MOVE:
                 type = MultiTouchInput::MULTITOUCH_MOVE;
                 break;
-            case AndroidMotionEvent::ACTION_UP:
-            case AndroidMotionEvent::ACTION_POINTER_UP:
+            case sdk::MotionEvent::ACTION_UP:
+            case sdk::MotionEvent::ACTION_POINTER_UP:
                 // for pointer-up events we only want the data from
                 // the one pointer that went up
                 type = MultiTouchInput::MULTITOUCH_END;
                 startIndex = aActionIndex;
                 endIndex = aActionIndex + 1;
                 break;
-            case AndroidMotionEvent::ACTION_OUTSIDE:
-            case AndroidMotionEvent::ACTION_CANCEL:
+            case sdk::MotionEvent::ACTION_OUTSIDE:
+            case sdk::MotionEvent::ACTION_CANCEL:
                 type = MultiTouchInput::MULTITOUCH_CANCEL;
                 break;
             default:

@@ -28,6 +28,7 @@ bindings_exports_FILES := \
   Bundle.h \
   KeyEvent.h \
   MediaCodec.h \
+  MotionEvent.h \
   SurfaceTexture.h \
   $(NULL)
 bindings_exports_DEST = $(DIST)/include
