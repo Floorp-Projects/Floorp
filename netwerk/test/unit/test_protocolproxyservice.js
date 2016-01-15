@@ -993,7 +993,7 @@ function failed_script_callback(pi)
                              null,      // aTriggeringPrincipal
                              Ci.nsILoadInfo.SEC_NORMAL,
                              Ci.nsIContentPolicy.TYPE_OTHER);
-  chan.asyncOpen(directFilterListener, chan);
+  chan.asyncOpen(directFilterListener, null);
 }
 
 var directFilterListener = {
@@ -1004,8 +1004,8 @@ var directFilterListener = {
 
   onStopRequest: function test_onStop(request, ctx, status) {
     // check on the PI from the channel itself
-    ctx.QueryInterface(Components.interfaces.nsIProxiedChannel);
-    check_proxy(ctx.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
+    request.QueryInterface(Components.interfaces.nsIProxiedChannel);
+    check_proxy(request.proxyInfo, "http", "127.0.0.1", 7246, 0, 0, false);
     pps.unregisterFilter(directFilter);
 
     // check on the PI from on-modify-request
