@@ -65,10 +65,14 @@ function runTest() {
                                    false, "foobarcookie", observer, alertName);
     ok(true, "showAlertNotification() succeeded.  Waiting for notification...");
 
-    if (SpecialPowers.Services.appinfo.OS == "Darwin") {
-      // Notifications are native on OS X 10.8 and later, and when they are they
-      // persist in the Notification Center. We need to close explicitly to avoid a hang.
-      // This also works for XUL notifications when running this test on OS X < 10.8.
+    if ("@mozilla.org/system-alerts-service;1" in Cc) {
+      // Notifications are native on OS X 10.8 and later, as well as GNOME
+      // Shell with libnotify (bug 1236036). These notifications persist in the
+      // Notification Center, and only fire the `alertfinished` event when
+      // closed. For platforms where native notifications may be used, we need
+      // to close explicitly to avoid a hang. This also works for XUL
+      // notifications when running this test on OS X < 10.8, or a window
+      // manager like Ubuntu Unity with incomplete libnotify support.
       notifier.closeAlert(alertName);
     }
   } catch (ex) {
