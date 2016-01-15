@@ -57,6 +57,11 @@ private:
     // Object that implements native GLController calls.
     mozilla::UniquePtr<GLControllerSupport> mGLControllerSupport;
 
+    class NPZCSupport;
+    // Object that implements native NativePanZoomController calls.
+    // Owned by the Java NativePanZoomController instance.
+    NPZCSupport* mNPZCSupport;
+
 public:
     static void OnGlobalAndroidEvent(mozilla::AndroidGeckoEvent *ae);
     static mozilla::gfx::IntSize GetAndroidScreenBounds();
