@@ -736,7 +736,7 @@ class Method(object):
             cmp(self.hidden, other.hidden) or
             cmp(self.optargc, other.optargc) or
             cmp(self.implicit_jscontext, other.implicit_jscontext) or
-            cmp(sorted(self.params), sorted(other.params)) or
+            cmp(self.params, other.params) or
             cmp(self.result, other.result)
         )
 
@@ -1018,8 +1018,8 @@ class Interface(object):
             if c != 0:
                 return c
         return (
-            cmp(sorted(self.methods), sorted(other.methods)) or
-            cmp(sorted(self.constants), sorted(other.constants)) or
+            cmp(self.methods, other.methods) or
+            cmp(self.constants, other.constants) or
             cmp(self.scriptable, other.scriptable) or
             cmp(self.function, other.function) or
             cmp(self.builtinclass, other.builtinclass) or
