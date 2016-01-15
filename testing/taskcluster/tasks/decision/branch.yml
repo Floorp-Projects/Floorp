@@ -53,7 +53,7 @@ tasks:
 
         # Note: This task is built server side without the context or tooling that
         # exist in tree so we must hard code the version
-        image: 'quay.io/mozilla/builder:0.3.0'
+        image: 'taskcluster/builder:0.5.11'
 
         # Virtually no network or other potentially risky operations happen as part
         # of the task timeout aside from the initial clone. We intentionally have
@@ -65,12 +65,13 @@ tasks:
           - /bin/bash
           - -cx
           - >
-            source ./bin/decision.sh &&
             mkdir -p /home/worker/artifacts &&
+            checkout-gecko workspace &&
+            cd workspace/gecko &&
             ./mach taskcluster-graph
             --pushlog-id='{{pushlog_id}}'
-            --message='{{comment}}'
             --project='{{project}}'
+            --message='{{comment}}'
             --owner='{{owner}}'
             --level='{{level}}'
             --revision-hash='{{revision_hash}}'
