@@ -29,7 +29,7 @@
 
 #include "nsITransport.h"
 #include "nsISocketTransport.h"
-
+#include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocument.h"
 #include "nsPresContext.h"
@@ -602,7 +602,14 @@ nsDocLoader::OnStopRequest(nsIRequest *aRequest,
   // load.  This will handle removing the request from our hashtable as needed.
   //
   if (mIsLoadingDocument) {
-    DocLoaderIsEmpty(true);
+    nsCOMPtr<nsIDocShell> ds = do_QueryInterface(static_cast<nsIRequestObserver*>(this));
+    bool doNotFlushLayout = false;
+    if (ds) {
+      // Don't do unexpected layout flushes while we're in process of restoring
+      // a document from the bfcache.
+      ds->GetRestoringDocument(&doNotFlushLayout);
+    }
+    DocLoaderIsEmpty(!doNotFlushLayout);
   }
 
   return NS_OK;
