@@ -293,9 +293,9 @@ typedef Vector<CodeRange, 0, SystemAllocPolicy> CodeRangeVector;
 // A CacheableUniquePtr is used to cacheably store strings in Module.
 
 template <class CharT>
-struct CacheableUniquePtr : public UniquePtr<CharT, JS::FreePolicy>
+struct CacheableUniquePtr : public UniquePtr<CharT[], JS::FreePolicy>
 {
-    typedef UniquePtr<CharT, JS::FreePolicy> UPtr;
+    typedef UniquePtr<CharT[], JS::FreePolicy> UPtr;
     explicit CacheableUniquePtr(CharT* ptr) : UPtr(ptr) {}
     MOZ_IMPLICIT CacheableUniquePtr(UPtr&& rhs) : UPtr(Move(rhs)) {}
     CacheableUniquePtr() = default;

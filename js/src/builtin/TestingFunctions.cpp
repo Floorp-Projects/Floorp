@@ -2333,7 +2333,7 @@ ReportLargeAllocationFailure(JSContext* cx, unsigned argc, Value* vp)
 
 namespace heaptools {
 
-typedef UniquePtr<char16_t[], JS::FreePolicy> EdgeName;
+typedef UniqueTwoByteChars EdgeName;
 
 // An edge to a node from its predecessor in a path through the graph.
 class BackEdge {
@@ -2576,7 +2576,7 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
     size_t srclen = chars.length();
     const char16_t* src = chars.start().get();
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     unsigned lineno;
 
     JS::DescribeScriptedCaller(cx, &filename, &lineno);
@@ -2662,7 +2662,7 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
     size_t srclen = chars.length();
     const char16_t* src = chars.start().get();
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     unsigned lineno;
 
     JS::DescribeScriptedCaller(cx, &filename, &lineno);

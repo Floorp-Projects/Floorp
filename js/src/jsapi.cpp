@@ -3904,7 +3904,7 @@ JS::OwningCompileOptions::setFileAndLine(JSContext* cx, const char* f, unsigned 
 bool
 JS::OwningCompileOptions::setSourceMapURL(JSContext* cx, const char16_t* s)
 {
-    UniquePtr<char16_t[], JS::FreePolicy> copy;
+    UniqueTwoByteChars copy;
     if (s) {
         copy = DuplicateString(cx, s);
         if (!copy)
@@ -3989,7 +3989,7 @@ static bool
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options, SyntacticScopeOption scopeOption,
         const char* bytes, size_t length, MutableHandleScript script)
 {
-    UniquePtr<char16_t, JS::FreePolicy> chars;
+    UniqueTwoByteChars chars;
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else
@@ -4318,7 +4318,7 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& scopeChain,
                     const char* name, unsigned nargs, const char* const* argnames,
                     const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    UniquePtr<char16_t, JS::FreePolicy> chars;
+    UniqueTwoByteChars chars;
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else
@@ -5980,7 +5980,7 @@ DescribeScriptedCaller(JSContext* cx, UniqueChars* filename, unsigned* lineno,
         return false;
 
     if (filename && i.filename()) {
-        UniqueChars copy = make_string_copy(i.filename());
+        UniqueChars copy = DuplicateString(i.filename());
         if (!copy)
             return false;
         *filename = Move(copy);

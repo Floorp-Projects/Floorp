@@ -4709,7 +4709,7 @@ js_strcmp(const char16_t* lhs, const char16_t* rhs)
     }
 }
 
-UniquePtr<char[], JS::FreePolicy>
+UniqueChars
 js::DuplicateString(js::ExclusiveContext* cx, const char* s)
 {
     size_t n = strlen(s) + 1;
@@ -4720,7 +4720,7 @@ js::DuplicateString(js::ExclusiveContext* cx, const char* s)
     return ret;
 }
 
-UniquePtr<char16_t[], JS::FreePolicy>
+UniqueTwoByteChars
 js::DuplicateString(js::ExclusiveContext* cx, const char16_t* s)
 {
     size_t n = js_strlen(s) + 1;
@@ -4731,11 +4731,17 @@ js::DuplicateString(js::ExclusiveContext* cx, const char16_t* s)
     return ret;
 }
 
-UniquePtr<char16_t[], JS::FreePolicy>
+UniqueChars
+js::DuplicateString(const char* s)
+{
+    return UniqueChars(js_strdup(s));
+}
+
+UniqueTwoByteChars
 js::DuplicateString(const char16_t* s)
 {
     size_t n = js_strlen(s) + 1;
-    UniquePtr<char16_t[], JS::FreePolicy> ret(js_pod_malloc<char16_t>(n));
+    UniqueTwoByteChars ret(js_pod_malloc<char16_t>(n));
     if (!ret)
         return nullptr;
     PodCopy(ret.get(), s, n);
