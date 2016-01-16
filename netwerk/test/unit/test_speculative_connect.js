@@ -80,61 +80,60 @@ TestServer.prototype = {
     onStopListening: function(socket) {}
 };
 
-/** TestOutputStreamCallback
+/** TestFailedStreamCallback
  *
- * Implements nsIOutputStreamCallback for socket layer tests.
+ * Implements nsI[Input|Output]StreamCallback for socket layer tests.
+ * Expect failure in all cases
  */
-function TestOutputStreamCallback(transport, hostname, proxied, expectSuccess, next) {
+function TestFailedStreamCallback(transport, hostname, next) {
     this.transport = transport;
     this.hostname = hostname;
-    this.proxied = proxied;
-    this.expectSuccess = expectSuccess;
     this.next = next;
-    this.dummyContent = "Dummy content";
+    this.dummyContent = "G";
 }
 
-TestOutputStreamCallback.prototype = {
+TestFailedStreamCallback.prototype = {
     QueryInterface: function(iid) {
-        if (iid.equals(Ci.nsIOutputStreamCallback) ||
+        if (iid.equals(Ci.nsIInputStreamCallback) ||
+            iid.equals(Ci.nsIOutputStreamCallback) ||
             iid.equals(Ci.nsISupports))
             return this;
         throw Cr.NS_ERROR_NO_INTERFACE;
     },
-    onOutputStreamReady: function(stream) {
-        do_check_neq(typeof(stream), undefined);
+    processException: function(e) {
+        do_check_instanceof(e, Ci.nsIException);
+        // A refusal to connect speculatively should throw an error.
+        do_check_eq(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
+        this.transport.close(Cr.NS_BINDING_ABORTED);
+        return true;
+    },
+    onOutputStreamReady: function(outstream) {
+        do_print("outputstream handler.");
+        do_check_neq(typeof(outstream), undefined);
         try {
-            stream.write(this.dummyContent, this.dummyContent.length);
+            outstream.write(this.dummyContent, this.dummyContent.length);
         } catch (e) {
-            // Spec Connect FAILED.
-            do_check_instanceof(e, Ci.nsIException);
-            if (this.expectSuccess) {
-                // We may expect success, but the address could be unreachable
-                // in the test environment, so expect errors.
-                if (this.proxied) {
-                    do_check_true(e.result == Cr.NS_ERROR_NET_TIMEOUT ||
-                                  e.result == Cr.NS_ERROR_PROXY_CONNECTION_REFUSED);
-                } else {
-                    do_check_true(e.result == Cr.NS_ERROR_NET_TIMEOUT ||
-                                  e.result == Cr.NS_ERROR_CONNECTION_REFUSED);
-                }
-            } else {
-                // A refusal to connect speculatively should throw an error.
-                do_check_eq(e.result, Cr.NS_ERROR_CONNECTION_REFUSED);
-            }
-            this.transport.close(Cr.NS_BINDING_ABORTED);
+            this.processException(e);
             this.next();
             return;
         }
-        // Spec Connect SUCCEEDED.
-        if (this.expectSuccess) {
-            do_check_true(true, "Success for " + this.hostname);
-        } else {
-            do_throw("Speculative Connect should have failed for " +
-                     this.hostname);
+        do_print("no exception on write. Wait for read.");
+    },
+    onInputStreamReady: function(instream) {
+        do_print("inputstream handler.");
+        do_check_neq(typeof(instream), undefined);
+        try {
+            instream.available();
+        } catch (e) {
+            this.processException(e);
+            this.next();
+            return;
         }
+        do_throw("Speculative Connect should have failed for " +
+                 this.hostname);
         this.transport.close(Cr.NS_BINDING_ABORTED);
         this.next();
-    }
+    },
 };
 
 /** test_speculative_connect
@@ -165,7 +164,7 @@ function test_speculative_connect() {
  * boolean to determine if the test is expected to succeed or fail, and a
  * function to call the next test case.
  */
-function test_hostnames_resolving_to_addresses(host, expectSuccess, next) {
+function test_hostnames_resolving_to_addresses(host, next) {
     do_print(host);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
@@ -179,15 +178,15 @@ function test_hostnames_resolving_to_addresses(host, expectSuccess, next) {
     do_check_eq(1, transport.getTimeout(Ci.nsISocketTransport.TIMEOUT_CONNECT));
 
     var outStream = transport.openOutputStream(Ci.nsITransport.OPEN_UNBUFFERED,0,0);
+    var inStream  = transport.openInputStream(0,0,0);
     do_check_neq(typeof(outStream), undefined);
+    do_check_neq(typeof(inStream), undefined);
 
-    var callback = new TestOutputStreamCallback(transport, host, false,
-                                                expectSuccess,
-                                                next);
+    var callback = new TestFailedStreamCallback(transport, host, next);
     do_check_neq(typeof(callback), undefined);
 
     // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
-    // adds callback to nsOutputStreamReadyEvent on main thread, and doesn't
+    // adds callback to ns*StreamReadyEvent on main thread, and doesn't
     // addref off the main thread.
     var gThreadManager = Cc["@mozilla.org/thread-manager;1"]
     .getService(Ci.nsIThreadManager);
@@ -195,7 +194,9 @@ function test_hostnames_resolving_to_addresses(host, expectSuccess, next) {
 
     try {
         outStream.QueryInterface(Ci.nsIAsyncOutputStream)
-                 .asyncWait(callback, 0, 0, mainThread);
+            .asyncWait(callback, 0, 0, mainThread);
+        inStream.QueryInterface(Ci.nsIAsyncInputStream)
+            .asyncWait(callback, 0, 0, mainThread);
     } catch (e) {
         do_throw("asyncWait should not fail!");
     }
@@ -222,7 +223,7 @@ function test_hostnames_resolving_to_local_addresses() {
     var host = localIPLiterals[hostIdx++];
     // Test another local IP address when the current one is done.
     var next = test_hostnames_resolving_to_local_addresses;
-    test_hostnames_resolving_to_addresses(host, false, next);
+    test_hostnames_resolving_to_addresses(host, next);
 }
 
 /** test_speculative_connect_with_host_list
@@ -231,7 +232,7 @@ function test_hostnames_resolving_to_local_addresses() {
  * boolean to determine if the test is expected to succeed or fail, and a
  * function to call the next test case.
  */
-function test_proxies(proxyHost, expectSuccess, next) {
+function test_proxies(proxyHost, next) {
     do_print("Proxy: " + proxyHost);
     var sts = Cc["@mozilla.org/network/socket-transport-service;1"]
               .getService(Ci.nsISocketTransportService);
@@ -253,15 +254,15 @@ function test_proxies(proxyHost, expectSuccess, next) {
     transport.setTimeout(Ci.nsISocketTransport.TIMEOUT_READ_WRITE, 1);
 
     var outStream = transport.openOutputStream(Ci.nsITransport.OPEN_UNBUFFERED,0,0);
+    var inStream  = transport.openInputStream(0,0,0);
     do_check_neq(typeof(outStream), undefined);
+    do_check_neq(typeof(inStream), undefined);
 
-    var callback = new TestOutputStreamCallback(transport, proxyHost, true,
-                                                expectSuccess,
-                                                next);
+    var callback = new TestFailedStreamCallback(transport, proxyHost, next);
     do_check_neq(typeof(callback), undefined);
 
     // Need to get main thread pointer to ensure nsSocketTransport::AsyncWait
-    // adds callback to nsOutputStreamReadyEvent on main thread, and doesn't
+    // adds callback to ns*StreamReadyEvent on main thread, and doesn't
     // addref off the main thread.
     var gThreadManager = Cc["@mozilla.org/thread-manager;1"]
     .getService(Ci.nsIThreadManager);
@@ -269,7 +270,9 @@ function test_proxies(proxyHost, expectSuccess, next) {
 
     try {
         outStream.QueryInterface(Ci.nsIAsyncOutputStream)
-                 .asyncWait(callback, 0, 0, mainThread);
+            .asyncWait(callback, 0, 0, mainThread);
+        inStream.QueryInterface(Ci.nsIAsyncInputStream)
+            .asyncWait(callback, 0, 0, mainThread);
     } catch (e) {
         do_throw("asyncWait should not fail!");
     }
@@ -296,7 +299,7 @@ function test_proxies_with_local_addresses() {
     var host = localIPLiterals[hostIdx++];
     // Test another local IP address when the current one is done.
     var next = test_proxies_with_local_addresses;
-    test_proxies(host, false, next);
+    test_proxies(host, next);
 }
 
 /** next_test
