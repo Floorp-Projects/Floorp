@@ -54,6 +54,7 @@ dictionary MediaTrackConstraintSet {
     ConstrainLong viewportOffsetY;
     ConstrainLong viewportWidth;
     ConstrainLong viewportHeight;
+    ConstrainBoolean echoCancellation;
 };
 
 dictionary MediaTrackConstraints : MediaTrackConstraintSet {
