@@ -55,7 +55,6 @@ using namespace js::gc;
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 using mozilla::PointerRangeSize;
-using mozilla::UniquePtr;
 
 bool
 js::AutoCycleDetector::init()

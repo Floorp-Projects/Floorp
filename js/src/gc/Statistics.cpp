@@ -9,7 +9,6 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>

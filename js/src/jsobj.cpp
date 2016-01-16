@@ -15,7 +15,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/SizePrintfMacros.h"
 #include "mozilla/TemplateLib.h"
-#include "mozilla/UniquePtr.h"
 
 #include <string.h>
 
@@ -48,6 +47,7 @@
 #include "js/MemoryMetrics.h"
 #include "js/Proxy.h"
 #include "js/UbiNode.h"
+#include "js/UniquePtr.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Interpreter.h"
 #include "vm/ProxyObject.h"
@@ -74,7 +74,6 @@ using namespace js::gc;
 
 using mozilla::DebugOnly;
 using mozilla::Maybe;
-using mozilla::UniquePtr;
 
 void
 js::ReportNotObject(JSContext* cx, const Value& v)

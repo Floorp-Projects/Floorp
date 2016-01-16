@@ -7,7 +7,6 @@
 #include "builtin/TestingFunctions.h"
 
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
 
 #include <cmath>
 
@@ -27,6 +26,7 @@
 #include "js/StructuredClone.h"
 #include "js/UbiNode.h"
 #include "js/UbiNodeBreadthFirst.h"
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
@@ -45,7 +45,6 @@ using namespace js;
 
 using mozilla::ArrayLength;
 using mozilla::Move;
-using mozilla::UniquePtr;
 
 // If fuzzingSafe is set, remove functionality that could cause problems with
 // fuzzers. Set this via the environment variable MOZ_FUZZING_SAFE.
@@ -2580,7 +2579,7 @@ EvalReturningScope(JSContext* cx, unsigned argc, Value* vp)
     JS::AutoFilename filename;
     unsigned lineno;
 
-    DescribeScriptedCaller(cx, &filename, &lineno);
+    JS::DescribeScriptedCaller(cx, &filename, &lineno);
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename.get(), lineno);
@@ -2666,7 +2665,7 @@ ShellCloneAndExecuteScript(JSContext* cx, unsigned argc, Value* vp)
     JS::AutoFilename filename;
     unsigned lineno;
 
-    DescribeScriptedCaller(cx, &filename, &lineno);
+    JS::DescribeScriptedCaller(cx, &filename, &lineno);
 
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename.get(), lineno);

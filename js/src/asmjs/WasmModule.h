@@ -96,7 +96,7 @@ struct StaticLinkData
     WASM_DECLARE_SERIALIZABLE(StaticLinkData)
 };
 
-typedef UniquePtr<StaticLinkData, JS::DeletePolicy<StaticLinkData>> UniqueStaticLinkData;
+typedef UniquePtr<StaticLinkData> UniqueStaticLinkData;
 
 // An Export represents a single function inside a wasm Module that has been
 // exported one or more times.
@@ -333,7 +333,7 @@ class CodeDeleter
     explicit CodeDeleter(uint32_t bytes) : bytes_(bytes) {}
     void operator()(uint8_t* p);
 };
-typedef JS::UniquePtr<uint8_t, CodeDeleter> UniqueCodePtr;
+typedef UniquePtr<uint8_t, CodeDeleter> UniqueCodePtr;
 
 UniqueCodePtr
 AllocateCode(ExclusiveContext* cx, size_t bytes);
@@ -401,7 +401,7 @@ struct ModuleData : ModuleCacheablePod
     WASM_DECLARE_SERIALIZABLE(ModuleData);
 };
 
-typedef UniquePtr<ModuleData, JS::DeletePolicy<ModuleData>> UniqueModuleData;
+typedef UniquePtr<ModuleData> UniqueModuleData;
 
 // Module represents a compiled WebAssembly module which lives until the last
 // reference to any exported functions is dropped. Modules must be wrapped by a
@@ -425,7 +425,7 @@ typedef UniquePtr<ModuleData, JS::DeletePolicy<ModuleData>> UniqueModuleData;
 
 class Module
 {
-    typedef UniquePtr<const ModuleData, JS::DeletePolicy<const ModuleData>> UniqueConstModuleData;
+    typedef UniquePtr<const ModuleData> UniqueConstModuleData;
     struct ImportExit {
         void* code;
         jit::BaselineScript* baselineScript;
@@ -589,7 +589,7 @@ class Module
     const char* profilingLabel(uint32_t funcIndex) const;
 };
 
-typedef UniquePtr<Module, JS::DeletePolicy<Module>> UniqueModule;
+typedef UniquePtr<Module> UniqueModule;
 
 // Tests to query and access the exported JS functions produced by
 // Module::createExportObject.

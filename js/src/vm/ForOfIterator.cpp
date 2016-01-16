@@ -17,8 +17,6 @@
 using namespace js;
 using JS::ForOfIterator;
 
-using mozilla::UniquePtr;
-
 bool
 ForOfIterator::init(HandleValue iterable, NonIterableBehavior nonIterableBehavior)
 {
