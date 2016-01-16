@@ -173,7 +173,7 @@ add_task(function* testTabSwitchContext() {
           "title": "Title 2" },
         { "icon": browser.runtime.getURL("2.png"),
           "popup": browser.runtime.getURL("2.html"),
-          "title": "Default Title" },
+          "title": "Default Title \u263a" },
       ];
 
       return [
