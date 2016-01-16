@@ -3285,14 +3285,38 @@ nsIDocument::ElementFromPoint(float aX, float aY)
   return ElementFromPointHelper(aX, aY, false, true);
 }
 
+void
+nsIDocument::ElementsFromPoint(float aX, float aY,
+                               nsTArray<RefPtr<Element>>& aElements)
+{
+  ElementsFromPointHelper(aX, aY, nsIDocument::FLUSH_LAYOUT, aElements);
+}
+
 Element*
 nsDocument::ElementFromPointHelper(float aX, float aY,
                                    bool aIgnoreRootScrollFrame,
                                    bool aFlushLayout)
 {
-  // As per the the spec, we return null if either coord is negative
-  if (!aIgnoreRootScrollFrame && (aX < 0 || aY < 0)) {
+  nsAutoTArray<RefPtr<Element>, 1> elementArray;
+  ElementsFromPointHelper(aX, aY,
+                          ((aIgnoreRootScrollFrame ? nsIDocument::IGNORE_ROOT_SCROLL_FRAME : 0) |
+                           (aFlushLayout ? nsIDocument::FLUSH_LAYOUT : 0) |
+                           nsIDocument::IS_ELEMENT_FROM_POINT),
+                          elementArray);
+  if (elementArray.IsEmpty()) {
     return nullptr;
+  }
+  return elementArray[0];
+}
+
+void
+nsDocument::ElementsFromPointHelper(float aX, float aY,
+                                    uint32_t aFlags,
+                                    nsTArray<RefPtr<mozilla::dom::Element>>& aElements)
+{
+  // As per the the spec, we return null if either coord is negative
+  if (!(aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) && (aX < 0 || aY < 0)) {
+    return;
   }
 
   nscoord x = nsPresContext::CSSPixelsToAppUnits(aX);
@@ -3301,32 +3325,58 @@ nsDocument::ElementFromPointHelper(float aX, float aY,
 
   // Make sure the layout information we get is up-to-date, and
   // ensure we get a root frame (for everything but XUL)
-  if (aFlushLayout)
+  if (aFlags & nsIDocument::FLUSH_LAYOUT) {
     FlushPendingNotifications(Flush_Layout);
+  }
 
   nsIPresShell *ps = GetShell();
   if (!ps) {
-    return nullptr;
+    return;
   }
   nsIFrame *rootFrame = ps->GetRootFrame();
 
   // XUL docs, unlike HTML, have no frame tree until everything's done loading
   if (!rootFrame) {
-    return nullptr; // return null to premature XUL callers as a reminder to wait
+    return; // return null to premature XUL callers as a reminder to wait
   }
 
-  nsIFrame *ptFrame = nsLayoutUtils::GetFrameForPoint(rootFrame, pt,
+  nsTArray<nsIFrame*> outFrames;
+  // Emulate what GetFrameAtPoint does, since we want all the frames under our
+  // point.
+  nsLayoutUtils::GetFramesForArea(rootFrame, nsRect(pt, nsSize(1, 1)), outFrames,
     nsLayoutUtils::IGNORE_PAINT_SUPPRESSION | nsLayoutUtils::IGNORE_CROSS_DOC |
-    (aIgnoreRootScrollFrame ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
-  if (!ptFrame) {
-    return nullptr;
+    ((aFlags & nsIDocument::IGNORE_ROOT_SCROLL_FRAME) ? nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME : 0));
+
+  // Dunno when this would ever happen, as we should at least have a root frame under us?
+  if (outFrames.IsEmpty()) {
+    return;
   }
 
-  nsIContent* elem = GetContentInThisDocument(ptFrame);
-  if (elem && !elem->IsElement()) {
-    elem = elem->GetParent();
+  // Used to filter out repeated elements in sequence.
+  nsIContent* lastAdded = nullptr;
+
+  for (uint32_t i = 0; i < outFrames.Length(); i++) {
+    nsIContent* node = GetContentInThisDocument(outFrames[i]);
+
+    if (!node || !node->IsElement()) {
+      // If this helper is called via ElementsFromPoint, we need to make sure
+      // our frame is an element. Otherwise return whatever the top frame is
+      // even if it isn't the top-painted element.
+      if (!(aFlags & nsIDocument::IS_ELEMENT_FROM_POINT)) {
+        continue;
+      }
+      node = node->GetParent();
+    }
+    if (node && node != lastAdded) {
+      aElements.AppendElement(node->AsElement());
+      lastAdded = node;
+      // If this helper is called via ElementFromPoint, just return the first
+      // element we find.
+      if (aFlags & nsIDocument::IS_ELEMENT_FROM_POINT) {
+        return;
+      }
+    }
   }
-  return elem ? elem->AsElement() : nullptr;
 }
 
 nsresult
