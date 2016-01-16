@@ -6,7 +6,7 @@
 #include "nsISupports.idl"
 
 interface nsIXULWindow;
-interface nsIWebNavigation;
+interface nsIWindowlessBrowser;
 interface nsIURI;
 interface nsIDOMWindow;
 interface nsIAppShell;
@@ -18,7 +18,7 @@ interface nsITabParent;
 #include "js/TypeDecls.h"
 %}
 
-[scriptable, uuid(83f23c7e-6ce0-433f-9fe2-f287ae8c6e0c)]
+[scriptable, uuid(0cc1c790-6873-4b31-944f-71d3725e373d)]
 interface nsIAppShellService : nsISupports
 {
   /**
@@ -53,7 +53,7 @@ interface nsIAppShellService : nsISupports
    * representation.
    * @param aIsChrome Set true if you want to use it for chrome content.
    */
-  nsIWebNavigation createWindowlessBrowser([optional] in bool aIsChrome);
+  nsIWindowlessBrowser createWindowlessBrowser([optional] in bool aIsChrome);
 
   [noscript]
   void createHiddenWindow();
