@@ -2,8 +2,141 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testTabSwitchContext() {
+function* runTests(options) {
+  function background(getTests) {
+    // Gets the current details of the browser action, and returns a
+    // promise that resolves to an object containing them.
+    function getDetails(tabId) {
+      return Promise.all([
+        new Promise(resolve => browser.browserAction.getTitle({tabId}, resolve)),
+        new Promise(resolve => browser.browserAction.getPopup({tabId}, resolve)),
+        new Promise(resolve => browser.browserAction.getBadgeText({tabId}, resolve)),
+        new Promise(resolve => browser.browserAction.getBadgeBackgroundColor({tabId}, resolve))]
+      ).then(details => {
+        return Promise.resolve({ title: details[0],
+                                 popup: details[1],
+                                 badge: details[2],
+                                 badgeBackgroundColor: details[3] });
+      });
+    }
+
+    function checkDetails(expecting, tabId) {
+      return getDetails(tabId).then(details => {
+        browser.test.assertEq(expecting.title, details.title,
+                              "expected value from getTitle");
+
+        browser.test.assertEq(expecting.popup, details.popup,
+                              "expected value from getPopup");
+
+        browser.test.assertEq(expecting.badge, details.badge,
+                              "expected value from getBadge");
+
+        browser.test.assertEq(String(expecting.badgeBackgroundColor),
+                              String(details.badgeBackgroundColor),
+                              "expected value from getBadgeBackgroundColor");
+      });
+    }
+
+    let expectDefaults = expecting => {
+      return checkDetails(expecting);
+    };
+
+    let tabs = [];
+    let tests = getTests(tabs, expectDefaults);
+
+    // Runs the next test in the `tests` array, checks the results,
+    // and passes control back to the outer test scope.
+    function nextTest() {
+      let test = tests.shift();
+
+      test(expecting => {
+        // Check that the API returns the expected values, and then
+        // run the next test.
+        new Promise(resolve => {
+          return browser.tabs.query({ active: true, currentWindow: true }, resolve);
+        }).then(tabs => {
+          return checkDetails(expecting, tabs[0].id);
+        }).then(() => {
+          // Check that the actual icon has the expected values, then
+          // run the next test.
+          browser.test.sendMessage("nextTest", expecting, tests.length);
+        });
+      });
+    }
+
+    browser.test.onMessage.addListener((msg) => {
+      if (msg != "runNextTest") {
+        browser.test.fail("Expecting 'runNextTest' message");
+      }
+
+      nextTest();
+    });
+
+    browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
+      tabs[0] = resultTabs[0].id;
+
+      nextTest();
+    });
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
+    manifest: options.manifest,
+
+    background: `(${background})(${options.getTests})`,
+  });
+
+
+  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
+
+  function checkDetails(details) {
+    let button = document.getElementById(browserActionId);
+
+    ok(button, "button exists");
+
+    let title = details.title || options.manifest.name;
+
+    is(button.getAttribute("image"), details.icon, "icon URL is correct");
+    is(button.getAttribute("tooltiptext"), title, "image title is correct");
+    is(button.getAttribute("label"), title, "image label is correct");
+    is(button.getAttribute("badge"), details.badge, "badge text is correct");
+    is(button.getAttribute("disabled") == "true", Boolean(details.disabled), "disabled state is correct");
+
+    if (details.badge && details.badgeBackgroundColor) {
+      let badge = button.ownerDocument.getAnonymousElementByAttribute(
+        button, "class", "toolbarbutton-badge");
+
+      let badgeColor = window.getComputedStyle(badge).backgroundColor;
+      let color = details.badgeBackgroundColor;
+      let expectedColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
+
+      is(badgeColor, expectedColor, "badge color is correct");
+    }
+
+
+    // TODO: Popup URL.
+  }
+
+  let awaitFinish = new Promise(resolve => {
+    extension.onMessage("nextTest", (expecting, testsRemaining) => {
+      checkDetails(expecting);
+
+      if (testsRemaining) {
+        extension.sendMessage("runNextTest");
+      } else {
+        resolve();
+      }
+    });
+  });
+
+  yield extension.startup();
+
+  yield awaitFinish;
+
+  yield extension.unload();
+}
+
+add_task(function* testTabSwitchContext() {
+  yield runTests({
     manifest: {
       "browser_action": {
         "default_icon": "default.png",
@@ -13,7 +146,7 @@ add_task(function* testTabSwitchContext() {
       "permissions": ["tabs"],
     },
 
-    background: function() {
+    getTests(tabs, expectDefaults) {
       let details = [
         { "icon": browser.runtime.getURL("default.png"),
           "popup": browser.runtime.getURL("default.html"),
@@ -50,10 +183,7 @@ add_task(function* testTabSwitchContext() {
           "badgeBackgroundColor": [0, 0xff, 0, 0xff] },
       ];
 
-      let tabs = [];
-
-      let expectDefaults;
-      let tests = [
+      return [
         expect => {
           browser.test.log("Initial state, expect default properties.");
           expectDefaults(details[0]).then(() => {
@@ -157,124 +287,82 @@ add_task(function* testTabSwitchContext() {
           });
         },
       ];
-
-      // Gets the current details of the browser action, and returns a
-      // promise that resolves to an object containing them.
-      function getDetails(tabId) {
-        return Promise.all([
-          new Promise(resolve => browser.browserAction.getTitle({tabId}, resolve)),
-          new Promise(resolve => browser.browserAction.getPopup({tabId}, resolve)),
-          new Promise(resolve => browser.browserAction.getBadgeText({tabId}, resolve)),
-          new Promise(resolve => browser.browserAction.getBadgeBackgroundColor({tabId}, resolve))]
-        ).then(details => {
-          return Promise.resolve({ title: details[0],
-                                   popup: details[1],
-                                   badge: details[2],
-                                   badgeBackgroundColor: details[3] });
-        });
-      }
-
-      function checkDetails(expecting, tabId) {
-        return getDetails(tabId).then(details => {
-          browser.test.assertEq(expecting.title, details.title,
-                                "expected value from getTitle");
-
-          browser.test.assertEq(expecting.popup, details.popup,
-                                "expected value from getPopup");
-
-          browser.test.assertEq(expecting.badge, details.badge,
-                                "expected value from getBadge");
-
-          browser.test.assertEq(String(expecting.badgeBackgroundColor),
-                                String(details.badgeBackgroundColor),
-                                "expected value from getBadgeBackgroundColor");
-        });
-      }
-
-      expectDefaults = expecting => {
-        return checkDetails(expecting);
-      };
-
-      // Runs the next test in the `tests` array, checks the results,
-      // and passes control back to the outer test scope.
-      function nextTest() {
-        let test = tests.shift();
-
-        test(expecting => {
-          // Check that the API returns the expected values, and then
-          // run the next test.
-          new Promise(resolve => {
-            return browser.tabs.query({ active: true, currentWindow: true }, resolve);
-          }).then(tabs => {
-            return checkDetails(expecting, tabs[0].id);
-          }).then(() => {
-            // Check that the actual icon has the expected values, then
-            // run the next test.
-            browser.test.sendMessage("nextTest", expecting, tests.length);
-          });
-        });
-      }
-
-      browser.test.onMessage.addListener((msg) => {
-        if (msg != "runNextTest") {
-          browser.test.fail("Expecting 'runNextTest' message");
-        }
-
-        nextTest();
-      });
-
-      browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
-        tabs[0] = resultTabs[0].id;
-
-        nextTest();
-      });
     },
   });
+});
 
-  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
+add_task(function* testDefaultTitle() {
+  yield runTests({
+    manifest: {
+      "name": "Foo Extension",
 
-  function checkDetails(details) {
-    let button = document.getElementById(browserActionId);
+      "browser_action": {
+        "default_icon": "icon.png",
+      },
 
-    ok(button, "button exists");
+      "permissions": ["tabs"],
+    },
 
-    is(button.getAttribute("image"), details.icon, "icon URL is correct");
-    is(button.getAttribute("tooltiptext"), details.title, "image title is correct");
-    is(button.getAttribute("label"), details.title, "image label is correct");
-    is(button.getAttribute("aria-label"), details.title, "image aria-label is correct");
-    is(button.getAttribute("badge"), details.badge, "badge text is correct");
-    is(button.getAttribute("disabled") == "true", Boolean(details.disabled), "disabled state is correct");
+    getTests(tabs, expectDefaults) {
+      let details = [
+        { "title": "Foo Extension",
+          "popup": "",
+          "badge": "",
+          "badgeBackgroundColor": null,
+          "icon": browser.runtime.getURL("icon.png") },
+        { "title": "Foo Title",
+          "popup": "",
+          "badge": "",
+          "badgeBackgroundColor": null,
+          "icon": browser.runtime.getURL("icon.png") },
+        { "title": "Bar Title",
+          "popup": "",
+          "badge": "",
+          "badgeBackgroundColor": null,
+          "icon": browser.runtime.getURL("icon.png") },
+        { "title": "",
+          "popup": "",
+          "badge": "",
+          "badgeBackgroundColor": null,
+          "icon": browser.runtime.getURL("icon.png") },
+      ];
 
-    if (details.badge && details.badgeBackgroundColor) {
-      let badge = button.ownerDocument.getAnonymousElementByAttribute(
-        button, "class", "toolbarbutton-badge");
-
-      let badgeColor = window.getComputedStyle(badge).backgroundColor;
-      let color = details.badgeBackgroundColor;
-      let expectedColor = `rgb(${color[0]}, ${color[1]}, ${color[2]})`;
-
-      is(badgeColor, expectedColor, "badge color is correct");
-    }
-
-
-    // TODO: Popup URL.
-  }
-
-  let awaitFinish = new Promise(resolve => {
-    extension.onMessage("nextTest", (expecting, testsRemaining) => {
-      checkDetails(expecting);
-
-      if (testsRemaining) {
-        extension.sendMessage("runNextTest");
-      } else {
-        resolve();
-      }
-    });
+      return [
+        expect => {
+          browser.test.log("Initial state. Expect extension title as default title.");
+          expectDefaults(details[0]).then(() => {
+            expect(details[0]);
+          });
+        },
+        expect => {
+          browser.test.log("Change the title. Expect new title.");
+          browser.browserAction.setTitle({ tabId: tabs[0], title: "Foo Title" });
+          expectDefaults(details[0]).then(() => {
+            expect(details[1]);
+          });
+        },
+        expect => {
+          browser.test.log("Change the default. Expect same properties.");
+          browser.browserAction.setTitle({ title: "Bar Title" });
+          expectDefaults(details[2]).then(() => {
+            expect(details[1]);
+          });
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect new default title.");
+          browser.browserAction.setTitle({ tabId: tabs[0], title: "" });
+          expectDefaults(details[2]).then(() => {
+            expect(details[2]);
+          });
+        },
+        expect => {
+          browser.test.log("Set default title to null string. Expect null string from API, extension title in UI.");
+          browser.browserAction.setTitle({ title: "" });
+          expectDefaults(details[3]).then(() => {
+            expect(details[3]);
+          });
+        },
+      ];
+    },
   });
-
-  yield extension.startup();
-
-  yield awaitFinish;
-
-  yield extension.unload();
 });
