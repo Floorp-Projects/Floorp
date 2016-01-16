@@ -6817,7 +6817,7 @@ CClosure::Create(JSContext* cx,
   // we might be unable to convert the value to the proper type. If so, we want
   // the caller to know about it _now_, rather than some uncertain time in the
   // future when the error sentinel is actually needed.
-  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> errResult;
+  UniquePtr<uint8_t[], JS::FreePolicy> errResult;
   if (!errVal.isUndefined()) {
 
     // Make sure the callback returns something.

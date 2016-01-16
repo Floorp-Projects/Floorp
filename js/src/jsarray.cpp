@@ -54,7 +54,6 @@ using mozilla::CeilingLog2;
 using mozilla::CheckedInt;
 using mozilla::DebugOnly;
 using mozilla::IsNaN;
-using mozilla::UniquePtr;
 
 using JS::AutoCheckCannotGC;
 using JS::IsArrayAnswer;

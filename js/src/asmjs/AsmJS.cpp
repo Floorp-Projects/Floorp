@@ -380,16 +380,14 @@ struct AsmJSModuleData : AsmJSModuleCacheablePod
     WASM_DECLARE_SERIALIZABLE(AsmJSModuleData)
 };
 
-typedef UniquePtr<AsmJSModuleData, JS::DeletePolicy<AsmJSModuleData>> UniqueAsmJSModuleData;
+typedef UniquePtr<AsmJSModuleData> UniqueAsmJSModuleData;
 
 // An AsmJSModule is-a Module with the extra persistent state necessary to
 // represent a compiled asm.js module.
 class js::AsmJSModule final : public Module
 {
-    typedef UniquePtr<const AsmJSModuleData,
-                      JS::DeletePolicy<const AsmJSModuleData>> UniqueConstAsmJSModuleData;
-    typedef UniquePtr<const StaticLinkData,
-                      JS::DeletePolicy<const StaticLinkData>> UniqueConstStaticLinkData;
+    typedef UniquePtr<const AsmJSModuleData> UniqueConstAsmJSModuleData;
+    typedef UniquePtr<const StaticLinkData> UniqueConstStaticLinkData;
 
     const UniqueConstStaticLinkData link_;
     const UniqueConstAsmJSModuleData module_;

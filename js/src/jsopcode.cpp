@@ -1403,7 +1403,7 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     return ed.getOutput(res);
 }
 
-typedef mozilla::UniquePtr<char[], JS::FreePolicy> UniquePtrChars;
+typedef UniquePtr<char[], JS::FreePolicy> UniquePtrChars;
 
 UniquePtrChars
 js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,

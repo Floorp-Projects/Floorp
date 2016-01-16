@@ -13,7 +13,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Range.h"
 #include "mozilla/TypeTraits.h"
-#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <string.h>
@@ -34,6 +33,7 @@
 #include "builtin/RegExp.h"
 #include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
+#include "js/UniquePtr.h"
 #if ENABLE_INTL_API
 #include "unicode/unorm.h"
 #endif
@@ -69,7 +69,6 @@ using mozilla::Move;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
 using mozilla::RangedPtr;
-using mozilla::UniquePtr;
 
 using JS::AutoCheckCannotGC;
 

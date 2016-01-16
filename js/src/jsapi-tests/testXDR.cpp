@@ -12,8 +12,6 @@
 
 #include "jsscriptinlines.h"
 
-using mozilla::UniquePtr;
-
 static JSScript*
 FreezeThaw(JSContext* cx, JS::HandleScript script)
 {
