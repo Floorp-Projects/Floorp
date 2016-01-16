@@ -12,7 +12,6 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -68,6 +67,7 @@
 #include "js/Proxy.h"
 #include "js/SliceBudget.h"
 #include "js/StructuredClone.h"
+#include "js/UniquePtr.h"
 #include "vm/DateObject.h"
 #include "vm/Debugger.h"
 #include "vm/ErrorObject.h"
@@ -100,7 +100,6 @@ using namespace js::gc;
 using mozilla::Maybe;
 using mozilla::PodCopy;
 using mozilla::PodZero;
-using mozilla::UniquePtr;
 
 using JS::AutoGCRooter;
 using JS::ToInt32;
@@ -3990,7 +3989,7 @@ static bool
 Compile(JSContext* cx, const ReadOnlyCompileOptions& options, SyntacticScopeOption scopeOption,
         const char* bytes, size_t length, MutableHandleScript script)
 {
-    mozilla::UniquePtr<char16_t, JS::FreePolicy> chars;
+    UniquePtr<char16_t, JS::FreePolicy> chars;
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else
@@ -4319,7 +4318,7 @@ JS::CompileFunction(JSContext* cx, AutoObjectVector& scopeChain,
                     const char* name, unsigned nargs, const char* const* argnames,
                     const char* bytes, size_t length, MutableHandleFunction fun)
 {
-    mozilla::UniquePtr<char16_t, JS::FreePolicy> chars;
+    UniquePtr<char16_t, JS::FreePolicy> chars;
     if (options.utf8)
         chars.reset(UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
     else

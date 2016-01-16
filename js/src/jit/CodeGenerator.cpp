@@ -55,7 +55,6 @@ using mozilla::FloatingPoint;
 using mozilla::Maybe;
 using mozilla::NegativeInfinity;
 using mozilla::PositiveInfinity;
-using mozilla::UniquePtr;
 using JS::GenericNaN;
 
 namespace js {

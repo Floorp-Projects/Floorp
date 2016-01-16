@@ -42,8 +42,6 @@
 # include <libgen.h>
 #endif
 
-using namespace JS;
-
 namespace js {
 namespace shell {
 

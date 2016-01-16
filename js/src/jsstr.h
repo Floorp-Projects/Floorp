@@ -9,13 +9,13 @@
 
 #include "mozilla/HashFunctions.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jsutil.h"
 #include "NamespaceImports.h"
 
 #include "gc/Rooting.h"
 #include "js/RootingAPI.h"
+#include "js/UniquePtr.h"
 #include "vm/Printer.h"
 #include "vm/Unicode.h"
 
@@ -123,15 +123,15 @@ InitStringClass(JSContext* cx, HandleObject obj);
 extern const char*
 ValueToPrintable(JSContext* cx, const Value&, JSAutoByteString* bytes, bool asSource = false);
 
-extern mozilla::UniquePtr<char[], JS::FreePolicy>
+extern UniquePtr<char[], JS::FreePolicy>
 DuplicateString(ExclusiveContext* cx, const char* s);
 
-extern mozilla::UniquePtr<char16_t[], JS::FreePolicy>
+extern UniquePtr<char16_t[], JS::FreePolicy>
 DuplicateString(ExclusiveContext* cx, const char16_t* s);
 
 // This variant does not report OOMs, you must arrange for OOMs to be reported
 // yourself.
-extern mozilla::UniquePtr<char16_t[], JS::FreePolicy>
+extern UniquePtr<char16_t[], JS::FreePolicy>
 DuplicateString(const char16_t* s);
 
 /*

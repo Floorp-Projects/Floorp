@@ -83,7 +83,7 @@ struct CountDeleter {
     void operator()(CountBase*);
 };
 
-using CountBasePtr = UniquePtr<CountBase, CountDeleter>;
+using CountBasePtr = js::UniquePtr<CountBase, CountDeleter>;
 
 // Abstract base class for CountType nodes.
 struct CountType {
@@ -111,7 +111,7 @@ struct CountType {
     virtual bool report(JSContext* cx, CountBase& count, MutableHandleValue report) = 0;
 };
 
-using CountTypePtr = UniquePtr<CountType, JS::DeletePolicy<CountType>>;
+using CountTypePtr = js::UniquePtr<CountType>;
 
 // An abstract base class for count tree nodes.
 class CountBase {

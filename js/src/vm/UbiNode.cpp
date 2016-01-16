@@ -34,9 +34,10 @@
 #include "jsobjinlines.h"
 #include "vm/Debugger-inl.h"
 
+using namespace js;
+
 using mozilla::Some;
 using mozilla::RangedPtr;
-using mozilla::UniquePtr;
 using JS::DispatchTyped;
 using JS::HandleValue;
 using JS::Value;

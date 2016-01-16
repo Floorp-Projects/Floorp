@@ -14,8 +14,6 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::UniquePtr;
-
 MOZ_ALWAYS_INLINE bool
 IsWeakMap(HandleValue v)
 {

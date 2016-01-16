@@ -55,7 +55,6 @@ using JS::AutoCheckCannotGC;
 using mozilla::IsInRange;
 using mozilla::Maybe;
 using mozilla::PodMove;
-using mozilla::UniquePtr;
 using mozilla::Maybe;
 
 static void

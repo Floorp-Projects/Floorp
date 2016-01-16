@@ -7,10 +7,10 @@
 #ifndef js_GCAPI_h
 #define js_GCAPI_h
 
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include "js/HeapAPI.h"
+#include "js/UniquePtr.h"
 
 namespace js {
 namespace gc {
@@ -47,8 +47,6 @@ typedef enum JSGCInvocationKind {
 } JSGCInvocationKind;
 
 namespace JS {
-
-using mozilla::UniquePtr;
 
 #define GCREASONS(D)                            \
     /* Reasons internal to the JS engine */     \
@@ -300,7 +298,7 @@ class GarbageCollectionEvent
         , collections()
     { }
 
-    using Ptr = UniquePtr<GarbageCollectionEvent, DeletePolicy<GarbageCollectionEvent>>;
+    using Ptr = js::UniquePtr<GarbageCollectionEvent>;
     static Ptr Create(JSRuntime* rt, ::js::gcstats::Statistics& stats, uint64_t majorGCNumber);
 
     JSObject* toJSObject(JSContext* cx) const;

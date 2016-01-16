@@ -12,7 +12,6 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jsapi.h"
 #include "jspubtd.h"
@@ -26,9 +25,6 @@ class Debugger;
 } // namespace js
 
 namespace JS {
-
-using mozilla::UniquePtr;
-
 namespace dbg {
 
 // Helping embedding code build objects for Debugger

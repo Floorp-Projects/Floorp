@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -24,6 +23,7 @@
 #include "jspubtd.h"
 
 #include "frontend/TokenKind.h"
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/RegExpObject.h"
 
@@ -976,7 +976,7 @@ class MOZ_STACK_CLASS TokenStream
     bool getDirective(bool isMultiline, bool shouldWarnDeprecated,
                       const char* directive, int directiveLength,
                       const char* errorMsgPragma,
-                      mozilla::UniquePtr<char16_t[], JS::FreePolicy>* destination);
+                      UniquePtr<char16_t[], JS::FreePolicy>* destination);
     bool getDisplayURL(bool isMultiline, bool shouldWarnDeprecated);
     bool getSourceMappingURL(bool isMultiline, bool shouldWarnDeprecated);
 
@@ -1024,9 +1024,9 @@ class MOZ_STACK_CLASS TokenStream
     size_t              linebase;           // start of current line
     size_t              prevLinebase;       // start of previous line;  size_t(-1) if on the first line
     TokenBuf            userbuf;            // user input buffer
-    const char*         filename;          // input filename or null
-    mozilla::UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
-    mozilla::UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_; // source map's filename or null
+    const char*         filename;           // input filename or null
+    UniquePtr<char16_t[], JS::FreePolicy> displayURL_; // the user's requested source URL or null
+    UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_; // source map's filename or null
     CharBuffer          tokenbuf;           // current token string buffer
     uint8_t             isExprEnding[TOK_LIMIT];// which tokens definitely terminate exprs?
     ExclusiveContext*   const cx;
