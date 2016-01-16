@@ -6662,7 +6662,7 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   JS::Rooted<JSObject*> re(cx,
     JS_NewUCRegExpObjectNoStatics(cx,
                                   static_cast<char16_t*>(aPattern.BeginWriting()),
-                                  aPattern.Length(), 0));
+                                  aPattern.Length(), JSREG_UNICODE));
   if (!re) {
     return true;
   }
