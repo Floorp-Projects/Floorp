@@ -34,7 +34,7 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(AudioContext* a
                                                       aContext->Graph()))
 {
   // Ensure an audio track with the correct ID is exposed to JS
-  mDOMStream->CreateOwnDOMTrack(AudioNodeStream::AUDIO_TRACK, MediaSegment::AUDIO);
+  mDOMStream->CreateOwnDOMTrack(AudioNodeStream::AUDIO_TRACK, MediaSegment::AUDIO, nsString());
 
   ProcessedMediaStream* outputStream = mDOMStream->GetInputStream()->AsProcessedStream();
   MOZ_ASSERT(!!outputStream);
