@@ -156,6 +156,7 @@ static const char* const sExtensionNames[] = {
     "GL_NV_geometry_program4",
     "GL_NV_half_float",
     "GL_NV_instanced_arrays",
+    "GL_NV_texture_barrier",
     "GL_NV_transform_feedback",
     "GL_NV_transform_feedback2",
     "GL_OES_EGL_image",
@@ -1558,6 +1559,20 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
             END_SYMBOLS
         };
         fnLoadForExt(symbols, NV_fence);
+                ClearSymbols(extSymbols);
+            }
+        }
+
+        if (IsExtensionSupported(NV_texture_barrier)) {
+            SymLoadStruct extSymbols[] = {
+                { (PRFuncPtr*) &mSymbols.fTextureBarrier, { "TextureBarrierNV", nullptr } },
+                END_SYMBOLS
+            };
+
+            if (!LoadSymbols(&extSymbols[0], trygl, prefix)) {
+                NS_ERROR("GL supports NV_texture_barrier without supplying its functions.");
+
+                MarkExtensionUnsupported(NV_texture_barrier);
     }
 
     if (IsSupported(GLFeature::read_buffer)) {
