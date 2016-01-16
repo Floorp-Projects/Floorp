@@ -128,7 +128,7 @@ public:
     NS_WARN_IF_FALSE(!mStream->mTracks.IsEmpty(),
                      "A new track was detected on the input stream; creating a corresponding MediaStreamTrack. "
                      "Initial tracks should be added manually to immediately and synchronously be available to JS.");
-    mStream->CreateOwnDOMTrack(aTrackId, aType);
+    mStream->CreateOwnDOMTrack(aTrackId, aType, nsString());
   }
 
   void DoNotifyTrackEnded(TrackID aTrackId)
@@ -619,7 +619,7 @@ DOMMediaStream::InitAudioCaptureStream(nsIDOMWindow* aWindow,
   InitInputStreamCommon(aGraph->CreateAudioCaptureStream(this, AUDIO_TRACK), aGraph);
   InitOwnedStreamCommon(aGraph);
   InitPlaybackStreamCommon(aGraph);
-  CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO);
+  CreateOwnDOMTrack(AUDIO_TRACK, MediaSegment::AUDIO, nsString());
 }
 
 void
@@ -780,7 +780,7 @@ DOMMediaStream::RemovePrincipalChangeObserver(PrincipalChangeObserver* aObserver
 }
 
 MediaStreamTrack*
-DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
+DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel)
 {
   MOZ_RELEASE_ASSERT(mInputStream);
   MOZ_RELEASE_ASSERT(mOwnedStream);
@@ -790,10 +790,10 @@ DOMMediaStream::CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType)
   MediaStreamTrack* track;
   switch (aType) {
   case MediaSegment::AUDIO:
-    track = new AudioStreamTrack(this, aTrackID);
+    track = new AudioStreamTrack(this, aTrackID, aLabel);
     break;
   case MediaSegment::VIDEO:
-    track = new VideoStreamTrack(this, aTrackID);
+    track = new VideoStreamTrack(this, aTrackID, aLabel);
     break;
   default:
     MOZ_CRASH("Unhandled track type");
