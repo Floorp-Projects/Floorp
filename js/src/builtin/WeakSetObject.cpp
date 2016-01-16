@@ -124,7 +124,7 @@ WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp)
 
             if (isOriginalAdder) {
                 if (keyVal.isPrimitive()) {
-                    UniquePtr<char[], JS::FreePolicy> bytes =
+                    UniqueChars bytes =
                         DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
                     if (!bytes)
                         return false;

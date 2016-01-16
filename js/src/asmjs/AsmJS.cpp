@@ -24,6 +24,7 @@
 
 #include "jsmath.h"
 #include "jsprf.h"
+#include "jsstr.h"
 #include "jsutil.h"
 
 #include "jswrapper.h"
@@ -1960,7 +1961,7 @@ class MOZ_STACK_CLASS ModuleValidator
         if (maybeFieldName)
             fieldName = StringToNewUTF8CharsZ(cx_, *maybeFieldName);
         else
-            fieldName = make_string_copy("");
+            fieldName = DuplicateString("");
         if (!fieldName || !module_->exportMap.fieldNames.append(Move(fieldName)))
             return false;
 
@@ -2081,7 +2082,7 @@ class MOZ_STACK_CLASS ModuleValidator
         MOZ_ASSERT(errorOffset_ == UINT32_MAX);
         MOZ_ASSERT(str);
         errorOffset_ = offset;
-        errorString_ = make_string_copy(str);
+        errorString_ = DuplicateString(str);
         return false;
     }
 
@@ -2205,18 +2206,16 @@ class MOZ_STACK_CLASS ModuleValidator
 
         CacheableChars filename;
         if (parser_.ss->filename()) {
-            filename = make_string_copy(parser_.ss->filename());
+            filename = DuplicateString(parser_.ss->filename());
             if (!filename)
                 return false;
         }
 
         CacheableTwoByteChars displayURL;
         if (parser_.ss->hasDisplayURL()) {
-            uint32_t length = js_strlen(parser_.ss->displayURL());
-            displayURL.reset(js_pod_calloc<char16_t>(length + 1));
+            displayURL = DuplicateString(parser_.ss->displayURL());
             if (!displayURL)
                 return false;
-            PodCopy(displayURL.get(), parser_.ss->displayURL(), length);
         }
 
         uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
@@ -8448,7 +8447,7 @@ BuildConsoleMessage(ExclusiveContext* cx, AsmJSModule& module, unsigned time,
     return UniqueChars(JS_smprintf("total compilation time %dms; %s%s",
                                    time, cacheString, slowText ? slowText.get() : ""));
 #else
-    return make_string_copy("");
+    return DuplicateString("");
 #endif
 }
 

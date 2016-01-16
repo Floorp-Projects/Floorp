@@ -2696,7 +2696,7 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     unsigned lineno;
 
     DescribeScriptedCaller(cx, &filename, &lineno);
@@ -3354,7 +3354,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     if (!scriptContents)
         return false;
 
-    UniquePtr<char, JS::FreePolicy> filename;
+    UniqueChars filename;
     CompileOptions options(cx);
     if (args.length() > 1) {
         if (!args[1].isString()) {
@@ -3951,7 +3951,7 @@ ThisFilename(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     if (!DescribeScriptedCaller(cx, &filename) || !filename.get()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
@@ -4642,7 +4642,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
             return;
         }
 
-        oom = !log.append(make_string_copy("anonymous"));
+        oom = !log.append(DuplicateString("anonymous"));
     }
 
     void Entry(JSContext* cx, JSScript* script, JS::HandleValue asyncStack,
@@ -5509,7 +5509,7 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!BuildStackString(cx, stackObj, &stackStr, 2))
         return false;
 
-    UniquePtr<char[], JS::FreePolicy> stack(JS_EncodeStringToUTF8(cx, stackStr));
+    UniqueChars stack(JS_EncodeStringToUTF8(cx, stackStr));
     if (!stack)
         return false;
 
