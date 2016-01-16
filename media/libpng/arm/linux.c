@@ -72,7 +72,7 @@ png_have_neon(png_structp png_ptr)
                      state = Colon;
                   break;
                }
-               
+
                /* did not match 'feature' */
                state = SkipLine;
                /* FALL THROUGH */
