@@ -744,6 +744,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "blogger.com", true, false, false, -1, &kPinset_google_root_pems },
   { "blogspot.com", true, false, false, -1, &kPinset_google_root_pems },
   { "br.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
+  { "build.chromium.org", true, false, false, -1, &kPinset_google_root_pems },
   { "business.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "business.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "ca.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
@@ -1035,6 +1036,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "googletagmanager.com", true, false, false, -1, &kPinset_google_root_pems },
   { "googletagservices.com", true, false, false, -1, &kPinset_google_root_pems },
   { "googleusercontent.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "googlevideo.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "googleweblight.com", true, false, false, -1, &kPinset_google_root_pems },
   { "goto.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "gr.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "groups.google.com", true, false, false, -1, &kPinset_google_root_pems },
@@ -1115,6 +1118,7 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "spideroak.com", true, false, false, -1, &kPinset_spideroak },
   { "spreadsheets.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "ssl.google-analytics.com", true, false, false, -1, &kPinset_google_root_pems },
+  { "static.googleadsserving.cn", true, false, false, -1, &kPinset_google_root_pems },
   { "sv.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "t.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "tablet.facebook.com", true, false, false, -1, &kPinset_facebook },
@@ -1172,8 +1176,8 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "zh.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
 };
 
-// Pinning Preload List Length = 450;
+// Pinning Preload List Length = 454;
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1460809706879000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1461412368217000);
