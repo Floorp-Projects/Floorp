@@ -21,15 +21,21 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
                                   .getService(Components.interfaces.nsIAppShellService);
   ok(appShellService, "Should be able to get app shell service");
 
-  var webNavigation = appShellService.createWindowlessBrowser();
-  ok(webNavigation, "Should be able to create windowless browser");
+  var windowlessBrowser = appShellService.createWindowlessBrowser();
+  ok(windowlessBrowser, "Should be able to create windowless browser");
 
-  var interfaceRequestor = webNavigation.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
+  ok(windowlessBrowser instanceof Components.interfaces.nsIWindowlessBrowser,
+     "Windowless browser should implement nsIWindowlessBrowser");
+
+  var webNavigation = windowlessBrowser.QueryInterface(Components.interfaces.nsIWebNavigation);
+  ok(webNavigation, "Windowless browser should implement nsIWebNavigation");
+
+  var interfaceRequestor = windowlessBrowser.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   ok(interfaceRequestor, "Should be able to query interface requestor interface");
 
   var docShell = interfaceRequestor.getInterface(Components.interfaces.nsIDocShell);
   ok(docShell, "Should be able to get doc shell interface");
- 
+
   var document = webNavigation.document;
   ok(document, "Should be able to get document");
 
@@ -55,12 +61,30 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=846906
         is(rect.width, 1024);
         is(rect.height, 768);
 
+        windowlessBrowser.close();
+
+        // Once the browser is closed, nsIWebNavigation and
+        // nsIInterfaceRequestor methods should no longer be accessible.
+        try {
+          windowlessBrowser.getInterface(Components.interfaces.nsIDocShell);
+          ok(false);
+        } catch (e) {
+          is(e.result, Components.results.NS_ERROR_NULL_POINTER);
+        }
+
+        try {
+          windowlessBrowser.document;
+          ok(false);
+        } catch (e) {
+          is(e.result, Components.results.NS_ERROR_NULL_POINTER);
+        }
+
         SimpleTest.finish();
     };
     iframe.setAttribute("src", "http://mochi.test:8888/chrome/docshell/test/chrome/bug846906.html");
   };
   document.documentElement.appendChild(iframe);
-    
+
   ]]>
   </script>
 
