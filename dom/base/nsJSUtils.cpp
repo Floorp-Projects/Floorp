@@ -37,7 +37,7 @@ bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, nsACString& aFilename,
                               uint32_t* aLineno, uint32_t* aColumn)
 {
-  JS::AutoFilename filename;
+  JS::UniqueChars filename;
   if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno, aColumn)) {
     return false;
   }
@@ -50,7 +50,7 @@ bool
 nsJSUtils::GetCallingLocation(JSContext* aContext, nsAString& aFilename,
                               uint32_t* aLineno, uint32_t* aColumn)
 {
-  JS::AutoFilename filename;
+  JS::UniqueChars filename;
   if (!JS::DescribeScriptedCaller(aContext, &filename, aLineno, aColumn)) {
     return false;
   }

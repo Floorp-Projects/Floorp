@@ -143,7 +143,7 @@ BEGIN_TEST(test_ubiNodeJSObjectConstructorName)
     EVAL("this.Ctor = function Ctor() {}; new Ctor", &val);
     CHECK(val.isObject());
 
-    UniquePtr<char16_t[], JS::FreePolicy> ctorName;
+    UniqueTwoByteChars ctorName;
     CHECK(JS::ubi::Node(&val.toObject()).jsObjectConstructorName(cx, ctorName));
     CHECK(ctorName);
     CHECK(js_strcmp(ctorName.get(), MOZ_UTF16("Ctor")) == 0);

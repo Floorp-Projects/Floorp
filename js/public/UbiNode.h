@@ -622,8 +622,7 @@ class Base {
     // Otherwise, place nullptr in the out parameter. Caller maintains ownership
     // of the out parameter. True is returned on success, false is returned on
     // OOM.
-    virtual bool jsObjectConstructorName(JSContext* cx,
-                                         js::UniquePtr<char16_t[], JS::FreePolicy>& outName) const {
+    virtual bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
         outName.reset(nullptr);
         return true;
     }
@@ -769,8 +768,7 @@ class Node {
     JS::Zone* zone()                const { return base()->zone(); }
     JSCompartment* compartment()    const { return base()->compartment(); }
     const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
-    bool jsObjectConstructorName(JSContext* cx,
-                                 js::UniquePtr<char16_t[], JS::FreePolicy>& outName) const {
+    bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
         return base()->jsObjectConstructorName(cx, outName);
     }
 
@@ -819,7 +817,7 @@ class Node {
 
 /*** Edge and EdgeRange ***************************************************************************/
 
-using EdgeName = js::UniquePtr<const char16_t[], JS::FreePolicy>;
+using EdgeName = UniqueTwoByteChars;
 
 // An outgoing edge to a referent node.
 class Edge {
@@ -1066,8 +1064,7 @@ template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
 template<>
 class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
     const char* jsObjectClassName() const override;
-    bool jsObjectConstructorName(JSContext* cx,
-                                 js::UniquePtr<char16_t[], JS::FreePolicy>& outName) const override;
+    bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const override;
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
     bool hasAllocationStack() const override;

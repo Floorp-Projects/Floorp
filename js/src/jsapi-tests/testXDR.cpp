@@ -130,7 +130,7 @@ BEGIN_TEST(testXDR_sourceMap)
         CHECK(script);
 
         size_t len = strlen(*sm);
-        UniquePtr<char16_t,JS::FreePolicy> expected_wrapper(js::InflateString(cx, *sm, &len));
+        UniqueTwoByteChars expected_wrapper(js::InflateString(cx, *sm, &len));
         char16_t *expected = expected_wrapper.get();
         CHECK(expected);
 

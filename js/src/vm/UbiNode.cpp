@@ -348,8 +348,7 @@ Concrete<JSObject>::jsObjectClassName() const
 }
 
 bool
-Concrete<JSObject>::jsObjectConstructorName(JSContext* cx,
-                                            UniquePtr<char16_t[], JS::FreePolicy>& outName) const
+Concrete<JSObject>::jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const
 {
     JSAtom* name = Concrete::get().maybeConstructorDisplayAtom();
     if (!name) {
@@ -488,7 +487,7 @@ RootList::addRoot(Node node, const char16_t* edgeName)
     MOZ_ASSERT(noGC.isSome());
     MOZ_ASSERT_IF(wantNames, edgeName);
 
-    UniquePtr<char16_t[], JS::FreePolicy> name;
+    UniqueTwoByteChars name;
     if (edgeName) {
         name = js::DuplicateString(edgeName);
         if (!name)

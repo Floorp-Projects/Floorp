@@ -630,10 +630,10 @@ class ScriptSource
     uint32_t length_;
 
     // The filename of this script.
-    UniquePtr<char[], JS::FreePolicy> filename_;
+    UniqueChars filename_;
 
-    UniquePtr<char16_t[], JS::FreePolicy> displayURL_;
-    UniquePtr<char16_t[], JS::FreePolicy> sourceMapURL_;
+    UniqueTwoByteChars displayURL_;
+    UniqueTwoByteChars sourceMapURL_;
     bool mutedErrors_;
 
     // bytecode offset in caller script that generated this code.
@@ -651,7 +651,7 @@ class ScriptSource
     //
     // In the case described above, this field will be non-null and will be the
     // original raw filename from above.  Otherwise this field will be null.
-    UniquePtr<char[], JS::FreePolicy> introducerFilename_;
+    UniqueChars introducerFilename_;
 
     // A string indicating how this source code was introduced into the system.
     // This accessor returns one of the following values:

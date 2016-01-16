@@ -205,7 +205,7 @@ ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type, const ch
         return false;
     if (!propertyName.init(cx, str))
         return false;
-    AutoFilename filename;
+    UniqueChars filename;
     unsigned line = 0, column = 0;
     DescribeScriptedCaller(cx, &filename, &line, &column);
 

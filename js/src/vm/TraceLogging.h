@@ -122,7 +122,7 @@ class TraceLoggerEvent {
  */
 class TraceLoggerEventPayload {
     uint32_t textId_;
-    UniquePtr<char, JS::FreePolicy> string_;
+    UniqueChars string_;
     uint32_t uses_;
 
   public:

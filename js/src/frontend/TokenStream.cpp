@@ -856,7 +856,7 @@ bool
 TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
                           const char* directive, int directiveLength,
                           const char* errorMsgPragma,
-                          UniquePtr<char16_t[], JS::FreePolicy>* destination)
+                          UniqueTwoByteChars* destination)
 {
     MOZ_ASSERT(directiveLength <= 18);
     char16_t peeked[18];

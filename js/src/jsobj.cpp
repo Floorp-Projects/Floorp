@@ -81,8 +81,7 @@ js::ReportNotObject(JSContext* cx, const Value& v)
     MOZ_ASSERT(!v.isObject());
 
     RootedValue value(cx, v);
-    UniquePtr<char[], JS::FreePolicy> bytes =
-        DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
+    UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, value, nullptr);
     if (bytes)
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
 }
@@ -195,8 +194,7 @@ js::GetFirstArgumentAsObject(JSContext* cx, const CallArgs& args, const char* me
 
     HandleValue v = args[0];
     if (!v.isObject()) {
-        UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
+        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, nullptr);
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_UNEXPECTED_TYPE,

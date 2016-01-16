@@ -234,8 +234,7 @@ ThrowErrorWithType(JSContext* cx, JSExnType type, const CallArgs& args)
         } else if (val.isString()) {
             errorArgs[i - 1].encodeLatin1(cx, val.toString());
         } else {
-            UniquePtr<char[], JS::FreePolicy> bytes =
-                DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
+            UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, val, nullptr);
             if (!bytes)
                 return;
             errorArgs[i - 1].initBytes(bytes.release());

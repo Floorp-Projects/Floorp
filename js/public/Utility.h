@@ -480,6 +480,9 @@ struct FreePolicy
     }
 };
 
+typedef mozilla::UniquePtr<char[], JS::FreePolicy> UniqueChars;
+typedef mozilla::UniquePtr<char16_t[], JS::FreePolicy> UniqueTwoByteChars;
+
 } // namespace JS
 
 namespace js {
@@ -487,13 +490,6 @@ namespace js {
 /* Integral types for all hash functions. */
 typedef uint32_t HashNumber;
 const unsigned HashNumberSizeBits = 32;
-
-typedef mozilla::UniquePtr<char, JS::FreePolicy> UniqueChars;
-
-static inline UniqueChars make_string_copy(const char* str)
-{
-    return UniqueChars(js_strdup(str));
-}
 
 namespace detail {
 
