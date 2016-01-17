@@ -24,6 +24,7 @@ separator { clear:both; display:block; height:6px; }
   margin-right: 4px;
   width: 40px;
   height: 40px;
+  align-content: stretch;
 }
 
 item1,item2,item3 {
@@ -71,7 +72,7 @@ item3 { grid-area: 3 / 3; }
 <script>
 var gridwm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
 var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
-             "space-between", "space-around", "space-evenly",
+             "space-between", "space-around", "space-evenly", "normal",
              "stretch1", "stretch2", "stretch3", "stretch4" ];
 for (var k = 0; k < test.length; ++k) {
   for (var i = 0; i < gridwm.length; ++i) {
