@@ -12,6 +12,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RecentWindow",
                                   "resource:///modules/RecentWindow.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ShellService",
+                                  "resource:///modules/ShellService.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "WindowsUIUtils",
                                    "@mozilla.org/windows-ui-utils;1", "nsIWindowsUIUtils");
 
@@ -660,9 +662,7 @@ nsBrowserContentHandler.prototype = {
         var url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
                   "win10-default-browser";
         if (urlParam == url) {
-          var shellSvc = Components.classes["@mozilla.org/browser/shell-service;1"]
-                                   .getService(Components.interfaces.nsIShellService);
-          isDefault = shellSvc.isDefaultBrowser(false, false);
+          isDefault = ShellService.isDefaultBrowser(false, false);
         }
       } catch (ex) {}
       if (isDefault) {

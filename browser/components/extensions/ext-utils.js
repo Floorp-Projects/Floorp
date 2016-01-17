@@ -2,11 +2,15 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
+XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
+                                  "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import("resource://gre/modules/AddonManager.jsm");
+
+const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const INTEGER = /^[1-9]\d*$/;
 
@@ -126,103 +130,203 @@ global.makeWidgetId = id => {
   return id.replace(/[^a-z0-9_-]/g, "_");
 };
 
-// Open a panel anchored to the given node, containing a browser opened
-// to the given URL, owned by the given extension. If |popupURL| is not
-// an absolute URL, it is resolved relative to the given extension's
-// base URL.
-global.openPanel = (node, popupURL, extension) => {
-  let document = node.ownerDocument;
+class BasePopup {
+  constructor(extension, viewNode, popupURL) {
+    let popupURI = Services.io.newURI(popupURL, null, extension.baseURI);
 
-  let popupURI = Services.io.newURI(popupURL, null, extension.baseURI);
+    Services.scriptSecurityManager.checkLoadURIWithPrincipal(
+      extension.principal, popupURI,
+      Services.scriptSecurityManager.DISALLOW_SCRIPT);
 
-  Services.scriptSecurityManager.checkLoadURIWithPrincipal(
-    extension.principal, popupURI,
-    Services.scriptSecurityManager.DISALLOW_SCRIPT);
+    this.extension = extension;
+    this.popupURI = popupURI;
+    this.viewNode = viewNode;
+    this.window = viewNode.ownerDocument.defaultView;
 
-  let panel = document.createElement("panel");
-  panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
-  panel.setAttribute("class", "browser-extension-panel");
-  panel.setAttribute("type", "arrow");
-  panel.setAttribute("role", "group");
+    this.contentReady = new Promise(resolve => {
+      this._resolveContentReady = resolve;
+    });
 
-  let anchor;
-  if (node.localName == "toolbarbutton") {
-    // Toolbar buttons are a special case. The panel becomes a child of
-    // the button, and is anchored to the button's icon.
-    node.appendChild(panel);
-    anchor = document.getAnonymousElementByAttribute(node, "class", "toolbarbutton-icon");
-  } else {
-    // In all other cases, the panel is anchored to the target node
-    // itself, and is a child of a popupset node.
-    document.getElementById("mainPopupSet").appendChild(panel);
-    anchor = node;
+    this.viewNode.addEventListener(this.DESTROY_EVENT, this);
+
+    this.browser = null;
+    this.browserReady = this.createBrowser(viewNode, popupURI);
   }
 
-  const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-  let browser = document.createElementNS(XUL_NS, "browser");
-  browser.setAttribute("type", "content");
-  browser.setAttribute("disableglobalhistory", "true");
-  panel.appendChild(browser);
+  destroy() {
+    this.browserReady.then(() => {
+      this.browser.removeEventListener("load", this, true);
+      this.browser.removeEventListener("DOMTitleChanged", this, true);
+      this.browser.removeEventListener("DOMWindowClose", this, true);
 
-  let titleChangedListener = () => {
-    panel.setAttribute("aria-label", browser.contentTitle);
-  };
+      this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
 
-  let context;
-  let popuphidden = () => {
-    panel.removeEventListener("popuphidden", popuphidden);
-    browser.removeEventListener("DOMTitleChanged", titleChangedListener, true);
-    context.unload();
-    panel.remove();
-  };
-  panel.addEventListener("popuphidden", popuphidden);
+      this.context.unload();
+      this.browser.remove();
 
-  let loadListener = () => {
-    panel.removeEventListener("load", loadListener);
-
-    context = new ExtensionPage(extension, {
-      type: "popup",
-      contentWindow: browser.contentWindow,
-      uri: popupURI,
-      docShell: browser.docShell,
+      this.browser = null;
+      this.viewNode = null;
+      this.context = null;
     });
-    GlobalManager.injectInDocShell(browser.docShell, extension, context);
-    browser.setAttribute("src", context.uri.spec);
+  }
 
-    let contentLoadListener = event => {
-      if (event.target != browser.contentDocument) {
-        return;
-      }
-      browser.removeEventListener("load", contentLoadListener, true);
+  // Returns the name of the event fired on `viewNode` when the popup is being
+  // destroyed. This must be implemented by every subclass.
+  get DESTROY_EVENT() {
+    throw new Error("Not implemented");
+  }
 
-      let contentViewer = browser.docShell.contentViewer;
-      let width = {}, height = {};
-      try {
-        contentViewer.getContentSize(width, height);
-        [width, height] = [width.value, height.value];
-      } catch (e) {
-        // getContentSize can throw
-        [width, height] = [400, 400];
-      }
+  handleEvent(event) {
+    switch (event.type) {
+      case this.DESTROY_EVENT:
+        this.destroy();
+        break;
 
-      let window = document.defaultView;
-      width /= window.devicePixelRatio;
-      height /= window.devicePixelRatio;
-      width = Math.min(width, 800);
-      height = Math.min(height, 800);
+      case "DOMWindowClose":
+        if (event.target === this.browser.contentWindow) {
+          event.preventDefault();
+          this.closePopup();
+        }
+        break;
 
-      browser.setAttribute("width", width);
-      browser.setAttribute("height", height);
+      case "DOMTitleChanged":
+        this.viewNode.setAttribute("aria-label", this.browser.contentTitle);
+        break;
 
-      panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-    };
-    browser.addEventListener("load", contentLoadListener, true);
+      case "load":
+        // We use a capturing listener, so we get this event earlier than any
+        // load listeners in the content page. Resizing after a timeout ensures
+        // that we calculate the size after the entire event cycle has completed
+        // (unless someone spins the event loop, anyway), and hopefully after
+        // the content has made any modifications.
+        //
+        // In the future, to match Chrome's behavior, we'll need to update this
+        // dynamically, probably in response to MozScrolledAreaChanged events.
+        this.window.setTimeout(() => this.resizeBrowser(), 0);
+        break;
+    }
+  }
 
-    browser.addEventListener("DOMTitleChanged", titleChangedListener, true);
-  };
-  panel.addEventListener("load", loadListener);
+  createBrowser(viewNode, popupURI) {
+    let document = viewNode.ownerDocument;
 
-  return panel;
+    this.browser = document.createElementNS(XUL_NS, "browser");
+    this.browser.setAttribute("type", "content");
+    this.browser.setAttribute("disableglobalhistory", "true");
+
+    // Note: When using noautohide panels, the popup manager will add width and
+    // height attributes to the panel, breaking our resize code, if the browser
+    // starts out smaller than 30px by 10px. This isn't an issue now, but it
+    // will be if and when we popup debugging.
+
+    // This overrides the content's preferred size when displayed in a
+    // fixed-size, slide-in panel.
+    this.browser.setAttribute("flex", "1");
+
+    viewNode.appendChild(this.browser);
+
+    return new Promise(resolve => {
+      // The first load event is for about:blank.
+      // We can't finish setting up the browser until the binding has fully
+      // initialized. Waiting for the first load event guarantees that it has.
+      let loadListener = event => {
+        this.browser.removeEventListener("load", loadListener, true);
+        resolve();
+      };
+      this.browser.addEventListener("load", loadListener, true);
+    }).then(() => {
+      let { contentWindow } = this.browser;
+
+      contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
+                   .getInterface(Ci.nsIDOMWindowUtils)
+                   .allowScriptsToClose();
+
+      this.context = new ExtensionPage(this.extension, {
+        type: "popup",
+        contentWindow,
+        uri: popupURI,
+        docShell: this.browser.docShell,
+      });
+
+      GlobalManager.injectInDocShell(this.browser.docShell, this.extension, this.context);
+      this.browser.setAttribute("src", this.context.uri.spec);
+
+      this.browser.addEventListener("load", this, true);
+      this.browser.addEventListener("DOMTitleChanged", this, true);
+      this.browser.addEventListener("DOMWindowClose", this, true);
+    });
+  }
+
+  // Resizes the browser to match the preferred size of the content.
+  resizeBrowser() {
+    let width, height;
+    try {
+      let w = {}, h = {};
+      this.browser.docShell.contentViewer.getContentSize(w, h);
+
+      width = w.value / this.window.devicePixelRatio;
+      height = h.value / this.window.devicePixelRatio;
+
+      // The width calculation is imperfect, and is often a fraction of a pixel
+      // too narrow, even after taking the ceiling, which causes lines of text
+      // to wrap.
+      width += 1;
+    } catch (e) {
+      // getContentSize can throw
+      [width, height] = [400, 400];
+    }
+
+    width = Math.ceil(Math.min(width, 800));
+    height = Math.ceil(Math.min(height, 600));
+
+    this.browser.style.width = `${width}px`;
+    this.browser.style.height = `${height}px`;
+
+    this._resolveContentReady();
+  }
+}
+
+global.PanelPopup = class PanelPopup extends BasePopup {
+  constructor(extension, imageNode, popupURL) {
+    let document = imageNode.ownerDocument;
+
+    let panel = document.createElement("panel");
+    panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
+    panel.setAttribute("class", "browser-extension-panel");
+    panel.setAttribute("type", "arrow");
+    panel.setAttribute("role", "group");
+
+    document.getElementById("mainPopupSet").appendChild(panel);
+
+    super(extension, panel, popupURL);
+
+    this.contentReady.then(() => {
+      panel.openPopup(imageNode, "bottomcenter topright", 0, 0, false, false);
+    });
+  }
+
+  get DESTROY_EVENT() {
+    return "popuphidden";
+  }
+
+  destroy() {
+    super.destroy();
+    this.viewNode.remove();
+  }
+
+  closePopup() {
+    this.viewNode.hidePopup();
+  }
+};
+
+global.ViewPopup = class ViewPopup extends BasePopup {
+  get DESTROY_EVENT() {
+    return "ViewHiding";
+  }
+
+  closePopup() {
+    CustomizableUI.hidePanelForNode(this.viewNode);
+  }
 };
 
 // Manages tab-specific context data, and dispatching tab select events
