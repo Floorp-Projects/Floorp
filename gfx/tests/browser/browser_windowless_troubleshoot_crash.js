@@ -40,4 +40,6 @@ add_task(function* test_windowlessBrowserTroubleshootCrash() {
   });
 
   ok(data.graphics.windowLayerManagerType !== "None", "windowless browser window should not set windowLayerManagerType to 'None'");
+
+  webNav.close();
 });
