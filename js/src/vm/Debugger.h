@@ -10,7 +10,6 @@
 #include "mozilla/GuardObjects.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/Range.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include "jsclist.h"

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script>
+      function draw() {
+        var c = document.getElementById('c').getContext('2d');
+        var img = document.getElementById("img");
+
+        c.fillStyle = 'red';
+        c.fillRect(0, 0, 200, 200);
+
+        c.rect(0, 0, 100, 100);
+        c.clip();
+
+        c.drawImage(img, 0, 0, 200, 200);
+      }
+    </script>
+  </head>
+  <body onload="draw();">
+    <canvas id='c' width='200' height='200'></canvas>
+    <img id="img" src="image_green-16x16.png" style="display:none">
+  </body>
+</html>

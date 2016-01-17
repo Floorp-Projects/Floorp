@@ -24,7 +24,7 @@ task:
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
-    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
     - 'docker-worker:image:{{#docker_image}}phone-builder{{/docker_image}}'
 
   payload:
@@ -34,7 +34,7 @@ task:
     maxRunTime: 3600
 
     cache:
-      tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
 
     # All builds share a common artifact directory for ease of uploading.
     artifacts:

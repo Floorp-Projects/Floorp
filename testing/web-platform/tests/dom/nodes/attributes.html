@@ -586,6 +586,10 @@ test(function() {
                       ["0", "1", "2"])
   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
                       ["0", "1", "2", "a", "b"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
 }, "Own property correctness with non-namespaced attribute before same-name namespaced one");
 
 test(function() {
@@ -599,6 +603,10 @@ test(function() {
                       ["0", "1", "2"])
   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
                       ["0", "1", "2", "a", "b"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
 }, "Own property correctness with namespaced attribute before same-name non-namespaced one");
 
 test(function() {
@@ -612,5 +620,59 @@ test(function() {
                       ["0", "1", "2"])
   assert_array_equals(Object.getOwnPropertyNames(el.attributes),
                       ["0", "1", "2", "a:b", "c:d"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
 }, "Own property correctness with two namespaced attributes with the same name-with-prefix");
+
+test(function() {
+  var el = document.createElement("div");
+  el.setAttributeNS("foo", "A:B", "");
+  el.setAttributeNS("bar", "c:D", "");
+  el.setAttributeNS("baz", "e:F", "");
+  el.setAttributeNS("qux", "g:h", "");
+  el.setAttributeNS("", "I", "");
+  el.setAttributeNS("", "j", "");
+  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+                      ["0", "1", "2", "3", "4", "5", "g:h", "j"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
+}, "Own property names should only include all-lowercase qualified names for an HTML element in an HTML document");
+
+test(function() {
+  var el = document.createElementNS("", "div");
+  el.setAttributeNS("foo", "A:B", "");
+  el.setAttributeNS("bar", "c:D", "");
+  el.setAttributeNS("baz", "e:F", "");
+  el.setAttributeNS("qux", "g:h", "");
+  el.setAttributeNS("", "I", "");
+  el.setAttributeNS("", "j", "");
+  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+                      ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
+}, "Own property names should include all qualified names for a non-HTML element in an HTML document");
+
+test(function() {
+  var doc = document.implementation.createDocument(null, "");
+  assert_equals(doc.contentType, "application/xml");
+  var el = doc.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  el.setAttributeNS("foo", "A:B", "");
+  el.setAttributeNS("bar", "c:D", "");
+  el.setAttributeNS("baz", "e:F", "");
+  el.setAttributeNS("qux", "g:h", "");
+  el.setAttributeNS("", "I", "");
+  el.setAttributeNS("", "j", "");
+  assert_array_equals(Object.getOwnPropertyNames(el.attributes),
+                      ["0", "1", "2", "3", "4", "5", "A:B", "c:D", "e:F", "g:h", "I", "j"])
+  for (var propName of Object.getOwnPropertyNames(el.attributes)) {
+    assert_true(el.attributes[propName] instanceof Attr,
+                "el.attributes has an Attr for property name " + propName);
+  }
+}, "Own property names should include all qualified names for an HTML element in a non-HTML document");
 </script>

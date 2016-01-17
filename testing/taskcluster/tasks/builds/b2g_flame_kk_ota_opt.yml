@@ -7,13 +7,13 @@ task:
   metadata:
     name: '[TC] B2G Flame KK OTA (user)'
   scopes:
-    - 'docker-worker:cache:build-flame-kk-ota-user'
-    - 'docker-worker:cache:build-flame-kk-ota-user-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-ota-user'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-ota-user-objdir-gecko'
 
   payload:
     cache:
-      build-flame-kk-ota-user: /home/worker/workspace
-      build-flame-kk-ota-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-flame-kk-ota-user: /home/worker/workspace
+      level-{{level}}-{{project}}-build-flame-kk-ota-user-objdir-gecko: /home/worker/objdir-gecko
     env:
       VARIANT: user
       MOZHARNESS_CONFIG: b2g/taskcluster-phone-fota.py

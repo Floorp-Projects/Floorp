@@ -196,6 +196,12 @@ nsDOMAttributeMap::GetSupportedNames(unsigned aFlags,
     return;
   }
 
+  // For HTML elements in HTML documents, only include names that are still the
+  // same after ASCII-lowercasing, since our named getter will end up
+  // ASCII-lowercasing the given string.
+  bool lowercaseNamesOnly =
+    mContent->IsHTMLElement() && mContent->IsInHTMLDocument();
+
   const uint32_t count = mContent->GetAttrCount();
   bool seenNonAtomName = false;
   for (uint32_t i = 0; i < count; i++) {
@@ -204,9 +210,18 @@ nsDOMAttributeMap::GetSupportedNames(unsigned aFlags,
     nsString qualifiedName;
     name->GetQualifiedName(qualifiedName);
 
+    if (lowercaseNamesOnly &&
+        nsContentUtils::StringContainsASCIIUpper(qualifiedName)) {
+      continue;
+    }
+
+    // Omit duplicates.  We only need to do this check if we've seen a non-atom
+    // name, because that's the only way we can have two identical qualified
+    // names.
     if (seenNonAtomName && aNames.Contains(qualifiedName)) {
       continue;
     }
+
     aNames.AppendElement(qualifiedName);
   }
 }

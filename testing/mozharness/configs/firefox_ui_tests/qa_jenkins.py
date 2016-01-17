@@ -12,12 +12,12 @@ external_tools_path = os.path.join(
 )
 
 config = {
+    # Tests run in mozmill-ci do not use RelEng infra
+    'developer_mode': True,
+
     'env': {
         'PIP_TRUSTED_HOST': 'pypi.pub.build.mozilla.org',
     },
-
-    # Don't use any kind of proxxy support
-    'proxxy': {},
 
     # General local variable overwrite
     'exes': {
