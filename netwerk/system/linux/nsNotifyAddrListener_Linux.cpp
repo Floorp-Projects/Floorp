@@ -149,7 +149,6 @@ void nsNotifyAddrListener::checkLink(void)
 void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
 {
     struct  nlmsghdr *nlh;
-    struct  rtmsg *route_entry;
 
     // The buffer size below, (4095) was chosen partly based on testing and
     // partly on existing sample source code using this size. It needs to be
@@ -158,7 +157,6 @@ void nsNotifyAddrListener::OnNetlinkMessage(int aNetlinkSocket)
     struct rtattr *attr;
     int attr_len;
     const struct ifaddrmsg* newifam;
-    bool link_local;
 
     // inspired by check_pf.c.
     nsAutoPtr<char> addr;
