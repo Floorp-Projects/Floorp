@@ -58,6 +58,7 @@ item3 { grid-area: 3 / 3; }
 .aspace-around { align-content:space-around;  }
 .aspace-evenly { align-content:space-evenly;  }
 
+.anormal { align-content:normal; }
 .astretch1, .astretch2, .astretch3, .astretch4 { align-content:stretch; }
 .astretch2 { grid-template-rows: minmax(3px,auto) 5px 7px; }
 .astretch3 { grid-template-rows: minmax(3px,auto) minmax(5px,auto) 7px; }
@@ -70,7 +71,7 @@ item3 { grid-area: 3 / 3; }
 <script>
 var gridwm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
 var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
-             "space-between", "space-around", "space-evenly",
+             "space-between", "space-around", "space-evenly", "normal",
              "stretch1", "stretch2", "stretch3", "stretch4" ];
 for (var k = 0; k < test.length; ++k) {
   for (var i = 0; i < gridwm.length; ++i) {
