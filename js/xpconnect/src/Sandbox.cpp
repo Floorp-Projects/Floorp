@@ -50,7 +50,6 @@
 
 using namespace mozilla;
 using namespace JS;
-using namespace js;
 using namespace xpc;
 
 using mozilla::dom::DestroyProtoAndIfaceCache;
@@ -598,7 +597,7 @@ static const JSFunctionSpec SandboxFunctions[] = {
 bool
 xpc::IsSandbox(JSObject* obj)
 {
-    const Class* clasp = GetObjectClass(obj);
+    const js::Class* clasp = js::GetObjectClass(obj);
     return clasp == &SandboxClass || clasp == &SandboxWriteToProtoClass;
 }
 
@@ -1021,9 +1020,9 @@ xpc::CreateSandboxObject(JSContext* cx, MutableHandleValue vp, nsISupports* prin
 
     compartmentOptions.behaviors().setDiscardSource(options.discardSource);
 
-    const Class* clasp = options.writeToGlobalPrototype
-                       ? &SandboxWriteToProtoClass
-                       : &SandboxClass;
+    const js::Class* clasp = options.writeToGlobalPrototype
+                             ? &SandboxWriteToProtoClass
+                             : &SandboxClass;
 
     RootedObject sandbox(cx, xpc::CreateGlobalObject(cx, js::Jsvalify(clasp),
                                                      principal, compartmentOptions));

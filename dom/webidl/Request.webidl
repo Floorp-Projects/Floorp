@@ -57,5 +57,5 @@ enum RequestContext {
 
 enum RequestMode { "same-origin", "no-cors", "cors" };
 enum RequestCredentials { "omit", "same-origin", "include" };
-enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache", "only-if-cached" };
+enum RequestCache { "default", "no-store", "reload", "no-cache", "force-cache" };
 enum RequestRedirect { "follow", "error", "manual" };

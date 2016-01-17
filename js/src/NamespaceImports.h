@@ -77,6 +77,8 @@ using JS::TwoByteChars;
 using JS::TwoByteCharsZ;
 using JS::UTF8Chars;
 using JS::UTF8CharsZ;
+using JS::UniqueChars;
+using JS::UniqueTwoByteChars;
 
 using JS::AutoVectorRooter;
 typedef AutoVectorRooter<Value> AutoValueVector;

@@ -574,8 +574,10 @@ pref("layers.async-video.enabled", true);
 pref("layers.async-pan-zoom.enabled", true);
 // APZ prefs that are different from B2G
 pref("apz.allow_immediate_handoff", false);
+pref("apz.touch_start_tolerance", "0.06");
 // APZ physics settings, copied from B2G
 pref("apz.axis_lock.mode", 2); // Use "sticky" axis locking
+// APZ physics settings reviewed by UX
 pref("apz.fling_curve_function_x1", "0.41");
 pref("apz.fling_curve_function_y1", "0.0");
 pref("apz.fling_curve_function_x2", "0.80");
@@ -584,6 +586,7 @@ pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.004");
 pref("apz.fling_stopped_threshold", "0.1");
 pref("apz.max_velocity_inches_per_ms", "0.07");
+pref("apz.fling_accel_interval_ms", 750);
 #endif
 
 pref("layers.progressive-paint", true);

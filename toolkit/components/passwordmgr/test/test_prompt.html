@@ -167,9 +167,9 @@ var resolveCallback = SpecialPowers.wrapCallbackObject({
                                          null,      // aLoadingNode
                                          systemPrincipal,
                                          null,      // aTriggeringPrincipal
-                                         Ci.nsILoadInfo.SEC_NORMAL,
+                                         Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                          Ci.nsIContentPolicy.TYPE_OTHER);
-    proxyChannel.asyncOpen(SpecialPowers.wrapCallbackObject(new proxyChannelListener()), null);
+    proxyChannel.asyncOpen2(SpecialPowers.wrapCallbackObject(new proxyChannelListener()));
   }
 });
 
@@ -186,7 +186,7 @@ function startup() {
                                 null,      // aLoadingNode
                                 systemPrincipal,
                                 null,      // aTriggeringPrincipal
-                                Ci.nsILoadInfo.SEC_NORMAL,
+                                Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                 Ci.nsIContentPolicy.TYPE_OTHER);
   pps.asyncResolve(channel, 0, resolveCallback);
 }
@@ -914,7 +914,7 @@ function doTests() {
                                        SpecialPowers.Services.
                                        scriptSecurityManager.getSystemPrincipal(),
                                        null,      // aTriggeringPrincipal
-                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                        Ci.nsIContentPolicy.TYPE_OTHER);
   var channel2 = ioService.newChannel2("http://example2.com",
                                        null,
@@ -923,7 +923,7 @@ function doTests() {
                                        SpecialPowers.Services.
                                        scriptSecurityManager.getSystemPrincipal(),
                                        null,      // aTriggeringPrincipal
-                                       Ci.nsILoadInfo.SEC_NORMAL,
+                                       Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
                                        Ci.nsIContentPolicy.TYPE_OTHER);
 
   var level = Ci.nsIAuthPrompt2.LEVEL_NONE;

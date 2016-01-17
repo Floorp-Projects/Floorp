@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1133073 - Use PR_DuplicateEnvironment from NSPR and remove interim mozglue wrappers.
+Bug 1228641 - Remove initializer_list from config/stl-headers

@@ -250,6 +250,10 @@ class RefTest(object):
             prefs['reftest.ignoreWindowSize'] = True
         if options.shuffle:
             prefs['reftest.shuffle'] = True
+        if options.repeat:
+            prefs['reftest.repeat'] = options.repeat
+        if options.runUntilFailure:
+            prefs['reftest.runUntilFailure'] = True
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
         prefs['reftest.manifests'] = json.dumps(manifests)
 

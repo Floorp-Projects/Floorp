@@ -5,6 +5,7 @@
 Components.utils.import("resource://gre/modules/Downloads.jsm");
 Components.utils.import("resource://gre/modules/FileUtils.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
+Components.utils.import("resource:///modules/ShellService.jsm");
 Components.utils.import("resource:///modules/TransientPrefs.jsm");
 #ifdef E10S_TESTING_ONLY
 XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",

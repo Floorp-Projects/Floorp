@@ -606,21 +606,21 @@ template <class T>
 struct DefaultHasher<T*> : PointerHasher<T*, mozilla::tl::FloorLog2<sizeof(void*)>::value>
 {};
 
-// Specialize hashing policy for mozilla::UniquePtr<T> to proxy the UniquePtr's
+// Specialize hashing policy for mozilla::UniquePtr to proxy the UniquePtr's
 // raw pointer to PointerHasher.
-template <class T>
-struct DefaultHasher<mozilla::UniquePtr<T>>
+template <class T, class D>
+struct DefaultHasher<mozilla::UniquePtr<T, D>>
 {
-    using Lookup = mozilla::UniquePtr<T>;
+    using Lookup = mozilla::UniquePtr<T, D>;
     using PtrHasher = PointerHasher<T*, mozilla::tl::FloorLog2<sizeof(void*)>::value>;
 
     static HashNumber hash(const Lookup& l) {
         return PtrHasher::hash(l.get());
     }
-    static bool match(const mozilla::UniquePtr<T>& k, const Lookup& l) {
+    static bool match(const mozilla::UniquePtr<T, D>& k, const Lookup& l) {
         return PtrHasher::match(k.get(), l.get());
     }
-    static void rekey(mozilla::UniquePtr<T>& k, mozilla::UniquePtr<T>&& newKey) {
+    static void rekey(mozilla::UniquePtr<T, D>& k, mozilla::UniquePtr<T, D>&& newKey) {
         k = mozilla::Move(newKey);
     }
 };

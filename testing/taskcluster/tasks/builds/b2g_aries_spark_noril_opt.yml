@@ -6,15 +6,15 @@ $inherits:
 task:
   workerType: flame-kk
   scopes:
-    - 'docker-worker:cache:build-aries-opt'
-    - 'docker-worker:cache:build-aries-opt-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-opt'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-opt-objdir-gecko'
   metadata:
     name: '[TC] B2G Aries No RIL Opt'
 
   payload:
     cache:
-      build-aries-opt: /home/worker/workspace
-      build-aries-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-aries-opt: /home/worker/workspace
+      level-{{level}}-{{project}}-build-aries-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'aries'
       DEBUG: 0

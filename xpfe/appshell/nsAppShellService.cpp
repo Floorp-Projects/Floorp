@@ -34,10 +34,13 @@
 #include "nsIScriptContext.h"
 
 #include "nsAppShellService.h"
+#include "nsContentUtils.h"
+#include "nsThreadUtils.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIChromeRegistry.h"
 #include "nsILoadContext.h"
 #include "nsIWebNavigation.h"
+#include "nsIWindowlessBrowser.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Preferences.h"
@@ -399,43 +402,100 @@ WebBrowserChrome2Stub::Blur()
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-// This is the "stub" we return from CreateWindowlessBrowser - it exists
-// purely to keep a strong reference to the browser and the container to
-// prevent the container being collected while the stub remains alive.
-class WindowlessBrowserStub final : public nsIWebNavigation,
-                                    public nsIInterfaceRequestor
+class BrowserDestroyer final : public nsRunnable
 {
 public:
-  WindowlessBrowserStub(nsIWebBrowser *aBrowser, nsISupports *aContainer) {
-    mBrowser = aBrowser;
+  BrowserDestroyer(nsIWebBrowser *aBrowser, nsISupports *aContainer) :
+    mBrowser(aBrowser),
+    mContainer(aContainer)
+  {
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    // Explicitly destroy the browser, in case this isn't the last reference.
+    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+    return window->Destroy();
+  }
+
+protected:
+  virtual ~BrowserDestroyer() {}
+
+private:
+  nsCOMPtr<nsIWebBrowser> mBrowser;
+  nsCOMPtr<nsISupports> mContainer;
+};
+
+// This is the "stub" we return from CreateWindowlessBrowser - it exists
+// to manage the lifetimes of the nsIWebBrowser and container window.
+// In particular, it keeps a strong reference to both, to prevent them from
+// being collected while this object remains alive, and ensures that they
+// aren't destroyed when it's not safe to run scripts.
+class WindowlessBrowser final : public nsIWindowlessBrowser,
+                                public nsIInterfaceRequestor
+{
+public:
+  WindowlessBrowser(nsIWebBrowser *aBrowser, nsISupports *aContainer) :
+    mBrowser(aBrowser),
+    mContainer(aContainer),
+    mClosed(false)
+  {
     mWebNavigation = do_QueryInterface(aBrowser);
     mInterfaceRequestor = do_QueryInterface(aBrowser);
-    mContainer = aContainer;
   }
   NS_DECL_ISUPPORTS
-  NS_FORWARD_NSIWEBNAVIGATION(mWebNavigation->)
-  NS_FORWARD_NSIINTERFACEREQUESTOR(mInterfaceRequestor->)
+  NS_FORWARD_SAFE_NSIWEBNAVIGATION(mWebNavigation)
+  NS_FORWARD_SAFE_NSIINTERFACEREQUESTOR(mInterfaceRequestor)
+
+  NS_IMETHOD
+  Close() override
+  {
+    NS_ENSURE_TRUE(!mClosed, NS_ERROR_UNEXPECTED);
+    NS_ASSERTION(nsContentUtils::IsSafeToRunScript(),
+                 "WindowlessBrowser::Close called when not safe to run scripts");
+
+    mClosed = true;
+
+    mWebNavigation = nullptr;
+    mInterfaceRequestor = nullptr;
+
+    nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mBrowser);
+    return window->Destroy();
+  }
+
+protected:
+  virtual ~WindowlessBrowser()
+  {
+    if (mClosed) {
+      return;
+    }
+
+    NS_WARNING("Windowless browser was not closed prior to destruction");
+
+    // The docshell destructor needs to dispatch events, and can only run
+    // when it's safe to run scripts. If this was triggered by GC, it may
+    // not always be safe to run scripts, in which cases we need to delay
+    // destruction until it is.
+    nsCOMPtr<nsIRunnable> runnable = new BrowserDestroyer(mBrowser, mContainer);
+    nsContentUtils::AddScriptRunner(runnable);
+  }
+
 private:
-  ~WindowlessBrowserStub() {}
   nsCOMPtr<nsIWebBrowser> mBrowser;
   nsCOMPtr<nsIWebNavigation> mWebNavigation;
   nsCOMPtr<nsIInterfaceRequestor> mInterfaceRequestor;
   // we don't use the container but just hold a reference to it.
   nsCOMPtr<nsISupports> mContainer;
+
+  bool mClosed;
 };
 
-NS_INTERFACE_MAP_BEGIN(WindowlessBrowserStub)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebNavigation)
-  NS_INTERFACE_MAP_ENTRY(nsIWebNavigation)
-  NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(WindowlessBrowserStub)
-NS_IMPL_RELEASE(WindowlessBrowserStub)
+NS_IMPL_ISUPPORTS(WindowlessBrowser, nsIWindowlessBrowser, nsIWebNavigation, nsIInterfaceRequestor)
 
 
 NS_IMETHODIMP
-nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWebNavigation **aResult)
+nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWindowlessBrowser **aResult)
 {
   /* First, we create an instance of nsWebBrowser. Instances of this class have
    * an associated doc shell, which is what we're interested in.
@@ -480,7 +540,7 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome, nsIWebNavigation **aR
   window->Create();
 
   nsISupports *isstub = NS_ISUPPORTS_CAST(nsIWebBrowserChrome2*, stub);
-  RefPtr<nsIWebNavigation> result = new WindowlessBrowserStub(browser, isstub);
+  RefPtr<nsIWindowlessBrowser> result = new WindowlessBrowser(browser, isstub);
   nsCOMPtr<nsIDocShell> docshell = do_GetInterface(result);
   docshell->SetInvisible(true);
 

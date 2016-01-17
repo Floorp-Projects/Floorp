@@ -187,6 +187,7 @@ public:
   virtual void NotifyTracksAvailable(DOMMediaStream* aStream) override
   {
     MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(aStream);
 
     PeerConnectionWrapper wrapper(mPcHandle);
 
@@ -199,6 +200,13 @@ public:
 
     std::string streamId = PeerConnectionImpl::GetStreamId(*aStream);
     bool notifyStream = true;
+
+    Sequence<OwningNonNull<DOMMediaStream>> streams;
+    if (!streams.AppendElement(OwningNonNull<DOMMediaStream>(*aStream),
+                               fallible)) {
+      MOZ_ASSERT(false);
+      return;
+    }
 
     for (size_t i = 0; i < tracks.Length(); i++) {
       std::string trackId;
@@ -231,7 +239,7 @@ public:
 
       JSErrorResult jrv;
       CSFLogInfo(logTag, "Calling OnAddTrack(%s)", trackId.c_str());
-      mObserver->OnAddTrack(*tracks[i], jrv);
+      mObserver->OnAddTrack(*tracks[i], streams, jrv);
       if (jrv.Failed()) {
         CSFLogError(logTag, ": OnAddTrack(%u) failed! Error: %u",
                     static_cast<unsigned>(i),
@@ -1860,19 +1868,31 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
       mJsepSession->GetRemoteTracksRemoved();
 
     for (auto i = removedTracks.begin(); i != removedTracks.end(); ++i) {
-      RefPtr<RemoteSourceStreamInfo> info =
-        mMedia->GetRemoteStreamById((*i)->GetStreamId());
+      const std::string& streamId = (*i)->GetStreamId();
+      const std::string& trackId = (*i)->GetTrackId();
+
+      RefPtr<RemoteSourceStreamInfo> info = mMedia->GetRemoteStreamById(streamId);
       if (!info) {
         MOZ_ASSERT(false, "A stream/track was removed that wasn't in PCMedia. "
                           "This is a bug.");
         continue;
       }
 
-      mMedia->RemoveRemoteTrack((*i)->GetStreamId(), (*i)->GetTrackId());
+      mMedia->RemoveRemoteTrack(streamId, trackId);
+
+      DOMMediaStream* stream = info->GetMediaStream();
+      nsTArray<RefPtr<MediaStreamTrack>> tracks;
+      stream->GetTracks(tracks);
+      for (auto& track : tracks) {
+        if (PeerConnectionImpl::GetTrackId(*track) == trackId) {
+          pco->OnRemoveTrack(*track, jrv);
+          break;
+        }
+      }
 
       // We might be holding the last ref, but that's ok.
       if (!info->GetTrackCount()) {
-        pco->OnRemoveStream(*info->GetMediaStream(), jrv);
+        pco->OnRemoveStream(*stream, jrv);
       }
     }
 

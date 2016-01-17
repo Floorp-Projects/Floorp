@@ -242,6 +242,9 @@ bool RtpHeaderParser::ParseRtcp(RTPHeader* header) const {
   header->payloadType  = PT;
   header->ssrc         = SSRC;
   header->headerLength = 4 + (len << 2);
+  if (header->headerLength > static_cast<size_t>(length)) {
+    return false;
+  }
 
   return true;
 }
@@ -291,7 +294,7 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
   header.headerLength   = 12 + (CC * 4);
   // not a full validation, just safety against underflow.  Padding must
   // start after the header.  We can have 0 payload bytes left, note.
-  if (header.paddingLength + header.headerLength > (ptrdiff_t) length) {
+  if (header.paddingLength + header.headerLength > (size_t) length) {
     return false;
   }
 

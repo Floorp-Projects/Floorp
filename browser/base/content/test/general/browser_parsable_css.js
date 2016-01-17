@@ -157,7 +157,7 @@ function messageIsCSSError(msg) {
   return false;
 }
 
-add_task(function checkAllTheCSS() {
+add_task(function* checkAllTheCSS() {
   let appDir = Services.dirsvc.get("XCurProcD", Ci.nsIFile);
   // This asynchronously produces a list of URLs (sadly, mostly sync on our
   // test infrastructure because it runs against jarfiles there, and
@@ -236,4 +236,6 @@ add_task(function checkAllTheCSS() {
   doc.head.innerHTML = '';
   doc = null;
   iframe = null;
+  windowless.close();
+  windowless = null;
 });

@@ -50,7 +50,6 @@ using mozilla::ArrayLength;
 using mozilla::DebugOnly;
 using mozilla::MakeScopeExit;
 using mozilla::Maybe;
-using mozilla::UniquePtr;
 
 
 /*** Forward declarations ************************************************************************/

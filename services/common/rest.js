@@ -16,6 +16,7 @@ this.EXPORTED_SYMBOLS = [
 
 Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://services-common/utils.js");
@@ -305,14 +306,9 @@ RESTRequest.prototype = {
     }
 
     // Create and initialize HTTP channel.
-    let channel = Services.io.newChannelFromURI2(this.uri,
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_NORMAL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER)
-                          .QueryInterface(Ci.nsIRequest)
-                          .QueryInterface(Ci.nsIHttpChannel);
+    let channel = NetUtil.newChannel({uri: this.uri, loadUsingSystemPrincipal: true})
+                         .QueryInterface(Ci.nsIRequest)
+                         .QueryInterface(Ci.nsIHttpChannel);
     this.channel = channel;
     channel.loadFlags |= this.loadFlags;
     channel.notificationCallbacks = this;
@@ -358,7 +354,7 @@ RESTRequest.prototype = {
 
     // Blast off!
     try {
-      channel.asyncOpen(this, null);
+      channel.asyncOpen2(this);
     } catch (ex) {
       // asyncOpen can throw in a bunch of cases -- e.g., a forbidden port.
       this._log.warn("Caught an error in asyncOpen", ex);

@@ -8,12 +8,12 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.sm-plain'
 
   scopes:
-    - 'docker-worker:cache:build-spidermonkey-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-spidermonkey-workspace'
 
   payload:
     image: '{{#docker_image}}desktop-build{{/docker_image}}'
     cache:
-      build-spidermonkey-c6-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-spidermonkey-workspace: '/home/worker/workspace'
 
     env:
       GECKO_REPOSITORY: '{{base_repository}}'

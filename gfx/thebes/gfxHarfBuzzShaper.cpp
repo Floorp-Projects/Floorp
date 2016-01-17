@@ -354,17 +354,6 @@ gfxHarfBuzzShaper::HBGetGlyphVAdvance(hb_font_t *font, void *font_data,
     return fcd->mShaper->GetGlyphVAdvance(glyph);
 }
 
-/* static */
-hb_bool_t
-gfxHarfBuzzShaper::HBGetGlyphHOrigin(hb_font_t *font, void *font_data,
-                                     hb_codepoint_t glyph,
-                                     hb_position_t *x, hb_position_t *y,
-                                     void *user_data)
-{
-    // We work in horizontal coordinates, so no origin adjustment needed here.
-    return true;
-}
-
 struct VORG {
     AutoSwap_PRUint16 majorVersion;
     AutoSwap_PRUint16 minorVersion;
@@ -1267,9 +1256,6 @@ gfxHarfBuzzShaper::Initialize()
         hb_font_funcs_set_glyph_v_advance_func(sHBFontFuncs,
                                                HBGetGlyphVAdvance,
                                                nullptr, nullptr);
-        hb_font_funcs_set_glyph_h_origin_func(sHBFontFuncs,
-                                              HBGetGlyphHOrigin,
-                                              nullptr, nullptr);
         hb_font_funcs_set_glyph_v_origin_func(sHBFontFuncs,
                                               HBGetGlyphVOrigin,
                                               nullptr, nullptr);

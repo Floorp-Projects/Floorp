@@ -121,6 +121,12 @@ function checkInvalidPattern(element, completeCheck)
   }
 }
 
+function checkSyntaxError(element)
+{
+    ok(!element.validity.patternMismatch,
+       "On SyntaxError, element should not suffer");
+}
+
 function checkPatternValidity(element)
 {
   element.pattern = "foo";
@@ -165,23 +171,26 @@ function checkPatternValidity(element)
   element.value = "foo";
   checkInvalidPattern(element);
 
-  // We need '\\\\' because '\\' will produce '\\' and we want to escape the '\'
-  // for the regexp.
-  element.pattern = "foo\\\\bar";
-  element.value = "foo\\bar";
-  checkValidPattern(element);
-
-  // The same way, we want to escape the ' in the pattern.
-  element.pattern = "foo\\'bar";
-  element.value = "foo'bar";
-  checkValidPattern(element);
-
   // Check for 'i' flag disabled. Should be case sensitive.
   element.value = "Foo";
   checkInvalidPattern(element);
 
   // We can't check for the 'g' flag because we only test, we don't execute.
   // We can't check for the 'm' flag because .value shouldn't contain line breaks.
+
+  // We need '\\\\' because '\\' will produce '\\' and we want to escape the '\'
+  // for the regexp.
+  element.pattern = "foo\\\\bar";
+  element.value = "foo\\bar";
+  checkValidPattern(element);
+
+  // We may want to escape the ' in the pattern, but this is a SyntaxError
+  // when unicode flag is set.
+  element.pattern = "foo\\'bar";
+  element.value = "foo'bar";
+  checkSyntaxError(element);
+  element.value = "baz";
+  checkSyntaxError(element);
 
   // We should check the pattern attribute do not pollute |RegExp.lastParen|.
   is(RegExp.lastParen, "", "RegExp.lastParen should be the empty string");
@@ -254,6 +263,33 @@ function checkPatternValidity(element)
 
   element.removeAttribute('pattern');
   checkValidPattern(element, true);
+
+  // Unicode pattern
+  for (var pattern of ["\\u{1F438}{2}", "\u{1F438}{2}",
+                       "\\uD83D\\uDC38{2}", "\uD83D\uDC38{2}",
+                       "\u{D83D}\u{DC38}{2}"]) {
+    element.pattern = pattern;
+
+    element.value = "\u{1F438}\u{1F438}";
+    checkValidPattern(element);
+
+    element.value = "\uD83D\uDC38\uD83D\uDC38";
+    checkValidPattern(element);
+
+    element.value = "\uD83D\uDC38\uDC38";
+    checkInvalidPattern(element);
+  }
+
+  element.pattern = "\\u{D83D}\\u{DC38}{2}";
+
+  element.value = "\u{1F438}\u{1F438}";
+  checkInvalidPattern(element);
+
+  element.value = "\uD83D\uDC38\uD83D\uDC38";
+  checkInvalidPattern(element);
+
+  element.value = "\uD83D\uDC38\uDC38";
+  checkInvalidPattern(element);
 }
 
 var input = document.getElementById('i');
