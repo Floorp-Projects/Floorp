@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "MediaDecoder.h"
+#include "MediaFormatReader.h"
 
 class nsIStreamListener;
 
@@ -88,6 +89,7 @@ private:
   // mMediaSource.
   dom::MediaSource* mMediaSource;
   RefPtr<MediaSourceDemuxer> mDemuxer;
+  RefPtr<MediaFormatReader> mReader;
 
   Atomic<bool> mEnded;
 };
