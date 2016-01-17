@@ -19,6 +19,7 @@
 #include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsRuleNode.h" // For nsRuleNode::ComputePropertiesOverridingAnimation
+#include "nsRuleProcessorData.h" // For ElementRuleProcessorData etc.
 #include "nsTArray.h"
 #include "RestyleManager.h"
 
@@ -236,21 +237,43 @@ EffectCompositor::GetAnimationRule(dom::Element* aElement,
                                    nsCSSPseudoElements::Type aPseudoType,
                                    CascadeLevel aCascadeLevel)
 {
+  // NOTE: We need to be careful about early returns in this method where
+  // we *don't* update mElementsToRestyle. When we get a call to
+  // RequestRestyle that results in a call to PostRestyleForAnimation, we
+  // will set a bool flag in mElementsToRestyle indicating that we've
+  // called PostRestyleForAnimation so we don't need to call it again
+  // until that restyle happens. During that restyle, if we arrive here
+  // and *don't* update mElementsToRestyle we'll continue to skip calling
+  // PostRestyleForAnimation from RequestRestyle.
+
   if (!mPresContext || !mPresContext->IsDynamic()) {
     // For print or print preview, ignore animations.
     return nullptr;
   }
 
-  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
-  if (!effectSet) {
-    return nullptr;
-  }
-
   if (mPresContext->RestyleManager()->SkipAnimationRules()) {
+    // We don't need to worry about updating mElementsToRestyle in this case
+    // since this is not the animation restyle we requested when we called
+    // PostRestyleForAnimation (see comment at start of this method).
     return nullptr;
   }
 
   MaybeUpdateAnimationRule(aElement, aPseudoType, aCascadeLevel);
+
+#ifdef DEBUG
+  {
+    auto& elementsToRestyle = mElementsToRestyle[aCascadeLevel];
+    PseudoElementHashKey key = { aElement, aPseudoType };
+    MOZ_ASSERT(!elementsToRestyle.Contains(key),
+               "Element should no longer require a restyle after its "
+               "animation rule has been updated");
+  }
+#endif
+
+  EffectSet* effectSet = EffectSet::GetEffectSet(aElement, aPseudoType);
+  if (!effectSet) {
+    return nullptr;
+  }
 
   return effectSet->AnimationRule(aCascadeLevel);
 }
@@ -678,6 +701,112 @@ EffectCompositor::GetPresContext(Element* aElement)
     return nullptr;
   }
   return shell->GetPresContext();
+}
+
+// ---------------------------------------------------------
+//
+// Nested class: AnimationStyleRuleProcessor
+//
+// ---------------------------------------------------------
+
+NS_IMPL_ISUPPORTS(EffectCompositor::AnimationStyleRuleProcessor,
+                  nsIStyleRuleProcessor)
+
+nsRestyleHint
+EffectCompositor::AnimationStyleRuleProcessor::HasStateDependentStyle(
+  StateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
+nsRestyleHint
+EffectCompositor::AnimationStyleRuleProcessor::HasStateDependentStyle(
+  PseudoElementStateRuleProcessorData* aData)
+{
+  return nsRestyleHint(0);
+}
+
+bool
+EffectCompositor::AnimationStyleRuleProcessor::HasDocumentStateDependentStyle(
+  StateRuleProcessorData* aData)
+{
+  return false;
+}
+
+nsRestyleHint
+EffectCompositor::AnimationStyleRuleProcessor::HasAttributeDependentStyle(
+                        AttributeRuleProcessorData* aData,
+                        RestyleHintData& aRestyleHintDataResult)
+{
+  return nsRestyleHint(0);
+}
+
+bool
+EffectCompositor::AnimationStyleRuleProcessor::MediumFeaturesChanged(
+  nsPresContext* aPresContext)
+{
+  return false;
+}
+
+void
+EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
+  ElementRuleProcessorData* aData)
+{
+  nsIStyleRule *rule =
+    mCompositor->GetAnimationRule(aData->mElement,
+                                  nsCSSPseudoElements::ePseudo_NotPseudoElement,
+                                  mCascadeLevel);
+  if (rule) {
+    aData->mRuleWalker->Forward(rule);
+    aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
+  }
+}
+
+void
+EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
+  PseudoElementRuleProcessorData* aData)
+{
+  if (aData->mPseudoType != nsCSSPseudoElements::ePseudo_before &&
+      aData->mPseudoType != nsCSSPseudoElements::ePseudo_after) {
+    return;
+  }
+
+  nsIStyleRule *rule =
+    mCompositor->GetAnimationRule(aData->mElement,
+                                  aData->mPseudoType,
+                                  mCascadeLevel);
+  if (rule) {
+    aData->mRuleWalker->Forward(rule);
+    aData->mRuleWalker->CurrentNode()->SetIsAnimationRule();
+  }
+}
+
+void
+EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
+  AnonBoxRuleProcessorData* aData)
+{
+}
+
+#ifdef MOZ_XUL
+void
+EffectCompositor::AnimationStyleRuleProcessor::RulesMatching(
+  XULTreeRuleProcessorData* aData)
+{
+}
+#endif
+
+size_t
+EffectCompositor::AnimationStyleRuleProcessor::SizeOfExcludingThis(
+  MallocSizeOf aMallocSizeOf) const
+{
+  return 0;
+}
+
+size_t
+EffectCompositor::AnimationStyleRuleProcessor::SizeOfIncludingThis(
+  MallocSizeOf aMallocSizeOf) const
+{
+  return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
 }
 
 } // namespace mozilla

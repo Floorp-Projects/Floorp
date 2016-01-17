@@ -14,7 +14,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/ThreadLocal.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include <setjmp.h>
@@ -38,6 +37,7 @@
 #ifdef DEBUG
 # include "js/Proxy.h" // For AutoEnterPolicy
 #endif
+#include "js/UniquePtr.h"
 #include "js/Vector.h"
 #include "vm/CodeCoverage.h"
 #include "vm/CommonPropertyNames.h"
@@ -1950,7 +1950,7 @@ class MOZ_RAII AutoEnterIonCompilation
 template <typename T>
 class MOZ_STACK_CLASS AutoInitGCManagedObject
 {
-    typedef mozilla::UniquePtr<T, JS::DeletePolicy<T>> UniquePtrT;
+    typedef UniquePtr<T> UniquePtrT;
 
     UniquePtrT ptr_;
 

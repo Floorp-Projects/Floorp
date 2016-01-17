@@ -55,7 +55,9 @@ struct head
   inline bool sanitize (hb_sanitize_context_t *c) const
   {
     TRACE_SANITIZE (this);
-    return_trace (c->check_struct (this) && likely (version.major == 1));
+    return_trace (c->check_struct (this) &&
+		  version.major == 1 &&
+		  magicNumber == 0x5F0F3CF5u);
   }
 
   protected:

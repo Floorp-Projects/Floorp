@@ -467,7 +467,7 @@ nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(JSContext *cx)
         unsigned lineNum = 0;
         NS_NAMED_LITERAL_STRING(scriptSample, "call to eval() or related function blocked by CSP");
 
-        JS::AutoFilename scriptFilename;
+        JS::UniqueChars scriptFilename;
         if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum)) {
             if (const char *file = scriptFilename.get()) {
                 CopyUTF8toUTF16(nsDependentCString(file), fileName);

@@ -7,6 +7,7 @@
 #define VorbisDecoder_h_
 
 #include "PlatformDecoderModule.h"
+#include "mozilla/Maybe.h"
 
 #ifdef MOZ_TREMOR
 #include "tremor/ivorbiscodec.h"
@@ -52,6 +53,7 @@ private:
 
   int64_t mPacketCount;
   int64_t mFrames;
+  Maybe<int64_t> mLastFrameTime;
 };
 
 } // namespace mozilla

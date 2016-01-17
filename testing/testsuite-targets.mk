@@ -509,6 +509,7 @@ stage-gtest: make-stage-dir
 	cp -RL $(DEPTH)/_tests/gtest $(PKG_STAGE)
 	cp $(topsrcdir)/testing/gtest/rungtests.py $(PKG_STAGE)/gtest
 	cp $(DIST)/bin/dependentlibs.list.gtest $(PKG_STAGE)/gtest
+	cp $(DEPTH)/mozinfo.json $(PKG_STAGE)/gtest
 
 stage-android: make-stage-dir
 ifdef MOZ_ENABLE_SZIP

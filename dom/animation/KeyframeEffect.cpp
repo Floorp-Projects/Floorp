@@ -180,6 +180,14 @@ KeyframeEffectReadOnly::NotifyAnimationTimingUpdated()
         RequestRestyle(mTarget, mPseudoType, restyleType,
                        mAnimation->CascadeLevel());
     }
+
+    // If we're not relevant, we will have been removed from the EffectSet.
+    // As a result, when the restyle we requested above is fulfilled, our
+    // ComposeStyle will not get called and mProgressOnLastCompose will not
+    // be updated. Instead, we need to manually clear it.
+    if (!isRelevant) {
+      mProgressOnLastCompose.SetNull();
+    }
   }
 }
 
@@ -613,6 +621,9 @@ KeyframeEffectReadOnly::UpdateTargetRegistration()
     EffectSet* effectSet = EffectSet::GetEffectSet(mTarget, mPseudoType);
     if (effectSet) {
       effectSet->RemoveEffect(*this);
+      if (effectSet->IsEmpty()) {
+        EffectSet::DestroyEffectSet(mTarget, mPseudoType);
+      }
     }
   }
 }

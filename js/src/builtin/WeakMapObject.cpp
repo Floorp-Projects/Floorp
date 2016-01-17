@@ -14,8 +14,6 @@
 using namespace js;
 using namespace js::gc;
 
-using mozilla::UniquePtr;
-
 MOZ_ALWAYS_INLINE bool
 IsWeakMap(HandleValue v)
 {
@@ -170,8 +168,7 @@ WeakMap_set_impl(JSContext* cx, const CallArgs& args)
     MOZ_ASSERT(IsWeakMap(args.thisv()));
 
     if (!args.get(0).isObject()) {
-        UniquePtr<char[], JS::FreePolicy> bytes =
-            DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.get(0), nullptr);
+        UniqueChars bytes = DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, args.get(0), nullptr);
         if (!bytes)
             return false;
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_NONNULL_OBJECT, bytes.get());
@@ -356,7 +353,7 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
             // Steps 12k-l.
             if (isOriginalAdder) {
                 if (keyVal.isPrimitive()) {
-                    UniquePtr<char[], JS::FreePolicy> bytes =
+                    UniqueChars bytes =
                         DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, keyVal, nullptr);
                     if (!bytes)
                         return false;

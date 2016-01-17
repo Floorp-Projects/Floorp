@@ -106,6 +106,10 @@ public:
                           gfxFontStyle &aFontStyle,
                           float aDevPixPerCSSPixel);
 
+    virtual void
+    AppendLinkedSystemFamilies(nsIAtom* aLanguage,
+                               nsTArray<gfxFontFamily*>& aFamilyList) override;
+
 private:
     friend class gfxPlatformMac;
 
@@ -120,6 +124,10 @@ private:
 
     // initialize system fonts
     void InitSystemFonts();
+
+    // helper function for looking up font cascades
+    void LookupFontCascadeForLang(const nsACString& aLang,
+                                  nsTArray<gfxFontFamily*>& aCascadeList);
 
     // helper function to lookup in both hidden system fonts and normal fonts
     gfxFontFamily* FindSystemFontFamily(const nsAString& aFamily);
@@ -170,6 +178,23 @@ private:
     bool mUseSizeSensitiveSystemFont;
     RefPtr<gfxFontFamily> mSystemTextFontFamily;
     RefPtr<gfxFontFamily> mSystemDisplayFontFamily; // only used on OSX 10.11
+
+    // system font cascade - under OSX, the system font is effectively
+    // not a single family but a fontlist with the Latin font at the end
+    // of the list (e.g. Lucida Grande, Helevetica Neue, San Francisco)
+
+    // most languages use a common default set of choices matching lang=en
+    PrefFontList mDefaultCascadeFamilies;
+
+    // languages for which the cascade matches the default cascade
+    nsTHashtable<nsCStringHashKey> mDefaultCascadeLangs;
+
+    // for languages where the fontlist doesn't match the default list
+    // (e.g. zh-TW will prioritize the traditional Chinese font over the
+    // Japanese font)
+    nsBaseHashtable<nsCStringHashKey,
+                    nsAutoPtr<PrefFontList>,
+                    PrefFontList*> mNonDefaultCascadeFamilies;
 };
 
 #endif /* gfxMacPlatformFontList_H_ */

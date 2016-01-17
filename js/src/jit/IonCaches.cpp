@@ -172,7 +172,7 @@ class IonCache::StubAttacher
     // value would be replaced by the attachStub function after the allocation
     // of the JitCode. The self-reference is used to keep the stub path alive
     // even if the IonScript is invalidated or if the IC is flushed.
-    static const ImmPtr STUB_ADDR;
+    static const void* const STUB_ADDR;
 
     template <class T1, class T2>
     void branchNextStub(MacroAssembler& masm, Assembler::Condition cond, T1 op1, T2 op2) {
@@ -219,7 +219,7 @@ class IonCache::StubAttacher
         // WARNING: stubs are flushed on GC.
         // WARNING:
         MOZ_ASSERT(!hasStubCodePatchOffset_);
-        stubCodePatchOffset_ = masm.PushWithPatch(STUB_ADDR);
+        stubCodePatchOffset_ = masm.PushWithPatch(ImmPtr(STUB_ADDR));
         hasStubCodePatchOffset_ = true;
     }
 
@@ -232,7 +232,7 @@ class IonCache::StubAttacher
     void patchStubCodePointer(JitCode* code) {
         if (hasStubCodePatchOffset_) {
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
-                                               ImmPtr(code), STUB_ADDR);
+                                               ImmPtr(code), ImmPtr(STUB_ADDR));
         }
     }
 
@@ -252,7 +252,7 @@ class IonCache::StubAttacher
     }
 };
 
-const ImmPtr IonCache::StubAttacher::STUB_ADDR = ImmPtr((void*)0xdeadc0de);
+const void* const IonCache::StubAttacher::STUB_ADDR = (void*)0xdeadc0de;
 
 void
 IonCache::emitInitialJump(MacroAssembler& masm, RepatchLabel& entry)

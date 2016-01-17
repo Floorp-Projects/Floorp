@@ -25,7 +25,7 @@ extern mozilla::LogModule* GetPDMLog();
 #undef LOG
 #endif
 
-#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("GonkOmxPlatformLayer:: " arg, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("GonkOmxPlatformLayer(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 #define CHECK_ERR(err)                    \
   if (err != OK)                       {  \
@@ -314,7 +314,7 @@ GonkBufferData::GetPlatformMediaData()
                                              false,
                                              0,
                                              info.mImage);
-  LOG("GetMediaData: %p, disp width %d, height %d, pic width %d, height %d, time %ld",
+  LOG("%p, disp width %d, height %d, pic width %d, height %d, time %ld",
       this, info.mDisplay.width, info.mDisplay.height,
       info.mImage.width, info.mImage.height, mBuffer->nTimeStamp);
 
@@ -324,7 +324,9 @@ GonkBufferData::GetPlatformMediaData()
     ->Then(mGonkPlatformLayer->GetTaskQueue(), __func__,
            [self] () {
              // Waiting for texture to be freed.
-             self->mTextureClientRecycleHandler->GetTextureClient()->WaitForBufferOwnership();
+             if (self->mTextureClientRecycleHandler) {
+               self->mTextureClientRecycleHandler->GetTextureClient()->WaitForBufferOwnership();
+             }
              self->mPromise.ResolveIfExists(self, __func__);
            },
            [self] () {

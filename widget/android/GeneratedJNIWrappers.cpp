@@ -1242,6 +1242,9 @@ auto DisplayPortMetrics::Resolution() const -> float
 
 constexpr char GLController::name[];
 
+constexpr char GLController::AttachToJava_t::name[];
+constexpr char GLController::AttachToJava_t::signature[];
+
 constexpr char GLController::CreateCompositor_t::name[];
 constexpr char GLController::CreateCompositor_t::signature[];
 
@@ -1266,9 +1269,6 @@ constexpr char GLController::DisposeNative_t::signature[];
 
 constexpr char GLController::PauseCompositor_t::name[];
 constexpr char GLController::PauseCompositor_t::signature[];
-
-constexpr char GLController::SetLayerClient_t::name[];
-constexpr char GLController::SetLayerClient_t::signature[];
 
 constexpr char GLController::SyncInvalidateAndScheduleComposite_t::name[];
 constexpr char GLController::SyncInvalidateAndScheduleComposite_t::signature[];
@@ -1431,6 +1431,26 @@ auto LayerView::updateZoomedView(mozilla::jni::Object::Param a0) -> void
 }
 
 constexpr char NativePanZoomController::name[];
+
+constexpr char NativePanZoomController::Destroy_t::name[];
+constexpr char NativePanZoomController::Destroy_t::signature[];
+
+auto NativePanZoomController::Destroy() const -> void
+{
+    return mozilla::jni::Method<Destroy_t>::Call(this, nullptr);
+}
+
+constexpr char NativePanZoomController::DisposeNative_t::name[];
+constexpr char NativePanZoomController::DisposeNative_t::signature[];
+
+constexpr char NativePanZoomController::HandleMotionEvent_t::name[];
+constexpr char NativePanZoomController::HandleMotionEvent_t::signature[];
+
+constexpr char NativePanZoomController::AbortAnimation_t::name[];
+constexpr char NativePanZoomController::AbortAnimation_t::signature[];
+
+constexpr char NativePanZoomController::SetIsLongpressEnabled_t::name[];
+constexpr char NativePanZoomController::SetIsLongpressEnabled_t::signature[];
 
 constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::name[];
 constexpr char NativePanZoomController::RequestContentRepaintWrapper_t::signature[];

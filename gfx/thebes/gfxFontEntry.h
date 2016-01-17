@@ -667,7 +667,8 @@ public:
         mIsBadUnderlineFamily(false),
         mFamilyCharacterMapInitialized(false),
         mSkipDefaultFeatureSpaceCheck(false),
-        mCheckForFallbackFaces(false)
+        mCheckForFallbackFaces(false),
+        mLinkedSystemFamily(false)
         { }
 
     const nsString& Name() { return mName; }
@@ -796,6 +797,9 @@ public:
         mSkipDefaultFeatureSpaceCheck = aSkipCheck;
     }
 
+    bool LinkedSystemFamily() const { return mLinkedSystemFamily; }
+    void SetLinkedSystemFamily() { mLinkedSystemFamily = true; }
+
 protected:
     // Protected destructor, to discourage deletion outside of Release():
     virtual ~gfxFontFamily()
@@ -828,6 +832,7 @@ protected:
     bool mFamilyCharacterMapInitialized : 1;
     bool mSkipDefaultFeatureSpaceCheck : 1;
     bool mCheckForFallbackFaces : 1;  // check other faces for character
+    bool mLinkedSystemFamily : 1;  // system fonts linked to other families
 
     enum {
         // for "simple" families, the faces are stored in mAvailableFonts

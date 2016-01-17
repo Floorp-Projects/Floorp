@@ -19,6 +19,12 @@
 #include <ui/Fence.h>
 #endif
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
+#include <gui/Surface.h>
+#else
+#include <gui/SurfaceTextureClient.h>
+#endif
+
 #include "mozilla/layers/GrallocTextureClient.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/Preferences.h"
@@ -231,11 +237,11 @@ OmxDecoder::AllocateMediaResources()
 #endif
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
-    mNativeWindowClient = new GonkNativeWindowClient(producer);
+    mNativeWindowClient = new Surface(producer);
 #elif defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-    mNativeWindowClient = new GonkNativeWindowClient(mNativeWindow->getBufferQueue());
+    mNativeWindowClient = new Surface(mNativeWindow->getBufferQueue());
 #else
-    mNativeWindowClient = new GonkNativeWindowClient(mNativeWindow);
+    mNativeWindowClient = new SurfaceTextureClient(mNativeWindow);
 #endif
 
     // Experience with OMX codecs is that only the HW decoders are

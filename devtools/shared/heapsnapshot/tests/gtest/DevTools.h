@@ -17,9 +17,9 @@
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
 #include "js/Principals.h"
 #include "js/UbiNode.h"
+#include "js/UniquePtr.h"
 
 using namespace mozilla;
 using namespace mozilla::devtools;
@@ -173,8 +173,6 @@ public:
 namespace JS {
 namespace ubi {
 
-using mozilla::UniquePtr;
-
 template<>
 class Concrete<FakeNode> : public Base
 {
@@ -182,8 +180,8 @@ class Concrete<FakeNode> : public Base
     return concreteTypeName;
   }
 
-  UniquePtr<EdgeRange> edges(JSRuntime*, bool) const override {
-    return UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
+  js::UniquePtr<EdgeRange> edges(JSRuntime*, bool) const override {
+    return js::UniquePtr<EdgeRange>(js_new<PreComputedEdgeRange>(get().edges));
   }
 
   Size size(mozilla::MallocSizeOf) const override {

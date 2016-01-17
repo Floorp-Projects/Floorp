@@ -10,7 +10,6 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/SizePrintfMacros.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jsprf.h"
 

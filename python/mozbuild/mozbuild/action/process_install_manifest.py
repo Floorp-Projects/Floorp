@@ -39,11 +39,9 @@ def process_manifest(destdir, paths, track=None,
             finder = FileFinder(destdir, find_executables=False,
                                 find_dotfiles=True)
             for dest in manifest._dests:
-                if '*' in dest:
-                    for p, f in finder.find(dest):
-                        remove_unaccounted.add(p, dummy_file)
-                else:
-                    remove_unaccounted.add(dest, dummy_file)
+                for p, f in finder.find(dest):
+                    remove_unaccounted.add(p, dummy_file)
+
         else:
             # If tracking is enabled and there is no file, we don't want to
             # be removing anything.

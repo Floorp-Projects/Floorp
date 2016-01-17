@@ -1241,6 +1241,21 @@ exports["test ready event after window.open"] = function (assert, done) {
   });
 }
 
+// related to bug #939496
+exports["test tab open event for new window"] = function(assert, done) {
+  // ensure popups open in a new window and disable popup blocker
+  setPref(OPEN_IN_NEW_WINDOW_PREF, 2);
+  setPref(DISABLE_POPUP_PREF, false);
+
+  tabs.once('open', function onOpen(window) {
+    assert.pass("tab open has occured");
+    window.close(done);
+  });
+
+  // open window to trigger observers
+  browserWindows.open("about:logo");
+};
+
 after(exports, function*(name, assert) {
   resetPopupPrefs();
   yield cleanUI();
