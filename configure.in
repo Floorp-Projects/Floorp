@@ -75,7 +75,7 @@ GNOMEUI_VERSION=2.2.0
 GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
-SQLITE_VERSION=3.9.1
+SQLITE_VERSION=3.10.1
 
 MSMANIFEST_TOOL=
 
@@ -1457,6 +1457,7 @@ if test "$GNU_CC"; then
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wpointer-arith"
     _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -Wtype-limits"
 
+    # -Wclass-varargs - catches objects passed by value to variadic functions.
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wsometimes-initialized - catches some uninitialized values
     # -Wunreachable-code-aggressive - catches lots of dead code
@@ -1468,6 +1469,8 @@ if test "$GNU_CC"; then
     # -Werror=non-literal-null-conversion, but we only do that when
     # --enable-warnings-as-errors is specified so that no unexpected fatal
     # warnings are produced.
+    MOZ_C_SUPPORTS_WARNING(-W, class-varargs, ac_c_has_wclass_varargs)
+
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_C_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_c_has_non_literal_null_conversion)
     fi
@@ -1541,6 +1544,7 @@ if test "$GNU_CXX"; then
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wpointer-arith"
     _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -Wtype-limits"
 
+    # -Wclass-varargs - catches objects passed by value to variadic functions.
     # -Wnon-literal-null-conversion - catches expressions used as a null pointer constant
     # -Wrange-loop-analysis - catches copies during range-based for loops.
     # -Wsometimes-initialized - catches some uninitialized values
@@ -1554,6 +1558,8 @@ if test "$GNU_CXX"; then
     # -Werror=non-literal-null-conversion, but we only do that when
     # --enable-warnings-as-errors is specified so that no unexpected fatal
     # warnings are produced.
+    MOZ_CXX_SUPPORTS_WARNING(-W, class-varargs, ac_cxx_has_wclass_varargs)
+
     if test "$MOZ_ENABLE_WARNINGS_AS_ERRORS"; then
         MOZ_CXX_SUPPORTS_WARNING(-Werror=, non-literal-null-conversion, ac_cxx_has_non_literal_null_conversion)
     fi

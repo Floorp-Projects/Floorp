@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {utils: Cu} = Components;
+let {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -13,15 +13,25 @@ XPCOMUtils.defineLazyModuleGetter(this, 'clearInterval',
   'resource://gre/modules/Timer.jsm');
 
 /**
- * The ElementManager manages DOM references and interactions with elements.
- * According to the WebDriver spec (http://code.google.com/p/selenium/wiki/JsonWireProtocol), the
- * server sends the client an element reference, and maintains the map of reference to element.
- * The client uses this reference when querying/interacting with the element, and the
- * server uses maps this reference to the actual element when it executes the command.
+ * The ElementManager manages DOM element references and
+ * interactions with elements.
+ *
+ * A web element is an abstraction used to identify an element when it
+ * is transported across the protocol, between remote- and local ends.
+ *
+ * Each element has an associated web element reference (a UUID) that
+ * uniquely identifies the the element across all browsing contexts. The
+ * web element reference for every element representing the same element
+ * is the same.
+ *
+ * The element manager provides a mapping between web element references
+ * and DOM elements for each browsing context.  It also provides
+ * functionality for looking up and retrieving elements.
  */
 
 this.EXPORTED_SYMBOLS = [
   "Accessibility",
+  "elements",
   "ElementManager",
   "CLASS_NAME",
   "SELECTOR",
@@ -239,7 +249,7 @@ Accessibility.prototype = {
 
 this.ElementManager = function ElementManager(notSupported) {
   this.seenItems = {};
-  this.timer = Components.classes["@mozilla.org/timer;1"].createInstance(Components.interfaces.nsITimer);
+  this.timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   this.elementKey = 'ELEMENT';
   this.w3cElementKey = 'element-6066-11e4-a52e-4f735466cecf';
   this.elementStrategies = [CLASS_NAME, SELECTOR, ID, NAME, LINK_TEXT, PARTIAL_LINK_TEXT, TAG, XPATH, ANON, ANON_ATTRIBUTE];
@@ -280,8 +290,7 @@ ElementManager.prototype = {
         delete this.seenItems[i];
       }
     }
-    let uuid = uuidGen.generateUUID().toString();
-    let id = uuid.substring(1, uuid.length - 1);
+    let id = elements.generateUUID();
     this.seenItems[id] = Components.utils.getWeakReference(element);
     return id;
   },
@@ -618,42 +627,51 @@ ElementManager.prototype = {
   },
 
   /**
-   * Helper method to find. Finds one element using find's criteria
+   * Finds a single element.
    *
-   * @param string using
-   *        String identifying which search method to use
-   * @param string value
-   *        Value to look for
-   * @param nsIDOMElement rootNode
-   *        Document root
-   * @param nsIDOMElement startNode
-   *        Node from which we start searching
+   * @param {String} using
+   *     Which selector search method to use.
+   * @param {String} value
+   *     Selector query.
+   * @param {nsIDOMElement} rootNode
+   *     Document root.
+   * @param {nsIDOMElement=} startNode
+   *     Optional node from which we start searching.
    *
-   * @return nsIDOMElement
-   *        Returns found element or throws Exception if not found
+   * @return {nsIDOMElement}
+   *     Returns found element.
+   * @throws {InvalidSelectorError}
+   *     If the selector query string (value) is invalid, or the selector
+   *     search method (using) is unknown.
    */
   findElement: function EM_findElement(using, value, rootNode, startNode) {
     let element;
+
     switch (using) {
       case ID:
         element = startNode.getElementById ?
                   startNode.getElementById(value) :
                   this.findByXPath(rootNode, './/*[@id="' + value + '"]', startNode);
         break;
+
       case NAME:
         element = startNode.getElementsByName ?
                   startNode.getElementsByName(value)[0] :
                   this.findByXPath(rootNode, './/*[@name="' + value + '"]', startNode);
         break;
+
       case CLASS_NAME:
         element = startNode.getElementsByClassName(value)[0]; //works for >=FF3
         break;
+
       case TAG:
         element = startNode.getElementsByTagName(value)[0]; //works for all elements
         break;
+
       case XPATH:
         element = this.findByXPath(rootNode, value, startNode);
         break;
+
       case LINK_TEXT:
       case PARTIAL_LINK_TEXT:
         let allLinks = startNode.getElementsByTagName('A');
@@ -669,21 +687,29 @@ ElementManager.prototype = {
         }
         break;
       case SELECTOR:
-        element = startNode.querySelector(value);
+        try {
+          element = startNode.querySelector(value);
+        } catch (e) {
+          throw new InvalidSelectorError(`${e.message}: "${value}"`);
+        }
         break;
+
       case ANON:
         element = rootNode.getAnonymousNodes(startNode);
         if (element != null) {
           element = element[0];
         }
         break;
+
       case ANON_ATTRIBUTE:
         let attr = Object.keys(value)[0];
         element = rootNode.getAnonymousElementByAttribute(startNode, attr, value[attr]);
         break;
+
       default:
         throw new InvalidSelectorError("No such strategy: " + using);
     }
+
     return element;
   },
 
@@ -754,3 +780,9 @@ ElementManager.prototype = {
     return elements;
   },
 }
+
+this.elements = {};
+elements.generateUUID = function() {
+  let uuid = uuidGen.generateUUID().toString();
+  return uuid.substring(1, uuid.length - 1);
+};

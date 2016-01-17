@@ -77,7 +77,7 @@ PermissionSettings.prototype = {
   set: function set(aPermName, aPermValue, aManifestURL, aOrigin,
                     aBrowserFlag) {
     debug("Set called with: " + aPermName + ", " + aManifestURL + ", " +
-          aOrigin + ",  " + aPermValue + ", " + aBrowserFlag);
+          aOrigin + ", " + aPermValue + ", " + aBrowserFlag);
     let currentPermValue = this.get(aPermName, aManifestURL, aOrigin,
                                     aBrowserFlag);
     let action;

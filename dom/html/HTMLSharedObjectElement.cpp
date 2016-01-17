@@ -343,7 +343,7 @@ HTMLSharedObjectElement::GetCapabilities() const
 {
   uint32_t capabilities = eSupportPlugins | eAllowPluginSkipChannel;
   if (mNodeInfo->Equals(nsGkAtoms::embed)) {
-    capabilities |= eSupportSVG | eSupportImages | eSupportDocuments;
+    capabilities |= eSupportImages | eSupportDocuments;
   }
 
   return capabilities;

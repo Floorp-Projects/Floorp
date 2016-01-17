@@ -5,12 +5,12 @@ $inherits:
     build_type: 'opt'
 task:
   scopes:
-    - 'docker-worker:cache:build-hamachi-user'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-hamachi-user'
   metadata:
     name: B2G Hamachi User
   payload:
     cache:
-      build-hamachi-user: /home/worker/object-folder
+      level-{{level}}-{{project}}-build-hamachi-user: /home/worker/object-folder
     env:
       TARGET: 'hamachi'
       DEBUG: 0

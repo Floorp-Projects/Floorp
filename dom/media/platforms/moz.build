@@ -39,6 +39,7 @@ if CONFIG['MOZ_EME']:
     DIRS += ['agnostic/eme']
 
 if CONFIG['MOZ_FFMPEG']:
+    LOCAL_INCLUDES += ['/xpcom/build']
     EXPORTS += [
         'ffmpeg/FFmpegRuntimeLinker.h',
     ]

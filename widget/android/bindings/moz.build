@@ -11,6 +11,7 @@ generated = [
     'Bundle',
     'KeyEvent',
     'MediaCodec',
+    'MotionEvent',
     'SurfaceTexture'
 ]
 

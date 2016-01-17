@@ -1149,8 +1149,10 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 filename = "<unknown>";
             unsigned len = strlen(filename) + 200;
             char* buf = js_pod_malloc<char>(len);
-            if (buf == nullptr)
+            if (buf == nullptr) {
+                ReportOutOfMemory(cx);
                 return false;
+            }
             JS_snprintf(buf, len, "%s %s %s on line %u of %s:%" PRIuSIZE,
                                   BailoutKindString(bailoutKind),
                                   resumeAfter ? "after" : "at",

@@ -69,9 +69,10 @@ public class GLController extends JNIObject {
     @WrapForJNI @Override // JNIObject
     protected native void disposeNative();
 
-    // Gecko thread sets its layer client instance; does not block UI thread.
+    // Gecko thread sets its Java instances; does not block UI thread.
     @WrapForJNI
-    /* package */ native void setLayerClient(GeckoLayerClient layerClient);
+    /* package */ native void attachToJava(GeckoLayerClient layerClient,
+                                           NativePanZoomController npzc);
 
     // Gecko thread creates compositor; blocks UI thread.
     @WrapForJNI

@@ -13,14 +13,14 @@ task:
   scopes:
     - 'docker-worker:image:{{#docker_image}}tester-device{{/docker_image}}'
     - 'queue:create-task:aws-provisioner-v1/testdroid-device'
-    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
     - 'docker-worker:capability:device:phone'
 
   payload:
     image: '{{#docker_image}}tester-device{{/docker_image}}'
     maxRunTime: 7200
     cache:
-      tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
     env:
       MOZ_BUILD_DATE: '{{pushdate}}'
       GAIA_HEAD_REPOSITORY: '{{{gaia_head_repository}}}'

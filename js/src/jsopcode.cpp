@@ -1403,9 +1403,7 @@ DecompileExpressionFromStack(JSContext* cx, int spindex, int skipStackHits, Hand
     return ed.getOutput(res);
 }
 
-typedef mozilla::UniquePtr<char[], JS::FreePolicy> UniquePtrChars;
-
-UniquePtrChars
+UniqueChars
 js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
                             HandleString fallbackArg, int skipStackHits)
 {
@@ -1416,19 +1414,19 @@ js::DecompileValueGenerator(JSContext* cx, int spindex, HandleValue v,
             return nullptr;
         if (result) {
             if (strcmp(result, "(intermediate value)"))
-                return UniquePtrChars(result);
+                return UniqueChars(result);
             js_free(result);
         }
     }
     if (!fallback) {
         if (v.isUndefined())
-            return UniquePtrChars(JS_strdup(cx, js_undefined_str)); // Prevent users from seeing "(void 0)"
+            return UniqueChars(JS_strdup(cx, js_undefined_str)); // Prevent users from seeing "(void 0)"
         fallback = ValueToSource(cx, v);
         if (!fallback)
-            return UniquePtrChars(nullptr);
+            return UniqueChars(nullptr);
     }
 
-    return UniquePtrChars(JS_EncodeString(cx, fallback));
+    return UniqueChars(JS_EncodeString(cx, fallback));
 }
 
 static bool

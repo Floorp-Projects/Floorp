@@ -10,7 +10,7 @@ task:
       description: 'Linux64 Static Analysis Opt'
 
   scopes:
-    - 'docker-worker:cache:build-{{project}}-linux64-st-an-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-linux64-st-an-workspace'
 
   routes:
     - 'index.buildbot.branches.{{project}}.linux64-st-an'
@@ -20,7 +20,7 @@ task:
 
   payload:
     cache:
-      build-{{project}}-linux64-st-an-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-linux64-st-an-workspace: '/home/worker/workspace'
     env:
       MOZHARNESS_SCRIPT: 'mozharness/scripts/fx_desktop_build.py'
       MOZHARNESS_CONFIG: 'builds/releng_sub_linux_configs/64_stat_and_opt.py balrog/production.py'
