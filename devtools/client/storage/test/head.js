@@ -159,6 +159,10 @@ var openStoragePanel = Task.async(function*(cb) {
   gUI = storage.UI;
   gToolbox = toolbox;
 
+  // The table animation flash causes some timeouts on Linux debug tests,
+  // so we disable it
+  gUI.animationsEnabled = false;
+
   info("Waiting for the stores to update");
   yield gUI.once("store-objects-updated");
 

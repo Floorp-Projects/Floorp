@@ -104,6 +104,10 @@ StorageUI.prototype = {
   shouldResetColumns: true,
   shouldLoadMoreItems: true,
 
+  set animationsEnabled(value) {
+    this._panelDoc.documentElement.classList.toggle("no-animate", !value);
+  },
+
   destroy: function() {
     this.front.off("stores-update", this.onUpdate);
     this.front.off("stores-cleared", this.onCleared);
