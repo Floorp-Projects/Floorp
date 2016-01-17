@@ -4789,7 +4789,10 @@ TSFTextStore::OnLayoutChangeInternal()
 bool
 TSFTextStore::NotifyTSFOfLayoutChange()
 {
-  bool returnedNoLayoutError = mHasReturnedNoLayoutError;
+  // If we're waiting a query of layout information from TIP, it means that
+  // we've returned TS_E_NOLAYOUT error.
+  bool returnedNoLayoutError =
+    mHasReturnedNoLayoutError || mWaitingQueryLayout;
 
   // If we returned TS_E_NOLAYOUT, TIP should query the computed layout again.
   mWaitingQueryLayout = returnedNoLayoutError;
@@ -4861,6 +4864,12 @@ TSFTextStore::NotifyTSFOfLayoutChange()
     return ret;
   }
 
+  // If we returned TS_E_NOLAYOUT again, we need another call of
+  // OnLayoutChange() later.  So, let's wait a query from TIP.
+  if (mHasReturnedNoLayoutError) {
+    mWaitingQueryLayout = true;
+  }
+
   if (!mWaitingQueryLayout) {
     MOZ_LOG(sTextStoreLog, LogLevel::Info,
            ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChange(), "
@@ -4869,10 +4878,12 @@ TSFTextStore::NotifyTSFOfLayoutChange()
     return ret;
   }
 
-  // If TIP hasn't accessed our new layout information yet, TSF and/or TIP may
-  // have met some trouble during calls of OnLayoutChange().  It should be
-  // tried again later.
-  mHasReturnedNoLayoutError = returnedNoLayoutError;
+  // If we believe that TIP needs to retry to retrieve our layout information
+  // later, we should call it with ::PostMessage() hack.
+  MOZ_LOG(sTextStoreLog, LogLevel::Debug,
+          ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChange(), "
+           "posing  MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE for calling "
+           "OnLayoutChange() again...", this));
   ::PostMessage(mWidget->GetWindowHandle(),
                 MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE,
                 reinterpret_cast<WPARAM>(this), 0);
@@ -4883,8 +4894,8 @@ TSFTextStore::NotifyTSFOfLayoutChange()
 void
 TSFTextStore::NotifyTSFOfLayoutChangeAgain()
 {
-  // Before preforming this method, TIP has accessed our layout information,
-  // we don't need to notify TIP of layout change anymore.
+  // Before preforming this method, TIP has accessed our layout information by
+  // itself.  In such case, we don't need to call OnLayoutChange() anymore.
   if (!mWaitingQueryLayout) {
     return;
   }
@@ -4893,9 +4904,23 @@ TSFTextStore::NotifyTSFOfLayoutChangeAgain()
          ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChangeAgain(), "
           "calling NotifyTSFOfLayoutChange()...", this));
   NotifyTSFOfLayoutChange();
-  MOZ_LOG(sTextStoreLog, LogLevel::Info,
-         ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChangeAgain(), "
-          "called NotifyTSFOfLayoutChange()", this));
+
+  // If TIP didn't retrieved our layout information during a call of
+  // NotifyTSFOfLayoutChange(), it means that the TIP already gave up to
+  // retry to retrieve layout information or doesn't necessary it anymore.
+  // But don't forget that the call may have caused returning TS_E_NOLAYOUT
+  // error again.  In such case we still need to call OnLayoutChange() later.
+  if (!mHasReturnedNoLayoutError && mWaitingQueryLayout) {
+    mWaitingQueryLayout = false;
+    MOZ_LOG(sTextStoreLog, LogLevel::Warning,
+            ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChangeAgain(), "
+             "called NotifyTSFOfLayoutChange() but TIP didn't retry to "
+             "retrieve the layout information", this));
+  } else {
+    MOZ_LOG(sTextStoreLog, LogLevel::Info,
+            ("TSF: 0x%p   TSFTextStore::NotifyTSFOfLayoutChangeAgain(), "
+             "called NotifyTSFOfLayoutChange()", this));
+  }
 }
 
 nsresult
