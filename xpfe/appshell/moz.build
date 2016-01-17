@@ -9,6 +9,7 @@ MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 XPIDL_SOURCES += [
     'nsIAppShellService.idl',
     'nsIPopupWindowManager.idl',
+    'nsIWindowlessBrowser.idl',
     'nsIWindowMediator.idl',
     'nsIWindowMediatorListener.idl',
     'nsIXULBrowserWindow.idl',

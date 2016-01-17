@@ -1,0 +1,27 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIWebNavigation.idl"
+
+/**
+ * This interface represents a nsIWebBrowser instance with no associated OS
+ * window. Its main function is to manage the lifetimes of those windows.
+ * A strong reference to this object must be held until the window is
+ * ready to be destroyed.
+ */
+[scriptable, uuid(abb46f48-abfc-41bf-aa9a-7feccefcf977)]
+interface nsIWindowlessBrowser : nsIWebNavigation
+{
+  /**
+   * "Closes" the windowless browser and destroys its associated nsIWebBrowser
+   * and docshell.
+   *
+   * This method *must* be called for every windowless browser before its last
+   * reference is released.
+   */
+  void close();
+};
+

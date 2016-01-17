@@ -110,3 +110,5 @@ add_task(function* testBadPermissions() {
 // new page, and no longer matches our expected state. This involves
 // intentionally trying to trigger a race condition, and is probably not
 // even worth attempting until we have proper |executeScript| callbacks.
+
+add_task(forceGC);

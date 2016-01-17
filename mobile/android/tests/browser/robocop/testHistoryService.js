@@ -49,7 +49,7 @@ function promiseLoadEvent(browser, url, eventType="load") {
 }
 
 // Wait 4 seconds for the pending visits to flush (which should happen in 3 seconds)
-const PENDING_VISIT_WAIT = 4000;
+const PENDING_VISIT_WAIT = 6000;
 
 // Manage the saved history visits so we can compare in the tests
 var gVisitURLs = [];
