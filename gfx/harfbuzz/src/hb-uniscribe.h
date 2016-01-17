@@ -34,10 +34,10 @@
 HB_BEGIN_DECLS
 
 
-LOGFONTW *
+HB_EXTERN LOGFONTW *
 hb_uniscribe_font_get_logfontw (hb_font_t *font);
 
-HFONT
+HB_EXTERN HFONT
 hb_uniscribe_font_get_hfont (hb_font_t *font);
 
 

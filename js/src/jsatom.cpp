@@ -35,7 +35,6 @@ using namespace js::gc;
 using mozilla::ArrayEnd;
 using mozilla::ArrayLength;
 using mozilla::RangedPtr;
-using mozilla::UniquePtr;
 
 const char*
 js::AtomToPrintableString(ExclusiveContext* cx, JSAtom* atom, JSAutoByteString* bytes)

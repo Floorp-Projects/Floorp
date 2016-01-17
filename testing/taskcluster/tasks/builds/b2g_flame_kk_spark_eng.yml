@@ -5,15 +5,15 @@ $inherits:
     build_type: 'opt'
 task:
   scopes:
-    - 'docker-worker:cache:build-flame-kk-spark-eng'
-    - 'docker-worker:cache:build-flame-kk-spark-eng-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-spark-eng'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-flame-kk-spark-eng-objdir-gecko'
   metadata:
     name: '[TC] B2G Flame KK Eng (spark)'
 
   payload:
     cache:
-      build-flame-kk-spark-eng: /home/worker/workspace
-      build-flame-kk-spark-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-flame-kk-spark-eng: /home/worker/workspace
+      level-{{level}}-{{project}}-build-flame-kk-spark-eng-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
       MOZHARNESS_CONFIG: b2g/taskcluster-spark.py

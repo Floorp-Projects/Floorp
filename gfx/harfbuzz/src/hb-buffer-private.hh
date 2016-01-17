@@ -124,6 +124,11 @@ struct hb_buffer_t {
   hb_codepoint_t context[2][CONTEXT_LENGTH];
   unsigned int context_len[2];
 
+  /* Debugging */
+  hb_buffer_message_func_t message_func;
+  void *message_data;
+  hb_destroy_func_t message_destroy;
+
 
   /* Methods */
 
@@ -174,13 +179,12 @@ struct hb_buffer_t {
     if (have_output)
     {
       if (unlikely (out_info != info || out_len != idx)) {
-	if (unlikely (!make_room_for (1, 1)))
-	  goto done;
+	if (unlikely (!make_room_for (1, 1))) return;
 	out_info[out_len] = info[idx];
       }
       out_len++;
     }
-  done:
+
     idx++;
   }
 
@@ -234,6 +238,19 @@ struct hb_buffer_t {
   inline void clear_context (unsigned int side) { context_len[side] = 0; }
 
   HB_INTERNAL void sort (unsigned int start, unsigned int end, int(*compar)(const hb_glyph_info_t *, const hb_glyph_info_t *));
+
+  inline bool messaging (void) { return unlikely (message_func); }
+  inline bool message (hb_font_t *font, const char *fmt, ...) HB_PRINTF_FUNC(3, 4)
+  {
+    if (!messaging ())
+      return true;
+    va_list ap;
+    va_start (ap, fmt);
+    bool ret = message_impl (font, fmt, ap);
+    va_end (ap);
+    return ret;
+  }
+  HB_INTERNAL bool message_impl (hb_font_t *font, const char *fmt, va_list ap) HB_PRINTF_FUNC(3, 0);
 };
 
 

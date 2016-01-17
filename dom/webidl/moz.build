@@ -837,6 +837,7 @@ if CONFIG['MOZ_WEBRTC']:
         'MediaStreamTrackEvent.webidl',
         'RTCDataChannelEvent.webidl',
         'RTCPeerConnectionIceEvent.webidl',
+        'RTCTrackEvent.webidl',
     ]
 
 if CONFIG['MOZ_WEBSPEECH']:

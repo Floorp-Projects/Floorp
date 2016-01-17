@@ -56,6 +56,16 @@ static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD0 = { Registers::invalid_reg }
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD1 = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register AsmJSIonExitRegD2 = { Registers::invalid_reg };
 
+static MOZ_CONSTEXPR_VAR Register RegExpTesterRegExpReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStringReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpTesterLastIndexReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpTesterStickyReg = { Registers::invalid_reg };
+
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherRegExpReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStringReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherLastIndexReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register RegExpMatcherStickyReg = { Registers::invalid_reg };
+
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Type = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register JSReturnReg_Data = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register JSReturnReg = { Registers::invalid_reg };

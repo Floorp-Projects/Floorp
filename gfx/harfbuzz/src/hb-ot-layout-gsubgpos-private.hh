@@ -845,9 +845,12 @@ static inline bool ligate_input (hb_apply_context_t *c,
     while (buffer->idx < match_positions[i] && !buffer->in_error)
     {
       if (!is_mark_ligature) {
+        unsigned int this_comp = _hb_glyph_info_get_lig_comp (&buffer->cur());
+	if (this_comp == 0)
+	  this_comp = last_num_components;
 	unsigned int new_lig_comp = components_so_far - last_num_components +
-				    MIN (MAX (_hb_glyph_info_get_lig_comp (&buffer->cur()), 1u), last_num_components);
-	_hb_glyph_info_set_lig_props_for_mark (&buffer->cur(), lig_id, new_lig_comp);
+				    MIN (this_comp, last_num_components);
+	  _hb_glyph_info_set_lig_props_for_mark (&buffer->cur(), lig_id, new_lig_comp);
       }
       buffer->next_glyph ();
     }
@@ -864,8 +867,11 @@ static inline bool ligate_input (hb_apply_context_t *c,
     /* Re-adjust components for any marks following. */
     for (unsigned int i = buffer->idx; i < buffer->len; i++) {
       if (last_lig_id == _hb_glyph_info_get_lig_id (&buffer->info[i])) {
+        unsigned int this_comp = _hb_glyph_info_get_lig_comp (&buffer->info[i]);
+	if (!this_comp)
+	  break;
 	unsigned int new_lig_comp = components_so_far - last_num_components +
-				    MIN (MAX (_hb_glyph_info_get_lig_comp (&buffer->info[i]), 1u), last_num_components);
+				    MIN (this_comp, last_num_components);
 	_hb_glyph_info_set_lig_props_for_mark (&buffer->info[i], lig_id, new_lig_comp);
       } else
 	break;
@@ -969,6 +975,11 @@ static inline bool apply_lookup (hb_apply_context_t *c,
   {
     unsigned int idx = lookupRecord[i].sequenceIndex;
     if (idx >= count)
+      continue;
+
+    /* Don't recurse to ourself at same position.
+     * Note that this test is too naive, it doesn't catch longer loops. */
+    if (idx == 0 && lookupRecord[i].lookupListIndex == c->lookup_index)
       continue;
 
     buffer->move_to (match_positions[idx]);

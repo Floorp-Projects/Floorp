@@ -203,7 +203,8 @@ struct hb_ot_map_builder_t
     unsigned int stage[2]; /* GSUB/GPOS */
 
     static int cmp (const feature_info_t *a, const feature_info_t *b)
-    { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) : (a->seq < b->seq ? -1 : 1); }
+    { return (a->tag != b->tag) ?  (a->tag < b->tag ? -1 : 1) :
+	     (a->seq < b->seq ? -1 : a->seq > b->seq ? 1 : 0); }
   };
 
   struct stage_info_t {

@@ -366,6 +366,25 @@ hb_ft_get_glyph_from_name (hb_font_t *font HB_UNUSED,
   return *glyph != 0;
 }
 
+static hb_bool_t
+hb_ft_get_font_h_extents (hb_font_t *font HB_UNUSED,
+			  void *font_data,
+			  hb_font_extents_t *metrics,
+			  void *user_data HB_UNUSED)
+{
+  const hb_ft_font_t *ft_font = (const hb_ft_font_t *) font_data;
+  FT_Face ft_face = ft_font->ft_face;
+  metrics->ascender = ft_face->size->metrics.ascender;
+  metrics->descender = ft_face->size->metrics.descender;
+  metrics->line_gap = ft_face->size->metrics.height - (ft_face->size->metrics.ascender - ft_face->size->metrics.descender);
+  if (font->y_scale < 0)
+  {
+    metrics->ascender = -metrics->ascender;
+    metrics->descender = -metrics->descender;
+    metrics->line_gap = -metrics->line_gap;
+  }
+  return true;
+}
 
 static hb_font_funcs_t *static_ft_funcs = NULL;
 
@@ -387,6 +406,8 @@ retry:
   {
     funcs = hb_font_funcs_create ();
 
+    hb_font_funcs_set_font_h_extents_func (funcs, hb_ft_get_font_h_extents, NULL, NULL);
+    //hb_font_funcs_set_font_v_extents_func (funcs, hb_ft_get_font_v_extents, NULL, NULL);
     hb_font_funcs_set_glyph_func (funcs, hb_ft_get_glyph, NULL, NULL);
     hb_font_funcs_set_glyph_h_advance_func (funcs, hb_ft_get_glyph_h_advance, NULL, NULL);
     hb_font_funcs_set_glyph_v_advance_func (funcs, hb_ft_get_glyph_v_advance, NULL, NULL);

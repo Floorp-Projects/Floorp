@@ -106,6 +106,7 @@ template<class Cls> struct TypeAdapter<const Cls&>
         static constexpr auto StaticGet = &JNIEnv::GetStatic ## JNIName ## Field; \
         static constexpr auto Set = &JNIEnv::Set ## JNIName ## Field; \
         static constexpr auto StaticSet = &JNIEnv::SetStatic ## JNIName ## Field; \
+        static constexpr auto GetArray = &JNIEnv::Get ## JNIName ## ArrayRegion; \
     \
         static JNIType FromNative(JNIEnv*, NativeType val) { \
             return static_cast<JNIType>(val); \

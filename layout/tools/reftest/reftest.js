@@ -46,6 +46,8 @@ var gTimeoutHook = null;
 var gRemote = false;
 var gIgnoreWindowSize = false;
 var gShuffle = false;
+var gRepeat = null;
+var gRunUntilFailure = false;
 var gTotalChunks = 0;
 var gThisChunk = 0;
 var gContainingWindow = null;
@@ -168,6 +170,16 @@ var gVerbose = false;
 // Only dump the sandbox once, because it doesn't depend on the
 // manifest URL (yet!).
 var gDumpedConditionSandbox = false;
+
+function HasUnexpectedResult()
+{
+    return gTestResults.Exception > 0 ||
+           gTestResults.FailedLoad > 0 ||
+           gTestResults.UnexpectedFail > 0 ||
+           gTestResults.UnexpectedPass > 0 ||
+           gTestResults.AssertionUnexpected > 0 ||
+           gTestResults.AssertionUnexpectedFixed > 0;
+}
 
 function LogWarning(str)
 {
@@ -469,6 +481,22 @@ function StartTests()
     }
 
     try {
+      gRunUntilFailure = prefs.getBoolPref("reftest.runUntilFailure");
+    } catch (e) {
+      gRunUntilFailure = false;
+    }
+
+    // When we repeat this function is called again, so really only want to set
+    // gRepeat once.
+    if (gRepeat == null) {
+      try {
+        gRepeat = prefs.getIntPref("reftest.repeat");
+      } catch (e) {
+        gRepeat = 0;
+      }
+    }
+
+    try {
         gRunSlowTests = prefs.getIntPref("reftest.skipslowtests");
     } catch(e) {
         gRunSlowTests = false;
@@ -479,6 +507,7 @@ function StartTests()
     }
 
     gURLs = [];
+    gManifestsLoaded = {};
 
     try {
         var manifests = JSON.parse(prefs.getCharPref("reftest.manifests"));
@@ -1226,11 +1255,15 @@ function StartCurrentTest()
         }
     }
 
-    if (gURLs.length == 0) {
+    if ((gURLs.length == 0 && gRepeat == 0) ||
+        (gRunUntilFailure && HasUnexpectedResult())) {
         RestoreChangedPreferences();
         DoneTests();
-    }
-    else {
+    } else if (gURLs.length == 0 && gRepeat > 0) {
+        // Repeat
+        gRepeat--;
+        StartTests();
+    } else {
         gDumpLog("REFTEST TEST-START | " + gURLs[0].prettyPath + "\n");
         if (gURLs[0].chaosMode) {
             gWindowUtils.enterChaosMode();

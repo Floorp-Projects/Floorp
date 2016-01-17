@@ -8,7 +8,6 @@
 
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 #include <stdlib.h>
@@ -41,7 +40,6 @@ using mozilla::Forward;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::Nothing;
-using mozilla::UniquePtr;
 
 /* static */ DebuggerMemory*
 DebuggerMemory::create(JSContext* cx, Debugger* dbg)

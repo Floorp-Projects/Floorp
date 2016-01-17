@@ -61,7 +61,7 @@ public:
 
 #ifdef MOZ_WIDGET_GTK
     void Put(Display* aDisplay, Drawable aWindow,
-             const LayoutDeviceIntRegion& aRegion);
+             const mozilla::LayoutDeviceIntRegion& aRegion);
 #elif defined(MOZ_WIDGET_QT)
     void Put(QWindow* aWindow, QRect& aRect);
 #endif
