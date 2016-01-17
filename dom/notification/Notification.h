@@ -17,6 +17,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
+#include "nsWeakReference.h"
 
 #define NOTIFICATIONTELEMETRYSERVICE_CONTRACTID \
   "@mozilla.org/notificationTelemetryService;1"
@@ -132,6 +133,8 @@ private:
  *
  */
 class Notification : public DOMEventTargetHelper
+                   , public nsIObserver
+                   , public nsSupportsWeakReference
 {
   friend class CloseNotificationRunnable;
   friend class NotificationTask;
@@ -151,6 +154,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(Notification, DOMEventTargetHelper)
+  NS_DECL_NSIOBSERVER
 
   static bool PrefEnabled(JSContext* aCx, JSObject* aObj);
   // Returns if Notification.get() is allowed for the current global.
@@ -325,6 +329,7 @@ protected:
                                                        const nsAString& aTitle,
                                                        const NotificationOptions& aOptions);
 
+  nsresult Init();
   bool IsInPrivateBrowsing();
   void ShowInternal();
   void CloseInternal();

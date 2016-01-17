@@ -193,7 +193,7 @@ class LinuxArtifactJob(ArtifactJob):
         'firefox/plugin-container',
         'firefox/updater',
         'firefox/webapprt-stub',
-        'firefox/*.so',
+        'firefox/**/*.so',
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -208,11 +208,13 @@ class LinuxArtifactJob(ArtifactJob):
                     if not any(mozpath.match(f.name, p) for p in self.package_artifact_patterns):
                         continue
 
-                    basename = mozpath.basename(f.name)
+                    # We strip off the relative "firefox/" bit from the path,
+                    # but otherwise preserve it.
+                    destpath = mozpath.relpath(f.name, "firefox")
                     self.log(logging.INFO, 'artifact',
-                             {'basename': basename},
-                             'Adding {basename} to processed archive')
-                    writer.add(basename.encode('utf-8'), reader.extractfile(f), mode=f.mode)
+                             {'destpath': destpath},
+                             'Adding {destpath} to processed archive')
+                    writer.add(destpath.encode('utf-8'), reader.extractfile(f), mode=f.mode)
                     added_entry = True
 
         if not added_entry:

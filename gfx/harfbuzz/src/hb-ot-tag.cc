@@ -355,7 +355,6 @@ static const LangTag ot_languages[] = {
   {"hay",	HB_TAG('H','A','Y',' ')},	/* Haya */
   {"haz",	HB_TAG('H','A','Z',' ')},	/* Hazaragi */
   {"he",	HB_TAG('I','W','R',' ')},	/* Hebrew */
-  {"hz",	HB_TAG('H','E','R',' ')},	/* Herero */
   {"hi",	HB_TAG('H','I','N',' ')},	/* Hindi */
   {"hil",	HB_TAG('H','I','L',' ')},	/* Hiligaynon */
   {"hnd",	HB_TAG('H','N','D',' ')},	/* [Southern] Hindko */
@@ -601,8 +600,8 @@ static const LangTag ot_languages[] = {
   {"sah",	HB_TAG('Y','A','K',' ')},	/* Yakut */
   {"sas",	HB_TAG('S','A','S',' ')},	/* Sasak */
   {"sat",	HB_TAG('S','A','T',' ')},	/* Santali */
-  {"sck",	HB_TAG('S','A','D',' ')},	/* Sadri */
   {"sc",	HB_TAG('S','R','D',' ')},	/* Sardinian [macrolanguage] */
+  {"sck",	HB_TAG('S','A','D',' ')},	/* Sadri */
   {"scn",	HB_TAG('S','C','N',' ')},	/* Sicilian */
   {"sco",	HB_TAG('S','C','O',' ')},	/* Scots */
   {"scs",	HB_TAG('S','L','A',' ')},	/* [North] Slavey */
@@ -690,8 +689,8 @@ static const LangTag ot_languages[] = {
   {"uzs",	HB_TAG('U','Z','B',' ')},	/* Southern Uzbek */
   {"ve",	HB_TAG('V','E','N',' ')},	/* Venda */
   {"vec",	HB_TAG('V','E','C',' ')},	/* Venetian */
-  {"vls",	HB_TAG('F','L','E',' ')},	/* Vlaams */
   {"vi",	HB_TAG('V','I','T',' ')},	/* Vietnamese */
+  {"vls",	HB_TAG('F','L','E',' ')},	/* Vlaams */
   {"vmw",	HB_TAG('M','A','K',' ')},	/* Makhuwa */
   {"vo",	HB_TAG('V','O','L',' ')},	/* Volapük */
   {"vro",	HB_TAG('V','R','O',' ')},	/* Võro */
@@ -700,9 +699,9 @@ static const LangTag ot_languages[] = {
   {"wbm",	HB_TAG('W','A',' ',' ')},	/* Wa */
   {"wbr",	HB_TAG('W','A','G',' ')},	/* Wagdi */
   {"wle",	HB_TAG('S','I','G',' ')},	/* Wolane */
+  {"wo",	HB_TAG('W','L','F',' ')},	/* Wolof */
   {"wry",	HB_TAG('M','A','W',' ')},	/* Merwari */
   {"wtm",	HB_TAG('W','T','M',' ')},	/* Mewati */
-  {"wo",	HB_TAG('W','L','F',' ')},	/* Wolof */
   {"xal",	HB_TAG('K','L','M',' ')},	/* Kalmyk */
   {"xh",	HB_TAG('X','H','S',' ')},	/* Xhosa */
   {"xog",	HB_TAG('X','O','G',' ')},	/* Soga */
@@ -928,4 +927,27 @@ hb_ot_tag_to_language (hb_tag_t tag)
   }
 }
 
+static inline void
+test_langs_sorted (void)
+{
+  for (unsigned int i = 1; i < ARRAY_LENGTH (ot_languages); i++)
+  {
+    int c = lang_compare_first_component (ot_languages[i-1].language, ot_languages[i].language);
+    if (c >= 0)
+    {
+      fprintf (stderr, "ot_languages not sorted at index %d: %s %d %s\n",
+	       i, ot_languages[i-1].language, c, ot_languages[i].language);
+      abort();
+    }
+  }
+}
 
+#ifdef MAIN
+int
+main (void)
+{
+  test_langs_sorted ();
+  return 0;
+}
+
+#endif

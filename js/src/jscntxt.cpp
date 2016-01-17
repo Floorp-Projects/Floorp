@@ -55,7 +55,6 @@ using namespace js::gc;
 using mozilla::DebugOnly;
 using mozilla::PodArrayZero;
 using mozilla::PointerRangeSize;
-using mozilla::UniquePtr;
 
 bool
 js::AutoCycleDetector::init()
@@ -843,8 +842,7 @@ js::ReportIsNullOrUndefined(JSContext* cx, int spindex, HandleValue v,
 {
     bool ok;
 
-    UniquePtr<char[], JS::FreePolicy> bytes =
-        DecompileValueGenerator(cx, spindex, v, fallback);
+    UniqueChars bytes = DecompileValueGenerator(cx, spindex, v, fallback);
     if (!bytes)
         return false;
 
@@ -874,7 +872,7 @@ void
 js::ReportMissingArg(JSContext* cx, HandleValue v, unsigned arg)
 {
     char argbuf[11];
-    UniquePtr<char[], JS::FreePolicy> bytes;
+    UniqueChars bytes;
     RootedAtom atom(cx);
 
     JS_snprintf(argbuf, sizeof argbuf, "%u", arg);
@@ -894,7 +892,7 @@ js::ReportValueErrorFlags(JSContext* cx, unsigned flags, const unsigned errorNum
                           int spindex, HandleValue v, HandleString fallback,
                           const char* arg1, const char* arg2)
 {
-    UniquePtr<char[], JS::FreePolicy> bytes;
+    UniqueChars bytes;
     bool ok;
 
     MOZ_ASSERT(js_ErrorFormatString[errorNumber].argCount >= 1);

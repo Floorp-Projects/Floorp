@@ -7,10 +7,10 @@
 #define mozilla_devtools_DeserializedNode__
 
 #include "js/UbiNode.h"
+#include "js/UniquePtr.h"
 #include "mozilla/devtools/CoreDump.pb.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
 #include "mozilla/Vector.h"
 
 // `Deserialized{Node,Edge}` translate protobuf messages from our core dump
@@ -242,7 +242,6 @@ namespace ubi {
 
 using mozilla::devtools::DeserializedNode;
 using mozilla::devtools::DeserializedStackFrame;
-using mozilla::UniquePtr;
 
 template<>
 struct Concrete<DeserializedNode> : public Base
@@ -273,7 +272,7 @@ public:
 
   // We ignore the `bool wantNames` parameter because we can't control whether
   // the core dump was serialized with edge names or not.
-  UniquePtr<EdgeRange> edges(JSRuntime* rt, bool) const override;
+  js::UniquePtr<EdgeRange> edges(JSRuntime* rt, bool) const override;
 };
 
 template<>

@@ -307,3 +307,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'qt'):
 LOCAL_INCLUDES += CONFIG['SKIA_INCLUDES']
 
 DEFINES['GRAPHITE2_STATIC'] = True
+
+if CONFIG['CLANG_CXX']:
+    # Suppress warnings from Skia header files.
+    SOURCES['gfxPlatform.cpp'].flags += ['-Wno-implicit-fallthrough']

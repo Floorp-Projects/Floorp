@@ -120,7 +120,7 @@ main (int argc, char **argv)
 	    info->cluster,
 	    info->codepoint,
 	    pos->x_offset,
-	    pos->x_offset,
+	    pos->y_offset,
 	    pos->x_advance,
 	    pos->y_advance);
 

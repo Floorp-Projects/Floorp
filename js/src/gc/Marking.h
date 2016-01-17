@@ -413,27 +413,6 @@ IsNullTaggedPointer(void* p)
     return uintptr_t(p) <= LargestTaggedNullCellPointer;
 }
 
-// HashKeyRef represents a reference to a HashMap key. This should normally
-// be used through the HashTableWriteBarrierPost function.
-template <typename Map, typename Key>
-class HashKeyRef : public BufferableRef
-{
-    Map* map;
-    Key key;
-
-  public:
-    HashKeyRef(Map* m, const Key& k) : map(m), key(k) {}
-
-    void trace(JSTracer* trc) override {
-        Key prior = key;
-        typename Map::Ptr p = map->lookup(key);
-        if (!p)
-            return;
-        TraceManuallyBarrieredEdge(trc, &key, "HashKeyRef");
-        map->rekeyIfMoved(prior, key);
-    }
-};
-
 // Wrap a GC thing pointer into a new Value or jsid. The type system enforces
 // that the thing pointer is a wrappable type.
 template <typename S, typename T>

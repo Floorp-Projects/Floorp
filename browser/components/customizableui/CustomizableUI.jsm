@@ -1342,7 +1342,9 @@ var CustomizableUIInternal = {
       }
 
       let tooltip = this.getLocalizedProperty(aWidget, "tooltiptext", additionalTooltipArguments);
-      node.setAttribute("tooltiptext", tooltip);
+      if (tooltip) {
+        node.setAttribute("tooltiptext", tooltip);
+      }
       node.setAttribute("class", "toolbarbutton-1 chromeclass-toolbar-additional");
 
       let commandHandler = this.handleWidgetCommand.bind(this, aWidget, node);
@@ -1385,6 +1387,8 @@ var CustomizableUIInternal = {
   },
 
   getLocalizedProperty: function(aWidget, aProp, aFormatArgs, aDef) {
+    const kReqStringProps = ["label"];
+
     if (typeof aWidget == "string") {
       aWidget = gPalette.get(aWidget);
     }
@@ -1395,7 +1399,7 @@ var CustomizableUIInternal = {
     // Let widgets pass their own string identifiers or strings, so that
     // we can use strings which aren't the default (in case string ids change)
     // and so that non-builtin-widgets can also provide labels, tooltips, etc.
-    if (aWidget[aProp]) {
+    if (aWidget[aProp] != null) {
       name = aWidget[aProp];
       // By using this as the default, if a widget provides a full string rather
       // than a string ID for localization, we will fall back to that string
@@ -1412,7 +1416,9 @@ var CustomizableUIInternal = {
       }
       return gWidgetsBundle.GetStringFromName(name) || def;
     } catch(ex) {
-      if (!def) {
+      // If an empty string was explicitly passed, treat it as an actual
+      // value rather than a missing property.
+      if (!def && (name != "" || kReqStringProps.includes(aProp))) {
         ERROR("Could not localize property '" + name + "'.");
       }
     }
@@ -2336,6 +2342,7 @@ var CustomizableUIInternal = {
     this.wrapWidgetEventHandler("onBeforeCreated", widget);
     this.wrapWidgetEventHandler("onClick", widget);
     this.wrapWidgetEventHandler("onCreated", widget);
+    this.wrapWidgetEventHandler("onDestroyed", widget);
 
     if (widget.type == "button") {
       widget.onCommand = typeof aData.onCommand == "function" ?
@@ -2438,6 +2445,9 @@ var CustomizableUIInternal = {
             }
           }
         }
+      }
+      if (widgetNode && widget.onDestroyed) {
+        widget.onDestroyed(window.document);
       }
     }
 
@@ -3172,6 +3182,11 @@ this.CustomizableUI = {
    * - onCreated(aNode): Attached to all widgets; a function that will be invoked
    *                  whenever the widget has a DOM node constructed, passing the
    *                  constructed node as an argument.
+   * - onDestroyed(aDoc): Attached to all non-custom widgets; a function that
+   *                  will be invoked after the widget has a DOM node destroyed,
+   *                  passing the document from which it was removed. This is
+   *                  useful especially for 'view' type widgets that need to
+   *                  cleanup after views that were constructed on the fly.
    * - onCommand(aEvt): Only useful for button widgets; a function that will be
    *                    invoked when the user activates the button.
    * - onClick(aEvt): Attached to all widgets; a function that will be invoked

@@ -23,14 +23,14 @@ task:
   scopes:
     # Nearly all of our build tasks use tc-vcs so just include the scope across
     # the board.
-    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
 
   payload:
     # Two hours is long but covers edge cases (and matches bb based infra)
     maxRunTime: 7200
 
     cache:
-      tc-vcs: '/home/worker/.tc-vcs'
+      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
 
     # All builds share a common artifact directory for ease of uploading.
     artifacts:

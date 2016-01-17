@@ -37,7 +37,6 @@ BackgroundPage.prototype = {
     }
 
     let uri = Services.io.newURI(url, null, null);
-    let principal = this.extension.createPrincipal(uri);
 
     let system = Services.scriptSecurityManager.getSystemPrincipal();
     let interfaceRequestor = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor);
@@ -56,8 +55,6 @@ BackgroundPage.prototype = {
 
     this.context = new ExtensionPage(this.extension, {type: "background", docShell, uri});
     GlobalManager.injectInDocShell(docShell, this.extension, this.context);
-
-    docShell.createAboutBlankContentViewer(principal);
 
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     this.webNav = webNav;
@@ -107,6 +104,7 @@ BackgroundPage.prototype = {
     this.webNav = null;
 
     this.chromeWebNav.loadURI("about:blank", 0, null, null, null);
+    this.chromeWebNav.close();
     this.chromeWebNav = null;
   },
 };

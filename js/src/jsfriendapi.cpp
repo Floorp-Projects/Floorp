@@ -36,7 +36,6 @@ using namespace js;
 
 using mozilla::Move;
 using mozilla::PodArrayZero;
-using mozilla::UniquePtr;
 
 // Required by PerThreadDataFriendFields::getMainThread()
 JS_STATIC_ASSERT(offsetof(JSRuntime, mainThread) ==
@@ -52,12 +51,12 @@ PerThreadDataFriendFields::PerThreadDataFriendFields()
 }
 
 JS_FRIEND_API(void)
-js::SetSourceHook(JSRuntime* rt, UniquePtr<SourceHook> hook)
+js::SetSourceHook(JSRuntime* rt, mozilla::UniquePtr<SourceHook> hook)
 {
     rt->sourceHook = Move(hook);
 }
 
-JS_FRIEND_API(UniquePtr<SourceHook>)
+JS_FRIEND_API(mozilla::UniquePtr<SourceHook>)
 js::ForgetSourceHook(JSRuntime* rt)
 {
     return Move(rt->sourceHook);

@@ -8,7 +8,7 @@
 interface nsIDOMElement;
 interface nsIFile;
 
-[scriptable, uuid(53f4bc4a-5b86-4643-8e67-4907ecbab34c)]
+[scriptable, uuid(2d1a95e4-5bd8-4eeb-b0a8-c1455fd2a357)]
 interface nsIShellService : nsISupports
 {
   /**
@@ -37,23 +37,6 @@ interface nsIShellService : nsISupports
    *                       users on a multi-user system. 
    */
   void setDefaultBrowser(in boolean aClaimAllTypes, in boolean aForAllUsers);
-
-  /**
-   * Used to determine whether or not to show a "Set Default Browser"
-   * query dialog. This attribute is true if the application is starting
-   * up and "browser.shell.checkDefaultBrowser" is true, otherwise it
-   * is false.
-   */
-  attribute boolean shouldCheckDefaultBrowser;
-
-  /**
-   * Used to determine whether or not to offer "Set as desktop background"
-   * functionality. Even if shell service is available it is not
-   * guaranteed that it is able to set the background for every desktop
-   * which is especially true for Linux with its many different desktop
-   * environments.
-   */
-  readonly attribute boolean canSetDesktopBackground;
 
   /** 
    * Flags for positioning/sizing of the Desktop Background image.

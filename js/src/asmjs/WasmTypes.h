@@ -22,10 +22,12 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/Move.h"
-#include "mozilla/UniquePtr.h"
+
+#include "NamespaceImports.h"
 
 #include "ds/LifoAlloc.h"
 #include "jit/IonTypes.h"
+#include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
 
@@ -37,7 +39,6 @@ namespace wasm {
 
 using mozilla::Move;
 using mozilla::DebugOnly;
-using mozilla::UniquePtr;
 using mozilla::MallocSizeOf;
 
 // The ValType enum represents the WebAssembly "value type", which are used to

@@ -110,23 +110,13 @@ add_task(function* () {
   yield checkWindow("background", winId2, "win2");
 
   function* triggerPopup(win, callback) {
-    let widgetId = makeWidgetId(extension.id) + "-browser-action";
-    let node = CustomizableUI.getWidget(widgetId).forWindow(win).node;
-
-    let evt = new CustomEvent("command", {
-      bubbles: true,
-      cancelable: true,
-    });
-    node.dispatchEvent(evt);
+    yield clickBrowserAction(extension, win);
 
     yield extension.awaitMessage("popup-ready");
 
     yield callback();
 
-    let panel = node.querySelector("panel");
-    if (panel) {
-      panel.hidePopup();
-    }
+    closeBrowserAction(extension, win);
   }
 
   // Set focus to some other window.

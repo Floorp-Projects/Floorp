@@ -6,8 +6,8 @@ $inherits:
 task:
   workerType: emulator-jb
   scopes:
-    - 'docker-worker:cache:workspace-emulator-jb-opt'
-    - 'docker-worker:cache:workspace-emulator-jb-opt-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-jb-opt'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-jb-opt-objdir-gecko'
   metadata:
     name: '[TC] B2G JB Emulator: (Opt)'
 
@@ -23,8 +23,8 @@ task:
 
   payload:
     cache:
-      workspace-emulator-jb-opt: /home/worker/workspace
-      workspace-emulator-jb-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-emulator-jb-opt: /home/worker/workspace
+      level-{{level}}-{{project}}-emulator-jb-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-jb'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-jb/releng-emulator-jb.tt'

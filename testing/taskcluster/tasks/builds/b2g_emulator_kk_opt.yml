@@ -9,8 +9,8 @@ task:
     - 'index.buildbot.branches.{{project}}.emulator-kk'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.emulator-kk'
   scopes:
-    - 'docker-worker:cache:workspace-emulator-kk-opt'
-    - 'docker-worker:cache:workspace-emulator-kk-opt-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-kk-opt'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-emulator-kk-opt-objdir-gecko'
   metadata:
     name: '[TC] B2G KK Emulator (Opt)'
 
@@ -26,8 +26,8 @@ task:
 
   payload:
     cache:
-      workspace-emulator-kk-opt: /home/worker/workspace
-      workspace-emulator-kk-opt-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-emulator-kk-opt: /home/worker/workspace
+      level-{{level}}-{{project}}-emulator-kk-opt-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'emulator-kk'
       TOOLTOOL_MANIFEST: 'b2g/config/emulator-kk/releng-emulator-kk.tt'

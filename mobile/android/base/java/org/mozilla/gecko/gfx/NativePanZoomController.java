@@ -5,11 +5,10 @@
 
 package org.mozilla.gecko.gfx;
 
-import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.util.GeckoEventListener;
+import org.mozilla.gecko.annotation.WrapForJNI;
+import org.mozilla.gecko.mozglue.JNIObject;
 
 import org.json.JSONObject;
 
@@ -18,32 +17,73 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
-class NativePanZoomController implements PanZoomController, GeckoEventListener {
+class NativePanZoomController extends JNIObject implements PanZoomController {
     private final PanZoomTarget mTarget;
-    private final EventDispatcher mDispatcher;
+    private final LayerView mView;
+    private boolean mDestroyed;
 
-    NativePanZoomController(PanZoomTarget target, View view, EventDispatcher dispatcher) {
-        mTarget = target;
-        mDispatcher = dispatcher;
-        if (GeckoThread.isRunning()) {
-            init();
-        } else {
-            mDispatcher.registerGeckoThreadListener(this, "Gecko:Ready");
+    @WrapForJNI
+    private native boolean handleMotionEvent(
+            int action, int actionIndex, long time, int metaState,
+            int pointerId[], float x[], float y[], float orientation[], float pressure[],
+            float toolMajor[], float toolMinor[]);
+
+    private boolean handleMotionEvent(MotionEvent event, boolean keepInViewCoordinates) {
+        if (mDestroyed) {
+            return false;
         }
+
+        final int action = event.getActionMasked();
+        final int count = event.getPointerCount();
+
+        final int[] pointerId = new int[count];
+        final float[] x = new float[count];
+        final float[] y = new float[count];
+        final float[] orientation = new float[count];
+        final float[] pressure = new float[count];
+        final float[] toolMajor = new float[count];
+        final float[] toolMinor = new float[count];
+
+        final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+        final PointF point = !keepInViewCoordinates ? new PointF() : null;
+        final float zoom = !keepInViewCoordinates ? mView.getViewportMetrics().zoomFactor : 1.0f;
+
+        for (int i = 0; i < count; i++) {
+            pointerId[i] = event.getPointerId(i);
+            event.getPointerCoords(i, coords);
+
+            if (keepInViewCoordinates) {
+                x[i] = coords.x;
+                y[i] = coords.y;
+            } else {
+                point.x = coords.x;
+                point.y = coords.y;
+                final PointF newPoint = mView.convertViewPointToLayerPoint(point);
+                x[i] = newPoint.x;
+                y[i] = newPoint.y;
+            }
+
+            orientation[i] = coords.orientation;
+            pressure[i] = coords.pressure;
+
+            // If we are converting to CSS pixels, we should adjust the radii as well.
+            toolMajor[i] = coords.toolMajor / zoom;
+            toolMinor[i] = coords.toolMinor / zoom;
+        }
+
+        return handleMotionEvent(action, event.getActionIndex(), event.getEventTime(),
+                event.getMetaState(), pointerId, x, y, orientation, pressure,
+                toolMajor, toolMinor);
     }
 
-    @Override
-    public void handleMessage(String event, JSONObject message) {
-        if ("Gecko:Ready".equals(event)) {
-            mDispatcher.unregisterGeckoThreadListener(this, "Gecko:Ready");
-            init();
-        }
+    NativePanZoomController(PanZoomTarget target, View view) {
+        mTarget = target;
+        mView = (LayerView) view;
     }
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        GeckoEvent wrapped = GeckoEvent.createMotionEvent(event, true);
-        return handleTouchEvent(wrapped);
+        return handleMotionEvent(event, /* keepInViewCoordinates */ true);
     }
 
     @Override
@@ -81,17 +121,35 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
         // we just want to ignore this callback.
     }
 
-    @Override
-    public native void abortAnimation();
+    @WrapForJNI(stubName = "AbortAnimation")
+    private native void nativeAbortAnimation();
 
-    private native void init();
-    private native boolean handleTouchEvent(GeckoEvent event);
-    private native void handleMotionEvent(GeckoEvent event);
+    @Override // PanZoomController
+    public void abortAnimation()
+    {
+        if (!mDestroyed) {
+            nativeAbortAnimation();
+        }
+    }
 
-    @Override
-    public native void destroy();
-    @Override
-    public native boolean getRedrawHint();
+    @Override // PanZoomController
+    public boolean getRedrawHint()
+    {
+        // FIXME implement this
+        return true;
+    }
+
+    @Override @WrapForJNI(allowMultithread = true) // PanZoomController
+    public void destroy() {
+        if (mDestroyed) {
+            return;
+        }
+        mDestroyed = true;
+        disposeNative();
+    }
+
+    @Override @WrapForJNI // JNIObject
+    protected native void disposeNative();
 
     @Override
     public void setOverScrollMode(int overscrollMode) {
@@ -113,6 +171,13 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     public void setOverscrollHandler(final Overscroll listener) {
     }
 
-    @Override
-    public native void setIsLongpressEnabled(boolean isLongpressEnabled);
+    @WrapForJNI(stubName = "SetIsLongpressEnabled")
+    private native void nativeSetIsLongpressEnabled(boolean isLongpressEnabled);
+
+    @Override // PanZoomController
+    public void setIsLongpressEnabled(boolean isLongpressEnabled) {
+        if (!mDestroyed) {
+            nativeSetIsLongpressEnabled(isLongpressEnabled);
+        }
+    }
 }

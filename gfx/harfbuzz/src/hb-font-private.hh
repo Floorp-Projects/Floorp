@@ -42,6 +42,8 @@
  */
 
 #define HB_FONT_FUNCS_IMPLEMENT_CALLBACKS \
+  HB_FONT_FUNC_IMPLEMENT (font_h_extents) \
+  HB_FONT_FUNC_IMPLEMENT (font_v_extents) \
   HB_FONT_FUNC_IMPLEMENT (glyph) \
   HB_FONT_FUNC_IMPLEMENT (glyph_h_advance) \
   HB_FONT_FUNC_IMPLEMENT (glyph_v_advance) \
@@ -80,7 +82,7 @@ struct hb_font_funcs_t {
       HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
     } f;
-    void (*array[]) (void);
+    void (*array[VAR]) (void);
   } get;
 };
 
@@ -160,7 +162,22 @@ struct hb_font_t {
   HB_FONT_FUNCS_IMPLEMENT_CALLBACKS
 #undef HB_FONT_FUNC_IMPLEMENT
 
-  inline hb_bool_t has_glyph (hb_codepoint_t unicode)
+  inline hb_bool_t get_font_h_extents (hb_font_extents_t *extents)
+  {
+    memset (extents, 0, sizeof (*extents));
+    return klass->get.f.font_h_extents (this, user_data,
+					extents,
+					klass->user_data.font_h_extents);
+  }
+  inline hb_bool_t get_font_v_extents (hb_font_extents_t *extents)
+  {
+    memset (extents, 0, sizeof (*extents));
+    return klass->get.f.font_v_extents (this, user_data,
+					extents,
+					klass->user_data.font_v_extents);
+  }
+
+  inline bool has_glyph (hb_codepoint_t unicode)
   {
     hb_codepoint_t glyph;
     return get_glyph (unicode, 0, &glyph);
@@ -265,6 +282,26 @@ struct hb_font_t {
 
   /* A bit higher-level, and with fallback */
 
+  inline void get_extents_for_direction (hb_direction_t direction,
+					 hb_font_extents_t *extents)
+  {
+    if (likely (HB_DIRECTION_IS_HORIZONTAL (direction))) {
+      if (!get_font_h_extents (extents))
+      {
+	extents->ascender = y_scale * .8;
+	extents->descender = y_scale - extents->ascender;
+	extents->line_gap = 0;
+      }
+    } else {
+      if (!get_font_v_extents (extents))
+      {
+	extents->ascender = x_scale / 2;
+	extents->descender = x_scale - extents->ascender;
+	extents->line_gap = 0;
+      }
+    }
+  }
+
   inline void get_glyph_advance_for_direction (hb_codepoint_t glyph,
 					       hb_direction_t direction,
 					       hb_position_t *x, hb_position_t *y)
@@ -284,7 +321,7 @@ struct hb_font_t {
   {
     *x = get_glyph_h_advance (glyph) / 2;
 
-    /* TODO use font_metrics.ascent */
+    /* TODO use font_extents.ascender */
     *y = y_scale;
   }
 

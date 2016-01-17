@@ -4884,6 +4884,20 @@ MTableSwitch::foldsTo(TempAllocator& alloc)
     if (numSuccessors() == 1 || (op->type() != MIRType_Value && !IsNumberType(op->type())))
         return MGoto::New(alloc, getDefault());
 
+    if (op->isConstantValue()) {
+        Value v = op->constantValue();
+        if (v.isInt32()) {
+            int32_t i = v.toInt32() - low_;
+            MBasicBlock* target;
+            if (size_t(i) < numCases())
+                target = getCase(size_t(i));
+            else
+                target = getDefault();
+            MOZ_ASSERT(target);
+            return MGoto::New(alloc, target);
+        }
+    }
+
     return this;
 }
 
