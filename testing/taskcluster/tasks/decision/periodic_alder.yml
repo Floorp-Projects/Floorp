@@ -13,14 +13,14 @@ task:
   provisionerId: aws-provisioner-v1
 
   scopes:
-    - 'docker-worker:cache:tc-vcs-public-sources'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs-public-sources'
 
   payload:
     cache:
       # The taskcluster-vcs tooling stores the large clone caches in this
       # directory and will reuse them for new requests this saves about 20s~ and
       # is the most generic cache possible.
-      tc-vcs-public-sources: '/home/worker/.tc-vcs/'
+      level-{{level}}-{{project}}-tc-vcs-public-sources: '/home/worker/.tc-vcs/'
 
     # Note: This task is built server side without the context or tooling that
     # exist in tree so we must hard code the version

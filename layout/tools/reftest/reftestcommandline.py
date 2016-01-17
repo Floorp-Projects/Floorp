@@ -150,6 +150,20 @@ class ReftestArgumentsParser(argparse.ArgumentParser):
                           dest="shuffle",
                           help="run reftests in random order")
 
+        self.add_argument("--run-until-failure",
+                          action="store_true",
+                          default=False,
+                          dest="runUntilFailure",
+                          help="stop running on the first failure. Useful for RR recordings.")
+
+        self.add_argument("--repeat",
+                          action="store",
+                          type=int,
+                          default=0,
+                          dest="repeat",
+                          help="number of times the select test(s) will be executed. Useful for "
+                          "finding intermittent failures.")
+
         self.add_argument("--focus-filter-mode",
                           action="store",
                           type=str,

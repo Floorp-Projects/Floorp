@@ -32,8 +32,7 @@ nsEventQueue::~nsEventQueue()
 {
   // It'd be nice to be able to assert that no one else is holding the lock,
   // but NSPR doesn't really expose APIs for it.
-  NS_ASSERTION(IsEmpty(),
-               "Non-empty event queue being destroyed; events being leaked.");
+  MOZ_ASSERT(IsEmpty());
 
   if (mHead) {
     FreePage(mHead);

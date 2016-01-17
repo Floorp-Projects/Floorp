@@ -100,12 +100,10 @@ using namespace js::shell;
 
 using mozilla::ArrayLength;
 using mozilla::Atomic;
-using mozilla::MakeUnique;
 using mozilla::Maybe;
 using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
-using mozilla::UniquePtr;
 
 enum JSShellExitCode {
     EXITCODE_RUNTIME_ERROR      = 3,
@@ -606,7 +604,7 @@ RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
     RootedFunction importFun(cx);
     MOZ_ALWAYS_TRUE(GetImportMethod(cx, loaderObj, &importFun));
 
-    AutoValueArray<2> args(cx);
+    JS::AutoValueArray<2> args(cx);
     args[0].setString(JS_NewStringCopyZ(cx, filename));
     args[1].setUndefined();
 
@@ -2698,7 +2696,7 @@ EvalInContext(JSContext* cx, unsigned argc, Value* vp)
         return true;
     }
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     unsigned lineno;
 
     DescribeScriptedCaller(cx, &filename, &lineno);
@@ -2758,7 +2756,7 @@ WorkerMain(void* arg)
         return;
     }
 
-    mozilla::UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
     if (!sr) {
         JS_DestroyRuntime(rt);
         js_delete(input);
@@ -3356,7 +3354,7 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     if (!scriptContents)
         return false;
 
-    mozilla::UniquePtr<char, JS::FreePolicy> filename;
+    UniqueChars filename;
     CompileOptions options(cx);
     if (args.length() > 1) {
         if (!args[1].isString()) {
@@ -3953,7 +3951,7 @@ ThisFilename(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    JS::AutoFilename filename;
+    JS::UniqueChars filename;
     if (!DescribeScriptedCaller(cx, &filename) || !filename.get()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
@@ -4154,12 +4152,12 @@ WithSourceHook(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    UniquePtr<ShellSourceHook> hook =
-        MakeUnique<ShellSourceHook>(cx, args[0].toObject().as<JSFunction>());
+    mozilla::UniquePtr<ShellSourceHook> hook =
+        mozilla::MakeUnique<ShellSourceHook>(cx, args[0].toObject().as<JSFunction>());
     if (!hook)
         return false;
 
-    UniquePtr<SourceHook> savedHook = js::ForgetSourceHook(cx->runtime());
+    mozilla::UniquePtr<SourceHook> savedHook = js::ForgetSourceHook(cx->runtime());
     js::SetSourceHook(cx->runtime(), Move(hook));
 
     RootedObject fun(cx, &args[1].toObject());
@@ -4644,7 +4642,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
             return;
         }
 
-        oom = !log.append(make_string_copy("anonymous"));
+        oom = !log.append(DuplicateString("anonymous"));
     }
 
     void Entry(JSContext* cx, JSScript* script, JS::HandleValue asyncStack,
@@ -5511,7 +5509,7 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!BuildStackString(cx, stackObj, &stackStr, 2))
         return false;
 
-    UniquePtr<char[], JS::FreePolicy> stack(JS_EncodeStringToUTF8(cx, stackStr));
+    UniqueChars stack(JS_EncodeStringToUTF8(cx, stackStr));
     if (!stack)
         return false;
 
@@ -6925,7 +6923,7 @@ main(int argc, char** argv, char** envp)
     if (!rt)
         return 1;
 
-    mozilla::UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
+    UniquePtr<ShellRuntime> sr = MakeUnique<ShellRuntime>();
     if (!sr)
         return 1;
 

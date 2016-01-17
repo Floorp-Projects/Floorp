@@ -10,7 +10,6 @@
 
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -25,6 +24,7 @@
 
 #include "frontend/BytecodeCompiler.h"
 #include "js/CharacterEncoding.h"
+#include "js/UniquePtr.h"
 #include "vm/HelperThreads.h"
 #include "vm/Keywords.h"
 #include "vm/StringBuffer.h"
@@ -37,7 +37,6 @@ using mozilla::Maybe;
 using mozilla::PodAssign;
 using mozilla::PodCopy;
 using mozilla::PodZero;
-using mozilla::UniquePtr;
 
 struct KeywordInfo {
     const char* chars;         // C string with keyword text
@@ -857,7 +856,7 @@ bool
 TokenStream::getDirective(bool isMultiline, bool shouldWarnDeprecated,
                           const char* directive, int directiveLength,
                           const char* errorMsgPragma,
-                          UniquePtr<char16_t[], JS::FreePolicy>* destination)
+                          UniqueTwoByteChars* destination)
 {
     MOZ_ASSERT(directiveLength <= 18);
     char16_t peeked[18];

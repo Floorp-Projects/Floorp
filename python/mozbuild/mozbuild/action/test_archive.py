@@ -59,6 +59,11 @@ ARCHIVE_FILES = {
         },
         {
             'source': buildconfig.topsrcdir,
+            'base': 'dom/media/test',
+            'pattern': 'external-media-tests/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
             'base': 'js/src',
             'pattern': 'jit-test/**',
             'dest': 'jit-test',
@@ -201,6 +206,21 @@ ARCHIVE_FILES = {
         },
     ],
     'web-platform': [
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'web-platform/meta/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'web-platform/mozilla/**',
+        },
+        {
+            'source': buildconfig.topsrcdir,
+            'base': 'testing',
+            'pattern': 'web-platform/tests/**',
+        },
         {
             'source': buildconfig.topobjdir,
             'base': '_tests',

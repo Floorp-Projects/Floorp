@@ -548,6 +548,96 @@ public:
 };
 
 
+// Ref specialization for arrays.
+template<class Type, typename JNIType, class ElementType>
+class ArrayRefBase : public RefBase<Type, JNIType>
+{
+    typedef RefBase<Type, JNIType> Base;
+
+protected:
+    ArrayRefBase(jobject instance) : Base(instance) {}
+
+    ArrayRefBase(const ArrayRefBase& ref) : Base(ref.mInstance) {}
+
+public:
+    size_t Length() const
+    {
+        MOZ_ASSERT(Base::mInstance);
+        JNIEnv* const env = GetEnvForThread();
+        const size_t ret = env->GetArrayLength(JNIType(Base::mInstance));
+        MOZ_CATCH_JNI_EXCEPTION(env);
+        return ret;
+    }
+
+    ElementType GetElement(size_t index) const
+    {
+        MOZ_ASSERT(Base::mInstance);
+        JNIEnv* const env = GetEnvForThread();
+        ElementType ret;
+        (env->*detail::TypeAdapter<ElementType>::GetArray)(
+                JNIType(Base::mInstance), jsize(index), 1, &ret);
+        MOZ_CATCH_JNI_EXCEPTION(env);
+        return ret;
+    }
+
+    nsTArray<ElementType> GetElements() const
+    {
+        MOZ_ASSERT(Base::mInstance);
+        static_assert(sizeof(ElementType) ==
+                sizeof(typename detail::TypeAdapter<ElementType>::JNIType),
+                "Size of native type must match size of JNI type");
+
+        JNIEnv* const env = GetEnvForThread();
+        const jsize len = size_t(env->GetArrayLength(
+                JNIType(Base::mInstance)));
+
+        nsTArray<ElementType> array((size_t(len)));
+        array.SetLength(size_t(len));
+        (env->*detail::TypeAdapter<ElementType>::GetArray)(
+                JNIType(Base::mInstance), 0, len, array.Elements());
+        return array;
+    }
+
+    ElementType operator[](size_t index) const
+    {
+        return GetElement(index);
+    }
+
+    operator nsTArray<ElementType>() const
+    {
+        return GetElements();
+    }
+};
+
+#define DEFINE_PRIMITIVE_ARRAY_REF(Type, JNIType, ElementType) \
+    template<> \
+    class Ref<Type> : public ArrayRefBase<Type, JNIType, ElementType> \
+    { \
+        friend class RefBase<Type, JNIType>; \
+        friend class detail::TypeAdapter<Ref<Type>>; \
+    \
+        typedef ArrayRefBase<Type, JNIType, ElementType> Base; \
+    \
+    protected: \
+        Ref(jobject instance) : Base(instance) {} \
+    \
+        Ref(const Ref& ref) : Base(ref.mInstance) {} \
+    \
+    public: \
+        MOZ_IMPLICIT Ref(decltype(nullptr)) : Base(nullptr) {} \
+    }
+
+DEFINE_PRIMITIVE_ARRAY_REF(BooleanArray, jbooleanArray, bool);
+DEFINE_PRIMITIVE_ARRAY_REF(ByteArray,    jbyteArray,    int8_t);
+DEFINE_PRIMITIVE_ARRAY_REF(CharArray,    jcharArray,    char16_t);
+DEFINE_PRIMITIVE_ARRAY_REF(ShortArray,   jshortArray,   int16_t);
+DEFINE_PRIMITIVE_ARRAY_REF(IntArray,     jintArray,     int32_t);
+DEFINE_PRIMITIVE_ARRAY_REF(LongArray,    jlongArray,    int64_t);
+DEFINE_PRIMITIVE_ARRAY_REF(FloatArray,   jfloatArray,   float);
+DEFINE_PRIMITIVE_ARRAY_REF(DoubleArray,  jdoubleArray,  double);
+
+#undef DEFINE_PRIMITIVE_ARRAY_REF
+
 // Ref specialization for jobjectArray.
 template<>
 class Ref<ObjectArray> : public RefBase<ObjectArray, jobjectArray>
@@ -565,12 +655,11 @@ protected:
 public:
     MOZ_IMPLICIT Ref(decltype(nullptr)) : Base(nullptr) {}
 
-    // Get the length of the object array.
     size_t Length() const
     {
-        MOZ_ASSERT(ObjectArray::mInstance);
+        MOZ_ASSERT(Base::mInstance);
         JNIEnv* const env = GetEnvForThread();
-        const size_t ret = env->GetArrayLength(jarray(ObjectArray::mInstance));
+        const size_t ret = env->GetArrayLength(jobjectArray(Base::mInstance));
         MOZ_CATCH_JNI_EXCEPTION(env);
         return ret;
     }
@@ -600,6 +689,11 @@ public:
             MOZ_CATCH_JNI_EXCEPTION(env);
         }
         return array;
+    }
+
+    Object::LocalRef operator[](size_t index) const
+    {
+        return GetElement(index);
     }
 
     operator nsTArray<Object::LocalRef>() const

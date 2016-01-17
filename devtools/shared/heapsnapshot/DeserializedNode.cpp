@@ -120,16 +120,15 @@ Concrete<DeserializedNode>::allocationStack() const
 }
 
 
-UniquePtr<EdgeRange>
+js::UniquePtr<EdgeRange>
 Concrete<DeserializedNode>::edges(JSRuntime* rt, bool) const
 {
-  UniquePtr<DeserializedEdgeRange, JS::DeletePolicy<DeserializedEdgeRange>> range(
-    js_new<DeserializedEdgeRange>(get()));
+  js::UniquePtr<DeserializedEdgeRange> range(js_new<DeserializedEdgeRange>(get()));
 
   if (!range)
     return nullptr;
 
-  return UniquePtr<EdgeRange>(range.release());
+  return js::UniquePtr<EdgeRange>(range.release());
 }
 
 StackFrame

@@ -49,12 +49,12 @@ class SimpleCount : public CountType {
         { }
     };
 
-    UniquePtr<char16_t[], JS::FreePolicy> label;
+    UniqueTwoByteChars label;
     bool reportCount : 1;
     bool reportBytes : 1;
 
   public:
-    explicit SimpleCount(UniquePtr<char16_t[], JS::FreePolicy>& label,
+    explicit SimpleCount(UniqueTwoByteChars& label,
                          bool reportCount=true,
                          bool reportBytes=true)
       : CountType(),
@@ -929,7 +929,7 @@ ParseBreakdown(JSContext* cx, HandleValue breakdownValue)
         if (!GetProperty(cx, breakdown, breakdown, cx->names().label, &label))
             return nullptr;
 
-        UniquePtr<char16_t[], JS::FreePolicy> labelUnique(nullptr);
+        UniqueTwoByteChars labelUnique(nullptr);
         if (!label.isUndefined()) {
             RootedString labelString(cx, ToString(cx, label));
             if (!labelString)

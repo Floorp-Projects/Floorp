@@ -234,7 +234,6 @@ CLASSES_WITH_JNI= \
     org.mozilla.gecko.GeckoAppShell \
     org.mozilla.gecko.GeckoJavaSampler \
     org.mozilla.gecko.GeckoSmsManager \
-    org.mozilla.gecko.gfx.NativePanZoomController \
     $(NULL)
 
 jni-stubs.inc: gecko-browser.jar constants.jar gecko-mozglue.jar gecko-util.jar sync-thirdparty.jar

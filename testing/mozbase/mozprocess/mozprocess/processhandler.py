@@ -13,7 +13,8 @@ import time
 import traceback
 from Queue import Queue, Empty
 from datetime import datetime
-__all__ = ['ProcessHandlerMixin', 'ProcessHandler']
+__all__ = ['ProcessHandlerMixin', 'ProcessHandler', 'LogOutput',
+           'StoreOutput', 'StreamOutput']
 
 # Set the MOZPROCESS_DEBUG environment variable to 1 to see some debugging output
 MOZPROCESS_DEBUG = os.getenv("MOZPROCESS_DEBUG")

@@ -5,7 +5,7 @@ $inherits:
     build_type: 'opt'
 task:
   scopes:
-    - 'docker-worker:cache:build-dolphin-opt'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-dolphin-opt'
   metadata:
     name: '[TC] B2G Dolphin Opt'
 
@@ -18,7 +18,7 @@ task:
 
   payload:
     cache:
-      build-dolphin-opt: /home/worker/workspace
+      level-{{level}}-{{project}}-build-dolphin-opt: /home/worker/workspace
     env:
       TARGET: 'dolphin'
 

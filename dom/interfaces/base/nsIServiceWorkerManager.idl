@@ -57,7 +57,8 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   // Allows to get the related nsIServiceWorkerInfo for a given
   // nsIWorkerDebugger. Over time we shouldn't need this anymore,
   // and instead always control then nsIWorkerDebugger from
-  // nsIServiceWorkerInfo and not the other way around.
+  // nsIServiceWorkerInfo and not the other way around.  Returns
+  // null if the service worker is no longer registered.
   nsIServiceWorkerInfo getWorkerByID(in unsigned long long aID);
 
   void addListener(in nsIServiceWorkerRegistrationInfoListener listener);

@@ -89,7 +89,7 @@ struct PostOrder {
     mozilla::DebugOnly<bool> traversed;
 
   private:
-    bool fillEdgesFromRange(EdgeVector& edges, UniquePtr<EdgeRange>& range) {
+    bool fillEdgesFromRange(EdgeVector& edges, js::UniquePtr<EdgeRange>& range) {
         MOZ_ASSERT(range);
         for ( ; !range->empty(); range->popFront()) {
             if (!edges.append(mozilla::Move(range->front())))
