@@ -21,6 +21,10 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     XPIDL_SOURCES += [
         'nsIMacShellService.idl',
     ]
+elif CONFIG['MOZ_WIDGET_GTK']:
+    XPIDL_SOURCES += [
+        'nsIGNOMEShellService.idl',
+    ]
 
 XPIDL_MODULE = 'shellservice'
 
@@ -43,6 +47,10 @@ if SOURCES:
 EXTRA_COMPONENTS += [
     'nsSetDefaultBrowser.js',
     'nsSetDefaultBrowser.manifest',
+]
+
+EXTRA_JS_MODULES += [
+    'ShellService.jsm',
 ]
 
 for var in ('MOZ_APP_NAME', 'MOZ_APP_VERSION'):
