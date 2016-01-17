@@ -2,18 +2,165 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testTabSwitchContext() {
+function* runTests(options) {
+  function background(getTests) {
+    let tabs;
+    let tests;
+
+    // Gets the current details of the page action, and returns a
+    // promise that resolves to an object containing them.
+    function getDetails() {
+      return new Promise(resolve => {
+        return browser.tabs.query({ active: true, currentWindow: true }, resolve);
+      }).then(tabs => {
+        let tabId = tabs[0].id;
+        return Promise.all([
+          new Promise(resolve => browser.pageAction.getTitle({tabId}, resolve)),
+          new Promise(resolve => browser.pageAction.getPopup({tabId}, resolve))]);
+      }).then(details => {
+        return Promise.resolve({ title: details[0],
+                                 popup: details[1] });
+      });
+    }
+
+
+    // Runs the next test in the `tests` array, checks the results,
+    // and passes control back to the outer test scope.
+    function nextTest() {
+      let test = tests.shift();
+
+      test(expecting => {
+        function finish() {
+          // Check that the actual icon has the expected values, then
+          // run the next test.
+          browser.test.sendMessage("nextTest", expecting, tests.length);
+        }
+
+        if (expecting) {
+          // Check that the API returns the expected values, and then
+          // run the next test.
+          getDetails().then(details => {
+            browser.test.assertEq(expecting.title, details.title,
+                                  "expected value from getTitle");
+
+            browser.test.assertEq(expecting.popup, details.popup,
+                                  "expected value from getPopup");
+
+            finish();
+          });
+        } else {
+          finish();
+        }
+      });
+    }
+
+    function runTests() {
+      tabs = [];
+      tests = getTests(tabs);
+
+      browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
+        tabs[0] = resultTabs[0].id;
+
+        nextTest();
+      });
+    }
+
+    browser.test.onMessage.addListener((msg) => {
+      if (msg == "runTests") {
+        runTests();
+      } else if (msg == "runNextTest") {
+        nextTest();
+      } else {
+        browser.test.fail(`Unexpected message: ${msg}`);
+      }
+    });
+
+    runTests();
+  }
+
   let extension = ExtensionTestUtils.loadExtension({
+    manifest: options.manifest,
+
+    background: `(${background})(${options.getTests})`,
+  });
+
+  let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  let currentWindow = window;
+  let windows = [];
+
+  function checkDetails(details) {
+    let image = currentWindow.document.getElementById(pageActionId);
+    if (details == null) {
+      ok(image == null || image.hidden, "image is hidden");
+    } else {
+      ok(image, "image exists");
+
+      is(image.src, details.icon, "icon URL is correct");
+
+      let title = details.title || options.manifest.name;
+      is(image.getAttribute("tooltiptext"), title, "image title is correct");
+      is(image.getAttribute("aria-label"), title, "image aria-label is correct");
+      // TODO: Popup URL.
+    }
+  }
+
+  let testNewWindows = 1;
+
+  let awaitFinish = new Promise(resolve => {
+    extension.onMessage("nextTest", (expecting, testsRemaining) => {
+      checkDetails(expecting);
+
+      if (testsRemaining) {
+        extension.sendMessage("runNextTest");
+      } else if (testNewWindows) {
+        testNewWindows--;
+
+        BrowserTestUtils.openNewBrowserWindow().then(window => {
+          windows.push(window);
+          currentWindow = window;
+          return focusWindow(window);
+        }).then(() => {
+          extension.sendMessage("runTests");
+        });
+      } else {
+        resolve();
+      }
+    });
+  });
+
+  yield extension.startup();
+
+  yield awaitFinish;
+
+  yield extension.unload();
+
+  let node = document.getElementById(pageActionId);
+  is(node, null, "pageAction image removed from document");
+
+  currentWindow = null;
+  for (let win of windows.splice(0)) {
+    node = win.document.getElementById(pageActionId);
+    is(node, null, "pageAction image removed from second document");
+
+    yield BrowserTestUtils.closeWindow(win);
+  }
+}
+
+add_task(function* testTabSwitchContext() {
+  yield runTests({
     manifest: {
+      "name": "Foo Extension",
+
       "page_action": {
         "default_icon": "default.png",
         "default_popup": "default.html",
         "default_title": "Default Title \u263a",
       },
+
       "permissions": ["tabs"],
     },
 
-    background: function() {
+    getTests(tabs) {
       let details = [
         { "icon": browser.runtime.getURL("default.png"),
           "popup": browser.runtime.getURL("default.html"),
@@ -24,11 +171,12 @@ add_task(function* testTabSwitchContext() {
         { "icon": browser.runtime.getURL("2.png"),
           "popup": browser.runtime.getURL("2.html"),
           "title": "Title 2" },
+        { "icon": browser.runtime.getURL("2.png"),
+          "popup": browser.runtime.getURL("2.html"),
+          "title": "Default Title \u263a" },
       ];
 
-      let tabs;
-      let tests;
-      let allTests = [
+      return [
         expect => {
           browser.test.log("Initial state. No icon visible.");
           expect(null);
@@ -59,6 +207,12 @@ add_task(function* testTabSwitchContext() {
           browser.pageAction.setTitle({ tabId, title: "Title 2" });
 
           expect(details[2]);
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect default title.");
+          browser.pageAction.setTitle({ tabId: tabs[1], title: "" });
+
+          expect(details[3]);
         },
         expect => {
           browser.test.log("Navigate to a new page. Expect icon hidden.");
@@ -104,135 +258,53 @@ add_task(function* testTabSwitchContext() {
           expect(null);
         },
       ];
-
-      // Gets the current details of the page action, and returns a
-      // promise that resolves to an object containing them.
-      function getDetails() {
-        return new Promise(resolve => {
-          return browser.tabs.query({ active: true, currentWindow: true }, resolve);
-        }).then(tabs => {
-          let tabId = tabs[0].id;
-          return Promise.all([
-            new Promise(resolve => browser.pageAction.getTitle({tabId}, resolve)),
-            new Promise(resolve => browser.pageAction.getPopup({tabId}, resolve))]);
-        }).then(details => {
-          return Promise.resolve({ title: details[0],
-                                   popup: details[1] });
-        });
-      }
-
-
-      // Runs the next test in the `tests` array, checks the results,
-      // and passes control back to the outer test scope.
-      function nextTest() {
-        let test = tests.shift();
-
-        test(expecting => {
-          function finish() {
-            // Check that the actual icon has the expected values, then
-            // run the next test.
-            browser.test.sendMessage("nextTest", expecting, tests.length);
-          }
-
-          if (expecting) {
-            // Check that the API returns the expected values, and then
-            // run the next test.
-            getDetails().then(details => {
-              browser.test.assertEq(expecting.title, details.title,
-                                    "expected value from getTitle");
-
-              browser.test.assertEq(expecting.popup, details.popup,
-                                    "expected value from getPopup");
-
-              finish();
-            });
-          } else {
-            finish();
-          }
-        });
-      }
-
-      function runTests() {
-        tabs = [];
-        tests = allTests.slice();
-
-        browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
-          tabs[0] = resultTabs[0].id;
-
-          nextTest();
-        });
-      }
-
-      browser.test.onMessage.addListener((msg) => {
-        if (msg == "runTests") {
-          runTests();
-        } else if (msg == "runNextTest") {
-          nextTest();
-        } else {
-          browser.test.fail(`Unexpected message: ${msg}`);
-        }
-      });
-
-      runTests();
     },
   });
+});
 
-  let pageActionId = makeWidgetId(extension.id) + "-page-action";
-  let currentWindow = window;
-  let windows = [];
+add_task(function* testDefaultTitle() {
+  yield runTests({
+    manifest: {
+      "name": "Foo Extension",
 
-  function checkDetails(details) {
-    let image = currentWindow.document.getElementById(pageActionId);
-    if (details == null) {
-      ok(image == null || image.hidden, "image is hidden");
-    } else {
-      ok(image, "image exists");
+      "page_action": {
+        "default_icon": "icon.png",
+      },
 
-      is(image.src, details.icon, "icon URL is correct");
-      is(image.getAttribute("tooltiptext"), details.title, "image title is correct");
-      is(image.getAttribute("aria-label"), details.title, "image aria-label is correct");
-      // TODO: Popup URL.
-    }
-  }
+      "permissions": ["tabs"],
+    },
 
-  let testNewWindows = 1;
+    getTests(tabs) {
+      let details = [
+        { "title": "Foo Extension",
+          "popup": "",
+          "icon": browser.runtime.getURL("icon.png") },
+        { "title": "Foo Title",
+          "popup": "",
+          "icon": browser.runtime.getURL("icon.png") },
+      ];
 
-  let awaitFinish = new Promise(resolve => {
-    extension.onMessage("nextTest", (expecting, testsRemaining) => {
-      checkDetails(expecting);
-
-      if (testsRemaining) {
-        extension.sendMessage("runNextTest");
-      } else if (testNewWindows) {
-        testNewWindows--;
-
-        BrowserTestUtils.openNewBrowserWindow().then(window => {
-          windows.push(window);
-          currentWindow = window;
-          return focusWindow(window);
-        }).then(() => {
-          extension.sendMessage("runTests");
-        });
-      } else {
-        resolve();
-      }
-    });
+      return [
+        expect => {
+          browser.test.log("Initial state. No icon visible.");
+          expect(null);
+        },
+        expect => {
+          browser.test.log("Show the icon on the first tab, expect extension title as default title.");
+          browser.pageAction.show(tabs[0]);
+          expect(details[0]);
+        },
+        expect => {
+          browser.test.log("Change the title. Expect new title.");
+          browser.pageAction.setTitle({ tabId: tabs[0], title: "Foo Title" });
+          expect(details[1]);
+        },
+        expect => {
+          browser.test.log("Clear the title. Expect extension title.");
+          browser.pageAction.setTitle({ tabId: tabs[0], title: "" });
+          expect(details[0]);
+        },
+      ];
+    },
   });
-
-  yield extension.startup();
-
-  yield awaitFinish;
-
-  yield extension.unload();
-
-  let node = document.getElementById(pageActionId);
-  is(node, null, "pageAction image removed from document");
-
-  currentWindow = null;
-  for (let win of windows.splice(0)) {
-    node = win.document.getElementById(pageActionId);
-    is(node, null, "pageAction image removed from second document");
-
-    yield BrowserTestUtils.closeWindow(win);
-  }
 });
