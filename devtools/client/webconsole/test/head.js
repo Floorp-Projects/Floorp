@@ -1454,8 +1454,13 @@ function checkOutputForInputs(hud, inputTests) {
       }],
     });
 
+    let msg = [...result.matched][0];
+
+    if (entry.consoleLogClick) {
+      yield checkObjectClick(entry, msg);
+    }
+
     if (typeof entry.inspectorIcon == "boolean") {
-      let msg = [...result.matched][0];
       info("Checking Inspector Link: " + entry.input);
       yield checkLinkToInspector(entry.inspectorIcon, msg);
     }
@@ -1483,11 +1488,13 @@ function checkOutputForInputs(hud, inputTests) {
     hud.jsterm.clearOutput();
     hud.jsterm.execute(entry.input);
 
+    let evalOutput = entry.evalOutput || entry.output;
+
     let [result] = yield waitForMessages({
       webconsole: hud,
       messages: [{
-        name: "JS eval output: " + entry.output,
-        text: entry.output,
+        name: "JS eval output: " + entry.evalOutput,
+        text: entry.evalOutput,
         category: CATEGORY_OUTPUT,
       }],
     });
@@ -1504,8 +1511,13 @@ function checkOutputForInputs(hud, inputTests) {
 
   function* checkObjectClick(entry, msg) {
     info("Clicking: " + entry.input);
-    let body = msg.querySelector(".message-body a") ||
-               msg.querySelector(".message-body");
+    let body;
+    if (entry.getClickableNode) {
+      body = entry.getClickableNode(msg);
+    } else {
+      body = msg.querySelector(".message-body a") ||
+             msg.querySelector(".message-body");
+    }
     ok(body, "the message body");
 
     let deferredVariablesView = promise.defer();

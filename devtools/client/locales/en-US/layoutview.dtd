@@ -16,7 +16,7 @@
   -  The text appears on the bottom right corner of the layout view when
   -  the corresponding box is hovered. -->
 
-<!ENTITY title                  "Box Model">
+<!ENTITY layoutViewTitle        "Box Model">
 <!ENTITY margin.tooltip         "margin">
 <!ENTITY border.tooltip         "border">
 <!ENTITY padding.tooltip        "padding">

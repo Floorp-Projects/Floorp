@@ -48,6 +48,11 @@ function* testHasPermission(params) {
   extension.sendMessage("execute-script");
 
   yield extension.awaitFinish("executeScript");
+
+  if (params.tearDown) {
+    yield params.tearDown(extension);
+  }
+
   yield extension.unload();
 }
 
@@ -82,6 +87,7 @@ add_task(function* testGoodPermissions() {
       return Promise.resolve();
     },
     setup: clickBrowserAction,
+    tearDown: closeBrowserAction,
   });
 
   info("Test activeTab permission with a page action click");
@@ -99,6 +105,7 @@ add_task(function* testGoodPermissions() {
       });
     },
     setup: clickPageAction,
+    tearDown: closePageAction,
   });
 
   info("Test activeTab permission with a browser action w/popup click");
@@ -108,6 +115,7 @@ add_task(function* testGoodPermissions() {
       "browser_action": { "default_popup": "_blank.html" },
     },
     setup: clickBrowserAction,
+    tearDown: closeBrowserAction,
   });
 
   info("Test activeTab permission with a page action w/popup click");
@@ -125,6 +133,7 @@ add_task(function* testGoodPermissions() {
       });
     },
     setup: clickPageAction,
+    tearDown: closePageAction,
   });
 
   info("Test activeTab permission with a context menu click");
@@ -155,3 +164,5 @@ add_task(function* testGoodPermissions() {
 
   yield BrowserTestUtils.removeTab(tab);
 });
+
+add_task(forceGC);

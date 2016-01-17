@@ -59,6 +59,8 @@ function testWindowlessBrowser(chromePrivileged) {
   }
   
   ok(!exception, "window.external.AddSearchProvider should be ignore withour raising an exception");
+
+  webNav.close();
 }
 
 info("Test Bug 1214174 on a content privileged windowless browser");

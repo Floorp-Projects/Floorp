@@ -250,6 +250,11 @@ panelmultiview[nosubviews=true] > .panel-viewcontainer > .panel-viewstack > .pan
   max-width: @standaloneSubviewWidth@;
 }
 
+/* Give WebExtension stand-alone panels extra width for Chrome compatibility */
+.cui-widget-panel[viewId^=PanelUI-webext-] .panel-mainview {
+  max-width: 800px;
+}
+
 panelview:not([mainview]) .toolbarbutton-text,
 .cui-widget-panel toolbarbutton > .toolbarbutton-text {
   text-align: start;
