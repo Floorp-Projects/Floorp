@@ -199,6 +199,10 @@ set_myanmar_properties (hb_glyph_info_t &info)
       cat = (indic_category_t) OT_A;
       break;
 
+    case 0x1039u:
+      cat = (indic_category_t) OT_H;
+      break;
+
     case 0x103Au:
       cat = (indic_category_t) OT_As;
       break;

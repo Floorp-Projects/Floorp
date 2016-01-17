@@ -8,7 +8,6 @@
 #define TraceLogging_h
 
 #include "mozilla/GuardObjects.h"
-#include "mozilla/UniquePtr.h"
 
 #include "jsalloc.h"
 #include "jslock.h"
@@ -123,7 +122,7 @@ class TraceLoggerEvent {
  */
 class TraceLoggerEventPayload {
     uint32_t textId_;
-    mozilla::UniquePtr<char, JS::FreePolicy> string_;
+    UniqueChars string_;
     uint32_t uses_;
 
   public:
@@ -170,7 +169,7 @@ class TraceLoggerThread
     uint32_t enabled;
     bool failed;
 
-    mozilla::UniquePtr<TraceLoggerGraph> graph;
+    UniquePtr<TraceLoggerGraph> graph;
 
     PointerHashMap pointerMap;
     TextIdHashMap textIdPayloads;

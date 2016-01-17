@@ -53,7 +53,6 @@
 using JS::ToInt32;
 
 using mozilla::DebugOnly;
-using mozilla::UniquePtr;
 
 using namespace js;
 using namespace js::gc;

@@ -6,15 +6,15 @@ $inherits:
 task:
   workerType: flame-kk
   scopes:
-    - 'docker-worker:cache:build-nexus-5-l-user'
-    - 'docker-worker:cache:build-nexus-5-l-user-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-user'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-user-objdir-gecko'
   metadata:
     name: '[TC] B2G Nexus 5-L User'
 
   payload:
     cache:
-      build-nexus-5-l-user: /home/worker/object-folder
-      build-nexus-5-l-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-nexus-5-l-user: /home/worker/object-folder
+      level-{{level}}-{{project}}-build-nexus-5-l-user-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'nexus-5-l'
       DEBUG: 0

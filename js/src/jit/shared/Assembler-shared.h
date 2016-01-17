@@ -139,8 +139,7 @@ static inline bool
 IsCompilingAsmJS()
 {
     // asm.js compilation pushes a JitContext with a null JSCompartment.
-    JitContext* jctx = MaybeGetJitContext();
-    return jctx && jctx->compartment == nullptr;
+    return GetJitContext()->compartment == nullptr;
 }
 #endif
 

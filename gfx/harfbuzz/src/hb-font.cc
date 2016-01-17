@@ -45,6 +45,54 @@
  */
 
 static hb_bool_t
+hb_font_get_font_h_extents_nil (hb_font_t *font,
+				void *font_data HB_UNUSED,
+				hb_font_extents_t *metrics,
+				void *user_data HB_UNUSED)
+{
+  memset (metrics, 0, sizeof (*metrics));
+  return false;
+}
+static hb_bool_t
+hb_font_get_font_h_extents_parent (hb_font_t *font,
+				   void *font_data HB_UNUSED,
+				   hb_font_extents_t *metrics,
+				   void *user_data HB_UNUSED)
+{
+  hb_bool_t ret = font->parent->get_font_h_extents (metrics);
+  if (ret) {
+    metrics->ascender = font->parent_scale_y_distance (metrics->ascender);
+    metrics->descender = font->parent_scale_y_distance (metrics->descender);
+    metrics->line_gap = font->parent_scale_y_distance (metrics->line_gap);
+  }
+  return ret;
+}
+
+static hb_bool_t
+hb_font_get_font_v_extents_nil (hb_font_t *font,
+				void *font_data HB_UNUSED,
+				hb_font_extents_t *metrics,
+				void *user_data HB_UNUSED)
+{
+  memset (metrics, 0, sizeof (*metrics));
+  return false;
+}
+static hb_bool_t
+hb_font_get_font_v_extents_parent (hb_font_t *font,
+				   void *font_data HB_UNUSED,
+				   hb_font_extents_t *metrics,
+				   void *user_data HB_UNUSED)
+{
+  hb_bool_t ret = font->parent->get_font_v_extents (metrics);
+  if (ret) {
+    metrics->ascender = font->parent_scale_x_distance (metrics->ascender);
+    metrics->descender = font->parent_scale_x_distance (metrics->descender);
+    metrics->line_gap = font->parent_scale_x_distance (metrics->line_gap);
+  }
+  return ret;
+}
+
+static hb_bool_t
 hb_font_get_glyph_nil (hb_font_t *font HB_UNUSED,
 		       void *font_data HB_UNUSED,
 		       hb_codepoint_t unicode,
@@ -109,7 +157,7 @@ hb_font_get_glyph_h_origin_nil (hb_font_t *font HB_UNUSED,
 				void *user_data HB_UNUSED)
 {
   *x = *y = 0;
-  return false;
+  return true;
 }
 static hb_bool_t
 hb_font_get_glyph_h_origin_parent (hb_font_t *font,
@@ -279,7 +327,6 @@ hb_font_get_glyph_from_name_parent (hb_font_t *font,
 {
   return font->parent->get_glyph_from_name (name, len, glyph);
 }
-
 
 static const hb_font_funcs_t _hb_font_funcs_nil = {
   HB_OBJECT_HEADER_STATIC,
@@ -522,6 +569,42 @@ hb_font_t::has_func (unsigned int i)
 /* Public getters */
 
 /**
+ * hb_font_get_h_extents:
+ * @font: a font.
+ * @extents: (out):
+ *
+ *
+ *
+ * Return value:
+ *
+ * Since: 1.1.3
+ **/
+hb_bool_t
+hb_font_get_h_extents (hb_font_t *font,
+		       hb_font_extents_t *extents)
+{
+  return font->get_font_h_extents (extents);
+}
+
+/**
+ * hb_font_get_v_extents:
+ * @font: a font.
+ * @extents: (out):
+ *
+ *
+ *
+ * Return value:
+ *
+ * Since: 1.1.3
+ **/
+hb_bool_t
+hb_font_get_v_extents (hb_font_t *font,
+		       hb_font_extents_t *extents)
+{
+  return font->get_font_v_extents (extents);
+}
+
+/**
  * hb_font_get_glyph:
  * @font: a font.
  * @unicode: 
@@ -745,6 +828,23 @@ hb_font_get_glyph_from_name (hb_font_t *font,
 
 /* A bit higher-level, and with fallback */
 
+/**
+ * hb_font_get_extents_for_direction:
+ * @font: a font.
+ * @direction:
+ * @extents:
+ *
+ *
+ *
+ * Since: 1.1.3
+ **/
+void
+hb_font_get_extents_for_direction (hb_font_t *font,
+				   hb_direction_t direction,
+				   hb_font_extents_t *extents)
+{
+  return font->get_extents_for_direction (direction, extents);
+}
 /**
  * hb_font_get_glyph_advance_for_direction:
  * @font: a font.

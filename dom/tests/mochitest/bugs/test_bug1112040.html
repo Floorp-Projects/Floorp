@@ -23,7 +23,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1112040
 /** Test for Bug 1112040 **/
 SimpleTest.runTestExpectingConsoleMessages(
     function() { $('i').value = "42"; },
-    [{ errorMessage: "SyntaxError: nothing to repeat" }]
+    [{ errorMessage: /nothing to repeat/ }]
 );
 
 </script>

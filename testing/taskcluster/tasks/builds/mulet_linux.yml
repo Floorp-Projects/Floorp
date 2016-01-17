@@ -15,13 +15,13 @@ task:
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-mulet'
 
   scopes:
-    - 'docker-worker:cache:build-mulet-linux-{{project}}-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-mulet-linux-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
-      build-mulet-linux-{{project}}-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-mulet-linux-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tools/tooltool-cache'
 
     features:

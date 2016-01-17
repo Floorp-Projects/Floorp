@@ -545,6 +545,9 @@ struct Feature
 	  c->try_set (&featureParams, new_offset) &&
 	  !featureParams.sanitize (c, this, closure ? closure->tag : HB_TAG_NONE))
 	return_trace (false);
+
+      if (c->edit_count > 1)
+        c->edit_count--; /* This was a "legitimate" edit; don't contribute to error count. */
     }
 
     return_trace (true);

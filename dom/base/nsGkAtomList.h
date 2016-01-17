@@ -2112,6 +2112,7 @@ GK_ATOM(baseURIProperty, "baseURIProperty")
 GK_ATOM(lockedStyleStates, "lockedStyleStates")
 GK_ATOM(apzCallbackTransform, "apzCallbackTransform")
 GK_ATOM(restylableAnonymousNode, "restylableAnonymousNode")
+GK_ATOM(paintRequestTime, "PaintRequestTime")
 
 // Languages for lang-specific transforms
 GK_ATOM(Japanese, "ja")

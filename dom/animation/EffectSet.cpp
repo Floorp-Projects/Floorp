@@ -108,6 +108,24 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
   return effectSet;
 }
 
+/* static */ void
+EffectSet::DestroyEffectSet(dom::Element* aElement,
+                            nsCSSPseudoElements::Type aPseudoType)
+{
+  nsIAtom* propName = GetEffectSetPropertyAtom(aPseudoType);
+  EffectSet* effectSet =
+    static_cast<EffectSet*>(aElement->GetProperty(propName));
+  if (!effectSet) {
+    return;
+  }
+
+  MOZ_ASSERT(!effectSet->IsBeingEnumerated(),
+             "Should not destroy an effect set while it is being enumerated");
+  effectSet = nullptr;
+
+  aElement->DeleteProperty(propName);
+}
+
 void
 EffectSet::UpdateAnimationGeneration(nsPresContext* aPresContext)
 {

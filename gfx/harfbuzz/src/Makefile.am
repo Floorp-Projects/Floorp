@@ -48,6 +48,7 @@ HBSOURCES =  \
 	hb-ot-hmtx-table.hh \
 	hb-ot-maxp-table.hh \
 	hb-ot-name-table.hh \
+	hb-ot-os2-table.hh \
 	hb-ot-tag.cc \
 	hb-private.hh \
 	hb-set-private.hh \
@@ -392,7 +393,14 @@ dist_check_SCRIPTS = \
 	check-symbols.sh \
 	$(NULL)
 
-TESTS = $(dist_check_SCRIPTS)
+check_PROGRAMS = \
+	test-ot-tag \
+	$(NULL)
+test_ot_tag_SOURCES = hb-ot-tag.cc
+test_ot_tag_CPPFLAGS = $(HBCFLAGS) -DMAIN
+test_ot_tag_LDADD = libharfbuzz.la $(HBLIBS)
+
+TESTS = $(dist_check_SCRIPTS) $(check_PROGRAMS)
 TESTS_ENVIRONMENT = \
 	srcdir="$(srcdir)" \
 	MAKE="$(MAKE) $(AM_MAKEFLAGS)" \
@@ -419,6 +427,7 @@ HarfBuzz_0_0_gir_CFLAGS = \
 	-DHB_OT_H_IN \
 	-DHB_GOBJECT_H \
 	-DHB_GOBJECT_H_IN \
+	-DHB_EXTERN= \
 	$(NULL)
 HarfBuzz_0_0_gir_LIBS = \
 	libharfbuzz.la \

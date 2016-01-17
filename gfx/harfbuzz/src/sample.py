@@ -33,6 +33,12 @@ hb.font_set_scale (font, upem, upem)
 hb.ot_font_set_funcs (font)
 
 buf = hb.buffer_create ()
+class Debugger(object):
+	def message (self, buf, font, msg, data, _x_what_is_this):
+		print(msg)
+		return True
+debugger = Debugger()
+hb.buffer_set_message_func (buf, debugger.message, 1, 0)
 hb.buffer_add_utf8 (buf, text.encode('utf-8'), 0, -1)
 hb.buffer_guess_segment_properties (buf)
 
