@@ -2936,15 +2936,17 @@ nsGridContainerFrame::Tracks::AlignJustifyContent(
 
   const bool isAlign = mAxis == eLogicalAxisBlock;
   auto stylePos = aReflowState.mStylePosition;
-  const auto valueAndFallback = isAlign ?
-    stylePos->ComputedAlignContent() :
-    stylePos->ComputedJustifyContent();
+  auto valueAndFallback = isAlign ? stylePos->ComputedAlignContent() :
+                                    stylePos->ComputedJustifyContent();
   WritingMode wm = aReflowState.GetWritingMode();
   bool overflowSafe;
   auto alignment = ::GetAlignJustifyValue(valueAndFallback, wm, isAlign,
                                           &overflowSafe);
   if (alignment == NS_STYLE_ALIGN_NORMAL) {
-    alignment = NS_STYLE_ALIGN_START;
+    MOZ_ASSERT(valueAndFallback == NS_STYLE_ALIGN_NORMAL,
+               "*-content:normal cannot be specified with explicit fallback");
+    alignment = isAlign ? NS_STYLE_ALIGN_STRETCH : NS_STYLE_ALIGN_START;
+    valueAndFallback = alignment; // we may need a fallback for 'stretch' below
   }
 
   // Compute the free space and count auto-sized tracks.
