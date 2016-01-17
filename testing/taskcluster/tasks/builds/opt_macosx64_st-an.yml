@@ -8,7 +8,7 @@ task:
       description: 'MacOSX64 Static Analysis Opt'
 
   scopes:
-    - 'docker-worker:cache:build-macosx64-st-an-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-macosx64-st-an-workspace'
 
   routes:
     - 'index.buildbot.branches.{{project}}.macosx64-st-an'
@@ -16,7 +16,7 @@ task:
 
   payload:
     cache:
-      build-macosx64-st-an-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-macosx64-st-an-workspace: '/home/worker/workspace'
     env:
       MH_CUSTOM_BUILD_VARIANT_CFG: 'cross-opt'
       DIST_UPLOADS: ''

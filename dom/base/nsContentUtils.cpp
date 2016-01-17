@@ -6636,6 +6636,48 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
   return nullptr;
 }
 
+static void
+ReportPatternCompileFailure(nsAString& aPattern, nsIDocument* aDocument,
+                            JSContext* cx)
+{
+    MOZ_ASSERT(JS_IsExceptionPending(cx));
+
+    JS::RootedValue exn(cx);
+    if (!JS_GetPendingException(cx, &exn)) {
+      return;
+    }
+    if (!exn.isObject()) {
+      // If pending exception is not an object, it should be OOM.
+      return;
+    }
+
+    JS::AutoSaveExceptionState savedExc(cx);
+    JS::RootedObject exnObj(cx, &exn.toObject());
+    JS::RootedValue messageVal(cx);
+    if (!JS_GetProperty(cx, exnObj, "message", &messageVal)) {
+      return;
+    }
+    MOZ_ASSERT(messageVal.isString());
+
+    JS::RootedString messageStr(cx, messageVal.toString());
+    MOZ_ASSERT(messageStr);
+
+    nsAutoString wideMessage;
+    if (!AssignJSString(cx, wideMessage, messageStr)) {
+        return;
+    }
+
+    const nsString& pattern = PromiseFlatString(aPattern);
+    const char16_t *strings[] = { pattern.get(), wideMessage.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::errorFlag,
+                                    NS_LITERAL_CSTRING("DOM"),
+                                    aDocument,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "PatternAttributeCompileFailure",
+                                    strings, ArrayLength(strings));
+    savedExc.drop();
+}
+
 // static
 bool
 nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
@@ -6662,8 +6704,12 @@ nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
   JS::Rooted<JSObject*> re(cx,
     JS_NewUCRegExpObjectNoStatics(cx,
                                   static_cast<char16_t*>(aPattern.BeginWriting()),
-                                  aPattern.Length(), 0));
+                                  aPattern.Length(), JSREG_UNICODE));
   if (!re) {
+    // Remove extra patterns added above to report with the original pattern.
+    aPattern.Cut(0, 4);
+    aPattern.Cut(aPattern.Length() - 2, 2);
+    ReportPatternCompileFailure(aPattern, aDocument, cx);
     return true;
   }
 

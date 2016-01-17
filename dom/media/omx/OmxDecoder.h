@@ -6,7 +6,6 @@
 #include <stagefright/MediaExtractor.h>
 
 #include "GonkNativeWindow.h"
-#include "GonkNativeWindowClient.h"
 #include "mozilla/layers/FenceUtils.h"
 #include "MP3FrameParser.h"
 #include "MPAPI.h"
@@ -42,7 +41,8 @@ class OmxDecoder : public RefBase {
 
   AbstractMediaDecoder *mDecoder;
   sp<GonkNativeWindow> mNativeWindow;
-  sp<GonkNativeWindowClient> mNativeWindowClient;
+  sp<ANativeWindow> mNativeWindowClient;
+
   sp<MediaSource> mVideoTrack;
   sp<OMXCodecProxy> mVideoSource;
   sp<MediaSource> mAudioOffloadTrack;

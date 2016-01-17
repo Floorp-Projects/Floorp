@@ -6,15 +6,15 @@ $inherits:
 task:
   workerType: flame-kk
   scopes:
-    - 'docker-worker:cache:build-aries-debug'
-    - 'docker-worker:cache:build-aries-debug-objdir-gecko-{{project}}'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-debug'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-debug-objdir-gecko'
   metadata:
     name: '[TC] B2G Aries Debug'
 
   payload:
     cache:
-      build-aries-debug: /home/worker/workspace
-      build-aries-debug-objdir-gecko-{{project}}: /home/worker/objdir-gecko
+      level-{{level}}-{{project}}-build-aries-debug: /home/worker/workspace
+      level-{{level}}-{{project}}-build-aries-debug-objdir-gecko: /home/worker/objdir-gecko
     env:
       TARGET: 'aries'
       DEBUG: 0

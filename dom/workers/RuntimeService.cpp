@@ -643,7 +643,7 @@ ContentSecurityPolicyAllows(JSContext* aCx)
     nsString fileName;
     uint32_t lineNum = 0;
 
-    JS::AutoFilename file;
+    JS::UniqueChars file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineNum) && file.get()) {
       fileName = NS_ConvertUTF8toUTF16(file.get());
     } else {

@@ -157,10 +157,10 @@ class Type(object):
 
     def __cmp__(self, other):
         return (
-                # First make sure we have two Types of the same type (no pun intended!)
-                cmp(type(self), type(other)) or
-                cmp(self.pointer, other.pointer) or
-                cmp(self.reference, other.reference)
+            # First make sure we have two Types of the same type (no pun intended!)
+            cmp(type(self), type(other)) or
+            cmp(self.pointer, other.pointer) or
+            cmp(self.reference, other.reference)
         )
 
     @staticmethod
@@ -245,8 +245,8 @@ class SimpleType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -297,10 +297,10 @@ class InterfaceType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                # When comparing interface types, only look at the name.
-                cmp(self.iface.name, other.iface.name) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            # When comparing interface types, only look at the name.
+            cmp(self.iface.name, other.iface.name) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -359,9 +359,9 @@ class InterfaceIsType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                cmp(self.param_index, other.param_index) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            cmp(self.param_index, other.param_index) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -418,11 +418,11 @@ class ArrayType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                cmp(self.element_type, other.element_type) or
-                cmp(self.size_is_arg_num, other.size_is_arg_num) or
-                cmp(self.length_is_arg_num, other.length_is_arg_num) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            cmp(self.element_type, other.element_type) or
+            cmp(self.size_is_arg_num, other.size_is_arg_num) or
+            cmp(self.length_is_arg_num, other.length_is_arg_num) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -477,10 +477,10 @@ class StringWithSizeType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                cmp(self.size_is_arg_num, other.size_is_arg_num) or
-                cmp(self.length_is_arg_num, other.length_is_arg_num) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            cmp(self.size_is_arg_num, other.size_is_arg_num) or
+            cmp(self.length_is_arg_num, other.length_is_arg_num) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -533,10 +533,10 @@ class WideStringWithSizeType(Type):
 
     def __cmp__(self, other):
         return (
-                Type.__cmp__(self, other) or
-                cmp(self.size_is_arg_num, other.size_is_arg_num) or
-                cmp(self.length_is_arg_num, other.length_is_arg_num) or
-                cmp(self.tag, other.tag)
+            Type.__cmp__(self, other) or
+            cmp(self.size_is_arg_num, other.size_is_arg_num) or
+            cmp(self.length_is_arg_num, other.length_is_arg_num) or
+            cmp(self.tag, other.tag)
         )
 
     @staticmethod
@@ -595,13 +595,13 @@ class Param(object):
 
     def __cmp__(self, other):
         return (
-                cmp(self.type, other.type) or
-                cmp(self.in_, other.in_) or
-                cmp(self.out, other.out) or
-                cmp(self.retval, other.retval) or
-                cmp(self.shared, other.shared) or
-                cmp(self.dipper, other.dipper) or
-                cmp(self.optional, other.optional)
+            cmp(self.type, other.type) or
+            cmp(self.in_, other.in_) or
+            cmp(self.out, other.out) or
+            cmp(self.retval, other.retval) or
+            cmp(self.shared, other.shared) or
+            cmp(self.dipper, other.dipper) or
+            cmp(self.optional, other.optional)
         )
 
     @staticmethod
@@ -728,16 +728,16 @@ class Method(object):
 
     def __cmp__(self, other):
         return (
-                cmp(self.name, other.name) or
-                cmp(self.getter, other.getter) or
-                cmp(self.setter, other.setter) or
-                cmp(self.notxpcom, other.notxpcom) or
-                cmp(self.constructor, other.constructor) or
-                cmp(self.hidden, other.hidden) or
-                cmp(self.optargc, other.optargc) or
-                cmp(self.implicit_jscontext, other.implicit_jscontext) or
-                cmp(sorted(self.params), sorted(other.params)) or
-                cmp(self.result, other.result)
+            cmp(self.name, other.name) or
+            cmp(self.getter, other.getter) or
+            cmp(self.setter, other.setter) or
+            cmp(self.notxpcom, other.notxpcom) or
+            cmp(self.constructor, other.constructor) or
+            cmp(self.hidden, other.hidden) or
+            cmp(self.optargc, other.optargc) or
+            cmp(self.implicit_jscontext, other.implicit_jscontext) or
+            cmp(self.params, other.params) or
+            cmp(self.result, other.result)
         )
 
     def read_params(self, typelib, map, data_pool, offset, num_args):
@@ -879,9 +879,9 @@ class Constant(object):
 
     def __cmp__(self, other):
         return (
-                cmp(self.name, other.name) or
-                cmp(self.type, other.type) or
-                cmp(self.value, other.value)
+            cmp(self.name, other.name) or
+            cmp(self.type, other.type) or
+            cmp(self.value, other.value)
         )
 
     @staticmethod
@@ -1018,12 +1018,12 @@ class Interface(object):
             if c != 0:
                 return c
         return (
-                cmp(sorted(self.methods), sorted(other.methods)) or
-                cmp(sorted(self.constants), sorted(other.constants)) or
-                cmp(self.scriptable, other.scriptable) or
-                cmp(self.function, other.function) or
-                cmp(self.builtinclass, other.builtinclass) or
-                cmp(self.main_process_scriptable_only, other.main_process_scriptable_only)
+            cmp(self.methods, other.methods) or
+            cmp(self.constants, other.constants) or
+            cmp(self.scriptable, other.scriptable) or
+            cmp(self.function, other.function) or
+            cmp(self.builtinclass, other.builtinclass) or
+            cmp(self.main_process_scriptable_only, other.main_process_scriptable_only)
         )
 
     def read_descriptor(self, typelib, map, data_pool):

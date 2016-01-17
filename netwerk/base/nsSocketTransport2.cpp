@@ -744,6 +744,7 @@ nsSocketTransport::nsSocketTransport()
     , mOutputClosed(true)
     , mResolving(false)
     , mNetAddrIsSet(false)
+    , mSelfAddrIsSet(false)
     , mLock("nsSocketTransport.mLock")
     , mFD(this)
     , mFDref(0)
@@ -910,6 +911,7 @@ nsSocketTransport::InitWithFilename(const char *filename)
 nsresult
 nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
 {
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     NS_ASSERTION(!mFD.IsInitialized(), "already initialized");
 
     char buf[kNetAddrMaxCStrBufSize];
@@ -930,6 +932,7 @@ nsSocketTransport::InitWithConnectedSocket(PRFileDesc *fd, const NetAddr *addr)
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
+    SetSocketName(fd);
     mNetAddrIsSet = true;
 
     {
@@ -1649,13 +1652,14 @@ nsSocketTransport::OnMsgOutputClosed(nsresult reason)
 void
 nsSocketTransport::OnSocketConnected()
 {
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
     SOCKET_LOG(("  advancing to STATE_TRANSFERRING\n"));
 
     mPollFlags = (PR_POLL_READ | PR_POLL_WRITE | PR_POLL_EXCEPT);
     mPollTimeout = mTimeouts[TIMEOUT_READ_WRITE];
     mState = STATE_TRANSFERRING;
 
-    // Set the mNetAddrIsSet flag only when state has reached TRANSFERRING
+    // Set the m*AddrIsSet flags only when state has reached TRANSFERRING
     // because we need to make sure its value does not change due to failover
     mNetAddrIsSet = true;
 
@@ -1665,6 +1669,7 @@ nsSocketTransport::OnSocketConnected()
         MutexAutoLock lock(mLock);
         NS_ASSERTION(mFD.IsInitialized(), "no socket");
         NS_ASSERTION(mFDref == 1, "wrong socket ref count");
+        SetSocketName(mFD);
         mFDconnected = true;
     }
 
@@ -1677,6 +1682,22 @@ nsSocketTransport::OnSocketConnected()
     }
 
     SendStatus(NS_NET_STATUS_CONNECTED_TO);
+}
+
+void
+nsSocketTransport::SetSocketName(PRFileDesc *fd)
+{
+    MOZ_ASSERT(PR_GetCurrentThread() == gSocketThread, "wrong thread");
+    if (mSelfAddrIsSet) {
+        return;
+    }
+
+    PRNetAddr prAddr;
+    memset(&prAddr, 0, sizeof(prAddr));
+    if (PR_GetSockName(fd, &prAddr) == PR_SUCCESS) {
+        PRNetAddrToNetAddr(&prAddr, &mSelfAddr);
+        mSelfAddrIsSet = true;
+    }
 }
 
 PRFileDesc *
@@ -2325,31 +2346,19 @@ nsSocketTransport::GetPeerAddr(NetAddr *addr)
 NS_IMETHODIMP
 nsSocketTransport::GetSelfAddr(NetAddr *addr)
 {
-    // we must not call any PR methods on our file descriptor
-    // while holding mLock since those methods might re-enter
-    // socket transport code.
+    // once we are in the connected state, mSelfAddr will not change.
+    // so if we can verify that we are in the connected state, then
+    // we can freely access mSelfAddr from any thread without being
+    // inside a critical section.
 
-    PRFileDescAutoLock fd(this);
-    if (!fd.IsInitialized()) {
-        return NS_ERROR_NOT_CONNECTED;
+    if (!mSelfAddrIsSet) {
+        SOCKET_LOG(("nsSocketTransport::GetSelfAddr [this=%p state=%d] "
+                    "NOT_AVAILABLE because not yet connected.", this, mState));
+        return NS_ERROR_NOT_AVAILABLE;
     }
 
-    PRNetAddr prAddr;
-
-    // NSPR doesn't tell us the socket address's length (as provided by
-    // the 'getsockname' system call), so we can't distinguish between
-    // named, unnamed, and abstract Unix domain socket names. (Server
-    // sockets are never unnamed, obviously, but client sockets can use
-    // any kind of address.) Clear prAddr first, so that the path for
-    // unnamed and abstract addresses will at least be reliably empty,
-    // and not garbage for unnamed sockets.
-    memset(&prAddr, 0, sizeof(prAddr));
-
-    nsresult rv =
-        (PR_GetSockName(fd, &prAddr) == PR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
-    PRNetAddrToNetAddr(&prAddr, addr);
-
-    return rv;
+    memcpy(addr, &mSelfAddr, sizeof(NetAddr));
+    return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -17,7 +17,7 @@ namespace jni {
 
 namespace detail {
 
-#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName, ABIName)	\
+#define DEFINE_PRIMITIVE_TYPE_ADAPTER(NativeType, JNIType, JNIName, ABIName) \
     \
     constexpr JNIType (JNIEnv::*TypeAdapter<NativeType>::Call) \
             (jobject, jmethodID, jvalue*) MOZ_JNICALL_ABI; \
@@ -30,7 +30,9 @@ namespace detail {
     constexpr void (JNIEnv::*TypeAdapter<NativeType>::Set) \
             (jobject, jfieldID, JNIType) ABIName; \
     constexpr void (JNIEnv::*TypeAdapter<NativeType>::StaticSet) \
-            (jclass, jfieldID, JNIType) ABIName
+            (jclass, jfieldID, JNIType) ABIName; \
+    constexpr void (JNIEnv::*TypeAdapter<NativeType>::GetArray) \
+            (JNIType ## Array, jsize, jsize, JNIType*)
 
 DEFINE_PRIMITIVE_TYPE_ADAPTER(bool,     jboolean, Boolean, /*nothing*/);
 DEFINE_PRIMITIVE_TYPE_ADAPTER(int8_t,   jbyte,    Byte,    /*nothing*/);

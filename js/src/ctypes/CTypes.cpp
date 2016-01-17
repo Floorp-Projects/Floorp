@@ -5498,20 +5498,6 @@ StructType::Create(JSContext* cx, unsigned argc, Value* vp)
   return true;
 }
 
-static void
-PostBarrierCallback(JSTracer* trc, JSString* key, void* data)
-{
-    typedef HashMap<JSFlatString*,
-                    UnbarrieredFieldInfo,
-                    FieldHashPolicy,
-                    SystemAllocPolicy> UnbarrieredFieldInfoHash;
-
-    UnbarrieredFieldInfoHash* table = reinterpret_cast<UnbarrieredFieldInfoHash*>(data);
-    JSString* prior = key;
-    js::UnsafeTraceManuallyBarrieredEdge(trc, &key, "CType fieldName");
-    table->rekeyIfMoved(JS_ASSERT_STRING_IS_FLAT(prior), JS_ASSERT_STRING_IS_FLAT(key));
-}
-
 bool
 StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsObj_)
 {
@@ -5612,8 +5598,10 @@ StructType::DefineInternal(JSContext* cx, JSObject* typeObj_, JSObject* fieldsOb
       info.mType = fieldType;
       info.mIndex = i;
       info.mOffset = fieldOffset;
-      ASSERT_OK(fields.add(entryPtr, name, info));
-      JS_StoreStringPostBarrierCallback(cx, PostBarrierCallback, name, fields.address());
+      if (!fields.add(entryPtr, name, info)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+      }
 
       structSize = fieldOffset + fieldSize;
 
@@ -6829,7 +6817,7 @@ CClosure::Create(JSContext* cx,
   // we might be unable to convert the value to the proper type. If so, we want
   // the caller to know about it _now_, rather than some uncertain time in the
   // future when the error sentinel is actually needed.
-  mozilla::UniquePtr<uint8_t[], JS::FreePolicy> errResult;
+  UniquePtr<uint8_t[], JS::FreePolicy> errResult;
   if (!errVal.isUndefined()) {
 
     // Make sure the callback returns something.

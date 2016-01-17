@@ -52,6 +52,7 @@ class TouchBlockState;
 class PanGestureBlockState;
 class OverscrollHandoffChain;
 class StateChangeNotificationBlocker;
+class CheckerboardEvent;
 
 /**
  * Controller for all panning and zooming logic. Any time a user input is
@@ -182,7 +183,8 @@ public:
    * layers code indicating that the frame metrics being sent with this call are
    * the initial metrics and the initial paint of the frame has just happened.
    */
-  void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint);
+  void NotifyLayersUpdated(const FrameMetrics& aLayerMetrics, bool aIsFirstPaint,
+                           bool aThisLayerTreeUpdated);
 
   /**
    * The platform implementation must set the compositor parent so that we can
@@ -594,7 +596,8 @@ protected:
   /**
    * Actually send the next pending paint request to gecko.
    */
-  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics);
+  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics,
+                              const ParentLayerPoint& aVelocity);
 
   /**
    * Gets the current frame metrics. This is *not* the Gecko copy stored in the
@@ -1099,6 +1102,17 @@ private:
   // Flag to track whether or not the APZ transform is not used. This
   // flag is recomputed for every composition frame.
   bool mAsyncTransformAppliedToContent;
+
+
+  /* ===================================================================
+   * The functions and members in this section are used for checkerboard
+   * recording.
+   */
+private:
+  // This is created when this APZC instance is first included as part of a
+  // composite. If a checkerboard event takes place, this is destroyed at the
+  // end of the event, and a new one is created on the next composite.
+  UniquePtr<CheckerboardEvent> mCheckerboardEvent;
 };
 
 } // namespace layers

@@ -1649,13 +1649,19 @@ gfxFontGroup::AddPlatformFont(const nsAString& aName,
     }
 
     // Not known in the user font set ==> check system fonts
+    gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
     if (!family) {
-        gfxPlatformFontList* fontList = gfxPlatformFontList::PlatformFontList();
         family = fontList->FindFamily(aName, &mStyle, mDevToCssSize);
     }
 
     if (family) {
         aFamilyList.AppendElement(family);
+        // In some cases, system generic fonts are linked to a set of
+        // families, so include these if that's the case
+        if (family->LinkedSystemFamily()) {
+            fontList->AppendLinkedSystemFamilies(mStyle.language,
+                                                 aFamilyList);
+        }
     }
 }
 

@@ -13,9 +13,17 @@ extern mozilla::LogModule* GetPDMLog();
 
 #ifdef LOG
 #undef LOG
+#undef LOGL
 #endif
 
-#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("OmxDataDecoder::%s: " arg, __func__, ##__VA_ARGS__))
+#define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("OmxDataDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
+
+#define LOGL(arg, ...)                                                     \
+  {                                                                        \
+    void* p = self;                                              \
+    MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug,                         \
+            ("OmxDataDecoder(%p)::%s: " arg, p, __func__, ##__VA_ARGS__)); \
+  }
 
 #define CHECK_OMX_ERR(err)     \
   if (err != OMX_ErrorNone) {  \
@@ -117,7 +125,7 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
   , mPortSettingsChanged(-1, "OmxDataDecoder::mPortSettingsChanged")
   , mCallback(aCallback)
 {
-  LOG("(%p)", this);
+  LOG("");
   mOmxLayer = new OmxPromiseLayer(mOmxTaskQueue, this, aImageContainer);
 
   nsCOMPtr<nsIRunnable> r =
@@ -127,7 +135,7 @@ OmxDataDecoder::OmxDataDecoder(const TrackInfo& aTrackInfo,
 
 OmxDataDecoder::~OmxDataDecoder()
 {
-  LOG("(%p)", this);
+  LOG("");
 }
 
 void
@@ -140,21 +148,27 @@ OmxDataDecoder::InitializationTask()
 void
 OmxDataDecoder::EndOfStream()
 {
-  LOG("(%p)", this);
+  LOG("");
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
 
+  mFlushing = true;
   RefPtr<OmxDataDecoder> self = this;
-  nsCOMPtr<nsIRunnable> r =
-    NS_NewRunnableFunction([self] () {
-      self->mCallback->DrainComplete();
-    });
-  mReaderTaskQueue->Dispatch(r.forget());
+  mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
+    ->Then(mReaderTaskQueue, __func__,
+        [self] () {
+          self->mFlushing = false;
+          self->mCallback->DrainComplete();
+        },
+        [self] () {
+          self->mFlushing = false;
+          self->mCallback->DrainComplete();
+        });
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
 OmxDataDecoder::Init()
 {
-  LOG("(%p)", this);
+  LOG("");
   mReaderTaskQueue = AbstractThread::GetCurrent()->AsTaskQueue();
   MOZ_ASSERT(mReaderTaskQueue);
 
@@ -181,7 +195,7 @@ OmxDataDecoder::Init()
 nsresult
 OmxDataDecoder::Input(MediaRawData* aSample)
 {
-  LOG("(%p) sample %p", this, aSample);
+  LOG("sample %p", aSample);
   MOZ_ASSERT(mInitPromise.IsEmpty());
 
   RefPtr<OmxDataDecoder> self = this;
@@ -205,7 +219,7 @@ OmxDataDecoder::Input(MediaRawData* aSample)
 nsresult
 OmxDataDecoder::Flush()
 {
-  LOG("(%p)", this);
+  LOG("");
 
   mFlushing = true;
 
@@ -227,7 +241,7 @@ OmxDataDecoder::Flush()
 nsresult
 OmxDataDecoder::Drain()
 {
-  LOG("(%p)", this);
+  LOG("");
 
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableMethod(this, &OmxDataDecoder::SendEosBuffer);
@@ -239,7 +253,7 @@ OmxDataDecoder::Drain()
 nsresult
 OmxDataDecoder::Shutdown()
 {
-  LOG("(%p)", this);
+  LOG("");
 
   mShuttingDown = true;
 
@@ -266,7 +280,7 @@ OmxDataDecoder::Shutdown()
 void
 OmxDataDecoder::DoAsyncShutdown()
 {
-  LOG("(%p)", this);
+  LOG("");
   MOZ_ASSERT(mOmxTaskQueue->IsCurrentThreadIn());
   MOZ_ASSERT(!mFlushing);
 
@@ -278,7 +292,7 @@ OmxDataDecoder::DoAsyncShutdown()
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
     ->Then(mOmxTaskQueue, __func__,
            [self] () -> RefPtr<OmxCommandPromise> {
-             LOG("DoAsyncShutdown: flush complete");
+             LOGL("DoAsyncShutdown: flush complete");
              return self->mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr);
            },
            [self] () {
@@ -298,7 +312,7 @@ OmxDataDecoder::DoAsyncShutdown()
              // Here the buffer promises are not resolved due to displaying
              // in layer, it needs to wait before the layer returns the
              // buffers.
-             LOG("DoAsyncShutdown: releasing buffers...");
+             LOGL("DoAsyncShutdown: releasing buffers...");
              self->ReleaseBuffers(OMX_DirInput);
              self->ReleaseBuffers(OMX_DirOutput);
 
@@ -310,7 +324,7 @@ OmxDataDecoder::DoAsyncShutdown()
     ->CompletionPromise()
     ->Then(mOmxTaskQueue, __func__,
            [self] () {
-             LOG("DoAsyncShutdown: OMX_StateLoaded, it is safe to shutdown omx");
+             LOGL("DoAsyncShutdown: OMX_StateLoaded, it is safe to shutdown omx");
              self->mOmxLayer->Shutdown();
              self->mWatchManager.Shutdown();
              self->mOmxLayer = nullptr;
@@ -432,7 +446,7 @@ OmxDataDecoder::EmptyBufferDone(BufferData* aData)
           return;
         }
 
-        LOG("Call InputExhausted()");
+        LOGL("Call InputExhausted()");
         self->mCallback->InputExhausted();
       });
 
@@ -521,7 +535,6 @@ OmxDataDecoder::FindAvailableBuffer(OMX_DIRTYPE aType)
     if (buf->mStatus == BufferData::BufferStatus::FREE) {
       return buf;
     }
-    LOG("buffer is owned by %d, type %d", buf->mStatus, aType);
   }
 
   return nullptr;
@@ -558,7 +571,7 @@ OmxDataDecoder::GetBuffers(OMX_DIRTYPE aType)
 void
 OmxDataDecoder::ResolveInitPromise(const char* aMethodName)
 {
-  LOG("Resolved InitPromise");
+  LOG("called from %s", aMethodName);
   RefPtr<OmxDataDecoder> self = this;
   nsCOMPtr<nsIRunnable> r =
     NS_NewRunnableFunction([self, aMethodName] () {
@@ -906,7 +919,7 @@ OmxDataDecoder::PortSettingsChanged()
       ->CompletionPromise()
       ->Then(mOmxTaskQueue, __func__,
              [self] () {
-               LOG("PortSettingsChanged: port settings changed complete");
+               LOGL("PortSettingsChanged: port settings changed complete");
                // finish port setting changed.
                self->mPortSettingsChanged = -1;
                self->FillAndEmptyBuffers();

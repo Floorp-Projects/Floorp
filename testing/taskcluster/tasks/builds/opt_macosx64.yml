@@ -3,7 +3,7 @@ $inherits:
 task:
   # same as clobber, but with a cached workspace
   scopes:
-    - 'docker-worker:cache:build-macosx64-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-macosx64-workspace'
 
   routes:
     - 'index.buildbot.branches.{{project}}.macosx64'
@@ -11,4 +11,4 @@ task:
 
   payload:
     cache:
-      build-macosx64-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-macosx64-workspace: '/home/worker/workspace'
