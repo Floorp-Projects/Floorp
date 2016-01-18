@@ -285,9 +285,13 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         src_talos_webdir = os.path.join(self.talos_path, 'talos')
 
         if self.query_pagesets_url():
-            self.info("Downloading pageset...")
+            self.info('Downloading pageset...')
+            dirs = self.query_abs_dirs()
             src_talos_pageset = os.path.join(src_talos_webdir, 'tests')
-            self.download_unzip(self.pagesets_url, src_talos_pageset)
+            archive = self.download_file(self.pagesets_url, parent_dir=dirs['abs_work_dir'])
+            unzip = self.query_exe('unzip')
+            unzip_cmd = [unzip, '-q', '-o', archive, '-d', src_talos_pageset]
+            self.run_command(unzip_cmd, halt_on_failure=True)
 
     # Action methods. {{{1
     # clobber defined in BaseScript
