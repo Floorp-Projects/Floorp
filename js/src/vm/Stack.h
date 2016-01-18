@@ -292,11 +292,7 @@ class InterpreterFrame
     enum Flags : uint32_t {
         /* Primary frame type */
         GLOBAL_OR_MODULE       =        0x1,  /* frame pushed for a global script */
-        /* (0x2 and 0x4 are unused) */
-
-        /* Frame subtypes */
-        EVAL                   =        0x8,  /* frame pushed for eval() or debugger eval */
-
+        /* (0x2, 0x4, 0x8 are unused) */
 
         /*
          * Frame pushed for debugger eval.
@@ -454,12 +450,13 @@ class InterpreterFrame
     /*
      * Stack frame type
      *
-     * A stack frame may have one of three types, which determines which
+     * A stack frame may have one of four types, which determines which
      * members of the frame may be accessed and other invariants:
      *
-     *  global frame:   execution of global code or an eval in global code
-     *  function frame: execution of function code or an eval in a function
-     *  module frame: execution of a module
+     *  global frame:   execution of global code
+     *  function frame: execution of function code
+     *  module frame:   execution of a module
+     *  eval frame:     execution of eval code
      */
 
     bool isGlobalOrModuleFrame() const {
@@ -475,20 +472,8 @@ class InterpreterFrame
         return isGlobalOrModuleFrame() && script()->module();
     }
 
-    /*
-     * Eval frames
-     *
-     * As noted above, global and function frames may optionally be 'eval
-     * frames'. Eval code shares its parent's arguments which means that the
-     * arg-access members of InterpreterFrame may not be used for eval frames.
-     * Search for 'hasArgs' below for more details.
-     *
-     * A further sub-classification of eval frames is whether the frame was
-     * pushed for an ES5 strict-mode eval().
-     */
-
     bool isEvalFrame() const {
-        return flags_ & EVAL;
+        return script_->isForEval();
     }
 
     bool isFunctionFrame() const {

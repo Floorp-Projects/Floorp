@@ -280,9 +280,6 @@ class FrameInfo
     Address addressOfFlags() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
     }
-    Address addressOfEvalScript() const {
-        return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfEvalScript());
-    }
     Address addressOfReturnValue() const {
         return Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue());
     }
