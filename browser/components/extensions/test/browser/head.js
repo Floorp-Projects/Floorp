@@ -2,13 +2,7 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-/* exported CustomizableUI makeWidgetId focusWindow forceGC
- *          getBrowserActionWidget
- *          clickBrowserAction clickPageAction
- *          getBrowserActionPopup getPageActionPopup
- *          closeBrowserAction closePageAction
- *          promisePopupShown
- */
+/* exported AppConstants CustomizableUI forceGC makeWidgetId focusWindow clickBrowserAction clickPageAction */
 
 var {AppConstants} = Cu.import("resource://gre/modules/AppConstants.jsm");
 var {CustomizableUI} = Cu.import("resource:///modules/CustomizableUI.jsm");
@@ -45,58 +39,12 @@ var focusWindow = Task.async(function* focusWindow(win) {
   yield promise;
 });
 
-function promisePopupShown(popup) {
-  return new Promise(resolve => {
-    if (popup.state == "open") {
-      resolve();
-    } else {
-      let onPopupShown = event => {
-        popup.removeEventListener("popupshown", onPopupShown);
-        resolve();
-      };
-      popup.addEventListener("popupshown", onPopupShown);
-    }
-  });
-}
+function clickBrowserAction(extension, win = window) {
+  let browserActionId = makeWidgetId(extension.id) + "-browser-action";
+  let elem = win.document.getElementById(browserActionId);
 
-function getBrowserActionWidget(extension) {
-  return CustomizableUI.getWidget(makeWidgetId(extension.id) + "-browser-action");
-}
-
-function getBrowserActionPopup(extension, win = window) {
-  let group = getBrowserActionWidget(extension);
-
-  if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
-    return win.document.getElementById("customizationui-widget-panel");
-  }
-  return null;
-}
-
-var clickBrowserAction = Task.async(function* (extension, win = window) {
-  let group = getBrowserActionWidget(extension);
-  let widget = group.forWindow(win);
-
-  if (group.areaType == CustomizableUI.TYPE_TOOLBAR) {
-    ok(!widget.overflowed, "Expect widget not to be overflowed");
-  } else if (group.areaType == CustomizableUI.TYPE_MENU_PANEL) {
-    yield win.PanelUI.show();
-  }
-
-  EventUtils.synthesizeMouseAtCenter(widget.node, {}, win);
-});
-
-function closeBrowserAction(extension, win = window) {
-  let group = getBrowserActionWidget(extension);
-
-  let node = win.document.getElementById(group.viewId);
-  CustomizableUI.hidePanelForNode(node);
-
-  return Promise.resolve();
-}
-
-function getPageActionPopup(extension, win = window) {
-  let panelId = makeWidgetId(extension.id) + "-panel";
-  return win.document.getElementById(panelId);
+  EventUtils.synthesizeMouseAtCenter(elem, {}, win);
+  return new Promise(SimpleTest.executeSoon);
 }
 
 function clickPageAction(extension, win = window) {
@@ -115,13 +63,3 @@ function clickPageAction(extension, win = window) {
   EventUtils.synthesizeMouseAtCenter(elem, {}, win);
   return new Promise(SimpleTest.executeSoon);
 }
-
-function closePageAction(extension, win = window) {
-  let node = getPageActionPopup(extension, win);
-  if (node) {
-    node.hidePopup();
-  }
-
-  return Promise.resolve();
-}
-
