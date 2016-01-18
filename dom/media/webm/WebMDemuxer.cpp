@@ -431,7 +431,7 @@ WebMDemuxer::ReadMetadata()
 bool
 WebMDemuxer::IsSeekable() const
 {
-  return mContext && nestegg_has_cues(mContext);
+  return mContext;
 }
 
 void
