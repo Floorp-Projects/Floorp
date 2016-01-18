@@ -79,7 +79,7 @@ public:
 
   // Get the RtspMediaResource pointer if this MediaResource is a
   // RtspMediaResource. For calling Rtsp specific functions.
-  virtual RtspMediaResource* GetRtspPointer() override final {
+  RtspMediaResource* GetRtspPointer() override final {
     return this;
   }
 
@@ -94,7 +94,7 @@ public:
 
   // Even it is a live stream, as long as it provides valid timestamps,
   // we tell state machine it's not a live stream.
-  virtual bool IsRealTime() override {
+  bool IsRealTime() override {
     return !mHasTimestamp;
   }
 
@@ -124,29 +124,29 @@ public:
   void DisablePlayoutDelay();
 
   // dummy
-  virtual nsresult ReadAt(int64_t aOffset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes)  override{
+  nsresult ReadAt(int64_t aOffset, char* aBuffer,
+                  uint32_t aCount, uint32_t* aBytes)  override{
     return NS_ERROR_FAILURE;
   }
   // dummy
-  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override {}
+  void     SetReadMode(MediaCacheStream::ReadMode aMode) override {}
   // dummy
-  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
+  void     SetPlaybackRate(uint32_t aBytesPerSecond) override {}
   // dummy
-  virtual int64_t  Tell() override { return 0; }
+  int64_t  Tell() override { return 0; }
 
   // Any thread
-  virtual void    Pin() override {}
-  virtual void    Unpin() override {}
+  void    Pin() override {}
+  void    Unpin() override {}
 
-  virtual bool    IsSuspendedByCache() override { return mIsSuspend; }
+  bool    IsSuspendedByCache() override { return mIsSuspend; }
 
-  virtual bool    IsSuspended() override { return false; }
-  virtual bool    IsTransportSeekable() override { return true; }
+  bool    IsSuspended() override { return false; }
+  bool    IsTransportSeekable() override { return true; }
   // dummy
-  virtual double  GetDownloadRate(bool* aIsReliable) override { *aIsReliable = false; return 0; }
+  double  GetDownloadRate(bool* aIsReliable) override { *aIsReliable = false; return 0; }
 
-  virtual int64_t GetLength() override {
+  int64_t GetLength() override {
     if (mIsLiveStream) {
       return -1;
     }
@@ -154,11 +154,11 @@ public:
   }
 
   // dummy
-  virtual int64_t GetNextCachedData(int64_t aOffset) override { return 0; }
+  int64_t GetNextCachedData(int64_t aOffset) override { return 0; }
   // dummy
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) override { return 0; }
+  int64_t GetCachedDataEnd(int64_t aOffset) override { return 0; }
   // dummy
-  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) override {
+  bool    IsDataCachedToEndOfResource(int64_t aOffset) override {
     return false;
   }
   // dummy
@@ -168,29 +168,26 @@ public:
 
   // The following methods can be called on main thread only.
 
-  virtual nsresult Open(nsIStreamListener** aStreamListener) override;
-  virtual nsresult Close() override;
-  virtual void     Suspend(bool aCloseImmediately) override;
-  virtual void     Resume() override;
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
-  virtual bool     CanClone() override {
+  nsresult Open(nsIStreamListener** aStreamListener) override;
+  nsresult Close() override;
+  void     Suspend(bool aCloseImmediately) override;
+  void     Resume() override;
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
+  bool     CanClone() override {
     return false;
   }
-  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback*)
-  override {
+  already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override {
     return nullptr;
   }
   // dummy
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset,
                                  uint32_t aCount) override {
     return NS_ERROR_FAILURE;
   }
 
-  virtual size_t SizeOfExcludingThis(
-                      MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 
-  virtual size_t SizeOfIncludingThis(
-                      MallocSizeOf aMallocSizeOf) const override {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
