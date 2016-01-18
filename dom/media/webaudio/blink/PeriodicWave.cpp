@@ -109,7 +109,8 @@ PeriodicWave::createTriangle(float sampleRate)
 PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     : m_sampleRate(sampleRate)
     , m_centsPerRange(CentsPerRange)
-    , m_lowestRequestedFundamentalFrequency(std::numeric_limits<float>::max())
+    , m_maxPartialsInBandLimitedTable(0)
+    , m_normalizationScale(1.0f)
 {
     float nyquist = 0.5 * m_sampleRate;
 
@@ -147,7 +148,13 @@ void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, f
     // to the positive frequency.
     fundamentalFrequency = fabsf(fundamentalFrequency);
 
-    if (fundamentalFrequency < m_lowestRequestedFundamentalFrequency) {
+    // We only need to rebuild to the tables if the new fundamental
+    // frequency is low enough to allow for more partials below the
+    // Nyquist frequency.
+    unsigned numberOfPartials = numberOfPartialsForRange(0);
+    float nyquist = 0.5 * m_sampleRate;
+    numberOfPartials = std::min(numberOfPartials, (unsigned)(nyquist / fundamentalFrequency));
+    if (numberOfPartials > m_maxPartialsInBandLimitedTable) {
         for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
             m_bandLimitedTables[rangeIndex] = 0;
         }
@@ -155,7 +162,7 @@ void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, f
         // We need to create the first table to determine the normalization
         // constant.
         createBandLimitedTables(fundamentalFrequency, 0);
-        m_lowestRequestedFundamentalFrequency = fundamentalFrequency;
+        m_maxPartialsInBandLimitedTable = numberOfPartials;
     }
 
     // Calculate the pitch range.
