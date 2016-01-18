@@ -670,7 +670,7 @@ IMEHandler::IsKeyboardPresentOnSlate()
   //    that the OSK is displayed.
 
   // 3. If step 1 and 2 fail then we check attached keyboards and return true
-  //    if we find ACPI\* or HID\VID* keyboards.
+  //    if we find ACPI\*, HID\VID* or bluetooth keyboards.
 
   typedef BOOL (WINAPI* GetAutoRotationState)(PAR_STATE state);
   GetAutoRotationState get_rotation_state =
@@ -763,12 +763,18 @@ IMEHandler::IsKeyboardPresentOnSlate()
                                           MAX_DEVICE_ID_LEN,
                                           0);
     if (status == CR_SUCCESS) {
+      static const std::wstring BT_HID_DEVICE = L"HID\\{00001124";
+      static const std::wstring BT_HOGP_DEVICE = L"HID\\{00001812";
       // To reduce the scope of the hack we only look for ACPI and HID\\VID
       // prefixes in the keyboard device ids.
       if (IMEHandler::WStringStartsWithCaseInsensitive(device_id,
                                                        L"ACPI") ||
           IMEHandler::WStringStartsWithCaseInsensitive(device_id,
-                                                       L"HID\\VID")) {
+                                                       L"HID\\VID") ||
+          IMEHandler::WStringStartsWithCaseInsensitive(device_id,
+                                                       BT_HID_DEVICE) ||
+          IMEHandler::WStringStartsWithCaseInsensitive(device_id,
+                                                       BT_HOGP_DEVICE)) {
         // The heuristic we are using is to check the count of keyboards and
         // return true if the API's report one or more keyboards. Please note
         // that this will break for non keyboard devices which expose a
