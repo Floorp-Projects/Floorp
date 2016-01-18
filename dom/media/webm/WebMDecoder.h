@@ -14,13 +14,13 @@ class WebMDecoder : public MediaDecoder
 {
 public:
   explicit WebMDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsWebMEnabled()) {
       return nullptr;
     }
     return new WebMDecoder(aOwner);
   }
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the WebM backend is preffed on.
   static bool IsEnabled();

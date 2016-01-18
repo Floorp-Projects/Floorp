@@ -22,16 +22,14 @@ protected:
   ~WaveReader();
 
 public:
-  virtual bool DecodeAudioData() override;
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                  int64_t aTimeThreshold) override;
+  bool DecodeAudioData() override;
+  bool DecodeVideoFrame(bool &aKeyframeSkip,
+                        int64_t aTimeThreshold) override;
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags) override;
-  virtual RefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) override;
+  nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
+  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual media::TimeIntervals GetBuffered() override;
+  media::TimeIntervals GetBuffered() override;
 
 private:
   bool ReadAll(char* aBuf, int64_t aSize, int64_t* aBytesRead = nullptr);
