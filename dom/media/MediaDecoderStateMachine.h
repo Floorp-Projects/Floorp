@@ -1196,8 +1196,7 @@ private:
   // Playback will not start when audio is offloading.
   bool mAudioOffloading;
 
-  // Used to distiguish continuous silent audio data.
-  bool mIsAudioDataAudible;
+  // Duration of the continuous silent data.
   uint32_t mSilentDataDuration;
 
 #ifdef MOZ_EME
@@ -1268,6 +1267,9 @@ private:
   // Current playback position in the stream in bytes.
   Canonical<int64_t> mPlaybackOffset;
 
+  // Used to distiguish whether the audio is producing sound.
+  Canonical<bool> mIsAudioDataAudible;
+
 public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
@@ -1286,6 +1288,9 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalPlaybackOffset() {
     return &mPlaybackOffset;
+  }
+  AbstractCanonical<bool>* CanonicalIsAudioDataAudible() {
+    return &mIsAudioDataAudible;
   }
 };
 
