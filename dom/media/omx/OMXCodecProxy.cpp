@@ -64,6 +64,13 @@ OMXCodecProxy::OMXCodecProxy(
 
 OMXCodecProxy::~OMXCodecProxy()
 {
+  // At first, release mResourceClient's resource to prevent a conflict with
+  // mResourceClient's callback.
+  if (mResourceClient) {
+    mResourceClient->ReleaseResource();
+    mResourceClient = nullptr;
+  }
+
   mState = ResourceState::END;
   mCodecPromise.RejectIfExists(true, __func__);
 
@@ -77,11 +84,6 @@ OMXCodecProxy::~OMXCodecProxy()
   }
   // Complete all pending Binder ipc transactions
   IPCThreadState::self()->flushCommands();
-
-  if (mResourceClient) {
-    mResourceClient->ReleaseResource();
-    mResourceClient = nullptr;
-  }
 
   mSource.clear();
   free(mComponentName);

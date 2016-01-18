@@ -52,6 +52,8 @@ const DIAL_ERROR_RADIO_NOT_AVAILABLE = RIL.GECKO_ERROR_RADIO_NOT_AVAILABLE;
 
 const TONES_GAP_DURATION = 70;
 
+const EMERGENCY_CALL_DEFAULT_CLIENT_ID = 0;
+
 // Consts for MMI.
 // MMI procedure as defined in TS.22.030 6.5.2
 const MMI_PROCEDURE_ACTIVATION = "*";
@@ -722,6 +724,26 @@ TelephonyService.prototype = {
   },
 
   /**
+   * Select a proper client for dialing emergency call.
+   *
+   * @return clientId
+   */
+  _getClientIdForEmergencyCall: function() {
+    // Select the client with sim card first.
+    for (let cid = 0; cid < this._numClients; ++cid) {
+      let icc = gIccService.getIccByServiceId(cid);
+      let cardState = icc ? icc.cardState : Ci.nsIIcc.CARD_STATE_UNKONWN;
+      if (cardState !== Ci.nsIIcc.CARD_STATE_UNDETECTED &&
+          cardState !== Ci.nsIIcc.CARD_STATE_UNKNOWN) {
+        return cid;
+      }
+    }
+
+    // Use the defualt client if no card presents.
+    return EMERGENCY_CALL_DEFAULT_CLIENT_ID;
+  },
+
+  /**
    * Dial number. Perform call setup or SS procedure accordingly.
    *
    * @see 3GPP TS 22.030 Figure 3.5.3.2
@@ -866,7 +888,7 @@ TelephonyService.prototype = {
 
     if (isEmergency) {
       // Automatically select a proper clientId for emergency call.
-      aClientId = gRadioInterfaceLayer.getClientIdForEmergencyCall() ;
+      aClientId = this._getClientIdForEmergencyCall() ;
       if (aClientId === -1) {
         if (DEBUG) debug("Error: No client is avaialble for emergency call.");
         aCallback.notifyError(DIAL_ERROR_INVALID_STATE_ERROR);

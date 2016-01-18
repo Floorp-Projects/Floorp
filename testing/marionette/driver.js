@@ -23,6 +23,7 @@ XPCOMUtils.defineLazyServiceGetter(
     this, "cookieManager", "@mozilla.org/cookiemanager;1", "nsICookieManager2");
 
 Cu.import("chrome://marionette/content/actions.js");
+Cu.import("chrome://marionette/content/interactions.js");
 Cu.import("chrome://marionette/content/elements.js");
 Cu.import("chrome://marionette/content/error.js");
 Cu.import("chrome://marionette/content/modal.js");
@@ -163,6 +164,8 @@ this.GeckoDriver = function(appName, device, stopSignal, emulator) {
     "device": device,
     "version": Services.appinfo.version,
   };
+
+  this.interactions = new Interactions(utils, () => this.sessionCapabilities);
 
   this.mm = globalMessageManager;
   this.listener = proxy.toListener(() => this.mm, this.sendAsync.bind(this));
@@ -1981,10 +1984,9 @@ GeckoDriver.prototype.clickElement = function(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      // click atom fails, fall back to click() action
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
-      el.click();
+      yield this.interactions.clickElement({ frame: win },
+        this.curBrowser.elementManager, id)
       break;
 
     case Context.CONTENT:
@@ -2082,8 +2084,8 @@ GeckoDriver.prototype.isElementDisplayed = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
-      resp.body.value = utils.isElementDisplayed(el);
+      resp.body.value = yield this.interactions.isElementDisplayed(
+        {frame: win}, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2130,8 +2132,8 @@ GeckoDriver.prototype.isElementEnabled = function(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, {frame: win});
-      resp.body.value = !(!!el.disabled);
+      resp.body.value = yield this.interactions.isElementEnabled(
+        {frame: win}, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2153,14 +2155,8 @@ GeckoDriver.prototype.isElementSelected = function(cmd, resp) {
     case Context.CHROME:
       // Selenium atom doesn't quite work here
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
-      if (typeof el.checked != "undefined") {
-        resp.body.value = !!el.checked;
-      } else if (typeof el.selected != "undefined") {
-        resp.body.value = !!el.selected;
-      } else {
-        resp.body.value = true;
-      }
+      resp.body.value = yield this.interactions.isElementSelected(
+        { frame: win }, this.curBrowser.elementManager, id);
       break;
 
     case Context.CONTENT:
@@ -2209,15 +2205,8 @@ GeckoDriver.prototype.sendKeysToElement = function(cmd, resp) {
   switch (this.context) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
-      let el = this.curBrowser.elementManager.getKnownElement(id, { frame: win });
-      utils.sendKeysToElement(
-          win,
-          el,
-          value,
-          () => {},
-          e => { throw e; },
-          cmd.id,
-          true /* ignore visibility check */);
+      yield this.interactions.sendKeysToElement(
+        { frame: win }, this.curBrowser.elementManager, id, value, true);
       break;
 
     case Context.CONTENT:
@@ -2806,9 +2795,6 @@ GeckoDriver.prototype.sendKeysToDialog = function(cmd, resp) {
       win,
       loginTextbox,
       cmd.parameters.value,
-      () => {},
-      e => { throw e; },
-      this.command_id,
       true /* ignore visibility check */);
 };
 

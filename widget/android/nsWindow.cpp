@@ -1075,7 +1075,7 @@ nsWindow::Create(nsIWidget* aParent,
         }
     }
 
-    mBounds = aRect.ToUnknownRect();
+    mBounds = aRect;
 
     // for toplevel windows, bounds are fixed to full screen size
     if (!parent) {
