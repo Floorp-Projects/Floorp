@@ -124,6 +124,19 @@ function testBug1109574() {
   var r3 = new Request(r1);
 }
 
+// Bug 1184550 - Request constructor should always throw if used flag is set,
+// even if body is null
+function testBug1184550() {
+  var req = new Request("", { method: 'post', body: "Test" });
+  fetch(req);
+  ok(req.bodyUsed, "Request body should be used immediately after fetch()");
+  return fetch(req).then(function(resp) {
+    ok(false, "Second fetch with same request should fail.");
+  }).catch(function(err) {
+    is(err.name, 'TypeError', "Second fetch with same request should fail.");
+  });
+}
+
 function testHeaderGuard() {
   var headers = {
     "Cookie": "Custom cookie",
@@ -500,6 +513,7 @@ function runTest() {
   testUrlMalformed();
   testMethod();
   testBug1109574();
+  testBug1184550();
   testHeaderGuard();
   testModeCorsPreflightEnumValue();
   testBug1154268();

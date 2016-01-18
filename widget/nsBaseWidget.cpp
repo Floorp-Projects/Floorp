@@ -1443,7 +1443,7 @@ NS_METHOD nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
 **/
 NS_METHOD nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 {
-  aRect = LayoutDeviceIntRect::FromUnknownRect(mBounds);
+  aRect = mBounds;
   return NS_OK;
 }
 

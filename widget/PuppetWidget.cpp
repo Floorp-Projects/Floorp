@@ -30,11 +30,11 @@ using namespace mozilla::layers;
 using namespace mozilla::widget;
 
 static void
-InvalidateRegion(nsIWidget* aWidget, const nsIntRegion& aRegion)
+InvalidateRegion(nsIWidget* aWidget, const LayoutDeviceIntRegion& aRegion)
 {
-  nsIntRegionRectIterator it(aRegion);
-  while(const nsIntRect* r = it.Next()) {
-    aWidget->Invalidate(LayoutDeviceIntRect::FromUnknownRect(*r));
+  LayoutDeviceIntRegion::RectIterator it(aRegion);
+  while(const LayoutDeviceIntRect* r = it.Next()) {
+    aWidget->Invalidate(*r);
   }
 }
 
@@ -107,7 +107,7 @@ PuppetWidget::Create(nsIWidget* aParent,
 
   BaseCreate(nullptr, aInitData);
 
-  mBounds = aRect.ToUnknownRect();
+  mBounds = aRect;
   mEnabled = true;
   mVisible = true;
 
@@ -197,7 +197,7 @@ PuppetWidget::Show(bool aState)
 
   if (!wasVisible && mVisible) {
     Resize(mBounds.width, mBounds.height, false);
-    Invalidate(LayoutDeviceIntRect::FromUnknownRect(mBounds));
+    Invalidate(mBounds);
   }
 
   return NS_OK;
@@ -208,8 +208,9 @@ PuppetWidget::Resize(double aWidth,
                      double aHeight,
                      bool   aRepaint)
 {
-  nsIntRect oldBounds = mBounds;
-  mBounds.SizeTo(nsIntSize(NSToIntRound(aWidth), NSToIntRound(aHeight)));
+  LayoutDeviceIntRect oldBounds = mBounds;
+  mBounds.SizeTo(LayoutDeviceIntSize(NSToIntRound(aWidth),
+                                     NSToIntRound(aHeight)));
 
   if (mChild) {
     return mChild->Resize(aWidth, aHeight, aRepaint);
@@ -218,8 +219,8 @@ PuppetWidget::Resize(double aWidth,
   // XXX: roc says that |aRepaint| dictates whether or not to
   // invalidate the expanded area
   if (oldBounds.Size() < mBounds.Size() && aRepaint) {
-    nsIntRegion dirty(mBounds);
-    dirty.Sub(dirty,  oldBounds);
+    LayoutDeviceIntRegion dirty(mBounds);
+    dirty.Sub(dirty, oldBounds);
     InvalidateRegion(this, dirty);
   }
 
@@ -1240,7 +1241,7 @@ PuppetWidget::GetWindowPosition()
 NS_METHOD
 PuppetWidget::GetScreenBounds(LayoutDeviceIntRect& aRect) {
   aRect.MoveTo(WidgetToScreenOffset());
-  aRect.SizeTo(LayoutDeviceIntSize::FromUnknownSize(mBounds.Size()));
+  aRect.SizeTo(mBounds.Size());
   return NS_OK;
 }
 

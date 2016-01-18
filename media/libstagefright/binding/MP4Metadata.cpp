@@ -112,7 +112,7 @@ MP4Metadata::~MP4Metadata()
 
 #ifdef MOZ_RUST_MP4PARSE
 // Helper to test the rust parser on a data source.
-static bool try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource, int32_t* aCount)
+static bool try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustState, RefPtr<Stream> aSource)
 {
   static LazyLogModule sLog("MP4Metadata");
   int64_t length;
@@ -129,9 +129,7 @@ static bool try_rust(const UniquePtr<mp4parse_state, FreeMP4ParseState>& aRustSt
     MOZ_LOG(sLog, LogLevel::Warning, ("Error copying mp4 data"));
     return false;
   }
-  *aCount = mp4parse_read(aRustState.get(), buffer.data(), bytes_read);
-  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %d tracks", int(*aCount)));
-  return true;
+  return mp4parse_read(aRustState.get(), buffer.data(), bytes_read);
 }
 #endif
 
@@ -139,12 +137,18 @@ uint32_t
 MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
 #ifdef MOZ_RUST_MP4PARSE
+  static LazyLogModule sLog("MP4Metadata");
   // Try in rust first.
   mRustState.reset(mp4parse_new());
-  int32_t rust_tracks = 0;
-  bool rust_mp4parse_success = try_rust(mRustState, mSource, &rust_tracks);
+  int32_t rust_mp4parse_success = try_rust(mRustState, mSource);
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
-                        rust_mp4parse_success);
+                        rust_mp4parse_success == 0);
+  if (rust_mp4parse_success < 0) {
+    Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_ERROR_CODE,
+                          -rust_mp4parse_success);
+  }
+  uint32_t rust_tracks = mp4parse_get_track_count(mRustState.get());
+  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %u tracks", rust_tracks));
 #endif
   size_t tracks = mPrivate->mMetadataExtractor->countTracks();
   uint32_t total = 0;
@@ -176,7 +180,7 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
   uint32_t rust_total = 0;
   const char* rust_track_type = nullptr;
   if (rust_mp4parse_success && rust_tracks > 0) {
-    for (int32_t i = 0; i < rust_tracks; ++i) {
+    for (uint32_t i = 0; i < rust_tracks; ++i) {
       mp4parse_track_info track_info;
       int32_t r = mp4parse_get_track_info(mRustState.get(), i, &track_info);
       switch (aType) {
@@ -197,7 +201,6 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
       }
     }
   }
-  static LazyLogModule sLog("MP4Metadata");
   MOZ_LOG(sLog, LogLevel::Info, ("%s tracks found: stagefright=%u rust=%u",
                                  rust_track_type, total, rust_total));
   switch (aType) {

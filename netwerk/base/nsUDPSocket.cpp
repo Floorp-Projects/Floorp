@@ -16,6 +16,7 @@
 #include "nsError.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
+#include "nsIOService.h"
 #include "prnetdb.h"
 #include "prio.h"
 #include "nsNetAddr.h"
@@ -29,7 +30,6 @@
 #include "nsIDNSRecord.h"
 #include "nsIDNSService.h"
 #include "nsICancelable.h"
-#include "ClosingService.h"
 
 #ifdef MOZ_WIDGET_GONK
 #include "NetStatistics.h"
@@ -332,6 +332,10 @@ nsUDPSocket::TryAttach()
   if (!gSocketTransportService)
     return NS_ERROR_FAILURE;
 
+  if (gIOService->IsNetTearingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   //
   // find out if it is going to be ok to attach another socket to the STS.
   // if not then we have to wait for the STS to tell us that it is ok.
@@ -581,6 +585,10 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
 {
   NS_ENSURE_TRUE(mFD == nullptr, NS_ERROR_ALREADY_INITIALIZED);
 
+  if (gIOService->IsNetTearingDown()) {
+    return NS_ERROR_FAILURE;
+  }
+
   bool addressReuse = (aOptionalArgc == 1) ? aAddressReuse : true;
 
   //
@@ -657,7 +665,6 @@ nsUDPSocket::InitWithAddress(const NetAddr *aAddr, nsIPrincipal *aPrincipal,
 
   // create proxy via NetworkActivityMonitor
   NetworkActivityMonitor::AttachIOLayer(mFD);
-  ClosingService::AttachIOLayer(mFD);
 
   // wait until AsyncListen is called before polling the socket for
   // client connections.

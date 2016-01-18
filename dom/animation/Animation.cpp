@@ -83,6 +83,32 @@ namespace {
 // Animation interface:
 //
 // ---------------------------------------------------------------------------
+/* static */ already_AddRefed<Animation>
+Animation::Constructor(const GlobalObject& aGlobal,
+                       KeyframeEffectReadOnly* aEffect,
+                       AnimationTimeline* aTimeline,
+                       ErrorResult& aRv)
+{
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<Animation> animation = new Animation(global);
+
+  if (!aTimeline) {
+    // Bug 1096776: We do not support null timeline yet.
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+  if (!aEffect) {
+    // Bug 1049975: We do not support null effect yet.
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  animation->SetTimeline(aTimeline);
+  animation->SetEffect(aEffect);
+
+  return animation.forget();
+}
+
 void
 Animation::SetId(const nsAString& aId)
 {
