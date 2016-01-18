@@ -42,7 +42,7 @@ public:
   nsIThread* GMPThread();
 
   // GMPSharedMem
-  virtual void CheckThread() override;
+  void CheckThread() override;
 
   void SetDisplayName(const nsCString& aDisplayName)
   {
@@ -64,19 +64,19 @@ public:
 private:
   ~GMPContentParent();
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() override;
-  virtual bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) override;
+  PGMPVideoDecoderParent* AllocPGMPVideoDecoderParent() override;
+  bool DeallocPGMPVideoDecoderParent(PGMPVideoDecoderParent* aActor) override;
 
-  virtual PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() override;
-  virtual bool DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor) override;
+  PGMPVideoEncoderParent* AllocPGMPVideoEncoderParent() override;
+  bool DeallocPGMPVideoEncoderParent(PGMPVideoEncoderParent* aActor) override;
 
-  virtual PGMPDecryptorParent* AllocPGMPDecryptorParent() override;
-  virtual bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) override;
+  PGMPDecryptorParent* AllocPGMPDecryptorParent() override;
+  bool DeallocPGMPDecryptorParent(PGMPDecryptorParent* aActor) override;
 
-  virtual PGMPAudioDecoderParent* AllocPGMPAudioDecoderParent() override;
-  virtual bool DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor) override;
+  PGMPAudioDecoderParent* AllocPGMPAudioDecoderParent() override;
+  bool DeallocPGMPAudioDecoderParent(PGMPAudioDecoderParent* aActor) override;
 
   void CloseIfUnused();
   // Needed because NS_NewRunnableMethod tried to use the class that the method

@@ -56,20 +56,20 @@ public:
   {}
   virtual ~GMPLoaderImpl() {}
 
-  virtual bool Load(const char* aUTF8LibPath,
-                    uint32_t aUTF8LibPathLen,
-                    char* aOriginSalt,
-                    uint32_t aOriginSaltLen,
-                    const GMPPlatformAPI* aPlatformAPI) override;
+  bool Load(const char* aUTF8LibPath,
+            uint32_t aUTF8LibPathLen,
+            char* aOriginSalt,
+            uint32_t aOriginSaltLen,
+            const GMPPlatformAPI* aPlatformAPI) override;
 
-  virtual GMPErr GetAPI(const char* aAPIName,
-                        void* aHostAPI,
-                        void** aPluginAPI) override;
+  GMPErr GetAPI(const char* aAPIName,
+                void* aHostAPI,
+                void** aPluginAPI) override;
 
-  virtual void Shutdown() override;
+  void Shutdown() override;
 
 #if defined(XP_MACOSX) && defined(MOZ_GMP_SANDBOX)
-  virtual void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override;
+  void SetSandboxInfo(MacSandboxInfo* aSandboxInfo) override;
 #endif
 
 private:
