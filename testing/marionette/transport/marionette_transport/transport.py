@@ -289,22 +289,23 @@ class TcpTransport(object):
 
 
 def wait_for_port(host, port, timeout=60):
-    """ Wait for the specified host/port to be available."""
+    """Wait for the specified host/port to become available."""
     starttime = datetime.datetime.now()
     poll_interval = 0.1
     while datetime.datetime.now() - starttime < datetime.timedelta(seconds=timeout):
         sock = None
         try:
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(0.5)
             sock.connect((host, port))
             data = sock.recv(16)
             sock.close()
-            if ':' in data:
+            if ":" in data:
                 return True
         except socket.error:
             pass
         finally:
-            if sock:
+            if sock is not None:
                 sock.close()
         time.sleep(poll_interval)
     return False
