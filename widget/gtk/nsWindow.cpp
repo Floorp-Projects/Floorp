@@ -1497,7 +1497,7 @@ nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
     // bounds (bug 581863).  gdk_window_get_frame_extents would give the
     // frame bounds, but mBounds.Size() is returned here for consistency
     // with Resize.
-    aRect.SizeTo(LayoutDeviceIntSize::FromUnknownSize(mBounds.Size()));
+    aRect.SizeTo(mBounds.Size());
     LOG(("GetScreenBounds %d,%d | %dx%d\n",
          aRect.x, aRect.y, aRect.width, aRect.height));
     return NS_OK;
@@ -2419,7 +2419,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
         return FALSE;
     }
 
-    mBounds.MoveTo(screenBounds.TopLeft().ToUnknownPoint());
+    mBounds.MoveTo(screenBounds.TopLeft());
 
     // XXX mozilla will invalidate the entire window after this move
     // complete.  wtf?
@@ -2450,7 +2450,7 @@ nsWindow::OnSizeAllocate(GtkAllocation *aAllocation)
          (void *)this, aAllocation->x, aAllocation->y,
          aAllocation->width, aAllocation->height));
 
-    nsIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
+    LayoutDeviceIntSize size = GdkRectToDevicePixels(*aAllocation).Size();
 
     if (mBounds.Size() == size)
         return;
@@ -3542,7 +3542,7 @@ nsWindow::Create(nsIWidget* aParent,
     CommonCreate(aParent, listenForResizes);
 
     // save our bounds
-    mBounds = aRect.ToUnknownRect();
+    mBounds = aRect;
     ConstrainSize(&mBounds.width, &mBounds.height);
 
     // figure out our parent window
@@ -4035,7 +4035,7 @@ nsWindow::NativeResize()
     }
 
     GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
-    
+
     LOG(("nsWindow::NativeResize [%p] %d %d\n", (void *)this,
          size.width, size.height));
 
@@ -4301,14 +4301,12 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild.get());
         NS_ASSERTION(w->GetParent() == this,
                      "Configured widget is not a child");
-        LayoutDeviceIntRect wBounds =
-            LayoutDeviceIntRect::FromUnknownRect(w->mBounds);
         w->SetWindowClipRegion(configuration.mClipRegion, true);
-        if (wBounds.Size() != configuration.mBounds.Size()) {
+        if (w->mBounds.Size() != configuration.mBounds.Size()) {
             w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                       configuration.mBounds.width, configuration.mBounds.height,
                       true);
-        } else if (wBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
             w->Move(configuration.mBounds.x, configuration.mBounds.y);
         }
         w->SetWindowClipRegion(configuration.mClipRegion, false);
@@ -6702,7 +6700,7 @@ nsWindow::DevicePixelsToGdkCoordRoundDown(int pixels) {
 }
 
 GdkPoint
-nsWindow::DevicePixelsToGdkPointRoundDown(nsIntPoint point) {
+nsWindow::DevicePixelsToGdkPointRoundDown(LayoutDeviceIntPoint point) {
     gint scale = GdkScaleFactor();
     return { point.x / scale, point.y / scale };
 }
@@ -6718,7 +6716,7 @@ nsWindow::DevicePixelsToGdkRectRoundOut(LayoutDeviceIntRect rect) {
 }
 
 GdkRectangle
-nsWindow::DevicePixelsToGdkSizeRoundUp(nsIntSize pixelSize) {
+nsWindow::DevicePixelsToGdkSizeRoundUp(LayoutDeviceIntSize pixelSize) {
     gint scale = GdkScaleFactor();
     gint width = (pixelSize.width + scale - 1) / scale;
     gint height = (pixelSize.height + scale - 1) / scale;
@@ -6744,13 +6742,13 @@ nsWindow::GdkPointToDevicePixels(GdkPoint point) {
                                 point.y * scale);
 }
 
-nsIntRect
+LayoutDeviceIntRect
 nsWindow::GdkRectToDevicePixels(GdkRectangle rect) {
     gint scale = GdkScaleFactor();
-    return nsIntRect(rect.x * scale,
-                     rect.y * scale,
-                     rect.width * scale,
-                     rect.height * scale);
+    return LayoutDeviceIntRect(rect.x * scale,
+                               rect.y * scale,
+                               rect.width * scale,
+                               rect.height * scale);
 }
 
 nsresult

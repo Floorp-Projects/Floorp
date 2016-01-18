@@ -36,7 +36,6 @@
 #include "prerr.h"
 #include "prerror.h"
 #include "NetworkActivityMonitor.h"
-#include "ClosingService.h"
 
 using namespace mozilla::net;
 
@@ -144,9 +143,6 @@ void ARTPConnection::MakePortPair(
 
     NetworkActivityMonitor::AttachIOLayer(*rtpSocket);
     NetworkActivityMonitor::AttachIOLayer(*rtcpSocket);
-
-    ClosingService::AttachIOLayer(*rtpSocket);
-    ClosingService::AttachIOLayer(*rtcpSocket);
 
     // Reduce the chance of using duplicate port numbers.
     srand(time(NULL));

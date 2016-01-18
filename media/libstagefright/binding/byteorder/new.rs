@@ -295,6 +295,36 @@ pub trait WriteBytesExt: io::Write {
         write_all(self, &buf)
     }
 
+    /// Writes an unsigned n-bytes integer to the underlying writer.
+    ///
+    /// If the given integer is not representable in the given number of bytes,
+    /// this method panics. If `nbytes > 8`, this method panics.
+    #[inline]
+    fn write_uint<T: ByteOrder>(
+        &mut self,
+        n: u64,
+        nbytes: usize,
+    ) -> Result<()> {
+        let mut buf = [0; 8];
+        T::write_uint(&mut buf, n, nbytes);
+        write_all(self, &buf[0..nbytes])
+    }
+
+    /// Writes a signed n-bytes integer to the underlying writer.
+    ///
+    /// If the given integer is not representable in the given number of bytes,
+    /// this method panics. If `nbytes > 8`, this method panics.
+    #[inline]
+    fn write_int<T: ByteOrder>(
+        &mut self,
+        n: i64,
+        nbytes: usize,
+    ) -> Result<()> {
+        let mut buf = [0; 8];
+        T::write_int(&mut buf, n, nbytes);
+        write_all(self, &buf[0..nbytes])
+    }
+
     /// Writes a IEEE754 single-precision (4 bytes) floating point number to
     /// the underlying writer.
     #[inline]

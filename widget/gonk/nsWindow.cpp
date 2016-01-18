@@ -344,13 +344,13 @@ nsWindow::Create(nsIWidget* aParent,
 
     mScreen = static_cast<nsScreenGonk*>(screen.get());
 
-    mBounds = aRect.ToUnknownRect();
+    mBounds = aRect;
 
     mParent = (nsWindow *)aParent;
     mVisible = false;
 
     if (!aParent) {
-        mBounds = mScreen->GetRect().ToUnknownRect();
+        mBounds = mScreen->GetRect();
     }
 
     mComposer2D = HwcComposer2D::GetInstance();
@@ -448,14 +448,14 @@ nsWindow::Resize(double aX,
                  double aHeight,
                  bool   aRepaint)
 {
-    mBounds = nsIntRect(NSToIntRound(aX), NSToIntRound(aY),
-                        NSToIntRound(aWidth), NSToIntRound(aHeight));
+    mBounds = LayoutDeviceIntRect(NSToIntRound(aX), NSToIntRound(aY),
+                                  NSToIntRound(aWidth), NSToIntRound(aHeight));
     if (mWidgetListener) {
         mWidgetListener->WindowResized(this, mBounds.width, mBounds.height);
     }
 
     if (aRepaint) {
-        Invalidate(LayoutDeviceIntRect::FromUnknownRect(mBounds));
+        Invalidate(mBounds);
     }
 
     return NS_OK;
@@ -726,7 +726,7 @@ nsWindow::BringToTop()
         mWidgetListener->WindowActivated();
     }
 
-    Invalidate(LayoutDeviceIntRect::FromUnknownRect(mBounds));
+    Invalidate(mBounds);
 }
 
 void
