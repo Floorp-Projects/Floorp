@@ -1,0 +1,100 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+createHTML({
+  bug: "1166832",
+  title: "Canvas(2D)::Multiple CaptureStream as video-only input to peerconnection",
+  visible: true
+});
+
+/**
+ * Test to verify using multiple capture streams concurrently.
+ */
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  var h = new CaptureStreamTestHelper2D(50, 50);
+
+  var vremote1;
+  var stream1;
+  var canvas1 = h.createAndAppendElement('canvas', 'source_canvas1');
+
+  var vremote2;
+  var stream2;
+  var canvas2 = h.createAndAppendElement('canvas', 'source_canvas2');
+
+  test.setMediaConstraints([{video: true}, {video: true}], []);
+  test.chain.replace("PC_LOCAL_GUM", [
+    function DRAW_INITIAL_LOCAL1_GREEN(test) {
+      h.drawColor(canvas1, h.green);
+    },
+    function DRAW_INITIAL_LOCAL2_BLUE(test) {
+      h.drawColor(canvas2, h.blue);
+    },
+    function PC_LOCAL_CANVAS_CAPTURESTREAM(test) {
+      stream1 = canvas1.captureStream(0); // fps = 0 to capture single frame
+      test.pcLocal.attachMedia(stream1, 'video', 'local');
+      stream2 = canvas2.captureStream(0); // fps = 0 to capture single frame
+      test.pcLocal.attachMedia(stream2, 'video', 'local');
+    }
+  ]);
+
+  test.chain.append([
+    function CHECK_REMOTE_VIDEO() {
+      var testremote = document.getElementById('pcRemote_remote3_video');
+      ok(!testremote, "Should not have remote3 video element for pcRemote");
+      vremote1 = document.getElementById('pcRemote_remote1_video');
+      vremote2 = document.getElementById('pcRemote_remote2_video');
+
+      // since we don't know which remote video is created first, we don't know
+      // which should be blue or green, but this will make sure that one is
+      // green and one is blue
+      return Promise.race([
+               Promise.all([
+                 h.waitForPixelColor(vremote1, h.green, 128,
+                                     "pcRemote's remote1 should become green"),
+                 h.waitForPixelColor(vremote2, h.blue, 128,
+                                     "pcRemote's remote2 should become blue")
+               ]),
+               Promise.all([
+                 h.waitForPixelColor(vremote2, h.green, 128,
+                                     "pcRemote's remote2 should become green"),
+                 h.waitForPixelColor(vremote1, h.blue, 128,
+                                     "pcRemote's remote1 should become blue")
+               ])
+             ]);
+    },
+    function DRAW_LOCAL1_RED() {
+      // After requesting a frame it will be captured at the time of next render.
+      // Next render will happen at next stable state, at the earliest,
+      // i.e., this order of `requestFrame(); draw();` should work.
+      stream1.requestFrame();
+      h.drawColor(canvas1, h.red);
+    },
+    function DRAW_LOCAL2_RED() {
+      // After requesting a frame it will be captured at the time of next render.
+      // Next render will happen at next stable state, at the earliest,
+      // i.e., this order of `requestFrame(); draw();` should work.
+      stream2.requestFrame();
+      h.drawColor(canvas2, h.red);
+    },
+    function WAIT_FOR_REMOTE1_RED() {
+      return h.waitForPixelColor(vremote1, h.red, 128,
+                                 "pcRemote's remote1 should become red");
+    },
+    function WAIT_FOR_REMOTE2_RED() {
+      return h.waitForPixelColor(vremote2, h.red, 128,
+                                 "pcRemote's remote2 should become red");
+    }
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>

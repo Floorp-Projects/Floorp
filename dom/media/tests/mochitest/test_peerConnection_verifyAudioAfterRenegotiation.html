@@ -1,0 +1,123 @@
+﻿<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    bug: "1166832",
+    title: "Renegotiation: verify audio after renegotiation"
+  });
+
+  var test;
+  runNetworkTest(function (options) {
+    test = new PeerConnectionTest(options);
+
+    var checkAudio = (analyser, fun) => {
+      analyser.enableDebugCanvas();
+      return analyser.waitForAnalysisSuccess(fun)
+        .then(() => analyser.disableDebugCanvas());
+    };
+    var checkAudioEnabled = (analyser, freq) =>
+      checkAudio(analyser, array => array[freq] > 200);
+    var checkAudioDisabled = (analyser, freq) =>
+      checkAudio(analyser, array => array[freq] < 50);
+
+    var ac = new AudioContext();
+    var local1Analyser;
+    var remote1Analyser;
+
+    test.chain.append([
+      function CHECK_ASSUMPTIONS() {
+        is(test.pcLocal.mediaElements.length, 1,
+           "pcLocal should only have one media element");
+        is(test.pcRemote.mediaElements.length, 1,
+           "pcRemote should only have one media element");
+        is(test.pcLocal.streams.length, 1,
+           "pcLocal should only have one stream (the local one)");
+        is(test.pcRemote.streams.length, 1,
+           "pcRemote should only have one stream (the remote one)");
+      },
+      function CHECK_AUDIO() {
+        local1Analyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
+        remote1Analyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
+
+        freq1k = local1Analyser.binIndexForFrequency(1000);
+
+        return Promise.resolve()
+          .then(() => info("Checking local audio enabled"))
+          .then(() => checkAudioEnabled(local1Analyser, freq1k))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => checkAudioEnabled(remote1Analyser, freq1k))
+
+          .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = false)
+
+          .then(() => info("Checking local audio disabled"))
+          .then(() => checkAudioDisabled(local1Analyser, freq1k))
+          .then(() => info("Checking remote audio disabled"))
+          .then(() => checkAudioDisabled(remote1Analyser, freq1k))
+      }
+    ]);
+
+    addRenegotiation(test.chain,
+      [
+        function PC_LOCAL_ADD_SECOND_STREAM(test) {
+          test.setMediaConstraints([{audio: true}],
+                                   []);
+          return test.pcLocal.getAllUserMedia([{audio: true}]);
+        },
+      ]
+    );
+
+    test.chain.append([
+      function CHECK_ASSUMPTIONS2() {
+        is(test.pcLocal.mediaElements.length, 2,
+           "pcLocal should have two media elements");
+        is(test.pcRemote.mediaElements.length, 2,
+           "pcRemote should have two media elements");
+        is(test.pcLocal.streams.length, 2,
+           "pcLocal should have two streams");
+        is(test.pcRemote.streams.length, 2,
+           "pcRemote should have two streams");
+      },
+      function RE_CHECK_AUDIO() {
+        local2Analyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[1]);
+        remote2Analyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[1]);
+
+        freq1k = local2Analyser.binIndexForFrequency(1000);
+
+        return Promise.resolve()
+          .then(() => info("Checking local audio disabled"))
+          .then(() => checkAudioDisabled(local1Analyser, freq1k))
+          .then(() => info("Checking remote audio disabled"))
+          .then(() => checkAudioDisabled(remote1Analyser, freq1k))
+
+          .then(() => info("Checking local2 audio enabled"))
+          .then(() => checkAudioEnabled(local2Analyser, freq1k))
+          .then(() => info("Checking remote2 audio enabled"))
+          .then(() => checkAudioEnabled(remote2Analyser, freq1k))
+
+          .then(() => test.pcLocal.streams[1].getAudioTracks()[0].enabled = false)
+          .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = true)
+
+          .then(() => info("Checking local2 audio disabled"))
+          .then(() => checkAudioDisabled(local2Analyser, freq1k))
+          .then(() => info("Checking remote2 audio disabled"))
+          .then(() => checkAudioDisabled(remote2Analyser, freq1k))
+
+          .then(() => info("Checking local audio enabled"))
+          .then(() => checkAudioEnabled(local1Analyser, freq1k))
+          .then(() => info("Checking remote audio enabled"))
+          .then(() => checkAudioEnabled(remote1Analyser, freq1k))
+      }
+    ]);
+
+    test.setMediaConstraints([{audio: true}], []);
+    test.run();
+  });
+</script>
+</pre>
+</body>
+</html>
