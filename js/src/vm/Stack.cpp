@@ -841,25 +841,6 @@ FrameIter::compartment() const
 }
 
 bool
-FrameIter::isGlobalOrModuleFrame() const
-{
-    switch (data_.state_) {
-      case DONE:
-        break;
-      case INTERP:
-        return interpFrame()->isGlobalOrModuleFrame();
-      case JIT:
-        if (data_.jitFrames_.isBaselineJS())
-            return data_.jitFrames_.baselineFrame()->isGlobalOrModuleFrame();
-        MOZ_ASSERT(!script()->isForEval());
-        return script()->isGlobalCode();
-      case WASM:
-        return false;
-    }
-    MOZ_CRASH("Unexpected state");
-}
-
-bool
 FrameIter::isEvalFrame() const
 {
     switch (data_.state_) {
