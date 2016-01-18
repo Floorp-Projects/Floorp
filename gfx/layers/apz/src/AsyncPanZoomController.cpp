@@ -2762,7 +2762,7 @@ void AsyncPanZoomController::FlushRepaintForNewInputBlock() {
   APZC_LOG("%p flushing repaint for new input block\n", this);
 
   ReentrantMonitorAutoEnter lock(mMonitor);
-  RequestContentRepaint(mFrameMetrics);
+  RequestContentRepaint();
   UpdateSharedCompositorFrameMetrics();
 }
 
@@ -2805,7 +2805,11 @@ int32_t AsyncPanZoomController::GetLastTouchIdentifier() const {
 }
 
 void AsyncPanZoomController::RequestContentRepaint() {
-  RequestContentRepaint(mFrameMetrics);
+  ParentLayerPoint velocity = GetVelocityVector();
+  mFrameMetrics.SetDisplayPortMargins(CalculatePendingDisplayPort(mFrameMetrics, velocity));
+  mFrameMetrics.SetUseDisplayPortMargins(true);
+  mFrameMetrics.SetPaintRequestTime(TimeStamp::Now());
+  RequestContentRepaint(mFrameMetrics, velocity);
 }
 
 /*static*/ CSSRect
@@ -2819,12 +2823,10 @@ GetDisplayPortRect(const FrameMetrics& aFrameMetrics)
   return baseRect;
 }
 
-void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
+void
+AsyncPanZoomController::RequestContentRepaint(const FrameMetrics& aFrameMetrics,
+                                              const ParentLayerPoint& aVelocity)
 {
-  ParentLayerPoint velocity = GetVelocityVector();
-  aFrameMetrics.SetDisplayPortMargins(CalculatePendingDisplayPort(aFrameMetrics, velocity));
-  aFrameMetrics.SetUseDisplayPortMargins(true);
-
   // If we're trying to paint what we already think is painted, discard this
   // request since it's a pointless paint.
   ScreenMargin marginDelta = (mLastPaintRequestMetrics.GetDisplayPortMargins()
@@ -2846,7 +2848,6 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
     return;
   }
 
-  aFrameMetrics.SetPaintRequestTime(TimeStamp::Now());
   RefPtr<GeckoContentController> controller = GetGeckoContentController();
   if (!controller) {
     return;
@@ -2855,7 +2856,7 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
   APZC_LOG_FM(aFrameMetrics, "%p requesting content repaint", this);
   if (mCheckerboardEvent) {
     std::stringstream info;
-    info << " velocity " << velocity;
+    info << " velocity " << aVelocity;
     std::string str = info.str();
     mCheckerboardEvent->UpdateRendertraceProperty(
         CheckerboardEvent::RequestedDisplayPort, GetDisplayPortRect(aFrameMetrics),
@@ -2870,7 +2871,6 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics)
   }
   mExpectedGeckoMetrics = aFrameMetrics;
   mLastPaintRequestMetrics = aFrameMetrics;
-  aFrameMetrics.SetPresShellId(mLastContentPaintMetrics.GetPresShellId());
 }
 
 bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
@@ -3453,9 +3453,6 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
     }
 
     endZoomToMetrics.SetScrollOffset(aRect.TopLeft());
-    endZoomToMetrics.SetDisplayPortMargins(
-      CalculatePendingDisplayPort(endZoomToMetrics, ParentLayerPoint(0,0)));
-    endZoomToMetrics.SetUseDisplayPortMargins(true);
 
     StartAnimation(new ZoomAnimation(
         mFrameMetrics.GetScrollOffset(),
@@ -3465,7 +3462,12 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect) {
 
     // Schedule a repaint now, so the new displayport will be painted before the
     // animation finishes.
-    RequestContentRepaint(endZoomToMetrics);
+    ParentLayerPoint velocity(0, 0);
+    endZoomToMetrics.SetDisplayPortMargins(
+      CalculatePendingDisplayPort(endZoomToMetrics, velocity));
+    endZoomToMetrics.SetUseDisplayPortMargins(true);
+    endZoomToMetrics.SetPaintRequestTime(TimeStamp::Now());
+    RequestContentRepaint(endZoomToMetrics, velocity);
   }
 }
 
