@@ -9,7 +9,7 @@
     <item>
         <shape android:shape="rectangle" >
             <stroke android:width="1dp"
-                    android:color="@color/divider_light" />
+                    android:color="@color/toolbar_divider_grey" />
             <padding android:top="1dp" />
         </shape>
     </item>
