@@ -1137,33 +1137,6 @@ window.addEventListener('ContentStart', function update_onContentStart() {
 }, "geolocation-device-events", false);
 })();
 
-(function suplNiNotifyStatusTracker() {
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    shell.sendChromeEvent({
-      type: 'supl-notification',
-      id: aData
-    });
-}, "supl-ni-notify", false);
-})();
-
-(function suplNiVerifyStatusTracker() {
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    shell.sendChromeEvent({
-      type: 'supl-verification',
-      id: aData
-    });
-}, "supl-ni-verify", false);
-})();
-
-(function suplNiVerifyTimeoutStatusTracker() {
-  Services.obs.addObserver(function(aSubject, aTopic, aData) {
-    shell.sendChromeEvent({
-      type: 'supl-verification-timeout',
-      id: aData
-    });
-}, "supl-ni-verify-timeout", false);
-})();
-
 (function headphonesStatusTracker() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
