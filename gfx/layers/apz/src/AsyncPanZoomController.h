@@ -577,13 +577,16 @@ protected:
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
-   * work. This call will use the current metrics.
+   * work. This call will use the current metrics. If this function is called
+   * from a non-main thread, it will redispatch itself to the main thread, and
+   * use the latest metrics during the redispatch.
    */
   void RequestContentRepaint();
 
   /**
    * Send the provided metrics to Gecko to trigger a repaint. This function
-   * may filter duplicate calls with the same metrics.
+   * may filter duplicate calls with the same metrics. This function must be
+   * called on the main thread.
    */
   void RequestContentRepaint(const FrameMetrics& aFrameMetrics,
                              const ParentLayerPoint& aVelocity);
