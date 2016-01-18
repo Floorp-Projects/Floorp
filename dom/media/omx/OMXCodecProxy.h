@@ -51,15 +51,15 @@ public:
     void ResourceReserveFailed() override;
 
     // MediaSource
-    virtual status_t start(MetaData *params = nullptr);
-    virtual status_t stop();
+    status_t start(MetaData *params = nullptr) override;
+    status_t stop() override;
 
-    virtual sp<MetaData> getFormat();
+    sp<MetaData> getFormat() override;
 
-    virtual status_t read(
-            MediaBuffer **buffer, const ReadOptions *options = nullptr);
+    status_t read(
+            MediaBuffer **buffer, const ReadOptions *options = nullptr) override;
 
-    virtual status_t pause();
+    status_t pause() override;
 
 protected:
     OMXCodecProxy(
