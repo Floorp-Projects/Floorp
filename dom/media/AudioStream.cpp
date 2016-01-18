@@ -127,7 +127,6 @@ AudioStream::AudioStream(DataSource& aSource)
   , mAudioClock(this)
   , mTimeStretcher(nullptr)
   , mDumpFile(nullptr)
-  , mBytesPerFrame(0)
   , mState(INITIALIZED)
   , mIsMonoAudioEnabled(gfxPrefs::MonoAudio())
   , mDataSource(aSource)
@@ -339,7 +338,6 @@ AudioStream::Init(int32_t aNumChannels, int32_t aRate,
   } else {
     params.format = CUBEB_SAMPLE_FLOAT32NE;
   }
-  mBytesPerFrame = sizeof(AudioDataValue) * mOutChannels;
 
   mAudioClock.Init();
 
