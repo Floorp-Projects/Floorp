@@ -401,17 +401,6 @@ You can set this by:
         if message:
             self.fatal(message + "Can't run download-and-extract... exiting")
 
-        if self.config.get("developer_mode") and self._is_darwin():
-            # Bug 1066700 only affects Mac users that try to run mozharness locally
-            version = self._query_binary_version(
-                    regex=re.compile("UnZip\ (\d+\.\d+)\ .*", re.MULTILINE),
-                    cmd=[self.query_exe('unzip'), '-v']
-            )
-            if not version >= 6:
-                self.fatal("We require a more recent version of unzip to unpack our tests.zip files.\n"
-                        "You are currently using version %s. Please update to at least 6.0.\n"
-                        "You can visit http://www.info-zip.org/UnZip.html" % version)
-
     def _read_packages_manifest(self):
         dirs = self.query_abs_dirs()
         source = self.download_file(self.test_packages_url,
