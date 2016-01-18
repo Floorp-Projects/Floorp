@@ -56,6 +56,10 @@ if (Cu) {
   XPCOMUtils.defineLazyServiceGetter(this, "FinalizationWitnessService",
                                      "@mozilla.org/toolkit/finalizationwitness;1",
                                      "nsIFinalizationWitnessService");
+
+  // For now, we're worried about add-ons using Promises with CPOWs, so we'll
+  // permit them in this scope, but this support will go away soon.
+  Cu.permitCPOWsInScope(this);
 }
 
 const STATUS_PENDING = 0;
