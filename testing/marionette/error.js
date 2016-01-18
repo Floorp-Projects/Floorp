@@ -168,25 +168,29 @@ InvalidSessionIdError.prototype = Object.create(WebDriverError.prototype);
  *
  * @param {Error} err
  *     An Error object passed to a catch block or a message.
- * @param {string} fnName
+ * @param {string=} fnName
  *     The name of the function to use in the stack trace message
  *     (e.g. execute_script).
- * @param {string} file
+ * @param {string=} file
  *     The filename of the test file containing the Marionette
  *     command that caused this error to occur.
- * @param {number} line
+ * @param {number=} line
  *     The line number of the above test file.
  * @param {string=} script
  *     The JS script being executed in text form.
  */
-this.JavaScriptError = function(err, fnName, file, line, script) {
+this.JavaScriptError = function(
+    err, fnName = null, file = null, line = null, script = null) {
   let msg = String(err);
   let trace = "";
 
-  if (fnName && line) {
-    trace += `${fnName} @${file}`;
-    if (line) {
-      trace += `, line ${line}`;
+  if (fnName) {
+    trace += fnName;
+    if (file) {
+      trace += `@${file}`;
+      if (line) {
+        trace += `, line ${line}`;
+      }
     }
   }
 
