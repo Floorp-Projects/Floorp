@@ -20,6 +20,9 @@ if [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS relea
     # see testing/taskcluster/scripts/misc/repackage-jdk.sh
     export JAVA_HOME="$topsrcdir/java_home"
     export PATH="$PATH:$topsrcdir/java_home/bin"
+
+    mk_add_options "export JAVA_HOME=$topsrcdir/java_home"
+    mk_add_options "export PATH=$PATH:$topsrcdir/java_home/bin"
 fi
 
 # Set the most aggressive settings for szip. Not the default because it's
@@ -61,10 +64,6 @@ HOST_CXX="$topsrcdir/gcc/bin/g++"
 
 # Avoid dependency on libstdc++ 4.7
 ac_add_options --enable-stdcxx-compat
-
-mk_add_options "export ANT_HOME=$topsrcdir/apache-ant"
-
-mk_add_options "export PATH=$topsrcdir/apache-ant/bin:$PATH"
 
 JS_BINARY="$topsrcdir/mobile/android/config/js_wrapper.sh"
 

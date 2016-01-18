@@ -585,7 +585,7 @@ protected:
   HDC                   mPaintDC; // only set during painting
   HDC                   mCompositeDC; // only set during StartRemoteDrawing
 
-  nsIntRect             mLastPaintBounds;
+  LayoutDeviceIntRect   mLastPaintBounds;
 
   // Used for displayport suppression during window resize
   enum ResizeState {

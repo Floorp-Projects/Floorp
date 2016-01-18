@@ -41,16 +41,46 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
 #![deny(missing_docs)]
 
 use std::mem::transmute;
+use std::ptr::copy_nonoverlapping;
 
+#[cfg(not(feature = "no-std"))]
 pub use byteorder::new::{ReadBytesExt, WriteBytesExt, Error, Result};
 
+#[cfg(not(feature = "no-std"))]
 // Re-export new so gecko can build us as a mod intead of a crate.
 pub mod new;
 
 #[inline]
 fn extend_sign(val: u64, nbytes: usize) -> i64 {
-    let shift  = (8 - nbytes) * 8;
+    let shift = (8 - nbytes) * 8;
     (val << shift) as i64 >> shift
+}
+
+#[inline]
+fn unextend_sign(val: i64, nbytes: usize) -> u64 {
+    let shift = (8 - nbytes) * 8;
+    (val << shift) as u64 >> shift
+}
+
+#[inline]
+fn pack_size(n: u64) -> usize {
+    if n < 1 << 8 {
+        1
+    } else if n < 1 << 16 {
+        2
+    } else if n < 1 << 24 {
+        3
+    } else if n < 1 << 32 {
+        4
+    } else if n < 1 << 40 {
+        5
+    } else if n < 1 << 48 {
+        6
+    } else if n < 1 << 56 {
+        7
+    } else {
+        8
+    }
 }
 
 /// ByteOrder describes types that can serialize integers as bytes.
@@ -119,6 +149,12 @@ pub trait ByteOrder {
     ///
     /// Panics when `buf.len() < 8`.
     fn write_u64(buf: &mut [u8], n: u64);
+
+    /// Writes an unsigned integer `n` to `buf` using only `nbytes`.
+    ///
+    /// If `n` is not representable in `nbytes`, or if `nbytes` is `> 8`, then
+    /// this method panics.
+    fn write_uint(buf: &mut [u8], n: u64, nbytes: usize);
 
     /// Reads a signed 16 bit integer from `buf`.
     ///
@@ -193,6 +229,15 @@ pub trait ByteOrder {
         Self::write_u64(buf, n as u64)
     }
 
+    /// Writes a signed integer `n` to `buf` using only `nbytes`.
+    ///
+    /// If `n` is not representable in `nbytes`, or if `nbytes` is `> 8`, then
+    /// this method panics.
+    #[inline]
+    fn write_int(buf: &mut [u8], n: i64, nbytes: usize) {
+        Self::write_uint(buf, unextend_sign(n, nbytes), nbytes)
+    }
+
     /// Writes a IEEE754 single-precision (4 bytes) floating point number.
     ///
     /// Panics when `buf.len() < 4`.
@@ -238,41 +283,16 @@ pub type NativeEndian = BigEndian;
 
 macro_rules! read_num_bytes {
     ($ty:ty, $size:expr, $src:expr, $which:ident) => ({
-        assert!($src.len() >= $size); // critical for memory safety!
+        assert!($size <= $src.len());
         unsafe {
             (*($src.as_ptr() as *const $ty)).$which()
-        }
-    });
-    ($ty:ty, $size:expr, le $bytes:expr, $src:expr, $which:ident) => ({
-        use std::ptr::copy_nonoverlapping;
-
-        assert!($bytes > 0 && $bytes < 9 && $bytes <= $src.len());
-        let mut out = [0u8; $size];
-        let ptr_out = out.as_mut_ptr();
-        unsafe {
-            copy_nonoverlapping($src.as_ptr(), ptr_out, $bytes);
-            (*(ptr_out as *const $ty)).$which()
-        }
-    });
-    ($ty:ty, $size:expr, be $bytes:expr, $src:expr, $which:ident) => ({
-        use std::ptr::copy_nonoverlapping;
-
-        assert!($bytes > 0 && $bytes < 9 && $bytes <= $src.len());
-        let mut out = [0u8; $size];
-        let ptr_out = out.as_mut_ptr();
-        unsafe {
-            copy_nonoverlapping($src.as_ptr(),
-                                ptr_out.offset((8 - $bytes) as isize), $bytes);
-            (*(ptr_out as *const $ty)).$which()
         }
     });
 }
 
 macro_rules! write_num_bytes {
     ($ty:ty, $size:expr, $n:expr, $dst:expr, $which:ident) => ({
-        use std::ptr::copy_nonoverlapping;
-
-        assert!($dst.len() >= $size); // critical for memory safety!
+        assert!($size <= $dst.len());
         unsafe {
             // N.B. https://github.com/rust-lang/rust/issues/22776
             let bytes = transmute::<_, [u8; $size]>($n.$which());
@@ -299,7 +319,14 @@ impl ByteOrder for BigEndian {
 
     #[inline]
     fn read_uint(buf: &[u8], nbytes: usize) -> u64 {
-        read_num_bytes!(u64, 8, be nbytes, buf, to_be)
+        assert!(1 <= nbytes && nbytes <= 8 && nbytes <= buf.len());
+        let mut out = [0u8; 8];
+        let ptr_out = out.as_mut_ptr();
+        unsafe {
+            copy_nonoverlapping(
+                buf.as_ptr(), ptr_out.offset((8 - nbytes) as isize), nbytes);
+            (*(ptr_out as *const u64)).to_be()
+        }
     }
 
     #[inline]
@@ -315,6 +342,19 @@ impl ByteOrder for BigEndian {
     #[inline]
     fn write_u64(buf: &mut [u8], n: u64) {
         write_num_bytes!(u64, 8, n, buf, to_be);
+    }
+
+    #[inline]
+    fn write_uint(buf: &mut [u8], n: u64, nbytes: usize) {
+        assert!(pack_size(n) <= nbytes && nbytes <= 8);
+        assert!(nbytes <= buf.len());
+        unsafe {
+            let bytes: [u8; 8] = transmute(n.to_be());
+            copy_nonoverlapping(
+                bytes.as_ptr().offset((8 - nbytes) as isize),
+                buf.as_mut_ptr(),
+                nbytes);
+        }
     }
 }
 
@@ -336,7 +376,13 @@ impl ByteOrder for LittleEndian {
 
     #[inline]
     fn read_uint(buf: &[u8], nbytes: usize) -> u64 {
-        read_num_bytes!(u64, 8, le nbytes, buf, to_le)
+        assert!(1 <= nbytes && nbytes <= 8 && nbytes <= buf.len());
+        let mut out = [0u8; 8];
+        let ptr_out = out.as_mut_ptr();
+        unsafe {
+            copy_nonoverlapping(buf.as_ptr(), ptr_out, nbytes);
+            (*(ptr_out as *const u64)).to_le()
+        }
     }
 
     #[inline]
@@ -352,6 +398,16 @@ impl ByteOrder for LittleEndian {
     #[inline]
     fn write_u64(buf: &mut [u8], n: u64) {
         write_num_bytes!(u64, 8, n, buf, to_le);
+    }
+
+    #[inline]
+    fn write_uint(buf: &mut [u8], n: u64, nbytes: usize) {
+        assert!(pack_size(n as u64) <= nbytes && nbytes <= 8);
+        assert!(nbytes <= buf.len());
+        unsafe {
+            let bytes: [u8; 8] = transmute(n.to_le());
+            copy_nonoverlapping(bytes.as_ptr(), buf.as_mut_ptr(), nbytes);
+        }
     }
 }
 
@@ -386,8 +442,8 @@ mod test {
                     let max = ($max - 1) >> (8 * (8 - $bytes));
                     fn prop(n: $ty_int) -> bool {
                         let mut buf = [0; 8];
-                        BigEndian::$write(&mut buf, n);
-                        n == BigEndian::$read(&mut buf[8 - $bytes..], $bytes)
+                        BigEndian::$write(&mut buf, n, $bytes);
+                        n == BigEndian::$read(&mut buf[..$bytes], $bytes)
                     }
                     qc_sized(prop as fn($ty_int) -> bool, max);
                 }
@@ -397,7 +453,7 @@ mod test {
                     let max = ($max - 1) >> (8 * (8 - $bytes));
                     fn prop(n: $ty_int) -> bool {
                         let mut buf = [0; 8];
-                        LittleEndian::$write(&mut buf, n);
+                        LittleEndian::$write(&mut buf, n, $bytes);
                         n == LittleEndian::$read(&mut buf[..$bytes], $bytes)
                     }
                     qc_sized(prop as fn($ty_int) -> bool, max);
@@ -408,7 +464,7 @@ mod test {
                     let max = ($max - 1) >> (8 * (8 - $bytes));
                     fn prop(n: $ty_int) -> bool {
                         let mut buf = [0; 8];
-                        NativeEndian::$write(&mut buf, n);
+                        NativeEndian::$write(&mut buf, n, $bytes);
                         n == NativeEndian::$read(&mut buf[..$bytes], $bytes)
                     }
                     qc_sized(prop as fn($ty_int) -> bool, max);
@@ -467,23 +523,23 @@ mod test {
     qc_byte_order!(prop_f32, f32, ::std::u64::MAX as u64, read_f32, write_f32);
     qc_byte_order!(prop_f64, f64, ::std::i64::MAX as u64, read_f64, write_f64);
 
-    qc_byte_order!(prop_uint_1, u64, super::U64_MAX, 1, read_uint, write_u64);
-    qc_byte_order!(prop_uint_2, u64, super::U64_MAX, 2, read_uint, write_u64);
-    qc_byte_order!(prop_uint_3, u64, super::U64_MAX, 3, read_uint, write_u64);
-    qc_byte_order!(prop_uint_4, u64, super::U64_MAX, 4, read_uint, write_u64);
-    qc_byte_order!(prop_uint_5, u64, super::U64_MAX, 5, read_uint, write_u64);
-    qc_byte_order!(prop_uint_6, u64, super::U64_MAX, 6, read_uint, write_u64);
-    qc_byte_order!(prop_uint_7, u64, super::U64_MAX, 7, read_uint, write_u64);
-    qc_byte_order!(prop_uint_8, u64, super::U64_MAX, 8, read_uint, write_u64);
+    qc_byte_order!(prop_uint_1, u64, super::U64_MAX, 1, read_uint, write_uint);
+    qc_byte_order!(prop_uint_2, u64, super::U64_MAX, 2, read_uint, write_uint);
+    qc_byte_order!(prop_uint_3, u64, super::U64_MAX, 3, read_uint, write_uint);
+    qc_byte_order!(prop_uint_4, u64, super::U64_MAX, 4, read_uint, write_uint);
+    qc_byte_order!(prop_uint_5, u64, super::U64_MAX, 5, read_uint, write_uint);
+    qc_byte_order!(prop_uint_6, u64, super::U64_MAX, 6, read_uint, write_uint);
+    qc_byte_order!(prop_uint_7, u64, super::U64_MAX, 7, read_uint, write_uint);
+    qc_byte_order!(prop_uint_8, u64, super::U64_MAX, 8, read_uint, write_uint);
 
-    qc_byte_order!(prop_int_1, i64, super::I64_MAX, 1, read_int, write_i64);
-    qc_byte_order!(prop_int_2, i64, super::I64_MAX, 2, read_int, write_i64);
-    qc_byte_order!(prop_int_3, i64, super::I64_MAX, 3, read_int, write_i64);
-    qc_byte_order!(prop_int_4, i64, super::I64_MAX, 4, read_int, write_i64);
-    qc_byte_order!(prop_int_5, i64, super::I64_MAX, 5, read_int, write_i64);
-    qc_byte_order!(prop_int_6, i64, super::I64_MAX, 6, read_int, write_i64);
-    qc_byte_order!(prop_int_7, i64, super::I64_MAX, 7, read_int, write_i64);
-    qc_byte_order!(prop_int_8, i64, super::I64_MAX, 8, read_int, write_i64);
+    qc_byte_order!(prop_int_1, i64, super::I64_MAX, 1, read_int, write_int);
+    qc_byte_order!(prop_int_2, i64, super::I64_MAX, 2, read_int, write_int);
+    qc_byte_order!(prop_int_3, i64, super::I64_MAX, 3, read_int, write_int);
+    qc_byte_order!(prop_int_4, i64, super::I64_MAX, 4, read_int, write_int);
+    qc_byte_order!(prop_int_5, i64, super::I64_MAX, 5, read_int, write_int);
+    qc_byte_order!(prop_int_6, i64, super::I64_MAX, 6, read_int, write_int);
+    qc_byte_order!(prop_int_7, i64, super::I64_MAX, 7, read_int, write_int);
+    qc_byte_order!(prop_int_8, i64, super::I64_MAX, 8, read_int, write_int);
 
     macro_rules! qc_bytes_ext {
         ($name:ident, $ty_int:ident, $max:expr,

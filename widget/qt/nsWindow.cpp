@@ -151,7 +151,7 @@ nsWindow::Create(nsIWidget* aParent,
     mParent = (nsWindow *)aParent;
 
     // save our bounds
-    mBounds = aRect.ToUnknownRect();
+    mBounds = aRect;
 
     // find native parent
     MozQWidget *parent = nullptr;
@@ -466,8 +466,7 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     // synthesize a resize event if this isn't a toplevel
     if (mIsTopLevel || mListenForResizes) {
         nsEventStatus status;
-        DispatchResizeEvent(LayoutDeviceIntRect::FromUnknownRect(mBounds),
-                            status);
+        DispatchResizeEvent(mBounds, status);
     }
 
     NotifyRollupGeometryChange();
@@ -530,8 +529,7 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     if (mIsTopLevel || mListenForResizes) {
         // synthesize a resize event
         nsEventStatus status;
-        DispatchResizeEvent(LayoutDeviceIntRect::FromUnknownRect(mBounds),
-                            status);
+        DispatchResizeEvent(mBounds, status);
     }
 
     if (aRepaint) {
@@ -603,13 +601,11 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigura
         NS_ASSERTION(w->GetParent() == this,
                      "Configured widget is not a child");
 
-        LayoutDeviceIntRect wBounds =
-            LayoutDeviceIntRect::FromUnknownRect(w->mBounds);
-        if (wBounds.Size() != configuration.mBounds.Size()) {
+        if (w->mBounds.Size() != configuration.mBounds.Size()) {
             w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                       configuration.mBounds.width, configuration.mBounds.height,
                       true);
-        } else if (wBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
             w->Move(configuration.mBounds.x, configuration.mBounds.y);
         }
     }
@@ -1503,8 +1499,7 @@ void find_first_visible_parent(QWindow* aItem, QWindow*& aVisibleItem)
 NS_IMETHODIMP
 nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
-    aRect = LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0),
-                                LayoutDeviceIntSize::FromUnknownSize(mBounds.Size()));
+    aRect = LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0), mBounds.Size());
     if (mIsTopLevel) {
         QPoint pos = mWidget->position();
         aRect.MoveTo(pos.x(), pos.y());

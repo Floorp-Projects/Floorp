@@ -26580,6 +26580,10 @@
         "url": "/vibration/silent-ignore.html"
       },
       {
+        "path": "web-animations/animation/constructor.html",
+        "url": "/web-animations/animation/constructor.html"
+      },
+      {
         "path": "web-animations/animation-node/animation-node-after.html",
         "url": "/web-animations/animation-node/animation-node-after.html"
       },
