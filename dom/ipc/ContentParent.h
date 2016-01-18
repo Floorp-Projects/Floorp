@@ -457,16 +457,14 @@ public:
   AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
                                  const URIParams& aDocumentURI,
                                  const PrincipalInfo& aLoadingPrincipalInfo,
-                                 const bool& aStickDocument,
-                                 const TabId& aTabId) override;
+                                 const bool& aStickDocument) override;
 
   virtual bool
   RecvPOfflineCacheUpdateConstructor(POfflineCacheUpdateParent* aActor,
                                      const URIParams& aManifestURI,
                                      const URIParams& aDocumentURI,
                                      const PrincipalInfo& aLoadingPrincipal,
-                                     const bool& stickDocument,
-                                     const TabId& aTabId) override;
+                                     const bool& stickDocument) override;
 
   virtual bool
   DeallocPOfflineCacheUpdateParent(POfflineCacheUpdateParent* aActor) override;

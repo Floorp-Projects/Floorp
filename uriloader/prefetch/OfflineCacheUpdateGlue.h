@@ -30,7 +30,7 @@ namespace docshell {
   NS_IMETHOD GetManifestURI(nsIURI **aManifestURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetManifestURI(aManifestURI); } \
   NS_IMETHOD GetSucceeded(bool *aSucceeded) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSucceeded(aSucceeded); } \
   NS_IMETHOD InitPartial(nsIURI *aManifestURI, const nsACString & aClientID, nsIURI *aDocumentURI, nsIPrincipal *aLoadingPrincipal) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitPartial(aManifestURI, aClientID, aDocumentURI, aLoadingPrincipal); } \
-  NS_IMETHOD InitForUpdateCheck(nsIURI *aManifestURI, nsIPrincipal* aLoadingPrincipal, uint32_t aAppID, bool aInBrowser, nsIObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitForUpdateCheck(aManifestURI, aLoadingPrincipal, aAppID, aInBrowser, aObserver); } \
+  NS_IMETHOD InitForUpdateCheck(nsIURI *aManifestURI, nsIPrincipal* aLoadingPrincipal, nsIObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->InitForUpdateCheck(aManifestURI, aLoadingPrincipal, aObserver); } \
   NS_IMETHOD AddDynamicURI(nsIURI *aURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->AddDynamicURI(aURI); } \
   NS_IMETHOD AddObserver(nsIOfflineCacheUpdateObserver *aObserver, bool aHoldWeak) override { return !_to ? NS_ERROR_NULL_POINTER : _to->AddObserver(aObserver, aHoldWeak); } \
   NS_IMETHOD RemoveObserver(nsIOfflineCacheUpdateObserver *aObserver) override { return !_to ? NS_ERROR_NULL_POINTER : _to->RemoveObserver(aObserver); } \
@@ -54,9 +54,7 @@ public:
                     nsIURI *aDocumentURI,
                     nsIPrincipal* aLoadingPrincipal,
                     nsIDOMDocument *aDocument,
-                    nsIFile *aCustomProfileDir,
-                    uint32_t aAppID,
-                    bool aInBrowser) override;
+                    nsIFile *aCustomProfileDir) override;
 
     NS_DECL_NSIOFFLINECACHEUPDATEOBSERVER
 
