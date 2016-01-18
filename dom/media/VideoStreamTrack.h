@@ -17,12 +17,12 @@ public:
   VideoStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
     : MediaStreamTrack(aStream, aTrackID, aLabel) {}
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual VideoStreamTrack* AsVideoStreamTrack() override { return this; }
+  VideoStreamTrack* AsVideoStreamTrack() override { return this; }
 
   // WebIDL
-  virtual void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
+  void GetKind(nsAString& aKind) override { aKind.AssignLiteral("video"); }
 };
 
 } // namespace dom

@@ -380,11 +380,10 @@ private:
 
 class BaseMediaResource : public MediaResource {
 public:
-  virtual nsIURI* URI() const override { return mURI; }
-  virtual void SetLoadInBackground(bool aLoadInBackground) override;
+  nsIURI* URI() const override { return mURI; }
+  void SetLoadInBackground(bool aLoadInBackground) override;
 
-  virtual size_t SizeOfExcludingThis(
-                  MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     // Might be useful to track in the future:
     // - mChannel
@@ -397,8 +396,7 @@ public:
     return size;
   }
 
-  virtual size_t SizeOfIncludingThis(
-                  MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
@@ -429,7 +427,7 @@ protected:
     MOZ_COUNT_DTOR(BaseMediaResource);
   }
 
-  virtual const nsCString& GetContentType() const override
+  const nsCString& GetContentType() const override
   {
     return mContentType;
   }
@@ -556,21 +554,21 @@ public:
 
   // Ensure that the media cache writes any data held in its partial block.
   // Called on the main thread.
-  virtual void FlushCache() override;
+  void FlushCache() override;
 
   // Notify that the last data byte range was loaded.
-  virtual void NotifyLastByteRange() override;
+  void NotifyLastByteRange() override;
 
   // Main thread
-  virtual nsresult Open(nsIStreamListener** aStreamListener) override;
-  virtual nsresult Close() override;
-  virtual void     Suspend(bool aCloseImmediately) override;
-  virtual void     Resume() override;
-  virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
+  nsresult Open(nsIStreamListener** aStreamListener) override;
+  nsresult Close() override;
+  void     Suspend(bool aCloseImmediately) override;
+  void     Resume() override;
+  already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
   // Return true if the stream has been closed.
-  bool IsClosed() const { return mCacheStream.IsClosed(); }
-  virtual bool     CanClone() override;
-  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
+  bool     IsClosed() const { return mCacheStream.IsClosed(); }
+  bool     CanClone() override;
+  already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
   // Set statistics to be recorded to the object passed in. If not called,
   // |ChannelMediaResource| will create it's own statistics objects in |Open|.
   void RecordStatisticsTo(MediaChannelStatistics *aStatistics) override {
@@ -580,31 +578,30 @@ public:
       mChannelStatistics = aStatistics;
     }
   }
-  virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
-  virtual void     EnsureCacheUpToDate() override;
+  nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
+  void     EnsureCacheUpToDate() override;
 
   // Other thread
-  virtual void     SetReadMode(MediaCacheStream::ReadMode aMode) override;
-  virtual void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
-  virtual nsresult ReadAt(int64_t offset, char* aBuffer,
-                          uint32_t aCount, uint32_t* aBytes) override;
-  virtual already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
-  virtual int64_t Tell() override;
+  void     SetReadMode(MediaCacheStream::ReadMode aMode) override;
+  void     SetPlaybackRate(uint32_t aBytesPerSecond) override;
+  nsresult ReadAt(int64_t offset, char* aBuffer,
+                  uint32_t aCount, uint32_t* aBytes) override;
+  already_AddRefed<MediaByteBuffer> MediaReadAt(int64_t aOffset, uint32_t aCount) override;
+  int64_t Tell() override;
 
   // Any thread
-  virtual void    Pin() override;
-  virtual void    Unpin() override;
-  virtual double  GetDownloadRate(bool* aIsReliable) override;
-  virtual int64_t GetLength() override;
-  virtual int64_t GetNextCachedData(int64_t aOffset) override;
-  virtual int64_t GetCachedDataEnd(int64_t aOffset) override;
-  virtual bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
-  virtual bool    IsSuspendedByCache() override;
-  virtual bool    IsSuspended() override;
-  virtual bool    IsTransportSeekable() override;
+  void    Pin() override;
+  void    Unpin() override;
+  double  GetDownloadRate(bool* aIsReliable) override;
+  int64_t GetLength() override;
+  int64_t GetNextCachedData(int64_t aOffset) override;
+  int64_t GetCachedDataEnd(int64_t aOffset) override;
+  bool    IsDataCachedToEndOfResource(int64_t aOffset) override;
+  bool    IsSuspendedByCache() override;
+  bool    IsSuspended() override;
+  bool    IsTransportSeekable() override;
 
-  virtual size_t SizeOfExcludingThis(
-                      MallocSizeOf aMallocSizeOf) const override {
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override {
     // Might be useful to track in the future:
     //   - mListener (seems minor)
     //   - mChannelStatistics (seems minor)
@@ -616,8 +613,7 @@ public:
     return size;
   }
 
-  virtual size_t SizeOfIncludingThis(
-                      MallocSizeOf aMallocSizeOf) const override {
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
@@ -642,7 +638,7 @@ public:
   };
   friend class Listener;
 
-  virtual nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
+  nsresult GetCachedRanges(MediaByteRangeSet& aRanges) override;
 
 protected:
   // These are called on the main thread by Listener.
