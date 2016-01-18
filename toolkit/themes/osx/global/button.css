@@ -9,7 +9,6 @@ button {
   /* The horizontal margin used here come from the Aqua Human Interface
      Guidelines, there should be 12 pixels between two buttons. */
   margin: 5px 6px 3px;
-  padding: 2px 6px 3px;
   min-width: 79px;
   color: ButtonText;
   text-shadow: none;
