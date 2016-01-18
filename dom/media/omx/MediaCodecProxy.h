@@ -163,6 +163,8 @@ private:
   bool mCodecEncoder;
 
   mozilla::MozPromiseHolder<CodecPromise> mCodecPromise;
+  // When mPromiseMonitor is held, mResourceClient's functions should not be called.
+  mozilla::Monitor mPromiseMonitor;
 
   // Media Resource Management
   RefPtr<mozilla::MediaSystemResourceClient> mResourceClient;
@@ -174,9 +176,6 @@ private:
   //MediaCodec buffers to hold input/output data.
   Vector<sp<ABuffer> > mInputBuffers;
   Vector<sp<ABuffer> > mOutputBuffers;
-
-  mozilla::Monitor mMediaCodecLock;
-  bool mPendingRequestMediaResource;
 };
 
 } // namespace android
