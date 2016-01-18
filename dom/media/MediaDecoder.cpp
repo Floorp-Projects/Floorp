@@ -532,8 +532,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
                           "MediaDecoder::mStateMachineDuration (Mirror)")
   , mPlaybackPosition(AbstractThread::MainThread(), 0,
                       "MediaDecoder::mPlaybackPosition (Mirror)")
-  , mIsAudioDataAudible(AbstractThread::MainThread(), false,
-                        "MediaDecoder::mIsAudioDataAudible (Mirror)")
   , mVolume(AbstractThread::MainThread(), 0.0,
             "MediaDecoder::mVolume (Canonical)")
   , mPlaybackRate(AbstractThread::MainThread(), 1.0,
@@ -594,8 +592,6 @@ MediaDecoder::MediaDecoder(MediaDecoderOwner* aOwner)
   // mIgnoreProgressData
   mWatchManager.Watch(mLogicallySeeking, &MediaDecoder::SeekingChanged);
 
-  mWatchManager.Watch(mIsAudioDataAudible, &MediaDecoder::NotifyAudibleStateChanged);
-
   MediaShutdownManager::Instance().Register(this);
 }
 
@@ -626,8 +622,6 @@ MediaDecoder::Shutdown()
     mOnPlaybackEvent.Disconnect();
     mOnSeekingStart.Disconnect();
     mOnMediaNotSeekable.Disconnect();
-
-    mWatchManager.Unwatch(mIsAudioDataAudible, &MediaDecoder::NotifyAudibleStateChanged);
 
     shutdown = mDecoderStateMachine->BeginShutdown()
         ->Then(AbstractThread::MainThread(), __func__, this,
@@ -1479,7 +1473,6 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
     mNextFrameStatus.Connect(mDecoderStateMachine->CanonicalNextFrameStatus());
     mCurrentPosition.Connect(mDecoderStateMachine->CanonicalCurrentPosition());
     mPlaybackPosition.Connect(mDecoderStateMachine->CanonicalPlaybackOffset());
-    mIsAudioDataAudible.Connect(mDecoderStateMachine->CanonicalIsAudioDataAudible());
   } else {
     mStateMachineDuration.DisconnectIfConnected();
     mBuffered.DisconnectIfConnected();
@@ -1487,7 +1480,6 @@ MediaDecoder::SetStateMachine(MediaDecoderStateMachine* aStateMachine)
     mNextFrameStatus.DisconnectIfConnected();
     mCurrentPosition.DisconnectIfConnected();
     mPlaybackPosition.DisconnectIfConnected();
-    mIsAudioDataAudible.DisconnectIfConnected();
   }
 }
 
@@ -1837,13 +1829,6 @@ MediaDecoder::NextFrameBufferedStatus()
   return GetBuffered().Contains(interval)
     ? MediaDecoderOwner::NEXT_FRAME_AVAILABLE
     : MediaDecoderOwner::NEXT_FRAME_UNAVAILABLE;
-}
-
-void
-MediaDecoder::NotifyAudibleStateChanged()
-{
-  MOZ_ASSERT(!mShuttingDown);
-  mOwner->NotifyAudibleStateChanged(mIsAudioDataAudible);
 }
 
 MediaMemoryTracker::MediaMemoryTracker()
