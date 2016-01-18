@@ -12,7 +12,9 @@
 
 enum AnimationPlayState { "idle", "pending", "running", "paused", "finished" };
 
-[Func="nsDocument::IsWebAnimationsEnabled"]
+[Func="nsDocument::IsWebAnimationsEnabled",
+ Constructor (optional KeyframeEffectReadOnly? effect = null,
+              optional AnimationTimeline? timeline = null)]
 interface Animation : EventTarget {
   attribute DOMString id;
   // Bug 1049975: Make 'effect' writeable

@@ -2,9 +2,21 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-add_task(function* testPageActionPopup() {
-  let scriptPage = url => `<html><head><meta charset="utf-8"><script src="${url}"></script></head></html>`;
+function promisePopupShown(popup) {
+  return new Promise(resolve => {
+    if (popup.popupOpen) {
+      resolve();
+    } else {
+      let onPopupShown = event => {
+        popup.removeEventListener("popupshown", onPopupShown);
+        resolve();
+      };
+      popup.addEventListener("popupshown", onPopupShown);
+    }
+  });
+}
 
+add_task(function* testPageActionPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "background": {
@@ -16,17 +28,17 @@ add_task(function* testPageActionPopup() {
     },
 
     files: {
-      "popup-a.html": scriptPage("popup-a.js"),
+      "popup-a.html": `<script src="popup-a.js"></script>`,
       "popup-a.js": function() {
         browser.runtime.sendMessage("from-popup-a");
       },
 
-      "data/popup-b.html": scriptPage("popup-b.js"),
+      "data/popup-b.html": `<script src="popup-b.js"></script>`,
       "data/popup-b.js": function() {
         browser.runtime.sendMessage("from-popup-b");
       },
 
-      "data/background.html": scriptPage("background.js"),
+      "data/background.html": `<script src="background.js"></script>`,
 
       "data/background.js": function() {
         let tabId;

@@ -2,7 +2,21 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-function* testInArea(area) {
+function promisePopupShown(popup) {
+  return new Promise(resolve => {
+    if (popup.popupOpen) {
+      resolve();
+    } else {
+      let onPopupShown = event => {
+        popup.removeEventListener("popupshown", onPopupShown);
+        resolve();
+      };
+      popup.addEventListener("popupshown", onPopupShown);
+    }
+  });
+}
+
+add_task(function* testPageActionPopup() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "background": {
@@ -102,34 +116,30 @@ function* testInArea(area) {
     },
   });
 
+  let panelId = makeWidgetId(extension.id) + "-panel";
+
   extension.onMessage("send-click", () => {
     clickBrowserAction(extension);
   });
 
-  let widget;
   extension.onMessage("next-test", Task.async(function* () {
-    if (!widget) {
-      widget = getBrowserActionWidget(extension);
-      CustomizableUI.addWidgetToArea(widget.id, area);
-    }
+    let panel = document.getElementById(panelId);
+    if (panel) {
+      yield promisePopupShown(panel);
+      panel.hidePopup();
 
-    yield closeBrowserAction(extension);
+      panel = document.getElementById(panelId);
+      is(panel, null, "panel successfully removed from document after hiding");
+    }
 
     extension.sendMessage("next-test");
   }));
+
 
   yield Promise.all([extension.startup(), extension.awaitFinish("browseraction-tests-done")]);
 
   yield extension.unload();
 
-  let view = document.getElementById(widget.viewId);
-  is(view, null, "browserAction view removed from document");
-}
-
-add_task(function* testBrowserActionInToolbar() {
-  yield testInArea(CustomizableUI.AREA_NAVBAR);
-});
-
-add_task(function* testBrowserActionInPanel() {
-  yield testInArea(CustomizableUI.AREA_PANEL);
+  let panel = document.getElementById(panelId);
+  is(panel, null, "browserAction panel removed from document");
 });

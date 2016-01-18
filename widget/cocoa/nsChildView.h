@@ -535,11 +535,6 @@ public:
   CGFloat           DevPixelsToCocoaPoints(int32_t aPixels) const {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aPixels, BackingScaleFactor());
   }
-  // XXX: all calls to this function should eventually be replaced with calls
-  // to DevPixelsToCocoaPoints().
-  NSRect            UntypedDevPixelsToCocoaPoints(const nsIntRect& aRect) const {
-    return nsCocoaUtils::UntypedDevPixelsToCocoaPoints(aRect, BackingScaleFactor());
-  }
   NSRect            DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect) const {
     return nsCocoaUtils::DevPixelsToCocoaPoints(aRect, BackingScaleFactor());
   }

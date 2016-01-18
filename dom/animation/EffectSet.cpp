@@ -70,10 +70,11 @@ EffectSet::GetEffectSet(const nsIFrame* aFrame)
       return nullptr;
     }
   } else {
-    if (!content->MayHaveAnimations()) {
-      return nullptr;
-    }
     propName = nsGkAtoms::animationEffectsProperty;
+  }
+
+  if (!content->MayHaveAnimations()) {
+    return nullptr;
   }
 
   return static_cast<EffectSet*>(content->GetProperty(propName));
@@ -101,9 +102,7 @@ EffectSet::GetOrCreateEffectSet(dom::Element* aElement,
     return nullptr;
   }
 
-  if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-    aElement->SetMayHaveAnimations();
-  }
+  aElement->SetMayHaveAnimations();
 
   return effectSet;
 }

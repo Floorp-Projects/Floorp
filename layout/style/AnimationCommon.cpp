@@ -105,9 +105,8 @@ CommonAnimationManager::GetAnimationCollection(dom::Element *aElement,
       AnimationCollection::PropertyDtor(aElement, propName, collection, nullptr);
       return nullptr;
     }
-    if (aPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement) {
-      aElement->SetMayHaveAnimations();
-    }
+
+    aElement->SetMayHaveAnimations();
 
     AddElementCollection(collection);
   }
@@ -124,9 +123,7 @@ CommonAnimationManager::GetAnimationCollection(const nsIFrame* aFrame)
     return nullptr;
   }
 
-  if (pseudoElement->second() ==
-        nsCSSPseudoElements::ePseudo_NotPseudoElement &&
-      !pseudoElement->first()->MayHaveAnimations()) {
+  if (!pseudoElement->first()->MayHaveAnimations()) {
     return nullptr;
   }
 
