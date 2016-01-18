@@ -967,39 +967,26 @@ class Marionette(object):
                 self.push_permission(perm, original_perms[perm])
 
     def get_pref(self, pref):
-        '''Gets the preference value.
+        """Gets the preference value.
 
         :param pref: Name of the preference.
 
         Usage example::
 
-          marionette.get_pref('browser.tabs.warnOnClose')
-
-        '''
+            marionette.get_pref("browser.tabs.warnOnClose")
+        """
         with self.using_context(self.CONTEXT_CONTENT):
             pref_value = self.execute_script("""
-                Components.utils.import("resource://gre/modules/Services.jsm");
-                let pref = arguments[0];
-                let type = Services.prefs.getPrefType(pref);
-                switch (type) {
-                    case Services.prefs.PREF_STRING:
-                        return Services.prefs.getCharPref(pref);
-                    case Services.prefs.PREF_INT:
-                        return Services.prefs.getIntPref(pref);
-                    case Services.prefs.PREF_BOOL:
-                        return Services.prefs.getBoolPref(pref);
-                    case Services.prefs.PREF_INVALID:
-                        return null;
-                }
-                """, script_args=[pref], sandbox='system')
+                Components.utils.import("resource://gre/modules/Preferences.jsm");
+                return Preferences.get(arguments[0], null);
+                """, script_args=[pref], sandbox="system")
             return pref_value
 
     def clear_pref(self, pref):
         with self.using_context(self.CONTEXT_CHROME):
             self.execute_script("""
-               Components.utils.import("resource://gre/modules/Services.jsm");
-               let pref = arguments[0];
-               Services.prefs.clearUserPref(pref);
+               Components.utils.import("resource://gre/modules/Preferences.jsm");
+               Preferences.reset(arguments[0]);
                """, script_args=[pref])
 
     def set_pref(self, pref, value):
@@ -1008,22 +995,10 @@ class Marionette(object):
                 self.clear_pref(pref)
                 return
 
-            if isinstance(value, bool):
-                func = 'setBoolPref'
-            elif isinstance(value, (int, long)):
-                func = 'setIntPref'
-            elif isinstance(value, basestring):
-                func = 'setCharPref'
-            else:
-                raise errors.MarionetteException(
-                    "Unsupported preference type: %s" % type(value))
-
             self.execute_script("""
-                Components.utils.import("resource://gre/modules/Services.jsm");
-                let pref = arguments[0];
-                let value = arguments[1];
-                Services.prefs.%s(pref, value);
-                """ % func, script_args=[pref, value])
+                Components.utils.import("resource://gre/modules/Preferences.jsm");
+                Preferences.set(arguments[0], arguments[1]);
+                """, script_args=[pref, value])
 
     def set_prefs(self, prefs):
         '''Sets preferences.
