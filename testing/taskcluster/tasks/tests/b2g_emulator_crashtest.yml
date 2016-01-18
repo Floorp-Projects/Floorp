@@ -41,3 +41,4 @@ task:
       groupSymbol: tc-R
       symbol: 'C{{chunk}}'
       productName: b2g
+      tier: 2
