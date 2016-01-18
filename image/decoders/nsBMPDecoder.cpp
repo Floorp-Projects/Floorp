@@ -233,14 +233,16 @@ nsBMPDecoder::FinishInternal()
   if (!IsMetadataDecode() && HasSize()) {
 
     // If it was truncated, fill in the missing pixels as black.
-    while (mCurrentRow > 0) {
-      uint32_t* dst = RowBuffer();
-      while (mCurrentPos < mH.mWidth) {
-        SetPixel(dst, 0, 0, 0);
-        mCurrentPos++;
+    if (mImageData) {
+      while (mCurrentRow > 0) {
+        uint32_t* dst = RowBuffer();
+        while (mCurrentPos < mH.mWidth) {
+          SetPixel(dst, 0, 0, 0);
+          mCurrentPos++;
+        }
+        mCurrentPos = 0;
+        FinishRow();
       }
-      mCurrentPos = 0;
-      FinishRow();
     }
 
     // Invalidate.
@@ -554,6 +556,11 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     (mH.mCompression == Compression::RLE8 && mH.mBpp == 8) ||
     (mH.mCompression == Compression::RLE4 && mH.mBpp == 4) ||
     (mH.mCompression == Compression::BITFIELDS &&
+      // For BITFIELDS compression we require an exact match for one of the
+      // WinBMP BIH sizes; this clearly isn't an OS2 BMP.
+      (mH.mBIHSize == InfoHeaderLength::WIN_V3 ||
+       mH.mBIHSize == InfoHeaderLength::WIN_V4 ||
+       mH.mBIHSize == InfoHeaderLength::WIN_V5) &&
       (mH.mBpp == 16 || mH.mBpp == 32));
   if (!bppCompressionOk) {
     PostDataError();
