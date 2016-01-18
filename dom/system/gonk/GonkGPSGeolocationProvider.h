@@ -84,7 +84,7 @@ private:
   void InjectLocation(double latitude, double longitude, float accuracy);
   void RequestSettingValue(const char* aKey);
   void SetNiResponse(int id, int response);
-  bool SendChromeEvent(int id, GpsNiNotifyFlags flags, nsString& message);
+  bool SendChromeEvent(int id, GpsNiNotifyFlags flags);
 #ifdef MOZ_B2G_RIL
   void UpdateRadioInterface();
   bool IsValidRilServiceId(uint32_t aServiceId);
