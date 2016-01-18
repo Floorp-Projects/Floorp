@@ -10,21 +10,36 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="chrome://global/skin"/>
   <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="head_search.js"></script>
   <script type="application/javascript;version=1.7">
 
-  Components.utils.import("resource://gre/modules/Services.jsm");
+    Services.prefs.clearUserPref("browser.migration.version");
+    Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
 
-  Services.prefs.clearUserPref("browser.migration.version");
-  Services.prefs.setBoolPref("nglayout.debug.paint_flashing", true);
+    addTestEngines([
+      { name: "bacon", details: ["", "bacon", "Search Bacon", "GET",
+                                 "http://www.bacon.moz/?search={searchTerms}"] },
+    ]).then(engines => {
+      Services.prefs.setCharPref("browser.search.defaultenginename", engines[0].name);
 
-  let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
-  BrowserApp._migrateUI();
+      let BrowserApp = Services.wm.getMostRecentWindow("navigator:browser").BrowserApp;
 
-  // Check that migration version increased.
-  is(Services.prefs.getIntPref("browser.migration.version"), 1, "found expected version");
+      // This performs the serach migration asynchronously, but the search service is already initialized
+      // by `addTestEngines`, so we don't need to worry about waiting before checking the new engine.
+      BrowserApp._migrateUI();
 
-  // Check that user pref value was reset.
-  is(Services.prefs.prefHasUserValue("nglayout.debug.paint_flashing"), false, "found expected user value");
+      // Check that migration version increased.
+      is(Services.prefs.getIntPref("browser.migration.version"), 2, "found expected version");
+
+      // Check that user pref value was reset.
+      is(Services.prefs.prefHasUserValue("nglayout.debug.paint_flashing"), false, "found expected user value");
+
+      function searchObserver(s, t, d) {
+        Services.obs.removeObserver(searchObserver, "default-search-engine-migrated");
+        is(Services.search.defaultEngine.name, engines[0].name, "found expected default search engine");
+      }
+      Services.obs.addObserver(searchObserver, "default-search-engine-migrated", false);
+    });
 
   </script>
 </head>
