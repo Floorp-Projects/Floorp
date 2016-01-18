@@ -352,18 +352,6 @@ private:
   // Owning reference to a cubeb_stream.
   UniquePtr<cubeb_stream, CubebDestroyPolicy> mCubebStream;
 
-  uint32_t mBytesPerFrame;
-
-  uint32_t BytesToFrames(uint32_t aBytes) {
-    NS_ASSERTION(aBytes % mBytesPerFrame == 0,
-                 "Byte count not aligned on frames size.");
-    return aBytes / mBytesPerFrame;
-  }
-
-  uint32_t FramesToBytes(uint32_t aFrames) {
-    return aFrames * mBytesPerFrame;
-  }
-
   enum StreamState {
     INITIALIZED, // Initialized, playback has not begun.
     STARTED,     // cubeb started, but callbacks haven't started
