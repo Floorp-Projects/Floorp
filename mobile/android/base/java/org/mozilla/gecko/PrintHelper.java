@@ -81,9 +81,6 @@ public class PrintHelper {
                                     }
 
                                     callback.onWriteFinished(new PageRange[] { PageRange.ALL_PAGES });
-
-                                    // File is not really deleted until the input stream closes it
-                                    pdfFile.delete();
                                 } catch (FileNotFoundException ee) {
                                     Log.d(LOGTAG, "Unable to find the temporary PDF file.");
                                 } catch (IOException ioe) {
@@ -97,7 +94,7 @@ public class PrintHelper {
                     }
 
                     @Override
-                    public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes, CancellationSignal cancellationSignal, LayoutResultCallback callback, Bundle extras){
+                    public void onLayout(PrintAttributes oldAttributes, PrintAttributes newAttributes, CancellationSignal cancellationSignal, LayoutResultCallback callback, Bundle extras) {
                         if (cancellationSignal.isCanceled()) {
                             callback.onLayoutCancelled();
                             return;
@@ -105,6 +102,18 @@ public class PrintHelper {
 
                         PrintDocumentInfo pdi = new PrintDocumentInfo.Builder(filePath).setContentType(PrintDocumentInfo.CONTENT_TYPE_DOCUMENT).build();
                         callback.onLayoutFinished(pdi, true);
+                    }
+
+                    @Override
+                    public void onFinish() {
+                        // Remove the temporary file when the printing system is finished.
+                        try {
+                            File pdfFile = new File(filePath);
+                            pdfFile.delete();
+                        } catch (NullPointerException npe) {
+                            // Silence the exception. We only want to delete a real file. We don't
+                            // care if the file doesn't exist.
+                        }
                     }
                 };
 
