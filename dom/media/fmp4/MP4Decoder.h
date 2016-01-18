@@ -7,6 +7,7 @@
 #define MP4Decoder_h_
 
 #include "MediaDecoder.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
@@ -38,6 +39,11 @@ public:
   static bool IsEnabled();
 
   static bool IsVideoAccelerated(layers::LayersBackend aBackend, nsACString& aReason);
+
+  void GetMozDebugReaderData(nsAString& aString) override;
+
+private:
+  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla
