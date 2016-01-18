@@ -10,6 +10,7 @@ var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"].getService(Ci.mozIJSSub
 const ServerSocket = CC("@mozilla.org/network/server-socket;1", "nsIServerSocket", "initSpecialConnection");
 
 Cu.import("resource://gre/modules/Log.jsm");
+Cu.import("resource://gre/modules/Preferences.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://marionette/content/dispatcher.js");
@@ -29,7 +30,9 @@ loader.loadSubScript("chrome://marionette/content/frame-manager.js");
 const logger = Log.repository.getLogger("Marionette");
 
 this.EXPORTED_SYMBOLS = ["MarionetteServer"];
+
 const CONTENT_LISTENER_PREF = "marionette.contentListener";
+const MANAGE_OFFLINE_STATUS_PREF = "network.gonk.manage-offline-status";
 
 /**
  * Bootstraps Marionette and handles incoming client connections.
@@ -84,11 +87,11 @@ MarionetteServer.prototype.driverFactory = function(emulator) {
     device = "desktop";
   }
 
-  Services.prefs.setBoolPref(CONTENT_LISTENER_PREF, false);
+  Preferences.set(CONTENT_LISTENER_PREF, false);
 
   if (bypassOffline) {
     logger.debug("Bypassing offline status");
-    Services.prefs.setBoolPref("network.gonk.manage-offline-status", false);
+    Preferences.set(MANAGE_OFFLINE_STATUS_PREF, false);
     Services.io.manageOfflineStatus = false;
     Services.io.offline = false;
   }
@@ -146,9 +149,5 @@ MarionetteServer.prototype.onConnectionClosed = function(conn) {
 };
 
 function isMulet() {
-  try {
-    return Services.prefs.getBoolPref("b2g.is_mulet");
-  } catch (e) {
-    return false;
-  }
+  return Preferences.get("b2g.is_mulet", false);
 }
