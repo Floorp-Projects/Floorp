@@ -405,7 +405,6 @@ protected:
   void OnAudioPopped(const RefPtr<MediaData>& aSample);
   void OnVideoPopped(const RefPtr<MediaData>& aSample);
 
-  void CheckIsAudible(const MediaData* aSample);
   void VolumeChanged();
   void LogicalPlaybackRateChanged();
   void PreservesPitchChanged();
@@ -1196,9 +1195,6 @@ private:
   // Playback will not start when audio is offloading.
   bool mAudioOffloading;
 
-  // Duration of the continuous silent data.
-  uint32_t mSilentDataDuration;
-
 #ifdef MOZ_EME
   void OnCDMProxyReady(RefPtr<CDMProxy> aProxy);
   void OnCDMProxyNotReady();
@@ -1267,9 +1263,6 @@ private:
   // Current playback position in the stream in bytes.
   Canonical<int64_t> mPlaybackOffset;
 
-  // Used to distiguish whether the audio is producing sound.
-  Canonical<bool> mIsAudioDataAudible;
-
 public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
@@ -1288,9 +1281,6 @@ public:
   }
   AbstractCanonical<int64_t>* CanonicalPlaybackOffset() {
     return &mPlaybackOffset;
-  }
-  AbstractCanonical<bool>* CanonicalIsAudioDataAudible() {
-    return &mIsAudioDataAudible;
   }
 };
 
