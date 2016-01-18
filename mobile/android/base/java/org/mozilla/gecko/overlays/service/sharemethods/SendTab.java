@@ -14,8 +14,8 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+
 import org.mozilla.gecko.GeckoProfile;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.TabsAccessor;
@@ -29,9 +29,6 @@ import org.mozilla.gecko.sync.CommandProcessor;
 import org.mozilla.gecko.sync.CommandRunner;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.SyncConfiguration;
-import org.mozilla.gecko.sync.SyncConstants;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
-import org.mozilla.gecko.sync.syncadapter.SyncAdapter;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -168,17 +165,6 @@ public class SendTab extends ShareMethod {
             return;
         }
 
-        final Account[] syncAccounts = accountManager.getAccountsByType(SyncConstants.ACCOUNTTYPE_SYNC);
-        if (syncAccounts.length > 0) {
-            tabSender = new Sync11TabSender(context, syncAccounts[0], accountManager);
-
-            updateClientList(tabSender);
-
-            Log.i(LOGTAG, "Allowing tab send for Sync account.");
-            registerDisplayURICommand();
-            return;
-        }
-
         // Have registered UIs offer to set up a Firefox Account.
         setOverrideIntentAction(FxAccountConstants.ACTION_FXA_GET_STARTED);
     }
@@ -306,34 +292,6 @@ public class SendTab extends ShareMethod {
         @Override
         public void sync() {
             fxAccount.requestSync(FirefoxAccounts.FORCE, STAGES_TO_SYNC, null);
-        }
-    }
-
-    private static class Sync11TabSender implements TabSender {
-        private final Account account;
-        private final AccountManager accountManager;
-        private final Context context;
-
-        private Sync11TabSender(Context aContext, Account syncAccount, AccountManager manager) {
-            context = aContext;
-            account = syncAccount;
-            accountManager = manager;
-        }
-
-        @Override
-        public String getAccountGUID() {
-            try {
-                SharedPreferences prefs = SyncAccounts.blockingPrefsFromDefaultProfileV0(context, accountManager, account);
-                return prefs.getString(SyncConfiguration.PREF_ACCOUNT_GUID, null);
-            } catch (Exception e) {
-                Log.w(LOGTAG, "Could not get Sync account parameters or preferences; aborting.");
-                return null;
-            }
-        }
-
-        @Override
-        public void sync() {
-            SyncAdapter.requestImmediateSync(account, STAGES_TO_SYNC);
         }
     }
 }
