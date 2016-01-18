@@ -1121,7 +1121,7 @@ class RunProgram(MachCommandBase):
                 args.append('-profile')
                 args.append(path)
 
-        extra_env = {}
+        extra_env = {'MOZ_CRASHREPORTER_DISABLE': '1'}
 
         if debug or debugger or debugparams:
             import mozdebug
@@ -1149,8 +1149,6 @@ class RunProgram(MachCommandBase):
 
             if not slowscript:
                 extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'
-
-            extra_env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
             # Prepend the debugger args.
             args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
