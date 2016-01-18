@@ -21,14 +21,14 @@ public:
              const nsAString& aLanguage,
              bool aEnabled);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual AudioTrack* AsAudioTrack() override
+  AudioTrack* AsAudioTrack() override
   {
     return this;
   }
 
-  virtual void SetEnabledInternal(bool aEnabled, int aFlags) override;
+  void SetEnabledInternal(bool aEnabled, int aFlags) override;
 
   // WebIDL
   bool Enabled() const
