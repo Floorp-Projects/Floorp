@@ -1141,7 +1141,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
       type: 'supl-notification',
-      data: aData
+      id: aData
     });
 }, "supl-ni-notify", false);
 })();
@@ -1150,7 +1150,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
       type: 'supl-verification',
-      data: aData
+      id: aData
     });
 }, "supl-ni-verify", false);
 })();
@@ -1159,7 +1159,7 @@ window.addEventListener('ContentStart', function update_onContentStart() {
   Services.obs.addObserver(function(aSubject, aTopic, aData) {
     shell.sendChromeEvent({
       type: 'supl-verification-timeout',
-      data: aData
+      id: aData
     });
 }, "supl-ni-verify-timeout", false);
 })();
