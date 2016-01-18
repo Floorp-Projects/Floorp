@@ -24,6 +24,7 @@ public final class HelperInitializer {
         GeckoHelper.init(context);
         JavascriptBridge.init(context);
         NavigationHelper.init(context);
+        RobotiumHelper.init(context);
         WaitHelper.init(context);
     }
 }
