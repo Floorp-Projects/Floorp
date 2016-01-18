@@ -1379,10 +1379,18 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
     int32_t selectedIndex;
     popup->GetSelectedIndex(&selectedIndex);
     if (selectedIndex >= 0) {
+
+      nsAutoString inputValue;
+      input->GetTextValue(inputValue);
       nsAutoString finalValue;
-      // If completeselectedindex is false or a row was selected from the popup,
-      // enter it into the textbox.
-      if (!completeSelection || aIsPopupSelection) {
+      if (!completeSelection || aIsPopupSelection ||
+          (mDefaultIndexCompleted &&
+           inputValue.Equals(mPlaceholderCompletionString,
+                             nsCaseInsensitiveStringComparator()))) {
+        // We need to fill-in the value if:
+        //  * completeselectedindex is false
+        //  * A row in the popup was confirmed
+        //  * The default index completion was confirmed
         GetResultValueAt(selectedIndex, true, finalValue);
         value = finalValue;
       } else if (mCompletedSelectionIndex != -1) {
@@ -1392,8 +1400,6 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
         // needed, unless the selected match has a final complete value that
         // differs from the user-facing value.
         GetResultValueAt(mCompletedSelectionIndex, true, finalValue);
-        nsAutoString inputValue;
-        input->GetTextValue(inputValue);
         nsAutoString completedValue;
         GetResultValueAt(mCompletedSelectionIndex, false, completedValue);
         if (completedValue.Equals(inputValue) && !finalValue.Equals(inputValue)) {
@@ -1401,12 +1407,11 @@ nsAutoCompleteController::EnterMatch(bool aIsPopupSelection)
         }
         // Note that if the user opens the popup, mouses over entries without
         // ever selecting one with the keyboard, and then hits enter, none of
-        // the above cases will be hitt, since mouseover doesn't activate
+        // the above cases will be hit, since mouseover doesn't activate
         // completeselectedindex and thus mCompletedSelectionIndex would be
         // -1.
       }
-    }
-    else if (shouldComplete) {
+    } else if (shouldComplete) {
       // We usually try to preserve the casing of what user has typed, but
       // if he wants to autocomplete, we will replace the value with the
       // actual autocomplete result.
@@ -1934,12 +1939,17 @@ nsAutoCompleteController::GetResultValueLabelAt(int32_t aIndex,
     result->GetErrorDescription(_retval);
   } else if (searchResult == nsIAutoCompleteResult::RESULT_SUCCESS ||
              searchResult == nsIAutoCompleteResult::RESULT_SUCCESS_ONGOING) {
-    if (aGetFinalValue)
-      result->GetFinalCompleteValueAt(rowIndex, _retval);
-    else if (aGetValue)
+    if (aGetFinalValue) {
+      // Some implementations may miss finalCompleteValue, try to be backwards
+      // compatible.
+      if (NS_FAILED(result->GetFinalCompleteValueAt(rowIndex, _retval))) {
+        result->GetValueAt(rowIndex, _retval);
+      }
+    } else if (aGetValue) {
       result->GetValueAt(rowIndex, _retval);
-    else
+    } else {
       result->GetLabelAt(rowIndex, _retval);
+    }
   }
 
   return NS_OK;
