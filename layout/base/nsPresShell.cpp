@@ -7951,6 +7951,14 @@ PresShell::HandleEventInternal(WidgetEvent* aEvent,
       break;
     }
   }
+
+  if (Telemetry::CanRecordBase() &&
+      !aEvent->timeStamp.IsNull() &&
+      aEvent->AsInputEvent()) {
+    double millis = (TimeStamp::Now() - aEvent->timeStamp).ToMilliseconds();
+    Telemetry::Accumulate(Telemetry::INPUT_EVENT_RESPONSE_MS, millis);
+  }
+
   return rv;
 }
 
