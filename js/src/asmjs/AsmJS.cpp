@@ -1250,6 +1250,9 @@ class Type
             return ValType::F64;
         else if (isInt32x4())
             return ValType::I32x4;
+        else if (isBool32x4())
+            return ValType::B32x4;
+        MOZ_ASSERT(isFloat32x4());
         return ValType::F32x4;
     }
 
@@ -4388,7 +4391,7 @@ CheckInternalCall(FunctionValidator& f, ParseNode* callNode, PropertyName* calle
                   ExprType ret, Type* type)
 {
     switch (ret) {
-      case ExprType::Void:   if (!f.writeOp(Expr::CallInternal))  return false; break;
+      case ExprType::Void:   if (!f.writeOp(Expr::CallInternal))      return false; break;
       case ExprType::I32:    if (!f.writeOp(Expr::I32CallInternal))   return false; break;
       case ExprType::I64:    MOZ_CRASH("no int64 in asm.js");
       case ExprType::F32:    if (!f.writeOp(Expr::F32CallInternal))   return false; break;
