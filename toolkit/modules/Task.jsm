@@ -91,6 +91,10 @@ const Ci = Components.interfaces;
 const Cu = Components.utils;
 const Cr = Components.results;
 
+// For now, we're worried about add-ons using Tasks with CPOWs, so we'll
+// permit them in this scope, but this support will go away soon.
+Cu.permitCPOWsInScope(this);
+
 Cu.import("resource://gre/modules/Promise.jsm");
 
 // The following error types are considered programmer errors, which should be
