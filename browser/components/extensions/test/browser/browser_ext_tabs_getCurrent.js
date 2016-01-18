@@ -63,7 +63,6 @@ add_task(function* () {
 
   clickBrowserAction(extension);
   yield extension.awaitMessage("popup-finished");
-  yield closeBrowserAction(extension);
 
   yield extension.unload();
 });
