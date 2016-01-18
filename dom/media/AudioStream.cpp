@@ -553,18 +553,18 @@ AudioStream::Downmix(AudioDataValue* aBuffer, uint32_t aFrames)
   return true;
 }
 
-long
-AudioStream::GetUnprocessed(void* aBuffer, long aFrames)
+void
+AudioStream::GetUnprocessed(AudioBufferWriter& aWriter)
 {
   mMonitor.AssertCurrentThreadOwns();
-  uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
 
   // Flush the timestretcher pipeline, if we were playing using a playback rate
   // other than 1.0.
-  uint32_t flushedFrames = 0;
   if (mTimeStretcher && mTimeStretcher->numSamples()) {
-    flushedFrames = mTimeStretcher->receiveSamples(reinterpret_cast<AudioDataValue*>(wpos), aFrames);
-    wpos += FramesToBytes(flushedFrames);
+    auto timeStretcher = mTimeStretcher;
+    aWriter.Write([timeStretcher] (AudioDataValue* aPtr, uint32_t aFrames) {
+      return timeStretcher->receiveSamples(aPtr, aFrames);
+    }, aWriter.Available());
 
     // TODO: There might be still unprocessed samples in the stretcher.
     // We should either remove or flush them so they won't be in the output
@@ -572,41 +572,35 @@ AudioStream::GetUnprocessed(void* aBuffer, long aFrames)
     NS_WARN_IF(mTimeStretcher->numUnprocessedSamples() > 0);
   }
 
-  uint32_t toPopFrames = aFrames - flushedFrames;
-  while (toPopFrames > 0) {
-    UniquePtr<Chunk> c = mDataSource.PopFrames(toPopFrames);
+  while (aWriter.Available() > 0) {
+    UniquePtr<Chunk> c = mDataSource.PopFrames(aWriter.Available());
     if (c->Frames() == 0) {
       break;
     }
-    MOZ_ASSERT(c->Frames() <= toPopFrames);
+    MOZ_ASSERT(c->Frames() <= aWriter.Available());
     if (Downmix(c->GetWritable(), c->Frames())) {
-      memcpy(wpos, c->Data(), FramesToBytes(c->Frames()));
+      aWriter.Write(c->Data(), c->Frames());
     } else {
       // Write silence if downmixing fails.
-      memset(wpos, 0, FramesToBytes(c->Frames()));
+      aWriter.WriteZeros(c->Frames());
     }
-    wpos += FramesToBytes(c->Frames());
-    toPopFrames -= c->Frames();
   }
-
-  return aFrames - toPopFrames;
 }
 
-long
-AudioStream::GetTimeStretched(void* aBuffer, long aFrames)
+void
+AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
 {
   mMonitor.AssertCurrentThreadOwns();
 
   // We need to call the non-locking version, because we already have the lock.
   if (EnsureTimeStretcherInitializedUnlocked() != NS_OK) {
-    return 0;
+    return;
   }
 
-  uint8_t* wpos = reinterpret_cast<uint8_t*>(aBuffer);
   double playbackRate = static_cast<double>(mInRate) / mOutRate;
-  uint32_t toPopFrames = ceil(aFrames * playbackRate);
+  uint32_t toPopFrames = ceil(aWriter.Available() * playbackRate);
 
-  while (mTimeStretcher->numSamples() < static_cast<uint32_t>(aFrames)) {
+  while (mTimeStretcher->numSamples() < aWriter.Available()) {
     UniquePtr<Chunk> c = mDataSource.PopFrames(toPopFrames);
     if (c->Frames() == 0) {
       break;
@@ -623,9 +617,10 @@ AudioStream::GetTimeStretched(void* aBuffer, long aFrames)
     }
   }
 
-  uint32_t receivedFrames = mTimeStretcher->receiveSamples(reinterpret_cast<AudioDataValue*>(wpos), aFrames);
-  wpos += FramesToBytes(receivedFrames);
-  return receivedFrames;
+  auto timeStretcher = mTimeStretcher;
+  aWriter.Write([timeStretcher] (AudioDataValue* aPtr, uint32_t aFrames) {
+    return timeStretcher->receiveSamples(aPtr, aFrames);
+  }, aWriter.Available());
 }
 
 long
@@ -633,16 +628,16 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
 {
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No data callback after shutdown");
-  uint32_t underrunFrames = 0;
-  uint32_t servicedFrames = 0;
+
+  auto writer = AudioBufferWriter(
+    reinterpret_cast<AudioDataValue*>(aBuffer), mOutChannels, aFrames);
 
   // FIXME: cubeb_pulse sometimes calls us before cubeb_stream_start() is called.
   // We don't want to consume audio data until Start() is called by the client.
   if (mState == INITIALIZED) {
     NS_WARNING("data callback fires before cubeb_stream_start() is called");
     mAudioClock.UpdateFrameHistory(0, aFrames);
-    memset(aBuffer, 0, FramesToBytes(aFrames));
-    return aFrames;
+    return writer.WriteZeros(aFrames);
   }
 
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
@@ -654,33 +649,29 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   }
 
   if (mInRate == mOutRate) {
-    servicedFrames = GetUnprocessed(aBuffer, aFrames);
+    GetUnprocessed(writer);
   } else {
-    servicedFrames = GetTimeStretched(aBuffer, aFrames);
+    GetTimeStretched(writer);
   }
-
-  underrunFrames = aFrames - servicedFrames;
 
   // Always send audible frames first, and silent frames later.
   // Otherwise it will break the assumption of FrameHistory.
   if (!mDataSource.Ended()) {
-    mAudioClock.UpdateFrameHistory(servicedFrames, underrunFrames);
-    uint8_t* rpos = static_cast<uint8_t*>(aBuffer) + FramesToBytes(aFrames - underrunFrames);
-    memset(rpos, 0, FramesToBytes(underrunFrames));
-    if (underrunFrames) {
+    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), writer.Available());
+    if (writer.Available() > 0) {
       MOZ_LOG(gAudioStreamLog, LogLevel::Warning,
-             ("AudioStream %p lost %d frames", this, underrunFrames));
+             ("AudioStream %p lost %d frames", this, writer.Available()));
+      writer.WriteZeros(writer.Available());
     }
-    servicedFrames += underrunFrames;
   } else {
     // No more new data in the data source. Don't send silent frames so the
     // cubeb stream can start draining.
-    mAudioClock.UpdateFrameHistory(servicedFrames, 0);
+    mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), 0);
   }
 
   WriteDumpFile(mDumpFile, this, aFrames, aBuffer);
 
-  return servicedFrames;
+  return aFrames - writer.Available();
 }
 
 void
