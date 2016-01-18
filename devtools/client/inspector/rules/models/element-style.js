@@ -24,7 +24,9 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
 });
 
 /**
- * ElementStyle maintains a list of Rule objects for a given element.
+ * ElementStyle is responsible for the following:
+ *   Keeps track of which properties are overridden.
+ *   Maintains a list of Rule objects for a given element.
  *
  * @param {Element} element
  *        The element whose style we are viewing.
