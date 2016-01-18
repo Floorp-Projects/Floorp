@@ -15,22 +15,17 @@ interface nsILoadContextInfo;
  * The application cache service manages the set of application cache
  * groups.
  */
-[scriptable, uuid(03b41c3d-0816-4134-8b2e-4f5afbdb1f06)]
+[scriptable, uuid(b8b6546c-6cec-4bda-82df-08e006a97b56)]
 interface nsIApplicationCacheService : nsISupports
 {
     /**
      * Create group string identifying cache group according the manifest
-     * URL and the given load context.
+     * URL and the given principal.
      */
-    ACString buildGroupID(in nsIURI aManifestURL,
-                          in nsILoadContextInfo aLoadContextInfo);
-
-    /**
-     * Same as buildGroupID method, just doesn't require load context.
-     */
-    ACString buildGroupIDForApp(in nsIURI aManifestURL,
-                                in unsigned long aAppID,
-                                in boolean aInBrowser);
+    ACString buildGroupIDForInfo(in nsIURI aManifestURL,
+                                 in nsILoadContextInfo aLoadContextInfo);
+    ACString buildGroupIDForSuffix(in nsIURI aManifestURL,
+                                   in ACString aOriginSuffix);
 
     /**
      * Create a new, empty application cache for the given cache
@@ -70,18 +65,15 @@ interface nsIApplicationCacheService : nsISupports
     void deactivateGroup(in ACString group);
 
     /**
-     * Deletes some or all of an application's cache entries.  
-     *
-     * @param appId
-     *    The mozIApplication.localId of the application.
-     * 
-     * @param discardOnlyBrowserEntries 
-     *    If true, only entries marked as 'inBrowserElement' are deleted 
-     *    (this is used by browser applications to delete user browsing 
-     *    data/history.).  If false, *all* entries for the given appId are
-     *    deleted (this is used for application uninstallation).
+     * Evict offline cache entries, either all of them or those belonging
+     * to the given origin.
      */
-    void discardByAppId(in int32_t appID, in boolean discardOnlyBrowserEntries);
+    void evict(in nsILoadContextInfo aLoadContextInfo);
+
+    /**
+     * Delete caches whom origin attributes matches the given pattern.
+     */
+    void evictMatchingOriginAttributes(in AString aPattern);
 
     /**
      * Try to find the best application cache to serve a resource.

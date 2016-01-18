@@ -324,7 +324,7 @@ getActiveCache: function(overload)
   // one associated with this window.
   var serv = Cc["@mozilla.org/network/application-cache-service;1"]
              .getService(Ci.nsIApplicationCacheService);
-  var groupID = serv.buildGroupID(this.manifestURL(overload), this.loadContextInfo());
+  var groupID = serv.buildGroupIDForInfo(this.manifestURL(overload), this.loadContextInfo());
   return serv.getActiveCache(groupID);
 },
 
