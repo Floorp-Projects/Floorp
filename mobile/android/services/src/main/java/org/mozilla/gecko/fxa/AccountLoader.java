@@ -40,18 +40,10 @@ public class AccountLoader extends AsyncTaskLoader<Account> {
     super(context);
   }
 
-  // Task that performs the asynchronous load **/
+  // Task that performs the asynchronous load.
   @Override
   public Account loadInBackground() {
-    final Context context = getContext();
-    Account foundAccount = FirefoxAccounts.getFirefoxAccount(context);
-    if (foundAccount == null) {
-      final Account[] syncAccounts = SyncAccounts.syncAccounts(context);
-      if (syncAccounts != null && syncAccounts.length > 0) {
-        foundAccount = syncAccounts[0];
-      }
-    }
-    return foundAccount;
+    return FirefoxAccounts.getFirefoxAccount(getContext());
   }
 
   // Deliver the results to the registered listener.
