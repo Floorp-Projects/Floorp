@@ -16,14 +16,14 @@ class MP4Decoder : public MediaDecoder
 public:
   explicit MP4Decoder(MediaDecoderOwner* aOwner);
 
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsEnabled()) {
       return nullptr;
     }
     return new MP4Decoder(aOwner);
   }
 
-  virtual MediaDecoderStateMachine* CreateStateMachine() override;
+  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if aMIMEType is a type that we think we can render with the
   // a MP4 platform decoder backend. If aCodecs is non emtpy, it is filled
