@@ -23,10 +23,10 @@ public:
     MOZ_ASSERT(NS_IsMainThread());
   }
 
-  virtual void ProcessBlocksOnPorts(AudioNodeStream* aStream,
-                                    const OutputChunks& aInput,
-                                    OutputChunks& aOutput,
-                                    bool* aFinished) override
+  void ProcessBlocksOnPorts(AudioNodeStream* aStream,
+                            const OutputChunks& aInput,
+                            OutputChunks& aOutput,
+                            bool* aFinished) override
   {
     MOZ_ASSERT(aInput.Length() >= 1, "Should have one or more input ports");
 
@@ -55,7 +55,7 @@ public:
     }
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
