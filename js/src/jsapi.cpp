@@ -1047,15 +1047,6 @@ static const JSStdName builtin_property_names[] = {
 #if JS_HAS_UNEVAL
     { EAGER_ATOM(uneval), JSProto_String },
 #endif
-#ifdef ENABLE_SIMD
-    { EAGER_ATOM(SIMD), JSProto_SIMD },
-#endif
-#ifdef ENABLE_BINARYDATA
-    { EAGER_ATOM(TypedObject), JSProto_TypedObject },
-#endif
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
-    { EAGER_ATOM(Atomics), JSProto_Atomics },
-#endif
 
     { 0, JSProto_LIMIT }
 };
@@ -1095,14 +1086,8 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     if (!stdnm)
         stdnm = LookupStdName(cx->names(), idAtom, builtin_property_names);
 
-#ifdef ENABLE_SHARED_ARRAY_BUFFER
-    if (stdnm && !cx->compartment()->creationOptions().getSharedMemoryAndAtomicsEnabled() &&
-        (stdnm->atomOffset == NAME_OFFSET(Atomics) ||
-         stdnm->atomOffset == NAME_OFFSET(SharedArrayBuffer)))
-    {
+    if (stdnm && GlobalObject::skipDeselectedConstructor(cx, stdnm->key))
         stdnm = nullptr;
-    }
-#endif
 
     // If this class is anonymous, then it doesn't exist as a global
     // property, so we won't resolve anything.
@@ -1144,6 +1129,9 @@ JS_MayResolveStandardClass(const JSAtomState& names, jsid id, JSObject* maybeObj
         return false;
 
     JSAtom* atom = JSID_TO_ATOM(id);
+
+    // This will return true even for deselected constructors.  (To do
+    // better, we need a JSContext here; it's fine as it is.)
 
     return atom == names.undefined ||
            LookupStdName(names, atom, standard_class_names) ||
@@ -1199,6 +1187,9 @@ JS_IdToProtoKey(JSContext* cx, HandleId id)
     JSAtom* atom = JSID_TO_ATOM(id);
     const JSStdName* stdnm = LookupStdName(cx->names(), atom, standard_class_names);
     if (!stdnm)
+        return JSProto_Null;
+
+    if (GlobalObject::skipDeselectedConstructor(cx, stdnm->key))
         return JSProto_Null;
 
     MOZ_ASSERT(MOZ_ARRAY_LENGTH(standard_class_names) == JSProto_LIMIT + 1);
