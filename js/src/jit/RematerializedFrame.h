@@ -141,8 +141,11 @@ class RematerializedFrame
     bool isFunctionFrame() const {
         return !!script_->functionNonDelazifying();
     }
-    bool isGlobalOrModuleFrame() const {
-        return !isFunctionFrame();
+    bool isGlobalFrame() const {
+        return script_->isGlobalCode();
+    }
+    bool isModuleFrame() const {
+        return script_->module();
     }
 
     JSScript* script() const {
