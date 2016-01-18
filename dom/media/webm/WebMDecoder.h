@@ -7,6 +7,7 @@
 #define WebMDecoder_h_
 
 #include "MediaDecoder.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
@@ -31,6 +32,11 @@ public:
   // out params whether the codecs string contains Opus/Vorbis or VP8/VP9.
   static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
                                  const nsAString& aCodecs);
+
+  void GetMozDebugReaderData(nsAString& aString) override;
+
+private:
+  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla
