@@ -61,6 +61,22 @@ In the browser:
       var tree = WebIDL2.parse("string of WebIDL");
     </script>
 
+Advanced Parsing
+----------------
+
+`parse()` can optionally accept a second parameter, an options object, which can be used to
+modify parsing behavior.
+
+The following options are recognized:
+```javascript
+{
+    allowNestedTypedefs: false # 
+}
+```
+And their meanings are as follows:
+
+* `allowNestedTypedefs`: Boolean indicating whether the parser should accept `typedef`s as valid members of `interface`s. This is non-standard syntax and therefore the default is `false`.
+
 Errors
 ------
 When there is a syntax error in the WebIDL, it throws an exception object with the following
@@ -660,9 +676,8 @@ The fields are as follows:
   whereas the lack thereof will yield a `null`. If there is an `rhs` field then
   they are the right-hand side's arguments, otherwise they apply to the extended
   attribute directly.
-* `rhs`: If there is a right-hand side, this will capture its `type` (always
-  "identifier" in practice, though it may be extended in the future) and its
-  `value`.
+* `rhs`: If there is a right-hand side, this will capture its `type` (which can be
+  "identifier" or "identifier-list") and its `value`.
 * `typePair`: If the extended attribute is a `MapClass` this will capture the
   map's key type and value type respectively.
 
@@ -680,6 +695,24 @@ For string, number, boolean, and sequence:
 For Infinity:
 
 * `negative`: Boolean indicating whether this is negative Infinity or not.
+
+### `iterable<>`, `legacyiterable<>`, `maplike<>`, `setlike<>` declarations
+
+These appear as members of interfaces that look like this:
+
+        {
+            "type": "maplike", // or "legacyiterable" / "iterable" / "setlike"
+            "idlType": /* One or two types */,
+            "readonly": false, // only for maplike and setlike
+            "extAttrs": []
+        }
+
+The fields are as follows:
+
+* `type`: Always one of "iterable", "legacyiterable", "maplike" or "setlike".
+* `idlType`: An [IDL Type](#idl-type) (or an array of two types) representing the declared type arguments.
+* `readonly`: Whether the maplike or setlike is declared as read only.
+* `extAttrs`: A list of [extended attributes](#extended-attributes).
 
 
 Testing
