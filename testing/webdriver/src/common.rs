@@ -1,5 +1,5 @@
-use rustc_serialize::json::{Json, ToJson};
 use rustc_serialize::{Encodable, Encoder};
+use rustc_serialize::json::{Json, ToJson};
 use std::collections::BTreeMap;
 use std::error::Error;
 
@@ -74,7 +74,7 @@ impl<T: ToJson> Encodable for Nullable<T> {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub struct WebElement {
     pub id: String
 }
@@ -110,7 +110,7 @@ impl ToJson for WebElement {
     }
 }
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Debug)]
 pub enum FrameId {
     Short(u16),
     Element(WebElement),
