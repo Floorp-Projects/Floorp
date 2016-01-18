@@ -79,7 +79,6 @@ var TabsInTitlebar = {
   _disallowed: {},
   _prefName: "browser.tabs.drawInTitlebar",
   _lastSizeMode: null,
-  haveUpdatedTitlebarDisplay: false,
 
   _readPref: function () {
     this.allowedBy("pref",
@@ -264,22 +263,6 @@ var TabsInTitlebar = {
 };
 
 function updateTitlebarDisplay() {
-  // On Windows, trying to run this before the window has been activated
-  // results in Bad Things Happening. Prevent us from doing that:
-  if (!TabsInTitlebar.haveUpdatedTitlebarDisplay) {
-    if (AppConstants.platform == "win" && Services.focus.activeWindow != window) {
-      if (!TabsInTitlebar._titlebarUpdateListener) {
-        TabsInTitlebar._titlebarUpdateListener = e => {
-          window.removeEventListener("activate", TabsInTitlebar._titlebarUpdateListener);
-          updateTitlebarDisplay();
-        };
-        window.addEventListener("activate", TabsInTitlebar._titlebarUpdateListener);
-      }
-      return;
-    }
-    TabsInTitlebar.haveUpdatedTitlebarDisplay = true;
-  }
-
   if (AppConstants.platform == "macosx") {
     // OS X and the other platforms differ enough to necessitate this kind of
     // special-casing. Like the other platforms where we CAN_DRAW_IN_TITLEBAR,
