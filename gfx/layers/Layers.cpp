@@ -76,8 +76,7 @@ LayerManager::GetRootScrollableLayerId()
     return FrameMetrics::NULL_SCROLL_ID;
   }
 
-  nsTArray<LayerMetricsWrapper> queue;
-  queue.AppendElement(LayerMetricsWrapper(mRoot));
+  nsTArray<LayerMetricsWrapper> queue = { LayerMetricsWrapper(mRoot) };
   while (queue.Length()) {
     LayerMetricsWrapper layer = queue[0];
     queue.RemoveElementAt(0);
@@ -110,8 +109,7 @@ LayerManager::GetRootScrollableLayers(nsTArray<Layer*>& aArray)
     return;
   }
 
-  nsTArray<Layer*> queue;
-  queue.AppendElement(mRoot);
+  nsTArray<Layer*> queue = { mRoot };
   while (queue.Length()) {
     Layer* layer = queue[0];
     queue.RemoveElementAt(0);
@@ -134,8 +132,7 @@ LayerManager::GetScrollableLayers(nsTArray<Layer*>& aArray)
     return;
   }
 
-  nsTArray<Layer*> queue;
-  queue.AppendElement(mRoot);
+  nsTArray<Layer*> queue = { mRoot };
   while (!queue.IsEmpty()) {
     Layer* layer = queue.LastElement();
     queue.RemoveElementAt(queue.Length() - 1);

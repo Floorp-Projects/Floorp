@@ -184,17 +184,6 @@ public:
                        (CGFloat)aPt.y / aBackingScale);
   }
 
-  // XXX: all calls to this function should eventually be replaced with calls
-  // to DevPixelsToCocoaPoints().
-  static NSRect
-  UntypedDevPixelsToCocoaPoints(const nsIntRect& aRect, CGFloat aBackingScale)
-  {
-    return NSMakeRect((CGFloat)aRect.x / aBackingScale,
-                      (CGFloat)aRect.y / aBackingScale,
-                      (CGFloat)aRect.width / aBackingScale,
-                      (CGFloat)aRect.height / aBackingScale);
-  }
-
   static NSRect
   DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
                          CGFloat aBackingScale)

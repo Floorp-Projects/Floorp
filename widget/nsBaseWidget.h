@@ -515,7 +515,7 @@ protected:
   RefPtr<TextEventDispatcher> mTextEventDispatcher;
   nsCursor          mCursor;
   nsBorderStyle     mBorderStyle;
-  nsIntRect         mBounds;
+  LayoutDeviceIntRect mBounds;
   LayoutDeviceIntRect* mOriginalBounds;
   // When this pointer is null, the widget is not clipped
   mozilla::UniquePtr<LayoutDeviceIntRect[]> mClipRects;

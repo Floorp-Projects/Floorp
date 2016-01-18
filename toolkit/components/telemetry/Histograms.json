@@ -6032,9 +6032,20 @@
     "description": "The time (in milliseconds) that it took a 'reconfigure thread' request to go round trip."
   },
   "MEDIA_RUST_MP4PARSE_SUCCESS": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
     "expires_in_version": "50",
     "kind": "boolean",
+    "bug_numbers": [1220885],
     "description": "(Bug 1220885) Whether the rust mp4 demuxer successfully parsed a stream segment.",
+    "cpp_guard": "MOZ_RUST_MP4PARSE"
+  },
+  "MEDIA_RUST_MP4PARSE_ERROR_CODE": {
+    "alert_emails": ["giles@mozilla.com", "kinetik@flim.org"],
+    "expires_in_version": "50",
+    "kind": "enumerated",
+    "n_values": 32,
+    "bug_numbers": [1238420],
+    "description": "The error code reported when an MP4 parse attempt has failed.",
     "cpp_guard": "MOZ_RUST_MP4PARSE"
   },
   "MEDIA_RUST_MP4PARSE_TRACK_MATCH_AUDIO": {
