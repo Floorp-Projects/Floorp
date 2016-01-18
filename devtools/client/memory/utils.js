@@ -518,6 +518,42 @@ exports.openFilePicker = function({ title, filters, defaultName, mode }) {
 };
 
 /**
+ * Format the provided number with a space every 3 digits, and optionally
+ * prefixed by its sign.
+ *
+ * @param {Number} number
+ * @param {Boolean} showSign (defaults to false)
+ */
+exports.formatNumber = function(number, showSign = false) {
+  const rounded = Math.round(number);
+  if (rounded === 0 || rounded === -0) {
+    return "0";
+  }
+
+  const abs = String(Math.abs(rounded));
+  // replace every digit followed by (sets of 3 digits) by (itself and a space)
+  const formatted = abs.replace(/(\d)(?=(\d{3})+$)/g, "$1 ");
+
+  if (showSign) {
+    const sign = rounded < 0 ? "-" : "+";
+    return sign + formatted;
+  }
+  return formatted;
+};
+
+/**
+ * Format the provided percentage following the same logic as formatNumber and
+ * an additional % suffix.
+ *
+ * @param {Number} percent
+ * @param {Boolean} showSign (defaults to false)
+ */
+exports.formatPercent = function(percent, showSign = false) {
+  return exports.L10N.getFormatStr("tree-item.percent",
+                           exports.formatNumber(percent, showSign));
+};
+
+/**
  * Creates a hash map mapping node IDs to its parent node.
  *
  * @param {CensusTreeNode} node
