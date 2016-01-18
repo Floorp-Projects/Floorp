@@ -86,6 +86,7 @@ UNIFIED_SOURCES += [
     'testUbiNode.cpp',
     'testUncaughtError.cpp',
     'testUTF8.cpp',
+    'testWasmLEB128.cpp',
     'testWeakMap.cpp',
     'testXDR.cpp',
 ]

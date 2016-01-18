@@ -2696,20 +2696,24 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     MOZ_WARN_UNUSED_RESULT
-    bool writeU8(uint8_t u) {
-        return encoder().writeU8(u);
+    bool writeU8(uint8_t u8) {
+        return encoder().writeU8(u8);
     }
     MOZ_WARN_UNUSED_RESULT
-    bool writeU32(uint32_t u) {
-        return encoder().writeU32(u);
+    bool writeVarU32(uint32_t u32) {
+        return encoder().writeVarU32(u32);
     }
     MOZ_WARN_UNUSED_RESULT
-    bool writeI32(int32_t u) {
-        return encoder().writeI32(u);
+    bool writeU32(uint32_t u32) {
+        return encoder().writeU32(u32);
     }
     MOZ_WARN_UNUSED_RESULT
-    bool writeInt32Lit(int32_t i) {
-        return writeOp(Expr::I32Literal) && encoder().writeI32(i);
+    bool writeI32(int32_t i32) {
+        return encoder().writeI32(i32);
+    }
+    MOZ_WARN_UNUSED_RESULT
+    bool writeInt32Lit(int32_t i32) {
+        return writeOp(Expr::I32Literal) && encoder().writeI32(i32);
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -3406,7 +3410,7 @@ SetLocal(FunctionValidator& f, Expr exprStmt, NumLit lit)
 {
     return f.writeOp(exprStmt) &&
            f.writeOp(Expr::SetLocal) &&
-           f.writeU32(f.numLocals()) &&
+           f.writeVarU32(f.numLocals()) &&
            f.writeLit(lit);
 }
 
@@ -3509,7 +3513,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
         if (!f.writeOp(Expr::GetLocal))
             return false;
         MOZ_ASSERT(local->type != ValType::I64, "no int64 in asm.js");
-        if (!f.writeU32(local->slot))
+        if (!f.writeVarU32(local->slot))
             return false;
         *type = Type::var(local->type);
         return true;
@@ -3524,7 +3528,7 @@ CheckVarRef(FunctionValidator& f, ParseNode* varRef, Type* type)
           case ModuleValidator::Global::Variable: {
             *type = global->varOrConstType();
             return f.writeOp(Expr::LoadGlobal) &&
-                   f.writeU32(global->varOrConstGlobalDataOffset()) &&
+                   f.writeVarU32(global->varOrConstGlobalDataOffset()) &&
                    f.writeU8(uint8_t(global->isConst()));
           }
           case ModuleValidator::Global::Function:
@@ -3815,25 +3819,19 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
 {
     RootedPropertyName name(f.cx(), lhs->name());
 
-    size_t opcodeAt;
-    size_t indexAt;
-    if (!f.tempOp(&opcodeAt) || !f.temp32(&indexAt))
-        return false;
-
-    Type rhsType;
-    if (!CheckExpr(f, rhs, &rhsType))
-        return false;
-
     if (const FunctionValidator::Local* lhsVar = f.lookupLocal(name)) {
+        if (!f.writeOp(Expr::SetLocal) || !f.writeVarU32(lhsVar->slot))
+            return false;
+
+        Type rhsType;
+        if (!CheckExpr(f, rhs, &rhsType))
+            return false;
+
         if (!(rhsType <= lhsVar->type)) {
             return f.failf(lhs, "%s is not a subtype of %s",
                            rhsType.toChars(), Type::var(lhsVar->type).toChars());
         }
-
         MOZ_ASSERT(lhsVar->type != ValType::I64, "no int64 in asm.js");
-
-        f.patchOp(opcodeAt, Expr::SetLocal);
-        f.patch32(indexAt, lhsVar->slot);
         *type = rhsType;
         return true;
     }
@@ -3842,13 +3840,16 @@ CheckAssignName(FunctionValidator& f, ParseNode* lhs, ParseNode* rhs, Type* type
         if (global->which() != ModuleValidator::Global::Variable)
             return f.failName(lhs, "'%s' is not a mutable variable", name);
 
-        if (!(rhsType <= global->varOrConstType())) {
-            return f.failf(lhs, "%s is not a subtype of %s",
-                           rhsType.toChars(), global->varOrConstType().toChars());
-        }
+        if (!f.writeOp(Expr::StoreGlobal) || !f.writeVarU32(global->varOrConstGlobalDataOffset()))
+            return false;
 
-        f.patchOp(opcodeAt, Expr::StoreGlobal);
-        f.patch32(indexAt, global->varOrConstGlobalDataOffset());
+        Type rhsType;
+        if (!CheckExpr(f, rhs, &rhsType))
+            return false;
+
+        Type globType = global->varOrConstType();
+        if (!(rhsType <= globType))
+            return f.failf(lhs, "%s is not a subtype of %s", rhsType.toChars(), globType.toChars());
         *type = rhsType;
         return true;
     }
