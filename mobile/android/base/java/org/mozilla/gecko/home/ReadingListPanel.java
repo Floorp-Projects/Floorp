@@ -165,33 +165,6 @@ public class ReadingListPanel extends HomeFragment {
             final ImageView emptyImage = (ImageView) mEmptyView.findViewById(R.id.home_empty_image);
             emptyImage.setImageResource(R.drawable.icon_reading_list_empty);
 
-            final TextView emptyHint = (TextView) mEmptyView.findViewById(R.id.home_empty_hint);
-            if (HardwareUtils.isLowMemoryPlatform()) {
-                emptyHint.setVisibility(View.GONE);
-            } else {
-                String readingListHint = getString(R.string.home_reading_list_hint);
-                String readingListDesc = getString(R.string.home_reading_list_hint_accessible);
-                emptyHint.setText(readingListHint);
-                emptyHint.setContentDescription(readingListDesc);
-
-                // Use an ImageSpan to include the reader icon in the "Tip".
-                int imageSpanIndex = readingListHint.indexOf(MATCH_STRING);
-                if (imageSpanIndex != -1) {
-                    final ImageSpan readingListIcon = new ImageSpan(getActivity(), R.drawable.reader_cropped, ImageSpan.ALIGN_BOTTOM);
-                    final SpannableStringBuilder hintBuilder = new SpannableStringBuilder(readingListHint);
-
-                    // Add additional spacing.
-                    hintBuilder.insert(imageSpanIndex + MATCH_STRING.length(), " ");
-                    hintBuilder.insert(imageSpanIndex, " ");
-
-                    // Add icon.
-                    hintBuilder.setSpan(readingListIcon, imageSpanIndex + 1, imageSpanIndex + MATCH_STRING.length() + 1, Spanned.SPAN_INCLUSIVE_INCLUSIVE);
-
-                    emptyHint.setText(hintBuilder, TextView.BufferType.SPANNABLE);
-                }
-                emptyHint.setVisibility(View.VISIBLE);
-            }
-
             mList.setEmptyView(mEmptyView);
         }
     }
