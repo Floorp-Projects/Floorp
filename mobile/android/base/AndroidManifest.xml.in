@@ -16,11 +16,20 @@
               android:targetSdkVersion="23"/>
 
 #include ../services/manifests/FxAccountAndroidManifest_permissions.xml.in
-#include ../services/manifests/SyncAndroidManifest_permissions.xml.in
 
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 #include ../search/manifests/SearchAndroidManifest_permissions.xml.in
 #endif
+
+    <!-- A signature level permission specific to each Firefox version (Android
+         package name, e.g., org.mozilla.firefox).  Use this permission to
+         broadcast securely within a single Firefox version.  This needs to
+         agree with GlobalConstants.PER_ANDROID_PACKAGE_PERMISSION. -->
+    <permission
+        android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE"
+        android:protectionLevel="signature"/>
+
+    <uses-permission android:name="@ANDROID_PACKAGE_NAME@.permission.PER_ANDROID_PACKAGE" />
 
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
@@ -356,7 +365,6 @@
         </receiver>
 
 #include ../services/manifests/FxAccountAndroidManifest_activities.xml.in
-#include ../services/manifests/SyncAndroidManifest_activities.xml.in
 #ifdef MOZ_ANDROID_SEARCH_ACTIVITY
 #include ../search/manifests/SearchAndroidManifest_activities.xml.in
 #endif
@@ -463,7 +471,6 @@
 
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
-#include ../services/manifests/SyncAndroidManifest_services.xml.in
 
         <service
             android:name="org.mozilla.gecko.tabqueue.TabReceivedService"
