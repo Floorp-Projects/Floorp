@@ -41,6 +41,8 @@
 #define MOZ_WM_NOTIY_TSF_OF_LAYOUT_CHANGE (WM_APP+0x0315)
 // Internal message used in correcting backwards clock skew
 #define MOZ_WM_SKEWFIX                    (WM_APP+0x0316)
+// Internal message used for hiding the on-screen keyboard
+#define MOZ_WM_DISMISS_ONSCREEN_KEYBOARD  (WM_APP+0x0317)
 
 // Internal message for ensuring the file picker is visible on multi monitor
 // systems, and when the screen resolution changes.
