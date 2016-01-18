@@ -57,6 +57,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
 
         var moveMouse = function(e) {
+          info("Got mouse move");
           mozMovementX = ("mozMovementX" in e);
           mozMovementY = ("mozMovementY" in e);
 
@@ -75,6 +76,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         };
 
         var moveMouseAgain = function(e) {
+          info("Got mouse move again");
           secondMove.screenX = e.screenX;
           secondMove.screenY = e.screenY;
           secondMove.mozMovementX = e.mozMovementX;
@@ -86,6 +88,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         function fullscreenchange() {
           if (document.mozFullScreenElement === div) {
+            info("Got mozfullscreenchange for entering");
             var screenX = window.screenX;
             var screenY = window.screenY;
             if (screenX != 0 || screenY != 0) {
@@ -94,10 +97,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
               setTimeout(fullscreenchange, 250);
               return;
             } 
+            info("Finish waiting for fullscreenchange");
             div.addEventListener("mousemove", moveMouse, false);
             synthesizeMouseAtCenter(div, {type: "mousemove"}, window);
           }
           else {
+            info("Got mozfullscreenchange for exiting");
             runTests();
             SimpleTest.finish();
           }
@@ -106,6 +111,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         document.addEventListener("mozfullscreenchange", fullscreenchange, false);
 
         function start() {
+          info("Requesting fullscreen on parent");
           div.mozRequestFullScreen();
         }
       </script>
