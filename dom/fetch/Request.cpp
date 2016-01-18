@@ -231,11 +231,11 @@ Request::Constructor(const GlobalObject& aGlobal,
     RefPtr<Request> inputReq = &aInput.GetAsRequest();
     nsCOMPtr<nsIInputStream> body;
     inputReq->GetBody(getter_AddRefs(body));
+    if (inputReq->BodyUsed()) {
+      aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
+      return nullptr;
+    }
     if (body) {
-      if (inputReq->BodyUsed()) {
-        aRv.ThrowTypeError<MSG_FETCH_BODY_CONSUMED_ERROR>();
-        return nullptr;
-      }
       temporaryBody = body;
     }
 

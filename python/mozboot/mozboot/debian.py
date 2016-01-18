@@ -74,7 +74,6 @@ class DebianBootstrapper(BaseBootstrapper):
     MOBILE_ANDROID_COMMON_PACKAGES = [
         'zlib1g-dev',  # mobile/android requires system zlib.
         'openjdk-7-jdk',
-        'ant',
         'wget',  # For downloading the Android SDK and NDK.
         'libncurses5:i386',  # See comments about i386 below.
         'libstdc++6:i386',

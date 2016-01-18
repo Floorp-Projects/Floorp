@@ -890,9 +890,8 @@ TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_NoTouchAction) {
 
 TEST_F(APZCPinchGestureDetectorTester, Pinch_UseGestureDetector_TouchActionNone) {
   SCOPED_GFX_PREF(TouchActionEnabled, bool, true);
-  nsTArray<uint32_t> behaviors;
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
-  behaviors.AppendElement(mozilla::layers::AllowedTouchBehavior::NONE);
+  nsTArray<uint32_t> behaviors = { mozilla::layers::AllowedTouchBehavior::NONE,
+                                   mozilla::layers::AllowedTouchBehavior::NONE };
   DoPinchTest(false, &behaviors);
 }
 

@@ -252,7 +252,7 @@ already_AddRefed<SharedThreadPool> GetMediaThreadPool(MediaThreadType aType)
       name = "MediaPDecoder";
       break;
     default:
-      MOZ_ASSERT(false);
+      MOZ_FALLTHROUGH_ASSERT("Unexpected MediaThreadType");
     case MediaThreadType::PLAYBACK:
       name = "MediaPlayback";
       break;
