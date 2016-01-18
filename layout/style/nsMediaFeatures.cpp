@@ -523,12 +523,13 @@ nsMediaFeatures::features[] = {
   },
 
   // Webkit extensions that we support for de-facto web compatibility
-  // -webkit-{min|max}-device-pixel-ratio:
+  // -webkit-{min|max}-device-pixel-ratio (controlled with its own pref):
   {
     &nsGkAtoms::devicePixelRatio,
     nsMediaFeature::eMinMaxAllowed,
     nsMediaFeature::eFloat,
-    nsMediaFeature::eHasWebkitPrefix,
+    nsMediaFeature::eHasWebkitPrefix |
+      nsMediaFeature::eWebkitDevicePixelRatioPrefEnabled,
     { nullptr },
     GetDevicePixelRatio
   },
