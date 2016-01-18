@@ -208,7 +208,7 @@ class B2GEmulatorTest(TestingMixin, VCSMixin, BaseScript, BlobUploadMixin):
                          error_list=TarErrorList,
                          halt_on_failure=True, fatal_exit_code=3)
 
-        self.download_unpack(self.config['xre_url'],
+        self.download_unzip(self.config['xre_url'],
                              dirs['abs_xre_dir'])
 
         if self.config.get('busybox_url'):

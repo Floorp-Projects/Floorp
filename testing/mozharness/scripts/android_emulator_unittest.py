@@ -627,7 +627,7 @@ class AndroidEmulatorTest(BlobUploadMixin, TestingMixin, EmulatorMixin, VCSMixin
             robocop_url = self.installer_url[:self.installer_url.rfind('/')] + '/robocop.apk'
             self.info("Downloading robocop...")
             self.download_file(robocop_url, 'robocop.apk', dirs['abs_work_dir'], error_level=FATAL)
-        self.download_unpack(self.host_utils_url, dirs['abs_xre_dir'])
+        self.download_unzip(self.host_utils_url, dirs['abs_xre_dir'])
 
     def install(self):
         """
