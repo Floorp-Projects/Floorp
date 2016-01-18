@@ -141,7 +141,7 @@ private:
   static bool IsIMMActive();
 
   static void MaybeShowOnScreenKeyboard();
-  static void MaybeDismissOnScreenKeyboard();
+  static void MaybeDismissOnScreenKeyboard(nsWindow* aWindow);
   static bool WStringStartsWithCaseInsensitive(const std::wstring& aHaystack,
                                                const std::wstring& aNeedle);
   static bool IsKeyboardPresentOnSlate();
