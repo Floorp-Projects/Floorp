@@ -518,7 +518,7 @@ protected:
     // For compositionstart and selectionset
     LONG mSelectionStart;
     LONG mSelectionLength;
-    // For compositionupdate and compositionend
+    // For compositionstart, compositionupdate and compositionend
     nsString mData;
     // For compositionupdate
     RefPtr<TextRangeArray> mRanges;
