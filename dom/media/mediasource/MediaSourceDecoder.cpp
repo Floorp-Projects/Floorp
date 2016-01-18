@@ -239,8 +239,10 @@ MediaSourceDecoder::GetMediaSourceDuration()
 void
 MediaSourceDecoder::GetMozDebugReaderData(nsAString& aString)
 {
-  mReader->GetMozDebugReaderData(aString);
-  mDemuxer->GetMozDebugReaderData(aString);
+  if (mReader && mDemuxer) {
+    mReader->GetMozDebugReaderData(aString);
+    mDemuxer->GetMozDebugReaderData(aString);
+  }
 }
 
 double

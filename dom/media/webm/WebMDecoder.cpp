@@ -6,7 +6,6 @@
 
 #include "mozilla/Preferences.h"
 #include "MediaDecoderStateMachine.h"
-#include "MediaFormatReader.h"
 #include "WebMDemuxer.h"
 #include "WebMDecoder.h"
 #include "VideoUtils.h"
@@ -15,9 +14,9 @@ namespace mozilla {
 
 MediaDecoderStateMachine* WebMDecoder::CreateStateMachine()
 {
-  RefPtr<MediaDecoderReader> reader =
+  mReader =
     new MediaFormatReader(this, new WebMDemuxer(GetResource()), GetVideoFrameContainer());
-  return new MediaDecoderStateMachine(this, reader);
+  return new MediaDecoderStateMachine(this, mReader);
 }
 
 /* static */
@@ -69,6 +68,14 @@ WebMDecoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
     return false;
   }
   return true;
+}
+
+void
+WebMDecoder::GetMozDebugReaderData(nsAString& aString)
+{
+  if (mReader) {
+    mReader->GetMozDebugReaderData(aString);
+  }
 }
 
 } // namespace mozilla
