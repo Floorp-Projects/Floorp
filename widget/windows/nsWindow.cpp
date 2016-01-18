@@ -5228,13 +5228,19 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
                                     WidgetMouseEvent::eRightButton,
                                   MOUSE_INPUT_SOURCE());
       if (lParam != -1 && !result && mCustomNonClient) {
-        WidgetMouseEvent event(true, eMouseHitTest, this,
-                               WidgetMouseEvent::eReal,
-                               WidgetMouseEvent::eNormal);
-        event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
-        event.inputSource = MOUSE_INPUT_SOURCE();
-        event.mFlags.mOnlyChromeDispatch = true;
-        if (DispatchWindowEvent(&event)) {
+        bool shouldShowMenu = false;
+        if (mDraggableRegion.Contains(GET_X_LPARAM(pos), GET_Y_LPARAM(pos))) {
+          shouldShowMenu = true;
+        } else {
+          WidgetMouseEvent event(true, eMouseHitTest, this,
+                                 WidgetMouseEvent::eReal,
+                                 WidgetMouseEvent::eNormal);
+          event.refPoint = LayoutDeviceIntPoint(GET_X_LPARAM(pos), GET_Y_LPARAM(pos));
+          event.inputSource = MOUSE_INPUT_SOURCE();
+          event.mFlags.mOnlyChromeDispatch = true;
+          shouldShowMenu = DispatchWindowEvent(&event);
+        }
+        if (shouldShowMenu) {
           // Blank area hit, throw up the system menu.
           DisplaySystemMenu(mWnd, mSizeMode, mIsRTL, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
           result = true;
