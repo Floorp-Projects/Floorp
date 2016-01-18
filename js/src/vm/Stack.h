@@ -217,7 +217,7 @@ class AbstractFramePtr
 
     inline Value newTarget() const;
 
-    inline bool isNonEvalFunctionFrame() const;
+    inline bool isFunctionFrame() const;
     inline bool isNonStrictDirectEvalFrame() const;
     inline bool isStrictEvalFrame() const;
 
@@ -292,7 +292,7 @@ class InterpreterFrame
     enum Flags : uint32_t {
         /* Primary frame type */
         GLOBAL_OR_MODULE       =        0x1,  /* frame pushed for a global script */
-        FUNCTION               =        0x2,  /* frame pushed for a scripted call */
+        /* (0x2 and 0x4 are unused) */
 
         /* Frame subtypes */
         EVAL                   =        0x8,  /* frame pushed for eval() or debugger eval */
@@ -491,8 +491,8 @@ class InterpreterFrame
         return flags_ & EVAL;
     }
 
-    bool isNonEvalFunctionFrame() const {
-        return (flags_ & (FUNCTION | EVAL)) == FUNCTION;
+    bool isFunctionFrame() const {
+        return script_->functionNonDelazifying();
     }
 
     inline bool isStrictEvalFrame() const {
@@ -551,7 +551,7 @@ class InterpreterFrame
 
     inline Value& unaliasedLocal(uint32_t i);
 
-    bool hasArgs() const { return isNonEvalFunctionFrame(); }
+    bool hasArgs() const { return isFunctionFrame(); }
     inline Value& unaliasedFormal(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
     inline Value& unaliasedActual(unsigned i, MaybeCheckAliasing = CHECK_ALIASING);
     template <class Op> inline void unaliasedForEachActual(Op op);
@@ -661,7 +661,7 @@ class InterpreterFrame
      * return the original, unboxed Value.
      */
     Value& thisArgument() const {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return argv()[-1];
     }
 
@@ -673,12 +673,12 @@ class InterpreterFrame
      */
 
     JSFunction& callee() const {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return calleev().toObject().as<JSFunction>();
     }
 
     const Value& calleev() const {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return argv()[-2];
     }
 
@@ -693,7 +693,7 @@ class InterpreterFrame
         if (isEvalFrame())
             return ((Value*)this)[-2];
 
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
 
         if (callee().isArrow())
             return callee().getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
@@ -747,7 +747,7 @@ class InterpreterFrame
 
     void resumeGeneratorFrame(JSObject* scopeChain) {
         MOZ_ASSERT(script()->isGenerator());
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         flags_ |= HAS_CALL_OBJ | HAS_SCOPECHAIN;
         scopeChain_ = scopeChain;
     }
@@ -1843,8 +1843,8 @@ class FrameIter
 
     bool isGlobalOrModuleFrame() const;
     bool isEvalFrame() const;
-    bool isNonEvalFunctionFrame() const;
-    bool hasArgs() const { return isNonEvalFunctionFrame(); }
+    bool isFunctionFrame() const;
+    bool hasArgs() const { return isFunctionFrame(); }
 
     // These two methods may not be called with asm frames.
     inline bool hasCachedSavedFrame() const;
@@ -1878,7 +1878,7 @@ class FrameIter
     JSFunction* callee(JSContext* cx) const;
 
     JSFunction* maybeCallee(JSContext* cx) const {
-        return isNonEvalFunctionFrame() ? callee(cx) : nullptr;
+        return isFunctionFrame() ? callee(cx) : nullptr;
     }
 
     bool        matchCallee(JSContext* cx, HandleFunction fun) const;
