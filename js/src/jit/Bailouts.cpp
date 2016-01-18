@@ -263,7 +263,7 @@ jit::EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp)
     // Ion does not compile eval scripts.
     MOZ_ASSERT(!fp.isEvalFrame());
 
-    if (fp.isNonEvalFunctionFrame() &&
+    if (fp.isFunctionFrame() &&
         fp.callee()->needsCallObject() &&
         !fp.hasCallObj())
     {

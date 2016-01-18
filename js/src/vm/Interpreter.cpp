@@ -138,7 +138,7 @@ js::BoxNonStrictThis(JSContext* cx, const CallReceiver& call)
 bool
 js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res)
 {
-    MOZ_ASSERT(frame.isNonEvalFunctionFrame());
+    MOZ_ASSERT(frame.isFunctionFrame());
     MOZ_ASSERT(!frame.callee()->isArrow());
 
     if (frame.thisArgument().isObject() ||
@@ -3354,7 +3354,7 @@ CASE(JSOP_LAMBDA_ARROW)
 END_CASE(JSOP_LAMBDA_ARROW)
 
 CASE(JSOP_CALLEE)
-    MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
+    MOZ_ASSERT(REGS.fp()->isFunctionFrame());
     PUSH_COPY(REGS.fp()->calleev());
 END_CASE(JSOP_CALLEE)
 
@@ -3706,7 +3706,7 @@ END_CASE(JSOP_GENERATOR)
 CASE(JSOP_INITIALYIELD)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
+    MOZ_ASSERT(REGS.fp()->isFunctionFrame());
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
     POP_RETURN_VALUE();
     MOZ_ASSERT(REGS.stackDepth() == 0);
@@ -3718,7 +3718,7 @@ CASE(JSOP_INITIALYIELD)
 CASE(JSOP_YIELD)
 {
     MOZ_ASSERT(!cx->isExceptionPending());
-    MOZ_ASSERT(REGS.fp()->isNonEvalFunctionFrame());
+    MOZ_ASSERT(REGS.fp()->isFunctionFrame());
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-1].toObject());
     if (!GeneratorObject::normalSuspend(cx, obj, REGS.fp(), REGS.pc,
                                         REGS.spForStackDepth(0), REGS.stackDepth() - 2))

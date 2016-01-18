@@ -220,7 +220,7 @@ InterpreterFrame::prologue(JSContext* cx)
     if (isModuleFrame())
         return probes::EnterScript(cx, script, nullptr, this);
 
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
     if (callee().needsCallObject() && !initFunctionScopeObjects(cx))
         return false;
 
@@ -274,7 +274,7 @@ InterpreterFrame::epilogue(JSContext* cx)
     if (isModuleFrame())
         return;
 
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
 
     if (callee().needsCallObject()) {
         MOZ_ASSERT_IF(hasCallObj() && !callee().isGenerator(),
@@ -299,7 +299,7 @@ bool
 InterpreterFrame::checkReturn(JSContext* cx, HandleValue thisv)
 {
     MOZ_ASSERT(script()->isDerivedClassConstructor());
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
     MOZ_ASSERT(callee().isClassConstructor());
 
     HandleValue retVal = returnValue();
@@ -879,17 +879,17 @@ FrameIter::isEvalFrame() const
 }
 
 bool
-FrameIter::isNonEvalFunctionFrame() const
+FrameIter::isFunctionFrame() const
 {
     MOZ_ASSERT(!done());
     switch (data_.state_) {
       case DONE:
         break;
       case INTERP:
-        return interpFrame()->isNonEvalFunctionFrame();
+        return interpFrame()->isFunctionFrame();
       case JIT:
         if (data_.jitFrames_.isBaselineJS())
-            return data_.jitFrames_.baselineFrame()->isNonEvalFunctionFrame();
+            return data_.jitFrames_.baselineFrame()->isFunctionFrame();
         return script()->functionNonDelazifying();
       case WASM:
         return true;
@@ -900,7 +900,7 @@ FrameIter::isNonEvalFunctionFrame() const
 JSAtom*
 FrameIter::functionDisplayAtom() const
 {
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
 
     switch (data_.state_) {
       case DONE:
@@ -1106,7 +1106,7 @@ FrameIter::calleeTemplate() const
       case WASM:
         break;
       case INTERP:
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return &interpFrame()->callee();
       case JIT:
         if (data_.jitFrames_.isBaselineJS())
@@ -1176,7 +1176,7 @@ FrameIter::numActualArgs() const
       case WASM:
         break;
       case INTERP:
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return interpFrame()->numActualArgs();
       case JIT:
         if (data_.jitFrames_.isIonScripted())
@@ -1246,7 +1246,7 @@ FrameIter::argsObj() const
 Value
 FrameIter::thisArgument(JSContext* cx) const
 {
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
 
     switch (data_.state_) {
       case DONE:
@@ -1417,7 +1417,7 @@ ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, InterpreterFrame* 
     if (entryMonitor_) {
         RootedValue stack(cx, asyncStack(cx));
         RootedString asyncCause(cx, cx->runtime()->asyncCauseForNewActivations);
-        if (entryFrame->isNonEvalFunctionFrame())
+        if (entryFrame->isFunctionFrame())
             entryMonitor_->Entry(cx, &entryFrame->callee(), stack, asyncCause);
         else
             entryMonitor_->Entry(cx, entryFrame->script(), stack, asyncCause);

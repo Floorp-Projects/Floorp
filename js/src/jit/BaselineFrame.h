@@ -206,7 +206,7 @@ class BaselineFrame
         return script()->functionNonDelazifying()->nargs();
     }
     Value& thisArgument() const {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                          BaselineFrame::Size() +
                          offsetOfThis());
@@ -230,7 +230,7 @@ class BaselineFrame
     Value newTarget() const {
         if (isEvalFrame())
             return *evalNewTargetAddress();
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         if (callee()->isArrow())
             return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
         if (isConstructing()) {
@@ -406,8 +406,8 @@ class BaselineFrame
     bool isNonStrictDirectEvalFrame() const {
         return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
     }
-    bool isNonEvalFunctionFrame() const {
-        return CalleeTokenIsFunction(calleeToken()) && !isEvalFrame();
+    bool isFunctionFrame() const {
+        return CalleeTokenIsFunction(calleeToken());
     }
     bool isDebuggerEvalFrame() const {
         return false;

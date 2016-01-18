@@ -33,7 +33,7 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
     replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
     // Mark |this|, actual and formal args.
-    if (isNonEvalFunctionFrame()) {
+    if (isFunctionFrame()) {
         TraceRoot(trc, &thisArgument(), "baseline-this");
 
         unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
@@ -126,7 +126,7 @@ BaselineFrame::initStrictEvalScopeObjects(JSContext* cx)
 bool
 BaselineFrame::initFunctionScopeObjects(JSContext* cx)
 {
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
     MOZ_ASSERT(callee()->needsCallObject());
 
     CallObject* callobj = CallObject::createForFunction(cx, this);

@@ -4189,7 +4189,7 @@ JSScript::argumentsOptimizationFailed(JSContext* cx, HandleScript script)
         if (i.isIon())
             continue;
         AbstractFramePtr frame = i.abstractFramePtr();
-        if (frame.isNonEvalFunctionFrame() && frame.script() == script) {
+        if (frame.isFunctionFrame() && frame.script() == script) {
             /* We crash on OOM since cleaning up here would be complicated. */
             AutoEnterOOMUnsafeRegion oomUnsafe;
             ArgumentsObject* argsobj = ArgumentsObject::createExpected(cx, frame);
