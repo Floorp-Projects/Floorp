@@ -148,6 +148,66 @@ private:
   uint32_t mCount;
 };
 
+/*
+ * A bookkeeping class to track the read/write position of an audio buffer.
+ */
+class AudioBufferCursor {
+public:
+  AudioBufferCursor(AudioDataValue* aPtr, uint32_t aChannels, uint32_t aFrames)
+    : mPtr(aPtr), mChannels(aChannels), mFrames(aFrames) {}
+
+  // Advance the cursor to account for frames that are consumed.
+  uint32_t Advance(uint32_t aFrames) {
+    MOZ_ASSERT(mFrames >= aFrames);
+    mFrames -= aFrames;
+    mPtr += mChannels * aFrames;
+    return aFrames;
+  }
+
+  // The number of frames available for read/write in this buffer.
+  uint32_t Available() const { return mFrames; }
+
+  // Return a pointer where read/write should begin.
+  AudioDataValue* Ptr() const { return mPtr; }
+
+protected:
+  AudioDataValue* mPtr;
+  const uint32_t mChannels;
+  uint32_t mFrames;
+};
+
+/*
+ * A helper class to encapsulate pointer arithmetic and provide means to modify
+ * the underlying audio buffer.
+ */
+class AudioBufferWriter : private AudioBufferCursor {
+public:
+  AudioBufferWriter(AudioDataValue* aPtr, uint32_t aChannels, uint32_t aFrames)
+    : AudioBufferCursor(aPtr, aChannels, aFrames) {}
+
+  uint32_t WriteZeros(uint32_t aFrames) {
+    memset(mPtr, 0, sizeof(AudioDataValue) * mChannels * aFrames);
+    return Advance(aFrames);
+  }
+
+  uint32_t Write(const AudioDataValue* aPtr, uint32_t aFrames) {
+    memcpy(mPtr, aPtr, sizeof(AudioDataValue) * mChannels * aFrames);
+    return Advance(aFrames);
+  }
+
+  // Provide a write fuction to update the audio buffer with the following
+  // signature: uint32_t(const AudioDataValue* aPtr, uint32_t aFrames)
+  // aPtr: Pointer to the audio buffer.
+  // aFrames: The number of frames available in the buffer.
+  // return: The number of frames actually written by the function.
+  template <typename Function>
+  uint32_t Write(const Function& aFunction, uint32_t aFrames) {
+    return Advance(aFunction(mPtr, aFrames));
+  }
+
+  using AudioBufferCursor::Available;
+};
+
 // Access to a single instance of this class must be synchronized by
 // callers, or made from a single thread.  One exception is that access to
 // GetPosition, GetPositionInFrames, SetVolume, and Get{Rate,Channels},
@@ -263,8 +323,8 @@ private:
   // Return true if downmixing succeeds otherwise false.
   bool Downmix(AudioDataValue* aBuffer, uint32_t aFrames);
 
-  long GetUnprocessed(void* aBuffer, long aFrames);
-  long GetTimeStretched(void* aBuffer, long aFrames);
+  void GetUnprocessed(AudioBufferWriter& aWriter);
+  void GetTimeStretched(AudioBufferWriter& aWriter);
 
   void StartUnlocked();
 
