@@ -1170,6 +1170,7 @@ class FunctionCompiler
 
     uint8_t        readU8()     { return decoder_.uncheckedReadU8(); }
     uint32_t       readU32()    { return decoder_.uncheckedReadU32(); }
+    uint32_t       readVarU32() { return decoder_.uncheckedReadVarU32(); }
     int32_t        readI32()    { return decoder_.uncheckedReadI32(); }
     float          readF32()    { return decoder_.uncheckedReadF32(); }
     double         readF64()    { return decoder_.uncheckedReadF64(); }
@@ -1330,7 +1331,7 @@ EmitLiteral(FunctionCompiler& f, ValType type, MDefinition**def)
 static bool
 EmitGetLocal(FunctionCompiler& f, const DebugOnly<MIRType>& type, MDefinition** def)
 {
-    uint32_t slot = f.readU32();
+    uint32_t slot = f.readVarU32();
     *def = f.getLocalDef(slot);
     MOZ_ASSERT_IF(*def, (*def)->type() == type);
     return true;
@@ -1339,7 +1340,7 @@ EmitGetLocal(FunctionCompiler& f, const DebugOnly<MIRType>& type, MDefinition** 
 static bool
 EmitLoadGlobal(FunctionCompiler& f, MIRType type, MDefinition** def)
 {
-    uint32_t globalDataOffset = f.readU32();
+    uint32_t globalDataOffset = f.readVarU32();
     bool isConst = bool(f.readU8());
     *def = f.loadGlobalVar(globalDataOffset, isConst, type);
     return true;
@@ -1429,7 +1430,7 @@ EmitStoreWithCoercion(FunctionCompiler& f, Scalar::Type rhsType, Scalar::Type vi
 static bool
 EmitSetLocal(FunctionCompiler& f, ValType type, MDefinition** def)
 {
-    uint32_t slot = f.readU32();
+    uint32_t slot = f.readVarU32();
     MDefinition* expr;
     if (!EmitExpr(f, type, &expr))
         return false;
@@ -1441,7 +1442,7 @@ EmitSetLocal(FunctionCompiler& f, ValType type, MDefinition** def)
 static bool
 EmitStoreGlobal(FunctionCompiler& f, ValType type, MDefinition**def)
 {
-    uint32_t globalDataOffset = f.readU32();
+    uint32_t globalDataOffset = f.readVarU32();
     MDefinition* expr;
     if (!EmitExpr(f, type, &expr))
         return false;

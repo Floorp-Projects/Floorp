@@ -398,7 +398,7 @@ class Encoder
         done_(false)
     {}
 
-    bool init(UniqueBytecode bytecode) {
+    bool init(UniqueBytecode bytecode = UniqueBytecode()) {
         if (bytecode) {
             bytecode_ = mozilla::Move(bytecode);
             bytecode_->clear();
@@ -415,6 +415,19 @@ class Encoder
         MOZ_ASSERT(!done_);
         done_ = true;
         return mozilla::Move(bytecode_);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool
+    writeVarU32(uint32_t i) {
+        do {
+            uint8_t byte = i & 0x7F;
+            i >>= 7;
+            if (i != 0)
+                byte |= 0x80;
+            if (!writeU8(byte))
+                return false;
+        } while(i != 0);
+        return true;
     }
 
     MOZ_WARN_UNUSED_RESULT bool
@@ -546,6 +559,26 @@ class Decoder
         return true;
     }
 
+    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* decoded) {
+        *decoded = 0;
+        uint8_t byte;
+        uint32_t shift = 0;
+        do {
+            if (!readU8(&byte))
+                return false;
+            if (!(byte & 0x80)) {
+                *decoded |= uint32_t(byte & 0x7F) << shift;
+                return true;
+            }
+            *decoded |= uint32_t(byte & 0x7F) << shift;
+            shift += 7;
+        } while (shift != 28);
+        if (!readU8(&byte) || (byte & 0xF0))
+            return false;
+        *decoded |= uint32_t(byte) << 28;
+        return true;
+    }
+
     // The infallible unpacking API should be used when we are sure that the
     // bytecode is well-formed.
     uint8_t        uncheckedReadU8 () { return uncheckedRead<uint8_t>(); }
@@ -566,6 +599,25 @@ class Decoder
         for (size_t i = 0; i < 4; i++)
             v[i] = uncheckedReadF32();
         return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
+    }
+
+    uint32_t uncheckedReadVarU32() {
+        uint32_t decoded = 0;
+        uint32_t shift = 0;
+        uint8_t byte;
+        do {
+            byte = uncheckedReadU8();
+            if (!(byte & 0x80)) {
+                decoded |= uint32_t(byte & 0x7F) << shift;
+                return decoded;
+            }
+            decoded |= uint32_t(byte & 0x7F) << shift;
+            shift += 7;
+        } while (shift != 28);
+        byte = uncheckedReadU8();
+        MOZ_ASSERT(!(byte & 0xF0));
+        decoded |= uint32_t(byte) << 28;
+        return decoded;
     }
 };
 
