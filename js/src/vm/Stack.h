@@ -202,7 +202,6 @@ class AbstractFramePtr
     inline JSCompartment* compartment() const;
 
     inline bool hasCallObj() const;
-    inline bool isGlobalOrModuleFrame() const;
     inline bool isGlobalFrame() const;
     inline bool isModuleFrame() const;
     inline bool isEvalFrame() const;
@@ -459,17 +458,12 @@ class InterpreterFrame
      *  eval frame:     execution of eval code
      */
 
-    bool isGlobalOrModuleFrame() const {
-        MOZ_ASSERT(!isEvalFrame());
-        return !!(flags_ & GLOBAL_OR_MODULE);
-    }
-
     bool isGlobalFrame() const {
-        return isGlobalOrModuleFrame() && !script()->module();
+        return script_->isGlobalCode();
     }
 
     bool isModuleFrame() const {
-        return isGlobalOrModuleFrame() && script()->module();
+        return script_->module();
     }
 
     bool isEvalFrame() const {
@@ -1826,7 +1820,6 @@ class FrameIter
     inline bool isBaseline() const;
     inline bool isPhysicalIonFrame() const;
 
-    bool isGlobalOrModuleFrame() const;
     bool isEvalFrame() const;
     bool isFunctionFrame() const;
     bool hasArgs() const { return isFunctionFrame(); }

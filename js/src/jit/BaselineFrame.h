@@ -372,9 +372,11 @@ class BaselineFrame
 
     void trace(JSTracer* trc, JitFrameIterator& frame);
 
-    bool isGlobalOrModuleFrame() const {
-        MOZ_ASSERT(!isEvalFrame());
-        return !CalleeTokenIsFunction(calleeToken());
+    bool isGlobalFrame() const {
+        return script()->isGlobalCode();
+    }
+    bool isModuleFrame() const {
+        return script()->module();
     }
     bool isEvalFrame() const {
         return script()->isForEval();

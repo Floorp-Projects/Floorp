@@ -1294,20 +1294,20 @@ class JSScript : public js::gc::TenuredCell
     // The fixed part of a stack frame is comprised of vars (in function and
     // module code) and block-scoped locals (in all kinds of code).
     size_t nfixed() const {
-        return isGlobalCode() ? bindings.numBlockScoped() : bindings.numFixedLocals();
+        return isGlobalOrEvalCode() ? bindings.numBlockScoped() : bindings.numFixedLocals();
     }
 
     // Number of fixed slots reserved for vars.  Only nonzero for function
     // or module code.
     size_t nfixedvars() const {
-        return isGlobalCode() ? 0 : bindings.numUnaliasedVars();
+        return isGlobalOrEvalCode() ? 0 : bindings.numUnaliasedVars();
     }
 
     // Number of fixed slots reserved for body-level lexicals and vars. This
     // value minus nfixedvars() is the number of body-level lexicals. Only
     // nonzero for function or module code.
     size_t nbodyfixed() const {
-        return isGlobalCode() ? 0 : bindings.numUnaliasedBodyLevelLocals();
+        return isGlobalOrEvalCode() ? 0 : bindings.numUnaliasedBodyLevelLocals();
     }
 
     // Calculate the number of fixed slots that are live at a particular bytecode.
@@ -1642,8 +1642,11 @@ class JSScript : public js::gc::TenuredCell
     }
     inline void setModule(js::ModuleObject* module);
 
-    bool isGlobalCode() const {
+    bool isGlobalOrEvalCode() const {
         return !function_ && !module_;
+    }
+    bool isGlobalCode() const {
+        return isGlobalOrEvalCode() && !isForEval();
     }
 
     // Returns true if the script may read formal arguments on the stack

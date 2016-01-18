@@ -564,25 +564,23 @@ AbstractFramePtr::createSingleton() const
 }
 
 inline bool
-AbstractFramePtr::isGlobalOrModuleFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->isGlobalOrModuleFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->isGlobalOrModuleFrame();
-    return asRematerializedFrame()->isGlobalOrModuleFrame();
-}
-
-inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
-    return isGlobalOrModuleFrame() && !script()->module();
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isGlobalFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isGlobalFrame();
+    return asRematerializedFrame()->isGlobalFrame();
 }
 
 inline bool
 AbstractFramePtr::isModuleFrame() const
 {
-    return isGlobalOrModuleFrame() && script()->module();
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isModuleFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isModuleFrame();
+    return asRematerializedFrame()->isModuleFrame();
 }
 
 inline bool
