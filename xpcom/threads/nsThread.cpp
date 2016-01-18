@@ -403,6 +403,9 @@ nsThread::ThreadFunc(void* aArg)
     BackgroundChild::CloseForCurrentThread();
 #endif // defined(MOZILLA_XPCOMRT_API)
 
+    // NB: The main thread does not shut down here!  It shuts down via
+    // nsThreadManager::Shutdown.
+
     // Do NS_ProcessPendingEvents but with special handling to set
     // mEventsAreDoomed atomically with the removal of the last event. The key
     // invariant here is that we will never permit PutEvent to succeed if the
@@ -411,10 +414,7 @@ nsThread::ThreadFunc(void* aArg)
     // as we have outstanding mRequestedShutdownContexts.
     while (true) {
       // Check and see if we're waiting on any threads.
-      while (self->mRequestedShutdownContexts.Length()) {
-        // We can't stop accepting events just yet.  Block and check again.
-        NS_ProcessNextEvent(self, true);
-      }
+      self->WaitForAllAsynchronousShutdowns();
 
       {
         MutexAutoLock lock(self->mLock);
@@ -776,6 +776,14 @@ nsThread::ShutdownComplete(nsThreadShutdownContext* aContext)
   // Delete aContext.
   MOZ_ALWAYS_TRUE(
     aContext->joiningThread->mRequestedShutdownContexts.RemoveElement(aContext));
+}
+
+void
+nsThread::WaitForAllAsynchronousShutdowns()
+{
+  while (mRequestedShutdownContexts.Length()) {
+    NS_ProcessNextEvent(this, true);
+  }
 }
 
 NS_IMETHODIMP
