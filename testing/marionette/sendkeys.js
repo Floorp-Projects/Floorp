@@ -144,7 +144,7 @@ function focusElement(el) {
   el.focus();
 }
 
-function sendKeysToElement(document, element, keysToSend, successCallback, errorCallback, command_id, ignoreVisibility) {
+function sendKeysToElement(document, element, keysToSend, ignoreVisibility) {
   if (ignoreVisibility || checkVisible(element)) {
     focusElement(element);
 
@@ -159,9 +159,7 @@ function sendKeysToElement(document, element, keysToSend, successCallback, error
       var c = value.charAt(i);
       sendSingleKey(c, modifiers, document);
     }
-
-    successCallback(command_id);
   } else {
-    errorCallback(new ElementNotVisibleError("Element is not visible"), command_id);
+    throw new ElementNotVisibleError("Element is not visible");
   }
 };

@@ -5,12 +5,6 @@
 let {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/error.js");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, 'setInterval',
-  'resource://gre/modules/Timer.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'clearInterval',
-  'resource://gre/modules/Timer.jsm');
 
 /**
  * The ElementManager manages DOM element references and
@@ -30,7 +24,6 @@ XPCOMUtils.defineLazyModuleGetter(this, 'clearInterval',
  */
 
 this.EXPORTED_SYMBOLS = [
-  "Accessibility",
   "elements",
   "ElementManager",
   "CLASS_NAME",
@@ -47,8 +40,8 @@ this.EXPORTED_SYMBOLS = [
 
 const DOCUMENT_POSITION_DISCONNECTED = 1;
 
-const uuidGen = Components.classes["@mozilla.org/uuid-generator;1"]
-    .getService(Components.interfaces.nsIUUIDGenerator);
+const uuidGen = Cc["@mozilla.org/uuid-generator;1"]
+    .getService(Ci.nsIUUIDGenerator);
 
 this.CLASS_NAME = "class name";
 this.SELECTOR = "css selector";
@@ -60,192 +53,6 @@ this.TAG = "tag name";
 this.XPATH = "xpath";
 this.ANON= "anon";
 this.ANON_ATTRIBUTE = "anon attribute";
-
-this.Accessibility = function Accessibility() {
-  // A flag indicating whether the accessibility issue should be logged or cause
-  // an exception. Default: log to stdout.
-  this.strict = false;
-  // An interface for in-process accessibility clients
-  // Note: we access it lazily to not enable accessibility when it is not needed
-  Object.defineProperty(this, 'accessibleRetrieval', {
-    configurable: true,
-    get: function() {
-      delete this.accessibleRetrieval;
-      this.accessibleRetrieval = Components.classes[
-        '@mozilla.org/accessibleRetrieval;1'].getService(
-          Components.interfaces.nsIAccessibleRetrieval);
-      return this.accessibleRetrieval;
-    }
-  });
-};
-
-Accessibility.prototype = {
-
-  /**
-   * Number of attempts to get an accessible object for an element. We attempt
-   * more than once because accessible tree can be out of sync with the DOM tree
-   * for a short period of time.
-   * @type {Number}
-   */
-  GET_ACCESSIBLE_ATTEMPTS: 100,
-
-  /**
-   * An interval between attempts to retrieve an accessible object for an
-   * element.
-   * @type {Number} ms
-   */
-  GET_ACCESSIBLE_ATTEMPT_INTERVAL: 10,
-
-  /**
-   * Accessible object roles that support some action
-   * @type Object
-   */
-  actionableRoles: new Set([
-    'pushbutton',
-    'checkbutton',
-    'combobox',
-    'key',
-    'link',
-    'menuitem',
-    'check menu item',
-    'radio menu item',
-    'option',
-    'listbox option',
-    'listbox rich option',
-    'check rich option',
-    'combobox option',
-    'radiobutton',
-    'rowheader',
-    'switch',
-    'slider',
-    'spinbutton',
-    'pagetab',
-    'entry',
-    'outlineitem'
-  ]),
-
-  /**
-   * Get an accessible object for a DOM element
-   * @param nsIDOMElement element
-   * @param Boolean mustHaveAccessible a flag indicating that the element must
-   * have an accessible object
-   * @return nsIAccessible object for the element
-   */
-  getAccessibleObject(element, mustHaveAccessible = false) {
-    return new Promise((resolve, reject) => {
-      let acc = this.accessibleRetrieval.getAccessibleFor(element);
-
-      if (acc || !mustHaveAccessible) {
-        // If accessible object is found, return it. If it is not required,
-        // also resolve.
-        resolve(acc);
-      } else {
-        // If we require an accessible object, we need to poll for it because
-        // accessible tree might be out of sync with DOM tree for a short time.
-        let attempts = this.GET_ACCESSIBLE_ATTEMPTS;
-        let intervalId = setInterval(() => {
-          let acc = this.accessibleRetrieval.getAccessibleFor(element);
-          if (acc || --attempts <= 0) {
-            clearInterval(intervalId);
-            if (acc) { resolve(acc); }
-            else { reject(); }
-          }
-        }, this.GET_ACCESSIBLE_ATTEMPT_INTERVAL);
-      }
-    }).catch(() => this.handleErrorMessage(
-      'Element does not have an accessible object', element));
-  },
-
-  /**
-   * Check if the accessible has a role that supports some action
-   * @param nsIAccessible object
-   * @return Boolean an indicator of role being actionable
-   */
-  isActionableRole(accessible) {
-    return this.actionableRoles.has(
-      this.accessibleRetrieval.getStringRole(accessible.role));
-  },
-
-  /**
-   * Determine if an accessible has at least one action that it supports
-   * @param nsIAccessible object
-   * @return Boolean an indicator of supporting at least one accessible action
-   */
-  hasActionCount(accessible) {
-    return accessible.actionCount > 0;
-  },
-
-  /**
-   * Determine if an accessible has a valid name
-   * @param nsIAccessible object
-   * @return Boolean an indicator that the element has a non empty valid name
-   */
-  hasValidName(accessible) {
-    return accessible.name && accessible.name.trim();
-  },
-
-  /**
-   * Check if an accessible has a set hidden attribute
-   * @param nsIAccessible object
-   * @return Boolean an indicator that the element has a hidden accessible
-   * attribute set to true
-   */
-  hasHiddenAttribute(accessible) {
-    let hidden;
-    try {
-      hidden = accessible.attributes.getStringProperty('hidden');
-    } finally {
-      // If the property is missing, exception will be thrown.
-      return hidden && hidden === 'true';
-    }
-  },
-
-  /**
-   * Verify if an accessible has a given state
-   * @param nsIAccessible object
-   * @param String stateName name of the state to match
-   * @return Boolean accessible has a state
-   */
-  matchState(accessible, stateName) {
-    let stateToMatch = Components.interfaces.nsIAccessibleStates[stateName];
-    let state = {};
-    accessible.getState(state, {});
-    return !!(state.value & stateToMatch);
-  },
-
-  /**
-   * Check if an accessible is hidden from the user of the accessibility API
-   * @param nsIAccessible object
-   * @return Boolean an indicator that the element is hidden from the user
-   */
-  isHidden(accessible) {
-    while (accessible) {
-      if (this.hasHiddenAttribute(accessible)) {
-        return true;
-      }
-      accessible = accessible.parent;
-    }
-    return false;
-  },
-
-  /**
-   * Send an error message or log the error message in the log
-   * @param String message
-   * @param DOMElement element that caused an error
-   */
-  handleErrorMessage(message, element) {
-    if (!message) {
-      return;
-    }
-    if (element) {
-      message += ` -> id: ${element.id}, tagName: ${element.tagName}, className: ${element.className}\n`;
-    }
-    if (this.strict) {
-      throw new ElementNotAccessibleError(message);
-    }
-    dump(Date.now() + " Marionette: " + message);
-  }
-};
 
 this.ElementManager = function ElementManager(notSupported) {
   this.seenItems = {};
@@ -291,7 +98,7 @@ ElementManager.prototype = {
       }
     }
     let id = elements.generateUUID();
-    this.seenItems[id] = Components.utils.getWeakReference(element);
+    this.seenItems[id] = Cu.getWeakReference(element);
     return id;
   },
 
@@ -562,7 +369,7 @@ ElementManager.prototype = {
                                                    on_success, on_error,
                                                    command_id),
                                     100,
-                                    Components.interfaces.nsITimer.TYPE_ONE_SHOT);
+                                    Ci.nsITimer.TYPE_ONE_SHOT);
       }
     } else {
       if (isArrayLike) {
@@ -598,7 +405,7 @@ ElementManager.prototype = {
    */
   findByXPath: function EM_findByXPath(root, value, node) {
     return root.evaluate(value, node, null,
-            Components.interfaces.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+            Ci.nsIDOMXPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
   },
 
   /**
@@ -616,7 +423,7 @@ ElementManager.prototype = {
    */
   findByXPathAll: function EM_findByXPathAll(root, value, node) {
     let values = root.evaluate(value, node, null,
-                      Components.interfaces.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
+                      Ci.nsIDOMXPathResult.ORDERED_NODE_ITERATOR_TYPE, null);
     let elements = [];
     let element = values.iterateNext();
     while (element) {

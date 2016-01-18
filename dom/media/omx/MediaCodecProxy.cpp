@@ -90,10 +90,10 @@ MediaCodecProxy::MediaCodecProxy(sp<ALooper> aLooper,
   : mCodecLooper(aLooper)
   , mCodecMime(aMime)
   , mCodecEncoder(aEncoder)
-  , mMediaCodecLock("MediaCodecProxy::mMediaCodecLock")
-  , mPendingRequestMediaResource(false)
+  , mPromiseMonitor("MediaCodecProxy::mPromiseMonitor")
 {
   MOZ_ASSERT(mCodecLooper != nullptr, "ALooper should not be nullptr.");
+  mCodecPromise.SetMonitor(&mPromiseMonitor);
 }
 
 MediaCodecProxy::~MediaCodecProxy()
@@ -134,6 +134,7 @@ MediaCodecProxy::AsyncAllocateVideoMediaCodec()
   mResourceClient->SetListener(this);
   mResourceClient->Acquire();
 
+  mozilla::MonitorAutoLock lock(mPromiseMonitor);
   RefPtr<CodecPromise> p = mCodecPromise.Ensure(__func__);
   return p.forget();
 }
@@ -141,23 +142,16 @@ MediaCodecProxy::AsyncAllocateVideoMediaCodec()
 void
 MediaCodecProxy::ReleaseMediaCodec()
 {
-  mCodecPromise.RejectIfExists(true, __func__);
-  releaseCodec();
-
-  if (!mResourceClient) {
-    return;
-  }
-
-  mozilla::MonitorAutoLock mon(mMediaCodecLock);
-  if (mPendingRequestMediaResource) {
-    mPendingRequestMediaResource = false;
-    mon.NotifyAll();
-  }
-
+  // At first, release mResourceClient's resource to prevent a conflict with
+  // mResourceClient's callback.
   if (mResourceClient) {
     mResourceClient->ReleaseResource();
     mResourceClient = nullptr;
   }
+
+  mozilla::MonitorAutoLock lock(mPromiseMonitor);
+  mCodecPromise.RejectIfExists(true, __func__);
+  releaseCodec();
 }
 
 bool
@@ -473,18 +467,12 @@ void
 MediaCodecProxy::ResourceReserved()
 {
   MCP_LOG("resourceReserved");
+  mozilla::MonitorAutoLock lock(mPromiseMonitor);
   // Create MediaCodec
   if (!allocateCodec()) {
-    ReleaseMediaCodec();
     mCodecPromise.RejectIfExists(true, __func__);
     return;
   }
-
-  // Notify initialization waiting.
-  mozilla::MonitorAutoLock mon(mMediaCodecLock);
-  mPendingRequestMediaResource = false;
-  mon.NotifyAll();
-
   mCodecPromise.ResolveIfExists(true, __func__);
 }
 
@@ -492,7 +480,7 @@ MediaCodecProxy::ResourceReserved()
 void
 MediaCodecProxy::ResourceReserveFailed()
 {
-  ReleaseMediaCodec();
+  mozilla::MonitorAutoLock lock(mPromiseMonitor);
   mCodecPromise.RejectIfExists(true, __func__);
 }
 
