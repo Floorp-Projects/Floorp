@@ -7,7 +7,6 @@ package org.mozilla.gecko.overlays.ui;
 import java.util.Collection;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.overlays.ui.SendTabList.State;
@@ -19,8 +18,6 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 public class SendTabDeviceListArrayAdapter extends ArrayAdapter<RemoteClient> {
     @SuppressWarnings("unused")
@@ -174,7 +171,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<RemoteClient> {
                 showDummyRecord(getContext().getResources().getString(R.string.overlay_share_send_other));
                 break;
             default:
-                Assert.fail("Unexpected state transition: " + newState);
+                throw new IllegalStateException("Unexpected state transition: " + newState);
         }
     }
 
