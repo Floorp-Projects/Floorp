@@ -33,13 +33,23 @@ add_task(function* () {
 
   yield extension.startup();
 
+  let widgetId = makeWidgetId(extension.id) + "-browser-action";
+  let node = CustomizableUI.getWidget(widgetId).forWindow(window).node;
+
   // Do this a few times to make sure the pop-up is reloaded each time.
   for (let i = 0; i < 3; i++) {
-    clickBrowserAction(extension);
+    let evt = new CustomEvent("command", {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(evt);
 
     yield extension.awaitMessage("popup");
 
-    closeBrowserAction(extension);
+    let panel = node.querySelector("panel");
+    if (panel) {
+      panel.hidePopup();
+    }
   }
 
   yield extension.unload();
