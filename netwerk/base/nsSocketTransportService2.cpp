@@ -47,6 +47,7 @@ Atomic<PRThread*, Relaxed> gSocketThread;
 #define BLIP_INTERVAL_PREF "network.activity.blipIntervalMilliseconds"
 #define MAX_TIME_BETWEEN_TWO_POLLS "network.sts.max_time_for_events_between_two_polls"
 #define TELEMETRY_PREF "toolkit.telemetry.enabled"
+#define MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN "network.sts.max_time_for_pr_close_during_shutdown"
 
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
@@ -111,6 +112,7 @@ nsSocketTransportService::nsSocketTransportService()
     , mServingPendingQueue(false)
     , mMaxTimePerPollIter(100)
     , mTelemetryEnabledPref(false)
+    , mMaxTimeForPrClosePref(PR_SecondsToInterval(5))
     , mProbedMaxCount(false)
 {
     NS_ASSERTION(NS_IsMainThread(), "wrong thread");
@@ -550,6 +552,7 @@ nsSocketTransportService::Init()
         tmpPrefService->AddObserver(KEEPALIVE_PROBE_COUNT_PREF, this, false);
         tmpPrefService->AddObserver(MAX_TIME_BETWEEN_TWO_POLLS, this, false);
         tmpPrefService->AddObserver(TELEMETRY_PREF, this, false);
+        tmpPrefService->AddObserver(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN, this, false);
     }
     UpdatePrefs();
 
@@ -1217,6 +1220,13 @@ nsSocketTransportService::UpdatePrefs()
                                          &telemetryPref);
         if (NS_SUCCEEDED(rv)) {
             mTelemetryEnabledPref = telemetryPref;
+        }
+
+        int32_t maxTimeForPrClosePref;
+        rv = tmpPrefService->GetIntPref(MAX_TIME_FOR_PR_CLOSE_DURING_SHUTDOWN,
+                                        &maxTimeForPrClosePref);
+        if (NS_SUCCEEDED(rv) && maxTimeForPrClosePref >=0) {
+            mMaxTimeForPrClosePref = PR_MillisecondsToInterval(maxTimeForPrClosePref);
         }
     }
     
