@@ -42,19 +42,12 @@ interface nsIRadioInterface : nsISupports
 #define NS_RADIOINTERFACELAYER_CONTRACTID "@mozilla.org/ril;1"
 %}
 
-[scriptable, uuid(78b65e8c-68e7-4510-9a05-65bba12b283e)]
+[scriptable, uuid(09730e0d-75bb-4f21-8540-062a2eadc8ff)]
 interface nsIRadioInterfaceLayer : nsISupports
 {
   readonly attribute unsigned long numRadioInterfaces;
 
   nsIRadioInterface getRadioInterface(in unsigned long clientId);
-
-  /**
-   * Select a proper client for dialing emergency call.
-   *
-   * @return clientId or -1 if none of the clients are avaialble.
-   */
-  unsigned long getClientIdForEmergencyCall();
 
   void setMicrophoneMuted(in boolean muted);
 };

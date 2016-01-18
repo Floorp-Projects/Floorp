@@ -52,7 +52,7 @@ public class SearchEngineBar extends RecyclerView
         super(context, attrs);
 
         mDividerPaint = new Paint();
-        mDividerPaint.setColor(ColorUtils.getColor(context, R.color.divider_light));
+        mDividerPaint.setColor(ColorUtils.getColor(context, R.color.toolbar_divider_grey));
         mDividerPaint.setStyle(Paint.Style.FILL_AND_STROKE);
 
         final DisplayMetrics displayMetrics = getResources().getDisplayMetrics();

@@ -24,7 +24,7 @@
                                              gecko:strip="@drawable/home_tab_menu_strip"
                                              gecko:titlebarFill="true"
                                              gecko:activeTextColor="@android:color/white"
-                                             gecko:inactiveTextColor="@color/divider_light" />
+                                             gecko:inactiveTextColor="@color/toolbar_divider_grey" />
 
     </org.mozilla.gecko.firstrun.FirstrunPager>
 </org.mozilla.gecko.firstrun.FirstrunAnimationContainer>
