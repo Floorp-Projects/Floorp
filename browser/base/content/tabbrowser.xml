@@ -6031,8 +6031,11 @@
           // visual status to selected until after we receive confirmation that its content has painted.
           this._logicallySelected = val;
 
-          // If we're non-e10s we should update the visual selection as well at the same time
-          if (!gMultiProcessBrowser) {
+          // If we're non-e10s we should update the visual selection as well at the same time,
+          // *or* if we're e10s and the visually selected tab isn't changing, in which case the
+          // tab switcher code won't run and update anything else (like the before- and after-
+          // selected attributes).
+          if (!gMultiProcessBrowser || (val && this.hasAttribute("visuallyselected"))) {
             this._visuallySelected = val;
           }
 
