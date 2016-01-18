@@ -1042,7 +1042,7 @@ var BrowserApp = {
   },
 
   _migrateUI: function() {
-    const UI_VERSION = 1;
+    const UI_VERSION = 2;
     let currentUIVersion = 0;
     try {
       currentUIVersion = Services.prefs.getIntPref("browser.migration.version");
@@ -1085,6 +1085,25 @@ var BrowserApp = {
       // Power users can go into about:config to re-enable this if they choose.
       if (Services.prefs.prefHasUserValue("nglayout.debug.paint_flashing")) {
         Services.prefs.clearUserPref("nglayout.debug.paint_flashing");
+      }
+    }
+
+    if (currentUIVersion < 2) {
+      let name;
+      if (Services.prefs.prefHasUserValue("browser.search.defaultenginename")) {
+        name = Services.prefs.getCharPref("browser.search.defaultenginename");
+      }
+      if (!name && Services.prefs.prefHasUserValue("browser.search.defaultenginename.US")) {
+        name = Services.prefs.getCharPref("browser.search.defaultenginename.US");
+      }
+      if (name) {
+        Services.search.init(() => {
+          let engine = Services.search.getEngineByName(name);
+          if (engine) {
+            Services.search.defaultEngine = engine;
+            Services.obs.notifyObservers(null, "default-search-engine-migrated", "");
+          }
+        });
       }
     }
 
