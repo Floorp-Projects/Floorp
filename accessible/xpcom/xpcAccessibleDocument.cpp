@@ -168,6 +168,7 @@ xpcAccessibleDocument::GetVirtualCursor(nsIAccessiblePivot** aVirtualCursor)
 xpcAccessibleGeneric*
 xpcAccessibleDocument::GetAccessible(Accessible* aAccessible)
 {
+  MOZ_ASSERT(!mRemote);
   if (ToXPCDocument(aAccessible->Document()) != this) {
     NS_ERROR("This XPCOM document is not related with given internal accessible!");
     return nullptr;
