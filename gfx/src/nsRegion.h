@@ -740,10 +740,8 @@ public:
   nsRegion ToAppUnits (nscoord aAppUnitsPerPixel) const
   {
     nsRegion result;
-    OldRectIterator rgnIter(*this);
-    const Rect* currentRect;
-    while ((currentRect = rgnIter.Next())) {
-      nsRect appRect = ::ToAppUnits(*currentRect, aAppUnitsPerPixel);
+    for (auto iter = RectIter(); !iter.Done(); iter.Next()) {
+      nsRect appRect = ::ToAppUnits(iter.Get(), aAppUnitsPerPixel);
       result.Or(result, appRect);
     }
     return result;
