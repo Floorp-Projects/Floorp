@@ -106,33 +106,6 @@ public class MockFxAccountClient implements FxAccountClient {
   }
 
   @Override
-  public void loginAndGetKeys(byte[] emailUTF8, final PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> requestDelegate) {
-    User user;
-    try {
-      user = users.get(new String(emailUTF8, "UTF-8"));
-    } catch (UnsupportedEncodingException e) {
-      user = null;
-    }
-    if (user == null) {
-      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.ATTEMPT_TO_CREATE_AN_ACCOUNT_THAT_ALREADY_EXISTS, "invalid emailUTF8");
-      return;
-    }
-    byte[] quickStretchedPW;
-    try {
-      quickStretchedPW = passwordStretcher.getQuickStretchedPW(emailUTF8);
-    } catch (Exception e) {
-      handleFailure(requestDelegate, HttpStatus.SC_INTERNAL_SERVER_ERROR, 999, "error stretching password");
-      return;
-    }
-    if (user.quickStretchedPW == null || !Arrays.equals(user.quickStretchedPW, quickStretchedPW)) {
-      handleFailure(requestDelegate, HttpStatus.SC_BAD_REQUEST, FxAccountRemoteError.INCORRECT_PASSWORD, "invalid quickStretchedPW");
-      return;
-    }
-    LoginResponse loginResponse = addLogin(user, Utils.generateRandomBytes(8), Utils.generateRandomBytes(8));
-    requestDelegate.handleSuccess(loginResponse);
-  }
-
-  @Override
   public void keys(byte[] keyFetchToken, RequestDelegate<TwoKeys> requestDelegate) {
     String email = keyFetchTokens.get(Utils.byte2Hex(keyFetchToken));
     User user = users.get(email);
@@ -168,10 +141,5 @@ public class MockFxAccountClient implements FxAccountClient {
     } catch (Exception e) {
       requestDelegate.handleError(e);
     }
-  }
-
-  @Override
-  public void createAccountAndGetKeys(byte[] emailUTF8, PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> delegate) {
-    delegate.handleError(new RuntimeException("Not yet implemented"));
   }
 }
