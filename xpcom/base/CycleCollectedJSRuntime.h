@@ -203,6 +203,9 @@ private:
   static void GCCallback(JSRuntime* aRuntime, JSGCStatus aStatus, void* aData);
   static void GCSliceCallback(JSRuntime* aRuntime, JS::GCProgress aProgress,
                               const JS::GCDescription& aDesc);
+  static void GCNurseryCollectionCallback(JSRuntime* aRuntime,
+                                          JS::GCNurseryProgress aProgress,
+                                          JS::gcreason::Reason aReason);
   static void OutOfMemoryCallback(JSContext* aContext, void* aData);
   static void LargeAllocationFailureCallback(void* aData);
   static bool ContextCallback(JSContext* aCx, unsigned aOperation,
@@ -341,6 +344,7 @@ private:
   JSRuntime* mJSRuntime;
 
   JS::GCSliceCallback mPrevGCSliceCallback;
+  JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;
 
   nsDataHashtable<nsPtrHashKey<void>, nsScriptObjectTracer*> mJSHolders;
 
