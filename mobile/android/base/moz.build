@@ -202,7 +202,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'animation/ViewHelper.java',
     'ANRReporter.java',
     'AppNotificationClient.java',
-    'Assert.java',
     'BaseGeckoInterface.java',
     'BrowserApp.java',
     'BrowserLocaleManager.java',
