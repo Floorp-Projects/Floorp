@@ -78,7 +78,7 @@ private:
   xpcAccessibleDocument(const xpcAccessibleDocument&) = delete;
   xpcAccessibleDocument& operator =(const xpcAccessibleDocument&) = delete;
 
-  nsRefPtrHashtable<nsPtrHashKey<const Accessible>, xpcAccessibleGeneric> mCache;
+  nsRefPtrHashtable<nsPtrHashKey<const void>, xpcAccessibleGeneric> mCache;
 };
 
 inline xpcAccessibleGeneric*
