@@ -3,6 +3,8 @@ var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const { devtools, DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/shared/vendor",
   "resource://devtools/client/shared/components",
@@ -36,12 +38,18 @@ const BROWSER_BASED_DIRS = [
  */
 function BrowserLoader(baseURI, window) {
   const loaderOptions = devtools.require("@loader/options");
+  const dynamicPaths = {};
+
+  if(AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES) {
+    dynamicPaths["devtools/client/shared/vendor/react"] =
+      "resource://devtools/client/shared/vendor/react-dev";
+  };
 
   const opts = {
     id: "browser-loader",
     sharedGlobal: true,
     sandboxPrototype: window,
-    paths: Object.assign({}, loaderOptions.paths),
+    paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     require: (id, require) => {
       const uri = require.resolve(id);
