@@ -657,9 +657,8 @@ nsTransitionManager::ConsiderStartingTransition(
 
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), aElement,
-                                  aNewStyleContext->GetPseudoType(), timing);
-  pt->mStartForReversingTest = startForReversingTest;
-  pt->mReversePortion = reversePortion;
+                                  aNewStyleContext->GetPseudoType(), timing,
+                                  startForReversingTest, reversePortion);
 
   AnimationProperty& prop = *pt->Properties().AppendElement();
   prop.mProperty = aProperty;
