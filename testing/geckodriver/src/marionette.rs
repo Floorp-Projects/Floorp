@@ -151,18 +151,18 @@ impl ToMarionette for GeckoContextParameters {
     }
 }
 
-pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 49] = [
-    ("app.update.enabled", PrefValue::PrefBool(false)),
+pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 50] = [
     ("app.update.auto", PrefValue::PrefBool(false)),
-    ("browser.EULA.override", PrefValue::PrefBool(true)),
-    ("browser.EULA.3.accepted", PrefValue::PrefBool(true)),
-    ("browser.offline", PrefValue::PrefBool(false)),
-    ("browser.displayedE10SPrompt", PrefValue::PrefInt(5)),
+    ("app.update.enabled", PrefValue::PrefBool(false)),
     ("browser.displayedE10SPrompt.1", PrefValue::PrefInt(5)),
     ("browser.displayedE10SPrompt.2", PrefValue::PrefInt(5)),
     ("browser.displayedE10SPrompt.3", PrefValue::PrefInt(5)),
     ("browser.displayedE10SPrompt.4", PrefValue::PrefInt(5)),
+    ("browser.displayedE10SPrompt", PrefValue::PrefInt(5)),
     ("browser.dom.window.dump.enabled", PrefValue::PrefBool(true)),
+    ("browser.EULA.3.accepted", PrefValue::PrefBool(true)),
+    ("browser.EULA.override", PrefValue::PrefBool(true)),
+    ("browser.offline", PrefValue::PrefBool(false)),
     ("browser.safebrowsing.enabled", PrefValue::PrefBool(false)),
     ("browser.safebrowsing.malware.enabled", PrefValue::PrefBool(false)),
     ("browser.search.update", PrefValue::PrefBool(false)),
@@ -171,16 +171,18 @@ pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 49] = [
     ("browser.startup.page", PrefValue::PrefInt(0)),
     ("browser.tabs.remote.autostart.1", PrefValue::PrefBool(false)),
     ("browser.tabs.remote.autostart.2", PrefValue::PrefBool(false)),
-    ("browser.tabs.warnOnOpen", PrefValue::PrefBool(false)),
     ("browser.tabs.warnOnClose", PrefValue::PrefBool(false)),
+    ("browser.tabs.warnOnOpen", PrefValue::PrefBool(false)),
     ("browser.warnOnQuit", PrefValue::PrefBool(false)),
-    ("datareporting.healthreport.service.enabled", PrefValue::PrefBool(false)),
-    ("datareporting.healthreport.uploadEnabled", PrefValue::PrefBool(false)),
-    ("datareporting.healthreport.service.firstRun", PrefValue::PrefBool(false)),
     ("datareporting.healthreport.logging.consoleEnabled", PrefValue::PrefBool(false)),
+    ("datareporting.healthreport.service.enabled", PrefValue::PrefBool(false)),
+    ("datareporting.healthreport.service.firstRun", PrefValue::PrefBool(false)),
+    ("datareporting.healthreport.uploadEnabled", PrefValue::PrefBool(false)),
     ("datareporting.policy.dataSubmissionEnabled", PrefValue::PrefBool(false)),
     ("datareporting.policy.dataSubmissionPolicyAccepted", PrefValue::PrefBool(false)),
     ("devtools.errorconsole.enabled", PrefValue::PrefBool(true)),
+    // until bug 1238095 is fixed, we have to allow CPOWs
+    ("dom.ipc.cpows.forbid-unsafe-from-browser", PrefValue::PrefBool(false)),
     ("dom.ipc.reportProcessHangs", PrefValue::PrefBool(false)),
     ("focusmanager.testmode", PrefValue::PrefBool(true)),
     ("marionette.defaultPrefs.enabled", PrefValue::PrefBool(true)),
@@ -198,8 +200,8 @@ pub static FIREFOX_PREFERENCES: [(&'static str, PrefValue); 49] = [
     ("security.warn_viewing_mixed.show_once", PrefValue::PrefBool(false)),
     ("signon.rememberSignons", PrefValue::PrefBool(false)),
     ("toolkit.networkmanager.disable", PrefValue::PrefBool(true)),
-    ("toolkit.telemetry.prompted", PrefValue::PrefInt(2)),
     ("toolkit.telemetry.enabled", PrefValue::PrefBool(false)),
+    ("toolkit.telemetry.prompted", PrefValue::PrefInt(2)),
     ("toolkit.telemetry.rejected", PrefValue::PrefBool(true)),
 ];
 
