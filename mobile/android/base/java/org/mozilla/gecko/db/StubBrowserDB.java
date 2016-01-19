@@ -25,7 +25,6 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.drawable.BitmapDrawable;
-import android.support.v4.os.CancellationSignal;
 
 class StubReadingListAccessor implements ReadingListAccessor {
     @Override
@@ -380,7 +379,7 @@ public class StubBrowserDB implements BrowserDB {
         return 0;
     }
 
-    public Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit, CancellationSignal cancellationSignal) {
+    public Cursor getTopSites(ContentResolver cr, int minLimit, int maxLimit) {
         return null;
     }
 
