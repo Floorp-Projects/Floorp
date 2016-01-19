@@ -130,6 +130,9 @@ function runTests() {
     xhr.send();
   }
   getNonImageFile("imagebitmap_on_worker.js");
+
+  // task: test bug : bug 1239300
+  WORKER_TASKS.tasks.push(new Task("testBug1239300"));
 }
 
 SimpleTest.waitForExplicitFinish();
