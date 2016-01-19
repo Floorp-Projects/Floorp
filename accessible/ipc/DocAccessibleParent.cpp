@@ -267,6 +267,8 @@ DocAccessibleParent::Destroy()
     ProxyDestroyed(iter.Get()->mProxy);
     iter.Remove();
   }
+
+  DocManager::NotifyOfRemoteDocShutdown(this);
   ProxyDestroyed(this);
   if (mParentDoc)
     mParentDoc->RemoveChildDoc(this);

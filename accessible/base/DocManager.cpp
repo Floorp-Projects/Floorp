@@ -40,6 +40,8 @@ using namespace mozilla::a11y;
 using namespace mozilla::dom;
 
 StaticAutoPtr<nsTArray<DocAccessibleParent*>> DocManager::sRemoteDocuments;
+nsRefPtrHashtable<nsPtrHashKey<const DocAccessibleParent>, xpcAccessibleDocument>*
+DocManager::sRemoteXPCDocumentCache = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 // DocManager
@@ -101,6 +103,16 @@ DocManager::NotifyOfDocumentShutdown(DocAccessible* aDocument,
   RemoveListeners(aDOMDocument);
 }
 
+void
+DocManager::NotifyOfRemoteDocShutdown(DocAccessibleParent* aDoc)
+{
+  xpcAccessibleDocument* doc = GetCachedXPCDocument(aDoc);
+  if (doc) {
+    doc->Shutdown();
+    sRemoteXPCDocumentCache->Remove(aDoc);
+  }
+}
+
 xpcAccessibleDocument*
 DocManager::GetXPCDocument(DocAccessible* aDocument)
 {
@@ -113,6 +125,26 @@ DocManager::GetXPCDocument(DocAccessible* aDocument)
     mXPCDocumentCache.Put(aDocument, xpcDoc);
   }
   return xpcDoc;
+}
+
+xpcAccessibleDocument*
+DocManager::GetXPCDocument(DocAccessibleParent* aDoc)
+{
+  xpcAccessibleDocument* doc = GetCachedXPCDocument(aDoc);
+  if (doc) {
+    return doc;
+  }
+
+  if (!sRemoteXPCDocumentCache) {
+    sRemoteXPCDocumentCache =
+      new nsRefPtrHashtable<nsPtrHashKey<const DocAccessibleParent>, xpcAccessibleDocument>;
+  }
+
+  doc =
+    new xpcAccessibleDocument(aDoc, Interfaces::DOCUMENT | Interfaces::HYPERTEXT);
+  sRemoteXPCDocumentCache->Put(aDoc, doc);
+
+  return doc;
 }
 
 #ifdef DEBUG
