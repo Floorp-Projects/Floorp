@@ -525,7 +525,7 @@ class JSFunction : public js::NativeObject
     bool isDerivedClassConstructor() {
         bool derived;
         if (isInterpretedLazy())
-            derived = lazyScript()->isDerivedClassConstructor();
+            derived = !isSelfHostedBuiltin() && lazyScript()->isDerivedClassConstructor();
         else
             derived = nonLazyScript()->isDerivedClassConstructor();
         MOZ_ASSERT_IF(derived, isClassConstructor());
