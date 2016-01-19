@@ -54,6 +54,9 @@ public class RecentTabsPanel extends HomeFragment
     // Cursor loader ID for the loader that loads recent tabs
     private static final int LOADER_ID_RECENT_TABS = 0;
 
+    private static final String TELEMETRY_EXTRA_LAST_TIME = "recent_tabs_last_time";
+    private static final String TELEMETRY_EXTRA_CLOSED = "recent_closed_tabs";
+
     // Adapter for the list of recent tabs.
     private RecentTabsAdapter mAdapter;
 
@@ -133,7 +136,8 @@ public class RecentTabsPanel extends HomeFragment
                     return;
                 }
 
-                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "recent_tabs");
+                final String extras = (itemType == RecentTabs.TYPE_CLOSED) ? TELEMETRY_EXTRA_CLOSED : TELEMETRY_EXTRA_LAST_TIME;
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, extras);
 
                 final List<String> dataList = new ArrayList<>();
                 dataList.add(c.getString(c.getColumnIndexOrThrow(RecentTabs.DATA)));
@@ -256,7 +260,8 @@ public class RecentTabsPanel extends HomeFragment
             }
         } while (c.moveToNext());
 
-        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON);
+        final String extras = (type == RecentTabs.TYPE_CLOSED) ? TELEMETRY_EXTRA_CLOSED : TELEMETRY_EXTRA_LAST_TIME;
+        Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.BUTTON, extras);
 
         restoreSessionWithHistory(dataList);
     }

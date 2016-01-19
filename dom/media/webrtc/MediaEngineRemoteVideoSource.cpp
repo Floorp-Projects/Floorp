@@ -17,6 +17,12 @@ extern mozilla::LogModule* GetMediaManagerLog();
 
 namespace mozilla {
 
+// These need a definition somewhere because template
+// code is allowed to take their address, and they aren't
+// guaranteed to have one without this.
+const unsigned int MediaEngineSource::kMaxDeviceNameLength;
+const unsigned int MediaEngineSource::kMaxUniqueIdLength;;
+
 using dom::ConstrainLongRange;
 
 NS_IMPL_ISUPPORTS0(MediaEngineRemoteVideoSource)
@@ -38,10 +44,11 @@ MediaEngineRemoteVideoSource::Init()
   LOG((__PRETTY_FUNCTION__));
   char deviceName[kMaxDeviceNameLength];
   char uniqueId[kMaxUniqueIdLength];
-  if (mozilla::camera::GetCaptureDevice(mCapEngine,
-                                        mCaptureIndex,
-                                        deviceName, kMaxDeviceNameLength,
-                                        uniqueId, kMaxUniqueIdLength)) {
+  if (mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::GetCaptureDevice,
+    mCapEngine, mCaptureIndex,
+    deviceName, kMaxDeviceNameLength,
+    uniqueId, kMaxUniqueIdLength)) {
     LOG(("Error initializing RemoteVideoSource (GetCaptureDevice)"));
     return;
   }
@@ -111,9 +118,9 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
       return NS_ERROR_UNEXPECTED;
     }
 
-    if (mozilla::camera::AllocateCaptureDevice(mCapEngine,
-                                               GetUUID().get(),
-                                               kMaxUniqueIdLength, mCaptureIndex)) {
+    if (mozilla::camera::GetChildAndCall(
+      &mozilla::camera::CamerasChild::AllocateCaptureDevice,
+      mCapEngine, GetUUID().get(), kMaxUniqueIdLength, mCaptureIndex)) {
       return NS_ERROR_FAILURE;
     }
     mState = kAllocated;
@@ -145,7 +152,9 @@ MediaEngineRemoteVideoSource::Deallocate()
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }
-    mozilla::camera::ReleaseCaptureDevice(mCapEngine, mCaptureIndex);
+    mozilla::camera::GetChildAndCall(
+      &mozilla::camera::CamerasChild::ReleaseCaptureDevice,
+      mCapEngine, mCaptureIndex);
     mState = kReleased;
     LOG(("Video device %d deallocated", mCaptureIndex));
   } else {
@@ -179,8 +188,9 @@ MediaEngineRemoteVideoSource::Start(SourceMediaStream* aStream, TrackID aID)
   mState = kStarted;
   mTrackID = aID;
 
-  if (mozilla::camera::StartCapture(mCapEngine,
-                                    mCaptureIndex, mCapability, this)) {
+  if (mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::StartCapture,
+    mCapEngine, mCaptureIndex, mCapability, this)) {
     LOG(("StartCapture failed"));
     return NS_ERROR_FAILURE;
   }
@@ -217,7 +227,9 @@ MediaEngineRemoteVideoSource::Stop(mozilla::SourceMediaStream* aSource,
     mImage = nullptr;
   }
 
-  mozilla::camera::StopCapture(mCapEngine, mCaptureIndex);
+  mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::StopCapture,
+    mCapEngine, mCaptureIndex);
 
   return NS_OK;
 }
@@ -239,9 +251,12 @@ MediaEngineRemoteVideoSource::Restart(const dom::MediaTrackConstraints& aConstra
     return NS_OK;
   }
 
-  mozilla::camera::StopCapture(mCapEngine, mCaptureIndex);
-  if (mozilla::camera::StartCapture(mCapEngine,
-                                    mCaptureIndex, mCapability, this)) {
+  mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::StopCapture,
+    mCapEngine, mCaptureIndex);
+  if (mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::StartCapture,
+    mCapEngine, mCaptureIndex, mCapability, this)) {
     LOG(("StartCapture failed"));
     return NS_ERROR_FAILURE;
   }
@@ -354,7 +369,10 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
 size_t
 MediaEngineRemoteVideoSource::NumCapabilities()
 {
-  int num = mozilla::camera::NumberOfCapabilities(mCapEngine, GetUUID().get());
+  int num = mozilla::camera::GetChildAndCall(
+      &mozilla::camera::CamerasChild::NumberOfCapabilities,
+      mCapEngine,
+      GetUUID().get());
   if (num > 0) {
     return num;
   }
@@ -433,10 +451,12 @@ MediaEngineRemoteVideoSource::GetCapability(size_t aIndex,
   if (!mHardcodedCapabilities.IsEmpty()) {
     MediaEngineCameraVideoSource::GetCapability(aIndex, aOut);
   }
-  mozilla::camera::GetCaptureCapability(mCapEngine,
-                                        GetUUID().get(),
-                                        aIndex,
-                                        aOut);
+  mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::GetCaptureCapability,
+    mCapEngine,
+    GetUUID().get(),
+    aIndex,
+    aOut);
 }
 
 void MediaEngineRemoteVideoSource::Refresh(int aIndex) {
@@ -446,10 +466,11 @@ void MediaEngineRemoteVideoSource::Refresh(int aIndex) {
   char deviceName[kMaxDeviceNameLength];
   char uniqueId[kMaxUniqueIdLength];
 
-  if (mozilla::camera::GetCaptureDevice(mCapEngine,
-                                        aIndex,
-                                        deviceName, sizeof(deviceName),
-                                        uniqueId, sizeof(uniqueId))) {
+  if (mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::GetCaptureDevice,
+    mCapEngine, aIndex,
+    deviceName, sizeof(deviceName),
+    uniqueId, sizeof(uniqueId))) {
     return;
   }
 

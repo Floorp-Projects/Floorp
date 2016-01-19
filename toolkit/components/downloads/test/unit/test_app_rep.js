@@ -20,6 +20,8 @@ var whitelistedURI = createURI("http://foo:bar@whitelisted.com/index.htm#junk");
 var exampleURI = createURI("http://user:password@example.com/i.html?foo=bar");
 var blocklistedURI = createURI("http://baz:qux@blocklisted.com?xyzzy");
 
+const appRepURLPref = "browser.safebrowsing.appRepURL";
+
 function readFileToString(aFilename) {
   let f = do_get_file(aFilename);
   let stream = Cc["@mozilla.org/network/file-input-stream;1"]
@@ -57,9 +59,9 @@ function registerTableUpdate(aTable, aFilename) {
   });
 }
 
-function run_test() {
+add_task(function* test_setup() {
   // Set up a local HTTP server to return bad verdicts.
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   // Ensure safebrowsing is enabled for this test, even if the app
   // doesn't have it enabled.
@@ -87,7 +89,9 @@ function run_test() {
     do_throw("This test should never make a remote lookup");
   });
   gHttpServ.start(4444);
+});
 
+function run_test() {
   run_next_test();
 }
 
@@ -221,7 +225,7 @@ add_test(function test_local_list() {
 });
 
 add_test(function test_unlisted() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
@@ -238,7 +242,7 @@ add_test(function test_unlisted() {
 });
 
 add_test(function test_non_uri() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
@@ -257,7 +261,7 @@ add_test(function test_non_uri() {
 });
 
 add_test(function test_local_blacklist() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
@@ -274,7 +278,7 @@ add_test(function test_local_blacklist() {
 });
 
 add_test(function test_referer_blacklist() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
@@ -292,7 +296,7 @@ add_test(function test_referer_blacklist() {
 });
 
 add_test(function test_blocklist_trumps_allowlist() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;
@@ -310,7 +314,7 @@ add_test(function test_blocklist_trumps_allowlist() {
 });
 
 add_test(function test_redirect_on_blocklist() {
-  Services.prefs.setCharPref("browser.safebrowsing.appRepURL",
+  Services.prefs.setCharPref(appRepURLPref,
                              "http://localhost:4444/download");
   let counts = get_telemetry_counts();
   let listCounts = counts.listCounts;

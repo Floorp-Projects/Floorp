@@ -28,9 +28,11 @@ namespace js {
 namespace wasm {
 
 class FunctionGenerator;
+typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
 // A slow function describes a function that took longer than msThreshold to
 // validate and compile.
+
 struct SlowFunction
 {
     SlowFunction(PropertyName* name, unsigned ms, unsigned line, unsigned column)
@@ -46,53 +48,96 @@ struct SlowFunction
 };
 typedef Vector<SlowFunction> SlowFunctionVector;
 
+// The ModuleGeneratorData holds all the state shared between the
+// ModuleGenerator and ModuleGeneratorThreadView. The ModuleGeneratorData is
+// encapsulated by ModuleGenerator/ModuleGeneratorThreadView classes which
+// present a race-free interface to the code in each thread assuming any given
+// element is initialized by the ModuleGenerator thread before an index to that
+// element is written to Bytecode sent to a ModuleGeneratorThreadView thread.
+// Once created, the Vectors are never resized.
+
+struct ModuleImportGeneratorData
+{
+    DeclaredSig* sig;
+    uint32_t globalDataOffset;
+};
+
+typedef Vector<ModuleImportGeneratorData, 0, SystemAllocPolicy> ModuleImportGeneratorDataVector;
+
+struct ModuleGeneratorData
+{
+    DeclaredSigVector               sigs;
+    DeclaredSigPtrVector            funcSigs;
+    ModuleImportGeneratorDataVector imports;
+};
+
+typedef UniquePtr<ModuleGeneratorData> UniqueModuleGeneratorData;
+
+// The ModuleGeneratorThreadView class presents a restricted, read-only view of
+// the shared state needed by helper threads. There is only one
+// ModuleGeneratorThreadView object owned by ModuleGenerator and referenced by
+// all compile tasks.
+
+class ModuleGeneratorThreadView
+{
+    const ModuleGeneratorData& shared_;
+
+  public:
+    explicit ModuleGeneratorThreadView(const ModuleGeneratorData& shared)
+      : shared_(shared)
+    {}
+    const DeclaredSig& sig(uint32_t sigIndex) const {
+        return shared_.sigs[sigIndex];
+    }
+    const DeclaredSig& funcSig(uint32_t funcIndex) const {
+        MOZ_ASSERT(shared_.funcSigs[funcIndex]);
+        return *shared_.funcSigs[funcIndex];
+    }
+    const ModuleImportGeneratorData& import(uint32_t importIndex) const {
+        MOZ_ASSERT(shared_.imports[importIndex].sig);
+        return shared_.imports[importIndex];
+    }
+};
+
 // A ModuleGenerator encapsulates the creation of a wasm module. During the
 // lifetime of a ModuleGenerator, a sequence of FunctionGenerators are created
 // and destroyed to compile the individual function bodies. After generating all
 // functions, ModuleGenerator::finish() must be called to complete the
 // compilation and extract the resulting wasm module.
+
 class MOZ_STACK_CLASS ModuleGenerator
 {
-    typedef Vector<uint32_t> FuncOffsetVector;
-    typedef Vector<uint32_t> FuncIndexVector;
+    typedef UniquePtr<ModuleGeneratorThreadView> UniqueModuleGeneratorThreadView;
     typedef HashMap<uint32_t, uint32_t> FuncIndexMap;
 
-    struct SigHashPolicy
-    {
-        typedef const MallocSig& Lookup;
-        static HashNumber hash(Lookup l) { return l.hash(); }
-        static bool match(const LifoSig* lhs, Lookup rhs) { return *lhs == rhs; }
-    };
-    typedef HashSet<const LifoSig*, SigHashPolicy> SigSet;
-
-    ExclusiveContext*             cx_;
+    ExclusiveContext*               cx_;
+    jit::JitContext                 jcx_;
 
     // Data handed back to the caller in finish()
-    UniqueModuleData              module_;
-    UniqueStaticLinkData          link_;
-    SlowFunctionVector            slowFuncs_;
+    UniqueModuleData                module_;
+    UniqueStaticLinkData            link_;
+    SlowFunctionVector              slowFuncs_;
 
     // Data scoped to the ModuleGenerator's lifetime
-    LifoAlloc                     lifo_;
-    jit::JitContext               jcx_;
-    jit::TempAllocator            alloc_;
-    jit::MacroAssembler           masm_;
-    SigSet                        sigs_;
-    FuncOffsetVector              funcEntryOffsets_;
-    FuncIndexVector               exportFuncIndices_;
-    FuncIndexMap                  funcIndexToExport_;
+    UniqueModuleGeneratorData       shared_;
+    LifoAlloc                       lifo_;
+    jit::TempAllocator              alloc_;
+    jit::MacroAssembler             masm_;
+    Uint32Vector                    funcEntryOffsets_;
+    Uint32Vector                    exportFuncIndices_;
+    FuncIndexMap                    funcIndexToExport_;
 
     // Parallel compilation
-    bool                          parallel_;
-    uint32_t                      outstanding_;
-    Vector<IonCompileTask>        tasks_;
-    Vector<IonCompileTask*>       freeTasks_;
+    bool                            parallel_;
+    uint32_t                        outstanding_;
+    UniqueModuleGeneratorThreadView threadView_;
+    Vector<IonCompileTask>          tasks_;
+    Vector<IonCompileTask*>         freeTasks_;
 
     // Assertions
-    DebugOnly<FunctionGenerator*> activeFunc_;
-    DebugOnly<bool>               finishedFuncs_;
+    DebugOnly<FunctionGenerator*>   activeFunc_;
+    DebugOnly<bool>                 finishedFuncs_;
 
-    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
     bool finishOutstandingTask();
     bool finishTask(IonCompileTask* task);
 
@@ -100,36 +145,40 @@ class MOZ_STACK_CLASS ModuleGenerator
     explicit ModuleGenerator(ExclusiveContext* cx);
     ~ModuleGenerator();
 
-    bool init();
+    bool init(UniqueModuleGeneratorData shared);
 
     CompileArgs args() const { return module_->compileArgs; }
     jit::MacroAssembler& masm() { return masm_; }
-    const FuncOffsetVector& funcEntryOffsets() const { return funcEntryOffsets_; }
-
-    const LifoSig* newLifoSig(const MallocSig& sig);
+    const Uint32Vector& funcEntryOffsets() const { return funcEntryOffsets_; }
 
     // Global data:
+    bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset);
     bool allocateGlobalVar(ValType type, uint32_t* globalDataOffset);
 
+    // Signatures:
+    void initSig(uint32_t sigIndex, Sig&& sig);
+    const DeclaredSig& sig(uint32_t sigIndex) const;
+
     // Imports:
-    bool declareImport(MallocSig&& sig, uint32_t* index);
+    bool initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset);
     uint32_t numImports() const;
-    uint32_t importExitGlobalDataOffset(uint32_t index) const;
-    const MallocSig& importSig(uint32_t index) const;
+    const ModuleImportGeneratorData& import(uint32_t index) const;
     bool defineImport(uint32_t index, ProfilingOffsets interpExit, ProfilingOffsets jitExit);
 
     // Exports:
-    bool declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* exportIndex);
+    bool declareExport(uint32_t funcIndex, uint32_t* exportIndex);
     uint32_t numExports() const;
     uint32_t exportFuncIndex(uint32_t index) const;
-    const MallocSig& exportSig(uint32_t index) const;
+    const Sig& exportSig(uint32_t index) const;
     bool defineExport(uint32_t index, Offsets offsets);
 
     // Functions:
+    bool initFuncSig(uint32_t funcIndex, uint32_t sigIndex);
+    const DeclaredSig& funcSig(uint32_t funcIndex) const;
     bool startFunc(PropertyName* name, unsigned line, unsigned column, UniqueBytecode* recycled,
                    FunctionGenerator* fg);
-    bool finishFunc(uint32_t funcIndex, const LifoSig& sig, UniqueBytecode bytecode,
-                    unsigned generateTime, FunctionGenerator* fg);
+    bool finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigned generateTime,
+                    FunctionGenerator* fg);
     bool finishFuncs();
 
     // Function-pointer tables:
@@ -160,6 +209,7 @@ class MOZ_STACK_CLASS ModuleGenerator
 // anything else. After the body is complete, ModuleGenerator::finishFunc must
 // be called before the FunctionGenerator is destroyed and the next function is
 // started.
+
 class MOZ_STACK_CLASS FunctionGenerator
 {
     friend class ModuleGenerator;

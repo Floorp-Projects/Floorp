@@ -161,7 +161,9 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
    * mVideoSources must be updated.
    */
   int num;
-  num = mozilla::camera::NumberOfCaptureDevices(capEngine);
+  num = mozilla::camera::GetChildAndCall(
+    &mozilla::camera::CamerasChild::NumberOfCaptureDevices,
+    capEngine);
   if (num <= 0) {
     return;
   }
@@ -175,11 +177,12 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
     uniqueId[0] = '\0';
     int error;
 
-    error = mozilla::camera::GetCaptureDevice(capEngine,
-                                              i, deviceName,
-                                              sizeof(deviceName), uniqueId,
-                                              sizeof(uniqueId));
-
+    error =  mozilla::camera::GetChildAndCall(
+      &mozilla::camera::CamerasChild::GetCaptureDevice,
+      capEngine,
+      i, deviceName,
+      sizeof(deviceName), uniqueId,
+      sizeof(uniqueId));
     if (error) {
       LOG(("camera:GetCaptureDevice: Failed %d", error ));
       continue;
@@ -188,13 +191,17 @@ MediaEngineWebRTC::EnumerateVideoDevices(dom::MediaSourceEnum aMediaSource,
     LOG(("  Capture Device Index %d, Name %s", i, deviceName));
 
     webrtc::CaptureCapability cap;
-    int numCaps = mozilla::camera::NumberOfCapabilities(capEngine,
-                                                        uniqueId);
+    int numCaps = mozilla::camera::GetChildAndCall(
+      &mozilla::camera::CamerasChild::NumberOfCapabilities,
+      capEngine,
+      uniqueId);
     LOG(("Number of Capabilities %d", numCaps));
     for (int j = 0; j < numCaps; j++) {
-      if (mozilla::camera::GetCaptureCapability(capEngine,
-                                                uniqueId,
-                                                j, cap ) != 0 ) {
+      if (mozilla::camera::GetChildAndCall(
+            &mozilla::camera::CamerasChild::GetCaptureCapability,
+            capEngine,
+            uniqueId,
+            j, cap) != 0) {
        break;
       }
       LOG(("type=%d width=%d height=%d maxFPS=%d",
