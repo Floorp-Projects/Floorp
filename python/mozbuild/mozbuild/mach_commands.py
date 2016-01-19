@@ -1499,10 +1499,15 @@ class PackageFrontend(MachCommandBase):
         manifest = InstallManifest(manifest_path)
 
         def install_callback(path, file_existed, file_updated):
+            # Our paths are either under dist/bin or dist/plugins (for test
+            # plugins). dist/plugins. does not have an install manifest.
+            if not path.startswith('bin/'):
+                return
+            path = path[len('bin/'):]
             if path not in manifest:
                 manifest.add_optional_exists(path)
 
-        retcode = artifacts.install_from(source, self.bindir, install_callback=install_callback)
+        retcode = artifacts.install_from(source, self.distdir, install_callback=install_callback)
 
         if retcode == 0:
             manifest.write(manifest_path)
