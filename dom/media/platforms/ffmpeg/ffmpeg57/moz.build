@@ -21,9 +21,5 @@ if CONFIG['CLANG_CXX']:
   CXXFLAGS += [
     '-Wno-unknown-attributes',
   ]
-if CONFIG['_MSC_VER']:
-  CXXFLAGS += [
-    '-wd4996', # deprecated declaration
-  ]
 
 FINAL_LIBRARY = 'xul'
