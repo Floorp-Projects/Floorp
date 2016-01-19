@@ -216,6 +216,11 @@ public:
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
     result.mSupportedBlendModes += gfx::CompositionOp::OP_SOURCE;
+    for (uint8_t op = 0; op < uint8_t(gfx::CompositionOp::OP_COUNT); op++) {
+      if (BlendOpIsMixBlendMode(gfx::CompositionOp(op))) {
+        result.mSupportedBlendModes += gfx::CompositionOp(op);
+      }
+    }
     return result;
   }
 
@@ -422,6 +427,7 @@ private:
   void CreateFBOWithTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
                             GLuint aSourceFrameBuffer,
                             GLuint *aFBO, GLuint *aTexture);
+  GLuint CreateTexture(const gfx::IntRect& aRect, bool aCopyFromSource, GLuint aSourceFrameBuffer);
 
   void BindAndDrawQuads(ShaderProgramOGL *aProg,
                         int aQuads,
@@ -444,6 +450,12 @@ private:
                                    const gfx::Point& aPoint2);
   void ActivateProgram(ShaderProgramOGL *aProg);
   void CleanupResources();
+
+  /**
+   * Bind the texture behind the current render target as the backdrop for a
+   * mix-blend shader.
+   */
+  void BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum aTexUnit);
 
   /**
    * Copies the content of our backbuffer to the set transaction target.
