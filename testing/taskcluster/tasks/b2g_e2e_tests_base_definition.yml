@@ -45,6 +45,11 @@ task:
         path: '/home/worker/upload/logs/'
         expires: '{{#from_now}}1 year{{/from_now}}'
 
+      'private/b2g/videos':
+        type: directory
+        path: '/home/worker/upload/videos/'
+        expires: '{{#from_now}}3 months{{/from_now}}'
+
     features:
       testdroidProxy: true
 
@@ -81,6 +86,8 @@ task:
         --log-html=/home/worker/upload/logs/index.html
         --log-mach=-
         --log-raw=/home/worker/upload/logs/raw.log
+        --capture=whenfail
+        --capturefolder=/home/worker/upload/videos/
         --restart
         --timeout=$TESTS_TIMEOUT_IN_MS
         --type=$MANIFEST_INCLUDE_EXCLUDE
