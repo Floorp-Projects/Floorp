@@ -73,6 +73,9 @@ private:
   static bool sAndroidMCDecoderEnabled;
 #endif
   static bool sGMPDecoderEnabled;
+#ifdef MOZ_FFVPX
+  static bool sFFVPXDecoderEnabled;
+#endif
 #ifdef MOZ_FFMPEG
   static bool sFFmpegDecoderEnabled;
 #endif
