@@ -132,9 +132,14 @@ MultiThreadedJobQueue::RegisterThread()
 void
 MultiThreadedJobQueue::UnregisterThread()
 {
-  CriticalSectionAutoEnter lock(&mSection);
+  mSection.Enter();
   mThreadsCount -= 1;
-  if (mThreadsCount == 0) {
+  bool finishShutdown = mThreadsCount == 0;
+  mSection.Leave();
+
+  if (finishShutdown) {
+    // Can't touch mSection or any other member from now on because this object
+    // may get deleted on the main thread after mShutdownEvent is set.
     ::SetEvent(mShutdownEvent);
   }
 }
