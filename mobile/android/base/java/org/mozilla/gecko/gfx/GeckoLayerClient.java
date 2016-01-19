@@ -764,7 +764,7 @@ class GeckoLayerClient implements LayerView.Listener, PanZoomTarget
         // We need to make sure a draw happens synchronously at this point,
         // but resizing the surface before the SurfaceView has resized will
         // cause a visible jump.
-        mView.getGLController().resumeCompositor(mWindowSize.width, mWindowSize.height);
+        mView.getGLController().resumeCompositor(width, height);
     }
 
     /** Implementation of LayerView.Listener */
