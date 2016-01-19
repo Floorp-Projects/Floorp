@@ -137,7 +137,8 @@ protected:
                    const nsCString&           aSchedulingContextID,
                    const OptionalCorsPreflightArgs& aCorsPreflightArgs,
                    const uint32_t&            aInitialRwin,
-                   const bool&                aSuspendAfterSynthesizeResponse);
+                   const bool&                aSuspendAfterSynthesizeResponse,
+                   const bool&                aAllowStaleCacheContent);
 
   virtual bool RecvSetPriority(const uint16_t& priority) override;
   virtual bool RecvSetClassOfService(const uint32_t& cos) override;
