@@ -29,15 +29,150 @@ namespace wasm {
 
 enum class Expr : uint8_t
 {
-    Ret,
-
+    // Control opcodes
+    Nop,
     Block,
-
-    IfThen,
+    Loop,
+    If,
     IfElse,
-    Switch,
+    Select,
+    Br,
+    BrIf,
+    TableSwitch,
+    Return,
+    Unreachable,
 
-    While,
+    // Calls
+    CallInternal,
+    CallIndirect,
+    CallImport,
+
+    // Constants and calls
+    I8Const,
+    I32Const,
+    I64Const,
+    F64Const,
+    F32Const,
+    GetLocal,
+    SetLocal,
+    LoadGlobal,
+    StoreGlobal,
+
+    // I32 opcodes
+    I32Add,
+    I32Sub,
+    I32Mul,
+    I32DivS,
+    I32DivU,
+    I32RemS,
+    I32RemU,
+    I32Ior,
+    I32And,
+    I32Xor,
+    I32Shl,
+    I32ShrU,
+    I32ShrS,
+    I32Eq,
+    I32Ne,
+    I32LtS,
+    I32LeS,
+    I32LtU,
+    I32LeU,
+    I32GtS,
+    I32GeS,
+    I32GtU,
+    I32GeU,
+    I32Clz,
+    I32Ctz,
+    I32Popcnt,
+
+    // F32 opcodes
+    F32Add,
+    F32Sub,
+    F32Mul,
+    F32Div,
+    F32Min,
+    F32Max,
+    F32Abs,
+    F32Neg,
+    F32CopySign,
+    F32Ceil,
+    F32Floor,
+    F32Trunc,
+    F32NearestInt,
+    F32Sqrt,
+    F32Eq,
+    F32Ne,
+    F32Lt,
+    F32Le,
+    F32Gt,
+    F32Ge,
+
+    // F64 opcodes
+    F64Add,
+    F64Sub,
+    F64Mul,
+    F64Div,
+    F64Min,
+    F64Max,
+    F64Abs,
+    F64Neg,
+    F64CopySign,
+    F64Ceil,
+    F64Floor,
+    F64Trunc,
+    F64NearestInt,
+    F64Sqrt,
+    F64Eq,
+    F64Ne,
+    F64Lt,
+    F64Le,
+    F64Gt,
+    F64Ge,
+
+    // Conversions
+    I32SConvertF32,
+    I32SConvertF64,
+    I32UConvertF32,
+    I32UConvertF64,
+    I32ConvertI64,
+    I64SConvertF32,
+    I64SConvertF64,
+    I64UConvertF32,
+    I64UConvertF64,
+    I64SConvertI32,
+    I64UConvertI32,
+
+    // Load/store operations
+    I32LoadMem8S,
+    I32LoadMem8U,
+    I32LoadMem16S,
+    I32LoadMem16U,
+    I32LoadMem,
+    I64LoadMem8S,
+    I64LoadMem8U,
+    I64LoadMem16S,
+    I64LoadMem16U,
+    I64LoadMem32S,
+    I64LoadMem32U,
+    I64LoadMem,
+    F32LoadMem,
+    F64LoadMem,
+
+    I32StoreMem8,
+    I32StoreMem16,
+    I64StoreMem8,
+    I64StoreMem16,
+    I64StoreMem32,
+    I32StoreMem,
+    I64StoreMem,
+    F32StoreMem,
+    F64StoreMem,
+
+    // asm.js specific
+    Ternary,        // to be merged with IfElse
+
+    While,          // all CFG ops to be deleted in favor of Loop/Br/BrIf
     DoWhile,
 
     ForInitInc,
@@ -51,201 +186,97 @@ enum class Expr : uint8_t
     Break,
     BreakLabel,
 
-    GetLocal,
-    SetLocal,
-
-    CallInternal,
-    CallIndirect,
-    CallImport,
-
-    AtomicsFence,
-
-    I32Expr,
+    I32Expr,        // to be removed
     F32Expr,
     F64Expr,
-    I32X4Expr,
-    F32X4Expr,
-    B32X4Expr,
 
-    // asm.js specific
     Id,
-    Noop,
-
-    LoadGlobal,
-    StoreGlobal,
 
     InterruptCheckHead,
     InterruptCheckLoop,
 
     DebugCheckPoint,
-    Bad,
 
-    // I32 opcodes
-    I32CallInternal,
-    I32CallIndirect,
-    I32CallImport,
-
-    I32Conditional,
-    I32Comma,
-
-    I32Literal,
-
-    // Binary arith opcodes
-    I32Add,
-    I32Sub,
-    I32Mul,
-    I32SDiv,
-    I32SMod,
-    I32UDiv,
-    I32UMod,
     I32Min,
     I32Max,
 
-    // Unary arith opcodes
-    I32Not,
-    I32Neg,
-
-    // Bitwise opcodes
-    I32BitOr,
-    I32BitAnd,
-    I32BitXor,
-    I32BitNot,
-
-    I32Lsh,
-    I32ArithRsh,
-    I32LogicRsh,
-
-    // Conversion opcodes
-    I32FromF32,
-    I32FromF64,
-
-    // Math builtin opcodes
-    I32Clz,
-    I32Abs,
-
-    // Comparison opcodes
-    // Ordering matters (EmitComparison expects signed opcodes to be placed
-    // before unsigned opcodes)
-    I32EqI32,
-    I32NeI32,
-    I32SLtI32,
-    I32SLeI32,
-    I32SGtI32,
-    I32SGeI32,
-    I32ULtI32,
-    I32ULeI32,
-    I32UGtI32,
-    I32UGeI32,
-
-    I32EqF32,
-    I32NeF32,
-    I32LtF32,
-    I32LeF32,
-    I32GtF32,
-    I32GeF32,
-
-    I32EqF64,
-    I32NeF64,
-    I32LtF64,
-    I32LeF64,
-    I32GtF64,
-    I32GeF64,
-
-    // Heap accesses opcodes
-    I32SLoad8,
-    I32SLoad16,
-    I32SLoad32,
-    I32ULoad8,
-    I32ULoad16,
-    I32ULoad32,
-    I32Store8,
-    I32Store16,
-    I32Store32,
-
-    // Atomics opcodes
+    // Atomics
+    AtomicsFence,
     I32AtomicsCompareExchange,
     I32AtomicsExchange,
     I32AtomicsLoad,
     I32AtomicsStore,
     I32AtomicsBinOp,
 
-    // SIMD opcodes
+    // SIMD
+    I32X4Const,
+    B32X4Const,
+    F32X4Const,
+
+    I32X4Expr,
+    F32X4Expr,
+    B32X4Expr,
+
     I32I32X4ExtractLane,
     I32B32X4ExtractLane,
     I32B32X4AllTrue,
     I32B32X4AnyTrue,
 
-    // Specific to AsmJS
-    I32Id,
+    F32F32X4ExtractLane,
 
-    // F32 opcdoes
-    // Common opcodes
-    F32CallInternal,
-    F32CallIndirect,
-    F32CallImport,
+    I32X4Ctor,
+    I32X4Unary,
+    I32X4Binary,
+    I32X4BinaryBitwise,
+    I32X4BinaryShift,
+    I32X4ReplaceLane,
+    I32X4FromF32X4,
+    I32X4FromF32X4Bits,
+    I32X4Swizzle,
+    I32X4Shuffle,
+    I32X4Select,
+    I32X4Splat,
+    I32X4Load,
+    I32X4Store,
 
-    F32Conditional,
-    F32Comma,
+    F32X4Ctor,
+    F32X4Unary,
+    F32X4Binary,
+    F32X4ReplaceLane,
+    F32X4FromI32X4,
+    F32X4FromI32X4Bits,
+    F32X4Swizzle,
+    F32X4Shuffle,
+    F32X4Select,
+    F32X4Splat,
+    F32X4Load,
+    F32X4Store,
 
-    F32Literal,
+    B32X4Ctor,
+    B32X4Unary,
+    B32X4Binary,
+    B32X4BinaryCompI32X4,
+    B32X4BinaryCompF32X4,
+    B32X4BinaryBitwise,
+    B32X4ReplaceLane,
+    B32X4Splat,
 
-    // Binary arith opcodes
-    F32Add,
-    F32Sub,
-    F32Mul,
-    F32Div,
-    F32Min,
-    F32Max,
-    F32Neg,
+    // I32 asm.js opcodes
+    I32Not,
+    I32Neg,
+    I32BitNot,
+    I32Abs,
 
-    // Math builtin opcodes
-    F32Abs,
-    F32Sqrt,
-    F32Ceil,
-    F32Floor,
-
-    // Conversion opcodes
+    // F32 asm.js opcodes
     F32FromF64,
     F32FromS32,
     F32FromU32,
 
-    // Heap accesses opcodes
-    F32Load,
-    F32StoreF32,
-    F32StoreF64,
+    F32StoreMemF64,
 
-    // SIMD opcodes
-    F32F32X4ExtractLane,
-
-    // asm.js specific
-    F32Id,
-
-    // F64 opcodes
-    // Common opcodes
-    F64CallInternal,
-    F64CallIndirect,
-    F64CallImport,
-
-    F64Conditional,
-    F64Comma,
-
-    F64Literal,
-
-    // Binary arith opcodes
-    F64Add,
-    F64Sub,
-    F64Mul,
-    F64Div,
-    F64Min,
-    F64Max,
+    // F64 asm.js opcodes
     F64Mod,
-    F64Neg,
 
-    // Math builtin opcodes
-    F64Abs,
-    F64Sqrt,
-    F64Ceil,
-    F64Floor,
     F64Sin,
     F64Cos,
     F64Tan,
@@ -257,115 +288,11 @@ enum class Expr : uint8_t
     F64Pow,
     F64Atan2,
 
-    // Conversions opcodes
     F64FromF32,
     F64FromS32,
     F64FromU32,
 
-    // Heap accesses opcodes
-    F64Load,
-    F64StoreF32,
-    F64StoreF64,
-
-    // asm.js specific
-    F64Id,
-
-    // I32X4 opcodes
-    // Common opcodes
-    I32X4CallInternal,
-    I32X4CallIndirect,
-    I32X4CallImport,
-
-    I32X4Conditional,
-    I32X4Comma,
-
-    I32X4Literal,
-
-    // Specific opcodes
-    I32X4Ctor,
-
-    I32X4Unary,
-
-    I32X4Binary,
-    I32X4BinaryBitwise,
-    I32X4BinaryShift,
-
-    I32X4ReplaceLane,
-
-    I32X4FromF32X4,
-    I32X4FromF32X4Bits,
-
-    I32X4Swizzle,
-    I32X4Shuffle,
-    I32X4Select,
-    I32X4Splat,
-
-    I32X4Load,
-    I32X4Store,
-
-    // asm.js specific
-    I32X4Id,
-
-    // F32X4 opcodes
-    // Common opcodes
-    F32X4CallInternal,
-    F32X4CallIndirect,
-    F32X4CallImport,
-
-    F32X4Conditional,
-    F32X4Comma,
-
-    F32X4Literal,
-
-    // Specific opcodes
-    F32X4Ctor,
-
-    F32X4Unary,
-
-    F32X4Binary,
-
-    F32X4ReplaceLane,
-
-    F32X4FromI32X4,
-    F32X4FromI32X4Bits,
-    F32X4Swizzle,
-    F32X4Shuffle,
-    F32X4Select,
-    F32X4Splat,
-
-    F32X4Load,
-    F32X4Store,
-
-    // asm.js specific
-    F32X4Id,
-
-    // B32X4 opcodes
-    // Common opcodes
-    B32X4CallInternal,
-    B32X4CallIndirect,
-    B32X4CallImport,
-
-    B32X4Conditional,
-    B32X4Comma,
-
-    B32X4Literal,
-
-    // Specific opcodes
-    B32X4Ctor,
-
-    B32X4Unary,
-
-    B32X4Binary,
-    B32X4BinaryCompI32X4,
-    B32X4BinaryCompF32X4,
-    B32X4BinaryBitwise,
-
-    B32X4ReplaceLane,
-
-    B32X4Splat,
-
-    // asm.js specific
-    B32X4Id
+    F64StoreMemF32
 };
 
 enum NeedsBoundsCheck : uint8_t
@@ -382,7 +309,7 @@ typedef UniquePtr<Bytecode> UniqueBytecode;
 class Encoder
 {
     UniqueBytecode bytecode_;
-    mozilla::DebugOnly<bool> done_;
+    DebugOnly<bool> done_;
 
     template<class T>
     MOZ_WARN_UNUSED_RESULT
@@ -398,9 +325,9 @@ class Encoder
         done_(false)
     {}
 
-    bool init(UniqueBytecode bytecode) {
+    bool init(UniqueBytecode bytecode = UniqueBytecode()) {
         if (bytecode) {
-            bytecode_ = mozilla::Move(bytecode);
+            bytecode_ = Move(bytecode);
             bytecode_->clear();
             return true;
         }
@@ -414,7 +341,20 @@ class Encoder
     UniqueBytecode finish() {
         MOZ_ASSERT(!done_);
         done_ = true;
-        return mozilla::Move(bytecode_);
+        return Move(bytecode_);
+    }
+
+    MOZ_WARN_UNUSED_RESULT bool
+    writeVarU32(uint32_t i) {
+        do {
+            uint8_t byte = i & 0x7F;
+            i >>= 7;
+            if (i != 0)
+                byte |= 0x80;
+            if (!writeU8(byte))
+                return false;
+        } while(i != 0);
+        return true;
     }
 
     MOZ_WARN_UNUSED_RESULT bool
@@ -453,7 +393,7 @@ class Encoder
     bool pcIsPatchable(size_t pc, unsigned size) const {
         bool patchable = true;
         for (unsigned i = 0; patchable && i < size; i++)
-            patchable &= Expr((*bytecode_)[pc]) == Expr::Bad;
+            patchable &= Expr((*bytecode_)[pc]) == Expr::Unreachable;
         return patchable;
     }
 #endif
@@ -469,11 +409,6 @@ class Encoder
                       "patch32 must be used with 32-bits wide types");
         MOZ_ASSERT(pcIsPatchable(pc, sizeof(uint32_t)));
         memcpy(&(*bytecode_)[pc], &i, sizeof(uint32_t));
-    }
-
-    void patchSig(size_t pc, const LifoSig* ptr) {
-        MOZ_ASSERT(pcIsPatchable(pc, sizeof(LifoSig*)));
-        memcpy(&(*bytecode_)[pc], &ptr, sizeof(LifoSig*));
     }
 };
 
@@ -525,7 +460,6 @@ class Decoder
     MOZ_WARN_UNUSED_RESULT bool readF32(float* f)           { return read(f); }
     MOZ_WARN_UNUSED_RESULT bool readU32(uint32_t* u)        { return read(u); }
     MOZ_WARN_UNUSED_RESULT bool readF64(double* d)          { return read(d); }
-    MOZ_WARN_UNUSED_RESULT bool readSig(const LifoSig* sig) { return read(sig); }
 
     MOZ_WARN_UNUSED_RESULT bool readI32X4(jit::SimdConstant* c) {
         int32_t v[4] = { 0, 0, 0, 0 };
@@ -546,6 +480,26 @@ class Decoder
         return true;
     }
 
+    MOZ_WARN_UNUSED_RESULT bool readVarU32(uint32_t* decoded) {
+        *decoded = 0;
+        uint8_t byte;
+        uint32_t shift = 0;
+        do {
+            if (!readU8(&byte))
+                return false;
+            if (!(byte & 0x80)) {
+                *decoded |= uint32_t(byte & 0x7F) << shift;
+                return true;
+            }
+            *decoded |= uint32_t(byte & 0x7F) << shift;
+            shift += 7;
+        } while (shift != 28);
+        if (!readU8(&byte) || (byte & 0xF0))
+            return false;
+        *decoded |= uint32_t(byte) << 28;
+        return true;
+    }
+
     // The infallible unpacking API should be used when we are sure that the
     // bytecode is well-formed.
     uint8_t        uncheckedReadU8 () { return uncheckedRead<uint8_t>(); }
@@ -553,7 +507,6 @@ class Decoder
     float          uncheckedReadF32() { return uncheckedRead<float>(); }
     uint32_t       uncheckedReadU32() { return uncheckedRead<uint32_t>(); }
     double         uncheckedReadF64() { return uncheckedRead<double>(); }
-    const LifoSig* uncheckedReadSig() { return uncheckedRead<const LifoSig*>(); }
 
     jit::SimdConstant uncheckedReadI32X4() {
         int32_t v[4] = { 0, 0, 0, 0 };
@@ -567,6 +520,25 @@ class Decoder
             v[i] = uncheckedReadF32();
         return jit::SimdConstant::CreateX4(v[0], v[1], v[2], v[3]);
     }
+
+    uint32_t uncheckedReadVarU32() {
+        uint32_t decoded = 0;
+        uint32_t shift = 0;
+        uint8_t byte;
+        do {
+            byte = uncheckedReadU8();
+            if (!(byte & 0x80)) {
+                decoded |= uint32_t(byte & 0x7F) << shift;
+                return decoded;
+            }
+            decoded |= uint32_t(byte & 0x7F) << shift;
+            shift += 7;
+        } while (shift != 28);
+        byte = uncheckedReadU8();
+        MOZ_ASSERT(!(byte & 0xF0));
+        decoded |= uint32_t(byte) << 28;
+        return decoded;
+    }
 };
 
 // Source coordinates for a call site. As they're read sequentially, we
@@ -579,7 +551,6 @@ struct SourceCoords {
 };
 
 typedef Vector<SourceCoords, 0, SystemAllocPolicy> SourceCoordsVector;
-typedef Vector<ValType, 0, SystemAllocPolicy> ValTypeVector;
 
 // The FuncBytecode class contains the intermediate representation of a
 // parsed/decoded and validated asm.js/WebAssembly function. The FuncBytecode
@@ -595,7 +566,7 @@ class FuncBytecode
     SourceCoordsVector callSourceCoords_;
 
     uint32_t index_;
-    const LifoSig& sig_;
+    const DeclaredSig& sig_;
     UniqueBytecode bytecode_;
     ValTypeVector localVars_;
     unsigned generateTime_;
@@ -606,22 +577,22 @@ class FuncBytecode
                  unsigned column,
                  SourceCoordsVector&& sourceCoords,
                  uint32_t index,
-                 const LifoSig& sig,
+                 const DeclaredSig& sig,
                  UniqueBytecode bytecode,
                  ValTypeVector&& localVars,
                  unsigned generateTime)
       : name_(name),
         line_(line),
         column_(column),
-        callSourceCoords_(mozilla::Move(sourceCoords)),
+        callSourceCoords_(Move(sourceCoords)),
         index_(index),
         sig_(sig),
-        bytecode_(mozilla::Move(bytecode)),
-        localVars_(mozilla::Move(localVars)),
+        bytecode_(Move(bytecode)),
+        localVars_(Move(localVars)),
         generateTime_(generateTime)
     {}
 
-    UniqueBytecode recycleBytecode() { return mozilla::Move(bytecode_); }
+    UniqueBytecode recycleBytecode() { return Move(bytecode_); }
 
     PropertyName* name() const { return name_; }
     unsigned line() const { return line_; }
@@ -629,7 +600,7 @@ class FuncBytecode
     const SourceCoords& sourceCoords(size_t i) const { return callSourceCoords_[i]; }
 
     uint32_t index() const { return index_; }
-    const LifoSig& sig() const { return sig_; }
+    const DeclaredSig& sig() const { return sig_; }
     const Bytecode& bytecode() const { return *bytecode_; }
 
     size_t numLocalVars() const { return localVars_.length(); }

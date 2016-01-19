@@ -440,7 +440,9 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
             glController.attachToJava(mLayerClient, npzc);
         } else {
             GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY,
-                    glController, "attachToJava", mLayerClient, npzc);
+                    glController, "attachToJava",
+                    GeckoLayerClient.class, mLayerClient,
+                    NativePanZoomController.class, npzc);
         }
     }
 

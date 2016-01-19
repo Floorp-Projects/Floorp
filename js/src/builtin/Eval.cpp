@@ -270,7 +270,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
 
     EvalScriptGuard esg(cx);
 
-    if (evalType == DIRECT_EVAL && caller.isNonEvalFunctionFrame())
+    if (evalType == DIRECT_EVAL && caller.isFunctionFrame())
         esg.lookupInEvalCache(linearStr, callerScript, pc);
 
     if (!esg.foundScript()) {

@@ -93,6 +93,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       //  Event listeners for the parent element
       var startMouseTests = function() {
+        info("Got parent mousemove");
         parent.removeEventListener("mousemove", startMouseTests);
         parent.addEventListener("DOMMouseScroll", parentScrollTest);
         child.addEventListener("DOMMouseScroll", childScrollTest);
@@ -103,6 +104,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentScrollTest = function (e) {
+        info("Got parent DOMMouseScroll");
         parentStats.mouseScroll = true;
         parent.removeEventListener("DOMMouseScroll", parentScrollTest);
         child.removeEventListener("DOMMouseScroll", childScrollTest);
@@ -115,6 +117,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentWheelTest = function (e) {
+        info("Got parent wheel");
         parentStats.wheel = true;
         parent.removeEventListener("wheel", parentWheelTest);
         child.removeEventListener("wheel", childWheelTest);
@@ -126,6 +129,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentDownTest = function (e) {
+        info("Got parent mousedown");
         parentStats.mouseDown = true;
         parent.removeEventListener("mousedown", parentDownTest);
         child.removeEventListener("mousedown", childDownTest);
@@ -137,6 +141,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentUpTest = function (e) {
+        info("Got parent mouseup");
         parentStats.mouseUp = true;
         parent.removeEventListener("mouseup", parentUpTest);
         child.removeEventListener("mouseup", childUpTest);
@@ -148,6 +153,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentClickTest = function (e) {
+        info("Got parent click");
         parentStats.mouseClick = true;
         parent.removeEventListener("click", parentClickTest);
         child.removeEventListener("click", childClickTest);
@@ -159,34 +165,42 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       };
 
       var parentMoveTest = function (e) {
+        info("Got parent mousemove");
         parentStats.mouseMove = true;
         parent.removeEventListener("mousemove", parentMoveTest);
         child.removeEventListener("mousemove", childMoveTest);
         SimpleTest.executeSoon(function () {
+          info("Exit fullscreen");
           document.mozCancelFullScreen();
         });
       }
 
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === parent) {
+          info("Got mozpointerlockchange for entering");
           parent.addEventListener("mousemove", startMouseTests);
           child.addEventListener("mousemove", childMoveTest);
           SimpleTest.executeSoon(function () {
             synthesizeMouseAtCenter(parent, {type: "mousemove"}, window);
           });
+        } else {
+          info("Got mozpointerlockchange for exiting");
         }
       }, false);
 
       document.addEventListener("mozfullscreenchange", function (e)  {
         if (document.mozFullScreenElement === parent) {
+          info("Got mozfullscreenchange for entering");
           parent.mozRequestPointerLock();
         } else {
+          info("Got mozfullscreenchange for exiting");
           runTests();
           SimpleTest.finish();
         }
       }, false);
 
       function start() {
+        info("Requesting fullscreen on parent");
         parent.mozRequestFullScreen();
       }
     </script>

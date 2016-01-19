@@ -1,0 +1,25 @@
+<!DOCTYPE HTML>
+<head>
+  <style>
+    .parent {
+       width: 200px;
+       height: 200px;
+       isolation: isolate;
+       background: #5856a2;
+    }
+    .child {
+      width: 200px;
+      height: 200px;
+      mix-blend-mode: soft-light;
+      opacity: 0.5;
+      background: white;
+      will-change: opacity;
+    }
+  </style>
+</head>
+<body>
+ <div class="parent">
+  <div class="child">
+  </div>
+ </div>
+</body>

@@ -440,6 +440,8 @@ function run() {
   expression_should_be_parseable("-webkit-max-device-pixel-ratio: 1.0");
   expression_should_not_be_parseable("max-device-pixel-ratio: 1.0");
 
+  should_apply("(-webkit-transform-3d)");
+
   features = [ "max-aspect-ratio", "device-aspect-ratio" ];
   for (i in features) {
     feature = features[i];
