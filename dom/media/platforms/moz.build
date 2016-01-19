@@ -38,6 +38,11 @@ if CONFIG['MOZ_WMF']:
 if CONFIG['MOZ_EME']:
     DIRS += ['agnostic/eme']
 
+if CONFIG['MOZ_FFVPX']:
+    DIRS += [
+        'ffmpeg/ffvpx',
+    ]
+
 if CONFIG['MOZ_FFMPEG']:
     EXPORTS += [
         'ffmpeg/FFmpegRuntimeLinker.h',
@@ -45,17 +50,12 @@ if CONFIG['MOZ_FFMPEG']:
     UNIFIED_SOURCES += [
         'ffmpeg/FFmpegRuntimeLinker.cpp',
     ]
-    if CONFIG['MOZ_FFVPX']:
-        DIRS += [
-            'ffmpeg/ffvpx',
-        ]
-    if CONFIG['OS_ARCH'] != 'WINNT':
-        DIRS += [
-            'ffmpeg/libav53',
-            'ffmpeg/libav54',
-            'ffmpeg/libav55',
-            'ffmpeg/ffmpeg57',
-        ]
+    DIRS += [
+        'ffmpeg/libav53',
+        'ffmpeg/libav54',
+        'ffmpeg/libav55',
+        'ffmpeg/ffmpeg57',
+    ]
 
 if CONFIG['MOZ_APPLEMEDIA']:
   EXPORTS += [
