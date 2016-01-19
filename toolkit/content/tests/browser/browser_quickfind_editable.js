@@ -6,7 +6,7 @@ function* test_hotkeys(browser, expected) {
   let findbar = gBrowser.getFindBar();
   for (let key of HOTKEYS) {
     is(findbar.hidden, true, "findbar is hidden");
-    EventUtils.synthesizeKey(key, {}, browser.contentWindow);
+    yield BrowserTestUtils.sendChar(key, gBrowser.selectedBrowser);
     is(findbar.hidden, expected, "findbar should" + (expected ? "" : " not") + " be hidden");
     if (!expected) {
       yield closeFindbarAndWait(findbar);
