@@ -423,7 +423,6 @@ struct MOZ_RAII AutoSCC
 };
 
 const char* ExplainInvocationKind(JSGCInvocationKind gckind);
-const char* ExplainReason(JS::gcreason::Reason reason);
 
 } /* namespace gcstats */
 } /* namespace js */
