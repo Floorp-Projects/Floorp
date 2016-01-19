@@ -26,7 +26,7 @@ var gStillRunning = true;
 var gTables = {};
 var gHttpServer = null;
 
-const appRepURLPref = "browser.safebrowsing.appRepURL";
+const appRepURLPref = "browser.safebrowsing.downloads.remote.url";
 const remoteEnabledPref = "browser.safebrowsing.downloads.remote.enabled";
 
 function readFileToString(aFilename) {
