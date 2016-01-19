@@ -61,7 +61,7 @@ this.ManifestProcessor = { // jshint ignore:line
     docURL: aDocURL
   }) {
     const console = new ConsoleAPI({
-      prefix: 'Web Manifest: '
+      prefix: 'Web Manifest'
     });
     const manifestURL = new URL(aManifestURL);
     const docURL = new URL(aDocURL);
