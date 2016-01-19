@@ -47,14 +47,22 @@ public:
                      FlushableTaskQueue* aAudioTaskQueue,
                      MediaDataDecoderCallback* aCallback) override
   {
+#ifdef USING_MOZFFVPX
+    return nullptr;
+#else
     RefPtr<MediaDataDecoder> decoder =
       new FFmpegAudioDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
     return decoder.forget();
+#endif
   }
 
   bool SupportsMimeType(const nsACString& aMimeType) const override
   {
+#ifdef USING_MOZFFVPX
+    AVCodecID audioCodec = AV_CODEC_ID_NONE;
+#else
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
+#endif
     AVCodecID videoCodec = FFmpegH264Decoder<V>::GetCodecId(aMimeType);
     if (audioCodec == AV_CODEC_ID_NONE && videoCodec == AV_CODEC_ID_NONE) {
       return false;
