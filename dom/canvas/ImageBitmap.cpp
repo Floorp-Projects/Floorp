@@ -389,11 +389,13 @@ HasRasterImage(HTMLImageElement& aImageEl)
   return false;
 }
 
-ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData)
+ImageBitmap::ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
+                         bool aIsPremultipliedAlpha /* = true */)
   : mParent(aGlobal)
   , mData(aData)
   , mSurface(nullptr)
   , mPictureRect(0, 0, aData->GetSize().width, aData->GetSize().height)
+  , mIsPremultipliedAlpha(aIsPremultipliedAlpha)
 {
   MOZ_ASSERT(aData, "aData is null in ImageBitmap constructor.");
 }
@@ -433,10 +435,10 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
 
   if (!mSurface) {
     mSurface = mData->GetAsSourceSurface();
-  }
 
-  if (!mSurface) {
-    return nullptr;
+    if (!mSurface) {
+      return nullptr;
+    }
   }
 
   RefPtr<DrawTarget> target = aTarget;
@@ -496,6 +498,63 @@ ImageBitmap::PrepareForDrawTarget(gfx::DrawTarget* aTarget)
     mPictureRect.MoveTo(0, 0);
   }
 
+  // Pre-multiply alpha here.
+  // Apply pre-multiply alpha only if mIsPremultipliedAlpha is false.
+  if (!mIsPremultipliedAlpha) {
+    MOZ_ASSERT(mSurface->GetFormat() == SurfaceFormat::R8G8B8A8 ||
+               mSurface->GetFormat() == SurfaceFormat::B8G8R8A8 ||
+               mSurface->GetFormat() == SurfaceFormat::A8R8G8B8);
+
+    RefPtr<DataSourceSurface> dataSourceSurface = mSurface->GetDataSurface();
+    MOZ_ASSERT(dataSourceSurface);
+
+    DataSourceSurface::ScopedMap map(dataSourceSurface, DataSourceSurface::READ_WRITE);
+    if (NS_WARN_IF(!map.IsMapped())) {
+      return nullptr;
+    }
+
+    uint8_t rIndex = 0;
+    uint8_t gIndex = 0;
+    uint8_t bIndex = 0;
+    uint8_t aIndex = 0;
+
+    if (mSurface->GetFormat() == SurfaceFormat::R8G8B8A8) {
+      rIndex = 0;
+      gIndex = 1;
+      bIndex = 2;
+      aIndex = 3;
+    } else if (mSurface->GetFormat() == SurfaceFormat::B8G8R8A8) {
+      rIndex = 2;
+      gIndex = 1;
+      bIndex = 0;
+      aIndex = 3;
+    } else if (mSurface->GetFormat() == SurfaceFormat::A8R8G8B8) {
+      rIndex = 1;
+      gIndex = 2;
+      bIndex = 3;
+      aIndex = 0;
+    }
+
+    for (int i = 0; i < dataSourceSurface->GetSize().height; ++i) {
+      uint8_t* bufferPtr = map.GetData() + map.GetStride() * i;
+      for (int i = 0; i < dataSourceSurface->GetSize().width; ++i) {
+        uint8_t r = *(bufferPtr+rIndex);
+        uint8_t g = *(bufferPtr+gIndex);
+        uint8_t b = *(bufferPtr+bIndex);
+        uint8_t a = *(bufferPtr+aIndex);
+
+        *(bufferPtr+rIndex) = gfxUtils::sPremultiplyTable[a * 256 + r];
+        *(bufferPtr+gIndex) = gfxUtils::sPremultiplyTable[a * 256 + g];
+        *(bufferPtr+bIndex) = gfxUtils::sPremultiplyTable[a * 256 + b];
+        *(bufferPtr+aIndex) = a;
+
+        bufferPtr += 4;
+      }
+    }
+
+    mSurface = dataSourceSurface;
+  }
+
   // Replace our surface with one optimized for the target we're about to draw
   // to, under the assumption it'll likely be drawn again to that target.
   // This call should be a no-op for already-optimized surfaces
@@ -518,6 +577,7 @@ ImageBitmap::ToCloneData()
 {
   ImageBitmapCloneData* result = new ImageBitmapCloneData();
   result->mPictureRect = mPictureRect;
+  result->mIsPremultipliedAlpha = mIsPremultipliedAlpha;
   RefPtr<SourceSurface> surface = mData->GetAsSourceSurface();
   result->mSurface = surface->GetDataSurface();
   MOZ_ASSERT(result->mSurface);
@@ -532,7 +592,8 @@ ImageBitmap::CreateFromCloneData(nsIGlobalObject* aGlobal,
   RefPtr<layers::Image> data =
     CreateImageFromSurface(aData->mSurface);
 
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data,
+                                            aData->mIsPremultipliedAlpha);
   ErrorResult rv;
   ret->SetPictureRect(aData->mPictureRect, rv);
   return ret.forget();
@@ -763,7 +824,8 @@ ImageBitmap::CreateInternal(nsIGlobalObject* aGlobal, ImageData& aImageData,
   }
 
   // Create an ImageBimtap.
-  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data);
+  // ImageData's underlying data is not alpha-premultiplied.
+  RefPtr<ImageBitmap> ret = new ImageBitmap(aGlobal, data, false);
 
   // The cropping information has been handled in the CreateImageFromRawData()
   // function.
@@ -1239,9 +1301,12 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   uint32_t picRectY_;
   uint32_t picRectWidth_;
   uint32_t picRectHeight_;
+  uint32_t isPremultipliedAlpha_;
+  uint32_t dummy_;
 
   if (!JS_ReadUint32Pair(aReader, &picRectX_, &picRectY_) ||
-      !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_)) {
+      !JS_ReadUint32Pair(aReader, &picRectWidth_, &picRectHeight_) ||
+      !JS_ReadUint32Pair(aReader, &isPremultipliedAlpha_, &dummy_)) {
     return nullptr;
   }
 
@@ -1263,7 +1328,7 @@ ImageBitmap::ReadStructuredClone(JSContext* aCx,
   {
     RefPtr<layers::Image> img = CreateImageFromSurface(aClonedSurfaces[aIndex]);
     RefPtr<ImageBitmap> imageBitmap =
-      new ImageBitmap(aParent, img);
+      new ImageBitmap(aParent, img, isPremultipliedAlpha_);
 
     ErrorResult error;
     imageBitmap->SetPictureRect(IntRect(picRectX, picRectY,
@@ -1293,13 +1358,15 @@ ImageBitmap::WriteStructuredClone(JSStructuredCloneWriter* aWriter,
   const uint32_t picRectY = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.y);
   const uint32_t picRectWidth = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.width);
   const uint32_t picRectHeight = BitwiseCast<uint32_t>(aImageBitmap->mPictureRect.height);
+  const uint32_t isPremultipliedAlpha = aImageBitmap->mIsPremultipliedAlpha ? 1 : 0;
 
   // Indexing the cloned surfaces and send the index to the receiver.
   uint32_t index = aClonedSurfaces.Length();
 
   if (NS_WARN_IF(!JS_WriteUint32Pair(aWriter, SCTAG_DOM_IMAGEBITMAP, index)) ||
       NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectX, picRectY)) ||
-      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight))) {
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, picRectWidth, picRectHeight)) ||
+      NS_WARN_IF(!JS_WriteUint32Pair(aWriter, isPremultipliedAlpha, 0))) {
     return false;
   }
 

@@ -57,6 +57,7 @@ struct ImageBitmapCloneData final
 {
   RefPtr<gfx::DataSourceSurface> mSurface;
   gfx::IntRect mPictureRect;
+  bool mIsPremultipliedAlpha;
 };
 
 /*
@@ -141,7 +142,27 @@ public:
 
 protected:
 
-  ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData);
+  /*
+   * The default value of aIsPremultipliedAlpha is TRUE because that the
+   * data stored in HTMLImageElement, HTMLVideoElement, HTMLCanvasElement,
+   * CanvasRenderingContext2D are alpha-premultiplied in default.
+   *
+   * Actually, if one HTMLCanvasElement's rendering context is WebGLContext, it
+   * is possible to get un-premultipliedAlpha data out. But, we do not do it in
+   * the CreateInternal(from HTMLCanvasElement) method.
+   *
+   * It is also possible to decode an image which is encoded with alpha channel
+   * to be non-premultipliedAlpha. This could be applied in
+   * 1) the CreateInternal(from HTMLImageElement) method (which might trigger
+   *    re-decoding if the original decoded data is alpha-premultiplied) and
+   * 2) while decoding a blob. But we do not do it in both code path too.
+   *
+   * ImageData's underlying data is triggered as non-premultipliedAlpha, so set
+   * the aIsPremultipliedAlpha to be false in the
+   * CreateInternal(from ImageData) method.
+   */
+  ImageBitmap(nsIGlobalObject* aGlobal, layers::Image* aData,
+              bool aIsPremultipliedAlpha = true);
 
   virtual ~ImageBitmap();
 
@@ -202,6 +223,8 @@ protected:
    * to draw this ImageBitmap into a HTMLCanvasElement.
    */
   gfx::IntRect mPictureRect;
+
+  const bool mIsPremultipliedAlpha;
 };
 
 } // namespace dom
