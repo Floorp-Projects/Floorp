@@ -3,28 +3,27 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import ch.boye.httpclientandroidlib.HttpStatus;
-import ch.boye.httpclientandroidlib.ProtocolVersion;
-import ch.boye.httpclientandroidlib.entity.StringEntity;
-import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.StatusResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
-import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient10.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
-import org.mozilla.gecko.background.fxa.PasswordStretcher;
 import org.mozilla.gecko.browserid.MockMyIDTokenFactory;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
 
 import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+
+import ch.boye.httpclientandroidlib.HttpStatus;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.entity.StringEntity;
+import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
 
 public class MockFxAccountClient implements FxAccountClient {
   protected static MockMyIDTokenFactory mockMyIdTokenFactory = new MockMyIDTokenFactory();
