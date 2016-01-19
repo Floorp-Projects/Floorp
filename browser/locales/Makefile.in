@@ -74,7 +74,7 @@ PP_TARGETS += SEARCHPLUGINS
 list-txt = $(SEARCHPLUGINS_PATH)/list.txt
 GARBAGE += $(list-txt)
 
-libs:: searchplugins
+misc:: searchplugins
 
 # Required for l10n.mk - defines a list of app sub dirs that should
 # be included in langpack xpis.
