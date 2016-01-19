@@ -873,10 +873,9 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
   RootLayer()->RenderLayer(clipRect.ToUnknownRect());
 
   if (!mRegionToClear.IsEmpty()) {
-    nsIntRegionRectIterator iter(mRegionToClear);
-    const IntRect *r;
-    while ((r = iter.Next())) {
-      mCompositor->ClearRect(Rect(r->x, r->y, r->width, r->height));
+    for (auto iter = mRegionToClear.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& r = iter.Get();
+      mCompositor->ClearRect(Rect(r.x, r.y, r.width, r.height));
     }
   }
 
@@ -1142,14 +1141,14 @@ SubtractTransformedRegion(nsIntRegion& aRegion,
 
   // For each rect in the region, find out its bounds in screen space and
   // subtract it from the screen region.
-  nsIntRegionRectIterator it(aRegionToSubtract);
-  while (const IntRect* rect = it.Next()) {
-    Rect incompleteRect = aTransform.TransformAndClipBounds(IntRectToRect(*rect),
+  for (auto iter = aRegionToSubtract.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& rect = iter.Get();
+    Rect incompleteRect = aTransform.TransformAndClipBounds(IntRectToRect(rect),
                                                             Rect::MaxIntRect());
     aRegion.Sub(aRegion, IntRect(incompleteRect.x,
-                                   incompleteRect.y,
-                                   incompleteRect.width,
-                                   incompleteRect.height));
+                                 incompleteRect.y,
+                                 incompleteRect.width,
+                                 incompleteRect.height));
   }
 }
 
