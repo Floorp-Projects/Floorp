@@ -781,8 +781,6 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'background/common/telemetry/TelemetryWrapper.java',
     'background/db/CursorDumper.java',
     'background/db/Tab.java',
-    'background/fxa/FxAccount10AuthDelegate.java',
-    'background/fxa/FxAccount10CreateDelegate.java',
     'background/fxa/FxAccount20CreateDelegate.java',
     'background/fxa/FxAccount20LoginDelegate.java',
     'background/fxa/FxAccountClient.java',
