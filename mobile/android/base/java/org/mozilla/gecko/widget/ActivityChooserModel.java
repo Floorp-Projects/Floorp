@@ -31,7 +31,6 @@ import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.SyncStatusListener;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
-import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.R;
 import java.io.File;
 
