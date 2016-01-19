@@ -6,7 +6,7 @@ package org.mozilla.gecko.fxa.login;
 
 import java.security.NoSuchAlgorithmException;
 
-import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.ExecuteDelegate;
