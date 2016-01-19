@@ -4,6 +4,22 @@
 
 package org.mozilla.gecko.background.fxa;
 
+import org.json.simple.JSONObject;
+import org.mozilla.gecko.background.fxa.FxAccountClientException
+        .FxAccountClientMalformedResponseException;
+import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
+import org.mozilla.gecko.fxa.FxAccountConstants;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.crypto.HKDF;
+import org.mozilla.gecko.sync.net.AuthHeaderProvider;
+import org.mozilla.gecko.sync.net.BaseResource;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
+import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
+import org.mozilla.gecko.sync.net.Resource;
+import org.mozilla.gecko.sync.net.SyncResponse;
+import org.mozilla.gecko.sync.net.SyncStorageResponse;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -19,21 +35,6 @@ import java.util.Map.Entry;
 import java.util.concurrent.Executor;
 
 import javax.crypto.Mac;
-
-import org.json.simple.JSONObject;
-import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientMalformedResponseException;
-import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
-import org.mozilla.gecko.fxa.FxAccountConstants;
-import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.crypto.HKDF;
-import org.mozilla.gecko.sync.net.AuthHeaderProvider;
-import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.BaseResourceDelegate;
-import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
-import org.mozilla.gecko.sync.net.Resource;
-import org.mozilla.gecko.sync.net.SyncResponse;
-import org.mozilla.gecko.sync.net.SyncStorageResponse;
 
 import ch.boye.httpclientandroidlib.HttpEntity;
 import ch.boye.httpclientandroidlib.HttpHeaders;
@@ -170,18 +171,6 @@ public class FxAccountClient10 {
     public JSONObject getAuthFinishBody() throws FxAccountClientException;
 
     public byte[] getSharedBytes() throws FxAccountClientException;
-  }
-
-  /**
-   * Thin container for two access tokens.
-   */
-  public static class TwoTokens {
-    public final byte[] keyFetchToken;
-    public final byte[] sessionToken;
-    public TwoTokens(byte[] keyFetchToken, byte[] sessionToken) {
-      this.keyFetchToken = keyFetchToken;
-      this.sessionToken = sessionToken;
-    }
   }
 
   /**
@@ -511,70 +500,6 @@ public class FxAccountClient10 {
     });
   }
 
-  public void sessionCreate(byte[] authToken, final RequestDelegate<TwoTokens> delegate) {
-    final byte[] tokenId = new byte[32];
-    final byte[] reqHMACKey = new byte[32];
-    final byte[] requestKey = new byte[32];
-    try {
-      HKDF.deriveMany(authToken, new byte[0], FxAccountUtils.KW("authToken"), tokenId, reqHMACKey, requestKey);
-    } catch (Exception e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    BaseResource resource;
-    try {
-      resource = getBaseResource("session/create");
-    } catch (URISyntaxException | UnsupportedEncodingException e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    resource.delegate = new ResourceDelegate<TwoTokens>(resource, delegate, tokenId, reqHMACKey) {
-      @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          byte[] keyFetchToken = new byte[32];
-          byte[] sessionToken = new byte[32];
-          unbundleBody(body, requestKey, FxAccountUtils.KW("session/create"), keyFetchToken, sessionToken);
-          delegate.handleSuccess(new TwoTokens(keyFetchToken, sessionToken));
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
-        }
-      }
-    };
-    post(resource, null, delegate);
-  }
-
-  public void sessionDestroy(byte[] sessionToken, final RequestDelegate<Void> delegate) {
-    final byte[] tokenId = new byte[32];
-    final byte[] reqHMACKey = new byte[32];
-    try {
-      HKDF.deriveMany(sessionToken, new byte[0], FxAccountUtils.KW("sessionToken"), tokenId, reqHMACKey);
-    } catch (Exception e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    BaseResource resource;
-    try {
-      resource = getBaseResource("session/destroy");
-    } catch (URISyntaxException | UnsupportedEncodingException e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    resource.delegate = new ResourceDelegate<Void>(resource, delegate, tokenId, reqHMACKey) {
-      @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        delegate.handleSuccess(null);
-      }
-    };
-    post(resource, null, delegate);
-  }
-
   /**
    * Don't call this directly. Use <code>unbundleBody</code> instead.
    */
@@ -768,90 +693,6 @@ public class FxAccountClient10 {
           return;
         }
         delegate.handleSuccess(cert);
-      }
-    };
-    post(resource, body, delegate);
-  }
-
-  /**
-   * Request a verification link be sent to the account email, given a valid session token.
-   *
-   * @param sessionToken
-   *          to authenticate with.
-   * @param delegate
-   *          to invoke callbacks.
-   */
-  public void resendCode(byte[] sessionToken, final RequestDelegate<Void> delegate) {
-    final byte[] tokenId = new byte[32];
-    final byte[] reqHMACKey = new byte[32];
-    final byte[] requestKey = new byte[32];
-    try {
-      HKDF.deriveMany(sessionToken, new byte[0], FxAccountUtils.KW("sessionToken"), tokenId, reqHMACKey, requestKey);
-    } catch (Exception e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    BaseResource resource;
-    try {
-      resource = getBaseResource("recovery_email/resend_code");
-    } catch (URISyntaxException | UnsupportedEncodingException e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    resource.delegate = new ResourceDelegate<Void>(resource, delegate, tokenId, reqHMACKey) {
-      @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          delegate.handleSuccess(null);
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
-        }
-      }
-    };
-    post(resource, new JSONObject(), delegate);
-  }
-
-  /**
-   * Request a fresh unlock code be sent to the account email.
-   * <p>
-   * Since the account can be locked before the device can connect to it, the
-   * only reasonable identifier is the account email. Since the account is
-   * locked out, this request is un-authenticated.
-   *
-   * @param emailUTF8
-   *          identifying account.
-   * @param delegate
-   *          to invoke callbacks.
-   */
-  @SuppressWarnings("unchecked")
-  public void resendUnlockCode(final byte[] emailUTF8, final RequestDelegate<Void> delegate) {
-    final BaseResource resource;
-    final JSONObject body = new JSONObject();
-    try {
-      resource = getBaseResource("account/unlock/resend_code");
-      body.put("email", new String(emailUTF8, "UTF-8"));
-    } catch (URISyntaxException e) {
-      invokeHandleError(delegate, e);
-      return;
-    } catch (UnsupportedEncodingException e) {
-      invokeHandleError(delegate, e);
-      return;
-    }
-
-    resource.delegate = new ResourceDelegate<Void>(resource, delegate) {
-      @Override
-      public void handleSuccess(int status, HttpResponse response, ExtendedJSONObject body) {
-        try {
-          delegate.handleSuccess(null);
-          return;
-        } catch (Exception e) {
-          delegate.handleError(e);
-          return;
-        }
       }
     };
     post(resource, body, delegate);
