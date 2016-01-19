@@ -12,9 +12,9 @@ function rectangleContains(rect, x, y, width, height) {
 }
 
 function sanitizeMarkers(list) {
-  // Worker markers are currently gathered from all docshells, which may
+  // These markers are currently gathered from all docshells, which may
   // interfere with this test.
-  return list.filter(e => e.name != "Worker")
+  return list.filter(e => e.name != "Worker" && e.name != "MinorGC");
 }
 
 var TESTS = [{
