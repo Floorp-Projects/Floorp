@@ -349,7 +349,17 @@ nsWebShellWindow::SizeModeChanged(nsSizeMode sizeMode)
       ourWindow->SetFullScreen(true);
     }
     else if (sizeMode != nsSizeMode_Minimized) {
-      ourWindow->SetFullScreen(false);
+      if (ourWindow->GetFullScreen()) {
+        // The first SetFullscreenInternal call below ensures that we do
+        // not trigger any fullscreen transition even if the window was
+        // put in fullscreen only for the Fullscreen API. The second
+        // SetFullScreen call ensures that the window really exit from
+        // fullscreen even if it entered fullscreen for both Fullscreen
+        // Mode and Fullscreen API.
+        ourWindow->SetFullscreenInternal(
+          nsPIDOMWindow::eForForceExitFullscreen, false);
+        ourWindow->SetFullScreen(false);
+      }
     }
 
     // And always fire a user-defined sizemodechange event on the window
