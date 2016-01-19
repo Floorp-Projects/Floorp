@@ -30,6 +30,7 @@ AddUniforms(ProgramProfileOGL& aProfile)
         "uLayerTransform",
         "uLayerTransformInverse",
         "uMaskTransform",
+        "uBackdropTransform",
         "uLayerRects",
         "uMatrixProj",
         "uTextureTransform",
@@ -200,6 +201,7 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   }
 
   if (BlendOpIsMixBlendMode(blendOp)) {
+    vs << "uniform mat4 uBackdropTransform;" << endl;
     vs << "varying vec2 vBackdropCoord;" << endl;
   }
 
@@ -287,8 +289,12 @@ ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig)
   vs << "  finalPosition.xy -= uRenderTargetOffset * finalPosition.w;" << endl;
   vs << "  finalPosition = uMatrixProj * finalPosition;" << endl;
   if (BlendOpIsMixBlendMode(blendOp)) {
-    // Move from clip space coordinates into texture/uv-coordinates.
-    vs << "  vBackdropCoord = (finalPosition.xy + vec2(1.0, 1.0)) / 2.0;" << endl;
+    // Translate from clip space (-1, 1) to (0..1), apply the backdrop
+    // transform, then invert the y-axis.
+    vs << "  vBackdropCoord.x = (finalPosition.x + 1.0) / 2.0;" << endl;
+    vs << "  vBackdropCoord.y = 1.0 - (finalPosition.y + 1.0) / 2.0;" << endl;
+    vs << "  vBackdropCoord = (uBackdropTransform * vec4(vBackdropCoord.xy, 0.0, 1.0)).xy;" << endl;
+    vs << "  vBackdropCoord.y = 1.0 - vBackdropCoord.y;" << endl;
   }
   vs << "  gl_Position = finalPosition;" << endl;
   vs << "}" << endl;
