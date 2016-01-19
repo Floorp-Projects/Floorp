@@ -681,11 +681,18 @@ Telephony::WindowVolumeChanged(float aVolume, bool aMuted)
   }
 
   bool isSingleCall = mCalls.Length();
-  nsCOMPtr<nsITelephonyCallback> callback = new TelephonyCallback(promise);
-  if (isSingleCall) {
-    rv = aMuted ? mCalls[0]->Hold(callback) : mCalls[0]->Resume(callback);
+  if (isSingleCall && mCalls[0]->Switchable()) {
+    if (aMuted && (mCalls[0]->State() == TelephonyCallState::Connected)) {
+      mCalls[0]->Hold(rv);
+    } else if (!aMuted && (mCalls[0]->State() == TelephonyCallState::Held)) {
+      mCalls[0]->Resume(rv);
+    }
   } else {
-    rv = aMuted ? mGroup->Hold(callback) : mGroup->Resume(callback);
+    if (aMuted && (mGroup->State() == TelephonyCallGroupState::Connected)) {
+      mGroup->Hold(rv);
+    } else if (!aMuted && (mGroup->State() == TelephonyCallGroupState::Held)) {
+      mGroup->Resume(rv);
+    }
   }
   if (NS_WARN_IF(rv.Failed())) {
     return rv.StealNSResult();
