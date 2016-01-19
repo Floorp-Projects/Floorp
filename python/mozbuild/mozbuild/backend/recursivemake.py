@@ -950,6 +950,7 @@ class RecursiveMakeBackend(CommonBackend):
             backend_file.write("""
 %(prefix)s_FILES := %(files)s
 %(prefix)s_DEST := %(dest)s
+%(prefix)s_TARGET := misc
 INSTALL_TARGETS += %(prefix)s
 """ % { 'prefix': prefix,
         'dest': '$(DEPTH)/_tests/%s' % path,
@@ -1316,6 +1317,7 @@ INSTALL_TARGETS += %(prefix)s
                     i, self._pretty_path(f, backend_file)))
             backend_file.write('DIST_FILES_%d_PATH := $(DEPTH)/%s\n'
                                % (i, mozpath.join(obj.install_target, path)))
+            backend_file.write('DIST_FILES_%d_TARGET := misc\n' % i)
             backend_file.write('PP_TARGETS += DIST_FILES_%d\n' % i)
 
     def _process_chrome_manifest_entry(self, obj, backend_file):
