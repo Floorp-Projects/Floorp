@@ -809,7 +809,9 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
   if (!mTarget && !haveLayerEffects &&
       gfxPrefs::Composer2DCompositionEnabled() &&
       composer2D && composer2D->HasHwc() && composer2D->TryRenderWithHwc(mRoot,
-          mCompositor->GetWidget(), mGeometryChanged))
+          mCompositor->GetWidget(),
+          mGeometryChanged,
+          mCompositor->HasImageHostOverlays()))
   {
     LayerScope::SetHWComposed();
     if (mFPS) {
