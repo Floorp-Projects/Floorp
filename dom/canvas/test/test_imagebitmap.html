@@ -12,6 +12,7 @@
 <canvas id="c2" width="128" height="128"></canvas>
 
 <script src="imagebitmap_bug1239300.js"></script>
+<script src="imagebitmap_bug1239752.js"></script>
 <script type="text/javascript">
 
 SimpleTest.waitForExplicitFinish();
@@ -335,6 +336,7 @@ function runTests() {
     .then(testExceptions)
     .then(testSecurityErrors)
     .then(testBug1239300)
+    .then(testBug1239752)
     .then(SimpleTest.finish, function(ev) { failed(ev); SimpleTest.finish(); });
 }
 
