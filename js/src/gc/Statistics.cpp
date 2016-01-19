@@ -751,6 +751,7 @@ Statistics::Statistics(JSRuntime* rt)
     activeDagSlot(PHASE_DAG_NONE),
     suspendedPhaseNestingDepth(0),
     sliceCallback(nullptr),
+    nurseryCollectionCallback(nullptr),
     aborted(false)
 {
     PodArrayZero(phaseTotals);
@@ -839,6 +840,14 @@ Statistics::setSliceCallback(JS::GCSliceCallback newCallback)
 {
     JS::GCSliceCallback oldCallback = sliceCallback;
     sliceCallback = newCallback;
+    return oldCallback;
+}
+
+JS::GCNurseryCollectionCallback
+Statistics::setNurseryCollectionCallback(JS::GCNurseryCollectionCallback newCallback)
+{
+    auto oldCallback = nurseryCollectionCallback;
+    nurseryCollectionCallback = newCallback;
     return oldCallback;
 }
 

@@ -200,6 +200,8 @@ struct Statistics
     UniqueChars formatDetailedMessage();
 
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
+    JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
+        JS::GCNurseryCollectionCallback callback);
 
     int64_t clearMaxGCPauseAccumulator();
     int64_t getMaxGCPauseSinceClear();
@@ -306,6 +308,7 @@ struct Statistics
     Vector<int64_t, 0, SystemAllocPolicy> sccTimes;
 
     JS::GCSliceCallback sliceCallback;
+    JS::GCNurseryCollectionCallback nurseryCollectionCallback;
 
     /*
      * True if we saw an OOM while allocating slices. The statistics for this
