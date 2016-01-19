@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko.background.fxa;
 
-import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.StatusResponse;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.StatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
 public interface FxAccountClient {
