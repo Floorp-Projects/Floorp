@@ -329,6 +329,9 @@ pref("media.wmf.skip-blacklist", false);
 #if defined(MOZ_FFMPEG)
 pref("media.ffmpeg.enabled", true);
 #endif
+#if defined(MOZ_FFVPX)
+pref("media.ffvpx.enabled", true);
+#endif
 pref("media.gmp.decoder.enabled", false);
 pref("media.gmp.decoder.aac", 0);
 pref("media.gmp.decoder.h264", 0);
