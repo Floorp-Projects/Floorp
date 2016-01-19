@@ -7316,8 +7316,8 @@ var Tabs = {
         break;
       case "Session:Prefetch":
         if (aData) {
-          let uri = Services.io.newURI(aData, null, null);
           try {
+            let uri = Services.io.newURI(aData, null, null);
             if (uri && !this._domains.has(uri.host)) {
               Services.io.QueryInterface(Ci.nsISpeculativeConnect).speculativeConnect(uri, null);
               this._domains.add(uri.host);
