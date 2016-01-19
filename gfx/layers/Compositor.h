@@ -515,6 +515,16 @@ protected:
   bool ShouldDrawDiagnostics(DiagnosticFlags);
 
   /**
+   * Given a layer rect, clip, and transform, compute the area of the backdrop that
+   * needs to be copied for mix-blending. The output transform translates from 0..1
+   * space into the backdrop rect space.
+   */
+  gfx::IntRect ComputeBackdropCopyRect(
+    const gfx::Rect& aRect,
+    const gfx::Rect& aClipRect,
+    const gfx::Matrix4x4& aTransform);
+
+  /**
    * Render time for the current composition.
    */
   TimeStamp mCompositionTime;
@@ -541,6 +551,8 @@ protected:
 
   RefPtr<gfx::DrawTarget> mTarget;
   gfx::IntRect mTargetBounds;
+
+  gfx::Rect mRenderBounds;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;

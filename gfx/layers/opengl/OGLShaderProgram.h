@@ -52,6 +52,7 @@ public:
     LayerTransform = 0,
     LayerTransformInverse,
     MaskTransform,
+    BackdropTransform,
     LayerRects,
     MatrixProj,
     TextureTransform,
@@ -350,6 +351,10 @@ public:
 
   void SetMaskLayerTransform(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(KnownUniform::MaskTransform, aMatrix);
+  }
+
+  void SetBackdropTransform(const gfx::Matrix4x4& aMatrix) {
+    SetMatrixUniform(KnownUniform::BackdropTransform, aMatrix);
   }
 
   void SetDEAAEdges(const gfx::Point3D* aEdges) {
