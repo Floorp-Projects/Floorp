@@ -26,7 +26,7 @@ public:
   explicit xpcAccessibleHyperText(Accessible* aIntl) :
     xpcAccessibleGeneric(aIntl)
   {
-    if (mIntl->IsHyperText() && mIntl->AsHyperText()->IsTextRole())
+    if (aIntl->IsHyperText() && aIntl->AsHyperText()->IsTextRole())
       mSupportedIfaces |= eText;
   }
 
@@ -40,7 +40,7 @@ protected:
   virtual ~xpcAccessibleHyperText() {}
 
 private:
-  HyperTextAccessible* Intl() { return mIntl->AsHyperText(); }
+  HyperTextAccessible* Intl() { return mIntl.AsAccessible()->AsHyperText(); }
 
   xpcAccessibleHyperText(const xpcAccessibleHyperText&) = delete;
   xpcAccessibleHyperText& operator =(const xpcAccessibleHyperText&) = delete;
