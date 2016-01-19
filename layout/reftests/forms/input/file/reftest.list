@@ -1,8 +1,8 @@
 # B2G failures: bug 855352.
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,128) skip-if((B2G&&browserIsRemote)||Mulet) == simple.html simple-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,64) skip-if((B2G&&browserIsRemote)||Mulet) == rtl.html rtl-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,128) skip-if((B2G&&browserIsRemote)||Mulet) == size.html simple-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,64) skip-if((B2G&&browserIsRemote)||Mulet) == background.html background-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,152) skip-if((B2G&&browserIsRemote)||Mulet) == simple.html simple-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,76) skip-if((B2G&&browserIsRemote)||Mulet) == rtl.html rtl-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,152) skip-if((B2G&&browserIsRemote)||Mulet) == size.html simple-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(B2G||Mulet||Android) fuzzy-if(OSX==1006,8,76) skip-if((B2G&&browserIsRemote)||Mulet) == background.html background-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(B2G||Mulet||Android) skip-if((B2G&&browserIsRemote)||Mulet) == style.html style-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 != width-clip.html width-clip-ref.html
 fails-if(B2G||Mulet||Android) == color-inherit.html color-inherit-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
