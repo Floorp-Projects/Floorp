@@ -58,6 +58,10 @@ ImageFactory::CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecyc
 
 BufferRecycleBin::BufferRecycleBin()
   : mLock("mozilla.layers.BufferRecycleBin.mLock")
+  // This member is only valid when the bin is not empty and will be properly
+  // initialized in RecycleBuffer, but initializing it here avoids static analysis
+  // noise.
+  , mRecycledBufferSize(0)
 {
 }
 
