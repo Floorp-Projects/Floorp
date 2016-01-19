@@ -784,7 +784,6 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'background/fxa/FxAccount20CreateDelegate.java',
     'background/fxa/FxAccount20LoginDelegate.java',
     'background/fxa/FxAccountClient.java',
-    'background/fxa/FxAccountClient10.java',
     'background/fxa/FxAccountClient20.java',
     'background/fxa/FxAccountClientException.java',
     'background/fxa/FxAccountRemoteError.java',

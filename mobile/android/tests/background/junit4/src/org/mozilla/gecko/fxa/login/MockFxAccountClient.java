@@ -4,10 +4,10 @@
 package org.mozilla.gecko.fxa.login;
 
 import org.mozilla.gecko.background.fxa.FxAccountClient;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.RequestDelegate;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.StatusResponse;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.TwoKeys;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.LoginResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.RequestDelegate;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.StatusResponse;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.TwoKeys;
+import org.mozilla.gecko.background.fxa.FxAccountClient20.LoginResponse;
 import org.mozilla.gecko.background.fxa.FxAccountClientException.FxAccountClientRemoteException;
 import org.mozilla.gecko.background.fxa.FxAccountRemoteError;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
