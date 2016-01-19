@@ -134,7 +134,7 @@ MarionetteServer.prototype.onSocketAccepted = function(
   dispatcher.onclose = this.onConnectionClosed.bind(this);
   this.conns[connId] = dispatcher;
 
-  logger.debug(`Accepted connection ${connId} from ${clientSocket.host}:${clientSocket.port}`);
+  logger.info(`Accepted connection ${connId} from ${clientSocket.host}:${clientSocket.port}`);
   dispatcher.sayHello();
   transport.ready();
 };
@@ -142,7 +142,7 @@ MarionetteServer.prototype.onSocketAccepted = function(
 MarionetteServer.prototype.onConnectionClosed = function(conn) {
   let id = conn.connId;
   delete this.conns[id];
-  logger.debug(`Closed connection ${id}`);
+  logger.info(`Closed connection ${id}`);
 };
 
 function isMulet() {
