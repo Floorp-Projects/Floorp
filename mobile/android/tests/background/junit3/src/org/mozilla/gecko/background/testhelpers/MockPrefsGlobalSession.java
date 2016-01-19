@@ -31,7 +31,7 @@ public class MockPrefsGlobalSession extends GlobalSession {
       ClientsDataDelegate clientsDelegate)
       throws SyncConfigurationException, IllegalArgumentException, IOException,
       ParseException, NonObjectJSONException {
-    super(config, callback, context, clientsDelegate, callback);
+    super(config, callback, context, clientsDelegate);
   }
 
   public static MockPrefsGlobalSession getSession(
