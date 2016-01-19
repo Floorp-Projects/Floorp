@@ -27,6 +27,9 @@ public:
   explicit xpcAccessibleDocument(DocAccessible* aIntl) :
     xpcAccessibleHyperText(aIntl), mCache(kDefaultCacheLength) { }
 
+  xpcAccessibleDocument(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleHyperText(aProxy, aInterfaces), mCache(kDefaultCacheLength) {}
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(xpcAccessibleDocument,
                                            xpcAccessibleGeneric)

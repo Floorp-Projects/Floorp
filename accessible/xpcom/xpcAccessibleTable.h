@@ -23,6 +23,9 @@ public:
   explicit xpcAccessibleTable(Accessible* aIntl) :
     xpcAccessibleGeneric(aIntl) { }
 
+  xpcAccessibleTable(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleGeneric(aProxy, aInterfaces) {}
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTable
