@@ -158,6 +158,8 @@ public:
 
   static bool IsValid(OverlaySource aOverlay);
 
+  void SetCompositor(Compositor* aCompositor);
+
   virtual void Composite(Compositor* aCompositor,
                          uint32_t aFlashCounter,
                          LayerComposite* aLayer,
@@ -173,6 +175,7 @@ public:
   virtual gfx::IntSize GetImageSize() const;
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix);
 protected:
+  RefPtr<Compositor> mCompositor;
   gfx::IntRect mPictureRect;
   OverlaySource mOverlay;
 };

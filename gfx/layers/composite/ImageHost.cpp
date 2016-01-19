@@ -441,6 +441,9 @@ ImageHost::SetCompositor(Compositor* aCompositor)
       img.mFrontBuffer->SetCompositor(aCompositor);
     }
   }
+  if (mImageHostOverlay) {
+    mImageHostOverlay->SetCompositor(aCompositor);
+  }
   CompositableHost::SetCompositor(aCompositor);
 }
 
@@ -586,6 +589,9 @@ ImageHostOverlay::ImageHostOverlay()
 
 ImageHostOverlay::~ImageHostOverlay()
 {
+  if (mCompositor) {
+    mCompositor->RemoveImageHostOverlay(this);
+  }
   MOZ_COUNT_DTOR(ImageHostOverlay);
 }
 
@@ -602,6 +608,18 @@ ImageHostOverlay::IsValid(OverlaySource aOverlay)
 }
 
 void
+ImageHostOverlay::SetCompositor(Compositor* aCompositor)
+{
+  if (mCompositor && (mCompositor != aCompositor)) {
+    mCompositor->RemoveImageHostOverlay(this);
+  }
+  if (aCompositor) {
+    aCompositor->AddImageHostOverlay(this);
+  }
+  mCompositor = aCompositor;
+}
+
+void
 ImageHostOverlay::Composite(Compositor* aCompositor,
                             uint32_t aFlashCounter,
                             LayerComposite* aLayer,
@@ -612,6 +630,8 @@ ImageHostOverlay::Composite(Compositor* aCompositor,
                             const gfx::Rect& aClipRect,
                             const nsIntRegion* aVisibleRegion)
 {
+  MOZ_ASSERT(mCompositor == aCompositor);
+
   if (mOverlay.handle().type() == OverlayHandle::Tnull_t) {
     return;
   }

@@ -35,14 +35,11 @@ static const unsigned COMPILATION_LIFO_DEFAULT_CHUNK_SIZE = 64 * 1024;
 
 ModuleGenerator::ModuleGenerator(ExclusiveContext* cx)
   : cx_(cx),
+    jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
     slowFuncs_(cx),
     lifo_(GENERATOR_LIFO_DEFAULT_CHUNK_SIZE),
-    jcx_(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread())),
     alloc_(&lifo_),
     masm_(MacroAssembler::AsmJSToken(), alloc_),
-    sigs_(cx),
-    funcEntryOffsets_(cx),
-    exportFuncIndices_(cx),
     funcIndexToExport_(cx),
     parallel_(false),
     outstanding_(0),
@@ -105,20 +102,26 @@ ParallelCompilationEnabled(ExclusiveContext* cx)
 }
 
 bool
-ModuleGenerator::init()
+ModuleGenerator::init(UniqueModuleGeneratorData shared)
 {
-    module_ = cx_->make_unique<ModuleData>();
+    module_ = MakeUnique<ModuleData>();
     if (!module_)
         return false;
 
     module_->globalBytes = InitialGlobalDataBytes;
     module_->compileArgs = CompileArgs(cx_);
 
-    link_ = cx_->make_unique<StaticLinkData>();
+    link_ = MakeUnique<StaticLinkData>();
     if (!link_)
         return false;
 
-    if (!sigs_.init() || !funcIndexToExport_.init())
+    shared_ = Move(shared);
+
+    threadView_ = MakeUnique<ModuleGeneratorThreadView>(*shared_);
+    if (!threadView_)
+        return false;
+
+    if (!funcIndexToExport_.init())
         return false;
 
     uint32_t numTasks;
@@ -142,32 +145,15 @@ ModuleGenerator::init()
 
     if (!tasks_.initCapacity(numTasks))
         return false;
-    JSRuntime* runtime = cx_->compartment()->runtimeFromAnyThread();
+    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
     for (size_t i = 0; i < numTasks; i++)
-        tasks_.infallibleEmplaceBack(runtime, args(), COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
+        tasks_.infallibleEmplaceBack(rt, args(), *threadView_, COMPILATION_LIFO_DEFAULT_CHUNK_SIZE);
 
     if (!freeTasks_.reserve(numTasks))
         return false;
     for (size_t i = 0; i < numTasks; i++)
         freeTasks_.infallibleAppend(&tasks_[i]);
 
-    return true;
-}
-
-bool
-ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset)
-{
-    uint32_t globalBytes = module_->globalBytes;
-
-    uint32_t pad = ComputeByteAlignment(globalBytes, align);
-    if (UINT32_MAX - globalBytes < pad + bytes)
-        return false;
-
-    globalBytes += pad;
-    *globalDataOffset = globalBytes;
-    globalBytes += bytes;
-
-    module_->globalBytes = globalBytes;
     return true;
 }
 
@@ -210,6 +196,7 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     results.offsets().offsetBy(offsetInWhole);
 
     // Record the non-profiling entry for whole-module linking later.
+    // Cannot simply append because funcIndex order is nonlinear.
     if (func.index() >= funcEntryOffsets_.length()) {
         if (!funcEntryOffsets_.resize(func.index() + 1))
             return false;
@@ -243,18 +230,21 @@ ModuleGenerator::finishTask(IonCompileTask* task)
     return true;
 }
 
-const LifoSig*
-ModuleGenerator::newLifoSig(const MallocSig& sig)
+bool
+ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset)
 {
-    SigSet::AddPtr p = sigs_.lookupForAdd(sig);
-    if (p)
-        return *p;
+    uint32_t globalBytes = module_->globalBytes;
 
-    LifoSig* lifoSig = LifoSig::new_(lifo_, sig);
-    if (!lifoSig || !sigs_.add(p, lifoSig))
-        return nullptr;
+    uint32_t pad = ComputeByteAlignment(globalBytes, align);
+    if (UINT32_MAX - globalBytes < pad + bytes)
+        return false;
 
-    return lifoSig;
+    globalBytes += pad;
+    *globalDataOffset = globalBytes;
+    globalBytes += bytes;
+
+    module_->globalBytes = globalBytes;
+    return true;
 }
 
 bool
@@ -279,17 +269,35 @@ ModuleGenerator::allocateGlobalVar(ValType type, uint32_t* globalDataOffset)
     return allocateGlobalBytes(width, width, globalDataOffset);
 }
 
-bool
-ModuleGenerator::declareImport(MallocSig&& sig, unsigned* index)
+void
+ModuleGenerator::initSig(uint32_t sigIndex, Sig&& sig)
 {
-    static_assert(Module::SizeOfImportExit % sizeof(void*) == 0, "word aligned");
+    MOZ_ASSERT(shared_->sigs[sigIndex] == Sig());
+    shared_->sigs[sigIndex] = Move(sig);
+}
 
-    uint32_t globalDataOffset;
-    if (!allocateGlobalBytes(Module::SizeOfImportExit, sizeof(void*), &globalDataOffset))
+const DeclaredSig&
+ModuleGenerator::sig(uint32_t index) const
+{
+    return shared_->sigs[index];
+}
+
+bool
+ModuleGenerator::initImport(uint32_t importIndex, uint32_t sigIndex, uint32_t globalDataOffset)
+{
+    MOZ_ASSERT(importIndex == module_->imports.length());
+
+    Sig copy;
+    if (!copy.clone(sig(sigIndex)))
+        return false;
+    if (!module_->imports.emplaceBack(Move(copy), globalDataOffset))
         return false;
 
-    *index = unsigned(module_->imports.length());
-    return module_->imports.emplaceBack(Move(sig), globalDataOffset);
+    ModuleImportGeneratorData& import = shared_->imports[importIndex];
+    MOZ_ASSERT(!import.sig);
+    import.sig = &shared_->sigs[sigIndex];
+    import.globalDataOffset = globalDataOffset;
+    return true;
 }
 
 uint32_t
@@ -298,16 +306,11 @@ ModuleGenerator::numImports() const
     return module_->imports.length();
 }
 
-uint32_t
-ModuleGenerator::importExitGlobalDataOffset(uint32_t index) const
+const ModuleImportGeneratorData&
+ModuleGenerator::import(uint32_t index) const
 {
-    return module_->imports[index].exitGlobalDataOffset();
-}
-
-const MallocSig&
-ModuleGenerator::importSig(uint32_t index) const
-{
-    return module_->imports[index].sig();
+    MOZ_ASSERT(shared_->imports[index].sig);
+    return shared_->imports[index];
 }
 
 bool
@@ -321,7 +324,7 @@ ModuleGenerator::defineImport(uint32_t index, ProfilingOffsets interpExit, Profi
 }
 
 bool
-ModuleGenerator::declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* exportIndex)
+ModuleGenerator::declareExport(uint32_t funcIndex, uint32_t* exportIndex)
 {
     FuncIndexMap::AddPtr p = funcIndexToExport_.lookupForAdd(funcIndex);
     if (p) {
@@ -329,9 +332,13 @@ ModuleGenerator::declareExport(MallocSig&& sig, uint32_t funcIndex, uint32_t* ex
         return true;
     }
 
+    Sig copy;
+    if (!copy.clone(funcSig(funcIndex)))
+        return false;
+
     *exportIndex = module_->exports.length();
     return funcIndexToExport_.add(p, funcIndex, *exportIndex) &&
-           module_->exports.append(Move(sig)) &&
+           module_->exports.append(Move(copy)) &&
            exportFuncIndices_.append(funcIndex);
 }
 
@@ -341,7 +348,7 @@ ModuleGenerator::exportFuncIndex(uint32_t index) const
     return exportFuncIndices_[index];
 }
 
-const MallocSig&
+const Sig&
 ModuleGenerator::exportSig(uint32_t index) const
 {
     return module_->exports[index].sig();
@@ -358,6 +365,21 @@ ModuleGenerator::defineExport(uint32_t index, Offsets offsets)
 {
     module_->exports[index].initStubOffset(offsets.begin);
     return module_->codeRanges.emplaceBack(CodeRange::Entry, offsets);
+}
+
+bool
+ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
+{
+    MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
+    shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
+    return true;
+}
+
+const DeclaredSig&
+ModuleGenerator::funcSig(uint32_t funcIndex) const
+{
+    MOZ_ASSERT(shared_->funcSigs[funcIndex]);
+    return *shared_->funcSigs[funcIndex];
 }
 
 bool
@@ -384,21 +406,21 @@ ModuleGenerator::startFunc(PropertyName* name, unsigned line, unsigned column,
 }
 
 bool
-ModuleGenerator::finishFunc(uint32_t funcIndex, const LifoSig& sig, UniqueBytecode bytecode,
-                            unsigned generateTime, FunctionGenerator* fg)
+ModuleGenerator::finishFunc(uint32_t funcIndex, UniqueBytecode bytecode, unsigned generateTime,
+                            FunctionGenerator* fg)
 {
     MOZ_ASSERT(activeFunc_ == fg);
 
-    UniqueFuncBytecode func = cx_->make_unique<FuncBytecode>(fg->name_,
-        fg->line_,
-        fg->column_,
-        Move(fg->callSourceCoords_),
-        funcIndex,
-        sig,
-        Move(bytecode),
-        Move(fg->localVars_),
-        generateTime
-    );
+    UniqueFuncBytecode func =
+        js::MakeUnique<FuncBytecode>(fg->name_,
+                                     fg->line_,
+                                     fg->column_,
+                                     Move(fg->callSourceCoords_),
+                                     funcIndex,
+                                     funcSig(funcIndex),
+                                     Move(bytecode),
+                                     Move(fg->localVars_),
+                                     generateTime);
     if (!func)
         return false;
 

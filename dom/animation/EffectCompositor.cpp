@@ -565,6 +565,9 @@ EffectCompositor::ComposeAnimationRule(dom::Element* aElement,
     effect->GetAnimation()->ComposeStyle(animationRule, properties);
   }
 
+  MOZ_ASSERT(effects == EffectSet::GetEffectSet(aElement, aPseudoType),
+             "EffectSet should not change while composing style");
+
   effects->UpdateAnimationRuleRefreshTime(aCascadeLevel, aRefreshTime);
 }
 

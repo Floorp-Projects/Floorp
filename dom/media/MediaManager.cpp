@@ -1025,10 +1025,14 @@ public:
                                                            msg);
 
       if (mAudioDevice) {
-        domStream->CreateOwnDOMTrack(kAudioTrack, MediaSegment::AUDIO);
+        nsString audioDeviceName;
+        mAudioDevice->GetName(audioDeviceName);
+        domStream->CreateOwnDOMTrack(kAudioTrack, MediaSegment::AUDIO, audioDeviceName);
       }
       if (mVideoDevice) {
-        domStream->CreateOwnDOMTrack(kVideoTrack, MediaSegment::VIDEO);
+        nsString videoDeviceName;
+        mVideoDevice->GetName(videoDeviceName);
+        domStream->CreateOwnDOMTrack(kVideoTrack, MediaSegment::VIDEO, videoDeviceName);
       }
 
       nsCOMPtr<nsIPrincipal> principal;

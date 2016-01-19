@@ -57,16 +57,12 @@ enum class ValType
     B32x4
 };
 
+typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+
 static inline bool
 IsSimdType(ValType vt)
 {
     return vt == ValType::I32x4 || vt == ValType::F32x4 || vt == ValType::B32x4;
-}
-
-static inline bool
-IsSimdBoolType(ValType vt)
-{
-    return vt == ValType::B32x4;
 }
 
 static inline jit::MIRType
@@ -179,6 +175,12 @@ IsSimdType(ExprType et)
     return IsVoid(et) ? false : IsSimdType(ValType(et));
 }
 
+static inline bool
+IsSimdBoolType(ExprType vt)
+{
+    return vt == ExprType::B32x4;
+}
+
 static inline jit::MIRType
 ToMIRType(ExprType et)
 {
@@ -195,30 +197,32 @@ ToMIRType(ExprType et)
 // duration of module validation+compilation). Thus, long-lived objects like
 // WasmModule must use malloced allocation.
 
-template <class AllocPolicy>
 class Sig
 {
-  public:
-    typedef Vector<ValType, 4, AllocPolicy> ArgVector;
-
-  private:
-    ArgVector args_;
+    ValTypeVector args_;
     ExprType ret_;
 
-  protected:
-    explicit Sig(AllocPolicy alloc = AllocPolicy()) : args_(alloc) {}
-    Sig(Sig&& rhs) : args_(Move(rhs.args_)), ret_(rhs.ret_) {}
-    Sig(ArgVector&& args, ExprType ret) : args_(Move(args)), ret_(ret) {}
+    Sig(const Sig&) = delete;
+    Sig& operator=(const Sig&) = delete;
 
   public:
-    void init(ArgVector&& args, ExprType ret) {
+    Sig() : args_(), ret_(ExprType::Void) {}
+    Sig(Sig&& rhs) : args_(Move(rhs.args_)), ret_(rhs.ret_) {}
+    Sig(ValTypeVector&& args, ExprType ret) : args_(Move(args)), ret_(ret) {}
+
+    bool clone(const Sig& rhs) {
+        ret_ = rhs.ret_;
         MOZ_ASSERT(args_.empty());
-        args_ = Move(args);
-        ret_ = ret;
+        return args_.appendAll(rhs.args_);
+    }
+    Sig& operator=(Sig&& rhs) {
+        ret_ = rhs.ret_;
+        args_ = Move(rhs.args_);
+        return *this;
     }
 
     ValType arg(unsigned i) const { return args_[i]; }
-    const ArgVector& args() const { return args_; }
+    const ValTypeVector& args() const { return args_; }
     const ExprType& ret() const { return ret_; }
 
     HashNumber hash() const {
@@ -227,9 +231,7 @@ class Sig
             hn = mozilla::AddToHash(hn, HashNumber(args_[i]));
         return hn;
     }
-
-    template <class AllocPolicy2>
-    bool operator==(const Sig<AllocPolicy2>& rhs) const {
+    bool operator==(const Sig& rhs) const {
         if (ret() != rhs.ret())
             return false;
         if (args().length() != rhs.args().length())
@@ -240,39 +242,27 @@ class Sig
         }
         return true;
     }
-
-    template <class AllocPolicy2>
-    bool operator!=(const Sig<AllocPolicy2>& rhs) const {
+    bool operator!=(const Sig& rhs) const {
         return !(*this == rhs);
     }
 };
 
-class MallocSig : public Sig<SystemAllocPolicy>
-{
-    typedef Sig<SystemAllocPolicy> BaseSig;
+// A "declared" signature is a Sig object that is created and owned by the
+// ModuleGenerator. These signature objects are read-only and have the same
+// lifetime as the ModuleGenerator. This type is useful since some uses of Sig
+// need this extended lifetime and want to statically distinguish from the
+// common stack-allocated Sig objects that get passed around.
 
-  public:
-    MallocSig() = default;
-    MallocSig(MallocSig&& rhs) : BaseSig(Move(rhs)) {}
-    MallocSig(ArgVector&& args, ExprType ret) : BaseSig(Move(args), ret) {}
+struct DeclaredSig : Sig
+{
+    DeclaredSig() = default;
+    DeclaredSig(DeclaredSig&& rhs) : Sig(Move(rhs)) {}
+    explicit DeclaredSig(Sig&& sig) : Sig(Move(sig)) {}
+    void operator=(Sig&& rhs) { Sig& base = *this; base = Move(rhs); }
 };
 
-class LifoSig : public Sig<LifoAllocPolicy<Fallible>>
-{
-    typedef Sig<LifoAllocPolicy<Fallible>> BaseSig;
-    LifoSig(ArgVector&& args, ExprType ret) : BaseSig(Move(args), ret) {}
-
-  public:
-    static LifoSig* new_(LifoAlloc& lifo, const MallocSig& src) {
-        void* mem = lifo.alloc(sizeof(LifoSig));
-        if (!mem)
-            return nullptr;
-        ArgVector args(lifo);
-        if (!args.appendAll(src.args()))
-            return nullptr;
-        return new (mem) LifoSig(Move(args), src.ret());
-    }
-};
+typedef Vector<DeclaredSig, 0, SystemAllocPolicy> DeclaredSigVector;
+typedef Vector<const DeclaredSig*, 0, SystemAllocPolicy> DeclaredSigPtrVector;
 
 // The (,Profiling,Func)Offsets classes are used to record the offsets of
 // different key points in a CodeRange during compilation.

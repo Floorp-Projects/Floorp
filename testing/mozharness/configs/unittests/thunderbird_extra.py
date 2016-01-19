@@ -4,10 +4,13 @@ config = {
     "minimum_tests_zip_dirs": [
         "bin/*",
         "certs/*",
+        "config/*",
         "extensions/*",
+        "marionette/*",
         "modules/*",
         "mozbase/*",
-        "config/*"],
+        "tools/*",
+    ],
     "all_mozmill_suites": {
         "mozmill": ["--list=tests/mozmill/mozmilltests.list"],
     },

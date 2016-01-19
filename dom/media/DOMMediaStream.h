@@ -476,7 +476,7 @@ public:
    *
    * Creates a MediaStreamTrack, adds it to mTracks and returns it.
    */
-  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType);
+  MediaStreamTrack* CreateOwnDOMTrack(TrackID aTrackID, MediaSegment::Type aType, const nsString& aLabel);
 
   class OnTracksAvailableCallback {
   public:

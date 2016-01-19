@@ -49,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       }
 
       function moveUnlocked(e) {
+        info("Got mousemove via moveUnlocked");
         var firstCall = !unLockedCoords;
         if (!firstCall) {
           todo(false, "mousemove is fired twice.");
@@ -70,6 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
       }
 
       function moveLocked(e) {
+        info("Got mousemove via moveLocked");
         div.removeEventListener("mousemove", moveLocked, false);
 
         isLocked = !!document.mozPointerLockElement;
@@ -85,11 +87,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       document.addEventListener("mozpointerlockchange", function (e) {
         if (document.mozPointerLockElement === div) {
+          info("Got mozpointerlockchange for entering");
           div.removeEventListener("mousemove", moveUnlocked, false);
           div.addEventListener("mousemove", moveLocked, false);
           divRect = div.getBoundingClientRect();
           synthesizeNativeMouseMove(div, (divRect.width / 4) * 3,
                                     (divRect.height / 4) * 3);
+        } else {
+          info("Got mozpointerlockchange for exiting");
         }
       }, false);
 
@@ -97,6 +102,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         var screenX = window.screenX;
         var screenY = window.screenY;
         if (document.mozFullScreenElement === div) {
+          info("Got mozfullscreenchange for entering");
           if (screenX != 0 || screenY != 0) {
             todo(screenX == 0 && screenY == 0,
               "We should only receive fullscreenchange once we've finished fullscreen transition " +
@@ -104,12 +110,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             setTimeout(fullscreenchange, 250);
             return;
           }
+          info("Finish waiting for fullscreenchange");
           synthesizeNativeMouseMove(div, 0, 0, () => {
             div.addEventListener("mousemove", moveUnlocked, false);
             divRect = div.getBoundingClientRect();
             synthesizeNativeMouseMove(div, divRect.width / 2, divRect.height / 2);
           });
         } else {
+          info("Got mozfullscreenchange for exiting");
           runTests();
           SimpleTest.finish();
         }
@@ -118,6 +126,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
       function start() {
         div = document.getElementById("div");
+        info("Requesting fullscreen on parent");
         div.mozRequestFullScreen();
       }
   </script>

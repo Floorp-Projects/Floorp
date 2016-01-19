@@ -5,7 +5,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
-    'TestAsyncPanZoomController.cpp',
+    'TestBasic.cpp',
+    'TestEventRegions.cpp',
+    'TestGestureDetector.cpp',
+    'TestHitTesting.cpp',
+    'TestOverscrollHandoff.cpp',
+    'TestPanning.cpp',
+    'TestPinching.cpp',
+    'TestTreeManager.cpp',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

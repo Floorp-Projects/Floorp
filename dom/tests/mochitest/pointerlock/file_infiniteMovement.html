@@ -49,6 +49,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
 
         var firstMoveListener = function (e) {
+          info("Got first mousemove");
           div.removeEventListener("mousemove", firstMoveListener, false);
           div.addEventListener("mousemove", secondMoveListener, false);
 
@@ -59,6 +60,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
         }
 
         var secondMoveListener = function (e) {
+          info("Got second mousemove");
           totalMovementX = divCenterWidth + ((divCenterWidth / 2) * 3);
           totalMovementY = divCenterHeight + ((divCenterHeight / 2) * 3);
 
@@ -68,6 +70,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
 
         document.addEventListener("mozpointerlockchange", function (e) {
           if (document.mozPointerLockElement === div) {
+            info("Got mozpointerlockchange for entering");
             div.addEventListener("mousemove", firstMoveListener, false);
 
             divCenterWidth = Math.round(div.getBoundingClientRect().width / 2);
@@ -76,20 +79,25 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=633602
             synthesizeMouse(div, divCenterWidth, divCenterHeight, {
               type: "mousemove"
             }, window);
+          } else {
+            info("Got mozpointerlockchange for exiting");
           }
         }, false);
 
         document.addEventListener("mozfullscreenchange", function() {
           if (document.mozFullScreenElement === div) {
+            info("Got mozfullscreenchange for entering");
             div.mozRequestPointerLock();
           }
           else {
+            info("Got mozfullscreenchange for exiting");
             runTests();
             SimpleTest.finish();
           }
         }, false);
 
         function start() {
+          info("Requesting fullscreen on parent");
           div.mozRequestFullScreen();
         }
       </script>

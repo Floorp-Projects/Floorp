@@ -142,8 +142,8 @@ RematerializedFrame::pushOnScopeChain(ScopeObject& scope)
 bool
 RematerializedFrame::initFunctionScopeObjects(JSContext* cx)
 {
-    MOZ_ASSERT(isNonEvalFunctionFrame());
-    MOZ_ASSERT(fun()->needsCallObject());
+    MOZ_ASSERT(isFunctionFrame());
+    MOZ_ASSERT(callee()->needsCallObject());
     CallObject* callobj = CallObject::createForFunction(cx, this);
     if (!callobj)
         return false;
