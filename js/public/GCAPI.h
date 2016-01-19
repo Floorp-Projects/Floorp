@@ -128,6 +128,12 @@ enum Reason {
     NUM_TELEMETRY_REASONS = 100
 };
 
+/**
+ * Get a statically allocated C string explaining the given GC reason.
+ */
+extern JS_PUBLIC_API(const char*)
+ExplainReason(JS::gcreason::Reason reason);
+
 } /* namespace gcreason */
 
 /*

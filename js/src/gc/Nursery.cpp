@@ -600,7 +600,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
         }
 
 #define FMT " %6" PRIu64
-        fprintf(stderr, "MinorGC: %20s %5.1f%% %4d " FMT, js::gcstats::ExplainReason(reason),
+        fprintf(stderr, "MinorGC: %20s %5.1f%% %4d " FMT, JS::gcreason::ExplainReason(reason),
                 promotionRate * 100, numActiveChunks_, totalTime);
         for (auto &entry : PrintList) {
             fprintf(stderr, FMT, entry.time);
