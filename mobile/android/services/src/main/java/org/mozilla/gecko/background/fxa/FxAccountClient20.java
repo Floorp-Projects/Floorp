@@ -156,21 +156,6 @@ public class FxAccountClient20 extends FxAccountClient10 implements FxAccountCli
     post(resource, body, delegate);
   }
 
-  @Override
-  public void createAccountAndGetKeys(byte[] emailUTF8, PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> delegate) {
-    try {
-      byte[] quickStretchedPW = passwordStretcher.getQuickStretchedPW(emailUTF8);
-      createAccount(emailUTF8, quickStretchedPW, true, false, queryParameters, delegate);
-    } catch (Exception e) {
-      invokeHandleError(delegate, e);
-    }
-  }
-
-  @Override
-  public void loginAndGetKeys(byte[] emailUTF8, PasswordStretcher passwordStretcher, final Map<String, String> queryParameters, RequestDelegate<LoginResponse> delegate) {
-    login(emailUTF8, passwordStretcher, true, queryParameters, delegate);
-  }
-
   /**
    * We want users to be able to enter their email address case-insensitively.
    * We stretch the password locally using the email address as a salt, to make
