@@ -103,14 +103,14 @@ typedef UniquePtr<StaticLinkData> UniqueStaticLinkData;
 
 class Export
 {
-    MallocSig sig_;
+    Sig sig_;
     struct CacheablePod {
         uint32_t stubOffset_;
     } pod;
 
   public:
     Export() = default;
-    explicit Export(MallocSig&& sig)
+    explicit Export(Sig&& sig)
       : sig_(Move(sig))
     {
         pod.stubOffset_ = UINT32_MAX;
@@ -128,7 +128,7 @@ class Export
     uint32_t stubOffset() const {
         return pod.stubOffset_;
     }
-    const MallocSig& sig() const {
+    const Sig& sig() const {
         return sig_;
     }
 
@@ -143,7 +143,7 @@ typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
 
 class Import
 {
-    MallocSig sig_;
+    Sig sig_;
     struct CacheablePod {
         uint32_t exitGlobalDataOffset_;
         uint32_t interpExitCodeOffset_;
@@ -153,7 +153,7 @@ class Import
   public:
     Import() {}
     Import(Import&& rhs) : sig_(Move(rhs.sig_)), pod(rhs.pod) {}
-    Import(MallocSig&& sig, uint32_t exitGlobalDataOffset)
+    Import(Sig&& sig, uint32_t exitGlobalDataOffset)
       : sig_(Move(sig))
     {
         pod.exitGlobalDataOffset_ = exitGlobalDataOffset;
@@ -170,7 +170,7 @@ class Import
         pod.jitExitCodeOffset_ = off;
     }
 
-    const MallocSig& sig() const {
+    const Sig& sig() const {
         return sig_;
     }
     uint32_t exitGlobalDataOffset() const {

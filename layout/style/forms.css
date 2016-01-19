@@ -683,10 +683,12 @@ input[type="color"]:-moz-system-metric(color-picker-available):active:hover,
 input[type="reset"]:active:hover,
 input[type="button"]:active:hover,
 input[type="submit"]:active:hover {
+%ifndef XP_MACOSX
   padding-block-start: 0px;
   -moz-padding-end: 5px;
   padding-block-end: 0px;
   -moz-padding-start: 7px;
+%endif
   border-style: inset;
   background-color: ButtonFace;
 }

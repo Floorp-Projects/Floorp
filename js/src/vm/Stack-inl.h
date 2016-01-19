@@ -44,7 +44,7 @@ IsCacheableNonGlobalScope(JSObject* obj)
 inline HandleObject
 InterpreterFrame::scopeChain() const
 {
-    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isNonEvalFunctionFrame());
+    MOZ_ASSERT_IF(!(flags_ & HAS_SCOPECHAIN), isFunctionFrame());
     if (!(flags_ & HAS_SCOPECHAIN)) {
         scopeChain_ = callee().environment();
         flags_ |= HAS_SCOPECHAIN;
@@ -82,7 +82,7 @@ InterpreterFrame::initCallFrame(JSContext* cx, InterpreterFrame* prev, jsbytecod
     MOZ_ASSERT(callee.nonLazyScript() == script);
 
     /* Initialize stack frame members. */
-    flags_ = FUNCTION | HAS_SCOPECHAIN | flagsArg;
+    flags_ = HAS_SCOPECHAIN | flagsArg;
     argv_ = argv;
     script_ = script;
     nactual_ = nactual;
@@ -564,25 +564,23 @@ AbstractFramePtr::createSingleton() const
 }
 
 inline bool
-AbstractFramePtr::isGlobalOrModuleFrame() const
-{
-    if (isInterpreterFrame())
-        return asInterpreterFrame()->isGlobalOrModuleFrame();
-    if (isBaselineFrame())
-        return asBaselineFrame()->isGlobalOrModuleFrame();
-    return asRematerializedFrame()->isGlobalOrModuleFrame();
-}
-
-inline bool
 AbstractFramePtr::isGlobalFrame() const
 {
-    return isGlobalOrModuleFrame() && !script()->module();
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isGlobalFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isGlobalFrame();
+    return asRematerializedFrame()->isGlobalFrame();
 }
 
 inline bool
 AbstractFramePtr::isModuleFrame() const
 {
-    return isGlobalOrModuleFrame() && script()->module();
+    if (isInterpreterFrame())
+        return asInterpreterFrame()->isModuleFrame();
+    if (isBaselineFrame())
+        return asBaselineFrame()->isModuleFrame();
+    return asRematerializedFrame()->isModuleFrame();
 }
 
 inline bool
@@ -662,7 +660,7 @@ AbstractFramePtr::unsetIsDebuggee()
 
 inline bool
 AbstractFramePtr::hasArgs() const {
-    return isNonEvalFunctionFrame();
+    return isFunctionFrame();
 }
 
 inline JSScript*
@@ -696,13 +694,13 @@ AbstractFramePtr::calleev() const
 }
 
 inline bool
-AbstractFramePtr::isNonEvalFunctionFrame() const
+AbstractFramePtr::isFunctionFrame() const
 {
     if (isInterpreterFrame())
-        return asInterpreterFrame()->isNonEvalFunctionFrame();
+        return asInterpreterFrame()->isFunctionFrame();
     if (isBaselineFrame())
-        return asBaselineFrame()->isNonEvalFunctionFrame();
-    return asRematerializedFrame()->isNonEvalFunctionFrame();
+        return asBaselineFrame()->isFunctionFrame();
+    return asRematerializedFrame()->isFunctionFrame();
 }
 
 inline bool

@@ -32,6 +32,10 @@ if (window.opener) {
     opener.todo_isnot(a, b, testName + ": " + msg);
   };
 
+  window.info = function(msg) {
+    opener.info(testName + ": " + msg);
+  };
+
   // Override bits of SimpleTest so test files work stand-alone
   var SimpleTest = SimpleTest || {};
 
