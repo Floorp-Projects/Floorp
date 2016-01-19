@@ -757,9 +757,8 @@ void
 nsBaseWidget::ArrayFromRegion(const LayoutDeviceIntRegion& aRegion,
                               nsTArray<LayoutDeviceIntRect>& aRects)
 {
-  const LayoutDeviceIntRect* r;
-  for (LayoutDeviceIntRegion::OldRectIterator iter(aRegion); (r = iter.Next()); ) {
-    aRects.AppendElement(*r);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    aRects.AppendElement(iter.Get());
   }
 }
 

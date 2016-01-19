@@ -142,12 +142,12 @@ nsShmImage::Put(Display* aDisplay, Drawable aWindow,
     LayoutDeviceIntRegion bounded;
     bounded.And(aRegion,
                 LayoutDeviceIntRect(0, 0, mImage->width, mImage->height));
-    LayoutDeviceIntRegion::OldRectIterator iter(bounded);
-    for (const LayoutDeviceIntRect *r = iter.Next(); r; r = iter.Next()) {
+    for (auto iter = bounded.RectIter(); !iter.Done(); iter.Next()) {
+        const LayoutDeviceIntRect& r = iter.Get();
         XShmPutImage(aDisplay, aWindow, gc, mImage,
-                     r->x, r->y,
-                     r->x, r->y,
-                     r->width, r->height,
+                     r.x, r.y,
+                     r.x, r.y,
+                     r.width, r.height,
                      False);
     }
 
