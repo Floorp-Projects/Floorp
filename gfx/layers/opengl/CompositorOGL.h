@@ -34,6 +34,10 @@
 #include "nscore.h"                     // for NS_IMETHOD
 #include "gfxVR.h"
 
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+#include "nsTHashtable.h"               // for nsTHashtable
+#endif
+
 class nsIWidget;
 
 namespace mozilla {
@@ -48,6 +52,11 @@ class TextureSource;
 struct Effect;
 struct EffectChain;
 class GLBlitTextureImageHelper;
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+class ImageHostOverlay;
+#endif
+
 /**
  * Interface for pools of temporary gl textures for the compositor.
  * The textures are fully owned by the pool, so the latter is responsible
@@ -207,6 +216,11 @@ public:
                                mFBOTextureTarget == LOCAL_GL_TEXTURE_2D,
                                SupportsPartialTextureUpdate());
     result.mSupportedBlendModes += gfx::CompositionOp::OP_SOURCE;
+    for (uint8_t op = 0; op < uint8_t(gfx::CompositionOp::OP_COUNT); op++) {
+      if (BlendOpIsMixBlendMode(gfx::CompositionOp(op))) {
+        result.mSupportedBlendModes += gfx::CompositionOp(op);
+      }
+    }
     return result;
   }
 
@@ -267,6 +281,29 @@ public:
   virtual bool Resume() override;
 
   virtual nsIWidget* GetWidget() const override { return mWidget; }
+
+  virtual bool HasImageHostOverlays() override
+  {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+    return mImageHostOverlays.Count() > 0;
+#else
+    return false;
+#endif
+  }
+
+  virtual void AddImageHostOverlay(ImageHostOverlay* aOverlay) override
+  {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+    mImageHostOverlays.PutEntry(aOverlay);
+#endif
+  }
+
+  virtual void RemoveImageHostOverlay(ImageHostOverlay* aOverlay) override
+  {
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+    mImageHostOverlays.RemoveEntry(aOverlay);
+#endif
+  }
 
   GLContext* gl() const { return mGLContext; }
   /**
@@ -390,6 +427,7 @@ private:
   void CreateFBOWithTexture(const gfx::IntRect& aRect, bool aCopyFromSource,
                             GLuint aSourceFrameBuffer,
                             GLuint *aFBO, GLuint *aTexture);
+  GLuint CreateTexture(const gfx::IntRect& aRect, bool aCopyFromSource, GLuint aSourceFrameBuffer);
 
   void BindAndDrawQuads(ShaderProgramOGL *aProg,
                         int aQuads,
@@ -412,6 +450,12 @@ private:
                                    const gfx::Point& aPoint2);
   void ActivateProgram(ShaderProgramOGL *aProg);
   void CleanupResources();
+
+  /**
+   * Bind the texture behind the current render target as the backdrop for a
+   * mix-blend shader.
+   */
+  void BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum aTexUnit);
 
   /**
    * Copies the content of our backbuffer to the set transaction target.
@@ -444,9 +488,12 @@ private:
 
   ShaderProgramOGL *mCurrentProgram;
 
-  gfx::Rect mRenderBound;
-
   CompositorOGLVRObjects mVR;
+
+#if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 21
+  nsTHashtable<nsPtrHashKey<ImageHostOverlay> > mImageHostOverlays;
+#endif
+
 };
 
 } // namespace layers

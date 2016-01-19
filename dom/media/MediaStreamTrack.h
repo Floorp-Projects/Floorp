@@ -29,7 +29,7 @@ public:
    * aTrackID is the MediaStreamGraph track ID for the track in the
    * MediaStream owned by aStream.
    */
-  MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID);
+  MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(MediaStreamTrack,
@@ -54,7 +54,7 @@ public:
   // WebIDL
   virtual void GetKind(nsAString& aKind) = 0;
   void GetId(nsAString& aID) const;
-  void GetLabel(nsAString& aLabel) { aLabel.Truncate(); }
+  void GetLabel(nsAString& aLabel) { aLabel.Assign(mLabel); }
   bool Enabled() { return mEnabled; }
   void SetEnabled(bool aEnabled);
   void Stop();
@@ -75,6 +75,7 @@ protected:
   RefPtr<DOMMediaStream> mOwningStream;
   TrackID mTrackID;
   nsString mID;
+  nsString mLabel;
   bool mEnded;
   bool mEnabled;
 };

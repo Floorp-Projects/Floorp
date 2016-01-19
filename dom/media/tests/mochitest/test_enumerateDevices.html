@@ -32,15 +32,25 @@ runTest(() =>
   .then(() => navigator.mediaDevices.enumerateDevices())
   .then(devices => {
     ok(devices.length > 0, "At least one device found");
-    devices.forEach(d => {
+    var jsoned = JSON.parse(JSON.stringify(devices));
+    is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
+    is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
+    return devices.reduce((p, d) => {
       ok(d.kind == "videoinput" || d.kind == "audioinput", "Known device kind");
       is(d.deviceId.length, 44, "Correct device id length");
       ok(d.label.length !== undefined, "Device label: " + d.label);
       is(d.groupId, "", "Don't support groupId yet");
-    });
-    var jsoned = JSON.parse(JSON.stringify(devices));
-    is(jsoned[0].kind, devices[0].kind, "kind survived serializer");
-    is(jsoned[0].deviceId, devices[0].deviceId, "deviceId survived serializer");
+      var c = {};
+      c[d.kind == "videoinput" ? "video" : "audio"] = { deviceId: d.deviceId };
+      return p
+        .then(() => navigator.mediaDevices.getUserMedia(c))
+        .then(stream => {
+          stream.getTracks().forEach(track => {
+            is(typeof(track.label), "string", "Label is a string")
+            is(track.label, d.label, "Label is the device label")
+          })
+        });
+    }, Promise.resolve());
   })
   // Check deviceId failure paths for video.
   .then(() => mustSucceed("unknown plain deviceId on video",

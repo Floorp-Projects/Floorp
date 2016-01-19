@@ -43,7 +43,7 @@ fuzzy(64,37) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-9520
 pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.html mix-blend-mode-and-filter-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) pref(layout.css.filters.enabled,true) == mix-blend-mode-and-filter.svg mix-blend-mode-and-filter-ref.svg
 
-pref(layout.css.mix-blend-mode.enabled,true) fuzzy-if(d2d,1,14400) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
+fuzzy(1,14400) pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-child-of-blended-has-opacity.html mix-blend-mode-child-of-blended-has-opacity-ref.html
 
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-nested-976533.html mix-blend-mode-nested-976533-ref.html
 pref(layout.css.mix-blend-mode.enabled,true) == mix-blend-mode-culling-1207041.html mix-blend-mode-culling-1207041-ref.html
@@ -86,9 +86,11 @@ pref(layout.css.background-blend-mode.enabled,true) == background-blending-backg
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-background-attachement-fixed-scroll.html background-blending-background-attachement-fixed-scroll-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-image.html background-blend-mode-body-image-ref.html
-fuzzy-if(Android,4,768) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
+fuzzy-if(Android,4,768) fuzzy-if(gtkWidget,1,132) pref(layout.css.background-blend-mode.enabled,true) == background-blend-mode-body-transparent-image.html background-blend-mode-body-transparent-image-ref.html
 
 pref(layout.css.background-blend-mode.enabled,true) == background-blending-moz-element.html background-blending-moz-element-ref.html
+
+fuzzy(1,40000) pref(layout.css.background-blend-mode.enabled,true) == mix-blend-mode-soft-light.html mix-blend-mode-soft-light-ref.html
 
 # Test plan 4.4.2 element with isolation:isolate creates an isolated group for blended children
 pref(layout.css.isolation.enabled,true) == blend-isolation.html blend-isolation-ref.html

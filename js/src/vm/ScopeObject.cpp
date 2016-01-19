@@ -251,7 +251,7 @@ CallObject::createForFunction(JSContext* cx, HandleObject enclosing, HandleFunct
 CallObject*
 CallObject::createForFunction(JSContext* cx, AbstractFramePtr frame)
 {
-    MOZ_ASSERT(frame.isNonEvalFunctionFrame());
+    MOZ_ASSERT(frame.isFunctionFrame());
     assertSameCompartment(cx, frame);
 
     RootedObject scopeChain(cx, frame.scopeChain());
@@ -1411,7 +1411,7 @@ ScopeIter::settle()
 {
     // Check for trying to iterate a function frame before the prologue has
     // created the CallObject, in which case we have to skip.
-    if (frame_ && frame_.isNonEvalFunctionFrame() && frame_.callee()->needsCallObject() &&
+    if (frame_ && frame_.isFunctionFrame() && frame_.callee()->needsCallObject() &&
         !frame_.hasCallObj())
     {
         MOZ_ASSERT(ssi_.type() == StaticScopeIter<CanGC>::Function);
@@ -2722,7 +2722,7 @@ DebugScopes::updateLiveScopes(JSContext* cx)
         if (frame.scopeChain()->compartment() != cx->compartment())
             continue;
 
-        if (frame.isNonEvalFunctionFrame() && frame.callee()->isGenerator())
+        if (frame.isFunctionFrame() && frame.callee()->isGenerator())
             continue;
 
         if (!frame.isDebuggee())
@@ -2907,7 +2907,7 @@ GetDebugScopeForMissing(JSContext* cx, const ScopeIter& si)
         // For example, |let ({} = "") { yield evalInFrame("foo"); }|.
         MOZ_ASSERT_IF(si.staticBlock().numVariables() > 0 &&
                       si.withinInitialFrame() &&
-                      si.initialFrame().isNonEvalFunctionFrame(),
+                      si.initialFrame().isFunctionFrame(),
                       !si.initialFrame().callee()->isGenerator());
 
         Rooted<StaticBlockObject*> staticBlock(cx, &si.staticBlock());

@@ -383,7 +383,9 @@ public:
   template<typename T>
   Log &operator<<(Hexa<T> aHex) {
     if (MOZ_UNLIKELY(LogIt())) {
-      mMessage << "0x" << std::hex << aHex.mVal << std::dec;
+      mMessage << std::showbase << std::hex
+               << aHex.mVal
+               << std::noshowbase << std::dec;
     }
     return *this;
   }

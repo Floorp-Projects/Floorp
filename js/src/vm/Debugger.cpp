@@ -6291,7 +6291,7 @@ DebuggerFrame_getType(JSContext* cx, unsigned argc, Value* vp)
         type = cx->names().eval;
     else if (frame.isGlobalFrame())
         type = cx->names().global;
-    else if (frame.isNonEvalFunctionFrame())
+    else if (frame.isFunctionFrame())
         type = cx->names().call;
     else if (frame.isModuleFrame())
         type = cx->names().module;
@@ -6343,7 +6343,7 @@ static bool
 DebuggerFrame_getCallee(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_FRAME(cx, argc, vp, "get callee", args, thisobj, frame);
-    RootedValue calleev(cx, frame.isNonEvalFunctionFrame() ? frame.calleev() : NullValue());
+    RootedValue calleev(cx, frame.isFunctionFrame() ? frame.calleev() : NullValue());
     if (!Debugger::fromChildJSObject(thisobj)->wrapDebuggeeValue(cx, &calleev))
         return false;
     args.rval().set(calleev);
@@ -6362,7 +6362,7 @@ static bool
 DebuggerFrame_getConstructing(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_FRAME_ITER(cx, argc, vp, "get constructing", args, thisobj, _, iter);
-    args.rval().setBoolean(iter.isNonEvalFunctionFrame() && iter.isConstructing());
+    args.rval().setBoolean(iter.isFunctionFrame() && iter.isConstructing());
     return true;
 }
 
@@ -6532,7 +6532,7 @@ DebuggerFrame_getScript(JSContext* cx, unsigned argc, Value* vp)
     Debugger* debug = Debugger::fromChildJSObject(thisobj);
 
     RootedObject scriptObject(cx);
-    if (frame.isNonEvalFunctionFrame()) {
+    if (frame.isFunctionFrame()) {
         RootedFunction callee(cx, frame.callee());
         if (callee->isInterpreted()) {
             RootedScript script(cx, callee->nonLazyScript());

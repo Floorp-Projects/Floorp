@@ -3598,7 +3598,7 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
         else
             fprintf(stderr, "InterpreterFrame at %p\n", (void*) i.interpFrame());
 
-        if (i.isNonEvalFunctionFrame()) {
+        if (i.isFunctionFrame()) {
             fprintf(stderr, "callee fun: ");
             RootedValue v(cx);
             JSObject* fun = i.callee(cx);
@@ -3617,7 +3617,7 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
             fprintf(stderr, "  current op: %s\n", CodeName[*pc]);
             MaybeDumpObject("staticScope", i.script()->getStaticBlockScope(pc));
         }
-        if (i.isNonEvalFunctionFrame())
+        if (i.isFunctionFrame())
             MaybeDumpValue("this", i.thisArgument(cx));
         if (!i.isJit()) {
             fprintf(stderr, "  rval: ");
