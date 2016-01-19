@@ -8990,6 +8990,13 @@
     "kind": "boolean",
     "description": "Has the tab queue functionality been enabled."
   },
+  "FENNEC_CUSTOM_HOMEPAGE": {
+    "expires_in_version": "50",
+    "alert_emails": ["mobile-frontend@mozilla.com"],
+    "bug_numbers": [1239102],
+    "kind": "boolean",
+    "description": "Whether the user has set a custom homepage."
+  },
   "GRAPHICS_DRIVER_STARTUP_TEST": {
     "alert_emails": ["danderson@mozilla.com"],
     "expires_in_version": "never",

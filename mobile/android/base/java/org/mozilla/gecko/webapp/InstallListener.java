@@ -10,7 +10,6 @@ import java.io.IOException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.GeckoThread;
 
 import android.content.BroadcastReceiver;
@@ -32,8 +31,12 @@ public class InstallListener extends BroadcastReceiver {
         mData = data;
         mApkFile = apkFile;
         mManifestUrl = manifestUrl;
-        Assert.isNotNull(mManifestUrl);
-        Assert.isTrue(mApkFile != null && mApkFile.exists());
+        if (mManifestUrl == null) {
+            throw new IllegalArgumentException("manifestUrl must not be null");
+        }
+        if (mApkFile == null || mApkFile.exists()) {
+            throw new IllegalArgumentException("apkFile must not be null and must exist");
+        }
     }
 
     public boolean isReceived() {

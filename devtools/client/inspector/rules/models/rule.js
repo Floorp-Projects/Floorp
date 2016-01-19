@@ -26,7 +26,10 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
 });
 
 /**
- * A single style rule or declaration.
+ * Rule is responsible for the following:
+ *   Manages a single style declaration or rule.
+ *   Applies changes to the properties in a rule.
+ *   Maintains a list of TextProperty objects.
  *
  * @param {ElementStyle} elementStyle
  *        The ElementStyle to which this rule belongs.

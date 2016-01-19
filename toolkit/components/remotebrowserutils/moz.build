@@ -4,13 +4,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'models',
-    'views',
+EXTRA_COMPONENTS += [
+    'remotebrowserutils.manifest',
+    'RemoteWebNavigation.js',
 ]
 
-DevToolsModules(
-    'rules.js',
-)
-
-BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
+BROWSER_CHROME_MANIFESTS += ['tests/browser/browser.ini']
