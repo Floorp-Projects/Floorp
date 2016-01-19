@@ -45,6 +45,7 @@ DIRS += [
     'prompts',
     'protobuf',
     'reader',
+    'remotebrowserutils',
     'reflect',
     'sqlite',
     'startup',
