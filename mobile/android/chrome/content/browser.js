@@ -115,6 +115,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/Re
 
 XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "FontEnumerator",
   "@mozilla.org/gfx/fontenumerator;1",
   "nsIFontEnumerator");
@@ -1420,28 +1422,34 @@ var BrowserApp = {
   },
 
   saveAsPDF: function saveAsPDF(aBrowser) {
-    Task.spawn(function* () {
-      let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.currentURI, null, null);
-      fileName = fileName.trim() + ".pdf";
+    RuntimePermissions.waitForPermissions(RuntimePermissions.WRITE_EXTERNAL_STORAGE).then(function(permissionGranted) {
+      if (!permissionGranted) {
+        return;
+      }
 
-      let downloadsDir = yield Downloads.getPreferredDownloadsDirectory();
-      let file = OS.Path.join(downloadsDir, fileName);
+      Task.spawn(function* () {
+        let fileName = ContentAreaUtils.getDefaultFileName(aBrowser.contentTitle, aBrowser.currentURI, null, null);
+        fileName = fileName.trim() + ".pdf";
 
-      // Force this to have a unique name.
-      let openedFile = yield OS.File.openUnique(file, { humanReadable: true });
-      file = openedFile.path;
-      yield openedFile.file.close();
+        let downloadsDir = yield Downloads.getPreferredDownloadsDirectory();
+        let file = OS.Path.join(downloadsDir, fileName);
 
-      let download = yield Downloads.createDownload({
-        source: aBrowser.contentWindow,
-        target: file,
-        saver: "pdf",
-        startTime: Date.now(),
+        // Force this to have a unique name.
+        let openedFile = yield OS.File.openUnique(file, { humanReadable: true });
+        file = openedFile.path;
+        yield openedFile.file.close();
+
+        let download = yield Downloads.createDownload({
+          source: aBrowser.contentWindow,
+          target: file,
+          saver: "pdf",
+          startTime: Date.now(),
+        });
+
+        let list = yield Downloads.getList(download.source.isPrivate ? Downloads.PRIVATE : Downloads.PUBLIC)
+        yield list.add(download);
+        yield download.start();
       });
-
-      let list = yield Downloads.getList(download.source.isPrivate ? Downloads.PRIVATE : Downloads.PUBLIC)
-      yield list.add(download);
-      yield download.start();
     });
   },
 
