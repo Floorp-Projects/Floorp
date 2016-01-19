@@ -1451,9 +1451,9 @@ TreatAsOpaque(nsDisplayItem* aItem, nsDisplayListBuilder* aBuilder)
     return opaque;
   }
   nsRegion opaqueClipped;
-  nsRegionRectIterator iter(opaque);
-  for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-    opaqueClipped.Or(opaqueClipped, aItem->GetClip().ApproximateIntersectInward(*r));
+  for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
+    opaqueClipped.Or(opaqueClipped,
+                     aItem->GetClip().ApproximateIntersectInward(iter.Get()));
   }
   return opaqueClipped;
 }
@@ -3636,24 +3636,25 @@ ComputeDisjointRectangles(const nsRegion& aRegion,
                           nsTArray<nsRect>* aRects) {
   nscoord accumulationMargin = nsPresContext::CSSPixelsToAppUnits(25);
   nsRect accumulated;
-  nsRegionRectIterator iter(aRegion);
-  while (true) {
-    const nsRect* r = iter.Next();
-    if (r && !accumulated.IsEmpty() &&
-        accumulated.YMost() >= r->y - accumulationMargin) {
-      accumulated.UnionRect(accumulated, *r);
+
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& r = iter.Get();
+    if (accumulated.IsEmpty()) {
+      accumulated = r;
       continue;
     }
 
-    if (!accumulated.IsEmpty()) {
+    if (accumulated.YMost() >= r.y - accumulationMargin) {
+      accumulated.UnionRect(accumulated, r);
+    } else {
       aRects->AppendElement(accumulated);
-      accumulated.SetEmpty();
+      accumulated = r;
     }
+  }
 
-    if (!r)
-      break;
-
-    accumulated = *r;
+  // Finish the in-flight rectangle, if there is one.
+  if (!accumulated.IsEmpty()) {
+    aRects->AppendElement(accumulated);
   }
 }
 
