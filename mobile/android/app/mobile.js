@@ -33,11 +33,7 @@ pref("browser.tabs.expireTime", 900);
 
 // Control whether tab content should try to load from disk cache when network
 // is offline.
-#ifdef NIGHTLY_BUILD
 pref("browser.tabs.useCache", true);
-#else
-pref("browser.tabs.useCache", false);
-#endif
 
 // From libpref/src/init/all.js, extended to allow a slightly wider zoom range.
 pref("zoom.minPercent", 20);

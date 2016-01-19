@@ -16,7 +16,6 @@ import java.util.Set;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.util.ThreadUtils;
@@ -109,7 +108,6 @@ public class LocalURLMetadata implements URLMetadata {
             }
         } catch (JSONException e) {
             Log.w(LOGTAG, "Exception processing touchIconList for LocalURLMetadata; ignoring.", e);
-            Assert.isTrue(false);
         }
 
         return Collections.unmodifiableMap(data);

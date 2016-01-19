@@ -485,7 +485,7 @@ public class BrowserSearch extends HomeFragment
     LinkedHashSet<String> domains = null;
     private LinkedHashSet<String> getDomains() {
         if (domains == null) {
-            domains = new LinkedHashSet<String>();
+            domains = new LinkedHashSet<String>(500);
             BufferedReader buf = null;
             try {
                 buf = new BufferedReader(new InputStreamReader(getResources().openRawResource(R.raw.topdomains)));
@@ -511,10 +511,6 @@ public class BrowserSearch extends HomeFragment
     }
 
     private String searchDomains(String search) {
-        if (AppConstants.NIGHTLY_BUILD == false) {
-            return null;
-        }
-
         for (String domain : getDomains()) {
             if (domain.startsWith(search)) {
                 return domain;

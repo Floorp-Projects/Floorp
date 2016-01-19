@@ -16,17 +16,13 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
 });
 
 /**
- * TextProperty:
+ * TextProperty is responsible for the following:
  *   Manages a single property from the authoredText attribute of the
  *     relevant declaration.
  *   Maintains a list of computed properties that come from this
  *     property declaration.
  *   Changes to the TextProperty are sent to its related Rule for
  *     application.
- */
-
-/**
- * A single property in a rule's authoredText.
  *
  * @param {Rule} rule
  *        The rule this TextProperty came from.

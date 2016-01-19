@@ -8,7 +8,6 @@ package org.mozilla.gecko.overlays.ui;
 import java.net.URISyntaxException;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.R;
@@ -369,7 +368,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
     @Override
     public void onSendTabActionSelected() {
         // This requires an override intent.
-        Assert.isTrue(sendTabOverrideIntent != null);
+        if (sendTabOverrideIntent == null) {
+            throw new IllegalStateException("sendTabOverrideIntent must not be null");
+        }
 
         startActivity(sendTabOverrideIntent);
         finish();
@@ -378,7 +379,9 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
     @Override
     public void onSendTabTargetSelected(String targetGUID) {
         // targetGUID being null with no override intent should be an impossible state.
-        Assert.isTrue(targetGUID != null);
+        if (targetGUID == null) {
+            throw new IllegalStateException("targetGUID must not be null");
+        }
 
         Intent serviceIntent = getServiceIntent(ShareMethod.Type.SEND_TAB);
 
