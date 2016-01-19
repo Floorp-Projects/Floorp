@@ -21,6 +21,7 @@ function run_test() {
       ok(request, 'each request in list should be non-null');
       ok(request.redirect === 'follow', 'request.redirect should default to "follow"');
       ok(request.cache === 'default', 'request.cache should have been updated to "default"' + request.cache);
+      ok(request.mode === 'navigate', 'request.mode should have been updated to "navigate"');
     });
     return Promise.all(requestList.map(function(request) {
       return cache.match(request);
