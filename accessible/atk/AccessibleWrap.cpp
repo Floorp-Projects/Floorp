@@ -1064,13 +1064,13 @@ GetAccessibleWrap(AtkObject* aAtkObj)
   NS_ENSURE_TRUE(isMAIObject || MAI_IS_ATK_SOCKET(aAtkObj),
                  nullptr);
 
-  uintptr_t accWrapPtr = isMAIObject ?
-    MAI_ATK_OBJECT(aAtkObj)->accWrap.Bits() :
-    reinterpret_cast<uintptr_t>(MAI_ATK_SOCKET(aAtkObj)->accWrap);
-  if (accWrapPtr & IS_PROXY)
-    return nullptr;
-
-  AccessibleWrap* accWrap = reinterpret_cast<AccessibleWrap*>(accWrapPtr);
+  AccessibleWrap* accWrap = nullptr;
+  if (isMAIObject) {
+    Accessible* acc = MAI_ATK_OBJECT(aAtkObj)->accWrap.AsAccessible();
+    accWrap = static_cast<AccessibleWrap*>(acc);
+  } else {
+    accWrap = MAI_ATK_SOCKET(aAtkObj)->accWrap;
+  }
 
   // Check if the accessible was deconstructed.
   if (!accWrap)
