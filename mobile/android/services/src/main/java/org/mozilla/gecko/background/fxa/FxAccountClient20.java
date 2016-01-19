@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko.background.fxa;
 
-import org.json.simple.JSONObject;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.fxa.FxAccountClientException
         .FxAccountClientMalformedResponseException;
@@ -286,16 +285,11 @@ public class FxAccountClient20 implements FxAccountClient {
     }
   }
 
-  protected <T> void post(BaseResource resource, final JSONObject requestBody, final RequestDelegate<T> delegate) {
-    try {
-      if (requestBody == null) {
-        resource.post((HttpEntity) null);
-      } else {
-        resource.post(requestBody);
-      }
-    } catch (UnsupportedEncodingException e) {
-      invokeHandleError(delegate, e);
-      return;
+  protected <T> void post(BaseResource resource, final ExtendedJSONObject requestBody, final RequestDelegate<T> delegate) {
+    if (requestBody == null) {
+      resource.post((HttpEntity) null);
+    } else {
+      resource.post(requestBody);
     }
   }
 
@@ -502,7 +496,7 @@ public class FxAccountClient20 implements FxAccountClient {
 
   @SuppressWarnings("unchecked")
   public void sign(final byte[] sessionToken, final ExtendedJSONObject publicKey, long durationInMilliseconds, final RequestDelegate<String> delegate) {
-    final JSONObject body = new JSONObject();
+    final ExtendedJSONObject body = new ExtendedJSONObject();
     body.put("publicKey", publicKey);
     body.put("duration", durationInMilliseconds);
 
@@ -569,7 +563,7 @@ public class FxAccountClient20 implements FxAccountClient {
                     final Map<String, String> queryParameters,
                     final RequestDelegate<LoginResponse> delegate) {
     final BaseResource resource;
-    final JSONObject body;
+    final ExtendedJSONObject body;
     try {
       final String path = "account/login";
       final Map<String, String> modifiedParameters = new HashMap<>();
@@ -623,7 +617,7 @@ public class FxAccountClient20 implements FxAccountClient {
                             final Map<String, String> queryParameters,
                             final RequestDelegate<LoginResponse> delegate) {
     final BaseResource resource;
-    final JSONObject body;
+    final ExtendedJSONObject body;
     try {
       final String path = "account/create";
       final Map<String, String> modifiedParameters = new HashMap<>();
