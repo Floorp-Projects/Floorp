@@ -542,6 +542,12 @@ Promise::MaybeReject(const RefPtr<MediaStreamError>& aArg) {
   MaybeSomething(aArg, &Promise::MaybeReject);
 }
 
+void
+Promise::MaybeRejectWithNull()
+{
+  MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
+}
+
 bool
 Promise::PerformMicroTaskCheckpoint()
 {
