@@ -3263,6 +3263,39 @@ public:
 
 };
 
+class Distribution : public mozilla::jni::Class<Distribution>
+{
+public:
+    typedef mozilla::jni::Ref<Distribution> Ref;
+    typedef mozilla::jni::LocalRef<Distribution> LocalRef;
+    typedef mozilla::jni::GlobalRef<Distribution> GlobalRef;
+    typedef const mozilla::jni::Param<Distribution>& Param;
+
+    static constexpr char name[] =
+            "org/mozilla/gecko/distribution/Distribution";
+
+protected:
+    Distribution(jobject instance) : Class(instance) {}
+
+public:
+    struct GetDistributionDirectories_t {
+        typedef Distribution Owner;
+        typedef mozilla::jni::ObjectArray::LocalRef ReturnType;
+        typedef mozilla::jni::ObjectArray::Param SetterType;
+        typedef mozilla::jni::Args<> Args;
+        static constexpr char name[] = "getDistributionDirectories";
+        static constexpr char signature[] =
+                "()[Ljava/lang/String;";
+        static const bool isStatic = true;
+        static const bool isMultithreaded = false;
+        static const mozilla::jni::ExceptionMode exceptionMode =
+                mozilla::jni::ExceptionMode::ABORT;
+    };
+
+    static auto GetDistributionDirectories() -> mozilla::jni::ObjectArray::LocalRef;
+
+};
+
 class DisplayPortMetrics : public mozilla::jni::Class<DisplayPortMetrics>
 {
 public:

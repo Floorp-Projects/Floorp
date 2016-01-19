@@ -325,6 +325,15 @@ GetDevicePixelRatio(nsPresContext* aPresContext, const nsMediaFeature*,
 }
 
 static nsresult
+GetTransform3d(nsPresContext* aPresContext, const nsMediaFeature*,
+               nsCSSValue& aResult)
+{
+  // Gecko supports 3d transforms, so this feature is always 1.
+  aResult.SetIntValue(1, eCSSUnit_Integer);
+  return NS_OK;
+}
+
+static nsresult
 GetSystemMetric(nsPresContext* aPresContext, const nsMediaFeature* aFeature,
                 nsCSSValue& aResult)
 {
@@ -523,14 +532,24 @@ nsMediaFeatures::features[] = {
   },
 
   // Webkit extensions that we support for de-facto web compatibility
-  // -webkit-{min|max}-device-pixel-ratio:
+  // -webkit-{min|max}-device-pixel-ratio (controlled with its own pref):
   {
     &nsGkAtoms::devicePixelRatio,
     nsMediaFeature::eMinMaxAllowed,
     nsMediaFeature::eFloat,
-    nsMediaFeature::eHasWebkitPrefix,
+    nsMediaFeature::eHasWebkitPrefix |
+      nsMediaFeature::eWebkitDevicePixelRatioPrefEnabled,
     { nullptr },
     GetDevicePixelRatio
+  },
+  // -webkit-transform-3d:
+  {
+    &nsGkAtoms::transform_3d,
+    nsMediaFeature::eMinMaxNotAllowed,
+    nsMediaFeature::eBoolInteger,
+    nsMediaFeature::eHasWebkitPrefix,
+    { nullptr },
+    GetTransform3d
   },
 
   // Mozilla extensions

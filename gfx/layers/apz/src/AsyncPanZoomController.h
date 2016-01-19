@@ -577,27 +577,19 @@ protected:
   /**
    * Utility function to send updated FrameMetrics to Gecko so that it can paint
    * the displayport area. Calls into GeckoContentController to do the actual
-   * work. Note that only one paint request can be active at a time. If a paint
-   * request is made while a paint is currently happening, it gets queued up. If
-   * a new paint request arrives before a paint is completed, the old request
-   * gets discarded.
+   * work. This call will use the current metrics. If this function is called
+   * from a non-main thread, it will redispatch itself to the main thread, and
+   * use the latest metrics during the redispatch.
    */
   void RequestContentRepaint();
 
   /**
-   * Tell the paint throttler to request a content repaint with the given
-   * metrics.  (Helper function used by RequestContentRepaint.) If aThrottled
-   * is set to false, the repaint request is sent directly without going through
-   * the paint throttler. In particular, the GeckoContentController::RequestContentRepaint
-   * function will be invoked before this function returns.
+   * Send the provided metrics to Gecko to trigger a repaint. This function
+   * may filter duplicate calls with the same metrics. This function must be
+   * called on the main thread.
    */
-  void RequestContentRepaint(FrameMetrics& aFrameMetrics);
-
-  /**
-   * Actually send the next pending paint request to gecko.
-   */
-  void DispatchRepaintRequest(const FrameMetrics& aFrameMetrics,
-                              const ParentLayerPoint& aVelocity);
+  void RequestContentRepaint(const FrameMetrics& aFrameMetrics,
+                             const ParentLayerPoint& aVelocity);
 
   /**
    * Gets the current frame metrics. This is *not* the Gecko copy stored in the

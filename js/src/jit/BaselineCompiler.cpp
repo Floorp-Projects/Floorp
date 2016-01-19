@@ -357,13 +357,7 @@ BaselineCompiler::emitPrologue()
     // is passed in R1, so we have to be careful not to clobber it.
 
     // Initialize BaselineFrame::flags.
-    uint32_t flags = 0;
-    if (script->isForEval())
-        flags |= BaselineFrame::EVAL;
-    masm.store32(Imm32(flags), frame.addressOfFlags());
-
-    if (script->isForEval())
-        masm.storePtr(ImmGCPtr(script), frame.addressOfEvalScript());
+    masm.store32(Imm32(0), frame.addressOfFlags());
 
     // Handle scope chain pre-initialization (in case GC gets run
     // during stack check).  For global and eval scripts, the scope

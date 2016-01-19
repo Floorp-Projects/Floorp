@@ -632,13 +632,11 @@ public abstract class GeckoApp
             onStatePurged();
 
         } else if ("Share:Text".equals(event)) {
-            String text = message.getString("text");
+            final String text = message.getString("text");
             final Tab tab = Tabs.getInstance().getSelectedTab();
             String title = "";
             if (tab != null) {
                 title = tab.getDisplayTitle();
-                final String url = ReaderModeUtils.stripAboutReaderUrl(tab.getURL());
-                text += "\n\n" + url;
             }
             GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
 

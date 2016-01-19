@@ -64,7 +64,7 @@ EnsureCanEnterIon(JSContext* cx, ICWarmUpCounter_Fallback* stub, BaselineFrame* 
         MOZ_ASSERT(LoopEntryCanIonOsr(pc));
         JitSpew(JitSpew_BaselineOSR, "  Compile at loop entry!");
         stat = CanEnterAtBranch(cx, script, frame, pc);
-    } else if (frame->isNonEvalFunctionFrame()) {
+    } else if (frame->isFunctionFrame()) {
         JitSpew(JitSpew_BaselineOSR, "  Compile function from top for later entry!");
         stat = CompileFunctionForBaseline(cx, script, frame);
     } else {

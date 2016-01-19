@@ -84,7 +84,7 @@ CheckFrame(InterpreterFrame* fp)
         return false;
     }
 
-    if (fp->isNonEvalFunctionFrame() && fp->numActualArgs() > BASELINE_MAX_ARGS_LENGTH) {
+    if (fp->isFunctionFrame() && fp->numActualArgs() > BASELINE_MAX_ARGS_LENGTH) {
         // Fall back to the interpreter to avoid running out of stack space.
         JitSpew(JitSpew_BaselineAbort, "Too many arguments (%u)", fp->numActualArgs());
         return false;
@@ -201,7 +201,7 @@ jit::EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc)
     AutoValueVector vals(cx);
     RootedValue thisv(cx);
 
-    if (fp->isNonEvalFunctionFrame()) {
+    if (fp->isFunctionFrame()) {
         data.constructing = fp->isConstructing();
         data.numActualArgs = fp->numActualArgs();
         data.maxArgc = Max(fp->numActualArgs(), fp->numFormalArgs()) + 1; // +1 = include |this|

@@ -12,8 +12,8 @@
 namespace mozilla {
 namespace dom {
 
-MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID)
-  : mOwningStream(aStream), mTrackID(aTrackID), mEnded(false), mEnabled(true)
+MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID, const nsString& aLabel)
+  : mOwningStream(aStream), mTrackID(aTrackID), mLabel(aLabel), mEnded(false), mEnabled(true)
 {
 
   nsresult rv;

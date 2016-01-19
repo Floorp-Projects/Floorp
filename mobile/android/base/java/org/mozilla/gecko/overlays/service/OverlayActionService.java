@@ -11,7 +11,6 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.util.Log;
 
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.overlays.service.sharemethods.AddBookmark;
 import org.mozilla.gecko.overlays.service.sharemethods.AddToReadingList;
 import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
@@ -122,8 +121,7 @@ public class OverlayActionService extends Service {
                         Log.e(LOGTAG, "Share failed: " + result);
                         break;
                     default:
-                        Assert.fail("Unknown share method result code: " + result);
-                        break;
+                        throw new IllegalStateException("Unknown share method result code: " + result);
                 }
             }
         });

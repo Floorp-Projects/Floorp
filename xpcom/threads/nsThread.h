@@ -76,6 +76,8 @@ public:
 
   void ShutdownComplete(struct nsThreadShutdownContext* aContext);
 
+  void WaitForAllAsynchronousShutdowns();
+
 protected:
   class nsChainedEventQueue;
 
