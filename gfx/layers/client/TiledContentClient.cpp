@@ -976,9 +976,10 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
     printf_stderr("Time to draw %i: %i, %i, %i, %i\n", PR_IntervalNow() - start, bounds.x, bounds.y, bounds.width, bounds.height);
     if (aPaintRegion.IsComplex()) {
       printf_stderr("Complex region\n");
-      nsIntRegionRectIterator it(aPaintRegion);
-      for (const IntRect* rect = it.Next(); rect != nullptr; rect = it.Next()) {
-        printf_stderr(" rect %i, %i, %i, %i\n", rect->x, rect->y, rect->width, rect->height);
+      for (auto iter = aPaintRegion.RectIter(); !iter.Done(); iter.Next()) {
+        const IntRect& rect = iter.Get();
+        printf_stderr(" rect %i, %i, %i, %i\n",
+                      rect.x, rect.y, rect.width, rect.height);
       }
     }
   }
@@ -1291,12 +1292,12 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
     mTilingOrigin.x = std::min(mTilingOrigin.x, moz2DTile.mTileOrigin.x);
     mTilingOrigin.y = std::min(mTilingOrigin.y, moz2DTile.mTileOrigin.y);
 
-    nsIntRegionRectIterator it(aDirtyRegion);
-    for (const IntRect* dirtyRect = it.Next(); dirtyRect != nullptr; dirtyRect = it.Next()) {
-      gfx::Rect drawRect(dirtyRect->x - aTileOrigin.x,
-                         dirtyRect->y - aTileOrigin.y,
-                         dirtyRect->width,
-                         dirtyRect->height);
+    for (auto iter = aDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+      const IntRect& dirtyRect = iter.Get();
+      gfx::Rect drawRect(dirtyRect.x - aTileOrigin.x,
+                         dirtyRect.y - aTileOrigin.y,
+                         dirtyRect.width,
+                         dirtyRect.height);
       drawRect.Scale(mResolution);
 
       // Mark the newly updated area as invalid in the front buffer
@@ -1332,20 +1333,20 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   // XXX Perhaps we should just copy the bounding rectangle here?
   RefPtr<gfx::SourceSurface> source = mSinglePaintDrawTarget->Snapshot();
-  nsIntRegionRectIterator it(aDirtyRegion);
-  for (const IntRect* dirtyRect = it.Next(); dirtyRect != nullptr; dirtyRect = it.Next()) {
+  for (auto iter = aDirtyRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& dirtyRect = iter.Get();
 #ifdef GFX_TILEDLAYER_PREF_WARNINGS
     printf_stderr(" break into subdirtyRect %i, %i, %i, %i\n",
-                  dirtyRect->x, dirtyRect->y, dirtyRect->width, dirtyRect->height);
+                  dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
 #endif
-    gfx::Rect drawRect(dirtyRect->x - aTileOrigin.x,
-                       dirtyRect->y - aTileOrigin.y,
-                       dirtyRect->width,
-                       dirtyRect->height);
+    gfx::Rect drawRect(dirtyRect.x - aTileOrigin.x,
+                       dirtyRect.y - aTileOrigin.y,
+                       dirtyRect.width,
+                       dirtyRect.height);
     drawRect.Scale(mResolution);
 
-    gfx::IntRect copyRect(NS_lroundf((dirtyRect->x - mSinglePaintBufferOffset.x) * mResolution),
-                          NS_lroundf((dirtyRect->y - mSinglePaintBufferOffset.y) * mResolution),
+    gfx::IntRect copyRect(NS_lroundf((dirtyRect.x - mSinglePaintBufferOffset.x) * mResolution),
+                          NS_lroundf((dirtyRect.y - mSinglePaintBufferOffset.y) * mResolution),
                           drawRect.width,
                           drawRect.height);
     gfx::IntPoint copyTarget(NS_lroundf(drawRect.x), NS_lroundf(drawRect.y));
