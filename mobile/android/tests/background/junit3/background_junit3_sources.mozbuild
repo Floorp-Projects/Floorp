@@ -7,7 +7,6 @@
 background_junit3_sources = [
     'src/org/mozilla/gecko/background/common/TestAndroidLogWriters.java',
     'src/org/mozilla/gecko/background/common/TestBrowserContractHelpers.java',
-    'src/org/mozilla/gecko/background/common/TestDateUtils.java',
     'src/org/mozilla/gecko/background/common/TestUtils.java',
     'src/org/mozilla/gecko/background/common/TestWaitHelper.java',
     'src/org/mozilla/gecko/background/db/AndroidBrowserRepositoryTestCase.java',
