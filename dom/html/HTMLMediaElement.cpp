@@ -1890,11 +1890,11 @@ HTMLMediaElement::CaptureStreamInternal(bool aFinishWhenEnded,
       // Expose the tracks to JS directly.
       if (HasAudio()) {
         TrackID audioTrackId = mMediaInfo.mAudio.mTrackId;
-        out->mStream->CreateOwnDOMTrack(audioTrackId, MediaSegment::AUDIO);
+        out->mStream->CreateOwnDOMTrack(audioTrackId, MediaSegment::AUDIO, nsString());
       }
       if (HasVideo()) {
         TrackID videoTrackId = mMediaInfo.mVideo.mTrackId;
-        out->mStream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO);
+        out->mStream->CreateOwnDOMTrack(videoTrackId, MediaSegment::VIDEO, nsString());
       }
     }
   }

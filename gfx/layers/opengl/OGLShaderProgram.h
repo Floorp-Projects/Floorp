@@ -39,7 +39,7 @@ enum ShaderFeatures {
   ENABLE_COLOR_MATRIX=0x400,
   ENABLE_MASK_2D=0x800,
   ENABLE_MASK_3D=0x1000,
-  ENABLE_PREMULTIPLY=0x2000,
+  ENABLE_NO_PREMUL_ALPHA=0x2000,
   ENABLE_DEAA=0x4000
 };
 
@@ -52,6 +52,7 @@ public:
     LayerTransform = 0,
     LayerTransformInverse,
     MaskTransform,
+    BackdropTransform,
     LayerRects,
     MatrixProj,
     TextureTransform,
@@ -65,6 +66,7 @@ public:
     BlackTexture,
     WhiteTexture,
     MaskTexture,
+    BackdropTexture,
     RenderColor,
     TexCoordMultiplier,
     CbCrTexCoordMultiplier,
@@ -207,7 +209,9 @@ class ShaderConfigOGL
 {
 public:
   ShaderConfigOGL() :
-    mFeatures(0) {}
+    mFeatures(0),
+    mCompositionOp(gfx::CompositionOp::OP_OVER)
+  {}
 
   void SetRenderColor(bool aEnabled);
   void SetTextureTarget(GLenum aTarget);
@@ -221,11 +225,14 @@ public:
   void SetBlur(bool aEnabled);
   void SetMask2D(bool aEnabled);
   void SetMask3D(bool aEnabled);
-  void SetPremultiply(bool aEnabled);
   void SetDEAA(bool aEnabled);
+  void SetCompositionOp(gfx::CompositionOp aOp);
+  void SetNoPremultipliedAlpha();
 
   bool operator< (const ShaderConfigOGL& other) const {
-    return mFeatures < other.mFeatures;
+    return mFeatures < other.mFeatures ||
+           (mFeatures == other.mFeatures &&
+            (int)mCompositionOp < (int)other.mCompositionOp);
   }
 
 public:
@@ -237,6 +244,7 @@ public:
   }
 
   int mFeatures;
+  gfx::CompositionOp mCompositionOp;
 };
 
 static inline ShaderConfigOGL
@@ -278,6 +286,9 @@ struct ProgramProfileOGL
   ProgramProfileOGL() :
     mTextureCount(0)
   {}
+
+ private:
+  static void BuildMixBlender(const ShaderConfigOGL& aConfig, std::ostringstream& fs);
 };
 
 
@@ -340,6 +351,10 @@ public:
 
   void SetMaskLayerTransform(const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(KnownUniform::MaskTransform, aMatrix);
+  }
+
+  void SetBackdropTransform(const gfx::Matrix4x4& aMatrix) {
+    SetMatrixUniform(KnownUniform::BackdropTransform, aMatrix);
   }
 
   void SetDEAAEdges(const gfx::Point3D* aEdges) {
@@ -431,6 +446,10 @@ public:
 
   void SetMaskTextureUnit(GLint aUnit) {
     SetUniform(KnownUniform::MaskTexture, aUnit);
+  }
+
+  void SetBackdropTextureUnit(GLint aUnit) {
+    SetUniform(KnownUniform::BackdropTexture, aUnit);
   }
 
   void SetRenderColor(const gfx::Color& aColor) {

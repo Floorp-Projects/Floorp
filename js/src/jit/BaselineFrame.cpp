@@ -33,7 +33,7 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
     replaceCalleeToken(MarkCalleeToken(trc, calleeToken()));
 
     // Mark |this|, actual and formal args.
-    if (isNonEvalFunctionFrame()) {
+    if (isFunctionFrame()) {
         TraceRoot(trc, &thisArgument(), "baseline-this");
 
         unsigned numArgs = js::Max(numActualArgs(), numFormalArgs());
@@ -48,11 +48,8 @@ BaselineFrame::trace(JSTracer* trc, JitFrameIterator& frameIterator)
     if (hasReturnValue())
         TraceRoot(trc, returnValue().address(), "baseline-rval");
 
-    if (isEvalFrame()) {
-        TraceRoot(trc, &evalScript_, "baseline-evalscript");
-        if (script()->isDirectEvalInFunction())
-            TraceRoot(trc, evalNewTargetAddress(), "baseline-evalNewTarget");
-    }
+    if (isEvalFrame() && script()->isDirectEvalInFunction())
+        TraceRoot(trc, evalNewTargetAddress(), "baseline-evalNewTarget");
 
     if (hasArgsObj())
         TraceRoot(trc, &argsObj_, "baseline-args-obj");
@@ -126,7 +123,7 @@ BaselineFrame::initStrictEvalScopeObjects(JSContext* cx)
 bool
 BaselineFrame::initFunctionScopeObjects(JSContext* cx)
 {
-    MOZ_ASSERT(isNonEvalFunctionFrame());
+    MOZ_ASSERT(isFunctionFrame());
     MOZ_ASSERT(callee()->needsCallObject());
 
     CallObject* callobj = CallObject::createForFunction(cx, this);
@@ -147,11 +144,6 @@ BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues)
 
     if (fp->hasCallObjUnchecked())
         flags_ |= BaselineFrame::HAS_CALL_OBJ;
-
-    if (fp->isEvalFrame()) {
-        flags_ |= BaselineFrame::EVAL;
-        evalScript_ = fp->script();
-    }
 
     if (fp->script()->needsArgsObj() && fp->hasArgsObj()) {
         flags_ |= BaselineFrame::HAS_ARGS_OBJ;

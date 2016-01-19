@@ -11,6 +11,8 @@ Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "JNI", "resource://gre/modules/JNI.jsm");
+
 // -----------------------------------------------------------------------
 // Directory Provider for special browser folders and files
 // -----------------------------------------------------------------------
@@ -50,18 +52,14 @@ DirectoryProvider.prototype = {
       let profile = dirsvc.get("ProfD", Ci.nsIFile);
       return profile.parent;
     } else if (prop == XRE_APP_DISTRIBUTION_DIR) {
-      // First, check to see if there's a distribution in the data directory.
-      let dataDist = FileUtils.getDir(NS_XPCOM_CURRENT_PROCESS_DIR, ["distribution"], false);
-      if (!dataDist.exists()) {
-        // Then check to see if there's distribution in the system directory.
-        let systemDist = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-        systemDist.initWithPath(SYSTEM_DIST_PATH);
-        // Only return the system distribution location if it exists.
-        if (systemDist.exists()) {
-          return systemDist;
+      let distributionDirectories =  this._getDistributionDirectories();
+      for (let i = 0; i < distributionDirectories.length; i++) {
+        if (distributionDirectories[i].exists()) {
+          return distributionDirectories[i];
         }
       }
-      return dataDist;
+      // Fallback: Return default data distribution directory
+      return FileUtils.getDir(NS_XPCOM_CURRENT_PROCESS_DIR, ["distribution"], false);
     } else if (prop == XRE_UPDATE_ROOT_DIR) {
       let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
       if (env.exists(ENVVAR_UPDATE_DIR)) {
@@ -187,6 +185,35 @@ DirectoryProvider.prototype = {
         return result.shift();
       }
     };
+  },
+
+  _getDistributionDirectories: function() {
+    let directories = [];
+    let jenv = null;
+
+    try {
+      jenv = JNI.GetForThread();
+
+      let jDistribution = JNI.LoadClass(jenv, "org.mozilla.gecko.distribution.Distribution", {
+        static_methods: [
+          { name: "getDistributionDirectories", sig: "()[Ljava/lang/String;" }
+        ],
+      });
+
+      let jDirectories = jDistribution.getDistributionDirectories();
+
+      for (let i = 0; i < jDirectories.length; i++) {
+        directories.push(new FileUtils.File(
+          JNI.ReadString(jenv, jDirectories.get(i))
+        ));
+      }
+    } finally {
+      if (jenv) {
+        JNI.UnloadClasses(jenv);
+      }
+    }
+
+    return directories;
   }
 };
 

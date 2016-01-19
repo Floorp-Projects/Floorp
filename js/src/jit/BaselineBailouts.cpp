@@ -1723,7 +1723,7 @@ CopyFromRematerializedFrame(JSContext* cx, JitActivation* act, uint8_t* fp, size
 
     frame->setScopeChain(rematFrame->scopeChain());
 
-    if (frame->isNonEvalFunctionFrame())
+    if (frame->isFunctionFrame())
         frame->thisArgument() = rematFrame->thisArgument();
 
     for (unsigned i = 0; i < frame->numActualArgs(); i++)

@@ -691,7 +691,7 @@ DebugEpilogue(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bool ok)
     JSScript* script = frame->script();
     frame->setOverridePc(script->lastPC());
 
-    if (frame->isNonEvalFunctionFrame()) {
+    if (frame->isFunctionFrame()) {
         MOZ_ASSERT_IF(ok, frame->hasReturnValue());
         DebugScopes::onPopCall(frame, cx);
     } else if (frame->isStrictEvalFrame()) {

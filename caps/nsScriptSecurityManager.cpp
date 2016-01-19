@@ -401,12 +401,34 @@ nsScriptSecurityManager::GetChannelURIPrincipal(nsIChannel* aChannel,
     nsCOMPtr<nsILoadContext> loadContext;
     NS_QueryNotificationCallbacks(aChannel, loadContext);
 
-    if (loadContext) {
-        return GetLoadContextCodebasePrincipal(uri, loadContext, aPrincipal);
+    nsCOMPtr<nsILoadInfo> loadInfo;
+    aChannel->GetLoadInfo(getter_AddRefs(loadInfo));
+    nsContentPolicyType contentPolicyType = nsIContentPolicy::TYPE_INVALID;
+    if (loadInfo) {
+      contentPolicyType = loadInfo->GetExternalContentPolicyType();
     }
 
-    //TODO: Bug 1211590. inherit Origin Attributes from LoadInfo.
-    PrincipalOriginAttributes attrs(UNKNOWN_APP_ID, false);
+    PrincipalOriginAttributes attrs;
+    if (nsIContentPolicy::TYPE_DOCUMENT == contentPolicyType ||
+        nsIContentPolicy::TYPE_SUBDOCUMENT == contentPolicyType) {
+      // If it's document or sub-document, inherit originAttributes from
+      // the document.
+      if (loadContext) {
+        DocShellOriginAttributes docShellAttrs;
+        loadContext->GetOriginAttributes(docShellAttrs);
+        attrs.InheritFromDocShellToDoc(docShellAttrs, uri);
+      }
+    } else {
+      // Inherit origin attributes from loading principal if any.
+      nsCOMPtr<nsIPrincipal> loadingPrincipal;
+      if (loadInfo) {
+        loadInfo->GetLoadingPrincipal(getter_AddRefs(loadingPrincipal));
+      }
+      if (loadingPrincipal) {
+        attrs = BasePrincipal::Cast(loadingPrincipal)->OriginAttributesRef();
+      }
+    }
+
     rv = MaybeSetAddonIdFromURI(attrs, uri);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIPrincipal> prin = BasePrincipal::CreateCodebasePrincipal(uri, attrs);

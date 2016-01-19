@@ -1221,6 +1221,9 @@ for (var i = 1; i < 10; ++i) {
     asmLink(asmCompile('glob', 'ffi', c), this, ffi)();
 }
 
+// Bug 1240524
+assertAsmTypeFail(USE_ASM + B32 + 'var x = b4(0, 0, 0, 0); frd(x);');
+
 // Passing boolean results to extern functions.
 // Verify that these functions are typed correctly.
 function isone(x) { return (x===1)|0 }
