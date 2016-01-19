@@ -135,7 +135,7 @@ MaiAtkObject::GetAtkHyperlink()
   MaiHyperlink* maiHyperlink =
     (MaiHyperlink*)g_object_get_qdata(G_OBJECT(this), quark_mai_hyperlink);
   if (!maiHyperlink) {
-    maiHyperlink = new MaiHyperlink(accWrap.Bits());
+    maiHyperlink = new MaiHyperlink(accWrap);
     g_object_set_qdata(G_OBJECT(this), quark_mai_hyperlink, maiHyperlink);
   }
 
