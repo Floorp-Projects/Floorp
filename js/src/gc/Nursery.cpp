@@ -418,8 +418,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
 
     rt->gc.incMinorGcNumber();
 
-    rt->gc.stats.count(gcstats::STAT_MINOR_GC);
-
+    rt->gc.stats.beginNurseryCollection(reason);
     TraceMinorGCStart();
 
     int64_t timestampStart_total = PRMJ_Now();
@@ -563,6 +562,7 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
     if (totalTime > 1000)
         rt->addTelemetry(JS_TELEMETRY_GC_MINOR_REASON_LONG, reason);
 
+    rt->gc.stats.endNurseryCollection(reason);
     TraceMinorGCEnd();
 
     if (enableProfiling_ && totalTime >= profileThreshold_) {
