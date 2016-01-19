@@ -24,6 +24,9 @@ public:
   explicit xpcAccessibleTableCell(Accessible* aIntl) :
     xpcAccessibleHyperText(aIntl) { }
 
+  xpcAccessibleTableCell(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleHyperText(aProxy, aInterfaces) {}
+
   NS_DECL_ISUPPORTS_INHERITED
 
   // nsIAccessibleTableCell
