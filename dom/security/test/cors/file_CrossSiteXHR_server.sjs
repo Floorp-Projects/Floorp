@@ -52,10 +52,13 @@ function handleRequest(request, response)
     for(headerName in headers) {
       // Content-Type is changed if there was a body 
       if (!(headerName == "Content-Type" && body) &&
-          request.getHeader(headerName) != headers[headerName]) {
+          (!request.hasHeader(headerName) ||
+          request.getHeader(headerName) != headers[headerName])) {
+        var actual = request.hasHeader(headerName) ? request.getHeader(headerName)
+                                                   : "<missing header>";
         sendHttp500(response,
           "Header " + headerName + " had wrong value. Expected " +
-          headers[headerName] + " got " + request.getHeader(headerName));
+          headers[headerName] + " got " + actual);
         return;
       }
     }
@@ -151,6 +154,9 @@ function handleRequest(request, response)
     newURL = hops[query.hop].server +
              "/tests/dom/security/test/cors/file_CrossSiteXHR_server.sjs?" +
              "hop=" + (query.hop + 1) + "&hops=" + escape(query.hops);
+    if ("headers" in query) {
+      newURL += "&headers=" + escape(query.headers);
+    }
     response.setStatusLine(null, 307, "redirect");
     response.setHeader("Location", newURL);
 
