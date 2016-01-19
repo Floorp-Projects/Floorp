@@ -8519,7 +8519,7 @@ GarbageCollectionEvent::Create(JSRuntime* rt, ::js::gcstats::Statistics& stats, 
             // reasons this data is stored and replicated on each slice. Each
             // slice used to have its own GCReason, but now they are all the
             // same.
-            data->reason = gcstats::ExplainReason(range.front().reason);
+            data->reason = gcreason::ExplainReason(range.front().reason);
             MOZ_ASSERT(data->reason);
         }
 
