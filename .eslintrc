@@ -6,6 +6,7 @@
   "rules": {
     "mozilla/components-imports": 1,
     "mozilla/import-globals-from": 1,
+    "mozilla/this-top-level-scope": 1,
   },
   "env": {
     "es6": true
