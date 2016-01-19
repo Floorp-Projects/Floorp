@@ -204,73 +204,23 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
   mTargetBounds = aRect;
 }
 
-template<typename RectType>
-Maybe<RectType>
-IntersectMaybeRects(const Maybe<RectType>& aRect1, const Maybe<RectType>& aRect2)
-{
-  if (aRect1) {
-    if (aRect2) {
-      return Some(aRect1->Intersect(*aRect2));
-    }
-    return aRect1;
-  }
-  return aRect2;
-}
-
 void
 LayerManagerComposite::PostProcessLayers(Layer* aLayer,
                                          nsIntRegion& aOpaqueRegion,
-                                         LayerIntRegion& aVisibleRegion,
-                                         const Maybe<ParentLayerIntRect>& aClipFromAncestors)
+                                         LayerIntRegion& aVisibleRegion)
 {
   nsIntRegion localOpaque;
-  Matrix4x4 transform = aLayer->GetLocalTransform();
   Matrix transform2d;
   Maybe<nsIntPoint> integerTranslation;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
-  if (transform.Is2D(&transform2d)) {
+  if (aLayer->GetLocalTransform().Is2D(&transform2d)) {
     if (transform2d.IsIntegerTranslation()) {
       integerTranslation = Some(TruncatedToInt(transform2d.GetTranslation()));
       localOpaque = aOpaqueRegion;
       localOpaque.MoveBy(-*integerTranslation);
     }
-  }
- 
-  // Compute a clip that's the combination of our layer clip with the clip
-  // from our ancestors.
-  LayerComposite* composite = aLayer->AsLayerComposite();
-  Maybe<ParentLayerIntRect> layerClip = composite->GetShadowClipRect();
-  Maybe<ParentLayerIntRect> outsideClip =
-    IntersectMaybeRects(layerClip, aClipFromAncestors);
-
-  // Convert the combined clip into our pre-transform coordinate space, so
-  // that it can later be intersected with our visible region.
-  // If our transform is a perspective, there's no meaningful insideClip rect
-  // we can compute (it would need to be a cone).
-  Maybe<LayerIntRect> insideClip;
-  if (outsideClip && !transform.HasPerspectiveComponent()) {
-    Matrix4x4 inverse = transform;
-    if (inverse.Invert()) {
-      Maybe<LayerRect> insideClipFloat =
-        UntransformBy(ViewAs<ParentLayerToLayerMatrix4x4>(inverse),
-                      ParentLayerRect(*outsideClip),
-                      LayerRect::MaxIntRect());
-      if (insideClipFloat) {
-        insideClipFloat->RoundOut();
-        LayerIntRect insideClipInt;
-        if (insideClipFloat->ToIntRect(&insideClipInt)) {
-          insideClip = Some(insideClipInt);
-        }
-      }
-    }
-  }
-
-  Maybe<ParentLayerIntRect> ancestorClipForChildren;
-  if (insideClip) {
-    ancestorClipForChildren =
-      Some(ViewAs<ParentLayerPixel>(*insideClip, PixelCastJustification::MovingDownToChildren));
   }
 
   // Save the value of localOpaque, which currently stores the region obscured
@@ -279,14 +229,15 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
 
   // Recurse on our descendants, in front-to-back order. In this process:
   //  - Occlusions are computed for them, and they contribute to localOpaque.
-  //  - They recalculate their visible regions, taking ancestorClipForChildren
-  //    into account, and accumulate them into descendantsVisibleRegion.
+  //  - They recalculate their visible regions, and accumulate them into
+  //    descendantsVisibleRegion.
   LayerIntRegion descendantsVisibleRegion;
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    PostProcessLayers(child, localOpaque, descendantsVisibleRegion, ancestorClipForChildren);
+    PostProcessLayers(child, localOpaque, descendantsVisibleRegion);
   }
 
   // Recalculate our visible region.
+  LayerComposite* composite = aLayer->AsLayerComposite();
   LayerIntRegion visible = composite->GetShadowVisibleRegion();
 
   // If we have descendants, throw away the visible region stored on this
@@ -300,17 +251,14 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
     visible.SubOut(LayerIntRegion::FromUnknownRegion(obscured));
   }
 
-  // Clip the visible region using the combined clip.
-  if (insideClip) {
-    visible.AndWith(*insideClip);
-  }
   composite->SetShadowVisibleRegion(visible);
 
   // Transform the newly calculated visible region into our parent's space,
   // apply our clip to it (if any), and accumulate it into |aVisibleRegion|
   // for the caller to use.
-  ParentLayerIntRegion visibleParentSpace = TransformBy(
-      ViewAs<LayerToParentLayerMatrix4x4>(transform), visible);
+  ParentLayerIntRegion visibleParentSpace = TransformBy<ParentLayerPixel>(
+      ViewAs<LayerToParentLayerMatrix4x4>(aLayer->GetLocalTransform()),
+      visible);
   if (const Maybe<ParentLayerIntRect>& clipRect = composite->GetShadowClipRect()) {
     visibleParentSpace.AndWith(*clipRect);
   }
@@ -326,8 +274,9 @@ LayerManagerComposite::PostProcessLayers(Layer* aLayer,
       localOpaque.OrWith(composite->GetFullyRenderedRegion());
     }
     localOpaque.MoveBy(*integerTranslation);
-    if (layerClip) {
-      localOpaque.AndWith(layerClip->ToUnknownRect());
+    const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
+    if (clip) {
+      localOpaque.AndWith(clip->ToUnknownRect());
     }
     aOpaqueRegion.OrWith(localOpaque);
   }
@@ -383,13 +332,8 @@ void
 LayerManagerComposite::UpdateAndRender()
 {
   nsIntRegion invalid;
-  bool didEffectiveTransforms = false;
 
   if (mClonedLayerTreeProperties) {
-    // Effective transforms are needed by ComputeDifferences().
-    mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
-    didEffectiveTransforms = true;
-
     // We need to compute layer tree differences even if we're not going to
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
@@ -434,15 +378,13 @@ LayerManagerComposite::UpdateAndRender()
   // so we will invalidate after we've decided if something changed.
   InvalidateDebugOverlay(mRenderBounds);
 
-  if (!didEffectiveTransforms) {
-    // The results of our drawing always go directly into a pixel buffer,
-    // so we don't need to pass any global transform here.
-    mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
-  }
+  // The results of our drawing always go directly into a pixel buffer,
+  // so we don't need to pass any global transform here.
+  mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
 
   nsIntRegion opaque;
   LayerIntRegion visible;
-  PostProcessLayers(mRoot, opaque, visible, Nothing());
+  PostProcessLayers(mRoot, opaque, visible);
 
   Render(invalid);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
@@ -1099,7 +1041,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   mRoot->ComputeEffectiveTransforms(matrix);
   nsIntRegion opaque;
   LayerIntRegion visible;
-  PostProcessLayers(mRoot, opaque, visible, Nothing());
+  PostProcessLayers(mRoot, opaque, visible);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);

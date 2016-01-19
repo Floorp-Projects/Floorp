@@ -1042,8 +1042,7 @@ public:
 
 private:
   /* This is the cumulative CSS transform for all the layers from (and including)
-   * the parent APZC down to (but excluding) this one, and excluding any
-   * perspective transforms. */
+   * the parent APZC down to (but excluding) this one. */
   Matrix4x4 mAncestorTransform;
 
 

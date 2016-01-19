@@ -29,7 +29,7 @@ function run() {
 
   function check(x, y, expected_element, description)
   {
-	is(doc.elementFromPoint(x, y).id, expected_element.id,
+	is(doc.elementFromPoint(x, y), expected_element,
 	   "point (" + x + ", " + y + "): " + description);
   }
 
