@@ -367,10 +367,10 @@ struct RegionParamTraits
 
   static void Write(Message* msg, const paramType& param)
   {
-    Iter it(param);
-    while (const Rect* r = it.Next()) {
-      MOZ_RELEASE_ASSERT(!r->IsEmpty());
-      WriteParam(msg, *r);
+    for (auto iter = param.RectIter(); !iter.Done(); iter.Next()) {
+      const Rect& r = iter.Get();
+      MOZ_RELEASE_ASSERT(!r.IsEmpty());
+      WriteParam(msg, r);
     }
     // empty rects are sentinel values because nsRegions will never
     // contain them
@@ -393,7 +393,7 @@ template<class Units>
 struct ParamTraits<mozilla::gfx::IntRegionTyped<Units>>
   : RegionParamTraits<mozilla::gfx::IntRegionTyped<Units>,
                       mozilla::gfx::IntRectTyped<Units>,
-                      typename mozilla::gfx::IntRegionTyped<Units>::OldRectIterator>
+                      typename mozilla::gfx::IntRegionTyped<Units>::RectIterator>
 {};
 
 template<>
@@ -666,7 +666,7 @@ struct ParamTraits<nsRect>
 
 template<>
 struct ParamTraits<nsRegion>
-  : RegionParamTraits<nsRegion, nsRect, nsRegionRectIterator>
+  : RegionParamTraits<nsRegion, nsRect, nsRegion::RectIterator>
 {};
 
 template <>
