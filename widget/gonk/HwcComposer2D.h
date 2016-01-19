@@ -74,7 +74,8 @@ public:
     // by this composer so nothing was rendered at all
     virtual bool TryRenderWithHwc(layers::Layer* aRoot,
                                   nsIWidget* aWidget,
-                                  bool aGeometryChanged) override;
+                                  bool aGeometryChanged,
+                                  bool aHasImageHostOverlays) override;
 
     virtual bool Render(nsIWidget* aWidget) override;
 
@@ -94,7 +95,8 @@ private:
     bool TryHwComposition(nsScreenGonk* aScreen);
     bool ReallocLayerList();
     bool PrepareLayerList(layers::Layer* aContainer, const nsIntRect& aClip,
-          const gfx::Matrix& aParentTransform);
+          const gfx::Matrix& aParentTransform,
+          bool aFindSidebandStreams);
     void SendtoLayerScope();
 
     UniquePtr<HwcHALBase>   mHal;
@@ -108,6 +110,7 @@ private:
     std::list<HwcUtils::RectVector>   mVisibleRegions;
     layers::FenceHandle mPrevRetireFence;
     layers::FenceHandle mPrevDisplayFence;
+    nsTArray<HwcLayer>      mCachedSidebandLayers;
     nsTArray<layers::LayerComposite*> mHwcLayerMap;
     bool                    mPrepared;
     bool                    mHasHWVsync;

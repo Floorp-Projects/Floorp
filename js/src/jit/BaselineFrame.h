@@ -24,13 +24,6 @@ struct BaselineDebugModeOSRInfo;
 //        locals
 //        stack values
 
-// Eval frames
-//
-// Like js::InterpreterFrame, every BaselineFrame is either a global frame
-// or a function frame. Both global and function frames can optionally
-// be "eval frames". The callee token for eval function frames is the
-// enclosing function. BaselineFrame::evalScript_ stores the eval script
-// itself.
 class BaselineFrame
 {
   public:
@@ -53,8 +46,7 @@ class BaselineFrame
         // invariants of debuggee compartments, scripts, and frames.
         DEBUGGEE         = 1 << 6,
 
-        // Eval frame, see the "eval frames" comment.
-        EVAL             = 1 << 7,
+        // (1 << 7 and 1 << 8 are unused)
 
         // Frame has over-recursed on an early check.
         OVER_RECURSED    = 1 << 9,
@@ -100,9 +92,7 @@ class BaselineFrame
     uint32_t hiReturnValue_;
     uint32_t frameSize_;
     JSObject* scopeChain_;                // Scope chain (always initialized).
-    JSScript* evalScript_;                // If isEvalFrame(), the current eval script.
     ArgumentsObject* argsObj_;            // If HAS_ARGS_OBJ, the arguments object.
-    void* unused;                         // See static assertion re: sizeof, below.
     uint32_t overrideOffset_;             // If HAS_OVERRIDE_PC, the bytecode offset.
     uint32_t flags_;
 
@@ -154,8 +144,6 @@ class BaselineFrame
         return CalleeTokenIsConstructing(calleeToken());
     }
     JSScript* script() const {
-        if (isEvalFrame())
-            return evalScript();
         return ScriptFromCalleeToken(calleeToken());
     }
     JSFunction* callee() const {
@@ -206,7 +194,7 @@ class BaselineFrame
         return script()->functionNonDelazifying()->nargs();
     }
     Value& thisArgument() const {
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         return *(Value*)(reinterpret_cast<const uint8_t*>(this) +
                          BaselineFrame::Size() +
                          offsetOfThis());
@@ -230,7 +218,7 @@ class BaselineFrame
     Value newTarget() const {
         if (isEvalFrame())
             return *evalNewTargetAddress();
-        MOZ_ASSERT(isNonEvalFunctionFrame());
+        MOZ_ASSERT(isFunctionFrame());
         if (callee()->isArrow())
             return callee()->getExtendedSlot(FunctionExtended::ARROW_NEWTARGET_SLOT);
         if (isConstructing()) {
@@ -331,11 +319,6 @@ class BaselineFrame
         flags_ |= HAS_CACHED_SAVED_FRAME;
     }
 
-    JSScript* evalScript() const {
-        MOZ_ASSERT(isEvalFrame());
-        return evalScript_;
-    }
-
     bool overRecursed() const {
         return flags_ & OVER_RECURSED;
     }
@@ -389,12 +372,14 @@ class BaselineFrame
 
     void trace(JSTracer* trc, JitFrameIterator& frame);
 
-    bool isGlobalOrModuleFrame() const {
-        MOZ_ASSERT(!isEvalFrame());
-        return !CalleeTokenIsFunction(calleeToken());
+    bool isGlobalFrame() const {
+        return script()->isGlobalCode();
+    }
+    bool isModuleFrame() const {
+        return script()->module();
     }
     bool isEvalFrame() const {
-        return flags_ & EVAL;
+        return script()->isForEval();
     }
     bool isStrictEvalFrame() const {
         return isEvalFrame() && script()->strict();
@@ -406,8 +391,8 @@ class BaselineFrame
     bool isNonStrictDirectEvalFrame() const {
         return isNonStrictEvalFrame() && isNonGlobalEvalFrame();
     }
-    bool isNonEvalFunctionFrame() const {
-        return CalleeTokenIsFunction(calleeToken()) && !isEvalFrame();
+    bool isFunctionFrame() const {
+        return CalleeTokenIsFunction(calleeToken());
     }
     bool isDebuggerEvalFrame() const {
         return false;
@@ -455,9 +440,6 @@ class BaselineFrame
     }
     static int reverseOffsetOfFlags() {
         return -int(Size()) + offsetof(BaselineFrame, flags_);
-    }
-    static int reverseOffsetOfEvalScript() {
-        return -int(Size()) + offsetof(BaselineFrame, evalScript_);
     }
     static int reverseOffsetOfReturnValue() {
         return -int(Size()) + offsetof(BaselineFrame, loReturnValue_);

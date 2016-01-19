@@ -1,0 +1,8 @@
+<!doctype html>
+<html>
+  <body>
+    <script>
+      parent.postMessage(SpecialPowers.wrap(localStorage).isSessionOnly, "*");
+    </script>
+  </body>
+</html>
