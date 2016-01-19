@@ -240,25 +240,7 @@ FetchDriver::HttpFetch()
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Set the same headers.
-    nsAutoTArray<InternalHeaders::Entry, 5> headers;
-    mRequest->Headers()->GetEntries(headers);
-    bool hasAccept = false;
-    for (uint32_t i = 0; i < headers.Length(); ++i) {
-      if (!hasAccept && headers[i].mName.EqualsLiteral("accept")) {
-        hasAccept = true;
-      }
-      if (headers[i].mValue.IsEmpty()) {
-        httpChan->SetEmptyRequestHeader(headers[i].mName);
-      } else {
-        httpChan->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
-      }
-    }
-
-    if (!hasAccept) {
-      httpChan->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
-                                 NS_LITERAL_CSTRING("*/*"),
-                                 false /* merge */);
-    }
+    SetRequestHeaders(httpChan);
 
     // Step 2. Set the referrer.
     nsAutoString referrer;
@@ -291,16 +273,6 @@ FetchDriver::HttpFetch()
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    // Step 3 "If HTTPRequest's force Origin header flag is set..."
-    if (mRequest->ForceOriginHeader()) {
-      nsAutoString origin;
-      rv = nsContentUtils::GetUTFOrigin(mPrincipal, origin);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      httpChan->SetRequestHeader(NS_LITERAL_CSTRING("origin"),
-                                 NS_ConvertUTF16toUTF8(origin),
-                                 false /* merge */);
-    }
     // Bug 1120722 - Authorization will be handled later.
     // Auth may require prompting, we don't support it yet.
     // The next patch in this same bug prevents this from aborting the request.
@@ -703,6 +675,41 @@ FetchDriver::SetDocument(nsIDocument* aDocument)
   // Cannot set document after Fetch() has been called.
   MOZ_ASSERT(!mFetchCalled);
   mDocument = aDocument;
+}
+
+void
+FetchDriver::SetRequestHeaders(nsIHttpChannel* aChannel) const
+{
+  MOZ_ASSERT(aChannel);
+
+  nsAutoTArray<InternalHeaders::Entry, 5> headers;
+  mRequest->Headers()->GetEntries(headers);
+  bool hasAccept = false;
+  for (uint32_t i = 0; i < headers.Length(); ++i) {
+    if (!hasAccept && headers[i].mName.EqualsLiteral("accept")) {
+      hasAccept = true;
+    }
+    if (headers[i].mValue.IsEmpty()) {
+      aChannel->SetEmptyRequestHeader(headers[i].mName);
+    } else {
+      aChannel->SetRequestHeader(headers[i].mName, headers[i].mValue, false /* merge */);
+    }
+  }
+
+  if (!hasAccept) {
+    aChannel->SetRequestHeader(NS_LITERAL_CSTRING("accept"),
+                               NS_LITERAL_CSTRING("*/*"),
+                               false /* merge */);
+  }
+
+  if (mRequest->ForceOriginHeader()) {
+    nsAutoString origin;
+    if (NS_SUCCEEDED(nsContentUtils::GetUTFOrigin(mPrincipal, origin))) {
+      aChannel->SetRequestHeader(NS_LITERAL_CSTRING("origin"),
+                                 NS_ConvertUTF16toUTF8(origin),
+                                 false /* merge */);
+    }
+  }
 }
 
 } // namespace dom
