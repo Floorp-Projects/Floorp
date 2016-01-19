@@ -832,11 +832,11 @@ impl Parameters for SendAlertTextParameters {
         let data = try_opt!(body.as_object(), ErrorStatus::InvalidArgument,
                             "Message body was not an object");
         let keys = try_opt!(
-            try_opt!(data.get("message"),
+            try_opt!(data.get("text"),
                      ErrorStatus::InvalidArgument,
-                     "Missing 'message' parameter").as_string(),
+                     "Missing 'text' parameter").as_string(),
             ErrorStatus::InvalidArgument,
-            "'message' not a string").to_string();
+            "'text' not a string").to_string();
         return Ok(SendAlertTextParameters {
             message: keys
         })
