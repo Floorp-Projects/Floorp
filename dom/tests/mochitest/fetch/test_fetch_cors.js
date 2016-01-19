@@ -1444,6 +1444,10 @@ function testCORSRedirects() {
       body: test.body,
     };
 
+    if (test.headers) {
+      req.url += "&headers=" + escape(test.headers.toSource());
+    }
+
     if (test.pass) {
       if (test.body)
         req.url += "&body=" + escape(test.body);
@@ -1503,6 +1507,17 @@ function testNoCORSRedirects() {
            },
            { pass: 1,
              method: "GET",
+             // Must use a simple header due to no-cors header restrictions.
+             headers: { "accept-language": "en-us",
+                      },
+             hops: [{ server: origin,
+                    },
+                    { server: "http://example.com",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
              hops: [{ server: origin,
                     },
                     { server: "http://example.com",
@@ -1539,6 +1554,10 @@ function testNoCORSRedirects() {
       headers: test.headers,
       body: test.body,
     };
+
+    if (test.headers) {
+      req.url += "&headers=" + escape(test.headers.toSource());
+    }
 
     if (test.pass) {
       if (test.body)
