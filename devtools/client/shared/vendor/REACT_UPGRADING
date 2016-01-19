@@ -1,23 +1,22 @@
-React has a dev and prod version. The dev version includes additional
-sanity checks and better errors, but at a slight perf cost. The prod
-version available on the web is by default minified, but we don't want
-a minified version, so we need to build it ourselves.
+We have a version of React that has a few minor patches on top of it:
+https://github.com/mozilla/react. These instructions are how to
+upgrade to the latest version of React.
 
-In bug 1217979, we are only using react in development environment for now until
-we can think of a way to conditionally build these different versions, so
-the `react.js` here is the dev environment one and generated with the following steps:
+First, rebase our fork on top of the latest version and publish it to
+our repo.
 
-* git clone https://github.com/facebook/react.git && cd react
+Next, build React. You should already have our fork locally; make sure
+you are building our fork: https://github.com/mozilla/react
+
 * npm install
 * grunt build
-* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
+* cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react-dev.js
 
-For production, which we do not currently have:
+Note that the last command above adds a `react-dev.js` file. You also
+need to generated a production version of React:
+
 * NODE_ENV=production grunt build
 * cp build/react-with-addons.js <gecko-dev>/devtools/client/shared/vendor/react.js
-
-The second build produces a non-minified React file but with all the
-sanity checks that incur a perf hit removed.
 
 You also need to copy the ReactDOM package. It requires React, so
 right now we are just manually changing the path from `react` to
