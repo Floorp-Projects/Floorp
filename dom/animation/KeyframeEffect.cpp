@@ -1987,8 +1987,8 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   const nsIFrame* aFrame,
   const nsIContent* aContent)
 {
-  if (aFrame->Combines3DTransformWithAncestors() ||
-      aFrame->Extend3DContext()) {
+  if (aFrame->Preserves3D() ||
+      aFrame->Preserves3DChildren()) {
     if (aContent) {
       nsCString message;
       message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
@@ -1999,7 +1999,7 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   }
   // Note that testing BackfaceIsHidden() is not a sufficient test for
   // what we need for animating backface-visibility correctly if we
-  // remove the above test for Extend3DContext(); that would require
+  // remove the above test for Preserves3DChildren(); that would require
   // looking at backface-visibility on descendants as well.
   if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
     if (aContent) {

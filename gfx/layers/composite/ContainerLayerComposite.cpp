@@ -199,18 +199,14 @@ ContainerRenderVR(ContainerT* aContainer,
     Layer* layer = layerToRender->GetLayer();
     uint32_t contentFlags = layer->GetContentFlags();
 
-    if (layer->IsBackfaceHidden()) {
+    if (layer->GetEffectiveVisibleRegion().IsEmpty() &&
+        !layer->AsContainerLayer()) {
       continue;
     }
 
-    if (!layer->IsVisible() && !layer->AsContainerLayer()) {
-      continue;
-    }
-
-    // We flip between pre-rendered and Gecko-rendered VR based on
-    // whether the child layer of this VR container layer has
-    // CONTENT_EXTEND_3D_CONTEXT or not.
-    if ((contentFlags & Layer::CONTENT_EXTEND_3D_CONTEXT) == 0) {
+    // We flip between pre-rendered and Gecko-rendered VR based on whether
+    // the child layer of this VR container layer has PRESERVE_3D or not.
+    if ((contentFlags & Layer::CONTENT_PRESERVE_3D) == 0) {
       // This layer is native VR
       DUMP("%p Switching to pre-rendered VR\n", aContainer);
 
@@ -323,14 +319,6 @@ ContainerRenderVR(ContainerT* aContainer,
   DUMP("<<< ContainerRenderVR [%p]\n", aContainer);
 }
 
-static bool
-NeedToDrawCheckerboardingForLayer(Layer* aLayer, Color* aOutCheckerboardingColor)
-{
-  return (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
-         aLayer->IsOpaqueForVisibility() &&
-         LayerHasCheckerboardingAPZC(aLayer, aOutCheckerboardingColor);
-}
-
 /* all of the prepared data that we need in RenderLayer() */
 struct PreparedData
 {
@@ -369,15 +357,10 @@ ContainerPrepare(ContainerT* aContainer,
     RenderTargetIntRect clipRect = layerToRender->GetLayer()->
         CalculateScissorRect(aClipRect);
 
-    if (layerToRender->GetLayer()->IsBackfaceHidden()) {
-      continue;
-    }
-
     // We don't want to skip container layers because otherwise their mPrepared
     // may be null which is not allowed.
     if (!layerToRender->GetLayer()->AsContainerLayer()) {
-      if (!layerToRender->GetLayer()->IsVisible() &&
-          !NeedToDrawCheckerboardingForLayer(layerToRender->GetLayer(), nullptr)) {
+      if (layerToRender->GetLayer()->GetEffectiveVisibleRegion().IsEmpty()) {
         CULLING_LOG("Sublayer %p has no effective visible region\n", layerToRender->GetLayer());
         continue;
       }
@@ -542,7 +525,9 @@ RenderLayers(ContainerT* aContainer,
     Layer* layer = layerToRender->GetLayer();
 
     Color color;
-    if (NeedToDrawCheckerboardingForLayer(layer, &color)) {
+    if ((layer->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+        layer->IsOpaqueForVisibility() &&
+        LayerHasCheckerboardingAPZC(layer, &color)) {
       if (gfxPrefs::APZHighlightCheckerboardedAreas()) {
         color = Color(255 / 255.f, 188 / 255.f, 217 / 255.f, 1.f); // "Cotton Candy"
       }

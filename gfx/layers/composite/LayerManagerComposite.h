@@ -182,8 +182,7 @@ public:
    */
   void PostProcessLayers(Layer* aLayer,
                          nsIntRegion& aOpaqueRegion,
-                         LayerIntRegion& aVisibleRegion,
-                         const Maybe<ParentLayerIntRect>& aClipFromAncestors);
+                         LayerIntRegion& aVisibleRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
