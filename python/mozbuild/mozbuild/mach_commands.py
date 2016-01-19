@@ -1009,8 +1009,11 @@ class Package(MachCommandBase):
 
     @Command('package', category='post-build',
         description='Package the built product for distribution as an APK, DMG, etc.')
-    def package(self):
-        ret = self._run_make(directory=".", target='package', ensure_exit_code=False)
+    @CommandArgument('-v', '--verbose', action='store_true',
+        help='Verbose output for what commands the packaging process is running.')
+    def package(self, verbose=False):
+        ret = self._run_make(directory=".", target='package',
+                             silent=not verbose, ensure_exit_code=False)
         if ret == 0:
             self.notify('Packaging complete')
         return ret
