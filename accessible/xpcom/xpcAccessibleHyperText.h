@@ -30,6 +30,9 @@ public:
       mSupportedIfaces |= eText;
   }
 
+  xpcAccessibleHyperText(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    xpcAccessibleGeneric(aProxy, aInterfaces) { mSupportedIfaces |= eText; }
+
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIACCESSIBLETEXT

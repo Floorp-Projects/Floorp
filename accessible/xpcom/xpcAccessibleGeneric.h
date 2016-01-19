@@ -38,6 +38,20 @@ public:
       mSupportedIfaces |= eHyperLink;
   }
 
+  xpcAccessibleGeneric(ProxyAccessible* aProxy, uint32_t aInterfaces) :
+    mIntl(aProxy)
+  {
+    if (aInterfaces & Interfaces::SELECTION) {
+      mSupportedIfaces |= eSelectable;
+    }
+      if (aInterfaces & Interfaces::VALUE) {
+        mSupportedIfaces |= eValue;
+      }
+      if (aInterfaces & Interfaces::HYPERLINK) {
+        mSupportedIfaces |= eHyperLink;
+      }
+    }
+
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(xpcAccessibleGeneric, nsIAccessible)
 
