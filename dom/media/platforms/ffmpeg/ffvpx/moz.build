@@ -12,7 +12,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     '../FFmpegDataDecoder.cpp',
     '../FFmpegDecoderModule.cpp',
-    '../FFmpegH264Decoder.cpp',
+    '../FFmpegVideoDecoder.cpp',
 ]
 SOURCES += [
     'FFVPXRuntimeLinker.cpp',
