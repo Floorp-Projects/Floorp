@@ -166,7 +166,10 @@ struct TransformData {
   nsPoint origin;
   // the transform-origin property for the transform in device pixels
   Point3D transformOrigin;
+  // the perspective-origin property for the transform in device pixels
+  Point3D perspectiveOrigin;
   nsRect bounds;
+  nscoord perspective;
   int32_t appUnitsPerDevPixel;
 };
 
@@ -207,7 +210,6 @@ struct CommonLayerAttributes {
   LayerIntRegion visibleRegion;
   EventRegions eventRegions;
   TransformMatrix transform;
-  bool transformIsPerspective;
   float postXScale;
   float postYScale;
   uint32_t contentFlags;

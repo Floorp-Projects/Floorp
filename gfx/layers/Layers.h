@@ -769,7 +769,7 @@ public:
      * If this is set then this layer is part of a preserve-3d group, and should
      * be sorted with sibling layers that are also part of the same group.
      */
-    CONTENT_EXTEND_3D_CONTEXT = 0x08,
+    CONTENT_PRESERVE_3D = 0x08,
     /**
      * This indicates that the transform may be changed on during an empty
      * transaction where there is no possibility of redrawing the content, so the
@@ -789,13 +789,7 @@ public:
      * This is for internal layout/FrameLayerBuilder usage only until flattening
      * code is obsoleted. See bug 633097
      */
-    CONTENT_DISABLE_FLATTENING = 0x40,
-
-    /**
-     * This layer is hidden if the backface of the layer is visible
-     * to user.
-     */
-    CONTENT_BACKFACE_HIDDEN = 0x80
+    CONTENT_DISABLE_FLATTENING = 0x40
   };
   /**
    * CONSTRUCTION PHASE ONLY
@@ -1113,21 +1107,6 @@ public:
     }
   }
 
-  /**
-   * CONSTRUCTION PHASE ONLY
-   * This flag is true when the transform on the layer is a perspective
-   * transform. The compositor treats perspective transforms specially
-   * for async scrolling purposes.
-   */
-  void SetTransformIsPerspective(bool aTransformIsPerspective)
-  {
-    if (mTransformIsPerspective != aTransformIsPerspective) {
-      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) TransformIsPerspective", this));
-      mTransformIsPerspective = aTransformIsPerspective;
-      Mutated();
-    }
-  }
-
   // Call AddAnimation to add a new animation to this layer from layout code.
   // Caller must fill in all the properties of the returned animation.
   // A later animation overrides an earlier one.
@@ -1281,7 +1260,6 @@ public:
   virtual float GetPostXScale() const { return mPostXScale; }
   virtual float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
-  bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
   bool GetIsStickyPosition() { return mStickyPositionData; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mFixedPositionData ? mFixedPositionData->mScrollId : FrameMetrics::NULL_SCROLL_ID; }
   LayerPoint GetFixedPositionAnchor() { return mFixedPositionData ? mFixedPositionData->mAnchor : LayerPoint(); }
@@ -1474,29 +1452,6 @@ public:
   // accounting for this layer possibly being a shadow.
   const Maybe<ParentLayerIntRect>& GetEffectiveClipRect();
   const LayerIntRegion& GetEffectiveVisibleRegion();
-
-  bool Extend3DContext() {
-    return GetContentFlags() & CONTENT_EXTEND_3D_CONTEXT;
-  }
-  bool Combines3DTransformWithAncestors() {
-    return GetParent() &&
-      reinterpret_cast<Layer*>(GetParent())->Extend3DContext();
-  }
-  bool Is3DContextLeaf() {
-    return !Extend3DContext() && Combines3DTransformWithAncestors();
-  }
-  /**
-   * It is true if the user can see the back of the layer and the
-   * backface is hidden.  The compositor should skip the layer if the
-   * result is true.
-   */
-  bool IsBackfaceHidden();
-  bool IsVisible() {
-    // For containers extending 3D context, visible region
-    // is meaningless, since they are just intermediate result of
-    // content.
-    return !GetEffectiveVisibleRegion().IsEmpty() || Extend3DContext();
-  }
 
   /**
    * Returns the product of the opacities of this layer and all ancestors up
@@ -1812,7 +1767,6 @@ protected:
   uint32_t mContentFlags;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
-  bool mTransformIsPerspective;
   struct FixedPositionData {
     FrameMetrics::ViewID mScrollId;
     LayerPoint mAnchor;
@@ -1899,16 +1853,8 @@ public:
                  "Residual transform can only be a translation");
     if (!gfx::ThebesPoint(residual.GetTranslation()).WithinEpsilonOf(mResidualTranslation, 1e-3f)) {
       mResidualTranslation = gfx::ThebesPoint(residual.GetTranslation());
-      DebugOnly<mozilla::gfx::Point> transformedOrig =
-        idealTransform * mozilla::gfx::Point();
-#ifdef DEBUG
-      DebugOnly<mozilla::gfx::Point> transformed =
-        idealTransform * mozilla::gfx::Point(mResidualTranslation.x,
-                                             mResidualTranslation.y) -
-        *&transformedOrig;
-#endif
-      NS_ASSERTION(-0.5 <= (&transformed)->x && (&transformed)->x < 0.5 &&
-                   -0.5 <= (&transformed)->y && (&transformed)->y < 0.5,
+      NS_ASSERTION(-0.5 <= mResidualTranslation.x && mResidualTranslation.x < 0.5 &&
+                   -0.5 <= mResidualTranslation.y && mResidualTranslation.y < 0.5,
                    "Residual translation out of range");
       mValidRegion.SetEmpty();
     }
@@ -2153,8 +2099,6 @@ protected:
   void DidInsertChild(Layer* aLayer);
   void DidRemoveChild(Layer* aLayer);
 
-  void Collect3DContextLeaves(nsTArray<Layer*>& aToSort);
-
   ContainerLayer(LayerManager* aManager, void* aImplData);
 
   /**
@@ -2179,12 +2123,6 @@ protected:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
-
-  /**
-   * True for if the container start a new 3D context extended by one
-   * or more children.
-   */
-  bool Creates3DContextWithExtendingChildren();
 
   Layer* mFirstChild;
   Layer* mLastChild;

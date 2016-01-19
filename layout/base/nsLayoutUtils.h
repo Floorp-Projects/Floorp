@@ -920,6 +920,18 @@ public:
                                     const Matrix4x4 &aMatrix, float aFactor);
 
   /**
+   * Helper function that, given a rectangle and a matrix, returns the smallest
+   * rectangle containing the image of the source rectangle rounded out to the nearest
+   * pixel value.
+   *
+   * @param aBounds The rectangle to transform.
+   * @param aMatrix The matrix to transform it with.
+   * @param aFactor The number of app units per graphics unit.
+   * @return The smallest rect that contains the image of aBounds.
+   */
+  static nsRect MatrixTransformRectOut(const nsRect &aBounds,
+                                       const Matrix4x4 &aMatrix, float aFactor);
+  /**
    * Helper function that, given a point and a matrix, returns the image
    * of that point under the matrix transform.
    *
@@ -1968,8 +1980,10 @@ public:
 
   /**
    * Get the reference frame that would be used when constructing a
-   * display item for this frame.  Rather than using their own frame
-   * as a reference frame.)
+   * display item for this frame.  (Note, however, that
+   * nsDisplayTransform use the reference frame appropriate for their
+   * GetTransformRootFrame(), rather than using their own frame as a
+   * reference frame.)
    *
    * This duplicates some of the logic of GetDisplayRootFrame above and
    * of nsDisplayListBuilder::FindReferenceFrameFor.
@@ -1978,6 +1992,16 @@ public:
    * frame from it instead of calling this.
    */
   static nsIFrame* GetReferenceFrame(nsIFrame* aFrame);
+
+  /**
+   * Get the parent of this frame, except if that parent is part of a
+   * preserve-3d hierarchy, get the parent of the root of the
+   * preserve-3d hierarchy.
+   *
+   * (This is used as the starting point for reference frame computation
+   * for nsDisplayTransform display items.)
+   */
+  static nsIFrame* GetTransformRootFrame(nsIFrame* aFrame);
 
   /**
    * Get textrun construction flags determined by a given style; in particular
