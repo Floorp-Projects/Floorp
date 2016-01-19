@@ -3800,7 +3800,6 @@ MOZ_ANDROID_HISTORY=
 MOZ_WEBSMS_BACKEND=
 MOZ_ANDROID_BEAM=
 MOZ_LOCALE_SWITCHER=
-MOZ_ANDROID_READING_LIST_SERVICE=
 MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
 MOZ_ANDROID_GCM=
@@ -4876,13 +4875,6 @@ dnl = Include Search Activity on Android
 dnl ========================================================
 if test -n "$MOZ_ANDROID_SEARCH_ACTIVITY"; then
     AC_DEFINE(MOZ_ANDROID_SEARCH_ACTIVITY)
-fi
-
-dnl ========================================================
-dnl = Include Reading List service on Android
-dnl ========================================================
-if test -n "$MOZ_ANDROID_READING_LIST_SERVICE"; then
-    AC_DEFINE(MOZ_ANDROID_READING_LIST_SERVICE)
 fi
 
 dnl ========================================================
@@ -8542,7 +8534,6 @@ AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
 AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
-AC_SUBST(MOZ_ANDROID_READING_LIST_SERVICE)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)
 AC_SUBST(MOZ_ANDROID_MLS_STUMBLER)
 AC_SUBST(MOZ_ANDROID_DOWNLOADS_INTEGRATION)
