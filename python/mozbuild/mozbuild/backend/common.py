@@ -37,7 +37,10 @@ from mozbuild.frontend.data import (
     XPIDLFile,
     WebIDLFile,
 )
-from mozbuild.jar import JarManifestParser
+from mozbuild.jar import (
+    DeprecatedJarManifest,
+    JarManifestParser,
+)
 from mozbuild.preprocessor import Preprocessor
 from mozpack.chrome.manifest import parse_manifest_line
 
@@ -397,7 +400,11 @@ class CommonBackend(BuildBackend):
             BUILD_FASTER=1,
         )
         pp.out = JarManifestParser()
-        pp.do_include(obj.path.full_path)
+        try:
+            pp.do_include(obj.path.full_path)
+        except DeprecatedJarManifest as e:
+            raise DeprecatedJarManifest('Parsing error while processing %s: %s'
+                                        % (obj.path.full_path, e.message))
         self.backend_input_files |= pp.includes
 
         for jarinfo in pp.out:
