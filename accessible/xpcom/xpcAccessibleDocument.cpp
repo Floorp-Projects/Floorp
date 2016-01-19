@@ -9,6 +9,7 @@
 #include "xpcAccessibleTable.h"
 #include "xpcAccessibleTableCell.h"
 
+#include "mozilla/a11y/DocAccessibleParent.h"
 #include "DocAccessible-inl.h"
 #include "nsIDOMDocument.h"
 
@@ -194,6 +195,27 @@ xpcAccessibleDocument::GetAccessible(Accessible* aAccessible)
 
   mCache.Put(aAccessible, xpcAcc);
   return xpcAcc;
+}
+
+xpcAccessibleGeneric*
+xpcAccessibleDocument::GetXPCAccessible(ProxyAccessible* aProxy)
+{
+  MOZ_ASSERT(mRemote);
+  MOZ_ASSERT(aProxy->Document() == mIntl.AsProxy());
+  if (aProxy->IsDoc()) {
+    return this;
+  }
+
+  xpcAccessibleGeneric* acc = mCache.GetWeak(aProxy);
+  if (acc) {
+    return acc;
+  }
+
+  // XXX support exposing optional interfaces.
+  acc = new xpcAccessibleGeneric(aProxy, 0);
+  mCache.Put(aProxy, acc);
+
+  return acc;
 }
 
 void
