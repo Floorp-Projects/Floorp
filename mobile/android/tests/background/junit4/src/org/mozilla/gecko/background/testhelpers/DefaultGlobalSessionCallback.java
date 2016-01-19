@@ -16,25 +16,9 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   }
 
   @Override
-  public boolean wantNodeAssignment() {
-    return false;
-  }
-
-  @Override
   public void informUnauthorizedResponse(GlobalSession globalSession,
                                          URI oldClusterURL) {
   }
-
-  @Override
-  public void informNodeAssigned(GlobalSession globalSession,
-                                 URI oldClusterURL, URI newClusterURL) {
-  }
-
-  @Override
-  public void informNodeAuthenticationFailed(GlobalSession globalSession,
-                                             URI failedClusterURL) {
-  }
-
   @Override
   public void informUpgradeRequiredResponse(GlobalSession session) {
   }
@@ -63,10 +47,5 @@ public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
   @Override
   public boolean shouldBackOffStorage() {
     return false;
-  }
-
-  @Override
-  public String nodeWeaveURL() {
-    return null;
   }
 }
