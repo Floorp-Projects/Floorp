@@ -162,9 +162,9 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           aItem->IsUniform(aBuilder, &color) ? " uniform" : "",
           aItem->ReferenceFrame(), aItem->GetAnimatedGeometryRoot()->mFrame);
 
-  nsRegionRectIterator iter(opaque);
-  for (const nsRect* r = iter.Next(); r; r = iter.Next()) {
-    aStream << nsPrintfCString(" (opaque %d,%d,%d,%d)", r->x, r->y, r->width, r->height);
+  for (auto iter = opaque.RectIter(); !iter.Done(); iter.Next()) {
+    const nsRect& r = iter.Get();
+    aStream << nsPrintfCString(" (opaque %d,%d,%d,%d)", r.x, r.y, r.width, r.height);
   }
 
   if (aItem->Frame()->StyleDisplay()->mWillChange.Length() > 0) {

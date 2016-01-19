@@ -322,11 +322,9 @@ static float
 ComputeDistanceFromRegion(const nsPoint& aPoint, const nsRegion& aRegion)
 {
   MOZ_ASSERT(!aRegion.IsEmpty(), "can't compute distance between point and empty region");
-  nsRegionRectIterator iter(aRegion);
-  const nsRect* r;
   float minDist = -1;
-  while ((r = iter.Next()) != nullptr) {
-    float dist = ComputeDistanceFromRect(aPoint, *r);
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    float dist = ComputeDistanceFromRect(aPoint, iter.Get());
     if (dist < minDist || minDist < 0) {
       minDist = dist;
     }
