@@ -31,7 +31,7 @@ protected:
   virtual ~xpcAccessibleImage() {}
 
 private:
-  ImageAccessible* Intl() { return mIntl->AsImage(); }
+  ImageAccessible* Intl() { return mIntl.AsAccessible()->AsImage(); }
 
   xpcAccessibleImage(const xpcAccessibleImage&) = delete;
   xpcAccessibleImage& operator =(const xpcAccessibleImage&) = delete;
