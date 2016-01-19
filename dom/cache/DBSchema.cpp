@@ -37,7 +37,7 @@ const int32_t kFirstShippedSchemaVersion = 15;
 namespace {
 
 // Update this whenever the DB schema is changed.
-const int32_t kLatestSchemaVersion = 18;
+const int32_t kLatestSchemaVersion = 19;
 
 // ---------
 // The following constants define the SQL schema.  These are defined in the
@@ -2412,12 +2412,14 @@ struct Migration
 nsresult MigrateFrom15To16(mozIStorageConnection* aConn);
 nsresult MigrateFrom16To17(mozIStorageConnection* aConn);
 nsresult MigrateFrom17To18(mozIStorageConnection* aConn);
+nsresult MigrateFrom18To19(mozIStorageConnection* aConn);
 
 // Configure migration functions to run for the given starting version.
 Migration sMigrationList[] = {
   Migration(15, MigrateFrom15To16),
   Migration(16, MigrateFrom16To17),
   Migration(17, MigrateFrom17To18),
+  Migration(18, MigrateFrom18To19),
 };
 
 uint32_t sMigrationListLength = sizeof(sMigrationList) / sizeof(Migration);
@@ -2680,6 +2682,38 @@ MigrateFrom17To18(mozIStorageConnection* aConn)
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   rv = aConn->SetSchemaVersion(18);
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  return rv;
+}
+
+nsresult
+MigrateFrom18To19(mozIStorageConnection* aConn)
+{
+  MOZ_ASSERT(!NS_IsMainThread());
+  MOZ_ASSERT(aConn);
+
+  mozStorageTransaction trans(aConn, true,
+                              mozIStorageConnection::TRANSACTION_IMMEDIATE);
+
+  // This migration is needed in order to update the RequestMode values for
+  // Request objects corresponding to a navigation content policy type to
+  // "navigate".
+
+  static_assert(int(nsIContentPolicy::TYPE_DOCUMENT) == 6 &&
+                int(nsIContentPolicy::TYPE_SUBDOCUMENT) == 7 &&
+                int(nsIContentPolicy::TYPE_INTERNAL_FRAME) == 28 &&
+                int(nsIContentPolicy::TYPE_INTERNAL_IFRAME) == 29 &&
+                int(nsIContentPolicy::TYPE_REFRESH) == 8 &&
+                int(RequestMode::Navigate) == 3,
+                "This is where the numbers below come from!");
+  nsresult rv = aConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "UPDATE entries SET request_mode = 3 "
+      "WHERE request_contentpolicytype IN (6, 7, 28, 29, 8);"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
+
+  rv = aConn->SetSchemaVersion(19);
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
 
   return rv;
