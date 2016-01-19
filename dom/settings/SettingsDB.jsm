@@ -40,7 +40,7 @@ const TYPED_ARRAY_THINGS = new Set([
 ]);
 
 this.SETTINGSDB_NAME = "settings";
-this.SETTINGSDB_VERSION = 7;
+this.SETTINGSDB_VERSION = 8;
 this.SETTINGSSTORE_NAME = "settings";
 
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");

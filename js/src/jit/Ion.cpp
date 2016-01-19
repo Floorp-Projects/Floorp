@@ -2308,7 +2308,7 @@ CheckFrame(JSContext* cx, BaselineFrame* frame)
     MOZ_ASSERT(!frame->isEvalFrame());
 
     // This check is to not overrun the stack.
-    if (frame->isNonEvalFunctionFrame()) {
+    if (frame->isFunctionFrame()) {
         if (TooManyActualArguments(frame->numActualArgs())) {
             TrackAndSpewIonAbort(cx, frame->script(), "too many actual arguments");
             return false;
@@ -2634,7 +2634,7 @@ jit::CompileFunctionForBaseline(JSContext* cx, HandleScript script, BaselineFram
     MOZ_ASSERT(frame->callee()->nonLazyScript()->canIonCompile());
     MOZ_ASSERT(!frame->callee()->nonLazyScript()->isIonCompilingOffThread());
     MOZ_ASSERT(!frame->callee()->nonLazyScript()->hasIonScript());
-    MOZ_ASSERT(frame->isNonEvalFunctionFrame());
+    MOZ_ASSERT(frame->isFunctionFrame());
 
     // Mark as forbidden if frame can't be handled.
     if (!CheckFrame(cx, frame)) {

@@ -52,8 +52,13 @@ struct nsMediaFeature
     // Bitfield of requirements that must be satisfied in order for this
     // media feature to be active.
     eNoRequirements = 0,
-    eHasWebkitPrefix = 1 // Feature name must start w/ "-webkit-", even
-                         // before any "min-"/"max-" qualifier.
+    eHasWebkitPrefix = 1 << 0, // Feature name must start w/ "-webkit-", even
+                               // before any "min-"/"max-" qualifier.
+
+    // Feature is only supported if the pref
+    // "layout.css.prefixes.device-pixel-ratio-webkit" is enabled.
+    // (Should only be used for -webkit-device-pixel-ratio.)
+    eWebkitDevicePixelRatioPrefEnabled = 1 << 1
   };
   uint8_t mReqFlags;
 

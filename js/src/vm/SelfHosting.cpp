@@ -633,7 +633,7 @@ intrinsic_ActiveFunction(JSContext* cx, unsigned argc, Value* vp)
     MOZ_ASSERT(args.length() == 0);
 
     ScriptFrameIter iter(cx);
-    MOZ_ASSERT(iter.isNonEvalFunctionFrame());
+    MOZ_ASSERT(iter.isFunctionFrame());
     args.rval().setObject(*iter.callee(cx));
     return true;
 }

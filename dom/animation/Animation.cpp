@@ -796,7 +796,6 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
   // immediately before updating the style rule and then restore it immediately
   // afterwards. This is purely to prevent visual flicker. Other behavior
   // such as dispatching events continues to rely on the regular timeline time.
-  bool updatedHoldTime = false;
   AnimationPlayState playState = PlayState();
   {
     AutoRestore<Nullable<TimeDuration>> restoreHoldTime(mHoldTime);
@@ -813,18 +812,10 @@ Animation::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
       if (!timeToUse.IsNull()) {
         mHoldTime.SetValue((timeToUse.Value() - mStartTime.Value())
                             .MultDouble(mPlaybackRate));
-        // Push the change down to the effect
-        UpdateEffect();
-        updatedHoldTime = true;
       }
     }
 
     mEffect->ComposeStyle(aStyleRule, aSetProperties);
-  }
-
-  // Now that the hold time has been restored, update the effect
-  if (updatedHoldTime) {
-    UpdateEffect();
   }
 
   MOZ_ASSERT(playState == PlayState(),
