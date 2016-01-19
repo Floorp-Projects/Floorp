@@ -381,8 +381,6 @@ GeckoChildProcessHost::AsyncLaunch(std::vector<std::string> aExtraOpts,
 bool
 GeckoChildProcessHost::WaitUntilConnected(int32_t aTimeoutMs)
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
-
   // NB: this uses a different mechanism than the chromium parent
   // class.
   PRIntervalTime timeoutTicks = (aTimeoutMs > 0) ?

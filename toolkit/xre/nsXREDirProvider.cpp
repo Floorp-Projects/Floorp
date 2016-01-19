@@ -910,8 +910,6 @@ nsXREDirProvider::DoStartup()
 void
 nsXREDirProvider::DoShutdown()
 {
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
-
   if (mProfileNotified) {
     nsCOMPtr<nsIObserverService> obsSvc =
       mozilla::services::GetObserverService();

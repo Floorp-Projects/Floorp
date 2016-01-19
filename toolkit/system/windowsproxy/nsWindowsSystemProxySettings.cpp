@@ -203,7 +203,6 @@ nsWindowsSystemProxySettings::PatternMatch(const nsACString& aHost,
 nsresult
 nsWindowsSystemProxySettings::GetPACURI(nsACString& aResult)
 {
-    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::STORAGE);
     nsresult rv;
     uint32_t flags = 0;
     nsAutoString buf;
