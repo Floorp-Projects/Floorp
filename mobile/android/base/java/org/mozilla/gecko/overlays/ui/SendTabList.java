@@ -9,8 +9,6 @@ import static org.mozilla.gecko.overlays.ui.SendTabList.State.SHOW_DEVICES;
 
 import java.util.Arrays;
 
-import org.mozilla.gecko.AppConstants.Versions;
-import org.mozilla.gecko.Assert;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
@@ -87,7 +85,9 @@ public class SendTabList extends ListView {
 
     @Override
     public void setAdapter(ListAdapter adapter) {
-        Assert.isTrue(adapter instanceof SendTabDeviceListArrayAdapter);
+        if (!(adapter instanceof SendTabDeviceListArrayAdapter)) {
+            throw new IllegalArgumentException("adapter must be a SendTabDeviceListArrayAdapter instance");
+        }
 
         clientListAdapter = (SendTabDeviceListArrayAdapter) adapter;
         super.setAdapter(adapter);

@@ -1214,6 +1214,16 @@ auto ThumbnailHelper::SendThumbnail(mozilla::jni::Object::Param a0, int32_t a1, 
     return mozilla::jni::Method<SendThumbnail_t>::Call(nullptr, nullptr, a0, a1, a2, a3);
 }
 
+constexpr char Distribution::name[];
+
+constexpr char Distribution::GetDistributionDirectories_t::name[];
+constexpr char Distribution::GetDistributionDirectories_t::signature[];
+
+auto Distribution::GetDistributionDirectories() -> mozilla::jni::ObjectArray::LocalRef
+{
+    return mozilla::jni::Method<GetDistributionDirectories_t>::Call(nullptr, nullptr);
+}
+
 constexpr char DisplayPortMetrics::name[];
 
 constexpr char DisplayPortMetrics::New_t::name[];
