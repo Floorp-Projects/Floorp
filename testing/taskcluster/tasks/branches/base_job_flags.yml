@@ -32,6 +32,7 @@ flags:
     e10s: /.*e10s.*/
     gaia-js-integration: /.*gaia-js-integration.*/
     gaia-ui-test: /.*gaia-ui-test.*/
+    gtest: /gtest.*/
     jittest: /jittest.*/
     jittests: /jittest.*/
     jsreftest: /jsreftest.*/
@@ -121,6 +122,7 @@ flags:
     - gaia-ui-test-functional
     - gaia-ui-test-functional-dsds
     - gaia-ui-test-unit
+    - gtest
     - jetpack
     - jittests
     - jsreftest
