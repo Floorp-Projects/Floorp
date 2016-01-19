@@ -4,14 +4,13 @@
 
 package org.mozilla.gecko.background.fxa;
 
+import org.json.simple.JSONObject;
+import org.mozilla.gecko.sync.Utils;
+
 import java.io.UnsupportedEncodingException;
 import java.security.GeneralSecurityException;
 
-import org.json.simple.JSONObject;
-import org.mozilla.gecko.background.fxa.FxAccountClient10.CreateDelegate;
-import org.mozilla.gecko.sync.Utils;
-
-public class FxAccount20CreateDelegate implements CreateDelegate {
+public class FxAccount20CreateDelegate {
   protected final byte[] emailUTF8;
   protected final byte[] authPW;
   protected final boolean preVerified;
@@ -36,7 +35,6 @@ public class FxAccount20CreateDelegate implements CreateDelegate {
   }
 
   @SuppressWarnings("unchecked")
-  @Override
   public JSONObject getCreateBody() throws FxAccountClientException {
     final JSONObject body = new JSONObject();
     try {
