@@ -116,6 +116,10 @@ class TcpTransport(object):
     connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
 
     def __init__(self, addr, port, socket_timeout=360.0):
+        """If `socket_timeout` is `0` or `0.0`, non-blocking socket mode
+        will be used.  Setting it to `1` or `None` disables timeouts on
+        socket operations altogether.
+        """
         self.addr = addr
         self.port = port
         self.socket_timeout = socket_timeout
@@ -164,7 +168,7 @@ class TcpTransport(object):
         data = ""
         bytes_to_recv = 10
 
-        while time.time() - now < self.socket_timeout:
+        while self.socket_timeout is None or (time.time() - now < self.socket_timeout):
             try:
                 chunk = self.sock.recv(bytes_to_recv)
                 data += chunk
