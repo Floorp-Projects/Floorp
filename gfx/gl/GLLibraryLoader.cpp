@@ -95,8 +95,9 @@ GLLibraryLoader::LoadSymbols(PRLibrary *lib,
         }
 
         if (*ss->symPointer == 0) {
-            if (warnOnFailure)
+            if (warnOnFailure) {
                 printf_stderr("Can't find symbol '%s'.\n", ss->symNames[0]);
+            }
 
             failCount++;
         }
