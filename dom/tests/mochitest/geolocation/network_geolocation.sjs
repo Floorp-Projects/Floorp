@@ -18,7 +18,7 @@ function parseQueryString(str)
 }
 
 function getPosition(action)
-{  
+{
   var response = {
     status: "OK",
     location: {
@@ -27,7 +27,7 @@ function getPosition(action)
     },
     accuracy: (action == "worse-accuracy") ? 100 : 42,
   };
-  
+
   return JSON.stringify(response);
 }
 
