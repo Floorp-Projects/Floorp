@@ -557,8 +557,24 @@ const resolveURI = iced(function resolveURI(id, mapping) {
 
   while (index < count) {
     let [ path, uri ] = mapping[index++];
-    if (id.indexOf(path) === 0)
+
+    // Strip off any trailing slashes to make comparisons simpler
+    let stripped = path.endsWith('/') ? path.slice(0, -1) : path;
+
+    // We only want to match path segments explicitly. Examples:
+    // * "foo/bar" matches for "foo/bar"
+    // * "foo/bar" matches for "foo/bar/baz"
+    // * "foo/bar" does not match for "foo/bar-1"
+    // * "foo/bar/" does not match for "foo/bar"
+    // * "foo/bar/" matches for "foo/bar/baz"
+    //
+    // Check for an empty path, an exact match, or a substring match
+    // with the next character being a forward slash.
+    if(stripped === "" ||
+       (id.indexOf(stripped) === 0 &&
+        (id.length === path.length || id[stripped.length] === '/'))) {
       return normalizeExt(id.replace(path, uri));
+    }
   }
   return void 0; // otherwise we raise a warning, see bug 910304
 });
