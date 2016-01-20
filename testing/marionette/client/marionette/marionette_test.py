@@ -552,8 +552,8 @@ setReq.onerror = function() {
         self.marionette.set_context("chrome")
         self.marionette.execute_script("""
             let SECURITY_PREF = "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-            Components.utils.import("resource://gre/modules/Preferences.jsm");
-            Preferences.set(SECURITY_PREF, true);
+            Components.utils.import("resource://gre/modules/Services.jsm");
+            Services.prefs.setBoolPref(SECURITY_PREF, true);
 
             if (!testUtils.hasOwnProperty("specialPowersObserver")) {
               let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
