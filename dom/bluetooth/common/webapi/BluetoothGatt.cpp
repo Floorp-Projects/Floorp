@@ -112,11 +112,6 @@ BluetoothGatt::Connect(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
-  BluetoothUuid appUuid;
-  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
-                        promise,
-                        NS_ERROR_DOM_OPERATION_ERR);
-
   BluetoothAddress deviceAddr;
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(StringToAddress(mDeviceAddr, deviceAddr)),
@@ -130,6 +125,11 @@ BluetoothGatt::Connect(ErrorResult& aRv)
                           NS_ERROR_DOM_OPERATION_ERR);
     RegisterBluetoothSignalHandler(mAppUuid, this);
   }
+
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
 
   UpdateConnectionState(BluetoothConnectionState::Connecting);
   bs->ConnectGattClientInternal(
