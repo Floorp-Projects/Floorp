@@ -211,6 +211,10 @@ waitForAllPaints(function() {
     div.remove(div);
   });
 
+  /*
+   Disabled for now since, on Android, the opacity animation runs on the
+   compositor even if it is scrolled out of view.
+   We will fix this in bug 1166500 or a follow-up bug
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_scrolled_out_element() {
     var parentElement = addDiv(null,
       { style: 'overflow-y: scroll; height: 20px;' });
@@ -229,6 +233,7 @@ waitForAllPaints(function() {
             'which are scrolled out should never cause restyles');
     parentElement.remove(div);
   });
+  */
 
   add_task(function* no_restyling_main_thread_animations_in_scrolled_out_element() {
     var parentElement = addDiv(null,
@@ -247,6 +252,10 @@ waitForAllPaints(function() {
     parentElement.remove(div);
   });
 
+  /*
+   Disabled for now since, on Android and B2G, the opacity animation runs on the
+   compositor even if the associated element has visibility:hidden.
+   We will fix this in bug 1237454 or a follow-up bug.
   add_task_if_omta_enabled(function* no_restyling_compositor_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,
      { style: 'animation: opacity 100s; visibility: hidden' });
@@ -262,6 +271,7 @@ waitForAllPaints(function() {
             'visibility hidden element should never cause restyles');
     div.remove(div);
   });
+  */
 
   add_task(function* no_restyling_main_thread_animations_in_visiblily_hidden_element() {
     var div = addDiv(null,
