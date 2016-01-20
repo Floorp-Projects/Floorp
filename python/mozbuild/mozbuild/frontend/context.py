@@ -911,7 +911,7 @@ VARIABLES = {
     'FILES_PER_UNIFIED_FILE': (int, int,
         """The number of source files to compile into each unified source file.
 
-        """, 'None'),
+        """, None),
 
     'UNIFIED_SOURCES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Source code files that can be compiled together.
@@ -1505,7 +1505,7 @@ VARIABLES = {
 
         When this variable is present, the results of this directory will end up
         being packaged into an extension instead of the main dist/bin results.
-        """, 'libs'),
+        """, None),
 
     'DIST_SUBDIR': (unicode, unicode,
         """The name of an alternate directory to install files to.
