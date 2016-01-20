@@ -33,17 +33,6 @@ public class TestExtendedJSONObject {
   public static String exampleIntegral = "{\"modified\":1233702554,}";
 
   @Test
-  public void testDeepCopy() throws NonObjectJSONException, IOException, ParseException, NonArrayJSONException {
-    ExtendedJSONObject a = new ExtendedJSONObject(exampleJSON);
-    ExtendedJSONObject c = a.deepCopy();
-    assertTrue(a != c);
-    assertTrue(a.equals(c));
-    assertTrue(a.get("modified") == c.get("modified"));
-    assertTrue(a.getArray("success") != c.getArray("success"));
-    assertTrue(a.getArray("success").equals(c.getArray("success")));
-  }
-
-  @Test
   public void testFractional() throws IOException, ParseException, NonObjectJSONException {
     ExtendedJSONObject o = new ExtendedJSONObject(exampleJSON);
     assertTrue(o.containsKey("modified"));
