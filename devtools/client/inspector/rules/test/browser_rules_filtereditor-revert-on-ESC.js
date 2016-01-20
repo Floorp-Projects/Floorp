@@ -6,7 +6,7 @@
 // Tests that changes made to the Filter Editor Tooltip are reverted when
 // ESC is pressed
 
-const TEST_URL = TEST_URL_ROOT + "doc_filter.html";
+const TEST_URL = URL_ROOT + "doc_filter.html";
 
 add_task(function*() {
   yield addTab(TEST_URL);

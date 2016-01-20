@@ -10,7 +10,7 @@
 var PREF_UA_STYLES = "devtools.inspector.showUserAgentStyles";
 const { PrefObserver } = require("devtools/client/styleeditor/utils");
 
-const TEST_URI = TEST_URL_ROOT + "doc_author-sheet.html";
+const TEST_URI = URL_ROOT + "doc_author-sheet.html";
 
 const TEST_DATA = [
   {

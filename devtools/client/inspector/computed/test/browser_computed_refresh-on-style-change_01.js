@@ -19,7 +19,9 @@ add_task(function*() {
 
   info("Changing the node's style and waiting for the update");
   let onUpdated = inspector.once("computed-view-refreshed");
-  getNode("#testdiv").style.cssText = "font-size: 15px; color: red;";
+  // FIXME: use the testActor to set style on the node.
+  content.document.querySelector("#testdiv")
+                  .style.cssText = "font-size: 15px; color: red;";
   yield onUpdated;
 
   fontSize = getComputedViewPropertyValue(view, "font-size");

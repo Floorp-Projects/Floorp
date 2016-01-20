@@ -39,7 +39,7 @@ add_task(function* () {
 });
 
 function* testShowMdnTooltip(view) {
-  setBaseCssDocsUrl(TEST_URL_ROOT);
+  setBaseCssDocsUrl(URL_ROOT);
 
   info("Setting the popupNode for the MDN docs tooltip");
 
