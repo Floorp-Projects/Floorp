@@ -1242,6 +1242,7 @@ ContentParent::CreateBrowserOrApp(const TabContext& aContext,
                                   Element* aFrameElement,
                                   ContentParent* aOpenerContentParent)
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
     if (!sCanLaunchSubprocesses) {
         return nullptr;
     }
@@ -2398,6 +2399,8 @@ ContentParent::InitializeMembers()
 bool
 ContentParent::LaunchSubprocess(ProcessPriority aInitialPriority /* = PROCESS_PRIORITY_FOREGROUND */)
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
     std::vector<std::string> extraArgs;
     if (mIsNuwaProcess) {
         extraArgs.push_back("-nuwa");
@@ -3643,6 +3646,8 @@ ContentParent::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 void
 ContentParent::KillHard(const char* aReason)
 {
+    PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
+
     // On Windows, calling KillHard multiple times causes problems - the
     // process handle becomes invalid on the first call, causing a second call
     // to crash our process - more details in bug 890840.
