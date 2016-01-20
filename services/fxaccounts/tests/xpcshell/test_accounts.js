@@ -127,7 +127,8 @@ function MockFxAccountsClient() {
 
   this.signCertificate = function() { throw "no" };
 
-  this.signOut = function() { return Promise.resolve(); };
+  this.signOut = () => Promise.resolve();
+  this.signOutAndDestroyDevice = () => Promise.resolve({});
 
   FxAccountsClient.apply(this);
 }
@@ -162,6 +163,9 @@ function MockFxAccounts() {
       this._getCertificateSigned_calls.push([sessionToken, serializedPublicKey]);
       return this._d_signCertificate.promise;
     },
+    _registerOrUpdateDevice() {
+      return Promise.resolve();
+    },
     fxAccountsClient: new MockFxAccountsClient()
   });
 }
@@ -178,6 +182,12 @@ function MakeFxAccounts(internal = {}) {
       storage.initialize(credentials);
       return new AccountState(storage);
     };
+  }
+  if (!internal._signOutServer) {
+    internal._signOutServer = () => Promise.resolve();
+  }
+  if (!internal._registerOrUpdateDevice) {
+    internal._registerOrUpdateDevice = () => Promise.resolve();
   }
   return new FxAccounts(internal);
 }
@@ -210,7 +220,7 @@ add_test(function test_non_https_remote_server_uri() {
   run_next_test();
 });
 
-add_task(function test_get_signed_in_user_initially_unset() {
+add_task(function* test_get_signed_in_user_initially_unset() {
   _("Check getSignedInUser initially and after signout reports no user");
   let account = MakeFxAccounts();
   let credentials = {
@@ -555,7 +565,7 @@ add_test(function test_overlapping_signins() {
   });
 });
 
-add_task(function test_getAssertion() {
+add_task(function* test_getAssertion() {
   let fxa = new MockFxAccounts();
 
   do_check_throws(function() {
@@ -675,7 +685,7 @@ add_task(function test_getAssertion() {
   _("----- DONE ----\n");
 });
 
-add_task(function test_resend_email_not_signed_in() {
+add_task(function* test_resend_email_not_signed_in() {
   let fxa = new MockFxAccounts();
 
   try {
@@ -762,21 +772,98 @@ add_test(function test_resend_email() {
   });
 });
 
-add_test(function test_sign_out() {
-  let fxa = new MockFxAccounts();
-  let remoteSignOutCalled = false;
-  let client = fxa.internal.fxAccountsClient;
-  client.signOut = function() { remoteSignOutCalled = true; return Promise.resolve(); };
-  makeObserver(ONLOGOUT_NOTIFICATION, function() {
-    log.debug("test_sign_out_with_remote_error observed onlogout");
-    // user should be undefined after sign out
-    fxa.internal.getUserAccountData().then(user => {
-      do_check_eq(user, null);
-      do_check_true(remoteSignOutCalled);
-      run_next_test();
+add_task(function* test_sign_out_with_device() {
+  const fxa = new MockFxAccounts();
+
+  const credentials = getTestUser("alice");
+  yield fxa.internal.setSignedInUser(credentials);
+
+  const user = yield fxa.internal.getUserAccountData();
+  do_check_true(user);
+  Object.keys(credentials).forEach(key => do_check_eq(credentials[key], user[key]));
+
+  const spy = {
+    signOut: { count: 0 },
+    signOutAndDeviceDestroy: { count: 0, args: [] }
+  };
+  const client = fxa.internal.fxAccountsClient;
+  client.signOut = function () {
+    spy.signOut.count += 1;
+    return Promise.resolve();
+  };
+  client.signOutAndDestroyDevice = function () {
+    spy.signOutAndDeviceDestroy.count += 1;
+    spy.signOutAndDeviceDestroy.args.push(arguments);
+    return Promise.resolve();
+  };
+
+  const promise = new Promise(resolve => {
+    makeObserver(ONLOGOUT_NOTIFICATION, () => {
+      log.debug("test_sign_out_with_device observed onlogout");
+      // user should be undefined after sign out
+      fxa.internal.getUserAccountData().then(user2 => {
+        do_check_eq(user2, null);
+        do_check_eq(spy.signOut.count, 0);
+        do_check_eq(spy.signOutAndDeviceDestroy.count, 1);
+        do_check_eq(spy.signOutAndDeviceDestroy.args[0].length, 3);
+        do_check_eq(spy.signOutAndDeviceDestroy.args[0][0], credentials.sessionToken);
+        do_check_eq(spy.signOutAndDeviceDestroy.args[0][1], credentials.deviceId);
+        do_check_true(spy.signOutAndDeviceDestroy.args[0][2]);
+        do_check_eq(spy.signOutAndDeviceDestroy.args[0][2].service, "sync");
+        resolve();
+      });
     });
   });
-  fxa.signOut();
+
+  yield fxa.signOut();
+
+  yield promise;
+});
+
+add_task(function* test_sign_out_without_device() {
+  const fxa = new MockFxAccounts();
+
+  const credentials = getTestUser("alice");
+  delete credentials.deviceId;
+  yield fxa.internal.setSignedInUser(credentials);
+
+  const user = yield fxa.internal.getUserAccountData();
+
+  const spy = {
+    signOut: { count: 0, args: [] },
+    signOutAndDeviceDestroy: { count: 0 }
+  };
+  const client = fxa.internal.fxAccountsClient;
+  client.signOut = function () {
+    spy.signOut.count += 1;
+    spy.signOut.args.push(arguments);
+    return Promise.resolve();
+  };
+  client.signOutAndDestroyDevice = function () {
+    spy.signOutAndDeviceDestroy.count += 1;
+    return Promise.resolve();
+  };
+
+  const promise = new Promise(resolve => {
+    makeObserver(ONLOGOUT_NOTIFICATION, () => {
+      log.debug("test_sign_out_without_device observed onlogout");
+      // user should be undefined after sign out
+      fxa.internal.getUserAccountData().then(user2 => {
+        do_check_eq(user2, null);
+        do_check_eq(spy.signOut.count, 1);
+        do_check_eq(spy.signOut.args[0].length, 2);
+        do_check_eq(spy.signOut.args[0][0], credentials.sessionToken);
+        do_check_true(spy.signOut.args[0][1]);
+        do_check_eq(spy.signOut.args[0][1].service, "sync");
+        do_check_eq(spy.signOutAndDeviceDestroy.count, 0);
+        resolve();
+      });
+    });
+  });
+
+  yield fxa.signOut();
+
+  yield promise;
 });
 
 add_test(function test_sign_out_with_remote_error() {
@@ -1087,7 +1174,10 @@ add_test(function test_getSignedInUserProfile() {
     },
     tearDown: function() {},
   };
-  let fxa = new FxAccounts({});
+  let fxa = new FxAccounts({
+    _signOutServer() { return Promise.resolve(); },
+    _registerOrUpdateDevice() { return Promise.resolve(); }
+  });
 
   fxa.setSignedInUser(alice).then(() => {
     fxa.internal._profile = mockProfile;
@@ -1180,6 +1270,7 @@ function getTestUser(name) {
   return {
     email: name + "@example.com",
     uid: "1ad7f502-4cc7-4ec1-a209-071fd2fae348",
+    deviceId: name + "'s device id",
     sessionToken: name + "'s session token",
     keyFetchToken: name + "'s keyfetch token",
     unwrapBKey: expandHex("44"),

@@ -283,7 +283,7 @@
 
           this._browser = val;
           if (this._browser) {
-            // Need to do this in case FAYT
+            // Need to do this to ensure the correct initial state.
             this._updateBrowserWithState();
             this._browser.messageManager.addMessageListener("Findbar:Keypress", this);
             this._browser.messageManager.addMessageListener("Findbar:Mouseup", this);
@@ -318,7 +318,6 @@
           switch (aPrefName) {
             case "accessibility.typeaheadfind":
               this._self._findAsYouType = prefsvc.getBoolPref(aPrefName);
-              this._self._updateBrowserWithState();
               break;
             case "accessibility.typeaheadfind.linksonly":
               this._self._typeAheadLinksOnly = prefsvc.getBoolPref(aPrefName);
@@ -739,9 +738,20 @@
            on the real event. -->
       <method name="_onBrowserKeypress">
         <parameter name="aFakeEvent"/>
+        <parameter name="aShouldFastFind"/>
         <body><![CDATA[
           const FAYT_LINKS_KEY = "'";
           const FAYT_TEXT_KEY = "/";
+
+          // Fast keypresses can stack up when the content process is slow or
+          // hangs when in e10s mode. We make sure the findbar isn't 'opened'
+          // several times in a row, because then the find query is selected
+          // each time, losing characters typed initially.
+          let inputField = this._findField.inputField;
+          if (!this.hidden && document.activeElement == inputField) {
+            this._dispatchKeypressEvent(inputField, aFakeEvent);
+            return false;
+          }
 
           if (this._findMode != this.FIND_NORMAL && this._quickFindTimeout) {
             if (!aFakeEvent.charCode)
@@ -752,6 +762,9 @@
             this._dispatchKeypressEvent(this._findField.inputField, aFakeEvent);
             return false;
           }
+
+          if (!aShouldFastFind)
+            return true;
 
           let key = aFakeEvent.charCode ? String.fromCharCode(aFakeEvent.charCode) : null;
           let manualstartFAYT = (key == FAYT_LINKS_KEY || key == FAYT_TEXT_KEY);
@@ -795,7 +808,8 @@
               break;
 
             case "Findbar:Keypress":
-              return this._onBrowserKeypress(aMessage.data);
+              return this._onBrowserKeypress(aMessage.data.fakeEvent,
+                                             aMessage.data.shouldFastFind);
           }
         ]]></body>
       </method>
@@ -804,8 +818,7 @@
         <body><![CDATA[
           if (this._browser && this._browser.messageManager) {
             this._browser.messageManager.sendAsyncMessage("Findbar:UpdateState", {
-              findMode: this._findMode,
-              findAsYouType: this._findAsYouType,
+              findMode: this._findMode
             });
           }
         ]]></body>

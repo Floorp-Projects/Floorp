@@ -44,6 +44,12 @@ const TEST_DATA = [{
     rootNode.setAttribute("test-name", "value-" + Date.now());
   }
 }, {
+  desc: "Adding an attribute with css reserved characters should flash the attribute",
+  attribute: "one:two",
+  mutate: (doc, rootNode) => {
+    rootNode.setAttribute("one:two", "value-" + Date.now());
+  }
+}, {
   desc: "Editing an attribute should flash the attribute",
   attribute: "class",
   mutate: (doc, rootNode) => {

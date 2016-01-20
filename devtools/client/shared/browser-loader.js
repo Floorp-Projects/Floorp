@@ -1,9 +1,17 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
+
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 const loaders = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js", {});
 const { devtools, DevToolsLoader } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+
 const BROWSER_BASED_DIRS = [
+  "resource://devtools/client/jsonview",
   "resource://devtools/client/shared/vendor",
   "resource://devtools/client/shared/components",
   "resource://devtools/client/shared/redux"
@@ -36,12 +44,18 @@ const BROWSER_BASED_DIRS = [
  */
 function BrowserLoader(baseURI, window) {
   const loaderOptions = devtools.require("@loader/options");
+  const dynamicPaths = {};
+
+  if(AppConstants.DEBUG || AppConstants.DEBUG_JS_MODULES) {
+    dynamicPaths["devtools/client/shared/vendor/react"] =
+      "resource://devtools/client/shared/vendor/react-dev";
+  };
 
   const opts = {
     id: "browser-loader",
     sharedGlobal: true,
     sandboxPrototype: window,
-    paths: Object.assign({}, loaderOptions.paths),
+    paths: Object.assign({}, dynamicPaths, loaderOptions.paths),
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     require: (id, require) => {
       const uri = require.resolve(id);
@@ -54,6 +68,13 @@ function BrowserLoader(baseURI, window) {
       }
 
       return require(uri);
+    },
+    globals: {
+      // Make sure 'define' function exists. This allows reusing AMD modules.
+      define: function(callback) {
+        callback(this.require, this.exports, this.module);
+        return this.exports;
+      }
     }
   };
 

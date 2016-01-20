@@ -158,6 +158,45 @@ add_task(function * test_reinitialization_at_remoteness_change() {
   yield BrowserTestUtils.removeTab(tab);
 });
 
+/**
+ * Ensure that the initial typed characters aren't lost immediately after
+ * opening the find bar.
+ */
+add_task(function* () {
+  // This test only makes sence in e10s evironment.
+  if (!gMultiProcessBrowser) {
+    info("Skipping this test because of non-e10s environment.");
+    return true;
+  }
+
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, TEST_PAGE_URI);
+  let browser = tab.linkedBrowser;
+
+  ok(!gFindBarInitialized, "findbar isn't initialized yet");
+
+  let findBar = gFindBar;
+  let initialValue = findBar._findField.value;
+
+  EventUtils.synthesizeKey("f", { accelKey: true }, window);
+
+  let promises = [
+    BrowserTestUtils.sendChar("a", browser),
+    BrowserTestUtils.sendChar("b", browser),
+    BrowserTestUtils.sendChar("c", browser)
+  ];
+
+  isnot(document.activeElement, findBar._findField.inputField,
+    "findbar is not yet focused");
+  is(findBar._findField.value, initialValue, "still has initial find query");
+
+  yield Promise.all(promises);
+  is(document.activeElement, findBar._findField.inputField,
+    "findbar is now focused");
+  is(findBar._findField.value, "abc", "abc fully entered as find query");
+
+  yield BrowserTestUtils.removeTab(tab);
+});
+
 function promiseFindFinished(searchText, highlightOn) {
   let deferred = Promise.defer();
 

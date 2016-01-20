@@ -243,8 +243,14 @@
 <!ENTITY tab_queue_prompt_title "Opening multiple links?">
 <!ENTITY tab_queue_prompt_text4 "Save them until the next time you open &brandShortName;.">
 <!ENTITY tab_queue_prompt_tip_text2 "You can change this later in Settings">
+<!-- Localization note (tab_queue_prompt_permit_drawing_over_apps): This additional text is shown if the
+     user needs to enable an Android setting in order to enable tab queues. -->
+<!ENTITY tab_queue_prompt_permit_drawing_over_apps "Turn on Permit drawing over other apps">
 <!ENTITY tab_queue_prompt_positive_action_button "Enable">
 <!ENTITY tab_queue_prompt_negative_action_button "Not now">
+<!-- Localization note (tab_queue_prompt_settings_button): This button is shown if the user needs to
+     enable a permission in Android's setting in order to enable tab queues. -->
+<!ENTITY tab_queue_prompt_settings_button "Go to Settings">
 <!ENTITY tab_queue_notification_title "&brandShortName;">
 <!-- Localization note (tab_queue_notification_text_plural2) : The
      formatD is replaced with the number of tabs queued.  The
@@ -254,6 +260,10 @@
 <!-- Localization note (tab_queue_notification_text_singular2) : This is the
      text of a notification; we expect only one tab queued. -->
 <!ENTITY tab_queue_notification_text_singular2 "1 tab waiting">
+
+<!-- Localization note (tab_queue_notification_settings): This notification text is shown if a tab
+     has been queued but we are missing the system permission to show an overlay. -->
+<!ENTITY tab_queue_notification_settings "To &quot;Open multiple links&quot;, please enable the \'Draw over other apps\' permission for &brandShortName;">
 
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
