@@ -235,9 +235,10 @@ public:
 
   static bool RequestPermissionEnabledForScope(JSContext* aCx, JSObject* /* unused */);
 
-  static void RequestPermission(const GlobalObject& aGlobal,
-                                const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
-                                ErrorResult& aRv);
+  static already_AddRefed<Promise>
+  RequestPermission(const GlobalObject& aGlobal,
+                    const Optional<OwningNonNull<NotificationPermissionCallback> >& aCallback,
+                    ErrorResult& aRv);
 
   static NotificationPermission GetPermission(const GlobalObject& aGlobal,
                                               ErrorResult& aRv);
