@@ -88,20 +88,6 @@ function doOnloadOnce(aCallback) {
   registerCleanupFunction(removeDoOnloadOnceListener);
 }
 
-function* promiseOnLoad() {
-  return new Promise(resolve => {
-    gBrowser.addEventListener("load", function onLoadListener(aEvent) {
-      let cw = aEvent.target.defaultView;
-      let tab = gBrowser._getTabForContentWindow(cw);
-      if (tab) {
-        info("onLoadListener: " + aEvent.originalTarget.location);
-        gBrowser.removeEventListener("load", onLoadListener, true);
-        resolve(aEvent);
-      }
-    }, true);
-  });
-}
-
 function promiseNewEngine(basename, options = {}) {
   return new Promise((resolve, reject) => {
     //Default the setAsCurrent option to true.
