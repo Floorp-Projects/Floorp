@@ -3696,7 +3696,7 @@ IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::
 }
 
 #define ADD_NATIVE(native) const JSJitInfo JitInfo_##native { \
-    { nullptr }, { uint16_t(InlinableNative::native) }, 0, JSJitInfo::InlinableNative };
+    { nullptr }, { uint16_t(InlinableNative::native) }, { 0 }, JSJitInfo::InlinableNative };
     INLINABLE_NATIVE_LIST(ADD_NATIVE)
 #undef ADD_NATIVE
 
