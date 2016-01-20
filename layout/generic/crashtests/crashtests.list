@@ -602,15 +602,15 @@ pref(layout.css.grid.enabled,true) load 1225376.html
 pref(layout.css.grid.enabled,true) load 1225592.html
 load 1229437-1.html
 load 1229437-2.html
-load details-containing-only-text.html
-load details-open-overflow-auto.html
-load details-open-overflow-hidden.html
-load details-three-columns.html
+pref(dom.details_element.enabled,true) load details-containing-only-text.html
+pref(dom.details_element.enabled,true) load details-open-overflow-auto.html
+pref(dom.details_element.enabled,true) load details-open-overflow-hidden.html
+pref(dom.details_element.enabled,true) load details-three-columns.html
 load first-letter-638937-1.html
 load first-letter-638937-2.html
 pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(0-100) load font-inflation-762332.html # bug 762332
 load outline-on-frameset.xhtml
-load summary-position-out-of-flow.html
+pref(dom.details_element.enabled,true) load summary-position-out-of-flow.html
 load text-overflow-bug666751-1.html
 load text-overflow-bug666751-2.html
 load text-overflow-bug670564.xhtml
