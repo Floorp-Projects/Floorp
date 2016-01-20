@@ -13,13 +13,17 @@ package org.webrtc.videoengine;
 import java.util.ArrayList;
 import java.util.List;
 
+import android.Manifest;
+import android.app.Activity;
 import android.hardware.Camera.CameraInfo;
 import android.hardware.Camera.Parameters;
 import android.hardware.Camera.Size;
 import android.hardware.Camera;
 import android.util.Log;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.annotation.WebRTCJNITarget;
+import org.mozilla.gecko.permissions.Permissions;
 
 public class VideoCaptureDeviceInfoAndroid {
   private final static String TAG = "WEBRTC-JC";
@@ -71,6 +75,17 @@ public class VideoCaptureDeviceInfoAndroid {
   // marked "private" as it is only called by native code.
   @WebRTCJNITarget
   private static CaptureCapabilityAndroid[] getDeviceInfo() {
+      final boolean hasPermissions = Permissions.waitFor(
+              (Activity) GeckoAppShell.getContext(), Manifest.permission.CAMERA);
+
+      if (hasPermissions) {
+          return createDeviceList();
+      } else {
+          return new CaptureCapabilityAndroid[0];
+      }
+  }
+
+  private static CaptureCapabilityAndroid[] createDeviceList() {
       ArrayList<CaptureCapabilityAndroid> allDevices = new ArrayList<CaptureCapabilityAndroid>();
       int numCameras = 1;
       if (android.os.Build.VERSION.SDK_INT >= 9) {
@@ -163,5 +178,4 @@ public class VideoCaptureDeviceInfoAndroid {
       }
       return allDevices.toArray(new CaptureCapabilityAndroid[0]);
   }
-
 }

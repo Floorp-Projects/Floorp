@@ -25,6 +25,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
 XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
                                    "@mozilla.org/contentsecuritymanager;1",
                                    "nsIContentSecurityManager");
+XPCOMUtils.defineLazyServiceGetter(this, "gNetUtil",
+                                   "@mozilla.org/network/util;1",
+                                   "nsINetUtil");
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerContent");
@@ -416,9 +419,7 @@ var LoginManagerContent = {
     // Returns true if this window or any subframes have insecure login forms.
     let hasInsecureLoginForms = (thisWindow, parentIsInsecure) => {
       let doc = thisWindow.document;
-      let isInsecure =
-          parentIsInsecure ||
-          !this.checkIfURIisSecure(doc.documentURIObject);
+      let isInsecure = parentIsInsecure || !this.isDocumentSecure(doc);
       let hasLoginForm = !!this.stateForDocument(doc).loginForm;
       return (hasLoginForm && isInsecure) ||
              Array.some(thisWindow.frames,
@@ -1101,50 +1102,37 @@ var LoginManagerContent = {
     };
   },
 
-  /*
-   * Checks whether the passed uri is secure
-   * Check Protocol Flags to determine if scheme is secure:
-   * URI_DOES_NOT_RETURN_DATA - e.g.
-   *   "mailto"
-   * URI_IS_LOCAL_RESOURCE - e.g.
-   *   "data",
-   *   "resource",
-   *   "moz-icon"
-   * URI_INHERITS_SECURITY_CONTEXT - e.g.
-   *   "javascript"
-   * URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT - e.g.
-   *   "https",
-   *   "moz-safe-about"
+  /**
+   * Returns true if the provided document principal and URI are such that the
+   * page using them can safely host password fields.
    *
-   *   The use of this logic comes directly from nsMixedContentBlocker.cpp
-   *   At the time it was decided to include these protocols since a secure
-   *   uri for mixed content blocker means that the resource can't be
-   *   easily tampered with because 1) it is sent over an encrypted channel or
-   *   2) it is a local resource that never hits the network
-   *   or 3) it is a request sent without any response that could alter
-   *   the behavior of the page. It was decided to include the same logic
-   *   here both to be consistent with MCB and to make sure we cover all
-   *   "safe" protocols. Eventually, the code here and the code in MCB
-   *   will be moved to a common location that will be referenced from
-   *   both places. Look at
-   *   https://bugzilla.mozilla.org/show_bug.cgi?id=899099 for more info.
+   * This means the page can't be easily tampered with because it is sent over
+   * an encrypted channel or is a local resource that never hits the network.
+   *
+   * The system principal, codebase principals with secure schemes like "https",
+   * and local schemes like "resource" and "file" are all considered secure. If
+   * the page is sandboxed, then the document URI is checked instead.
+   *
+   * @param document
+   *        The document whose principal and URI are to be considered.
    */
-  checkIfURIisSecure : function(uri) {
-    let isSafe = false;
-    let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
-    let ph = Ci.nsIProtocolHandler;
-
-    // Is the connection to localhost? Consider localhost safe for passwords.
-    if (gContentSecurityManager.isURIPotentiallyTrustworthy(uri) ||
-        netutil.URIChainHasFlags(uri, ph.URI_IS_LOCAL_RESOURCE) ||
-        netutil.URIChainHasFlags(uri, ph.URI_DOES_NOT_RETURN_DATA) ||
-        netutil.URIChainHasFlags(uri, ph.URI_INHERITS_SECURITY_CONTEXT) ||
-        netutil.URIChainHasFlags(uri, ph.URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT)) {
-
-      isSafe = true;
+  isDocumentSecure(document) {
+    let docPrincipal = document.nodePrincipal;
+    if (docPrincipal.isSystemPrincipal) {
+      return true;
     }
 
-    return isSafe;
+    // Fall back to the document URI for sandboxed documents that do not have
+    // the allow-same-origin flag, as they have a null principal instead of a
+    // codebase principal. Here there are still some cases that are considered
+    // insecure while they are secure, for example sandboxed documents created
+    // using a "javascript:" or "data:" URI from an HTTPS page. See bug 1162772
+    // for defining "window.isSecureContext", that may help in these cases.
+    let uri = docPrincipal.isCodebasePrincipal ? docPrincipal.URI
+                                               : document.documentURIObject;
+
+    // These checks include "file", "resource", HTTPS, and HTTP to "localhost".
+    return gContentSecurityManager.isURIPotentiallyTrustworthy(uri);
   },
 };
 

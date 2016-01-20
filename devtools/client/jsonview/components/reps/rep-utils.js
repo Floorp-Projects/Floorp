@@ -9,7 +9,7 @@
 define(function(require, exports, module) {
 
 // Dependencies
-const React = require("react");
+const React = require("devtools/client/shared/vendor/react");
 
 /**
  * Create React factories for given arguments.
