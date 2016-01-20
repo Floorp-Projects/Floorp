@@ -121,6 +121,100 @@ function registerFakePluginHost() {
   MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
 }
 
+function MockAddonWrapper(aAddon) {
+  this.addon = aAddon;
+}
+MockAddonWrapper.prototype = {
+  get id() {
+    return this.addon.id;
+  },
+
+  get type() {
+    return "service";
+  },
+
+  get appDisabled() {
+    return false;
+  },
+
+  get isCompatible() {
+    return true;
+  },
+
+  get isPlatformCompatible() {
+    return true;
+  },
+
+  get scope() {
+    return AddonManager.SCOPE_PROFILE;
+  },
+
+  get foreignInstall() {
+    return false;
+  },
+
+  get providesUpdatesSecurely() {
+    return true;
+  },
+
+  get blocklistState() {
+    return 0; // Not blocked.
+  },
+
+  get pendingOperations() {
+    return AddonManager.PENDING_NONE;
+  },
+
+  get permissions() {
+    return AddonManager.PERM_CAN_UNINSTALL | AddonManager.PERM_CAN_DISABLE;
+  },
+
+  get isActive() {
+    return true;
+  },
+
+  get name() {
+    return this.addon.name;
+  },
+
+  get version() {
+    return this.addon.version;
+  },
+
+  get creator() {
+    return new AddonManagerPrivate.AddonAuthor(this.addon.author);
+  },
+
+  get userDisabled() {
+    return this.appDisabled;
+  },
+};
+
+function createMockAddonProvider(aName) {
+  let mockProvider = {
+    _addons: [],
+
+    get name() {
+      return aName;
+    },
+
+    addAddon: function(aAddon) {
+      this._addons.push(aAddon);
+      AddonManagerPrivate.callAddonListeners("onInstalled", new MockAddonWrapper(aAddon));
+    },
+
+    getAddonsByTypes: function (aTypes, aCallback) {
+      aCallback(this._addons.map(a => new MockAddonWrapper(a)));
+    },
+
+    shutdown() {
+      return Promise.resolve();
+    },
+  };
+
+  return mockProvider;
+};
+
 /**
  * Used to spoof the Persona Id.
  */
@@ -1049,11 +1143,9 @@ add_task(function* test_addonsFieldsLimit() {
 add_task(function* test_collectionWithbrokenAddonData() {
   const BROKEN_ADDON_ID = "telemetry-test2.example.com@services.mozilla.org";
   const BROKEN_MANIFEST = {
-    name: "telemetry social provider",
+    id: "telemetry-test2.example.com@services.mozilla.org",
+    name: "telemetry broken addon",
     origin: "https://telemetry-test2.example.com",
-    sidebarURL: "https://telemetry-test2.example.com/browser/browser/base/content/test/social/social_sidebar.html",
-    workerURL: "https://telemetry-test2.example.com/browser/browser/base/content/test/social/social_worker.js",
-    iconURL: "https://telemetry-test2.example.com/browser/browser/base/content/test/general/moz.png",
     version: 1, // This is intentionally not a string.
     signedState: AddonManager.SIGNEDSTATE_SIGNED,
   };
@@ -1097,21 +1189,11 @@ add_task(function* test_collectionWithbrokenAddonData() {
     TelemetryEnvironment.unregisterChangeListener("testBrokenAddon_collection" + aExpected);
   };
 
-  // Initialize Social in order to use the SocialService later.
-  let Social = Cu.import("resource:///modules/Social.jsm", {}).Social;
-  Social.init();
-  Assert.ok(Social.initialized, "Social is now initialized");
-
-  // Add the broken provider to the SocialService.
-  const PROVIDER_DATA = {
-    origin: BROKEN_MANIFEST.origin,
-    manifest: BROKEN_MANIFEST,
-  };
-
-  let SocialService = Cu.import("resource://gre/modules/SocialService.jsm", {}).SocialService;
+  // Register the broken provider and install the broken addon.
   let checkpointPromise = registerCheckpointPromise(1);
-  SocialService.installProvider(PROVIDER_DATA, () => SocialService.enableProvider(BROKEN_MANIFEST.origin),
-                                { bypassInstallPanel: true });
+  let brokenAddonProvider = createMockAddonProvider("Broken Extensions Provider");
+  AddonManagerPrivate.registerProvider(brokenAddonProvider);
+  brokenAddonProvider.addAddon(BROKEN_MANIFEST);
   yield checkpointPromise;
   assertCheckpoint(1);
 
@@ -1138,10 +1220,8 @@ add_task(function* test_collectionWithbrokenAddonData() {
   Assert.equal(activeAddons[ADDON_ID].description, EXPECTED_ADDON_DATA.description,
                "The description for the valid addon should be correct.");
 
-  // Uninstall the broken addon so don't mess with other tests.
-  deferred = PromiseUtils.defer();
-  SocialService.uninstallProvider(BROKEN_MANIFEST.origin, deferred.resolve);
-  yield deferred.promise;
+  // Unregister the broken provider so we don't mess with other tests.
+  AddonManagerPrivate.unregisterProvider(brokenAddonProvider);
 
   // Uninstall the valid addon.
   yield AddonTestUtils.uninstallAddonByID(ADDON_ID);
