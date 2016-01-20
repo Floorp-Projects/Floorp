@@ -15,7 +15,9 @@ BEGIN_TEST(testDebugger_newScriptHook)
 {
     // Test that top-level indirect eval fires the newScript hook.
     CHECK(JS_DefineDebuggerObject(cx, global));
-    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr, JS::FireOnNewGlobalHook));
+    JS::CompartmentOptions options;
+    JS::RootedObject g(cx, JS_NewGlobalObject(cx, getGlobalClass(), nullptr,
+                                              JS::FireOnNewGlobalHook, options));
     CHECK(g);
     {
         JSAutoCompartment ae(cx, g);
