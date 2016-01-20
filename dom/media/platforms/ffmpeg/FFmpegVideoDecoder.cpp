@@ -98,11 +98,11 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
   mLastDts = INT64_MIN;
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(FFmpegLibWrapper* aLib,
+FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const VideoInfo& aConfig,
   ImageContainer* aImageContainer)
-  : FFmpegDataDecoder(aLib, aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
+  : FFmpegDataDecoder(aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
   , mImageContainer(aImageContainer)
   , mDisplay(aConfig.mDisplay)
   , mImage(aConfig.mImage)
@@ -151,7 +151,7 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
 
-  mCodecParser = mLib->av_parser_init(mCodecID);
+  mCodecParser = AV_CALL(av_parser_init(mCodecID));
   if (mCodecParser) {
     mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
   }
@@ -175,10 +175,10 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     while (inputSize) {
       uint8_t* data;
       int size;
-      int len = mLib->av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
-                                       inputData, inputSize,
-                                       aSample->mTime, aSample->mTimecode,
-                                       aSample->mOffset);
+      int len = AV_CALL(av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
+                                         inputData, inputSize,
+                                         aSample->mTime, aSample->mTimecode,
+                                         aSample->mOffset));
       if (size_t(len) > inputSize) {
         mCallback->Error();
         return DecodeResult::DECODE_ERROR;
@@ -210,7 +210,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
   AVPacket packet;
-  mLib->av_init_packet(&packet);
+  AV_CALL(av_init_packet(&packet));
 
   packet.data = aData;
   packet.size = aSize;
@@ -237,7 +237,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   int decoded;
   int bytesConsumed =
-    mLib->avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
+    AV_CALL(avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet));
 
   FFMPEG_LOG("DoDecodeFrame:decode_video: rv=%d decoded=%d "
              "(Input: pts(%lld) dts(%lld) Output: pts(%lld) "
@@ -361,7 +361,7 @@ FFmpegVideoDecoder<LIBAV_VER>::~FFmpegVideoDecoder()
 {
   MOZ_COUNT_DTOR(FFmpegVideoDecoder);
   if (mCodecParser) {
-    mLib->av_parser_close(mCodecParser);
+    AV_CALL(av_parser_close(mCodecParser));
     mCodecParser = nullptr;
   }
 }

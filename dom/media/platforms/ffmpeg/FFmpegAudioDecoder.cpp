@@ -6,6 +6,7 @@
 
 #include "mozilla/TaskQueue.h"
 
+#include "FFmpegRuntimeLinker.h"
 #include "FFmpegAudioDecoder.h"
 #include "TimeUnits.h"
 
@@ -14,10 +15,10 @@
 namespace mozilla
 {
 
-FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(FFmpegLibWrapper* aLib,
+FFmpegAudioDecoder<LIBAV_VER>::FFmpegAudioDecoder(
   FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const AudioInfo& aConfig)
-  : FFmpegDataDecoder(aLib, aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
+  : FFmpegDataDecoder(aTaskQueue, aCallback, GetCodecId(aConfig.mMimeType))
 {
   MOZ_COUNT_CTOR(FFmpegAudioDecoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
@@ -43,9 +44,11 @@ FFmpegAudioDecoder<LIBAV_VER>::InitCodecContext()
   // isn't implemented.
   mCodecContext->thread_count = 1;
   // FFmpeg takes this as a suggestion for what format to use for audio samples.
+  uint32_t major, minor, micro;
+  FFmpegRuntimeLinker::GetVersion(major, minor, micro);
   // LibAV 0.8 produces rubbish float interleaved samples, request 16 bits audio.
   mCodecContext->request_sample_fmt =
-    (mLib->mVersion == 53) ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;
+    (major == 53) ? AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;
 }
 
 static UniquePtr<AudioDataValue[]>
@@ -98,7 +101,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   AVPacket packet;
-  mLib->av_init_packet(&packet);
+  AV_CALL(av_init_packet(&packet));
 
   packet.data = const_cast<uint8_t*>(aSample->Data());
   packet.size = aSample->Size();
@@ -115,7 +118,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
   while (packet.size > 0) {
     int decoded;
     int bytesConsumed =
-      mLib->avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet);
+      AV_CALL(avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet));
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
