@@ -19,20 +19,20 @@ public class FirstrunPagerConfig {
     public static final String LOGTAG = "FirstrunPagerConfig";
     public static final String ONBOARDING_A = "onboarding-a";
     public static final String ONBOARDING_B = "onboarding-b";
+    public static final String ONBOARDING_C = "onboarding-c";
 
     public static List<FirstrunPanelConfig> getDefault(Context context) {
         final List<FirstrunPanelConfig> panels = new LinkedList<>();
 
-        // The "Import" feature is disabled on devices running Android M+ (Bug 1183559).
-        // Exclude these users from the experiment to add an "Import" panel.
-        if (isInExperimentLocal(context, ONBOARDING_A) && AppConstants.Versions.preM) {
+        if (isInExperimentLocal(context, ONBOARDING_A)) {
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_A);
-        } else if (isInExperimentLocal(context, ONBOARDING_B) && AppConstants.Versions.preM) {
-            // Strings used for first run, pulled from existing strings.
-            panels.add(new FirstrunPanelConfig(ImportPanel.class.getName(), ImportPanel.TITLE_RES));
-            panels.add(new FirstrunPanelConfig(SyncPanel.class.getName(), SyncPanel.TITLE_RES));
+        } else if (isInExperimentLocal(context, ONBOARDING_B)) {
+            // TODO: Add new static onboarding flow.
             Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_B);
+        } else if (isInExperimentLocal(context, ONBOARDING_C)) {
+            // TODO: Add new interactive onboarding flow.
+            Telemetry.startUISession(TelemetryContract.Session.EXPERIMENT, ONBOARDING_C);
         } else {
             Log.d(LOGTAG, "Not in an experiment!");
             panels.add(new FirstrunPanelConfig(WelcomePanel.class.getName(), WelcomePanel.TITLE_RES));
@@ -47,8 +47,13 @@ public class FirstrunPagerConfig {
      */
     private static boolean isInExperimentLocal(Context context, String name) {
         if (AppConstants.MOZ_SWITCHBOARD) {
-          // Only show Onboarding A.
-          return ONBOARDING_A.equals(name);
+            if (SwitchBoard.isInBucket(context, 0, 33)) {
+                return ONBOARDING_A.equals(name);
+            } else if (SwitchBoard.isInBucket(context, 33, 66)) {
+                return ONBOARDING_B.equals(name);
+            } else if (SwitchBoard.isInBucket(context, 66, 100)) {
+                return ONBOARDING_C.equals(name);
+            }
         }
         return false;
     }
