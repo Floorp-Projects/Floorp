@@ -779,7 +779,7 @@
 
 namespace js {
 
-class SIMDObject : public JSObject
+class SimdObject : public JSObject
 {
   public:
     static const Class class_;
@@ -1038,7 +1038,7 @@ BOOL64X2_FUNCTION_LIST(DECLARE_SIMD_BOOL64x2_FUNCTION)
 #undef DECLARE_SIMD_BOOL64x2_FUNCTION
 
 JSObject*
-InitSIMDClass(JSContext* cx, HandleObject obj);
+InitSimdClass(JSContext* cx, HandleObject obj);
 
 }  /* namespace js */
 
