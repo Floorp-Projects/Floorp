@@ -114,7 +114,7 @@ if test "$_conflict_files"; then
 fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd -P`
 
-MOZ_BUILD_BACKEND
+MOZ_BUILD_BACKEND(../..)
 
 MOZ_DEFAULT_COMPILER
 
