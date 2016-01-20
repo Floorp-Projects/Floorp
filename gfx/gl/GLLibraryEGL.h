@@ -108,9 +108,52 @@ public:
     GLLibraryEGL()
         : mInitialized(false),
           mEGLLibrary(nullptr),
+          mEGLDisplay(EGL_NO_DISPLAY),
           mIsANGLE(false),
           mIsWARP(false)
     {
+        ClearSymbols();
+    }
+
+    void ClearSymbols() {
+        mSymbols.fGetDisplay = nullptr;
+        mSymbols.fGetPlatformDisplayEXT = nullptr;
+        mSymbols.fTerminate = nullptr;
+        mSymbols.fGetCurrentSurface = nullptr;
+        mSymbols.fGetCurrentContext = nullptr;
+        mSymbols.fMakeCurrent = nullptr;
+        mSymbols.fDestroyContext = nullptr;
+        mSymbols.fCreateContext = nullptr;
+        mSymbols.fDestroySurface = nullptr;
+        mSymbols.fCreateWindowSurface = nullptr;
+        mSymbols.fCreatePbufferSurface = nullptr;
+        mSymbols.fCreatePixmapSurface = nullptr;
+        mSymbols.fBindAPI = nullptr;
+        mSymbols.fInitialize = nullptr;
+        mSymbols.fChooseConfig = nullptr;
+        mSymbols.fGetError = nullptr;
+        mSymbols.fGetConfigAttrib = nullptr;
+        mSymbols.fGetConfigs = nullptr;
+        mSymbols.fWaitNative = nullptr;
+        mSymbols.fGetProcAddress = nullptr;
+        mSymbols.fSwapBuffers = nullptr;
+        mSymbols.fCopyBuffers = nullptr;
+        mSymbols.fQueryString = nullptr;
+        mSymbols.fQueryStringImplementationANDROID = nullptr;
+        mSymbols.fQueryContext = nullptr;
+        mSymbols.fBindTexImage = nullptr;
+        mSymbols.fReleaseTexImage = nullptr;
+        mSymbols.fCreateImage = nullptr;
+        mSymbols.fDestroyImage = nullptr;
+        mSymbols.fLockSurface = nullptr;
+        mSymbols.fUnlockSurface = nullptr;
+        mSymbols.fQuerySurface = nullptr;
+        mSymbols.fQuerySurfacePointerANGLE = nullptr;
+        mSymbols.fCreateSync = nullptr;
+        mSymbols.fDestroySync = nullptr;
+        mSymbols.fClientWaitSync = nullptr;
+        mSymbols.fGetSyncAttrib = nullptr;
+        mSymbols.fDupNativeFenceFDANDROID = nullptr;
     }
 
     void InitClientExtensions();
