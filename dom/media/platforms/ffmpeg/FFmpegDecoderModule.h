@@ -8,7 +8,6 @@
 #define __FFmpegDecoderModule_h__
 
 #include "PlatformDecoderModule.h"
-#include "FFmpegLibWrapper.h"
 #include "FFmpegAudioDecoder.h"
 #include "FFmpegVideoDecoder.h"
 
@@ -20,14 +19,14 @@ class FFmpegDecoderModule : public PlatformDecoderModule
 {
 public:
   static already_AddRefed<PlatformDecoderModule>
-  Create(FFmpegLibWrapper* aLib)
+  Create()
   {
-    RefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule(aLib);
+    RefPtr<PlatformDecoderModule> pdm = new FFmpegDecoderModule();
 
     return pdm.forget();
   }
 
-  explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+  FFmpegDecoderModule() {}
   virtual ~FFmpegDecoderModule() {}
 
   already_AddRefed<MediaDataDecoder>
@@ -38,7 +37,7 @@ public:
                      MediaDataDecoderCallback* aCallback) override
   {
     RefPtr<MediaDataDecoder> decoder =
-      new FFmpegVideoDecoder<V>(mLib, aVideoTaskQueue, aCallback, aConfig,
+      new FFmpegVideoDecoder<V>(aVideoTaskQueue, aCallback, aConfig,
                                 aImageContainer);
     return decoder.forget();
   }
@@ -52,7 +51,7 @@ public:
     return nullptr;
 #else
     RefPtr<MediaDataDecoder> decoder =
-      new FFmpegAudioDecoder<V>(mLib, aAudioTaskQueue, aCallback, aConfig);
+      new FFmpegAudioDecoder<V>(aAudioTaskQueue, aCallback, aConfig);
     return decoder.forget();
 #endif
   }
@@ -69,7 +68,7 @@ public:
       return false;
     }
     AVCodecID codec = audioCodec != AV_CODEC_ID_NONE ? audioCodec : videoCodec;
-    return !!FFmpegDataDecoder<V>::FindAVCodec(mLib, codec);
+    return !!FFmpegDataDecoder<V>::FindAVCodec(codec);
   }
 
   ConversionRequired
@@ -84,8 +83,6 @@ public:
     }
   }
 
-private:
-  FFmpegLibWrapper* mLib;
 };
 
 } // namespace mozilla

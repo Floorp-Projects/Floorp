@@ -8,9 +8,9 @@
 #define __FFmpegDataDecoder_h__
 
 #include "PlatformDecoderModule.h"
-#include "FFmpegLibWrapper.h"
-#include "mozilla/StaticMutex.h"
 #include "FFmpegLibs.h"
+#include "FFmpegRuntimeLinker.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla
 {
@@ -24,7 +24,7 @@ template <>
 class FFmpegDataDecoder<LIBAV_VER> : public MediaDataDecoder
 {
 public:
-  FFmpegDataDecoder(FFmpegLibWrapper* aLib, FlushableTaskQueue* aTaskQueue,
+  FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
                     MediaDataDecoderCallback* aCallback,
                     AVCodecID aCodecID);
   virtual ~FFmpegDataDecoder();
@@ -37,7 +37,7 @@ public:
   nsresult Drain() override;
   nsresult Shutdown() override;
 
-  static AVCodec* FindAVCodec(FFmpegLibWrapper* aLib, AVCodecID aCodec);
+  static AVCodec* FindAVCodec(AVCodecID aCodec);
 
 protected:
   // Flush and Drain operation, always run
@@ -48,7 +48,6 @@ protected:
   AVFrame*        PrepareFrame();
   nsresult        InitDecoder();
 
-  FFmpegLibWrapper* mLib;
   RefPtr<FlushableTaskQueue> mTaskQueue;
   MediaDataDecoderCallback* mCallback;
 
@@ -66,6 +65,7 @@ protected:
   Atomic<bool> mIsFlushing;
 
 private:
+  static bool sFFmpegInitDone;
   static StaticMutex sMonitor;
 };
 

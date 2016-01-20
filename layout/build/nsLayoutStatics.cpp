@@ -97,6 +97,10 @@
 #include "AndroidMediaPluginHost.h"
 #endif
 
+#ifdef MOZ_FFMPEG
+#include "FFmpegRuntimeLinker.h"
+#endif
+
 #include "CubebUtils.h"
 #include "Latency.h"
 #include "WebAudioUtils.h"
@@ -388,6 +392,10 @@ nsLayoutStatics::Shutdown()
 
 #ifdef MOZ_ANDROID_OMX
   AndroidMediaPluginHost::Shutdown();
+#endif
+
+#ifdef MOZ_FFMPEG
+  FFmpegRuntimeLinker::Unlink();
 #endif
 
   CubebUtils::ShutdownLibrary();
