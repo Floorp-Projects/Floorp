@@ -7,6 +7,8 @@
 #ifndef __FFmpegLog_h__
 #define __FFmpegLog_h__
 
+#include "mozilla/Logging.h"
+
 extern mozilla::LogModule* GetPDMLog();
 #define FFMPEG_LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 

@@ -38,23 +38,20 @@ if CONFIG['MOZ_WMF']:
 if CONFIG['MOZ_EME']:
     DIRS += ['agnostic/eme']
 
+if CONFIG['MOZ_FFVPX'] or CONFIG['MOZ_FFMPEG']:
+    # common code to either FFmpeg or FFVPX
+    UNIFIED_SOURCES += [
+        'ffmpeg/FFmpegLibWrapper.cpp',
+    ]
+
 if CONFIG['MOZ_FFVPX']:
     DIRS += [
         'ffmpeg/ffvpx',
     ]
 
 if CONFIG['MOZ_FFMPEG']:
-    EXPORTS += [
-        'ffmpeg/FFmpegRuntimeLinker.h',
-    ]
-    UNIFIED_SOURCES += [
-        'ffmpeg/FFmpegRuntimeLinker.cpp',
-    ]
     DIRS += [
-        'ffmpeg/libav53',
-        'ffmpeg/libav54',
-        'ffmpeg/libav55',
-        'ffmpeg/ffmpeg57',
+        'ffmpeg',
     ]
 
 if CONFIG['MOZ_APPLEMEDIA']:
