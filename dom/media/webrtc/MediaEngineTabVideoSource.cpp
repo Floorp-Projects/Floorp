@@ -314,12 +314,6 @@ MediaEngineTabVideoSource::Stop(mozilla::SourceMediaStream*, mozilla::TrackID)
   return NS_OK;
 }
 
-nsresult
-MediaEngineTabVideoSource::Config(bool, uint32_t, bool, uint32_t, bool, uint32_t, int32_t)
-{
-  return NS_OK;
-}
-
 bool
 MediaEngineTabVideoSource::IsFake()
 {
