@@ -19,7 +19,7 @@ class nsIMultiplexInputStream;
 
 namespace mozilla {
 namespace dom {
-class File;
+class Blob;
 } // namespace dom
 } // namespace mozilla
 
@@ -45,13 +45,14 @@ public:
                                     const nsAString& aValue) = 0;
 
   /**
-   * Submit a name/file pair
+   * Submit a name/blob pair
    *
    * @param aName the name of the parameter
-   * @param aFile the file to submit. The file's name will be used
+   * @param aBlob the blob to submit. The file's name will be used if the Blob
+   * is actually a File, otherwise 'blob' string is used instead.
    */
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   mozilla::dom::File* aFile) = 0;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   mozilla::dom::Blob* aBlob) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -159,8 +160,8 @@ public:
  
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
-  virtual nsresult AddNameFilePair(const nsAString& aName,
-                                   mozilla::dom::File* aFile) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   mozilla::dom::Blob* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream) override;
 
