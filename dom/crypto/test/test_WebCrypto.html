@@ -286,6 +286,7 @@ TestArray.addTest(
                   .get(dbkey);
       req.onerror = error(that);
       req.onsuccess = complete(that, function(e) {
+        db.close();
         return hasKeyFields(e.target.result.val);
       });
     }
