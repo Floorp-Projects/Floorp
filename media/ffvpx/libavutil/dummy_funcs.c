@@ -17,9 +17,3 @@ void ff_float_dsp_init_aarch64(AVFloatDSPContext *fdsp) {}
 void ff_float_dsp_init_arm(AVFloatDSPContext *fdsp) {}
 void ff_float_dsp_init_ppc(AVFloatDSPContext *fdsp, int strict) {}
 void ff_float_dsp_init_mips(AVFloatDSPContext *fdsp) {}
-
-// VS2015 (and later) now provides snprintf. As we have a global symbols
-// file that do not allow conditional export, we create a dummy entry instead.
-#if defined(_MSC_VER) && _MSC_VER >= 1900
-int avpriv_snprintf(char *s, size_t n, const char *fmt, ...) { return 0; }
-#endif

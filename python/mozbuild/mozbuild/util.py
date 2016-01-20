@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import, unicode_literals
 
+import argparse
 import collections
 import difflib
 import errno
@@ -974,3 +975,20 @@ def expand_variables(s, variables):
             value = ' '.join(value)
         result += value
     return result
+
+
+class DefinesAction(argparse.Action):
+    '''An ArgumentParser action to handle -Dvar[=value] type of arguments.'''
+    def __call__(self, parser, namespace, values, option_string):
+        defines = getattr(namespace, self.dest)
+        if defines is None:
+            defines = {}
+        values = values.split('=', 1)
+        if len(values) == 1:
+            name, value = values[0], 1
+        else:
+            name, value = values
+            if value.isdigit():
+                value = int(value)
+        defines[name] = value
+        setattr(namespace, self.dest, defines)

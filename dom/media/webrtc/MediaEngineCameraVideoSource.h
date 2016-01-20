@@ -34,23 +34,23 @@ public:
   {}
 
 
-  virtual void GetName(nsAString& aName) override;
-  virtual void GetUUID(nsACString& aUUID) override;
-  virtual void SetDirectListeners(bool aHasListeners) override;
-  virtual nsresult Config(bool aEchoOn, uint32_t aEcho,
-                          bool aAgcOn, uint32_t aAGC,
-                          bool aNoiseOn, uint32_t aNoise,
-                          int32_t aPlayoutDelay) override
+  void GetName(nsAString& aName) override;
+  void GetUUID(nsACString& aUUID) override;
+  void SetDirectListeners(bool aHasListeners) override;
+  nsresult Config(bool aEchoOn, uint32_t aEcho,
+                  bool aAgcOn, uint32_t aAGC,
+                  bool aNoiseOn, uint32_t aNoise,
+                  int32_t aPlayoutDelay) override
   {
     return NS_OK;
   };
 
-  virtual bool IsFake() override
+  bool IsFake() override
   {
     return false;
   }
 
-  virtual nsresult TakePhoto(PhotoCallback* aCallback) override
+  nsresult TakePhoto(PhotoCallback* aCallback) override
   {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
@@ -59,7 +59,7 @@ public:
       const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override;
 
-  virtual void Shutdown() override {};
+  void Shutdown() override {};
 
 protected:
   struct CapabilityCandidate {
@@ -85,9 +85,9 @@ protected:
   static void TrimLessFitCandidates(CapabilitySet& set);
   static void LogConstraints(const dom::MediaTrackConstraintSet& aConstraints,
                              bool aAdvanced);
-static void LogCapability(const char* aHeader,
-                          const webrtc::CaptureCapability &aCapability,
-                          uint32_t aDistance);
+  static void LogCapability(const char* aHeader,
+                            const webrtc::CaptureCapability &aCapability,
+                            uint32_t aDistance);
   virtual size_t NumCapabilities();
   virtual void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut);
   virtual bool ChooseCapability(const dom::MediaTrackConstraints &aConstraints,

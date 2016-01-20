@@ -603,7 +603,7 @@ class Build(MachCommandBase):
     # conditions, but that is for another day.
     @CommandArgument('-b', '--backend', nargs='+',
         choices=['RecursiveMake', 'AndroidEclipse', 'CppEclipse',
-                 'VisualStudio', 'FasterMake', 'CompileDB'],
+                 'VisualStudio', 'FasterMake', 'CompileDB', 'ChromeMap'],
         help='Which backend to build.')
     def build_backend(self, backend, diff=False):
         python = self.virtualenv_manager.python_path
@@ -1121,7 +1121,7 @@ class RunProgram(MachCommandBase):
                 args.append('-profile')
                 args.append(path)
 
-        extra_env = {}
+        extra_env = {'MOZ_CRASHREPORTER_DISABLE': '1'}
 
         if debug or debugger or debugparams:
             import mozdebug
@@ -1149,8 +1149,6 @@ class RunProgram(MachCommandBase):
 
             if not slowscript:
                 extra_env['JS_DISABLE_SLOW_SCRIPT_SIGNALS'] = '1'
-
-            extra_env['MOZ_CRASHREPORTER_DISABLE'] = '1'
 
             # Prepend the debugger args.
             args = [self.debuggerInfo.path] + self.debuggerInfo.args + args
@@ -1501,10 +1499,15 @@ class PackageFrontend(MachCommandBase):
         manifest = InstallManifest(manifest_path)
 
         def install_callback(path, file_existed, file_updated):
+            # Our paths are either under dist/bin or dist/plugins (for test
+            # plugins). dist/plugins. does not have an install manifest.
+            if not path.startswith('bin/'):
+                return
+            path = path[len('bin/'):]
             if path not in manifest:
                 manifest.add_optional_exists(path)
 
-        retcode = artifacts.install_from(source, self.bindir, install_callback=install_callback)
+        retcode = artifacts.install_from(source, self.distdir, install_callback=install_callback)
 
         if retcode == 0:
             manifest.write(manifest_path)

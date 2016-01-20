@@ -5040,7 +5040,7 @@ SVGTextFrame::DoTextPathLayout()
       Float rotation = vertical ? atan2f(-tangent.x, tangent.y)
                                 : atan2f(tangent.y, tangent.x);
       Point normal(-tangent.y, tangent.x); // Unit vector normal to the point.
-      Point offsetFromPath = normal * (vertical ? mPositions[i].mPosition.x
+      Point offsetFromPath = normal * (vertical ? -mPositions[i].mPosition.x
                                                 : mPositions[i].mPosition.y);
       pt += offsetFromPath;
       Point direction = tangent * sign;

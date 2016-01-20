@@ -367,13 +367,14 @@ private:
   class IOThreadSuspender : public nsRunnable
   {
   public:
-    IOThreadSuspender() : mMon("IOThreadSuspender") { }
+    IOThreadSuspender() : mMon("IOThreadSuspender"), mSignaled(false) { }
     void Notify();
   private:
     virtual ~IOThreadSuspender() { }
     NS_IMETHOD Run() override;
 
     Monitor mMon;
+    bool mSignaled;
   };
 
   RefPtr<IOThreadSuspender> mActiveIOSuspender;

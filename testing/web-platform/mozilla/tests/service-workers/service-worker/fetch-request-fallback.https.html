@@ -95,9 +95,9 @@ async_test(function(t) {
           assert_equals(requests[0].url, new URL(SCOPE, location).toString(),
                         'The first request to the SW must be the request for ' +
                         'the page.');
-          assert_equals(requests[0].mode, 'same-origin',
+          assert_equals(requests[0].mode, 'navigate',
                         'The mode of the first request to the SW must be ' +
-                        'same-origin');
+                        'navigate');
           for (var i = 0; i < expected_urls.length; ++i) {
             assert_equals(requests[i + 1].url, expected_urls[i],
                           'The URL of the request which was passed from XHR ' +

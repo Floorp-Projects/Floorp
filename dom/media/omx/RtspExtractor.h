@@ -25,12 +25,12 @@ namespace mozilla {
 class RtspExtractor: public android::MediaExtractor
 {
 public:
-  virtual size_t countTracks() final override;
-  virtual android::sp<android::MediaSource> getTrack(size_t index)
+  size_t countTracks() final override;
+  android::sp<android::MediaSource> getTrack(size_t index)
     final override;
-  virtual android::sp<android::MetaData> getTrackMetaData(
+  android::sp<android::MetaData> getTrackMetaData(
     size_t index, uint32_t flag = 0) final override;
-  virtual uint32_t flags() const final override;
+  uint32_t flags() const final override;
 
   RtspExtractor(RtspMediaResource* aResource)
     : mRtspResource(aResource) {

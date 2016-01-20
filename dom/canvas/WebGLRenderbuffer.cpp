@@ -27,8 +27,7 @@ DepthStencilDepthFormat(gl::GLContext* gl)
 static bool
 SupportsDepthStencil(gl::GLContext* gl)
 {
-    return gl->IsExtensionSupported(gl::GLContext::EXT_packed_depth_stencil) ||
-           gl->IsExtensionSupported(gl::GLContext::OES_packed_depth_stencil);
+    return gl->IsSupported(gl::GLFeature::packed_depth_stencil);
 }
 
 static bool

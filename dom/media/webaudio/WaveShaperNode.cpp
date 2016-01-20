@@ -174,12 +174,12 @@ public:
     TYPE
   };
 
-  virtual void SetRawArrayData(nsTArray<float>& aCurve) override
+  void SetRawArrayData(nsTArray<float>& aCurve) override
   {
     mCurve.SwapElements(aCurve);
   }
 
-  virtual void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
+  void SetInt32Parameter(uint32_t aIndex, int32_t aValue) override
   {
     switch (aIndex) {
     case TYPE:
@@ -214,11 +214,11 @@ public:
     }
   }
 
-  virtual void ProcessBlock(AudioNodeStream* aStream,
-                            GraphTime aFrom,
-                            const AudioBlock& aInput,
-                            AudioBlock* aOutput,
-                            bool* aFinished) override
+  void ProcessBlock(AudioNodeStream* aStream,
+                    GraphTime aFrom,
+                    const AudioBlock& aInput,
+                    AudioBlock* aOutput,
+                    bool* aFinished) override
   {
     uint32_t channelCount = aInput.ChannelCount();
     if (!mCurve.Length() || !channelCount) {
@@ -267,7 +267,7 @@ public:
     }
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mCurve.ShallowSizeOfExcludingThis(aMallocSizeOf);
@@ -275,7 +275,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

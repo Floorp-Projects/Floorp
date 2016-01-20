@@ -18,7 +18,7 @@ public:
   MemoryFunctor() : mSize(0) {}
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
-  virtual void* operator()(void* aObject) {
+  void* operator()(void* aObject) override {
     const AudioData* audioData = static_cast<const AudioData*>(aObject);
     mSize += audioData->SizeOfIncludingThis(MallocSizeOf);
     return nullptr;

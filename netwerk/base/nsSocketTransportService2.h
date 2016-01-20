@@ -112,6 +112,7 @@ public:
     bool IsKeepaliveEnabled() { return mKeepaliveEnabledPref; }
 
     bool IsTelemetryEnabled() { return mTelemetryEnabledPref; }
+    PRIntervalTime MaxTimeForPrClosePref() {return mMaxTimeForPrClosePref; }
 protected:
 
     virtual ~nsSocketTransportService();
@@ -237,6 +238,7 @@ private:
     mozilla::Atomic<bool>  mServingPendingQueue;
     mozilla::Atomic<int32_t, mozilla::Relaxed> mMaxTimePerPollIter;
     mozilla::Atomic<bool, mozilla::Relaxed>  mTelemetryEnabledPref;
+    mozilla::Atomic<PRIntervalTime, mozilla::Relaxed> mMaxTimeForPrClosePref;
 
     void OnKeepaliveEnabledPrefChange();
     void NotifyKeepaliveEnabledPrefChange(SocketContext *sock);

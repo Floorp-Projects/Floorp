@@ -65,38 +65,38 @@ public:
   bool RelinquishFrameData(GMPVideoEncodedFrameData& aFrameData);
 
   // GMPVideoFrame
-  virtual GMPVideoFrameFormat GetFrameFormat() override;
-  virtual void Destroy() override;
+  GMPVideoFrameFormat GetFrameFormat() override;
+  void Destroy() override;
 
   // GMPVideoEncodedFrame
-  virtual GMPErr   CreateEmptyFrame(uint32_t aSize) override;
-  virtual GMPErr   CopyFrame(const GMPVideoEncodedFrame& aFrame) override;
-  virtual void     SetEncodedWidth(uint32_t aEncodedWidth) override;
-  virtual uint32_t EncodedWidth() override;
-  virtual void     SetEncodedHeight(uint32_t aEncodedHeight) override;
-  virtual uint32_t EncodedHeight() override;
+  GMPErr   CreateEmptyFrame(uint32_t aSize) override;
+  GMPErr   CopyFrame(const GMPVideoEncodedFrame& aFrame) override;
+  void     SetEncodedWidth(uint32_t aEncodedWidth) override;
+  uint32_t EncodedWidth() override;
+  void     SetEncodedHeight(uint32_t aEncodedHeight) override;
+  uint32_t EncodedHeight() override;
   // Microseconds
-  virtual void     SetTimeStamp(uint64_t aTimeStamp) override;
-  virtual uint64_t TimeStamp() override;
+  void     SetTimeStamp(uint64_t aTimeStamp) override;
+  uint64_t TimeStamp() override;
   // Set frame duration (microseconds)
   // NOTE: next-frame's Timestamp() != this-frame's TimeStamp()+Duration()
   // depending on rounding to avoid having to track roundoff errors
   // and dropped/missing frames(!) (which may leave a large gap)
-  virtual void     SetDuration(uint64_t aDuration) override;
-  virtual uint64_t Duration() const override;
-  virtual void     SetFrameType(GMPVideoFrameType aFrameType) override;
-  virtual GMPVideoFrameType FrameType() override;
-  virtual void     SetAllocatedSize(uint32_t aNewSize) override;
-  virtual uint32_t AllocatedSize() override;
-  virtual void     SetSize(uint32_t aSize) override;
-  virtual uint32_t Size() override;
-  virtual void     SetCompleteFrame(bool aCompleteFrame) override;
-  virtual bool     CompleteFrame() override;
-  virtual const uint8_t* Buffer() const override;
-  virtual uint8_t* Buffer() override;
-  virtual GMPBufferType BufferType() const override;
-  virtual void     SetBufferType(GMPBufferType aBufferType) override;
-  virtual const    GMPEncryptedBufferMetadata* GetDecryptionData() const override;
+  void     SetDuration(uint64_t aDuration) override;
+  uint64_t Duration() const override;
+  void     SetFrameType(GMPVideoFrameType aFrameType) override;
+  GMPVideoFrameType FrameType() override;
+  void     SetAllocatedSize(uint32_t aNewSize) override;
+  uint32_t AllocatedSize() override;
+  void     SetSize(uint32_t aSize) override;
+  uint32_t Size() override;
+  void     SetCompleteFrame(bool aCompleteFrame) override;
+  bool     CompleteFrame() override;
+  const uint8_t* Buffer() const override;
+  uint8_t* Buffer() override;
+  GMPBufferType BufferType() const override;
+  void     SetBufferType(GMPBufferType aBufferType) override;
+  const    GMPEncryptedBufferMetadata* GetDecryptionData() const override;
 
 private:
   void DestroyBuffer();

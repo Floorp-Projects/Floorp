@@ -907,7 +907,9 @@ final class GeckoEditable extends JNIObject
                 // Action.TYPE_ACKNOWLEDGE_FOCUS, this line also makes us
                 // wait for Gecko to update us on the newly focused content
                 mActionQueue.syncWithGecko();
-                mListener.notifyIME(type);
+                if (mListener != null) {
+                    mListener.notifyIME(type);
+                }
 
                 // Unset mFocused after we call syncWithGecko because
                 // syncWithGecko becomes a no-op when mFocused is false.
@@ -947,6 +949,9 @@ final class GeckoEditable extends JNIObject
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
+                if (mListener == null) {
+                    return;
+                }
                 mListener.notifyIMEContext(state, typeHint, modeHint, actionHint);
             }
         });
@@ -979,6 +984,9 @@ final class GeckoEditable extends JNIObject
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
+                if (mListener == null) {
+                    return;
+                }
                 mListener.onSelectionChange(newStart, newEnd);
             }
         });
@@ -1089,6 +1097,9 @@ final class GeckoEditable extends JNIObject
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
+                if (mListener == null) {
+                    return;
+                }
                 mListener.onTextChange(text, start, oldEnd, newEnd);
             }
         });

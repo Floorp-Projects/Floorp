@@ -484,18 +484,31 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, uint32_t aStart, uint32_t aEnd,
     }
 }
 
-// returns true if a glyph run is using a font with synthetic bolding enabled, false otherwise
+// Returns true if a glyph run is using a font with synthetic bolding enabled,
+// or a color font (COLR/SVG/sbix/CBDT), false otherwise. This is used to
+// check whether the text run needs to be explicitly composited in order to
+// support opacity.
 static bool
-HasSyntheticBold(gfxTextRun *aRun, uint32_t aStart, uint32_t aLength)
+HasSyntheticBoldOrColor(gfxTextRun *aRun, uint32_t aStart, uint32_t aLength)
 {
     gfxTextRun::GlyphRunIterator iter(aRun, aStart, aLength);
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
-        if (font && font->IsSyntheticBold()) {
-            return true;
+        if (font) {
+            if (font->IsSyntheticBold()) {
+                return true;
+            }
+            gfxFontEntry* fe = font->GetFontEntry();
+            if (fe->TryGetSVGData(font) || fe->TryGetColorGlyphs()) {
+                return true;
+            }
+#if defined(XP_MACOSX) // sbix fonts only supported via Core Text
+            if (fe->HasFontTable(TRUETYPE_TAG('s', 'b', 'i', 'x'))) {
+                return true;
+            }
+#endif
         }
     }
-
     return false;
 }
 
@@ -592,7 +605,7 @@ gfxTextRun::Draw(gfxContext *aContext, gfxPoint aPt, DrawMode aDrawMode,
 
     if (aDrawMode == DrawMode::GLYPH_FILL &&
         HasNonOpaqueNonTransparentColor(aContext, currentColor) &&
-        HasSyntheticBold(this, aStart, aLength)) {
+        HasSyntheticBoldOrColor(this, aStart, aLength)) {
         needToRestore = true;
         // measure text, use the bounding box
         gfxTextRun::Metrics metrics = MeasureText(aStart, aLength,
