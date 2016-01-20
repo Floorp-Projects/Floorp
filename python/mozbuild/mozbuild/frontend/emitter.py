@@ -595,6 +595,7 @@ class TreeMetadataEmitter(LoggingMixin):
             'LD_VERSION_SCRIPT',
             'USE_EXTENSION_MANIFEST',
             'NO_JS_MANIFEST',
+            'HAS_MISC_RULE',
         ]
         for v in varlist:
             if v in context and context[v]:

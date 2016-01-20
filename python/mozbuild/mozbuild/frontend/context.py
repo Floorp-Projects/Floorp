@@ -1029,7 +1029,7 @@ VARIABLES = {
         Please note that converting ``libs`` rules to the ``misc`` tier must
         be done with care, as there are many implicit dependencies that can
         break the build in subtle ways.
-        """, 'misc'),
+        """, None),
 
     'FINAL_TARGET_FILES': (ContextDerivedTypedHierarchicalStringList(Path), list,
         """List of files to be installed into the application directory.
