@@ -40,7 +40,7 @@ function* ifTestingSupported() {
   is(functionCalls[0].line, 25,
     "The called function's line is correct.");
 
-  is(functionCalls[0].callerPreview, "ctx",
+  is(functionCalls[0].callerPreview, "Object",
     "The called function's caller preview is correct.");
   is(functionCalls[0].argsPreview, "0, 0, 128, 128",
     "The called function's args preview is correct.");
