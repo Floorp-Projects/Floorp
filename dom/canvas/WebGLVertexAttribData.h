@@ -52,12 +52,18 @@ struct WebGLVertexAttribData
         case LOCAL_GL_UNSIGNED_SHORT:
             return sizeof(GLushort);
 
+        case LOCAL_GL_INT:
+            return sizeof(GLint);
+
+        case LOCAL_GL_UNSIGNED_INT:
+            return sizeof(GLuint);
+
         // case LOCAL_GL_FIXED:
         case LOCAL_GL_FLOAT:
             return sizeof(GLfloat);
 
         default:
-            NS_ERROR("Should never get here!");
+            MOZ_ASSERT(false, "Should never get here!");
             return 0;
         }
     }
