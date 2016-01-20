@@ -45,6 +45,13 @@ public:
     SetHTMLBoolAttr(nsGkAtoms::open, aOpen, aError);
   }
 
+  void ToggleOpen()
+  {
+    ErrorResult rv;
+    SetOpen(!Open(), rv);
+    rv.SuppressException();
+  }
+
 protected:
   virtual ~HTMLDetailsElement();
 
