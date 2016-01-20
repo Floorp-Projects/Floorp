@@ -1688,7 +1688,7 @@ TabChild::RecvHandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifier
     ViewID viewId;
     if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(
         document->GetDocumentElement(), &presShellId, &viewId)) {
-      SendZoomToRect(presShellId, viewId, zoomToRect);
+      SendZoomToRect(presShellId, viewId, zoomToRect, DEFAULT_BEHAVIOR);
     }
 
     return true;
