@@ -69,6 +69,12 @@ window.addEventListener("unload", function onUnload() {
 // Allows quick testing of actions from the console
 window.dispatch = action => bootstrap.dispatch(action);
 
+// Expose the store on window for testing
+Object.defineProperty(window, "store", {
+  get: () => bootstrap.store,
+  enumerable: true,
+});
+
 /**
  * Called by manager.js to add the initial viewport based on the original page.
  */
