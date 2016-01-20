@@ -258,21 +258,21 @@ class ThreadedDriver : public GraphDriver
 public:
   explicit ThreadedDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~ThreadedDriver();
-  virtual void Start() override;
-  virtual void Stop() override;
-  virtual void Resume() override;
-  virtual void Revive() override;
+  void Start() override;
+  void Stop() override;
+  void Resume() override;
+  void Revive() override;
   /**
    * Runs main control loop on the graph thread. Normally a single invocation
    * of this runs for the entire lifetime of the graph thread.
    */
   void RunThread();
   friend class MediaStreamGraphInitThreadRunnable;
-  virtual uint32_t IterationDuration() override {
+  uint32_t IterationDuration() override {
     return MEDIA_GRAPH_TARGET_PERIOD_MS;
   }
 
-  virtual bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
+  bool OnThread() override { return !mThread || NS_GetCurrentThread() == mThread; }
 
   /* When the graph wakes up to do an iteration, implementations return the
    * range of time that will be processed.  This is called only once per
@@ -292,9 +292,9 @@ class SystemClockDriver : public ThreadedDriver
 public:
   explicit SystemClockDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~SystemClockDriver();
-  virtual MediaTime GetIntervalForIteration() override;
-  virtual void WaitForNextIteration() override;
-  virtual void WakeUp() override;
+  MediaTime GetIntervalForIteration() override;
+  void WaitForNextIteration() override;
+  void WakeUp() override;
 
 
 private:
@@ -313,11 +313,11 @@ class OfflineClockDriver : public ThreadedDriver
 public:
   OfflineClockDriver(MediaStreamGraphImpl* aGraphImpl, GraphTime aSlice);
   virtual ~OfflineClockDriver();
-  virtual MediaTime GetIntervalForIteration() override;
-  virtual void WaitForNextIteration() override;
-  virtual void WakeUp() override;
-  virtual TimeStamp GetCurrentTimeStamp() override;
-  virtual OfflineClockDriver* AsOfflineClockDriver() override {
+  MediaTime GetIntervalForIteration() override;
+  void WaitForNextIteration() override;
+  void WakeUp() override;
+  TimeStamp GetCurrentTimeStamp() override;
+  OfflineClockDriver* AsOfflineClockDriver() override {
     return this;
   }
 
@@ -368,13 +368,13 @@ public:
   explicit AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl);
   virtual ~AudioCallbackDriver();
 
-  virtual void Destroy() override;
-  virtual void Start() override;
-  virtual void Stop() override;
-  virtual void Resume() override;
-  virtual void Revive() override;
-  virtual void WaitForNextIteration() override;
-  virtual void WakeUp() override;
+  void Destroy() override;
+  void Start() override;
+  void Stop() override;
+  void Resume() override;
+  void Revive() override;
+  void WaitForNextIteration() override;
+  void WakeUp() override;
 
   /* Static wrapper function cubeb calls back. */
   static long DataCallback_s(cubeb_stream * aStream,
@@ -394,17 +394,17 @@ public:
   void StateCallback(cubeb_state aState);
   /* This is an approximation of the number of millisecond there are between two
    * iterations of the graph. */
-  virtual uint32_t IterationDuration() override;
+  uint32_t IterationDuration() override;
 
   /* This function gets called when the graph has produced the audio frames for
    * this iteration. */
-  virtual void MixerCallback(AudioDataValue* aMixedBuffer,
-                             AudioSampleFormat aFormat,
-                             uint32_t aChannels,
-                             uint32_t aFrames,
-                             uint32_t aSampleRate) override;
+  void MixerCallback(AudioDataValue* aMixedBuffer,
+                     AudioSampleFormat aFormat,
+                     uint32_t aChannels,
+                     uint32_t aFrames,
+                     uint32_t aSampleRate) override;
 
-  virtual AudioCallbackDriver* AsAudioCallbackDriver() override {
+  AudioCallbackDriver* AsAudioCallbackDriver() override {
     return this;
   }
 
@@ -427,7 +427,7 @@ public:
    */
   bool InCallback();
 
-  virtual bool OnThread() override { return !mStarted || InCallback(); }
+  bool OnThread() override { return !mStarted || InCallback(); }
 
   /* Whether the underlying cubeb stream has been started. See comment for
    * mStarted for details. */

@@ -54,37 +54,37 @@ public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
   // ExternalRenderer
-  virtual int FrameSizeChange(unsigned int w, unsigned int h,
-                              unsigned int streams) override;
-  virtual int DeliverFrame(unsigned char* buffer,
-                           size_t size,
-                           uint32_t time_stamp,
-                           int64_t ntp_time,
-                           int64_t render_time,
-                           void *handle) override;
+  int FrameSizeChange(unsigned int w, unsigned int h,
+                      unsigned int streams) override;
+  int DeliverFrame(unsigned char* buffer,
+                   size_t size,
+                   uint32_t time_stamp,
+                   int64_t ntp_time,
+                   int64_t render_time,
+                   void *handle) override;
   // XXX!!!! FIX THIS
-  virtual int DeliverI420Frame(const webrtc::I420VideoFrame& webrtc_frame) override { return 0; };
-  virtual bool IsTextureSupported() override { return false; };
+  int DeliverI420Frame(const webrtc::I420VideoFrame& webrtc_frame) override { return 0; };
+  bool IsTextureSupported() override { return false; };
 
   // MediaEngineCameraVideoSource
   MediaEngineRemoteVideoSource(int aIndex, mozilla::camera::CaptureEngine aCapEngine,
                                dom::MediaSourceEnum aMediaSource,
                                const char* aMonitorName = "RemoteVideo.Monitor");
 
-  virtual nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
-                            const MediaEnginePrefs& aPrefs,
-                            const nsString& aDeviceId) override;
-  virtual nsresult Deallocate() override;;
-  virtual nsresult Start(SourceMediaStream*, TrackID) override;
-  virtual nsresult Stop(SourceMediaStream*, TrackID) override;
-  virtual nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
-                           const MediaEnginePrefs &aPrefs,
-                           const nsString& aDeviceId) override;
-  virtual void NotifyPull(MediaStreamGraph* aGraph,
-                          SourceMediaStream* aSource,
-                          TrackID aId,
-                          StreamTime aDesiredTime) override;
-  virtual dom::MediaSourceEnum GetMediaSource() const override {
+  nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
+                    const MediaEnginePrefs& aPrefs,
+                    const nsString& aDeviceId) override;
+  nsresult Deallocate() override;;
+  nsresult Start(SourceMediaStream*, TrackID) override;
+  nsresult Stop(SourceMediaStream*, TrackID) override;
+  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+                   const MediaEnginePrefs &aPrefs,
+                   const nsString& aDeviceId) override;
+  void NotifyPull(MediaStreamGraph* aGraph,
+                  SourceMediaStream* aSource,
+                  TrackID aId,
+                  StreamTime aDesiredTime) override;
+  dom::MediaSourceEnum GetMediaSource() const override {
     return mMediaSource;
   }
 
@@ -94,7 +94,7 @@ public:
 
   void Refresh(int aIndex);
 
-  virtual void Shutdown() override;
+  void Shutdown() override;
 
 protected:
   ~MediaEngineRemoteVideoSource() { Shutdown(); }

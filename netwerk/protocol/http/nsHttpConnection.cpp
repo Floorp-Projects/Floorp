@@ -558,7 +558,7 @@ nsHttpConnection::AddTransaction(nsAHttpTransaction *httpTransaction,
 }
 
 void
-nsHttpConnection::Close(nsresult reason)
+nsHttpConnection::Close(nsresult reason, bool aIsShutdown)
 {
     LOG(("nsHttpConnection::Close [this=%p reason=%x]\n", this, reason));
 
@@ -596,7 +596,8 @@ nsHttpConnection::Close(nsresult reason)
             // socket with data pending. TLS is a classic case of this where
             // a Alert record might be superfulous to a clean HTTP/SPDY shutdown.
             // Never block to do this and limit it to a small amount of data.
-            if (mSocketIn) {
+            // During shutdown just be fast!
+            if (mSocketIn && !aIsShutdown) {
                 char buffer[4000];
                 uint32_t count, total = 0;
                 nsresult rv;

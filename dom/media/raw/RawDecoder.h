@@ -13,13 +13,13 @@ class RawDecoder : public MediaDecoder
 {
 public:
   explicit RawDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsRawEnabled()) {
       return nullptr;
     }
     return new RawDecoder(aOwner);
   }
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine() override;
 };
 
 } // namespace mozilla

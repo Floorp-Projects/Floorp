@@ -29,8 +29,7 @@ protected:
   ~AudioNodeExternalInputStream();
 
 public:
-  virtual void ProcessInput(GraphTime aFrom, GraphTime aTo,
-                            uint32_t aFlags) override;
+  void ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags) override;
 
 private:
   /**

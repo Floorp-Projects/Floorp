@@ -38,8 +38,12 @@ struct ElementPropertyTransition : public dom::KeyframeEffectReadOnly
   ElementPropertyTransition(nsIDocument* aDocument,
                             dom::Element* aTarget,
                             nsCSSPseudoElements::Type aPseudoType,
-                            const TimingParams &aTiming)
+                            const TimingParams &aTiming,
+                            StyleAnimationValue aStartForReversingTest,
+                            double aReversePortion)
     : dom::KeyframeEffectReadOnly(aDocument, aTarget, aPseudoType, aTiming)
+    , mStartForReversingTest(aStartForReversingTest)
+    , mReversePortion(aReversePortion)
   { }
 
   ElementPropertyTransition* AsTransition() override { return this; }

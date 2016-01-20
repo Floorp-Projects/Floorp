@@ -551,6 +551,14 @@ HTMLMediaElement::GetMozMediaSourceObject() const
   return source.forget();
 }
 
+void
+HTMLMediaElement::GetMozDebugReaderData(nsAString& aString)
+{
+  if (mDecoder && !mSrcStream) {
+    mDecoder->GetMozDebugReaderData(aString);
+  }
+}
+
 already_AddRefed<DOMMediaStream>
 HTMLMediaElement::GetSrcObject() const
 {

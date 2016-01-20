@@ -766,6 +766,8 @@ class GCRuntime
     bool addWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback, void* data);
     void removeWeakPointerCompartmentCallback(JSWeakPointerCompartmentCallback callback);
     JS::GCSliceCallback setSliceCallback(JS::GCSliceCallback callback);
+    JS::GCNurseryCollectionCallback setNurseryCollectionCallback(
+        JS::GCNurseryCollectionCallback callback);
 
     void setValidate(bool enable);
     void setFullCompartmentChecks(bool enable);

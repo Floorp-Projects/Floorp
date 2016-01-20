@@ -31,7 +31,8 @@ def main(argv):
                         help='The file to generate')
     parser.add_argument('dep_file', metavar='dep-file', type=str,
                         help='File to write any additional make dependencies to')
-    parser.add_argument('additional_arguments', metavar='arg', nargs='*',
+    parser.add_argument('additional_arguments', metavar='arg',
+                        nargs=argparse.REMAINDER,
                         help="Additional arguments to the script's main() method")
 
     args = parser.parse_args(argv)

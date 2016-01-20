@@ -390,11 +390,9 @@ class XPCShellTestThread(Thread):
                  '-e', 'const _JSDEBUGGER_PORT = %d;' % dbgport,
                 ]
 
-    def getHeadAndTailFiles(self, test_object):
-        """Obtain the list of head and tail files.
-
-        Returns a 2-tuple. The first element is a list of head files. The second
-        is a list of tail files.
+    def getHeadAndTailFiles(self, test):
+        """Obtain lists of head- and tail files.  Returns a tuple
+        containing a list of head files and a list of tail files.
         """
         def sanitize_list(s, kind):
             for f in s.strip().split(' '):
@@ -402,7 +400,7 @@ class XPCShellTestThread(Thread):
                 if len(f) < 1:
                     continue
 
-                path = os.path.normpath(os.path.join(test_object['here'], f))
+                path = os.path.normpath(os.path.join(test['here'], f))
                 if not os.path.exists(path):
                     raise Exception('%s file does not exist: %s' % (kind, path))
 
@@ -411,8 +409,8 @@ class XPCShellTestThread(Thread):
 
                 yield path
 
-        headlist = test_object['head'] if 'head' in test_object else ''
-        taillist = test_object['tail'] if 'tail' in test_object else ''
+        headlist = test.get('head', '')
+        taillist = test.get('tail', '')
         return (list(sanitize_list(headlist, 'head')),
                 list(sanitize_list(taillist, 'tail')))
 

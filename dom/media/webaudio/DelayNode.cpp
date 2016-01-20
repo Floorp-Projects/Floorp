@@ -46,7 +46,7 @@ public:
   {
   }
 
-  virtual DelayNodeEngine* AsDelayNodeEngine() override
+  DelayNodeEngine* AsDelayNodeEngine() override
   {
     return this;
   }
@@ -70,11 +70,11 @@ public:
     }
   }
 
-  virtual void ProcessBlock(AudioNodeStream* aStream,
-                            GraphTime aFrom,
-                            const AudioBlock& aInput,
-                            AudioBlock* aOutput,
-                            bool* aFinished) override
+  void ProcessBlock(AudioNodeStream* aStream,
+                    GraphTime aFrom,
+                    const AudioBlock& aInput,
+                    AudioBlock* aOutput,
+                    bool* aFinished) override
   {
     MOZ_ASSERT(aStream->SampleRate() == mDestination->SampleRate());
 
@@ -149,9 +149,9 @@ public:
     }
   }
 
-  virtual void ProduceBlockBeforeInput(AudioNodeStream* aStream,
-                                       GraphTime aFrom,
-                                       AudioBlock* aOutput) override
+  void ProduceBlockBeforeInput(AudioNodeStream* aStream,
+                               GraphTime aFrom,
+                               AudioBlock* aOutput) override
   {
     if (mLeftOverData <= 0) {
       aOutput->SetNull(WEBAUDIO_BLOCK_SIZE);
@@ -161,12 +161,12 @@ public:
     mHaveProducedBeforeInput = true;
   }
 
-  virtual bool IsActive() const override
+  bool IsActive() const override
   {
     return mLeftOverData != INT32_MIN;
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
@@ -176,7 +176,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

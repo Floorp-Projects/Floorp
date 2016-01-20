@@ -85,6 +85,7 @@ public:
     PRIntervalTime LastConnectivityChange() { return mLastConnectivityChange; }
     PRIntervalTime LastNetworkLinkChange() { return mLastNetworkLinkChange; }
     bool IsNetTearingDown() { return mShutdown || mOfflineForProfileChange; }
+    PRIntervalTime NetTearingDownStarted() { return mNetTearingDownStarted; }
     bool IsLinkUp();
 
     // Should only be called from NeckoChild. Use SetAppOffline instead.
@@ -180,9 +181,12 @@ private:
     // PR_ConnectContinue and PR_Close blocking time.  If we spend very long
     // time in any of these functions we want to know if and what network
     // change has happened shortly before.
-    mozilla::Atomic<PRIntervalTime>  mLastOfflineStateChange;
-    mozilla::Atomic<PRIntervalTime>  mLastConnectivityChange;
-    mozilla::Atomic<PRIntervalTime>  mLastNetworkLinkChange;
+    mozilla::Atomic<PRIntervalTime> mLastOfflineStateChange;
+    mozilla::Atomic<PRIntervalTime> mLastConnectivityChange;
+    mozilla::Atomic<PRIntervalTime> mLastNetworkLinkChange;
+
+    // Time a network tearing down started.
+    mozilla::Atomic<PRIntervalTime> mNetTearingDownStarted;
 public:
     // Used for all default buffer sizes that necko allocates.
     static uint32_t   gDefaultSegmentSize;

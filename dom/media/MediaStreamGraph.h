@@ -698,10 +698,10 @@ public:
     mNeedsMixing(false)
   {}
 
-  virtual SourceMediaStream* AsSourceStream() override { return this; }
+  SourceMediaStream* AsSourceStream() override { return this; }
 
   // Media graph thread only
-  virtual void DestroyImpl() override;
+  void DestroyImpl() override;
 
   // Call these on any thread.
   /**
@@ -796,14 +796,14 @@ public:
   }
 
   // Overriding allows us to hold the mMutex lock while changing the track enable status
-  virtual void
+  void
   SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override {
     MutexAutoLock lock(mMutex);
     MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
   }
 
   // Overriding allows us to ensure mMutex is locked while changing the track enable status
-  virtual void
+  void
   ApplyTrackDisabling(TrackID aTrackID, MediaSegment* aSegment,
                       MediaSegment* aRawSegment = nullptr) override {
     mMutex.AssertCurrentThreadOwns();
@@ -1071,7 +1071,7 @@ public:
    */
   void SetAutofinish(bool aAutofinish);
 
-  virtual ProcessedMediaStream* AsProcessedStream() override { return this; }
+  ProcessedMediaStream* AsProcessedStream() override { return this; }
 
   friend class MediaStreamGraphImpl;
 
@@ -1089,7 +1089,7 @@ public:
   {
     return mInputs.Length();
   }
-  virtual void DestroyImpl() override;
+  void DestroyImpl() override;
   /**
    * This gets called after we've computed the blocking states for all
    * streams (mBlocked is up to date up to mStateComputedTime).
@@ -1117,7 +1117,7 @@ public:
   // true for echo loops, only for muted cycles.
   bool InMutedCycle() const { return mCycleMarker; }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = MediaStream::SizeOfExcludingThis(aMallocSizeOf);
     // Not owned:
@@ -1126,7 +1126,7 @@ public:
     return amount;
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

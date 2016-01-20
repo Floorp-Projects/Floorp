@@ -736,7 +736,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     }
 
     switch (attachment) {
-    case LOCAL_GL_COLOR:
+    case LOCAL_GL_BACK:
     case LOCAL_GL_DEPTH:
     case LOCAL_GL_STENCIL:
         break;
@@ -760,12 +760,12 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_RED_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_GREEN_SIZE:
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_BLUE_SIZE:
-        if (attachment == LOCAL_GL_COLOR)
+        if (attachment == LOCAL_GL_BACK)
             return JS::NumberValue(8);
         return JS::NumberValue(0);
 
     case LOCAL_GL_FRAMEBUFFER_ATTACHMENT_ALPHA_SIZE:
-        if (attachment == LOCAL_GL_COLOR)
+        if (attachment == LOCAL_GL_BACK)
             return JS::NumberValue(mOptions.alpha ? 8 : 0);
         return JS::NumberValue(0);
 

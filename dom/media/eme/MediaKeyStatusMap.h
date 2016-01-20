@@ -42,7 +42,7 @@ protected:
 public:
   nsPIDOMWindow* GetParentObject() const;
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   MediaKeyStatus Get(const ArrayBufferViewOrArrayBuffer& aKey) const;
   bool Has(const ArrayBufferViewOrArrayBuffer& aKey) const;
