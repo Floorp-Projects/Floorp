@@ -3746,7 +3746,7 @@ if test -n "$MOZ_FMP4"; then
 else
   MOZ_FMP4=
 fi
-MOZ_FFMPEG=
+MOZ_FFMPEG=1
 MOZ_WEBRTC=1
 MOZ_PEERCONNECTION=
 MOZ_SRTP=
@@ -5234,14 +5234,6 @@ fi;
 dnl ========================================================
 dnl FFmpeg H264/AAC Decoding Support
 dnl ========================================================
-case "$OS_TARGET" in
-WINNT|Android)
-    ;;
-*)
-    MOZ_FFMPEG=1
-    ;;
-esac
-
 MOZ_ARG_DISABLE_BOOL(ffmpeg,
 [  --disable-ffmpeg         Disable FFmpeg for fragmented H264/AAC decoding],
     MOZ_FFMPEG=,
