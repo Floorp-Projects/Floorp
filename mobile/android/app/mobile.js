@@ -571,9 +571,9 @@ pref("layers.async-pan-zoom.enabled", true);
 // APZ prefs that are different from B2G
 pref("apz.allow_immediate_handoff", false);
 pref("apz.touch_start_tolerance", "0.06");
-// APZ physics settings, copied from B2G
-pref("apz.axis_lock.mode", 2); // Use "sticky" axis locking
+pref("apz.axis_lock.breakout_angle", "0.7853982");    // PI / 4 (45 degrees)
 // APZ physics settings reviewed by UX
+pref("apz.axis_lock.mode", 1); // Use "strict" axis locking
 pref("apz.fling_curve_function_x1", "0.41");
 pref("apz.fling_curve_function_y1", "0.0");
 pref("apz.fling_curve_function_x2", "0.80");

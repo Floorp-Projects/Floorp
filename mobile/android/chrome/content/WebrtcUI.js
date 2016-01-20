@@ -7,6 +7,7 @@ this.EXPORTED_SYMBOLS = ["WebrtcUI"];
 
 XPCOMUtils.defineLazyModuleGetter(this, "Notifications", "resource://gre/modules/Notifications.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "ParentalControls", "@mozilla.org/parental-controls-service;1", "nsIParentalControlsService");
+XPCOMUtils.defineLazyModuleGetter(this, "RuntimePermissions", "resource://gre/modules/RuntimePermissions.jsm");
 
 var WebrtcUI = {
   _notificationId: null,
@@ -28,7 +29,14 @@ var WebrtcUI = {
 
   observe: function(aSubject, aTopic, aData) {
     if (aTopic === "getUserMedia:request") {
-      this.handleGumRequest(aSubject, aTopic, aData);
+      RuntimePermissions
+        .waitForPermissions(this._determineNeededRuntimePermissions(aSubject))
+        .then((permissionGranted) => {
+          if (permissionGranted) {
+            WebrtcUI.handleGumRequest(aSubject, aTopic, aData);
+          } else {
+            Services.obs.notifyObservers(null, "getUserMedia:response:deny", aSubject.callID);
+          }});
     } else if (aTopic === "PeerConnection:request") {
       this.handlePCRequest(aSubject, aTopic, aData);
     } else if (aTopic === "recording-device-events") {
@@ -153,6 +161,20 @@ var WebrtcUI = {
       },
       positive: true
     }];
+  },
+
+  _determineNeededRuntimePermissions: function(aSubject) {
+    let permissions = [];
+
+    let constraints = aSubject.getConstraints();
+    if (constraints.video) {
+      permissions.push(RuntimePermissions.CAMERA);
+    }
+    if (constraints.audio) {
+      permissions.push(RuntimePermissions.RECORD_AUDIO);
+    }
+
+    return permissions;
   },
 
   // Get a list of string names for devices. Ensures that none of the strings are blank

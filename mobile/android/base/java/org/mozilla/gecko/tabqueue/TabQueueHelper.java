@@ -14,12 +14,15 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 import org.mozilla.gecko.util.ThreadUtils;
 
+import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.os.Build;
+import android.provider.Settings;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
@@ -47,6 +50,21 @@ public class TabQueueHelper {
     // result codes for returning from the prompt
     public static final int TAB_QUEUE_YES = 201;
     public static final int TAB_QUEUE_NO = 202;
+
+    /**
+     * Checks if the specified context can draw on top of other apps. As of API level 23, an app
+     * cannot draw on top of other apps unless it declares the SYSTEM_ALERT_WINDOW permission in
+     * its manifest, AND the user specifically grants the app this capability.
+     *
+     * @return true if the specified context can draw on top of other apps, false otherwise.
+     */
+    public static boolean canDrawOverlays(Context context) {
+        if (AppConstants.Versions.preM) {
+            return true; // We got the permission at install time.
+        }
+
+        return Settings.canDrawOverlays(context);
+    }
 
     /**
      * Check if we should show the tab queue prompt
@@ -239,7 +257,7 @@ public class TabQueueHelper {
         notificationManager.cancel(TAB_QUEUE_NOTIFICATION_ID);
     }
 
-    public static void processTabQueuePromptResponse(int resultCode, Context context) {
+    public static boolean processTabQueuePromptResponse(int resultCode, Context context) {
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(context);
         final SharedPreferences.Editor editor = prefs.edit();
 
@@ -270,6 +288,8 @@ public class TabQueueHelper {
         }
 
         editor.apply();
+
+        return resultCode == TAB_QUEUE_YES;
     }
 
     public static boolean isTabQueueEnabled(Context context) {

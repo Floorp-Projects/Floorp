@@ -9,7 +9,7 @@
 define(function(require, exports, module) {
 
 // Dependencies
-const React = require("react");
+const React = require("devtools/client/shared/vendor/react");
 const { createFactories } = require("./rep-utils");
 const { Rep } = createFactories(require("./rep"));
 const { ObjectBox } = createFactories(require("./object-box"));

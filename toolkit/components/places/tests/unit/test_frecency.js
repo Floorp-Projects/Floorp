@@ -122,7 +122,7 @@ try {
   do_throw("Could not get history service\n");
 } 
 
-function task_setCountDate(aURI, aCount, aDate)
+function* task_setCountDate(aURI, aCount, aDate)
 {
   // We need visits so that frecency can be computed over multiple visits
   let visits = [];

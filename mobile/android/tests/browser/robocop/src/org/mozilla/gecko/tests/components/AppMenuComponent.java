@@ -17,6 +17,7 @@ import org.mozilla.gecko.menu.MenuItemActionBar;
 import org.mozilla.gecko.menu.MenuItemDefault;
 import org.mozilla.gecko.tests.UITestContext;
 import org.mozilla.gecko.tests.helpers.DeviceHelper;
+import org.mozilla.gecko.tests.helpers.RobotiumHelper;
 import org.mozilla.gecko.tests.helpers.WaitHelper;
 
 import android.text.TextUtils;
@@ -159,7 +160,7 @@ public class AppMenuComponent extends BaseComponent {
      * This method is dependent on not having two views with equivalent contentDescription / text.
      */
     private View findAppMenuItemView(String text) {
-        mSolo.waitForText(String.format("^%s$", text), 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
+        RobotiumHelper.waitForExactText(text, 1, MAX_WAITTIME_FOR_MENU_UPDATE_IN_MS);
 
         final List<View> views = mSolo.getViews();
 
@@ -299,7 +300,7 @@ public class AppMenuComponent extends BaseComponent {
     private boolean isLegacyMoreMenuOpen() {
         // Check if the first menu option is visible.
         final String shareTitle = mSolo.getString(R.string.share);
-        return mSolo.searchText(String.format("^%s$", shareTitle), true);
+        return RobotiumHelper.searchExactText(shareTitle, true);
     }
 
     /**
@@ -311,7 +312,7 @@ public class AppMenuComponent extends BaseComponent {
      */
     private boolean isMenuOpen(String menuItemTitle) {
         final View menuItemView = findAppMenuItemView(menuItemTitle);
-        return isMenuOpen(menuItemView) ? true : mSolo.searchText(String.format("^%s$", menuItemTitle), true);
+        return isMenuOpen(menuItemView) ? true : RobotiumHelper.searchExactText(menuItemTitle, true);
     }
 
     /**

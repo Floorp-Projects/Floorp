@@ -4,32 +4,13 @@
 
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory } = require("devtools/client/shared/vendor/react");
-const { L10N } = require("../utils");
+const { L10N, formatNumber, formatPercent } = require("../utils");
 const Frame = createFactory(require("devtools/client/shared/components/frame"));
 const unknownSourceString = L10N.getStr("unknownSource");
 const { TREE_ROW_HEIGHT } = require("../constants");
 
 const CensusTreeItem = module.exports = createClass({
   displayName: "CensusTreeItem",
-
-  formatPercent(showSign, percent) {
-    return L10N.getFormatStr("tree-item.percent",
-                             this.formatNumber(showSign, percent));
-  },
-
-  formatNumber(showSign, number) {
-    const rounded = Math.round(number);
-    if (rounded === 0 || rounded === -0) {
-      return "0";
-    }
-
-    let sign = "";
-    if (showSign) {
-      sign = rounded < 0 ? "-" : "+";
-    }
-
-    return sign + Math.abs(rounded);
-  },
 
   shouldComponentUpdate(nextProps, nextState) {
     return this.props.item != nextProps.item
@@ -52,17 +33,17 @@ const CensusTreeItem = module.exports = createClass({
       onViewSourceInDebugger,
     } = this.props;
 
-    const bytes = this.formatNumber(showSign, item.bytes);
-    const percentBytes = this.formatPercent(showSign, getPercentBytes(item.bytes));
+    const bytes = formatNumber(item.bytes, showSign);
+    const percentBytes = formatPercent(getPercentBytes(item.bytes), showSign);
 
-    const count = this.formatNumber(showSign, item.count);
-    const percentCount = this.formatPercent(showSign, getPercentCount(item.count));
+    const count = formatNumber(item.count, showSign);
+    const percentCount = formatPercent(getPercentCount(item.count), showSign);
 
-    const totalBytes = this.formatNumber(showSign, item.totalBytes);
-    const percentTotalBytes = this.formatPercent(showSign, getPercentBytes(item.totalBytes));
+    const totalBytes = formatNumber(item.totalBytes, showSign);
+    const percentTotalBytes = formatPercent(getPercentBytes(item.totalBytes), showSign);
 
-    const totalCount = this.formatNumber(showSign, item.totalCount);
-    const percentTotalCount = this.formatPercent(showSign, getPercentCount(item.totalCount));
+    const totalCount = formatNumber(item.totalCount, showSign);
+    const percentTotalCount = formatPercent(getPercentCount(item.totalCount), showSign);
 
     return dom.div({ className: `heap-tree-item ${focused ? "focused" :""}` },
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" },

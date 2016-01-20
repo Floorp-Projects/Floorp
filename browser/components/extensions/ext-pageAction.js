@@ -28,7 +28,7 @@ function PageAction(options, extension) {
 
   this.defaults = {
     show: false,
-    title: title,
+    title: title || extension.name,
     icon: IconDetails.normalize({ path: options.default_icon }, extension,
                                 null, true),
     popup: popup && extension.baseURI.resolve(popup),
@@ -58,7 +58,12 @@ PageAction.prototype = {
   // If |tab| is currently selected, updates the page action button to
   // reflect the new value.
   setProperty(tab, prop, value) {
-    this.tabContext.get(tab)[prop] = value;
+    if (value != null) {
+      this.tabContext.get(tab)[prop] = value;
+    } else {
+      delete this.tabContext.get(tab)[prop];
+    }
+
     if (tab.selected) {
       this.updateButton(tab.ownerDocument.defaultView);
     }
@@ -84,13 +89,9 @@ PageAction.prototype = {
     if (tabData.show) {
       // Update the title and icon only if the button is visible.
 
-      if (tabData.title) {
-        button.setAttribute("tooltiptext", tabData.title);
-        button.setAttribute("aria-label", tabData.title);
-      } else {
-        button.removeAttribute("tooltiptext");
-        button.removeAttribute("aria-label");
-      }
+      let title = tabData.title || this.extension.name;
+      button.setAttribute("tooltiptext", title);
+      button.setAttribute("aria-label", title);
 
       let icon = IconDetails.getURL(tabData.icon, window, this.extension);
       button.setAttribute("src", icon);
@@ -137,12 +138,16 @@ PageAction.prototype = {
   // the any click listeners in the add-on.
   handleClick(window) {
     let tab = window.gBrowser.selectedTab;
-    let popup = this.tabContext.get(tab).popup;
+    let popupURL = this.tabContext.get(tab).popup;
 
     this.tabManager.addActiveTabPermission(tab);
 
-    if (popup) {
-      openPanel(this.getButton(window), popup, this.extension);
+    // If the widget has a popup URL defined, we open a popup, but do not
+    // dispatch a click event to the extension.
+    // If it has no popup URL defined, we dispatch a click event, but do not
+    // open a popup.
+    if (popupURL) {
+      new PanelPopup(this.extension, this.getButton(window), popupURL);
     } else {
       this.emit("click", tab);
     }
@@ -213,7 +218,9 @@ extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
 
       setTitle(details) {
         let tab = TabManager.getTab(details.tabId);
-        PageAction.for(extension).setProperty(tab, "title", details.title);
+
+        // Clear the tab-specific title when given a null string.
+        PageAction.for(extension).setProperty(tab, "title", details.title || null);
       },
 
       getTitle(details, callback) {

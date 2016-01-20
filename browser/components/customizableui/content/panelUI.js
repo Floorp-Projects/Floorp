@@ -329,6 +329,7 @@ const PanelUI = {
       evt.initCustomEvent("ViewShowing", true, true, viewNode);
       viewNode.dispatchEvent(evt);
       if (evt.defaultPrevented) {
+        aAnchor.open = false;
         return;
       }
 
