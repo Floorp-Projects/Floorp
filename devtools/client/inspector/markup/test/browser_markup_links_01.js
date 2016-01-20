@@ -7,7 +7,7 @@
 // Tests that links are shown in attributes when the values (or part of the
 // values) are URIs or pointers to IDs.
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
+const TEST_URL = URL_ROOT + "doc_markup_links.html";
 
 const TEST_DATA = [{
   selector: "link",
@@ -102,7 +102,7 @@ const TEST_DATA = [{
 requestLongerTimeout(2);
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let {selector, attributes} of TEST_DATA) {
     info("Testing attributes on node " + selector);

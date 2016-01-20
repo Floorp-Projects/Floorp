@@ -9,16 +9,16 @@
 // The test registers one backend actor providing custom form data
 // and checks that the value is properly sent to the client (NodeFront).
 
-const TEST_PAGE_URL = TEST_URL_ROOT + "doc_markup_events_form.html";
-const TEST_ACTOR_URL = CHROME_BASE + "actor_events_form.js";
+const TEST_PAGE_URL = URL_ROOT + "doc_markup_events_form.html";
+const TEST_ACTOR_URL = CHROME_URL_ROOT + "actor_events_form.js";
 
 var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
 var {EventsFormFront} = require(TEST_ACTOR_URL);
 
 add_task(function*() {
   info("Opening the Toolbox");
-  let {tab} = yield addTab(TEST_PAGE_URL);
-  let {toolbox} = yield openToolbox("webconsole");
+  let tab = yield addTab(TEST_PAGE_URL);
+  let toolbox = yield openToolboxForTab(tab, "webconsole");
 
   info("Registering test actor");
   let {registrar, front} = yield registerTestActor(toolbox);

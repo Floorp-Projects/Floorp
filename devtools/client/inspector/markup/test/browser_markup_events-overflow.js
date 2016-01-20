@@ -3,7 +3,7 @@
  http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 
-const TEST_URL = TEST_URL_ROOT + "doc_markup_events-overflow.html";
+const TEST_URL = URL_ROOT + "doc_markup_events-overflow.html";
 const TEST_DATA = [
   {
     desc: "editor overflows container",
@@ -29,7 +29,7 @@ const TEST_DATA = [
 ];
 
 add_task(function*() {
-  let { inspector } = yield addTab(TEST_URL).then(openInspector);
+  let { inspector } = yield openInspectorForURL(TEST_URL);
 
   let markupContainer = yield getContainerForSelector("#events", inspector);
   let evHolder = markupContainer.elt.querySelector(".markupview-events");

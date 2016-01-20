@@ -15,7 +15,7 @@ const TEST_DATA = [
     newHTML: '<div id="one">First Div</div>',
     validate: function*(pageNode, pageNodeFront, selectedNodeFront) {
       is(pageNode.textContent, "First Div", "New div has expected text content");
-      ok(!getNode("#one em"), "No em remaining")
+      ok(!getNode("#one em", {expectNoMatch: true}), "No em remaining")
     }
   },
   {
@@ -71,7 +71,7 @@ const TEST_URL = "data:text/html," +
   "</html>";
 
 add_task(function*() {
-  let {inspector} = yield addTab(TEST_URL).then(openInspector);
+  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
   inspector.markup._frame.focus();
-  yield runEditOuterHTMLTests(TEST_DATA, inspector);
+  yield runEditOuterHTMLTests(TEST_DATA, inspector, testActor);
 });
