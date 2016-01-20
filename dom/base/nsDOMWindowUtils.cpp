@@ -105,6 +105,7 @@
 #include "nsDocument.h"
 #include "HTMLImageElement.h"
 #include "mozilla/css/ImageLoader.h"
+#include "mozilla/layers/APZCTreeManager.h" // for layers::ZoomToRectBehavior
 
 #ifdef XP_WIN
 #undef GetClassName
@@ -2418,6 +2419,59 @@ nsDOMWindowUtils::FlushApzRepaints(bool* aOutResult)
   }
   forwarder->GetShadowManager()->SendFlushApzRepaints();
   *aOutResult = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::ZoomToFocusedInput()
+{
+  nsIWidget* widget = GetWidget();
+  if (!widget) {
+    return NS_OK;
+  }
+  // If APZ is not enabled, this function is a no-op.
+  if (!widget->AsyncPanZoomEnabled()) {
+    return NS_OK;
+  }
+
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return NS_OK;
+  }
+
+  nsIContent* content = fm->GetFocusedContent();
+  if (!content) {
+    return NS_OK;
+  }
+
+  nsIPresShell* shell = APZCCallbackHelper::GetRootContentDocumentPresShellForContent(content);
+  if (!shell) {
+    return NS_OK;
+  }
+
+  nsIScrollableFrame* rootScrollFrame = shell->GetRootScrollFrameAsScrollable();
+  if (!rootScrollFrame) {
+    return NS_OK;
+  }
+
+  nsIDocument* document = shell->GetDocument();
+  if (!document) {
+    return NS_OK;
+  }
+
+  uint32_t presShellId;
+  FrameMetrics::ViewID viewId;
+  if (APZCCallbackHelper::GetOrCreateScrollIdentifiers(document->GetDocumentElement(), &presShellId, &viewId)) {
+    uint32_t flags = layers::DISABLE_ZOOM_OUT;
+    if (!Preferences::GetBool("formhelper.autozoom")) {
+      flags |= layers::PAN_INTO_VIEW_ONLY;
+    }
+
+    CSSRect bounds = nsLayoutUtils::GetBoundingContentRect(content, rootScrollFrame);
+    bounds.Inflate(15.0f, 0.0f);
+    widget->ZoomToRect(presShellId, viewId, bounds, flags);
+  }
+
   return NS_OK;
 }
 
