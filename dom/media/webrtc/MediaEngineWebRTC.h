@@ -93,12 +93,6 @@ public:
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aDirect) override
   {}
-  nsresult Config(bool aEchoOn, uint32_t aEcho, bool aAgcOn,
-                  uint32_t aAGC, bool aNoiseOn, uint32_t aNoise,
-                  int32_t aPlayoutDelay) override
-  {
-    return NS_OK;
-  }
   void NotifyOutputData(MediaStreamGraph* aGraph,
                         AudioDataValue* aBuffer, size_t aFrames,
                         uint32_t aChannels) override
@@ -410,10 +404,6 @@ public:
                    const MediaEnginePrefs &aPrefs,
                    const nsString& aDeviceId) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
-  nsresult Config(bool aEchoOn, uint32_t aEcho,
-                  bool aAgcOn, uint32_t aAGC,
-                  bool aNoiseOn, uint32_t aNoise,
-                  int32_t aPlayoutDelay) override;
 
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream* aSource,
