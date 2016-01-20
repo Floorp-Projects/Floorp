@@ -7,6 +7,7 @@
 
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLElementBinding.h"
+#include "mozilla/MouseEvents.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Summary)
 
@@ -18,6 +19,46 @@ HTMLSummaryElement::~HTMLSummaryElement()
 }
 
 NS_IMPL_ELEMENT_CLONE(HTMLSummaryElement)
+
+nsresult
+HTMLSummaryElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
+{
+  nsresult rv = NS_OK;
+  if (!aVisitor.mPresContext) {
+    return rv;
+  }
+
+  if (aVisitor.mEventStatus == nsEventStatus_eConsumeNoDefault) {
+    return rv;
+  }
+
+  auto toggleDetails = false;
+  auto* event = aVisitor.mEvent;
+
+  if (event->HasMouseEventMessage()) {
+    auto* mouseEvent = event->AsMouseEvent();
+    toggleDetails = mouseEvent->IsLeftClickEvent();
+  }
+
+  // Todo: Bug 634004: Implement toggle details by keyboard.
+
+  if (!toggleDetails || !IsMainSummary()) {
+    return rv;
+  }
+
+  auto* details = GetDetails();
+  MOZ_ASSERT(details, "Expected to find details since this is the main summary!");
+
+  // When dispatching a synthesized mouse click event to a details with
+  // 'display: none', both Chrome and Safari do not toggle the 'open' attribute.
+  // We follow them by checking whether details has a frame or not.
+  if (details->GetPrimaryFrame()) {
+    details->ToggleOpen();
+    aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+  }
+
+  return rv;
+}
 
 bool
 HTMLSummaryElement::IsMainSummary() const
