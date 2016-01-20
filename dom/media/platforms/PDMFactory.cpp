@@ -58,7 +58,6 @@ bool PDMFactory::sAndroidMCDecoderPreferred = false;
 bool PDMFactory::sGMPDecoderEnabled = false;
 #ifdef MOZ_FFVPX
 bool PDMFactory::sFFVPXDecoderEnabled = false;
-using namespace ffvpx;
 #endif
 #ifdef MOZ_FFMPEG
 bool PDMFactory::sFFmpegDecoderEnabled = false;
@@ -124,10 +123,10 @@ PDMFactory::Init()
   AppleDecoderModule::Init();
 #endif
 #ifdef MOZ_FFVPX
-  FFVPXRuntimeLinker::Link();
+  FFVPXRuntimeLinker::Init();
 #endif
 #ifdef MOZ_FFMPEG
-  FFmpegRuntimeLinker::Link();
+  FFmpegRuntimeLinker::Init();
 #endif
   GMPDecoderModule::Init();
 }
