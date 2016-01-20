@@ -1776,7 +1776,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
 
     JS_INLINABLE_FN("TypedArrayLength", intrinsic_TypedArrayLength,     1,0,
                     IntrinsicTypedArrayLength),
-    JS_FN("PossiblyWrappedTypedArrayLength", intrinsic_PossiblyWrappedTypedArrayLength, 1, 0),
+    JS_INLINABLE_FN("PossiblyWrappedTypedArrayLength", intrinsic_PossiblyWrappedTypedArrayLength,
+                    1, 0, IntrinsicPossiblyWrappedTypedArrayLength),
 
     JS_FN("MoveTypedArrayElements",  intrinsic_MoveTypedArrayElements,  4,0),
     JS_FN("SetFromTypedArrayApproach",intrinsic_SetFromTypedArrayApproach, 4, 0),
