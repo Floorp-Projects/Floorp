@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import unittest
 
 from marionette import MarionetteTestCase
 from marionette_driver.addons import Addons, AddonInstallException
@@ -14,7 +15,6 @@ class TestAddons(MarionetteTestCase):
     def setUp(self):
         MarionetteTestCase.setUp(self)
         self.addons = Addons(self.marionette)
-        self.addon_path = os.path.join(here, 'mn-restartless.xpi')
 
 
     @property
@@ -32,19 +32,27 @@ class TestAddons(MarionetteTestCase):
 
         return addons
 
-    def test_install_and_remove_unsigned_addon(self):
-        self.addons.signature_required = False
+    def test_install_and_remove_temporary_unsigned_addon(self):
+        addon_path = os.path.join(here, 'mn-restartless-unsigned.xpi')
 
-        addon_id = self.addons.install(self.addon_path)
+        addon_id = self.addons.install(addon_path, temp=True)
         self.assertIn(addon_id, self.all_addon_ids)
 
         self.addons.uninstall(addon_id)
         self.assertNotIn(addon_id, self.all_addon_ids)
 
-        self.addons.signature_required = True
-
-    def test_install_unsigned_addon_with_signature_required(self):
-        self.signature_required = True
+    def test_install_unsigned_addon(self):
+        addon_path = os.path.join(here, 'mn-restartless-unsigned.xpi')
 
         with self.assertRaises(AddonInstallException):
-            self.addons.install(self.addon_path)
+            self.addons.install(addon_path)
+
+    @unittest.skip("need to get the test extension signed")
+    def test_install_and_remove_signed_addon(self):
+        addon_path = os.path.join(here, 'mn-restartless-signed.xpi')
+
+        addon_id = self.addons.install(addon_path)
+        self.assertIn(addon_id, self.all_addon_ids)
+
+        self.addons.uninstall(addon_id)
+        self.assertNotIn(addon_id, self.all_addon_ids)

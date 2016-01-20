@@ -32,7 +32,7 @@ public:
 
   void Delete(nsCOMPtr<nsIRunnable> aCallback = nullptr);
 
-  virtual bool CanShutdown() override { return true; }
+  bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
 
   using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;

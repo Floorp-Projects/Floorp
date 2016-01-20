@@ -21,7 +21,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ConvolverNode, AudioNode);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   AudioBuffer* GetBuffer(JSContext* aCx) const
   {
@@ -37,7 +37,7 @@ public:
 
   void SetNormalize(bool aNormal);
 
-  virtual void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
+  void SetChannelCount(uint32_t aChannelCount, ErrorResult& aRv) override
   {
     if (aChannelCount > 2) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -45,7 +45,7 @@ public:
     }
     AudioNode::SetChannelCount(aChannelCount, aRv);
   }
-  virtual void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) override
+  void SetChannelCountModeValue(ChannelCountMode aMode, ErrorResult& aRv) override
   {
     if (aMode == ChannelCountMode::Max) {
       aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
@@ -54,13 +54,13 @@ public:
     AudioNode::SetChannelCountModeValue(aMode, aRv);
   }
 
-  virtual const char* NodeType() const override
+  const char* NodeType() const override
   {
     return "ConvolverNode";
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
 protected:
   virtual ~ConvolverNode();

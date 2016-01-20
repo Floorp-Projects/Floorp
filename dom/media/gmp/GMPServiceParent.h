@@ -30,7 +30,7 @@ public:
   static already_AddRefed<GeckoMediaPluginServiceParent> GetSingleton();
 
   GeckoMediaPluginServiceParent();
-  virtual nsresult Init() override;
+  nsresult Init() override;
 
   NS_DECL_ISUPPORTS_INHERITED
 
@@ -104,11 +104,11 @@ protected:
   friend class GMPParent;
   void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
   void PluginTerminated(const RefPtr<GMPParent>& aOld);
-  virtual void InitializePlugins() override;
-  virtual bool GetContentParentFrom(const nsACString& aNodeId,
-                                    const nsCString& aAPI,
-                                    const nsTArray<nsCString>& aTags,
-                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
+  void InitializePlugins() override;
+  bool GetContentParentFrom(const nsACString& aNodeId,
+                            const nsCString& aAPI,
+                            const nsTArray<nsCString>& aTags,
+                            UniquePtr<GetGMPContentParentCallback>&& aCallback)
     override;
 private:
   GMPParent* ClonePlugin(const GMPParent* aOriginal);
@@ -207,23 +207,23 @@ public:
   }
   virtual ~GMPServiceParent();
 
-  virtual bool RecvLoadGMP(const nsCString& aNodeId,
-                           const nsCString& aApi,
-                           nsTArray<nsCString>&& aTags,
-                           nsTArray<ProcessId>&& aAlreadyBridgedTo,
-                           base::ProcessId* aID,
-                           nsCString* aDisplayName,
-                           uint32_t* aPluginId) override;
-  virtual bool RecvGetGMPNodeId(const nsString& aOrigin,
-                                const nsString& aTopLevelOrigin,
-                                const nsString& aGMPName,
-                                const bool& aInPrivateBrowsing,
-                                nsCString* aID) override;
+  bool RecvLoadGMP(const nsCString& aNodeId,
+                   const nsCString& aApi,
+                   nsTArray<nsCString>&& aTags,
+                   nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                   base::ProcessId* aID,
+                   nsCString* aDisplayName,
+                   uint32_t* aPluginId) override;
+  bool RecvGetGMPNodeId(const nsString& aOrigin,
+                        const nsString& aTopLevelOrigin,
+                        const nsString& aGMPName,
+                        const bool& aInPrivateBrowsing,
+                        nsCString* aID) override;
   static bool RecvGetGMPPluginVersionForAPI(const nsCString& aAPI,
                                             nsTArray<nsCString>&& aTags,
                                             bool* aHasPlugin,
                                             nsCString* aVersion);
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
 

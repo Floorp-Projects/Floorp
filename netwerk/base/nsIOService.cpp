@@ -190,6 +190,7 @@ nsIOService::nsIOService()
     , mLastOfflineStateChange(PR_IntervalNow())
     , mLastConnectivityChange(PR_IntervalNow())
     , mLastNetworkLinkChange(PR_IntervalNow())
+    , mNetTearingDownStarted(0)
 {
 }
 
@@ -1419,6 +1420,7 @@ nsIOService::Observe(nsISupports *subject,
     } else if (!strcmp(topic, kProfileChangeNetTeardownTopic)) {
         if (!mOffline) {
             mOfflineForProfileChange = true;
+            mNetTearingDownStarted = PR_IntervalNow();
             if (gHttpHandler) {
                 gHttpHandler->ShutdownConnectionManager();
             }
@@ -1447,7 +1449,9 @@ nsIOService::Observe(nsISupports *subject,
         // changes of the offline status from now. We must not allow going
         // online after this point.
         mShutdown = true;
-
+        if (!mOfflineForProfileChange) {
+          mNetTearingDownStarted = PR_IntervalNow();
+        }
         if (gHttpHandler) {
             gHttpHandler->ShutdownConnectionManager();
         }

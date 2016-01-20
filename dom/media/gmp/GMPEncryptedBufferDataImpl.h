@@ -19,9 +19,9 @@ class GMPStringListImpl : public GMPStringList
 {
 public:
   explicit GMPStringListImpl(const nsTArray<nsCString>& aStrings);
-  virtual uint32_t Size() const override;
-  virtual void StringAt(uint32_t aIndex,
-                        const char** aOutString, uint32_t *aOutLength) const override;
+  uint32_t Size() const override;
+  void StringAt(uint32_t aIndex,
+                const char** aOutString, uint32_t *aOutLength) const override;
   virtual ~GMPStringListImpl() override;
   void RelinquishData(nsTArray<nsCString>& aStrings);
 
@@ -37,14 +37,14 @@ public:
 
   void RelinquishData(GMPDecryptionData& aData);
 
-  virtual const uint8_t* KeyId() const override;
-  virtual uint32_t KeyIdSize() const override;
-  virtual const uint8_t* IV() const override;
-  virtual uint32_t IVSize() const override;
-  virtual uint32_t NumSubsamples() const override;
-  virtual const uint16_t* ClearBytes() const override;
-  virtual const uint32_t* CipherBytes() const override;
-  virtual const GMPStringList* SessionIds() const override;
+  const uint8_t* KeyId() const override;
+  uint32_t KeyIdSize() const override;
+  const uint8_t* IV() const override;
+  uint32_t IVSize() const override;
+  uint32_t NumSubsamples() const override;
+  const uint16_t* ClearBytes() const override;
+  const uint32_t* CipherBytes() const override;
+  const GMPStringList* SessionIds() const override;
 
 private:
   nsTArray<uint8_t> mKeyId;
@@ -62,16 +62,16 @@ public:
     , mData(aData)
   {
   }
-  virtual uint32_t Id() const {
+  uint32_t Id() const override {
     return mId;
   }
-  virtual uint8_t* Data() {
+  uint8_t* Data() override {
     return mData.Elements();
   }
-  virtual uint32_t Size() const {
+  uint32_t Size() const override {
     return mData.Length();
   }
-  virtual void Resize(uint32_t aSize) {
+  void Resize(uint32_t aSize) override {
     mData.SetLength(aSize);
   }
 

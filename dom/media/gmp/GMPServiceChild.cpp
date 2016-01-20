@@ -59,7 +59,7 @@ public:
   {
   }
 
-  virtual void Done(GMPServiceChild* aGMPServiceChild)
+  void Done(GMPServiceChild* aGMPServiceChild) override
   {
     if (!aGMPServiceChild) {
       mCallback->Done(nullptr);
@@ -147,7 +147,7 @@ public:
   {
   }
 
-  virtual void Done(GMPServiceChild* aGMPServiceChild)
+  void Done(GMPServiceChild* aGMPServiceChild) override
   {
     if (!aGMPServiceChild) {
       mCallback->Done(NS_ERROR_FAILURE, EmptyCString());

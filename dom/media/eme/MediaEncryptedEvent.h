@@ -36,7 +36,7 @@ protected:
 
 public:
 
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<MediaEncryptedEvent>
   Constructor(EventTarget* aOwner);

@@ -538,7 +538,7 @@ class TreeMetadataEmitter(LoggingMixin):
                         'action', 'generate_symbols_file.py')
                     yield GeneratedFile(context, script,
                         'generate_symbols_file', lib.symbols_file,
-                        [symbols_file.full_path])
+                        [symbols_file.full_path], lib.defines.get_defines())
             if static_lib:
                 lib = StaticLibrary(context, libname, **static_args)
                 self._libs[libname].append(lib)

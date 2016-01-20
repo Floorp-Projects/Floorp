@@ -1481,6 +1481,10 @@ pref("network.ftp.control.qos", 0);
 
 // The max time to spend on xpcom events between two polls in ms.
 pref("network.sts.max_time_for_events_between_two_polls", 100);
+
+// During shutdown we limit PR_Close calls. If time exceeds this pref (in ms)
+// let sockets just leak.
+pref("network.sts.max_time_for_pr_close_during_shutdown", 5000);
 // </http>
 
 // 2147483647 == PR_INT32_MAX == ~2 GB

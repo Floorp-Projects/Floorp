@@ -1,10 +1,9 @@
 config = {
     "log_name": "central_to_aurora",
     "version_files": [
-        "browser/config/version.txt",
-        "browser/config/version_display.txt",
-        "config/milestone.txt",
-        "b2g/confvars.sh",
+        {"file": "browser/config/version.txt", "suffix": ""},
+        {"file": "browser/config/version_display.txt", "suffix": ""},
+        {"file": "config/milestone.txt", "suffix": ""},
     ],
     "replacements": [
         # File, from, to

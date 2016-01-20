@@ -4,7 +4,7 @@ This test exercises the CacheFileContextEvictor::WasEvicted API and code using i
 
 - We store 10+10 (pinned and non-pinned) entries to the cache, wait for them being written.
 - Then we purge the memory pools.
-- Now the IO thread is suspended on the EVICT (8) level to prevent actual deletion of the files.
+- Now the IO thread is suspended on the EVICT (7) level to prevent actual deletion of the files.
 - Index is disabled.
 - We do clear() of the cache, this creates the "ce_*" file and posts to the EVICT level
   the eviction loop mechanics.
@@ -51,9 +51,9 @@ function run_test()
 
   // (1), here we start
 
+  log_("first set of opens");
   var i;
   for (i = 0; i < kENTRYCOUNT; ++i) {
-    log_("first set of opens");
 
     // Callbacks 1-20
     mc.add();
@@ -100,7 +100,9 @@ function run_test()
       // an early check on CacheIOThread::YieldAndRerun() in that method.
       // CacheFileIOManager::OpenFileInternal should now run and CacheFileContextEvictor::WasEvicted
       // should be checked on.
+      log_("resuming");
       testingInterface.resumeCacheIOThread();
+      log_("resumed");
 
       mc.fired(); // Finishes this test
     }

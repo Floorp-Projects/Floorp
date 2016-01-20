@@ -93,16 +93,22 @@ PROCESSED_SUFFIX = '.processed.jar'
 
 class ArtifactJob(object):
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+    # Each item is a pair of (pattern, (src_prefix, dest_prefix), where src_prefix
+    # is the prefix of the pattern relevant to its location in the archive, and
+    # dest_prefix is the prefix to be added that will yield the final path relative
+    # to dist/.
     test_artifact_patterns = {
-        'bin/BadCertServer',
-        'bin/GenerateOCSPResponse',
-        'bin/OCSPStaplingServer',
-        'bin/certutil',
-        'bin/fileid',
-        'bin/pk12util',
-        'bin/ssltunnel',
-        'bin/xpcshell',
+        ('bin/BadCertServer', ('bin', 'bin')),
+        ('bin/GenerateOCSPResponse', ('bin', 'bin')),
+        ('bin/OCSPStaplingServer', ('bin', 'bin')),
+        ('bin/certutil', ('bin', 'bin')),
+        ('bin/fileid', ('bin', 'bin')),
+        ('bin/pk12util', ('bin', 'bin')),
+        ('bin/ssltunnel', ('bin', 'bin')),
+        ('bin/xpcshell', ('bin', 'bin')),
+        ('bin/plugins/*', ('bin/plugins', 'plugins'))
     }
+
     # We can tell our input is a test archive by this suffix, which happens to
     # be the same across platforms.
     _test_archive_suffix = '.common.tests.zip'
@@ -150,13 +156,16 @@ class ArtifactJob(object):
         with JarWriter(file=processed_filename, optimize=False, compress_level=5) as writer:
             reader = JarReader(filename)
             for filename, entry in reader.entries.iteritems():
-                if filename in self.test_artifact_patterns:
-                    basename = mozpath.basename(filename)
+                for pattern, (src_prefix, dest_prefix) in self.test_artifact_patterns:
+                    if not mozpath.match(filename, pattern):
+                        continue
+                    destpath = mozpath.relpath(filename, src_prefix)
+                    destpath = mozpath.join(dest_prefix, destpath)
                     self.log(logging.INFO, 'artifact',
-                             {'basename': basename},
-                             'Adding {basename} to processed archive')
+                             {'destpath': destpath},
+                             'Adding {destpath} to processed archive')
                     mode = entry['external_attr'] >> 16
-                    writer.add(basename.encode('utf-8'), reader[filename], mode=mode)
+                    writer.add(destpath.encode('utf-8'), reader[filename], mode=mode)
                     added_entry = True
 
         if not added_entry:
@@ -178,6 +187,7 @@ class AndroidArtifactJob(ArtifactJob):
                     {'basename': basename},
                    'Adding {basename} to processed archive')
 
+                basename = mozpath.join('bin', basename)
                 writer.add(basename.encode('utf-8'), f)
 
 
@@ -210,7 +220,8 @@ class LinuxArtifactJob(ArtifactJob):
 
                     # We strip off the relative "firefox/" bit from the path,
                     # but otherwise preserve it.
-                    destpath = mozpath.relpath(f.name, "firefox")
+                    destpath = mozpath.join('bin',
+                                            mozpath.relpath(f.name, "firefox"))
                     self.log(logging.INFO, 'artifact',
                              {'destpath': destpath},
                              'Adding {destpath} to processed archive')
@@ -295,7 +306,8 @@ class MacArtifactJob(ArtifactJob):
                         self.log(logging.INFO, 'artifact',
                             {'path': path},
                             'Adding {path} to processed archive')
-                        writer.add(os.path.basename(p).encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+                        destpath = mozpath.join('bin', os.path.basename(p))
+                        writer.add(destpath.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
 
                 root, paths = paths_keep_path
                 finder = FileFinder(mozpath.join(source, root))
@@ -304,7 +316,8 @@ class MacArtifactJob(ArtifactJob):
                         self.log(logging.INFO, 'artifact',
                             {'path': path},
                             'Adding {path} to processed archive')
-                        writer.add(p.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
+                        destpath = mozpath.join('bin', p)
+                        writer.add(destpath.encode('utf-8'), f, mode=os.stat(mozpath.join(finder.base, p)).st_mode)
 
         finally:
             try:
@@ -326,14 +339,15 @@ class WinArtifactJob(ArtifactJob):
     }
     # These are a subset of TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
     test_artifact_patterns = {
-        'bin/BadCertServer.exe',
-        'bin/GenerateOCSPResponse.exe',
-        'bin/OCSPStaplingServer.exe',
-        'bin/certutil.exe',
-        'bin/fileid.exe',
-        'bin/pk12util.exe',
-        'bin/ssltunnel.exe',
-        'bin/xpcshell.exe',
+        ('bin/BadCertServer.exe', ('bin', 'bin')),
+        ('bin/GenerateOCSPResponse.exe', ('bin', 'bin')),
+        ('bin/OCSPStaplingServer.exe', ('bin', 'bin')),
+        ('bin/certutil.exe', ('bin', 'bin')),
+        ('bin/fileid.exe', ('bin', 'bin')),
+        ('bin/pk12util.exe', ('bin', 'bin')),
+        ('bin/ssltunnel.exe', ('bin', 'bin')),
+        ('bin/xpcshell.exe', ('bin', 'bin')),
+        ('bin/plugins/*', ('bin/plugins', 'plugins'))
     }
 
     def process_package_artifact(self, filename, processed_filename):
@@ -345,6 +359,7 @@ class WinArtifactJob(ArtifactJob):
 
                 # strip off the relative "firefox/" bit from the path:
                 basename = mozpath.relpath(f.filename, "firefox")
+                basename = mozpath.join('bin', basename)
                 self.log(logging.INFO, 'artifact',
                     {'basename': basename},
                     'Adding {basename} to processed archive')
@@ -664,7 +679,7 @@ class Artifacts(object):
         if self._log:
             self._log(*args, **kwargs)
 
-    def install_from_file(self, filename, bindir, install_callback=None):
+    def install_from_file(self, filename, distdir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'filename': filename},
             'Installing from {filename}')
@@ -685,13 +700,13 @@ class Artifacts(object):
             'Installing from processed {processed_filename}')
 
         # Copy all .so files, avoiding modification where possible.
-        ensureParentDir(mozpath.join(bindir, '.dummy'))
+        ensureParentDir(mozpath.join(distdir, '.dummy'))
 
         with zipfile.ZipFile(processed_filename) as zf:
             for info in zf.infolist():
                 if info.filename.endswith('.ini'):
                     continue
-                n = mozpath.join(bindir, info.filename)
+                n = mozpath.join(distdir, info.filename)
                 fh = FileAvoidWrite(n, mode='rb')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
@@ -708,15 +723,15 @@ class Artifacts(object):
                     install_callback(info.filename, file_existed, file_updated)
         return 0
 
-    def install_from_url(self, url, bindir, install_callback=None):
+    def install_from_url(self, url, distdir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
         with self._artifact_cache as artifact_cache:  # The with block handles persistence.
             filename = artifact_cache.fetch(url)
-        return self.install_from_file(filename, bindir, install_callback=install_callback)
+        return self.install_from_file(filename, distdir, install_callback=install_callback)
 
-    def install_from_hg(self, revset, bindir, install_callback=None):
+    def install_from_hg(self, revset, distdir, install_callback=None):
         if not revset:
             revset = '.'
         if len(revset) != 40:
@@ -745,7 +760,7 @@ class Artifacts(object):
                     pass
         if urls:
             for url in urls:
-                if self.install_from_url(url, bindir, install_callback=install_callback):
+                if self.install_from_url(url, distdir, install_callback=install_callback):
                     return 1
             return 0
         self.log(logging.ERROR, 'artifact',
@@ -753,21 +768,21 @@ class Artifacts(object):
                  'No built artifacts for {revset} found.')
         return 1
 
-    def install_from(self, source, bindir, install_callback=None):
-        """Install artifacts from a ``source`` into the given ``bindir``.
+    def install_from(self, source, distdir, install_callback=None):
+        """Install artifacts from a ``source`` into the given ``distdir``.
 
         If ``callback`` is given, it is called once with arguments ``(path,
         existed, updated)``, where ``path`` is the file path written relative
-        to ``bindir``; ``existed`` is a boolean indicating whether the file
+        to ``distdir``; ``existed`` is a boolean indicating whether the file
         existed; and ``updated`` is a boolean indicating whether the file was
         updated.
         """
         if source and os.path.isfile(source):
-            return self.install_from_file(source, bindir, install_callback=install_callback)
+            return self.install_from_file(source, distdir, install_callback=install_callback)
         elif source and urlparse.urlparse(source).scheme:
-            return self.install_from_url(source, bindir, install_callback=install_callback)
+            return self.install_from_url(source, distdir, install_callback=install_callback)
         else:
-            return self.install_from_hg(source, bindir, install_callback=install_callback)
+            return self.install_from_hg(source, distdir, install_callback=install_callback)
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',

@@ -18,14 +18,14 @@ public:
   static already_AddRefed<MediaElementAudioSourceNode>
   Create(AudioContext* aContext, DOMMediaStream* aStream, ErrorResult& aRv);
 
-  virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual const char* NodeType() const override
+  const char* NodeType() const override
   {
     return "MediaElementAudioSourceNode";
   }
 
-  virtual size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }

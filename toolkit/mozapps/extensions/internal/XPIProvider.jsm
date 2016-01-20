@@ -112,6 +112,7 @@ const PREF_SHOWN_SELECTION_UI         = "extensions.shownSelectionUI";
 const PREF_INTERPOSITION_ENABLED      = "extensions.interposition.enabled";
 const PREF_SYSTEM_ADDON_SET           = "extensions.systemAddonSet";
 const PREF_SYSTEM_ADDON_UPDATE_URL    = "extensions.systemAddon.update.url";
+const PREF_E10S_BLOCK_ENABLE          = "extensions.e10sBlocksEnabling";
 
 const PREF_EM_MIN_COMPAT_APP_VERSION      = "extensions.minCompatibleAppVersion";
 const PREF_EM_MIN_COMPAT_PLATFORM_VERSION = "extensions.minCompatiblePlatformVersion";
@@ -2744,11 +2745,19 @@ this.XPIProvider = {
         observe: function(aSubject, aTopic, aData) {
           XPIProvider._closing = true;
           for (let id in XPIProvider.bootstrappedAddons) {
+            // If no scope has been loaded for this add-on then there is no need
+            // to shut it down (should only happen when a bootstrapped add-on is
+            // pending enable)
+            if (!(id in XPIProvider.bootstrapScopes))
+              continue;
+
             let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
             file.persistentDescriptor = XPIProvider.bootstrappedAddons[id].descriptor;
             let addon = createAddonDetails(id, XPIProvider.bootstrappedAddons[id]);
             XPIProvider.callBootstrapMethod(addon, file, "shutdown",
                                             BOOTSTRAP_REASONS.APP_SHUTDOWN);
+            if (XPIProvider.bootstrappedAddons[id].disable)
+              delete XPIProvider.bootstrappedAddons[aId];
           }
           Services.obs.removeObserver(this, "quit-application-granted");
         }
@@ -4230,6 +4239,41 @@ this.XPIProvider = {
   },
 
   /**
+   * In some cases having add-ons active blocks e10s but turning off e10s
+   * requires a restart so some add-ons that are normally restartless will
+   * require a restart to install or enable.
+   *
+   * @param  aAddon
+   *         The add-on to test
+   * @return true if enabling the add-on requires a restart
+   */
+  e10sBlocksEnabling: function(aAddon) {
+    // If the preference isn't set then don't block anything
+    if (!Preferences.get(PREF_E10S_BLOCK_ENABLE, false))
+      return false;
+
+    // If e10s isn't active then don't block anything
+    if (!Services.appinfo.browserTabsRemoteAutostart)
+      return false;
+
+    // Only extensions change behaviour
+    if (aAddon.type != "extension")
+      return false;
+
+    // The hotfix is exempt
+    let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+    if (hotfixID && hotfixID == aAddon.id)
+      return false;
+
+    // System add-ons are exempt
+    if (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS ||
+        aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS)
+      return false;
+
+    return true;
+  },
+
+  /**
    * Tests whether enabling an add-on will require a restart.
    *
    * @param  aAddon
@@ -4262,6 +4306,9 @@ this.XPIProvider = {
       // lightweight theme is considered active.
       return aAddon.internalName != this.currentSkin;
     }
+
+    if (this.e10sBlocksEnabling(aAddon))
+      return true;
 
     return !aAddon.bootstrap;
   },
@@ -4352,6 +4399,9 @@ this.XPIProvider = {
     // doesn't require a restart to install.
     if (aAddon.disabled)
       return false;
+
+    if (this.e10sBlocksEnabling(aAddon))
+      return true;
 
     // Themes will require a restart (even if dynamic switching is enabled due
     // to some caching issues) and non-bootstrapped add-ons will require a
@@ -4722,6 +4772,23 @@ this.XPIProvider = {
                                      BOOTSTRAP_REASONS.ADDON_ENABLE);
           }
           AddonManagerPrivate.callAddonListeners("onEnabled", wrapper);
+        }
+      }
+      else if (aAddon.bootstrap) {
+        // Something blocked the restartless add-on from enabling or disabling
+        // make sure it happens on the next startup
+        if (isDisabled) {
+          this.bootstrappedAddons[aAddon.id].disable = true;
+        }
+        else {
+          this.bootstrappedAddons[aAddon.id] = {
+            version: aAddon.version,
+            type: aAddon.type,
+            descriptor: aAddon._sourceBundle.persistentDescriptor,
+            multiprocessCompatible: aAddon.multiprocessCompatible,
+            runInSafeMode: canRunInSafeMode(aAddon),
+          };
+          this.persistBootstrappedAddons();
         }
       }
     }

@@ -25,13 +25,13 @@ class WaveDecoder : public MediaDecoder
 {
 public:
   explicit WaveDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsWaveEnabled()) {
       return nullptr;
     }
     return new WaveDecoder(aOwner);
   }
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine() override;
 };
 
 } // namespace mozilla

@@ -60,20 +60,20 @@ public:
       Init();
     }
 
-  virtual nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
-                            const MediaEnginePrefs &aPrefs,
-                            const nsString& aDeviceId) override;
-  virtual nsresult Deallocate() override;
-  virtual nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
-  virtual nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
-  virtual nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
-                           const MediaEnginePrefs &aPrefs,
-                           const nsString& aDeviceId) override;
-  virtual void NotifyPull(MediaStreamGraph* aGraph,
-                          SourceMediaStream* aSource,
-                          TrackID aId,
-                          StreamTime aDesiredTime) override;
-  virtual dom::MediaSourceEnum GetMediaSource() const override {
+  nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
+                    const MediaEnginePrefs &aPrefs,
+                    const nsString& aDeviceId) override;
+  nsresult Deallocate() override;
+  nsresult Start(SourceMediaStream* aStream, TrackID aID) override;
+  nsresult Stop(SourceMediaStream* aSource, TrackID aID) override;
+  nsresult Restart(const dom::MediaTrackConstraints& aConstraints,
+                   const MediaEnginePrefs &aPrefs,
+                   const nsString& aDeviceId) override;
+  void NotifyPull(MediaStreamGraph* aGraph,
+                  SourceMediaStream* aSource,
+                  TrackID aId,
+                  StreamTime aDesiredTime) override;
+  dom::MediaSourceEnum GetMediaSource() const override {
     return dom::MediaSourceEnum::Camera;
   }
 

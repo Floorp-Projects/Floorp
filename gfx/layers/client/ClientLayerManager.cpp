@@ -652,7 +652,7 @@ ClientLayerManager::ForwardTransaction(bool aScheduleComposite)
   // PLayer::Send__delete__() and DeallocShmem()
   mKeepAlive.Clear();
 
-  TabChild* window = mWidget->GetOwningTabChild();
+  TabChild* window = mWidget ? mWidget->GetOwningTabChild() : nullptr;
   if (window) {
     TimeStamp end = TimeStamp::Now();
     window->DidRequestComposite(start, end);

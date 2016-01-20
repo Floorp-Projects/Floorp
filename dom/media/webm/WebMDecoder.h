@@ -7,6 +7,7 @@
 #define WebMDecoder_h_
 
 #include "MediaDecoder.h"
+#include "MediaFormatReader.h"
 
 namespace mozilla {
 
@@ -14,13 +15,13 @@ class WebMDecoder : public MediaDecoder
 {
 public:
   explicit WebMDecoder(MediaDecoderOwner* aOwner) : MediaDecoder(aOwner) {}
-  virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) {
+  MediaDecoder* Clone(MediaDecoderOwner* aOwner) override {
     if (!IsWebMEnabled()) {
       return nullptr;
     }
     return new WebMDecoder(aOwner);
   }
-  virtual MediaDecoderStateMachine* CreateStateMachine();
+  MediaDecoderStateMachine* CreateStateMachine() override;
 
   // Returns true if the WebM backend is preffed on.
   static bool IsEnabled();
@@ -31,6 +32,11 @@ public:
   // out params whether the codecs string contains Opus/Vorbis or VP8/VP9.
   static bool CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
                                  const nsAString& aCodecs);
+
+  void GetMozDebugReaderData(nsAString& aString) override;
+
+private:
+  RefPtr<MediaFormatReader> mReader;
 };
 
 } // namespace mozilla

@@ -42,18 +42,15 @@ public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
                      const nsACString& aContentType);
 
-  virtual nsresult ResetDecode();
+  nsresult ResetDecode() override;
 
-  virtual bool DecodeAudioData();
-  virtual bool DecodeVideoFrame(bool &aKeyframeSkip,
-                                int64_t aTimeThreshold);
+  bool DecodeAudioData() override;
+  bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) override;
 
-  virtual nsresult ReadMetadata(MediaInfo* aInfo,
-                                MetadataTags** aTags);
-  virtual RefPtr<SeekPromise>
-  Seek(int64_t aTime, int64_t aEndTime) override;
+  nsresult ReadMetadata(MediaInfo* aInfo, MetadataTags** aTags) override;
+  RefPtr<SeekPromise> Seek(int64_t aTime, int64_t aEndTime) override;
 
-  virtual RefPtr<ShutdownPromise> Shutdown() override;
+  RefPtr<ShutdownPromise> Shutdown() override;
 
   class ImageBufferCallback : public MPAPI::BufferCallback {
     typedef mozilla::layers::Image Image;

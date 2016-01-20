@@ -431,6 +431,10 @@ protected:
   // True if this channel was intercepted and could receive a synthesized response.
   uint32_t                          mResponseCouldBeSynthesized : 1;
 
+  // If true, we behave as if the LOAD_FROM_CACHE flag has been set.
+  // Used to enforce that flag's behavior but not expose it externally.
+  uint32_t                          mAllowStaleCacheContent : 1;
+
   // Current suspension depth for this channel object
   uint32_t                          mSuspendCount;
 
