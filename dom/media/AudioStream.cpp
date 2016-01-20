@@ -21,13 +21,13 @@
 
 namespace mozilla {
 
-#ifdef LOG
 #undef LOG
-#endif
+#undef LOGW
 
 LazyLogModule gAudioStreamLog("AudioStream");
 // For simple logs
-#define LOG(x) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Debug, x)
+#define LOG(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Debug, ("%p " x, this, ##__VA_ARGS__))
+#define LOGW(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Warning, ("%p " x, this, ##__VA_ARGS__))
 
 /**
  * When MOZ_DUMP_AUDIO is set in the environment (to anything),
@@ -135,7 +135,7 @@ AudioStream::AudioStream(DataSource& aSource)
 
 AudioStream::~AudioStream()
 {
-  LOG(("AudioStream: delete %p, state %d", this, mState));
+  LOG("deleted, state %d", mState);
   MOZ_ASSERT(mState == SHUTDOWN && !mCubebStream,
              "Should've called Shutdown() before deleting an AudioStream");
   if (mDumpFile) {
@@ -381,8 +381,8 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams)
 
   if (!mStartTime.IsNull()) {
     TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-    LOG(("AudioStream creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
-          (uint32_t) timeDelta.ToMilliseconds()));
+    LOG("creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
+        (uint32_t) timeDelta.ToMilliseconds());
     Telemetry::Accumulate(mIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
         Telemetry::AUDIOSTREAM_LATER_OPEN_MS, timeDelta.ToMilliseconds());
   }
@@ -428,7 +428,7 @@ AudioStream::StartUnlocked()
     if (r != CUBEB_OK) {
       mState = ERRORED;
     }
-    LOG(("AudioStream: started %p, state %s", this, mState == STARTED ? "STARTED" : "ERRORED"));
+    LOG("started, state %s", mState == STARTED ? "STARTED" : "ERRORED");
   }
 }
 
@@ -478,7 +478,7 @@ void
 AudioStream::Shutdown()
 {
   MonitorAutoLock mon(mMonitor);
-  LOG(("AudioStream: Shutdown %p, state %d", this, mState));
+  LOG("Shutdown, state %d", mState);
 
   if (mCubebStream) {
     MonitorAutoUnlock mon(mMonitor);
@@ -657,8 +657,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   if (!mDataSource.Ended()) {
     mAudioClock.UpdateFrameHistory(aFrames - writer.Available(), writer.Available());
     if (writer.Available() > 0) {
-      MOZ_LOG(gAudioStreamLog, LogLevel::Warning,
-             ("AudioStream %p lost %d frames", this, writer.Available()));
+      LOGW("lost %d frames", writer.Available());
       writer.WriteZeros(writer.Available());
     }
   } else {
@@ -677,12 +676,12 @@ AudioStream::StateCallback(cubeb_state aState)
 {
   MonitorAutoLock mon(mMonitor);
   MOZ_ASSERT(mState != SHUTDOWN, "No state callback after shutdown");
-  LOG(("AudioStream: StateCallback %p, mState=%d cubeb_state=%d", this, mState, aState));
+  LOG("StateCallback, mState=%d cubeb_state=%d", mState, aState);
   if (aState == CUBEB_STATE_DRAINED) {
     mState = DRAINED;
     mDataSource.Drained();
   } else if (aState == CUBEB_STATE_ERROR) {
-    LOG(("AudioStream::StateCallback() state %d cubeb error", mState));
+    LOG("StateCallback() state %d cubeb error", mState);
     mState = ERRORED;
   }
 }
