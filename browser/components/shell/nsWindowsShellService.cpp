@@ -545,6 +545,9 @@ SaveWin8RegistryHashes(bool aCheckAllTypes, bool* aIsDefaultBrowser)
 static bool
 RestoreWin8RegistryHashes(bool aClaimAllTypes)
 {
+  // Disabled due to bug 1240892.
+  return false;
+
   RefPtr<IApplicationAssociationRegistration> pAAR;
   HRESULT hr = CoCreateInstance(CLSID_ApplicationAssociationRegistration,
                                 nullptr,
