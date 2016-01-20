@@ -2,13 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/Preferences.jsm");
-
-var CONTEXT_MENU_DELAY_PREF = "ui.click_hold_context_menus.delay";
-var DEFAULT_CONTEXT_MENU_DELAY = 750;  // ms
-
 this.EXPORTED_SYMBOLS = ["ActionChain"];
 
 /**
@@ -25,7 +18,8 @@ this.ActionChain = function(utils, checkForInterrupted) {
   this.scrolling = false;
   // whether to send mouse event
   this.mouseEventsOnly = false;
-  this.checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+  this.checkTimer = Components.classes["@mozilla.org/timer;1"]
+      .createInstance(Components.interfaces.nsITimer);
 
   // callbacks for command completion
   this.onSuccess = null;
@@ -264,9 +258,10 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
         let time = pack[1] * 1000;
 
         // standard waiting time to fire contextmenu
-        let standard = Preferences.get(
-            CONTEXT_MENU_DELAY_PREF,
-            DEFAULT_CONTEXT_MENU_DELAY);
+        let standard = 750;
+        try {
+          standard = Services.prefs.getIntPref("ui.click_hold_context_menus.delay");
+        } catch (e) {}
 
         if (time >= standard && this.isTap) {
           chain.splice(i, 0, ["longPress"], ["wait", (time - standard) / 1000]);
@@ -302,6 +297,7 @@ ActionChain.prototype.actions = function(chain, touchId, i, keyModifiers) {
           keyModifiers);
       this.actions(chain, touchId, i, keyModifiers);
       break;
+
   }
 };
 

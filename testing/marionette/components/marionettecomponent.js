@@ -110,7 +110,9 @@ MarionetteComponent.prototype.observe = function(subj, topic, data) {
       // so we wait for that by adding an observer here.
       this.observerService.addObserver(this, "final-ui-startup", false);
 #ifdef ENABLE_MARIONETTE
-      this.enabled = Preferences.get(ENABLED_PREF, false);
+      try {
+        this.enabled = Services.prefs.getBoolPref(ENABLED_PREF);
+      } catch(e) {}
       if (this.enabled) {
         this.logger.debug("Marionette enabled via build flag and pref");
 
@@ -163,9 +165,11 @@ MarionetteComponent.prototype.init = function() {
 
   this.loaded_ = true;
 
-  let forceLocal = Preferences.get(FORCELOCAL_PREF,
-      Services.appinfo.name == "B2G" ? false : true);
-  Preferences.set(FORCELOCAL_PREF, forceLocal);
+  let forceLocal = Services.appinfo.name == "B2G" ? false : true;
+  try {
+    forceLocal = Services.prefs.getBoolPref(FORCELOCAL_PREF);
+  } catch (e) {}
+  Services.prefs.setBoolPref(FORCELOCAL_PREF, forceLocal);
 
   if (!forceLocal) {
     // See bug 800138.  Because the first socket that opens with
@@ -178,7 +182,10 @@ MarionetteComponent.prototype.init = function() {
     insaneSacrificialGoat.asyncListen(this);
   }
 
-  let port = Preferences.get(PORT_PREF, DEFAULT_PORT);
+  let port = DEFAULT_PORT;
+  try {
+    port = Services.prefs.getIntPref(PORT_PREF);
+  } catch (e) {}
 
   let s;
   try {

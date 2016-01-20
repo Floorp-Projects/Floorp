@@ -48,12 +48,11 @@ class BrowserMobProxyTestCaseMixin(object):
         client = self.browsermob_server.create_proxy()
         with self.marionette.using_context('chrome'):
             self.marionette.execute_script("""
-                Components.utils.import("resource://gre/modules/Preferences.jsm");
-                Preferences.set("network.proxy.type", 1);
-                Preferences.set("network.proxy.http", "localhost");
-                Preferences.set("network.proxy.http_port", %(port)s);
-                Preferences.set("network.proxy.ssl", "localhost");
-                Preferences.set("network.proxy.ssl_port", %(port)s);
+                Services.prefs.setIntPref('network.proxy.type', 1);
+                Services.prefs.setCharPref('network.proxy.http', 'localhost');
+                Services.prefs.setIntPref('network.proxy.http_port', %(port)s);
+                Services.prefs.setCharPref('network.proxy.ssl', 'localhost');
+                Services.prefs.setIntPref('network.proxy.ssl_port', %(port)s);
             """ % {"port": client.port})
         return client
 
