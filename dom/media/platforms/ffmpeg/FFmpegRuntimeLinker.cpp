@@ -44,6 +44,7 @@ PRLibrary* FFmpegRuntimeLinker::sLinkedLib = nullptr;
 PRLibrary* FFmpegRuntimeLinker::sLinkedUtilLib = nullptr;
 static unsigned (*avcodec_version)() = nullptr;
 
+#if !defined(XP_WIN)
 #ifdef __GNUC__
 #define AV_FUNC(func, ver) void (*func)();
 #define LIBAVCODEC_ALLVERSION
@@ -52,6 +53,7 @@ static unsigned (*avcodec_version)() = nullptr;
 #endif
 #include "FFmpegFunctionList.h"
 #undef AV_FUNC
+#endif
 
 static PRLibrary*
 MozAVLink(const char* aName)
@@ -68,6 +70,7 @@ FFmpegRuntimeLinker::Link()
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
+#if !defined(XP_WIN)
   MOZ_ASSERT(NS_IsMainThread());
 
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
@@ -91,6 +94,7 @@ FFmpegRuntimeLinker::Link()
   FFMPEG_LOG(" ]\n");
 
   Unlink();
+#endif
 
   sLinkStatus = LinkStatus_FAILED;
   return false;
@@ -99,6 +103,9 @@ FFmpegRuntimeLinker::Link()
 /* static */ bool
 FFmpegRuntimeLinker::Bind(const char* aLibName)
 {
+#if defined(XP_WIN)
+  return false;
+#else
   avcodec_version = (decltype(avcodec_version))PR_FindSymbol(sLinkedLib,
                                                            "avcodec_version");
   uint32_t major, minor, micro;
@@ -145,11 +152,15 @@ FFmpegRuntimeLinker::Bind(const char* aLibName)
 #include "FFmpegFunctionList.h"
 #undef AV_FUNC
   return true;
+#endif
 }
 
 /* static */ already_AddRefed<PlatformDecoderModule>
 FFmpegRuntimeLinker::CreateDecoderModule()
 {
+#if defined(XP_WIN)
+  return nullptr;
+#else
   if (!Link()) {
     return nullptr;
   }
@@ -168,6 +179,7 @@ FFmpegRuntimeLinker::CreateDecoderModule()
     default: module = nullptr;
   }
   return module.forget();
+#endif
 }
 
 /* static */ void
