@@ -9,35 +9,23 @@
 
 #include "PlatformDecoderModule.h"
 
-struct PRLibrary;
-
 namespace mozilla
-{
-namespace ffvpx
 {
 
 class FFVPXRuntimeLinker
 {
 public:
-  static bool Link();
-  static void Unlink();
+  static bool Init();
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
 
 private:
-  static PRLibrary* sLinkedLib;
-  static PRLibrary* sLinkedUtilLib;
   static enum LinkStatus {
     LinkStatus_INIT = 0,
     LinkStatus_FAILED,
     LinkStatus_SUCCEEDED
   } sLinkStatus;
-
-  static bool Bind(const char* aLibName);
-
 };
 
 }
-}
-
 
 #endif /* __FFVPXRuntimeLinker_h__ */
