@@ -12,7 +12,7 @@
 
 #include "MediaInfo.h"
 
-#include "FFmpegVideoDecoder.h"
+#include "FFmpegH264Decoder.h"
 #include "FFmpegLog.h"
 #include "mozilla/PodOperations.h"
 
@@ -59,7 +59,7 @@ ChoosePixelFormat(AVCodecContext* aCodecContext, const AVPixelFormat* aFormats)
   return AV_PIX_FMT_NONE;
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
   : mNumFaultyPts(0)
   , mNumFaultyDts(0)
   , mLastPts(INT64_MIN)
@@ -68,7 +68,7 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
 }
 
 int64_t
-FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(int64_t aPts, int64_t aDts)
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(int64_t aPts, int64_t aDts)
 {
   int64_t pts = AV_NOPTS_VALUE;
 
@@ -90,7 +90,7 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(int64_t aPt
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::Reset()
 {
   mNumFaultyPts = 0;
   mNumFaultyDts = 0;
@@ -98,7 +98,7 @@ FFmpegVideoDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
   mLastDts = INT64_MIN;
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
+FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const VideoInfo& aConfig,
   ImageContainer* aImageContainer)
@@ -108,14 +108,14 @@ FFmpegVideoDecoder<LIBAV_VER>::FFmpegVideoDecoder(
   , mImage(aConfig.mImage)
   , mCodecParser(nullptr)
 {
-  MOZ_COUNT_CTOR(FFmpegVideoDecoder);
+  MOZ_COUNT_CTOR(FFmpegH264Decoder);
   // Use a new MediaByteBuffer as the object will be modified during initialization.
   mExtraData = new MediaByteBuffer;
   mExtraData->AppendElements(*aConfig.mExtraData);
 }
 
 RefPtr<MediaDataDecoder::InitPromise>
-FFmpegVideoDecoder<LIBAV_VER>::Init()
+FFmpegH264Decoder<LIBAV_VER>::Init()
 {
   if (NS_FAILED(InitDecoder())) {
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
@@ -125,7 +125,7 @@ FFmpegVideoDecoder<LIBAV_VER>::Init()
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
+FFmpegH264Decoder<LIBAV_VER>::InitCodecContext()
 {
   mCodecContext->width = mImage.width;
   mCodecContext->height = mImage.height;
@@ -151,14 +151,14 @@ FFmpegVideoDecoder<LIBAV_VER>::InitCodecContext()
   // FFmpeg will call back to this to negotiate a video pixel format.
   mCodecContext->get_format = ChoosePixelFormat;
 
-  mCodecParser = AV_CALL(av_parser_init(mCodecID));
+  mCodecParser = av_parser_init(mCodecID);
   if (mCodecParser) {
     mCodecParser->flags |= PARSER_FLAG_COMPLETE_FRAMES;
   }
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DecodeResult
+FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
@@ -175,10 +175,10 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
     while (inputSize) {
       uint8_t* data;
       int size;
-      int len = AV_CALL(av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
-                                         inputData, inputSize,
-                                         aSample->mTime, aSample->mTimecode,
-                                         aSample->mOffset));
+      int len = av_parser_parse2(mCodecParser, mCodecContext, &data, &size,
+                                 inputData, inputSize,
+                                 aSample->mTime, aSample->mTimecode,
+                                 aSample->mOffset);
       if (size_t(len) > inputSize) {
         mCallback->Error();
         return DecodeResult::DECODE_ERROR;
@@ -203,14 +203,14 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
   return DoDecodeFrame(aSample, inputData, inputSize);
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::DecodeResult
-FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
+FFmpegH264Decoder<LIBAV_VER>::DecodeResult
+FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
                                             uint8_t* aData, int aSize)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
   AVPacket packet;
-  AV_CALL(av_init_packet(&packet));
+  av_init_packet(&packet);
 
   packet.data = aData;
   packet.size = aSize;
@@ -237,7 +237,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   int decoded;
   int bytesConsumed =
-    AV_CALL(avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet));
+    avcodec_decode_video2(mCodecContext, mFrame, &decoded, &packet);
 
   FFMPEG_LOG("DoDecodeFrame:decode_video: rv=%d decoded=%d "
              "(Input: pts(%lld) dts(%lld) Output: pts(%lld) "
@@ -317,7 +317,7 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
+FFmpegH264Decoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
 
@@ -328,11 +328,11 @@ FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame(MediaRawData* aSample)
 }
 
 nsresult
-FFmpegVideoDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
+FFmpegH264Decoder<LIBAV_VER>::Input(MediaRawData* aSample)
 {
   nsCOMPtr<nsIRunnable> runnable(
     NS_NewRunnableMethodWithArg<RefPtr<MediaRawData>>(
-      this, &FFmpegVideoDecoder<LIBAV_VER>::DecodeFrame,
+      this, &FFmpegH264Decoder<LIBAV_VER>::DecodeFrame,
       RefPtr<MediaRawData>(aSample)));
   mTaskQueue->Dispatch(runnable.forget());
 
@@ -340,7 +340,7 @@ FFmpegVideoDecoder<LIBAV_VER>::Input(MediaRawData* aSample)
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
+FFmpegH264Decoder<LIBAV_VER>::ProcessDrain()
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   RefPtr<MediaRawData> empty(new MediaRawData());
@@ -350,24 +350,24 @@ FFmpegVideoDecoder<LIBAV_VER>::ProcessDrain()
 }
 
 void
-FFmpegVideoDecoder<LIBAV_VER>::ProcessFlush()
+FFmpegH264Decoder<LIBAV_VER>::ProcessFlush()
 {
   mPtsContext.Reset();
   mDurationMap.Clear();
   FFmpegDataDecoder::ProcessFlush();
 }
 
-FFmpegVideoDecoder<LIBAV_VER>::~FFmpegVideoDecoder()
+FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
 {
-  MOZ_COUNT_DTOR(FFmpegVideoDecoder);
+  MOZ_COUNT_DTOR(FFmpegH264Decoder);
   if (mCodecParser) {
-    AV_CALL(av_parser_close(mCodecParser));
+    av_parser_close(mCodecParser);
     mCodecParser = nullptr;
   }
 }
 
 AVCodecID
-FFmpegVideoDecoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
+FFmpegH264Decoder<LIBAV_VER>::GetCodecId(const nsACString& aMimeType)
 {
   if (aMimeType.EqualsLiteral("video/avc") || aMimeType.EqualsLiteral("video/mp4")) {
     return AV_CODEC_ID_H264;

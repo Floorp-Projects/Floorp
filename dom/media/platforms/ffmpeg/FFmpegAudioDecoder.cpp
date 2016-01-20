@@ -101,7 +101,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
 {
   MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
   AVPacket packet;
-  AV_CALL(av_init_packet(&packet));
+  av_init_packet(&packet);
 
   packet.data = const_cast<uint8_t*>(aSample->Data());
   packet.size = aSample->Size();
@@ -118,7 +118,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DecodePacket(MediaRawData* aSample)
   while (packet.size > 0) {
     int decoded;
     int bytesConsumed =
-      AV_CALL(avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet));
+      avcodec_decode_audio4(mCodecContext, mFrame, &decoded, &packet);
 
     if (bytesConsumed < 0) {
       NS_WARNING("FFmpeg audio decoder error.");
