@@ -71,14 +71,9 @@ function* setDisableCacheCheckboxChecked(tabX, state) {
   let panel = tabX.toolbox.getCurrentPanel();
   let cbx = panel.panelDoc.getElementById("devtools-disable-cache");
 
-  cbx.scrollIntoView();
-
-  // After uising scrollIntoView() we need to wait for the browser to scroll.
-  yield waitForTick();
-
   if (cbx.checked !== state) {
     info("Setting disable cache checkbox to " + state + " for " + tabX.title);
-    EventUtils.synthesizeMouseAtCenter(cbx, {}, panel.panelWin);
+    cbx.click();
 
     // We need to wait for all checkboxes to be updated and the docshells to
     // apply the new cache settings.
