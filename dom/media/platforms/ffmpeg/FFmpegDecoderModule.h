@@ -27,7 +27,7 @@ public:
     return pdm.forget();
   }
 
-  FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
+  explicit FFmpegDecoderModule(FFmpegLibWrapper* aLib) : mLib(aLib) {}
   virtual ~FFmpegDecoderModule() {}
 
   already_AddRefed<MediaDataDecoder>
