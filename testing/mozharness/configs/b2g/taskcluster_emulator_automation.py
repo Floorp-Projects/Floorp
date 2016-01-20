@@ -1,20 +1,9 @@
-# This is a template config file for b2g emulator unittest production.
-# TODO: This could be removed after B2G ICS emulator buildbot builds is turned
-#       off, Bug 1209180.
-import os
-
+#!/usr/bin/env python
+import os.path
 config = {
     # mozharness options
     "application": "b2g",
-    "busybox_url": "https://api.pub.build.mozilla.org/tooltool/sha512/0748e900821820f1a42e2f1f3fa4d9002ef257c351b9e6b78e7de0ddd0202eace351f440372fbb1ae0b7e69e8361b036f6bd3362df99e67fc585082a311fc0df",
-    "xre_url": "https://api.pub.build.mozilla.org/tooltool/sha512/dc9503b21c87b5a469118746f99e4f41d73888972ce735fa10a80f6d218086da0e3da525d9a4cd8e4ea497ec199fef720e4a525873d77a1af304ac505e076462",
     "tooltool_cache": "/builds/tooltool_cache",
-
-    "exes": {
-        'python': '/tools/buildbot/bin/python',
-        'virtualenv': ['/tools/buildbot/bin/python', '/tools/misc-python/virtualenv.py'],
-        'tooltool.py': "/tools/tooltool.py",
-    },
 
     "find_links": [
         "http://pypi.pvt.build.mozilla.org/pub",
@@ -22,18 +11,16 @@ config = {
     ],
     "pip_index": False,
 
-    "buildbot_json_path": "buildprops.json",
-
     "default_actions": [
         'clobber',
-        'read-buildbot-config',
         'download-and-extract',
         'create-virtualenv',
         'install',
         'run-tests',
     ],
     "download_symbols": "ondemand",
-    "download_minidump_stackwalk": True,
+    # We bake this directly into the tester image now.
+    "download_minidump_stackwalk": False,
     "default_blob_upload_servers": [
         "https://blobupload.elasticbeanstalk.com",
     ],
