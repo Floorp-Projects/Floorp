@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"
+                 type="text/css"?>
+<?xml-stylesheet href="general.css"
+                 type="text/css"?>
+
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="Accessibility Name Calculating Test.">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+  <script type="application/javascript"
+          src="../name.js"></script>
+  <script type="application/javascript">
+  <![CDATA[
+    var gQueue = null;
+    function doTest() {
+      let ids = [];
+      for (let item of ["button", "textbox"]) {
+        ids.push(item + "withtooltip");
+        ids.push(item + "withouttooltip");
+        ids.push("nested" + item + "withtooltip");
+        ids.push("nested" + item + "withouttooltip");
+      }
+
+      for (let id of ids) {
+        if (id.endsWith("withtooltip")) {
+          testName(id, id, id + " should have individual name from its tooltip - ");
+        } else {
+          testName(id, "Toolbaritem title", id + " should have toolbaritem's title for a name - ");
+        }
+      }
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  ]]>
+  </script>
+
+  <hbox flex="1" style="overflow: auto;">
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <a target="_blank"
+       href="https://bugzilla.mozilla.org/show_bug.cgi?id=1216478"
+       title="Items with tooltips inside items with a label should use their own tooltip as an accessible name, not the ancestor's label">
+      Mozilla Bug 1216478
+    </a>
+    <p id="display"></p>
+    <div id="content" style="display: none">
+    </div>
+    <pre id="test">
+    </pre>
+  </body>
+
+  <vbox flex="1">
+    <toolbox>
+      <toolbar>
+        <toolbaritem title="Toolbaritem title">
+          <toolbarbutton id="buttonwithtooltip" tooltiptext="buttonwithtooltip"/>
+          <toolbarbutton id="buttonwithouttooltip"/>
+          <textbox id="textboxwithtooltip" tooltiptext="textboxwithtooltip"/>
+          <textbox id="textboxwithouttooltip"/>
+          <vbox>
+            <toolbarbutton id="nestedbuttonwithtooltip" tooltiptext="nestedbuttonwithtooltip"/>
+            <toolbarbutton id="nestedbuttonwithouttooltip"/>
+            <textbox id="nestedtextboxwithtooltip" tooltiptext="nestedtextboxwithtooltip"/>
+            <textbox id="nestedtextboxwithouttooltip"/>
+          </vbox>
+        </toolbaritem>
+      </toolbar>
+    </toolbox>
+
+
+  </vbox> <!-- close tests area -->
+  </hbox> <!-- close main area -->
+</window>
