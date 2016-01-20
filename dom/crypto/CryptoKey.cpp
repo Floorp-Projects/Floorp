@@ -9,7 +9,6 @@
 #include "nsNSSComponent.h"
 #include "ScopedNSSTypes.h"
 #include "mozilla/dom/CryptoKey.h"
-#include "mozilla/dom/WebCryptoCommon.h"
 #include "mozilla/dom/SubtleCryptoBinding.h"
 #include "mozilla/dom/ToJSValue.h"
 
