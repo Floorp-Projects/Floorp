@@ -77,10 +77,6 @@ function testSet() {
   is(f.getAll("other")[0], "value4", "set() should replace existing entries.");
 }
 
-function testIterate() {
-  todo(false, "Implement this in Bug 1085284.");
-}
-
 function testFilename() {
   var f = new FormData();
   // Spec says if a Blob (which is not a File) is added, the name parameter is set to "blob".
@@ -209,7 +205,6 @@ function runTest(doneCb) {
   testGetAll();
   testDelete();
   testSet();
-  testIterate();
   testFilename();
   testIterable();
   // Finally, send an XHR and verify the response matches.
