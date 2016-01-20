@@ -1088,6 +1088,9 @@ nsContextMenu.prototype = {
   },
 
   viewImageInfo: function() {
+    // Don't need to pass in ownerDocument.defaultView.top.document here;
+    // window.gBrowser.selectedBrowser.currentURI.spec does the job without
+    // using CPOWs
     BrowserPageInfo(null, "mediaTab", this.target);
   },
 
