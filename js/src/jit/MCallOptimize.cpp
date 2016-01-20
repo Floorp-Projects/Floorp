@@ -3154,22 +3154,22 @@ IonBuilder::inlineSimdInt32x4(CallInfo& callInfo, JSNative native)
         return inlineSimdShuffle(callInfo, native, MIRType_Int32x4, 2, 4);
 
     if (native == js::simd_int32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 4);
+        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 4);
     if (native == js::simd_int32x4_load1)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 1);
+        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 1);
     if (native == js::simd_int32x4_load2)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 2);
+        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 2);
     if (native == js::simd_int32x4_load3)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Int32x4, 3);
+        return inlineSimdLoad(callInfo, native, MIRType_Int32x4, 3);
 
     if (native == js::simd_int32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 4);
+        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 4);
     if (native == js::simd_int32x4_store1)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 1);
+        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 1);
     if (native == js::simd_int32x4_store2)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 2);
+        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 2);
     if (native == js::simd_int32x4_store3)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Int32x4, 3);
+        return inlineSimdStore(callInfo, native, MIRType_Int32x4, 3);
 
     return InliningStatus_NotInlined;
 }
@@ -3228,22 +3228,22 @@ IonBuilder::inlineSimdFloat32x4(CallInfo& callInfo, JSNative native)
         return inlineSimdShuffle(callInfo, native, MIRType_Float32x4, 2, 4);
 
     if (native == js::simd_float32x4_load)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 4);
+        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 4);
     if (native == js::simd_float32x4_load1)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 1);
+        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 1);
     if (native == js::simd_float32x4_load2)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 2);
+        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 2);
     if (native == js::simd_float32x4_load3)
-        return inlineSimdLoad(callInfo, native, SimdTypeDescr::Float32x4, 3);
+        return inlineSimdLoad(callInfo, native, MIRType_Float32x4, 3);
 
     if (native == js::simd_float32x4_store)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 4);
+        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 4);
     if (native == js::simd_float32x4_store1)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 1);
+        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 1);
     if (native == js::simd_float32x4_store2)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 2);
+        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 2);
     if (native == js::simd_float32x4_store3)
-        return inlineSimdStore(callInfo, native, SimdTypeDescr::Float32x4, 3);
+        return inlineSimdStore(callInfo, native, MIRType_Float32x4, 3);
 
     return InliningStatus_NotInlined;
 }
@@ -3574,25 +3574,13 @@ IonBuilder::inlineSimdAnyAllTrue(CallInfo& callInfo, bool IsAllTrue, JSNative na
 // Get the typed array element type corresponding to the lanes in a SIMD vector type.
 // This only applies to SIMD types that can be loaded and stored to a typed array.
 static Scalar::Type
-SimdTypeToArrayElementType(SimdTypeDescr::Type type)
+SimdTypeToArrayElementType(MIRType type)
 {
     switch (type) {
-      case SimdTypeDescr::Float32x4: return Scalar::Float32x4;
-      case SimdTypeDescr::Int32x4:   return Scalar::Int32x4;
-      // Bool vectors don't have load/store operations.
-      case SimdTypeDescr::Bool8x16:
-      case SimdTypeDescr::Bool16x8:
-      case SimdTypeDescr::Bool32x4:
-      case SimdTypeDescr::Bool64x2: break;
-      // Not yet implemented.
-      case SimdTypeDescr::Int8x16:
-      case SimdTypeDescr::Int16x8:
-      case SimdTypeDescr::Uint8x16:
-      case SimdTypeDescr::Uint16x8:
-      case SimdTypeDescr::Uint32x4:
-      case SimdTypeDescr::Float64x2: break;
+      case MIRType_Float32x4: return Scalar::Float32x4;
+      case MIRType_Int32x4:   return Scalar::Int32x4;
+      default:                MOZ_CRASH("unexpected simd type");
     }
-    MOZ_CRASH("unexpected simd type");
 }
 
 bool
@@ -3640,49 +3628,47 @@ IonBuilder::prepareForSimdLoadStore(CallInfo& callInfo, Scalar::Type simdType, M
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdLoad(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
-                           unsigned numElems)
+IonBuilder::inlineSimdLoad(CallInfo& callInfo, JSNative native, MIRType type, unsigned numElems)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 2, &templateObj))
         return InliningStatus_NotInlined;
 
-    Scalar::Type simdType = SimdTypeToArrayElementType(type);
+    Scalar::Type elemType = SimdTypeToArrayElementType(type);
 
     MDefinition* index = nullptr;
     MInstruction* elements = nullptr;
     Scalar::Type arrayType;
-    if (!prepareForSimdLoadStore(callInfo, simdType, &elements, &index, &arrayType))
+    if (!prepareForSimdLoadStore(callInfo, elemType, &elements, &index, &arrayType))
         return InliningStatus_NotInlined;
 
     MLoadUnboxedScalar* load = MLoadUnboxedScalar::New(alloc(), elements, index, arrayType);
-    load->setResultType(SimdTypeDescrToMIRType(type));
-    load->setSimdRead(simdType, numElems);
+    load->setResultType(type);
+    load->setSimdRead(elemType, numElems);
 
     return boxSimd(callInfo, load, templateObj);
 }
 
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, SimdTypeDescr::Type type,
-                            unsigned numElems)
+IonBuilder::inlineSimdStore(CallInfo& callInfo, JSNative native, MIRType type, unsigned numElems)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 3, &templateObj))
         return InliningStatus_NotInlined;
 
-    Scalar::Type simdType = SimdTypeToArrayElementType(type);
+    Scalar::Type elemType = SimdTypeToArrayElementType(type);
 
     MDefinition* index = nullptr;
     MInstruction* elements = nullptr;
     Scalar::Type arrayType;
-    if (!prepareForSimdLoadStore(callInfo, simdType, &elements, &index, &arrayType))
+    if (!prepareForSimdLoadStore(callInfo, elemType, &elements, &index, &arrayType))
         return InliningStatus_NotInlined;
 
     MDefinition* valueToWrite = callInfo.getArg(2);
     MStoreUnboxedScalar* store = MStoreUnboxedScalar::New(alloc(), elements, index,
                                                           valueToWrite, arrayType,
                                                           MStoreUnboxedScalar::TruncateInput);
-    store->setSimdWrite(simdType, numElems);
+    store->setSimdWrite(elemType, numElems);
 
     current->add(store);
     current->push(valueToWrite);
