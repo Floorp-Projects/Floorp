@@ -15,13 +15,6 @@
 
 <!ENTITY  onboard_start_restricted1 "Stay safe and in control with this simplified version of &brandShortName;.">
 
-<!ENTITY firstrun_import_title "Import">
-<!ENTITY firstrun_import_message "Welcome to &brandShortName;">
-<!ENTITY firstrun_import_subtext "Import your bookmarks and history from another browser.">
-<!ENTITY firstrun_import_action "Transfer to &brandShortName;">
-<!ENTITY firstrun_import_dialog_button "Transfer">
-<!ENTITY firstrun_import_progress_title "Transferring">
-
 <!-- Localization note: These are used as the titles of different pages on the home screen.
      They are automatically converted to all caps by the Android platform. -->
 <!ENTITY  bookmarks_title "Bookmarks">
