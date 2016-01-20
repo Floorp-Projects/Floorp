@@ -56,7 +56,7 @@ public class MetaGlobal implements SyncStorageRequestDelegate {
       this.isUploading = false;
       SyncStorageRecordRequest r = new SyncStorageRecordRequest(this.metaURL);
       r.delegate = this;
-      r.deferGet();
+      r.get();
     } catch (URISyntaxException e) {
       this.callback.handleError(e);
     }
