@@ -7,8 +7,17 @@
 #include "FFmpegRuntimeLinker.h"
 #include "mozilla/ArrayUtils.h"
 #include "FFmpegLog.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/Types.h"
+#include "nsIFile.h"
+#include "nsXPCOMPrivate.h" // for XUL_DLL
+#include "prmem.h"
 #include "prlink.h"
+
+#if defined(XP_WIN)
+#include "libavcodec/avcodec.h"
+#include "libavutil/avutil.h"
+#endif
 
 namespace mozilla
 {
@@ -68,6 +77,7 @@ FFmpegRuntimeLinker::Link()
   if (sLinkStatus) {
     return sLinkStatus == LinkStatus_SUCCEEDED;
   }
+
   MOZ_ASSERT(NS_IsMainThread());
 
   for (size_t i = 0; i < ArrayLength(sLibs); i++) {
@@ -89,6 +99,54 @@ FFmpegRuntimeLinker::Link()
     FFMPEG_LOG("%s %s", i ? "," : "", sLibs[i]);
   }
   FFMPEG_LOG(" ]\n");
+
+#ifdef MOZ_FFVPX
+  // We retrieve the path of the XUL library as this is where mozavcodec and
+  // mozavutil libs are located.
+  char* path =
+    PR_GetLibraryFilePathname(XUL_DLL, (PRFuncPtr)&FFmpegRuntimeLinker::Link);
+  if (!path) {
+    return false;
+  }
+  nsCOMPtr<nsIFile> xulFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
+  if (!xulFile ||
+      NS_FAILED(xulFile->InitWithNativePath(nsDependentCString(path)))) {
+    PR_Free(path);
+    return false;
+  }
+  PR_Free(path);
+
+  nsCOMPtr<nsIFile> rootDir;
+  if (NS_FAILED(xulFile->GetParent(getter_AddRefs(rootDir))) || !rootDir) {
+    return false;
+  }
+  nsAutoCString rootPath;
+  if (NS_FAILED(rootDir->GetNativePath(rootPath))) {
+    return false;
+  }
+
+  char* libname = NULL;
+  /* Get the platform-dependent library name of the module */
+  libname = PR_GetLibraryName(rootPath.get(), "mozavutil");
+  if (!libname) {
+    return false;
+  }
+  sLinkedUtilLib = MozAVLink(libname);
+  PR_FreeLibraryName(libname);
+  libname = PR_GetLibraryName(rootPath.get(), "mozavcodec");
+  if (!libname) {
+    Unlink();
+    return false;
+  }
+  sLinkedLib = MozAVLink(libname);
+  PR_FreeLibraryName(libname);
+  if (sLinkedLib && sLinkedUtilLib) {
+    if (Bind("mozavcodec")) {
+      sLinkStatus = LinkStatus_SUCCEEDED;
+      return true;
+    }
+  }
+#endif
 
   Unlink();
 
@@ -160,10 +218,12 @@ FFmpegRuntimeLinker::CreateDecoderModule()
 
   RefPtr<PlatformDecoderModule> module;
   switch (major) {
+#ifndef XP_WIN
     case 53: module = FFmpegDecoderModule<53>::Create(); break;
     case 54: module = FFmpegDecoderModule<54>::Create(); break;
     case 55:
     case 56: module = FFmpegDecoderModule<55>::Create(); break;
+#endif
     case 57: module = FFmpegDecoderModule<57>::Create(); break;
     default: module = nullptr;
   }
