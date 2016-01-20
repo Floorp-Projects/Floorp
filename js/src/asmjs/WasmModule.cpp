@@ -825,7 +825,6 @@ Module::clone(JSContext* cx, const StaticLinkData& link, Module* out) const
     // constructed. This function should clone the rest.
     MOZ_ASSERT(out->module_);
 
-    out->isAsmJS_ = isAsmJS_;
     out->profilingEnabled_ = profilingEnabled_;
 
     if (!CloneVector(cx, funcLabels_, &out->funcLabels_))
@@ -854,9 +853,8 @@ Module::clone(JSContext* cx, const StaticLinkData& link, Module* out) const
 }
 
 
-Module::Module(UniqueModuleData module, AsmJSBool isAsmJS)
+Module::Module(UniqueModuleData module)
   : module_(Move(module)),
-    isAsmJS_(bool(isAsmJS)),
     staticallyLinked_(false),
     interrupt_(nullptr),
     outOfBounds_(nullptr),
