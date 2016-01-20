@@ -2714,8 +2714,7 @@ class MOZ_STACK_CLASS FunctionValidator
 
     MOZ_WARN_UNUSED_RESULT
     bool writeOp(Expr op) {
-        static_assert(sizeof(Expr) == sizeof(uint8_t), "opcodes must be uint8");
-        return encoder().writeU8(uint8_t(op));
+        return encoder().writeExpr(op);
     }
 
     MOZ_WARN_UNUSED_RESULT
@@ -2772,8 +2771,7 @@ class MOZ_STACK_CLASS FunctionValidator
     }
 
     void patchOp(size_t pos, Expr stmt) {
-        static_assert(sizeof(Expr) == sizeof(uint8_t), "opcodes must be uint8");
-        encoder().patchU8(pos, uint8_t(stmt));
+        encoder().patchExpr(pos, stmt);
     }
     void patchU8(size_t pos, uint8_t u8) {
         encoder().patchU8(pos, u8);
@@ -2790,7 +2788,7 @@ class MOZ_STACK_CLASS FunctionValidator
     }
     MOZ_WARN_UNUSED_RESULT
     bool tempOp(size_t* offset) {
-        return tempU8(offset);
+        return encoder().writeExpr(Expr::Unreachable, offset);
     }
     MOZ_WARN_UNUSED_RESULT
     bool temp32(size_t* offset) {
