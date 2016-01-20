@@ -7,6 +7,8 @@
 #ifndef __FFmpegLibs_h__
 #define __FFmpegLibs_h__
 
+#include "mozilla/Types.h"
+
 extern "C" {
 #ifdef __GNUC__
 #pragma GCC visibility push(default)
@@ -34,5 +36,24 @@ enum { LIBAV_VER = FFVPX_VERSION };
 #else
 enum { LIBAV_VER = LIBAVCODEC_VERSION_MAJOR };
 #endif
+
+namespace mozilla {
+
+#ifdef USING_MOZFFVPX
+namespace ffvpx {
+#endif
+
+#define AV_FUNC(func, ver) extern decltype(func)* func;
+#include "FFmpegFunctionList.h"
+#undef AV_FUNC
+
+#ifdef USING_MOZFFVPX
+} // namespace ffvpx
+#define AV_CALL(func) mozilla::ffvpx::func
+#else
+#define AV_CALL(func) mozilla::func
+#endif
+
+}
 
 #endif // __FFmpegLibs_h__
