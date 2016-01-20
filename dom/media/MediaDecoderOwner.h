@@ -130,9 +130,6 @@ public:
   // when the connection between Rtsp server and client gets lost.
   virtual void ResetConnectionState() = 0;
 
-  // Called by media decoder when the audible state changed
-  virtual void NotifyAudibleStateChanged(bool aAudible) = 0;
-
 #ifdef MOZ_EME
   // Dispatches a "encrypted" event to the HTMLMediaElement, with the
   // provided init data. Actual dispatch may be delayed until HAVE_METADATA.
