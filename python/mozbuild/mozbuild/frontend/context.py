@@ -855,15 +855,15 @@ VARIABLES = {
         generated (often by preprocessing) into a 'res' directory as
         part of the build process, and subsequently merged into an APK
         file.
-        """, 'export'),
+        """, None),
 
     'ANDROID_APK_NAME': (unicode, unicode,
         """The name of an Android APK file to generate.
-        """, 'export'),
+        """, None),
 
     'ANDROID_APK_PACKAGE': (unicode, unicode,
         """The name of the Android package to generate R.java for, like org.mozilla.gecko.
-        """, 'export'),
+        """, None),
 
     'ANDROID_EXTRA_PACKAGES': (StrictOrderingOnAppendList, list,
         """The name of extra Android packages to generate R.java for, like ['org.mozilla.other'].
