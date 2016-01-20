@@ -201,6 +201,7 @@ const DominatorTree = module.exports = createClass({
           depth,
           focused,
           arrow,
+          expanded,
           getPercentSize: size => (size / dominatorTree.root.retainedSize) * 100,
           onViewSourceInDebugger,
         })
